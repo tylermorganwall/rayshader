@@ -34,7 +34,7 @@ Usage
 ``` r
 library(rayshader)
 volcanoshadow = rayshade(heightmap = volcano, 
-  anglebreaks = seq(0,90,1)*pi/180, 
+  anglebreaks = seq(-90,90,1)*pi/180, 
   sunangle = 45*pi/180, 
   maxsearch = 100,
   zscale = 1)
