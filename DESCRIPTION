@@ -1,0 +1,15 @@
+Package: rayshader
+Type: Package
+Title: Raytraces Elevation Matrices to Produce Global Illumination Relief Maps
+Version: 0.1
+Date: 2018-05-12
+Author: Tyler Morgan-Wall
+Maintainer: Tyler Morgan-Wall <tylermw@gmail.com>
+Description: Uses ray tracing to produce global illumination maps of elevation matrices.
+License: GPL-3
+Imports: suncalc,
+         doParallel,
+         foreach,
+         Rcpp
+LinkingTo: Rcpp
+RoxygenNote: 6.0.1
