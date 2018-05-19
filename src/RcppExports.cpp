@@ -5,6 +5,18 @@
 
 using namespace Rcpp;
 
+// lambshade_cpp
+NumericMatrix lambshade_cpp(NumericMatrix heightmap, NumericVector rayvector);
+RcppExport SEXP _rayshader_lambshade_cpp(SEXP heightmapSEXP, SEXP rayvectorSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix >::type heightmap(heightmapSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type rayvector(rayvectorSEXP);
+    rcpp_result_gen = Rcpp::wrap(lambshade_cpp(heightmap, rayvector));
+    return rcpp_result_gen;
+END_RCPP
+}
 // rayshade_multicore
 NumericMatrix rayshade_multicore(double sunangle, NumericVector anglebreaks, NumericMatrix heightmap, double zscale, double maxsearch, int row);
 RcppExport SEXP _rayshader_rayshade_multicore(SEXP sunangleSEXP, SEXP anglebreaksSEXP, SEXP heightmapSEXP, SEXP zscaleSEXP, SEXP maxsearchSEXP, SEXP rowSEXP) {
@@ -39,6 +51,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_rayshader_lambshade_cpp", (DL_FUNC) &_rayshader_lambshade_cpp, 2},
     {"_rayshader_rayshade_multicore", (DL_FUNC) &_rayshader_rayshade_multicore, 6},
     {"_rayshader_rayshade_cpp", (DL_FUNC) &_rayshader_rayshade_cpp, 6},
     {NULL, NULL, 0}

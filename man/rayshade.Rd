@@ -4,24 +4,28 @@
 \alias{rayshade}
 \title{Rayshade}
 \usage{
-rayshade(heightmap, anglebreaks, sunangle, maxsearch, zscale = 1,
-  multicore = FALSE, verbose = TRUE)
+rayshade(heightmap, anglebreaks, sunangle, maxsearch, lambert = TRUE,
+  zscale = 1, multicore = FALSE, remove_edges = TRUE)
 }
 \arguments{
 \item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.}
 
-\item{anglebreaks}{The angle(s) as measured from the horizon from which the light originates.}
+\item{anglebreaks}{The angle(s), in degrees, as measured from the horizon from which the light originates.}
 
-\item{sunangle}{The angle around the matrix from which the light originates.}
+\item{sunangle}{The angle, in degrees, around the matrix from which the light originates. Zero degrees is due North.}
 
 \item{maxsearch}{The maximum distance that the system should propogate rays to check. For longer}
+
+\item{lambert}{Default TRUE. Changes the intensity of the light at each point based proportional to the
+dot product of the ray direction and the surface normal at that point. Zeros out all values directed away from
+the ray.}
 
 \item{zscale}{Default 1. The ratio between the x and y spacing (which are assumed to be equal) and the z axis.}
 
 \item{multicore}{Default FALSE. If TRUE, multiple cores will be used to compute the shadow matrix. By default, this uses all cores available, unless the user has
 set `options("cores")` in which the multicore option will only use that many cores.}
 
-\item{verbose}{Default TRUE. Tracks progress by outputing the current column being shaded to the console.}
+\item{remove_edges}{Default TRUE. Slices off artifacts on the edge of the shadow matrix.}
 }
 \value{
 Matrix of light intensities at each point.
@@ -31,17 +35,22 @@ Calculates global shadow map for a elevation matrix by propogating rays from eac
 lowering the brightness at each point for each ray that intersects the surface.
 }
 \examples{
-#Here we produce an shadow map of the `volcano` elevation map.
+#Here we produce an shadow map of the `volcano` elevation map with the light from the NE.
 volcanoshadow = rayshade(heightmap = volcano, 
-   anglebreaks = seq(-90,90,10)*pi/180, 
-   sunangle = 45*pi/180, 
-   maxsearch = 100,
-   zscale = 1)
+   anglebreaks = seq(55,65,10), 
+   sunangle = 315, 
+   maxsearch = 100)
    
 \dontrun{volcanoshadow_fast = rayshade(heightmap = volcano, 
-   anglebreaks = seq(-90,90,10)*pi/180, 
-   sunangle = 45*pi/180, 
+   anglebreaks = seq(0,90,10), 
+   sunangle = 45, 
    maxsearch = 100,
-   zscale = 1, 
    multicore=TRUE)}
+   
+#Turn off Lambertian shading to get a shadow map solely based on the raytraced shadows.
+volcanoshadow = rayshade(heightmap = volcano, 
+   anglebreaks = seq(30,40,10), 
+   sunangle = 45, 
+   maxsearch = 100,
+   lambert = FALSE)
 }

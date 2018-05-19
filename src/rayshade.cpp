@@ -1,4 +1,5 @@
 #include <Rcpp.h>
+#include <RProgress.h>
 using namespace Rcpp;
 
 inline double bilinearinterp(double q11, double q12, double q21, double q22, double x1, double x2, double y1, double y2, double x, double y) {
@@ -12,6 +13,7 @@ inline double bilinearinterp(double q11, double q12, double q21, double q22, dou
 
 // [[Rcpp::export]]
 NumericMatrix rayshade_cpp(double sunangle, NumericVector anglebreaks, NumericMatrix heightmap, double zscale, double maxsearch, bool verbose) {
+  
   double precisionval = 1e-10;
   double sinsunangle = sin(sunangle);
   double cossunangle = cos(sunangle);
@@ -26,10 +28,11 @@ NumericMatrix rayshade_cpp(double sunangle, NumericVector anglebreaks, NumericMa
   bool breakloop;
   double maxheight = max(heightmap);
   
+  RProgress::RProgress pb("Raytracing [:bar] ETA: :eta");
+  pb.set_total(numberrows);
+  
   for(int i = 0; i < numberrows; i++) {
-    if(verbose) {
-      Rcpp::Rcout << i  << "\n";
-    }
+    pb.tick();
     for(int j = 0; j < numbercols; j++) {
       for (int angentry = 0; angentry < numberangles; angentry++) {
         breakloop = FALSE;
