@@ -9,7 +9,7 @@ rayshade_multicore <- function(sunangle, anglebreaks, heightmap, zscale, maxsear
     .Call(`_rayshader_rayshade_multicore`, sunangle, anglebreaks, heightmap, zscale, maxsearch, row)
 }
 
-rayshade_cpp <- function(sunangle, anglebreaks, heightmap, zscale, maxsearch, verbose) {
-    .Call(`_rayshader_rayshade_cpp`, sunangle, anglebreaks, heightmap, zscale, maxsearch, verbose)
+rayshade_cpp <- function(sunangle, anglebreaks, heightmap, zscale, maxsearch) {
+    .Call(`_rayshader_rayshade_cpp`, sunangle, anglebreaks, heightmap, zscale, maxsearch)
 }
 

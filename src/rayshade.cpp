@@ -12,7 +12,7 @@ inline double bilinearinterp(double q11, double q12, double q21, double q22, dou
 }
 
 // [[Rcpp::export]]
-NumericMatrix rayshade_cpp(double sunangle, NumericVector anglebreaks, NumericMatrix heightmap, double zscale, double maxsearch, bool verbose) {
+NumericMatrix rayshade_cpp(double sunangle, NumericVector anglebreaks, NumericMatrix heightmap, double zscale, double maxsearch) {
   
   double precisionval = 1e-10;
   double sinsunangle = sin(sunangle);

@@ -34,8 +34,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // rayshade_cpp
-NumericMatrix rayshade_cpp(double sunangle, NumericVector anglebreaks, NumericMatrix heightmap, double zscale, double maxsearch, bool verbose);
-RcppExport SEXP _rayshader_rayshade_cpp(SEXP sunangleSEXP, SEXP anglebreaksSEXP, SEXP heightmapSEXP, SEXP zscaleSEXP, SEXP maxsearchSEXP, SEXP verboseSEXP) {
+NumericMatrix rayshade_cpp(double sunangle, NumericVector anglebreaks, NumericMatrix heightmap, double zscale, double maxsearch);
+RcppExport SEXP _rayshader_rayshade_cpp(SEXP sunangleSEXP, SEXP anglebreaksSEXP, SEXP heightmapSEXP, SEXP zscaleSEXP, SEXP maxsearchSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -44,8 +44,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< NumericMatrix >::type heightmap(heightmapSEXP);
     Rcpp::traits::input_parameter< double >::type zscale(zscaleSEXP);
     Rcpp::traits::input_parameter< double >::type maxsearch(maxsearchSEXP);
-    Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
-    rcpp_result_gen = Rcpp::wrap(rayshade_cpp(sunangle, anglebreaks, heightmap, zscale, maxsearch, verbose));
+    rcpp_result_gen = Rcpp::wrap(rayshade_cpp(sunangle, anglebreaks, heightmap, zscale, maxsearch));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -53,7 +52,7 @@ END_RCPP
 static const R_CallMethodDef CallEntries[] = {
     {"_rayshader_lambshade_cpp", (DL_FUNC) &_rayshader_lambshade_cpp, 2},
     {"_rayshader_rayshade_multicore", (DL_FUNC) &_rayshader_rayshade_multicore, 6},
-    {"_rayshader_rayshade_cpp", (DL_FUNC) &_rayshader_rayshade_cpp, 6},
+    {"_rayshader_rayshade_cpp", (DL_FUNC) &_rayshader_rayshade_cpp, 5},
     {NULL, NULL, 0}
 };
 
