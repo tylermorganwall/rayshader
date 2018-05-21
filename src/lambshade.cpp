@@ -11,7 +11,7 @@ NumericVector vcrossnorm(NumericVector a, NumericVector b) {
   return(result);
 }
 
-double dot_product(NumericVector x, NumericVector y) {
+double dot_product(const NumericVector x, const NumericVector y) {
   return std::inner_product(x.begin(), x.end(), y.begin(), 0.0);
 }
 
@@ -26,7 +26,7 @@ NumericMatrix lambshade_cpp(NumericMatrix heightmap, NumericVector rayvector) {
   NumericVector tempvector4 = NumericVector::create(0,-1,0);
   for(int col = 0; col < heightmap.ncol(); col++) {
     for(int row = 0; row < heightmap.nrow(); row++) {
-      if(row != 0 || col != 0 || row != heightmap.nrow() - 1 || col != heightmap.ncol() - 1) {
+      if(row != 0 && col != 0 && row < heightmap.nrow() - 1 && col < heightmap.ncol() - 1) {
         tempvector1(2) = heightmap(row,col)-heightmap(row,col+1);
         tempvector2(2) = heightmap(row,col)-heightmap(row+1,col);
         tempvector3(2) = heightmap(row,col)-heightmap(row,col-1);
@@ -35,11 +35,12 @@ NumericMatrix lambshade_cpp(NumericMatrix heightmap, NumericVector rayvector) {
         storevector2 = vcrossnorm(tempvector3,tempvector4);
         shaded_matrix(row,col) = dot_product((storevector1 + storevector2)/2, rayvector);
       } else {
-        if(row == 0 || col == 0) {
+        if((row == 0 || col == 0) && (row != heightmap.nrow() - 1 || col != heightmap.ncol() - 1)) {
           tempvector1(2) = heightmap(row,col)-heightmap(row,col+1);
           tempvector2(2) = heightmap(row,col)-heightmap(row+1,col);
           shaded_matrix(row,col) = dot_product(vcrossnorm(tempvector1,tempvector2), rayvector);
-        } else {
+        } 
+        if((row != 0 || col != 0) && (row == heightmap.nrow() - 1 || col == heightmap.ncol() - 1)) {
           tempvector3(2) = heightmap(row,col)-heightmap(row,col-1);
           tempvector4(2) = heightmap(row,col)-heightmap(row-1,col);
           shaded_matrix(row,col) = dot_product(vcrossnorm(tempvector3,tempvector4), rayvector);
@@ -47,5 +48,12 @@ NumericMatrix lambshade_cpp(NumericMatrix heightmap, NumericVector rayvector) {
       }
     }
   }
+  tempvector2(2) = heightmap(0,heightmap.ncol())-heightmap(1,heightmap.ncol());
+  tempvector3(2) = heightmap(0,heightmap.ncol())-heightmap(0,heightmap.ncol()-1);
+  shaded_matrix(0,heightmap.ncol()-1) = dot_product(vcrossnorm(tempvector3,tempvector2), rayvector);
+  tempvector1(2) = heightmap(heightmap.nrow(),0)-heightmap(heightmap.nrow(),1);
+  tempvector4(2) = heightmap(heightmap.nrow(),0)-heightmap(heightmap.nrow()-1,0);
+  shaded_matrix(heightmap.nrow()-1,0) = dot_product(vcrossnorm(tempvector4,tempvector1), rayvector);
+  
   return(shaded_matrix);
 }

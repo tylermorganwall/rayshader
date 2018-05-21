@@ -51,7 +51,7 @@ rayshade = function(heightmap, anglebreaks, sunangle, maxsearch, lambert=TRUE, z
     shadowmatrix[shadowmatrix<0] = 0
     if(lambert) {
       shadowmatrix = shadowmatrix * lambshade(heightmap, rayangle = mean(anglebreaks), 
-                                              sunangle = sunangle, zscale = zscale)
+                                              sunangle = sunangle, zscale = zscale, remove_edges=remove_edges)
     }
     return(shadowmatrix)
   } else {
@@ -79,7 +79,7 @@ rayshade = function(heightmap, anglebreaks, sunangle, maxsearch, lambert=TRUE, z
     }
     if(lambert) {
       shadowmatrix = shadowmatrix * lambshade(heightmap, rayangle = mean(anglebreaks), 
-                                              sunangle = sunangle, zscale = zscale)
+                                              sunangle = sunangle, zscale = zscale, remove_edges=remove_edges)
     }
     return(shadowmatrix)
   }

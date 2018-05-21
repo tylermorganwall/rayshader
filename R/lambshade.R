@@ -28,7 +28,9 @@ lambshade = function(heightmap, rayangle, sunangle, zscale = 1, zero_negative = 
     shadowmatrix[shadowmatrix < 0] = 0
   }
   if(remove_edges) {
-    shadowmatrix = shadowmatrix[c(-1,-nrow(shadowmatrix)),c(-1,-ncol(shadowmatrix))]
+    shadowmatrixremove = shadowmatrix[c(-1,-nrow(shadowmatrix)),c(-1,-ncol(shadowmatrix))]
+    return(shadowmatrixremove)
+  } else {
+    return(shadowmatrix)
   }
-  return(shadowmatrix)
 }
