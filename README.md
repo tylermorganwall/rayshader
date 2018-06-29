@@ -22,22 +22,22 @@ Functions
 ---------
 
 Rayshader has five functions related to hillshading:
-<p style="min-height: 90px">
+<p style="min-height: 110px">
 <img align="right" height="110" width="102" src="man/figures/ray_small.png"> • `ray_shade` uses user specified light directions to calculate a global shadow map for an elevation matrix. By default, this also scales the light intensity at each point by the dot product of the mean ray direction and the surface normal (also implemented in function `lamb_shade`, this can be turned off by setting `lambert=FALSE`.
 </p>
-<p style="min-height: 90px">
+<p style="min-height: 110px">
 <img align="right" height="110" width="102" src="man/figures/sphere_small.png"> • `sphere_shade` maps an RGB texture to a hillshade by spherical mapping. A texture can be generated with the `create_texture` function, or loaded from an image. `sphere_shade` also includes 7 built-in palettes: "imhof1","imhof2","imhof3",imhof4","desert","bw","unicorn".
 </p>
-<p style="min-height: 90px">
+<p style="min-height: 110px">
 <img align="right" height="102" width="102" src="man/figures/imhof_small.png"> • `create_texture` programmatically creates texture maps given five colors: a highlight, a shadow, a left fill light, a right fill light, and a center color for flat areas. The user can also optionally specify the colors at the corners, but `create_texture` will interpolate those if they aren't given.
 </p>
-<p style="min-height: 90px">
+<p style="min-height: 110px">
 <img align="right" height="110" width="102" src="man/figures/amb_small.png"> • `ambient_shade` creates an ambient occlusion shadow layer, darkening areas that have less scattered light from the atmosphere. This results in valleys being darker than flat areas and ridges.
 </p>
-<p style="min-height: 90px">
+<p style="min-height: 110px">
 <img align="right" height="110" width="102" src="man/figures/lamb_small.png"> • `lamb_shade` uses a single user specified light direction to calculate a local shadow map based on the dot product between the surface normal and the light direction for an elevation matrix.
 </p>
-<p style="min-height: 90px">
+<p style="min-height: 110px">
 <img align="right" height="110" width="102" src="man/figures/alltogether_small.png"> • `add_shadow` takes two of the shadow maps above and combines them, scaling the second one (or, if the second is an RGB array, the matrix) as specified by the user.
 </p>
 Rayshader also has two functions to detect and add water to maps:
