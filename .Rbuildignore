@@ -1,3 +1,7 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
 ^README.Rmd$
+^\.RDataTmp$
+^README_cache$
+^README_files$
+^tests$

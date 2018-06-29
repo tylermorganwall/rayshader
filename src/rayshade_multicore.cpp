@@ -11,7 +11,8 @@ inline double bilinearinterp(double q11, double q12, double q21, double q22, dou
 }
 
 // [[Rcpp::export]]
-NumericMatrix rayshade_multicore(double sunangle, NumericVector anglebreaks, NumericMatrix heightmap, double zscale, double maxsearch, int row) {
+NumericMatrix rayshade_multicore(double sunangle, NumericVector anglebreaks, NumericMatrix heightmap, 
+                                 double zscale, double maxsearch, int row, NumericVector& cache_mask) {
   double precisionval = 1e-10;
   double sinsunangle = sin(sunangle);
   double cossunangle = cos(sunangle);
@@ -27,64 +28,66 @@ NumericMatrix rayshade_multicore(double sunangle, NumericVector anglebreaks, Num
   double maxheight = max(heightmap);
   
   for(int j = 0; j < numbercols; j++) {
-    for (int angentry = 0; angentry < numberangles; angentry++) {
-      breakloop = false;
-      for(int k = 1; k < maxdist; k++) {
-        Rcpp::checkUserInterrupt();
-        xcoord = row + sinsunangle * k;
-        ycoord = j + cossunangle * k;
-        tanangheight = heightmap(row, j) + tan(anglebreaks[angentry]) * k * zscale;
-        if(xcoord > numberrows-1 || ycoord > numbercols-1 || xcoord < 0 || ycoord < 0 || tanangheight > maxheight) {
-          break;
-        } else {
-          ceilxcoord = ceil(xcoord);
-          ceilycoord = ceil(ycoord);
-          floorxcoord = floor(xcoord);
-          floorycoord = floor(ycoord);
-          
-          // Get case where xcoord and ycoord integer number
-          if(floorxcoord == ceilxcoord && floorycoord == ceilycoord) {
-            if (tanangheight < heightmap(xcoord,ycoord)) {
-              shadowmatrix(0, j) =  shadowmatrix(0, j) - 1.0 / numberangles;
-              break;
-            }
-          }
-          
-          if(fabs(floorxcoord - ceilxcoord) < precisionval && floorycoord != ceilycoord) {
-            if (tanangheight < (heightmap(floorxcoord,ceilycoord) - heightmap(floorxcoord,floorycoord))*(ycoord-floorycoord) + heightmap(floorxcoord,floorycoord)) {
-              shadowmatrix(0, j) =  shadowmatrix(0, j) - 1.0 / numberangles;
-              break;
-            }
-          }
-          
-          if(floorxcoord != ceilxcoord && fabs(floorycoord - ceilycoord) < precisionval) {
-            if (tanangheight < (heightmap(ceilxcoord,floorycoord) - heightmap(floorxcoord,floorycoord))*(xcoord-floorxcoord) + heightmap(floorxcoord,floorycoord)) {
-              shadowmatrix(0, j) =  shadowmatrix(0, j) - 1.0 / numberangles;
-              break;
-            }
-          }
-          
-          if (heightmap(ceilxcoord, ceilycoord) < tanangheight &&
-              heightmap(floorxcoord, ceilycoord) < tanangheight &&
-              heightmap(ceilxcoord, floorycoord) < tanangheight &&
-              heightmap(floorxcoord, floorycoord) < tanangheight) {
-            continue;
-          }
-          
-          if (tanangheight < bilinearinterp(heightmap(floorxcoord, floorycoord),
-                                            heightmap(floorxcoord, ceilycoord),
-                                            heightmap(ceilxcoord, floorycoord),
-                                            heightmap(ceilxcoord, ceilycoord),
-                                            floorxcoord, ceilxcoord,
-                                            floorycoord, ceilycoord,
-                                            xcoord, ycoord)) {
-            shadowmatrix(0, j) =  shadowmatrix(0, j) - 1.0 / numberangles;
+    if(cache_mask(j)) {
+      for (int angentry = 0; angentry < numberangles; angentry++) {
+        breakloop = false;
+        for(int k = 1; k < maxdist; k++) {
+          Rcpp::checkUserInterrupt();
+          xcoord = row + sinsunangle * k;
+          ycoord = j + cossunangle * k;
+          tanangheight = heightmap(row, j) + tan(anglebreaks[angentry]) * k * zscale;
+          if(xcoord > numberrows-1 || ycoord > numbercols-1 || xcoord < 0 || ycoord < 0 || tanangheight > maxheight) {
             break;
-          } 
-          if(k == (maxdist - 1)) breakloop = true;
+          } else {
+            ceilxcoord = ceil(xcoord);
+            ceilycoord = ceil(ycoord);
+            floorxcoord = floor(xcoord);
+            floorycoord = floor(ycoord);
+            
+            // Get case where xcoord and ycoord integer number
+            if(floorxcoord == ceilxcoord && floorycoord == ceilycoord) {
+              if (tanangheight < heightmap(xcoord,ycoord)) {
+                shadowmatrix(0, j) =  shadowmatrix(0, j) - 1.0 / numberangles;
+                break;
+              }
+            }
+            
+            if(fabs(floorxcoord - ceilxcoord) < precisionval && floorycoord != ceilycoord) {
+              if (tanangheight < (heightmap(floorxcoord,ceilycoord) - heightmap(floorxcoord,floorycoord))*(ycoord-floorycoord) + heightmap(floorxcoord,floorycoord)) {
+                shadowmatrix(0, j) =  shadowmatrix(0, j) - 1.0 / numberangles;
+                break;
+              }
+            }
+            
+            if(floorxcoord != ceilxcoord && fabs(floorycoord - ceilycoord) < precisionval) {
+              if (tanangheight < (heightmap(ceilxcoord,floorycoord) - heightmap(floorxcoord,floorycoord))*(xcoord-floorxcoord) + heightmap(floorxcoord,floorycoord)) {
+                shadowmatrix(0, j) =  shadowmatrix(0, j) - 1.0 / numberangles;
+                break;
+              }
+            }
+            
+            if (heightmap(ceilxcoord, ceilycoord) < tanangheight &&
+                heightmap(floorxcoord, ceilycoord) < tanangheight &&
+                heightmap(ceilxcoord, floorycoord) < tanangheight &&
+                heightmap(floorxcoord, floorycoord) < tanangheight) {
+              continue;
+            }
+            
+            if (tanangheight < bilinearinterp(heightmap(floorxcoord, floorycoord),
+                                              heightmap(floorxcoord, ceilycoord),
+                                              heightmap(ceilxcoord, floorycoord),
+                                              heightmap(ceilxcoord, ceilycoord),
+                                              floorxcoord, ceilxcoord,
+                                              floorycoord, ceilycoord,
+                                              xcoord, ycoord)) {
+              shadowmatrix(0, j) =  shadowmatrix(0, j) - 1.0 / numberangles;
+              break;
+            } 
+            if(k == (maxdist - 1)) breakloop = true;
+          }
         }
+        if(breakloop) break;
       }
-      if(breakloop) break;
     }
   }
   return(shadowmatrix);
