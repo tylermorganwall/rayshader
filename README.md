@@ -98,6 +98,7 @@ elmat %>%
 ![](tools/readme/fourth.jpg)
 
 ``` r
+#And finally, we add an ambient occlusion layer:
 elmat %>%
   sphere_shade(sunangle = 45, texture = "desert") %>%
   add_water(detect_water(elmat), color="desert") %>%
