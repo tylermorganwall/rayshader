@@ -7,8 +7,7 @@ Author: Tyler Morgan-Wall
 Maintainer: Tyler Morgan-Wall <tylermw@gmail.com>
 Description: Uses ray tracing to produce global illumination maps of elevation matrices.
 License: GPL-3
-Imports: suncalc,
-         doParallel,
+Imports: doParallel,
          foreach,
          Rcpp,
          progress,
