@@ -13,6 +13,7 @@
 #'@param cache_mask Default `NULL`. A matrix of 1 and 0s, indicating which points on which the raytracer will operate.
 #'@param shadow_cache Default `NULL`. The shadow matrix to be updated at the points defined by the argument `cache_mask`.
 #'@param progbar Default `TRUE`. If `FALSE`, turns off progress bar.
+#'@param ... Additional arguments to pass to the `makeCluster` function when `multicore=TRUE`.
 #'@return Shaded texture map.
 #'@export
 #'@examples
@@ -21,7 +22,8 @@
 #'    sunbreaks = 15, 
 #'    maxsearch = 100)
 ambient_shade = function(heightmap, anglebreaks = seq(0,45,15), sunbreaks = 12, 
-                        maxsearch=20, multicore=FALSE, zscale=1, remove_edges=TRUE, cache_mask = NULL, shadow_cache=NULL, progbar=TRUE) {
+                        maxsearch=20, multicore=FALSE, zscale=1, remove_edges=TRUE, cache_mask = NULL, 
+                        shadow_cache=NULL, progbar=TRUE, ...) {
   if(sunbreaks < 3) {
     stop("sunbreaks needs to be at least 3")
   }
@@ -33,7 +35,7 @@ ambient_shade = function(heightmap, anglebreaks = seq(0,45,15), sunbreaks = 12,
   for(angle in seq(0,360,length.out = sunbreaks+1)[-(sunbreaks+1)]) {
     shademat = shademat + ray_shade(heightmap,anglebreaks=anglebreaks,sunangle = angle, maxsearch = maxsearch, zscale=zscale,
                          multicore=multicore,  remove_edges = remove_edges,
-                         lambert=FALSE, cache_mask = cache_mask, progbar = progbar)
+                         lambert=FALSE, cache_mask = cache_mask, progbar = progbar, ...)
   }
   shademat = shademat/sunbreaks
   if(!is.null(shadow_cache)) {

@@ -6,7 +6,7 @@
 \usage{
 ambient_shade(heightmap, anglebreaks = seq(0, 45, 15), sunbreaks = 12,
   maxsearch = 20, multicore = FALSE, zscale = 1, remove_edges = TRUE,
-  cache_mask = NULL, shadow_cache = NULL, progbar = TRUE)
+  cache_mask = NULL, shadow_cache = NULL, progbar = TRUE, ...)
 }
 \arguments{
 \item{heightmap}{two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.}
@@ -29,6 +29,8 @@ set `options("cores")` in which the multicore option will only use that many cor
 \item{shadow_cache}{Default `NULL`. The shadow matrix to be updated at the points defined by the argument `cache_mask`.}
 
 \item{progbar}{Default `TRUE`. If `FALSE`, turns off progress bar.}
+
+\item{...}{Additional arguments to pass to the `makeCluster` function when `multicore=TRUE`.}
 }
 \value{
 Shaded texture map.

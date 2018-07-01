@@ -7,7 +7,7 @@
 ray_shade(heightmap, anglebreaks = seq(40, 50, 1), sunangle = 315,
   maxsearch = 100, lambert = TRUE, zscale = 1, multicore = FALSE,
   remove_edges = TRUE, cache_mask = NULL, shadow_cache = NULL,
-  progbar = TRUE)
+  progbar = TRUE, ...)
 }
 \arguments{
 \item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.}
@@ -36,6 +36,8 @@ set `options("cores")` in which the multicore option will only use that many cor
 If present, this will only compute the raytraced shadows for those points with value `1` in the mask.}
 
 \item{progbar}{Default `TRUE`. If `FALSE`, turns off progress bar.}
+
+\item{...}{Additional arguments to pass to the `makeCluster` function when `multicore=TRUE`.}
 }
 \value{
 Matrix of light intensities at each point.
