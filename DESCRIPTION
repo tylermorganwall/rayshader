@@ -1,7 +1,7 @@
 Package: rayshader
 Type: Package
-Title: Raytraces Elevation Matrices to Produce Global Illumination Relief Maps
-Version: 0.3.1
+Title: Produce and Visualize Hillshaded Maps from Elevation Matrices with Raytracing and Local Illumination Models
+Version: 0.4.0
 Date: 2018-06-30
 Author: Tyler Morgan-Wall
 Maintainer: Tyler Morgan-Wall <tylermw@gmail.com>
@@ -16,6 +16,9 @@ Imports: doParallel,
          jpeg,
          png,
          akima,
-         magrittr
+         magrittr,
+         rgl
 LinkingTo: Rcpp, progress
 RoxygenNote: 6.0.1
+URL: https://github.com/tylermorganwall/rayshader
+BugReports: https://github.com/tylermorganwall/rayshader/issues

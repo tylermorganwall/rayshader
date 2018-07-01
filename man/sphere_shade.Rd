@@ -32,5 +32,5 @@ product between light direction and the surface normal vector at that point. Eac
 intensity is proportional to the cosine of the normal ve
 }
 \examples{
-#TBD
+plot_map(sphere_shade(volcano,texture="desert"))
 }

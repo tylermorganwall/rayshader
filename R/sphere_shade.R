@@ -15,7 +15,7 @@
 #'@return RGB array of hillshaded texture mappings.
 #'@export
 #'@examples
-#'#TBD
+#'plot_map(sphere_shade(volcano,texture="desert"))
 sphere_shade = function(heightmap, sunangle=315, texture="imhof1", normalvectors = NULL, zscale=1, remove_edges = TRUE, progbar = TRUE) {
   sunangle = sunangle/180*pi
   if(is.null(normalvectors)) {
