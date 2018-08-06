@@ -2,7 +2,7 @@
 #'
 #'@description Calculates Ambient Occlusion Shadow Map
 #'
-#'@param heightmap  two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.
+#'@param heightmap  A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.
 #'@param anglebreaks The angle(s), in degrees, as measured from the horizon from which the light originates.
 #'@param sunbreaks Default 12. Number of rays to be sent out in a circle, evenly spaced, around the point being tested.
 #'@param maxsearch Default 20. The maximum distance that the system should propogate rays to check for .
@@ -21,7 +21,7 @@
 #'amb = ambient_shade(heightmap = volcano, 
 #'    sunbreaks = 15, 
 #'    maxsearch = 100)
-ambient_shade = function(heightmap, anglebreaks = seq(0,45,15), sunbreaks = 12, 
+ambient_shade = function(heightmap, anglebreaks = seq(1,46,15), sunbreaks = 12, 
                         maxsearch=20, multicore=FALSE, zscale=1, remove_edges=TRUE, cache_mask = NULL, 
                         shadow_cache=NULL, progbar=TRUE, ...) {
   if(sunbreaks < 3) {

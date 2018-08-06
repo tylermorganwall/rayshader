@@ -22,7 +22,10 @@ lamb_shade = function(heightmap, rayangle=45, sunangle=315, zscale = 1, zero_neg
   sunang_rad = (-sunangle)*pi/180;
   rayang_rad = rayangle*pi/180;
   rayvector = c(sin(sunang_rad)*cos(rayang_rad),cos(sunang_rad)*cos(rayang_rad),-sin(rayang_rad))
-  heightmap = t(heightmap) / zscale;
+  flipud = function(x) {
+    x[,ncol(x):1]
+  }
+  heightmap = t(flipud(heightmap)) / zscale;
   shadowmatrix = lambshade_cpp(heightmap = heightmap, rayvector = rayvector)
   shadowmatrix = scales::rescale_max(shadowmatrix,c(0,1))
   if(zero_negative) {

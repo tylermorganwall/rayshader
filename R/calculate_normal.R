@@ -5,14 +5,16 @@
 #'@param heightmap A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.
 #'@param zscale Default 1.
 #'@param remove_edges Default TRUE. Slices off artifacts on the edge of the shadow matrix.
-#'@param progbar Default `TRUE`. If `FALSE`, turns off progress bar.
+#'@param progbar Default `FALSE`. If `TRUE`, turns on progress bar.
 #'@return Matrix of light intensities at each point.
 #'@export
 #'@examples
 #'#Here we produce a light intensity map of the `volcano` elevation map.
-calculate_normal = function(heightmap, zscale=1, remove_edges = FALSE, progbar=TRUE) {
+calculate_normal = function(heightmap, zscale=1, remove_edges = FALSE, progbar=FALSE) {
+  flipud = function(x) {
+    x[,ncol(x):1]
+  }
   heightmap = heightmap / zscale
-  heightmap = heightmap[1:nrow(heightmap),ncol(heightmap):1]
   matrices = calculate_normal_cpp(heightmap=heightmap, progbar = progbar)
   returnnormal = list()
   if(remove_edges) {

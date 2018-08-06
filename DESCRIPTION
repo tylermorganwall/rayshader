@@ -5,7 +5,7 @@ Version: 0.4.0
 Date: 2018-06-30
 Author: Tyler Morgan-Wall
 Maintainer: Tyler Morgan-Wall <tylermw@gmail.com>
-Description: Uses ray tracing to produce global illumination maps of elevation matrices.
+Description: Uses a combination of raytracing, spherical UV mapping, Lambertian reflectance, and ambient occlusion to produce hillshades of elevation matrices. Includes water detection and layering, programmable color palette generation, several built-in textures, and 2D and 3D plotting options.
 License: GPL-3
 Imports: doParallel,
          foreach,
@@ -17,7 +17,8 @@ Imports: doParallel,
          png,
          akima,
          magrittr,
-         rgl
+         rgl,
+         imager
 LinkingTo: Rcpp, progress
 RoxygenNote: 6.0.1
 URL: https://github.com/tylermorganwall/rayshader

@@ -3,11 +3,14 @@
 #'@description Detects bodies of water (of a user-defined minimum size) within an elevation matrix.
 #'
 #'@param heightmap A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All grid points are assumed to be evenly spaced.
+#'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
+#'of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
 #'@param cutoff Default `0.999`. The lower limit of the z-component of the unit normal vector to be classified as water.
 #'@param min_area Default length(heightmap)/400. Minimum area (in units of the height matrix x and y spacing) to be considered a body of water.
 #'@param normalvectors Default `NULL`. Pre-computed array of normal vectors from the `calculate_normal` function. Supplying this will speed up water detection.
 #'@param remove_edges Default `TRUE`. Slices off artifacts on the edge of the shadow matrix.
 #'@param keep_groups Default `FALSE`. If `TRUE`, the matrix returned will retain the numbered grouping information.
+#'@param progbar Default `FALSE`. If `TRUE`, turns on progress bar.
 #'@return Matrix indicating whether water was detected at that point. 1 indicates water, 0 indicates no water.
 #'@export
 #'@examples
@@ -21,8 +24,8 @@
 #'  sphere_shade(texture="imhof3") %>%
 #'  add_water(detect_water(island_volcano, min_area = 400),color="imhof3") %>%
 #'  plot_map()
-detect_water = function(heightmap, cutoff = 0.999, min_area=length(heightmap)/400 ,normalvectors=NULL,
-                        remove_edges=TRUE, keep_groups=FALSE) {
+detect_water = function(heightmap, zscale = 1, cutoff = 0.999, min_area=length(heightmap)/400 ,normalvectors=NULL,
+                        remove_edges=TRUE, keep_groups=FALSE, progbar = TRUE) {
   if(!is.null(normalvectors)) {
     zmatrix = abs(normalvectors$z)
     zmatrix = abs(zmatrix)
@@ -33,7 +36,7 @@ detect_water = function(heightmap, cutoff = 0.999, min_area=length(heightmap)/40
     zmatrix[nrow(zmatrix),] = 0
     zmatrix[,ncol(zmatrix)] = 0
   } else {
-    zmatrix = calculate_normal(heightmap)$z
+    zmatrix = calculate_normal(heightmap,zscale=zscale,progbar=progbar)$z
     zmatrix = abs(zmatrix)
     zmatrix[zmatrix < cutoff] = 0
     zmatrix[zmatrix >= cutoff] = 1

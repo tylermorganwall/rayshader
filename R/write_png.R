@@ -8,7 +8,10 @@
 #'@export
 #'@examples
 #'#TBD
-write_png = function(hillshade,filename,rotate=0) {
+write_png = function(hillshade,filename ,rotate=0) {
+  if(is.null(filename)) {
+    stop("write_png requires a filename")
+  }
   rotatef = function(x) t(apply(x, 2, rev))
   if(!(rotate %in% c(0,90,180,270))) {
     warning(paste0("Rotation value ",rotate," not in c(0,90,180,270). Ignoring"))
@@ -25,7 +28,8 @@ write_png = function(hillshade,filename,rotate=0) {
         hillshade = rotatef(hillshade)
       }
     }
-    png::writePNG(t(hillshade[,ncol(hillshade):1]),filename)
+    final = array(t(hillshade[,ncol(hillshade):1]),dim=c(ncol(hillshade),nrow(hillshade),3))
+    png::writePNG(final,filename)
   } else {
     if(number_of_rots != 0) {
       newarray = hillshade

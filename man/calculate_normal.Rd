@@ -5,7 +5,7 @@
 \title{Calculate Normal}
 \usage{
 calculate_normal(heightmap, zscale = 1, remove_edges = FALSE,
-  progbar = TRUE)
+  progbar = FALSE)
 }
 \arguments{
 \item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.}
@@ -14,7 +14,7 @@ calculate_normal(heightmap, zscale = 1, remove_edges = FALSE,
 
 \item{remove_edges}{Default TRUE. Slices off artifacts on the edge of the shadow matrix.}
 
-\item{progbar}{Default `TRUE`. If `FALSE`, turns off progress bar.}
+\item{progbar}{Default `FALSE`. If `TRUE`, turns on progress bar.}
 }
 \value{
 Matrix of light intensities at each point.

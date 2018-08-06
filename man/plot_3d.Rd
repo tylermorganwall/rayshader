@@ -4,8 +4,13 @@
 \alias{plot_3d}
 \title{plot_3d}
 \usage{
-plot_3d(hillshade, heightmap, zscale = 1, theta = 0, phi = 45, fov = 60,
-  zoom = 1, background = "grey10", windowsize = c(600, 600), ...)
+plot_3d(hillshade, heightmap, zscale = 1, solid = TRUE,
+  soliddepth = "auto", solidcolor = "grey20", solidlinecolor = "grey40",
+  shadow = TRUE, shadowdepth = "auto", shadowwidth = "auto",
+  shadowalpha = 1, water = FALSE, waterdepth = 0,
+  watercolor = "lightblue", wateralpha = 0.5, waterlinecolor = NULL,
+  waterlinealpha = 1, linewidth = 2, theta = 45, phi = 45, fov = 0,
+  zoom = 1, background = "white", windowsize = c(600, 600), ...)
 }
 \arguments{
 \item{hillshade}{Hillshade/image to be added to 3D surface map.}
@@ -13,13 +18,43 @@ plot_3d(hillshade, heightmap, zscale = 1, theta = 0, phi = 45, fov = 60,
 \item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.}
 
 \item{zscale}{Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
-of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.}
+of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10. Adjust the zscale down to exaggerate elevation features.}
 
-\item{theta}{Default 0. Rotation around z-axis.}
+\item{solid}{Default `TRUE`. If `FALSE`, just the surface is rendered.}
+
+\item{soliddepth}{Default `auto`, which sets it to the lowest elevation in the matrix minus one unit (scaled by zscale). Depth of the solid base.}
+
+\item{solidcolor}{Default `grey20`. Base color.}
+
+\item{solidlinecolor}{Default `grey40`. Base edge line color.}
+
+\item{shadow}{Default `TRUE`. If `FALSE`, no shadow is rendered.}
+
+\item{shadowdepth}{Default `auto`, which sets it to `soliddepth - soliddepth/10`. Depth of the shadow layer.}
+
+\item{shadowwidth}{Default `auto`, which sizes it to 1/10th the smallest dimension of `heightmap`. Width of the shadow in units of the matrix.}
+
+\item{shadowalpha}{Default `1`. Shadow transparency.}
+
+\item{water}{Default `FALSE`. If `TRUE`, a water layer is rendered.}
+
+\item{waterdepth}{Default `0`. Water level.}
+
+\item{watercolor}{Default `lightblue`. Water color.}
+
+\item{wateralpha}{Default `0.5`. Water transparency.}
+
+\item{waterlinecolor}{Default `NULL`. Color of the lines around the edges of the water layer.}
+
+\item{waterlinealpha}{Default `1`. Water line tranparency.}
+
+\item{linewidth}{Default `2`. Width of the edge lines in the scene.}
+
+\item{theta}{Default `45`. Rotation around z-axis.}
 
 \item{phi}{Default `45`. Azimuth angle.}
 
-\item{fov}{Field-of-view angle in degrees.}
+\item{fov}{Default `0`--isometric. Field-of-view angle.}
 
 \item{zoom}{Default `1`. Zoom factor.}
 

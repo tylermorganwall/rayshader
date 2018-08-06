@@ -4,11 +4,15 @@
 \alias{detect_water}
 \title{Detect water}
 \usage{
-detect_water(heightmap, cutoff = 0.999, min_area = length(heightmap)/400,
-  normalvectors = NULL, remove_edges = TRUE, keep_groups = FALSE)
+detect_water(heightmap, zscale = 1, cutoff = 0.999,
+  min_area = length(heightmap)/400, normalvectors = NULL,
+  remove_edges = TRUE, keep_groups = FALSE, progbar = TRUE)
 }
 \arguments{
 \item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All grid points are assumed to be evenly spaced.}
+
+\item{zscale}{Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
+of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.}
 
 \item{cutoff}{Default `0.999`. The lower limit of the z-component of the unit normal vector to be classified as water.}
 
@@ -19,6 +23,8 @@ detect_water(heightmap, cutoff = 0.999, min_area = length(heightmap)/400,
 \item{remove_edges}{Default `TRUE`. Slices off artifacts on the edge of the shadow matrix.}
 
 \item{keep_groups}{Default `FALSE`. If `TRUE`, the matrix returned will retain the numbered grouping information.}
+
+\item{progbar}{Default `FALSE`. If `TRUE`, turns on progress bar.}
 }
 \value{
 Matrix indicating whether water was detected at that point. 1 indicates water, 0 indicates no water.

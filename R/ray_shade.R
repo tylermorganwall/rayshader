@@ -39,6 +39,9 @@ ray_shade = function(heightmap, anglebreaks=seq(40,50,1), sunangle=315, maxsearc
   anglebreaks = anglebreaks[order(anglebreaks)]
   anglebreaks_rad = anglebreaks*pi/180
   sunangle_rad = sunangle*pi/180
+  flipud = function(x) {
+    x[,ncol(x):1]
+  }
   if(is.null(cache_mask)) {
     cache_mask = matrix(1,nrow = nrow(heightmap),ncol=ncol(heightmap))
   } else {
@@ -48,7 +51,7 @@ ray_shade = function(heightmap, anglebreaks=seq(40,50,1), sunangle=315, maxsearc
   }
   if(!multicore) {
     shadowmatrix = rayshade_cpp(sunangle = sunangle_rad, anglebreaks = anglebreaks_rad, 
-                                heightmap = heightmap, zscale = zscale, 
+                                heightmap = flipud(heightmap), zscale = zscale, 
                                 maxsearch = maxsearch, cache_mask = cache_mask, progbar = progbar)
     if(remove_edges) {
       shadowmatrix = shadowmatrix[c(-1,-nrow(shadowmatrix)),c(-1,-ncol(shadowmatrix))]
@@ -72,10 +75,10 @@ ray_shade = function(heightmap, anglebreaks=seq(40,50,1), sunangle=315, maxsearc
     }
     cl = parallel::makeCluster(numbercores, ...)
     doParallel::registerDoParallel(cl, cores = numbercores)
-    shadowmatrix = tryCatch({
-      foreach::foreach(i=1:nrow(heightmap), .combine="rbind", .packages = c("rayshader")) %dopar% {
+    shadowmatrixlist = tryCatch({
+      foreach::foreach(i=1:nrow(heightmap), .packages = c("rayshader")) %dopar% {
         rayshade_multicore(sunangle = sunangle_rad, anglebreaks = anglebreaks_rad, 
-                           heightmap = heightmap, zscale = zscale, 
+                           heightmap = flipud(heightmap), zscale = zscale, 
                            maxsearch = maxsearch, row = i-1, cache_mask = cache_mask[i,])
       }
     }, finally = {
@@ -83,6 +86,7 @@ ray_shade = function(heightmap, anglebreaks=seq(40,50,1), sunangle=315, maxsearc
         parallel::stopCluster(cl)
       }, error = function (e) {})
     })
+    shadowmatrix = do.call(rbind,shadowmatrixlist) 
     shadowmatrix[shadowmatrix<0] = 0
     if(remove_edges) {
       shadowmatrix = shadowmatrix[c(-1,-nrow(shadowmatrix)),c(-1,-ncol(shadowmatrix))]

@@ -18,6 +18,9 @@
 #'plot_map(sphere_shade(volcano,texture="desert"))
 sphere_shade = function(heightmap, sunangle=315, texture="imhof1", normalvectors = NULL, zscale=1, remove_edges = TRUE, progbar = TRUE) {
   sunangle = sunangle/180*pi
+  flipud = function(x) {
+    x[,ncol(x):1]
+  }
   if(is.null(normalvectors)) {
     normalvectors = calculate_normal(heightmap=heightmap,zscale=zscale, progbar = progbar)
   } 
@@ -43,7 +46,7 @@ sphere_shade = function(heightmap, sunangle=315, texture="imhof1", normalvectors
     }
   }
   center = dim(texture)[1:2]/2
-  heightmap = t(heightmap) / zscale
+  heightmap = flipud(t(heightmap)) / zscale
   distancemat = (1 - normalvectors[["z"]]) * center[1]
   lengthmat = sqrt(1 - (normalvectors[["z"]])^2)
   image_x_nocenter = ((-normalvectors[["x"]] / lengthmat * distancemat) )
