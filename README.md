@@ -104,6 +104,7 @@ elmat %>%
 ```
 
 ![](tools/readme/fifth.jpg)
+
 Rayshader also supports 3D mapping by passing a texture map (either external or one produced by rayshader) into the `plot_3d` function.
 
 ``` r
