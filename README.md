@@ -51,11 +51,10 @@ Usage
 ```r
 library(rayshader)
 library(magrittr)
-#Here we produce an texture map of the `volcano` elevation map with the light. 
-#By default, the highlight is towards the NE.
 
-#Here, I load a map with the raster package:
+#Here, I load a map for the River Derwent in Tasmania with the raster package:
 localtif = raster::raster("tasmania.tif")
+
 #And convert it to a matrix:
 elmat = matrix(raster::extract(localtif,raster::extent(localtif),buffer=1000),
                nrow=ncol(localtif),ncol=nrow(localtif))
