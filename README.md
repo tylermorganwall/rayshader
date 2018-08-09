@@ -118,17 +118,14 @@ elmat %>%
 
 ![](tools/readme/sixth.jpg)
 
-You can also easily add a water layer by setting `water = TRUE` (and setting `waterdepth` if the water level is not 0). You can customize the appearance and transparancy of the water layer via arguments to `plot_3d`. Here's an example loading bathymetric/topographic data of Monterey Bay, CA:
+You can also easily add a water layer by setting `water = TRUE` (and setting `waterdepth` if the water level is not 0). You can customize the appearance and transparancy of the water layer via arguments to `plot_3d`. Here's an example using the built-in example bathymetric/topographic data of Monterey Bay, CA `montereybay` (zscale for a 1-to-1 ratio  using `montereybay` would be 200, but in plot_3d is set to 50 to give a 4x exaggerated height in the z-direction) :
 
 ``` r
-montbay = raster::raster("mbay2012.nc")
-montmat = matrix(raster::extract(montbay,raster::extent(montbay),buffer=10000),nrow=ncol(montbay),ncol=nrow(montbay))
-
-montmat %>% 
+montereybay %>% 
     sphere_shade(texture = "imhof1") %>% 
-    add_shadow(ray_shade(montmat)) %>%
-    add_shadow(ambient_shade(montmat)) %>%
-    plot_3d(montmat, water=TRUE, 
+    add_shadow(ray_shade(montereybay,zscale=200)) %>%
+    add_shadow(ambient_shade(montereybay,zscale=200)) %>%
+    plot_3d(montereybay, water=TRUE, zscale=50, theta=-45,
             waterdepth = 0, wateralpha = 0.6, watercolor = "#88DDFF",
             waterlinecolor = "white", waterlinealpha = 0.5)
 ```
