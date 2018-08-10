@@ -34,13 +34,13 @@
 #'#Plotting a spherical texture map of the built-in `montereybay` dataset.
 #'montereybay %>%
 #'  sphere_shade(texture="desert") %>%
-#'  plot_3d(montereybay,waterdepth=0)
+#'  plot_3d(montereybay,zscale=50)
 #'
 #'#With a water layer  
 #'montereybay %>%
 #'  sphere_shade(texture="imhof2") %>%
 #'  plot_3d(montereybay, zscale=50, water = TRUE, watercolor="imhof2", 
-#'          waterlinecolor="white", waterlinealpha=0.5, windowsize=c(1000,1000))
+#'          waterlinecolor="white", waterlinealpha=0.5)
 plot_3d = function(hillshade, heightmap, zscale=1, 
                    solid = TRUE, soliddepth="auto", solidcolor="grey20",solidlinecolor="grey40",
                    shadow = TRUE, shadowdepth = "auto", shadowwidth = "auto", shadowalpha=1,
@@ -52,7 +52,7 @@ plot_3d = function(hillshade, heightmap, zscale=1,
   #setting default zscale if montereybay is used and tell user about zscale
   argnameschar = unlist(lapply(as.list(sys.call()),as.character))[-1]
   argnames = as.list(sys.call())
-  if(argnameschar[2] == "montereybay" || argnameschar["heightmap"] == "montereybay") {
+  if(argnameschar[2] == "montereybay" || (!is.na(argnameschar["heightmap"]) && argnameschar["heightmap"] == "montereybay")) {
     if (!("zscale" %in% as.character(names(argnames)))) {
       if(length(argnames) <= 3) {
         zscale = 200
