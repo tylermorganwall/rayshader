@@ -31,8 +31,16 @@
 #'@import rgl
 #'@export
 #'@examples
-#'#Plotting a spherical texture map of the volcano dataset.
-#'plot_3d(sphere_shade(volcano,texture="desert"),volcano, zscale=5)
+#'#Plotting a spherical texture map of the built-in `montereybay` dataset.
+#'montereybay %>%
+#'  sphere_shade(texture="desert") %>%
+#'  plot_3d(montereybay,waterdepth=0)
+#'
+#'#With a water layer  
+#'montereybay %>%
+#'  sphere_shade(texture="imhof2") %>%
+#'  plot_3d(montereybay, zscale=50, water = TRUE, watercolor="imhof2", 
+#'          waterlinecolor="white", waterlinealpha=0.5, windowsize=c(1000,1000))
 plot_3d = function(hillshade, heightmap, zscale=1, 
                    solid = TRUE, soliddepth="auto", solidcolor="grey20",solidlinecolor="grey40",
                    shadow = TRUE, shadowdepth = "auto", shadowwidth = "auto", shadowalpha=1,
@@ -41,6 +49,24 @@ plot_3d = function(hillshade, heightmap, zscale=1,
                    linewidth = 2,
                    theta=45, phi = 45, fov=0, zoom = 1, 
                    background="white", windowsize= c(600,600), ...) {
+  #setting default zscale if montereybay is used and tell user about zscale
+  argnameschar = unlist(lapply(as.list(sys.call()),as.character))[-1]
+  argnames = as.list(sys.call())
+  if(argnameschar[2] == "montereybay" || argnameschar["heightmap"] == "montereybay") {
+    if (!("zscale" %in% as.character(names(argnames)))) {
+      if(length(argnames) <= 3) {
+        zscale = 200
+        message("`montereybay` dataset used with no zscale--setting `zscale=200` for a realistic depiction. Lower zscale (i.e. to 50) in `plot_3d` to emphasize vertical features.")
+      } else {
+        if (!is.numeric(argnames[[4]]) || !is.null(names(argnames))) {
+          if(names(argnames)[4] != "")  {
+            zscale = 200
+            message("`montereybay` dataset used with no zscale--setting `zscale=200` for a realistic depiction. Lower zscale (i.e. to 50) in `plot_3d` to emphasize vertical features.")
+          }
+        }
+      }
+    }
+  }
   flipud = function(x) {
     x[,ncol(x):1]
   }

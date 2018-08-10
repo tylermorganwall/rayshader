@@ -68,6 +68,14 @@ of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
 Displays the shaded map in 3D with the `rgl` package.
 }
 \examples{
-#Plotting a spherical texture map of the volcano dataset.
-plot_3d(sphere_shade(volcano,texture="desert"),volcano, zscale=5)
+#Plotting a spherical texture map of the built-in `montereybay` dataset.
+montereybay \%>\%
+ sphere_shade(texture="desert") \%>\%
+ plot_3d(montereybay, zscale=50)
+
+#With a water layer  
+montereybay \%>\%
+ sphere_shade(texture="desert") \%>\%
+ plot_3d(montereybay, zscale=50, water = TRUE, watercolor="desert", 
+         waterlinecolor="white", waterlinealpha=0.5)
 }
