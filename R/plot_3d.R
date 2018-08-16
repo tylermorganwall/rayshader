@@ -12,11 +12,11 @@
 #'@param solidlinecolor Default `grey40`. Base edge line color.
 #'@param shadow Default `TRUE`. If `FALSE`, no shadow is rendered.
 #'@param shadowdepth Default `auto`, which sets it to `soliddepth - soliddepth/10`. Depth of the shadow layer.
+#'@param shadowcolor Default `grey50`. Color of the shadow.
 #'@param shadowwidth Default `auto`, which sizes it to 1/10th the smallest dimension of `heightmap`. Width of the shadow in units of the matrix. 
-#'@param shadowalpha Default `1`. Shadow transparency. 
 #'@param water Default `FALSE`. If `TRUE`, a water layer is rendered.
 #'@param waterdepth Default `0`. Water level.
-#'@param watercolor Default `lightblue`. Water color.
+#'@param watercolor Default `lightblue`. Color of the water.
 #'@param wateralpha Default `0.5`. Water transparency.
 #'@param waterlinecolor Default `NULL`. Color of the lines around the edges of the water layer.
 #'@param waterlinealpha Default `1`. Water line tranparency. 
@@ -43,7 +43,7 @@
 #'          waterlinecolor="white", waterlinealpha=0.5)
 plot_3d = function(hillshade, heightmap, zscale=1, 
                    solid = TRUE, soliddepth="auto", solidcolor="grey20",solidlinecolor="grey40",
-                   shadow = TRUE, shadowdepth = "auto", shadowwidth = "auto", shadowalpha=1,
+                   shadow = TRUE, shadowdepth = "auto", shadowcolor = "grey50", shadowwidth = "auto", 
                    water = FALSE, waterdepth = 0, watercolor="lightblue", wateralpha = 0.5, 
                    waterlinecolor=NULL, waterlinealpha = 1, 
                    linewidth = 2,
@@ -138,19 +138,6 @@ plot_3d = function(hillshade, heightmap, zscale=1,
     make_lines(heightmap,basedepth=soliddepth,linecolor=solidlinecolor,zscale=zscale)
   }
   if(shadow) {
-    shadowmat = matrix(shadowdepth,nrow = nrow(heightmap)+shadowwidth*2, ncol = ncol(heightmap)+shadowwidth*2)
-    imagemat = matrix(1,nrow = nrow(heightmap)+shadowwidth*2, ncol = ncol(heightmap)+shadowwidth*2)
-    imagemat[shadowwidth:(nrow(heightmap)+shadowwidth),shadowwidth:(ncol(heightmap)+shadowwidth)] = 0
-    shadowarray = as.array(imager::isoblur(imager::as.cimg(imagemat),sigma=shadowwidth/3))[,,1,1]
-    tempmap2 = tempfile()
-    write_png(shadowarray,tempmap2)
-    rgl.surface((-shadowwidth+1):(nrow(heightmap)+shadowwidth),
-                (-shadowwidth+1):(ncol(heightmap)+shadowwidth),shadowmat,
-                texture=paste0(tempmap2,".png"),
-                lit=FALSE,back="culled",alpha = shadowalpha)
-    # rgl.surface(c(-shadowwidth*100+1,(nrow(heightmap)+shadowwidth*100)),
-                # c(-shadowwidth*100+1,(ncol(heightmap)+shadowwidth*100)),matrix(shadowdepth-1,nrow = 2, ncol = 2),
-                # color="white",
-                # lit=FALSE,back="culled")
+    make_shadow(nrow(heightmap),  ncol(heightmap), shadowdepth, shadowwidth, background, shadowcolor)
   }
 }

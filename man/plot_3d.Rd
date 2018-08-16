@@ -6,8 +6,8 @@
 \usage{
 plot_3d(hillshade, heightmap, zscale = 1, solid = TRUE,
   soliddepth = "auto", solidcolor = "grey20", solidlinecolor = "grey40",
-  shadow = TRUE, shadowdepth = "auto", shadowwidth = "auto",
-  shadowalpha = 1, water = FALSE, waterdepth = 0,
+  shadow = TRUE, shadowdepth = "auto", shadowcolor = "grey50",
+  shadowwidth = "auto", water = FALSE, waterdepth = 0,
   watercolor = "lightblue", wateralpha = 0.5, waterlinecolor = NULL,
   waterlinealpha = 1, linewidth = 2, theta = 45, phi = 45, fov = 0,
   zoom = 1, background = "white", windowsize = c(600, 600), ...)
@@ -32,15 +32,15 @@ of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
 
 \item{shadowdepth}{Default `auto`, which sets it to `soliddepth - soliddepth/10`. Depth of the shadow layer.}
 
-\item{shadowwidth}{Default `auto`, which sizes it to 1/10th the smallest dimension of `heightmap`. Width of the shadow in units of the matrix.}
+\item{shadowcolor}{Default `grey50`. Color of the shadow.}
 
-\item{shadowalpha}{Default `1`. Shadow transparency.}
+\item{shadowwidth}{Default `auto`, which sizes it to 1/10th the smallest dimension of `heightmap`. Width of the shadow in units of the matrix.}
 
 \item{water}{Default `FALSE`. If `TRUE`, a water layer is rendered.}
 
 \item{waterdepth}{Default `0`. Water level.}
 
-\item{watercolor}{Default `lightblue`. Water color.}
+\item{watercolor}{Default `lightblue`. Color of the water.}
 
 \item{wateralpha}{Default `0.5`. Water transparency.}
 

@@ -4,7 +4,7 @@
 \alias{make_shadow}
 \title{make_shadow}
 \usage{
-make_shadow(rows, cols, basedepth, shadowwidth)
+make_shadow(rows, cols, basedepth, shadowwidth, color, shadowcolor)
 }
 \arguments{
 \item{rows}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.}

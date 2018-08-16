@@ -42,7 +42,7 @@ sphere_shade = function(heightmap, sunangle=315, texture="imhof1", normalvectors
         texture = create_texture("red","green","blue","yellow","white")
       } 
     } else {
-      stop("Built-in texture palette not recognized: possible choices are `imhof1`,`imhof2`,`imhof3`,`imhof4`,`bw`,`desert`, and `rainbowtest`")
+      stop("Built-in texture palette not recognized: possible choices are `imhof1`,`imhof2`,`imhof3`,`imhof4`,`bw`,`desert`, and `unicorn`")
     }
   }
   center = dim(texture)[1:2]/2
