@@ -5,12 +5,13 @@
 \title{plot_3d}
 \usage{
 plot_3d(hillshade, heightmap, zscale = 1, solid = TRUE,
-  soliddepth = "auto", solidcolor = "grey20", solidlinecolor = "grey40",
-  shadow = TRUE, shadowdepth = "auto", shadowcolor = "grey50",
-  shadowwidth = "auto", water = FALSE, waterdepth = 0,
-  watercolor = "lightblue", wateralpha = 0.5, waterlinecolor = NULL,
-  waterlinealpha = 1, linewidth = 2, theta = 45, phi = 45, fov = 0,
-  zoom = 1, background = "white", windowsize = c(600, 600), ...)
+  soliddepth = "auto", solidcolor = "grey20",
+  solidlinecolor = "grey40", shadow = TRUE, shadowdepth = "auto",
+  shadowcolor = "grey50", shadowwidth = "auto", water = FALSE,
+  waterdepth = 0, watercolor = "lightblue", wateralpha = 0.5,
+  waterlinecolor = NULL, waterlinealpha = 1, linewidth = 2,
+  theta = 45, phi = 45, fov = 0, zoom = 1, background = "white",
+  windowsize = c(600, 600), ...)
 }
 \arguments{
 \item{hillshade}{Hillshade/image to be added to 3D surface map.}
@@ -69,13 +70,17 @@ Displays the shaded map in 3D with the `rgl` package.
 }
 \examples{
 #Plotting a spherical texture map of the built-in `montereybay` dataset.
+\dontrun{
 montereybay \%>\%
  sphere_shade(texture="desert") \%>\%
  plot_3d(montereybay,zscale=50)
+}
 
 #With a water layer  
+\dontrun{
 montereybay \%>\%
  sphere_shade(texture="imhof2") \%>\%
  plot_3d(montereybay, zscale=50, water = TRUE, watercolor="imhof2", 
          waterlinecolor="white", waterlinealpha=0.5)
+}
 }

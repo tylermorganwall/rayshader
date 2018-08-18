@@ -39,8 +39,19 @@ add_water = function(hillshade, watermap, color="imhof1") {
     color = col2rgb("#ffffff")
   } 
   if(class(hillshade) != "array") {
-    stop("Argument `hillshade` must be a 3-layer array.")
-  }
+    if (class(hillshade) == "matrix") {
+      if(any(hillshade > 1 | hillshade < 0)) {
+        stop("Error: Not a shadow matrix. Intensities must be between 0 and 1. Pass your elevation matrix to ray_shade/lamb_shade/ambient_shade/sphere_shade first.")
+      }
+      temp = array(0,dim = c(nrow(hillshade),ncol(hillshade),3))
+      temp[,,1] = flipud(t(hillshade))
+      temp[,,2] = flipud(t(hillshade))
+      temp[,,3] = flipud(t(hillshade))
+      hillshade = temp
+    } else {
+      stop("Argument `hillshade` must be a 3-layer rgb array or 1d shadow matrix.")
+    }
+  } 
   if(missing(watermap)) {
     stop("User must provide matrix indicating locations of bodies of water")
   }

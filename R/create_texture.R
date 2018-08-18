@@ -52,7 +52,7 @@ create_texture = function(lightcolor,shadowcolor,leftcolor,rightcolor,centercolo
   }
   returnarray = array(0,dim=c(512,512,3))
   for(i in 1:3) {
-    returnarray[,,i] = floor(akima::bilinear.grid(x=c(0,0.5,1),y=c(0,0.5,1),z=colorarray[,,i],nx=512,ny=512)$z)/256
+    returnarray[,,i] = bilineargrid(colorarray[,,i]/256)
   }
   returnarray
 }

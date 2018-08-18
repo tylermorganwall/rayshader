@@ -4,8 +4,8 @@
 \alias{make_lines}
 \title{make_lines}
 \usage{
-make_lines(heightmap, basedepth = 0, linecolor = "grey40", zscale = 1,
-  alpha = 1, linewidth = 2)
+make_lines(heightmap, basedepth = 0, linecolor = "grey40",
+  zscale = 1, alpha = 1, linewidth = 2)
 }
 \arguments{
 \item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.}

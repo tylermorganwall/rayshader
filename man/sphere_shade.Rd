@@ -5,7 +5,8 @@
 \title{sphere_shade}
 \usage{
 sphere_shade(heightmap, sunangle = 315, texture = "imhof1",
-  normalvectors = NULL, zscale = 1, remove_edges = TRUE, progbar = TRUE)
+  normalvectors = NULL, zscale = 1, remove_edges = TRUE,
+  progbar = TRUE)
 }
 \arguments{
 \item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.}

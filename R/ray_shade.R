@@ -76,8 +76,8 @@ ray_shade = function(heightmap, anglebreaks=seq(40,50,1), sunangle=315, maxsearc
     cl = parallel::makeCluster(numbercores, ...)
     doParallel::registerDoParallel(cl, cores = numbercores)
     shadowmatrixlist = tryCatch({
-      foreach::foreach(i=1:nrow(heightmap)) %dopar% {
-        rayshader:::rayshade_multicore(sunangle = sunangle_rad, anglebreaks = anglebreaks_rad, 
+      foreach::foreach(i=1:nrow(heightmap),.export = c("rayshade_multicore")) %dopar% {
+        rayshade_multicore(sunangle = sunangle_rad, anglebreaks = anglebreaks_rad, 
                            heightmap = flipud(heightmap), zscale = zscale, 
                            maxsearch = maxsearch, row = i-1, cache_mask = cache_mask[i,])
       }

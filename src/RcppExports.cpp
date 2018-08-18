@@ -5,6 +5,17 @@
 
 using namespace Rcpp;
 
+// bilineargrid
+NumericMatrix bilineargrid(NumericMatrix& colorarray);
+RcppExport SEXP _rayshader_bilineargrid(SEXP colorarraySEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix& >::type colorarray(colorarraySEXP);
+    rcpp_result_gen = Rcpp::wrap(bilineargrid(colorarray));
+    return rcpp_result_gen;
+END_RCPP
+}
 // calculate_normal_cpp
 List calculate_normal_cpp(const NumericMatrix& heightmap, bool progbar);
 RcppExport SEXP _rayshader_calculate_normal_cpp(SEXP heightmapSEXP, SEXP progbarSEXP) {
@@ -116,6 +127,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_rayshader_bilineargrid", (DL_FUNC) &_rayshader_bilineargrid, 1},
     {"_rayshader_calculate_normal_cpp", (DL_FUNC) &_rayshader_calculate_normal_cpp, 2},
     {"_rayshader_construct_matrix", (DL_FUNC) &_rayshader_construct_matrix, 5},
     {"_rayshader_fill_find_groups", (DL_FUNC) &_rayshader_fill_find_groups, 1},

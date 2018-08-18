@@ -5,8 +5,9 @@
 \title{Ambient Occlusion}
 \usage{
 ambient_shade(heightmap, anglebreaks = seq(1, 46, 15), sunbreaks = 12,
-  maxsearch = 20, multicore = FALSE, zscale = 1, remove_edges = TRUE,
-  cache_mask = NULL, shadow_cache = NULL, progbar = TRUE, ...)
+  maxsearch = 20, multicore = FALSE, zscale = 1,
+  remove_edges = TRUE, cache_mask = NULL, shadow_cache = NULL,
+  progbar = TRUE, ...)
 }
 \arguments{
 \item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.}
