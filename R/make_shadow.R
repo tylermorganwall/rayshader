@@ -19,9 +19,9 @@ make_shadow = function(rows, cols, basedepth, shadowwidth, color, shadowcolor) {
   gmat[shadowwidth:(rows+shadowwidth),shadowwidth:(cols+shadowwidth)] = shadowcolors[2]/255
   bmat[shadowwidth:(rows+shadowwidth),shadowwidth:(cols+shadowwidth)] = shadowcolors[3]/255
   shadowarray = array(1,dim = c(cols+shadowwidth*2,rows+shadowwidth*2,3))
-  shadowarray[,,1] = rmat
-  shadowarray[,,2] = gmat
-  shadowarray[,,3] = bmat
+  shadowarray[,,1] = t(rmat)
+  shadowarray[,,2] = t(gmat)
+  shadowarray[,,3] = t(bmat)
   shadowarray = suppressWarnings(as.array(imager::isoblur(imager::as.cimg(shadowarray),sigma=shadowwidth/2))[,,1,])
   tempmap = tempfile()
   write_png(shadowarray,tempmap)
