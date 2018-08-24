@@ -17,5 +17,16 @@ write_png(hillshade, filename, rotate = 0)
 Writes the hillshaded map to file.
 }
 \examples{
-#TBD
+filename_map = tempfile()
+
+#Save the map into `filename_map`
+montereybay \%>\%
+ sphere_shade() \%>\%
+ write_png(filename_map)
+ 
+#Rotate the map 180 degrees:
+
+montereybay \%>\%
+ sphere_shade() \%>\%
+ write_png(filename_map,rotate=180)
 }

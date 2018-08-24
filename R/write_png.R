@@ -7,7 +7,18 @@
 #'@param rotate Default 0. Rotates the output. Possible values: 0, 90, 180, 270.
 #'@export
 #'@examples
-#'#TBD
+#'filename_map = tempfile()
+#'
+#'#Save the map into `filename_map`
+#'montereybay %>%
+#'  sphere_shade() %>%
+#'  write_png(filename_map)
+#'  
+#'#Rotate the map 180 degrees:
+#'
+#'montereybay %>%
+#'  sphere_shade() %>%
+#'  write_png(filename_map,rotate=180)
 write_png = function(hillshade,filename ,rotate=0) {
   if(is.null(filename)) {
     stop("write_png requires a filename")
