@@ -5,7 +5,7 @@
 \title{make_lines}
 \usage{
 make_lines(heightmap, basedepth = 0, linecolor = "grey40",
-  zscale = 1, alpha = 1, linewidth = 2)
+  zscale = 1, alpha = 1, linewidth = 2, solid = TRUE)
 }
 \arguments{
 \item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.}
@@ -20,6 +20,8 @@ of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
 \item{alpha}{Default `1`. Transparency.}
 
 \item{linewidth}{Default `2`. Linewidth}
+
+\item{solid}{Default `TRUE`. Whether it's solid or water.}
 }
 \description{
 Makes the lines in the corner of the base.

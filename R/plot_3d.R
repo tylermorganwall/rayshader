@@ -129,7 +129,7 @@ plot_3d = function(hillshade, heightmap, zscale=1,
     }
   }
   tempmap = tempfile()
-  write_png(hillshade,tempmap)
+  save_png(hillshade,tempmap)
   rgl.surface(1:nrow(heightmap),-(1:ncol(heightmap)),heightmap[,ncol(heightmap):1]/zscale,texture=paste0(tempmap,".png"),lit=FALSE)
   if(water) {
     rgl.surface(c(1,nrow(heightmap)),c(-1,-ncol(heightmap)),matrix(waterdepth,2,2),color=watercolor,lit=FALSE,alpha=wateralpha)

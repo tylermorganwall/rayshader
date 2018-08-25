@@ -1,4 +1,4 @@
-#'@title write_png
+#'@title save_png
 #'
 #'@description Writes the hillshaded map to file.
 #'
@@ -12,16 +12,16 @@
 #'#Save the map into `filename_map`
 #'montereybay %>%
 #'  sphere_shade() %>%
-#'  write_png(filename_map)
+#'  save_png(filename_map)
 #'  
 #'#Rotate the map 180 degrees:
 #'
 #'montereybay %>%
 #'  sphere_shade() %>%
-#'  write_png(filename_map,rotate=180)
-write_png = function(hillshade,filename ,rotate=0) {
+#'  save_png(filename_map,rotate=180)
+save_png = function(hillshade,filename ,rotate=0) {
   if(is.null(filename)) {
-    stop("write_png requires a filename")
+    stop("save_png requires a filename")
   }
   rotatef = function(x) t(apply(x, 2, rev))
   if(!(rotate %in% c(0,90,180,270))) {
