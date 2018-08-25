@@ -9,7 +9,6 @@
 #'@param multicore Default FALSE. If TRUE, multiple cores will be used to compute the shadow matrix. By default, this uses all cores available, unless the user has
 #'set `options("cores")` in which the multicore option will only use that many cores.
 #'@param zscale Default 1. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. 
-#'@param remove_edges Default `TRUE`. Slices off artifacts on the edge of the shadow matrix.
 #'@param cache_mask Default `NULL`. A matrix of 1 and 0s, indicating which points on which the raytracer will operate.
 #'@param shadow_cache Default `NULL`. The shadow matrix to be updated at the points defined by the argument `cache_mask`.
 #'@param progbar Default `TRUE`. If `FALSE`, turns off progress bar.
@@ -21,21 +20,20 @@
 #'amb = ambient_shade(heightmap = volcano, 
 #'    sunbreaks = 15, 
 #'    maxsearch = 100)
+#'    
+#'plot_map(amb)
 ambient_shade = function(heightmap, anglebreaks = seq(1,46,15), sunbreaks = 12, 
-                        maxsearch=20, multicore=FALSE, zscale=1, remove_edges=TRUE, cache_mask = NULL, 
+                        maxsearch=20, multicore=FALSE, zscale=1, cache_mask = NULL, 
                         shadow_cache=NULL, progbar=TRUE, ...) {
   if(sunbreaks < 3) {
     stop("sunbreaks needs to be at least 3")
   }
-  if(remove_edges) {
-    shademat = matrix(0,nrow=nrow(heightmap)-2,ncol = ncol(heightmap)-2)
-  } else {
-    shademat = matrix(0,nrow=nrow(heightmap),ncol = ncol(heightmap))
-  }
+  shademat = matrix(0,nrow=nrow(heightmap),ncol = ncol(heightmap))
   for(angle in seq(0,360,length.out = sunbreaks+1)[-(sunbreaks+1)]) {
-    shademat = shademat + ray_shade(heightmap,anglebreaks=anglebreaks,sunangle = angle, maxsearch = maxsearch, zscale=zscale,
-                         multicore=multicore,  remove_edges = remove_edges,
-                         lambert=FALSE, cache_mask = cache_mask, progbar = progbar, ...)
+    shademat = shademat + ray_shade(heightmap,anglebreaks=anglebreaks,sunangle = angle, 
+                                    maxsearch = maxsearch, zscale=zscale,
+                                    multicore=multicore, lambert=FALSE, 
+                                    cache_mask = cache_mask, progbar = progbar, ...)
   }
   shademat = shademat/sunbreaks
   if(!is.null(shadow_cache)) {

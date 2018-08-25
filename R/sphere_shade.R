@@ -10,20 +10,20 @@
 #'of the built-in palettes (`imhof1`,`imhof2`,`imhof3`,`imhof4`,`desert`, `bw`, and `unicorn`). 
 #'@param normalvectors Default `NULL`. Cache of the normal vectors (from `calculate_normal` function). Supply this to speed up texture mapping.
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. 
-#'@param remove_edges Default `TRUE`. Slices off artifacts on the edge of the shadow matrix.
 #'@param progbar Default `TRUE`. If `FALSE`, turns off progress bar.
 #'@return RGB array of hillshaded texture mappings.
 #'@export
 #'@examples
 #'plot_map(sphere_shade(volcano,texture="desert"))
-sphere_shade = function(heightmap, sunangle=315, texture="imhof1", normalvectors = NULL, zscale=1, remove_edges = TRUE, progbar = TRUE) {
+sphere_shade = function(heightmap, sunangle=315, texture="imhof1", normalvectors = NULL, zscale=1, progbar = TRUE) {
   sunangle = sunangle/180*pi
   flipud = function(x) {
     x[,ncol(x):1]
   }
   if(is.null(normalvectors)) {
-    normalvectors = calculate_normal(heightmap=heightmap,zscale=zscale, progbar = progbar)
+    normalvectors = calculate_normal(heightmap = heightmap, zscale = zscale, progbar = progbar)
   } 
+  heightmap = add_padding(heightmap)
   if(class(texture) == "character") {
     if(texture %in% c("imhof1","imhof2","imhof3","imhof4","desert","bw","unicorn")) {
       if(texture == "imhof1") {
@@ -67,13 +67,9 @@ sphere_shade = function(heightmap, sunangle=315, texture="imhof1", normalvectors
   returnimage[,,1] = construct_matrix(texture[,,1],nrow(heightmap),ncol(heightmap), image_x, image_y)
   returnimage[,,2] = construct_matrix(texture[,,2],nrow(heightmap),ncol(heightmap), image_x, image_y)
   returnimage[,,3] = construct_matrix(texture[,,3],nrow(heightmap),ncol(heightmap), image_x, image_y)
-  if(remove_edges) {
-    returnimageslice = array(dim=c(nrow(heightmap)-2,ncol(heightmap)-2,3))
-    returnimageslice[,,1] = returnimage[c(-1,-nrow(heightmap)),c(-1,-ncol(heightmap)),1]
-    returnimageslice[,,2] = returnimage[c(-1,-nrow(heightmap)),c(-1,-ncol(heightmap)),2]
-    returnimageslice[,,3] = returnimage[c(-1,-nrow(heightmap)),c(-1,-ncol(heightmap)),3]
-    return(returnimageslice)
-  } else {
-    return(returnimage)
-  }
+  returnimageslice = array(dim=c(nrow(heightmap)-2,ncol(heightmap)-2,3))
+  returnimageslice[,,1] = returnimage[c(-1,-nrow(heightmap)),c(-1,-ncol(heightmap)),1]
+  returnimageslice[,,2] = returnimage[c(-1,-nrow(heightmap)),c(-1,-ncol(heightmap)),2]
+  returnimageslice[,,3] = returnimage[c(-1,-nrow(heightmap)),c(-1,-ncol(heightmap)),3]
+  return(returnimageslice)
 }

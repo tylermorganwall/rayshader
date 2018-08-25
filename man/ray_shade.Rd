@@ -6,8 +6,7 @@
 \usage{
 ray_shade(heightmap, anglebreaks = seq(40, 50, 1), sunangle = 315,
   maxsearch = 100, lambert = TRUE, zscale = 1, multicore = FALSE,
-  remove_edges = TRUE, cache_mask = NULL, shadow_cache = NULL,
-  progbar = TRUE, ...)
+  cache_mask = NULL, shadow_cache = NULL, progbar = TRUE, ...)
 }
 \arguments{
 \item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.}
@@ -27,8 +26,6 @@ of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
 
 \item{multicore}{Default `FALSE`. If `TRUE`, multiple cores will be used to compute the shadow matrix. By default, this uses all cores available, unless the user has
 set `options("cores")` in which the multicore option will only use that many cores.}
-
-\item{remove_edges}{Default `TRUE`. Slices off artifacts on the edge of the shadow matrix.}
 
 \item{cache_mask}{Default `NULL`. A matrix of 1 and 0s, indicating which points on which the raytracer will operate.}
 
@@ -57,4 +54,6 @@ volcanoshadow = ray_shade(heightmap = volcano,
    sunangle = 45, 
    maxsearch = 100,
    lambert = FALSE)
+   
+plot_map(volcanoshadow)
 }

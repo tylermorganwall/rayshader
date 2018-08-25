@@ -4,15 +4,12 @@
 \alias{calculate_normal}
 \title{Calculate Normal}
 \usage{
-calculate_normal(heightmap, zscale = 1, remove_edges = FALSE,
-  progbar = FALSE)
+calculate_normal(heightmap, zscale = 1, progbar = FALSE)
 }
 \arguments{
 \item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.}
 
 \item{zscale}{Default 1.}
-
-\item{remove_edges}{Default TRUE. Slices off artifacts on the edge of the shadow matrix.}
 
 \item{progbar}{Default `FALSE`. If `TRUE`, turns on progress bar.}
 }
@@ -24,4 +21,11 @@ Calculates the normal unit vector for every point on the grid.
 }
 \examples{
 #Here we produce a light intensity map of the `volcano` elevation map.
+
+#Cache the normal vectors of the volcano dataset
+volcanocache = calculate_normal(volcano)
+
+#Use the cached vectors to speed up calculation of `sphere_shade()` on a map.
+sphere_shade(volcano,normalvectors = volcanocache) \%>\%
+ plot_map()
 }

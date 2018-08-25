@@ -5,9 +5,8 @@
 \title{Ambient Occlusion}
 \usage{
 ambient_shade(heightmap, anglebreaks = seq(1, 46, 15), sunbreaks = 12,
-  maxsearch = 20, multicore = FALSE, zscale = 1,
-  remove_edges = TRUE, cache_mask = NULL, shadow_cache = NULL,
-  progbar = TRUE, ...)
+  maxsearch = 20, multicore = FALSE, zscale = 1, cache_mask = NULL,
+  shadow_cache = NULL, progbar = TRUE, ...)
 }
 \arguments{
 \item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.}
@@ -22,8 +21,6 @@ ambient_shade(heightmap, anglebreaks = seq(1, 46, 15), sunbreaks = 12,
 set `options("cores")` in which the multicore option will only use that many cores.}
 
 \item{zscale}{Default 1. The ratio between the x and y spacing (which are assumed to be equal) and the z axis.}
-
-\item{remove_edges}{Default `TRUE`. Slices off artifacts on the edge of the shadow matrix.}
 
 \item{cache_mask}{Default `NULL`. A matrix of 1 and 0s, indicating which points on which the raytracer will operate.}
 
@@ -44,4 +41,6 @@ Calculates Ambient Occlusion Shadow Map
 amb = ambient_shade(heightmap = volcano, 
    sunbreaks = 15, 
    maxsearch = 100)
+   
+plot_map(amb)
 }

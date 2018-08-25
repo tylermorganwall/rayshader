@@ -14,7 +14,6 @@
 #'of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
 #'@param multicore Default `FALSE`. If `TRUE`, multiple cores will be used to compute the shadow matrix. By default, this uses all cores available, unless the user has
 #'set `options("cores")` in which the multicore option will only use that many cores.
-#'@param remove_edges Default `TRUE`. Slices off artifacts on the edge of the shadow matrix.
 #'@param cache_mask Default `NULL`. A matrix of 1 and 0s, indicating which points on which the raytracer will operate.
 #'@param shadow_cache Default `NULL`. The shadow matrix to be updated at the points defined by the argument `cache_mask`.
 #'If present, this will only compute the raytraced shadows for those points with value `1` in the mask.
@@ -34,14 +33,18 @@
 #'    sunangle = 45, 
 #'    maxsearch = 100,
 #'    lambert = FALSE)
+#'    
+#'plot_map(volcanoshadow)
 ray_shade = function(heightmap, anglebreaks=seq(40,50,1), sunangle=315, maxsearch=100, lambert=TRUE, zscale=1, 
-                    multicore = FALSE,  remove_edges=TRUE, cache_mask = NULL, shadow_cache=NULL, progbar=TRUE, ...) {
+                    multicore = FALSE, cache_mask = NULL, shadow_cache=NULL, progbar=TRUE, ...) {
   anglebreaks = anglebreaks[order(anglebreaks)]
   anglebreaks_rad = anglebreaks*pi/180
   sunangle_rad = sunangle*pi/180
   flipud = function(x) {
     x[,ncol(x):1]
   }
+  originalheightmap = heightmap
+  heightmap = add_padding(heightmap)
   if(is.null(cache_mask)) {
     cache_mask = matrix(1,nrow = nrow(heightmap),ncol=ncol(heightmap))
   } else {
@@ -53,14 +56,12 @@ ray_shade = function(heightmap, anglebreaks=seq(40,50,1), sunangle=315, maxsearc
     shadowmatrix = rayshade_cpp(sunangle = sunangle_rad, anglebreaks = anglebreaks_rad, 
                                 heightmap = flipud(heightmap), zscale = zscale, 
                                 maxsearch = maxsearch, cache_mask = cache_mask, progbar = progbar)
-    if(remove_edges) {
-      shadowmatrix = shadowmatrix[c(-1,-nrow(shadowmatrix)),c(-1,-ncol(shadowmatrix))]
-      cache_mask = cache_mask[c(-1,-nrow(cache_mask)),c(-1,-ncol(cache_mask))]
-    }
+    shadowmatrix = shadowmatrix[c(-1,-nrow(shadowmatrix)),c(-1,-ncol(shadowmatrix))]
+    cache_mask = cache_mask[c(-1,-nrow(cache_mask)),c(-1,-ncol(cache_mask))]
     shadowmatrix[shadowmatrix<0] = 0
     if(lambert) {
-      shadowmatrix = add_shadow(shadowmatrix, lamb_shade(heightmap, rayangle = mean(anglebreaks), 
-                                                         sunangle = sunangle, zscale = zscale, remove_edges=remove_edges),0)
+      shadowmatrix = add_shadow(shadowmatrix, lamb_shade(originalheightmap, rayangle = mean(anglebreaks), 
+                                                         sunangle = sunangle, zscale = zscale), 0)
     }
     if(!is.null(shadow_cache)) {
       shadow_cache[cache_mask == 1] = shadowmatrix[cache_mask == 1]
@@ -88,13 +89,11 @@ ray_shade = function(heightmap, anglebreaks=seq(40,50,1), sunangle=315, maxsearc
     })
     shadowmatrix = do.call(rbind,shadowmatrixlist) 
     shadowmatrix[shadowmatrix<0] = 0
-    if(remove_edges) {
-      shadowmatrix = shadowmatrix[c(-1,-nrow(shadowmatrix)),c(-1,-ncol(shadowmatrix))]
-      cache_mask = cache_mask[c(-1,-nrow(cache_mask)),c(-1,-ncol(cache_mask))]
-    }
+    shadowmatrix = shadowmatrix[c(-1,-nrow(shadowmatrix)),c(-1,-ncol(shadowmatrix))]
+    cache_mask = cache_mask[c(-1,-nrow(cache_mask)),c(-1,-ncol(cache_mask))]
     if(lambert) {
-      shadowmatrix = add_shadow(shadowmatrix, lamb_shade(heightmap, rayangle = mean(anglebreaks), 
-                                              sunangle = sunangle, zscale = zscale, remove_edges=remove_edges),0)
+      shadowmatrix = add_shadow(shadowmatrix, lamb_shade(originalheightmap, rayangle = mean(anglebreaks), 
+                                              sunangle = sunangle, zscale = zscale), 0)
     }
     if(!is.null(shadow_cache)) {
       shadow_cache[cache_mask == 1] = shadowmatrix[cache_mask == 1]

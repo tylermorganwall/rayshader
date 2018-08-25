@@ -21,5 +21,17 @@ Shaded texture map.
 Multiplies a texture array or shadow map by a shadow map.
 }
 \examples{
-#TBD
+#Raytrace the `volcano` elevation map and add that shadow to the output of sphere_shade()
+shadowmap = ray_shade(volcano)
+
+volcano \%>\%
+ sphere_shade() \%>\%
+ add_shadow(shadowmap) \%>\%
+ plot_map()
+ 
+#Increase the intensity of the shadow:
+volcano \%>\%
+ sphere_shade() \%>\%
+ add_shadow(shadowmap,0.3) \%>\%
+ plot_map()
 }

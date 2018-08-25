@@ -9,7 +9,19 @@
 #'@return Shaded texture map.
 #'@export
 #'@examples
-#'#TBD
+#'#Raytrace the `volcano` elevation map and add that shadow to the output of sphere_shade()
+#'shadowmap = ray_shade(volcano)
+#'
+#'volcano %>%
+#'  sphere_shade() %>%
+#'  add_shadow(shadowmap) %>%
+#'  plot_map()
+#'  
+#'#Increase the intensity of the shadow:
+#'volcano %>%
+#'  sphere_shade() %>%
+#'  add_shadow(shadowmap,0.3) %>%
+#'  plot_map()
 add_shadow = function(hillshade, shadowmap, max_darken = 0.7) {
   if(class(shadowmap) == "array" && class(hillshade) == "matrix") {
     tempstore = hillshade

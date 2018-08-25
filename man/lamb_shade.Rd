@@ -5,7 +5,7 @@
 \title{lambshade}
 \usage{
 lamb_shade(heightmap, rayangle = 45, sunangle = 315, zscale = 1,
-  zero_negative = TRUE, remove_edges = TRUE)
+  zero_negative = TRUE)
 }
 \arguments{
 \item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.}
@@ -17,8 +17,6 @@ lamb_shade(heightmap, rayangle = 45, sunangle = 315, zscale = 1,
 \item{zscale}{Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis.}
 
 \item{zero_negative}{Default `TRUE`. Zeros out all values below 0 (corresponding to surfaces facing away from the light source).}
-
-\item{remove_edges}{Default `TRUE`. Slices off artifacts on the edge of the shadow matrix.}
 }
 \value{
 Matrix of light intensities at each point.
@@ -31,7 +29,9 @@ intensity is proportional to the cosine of the normal ve
 \examples{
 #Here we produce a light intensity map of the `volcano` elevation map.
 volcanointensity = lamb_shade(heightmap = volcano, 
-   rayangle = 55, 
-   sunangle = 45, 
-   zscale = 1)
+   rayangle = 60, 
+   sunangle = 25, 
+   zscale = 1) 
+   
+plot_map(volcanointensity)
 }

@@ -14,7 +14,13 @@
 #'all corners are specified), the mid-points will just be interpolated from the main colors.
 #'@export
 #'@examples
-#'#Here we produce a light intensity map of the `volcano` elevation map.
+#'#Here is the `imhof1` palette:
+#'create_texture("#fff673","#55967a","#8fb28a","#55967a","#cfe0a9") %>%
+#'  plot_map()
+#'
+#'#Here is the `unicorn` palette:
+#'create_texture("red","green","blue","yellow","white") %>%
+#'  plot_map()
 create_texture = function(lightcolor,shadowcolor,leftcolor,rightcolor,centercolor,cornercolors=NULL) {
   lightrgb = col2rgb(lightcolor)
   shadowrgb = col2rgb(shadowcolor)

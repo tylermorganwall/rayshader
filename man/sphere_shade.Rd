@@ -5,8 +5,7 @@
 \title{sphere_shade}
 \usage{
 sphere_shade(heightmap, sunangle = 315, texture = "imhof1",
-  normalvectors = NULL, zscale = 1, remove_edges = TRUE,
-  progbar = TRUE)
+  normalvectors = NULL, zscale = 1, progbar = TRUE)
 }
 \arguments{
 \item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.}
@@ -19,8 +18,6 @@ of the built-in palettes (`imhof1`,`imhof2`,`imhof3`,`imhof4`,`desert`, `bw`, an
 \item{normalvectors}{Default `NULL`. Cache of the normal vectors (from `calculate_normal` function). Supply this to speed up texture mapping.}
 
 \item{zscale}{Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis.}
-
-\item{remove_edges}{Default `TRUE`. Slices off artifacts on the edge of the shadow matrix.}
 
 \item{progbar}{Default `TRUE`. If `FALSE`, turns off progress bar.}
 }

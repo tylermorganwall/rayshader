@@ -6,7 +6,7 @@
 \usage{
 detect_water(heightmap, zscale = 1, cutoff = 0.999,
   min_area = length(heightmap)/400, normalvectors = NULL,
-  remove_edges = TRUE, keep_groups = FALSE, progbar = TRUE)
+  keep_groups = FALSE, progbar = TRUE)
 }
 \arguments{
 \item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All grid points are assumed to be evenly spaced.}
@@ -19,8 +19,6 @@ of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
 \item{min_area}{Default length(heightmap)/400. Minimum area (in units of the height matrix x and y spacing) to be considered a body of water.}
 
 \item{normalvectors}{Default `NULL`. Pre-computed array of normal vectors from the `calculate_normal` function. Supplying this will speed up water detection.}
-
-\item{remove_edges}{Default `TRUE`. Slices off artifacts on the edge of the shadow matrix.}
 
 \item{keep_groups}{Default `FALSE`. If `TRUE`, the matrix returned will retain the numbered grouping information.}
 

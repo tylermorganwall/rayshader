@@ -70,13 +70,17 @@ Displays the shaded map in 3D with the `rgl` package.
 }
 \examples{
 #Plotting a spherical texture map of the built-in `montereybay` dataset.
+\donttest{
 montereybay \%>\%
  sphere_shade(texture="desert") \%>\%
  plot_3d(montereybay,zscale=50)
+}
 
 #With a water layer  
+\donttest{
 montereybay \%>\%
  sphere_shade(texture="imhof2") \%>\%
  plot_3d(montereybay, zscale=50, water = TRUE, watercolor="imhof2", 
          waterlinecolor="white", waterlinealpha=0.5)
+}
 }
