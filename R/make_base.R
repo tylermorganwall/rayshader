@@ -39,8 +39,8 @@ make_base = function(heightmap,basedepth=0,basecolor="grey20",zscale=1) {
     heightlist4[[i+length(heightmap4)]] = matrix(c(i,i+1,i+1, heightmap4[i],basedepth,heightmap4[i+1], -ncol(heightmap),-ncol(heightmap),-ncol(heightmap)),3,3)[c(1,3,2),]
   }
   heightmat4 = do.call(rbind,heightlist4)
-  heightlist5[[1]] =  matrix(c(0,nrow(heightmap),nrow(heightmap),basedepth,basedepth,basedepth,0,0,-ncol(heightmap)),3,3)[c(1,3,2),]
-  heightlist5[[2]] =   matrix(c(0,0,nrow(heightmap),basedepth,basedepth,basedepth,-ncol(heightmap),0,-ncol(heightmap)),3,3)[c(1,3,2),]
+  heightlist5[[1]] =  matrix(c(1,nrow(heightmap),nrow(heightmap),basedepth,basedepth,basedepth,-1,-1,-ncol(heightmap)),3,3)[c(1,3,2),]
+  heightlist5[[2]] =   matrix(c(1,1,nrow(heightmap),basedepth,basedepth,basedepth,-ncol(heightmap),-1,-ncol(heightmap)),3,3)[c(1,3,2),]
   heightmat5 = do.call(rbind,heightlist5)
   fullsides = rbind(heightmat1,heightmat2,heightmat3,heightmat4,heightmat5)
   rgl::triangles3d(fullsides,lit=FALSE,color=basecolor,front="fill",back="culled")

@@ -131,14 +131,6 @@ plot_3d = function(hillshade, heightmap, zscale=1,
   tempmap = tempfile()
   save_png(hillshade,tempmap)
   rgl.surface(1:nrow(heightmap),-(1:ncol(heightmap)),heightmap[,ncol(heightmap):1]/zscale,texture=paste0(tempmap,".png"),lit=FALSE)
-  if(water) {
-    rgl.surface(c(1,nrow(heightmap)),c(-1,-ncol(heightmap)),matrix(waterdepth,2,2),color=watercolor,lit=FALSE,alpha=wateralpha)
-    make_water(heightmap/zscale,waterheight=waterdepth,wateralpha=wateralpha,watercolor=watercolor)
-  }
-  if(!is.null(waterlinecolor) && water) {
-    make_lines(heightmap,basedepth=waterdepth,linecolor=waterlinecolor,zscale=zscale,linewidth = linewidth,alpha=waterlinealpha,solid=FALSE)
-    make_waterlines(heightmap,waterdepth=waterdepth,linecolor=waterlinecolor,zscale=zscale,alpha=waterlinealpha,lwd=linewidth)
-  }
   rgl.bg(color=background)
   rgl.viewpoint(zoom=zoom,phi=phi,theta=theta,fov=fov)
   par3d("windowRect" = c(0,0,windowsize), ...)
@@ -146,7 +138,15 @@ plot_3d = function(hillshade, heightmap, zscale=1,
     make_base(heightmap,basedepth=soliddepth,basecolor=solidcolor,zscale=zscale)
   }
   if(!is.null(solidlinecolor) && solid) {
-    make_lines(heightmap,basedepth=soliddepth,linecolor=solidlinecolor,zscale=zscale)
+    make_lines(heightmap,basedepth=soliddepth,linecolor=solidlinecolor,zscale=zscale,linewidth = linewidth)
+  }
+  if(water) {
+    rgl.surface(c(1,nrow(heightmap)),c(-1,-ncol(heightmap)),matrix(waterdepth,2,2),color=watercolor,lit=FALSE,alpha=wateralpha)
+    make_water(heightmap/zscale,waterheight=waterdepth,wateralpha=wateralpha,watercolor=watercolor)
+  }
+  if(!is.null(waterlinecolor) && water) {
+    make_lines(heightmap,basedepth=waterdepth,linecolor=waterlinecolor,zscale=zscale,linewidth = linewidth,alpha=waterlinealpha,solid=FALSE)
+    make_waterlines(heightmap,waterdepth=waterdepth,linecolor=waterlinecolor,zscale=zscale,alpha=waterlinealpha,lwd=linewidth)
   }
   if(shadow) {
     make_shadow(nrow(heightmap),  ncol(heightmap), shadowdepth, shadowwidth, background, shadowcolor)

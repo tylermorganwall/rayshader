@@ -1,6 +1,6 @@
 
-rayshader
-=========
+rayshader<img src="man/figures/raylogosmall.png" align="right" />
+=========================================================
 
 <img src="man/figures/volcano_r_small.gif" ></img>
 
