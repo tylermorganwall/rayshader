@@ -26,7 +26,7 @@ make_shadow = function(rows, cols, basedepth, shadowwidth, color, shadowcolor) {
   tempmap = tempfile()
   write_png(shadowarray,tempmap)
   rgl.surface((-shadowwidth+1):(rows+shadowwidth),
-              (-shadowwidth+1):(cols+shadowwidth),
+              -(-shadowwidth+1):-(cols+shadowwidth),
               basedepth,texture=paste0(tempmap,".png"),
               lit=FALSE,back="culled")
 }

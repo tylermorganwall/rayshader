@@ -27,7 +27,7 @@ make_waterlines = function(heightmap,waterdepth=0,linecolor="grey40",zscale=1,al
     } 
     if((heightval1[i] > waterdepth || i == length(heightval1)) && drawing) {
       drawing = FALSE
-      heightlist[[counter]] = matrix(c(1,1,waterdepth,waterdepth,startcoord,i),2,3)
+      heightlist[[counter]] = matrix(c(1,1,waterdepth,waterdepth,-startcoord,-i),2,3)
       counter = counter + 1
     }
   }
@@ -40,7 +40,7 @@ make_waterlines = function(heightmap,waterdepth=0,linecolor="grey40",zscale=1,al
     } 
     if((heightval2[i] > waterdepth || i == length(heightval2)) && drawing) {
       drawing = FALSE
-      heightlist[[counter]] = matrix(c(startcoord,i,waterdepth,waterdepth,1,1),2,3)
+      heightlist[[counter]] = matrix(c(startcoord,i,waterdepth,waterdepth,-1,-1),2,3)
       counter = counter + 1
     }
   }
@@ -53,7 +53,7 @@ make_waterlines = function(heightmap,waterdepth=0,linecolor="grey40",zscale=1,al
     } 
     if((heightval3[i] > waterdepth || i == length(heightval3)) && drawing) {
       drawing = FALSE
-      heightlist[[counter]] = matrix(c(nrow(heightmap),nrow(heightmap),waterdepth,waterdepth,startcoord,i),2,3)  
+      heightlist[[counter]] = matrix(c(nrow(heightmap),nrow(heightmap),waterdepth,waterdepth,-startcoord,-i),2,3)  
       counter = counter + 1
     }
   }
@@ -66,7 +66,7 @@ make_waterlines = function(heightmap,waterdepth=0,linecolor="grey40",zscale=1,al
     } 
     if((heightval4[i] > waterdepth || i == length(heightval4)) && drawing) {
       drawing = FALSE
-      heightlist[[counter]] = matrix(c(startcoord,i,waterdepth,waterdepth,ncol(heightmap),ncol(heightmap)),2,3)
+      heightlist[[counter]] = matrix(c(startcoord,i,waterdepth,waterdepth,-ncol(heightmap),-ncol(heightmap)),2,3)
       counter = counter + 1
     }
   }

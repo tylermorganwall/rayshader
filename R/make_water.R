@@ -21,29 +21,29 @@ make_water = function(heightmap,waterheight=mean(heightmap),watercolor="lightblu
   heightlist5 = list()
   for(i in 1:(length(heightmap1)-1)) {
     if(heightmap1[i] < waterheight) {
-      heightlist1[[i]] = matrix(c(1,1,1, heightmap1[i],waterheight,waterheight, i,i,i+1),3,3)[c(1,3,2),]
-      heightlist1[[i+length(heightmap1)]] = matrix(c(1,1,1, heightmap1[i],waterheight,heightmap1[i+1], i,i+1,i+1),3,3)[c(1,3,2),]
+      heightlist1[[i]] = matrix(c(1,1,1, heightmap1[i],waterheight,waterheight, -i,-i,-i-1),3,3)
+      heightlist1[[i+length(heightmap1)]] = matrix(c(1,1,1, heightmap1[i],waterheight,heightmap1[i+1], -i,-i-1,-i-1),3,3)
     }
   }
   heightmat1 = do.call(rbind,heightlist1)
   for(i in 1:(length(heightmap2)-1)) {
     if(heightmap2[i] < waterheight) {
-      heightlist2[[i]] = matrix(c(i,i+1,i,  heightmap2[i],waterheight,waterheight, 1,1,1),3,3)[c(1,3,2),]
-      heightlist2[[i+length(heightmap2)]] = matrix(c(i,i+1,i+1,  heightmap2[i],heightmap2[i+1],waterheight, 1,1,1),3,3)[c(1,3,2),]
+      heightlist2[[i]] = matrix(c(i,i+1,i,  heightmap2[i],waterheight,waterheight, -1,-1,-1),3,3)
+      heightlist2[[i+length(heightmap2)]] = matrix(c(i,i+1,i+1,  heightmap2[i],heightmap2[i+1],waterheight, -1,-1,-1),3,3)
     }
   }
   heightmat2 = do.call(rbind,heightlist2)
   for(i in 1:(length(heightmap3)-1)) {
     if(heightmap3[i] < waterheight) {
-      heightlist3[[i]] = matrix(c(nrow(heightmap),nrow(heightmap),nrow(heightmap),  heightmap3[i],waterheight,waterheight, i,i+1,i),3,3)[c(1,3,2),]
-      heightlist3[[i+length(heightmap3)]] = matrix(c(nrow(heightmap),nrow(heightmap),nrow(heightmap),  heightmap3[i],heightmap3[i+1],waterheight, i,i+1,i+1),3,3)[c(1,3,2),]
+      heightlist3[[i]] = matrix(c(nrow(heightmap),nrow(heightmap),nrow(heightmap),  heightmap3[i],waterheight,waterheight, -i,-i-1,-i),3,3)
+      heightlist3[[i+length(heightmap3)]] = matrix(c(nrow(heightmap),nrow(heightmap),nrow(heightmap),  heightmap3[i],heightmap3[i+1],waterheight, -i,-i-1,-i-1),3,3)
     }
   }
   heightmat3 = do.call(rbind,heightlist3)
   for(i in 1:(length(heightmap4)-1)) {
     if(heightmap4[i] < waterheight) {
-      heightlist4[[i]] = matrix(c(i,i,i+1, heightmap4[i],waterheight,waterheight, ncol(heightmap),ncol(heightmap),ncol(heightmap)),3,3)[c(1,3,2),]
-      heightlist4[[i+length(heightmap4)]] = matrix(c(i,i+1,i+1, heightmap4[i],waterheight,heightmap4[i+1], ncol(heightmap),ncol(heightmap),ncol(heightmap)),3,3)[c(1,3,2),]
+      heightlist4[[i]] = matrix(c(i,i,i+1, heightmap4[i],waterheight,waterheight, -ncol(heightmap),-ncol(heightmap),-ncol(heightmap)),3,3)
+      heightlist4[[i+length(heightmap4)]] = matrix(c(i,i+1,i+1, heightmap4[i],waterheight,heightmap4[i+1], -ncol(heightmap),-ncol(heightmap),-ncol(heightmap)),3,3)
     }
   }
   heightmat4 = do.call(rbind,heightlist4)

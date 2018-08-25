@@ -9,19 +9,40 @@
 #'of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
 #'@param alpha Default `1`. Transparency.
 #'@param linewidth Default `2`. Linewidth
+#'@param solid Default `TRUE`. Whether it's solid or water.
 #'@keywords internal
-make_lines = function(heightmap,basedepth=0,linecolor="grey40",zscale=1,alpha=1,linewidth = 2) {
+make_lines = function(heightmap,basedepth=0,linecolor="grey40",zscale=1,alpha=1,linewidth = 2,solid=TRUE) {
   heightmap = heightmap[,ncol(heightmap):1]/zscale
   heightval1 = heightmap[2,2]
   heightval2 = heightmap[nrow(heightmap)-1,2]
   heightval3 = heightmap[2,ncol(heightmap)-1]
   heightval4 = heightmap[nrow(heightmap)-1,ncol(heightmap)-1]
   heightlist = list()
-  heightlist[[1]] = matrix(c(1,1,basedepth,heightval1,1,1),2,3)
-  heightlist[[2]] = matrix(c(nrow(heightmap),nrow(heightmap),basedepth,heightval2,1,1),2,3)
-  heightlist[[3]] = matrix(c(1,1,basedepth,heightval3,ncol(heightmap),ncol(heightmap)),2,3)
-  heightlist[[4]] = matrix(c(nrow(heightmap),nrow(heightmap),basedepth,heightval4,ncol(heightmap),ncol(heightmap)),2,3)
-  for(i in 1:4) {
+  if(solid) {
+    heightlist[[1]] = matrix(c(1,1,basedepth,heightval1,-1,-1),2,3)
+    heightlist[[2]] = matrix(c(nrow(heightmap),nrow(heightmap),basedepth,heightval2,-1,-1),2,3)
+    heightlist[[3]] = matrix(c(1,1,basedepth,heightval3,-ncol(heightmap),-ncol(heightmap)),2,3)
+    heightlist[[4]] = matrix(c(nrow(heightmap),nrow(heightmap),basedepth,heightval4,-ncol(heightmap),-ncol(heightmap)),2,3)
+  } else {
+    counter = 1
+    if(basedepth > heightval1) {
+      heightlist[[counter]] = matrix(c(1,1,basedepth,heightval1,-1,-1),2,3)
+      counter = counter + 1
+    }
+    if(basedepth > heightval2) {
+      heightlist[[counter]] = matrix(c(nrow(heightmap),nrow(heightmap),basedepth,heightval2,-1,-1),2,3)
+      counter = counter + 1
+    }
+    if(basedepth > heightval3) {
+      heightlist[[counter]] = matrix(c(1,1,basedepth,heightval3,-ncol(heightmap),-ncol(heightmap)),2,3)
+      counter = counter + 1
+    }
+    if(basedepth > heightval4) {
+      heightlist[[counter]] = matrix(c(nrow(heightmap),nrow(heightmap),basedepth,heightval4,-ncol(heightmap),-ncol(heightmap)),2,3)
+      counter = counter + 1
+    }
+  }
+  for(i in seq_len(length(heightlist))) {
     rgl::lines3d(heightlist[[i]],color=linecolor,lwd=linewidth,alpha=alpha)
   }
 }
