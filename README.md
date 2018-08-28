@@ -40,8 +40,9 @@ Rayshader also has two functions to detect and add water to maps:
 And two functions to display and save your maps:
 
 -   `plot_map` Plots the current map. Accepts either a matrix or an array.
--   `write_png` Writes the current map to disk with a user-specified filename.
+-   `save_png` Saves the current map to disk with a user-specified filename.
 -   `plot_3d` Creates a 3D map, given a texture and an elevation matrix. You can customize the appearance of the map, as well as add a user-defined water level.
+-   `save_3dprint` Writes a stereolithography (STL) file of the current 3D map to create a 3D printable map. The user can specify the physical maximum width of the 3D print when calling the function.
 
 All of these functions are designed to be used with the magrittr pipe `%>%`.
 
