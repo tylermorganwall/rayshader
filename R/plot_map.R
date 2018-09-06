@@ -13,7 +13,11 @@
 plot_map = function(hillshade, rotate=0, ...) {
   rotatef = function(x) t(apply(x, 2, rev))
   if(!(rotate %in% c(0,90,180,270))) {
-    warning(paste0("Rotation value ",rotate," not in c(0,90,180,270). Ignoring"))
+    if(length(rotate) == 1) {
+      warning(paste0("Rotation value ",rotate," not in c(0,90,180,270). Ignoring"))
+    } else {
+      warning(paste0("Rotation argument `rotate` not in c(0,90,180,270). Ignoring"))
+    }
     number_of_rots = 0
   } else {
     number_of_rots = rotate/90

@@ -44,12 +44,12 @@ List calculate_normal_cpp(const NumericMatrix& heightmap, bool progbar) {
         storevector3 = (storevector1 + storevector2);
         storevector3 = storevector3/sqrt(pow(storevector3(0),2) + pow(storevector3(1),2) + pow(storevector3(2),2));
       } else {
-        if((row == 0 || col == 0) && (row != heightmap.nrow() - 1 || col != heightmap.ncol() - 1)) {
+        if((row == 0 || col == 0) && (row != heightmap.nrow() - 1 && col != heightmap.ncol() - 1)) {
           tempvector1(2) = heightmap(row,col)-heightmap(row,col+1);
           tempvector2(2) = heightmap(row,col)-heightmap(row+1,col);
           storevector3 = vcrossnorm2(tempvector1,tempvector2);
         } 
-        if((row != 0 || col != 0) && (row == heightmap.nrow() - 1 || col == heightmap.ncol() - 1)) {
+        if((row != 0 && col != 0) && (row == heightmap.nrow() - 1 || col == heightmap.ncol() - 1)) {
           tempvector3(2) = heightmap(row,col)-heightmap(row,col-1);
           tempvector4(2) = heightmap(row,col)-heightmap(row-1,col);
           storevector3 = vcrossnorm2(tempvector3,tempvector4);

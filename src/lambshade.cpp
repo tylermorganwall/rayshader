@@ -35,12 +35,12 @@ NumericMatrix lambshade_cpp(NumericMatrix heightmap, NumericVector rayvector) {
         storevector2 = vcrossnorm(tempvector3,tempvector4);
         shaded_matrix(row,col) = dot_product((storevector1 + storevector2)/2, rayvector);
       } else {
-        if((row == 0 || col == 0) && (row != heightmap.nrow() - 1 || col != heightmap.ncol() - 1)) {
+        if((row == 0 || col == 0) && (row != heightmap.nrow() - 1 && col != heightmap.ncol() - 1)) {
           tempvector1(2) = heightmap(row,col)-heightmap(row,col+1);
           tempvector2(2) = heightmap(row,col)-heightmap(row+1,col);
           shaded_matrix(row,col) = dot_product(vcrossnorm(tempvector1,tempvector2), rayvector);
         } 
-        if((row != 0 || col != 0) && (row == heightmap.nrow() - 1 || col == heightmap.ncol() - 1)) {
+        if((row != 0 && col != 0) && (row == heightmap.nrow() - 1 || col == heightmap.ncol() - 1)) {
           tempvector3(2) = heightmap(row,col)-heightmap(row,col-1);
           tempvector4(2) = heightmap(row,col)-heightmap(row-1,col);
           shaded_matrix(row,col) = dot_product(vcrossnorm(tempvector3,tempvector4), rayvector);

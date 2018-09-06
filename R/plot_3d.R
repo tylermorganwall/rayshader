@@ -71,6 +71,9 @@ plot_3d = function(hillshade, heightmap, zscale=1,
       }
     }
   }
+  if(any(hillshade > 1 || hillshade < 0)) {
+    stop("Argument `hillshade` must not contain any entries less than 0 or more than 1")
+  }
   flipud = function(x) {
     x[nrow(x):1,]
   }
