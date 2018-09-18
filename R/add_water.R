@@ -37,7 +37,9 @@ add_water = function(hillshade, watermap, color="imhof1") {
     color = col2rgb("#b2f4ff")
   } else if (color == "bw") {
     color = col2rgb("#ffffff")
-  } 
+  } else if (color != "unicorn") {
+    color = col2rgb(color)
+  }
   if(class(hillshade) != "array") {
     if (class(hillshade) == "matrix") {
       if(any(hillshade > 1 | hillshade < 0)) {
