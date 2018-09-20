@@ -1,7 +1,7 @@
 Package: rayshader
 Type: Package
 Title: Create and Visualize Hillshaded Maps from Elevation Matrices
-Version: 0.5.3
+Version: 0.5.4
 Date: 2018-08-25
 Author: Tyler Morgan-Wall
 Maintainer: Tyler Morgan-Wall <tylermw@gmail.com>

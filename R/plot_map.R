@@ -41,7 +41,7 @@ plot_map = function(hillshade, rotate=0, ...) {
         hillshade = newarrayt
       }
     }
-    suppressWarnings(raster::plotRGB(raster::brick(hillshade, xmn = 1, xmx = dim(hillshade)[2],ymn = 1, ymx = dim(hillshade)[1], ...),scale=max(hillshade), ...))
+    suppressWarnings(raster::plotRGB(raster::brick(hillshade, xmn = 0.5, xmx = dim(hillshade)[2]+ 0.5,ymn = 0.5, ymx = dim(hillshade)[1] + 0.5, ...),scale=1, ...))
   } else if(class(hillshade) == "matrix") {
     flipud = function(matrix) {
       matrix[nrow(matrix):1,]
@@ -55,7 +55,7 @@ plot_map = function(hillshade, rotate=0, ...) {
       }
     }
     array_from_mat = array(flipud(t(hillshade)),dim=c(ncol(hillshade),nrow(hillshade),3))
-    suppressWarnings(raster::plotRGB(raster::brick(array_from_mat, xmn = 1, xmx = dim(array_from_mat)[2],ymn = 1, ymx = dim(array_from_mat)[1], ...),scale=max(array_from_mat), ...))
+    suppressWarnings(raster::plotRGB(raster::brick(array_from_mat, xmn = 0.5, xmx = dim(array_from_mat)[2] + 0.5,ymn =  0.5, ymx = dim(array_from_mat)[1] +  0.5, ...),scale=1, ...))
   } else {
     stop("`hillshade` is neither array nor matrix--convert to either to plot.")
   }
