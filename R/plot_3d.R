@@ -56,7 +56,7 @@ plot_3d = function(hillshade, heightmap, zscale=1,
   #setting default zscale if montereybay is used and tell user about zscale
   argnameschar = unlist(lapply(as.list(sys.call()),as.character))[-1]
   argnames = as.list(sys.call())
-  if(argnameschar[2] == "montereybay" || (!is.na(argnameschar["heightmap"]) && argnameschar["heightmap"] == "montereybay")) {
+  if(!is.null(attr(heightmap,"rayshader_data"))) {
     if (!("zscale" %in% as.character(names(argnames)))) {
       if(length(argnames) <= 3) {
         zscale = 200
@@ -89,10 +89,10 @@ plot_3d = function(hillshade, heightmap, zscale=1,
     stop("heightmap argument missing--need to input both hillshade and original elevation matrix")
   }
   if(soliddepth == "auto") {
-    soliddepth = min(heightmap)/zscale - (max(heightmap)/zscale-min(heightmap)/zscale)/5
+    soliddepth = min(heightmap,na.rm = TRUE)/zscale - (max(heightmap,na.rm = TRUE)/zscale-min(heightmap,na.rm = TRUE)/zscale)/5
   }
   if(shadowdepth == "auto") {
-    shadowdepth = soliddepth - (max(heightmap)/zscale-min(heightmap)/zscale)/5
+    shadowdepth = soliddepth - (max(heightmap,na.rm = TRUE)/zscale-min(heightmap,na.rm = TRUE)/zscale)/5
   }
   if(shadowwidth == "auto") {
     shadowwidth = floor(min(dim(heightmap))/10)
@@ -143,15 +143,15 @@ plot_3d = function(hillshade, heightmap, zscale=1,
   if(!is.null(solidlinecolor) && solid) {
     make_lines(heightmap,basedepth=soliddepth,linecolor=solidlinecolor,zscale=zscale,linewidth = linewidth)
   }
+  if(shadow) {
+    make_shadow(nrow(heightmap),  ncol(heightmap), shadowdepth, shadowwidth, background, shadowcolor)
+  }
   if(water) {
-    rgl.surface(c(1,nrow(heightmap)),c(-1,-ncol(heightmap)),matrix(waterdepth,2,2),color=watercolor,lit=FALSE,alpha=wateralpha)
-    make_water(heightmap/zscale,waterheight=waterdepth,wateralpha=wateralpha,watercolor=watercolor)
+    rgl.surface(c(1,nrow(heightmap)),c(-1,-ncol(heightmap)),matrix(waterdepth/zscale,2,2),color=watercolor,lit=FALSE,alpha=wateralpha)
+    make_water(heightmap/zscale,waterheight=waterdepth/zscale,wateralpha=wateralpha,watercolor=watercolor)
   }
   if(!is.null(waterlinecolor) && water) {
     make_lines(heightmap,basedepth=waterdepth,linecolor=waterlinecolor,zscale=zscale,linewidth = linewidth,alpha=waterlinealpha,solid=FALSE)
-    make_waterlines(heightmap,waterdepth=waterdepth,linecolor=waterlinecolor,zscale=zscale,alpha=waterlinealpha,lwd=linewidth)
-  }
-  if(shadow) {
-    make_shadow(nrow(heightmap),  ncol(heightmap), shadowdepth, shadowwidth, background, shadowcolor)
+    make_waterlines(heightmap,waterdepth=waterdepth/zscale,linecolor=waterlinecolor,zscale=zscale,alpha=waterlinealpha,lwd=linewidth)
   }
 }

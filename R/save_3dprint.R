@@ -6,6 +6,8 @@
 #'@param maxwidth Default `125`. Desired maximum width of the 3D print in millimeters. Uses the units set in `unit` argument. Can also pass in a string, "125mm" or "5in".
 #'@param unit Default `mm`. Units of the `maxwidth` argument. Can also be set to inches with `in`. 
 #'@param rotate Default `TRUE`. If `FALSE`, the map will be printing on its side. This may improve resolution for some 3D printing types.
+#'@param shadow_exist Default `TRUE`. Set to `FALSE` if shadow is not present.
+#'@param remove_water Default `FALSE`. If `TRUE`, will remove the water layer added to the scene.
 #'@return Writes an STL file to `filename`. Regardless of the unit displayed, the output STL is in millimeters.
 #'@export
 #'@examples
@@ -41,13 +43,29 @@
 #'  plot_3d(volcano,zscale=3)
 #'save_3dprint(filename_stl, maxwidth = "120mm")
 #'}
-save_3dprint = function(filename,maxwidth=125,unit="mm",rotate=TRUE) {
+save_3dprint = function(filename,maxwidth=125,unit="mm",rotate=TRUE, shadow_exist = TRUE, remove_water = FALSE) {
   if(substring(filename, nchar(filename)-3,nchar(filename)) != ".stl") {
     filename = paste0(filename,".stl")
   }
-  ids = rgl::rgl.ids()
-  if(nrow(ids) > 2) {
-    rgl::rgl.pop(id = ids$id[3:nrow(ids)])
+  if(shadow_exist) {
+    ids = rgl::rgl.ids()
+    for(i in 2:nrow(ids)) {
+      if(ids$type[i] == "surface") {
+        rgl::rgl.pop(id=ids$id[i])
+        break
+      }
+    }
+  }
+  if(remove_water) {
+    ids = rgl::rgl.ids()
+    for(i in seq(nrow(ids),2,-1)) {
+      if(ids$type[i] != "surface") {
+        rgl::rgl.pop(id=ids$id[i])
+      } else {
+        rgl::rgl.pop(id=ids$id[i])
+        break
+      }
+    }
   }
   inch2mm = function(inch) {
     inch/0.0393

@@ -4,7 +4,8 @@
 \alias{save_3dprint}
 \title{save_3dprint}
 \usage{
-save_3dprint(filename, maxwidth = 125, unit = "mm", rotate = TRUE)
+save_3dprint(filename, maxwidth = 125, unit = "mm", rotate = TRUE,
+  shadow_exist = TRUE, remove_water = FALSE)
 }
 \arguments{
 \item{filename}{String with the filename. If `.stl` is not at the end of the string, it will be appended automatically.}
@@ -14,6 +15,10 @@ save_3dprint(filename, maxwidth = 125, unit = "mm", rotate = TRUE)
 \item{unit}{Default `mm`. Units of the `maxwidth` argument. Can also be set to inches with `in`.}
 
 \item{rotate}{Default `TRUE`. If `FALSE`, the map will be printing on its side. This may improve resolution for some 3D printing types.}
+
+\item{shadow_exist}{Default `TRUE`. Set to `FALSE` if shadow is not present.}
+
+\item{remove_water}{Default `FALSE`. If `TRUE`, will remove the water layer added to the scene.}
 }
 \value{
 Writes an STL file to `filename`. Regardless of the unit displayed, the output STL is in millimeters.

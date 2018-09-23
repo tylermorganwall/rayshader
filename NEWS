@@ -1,0 +1,18 @@
+rayshader v0.5.1 (Release date: 2018-09-11):
+================
+
+• Added `save_3dprint`, a function that exports 3D maps to a stereolithography (STL) format for 3D printing.
+
+• Changed `write_png` to `save_png`.
+
+• Corrected orientation of polygons in `plot_3d`
+
+• Fixed small overhand on 3D base.
+
+• Fixed out-of-bounds bug in C++ normal vector generation.
+
+• `plot_map()` no longer crashes R when "rotate" is a matrix rather than a single numeric value.
+
+• `plot_3d()` now displays warning if hillshade argument contains any values below 0 or more than 1.
+
+• Add hex logo to README

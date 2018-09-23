@@ -1,7 +1,7 @@
 #'@title plot_map
 #'
 #'@description Displays the shaded map. If the input is an array, it uses raster's plotRGB
-#'function. If it's a matrix, it uses the 
+#'function.
 #'
 #'@param hillshade Hillshade to be plotted.
 #'@param rotate Default 0. Rotates the output. Possible values: 0, 90, 180, 270.

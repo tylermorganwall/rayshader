@@ -1,6 +1,6 @@
 #'@title make_water
 #'
-#'@description Makes the base below the 3D elevation map.
+#'@description Makes the water in the 3D elevation map.
 #'
 #'@param heightmap A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.
 #'@param waterheight Default `0`.

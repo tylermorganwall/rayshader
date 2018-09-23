@@ -29,6 +29,30 @@ lambshade_cpp <- function(heightmap, rayvector) {
     .Call(`_rayshader_lambshade_cpp`, heightmap, rayvector)
 }
 
+subsample <- function(circle, size) {
+    .Call(`_rayshader_subsample`, circle, size)
+}
+
+subsample_rect <- function(rect, binsx, binsy) {
+    .Call(`_rayshader_subsample_rect`, rect, binsx, binsy)
+}
+
+gen_circle_psf <- function(radius) {
+    .Call(`_rayshader_gen_circle_psf`, radius)
+}
+
+is_inside <- function(sizehex, positionx, positiony, sinval, cosval) {
+    .Call(`_rayshader_is_inside`, sizehex, positionx, positiony, sinval, cosval)
+}
+
+gen_hex_psf <- function(radius, rotation) {
+    .Call(`_rayshader_gen_hex_psf`, radius, rotation)
+}
+
+psf <- function(image, blurmatrix, depthmap, depth, custombokeh, type, bokehintensity, bokehlimit, rotation, progbar, channel) {
+    .Call(`_rayshader_psf`, image, blurmatrix, depthmap, depth, custombokeh, type, bokehintensity, bokehlimit, rotation, progbar, channel)
+}
+
 rayshade_multicore <- function(sunangle, anglebreaks, heightmap, zscale, maxsearch, row, cache_mask) {
     .Call(`_rayshader_rayshade_multicore`, sunangle, anglebreaks, heightmap, zscale, maxsearch, row, cache_mask)
 }

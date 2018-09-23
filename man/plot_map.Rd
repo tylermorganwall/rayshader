@@ -15,7 +15,7 @@ plot_map(hillshade, rotate = 0, ...)
 }
 \description{
 Displays the shaded map. If the input is an array, it uses raster's plotRGB
-function. If it's a matrix, it uses the
+function.
 }
 \examples{
 #Plotting a spherical texture map of the volcano dataset.

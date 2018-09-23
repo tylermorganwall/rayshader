@@ -15,7 +15,7 @@ ambient_shade(heightmap, anglebreaks = seq(1, 46, 15), sunbreaks = 12,
 
 \item{sunbreaks}{Default 12. Number of rays to be sent out in a circle, evenly spaced, around the point being tested.}
 
-\item{maxsearch}{Default 20. The maximum distance that the system should propogate rays to check for .}
+\item{maxsearch}{Default `20`. The maximum horizontal distance that the system should propogate rays to check for surface intersections.}
 
 \item{multicore}{Default FALSE. If TRUE, multiple cores will be used to compute the shadow matrix. By default, this uses all cores available, unless the user has
 set `options("cores")` in which the multicore option will only use that many cores.}
@@ -29,6 +29,9 @@ set `options("cores")` in which the multicore option will only use that many cor
 \item{progbar}{Default `TRUE`. If `FALSE`, turns off progress bar.}
 
 \item{...}{Additional arguments to pass to the `makeCluster` function when `multicore=TRUE`.}
+
+\item{breakmap}{Default `NULL`. A matrix of points for each elevation value indicating the maximum height to propogate the ray. This can speed up raytracing, particularly for maps with large areas of relatively flat terrain with a few large features.
+This matrix can be generated with `gen_breakmap()`.}
 }
 \value{
 Shaded texture map.
