@@ -16,6 +16,9 @@
 #'@examples
 #'plot_map(sphere_shade(volcano,texture="desert"))
 sphere_shade = function(heightmap, sunangle=315, texture="imhof1", normalvectors = NULL, zscale=1, progbar = TRUE) {
+  if(any(is.na(heightmap))) {
+        message("Warning: heightmap matrix object contains NA's.  This can effect results and cause save_3dprint() to export a surface in the stl file instead of a volume.")
+  } 
   sunangle = sunangle/180*pi
   flipud = function(x) {
     x[,ncol(x):1]
