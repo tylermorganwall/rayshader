@@ -30,11 +30,16 @@ NumericMatrix rayshade_cpp(double sunangle, NumericVector anglebreaks, NumericMa
   bool breakloop;
   double maxheight = max(heightmap);
   RProgress::RProgress pb("Raytracing [:bar] ETA: :eta");
+  NumericVector tanangles(numberangles);
   
   if(progbar) {
     pb.set_total(numberrows);
   }
   
+  for(int i = 0; i < numberangles; i++) {
+    tanangles(i) = tan(anglebreaks[i]);
+  }
+
   for(int i = 0; i < numberrows; i++) {
     Rcpp::checkUserInterrupt();
     if(progbar) {
@@ -47,7 +52,7 @@ NumericMatrix rayshade_cpp(double sunangle, NumericVector anglebreaks, NumericMa
           for(int k = 1; k < maxdist; k++) {
             xcoord = i + sinsunangle * k;
             ycoord = j + cossunangle * k;
-            tanangheight = heightmap(i, j) + tan(anglebreaks[angentry]) * k * zscale;
+            tanangheight = heightmap(i, j) + tanangles[angentry] * k * zscale;
             if(xcoord > numberrows-1 || ycoord > numbercols-1 || xcoord < 0 || ycoord < 0 || tanangheight > maxheight) {
               break;
             } else {

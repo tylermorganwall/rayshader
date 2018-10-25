@@ -26,6 +26,11 @@ NumericMatrix rayshade_multicore(double sunangle, NumericVector anglebreaks, Num
   int numberangles = anglebreaks.size();
   bool breakloop;
   double maxheight = max(heightmap);
+  NumericVector tanangles(numberangles);
+
+  for(int i = 0; i < numberangles; i++) {
+    tanangles(i) = tan(anglebreaks[i]);
+  }
   
   for(int j = 0; j < numbercols; j++) {
     Rcpp::checkUserInterrupt();
@@ -35,7 +40,7 @@ NumericMatrix rayshade_multicore(double sunangle, NumericVector anglebreaks, Num
         for(int k = 1; k < maxdist; k++) {
           xcoord = row + sinsunangle * k;
           ycoord = j + cossunangle * k;
-          tanangheight = heightmap(row, j) + tan(anglebreaks[angentry]) * k * zscale;
+          tanangheight = heightmap(row, j) +  tanangles(angentry) * k * zscale;
           if(xcoord > numberrows-1 || ycoord > numbercols-1 || xcoord < 0 || ycoord < 0 || tanangheight > maxheight) {
             break;
           } else {
