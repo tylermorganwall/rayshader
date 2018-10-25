@@ -32,6 +32,8 @@ NumericMatrix rayshade_multicore(double sunangle, NumericVector anglebreaks, Num
     tanangles(i) = tan(anglebreaks[i]);
   }
   
+  double invnumberangles = 1 / numberangles;
+  
   for(int j = 0; j < numbercols; j++) {
     Rcpp::checkUserInterrupt();
     if(cache_mask(j)) {
@@ -52,21 +54,21 @@ NumericMatrix rayshade_multicore(double sunangle, NumericVector anglebreaks, Num
             // Get case where xcoord and ycoord integer number
             if(floorxcoord == ceilxcoord && floorycoord == ceilycoord) {
               if (tanangheight < heightmap(xcoord,ycoord)) {
-                shadowmatrix(0, j) =  shadowmatrix(0, j) - 1.0 / numberangles;
+                shadowmatrix(0, j) =  shadowmatrix(0, j) - invnumberangles;
                 break;
               }
             }
             
             if(fabs(floorxcoord - ceilxcoord) < precisionval && floorycoord != ceilycoord) {
               if (tanangheight < (heightmap(floorxcoord,ceilycoord) - heightmap(floorxcoord,floorycoord))*(ycoord-floorycoord) + heightmap(floorxcoord,floorycoord)) {
-                shadowmatrix(0, j) =  shadowmatrix(0, j) - 1.0 / numberangles;
+                shadowmatrix(0, j) =  shadowmatrix(0, j) - invnumberangles;
                 break;
               }
             }
             
             if(floorxcoord != ceilxcoord && fabs(floorycoord - ceilycoord) < precisionval) {
               if (tanangheight < (heightmap(ceilxcoord,floorycoord) - heightmap(floorxcoord,floorycoord))*(xcoord-floorxcoord) + heightmap(floorxcoord,floorycoord)) {
-                shadowmatrix(0, j) =  shadowmatrix(0, j) - 1.0 / numberangles;
+                shadowmatrix(0, j) =  shadowmatrix(0, j) - invnumberangles;
                 break;
               }
             }
@@ -85,7 +87,7 @@ NumericMatrix rayshade_multicore(double sunangle, NumericVector anglebreaks, Num
                                               floorxcoord, ceilxcoord,
                                               floorycoord, ceilycoord,
                                               xcoord, ycoord)) {
-              shadowmatrix(0, j) =  shadowmatrix(0, j) - 1.0 / numberangles;
+              shadowmatrix(0, j) =  shadowmatrix(0, j) - invnumberangles;
               break;
             } 
             if(k == (maxdist - 1)) breakloop = true;
