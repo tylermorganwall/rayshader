@@ -28,11 +28,11 @@ NumericMatrix rayshade_multicore(double sunangle, NumericVector anglebreaks, Num
   double maxheight = max(heightmap);
   
   for(int j = 0; j < numbercols; j++) {
+    Rcpp::checkUserInterrupt();
     if(cache_mask(j)) {
       for (int angentry = 0; angentry < numberangles; angentry++) {
         breakloop = false;
         for(int k = 1; k < maxdist; k++) {
-          Rcpp::checkUserInterrupt();
           xcoord = row + sinsunangle * k;
           ycoord = j + cossunangle * k;
           tanangheight = heightmap(row, j) + tan(anglebreaks[angentry]) * k * zscale;
