@@ -17,8 +17,16 @@ NumericMatrix rayshade_cpp(double sunangle, NumericVector anglebreaks, NumericMa
                            bool progbar) {
   
   double precisionval = 1e-10;
+  
+  //Cache trig functions
   double sinsunangle = sin(sunangle);
   double cossunangle = cos(sunangle);
+  int numberangles = anglebreaks.size();
+  NumericVector tanangles(numberangles);
+  for(int i = 0; i < numberangles; i++) {
+    tanangles(i) = tan(anglebreaks[i]);
+  }
+  
   int numbercols = heightmap.ncol();
   int numberrows = heightmap.nrow();
   NumericMatrix shadowmatrix(numberrows,numbercols);
@@ -26,19 +34,13 @@ NumericMatrix rayshade_cpp(double sunangle, NumericVector anglebreaks, NumericMa
   double xcoord, ycoord, tanangheight;
   double ceilxcoord,ceilycoord,floorxcoord,floorycoord;
   double maxdist = maxsearch;
-  int numberangles = anglebreaks.size();
   bool breakloop;
   double maxheight = max(heightmap);
   RProgress::RProgress pb("Raytracing [:bar] ETA: :eta");
-  NumericVector tanangles(numberangles);
-  double invnumberangles = 1 / numberangles;
+  double invnumberangles = 1 / (double)numberangles;
   
   if(progbar) {
     pb.set_total(numberrows);
-  }
-  
-  for(int i = 0; i < numberangles; i++) {
-    tanangles(i) = tan(anglebreaks[i]);
   }
 
   for(int i = 0; i < numberrows; i++) {

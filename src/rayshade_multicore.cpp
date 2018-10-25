@@ -32,7 +32,7 @@ NumericMatrix rayshade_multicore(double sunangle, NumericVector anglebreaks, Num
     tanangles(i) = tan(anglebreaks[i]);
   }
   
-  double invnumberangles = 1 / numberangles;
+  double invnumberangles = 1 / (double)numberangles;
   
   for(int j = 0; j < numbercols; j++) {
     Rcpp::checkUserInterrupt();
