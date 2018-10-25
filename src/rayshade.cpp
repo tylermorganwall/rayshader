@@ -36,6 +36,7 @@ NumericMatrix rayshade_cpp(double sunangle, NumericVector anglebreaks, NumericMa
   }
   
   for(int i = 0; i < numberrows; i++) {
+    Rcpp::checkUserInterrupt();
     if(progbar) {
       pb.tick();
     }
@@ -44,7 +45,6 @@ NumericMatrix rayshade_cpp(double sunangle, NumericVector anglebreaks, NumericMa
         for (int angentry = 0; angentry < numberangles; angentry++) {
           breakloop = FALSE;
           for(int k = 1; k < maxdist; k++) {
-            Rcpp::checkUserInterrupt();
             xcoord = i + sinsunangle * k;
             ycoord = j + cossunangle * k;
             tanangheight = heightmap(i, j) + tan(anglebreaks[angentry]) * k * zscale;

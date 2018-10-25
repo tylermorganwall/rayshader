@@ -1,3 +1,32 @@
+rayshader v0.6.1 (Release date: 2018-09-25):
+================
+
+• Moved Rcpp::checkUserInterrupt() to outer loop to speed up raytracing (thanks @brodieG)
+
+rayshader v0.6.0 (Release date: 2018-09-22):
+================
+
+• Added `render_depth()`, a post-processing effect to add depth of field to 3D maps.
+
+• Added `render_water()`, which either adds or replaces a water layer on the existing 3D map.
+
+• Added `add_overlay()`, which adds a transparent or semi-transparent overlay to the current hillshade.
+
+• Changed `save_3dprint()` to include the option to remove the shadow and water layers.
+
+Minor change:
+
+• Altered coordinates of plot_map to align with the center of the grid (thanks @mdsumner)
+
+• Added attribute to `montereybay` to mark it as internal data (for better user messages)
+
+Bug fixes:
+
+• Fix for add_water hex color (thanks @ozjimbob)
+
+• Fixed aspect ratio in plot_map() (thanks @mdsumner)
+
+
 rayshader v0.5.1 (Release date: 2018-09-11):
 ================
 
