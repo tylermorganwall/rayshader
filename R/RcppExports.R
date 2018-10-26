@@ -53,8 +53,8 @@ psf <- function(image, blurmatrix, depthmap, depth, custombokeh, type, bokehinte
     .Call(`_rayshader_psf`, image, blurmatrix, depthmap, depth, custombokeh, type, bokehintensity, bokehlimit, rotation, progbar, channel)
 }
 
-rayshade_multicore <- function(sunangle, anglebreaks, heightmap, zscale, maxsearch, row, cache_mask) {
-    .Call(`_rayshader_rayshade_multicore`, sunangle, anglebreaks, heightmap, zscale, maxsearch, row, cache_mask)
+rayshade_multicore <- function(sunangle, anglebreaks, heightmap, zscale, chunkindices, maxsearch, cache_mask) {
+    .Call(`_rayshader_rayshade_multicore`, sunangle, anglebreaks, heightmap, zscale, chunkindices, maxsearch, cache_mask)
 }
 
 rayshade_cpp <- function(sunangle, anglebreaks, heightmap, zscale, maxsearch, cache_mask, progbar) {

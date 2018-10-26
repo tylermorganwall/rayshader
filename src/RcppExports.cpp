@@ -177,19 +177,19 @@ BEGIN_RCPP
 END_RCPP
 }
 // rayshade_multicore
-NumericMatrix rayshade_multicore(double sunangle, NumericVector anglebreaks, NumericMatrix heightmap, double zscale, double maxsearch, int row, NumericVector& cache_mask);
-RcppExport SEXP _rayshader_rayshade_multicore(SEXP sunangleSEXP, SEXP anglebreaksSEXP, SEXP heightmapSEXP, SEXP zscaleSEXP, SEXP maxsearchSEXP, SEXP rowSEXP, SEXP cache_maskSEXP) {
+NumericMatrix rayshade_multicore(double sunangle, NumericVector anglebreaks, NumericMatrix& heightmap, double zscale, NumericVector chunkindices, double maxsearch, NumericVector& cache_mask);
+RcppExport SEXP _rayshader_rayshade_multicore(SEXP sunangleSEXP, SEXP anglebreaksSEXP, SEXP heightmapSEXP, SEXP zscaleSEXP, SEXP chunkindicesSEXP, SEXP maxsearchSEXP, SEXP cache_maskSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< double >::type sunangle(sunangleSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type anglebreaks(anglebreaksSEXP);
-    Rcpp::traits::input_parameter< NumericMatrix >::type heightmap(heightmapSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix& >::type heightmap(heightmapSEXP);
     Rcpp::traits::input_parameter< double >::type zscale(zscaleSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type chunkindices(chunkindicesSEXP);
     Rcpp::traits::input_parameter< double >::type maxsearch(maxsearchSEXP);
-    Rcpp::traits::input_parameter< int >::type row(rowSEXP);
     Rcpp::traits::input_parameter< NumericVector& >::type cache_mask(cache_maskSEXP);
-    rcpp_result_gen = Rcpp::wrap(rayshade_multicore(sunangle, anglebreaks, heightmap, zscale, maxsearch, row, cache_mask));
+    rcpp_result_gen = Rcpp::wrap(rayshade_multicore(sunangle, anglebreaks, heightmap, zscale, chunkindices, maxsearch, cache_mask));
     return rcpp_result_gen;
 END_RCPP
 }

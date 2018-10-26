@@ -73,8 +73,9 @@ bool ray_intersects_multi(NumericMatrix& heightmap, NumericVector& tanangles,
 }
 
 // [[Rcpp::export]]
-NumericMatrix rayshade_multicore(double sunangle, NumericVector anglebreaks, NumericMatrix heightmap, 
-                                 double zscale, double maxsearch, int row, NumericVector& cache_mask) {
+NumericMatrix rayshade_multicore(double sunangle, NumericVector anglebreaks, NumericMatrix& heightmap, 
+                                 double zscale, NumericVector chunkindices,
+                                 double maxsearch, NumericVector& cache_mask) {
   double precisionval = 1e-10;
   
   //Cache trig functions
@@ -85,11 +86,11 @@ NumericMatrix rayshade_multicore(double sunangle, NumericVector anglebreaks, Num
   for(int i = 0; i < numberangles; i++) {
     tanangles(i) = tan(anglebreaks[i]);
   }
-  int i = row;
-  
+  int minindex = chunkindices(0)-1;
+  int maxindex = chunkindices(1)-1;
   int numbercols = heightmap.ncol();
   int numberrows = heightmap.nrow();
-  NumericMatrix shadowmatrix(1,numbercols);
+  NumericMatrix shadowmatrix(maxindex - minindex,numbercols);
   std::fill(shadowmatrix.begin(), shadowmatrix.end(), 1.0);
   double maxdist = maxsearch;
   int current_min_entry = 0;
@@ -99,44 +100,45 @@ NumericMatrix rayshade_multicore(double sunangle, NumericVector anglebreaks, Num
   double maxheight = max(heightmap);
 
   double invnumberangles = 1 / (double)numberangles;
-  
-  for(int j = 0; j < numbercols; j++) {
-    Rcpp::checkUserInterrupt();
-    if(cache_mask(j)) {
-      anyfound = false;
-      if(numberangles < 3) {
-        for(int ang = 0; ang < numberangles; ang++) {
-          if(ray_intersects_multi(heightmap,tanangles,
-                            i, j, ang,
-                            maxheight, precisionval,
-                            cossunangle, sinsunangle, 
-                            numbercols, numberrows,
-                            zscale, maxdist)) {
-            shadowmatrix(1,j) = 1 - ((double)ang + 1) * invnumberangles;
-          } 
-        }
-      } else {
-        while(current_min_entry != current_entry && current_max_entry != current_entry) {
-          if(ray_intersects_multi(heightmap,tanangles,
-                            i, j, current_entry, 
-                            maxheight, precisionval,
-                            cossunangle, sinsunangle, 
-                            numbercols, numberrows,
-                            zscale, maxdist)) {
-            current_min_entry = current_entry;
-            current_entry = (current_max_entry + current_entry)/2;
-            anyfound = true;
-          } else {
-            current_max_entry = current_entry;
-            current_entry = (current_min_entry + current_entry)/2;
+  for(int i = 0; i < maxindex - minindex ; i++) {
+    for(int j = 0; j < numbercols; j++) {
+      Rcpp::checkUserInterrupt();
+      if(cache_mask(i + minindex,j)) {
+        anyfound = false;
+        if(numberangles < 3) {
+          for(int ang = 0; ang < numberangles; ang++) {
+            if(ray_intersects_multi(heightmap,tanangles,
+                              i + minindex, j, ang,
+                              maxheight, precisionval,
+                              cossunangle, sinsunangle, 
+                              numbercols, numberrows,
+                              zscale, maxdist)) {
+              shadowmatrix(i,j) = 1 - ((double)ang + 1) * invnumberangles;
+            } 
           }
+        } else {
+          while(current_min_entry != current_entry && current_max_entry != current_entry) {
+            if(ray_intersects_multi(heightmap,tanangles,
+                              i + minindex, j, current_entry, 
+                              maxheight, precisionval,
+                              cossunangle, sinsunangle, 
+                              numbercols, numberrows,
+                              zscale, maxdist)) {
+              current_min_entry = current_entry;
+              current_entry = (current_max_entry + current_entry)/2;
+              anyfound = true;
+            } else {
+              current_max_entry = current_entry;
+              current_entry = (current_min_entry + current_entry)/2;
+            }
+          }
+          if(anyfound) {
+            shadowmatrix(i,j) = 1 - ((double)current_entry + 1) * invnumberangles;
+          }
+          current_min_entry = 0;
+          current_max_entry =  numberangles - 1;
+          current_entry = current_max_entry/2;
         }
-        if(anyfound) {
-          shadowmatrix(1,j) = 1 - ((double)current_entry + 1) * invnumberangles;
-        }
-        current_min_entry = 0;
-        current_max_entry =  numberangles - 1;
-        current_entry = current_max_entry/2;
       }
     }
   }

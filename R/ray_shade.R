@@ -74,18 +74,36 @@ ray_shade = function(heightmap, anglebreaks=seq(40,50,1), sunangle=315, maxsearc
     } else {
       numbercores = options("cores")[[1]]
     }
+    if(nrow(heightmap) < numbercores*16) {
+      if(nrow(heightmap) < 4) {
+        chunksize = 1
+      }
+      chunksize = 4
+    } else {
+      chunksize = 16
+    }
+    if(nrow(heightmap) %% chunksize == 0) {
+      number_multicore_iterations = nrow(heightmap)/chunksize
+    } else {
+      number_multicore_iterations = floor(nrow(heightmap)/chunksize) + 1
+    }
+    itervec = rep(1,number_multicore_iterations)
+    for(i in 0:number_multicore_iterations) {
+      itervec[i+1] = 1 + i*chunksize
+    }
+    itervec[length(itervec)] = nrow(heightmap)+1
     cl = parallel::makeCluster(numbercores, ...)
     doParallel::registerDoParallel(cl, cores = numbercores)
     shadowmatrixlist = tryCatch({
-      foreach::foreach(i=1:nrow(heightmap),.export = c("rayshade_multicore")) %dopar% {
+      foreach::foreach(i=1:(length(itervec)-1),.export = c("rayshade_multicore")) %do% {
         rayshade_multicore(sunangle = sunangle_rad, anglebreaks = anglebreaks_rad, 
-                           heightmap = flipud(heightmap), zscale = zscale, 
-                           maxsearch = maxsearch, row = i-1, cache_mask = cache_mask[i,])
+                           heightmap = flipud(heightmap), zscale = zscale, chunkindices = c(itervec[i],(itervec[i+1])),
+                           maxsearch = maxsearch, cache_mask = cache_mask)
       }
     }, finally = {
       tryCatch({
         parallel::stopCluster(cl)
-      }, error = function (e) {})
+      }, error = function (e) {print(e)})
     })
     shadowmatrix = do.call(rbind,shadowmatrixlist) 
     shadowmatrix[shadowmatrix<0] = 0
