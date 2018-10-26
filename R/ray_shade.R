@@ -91,11 +91,11 @@ ray_shade = function(heightmap, anglebreaks=seq(40,50,1), sunangle=315, maxsearc
     for(i in 0:number_multicore_iterations) {
       itervec[i+1] = 1 + i*chunksize
     }
-    itervec[length(itervec)] = nrow(heightmap)+1
+    itervec[length(itervec)] = nrow(heightmap) + 1
     cl = parallel::makeCluster(numbercores, ...)
     doParallel::registerDoParallel(cl, cores = numbercores)
     shadowmatrixlist = tryCatch({
-      foreach::foreach(i=1:(length(itervec)-1),.export = c("rayshade_multicore")) %do% {
+      foreach::foreach(i=1:(length(itervec)-1),.export = c("rayshade_multicore")) %dopar% {
         rayshade_multicore(sunangle = sunangle_rad, anglebreaks = anglebreaks_rad, 
                            heightmap = flipud(heightmap), zscale = zscale, chunkindices = c(itervec[i],(itervec[i+1])),
                            maxsearch = maxsearch, cache_mask = cache_mask)
