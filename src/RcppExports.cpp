@@ -92,6 +92,54 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// make_base_cpp
+List make_base_cpp(NumericVector side1, NumericVector side2, NumericVector side3, NumericVector side4, NumericMatrix& heightmap, double basedepth);
+RcppExport SEXP _rayshader_make_base_cpp(SEXP side1SEXP, SEXP side2SEXP, SEXP side3SEXP, SEXP side4SEXP, SEXP heightmapSEXP, SEXP basedepthSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type side1(side1SEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type side2(side2SEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type side3(side3SEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type side4(side4SEXP);
+    Rcpp::traits::input_parameter< NumericMatrix& >::type heightmap(heightmapSEXP);
+    Rcpp::traits::input_parameter< double >::type basedepth(basedepthSEXP);
+    rcpp_result_gen = Rcpp::wrap(make_base_cpp(side1, side2, side3, side4, heightmap, basedepth));
+    return rcpp_result_gen;
+END_RCPP
+}
+// make_water_cpp
+List make_water_cpp(NumericVector side1, NumericVector side2, NumericVector side3, NumericVector side4, NumericMatrix& heightmap, double waterheight);
+RcppExport SEXP _rayshader_make_water_cpp(SEXP side1SEXP, SEXP side2SEXP, SEXP side3SEXP, SEXP side4SEXP, SEXP heightmapSEXP, SEXP waterheightSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type side1(side1SEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type side2(side2SEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type side3(side3SEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type side4(side4SEXP);
+    Rcpp::traits::input_parameter< NumericMatrix& >::type heightmap(heightmapSEXP);
+    Rcpp::traits::input_parameter< double >::type waterheight(waterheightSEXP);
+    rcpp_result_gen = Rcpp::wrap(make_water_cpp(side1, side2, side3, side4, heightmap, waterheight));
+    return rcpp_result_gen;
+END_RCPP
+}
+// make_waterlines_cpp
+List make_waterlines_cpp(NumericVector side1, NumericVector side2, NumericVector side3, NumericVector side4, NumericMatrix& heightmap, double waterdepth);
+RcppExport SEXP _rayshader_make_waterlines_cpp(SEXP side1SEXP, SEXP side2SEXP, SEXP side3SEXP, SEXP side4SEXP, SEXP heightmapSEXP, SEXP waterdepthSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type side1(side1SEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type side2(side2SEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type side3(side3SEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type side4(side4SEXP);
+    Rcpp::traits::input_parameter< NumericMatrix& >::type heightmap(heightmapSEXP);
+    Rcpp::traits::input_parameter< double >::type waterdepth(waterdepthSEXP);
+    rcpp_result_gen = Rcpp::wrap(make_waterlines_cpp(side1, side2, side3, side4, heightmap, waterdepth));
+    return rcpp_result_gen;
+END_RCPP
+}
 // subsample
 arma::mat subsample(arma::mat& circle, int size);
 RcppExport SEXP _rayshader_subsample(SEXP circleSEXP, SEXP sizeSEXP) {
@@ -219,6 +267,9 @@ static const R_CallMethodDef CallEntries[] = {
     {"_rayshader_find_groups_cpp", (DL_FUNC) &_rayshader_find_groups_cpp, 1},
     {"_rayshader_interpolate_color", (DL_FUNC) &_rayshader_interpolate_color, 4},
     {"_rayshader_lambshade_cpp", (DL_FUNC) &_rayshader_lambshade_cpp, 2},
+    {"_rayshader_make_base_cpp", (DL_FUNC) &_rayshader_make_base_cpp, 6},
+    {"_rayshader_make_water_cpp", (DL_FUNC) &_rayshader_make_water_cpp, 6},
+    {"_rayshader_make_waterlines_cpp", (DL_FUNC) &_rayshader_make_waterlines_cpp, 6},
     {"_rayshader_subsample", (DL_FUNC) &_rayshader_subsample, 2},
     {"_rayshader_subsample_rect", (DL_FUNC) &_rayshader_subsample_rect, 3},
     {"_rayshader_gen_circle_psf", (DL_FUNC) &_rayshader_gen_circle_psf, 1},

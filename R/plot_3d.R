@@ -9,7 +9,7 @@
 #'@param solid Default `TRUE`. If `FALSE`, just the surface is rendered.
 #'@param soliddepth Default `auto`, which sets it to the lowest elevation in the matrix minus one unit (scaled by zscale). Depth of the solid base.
 #'@param solidcolor Default `grey20`. Base color.
-#'@param solidlinecolor Default `grey40`. Base edge line color.
+#'@param solidlinecolor Default `grey30`. Base edge line color.
 #'@param shadow Default `TRUE`. If `FALSE`, no shadow is rendered.
 #'@param shadowdepth Default `auto`, which sets it to `soliddepth - soliddepth/10`. Depth of the shadow layer.
 #'@param shadowcolor Default `grey50`. Color of the shadow.
@@ -46,7 +46,7 @@
 #'          waterlinecolor="white", waterlinealpha=0.5)
 #'}
 plot_3d = function(hillshade, heightmap, zscale=1, 
-                   solid = TRUE, soliddepth="auto", solidcolor="grey20",solidlinecolor="grey40",
+                   solid = TRUE, soliddepth="auto", solidcolor="grey20",solidlinecolor="grey30",
                    shadow = TRUE, shadowdepth = "auto", shadowcolor = "grey50", shadowwidth = "auto", 
                    water = FALSE, waterdepth = 0, watercolor="lightblue", wateralpha = 0.5, 
                    waterlinecolor=NULL, waterlinealpha = 1, 
@@ -152,6 +152,6 @@ plot_3d = function(hillshade, heightmap, zscale=1,
   }
   if(!is.null(waterlinecolor) && water) {
     make_lines(heightmap,basedepth=waterdepth,linecolor=waterlinecolor,zscale=zscale,linewidth = linewidth,alpha=waterlinealpha,solid=FALSE)
-    make_waterlines(heightmap,waterdepth=waterdepth/zscale,linecolor=waterlinecolor,zscale=zscale,alpha=waterlinealpha,lwd=linewidth)
+    make_waterlines(heightmap,waterdepth=waterdepth/zscale,linecolor=waterlinecolor,zscale=zscale,alpha=waterlinealpha,linewidth=linewidth)
   }
 }

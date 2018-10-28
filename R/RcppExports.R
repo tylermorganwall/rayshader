@@ -29,6 +29,18 @@ lambshade_cpp <- function(heightmap, rayvector) {
     .Call(`_rayshader_lambshade_cpp`, heightmap, rayvector)
 }
 
+make_base_cpp <- function(side1, side2, side3, side4, heightmap, basedepth) {
+    .Call(`_rayshader_make_base_cpp`, side1, side2, side3, side4, heightmap, basedepth)
+}
+
+make_water_cpp <- function(side1, side2, side3, side4, heightmap, waterheight) {
+    .Call(`_rayshader_make_water_cpp`, side1, side2, side3, side4, heightmap, waterheight)
+}
+
+make_waterlines_cpp <- function(side1, side2, side3, side4, heightmap, waterdepth) {
+    .Call(`_rayshader_make_waterlines_cpp`, side1, side2, side3, side4, heightmap, waterdepth)
+}
+
 subsample <- function(circle, size) {
     .Call(`_rayshader_subsample`, circle, size)
 }
