@@ -6,7 +6,7 @@
 \usage{
 plot_3d(hillshade, heightmap, zscale = 1, solid = TRUE,
   soliddepth = "auto", solidcolor = "grey20",
-  solidlinecolor = "grey40", shadow = TRUE, shadowdepth = "auto",
+  solidlinecolor = "grey30", shadow = TRUE, shadowdepth = "auto",
   shadowcolor = "grey50", shadowwidth = "auto", water = FALSE,
   waterdepth = 0, watercolor = "lightblue", wateralpha = 0.5,
   waterlinecolor = NULL, waterlinealpha = 1, linewidth = 2,
@@ -27,7 +27,7 @@ of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
 
 \item{solidcolor}{Default `grey20`. Base color.}
 
-\item{solidlinecolor}{Default `grey40`. Base edge line color.}
+\item{solidlinecolor}{Default `grey30`. Base edge line color.}
 
 \item{shadow}{Default `TRUE`. If `FALSE`, no shadow is rendered.}
 

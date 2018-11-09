@@ -6,7 +6,7 @@
 \usage{
 ambient_shade(heightmap, anglebreaks = seq(1, 46, 15), sunbreaks = 12,
   maxsearch = 20, multicore = FALSE, zscale = 1, cache_mask = NULL,
-  shadow_cache = NULL, progbar = TRUE, ...)
+  shadow_cache = NULL, progbar = interactive(), ...)
 }
 \arguments{
 \item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.}
@@ -26,12 +26,9 @@ set `options("cores")` in which the multicore option will only use that many cor
 
 \item{shadow_cache}{Default `NULL`. The shadow matrix to be updated at the points defined by the argument `cache_mask`.}
 
-\item{progbar}{Default `TRUE`. If `FALSE`, turns off progress bar.}
+\item{progbar}{Default `TRUE` if interactive, `FALSE` otherwise. If `FALSE`, turns off progress bar.}
 
 \item{...}{Additional arguments to pass to the `makeCluster` function when `multicore=TRUE`.}
-
-\item{breakmap}{Default `NULL`. A matrix of points for each elevation value indicating the maximum height to propogate the ray. This can speed up raytracing, particularly for maps with large areas of relatively flat terrain with a few large features.
-This matrix can be generated with `gen_breakmap()`.}
 }
 \value{
 Shaded texture map.

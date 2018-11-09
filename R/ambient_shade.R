@@ -6,14 +6,12 @@
 #'@param anglebreaks The angle(s), in degrees, as measured from the horizon from which the light originates.
 #'@param sunbreaks Default 12. Number of rays to be sent out in a circle, evenly spaced, around the point being tested.
 #'@param maxsearch Default `20`. The maximum horizontal distance that the system should propogate rays to check for surface intersections. 
-#'@param breakmap Default `NULL`. A matrix of points for each elevation value indicating the maximum height to propogate the ray. This can speed up raytracing, particularly for maps with large areas of relatively flat terrain with a few large features.
-#'This matrix can be generated with `gen_breakmap()`. 
 #'@param multicore Default FALSE. If TRUE, multiple cores will be used to compute the shadow matrix. By default, this uses all cores available, unless the user has
 #'set `options("cores")` in which the multicore option will only use that many cores.
 #'@param zscale Default 1. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. 
 #'@param cache_mask Default `NULL`. A matrix of 1 and 0s, indicating which points on which the raytracer will operate.
 #'@param shadow_cache Default `NULL`. The shadow matrix to be updated at the points defined by the argument `cache_mask`.
-#'@param progbar Default `TRUE`. If `FALSE`, turns off progress bar.
+#'@param progbar Default `TRUE` if interactive, `FALSE` otherwise. If `FALSE`, turns off progress bar.
 #'@param ... Additional arguments to pass to the `makeCluster` function when `multicore=TRUE`.
 #'@return Shaded texture map.
 #'@export
@@ -27,7 +25,7 @@
 ambient_shade = function(heightmap, anglebreaks = seq(1,46,15), sunbreaks = 12, 
                         maxsearch=20,
                         multicore=FALSE, zscale=1, cache_mask = NULL, 
-                        shadow_cache=NULL, progbar=TRUE, ...) {
+                        shadow_cache=NULL, progbar=interactive(), ...) {
   if(sunbreaks < 3) {
     stop("sunbreaks needs to be at least 3")
   }

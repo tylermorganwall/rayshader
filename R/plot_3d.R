@@ -147,11 +147,14 @@ plot_3d = function(hillshade, heightmap, zscale=1,
     make_shadow(nrow(heightmap),  ncol(heightmap), shadowdepth, shadowwidth, background, shadowcolor)
   }
   if(water) {
-    rgl.surface(c(1,nrow(heightmap)),c(-1,-ncol(heightmap)),matrix(waterdepth/zscale,2,2),color=watercolor,lit=FALSE,alpha=wateralpha)
-    make_water(heightmap/zscale,waterheight=waterdepth/zscale,wateralpha=wateralpha,watercolor=watercolor)
+    triangles3d(matrix(c(nrow(heightmap),1,nrow(heightmap), waterdepth,waterdepth,waterdepth,-ncol(heightmap),-1,-1),3,3),
+                color=watercolor,alpha=wateralpha,depth_mask=TRUE,front="fill",back="culled",depth_test = "lequal");
+    triangles3d(matrix(c(1,1,nrow(heightmap),waterdepth,waterdepth,waterdepth,-ncol(heightmap),-1,-ncol(heightmap)),3,3),
+                color=watercolor,alpha=wateralpha,depth_mask=TRUE,front="fill",back="culled",depth_test = "lequal");
+    make_water(heightmap,waterheight=waterdepth,wateralpha=wateralpha,watercolor=watercolor,zscale=zscale)
   }
   if(!is.null(waterlinecolor) && water) {
     make_lines(heightmap,basedepth=waterdepth,linecolor=waterlinecolor,zscale=zscale,linewidth = linewidth,alpha=waterlinealpha,solid=FALSE)
-    make_waterlines(heightmap,waterdepth=waterdepth/zscale,linecolor=waterlinecolor,zscale=zscale,alpha=waterlinealpha,linewidth=linewidth)
+    make_waterlines(heightmap,waterdepth=waterdepth,linecolor=waterlinecolor,zscale=zscale,alpha=waterlinealpha,linewidth=linewidth)
   }
 }

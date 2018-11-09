@@ -29,8 +29,8 @@
 #'render_depth(focallength = 30,fstop=2)
 #'render_depth(focallength = 30,fstop=2)
 render_depth = function(focus = 0.5, focallength = 100, fstop = 4, filename=NULL,
-                     breaks=0.80, bokehshape = "circle", 
-                     bokehintensity = 1, bokehlimit=0.8, rotation = 0, gamma_correction = TRUE,
+                     bokehshape = "circle", bokehintensity = 1, bokehlimit=0.8, 
+                     rotation = 0, gamma_correction = TRUE,
                      transparent_water = FALSE, progbar = TRUE) {
   if(focallength < 1) {
     stop("focal length must be greater than 1")

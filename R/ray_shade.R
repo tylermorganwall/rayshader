@@ -17,7 +17,7 @@
 #'@param cache_mask Default `NULL`. A matrix of 1 and 0s, indicating which points on which the raytracer will operate.
 #'@param shadow_cache Default `NULL`. The shadow matrix to be updated at the points defined by the argument `cache_mask`.
 #'If present, this will only compute the raytraced shadows for those points with value `1` in the mask.
-#'@param progbar Default `TRUE`. If `FALSE`, turns off progress bar.
+#'@param progbar Default `TRUE` if interactive, `FALSE` otherwise. If `FALSE`, turns off progress bar.
 #'@param ... Additional arguments to pass to the `makeCluster` function when `multicore=TRUE`.
 #'@import foreach doParallel parallel progress
 #'@return Matrix of light intensities at each point.
@@ -36,7 +36,7 @@
 #'    
 #'plot_map(volcanoshadow)
 ray_shade = function(heightmap, anglebreaks=seq(40,50,1), sunangle=315, maxsearch=100, lambert=TRUE, zscale=1, 
-                    multicore = FALSE, cache_mask = NULL, shadow_cache=NULL, progbar=TRUE, ...) {
+                    multicore = FALSE, cache_mask = NULL, shadow_cache=NULL, progbar=interactive(), ...) {
   anglebreaks = anglebreaks[order(anglebreaks)]
   anglebreaks_rad = anglebreaks*pi/180
   sunangle_rad = sunangle*pi/180

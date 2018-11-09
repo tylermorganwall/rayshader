@@ -10,12 +10,12 @@
 #'of the built-in palettes (`imhof1`,`imhof2`,`imhof3`,`imhof4`,`desert`, `bw`, and `unicorn`). 
 #'@param normalvectors Default `NULL`. Cache of the normal vectors (from `calculate_normal` function). Supply this to speed up texture mapping.
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. 
-#'@param progbar Default `TRUE`. If `FALSE`, turns off progress bar.
+#'@param progbar Default `TRUE` if interactive, `FALSE` otherwise. If `FALSE`, turns off progress bar.
 #'@return RGB array of hillshaded texture mappings.
 #'@export
 #'@examples
 #'plot_map(sphere_shade(volcano,texture="desert"))
-sphere_shade = function(heightmap, sunangle=315, texture="imhof1", normalvectors = NULL, zscale=1, progbar = TRUE) {
+sphere_shade = function(heightmap, sunangle=315, texture="imhof1", normalvectors = NULL, zscale=1, progbar = interactive()) {
   sunangle = sunangle/180*pi
   flipud = function(x) {
     x[,ncol(x):1]

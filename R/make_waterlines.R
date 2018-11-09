@@ -19,7 +19,7 @@ make_waterlines = function(heightmap,waterdepth=0,linecolor="grey40",zscale=1,al
   heightlist = make_waterlines_cpp(heightmap1,heightmap2,heightmap3,heightmap4,heightmap,waterdepth)
   if(length(heightlist) > 0) {
     for(i in 1:length(heightlist)) {
-      rgl::lines3d(heightlist[[i]],color=linecolor,lwd=linewidth,alpha=alpha,depth_mask=TRUE, line_antialias=FALSE)
+      rgl::lines3d(heightlist[[i]],color=linecolor,lwd=linewidth,alpha=alpha,depth_mask=TRUE, line_antialias=FALSE, depth_test="lequal")
     }
   }
 }

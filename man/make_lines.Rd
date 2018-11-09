@@ -4,7 +4,7 @@
 \alias{make_lines}
 \title{make_lines}
 \usage{
-make_lines(heightmap, basedepth = 0, linecolor = "grey40",
+make_lines(heightmap, basedepth = 0, linecolor = "grey20",
   zscale = 1, alpha = 1, linewidth = 2, solid = TRUE)
 }
 \arguments{

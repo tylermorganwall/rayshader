@@ -5,7 +5,7 @@
 \title{sphere_shade}
 \usage{
 sphere_shade(heightmap, sunangle = 315, texture = "imhof1",
-  normalvectors = NULL, zscale = 1, progbar = TRUE)
+  normalvectors = NULL, zscale = 1, progbar = interactive())
 }
 \arguments{
 \item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.}
@@ -19,7 +19,7 @@ of the built-in palettes (`imhof1`,`imhof2`,`imhof3`,`imhof4`,`desert`, `bw`, an
 
 \item{zscale}{Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis.}
 
-\item{progbar}{Default `TRUE`. If `FALSE`, turns off progress bar.}
+\item{progbar}{Default `TRUE` if interactive, `FALSE` otherwise. If `FALSE`, turns off progress bar.}
 }
 \value{
 RGB array of hillshaded texture mappings.

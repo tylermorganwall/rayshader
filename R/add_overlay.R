@@ -19,6 +19,9 @@
 #'#TBD
 add_overlay = function(hillshade, overlay, alphacolor=NULL, 
                        alphalayer = 1, alphamethod = "max", gamma_correction = TRUE) {
+  flipud = function(x) {
+    x[nrow(x):1,]
+  }
   if(any(alphalayer > 1 || alphalayer < 0)) {
     stop("Argument `alphalayer` must not be less than 0 or more than 1")
   }

@@ -38,6 +38,6 @@ render_water = function(heightmap, waterdepth=0, watercolor="lightblue",
   make_water(heightmap/zscale,waterheight=waterdepth/zscale,wateralpha=wateralpha,watercolor=watercolor)
   if(!is.null(waterlinecolor)) {
     make_lines(heightmap,basedepth=waterdepth/zscale,linecolor=waterlinecolor,zscale=zscale,linewidth = linewidth,alpha=waterlinealpha,solid=FALSE)
-    make_waterlines(heightmap,waterdepth=waterdepth/zscale,linecolor=waterlinecolor,zscale=zscale,alpha=waterlinealpha,lwd=linewidth)
+    make_waterlines(heightmap,waterdepth=waterdepth/zscale,linecolor=waterlinecolor,zscale=zscale,alpha=waterlinealpha,linewidth=linewidth)
   }
 }

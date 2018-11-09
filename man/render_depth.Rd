@@ -5,9 +5,9 @@
 \title{Render Depth of Field}
 \usage{
 render_depth(focus = 0.5, focallength = 100, fstop = 4,
-  filename = NULL, breaks = 0.8, bokehshape = "circle",
-  bokehintensity = 1, bokehlimit = 0.8, rotation = 0,
-  gamma_correction = TRUE, transparent_water = FALSE, progbar = TRUE)
+  filename = NULL, bokehshape = "circle", bokehintensity = 1,
+  bokehlimit = 0.8, rotation = 0, gamma_correction = TRUE,
+  transparent_water = FALSE, progbar = TRUE)
 }
 \arguments{
 \item{focus}{Defaults `0.5`. Depth in which to blur. Minimum 0, maximum 1.}
