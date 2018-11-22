@@ -17,7 +17,7 @@
 #'@param gamma_correction Default `TRUE`. Controls gamma correction when adding colors. Default exponent of 2.2.
 #'@param transparent_water Default `FALSE`. If `TRUE`, depth is determined without water layer. User will have to re-render the water
 #'layer with `render_water()` if they want to recreate the water layer.
-#'@param progbar Default `TRUE`. Display a progress bar.
+#'@param progbar Default `TRUE` if in an interactive session. Displays a progress bar.
 #'@return 4-layer RGBA array.
 #'@export
 #'@examples
@@ -31,7 +31,7 @@
 render_depth = function(focus = 0.5, focallength = 100, fstop = 4, filename=NULL,
                      bokehshape = "circle", bokehintensity = 1, bokehlimit=0.8, 
                      rotation = 0, gamma_correction = TRUE,
-                     transparent_water = FALSE, progbar = TRUE) {
+                     transparent_water = FALSE, progbar = interactive()) {
   if(focallength < 1) {
     stop("focal length must be greater than 1")
   }

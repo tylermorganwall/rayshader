@@ -5,15 +5,15 @@ output:
 editor_options: 
   chunk_output_type: console
 ---
-rayshader 
+rayshader<img src="man/figures/raylogosmall.png" align="right" />
 =========================================================
 
-<img src="man/figures/volcano_r_small.gif" ></img>
+<img src="man/figures/smallhobart.gif" ></img>
 
 Overview
 --------
 
-**rayshader** is an open source package for producing hillshaded maps of elevation matrices with raytracing and spherical texture mapping.
+**rayshader** is an open source R package for producing 2D and 3D hillshaded maps of elevation matrices using a combination of raytracing, spherical texture mapping, and ambient occlusion.
 
 Installation
 ------------
@@ -28,7 +28,7 @@ Functions
 ---------
 <img   src="man/figures/ray_small.png"><img   src="man/figures/sphere_small.png"><img   src="man/figures/imhof_small.png"><img   src="man/figures/amb_small.png"><img   src="man/figures/lamb_small.png"><img   src="man/figures/alltogether_small.png"> 
 
-Rayshader has five functions related to hillshading:
+Rayshader has seven functions related to hillshading:
 
 - `ray_shade` uses user specified light directions to calculate a global shadow map for an elevation matrix. By default, this also scales the light intensity at each point by the dot product of the mean ray direction and the surface normal (also implemented in function `lamb_shade`, this can be turned off by setting `lambert=FALSE`.
 - `sphere_shade` maps an RGB texture to a hillshade by spherical mapping. A texture can be generated with the `create_texture` function, or loaded from an image. `sphere_shade` also includes 7 built-in palettes: "imhof1","imhof2","imhof3",imhof4","desert","bw","unicorn". 
@@ -44,9 +44,10 @@ Rayshader also has three functions to detect and add water to maps:
 - `add_water` uses the output of `detect_water` to add a water color to the map. The user can input their own color, or pass the name of one of the pre-defined palettes from `sphere_shade` to get a matching hue.
 - `render_water` adds a 3D tranparent water layer to 3D maps, after the rgl device has already been created. This can either add to a map that does not already have a water layer, or replace an existing water layer on the map.
 
-Also included is one function to generate a post-processing depth of field effect on 3D maps:
+Also included are two functions to add additional effects and information to your 3D visualizations:
 
 -  `render_depth` generates a depth of field effect for the 3D map. The user can specify the focal distance, focal length, and f-stop of the camera, as well as aperture shape and bokeh intensity. This either plots the image to the local device, or saves it to a file if given a filename.
+-  `render_label` adds a text label to the `x` and `y` coordinate of the map at a specified altitude `z` (in units of the matrix). The altitude can either be specified relative to the elevation at that point (the default), or absolutely. 
 
 And three functions to display and save your maps:
 
@@ -61,6 +62,9 @@ Usage
 
 ```{r}
 library(rayshader)
+library(rgl)
+library(knitr)
+knit_hooks$set(rgl = hook_rgl)
 
 #Here, I load a map with the raster package:
 raster::raster("~/Desktop/R/blurstuff/spemap/dem_01.tif") -> localtif
@@ -70,22 +74,22 @@ elmat = matrix(raster::extract(localtif,raster::extent(localtif),buffer=1000),
 
 #We use another one of rayshader's built-in textures:
 elmat %>%
-  sphere_shade(texture = "desert",progbar = FALSE) %>%
+  sphere_shade(texture = "desert") %>%
   plot_map()
 
 #sphere_shade can shift the sun direction:
 elmat %>%
-  sphere_shade(sunangle = 45, texture = "desert",progbar = FALSE) %>%
+  sphere_shade(sunangle = 45, texture = "desert") %>%
   plot_map()
-
-ambmat = ambient_shade(elmat,progbar = FALSE)
-raymat = ray_shade(elmat,lambert = TRUE,multicore = TRUE,progbar = FALSE)
 
 #detect_water and add_water adds a water layer to the map:
 elmat %>%
   sphere_shade(texture = "desert") %>%
   add_water(detect_water(elmat), color="desert") %>%
   plot_map()
+
+ambmat = ambient_shade(elmat)
+raymat = ray_shade(elmat,lambert = TRUE)
 
 #And we can add a raytraced layer from that sun direction as well:
 elmat %>%
@@ -109,11 +113,11 @@ Rayshader also supports 3D mapping by passing a texture map (either external or 
 ```{r}
 
 elmat %>%
-  sphere_shade(texture = "desert",progbar = FALSE) %>%
+  sphere_shade(texture = "desert") %>%
   add_water(detect_water(elmat), color="desert") %>%
-  add_shadow(ray_shade(elmat,zscale=3,maxsearch = 300,progbar = FALSE),0.7) %>%
+  add_shadow(ray_shade(elmat,zscale=3,maxsearch = 300),0.7) %>%
   add_shadow(ambmat,0.7) %>%
-  plot_3d(elmat,zscale=10,fov=0,theta=135,zoom=0.9,phi=45, windowsize = c(800,800))
+  plot_3d(elmat,zscale=10,fov=0,theta=135,zoom=0.75,phi=45, windowsize = c(1000,800))
 rgl::snapshot3d("preview.png")
 png::readPNG("preview.png") %>%
   plot_map()
@@ -126,30 +130,54 @@ You can also easily add a water layer by setting `water = TRUE` in `plot_3d()` (
 
 ```{r}
 
-montshadow = ray_shade(montereybay,zscale=50,lambert=FALSE,multicore=TRUE)
-montamb = ambient_shade(montereybay,zscale=50,multicore=TRUE)
+montshadow = ray_shade(montereybay,zscale=50,lambert=FALSE)
+montamb = ambient_shade(montereybay,zscale=50,)
 montereybay %>% 
-    sphere_shade(zscale=10,texture = "imhof1",progbar = FALSE) %>% 
+    sphere_shade(zscale=10,texture = "imhof1") %>% 
     add_shadow(montshadow,0.5) %>%
     add_shadow(montamb) %>%
-    plot_3d(montereybay,zscale=50,fov=0,theta=-45,phi=45,windowsize=c(800,800),zoom=0.9,
+    plot_3d(montereybay,zscale=50,fov=0,theta=-45,phi=45,windowsize=c(1000,800),zoom=0.75,
             water=TRUE, waterdepth = 0, wateralpha = 0.5,watercolor = "lightblue",
             waterlinecolor = "white",waterlinealpha = 0.3)
 rgl::snapshot3d("preview2.png")
 png::readPNG("preview2.png") %>%
   plot_map()
+rgl::rgl.close()
 ```
 
-You can also apply a post-processing effect to the 3D maps to get a depth of field with `render_depth()`:
+Adding text labels is done with the `render_label()` function, which also allows you to customize the line type, color, and size along with the font:
 
 ```{r}
 montereybay %>% 
     sphere_shade(zscale=10,texture = "imhof1") %>% 
     add_shadow(montshadow,0.5) %>%
     add_shadow(montamb) %>%
-    plot_3d(montereybay,zscale=50,fov=30,theta=45,phi=25,windowsize=c(800,800),zoom=0.4,
+    plot_3d(montereybay,zscale=50,fov=0,theta=-100,phi=30,windowsize=c(1000,800),zoom=0.6,
             water=TRUE, waterdepth = 0, waterlinecolor = "white", waterlinealpha = 0.5,
             wateralpha = 0.5,watercolor = "lightblue")
-render_depth(focus=0.5,progress = FALSE)
+render_label(montereybay,x=350,y=240, z=4000,zscale=50,text = "Moss Landing",textsize = 2,linewidth = 5)
+render_label(montereybay,x=220,y=330, z=6000,zscale=50,text = "Santa Cruz",color="darkred",textcolor = "darkred",textsize = 2,linewidth = 5)
+render_label(montereybay,x=300,y=130, z=4000,zscale=50,text = "Monterey",dashed = TRUE,textsize = 2,linewidth = 5)
+render_label(montereybay,x=50,y=130, z=1000,zscale=50,text = "Monterey Canyon",relativez=FALSE,textsize = 2,linewidth = 5)
+
+rgl::snapshot3d("preview3.png")
+png::readPNG("preview3.png") %>%
+  plot_map()
+rgl::rgl.close()
+```
+
+
+You can also apply a post-processing effect to the 3D maps to render maps with depth of field with the `render_depth()` function:
+
+```{r}
+
+elmat %>%
+  sphere_shade(texture = "desert") %>%
+  add_water(detect_water(elmat), color="desert") %>%
+  add_shadow(raymat,0.5) %>%
+  add_shadow(ambmat,0.5) %>%
+  plot_3d(elmat,zscale=10,fov=30,theta=-225,phi=25,windowsize=c(1000,800),zoom=0.3)
+render_depth(focus=0.6,focallength = 200,filename="depth2.png")
+
 
 ```

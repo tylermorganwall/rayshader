@@ -25,7 +25,7 @@
 #'  plot_map()
 detect_water = function(heightmap, zscale = 1, cutoff = 0.999, 
                         min_area=length(heightmap)/400 ,normalvectors=NULL,
-                        keep_groups=FALSE, progbar = TRUE) {
+                        keep_groups=FALSE, progbar = FALSE) {
   if(!is.null(normalvectors)) {
     zmatrix = abs(normalvectors$z)
     zmatrix = abs(zmatrix)

@@ -4,12 +4,10 @@
 \alias{make_shadow}
 \title{make_shadow}
 \usage{
-make_shadow(rows, cols, basedepth, shadowwidth, color, shadowcolor)
+make_shadow(heightmap, basedepth, shadowwidth, color, shadowcolor)
 }
 \arguments{
-\item{rows}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.}
-
-\item{cols}{Default `0`.}
+\item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.}
 
 \item{basedepth}{Default `grey20`.}
 
