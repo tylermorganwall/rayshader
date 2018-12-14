@@ -32,5 +32,27 @@ Hillshade with overlay.
 Overlays an image (with a transparency layer) on the current map.
 }
 \examples{
-#TBD
+#Here, we overlay a base R elevation plot with our raytraced shadow layer:
+
+fliplr = function(x) {
+ x[,ncol(x):1]
+}
+tempfilename = tempfile()
+png(tempfilename,width = 401,height=401)
+par(mar = c(0,0,0,0))
+raster::image(fliplr(montereybay),axes = FALSE,col = rev(terrain.colors(1000)))
+dev.off()
+tempmap = png::readPNG(tempfilename)
+
+montereybay \%>\%
+  ray_shade(zscale=50,maxsearch = 500,anglebreaks = seq(20,30,0.1)) \%>\%
+  add_overlay(tempmap,alphalayer = 0.5) \%>\%
+  plot_map()
+  
+#Combining base R plotting with rayshader's spherical color mapping and raytracing:
+montereybay \%>\%
+  sphere_shade() \%>\%
+  add_overlay(tempmap,alphalayer = 0.4) \%>\%
+  add_shadow(ray_shade(montereybay,zscale=50,maxsearch = 500)) \%>\%
+  plot_map()
 }

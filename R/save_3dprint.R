@@ -6,8 +6,6 @@
 #'@param maxwidth Default `125`. Desired maximum width of the 3D print in millimeters. Uses the units set in `unit` argument. Can also pass in a string, "125mm" or "5in".
 #'@param unit Default `mm`. Units of the `maxwidth` argument. Can also be set to inches with `in`. 
 #'@param rotate Default `TRUE`. If `FALSE`, the map will be printing on its side. This may improve resolution for some 3D printing types.
-#'@param shadow_exist Default `TRUE`. Set to `FALSE` if shadow is not present.
-#'@param remove_water Default `FALSE`. If `TRUE`, will remove the water layer added to the scene.
 #'@return Writes an STL file to `filename`. Regardless of the unit displayed, the output STL is in millimeters.
 #'@export
 #'@examples
@@ -43,29 +41,9 @@
 #'  plot_3d(volcano,zscale=3)
 #'save_3dprint(filename_stl, maxwidth = "120mm")
 #'}
-save_3dprint = function(filename,maxwidth=125,unit="mm",rotate=TRUE, shadow_exist = TRUE, remove_water = FALSE) {
+save_3dprint = function(filename,maxwidth=125,unit="mm",rotate=TRUE) {
   if(substring(filename, nchar(filename)-3,nchar(filename)) != ".stl") {
     filename = paste0(filename,".stl")
-  }
-  if(shadow_exist) {
-    ids = rgl::rgl.ids()
-    for(i in 2:nrow(ids)) {
-      if(ids$type[i] == "surface") {
-        rgl::rgl.pop(id=ids$id[i])
-        break
-      }
-    }
-  }
-  if(remove_water) {
-    ids = rgl::rgl.ids()
-    for(i in seq(nrow(ids),2,-1)) {
-      if(ids$type[i] != "surface") {
-        rgl::rgl.pop(id=ids$id[i])
-      } else {
-        rgl::rgl.pop(id=ids$id[i])
-        break
-      }
-    }
   }
   inch2mm = function(inch) {
     inch/0.0393
@@ -118,23 +96,33 @@ save_3dprint = function(filename,maxwidth=125,unit="mm",rotate=TRUE, shadow_exis
   }
   
   close.connection(stlfile)
-  dim1width = abs(min(vertexmatrix[,1])-max(vertexmatrix[,1]))
-  dim2width = abs(min(vertexmatrix[,3])-max(vertexmatrix[,3]))
-  dim3width = abs(min(vertexmatrix[,2])-max(vertexmatrix[,2]))
+  dim1width = abs(min(vertexmatrix[,1],na.rm = TRUE)-max(vertexmatrix[,1],na.rm = TRUE))
+  dim2width = abs(min(vertexmatrix[,3],na.rm = TRUE)-max(vertexmatrix[,3],na.rm = TRUE))
+  dim3width = abs(min(vertexmatrix[,2],na.rm = TRUE)-max(vertexmatrix[,2],na.rm = TRUE))
   maxdim = max(dim1width,dim2width)
   multiplier = maxwidth/maxdim
   
   stlfilewrite = file(filename, "wb")
   
   writeChar(header,stlfilewrite,nchars = 80,eos=NULL)
-  writeBin(numbertriangles, stlfilewrite, size=4, endian = "little")
+  adjustednumbertriangles = 0L
+  for(i in 1:numbertriangles) {
+    if(all(!is.nan(normalmatrix[i,,drop=FALSE])) && all(!is.nan(vertexmatrix[3*(i-1)+1,,drop=FALSE])) &&
+       all(!is.nan(vertexmatrix[3*(i-1)+2,,drop=FALSE])) && all(!is.nan(vertexmatrix[3*(i-1)+3,,drop=FALSE]))) {
+      adjustednumbertriangles = adjustednumbertriangles + 1L
+    }
+  }
+  writeBin(adjustednumbertriangles, stlfilewrite, size=4, endian = "little")
   
   for(i in 1:numbertriangles) {
-    writeBin(as.double(rot_z_90(normalmatrix[i,,drop=FALSE])), stlfilewrite,endian = "little",size=4)
-    writeBin(as.double(rot_z_90(vertexmatrix[3*(i-1)+1,,drop=FALSE])*multiplier), stlfilewrite, endian = "little",size=4)
-    writeBin(as.double(rot_z_90(vertexmatrix[3*(i-1)+2,,drop=FALSE])*multiplier), stlfilewrite, endian = "little",size=4)
-    writeBin(as.double(rot_z_90(vertexmatrix[3*(i-1)+3,,drop=FALSE])*multiplier), stlfilewrite, endian = "little",size=4)
-    writeBin(0L, stlfilewrite,size=2, endian = "little")
+    if(all(!is.nan(normalmatrix[i,,drop=FALSE])) && all(!is.nan(vertexmatrix[3*(i-1)+1,,drop=FALSE])) &&
+    all(!is.nan(vertexmatrix[3*(i-1)+2,,drop=FALSE])) && all(!is.nan(vertexmatrix[3*(i-1)+3,,drop=FALSE]))) {
+      writeBin(as.double(rot_z_90(normalmatrix[i,,drop=FALSE])), stlfilewrite,endian = "little",size=4)
+      writeBin(as.double(rot_z_90(vertexmatrix[3*(i-1)+1,,drop=FALSE])*multiplier), stlfilewrite, endian = "little",size=4)
+      writeBin(as.double(rot_z_90(vertexmatrix[3*(i-1)+2,,drop=FALSE])*multiplier), stlfilewrite, endian = "little",size=4)
+      writeBin(as.double(rot_z_90(vertexmatrix[3*(i-1)+3,,drop=FALSE])*multiplier), stlfilewrite, endian = "little",size=4)
+      writeBin(0L, stlfilewrite,size=2, endian = "little")
+    }
   }
   close.connection(stlfilewrite)
   if(!rotate) {

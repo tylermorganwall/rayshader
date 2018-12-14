@@ -5,7 +5,7 @@
 \title{make_waterlines}
 \usage{
 make_waterlines(heightmap, waterdepth = 0, linecolor = "grey40",
-  zscale = 1, alpha = 1, linewidth = 2)
+  zscale = 1, alpha = 1, linewidth = 2, antialias = FALSE)
 }
 \arguments{
 \item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.}
@@ -20,6 +20,8 @@ of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
 \item{alpha}{Default `1`. Transparency of lines.}
 
 \item{linewidth}{Default `2`. Water line width.}
+
+\item{antialias}{Default `FALSE`.}
 }
 \description{
 Makes the edge lines of

@@ -4,14 +4,14 @@
 \alias{plot_3d}
 \title{plot_3d}
 \usage{
-plot_3d(hillshade, heightmap, zscale = 1, solid = TRUE,
-  soliddepth = "auto", solidcolor = "grey20",
+plot_3d(hillshade, heightmap, zscale = 1, baseshape = "rectangle",
+  solid = TRUE, soliddepth = "auto", solidcolor = "grey20",
   solidlinecolor = "grey30", shadow = TRUE, shadowdepth = "auto",
   shadowcolor = "grey50", shadowwidth = "auto", water = FALSE,
   waterdepth = 0, watercolor = "lightblue", wateralpha = 0.5,
   waterlinecolor = NULL, waterlinealpha = 1, linewidth = 2,
-  theta = 45, phi = 45, fov = 0, zoom = 1, background = "white",
-  windowsize = c(600, 600), ...)
+  lineantialias = FALSE, theta = 45, phi = 45, fov = 0, zoom = 1,
+  background = "white", windowsize = c(600, 600), ...)
 }
 \arguments{
 \item{hillshade}{Hillshade/image to be added to 3D surface map.}
@@ -20,6 +20,8 @@ plot_3d(hillshade, heightmap, zscale = 1, solid = TRUE,
 
 \item{zscale}{Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
 of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10. Adjust the zscale down to exaggerate elevation features.}
+
+\item{baseshape}{Default `rectangle`. Shape of the base. Options are c("rectangle","circle","hex").}
 
 \item{solid}{Default `TRUE`. If `FALSE`, just the surface is rendered.}
 
@@ -51,6 +53,8 @@ of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
 
 \item{linewidth}{Default `2`. Width of the edge lines in the scene.}
 
+\item{lineantialias}{Default `FALSE`. Whether to anti-alias the lines in the scene.}
+
 \item{theta}{Default `45`. Rotation around z-axis.}
 
 \item{phi}{Default `45`. Azimuth angle.}
@@ -81,6 +85,37 @@ montereybay \%>\%
 montereybay \%>\%
  sphere_shade(texture="imhof2") \%>\%
  plot_3d(montereybay, zscale=50, water = TRUE, watercolor="imhof2", 
+         waterlinecolor="white", waterlinealpha=0.5)
+}
+
+#We can also change the base by setting "baseshape" to "hex" or "circle"
+\donttest{
+montereybay \%>\%
+ sphere_shade(texture="imhof1") \%>\%
+ plot_3d(montereybay, zscale=50, water = TRUE, watercolor="imhof1", 
+         waterlinecolor="white", waterlinealpha=0.5,baseshape="circle")
+}
+
+\donttest{
+montereybay \%>\%
+ sphere_shade(texture="imhof1") \%>\%
+ plot_3d(montereybay, zscale=50, water = TRUE, watercolor="imhof1", 
+         waterlinecolor="white", waterlinealpha=0.5,baseshape="hex")
+}
+
+#Or we can carve out the region of interest ourselves, by setting those entries to NA
+#to the elevation map passed into `plot_3d`
+
+#Here, we only include the deep bathymetry data by setting all points greater than -2
+#in the copied elevation matrix to NA.
+
+mb_water = montereybay
+mb_water[mb_water > -2] = NA
+
+\donttest{
+montereybay \%>\%
+ sphere_shade(texture="imhof1") \%>\%
+ plot_3d(mb_water, zscale=50, water = TRUE, watercolor="imhof1", 
          waterlinecolor="white", waterlinealpha=0.5)
 }
 }

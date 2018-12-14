@@ -10,11 +10,18 @@
 #'@keywords internal
 make_base = function(heightmap,basedepth=0,basecolor="grey20",zscale=1) {
   heightmap = heightmap[,ncol(heightmap):1]/zscale
-  heightmap1 = heightmap[1,]
-  heightmap2 = heightmap[,1]
-  heightmap3 = heightmap[nrow(heightmap),]
-  heightmap4 = heightmap[,ncol(heightmap)]
-  heightlist = make_base_cpp(heightmap1,heightmap2,heightmap3,heightmap4,heightmap,basedepth)
-  fullsides = do.call(rbind,heightlist)
-  rgl::triangles3d(fullsides,lit=FALSE,color=basecolor,front="fill",back="culled")
+  na_matrix = is.na(heightmap)
+  heightlist = make_base_cpp(heightmap, na_matrix, basedepth)
+  if(all(!is.na(heightmap))) {
+    heightlist[[length(heightlist)+1]] = matrix(c(1,nrow(heightmap),nrow(heightmap), basedepth,basedepth,basedepth,-1,-ncol(heightmap),-1),3,3)
+    heightlist[[length(heightlist)+2]] = matrix(c(1,nrow(heightmap),1,basedepth,basedepth,basedepth,-ncol(heightmap),-ncol(heightmap),-1),3,3)
+    fullsides = do.call(rbind,heightlist)
+    rgl::triangles3d(fullsides,lit=FALSE,color=basecolor,front="filled",back="filled")
+  } else {
+    fullsides = do.call(rbind,heightlist)
+    basemat = matrix(basedepth,nrow(heightmap),ncol(heightmap))
+    basemat[is.na(heightmap)] = NA
+    rgl.surface(1:nrow(basemat),-(1:ncol(basemat)),basemat,color=basecolor,lit=FALSE,back="filled",front="filled")
+    rgl::triangles3d(fullsides,lit=FALSE,color=basecolor,front="filled",back="filled")
+  }
 }

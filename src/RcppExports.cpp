@@ -93,50 +93,54 @@ BEGIN_RCPP
 END_RCPP
 }
 // make_base_cpp
-List make_base_cpp(NumericVector side1, NumericVector side2, NumericVector side3, NumericVector side4, NumericMatrix& heightmap, double basedepth);
-RcppExport SEXP _rayshader_make_base_cpp(SEXP side1SEXP, SEXP side2SEXP, SEXP side3SEXP, SEXP side4SEXP, SEXP heightmapSEXP, SEXP basedepthSEXP) {
+List make_base_cpp(NumericMatrix& heightmap, LogicalMatrix& na_matrix, double basedepth);
+RcppExport SEXP _rayshader_make_base_cpp(SEXP heightmapSEXP, SEXP na_matrixSEXP, SEXP basedepthSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< NumericVector >::type side1(side1SEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type side2(side2SEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type side3(side3SEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type side4(side4SEXP);
     Rcpp::traits::input_parameter< NumericMatrix& >::type heightmap(heightmapSEXP);
+    Rcpp::traits::input_parameter< LogicalMatrix& >::type na_matrix(na_matrixSEXP);
     Rcpp::traits::input_parameter< double >::type basedepth(basedepthSEXP);
-    rcpp_result_gen = Rcpp::wrap(make_base_cpp(side1, side2, side3, side4, heightmap, basedepth));
+    rcpp_result_gen = Rcpp::wrap(make_base_cpp(heightmap, na_matrix, basedepth));
     return rcpp_result_gen;
 END_RCPP
 }
 // make_water_cpp
-List make_water_cpp(NumericVector side1, NumericVector side2, NumericVector side3, NumericVector side4, NumericMatrix& heightmap, double waterheight);
-RcppExport SEXP _rayshader_make_water_cpp(SEXP side1SEXP, SEXP side2SEXP, SEXP side3SEXP, SEXP side4SEXP, SEXP heightmapSEXP, SEXP waterheightSEXP) {
+List make_water_cpp(NumericMatrix& heightmap, LogicalMatrix& na_matrix, double waterheight);
+RcppExport SEXP _rayshader_make_water_cpp(SEXP heightmapSEXP, SEXP na_matrixSEXP, SEXP waterheightSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< NumericVector >::type side1(side1SEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type side2(side2SEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type side3(side3SEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type side4(side4SEXP);
     Rcpp::traits::input_parameter< NumericMatrix& >::type heightmap(heightmapSEXP);
+    Rcpp::traits::input_parameter< LogicalMatrix& >::type na_matrix(na_matrixSEXP);
     Rcpp::traits::input_parameter< double >::type waterheight(waterheightSEXP);
-    rcpp_result_gen = Rcpp::wrap(make_water_cpp(side1, side2, side3, side4, heightmap, waterheight));
+    rcpp_result_gen = Rcpp::wrap(make_water_cpp(heightmap, na_matrix, waterheight));
     return rcpp_result_gen;
 END_RCPP
 }
 // make_waterlines_cpp
-List make_waterlines_cpp(NumericVector side1, NumericVector side2, NumericVector side3, NumericVector side4, NumericMatrix& heightmap, double waterdepth);
-RcppExport SEXP _rayshader_make_waterlines_cpp(SEXP side1SEXP, SEXP side2SEXP, SEXP side3SEXP, SEXP side4SEXP, SEXP heightmapSEXP, SEXP waterdepthSEXP) {
+List make_waterlines_cpp(NumericMatrix& heightmap, LogicalMatrix& na_matrix, double waterdepth);
+RcppExport SEXP _rayshader_make_waterlines_cpp(SEXP heightmapSEXP, SEXP na_matrixSEXP, SEXP waterdepthSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< NumericVector >::type side1(side1SEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type side2(side2SEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type side3(side3SEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type side4(side4SEXP);
     Rcpp::traits::input_parameter< NumericMatrix& >::type heightmap(heightmapSEXP);
+    Rcpp::traits::input_parameter< LogicalMatrix& >::type na_matrix(na_matrixSEXP);
     Rcpp::traits::input_parameter< double >::type waterdepth(waterdepthSEXP);
-    rcpp_result_gen = Rcpp::wrap(make_waterlines_cpp(side1, side2, side3, side4, heightmap, waterdepth));
+    rcpp_result_gen = Rcpp::wrap(make_waterlines_cpp(heightmap, na_matrix, waterdepth));
+    return rcpp_result_gen;
+END_RCPP
+}
+// make_baselines_cpp
+List make_baselines_cpp(NumericMatrix& heightmap, LogicalMatrix& na_matrix, double waterdepth);
+RcppExport SEXP _rayshader_make_baselines_cpp(SEXP heightmapSEXP, SEXP na_matrixSEXP, SEXP waterdepthSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix& >::type heightmap(heightmapSEXP);
+    Rcpp::traits::input_parameter< LogicalMatrix& >::type na_matrix(na_matrixSEXP);
+    Rcpp::traits::input_parameter< double >::type waterdepth(waterdepthSEXP);
+    rcpp_result_gen = Rcpp::wrap(make_baselines_cpp(heightmap, na_matrix, waterdepth));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -224,23 +228,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// rayshade_multicore
-NumericMatrix rayshade_multicore(double sunangle, NumericVector anglebreaks, NumericMatrix& heightmap, double zscale, NumericVector chunkindices, double maxsearch, NumericVector& cache_mask);
-RcppExport SEXP _rayshader_rayshade_multicore(SEXP sunangleSEXP, SEXP anglebreaksSEXP, SEXP heightmapSEXP, SEXP zscaleSEXP, SEXP chunkindicesSEXP, SEXP maxsearchSEXP, SEXP cache_maskSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< double >::type sunangle(sunangleSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type anglebreaks(anglebreaksSEXP);
-    Rcpp::traits::input_parameter< NumericMatrix& >::type heightmap(heightmapSEXP);
-    Rcpp::traits::input_parameter< double >::type zscale(zscaleSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type chunkindices(chunkindicesSEXP);
-    Rcpp::traits::input_parameter< double >::type maxsearch(maxsearchSEXP);
-    Rcpp::traits::input_parameter< NumericVector& >::type cache_mask(cache_maskSEXP);
-    rcpp_result_gen = Rcpp::wrap(rayshade_multicore(sunangle, anglebreaks, heightmap, zscale, chunkindices, maxsearch, cache_mask));
-    return rcpp_result_gen;
-END_RCPP
-}
 // rayshade_cpp
 NumericMatrix rayshade_cpp(double sunangle, NumericVector anglebreaks, NumericMatrix& heightmap, double zscale, double maxsearch, const NumericMatrix cache_mask, bool progbar);
 RcppExport SEXP _rayshader_rayshade_cpp(SEXP sunangleSEXP, SEXP anglebreaksSEXP, SEXP heightmapSEXP, SEXP zscaleSEXP, SEXP maxsearchSEXP, SEXP cache_maskSEXP, SEXP progbarSEXP) {
@@ -258,6 +245,23 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// rayshade_multicore
+NumericMatrix rayshade_multicore(double sunangle, NumericVector anglebreaks, NumericMatrix& heightmap, double zscale, NumericVector chunkindices, double maxsearch, NumericVector& cache_mask);
+RcppExport SEXP _rayshader_rayshade_multicore(SEXP sunangleSEXP, SEXP anglebreaksSEXP, SEXP heightmapSEXP, SEXP zscaleSEXP, SEXP chunkindicesSEXP, SEXP maxsearchSEXP, SEXP cache_maskSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type sunangle(sunangleSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type anglebreaks(anglebreaksSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix& >::type heightmap(heightmapSEXP);
+    Rcpp::traits::input_parameter< double >::type zscale(zscaleSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type chunkindices(chunkindicesSEXP);
+    Rcpp::traits::input_parameter< double >::type maxsearch(maxsearchSEXP);
+    Rcpp::traits::input_parameter< NumericVector& >::type cache_mask(cache_maskSEXP);
+    rcpp_result_gen = Rcpp::wrap(rayshade_multicore(sunangle, anglebreaks, heightmap, zscale, chunkindices, maxsearch, cache_mask));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_rayshader_bilineargrid", (DL_FUNC) &_rayshader_bilineargrid, 1},
@@ -267,17 +271,18 @@ static const R_CallMethodDef CallEntries[] = {
     {"_rayshader_find_groups_cpp", (DL_FUNC) &_rayshader_find_groups_cpp, 1},
     {"_rayshader_interpolate_color", (DL_FUNC) &_rayshader_interpolate_color, 4},
     {"_rayshader_lambshade_cpp", (DL_FUNC) &_rayshader_lambshade_cpp, 2},
-    {"_rayshader_make_base_cpp", (DL_FUNC) &_rayshader_make_base_cpp, 6},
-    {"_rayshader_make_water_cpp", (DL_FUNC) &_rayshader_make_water_cpp, 6},
-    {"_rayshader_make_waterlines_cpp", (DL_FUNC) &_rayshader_make_waterlines_cpp, 6},
+    {"_rayshader_make_base_cpp", (DL_FUNC) &_rayshader_make_base_cpp, 3},
+    {"_rayshader_make_water_cpp", (DL_FUNC) &_rayshader_make_water_cpp, 3},
+    {"_rayshader_make_waterlines_cpp", (DL_FUNC) &_rayshader_make_waterlines_cpp, 3},
+    {"_rayshader_make_baselines_cpp", (DL_FUNC) &_rayshader_make_baselines_cpp, 3},
     {"_rayshader_subsample", (DL_FUNC) &_rayshader_subsample, 2},
     {"_rayshader_subsample_rect", (DL_FUNC) &_rayshader_subsample_rect, 3},
     {"_rayshader_gen_circle_psf", (DL_FUNC) &_rayshader_gen_circle_psf, 1},
     {"_rayshader_is_inside", (DL_FUNC) &_rayshader_is_inside, 5},
     {"_rayshader_gen_hex_psf", (DL_FUNC) &_rayshader_gen_hex_psf, 2},
     {"_rayshader_psf", (DL_FUNC) &_rayshader_psf, 11},
-    {"_rayshader_rayshade_multicore", (DL_FUNC) &_rayshader_rayshade_multicore, 7},
     {"_rayshader_rayshade_cpp", (DL_FUNC) &_rayshader_rayshade_cpp, 7},
+    {"_rayshader_rayshade_multicore", (DL_FUNC) &_rayshader_rayshade_multicore, 7},
     {NULL, NULL, 0}
 };
 

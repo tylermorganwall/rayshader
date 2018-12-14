@@ -29,16 +29,20 @@ lambshade_cpp <- function(heightmap, rayvector) {
     .Call(`_rayshader_lambshade_cpp`, heightmap, rayvector)
 }
 
-make_base_cpp <- function(side1, side2, side3, side4, heightmap, basedepth) {
-    .Call(`_rayshader_make_base_cpp`, side1, side2, side3, side4, heightmap, basedepth)
+make_base_cpp <- function(heightmap, na_matrix, basedepth) {
+    .Call(`_rayshader_make_base_cpp`, heightmap, na_matrix, basedepth)
 }
 
-make_water_cpp <- function(side1, side2, side3, side4, heightmap, waterheight) {
-    .Call(`_rayshader_make_water_cpp`, side1, side2, side3, side4, heightmap, waterheight)
+make_water_cpp <- function(heightmap, na_matrix, waterheight) {
+    .Call(`_rayshader_make_water_cpp`, heightmap, na_matrix, waterheight)
 }
 
-make_waterlines_cpp <- function(side1, side2, side3, side4, heightmap, waterdepth) {
-    .Call(`_rayshader_make_waterlines_cpp`, side1, side2, side3, side4, heightmap, waterdepth)
+make_waterlines_cpp <- function(heightmap, na_matrix, waterdepth) {
+    .Call(`_rayshader_make_waterlines_cpp`, heightmap, na_matrix, waterdepth)
+}
+
+make_baselines_cpp <- function(heightmap, na_matrix, waterdepth) {
+    .Call(`_rayshader_make_baselines_cpp`, heightmap, na_matrix, waterdepth)
 }
 
 subsample <- function(circle, size) {
@@ -65,11 +69,11 @@ psf <- function(image, blurmatrix, depthmap, depth, custombokeh, type, bokehinte
     .Call(`_rayshader_psf`, image, blurmatrix, depthmap, depth, custombokeh, type, bokehintensity, bokehlimit, rotation, progbar, channel)
 }
 
-rayshade_multicore <- function(sunangle, anglebreaks, heightmap, zscale, chunkindices, maxsearch, cache_mask) {
-    .Call(`_rayshader_rayshade_multicore`, sunangle, anglebreaks, heightmap, zscale, chunkindices, maxsearch, cache_mask)
-}
-
 rayshade_cpp <- function(sunangle, anglebreaks, heightmap, zscale, maxsearch, cache_mask, progbar) {
     .Call(`_rayshader_rayshade_cpp`, sunangle, anglebreaks, heightmap, zscale, maxsearch, cache_mask, progbar)
+}
+
+rayshade_multicore <- function(sunangle, anglebreaks, heightmap, zscale, chunkindices, maxsearch, cache_mask) {
+    .Call(`_rayshader_rayshade_multicore`, sunangle, anglebreaks, heightmap, zscale, chunkindices, maxsearch, cache_mask)
 }
 

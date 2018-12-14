@@ -85,7 +85,7 @@ And three functions to display and save your maps:
 
   - `plot_map` Plots the current map. Accepts either a matrix or an
     array.
-  - `write_png` Writes the current map to disk with a user-specified
+  - `save_png` Writes the current map to disk with a user-specified
     filename.
   - `plot_3d` Creates a 3D map, given a texture and an elevation matrix.
     You can customize the appearance of the map, as well as add a

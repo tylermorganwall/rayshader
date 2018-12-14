@@ -16,11 +16,33 @@
 #'@return Hillshade with overlay.
 #'@export
 #'@examples
-#'#TBD
-add_overlay = function(hillshade, overlay, alphacolor=NULL, 
-                       alphalayer = 1, alphamethod = "max", gamma_correction = TRUE) {
+#'#Here, we overlay a base R elevation plot with our raytraced shadow layer:
+#'
+#'fliplr = function(x) {
+#'  x[,ncol(x):1]
+#'}
+#'tempfilename = tempfile()
+#'png(tempfilename,width = 401,height=401)
+#'par(mar = c(0,0,0,0))
+#'raster::image(fliplr(montereybay),axes = FALSE,col = rev(terrain.colors(1000)))
+#'dev.off()
+#'tempmap = png::readPNG(tempfilename)
+#' 
+#'montereybay %>%
+#'   ray_shade(zscale=50,maxsearch = 500,anglebreaks = seq(20,30,0.1)) %>%
+#'   add_overlay(tempmap,alphalayer = 0.5) %>%
+#'   plot_map()
+#'   
+#'#Combining base R plotting with rayshader's spherical color mapping and raytracing:
+#'montereybay %>%
+#'   sphere_shade() %>%
+#'   add_overlay(tempmap,alphalayer = 0.4) %>%
+#'   add_shadow(ray_shade(montereybay,zscale=50,maxsearch = 500)) %>%
+#'   plot_map()
+add_overlay = function(hillshade, overlay, alphacolor=NULL, alphalayer = 1, alphamethod = "max", 
+                       gamma_correction = TRUE) {
   flipud = function(x) {
-    x[nrow(x):1,]
+    x[,ncol(x):1]
   }
   if(any(alphalayer > 1 || alphalayer < 0)) {
     stop("Argument `alphalayer` must not be less than 0 or more than 1")
@@ -31,10 +53,10 @@ add_overlay = function(hillshade, overlay, alphacolor=NULL,
         stop("Error: Not a shadow matrix. Intensities must be between 0 and 1. Pass your elevation matrix to ray_shade/lamb_shade/ambient_shade/sphere_shade first.")
       }
       temp = array(0,dim = c(nrow(hillshade),ncol(hillshade),3))
-      temp[,,1] = flipud(t(hillshade))
-      temp[,,2] = flipud(t(hillshade))
-      temp[,,3] = flipud(t(hillshade))
-      hillshade = temp
+      temp[,,1] = flipud(hillshade)
+      temp[,,2] = flipud(hillshade)
+      temp[,,3] = flipud(hillshade)
+      hillshade = aperm(temp,c(2,1,3))
     } else {
       stop("Argument `hillshade` must be a RGB 3/4D array or 1D shadow matrix.")
     }
@@ -83,7 +105,6 @@ add_overlay = function(hillshade, overlay, alphacolor=NULL,
         overlay[,,4] = alphamat
       }
     }
-    # overlay = aperm(overlay, c(1,2,3))
     if(!is.null(alphacolor)) {
       colorvals = col2rgb(alphacolor)/255
       alphalayer1 = overlay[,,1] == colorvals[1] & overlay[,,2] == colorvals[2] & overlay[,,3] == colorvals[3]
