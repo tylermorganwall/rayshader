@@ -88,7 +88,7 @@ add_overlay = function(hillshade, overlay, alphacolor=NULL, alphalayer = 1, alph
   
   if(dim(overlay)[3] == 4 || alphalayer != 1) {
     if(dim(overlay)[3] == 3) {
-      temp = array(alphalayer,dim = c(ncol(overlay),nrow(overlay),4))
+      temp = array(alphalayer,dim = c(nrow(overlay),ncol(overlay),4))
       temp[,,1:3] = overlay[,,1:3]
       overlay = temp
     }
