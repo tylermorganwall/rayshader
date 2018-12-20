@@ -139,7 +139,7 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
     }
     heightmap[radmat == 0] = NA
   }
-  if(any(hillshade > 1 || hillshade < 0)) {
+  if(any(hillshade > 1 || hillshade < 0, na.rm = TRUE)) {
     stop("Argument `hillshade` must not contain any entries less than 0 or more than 1")
   }
   flipud = function(x) {
