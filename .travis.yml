@@ -33,6 +33,11 @@ sudo: false
 dist: trusty
 cache: packages
 latex: false
+addons:
+  apt:
+    packages:
+      - libgdal-dev
+      - libproj-dev
 
 #env
 env:
