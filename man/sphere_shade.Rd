@@ -2,7 +2,7 @@
 % Please edit documentation in R/sphere_shade.R
 \name{sphere_shade}
 \alias{sphere_shade}
-\title{sphere_shade}
+\title{Calculate Surface Color Map}
 \usage{
 sphere_shade(heightmap, sunangle = 315, texture = "imhof1",
   normalvectors = NULL, zscale = 1, progbar = interactive())
@@ -25,10 +25,28 @@ of the built-in palettes (`imhof1`,`imhof2`,`imhof3`,`imhof4`,`desert`, `bw`, an
 RGB array of hillshaded texture mappings.
 }
 \description{
-Calculates local shadow map for a elevation matrix by calculating the dot 
-product between light direction and the surface normal vector at that point. Each point's
-intensity is proportional to the cosine of the normal ve
+Calculates a color for each point on the surface using the surface normals and
+hemispherical UV mapping. This uses either a texture map provided by the user (as an RGB array),
+or a built-in color texture.
 }
 \examples{
-plot_map(sphere_shade(volcano,texture="desert"))
+montereybay \%>\%
+ sphere_shade() \%>\%
+ plot_map()
+ 
+#Change to a built-in color texture:
+montereybay \%>\%
+ sphere_shade(texture="desert") \%>\%
+ plot_map()
+
+#Change the highlight angle:
+montereybay \%>\%
+ sphere_shade(texture="desert", sunangle = 45) \%>\%
+ plot_map()
+
+#Create our own texture using the `create_texture` function:
+montereybay \%>\%
+ sphere_shade(texture=create_texture("springgreen","darkgreen",
+                                     "turquoise","steelblue3","white")) \%>\%
+ plot_map()
 }

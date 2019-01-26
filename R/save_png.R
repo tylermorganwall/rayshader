@@ -1,4 +1,4 @@
-#'@title save_png
+#'@title Save PNG
 #'
 #'@description Writes the hillshaded map to file.
 #'

@@ -2,9 +2,10 @@
 % Please edit documentation in R/save_3dprint.R
 \name{save_3dprint}
 \alias{save_3dprint}
-\title{save_3dprint}
+\title{Save 3D Print}
 \usage{
-save_3dprint(filename, maxwidth = 125, unit = "mm", rotate = TRUE)
+save_3dprint(filename, maxwidth = 125, unit = "mm", rotate = TRUE,
+  remove_extras = TRUE)
 }
 \arguments{
 \item{filename}{String with the filename. If `.stl` is not at the end of the string, it will be appended automatically.}
@@ -14,6 +15,8 @@ save_3dprint(filename, maxwidth = 125, unit = "mm", rotate = TRUE)
 \item{unit}{Default `mm`. Units of the `maxwidth` argument. Can also be set to inches with `in`.}
 
 \item{rotate}{Default `TRUE`. If `FALSE`, the map will be printing on its side. This may improve resolution for some 3D printing types.}
+
+\item{remove_extras}{Default `TRUE`. Removes non-topographic features from base: lines, water, labels, and the shadow.}
 }
 \value{
 Writes an STL file to `filename`. Regardless of the unit displayed, the output STL is in millimeters.
@@ -30,6 +33,7 @@ volcano \%>\%
  sphere_shade() \%>\%
  plot_3d(volcano,zscale=3)
 save_3dprint(filename_stl)
+rgl::rgl.clear()
 }
 
 #Save the STL file into `filename_stl`, setting maximum width to 100 mm
@@ -38,6 +42,7 @@ volcano \%>\%
  sphere_shade() \%>\%
  plot_3d(volcano,zscale=3)
 save_3dprint(filename_stl, maxwidth = 100)
+rgl::rgl.clear()
 }
 
 #'#Save the STL file into `filename_stl`, setting maximum width to 4 inches
@@ -46,6 +51,7 @@ volcano \%>\%
  sphere_shade() \%>\%
  plot_3d(volcano,zscale=3)
 save_3dprint(filename_stl, maxwidth = 4, unit = "in")
+rgl::rgl.clear()
 }
 #'#'#Save the STL file into `filename_stl`, setting maximum width (character) to 120mm
 \donttest{
@@ -53,5 +59,6 @@ volcano \%>\%
  sphere_shade() \%>\%
  plot_3d(volcano,zscale=3)
 save_3dprint(filename_stl, maxwidth = "120mm")
+rgl::rgl.clear()
 }
 }

@@ -60,15 +60,20 @@ Adds a marker and label to the current 3D plot
 montereybay \%>\%
  sphere_shade() \%>\%
  plot_3d(montereybay,zscale=50,water=TRUE)
+render_snapshot()
  
 #We want to add a label to Santa Cruz, so we use the x and y matrix coordinate (x=220 and y=330)
 render_label(montereybay,x=220,y=330, z=10000,zscale=50,text = "Santa Cruz")
+render_snapshot()
 
 #We can also change the linetype to dashed by setting `dashed = TRUE` (additional options allow
 #the user to control the dash length)
 render_label(montereybay,x=300,y=120, z=10000,zscale=50,text = "Monterey",dashed=TRUE)
+render_snapshot()
 
 #By default, z specifies the altitude above that point on the elevation matrix. We can also specify 
 #an absolute height by setting `relativez=FALSE`.
 render_label(montereybay,x=50,y=130, z=2000,zscale=50,text = "Monterey Canyon",relativez=FALSE)
+render_snapshot()
+rgl::rgl.clear()
 }

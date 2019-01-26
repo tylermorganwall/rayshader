@@ -2,7 +2,7 @@
 % Please edit documentation in R/add_water.R
 \name{add_water}
 \alias{add_water}
-\title{add_water}
+\title{Add Water}
 \usage{
 add_water(hillshade, watermap, color = "imhof1")
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/ray_shade.R
 \name{ray_shade}
 \alias{ray_shade}
-\title{Rayshade}
+\title{Calculate Raytraced Shadow Map}
 \usage{
 ray_shade(heightmap, anglebreaks = seq(40, 50, 1), sunangle = 315,
   maxsearch = 100, lambert = TRUE, zscale = 1, multicore = FALSE,
@@ -41,7 +41,7 @@ If present, this will only compute the raytraced shadows for those points with v
 Matrix of light intensities at each point.
 }
 \description{
-Calculates global shadow map for a elevation matrix by propogating rays from each matrix point to the light source(s),
+Calculates shadow map for a elevation matrix by propogating rays from each matrix point to the light source(s),
 lowering the brightness at each point for each ray that intersects the surface.
 }
 \examples{

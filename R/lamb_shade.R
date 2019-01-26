@@ -1,4 +1,4 @@
-#'@title lambshade
+#'@title Calculate Lambert Shading Map
 #'
 #'@description Calculates local shadow map for a elevation matrix by calculating the dot 
 #'product between light direction and the surface normal vector at that point. Each point's

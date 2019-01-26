@@ -2,7 +2,7 @@
 % Please edit documentation in R/save_png.R
 \name{save_png}
 \alias{save_png}
-\title{save_png}
+\title{Save PNG}
 \usage{
 save_png(hillshade, filename, rotate = 0)
 }

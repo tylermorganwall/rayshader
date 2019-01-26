@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot_3d.R
 \name{plot_3d}
 \alias{plot_3d}
-\title{plot_3d}
+\title{Plot 3D}
 \usage{
 plot_3d(hillshade, heightmap, zscale = 1, baseshape = "rectangle",
   solid = TRUE, soliddepth = "auto", solidcolor = "grey20",
@@ -78,6 +78,7 @@ Displays the shaded map in 3D with the `rgl` package.
 montereybay \%>\%
  sphere_shade(texture="desert") \%>\%
  plot_3d(montereybay,zscale=50)
+render_snapshot()
 }
 
 #With a water layer  
@@ -86,36 +87,44 @@ montereybay \%>\%
  sphere_shade(texture="imhof2") \%>\%
  plot_3d(montereybay, zscale=50, water = TRUE, watercolor="imhof2", 
          waterlinecolor="white", waterlinealpha=0.5)
+render_snapshot()
+rgl::rgl.clear()
 }
 
 #We can also change the base by setting "baseshape" to "hex" or "circle"
 \donttest{
 montereybay \%>\%
  sphere_shade(texture="imhof1") \%>\%
- plot_3d(montereybay, zscale=50, water = TRUE, watercolor="imhof1", 
+ plot_3d(montereybay, zscale=50, water = TRUE, watercolor="imhof1", theta=-45, zoom=0.7,
          waterlinecolor="white", waterlinealpha=0.5,baseshape="circle")
+render_snapshot()
+rgl::rgl.clear()
 }
 
 \donttest{
 montereybay \%>\%
  sphere_shade(texture="imhof1") \%>\%
- plot_3d(montereybay, zscale=50, water = TRUE, watercolor="imhof1", 
+ plot_3d(montereybay, zscale=50, water = TRUE, watercolor="imhof1", theta=-45, zoom=0.7,
          waterlinecolor="white", waterlinealpha=0.5,baseshape="hex")
+render_snapshot()
+rgl::rgl.clear()
 }
 
 #Or we can carve out the region of interest ourselves, by setting those entries to NA
 #to the elevation map passed into `plot_3d`
 
-#Here, we only include the deep bathymetry data by setting all points greater than -2
+#Here, we only include the deep bathymetry data by setting all points greater than -10
 #in the copied elevation matrix to NA.
 
 mb_water = montereybay
-mb_water[mb_water > -2] = NA
+mb_water[mb_water > -10] = NA
 
 \donttest{
 montereybay \%>\%
  sphere_shade(texture="imhof1") \%>\%
- plot_3d(mb_water, zscale=50, water = TRUE, watercolor="imhof1", 
+ plot_3d(mb_water, zscale=50, water = TRUE, watercolor="imhof1", theta=-45,
          waterlinecolor="white", waterlinealpha=0.5)
+render_snapshot()
+rgl::rgl.clear()
 }
 }

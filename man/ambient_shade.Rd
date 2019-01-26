@@ -2,7 +2,7 @@
 % Please edit documentation in R/ambient_shade.R
 \name{ambient_shade}
 \alias{ambient_shade}
-\title{Ambient Occlusion}
+\title{Calculate Ambient Occlusion Map}
 \usage{
 ambient_shade(heightmap, anglebreaks = seq(1, 46, 15), sunbreaks = 12,
   maxsearch = 20, multicore = FALSE, zscale = 1, cache_mask = NULL,
@@ -37,10 +37,12 @@ Shaded texture map.
 Calculates Ambient Occlusion Shadow Map
 }
 \examples{
-#Here we produce a ambient occlusion map of the `volcano` elevation map.
-amb = ambient_shade(heightmap = volcano, 
-   sunbreaks = 15, 
-   maxsearch = 100)
-   
+#Here we produce a ambient occlusion map of the `montereybay` elevation map.
+amb = ambient_shade(heightmap = montereybay)
+plot_map(amb)
+
+#We can increase the distance to look for surface intersections `maxsearch`
+#and the density of rays sent out around the point `sunbreaks`.
+amb = ambient_shade(heightmap = montereybay,sunbreaks=24,maxsearch=50)
 plot_map(amb)
 }

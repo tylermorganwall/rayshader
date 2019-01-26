@@ -1,4 +1,4 @@
-#'@title add_water
+#'@title Add Water
 #'
 #'@description Adds a layer of water to a map.
 #'

@@ -22,3 +22,4 @@ of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
 \description{
 Makes the water in the 3D elevation map.
 }
+\keyword{internal}

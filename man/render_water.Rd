@@ -6,7 +6,7 @@
 \usage{
 render_water(heightmap, waterdepth = 0, watercolor = "lightblue",
   zscale = 1, wateralpha = 0.5, waterlinecolor = NULL,
-  waterlinealpha = 1, linewidth = 2, remove_water = FALSE)
+  waterlinealpha = 1, linewidth = 2, remove_water = TRUE)
 }
 \arguments{
 \item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.}
@@ -26,7 +26,7 @@ of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
 
 \item{linewidth}{Default `2`. Width of the edge lines in the scene.}
 
-\item{remove_water}{Default `FALSE`. If `TRUE`, will remove existing water layer and replace it with new layer.}
+\item{remove_water}{Default `TRUE`. If `TRUE`, will remove existing water layer and replace it with new layer.}
 }
 \description{
 Adds water layer to the scene, removing the previous water layer if desired.
@@ -34,8 +34,15 @@ Adds water layer to the scene, removing the previous water layer if desired.
 \examples{
 montereybay \%>\%
  sphere_shade() \%>\%
- plot_3d(montereybay)
+ plot_3d(montereybay,zscale=50)
+render_snapshot()
  
 #We want to add a layer of water after the initial render.
-render_water(montereybay)
+render_water(montereybay,zscale=50)
+render_snapshot()
+
+#Call it again to change the water depth
+render_water(montereybay,zscale=50,waterdepth=-1000)
+render_snapshot()
+rgl::rgl.clear()
 }

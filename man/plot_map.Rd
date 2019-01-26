@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot_map.R
 \name{plot_map}
 \alias{plot_map}
-\title{plot_map}
+\title{Plot Map}
 \usage{
 plot_map(hillshade, rotate = 0, ...)
 }
@@ -14,8 +14,7 @@ plot_map(hillshade, rotate = 0, ...)
 \item{...}{Additional arguments to pass to the `raster::plotRGB` function that displays the map.}
 }
 \description{
-Displays the shaded map. If the input is an array, it uses raster's plotRGB
-function.
+Displays the map in the current device.
 }
 \examples{
 #Plotting a spherical texture map of the volcano dataset.

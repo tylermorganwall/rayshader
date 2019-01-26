@@ -51,4 +51,5 @@ montereybay \%>\%
 render_depth(focallength = 30)
 render_depth(focallength = 30,fstop=2)
 render_depth(focallength = 30,fstop=2)
+rgl::rgl.clear()
 }

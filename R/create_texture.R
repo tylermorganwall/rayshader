@@ -1,4 +1,4 @@
-#'@title create_texture
+#'@title Create Texture
 #'
 #'@description Creates a texture map based on 5 user-supplied colors.
 #'

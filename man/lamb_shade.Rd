@@ -2,7 +2,7 @@
 % Please edit documentation in R/lamb_shade.R
 \name{lamb_shade}
 \alias{lamb_shade}
-\title{lambshade}
+\title{Calculate Lambert Shading Map}
 \usage{
 lamb_shade(heightmap, rayangle = 45, sunangle = 315, zscale = 1,
   zero_negative = TRUE)

@@ -2,7 +2,7 @@
 % Please edit documentation in R/create_texture.R
 \name{create_texture}
 \alias{create_texture}
-\title{create_texture}
+\title{Create Texture}
 \usage{
 create_texture(lightcolor, shadowcolor, leftcolor, rightcolor, centercolor,
   cornercolors = NULL)
