@@ -37,5 +37,5 @@ make_shadow = function(heightmap, basedepth, shadowwidth, color, shadowcolor) {
   rgl.surface((-shadowwidth+1):(rows+shadowwidth),
               -(-shadowwidth+1):-(cols+shadowwidth),
               basedepthmat,texture=paste0(tempmap,".png"),
-              lit=FALSE,back="culled")
+              lit=FALSE,back="culled",ambient = "#000006")
 }

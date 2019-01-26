@@ -53,6 +53,7 @@ make_lines = function(heightmap,basedepth=0,linecolor="grey20",zscale=1,alpha=1,
   }
   if(length(heightlist) > 0) {
     segmentlist = do.call(rbind,heightlist)
-    rgl::segments3d(segmentlist,color=linecolor,lwd=linewidth,alpha=alpha,depth_mask=TRUE, line_antialias=FALSE, depth_test="lequal")
+    rgl::segments3d(segmentlist,color=linecolor,lwd=linewidth,alpha=alpha,depth_mask=TRUE, 
+                    line_antialias=FALSE, depth_test="lequal",ambient = ifelse(solid,"#000004","#000005"))
   }
 }

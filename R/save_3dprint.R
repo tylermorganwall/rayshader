@@ -1,4 +1,4 @@
-#'@title save_3dprint
+#'@title Save 3D Print 
 #'
 #'@description Writes a stereolithography (STL) file that can be used in 3D printing.
 #'
@@ -6,6 +6,7 @@
 #'@param maxwidth Default `125`. Desired maximum width of the 3D print in millimeters. Uses the units set in `unit` argument. Can also pass in a string, "125mm" or "5in".
 #'@param unit Default `mm`. Units of the `maxwidth` argument. Can also be set to inches with `in`. 
 #'@param rotate Default `TRUE`. If `FALSE`, the map will be printing on its side. This may improve resolution for some 3D printing types.
+#'@param remove_extras Default `TRUE`. Removes non-topographic features from base: lines, water, labels, and the shadow.
 #'@return Writes an STL file to `filename`. Regardless of the unit displayed, the output STL is in millimeters.
 #'@export
 #'@examples
@@ -17,6 +18,7 @@
 #'  sphere_shade() %>%
 #'  plot_3d(volcano,zscale=3)
 #'save_3dprint(filename_stl)
+#'rgl::rgl.clear()
 #'}
 #'
 #'#Save the STL file into `filename_stl`, setting maximum width to 100 mm
@@ -25,6 +27,7 @@
 #'  sphere_shade() %>%
 #'  plot_3d(volcano,zscale=3)
 #'save_3dprint(filename_stl, maxwidth = 100)
+#'rgl::rgl.clear()
 #'}
 #'
 #'#'#Save the STL file into `filename_stl`, setting maximum width to 4 inches
@@ -33,6 +36,7 @@
 #'  sphere_shade() %>%
 #'  plot_3d(volcano,zscale=3)
 #'save_3dprint(filename_stl, maxwidth = 4, unit = "in")
+#'rgl::rgl.clear()
 #'}
 #'#'#'#Save the STL file into `filename_stl`, setting maximum width (character) to 120mm
 #'\donttest{
@@ -40,8 +44,14 @@
 #'  sphere_shade() %>%
 #'  plot_3d(volcano,zscale=3)
 #'save_3dprint(filename_stl, maxwidth = "120mm")
+#'rgl::rgl.clear()
 #'}
-save_3dprint = function(filename,maxwidth=125,unit="mm",rotate=TRUE) {
+save_3dprint = function(filename,maxwidth=125,unit="mm",rotate=TRUE,remove_extras = TRUE) {
+  if(remove_extras) {
+    idlist = get_ids_with_labels()
+    remove_ids = idlist$id[!(idlist$raytype %in% c("surface","base"))]
+    rgl::pop3d(id=remove_ids)
+  }
   if(substring(filename, nchar(filename)-3,nchar(filename)) != ".stl") {
     filename = paste0(filename,".stl")
   }

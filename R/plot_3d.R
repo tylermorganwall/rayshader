@@ -1,4 +1,4 @@
-#'@title plot_3d
+#'@title Plot 3D 
 #'
 #'@description Displays the shaded map in 3D with the `rgl` package. 
 #'
@@ -38,6 +38,7 @@
 #'montereybay %>%
 #'  sphere_shade(texture="desert") %>%
 #'  plot_3d(montereybay,zscale=50)
+#'render_snapshot()
 #'}
 #'
 #'#With a water layer  
@@ -46,37 +47,45 @@
 #'  sphere_shade(texture="imhof2") %>%
 #'  plot_3d(montereybay, zscale=50, water = TRUE, watercolor="imhof2", 
 #'          waterlinecolor="white", waterlinealpha=0.5)
+#'render_snapshot()
+#'rgl::rgl.clear()
 #'}
 #'
 #'#We can also change the base by setting "baseshape" to "hex" or "circle"
 #'\donttest{
 #'montereybay %>%
 #'  sphere_shade(texture="imhof1") %>%
-#'  plot_3d(montereybay, zscale=50, water = TRUE, watercolor="imhof1", 
+#'  plot_3d(montereybay, zscale=50, water = TRUE, watercolor="imhof1", theta=-45, zoom=0.7,
 #'          waterlinecolor="white", waterlinealpha=0.5,baseshape="circle")
+#'render_snapshot()
+#'rgl::rgl.clear()
 #'}
 #'
 #'\donttest{
 #'montereybay %>%
 #'  sphere_shade(texture="imhof1") %>%
-#'  plot_3d(montereybay, zscale=50, water = TRUE, watercolor="imhof1", 
+#'  plot_3d(montereybay, zscale=50, water = TRUE, watercolor="imhof1", theta=-45, zoom=0.7,
 #'          waterlinecolor="white", waterlinealpha=0.5,baseshape="hex")
+#'render_snapshot()
+#'rgl::rgl.clear()
 #'}
 #'
 #'#Or we can carve out the region of interest ourselves, by setting those entries to NA
 #'#to the elevation map passed into `plot_3d`
 #'
-#'#Here, we only include the deep bathymetry data by setting all points greater than -2
+#'#Here, we only include the deep bathymetry data by setting all points greater than -10
 #'#in the copied elevation matrix to NA.
 #'
 #'mb_water = montereybay
-#'mb_water[mb_water > -2] = NA
+#'mb_water[mb_water > -10] = NA
 #'
 #'\donttest{
 #'montereybay %>%
 #'  sphere_shade(texture="imhof1") %>%
-#'  plot_3d(mb_water, zscale=50, water = TRUE, watercolor="imhof1", 
+#'  plot_3d(mb_water, zscale=50, water = TRUE, watercolor="imhof1", theta=-45,
 #'          waterlinecolor="white", waterlinealpha=0.5)
+#'render_snapshot()
+#'rgl::rgl.clear()
 #'}
 plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
                    solid = TRUE, soliddepth="auto", solidcolor="grey20",solidlinecolor="grey30",
@@ -92,13 +101,13 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
   if(!is.null(attr(heightmap,"rayshader_data"))) {
     if (!("zscale" %in% as.character(names(argnames)))) {
       if(length(argnames) <= 3) {
-        zscale = 200
-        message("`montereybay` dataset used with no zscale--setting `zscale=200` for a realistic depiction. Lower zscale (i.e. to 50) in `plot_3d` to emphasize vertical features.")
+        zscale = 50
+        message("`montereybay` dataset used with no zscale--setting `zscale=50`. For a realistic depiction, lower `zscale` to 200.")
       } else {
         if (!is.numeric(argnames[[4]]) || !is.null(names(argnames))) {
           if(names(argnames)[4] != "")  {
-            zscale = 200
-            message("`montereybay` dataset used with no zscale--setting `zscale=200` for a realistic depiction. Lower zscale (i.e. to 50) in `plot_3d` to emphasize vertical features.")
+            zscale = 50
+            message("`montereybay` dataset used with no zscale--setting `zscale=50`.  For a realistic depiction, lower `zscale` to 200.")
           }
         }
       }
@@ -201,7 +210,7 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
   }
   tempmap = tempfile()
   save_png(hillshade,tempmap)
-  rgl.surface(1:nrow(heightmap),-(1:ncol(heightmap)),heightmap[,ncol(heightmap):1]/zscale,texture=paste0(tempmap,".png"),lit=FALSE)
+  rgl.surface(1:nrow(heightmap),-(1:ncol(heightmap)),heightmap[,ncol(heightmap):1]/zscale,texture=paste0(tempmap,".png"),lit=FALSE,ambient = "#000001")
   bg3d(color = background,texture=NULL)
   rgl.viewpoint(zoom=zoom,phi=phi,theta=theta,fov=fov)
   par3d("windowRect" = c(0,0,windowsize), ...)

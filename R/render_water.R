@@ -11,33 +11,35 @@
 #'@param waterlinecolor Default `NULL`. Color of the lines around the edges of the water layer.
 #'@param waterlinealpha Default `1`. Water line tranparency. 
 #'@param linewidth Default `2`. Width of the edge lines in the scene.
-#'@param remove_water Default `FALSE`. If `TRUE`, will remove existing water layer and replace it with new layer.
+#'@param remove_water Default `TRUE`. If `TRUE`, will remove existing water layer and replace it with new layer.
 #'@export
 #'@examples
 #'montereybay %>%
 #'  sphere_shade() %>%
-#'  plot_3d(montereybay)
+#'  plot_3d(montereybay,zscale=50)
+#'render_snapshot()
 #'  
 #'#We want to add a layer of water after the initial render.
-#'render_water(montereybay)
+#'render_water(montereybay,zscale=50)
+#'render_snapshot()
+#'
+#'#Call it again to change the water depth
+#'render_water(montereybay,zscale=50,waterdepth=-1000)
+#'render_snapshot()
+#'rgl::rgl.clear()
 render_water = function(heightmap, waterdepth=0, watercolor="lightblue",
                         zscale=1, wateralpha=0.5, waterlinecolor=NULL, waterlinealpha = 1, 
-                        linewidth = 2, remove_water = FALSE) {
+                        linewidth = 2, remove_water = TRUE) {
   if(remove_water) {
-    ids = rgl::rgl.ids()
-    for(i in seq(nrow(ids),2,-1)) {
-      if(ids$type[i] != "surface") {
-        rgl::rgl.pop(id=ids$id[i])
-      } else {
-        rgl::rgl.pop(id=ids$id[i])
-        break
-      }
-    }
+    idlist = get_ids_with_labels()
+    remove_ids = idlist$id[idlist$raytype %in% c("waterlines", "water")]
+    rgl::pop3d(id=remove_ids)
   }
-  rgl.surface(c(1,nrow(heightmap)),c(-1,-ncol(heightmap)),matrix(waterdepth/zscale,2,2),color=watercolor,lit=FALSE,alpha=wateralpha)
   make_water(heightmap/zscale,waterheight=waterdepth/zscale,wateralpha=wateralpha,watercolor=watercolor)
   if(!is.null(waterlinecolor)) {
-    make_lines(heightmap,basedepth=waterdepth/zscale,linecolor=waterlinecolor,zscale=zscale,linewidth = linewidth,alpha=waterlinealpha,solid=FALSE)
+    if(all(!is.na(heightmap))) {
+      make_lines(heightmap,basedepth=waterdepth/zscale,linecolor=waterlinecolor,zscale=zscale,linewidth = linewidth,alpha=waterlinealpha,solid=FALSE)
+    }
     make_waterlines(heightmap,waterdepth=waterdepth/zscale,linecolor=waterlinecolor,zscale=zscale,alpha=waterlinealpha,linewidth=linewidth)
   }
 }

@@ -17,7 +17,7 @@
 #'@param gamma_correction Default `TRUE`. Controls gamma correction when adding colors. Default exponent of 2.2.
 #'@param transparent_water Default `FALSE`. If `TRUE`, depth is determined without water layer. User will have to re-render the water
 #'layer with `render_water()` if they want to recreate the water layer.
-#'@param progbar Default `TRUE` if in an interactive session. Displays a progress bar.
+#'@param progbar Default `TRUE` if in an interactive session. Displays a progress bar. 
 #'@return 4-layer RGBA array.
 #'@export
 #'@examples
@@ -28,6 +28,7 @@
 #'render_depth(focallength = 30)
 #'render_depth(focallength = 30,fstop=2)
 #'render_depth(focallength = 30,fstop=2)
+#'rgl::rgl.clear()
 render_depth = function(focus = 0.5, focallength = 100, fstop = 4, filename=NULL,
                      bokehshape = "circle", bokehintensity = 1, bokehlimit=0.8, 
                      rotation = 0, gamma_correction = TRUE,
@@ -38,17 +39,9 @@ render_depth = function(focus = 0.5, focallength = 100, fstop = 4, filename=NULL
   temp = paste0(tempfile(),".png")
   rgl::snapshot3d(filename=temp)
   if(transparent_water) {
-    ids = rgl::rgl.ids()
-    for(i in seq(nrow(ids),2,-1)) {
-      if(ids$type[i] != "surface") {
-        if(ids$type[i] == "triangles") {
-          rgl::rgl.pop(id=ids$id[i])
-        }
-      } else {
-        rgl::rgl.pop(id=ids$id[i])
-        break
-      }
-    }
+    idlist = get_ids_with_labels()
+    remove_ids = idlist$id[idlist$raytype == "water"]
+    rgl::pop3d(id=remove_ids)
   }
   #bokehshape 0: circle, 1: circle, 2: custom
   if(is.matrix(bokehshape)) {
@@ -75,14 +68,9 @@ render_depth = function(focus = 0.5, focallength = 100, fstop = 4, filename=NULL
   }
   depthmap = rgl::rgl.pixels(component = "depth")
   if(transparent_water) {
-    ids = rgl::rgl.ids()
-    for(i in seq(nrow(ids),2,-1)) {
-      if(ids$type[i] == "linestrip") {
-        rgl::rgl.pop(id=ids$id[i])
-      } else {
-        break
-      }
-    }
+    idlist = get_ids_with_labels()
+    remove_ids = idlist$id[idlist$raytype == "waterlines"]
+    rgl::pop3d(id=remove_ids)
   }
   tempmap = png::readPNG(temp)
   if(gamma_correction) {
