@@ -44,6 +44,7 @@ The size of the circle of confusion is determined by the following formula (z_de
 \code{abs(z_depth-focus)*focal_length^2/(f_stop*z_depth*(focus - focal_length))}
 }
 \examples{
+\donttest{
 montereybay \%>\%
  sphere_shade() \%>\%
  plot_3d(montereybay,zscale=50,zoom=0.6,theta=-90)
@@ -51,5 +52,6 @@ montereybay \%>\%
 render_depth(focallength = 30)
 render_depth(focallength = 30,fstop=2)
 render_depth(focallength = 30,fstop=2)
+}
 rgl::rgl.clear()
 }

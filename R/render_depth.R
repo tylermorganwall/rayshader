@@ -21,6 +21,7 @@
 #'@return 4-layer RGBA array.
 #'@export
 #'@examples
+#'\donttest{
 #'montereybay %>%
 #'  sphere_shade() %>%
 #'  plot_3d(montereybay,zscale=50,zoom=0.6,theta=-90)
@@ -28,6 +29,7 @@
 #'render_depth(focallength = 30)
 #'render_depth(focallength = 30,fstop=2)
 #'render_depth(focallength = 30,fstop=2)
+#'}
 #'rgl::rgl.clear()
 render_depth = function(focus = 0.5, focallength = 100, fstop = 4, filename=NULL,
                      bokehshape = "circle", bokehintensity = 1, bokehlimit=0.8, 
