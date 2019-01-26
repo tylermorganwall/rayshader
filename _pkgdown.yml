@@ -1,0 +1,62 @@
+pandoc: 2.3.1
+pkgdown: 1.3.0.9000
+pkgdown_sha: 2f40b4769ea9ad2312aa4cc93f27ab116461543b
+articles: []
+
+reference:
+  - title: "Creating Hillshades and Color Mappings"
+    desc: "Functions for generating hillshades from elevation matrices"
+    contents: 
+      - ends_with("shade")
+      - starts_with("calculate")
+      - starts_with("create")
+  - title: "Adding Shadows and Overlays to Maps"
+    desc: "Functions for detecting and adding layers to maps."
+    contents:
+      - starts_with("add")
+      - starts_with("detect")
+  - title: "Plotting and Saving 2D Maps and 3D Prints"
+    desc: "Functions for displaying/saving 2D maps and 3D prints"
+    contents:
+      - starts_with("plot")
+      - starts_with("save")
+  - title: "Manipulate and Capture 3D Maps"
+    desc: "Functions for adding features to 3D maps, rendering post-processing effects, and saving snapshots"
+    contents:
+      - starts_with("render")
+  - title: "Included Data"
+    desc: "Elevation data included with rayshader"
+    contents:
+      - "montereybay"
+     
+navbar: 
+  title: "rayshader"
+  type: inverse
+  left:
+    - icon: fa-home
+      href: index.html
+    - text: "Rayshader Blog"
+      menu: 
+      -  text: 2018 Year in Review
+         href: https://www.tylermw.com/2018-year-in-review/
+      -  text: "Portrait Mode for Data: Rayshader + Rayfocus"
+         href: https://www.tylermw.com/portrait-mode-data/
+      -  text: "From R to Reality: 3D Printing Maps with Rayshader"
+         href: https://www.tylermw.com/3d-printing-rayshader/
+      -  text: "Slicing Through Monterey Bay: Creating 3D Maps with Rayshader"
+         href: https://www.tylermw.com/3d-maps-with-rayshader/
+      -  text: "Draining Lake Mead: Making Beautiful Maps with Rayshader"
+         href: https://www.tylermw.com/making-beautiful-maps/
+      -  text: "Throwing Shade at the Cartographer Illuminati: Raytracing the Washington Monument in R"
+         href: https://www.tylermw.com/throwing-shade/
+    - icon: fa-newspaper-o
+      text: "Changelog"
+      href: news/index.html
+  right:
+    - icon: fa-file-code-o 
+      text: "functions"
+      href: reference/index.html
+    - icon: fa-github fa-lg
+      text: "GitHub"
+      href: https://github.com/tylermorganwall/rayshader
+      
