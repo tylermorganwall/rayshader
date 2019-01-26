@@ -1,4 +1,5 @@
 get_stage("before_script") %>%
+  add_code_step(system('sudo apt-get gdal')) %>%
   add_code_step(system('export DISPLAY=:99.0')) %>%
   add_code_step(system('sh -e /etc/init.d/xvfb start')) %>%
   add_code_step(system("sleep 3"))
