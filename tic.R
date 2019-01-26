@@ -1,5 +1,6 @@
-get_stage("script") %>%
-  add_code_step(system('xvfb-run --server-args="-screen 0 1024x768x24" make test')) %>%
+get_stage("before_script") %>%
+  add_code_step(system('export DISPLAY=:99.0')) %>%
+  add_code_step(system('sh -e /etc/init.d/xvfb start')) %>%
   add_code_step(system("sleep 3"))
 
 add_package_checks()
