@@ -1,7 +1,6 @@
-#'@title plot_map
+#'@title Plot Map
 #'
-#'@description Displays the shaded map. If the input is an array, it uses raster's plotRGB
-#'function.
+#'@description Displays the map in the current device.
 #'
 #'@param hillshade Hillshade to be plotted.
 #'@param rotate Default 0. Rotates the output. Possible values: 0, 90, 180, 270.
@@ -41,7 +40,7 @@ plot_map = function(hillshade, rotate=0, ...) {
         hillshade = newarrayt
       }
     }
-    suppressWarnings(raster::plotRGB(raster::brick(hillshade, xmn = 0.5, xmx = dim(hillshade)[2]+ 0.5,ymn = 0.5, ymx = dim(hillshade)[1] + 0.5, ...),scale=1, ...))
+    suppressWarnings(raster::plotRGB(raster::brick(hillshade, xmn = 0.5, xmx = dim(hillshade)[2]+ 0.5,ymn = 0.5, ymx = dim(hillshade)[1] + 0.5, ...),scale=1, maxpixels=nrow(hillshade)*ncol(hillshade),...))
   } else if(class(hillshade) == "matrix") {
     flipud = function(matrix) {
       matrix[nrow(matrix):1,]
@@ -55,7 +54,7 @@ plot_map = function(hillshade, rotate=0, ...) {
       }
     }
     array_from_mat = array(flipud(t(hillshade)),dim=c(ncol(hillshade),nrow(hillshade),3))
-    suppressWarnings(raster::plotRGB(raster::brick(array_from_mat, xmn = 0.5, xmx = dim(array_from_mat)[2] + 0.5,ymn =  0.5, ymx = dim(array_from_mat)[1] +  0.5, ...),scale=1, ...))
+    suppressWarnings(raster::plotRGB(raster::brick(array_from_mat, xmn = 0.5, xmx = dim(array_from_mat)[2] + 0.5,ymn =  0.5, ymx = dim(array_from_mat)[1] +  0.5, ...),scale=1, maxpixels=nrow(hillshade)*ncol(hillshade), ...))
   } else {
     stop("`hillshade` is neither array nor matrix--convert to either to plot.")
   }
