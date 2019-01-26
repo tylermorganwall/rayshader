@@ -1,3 +1,7 @@
+get_stage("script") %>%
+  add_code_step(system('xvfb-run --server-args="-screen 0 1024x768x24" make test')) %>%
+  add_code_step(system("sleep 3"))
+
 add_package_checks()
 
 if (Sys.getenv("id_rsa") != "" && !ci()$is_tag()) {
