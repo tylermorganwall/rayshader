@@ -10,7 +10,7 @@ editor_options:
 rayshader<img src="man/figures/raylogosmall.png" align="right" />
 =========================================================
 
-<img src="tools/readme/smallhobart.gif" ></img>
+<img src="man/figures/smallhobart.gif" ></img>
 
 Overview
 --------
