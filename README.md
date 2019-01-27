@@ -75,7 +75,7 @@ elmat %>%
   plot_map()
 ```
 
-![](tools/readme/basicmapping-1.png)
+![](man/figures/basicmapping-1.png)
 
 ``` r
 #sphere_shade can shift the sun direction:
@@ -84,7 +84,7 @@ elmat %>%
   plot_map()
 ```
 
-![](tools/readme/basicmapping-2.png)
+![](man/figures/basicmapping-2.png)
 
 ``` r
 #detect_water and add_water adds a water layer to the map:
@@ -94,7 +94,7 @@ elmat %>%
   plot_map()
 ```
 
-![](tools/readme/basicmapping-3.png)
+![](man/figures/basicmapping-3.png)
 
 ``` r
 raymat = ray_shade(elmat)
@@ -107,7 +107,7 @@ elmat %>%
   plot_map()
 ```
 
-![](tools/readme/basicmapping-4.png)
+![](man/figures/basicmapping-4.png)
 
 ``` r
 #And here we add an ambient occlusion shadow layer, which models 
@@ -123,7 +123,7 @@ elmat %>%
   plot_map()
 ```
 
-![](tools/readme/basicmapping-5.png)
+![](man/figures/basicmapping-5.png)
 
 Rayshader also supports 3D mapping by passing a texture map (either external or one produced by rayshader) into the `plot_3d` function.
 
@@ -137,7 +137,7 @@ elmat %>%
 render_snapshot()
 ```
 
-![](tools/readme/three-d-1.png)
+![](man/figures/three-d-1.png)
 
 You can also easily add a water layer by setting `water = TRUE` in `plot_3d()` (and setting `waterdepth` if the water level is not 0), or by using the function `render_water()` after the 3D map has been rendered. You can customize the appearance and transparancy of the water layer via function arguments. Here's an example using bathymetric/topographic data of Monterey Bay, CA (included with rayshader):
 
@@ -154,7 +154,7 @@ montereybay %>%
 render_snapshot()
 ```
 
-![](tools/readme/three-d-water-1.png)
+![](man/figures/three-d-water-1.png)
 
 Rayshader also has map shapes other than rectangular included `c("hex", "circle")`, and you can customize the map into any shape you want by setting the areas you do not want to display to `NA`.
 
@@ -180,7 +180,7 @@ montereybay %>%
 render_snapshot()
 ```
 
-![](tools/readme/three-d-shapes-1.png)
+![](man/figures/three-d-shapes-1.png)
 
 Adding text labels is done with the `render_label()` function, which also allows you to customize the line type, color, and size along with the font:
 
@@ -203,7 +203,7 @@ render_label(montereybay,x=50,y=130, z=1000,zscale=50,
 render_snapshot()
 ```
 
-![](tools/readme/three-d-labels-1.png)
+![](man/figures/three-d-labels-1.png)
 
 You can also apply a post-processing effect to the 3D maps to render maps with depth of field with the `render_depth()` function:
 
@@ -217,4 +217,4 @@ elmat %>%
 render_depth(focus=0.6,focallength = 200)
 ```
 
-![](tools/readme/three-d-depth-1.png)
+![](man/figures/three-d-depth-1.png)

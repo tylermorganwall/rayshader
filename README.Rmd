@@ -68,7 +68,7 @@ library(knitr)
 library(rgl)
 knit_hooks$set(rgl = hook_rgl)
 knitr::opts_chunk$set(
-  fig.path = "tools/readme/"
+  fig.path = "man/figures/"
 )
 ```
 
