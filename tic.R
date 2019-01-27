@@ -1,4 +1,5 @@
 get_stage("before_install") %>%
+  add_code_step(options(rgl.useNULL = TRUE)) %>%
   add_code_step(system("/sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -ac -screen 0 1280x1024x16"))
 
 get_stage("before_script") %>%
