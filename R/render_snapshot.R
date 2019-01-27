@@ -13,7 +13,7 @@
 #'render_snapshot()
 #'rgl::rgl.clear()
 render_snapshot = function(filename) {
-  if(!rgl.useNULL()) {
+  if(!rgl::rgl.useNULL()) {
     temp = paste0(tempfile(),".png")
     rgl::snapshot3d(filename=temp)
   } else {
