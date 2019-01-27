@@ -47,4 +47,3 @@ env:
 
 #services
 services:
-  - xvfb
