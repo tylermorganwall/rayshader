@@ -1,3 +1,6 @@
+get_stage("before_install") %>%
+  add_code_step(options(rgl.useNULL=TRUE)) 
+
 add_package_checks()
 
 if (Sys.getenv("id_rsa") != "" && !ci()$is_tag()) {
