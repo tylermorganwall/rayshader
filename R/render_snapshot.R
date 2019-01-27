@@ -13,15 +13,8 @@
 #'render_snapshot()
 #'rgl::rgl.clear()
 render_snapshot = function(filename) {
-  if(!rgl::rgl.useNULL()) {
-    temp = paste0(tempfile(),".png")
-    rgl::snapshot3d(filename=temp)
-  } else {
-    temp = paste0(tempfile())
-    system(paste0("xwd -out ",temp,".xwd"))
-    system(paste0("convert ",temp,".xwd ", temp,".png"))
-    temp = paste0(temp,".png")
-  }
+  temp = paste0(tempfile(),".png")
+  rgl::snapshot3d(filename=temp)
   tempmap = png::readPNG(temp)
   if(missing(filename)) {
     plot_map(tempmap)
