@@ -1,5 +1,5 @@
 get_stage("before_install") %>%
-  add_code_step(system('/sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/Xvfb -- :99 -ac -screen 0 1280x1024x24"'))
+  add_code_step(system('/sbin/start-stop-daemon --start --quiet --pidfile /tmp/custom_xvfb_99.pid --make-pidfile --background --exec /usr/bin/xvfb -- :99 -ac -screen 0 1280x1024x24"'))
 
 add_package_checks()
 
