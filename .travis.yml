@@ -35,9 +35,23 @@ cache: packages
 latex: false
 addons:
   apt:
+    update: true
+    sources:
+      - sourceline: 'ppa:opencpu/imagemagick'
     packages:
+      - libmagick++-dev
+      - librsvg2-dev
+      - libwebp-dev
+      - libpoppler-cpp-dev
+      - libtesseract-dev
+      - libleptonica-dev
+      - tesseract-ocr-eng
+      - r-cran-rgdal
+      - libfftw3-dev
+      - cargo
       - libgdal-dev
       - libproj-dev
+
 
 #env
 env:
