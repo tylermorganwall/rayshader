@@ -42,7 +42,6 @@ addons:
 #env
 env:
   global:
-  - DISPLAY=:1
   - _R_CHECK_FORCE_SUGGESTS_=false
   - MAKEFLAGS="-j 2"
 
