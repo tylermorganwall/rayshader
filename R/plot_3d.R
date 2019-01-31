@@ -102,12 +102,12 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
     if (!("zscale" %in% as.character(names(argnames)))) {
       if(length(argnames) <= 3) {
         zscale = 50
-        message("`montereybay` dataset used with no zscale--setting `zscale=50`. For a realistic depiction, lower `zscale` to 200.")
+        message("`montereybay` dataset used with no zscale--setting `zscale=50`. For a realistic depiction, raise `zscale` to 200.")
       } else {
         if (!is.numeric(argnames[[4]]) || !is.null(names(argnames))) {
           if(names(argnames)[4] != "")  {
             zscale = 50
-            message("`montereybay` dataset used with no zscale--setting `zscale=50`.  For a realistic depiction, lower `zscale` to 200.")
+            message("`montereybay` dataset used with no zscale--setting `zscale=50`.  For a realistic depiction, raise `zscale` to 200.")
           }
         }
       }
