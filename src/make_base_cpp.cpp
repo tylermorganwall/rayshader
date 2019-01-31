@@ -88,6 +88,7 @@ List make_water_cpp(NumericMatrix& heightmap,
   int offset = 0;
   double adjust;
   for(int j = 0; j < rows - 1; j++) {
+    offset = 0;
     if(j != 0) {
       offset = 1;
     }
@@ -116,8 +117,8 @@ List make_water_cpp(NumericMatrix& heightmap,
       }
     }
   }
-  offset = 0;
   for(int j = 0; j < cols - 1; j++) {
+    offset = 0;
     if(j != 0) {
       offset = 1;
     }
@@ -146,8 +147,8 @@ List make_water_cpp(NumericMatrix& heightmap,
       }
     }
   }
-  offset = 0;
   for(int j = 0; j < rows; j++) {
+    offset = 0;
     if(j != rows - 1) {
       offset = 1;
     }
@@ -164,7 +165,7 @@ List make_water_cpp(NumericMatrix& heightmap,
         }
         if(heightmap(j,i+1) < waterheight) {
           adjust = (waterheight - heightmap(j,i))/(heightmap(j,i+1)-heightmap(j,i));
-          if(heightmap(j,i)> waterheight && fabs(adjust) < 1) {
+          if(heightmap(j,i) > waterheight && fabs(adjust) < 1) {
             begincoord = -(double)i - 1 - adjust;
             heighttemp = waterheight;
           } else {
@@ -176,8 +177,8 @@ List make_water_cpp(NumericMatrix& heightmap,
       }
     }
   }
-  offset = 0;
   for(int j = 0; j < cols; j++) {
+    offset = 0;
     if(j != cols - 1) {
       offset = 1;
     }
