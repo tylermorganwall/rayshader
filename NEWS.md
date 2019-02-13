@@ -1,3 +1,13 @@
+# rayshader 0.9.2:
+
+## Additions
+* Add additional arguments to windowsize in `plot_3d()` to specify location of viewport
+
+# rayshader 0.9.1:
+
+## Changes
+* Fix out-of-bounds memory issue with water layer generation
+
 # rayshader 0.9.0:
 
 ## Additions
