@@ -11,7 +11,7 @@ plot_3d(hillshade, heightmap, zscale = 1, baseshape = "rectangle",
   waterdepth = 0, watercolor = "lightblue", wateralpha = 0.5,
   waterlinecolor = NULL, waterlinealpha = 1, linewidth = 2,
   lineantialias = FALSE, theta = 45, phi = 45, fov = 0, zoom = 1,
-  background = "white", windowsize = c(600, 600), ...)
+  background = "white", windowsize = 600, ...)
 }
 \arguments{
 \item{hillshade}{Hillshade/image to be added to 3D surface map.}
@@ -65,7 +65,13 @@ of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
 
 \item{background}{Default `grey10`. Color of the background.}
 
-\item{windowsize}{Default `c(600,600)`. Width and height of the `rgl` device displaying the plot.}
+\item{windowsize}{Default `600`. Position, width, and height of the `rgl` device displaying the plot. 
+If a single number, viewport will be a square and located in upper left corner. 
+If two numbers, (e.g. `c(600,800)`), user will specify width and height separately. 
+If four numbers (e.g. `c(200,0,600,800)`), the first two coordinates 
+specify the location of the x-y coordinates of the bottom-left corner of the viewport on the screen,
+and the next two (or one, if square) specify the window size. NOTE: The absolute positioning of the
+window does not currently work on macOS (tested on Mojave), but the size can still be specified.}
 
 \item{...}{Additional arguments to pass to the `rgl::par3d` function.}
 }

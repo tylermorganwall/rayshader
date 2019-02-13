@@ -28,7 +28,13 @@
 #'@param fov Default `0`--isometric. Field-of-view angle.
 #'@param zoom Default `1`. Zoom factor.
 #'@param background Default `grey10`. Color of the background.
-#'@param windowsize Default `c(600,600)`. Width and height of the `rgl` device displaying the plot.
+#'@param windowsize Default `600`. Position, width, and height of the `rgl` device displaying the plot. 
+#'If a single number, viewport will be a square and located in upper left corner. 
+#'If two numbers, (e.g. `c(600,800)`), user will specify width and height separately. 
+#'If four numbers (e.g. `c(200,0,600,800)`), the first two coordinates 
+#'specify the location of the x-y coordinates of the bottom-left corner of the viewport on the screen,
+#'and the next two (or one, if square) specify the window size. NOTE: The absolute positioning of the
+#'window does not currently work on macOS (tested on Mojave), but the size can still be specified.
 #'@param ... Additional arguments to pass to the `rgl::par3d` function.
 #'@import rgl
 #'@export
@@ -94,7 +100,7 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
                    waterlinecolor=NULL, waterlinealpha = 1, 
                    linewidth = 2, lineantialias = FALSE,
                    theta=45, phi = 45, fov=0, zoom = 1, 
-                   background="white", windowsize= c(600,600), ...) {
+                   background="white", windowsize = 600, ...) {
   #setting default zscale if montereybay is used and tell user about zscale
   argnameschar = unlist(lapply(as.list(sys.call()),as.character))[-1]
   argnames = as.list(sys.call())
@@ -112,6 +118,18 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
         }
       }
     }
+  }
+  #Set window size and position
+  if(length(windowsize) == 1) {
+    windowsize = c(0,0,windowsize,windowsize)
+  } else if (length(windowsize) == 2) {
+    windowsize = c(0,0,windowsize)
+  } else if (length(windowsize) == 3) {
+    windowsize = c(windowsize[1],windowsize[2],windowsize[1]+windowsize[3],windowsize[2]+windowsize[3])
+  } else if (length(windowsize) == 4) {
+    windowsize = c(windowsize[1],windowsize[2],windowsize[1]+windowsize[3],windowsize[2]+windowsize[4])
+  } else {
+    stop(paste0("Don't know what to do with `windowsize` argument of length ",length(windowsize)))
   }
   if(baseshape == "circle") {
     radius = ifelse(nrow(heightmap) <= ncol(heightmap),nrow(heightmap)/2-1,ncol(heightmap)/2-1)
@@ -213,7 +231,7 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
   rgl.surface(1:nrow(heightmap),-(1:ncol(heightmap)),heightmap[,ncol(heightmap):1]/zscale,texture=paste0(tempmap,".png"),lit=FALSE,ambient = "#000001")
   bg3d(color = background,texture=NULL)
   rgl.viewpoint(zoom=zoom,phi=phi,theta=theta,fov=fov)
-  par3d("windowRect" = c(0,0,windowsize), ...)
+  par3d(windowRect = windowsize,...)
   if(solid) {
     make_base(heightmap,basedepth=soliddepth,basecolor=solidcolor,zscale=zscale)
   }
