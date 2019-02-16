@@ -17,13 +17,17 @@
 #'@export
 #'@examples
 #'#Here we produce a ambient occlusion map of the `montereybay` elevation map.
+#'\dontrun{
 #'amb = ambient_shade(heightmap = montereybay)
 #'plot_map(amb)
+#'}
 #'
 #'#We can increase the distance to look for surface intersections `maxsearch`
 #'#and the density of rays sent out around the point `sunbreaks`.
+#'\dontrun{
 #'amb = ambient_shade(heightmap = montereybay,sunbreaks=24,maxsearch=50)
 #'plot_map(amb)
+#'}
 ambient_shade = function(heightmap, anglebreaks = seq(1,46,15), sunbreaks = 12, 
                         maxsearch=20,
                         multicore=FALSE, zscale=1, cache_mask = NULL, 

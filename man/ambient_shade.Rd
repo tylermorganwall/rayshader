@@ -38,11 +38,15 @@ Calculates Ambient Occlusion Shadow Map
 }
 \examples{
 #Here we produce a ambient occlusion map of the `montereybay` elevation map.
+\dontrun{
 amb = ambient_shade(heightmap = montereybay)
 plot_map(amb)
+}
 
 #We can increase the distance to look for surface intersections `maxsearch`
 #and the density of rays sent out around the point `sunbreaks`.
+\dontrun{
 amb = ambient_shade(heightmap = montereybay,sunbreaks=24,maxsearch=50)
 plot_map(amb)
+}
 }

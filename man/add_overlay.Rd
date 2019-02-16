@@ -16,7 +16,7 @@ If the array is 3D, `alphacolor` should also be passed to indicate transparent r
 \item{alphacolor}{Default `NULL`. If `overlay` is a 3-layer array, this argument tells which color is interpretted as completely transparent.}
 
 \item{alphalayer}{Default `1`. Defines minimum tranparaency of layer. If transparency already exists in `overlay`, the way `add_overlay` combines 
-the two is determined in argument `layeralphamethod`.}
+the two is determined in argument `alphamethod`.}
 
 \item{alphamethod}{Default `max`. Method for dealing with pre-existing transparency with `layeralpha`. 
 If `max`, converts all alpha levels higher than `layeralpha` to the value set in `layeralpha`.
@@ -37,22 +37,28 @@ Overlays an image (with a transparency layer) on the current map.
 fliplr = function(x) {
  x[,ncol(x):1]
 }
+\dontrun{
 tempfilename = tempfile()
 png(tempfilename,width = 401,height=401)
 par(mar = c(0,0,0,0))
 raster::image(fliplr(montereybay),axes = FALSE,col = rev(terrain.colors(1000)))
 dev.off()
 tempmap = png::readPNG(tempfilename)
+}
 
+\dontrun{
 montereybay \%>\%
   ray_shade(zscale=50,maxsearch = 500,anglebreaks = seq(20,30,0.1)) \%>\%
   add_overlay(tempmap,alphalayer = 0.5) \%>\%
   plot_map()
-  
+}
+
 #Combining base R plotting with rayshader's spherical color mapping and raytracing:
+\dontrun{
 montereybay \%>\%
   sphere_shade() \%>\%
   add_overlay(tempmap,alphalayer = 0.4) \%>\%
   add_shadow(ray_shade(montereybay,zscale=50,maxsearch = 500)) \%>\%
   plot_map()
+}
 }

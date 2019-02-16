@@ -60,3 +60,6 @@ navbar:
       text: "GitHub"
       href: https://github.com/tylermorganwall/rayshader
       
+authors:
+  Tyler Morgan-Wall: 
+    href: https://www.tylermw.com

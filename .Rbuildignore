@@ -1,3 +1,4 @@
+^man/figures/README.+\.png$
 ^tic\.R$
 ^appveyor\.yml$
 ^\.travis\.yml$
@@ -5,6 +6,7 @@
 ^\.Rproj\.user$
 ^README.Rmd$
 ^\.RDataTmp$
+^README\.md$
 ^README_cache$
 ^README_files$
 ^tests$

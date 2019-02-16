@@ -72,7 +72,7 @@ knitr::opts_chunk$set(
 )
 ```
 
-```{r basicmapping}
+```{r README_basicmapping}
 library(rayshader)
 
 #Here, I load a map with the raster package.
@@ -126,7 +126,7 @@ elmat %>%
 
 Rayshader also supports 3D mapping by passing a texture map (either external or one produced by rayshader) into the `plot_3d` function. 
 
-```{r three-d}
+```{r README_three-d}
 
 elmat %>%
   sphere_shade(texture = "desert") %>%
@@ -144,7 +144,7 @@ system("rm dem_01.tif")
 ```
 You can also easily add a water layer by setting `water = TRUE` in `plot_3d()` (and setting `waterdepth` if the water level is not 0), or by using the function `render_water()` after the 3D map has been rendered. You can customize the appearance and transparancy of the water layer via function arguments. Here's an example using bathymetric/topographic data of Monterey Bay, CA (included with rayshader):
 
-```{r three-d-water}
+```{r README_three-d-water}
 
 montshadow = ray_shade(montereybay,zscale=50,lambert=FALSE)
 montamb = ambient_shade(montereybay,zscale=50)
@@ -164,7 +164,7 @@ rgl::rgl.close()
 
 Rayshader also has map shapes other than rectangular included `c("hex", "circle")`, and you can customize the map into any shape you want by setting the areas you do not want to display to `NA`.
 
-```{r  three-d-shapes, fig.width = 15, fig.height=6}
+```{r  README_three-d-shapes, fig.width = 15, fig.height=6}
 par(mfrow=c(1,2))
 montereybay %>% 
     sphere_shade(zscale=10,texture = "imhof1") %>% 
@@ -192,7 +192,7 @@ rgl::rgl.close()
 
 Adding text labels is done with the `render_label()` function, which also allows you to customize the line type, color, and size along with the font:
 
-```{r three-d-labels}
+```{r README_three-d-labels}
 montereybay %>% 
     sphere_shade(zscale=10,texture = "imhof1") %>% 
     add_shadow(montshadow,0.5) %>%
@@ -218,7 +218,7 @@ rgl::rgl.close()
 
 You can also apply a post-processing effect to the 3D maps to render maps with depth of field with the `render_depth()` function:
 
-```{r three-d-depth, fig.width = 10, fig.height = 8}
+```{r README_three-d-depth, fig.width = 10, fig.height = 8}
 
 elmat %>%
   sphere_shade(texture = "desert") %>%

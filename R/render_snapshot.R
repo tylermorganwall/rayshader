@@ -6,12 +6,16 @@
 #'@return Displays snapshot of current rgl plot (or saves to disk).
 #'@export
 #'@examples
+#'\dontrun{
 #'montereybay %>%
 #'  sphere_shade() %>%
 #'  plot_3d(montereybay,zscale=50,zoom=0.6,theta=-90)
+#'}
 #'  
+#'\dontrun{
 #'render_snapshot()
 #'rgl::rgl.clear()
+#'}
 render_snapshot = function(filename) {
   temp = paste0(tempfile(),".png")
   rgl::snapshot3d(filename=temp)

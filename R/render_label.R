@@ -25,25 +25,33 @@
 #'@param textcolor Default `black`. Color of the text.
 #'@export
 #'@examples
+#'\dontrun{
 #'montereybay %>%
 #'  sphere_shade() %>%
 #'  plot_3d(montereybay,zscale=50,water=TRUE)
 #'render_snapshot()
+#'}
 #'  
 #'#We want to add a label to Santa Cruz, so we use the x and y matrix coordinate (x=220 and y=330)
+#'\dontrun{
 #'render_label(montereybay,x=220,y=330, z=10000,zscale=50,text = "Santa Cruz")
 #'render_snapshot()
+#'}
 #'
 #'#We can also change the linetype to dashed by setting `dashed = TRUE` (additional options allow
 #'#the user to control the dash length)
+#'\dontrun{
 #'render_label(montereybay,x=300,y=120, z=10000,zscale=50,text = "Monterey",dashed=TRUE)
 #'render_snapshot()
+#'}
 #'
 #'#By default, z specifies the altitude above that point on the elevation matrix. We can also specify 
 #'#an absolute height by setting `relativez=FALSE`.
+#'\dontrun{
 #'render_label(montereybay,x=50,y=130, z=2000,zscale=50,text = "Monterey Canyon",relativez=FALSE)
 #'render_snapshot()
 #'rgl::rgl.clear()
+#'}
 render_label = function(heightmap, text, x, y, z, zscale=1, relativez=TRUE, offset = 0, 
                         textsize=1, dashed=FALSE,dashlength = "auto", linewidth=3, antialias = FALSE,
                         alpha=1,textalpha=1,freetype=TRUE,adjustvec = NULL, 
