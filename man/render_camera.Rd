@@ -69,7 +69,7 @@ for(i in 1:360) {
  #render_snapshot(paste0("frame", i, ".png"))
 }
 #Run this command in the command line using ffmpeg to stitch together a video:
-#ffmpeg -framerate 60 -i frame\%d.png -vcodec libx264 -vf scale=-2:-2 raymovie.mp4
+#ffmpeg -framerate 60 -i frame\%d.png -vcodec libx264 raymovie.mp4
 
 #And run this command to convert the video to post to the web:
 #ffmpeg -i raymovie.mp4 -pix_fmt yuv420p -profile:v baseline -level 3 -vf scale=-2:-2 rayweb.mp4
