@@ -1,3 +1,11 @@
+# rayshader 0.10.0:
+
+## Additions
+* Add `render_camera()` function
+
+## Changes
+* Fixed some documentation issues
+
 # rayshader 0.9.2:
 
 ## Additions
