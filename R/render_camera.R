@@ -44,8 +44,7 @@
 #'\dontrun{
 #'montereybay %>%
 #'  sphere_shade() %>%
-#'  plot_3d(montereybay)
-#'render_water(montereybay, zscale = 50, waterlinecolor = "white", waterlinealpha = 0.7)
+#'  plot_3d(montereybay,zscale=50)
 #'
 #'phivec = 20 + 70 * 1/(1 + exp(seq(-5, 10, length.out = 180)))
 #'phivecfull = c(phivec, rev(phivec))
