@@ -39,6 +39,31 @@
 #'render_snapshot()
 #'rgl::rgl.close()
 #'}
+#'
+#'#Here we render a series of frames to later stitch together into a movie.
+#'\dontrun{
+#'montereybay %>%
+#'  sphere_shade() %>%
+#'  plot_3d(montereybay)
+#'render_water(montereybay, zscale = 50, waterlinecolor = "white", waterlinealpha = 0.7)
+#'
+#'phivec = 20 + 70 * 1/(1 + exp(seq(-5, 10, length.out = 180)))
+#'phivecfull = c(phivec, rev(phivec))
+#'thetavec = 270 + 90 * sin(seq(0,359,length.out = 360) * pi/180)
+#'zoomvec = 0.5 + 0.5 * 1/(1 + exp(seq(-5, 10, length.out = 180)))
+#'zoomvecfull = c(zoomvec, rev(zoomvec))
+#'
+#'for(i in 1:360) {
+#'  render_camera(theta = thetavec[i],phi = phivecfull[i],zoom = zoomvecfull[i])
+#'  #uncomment the next line to save each frame to the working directory
+#'  #render_snapshot(paste0("frame", i, ".png"))
+#'}
+#'#Run this command in the command line using ffmpeg to stitch together a video:
+#'#ffmpeg -framerate 60 -i frame%d.png -vcodec libx264 -vf scale=-2:-2 raymovie.mp4
+#'
+#'#And run this command to convert the video to post to the web:
+#'#ffmpeg -i raymovie.mp4 -pix_fmt yuv420p -profile:v baseline -level 3 -vf scale=-2:-2 rayweb.mp4
+#'}
 render_camera = function(theta = 45, phi = 45, zoom = 1, fov = 0) {
   rgl::rgl.viewpoint( theta = theta, phi = phi, fov = fov, zoom = zoom)
 }
