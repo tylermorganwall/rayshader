@@ -32,17 +32,23 @@ of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
 Adds water layer to the scene, removing the previous water layer if desired.
 }
 \examples{
+\dontrun{
 montereybay \%>\%
  sphere_shade() \%>\%
  plot_3d(montereybay,zscale=50)
 render_snapshot()
+}
  
 #We want to add a layer of water after the initial render.
+\dontrun{
 render_water(montereybay,zscale=50)
 render_snapshot()
+}
 
 #Call it again to change the water depth
+\dontrun{
 render_water(montereybay,zscale=50,waterdepth=-1000)
 render_snapshot()
 rgl::rgl.clear()
+}
 }

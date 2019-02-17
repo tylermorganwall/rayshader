@@ -14,19 +14,25 @@
 #'@param remove_water Default `TRUE`. If `TRUE`, will remove existing water layer and replace it with new layer.
 #'@export
 #'@examples
+#'\dontrun{
 #'montereybay %>%
 #'  sphere_shade() %>%
 #'  plot_3d(montereybay,zscale=50)
 #'render_snapshot()
+#'}
 #'  
 #'#We want to add a layer of water after the initial render.
+#'\dontrun{
 #'render_water(montereybay,zscale=50)
 #'render_snapshot()
+#'}
 #'
 #'#Call it again to change the water depth
+#'\dontrun{
 #'render_water(montereybay,zscale=50,waterdepth=-1000)
 #'render_snapshot()
 #'rgl::rgl.clear()
+#'}
 render_water = function(heightmap, waterdepth=0, watercolor="lightblue",
                         zscale=1, wateralpha=0.5, waterlinecolor=NULL, waterlinealpha = 1, 
                         linewidth = 2, remove_water = TRUE) {
