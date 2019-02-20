@@ -86,7 +86,7 @@ bool is_inside(double sizehex, double positionx, double positiony, double sinval
   double num1 = fabs(cosval* (positionx - sizehex) - sinval* (positiony - sizehex));
   double num2 = fabs(sinval* (positionx - sizehex) + cosval* (positiony - sizehex));
   double minval = sizehex - num1 < sizehex / 2 ?  sizehex - num1 : sizehex / 2;
-  return(num2 < sqrt(3) * minval);
+  return(num2 < sqrt(3.0) * minval);
 }
 
 // [[Rcpp::export]]

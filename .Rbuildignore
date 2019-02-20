@@ -1,4 +1,5 @@
-^man/figures/README.+\.png$
+^man/figures$
+^tools/readme$
 ^tic\.R$
 ^appveyor\.yml$
 ^\.travis\.yml$
