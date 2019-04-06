@@ -48,7 +48,6 @@ render_snapshot()
 #Call it again to change the water depth
 \dontrun{
 render_water(montereybay,zscale=50,waterdepth=-1000)
-render_snapshot()
-rgl::rgl.clear()
+render_snapshot(clear = TRUE)
 }
 }

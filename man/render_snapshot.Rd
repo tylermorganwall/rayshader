@@ -25,7 +25,6 @@ montereybay \%>\%
 }
  
 \dontrun{
-render_snapshot()
-rgl::rgl.clear()
+render_snapshot(clear = TRUE)
 }
 }

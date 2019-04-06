@@ -49,8 +49,7 @@
 #'#an absolute height by setting `relativez=FALSE`.
 #'\dontrun{
 #'render_label(montereybay,x=50,y=130, z=2000,zscale=50,text = "Monterey Canyon",relativez=FALSE)
-#'render_snapshot()
-#'rgl::rgl.clear()
+#'render_snapshot(clear = TRUE)
 #'}
 render_label = function(heightmap, text, x, y, z, zscale=1, relativez=TRUE, offset = 0, 
                         textsize=1, dashed=FALSE,dashlength = "auto", linewidth=3, antialias = FALSE,

@@ -30,8 +30,7 @@
 #'#Call it again to change the water depth
 #'\dontrun{
 #'render_water(montereybay,zscale=50,waterdepth=-1000)
-#'render_snapshot()
-#'rgl::rgl.clear()
+#'render_snapshot(clear = TRUE)
 #'}
 render_water = function(heightmap, waterdepth=0, watercolor="lightblue",
                         zscale=1, wateralpha=0.5, waterlinecolor=NULL, waterlinealpha = 1, 

@@ -81,7 +81,6 @@ render_snapshot()
 #an absolute height by setting `relativez=FALSE`.
 \dontrun{
 render_label(montereybay,x=50,y=130, z=2000,zscale=50,text = "Monterey Canyon",relativez=FALSE)
-render_snapshot()
-rgl::rgl.clear()
+render_snapshot(clear = TRUE)
 }
 }

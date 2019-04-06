@@ -88,7 +88,10 @@ List make_water_cpp(NumericMatrix& heightmap,
   int offset = 1;
   double adjust;
   for(int j = 0; j < rows - 1; j++) {
-    offset = 1;
+    offset = 0;
+    if(j != 0) {
+      offset = 1;
+    }
     for(int i = 0; i < cols - 1; i++) {
       if(((na_matrix(j-offset,i) && !na_matrix(j,i) && !na_matrix(j,i+1)) || (na_matrix(j-offset,i+1) && !na_matrix(j,i+1))) || j == 0) {
         if(heightmap(0+j,i) < waterheight && heightmap(0+j,i+1) < waterheight) {
@@ -112,7 +115,10 @@ List make_water_cpp(NumericMatrix& heightmap,
     }
   }
   for(int j = 0; j < cols - 1; j++) {
-    offset = 1;
+    offset = 0;
+    if(j != 0) {
+      offset = 1;
+    }
     for(int i = 0; i < rows-1; i++) {
       if(((na_matrix(i,j-offset) && !na_matrix(i,j) && !na_matrix(i+1,j)) || (na_matrix(i+1,j-offset) && !na_matrix(i+1,j))) || j == 0) {
         if(heightmap(i,0+j) < waterheight, heightmap(i+1,0+j) < waterheight) {
@@ -136,7 +142,10 @@ List make_water_cpp(NumericMatrix& heightmap,
     }
   }
   for(int j = 0; j < rows; j++) {
-    offset = 1;
+    offset = 0;
+    if(j != rows - 1) {
+      offset = 1;
+    }
     for(int i = 0; i < cols - 1; i++) {
       if(((na_matrix(j+offset,i) && !na_matrix(j,i) && !na_matrix(j,i+1)) || (na_matrix(j+offset,i+1) && !na_matrix(j,i+1))) || j == rows-1) {
         if(heightmap(j,i) < waterheight && heightmap(j,i+1) < waterheight) {
@@ -160,7 +169,10 @@ List make_water_cpp(NumericMatrix& heightmap,
     }
   }
   for(int j = 0; j < cols; j++) {
-    offset = 1;
+    offset = 0;
+    if(j != rows - 1) {
+      offset = 1;
+    }
     for(int i = 0; i < rows-1; i++) {
       if(((na_matrix(i,j+offset) && !na_matrix(i,j) && !na_matrix(i+1,j)) || (na_matrix(i+1,j+offset) && !na_matrix(i+1,j))) || j == cols-1) {
         if(heightmap(i,j) < waterheight && heightmap(i+1,j) < waterheight) {

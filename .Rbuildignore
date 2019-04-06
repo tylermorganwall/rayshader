@@ -1,3 +1,4 @@
+^build_gh_pages_rayshader\.R$
 ^man/figures$
 ^tools/readme$
 ^tic\.R$

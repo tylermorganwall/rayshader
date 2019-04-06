@@ -14,8 +14,7 @@
 #'}
 #'  
 #'\dontrun{
-#'render_snapshot()
-#'rgl::rgl.clear()
+#'render_snapshot(clear = TRUE)
 #'}
 render_snapshot = function(filename, clear=FALSE) {
   temp = paste0(tempfile(),".png")
