@@ -36,11 +36,31 @@ ambient_shade = function(heightmap, anglebreaks = seq(1,46,15), sunbreaks = 12,
     stop("sunbreaks needs to be at least 3")
   }
   shademat = matrix(0,nrow=nrow(heightmap),ncol = ncol(heightmap))
-  for(angle in seq(0,360,length.out = sunbreaks+1)[-(sunbreaks+1)]) {
-    shademat = shademat + ray_shade(heightmap,anglebreaks=anglebreaks,sunangle = angle, 
-                                    maxsearch = maxsearch, zscale=zscale,
-                                    multicore=multicore, lambert=FALSE, 
-                                    cache_mask = cache_mask, progbar = progbar, ...)^2.2
+  if(!multicore) {
+    for(angle in seq(0,360,length.out = sunbreaks+1)[-(sunbreaks+1)]) {
+      shademat = shademat + ray_shade(heightmap,anglebreaks=anglebreaks,sunangle = angle, 
+                                      maxsearch = maxsearch, zscale=zscale, lambert=FALSE, 
+                                      cache_mask = cache_mask, progbar = progbar, ...)^2.2
+    }
+  } else {
+    if(is.null(options("cores")[[1]])) {
+      numbercores = parallel::detectCores()
+    } else {
+      numbercores = options("cores")[[1]]
+    }
+    cl = parallel::makeCluster(numbercores, ...)
+    doParallel::registerDoParallel(cl, cores = numbercores)
+    shademat = tryCatch({
+      foreach::foreach(angle=seq(0,360,length.out = sunbreaks+1)[-(sunbreaks+1)],.export = c("ray_shade"),.combine = "+") %dopar% {
+        ray_shade(heightmap,anglebreaks=anglebreaks,sunangle = angle, 
+                  maxsearch = maxsearch, zscale=zscale, lambert=FALSE, 
+                  cache_mask = cache_mask, progbar = progbar, ...)^2.2
+      }
+    }, finally = {
+      tryCatch({
+        parallel::stopCluster(cl)
+      }, error = function (e) {print(e)})
+    })
   }
   shademat = shademat/sunbreaks
   shademat = shademat ^ (1/2.2)

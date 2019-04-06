@@ -4,10 +4,12 @@
 \alias{render_snapshot}
 \title{Render Snapshot of 3D Visualization}
 \usage{
-render_snapshot(filename)
+render_snapshot(filename, clear = FALSE)
 }
 \arguments{
 \item{filename}{Filename of snapshot. If missing, will display to current device.}
+
+\item{clear}{Default `FALSE`. If `TRUE`, the current `rgl` device will be cleared.}
 }
 \value{
 Displays snapshot of current rgl plot (or saves to disk).

@@ -7,7 +7,7 @@
 render_depth(focus = 0.5, focallength = 100, fstop = 4,
   filename = NULL, bokehshape = "circle", bokehintensity = 1,
   bokehlimit = 0.8, rotation = 0, gamma_correction = TRUE,
-  transparent_water = FALSE, progbar = interactive())
+  transparent_water = FALSE, progbar = interactive(), clear = FALSE)
 }
 \arguments{
 \item{focus}{Defaults `0.5`. Depth in which to blur. Minimum 0, maximum 1.}
@@ -32,6 +32,8 @@ render_depth(focus = 0.5, focallength = 100, fstop = 4,
 layer with `render_water()` if they want to recreate the water layer.}
 
 \item{progbar}{Default `TRUE` if in an interactive session. Displays a progress bar.}
+
+\item{clear}{Default `FALSE`. If `TRUE`, the current `rgl` device will be cleared.}
 }
 \value{
 4-layer RGBA array.

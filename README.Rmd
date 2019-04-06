@@ -155,11 +155,7 @@ montereybay %>%
     plot_3d(montereybay,zscale=50,fov=0,theta=-45,phi=45,windowsize=c(1000,800),zoom=0.75,
             water=TRUE, waterdepth = 0, wateralpha = 0.5,watercolor = "lightblue",
             waterlinecolor = "white",waterlinealpha = 0.5)
-render_snapshot()
-```
-
-```{r include=FALSE}
-rgl::rgl.close()
+render_snapshot(clear = TRUE)
 ```
 
 Rayshader also has map shapes other than rectangular included `c("hex", "circle")`, and you can customize the map into any shape you want by setting the areas you do not want to display to `NA`.
@@ -173,8 +169,7 @@ montereybay %>%
     plot_3d(montereybay,zscale=50,fov=0,theta=-45,phi=45,windowsize=c(1000,800),zoom=0.6,
             water=TRUE, waterdepth = 0, wateralpha = 0.5,watercolor = "lightblue",
             waterlinecolor = "white",waterlinealpha = 0.5,baseshape = "circle")
-render_snapshot()
-rgl::rgl.clear()
+render_snapshot(clear = TRUE)
 
 montereybay %>% 
     sphere_shade(zscale=10,texture = "imhof1") %>% 
@@ -183,11 +178,7 @@ montereybay %>%
     plot_3d(montereybay,zscale=50,fov=0,theta=-45,phi=45,windowsize=c(1000,800),zoom=0.6,
             water=TRUE, waterdepth = 0, wateralpha = 0.5,watercolor = "lightblue",
             waterlinecolor = "white",waterlinealpha = 0.5,baseshape = "hex")
-render_snapshot()
-```
-
-```{r include=FALSE}
-rgl::rgl.close()
+render_snapshot(clear = TRUE)
 ```
 
 Adding text labels is done with the `render_label()` function, which also allows you to customize the line type, color, and size along with the font:
@@ -208,13 +199,8 @@ render_label(montereybay,x=300,y=130, z=4000,zscale=50,
              text = "Monterey",dashed = TRUE,textsize = 2,linewidth = 5)
 render_label(montereybay,x=50,y=130, z=1000,zscale=50,
              text = "Monterey Canyon",relativez=FALSE,textsize = 2,linewidth = 5)
-render_snapshot()
+render_snapshot(clear = TRUE)
 ```
-
-```{r include=FALSE}
-rgl::rgl.close()
-```
-
 
 You can also apply a post-processing effect to the 3D maps to render maps with depth of field with the `render_depth()` function:
 

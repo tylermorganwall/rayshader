@@ -18,6 +18,7 @@
 #'@param transparent_water Default `FALSE`. If `TRUE`, depth is determined without water layer. User will have to re-render the water
 #'layer with `render_water()` if they want to recreate the water layer.
 #'@param progbar Default `TRUE` if in an interactive session. Displays a progress bar. 
+#'@param clear Default `FALSE`. If `TRUE`, the current `rgl` device will be cleared.
 #'@return 4-layer RGBA array.
 #'@export
 #'@examples
@@ -34,7 +35,8 @@
 render_depth = function(focus = 0.5, focallength = 100, fstop = 4, filename=NULL,
                      bokehshape = "circle", bokehintensity = 1, bokehlimit=0.8, 
                      rotation = 0, gamma_correction = TRUE,
-                     transparent_water = FALSE, progbar = interactive()) {
+                     transparent_water = FALSE, progbar = interactive(),
+                     clear = FALSE){
   if(focallength < 1) {
     stop("focal length must be greater than 1")
   }
@@ -94,5 +96,8 @@ render_depth = function(focus = 0.5, focallength = 100, fstop = 4, filename=NULL
     plot_map(tempmap)
   } else {
     save_png(tempmap,filename)
+  }
+  if(clear) {
+    rgl::rgl.clear()
   }
 }

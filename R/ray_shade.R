@@ -60,8 +60,8 @@ ray_shade = function(heightmap, anglebreaks=seq(40,50,1), sunangle=315, maxsearc
     cache_mask = cache_mask[c(-1,-nrow(cache_mask)),c(-1,-ncol(cache_mask))]
     shadowmatrix[shadowmatrix<0] = 0
     if(lambert) {
-      shadowmatrix = add_shadow(shadowmatrix, lamb_shade(originalheightmap, rayangle = mean(anglebreaks), 
-                                                         sunangle = sunangle, zscale = zscale), 0)
+      shadowmatrix = shadowmatrix * lamb_shade(originalheightmap, rayangle = mean(anglebreaks), 
+                                                         sunangle = sunangle, zscale = zscale)
     }
     if(!is.null(shadow_cache)) {
       shadow_cache[cache_mask == 1] = shadowmatrix[cache_mask == 1]
@@ -110,8 +110,8 @@ ray_shade = function(heightmap, anglebreaks=seq(40,50,1), sunangle=315, maxsearc
     shadowmatrix = shadowmatrix[c(-1,-nrow(shadowmatrix)),c(-1,-ncol(shadowmatrix))]
     cache_mask = cache_mask[c(-1,-nrow(cache_mask)),c(-1,-ncol(cache_mask))]
     if(lambert) {
-      shadowmatrix = add_shadow(shadowmatrix, lamb_shade(originalheightmap, rayangle = mean(anglebreaks), 
-                                              sunangle = sunangle, zscale = zscale), 0)
+      shadowmatrix = shadowmatrix * lamb_shade(originalheightmap, rayangle = mean(anglebreaks), 
+                                              sunangle = sunangle, zscale = zscale)
     }
     if(!is.null(shadow_cache)) {
       shadow_cache[cache_mask == 1] = shadowmatrix[cache_mask == 1]

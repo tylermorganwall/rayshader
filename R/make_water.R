@@ -12,6 +12,7 @@
 make_water = function(heightmap,waterheight=mean(heightmap),watercolor="lightblue",zscale=1,wateralpha=0.5) {
   heightmap = heightmap[,ncol(heightmap):1]/zscale
   na_matrix = is.na(heightmap)
+  waterheight = waterheight/zscale
   heightlist = make_water_cpp(heightmap,na_matrix, waterheight)
   if(all(!na_matrix)) {
     triangles3d(matrix(c(nrow(heightmap),1,nrow(heightmap), waterheight,waterheight,waterheight,-ncol(heightmap),-1,-1),3,3),
