@@ -15,8 +15,8 @@ reference:
     contents:
       - starts_with("add")
       - starts_with("detect")
-  - title: "Plotting and Saving 2D Maps and 3D Prints"
-    desc: "Functions for displaying/saving 2D maps and 3D prints"
+  - title: "Plotting and Saving 2D and 3D Visualizations"
+    desc: "Functions for displaying/saving 2D visualizations and 3D prints"
     contents:
       - starts_with("plot")
       - starts_with("save")

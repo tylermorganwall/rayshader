@@ -5,7 +5,7 @@
 \title{Save 3D Print}
 \usage{
 save_3dprint(filename, maxwidth = 125, unit = "mm", rotate = TRUE,
-  remove_extras = TRUE)
+  remove_extras = TRUE, clear = FALSE)
 }
 \arguments{
 \item{filename}{String with the filename. If `.stl` is not at the end of the string, it will be appended automatically.}
@@ -17,6 +17,8 @@ save_3dprint(filename, maxwidth = 125, unit = "mm", rotate = TRUE,
 \item{rotate}{Default `TRUE`. If `FALSE`, the map will be printing on its side. This may improve resolution for some 3D printing types.}
 
 \item{remove_extras}{Default `TRUE`. Removes non-topographic features from base: lines, water, labels, and the shadow.}
+
+\item{clear}{Default `FALSE`. If `TRUE`, the current `rgl` device will be cleared.}
 }
 \value{
 Writes an STL file to `filename`. Regardless of the unit displayed, the output STL is in millimeters.
@@ -32,8 +34,8 @@ filename_stl = tempfile()
 volcano \%>\%
  sphere_shade() \%>\%
  plot_3d(volcano,zscale=3)
-save_3dprint(filename_stl)
-rgl::rgl.clear()
+render_snapshot()
+save_3dprint(filename_stl, clear=TRUE)
 }
 
 #Save the STL file into `filename_stl`, setting maximum width to 100 mm
@@ -41,8 +43,8 @@ rgl::rgl.clear()
 volcano \%>\%
  sphere_shade() \%>\%
  plot_3d(volcano,zscale=3)
-save_3dprint(filename_stl, maxwidth = 100)
-rgl::rgl.clear()
+render_snapshot()
+save_3dprint(filename_stl, maxwidth = 100, clear=TRUE)
 }
 
 #'#Save the STL file into `filename_stl`, setting maximum width to 4 inches
@@ -50,15 +52,15 @@ rgl::rgl.clear()
 volcano \%>\%
  sphere_shade() \%>\%
  plot_3d(volcano,zscale=3)
-save_3dprint(filename_stl, maxwidth = 4, unit = "in")
-rgl::rgl.clear()
+render_snapshot()
+save_3dprint(filename_stl, maxwidth = 4, unit = "in", clear=TRUE)
 }
 #'#'#Save the STL file into `filename_stl`, setting maximum width (character) to 120mm
 \donttest{
 volcano \%>\%
  sphere_shade() \%>\%
  plot_3d(volcano,zscale=3)
-save_3dprint(filename_stl, maxwidth = "120mm")
-rgl::rgl.clear()
+render_snapshot()
+save_3dprint(filename_stl, maxwidth = "120mm", clear=TRUE)
 }
 }

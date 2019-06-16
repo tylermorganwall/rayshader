@@ -1,15 +1,32 @@
 
 # rayshader<img src="man/figures/raylogosmall.png" align="right" />
 
+<meta property="og:title" content="Rayshader">
+
+<meta property="og:description" content="3D mapping and data visualization in R">
+
+<meta property="og:image" content="man/figures/website.png">
+
+<meta property="og:url" content="http://www.rayshader.com/">
+
+<meta name="twitter:card" content="summary_large_image">
+
 <img src="man/figures/smallhobart.gif" ></img>
 
 ## Overview
 
-**rayshader** is an open source R package for producing 2D and 3D
-hillshaded maps of elevation matrices using a combination of raytracing,
-spherical texture mapping, overlays, and ambient occlusion. It also
-includes the ability to export 3D models to a 3D print-ready format, and
-includes a post-processing depth of field effect for 3D visualizations.
+**rayshader** is an open source package for producing 2D and 3D data
+visualizations in R. **rayshader** uses elevation data in a base R
+matrix and a combination of raytracing, spherical texture mapping,
+overlays, and ambient occlusion to generate beautiful topographic 2D and
+3D maps. In addition to maps, **rayshader** also allows the user to
+translate **ggplot2** objects into beautiful 3D data visualizations.
+
+The models can be rotated and examined interactively or the camera
+movement can be scripted to create animations. The user can also create
+a cinematic depth of field post-processing effect to direct the user’s
+focus to important regions in the figure. The 3D models can also be
+exported to a 3D-printable format with a built-in STL export function.
 
 ## Installation
 
@@ -21,9 +38,9 @@ devtools::install_github("tylermorganwall/rayshader")
 
 ## Functions
 
-<img   src="man/figures/ray_small.png"><img   src="man/figures/sphere_small.png"><img   src="man/figures/imhof_small.png"><img   src="man/figures/amb_small.png"><img   src="man/figures/lamb_small.png"><img   src="man/figures/alltogether_small.png">
+<img  src="man/figures/smallfeature.png">
 
-Rayshader has seven functions related to hillshading:
+Rayshader has seven functions related to mapping:
 
   - `ray_shade` uses user specified light directions to calculate a
     global shadow map for an elevation matrix. By default, this also
@@ -82,7 +99,7 @@ information to your 3D visualizations:
     altitude can either be specified relative to the elevation at that
     point (the default), or absolutely.
 
-And four functions to display and save your maps:
+And four functions to display and save your visualizations:
 
   - `plot_map` Plots the current map. Accepts either a matrix or an
     array.
@@ -95,10 +112,26 @@ And four functions to display and save your maps:
     given a filename), or plots the 3D view to the current device
     (useful for including images in R Markdown files).
 
+Finally, rayshader has a single function to generate 3D plots using
+ggplot2 objects:
+
+  - `plot_gg` Takes a ggplot2 object (or a list of two ggplot2 objects)
+    and uses the fill or color aesthetic to transform the plot into a 3D
+    surface. You can pass any of the arguments used to specify the
+    camera and the background/shadow colors in `plot_3d()`, and
+    manipulate the displayed 3D plot using `render_camera()` and
+    `render_depth()`.
+
 All of these functions are designed to be used with the magrittr pipe
 `%>%`.
 
 ## Usage
+
+Rayshader can be used for two purposes: both creating hillshaded maps
+and 3D data visualizations plots. First, let’s look at rayshader’s
+mapping capabilities. For the latter, scroll below.
+
+## Mapping with rayshader
 
 ``` r
 library(rayshader)
@@ -269,7 +302,86 @@ elmat %>%
   add_shadow(raymat,0.5) %>%
   add_shadow(ambmat,0.5) %>%
   plot_3d(elmat,zscale=10,fov=30,theta=-225,phi=25,windowsize=c(1000,800),zoom=0.3)
-render_depth(focus=0.6,focallength = 200)
+render_depth(focus=0.6,focallength = 200,clear=TRUE)
 ```
 
 ![](man/figures/README_three-d-depth-1.png)<!-- -->
+
+## 3D plotting with rayshader and ggplot2
+
+Rayshader can also be used to make 3D plots out of ggplot2 objects.
+Here, I turn a color density plot into a 3D density plot. `plot_gg()`
+detects that the user mapped the `fill` aesthetic and uses that to
+project to 3D.
+
+``` r
+library(ggplot2)
+ggdiamonds = ggplot(diamonds) +
+  stat_density_2d(aes(x=x, y=depth, fill = stat(nlevel)), 
+                  geom = "polygon", n = 100, bins = 10,contour = TRUE) +
+  facet_wrap(clarity~.) +
+  scale_fill_viridis_c(option = "A")
+
+par(mfrow=c(1,2))
+
+plot_gg(ggdiamonds, width = 5,height = 5, raytrace = FALSE, preview = TRUE)
+plot_gg(ggdiamonds, width = 5,height = 5, multicore = TRUE, scale = 250, 
+        zoom = 0.7, theta=10, phi=30, windowsize = c(800,800))
+render_snapshot(clear = TRUE)
+```
+
+![](man/figures/README_ggplots-1.png)<!-- -->
+
+Rayshader also detects when the user passes the `color` aesthetic. If
+both are passed, however, rayshader will default to `fill`.
+
+``` r
+mtplot = ggplot(mtcars) + 
+  geom_point(aes(x=mpg,y=disp,color=cyl)) + 
+  scale_color_continuous(limits=c(0,8))
+
+par(mfrow=c(1,2))
+plot_gg(mtplot, width=3.5, raytrace = FALSE, preview = TRUE)
+
+plot_gg(mtplot, width=3.5, multicore = TRUE, windowsize = c(800,800), 
+        zoom=0.85, phi=35, theta=30, sunangle=225, soliddepth=-100)
+render_snapshot(clear = TRUE)
+```
+
+![](man/figures/README_ggplots_2-1.png)<!-- -->
+
+Utilize combinations of line color and different fill to create
+different effects. Here is a terraced hexbin plot, created by mapping
+the line colors all to black.
+
+``` r
+a = data.frame(x=rnorm(20000, 10, 1.9), y=rnorm(20000, 10, 1.2) )
+b = data.frame(x=rnorm(20000, 14.5, 1.9), y=rnorm(20000, 14.5, 1.9) )
+c = data.frame(x=rnorm(20000, 9.5, 1.9), y=rnorm(20000, 15.5, 1.9) )
+data = rbind(a,b,c)
+
+#Lines
+pp = ggplot(data,aes(x=x, y=y)) +
+  geom_hex(bins = 20, size = 0.5, color = "black") +
+  scale_fill_viridis_c(option = "C")
+
+par(mfrow=c(1,2))
+plot_gg(pp, width = 5, height = 4, scale = 300, raytrace = FALSE, preview = TRUE)
+plot_gg(pp, width = 5, height = 4, scale = 300, multicore = TRUE, windowsize = c(1000,800))
+render_camera(fov = 70, zoom = 0.5, theta = 130, phi = 35)
+render_snapshot(clear = TRUE)
+```
+
+![](man/figures/README_ggplots_3-1.png)<!-- -->
+
+You can also use the `render_depth()` function to direct the viewer’s
+focus to a certain area in the figure.
+
+``` r
+par(mfrow = c(1,1))
+plot_gg(pp, width = 5, height = 4, scale = 300, multicore = TRUE, windowsize = c(1200,960),
+        fov = 70, zoom = 0.4, theta = 330, phi = 40)
+render_depth(focus = 0.68, focallength = 200)
+```
+
+![](man/figures/README_ggplots_4-1.png)<!-- -->

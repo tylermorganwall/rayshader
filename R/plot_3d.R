@@ -44,7 +44,7 @@
 #'montereybay %>%
 #'  sphere_shade(texture="desert") %>%
 #'  plot_3d(montereybay,zscale=50)
-#'render_snapshot()
+#'render_snapshot(clear = TRUE)
 #'}
 #'
 #'#With a water layer  
@@ -53,8 +53,7 @@
 #'  sphere_shade(texture="imhof2") %>%
 #'  plot_3d(montereybay, zscale=50, water = TRUE, watercolor="imhof2", 
 #'          waterlinecolor="white", waterlinealpha=0.5)
-#'render_snapshot()
-#'rgl::rgl.clear()
+#'render_snapshot(clear = TRUE)
 #'}
 #'
 #'#We can also change the base by setting "baseshape" to "hex" or "circle"
@@ -63,8 +62,7 @@
 #'  sphere_shade(texture="imhof1") %>%
 #'  plot_3d(montereybay, zscale=50, water = TRUE, watercolor="imhof1", theta=-45, zoom=0.7,
 #'          waterlinecolor="white", waterlinealpha=0.5,baseshape="circle")
-#'render_snapshot()
-#'rgl::rgl.clear()
+#'render_snapshot(clear = TRUE)
 #'}
 #'
 #'\donttest{
@@ -72,8 +70,7 @@
 #'  sphere_shade(texture="imhof1") %>%
 #'  plot_3d(montereybay, zscale=50, water = TRUE, watercolor="imhof1", theta=-45, zoom=0.7,
 #'          waterlinecolor="white", waterlinealpha=0.5,baseshape="hex")
-#'render_snapshot()
-#'rgl::rgl.clear()
+#'render_snapshot(clear = TRUE)
 #'}
 #'
 #'#Or we can carve out the region of interest ourselves, by setting those entries to NA
@@ -90,8 +87,7 @@
 #'  sphere_shade(texture="imhof1") %>%
 #'  plot_3d(mb_water, zscale=50, water = TRUE, watercolor="imhof1", theta=-45,
 #'          waterlinecolor="white", waterlinealpha=0.5)
-#'render_snapshot()
-#'rgl::rgl.clear()
+#'render_snapshot(clear = TRUE)
 #'}
 plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
                    solid = TRUE, soliddepth="auto", solidcolor="grey20",solidlinecolor="grey30",

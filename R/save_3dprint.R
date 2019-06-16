@@ -7,6 +7,7 @@
 #'@param unit Default `mm`. Units of the `maxwidth` argument. Can also be set to inches with `in`. 
 #'@param rotate Default `TRUE`. If `FALSE`, the map will be printing on its side. This may improve resolution for some 3D printing types.
 #'@param remove_extras Default `TRUE`. Removes non-topographic features from base: lines, water, labels, and the shadow.
+#'@param clear Default `FALSE`. If `TRUE`, the current `rgl` device will be cleared.
 #'@return Writes an STL file to `filename`. Regardless of the unit displayed, the output STL is in millimeters.
 #'@export
 #'@examples
@@ -17,8 +18,8 @@
 #'volcano %>%
 #'  sphere_shade() %>%
 #'  plot_3d(volcano,zscale=3)
-#'save_3dprint(filename_stl)
-#'rgl::rgl.clear()
+#'render_snapshot()
+#'save_3dprint(filename_stl, clear=TRUE)
 #'}
 #'
 #'#Save the STL file into `filename_stl`, setting maximum width to 100 mm
@@ -26,8 +27,8 @@
 #'volcano %>%
 #'  sphere_shade() %>%
 #'  plot_3d(volcano,zscale=3)
-#'save_3dprint(filename_stl, maxwidth = 100)
-#'rgl::rgl.clear()
+#'render_snapshot()
+#'save_3dprint(filename_stl, maxwidth = 100, clear=TRUE)
 #'}
 #'
 #'#'#Save the STL file into `filename_stl`, setting maximum width to 4 inches
@@ -35,18 +36,19 @@
 #'volcano %>%
 #'  sphere_shade() %>%
 #'  plot_3d(volcano,zscale=3)
-#'save_3dprint(filename_stl, maxwidth = 4, unit = "in")
-#'rgl::rgl.clear()
+#'render_snapshot()
+#'save_3dprint(filename_stl, maxwidth = 4, unit = "in", clear=TRUE)
 #'}
 #'#'#'#Save the STL file into `filename_stl`, setting maximum width (character) to 120mm
 #'\donttest{
 #'volcano %>%
 #'  sphere_shade() %>%
 #'  plot_3d(volcano,zscale=3)
-#'save_3dprint(filename_stl, maxwidth = "120mm")
-#'rgl::rgl.clear()
+#'render_snapshot()
+#'save_3dprint(filename_stl, maxwidth = "120mm", clear=TRUE)
 #'}
-save_3dprint = function(filename,maxwidth=125,unit="mm",rotate=TRUE,remove_extras = TRUE) {
+save_3dprint = function(filename,maxwidth=125,unit="mm",rotate=TRUE,remove_extras = TRUE,
+                        clear=FALSE) {
   if(remove_extras) {
     idlist = get_ids_with_labels()
     remove_ids = idlist$id[!(idlist$raytype %in% c("surface","base"))]
@@ -144,5 +146,8 @@ save_3dprint = function(filename,maxwidth=125,unit="mm",rotate=TRUE,remove_extra
     message(sprintf("Dimensions of model are: %1.1f mm x %1.1f mm x %1.1f mm",dim1width*multiplier,dim2width*multiplier,dim3width*multiplier))
   } else {
     message(sprintf("Dimensions of model are: %1.2f in x %1.2f in x %1.2f in",dim1width*0.0393*multiplier,dim2width*0.0393*multiplier,dim3width*0.0393*multiplier))
+  }
+  if(clear) {
+    rgl::rgl.clear()
   }
 }

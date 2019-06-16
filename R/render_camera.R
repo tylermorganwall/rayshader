@@ -11,7 +11,7 @@
 #'\dontrun{
 #'montereybay %>%
 #'  sphere_shade() %>%
-#'  plot_3d(montereybay,zscale=50)
+#'  plot_3d(montereybay,zscale = 50)
 #'render_snapshot()
 #'}
 #'
@@ -23,19 +23,19 @@
 #'
 #'#Shift to an overhead view
 #'\dontrun{
-#'render_camera(theta = 0, phi = 90,zoom=0.7)
+#'render_camera(theta = 0, phi = 90,zoom = 0.7)
 #'render_snapshot()
 #'}
 #'
 #'#Shift to an front view
 #'\dontrun{
-#'render_camera(theta = -90, phi = 30,zoom=0.5)
+#'render_camera(theta = -90, phi = 30,zoom = 0.5)
 #'render_snapshot()
 #'}
 #'
 #'#Change the FOV
 #'\dontrun{
-#'render_camera(theta = -90, phi = 30,zoom=0.5,fov=130)
+#'render_camera(theta = -90, phi = 30,zoom = 0.5,fov = 130)
 #'render_snapshot()
 #'rgl::rgl.close()
 #'}
@@ -44,7 +44,7 @@
 #'\dontrun{
 #'montereybay %>%
 #'  sphere_shade() %>%
-#'  plot_3d(montereybay,zscale=50)
+#'  plot_3d(montereybay,zscale = 50)
 #'
 #'phivec = 20 + 70 * 1/(1 + exp(seq(-5, 10, length.out = 180)))
 #'phivecfull = c(phivec, rev(phivec))
@@ -64,5 +64,5 @@
 #'#ffmpeg -i raymovie.mp4 -pix_fmt yuv420p -profile:v baseline -level 3 -vf scale=-2:-2 rayweb.mp4
 #'}
 render_camera = function(theta = 45, phi = 45, zoom = 1, fov = 0) {
-  rgl::rgl.viewpoint( theta = theta, phi = phi, fov = fov, zoom = zoom)
+  rgl::rgl.viewpoint(theta = theta, phi = phi, fov = fov, zoom = zoom)
 }
