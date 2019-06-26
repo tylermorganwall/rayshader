@@ -74,7 +74,7 @@ render_movie = function(filename, type = "orbit", frames = 360, fps = 30,
   if(is.null(zoom)) {
     zoom = rgl::par3d()$zoom
   }
-  png_files <- file.path(tempdir(), sprintf("image%d.png", seq_len(frames)))
+  png_files = file.path(tempdir(), sprintf("image%d.png", seq_len(frames)))
   on.exit(unlink(png_files))
   if(type == "orbit") {
     theta_vector = seq(0,360,length.out = frames+1)[-(frames+1)]
@@ -98,7 +98,7 @@ render_movie = function(filename, type = "orbit", frames = 360, fps = 30,
     }
     for(i in seq_len(frames)) {
       render_camera(theta = theta[i], phi = phi[i], zoom = zoom[i], fov = fov[i])
-      render_snapshot()
+      rgl::snapshot3d(filename = png_files[i])
     }
   } else {
     stop("Unknown type: ", type)
