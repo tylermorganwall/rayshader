@@ -74,22 +74,20 @@ render_movie = function(filename, type = "orbit", frames = 360, fps = 30,
   if(is.null(zoom)) {
     zoom = rgl::par3d()$zoom
   }
+  png_files = file.path(tempdir(), sprintf("image%d.png", seq_len(frames)))
+  on.exit(unlink(png_files))
   if(type == "orbit") {
     theta_vector = seq(0,360,length.out = frames+1)[-(frames+1)]
-    av::av_capture_graphics({
-    for(i in 1:frames) {
+    for(i in seq_len(frames)) {
       render_camera(theta = theta_vector[i], phi = phi, zoom = zoom, fov = fov)
-      render_snapshot()
+      rgl::snapshot3d(filename = png_files[i])
     }
-    },output = filename, width = windowsize["width"], height = windowsize["height"], framerate = fps, ...)
   } else if (type == "oscillate") {
     theta_vector = theta + 45 * sin(seq(0,360,length.out = frames+1)[-(frames+1)]*pi/180)
-    av::av_capture_graphics({
-      for(i in 1:frames) {
-        render_camera(theta = theta_vector[i], phi = phi, zoom = zoom, fov = fov)
-        render_snapshot()
-      }
-    },output = filename, width = windowsize["width"], height = windowsize["height"], framerate = fps, ...)
+    for(i in seq_len(frames)) {
+      render_camera(theta = theta_vector[i], phi = phi, zoom = zoom, fov = fov)
+      rgl::snapshot3d(filename = png_files[i])
+    }
   } else if (type == "custom") {
     if(length(theta) == 1) theta = rep(theta, frames)
     if(length(phi) == 1) phi = rep(phi, frames)
@@ -98,11 +96,12 @@ render_movie = function(filename, type = "orbit", frames = 360, fps = 30,
     if(!all(c(length(theta), length(phi), length(zoom),length(fov)) == frames)) {
       stop("All camera vectors must be the same length (or fixed values)")
     }
-    av::av_capture_graphics({
-      for(i in 1:frames) {
-        render_camera(theta = theta[i], phi = phi[i], zoom = zoom[i], fov = fov[i])
-        render_snapshot()
-      }
-    },output = filename, width = windowsize["width"], height = windowsize["height"], framerate = fps, ...)
+    for(i in seq_len(frames)) {
+      render_camera(theta = theta[i], phi = phi[i], zoom = zoom[i], fov = fov[i])
+      rgl::snapshot3d(filename = png_files[i])
+    }
+  } else {
+    stop("Unknown type: ", type)
   }
+  av::av_encode_video(png_files, output = filename, framerate = fps, ...)
 }
