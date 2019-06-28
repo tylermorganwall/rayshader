@@ -171,6 +171,14 @@ plot_gg = function(ggobj, width = 3, height = 3, height_aes = NULL,invert = FALS
         iscolor = TRUE
       }
     }
+    if(!iscolor && !isfill) {
+      if("fill" %in% names(ggplotobj2$mapping)) {
+        isfill = TRUE
+      }
+      if(any(c("color","colour") %in% names(ggplotobj2$mapping))) {
+        iscolor = TRUE
+      }
+    }
     if(isfill && !iscolor) {
       height_aes = "fill"
     } else if (!isfill && iscolor) {
@@ -445,8 +453,10 @@ plot_gg = function(ggobj, width = 3, height = 3, height_aes = NULL,invert = FALS
         }
       } else if(whichtype == "rect") {
         if(!(tempname %in% c("panel.border","rect"))) {
-          ggplotobj2$theme[[i]]$colour = "white"
-          ggplotobj2$theme[[i]]$fill = "white"
+          if(!is.null(ggplotobj2$theme[[i]])) {
+            ggplotobj2$theme[[i]]$colour = "white"
+            ggplotobj2$theme[[i]]$fill = "white"
+          }
         } else {
           ggplotobj2$theme[[i]]$colour = "white"
           ggplotobj2$theme[[i]]$fill = NA

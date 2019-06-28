@@ -47,6 +47,15 @@
 #'}
 add_overlay = function(hillshade, overlay, alphacolor=NULL, alphalayer = 1, alphamethod = "max", 
                        gamma_correction = TRUE) {
+  if(any(dim(hillshade)[1:2] != dim(overlay)[1:2])) {
+    resized_overlay_file = tempfile(fileext=".png")
+    png::writePNG(overlay,resized_overlay_file)
+    temp_overlay = imager::load.image(resized_overlay_file)
+    resized_temp_overlay = resize(temp_overlay, dim(hillshade)[2], dim(hillshade)[1])
+    imager::save.image(resized_temp_overlay, resized_overlay_file)
+    overlay = png::readPNG(resized_overlay_file)
+    warning("Overlay doesn't match dimension of hillshade--resizing to match")
+  }
   flipud = function(x) {
     x[,ncol(x):1]
   }

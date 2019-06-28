@@ -5,6 +5,7 @@
 #'@param hillshade Array (or matrix) of hillshade to be written.
 #'@param filename String with the filename. If `.png` is not at the end of the string, it will be appended automatically.
 #'@param rotate Default 0. Rotates the output. Possible values: 0, 90, 180, 270.
+#'@param dpi Default `NULL`. Optional DPI (dots per inch) specifying the resolution of the image.
 #'@export
 #'@examples
 #'filename_map = tempfile()
@@ -19,7 +20,7 @@
 #'montereybay %>%
 #'  sphere_shade() %>%
 #'  save_png(filename_map,rotate=180)
-save_png = function(hillshade,filename ,rotate=0) {
+save_png = function(hillshade, filename, rotate = 0, dpi = NULL) {
   if(is.null(filename)) {
     stop("save_png requires a filename")
   }
@@ -40,7 +41,7 @@ save_png = function(hillshade,filename ,rotate=0) {
       }
     }
     final = array(t(hillshade[,ncol(hillshade):1]),dim=c(ncol(hillshade),nrow(hillshade),3))
-    png::writePNG(final,filename)
+    png::writePNG(final,filename, dpi = dpi)
   } else {
     if(number_of_rots != 0) {
       newarray = hillshade
@@ -60,6 +61,6 @@ save_png = function(hillshade,filename ,rotate=0) {
         hillshade = newarrayt
       }
     }
-    png::writePNG(hillshade,filename)
+    png::writePNG(hillshade, filename, dpi = dpi)
   } 
 }

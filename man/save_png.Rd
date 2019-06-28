@@ -4,7 +4,7 @@
 \alias{save_png}
 \title{Save PNG}
 \usage{
-save_png(hillshade, filename, rotate = 0)
+save_png(hillshade, filename, rotate = 0, dpi = NULL)
 }
 \arguments{
 \item{hillshade}{Array (or matrix) of hillshade to be written.}
@@ -12,6 +12,8 @@ save_png(hillshade, filename, rotate = 0)
 \item{filename}{String with the filename. If `.png` is not at the end of the string, it will be appended automatically.}
 
 \item{rotate}{Default 0. Rotates the output. Possible values: 0, 90, 180, 270.}
+
+\item{dpi}{Default `NULL`. Optional DPI (dots per inch) specifying the resolution of the image.}
 }
 \description{
 Writes the hillshaded map to file.

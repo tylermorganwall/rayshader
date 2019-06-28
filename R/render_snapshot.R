@@ -18,12 +18,12 @@
 #'}
 render_snapshot = function(filename, clear=FALSE) {
   temp = paste0(tempfile(),".png")
-  rgl::snapshot3d(filename=temp)
+  rgl::snapshot3d(filename = temp)
   tempmap = png::readPNG(temp)
   if(missing(filename)) {
     plot_map(tempmap)
   } else {
-    save_png(tempmap,filename)
+    save_png(tempmap, filename)
   }
   if(clear) {
     rgl::rgl.clear()
