@@ -588,13 +588,7 @@ plot_gg = function(ggobj, width = 3, height = 3, height_aes = NULL,invert = FALS
   if(height_aes == "fill") {
     if(length(ggplotobj2$layers) > 0) {
       for(i in seq_along(1:length(ggplotobj2$layers))) {
-        ggplotobj2$layers[[i]]$aes_params$size = 0
-        if("GeomContour" %in% class(ggplotobj2$layers[[i]]$geom)) {
-          ggplotobj2$layers[[i]]$aes_params$alpha = 0
-        }
-        if("GeomSf" %in% class(ggplotobj2$layers[[i]]$geom)) {
-          ggplotobj2$layers[[i]]$aes_params$colour = "white"
-        }
+        ggplotobj2$layers[[i]]$aes_params$size = NA
       }
     }
   } else {
