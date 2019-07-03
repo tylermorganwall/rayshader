@@ -210,11 +210,17 @@ plot_gg = function(ggobj, width = 3, height = 3, height_aes = NULL,invert = FALS
     "strip.background","strip.placement","strip.text" ,"strip.text.x",
     "strip.text.y","strip.switch.pad.grid","strip.switch.pad.wrap","panel.grid.major",
     "title","axis.ticks.length.x","axis.ticks.length.y","axis.ticks.length.x.top",
-    "axis.ticks.length.x.bottom","axis.ticks.length.y.left","axis.ticks.length.y.right")
+    "axis.ticks.length.x.bottom","axis.ticks.length.y.left","axis.ticks.length.y.right","axis.title.x.bottom",
+    "axis.text.x.bottom","axis.text.y.left","axis.title.y.left")
   
-  key_theme_elements = c("text", "line", "axis.line", "axis.title", "axis.text", 
-                         "axis.ticks", "strip.background", "strip.text", "legend.text", 
-                         "legend.background", "legend.title", "panel.background")
+  key_theme_elements = c("text", "line", "axis.line", "axis.title", 
+                         "axis.title.x",
+                         "axis.title.y",
+                         "axis.text", 
+                         "axis.text.x", "axis.text.y", "axis.text.x.top", "axis.text.x.bottom", 
+                         "axis.text.y.left", "axis.text.y.right",
+                         "axis.ticks", "strip.background", "strip.text", "legend.text", "strip.text.x","strip.text.y",
+                         "legend.title","legend.background", "legend.title", "panel.background")
   theme_bool = rep(TRUE,length(key_theme_elements))
   names(theme_bool) = key_theme_elements
 
@@ -234,7 +240,8 @@ plot_gg = function(ggobj, width = 3, height = 3, height_aes = NULL,invert = FALS
     "rect","none","text","text",
     "text","unit","unit","line",
     "text","line","line","line",
-    "line","line","line")
+    "line","line","line","text",
+    "text","text","text")
   black_white_pal = function(x) {
     grDevices::colorRampPalette(c("white", "black"))(255)[x * 254 + 1]
   }
@@ -246,7 +253,7 @@ plot_gg = function(ggobj, width = 3, height = 3, height_aes = NULL,invert = FALS
       return(entry)
     }
   }
-  
+
   #aes_with_guides = c("size","shape","colour","fill","alpha","linetype")
   #Shift all continuous palettes of height_aes to black/white, and set all discrete key colors to white.
   if(ggplotobj2$scales$n() != 0) {
@@ -478,11 +485,22 @@ plot_gg = function(ggobj, width = 3, height = 3, height_aes = NULL,invert = FALS
     if(theme_bool["line"]) ggplotobj2 = ggplotobj2 + theme(line = element_line(color="white"))
     if(theme_bool["axis.line"]) ggplotobj2 = ggplotobj2 + theme(axis.line = element_line(color="white"))
     if(theme_bool["axis.title"]) ggplotobj2 = ggplotobj2 + theme(axis.title = element_text(color="white"))
+    if(theme_bool["axis.title.x"]) ggplotobj2 = ggplotobj2 + theme(axis.title.x = element_text(color="white"))
+    if(theme_bool["axis.title.y"]) ggplotobj2 = ggplotobj2 + theme(axis.title.y = element_text(color="white"))
     if(theme_bool["axis.text"]) ggplotobj2 = ggplotobj2 + theme(axis.text = element_text(color="white"))
+    if(theme_bool["axis.text.x"]) ggplotobj2 = ggplotobj2 + theme(axis.text.x = element_text(color="white"))
+    if(theme_bool["axis.text.y"]) ggplotobj2 = ggplotobj2 + theme(axis.text.y = element_text(color="white"))
+    if(theme_bool["axis.text.x.bottom"]) ggplotobj2 = ggplotobj2 + theme(axis.text.x.bottom = element_text(color="white"))
+    if(theme_bool["axis.text.x.top"]) ggplotobj2 = ggplotobj2 + theme(axis.text.x.top = element_text(color="white"))
+    if(theme_bool["axis.text.y.left"]) ggplotobj2 = ggplotobj2 + theme(axis.text.y.left = element_text(color="white"))
+    if(theme_bool["axis.text.y.right"]) ggplotobj2 = ggplotobj2 + theme(axis.text.y.right = element_text(color="white"))
+    if(theme_bool["strip.text.x"]) ggplotobj2 = ggplotobj2 + theme(strip.text.x = element_text(color="white"))
+    if(theme_bool["strip.text.y"]) ggplotobj2 = ggplotobj2 + theme(strip.text.y = element_text(color="white"))
     if(theme_bool["axis.ticks"]) ggplotobj2 = ggplotobj2 + theme(axis.ticks = element_line(color="white"))
     if(theme_bool["strip.background"]) ggplotobj2 = ggplotobj2 + theme(strip.background = element_rect(fill = "white", color = "white"))
     if(theme_bool["strip.text"]) ggplotobj2 = ggplotobj2 + theme(strip.text = element_text(color="white"))
     if(theme_bool["legend.text"]) ggplotobj2 = ggplotobj2 + theme(legend.text = element_text(color="white"))
+    if(theme_bool["legend.title"]) ggplotobj2 = ggplotobj2 + theme(legend.title = element_text(color="white"))
     if(theme_bool["legend.background"]) ggplotobj2 = ggplotobj2 + theme(legend.background = element_rect(fill = "white", color = "white"))
     if(theme_bool["legend.title"]) ggplotobj2 = ggplotobj2 + theme(legend.title = element_text(color="white"))
     if(theme_bool["panel.background"]) ggplotobj2 = ggplotobj2 + theme(panel.background = element_rect(fill = "white", color = "white"))
@@ -571,12 +589,21 @@ plot_gg = function(ggobj, width = 3, height = 3, height_aes = NULL,invert = FALS
     if(length(ggplotobj2$layers) > 0) {
       for(i in seq_along(1:length(ggplotobj2$layers))) {
         ggplotobj2$layers[[i]]$aes_params$size = 0
+        if("GeomContour" %in% class(ggplotobj2$layers[[i]]$geom)) {
+          ggplotobj2$layers[[i]]$aes_params$alpha = 0
+        }
+        if("GeomSf" %in% class(ggplotobj2$layers[[i]]$geom)) {
+          ggplotobj2$layers[[i]]$aes_params$colour = "white"
+        }
       }
     }
   } else {
     if(length(ggplotobj2$layers) > 0) {
       for(i in seq_along(1:length(ggplotobj2$layers))) {
         ggplotobj2$layers[[i]]$aes_params$fill = "white"
+        if("GeomContour" %in% class(ggplotobj2$layers[[i]]$geom)) {
+          ggplotobj2$layers[[i]]$aes_params$alpha = 0
+        }
       }
       if(pointcontract != 1) {
         for(i in 1:length(ggplotobj2$layers)) {
