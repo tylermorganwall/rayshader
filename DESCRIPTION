@@ -1,8 +1,7 @@
 Package: rayshader
 Type: Package
 Title: Create and Visualize Hillshaded Maps from Elevation Matrices
-Version: 0.11.1
-Date: 2019-06-25
+Version: 0.11.2
 Author: Tyler Morgan-Wall
 Maintainer: Tyler Morgan-Wall <tylermw@gmail.com>
 Description: Uses a combination of raytracing, spherical texture mapping, lambertian reflectance, and ambient occlusion to produce 2D and 3D data visualizations and maps. Includes water detection and layering functions, programmable color palette generation, several built-in textures for hillshading, 2D and 3D plotting options, and the ability to export 3D visualizations to a 3D printable format.
