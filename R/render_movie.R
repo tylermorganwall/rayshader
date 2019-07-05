@@ -103,5 +103,5 @@ render_movie = function(filename, type = "orbit", frames = 360, fps = 30,
   } else {
     stop("Unknown type: ", type)
   }
-  av::av_encode_video(png_files, output = filename, framerate = fps, ...)
+  av::av_encode_video(png_files, output = filename, framerate = fps, vfilter = "scale=-2:-2", ...)
 }

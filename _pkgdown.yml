@@ -36,8 +36,10 @@ navbar:
     - icon: fa-home
       href: index.html
     - text: "Rayshader Blog"
-      menu: 
-      -  text: 2018 Year in Review
+      menu:
+      -  text: "Introducing 3D ggplots with rayshader"
+         href: https://www.tylermw.com/3d-ggplots-with-rayshader/
+      -  text: "2018 Year in Review"
          href: https://www.tylermw.com/2018-year-in-review/
       -  text: "Portrait Mode for Data: Rayshader + Rayfocus"
          href: https://www.tylermw.com/portrait-mode-data/

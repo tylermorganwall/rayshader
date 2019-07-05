@@ -450,8 +450,8 @@ plot_gg = function(ggobj, width = 3, height = 3, height_aes = NULL,invert = FALS
       tempname = names(ggplotobj2$theme[i])
       if(tempname %in% key_theme_elements) {
         theme_bool[tempname] = FALSE
-      } else if (substr(tempname,1,nchar(tempname)-2) %in% key_theme_elements) {
-        theme_bool[substr(tempname,1,nchar(tempname)-2)] = FALSE
+      } else if ("element_blank" %in% class(ggplotobj2$theme[[i]])) {
+        theme_bool[tempname] = FALSE
       }
       whichtype = typetheme[which(tempname == colortheme)]
       if(whichtype %in% c("text","line")) {
@@ -490,10 +490,6 @@ plot_gg = function(ggobj, width = 3, height = 3, height_aes = NULL,invert = FALS
     if(theme_bool["axis.text"]) ggplotobj2 = ggplotobj2 + theme(axis.text = element_text(color="white"))
     if(theme_bool["axis.text.x"]) ggplotobj2 = ggplotobj2 + theme(axis.text.x = element_text(color="white"))
     if(theme_bool["axis.text.y"]) ggplotobj2 = ggplotobj2 + theme(axis.text.y = element_text(color="white"))
-    if(theme_bool["axis.text.x.bottom"]) ggplotobj2 = ggplotobj2 + theme(axis.text.x.bottom = element_text(color="white"))
-    if(theme_bool["axis.text.x.top"]) ggplotobj2 = ggplotobj2 + theme(axis.text.x.top = element_text(color="white"))
-    if(theme_bool["axis.text.y.left"]) ggplotobj2 = ggplotobj2 + theme(axis.text.y.left = element_text(color="white"))
-    if(theme_bool["axis.text.y.right"]) ggplotobj2 = ggplotobj2 + theme(axis.text.y.right = element_text(color="white"))
     if(theme_bool["strip.text.x"]) ggplotobj2 = ggplotobj2 + theme(strip.text.x = element_text(color="white"))
     if(theme_bool["strip.text.y"]) ggplotobj2 = ggplotobj2 + theme(strip.text.y = element_text(color="white"))
     if(theme_bool["axis.ticks"]) ggplotobj2 = ggplotobj2 + theme(axis.ticks = element_line(color="white"))

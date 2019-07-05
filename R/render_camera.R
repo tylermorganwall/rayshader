@@ -4,8 +4,8 @@
 #'
 #'@param theta Default `45`. Rotation angle.
 #'@param phi Default `45`. Azimuth angle. Maximum `90`.
-#'@param zoom Default `1`. Positive value indicating camera magnification.
-#'@param fov Default `0`. Field of view of the camera. Maximum `180`.
+#'@param zoom Defaults to current value. Positive value indicating camera magnification.
+#'@param fov Defaults to current value. Field of view of the camera. Maximum `180`.
 #'@export
 #'@examples
 #'\dontrun{
@@ -63,6 +63,12 @@
 #'#And run this command to convert the video to post to the web:
 #'#ffmpeg -i raymovie.mp4 -pix_fmt yuv420p -profile:v baseline -level 3 -vf scale=-2:-2 rayweb.mp4
 #'}
-render_camera = function(theta = 45, phi = 45, zoom = 1, fov = 0) {
+render_camera = function(theta = 45, phi = 45, zoom = 1, fov = NULL) {
+  if(is.null(fov)) {
+    fov = rgl::par3d()$FOV
+  }
+  if(is.null(zoom)) {
+    zoom = rgl::par3d()$zoom
+  }
   rgl::rgl.viewpoint(theta = theta, phi = phi, fov = fov, zoom = zoom)
 }
