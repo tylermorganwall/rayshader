@@ -6,7 +6,7 @@
 \usage{
 plot_gg(ggobj, width = 3, height = 3, height_aes = NULL,
   invert = FALSE, shadow_intensity = 0.5, units = c("in", "cm",
-  "mm"), scale = 150, pointcontract = 0.7, offset_edges = TRUE,
+  "mm"), scale = 150, pointcontract = 0.7, offset_edges = FALSE,
   preview = FALSE, raytrace = TRUE, sunangle = 315,
   anglebreaks = seq(30, 40, 0.1), multicore = FALSE, lambert = TRUE,
   save_shadow_matrix = FALSE, saved_shadow_matrix = NULL, ...)
@@ -39,8 +39,9 @@ being mapped, you may want to set this to `1`, since the points now have a non-z
 mapping `alpha` in the same variable you are projecting to height is probably not a good choice. as the `alpha`
 variable is ignored when performing the 3D projection).}
 
-\item{offset_edges}{Default `TRUE`. Inserts a small amount of space between polygons for "geom_sf" and "geom_polygon" layers.
-If `FALSE`, this feature will be turned off. If you pass in a number, the space between polygons will be a line of that width.}
+\item{offset_edges}{Default `FALSE`. If `TRUE`, inserts a small amount of space between polygons for "geom_sf" and "geom_polygon" layers.
+If you pass in a number, the space between polygons will be a line of that width. Note: this feature may end up removing thin polygons 
+from the plot entirely--use with care.}
 
 \item{preview}{Default `FALSE`. If `TRUE`, the raytraced 2D ggplot will be displayed on the current device.}
 
