@@ -31,6 +31,8 @@
 #'being mapped, you may want to set this to `1`, since the points now have a non-zero width stroke outline (however,
 #'mapping `alpha` in the same variable you are projecting to height is probably not a good choice. as the `alpha`
 #'variable is ignored when performing the 3D projection).
+#'@param offset_edges Default `TRUE`. Inserts a small amount of space between polygons for "geom_sf" and "geom_polygon" layers.
+#'If `FALSE`, this feature will be turned off. If you pass in a number, the space between polygons will be a line of that width.
 #'@param preview Default `FALSE`. If `TRUE`, the raytraced 2D ggplot will be displayed on the current device.
 #'@param raytrace Default `FALSE`. Whether to add a raytraced layer.
 #'@param sunangle Default `315` (NW). If raytracing, the angle (in degrees) around the matrix from which the light originates. 
@@ -141,9 +143,11 @@
 #'        zoom = 0.55, theta = -10, phi = 25, scale=300)
 #'render_snapshot(clear = TRUE)
 #'}
-plot_gg = function(ggobj, width = 3, height = 3, height_aes = NULL,invert = FALSE, shadow_intensity = 0.5,
-                   units = c("in", "cm", "mm"), scale=150, pointcontract = 0.7, preview = FALSE,
-                   raytrace = TRUE, sunangle = 315, anglebreaks = seq(30,40,0.1), multicore=FALSE, lambert=TRUE,
+plot_gg = function(ggobj, width = 3, height = 3, 
+                   height_aes = NULL, invert = FALSE, shadow_intensity = 0.5,
+                   units = c("in", "cm", "mm"), scale=150, pointcontract = 0.7, offset_edges = TRUE,
+                   preview = FALSE, raytrace = TRUE, sunangle = 315, anglebreaks = seq(30,40,0.1), 
+                   multicore = FALSE, lambert=TRUE, 
                    save_shadow_matrix = FALSE, saved_shadow_matrix=NULL, ...) {
   flipud = function(x) {
     x[nrow(x):1,]
@@ -191,6 +195,12 @@ plot_gg = function(ggobj, width = 3, height = 3, height_aes = NULL,invert = FALS
   }
   if(height_aes == "color") {
     height_aes = "colour"
+  }
+  if(is.numeric(offset_edges)) {
+    polygon_offset_value = offset_edges
+    offset_edges = TRUE
+  } else {
+    polygon_offset_value = 0.5
   }
   other_height_type = ifelse(height_aes == "colour", "fill", "colour")
   mapcolor = png::readPNG(paste0(colormaptemp,".png"))
@@ -388,7 +398,11 @@ plot_gg = function(ggobj, width = 3, height = 3, height_aes = NULL,invert = FALS
           ggplotobj2$layers[[layer]]$aes_params$colour = "white"
         }
         if("fill" %in% names(ggplotobj2$layers[[layer]]$mapping)) {
-          ggplotobj2$layers[[layer]]$aes_params$size = 0
+          ggplotobj2$layers[[layer]]$aes_params$size = NA
+          if(any(c("GeomPolygon","GeomSf") %in% class(ggplotobj2$layers[[layer]]$geom)) && offset_edges) {
+            ggplotobj2$layers[[layer]]$aes_params$size = polygon_offset_value
+            ggplotobj2$layers[[layer]]$aes_params$colour = "white"
+          }
         }
         if("shape" %in% names(ggplotobj2$layers[[layer]]$mapping)) {
           shapedata = layer_data(ggplotobj2)
@@ -508,7 +522,11 @@ plot_gg = function(ggobj, width = 3, height = 3, height_aes = NULL,invert = FALS
           ggplotobj2$layers[[layer]]$aes_params$colour = "white"
         }
         if("fill" %in% names(ggplotobj2$layers[[layer]]$mapping)) {
-          ggplotobj2$layers[[layer]]$aes_params$size = 0
+          ggplotobj2$layers[[layer]]$aes_params$size = NA
+          if(any(c("GeomPolygon","GeomSf") %in% class(ggplotobj2$layers[[layer]]$geom)) && offset_edges) {
+            ggplotobj2$layers[[layer]]$aes_params$size = polygon_offset_value
+            ggplotobj2$layers[[layer]]$aes_params$colour = "white"
+          }
         }
         if("shape" %in% names(ggplotobj2$layers[[layer]]$mapping)) {
           shapedata = layer_data(ggplotobj2)
@@ -585,6 +603,10 @@ plot_gg = function(ggobj, width = 3, height = 3, height_aes = NULL,invert = FALS
     if(length(ggplotobj2$layers) > 0) {
       for(i in seq_along(1:length(ggplotobj2$layers))) {
         ggplotobj2$layers[[i]]$aes_params$size = NA
+        if(any(c("GeomPolygon","GeomSf") %in% class(ggplotobj2$layers[[layer]]$geom)) && offset_edges) {
+          ggplotobj2$layers[[i]]$aes_params$size = polygon_offset_value
+          ggplotobj2$layers[[i]]$aes_params$colour = "white"
+        }
       }
     }
   } else {

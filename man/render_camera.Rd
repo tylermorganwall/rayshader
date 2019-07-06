@@ -4,7 +4,7 @@
 \alias{render_camera}
 \title{Render Camera}
 \usage{
-render_camera(theta = 45, phi = 45, zoom = 1, fov = NULL)
+render_camera(theta = 45, phi = 45, zoom = NULL, fov = NULL)
 }
 \arguments{
 \item{theta}{Default `45`. Rotation angle.}

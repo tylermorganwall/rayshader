@@ -63,7 +63,7 @@
 #'#And run this command to convert the video to post to the web:
 #'#ffmpeg -i raymovie.mp4 -pix_fmt yuv420p -profile:v baseline -level 3 -vf scale=-2:-2 rayweb.mp4
 #'}
-render_camera = function(theta = 45, phi = 45, zoom = 1, fov = NULL) {
+render_camera = function(theta = 45, phi = 45, zoom = NULL, fov = NULL) {
   if(is.null(fov)) {
     fov = rgl::par3d()$FOV
   }
