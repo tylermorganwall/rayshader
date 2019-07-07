@@ -1,4 +1,4 @@
-pkgdown::build_site(run_dont_run = TRUE, lazy = FALSE)
+pkgdown::build_site(run_dont_run = TRUE, lazy = TRUE)
 system('echo "www.rayshader.com" >> docs/CNAME')
 system("git checkout -b gh-pages")
 library(magrittr)
