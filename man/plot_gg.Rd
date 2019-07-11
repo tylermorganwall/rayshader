@@ -39,7 +39,7 @@ being mapped, you may want to set this to `1`, since the points now have a non-z
 mapping `alpha` in the same variable you are projecting to height is probably not a good choice. as the `alpha`
 variable is ignored when performing the 3D projection).}
 
-\item{offset_edges}{Default `FALSE`. If `TRUE`, inserts a small amount of space between polygons for "geom_sf" and "geom_polygon" layers.
+\item{offset_edges}{Default `FALSE`. If `TRUE`, inserts a small amount of space between polygons for "geom_sf", "geom_tile", "geom_hex", and "geom_polygon" layers.
 If you pass in a number, the space between polygons will be a line of that width. Note: this feature may end up removing thin polygons 
 from the plot entirely--use with care.}
 

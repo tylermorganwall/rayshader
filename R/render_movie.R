@@ -61,6 +61,9 @@
 #'}
 render_movie = function(filename, type = "orbit", frames = 360, fps = 30, 
                         phi = 30, theta = 0, zoom = NULL, fov = NULL, ...) {
+  if(!("av" %in% rownames(utils::installed.packages()))) {
+    stop("`av` package required for render_movie()")
+  }
   if(is.null(filename)) {
     stop("render_movie requires a filename")
   }
