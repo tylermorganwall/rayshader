@@ -17,8 +17,19 @@
 #'@param gamma_correction Default `TRUE`. Controls gamma correction when adding colors. Default exponent of 2.2.
 #'@param transparent_water Default `FALSE`. If `TRUE`, depth is determined without water layer. User will have to re-render the water
 #'layer with `render_water()` if they want to recreate the water layer.
+#'@param title_text Default `NULL`. Text. Adds a title to the image, using magick::image_annotate. 
+#'@param title_offset Default `c(20,20)`. Distance from the top-left (default, `gravity` direction in 
+#'image_annotate) corner to offset the title.
+#'@param title_size Default `30`. Font size in pixels.
+#'@param title_color Default `black`. Font color.
+#'@param title_font Default `sans`. String with font family such as "sans", "mono", "serif", "Times", "Helvetica", 
+#'"Trebuchet", "Georgia", "Palatino" or "Comic Sans".
+#'@param image_overlay Default `NULL`. Either a string indicating the location of a png image to overlay
+#'over the image (transparency included), or a 4-layer RGBA array. This image will be resized to the 
+#'dimension of the image if it does not match exactly.
 #'@param progbar Default `TRUE` if in an interactive session. Displays a progress bar. 
 #'@param clear Default `FALSE`. If `TRUE`, the current `rgl` device will be cleared.
+#'@param ... Additional parameters to pass to magick::image_annotate. 
 #'@return 4-layer RGBA array.
 #'@export
 #'@examples
@@ -29,13 +40,19 @@
 #'  
 #'render_depth(focallength = 30)
 #'render_depth(focallength = 30,fstop=2)
-#'render_depth(focallength = 30,fstop=2, clear = TRUE)
+#'render_depth(focallength = 30,fstop=2, bokehshape = "hex")
+#'
+#'#Add a title
+#'render_depth(focallength = 30,fstop=2, clear = TRUE, 
+#'             title_text = "Monterey Bay, with Depth of Field",title_offset = c(10,0))
 #'}
 render_depth = function(focus = 0.5, focallength = 100, fstop = 4, filename=NULL,
                      bokehshape = "circle", bokehintensity = 1, bokehlimit=0.8, 
                      rotation = 0, gamma_correction = TRUE,
-                     transparent_water = FALSE, progbar = interactive(),
-                     clear = FALSE){
+                     transparent_water = FALSE, 
+                     title_text = NULL, title_offset = c(20,20), 
+                     title_color = "black", title_size = 30, title_font = "sans",
+                     image_overlay = NULL, progbar = interactive(), clear = FALSE, ...) {
   if(focallength < 1) {
     stop("focal length must be greater than 1")
   }
@@ -90,7 +107,51 @@ render_depth = function(focus = 0.5, focallength = 100, fstop = 4, filename=NULL
   }
   tempmap[tempmap > 1] = 1
   tempmap[tempmap < 0] = 0
-
+  png::writePNG(tempmap,temp)
+  if(!is.null(title_text)) {
+    has_title = TRUE
+  } else {
+    has_title = FALSE
+  }
+  if(length(title_offset) != 2) {
+    stop("`title_offset` needs to be length-2 vector")
+  }
+  if(!is.null(image_overlay)) {
+    if("character" %in% class(image_overlay)) {
+      image_overlay_file = image_overlay
+      has_overlay = TRUE
+    } else if("array" %in% class(image_overlay)) {
+      image_overlay_file = tempfile()
+      png::writePNG(image_overlay_file)
+      has_overlay = TRUE
+    }
+  } else {
+    has_overlay = FALSE
+  }
+  dimensions = dim(tempmap)
+  if(has_overlay) {
+    if(!("magick" %in% rownames(utils::installed.packages()))) {
+      stop("`magick` package required for adding overlay")
+    }
+    magick::image_read(temp) %>%
+      magick::image_composite(
+        magick::image_scale(magick::image_read(image_overlay_file),
+                            paste0(dimensions[1],"x",dimensions[2]))
+      ) %>%
+      magick::image_write(path = temp, format = "png")
+  }
+  if(has_title) {
+    if(!("magick" %in% rownames(utils::installed.packages()))) {
+      stop("`magick` package required for adding title")
+    }
+    magick::image_read(temp) %>%
+      magick::image_annotate(title_text, 
+                             location = paste0("+", title_offset[1],"+",title_offset[2]),
+                             size = title_size, color = title_color, 
+                             font = title_font, ...) %>%
+      magick::image_write(path = temp, format = "png")
+  }
+  tempmap = png::readPNG(temp)
   if(is.null(filename)) {
     plot_map(tempmap)
   } else {

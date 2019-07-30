@@ -4,12 +4,32 @@
 \alias{render_snapshot}
 \title{Render Snapshot of 3D Visualization}
 \usage{
-render_snapshot(filename, clear = FALSE)
+render_snapshot(filename, clear = FALSE, title_text = NULL,
+  title_offset = c(20, 20), title_color = "black", title_size = 30,
+  title_font = "sans", image_overlay = NULL, ...)
 }
 \arguments{
 \item{filename}{Filename of snapshot. If missing, will display to current device.}
 
 \item{clear}{Default `FALSE`. If `TRUE`, the current `rgl` device will be cleared.}
+
+\item{title_text}{Default `NULL`. Text. Adds a title to the image, using magick::image_annotate.}
+
+\item{title_offset}{Default `c(20,20)`. Distance from the top-left (default, `gravity` direction in 
+image_annotate) corner to offset the title.}
+
+\item{title_color}{Default `black`. Font color.}
+
+\item{title_size}{Default `30`. Font size in pixels.}
+
+\item{title_font}{Default `sans`. String with font family such as "sans", "mono", "serif", "Times", "Helvetica", 
+"Trebuchet", "Georgia", "Palatino" or "Comic Sans".}
+
+\item{image_overlay}{Default `NULL`. Either a string indicating the location of a png image to overlay
+over the image (transparency included), or a 4-layer RGBA array. This image will be resized to the 
+dimension of the image if it does not match exactly.}
+
+\item{...}{Additional parameters to pass to magick::image_annotate.}
 }
 \value{
 Displays snapshot of current rgl plot (or saves to disk).
@@ -26,5 +46,18 @@ montereybay \%>\%
  
 \dontrun{
 render_snapshot(clear = TRUE)
+}
+
+\dontrun{
+montereybay \%>\%
+ sphere_shade() \%>\%
+ plot_3d(montereybay,zscale=50,zoom=0.6,theta=-90)
+}
+ 
+#Create a title, but also pass the `gravity` argument to magick::image_annotate using ...
+#to center the text.
+\dontrun{
+render_snapshot(clear = TRUE, title_text = "Monterey Bay, California", title_color = "darkgreen",
+               title_font = "Helvetica", gravity = "North", title_offset = c(0,0))
 }
 }

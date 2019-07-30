@@ -7,7 +7,9 @@
 render_depth(focus = 0.5, focallength = 100, fstop = 4,
   filename = NULL, bokehshape = "circle", bokehintensity = 1,
   bokehlimit = 0.8, rotation = 0, gamma_correction = TRUE,
-  transparent_water = FALSE, progbar = interactive(), clear = FALSE)
+  transparent_water = FALSE, title_text = NULL, title_offset = c(20,
+  20), title_color = "black", title_size = 30, title_font = "sans",
+  image_overlay = NULL, progbar = interactive(), clear = FALSE, ...)
 }
 \arguments{
 \item{focus}{Defaults `0.5`. Depth in which to blur. Minimum 0, maximum 1.}
@@ -31,9 +33,27 @@ render_depth(focus = 0.5, focallength = 100, fstop = 4,
 \item{transparent_water}{Default `FALSE`. If `TRUE`, depth is determined without water layer. User will have to re-render the water
 layer with `render_water()` if they want to recreate the water layer.}
 
+\item{title_text}{Default `NULL`. Text. Adds a title to the image, using magick::image_annotate.}
+
+\item{title_offset}{Default `c(20,20)`. Distance from the top-left (default, `gravity` direction in 
+image_annotate) corner to offset the title.}
+
+\item{title_color}{Default `black`. Font color.}
+
+\item{title_size}{Default `30`. Font size in pixels.}
+
+\item{title_font}{Default `sans`. String with font family such as "sans", "mono", "serif", "Times", "Helvetica", 
+"Trebuchet", "Georgia", "Palatino" or "Comic Sans".}
+
+\item{image_overlay}{Default `NULL`. Either a string indicating the location of a png image to overlay
+over the image (transparency included), or a 4-layer RGBA array. This image will be resized to the 
+dimension of the image if it does not match exactly.}
+
 \item{progbar}{Default `TRUE` if in an interactive session. Displays a progress bar.}
 
 \item{clear}{Default `FALSE`. If `TRUE`, the current `rgl` device will be cleared.}
+
+\item{...}{Additional parameters to pass to magick::image_annotate.}
 }
 \value{
 4-layer RGBA array.
@@ -53,6 +73,10 @@ montereybay \%>\%
  
 render_depth(focallength = 30)
 render_depth(focallength = 30,fstop=2)
-render_depth(focallength = 30,fstop=2, clear = TRUE)
+render_depth(focallength = 30,fstop=2, bokehshape = "hex")
+
+#Add a title
+render_depth(focallength = 30,fstop=2, clear = TRUE, 
+            title_text = "Monterey Bay, with Depth of Field",title_offset = c(10,0))
 }
 }
