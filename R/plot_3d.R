@@ -169,12 +169,12 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
     x[nrow(x):1,]
   }
   if(class(hillshade) == "array") {
-    hillshade[,,1] = flipud(hillshade[,,1])
-    hillshade[,,2] = flipud(hillshade[,,2])
-    hillshade[,,3] = flipud(hillshade[,,3])
+    # hillshade[,,1] = flipud(hillshade[,,1])
+    # hillshade[,,2] = flipud(hillshade[,,2])
+    # hillshade[,,3] = flipud(hillshade[,,3])
   }
   if(class(hillshade) == "matrix") {
-    hillshade = hillshade[,ncol(hillshade):1]
+    # hillshade = hillshade[,ncol(hillshade):1]
   }
   if(is.null(heightmap)) {
     stop("heightmap argument missing--need to input both hillshade and original elevation matrix")
@@ -224,7 +224,7 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
   }
   tempmap = tempfile()
   save_png(hillshade,tempmap)
-  rgl.surface(1:nrow(heightmap),-(1:ncol(heightmap)),heightmap[,ncol(heightmap):1]/zscale,texture=paste0(tempmap,".png"),lit=FALSE,ambient = "#000001")
+  rgl.surface(1:nrow(heightmap)-nrow(heightmap)/2,(1:ncol(heightmap)-ncol(heightmap)/2),heightmap/zscale,texture=paste0(tempmap,".png"),lit=FALSE,ambient = "#000001")
   bg3d(color = background,texture=NULL)
   rgl.viewpoint(zoom=zoom,phi=phi,theta=theta,fov=fov)
   par3d(windowRect = windowsize,...)

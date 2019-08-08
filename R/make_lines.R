@@ -13,17 +13,17 @@
 #'@keywords internal
 make_lines = function(heightmap,basedepth=0,linecolor="grey20",zscale=1,alpha=1,linewidth = 2,solid=TRUE) {
   heightmap = heightmap[,ncol(heightmap):1]/zscale
-  heightval1 = heightmap[1,1]
-  heightval2 = heightmap[nrow(heightmap),1]
-  heightval3 = heightmap[1,ncol(heightmap)]
-  heightval4 = heightmap[nrow(heightmap),ncol(heightmap)]
+  heightval3 = heightmap[1,1]
+  heightval4 = heightmap[nrow(heightmap),1]
+  heightval1 = heightmap[1,ncol(heightmap)]
+  heightval2 = heightmap[nrow(heightmap),ncol(heightmap)]
   heightlist = list()
   if(all(!is.na(heightmap))) {
     if(solid) {
-      heightlist[[1]] = matrix(c(1,1,basedepth,heightval1,-1,-1),2,3)
-      heightlist[[2]] = matrix(c(nrow(heightmap),nrow(heightmap),basedepth,heightval2,-1,-1),2,3)
-      heightlist[[3]] = matrix(c(1,1,basedepth,heightval3,-ncol(heightmap),-ncol(heightmap)),2,3)
-      heightlist[[4]] = matrix(c(nrow(heightmap),nrow(heightmap),basedepth,heightval4,-ncol(heightmap),-ncol(heightmap)),2,3)
+      heightlist[[1]] = matrix(c(1,1,basedepth,heightval3,-1,-1),2,3)
+      heightlist[[2]] = matrix(c(nrow(heightmap),nrow(heightmap),basedepth,heightval4,-1,-1),2,3)
+      heightlist[[3]] = matrix(c(1,1,basedepth,heightval1,-ncol(heightmap),-ncol(heightmap)),2,3)
+      heightlist[[4]] = matrix(c(nrow(heightmap),nrow(heightmap),basedepth,heightval2,-ncol(heightmap),-ncol(heightmap)),2,3)
       heightlist[[5]] = matrix(c(1,1,basedepth,basedepth,-1,-ncol(heightmap)),2,3)
       heightlist[[6]] = matrix(c(1,nrow(heightmap),basedepth,basedepth,-ncol(heightmap),-ncol(heightmap)),2,3)
       heightlist[[7]] = matrix(c(nrow(heightmap),nrow(heightmap),basedepth,basedepth,-ncol(heightmap),-1),2,3)
@@ -53,6 +53,8 @@ make_lines = function(heightmap,basedepth=0,linecolor="grey20",zscale=1,alpha=1,
   }
   if(length(heightlist) > 0) {
     segmentlist = do.call(rbind,heightlist)
+    segmentlist[,1] = segmentlist[,1] - nrow(heightmap)/2
+    segmentlist[,3] = segmentlist[,3] + ncol(heightmap)/2 + 1
     rgl::segments3d(segmentlist,color=linecolor,lwd=linewidth,alpha=alpha,depth_mask=TRUE, 
                     line_antialias=FALSE, depth_test="lequal",ambient = ifelse(solid,"#000004","#000005"))
   }

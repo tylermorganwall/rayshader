@@ -34,8 +34,8 @@ make_shadow = function(heightmap, basedepth, shadowwidth, color, shadowcolor) {
   shadowarray = suppressWarnings(as.array(imager::isoblur(imager::as.cimg(shadowarray),sigma=shadowwidth/2))[,,1,])
   tempmap = tempfile()
   save_png(shadowarray,tempmap)
-  rgl.surface((-shadowwidth+1):(rows+shadowwidth),
-              -(-shadowwidth+1):-(cols+shadowwidth),
+  rgl.surface((-shadowwidth+1):(rows+shadowwidth) - rows/2,
+              -(-shadowwidth+1):-(cols+shadowwidth) + cols/2,
               basedepthmat,texture=paste0(tempmap,".png"),
               lit=FALSE,back="culled",ambient = "#000006")
 }
