@@ -155,7 +155,7 @@ List make_water_cpp(NumericMatrix& heightmap,
           } else {
             endcoord = -i - 2;
           }
-          vertices.push_back(vec2matrix(NumericVector::create(j+offset,j+offset,j+offset, heightmap(j,i),waterheight,waterheight, -i-1, endcoord, -i-1),3,3));
+          vertices.push_back(vec2matrix(NumericVector::create(j+1,j+1,j+1, heightmap(j,i),waterheight,waterheight, -i-1, endcoord, -i-1),3,3));
           if(heightmap(j,i) > waterheight && fabs(adjust) < 1) {
             begincoord = -(double)i - 1 - adjust;
             heighttemp = waterheight;
@@ -163,7 +163,7 @@ List make_water_cpp(NumericMatrix& heightmap,
             begincoord = -i-1;
             heighttemp = heightmap(j,i);
           }
-          vertices.push_back(vec2matrix(NumericVector::create(j+offset,j+offset,j+offset, heighttemp,heightmap(j,i+1),waterheight, begincoord,-i-2,-i-2),3,3));
+          vertices.push_back(vec2matrix(NumericVector::create(j+1,j+1,j+1, heighttemp,heightmap(j,i+1),waterheight, begincoord,-i-2,-i-2),3,3));
         }
       }
     }

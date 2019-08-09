@@ -10,7 +10,7 @@
 #'@param wateralpha Default `0.5`. Water transparency.
 #'@keywords internal
 make_water = function(heightmap,waterheight=mean(heightmap),watercolor="lightblue",zscale=1,wateralpha=0.5) {
-  heightmap = heightmap[,ncol(heightmap):1]/zscale
+  heightmap = heightmap/zscale
   na_matrix = is.na(heightmap)
   waterheight = waterheight/zscale
   heightlist = make_water_cpp(heightmap,na_matrix, waterheight)
@@ -23,9 +23,12 @@ make_water = function(heightmap,waterheight=mean(heightmap),watercolor="lightblu
     rgl::triangles3d(fullsides,lit=FALSE,color=watercolor,alpha=wateralpha,front="fill",depth_test="less",texture=NULL,ambient = "#000003")
   } else {
     fullsides = do.call(rbind,heightlist)
+    fullsides[,1] = (fullsides[,1] - nrow(heightmap)/2)
+    fullsides[,3] = -(fullsides[,3] + ncol(heightmap)/2)
+    fullsides = fullsides[nrow(fullsides):1,]
     rgl::triangles3d(fullsides,lit=FALSE,color=watercolor,alpha=wateralpha,front="fill",texture=NULL,ambient = "#000003")
     basemat = matrix(waterheight,nrow(heightmap),ncol(heightmap))
     basemat[is.na(heightmap)] = NA
-    rgl.surface(1:nrow(basemat),-(1:ncol(basemat)),basemat,color=watercolor,alpha=wateralpha,lit=FALSE,texture=NULL,ambient = "#000003")
+    rgl.surface(1:nrow(basemat)-nrow(basemat)/2,1:ncol(basemat)-ncol(basemat)/2,basemat,color=watercolor,alpha=wateralpha,lit=FALSE,texture=NULL,ambient = "#000003")
   }
 }

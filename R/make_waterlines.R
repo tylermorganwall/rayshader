@@ -12,11 +12,13 @@
 #'@param antialias Default `FALSE`.
 #'@keywords internal
 make_waterlines = function(heightmap,waterdepth=0,linecolor="grey40",zscale=1,alpha=1,linewidth=2,antialias = FALSE) {
-  heightmap = heightmap[,ncol(heightmap):1]/zscale
+  heightmap = heightmap/zscale
   na_matrix = is.na(heightmap)
   heightlist = make_waterlines_cpp(heightmap,na_matrix,waterdepth)
   if(length(heightlist) > 0) {
     segmentlist = do.call(rbind,heightlist)
+    segmentlist[,1] = segmentlist[,1] - nrow(heightmap)/2
+    segmentlist[,3] = -(segmentlist[,3] + ncol(heightmap)/2)
     rgl::segments3d(segmentlist,color=linecolor,lwd=linewidth,alpha=alpha,depth_mask=TRUE, line_antialias=antialias, depth_test="lequal",ambient = "#000005")
   }
 }
