@@ -6,12 +6,12 @@
 \usage{
 plot_3d(hillshade, heightmap, zscale = 1, baseshape = "rectangle",
   solid = TRUE, soliddepth = "auto", solidcolor = "grey20",
-  solidlinecolor = "grey30", shadow = TRUE, shadowdepth = "auto",
-  shadowcolor = "grey50", shadowwidth = "auto", water = FALSE,
-  waterdepth = 0, watercolor = "lightblue", wateralpha = 0.5,
-  waterlinecolor = NULL, waterlinealpha = 1, linewidth = 2,
-  lineantialias = FALSE, theta = 45, phi = 45, fov = 0, zoom = 1,
-  background = "white", windowsize = 600, ...)
+  solidalpha = 1, solidlinecolor = "grey30", shadow = TRUE,
+  shadowdepth = "auto", shadowcolor = "grey50", shadowwidth = "auto",
+  water = FALSE, waterdepth = 0, watercolor = "lightblue",
+  wateralpha = 0.5, waterlinecolor = NULL, waterlinealpha = 1,
+  linewidth = 2, lineantialias = FALSE, theta = 45, phi = 45,
+  fov = 0, zoom = 1, background = "white", windowsize = 600, ...)
 }
 \arguments{
 \item{hillshade}{Hillshade/image to be added to 3D surface map.}
@@ -28,6 +28,8 @@ of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
 \item{soliddepth}{Default `auto`, which sets it to the lowest elevation in the matrix minus one unit (scaled by zscale). Depth of the solid base.}
 
 \item{solidcolor}{Default `grey20`. Base color.}
+
+\item{solidalpha}{Default `1`. Transparency.}
 
 \item{solidlinecolor}{Default `grey30`. Base edge line color.}
 

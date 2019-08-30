@@ -10,6 +10,7 @@
 #'@param solid Default `TRUE`. If `FALSE`, just the surface is rendered.
 #'@param soliddepth Default `auto`, which sets it to the lowest elevation in the matrix minus one unit (scaled by zscale). Depth of the solid base.
 #'@param solidcolor Default `grey20`. Base color.
+#'@param solidalpha Default `1`. Transparency.
 #'@param solidlinecolor Default `grey30`. Base edge line color.
 #'@param shadow Default `TRUE`. If `FALSE`, no shadow is rendered.
 #'@param shadowdepth Default `auto`, which sets it to `soliddepth - soliddepth/10`. Depth of the shadow layer.
@@ -90,7 +91,7 @@
 #'render_snapshot(clear = TRUE)
 #'}
 plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
-                   solid = TRUE, soliddepth="auto", solidcolor="grey20",solidlinecolor="grey30",
+                   solid = TRUE, soliddepth="auto", solidcolor="grey20", solidalpha=1, solidlinecolor="grey30",
                    shadow = TRUE, shadowdepth = "auto", shadowcolor = "grey50", shadowwidth = "auto", 
                    water = FALSE, waterdepth = 0, watercolor="lightblue", wateralpha = 0.5, 
                    waterlinecolor=NULL, waterlinealpha = 1, 
@@ -229,7 +230,7 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
   rgl.viewpoint(zoom=zoom,phi=phi,theta=theta,fov=fov)
   par3d(windowRect = windowsize,...)
   if(solid) {
-    make_base(heightmap,basedepth=soliddepth,basecolor=solidcolor,zscale=zscale)
+    make_base(heightmap,basedepth=soliddepth,basecolor=solidcolor,zscale=zscale,basealpha=solidalpha)
   }
   if(!is.null(solidlinecolor) && solid) {
     make_lines(heightmap,basedepth=soliddepth,linecolor=solidlinecolor,zscale=zscale,linewidth = linewidth)
