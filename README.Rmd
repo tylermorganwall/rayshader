@@ -317,5 +317,4 @@ par(mfrow = c(1, 1))
 plot_gg(pp, width = 5, height = 4, scale = 300, multicore = TRUE, windowsize = c(1200, 960),
         fov = 70, zoom = 0.4, theta = 330, phi = 40)
 render_depth(focus = 0.68, focallength = 200)
-
 ```

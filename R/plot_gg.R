@@ -315,7 +315,11 @@ plot_gg = function(ggobj, width = 3, height = 3,
       if(height_aes %in% ggplotobj2$scales$scales[[i]]$aesthetics) {
         ggplotobj2$scales$scales[[i]]$palette = black_white_pal
         ggplotobj2$scales$scales[[i]]$na.value = "white"
-        if(!any("guide" %in% class(ggplotobj2$scales$scales[[i]]$guide))) {
+        has_guide = !any("guide" %in% class(ggplotobj2$scales$scales[[i]]$guide))
+        if(any(c("logical" %in% class(ggplotobj2$scales$scales[[i]]$guide)))) {
+          has_guide = ggplotobj2$scales$scales[[i]]$guide
+        }
+        if(has_guide) {
           if(height_aes == "fill") {
             if(is.null(ggplotobj2$guides$fill)) {
               ggplotobj2 = ggplotobj2 + guides(fill = guide_colourbar(ticks = FALSE,nbin = 1000,order=i))
