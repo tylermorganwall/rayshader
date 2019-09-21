@@ -29,6 +29,7 @@
 #'dimension of the image if it does not match exactly.
 #'@param progbar Default `TRUE` if in an interactive session. Displays a progress bar. 
 #'@param clear Default `FALSE`. If `TRUE`, the current `rgl` device will be cleared.
+#'@param bring_to_front Default `FALSE`. Whether to bring the window to the front when rendering the snapshot.
 #'@param ... Additional parameters to pass to magick::image_annotate. 
 #'@return 4-layer RGBA array.
 #'@export
@@ -52,12 +53,13 @@ render_depth = function(focus = 0.5, focallength = 100, fstop = 4, filename=NULL
                      transparent_water = FALSE, 
                      title_text = NULL, title_offset = c(20,20), 
                      title_color = "black", title_size = 30, title_font = "sans",
-                     image_overlay = NULL, progbar = interactive(), clear = FALSE, ...) {
+                     image_overlay = NULL, progbar = interactive(), clear = FALSE, 
+                     bring_to_front = FALSE, ...) {
   if(focallength < 1) {
     stop("focal length must be greater than 1")
   }
   temp = paste0(tempfile(),".png")
-  rgl::snapshot3d(filename=temp)
+  rgl::snapshot3d(filename=temp, top = bring_to_front)
   if(transparent_water) {
     idlist = get_ids_with_labels()
     remove_ids = idlist$id[idlist$raytype == "water"]

@@ -14,6 +14,7 @@
 #'over the image (transparency included), or a 4-layer RGBA array. This image will be resized to the 
 #'dimension of the image if it does not match exactly.
 #'@param clear Default `FALSE`. If `TRUE`, the current `rgl` device will be cleared.
+#'@param bring_to_front Default `FALSE`. Whether to bring the window to the front when taking the snapshot.
 #'@param ... Additional parameters to pass to magick::image_annotate. 
 #'@return Displays snapshot of current rgl plot (or saves to disk).
 #'@export
@@ -43,7 +44,7 @@
 render_snapshot = function(filename, clear=FALSE, 
                            title_text = NULL, title_offset = c(20,20), 
                            title_color = "black", title_size = 30, title_font = "sans",
-                           image_overlay = NULL, ...) {
+                           image_overlay = NULL, bring_to_front = FALSE, ...) {
   if(!is.null(title_text)) {
     has_title = TRUE
   } else {
@@ -65,7 +66,7 @@ render_snapshot = function(filename, clear=FALSE,
     has_overlay = FALSE
   }
   temp = paste0(tempfile(),".png")
-  rgl::snapshot3d(filename = temp)
+  rgl::snapshot3d(filename = temp, top = bring_to_front)
   tempmap = png::readPNG(temp)
   dimensions = dim(tempmap)
   if(has_overlay) {
