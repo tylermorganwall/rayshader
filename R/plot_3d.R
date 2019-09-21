@@ -242,7 +242,7 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
   }
   if(!is.null(waterlinecolor) && water) {
     if(all(!is.na(heightmap))) {
-      make_lines(heightmap,basedepth=waterdepth,linecolor=waterlinecolor,zscale=zscale,linewidth = linewidth,alpha=waterlinealpha,solid=FALSE)
+      make_lines(fliplr(heightmap),basedepth=waterdepth,linecolor=waterlinecolor,zscale=zscale,linewidth = linewidth,alpha=waterlinealpha,solid=FALSE)
     }
     make_waterlines(heightmap,waterdepth=waterdepth,linecolor=waterlinecolor,zscale=zscale,alpha=waterlinealpha,linewidth=linewidth,antialias=lineantialias)
   }

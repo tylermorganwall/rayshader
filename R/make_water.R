@@ -16,17 +16,17 @@ make_water = function(heightmap,waterheight=mean(heightmap),watercolor="lightblu
   heightlist = make_water_cpp(heightmap,na_matrix, waterheight)
   fullsides = do.call(rbind,heightlist)
   fullsides[,1] = (fullsides[,1] - nrow(heightmap)/2)
-  fullsides[,3] = -(fullsides[,3] + ncol(heightmap)/2)
+  fullsides[,3] = -(fullsides[,3] + ncol(heightmap)/2 - 1)
   fullsides = fullsides[nrow(fullsides):1,]
   if(all(!na_matrix)) {
-    triangles3d(matrix(c(-nrow(heightmap)/2+1, nrow(heightmap)/2+1, -nrow(heightmap)/2+1, 
+    triangles3d(matrix(c(-nrow(heightmap)/2+1, nrow(heightmap)/2, -nrow(heightmap)/2+1,
                          waterheight,waterheight,waterheight,
-                         ncol(heightmap)/2+1,-ncol(heightmap)/2+1,-ncol(heightmap)/2+1),3,3),
+                         ncol(heightmap)/2,-ncol(heightmap)/2+1,-ncol(heightmap)/2+1),3,3),
                 color=watercolor,alpha=wateralpha,front="filled",back="culled",texture=NULL,ambient = "#000003")
-    # triangles3d(matrix(c(1,1,nrow(heightmap)-nrow(heightmap)/2,
-    #                      waterheight,waterheight,waterheight,
-    #                      -ncol(heightmap)+ncol(heightmap)/2,-1,-ncol(heightmap)+ncol(heightmap)/2),3,3),
-    #             color=watercolor,alpha=wateralpha,front="fill",back="fill",texture=NULL,ambient = "#000003")
+    triangles3d(matrix(c(-nrow(heightmap)/2+1, nrow(heightmap)/2, nrow(heightmap)/2,
+                         waterheight,waterheight,waterheight,
+                         ncol(heightmap)/2,ncol(heightmap)/2,-ncol(heightmap)/2+1),3,3),
+                color=watercolor,alpha=wateralpha,front="filled",back="culled",texture=NULL,ambient = "#000003")
     rgl::triangles3d(fullsides,lit=FALSE,color=watercolor,alpha=wateralpha,front="fill",depth_test="less",texture=NULL,ambient = "#000003")
   } else {
     rgl::triangles3d(fullsides,lit=FALSE,color=watercolor,alpha=wateralpha,front="fill",texture=NULL,ambient = "#000003")
