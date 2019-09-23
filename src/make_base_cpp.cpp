@@ -121,7 +121,7 @@ List make_water_cpp(NumericMatrix& heightmap,
     }
     for(int i = 0; i < rows-1; i++) {
       if(((na_matrix(i,j-offset) && !na_matrix(i,j) && !na_matrix(i+1,j)) || (na_matrix(i+1,j-offset) && !na_matrix(i+1,j))) || j == 0) {
-        if(heightmap(i,0+j) < waterheight, heightmap(i+1,0+j) < waterheight) {
+        if(heightmap(i,0+j) < waterheight && heightmap(i+1,0+j) < waterheight) {
           adjust = (waterheight - heightmap(i,0+j))/(heightmap(i+1,0+j)-heightmap(i,0+j));
           if(heightmap(i+1,0+j) > waterheight && fabs(adjust) < 1) {
             endcoord = (double)i + 1 + adjust;
@@ -282,9 +282,9 @@ List make_waterlines_cpp(NumericMatrix& heightmap,
         //Finish drawing if not NA AND
           //the back left or back right entries are NA AND the front left and front right entries are NOT NA OR
           //It is NA right in front of that entry
-        if(!na_matrix(j,i) &&
+        if((!na_matrix(j,i) &&
            (((na_matrix(j+offset2,i-offsetside) || na_matrix(j-offset,i-offsetside)) && (!na_matrix(j+offset2,i+offsetside2) || !na_matrix(j-offset,i+offsetside2))) ||
-           na_matrix(j,i+offsetside)) || i == cols - 1) {
+           na_matrix(j,i+offsetside))) || i == cols - 1) {
           drawing = false;
           if(i != cols-1) {
             adjust = (waterdepth - heightmap(j,i-1))/(heightmap(j,i)-heightmap(j,i-1));
@@ -392,9 +392,9 @@ List make_waterlines_cpp(NumericMatrix& heightmap,
         //Finish drawing if not NA AND
           //the back left or back right entries are NA AND the front left and front right entries are NOT NA OR
           //It is NA right in front of that entry
-        if(!na_matrix(i,j) &&
+        if((!na_matrix(i,j) &&
            (((na_matrix(i-offsetside,j-offset) || na_matrix(i-offsetside,j+offset2)) && (!na_matrix(i+offsetside2,j-offset) || !na_matrix(i+offsetside2,j+offset2))) ||
-           na_matrix(i+offsetside,j)) || i == rows - 1) {
+           na_matrix(i+offsetside,j))) || i == rows - 1) {
           drawing = false;
           if(i != rows-1) {
             adjust = (waterdepth - heightmap(i-1,j))/(heightmap(i,j)-heightmap(i-1,j));
@@ -448,8 +448,7 @@ List make_baselines_cpp(NumericMatrix& heightmap,
   int offsetside, offsetside2 = 0;
   bool drawing = false;
   double startcoord, endcoord = 1;
-  double adjust;
-  
+
   for(int j = 0; j < rows; j++) {
     drawing = false;
     if(j != 0) {
@@ -500,9 +499,9 @@ List make_baselines_cpp(NumericMatrix& heightmap,
         //Finish drawing if not NA AND
         //the back left or back right entries are NA AND the front left and front right entries are NOT NA OR
         //It is NA right in front of that entry
-        if(!na_matrix(j,i) &&
+        if((!na_matrix(j,i) &&
            (((na_matrix(j+offset2,i-offsetside) || na_matrix(j-offset,i-offsetside)) && (!na_matrix(j+offset2,i+offsetside2) || !na_matrix(j-offset,i+offsetside2))) ||
-           na_matrix(j,i+offsetside)) || i == cols - 1) {
+           na_matrix(j,i+offsetside))) || i == cols - 1) {
           drawing = false;
           if(i != cols-1) {
             endcoord = (double)i+1;
@@ -582,9 +581,9 @@ List make_baselines_cpp(NumericMatrix& heightmap,
         //Finish drawing if not NA AND
         //the back left or back right entries are NA AND the front left and front right entries are NOT NA OR
         //It is NA right in front of that entry
-        if(!na_matrix(i,j) &&
+        if((!na_matrix(i,j) &&
            (((na_matrix(i-offsetside,j-offset) || na_matrix(i-offsetside,j+offset2)) && (!na_matrix(i+offsetside2,j-offset) || !na_matrix(i+offsetside2,j+offset2))) ||
-           na_matrix(i+offsetside,j))  || i == rows - 1) {
+           na_matrix(i+offsetside,j)))  || i == rows - 1) {
           drawing = false;
           if(i != rows-1) {
             endcoord = (double)i+1;
