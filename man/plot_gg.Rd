@@ -9,7 +9,8 @@ plot_gg(ggobj, width = 3, height = 3, height_aes = NULL,
   "mm"), scale = 150, pointcontract = 0.7, offset_edges = FALSE,
   preview = FALSE, raytrace = TRUE, sunangle = 315,
   anglebreaks = seq(30, 40, 0.1), multicore = FALSE, lambert = TRUE,
-  save_shadow_matrix = FALSE, saved_shadow_matrix = NULL, ...)
+  save_height_matrix = FALSE, save_shadow_matrix = FALSE,
+  saved_shadow_matrix = NULL, ...)
 }
 \arguments{
 \item{ggobj}{ggplot object to projected into 3D.}
@@ -58,11 +59,13 @@ set `options("cores")` in which the multicore option will only use that many cor
 dot product of the ray direction and the surface normal at that point. Zeros out all values directed away from
 the ray.}
 
-\item{save_shadow_matrix}{Default `FALSE`. If `TRUE`, the function will return the shadow matrix for use in future updates via the `shadow_cache` argument passed to `ray_shade`.}
+\item{save_shadow_matrix}{Default `FALSE`. If `TRUE`, the function will return the height matrix used for the ggplot.}
 
 \item{saved_shadow_matrix}{Default `NULL`. A cached shadow matrix (saved by the a previous invocation of `plot_gg(..., save_shadow_matrix=TRUE)` to use instead of raytracing a shadow map each time.}
 
 \item{...}{Additional arguments to be passed to `plot_3d()`.}
+
+\item{save_shadow_matrix}{Default `FALSE`. If `TRUE`, the function will return the shadow matrix for use in future updates via the `shadow_cache` argument passed to `ray_shade`.}
 }
 \value{
 Opens a 3D plot in rgl.

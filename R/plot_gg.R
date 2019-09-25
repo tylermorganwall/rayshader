@@ -43,6 +43,7 @@
 #'the ray.
 #'@param multicore Default `FALSE`. If raytracing and `TRUE`, multiple cores will be used to compute the shadow matrix. By default, this uses all cores available, unless the user has
 #'set `options("cores")` in which the multicore option will only use that many cores.
+#'@param save_shadow_matrix Default `FALSE`. If `TRUE`, the function will return the height matrix used for the ggplot.
 #'@param save_shadow_matrix Default `FALSE`. If `TRUE`, the function will return the shadow matrix for use in future updates via the `shadow_cache` argument passed to `ray_shade`.
 #'@param saved_shadow_matrix Default `NULL`. A cached shadow matrix (saved by the a previous invocation of `plot_gg(..., save_shadow_matrix=TRUE)` to use instead of raytracing a shadow map each time.
 #'@param ... Additional arguments to be passed to `plot_3d()`.
@@ -148,7 +149,7 @@ plot_gg = function(ggobj, width = 3, height = 3,
                    height_aes = NULL, invert = FALSE, shadow_intensity = 0.5,
                    units = c("in", "cm", "mm"), scale=150, pointcontract = 0.7, offset_edges = FALSE,
                    preview = FALSE, raytrace = TRUE, sunangle = 315, anglebreaks = seq(30,40,0.1), 
-                   multicore = FALSE, lambert=TRUE, 
+                   multicore = FALSE, lambert=TRUE, save_height_matrix = FALSE,
                    save_shadow_matrix = FALSE, saved_shadow_matrix=NULL, ...) {
   flipud = function(x) {
     x[nrow(x):1,]
@@ -677,7 +678,14 @@ plot_gg = function(ggobj, width = 3, height = 3,
       plot_map(mapcolor)
     }
   }
-  if(save_shadow_matrix) {
+  if(save_shadow_matrix & !save_height_matrix) {
     return(raylayer)
   }
+  if(!save_shadow_matrix & save_height_matrix) {
+    return(1-t(mapheight[,,1]))
+  }
+  if(save_shadow_matrix & save_height_matrix) {
+    return(list(1-t(mapheight[,,1]),raylayer))
+  }
+  
 }
