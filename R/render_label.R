@@ -4,9 +4,12 @@
 #'
 #'@param heightmap A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.
 #'@param text The label text. 
-#'@param x Text `x` coordinate in the matrix.
-#'@param y Text `y` coordinate in the matrix.
+#'@param x Either the `x` coordinate in the matrix if `extent = NULL`, or the latitude of the position of the text (WGS84).
+#'@param y Either the `y` coordinate in the matrix if `extent = NULL`, or the longitude of the position of the text (WGS84).
 #'@param z Elevation of the label, in units of the elevation matrix (scaled by zscale).
+#' @param extent Default `NULL`. If `NULL`, `x` and `y` are considered indices of the underlying elevation matrix.
+#' Otherwise, this will either be a `raster::extent()` object, or a length-4 numeric vector listing the maximum longitude,
+#' minimum longitude, maximum latitude, and minimum latitude, in that order.
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
 #'@param relativez Default `TRUE`. Whether `z` should be measured in relation to the underlying elevation at that point in the heightmap, or set absolutely (`FALSE`).
 #'@param offset Elevation above the surface (at the label point) to start drawing the line.
@@ -56,9 +59,6 @@ render_label = function(heightmap, text, x, y, z, zscale=1, relativez=TRUE, offs
                         alpha=1,textalpha=1,freetype=TRUE,adjustvec = NULL, 
                         family = "sans", fonttype = "standard",
                         color="black",textcolor="black") {
-  fliplr = function(x) {
-    x[,ncol(x):1]
-  }
   if(.Platform$OS.type == "unix") {
     windows = FALSE
   } else {
@@ -68,7 +68,7 @@ render_label = function(heightmap, text, x, y, z, zscale=1, relativez=TRUE, offs
   fonttype = fontlist[[fonttype]]
   z=z/zscale
   offset = offset/zscale
-  startline = fliplr(heightmap)[x,y]/zscale
+  startline = heightmap[x,y]/zscale
   if(relativez)  {
     z = z + startline
   }
@@ -81,16 +81,18 @@ render_label = function(heightmap, text, x, y, z, zscale=1, relativez=TRUE, offs
   ignoreex = par3d()$ignoreExtent
   ignoreex = par3d(ignoreExtent = TRUE)
   linelist = list()
+    x = x - nrow(heightmap)/2
+    y = y - ncol(heightmap)/2
   if(dashed) {
     counter = 1
     while(startline + dashlength < z) {
-      linelist[[counter]] = matrix(c(x, x, startline + dashlength + offset, startline + offset, -y,-y),2,3)
+      linelist[[counter]] = matrix(c(x, x, startline + dashlength + offset, startline + offset, y,y),2,3)
       startline =  startline + dashlength*2
       counter = counter + 1
     }
-    linelist[[counter]] = matrix(c(x, x, z + offset, startline + offset, -y, -y),2,3)
+    linelist[[counter]] = matrix(c(x, x, z + offset, startline + offset, y, y),2,3)
   } else {
-    linelist[[1]] = matrix(c(x, x, z+offset, startline + offset, -y,-y),2,3)
+    linelist[[1]] = matrix(c(x, x, z+offset, startline + offset, y,y),2,3)
   }
   for(i in 1:length(linelist)) {
     rgl::lines3d(linelist[[i]] ,color = color, lwd = linewidth,lit=FALSE,line_antialias = antialias,
@@ -199,7 +201,8 @@ render_label = function(heightmap, text, x, y, z, zscale=1, relativez=TRUE, offs
       adjustvec = c(0.33,-0.5)
     }
   }
-  text3d(x, z+offset, -y, text,color=textcolor,adj=adjustvec,useFreeType=freetype,
+  text3d(x, z+offset, y, 
+         text,color=textcolor,adj=adjustvec,useFreeType=freetype,
          alpha=textalpha,family=family,font=fonttype,cex=textsize,depth_test="less")
   par3d(ignoreExtent = ignoreex)
 }
