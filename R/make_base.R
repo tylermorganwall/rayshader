@@ -27,11 +27,14 @@ make_base = function(heightmap,basedepth=0,basecolor="grey20",zscale=1) {
     fullsides = fullsides[nrow(fullsides):1,]
     basemat = matrix(basedepth,nrow(heightmap),ncol(heightmap))
     basemat[is.na(heightmap)] = NA
-    normalmaty = basemat
-    normalmaty[!is.na(normalmaty)] = -1
     normalmat = matrix(0,nrow(heightmap),ncol(heightmap))
-    rgl.surface(nrow(basemat):1-nrow(basemat)/2,ncol(basemat):1-ncol(basemat)/2,basemat,color=basecolor,
-                lit=FALSE,back="filled",front="filled",ambient = "#000002")
+    xznormals = fliplr(heightmap)
+    ynormals = fliplr(heightmap)
+    xznormals[!is.na(xznormals)] = 0
+    ynormals[!is.na(ynormals)] = -1
+    rgl.surface(1:nrow(basemat)-nrow(basemat)/2,1:ncol(basemat)-ncol(basemat)/2,basemat,color=basecolor,
+                lit=FALSE,back="filled",front="filled",ambient = "#000002", 
+                normal_x = xznormals, normal_z = xznormals, normal_y = ynormals)
     rgl::triangles3d(fullsides,lit=FALSE,color=basecolor,front="filled",back="filled",ambient = "#000002")
   }
 }

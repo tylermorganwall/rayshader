@@ -54,7 +54,7 @@ make_lines = function(heightmap,basedepth=0,linecolor="grey20",zscale=1,alpha=1,
   if(length(heightlist) > 0) {
     segmentlist = do.call(rbind,heightlist)
     segmentlist[,1] = segmentlist[,1] - nrow(heightmap)/2
-    segmentlist[,3] = segmentlist[,3] + ncol(heightmap)/2 + 1
+    segmentlist[,3] = -segmentlist[,3] - ncol(heightmap)/2 
     rgl::segments3d(segmentlist,color=linecolor,lwd=linewidth,alpha=alpha,depth_mask=TRUE, 
                     line_antialias=FALSE, depth_test="lequal",ambient = ifelse(solid,"#000004","#000005"))
   }
