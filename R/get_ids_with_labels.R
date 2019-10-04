@@ -7,56 +7,46 @@
 #'@keywords internal
 get_ids_with_labels = function() {
   ambient_encoder = c("#000001" = "surface","#000002" = "base","#000003" = "water",
-                      "#000004" = "lines","#000005" = "waterlines","#000006" = "shadow")
+                      "#000004" = "lines","#000005" = "waterlines","#000006" = "shadow","#000007" = "basebottom")
   get_rgl_material = getFromNamespace("rgl.getmaterial", "rgl")
   idvals = rgl::rgl.ids()
-  material_properties = list()
+  material_type = list()
+  material_properties = vector("list", nrow(idvals))
   for(i in 1:nrow(idvals)) {
-    material_properties_single = get_rgl_material(id=idvals[i,1])
-    if(idvals$type[i] != "surface") {
-      material_properties[[i]] = ambient_encoder[material_properties_single$ambient]
-      if(material_properties[[i]] == "surface") {
-        texture_file = material_properties_single$texture
-      }
-      if(material_properties[[i]] == "base") {
-        base_color = material_properties_single$color
-      }
-      if(material_properties[[i]] == "water") {
-        water_color = material_properties_single$color
-        water_alpha = material_properties_single$alpha
-      }
-      if(material_properties[[i]] == "lines") {
-        line_color = material_properties_single$color
-      }
-      if(material_properties[[i]] == "waterlines") {
-        waterline_color = material_properties_single$color
-      }
-      if(material_properties[[i]] == "shadow") {
-        shadow_texture_file = material_properties_single$texture
-      }
-    } else {
-      material_properties[[i]] = ambient_encoder[material_properties_single$ambient]
-      if(material_properties[[i]] == "surface") {
-        texture_file = material_properties_single$texture
-      }
-      if(material_properties[[i]] == "base") {
-        base_color = material_properties_single$color
-      }
-      if(material_properties[[i]] == "water") {
-        water_color = material_properties_single$color
-        water_alpha = material_properties_single$alpha
-      }
-      if(material_properties[[i]] == "shadow") {
-        shadow_texture_file = material_properties_single$texture
-      }
-    }
+    material_type_single = get_rgl_material(id=idvals[i,1])
+    material_properties[[i]]$texture_file = NA
+    material_properties[[i]]$base_color = NA
+    material_properties[[i]]$water_color = NA
+    material_properties[[i]]$water_alpha = NA
+    material_properties[[i]]$line_color = NA
+    material_properties[[i]]$waterline_color = NA
+    material_properties[[i]]$shadow_texture_file = NA
     if(idvals$type[i] != "text") {
-      material_properties[[i]] = ambient_encoder[material_properties_single$ambient]
+      material_type[[i]] = ambient_encoder[material_type_single$ambient]
+      if(material_type[[i]] == "surface") {
+        material_properties[[i]]$texture_file = material_type_single$texture
+      } 
+      if(material_type[[i]] == "base") {
+        material_properties[[i]]$base_color = material_type_single$color
+      } 
+      if(material_type[[i]] == "water") {
+        material_properties[[i]]$water_color = material_type_single$color
+        material_properties[[i]]$water_alpha = material_type_single$alpha
+      } 
+      if(material_type[[i]] == "lines") {
+        material_properties[[i]]$line_color = material_type_single$color
+      }
+      if(material_type[[i]] == "waterlines") {
+        material_properties[[i]]$waterline_color = material_type_single$color
+      }
+      if(material_type[[i]] == "shadow") {
+        material_properties[[i]]$shadow_texture_file = material_type_single$texture
+      }
     } else {
-      material_properties[[i]] = "text"
+      material_type[[i]] = "text"
     }
   }
-  
-  idvals$raytype = unlist(material_properties)
-  idvals
+  idvals$raytype = unlist(material_type)
+  full_properties = do.call(rbind,material_properties)
+  cbind(idvals,full_properties)
 }
