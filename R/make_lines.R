@@ -13,10 +13,10 @@
 #'@keywords internal
 make_lines = function(heightmap,basedepth=0,linecolor="grey20",zscale=1,alpha=1,linewidth = 2,solid=TRUE) {
   heightmap = heightmap/zscale
-  heightval1 = heightmap[1,1]
-  heightval2 = heightmap[nrow(heightmap),1]
-  heightval3 = heightmap[1,ncol(heightmap)]
-  heightval4 = heightmap[nrow(heightmap),ncol(heightmap)]
+  heightval3 = heightmap[1,1]
+  heightval4 = heightmap[nrow(heightmap),1]
+  heightval1 = heightmap[1,ncol(heightmap)]
+  heightval2 = heightmap[nrow(heightmap),ncol(heightmap)]
   heightlist = list()
   if(all(!is.na(heightmap))) {
     if(solid) {
