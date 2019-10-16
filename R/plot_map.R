@@ -10,6 +10,8 @@
 #'#Plotting a spherical texture map of the volcano dataset.
 #'plot_map(sphere_shade(volcano))
 plot_map = function(hillshade, rotate=0, ...) {
+  old.par = par(no.readonly = TRUE)
+  on.exit(par(old.par))
   rotatef = function(x) t(apply(x, 2, rev))
   if(!(rotate %in% c(0,90,180,270))) {
     if(length(rotate) == 1) {
