@@ -9,7 +9,8 @@ render_depth(focus = 0.5, focallength = 100, fstop = 4,
   bokehlimit = 0.8, rotation = 0, gamma_correction = TRUE,
   transparent_water = FALSE, title_text = NULL, title_offset = c(20,
   20), title_color = "black", title_size = 30, title_font = "sans",
-  image_overlay = NULL, progbar = interactive(), clear = FALSE, ...)
+  image_overlay = NULL, progbar = interactive(), clear = FALSE,
+  bring_to_front = FALSE, ...)
 }
 \arguments{
 \item{focus}{Defaults `0.5`. Depth in which to blur. Minimum 0, maximum 1.}
@@ -52,6 +53,8 @@ dimension of the image if it does not match exactly.}
 \item{progbar}{Default `TRUE` if in an interactive session. Displays a progress bar.}
 
 \item{clear}{Default `FALSE`. If `TRUE`, the current `rgl` device will be cleared.}
+
+\item{bring_to_front}{Default `FALSE`. Whether to bring the window to the front when rendering the snapshot.}
 
 \item{...}{Additional parameters to pass to magick::image_annotate.}
 }

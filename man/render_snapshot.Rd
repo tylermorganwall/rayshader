@@ -6,7 +6,8 @@
 \usage{
 render_snapshot(filename, clear = FALSE, title_text = NULL,
   title_offset = c(20, 20), title_color = "black", title_size = 30,
-  title_font = "sans", image_overlay = NULL, ...)
+  title_font = "sans", image_overlay = NULL, bring_to_front = FALSE,
+  ...)
 }
 \arguments{
 \item{filename}{Filename of snapshot. If missing, will display to current device.}
@@ -28,6 +29,8 @@ image_annotate) corner to offset the title.}
 \item{image_overlay}{Default `NULL`. Either a string indicating the location of a png image to overlay
 over the image (transparency included), or a 4-layer RGBA array. This image will be resized to the 
 dimension of the image if it does not match exactly.}
+
+\item{bring_to_front}{Default `FALSE`. Whether to bring the window to the front when taking the snapshot.}
 
 \item{...}{Additional parameters to pass to magick::image_annotate.}
 }
