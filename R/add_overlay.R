@@ -23,6 +23,8 @@
 #'}
 #'\dontrun{
 #'tempfilename = tempfile()
+#'old.par = par(no.readonly = TRUE)
+#'on.exit(par(old.par))
 #'png(tempfilename,width = 401,height=401)
 #'par(mar = c(0,0,0,0))
 #'raster::image(fliplr(montereybay),axes = FALSE,col = rev(terrain.colors(1000)))
