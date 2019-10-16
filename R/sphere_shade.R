@@ -9,13 +9,21 @@
 #'@param texture Default `imhof1`. Either a square matrix indicating the spherical texture mapping, or a string indicating one 
 #'of the built-in palettes (`imhof1`,`imhof2`,`imhof3`,`imhof4`,`desert`, `bw`, and `unicorn`). 
 #'@param normalvectors Default `NULL`. Cache of the normal vectors (from `calculate_normal` function). Supply this to speed up texture mapping.
-#'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. 
+#'@param colorintensity Default `1`. The intensity of the color mapping. Higher values will increase the intensity of the color mapping.
+#'@param zscale Default `1/colorintensity`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. 
+#'Ignored unless `colorintensity` missing.
 #'@param progbar Default `TRUE` if interactive, `FALSE` otherwise. If `FALSE`, turns off progress bar.
 #'@return RGB array of hillshaded texture mappings.
 #'@export
 #'@examples
+#'#Basic example:
 #'montereybay %>%
 #'  sphere_shade() %>%
+#'  plot_map()
+#'  
+#'#Decrease the color intensity:
+#'montereybay %>%
+#'  sphere_shade(colorintensity=0.1) %>%
 #'  plot_map()
 #'  
 #'#Change to a built-in color texture:
@@ -33,7 +41,15 @@
 #'  sphere_shade(texture=create_texture("springgreen","darkgreen",
 #'                                      "turquoise","steelblue3","white")) %>%
 #'  plot_map()
-sphere_shade = function(heightmap, sunangle=315, texture="imhof1", normalvectors = NULL, zscale=1, progbar = interactive()) {
+sphere_shade = function(heightmap, sunangle=315, texture="imhof1", 
+                        normalvectors = NULL, colorintensity = 1, zscale=1, progbar = interactive()) {
+  if(missing(zscale)) {
+    if(colorintensity > 0 && is.numeric(colorintensity)) {
+      zscale = 1/colorintensity
+    } else {
+      stop("colorintensity (value: ", colorintensity,") must be a number greater than 0")
+    }
+  }
   sunangle = sunangle/180*pi
   flipud = function(x) {
     x[,ncol(x):1]
