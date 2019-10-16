@@ -170,7 +170,7 @@ List make_water_cpp(NumericMatrix& heightmap,
   }
   for(int j = 0; j < cols; j++) {
     offset = 0;
-    if(j != rows - 1) {
+    if(j != cols - 1) {
       offset = 1;
     }
     for(int i = 0; i < rows-1; i++) {
