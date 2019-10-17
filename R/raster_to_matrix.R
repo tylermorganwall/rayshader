@@ -1,6 +1,6 @@
 #'@title Raster to Matrix
 #'
-#'@description Turns a raster into a matrix suitable for rayshader. Also attaches the
+#'@description Turns a raster into a matrix suitable for rayshader. 
 #'
 #'@param raster The input raster. Either a RasterLayer object, or a filename.
 #'@param height_units Default `m` for meters. If `feet`, printed zscale (with
