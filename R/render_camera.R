@@ -2,8 +2,8 @@
 #'
 #'@description Changes the position and properties of the camera around the scene. Wrapper around \link[rgl]{rgl.viewpoint}.
 #'
-#'@param theta Default `45`. Rotation angle.
-#'@param phi Default `45`. Azimuth angle. Maximum `90`.
+#'@param theta Defaults to current value. Rotation angle.
+#'@param phi Defaults to current value. Azimuth angle. Maximum `90`.
 #'@param zoom Defaults to current value. Positive value indicating camera magnification.
 #'@param fov Defaults to current value. Field of view of the camera. Maximum `180`.
 #'@export
@@ -63,12 +63,25 @@
 #'#And run this command to convert the video to post to the web:
 #'#ffmpeg -i raymovie.mp4 -pix_fmt yuv420p -profile:v baseline -level 3 -vf scale=-2:-2 rayweb.mp4
 #'}
-render_camera = function(theta = 45, phi = 45, zoom = NULL, fov = NULL) {
+render_camera = function(theta = NULL, phi = NULL, zoom = NULL, fov = NULL) {
   if(is.null(fov)) {
     fov = rgl::par3d()$FOV
   }
   if(is.null(zoom)) {
     zoom = rgl::par3d()$zoom
+  }
+  if(is.null(phi) || is.null(theta)) {
+    rotmat = rot_to_euler(rgl::par3d()$userMatrix)
+    if(is.null(phi)) {
+      phi = rotmat[1]
+    }
+    if(is.null(theta)) {
+      if(0.001 > abs(abs(rotmat[3]) - 180)) {
+        theta = -rotmat[2] + 180
+      } else {
+        theta = rotmat[2]
+      }
+    }
   }
   rgl::rgl.viewpoint(theta = theta, phi = phi, fov = fov, zoom = zoom)
 }
