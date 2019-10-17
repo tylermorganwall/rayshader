@@ -29,14 +29,14 @@
 #'  height_shade(texture = rainbow(256)) %>%
 #'  add_shadow(ray_shade(montereybay,zscale=50),0.3) %>%
 #'  plot_map()
-height_shade = function(heightmap, texture=terrain.colors(256)) {
+height_shade = function(heightmap, texture=grDevices::terrain.colors(256)) {
   tempfilename = tempfile()
-  old.par = par(no.readonly = TRUE)
-  on.exit(par(old.par))
-  png(tempfilename,width = nrow(heightmap),height=ncol(heightmap))
-  par(mar = c(0,0,0,0))
+  old.par = graphics::par(no.readonly = TRUE)
+  on.exit(graphics::par(old.par))
+  grDevices::png(tempfilename,width = nrow(heightmap),height=ncol(heightmap))
+  graphics::par(mar = c(0,0,0,0))
   raster::image(fliplr(heightmap),axes = FALSE,col = texture)
-  dev.off()
+  grDevices::dev.off()
   tempmap = png::readPNG(tempfilename)
   return(tempmap)
 }

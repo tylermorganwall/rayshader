@@ -43,7 +43,7 @@ reduce_matrix_size = function(heightmap, scale=0.5, width=NULL, height=NULL) {
   }
   heightmapr = raster::raster(t(heightmap))
   rasternew = raster::raster(t(heightmap[1:height, 1:width]))
-  rasternew = raster:::resample(heightmapr, rasternew, method = "bilinear")
+  rasternew = raster::resample(heightmapr, rasternew, method = "bilinear")
   return(matrix(raster::extract(rasternew, raster::extent(rasternew)), 
          nrow = ncol(rasternew), ncol = nrow(rasternew)))
 }

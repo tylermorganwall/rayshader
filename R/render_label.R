@@ -4,12 +4,9 @@
 #'
 #'@param heightmap A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.
 #'@param text The label text. 
-#'@param x Either the `x` coordinate in the matrix if `extent = NULL`, or the latitude of the position of the text (WGS84).
-#'@param y Either the `y` coordinate in the matrix if `extent = NULL`, or the longitude of the position of the text (WGS84).
+#'@param x Either the `x` coordinate in the matrix.
+#'@param y Either the `y` coordinate in the matrix.
 #'@param z Elevation of the label, in units of the elevation matrix (scaled by zscale).
-#' @param extent Default `NULL`. If `NULL`, `x` and `y` are considered indices of the underlying elevation matrix.
-#' Otherwise, this will either be a `raster::extent()` object, or a length-4 numeric vector listing the maximum longitude,
-#' minimum longitude, maximum latitude, and minimum latitude, in that order.
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
 #'@param relativez Default `TRUE`. Whether `z` should be measured in relation to the underlying elevation at that point in the heightmap, or set absolutely (`FALSE`).
 #'@param offset Elevation above the surface (at the label point) to start drawing the line.
@@ -54,7 +51,7 @@
 #'render_label(montereybay,x=50,y=130, z=2000,zscale=50,text = "Monterey Canyon",relativez=FALSE)
 #'render_snapshot(clear = TRUE)
 #'}
-render_label = function(heightmap, text, x, y, z, zscale=1, relativez=TRUE, offset = 0, 
+  render_label = function(heightmap, text, x, y, z, zscale=1, relativez=TRUE, offset = 0, 
                         textsize=1, dashed=FALSE,dashlength = "auto", linewidth=3, antialias = FALSE,
                         alpha=1,textalpha=1,freetype=TRUE,adjustvec = NULL, 
                         family = "sans", fonttype = "standard",

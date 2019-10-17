@@ -15,7 +15,7 @@ raster_to_matrix(raster, height_units = "m", verbose = interactive())
 \item{verbose}{Default `interactive()`. Will print dimensions and (if available) zscale of the resulting matrix.}
 }
 \description{
-Turns a raster into a matrix suitable for rayshader. Also attaches the
+Turns a raster into a matrix suitable for rayshader.
 }
 \examples{
 #Save montereybay as a raster and open using the filename.

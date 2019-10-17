@@ -15,9 +15,9 @@ render_label(heightmap, text, x, y, z, zscale = 1, relativez = TRUE,
 
 \item{text}{The label text.}
 
-\item{x}{Text `x` coordinate in the matrix.}
+\item{x}{Either the `x` coordinate in the matrix.}
 
-\item{y}{Text `y` coordinate in the matrix.}
+\item{y}{Either the `y` coordinate in the matrix.}
 
 \item{z}{Elevation of the label, in units of the elevation matrix (scaled by zscale).}
 

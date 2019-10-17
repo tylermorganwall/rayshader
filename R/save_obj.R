@@ -3,6 +3,8 @@
 #'@description Writes the textured 3D rayshader visualization to an OBJ file.
 #'
 #'@param filename String with the filename. If `.png` is not at the end of the string, it will be appended automatically.
+#'@param save_texture Default `TRUE`. If the texture should be saved along with the geometry.
+#'@param water_index_refraction Default `1`. The index of refraction for the rendered water.
 #'@export
 #'@examples
 #'filename_map = tempfile()
