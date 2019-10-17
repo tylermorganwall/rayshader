@@ -643,17 +643,18 @@ plot_gg = function(ggobj, width = 3, height = 3,
     }
   })
   mapheight = png::readPNG(paste0(heightmaptemp,".png"))
+  mapheight = mapheight[,,1]
   if(invert) {
-    mapheight[,,1] = 1 - mapheight[,,1]
+    mapheight = 1 - mapheight
   }
   if(raytrace) {
     if(is.null(saved_shadow_matrix)) {
-      raylayer = ray_shade(1-t(mapheight[,,1]),maxsearch = 600,sunangle = sunangle,anglebreaks = anglebreaks,
+      raylayer = ray_shade(1-t(mapheight),maxsearch = 600,sunangle = sunangle,anglebreaks = anglebreaks,
                            zscale=1/scale,multicore = multicore,lambert = lambert, ...)
       if(!preview) {
         mapcolor %>%
           add_shadow(raylayer,shadow_intensity) %>%
-          plot_3d((t(1-mapheight[,,1])),zscale=1/scale, ... )
+          plot_3d((t(1-mapheight)),zscale=1/scale, ... )
       } else {
         mapcolor %>%
           add_shadow(raylayer,shadow_intensity) %>%
@@ -664,7 +665,7 @@ plot_gg = function(ggobj, width = 3, height = 3,
       if(!preview) {
         mapcolor %>%
           add_shadow(raylayer,shadow_intensity) %>%
-          plot_3d((t(1-mapheight[,,1])),zscale=1/scale, ... )
+          plot_3d((t(1-mapheight)),zscale=1/scale, ... )
       } else {
         mapcolor %>%
           add_shadow(raylayer,shadow_intensity) %>%
@@ -673,7 +674,7 @@ plot_gg = function(ggobj, width = 3, height = 3,
     }
   } else {
     if(!preview) {
-      plot_3d(mapcolor, (t(1-mapheight[,,1])), zscale=1/scale, ...)
+      plot_3d(mapcolor, (t(1-mapheight)), zscale=1/scale, ...)
     } else {
       plot_map(mapcolor)
     }
@@ -682,10 +683,10 @@ plot_gg = function(ggobj, width = 3, height = 3,
     return(raylayer)
   }
   if(!save_shadow_matrix & save_height_matrix) {
-    return(1-t(mapheight[,,1]))
+    return(1-t(mapheight))
   }
   if(save_shadow_matrix & save_height_matrix) {
-    return(list(1-t(mapheight[,,1]),raylayer))
+    return(list(1-t(mapheight),raylayer))
   }
   
 }
