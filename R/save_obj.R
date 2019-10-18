@@ -2,7 +2,7 @@
 #'
 #'@description Writes the textured 3D rayshader visualization to an OBJ file.
 #'
-#'@param filename String with the filename. If `.png` is not at the end of the string, it will be appended automatically.
+#'@param filename String with the filename. If `.obj` is not at the end of the string, it will be appended automatically.
 #'@param save_texture Default `TRUE`. If the texture should be saved along with the geometry.
 #'@param water_index_refraction Default `1`. The index of refraction for the rendered water.
 #'@export
@@ -16,15 +16,17 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1) {
   
   if(is.character(filename)) {
     if(save_texture) {
-      filename_mtl = paste0(filename,".mtl")
+      if(substring(filename, nchar(filename)-3,nchar(filename)) == ".obj") {
+        filename_mtl = paste0(substring(filename, 1,nchar(filename)-4),".mtl")
+      } else {
+        filename_mtl = paste0(filename,".mtl")
+      }
     }
     if(substring(filename, nchar(filename)-3,nchar(filename)) != ".obj") {
       filename = paste0(filename,".obj")
     }
     con = file(filename, "w")
-    on.exit(close(con))
     con_mtl = file(filename_mtl, "w")
-    on.exit(close(con_mtl))
   }
   
   number_vertices = 0
@@ -164,4 +166,6 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1) {
       }
     }
   }
+  close(con)
+  close(con_mtl)
 }

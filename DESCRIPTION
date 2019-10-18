@@ -21,7 +21,8 @@ Imports: doParallel,
          grDevices,
          ggplot2,
          grid,
-         utils
+         utils,
+         rayrender
 Suggests: reshape2,
           viridis,
           av,

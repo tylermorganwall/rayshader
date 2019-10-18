@@ -7,9 +7,9 @@
 render_camera(theta = NULL, phi = NULL, zoom = NULL, fov = NULL)
 }
 \arguments{
-\item{theta}{Default `45`. Rotation angle.}
+\item{theta}{Defaults to current value. Rotation angle.}
 
-\item{phi}{Default `45`. Azimuth angle. Maximum `90`.}
+\item{phi}{Defaults to current value. Azimuth angle. Maximum `90`.}
 
 \item{zoom}{Defaults to current value. Positive value indicating camera magnification.}
 
