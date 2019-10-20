@@ -2,10 +2,11 @@
 #'
 #'@description Gets the rgl IDs with associated rayshader labels
 #'
+#'@param typeval Default `NULL`. Select to filter just one of the types: `surface`, `base`,`lines`, `waterlines`,`shadow`, `basebottom`,
 #'@importFrom utils getFromNamespace
 #'@return Data frame of IDs with labels
 #'@keywords internal
-get_ids_with_labels = function() {
+get_ids_with_labels = function(typeval = NULL) {
   ambient_encoder = c("#000001" = "surface","#000002" = "base","#000003" = "water",
                       "#000004" = "lines","#000005" = "waterlines","#000006" = "shadow","#000007" = "basebottom")
   get_rgl_material = getFromNamespace("rgl.getmaterial", "rgl")
@@ -48,5 +49,11 @@ get_ids_with_labels = function() {
   }
   idvals$raytype = unlist(material_type)
   full_properties = do.call(rbind,material_properties)
-  cbind(idvals,full_properties)
+  retval = cbind(idvals,full_properties)
+  if(!is.null(typeval)) {
+    if(typeval %in% ambient_encoder) {
+      retval = retval[retval$raytype == typeval,]
+    } 
+  }
+  return(retval)
 }
