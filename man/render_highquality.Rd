@@ -4,10 +4,24 @@
 \alias{render_highquality}
 \title{Render High Quality}
 \usage{
-render_highquality(...)
+render_highquality(objfile = NULL, light = FALSE,
+  lightdirection = 315, lightangle = 45, lightintensity = 500,
+  offset_camera = c(0, 0, 0), offset_lookat = c(0, 0, 0), ...)
 }
 \arguments{
-\item{...}{Arguments that would go to rayrender::render_scene()}
+\item{objfile}{Name of temporary filename to store OBJ file.}
+
+\item{light}{Default `FALSE`. Whether there should be a light in the scene.}
+
+\item{lightdirection}{Default `315`. Position of the light angle around the scene.}
+
+\item{lightangle}{Default `45`. Position above the horizon that the light is located.}
+
+\item{lightintensity}{Default `500`. Intensity of the light.}
+
+\item{offset_camera}{Default `NULL`. Offset position of the camera.}
+
+\item{offset_lookat}{Default `NULL`. Offset position at which the camera is directed.}
 }
 \description{
 Changes the position and properties of the camera around the scene. Wrapper around \link[rgl]{rgl.viewpoint}.
