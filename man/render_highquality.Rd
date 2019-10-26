@@ -4,33 +4,56 @@
 \alias{render_highquality}
 \title{Render High Quality}
 \usage{
-render_highquality(objfile = NULL, light = FALSE,
-  lightdirection = 315, lightangle = 45, lightintensity = 500,
-  offset_camera = c(0, 0, 0), offset_lookat = c(0, 0, 0), ...)
+render_highquality(filename = NULL, light = TRUE,
+  lightdirection = 315, lightangle = 45, lightsize = NULL,
+  lightintensity = 500, lightcolor = "white", cache_filename = NULL,
+  width = NULL, height = NULL, ground_material = diffuse(),
+  scene_elements = NULL, offset_camera = c(0, 0, 0),
+  offset_lookat = c(0, 0, 0), ...)
 }
 \arguments{
-\item{objfile}{Name of temporary filename to store OBJ file.}
+\item{filename}{Filename of saved image. If missing, will display to current device.}
 
-\item{light}{Default `FALSE`. Whether there should be a light in the scene.}
+\item{light}{Default `TRUE`. Whether there should be a light in the scene. If not, the scene will be lit with a bluish sky.}
 
-\item{lightdirection}{Default `315`. Position of the light angle around the scene.}
+\item{lightdirection}{Default `315`. Position of the light angle around the scene. 
+If this is a vector longer than one, multiple lights will be generated (using values from 
+`lightangle`, `lightintensity`, and `lightcolor`)}
 
-\item{lightangle}{Default `45`. Position above the horizon that the light is located.}
+\item{lightangle}{Default `45`. Position above the horizon that the light is located. 
+If this is a vector longer than one, multiple lights will be generated (using values from 
+`lightdirection`, `lightintensity`, and `lightcolor`)}
+
+\item{lightsize}{Default `NULL`. Radius of the light(s). Automatically chosen, but can be set here by the user.}
 
 \item{lightintensity}{Default `500`. Intensity of the light.}
+
+\item{lightcolor}{Default `white`. The color of the light.}
+
+\item{cache_filename}{Name of temporary filename to store OBJ file, if the user does not want to rewrite the file each time.}
+
+\item{width}{Defaults to the width of the rgl window. Width of the rendering.}
+
+\item{height}{Defaults to the height of the rgl window. Height of the rendering.}
+
+\item{ground_material}{Default `diffuse()`. Material defined by the rayrender material functions.}
+
+\item{scene_elements}{Default `NULL`. Extra scene elements to add to the scene, created with rayrender.}
 
 \item{offset_camera}{Default `NULL`. Offset position of the camera.}
 
 \item{offset_lookat}{Default `NULL`. Offset position at which the camera is directed.}
+
+\item{...}{Additional parameters to pass to rayrender::render_scene()}
 }
 \description{
 Changes the position and properties of the camera around the scene. Wrapper around \link[rgl]{rgl.viewpoint}.
 }
 \examples{
 \dontrun{
-montereybay \%>\%
+volcano \%>\%
  sphere_shade() \%>\%
- plot_3d(montereybay,zscale = 50)
+ plot_3d(volcano,zscale = 2)
 render_highquality()
 }
 }
