@@ -13,7 +13,6 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1) {
   if(is.null(filename)) {
     stop("save_obj requires a filename")
   }
-  
   if(is.character(filename)) {
     if(save_texture) {
       if(substring(filename, nchar(filename)-3,nchar(filename)) == ".obj") {
@@ -52,13 +51,9 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1) {
   write_mtl = function(idrow, con) {
     if(!is.na(idrow$texture_file)) {
       cat(paste("newmtl ray_surface \n"), file=con)
-      file.copy(idrow$texture_file[[1]], "raysurface.png", overwrite = TRUE)
-      if(file.exists("raysurface.png")) {
-        cat(paste("map_Ka raysurface.png \n"), file=con)
-        cat(paste("map_Kd raysurface.png \n"), file=con)
-      } else {
-        warning("Was not able to write raysurface.png -- texture not written")
-      }
+      file.copy(idrow$texture_file[[1]], paste0(dirname(filename), .Platform$file.sep , "raysurface.png"), overwrite = TRUE)
+      cat(paste("map_Ka raysurface.png" ,"\n"), file=con)
+      cat(paste("map_Kd raysurface.png" ,"\n"), file=con)
       cat("\n", file=con)
     } else if (!is.na(idrow$base_color[[1]])) {
       tempcol = col2rgb(idrow$base_color[[1]])/256
@@ -84,7 +79,7 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1) {
   
   #Begin file
   cat("#", paste0(filename, " produced by rayshader"), "\n", file=con)
-  cat("mtllib", filename_mtl, "\n", file=con)
+  cat("mtllib", gsub(paste0(dirname(filename), .Platform$file.sep), replacement="", x=filename_mtl), "\n", file=con)
   
   vertex_info = get_ids_with_labels()
   vertex_info$startindex = NA
