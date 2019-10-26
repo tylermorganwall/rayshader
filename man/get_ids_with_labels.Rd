@@ -4,7 +4,10 @@
 \alias{get_ids_with_labels}
 \title{Get IDs with Labels}
 \usage{
-get_ids_with_labels()
+get_ids_with_labels(typeval = NULL)
+}
+\arguments{
+\item{typeval}{Default `NULL`. Select to filter just one of the types: `surface`, `base`,`lines`, `waterlines`,`shadow`, `basebottom`,}
 }
 \value{
 Data frame of IDs with labels
