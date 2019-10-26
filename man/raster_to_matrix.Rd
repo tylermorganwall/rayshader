@@ -4,15 +4,12 @@
 \alias{raster_to_matrix}
 \title{Raster to Matrix}
 \usage{
-raster_to_matrix(raster, height_units = "m", verbose = interactive())
+raster_to_matrix(raster, verbose = interactive())
 }
 \arguments{
 \item{raster}{The input raster. Either a RasterLayer object, or a filename.}
 
-\item{height_units}{Default `m` for meters. If `feet`, printed zscale (with
-`verbose = TRUE` will be properly scaled.}
-
-\item{verbose}{Default `interactive()`. Will print dimensions and (if available) zscale of the resulting matrix.}
+\item{verbose}{Default `interactive()`. Will print dimensions of the resulting matrix.}
 }
 \description{
 Turns a raster into a matrix suitable for rayshader.
