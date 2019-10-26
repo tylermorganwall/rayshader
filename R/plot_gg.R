@@ -41,9 +41,10 @@
 #'@param lambert Default `TRUE`. If raytracing, changes the intensity of the light at each point based proportional to the
 #'dot product of the ray direction and the surface normal at that point. Zeros out all values directed away from
 #'the ray.
+#'@param reduce_size Default `NULL`. A number between 0 and 1 that specifies how much to reduce the resolution of the plot, for faster plotting.
 #'@param multicore Default `FALSE`. If raytracing and `TRUE`, multiple cores will be used to compute the shadow matrix. By default, this uses all cores available, unless the user has
 #'set `options("cores")` in which the multicore option will only use that many cores.
-#'@param save_shadow_matrix Default `FALSE`. If `TRUE`, the function will return the height matrix used for the ggplot.
+#'@param save_height_matrix Default `FALSE`. If `TRUE`, the function will return the height matrix used for the ggplot.
 #'@param save_shadow_matrix Default `FALSE`. If `TRUE`, the function will return the shadow matrix for use in future updates via the `shadow_cache` argument passed to `ray_shade`.
 #'@param saved_shadow_matrix Default `NULL`. A cached shadow matrix (saved by the a previous invocation of `plot_gg(..., save_shadow_matrix=TRUE)` to use instead of raytracing a shadow map each time.
 #'@param ... Additional arguments to be passed to `plot_3d()`.
@@ -149,7 +150,7 @@ plot_gg = function(ggobj, width = 3, height = 3,
                    height_aes = NULL, invert = FALSE, shadow_intensity = 0.5,
                    units = c("in", "cm", "mm"), scale=150, pointcontract = 0.7, offset_edges = FALSE,
                    preview = FALSE, raytrace = TRUE, sunangle = 315, anglebreaks = seq(30,40,0.1), 
-                   multicore = FALSE, lambert=TRUE, save_height_matrix = FALSE,
+                   multicore = FALSE, lambert=TRUE, reduce_size = NULL, save_height_matrix = FALSE, 
                    save_shadow_matrix = FALSE, saved_shadow_matrix=NULL, ...) {
   flipud = function(x) {
     x[nrow(x):1,]
@@ -206,7 +207,6 @@ plot_gg = function(ggobj, width = 3, height = 3,
   }
   polygon_offset_geoms = c("GeomPolygon","GeomSf", "GeomHex", "GeomTile")
   other_height_type = ifelse(height_aes == "colour", "fill", "colour")
-  mapcolor = png::readPNG(paste0(colormaptemp,".png"))
   colortheme = c("line","rect","text","axis.title", "axis.title.x",
     "axis.title.x.top","axis.title.y","axis.title.y.right","axis.text",
     "axis.text.x" ,"axis.text.x.top","axis.text.y","axis.text.y.right",
@@ -642,6 +642,24 @@ plot_gg = function(ggobj, width = 3, height = 3,
       stop(paste0("Error: Discrete variable cannot be mapped to 3D. Did you mean to choose `",ifelse(height_aes == "fill","color","fill"), "` as the `height_aes`?"),call.=FALSE)
     }
   })
+  if(!("magick" %in% rownames(utils::installed.packages()))) {
+    stop("magick package required to use argument reduce_size")
+  } else {
+    if(!is.null(reduce_size)) {
+      if(length(reduce_size) == 1 && reduce_size < 1) {
+        scale = scale * reduce_size
+        image_info = magick::image_read(paste0(heightmaptemp,".png")) %>%
+          magick::image_info() 
+        magick::image_read(paste0(heightmaptemp,".png")) %>%
+          magick::image_resize(paste0(image_info$width * reduce_size,"x",image_info$height * reduce_size)) %>%
+          magick::image_write(paste0(heightmaptemp,".png"))
+        magick::image_read(paste0(colormaptemp,".png")) %>%
+          magick::image_resize(paste0(image_info$width * reduce_size,"x",image_info$height * reduce_size)) %>%
+          magick::image_write(paste0(colormaptemp,".png"))
+      }
+    }
+  }
+  mapcolor = png::readPNG(paste0(colormaptemp,".png"))
   mapheight = png::readPNG(paste0(heightmaptemp,".png"))
   mapheight = mapheight[,,1]
   if(invert) {
