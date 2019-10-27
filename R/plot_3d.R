@@ -28,7 +28,8 @@
 #'@param fov Default `0`--isometric. Field-of-view angle.
 #'@param zoom Default `1`. Zoom factor.
 #'@param background Default `grey10`. Color of the background.
-#'@param calculate_normals Default `TRUE`. If `FALSE`, will not calculate per-vertex normals.
+#'@param calculate_normals Default `TRUE`. If `FALSE`, will not calculate per-vertex normals. Can also pass the
+#'output of the function `calculate_normals` to use pre-computed normals.
 #'@param windowsize Default `600`. Position, width, and height of the `rgl` device displaying the plot. 
 #'If a single number, viewport will be a square and located in upper left corner. 
 #'If two numbers, (e.g. `c(600,800)`), user will specify width and height separately. 
@@ -225,8 +226,16 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
   }
   tempmap = tempfile()
   save_png(hillshade,tempmap)
+  precomputed = FALSE
+  if(is.list(calculate_normals)) {
+    normals = calculate_normals
+    calculate_normals = TRUE
+    precomputed = TRUE
+  }
   if(calculate_normals) {
-    normals = calculate_normal(heightmap,zscale=zscale)
+    if(!precomputed) {
+      normals = calculate_normal(heightmap,zscale=zscale)
+    }
     normalsx = (t(normals$x[c(-1,-nrow(normals$x)),c(-1,-ncol(normals$x))]))
     normalsy = (t(normals$z[c(-1,-nrow(normals$z)),c(-1,-ncol(normals$z))]))
     normalsz = (t(normals$y[c(-1,-nrow(normals$y)),c(-1,-ncol(normals$y))]))
