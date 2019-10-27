@@ -4,18 +4,19 @@
 \alias{ambient_shade}
 \title{Calculate Ambient Occlusion Map}
 \usage{
-ambient_shade(heightmap, anglebreaks = seq(1, 46, 15), sunbreaks = 12,
-  maxsearch = 20, multicore = FALSE, zscale = 1, cache_mask = NULL,
-  shadow_cache = NULL, progbar = interactive(), ...)
+ambient_shade(heightmap, anglebreaks = 90 * cospi(seq(5, 85, by =
+  5)/180), sunbreaks = 24, maxsearch = 30, multicore = FALSE,
+  zscale = 1, cache_mask = NULL, shadow_cache = NULL,
+  progbar = interactive(), ...)
 }
 \arguments{
 \item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.}
 
-\item{anglebreaks}{The angle(s), in degrees, as measured from the horizon from which the light originates.}
+\item{anglebreaks}{Default `90*cospi(seq(5, 85,by =5)/180)`. The angle(s), in degrees, as measured from the horizon from which the light originates.}
 
-\item{sunbreaks}{Default 12. Number of rays to be sent out in a circle, evenly spaced, around the point being tested.}
+\item{sunbreaks}{Default `24`. Number of rays to be sent out in a circle, evenly spaced, around the point being tested.}
 
-\item{maxsearch}{Default `20`. The maximum horizontal distance that the system should propogate rays to check for surface intersections.}
+\item{maxsearch}{Default `30`. The maximum horizontal distance that the system should propogate rays to check for surface intersections.}
 
 \item{multicore}{Default FALSE. If TRUE, multiple cores will be used to compute the shadow matrix. By default, this uses all cores available, unless the user has
 set `options("cores")` in which the multicore option will only use that many cores.}
