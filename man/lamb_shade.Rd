@@ -4,13 +4,13 @@
 \alias{lamb_shade}
 \title{Calculate Lambert Shading Map}
 \usage{
-lamb_shade(heightmap, rayangle = 45, sunangle = 315, zscale = 1,
+lamb_shade(heightmap, sunaltitude = 45, sunangle = 315, zscale = 1,
   zero_negative = TRUE)
 }
 \arguments{
 \item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.}
 
-\item{rayangle}{Default `45`. The azimuth angle as measured from the horizon from which the light originates.}
+\item{sunaltitude}{Default `45`. The azimuth angle as measured from the horizon from which the light originates.}
 
 \item{sunangle}{Default `315` (NW). The angle around the matrix from which the light originates.}
 
@@ -24,12 +24,12 @@ Matrix of light intensities at each point.
 \description{
 Calculates local shadow map for a elevation matrix by calculating the dot 
 product between light direction and the surface normal vector at that point. Each point's
-intensity is proportional to the cosine of the normal ve
+intensity is proportional to the cosine of the normal vector.
 }
 \examples{
 #Here we produce a light intensity map of the `volcano` elevation map.
 volcanointensity = lamb_shade(heightmap = volcano, 
-   rayangle = 60, 
+   sunaltitude = 60, 
    sunangle = 25, 
    zscale = 1) 
    
