@@ -35,7 +35,7 @@ make_shadow = function(heightmap, basedepth, shadowwidth, color, shadowcolor) {
   tempmap = tempfile()
   save_png(shadowarray,tempmap)
   rgl.surface((-shadowwidth+1):(rows+shadowwidth) - rows/2,
-              -(-shadowwidth+1):-(cols+shadowwidth) + cols/2,
+              -(-shadowwidth+1):-(cols+shadowwidth) + cols/2+1,
               basedepthmat,texture=paste0(tempmap,".png"),
               lit=FALSE,back="culled",ambient = "#000006")
 }
