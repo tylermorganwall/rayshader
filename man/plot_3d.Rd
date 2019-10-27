@@ -11,7 +11,8 @@ plot_3d(hillshade, heightmap, zscale = 1, baseshape = "rectangle",
   waterdepth = 0, watercolor = "lightblue", wateralpha = 0.5,
   waterlinecolor = NULL, waterlinealpha = 1, linewidth = 2,
   lineantialias = FALSE, theta = 45, phi = 45, fov = 0, zoom = 1,
-  background = "white", windowsize = 600, ...)
+  background = "white", calculate_normals = TRUE, windowsize = 600,
+  ...)
 }
 \arguments{
 \item{hillshade}{Hillshade/image to be added to 3D surface map.}
@@ -64,6 +65,8 @@ of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
 \item{zoom}{Default `1`. Zoom factor.}
 
 \item{background}{Default `grey10`. Color of the background.}
+
+\item{calculate_normals}{Default `TRUE`. If `FALSE`, will not calculate per-vertex normals.}
 
 \item{windowsize}{Default `600`. Position, width, and height of the `rgl` device displaying the plot. 
 If a single number, viewport will be a square and located in upper left corner. 
