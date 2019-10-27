@@ -47,7 +47,12 @@ If this is a vector longer than one, multiple lights will be generated (using va
 \item{...}{Additional parameters to pass to rayrender::render_scene()}
 }
 \description{
-Changes the position and properties of the camera around the scene. Wrapper around \link[rgl]{rgl.viewpoint}.
+Renders a raytraced version of the displayed rgl scene, using the `rayrender` package. 
+User can specify the light direction, intensity, and color, as well as specify the material of the 
+ground and add additional scene elements.
+
+Note: This version does not yet support meshes with missing entries (e.g. if any NA values are present,
+output will be unpredictable).
 }
 \examples{
 \dontrun{
