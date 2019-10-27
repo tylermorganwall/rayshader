@@ -9,7 +9,7 @@ render_highquality(filename = NULL, light = TRUE,
   lightintensity = 500, lightcolor = "white", cache_filename = NULL,
   width = NULL, height = NULL, ground_material = diffuse(),
   scene_elements = NULL, offset_camera = c(0, 0, 0),
-  offset_lookat = c(0, 0, 0), ...)
+  offset_lookat = c(0, 0, 0), clear = FALSE, ...)
 }
 \arguments{
 \item{filename}{Filename of saved image. If missing, will display to current device.}
@@ -44,6 +44,8 @@ If this is a vector longer than one, multiple lights will be generated (using va
 
 \item{offset_lookat}{Default `NULL`. Offset position at which the camera is directed.}
 
+\item{clear}{Default `FALSE`. If `TRUE`, the current `rgl` device will be cleared.}
+
 \item{...}{Additional parameters to pass to rayrender::render_scene()}
 }
 \description{
@@ -52,13 +54,54 @@ User can specify the light direction, intensity, and color, as well as specify t
 ground and add additional scene elements.
 
 Note: This version does not yet support meshes with missing entries (e.g. if any NA values are present,
-output will be unpredictable).
+output will be ugly and wrong).
 }
 \examples{
+#Render the volcano dataset using pathtracing
 \dontrun{
 volcano \%>\%
  sphere_shade() \%>\%
  plot_3d(volcano,zscale = 2)
 render_highquality()
+}
+
+#Change position of light
+\dontrun{
+render_highquality(lightdirection = 45)
+}
+
+#Change vertical position of light
+\dontrun{
+render_highquality(lightdirection = 45, lightangle=30)
+}
+
+#Change the ground material
+\dontrun{
+render_highquality(lightdirection = 45, lightangle=60, 
+                  ground_material = rayrender::diffuse(checkerperiod = 30, checkercolor="grey50"))
+}
+
+#Add three different color lights
+\dontrun{
+render_highquality(lightdirection = c(0,120,240), lightangle=30, 
+                  lightcolor=c("red","green","blue"))
+}
+
+#Add a shiny metal sphere
+\dontrun{
+render_highquality(lightdirection = c(0,120,240), lightangle=30, 
+                  lightcolor=c("red","green","blue"),samples=10,
+                  scene_elements = rayrender::sphere(z=-60,y=0,
+                                                     radius=20,material=rayrender::metal()))
+}
+
+#Add a red light to the volcano and change the ambient light to dusk
+\dontrun{
+render_highquality(lightdirection = c(240), lightangle=30, 
+                  lightcolor=c("#5555ff"),
+                  scene_elements = rayrender::sphere(z=0,y=15, x=-18, radius=5,
+                                   material=rayrender::diffuse(color="red",
+                                                               lightintensity=10, 
+                                                               implicit_sample=TRUE)))
 }
 }

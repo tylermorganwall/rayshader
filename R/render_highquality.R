@@ -5,7 +5,7 @@
 #'ground and add additional scene elements.
 #'
 #'Note: This version does not yet support meshes with missing entries (e.g. if any NA values are present,
-#'output will be unpredictable).
+#'output will be ugly and wrong).
 #'
 #'@param filename Filename of saved image. If missing, will display to current device.
 #'@param light Default `TRUE`. Whether there should be a light in the scene. If not, the scene will be lit with a bluish sky.
@@ -25,21 +25,64 @@
 #'@param offset_camera Default `NULL`. Offset position of the camera.
 #'@param offset_lookat Default `NULL`. Offset position at which the camera is directed.
 #'@param scene_elements Default `NULL`. Extra scene elements to add to the scene, created with rayrender.
+#'@param clear Default `FALSE`. If `TRUE`, the current `rgl` device will be cleared.
 #'@param ... Additional parameters to pass to rayrender::render_scene()
 #'@import rayrender
 #'@export
 #'@examples
+#'#Render the volcano dataset using pathtracing
 #'\dontrun{
 #'volcano %>%
 #'  sphere_shade() %>%
 #'  plot_3d(volcano,zscale = 2)
 #'render_highquality()
 #'}
+#'
+#'#Change position of light
+#'\dontrun{
+#'render_highquality(lightdirection = 45)
+#'}
+#'
+#'#Change vertical position of light
+#'\dontrun{
+#'render_highquality(lightdirection = 45, lightangle=30)
+#'}
+#'
+#'#Change the ground material
+#'\dontrun{
+#'render_highquality(lightdirection = 45, lightangle=60, 
+#'                   ground_material = rayrender::diffuse(checkerperiod = 30, checkercolor="grey50"))
+#'}
+#'
+#'#Add three different color lights
+#'\dontrun{
+#'render_highquality(lightdirection = c(0,120,240), lightangle=30, 
+#'                   lightcolor=c("red","green","blue"))
+#'}
+#'
+#'#Add a shiny metal sphere
+#'\dontrun{
+#'render_highquality(lightdirection = c(0,120,240), lightangle=30, 
+#'                   lightcolor=c("red","green","blue"),samples=10,
+#'                   scene_elements = rayrender::sphere(z=-60,y=0,
+#'                                                      radius=20,material=rayrender::metal()))
+#'}
+#'
+#'#Add a red light to the volcano and change the ambient light to dusk
+#'\dontrun{
+#'render_highquality(lightdirection = c(240), lightangle=30, 
+#'                   lightcolor=c("#5555ff"),
+#'                   scene_elements = rayrender::sphere(z=0,y=15, x=-18, radius=5,
+#'                                    material=rayrender::diffuse(color="red",
+#'                                                                lightintensity=10, 
+#'                                                                implicit_sample=TRUE)))
+#'}
 render_highquality = function(filename = NULL, light = TRUE, lightdirection = 315, lightangle = 45, lightsize=NULL,
                               lightintensity = 500, lightcolor = "white", 
                               cache_filename=NULL, width = NULL, height = NULL, 
                               ground_material = diffuse(), scene_elements=NULL, 
-                              offset_camera = c(0,0,0), offset_lookat = c(0,0,0), ...) {
+                              offset_camera = c(0,0,0), offset_lookat = c(0,0,0), clear  = FALSE, 
+                              ...) {
   windowrect = rgl::par3d()$windowRect
   if(is.null(width)) {
     width = windowrect[3]-windowrect[1]
@@ -143,4 +186,7 @@ render_highquality = function(filename = NULL, light = TRUE, lightdirection = 31
   }
   render_scene(scene, lookfrom = lookfrom, lookat = offset_lookat, fov = fov, filename=filename,
               ortho_dimensions = ortho_dimensions, width = width, height = height, ...)
+  if(clear) {
+    rgl::rgl.clear()
+  }
 }
