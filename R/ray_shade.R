@@ -76,7 +76,7 @@ ray_shade = function(heightmap, sunaltitude=45, sunangle=315, maxsearch=NULL, la
     cache_mask = cache_mask[c(-1,-nrow(cache_mask)),c(-1,-ncol(cache_mask))]
     shadowmatrix[shadowmatrix<0] = 0
     if(lambert) {
-      shadowmatrix = shadowmatrix * lamb_shade(originalheightmap, rayangle = mean(anglebreaks), 
+      shadowmatrix = shadowmatrix * lamb_shade(originalheightmap, sunaltitude = mean(anglebreaks), 
                                                          sunangle = sunangle, zscale = zscale)
     }
     if(!is.null(shadow_cache)) {
@@ -126,7 +126,7 @@ ray_shade = function(heightmap, sunaltitude=45, sunangle=315, maxsearch=NULL, la
     shadowmatrix = shadowmatrix[c(-1,-nrow(shadowmatrix)),c(-1,-ncol(shadowmatrix))]
     cache_mask = cache_mask[c(-1,-nrow(cache_mask)),c(-1,-ncol(cache_mask))]
     if(lambert) {
-      shadowmatrix = shadowmatrix * lamb_shade(originalheightmap, rayangle = mean(anglebreaks), 
+      shadowmatrix = shadowmatrix * lamb_shade(originalheightmap, sunaltitude = mean(anglebreaks), 
                                               sunangle = sunangle, zscale = zscale)
     }
     if(!is.null(shadow_cache)) {
