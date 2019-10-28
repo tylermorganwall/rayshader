@@ -146,7 +146,7 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1) {
         counter = 0
         for(i in seq_len(nz)[-nz]) {
           for(j in seq_len(nx)[-nx]) {
-            cindices = (i-1)*nx + c(j, j + nx, j + 1, j + nx, j + nx + 1, j + 1) + (vertex_info$startindex[row]-1)/3
+            cindices = (i-1)*nx + c(j, j + nx, j + 1, j + nx, j + nx + 1, j + 1) + vertex_info$startindex[row]/3
             indices[(1:6 + 6*counter)] = cindices
             counter = counter + 1
           }
