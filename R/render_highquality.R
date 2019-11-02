@@ -11,8 +11,8 @@
 #'@param light Default `TRUE`. Whether there should be a light in the scene. If not, the scene will be lit with a bluish sky.
 #'@param lightdirection Default `315`. Position of the light angle around the scene. 
 #'If this is a vector longer than one, multiple lights will be generated (using values from 
-#'`lightangle`, `lightintensity`, and `lightcolor`)
-#'@param lightangle Default `45`. Position above the horizon that the light is located. 
+#'`lightaltitude`, `lightintensity`, and `lightcolor`)
+#'@param lightaltitude Default `45`. Angle above the horizon that the light is located. 
 #'If this is a vector longer than one, multiple lights will be generated (using values from 
 #'`lightdirection`, `lightintensity`, and `lightcolor`)
 #'@param lightsize Default `NULL`. Radius of the light(s). Automatically chosen, but can be set here by the user.
@@ -22,10 +22,13 @@
 #'@param width Defaults to the width of the rgl window. Width of the rendering. 
 #'@param height Defaults to the height of the rgl window. Height of the rendering. 
 #'@param ground_material Default `diffuse()`. Material defined by the rayrender material functions.
-#'@param offset_camera Default `NULL`. Offset position of the camera.
-#'@param offset_lookat Default `NULL`. Offset position at which the camera is directed.
+#'@param camera_location Default `NULL`. Custom position of the camera. The `FOV`, `width`, and `height` arguments will still
+#'be derived from the rgl window.
+#'@param camera_lookat Default `NULL`. Custom point at which the camera is directed. The `FOV`, `width`, and `height` arguments will still
+#'be derived from the rgl window.
 #'@param scene_elements Default `NULL`. Extra scene elements to add to the scene, created with rayrender.
 #'@param clear Default `FALSE`. If `TRUE`, the current `rgl` device will be cleared.
+#'@param print_scene_info Default `FALSE`. If `TRUE`, it will print the position and lookat point of the camera.
 #'@param ... Additional parameters to pass to rayrender::render_scene()
 #'@import rayrender
 #'@export
@@ -45,24 +48,24 @@
 #'
 #'#Change vertical position of light
 #'\dontrun{
-#'render_highquality(lightdirection = 45, lightangle=30)
+#'render_highquality(lightdirection = 45, lightaltitude=30)
 #'}
 #'
 #'#Change the ground material
 #'\dontrun{
-#'render_highquality(lightdirection = 45, lightangle=60, 
+#'render_highquality(lightdirection = 45, lightaltitude=60, 
 #'                   ground_material = rayrender::diffuse(checkerperiod = 30, checkercolor="grey50"))
 #'}
 #'
 #'#Add three different color lights
 #'\dontrun{
-#'render_highquality(lightdirection = c(0,120,240), lightangle=30, 
+#'render_highquality(lightdirection = c(0,120,240), lightaltitude=30, 
 #'                   lightcolor=c("red","green","blue"))
 #'}
 #'
 #'#Add a shiny metal sphere
 #'\dontrun{
-#'render_highquality(lightdirection = c(0,120,240), lightangle=30, 
+#'render_highquality(lightdirection = c(0,120,240), lightaltitude=30, 
 #'                   lightcolor=c("red","green","blue"),samples=10,
 #'                   scene_elements = rayrender::sphere(z=-60,y=0,
 #'                                                      radius=20,material=rayrender::metal()))
@@ -70,19 +73,19 @@
 #'
 #'#Add a red light to the volcano and change the ambient light to dusk
 #'\dontrun{
-#'render_highquality(lightdirection = c(240), lightangle=30, 
+#'render_highquality(lightdirection = c(240), lightaltitude=30, 
 #'                   lightcolor=c("#5555ff"),
 #'                   scene_elements = rayrender::sphere(z=0,y=15, x=-18, radius=5,
 #'                                    material=rayrender::diffuse(color="red",
 #'                                                                lightintensity=10, 
 #'                                                                implicit_sample=TRUE)))
 #'}
-render_highquality = function(filename = NULL, light = TRUE, lightdirection = 315, lightangle = 45, lightsize=NULL,
+render_highquality = function(filename = NULL, light = TRUE, lightdirection = 315, lightaltitude = 45, lightsize=NULL,
                               lightintensity = 500, lightcolor = "white", 
                               cache_filename=NULL, width = NULL, height = NULL, 
                               ground_material = diffuse(), scene_elements=NULL, 
-                              offset_camera = c(0,0,0), offset_lookat = c(0,0,0), clear  = FALSE, 
-                              ...) {
+                              camera_location = NULL, camera_lookat = c(0,0,0), clear  = FALSE, 
+                              print_scene_info = FALSE, ...) {
   windowrect = rgl::par3d()$windowRect
   if(is.null(width)) {
     width = windowrect[3]-windowrect[1]
@@ -133,7 +136,11 @@ render_highquality = function(filename = NULL, light = TRUE, lightdirection = 31
   observery = sinpi(phi/180) * observer_radius
   observerx = cospi(phi/180) * sinpi(theta/180) * observer_radius 
   observerz = cospi(phi/180) * cospi(theta/180) * observer_radius 
-  lookfrom = c(observerx,observery,observerz) + offset_camera
+  if(is.null(camera_location)) {
+    lookfrom = c(observerx,observery,observerz) 
+  } else {
+    lookfrom = camera_location
+  }
   if(substring(cache_filename, nchar(cache_filename)-3,nchar(cache_filename)) != ".obj") {
     cache_filename = paste0(cache_filename,".obj")
   }
@@ -148,19 +155,19 @@ render_highquality = function(filename = NULL, light = TRUE, lightdirection = 31
     if(is.null(lightsize)) {
       lightsize = observer_radius/5
     }
-    if(length(lightangle) >= 1 || length(lightdirection) >= 1) {
-      if(length(lightangle) > 1 && length(lightdirection) > 1 && length(lightdirection) != length(lightangle)) {
-        stop("lightangle vector ", lightangle, " and lightdirection vector ", lightdirection, "both greater than length 1 but not equal length" )
+    if(length(lightaltitude) >= 1 || length(lightdirection) >= 1) {
+      if(length(lightaltitude) > 1 && length(lightdirection) > 1 && length(lightdirection) != length(lightaltitude)) {
+        stop("lightaltitude vector ", lightaltitude, " and lightdirection vector ", lightdirection, "both greater than length 1 but not equal length" )
       }
-      numberlights = ifelse(length(lightangle) > length(lightdirection), length(lightangle),length(lightdirection))
-      lightangletemp = lightangle[1]
+      numberlights = ifelse(length(lightaltitude) > length(lightdirection), length(lightaltitude),length(lightdirection))
+      lightaltitudetemp = lightaltitude[1]
       lightdirectiontemp = lightdirection[1]
       lightintensitytemp = lightintensity[1]
       lightcolortemp = lightcolor[1]
       lightsizetemp = lightsize[1]
       for(i in seq_len(numberlights)) {
-        if(!is.na(lightangle[i])) {
-          lightangletemp = lightangle[i]
+        if(!is.na(lightaltitude[i])) {
+          lightaltitudetemp = lightaltitude[i]
         }
         if(!is.na(lightdirection[i])) {
           lightdirectiontemp = lightdirection[i]
@@ -174,17 +181,21 @@ render_highquality = function(filename = NULL, light = TRUE, lightdirection = 31
         if(!is.na(lightsize[i])) {
           lightsizetemp = lightsize[i]
         }
-        scene = add_object(scene, sphere(x=observer_radius*5 * cospi(lightangletemp/180) * sinpi(lightdirectiontemp/180),
-                                         y=observer_radius*5 * sinpi(lightangletemp/180),
-                                         z=-observer_radius*5 * cospi(lightangletemp/180) * cospi(lightdirectiontemp/180), radius=lightsizetemp,
+        scene = add_object(scene, sphere(x=observer_radius*5 * cospi(lightaltitudetemp/180) * sinpi(lightdirectiontemp/180),
+                                         y=observer_radius*5 * sinpi(lightaltitudetemp/180),
+                                         z=-observer_radius*5 * cospi(lightaltitudetemp/180) * cospi(lightdirectiontemp/180), radius=lightsizetemp,
                                          material = diffuse(color = lightcolortemp, lightintensity = lightintensitytemp, implicit_sample=TRUE)))
       }
     }
   }
+  if(print_scene_info) {
+    print(paste0(c("Camera position: c(", paste0(lookfrom,collapse=","), 
+                   "), Camera lookat: c(", paste0(lookat,collapse=","), ")"),collapse=""))
+  }
   if(!is.null(scene_elements)) {
     scene = add_object(scene,scene_elements)
   }
-  render_scene(scene, lookfrom = lookfrom, lookat = offset_lookat, fov = fov, filename=filename,
+  render_scene(scene, lookfrom = lookfrom, lookat = camera_lookat, fov = fov, filename=filename,
               ortho_dimensions = ortho_dimensions, width = width, height = height, ...)
   if(clear) {
     rgl::rgl.clear()

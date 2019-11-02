@@ -5,11 +5,11 @@
 \title{Render High Quality}
 \usage{
 render_highquality(filename = NULL, light = TRUE,
-  lightdirection = 315, lightangle = 45, lightsize = NULL,
+  lightdirection = 315, lightaltitude = 45, lightsize = NULL,
   lightintensity = 500, lightcolor = "white", cache_filename = NULL,
   width = NULL, height = NULL, ground_material = diffuse(),
-  scene_elements = NULL, offset_camera = c(0, 0, 0),
-  offset_lookat = c(0, 0, 0), clear = FALSE, ...)
+  scene_elements = NULL, camera_location = NULL, camera_lookat = c(0,
+  0, 0), clear = FALSE, print_scene_info = FALSE, ...)
 }
 \arguments{
 \item{filename}{Filename of saved image. If missing, will display to current device.}
@@ -18,9 +18,9 @@ render_highquality(filename = NULL, light = TRUE,
 
 \item{lightdirection}{Default `315`. Position of the light angle around the scene. 
 If this is a vector longer than one, multiple lights will be generated (using values from 
-`lightangle`, `lightintensity`, and `lightcolor`)}
+`lightaltitude`, `lightintensity`, and `lightcolor`)}
 
-\item{lightangle}{Default `45`. Position above the horizon that the light is located. 
+\item{lightaltitude}{Default `45`. Angle above the horizon that the light is located. 
 If this is a vector longer than one, multiple lights will be generated (using values from 
 `lightdirection`, `lightintensity`, and `lightcolor`)}
 
@@ -40,11 +40,15 @@ If this is a vector longer than one, multiple lights will be generated (using va
 
 \item{scene_elements}{Default `NULL`. Extra scene elements to add to the scene, created with rayrender.}
 
-\item{offset_camera}{Default `NULL`. Offset position of the camera.}
+\item{camera_location}{Default `NULL`. Custom position of the camera. The `FOV`, `width`, and `height` arguments will still
+be derived from the rgl window.}
 
-\item{offset_lookat}{Default `NULL`. Offset position at which the camera is directed.}
+\item{camera_lookat}{Default `NULL`. Custom point at which the camera is directed. The `FOV`, `width`, and `height` arguments will still
+be derived from the rgl window.}
 
 \item{clear}{Default `FALSE`. If `TRUE`, the current `rgl` device will be cleared.}
+
+\item{print_scene_info}{Default `FALSE`. If `TRUE`, it will print the position and lookat point of the camera.}
 
 \item{...}{Additional parameters to pass to rayrender::render_scene()}
 }
@@ -72,24 +76,24 @@ render_highquality(lightdirection = 45)
 
 #Change vertical position of light
 \dontrun{
-render_highquality(lightdirection = 45, lightangle=30)
+render_highquality(lightdirection = 45, lightaltitude=30)
 }
 
 #Change the ground material
 \dontrun{
-render_highquality(lightdirection = 45, lightangle=60, 
+render_highquality(lightdirection = 45, lightaltitude=60, 
                   ground_material = rayrender::diffuse(checkerperiod = 30, checkercolor="grey50"))
 }
 
 #Add three different color lights
 \dontrun{
-render_highquality(lightdirection = c(0,120,240), lightangle=30, 
+render_highquality(lightdirection = c(0,120,240), lightaltitude=30, 
                   lightcolor=c("red","green","blue"))
 }
 
 #Add a shiny metal sphere
 \dontrun{
-render_highquality(lightdirection = c(0,120,240), lightangle=30, 
+render_highquality(lightdirection = c(0,120,240), lightaltitude=30, 
                   lightcolor=c("red","green","blue"),samples=10,
                   scene_elements = rayrender::sphere(z=-60,y=0,
                                                      radius=20,material=rayrender::metal()))
@@ -97,7 +101,7 @@ render_highquality(lightdirection = c(0,120,240), lightangle=30,
 
 #Add a red light to the volcano and change the ambient light to dusk
 \dontrun{
-render_highquality(lightdirection = c(240), lightangle=30, 
+render_highquality(lightdirection = c(240), lightaltitude=30, 
                   lightcolor=c("#5555ff"),
                   scene_elements = rayrender::sphere(z=0,y=15, x=-18, radius=5,
                                    material=rayrender::diffuse(color="red",
