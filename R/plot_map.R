@@ -3,15 +3,19 @@
 #'@description Displays the map in the current device.
 #'
 #'@param hillshade Hillshade to be plotted.
-#'@param rotate Default 0. Rotates the output. Possible values: 0, 90, 180, 270.
+#'@param rotate Default `0`. Rotates the output. Possible values: `0`, `90`, `180`, `270`.
+#'@param keep_user_par Default `TRUE`. Whether to keep the user's `par()` settings. Set to `FALSE` if you 
+#'want to set up a multi-pane plot (e.g. set `par(mfrow)`).
 #'@param ... Additional arguments to pass to the `raster::plotRGB` function that displays the map.
 #'@export
 #'@examples
 #'#Plotting a spherical texture map of the volcano dataset.
 #'plot_map(sphere_shade(volcano))
-plot_map = function(hillshade, rotate=0, ...) {
-  old.par = graphics::par(no.readonly = TRUE)
-  on.exit(graphics::par(old.par))
+plot_map = function(hillshade, rotate=0, keep_user_par = TRUE, ...) {
+  if(keep_user_par) {
+    old.par = graphics::par(no.readonly = TRUE)
+    on.exit(graphics::par(old.par))
+  }
   rotatef = function(x) t(apply(x, 2, rev))
   if(!(rotate %in% c(0,90,180,270))) {
     if(length(rotate) == 1) {

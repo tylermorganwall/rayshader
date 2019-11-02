@@ -4,12 +4,15 @@
 \alias{plot_map}
 \title{Plot Map}
 \usage{
-plot_map(hillshade, rotate = 0, ...)
+plot_map(hillshade, rotate = 0, keep_user_par = TRUE, ...)
 }
 \arguments{
 \item{hillshade}{Hillshade to be plotted.}
 
-\item{rotate}{Default 0. Rotates the output. Possible values: 0, 90, 180, 270.}
+\item{rotate}{Default `0`. Rotates the output. Possible values: `0`, `90`, `180`, `270`.}
+
+\item{keep_user_par}{Default `TRUE`. Whether to keep the user's `par()` settings. Set to `FALSE` if you 
+want to set up a multi-pane plot (e.g. set `par(mfrow)`).}
 
 \item{...}{Additional arguments to pass to the `raster::plotRGB` function that displays the map.}
 }
