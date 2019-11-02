@@ -21,6 +21,8 @@
 #'@param title_color Default `black`. Font color.
 #'@param title_font Default `sans`. String with font family such as "sans", "mono", "serif", "Times", "Helvetica", 
 #'"Trebuchet", "Georgia", "Palatino" or "Comic Sans".
+#'@param title_bar_color Default `NULL`. If a color, this will create a colored bar under the title.
+#'@param title_bar_alpha Default `0.5`. Transparency of the title bar.
 #'@param image_overlay Default `NULL`. Either a string indicating the location of a png image to overlay
 #'over the whole movie (transparency included), or a 4-layer RGBA array. This image will be resized to the 
 #'dimension of the movie if it does not match exactly.
@@ -78,6 +80,7 @@ render_movie = function(filename, type = "orbit", frames = 360, fps = 30,
                         phi = 30, theta = 0, zoom = NULL, fov = NULL, 
                         title_text = NULL, title_offset = c(20,20), 
                         title_color = "black", title_size = 30, title_font = "sans",
+                        title_bar_color = NULL, title_bar_alpha = 0.5,
                         image_overlay = NULL, audio=NULL, progbar = interactive(), ...) {
   if(!("av" %in% rownames(utils::installed.packages()))) {
     stop("`av` package required for render_movie()")
@@ -173,6 +176,21 @@ render_movie = function(filename, type = "orbit", frames = 360, fps = 30,
   if(has_title) {
     if(!("magick" %in% rownames(utils::installed.packages()))) {
       stop("`magick` package required for adding title")
+    }
+    if(!is.null(title_bar_color)) {
+      title_bar_color = col2rgb(title_bar_color)/255
+      title_bar = array(0,c(dimensions[1],dimensions[2],4))
+      title_bar_width = 2 * title_offset[1] + title_size
+      title_bar[1:title_bar_width,,1] = title_bar_color[1]
+      title_bar[1:title_bar_width,,2] = title_bar_color[2]
+      title_bar[1:title_bar_width,,3] = title_bar_color[3]
+      title_bar[1:title_bar_width,,4] = title_bar_alpha
+      title_bar_temp = paste0(tempfile(),".png")
+      png::writePNG(title_bar,title_bar_temp)
+      magick::image_read(temp) %>%
+        magick::image_composite(magick::image_read(title_bar_temp),
+        ) %>%
+        magick::image_write(path = temp, format = "png")
     }
     if(progbar) {
       pb = progress::progress_bar$new(

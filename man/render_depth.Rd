@@ -5,12 +5,14 @@
 \title{Render Depth of Field}
 \usage{
 render_depth(focus = 0.5, focallength = 100, fstop = 4,
-  filename = NULL, bokehshape = "circle", bokehintensity = 1,
-  bokehlimit = 0.8, rotation = 0, gamma_correction = TRUE,
-  transparent_water = FALSE, title_text = NULL, title_offset = c(20,
-  20), title_color = "black", title_size = 30, title_font = "sans",
-  image_overlay = NULL, progbar = interactive(), clear = FALSE,
-  bring_to_front = FALSE, ...)
+  filename = NULL, preview_focus = FALSE, bokehshape = "circle",
+  bokehintensity = 1, bokehlimit = 0.8, rotation = 0,
+  gamma_correction = TRUE, transparent_water = FALSE,
+  title_text = NULL, title_offset = c(20, 20), title_color = "black",
+  title_size = 30, title_font = "sans", title_bar_color = NULL,
+  title_bar_alpha = 0.5, image_overlay = NULL,
+  progbar = interactive(), instant_capture = interactive(),
+  clear = FALSE, bring_to_front = FALSE, ...)
 }
 \arguments{
 \item{focus}{Defaults `0.5`. Depth in which to blur. Minimum 0, maximum 1.}
@@ -20,6 +22,9 @@ render_depth(focus = 0.5, focallength = 100, fstop = 4,
 \item{fstop}{Default `1`. F-stop of the virtual camera.}
 
 \item{filename}{The filename of the image to be saved. If this is not given, the image will be plotted instead.}
+
+\item{preview_focus}{Default `FALSE`. If `TRUE`, a red line will be drawn across the image
+showing where the camera will be focused.}
 
 \item{bokehshape}{Default `circle`. Also built-in: `hex`. The shape of the bokeh.}
 
@@ -46,11 +51,18 @@ image_annotate) corner to offset the title.}
 \item{title_font}{Default `sans`. String with font family such as "sans", "mono", "serif", "Times", "Helvetica", 
 "Trebuchet", "Georgia", "Palatino" or "Comic Sans".}
 
+\item{title_bar_color}{Default `NULL`. If a color, this will create a colored bar under the title.}
+
+\item{title_bar_alpha}{Default `0.5`. Transparency of the title bar.}
+
 \item{image_overlay}{Default `NULL`. Either a string indicating the location of a png image to overlay
 over the image (transparency included), or a 4-layer RGBA array. This image will be resized to the 
 dimension of the image if it does not match exactly.}
 
 \item{progbar}{Default `TRUE` if in an interactive session. Displays a progress bar.}
+
+\item{instant_capture}{Default `TRUE` if interactive, `FALSE` otherwise. If `FALSE`, a slight delay is added 
+before taking the snapshot. This can help stop prevent rendering issues when running scripts.}
 
 \item{clear}{Default `FALSE`. If `TRUE`, the current `rgl` device will be cleared.}
 

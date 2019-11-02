@@ -6,8 +6,8 @@
 \usage{
 render_snapshot(filename, clear = FALSE, title_text = NULL,
   title_offset = c(20, 20), title_color = "black", title_size = 30,
-  title_font = "sans", image_overlay = NULL, bring_to_front = FALSE,
-  ...)
+  title_font = "sans", title_bar_color = NULL, title_bar_alpha = 0.5,
+  image_overlay = NULL, bring_to_front = FALSE, ...)
 }
 \arguments{
 \item{filename}{Filename of snapshot. If missing, will display to current device.}
@@ -25,6 +25,10 @@ image_annotate) corner to offset the title.}
 
 \item{title_font}{Default `sans`. String with font family such as "sans", "mono", "serif", "Times", "Helvetica", 
 "Trebuchet", "Georgia", "Palatino" or "Comic Sans".}
+
+\item{title_bar_color}{Default `NULL`. If a color, this will create a colored bar under the title.}
+
+\item{title_bar_alpha}{Default `0.5`. Transparency of the title bar.}
 
 \item{image_overlay}{Default `NULL`. Either a string indicating the location of a png image to overlay
 over the image (transparency included), or a 4-layer RGBA array. This image will be resized to the 
