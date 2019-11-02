@@ -8,7 +8,8 @@
 #'@keywords internal
 get_ids_with_labels = function(typeval = NULL) {
   ambient_encoder = c("#000001" = "surface","#000002" = "base","#000003" = "water",
-                      "#000004" = "lines","#000005" = "waterlines","#000006" = "shadow","#000007" = "basebottom")
+                      "#000004" = "lines","#000005" = "waterlines","#000006" = "shadow",
+                      "#000007" = "basebottom", "#000008" = "textline", "#000009" = "raytext")
   get_rgl_material = getFromNamespace("rgl.getmaterial", "rgl")
   idvals = rgl::rgl.ids()
   material_type = list()
@@ -44,15 +45,15 @@ get_ids_with_labels = function(typeval = NULL) {
         material_properties[[i]]$shadow_texture_file = material_type_single$texture
       }
     } else {
-      material_type[[i]] = "text"
+      material_type[[i]] = ambient_encoder[material_type_single$ambient]
     }
   }
   idvals$raytype = unlist(material_type)
   full_properties = do.call(rbind,material_properties)
   retval = cbind(idvals,full_properties)
   if(!is.null(typeval)) {
-    if(typeval %in% ambient_encoder) {
-      retval = retval[retval$raytype == typeval,]
+    if(any(typeval %in% ambient_encoder)) {
+      retval = retval[retval$raytype %in% typeval,]
     } 
   }
   return(retval)

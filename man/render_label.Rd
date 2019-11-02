@@ -5,10 +5,11 @@
 \title{Render Label}
 \usage{
 render_label(heightmap, text, x, y, z, zscale = 1, relativez = TRUE,
-  offset = 0, textsize = 1, dashed = FALSE, dashlength = "auto",
-  linewidth = 3, antialias = FALSE, alpha = 1, textalpha = 1,
-  freetype = TRUE, adjustvec = NULL, family = "sans",
-  fonttype = "standard", color = "black", textcolor = "black")
+  offset = 0, clear_previous = FALSE, textsize = 1, dashed = FALSE,
+  dashlength = "auto", linewidth = 3, antialias = FALSE, alpha = 1,
+  textalpha = 1, freetype = TRUE, adjustvec = NULL,
+  family = "sans", fonttype = "standard", linecolor = "black",
+  textcolor = "black")
 }
 \arguments{
 \item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.}
@@ -26,6 +27,9 @@ render_label(heightmap, text, x, y, z, zscale = 1, relativez = TRUE,
 \item{relativez}{Default `TRUE`. Whether `z` should be measured in relation to the underlying elevation at that point in the heightmap, or set absolutely (`FALSE`).}
 
 \item{offset}{Elevation above the surface (at the label point) to start drawing the line.}
+
+\item{clear_previous}{Default `FALSE`. If `TRUE`, it will clear all existing text and lines rendered with `render_label()`. If no
+other arguments are passed to `render_label()`, this will just remove all existing lines.}
 
 \item{textsize}{Default `1`. A numeric character expansion value.}
 
@@ -49,7 +53,7 @@ render_label(heightmap, text, x, y, z, zscale = 1, relativez = TRUE,
 
 \item{fonttype}{Default `"standard"`. The font type. Choices are `c("standard", "bold", "italic", "bolditalic")`. NOTE: These require FreeType fonts, which may not be installed on your system. See the documentation for rgl::text3d() for more information.}
 
-\item{color}{Default `black`. Color of the line.}
+\item{linecolor}{Default `black`. Color of the line.}
 
 \item{textcolor}{Default `black`. Color of the text.}
 }
@@ -71,9 +75,11 @@ render_snapshot()
 }
 
 #We can also change the linetype to dashed by setting `dashed = TRUE` (additional options allow
-#the user to control the dash length)
+#the user to control the dash length). You can clear the existing lines by setting 
+#`clear_previous = TRUE`.
 \dontrun{
-render_label(montereybay,x=300,y=120, z=10000,zscale=50,text = "Monterey",dashed=TRUE)
+render_label(montereybay, x = 300, y = 120, z = 10000, zscale = 50, text = "Monterey",
+            dashed = TRUE, clear_previous = TRUE)
 render_snapshot()
 }
 
@@ -81,6 +87,10 @@ render_snapshot()
 #an absolute height by setting `relativez=FALSE`.
 \dontrun{
 render_label(montereybay,x=50,y=130, z=2000,zscale=50,text = "Monterey Canyon",relativez=FALSE)
-render_snapshot(clear = TRUE)
+render_snapshot()
 }
+
+#We can remove all existing labels by calling `render_label(clear_previous = TRUE)`
+render_label(clear_previous = TRUE)
+render_snapshot()
 }
