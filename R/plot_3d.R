@@ -255,7 +255,7 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
     make_base(heightmap,basedepth=soliddepth,basecolor=solidcolor,zscale=zscale)
   }
   if(!is.null(solidlinecolor) && solid) {
-    rgl::rgl.material(color=waterlinecolor)
+    rgl::rgl.material(color=solidlinecolor, lit=FALSE)
     make_lines(heightmap,basedepth=soliddepth,linecolor=solidlinecolor,zscale=zscale,linewidth = linewidth)
   }
   if(shadow) {
@@ -266,10 +266,10 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
   }
   if(!is.null(waterlinecolor) && water) {
     if(all(!is.na(heightmap))) {
-      rgl::rgl.material(color=waterlinecolor)
+      rgl::rgl.material(color=waterlinecolor,lit=FALSE)
       make_lines(fliplr(heightmap),basedepth=waterdepth,linecolor=waterlinecolor,zscale=zscale,linewidth = linewidth,alpha=waterlinealpha,solid=FALSE)
     }
-    rgl::rgl.material(color=waterlinecolor)
+    rgl::rgl.material(color=waterlinecolor,lit=FALSE)
     make_waterlines(heightmap,waterdepth=waterdepth,linecolor=waterlinecolor,zscale=zscale,alpha=waterlinealpha,linewidth=linewidth,antialias=lineantialias)
   }
 }
