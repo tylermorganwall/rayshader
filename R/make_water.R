@@ -28,22 +28,24 @@ make_water = function(heightmap,waterheight=mean(heightmap),watercolor="lightblu
     if(all(!na_matrix)) {
       triangles3d(matrix(c(-nrow(heightmap)/2+1, nrow(heightmap)/2, -nrow(heightmap)/2+1,
                            waterheight,waterheight,waterheight,
-                           ncol(heightmap)/2,-ncol(heightmap)/2+1,-ncol(heightmap)/2+1),3,3),
+                           ncol(heightmap)/2,-ncol(heightmap)/2+1,-ncol(heightmap)/2+1),3,3), lit=FALSE,
                   color=watercolor,alpha=wateralpha,front="filled",back="culled",texture=NULL,ambient = "#000003")
       triangles3d(matrix(c(-nrow(heightmap)/2+1, nrow(heightmap)/2, nrow(heightmap)/2,
                            waterheight,waterheight,waterheight,
-                           ncol(heightmap)/2,ncol(heightmap)/2,-ncol(heightmap)/2+1),3,3),
+                           ncol(heightmap)/2,ncol(heightmap)/2,-ncol(heightmap)/2+1),3,3), lit=FALSE,
                   color=watercolor,alpha=wateralpha,front="filled",back="culled",texture=NULL,ambient = "#000003")
       if(length(heightlist) > 0) {
         rgl::triangles3d(fullsides,lit=FALSE,color=watercolor,alpha=wateralpha,front="fill",depth_test="less",texture=NULL,ambient = "#000003")
       }
     } else {
       if(length(heightlist) > 0) {
-        rgl::triangles3d(fullsides,lit=FALSE,color=watercolor,alpha=wateralpha,front="fill",texture=NULL,ambient = "#000003")
+        rgl::triangles3d(fullsides,lit=FALSE,color=watercolor,alpha=wateralpha,front="fill",
+                         texture=NULL,ambient = "#000003")
       }
       basemat = matrix(waterheight,nrow(heightmap),ncol(heightmap))
       basemat[is.na(heightmap)] = NA
-      rgl.surface(1:nrow(basemat)-nrow(basemat)/2,1:ncol(basemat)-ncol(basemat)/2,basemat,color=watercolor,alpha=wateralpha,lit=FALSE,texture=NULL,ambient = "#000003")
+      rgl.surface(1:nrow(basemat)-nrow(basemat)/2,1:ncol(basemat)-ncol(basemat)/2,basemat,color=watercolor,alpha=wateralpha,
+                  lit=FALSE,texture=NULL,ambient = "#000003")
     }
   }
 }
