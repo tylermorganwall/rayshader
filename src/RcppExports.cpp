@@ -180,6 +180,19 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// gen_ellipse
+arma::mat gen_ellipse(const double intensity, double width, double height);
+RcppExport SEXP _rayshader_gen_ellipse(SEXP intensitySEXP, SEXP widthSEXP, SEXP heightSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const double >::type intensity(intensitySEXP);
+    Rcpp::traits::input_parameter< double >::type width(widthSEXP);
+    Rcpp::traits::input_parameter< double >::type height(heightSEXP);
+    rcpp_result_gen = Rcpp::wrap(gen_ellipse(intensity, width, height));
+    return rcpp_result_gen;
+END_RCPP
+}
 // is_inside
 bool is_inside(double sizehex, double positionx, double positiony, double sinval, double cosval);
 RcppExport SEXP _rayshader_is_inside(SEXP sizehexSEXP, SEXP positionxSEXP, SEXP positionySEXP, SEXP sinvalSEXP, SEXP cosvalSEXP) {
@@ -278,6 +291,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_rayshader_subsample", (DL_FUNC) &_rayshader_subsample, 2},
     {"_rayshader_subsample_rect", (DL_FUNC) &_rayshader_subsample_rect, 3},
     {"_rayshader_gen_circle_psf", (DL_FUNC) &_rayshader_gen_circle_psf, 1},
+    {"_rayshader_gen_ellipse", (DL_FUNC) &_rayshader_gen_ellipse, 3},
     {"_rayshader_is_inside", (DL_FUNC) &_rayshader_is_inside, 5},
     {"_rayshader_gen_hex_psf", (DL_FUNC) &_rayshader_gen_hex_psf, 2},
     {"_rayshader_psf", (DL_FUNC) &_rayshader_psf, 11},

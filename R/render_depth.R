@@ -31,6 +31,9 @@
 #'@param image_overlay Default `NULL`. Either a string indicating the location of a png image to overlay
 #'over the image (transparency included), or a 4-layer RGBA array. This image will be resized to the 
 #'dimension of the image if it does not match exactly.
+#'@param vignette Default `FALSE`. If `TRUE` or numeric, a camera vignetting effect will be added to the image.
+#'`1` is the darkest vignetting, while `0` is no vignetting. If vignette is a length-2 vector, the second entry will
+#'control the blurriness of the vignette effect.
 #'@param progbar Default `TRUE` if in an interactive session. Displays a progress bar. 
 #'@param instant_capture Default `TRUE` if interactive, `FALSE` otherwise. If `FALSE`, a slight delay is added 
 #'before taking the snapshot. This can help stop prevent rendering issues when running scripts.
@@ -60,8 +63,12 @@ render_depth = function(focus = 0.5, focallength = 100, fstop = 4, filename=NULL
                      title_text = NULL, title_offset = c(20,20), 
                      title_color = "black", title_size = 30, title_font = "sans",
                      title_bar_color = NULL, title_bar_alpha = 0.5,
-                     image_overlay = NULL, progbar = interactive(), 
+                     image_overlay = NULL, vignette = FALSE,
+                     progbar = interactive(), 
                      instant_capture = interactive(), clear = FALSE, bring_to_front = FALSE, ...) {
+  if(rgl::rgl.cur() == 0) {
+    stop("No rgl window currently open.")
+  }
   if(!instant_capture) {
     Sys.sleep(0.5)
   }
@@ -169,6 +176,30 @@ render_depth = function(focus = 0.5, focallength = 100, fstop = 4, filename=NULL
           magick::image_scale(magick::image_read(image_overlay_file),
                               paste0(dimensions[1],"x",dimensions[2]))
         ) %>%
+        magick::image_write(path = temp, format = "png")
+    }
+    if(vignette || is.numeric(vignette)) {
+      if(!("magick" %in% rownames(utils::installed.packages()))) {
+        stop("`magick` package required for adding overlay")
+      }
+      if(length(vignette) > 1) {
+        if(vignette[2] < 0) {
+          stop("vignette[2] must be greater than 0")
+        }
+        radiusval = min(c(dimensions[1],dimensions[2]))/2 * vignette[2]
+      } else {
+        radiusval = min(c(dimensions[1],dimensions[2]))/2
+      }
+      if(is.numeric(vignette)) {
+        if(vignette[1] > 1 || vignette[1] < 0) {
+          stop("vignette value (", vignette[1],") must be between 0 and 1.")
+        }
+      } else {
+        vignette = 0.4
+      }
+      imagefile = make_vignette_overlay(dimensions[1],dimensions[2], vignette, radiusval)
+      magick::image_read(temp) %>%
+        magick::image_composite(magick::image_read(imagefile)) %>%
         magick::image_write(path = temp, format = "png")
     }
     if(has_title) {

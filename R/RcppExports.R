@@ -57,6 +57,10 @@ gen_circle_psf <- function(radius) {
     .Call(`_rayshader_gen_circle_psf`, radius)
 }
 
+gen_ellipse <- function(intensity, width, height) {
+    .Call(`_rayshader_gen_ellipse`, intensity, width, height)
+}
+
 is_inside <- function(sizehex, positionx, positiony, sinval, cosval) {
     .Call(`_rayshader_is_inside`, sizehex, positionx, positiony, sinval, cosval)
 }

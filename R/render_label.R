@@ -57,13 +57,18 @@
 #'}
 #'
 #'#We can remove all existing labels by calling `render_label(clear_previous = TRUE)`
+#'\dontrun{
 #'render_label(clear_previous = TRUE)
 #'render_snapshot()
+#'}
   render_label = function(heightmap, text, x, y, z, zscale=1, relativez=TRUE, offset = 0, clear_previous = FALSE, 
                         textsize=1, dashed=FALSE,dashlength = "auto", linewidth =3, antialias = FALSE,
                         alpha = 1, textalpha = 1, freetype = TRUE, adjustvec = NULL, 
                         family = "sans", fonttype = "standard", 
                         linecolor = "black", textcolor = "black") {
+  if(rgl::rgl.cur() == 0) {
+    stop("No rgl window currently open.")
+  }
   if(.Platform$OS.type == "unix") {
     windows = FALSE
   } else {

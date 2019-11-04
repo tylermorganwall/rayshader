@@ -86,6 +86,9 @@ render_highquality = function(filename = NULL, light = TRUE, lightdirection = 31
                               ground_material = diffuse(), scene_elements=NULL, 
                               camera_location = NULL, camera_lookat = c(0,0,0), clear  = FALSE, 
                               print_scene_info = FALSE, ...) {
+  if(rgl::rgl.cur() == 0) {
+    stop("No rgl window currently open.")
+  }
   windowrect = rgl::par3d()$windowRect
   if(is.null(width)) {
     width = windowrect[3]-windowrect[1]
@@ -190,7 +193,7 @@ render_highquality = function(filename = NULL, light = TRUE, lightdirection = 31
   }
   if(print_scene_info) {
     print(paste0(c("Camera position: c(", paste0(lookfrom,collapse=","), 
-                   "), Camera lookat: c(", paste0(lookat,collapse=","), ")"),collapse=""))
+                   "), Camera lookat: c(", paste0(camera_lookat,collapse=","), ")"),collapse=""))
   }
   if(!is.null(scene_elements)) {
     scene = add_object(scene,scene_elements)

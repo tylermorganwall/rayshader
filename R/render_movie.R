@@ -10,8 +10,8 @@
 #'`theta`, `phi`, `zoom`, and `fov` vectors passed in by the user).
 #'@param frames Default `360`. Number of frames to render.
 #'@param fps Default `30`. Frames per second. Recommmend either 30 or 60 for web.
-#'@param phi Default `30`. Azimuth values, in degrees. 
-#'@param theta Default `0`. Theta values, in degrees. 
+#'@param phi Defaults to current view. Azimuth values, in degrees. 
+#'@param theta Default to current view. Theta values, in degrees. 
 #'@param zoom Defaults to the current view. Zoom value, between `0` and `1`. 
 #'@param fov Defaults to the current view. Field of view values, in degrees.
 #'@param title_text Default `NULL`. Text. Adds a title to the movie, using magick::image_annotate. 
@@ -26,6 +26,9 @@
 #'@param image_overlay Default `NULL`. Either a string indicating the location of a png image to overlay
 #'over the whole movie (transparency included), or a 4-layer RGBA array. This image will be resized to the 
 #'dimension of the movie if it does not match exactly.
+#'@param vignette Default `FALSE`. If `TRUE` or numeric, a camera vignetting effect will be added to the image.
+#'`1` is the darkest vignetting, while `0` is no vignetting. If vignette is a length-2 vector, the second entry will
+#'control the blurriness of the vignette effect.
 #'@param audio Default `NULL`. Optional file with audio to add to the video.
 #'@param progbar Default `TRUE` if interactive, `FALSE` otherwise. If `FALSE`, turns off progress bar. 
 #'Will display a progress bar when adding an overlay or title.
@@ -81,7 +84,11 @@ render_movie = function(filename, type = "orbit", frames = 360, fps = 30,
                         title_text = NULL, title_offset = c(20,20), 
                         title_color = "black", title_size = 30, title_font = "sans",
                         title_bar_color = NULL, title_bar_alpha = 0.5,
-                        image_overlay = NULL, audio=NULL, progbar = interactive(), ...) {
+                        image_overlay = NULL, vignette = FALSE,
+                        audio=NULL, progbar = interactive(), ...) {
+  if(rgl::rgl.cur() == 0) {
+    stop("No rgl window currently open.")
+  }
   if(!("av" %in% rownames(utils::installed.packages()))) {
     stop("`av` package required for render_movie()")
   }
@@ -118,19 +125,32 @@ render_movie = function(filename, type = "orbit", frames = 360, fps = 30,
   if(is.null(zoom)) {
     zoom = rgl::par3d()$zoom
   }
+  if(is.null(phi) || is.null(theta)) {
+    rotmat = rot_to_euler(rgl::par3d()$userMatrix)
+    if(is.null(phi)) {
+      phi = rotmat[1]
+    }
+    if(is.null(theta)) {
+      if(0.001 > abs(abs(rotmat[3]) - 180)) {
+        theta = -rotmat[2] + 180
+      } else {
+        theta = rotmat[2]
+      }
+    }
+  }
   png_files = file.path(tempdir(), sprintf("image%d.png", seq_len(frames)))
   on.exit(unlink(png_files))
   if(type == "orbit") {
     theta_vector = seq(0,360,length.out = frames+1)[-(frames+1)]
     for(i in seq_len(frames)) {
       render_camera(theta = theta_vector[i], phi = phi, zoom = zoom, fov = fov)
-      rgl::snapshot3d(filename = png_files[i])
+      rgl::snapshot3d(filename = png_files[i], top = FALSE)
     }
   } else if (type == "oscillate") {
     theta_vector = theta + 45 * sin(seq(0,360,length.out = frames+1)[-(frames+1)]*pi/180)
     for(i in seq_len(frames)) {
       render_camera(theta = theta_vector[i], phi = phi, zoom = zoom, fov = fov)
-      rgl::snapshot3d(filename = png_files[i])
+      rgl::snapshot3d(filename = png_files[i], top = FALSE)
     }
   } else if (type == "custom") {
     if(length(theta) == 1) theta = rep(theta, frames)
@@ -142,7 +162,7 @@ render_movie = function(filename, type = "orbit", frames = 360, fps = 30,
     }
     for(i in seq_len(frames)) {
       render_camera(theta = theta[i], phi = phi[i], zoom = zoom[i], fov = fov[i])
-      rgl::snapshot3d(filename = png_files[i])
+      rgl::snapshot3d(filename = png_files[i], top = FALSE)
     }
   } else {
     stop("Unknown type: ", type)
@@ -173,37 +193,79 @@ render_movie = function(filename, type = "orbit", frames = 360, fps = 30,
         magick::image_write(path = png_files[i], format = "png")
     }
   }
-  if(has_title) {
+  if(vignette || is.numeric(vignette)) {
+    temp = png::readPNG(png_files[1])
+    dimensions = dim(temp)
     if(!("magick" %in% rownames(utils::installed.packages()))) {
-      stop("`magick` package required for adding title")
+      stop("`magick` package required for adding overlay")
     }
-    if(!is.null(title_bar_color)) {
-      title_bar_color = col2rgb(title_bar_color)/255
-      title_bar = array(0,c(dimensions[1],dimensions[2],4))
-      title_bar_width = 2 * title_offset[1] + title_size
-      title_bar[1:title_bar_width,,1] = title_bar_color[1]
-      title_bar[1:title_bar_width,,2] = title_bar_color[2]
-      title_bar[1:title_bar_width,,3] = title_bar_color[3]
-      title_bar[1:title_bar_width,,4] = title_bar_alpha
-      title_bar_temp = paste0(tempfile(),".png")
-      png::writePNG(title_bar,title_bar_temp)
-      magick::image_read(temp) %>%
-        magick::image_composite(magick::image_read(title_bar_temp),
-        ) %>%
-        magick::image_write(path = temp, format = "png")
+    if(length(vignette) > 1) {
+      if(vignette[2] < 0) {
+        stop("vignette[2] must be greater than 0")
+      }
+      radiusval = min(c(dimensions[1],dimensions[2]))/2 * vignette[2]
+    } else {
+      radiusval = min(c(dimensions[1],dimensions[2]))/2
     }
+    if(is.numeric(vignette)) {
+      if(vignette[1] > 1 || vignette[1] < 0) {
+        stop("vignette value (", vignette[1],") must be between 0 and 1.")
+      }
+    } else {
+      vignette = 0.4
+    }
+    imagefile = make_vignette_overlay(dimensions[1],dimensions[2], vignette, radiusval)
     if(progbar) {
       pb = progress::progress_bar$new(
-        format = "  Adding title text [:bar] :percent eta: :eta",
-        total = frames, width= 60)
+        format = "  Adding vignetting [:bar] :percent eta: :eta",
+        total = frames, width = 60)
     }
     for(i in seq_len(frames)) {
       if(progbar) {
         pb$tick()
       }
       magick::image_read(png_files[i]) %>%
+        magick::image_composite(magick::image_read(imagefile)) %>%
+        magick::image_write(path = png_files[i], format = "png")
+    }
+  }
+  if(has_title) {
+    if(!("magick" %in% rownames(utils::installed.packages()))) {
+      stop("`magick` package required for adding title")
+    }
+    if(progbar) {
+      pb = progress::progress_bar$new(
+        format = "  Adding title text [:bar] :percent eta: :eta",
+        total = frames, width= 60)
+    }
+    title_bar = array(0,c(dimensions[1],dimensions[2],4))
+    title_bar_temp = paste0(tempfile(),".png")
+    generated_array = FALSE
+    for(i in seq_len(frames)) {
+      if(progbar) {
+        pb$tick()
+      }
+      if(!is.null(title_bar_color)) {
+        if(is.character(title_bar_color)) {
+          title_bar_color = col2rgb(title_bar_color)/255
+        }
+        if(!generated_array) {
+          title_bar_width = 2 * title_offset[1] + title_size
+          title_bar[1:title_bar_width,,1] = title_bar_color[1]
+          title_bar[1:title_bar_width,,2] = title_bar_color[2]
+          title_bar[1:title_bar_width,,3] = title_bar_color[3]
+          title_bar[1:title_bar_width,,4] = title_bar_alpha
+          png::writePNG(title_bar,title_bar_temp)
+          generated_array = TRUE
+        }
+        magick::image_read(png_files[i]) %>%
+          magick::image_composite(magick::image_read(title_bar_temp),
+          ) %>%
+          magick::image_write(path = png_files[i], format = "png")
+      }
+      magick::image_read(png_files[i]) %>%
         magick::image_annotate(title_text, 
-                       location = paste0("+", title_offset[1],"+",title_offset[2]),
+                       location = paste0("+", title_offset[1], "+", title_offset[2]),
                        size = title_size, color = title_color, 
                        font = title_font, ...) %>%
         magick::image_write(path = png_files[i], format = "png")

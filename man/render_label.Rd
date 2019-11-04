@@ -91,6 +91,8 @@ render_snapshot()
 }
 
 #We can remove all existing labels by calling `render_label(clear_previous = TRUE)`
+\dontrun{
 render_label(clear_previous = TRUE)
 render_snapshot()
+}
 }

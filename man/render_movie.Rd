@@ -22,9 +22,9 @@ Other options are `oscillate` (sine wave around `theta` value, covering 90 degre
 
 \item{fps}{Default `30`. Frames per second. Recommmend either 30 or 60 for web.}
 
-\item{phi}{Default `30`. Azimuth values, in degrees.}
+\item{phi}{Defaults to current view. Azimuth values, in degrees.}
 
-\item{theta}{Default `0`. Theta values, in degrees.}
+\item{theta}{Default to current view. Theta values, in degrees.}
 
 \item{zoom}{Defaults to the current view. Zoom value, between `0` and `1`.}
 

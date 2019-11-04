@@ -82,6 +82,17 @@ arma::mat gen_circle_psf(const double radius) {
 }
 
 // [[Rcpp::export]]
+arma::mat gen_ellipse(const double intensity, double width, double height) {
+  arma::mat ellipse(width,height);
+  for (int i = 0; i < width; ++i) {
+    for (int j = 0; j < height; ++j) {
+      ellipse(i,j) = pow(((double)i - width/2 + 0.5), 2.0) * pow(height/2,2.0) + 
+                    pow(((double)j - height/2 + 0.5),2.0) * pow(width/2,2.0) > pow(width * height, 2.0)/16 ? intensity : 0.0;
+    }
+  }
+  return(ellipse);
+}
+// [[Rcpp::export]]
 bool is_inside(double sizehex, double positionx, double positiony, double sinval, double cosval) {
   double num1 = fabs(cosval* (positionx - sizehex) - sinval* (positiony - sizehex));
   double num2 = fabs(sinval* (positionx - sizehex) + cosval* (positiony - sizehex));

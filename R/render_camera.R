@@ -64,6 +64,9 @@
 #'#ffmpeg -i raymovie.mp4 -pix_fmt yuv420p -profile:v baseline -level 3 -vf scale=-2:-2 rayweb.mp4
 #'}
 render_camera = function(theta = NULL, phi = NULL, zoom = NULL, fov = NULL) {
+  if(rgl::rgl.cur() == 0) {
+    stop("No rgl window currently open.")
+  }
   if(is.null(fov)) {
     fov = rgl::par3d()$FOV
   }
