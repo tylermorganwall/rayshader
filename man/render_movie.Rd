@@ -8,8 +8,8 @@ render_movie(filename, type = "orbit", frames = 360, fps = 30,
   phi = 30, theta = 0, zoom = NULL, fov = NULL,
   title_text = NULL, title_offset = c(20, 20), title_color = "black",
   title_size = 30, title_font = "sans", title_bar_color = NULL,
-  title_bar_alpha = 0.5, image_overlay = NULL, audio = NULL,
-  progbar = interactive(), ...)
+  title_bar_alpha = 0.5, image_overlay = NULL, vignette = FALSE,
+  audio = NULL, progbar = interactive(), ...)
 }
 \arguments{
 \item{filename}{Filename. If not appended with `.mp4`, it will be appended automatically.}
@@ -49,6 +49,10 @@ image_annotate) corner to offset the title.}
 \item{image_overlay}{Default `NULL`. Either a string indicating the location of a png image to overlay
 over the whole movie (transparency included), or a 4-layer RGBA array. This image will be resized to the 
 dimension of the movie if it does not match exactly.}
+
+\item{vignette}{Default `FALSE`. If `TRUE` or numeric, a camera vignetting effect will be added to the image.
+`1` is the darkest vignetting, while `0` is no vignetting. If vignette is a length-2 vector, the second entry will
+control the blurriness of the vignette effect.}
 
 \item{audio}{Default `NULL`. Optional file with audio to add to the video.}
 
@@ -95,7 +99,7 @@ filename_movie = tempfile()
 
 phivechalf = 30 + 60 * 1/(1 + exp(seq(-7, 20, length.out = 180)/2))
 phivecfull = c(phivechalf, rev(phivechalf))
-thetavec = -90 + 60 * sin(seq(0,359,length.out = 360) * pi/180)
+thetavec = -90 + 45 * sin(seq(0,359,length.out = 360) * pi/180)
 zoomvec = 0.45 + 0.2 * 1/(1 + exp(seq(-5, 20, length.out = 180)))
 zoomvecfull = c(zoomvec, rev(zoomvec))
 \donttest{

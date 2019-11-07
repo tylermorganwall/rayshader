@@ -7,9 +7,12 @@
 render_highquality(filename = NULL, light = TRUE,
   lightdirection = 315, lightaltitude = 45, lightsize = NULL,
   lightintensity = 500, lightcolor = "white", cache_filename = NULL,
-  width = NULL, height = NULL, ground_material = diffuse(),
-  scene_elements = NULL, camera_location = NULL, camera_lookat = c(0,
-  0, 0), clear = FALSE, print_scene_info = FALSE, ...)
+  width = NULL, height = NULL, title_text = NULL,
+  title_offset = c(20, 20), title_color = "black", title_size = 30,
+  title_font = "sans", title_bar_color = NULL, title_bar_alpha = 0.5,
+  ground_material = diffuse(), scene_elements = NULL,
+  camera_location = NULL, camera_lookat = c(0, 0, 0), clear = FALSE,
+  print_scene_info = FALSE, ...)
 }
 \arguments{
 \item{filename}{Filename of saved image. If missing, will display to current device.}
@@ -35,6 +38,22 @@ If this is a vector longer than one, multiple lights will be generated (using va
 \item{width}{Defaults to the width of the rgl window. Width of the rendering.}
 
 \item{height}{Defaults to the height of the rgl window. Height of the rendering.}
+
+\item{title_text}{Default `NULL`. Text. Adds a title to the image, using magick::image_annotate.}
+
+\item{title_offset}{Default `c(20,20)`. Distance from the top-left (default, `gravity` direction in 
+image_annotate) corner to offset the title.}
+
+\item{title_color}{Default `black`. Font color.}
+
+\item{title_size}{Default `30`. Font size in pixels.}
+
+\item{title_font}{Default `sans`. String with font family such as "sans", "mono", "serif", "Times", "Helvetica", 
+"Trebuchet", "Georgia", "Palatino" or "Comic Sans".}
+
+\item{title_bar_color}{Default `NULL`. If a color, this will create a colored bar under the title.}
+
+\item{title_bar_alpha}{Default `0.5`. Transparency of the title bar.}
 
 \item{ground_material}{Default `diffuse()`. Material defined by the rayrender material functions.}
 
@@ -85,24 +104,43 @@ render_highquality(lightdirection = 45, lightaltitude=60,
                   ground_material = rayrender::diffuse(checkerperiod = 30, checkercolor="grey50"))
 }
 
-#Add three different color lights
+#Add three different color lights and a title
 \dontrun{
-render_highquality(lightdirection = c(0,120,240), lightaltitude=30, 
-                  lightcolor=c("red","green","blue"))
+render_highquality(lightdirection = c(0,120,240), lightaltitude=45, 
+                  lightcolor=c("red","green","blue"), title_text = "Red, Green, Blue",
+                  title_bar_color="white", title_bar_alpha=0.8)
 }
 
+#Change the camera:
+\dontrun{
+render_camera(theta=-45,phi=60,fov=60,zoom=0.8)
+render_highquality(lightdirection = c(0), 
+                  title_bar_color="white", title_bar_alpha=0.8)
+}
 #Add a shiny metal sphere
 \dontrun{
-render_highquality(lightdirection = c(0,120,240), lightaltitude=30, 
-                  lightcolor=c("red","green","blue"),samples=10,
+render_camera(theta=-45,phi=60,fov=60,zoom=0.8)
+render_highquality(lightdirection = c(0,120,240), lightaltitude=45, 
+                  lightcolor=c("red","green","blue"),
                   scene_elements = rayrender::sphere(z=-60,y=0,
                                                      radius=20,material=rayrender::metal()))
 }
 
 #Add a red light to the volcano and change the ambient light to dusk
 \dontrun{
+render_camera(theta=45,phi=45)
 render_highquality(lightdirection = c(240), lightaltitude=30, 
                   lightcolor=c("#5555ff"),
+                  scene_elements = rayrender::sphere(z=0,y=15, x=-18, radius=5,
+                                   material=rayrender::diffuse(color="red",
+                                                               lightintensity=10, 
+                                                               implicit_sample=TRUE)))
+}
+#Manually change the camera location and direction
+\dontrun{
+render_camera(theta=45,phi=45,fov=90)
+render_highquality(lightdirection = c(240), lightaltitude=30, 
+                  lightcolor=c("#5555ff"), camera_location = c(50,10,10), camera_lookat = c(0,15,0), 
                   scene_elements = rayrender::sphere(z=0,y=15, x=-18, radius=5,
                                    material=rayrender::diffuse(color="red",
                                                                lightintensity=10, 

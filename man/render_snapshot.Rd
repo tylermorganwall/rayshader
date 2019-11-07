@@ -7,7 +7,7 @@
 render_snapshot(filename, clear = FALSE, title_text = NULL,
   title_offset = c(20, 20), title_color = "black", title_size = 30,
   title_font = "sans", title_bar_color = NULL, title_bar_alpha = 0.5,
-  image_overlay = NULL, camera_vignette = FALSE,
+  image_overlay = NULL, vignette = FALSE,
   instant_capture = interactive(), bring_to_front = FALSE, ...)
 }
 \arguments{
@@ -35,8 +35,8 @@ image_annotate) corner to offset the title.}
 over the image (transparency included), or a 4-layer RGBA array. This image will be resized to the 
 dimension of the image if it does not match exactly.}
 
-\item{camera_vignette}{Default `FALSE`. If `TRUE` or numeric, a camera vignetting effect will be added to the image.
-`1` is the darkest vignetting, while `0` is no vignetting. If camera_vignette is a length-2 vector, the second entry will
+\item{vignette}{Default `FALSE`. If `TRUE` or numeric, a camera vignetting effect will be added to the image.
+`1` is the darkest vignetting, while `0` is no vignetting. If vignette is a length-2 vector, the second entry will
 control the blurriness of the vignette effect.}
 
 \item{instant_capture}{Default `TRUE` if interactive, `FALSE` otherwise. If `FALSE`, a slight delay is added 

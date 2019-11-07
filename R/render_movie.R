@@ -67,7 +67,7 @@
 #'
 #'phivechalf = 30 + 60 * 1/(1 + exp(seq(-7, 20, length.out = 180)/2))
 #'phivecfull = c(phivechalf, rev(phivechalf))
-#'thetavec = -90 + 60 * sin(seq(0,359,length.out = 360) * pi/180)
+#'thetavec = -90 + 45 * sin(seq(0,359,length.out = 360) * pi/180)
 #'zoomvec = 0.45 + 0.2 * 1/(1 + exp(seq(-5, 20, length.out = 180)))
 #'zoomvecfull = c(zoomvec, rev(zoomvec))
 #'\donttest{

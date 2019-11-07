@@ -78,7 +78,7 @@
 #'
 #'#Add a title and vignette effect
 #'render_camera(theta=0,zoom=0.5,phi=30)
-#'render_depth(focus = 0.75,focallength = 50, title_text = "Monterey Bay, with Depth of Field", 
+#'render_depth(focus = 0.75,focallength = 100, title_text = "Monterey Bay, CA", 
 #'             title_size = 20, title_color = "white", title_bar_color = "black", vignette = TRUE)
 #'             
 #'}
