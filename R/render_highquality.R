@@ -21,6 +21,15 @@
 #'@param cache_filename Name of temporary filename to store OBJ file, if the user does not want to rewrite the file each time.
 #'@param width Defaults to the width of the rgl window. Width of the rendering. 
 #'@param height Defaults to the height of the rgl window. Height of the rendering. 
+#'@param title_text Default `NULL`. Text. Adds a title to the image, using magick::image_annotate. 
+#'@param title_offset Default `c(20,20)`. Distance from the top-left (default, `gravity` direction in 
+#'image_annotate) corner to offset the title.
+#'@param title_size Default `30`. Font size in pixels.
+#'@param title_color Default `black`. Font color.
+#'@param title_font Default `sans`. String with font family such as "sans", "mono", "serif", "Times", "Helvetica", 
+#'"Trebuchet", "Georgia", "Palatino" or "Comic Sans".
+#'@param title_bar_color Default `NULL`. If a color, this will create a colored bar under the title.
+#'@param title_bar_alpha Default `0.5`. Transparency of the title bar.
 #'@param ground_material Default `diffuse()`. Material defined by the rayrender material functions.
 #'@param camera_location Default `NULL`. Custom position of the camera. The `FOV`, `width`, and `height` arguments will still
 #'be derived from the rgl window.
@@ -57,10 +66,11 @@
 #'                   ground_material = rayrender::diffuse(checkerperiod = 30, checkercolor="grey50"))
 #'}
 #'
-#'#Add three different color lights
+#'#Add three different color lights and a title
 #'\dontrun{
 #'render_highquality(lightdirection = c(0,120,240), lightaltitude=30, 
-#'                   lightcolor=c("red","green","blue"))
+#'                   lightcolor=c("red","green","blue"), title_text = "Red, Green, Blue",
+#'                   title_bar_color="white", title_bar_alpha=0.8)
 #'}
 #'
 #'#Add a shiny metal sphere
@@ -83,6 +93,9 @@
 render_highquality = function(filename = NULL, light = TRUE, lightdirection = 315, lightaltitude = 45, lightsize=NULL,
                               lightintensity = 500, lightcolor = "white", 
                               cache_filename=NULL, width = NULL, height = NULL, 
+                              title_text = NULL, title_offset = c(20,20), 
+                              title_color = "black", title_size = 30, title_font = "sans",
+                              title_bar_color = NULL, title_bar_alpha = 0.5,
                               ground_material = diffuse(), scene_elements=NULL, 
                               camera_location = NULL, camera_lookat = c(0,0,0), clear  = FALSE, 
                               print_scene_info = FALSE, ...) {
@@ -90,6 +103,11 @@ render_highquality = function(filename = NULL, light = TRUE, lightdirection = 31
     stop("No rgl window currently open.")
   }
   windowrect = rgl::par3d()$windowRect
+  if(!is.null(title_text)) {
+    has_title = TRUE
+  } else {
+    has_title = FALSE
+  }
   if(is.null(width)) {
     width = windowrect[3]-windowrect[1]
   }
@@ -198,8 +216,46 @@ render_highquality = function(filename = NULL, light = TRUE, lightdirection = 31
   if(!is.null(scene_elements)) {
     scene = add_object(scene,scene_elements)
   }
-  render_scene(scene, lookfrom = lookfrom, lookat = camera_lookat, fov = fov, filename=filename,
-              ortho_dimensions = ortho_dimensions, width = width, height = height, ...)
+  if(has_title) {
+    temp = tempfile(fileext = ".png")
+    render_scene(scene, lookfrom = lookfrom, lookat = camera_lookat, fov = fov, filename=temp,
+                 ortho_dimensions = ortho_dimensions, width = width, height = height, ...)
+    if(has_title) {
+      if(!("magick" %in% rownames(utils::installed.packages()))) {
+        stop("`magick` package required for adding title")
+      }
+      if(!is.null(title_bar_color)) {
+        title_bar_color = col2rgb(title_bar_color)/255
+        title_bar = array(0,c(width,height,4))
+        title_bar_width = 2 * title_offset[1] + title_size
+        title_bar[1:title_bar_width,,1] = title_bar_color[1]
+        title_bar[1:title_bar_width,,2] = title_bar_color[2]
+        title_bar[1:title_bar_width,,3] = title_bar_color[3]
+        title_bar[1:title_bar_width,,4] = title_bar_alpha
+        title_bar_temp = paste0(tempfile(),".png")
+        png::writePNG(title_bar,title_bar_temp)
+        magick::image_read(temp) %>%
+          magick::image_composite(magick::image_read(title_bar_temp),
+          ) %>%
+          magick::image_write(path = temp, format = "png")
+      }
+      magick::image_read(temp) %>%
+        magick::image_annotate(title_text, 
+                               location = paste0("+", title_offset[1],"+",title_offset[2]),
+                               size = title_size, color = title_color, 
+                               font = title_font) %>%
+        magick::image_write(path = temp, format = "png")
+      tempfileload = png::readPNG(temp)
+      if(is.null(filename)) {
+        plot_map(tempfileload)
+      } else {
+        save_png(tempfileload,filename)
+      }
+    }
+  } else {
+    render_scene(scene, lookfrom = lookfrom, lookat = camera_lookat, fov = fov, filename=filename,
+                 ortho_dimensions = ortho_dimensions, width = width, height = height, ...)
+  }
   if(clear) {
     rgl::rgl.clear()
   }
