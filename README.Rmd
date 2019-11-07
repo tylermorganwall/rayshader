@@ -137,10 +137,24 @@ Rayshader also supports 3D mapping by passing a texture map (either external or 
 elmat %>%
   sphere_shade(texture = "desert") %>%
   add_water(detect_water(elmat), color = "desert") %>%
-  add_shadow(ray_shade(elmat, zscale = 3, maxsearch = 300), 0.5) %>%
+  add_shadow(ray_shade(elmat, zscale = 3), 0.5) %>%
   add_shadow(ambient_shade(elmat), 0.5) %>%
   plot_3d(elmat, zscale = 10, fov = 0, theta = 135, zoom = 0.75, phi = 45, windowsize = c(1000, 800))
-render_snapshot()
+Sys.sleep(0.2)
+render_snapshot(clear=TRUE)
+
+```
+
+You can also render using the built-in pathtracer, powered by ![rayrender](https://www.rayrender.net). Simply replace `render_snapshot()` with `render_highquality()`. When `render_highquality()` is called, there's no need to pre-compute the shadows with any of the `_shade()` functions, so we remove those:
+
+```{r README_three-dhq}
+
+elmat %>%
+  sphere_shade(texture = "desert") %>%
+  add_water(detect_water(elmat), color = "desert") %>%
+  plot_3d(elmat, zscale = 10, fov = 0, theta = 135, zoom = 0.75, phi = 45, windowsize = c(1000, 800))
+Sys.sleep(0.2)
+render_highquality()
 
 ```
 
@@ -148,23 +162,42 @@ render_snapshot()
 rgl::rgl.close()
 system("rm dem_01.tif")
 ```
+
 You can also easily add a water layer by setting `water = TRUE` in `plot_3d()` (and setting `waterdepth` if the water level is not 0), or by using the function `render_water()` after the 3D map has been rendered. You can customize the appearance and transparancy of the water layer via function arguments. Here's an example using bathymetric/topographic data of Monterey Bay, CA (included with rayshader):
 
 ```{r README_three-d-water}
 
 montshadow = ray_shade(montereybay, zscale = 50, lambert = FALSE)
 montamb = ambient_shade(montereybay, zscale = 50)
-montereybay %>% 
-    sphere_shade(zscale = 10, texture = "imhof1") %>% 
+montereybay %>%
+    sphere_shade(zscale = 10, texture = "imhof1") %>%
     add_shadow(montshadow, 0.5) %>%
     add_shadow(montamb) %>%
-    plot_3d(montereybay, zscale = 50, fov = 0, theta = -45, phi = 45, windowsize = c(1000, 800), zoom = 0.75,
+    plot_3d(montereybay, zscale = 50, fov = 0, theta = -45, phi = 45, 
+            windowsize = c(1000, 800), zoom = 0.75,
             water = TRUE, waterdepth = 0, wateralpha = 0.5, watercolor = "lightblue",
             waterlinecolor = "white", waterlinealpha = 0.5)
-render_snapshot(clear = TRUE)
+Sys.sleep(0.2)
+render_snapshot(clear=TRUE)
 ```
 
-Rayshader also has map shapes other than rectangular included `c("hex", "circle")`, and you can customize the map into any shape you want by setting the areas you do not want to display to `NA`.
+Water is also supported in `render_highquality()`.
+
+```{r}
+
+montereybay %>%
+    sphere_shade(zscale = 10, texture = "imhof1") %>%
+    plot_3d(montereybay, zscale = 50, fov = 70, theta = -45, phi = 20, 
+            windowsize = c(1000, 800), zoom = 0.6,
+            water = TRUE, waterdepth = 0, wateralpha = 0.5, watercolor = "lightblue",
+            waterlinecolor = "white", waterlinealpha = 0.5)
+Sys.sleep(0.2)
+render_highquality(lightdirection = 0, lightangle = 30, clamp_value = 10, clear=TRUE)
+
+
+```
+
+Rayshader also has map shapes other than rectangular included `c("hex", "circle")`, and you can customize the map into any shape you want by setting the areas you do not want to display to `NA`. 
 
 ```{r  README_three-d-shapes, fig.width = 15, fig.height = 6}
 par(mfrow = c(1, 2))
@@ -175,6 +208,7 @@ montereybay %>%
     plot_3d(montereybay, zscale = 50, fov = 0, theta = -45, phi = 45, windowsize = c(1000, 800), zoom = 0.6,
             water = TRUE, waterdepth = 0, wateralpha = 0.5, watercolor = "lightblue",
             waterlinecolor = "white", waterlinealpha = 0.5, baseshape = "circle")
+Sys.sleep(0.2)
 render_snapshot(clear = TRUE)
 
 montereybay %>% 
@@ -184,6 +218,7 @@ montereybay %>%
     plot_3d(montereybay, zscale = 50, fov = 0, theta = -45, phi = 45, windowsize = c(1000, 800), zoom = 0.6,
             water = TRUE, waterdepth = 0, wateralpha = 0.5, watercolor = "lightblue",
             waterlinecolor = "white", waterlinealpha = 0.5, baseshape = "hex")
+Sys.sleep(0.2)
 render_snapshot(clear = TRUE)
 ```
 
@@ -205,6 +240,7 @@ render_label(montereybay, x = 300, y = 130, z = 4000, zscale = 50,
              text = "Monterey", dashed = TRUE, textsize = 2, linewidth = 5)
 render_label(montereybay, x = 50, y = 130, z = 1000, zscale = 50,
              text = "Monterey Canyon", relativez = FALSE, textsize = 2, linewidth = 5)
+Sys.sleep(0.2)
 render_snapshot(clear = TRUE)
 ```
 
@@ -215,9 +251,10 @@ You can also apply a post-processing effect to the 3D maps to render maps with d
 elmat %>%
   sphere_shade(texture = "desert") %>%
   add_water(detect_water(elmat), color = "desert") %>%
-  add_shadow(raymat, 0.5) %>%
-  add_shadow(ambmat, 0.5) %>%
+  add_shadow(ray_shade(elmat, zscale = 3), 0.5) %>%
+  add_shadow(ambient_shade(elmat), 0.5) %>%
   plot_3d(elmat, zscale = 10, fov = 30, theta = -225, phi = 25, windowsize = c(1000, 800), zoom = 0.3)
+Sys.sleep(0.2)
 render_depth(focus = 0.6, focallength = 200, clear = TRUE)
 
 ```
@@ -239,6 +276,7 @@ par(mfrow = c(1, 2))
 plot_gg(ggdiamonds, width = 5, height = 5, raytrace = FALSE, preview = TRUE)
 plot_gg(ggdiamonds, width = 5, height = 5, multicore = TRUE, scale = 250, 
         zoom = 0.7, theta = 10, phi = 30, windowsize = c(800, 800))
+Sys.sleep(0.2)
 render_snapshot(clear = TRUE)
 
 ```
@@ -261,9 +299,10 @@ ggvolcano = volcano %>%
 
 par(mfrow = c(1, 2))
 plot_gg(ggvolcano, width = 7, height = 4, raytrace = FALSE, preview = TRUE)
-
 plot_gg(ggvolcano, multicore = TRUE, raytrace = TRUE, width = 7, height = 4, 
         scale = 300, windowsize = c(1400, 866), zoom = 0.6, phi = 30, theta = 30)
+Sys.sleep(0.2)
+
 render_snapshot(clear = TRUE)
 
 ```
@@ -280,6 +319,7 @@ plot_gg(mtplot, width = 3.5, raytrace = FALSE, preview = TRUE)
 
 plot_gg(mtplot, width = 3.5, multicore = TRUE, windowsize = c(800, 800), 
         zoom = 0.85, phi = 35, theta = 30, sunangle = 225, soliddepth = -100)
+Sys.sleep(0.2)
 render_snapshot(clear = TRUE)
 
 ```
@@ -301,6 +341,7 @@ par(mfrow = c(1, 2))
 plot_gg(pp, width = 5, height = 4, scale = 300, raytrace = FALSE, preview = TRUE)
 plot_gg(pp, width = 5, height = 4, scale = 300, multicore = TRUE, windowsize = c(1000, 800))
 render_camera(fov = 70, zoom = 0.5, theta = 130, phi = 35)
+Sys.sleep(0.2)
 render_snapshot(clear = TRUE)
 ```
 
@@ -311,5 +352,16 @@ You can also use the `render_depth()` function to direct the viewer's focus to a
 par(mfrow = c(1, 1))
 plot_gg(pp, width = 5, height = 4, scale = 300, multicore = TRUE, windowsize = c(1200, 960),
         fov = 70, zoom = 0.4, theta = 330, phi = 40)
+Sys.sleep(0.2)
 render_depth(focus = 0.68, focallength = 200)
+```
+
+3D ggplots can also be visualized with `render_highquality()`, but often it's faster to reduce their size first. We can do that with the built-in `reduce_size` argument to `plot_gg()`. Here, we reduce the size of the plot by a factor of 2.
+
+```{r README_ggplots_6, fig.width = 10, fig.height = 8}
+
+plot_gg(pp, width = 5, height = 4, scale = 300, multicore = TRUE, windowsize = c(1200, 960),
+        fov = 70, zoom = 0.4, theta = 330, phi = 40, reduce_size = 0.5)
+Sys.sleep(0.2)
+render_highquality()
 ```

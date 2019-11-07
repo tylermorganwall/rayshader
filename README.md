@@ -136,8 +136,7 @@ localtif = raster::raster(unzip(loadzip, "dem_01.tif"))
 unlink(loadzip)
 
 #And convert it to a matrix:
-elmat = matrix(raster::extract(localtif, raster::extent(localtif), buffer = 1000),
-               nrow = ncol(localtif), ncol = nrow(localtif))
+elmat = raster_to_matrix(localtif)
 
 #We use another one of rayshader's built-in textures:
 elmat %>%
@@ -167,13 +166,11 @@ elmat %>%
 ![](man/figures/README_basicmapping-3.png)<!-- -->
 
 ``` r
-raymat = ray_shade(elmat)
-
 #And we can add a raytraced layer from that sun direction as well:
 elmat %>%
   sphere_shade(texture = "desert") %>%
   add_water(detect_water(elmat), color = "desert") %>%
-  add_shadow(raymat) %>%
+  add_shadow(ray_shade(elmat)) %>%
   plot_map()
 ```
 
@@ -183,13 +180,11 @@ elmat %>%
 #And here we add an ambient occlusion shadow layer, which models 
 #lighting from atmospheric scattering:
 
-ambmat = ambient_shade(elmat)
-
 elmat %>%
   sphere_shade(texture = "desert") %>%
   add_water(detect_water(elmat), color = "desert") %>%
-  add_shadow(raymat) %>%
-  add_shadow(ambmat) %>%
+  add_shadow(ray_shade(elmat)) %>%
+  add_shadow(ambient_shade(elmat)) %>%
   plot_map()
 ```
 
@@ -202,13 +197,29 @@ external or one produced by rayshader) into the `plot_3d` function.
 elmat %>%
   sphere_shade(texture = "desert") %>%
   add_water(detect_water(elmat), color = "desert") %>%
-  add_shadow(ray_shade(elmat, zscale = 3, maxsearch = 300), 0.5) %>%
-  add_shadow(ambmat, 0.5) %>%
+  add_shadow(ray_shade(elmat, zscale = 3), 0.5) %>%
+  add_shadow(ambient_shade(elmat), 0.5) %>%
   plot_3d(elmat, zscale = 10, fov = 0, theta = 135, zoom = 0.75, phi = 45, windowsize = c(1000, 800))
 render_snapshot()
 ```
 
 ![](man/figures/README_three-d-1.png)<!-- -->
+
+You can also render using the built-in pathtracer, powered by
+![rayrender](https://www.rayrender.net). Simply replace
+`render_snapshot()` with `render_highquality()`. When
+`render_highquality()` is called, there’s no need to pre-compute the
+shadows with any of the `_shade()` functions, so we remove those:
+
+``` r
+elmat %>%
+  sphere_shade(texture = "desert") %>%
+  add_water(detect_water(elmat), color = "desert") %>%
+  plot_3d(elmat, zscale = 10, fov = 0, theta = 135, zoom = 0.75, phi = 45, windowsize = c(1000, 800))
+render_highquality()
+```
+
+![](man/figures/README_three-dhq-1.png)<!-- -->
 
 You can also easily add a water layer by setting `water = TRUE` in
 `plot_3d()` (and setting `waterdepth` if the water level is not 0), or
@@ -221,17 +232,32 @@ rayshader):
 ``` r
 montshadow = ray_shade(montereybay, zscale = 50, lambert = FALSE)
 montamb = ambient_shade(montereybay, zscale = 50)
-montereybay %>% 
-    sphere_shade(zscale = 10, texture = "imhof1") %>% 
+montereybay %>%
+    sphere_shade(zscale = 10, texture = "imhof1") %>%
     add_shadow(montshadow, 0.5) %>%
     add_shadow(montamb) %>%
-    plot_3d(montereybay, zscale = 50, fov = 0, theta = -45, phi = 45, windowsize = c(1000, 800), zoom = 0.75,
+    plot_3d(montereybay, zscale = 50, fov = 0, theta = -45, phi = 45, 
+            windowsize = c(1000, 800), zoom = 0.75,
             water = TRUE, waterdepth = 0, wateralpha = 0.5, watercolor = "lightblue",
             waterlinecolor = "white", waterlinealpha = 0.5)
-render_snapshot(clear = TRUE)
+render_snapshot()
 ```
 
 ![](man/figures/README_three-d-water-1.png)<!-- -->
+
+Water is also supported in `render_highquality()`.
+
+``` r
+montereybay %>%
+    sphere_shade(zscale = 10, texture = "imhof1") %>%
+    plot_3d(montereybay, zscale = 50, fov = 70, theta = -45, phi = 20, 
+            windowsize = c(1000, 800), zoom = 0.6,
+            water = TRUE, waterdepth = 0, wateralpha = 0.5, watercolor = "lightblue",
+            waterlinecolor = "white", waterlinealpha = 0.5)
+render_highquality(lightdirection = 0, lightangle = 30, clamp_value = 10)
+```
+
+![](man/figures/unnamed-chunk-4-1.png)<!-- -->
 
 Rayshader also has map shapes other than rectangular included `c("hex",
 "circle")`, and you can customize the map into any shape you want by
@@ -246,7 +272,13 @@ montereybay %>%
     plot_3d(montereybay, zscale = 50, fov = 0, theta = -45, phi = 45, windowsize = c(1000, 800), zoom = 0.6,
             water = TRUE, waterdepth = 0, wateralpha = 0.5, watercolor = "lightblue",
             waterlinecolor = "white", waterlinealpha = 0.5, baseshape = "circle")
-render_snapshot(clear = TRUE)
+render_snapshot()
+```
+
+![](man/figures/README_three-d-shapes-1.png)<!-- -->
+
+``` r
+rgl::rgl.close()
 
 montereybay %>% 
     sphere_shade(zscale = 10, texture = "imhof1") %>% 
@@ -258,7 +290,7 @@ montereybay %>%
 render_snapshot(clear = TRUE)
 ```
 
-![](man/figures/README_three-d-shapes-1.png)<!-- -->
+![](man/figures/README_three-d-shapes-2.png)<!-- -->
 
 Adding text labels is done with the `render_label()` function, which
 also allows you to customize the line type, color, and size along with
@@ -280,7 +312,7 @@ render_label(montereybay, x = 300, y = 130, z = 4000, zscale = 50,
              text = "Monterey", dashed = TRUE, textsize = 2, linewidth = 5)
 render_label(montereybay, x = 50, y = 130, z = 1000, zscale = 50,
              text = "Monterey Canyon", relativez = FALSE, textsize = 2, linewidth = 5)
-render_snapshot(clear = TRUE)
+render_snapshot()
 ```
 
 ![](man/figures/README_three-d-labels-1.png)<!-- -->
@@ -292,10 +324,10 @@ maps with depth of field with the `render_depth()` function:
 elmat %>%
   sphere_shade(texture = "desert") %>%
   add_water(detect_water(elmat), color = "desert") %>%
-  add_shadow(raymat, 0.5) %>%
-  add_shadow(ambmat, 0.5) %>%
+  add_shadow(ray_shade(elmat, zscale = 3), 0.5) %>%
+  add_shadow(ambient_shade(elmat), 0.5) %>%
   plot_3d(elmat, zscale = 10, fov = 30, theta = -225, phi = 25, windowsize = c(1000, 800), zoom = 0.3)
-render_depth(focus = 0.6, focallength = 200, clear = TRUE)
+render_depth(focus = 0.6, focallength = 200)
 ```
 
 ![](man/figures/README_three-d-depth-1.png)<!-- -->
@@ -319,12 +351,17 @@ ggdiamonds = ggplot(diamonds) +
 par(mfrow = c(1, 2))
 
 plot_gg(ggdiamonds, width = 5, height = 5, raytrace = FALSE, preview = TRUE)
-plot_gg(ggdiamonds, width = 5, height = 5, multicore = TRUE, scale = 250, 
-        zoom = 0.7, theta = 10, phi = 30, windowsize = c(800, 800))
-render_snapshot(clear = TRUE)
 ```
 
 ![](man/figures/README_ggplots-1.png)<!-- -->
+
+``` r
+plot_gg(ggdiamonds, width = 5, height = 5, multicore = TRUE, scale = 250, 
+        zoom = 0.7, theta = 10, phi = 30, windowsize = c(800, 800))
+render_snapshot()
+```
+
+![](man/figures/README_ggplots-2.png)<!-- -->
 
 Rayshader will automatically ignore lines and other elements that should
 not be mapped to 3D. Here’s a contour plot of the `volcano` dataset.
@@ -349,6 +386,8 @@ plot_gg(ggvolcano, width = 7, height = 4, raytrace = FALSE, preview = TRUE)
 
     ## Warning: Removed 1861 rows containing missing values (geom_path).
 
+![](man/figures/README_ggplots_2-1.png)<!-- -->
+
 ``` r
 plot_gg(ggvolcano, multicore = TRUE, raytrace = TRUE, width = 7, height = 4, 
         scale = 300, windowsize = c(1400, 866), zoom = 0.6, phi = 30, theta = 30)
@@ -357,10 +396,10 @@ plot_gg(ggvolcano, multicore = TRUE, raytrace = TRUE, width = 7, height = 4,
     ## Warning: Removed 1861 rows containing missing values (geom_path).
 
 ``` r
-render_snapshot(clear = TRUE)
+render_snapshot()
 ```
 
-![](man/figures/README_ggplots_2-1.png)<!-- -->
+![](man/figures/README_ggplots_2-2.png)<!-- -->
 
 Rayshader also detects when the user passes the `color` aesthetic, and
 maps those values to 3D. If both `color` and `fill` are passed, however,
@@ -373,13 +412,17 @@ mtplot = ggplot(mtcars) +
 
 par(mfrow = c(1, 2))
 plot_gg(mtplot, width = 3.5, raytrace = FALSE, preview = TRUE)
-
-plot_gg(mtplot, width = 3.5, multicore = TRUE, windowsize = c(800, 800), 
-        zoom = 0.85, phi = 35, theta = 30, sunangle = 225, soliddepth = -100)
-render_snapshot(clear = TRUE)
 ```
 
 ![](man/figures/README_ggplots_3-1.png)<!-- -->
+
+``` r
+plot_gg(mtplot, width = 3.5, multicore = TRUE, windowsize = c(800, 800), 
+        zoom = 0.85, phi = 35, theta = 30, sunangle = 225, soliddepth = -100)
+render_snapshot()
+```
+
+![](man/figures/README_ggplots_3-2.png)<!-- -->
 
 Utilize combinations of line color and fill to create different effects.
 Here is a terraced hexbin plot, created by mapping the line colors of
@@ -398,12 +441,17 @@ pp = ggplot(data, aes(x = x, y = y)) +
 
 par(mfrow = c(1, 2))
 plot_gg(pp, width = 5, height = 4, scale = 300, raytrace = FALSE, preview = TRUE)
-plot_gg(pp, width = 5, height = 4, scale = 300, multicore = TRUE, windowsize = c(1000, 800))
-render_camera(fov = 70, zoom = 0.5, theta = 130, phi = 35)
-render_snapshot(clear = TRUE)
 ```
 
 ![](man/figures/README_ggplots_4-1.png)<!-- -->
+
+``` r
+plot_gg(pp, width = 5, height = 4, scale = 300, multicore = TRUE, windowsize = c(1000, 800))
+render_camera(fov = 70, zoom = 0.5, theta = 130, phi = 35)
+render_snapshot()
+```
+
+![](man/figures/README_ggplots_4-2.png)<!-- -->
 
 You can also use the `render_depth()` function to direct the viewer’s
 focus to a important areas in the figure.
@@ -416,3 +464,17 @@ render_depth(focus = 0.68, focallength = 200)
 ```
 
 ![](man/figures/README_ggplots_5-1.png)<!-- -->
+
+3D ggplots can also be visualized with `render_highquality()`, but often
+it’s faster to reduce their size first. We can do that with the built-in
+`reduce_size` argument to `plot_gg()`. Here, we reduce the size of the
+plot by a factor of
+2.
+
+``` r
+plot_gg(pp, width = 5, height = 4, scale = 300, multicore = TRUE, windowsize = c(1200, 960),
+        fov = 70, zoom = 0.4, theta = 330, phi = 40, reduce_size = 0.5)
+render_highquality(lightintensity = 700, lightangle = 60)
+```
+
+![](man/figures/README_ggplots_6-1.png)<!-- -->
