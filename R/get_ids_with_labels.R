@@ -22,6 +22,7 @@ get_ids_with_labels = function(typeval = NULL) {
     material_properties[[i]]$water_alpha = NA
     material_properties[[i]]$line_color = NA
     material_properties[[i]]$waterline_color = NA
+    material_properties[[i]]$waterline_alpha = NA
     material_properties[[i]]$shadow_texture_file = NA
     if(idvals$type[i] != "text") {
       material_type[[i]] = ambient_encoder[material_type_single$ambient]
@@ -40,6 +41,7 @@ get_ids_with_labels = function(typeval = NULL) {
       }
       if(material_type[[i]] == "waterlines") {
         material_properties[[i]]$waterline_color = material_type_single$color
+        material_properties[[i]]$waterline_alpha = material_type_single$alpha
       }
       if(material_type[[i]] == "shadow") {
         material_properties[[i]]$shadow_texture_file = material_type_single$texture

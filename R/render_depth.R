@@ -19,6 +19,10 @@
 #'@param gamma_correction Default `TRUE`. Controls gamma correction when adding colors. Default exponent of 2.2.
 #'@param transparent_water Default `FALSE`. If `TRUE`, depth is determined without water layer. User will have to re-render the water
 #'layer with `render_water()` if they want to recreate the water layer.
+#'@param heightmap Default `NULL`. The height matrix for the scene. Passing this will allow `render_depth()` 
+#'to automatically redraw the water layer if `transparent_water = TRUE`.
+#'@param zscale Default `NULL`. The zscale value for the heightmap. Passing this will allow `render_depth()` 
+#'to automatically redraw the water layer if `transparent_water = TRUE`.
 #'@param title_text Default `NULL`. Text. Adds a title to the image, using magick::image_annotate. 
 #'@param title_offset Default `c(20,20)`. Distance from the top-left (default, `gravity` direction in 
 #'image_annotate) corner to offset the title.
@@ -46,20 +50,42 @@
 #'\donttest{
 #'montereybay %>%
 #'  sphere_shade() %>%
-#'  plot_3d(montereybay,zscale=50,zoom=0.6,theta=-90)
+#'  plot_3d(montereybay,zscale=50, water=TRUE, waterlinecolor="white",
+#'          zoom=0.3,theta=-135,fov=70, phi=20)
 #'  
-#'render_depth(focallength = 30)
-#'render_depth(focallength = 30,fstop=2)
-#'render_depth(focallength = 30,fstop=2, bokehshape = "hex")
+#'#Preview where the focal plane lies
+#'render_depth(focus=0.75, preview_focus=TRUE)
 #'
-#'#Add a title
-#'render_depth(focallength = 30,fstop=2, clear = TRUE, 
-#'             title_text = "Monterey Bay, with Depth of Field",title_offset = c(10,0))
+#'#Render the depth of field effect
+#'render_depth(focus=0.75, focallength = 100)
+#'
+#'#Render the depth of field effect, ignoring water and re-drawing the waterlayer
+#'render_depth(focus=0.9, preview_focus=TRUE, 
+#'             heightmap = montereybay, zscale=50, transparent_water=TRUE)
+#'render_depth(focus=0.9, heightmap = montereybay, zscale=50, transparent_water=TRUE)
+#'rgl::rgl.close()
+#'
+#'montereybay %>%
+#'  sphere_shade() %>%
+#'  plot_3d(montereybay,zscale=50, water=TRUE, waterlinecolor="white",
+#'          zoom=0.7,phi=30,fov=60,theta=-90, background = "grey20")
+#'          
+#'render_camera(theta=45,zoom=0.15,phi=20)
+#'
+#'#Change the bokeh shape and intensity
+#'render_depth(focus=0.7, bokehshape = "circle",focallength=200,bokehintensity=30)
+#'render_depth(focus=0.7, bokehshape = "hex",focallength=200,bokehintensity=30)
+#'
+#'#Add a title and vignette effect
+#'render_camera(theta=0,zoom=0.5,phi=30)
+#'render_depth(focus = 0.75,focallength = 50, title_text = "Monterey Bay, with Depth of Field", 
+#'             title_size = 20, title_color = "white", title_bar_color = "black", vignette = TRUE)
+#'             
 #'}
 render_depth = function(focus = 0.5, focallength = 100, fstop = 4, filename=NULL,
                      preview_focus = FALSE, bokehshape = "circle", bokehintensity = 1, bokehlimit=0.8, 
                      rotation = 0, gamma_correction = TRUE,
-                     transparent_water = FALSE, 
+                     transparent_water = FALSE, heightmap = NULL, zscale = NULL, 
                      title_text = NULL, title_offset = c(20,20), 
                      title_color = "black", title_size = 30, title_font = "sans",
                      title_bar_color = NULL, title_bar_alpha = 0.5,
@@ -78,8 +104,18 @@ render_depth = function(focus = 0.5, focallength = 100, fstop = 4, filename=NULL
   temp = paste0(tempfile(),".png")
   rgl::snapshot3d(filename=temp, top = bring_to_front)
   if(transparent_water) {
-    idlist = get_ids_with_labels(typeval = "water")
-    rgl::pop3d(id=remove_ids)
+    idlist = get_ids_with_labels(typeval = c("water","waterlines"))
+    waterid = idlist$id[idlist$raytype == "water"][1]
+    waterdepthval = max(rgl::rgl.attrib(waterid, "vertices")[1:3,2],na.rm=TRUE)
+    has_waterlines = FALSE
+    water_color = idlist$water_color[idlist$raytype == "water"][1]
+    water_alpha = idlist$water_alpha[idlist$raytype == "water"][1]
+    if("waterlines" %in% idlist$raytype) {
+      has_waterlines = TRUE
+      water_line_color = idlist$waterline_color[idlist$raytype == "waterlines"][1]
+      water_line_alpha = idlist$waterline_alpha[idlist$raytype == "waterlines"][1]
+    }
+    rgl::pop3d(id=idlist$id)
   }
   if(preview_focus) {
     arraydepth = png::readPNG(temp)
@@ -99,6 +135,21 @@ render_depth = function(focus = 0.5, focallength = 100, fstop = 4, filename=NULL
       plot_map(arraydepth)
     } else {
       print(sprintf("Focus point (%g) not in focal range: %g-%g", focus, range(depthmap)[1],range(depthmap)[2]))
+    }
+    if(transparent_water && !is.null(heightmap)) {
+      if(is.null(zscale)) {
+        zscale = 1
+      }
+      if(has_waterlines) {
+        render_water(heightmap=heightmap, waterdepth = waterdepthval, 
+                     waterlinealpha = water_line_alpha, waterlinecolor = water_line_color,
+                     watercolor = water_color, wateralpha = water_alpha,
+                     zscale = zscale)
+      } else {
+        render_water(heightmap=heightmap, waterdepth = waterdepthval, 
+                     watercolor = water_color, wateralpha = water_alpha,
+                     zscale = zscale)
+      }
     }
   } else {
     #bokehshape 0: circle, 1: circle, 2: custom
@@ -126,11 +177,25 @@ render_depth = function(focus = 0.5, focallength = 100, fstop = 4, filename=NULL
     }
     depthmap = rgl::rgl.pixels(component = "depth")
     if(transparent_water) {
-      idlist = get_ids_with_labels()
-      remove_ids = idlist$id[idlist$raytype == "waterlines"]
+      remove_ids = get_ids_with_labels(type = "waterlines")$id
       rgl::pop3d(id=remove_ids)
     }
     tempmap = png::readPNG(temp)
+    if(transparent_water && !is.null(heightmap)) {
+      if(is.null(zscale)) {
+        zscale = 1
+      }
+      if(has_waterlines) {
+        render_water(heightmap=heightmap, waterdepth = waterdepthval, 
+                     waterlinealpha = water_line_alpha, waterlinecolor = water_line_color,
+                     watercolor = water_color, wateralpha = water_alpha,
+                     zscale = zscale)
+      } else {
+        render_water(heightmap=heightmap, waterdepth = waterdepthval, 
+                     watercolor = water_color, wateralpha = water_alpha,
+                     zscale = zscale)
+      }
+    }
     if(gamma_correction) {
       tempmap = tempmap^2.2
     }
