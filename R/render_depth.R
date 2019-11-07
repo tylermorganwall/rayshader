@@ -177,7 +177,7 @@ render_depth = function(focus = 0.5, focallength = 100, fstop = 4, filename=NULL
     }
     depthmap = rgl::rgl.pixels(component = "depth")
     if(transparent_water) {
-      remove_ids = get_ids_with_labels(type = "waterlines")$id
+      remove_ids = get_ids_with_labels(typeval = "waterlines")$id
       rgl::pop3d(id=remove_ids)
     }
     tempmap = png::readPNG(temp)
