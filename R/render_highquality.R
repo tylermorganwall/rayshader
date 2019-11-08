@@ -136,7 +136,12 @@ render_highquality = function(filename = NULL, light = TRUE, lightdirection = 31
   no_cache = FALSE
   if(is.null(cache_filename)) {
     no_cache = TRUE
-    cache_filename = paste0(tempdir(), .Platform$file.sep, "temprayfile.obj")
+    if(.Platform$OS.type == "windows") {
+      sepval = "\\"
+    } else {
+      sepval = "/"
+    }
+    cache_filename = paste0(tempdir(), sepval, "temprayfile.obj")
   }
   shadowid = get_ids_with_labels(typeval = "shadow")
   if(nrow(shadowid) > 0) {

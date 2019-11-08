@@ -39,10 +39,25 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1) {
   }
   if(is.character(filename)) {
     if(save_texture) {
-      if(substring(filename, nchar(filename)-3,nchar(filename)) == ".obj") {
-        filename_mtl = paste0(substring(filename, 1,nchar(filename)-4),".mtl")
+      current_dir = FALSE
+      if(basename(filename) != filename) {
+        tempbase = basename(filename)
       } else {
-        filename_mtl = paste0(filename,".mtl")
+        tempbase = filename
+        current_dir = TRUE
+      }
+      if(substring(filename, nchar(filename)-3,nchar(filename)) == ".obj") {
+        if(current_dir) {
+          filename_mtl = paste0(substring(tempbase, 1,nchar(tempbase)-4),".mtl")
+        } else {
+          filename_mtl = paste0(dirname(filename), .Platform$file.sep, substring(tempbase, 1,nchar(tempbase)-4),".mtl")
+        }
+      } else {
+        if(current_dir) {
+          filename_mtl = paste0(tempbase,".mtl")
+        } else {
+          filename_mtl = paste0(dirname(filename), .Platform$file.sep, tempbase,".mtl")
+        }
       }
     }
     if(substring(filename, nchar(filename)-3,nchar(filename)) != ".obj") {
@@ -51,7 +66,7 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1) {
     con = file(filename, "w")
     con_mtl = file(filename_mtl, "w")
   }
-  
+
   number_vertices = 0
   number_texcoords = 0
   number_normals = 0
