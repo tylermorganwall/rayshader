@@ -146,7 +146,7 @@ render_snapshot(clear=TRUE)
 
 ```
 
-You can also render using the built-in pathtracer, powered by ![rayrender](https://www.rayrender.net). Simply replace `render_snapshot()` with `render_highquality()`. When `render_highquality()` is called, there's no need to pre-compute the shadows with any of the `_shade()` functions, so we remove those:
+You can also render using the built-in pathtracer, powered by [rayrender](https://www.rayrender.net). Simply replace `render_snapshot()` with `render_highquality()`. When `render_highquality()` is called, there's no need to pre-compute the shadows with any of the `_shade()` functions, so we remove those:
 
 ```{r README_three-dhq}
 
@@ -237,7 +237,8 @@ montereybay %>%
 render_label(montereybay, x = 350, y = 240, z = 4000, zscale = 50,
              text = "Moss Landing", textsize = 2, linewidth = 5)
 render_label(montereybay, x = 220, y = 330, z = 6000, zscale = 50,
-             text = "Santa Cruz",textcolor = "darkred", textsize = 2, linewidth = 5)
+             text = "Santa Cruz", textcolor = "darkred", linecolor = "darkred",
+             textsize = 2, linewidth = 5)
 render_label(montereybay, x = 300, y = 130, z = 4000, zscale = 50,
              text = "Monterey", dashed = TRUE, textsize = 2, linewidth = 5)
 render_label(montereybay, x = 50, y = 130, z = 1000, zscale = 50,

@@ -57,7 +57,7 @@
 #'
 #'#Change vertical position of light
 #'\dontrun{
-#'render_highquality(lightdirection = 45, lightaltitude=30)
+#'render_highquality(lightdirection = 45, lightaltitude=10)
 #'}
 #'
 #'#Change the ground material

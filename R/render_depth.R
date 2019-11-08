@@ -68,16 +68,20 @@
 #'montereybay %>%
 #'  sphere_shade() %>%
 #'  plot_3d(montereybay,zscale=50, water=TRUE, waterlinecolor="white",
-#'          zoom=0.7,phi=30,fov=60,theta=-90, background = "grey20")
+#'          zoom=0.7,phi=30,fov=60,theta=-90)
 #'          
 #'render_camera(theta=45,zoom=0.15,phi=20)
 #'
 #'#Change the bokeh shape and intensity
-#'render_depth(focus=0.7, bokehshape = "circle",focallength=200,bokehintensity=30)
-#'render_depth(focus=0.7, bokehshape = "hex",focallength=200,bokehintensity=30)
+#'render_depth(focus=0.7, bokehshape = "circle",focallength=200,bokehintensity=30,
+#'             title_text = "Circular Bokeh", title_size = 20, title_color = "white", 
+#'             title_bar_color = "white")
+#'render_depth(focus=0.7, bokehshape = "hex",focallength=200,bokehintensity=30,
+#'             title_text = "Hexagonal Bokeh", title_size = 20, title_color = "white", 
+#'             title_bar_color = "white")
 #'
-#'#Add a title and vignette effect
-#'render_camera(theta=0,zoom=0.5,phi=30)
+#'#Add a title and vignette effect.
+#'render_camera(theta=0,zoom=0.7,phi=30)
 #'render_depth(focus = 0.75,focallength = 100, title_text = "Monterey Bay, CA", 
 #'             title_size = 20, title_color = "white", title_bar_color = "black", vignette = TRUE)
 #'rgl::rgl.close()

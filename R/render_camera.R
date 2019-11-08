@@ -47,7 +47,6 @@
 #'                title_bar_alpha = 1,
 #'                title_bar_color = "lightblue",
 #'                vignette = TRUE)
-#'rgl::rgl.close()
 #'}
 #'
 #'#Here we render a series of frames to later stitch together into a movie.

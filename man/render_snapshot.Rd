@@ -56,24 +56,29 @@ Either captures the current rgl view and displays, or saves the current view to 
 \dontrun{
 montereybay \%>\%
  sphere_shade() \%>\%
- plot_3d(montereybay,zscale=50,zoom=0.6,theta=-90)
+ plot_3d(montereybay,zscale=50,zoom=0.6,theta=-90,phi=30)
 }
  
 \dontrun{
-render_snapshot(clear = TRUE)
+render_snapshot()
 }
 
 \dontrun{
-montereybay \%>\%
- sphere_shade() \%>\%
- plot_3d(montereybay,zscale=50,zoom=0.6,theta=-90)
 }
  
 #Create a title, but also pass the `gravity` argument to magick::image_annotate using ...
 #to center the text.
 \dontrun{
-render_snapshot(clear = TRUE, title_text = "Monterey Bay, California", title_color = "darkgreen",
-               title_font = "Helvetica", gravity = "North", title_offset = c(0,0))
+render_snapshot(title_text = "Monterey Bay, California", 
+               title_color = "white", title_bar_color = "black",
+               title_font = "Helvetica", gravity = "North")
+               
+#Add a vignette effect
+render_camera(zoom=0.8)
+render_snapshot(title_text = "Monterey Bay, California", 
+               title_color = "white", title_bar_color = "darkgreen",
+               vignette = TRUE, 
+               title_font = "Helvetica", gravity = "North")
 rgl::rgl.close()
 }
 }

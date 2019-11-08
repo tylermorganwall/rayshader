@@ -7,8 +7,32 @@
 #'@param water_index_refraction Default `1`. The index of refraction for the rendered water.
 #'@export
 #'@examples
-#'filename_map = tempfile()
+#'filename_obj = tempfile(fileext = ".obj")
 #'
+#'#Save model of volcano
+#'\donttest{
+#'volcano %>%
+#'  sphere_shade() %>%
+#'  plot_3d(volcano, zscale = 2)
+#'
+#'save_obj(filename_obj)
+#'}
+#'
+#'#Save model of volcano without texture
+#'\donttest{
+#'save_obj(filename_obj, save_texture = FALSE)
+#'rgl::rgl.close()
+#'}
+#'
+#'#Make water have realistic index of refraction
+#'\donttest{
+#'montereybay %>%
+#'  sphere_shade() %>%
+#'  plot_3d(montereybay, zscale = 50)
+#'  
+#'save_obj(filename_obj, water_index_refraction = 1.5)
+#'rgl::rgl.close()
+#'}
 save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1) {
   if(is.null(filename)) {
     stop("save_obj requires a filename")
