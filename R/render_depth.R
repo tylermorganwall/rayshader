@@ -80,7 +80,7 @@
 #'render_camera(theta=0,zoom=0.5,phi=30)
 #'render_depth(focus = 0.75,focallength = 100, title_text = "Monterey Bay, CA", 
 #'             title_size = 20, title_color = "white", title_bar_color = "black", vignette = TRUE)
-#'             
+#'rgl::rgl.close()
 #'}
 render_depth = function(focus = 0.5, focallength = 100, fstop = 4, filename=NULL,
                      preview_focus = FALSE, bokehshape = "circle", bokehintensity = 1, bokehlimit=0.8, 

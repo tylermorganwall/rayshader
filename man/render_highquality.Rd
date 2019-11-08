@@ -139,11 +139,12 @@ render_highquality(lightdirection = c(240), lightaltitude=30,
 #Manually change the camera location and direction
 \dontrun{
 render_camera(theta=45,phi=45,fov=90)
-render_highquality(lightdirection = c(240), lightaltitude=30, 
-                  lightcolor=c("#5555ff"), camera_location = c(50,10,10), camera_lookat = c(0,15,0), 
+render_highquality(lightdirection = c(240), lightaltitude=30, lightcolor=c("#5555ff"), 
+                  camera_location = c(50,10,10), camera_lookat = c(0,15,0), 
                   scene_elements = rayrender::sphere(z=0,y=15, x=-18, radius=5,
                                    material=rayrender::diffuse(color="red",
                                                                lightintensity=10, 
                                                                implicit_sample=TRUE)))
+rgl::rgl.close()
 }
 }

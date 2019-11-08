@@ -676,7 +676,7 @@ plot_gg = function(ggobj, width = 3, height = 3,
       } else {
         mapcolor %>%
           add_shadow(raylayer,shadow_intensity) %>%
-          plot_map()
+          plot_map(keep_user_par = FALSE)
       }
     } else {
       raylayer = saved_shadow_matrix
@@ -687,14 +687,14 @@ plot_gg = function(ggobj, width = 3, height = 3,
       } else {
         mapcolor %>%
           add_shadow(raylayer,shadow_intensity) %>%
-          plot_map()
+          plot_map(keep_user_par = FALSE)
       }
     }
   } else {
     if(!preview) {
       plot_3d(mapcolor, (t(1-mapheight)), zscale=1/scale, ...)
     } else {
-      plot_map(mapcolor)
+      plot_map(mapcolor, keep_user_par = FALSE)
     }
   }
   if(save_shadow_matrix & !save_height_matrix) {

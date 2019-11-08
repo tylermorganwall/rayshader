@@ -47,6 +47,7 @@
 #'\dontrun{
 #'render_snapshot(clear = TRUE, title_text = "Monterey Bay, California", title_color = "darkgreen",
 #'                title_font = "Helvetica", gravity = "North", title_offset = c(0,0))
+#'rgl::rgl.close()
 #'}
 render_snapshot = function(filename, clear=FALSE, 
                            title_text = NULL, title_offset = c(20,20), 

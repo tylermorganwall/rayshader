@@ -125,6 +125,6 @@ render_depth(focus=0.7, bokehshape = "hex",focallength=200,bokehintensity=30)
 render_camera(theta=0,zoom=0.5,phi=30)
 render_depth(focus = 0.75,focallength = 100, title_text = "Monterey Bay, CA", 
             title_size = 20, title_color = "white", title_bar_color = "black", vignette = TRUE)
-            
+rgl::rgl.close()
 }
 }

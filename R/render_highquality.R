@@ -107,6 +107,7 @@
 #'                                    material=rayrender::diffuse(color="red",
 #'                                                                lightintensity=10, 
 #'                                                                implicit_sample=TRUE)))
+#'rgl::rgl.close()
 #'}
 render_highquality = function(filename = NULL, light = TRUE, lightdirection = 315, lightaltitude = 45, lightsize=NULL,
                               lightintensity = 500, lightcolor = "white", 
