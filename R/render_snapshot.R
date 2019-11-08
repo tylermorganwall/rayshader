@@ -148,7 +148,7 @@ render_snapshot = function(filename, clear=FALSE,
   }
   tempmap = png::readPNG(temp)
   if(missing(filename)) {
-    plot_map(tempmap,keep_user_par = FALSE)
+    plot_map(tempmap, keep_user_par = FALSE)
   } else {
     save_png(tempmap, filename)
   }

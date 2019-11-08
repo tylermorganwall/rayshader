@@ -74,7 +74,8 @@ library(knitr)
 library(rgl)
 knit_hooks$set(rgl = hook_rgl)
 knitr::opts_chunk$set(
-  fig.path = "man/figures/"
+  fig.path = "man/figures/",
+  cache = TRUE
 )
 set.seed(1001)
 ```
@@ -188,11 +189,12 @@ Water is also supported in `render_highquality()`.
 montereybay %>%
     sphere_shade(zscale = 10, texture = "imhof1") %>%
     plot_3d(montereybay, zscale = 50, fov = 70, theta = -45, phi = 20, 
-            windowsize = c(1000, 800), zoom = 0.6,
+            windowsize = c(1000, 800), zoom = 0.6, 
             water = TRUE, waterdepth = 0, wateralpha = 0.5, watercolor = "lightblue",
             waterlinecolor = "white", waterlinealpha = 0.5)
 Sys.sleep(0.2)
-render_highquality(lightdirection = 0, lightangle = 30, clamp_value = 10, clear=TRUE)
+render_highquality(lightdirection = 0, lightaltitude  = 30, clamp_value = 10, 
+                   samples=200, clear=TRUE)
 
 
 ```
@@ -208,7 +210,7 @@ montereybay %>%
     plot_3d(montereybay, zscale = 50, fov = 0, theta = -45, phi = 45, windowsize = c(1000, 800), zoom = 0.6,
             water = TRUE, waterdepth = 0, wateralpha = 0.5, watercolor = "lightblue",
             waterlinecolor = "white", waterlinealpha = 0.5, baseshape = "circle")
-Sys.sleep(0.2)
+
 render_snapshot(clear = TRUE)
 
 montereybay %>% 
@@ -218,7 +220,7 @@ montereybay %>%
     plot_3d(montereybay, zscale = 50, fov = 0, theta = -45, phi = 45, windowsize = c(1000, 800), zoom = 0.6,
             water = TRUE, waterdepth = 0, wateralpha = 0.5, watercolor = "lightblue",
             waterlinecolor = "white", waterlinealpha = 0.5, baseshape = "hex")
-Sys.sleep(0.2)
+
 render_snapshot(clear = TRUE)
 ```
 
@@ -235,7 +237,7 @@ montereybay %>%
 render_label(montereybay, x = 350, y = 240, z = 4000, zscale = 50,
              text = "Moss Landing", textsize = 2, linewidth = 5)
 render_label(montereybay, x = 220, y = 330, z = 6000, zscale = 50,
-             text = "Santa Cruz", color = "darkred", textcolor = "darkred", textsize = 2, linewidth = 5)
+             text = "Santa Cruz",textcolor = "darkred", textsize = 2, linewidth = 5)
 render_label(montereybay, x = 300, y = 130, z = 4000, zscale = 50,
              text = "Monterey", dashed = TRUE, textsize = 2, linewidth = 5)
 render_label(montereybay, x = 50, y = 130, z = 1000, zscale = 50,
@@ -354,14 +356,4 @@ plot_gg(pp, width = 5, height = 4, scale = 300, multicore = TRUE, windowsize = c
         fov = 70, zoom = 0.4, theta = 330, phi = 40)
 Sys.sleep(0.2)
 render_depth(focus = 0.68, focallength = 200)
-```
-
-3D ggplots can also be visualized with `render_highquality()`, but often it's faster to reduce their size first. We can do that with the built-in `reduce_size` argument to `plot_gg()`. Here, we reduce the size of the plot by a factor of 2.
-
-```{r README_ggplots_6, fig.width = 10, fig.height = 8}
-
-plot_gg(pp, width = 5, height = 4, scale = 300, multicore = TRUE, windowsize = c(1200, 960),
-        fov = 70, zoom = 0.4, theta = 330, phi = 40, reduce_size = 0.5)
-Sys.sleep(0.2)
-render_highquality()
 ```
