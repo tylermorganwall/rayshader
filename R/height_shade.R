@@ -32,10 +32,12 @@
 height_shade = function(heightmap, texture=grDevices::terrain.colors(256)) {
   tempfilename = tempfile()
   old.par = graphics::par(no.readonly = TRUE)
-  on.exit(graphics::par(old.par))
+  if(all(old.par$pin > 0)) {
+    on.exit(suppressWarnings(graphics::par(old.par)))
+  }
   grDevices::png(tempfilename,width = nrow(heightmap),height=ncol(heightmap))
   graphics::par(mar = c(0,0,0,0))
-  raster::image(fliplr(heightmap),axes = FALSE,col = texture)
+  raster::image(fliplr(heightmap),axes = FALSE,col = texture, useRaster=TRUE)
   grDevices::dev.off()
   tempmap = png::readPNG(tempfilename)
   return(tempmap)
