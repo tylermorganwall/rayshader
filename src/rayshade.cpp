@@ -17,7 +17,6 @@ bool ray_intersects(NumericMatrix& heightmap, NumericVector& tanangles,
                     double cossunangle, double sinsunangle, 
                     int numbercols, int numberrows,
                     double zscale, double maxdist) {
-  bool breakloop;
   double xcoord, ycoord, tanangheight;
   double ceilxcoord,ceilycoord,floorxcoord,floorycoord;
   for(int k = 1; k < maxdist; k++) {
@@ -67,7 +66,6 @@ bool ray_intersects(NumericMatrix& heightmap, NumericVector& tanangles,
                                         xcoord, ycoord)) {
         return(true);
       }
-      if(k == (maxdist - 1)) breakloop = true;
     }
   }
   return(false);
