@@ -5,8 +5,8 @@
 \title{Detect water}
 \usage{
 detect_water(heightmap, zscale = 1, cutoff = 0.999,
-  min_area = length(heightmap)/400, normalvectors = NULL,
-  keep_groups = FALSE, progbar = FALSE)
+  min_area = length(heightmap)/400, max_height = NULL,
+  normalvectors = NULL, keep_groups = FALSE, progbar = FALSE)
 }
 \arguments{
 \item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All grid points are assumed to be evenly spaced.}
@@ -17,6 +17,8 @@ of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
 \item{cutoff}{Default `0.999`. The lower limit of the z-component of the unit normal vector to be classified as water.}
 
 \item{min_area}{Default length(heightmap)/400. Minimum area (in units of the height matrix x and y spacing) to be considered a body of water.}
+
+\item{max_height}{Default `NULL`. If passed, this number will specify the maximum height a point can be considered to be water.}
 
 \item{normalvectors}{Default `NULL`. Pre-computed array of normal vectors from the `calculate_normal` function. Supplying this will speed up water detection.}
 
