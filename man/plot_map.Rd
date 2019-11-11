@@ -4,7 +4,7 @@
 \alias{plot_map}
 \title{Plot Map}
 \usage{
-plot_map(hillshade, rotate = 0, keep_user_par = TRUE, ...)
+plot_map(hillshade, rotate = 0, keep_user_par = FALSE, ...)
 }
 \arguments{
 \item{hillshade}{Hillshade to be plotted.}

@@ -11,7 +11,7 @@
 #'@examples
 #'#Plotting a spherical texture map of the volcano dataset.
 #'plot_map(sphere_shade(volcano))
-plot_map = function(hillshade, rotate=0, keep_user_par = TRUE, ...) {
+plot_map = function(hillshade, rotate=0, keep_user_par = FALSE, ...) {
   if(keep_user_par) {
     old.par = graphics::par(no.readonly = TRUE)
     on.exit(graphics::par(old.par))
