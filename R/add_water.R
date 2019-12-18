@@ -10,7 +10,6 @@
 #'@importFrom grDevices col2rgb rainbow
 #'@export
 #'@examples
-#'library(magrittr)
 #'#Here we even out a portion of the volcano dataset to simulate water:
 #'island_volcano = volcano
 #'island_volcano[island_volcano < mean(island_volcano)] = mean(island_volcano)
@@ -20,11 +19,18 @@
 #'  sphere_shade(texture="imhof3") %>%
 #'  add_water(detect_water(island_volcano, min_area = 400),color="imhof3") %>%
 #'  plot_map()
+#'  
+#'#We'll do the same thing with the Monterey Bay dataset to fill in the ocean:
+#'
+#'montbay_water = montereybay
+#'montbay_water[montbay_water < 0] = 0
+#'
+#'montereybay %>%
+#'  sphere_shade(texture="imhof4") %>%
+#'  add_water(detect_water(montbay_water),color="imhof4") %>%
+#'  plot_map()
 add_water = function(hillshade, watermap, color="imhof1") {
-  flipud = function(x) {
-    x[nrow(x):1,]
-  }
-  watermap = flipud(t(watermap))
+  watermap = t(flipud(watermap))
   if (color == "imhof1") {
     color = col2rgb("#e9f9ee")
   } else if (color == "imhof2") {
@@ -40,19 +46,17 @@ add_water = function(hillshade, watermap, color="imhof1") {
   } else if (color != "unicorn") {
     color = col2rgb(color)
   }
-  if(class(hillshade) != "array") {
-    if (class(hillshade) == "matrix") {
+  if (length(dim(hillshade)) != 3) {
+    if (length(dim(hillshade)) == 2) {
       if(any(hillshade > 1 | hillshade < 0)) {
         stop("Error: Not a shadow matrix. Intensities must be between 0 and 1. Pass your elevation matrix to ray_shade/lamb_shade/ambient_shade/sphere_shade first.")
       }
-      temp = array(0,dim = c(nrow(hillshade),ncol(hillshade),3))
-      temp[,,1] = flipud(t(hillshade))
-      temp[,,2] = flipud(t(hillshade))
-      temp[,,3] = flipud(t(hillshade))
+      temp = array(0,dim = c(ncol(hillshade),nrow(hillshade),3))
+      temp[,,1] = t(flipud(hillshade))
+      temp[,,2] = t(flipud(hillshade))
+      temp[,,3] = t(flipud(hillshade))
       hillshade = temp
-    } else {
-      stop("Argument `hillshade` must be a 3-layer rgb array or 1d shadow matrix.")
-    }
+    } 
   } 
   if(missing(watermap)) {
     stop("User must provide matrix indicating locations of bodies of water")

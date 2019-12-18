@@ -58,25 +58,18 @@ add_overlay = function(hillshade, overlay, alphacolor=NULL, alphalayer = 1, alph
     overlay = png::readPNG(resized_overlay_file)
     warning("Overlay doesn't match dimension of hillshade--resizing to match")
   }
-  flipud = function(x) {
-    x[,ncol(x):1]
-  }
   if(any(alphalayer > 1 || alphalayer < 0)) {
     stop("Argument `alphalayer` must not be less than 0 or more than 1")
   }
-  if(class(hillshade) != "array") {
-    if (class(hillshade) == "matrix") {
-      if(any(hillshade > 1 | hillshade < 0)) {
-        stop("Error: Not a shadow matrix. Intensities must be between 0 and 1. Pass your elevation matrix to ray_shade/lamb_shade/ambient_shade/sphere_shade first.")
-      }
-      temp = array(0,dim = c(nrow(hillshade),ncol(hillshade),3))
-      temp[,,1] = flipud(hillshade)
-      temp[,,2] = flipud(hillshade)
-      temp[,,3] = flipud(hillshade)
-      hillshade = aperm(temp,c(2,1,3))
-    } else {
-      stop("Argument `hillshade` must be a RGB 3/4D array or 1D shadow matrix.")
+  if(length(dim(hillshade)) == 2) {
+    if(any(hillshade > 1 | hillshade < 0)) {
+      stop("Error: Not a shadow matrix. Intensities must be between 0 and 1. Pass your elevation matrix to ray_shade/lamb_shade/ambient_shade/sphere_shade first.")
     }
+    temp = array(0,dim = c(nrow(hillshade),ncol(hillshade),3))
+    temp[,,1] = flipud(hillshade)
+    temp[,,2] = flipud(hillshade)
+    temp[,,3] = flipud(hillshade)
+    hillshade = aperm(temp,c(2,1,3))
   } 
   if(gamma_correction) {
     hillshade = hillshade ^ 2.2

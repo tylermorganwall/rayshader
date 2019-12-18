@@ -6,13 +6,14 @@
 \usage{
 render_highquality(filename = NULL, light = TRUE,
   lightdirection = 315, lightaltitude = 45, lightsize = NULL,
-  lightintensity = 500, lightcolor = "white", cache_filename = NULL,
-  width = NULL, height = NULL, title_text = NULL,
-  title_offset = c(20, 20), title_color = "black", title_size = 30,
-  title_font = "sans", title_bar_color = NULL, title_bar_alpha = 0.5,
-  ground_material = diffuse(), scene_elements = NULL,
-  camera_location = NULL, camera_lookat = c(0, 0, 0), clear = FALSE,
-  print_scene_info = FALSE, ...)
+  lightintensity = 500, lightcolor = "white",
+  obj_material = diffuse(), cache_filename = NULL, width = NULL,
+  height = NULL, title_text = NULL, title_offset = c(20, 20),
+  title_color = "black", title_size = 30, title_font = "sans",
+  title_bar_color = NULL, title_bar_alpha = 0.5,
+  ground_material = diffuse(), ground_size = 1e+05,
+  scene_elements = NULL, camera_location = NULL, camera_lookat = c(0,
+  0, 0), clear = FALSE, print_scene_info = FALSE, ...)
 }
 \arguments{
 \item{filename}{Filename of saved image. If missing, will display to current device.}
@@ -32,6 +33,8 @@ If this is a vector longer than one, multiple lights will be generated (using va
 \item{lightintensity}{Default `500`. Intensity of the light.}
 
 \item{lightcolor}{Default `white`. The color of the light.}
+
+\item{obj_material}{Default `rayrender::diffuse()`. The material properties of the object file.}
 
 \item{cache_filename}{Name of temporary filename to store OBJ file, if the user does not want to rewrite the file each time.}
 
@@ -56,6 +59,8 @@ image_annotate) corner to offset the title.}
 \item{title_bar_alpha}{Default `0.5`. Transparency of the title bar.}
 
 \item{ground_material}{Default `diffuse()`. Material defined by the rayrender material functions.}
+
+\item{ground_size}{Default `100000`. The width of the plane representing the ground.}
 
 \item{scene_elements}{Default `NULL`. Extra scene elements to add to the scene, created with rayrender.}
 
@@ -132,9 +137,7 @@ render_camera(theta=45,phi=45)
 render_highquality(lightdirection = c(240), lightaltitude=30, 
                   lightcolor=c("#5555ff"),
                   scene_elements = rayrender::sphere(z=0,y=15, x=-18, radius=5,
-                                   material=rayrender::diffuse(color="red",
-                                                               lightintensity=10, 
-                                                               implicit_sample=TRUE)))
+                                   material=rayrender::light(color="red",intensity=10)))
 }
 #Manually change the camera location and direction
 \donttest{
@@ -142,9 +145,7 @@ render_camera(theta=45,phi=45,fov=90)
 render_highquality(lightdirection = c(240), lightaltitude=30, lightcolor=c("#5555ff"), 
                   camera_location = c(50,10,10), camera_lookat = c(0,15,0), 
                   scene_elements = rayrender::sphere(z=0,y=15, x=-18, radius=5,
-                                   material=rayrender::diffuse(color="red",
-                                                               lightintensity=10, 
-                                                               implicit_sample=TRUE)))
+                                   material=rayrender::light(color="red",intensity=10)))
 rgl::rgl.close()
 }
 }

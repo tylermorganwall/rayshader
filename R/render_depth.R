@@ -16,6 +16,7 @@
 #'@param bokehintensity Default `3`. Intensity of the bokeh when the pixel intensity is greater than `bokehlimit`.
 #'@param bokehlimit Default `0.8`. Limit after which the bokeh intensity is increased by `bokehintensity`. 
 #'@param rotation Default `0`. Number of degrees to rotate the hexagon bokeh shape.
+#'@param aberration Default `0`. Adds chromatic aberration to the image. Maximum of `1`. 
 #'@param gamma_correction Default `TRUE`. Controls gamma correction when adding colors. Default exponent of 2.2.
 #'@param transparent_water Default `FALSE`. If `TRUE`, depth is determined without water layer. User will have to re-render the water
 #'layer with `render_water()` if they want to recreate the water layer.
@@ -59,6 +60,9 @@
 #'#Render the depth of field effect
 #'render_depth(focus=0.75, focallength = 100)
 #'
+#'#Add a chromatic aberration effect
+#'render_depth(focus=0.75, focallength = 100, aberration = 0.3)
+#'
 #'#Render the depth of field effect, ignoring water and re-drawing the waterlayer
 #'render_depth(focus=0.9, preview_focus=TRUE, 
 #'             heightmap = montereybay, zscale=50, transparent_water=TRUE)
@@ -84,11 +88,13 @@
 #'render_camera(theta=0,zoom=0.7,phi=30)
 #'render_depth(focus = 0.75,focallength = 100, title_text = "Monterey Bay, CA", 
 #'             title_size = 20, title_color = "white", title_bar_color = "black", vignette = TRUE)
+#'             
+#'#
 #'rgl::rgl.close()
 #'}
 render_depth = function(focus = 0.5, focallength = 100, fstop = 4, filename=NULL,
                      preview_focus = FALSE, bokehshape = "circle", bokehintensity = 1, bokehlimit=0.8, 
-                     rotation = 0, gamma_correction = TRUE,
+                     rotation = 0, gamma_correction = TRUE, aberration = 0,
                      transparent_water = FALSE, heightmap = NULL, zscale = NULL, 
                      title_text = NULL, title_offset = c(20,20), 
                      title_color = "black", title_size = 30, title_font = "sans",
@@ -176,8 +182,12 @@ render_depth = function(focus = 0.5, focallength = 100, fstop = 4, filename=NULL
     height = dimensions[3]
     width1 = abs(dimensions[2]-dimensions[1])
     width2 = abs(dimensions[6]-dimensions[5])
-    calc_circle = function(z,zfocus,f,N) {
-      abs(f^2*abs(z-zfocus)/((zfocus - f)*z*N))
+    if(aberration >= 1 || aberration <= -1) {
+      stop("aberration value must be less than 1 and greater than -1")
+    }
+    calc_circle = function(z,zfocus,f,N,ramp) {
+      ifelse(z-zfocus < 0, abs(f^2*abs(z-zfocus)*ramp/((zfocus - f)*z*N)),
+             abs(f^2*abs(z-zfocus)/((zfocus - f)*z*N*ramp)))
     }
     depthmap = rgl::rgl.pixels(component = "depth")
     if(transparent_water) {
@@ -203,8 +213,14 @@ render_depth = function(focus = 0.5, focallength = 100, fstop = 4, filename=NULL
     if(gamma_correction) {
       tempmap = tempmap^2.2
     }
-    depthmap2 = calc_circle(depthmap,focus,focallength, fstop)
     for(i in 1:3) {
+      if(i == 1) {
+        depthmap2 = calc_circle(depthmap,focus,focallength, fstop,1+aberration)
+      } else if(i ==2) {
+        depthmap2 = calc_circle(depthmap,focus,focallength, fstop,1)
+      } else {
+        depthmap2 = calc_circle(depthmap,focus,focallength, fstop,1-aberration)
+      }
       tempmap[,,i] = flipud(t(psf(t(flipud(tempmap[,,i])),depthmap2, 
                                   depthmap, focus, bokehshape, custombokeh = custombokeh,
                                   bokehintensity, bokehlimit, rotation, progbar = progbar,channel = i)))

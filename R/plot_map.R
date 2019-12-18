@@ -27,7 +27,7 @@ plot_map = function(hillshade, rotate=0, keep_user_par = FALSE, ...) {
   } else {
     number_of_rots = rotate/90
   }
-  if(class(hillshade) == "array") {
+  if(length(dim(hillshade)) == 3) {
     if(number_of_rots != 0) {
       newarray = hillshade
       newarrayt = array(0,dim=c(ncol(hillshade),nrow(hillshade),3))
@@ -47,19 +47,13 @@ plot_map = function(hillshade, rotate=0, keep_user_par = FALSE, ...) {
       }
     }
     suppressWarnings(raster::plotRGB(raster::brick(hillshade, xmn = 0.5, xmx = dim(hillshade)[2]+ 0.5,ymn = 0.5, ymx = dim(hillshade)[1] + 0.5, ...),scale=1, maxpixels=nrow(hillshade)*ncol(hillshade),...))
-  } else if(class(hillshade) == "matrix") {
-    flipud = function(matrix) {
-      matrix[nrow(matrix):1,]
-    }
-    fliplr = function(matrix) {
-      matrix[,ncol(matrix):1]
-    }
+  } else if(length(dim(hillshade)) == 2) {
     if(number_of_rots != 0) {
       for(j in 1:number_of_rots) {
         hillshade = rotatef(hillshade)
       }
     }
-    array_from_mat = array(flipud(t(hillshade)),dim=c(ncol(hillshade),nrow(hillshade),3))
+    array_from_mat = array(fliplr(t(hillshade)),dim=c(ncol(hillshade),nrow(hillshade),3))
     suppressWarnings(raster::plotRGB(raster::brick(array_from_mat, xmn = 0.5, xmx = dim(array_from_mat)[2] + 0.5,ymn =  0.5, ymx = dim(array_from_mat)[1] +  0.5, ...),scale=1, maxpixels=nrow(hillshade)*ncol(hillshade), ...))
   } else {
     stop("`hillshade` is neither array nor matrix--convert to either to plot.")

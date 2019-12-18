@@ -79,7 +79,7 @@ render_snapshot()
 #`clear_previous = TRUE`.
 \dontrun{
 render_label(montereybay, x = 300, y = 120, z = 10000, zscale = 50, text = "Monterey",
-            text_color = "darkred", dashed = TRUE, clear_previous = TRUE)
+            textcolor = "darkred", linecolor="darkred",dashed = TRUE, clear_previous = TRUE)
 render_snapshot()
 }
 

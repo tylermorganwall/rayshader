@@ -116,7 +116,7 @@ elmat %>%
 elmat %>%
   sphere_shade(texture = "desert") %>%
   add_water(detect_water(elmat), color = "desert") %>%
-  add_shadow(ray_shade(elmat)) %>%
+  add_shadow(ray_shade(elmat), 0.5) %>%
   plot_map()
 
 #And here we add an ambient occlusion shadow layer, which models 
@@ -125,8 +125,8 @@ elmat %>%
 elmat %>%
   sphere_shade(texture = "desert") %>%
   add_water(detect_water(elmat), color = "desert") %>%
-  add_shadow(ray_shade(elmat)) %>%
-  add_shadow(ambient_shade(elmat)) %>%
+  add_shadow(ray_shade(elmat), 0.5) %>%
+  add_shadow(ambient_shade(elmat), 0) %>%
   plot_map()
 
 ```
@@ -139,7 +139,7 @@ elmat %>%
   sphere_shade(texture = "desert") %>%
   add_water(detect_water(elmat), color = "desert") %>%
   add_shadow(ray_shade(elmat, zscale = 3), 0.5) %>%
-  add_shadow(ambient_shade(elmat), 0.5) %>%
+  add_shadow(ambient_shade(elmat), 0) %>%
   plot_3d(elmat, zscale = 10, fov = 0, theta = 135, zoom = 0.75, phi = 45, windowsize = c(1000, 800))
 Sys.sleep(0.2)
 render_snapshot(clear=TRUE)
@@ -173,7 +173,7 @@ montamb = ambient_shade(montereybay, zscale = 50)
 montereybay %>%
     sphere_shade(zscale = 10, texture = "imhof1") %>%
     add_shadow(montshadow, 0.5) %>%
-    add_shadow(montamb) %>%
+    add_shadow(montamb, 0) %>%
     plot_3d(montereybay, zscale = 50, fov = 0, theta = -45, phi = 45, 
             windowsize = c(1000, 800), zoom = 0.75,
             water = TRUE, waterdepth = 0, wateralpha = 0.5, watercolor = "lightblue",
@@ -206,7 +206,7 @@ par(mfrow = c(1, 2))
 montereybay %>% 
     sphere_shade(zscale = 10, texture = "imhof1") %>% 
     add_shadow(montshadow, 0.5) %>%
-    add_shadow(montamb) %>%
+    add_shadow(montamb, 0) %>%
     plot_3d(montereybay, zscale = 50, fov = 0, theta = -45, phi = 45, windowsize = c(1000, 800), zoom = 0.6,
             water = TRUE, waterdepth = 0, wateralpha = 0.5, watercolor = "lightblue",
             waterlinecolor = "white", waterlinealpha = 0.5, baseshape = "circle")
@@ -216,7 +216,7 @@ render_snapshot(clear = TRUE)
 montereybay %>% 
     sphere_shade(zscale = 10, texture = "imhof1") %>% 
     add_shadow(montshadow, 0.5) %>%
-    add_shadow(montamb) %>%
+    add_shadow(montamb, 0) %>%
     plot_3d(montereybay, zscale = 50, fov = 0, theta = -45, phi = 45, windowsize = c(1000, 800), zoom = 0.6,
             water = TRUE, waterdepth = 0, wateralpha = 0.5, watercolor = "lightblue",
             waterlinecolor = "white", waterlinealpha = 0.5, baseshape = "hex")
@@ -230,7 +230,7 @@ Adding text labels is done with the `render_label()` function, which also allows
 montereybay %>% 
     sphere_shade(zscale = 10, texture = "imhof1") %>% 
     add_shadow(montshadow, 0.5) %>%
-    add_shadow(montamb) %>%
+    add_shadow(montamb,0) %>%
     plot_3d(montereybay, zscale = 50, fov = 0, theta = -100, phi = 30, windowsize = c(1000, 800), zoom = 0.6,
             water = TRUE, waterdepth = 0, waterlinecolor = "white", waterlinealpha = 0.5,
             wateralpha = 0.5, watercolor = "lightblue")
@@ -255,7 +255,7 @@ elmat %>%
   sphere_shade(texture = "desert") %>%
   add_water(detect_water(elmat), color = "desert") %>%
   add_shadow(ray_shade(elmat, zscale = 3), 0.5) %>%
-  add_shadow(ambient_shade(elmat), 0.5) %>%
+  add_shadow(ambient_shade(elmat), 0) %>%
   plot_3d(elmat, zscale = 10, fov = 30, theta = -225, phi = 25, windowsize = c(1000, 800), zoom = 0.3)
 Sys.sleep(0.2)
 render_depth(focus = 0.6, focallength = 200, clear = TRUE)

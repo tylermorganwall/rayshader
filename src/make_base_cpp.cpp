@@ -11,6 +11,7 @@ List make_base_cpp(NumericMatrix& heightmap,
                     LogicalMatrix& na_matrix,
                     double basedepth) {
   std::vector<NumericMatrix> vertices;
+  std::vector<NumericMatrix> normals;
   int rows = heightmap.nrow();
   int cols = heightmap.ncol();
   for(int j = 0; j < rows-1; j++) {
@@ -19,11 +20,15 @@ List make_base_cpp(NumericMatrix& heightmap,
         if(!na_matrix(j,i) && !na_matrix(j, i + 1)) {
           vertices.push_back(vec2matrix(NumericVector::create(1+j,1+j,1+j, heightmap(0+j,i),basedepth,basedepth, -i-1,-i-2,-i-1),3,3));
           vertices.push_back(vec2matrix(NumericVector::create(1+j,1+j,1+j, heightmap(0+j,i),heightmap(0+j,i+1),basedepth, -i-1,-i-2,-i-2),3,3));
+          normals.push_back(vec2matrix(NumericVector::create(-1,-1,-1, 0,0,0, 0,0,0),3,3));
+          normals.push_back(vec2matrix(NumericVector::create(-1,-1,-1, 0,0,0, 0,0,0),3,3));
         }
       } else {
         if((!na_matrix(j,i) && na_matrix(j - 1, i) && !na_matrix(j, i+1)) || (!na_matrix(j,i+1) && na_matrix(j - 1, i+1))) {
           vertices.push_back(vec2matrix(NumericVector::create(1+j,1+j,1+j, heightmap(0+j,i),basedepth,basedepth, -i-1,-i-2,-i-1),3,3));
           vertices.push_back(vec2matrix(NumericVector::create(1+j,1+j,1+j, heightmap(0+j,i),heightmap(0+j,i+1),basedepth, -i-1,-i-2,-i-2),3,3));
+          normals.push_back(vec2matrix(NumericVector::create(-1,-1,-1, 0,0,0, 0,0,0),3,3));
+          normals.push_back(vec2matrix(NumericVector::create(-1,-1,-1, 0,0,0, 0,0,0),3,3));
         }
       }
     }
@@ -34,11 +39,15 @@ List make_base_cpp(NumericMatrix& heightmap,
         if(!na_matrix(j,i+1)) {
           vertices.push_back(vec2matrix(NumericVector::create(1+j,1+j,1+j, heightmap(j,i),basedepth,basedepth, -i-1, -i-1, -i-2),3,3));
           vertices.push_back(vec2matrix(NumericVector::create(1+j,1+j,1+j, heightmap(j,i),basedepth,heightmap(j,i+1), -i-1,-i-2,-i-2),3,3));
+          normals.push_back(vec2matrix(NumericVector::create(1,1,1, 0,0,0, 0,0,0),3,3));
+          normals.push_back(vec2matrix(NumericVector::create(1,1,1, 0,0,0, 0,0,0),3,3));
         }
       } else {
         if((!na_matrix(j,i) && na_matrix(j+1, i) && !na_matrix(j, i+1)) || (!na_matrix(j,i+1) && na_matrix(j+1, i+1))) {
           vertices.push_back(vec2matrix(NumericVector::create(j+1,j+1,j+1, heightmap(j,i),basedepth,basedepth, -i-1, -i-1, -i-2),3,3));
           vertices.push_back(vec2matrix(NumericVector::create(j+1,j+1,j+1, heightmap(j,i),basedepth,heightmap(j,i+1), -i-1,-i-2,-i-2),3,3));
+          normals.push_back(vec2matrix(NumericVector::create(1,1,1, 0,0,0, 0,0,0),3,3));
+          normals.push_back(vec2matrix(NumericVector::create(1,1,1, 0,0,0, 0,0,0),3,3));
         }
       }
     }
@@ -49,11 +58,15 @@ List make_base_cpp(NumericMatrix& heightmap,
         if(!na_matrix(i+1,j)) {
           vertices.push_back(vec2matrix(NumericVector::create(i+1,i+1,i+2, heightmap(i,0+j),basedepth,basedepth,  -1+j,-1+j,-1+j),3,3));
           vertices.push_back(vec2matrix(NumericVector::create(i+1,i+2,i+2, heightmap(i,0+j),basedepth,heightmap(i+1,0+j), -1+j,-1+j,-1+j),3,3));
+          normals.push_back(vec2matrix(NumericVector::create(0,0,0, 0,0,0,-1,-1,-1),3,3));
+          normals.push_back(vec2matrix(NumericVector::create(0,0,0, 0,0,0,-1,-1,-1),3,3));
         }
       } else {
         if((!na_matrix(i,j) && na_matrix(i,j - 1) && !na_matrix(i+1,j)) || (!na_matrix(i,j) && na_matrix(i + 1, j-1) && !na_matrix(i+1,j))) {
           vertices.push_back(vec2matrix(NumericVector::create(i+1,i+1,i+2, heightmap(i,0+j),basedepth,basedepth,  -1-j,-1-j,-1-j),3,3));
           vertices.push_back(vec2matrix(NumericVector::create(i+1,i+2,i+2, heightmap(i,0+j),basedepth,heightmap(i+1,0+j), -1-j,-1-j,-1-j),3,3));
+          normals.push_back(vec2matrix(NumericVector::create(0,0,0, 0,0,0,-1,-1,-1),3,3));
+          normals.push_back(vec2matrix(NumericVector::create(0,0,0, 0,0,0,-1,-1,-1),3,3));
         }
       }
     }
@@ -64,17 +77,22 @@ List make_base_cpp(NumericMatrix& heightmap,
         if(!na_matrix(i,j) && !na_matrix(i+1,j)) {
           vertices.push_back(vec2matrix(NumericVector::create(i+1,i+2,i+1, heightmap(i,j),basedepth,basedepth,-j-1,-j-1,-j-1),3,3));
           vertices.push_back(vec2matrix(NumericVector::create(i+1,i+2,i+2, heightmap(i,j),heightmap(i+1,j),basedepth, -j-1,-j-1,-j-1),3,3));
+          normals.push_back(vec2matrix(NumericVector::create(0,0,0, 0,0,0,1,1,1),3,3));
+          normals.push_back(vec2matrix(NumericVector::create(0,0,0, 0,0,0,1,1,1),3,3));
         }
       } else {
         if((!na_matrix(i,j) && na_matrix(i,j + 1) && !na_matrix(i+1,j)) || (!na_matrix(i,j) && na_matrix(i+1, j+1) && !na_matrix(i+1,j))) {
           vertices.push_back(vec2matrix(NumericVector::create(i+1,i+2,i+1, heightmap(i,j),basedepth,basedepth,-j-1,-j-1,-j-1),3,3));
           vertices.push_back(vec2matrix(NumericVector::create(i+1,i+2,i+2, heightmap(i,j),heightmap(i+1,j),basedepth, -j-1,-j-1,-j-1),3,3));
+          normals.push_back(vec2matrix(NumericVector::create(0,0,0, 0,0,0,1,1,1),3,3));
+          normals.push_back(vec2matrix(NumericVector::create(0,0,0, 0,0,0,1,1,1),3,3));
         }
       }
     }
   }
   List vectorlist = wrap(vertices);
-  return(vectorlist);
+  List normallist = wrap(normals);
+  return(List::create(_["vertices"] = vectorlist, _["normals"] = normallist));
 }
 
 // [[Rcpp::export]]

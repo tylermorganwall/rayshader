@@ -30,6 +30,8 @@
 #'@param background Default `grey10`. Color of the background.
 #'@param calculate_normals Default `TRUE`. If `FALSE`, will not calculate per-vertex normals. Can also pass the
 #'output of the function `calculate_normals` to use pre-computed normals.
+#'@param litbase Default `FALSE`. If `TRUE`, the base will be a glossy material lit using the 
+#'`lit = TRUE` parameter in `rgl`.
 #'@param windowsize Default `600`. Position, width, and height of the `rgl` device displaying the plot. 
 #'If a single number, viewport will be a square and located in upper left corner. 
 #'If two numbers, (e.g. `c(600,800)`), user will specify width and height separately. 
@@ -98,7 +100,8 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
                    waterlinecolor=NULL, waterlinealpha = 1, 
                    linewidth = 2, lineantialias = FALSE,
                    theta=45, phi = 45, fov=0, zoom = 1, 
-                   background="white", calculate_normals = TRUE, windowsize = 600, ...) {
+                   background="white", calculate_normals = TRUE, litbase = FALSE,
+                   windowsize = 600, ...) {
   #setting default zscale if montereybay is used and tell user about zscale
   argnameschar = unlist(lapply(as.list(sys.call()),as.character))[-1]
   argnames = as.list(sys.call())
@@ -169,14 +172,6 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
   }
   flipud = function(x) {
     x[nrow(x):1,]
-  }
-  if(class(hillshade) == "array") {
-    # hillshade[,,1] = flipud(hillshade[,,1])
-    # hillshade[,,2] = flipud(hillshade[,,2])
-    # hillshade[,,3] = flipud(hillshade[,,3])
-  }
-  if(class(hillshade) == "matrix") {
-    # hillshade = hillshade[,ncol(hillshade):1]
   }
   if(is.null(heightmap)) {
     stop("heightmap argument missing--need to input both hillshade and original elevation matrix")
@@ -252,7 +247,7 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
   rgl.viewpoint(zoom=zoom,phi=phi,theta=theta,fov=fov)
   par3d(windowRect = windowsize,...)
   if(solid) {
-    make_base(heightmap,basedepth=soliddepth,basecolor=solidcolor,zscale=zscale)
+    make_base(heightmap,basedepth=soliddepth,basecolor=solidcolor,zscale=zscale, litbase=litbase)
   }
   if(!is.null(solidlinecolor) && solid) {
     rgl::rgl.material(color=solidlinecolor, lit=FALSE)

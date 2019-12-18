@@ -4,7 +4,8 @@
 \alias{make_base}
 \title{make_base}
 \usage{
-make_base(heightmap, basedepth = 0, basecolor = "grey20", zscale = 1)
+make_base(heightmap, basedepth = 0, basecolor = "grey20", zscale = 1,
+  litbase = FALSE)
 }
 \arguments{
 \item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.}
@@ -15,6 +16,8 @@ make_base(heightmap, basedepth = 0, basecolor = "grey20", zscale = 1)
 
 \item{zscale}{Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
 of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.}
+
+\item{litbase}{Default `FALSE`.}
 }
 \description{
 Makes the base below the 3D elevation map.

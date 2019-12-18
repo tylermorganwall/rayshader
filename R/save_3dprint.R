@@ -60,7 +60,7 @@ save_3dprint = function(filename,maxwidth=125,unit="mm",rotate=TRUE,remove_extra
   inch2mm = function(inch) {
     inch/0.0393
   }
-  if(class(maxwidth) == "character") {
+  if(methods::is(maxwidth,"character")) {
     unit =  substr(maxwidth,nchar(maxwidth)-1,nchar(maxwidth))
     maxwidth = as.numeric(substr(maxwidth,1,nchar(maxwidth)-2))
   }

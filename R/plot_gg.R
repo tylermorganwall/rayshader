@@ -152,15 +152,9 @@ plot_gg = function(ggobj, width = 3, height = 3,
                    preview = FALSE, raytrace = TRUE, sunangle = 315, anglebreaks = seq(30,40,0.1), 
                    multicore = FALSE, lambert=TRUE, reduce_size = NULL, save_height_matrix = FALSE, 
                    save_shadow_matrix = FALSE, saved_shadow_matrix=NULL, ...) {
-  flipud = function(x) {
-    x[nrow(x):1,]
-  }
-  fliplr = function(x) {
-    x[,ncol(x):1]
-  }
   heightmaptemp = tempfile()
   colormaptemp = tempfile()
-  if(class(ggobj) == "list" && length(ggobj) == 2) {
+  if(methods::is(ggobj,"list") && length(ggobj) == 2) {
     ggplotobj2 = unserialize(serialize(ggobj[[2]], NULL))
     ggsave(paste0(colormaptemp,".png"),ggobj[[1]],width = width,height = height)
   } else {

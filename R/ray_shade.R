@@ -55,10 +55,7 @@ ray_shade = function(heightmap, sunaltitude=45, sunangle=315, maxsearch=NULL, la
   }
   anglebreaks = anglebreaks[order(anglebreaks)]
   anglebreaks_rad = anglebreaks*pi/180
-  sunangle_rad = sunangle*pi/180
-  flipud = function(x) {
-    x[,ncol(x):1]
-  }
+  sunangle_rad = pi+sunangle*pi/180
   originalheightmap = heightmap
   heightmap = add_padding(heightmap)
   if(is.null(cache_mask)) {
@@ -111,7 +108,7 @@ ray_shade = function(heightmap, sunaltitude=45, sunangle=315, maxsearch=NULL, la
     cl = parallel::makeCluster(numbercores, ...)
     doParallel::registerDoParallel(cl, cores = numbercores)
     shadowmatrixlist = tryCatch({
-      foreach::foreach(i=1:(length(itervec)-1),.export = c("rayshade_multicore")) %dopar% {
+      foreach::foreach(i=1:(length(itervec)-1), .export = c("rayshade_multicore","flipud")) %dopar% {
         rayshade_multicore(sunangle = sunangle_rad, anglebreaks = anglebreaks_rad, 
                            heightmap = flipud(heightmap), zscale = zscale, chunkindices = c(itervec[i],(itervec[i+1])),
                            maxsearch = maxsearch, cache_mask = cache_mask)

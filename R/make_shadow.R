@@ -12,9 +12,6 @@ make_shadow = function(heightmap, basedepth, shadowwidth, color, shadowcolor) {
   cols = ncol(heightmap)
   colors = col2rgb(color)
   shadowcolors = col2rgb(shadowcolor)
-  fliplr = function(x) {
-    x[,ncol(x):1]
-  }
   basedepthmat = matrix(basedepth,nrow = rows+shadowwidth*2, ncol = cols+shadowwidth*2)
   na_depth = matrix(FALSE,nrow = rows+shadowwidth*2, ncol = cols+shadowwidth*2)
   na_depth[(shadowwidth+1):(rows+shadowwidth),(shadowwidth+1):(cols+shadowwidth)] = is.na(heightmap)

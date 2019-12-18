@@ -7,7 +7,7 @@
 render_depth(focus = 0.5, focallength = 100, fstop = 4,
   filename = NULL, preview_focus = FALSE, bokehshape = "circle",
   bokehintensity = 1, bokehlimit = 0.8, rotation = 0,
-  gamma_correction = TRUE, transparent_water = FALSE,
+  gamma_correction = TRUE, aberration = 0, transparent_water = FALSE,
   heightmap = NULL, zscale = NULL, title_text = NULL,
   title_offset = c(20, 20), title_color = "black", title_size = 30,
   title_font = "sans", title_bar_color = NULL, title_bar_alpha = 0.5,
@@ -36,6 +36,8 @@ showing where the camera will be focused.}
 \item{rotation}{Default `0`. Number of degrees to rotate the hexagon bokeh shape.}
 
 \item{gamma_correction}{Default `TRUE`. Controls gamma correction when adding colors. Default exponent of 2.2.}
+
+\item{aberration}{Default `0`. Adds chromatic aberration to the image. Maximum of `1`.}
 
 \item{transparent_water}{Default `FALSE`. If `TRUE`, depth is determined without water layer. User will have to re-render the water
 layer with `render_water()` if they want to recreate the water layer.}
@@ -104,6 +106,9 @@ render_depth(focus=0.75, preview_focus=TRUE)
 #Render the depth of field effect
 render_depth(focus=0.75, focallength = 100)
 
+#Add a chromatic aberration effect
+render_depth(focus=0.75, focallength = 100, aberration = 0.3)
+
 #Render the depth of field effect, ignoring water and re-drawing the waterlayer
 render_depth(focus=0.9, preview_focus=TRUE, 
             heightmap = montereybay, zscale=50, transparent_water=TRUE)
@@ -129,6 +134,8 @@ render_depth(focus=0.7, bokehshape = "hex",focallength=200,bokehintensity=30,
 render_camera(theta=0,zoom=0.7,phi=30)
 render_depth(focus = 0.75,focallength = 100, title_text = "Monterey Bay, CA", 
             title_size = 20, title_color = "white", title_bar_color = "black", vignette = TRUE)
+            
+#
 rgl::rgl.close()
 }
 }

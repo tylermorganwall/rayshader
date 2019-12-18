@@ -64,7 +64,9 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1) {
       filename = paste0(filename,".obj")
     }
     con = file(filename, "w")
-    con_mtl = file(filename_mtl, "w")
+    if(save_texture) {
+      con_mtl = file(filename_mtl, "w")
+    }
   }
 
   number_vertices = 0
@@ -118,7 +120,9 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1) {
   
   #Begin file
   cat("#", paste0(filename, " produced by rayshader"), "\n", file=con)
-  cat("mtllib", gsub(paste0(dirname(filename), .Platform$file.sep), replacement="", x=filename_mtl), "\n", file=con)
+  if(save_texture) {
+    cat("mtllib", gsub(paste0(dirname(filename), .Platform$file.sep), replacement="", x=filename_mtl), "\n", file=con)
+  }
   
   vertex_info = get_ids_with_labels()
   vertex_info$startindex = NA
@@ -136,10 +140,14 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1) {
       vertex_info$startindexnormals[row] = number_normals + 1
       write_data(id, con)
       if(vertex_info$raytype[row] != "water") {
-        write_mtl(vertex_info[row,], con_mtl)
+        if(save_texture) {
+          write_mtl(vertex_info[row,], con_mtl)
+        }
       } else {
         if(!wrote_water) {
-          write_mtl(vertex_info[row,], con_mtl)
+          if(save_texture) {
+            write_mtl(vertex_info[row,], con_mtl)
+          }
           wrote_water = TRUE
         }
       }
@@ -148,10 +156,13 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1) {
       vertex_info$endindexnormals[row] = number_normals
     }
   }
+  browser()
   for(row in 1:nrow(vertex_info)) {
     if(vertex_info$raytype[row] == "surface") {
-      cat("g Surface", file=con, sep ="\n")
-      cat("usemtl ray_surface", file=con, sep ="\n")
+      if(save_texture) {
+        cat("g Surface", file=con, sep ="\n")
+        cat("usemtl ray_surface", file=con, sep ="\n")
+      }
       dims = rgl::rgl.attrib(vertex_info$id[row], "dim")
       nx = dims[1]
       nz = dims[2] 
@@ -169,14 +180,27 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1) {
       cat(paste("f", indices[,1], indices[,2], indices[,3]), 
           sep="\n", file=con)
     } else if (vertex_info$raytype[row] == "base"){
-      cat("g Base", file=con, sep ="\n")
-      cat("usemtl ray_base", file=con, sep ="\n")
+      if(save_texture) {
+        cat("g Base", file=con, sep ="\n")
+        cat("usemtl ray_base", file=con, sep ="\n")
+      }
       baseindices = matrix(vertex_info$startindex[row]:vertex_info$endindex[row], ncol=3, byrow=TRUE)
-      cat(paste("f", sprintf("%d %d %d", baseindices[,1], baseindices[,2], baseindices[,3])), 
-          sep="\n", file=con)
+      if(vertex_info$endindexnormals[row] > vertex_info$startindexnormals[row]) {
+        cat(paste("f", sprintf("%d//%d %d//%d %d//%d", baseindices[,1], baseindices[,1],
+                               baseindices[,2], baseindices[,2], 
+                               baseindices[,3], baseindices[,3])), 
+            sep="\n", file=con)
+      } else {
+        cat(paste("f", sprintf("%d %d %d", baseindices[,1],
+                               baseindices[,2], 
+                               baseindices[,3])), 
+            sep="\n", file=con)
+      }
     } else if (vertex_info$raytype[row] == "water") {
-      cat("g Water", file=con, sep ="\n")
-      cat("usemtl ray_water", file=con, sep ="\n")
+      if(save_texture) {
+        cat("g Water", file=con, sep ="\n")
+        cat("usemtl ray_water", file=con, sep ="\n")
+      }
       if(vertex_info$type[row] == "surface") {
         dims = rgl::rgl.attrib(vertex_info$id[row], "dim")
         nx = dims[1]
@@ -201,5 +225,7 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1) {
     }
   }
   close(con)
-  close(con_mtl)
+  if(save_texture) {
+    close(con_mtl)
+  }
 }

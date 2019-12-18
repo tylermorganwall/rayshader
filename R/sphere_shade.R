@@ -51,14 +51,11 @@ sphere_shade = function(heightmap, sunangle=315, texture="imhof1",
     }
   }
   sunangle = sunangle/180*pi
-  flipud = function(x) {
-    x[,ncol(x):1]
-  }
   if(is.null(normalvectors)) {
     normalvectors = calculate_normal(heightmap = heightmap, zscale = zscale, progbar = progbar)
   } 
   heightmap = add_padding(heightmap)
-  if(class(texture) == "character") {
+  if(methods::is(texture,"character")) {
     if(texture %in% c("imhof1","imhof2","imhof3","imhof4","desert","bw","unicorn")) {
       if(texture == "imhof1") {
         texture = create_texture("#fff673","#55967a","#8fb28a","#55967a","#cfe0a9")

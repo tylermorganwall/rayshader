@@ -17,9 +17,6 @@
 #'sphere_shade(volcano,normalvectors = volcanocache) %>%
 #'  plot_map()
 calculate_normal = function(heightmap, zscale=1, progbar=FALSE) {
-  flipud = function(x) {
-    x[,ncol(x):1]
-  }
   heightmap = add_padding(heightmap)
   heightmap = heightmap / zscale
   matrices = calculate_normal_cpp(heightmap=heightmap, progbar = progbar)

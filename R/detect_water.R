@@ -53,9 +53,6 @@ detect_water = function(heightmap, zscale = 1, cutoff = 0.999,
     heightmap_padded[2:(nrow(heightmap_padded)-1),2:(ncol(heightmap_padded)-1)] = heightmap
     zmatrix[t(heightmap_padded) > max_height] = 0
   }
-  flipud = function(x) {
-    x[nrow(x):1,]
-  }
   padding = matrix(0,nrow=nrow(zmatrix)+2,ncol=ncol(zmatrix)+2)
   padding[2:(nrow(padding)-1),2:(ncol(padding)-1)] = zmatrix
 
@@ -69,5 +66,5 @@ detect_water = function(heightmap, zscale = 1, cutoff = 0.999,
   }
   
   water_groups2 = water_groups[c(-1,-2,-nrow(water_groups)+1,-nrow(water_groups)),c(-1,-2,-ncol(water_groups)+1,-ncol(water_groups))]
-  return(t(flipud(water_groups2)))
+  return(flipud(t(water_groups2)))
 }

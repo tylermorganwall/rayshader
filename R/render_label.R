@@ -45,7 +45,7 @@
 #'#`clear_previous = TRUE`.
 #'\dontrun{
 #'render_label(montereybay, x = 300, y = 120, z = 10000, zscale = 50, text = "Monterey",
-#'             text_color = "darkred", dashed = TRUE, clear_previous = TRUE)
+#'             textcolor = "darkred", linecolor="darkred",dashed = TRUE, clear_previous = TRUE)
 #'render_snapshot()
 #'}
 #'
@@ -103,8 +103,9 @@
     ignoreex = par3d()$ignoreExtent
     ignoreex = par3d(ignoreExtent = TRUE)
     linelist = list()
-      x = x - nrow(heightmap)/2
-      y = y - ncol(heightmap)/2
+    x = x - nrow(heightmap)/2
+    y = y - ncol(heightmap)/2
+    y = -y
     if(dashed) {
       counter = 1
       while(startline + dashlength < z) {

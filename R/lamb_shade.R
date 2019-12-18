@@ -19,13 +19,10 @@
 #'    zscale = 1) 
 #'    
 #'plot_map(volcanointensity)
-lamb_shade = function(heightmap, sunaltitude=45, sunangle=315, zscale = 1, zero_negative = TRUE) {
-  sunang_rad = (-sunangle)*pi/180;
+lamb_shade = function(heightmap, sunaltitude=45,  sunangle=315, zscale = 1, zero_negative = TRUE) {
+  sunang_rad = pi-sunangle*pi/180;
   rayang_rad = sunaltitude*pi/180;
   rayvector = c(sin(sunang_rad)*cos(rayang_rad),cos(sunang_rad)*cos(rayang_rad),-sin(rayang_rad))
-  flipud = function(x) {
-    x[,ncol(x):1]
-  }
   heightmap = add_padding(heightmap)
   heightmap = t(flipud(heightmap)) / zscale;
   shadowmatrix = lambshade_cpp(heightmap = heightmap, rayvector = rayvector)

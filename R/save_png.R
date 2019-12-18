@@ -34,7 +34,7 @@ save_png = function(hillshade, filename, rotate = 0, dpi = NULL) {
   if(substring(filename, nchar(filename)-3,nchar(filename)) != ".png") {
     filename = paste0(filename,".png")
   }
-  if(class(hillshade) == "matrix") {
+  if(length(dim(hillshade)) == 2) {
     if(number_of_rots != 0) {
       for(j in 1:number_of_rots) {
         hillshade = rotatef(hillshade)

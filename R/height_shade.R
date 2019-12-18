@@ -13,22 +13,28 @@
 #'  plot_map()
 #'  
 #'#Add a shadow:
+#'\donttest{
 #'montereybay %>%
 #'  height_shade() %>%
 #'  add_shadow(ray_shade(montereybay,zscale=50),0.3) %>%
 #'  plot_map()
-#'  
+#'}
+#'
 #'#Change the palette:
+#'\donttest{
 #'montereybay %>%
 #'  height_shade(texture = topo.colors(256)) %>%
 #'  add_shadow(ray_shade(montereybay,zscale=50),0.3) %>%
 #'  plot_map()
+#'}
 #'
 #'#Really change the palette:
+#'\donttest{
 #'montereybay %>%
 #'  height_shade(texture = rainbow(256)) %>%
 #'  add_shadow(ray_shade(montereybay,zscale=50),0.3) %>%
 #'  plot_map()
+#'}
 height_shade = function(heightmap, texture=grDevices::terrain.colors(256)) {
   tempfilename = tempfile()
   old.par = graphics::par(no.readonly = TRUE)
