@@ -156,7 +156,6 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1) {
       vertex_info$endindexnormals[row] = number_normals
     }
   }
-  browser()
   for(row in 1:nrow(vertex_info)) {
     if(vertex_info$raytype[row] == "surface") {
       if(save_texture) {
