@@ -31,7 +31,8 @@
 #'@param calculate_normals Default `TRUE`. If `FALSE`, will not calculate per-vertex normals. Can also pass the
 #'output of the function `calculate_normals` to use pre-computed normals.
 #'@param litbase Default `FALSE`. If `TRUE`, the base will be a glossy material lit using the 
-#'`lit = TRUE` parameter in `rgl`.
+#'`lit = TRUE` parameter in `rgl`. If calling `render_highquality()`, set this to `TRUE` to make sure
+#'rgl exports the sizes of the model.
 #'@param windowsize Default `600`. Position, width, and height of the `rgl` device displaying the plot. 
 #'If a single number, viewport will be a square and located in upper left corner. 
 #'If two numbers, (e.g. `c(600,800)`), user will specify width and height separately. 

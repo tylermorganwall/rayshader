@@ -636,10 +636,10 @@ plot_gg = function(ggobj, width = 3, height = 3,
       stop(paste0("Error: Discrete variable cannot be mapped to 3D. Did you mean to choose `",ifelse(height_aes == "fill","color","fill"), "` as the `height_aes`?"),call.=FALSE)
     }
   })
-  if(!("magick" %in% rownames(utils::installed.packages()))) {
-    stop("magick package required to use argument reduce_size")
-  } else {
-    if(!is.null(reduce_size)) {
+  if(!is.null(reduce_size)) {
+    if(!("magick" %in% rownames(utils::installed.packages()))) {
+      stop("magick package required to use argument reduce_size")
+    } else {
       if(length(reduce_size) == 1 && reduce_size < 1) {
         scale = scale * reduce_size
         image_info = magick::image_read(paste0(heightmaptemp,".png")) %>%

@@ -70,7 +70,8 @@ of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
 output of the function `calculate_normals` to use pre-computed normals.}
 
 \item{litbase}{Default `FALSE`. If `TRUE`, the base will be a glossy material lit using the 
-`lit = TRUE` parameter in `rgl`.}
+`lit = TRUE` parameter in `rgl`. If calling `render_highquality()`, set this to `TRUE` to make sure
+rgl exports the sizes of the model.}
 
 \item{windowsize}{Default `600`. Position, width, and height of the `rgl` device displaying the plot. 
 If a single number, viewport will be a square and located in upper left corner. 
