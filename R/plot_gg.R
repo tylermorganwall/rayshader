@@ -655,7 +655,9 @@ plot_gg = function(ggobj, width = 3, height = 3,
   }
   mapcolor = png::readPNG(paste0(colormaptemp,".png"))
   mapheight = png::readPNG(paste0(heightmaptemp,".png"))
-  mapheight = mapheight[,,1]
+  if(length(dim(mapheight)) == 3) {
+    mapheight = mapheight[,,1]
+  } 
   if(invert) {
     mapheight = 1 - mapheight
   }
