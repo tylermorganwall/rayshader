@@ -13,7 +13,8 @@ render_highquality(filename = NULL, light = TRUE,
   title_bar_color = NULL, title_bar_alpha = 0.5,
   ground_material = diffuse(), ground_size = 1e+05,
   scene_elements = NULL, camera_location = NULL, camera_lookat = c(0,
-  0, 0), clear = FALSE, print_scene_info = FALSE, ...)
+  0, 0), camera_interpolate = 1, clear = FALSE,
+  print_scene_info = FALSE, ...)
 }
 \arguments{
 \item{filename}{Filename of saved image. If missing, will display to current device.}
@@ -69,6 +70,9 @@ be derived from the rgl window.}
 
 \item{camera_lookat}{Default `NULL`. Custom point at which the camera is directed. The `FOV`, `width`, and `height` arguments will still
 be derived from the rgl window.}
+
+\item{camera_interpolate}{Default `c(0,0)`. Maximum `1`, minimum `0`. Sets the camera at a point between the `rgl` view and the `camera_location` 
+and `camera_lookat` vectors.}
 
 \item{clear}{Default `FALSE`. If `TRUE`, the current `rgl` device will be cleared.}
 

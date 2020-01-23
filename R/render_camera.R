@@ -1,6 +1,7 @@
 #'@title Render Camera
 #'
-#'@description Changes the position and properties of the camera around the scene. Wrapper around \link[rgl]{rgl.viewpoint}.
+#'@description Changes the position and properties of the camera around the scene. If no 
+#'values are entered, prints and returns the current values.
 #'
 #'@param theta Defaults to current value. Rotation angle.
 #'@param phi Defaults to current value. Azimuth angle. Maximum `90`.
@@ -76,7 +77,13 @@
 #'}
 #'
 #'
+#'
 render_camera = function(theta = NULL, phi = NULL, zoom = NULL, fov = NULL) {
+  if(is.null(theta) && is.null(theta) && is.null(theta) && is.null(theta)) {
+    allmissing = TRUE
+  } else {
+    allmissing = FALSE
+  }
   if(rgl::rgl.cur() == 0) {
     stop("No rgl window currently open.")
   }
@@ -100,4 +107,7 @@ render_camera = function(theta = NULL, phi = NULL, zoom = NULL, fov = NULL) {
     }
   }
   rgl::rgl.viewpoint(theta = theta, phi = phi, fov = fov, zoom = zoom)
+  if(allmissing) {
+    return(c("theta"=theta,"phi"=phi,"zoom"=zoom,"fov"=fov))
+  }
 }

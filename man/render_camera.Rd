@@ -16,7 +16,8 @@ render_camera(theta = NULL, phi = NULL, zoom = NULL, fov = NULL)
 \item{fov}{Defaults to current value. Field of view of the camera. Maximum `180`.}
 }
 \description{
-Changes the position and properties of the camera around the scene. Wrapper around \link[rgl]{rgl.viewpoint}.
+Changes the position and properties of the camera around the scene. If no 
+values are entered, prints and returns the current values.
 }
 \examples{
 \dontrun{
@@ -85,6 +86,7 @@ for(i in 1:360) {
 #             theta = thetavec, phi = phivecfull, zoom = zoomvec, fov=0)
 rgl::rgl.close()
 }
+
 
 
 }

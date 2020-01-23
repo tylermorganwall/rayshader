@@ -37,6 +37,8 @@
 #'be derived from the rgl window.
 #'@param camera_lookat Default `NULL`. Custom point at which the camera is directed. The `FOV`, `width`, and `height` arguments will still
 #'be derived from the rgl window.
+#'@param camera_interpolate Default `c(0,0)`. Maximum `1`, minimum `0`. Sets the camera at a point between the `rgl` view and the `camera_location` 
+#'and `camera_lookat` vectors.
 #'@param scene_elements Default `NULL`. Extra scene elements to add to the scene, created with rayrender.
 #'@param clear Default `FALSE`. If `TRUE`, the current `rgl` device will be cleared.
 #'@param print_scene_info Default `FALSE`. If `TRUE`, it will print the position and lookat point of the camera.
@@ -114,7 +116,8 @@ render_highquality = function(filename = NULL, light = TRUE, lightdirection = 31
                               title_color = "black", title_size = 30, title_font = "sans",
                               title_bar_color = NULL, title_bar_alpha = 0.5,
                               ground_material = diffuse(), ground_size=100000,scene_elements=NULL, 
-                              camera_location = NULL, camera_lookat = c(0,0,0), clear  = FALSE, 
+                              camera_location = NULL, camera_lookat = c(0,0,0), 
+                              camera_interpolate=1, clear  = FALSE, 
                               print_scene_info = FALSE, ...) {
   if(rgl::rgl.cur() == 0) {
     stop("No rgl window currently open.")
@@ -149,6 +152,8 @@ render_highquality = function(filename = NULL, light = TRUE, lightdirection = 31
   } else {
     has_shadow = FALSE
   }
+  camera_interpolate[camera_interpolate > 1] = 1
+  camera_interpolate[camera_interpolate < 0] = 0
   fov = rgl::par3d()$FOV
   rotmat = rot_to_euler(rgl::par3d()$userMatrix)
   projmat = rgl::par3d()$projMatrix
@@ -180,25 +185,39 @@ render_highquality = function(filename = NULL, light = TRUE, lightdirection = 31
   observerx = cospi(phi/180) * sinpi(theta/180) * observer_radius 
   observerz = cospi(phi/180) * cospi(theta/180) * observer_radius 
   if(is.null(camera_location)) {
-    lookfrom = c(observerx,observery,observerz) 
+    lookfrom = c(observerx, observery, observerz) 
   } else {
     lookfrom = camera_location
   }
-  if(substring(cache_filename, nchar(cache_filename)-3,nchar(cache_filename)) != ".obj") {
-    cache_filename = paste0(cache_filename,".obj")
+  if(length(camera_interpolate) == 1) {
+    camera_interpolate = c(camera_interpolate,camera_interpolate)
+  }
+  if(all(camera_interpolate != 1)) {
+    if(!is.null(camera_location)) {
+      lookfrom = (1-camera_interpolate[1]) * c(observerx, observery, observerz) + 
+        camera_interpolate[1] * camera_location
+    }
+    if(!is.null(camera_lookat)) {
+      camera_lookat = camera_interpolate[2] * camera_lookat
+    }
+  }
+  if(substring(cache_filename, nchar(cache_filename) - 3, nchar(cache_filename)) != ".obj") {
+    cache_filename = paste0(cache_filename, ".obj")
   }
   if(no_cache || !file.exists(cache_filename)) {
-    if(obj_material$type == "diffuse") {
+    if(obj_material$type %in% c("diffuse","oren-nayar")) {
       save_obj(cache_filename)
     } else {
       save_obj(cache_filename, save_texture = FALSE)
     }
   }
-  if(obj_material$type == "diffuse") {
-    scene = obj_model(cache_filename, x=-bbox_center[1],y = -bbox_center[2],z=-bbox_center[3], texture=TRUE,
-                    material = obj_material)
+  if(obj_material$type %in% c("diffuse","oren-nayar")) {
+    scene = obj_model(cache_filename, x = -bbox_center[1], y = -bbox_center[2],
+                      z = -bbox_center[3], texture = TRUE,
+                      material = obj_material)
   } else {
-    scene = obj_model(cache_filename, x=-bbox_center[1],y = -bbox_center[2],z=-bbox_center[3],
+    scene = obj_model(cache_filename, x = -bbox_center[1], y = -bbox_center[2], 
+                      z = -bbox_center[3],
                       material = obj_material)
   }
   if(has_shadow) {
