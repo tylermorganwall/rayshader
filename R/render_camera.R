@@ -79,7 +79,7 @@
 #'
 #'
 render_camera = function(theta = NULL, phi = NULL, zoom = NULL, fov = NULL) {
-  if(is.null(theta) && is.null(theta) && is.null(theta) && is.null(theta)) {
+  if(is.null(theta) && is.null(phi) && is.null(zoom) && is.null(fov)) {
     allmissing = TRUE
   } else {
     allmissing = FALSE
