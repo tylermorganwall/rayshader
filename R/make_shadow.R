@@ -5,7 +5,6 @@
 #'@param heightmap A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.
 #'@param basedepth Default `grey20`.
 #'@param shadowwidth Default `50`. Shadow width.
-#'@import imager
 #'@keywords internal
 make_shadow = function(heightmap, basedepth, shadowwidth, color, shadowcolor) {
   rows = nrow(heightmap)
@@ -28,11 +27,20 @@ make_shadow = function(heightmap, basedepth, shadowwidth, color, shadowcolor) {
   shadowarray[,,1] = t(rmat)
   shadowarray[,,2] = t(gmat)
   shadowarray[,,3] = t(bmat)
-  shadowarray = suppressWarnings(as.array(imager::isoblur(imager::as.cimg(shadowarray),sigma=shadowwidth/2))[,,1,])
-  tempmap = tempfile()
-  save_png(shadowarray,tempmap)
+  temppreblur = tempfile(fileext = ".png")
+  tempmap = tempfile(fileext = ".png")
+  png::writePNG(shadowarray, temppreblur)
+  if("magick" %in% rownames(utils::installed.packages())) {
+    magick::image_read(temppreblur) %>%
+      magick::image_blur(sigma =  shadowwidth/2, radius=shadowwidth/2) %>%
+      (function(x) as.double(x[[1]])) %>%
+      png::writePNG(tempmap)
+  } else {
+    warning("`magick` package required for smooth shadow--using basic shadow instead.")
+    png::writePNG(shadowarray,tempmap)
+  }
   rgl.surface((-shadowwidth+1):(rows+shadowwidth) - rows/2,
               -(-shadowwidth+1):-(cols+shadowwidth) + cols/2+1,
-              basedepthmat,texture=paste0(tempmap,".png"),
+              basedepthmat,texture=tempmap,
               lit=FALSE,back="culled",ambient = "#000006")
 }

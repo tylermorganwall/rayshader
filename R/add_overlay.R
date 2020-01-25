@@ -49,14 +49,51 @@
 #'}
 add_overlay = function(hillshade, overlay, alphacolor=NULL, alphalayer = 1, alphamethod = "max", 
                        gamma_correction = TRUE) {
-  if(any(dim(hillshade)[1:2] != dim(overlay)[1:2])) {
-    resized_overlay_file = tempfile(fileext=".png")
-    png::writePNG(overlay,resized_overlay_file)
-    temp_overlay = imager::load.image(resized_overlay_file)
-    resized_temp_overlay = resize(temp_overlay, dim(hillshade)[2], dim(hillshade)[1])
-    imager::save.image(resized_temp_overlay, resized_overlay_file)
-    overlay = png::readPNG(resized_overlay_file)
-    warning("Overlay doesn't match dimension of hillshade--resizing to match")
+  if((length(dim(hillshade)) == 2) && any(dim(hillshade) != dim(overlay)[2:1])) {
+    if("magick" %in% rownames(utils::installed.packages())) {
+      resized_overlay_file = tempfile(fileext=".png")
+      resized_overlay_file2 = tempfile(fileext=".png")
+      png::writePNG(overlay,resized_overlay_file)
+      magick::image_read(resized_overlay_file) %>%
+        magick::image_resize(paste0(c(dim(hillshade)[2],"x",dim(hillshade)[1],"!"),collapse="")) %>%
+        magick::image_write(resized_overlay_file2)
+      overlay = png::readPNG(resized_overlay_file2)
+      if(length(dim(overlay)) != 3) {
+        tempoverlay = array(0, dim = c(dim(overlay)[1],dim(overlay)[2],3))
+        tempoverlay[,,1] = overlay
+        tempoverlay[,,2] = overlay
+        tempoverlay[,,3] = overlay
+        overlay = tempoverlay
+      }
+      warning("Overlay doesn't match dimension of hillshade--resizing to match")
+    } else {
+      stop("Overlay doesn't match dimension of hillshade.",
+           "`magick` package required for auto-resizing of overlay.",
+           "Resize overlay manually or install `magick` to continue.")
+    }
+  }
+  if((length(dim(hillshade)) == 3) && any(dim(hillshade)[1:2] != dim(overlay)[1:2])) {
+    if("magick" %in% rownames(utils::installed.packages())) {
+      resized_overlay_file = tempfile(fileext=".png")
+      resized_overlay_file2 = tempfile(fileext=".png")
+      png::writePNG(overlay,resized_overlay_file)
+      magick::image_read(resized_overlay_file) %>%
+        magick::image_resize(paste0(c(dim(hillshade)[2],"x",dim(hillshade)[1],"!"),collapse="")) %>%
+        magick::image_write(resized_overlay_file2)
+      overlay = png::readPNG(resized_overlay_file2)
+      if(length(dim(overlay)) != 3) {
+        tempoverlay = array(0, dim = c(dim(overlay)[1],dim(overlay)[2],3))
+        tempoverlay[,,1] = overlay
+        tempoverlay[,,2] = overlay
+        tempoverlay[,,3] = overlay
+        overlay = tempoverlay
+      }
+      warning("Overlay doesn't match dimension of hillshade--resizing to match")
+    } else {
+      stop("Overlay doesn't match dimension of hillshade.",
+           "`magick` package required for auto-resizing of overlay.",
+           "Resize overlay manually or install `magick` to continue.")
+    }
   }
   if(any(alphalayer > 1 || alphalayer < 0)) {
     stop("Argument `alphalayer` must not be less than 0 or more than 1")
