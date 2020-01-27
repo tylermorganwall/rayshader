@@ -9,19 +9,37 @@
 #'@return Shaded texture map.
 #'@export
 #'@examples
-#'#Raytrace the `volcano` elevation map and add that shadow to the output of sphere_shade()
-#'shadowmap = ray_shade(volcano)
+#'#First we plot the sphere_shade() hillshade of `montereybay` with no shadows
 #'
-#'volcano %>%
-#'  sphere_shade() %>%
-#'  add_shadow(shadowmap) %>%
+#'\donttest{
+#'montereybay %>%
+#'  sphere_shade(colorintensity=0.5) %>%
 #'  plot_map()
-#'  
-#'#Increase the intensity of the shadow:
-#'volcano %>%
-#'  sphere_shade() %>%
-#'  add_shadow(shadowmap,0.3) %>%
+#'}
+#'
+#'#Raytrace the `montereybay` elevation map and add that shadow to the output of sphere_shade()
+#'\donttest{
+#'montereybay %>%
+#'  sphere_shade(colorintensity=0.5) %>%
+#'  add_shadow(ray_shade(montereybay,sunaltitude=20,zscale=50),max_darken=0.3) %>%
 #'  plot_map()
+#'}
+#'
+#'#Increase the intensity of the shadow map with the max_darken argument.
+#'\donttest{
+#'montereybay %>%
+#'  sphere_shade(colorintensity=0.5) %>%
+#'  add_shadow(ray_shade(montereybay,sunaltitude=20,zscale=50),max_darken=0.1) %>%
+#'  plot_map()
+#'}
+#'
+#'#Decrease the intensity of the shadow map.
+#'\donttest{
+#'montereybay %>%
+#'  sphere_shade(colorintensity=0.5) %>%
+#'  add_shadow(ray_shade(montereybay,sunaltitude=20,zscale=50),max_darken=0.7) %>%
+#'  plot_map()
+#'}
 add_shadow = function(hillshade, shadowmap, max_darken = 0.7) {
   if(length(dim(shadowmap)) == 3 && length(dim(hillshade)) == 2) {
     tempstore = hillshade

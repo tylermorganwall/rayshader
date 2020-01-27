@@ -52,16 +52,30 @@ Calculates shadow map for a elevation matrix by propogating rays from each matri
 lowering the brightness at each point for each ray that intersects the surface.
 }
 \examples{
-#Here we produce an shadow map of the `volcano` elevation map with the light from the NE.
+#First we ray trace the Monterey Bay dataset.
 #The default angle is from 40-50 degrees azimuth, from the north east.
-volcanoshadow = ray_shade(volcano)
-   
-#Turn off Lambertian shading to get a shadow map solely based on the raytraced shadows.
-volcanoshadow = ray_shade(heightmap = volcano, 
-   sunaltitude = 35, 
-   sunangle = 45, 
-   maxsearch = 100,
-   lambert = FALSE)
-   
-plot_map(volcanoshadow)
+\donttest{
+montereybay \%>\%
+ ray_shade(zscale=50) \%>\%
+ plot_map()
+}
+#Change the altitude of the sun to 25 degrees
+\donttest{
+montereybay \%>\%
+ ray_shade(zscale=50, sunaltitude=25) \%>\%
+ plot_map()
+}
+#Remove the lambertian shading to just calculate shadow intensity.
+\donttest{
+montereybay \%>\%
+ ray_shade(zscale=50, sunaltitude=25, lambert=FALSE) \%>\%
+ plot_map()
+}
+
+#Change the direction of the sun to the South East
+\donttest{
+montereybay \%>\%
+ ray_shade(zscale=50, sunaltitude=25, sunangle=225) \%>\%
+ plot_map()
+}
 }
