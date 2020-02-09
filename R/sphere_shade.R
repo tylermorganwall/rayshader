@@ -6,11 +6,11 @@
 #'
 #'@param heightmap A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.
 #'@param sunangle Default `315` (NW). The direction of the main highlight color (derived from the built-in palettes or the `create_texture` function).
-#'@param texture Default `imhof1`. Either a square matrix indicating the spherical texture mapping, or a string indicating one 
-#'of the built-in palettes (`imhof1`,`imhof2`,`imhof3`,`imhof4`,`desert`, `bw`, and `unicorn`). 
+#'@param texture Default `imhof1`. Either a square matrix indicating the spherical texture mapping, or a string indicating one
+#'of the built-in palettes (`imhof1`,`imhof2`,`imhof3`,`imhof4`,`desert`, `bw`, and `unicorn`).
 #'@param normalvectors Default `NULL`. Cache of the normal vectors (from `calculate_normal` function). Supply this to speed up texture mapping.
 #'@param colorintensity Default `1`. The intensity of the color mapping. Higher values will increase the intensity of the color mapping.
-#'@param zscale Default `1/colorintensity`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. 
+#'@param zscale Default `1/colorintensity`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis.
 #'Ignored unless `colorintensity` missing.
 #'@param progbar Default `TRUE` if interactive, `FALSE` otherwise. If `FALSE`, turns off progress bar.
 #'@return RGB array of hillshaded texture mappings.
@@ -20,12 +20,12 @@
 #'montereybay %>%
 #'  sphere_shade() %>%
 #'  plot_map()
-#'  
+#'
 #'#Decrease the color intensity:
 #'montereybay %>%
 #'  sphere_shade(colorintensity=0.1) %>%
 #'  plot_map()
-#'  
+#'
 #'#Change to a built-in color texture:
 #'montereybay %>%
 #'  sphere_shade(texture="desert") %>%
@@ -41,7 +41,7 @@
 #'  sphere_shade(texture=create_texture("springgreen","darkgreen",
 #'                                      "turquoise","steelblue3","white")) %>%
 #'  plot_map()
-sphere_shade = function(heightmap, sunangle=315, texture="imhof1", 
+sphere_shade = function(heightmap, sunangle=315, texture="imhof1",
                         normalvectors = NULL, colorintensity = 1, zscale=1, progbar = interactive()) {
   if(missing(zscale)) {
     if(colorintensity > 0 && is.numeric(colorintensity)) {
@@ -53,7 +53,7 @@ sphere_shade = function(heightmap, sunangle=315, texture="imhof1",
   sunangle = sunangle/180*pi
   if(is.null(normalvectors)) {
     normalvectors = calculate_normal(heightmap = heightmap, zscale = zscale, progbar = progbar)
-  } 
+  }
   heightmap = add_padding(heightmap)
   if(methods::is(texture,"character")) {
     if(texture %in% c("imhof1","imhof2","imhof3","imhof4","desert","bw","unicorn")) {
@@ -71,7 +71,9 @@ sphere_shade = function(heightmap, sunangle=315, texture="imhof1",
         texture = create_texture("#ffe3b3","#6a463a","#dbaf70","#9c9988","#c09c7c")
       } else if(texture == "unicorn") {
         texture = create_texture("red","green","blue","yellow","white")
-      } 
+      }
+    } else if (methods::is(texture, "array")) {
+      texture = texture
     } else {
       stop("Built-in texture palette not recognized: possible choices are `imhof1`,`imhof2`,`imhof3`,`imhof4`,`bw`,`desert`, and `unicorn`")
     }
