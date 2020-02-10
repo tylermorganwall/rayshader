@@ -4,10 +4,18 @@
 \alias{ambient_shade}
 \title{Calculate Ambient Occlusion Map}
 \usage{
-ambient_shade(heightmap, anglebreaks = 90 * cospi(seq(5, 85, by =
-  5)/180), sunbreaks = 24, maxsearch = 30, multicore = FALSE,
-  zscale = 1, cache_mask = NULL, shadow_cache = NULL,
-  progbar = interactive(), ...)
+ambient_shade(
+  heightmap,
+  anglebreaks = 90 * cospi(seq(5, 85, by = 5)/180),
+  sunbreaks = 24,
+  maxsearch = 30,
+  multicore = FALSE,
+  zscale = 1,
+  cache_mask = NULL,
+  shadow_cache = NULL,
+  progbar = interactive(),
+  ...
+)
 }
 \arguments{
 \item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.}

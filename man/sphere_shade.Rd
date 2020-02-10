@@ -4,9 +4,15 @@
 \alias{sphere_shade}
 \title{Calculate Surface Color Map}
 \usage{
-sphere_shade(heightmap, sunangle = 315, texture = "imhof1",
-  normalvectors = NULL, colorintensity = 1, zscale = 1,
-  progbar = interactive())
+sphere_shade(
+  heightmap,
+  sunangle = 315,
+  texture = "imhof1",
+  normalvectors = NULL,
+  colorintensity = 1,
+  zscale = 1,
+  progbar = interactive()
+)
 }
 \arguments{
 \item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.}

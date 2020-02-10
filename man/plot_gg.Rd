@@ -4,13 +4,29 @@
 \alias{plot_gg}
 \title{Transform ggplot2 objects into 3D}
 \usage{
-plot_gg(ggobj, width = 3, height = 3, height_aes = NULL,
-  invert = FALSE, shadow_intensity = 0.5, units = c("in", "cm",
-  "mm"), scale = 150, pointcontract = 0.7, offset_edges = FALSE,
-  preview = FALSE, raytrace = TRUE, sunangle = 315,
-  anglebreaks = seq(30, 40, 0.1), multicore = FALSE, lambert = TRUE,
-  reduce_size = NULL, save_height_matrix = FALSE,
-  save_shadow_matrix = FALSE, saved_shadow_matrix = NULL, ...)
+plot_gg(
+  ggobj,
+  width = 3,
+  height = 3,
+  height_aes = NULL,
+  invert = FALSE,
+  shadow_intensity = 0.5,
+  units = c("in", "cm", "mm"),
+  scale = 150,
+  pointcontract = 0.7,
+  offset_edges = FALSE,
+  preview = FALSE,
+  raytrace = TRUE,
+  sunangle = 315,
+  anglebreaks = seq(30, 40, 0.1),
+  multicore = FALSE,
+  lambert = TRUE,
+  reduce_size = NULL,
+  save_height_matrix = FALSE,
+  save_shadow_matrix = FALSE,
+  saved_shadow_matrix = NULL,
+  ...
+)
 }
 \arguments{
 \item{ggobj}{ggplot object to projected into 3D.}

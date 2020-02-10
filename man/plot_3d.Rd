@@ -4,15 +4,37 @@
 \alias{plot_3d}
 \title{Plot 3D}
 \usage{
-plot_3d(hillshade, heightmap, zscale = 1, baseshape = "rectangle",
-  solid = TRUE, soliddepth = "auto", solidcolor = "grey20",
-  solidlinecolor = "grey30", shadow = TRUE, shadowdepth = "auto",
-  shadowcolor = "grey50", shadowwidth = "auto", water = FALSE,
-  waterdepth = 0, watercolor = "lightblue", wateralpha = 0.5,
-  waterlinecolor = NULL, waterlinealpha = 1, linewidth = 2,
-  lineantialias = FALSE, theta = 45, phi = 45, fov = 0, zoom = 1,
-  background = "white", calculate_normals = TRUE, litbase = FALSE,
-  windowsize = 600, ...)
+plot_3d(
+  hillshade,
+  heightmap,
+  zscale = 1,
+  baseshape = "rectangle",
+  solid = TRUE,
+  soliddepth = "auto",
+  solidcolor = "grey20",
+  solidlinecolor = "grey30",
+  shadow = TRUE,
+  shadowdepth = "auto",
+  shadowcolor = "grey50",
+  shadowwidth = "auto",
+  water = FALSE,
+  waterdepth = 0,
+  watercolor = "lightblue",
+  wateralpha = 0.5,
+  waterlinecolor = NULL,
+  waterlinealpha = 1,
+  linewidth = 2,
+  lineantialias = FALSE,
+  theta = 45,
+  phi = 45,
+  fov = 0,
+  zoom = 1,
+  background = "white",
+  calculate_normals = TRUE,
+  litbase = FALSE,
+  windowsize = 600,
+  ...
+)
 }
 \arguments{
 \item{hillshade}{Hillshade/image to be added to 3D surface map.}

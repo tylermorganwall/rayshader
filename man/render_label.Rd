@@ -4,12 +4,30 @@
 \alias{render_label}
 \title{Render Label}
 \usage{
-render_label(heightmap, text, x, y, z, zscale = 1, relativez = TRUE,
-  offset = 0, clear_previous = FALSE, textsize = 1, dashed = FALSE,
-  dashlength = "auto", linewidth = 3, antialias = FALSE, alpha = 1,
-  textalpha = 1, freetype = TRUE, adjustvec = NULL,
-  family = "sans", fonttype = "standard", linecolor = "black",
-  textcolor = "black")
+render_label(
+  heightmap,
+  text,
+  x,
+  y,
+  z,
+  zscale = 1,
+  relativez = TRUE,
+  offset = 0,
+  clear_previous = FALSE,
+  textsize = 1,
+  dashed = FALSE,
+  dashlength = "auto",
+  linewidth = 3,
+  antialias = FALSE,
+  alpha = 1,
+  textalpha = 1,
+  freetype = TRUE,
+  adjustvec = NULL,
+  family = "sans",
+  fonttype = "standard",
+  linecolor = "black",
+  textcolor = "black"
+)
 }
 \arguments{
 \item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.}

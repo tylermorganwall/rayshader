@@ -4,12 +4,28 @@
 \alias{render_movie}
 \title{Render Movie}
 \usage{
-render_movie(filename, type = "orbit", frames = 360, fps = 30,
-  phi = 30, theta = 0, zoom = NULL, fov = NULL,
-  title_text = NULL, title_offset = c(20, 20), title_color = "black",
-  title_size = 30, title_font = "sans", title_bar_color = NULL,
-  title_bar_alpha = 0.5, image_overlay = NULL, vignette = FALSE,
-  audio = NULL, progbar = interactive(), ...)
+render_movie(
+  filename,
+  type = "orbit",
+  frames = 360,
+  fps = 30,
+  phi = 30,
+  theta = 0,
+  zoom = NULL,
+  fov = NULL,
+  title_text = NULL,
+  title_offset = c(20, 20),
+  title_color = "black",
+  title_size = 30,
+  title_font = "sans",
+  title_bar_color = NULL,
+  title_bar_alpha = 0.5,
+  image_overlay = NULL,
+  vignette = FALSE,
+  audio = NULL,
+  progbar = interactive(),
+  ...
+)
 }
 \arguments{
 \item{filename}{Filename. If not appended with `.mp4`, it will be appended automatically.}

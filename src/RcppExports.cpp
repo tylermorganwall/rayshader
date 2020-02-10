@@ -92,6 +92,22 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// make_surface_cpp
+List make_surface_cpp(NumericMatrix& heightmap, LogicalMatrix& na_matrix, NumericMatrix& normalsx, NumericMatrix& normalsy, NumericMatrix& normalsz, double basedepth);
+RcppExport SEXP _rayshader_make_surface_cpp(SEXP heightmapSEXP, SEXP na_matrixSEXP, SEXP normalsxSEXP, SEXP normalsySEXP, SEXP normalszSEXP, SEXP basedepthSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix& >::type heightmap(heightmapSEXP);
+    Rcpp::traits::input_parameter< LogicalMatrix& >::type na_matrix(na_matrixSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix& >::type normalsx(normalsxSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix& >::type normalsy(normalsySEXP);
+    Rcpp::traits::input_parameter< NumericMatrix& >::type normalsz(normalszSEXP);
+    Rcpp::traits::input_parameter< double >::type basedepth(basedepthSEXP);
+    rcpp_result_gen = Rcpp::wrap(make_surface_cpp(heightmap, na_matrix, normalsx, normalsy, normalsz, basedepth));
+    return rcpp_result_gen;
+END_RCPP
+}
 // make_base_cpp
 List make_base_cpp(NumericMatrix& heightmap, LogicalMatrix& na_matrix, double basedepth);
 RcppExport SEXP _rayshader_make_base_cpp(SEXP heightmapSEXP, SEXP na_matrixSEXP, SEXP basedepthSEXP) {
@@ -284,6 +300,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_rayshader_find_groups_cpp", (DL_FUNC) &_rayshader_find_groups_cpp, 1},
     {"_rayshader_interpolate_color", (DL_FUNC) &_rayshader_interpolate_color, 4},
     {"_rayshader_lambshade_cpp", (DL_FUNC) &_rayshader_lambshade_cpp, 2},
+    {"_rayshader_make_surface_cpp", (DL_FUNC) &_rayshader_make_surface_cpp, 6},
     {"_rayshader_make_base_cpp", (DL_FUNC) &_rayshader_make_base_cpp, 3},
     {"_rayshader_make_water_cpp", (DL_FUNC) &_rayshader_make_water_cpp, 3},
     {"_rayshader_make_waterlines_cpp", (DL_FUNC) &_rayshader_make_waterlines_cpp, 3},

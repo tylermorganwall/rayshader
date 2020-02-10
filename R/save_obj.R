@@ -72,10 +72,11 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1) {
   number_vertices = 0
   number_texcoords = 0
   number_normals = 0
-  
+  # allvertices = matrix(nrow=0,ncol=3)
   #Writes data and increments vertex/normal/texture counter
   write_data = function(id, con) {
     vertices = rgl.attrib(id, "vertices")
+    # allvertices <<- rbind(allvertices,vertices)
     textures = rgl.attrib(id, "texcoords")
     normals = rgl.attrib(id, "normals")
     cat(paste0("v ", sprintf("%1.6f %1.6f %1.6f",vertices[,1], vertices[,2], vertices[,3])), file=con, sep = "\n")
@@ -132,6 +133,7 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1) {
   vertex_info$endindextex = NA
   vertex_info$endindexnormals = NA
   wrote_water = FALSE
+
   for(row in 1:nrow(vertex_info)) {
     id = vertex_info$id[row]
     if(vertex_info$raytype[row] %in% c("surface","base","basebottom","water")) {
@@ -163,22 +165,61 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1) {
         cat("usemtl ray_surface", file=con, sep ="\n")
       }
       dims = rgl::rgl.attrib(vertex_info$id[row], "dim")
+      vertices_y = rgl.attrib(vertex_info$id[row], "vertices")[,2]
       nx = dims[1]
       nz = dims[2] 
       indices = rep(0, 6 * (nz - 1) * (nx - 1))
       counter = 0
+      na_counter = 0
       for(i in seq_len(nz)[-nz]) {
         for(j in seq_len(nx)[-nx]) {
-          cindices = (i-1)*nx + c(j, j + nx, j + 1, j + nx, j + nx + 1, j + 1)
-          indices[(1:6 + 6*counter)] = cindices
-          counter = counter + 1
+          if(!is.na(vertices_y[(i-1)*nx + j]) && !is.na(vertices_y[(i+1-1)*nx + j]) && 
+             !is.na(vertices_y[(i-1)*nx + j+1]) && !is.na(vertices_y[(i+1-1)*nx + j+1]))  {
+            cindices = (i-1)*nx + c(j, j + nx, j + 1, j + nx, j + nx + 1, j + 1)
+            indices[(1:6 + 6*counter)] = cindices
+            counter = counter + 1
+          } else {
+            na_counter = na_counter + 2
+          }
         }
       }
       indices = sprintf("%d/%d/%d", indices, indices, indices)
       indices = matrix(indices, ncol=3, byrow=TRUE)
+      indices = indices[1:(nrow(indices)-na_counter),]
       cat(paste("f", indices[,1], indices[,2], indices[,3]), 
           sep="\n", file=con)
-    } else if (vertex_info$raytype[row] == "base"){
+    } else if (vertex_info$raytype[row] == "basebottom") {
+      if(save_texture) {
+        cat("g Basebottom", file=con, sep ="\n")
+        cat("usemtl ray_base", file=con, sep ="\n")
+      }
+      dims = rgl::rgl.attrib(vertex_info$id[row], "dim")
+      vertices_y = rgl.attrib(vertex_info$id[row], "vertices")[,2]
+      nx = dims[1]
+      nz = dims[2] 
+      indices = rep(0, 6 * (nz - 1) * (nx - 1))
+      counter = 0
+      na_counter = 0
+      
+      for(i in seq_len(nz)[-nz]) {
+        for(j in seq_len(nx)[-nx]) {
+          if(!is.na(vertices_y[(i-1)*nx + j]) && !is.na(vertices_y[(i+1-1)*nx + j]) && 
+             !is.na(vertices_y[(i-1)*nx + j+1]) && !is.na(vertices_y[(i+1-1)*nx + j+1]))  {
+            cindices = (i-1)*nx + c(j, j + nx, j + 1, j + nx, j + nx + 1, j + 1)
+            indices[(1:6 + 6*counter)] = cindices
+            counter = counter + 1
+          } else {
+            na_counter = na_counter + 2
+          }
+        }
+      }
+      indices = indices + vertex_info$startindextex[row] - 1
+      indices = sprintf("%d//%d", indices, indices)
+      indices = matrix(indices, ncol=3, byrow=TRUE)
+      indices = indices[1:(nrow(indices)-na_counter),]
+      cat(paste("f", indices[,3], indices[,2], indices[,1]), 
+          sep="\n", file=con)
+    } else if (vertex_info$raytype[row] == "base") {
       if(save_texture) {
         cat("g Base", file=con, sep ="\n")
         cat("usemtl ray_base", file=con, sep ="\n")
@@ -202,19 +243,30 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1) {
       }
       if(vertex_info$type[row] == "surface") {
         dims = rgl::rgl.attrib(vertex_info$id[row], "dim")
+        vertices_y = rgl.attrib(vertex_info$id[row], "vertices")[,2]
+        
         nx = dims[1]
         nz = dims[2] 
         indices = rep(0, 6 * (nz - 1) * (nx - 1))
         counter = 0
+        na_counter = 0
         for(i in seq_len(nz)[-nz]) {
           for(j in seq_len(nx)[-nx]) {
-            cindices = (i-1)*nx + c(j, j + nx, j + 1, j + nx, j + nx + 1, j + 1) + vertex_info$startindex[row]/3
-            indices[(1:6 + 6*counter)] = cindices
-            counter = counter + 1
+            if(!is.na(vertices_y[(i-1)*nx + j]) && !is.na(vertices_y[(i+1-1)*nx + j]) && 
+               !is.na(vertices_y[(i-1)*nx + j+1]) && !is.na(vertices_y[(i+1-1)*nx + j+1]))  {
+              cindices = (i-1)*nx + c(j, j + nx, j + 1, j + nx, j + nx + 1, j + 1)
+              indices[(1:6 + 6*counter)] = cindices
+              counter = counter + 1
+            } else {
+              na_counter = na_counter + 2
+            }
           }
         }
+        indices = indices + vertex_info$startindex[row] - 1
         indices = matrix(indices, ncol=3, byrow=TRUE)
-        cat(paste("f", sprintf("%d %d %d", indices[,1], indices[,2], indices[,3])), 
+        indices = indices[1:(nrow(indices)-na_counter),]
+        
+        cat(paste("f", sprintf("%f %f %f", indices[,1], indices[,2], indices[,3])), 
             sep="\n", file=con)
       } else {
         baseindices = matrix(vertex_info$startindex[row]:vertex_info$endindex[row], ncol=3, byrow=TRUE)

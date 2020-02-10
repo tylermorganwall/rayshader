@@ -4,16 +4,36 @@
 \alias{render_depth}
 \title{Render Depth of Field}
 \usage{
-render_depth(focus = 0.5, focallength = 100, fstop = 4,
-  filename = NULL, preview_focus = FALSE, bokehshape = "circle",
-  bokehintensity = 1, bokehlimit = 0.8, rotation = 0,
-  gamma_correction = TRUE, aberration = 0, transparent_water = FALSE,
-  heightmap = NULL, zscale = NULL, title_text = NULL,
-  title_offset = c(20, 20), title_color = "black", title_size = 30,
-  title_font = "sans", title_bar_color = NULL, title_bar_alpha = 0.5,
-  image_overlay = NULL, vignette = FALSE, progbar = interactive(),
-  instant_capture = interactive(), clear = FALSE,
-  bring_to_front = FALSE, ...)
+render_depth(
+  focus = 0.5,
+  focallength = 100,
+  fstop = 4,
+  filename = NULL,
+  preview_focus = FALSE,
+  bokehshape = "circle",
+  bokehintensity = 1,
+  bokehlimit = 0.8,
+  rotation = 0,
+  gamma_correction = TRUE,
+  aberration = 0,
+  transparent_water = FALSE,
+  heightmap = NULL,
+  zscale = NULL,
+  title_text = NULL,
+  title_offset = c(20, 20),
+  title_color = "black",
+  title_size = 30,
+  title_font = "sans",
+  title_bar_color = NULL,
+  title_bar_alpha = 0.5,
+  image_overlay = NULL,
+  vignette = FALSE,
+  progbar = interactive(),
+  instant_capture = interactive(),
+  clear = FALSE,
+  bring_to_front = FALSE,
+  ...
+)
 }
 \arguments{
 \item{focus}{Defaults `0.5`. Depth in which to blur. Minimum 0, maximum 1.}

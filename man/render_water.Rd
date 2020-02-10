@@ -4,9 +4,17 @@
 \alias{render_water}
 \title{Render Water Layer}
 \usage{
-render_water(heightmap, waterdepth = 0, watercolor = "lightblue",
-  zscale = 1, wateralpha = 0.5, waterlinecolor = NULL,
-  waterlinealpha = 1, linewidth = 2, remove_water = TRUE)
+render_water(
+  heightmap,
+  waterdepth = 0,
+  watercolor = "lightblue",
+  zscale = 1,
+  wateralpha = 0.5,
+  waterlinecolor = NULL,
+  waterlinealpha = 1,
+  linewidth = 2,
+  remove_water = TRUE
+)
 }
 \arguments{
 \item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.}

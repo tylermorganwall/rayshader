@@ -4,8 +4,14 @@
 \alias{save_3dprint}
 \title{Save 3D Print}
 \usage{
-save_3dprint(filename, maxwidth = 125, unit = "mm", rotate = TRUE,
-  remove_extras = TRUE, clear = FALSE)
+save_3dprint(
+  filename,
+  maxwidth = 125,
+  unit = "mm",
+  rotate = TRUE,
+  remove_extras = TRUE,
+  clear = FALSE
+)
 }
 \arguments{
 \item{filename}{String with the filename. If `.stl` is not at the end of the string, it will be appended automatically.}

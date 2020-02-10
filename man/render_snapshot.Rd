@@ -4,11 +4,22 @@
 \alias{render_snapshot}
 \title{Render Snapshot of 3D Visualization}
 \usage{
-render_snapshot(filename, clear = FALSE, title_text = NULL,
-  title_offset = c(20, 20), title_color = "black", title_size = 30,
-  title_font = "sans", title_bar_color = NULL, title_bar_alpha = 0.5,
-  image_overlay = NULL, vignette = FALSE,
-  instant_capture = interactive(), bring_to_front = FALSE, ...)
+render_snapshot(
+  filename,
+  clear = FALSE,
+  title_text = NULL,
+  title_offset = c(20, 20),
+  title_color = "black",
+  title_size = 30,
+  title_font = "sans",
+  title_bar_color = NULL,
+  title_bar_alpha = 0.5,
+  image_overlay = NULL,
+  vignette = FALSE,
+  instant_capture = interactive(),
+  bring_to_front = FALSE,
+  ...
+)
 }
 \arguments{
 \item{filename}{Filename of snapshot. If missing, will display to current device.}

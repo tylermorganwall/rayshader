@@ -29,6 +29,10 @@ lambshade_cpp <- function(heightmap, rayvector) {
     .Call(`_rayshader_lambshade_cpp`, heightmap, rayvector)
 }
 
+make_surface_cpp <- function(heightmap, na_matrix, normalsx, normalsy, normalsz, basedepth) {
+    .Call(`_rayshader_make_surface_cpp`, heightmap, na_matrix, normalsx, normalsy, normalsz, basedepth)
+}
+
 make_base_cpp <- function(heightmap, na_matrix, basedepth) {
     .Call(`_rayshader_make_base_cpp`, heightmap, na_matrix, basedepth)
 }

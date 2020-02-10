@@ -4,9 +4,16 @@
 \alias{detect_water}
 \title{Detect water}
 \usage{
-detect_water(heightmap, zscale = 1, cutoff = 0.999,
-  min_area = length(heightmap)/400, max_height = NULL,
-  normalvectors = NULL, keep_groups = FALSE, progbar = FALSE)
+detect_water(
+  heightmap,
+  zscale = 1,
+  cutoff = 0.999,
+  min_area = length(heightmap)/400,
+  max_height = NULL,
+  normalvectors = NULL,
+  keep_groups = FALSE,
+  progbar = FALSE
+)
 }
 \arguments{
 \item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All grid points are assumed to be evenly spaced.}

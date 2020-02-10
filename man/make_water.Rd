@@ -4,8 +4,13 @@
 \alias{make_water}
 \title{make_water}
 \usage{
-make_water(heightmap, waterheight = mean(heightmap),
-  watercolor = "lightblue", zscale = 1, wateralpha = 0.5)
+make_water(
+  heightmap,
+  waterheight = mean(heightmap),
+  watercolor = "lightblue",
+  zscale = 1,
+  wateralpha = 0.5
+)
 }
 \arguments{
 \item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.}

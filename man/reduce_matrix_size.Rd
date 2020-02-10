@@ -4,8 +4,7 @@
 \alias{reduce_matrix_size}
 \title{Reduce Matrix Size}
 \usage{
-reduce_matrix_size(heightmap, scale = 0.5, width = NULL,
-  height = NULL)
+reduce_matrix_size(heightmap, scale = 0.5, width = NULL, height = NULL)
 }
 \arguments{
 \item{heightmap}{The elevation matrix.}

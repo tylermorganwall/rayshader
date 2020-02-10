@@ -4,8 +4,13 @@
 \alias{lamb_shade}
 \title{Calculate Lambert Shading Map}
 \usage{
-lamb_shade(heightmap, sunaltitude = 45, sunangle = 315, zscale = 1,
-  zero_negative = TRUE)
+lamb_shade(
+  heightmap,
+  sunaltitude = 45,
+  sunangle = 315,
+  zscale = 1,
+  zero_negative = TRUE
+)
 }
 \arguments{
 \item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.}

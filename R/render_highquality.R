@@ -4,9 +4,6 @@
 #'User can specify the light direction, intensity, and color, as well as specify the material of the 
 #'ground and add additional scene elements.
 #'
-#'Note: This version does not yet support meshes with missing entries (e.g. if any NA values are present,
-#'output will be ugly and wrong).
-#'
 #'@param filename Filename of saved image. If missing, will display to current device.
 #'@param light Default `TRUE`. Whether there should be a light in the scene. If not, the scene will be lit with a bluish sky.
 #'@param lightdirection Default `315`. Position of the light angle around the scene. 

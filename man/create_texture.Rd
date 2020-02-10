@@ -4,8 +4,14 @@
 \alias{create_texture}
 \title{Create Texture}
 \usage{
-create_texture(lightcolor, shadowcolor, leftcolor, rightcolor, centercolor,
-  cornercolors = NULL)
+create_texture(
+  lightcolor,
+  shadowcolor,
+  leftcolor,
+  rightcolor,
+  centercolor,
+  cornercolors = NULL
+)
 }
 \arguments{
 \item{lightcolor}{The main highlight color. Corresponds to the top center of the texture map.}

@@ -4,8 +4,14 @@
 \alias{add_overlay}
 \title{Add Overlay}
 \usage{
-add_overlay(hillshade, overlay, alphacolor = NULL, alphalayer = 1,
-  alphamethod = "max", gamma_correction = TRUE)
+add_overlay(
+  hillshade,
+  overlay,
+  alphacolor = NULL,
+  alphalayer = 1,
+  alphamethod = "max",
+  gamma_correction = TRUE
+)
 }
 \arguments{
 \item{hillshade}{A three-dimensional RGB array or 2D matrix of shadow intensities.}

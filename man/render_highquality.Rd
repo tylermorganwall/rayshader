@@ -4,17 +4,35 @@
 \alias{render_highquality}
 \title{Render High Quality}
 \usage{
-render_highquality(filename = NULL, light = TRUE,
-  lightdirection = 315, lightaltitude = 45, lightsize = NULL,
-  lightintensity = 500, lightcolor = "white",
-  obj_material = diffuse(), cache_filename = NULL, width = NULL,
-  height = NULL, title_text = NULL, title_offset = c(20, 20),
-  title_color = "black", title_size = 30, title_font = "sans",
-  title_bar_color = NULL, title_bar_alpha = 0.5,
-  ground_material = diffuse(), ground_size = 1e+05,
-  scene_elements = NULL, camera_location = NULL, camera_lookat = c(0,
-  0, 0), camera_interpolate = 1, clear = FALSE,
-  print_scene_info = FALSE, ...)
+render_highquality(
+  filename = NULL,
+  light = TRUE,
+  lightdirection = 315,
+  lightaltitude = 45,
+  lightsize = NULL,
+  lightintensity = 500,
+  lightcolor = "white",
+  obj_material = diffuse(),
+  cache_filename = NULL,
+  width = NULL,
+  height = NULL,
+  title_text = NULL,
+  title_offset = c(20, 20),
+  title_color = "black",
+  title_size = 30,
+  title_font = "sans",
+  title_bar_color = NULL,
+  title_bar_alpha = 0.5,
+  ground_material = diffuse(),
+  ground_size = 1e+05,
+  scene_elements = NULL,
+  camera_location = NULL,
+  camera_lookat = c(0, 0, 0),
+  camera_interpolate = 1,
+  clear = FALSE,
+  print_scene_info = FALSE,
+  ...
+)
 }
 \arguments{
 \item{filename}{Filename of saved image. If missing, will display to current device.}
@@ -84,9 +102,6 @@ and `camera_lookat` vectors.}
 Renders a raytraced version of the displayed rgl scene, using the `rayrender` package. 
 User can specify the light direction, intensity, and color, as well as specify the material of the 
 ground and add additional scene elements.
-
-Note: This version does not yet support meshes with missing entries (e.g. if any NA values are present,
-output will be ugly and wrong).
 }
 \examples{
 #Render the volcano dataset using pathtracing

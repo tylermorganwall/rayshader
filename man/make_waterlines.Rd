@@ -4,8 +4,15 @@
 \alias{make_waterlines}
 \title{make_waterlines}
 \usage{
-make_waterlines(heightmap, waterdepth = 0, linecolor = "grey40",
-  zscale = 1, alpha = 1, linewidth = 2, antialias = FALSE)
+make_waterlines(
+  heightmap,
+  waterdepth = 0,
+  linecolor = "grey40",
+  zscale = 1,
+  alpha = 1,
+  linewidth = 2,
+  antialias = FALSE
+)
 }
 \arguments{
 \item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.}

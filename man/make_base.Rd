@@ -4,8 +4,13 @@
 \alias{make_base}
 \title{make_base}
 \usage{
-make_base(heightmap, basedepth = 0, basecolor = "grey20", zscale = 1,
-  litbase = FALSE)
+make_base(
+  heightmap,
+  basedepth = 0,
+  basecolor = "grey20",
+  zscale = 1,
+  litbase = FALSE
+)
 }
 \arguments{
 \item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.}

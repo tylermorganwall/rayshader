@@ -4,10 +4,20 @@
 \alias{ray_shade}
 \title{Calculate Raytraced Shadow Map}
 \usage{
-ray_shade(heightmap, sunaltitude = 45, sunangle = 315,
-  maxsearch = NULL, lambert = TRUE, zscale = 1, multicore = FALSE,
-  cache_mask = NULL, shadow_cache = NULL, progbar = interactive(),
-  anglebreaks = NULL, ...)
+ray_shade(
+  heightmap,
+  sunaltitude = 45,
+  sunangle = 315,
+  maxsearch = NULL,
+  lambert = TRUE,
+  zscale = 1,
+  multicore = FALSE,
+  cache_mask = NULL,
+  shadow_cache = NULL,
+  progbar = interactive(),
+  anglebreaks = NULL,
+  ...
+)
 }
 \arguments{
 \item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.}
