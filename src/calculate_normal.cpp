@@ -28,6 +28,10 @@ List calculate_normal_cpp(const NumericMatrix& heightmap, bool progbar) {
   if(progbar) {
     pb.set_total(heightmap.ncol());
   }
+  bool first_na  = false;
+  bool second_na = false;
+  bool third_na = false;
+  bool fourth_na = false;
   
   for(int col = 0; col < heightmap.ncol(); col++) {
     if(progbar) {
@@ -39,9 +43,39 @@ List calculate_normal_cpp(const NumericMatrix& heightmap, bool progbar) {
         tempvector2(2) = heightmap(row,col)-heightmap(row+1,col);
         tempvector3(2) = heightmap(row,col)-heightmap(row,col-1);
         tempvector4(2) = heightmap(row,col)-heightmap(row-1,col);
-        storevector1 = vcrossnorm2(tempvector1,tempvector2);
-        storevector2 = vcrossnorm2(tempvector3,tempvector4);
-        storevector3 = (storevector1 + storevector2);
+        first_na = std::isnan(tempvector1(2));
+        second_na = std::isnan(tempvector2(2));
+        third_na = std::isnan(tempvector3(2));
+        fourth_na = std::isnan(tempvector4(2));
+        if(!first_na && !second_na && !third_na && !fourth_na) {
+          storevector1 = vcrossnorm2(tempvector1,tempvector2);
+          storevector2 = vcrossnorm2(tempvector3,tempvector4);
+          storevector3 = (storevector1 + storevector2);
+        } else if (!first_na && !second_na && !third_na && fourth_na) {
+          storevector1 = vcrossnorm2(tempvector1,tempvector2);
+          storevector2 = vcrossnorm2(tempvector2,tempvector3);
+          storevector3 = (storevector1 + storevector2);
+        } else if (!first_na && !second_na && third_na && !fourth_na) {
+          storevector1 = vcrossnorm2(tempvector4,tempvector1);
+          storevector2 = vcrossnorm2(tempvector1,tempvector2);
+          storevector3 = (storevector1 + storevector2);
+        } else if (!first_na && second_na && !third_na && !fourth_na) {
+          storevector1 = vcrossnorm2(tempvector3,tempvector4);
+          storevector2 = vcrossnorm2(tempvector4,tempvector1);
+          storevector3 = (storevector1 + storevector2);
+        } else if (first_na && !second_na && !third_na && !fourth_na) {
+          storevector1 = vcrossnorm2(tempvector2,tempvector3);
+          storevector2 = vcrossnorm2(tempvector3,tempvector4);
+          storevector3 = (storevector1 + storevector2);
+        } else if (!first_na && !second_na) {
+          storevector1 = vcrossnorm2(tempvector1,tempvector2);
+          storevector2 = vcrossnorm2(tempvector1,tempvector2);
+          storevector3 = (storevector1 + storevector2);
+        } else if (!third_na && !fourth_na) {
+          storevector1 = vcrossnorm2(tempvector3,tempvector4);
+          storevector2 = vcrossnorm2(tempvector3,tempvector4);
+          storevector3 = (storevector1 + storevector2);
+        }
         storevector3 = storevector3/sqrt(pow(storevector3(0),2) + pow(storevector3(1),2) + pow(storevector3(2),2));
       } else {
         if((row == 0 || col == 0) && (row != heightmap.nrow() - 1 && col != heightmap.ncol() - 1)) {
@@ -58,6 +92,8 @@ List calculate_normal_cpp(const NumericMatrix& heightmap, bool progbar) {
       xmat(row,col) = storevector3(0);
       ymat(row,col) = storevector3(1);
       zmat(row,col) = -storevector3(2);
+      first_na = false;
+      second_na = false;
     }
   }
   tempvector2(2) = heightmap(0,heightmap.ncol()-1)-heightmap(1,heightmap.ncol()-1);

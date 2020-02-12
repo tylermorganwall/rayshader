@@ -72,11 +72,11 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1) {
   number_vertices = 0
   number_texcoords = 0
   number_normals = 0
-  # allvertices = matrix(nrow=0,ncol=3)
+  # allvertices = matrix(nrow=0,ncol=3) #Debug line
   #Writes data and increments vertex/normal/texture counter
   write_data = function(id, con) {
     vertices = rgl.attrib(id, "vertices")
-    # allvertices <<- rbind(allvertices,vertices)
+    # allvertices <<- rbind(allvertices,vertices) #Debug line
     textures = rgl.attrib(id, "texcoords")
     normals = rgl.attrib(id, "normals")
     cat(paste0("v ", sprintf("%1.6f %1.6f %1.6f",vertices[,1], vertices[,2], vertices[,3])), file=con, sep = "\n")
@@ -183,6 +183,7 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1) {
           }
         }
       }
+      indices = indices + vertex_info$startindextex[row] - 1
       indices = sprintf("%d/%d/%d", indices, indices, indices)
       indices = matrix(indices, ncol=3, byrow=TRUE)
       indices = indices[1:(nrow(indices)-na_counter),]
