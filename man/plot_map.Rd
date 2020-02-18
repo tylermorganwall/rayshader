@@ -9,12 +9,12 @@ plot_map(hillshade, rotate = 0, keep_user_par = FALSE, ...)
 \arguments{
 \item{hillshade}{Hillshade to be plotted.}
 
-\item{rotate}{Default `0`. Rotates the output. Possible values: `0`, `90`, `180`, `270`.}
+\item{rotate}{Default \code{0}. Rotates the output. Possible values: \code{0}, \code{90}, \code{180}, \code{270}.}
 
-\item{keep_user_par}{Default `TRUE`. Whether to keep the user's `par()` settings. Set to `FALSE` if you 
-want to set up a multi-pane plot (e.g. set `par(mfrow)`).}
+\item{keep_user_par}{Default \code{TRUE}. Whether to keep the user's \code{par()} settings. Set to \code{FALSE} if you
+want to set up a multi-pane plot (e.g. set \code{par(mfrow)}).}
 
-\item{...}{Additional arguments to pass to the `raster::plotRGB` function that displays the map.}
+\item{...}{Additional arguments to pass to the \code{\link[raster:plotRGB]{raster::plotRGB()}} function that displays the map.}
 }
 \description{
 Displays the map in the current device.

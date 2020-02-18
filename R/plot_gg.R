@@ -47,7 +47,7 @@
 #'@param save_height_matrix Default `FALSE`. If `TRUE`, the function will return the height matrix used for the ggplot.
 #'@param save_shadow_matrix Default `FALSE`. If `TRUE`, the function will return the shadow matrix for use in future updates via the `shadow_cache` argument passed to `ray_shade`.
 #'@param saved_shadow_matrix Default `NULL`. A cached shadow matrix (saved by the a previous invocation of `plot_gg(..., save_shadow_matrix=TRUE)` to use instead of raytracing a shadow map each time.
-#'@param ... Additional arguments to be passed to `plot_3d()`.
+#'@param ... Additional arguments to be passed to [plot_3d()].
 #'@return Opens a 3D plot in rgl.
 #'@import ggplot2
 #'@export

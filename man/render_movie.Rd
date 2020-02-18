@@ -28,59 +28,59 @@ render_movie(
 )
 }
 \arguments{
-\item{filename}{Filename. If not appended with `.mp4`, it will be appended automatically.}
+\item{filename}{Filename. If not appended with \code{.mp4}, it will be appended automatically.}
 
-\item{type}{Default `orbit`, which orbits the 3D object at the user-set camera settings `phi`, `zoom`, and `fov`. 
-Other options are `oscillate` (sine wave around `theta` value, covering 90 degrees), or `custom` (which uses the values from the 
-`theta`, `phi`, `zoom`, and `fov` vectors passed in by the user).}
+\item{type}{Default \code{orbit}, which orbits the 3D object at the user-set camera settings \code{phi}, \code{zoom}, and \code{fov}.
+Other options are \code{oscillate} (sine wave around \code{theta} value, covering 90 degrees), or \code{custom} (which uses the values from the
+\code{theta}, \code{phi}, \code{zoom}, and \code{fov} vectors passed in by the user).}
 
-\item{frames}{Default `360`. Number of frames to render.}
+\item{frames}{Default \code{360}. Number of frames to render.}
 
-\item{fps}{Default `30`. Frames per second. Recommmend either 30 or 60 for web.}
+\item{fps}{Default \code{30}. Frames per second. Recommmend either 30 or 60 for web.}
 
 \item{phi}{Defaults to current view. Azimuth values, in degrees.}
 
 \item{theta}{Default to current view. Theta values, in degrees.}
 
-\item{zoom}{Defaults to the current view. Zoom value, between `0` and `1`.}
+\item{zoom}{Defaults to the current view. Zoom value, between \code{0} and \code{1}.}
 
 \item{fov}{Defaults to the current view. Field of view values, in degrees.}
 
-\item{title_text}{Default `NULL`. Text. Adds a title to the movie, using magick::image_annotate.}
+\item{title_text}{Default \code{NULL}. Text. Adds a title to the movie, using magick::image_annotate.}
 
-\item{title_offset}{Default `c(20,20)`. Distance from the top-left (default, `gravity` direction in 
-image_annotate) corner to offset the title.}
+\item{title_offset}{Default \code{c(20,20)}. Distance from the top-left (default, \code{gravity} direction in
+\code{\link[magick:image_annotate]{magick::image_annotate()}}) corner to offset the title.}
 
-\item{title_color}{Default `black`. Font color.}
+\item{title_color}{Default \code{black}. Font color.}
 
-\item{title_size}{Default `30`. Font size in pixels.}
+\item{title_size}{Default \code{30}. Font size in pixels.}
 
-\item{title_font}{Default `sans`. String with font family such as "sans", "mono", "serif", "Times", "Helvetica", 
+\item{title_font}{Default \code{sans}. String with font family such as "sans", "mono", "serif", "Times", "Helvetica",
 "Trebuchet", "Georgia", "Palatino" or "Comic Sans".}
 
-\item{title_bar_color}{Default `NULL`. If a color, this will create a colored bar under the title.}
+\item{title_bar_color}{Default \code{NULL}. If a color, this will create a colored bar under the title.}
 
-\item{title_bar_alpha}{Default `0.5`. Transparency of the title bar.}
+\item{title_bar_alpha}{Default \code{0.5}. Transparency of the title bar.}
 
-\item{image_overlay}{Default `NULL`. Either a string indicating the location of a png image to overlay
-over the whole movie (transparency included), or a 4-layer RGBA array. This image will be resized to the 
+\item{image_overlay}{Default \code{NULL}. Either a string indicating the location of a png image to overlay
+over the whole movie (transparency included), or a 4-layer RGBA array. This image will be resized to the
 dimension of the movie if it does not match exactly.}
 
-\item{vignette}{Default `FALSE`. If `TRUE` or numeric, a camera vignetting effect will be added to the image.
-`1` is the darkest vignetting, while `0` is no vignetting. If vignette is a length-2 vector, the second entry will
+\item{vignette}{Default \code{FALSE}. If \code{TRUE} or numeric, a camera vignetting effect will be added to the image.
+\code{1} is the darkest vignetting, while \code{0} is no vignetting. If vignette is a length-2 vector, the second entry will
 control the blurriness of the vignette effect.}
 
-\item{audio}{Default `NULL`. Optional file with audio to add to the video.}
+\item{audio}{Default \code{NULL}. Optional file with audio to add to the video.}
 
-\item{progbar}{Default `TRUE` if interactive, `FALSE` otherwise. If `FALSE`, turns off progress bar. 
+\item{progbar}{Default \code{TRUE} if interactive, \code{FALSE} otherwise. If \code{FALSE}, turns off progress bar.
 Will display a progress bar when adding an overlay or title.}
 
-\item{...}{Additional parameters to pass to magick::image_annotate.}
+\item{...}{Additional parameters to pass to \code{\link[magick:image_annotate]{magick::image_annotate()}}.}
 }
 \description{
-Renders a movie using the \pkg{av} package. Moves the camera around a 3D visualization 
+Renders a movie using the \pkg{av} package. Moves the camera around a 3D visualization
 using either a standard orbit, or accepts vectors listing user-defined values for each camera parameter. If the latter,
-the values must be equal in length to `frames` (or of length `1`, in which the value will be fixed).
+the values must be equal in length to \code{frames} (or of length \code{1}, in which the value will be fixed).
 }
 \examples{
 filename_movie = tempfile()

@@ -37,23 +37,23 @@ render_highquality(
 \arguments{
 \item{filename}{Filename of saved image. If missing, will display to current device.}
 
-\item{light}{Default `TRUE`. Whether there should be a light in the scene. If not, the scene will be lit with a bluish sky.}
+\item{light}{Default \code{TRUE}. Whether there should be a light in the scene. If not, the scene will be lit with a bluish sky.}
 
-\item{lightdirection}{Default `315`. Position of the light angle around the scene. 
-If this is a vector longer than one, multiple lights will be generated (using values from 
-`lightaltitude`, `lightintensity`, and `lightcolor`)}
+\item{lightdirection}{Default \code{315}. Position of the light angle around the scene.
+If this is a vector longer than one, multiple lights will be generated (using values from
+\code{lightaltitude}, \code{lightintensity}, and \code{lightcolor})}
 
-\item{lightaltitude}{Default `45`. Angle above the horizon that the light is located. 
-If this is a vector longer than one, multiple lights will be generated (using values from 
-`lightdirection`, `lightintensity`, and `lightcolor`)}
+\item{lightaltitude}{Default \code{45}. Angle above the horizon that the light is located.
+If this is a vector longer than one, multiple lights will be generated (using values from
+\code{lightdirection}, \code{lightintensity}, and \code{lightcolor})}
 
-\item{lightsize}{Default `NULL`. Radius of the light(s). Automatically chosen, but can be set here by the user.}
+\item{lightsize}{Default \code{NULL}. Radius of the light(s). Automatically chosen, but can be set here by the user.}
 
-\item{lightintensity}{Default `500`. Intensity of the light.}
+\item{lightintensity}{Default \code{500}. Intensity of the light.}
 
-\item{lightcolor}{Default `white`. The color of the light.}
+\item{lightcolor}{Default \code{white}. The color of the light.}
 
-\item{obj_material}{Default `rayrender::diffuse()`. The material properties of the object file.}
+\item{obj_material}{Default \code{\link[rayrender:diffuse]{rayrender::diffuse()}}. The material properties of the object file.}
 
 \item{cache_filename}{Name of temporary filename to store OBJ file, if the user does not want to rewrite the file each time.}
 
@@ -61,46 +61,46 @@ If this is a vector longer than one, multiple lights will be generated (using va
 
 \item{height}{Defaults to the height of the rgl window. Height of the rendering.}
 
-\item{title_text}{Default `NULL`. Text. Adds a title to the image, using magick::image_annotate.}
+\item{title_text}{Default \code{NULL}. Text. Adds a title to the image, using magick::image_annotate.}
 
-\item{title_offset}{Default `c(20,20)`. Distance from the top-left (default, `gravity` direction in 
-image_annotate) corner to offset the title.}
+\item{title_offset}{Default \code{c(20,20)}. Distance from the top-left (default, \code{gravity} direction in
+\code{\link[magick:image_annotate]{magick::image_annotate()}} corner to offset the title.}
 
-\item{title_color}{Default `black`. Font color.}
+\item{title_color}{Default \code{black}. Font color.}
 
-\item{title_size}{Default `30`. Font size in pixels.}
+\item{title_size}{Default \code{30}. Font size in pixels.}
 
-\item{title_font}{Default `sans`. String with font family such as "sans", "mono", "serif", "Times", "Helvetica", 
+\item{title_font}{Default \code{sans}. String with font family such as "sans", "mono", "serif", "Times", "Helvetica",
 "Trebuchet", "Georgia", "Palatino" or "Comic Sans".}
 
-\item{title_bar_color}{Default `NULL`. If a color, this will create a colored bar under the title.}
+\item{title_bar_color}{Default \code{NULL}. If a color, this will create a colored bar under the title.}
 
-\item{title_bar_alpha}{Default `0.5`. Transparency of the title bar.}
+\item{title_bar_alpha}{Default \code{0.5}. Transparency of the title bar.}
 
-\item{ground_material}{Default `diffuse()`. Material defined by the rayrender material functions.}
+\item{ground_material}{Default \link[rayrender:diffuse]{diffuse()}. Material defined by the rayrender material functions.}
 
-\item{ground_size}{Default `100000`. The width of the plane representing the ground.}
+\item{ground_size}{Default \code{100000}. The width of the plane representing the ground.}
 
-\item{scene_elements}{Default `NULL`. Extra scene elements to add to the scene, created with rayrender.}
+\item{scene_elements}{Default \code{NULL}. Extra scene elements to add to the scene, created with rayrender.}
 
-\item{camera_location}{Default `NULL`. Custom position of the camera. The `FOV`, `width`, and `height` arguments will still
+\item{camera_location}{Default \code{NULL}. Custom position of the camera. The \code{FOV}, \code{width}, and \code{height} arguments will still
 be derived from the rgl window.}
 
-\item{camera_lookat}{Default `NULL`. Custom point at which the camera is directed. The `FOV`, `width`, and `height` arguments will still
+\item{camera_lookat}{Default \code{NULL}. Custom point at which the camera is directed. The \code{FOV}, \code{width}, and \code{height} arguments will still
 be derived from the rgl window.}
 
-\item{camera_interpolate}{Default `c(0,0)`. Maximum `1`, minimum `0`. Sets the camera at a point between the `rgl` view and the `camera_location` 
-and `camera_lookat` vectors.}
+\item{camera_interpolate}{Default \code{c(0,0)}. Maximum \code{1}, minimum \code{0}. Sets the camera at a point between the \code{rgl} view and the \code{camera_location}
+and \code{camera_lookat} vectors.}
 
-\item{clear}{Default `FALSE`. If `TRUE`, the current `rgl` device will be cleared.}
+\item{clear}{Default \code{FALSE}. If \code{TRUE}, the current \code{rgl} device will be cleared.}
 
-\item{print_scene_info}{Default `FALSE`. If `TRUE`, it will print the position and lookat point of the camera.}
+\item{print_scene_info}{Default \code{FALSE}. If \code{TRUE}, it will print the position and lookat point of the camera.}
 
-\item{...}{Additional parameters to pass to rayrender::render_scene()}
+\item{...}{Additional parameters to pass to \code{\link[rayrender:render_scene]{rayrender::render_scene()}}}
 }
 \description{
-Renders a raytraced version of the displayed rgl scene, using the `rayrender` package. 
-User can specify the light direction, intensity, and color, as well as specify the material of the 
+Renders a raytraced version of the displayed rgl scene, using the \code{rayrender} package.
+User can specify the light direction, intensity, and color, as well as specify the material of the
 ground and add additional scene elements.
 }
 \examples{

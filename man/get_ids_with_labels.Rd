@@ -7,7 +7,7 @@
 get_ids_with_labels(typeval = NULL)
 }
 \arguments{
-\item{typeval}{Default `NULL`. Select to filter just one of the types: `surface`, `base`,`lines`, `waterlines`,`shadow`, `basebottom`,}
+\item{typeval}{Default \code{NULL}. Select to filter just one of the types: \code{surface}, \code{base},\code{lines}, \code{waterlines},\code{shadow}, \code{basebottom},}
 }
 \value{
 Data frame of IDs with labels

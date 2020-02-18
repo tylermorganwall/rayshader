@@ -13,8 +13,8 @@ coordinate is 200 meters (zscale = 200). Water level is 0.}
 montereybay
 }
 \description{
-This dataset is a downsampled version of a combined topographic and bathymetric 
-elevation matrix representing the Monterey Bay, CA region. Original data from 
+This dataset is a downsampled version of a combined topographic and bathymetric
+elevation matrix representing the Monterey Bay, CA region. Original data from
 from the NOAA National Map website.
 }
 \keyword{datasets}

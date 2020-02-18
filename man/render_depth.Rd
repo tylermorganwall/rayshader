@@ -36,82 +36,82 @@ render_depth(
 )
 }
 \arguments{
-\item{focus}{Defaults `0.5`. Depth in which to blur. Minimum 0, maximum 1.}
+\item{focus}{Defaults \code{0.5}. Depth in which to blur. Minimum 0, maximum 1.}
 
-\item{focallength}{Default `1`. Focal length of the virtual camera.}
+\item{focallength}{Default \code{1}. Focal length of the virtual camera.}
 
-\item{fstop}{Default `1`. F-stop of the virtual camera.}
+\item{fstop}{Default \code{1}. F-stop of the virtual camera.}
 
 \item{filename}{The filename of the image to be saved. If this is not given, the image will be plotted instead.}
 
-\item{preview_focus}{Default `FALSE`. If `TRUE`, a red line will be drawn across the image
+\item{preview_focus}{Default \code{FALSE}. If \code{TRUE}, a red line will be drawn across the image
 showing where the camera will be focused.}
 
-\item{bokehshape}{Default `circle`. Also built-in: `hex`. The shape of the bokeh.}
+\item{bokehshape}{Default \code{circle}. Also built-in: \code{hex}. The shape of the bokeh.}
 
-\item{bokehintensity}{Default `3`. Intensity of the bokeh when the pixel intensity is greater than `bokehlimit`.}
+\item{bokehintensity}{Default \code{3}. Intensity of the bokeh when the pixel intensity is greater than \code{bokehlimit}.}
 
-\item{bokehlimit}{Default `0.8`. Limit after which the bokeh intensity is increased by `bokehintensity`.}
+\item{bokehlimit}{Default \code{0.8}. Limit after which the bokeh intensity is increased by \code{bokehintensity}.}
 
-\item{rotation}{Default `0`. Number of degrees to rotate the hexagon bokeh shape.}
+\item{rotation}{Default \code{0}. Number of degrees to rotate the hexagon bokeh shape.}
 
-\item{gamma_correction}{Default `TRUE`. Controls gamma correction when adding colors. Default exponent of 2.2.}
+\item{gamma_correction}{Default \code{TRUE}. Controls gamma correction when adding colors. Default exponent of 2.2.}
 
-\item{aberration}{Default `0`. Adds chromatic aberration to the image. Maximum of `1`.}
+\item{aberration}{Default \code{0}. Adds chromatic aberration to the image. Maximum of \code{1}.}
 
-\item{transparent_water}{Default `FALSE`. If `TRUE`, depth is determined without water layer. User will have to re-render the water
-layer with `render_water()` if they want to recreate the water layer.}
+\item{transparent_water}{Default \code{FALSE}. If \code{TRUE}, depth is determined without water layer. User will have to re-render the water
+layer with \code{render_water()} if they want to recreate the water layer.}
 
-\item{heightmap}{Default `NULL`. The height matrix for the scene. Passing this will allow `render_depth()` 
-to automatically redraw the water layer if `transparent_water = TRUE`.}
+\item{heightmap}{Default \code{NULL}. The height matrix for the scene. Passing this will allow \code{\link[=render_depth]{render_depth()}}
+to automatically redraw the water layer if \code{transparent_water = TRUE}.}
 
-\item{zscale}{Default `NULL`. The zscale value for the heightmap. Passing this will allow `render_depth()` 
-to automatically redraw the water layer if `transparent_water = TRUE`.}
+\item{zscale}{Default \code{NULL}. The zscale value for the heightmap. Passing this will allow \code{\link[=render_depth]{render_depth()}}
+to automatically redraw the water layer if \code{transparent_water = TRUE}.}
 
-\item{title_text}{Default `NULL`. Text. Adds a title to the image, using magick::image_annotate.}
+\item{title_text}{Default \code{NULL}. Text. Adds a title to the image, using magick::image_annotate.}
 
-\item{title_offset}{Default `c(20,20)`. Distance from the top-left (default, `gravity` direction in 
+\item{title_offset}{Default \code{c(20,20)}. Distance from the top-left (default, \code{gravity} direction in
 image_annotate) corner to offset the title.}
 
-\item{title_color}{Default `black`. Font color.}
+\item{title_color}{Default \code{black}. Font color.}
 
-\item{title_size}{Default `30`. Font size in pixels.}
+\item{title_size}{Default \code{30}. Font size in pixels.}
 
-\item{title_font}{Default `sans`. String with font family such as "sans", "mono", "serif", "Times", "Helvetica", 
+\item{title_font}{Default \code{sans}. String with font family such as "sans", "mono", "serif", "Times", "Helvetica",
 "Trebuchet", "Georgia", "Palatino" or "Comic Sans".}
 
-\item{title_bar_color}{Default `NULL`. If a color, this will create a colored bar under the title.}
+\item{title_bar_color}{Default \code{NULL}. If a color, this will create a colored bar under the title.}
 
-\item{title_bar_alpha}{Default `0.5`. Transparency of the title bar.}
+\item{title_bar_alpha}{Default \code{0.5}. Transparency of the title bar.}
 
-\item{image_overlay}{Default `NULL`. Either a string indicating the location of a png image to overlay
-over the image (transparency included), or a 4-layer RGBA array. This image will be resized to the 
+\item{image_overlay}{Default \code{NULL}. Either a string indicating the location of a png image to overlay
+over the image (transparency included), or a 4-layer RGBA array. This image will be resized to the
 dimension of the image if it does not match exactly.}
 
-\item{vignette}{Default `FALSE`. If `TRUE` or numeric, a camera vignetting effect will be added to the image.
-`1` is the darkest vignetting, while `0` is no vignetting. If vignette is a length-2 vector, the second entry will
+\item{vignette}{Default \code{FALSE}. If \code{TRUE} or numeric, a camera vignetting effect will be added to the image.
+\code{1} is the darkest vignetting, while \code{0} is no vignetting. If vignette is a length-2 vector, the second entry will
 control the blurriness of the vignette effect.}
 
-\item{progbar}{Default `TRUE` if in an interactive session. Displays a progress bar.}
+\item{progbar}{Default \code{TRUE} if in an interactive session. Displays a progress bar.}
 
-\item{instant_capture}{Default `TRUE` if interactive, `FALSE` otherwise. If `FALSE`, a slight delay is added 
+\item{instant_capture}{Default \code{TRUE} if interactive, \code{FALSE} otherwise. If \code{FALSE}, a slight delay is added
 before taking the snapshot. This can help stop prevent rendering issues when running scripts.}
 
-\item{clear}{Default `FALSE`. If `TRUE`, the current `rgl` device will be cleared.}
+\item{clear}{Default \code{FALSE}. If \code{TRUE}, the current \code{rgl} device will be cleared.}
 
-\item{bring_to_front}{Default `FALSE`. Whether to bring the window to the front when rendering the snapshot.}
+\item{bring_to_front}{Default \code{FALSE}. Whether to bring the window to the front when rendering the snapshot.}
 
-\item{...}{Additional parameters to pass to magick::image_annotate.}
+\item{...}{Additional parameters to pass to \code{\link[magick:image_annotate]{magick::image_annotate()}}.}
 }
 \value{
 4-layer RGBA array.
 }
 \description{
-Adds depth of field to the current RGL scene by simulating a synthetic aperture. 
+Adds depth of field to the current RGL scene by simulating a synthetic aperture.
 
 The size of the circle of confusion is determined by the following formula (z_depth is from the image's depth map).
 
-\code{abs(z_depth-focus)*focal_length^2/(f_stop*z_depth*(focus - focal_length))}
+`abs(z_depth-focus)\emph{focal_length^2/(f_stop}z_depth*(focus - focal_length))``
 }
 \examples{
 \donttest{

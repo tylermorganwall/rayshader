@@ -11,9 +11,9 @@ add_water(hillshade, watermap, color = "imhof1")
 
 \item{watermap}{Matrix indicating whether water was detected at that point. 1 indicates water, 0 indicates no water.}
 
-\item{color}{Default `imhof1`. The water fill color. A hexcode or recognized color string. 
-Also includes built-in colors to match the palettes included in sphere_shade: 
-(`imhof1`,`imhof2`,`imhof3`,`imhof4`, `desert`, `bw`, and `unicorn`).}
+\item{color}{Default \code{imhof1}. The water fill color. A hexcode or recognized color string.
+Also includes built-in colors to match the palettes included in sphere_shade:
+(\code{imhof1},\code{imhof2},\code{imhof3},\code{imhof4}, \code{desert}, \code{bw}, and \code{unicorn}).}
 }
 \description{
 Adds a layer of water to a map.

@@ -17,18 +17,18 @@ make_waterlines(
 \arguments{
 \item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.}
 
-\item{waterdepth}{Default `0`.}
+\item{waterdepth}{Default \code{0}.}
 
-\item{linecolor}{Default `grey40`.}
+\item{linecolor}{Default \code{grey40}.}
 
-\item{zscale}{Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
-of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.}
+\item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
+of 1 meter and the grid values are separated by 10 meters, \code{zscale} would be 10.}
 
-\item{alpha}{Default `1`. Transparency of lines.}
+\item{alpha}{Default \code{1}. Transparency of lines.}
 
-\item{linewidth}{Default `2`. Water line width.}
+\item{linewidth}{Default \code{2}. Water line width.}
 
-\item{antialias}{Default `FALSE`.}
+\item{antialias}{Default \code{FALSE}.}
 }
 \description{
 Makes the edge lines of

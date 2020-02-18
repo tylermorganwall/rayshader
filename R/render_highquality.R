@@ -15,20 +15,20 @@
 #'@param lightsize Default `NULL`. Radius of the light(s). Automatically chosen, but can be set here by the user.
 #'@param lightintensity Default `500`. Intensity of the light.
 #'@param lightcolor Default `white`. The color of the light.
-#'@param obj_material Default `rayrender::diffuse()`. The material properties of the object file. 
+#'@param obj_material Default [rayrender::diffuse()]. The material properties of the object file. 
 #'@param cache_filename Name of temporary filename to store OBJ file, if the user does not want to rewrite the file each time.
 #'@param width Defaults to the width of the rgl window. Width of the rendering. 
 #'@param height Defaults to the height of the rgl window. Height of the rendering. 
 #'@param title_text Default `NULL`. Text. Adds a title to the image, using magick::image_annotate. 
 #'@param title_offset Default `c(20,20)`. Distance from the top-left (default, `gravity` direction in 
-#'image_annotate) corner to offset the title.
+#'[magick::image_annotate()] corner to offset the title.
 #'@param title_size Default `30`. Font size in pixels.
 #'@param title_color Default `black`. Font color.
 #'@param title_font Default `sans`. String with font family such as "sans", "mono", "serif", "Times", "Helvetica", 
 #'"Trebuchet", "Georgia", "Palatino" or "Comic Sans".
 #'@param title_bar_color Default `NULL`. If a color, this will create a colored bar under the title.
 #'@param title_bar_alpha Default `0.5`. Transparency of the title bar.
-#'@param ground_material Default `diffuse()`. Material defined by the rayrender material functions.
+#'@param ground_material Default [diffuse()][rayrender::diffuse()]. Material defined by the rayrender material functions.
 #'@param ground_size Default `100000`. The width of the plane representing the ground.
 #'@param camera_location Default `NULL`. Custom position of the camera. The `FOV`, `width`, and `height` arguments will still
 #'be derived from the rgl window.
@@ -39,7 +39,7 @@
 #'@param scene_elements Default `NULL`. Extra scene elements to add to the scene, created with rayrender.
 #'@param clear Default `FALSE`. If `TRUE`, the current `rgl` device will be cleared.
 #'@param print_scene_info Default `FALSE`. If `TRUE`, it will print the position and lookat point of the camera.
-#'@param ... Additional parameters to pass to rayrender::render_scene()
+#'@param ... Additional parameters to pass to [rayrender::render_scene()]
 #'@import rayrender
 #'@export
 #'@examples

@@ -9,7 +9,7 @@ height_shade(heightmap, texture = grDevices::terrain.colors(256))
 \arguments{
 \item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point.}
 
-\item{texture}{Default `terrain.colors(256)`. A color palette for the plot.}
+\item{texture}{Default \code{terrain.colors(256)}. A color palette for the plot.}
 }
 \value{
 RGB array of hillshaded texture mappings.

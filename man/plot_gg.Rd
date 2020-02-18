@@ -31,59 +31,59 @@ plot_gg(
 \arguments{
 \item{ggobj}{ggplot object to projected into 3D.}
 
-\item{width}{Default `3`. Width of ggplot, in `units`.}
+\item{width}{Default \code{3}. Width of ggplot, in \code{units}.}
 
-\item{height}{Default `3`. Height of ggplot, in `units`.}
+\item{height}{Default \code{3}. Height of ggplot, in \code{units}.}
 
-\item{height_aes}{Default `NULL`. Whether the `fill` or `color` aesthetic should be used for height values, 
-which the user can specify by passing either `fill` or `color` to this argument.
-Automatically detected. If both `fill` and `color` aesthetics are present, then `fill` is default.}
+\item{height_aes}{Default \code{NULL}. Whether the \code{fill} or \code{color} aesthetic should be used for height values,
+which the user can specify by passing either \code{fill} or \code{color} to this argument.
+Automatically detected. If both \code{fill} and \code{color} aesthetics are present, then \code{fill} is default.}
 
-\item{invert}{Default `FALSE`. If `TRUE`, the height mapping is inverted.}
+\item{invert}{Default \code{FALSE}. If \code{TRUE}, the height mapping is inverted.}
 
-\item{shadow_intensity}{Default `0.5`. The intensity of the calculated shadows.}
+\item{shadow_intensity}{Default \code{0.5}. The intensity of the calculated shadows.}
 
-\item{units}{Default `in`. One of c("in", "cm", "mm").}
+\item{units}{Default \verb{in}. One of c("in", "cm", "mm").}
 
-\item{scale}{Default `150`. Multiplier for vertical scaling: a higher number increases the height
+\item{scale}{Default \code{150}. Multiplier for vertical scaling: a higher number increases the height
 of the 3D transformation.}
 
-\item{pointcontract}{Default `0.7`. This multiplies the size of the points and shrinks
+\item{pointcontract}{Default \code{0.7}. This multiplies the size of the points and shrinks
 them around their center in the 3D surface mapping. Decrease this to reduce color bleed on edges, and set to
-`1` to turn off entirely. Note: If `size` is passed as an aesthetic to the same geom
-that is being mapped to elevation, this scaling will not be applied. If `alpha` varies on the variable 
-being mapped, you may want to set this to `1`, since the points now have a non-zero width stroke outline (however,
-mapping `alpha` in the same variable you are projecting to height is probably not a good choice. as the `alpha`
+\code{1} to turn off entirely. Note: If \code{size} is passed as an aesthetic to the same geom
+that is being mapped to elevation, this scaling will not be applied. If \code{alpha} varies on the variable
+being mapped, you may want to set this to \code{1}, since the points now have a non-zero width stroke outline (however,
+mapping \code{alpha} in the same variable you are projecting to height is probably not a good choice. as the \code{alpha}
 variable is ignored when performing the 3D projection).}
 
-\item{offset_edges}{Default `FALSE`. If `TRUE`, inserts a small amount of space between polygons for "geom_sf", "geom_tile", "geom_hex", and "geom_polygon" layers.
-If you pass in a number, the space between polygons will be a line of that width. Note: this feature may end up removing thin polygons 
+\item{offset_edges}{Default \code{FALSE}. If \code{TRUE}, inserts a small amount of space between polygons for "geom_sf", "geom_tile", "geom_hex", and "geom_polygon" layers.
+If you pass in a number, the space between polygons will be a line of that width. Note: this feature may end up removing thin polygons
 from the plot entirely--use with care.}
 
-\item{preview}{Default `FALSE`. If `TRUE`, the raytraced 2D ggplot will be displayed on the current device.}
+\item{preview}{Default \code{FALSE}. If \code{TRUE}, the raytraced 2D ggplot will be displayed on the current device.}
 
-\item{raytrace}{Default `FALSE`. Whether to add a raytraced layer.}
+\item{raytrace}{Default \code{FALSE}. Whether to add a raytraced layer.}
 
-\item{sunangle}{Default `315` (NW). If raytracing, the angle (in degrees) around the matrix from which the light originates.}
+\item{sunangle}{Default \code{315} (NW). If raytracing, the angle (in degrees) around the matrix from which the light originates.}
 
-\item{anglebreaks}{Default `seq(30,40,0.1)`. The azimuth angle(s), in degrees, as measured from the horizon from which the light originates.}
+\item{anglebreaks}{Default \code{seq(30,40,0.1)}. The azimuth angle(s), in degrees, as measured from the horizon from which the light originates.}
 
-\item{multicore}{Default `FALSE`. If raytracing and `TRUE`, multiple cores will be used to compute the shadow matrix. By default, this uses all cores available, unless the user has
-set `options("cores")` in which the multicore option will only use that many cores.}
+\item{multicore}{Default \code{FALSE}. If raytracing and \code{TRUE}, multiple cores will be used to compute the shadow matrix. By default, this uses all cores available, unless the user has
+set \code{options("cores")} in which the multicore option will only use that many cores.}
 
-\item{lambert}{Default `TRUE`. If raytracing, changes the intensity of the light at each point based proportional to the
+\item{lambert}{Default \code{TRUE}. If raytracing, changes the intensity of the light at each point based proportional to the
 dot product of the ray direction and the surface normal at that point. Zeros out all values directed away from
 the ray.}
 
-\item{reduce_size}{Default `NULL`. A number between 0 and 1 that specifies how much to reduce the resolution of the plot, for faster plotting.}
+\item{reduce_size}{Default \code{NULL}. A number between 0 and 1 that specifies how much to reduce the resolution of the plot, for faster plotting.}
 
-\item{save_height_matrix}{Default `FALSE`. If `TRUE`, the function will return the height matrix used for the ggplot.}
+\item{save_height_matrix}{Default \code{FALSE}. If \code{TRUE}, the function will return the height matrix used for the ggplot.}
 
-\item{save_shadow_matrix}{Default `FALSE`. If `TRUE`, the function will return the shadow matrix for use in future updates via the `shadow_cache` argument passed to `ray_shade`.}
+\item{save_shadow_matrix}{Default \code{FALSE}. If \code{TRUE}, the function will return the shadow matrix for use in future updates via the \code{shadow_cache} argument passed to \code{ray_shade}.}
 
-\item{saved_shadow_matrix}{Default `NULL`. A cached shadow matrix (saved by the a previous invocation of `plot_gg(..., save_shadow_matrix=TRUE)` to use instead of raytracing a shadow map each time.}
+\item{saved_shadow_matrix}{Default \code{NULL}. A cached shadow matrix (saved by the a previous invocation of \code{plot_gg(..., save_shadow_matrix=TRUE)} to use instead of raytracing a shadow map each time.}
 
-\item{...}{Additional arguments to be passed to `plot_3d()`.}
+\item{...}{Additional arguments to be passed to \code{\link[=plot_3d]{plot_3d()}}.}
 }
 \value{
 Opens a 3D plot in rgl.
@@ -94,11 +94,11 @@ Plots a ggplot2 object in 3D by mapping the color or fill aesthetic to elevation
 Currently, this function does not transform lines mapped to color into 3D.
 
 If there are multiple legends/guides due to multiple aesthetics being mapped (e.g. color and shape),
-the package author recommends that the user pass the order of the guides manually using the ggplot2 function "guides()`. 
+the package author recommends that the user pass the order of the guides manually using the ggplot2 function "guides()`.
 Otherwise, the order may change when processing the ggplot2 object and result in a mismatch between the 3D mapping
 and the underlying plot.
 
-Using the shape aesthetic with more than three groups is not recommended, unless the user passes in 
+Using the shape aesthetic with more than three groups is not recommended, unless the user passes in
 custom, solid shapes. By default in ggplot2, only the first three shapes are solid, which is a requirement to be projected
 into 3D.
 }

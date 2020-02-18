@@ -9,12 +9,12 @@ reduce_matrix_size(heightmap, scale = 0.5, width = NULL, height = NULL)
 \arguments{
 \item{heightmap}{The elevation matrix.}
 
-\item{scale}{Default `0.5`. The amount to scale down the matrix. Scales down using bilinear interpolation.}
+\item{scale}{Default \code{0.5}. The amount to scale down the matrix. Scales down using bilinear interpolation.}
 
-\item{width}{Default `NULL`.  Alternative to `scale` argument. The desired output width. If `width` is less than 1, it will be interpreted as a scaling factor--
+\item{width}{Default \code{NULL}.  Alternative to \code{scale} argument. The desired output width. If \code{width} is less than 1, it will be interpreted as a scaling factor--
 e.g. 0.5 would halve the resolution for the width.}
 
-\item{height}{Default `NULL`. Alternative to `scale` argument. The desired output width. If `height` is less than 1, it will be interpreted as a scaling factor--
+\item{height}{Default \code{NULL}. Alternative to \code{scale} argument. The desired output width. If \code{height} is less than 1, it will be interpreted as a scaling factor--
 e.g. 0.5 would halve the resolution for the height.}
 }
 \description{

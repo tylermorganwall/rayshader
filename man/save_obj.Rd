@@ -7,11 +7,11 @@
 save_obj(filename, save_texture = TRUE, water_index_refraction = 1)
 }
 \arguments{
-\item{filename}{String with the filename. If `.obj` is not at the end of the string, it will be appended automatically.}
+\item{filename}{String with the filename. If \code{.obj} is not at the end of the string, it will be appended automatically.}
 
-\item{save_texture}{Default `TRUE`. If the texture should be saved along with the geometry.}
+\item{save_texture}{Default \code{TRUE}. If the texture should be saved along with the geometry.}
 
-\item{water_index_refraction}{Default `1`. The index of refraction for the rendered water.}
+\item{water_index_refraction}{Default \code{1}. The index of refraction for the rendered water.}
 }
 \description{
 Writes the textured 3D rayshader visualization to an OBJ file.

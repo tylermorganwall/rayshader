@@ -6,7 +6,7 @@
 #'@param anglebreaks Default `90*cospi(seq(5, 85,by =5)/180)`. The angle(s), in degrees, as measured from the horizon from which the light originates.
 #'@param sunbreaks Default `24`. Number of rays to be sent out in a circle, evenly spaced, around the point being tested.
 #'@param maxsearch Default `30`. The maximum horizontal distance that the system should propogate rays to check for surface intersections. 
-#'@param multicore Default FALSE. If TRUE, multiple cores will be used to compute the shadow matrix. By default, this uses all cores available, unless the user has
+#'@param multicore Default `FALSE`. If `TRUE`, multiple cores will be used to compute the shadow matrix. By default, this uses all cores available, unless the user has
 #'set `options("cores")` in which the multicore option will only use that many cores.
 #'@param zscale Default 1. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. 
 #'@param cache_mask Default `NULL`. A matrix of 1 and 0s, indicating which points on which the raytracer will operate.

@@ -3,7 +3,7 @@
 #'@description Turns a raster into a matrix suitable for rayshader. 
 #'
 #'@param raster The input raster. Either a RasterLayer object, or a filename.
-#'@param verbose Default `interactive()`. Will print dimensions of the resulting matrix.
+#'@param verbose Default [interactive()]. Will print dimensions of the resulting matrix.
 #'@export
 #'@examples
 #'#Save montereybay as a raster and open using the filename.

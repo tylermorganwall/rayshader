@@ -18,20 +18,20 @@ detect_water(
 \arguments{
 \item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All grid points are assumed to be evenly spaced.}
 
-\item{zscale}{Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
-of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.}
+\item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
+of 1 meter and the grid values are separated by 10 meters, \code{zscale} would be 10.}
 
-\item{cutoff}{Default `0.999`. The lower limit of the z-component of the unit normal vector to be classified as water.}
+\item{cutoff}{Default \code{0.999}. The lower limit of the z-component of the unit normal vector to be classified as water.}
 
 \item{min_area}{Default length(heightmap)/400. Minimum area (in units of the height matrix x and y spacing) to be considered a body of water.}
 
-\item{max_height}{Default `NULL`. If passed, this number will specify the maximum height a point can be considered to be water.}
+\item{max_height}{Default \code{NULL}. If passed, this number will specify the maximum height a point can be considered to be water.}
 
-\item{normalvectors}{Default `NULL`. Pre-computed array of normal vectors from the `calculate_normal` function. Supplying this will speed up water detection.}
+\item{normalvectors}{Default \code{NULL}. Pre-computed array of normal vectors from the \code{calculate_normal} function. Supplying this will speed up water detection.}
 
-\item{keep_groups}{Default `FALSE`. If `TRUE`, the matrix returned will retain the numbered grouping information.}
+\item{keep_groups}{Default \code{FALSE}. If \code{TRUE}, the matrix returned will retain the numbered grouping information.}
 
-\item{progbar}{Default `FALSE`. If `TRUE`, turns on progress bar.}
+\item{progbar}{Default \code{FALSE}. If \code{TRUE}, turns on progress bar.}
 }
 \value{
 Matrix indicating whether water was detected at that point. 1 indicates water, 0 indicates no water.

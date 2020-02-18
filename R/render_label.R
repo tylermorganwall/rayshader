@@ -10,7 +10,7 @@
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
 #'@param relativez Default `TRUE`. Whether `z` should be measured in relation to the underlying elevation at that point in the heightmap, or set absolutely (`FALSE`).
 #'@param offset Elevation above the surface (at the label point) to start drawing the line.
-#'@param clear_previous Default `FALSE`. If `TRUE`, it will clear all existing text and lines rendered with `render_label()`. If no
+#'@param clear_previous Default `FALSE`. If `TRUE`, it will clear all existing text and lines rendered with [render_label()]. If no
 #'other arguments are passed to `render_label()`, this will just remove all existing lines.
 #'@param textsize Default `1`. A numeric character expansion value.
 #'@param dashed Default `FALSE`. If `TRUE`, the label line is dashed.

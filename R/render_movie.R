@@ -16,7 +16,7 @@
 #'@param fov Defaults to the current view. Field of view values, in degrees.
 #'@param title_text Default `NULL`. Text. Adds a title to the movie, using magick::image_annotate. 
 #'@param title_offset Default `c(20,20)`. Distance from the top-left (default, `gravity` direction in 
-#'image_annotate) corner to offset the title.
+#'[magick::image_annotate()]) corner to offset the title.
 #'@param title_size Default `30`. Font size in pixels.
 #'@param title_color Default `black`. Font color.
 #'@param title_font Default `sans`. String with font family such as "sans", "mono", "serif", "Times", "Helvetica", 
@@ -32,7 +32,7 @@
 #'@param audio Default `NULL`. Optional file with audio to add to the video.
 #'@param progbar Default `TRUE` if interactive, `FALSE` otherwise. If `FALSE`, turns off progress bar. 
 #'Will display a progress bar when adding an overlay or title.
-#'@param ... Additional parameters to pass to magick::image_annotate. 
+#'@param ... Additional parameters to pass to [magick::image_annotate()]. 
 #'@export
 #'@examples
 #'filename_movie = tempfile()

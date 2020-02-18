@@ -5,7 +5,7 @@
 #'@param filename Filename of snapshot. If missing, will display to current device.
 #'@param title_text Default `NULL`. Text. Adds a title to the image, using magick::image_annotate. 
 #'@param title_offset Default `c(20,20)`. Distance from the top-left (default, `gravity` direction in 
-#'image_annotate) corner to offset the title.
+#'[magick::image_annotate()]) corner to offset the title.
 #'@param title_size Default `30`. Font size in pixels.
 #'@param title_color Default `black`. Font color.
 #'@param title_font Default `sans`. String with font family such as "sans", "mono", "serif", "Times", "Helvetica", 
@@ -22,7 +22,7 @@
 #'@param instant_capture Default `TRUE` if interactive, `FALSE` otherwise. If `FALSE`, a slight delay is added 
 #'before taking the snapshot. This can help stop prevent rendering issues when running scripts.
 #'@param bring_to_front Default `FALSE`. Whether to bring the window to the front when taking the snapshot.
-#'@param ... Additional parameters to pass to magick::image_annotate. 
+#'@param ... Additional parameters to pass to [magick::image_annotate()]. 
 #'@return Displays snapshot of current rgl plot (or saves to disk).
 #'@export
 #'@examples

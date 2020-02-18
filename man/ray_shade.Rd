@@ -22,37 +22,37 @@ ray_shade(
 \arguments{
 \item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.}
 
-\item{sunaltitude}{Default `45`. The angle, in degrees (as measured from the horizon) from which the light originates. The width of the light
-is centered on this value and has an angular extent of 0.533 degrees, which is the angular extent of the sun. Use the `anglebreaks` argument
+\item{sunaltitude}{Default \code{45}. The angle, in degrees (as measured from the horizon) from which the light originates. The width of the light
+is centered on this value and has an angular extent of 0.533 degrees, which is the angular extent of the sun. Use the \code{anglebreaks} argument
 to create a softer (wider) light. This has a hard minimum/maximum of 0/90 degrees.}
 
-\item{sunangle}{Default `315` (NW). The angle, in degrees, around the matrix from which the light originates. Zero degrees is North, increasing clockwise.}
+\item{sunangle}{Default \code{315} (NW). The angle, in degrees, around the matrix from which the light originates. Zero degrees is North, increasing clockwise.}
 
-\item{maxsearch}{Defaults to the longest possible shadow given the `sunaltitude` and `heightmap`. 
+\item{maxsearch}{Defaults to the longest possible shadow given the \code{sunaltitude} and \code{heightmap}.
 Otherwise, this argument specifies the maximum distance that the system should propagate rays to check.}
 
-\item{lambert}{Default `TRUE`. Changes the intensity of the light at each point based proportional to the
+\item{lambert}{Default \code{TRUE}. Changes the intensity of the light at each point based proportional to the
 dot product of the ray direction and the surface normal at that point. Zeros out all values directed away from
 the ray.}
 
-\item{zscale}{Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation is in units
-of meters and the grid values are separated by 10 meters, `zscale` would be 10.}
+\item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation is in units
+of meters and the grid values are separated by 10 meters, \code{zscale} would be 10.}
 
-\item{multicore}{Default `FALSE`. If `TRUE`, multiple cores will be used to compute the shadow matrix. By default, this uses all cores available, unless the user has
-set `options("cores")` in which the multicore option will only use that many cores.}
+\item{multicore}{Default \code{FALSE}. If \code{TRUE}, multiple cores will be used to compute the shadow matrix. By default, this uses all cores available, unless the user has
+set \code{options("cores")} in which the multicore option will only use that many cores.}
 
-\item{cache_mask}{Default `NULL`. A matrix of 1 and 0s, indicating which points on which the raytracer will operate.}
+\item{cache_mask}{Default \code{NULL}. A matrix of 1 and 0s, indicating which points on which the raytracer will operate.}
 
-\item{shadow_cache}{Default `NULL`. The shadow matrix to be updated at the points defined by the argument `cache_mask`.
-If present, this will only compute the raytraced shadows for those points with value `1` in the mask.}
+\item{shadow_cache}{Default \code{NULL}. The shadow matrix to be updated at the points defined by the argument \code{cache_mask}.
+If present, this will only compute the raytraced shadows for those points with value \code{1} in the mask.}
 
-\item{progbar}{Default `TRUE` if interactive, `FALSE` otherwise. If `FALSE`, turns off progress bar.}
+\item{progbar}{Default \code{TRUE} if interactive, \code{FALSE} otherwise. If \code{FALSE}, turns off progress bar.}
 
-\item{anglebreaks}{Default `NULL`. A vector of angle(s) in degrees (as measured from the horizon) specifying from where the light originates. 
-Use this instead of `sunaltitude` to create a softer shadow by specifying a wider light. E.g. `anglebreaks = seq(40,50,by=0.5)` creates a light 
+\item{anglebreaks}{Default \code{NULL}. A vector of angle(s) in degrees (as measured from the horizon) specifying from where the light originates.
+Use this instead of \code{sunaltitude} to create a softer shadow by specifying a wider light. E.g. \code{anglebreaks = seq(40,50,by=0.5)} creates a light
 10 degrees wide, as opposed to the default}
 
-\item{...}{Additional arguments to pass to the `makeCluster` function when `multicore=TRUE`.}
+\item{...}{Additional arguments to pass to the \code{\link[=makeCluster]{makeCluster()}} function when \code{multicore=TRUE}.}
 }
 \value{
 Matrix of light intensities at each point.

@@ -11,9 +11,9 @@ make_vignette_overlay(width, height, intensity = 0.3, radius = NULL)
 
 \item{height}{Height of the image.}
 
-\item{intensity}{Default `0.4`. `1` is max intensity, `0` is min.}
+\item{intensity}{Default \code{0.4}. \code{1} is max intensity, \code{0} is min.}
 
-\item{radius}{Default `NULL`. Max of height or width, divided by 2.}
+\item{radius}{Default \code{NULL}. Max of height or width, divided by 2.}
 }
 \description{
 Makes an overlay to simulate vignetting in a camera

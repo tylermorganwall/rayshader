@@ -4,7 +4,7 @@
 #'
 #'The size of the circle of confusion is determined by the following formula (z_depth is from the image's depth map).
 #'
-#'\code{abs(z_depth-focus)*focal_length^2/(f_stop*z_depth*(focus - focal_length))}
+#'`abs(z_depth-focus)*focal_length^2/(f_stop*z_depth*(focus - focal_length))``
 #'
 #'@param focus Defaults `0.5`. Depth in which to blur. Minimum 0, maximum 1.
 #'@param focallength Default `1`. Focal length of the virtual camera.
@@ -20,9 +20,9 @@
 #'@param gamma_correction Default `TRUE`. Controls gamma correction when adding colors. Default exponent of 2.2.
 #'@param transparent_water Default `FALSE`. If `TRUE`, depth is determined without water layer. User will have to re-render the water
 #'layer with `render_water()` if they want to recreate the water layer.
-#'@param heightmap Default `NULL`. The height matrix for the scene. Passing this will allow `render_depth()` 
+#'@param heightmap Default `NULL`. The height matrix for the scene. Passing this will allow [render_depth()] 
 #'to automatically redraw the water layer if `transparent_water = TRUE`.
-#'@param zscale Default `NULL`. The zscale value for the heightmap. Passing this will allow `render_depth()` 
+#'@param zscale Default `NULL`. The zscale value for the heightmap. Passing this will allow [render_depth()] 
 #'to automatically redraw the water layer if `transparent_water = TRUE`.
 #'@param title_text Default `NULL`. Text. Adds a title to the image, using magick::image_annotate. 
 #'@param title_offset Default `c(20,20)`. Distance from the top-left (default, `gravity` direction in 
@@ -44,7 +44,7 @@
 #'before taking the snapshot. This can help stop prevent rendering issues when running scripts.
 #'@param clear Default `FALSE`. If `TRUE`, the current `rgl` device will be cleared.
 #'@param bring_to_front Default `FALSE`. Whether to bring the window to the front when rendering the snapshot.
-#'@param ... Additional parameters to pass to magick::image_annotate. 
+#'@param ... Additional parameters to pass to [magick::image_annotate()]. 
 #'@return 4-layer RGBA array.
 #'@export
 #'@examples

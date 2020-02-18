@@ -29,5 +29,6 @@ Suggests: reshape2,
           magick
 LinkingTo: Rcpp, progress, RcppArmadillo
 RoxygenNote: 7.0.2
+Roxygen: list(markdown = TRUE)
 URL: https://github.com/tylermorganwall/rayshader
 BugReports: https://github.com/tylermorganwall/rayshader/issues

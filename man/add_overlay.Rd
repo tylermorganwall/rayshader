@@ -16,20 +16,20 @@ add_overlay(
 \arguments{
 \item{hillshade}{A three-dimensional RGB array or 2D matrix of shadow intensities.}
 
-\item{overlay}{A three or four dimensional RGB array, where the 4th dimension represents the alpha (transparency) channel. 
-If the array is 3D, `alphacolor` should also be passed to indicate transparent regions.}
+\item{overlay}{A three or four dimensional RGB array, where the 4th dimension represents the alpha (transparency) channel.
+If the array is 3D, \code{alphacolor} should also be passed to indicate transparent regions.}
 
-\item{alphacolor}{Default `NULL`. If `overlay` is a 3-layer array, this argument tells which color is interpretted as completely transparent.}
+\item{alphacolor}{Default \code{NULL}. If \code{overlay} is a 3-layer array, this argument tells which color is interpretted as completely transparent.}
 
-\item{alphalayer}{Default `1`. Defines minimum tranparaency of layer. If transparency already exists in `overlay`, the way `add_overlay` combines 
-the two is determined in argument `alphamethod`.}
+\item{alphalayer}{Default \code{1}. Defines minimum tranparaency of layer. If transparency already exists in \code{overlay}, the way \code{add_overlay} combines
+the two is determined in argument \code{alphamethod}.}
 
-\item{alphamethod}{Default `max`. Method for dealing with pre-existing transparency with `layeralpha`. 
-If `max`, converts all alpha levels higher than `layeralpha` to the value set in `layeralpha`.
-If `multiply`, multiples all pre-existing alpha values with `layeralpha`.
-If `none`, keeps existing tranparencies and only changes opaque entries.}
+\item{alphamethod}{Default \code{max}. Method for dealing with pre-existing transparency with \code{layeralpha}.
+If \code{max}, converts all alpha levels higher than \code{layeralpha} to the value set in \code{layeralpha}.
+If \code{multiply}, multiples all pre-existing alpha values with \code{layeralpha}.
+If \code{none}, keeps existing tranparencies and only changes opaque entries.}
 
-\item{gamma_correction}{Default `TRUE`. Controls gamma correction when adding colors. Default exponent of 2.2.}
+\item{gamma_correction}{Default \code{TRUE}. Controls gamma correction when adding colors. Default exponent of 2.2.}
 }
 \value{
 Hillshade with overlay.

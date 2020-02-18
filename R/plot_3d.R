@@ -31,7 +31,7 @@
 #'@param calculate_normals Default `TRUE`. If `FALSE`, will not calculate per-vertex normals. Can also pass the
 #'output of the function `calculate_normals` to use pre-computed normals.
 #'@param litbase Default `FALSE`. If `TRUE`, the base will be a glossy material lit using the 
-#'`lit = TRUE` parameter in `rgl`. If calling `render_highquality()`, set this to `TRUE` to make sure
+#'`lit = TRUE` parameter in `rgl`. If calling [render_highquality()], set this to `TRUE` to make sure
 #'rgl exports the sizes of the model.
 #'@param windowsize Default `600`. Position, width, and height of the `rgl` device displaying the plot. 
 #'If a single number, viewport will be a square and located in upper left corner. 
@@ -40,7 +40,7 @@
 #'specify the location of the x-y coordinates of the bottom-left corner of the viewport on the screen,
 #'and the next two (or one, if square) specify the window size. NOTE: The absolute positioning of the
 #'window does not currently work on macOS (tested on Mojave), but the size can still be specified.
-#'@param ... Additional arguments to pass to the `rgl::par3d` function.
+#'@param ... Additional arguments to pass to the [rgl::par3d()] function.
 #'@import rgl
 #'@export
 #'@examples

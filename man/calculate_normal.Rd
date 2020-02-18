@@ -11,7 +11,7 @@ calculate_normal(heightmap, zscale = 1, progbar = FALSE)
 
 \item{zscale}{Default 1.}
 
-\item{progbar}{Default `FALSE`. If `TRUE`, turns on progress bar.}
+\item{progbar}{Default \code{FALSE}. If \code{TRUE}, turns on progress bar.}
 }
 \value{
 Matrix of light intensities at each point.

@@ -24,7 +24,7 @@
 #'@param anglebreaks Default `NULL`. A vector of angle(s) in degrees (as measured from the horizon) specifying from where the light originates. 
 #'Use this instead of `sunaltitude` to create a softer shadow by specifying a wider light. E.g. `anglebreaks = seq(40,50,by=0.5)` creates a light 
 #'10 degrees wide, as opposed to the default
-#'@param ... Additional arguments to pass to the `makeCluster` function when `multicore=TRUE`.
+#'@param ... Additional arguments to pass to the [makeCluster()] function when `multicore=TRUE`.
 #'@import foreach doParallel parallel progress
 #'@return Matrix of light intensities at each point.
 #'@export

@@ -9,14 +9,14 @@ render_camera(theta = NULL, phi = NULL, zoom = NULL, fov = NULL)
 \arguments{
 \item{theta}{Defaults to current value. Rotation angle.}
 
-\item{phi}{Defaults to current value. Azimuth angle. Maximum `90`.}
+\item{phi}{Defaults to current value. Azimuth angle. Maximum \code{90}.}
 
 \item{zoom}{Defaults to current value. Positive value indicating camera magnification.}
 
-\item{fov}{Defaults to current value. Field of view of the camera. Maximum `180`.}
+\item{fov}{Defaults to current value. Field of view of the camera. Maximum \code{180}.}
 }
 \description{
-Changes the position and properties of the camera around the scene. If no 
+Changes the position and properties of the camera around the scene. If no
 values are entered, prints and returns the current values.
 }
 \examples{

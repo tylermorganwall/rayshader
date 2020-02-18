@@ -16,18 +16,18 @@ create_texture(
 \arguments{
 \item{lightcolor}{The main highlight color. Corresponds to the top center of the texture map.}
 
-\item{shadowcolor}{The main shadow color. Corresponds to the bottom center of the texture map. This color represents slopes directed 
+\item{shadowcolor}{The main shadow color. Corresponds to the bottom center of the texture map. This color represents slopes directed
 directly opposite to the main highlight color.}
 
-\item{leftcolor}{The left fill color. Corresponds to the left center of the texture map. This color represents slopes directed 
+\item{leftcolor}{The left fill color. Corresponds to the left center of the texture map. This color represents slopes directed
 90 degrees to the left of the main highlight color.}
 
-\item{rightcolor}{The right fill color. Corresponds to the right center of the texture map. This color represents slopes directed 
+\item{rightcolor}{The right fill color. Corresponds to the right center of the texture map. This color represents slopes directed
 90 degrees to the right of the main highlight color.}
 
 \item{centercolor}{The center color. Corresponds to the center of the texture map. This color represents flat areas.}
 
-\item{cornercolors}{Default `NULL`. The colors at the corners, in this order: NW, NE, SW, SE. If this vector isn't present (or
+\item{cornercolors}{Default \code{NULL}. The colors at the corners, in this order: NW, NE, SW, SE. If this vector isn't present (or
 all corners are specified), the mid-points will just be interpolated from the main colors.}
 }
 \description{
