@@ -4,7 +4,7 @@
 #'
 #'The size of the circle of confusion is determined by the following formula (z_depth is from the image's depth map).
 #'
-#'`abs(z_depth-focus)*focal_length^2/(f_stop*z_depth*(focus - focal_length))``
+#'`abs(z_depth-focus)*focal_length^2/(f_stop*z_depth*(focus - focal_length))`
 #'
 #'@param focus Defaults `0.5`. Depth in which to blur. Minimum 0, maximum 1.
 #'@param focallength Default `1`. Focal length of the virtual camera.
