@@ -41,7 +41,8 @@
 #'@param lambert Default `TRUE`. If raytracing, changes the intensity of the light at each point based proportional to the
 #'dot product of the ray direction and the surface normal at that point. Zeros out all values directed away from
 #'the ray.
-#'@param reduce_size Default `NULL`. A number between 0 and 1 that specifies how much to reduce the resolution of the plot, for faster plotting.
+#'@param reduce_size Default `NULL`. A number between `0` and `1` that specifies how much to reduce the resolution of the plot, for faster plotting. By
+#'default, this just decreases the size of height map, not the image. If you wish the image to be reduced in resolution as well, pass a numeric vector of size 2.
 #'@param multicore Default `FALSE`. If raytracing and `TRUE`, multiple cores will be used to compute the shadow matrix. By default, this uses all cores available, unless the user has
 #'set `options("cores")` in which the multicore option will only use that many cores.
 #'@param save_height_matrix Default `FALSE`. If `TRUE`, the function will return the height matrix used for the ggplot.
@@ -647,8 +648,15 @@ plot_gg = function(ggobj, width = 3, height = 3,
         magick::image_read(paste0(heightmaptemp,".png")) %>%
           magick::image_resize(paste0(image_info$width * reduce_size,"x",image_info$height * reduce_size)) %>%
           magick::image_write(paste0(heightmaptemp,".png"))
+      } else if (length(reduce_size) == 2 && all(reduce_size < 1)) {
+        scale = scale * reduce_size[1]
+        image_info = magick::image_read(paste0(heightmaptemp,".png")) %>%
+          magick::image_info() 
+        magick::image_read(paste0(heightmaptemp,".png")) %>%
+          magick::image_resize(paste0(image_info$width * reduce_size[1],"x",image_info$height * reduce_size[1])) %>%
+          magick::image_write(paste0(heightmaptemp,".png"))
         magick::image_read(paste0(colormaptemp,".png")) %>%
-          magick::image_resize(paste0(image_info$width * reduce_size,"x",image_info$height * reduce_size)) %>%
+          magick::image_resize(paste0(image_info$width * reduce_size[2],"x",image_info$height * reduce_size[2])) %>%
           magick::image_write(paste0(colormaptemp,".png"))
       }
     }

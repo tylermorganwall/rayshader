@@ -75,7 +75,8 @@ set `options("cores")` in which the multicore option will only use that many cor
 dot product of the ray direction and the surface normal at that point. Zeros out all values directed away from
 the ray.}
 
-\item{reduce_size}{Default `NULL`. A number between 0 and 1 that specifies how much to reduce the resolution of the plot, for faster plotting.}
+\item{reduce_size}{Default `NULL`. A number between `0` and `1` that specifies how much to reduce the resolution of the plot, for faster plotting. By
+default, this just decreases the size of height map, not the image. If you wish the image to be reduced in resolution as well, pass a numeric vector of size 2.}
 
 \item{save_height_matrix}{Default `FALSE`. If `TRUE`, the function will return the height matrix used for the ggplot.}
 
