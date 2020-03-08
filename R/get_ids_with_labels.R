@@ -9,7 +9,11 @@
 get_ids_with_labels = function(typeval = NULL) {
   ambient_encoder = c("#000001" = "surface","#000002" = "base","#000003" = "water",
                       "#000004" = "lines","#000005" = "waterlines","#000006" = "shadow",
-                      "#000007" = "basebottom", "#000008" = "textline", "#000009" = "raytext")
+                      "#000007" = "basebottom", "#000008" = "textline", "#000009" = "raytext",
+                      "#000010" = "north_symbol", "#000011" = "arrow_symbol",
+                      "#000012" = "bevel_symbol", "#000013" = "background_symbol",
+                      "#000014" = "scalebar_col1", "#000015" = "scalebar_col2",
+                      "#000016" = "text_scalebar")
   get_rgl_material = getFromNamespace("rgl.getmaterial", "rgl")
   idvals = rgl::rgl.ids()
   material_type = list()
@@ -24,6 +28,12 @@ get_ids_with_labels = function(typeval = NULL) {
     material_properties[[i]]$waterline_color = NA
     material_properties[[i]]$waterline_alpha = NA
     material_properties[[i]]$shadow_texture_file = NA
+    material_properties[[i]]$north_color = NA
+    material_properties[[i]]$arrow_color = NA
+    material_properties[[i]]$bevel_color = NA
+    material_properties[[i]]$background_color = NA
+    material_properties[[i]]$scalebar1_color = NA
+    material_properties[[i]]$scalebar2_color = NA
     if(idvals$type[i] != "text") {
       material_type[[i]] = ambient_encoder[material_type_single$ambient]
       if(material_type[[i]] == "surface") {
@@ -45,6 +55,24 @@ get_ids_with_labels = function(typeval = NULL) {
       }
       if(material_type[[i]] == "shadow") {
         material_properties[[i]]$shadow_texture_file = material_type_single$texture
+      }
+      if(material_type[[i]] == "north_symbol") {
+        material_properties[[i]]$north_color = material_type_single$color
+      }
+      if(material_type[[i]] == "arrow_symbol") {
+        material_properties[[i]]$arrow_color = material_type_single$color
+      }
+      if(material_type[[i]] == "bevel_symbol") {
+        material_properties[[i]]$bevel_color = material_type_single$color
+      }
+      if(material_type[[i]] == "background_symbol") {
+        material_properties[[i]]$background_color = material_type_single$color
+      }
+      if(material_type[[i]] == "scalebar_col1") {
+        material_properties[[i]]$scalebar1_color = material_type_single$color
+      }
+      if(material_type[[i]] == "scalebar_col2") {
+        material_properties[[i]]$scalebar2_color = material_type_single$color
       }
     } else {
       material_type[[i]] = ambient_encoder[material_type_single$ambient]

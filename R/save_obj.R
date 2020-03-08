@@ -112,6 +112,42 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1) {
       cat(paste("d", sprintf("%1.4f",idrow$water_alpha[[1]]),collapse = " "), file=con, sep="\n")
       cat(paste("Ni", sprintf("%1.4f",water_index_refraction),collapse = " "), file=con, sep="\n")
       cat("\n", file=con)
+    } else if (!is.na(idrow$north_color[[1]])) {
+      tempcol = col2rgb(idrow$north_color[[1]])/256
+      cat(paste("newmtl ray_north"), file=con, sep="\n")
+      cat(paste("Kd", sprintf("%1.4f %1.4f %1.4f",tempcol[1],tempcol[2],tempcol[3]),collapse = " "), file=con, sep="\n")
+      cat(paste("Ka", sprintf("%1.4f %1.4f %1.4f",tempcol[1],tempcol[2],tempcol[3]),collapse = " "), file=con, sep="\n")
+      cat("\n", file=con)
+    } else if (!is.na(idrow$arrow_color[[1]])) {
+      tempcol = col2rgb(idrow$arrow_color[[1]])/256
+      cat(paste("newmtl ray_arrow"), file=con, sep="\n")
+      cat(paste("Kd", sprintf("%1.4f %1.4f %1.4f",tempcol[1],tempcol[2],tempcol[3]),collapse = " "), file=con, sep="\n")
+      cat(paste("Ka", sprintf("%1.4f %1.4f %1.4f",tempcol[1],tempcol[2],tempcol[3]),collapse = " "), file=con, sep="\n")
+      cat("\n", file=con)
+    } else if (!is.na(idrow$bevel_color[[1]])) {
+      tempcol = col2rgb(idrow$bevel_color[[1]])/256
+      cat(paste("newmtl ray_bevel"), file=con, sep="\n")
+      cat(paste("Kd", sprintf("%1.4f %1.4f %1.4f",tempcol[1],tempcol[2],tempcol[3]),collapse = " "), file=con, sep="\n")
+      cat(paste("Ka", sprintf("%1.4f %1.4f %1.4f",tempcol[1],tempcol[2],tempcol[3]),collapse = " "), file=con, sep="\n")
+      cat("\n", file=con)
+    } else if (!is.na(idrow$background_color[[1]])) {
+      tempcol = col2rgb(idrow$background_color[[1]])/256
+      cat(paste("newmtl ray_background"), file=con, sep="\n")
+      cat(paste("Kd", sprintf("%1.4f %1.4f %1.4f",tempcol[1],tempcol[2],tempcol[3]),collapse = " "), file=con, sep="\n")
+      cat(paste("Ka", sprintf("%1.4f %1.4f %1.4f",tempcol[1],tempcol[2],tempcol[3]),collapse = " "), file=con, sep="\n")
+      cat("\n", file=con)
+    } else if (!is.na(idrow$scalebar1_color[[1]])) {
+      tempcol = col2rgb(idrow$scalebar1_color[[1]])/256
+      cat(paste("newmtl ray_scalebar1"), file=con, sep="\n")
+      cat(paste("Kd", sprintf("%1.4f %1.4f %1.4f",tempcol[1],tempcol[2],tempcol[3]),collapse = " "), file=con, sep="\n")
+      cat(paste("Ka", sprintf("%1.4f %1.4f %1.4f",tempcol[1],tempcol[2],tempcol[3]),collapse = " "), file=con, sep="\n")
+      cat("\n", file=con)
+    } else if (!is.na(idrow$scalebar2_color[[1]])) {
+      tempcol = col2rgb(idrow$scalebar2_color[[1]])/256
+      cat(paste("newmtl ray_scalebar2"), file=con, sep="\n")
+      cat(paste("Kd", sprintf("%1.4f %1.4f %1.4f",tempcol[1],tempcol[2],tempcol[3]),collapse = " "), file=con, sep="\n")
+      cat(paste("Ka", sprintf("%1.4f %1.4f %1.4f",tempcol[1],tempcol[2],tempcol[3]),collapse = " "), file=con, sep="\n")
+      cat("\n", file=con)
     }
   }
   
@@ -136,7 +172,9 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1) {
 
   for(row in 1:nrow(vertex_info)) {
     id = vertex_info$id[row]
-    if(vertex_info$raytype[row] %in% c("surface","base","basebottom","water")) {
+    if(vertex_info$raytype[row] %in% c("surface","base","basebottom","water",
+                                       "north_symbol","arrow_symbol", "bevel_symbol",
+                                       "background_symbol", "scalebar_col1", "scalebar_col2")) {
       vertex_info$startindex[row] = number_vertices + 1
       vertex_info$startindextex[row] = number_texcoords + 1
       vertex_info$startindexnormals[row] = number_normals + 1
@@ -268,6 +306,66 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1) {
         indices = indices[1:(nrow(indices)-na_counter),]
         
         cat(paste("f", sprintf("%f %f %f", indices[,1], indices[,2], indices[,3])), 
+            sep="\n", file=con)
+      } else {
+        baseindices = matrix(vertex_info$startindex[row]:vertex_info$endindex[row], ncol=3, byrow=TRUE)
+        cat(paste("f", baseindices[,1], baseindices[,2], baseindices[,3]), 
+            sep="\n", file=con)
+      }
+    } else if (vertex_info$raytype[row] == "north_symbol") {
+      if(save_texture) {
+        cat("g North", file=con, sep ="\n")
+        cat("usemtl ray_north", file=con, sep ="\n")
+      }
+      baseindices = matrix(vertex_info$startindex[row]:vertex_info$endindex[row], ncol=3, byrow=TRUE)
+      cat(paste("f", baseindices[,1], baseindices[,2], baseindices[,3]), 
+          sep="\n", file=con)
+    } else if (vertex_info$raytype[row] == "arrow_symbol") {
+      if(save_texture) {
+        cat("g Arrow", file=con, sep ="\n")
+        cat("usemtl ray_arrow", file=con, sep ="\n")
+      }
+      baseindices = matrix(vertex_info$startindex[row]:vertex_info$endindex[row], ncol=3, byrow=TRUE)
+      cat(paste("f", baseindices[,1], baseindices[,2], baseindices[,3]), 
+          sep="\n", file=con)
+    } else if (vertex_info$raytype[row] == "bevel_symbol") {
+      if(save_texture) {
+        cat("g Bevel", file=con, sep ="\n")
+        cat("usemtl ray_bevel", file=con, sep ="\n")
+      }
+      baseindices = matrix(vertex_info$startindex[row]:vertex_info$endindex[row], ncol=3, byrow=TRUE)
+      cat(paste("f", baseindices[,1], baseindices[,2], baseindices[,3]), 
+          sep="\n", file=con)
+    } else if (vertex_info$raytype[row] == "background_symbol") {
+      if(save_texture) {
+        cat("g Background", file=con, sep ="\n")
+        cat("usemtl ray_background", file=con, sep ="\n")
+      }
+      baseindices = matrix(vertex_info$startindex[row]:vertex_info$endindex[row], ncol=3, byrow=TRUE)
+      cat(paste("f", baseindices[,1], baseindices[,2], baseindices[,3]), 
+          sep="\n", file=con)
+    } else if (vertex_info$raytype[row] == "scalebar_col1") {
+      if(save_texture) {
+        cat("g Scalebar1", file=con, sep ="\n")
+        cat("usemtl ray_scalebar1", file=con, sep ="\n")
+      }
+      if(vertex_info$type[row] == "quads") {
+        baseindices = matrix(vertex_info$startindex[row]:vertex_info$endindex[row], ncol=4, byrow=TRUE)
+        cat(paste("f", baseindices[,1], baseindices[,2], baseindices[,3], baseindices[,4]), 
+            sep="\n", file=con)
+      } else {
+        baseindices = matrix(vertex_info$startindex[row]:vertex_info$endindex[row], ncol=3, byrow=TRUE)
+        cat(paste("f", baseindices[,1], baseindices[,2], baseindices[,3]), 
+            sep="\n", file=con)
+      }
+    } else if (vertex_info$raytype[row] == "scalebar_col2") {
+      if(save_texture) {
+        cat("g Scalebar1", file=con, sep ="\n")
+        cat("usemtl ray_scalebar2", file=con, sep ="\n")
+      }
+      if(vertex_info$type[row] == "quads") {
+        baseindices = matrix(vertex_info$startindex[row]:vertex_info$endindex[row], ncol=4, byrow=TRUE)
+        cat(paste("f", baseindices[,1], baseindices[,2], baseindices[,3], baseindices[,4]), 
             sep="\n", file=con)
       } else {
         baseindices = matrix(vertex_info$startindex[row]:vertex_info$endindex[row], ncol=3, byrow=TRUE)

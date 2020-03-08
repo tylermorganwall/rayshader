@@ -75,12 +75,12 @@ render_snapshot = function(filename, clear=FALSE,
     stop("`title_offset` needs to be length-2 vector")
   }
   if(!is.null(image_overlay)) {
-    if("character" %in% class(image_overlay)) {
+    if(inherits(image_overlay,"character")) {
       image_overlay_file = image_overlay
       has_overlay = TRUE
-    } else if("array" %in% class(image_overlay)) {
+    } else if(inherits(image_overlay,"array")) {
       image_overlay_file = tempfile()
-      png::writePNG(image_overlay_file)
+      png::writePNG(image_overlay, image_overlay_file)
       has_overlay = TRUE
     }
   } else {
@@ -132,7 +132,7 @@ render_snapshot = function(filename, clear=FALSE,
     if(!is.null(title_bar_color)) {
       title_bar_color = col2rgb(title_bar_color)/255
       title_bar = array(0,c(dimensions[1],dimensions[2],4))
-      title_bar_width = 2 * title_offset[1] + title_size
+      title_bar_width = 2 * title_offset[2] + title_size
       title_bar[1:title_bar_width,,1] = title_bar_color[1]
       title_bar[1:title_bar_width,,2] = title_bar_color[2]
       title_bar[1:title_bar_width,,3] = title_bar_color[3]
