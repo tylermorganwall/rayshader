@@ -46,7 +46,7 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1) {
         tempbase = filename
         current_dir = TRUE
       }
-      if(substring(filename, nchar(filename)-3,nchar(filename)) == ".obj") {
+      if(tools::file_ext(filename) == "obj") {
         if(current_dir) {
           filename_mtl = paste0(substring(tempbase, 1,nchar(tempbase)-4),".mtl")
         } else {
@@ -60,12 +60,14 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1) {
         }
       }
     }
-    if(substring(filename, nchar(filename)-3,nchar(filename)) != ".obj") {
+    if(tools::file_ext(filename) != "obj") {
       filename = paste0(filename,".obj")
     }
     con = file(filename, "w")
+    on.exit(close(con))
     if(save_texture) {
       con_mtl = file(filename_mtl, "w")
+      on.exit(close(con_mtl), add = TRUE)
     }
   }
 
@@ -373,9 +375,5 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1) {
             sep="\n", file=con)
       }
     }
-  }
-  close(con)
-  if(save_texture) {
-    close(con_mtl)
   }
 }

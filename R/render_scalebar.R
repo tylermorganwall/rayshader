@@ -34,12 +34,12 @@
 #'montereybay %>%
 #'  sphere_shade() %>%
 #'  plot_3d(montereybay,theta=45, water=TRUE)
-#'render_scalebar(limits=80, label_unit = "km")
+#'render_scalebar(limits=c(0, 80), label_unit = "km")
 #'render_snapshot()
 #'
-#'#This function works with `render_highquality()`, although text is not yet supported.
+#'#This function works with `render_highquality()`
 #'
-#'render_highquality(lightdirection=250, lightaltitude=40)
+#'render_highquality(lightdirection=250, lightaltitude=40, scale_text_size=24,clamp_value=10)
 #'render_scalebar(clear_scalebar = TRUE)
 #'
 #'#We can change the position by specifying a cardinal direction to `position`, and the 

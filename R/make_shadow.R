@@ -39,8 +39,15 @@ make_shadow = function(heightmap, basedepth, shadowwidth, color, shadowcolor) {
     warning("`magick` package required for smooth shadow--using basic shadow instead.")
     png::writePNG(shadowarray,tempmap)
   }
-  rgl.surface((-shadowwidth+1):(rows+shadowwidth) - rows/2,
-              -(-shadowwidth+1):-(cols+shadowwidth) + cols/2+1,
-              basedepthmat,texture=tempmap,
-              lit=FALSE,back="culled",ambient = "#000006")
+  rowmin = min((-shadowwidth+1):(rows+shadowwidth) - rows/2)
+  rowmax = max((-shadowwidth+1):(rows+shadowwidth) - rows/2)
+  colmin = min(-(-shadowwidth+1):-(cols+shadowwidth) + cols/2+1)
+  colmax = max(-(-shadowwidth+1):-(cols+shadowwidth) + cols/2+1)
+  
+  tri1 = matrix(c(rowmax,rowmax,rowmin,basedepth,basedepth,basedepth,colmax,colmin,colmin), nrow=3,ncol=3)
+  tri2 = matrix(c(rowmin,rowmax,rowmin,basedepth,basedepth,basedepth,colmax,colmax,colmin), nrow=3,ncol=3)
+  
+  rgl.triangles(rbind(tri1,tri2), texcoords = matrix(c(1,1,0,0,1,0,1,0,0,1,1,0),nrow=6,ncol=2),
+                texture=tempmap,
+                lit=FALSE,back="culled",ambient = "#000006")
 }

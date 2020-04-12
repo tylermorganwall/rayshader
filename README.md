@@ -170,7 +170,7 @@ elmat %>%
 elmat %>%
   sphere_shade(texture = "desert") %>%
   add_water(detect_water(elmat), color = "desert") %>%
-  add_shadow(ray_shade(elmat)) %>%
+  add_shadow(ray_shade(elmat), 0.5) %>%
   plot_map()
 ```
 
@@ -183,8 +183,8 @@ elmat %>%
 elmat %>%
   sphere_shade(texture = "desert") %>%
   add_water(detect_water(elmat), color = "desert") %>%
-  add_shadow(ray_shade(elmat)) %>%
-  add_shadow(ambient_shade(elmat)) %>%
+  add_shadow(ray_shade(elmat), 0.5) %>%
+  add_shadow(ambient_shade(elmat), 0) %>%
   plot_map()
 ```
 
@@ -198,13 +198,26 @@ elmat %>%
   sphere_shade(texture = "desert") %>%
   add_water(detect_water(elmat), color = "desert") %>%
   add_shadow(ray_shade(elmat, zscale = 3), 0.5) %>%
-  add_shadow(ambient_shade(elmat), 0.5) %>%
+  add_shadow(ambient_shade(elmat), 0) %>%
   plot_3d(elmat, zscale = 10, fov = 0, theta = 135, zoom = 0.75, phi = 45, windowsize = c(1000, 800))
 Sys.sleep(0.2)
-render_snapshot(clear=TRUE)
+render_snapshot()
 ```
 
 ![](man/figures/README_three-d-1.png)<!-- -->
+
+You can add a scale bar, as well as a compass using `render_scalebar()`
+and `render_compass()`
+
+``` r
+render_camera(fov = 0, theta = 60, zoom = 0.75, phi = 45)
+render_scalebar(limits=c(0, 5, 10),label_unit = "km",position = "W", y=50,
+                scale_length = c(0.33,1))
+render_compass(position = "E")
+render_snapshot(clear=TRUE)
+```
+
+![](man/figures/unnamed-chunk-1-1.png)<!-- -->
 
 You can also render using the built-in pathtracer, powered by
 [rayrender](https://www.rayrender.net). Simply replace
@@ -216,9 +229,14 @@ shadows with any of the `_shade()` functions, so we remove those:
 elmat %>%
   sphere_shade(texture = "desert") %>%
   add_water(detect_water(elmat), color = "desert") %>%
-  plot_3d(elmat, zscale = 10, fov = 0, theta = 135, zoom = 0.75, phi = 45, windowsize = c(1000, 800))
+  plot_3d(elmat, zscale = 10, fov = 0, theta = 60, zoom = 0.75, phi = 45, windowsize = c(1000, 800))
+
+render_scalebar(limits=c(0, 5, 10),label_unit = "km",position = "W", y=50,
+                scale_length = c(0.33,1))
+
+render_compass(position = "E")
 Sys.sleep(0.2)
-render_highquality()
+render_highquality(samples=200, scale_text_size = 24,clear=TRUE)
 ```
 
 ![](man/figures/README_three-dhq-1.png)<!-- -->
@@ -237,7 +255,7 @@ montamb = ambient_shade(montereybay, zscale = 50)
 montereybay %>%
     sphere_shade(zscale = 10, texture = "imhof1") %>%
     add_shadow(montshadow, 0.5) %>%
-    add_shadow(montamb) %>%
+    add_shadow(montamb, 0) %>%
     plot_3d(montereybay, zscale = 50, fov = 0, theta = -45, phi = 45, 
             windowsize = c(1000, 800), zoom = 0.75,
             water = TRUE, waterdepth = 0, wateralpha = 0.5, watercolor = "lightblue",
@@ -248,21 +266,27 @@ render_snapshot(clear=TRUE)
 
 ![](man/figures/README_three-d-water-1.png)<!-- -->
 
-Water is also supported in `render_highquality()`.
+Water is also supported in `render_highquality()`. We load the
+`rayrender` package to change the ground material to include a checker
+pattern. By default, the camera looks at the origin, but we shift it
+down slightly to center the map.
 
 ``` r
+library(rayrender)
+
 montereybay %>%
     sphere_shade(zscale = 10, texture = "imhof1") %>%
-    plot_3d(montereybay, zscale = 50, fov = 70, theta = -45, phi = 20, 
+    plot_3d(montereybay, zscale = 50, fov = 70, theta = 270, phi = 30, 
             windowsize = c(1000, 800), zoom = 0.6, 
-            water = TRUE, waterdepth = 0, wateralpha = 0.5, watercolor = "lightblue",
+            water = TRUE, waterdepth = 0, wateralpha = 0.5, watercolor = "#233aa1",
             waterlinecolor = "white", waterlinealpha = 0.5)
 Sys.sleep(0.2)
-render_highquality(lightdirection = 0, lightaltitude  = 30, clamp_value = 10, 
-                   samples=200, clear=TRUE)
+render_highquality(lightdirection = c(-45,45), lightaltitude  = 30, clamp_value = 10, 
+                   samples = 200, camera_lookat= c(0,-50,0),
+                   ground_material = diffuse(color="grey50",checkercolor = "grey20", checkerperiod = 100))
 ```
 
-![](man/figures/unnamed-chunk-2-1.png)<!-- -->
+![](man/figures/hq-1.png)<!-- -->
 
 Rayshader also has map shapes other than rectangular included `c("hex",
 "circle")`, and you can customize the map into any shape you want by
@@ -273,7 +297,7 @@ par(mfrow = c(1, 2))
 montereybay %>% 
     sphere_shade(zscale = 10, texture = "imhof1") %>% 
     add_shadow(montshadow, 0.5) %>%
-    add_shadow(montamb) %>%
+    add_shadow(montamb, 0) %>%
     plot_3d(montereybay, zscale = 50, fov = 0, theta = -45, phi = 45, windowsize = c(1000, 800), zoom = 0.6,
             water = TRUE, waterdepth = 0, wateralpha = 0.5, watercolor = "lightblue",
             waterlinecolor = "white", waterlinealpha = 0.5, baseshape = "circle")
@@ -283,7 +307,7 @@ render_snapshot(clear = TRUE)
 montereybay %>% 
     sphere_shade(zscale = 10, texture = "imhof1") %>% 
     add_shadow(montshadow, 0.5) %>%
-    add_shadow(montamb) %>%
+    add_shadow(montamb, 0) %>%
     plot_3d(montereybay, zscale = 50, fov = 0, theta = -45, phi = 45, windowsize = c(1000, 800), zoom = 0.6,
             water = TRUE, waterdepth = 0, wateralpha = 0.5, watercolor = "lightblue",
             waterlinecolor = "white", waterlinealpha = 0.5, baseshape = "hex")
@@ -301,24 +325,34 @@ the font:
 montereybay %>% 
     sphere_shade(zscale = 10, texture = "imhof1") %>% 
     add_shadow(montshadow, 0.5) %>%
-    add_shadow(montamb) %>%
+    add_shadow(montamb,0) %>%
     plot_3d(montereybay, zscale = 50, fov = 0, theta = -100, phi = 30, windowsize = c(1000, 800), zoom = 0.6,
             water = TRUE, waterdepth = 0, waterlinecolor = "white", waterlinealpha = 0.5,
             wateralpha = 0.5, watercolor = "lightblue")
-render_label(montereybay, x = 350, y = 240, z = 4000, zscale = 50,
+render_label(montereybay, x = 350, y = 160, z = 1000, zscale = 50,
              text = "Moss Landing", textsize = 2, linewidth = 5)
-render_label(montereybay, x = 220, y = 330, z = 6000, zscale = 50,
+render_label(montereybay, x = 220, y = 70, z = 7000, zscale = 50,
              text = "Santa Cruz", textcolor = "darkred", linecolor = "darkred",
              textsize = 2, linewidth = 5)
-render_label(montereybay, x = 300, y = 130, z = 4000, zscale = 50,
+render_label(montereybay, x = 300, y = 270, z = 4000, zscale = 50,
              text = "Monterey", dashed = TRUE, textsize = 2, linewidth = 5)
-render_label(montereybay, x = 50, y = 130, z = 1000, zscale = 50,
-             text = "Monterey Canyon", relativez = FALSE, textsize = 2, linewidth = 5)
+render_label(montereybay, x = 50, y = 270, z = 1000, zscale = 50,  textcolor = "white", linecolor = "white",
+             text = "Monterey Canyon", relativez = FALSE, textsize = 2, linewidth = 5) 
 Sys.sleep(0.2)
-render_snapshot(clear = TRUE)
+render_snapshot(clear=TRUE)
 ```
 
 ![](man/figures/README_three-d-labels-1.png)<!-- -->
+
+Labels are also supported in
+`render_highquality()`:
+
+``` r
+render_highquality(samples=200, line_radius = 1, text_size = 18, text_offset = c(0,12,0),
+                   clamp_value=10, clear = TRUE)
+```
+
+![](man/figures/README_hqlabels-1.png)<!-- -->
 
 You can also apply a post-processing effect to the 3D maps to render
 maps with depth of field with the `render_depth()` function:
@@ -328,7 +362,7 @@ elmat %>%
   sphere_shade(texture = "desert") %>%
   add_water(detect_water(elmat), color = "desert") %>%
   add_shadow(ray_shade(elmat, zscale = 3), 0.5) %>%
-  add_shadow(ambient_shade(elmat), 0.5) %>%
+  add_shadow(ambient_shade(elmat), 0) %>%
   plot_3d(elmat, zscale = 10, fov = 30, theta = -225, phi = 25, windowsize = c(1000, 800), zoom = 0.3)
 Sys.sleep(0.2)
 render_depth(focus = 0.6, focallength = 200, clear = TRUE)
@@ -384,14 +418,14 @@ par(mfrow = c(1, 2))
 plot_gg(ggvolcano, width = 7, height = 4, raytrace = FALSE, preview = TRUE)
 ```
 
-    ## Warning: Removed 1861 rows containing missing values (geom_path).
+    ## Warning: Removed 1861 row(s) containing missing values (geom_path).
 
 ``` r
 plot_gg(ggvolcano, multicore = TRUE, raytrace = TRUE, width = 7, height = 4, 
         scale = 300, windowsize = c(1400, 866), zoom = 0.6, phi = 30, theta = 30)
 ```
 
-    ## Warning: Removed 1861 rows containing missing values (geom_path).
+    ## Warning: Removed 1861 row(s) containing missing values (geom_path).
 
 ``` r
 Sys.sleep(0.2)

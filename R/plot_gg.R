@@ -50,7 +50,6 @@
 #'@param saved_shadow_matrix Default `NULL`. A cached shadow matrix (saved by the a previous invocation of `plot_gg(..., save_shadow_matrix=TRUE)` to use instead of raytracing a shadow map each time.
 #'@param ... Additional arguments to be passed to `plot_3d()`.
 #'@return Opens a 3D plot in rgl.
-#'@import ggplot2
 #'@export
 #'@examples
 #'library(ggplot2)
@@ -160,10 +159,10 @@ plot_gg = function(ggobj, width = 3, height = 3,
   colormaptemp = tempfile()
   if(methods::is(ggobj,"list") && length(ggobj) == 2) {
     ggplotobj2 = unserialize(serialize(ggobj[[2]], NULL))
-    ggsave(paste0(colormaptemp,".png"),ggobj[[1]],width = width,height = height)
+    ggplot2::ggsave(paste0(colormaptemp,".png"),ggobj[[1]],width = width,height = height)
   } else {
     ggplotobj2 = unserialize(serialize(ggobj, NULL))
-    ggsave(paste0(colormaptemp,".png"),ggplotobj2,width = width,height = height)
+    ggplot2::ggsave(paste0(colormaptemp,".png"),ggplotobj2,width = width,height = height)
   }
   isfill = FALSE
   iscolor = FALSE
@@ -303,9 +302,9 @@ plot_gg = function(ggobj, width = 3, height = 3,
       }
       if(same_limits && same_breaks && same_labels && same_calls) {
         if(height_aes == "fill") {
-          ggplotobj2 = ggplotobj2 + guides(color = "none")
+          ggplotobj2 = ggplotobj2 + ggplot2::guides(color = "none")
         } else {
-          ggplotobj2 = ggplotobj2 + guides(fill = "none")
+          ggplotobj2 = ggplotobj2 + ggplot2::guides(fill = "none")
         }
       }
     }
@@ -321,7 +320,7 @@ plot_gg = function(ggobj, width = 3, height = 3,
         if(has_guide) {
           if(height_aes == "fill") {
             if(is.null(ggplotobj2$guides$fill)) {
-              ggplotobj2 = ggplotobj2 + guides(fill = guide_colourbar(ticks = FALSE,nbin = 1000,order=i))
+              ggplotobj2 = ggplotobj2 + ggplot2::guides(fill = ggplot2::guide_colourbar(ticks = FALSE,nbin = 1000,order=i))
             } else {
               if(any(ggplotobj2$guides$fill != "none")) {
                 copyguide = ggplotobj2$guides$fill
@@ -329,7 +328,7 @@ plot_gg = function(ggobj, width = 3, height = 3,
                 copyguide$ticks = FALSE
                 copyguide$nbin = 1000
                 ggplotobj2 = ggplotobj2 + 
-                  guides(fill = guide_colourbar(ticks = FALSE,nbin = 1000))
+                  ggplot2::guides(fill = ggplot2::guide_colourbar(ticks = FALSE,nbin = 1000))
                 ggplotobj2$guides$fill = copyguide
               }
             }
@@ -340,7 +339,7 @@ plot_gg = function(ggobj, width = 3, height = 3,
             }
           } else {
             if(is.null(ggplotobj2$guides$colour)) {
-              ggplotobj2 = ggplotobj2 + guides(colour = guide_colourbar(ticks = FALSE,nbin = 1000,order=i))
+              ggplotobj2 = ggplotobj2 + ggplot2::guides(colour = ggplot2::guide_colourbar(ticks = FALSE,nbin = 1000,order=i))
             } else {
               if(any(ggplotobj2$guides$colour != "none")) {
                 copyguide = ggplotobj2$guides$colour
@@ -348,7 +347,7 @@ plot_gg = function(ggobj, width = 3, height = 3,
                 copyguide$ticks = FALSE
                 copyguide$nbin = 1000
                 ggplotobj2 = ggplotobj2 + 
-                  guides(colour = guide_colourbar(ticks = FALSE,nbin = 1000))
+                  ggplot2::guides(colour = ggplot2::guide_colourbar(ticks = FALSE,nbin = 1000))
                 ggplotobj2$guides$colour = copyguide
               }
             }
@@ -365,32 +364,34 @@ plot_gg = function(ggobj, width = 3, height = 3,
     if(!anyfound) {
       if(height_aes == "colour") {
         ggplotobj2 = ggplotobj2 + 
-          scale_color_gradientn(colours = grDevices::colorRampPalette(c("white","black"))(256), na.value = "white") +
-          guides(colour = guide_colourbar(ticks = FALSE,nbin = 1000))
+          ggplot2::scale_color_gradientn(colours = grDevices::colorRampPalette(c("white","black"))(256), na.value = "white") +
+          ggplot2::guides(colour = ggplot2::guide_colourbar(ticks = FALSE,nbin = 1000))
       }
       if(height_aes == "fill") {
         ggplotobj2 = ggplotobj2 + 
-          scale_fill_gradientn(colours = grDevices::colorRampPalette(c("white","black"))(256), na.value = "white") +
-          guides(fill = guide_colourbar(ticks = FALSE,nbin = 1000))
+          ggplot2::scale_fill_gradientn(colours = grDevices::colorRampPalette(c("white","black"))(256), na.value = "white") +
+          ggplot2::guides(fill = ggplot2::guide_colourbar(ticks = FALSE,nbin = 1000))
       }
     }
   } else {
     #If no scales found, just add one to the ggplot object.
     if(ggplotobj2$scales$n() == 0) {
       if(height_aes == "fill") {
-        ggplotobj2 = ggplotobj2 + scale_fill_gradientn(colours = grDevices::colorRampPalette(c("white","black"))(256), na.value = "white") +
-          guides(fill = guide_colourbar(ticks = FALSE,nbin = 1000))
+        ggplotobj2 = ggplotobj2 + 
+          ggplot2::scale_fill_gradientn(colours = grDevices::colorRampPalette(c("white","black"))(256), na.value = "white") +
+          ggplot2::guides(fill = ggplot2::guide_colourbar(ticks = FALSE,nbin = 1000))
       } else {
-        ggplotobj2 = ggplotobj2 + scale_color_gradientn(colours = grDevices::colorRampPalette(c("white","black"))(256), na.value = "white") +
-          guides(colour = guide_colourbar(ticks = FALSE,nbin = 1000))
+        ggplotobj2 = ggplotobj2 + 
+          ggplot2::scale_color_gradientn(colours = grDevices::colorRampPalette(c("white","black"))(256), na.value = "white") +
+          ggplot2::guides(colour = ggplot2::guide_colourbar(ticks = FALSE,nbin = 1000))
       }
     } else {
       if(height_aes == "fill") {
-        ggplotobj2 = ggplotobj2 + scale_fill_gradientn(colours = grDevices::colorRampPalette(c("white","black"))(256), na.value = "white") +
-          guides(fill = guide_colourbar(ticks = FALSE,nbin = 1000))
+        ggplotobj2 = ggplotobj2 + ggplot2::scale_fill_gradientn(colours = grDevices::colorRampPalette(c("white","black"))(256), na.value = "white") +
+          ggplot2::guides(fill = ggplot2::guide_colourbar(ticks = FALSE,nbin = 1000))
       } else {
-        ggplotobj2 = ggplotobj2 + scale_color_gradientn(colours = grDevices::colorRampPalette(c("white","black"))(256), na.value = "white") +
-          guides(colour = guide_colourbar(ticks = FALSE,nbin = 1000))
+        ggplotobj2 = ggplotobj2 + ggplot2::scale_color_gradientn(colours = grDevices::colorRampPalette(c("white","black"))(256), na.value = "white") +
+          ggplot2::guides(colour = ggplot2::guide_colourbar(ticks = FALSE,nbin = 1000))
       }
     }
   }
@@ -410,7 +411,7 @@ plot_gg = function(ggobj, width = 3, height = 3,
           }
         }
         if("shape" %in% names(ggplotobj2$layers[[layer]]$mapping)) {
-          shapedata = layer_data(ggplotobj2)
+          shapedata = ggplot2::layer_data(ggplotobj2)
           numbershapes = length(unique(shapedata$shape))
           if(numbershapes > 3) {
             warning("Non-solid shapes will not be projected to 3D.")
@@ -427,7 +428,7 @@ plot_gg = function(ggobj, width = 3, height = 3,
               ggplotobj2$layers[[j]]$geom$default_aes$stroke = 0
             }
           }
-          ggplotobj2 = suppressMessages({ggplotobj2 + scale_alpha_continuous(range=c(1,1))})
+          ggplotobj2 = suppressMessages({ggplotobj2 + ggplot2::scale_alpha_continuous(range=c(1,1))})
         }
         if("linetype" %in% names(ggplotobj2$layers[[layer]]$mapping)) {
           ggplotobj2$layers[[layer]]$geom$draw_key = drawkeyfunction_lines
@@ -440,7 +441,7 @@ plot_gg = function(ggobj, width = 3, height = 3,
           ggplotobj2$layers[[layer]]$aes_params$fill = "white"
         }
         if("shape" %in% names(ggplotobj2$layers[[layer]]$mapping)) {
-          shapedata = layer_data(ggplotobj2)
+          shapedata = ggplot2::layer_data(ggplotobj2)
           numbershapes = length(unique(shapedata$shape))
           if(numbershapes > 3) {
             warning("Non-solid shapes will not be projected to 3D.")
@@ -457,7 +458,7 @@ plot_gg = function(ggobj, width = 3, height = 3,
               ggplotobj2$layers[[j]]$geom$default_aes$stroke = 0
             }
           }
-          ggplotobj2 = suppressMessages({ggplotobj2 + scale_alpha_continuous(range=c(1,1))})
+          ggplotobj2 = suppressMessages({ggplotobj2 + ggplot2::scale_alpha_continuous(range=c(1,1))})
         }
         if("linetype" %in% names(ggplotobj2$layers[[layer]]$mapping)) {
           ggplotobj2$layers[[layer]]$geom$draw_key = drawkeyfunction_lines
@@ -500,25 +501,25 @@ plot_gg = function(ggobj, width = 3, height = 3,
         }
       }
     }
-    if(theme_bool["text"]) ggplotobj2 = ggplotobj2 + theme(text = element_text(color="white"))
-    if(theme_bool["line"]) ggplotobj2 = ggplotobj2 + theme(line = element_line(color="white"))
-    if(theme_bool["axis.line"]) ggplotobj2 = ggplotobj2 + theme(axis.line = element_line(color="white"))
-    if(theme_bool["axis.title"]) ggplotobj2 = ggplotobj2 + theme(axis.title = element_text(color="white"))
-    if(theme_bool["axis.title.x"]) ggplotobj2 = ggplotobj2 + theme(axis.title.x = element_text(color="white"))
-    if(theme_bool["axis.title.y"]) ggplotobj2 = ggplotobj2 + theme(axis.title.y = element_text(color="white"))
-    if(theme_bool["axis.text"]) ggplotobj2 = ggplotobj2 + theme(axis.text = element_text(color="white"))
-    if(theme_bool["axis.text.x"]) ggplotobj2 = ggplotobj2 + theme(axis.text.x = element_text(color="white"))
-    if(theme_bool["axis.text.y"]) ggplotobj2 = ggplotobj2 + theme(axis.text.y = element_text(color="white"))
-    if(theme_bool["strip.text.x"]) ggplotobj2 = ggplotobj2 + theme(strip.text.x = element_text(color="white"))
-    if(theme_bool["strip.text.y"]) ggplotobj2 = ggplotobj2 + theme(strip.text.y = element_text(color="white"))
-    if(theme_bool["axis.ticks"]) ggplotobj2 = ggplotobj2 + theme(axis.ticks = element_line(color="white"))
-    if(theme_bool["strip.background"]) ggplotobj2 = ggplotobj2 + theme(strip.background = element_rect(fill = "white", color = "white"))
-    if(theme_bool["strip.text"]) ggplotobj2 = ggplotobj2 + theme(strip.text = element_text(color="white"))
-    if(theme_bool["legend.text"]) ggplotobj2 = ggplotobj2 + theme(legend.text = element_text(color="white"))
-    if(theme_bool["legend.title"]) ggplotobj2 = ggplotobj2 + theme(legend.title = element_text(color="white"))
-    if(theme_bool["legend.background"]) ggplotobj2 = ggplotobj2 + theme(legend.background = element_rect(fill = "white", color = "white"))
-    if(theme_bool["legend.title"]) ggplotobj2 = ggplotobj2 + theme(legend.title = element_text(color="white"))
-    if(theme_bool["panel.background"]) ggplotobj2 = ggplotobj2 + theme(panel.background = element_rect(fill = "white", color = "white"))
+    if(theme_bool["text"]) ggplotobj2 = ggplotobj2 + ggplot2::theme(text = ggplot2::element_text(color="white"))
+    if(theme_bool["line"]) ggplotobj2 = ggplotobj2 + ggplot2::theme(line = ggplot2::element_line(color="white"))
+    if(theme_bool["axis.line"]) ggplotobj2 = ggplotobj2 + ggplot2::theme(axis.line = ggplot2::element_line(color="white"))
+    if(theme_bool["axis.title"]) ggplotobj2 = ggplotobj2 + ggplot2::theme(axis.title = ggplot2::element_text(color="white"))
+    if(theme_bool["axis.title.x"]) ggplotobj2 = ggplotobj2 + ggplot2::theme(axis.title.x = ggplot2::element_text(color="white"))
+    if(theme_bool["axis.title.y"]) ggplotobj2 = ggplotobj2 + ggplot2::theme(axis.title.y = ggplot2::element_text(color="white"))
+    if(theme_bool["axis.text"]) ggplotobj2 = ggplotobj2 + ggplot2::theme(axis.text = ggplot2::element_text(color="white"))
+    if(theme_bool["axis.text.x"]) ggplotobj2 = ggplotobj2 + ggplot2::theme(axis.text.x = ggplot2::element_text(color="white"))
+    if(theme_bool["axis.text.y"]) ggplotobj2 = ggplotobj2 + ggplot2::theme(axis.text.y = ggplot2::element_text(color="white"))
+    if(theme_bool["strip.text.x"]) ggplotobj2 = ggplotobj2 + ggplot2::theme(strip.text.x = ggplot2::element_text(color="white"))
+    if(theme_bool["strip.text.y"]) ggplotobj2 = ggplotobj2 + ggplot2::theme(strip.text.y = ggplot2::element_text(color="white"))
+    if(theme_bool["axis.ticks"]) ggplotobj2 = ggplotobj2 + ggplot2::theme(axis.ticks = ggplot2::element_line(color="white"))
+    if(theme_bool["strip.background"]) ggplotobj2 = ggplotobj2 + ggplot2::theme(strip.background = ggplot2::element_rect(fill = "white", color = "white"))
+    if(theme_bool["strip.text"]) ggplotobj2 = ggplotobj2 + ggplot2::theme(strip.text = ggplot2::element_text(color="white"))
+    if(theme_bool["legend.text"]) ggplotobj2 = ggplotobj2 + ggplot2::theme(legend.text = ggplot2::element_text(color="white"))
+    if(theme_bool["legend.title"]) ggplotobj2 = ggplotobj2 + ggplot2::theme(legend.title = ggplot2::element_text(color="white"))
+    if(theme_bool["legend.background"]) ggplotobj2 = ggplotobj2 + ggplot2::theme(legend.background = ggplot2::element_rect(fill = "white", color = "white"))
+    if(theme_bool["legend.title"]) ggplotobj2 = ggplotobj2 + ggplot2::theme(legend.title = ggplot2::element_text(color="white"))
+    if(theme_bool["panel.background"]) ggplotobj2 = ggplotobj2 + ggplot2::theme(panel.background = ggplot2::element_rect(fill = "white", color = "white"))
   } else {
     if(height_aes == "fill") {
       for(layer in seq_along(1:length(ggplotobj2$layers))) {
@@ -534,7 +535,7 @@ plot_gg = function(ggobj, width = 3, height = 3,
           }
         }
         if("shape" %in% names(ggplotobj2$layers[[layer]]$mapping)) {
-          shapedata = layer_data(ggplotobj2)
+          shapedata = ggplot2::layer_data(ggplotobj2)
           numbershapes = length(unique(shapedata$shape))
           if(numbershapes > 3) {
             warning("Non-solid shapes will not be projected to 3D.")
@@ -551,7 +552,7 @@ plot_gg = function(ggobj, width = 3, height = 3,
               ggplotobj2$layers[[j]]$geom$default_aes$stroke = 0
             }
           }
-          ggplotobj2 = suppressMessages({ggplotobj2 + scale_alpha_continuous(range=c(1,1))})
+          ggplotobj2 = suppressMessages({ggplotobj2 + ggplot2::scale_alpha_continuous(range=c(1,1))})
         }
         if("linetype" %in% names(ggplotobj2$layers[[layer]]$mapping)) {
           ggplotobj2$layers[[layer]]$geom$draw_key = drawkeyfunction_lines
@@ -564,7 +565,7 @@ plot_gg = function(ggobj, width = 3, height = 3,
           ggplotobj2$layers[[layer]]$aes_params$fill = "white"
         }
         if("shape" %in% names(ggplotobj2$layers[[layer]]$mapping)) {
-          shapedata = layer_data(ggplotobj2)
+          shapedata = ggplot2::layer_data(ggplotobj2)
           numbershapes = length(unique(shapedata$shape))
           if(numbershapes > 3) {
             warning("Non-solid shapes will not be projected to 3D.")
@@ -581,7 +582,7 @@ plot_gg = function(ggobj, width = 3, height = 3,
               ggplotobj2$layers[[j]]$geom$default_aes$stroke = 0
             }
           }
-          ggplotobj2 = suppressMessages({ggplotobj2 + scale_alpha_continuous(range=c(1,1))})
+          ggplotobj2 = suppressMessages({ggplotobj2 + ggplot2::scale_alpha_continuous(range=c(1,1))})
         }
         if("linetype" %in% names(ggplotobj2$layers[[layer]]$mapping)) {
           ggplotobj2$layers[[layer]]$geom$draw_key = drawkeyfunction_lines
@@ -590,19 +591,19 @@ plot_gg = function(ggobj, width = 3, height = 3,
     }
     #No custom theme passed, just create one.
     ggplotobj2 = ggplotobj2 +
-      theme(text = element_text(color="white"),
-            line = element_line(color="white"),
-            axis.line = element_line(color="white"),
-            axis.title = element_text(color="white"),
-            axis.text = element_text(color="white"),
-            axis.ticks = element_line(color="white"),
-            strip.background = element_rect(fill = "white", color = "white"),
-            strip.text = element_text(color="white"),
-            legend.key = element_rect(fill = "white", color = "white"),
-            legend.text = element_text(color="white"),
-            legend.background = element_rect(fill = "white", color = "white"),
-            legend.title = element_text(color="white"),
-            panel.background = element_rect(fill = "white", color = "white"))
+      ggplot2::theme(text = ggplot2::element_text(color="white"),
+            line = ggplot2::element_line(color="white"),
+            axis.line = ggplot2::element_line(color="white"),
+            axis.title = ggplot2::element_text(color="white"),
+            axis.text = ggplot2::element_text(color="white"),
+            axis.ticks = ggplot2::element_line(color="white"),
+            strip.background = ggplot2::element_rect(fill = "white", color = "white"),
+            strip.text = ggplot2::element_text(color="white"),
+            legend.key = ggplot2::element_rect(fill = "white", color = "white"),
+            legend.text = ggplot2::element_text(color="white"),
+            legend.background = ggplot2::element_rect(fill = "white", color = "white"),
+            legend.title = ggplot2::element_text(color="white"),
+            panel.background = ggplot2::element_rect(fill = "white", color = "white"))
   }
   if(height_aes == "fill") {
     if(length(ggplotobj2$layers) > 0) {
@@ -634,7 +635,7 @@ plot_gg = function(ggobj, width = 3, height = 3,
     }
   }
   tryCatch({
-    ggsave(paste0(heightmaptemp,".png"),ggplotobj2,width = width,height = height)
+    ggplot2::ggsave(paste0(heightmaptemp,".png"),ggplotobj2,width = width,height = height)
   }, error = function(e) {
     if(any(grepl("Error: Discrete value supplied to continuous scale", as.character(e),fixed = TRUE))) {
       stop(paste0("Error: Discrete variable cannot be mapped to 3D. Did you mean to choose `",ifelse(height_aes == "fill","color","fill"), "` as the `height_aes`?"),call.=FALSE)

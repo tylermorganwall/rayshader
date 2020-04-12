@@ -30,13 +30,13 @@
 #'\dontrun{
 #'montereybay %>%
 #'  sphere_shade() %>%
-#'  plot_3d(montereybay,zscale=50,water=TRUE)
+#'  plot_3d(montereybay,zscale=50,water=TRUE, watercolor="#233aa1")
 #'render_snapshot()
 #'}
 #'  
 #'#We want to add a label to Santa Cruz, so we use the x and y matrix coordinate (x=220 and y=330)
 #'\dontrun{
-#'render_label(montereybay,x=220,y=330, z=10000,zscale=50,text = "Santa Cruz")
+#'render_label(montereybay,x=220,y=70, z=10000,zscale=50,text = "Santa Cruz")
 #'render_snapshot()
 #'}
 #'
@@ -44,18 +44,35 @@
 #'#the user to control the dash length). You can clear the existing lines by setting 
 #'#`clear_previous = TRUE`.
 #'\dontrun{
-#'render_label(montereybay, x = 300, y = 120, z = 10000, zscale = 50, text = "Monterey",
-#'             textcolor = "darkred", linecolor="darkred",dashed = TRUE, clear_previous = TRUE)
+#'render_label(montereybay, x = 290, y = 280, z = 10000, zscale = 50, text = "Monterey",
+#'             textcolor = "white", linecolor="darkred",dashed = TRUE, clear_previous = TRUE)
 #'render_snapshot()
 #'}
 #'
 #'#By default, z specifies the altitude above that point on the elevation matrix. We can also specify 
 #'#an absolute height by setting `relativez=FALSE`.
 #'\dontrun{
-#'render_label(montereybay,x=50,y=130, z=2000,zscale=50,text = "Monterey Canyon",relativez=FALSE)
+#'render_label(montereybay,x=170,y=260, z=2000,zscale=50,text = "Monterey Canyon",relativez=FALSE)
 #'render_snapshot()
 #'}
 #'
+#'#We can also render labels in high quality with `render_highquality()`, specifying a custom
+#'#line radius. By default, the labels point towards the camera, but you can fix their angle with
+#'#argument `text_angle`.
+#'\dontrun{
+#'render_camera(theta=35, phi = 35, zoom = 0.80, fov=60)
+#'render_label(montereybay, x = 290, y = 280, z = 10000, zscale = 50, text = "Monterey",
+#'             textcolor = "white", linecolor="white",dashed = TRUE, clear_previous = TRUE)
+#'render_label(montereybay,x=170,y=260, z=2000,zscale=50,textcolor = "white", linecolor="white",
+#'             text = "Monterey Canyon",relativez=FALSE)
+#'             
+#'render_highquality(samples=200,text_size = 18, line_radius = 2, text_offset = c(0,20,0),
+#'                   lightdirection=180, clamp_value=10)
+#'                   
+#'#Fixed text angle
+#'render_highquality(samples=200,text_size = 18, line_radius = 2, text_offset = c(0,20,0),
+#'                   lightdirection=180, text_angle=0, clamp_value=10)
+#'}
 #'#We can remove all existing labels by calling `render_label(clear_previous = TRUE)`
 #'\dontrun{
 #'render_label(clear_previous = TRUE)
@@ -105,7 +122,6 @@
     linelist = list()
     x = x - nrow(heightmap)/2
     y = y - ncol(heightmap)/2
-    y = -y
     if(dashed) {
       counter = 1
       while(startline + dashlength < z) {

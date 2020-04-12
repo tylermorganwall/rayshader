@@ -49,7 +49,6 @@
 #'@param clear Default `FALSE`. If `TRUE`, the current `rgl` device will be cleared.
 #'@param print_scene_info Default `FALSE`. If `TRUE`, it will print the position and lookat point of the camera.
 #'@param ... Additional parameters to pass to rayrender::render_scene()
-#'@import rayrender
 #'@export
 #'@examples
 #'#Render the volcano dataset using pathtracing
@@ -116,19 +115,22 @@
 #'rgl::rgl.close()
 #'}
 render_highquality = function(filename = NULL, light = TRUE, lightdirection = 315, lightaltitude = 45, lightsize=NULL,
-                              lightintensity = 500, lightcolor = "white", obj_material = diffuse(),
+                              lightintensity = 500, lightcolor = "white", obj_material = rayrender::diffuse(),
                               cache_filename=NULL, width = NULL, height = NULL, 
                               text_angle = NULL, text_size = 6, text_offset = c(0,0,0), line_radius=0.5,
                               scale_text_angle = NULL, scale_text_size = 6, scale_text_offset = c(0,0,0), 
                               title_text = NULL, title_offset = c(20,20), 
                               title_color = "black", title_size = 30, title_font = "sans",
                               title_bar_color = NULL, title_bar_alpha = 0.5,
-                              ground_material = diffuse(), ground_size=100000,scene_elements=NULL, 
+                              ground_material = rayrender::diffuse(), ground_size=100000,scene_elements=NULL, 
                               camera_location = NULL, camera_lookat = c(0,0,0), 
                               camera_interpolate=1, clear  = FALSE, 
                               print_scene_info = FALSE, ...) {
   if(rgl::rgl.cur() == 0) {
     stop("No rgl window currently open.")
+  }
+  if(!("rayrender" %in% rownames(utils::installed.packages()))) {
+    stop("`rayrender` package required for render_highquality()")
   }
   windowrect = rgl::par3d()$windowRect
   if(!is.null(title_text)) {
@@ -209,7 +211,7 @@ render_highquality = function(filename = NULL, light = TRUE, lightdirection = 31
       camera_lookat = camera_interpolate[2] * camera_lookat
     }
   }
-  if(substring(cache_filename, nchar(cache_filename) - 3, nchar(cache_filename)) != ".obj") {
+  if(tools::file_ext(cache_filename) != "obj") {
     cache_filename = paste0(cache_filename, ".obj")
   }
   if(no_cache || !file.exists(cache_filename)) {
@@ -220,24 +222,32 @@ render_highquality = function(filename = NULL, light = TRUE, lightdirection = 31
     }
   }
   if(obj_material$type %in% c("diffuse","oren-nayar")) {
-    scene = obj_model(cache_filename, x = -bbox_center[1], y = -bbox_center[2],
+    scene = rayrender::obj_model(cache_filename, x = -bbox_center[1], y = -bbox_center[2],
                       z = -bbox_center[3], texture = TRUE,
                       material = obj_material)
   } else {
-    scene = obj_model(cache_filename, x = -bbox_center[1], y = -bbox_center[2], 
+    scene = rayrender::obj_model(cache_filename, x = -bbox_center[1], y = -bbox_center[2], 
                       z = -bbox_center[3],
                       material = obj_material)
+  }
+  has_rayimage = TRUE
+  if(!("rayimage" %in% rownames(utils::installed.packages()))) {
+    warning("`rayimage` package required for labels")
+    has_rayimage = FALSE
   }
   labelids = get_ids_with_labels(typeval = "raytext")$id
   labels = list()
   counter = 1
   for(i in seq_len(length(labelids))) {
+    if(!has_rayimage) {
+      break
+    }
     temp_label = rgl.attrib(labelids[i], "texts")
     temp_center = rgl.attrib(labelids[i], "centers")
     temp_color = rgl.attrib(labelids[i], "colors")
     for(j in seq_len(nrow(temp_label))) {
       labelfile = ""
-      if(no_cache) {
+      if(!no_cache) {
         labelfile = paste0(temp_label[j,1],".png")
       } else {
         labelfile = tempfile(fileext = ".png")
@@ -255,30 +265,33 @@ render_highquality = function(filename = NULL, light = TRUE, lightdirection = 31
           anglevec = text_angle
         }
       }
-      labels[[counter]] = xy_rect(x=temp_center[j,1] - bbox_center[1] + text_offset[1], 
+      labels[[counter]] = rayrender::xy_rect(x=temp_center[j,1] - bbox_center[1] + text_offset[1], 
                                   y=temp_center[j,2] - bbox_center[2] + text_offset[2], 
                                   z=temp_center[j,3] - bbox_center[3] + text_offset[3],
                                   angle = anglevec,
                                   xwidth = nchar(temp_label[j,1])*text_size, ywidth = text_size,
-                                  material = diffuse(color = temp_color[j,1:3], alpha_texture = labelfile))
+                                  material = rayrender::diffuse(color = temp_color[j,1:3], alpha_texture = labelfile))
       counter = counter + 1
     }
   }
   if(length(labels) > 0) {
     all_labels = do.call(rbind, labels)
-    scene = add_object(scene, all_labels)
+    scene = rayrender::add_object(scene, all_labels)
   }
   labellineids = get_ids_with_labels(typeval = "textline")$id
   labelline = list()
   counter = 1
   for(i in seq_len(length(labellineids))) {
+    if(!has_rayimage) {
+      break
+    }
     temp_verts = rgl.attrib(labellineids[i], "vertices")
     temp_color = rgl.attrib(labellineids[i], "colors")
     for(j in seq_len(nrow(temp_verts)/2)) {
-      labelline[[counter]] = segment(start = temp_verts[2*j-1,] - bbox_center, 
+      labelline[[counter]] = rayrender::segment(start = temp_verts[2*j-1,] - bbox_center, 
                                      end   = temp_verts[2*j,] - bbox_center,
                                      radius = line_radius,
-                                     material = diffuse(color = temp_color[j,1:3]))
+                                     material = rayrender::diffuse(color = temp_color[j,1:3]))
       counter = counter + 1
     }
   }
@@ -286,12 +299,15 @@ render_highquality = function(filename = NULL, light = TRUE, lightdirection = 31
   scalelabels = list()
   counter = 1
   for(i in seq_len(length(scalelabelids))) {
+    if(!has_rayimage) {
+      break
+    }
     temp_label = rgl.attrib(scalelabelids[i], "texts")
     temp_center = rgl.attrib(scalelabelids[i], "centers")
     temp_color = rgl.attrib(scalelabelids[i], "colors")
     for(j in seq_len(nrow(temp_label))) {
       scalelabelfile = ""
-      if(no_cache) {
+      if(!no_cache) {
         scalelabelfile = paste0(temp_label[j,1],".png")
       } else {
         scalelabelfile = tempfile(fileext = ".png")
@@ -309,29 +325,30 @@ render_highquality = function(filename = NULL, light = TRUE, lightdirection = 31
           anglevec = text_angle
         }
       }
-      scalelabels[[counter]] = xy_rect(x=temp_center[j,1] - bbox_center[1] + scale_text_offset[1], 
+      scalelabels[[counter]] = rayrender::xy_rect(x=temp_center[j,1] - bbox_center[1] + scale_text_offset[1], 
                                   y=temp_center[j,2] - bbox_center[2] + scale_text_offset[2], 
                                   z=temp_center[j,3] - bbox_center[3] + scale_text_offset[3],
                                   angle = anglevec,
                                   xwidth = nchar(temp_label[j,1])*scale_text_size, ywidth = scale_text_size,
-                                  material = diffuse(color = temp_color[j,1:3], alpha_texture = scalelabelfile))
+                                  material = rayrender::diffuse(color = temp_color[j,1:3], alpha_texture = scalelabelfile))
       counter = counter + 1
     }
   }
   if(length(labels) > 0) {
     all_labels = do.call(rbind, labels)
-    scene = add_object(scene, all_labels)
+    scene = rayrender::add_object(scene, all_labels)
   }
   if(length(labelline) > 0) {
     all_labellines = do.call(rbind, labelline)
-    scene = add_object(scene, all_labellines)
+    scene = rayrender::add_object(scene, all_labellines)
   }
   if(length(scalelabels) > 0) {
     all_scalelabels = do.call(rbind, scalelabels)
-    scene = add_object(scene, all_scalelabels)
+    scene = rayrender::add_object(scene, all_scalelabels)
   }
   if(has_shadow) {
-    scene = add_object(scene, xz_rect(zwidth=ground_size,xwidth=ground_size,y=shadowdepth-bbox_center[2], material = ground_material))
+    scene = rayrender::add_object(scene, rayrender::xz_rect(zwidth=ground_size,xwidth=ground_size,
+                                                            y=shadowdepth-bbox_center[2], material = ground_material))
   }
   if(light) {
     if(is.null(lightsize)) {
@@ -363,10 +380,10 @@ render_highquality = function(filename = NULL, light = TRUE, lightdirection = 31
         if(!is.na(lightsize[i])) {
           lightsizetemp = lightsize[i]
         }
-        scene = add_object(scene, sphere(x=observer_radius*5 * cospi(lightaltitudetemp/180) * sinpi(lightdirectiontemp/180),
+        scene = rayrender::add_object(scene, rayrender::sphere(x=observer_radius*5 * cospi(lightaltitudetemp/180) * sinpi(lightdirectiontemp/180),
                                          y=observer_radius*5 * sinpi(lightaltitudetemp/180),
                                          z=-observer_radius*5 * cospi(lightaltitudetemp/180) * cospi(lightdirectiontemp/180), radius=lightsizetemp,
-                                         material = light(color = lightcolortemp, intensity = lightintensitytemp)))
+                                         material = rayrender::light(color = lightcolortemp, intensity = lightintensitytemp)))
       }
     }
   }
@@ -375,11 +392,11 @@ render_highquality = function(filename = NULL, light = TRUE, lightdirection = 31
                    "), Camera lookat: c(", paste0(camera_lookat,collapse=","), ")"),collapse=""))
   }
   if(!is.null(scene_elements)) {
-    scene = add_object(scene,scene_elements)
+    scene = rayrender::add_object(scene,scene_elements)
   }
   if(has_title) {
     temp = tempfile(fileext = ".png")
-    render_scene(scene, lookfrom = lookfrom, lookat = camera_lookat, fov = fov, filename=temp,
+    rayrender::render_scene(scene, lookfrom = lookfrom, lookat = camera_lookat, fov = fov, filename=temp,
                  ortho_dimensions = ortho_dimensions, width = width, height = height, ...)
     if(has_title) {
       if(!("magick" %in% rownames(utils::installed.packages()))) {
@@ -414,7 +431,7 @@ render_highquality = function(filename = NULL, light = TRUE, lightdirection = 31
       }
     }
   } else {
-    render_scene(scene, lookfrom = lookfrom, lookat = camera_lookat, fov = fov, filename=filename,
+    rayrender::render_scene(scene, lookfrom = lookfrom, lookat = camera_lookat, fov = fov, filename=filename,
                  ortho_dimensions = ortho_dimensions, width = width, height = height, ...)
   }
   if(clear) {

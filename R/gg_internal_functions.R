@@ -84,9 +84,11 @@ drawkeyfunction_lines = function(data, params, size) {
     if (!is.null(a)) a else b
   }
   grid::segmentsGrob(0.1, 0.5, 0.9, 0.5, 
-               gp = grid::gpar(col = alpha(data$colour %||% data$fill %||% "black", 0), 
+               gp = grid::gpar(col = scales::alpha(data$colour %||% data$fill %||% "black", 0), 
                          lwd = (data$size %||% 0.5) * .pt, lty = data$linetype %||% 1, 
                          lineend = "butt"), 
                arrow = params$arrow)
 }
 
+globalVariables(".pt")
+globalVariables(".stroke")

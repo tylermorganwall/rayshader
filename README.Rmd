@@ -133,7 +133,7 @@ elmat %>%
 
 Rayshader also supports 3D mapping by passing a texture map (either external or one produced by rayshader) into the `plot_3d` function. 
 
-```{r README_three-d}
+```{r README_three-d, fig.width = 10, fig.height = 8}
 
 elmat %>%
   sphere_shade(texture = "desert") %>%
@@ -148,11 +148,10 @@ render_snapshot()
 
 You can add a scale bar, as well as a compass using `render_scalebar()` and `render_compass()`
 
-```{r}
-render_camera(theta=45,phi=45,zoom=0.75)
+```{r , fig.width = 10, fig.height = 8}
+render_camera(fov = 0, theta = 60, zoom = 0.75, phi = 45)
 render_scalebar(limits=c(0, 5, 10),label_unit = "km",position = "W", y=50,
-                scale_length = c(0.33,1),
-                text_z_offset = -20, text_y_offset = -30)
+                scale_length = c(0.33,1))
 render_compass(position = "E")
 render_snapshot(clear=TRUE)
 
@@ -160,18 +159,19 @@ render_snapshot(clear=TRUE)
 
 You can also render using the built-in pathtracer, powered by [rayrender](https://www.rayrender.net). Simply replace `render_snapshot()` with `render_highquality()`. When `render_highquality()` is called, there's no need to pre-compute the shadows with any of the `_shade()` functions, so we remove those:
 
-```{r README_three-dhq}
+```{r README_three-dhq, fig.width = 10, fig.height = 8}
 
 elmat %>%
   sphere_shade(texture = "desert") %>%
   add_water(detect_water(elmat), color = "desert") %>%
-  plot_3d(elmat, zscale = 10, fov = 0, theta = 135, zoom = 0.75, phi = 45, windowsize = c(1000, 800))
+  plot_3d(elmat, zscale = 10, fov = 0, theta = 60, zoom = 0.75, phi = 45, windowsize = c(1000, 800))
+
 render_scalebar(limits=c(0, 5, 10),label_unit = "km",position = "W", y=50,
-                scale_length = c(0.33,1),
-                text_z_offset = -20, text_y_offset = -30)
+                scale_length = c(0.33,1))
+
 render_compass(position = "E")
 Sys.sleep(0.2)
-render_highquality(samples=10)
+render_highquality(samples=200, scale_text_size = 24,clear=TRUE)
 
 ```
 
@@ -182,7 +182,7 @@ system("rm dem_01.tif")
 
 You can also easily add a water layer by setting `water = TRUE` in `plot_3d()` (and setting `waterdepth` if the water level is not 0), or by using the function `render_water()` after the 3D map has been rendered. You can customize the appearance and transparancy of the water layer via function arguments. Here's an example using bathymetric/topographic data of Monterey Bay, CA (included with rayshader):
 
-```{r README_three-d-water}
+```{r README_three-d-water, fig.width =  10, fig.height = 8}
 
 montshadow = ray_shade(montereybay, zscale = 50, lambert = FALSE)
 montamb = ambient_shade(montereybay, zscale = 50)
@@ -198,19 +198,21 @@ Sys.sleep(0.2)
 render_snapshot(clear=TRUE)
 ```
 
-Water is also supported in `render_highquality()`.
+Water is also supported in `render_highquality()`. We load the `rayrender` package to change the ground material to include a checker pattern. By default, the camera looks at the origin, but we shift it down slightly to center the map.
 
-```{r}
+```{r hq, fig.width =  10, fig.height = 8}
+library(rayrender)
 
 montereybay %>%
     sphere_shade(zscale = 10, texture = "imhof1") %>%
-    plot_3d(montereybay, zscale = 50, fov = 70, theta = -45, phi = 20, 
+    plot_3d(montereybay, zscale = 50, fov = 70, theta = 270, phi = 30, 
             windowsize = c(1000, 800), zoom = 0.6, 
-            water = TRUE, waterdepth = 0, wateralpha = 0.5, watercolor = "lightblue",
+            water = TRUE, waterdepth = 0, wateralpha = 0.5, watercolor = "#233aa1",
             waterlinecolor = "white", waterlinealpha = 0.5)
 Sys.sleep(0.2)
-render_highquality(lightdirection = 0, lightaltitude  = 30, clamp_value = 10, 
-                   samples=200, clear=TRUE)
+render_highquality(lightdirection = c(-45,45), lightaltitude  = 30, clamp_value = 10, 
+                   samples = 200, camera_lookat= c(0,-50,0),
+                   ground_material = diffuse(color="grey50",checkercolor = "grey20", checkerperiod = 100))
 
 
 ```
@@ -242,7 +244,7 @@ render_snapshot(clear = TRUE)
 
 Adding text labels is done with the `render_label()` function, which also allows you to customize the line type, color, and size along with the font:
 
-```{r README_three-d-labels}
+```{r README_three-d-labels, fig.width =  10, fig.height = 8}
 montereybay %>% 
     sphere_shade(zscale = 10, texture = "imhof1") %>% 
     add_shadow(montshadow, 0.5) %>%
@@ -250,17 +252,44 @@ montereybay %>%
     plot_3d(montereybay, zscale = 50, fov = 0, theta = -100, phi = 30, windowsize = c(1000, 800), zoom = 0.6,
             water = TRUE, waterdepth = 0, waterlinecolor = "white", waterlinealpha = 0.5,
             wateralpha = 0.5, watercolor = "lightblue")
-render_label(montereybay, x = 350, y = 240, z = 4000, zscale = 50,
+render_label(montereybay, x = 350, y = 160, z = 1000, zscale = 50,
              text = "Moss Landing", textsize = 2, linewidth = 5)
-render_label(montereybay, x = 220, y = 330, z = 6000, zscale = 50,
+render_label(montereybay, x = 220, y = 70, z = 7000, zscale = 50,
              text = "Santa Cruz", textcolor = "darkred", linecolor = "darkred",
              textsize = 2, linewidth = 5)
-render_label(montereybay, x = 300, y = 130, z = 4000, zscale = 50,
+render_label(montereybay, x = 300, y = 270, z = 4000, zscale = 50,
              text = "Monterey", dashed = TRUE, textsize = 2, linewidth = 5)
-render_label(montereybay, x = 50, y = 130, z = 1000, zscale = 50,
-             text = "Monterey Canyon", relativez = FALSE, textsize = 2, linewidth = 5)
+render_label(montereybay, x = 50, y = 270, z = 1000, zscale = 50,  textcolor = "white", linecolor = "white",
+             text = "Monterey Canyon", relativez = FALSE, textsize = 2, linewidth = 5) 
 Sys.sleep(0.2)
-render_snapshot(clear = TRUE)
+render_snapshot(clear=TRUE)
+```
+
+Labels are also supported in `render_highquality()`:
+
+```{r include=FALSE}
+montereybay %>% 
+    sphere_shade(zscale = 10, texture = "imhof1") %>% 
+    plot_3d(montereybay, zscale = 50, fov = 0, theta = -100, phi = 30, windowsize = c(1000, 800), zoom = 0.6,
+            water = TRUE, waterdepth = 0, waterlinecolor = "white", waterlinealpha = 0.5,
+            wateralpha = 0.5, watercolor = "#233aa1")
+render_label(montereybay, x = 350, y = 160, z = 1000, zscale = 50,
+             text = "Moss Landing", textsize = 2, linewidth = 5)
+render_label(montereybay, x = 220, y = 70, z = 7000, zscale = 50,
+             text = "Santa Cruz", textcolor = "darkred", linecolor = "darkred",
+             textsize = 2, linewidth = 5)
+render_label(montereybay, x = 300, y = 270, z = 4000, zscale = 50,
+             text = "Monterey", dashed = TRUE, textsize = 2, linewidth = 5)
+render_label(montereybay, x = 50, y = 270, z = 1000, zscale = 50,  textcolor = "white", linecolor = "white",
+             text = "Monterey Canyon", relativez = FALSE, textsize = 2, linewidth = 5)
+
+```
+
+```{r README_hqlabels, fig.width =  10, fig.height = 8}
+
+render_highquality(samples=200, line_radius = 1, text_size = 18, text_offset = c(0,12,0),
+                   clamp_value=10, clear = TRUE)
+
 ```
 
 You can also apply a post-processing effect to the 3D maps to render maps with depth of field with the `render_depth()` function:
