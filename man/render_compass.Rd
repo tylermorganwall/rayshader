@@ -17,7 +17,7 @@ render_compass(
   color_background = "grey60",
   color_bevel = "grey20",
   position_circular = FALSE,
-  clear_symbol = FALSE
+  clear_compass = FALSE
 )
 }
 \arguments{
@@ -48,7 +48,7 @@ Increase or decrease the size of the compass.}
 \item{position_circular}{Default `FALSE`. If `TRUE`, will place compass at a constant radius away from
 the map, as opposed to directly next to it. Overridden if user manually specifies position.}
 
-\item{clear_symbol}{Default `FALSE`. Clears the compass symbol(s) on the map.}
+\item{clear_compass}{Default `FALSE`. Clears the compass symbol(s) on the map.}
 }
 \value{
 Adds compass to map. No return value.
@@ -65,13 +65,13 @@ montereybay \%>\%
 render_compass()
 render_snapshot()
 
-#Remove the existing symbol with `clear_symbol = TRUE`
-render_compass(clear_symbol = TRUE)
+#Remove the existing symbol with `clear_compass = TRUE`
+render_compass(clear_compass = TRUE)
 
 #Point the N towards the light, at 315 degrees:
 render_compass(angle = 315)
 render_snapshot()
-render_compass(clear_symbol = TRUE)
+render_compass(clear_compass = TRUE)
 
 #We can change the position by specifying a direction (here are three):
 render_camera(theta=45,phi=45)
@@ -79,7 +79,7 @@ render_compass(position = "NW")
 render_compass(position = "E")
 render_compass(position = "S")
 render_snapshot()
-render_compass(clear_symbol = TRUE)
+render_compass(clear_compass = TRUE)
 
 #We can also change the distance away from the edge by setting the `scale_distance` argument.
 render_compass(position = "NW", scale_distance = 1.4)
@@ -89,7 +89,7 @@ render_compass(position = "S", scale_distance = 1.4)
 #Zoom in slightly:
 render_camera(theta=45,phi=45,zoom=0.7)
 render_snapshot()
-render_compass(clear_symbol = TRUE)
+render_compass(clear_compass = TRUE)
 
 #We can also specify the radius directly with `compass_radius`:
 render_camera(theta=0,phi=45,zoom=1)
@@ -98,7 +98,7 @@ render_compass(position = "E", scale_distance = 1.4, compass_radius=50)
 render_compass(position = "S", scale_distance = 1.3, compass_radius=25)
 render_compass(position = "W", scale_distance = 1.2, compass_radius=10)
 render_snapshot()
-render_compass(clear_symbol = TRUE)
+render_compass(clear_compass = TRUE)
 
 #We can also adjust the position manually, be specifying all x, y and z arguments.
 render_camera(theta=-45,phi=45,zoom=0.9)
@@ -107,7 +107,7 @@ render_snapshot()
 
 # Compass support is also included in render_highquality()
 render_highquality()
-render_compass(clear_symbol = TRUE)
+render_compass(clear_compass = TRUE)
 
 #We can change the colors in the compass, and also set it a constant distance away with
 #`position_circular = TRUE`:

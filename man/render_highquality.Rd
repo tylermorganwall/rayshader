@@ -16,6 +16,13 @@ render_highquality(
   cache_filename = NULL,
   width = NULL,
   height = NULL,
+  text_angle = NULL,
+  text_size = 6,
+  text_offset = c(0, 0, 0),
+  line_radius = 0.5,
+  scale_text_angle = NULL,
+  scale_text_size = 6,
+  scale_text_offset = c(0, 0, 0),
   title_text = NULL,
   title_offset = c(20, 20),
   title_color = "black",
@@ -60,6 +67,22 @@ If this is a vector longer than one, multiple lights will be generated (using va
 \item{width}{Defaults to the width of the rgl window. Width of the rendering.}
 
 \item{height}{Defaults to the height of the rgl window. Height of the rendering.}
+
+\item{text_angle}{Default `NULL`, which forces the text always to face the camera. If a single angle (degrees),
+will specify the absolute angle all the labels are facing. If three angles, this will specify all three orientations
+(relative to the x,y, and z axes) of the text labels.}
+
+\item{text_size}{Default `6`. Height of the text.}
+
+\item{text_offset}{Default `c(0,0,0)`. Offset to be applied to all text labels.}
+
+\item{line_radius}{Default `0.5`. Radius of the label line segments.}
+
+\item{scale_text_angle}{Default `NULL`. Same as `text_angle`, but for the scale bar.}
+
+\item{scale_text_size}{Default `6`. Height of the scale bar text.}
+
+\item{scale_text_offset}{Default `c(0,0,0)`. Offset to be applied to all scale bar text labels.}
 
 \item{title_text}{Default `NULL`. Text. Adds a title to the image, using magick::image_annotate.}
 
