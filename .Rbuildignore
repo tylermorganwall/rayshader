@@ -16,3 +16,5 @@
 ^docs$
 ^pkgdown$
 ^\.github$
+^.+\.png$
+^.+\.mp4$
