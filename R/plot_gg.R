@@ -221,7 +221,7 @@ plot_gg = function(ggobj, width = 3, height = 3,
     "strip.text.y","strip.switch.pad.grid","strip.switch.pad.wrap","panel.grid.major",
     "title","axis.ticks.length.x","axis.ticks.length.y","axis.ticks.length.x.top",
     "axis.ticks.length.x.bottom","axis.ticks.length.y.left","axis.ticks.length.y.right","axis.title.x.bottom",
-    "axis.text.x.bottom","axis.text.y.left","axis.title.y.left")
+    "axis.text.x.bottom","axis.text.y.left","axis.title.y.left", "aspect.ratio")
   
   key_theme_elements = c("text", "line", "axis.line", "axis.title", 
                          "axis.title.x",
@@ -251,7 +251,7 @@ plot_gg = function(ggobj, width = 3, height = 3,
     "text","unit","unit","line",
     "text","line","line","line",
     "line","line","line","text",
-    "text","text","text")
+    "text","text","text","none")
   black_white_pal = function(x) {
     grDevices::colorRampPalette(c("white", "black"))(255)[x * 254 + 1]
   }
@@ -474,21 +474,23 @@ plot_gg = function(ggobj, width = 3, height = 3,
         theme_bool[tempname] = FALSE
       }
       whichtype = typetheme[which(tempname == colortheme)]
-      if(whichtype %in% c("text","line")) {
-        if(!is.null(ggplotobj2$theme[[i]])) {
-          ggplotobj2$theme[[i]]$colour = "white"
-        }
-      } else if(whichtype == "rect") {
-        if(!(tempname %in% c("panel.border","rect"))) {
+      if(length(whichtype) > 0) {
+        if(whichtype %in% c("text","line")) {
           if(!is.null(ggplotobj2$theme[[i]])) {
             ggplotobj2$theme[[i]]$colour = "white"
-            ggplotobj2$theme[[i]]$fill = "white"
           }
-        } else {
-          ggplotobj2$theme[[i]]$colour = "white"
-          ggplotobj2$theme[[i]]$fill = NA
-        }
-      } 
+        } else if(whichtype == "rect") {
+          if(!(tempname %in% c("panel.border","rect"))) {
+            if(!is.null(ggplotobj2$theme[[i]])) {
+              ggplotobj2$theme[[i]]$colour = "white"
+              ggplotobj2$theme[[i]]$fill = "white"
+            }
+          } else {
+            ggplotobj2$theme[[i]]$colour = "white"
+            ggplotobj2$theme[[i]]$fill = NA
+          }
+        } 
+      }
     }
     if(ggplotobj2$scales$n() > 0) {
       for(i in 1:ggplotobj2$scales$n()) {

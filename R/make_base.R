@@ -7,9 +7,8 @@
 #'@param basecolor Default `grey20`.
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
 #'of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
-#'@param litbase Default `FALSE`.
 #'@keywords internal
-make_base = function(heightmap,basedepth=0,basecolor="grey20",zscale=1,litbase=FALSE) {
+make_base = function(heightmap,basedepth=0,basecolor="grey20",zscale=1) {
   heightmap = heightmap/zscale
   edge_vals = unique(c(heightmap[1,], heightmap[,1],heightmap[nrow(heightmap),],heightmap[,ncol(heightmap)]))
   if(length(edge_vals) == 1 && all(!is.na(edge_vals))) {
@@ -44,7 +43,7 @@ make_base = function(heightmap,basedepth=0,basecolor="grey20",zscale=1,litbase=F
     fullsides = fullsides[nrow(fullsides):1,]
     fullnormals = fullnormals[nrow(fullnormals):1,]
     rgl::triangles3d(fullsides, normals=fullnormals,
-                     lit=litbase,color=basecolor,front="filled",back="culled",ambient = "#000002")
+                     lit=FALSE,color=basecolor,front="filled",back="culled",ambient = "#000002")
   } else if(all(!is.na(heightmap))) {
     na_matrix = is.na(heightmap)
     baselist = make_base_cpp(heightmap, na_matrix, basedepth)
@@ -61,7 +60,7 @@ make_base = function(heightmap,basedepth=0,basecolor="grey20",zscale=1,litbase=F
     fullsides = fullsides[nrow(fullsides):1,]
     fullnormals = fullnormals[nrow(fullnormals):1,]
     rgl::triangles3d(fullsides, normals=fullnormals,
-                     lit=litbase,color=basecolor,front="filled",back="filled",ambient = "#000002")
+                     lit=FALSE,color=basecolor,front="filled",back="filled",ambient = "#000002")
   } else {
     na_matrix = is.na(heightmap)
     baselist = make_base_cpp(heightmap, na_matrix, basedepth)
@@ -81,9 +80,9 @@ make_base = function(heightmap,basedepth=0,basecolor="grey20",zscale=1,litbase=F
     xznormals[!is.na(xznormals)] = 0
     ynormals[!is.na(ynormals)] = -1
     rgl.surface(1:nrow(basemat)-nrow(basemat)/2,1:ncol(basemat)-ncol(basemat)/2,basemat,color=basecolor,
-                lit=litbase,back="filled",front="filled",ambient = "#000007", 
+                lit=FALSE,back="filled",front="filled",ambient = "#000007", 
                 normal_x = xznormals, normal_z = xznormals, normal_y = ynormals)
     rgl::triangles3d(fullsides, normals = fullnormals,
-                     lit=litbase,color=basecolor,front="filled",back="filled",ambient = "#000002")
+                     lit=FALSE,color=basecolor,front="filled",back="filled",ambient = "#000002")
   }
 }

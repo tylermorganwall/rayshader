@@ -28,11 +28,7 @@
 #'@param fov Default `0`--isometric. Field-of-view angle.
 #'@param zoom Default `1`. Zoom factor.
 #'@param background Default `grey10`. Color of the background.
-#'@param calculate_normals Default `TRUE`. If `FALSE`, will not calculate per-vertex normals. Can also pass the
-#'output of the function `calculate_normals` to use pre-computed normals.
-#'@param litbase Default `FALSE`. If `TRUE`, the base will be a glossy material lit using the 
-#'`lit = TRUE` parameter in `rgl`. If calling `render_highquality()`, set this to `TRUE` to make sure
-#'rgl exports the sizes of the model.
+#'@param precomputed_normals Default `NULL`. Takes the output of `calculate_normals()` to save computing normals internally.
 #'@param windowsize Default `600`. Position, width, and height of the `rgl` device displaying the plot. 
 #'If a single number, viewport will be a square and located in upper left corner. 
 #'If two numbers, (e.g. `c(600,800)`), user will specify width and height separately. 
@@ -101,7 +97,7 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
                    waterlinecolor=NULL, waterlinealpha = 1, 
                    linewidth = 2, lineantialias = FALSE,
                    theta=45, phi = 45, fov=0, zoom = 1, 
-                   background="white", calculate_normals = TRUE, litbase = FALSE,
+                   background="white", precomputed_normals = NULL, 
                    windowsize = 600, ...) {
   #setting default zscale if montereybay is used and tell user about zscale
   argnameschar = unlist(lapply(as.list(sys.call()),as.character))[-1]
@@ -223,32 +219,25 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
   tempmap = tempfile()
   save_png(hillshade,tempmap)
   precomputed = FALSE
-  if(is.list(calculate_normals)) {
-    normals = calculate_normals
-    calculate_normals = TRUE
+  if(is.list(precomputed_normals)) {
+    normals = precomputed_normals
     precomputed = TRUE
   }
-  if(calculate_normals) {
-    if(!precomputed) {
-      normals = calculate_normal(heightmap,zscale=zscale)
-    }
-    normalsx = (t(normals$x[c(-1,-nrow(normals$x)),c(-1,-ncol(normals$x))]))
-    normalsy = (t(normals$z[c(-1,-nrow(normals$z)),c(-1,-ncol(normals$z))]))
-    normalsz = (t(normals$y[c(-1,-nrow(normals$y)),c(-1,-ncol(normals$y))]))
-    rgl.surface(x=1:nrow(heightmap)-nrow(heightmap)/2,z=(1:ncol(heightmap)-ncol(heightmap)/2),
-                y=heightmap/zscale,
-                normal_x = normalsz, normal_y = normalsy, normal_z = -normalsx,
-                texture=paste0(tempmap,".png"),lit=FALSE,ambient = "#000001")
-  } else {
-    rgl.surface(x=1:nrow(heightmap)-nrow(heightmap)/2,z=(1:ncol(heightmap)-ncol(heightmap)/2),
-                y=heightmap/zscale,
-                texture=paste0(tempmap,".png"),lit=FALSE,ambient = "#000001")
+  if(!precomputed) {
+    normals = calculate_normal(heightmap,zscale=zscale)
   }
+  normalsx = (t(normals$x[c(-1,-nrow(normals$x)),c(-1,-ncol(normals$x))]))
+  normalsy = (t(normals$z[c(-1,-nrow(normals$z)),c(-1,-ncol(normals$z))]))
+  normalsz = (t(normals$y[c(-1,-nrow(normals$y)),c(-1,-ncol(normals$y))]))
+  rgl.surface(x=1:nrow(heightmap)-nrow(heightmap)/2,z=(1:ncol(heightmap)-ncol(heightmap)/2),
+              y=heightmap/zscale,
+              normal_x = normalsz, normal_y = normalsy, normal_z = -normalsx,
+              texture=paste0(tempmap,".png"),lit=FALSE,ambient = "#000001")
   bg3d(color = background,texture=NULL)
   rgl.viewpoint(zoom=zoom,phi=phi,theta=theta,fov=fov)
   par3d(windowRect = windowsize,...)
   if(solid) {
-    make_base(heightmap,basedepth=soliddepth,basecolor=solidcolor,zscale=zscale, litbase=litbase)
+    make_base(heightmap,basedepth=soliddepth,basecolor=solidcolor,zscale=zscale)
   }
   if(!is.null(solidlinecolor) && solid) {
     rgl::rgl.material(color=solidlinecolor, lit=FALSE)
