@@ -13,7 +13,7 @@ get_ids_with_labels = function(typeval = NULL) {
                       "#000010" = "north_symbol", "#000011" = "arrow_symbol",
                       "#000012" = "bevel_symbol", "#000013" = "background_symbol",
                       "#000014" = "scalebar_col1", "#000015" = "scalebar_col2",
-                      "#000016" = "text_scalebar")
+                      "#000016" = "text_scalebar", "#000017" = "surface_tris")
   get_rgl_material = getFromNamespace("rgl.getmaterial", "rgl")
   idvals = rgl::rgl.ids()
   material_type = list()
@@ -36,7 +36,7 @@ get_ids_with_labels = function(typeval = NULL) {
     material_properties[[i]]$scalebar2_color = NA
     if(idvals$type[i] != "text") {
       material_type[[i]] = ambient_encoder[material_type_single$ambient]
-      if(material_type[[i]] == "surface") {
+      if(material_type[[i]] %in% c("surface", "surface_tris")) {
         material_properties[[i]]$texture_file = material_type_single$texture
       } 
       if(material_type[[i]] == "base") {

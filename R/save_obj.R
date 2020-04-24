@@ -176,7 +176,8 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1) {
     id = vertex_info$id[row]
     if(vertex_info$raytype[row] %in% c("surface","base","basebottom","water",
                                        "north_symbol","arrow_symbol", "bevel_symbol",
-                                       "background_symbol", "scalebar_col1", "scalebar_col2")) {
+                                       "background_symbol", "scalebar_col1", "scalebar_col2",
+                                       "surface_tris")) {
       vertex_info$startindex[row] = number_vertices + 1
       vertex_info$startindextex[row] = number_texcoords + 1
       vertex_info$startindexnormals[row] = number_normals + 1
@@ -227,6 +228,16 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1) {
       indices = sprintf("%d/%d/%d", indices, indices, indices)
       indices = matrix(indices, ncol=3, byrow=TRUE)
       indices = indices[1:(nrow(indices)-na_counter),]
+      cat(paste("f", indices[,1], indices[,2], indices[,3]), 
+          sep="\n", file=con)
+    } else if(vertex_info$raytype[row] == "surface_tris") {
+      if(save_texture) {
+        cat("g Surface", file=con, sep ="\n")
+        cat("usemtl ray_surface", file=con, sep ="\n")
+      }
+      indices = vertex_info$startindextex[row]:vertex_info$endindex[row]
+      indices = sprintf("%d/%d", indices, indices)
+      indices = matrix(indices, ncol=3, byrow=TRUE)
       cat(paste("f", indices[,1], indices[,2], indices[,3]), 
           sep="\n", file=con)
     } else if (vertex_info$raytype[row] == "basebottom") {

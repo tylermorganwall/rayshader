@@ -28,7 +28,6 @@
 #'@param fov Default `0`--isometric. Field-of-view angle.
 #'@param zoom Default `1`. Zoom factor.
 #'@param background Default `grey10`. Color of the background.
-#'@param precomputed_normals Default `NULL`. Takes the output of `calculate_normals()` to save computing normals internally.
 #'@param windowsize Default `600`. Position, width, and height of the `rgl` device displaying the plot. 
 #'If a single number, viewport will be a square and located in upper left corner. 
 #'If two numbers, (e.g. `c(600,800)`), user will specify width and height separately. 
@@ -36,6 +35,14 @@
 #'specify the location of the x-y coordinates of the bottom-left corner of the viewport on the screen,
 #'and the next two (or one, if square) specify the window size. NOTE: The absolute positioning of the
 #'window does not currently work on macOS (tested on Mojave), but the size can still be specified.
+#'@param precomputed_normals Default `NULL`. Takes the output of `calculate_normals()` to save computing normals internally.
+#'@param triangulate Default `FALSE`. Reduce the size of the 3D model by triangulating the height map.
+#'Set this to `TRUE` if generating the model is slow, or moving it is choppy. Will also reduce the size
+#'of 3D models saved to disk.
+#'@param max_error Default `0`, no max. Maximum allowable error when triangulating the height map,
+#'when `triangulate = TRUE`.
+#'@param max_tri Default `0`, no max. Maximum number of triangles allowed with triangulating the
+#'height map, when `triangulate = TRUE`.
 #'@param ... Additional arguments to pass to the `rgl::par3d` function.
 #'@import rgl
 #'@export
@@ -96,9 +103,9 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
                    water = FALSE, waterdepth = 0, watercolor="lightblue", wateralpha = 0.5, 
                    waterlinecolor=NULL, waterlinealpha = 1, 
                    linewidth = 2, lineantialias = FALSE,
-                   theta=45, phi = 45, fov=0, zoom = 1, 
-                   background="white", precomputed_normals = NULL, 
-                   windowsize = 600, ...) {
+                   theta=45, phi = 45, fov=0, zoom = 1, background="white", windowsize = 600,
+                   precomputed_normals = NULL, triangulate = FALSE, max_error = 0, max_tri = 0,
+                   ...) {
   #setting default zscale if montereybay is used and tell user about zscale
   argnameschar = unlist(lapply(as.list(sys.call()),as.character))[-1]
   argnames = as.list(sys.call())
@@ -223,21 +230,39 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
     normals = precomputed_normals
     precomputed = TRUE
   }
-  if(!precomputed) {
-    normals = calculate_normal(heightmap,zscale=zscale)
+  if(triangulate && any(is.na(heightmap))) {
+    message("`triangulate = TRUE` cannot be currently set if any NA values present")
   }
-  normalsx = (t(normals$x[c(-1,-nrow(normals$x)),c(-1,-ncol(normals$x))]))
-  normalsy = (t(normals$z[c(-1,-nrow(normals$z)),c(-1,-ncol(normals$z))]))
-  normalsz = (t(normals$y[c(-1,-nrow(normals$y)),c(-1,-ncol(normals$y))]))
-  rgl.surface(x=1:nrow(heightmap)-nrow(heightmap)/2,z=(1:ncol(heightmap)-ncol(heightmap)/2),
-              y=heightmap/zscale,
-              normal_x = normalsz, normal_y = normalsy, normal_z = -normalsx,
-              texture=paste0(tempmap,".png"),lit=FALSE,ambient = "#000001")
+  if(!triangulate) {
+    if(!precomputed) {
+      normals = calculate_normal(heightmap,zscale=zscale)
+    }
+    normalsx = (t(normals$x[c(-1,-nrow(normals$x)),c(-1,-ncol(normals$x))]))
+    normalsy = (t(normals$z[c(-1,-nrow(normals$z)),c(-1,-ncol(normals$z))]))
+    normalsz = (t(normals$y[c(-1,-nrow(normals$y)),c(-1,-ncol(normals$y))]))
+    rgl.surface(x=1:nrow(heightmap)-nrow(heightmap)/2,z=(1:ncol(heightmap)-ncol(heightmap)/2),
+                y=heightmap/zscale,
+                normal_x = normalsz, normal_y = normalsy, normal_z = -normalsx,
+                texture=paste0(tempmap,".png"),lit=FALSE,ambient = "#000001")
+  } else {
+    tris = hmmr::triangulate_matrix(heightmap/zscale, maxError = max_error/zscale, 
+                                    maxTriangles = max_tri)
+    texcoords = tris[,c(1,3)]
+    texcoords[,1] = texcoords[,1]/nrow(heightmap)
+    texcoords[,2] = texcoords[,2]/ncol(heightmap)
+    tris[,1] = tris[,1] - nrow(heightmap)/2 +1
+    tris[,3] = tris[,3] - ncol(heightmap)/2
+    tris[,3] = -tris[,3]
+    rgl.triangles(tris, texcoords = texcoords,
+                  texture=paste0(tempmap,".png"),lit=FALSE,ambient = "#000017")
+  }
   bg3d(color = background,texture=NULL)
   rgl.viewpoint(zoom=zoom,phi=phi,theta=theta,fov=fov)
   par3d(windowRect = windowsize,...)
-  if(solid) {
+  if(solid && !triangulate) {
     make_base(heightmap,basedepth=soliddepth,basecolor=solidcolor,zscale=zscale)
+  } else if(solid && triangulate) {
+    make_base_triangulated(tris,basedepth=soliddepth,basecolor=solidcolor)
   }
   if(!is.null(solidlinecolor) && solid) {
     rgl::rgl.material(color=solidlinecolor, lit=FALSE)

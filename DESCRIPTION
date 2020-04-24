@@ -20,7 +20,8 @@ Imports: doParallel,
          grDevices,
          grid,
          utils,
-         methods
+         methods,
+         hmmr
 Suggests: reshape2,
           viridis,
           av,
