@@ -41,6 +41,15 @@
 #'@param lambert Default `TRUE`. If raytracing, changes the intensity of the light at each point based proportional to the
 #'dot product of the ray direction and the surface normal at that point. Zeros out all values directed away from
 #'the ray.
+#'@param triangulate Default `FALSE`. Reduce the size of the 3D model by triangulating the height map.
+#'Set this to `TRUE` if generating the model is slow, or moving it is choppy. Will also reduce the size
+#'of 3D models saved to disk.
+#'@param max_error Default `0`, no max. Maximum allowable error when triangulating the height map,
+#'when `triangulate = TRUE`.
+#'@param max_tri Default `0`, no max. Maximum number of triangles allowed with triangulating the
+#'height map, when `triangulate = TRUE`.
+#'@param verbose Default `TRUE`, if `interactive()`. Prints information about the mesh triangulation
+#'if `triangulate = TRUE`.
 #'@param reduce_size Default `NULL`. A number between `0` and `1` that specifies how much to reduce the resolution of the plot, for faster plotting. By
 #'default, this just decreases the size of height map, not the image. If you wish the image to be reduced in resolution as well, pass a numeric vector of size 2.
 #'@param multicore Default `FALSE`. If raytracing and `TRUE`, multiple cores will be used to compute the shadow matrix. By default, this uses all cores available, unless the user has
@@ -150,7 +159,9 @@ plot_gg = function(ggobj, width = 3, height = 3,
                    height_aes = NULL, invert = FALSE, shadow_intensity = 0.5,
                    units = c("in", "cm", "mm"), scale=150, pointcontract = 0.7, offset_edges = FALSE,
                    preview = FALSE, raytrace = TRUE, sunangle = 315, anglebreaks = seq(30,40,0.1), 
-                   multicore = FALSE, lambert=TRUE, reduce_size = NULL, save_height_matrix = FALSE, 
+                   multicore = FALSE, lambert=TRUE, triangulate = TRUE,
+                   max_error = 0.001, max_tri = 0, verbose=interactive(),
+                   reduce_size = NULL, save_height_matrix = FALSE, 
                    save_shadow_matrix = FALSE, saved_shadow_matrix=NULL, ...) {
   if(!"ggplot2" %in% rownames(utils::installed.packages())) {
     stop("Must have ggplot2 installed to use plot_gg()")
@@ -682,7 +693,8 @@ plot_gg = function(ggobj, width = 3, height = 3,
       if(!preview) {
         mapcolor %>%
           add_shadow(raylayer,shadow_intensity) %>%
-          plot_3d((t(1-mapheight)),zscale=1/scale, ... )
+          plot_3d((t(1-mapheight)),zscale=1/scale, triangulate = triangulate,
+                  max_error = max_error, max_tri = max_tri, verbose = verbose, ... )
       } else {
         mapcolor %>%
           add_shadow(raylayer,shadow_intensity) %>%
@@ -693,7 +705,8 @@ plot_gg = function(ggobj, width = 3, height = 3,
       if(!preview) {
         mapcolor %>%
           add_shadow(raylayer,shadow_intensity) %>%
-          plot_3d((t(1-mapheight)),zscale=1/scale, ... )
+          plot_3d((t(1-mapheight)),zscale=1/scale, triangulate = triangulate,
+                  max_error = max_error, max_tri = max_tri, verbose = verbose, ... )
       } else {
         mapcolor %>%
           add_shadow(raylayer,shadow_intensity) %>%
@@ -702,7 +715,8 @@ plot_gg = function(ggobj, width = 3, height = 3,
     }
   } else {
     if(!preview) {
-      plot_3d(mapcolor, (t(1-mapheight)), zscale=1/scale, ...)
+      plot_3d(mapcolor, (t(1-mapheight)), zscale=1/scale, triangulate = triangulate,
+              max_error = max_error, max_tri = max_tri, verbose = verbose, ...)
     } else {
       plot_map(mapcolor, keep_user_par = FALSE)
     }

@@ -30,9 +30,13 @@ plot_3d(
   fov = 0,
   zoom = 1,
   background = "white",
-  calculate_normals = TRUE,
-  litbase = FALSE,
   windowsize = 600,
+  calculate_normals = TRUE,
+  precomputed_normals = NULL,
+  triangulate = FALSE,
+  max_error = 0,
+  max_tri = 0,
+  verbose = interactive(),
   ...
 )
 }
@@ -88,13 +92,6 @@ of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
 
 \item{background}{Default `grey10`. Color of the background.}
 
-\item{calculate_normals}{Default `TRUE`. If `FALSE`, will not calculate per-vertex normals. Can also pass the
-output of the function `calculate_normals` to use pre-computed normals.}
-
-\item{litbase}{Default `FALSE`. If `TRUE`, the base will be a glossy material lit using the 
-`lit = TRUE` parameter in `rgl`. If calling `render_highquality()`, set this to `TRUE` to make sure
-rgl exports the sizes of the model.}
-
 \item{windowsize}{Default `600`. Position, width, and height of the `rgl` device displaying the plot. 
 If a single number, viewport will be a square and located in upper left corner. 
 If two numbers, (e.g. `c(600,800)`), user will specify width and height separately. 
@@ -102,6 +99,27 @@ If four numbers (e.g. `c(200,0,600,800)`), the first two coordinates
 specify the location of the x-y coordinates of the bottom-left corner of the viewport on the screen,
 and the next two (or one, if square) specify the window size. NOTE: The absolute positioning of the
 window does not currently work on macOS (tested on Mojave), but the size can still be specified.}
+
+\item{calculate_normals}{Default `TRUE`. If `FALSE`, normals are not computed for each vertex.
+This will make the appearance of models rendered with `render_highquality()` and `save_obj()` 
+less smooth, but may help with non-physical shading issues in those functions when 
+`triangulate = TRUE`.}
+
+\item{precomputed_normals}{Default `NULL`. Takes the output of `calculate_normals()` to save
+computing normals internally.}
+
+\item{triangulate}{Default `FALSE`. Reduce the size of the 3D model by triangulating the height map.
+Set this to `TRUE` if generating the model is slow, or moving it is choppy. Will also reduce the size
+of 3D models saved to disk.}
+
+\item{max_error}{Default `0`, no max. Maximum allowable error when triangulating the height map,
+when `triangulate = TRUE`.}
+
+\item{max_tri}{Default `0`, no max. Maximum number of triangles allowed with triangulating the
+height map, when `triangulate = TRUE`.}
+
+\item{verbose}{Default `TRUE`, if `interactive()`. Prints information about the mesh triangulation
+if `triangulate = TRUE`.}
 
 \item{...}{Additional arguments to pass to the `rgl::par3d` function.}
 }
