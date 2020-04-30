@@ -112,7 +112,7 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
                    linewidth = 2, lineantialias = FALSE,
                    theta=45, phi = 45, fov=0, zoom = 1, background="white", windowsize = 600,
                    calculate_normals = TRUE, precomputed_normals = NULL, 
-                   triangulate = FALSE, max_error = 0, max_tri = 0, verbose = interactive(),
+                   triangulate = TRUE, max_error = 0, max_tri = 0, verbose = interactive(),
                    ...) {
   #setting default zscale if montereybay is used and tell user about zscale
   argnameschar = unlist(lapply(as.list(sys.call()),as.character))[-1]
