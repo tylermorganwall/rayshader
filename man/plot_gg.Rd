@@ -24,7 +24,7 @@ plot_gg(
   triangulate = TRUE,
   max_error = 0.001,
   max_tri = 0,
-  verbose = interactive(),
+  verbose = FALSE,
   reduce_size = NULL,
   save_height_matrix = FALSE,
   save_shadow_matrix = FALSE,
@@ -83,11 +83,16 @@ the ray.}
 Set this to `TRUE` if generating the model is slow, or moving it is choppy. Will also reduce the size
 of 3D models saved to disk.}
 
-\item{max_error}{Default `0`, no max. Maximum allowable error when triangulating the height map,
-when `triangulate = TRUE`.}
+\item{max_error}{Default `0.001`. Maximum allowable error when triangulating the height map,
+when `triangulate = TRUE`. Increase this if you encounter problems with 3D performance, want
+to decrease render time with `render_highquality()`, or need 
+to save a smaller 3D OBJ file to disk with `save_obj()`,}
 
-\item{max_tri}{Default `0`, no max. Maximum number of triangles allowed with triangulating the
-height map, when `triangulate = TRUE`.}
+\item{max_tri}{Default `0`, which turns this setting off and uses `max_error`. 
+Maximum number of triangles allowed with triangulating the
+height map, when `triangulate = TRUE`. Increase this if you encounter problems with 3D performance, want
+to decrease render time with `render_highquality()`, or need 
+to save a smaller 3D OBJ file to disk with `save_obj()`,}
 
 \item{verbose}{Default `TRUE`, if `interactive()`. Prints information about the mesh triangulation
 if `triangulate = TRUE`.}
@@ -215,4 +220,6 @@ plot_gg(mtplot_density_facet, width = 6, windowsize=c(1400,866),
        zoom = 0.55, theta = -10, phi = 25, scale=300)
 render_snapshot(clear = TRUE)
 }
+
+#
 }

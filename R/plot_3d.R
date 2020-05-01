@@ -44,10 +44,15 @@
 #'@param triangulate Default `FALSE`. Reduce the size of the 3D model by triangulating the height map.
 #'Set this to `TRUE` if generating the model is slow, or moving it is choppy. Will also reduce the size
 #'of 3D models saved to disk.
-#'@param max_error Default `0`, no max. Maximum allowable error when triangulating the height map,
-#'when `triangulate = TRUE`.
-#'@param max_tri Default `0`, no max. Maximum number of triangles allowed with triangulating the
-#'height map, when `triangulate = TRUE`.
+#'@param max_error Default `0.001`. Maximum allowable error when triangulating the height map,
+#'when `triangulate = TRUE`. Increase this if you encounter problems with 3D performance, want
+#'to decrease render time with `render_highquality()`, or need 
+#'to save a smaller 3D OBJ file to disk with `save_obj()`,
+#'@param max_tri Default `0`, which turns this setting off and uses `max_error`. 
+#'Maximum number of triangles allowed with triangulating the
+#'height map, when `triangulate = TRUE`. Increase this if you encounter problems with 3D performance, want
+#'to decrease render time with `render_highquality()`, or need 
+#'to save a smaller 3D OBJ file to disk with `save_obj()`,
 #'@param verbose Default `TRUE`, if `interactive()`. Prints information about the mesh triangulation
 #'if `triangulate = TRUE`.
 #'@param ... Additional arguments to pass to the `rgl::par3d` function.
@@ -112,7 +117,7 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
                    linewidth = 2, lineantialias = FALSE,
                    theta=45, phi = 45, fov=0, zoom = 1, background="white", windowsize = 600,
                    calculate_normals = TRUE, precomputed_normals = NULL, 
-                   triangulate = TRUE, max_error = 0, max_tri = 0, verbose = interactive(),
+                   triangulate = TRUE, max_error = 0, max_tri = 0, verbose = FALSE,
                    ...) {
   #setting default zscale if montereybay is used and tell user about zscale
   argnameschar = unlist(lapply(as.list(sys.call()),as.character))[-1]
@@ -239,7 +244,10 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
     precomputed = TRUE
   }
   if(triangulate && any(is.na(heightmap))) {
-    message("`triangulate = TRUE` cannot be currently set if any NA values present")
+    if(interactive()) {
+      message("`triangulate = TRUE` cannot be currently set if any NA values present--settings `triangulate = FALSE`")
+    }
+    triangulate = FALSE
   }
   if(!triangulate) {
     if(calculate_normals) {

@@ -44,10 +44,15 @@
 #'@param triangulate Default `FALSE`. Reduce the size of the 3D model by triangulating the height map.
 #'Set this to `TRUE` if generating the model is slow, or moving it is choppy. Will also reduce the size
 #'of 3D models saved to disk.
-#'@param max_error Default `0`, no max. Maximum allowable error when triangulating the height map,
-#'when `triangulate = TRUE`.
-#'@param max_tri Default `0`, no max. Maximum number of triangles allowed with triangulating the
-#'height map, when `triangulate = TRUE`.
+#'@param max_error Default `0.001`. Maximum allowable error when triangulating the height map,
+#'when `triangulate = TRUE`. Increase this if you encounter problems with 3D performance, want
+#'to decrease render time with `render_highquality()`, or need 
+#'to save a smaller 3D OBJ file to disk with `save_obj()`,
+#'@param max_tri Default `0`, which turns this setting off and uses `max_error`. 
+#'Maximum number of triangles allowed with triangulating the
+#'height map, when `triangulate = TRUE`. Increase this if you encounter problems with 3D performance, want
+#'to decrease render time with `render_highquality()`, or need 
+#'to save a smaller 3D OBJ file to disk with `save_obj()`,
 #'@param verbose Default `TRUE`, if `interactive()`. Prints information about the mesh triangulation
 #'if `triangulate = TRUE`.
 #'@param reduce_size Default `NULL`. A number between `0` and `1` that specifies how much to reduce the resolution of the plot, for faster plotting. By
@@ -155,12 +160,14 @@
 #'        zoom = 0.55, theta = -10, phi = 25, scale=300)
 #'render_snapshot(clear = TRUE)
 #'}
+#'
+#'#
 plot_gg = function(ggobj, width = 3, height = 3, 
                    height_aes = NULL, invert = FALSE, shadow_intensity = 0.5,
                    units = c("in", "cm", "mm"), scale=150, pointcontract = 0.7, offset_edges = FALSE,
                    preview = FALSE, raytrace = TRUE, sunangle = 315, anglebreaks = seq(30,40,0.1), 
                    multicore = FALSE, lambert=TRUE, triangulate = TRUE,
-                   max_error = 0.001, max_tri = 0, verbose=interactive(),
+                   max_error = 0.001, max_tri = 0, verbose= FALSE,
                    reduce_size = NULL, save_height_matrix = FALSE, 
                    save_shadow_matrix = FALSE, saved_shadow_matrix=NULL, ...) {
   if(!"ggplot2" %in% rownames(utils::installed.packages())) {

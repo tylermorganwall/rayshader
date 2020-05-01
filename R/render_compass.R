@@ -116,6 +116,9 @@ render_compass = function(angle = 0, position = "SE",
   radius = 1.3
   if(is.null(compass_radius)) {
     id_base = get_ids_with_labels("surface")$id
+    if(length(id_base) == 0) {
+      id_base = get_ids_with_labels("surface_tris")$id
+    }
     fullverts = rgl::rgl.attrib(id_base,"vertices")
     xyz_range = apply(fullverts,2,range)
     widths = xyz_range[2,c(1,3)] - xyz_range[1,c(1,3)]
@@ -132,6 +135,9 @@ render_compass = function(angle = 0, position = "SE",
     id_shadow = get_ids_with_labels("shadow")$id
     if(length(id_shadow)  < 1) {
       id_base = get_ids_with_labels("surface")$id
+      if(length(id_base) == 0) {
+        id_base = get_ids_with_labels("surface_tris")$id
+      }
       fullverts = rgl::rgl.attrib(id_base,"vertices")
     } else {
       fullverts = rgl::rgl.attrib(id_shadow,"vertices")
