@@ -10,6 +10,8 @@ reference:
       - ends_with("shade")
       - starts_with("calculate")
       - starts_with("create")
+      - starts_with("raster")
+      - starts_with("reduce")
   - title: "Adding Shadows and Overlays to Maps"
     desc: "Functions for detecting and adding layers to maps."
     contents:
@@ -35,12 +37,12 @@ navbar:
   left:
     - icon: fa-home
       href: index.html
-    - text: "Rayshader Blog"
+    - text: "Tutorials/Blog Posts"
       menu:
+      -  text: "A Step-by-Step Guide to Making 3D Maps with Satellite Imagery in R"
+         href: https://www.tylermw.com/a-step-by-step-guide-to-making-3d-maps-with-satellite-imagery-in-r/
       -  text: "Introducing 3D ggplots with rayshader"
          href: https://www.tylermw.com/3d-ggplots-with-rayshader/
-      -  text: "2018 Year in Review"
-         href: https://www.tylermw.com/2018-year-in-review/
       -  text: "Portrait Mode for Data: Rayshader + Rayfocus"
          href: https://www.tylermw.com/portrait-mode-data/
       -  text: "From R to Reality: 3D Printing Maps with Rayshader"
