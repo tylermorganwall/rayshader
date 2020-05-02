@@ -13,10 +13,12 @@ overlays, and ambient occlusion to generate beautiful topographic 2D and
 translate **ggplot2** objects into beautiful 3D data visualizations.
 
 The models can be rotated and examined interactively or the camera
-movement can be scripted to create animations. The user can also create
-a cinematic depth of field post-processing effect to direct the user’s
-focus to important regions in the figure. The 3D models can also be
-exported to a 3D-printable format with a built-in STL export function.
+movement can be scripted to create animations. Scenes can also be
+rendered using a high-quality pathtracer, **rayrender**.The user can
+also create a cinematic depth of field post-processing effect to direct
+the user’s focus to important regions in the figure. The 3D models can
+also be exported to a 3D-printable format with a built-in STL export
+function.
 
 ## Installation
 
@@ -79,6 +81,9 @@ Rayshader also has three functions to detect and add water to maps:
 Also included are two functions to add additional effects and
 information to your 3D visualizations:
 
+  - `render_highquality` renders in the scene with a built-in
+    pathtracer, powered by the **rayrender** package. Use this for
+    high-quality maps with realistic light transport.
   - `render_depth` generates a depth of field effect for the 3D map. The
     user can specify the focal distance, focal length, and f-stop of the
     camera, as well as aperture shape and bokeh intensity. This either
@@ -344,8 +349,7 @@ render_snapshot(clear=TRUE)
 
 ![](man/figures/README_three-d-labels-1.png)<!-- -->
 
-Labels are also supported in
-`render_highquality()`:
+Labels are also supported in `render_highquality()`:
 
 ``` r
 render_highquality(samples=200, line_radius = 1, text_size = 18, text_offset = c(0,12,0),
@@ -488,7 +492,34 @@ par(mfrow = c(1, 1))
 plot_gg(pp, width = 5, height = 4, scale = 300, multicore = TRUE, windowsize = c(1200, 960),
         fov = 70, zoom = 0.4, theta = 330, phi = 40)
 Sys.sleep(0.2)
-render_depth(focus = 0.68, focallength = 200)
+render_depth(focus = 0.68, focallength = 200,clear=TRUE)
 ```
 
 ![](man/figures/README_ggplots_5-1.png)<!-- -->
+
+Finally, you can increase the allowable error in triangulating the model
+to vastly reduce the size. Here, we reduce the model to 1/100th of it’s
+raw (un-triangulated) size, while maintaining model quality. This can
+improve the performance when rendering 3D ggplots with
+`render_highquality()`, as well as improve performance on slower
+computers. This triangulation is powered by the {terrainmeshr} package.
+
+Here, we make a 3D ggplot out of glass, using a triangulated model and
+`render_highquality()`.
+
+``` r
+par(mfrow = c(1, 1))
+plot_gg(pp, width = 5, height = 4, scale = 300, raytrace = FALSE, windowsize = c(1200, 960),
+        fov = 70, zoom = 0.4, theta = 330, phi = 20,  max_error = 0.01, verbose = TRUE)
+```
+
+    ## 98.8% reduction: Number of triangles reduced from 3600000 to 41446. Error: 0.009996
+
+``` r
+Sys.sleep(0.2)
+render_highquality(samples = 400, aperture=30, light = FALSE, ambient = TRUE,focal_distance = 1700,
+                   obj_material = rayrender::dielectric(attenuation = c(1,1,0.3)/200), 
+                   ground_material = rayrender::diffuse(checkercolor = "grey80",sigma=90,checkerperiod = 100))
+```
+
+![](man/figures/README_ggplots_6-1.png)<!-- -->
