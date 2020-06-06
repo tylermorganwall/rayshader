@@ -13,7 +13,8 @@ get_ids_with_labels = function(typeval = NULL) {
                       "#000010" = "north_symbol", "#000011" = "arrow_symbol",
                       "#000012" = "bevel_symbol", "#000013" = "background_symbol",
                       "#000014" = "scalebar_col1", "#000015" = "scalebar_col2",
-                      "#000016" = "text_scalebar", "#000017" = "surface_tris")
+                      "#000016" = "text_scalebar", "#000017" = "surface_tris",
+                      "#000018" = "path3d", "#000019" = "points3d")
   get_rgl_material = getFromNamespace("rgl.getmaterial", "rgl")
   idvals = rgl::rgl.ids()
   material_type = list()
@@ -34,6 +35,8 @@ get_ids_with_labels = function(typeval = NULL) {
     material_properties[[i]]$background_color = NA
     material_properties[[i]]$scalebar1_color = NA
     material_properties[[i]]$scalebar2_color = NA
+    material_properties[[i]]$point_color = NA
+    
     if(idvals$type[i] != "text") {
       material_type[[i]] = ambient_encoder[material_type_single$ambient]
       if(material_type[[i]] %in% c("surface", "surface_tris")) {
@@ -46,8 +49,11 @@ get_ids_with_labels = function(typeval = NULL) {
         material_properties[[i]]$water_color = material_type_single$color
         material_properties[[i]]$water_alpha = material_type_single$alpha
       } 
-      if(material_type[[i]] == "lines") {
+      if(material_type[[i]] == "lines" || material_type[[i]] == "path3d") {
         material_properties[[i]]$line_color = material_type_single$color
+      }
+      if(material_type[[i]] == "points3d") {
+        material_properties[[i]]$point_color = material_type_single$color
       }
       if(material_type[[i]] == "waterlines") {
         material_properties[[i]]$waterline_color = material_type_single$color

@@ -24,7 +24,8 @@
 #'(relative to the x,y, and z axes) of the text labels.
 #'@param text_size Default `6`. Height of the text.
 #'@param text_offset Default `c(0,0,0)`. Offset to be applied to all text labels.
-#'@param line_radius Default `0.5`. Radius of the label line segments.
+#'@param line_radius Default `0.5`. Radius of line/path segments.
+#'@param point_radius Default `0.5`. Radius of 3D points (rendered with `render_points()`.
 #'@param scale_text_angle Default `NULL`. Same as `text_angle`, but for the scale bar.
 #'@param scale_text_size Default `6`. Height of the scale bar text.
 #'@param scale_text_offset Default `c(0,0,0)`. Offset to be applied to all scale bar text labels.
@@ -117,7 +118,8 @@
 render_highquality = function(filename = NULL, light = TRUE, lightdirection = 315, lightaltitude = 45, lightsize=NULL,
                               lightintensity = 500, lightcolor = "white", obj_material = rayrender::diffuse(),
                               cache_filename=NULL, width = NULL, height = NULL, 
-                              text_angle = NULL, text_size = 6, text_offset = c(0,0,0), line_radius=0.5,
+                              text_angle = NULL, text_size = 6, text_offset = c(0,0,0), 
+                              line_radius=0.5, point_radius = 0.5,
                               scale_text_angle = NULL, scale_text_size = 6, scale_text_offset = c(0,0,0), 
                               title_text = NULL, title_offset = c(20,20), 
                               title_color = "black", title_size = 30, title_font = "sans",
@@ -295,6 +297,47 @@ render_highquality = function(filename = NULL, light = TRUE, lightdirection = 31
       counter = counter + 1
     }
   }
+  pathids = get_ids_with_labels(typeval = "path3d")$id
+  pathline = list()
+  counter = 1
+  for(i in seq_len(length(pathids))) {
+    temp_verts = rgl.attrib(pathids[i], "vertices")
+    temp_color = rgl.attrib(pathids[i], "colors")
+    if(nrow(temp_color) == 1) {
+      temp_color = matrix(temp_color[1:3], byrow = TRUE, ncol = 3, nrow = nrow(temp_verts))
+    }
+    for(j in seq_len(nrow(temp_verts)-1)) {
+      pathline[[counter]] = rayrender::segment(start = temp_verts[j,] - bbox_center, 
+                                                end   = temp_verts[j+1,] - bbox_center,
+                                                radius = line_radius,
+                                                material = rayrender::diffuse(color = temp_color[j,1:3]))
+      counter = counter + 1
+      pathline[[counter]] = rayrender::sphere(x = temp_verts[j,1] - bbox_center[1],
+                                               y = temp_verts[j,2] - bbox_center[2],
+                                               z = temp_verts[j,3] - bbox_center[3],
+                                               radius = line_radius,
+                                               material = rayrender::diffuse(color = temp_color[j,1:3]))
+      counter = counter + 1
+    }
+  }
+  pointids = get_ids_with_labels(typeval = "points3d")$id
+  pointlist = list()
+  counter = 1
+  for(i in seq_len(length(pointids))) {
+    temp_verts = rgl.attrib(pointids[i], "vertices")
+    temp_color = rgl.attrib(pointids[i], "colors")
+    if(nrow(temp_color) == 1) {
+      temp_color = matrix(temp_color[1:3], byrow = TRUE, ncol = 3, nrow = nrow(temp_verts))
+    }
+    for(j in seq_len(nrow(temp_verts))) {
+      pointlist[[counter]] = rayrender::sphere(x = temp_verts[j,1] - bbox_center[1],
+                                              y = temp_verts[j,2] - bbox_center[2],
+                                              z = temp_verts[j,3] - bbox_center[3],
+                                              radius = point_radius,
+                                              material = rayrender::diffuse(color = temp_color[j,1:3]))
+      counter = counter + 1
+    }
+  }
   scalelabelids = get_ids_with_labels(typeval = "text_scalebar")$id
   scalelabels = list()
   counter = 1
@@ -345,6 +388,14 @@ render_highquality = function(filename = NULL, light = TRUE, lightdirection = 31
   if(length(scalelabels) > 0) {
     all_scalelabels = do.call(rbind, scalelabels)
     scene = rayrender::add_object(scene, all_scalelabels)
+  }
+  if(length(pathline) > 0) {
+    all_pathline = do.call(rbind, pathline)
+    scene = rayrender::add_object(scene, all_pathline)
+  }
+  if(length(pointlist) > 0) {
+    all_pointlist = do.call(rbind, pointlist)
+    scene = rayrender::add_object(scene, all_pointlist)
   }
   if(has_shadow) {
     scene = rayrender::add_object(scene, rayrender::xz_rect(zwidth=ground_size,xwidth=ground_size,

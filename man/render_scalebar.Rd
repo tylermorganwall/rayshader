@@ -123,6 +123,5 @@ render_scalebar(clear_scalebar = TRUE)
 render_scalebar(limits=c(0,20, 40), segments = 4, scale_length = c(0.5,1), 
                label_unit = "km", radius=10,text_y_offset=-20,text_x_offset=20)
 render_snapshot()
-render_scalebar(clear_scalebar = TRUE)
 }
 }

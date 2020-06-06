@@ -7,9 +7,13 @@
 render_label(
   heightmap,
   text,
-  x,
-  y,
-  z,
+  lat,
+  long,
+  altitude,
+  extent = NULL,
+  x = NULL,
+  y = NULL,
+  z = NULL,
   zscale = 1,
   relativez = TRUE,
   offset = 0,
@@ -34,11 +38,17 @@ render_label(
 
 \item{text}{The label text.}
 
-\item{x}{Either the `x` coordinate in the matrix.}
+\item{lat}{A latitude for the text. Must provide an `raster::extent` object to argument `extent` for the map.}
 
-\item{y}{Either the `y` coordinate in the matrix.}
+\item{long}{A latitude for the text. Must provide an `raster::extent` object to argument `extent` for the map.}
 
-\item{z}{Elevation of the label, in units of the elevation matrix (scaled by zscale).}
+\item{altitude}{Elevation of the label, in units of the elevation matrix (scaled by zscale).}
+
+\item{x}{Default `NULL`. Directly specify the `x` index in the matrix to place the label.}
+
+\item{y}{Default `NULL`. Directly specify the `y` index in the matrix to place the label.}
+
+\item{z}{Default `NULL`. Elevation of the label, in units of the elevation matrix (scaled by zscale).}
 
 \item{zscale}{Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units}
 
@@ -85,26 +95,35 @@ montereybay \%>\%
  plot_3d(montereybay,zscale=50,water=TRUE, watercolor="#233aa1")
 render_snapshot()
 }
- 
+
+santa_cruz = c(36.962957, -122.021033) 
 #We want to add a label to Santa Cruz, so we use the x and y matrix coordinate (x=220 and y=330)
 \dontrun{
-render_label(montereybay,x=220,y=70, z=10000,zscale=50,text = "Santa Cruz")
+render_label(montereybay,lat = santa_cruz[1], long = santa_cruz[2],
+            extent = attr(montereybay, "extent"),
+            altitude=12000, zscale=50, text = "Santa Cruz")
 render_snapshot()
 }
 
+monterey = c(36.603053, -121.892933)
 #We can also change the linetype to dashed by setting `dashed = TRUE` (additional options allow
 #the user to control the dash length). You can clear the existing lines by setting 
 #`clear_previous = TRUE`.
 \dontrun{
-render_label(montereybay, x = 290, y = 280, z = 10000, zscale = 50, text = "Monterey",
-            textcolor = "white", linecolor="darkred",dashed = TRUE, clear_previous = TRUE)
+render_label(montereybay, lat = monterey[1], long = monterey[2], altitude = 10000, 
+            extent = attr(montereybay, "extent"),
+            zscale = 50, text = "Monterey", textcolor = "white", linecolor="darkred",
+            dashed = TRUE, clear_previous = TRUE)
 render_snapshot()
 }
 
+canyon = c(36.621049, -122.333912)
 #By default, z specifies the altitude above that point on the elevation matrix. We can also specify 
 #an absolute height by setting `relativez=FALSE`.
 \dontrun{
-render_label(montereybay,x=170,y=260, z=2000,zscale=50,text = "Monterey Canyon",relativez=FALSE)
+render_label(montereybay,lat=canyon[1], long = canyon[2], altitude = 2000,
+            extent = attr(montereybay,"extent"),
+            zscale=50,text = "Monterey Canyon", relativez=FALSE)
 render_snapshot()
 }
 
@@ -113,16 +132,20 @@ render_snapshot()
 #argument `text_angle`.
 \dontrun{
 render_camera(theta=35, phi = 35, zoom = 0.80, fov=60)
-render_label(montereybay, x = 290, y = 280, z = 10000, zscale = 50, text = "Monterey",
-            textcolor = "white", linecolor="white",dashed = TRUE, clear_previous = TRUE)
-render_label(montereybay,x=170,y=260, z=2000,zscale=50,textcolor = "white", linecolor="white",
-            text = "Monterey Canyon",relativez=FALSE)
+render_label(montereybay, lat = monterey[1], long = monterey[2], altitude = 10000, 
+            extent = attr(montereybay, "extent"),
+            zscale = 50, text = "Monterey", textcolor = "white", linecolor="darkred",
+            dashed = TRUE, clear_previous = TRUE)
+               
+render_label(montereybay,lat=canyon[1], long = canyon[2], altitude = 2000, zscale=50,
+            extent = attr(montereybay,"extent"), textcolor = "white", linecolor="white",
+            text = "Monterey Canyon", relativez=FALSE)
             
-render_highquality(samples=200,text_size = 18, line_radius = 2, text_offset = c(0,20,0),
+render_highquality(samples=200,text_size = 24, line_radius = 2, text_offset = c(0,20,0),
                   lightdirection=180, clamp_value=10)
                   
 #Fixed text angle
-render_highquality(samples=200,text_size = 18, line_radius = 2, text_offset = c(0,20,0),
+render_highquality(samples=200,text_size = 24, line_radius = 2, text_offset = c(0,20,0),
                   lightdirection=180, text_angle=0, clamp_value=10)
 }
 #We can remove all existing labels by calling `render_label(clear_previous = TRUE)`

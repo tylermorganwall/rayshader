@@ -20,6 +20,7 @@ render_highquality(
   text_size = 6,
   text_offset = c(0, 0, 0),
   line_radius = 0.5,
+  point_radius = 0.5,
   scale_text_angle = NULL,
   scale_text_size = 6,
   scale_text_offset = c(0, 0, 0),
@@ -76,7 +77,9 @@ will specify the absolute angle all the labels are facing. If three angles, this
 
 \item{text_offset}{Default `c(0,0,0)`. Offset to be applied to all text labels.}
 
-\item{line_radius}{Default `0.5`. Radius of the label line segments.}
+\item{line_radius}{Default `0.5`. Radius of line/path segments.}
+
+\item{point_radius}{Default `0.5`. Radius of 3D points (rendered with `render_points()`.}
 
 \item{scale_text_angle}{Default `NULL`. Same as `text_angle`, but for the scale bar.}
 
