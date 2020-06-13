@@ -82,7 +82,7 @@
 #'
 #'render_scalebar(limits=c(0,20, 40), segments = 4, scale_length = c(0.5,1), 
 #'                label_unit = "km", radius=10,text_y_offset=-20,text_x_offset=20)
-#'render_snapshot()
+#'render_snapshot(clear=TRUE)
 #'}
 render_scalebar = function(limits, position = "W", y = NULL,
                           segments = 10, scale_length = 1, label_unit = "",

@@ -106,7 +106,7 @@ render_compass(x = 150, y = 50, z = 150)
 render_snapshot()
 
 # Compass support is also included in render_highquality()
-render_highquality()
+render_highquality(clamp_value=10)
 render_compass(clear_compass = TRUE)
 
 #We can change the colors in the compass, and also set it a constant distance away with

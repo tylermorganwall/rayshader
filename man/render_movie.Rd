@@ -22,6 +22,7 @@ render_movie(
   title_bar_alpha = 0.5,
   image_overlay = NULL,
   vignette = FALSE,
+  title_position = "northwest",
   audio = NULL,
   progbar = interactive(),
   ...
@@ -69,6 +70,8 @@ dimension of the movie if it does not match exactly.}
 \item{vignette}{Default `FALSE`. If `TRUE` or numeric, a camera vignetting effect will be added to the image.
 `1` is the darkest vignetting, while `0` is no vignetting. If vignette is a length-2 vector, the second entry will
 control the blurriness of the vignette effect.}
+
+\item{title_position}{Default `northwest`. Position of the title.}
 
 \item{audio}{Default `NULL`. Optional file with audio to add to the video.}
 

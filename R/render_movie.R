@@ -23,6 +23,7 @@
 #'"Trebuchet", "Georgia", "Palatino" or "Comic Sans".
 #'@param title_bar_color Default `NULL`. If a color, this will create a colored bar under the title.
 #'@param title_bar_alpha Default `0.5`. Transparency of the title bar.
+#'@param title_position Default `northwest`. Position of the title.
 #'@param image_overlay Default `NULL`. Either a string indicating the location of a png image to overlay
 #'over the whole movie (transparency included), or a 4-layer RGBA array. This image will be resized to the 
 #'dimension of the movie if it does not match exactly.
@@ -85,7 +86,7 @@ render_movie = function(filename, type = "orbit", frames = 360, fps = 30,
                         title_text = NULL, title_offset = c(20,20), 
                         title_color = "black", title_size = 30, title_font = "sans",
                         title_bar_color = NULL, title_bar_alpha = 0.5,
-                        image_overlay = NULL, vignette = FALSE,
+                        image_overlay = NULL, vignette = FALSE, title_position = "northwest",
                         audio=NULL, progbar = interactive(), ...) {
   if(rgl::rgl.cur() == 0) {
     stop("No rgl window currently open.")
@@ -186,36 +187,14 @@ render_movie = function(filename, type = "orbit", frames = 360, fps = 30,
       if(progbar) {
         pb$tick()
       }
-      magick::image_read(png_files[i]) %>%
-        magick::image_composite(
-          magick::image_scale(magick::image_read(image_overlay_file),
-                      paste0(dimensions[1],"x",dimensions[2]))
-          ) %>%
-        magick::image_write(path = png_files[i], format = "png")
+      rayimage::add_image_overlay(png_files[i], image_overlay = image_overlay_file,
+                                            filename = png_files[i])
     }
   }
   if(vignette || is.numeric(vignette)) {
-    temp = png::readPNG(png_files[1])
-    dimensions = dim(temp)
     if(!("magick" %in% rownames(utils::installed.packages()))) {
       stop("`magick` package required for adding overlay")
     }
-    if(length(vignette) > 1) {
-      if(vignette[2] < 0) {
-        stop("vignette[2] must be greater than 0")
-      }
-      radiusval = min(c(dimensions[1],dimensions[2]))/2 * vignette[2]
-    } else {
-      radiusval = min(c(dimensions[1],dimensions[2]))/2
-    }
-    if(is.numeric(vignette)) {
-      if(vignette[1] > 1 || vignette[1] < 0) {
-        stop("vignette value (", vignette[1],") must be between 0 and 1.")
-      }
-    } else {
-      vignette = 0.4
-    }
-    imagefile = make_vignette_overlay(dimensions[1],dimensions[2], vignette, radiusval)
     if(progbar) {
       pb = progress::progress_bar$new(
         format = "  Adding vignetting [:bar] :percent eta: :eta",
@@ -225,9 +204,7 @@ render_movie = function(filename, type = "orbit", frames = 360, fps = 30,
       if(progbar) {
         pb$tick()
       }
-      magick::image_read(png_files[i]) %>%
-        magick::image_composite(magick::image_read(imagefile)) %>%
-        magick::image_write(path = png_files[i], format = "png")
+      rayimage::add_vignette(png_files[i], vignette = vignette, filename = png_files[i])
     }
   }
   if(has_title) {
@@ -239,37 +216,15 @@ render_movie = function(filename, type = "orbit", frames = 360, fps = 30,
         format = "  Adding title text [:bar] :percent eta: :eta",
         total = frames, width= 60)
     }
-    title_bar = array(0,c(dimensions[1],dimensions[2],4))
-    title_bar_temp = paste0(tempfile(),".png")
-    generated_array = FALSE
     for(i in seq_len(frames)) {
       if(progbar) {
         pb$tick()
       }
-      if(!is.null(title_bar_color)) {
-        if(is.character(title_bar_color)) {
-          title_bar_color = col2rgb(title_bar_color)/255
-        }
-        if(!generated_array) {
-          title_bar_width = 2 * title_offset[1] + title_size
-          title_bar[1:title_bar_width,,1] = title_bar_color[1]
-          title_bar[1:title_bar_width,,2] = title_bar_color[2]
-          title_bar[1:title_bar_width,,3] = title_bar_color[3]
-          title_bar[1:title_bar_width,,4] = title_bar_alpha
-          png::writePNG(title_bar,title_bar_temp)
-          generated_array = TRUE
-        }
-        magick::image_read(png_files[i]) %>%
-          magick::image_composite(magick::image_read(title_bar_temp),
-          ) %>%
-          magick::image_write(path = png_files[i], format = "png")
-      }
-      magick::image_read(png_files[i]) %>%
-        magick::image_annotate(title_text, 
-                       location = paste0("+", title_offset[1], "+", title_offset[2]),
-                       size = title_size, color = title_color, 
-                       font = title_font, ...) %>%
-        magick::image_write(path = png_files[i], format = "png")
+      rayimage::add_title(png_files[i], filename = png_files[i], title_text = title_text, 
+                          title_bar_color = title_bar_color,title_bar_alpha = title_bar_alpha,
+                          title_offset = title_offset, title_color = title_color,
+                          title_position = title_position,
+                          title_size = title_size, title_font = title_font)
     }
   }
   av::av_encode_video(png_files, output = filename, framerate = fps, 

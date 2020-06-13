@@ -5,7 +5,7 @@
 \alias{montereybay}
 \title{Monterey Bay combined topographic and bathymetric elevation matrix.}
 \format{
-A matrix with 401 rows and 401 columns. Elevation is in meters, and the spacing between each
+A matrix with 540 rows and 540 columns. Elevation is in meters, and the spacing between each
 coordinate is 200 meters (zscale = 200). Water level is 0. Raster extent located in "extent" attribute. CRS located in "CRS" attribute.
 }
 \source{

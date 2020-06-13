@@ -14,6 +14,7 @@ render_snapshot(
   title_font = "sans",
   title_bar_color = NULL,
   title_bar_alpha = 0.5,
+  title_position = "northwest",
   image_overlay = NULL,
   vignette = FALSE,
   instant_capture = interactive(),
@@ -41,6 +42,8 @@ image_annotate) corner to offset the title.}
 \item{title_bar_color}{Default `NULL`. If a color, this will create a colored bar under the title.}
 
 \item{title_bar_alpha}{Default `0.5`. Transparency of the title bar.}
+
+\item{title_position}{Default `northwest`. Position of the title.}
 
 \item{image_overlay}{Default `NULL`. Either a string indicating the location of a png image to overlay
 over the image (transparency included), or a 4-layer RGBA array. This image will be resized to the 
@@ -90,6 +93,6 @@ render_snapshot(title_text = "Monterey Bay, California",
                title_color = "white", title_bar_color = "darkgreen",
                vignette = TRUE, 
                title_font = "Helvetica", gravity = "North")
-rgl::rgl.close()
+rgl::rgl.close() 
 }
 }

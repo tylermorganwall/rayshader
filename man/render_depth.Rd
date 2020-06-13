@@ -26,6 +26,7 @@ render_depth(
   title_font = "sans",
   title_bar_color = NULL,
   title_bar_alpha = 0.5,
+  title_position = "northwest",
   image_overlay = NULL,
   vignette = FALSE,
   progbar = interactive(),
@@ -84,6 +85,8 @@ image_annotate) corner to offset the title.}
 
 \item{title_bar_alpha}{Default `0.5`. Transparency of the title bar.}
 
+\item{title_position}{Default `northwest`. Position of the title.}
+
 \item{image_overlay}{Default `NULL`. Either a string indicating the location of a png image to overlay
 over the image (transparency included), or a 4-layer RGBA array. This image will be resized to the 
 dimension of the image if it does not match exactly.}
@@ -118,7 +121,7 @@ The size of the circle of confusion is determined by the following formula (z_de
 montereybay \%>\%
  sphere_shade() \%>\%
  plot_3d(montereybay,zscale=50, water=TRUE, waterlinecolor="white",
-         zoom=0.3,theta=-135,fov=70, phi=20)
+         zoom=0.3,theta=-135,fov=70, phi=20) 
  
 #Preview where the focal plane lies
 render_depth(focus=0.75, preview_focus=TRUE)
@@ -143,12 +146,12 @@ montereybay \%>\%
 render_camera(theta=45,zoom=0.15,phi=20)
 
 #Change the bokeh shape and intensity
-render_depth(focus=0.7, bokehshape = "circle",focallength=200,bokehintensity=30,
-            title_text = "Circular Bokeh", title_size = 20, title_color = "white", 
-            title_bar_color = "white")
-render_depth(focus=0.7, bokehshape = "hex",focallength=200,bokehintensity=30,
-            title_text = "Hexagonal Bokeh", title_size = 20, title_color = "white", 
-            title_bar_color = "white")
+render_depth(focus=0.7, bokehshape = "circle",focallength=300,bokehintensity=30,
+            title_text = "Circular Bokeh", title_size = 30, title_color = "white", 
+            title_bar_color = "black")
+render_depth(focus=0.7, bokehshape = "hex",focallength=300,bokehintensity=30,
+            title_text = "Hexagonal Bokeh", title_size = 30, title_color = "white", 
+            title_bar_color = "black")
 
 #Add a title and vignette effect.
 render_camera(theta=0,zoom=0.7,phi=30)

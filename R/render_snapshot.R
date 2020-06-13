@@ -12,6 +12,7 @@
 #'"Trebuchet", "Georgia", "Palatino" or "Comic Sans".
 #'@param title_bar_color Default `NULL`. If a color, this will create a colored bar under the title.
 #'@param title_bar_alpha Default `0.5`. Transparency of the title bar.
+#'@param title_position Default `northwest`. Position of the title.
 #'@param image_overlay Default `NULL`. Either a string indicating the location of a png image to overlay
 #'over the image (transparency included), or a 4-layer RGBA array. This image will be resized to the 
 #'dimension of the image if it does not match exactly.
@@ -52,12 +53,13 @@
 #'                title_color = "white", title_bar_color = "darkgreen",
 #'                vignette = TRUE, 
 #'                title_font = "Helvetica", gravity = "North")
-#'rgl::rgl.close()
+#'rgl::rgl.close() 
 #'}
 render_snapshot = function(filename, clear=FALSE, 
                            title_text = NULL, title_offset = c(20,20), 
                            title_color = "black", title_size = 30, title_font = "sans",
-                           title_bar_color = NULL, title_bar_alpha = 0.5,
+                           title_bar_color = NULL, title_bar_alpha = 0.5, 
+                           title_position = "northwest",
                            image_overlay = NULL, vignette = FALSE,
                            instant_capture = interactive(), bring_to_front = FALSE, ...) {
   if(rgl::rgl.cur() == 0) {
@@ -89,67 +91,18 @@ render_snapshot = function(filename, clear=FALSE,
   temp = paste0(tempfile(),".png")
   rgl::snapshot3d(filename = temp, top = bring_to_front)
   tempmap = png::readPNG(temp)
-  dimensions = dim(tempmap)
   if(has_overlay) {
-    if(!("magick" %in% rownames(utils::installed.packages()))) {
-      stop("`magick` package required for adding overlay")
-    }
-    magick::image_read(temp) %>%
-      magick::image_composite(
-        magick::image_scale(magick::image_read(image_overlay_file),
-                            paste0(dimensions[1],"x",dimensions[2]))
-      ) %>%
-      magick::image_write(path = temp, format = "png")
+    tempmap = rayimage::add_image_overlay(tempmap, image_overlay = image_overlay_file)
   }
   if(vignette || is.numeric(vignette)) {
-    if(!("magick" %in% rownames(utils::installed.packages()))) {
-      stop("`magick` package required for adding overlay")
-    }
-    if(length(vignette) > 1) {
-      if(vignette[2] < 0) {
-        stop("vignette[2] must be greater than 0")
-      }
-      radiusval = min(c(dimensions[1],dimensions[2]))/2 * vignette[2]
-    } else {
-      radiusval = min(c(dimensions[1],dimensions[2]))/2
-    }
-    if(is.numeric(vignette)) {
-      if(vignette[1] > 1 || vignette[1] < 0) {
-        stop("vignette value (", vignette[1],") must be between 0 and 1.")
-      }
-    } else {
-      vignette = 0.4
-    }
-    imagefile = make_vignette_overlay(dimensions[1],dimensions[2], vignette, radiusval)
-    magick::image_read(temp) %>%
-      magick::image_composite(magick::image_read(imagefile)) %>%
-      magick::image_write(path = temp, format = "png")
+    tempmap = rayimage::add_vignette(tempmap, vignette = vignette)
   }
   if(has_title) {
-    if(!("magick" %in% rownames(utils::installed.packages()))) {
-      stop("`magick` package required for adding title")
-    }
-    if(!is.null(title_bar_color)) {
-      title_bar_color = col2rgb(title_bar_color)/255
-      title_bar = array(0,c(dimensions[1],dimensions[2],4))
-      title_bar_width = 2 * title_offset[2] + title_size
-      title_bar[1:title_bar_width,,1] = title_bar_color[1]
-      title_bar[1:title_bar_width,,2] = title_bar_color[2]
-      title_bar[1:title_bar_width,,3] = title_bar_color[3]
-      title_bar[1:title_bar_width,,4] = title_bar_alpha
-      title_bar_temp = paste0(tempfile(),".png")
-      png::writePNG(title_bar,title_bar_temp)
-      magick::image_read(temp) %>%
-        magick::image_composite(magick::image_read(title_bar_temp),
-        ) %>%
-        magick::image_write(path = temp, format = "png")
-    }
-    magick::image_read(temp) %>%
-      magick::image_annotate(title_text, 
-                             location = paste0("+", title_offset[1],"+",title_offset[2]),
-                             size = title_size, color = title_color, 
-                             font = title_font, ...) %>%
-      magick::image_write(path = temp, format = "png")
+    tempmap = rayimage::add_title(tempmap, title_text = title_text, 
+                                  title_bar_color = title_bar_color,title_bar_alpha = title_bar_alpha,
+                                  title_offset = title_offset, title_color = title_color,
+                                  title_position = title_position,
+                                  title_size = title_size, title_font = title_font)
   }
   tempmap = png::readPNG(temp)
   if(missing(filename)) {

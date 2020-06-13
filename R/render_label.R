@@ -6,7 +6,8 @@
 #'@param text The label text. 
 #'@param lat A latitude for the text. Must provide an `raster::extent` object to argument `extent` for the map.
 #'@param long A latitude for the text. Must provide an `raster::extent` object to argument `extent` for the map.
-#'@param altitude Elevation of the label, in units of the elevation matrix (scaled by zscale).
+#'@param altitude Default `NULL`. Elevation of the label, in units of the elevation matrix (scaled by zscale). If none is passed, this will default to 10 percent above the maximum altitude in the heightmap.
+#'@param extent Default `NULL`. A `raster::Extent` object with the bounding box of the displayed 3D scene.
 #'@param x Default `NULL`. Directly specify the `x` index in the matrix to place the label.
 #'@param y Default `NULL`. Directly specify the `y` index in the matrix to place the label.
 #'@param z Default `NULL`. Elevation of the label, in units of the elevation matrix (scaled by zscale).
@@ -34,7 +35,7 @@
 #'montereybay %>%
 #'  sphere_shade() %>%
 #'  plot_3d(montereybay,zscale=50,water=TRUE, watercolor="#233aa1")
-#'render_snapshot()
+#'render_snapshot() 
 #'}
 #'
 #'santa_cruz = c(36.962957, -122.021033) 
@@ -91,35 +92,17 @@
 #'}
 #'#We can remove all existing labels by calling `render_label(clear_previous = TRUE)`
 #'\dontrun{
-#'render_label(clear_previous = TRUE)
+#'render_label(clear_previous = TRUE) 
 #'render_snapshot()
+#'rgl::rgl.close()
 #'}
-render_label = function(heightmap, text, lat, long, altitude, extent=NULL, 
+render_label = function(heightmap, text, lat, long, altitude=NULL, extent=NULL, 
                         x=NULL, y=NULL, z=NULL, zscale=1, 
                         relativez=TRUE, offset = 0, clear_previous = FALSE, 
                         textsize=1, dashed=FALSE,dashlength = "auto", linewidth =3, antialias = FALSE,
                         alpha = 1, textalpha = 1, freetype = TRUE, adjustvec = NULL, 
                         family = "sans", fonttype = "standard", 
                         linecolor = "black", textcolor = "black") {
-  if(!is.null(altitude)) {
-    z = altitude
-  }
-  if(is.null(extent) && (!is.null(lat) || !is.null(long))) {
-    stop("extent required when using lat/long instead of x/y")
-  }
-  if(!is.null(extent)) {
-    e = extent
-    x = (long - e@xmin)/(e@xmax - e@xmin)*ncol(heightmap)
-    y = (1 - (lat - e@ymin)/(e@ymax - e@ymin))*nrow(heightmap)
-  }
-  if(rgl::rgl.cur() == 0) {
-    stop("No rgl window currently open.")
-  }
-  if(.Platform$OS.type == "unix") {
-    windows = FALSE
-  } else {
-    windows = TRUE
-  }
   exit_early = FALSE
   if(clear_previous) {
     ray_text_ids = get_ids_with_labels(c("textline", "raytext"))
@@ -132,6 +115,28 @@ render_label = function(heightmap, text, lat, long, altitude, extent=NULL,
     }
   }
   if(!exit_early) {
+    if(!is.null(altitude)) {
+      z = altitude
+    }
+    if(is.null(z)) {
+      z = max(heightmap)*1.1
+    }
+    if(is.null(extent) && (!is.null(lat) || !is.null(long))) {
+      stop("extent required when using lat/long instead of x/y")
+    }
+    if(!is.null(extent)) {
+      e = extent
+      x = (long - e@xmin)/(e@xmax - e@xmin)*ncol(heightmap)
+      y = (1 - (lat - e@ymin)/(e@ymax - e@ymin))*nrow(heightmap)
+    }
+    if(rgl::rgl.cur() == 0) {
+      stop("No rgl window currently open.")
+    }
+    if(.Platform$OS.type == "unix") {
+      windows = FALSE
+    } else {
+      windows = TRUE
+    }
     fontlist = list("standard"=1,"bold"=2,"italic"=3,"bolditalic"=4)
     fonttype = fontlist[[fonttype]]
     z=z/zscale

@@ -4,7 +4,7 @@
 #' elevation matrix representing the Monterey Bay, CA region. Original data from 
 #' from the NOAA National Map website. 
 #'
-#' @format A matrix with 401 rows and 401 columns. Elevation is in meters, and the spacing between each
+#' @format A matrix with 540 rows and 540 columns. Elevation is in meters, and the spacing between each
 #' coordinate is 200 meters (zscale = 200). Water level is 0. Raster extent located in "extent" attribute. CRS located in "CRS" attribute.
 #' @source \url{https://www.ncei.noaa.gov/metadata/geoportal/rest/metadata/item/gov.noaa.ngdc.mgg.dem:3544/html}
 #' @examples 

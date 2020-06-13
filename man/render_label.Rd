@@ -9,7 +9,7 @@ render_label(
   text,
   lat,
   long,
-  altitude,
+  altitude = NULL,
   extent = NULL,
   x = NULL,
   y = NULL,
@@ -42,7 +42,9 @@ render_label(
 
 \item{long}{A latitude for the text. Must provide an `raster::extent` object to argument `extent` for the map.}
 
-\item{altitude}{Elevation of the label, in units of the elevation matrix (scaled by zscale).}
+\item{altitude}{Default `NULL`. Elevation of the label, in units of the elevation matrix (scaled by zscale). If none is passed, this will default to 10 percent above the maximum altitude in the heightmap.}
+
+\item{extent}{Default `NULL`. A `raster::Extent` object with the bounding box of the displayed 3D scene.}
 
 \item{x}{Default `NULL`. Directly specify the `x` index in the matrix to place the label.}
 
@@ -93,7 +95,7 @@ Adds a marker and label to the current 3D plot
 montereybay \%>\%
  sphere_shade() \%>\%
  plot_3d(montereybay,zscale=50,water=TRUE, watercolor="#233aa1")
-render_snapshot()
+render_snapshot() 
 }
 
 santa_cruz = c(36.962957, -122.021033) 
@@ -150,7 +152,8 @@ render_highquality(samples=200,text_size = 24, line_radius = 2, text_offset = c(
 }
 #We can remove all existing labels by calling `render_label(clear_previous = TRUE)`
 \dontrun{
-render_label(clear_previous = TRUE)
+render_label(clear_previous = TRUE) 
 render_snapshot()
+rgl::rgl.close()
 }
 }

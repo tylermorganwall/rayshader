@@ -33,6 +33,7 @@
 #'"Trebuchet", "Georgia", "Palatino" or "Comic Sans".
 #'@param title_bar_color Default `NULL`. If a color, this will create a colored bar under the title.
 #'@param title_bar_alpha Default `0.5`. Transparency of the title bar.
+#'@param title_position Default `northwest`. Position of the title.
 #'@param image_overlay Default `NULL`. Either a string indicating the location of a png image to overlay
 #'over the image (transparency included), or a 4-layer RGBA array. This image will be resized to the 
 #'dimension of the image if it does not match exactly.
@@ -52,7 +53,7 @@
 #'montereybay %>%
 #'  sphere_shade() %>%
 #'  plot_3d(montereybay,zscale=50, water=TRUE, waterlinecolor="white",
-#'          zoom=0.3,theta=-135,fov=70, phi=20)
+#'          zoom=0.3,theta=-135,fov=70, phi=20) 
 #'  
 #'#Preview where the focal plane lies
 #'render_depth(focus=0.75, preview_focus=TRUE)
@@ -77,12 +78,12 @@
 #'render_camera(theta=45,zoom=0.15,phi=20)
 #'
 #'#Change the bokeh shape and intensity
-#'render_depth(focus=0.7, bokehshape = "circle",focallength=200,bokehintensity=30,
-#'             title_text = "Circular Bokeh", title_size = 20, title_color = "white", 
-#'             title_bar_color = "white")
-#'render_depth(focus=0.7, bokehshape = "hex",focallength=200,bokehintensity=30,
-#'             title_text = "Hexagonal Bokeh", title_size = 20, title_color = "white", 
-#'             title_bar_color = "white")
+#'render_depth(focus=0.7, bokehshape = "circle",focallength=300,bokehintensity=30,
+#'             title_text = "Circular Bokeh", title_size = 30, title_color = "white", 
+#'             title_bar_color = "black")
+#'render_depth(focus=0.7, bokehshape = "hex",focallength=300,bokehintensity=30,
+#'             title_text = "Hexagonal Bokeh", title_size = 30, title_color = "white", 
+#'             title_bar_color = "black")
 #'
 #'#Add a title and vignette effect.
 #'render_camera(theta=0,zoom=0.7,phi=30)
@@ -96,9 +97,9 @@ render_depth = function(focus = 0.5, focallength = 100, fstop = 4, filename=NULL
                      preview_focus = FALSE, bokehshape = "circle", bokehintensity = 1, bokehlimit=0.8, 
                      rotation = 0, gamma_correction = TRUE, aberration = 0,
                      transparent_water = FALSE, heightmap = NULL, zscale = NULL, 
-                     title_text = NULL, title_offset = c(20,20), 
+                     title_text = NULL, title_offset = c(20,20),
                      title_color = "black", title_size = 30, title_font = "sans",
-                     title_bar_color = NULL, title_bar_alpha = 0.5,
+                     title_bar_color = NULL, title_bar_alpha = 0.5, title_position = "northwest",
                      image_overlay = NULL, vignette = FALSE,
                      progbar = interactive(), 
                      instant_capture = interactive(), clear = FALSE, bring_to_front = FALSE, ...) {
@@ -129,23 +130,10 @@ render_depth = function(focus = 0.5, focallength = 100, fstop = 4, filename=NULL
   }
   if(preview_focus) {
     arraydepth = png::readPNG(temp)
-    depthmap = flipud(t(rgl::rgl.pixels(component = "depth")))
+    depthmap = rgl::rgl.pixels(component = "depth")
     maxval = max(depthmap[depthmap != 1])
     depthmap[depthmap == 1] = maxval
-    range_depth_high = focus + range(depthmap)[2]/200
-    range_depth_low  = focus - range(depthmap)[1]/200
-    if(range_depth_high >= maxval) {
-      range_depth_high = range_depth_high - range(depthmap)[2]/200
-    }
-    if(any(depthmap < range_depth_high) & any(depthmap > range_depth_low)) {
-      arraydepth[,,1][depthmap < range_depth_high & depthmap > range_depth_low] = 1 
-      arraydepth[,,2][depthmap < range_depth_high & depthmap > range_depth_low] = 0
-      arraydepth[,,2][depthmap < range_depth_high & depthmap > range_depth_low] = 0 
-      print(sprintf("Focal range: %g-%g", range(depthmap)[1], range(depthmap)[2]))
-      plot_map(arraydepth)
-    } else {
-      print(sprintf("Focus point (%g) not in focal range: %g-%g", focus, range(depthmap)[1],range(depthmap)[2]))
-    }
+    rayimage::render_bokeh(arraydepth, depthmap, focus = focus, preview_focus = TRUE, preview = TRUE)
     if(transparent_water && !is.null(heightmap)) {
       if(is.null(zscale)) {
         zscale = 1
@@ -162,33 +150,6 @@ render_depth = function(focus = 0.5, focallength = 100, fstop = 4, filename=NULL
       }
     }
   } else {
-    #bokehshape 0: circle, 1: circle, 2: custom
-    if(is.matrix(bokehshape)) {
-      custombokeh = bokehshape
-      bokehshape = 2
-    } else {
-      if(bokehshape == "circle") {
-        bokehshape = 0
-      } else {
-        bokehshape = 1
-      }
-      custombokeh = matrix(1,1,1)
-    }
-    rotation = (rotation %% 360)/180*pi
-    flipud = function(x) {
-      x[nrow(x):1,]
-    }
-    dimensions = par3d()$bbox
-    height = dimensions[3]
-    width1 = abs(dimensions[2]-dimensions[1])
-    width2 = abs(dimensions[6]-dimensions[5])
-    if(aberration >= 1 || aberration <= -1) {
-      stop("aberration value must be less than 1 and greater than -1")
-    }
-    calc_circle = function(z,zfocus,f,N,ramp) {
-      ifelse(z-zfocus < 0, abs(f^2*abs(z-zfocus)*ramp/((zfocus - f)*z*N)),
-             abs(f^2*abs(z-zfocus)/((zfocus - f)*z*N*ramp)))
-    }
     depthmap = rgl::rgl.pixels(component = "depth")
     if(transparent_water) {
       remove_ids = get_ids_with_labels(typeval = "waterlines")$id
@@ -210,27 +171,10 @@ render_depth = function(focus = 0.5, focallength = 100, fstop = 4, filename=NULL
                      zscale = zscale)
       }
     }
-    if(gamma_correction) {
-      tempmap = tempmap^2.2
-    }
-    for(i in 1:3) {
-      if(i == 1) {
-        depthmap2 = calc_circle(depthmap,focus,focallength, fstop,1+aberration)
-      } else if(i ==2) {
-        depthmap2 = calc_circle(depthmap,focus,focallength, fstop,1)
-      } else {
-        depthmap2 = calc_circle(depthmap,focus,focallength, fstop,1-aberration)
-      }
-      tempmap[,,i] = flipud(t(psf(t(flipud(tempmap[,,i])),depthmap2, 
-                                  depthmap, focus, bokehshape, custombokeh = custombokeh,
-                                  bokehintensity, bokehlimit, rotation, progbar = progbar,channel = i)))
-    }
-    if(gamma_correction) {
-      tempmap = tempmap ^ (1/2.2)
-    }
-    tempmap[tempmap > 1] = 1
-    tempmap[tempmap < 0] = 0
-    png::writePNG(tempmap,temp)
+    tempmap = rayimage::render_bokeh(tempmap, depthmap = depthmap, focus = focus, focallength = focallength,
+                           fstop = fstop, bokehshape = bokehshape, bokehintensity = bokehintensity,
+                           bokehlimit = bokehlimit, rotation = rotation, aberration = aberration,
+                           gamma_correction = gamma_correction, progress = progbar, preview = FALSE)
     if(!is.null(title_text)) {
       has_title = TRUE
     } else {
@@ -240,12 +184,12 @@ render_depth = function(focus = 0.5, focallength = 100, fstop = 4, filename=NULL
       stop("`title_offset` needs to be length-2 vector")
     }
     if(!is.null(image_overlay)) {
-      if("character" %in% class(image_overlay)) {
+      if(inherits(image_overlay,"character")) {
         image_overlay_file = image_overlay
         has_overlay = TRUE
-      } else if("array" %in% class(image_overlay)) {
+      } else if(inherits(image_overlay,"array")) {
         image_overlay_file = tempfile()
-        png::writePNG(image_overlay_file)
+        png::writePNG(image_overlay, image_overlay_file)
         has_overlay = TRUE
       }
     } else {
@@ -253,67 +197,18 @@ render_depth = function(focus = 0.5, focallength = 100, fstop = 4, filename=NULL
     }
     dimensions = dim(tempmap)
     if(has_overlay) {
-      if(!("magick" %in% rownames(utils::installed.packages()))) {
-        stop("`magick` package required for adding overlay")
-      }
-      magick::image_read(temp) %>%
-        magick::image_composite(
-          magick::image_scale(magick::image_read(image_overlay_file),
-                              paste0(dimensions[1],"x",dimensions[2]))
-        ) %>%
-        magick::image_write(path = temp, format = "png")
+      tempmap = rayimage::add_image_overlay(tempmap, image_overlay = image_overlay_file)
     }
     if(vignette || is.numeric(vignette)) {
-      if(!("magick" %in% rownames(utils::installed.packages()))) {
-        stop("`magick` package required for adding overlay")
-      }
-      if(length(vignette) > 1) {
-        if(vignette[2] < 0) {
-          stop("vignette[2] must be greater than 0")
-        }
-        radiusval = min(c(dimensions[1],dimensions[2]))/2 * vignette[2]
-      } else {
-        radiusval = min(c(dimensions[1],dimensions[2]))/2
-      }
-      if(is.numeric(vignette)) {
-        if(vignette[1] > 1 || vignette[1] < 0) {
-          stop("vignette value (", vignette[1],") must be between 0 and 1.")
-        }
-      } else {
-        vignette = 0.4
-      }
-      imagefile = make_vignette_overlay(dimensions[1],dimensions[2], vignette, radiusval)
-      magick::image_read(temp) %>%
-        magick::image_composite(magick::image_read(imagefile)) %>%
-        magick::image_write(path = temp, format = "png")
+      tempmap = rayimage::add_vignette(tempmap, vignette = vignette)
     }
     if(has_title) {
-      if(!is.null(title_bar_color)) {
-        title_bar_color = col2rgb(title_bar_color)/255
-        title_bar = array(0,c(dimensions[1],dimensions[2],4))
-        title_bar_width = 2 * title_offset[1] + title_size
-        title_bar[1:title_bar_width,,1] = title_bar_color[1]
-        title_bar[1:title_bar_width,,2] = title_bar_color[2]
-        title_bar[1:title_bar_width,,3] = title_bar_color[3]
-        title_bar[1:title_bar_width,,4] = title_bar_alpha
-        title_bar_temp = paste0(tempfile(),".png")
-        png::writePNG(title_bar,title_bar_temp)
-        magick::image_read(temp) %>%
-          magick::image_composite(magick::image_read(title_bar_temp),
-          ) %>%
-          magick::image_write(path = temp, format = "png")
-      }
-      if(!("magick" %in% rownames(utils::installed.packages()))) {
-        stop("`magick` package required for adding title")
-      }
-      magick::image_read(temp) %>%
-        magick::image_annotate(title_text, 
-                               location = paste0("+", title_offset[1],"+",title_offset[2]),
-                               size = title_size, color = title_color, 
-                               font = title_font, ...) %>%
-        magick::image_write(path = temp, format = "png")
+      tempmap = rayimage::add_title(tempmap, title_text = title_text, 
+                          title_bar_color = title_bar_color,title_bar_alpha = title_bar_alpha,
+                          title_offset = title_offset, title_color = title_color,
+                          title_position = title_position,
+                          title_size = title_size, title_font = title_font)
     }
-    tempmap = png::readPNG(temp)
     if(is.null(filename)) {
       plot_map(tempmap)
     } else {

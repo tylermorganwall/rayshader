@@ -60,25 +60,25 @@
 #'render_highquality()
 #'}
 #'
-#'#Change position of light
+#'#Change position of light (clamp_value prevents small white rendering artifacts called fireflies)
 #'\donttest{
-#'render_highquality(lightdirection = 45)
+#'render_highquality(lightdirection = 45,clamp_value=10)
 #'}
 #'
 #'#Change vertical position of light
 #'\donttest{
-#'render_highquality(lightdirection = 45, lightaltitude=10)
+#'render_highquality(lightdirection = 45, lightaltitude=10, clamp_value=10)
 #'}
 #'
 #'#Change the ground material
 #'\donttest{
-#'render_highquality(lightdirection = 45, lightaltitude=60, 
+#'render_highquality(lightdirection = 45, lightaltitude=60, clamp_value=10,
 #'                   ground_material = rayrender::diffuse(checkerperiod = 30, checkercolor="grey50"))
 #'}
 #'
 #'#Add three different color lights and a title
 #'\donttest{
-#'render_highquality(lightdirection = c(0,120,240), lightaltitude=45, 
+#'render_highquality(lightdirection = c(0,120,240), lightaltitude=45, clamp_value=10,
 #'                   lightcolor=c("red","green","blue"), title_text = "Red, Green, Blue",
 #'                   title_bar_color="white", title_bar_alpha=0.8)
 #'}
@@ -86,14 +86,14 @@
 #'#Change the camera:
 #'\donttest{
 #'render_camera(theta=-45,phi=60,fov=60,zoom=0.8)
-#'render_highquality(lightdirection = c(0), 
+#'render_highquality(lightdirection = c(0), clamp_value=10,
 #'                   title_bar_color="white", title_bar_alpha=0.8)
 #'}
 #'#Add a shiny metal sphere
 #'\donttest{
 #'render_camera(theta=-45,phi=60,fov=60,zoom=0.8)
 #'render_highquality(lightdirection = c(0,120,240), lightaltitude=45, 
-#'                   lightcolor=c("red","green","blue"),
+#'                   lightcolor=c("red","green","blue"), clamp_value=10,
 #'                   scene_elements = rayrender::sphere(z=-60,y=0,
 #'                                                      radius=20,material=rayrender::metal()))
 #'}
@@ -102,7 +102,7 @@
 #'\donttest{
 #'render_camera(theta=45,phi=45)
 #'render_highquality(lightdirection = c(240), lightaltitude=30, 
-#'                   lightcolor=c("#5555ff"),
+#'                   lightcolor=c("#5555ff"), clamp_value=10,
 #'                   scene_elements = rayrender::sphere(z=0,y=15, x=-18, radius=5,
 #'                                    material=rayrender::light(color="red",intensity=10)))
 #'}
@@ -110,7 +110,7 @@
 #'\donttest{
 #'render_camera(theta=45,phi=45,fov=90)
 #'render_highquality(lightdirection = c(240), lightaltitude=30, lightcolor=c("#5555ff"), 
-#'                   camera_location = c(50,10,10), camera_lookat = c(0,15,0), 
+#'                   camera_location = c(50,10,10), camera_lookat = c(0,15,0), clamp_value=10,
 #'                   scene_elements = rayrender::sphere(z=0,y=15, x=-18, radius=5,
 #'                                    material=rayrender::light(color="red",intensity=10)))
 #'rgl::rgl.close()
@@ -319,6 +319,12 @@ render_highquality = function(filename = NULL, light = TRUE, lightdirection = 31
                                                material = rayrender::diffuse(color = temp_color[j,1:3]))
       counter = counter + 1
     }
+    pathline[[counter]] = rayrender::sphere(x = temp_verts[nrow(temp_verts),1] - bbox_center[1],
+                                            y = temp_verts[nrow(temp_verts),2] - bbox_center[2],
+                                            z = temp_verts[nrow(temp_verts),3] - bbox_center[3],
+                                            radius = line_radius,
+                                            material = rayrender::diffuse(color = temp_color[nrow(temp_verts),1:3]))
+    counter = counter + 1
   }
   pointids = get_ids_with_labels(typeval = "points3d")$id
   pointlist = list()
