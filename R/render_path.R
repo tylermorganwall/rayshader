@@ -130,7 +130,6 @@ render_path = function(extent = NULL, lat, long = NULL, altitude = NULL,
     e = extent
     distances_x = (long-e@xmin)/(e@xmax - e@xmin) * nrow_map
     distances_y = ncol_map - (lat-e@ymin)/(e@ymax - e@ymin) * ncol_map
-    
     if(is.null(altitude)) {
       if(is.null(heightmap)) {
         stop("No altitude data requires heightmap argument be passed")
@@ -152,5 +151,6 @@ render_path = function(extent = NULL, lat, long = NULL, altitude = NULL,
     }
     rgl::rgl.material(color = color, ambient = "#000018", lwd = linewidth, line_antialias = antialias)
     rgl::lines3d(distances_x-nrow_map/2, altitude/zscale, distances_y-ncol_map/2)
+    altitude = NULL
   }
 }
