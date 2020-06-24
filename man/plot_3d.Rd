@@ -33,7 +33,7 @@ plot_3d(
   windowsize = 600,
   calculate_normals = TRUE,
   precomputed_normals = NULL,
-  triangulate = TRUE,
+  triangulate = FALSE,
   max_error = 0,
   max_tri = 0,
   verbose = FALSE,

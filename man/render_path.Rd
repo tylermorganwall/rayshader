@@ -6,7 +6,7 @@
 \usage{
 render_path(
   extent = NULL,
-  lat = NULL,
+  lat,
   long = NULL,
   altitude = NULL,
   zscale = 1,
@@ -21,9 +21,11 @@ render_path(
 \arguments{
 \item{extent}{A `raster::Extent` object with the bounding box of the displayed 3D scene.}
 
-\item{lat}{Vector of latitudes (or other coordinate in the same coordinate reference system as extent).}
+\item{lat}{Vector of latitudes (or other coordinate in the same coordinate reference system as extent).
+Can also be an `sf` or `SpatialLineDataFrame` object.}
 
-\item{long}{Vector of longitudes (or other coordinate in the same coordinate reference system as extent).}
+\item{long}{Default `NULL`. Vector of longitudes (or other coordinate in the same coordinate reference system as extent).
+Ignored if lat is an `sf` or `SpatialLineDataFrame` object.}
 
 \item{altitude}{Default `NULL`. Elevation of each point, in units of the elevation matrix (scaled by zscale).
 If left `NULL`, this will be just the elevation value at ths surface, offset by `offset`.}
@@ -72,7 +74,7 @@ bird_track_long[[i]] = bird_track_long[[i-1]] + x_vel_out[i]
 }
 
 
-#Render the 3D map
+#Render the 3D map 
 montereybay \%>\%
  sphere_shade() \%>\%
  plot_3d(montereybay,zscale=50,water=TRUE,

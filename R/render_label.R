@@ -121,13 +121,13 @@ render_label = function(heightmap, text, lat, long, altitude=NULL, extent=NULL,
     if(is.null(z)) {
       z = max(heightmap)*1.1
     }
-    if(is.null(extent) && (!is.null(lat) || !is.null(long))) {
+    if(is.null(extent) && (!missing(lat) || !missing(long)) && (!is.null(x) && !is.null(y))) {
       stop("extent required when using lat/long instead of x/y")
     }
     if(!is.null(extent)) {
       e = extent
-      x = (long - e@xmin)/(e@xmax - e@xmin)*ncol(heightmap)
-      y = (1 - (lat - e@ymin)/(e@ymax - e@ymin))*nrow(heightmap)
+      x = (long-e@xmin)/(e@xmax - e@xmin) * nrow(heightmap)
+      y = ncol(heightmap) - (lat-e@ymin)/(e@ymax - e@ymin) * ncol(heightmap)
     }
     if(rgl::rgl.cur() == 0) {
       stop("No rgl window currently open.")

@@ -54,7 +54,7 @@
 #'              altitude = z_out, zscale=50,color="white")
 #'render_snapshot()
 #'     
-#'#We'll set the altitude to zero to give the tracks a "shadow" over the water.
+#'#We'll set the altitude to zero to give the tracks a "shadow" over the water. 
 #'render_points(extent = attr(montereybay,"extent"), 
 #'              lat = unlist(bird_track_lat), long = unlist(bird_track_long), 
 #'              altitude = 0, zscale=50, color="black")
@@ -105,23 +105,15 @@ render_points = function(extent = NULL, lat = NULL, long = NULL, altitude=NULL,
     nrow_map = nrow(heightmap)
   }
   e = extent
-  cell_size_x = raster::pointDistance(c(e@xmin, e@ymin), c(e@xmax, e@ymin), lonlat = FALSE)/ncol_map
-  cell_size_y = raster::pointDistance(c(e@xmin, e@ymin), c(e@xmin, e@ymax), lonlat = FALSE)/nrow_map
-  distances_x = raster::pointDistance(c(e@xmin, e@ymin), cbind(long, rep(e@ymin, length(long))), 
-                                      lonlat = FALSE)/cell_size_x 
-  distances_x = ifelse(long < e@xmin, -distances_x, distances_x)
-  distances_x = distances_x - (e@xmax - e@xmin)/2/cell_size_x
-  distances_y = raster::pointDistance(c(e@xmin, e@ymin), cbind(rep(e@xmin, length(lat)), lat), 
-                                      lonlat = FALSE)/cell_size_y 
-  distances_y = ifelse(lat < e@ymin, -distances_y, distances_y)
-  distances_y = distances_y - (e@ymax - e@ymin)/2/cell_size_y
+  distances_x = (long-e@xmin)/(e@xmax - e@xmin) * nrow_map
+  distances_y = ncol_map - (lat-e@ymin)/(e@ymax - e@ymin) * ncol_map
 
   if(is.null(altitude)) {
     if(is.null(heightmap)) {
       stop("No altitude data requires heightmap argument be passed")
     }
-    distances_x_index = distances_x + (e@xmax - e@xmin)/2/cell_size_x + 1
-    distances_y_index = distances_y + (e@ymax - e@ymin)/2/cell_size_y + 1
+    distances_x_index = distances_x
+    distances_y_index = distances_y
     distances_x_index[floor(distances_x_index) > nrow(heightmap)] = nrow(heightmap)
     distances_y_index[floor(distances_y_index) > ncol(heightmap)] = ncol(heightmap)
     distances_x_index[floor(distances_x_index) < 1] = 1
@@ -132,9 +124,9 @@ render_points = function(extent = NULL, lat = NULL, long = NULL, altitude=NULL,
       flipped_mat = flipud(t(heightmap))
       altitude = apply(xy,1,(function(x) flipped_mat[x[2],x[1]])) + offset
     } else {
-      altitude = rayimage::interpolate_array(flipud(t(heightmap)), distances_x_index,distances_y_index) + offset
+      altitude = rayimage::interpolate_array((t(heightmap)), distances_x_index,distances_y_index) + offset
     }
   }
   rgl::rgl.material(color = color, ambient = "#000019", size = size)
-  rgl::points3d(distances_x, altitude/zscale, -distances_y)
+  rgl::points3d(distances_x-nrow_map/2, altitude/zscale, distances_y-ncol_map/2)
 }

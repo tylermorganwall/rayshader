@@ -82,7 +82,7 @@ render_points(extent = attr(montereybay,"extent"),
              altitude = z_out, zscale=50,color="white")
 render_snapshot()
     
-#We'll set the altitude to zero to give the tracks a "shadow" over the water.
+#We'll set the altitude to zero to give the tracks a "shadow" over the water. 
 render_points(extent = attr(montereybay,"extent"), 
              lat = unlist(bird_track_lat), long = unlist(bird_track_long), 
              altitude = 0, zscale=50, color="black")
