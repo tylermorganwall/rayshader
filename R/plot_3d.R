@@ -35,10 +35,6 @@
 #'specify the location of the x-y coordinates of the bottom-left corner of the viewport on the screen,
 #'and the next two (or one, if square) specify the window size. NOTE: The absolute positioning of the
 #'window does not currently work on macOS (tested on Mojave), but the size can still be specified.
-#'@param calculate_normals Default `TRUE`. If `FALSE`, normals are not computed for each vertex.
-#'This will make the appearance of models rendered with `render_highquality()` and `save_obj()` 
-#'less smooth, but may help with non-physical shading issues in those functions when 
-#'`triangulate = TRUE`.
 #'@param precomputed_normals Default `NULL`. Takes the output of `calculate_normals()` to save
 #' computing normals internally.
 #'@param triangulate Default `FALSE`. Reduce the size of the 3D model by triangulating the height map.
@@ -116,7 +112,7 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
                    waterlinecolor=NULL, waterlinealpha = 1, 
                    linewidth = 2, lineantialias = FALSE,
                    theta=45, phi = 45, fov=0, zoom = 1, background="white", windowsize = 600,
-                   calculate_normals = TRUE, precomputed_normals = NULL, 
+                   precomputed_normals = NULL, 
                    triangulate = FALSE, max_error = 0, max_tri = 0, verbose = FALSE,
                    ...) {
   #setting default zscale if montereybay is used and tell user about zscale
@@ -250,58 +246,40 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
     triangulate = FALSE
   }
   if(!triangulate) {
-    if(calculate_normals) {
-      if(!precomputed) {
-        normals = calculate_normal(heightmap,zscale=zscale)
-      }
-      normalsx = (t(normals$x[c(-1,-nrow(normals$x)),c(-1,-ncol(normals$x))]))
-      normalsy = (t(normals$z[c(-1,-nrow(normals$z)),c(-1,-ncol(normals$z))]))
-      normalsz = (t(normals$y[c(-1,-nrow(normals$y)),c(-1,-ncol(normals$y))]))
-      rgl.surface(x=1:nrow(heightmap)-nrow(heightmap)/2,z=(1:ncol(heightmap)-ncol(heightmap)/2),
-                  y=heightmap/zscale,
-                  normal_x = normalsz, normal_y = normalsy, normal_z = -normalsx,
-                  texture=paste0(tempmap,".png"),lit=FALSE,ambient = "#000001")
-    } else {
-      rgl.surface(x=1:nrow(heightmap)-nrow(heightmap)/2,z=(1:ncol(heightmap)-ncol(heightmap)/2),
-                  y=heightmap/zscale,
-                  texture=paste0(tempmap,".png"),lit=FALSE,ambient = "#000001")
+    if(!precomputed) {
+      normals = calculate_normal(heightmap,zscale=zscale)
     }
+    normalsx = (t(normals$x[c(-1,-nrow(normals$x)),c(-1,-ncol(normals$x))]))
+    normalsy = (t(normals$z[c(-1,-nrow(normals$z)),c(-1,-ncol(normals$z))]))
+    normalsz = (t(normals$y[c(-1,-nrow(normals$y)),c(-1,-ncol(normals$y))]))
+    rgl.surface(x=1:nrow(heightmap)-nrow(heightmap)/2,z=(1:ncol(heightmap)-ncol(heightmap)/2),
+                y=heightmap/zscale,
+                normal_x = normalsz, normal_y = normalsy, normal_z = -normalsx,
+                texture=paste0(tempmap,".png"),lit=FALSE,ambient = "#000001")
   } else {
     tris = terrainmeshr::triangulate_matrix(heightmap, maxError = max_error, 
                                             maxTriangles = max_tri, start_index = 0, 
                                             verbose = verbose)
-    if(calculate_normals) {
-      if(!precomputed) {
-        normals = calculate_normal(heightmap,zscale=zscale)
-      }
-      normalsx = as.vector(t(flipud(normals$x[c(-1,-nrow(normals$x)),c(-1,-ncol(normals$x))])))
-      normalsy = as.vector(t(flipud(normals$z[c(-1,-nrow(normals$z)),c(-1,-ncol(normals$z))])))
-      normalsz = as.vector(t(flipud(normals$y[c(-1,-nrow(normals$y)),c(-1,-ncol(normals$y))])))
-      tris[,2] =  tris[,2]/zscale
-      nr = nrow(heightmap)
-      nc = ncol(heightmap)
-      rn = tris[,1]+1
-      cn = tris[,3]+1
-      normals = matrix(c(normalsx[rn + nr*cn],normalsy[rn + nr*cn],normalsz[rn + nr*cn]),ncol=3)
-      texcoords = tris[,c(1,3)]
-      texcoords[,1] = texcoords[,1]/nrow(heightmap)
-      texcoords[,2] = texcoords[,2]/ncol(heightmap)
-      tris[,1] = tris[,1] - nrow(heightmap)/2 +1
-      tris[,3] = tris[,3] - ncol(heightmap)/2
-      tris[,3] = -tris[,3]
-      rgl.triangles(tris, texcoords = texcoords, normals = normals,
-                    texture=paste0(tempmap,".png"),lit=FALSE,ambient = "#000017")
-    } else {
-      tris[,2] =  tris[,2]/zscale
-      texcoords = tris[,c(1,3)]
-      texcoords[,1] = texcoords[,1]/nrow(heightmap)
-      texcoords[,2] = texcoords[,2]/ncol(heightmap)
-      tris[,1] = tris[,1] - nrow(heightmap)/2 +1
-      tris[,3] = tris[,3] - ncol(heightmap)/2
-      tris[,3] = -tris[,3]
-      rgl.triangles(tris, texcoords = texcoords, 
-                    texture=paste0(tempmap,".png"),lit=FALSE,ambient = "#000017")
+    if(!precomputed) {
+      normals = calculate_normal(heightmap,zscale=zscale)
     }
+    normalsx = as.vector(t(flipud(normals$x[c(-1,-nrow(normals$x)),c(-1,-ncol(normals$x))])))
+    normalsy = as.vector(t(flipud(normals$z[c(-1,-nrow(normals$z)),c(-1,-ncol(normals$z))])))
+    normalsz = as.vector(t(flipud(normals$y[c(-1,-nrow(normals$y)),c(-1,-ncol(normals$y))])))
+    tris[,2] =  tris[,2]/zscale
+    nr = nrow(heightmap)
+    nc = ncol(heightmap)
+    rn = tris[,1]+1
+    cn = tris[,3]+1
+    normals = matrix(c(normalsx[rn + nr*cn],normalsy[rn + nr*cn],normalsz[rn + nr*cn]),ncol=3)
+    texcoords = tris[,c(1,3)]
+    texcoords[,1] = texcoords[,1]/nrow(heightmap)
+    texcoords[,2] = texcoords[,2]/ncol(heightmap)
+    tris[,1] = tris[,1] - nrow(heightmap)/2 +1
+    tris[,3] = tris[,3] - ncol(heightmap)/2
+    tris[,3] = -tris[,3]
+    rgl.triangles(tris, texcoords = texcoords, normals = normals,
+                  texture=paste0(tempmap,".png"),lit=FALSE,ambient = "#000017")
   }
   bg3d(color = background,texture=NULL)
   rgl.viewpoint(zoom=zoom,phi=phi,theta=theta,fov=fov)

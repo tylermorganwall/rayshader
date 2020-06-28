@@ -31,7 +31,6 @@ plot_3d(
   zoom = 1,
   background = "white",
   windowsize = 600,
-  calculate_normals = TRUE,
   precomputed_normals = NULL,
   triangulate = FALSE,
   max_error = 0,
@@ -99,11 +98,6 @@ If four numbers (e.g. `c(200,0,600,800)`), the first two coordinates
 specify the location of the x-y coordinates of the bottom-left corner of the viewport on the screen,
 and the next two (or one, if square) specify the window size. NOTE: The absolute positioning of the
 window does not currently work on macOS (tested on Mojave), but the size can still be specified.}
-
-\item{calculate_normals}{Default `TRUE`. If `FALSE`, normals are not computed for each vertex.
-This will make the appearance of models rendered with `render_highquality()` and `save_obj()` 
-less smooth, but may help with non-physical shading issues in those functions when 
-`triangulate = TRUE`.}
 
 \item{precomputed_normals}{Default `NULL`. Takes the output of `calculate_normals()` to save
 computing normals internally.}

@@ -70,7 +70,7 @@
 #'library(viridis)
 #'
 #'ggdiamonds = ggplot(diamonds, aes(x, depth)) +
-#'  stat_density_2d(aes(fill = stat(nlevel)), geom = "polygon", n = 100, bins = 10,contour = TRUE) +
+#'  stat_density_2d(aes(fill = stat(nlevel)), geom = "polygon", n = 200, bins = 50,contour = TRUE) +
 #'  facet_wrap(clarity~.) +
 #'  scale_fill_viridis_c(option = "A")
 #'\donttest{
@@ -695,7 +695,7 @@ plot_gg = function(ggobj, width = 3, height = 3,
   }
   if(raytrace) {
     if(is.null(saved_shadow_matrix)) {
-      raylayer = ray_shade(1-t(mapheight),maxsearch = 600,sunangle = sunangle,anglebreaks = anglebreaks,
+      raylayer = ray_shade(t(1-mapheight),maxsearch = 600,sunangle = sunangle,anglebreaks = anglebreaks,
                            zscale=1/scale,multicore = multicore,lambert = lambert, ...)
       if(!preview) {
         mapcolor %>%

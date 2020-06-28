@@ -207,6 +207,7 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1) {
       }
       dims = rgl::rgl.attrib(vertex_info$id[row], "dim")
       vertices_y = rgl.attrib(vertex_info$id[row], "vertices")[,2]
+      hasnormals = vertex_info$startindexnormals[row] < vertex_info$endindexnormals[row]
       nx = dims[1]
       nz = dims[2] 
       indices = rep(0, 6 * (nz - 1) * (nx - 1))
@@ -225,7 +226,11 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1) {
         }
       }
       indices = indices + vertex_info$startindextex[row] - 1
-      indices = sprintf("%d/%d/%d", indices, indices, indices)
+      if(hasnormals) {
+        indices = sprintf("%d/%d/%d", indices, indices, indices)
+      } else {
+        indices = sprintf("%d/%d", indices, indices)
+      }
       indices = matrix(indices, ncol=3, byrow=TRUE)
       indices = indices[1:(nrow(indices)-na_counter),]
       cat(paste("f", indices[,1], indices[,2], indices[,3]), 
@@ -278,7 +283,7 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1) {
       }
       baseindices = matrix(vertex_info$startindex[row]:vertex_info$endindex[row], ncol=3, byrow=TRUE)
       if(vertex_info$endindexnormals[row] > vertex_info$startindexnormals[row]) {
-        cat(paste("f", sprintf("%d//%d %d//%d %d//%d", baseindices[,1], baseindices[,1],
+        cat(paste("f", sprintf("%d/%d %d/%d %d/%d", baseindices[,1], baseindices[,1],
                                baseindices[,2], baseindices[,2], 
                                baseindices[,3], baseindices[,3])), 
             sep="\n", file=con)

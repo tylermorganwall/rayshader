@@ -8,9 +8,9 @@ add_overlay(
   hillshade,
   overlay,
   alphacolor = NULL,
-  alphalayer = 1,
   alphamethod = "max",
-  gamma_correction = TRUE
+  alphalayer = 1,
+  rescale_original = FALSE
 )
 }
 \arguments{
@@ -21,15 +21,15 @@ If the array is 3D, `alphacolor` should also be passed to indicate transparent r
 
 \item{alphacolor}{Default `NULL`. If `overlay` is a 3-layer array, this argument tells which color is interpretted as completely transparent.}
 
+\item{alphamethod}{Default `max`. Method for dealing with pre-existing transparency with `layeralpha`. 
+If `max`, converts all alpha levels higher than `layeralpha` to the value set in `layeralpha`. Otherwise,
+this just sets all transparency to `layeralpha`.}
+
 \item{alphalayer}{Default `1`. Defines minimum tranparaency of layer. If transparency already exists in `overlay`, the way `add_overlay` combines 
 the two is determined in argument `alphamethod`.}
 
-\item{alphamethod}{Default `max`. Method for dealing with pre-existing transparency with `layeralpha`. 
-If `max`, converts all alpha levels higher than `layeralpha` to the value set in `layeralpha`.
-If `multiply`, multiples all pre-existing alpha values with `layeralpha`.
-If `none`, keeps existing tranparencies and only changes opaque entries.}
-
-\item{gamma_correction}{Default `TRUE`. Controls gamma correction when adding colors. Default exponent of 2.2.}
+\item{rescale_original}{Default `FALSE`. If `TRUE`, `hillshade` will be scaled to match the dimensions of `overlay` (instead of
+the other way around).}
 }
 \value{
 Hillshade with overlay.
@@ -38,35 +38,19 @@ Hillshade with overlay.
 Overlays an image (with a transparency layer) on the current map.
 }
 \examples{
-#Here, we overlay a base R elevation plot with our raytraced shadow layer:
-
-fliplr = function(x) {
- x[,ncol(x):1]
-}
-\dontrun{
-tempfilename = tempfile()
-old.par = par(no.readonly = TRUE)
-on.exit(par(old.par))
-png(tempfilename,width = 401,height=401)
-par(mar = c(0,0,0,0))
-raster::image(fliplr(montereybay),axes = FALSE,col = rev(terrain.colors(1000)))
-dev.off()
-tempmap = png::readPNG(tempfilename)
-}
-
-\dontrun{
-montereybay \%>\%
-  ray_shade(zscale=50,maxsearch = 500,anglebreaks = seq(20,30,0.1)) \%>\%
-  add_overlay(tempmap,alphalayer = 0.5) \%>\%
-  plot_map()
-}
-
 #Combining base R plotting with rayshader's spherical color mapping and raytracing:
 \dontrun{
 montereybay \%>\%
   sphere_shade() \%>\%
-  add_overlay(tempmap,alphalayer = 0.4) \%>\%
-  add_shadow(ray_shade(montereybay,zscale=50,maxsearch = 500)) \%>\%
+  add_overlay(height_shade(montereybay),alphalayer = 0.6)  \%>\%
+  add_shadow(ray_shade(montereybay,zscale=50)) \%>\%
   plot_map()
 }
+
+#Add contours with `generate_contour_overlay()`
+montereybay \%>\%
+  height_shade() \%>\%
+  add_overlay(generate_contour_overlay(montereybay))  \%>\%
+  add_shadow(ray_shade(montereybay,zscale=50)) \%>\%
+  plot_map()
 }

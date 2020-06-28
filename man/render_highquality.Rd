@@ -39,6 +39,7 @@ render_highquality(
   camera_interpolate = 1,
   clear = FALSE,
   print_scene_info = FALSE,
+  clamp_value = 10,
   ...
 )
 }
@@ -122,7 +123,9 @@ and `camera_lookat` vectors.}
 
 \item{print_scene_info}{Default `FALSE`. If `TRUE`, it will print the position and lookat point of the camera.}
 
-\item{...}{Additional parameters to pass to rayrender::render_scene()}
+\item{clamp_value}{Default `10`. See documentation for `rayrender::render_scene()`.}
+
+\item{...}{Additional parameters to pass to `rayrender::render_scene`()}
 }
 \description{
 Renders a raytraced version of the displayed rgl scene, using the `rayrender` package. 
@@ -138,25 +141,25 @@ volcano \%>\%
 render_highquality()
 }
 
-#Change position of light (clamp_value prevents small white rendering artifacts called fireflies)
+#Change position of light
 \donttest{
-render_highquality(lightdirection = 45,clamp_value=10)
+render_highquality(lightdirection = 45)
 }
 
 #Change vertical position of light
 \donttest{
-render_highquality(lightdirection = 45, lightaltitude=10, clamp_value=10)
+render_highquality(lightdirection = 45, lightaltitude=10)
 }
 
 #Change the ground material
 \donttest{
-render_highquality(lightdirection = 45, lightaltitude=60, clamp_value=10,
+render_highquality(lightdirection = 45, lightaltitude=60,
                   ground_material = rayrender::diffuse(checkerperiod = 30, checkercolor="grey50"))
 }
 
 #Add three different color lights and a title
 \donttest{
-render_highquality(lightdirection = c(0,120,240), lightaltitude=45, clamp_value=10,
+render_highquality(lightdirection = c(0,120,240), lightaltitude=45,
                   lightcolor=c("red","green","blue"), title_text = "Red, Green, Blue",
                   title_bar_color="white", title_bar_alpha=0.8)
 }
@@ -164,14 +167,14 @@ render_highquality(lightdirection = c(0,120,240), lightaltitude=45, clamp_value=
 #Change the camera:
 \donttest{
 render_camera(theta=-45,phi=60,fov=60,zoom=0.8)
-render_highquality(lightdirection = c(0), clamp_value=10,
+render_highquality(lightdirection = c(0),
                   title_bar_color="white", title_bar_alpha=0.8)
 }
 #Add a shiny metal sphere
 \donttest{
 render_camera(theta=-45,phi=60,fov=60,zoom=0.8)
 render_highquality(lightdirection = c(0,120,240), lightaltitude=45, 
-                  lightcolor=c("red","green","blue"), clamp_value=10,
+                  lightcolor=c("red","green","blue"),
                   scene_elements = rayrender::sphere(z=-60,y=0,
                                                      radius=20,material=rayrender::metal()))
 }
@@ -180,7 +183,7 @@ render_highquality(lightdirection = c(0,120,240), lightaltitude=45,
 \donttest{
 render_camera(theta=45,phi=45)
 render_highquality(lightdirection = c(240), lightaltitude=30, 
-                  lightcolor=c("#5555ff"), clamp_value=10,
+                  lightcolor=c("#5555ff"),
                   scene_elements = rayrender::sphere(z=0,y=15, x=-18, radius=5,
                                    material=rayrender::light(color="red",intensity=10)))
 }
@@ -188,7 +191,7 @@ render_highquality(lightdirection = c(240), lightaltitude=30,
 \donttest{
 render_camera(theta=45,phi=45,fov=90)
 render_highquality(lightdirection = c(240), lightaltitude=30, lightcolor=c("#5555ff"), 
-                  camera_location = c(50,10,10), camera_lookat = c(0,15,0), clamp_value=10,
+                  camera_location = c(50,10,10), camera_lookat = c(0,15,0),
                   scene_elements = rayrender::sphere(z=0,y=15, x=-18, radius=5,
                                    material=rayrender::light(color="red",intensity=10)))
 rgl::rgl.close()

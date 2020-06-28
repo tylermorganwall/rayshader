@@ -49,7 +49,8 @@
 #'@param scene_elements Default `NULL`. Extra scene elements to add to the scene, created with rayrender.
 #'@param clear Default `FALSE`. If `TRUE`, the current `rgl` device will be cleared.
 #'@param print_scene_info Default `FALSE`. If `TRUE`, it will print the position and lookat point of the camera.
-#'@param ... Additional parameters to pass to rayrender::render_scene()
+#'@param clamp_value Default `10`. See documentation for `rayrender::render_scene()`.
+#'@param ... Additional parameters to pass to `rayrender::render_scene`()
 #'@export
 #'@examples
 #'#Render the volcano dataset using pathtracing
@@ -60,25 +61,25 @@
 #'render_highquality()
 #'}
 #'
-#'#Change position of light (clamp_value prevents small white rendering artifacts called fireflies)
+#'#Change position of light
 #'\donttest{
-#'render_highquality(lightdirection = 45,clamp_value=10)
+#'render_highquality(lightdirection = 45)
 #'}
 #'
 #'#Change vertical position of light
 #'\donttest{
-#'render_highquality(lightdirection = 45, lightaltitude=10, clamp_value=10)
+#'render_highquality(lightdirection = 45, lightaltitude=10)
 #'}
 #'
 #'#Change the ground material
 #'\donttest{
-#'render_highquality(lightdirection = 45, lightaltitude=60, clamp_value=10,
+#'render_highquality(lightdirection = 45, lightaltitude=60,
 #'                   ground_material = rayrender::diffuse(checkerperiod = 30, checkercolor="grey50"))
 #'}
 #'
 #'#Add three different color lights and a title
 #'\donttest{
-#'render_highquality(lightdirection = c(0,120,240), lightaltitude=45, clamp_value=10,
+#'render_highquality(lightdirection = c(0,120,240), lightaltitude=45,
 #'                   lightcolor=c("red","green","blue"), title_text = "Red, Green, Blue",
 #'                   title_bar_color="white", title_bar_alpha=0.8)
 #'}
@@ -86,14 +87,14 @@
 #'#Change the camera:
 #'\donttest{
 #'render_camera(theta=-45,phi=60,fov=60,zoom=0.8)
-#'render_highquality(lightdirection = c(0), clamp_value=10,
+#'render_highquality(lightdirection = c(0),
 #'                   title_bar_color="white", title_bar_alpha=0.8)
 #'}
 #'#Add a shiny metal sphere
 #'\donttest{
 #'render_camera(theta=-45,phi=60,fov=60,zoom=0.8)
 #'render_highquality(lightdirection = c(0,120,240), lightaltitude=45, 
-#'                   lightcolor=c("red","green","blue"), clamp_value=10,
+#'                   lightcolor=c("red","green","blue"),
 #'                   scene_elements = rayrender::sphere(z=-60,y=0,
 #'                                                      radius=20,material=rayrender::metal()))
 #'}
@@ -102,7 +103,7 @@
 #'\donttest{
 #'render_camera(theta=45,phi=45)
 #'render_highquality(lightdirection = c(240), lightaltitude=30, 
-#'                   lightcolor=c("#5555ff"), clamp_value=10,
+#'                   lightcolor=c("#5555ff"),
 #'                   scene_elements = rayrender::sphere(z=0,y=15, x=-18, radius=5,
 #'                                    material=rayrender::light(color="red",intensity=10)))
 #'}
@@ -110,7 +111,7 @@
 #'\donttest{
 #'render_camera(theta=45,phi=45,fov=90)
 #'render_highquality(lightdirection = c(240), lightaltitude=30, lightcolor=c("#5555ff"), 
-#'                   camera_location = c(50,10,10), camera_lookat = c(0,15,0), clamp_value=10,
+#'                   camera_location = c(50,10,10), camera_lookat = c(0,15,0),
 #'                   scene_elements = rayrender::sphere(z=0,y=15, x=-18, radius=5,
 #'                                    material=rayrender::light(color="red",intensity=10)))
 #'rgl::rgl.close()
@@ -127,7 +128,7 @@ render_highquality = function(filename = NULL, light = TRUE, lightdirection = 31
                               ground_material = rayrender::diffuse(), ground_size=100000,scene_elements=NULL, 
                               camera_location = NULL, camera_lookat = c(0,0,0), 
                               camera_interpolate=1, clear  = FALSE, 
-                              print_scene_info = FALSE, ...) {
+                              print_scene_info = FALSE, clamp_value = 10, ...) {
   if(rgl::rgl.cur() == 0) {
     stop("No rgl window currently open.")
   }
@@ -454,42 +455,25 @@ render_highquality = function(filename = NULL, light = TRUE, lightdirection = 31
   if(has_title) {
     temp = tempfile(fileext = ".png")
     rayrender::render_scene(scene, lookfrom = lookfrom, lookat = camera_lookat, fov = fov, filename=temp,
-                 ortho_dimensions = ortho_dimensions, width = width, height = height, ...)
+                 ortho_dimensions = ortho_dimensions, width = width, height = height, 
+                 clamp_value = clamp_value, ...)
     if(has_title) {
-      if(!("magick" %in% rownames(utils::installed.packages()))) {
-        stop("`magick` package required for adding title")
-      }
-      if(!is.null(title_bar_color)) {
-        title_bar_color = col2rgb(title_bar_color)/255
-        title_bar = array(0,c(width,height,4))
-        title_bar_width = 2 * title_offset[1] + title_size
-        title_bar[1:title_bar_width,,1] = title_bar_color[1]
-        title_bar[1:title_bar_width,,2] = title_bar_color[2]
-        title_bar[1:title_bar_width,,3] = title_bar_color[3]
-        title_bar[1:title_bar_width,,4] = title_bar_alpha
-        title_bar_temp = paste0(tempfile(),".png")
-        png::writePNG(title_bar,title_bar_temp)
-        magick::image_read(temp) %>%
-          magick::image_composite(magick::image_read(title_bar_temp),
-          ) %>%
-          magick::image_write(path = temp, format = "png")
-      }
-      magick::image_read(temp) %>%
-        magick::image_annotate(title_text, 
-                               location = paste0("+", title_offset[1],"+",title_offset[2]),
-                               size = title_size, color = title_color, 
-                               font = title_font) %>%
-        magick::image_write(path = temp, format = "png")
-      tempfileload = png::readPNG(temp)
       if(is.null(filename)) {
-        plot_map(tempfileload)
+        rayimage::add_title(temp, title_text = title_text, title_color = title_color, 
+                            title_font = title_font, title_offset = title_offset, 
+                            title_bar_alpha =  title_bar_alpha, title_bar_color = title_bar_color,
+                            title_size = title_size, preview = TRUE)
       } else {
-        save_png(tempfileload,filename)
+        rayimage::add_title(temp, title_text = title_text, title_color = title_color, 
+                            title_font = title_font, title_offset = title_offset, 
+                            title_bar_alpha =  title_bar_alpha, title_bar_color = title_bar_color,
+                            title_size = title_size, filename = filename)
       }
     }
   } else {
     rayrender::render_scene(scene, lookfrom = lookfrom, lookat = camera_lookat, fov = fov, filename=filename,
-                 ortho_dimensions = ortho_dimensions, width = width, height = height, ...)
+                 ortho_dimensions = ortho_dimensions, width = width, height = height, 
+                 clamp_value = clamp_value, ...)
   }
   if(clear) {
     rgl::rgl.clear()

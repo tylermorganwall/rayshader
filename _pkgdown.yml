@@ -8,15 +8,13 @@ reference:
     desc: "Functions for generating hillshades from elevation matrices"
     contents: 
       - ends_with("shade")
-      - starts_with("calculate")
       - starts_with("create")
-      - starts_with("raster")
-      - starts_with("reduce")
   - title: "Adding Shadows and Overlays to Maps"
     desc: "Functions for detecting and adding layers to maps."
     contents:
       - starts_with("add")
       - starts_with("detect")
+      - starts_with("generate")
   - title: "Plotting and Saving 2D and 3D Visualizations"
     desc: "Functions for displaying/saving 2D visualizations and 3D prints"
     contents:
@@ -26,6 +24,12 @@ reference:
     desc: "Functions for adding features to 3D maps, rendering post-processing effects, and saving snapshots"
     contents:
       - starts_with("render")
+  - title: "Helper functions for manipulating rasters"
+    desc: "Helper functions to manipulate and simplify rasters."
+    contents:   
+      - starts_with("calculate")
+      - starts_with("raster")
+      - starts_with("reduce")
   - title: "Included Data"
     desc: "Elevation data included with rayshader"
     contents:

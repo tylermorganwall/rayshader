@@ -4,15 +4,18 @@
 \alias{add_shadow}
 \title{Add Shadow}
 \usage{
-add_shadow(hillshade, shadowmap, max_darken = 0.7)
+add_shadow(hillshade, shadowmap, max_darken = 0.7, rescale_original = FALSE)
 }
 \arguments{
 \item{hillshade}{A three-dimensional RGB array or 2D matrix of shadow intensities.}
 
 \item{shadowmap}{A matrix that incidates the intensity of the shadow at that point. 0 is full darkness, 1 is full light.}
 
-\item{max_darken}{Default 0.7. The lower limit for how much the image will be darkened. 0 is completely black,
+\item{max_darken}{Default `0.7`. The lower limit for how much the image will be darkened. 0 is completely black,
 1 means the shadow map will have no effect.}
+
+\item{rescale_original}{Default `FALSE`. If `TRUE`, `hillshade` will be scaled to match the dimensions of `shadowmap` (instead of
+the other way around).}
 }
 \value{
 Shaded texture map.
