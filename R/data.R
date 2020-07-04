@@ -22,3 +22,35 @@
 #' #attr(montereybay, "crs") = crs(monterey_cropped)
 #' #attr(montereybay, "rayshader_data") = TRUE
 "montereybay"
+
+#' California County Data Around Monterey Bay
+#'
+#' This dataset is an `sf` object containing polygon data from the U.S. Department of Commerce
+#' with selected geographic and cartographic information from the U.S. Census Bureau's Master 
+#' Address File / Topologically Integrated Geographic Encoding and Referencing (MAF/TIGER) 
+#' Database (MTDB). This data has been trimmed to only include 26 features in the extent of
+#' the `montereybay` dataset.
+#'
+#' @format An `sf` object with MULTIPOLYGON geometry.
+#' @source \url{https://catalog.data.gov/dataset/tiger-line-shapefile-2016-state-california-current-county-subdivision-state-based}
+#' @examples 
+#' # This is the full code (commented out) used to generate this dataset from the original data:
+#' #counties = sf::st_read("tl_2016_06_cousub.shp")
+#' #monterey_counties_sf = sf::st_crop(counties, attr(montereybay,"extent"))
+"monterey_counties_sf"
+
+
+#' Road Data Around Monterey Bay
+#'
+#' This dataset is an `sf` object containing line data from the U.S. Department of Commerce
+#' with selected roads, TIGER/Line Shapefile, 2015,  state, California, Primary and Secondary 
+#' Roads State-based Shapefile. This data has been trimmed to only include 330 features in the extent of
+#' the `montereybay` dataset.
+#'
+#' @format An `sf` object with LINESTRING geometry.
+#' @source \url{http://www2.census.gov/geo/tiger/TIGER2015/PRISECROADS/tl_2015_06_prisecroads.zip}
+#' @examples 
+#' # This is the full code (commented out) used to generate this dataset from the original data:
+#' #counties = sf::st_read("tl_2015_06_prisecroads.shp")
+#' #monterey_roads_sf = sf::st_crop(counties, attr(montereybay,"extent"))
+"monterey_roads_sf"
