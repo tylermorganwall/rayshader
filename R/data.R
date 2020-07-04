@@ -16,7 +16,7 @@
 #' #                 proj4string=sp::CRS("+proj=longlat +ellps=WGS84 +datum=WGS84"))
 #' #monterey_cropped = raster::crop(montbay,extent_latlong)
 #' #montbay_mat = raster_to_matrix(montbay_cropped)
-#' #montereybay = reduce_matrix_size(montbay_mat,0.05)
+#' #montereybay = resize_matrix(montbay_mat,0.05)
 #' #attr(montereybay, "extent") = extent_latlong
 #' #attr(montereybay, "crs") = crs(monterey_cropped)
 #' #attr(montereybay, "crs") = crs(monterey_cropped)

@@ -8,21 +8,36 @@
 #'e.g. 0.5 would halve the resolution for the width. 
 #'@param height Default `NULL`. Alternative to `scale` argument. The desired output width. If `height` is less than 1, it will be interpreted as a scaling factor--
 #'e.g. 0.5 would halve the resolution for the height.
+#'@param method Default `bilinear`. Method of interpolation. Alteratively `cubic`, which is slightly smoother, although
+#'current implementation slightly scales the image.
 #'@export
 #'@examples
 #'#Reduce the size of the monterey bay dataset by half
 #'
-#'montbaysmall = resize_matrix(montereybay, 0.5)
+#'\donttest{
+#'montbaysmall = resize_matrix(montereybay, scale=0.5)
 #'montbaysmall %>%
 #'  sphere_shade() %>%
 #'  plot_map()
 #'
 #'#Reduce the size of the monterey bay dataset from 401x401 to 100x100
-#'
 #'montbaysmall = resize_matrix(montereybay, width = 100, height = 100)
 #'montbaysmall %>%
 #'  sphere_shade() %>%
 #'  plot_map()
+#'  
+#'#Increase the size of the volcano dataset 3x
+#'volcanobig = resize_matrix(volcano, scale=3)
+#'volcanobig %>%
+#'  sphere_shade() %>%
+#'  plot_map()
+#'  
+#'#Increase the size of the volcano dataset 2x, using cubic interpolation
+#'volcanobig = resize_matrix(volcano, scale=3, method="cubic")
+#'volcanobig %>%
+#'  sphere_shade() %>%
+#'  plot_map()
+#'}
 resize_matrix = function(heightmap, scale=1, width=NULL, height=NULL, method = "bilinear") {
   currentdim = dim(heightmap)
   if(is.null(width) && is.null(height)) {
@@ -91,3 +106,22 @@ resize_matrix = function(heightmap, scale=1, width=NULL, height=NULL, method = "
   }
 }
 
+#' Reduce Matrix Size (deprecated)
+#'
+#' @param ... Arguments to pass to resize_matrix() function.
+#'
+#' @return Reduced matrix.
+#' @export
+#'
+#' @examples
+#' #Deprecated lambertian material. Will display a warning.
+#'\donttest{
+#'montbaysmall = reduce_matrix_size(montereybay, scale=0.5)
+#'montbaysmall %>%
+#'  sphere_shade() %>%
+#'  plot_map()
+#'}
+reduce_matrix_size = function(...) {
+  warning("reduce_matrix_size() deprecated--use resize_matrix() instead.")
+  resize_matrix(...)
+}
