@@ -49,6 +49,14 @@ make_baselines_cpp <- function(heightmap, na_matrix, waterdepth) {
     .Call(`_rayshader_make_baselines_cpp`, heightmap, na_matrix, waterdepth)
 }
 
+cubic_interpolate <- function(p0, p1, p2, p3, x) {
+    .Call(`_rayshader_cubic_interpolate`, p0, p1, p2, p3, x)
+}
+
+bicubic_interpolate <- function(p, x, y) {
+    .Call(`_rayshader_bicubic_interpolate`, p, x, y)
+}
+
 subsample <- function(circle, size) {
     .Call(`_rayshader_subsample`, circle, size)
 }
