@@ -38,7 +38,7 @@ montbaysmall \%>\%
  sphere_shade() \%>\%
  plot_map()
 
-#Reduce the size of the monterey bay dataset from 401x401 to 100x100
+#Reduce the size of the monterey bay dataset from 540x540 to 100x100
 montbaysmall = resize_matrix(montereybay, width = 100, height = 100)
 montbaysmall \%>\%
  sphere_shade() \%>\%
@@ -46,13 +46,13 @@ montbaysmall \%>\%
  
 #Increase the size of the volcano dataset 3x
 volcanobig = resize_matrix(volcano, scale=3)
-volcanobig \%>\%
+volcanobig \%>\% 
  sphere_shade() \%>\%
  plot_map()
  
 #Increase the size of the volcano dataset 2x, using cubic interpolation
 volcanobig = resize_matrix(volcano, scale=3, method="cubic")
-volcanobig \%>\%
+volcanobig \%>\% 
  sphere_shade() \%>\%
  plot_map()
 }

@@ -5,7 +5,8 @@
 #'@param hillshade Array (or matrix) of hillshade to be written.
 #'@param filename String with the filename. If `.png` is not at the end of the string, it will be appended automatically.
 #'@param rotate Default 0. Rotates the output. Possible values: 0, 90, 180, 270.
-#'@param dpi Default `NULL`. Optional DPI (dots per inch) specifying the resolution of the image.
+#'@param asp Default `1`. Aspect ratio of the resulting plot. Use `asp = 1/cospi(mean_latitude/180)` to rescale
+#'lat/long at higher latitudes to the correct the aspect ratio.
 #'@export
 #'@examples
 #'filename_map = tempfile()
@@ -20,7 +21,7 @@
 #'montereybay %>%
 #'  sphere_shade() %>%
 #'  save_png(filename_map,rotate=180)
-save_png = function(hillshade, filename, rotate = 0, dpi = NULL) {
+save_png = function(hillshade, filename, rotate = 0, asp = 1) {
   if(is.null(filename)) {
     stop("save_png requires a filename")
   }
@@ -41,7 +42,7 @@ save_png = function(hillshade, filename, rotate = 0, dpi = NULL) {
       }
     }
     final = array(t(hillshade[,ncol(hillshade):1]),dim=c(ncol(hillshade),nrow(hillshade),3))
-    png::writePNG(final,filename, dpi = dpi)
+    png::writePNG(final,filename, asp = asp, text=c("source"="rayshader"))
   } else {
     if(number_of_rots != 0) {
       newarray = hillshade
@@ -61,6 +62,17 @@ save_png = function(hillshade, filename, rotate = 0, dpi = NULL) {
         hillshade = newarrayt
       }
     }
-    png::writePNG(hillshade, filename, dpi = dpi)
+    if(asp != 1) {
+      dims = dim(hillshade)
+      dimensions = c(dims[1], dims[2] * 1/asp, 3)
+      temp_hillshade = array(0, dim = dimensions)
+      for(i in 1:3) {
+        temp_hillshade[,,i] = resize_matrix(hillshade[,,i], width = ncol(temp_hillshade), height=nrow(temp_hillshade))
+      }
+      temp_hillshade[temp_hillshade > 1] = 1
+      temp_hillshade[temp_hillshade < 0] = 0
+      hillshade = temp_hillshade
+    }
+    png::writePNG(hillshade, filename, text=c("source"="rayshader"))
   } 
 }

@@ -20,7 +20,7 @@
 #'  sphere_shade() %>%
 #'  plot_map()
 #'
-#'#Reduce the size of the monterey bay dataset from 401x401 to 100x100
+#'#Reduce the size of the monterey bay dataset from 540x540 to 100x100
 #'montbaysmall = resize_matrix(montereybay, width = 100, height = 100)
 #'montbaysmall %>%
 #'  sphere_shade() %>%
@@ -28,13 +28,13 @@
 #'  
 #'#Increase the size of the volcano dataset 3x
 #'volcanobig = resize_matrix(volcano, scale=3)
-#'volcanobig %>%
+#'volcanobig %>% 
 #'  sphere_shade() %>%
 #'  plot_map()
 #'  
 #'#Increase the size of the volcano dataset 2x, using cubic interpolation
 #'volcanobig = resize_matrix(volcano, scale=3, method="cubic")
-#'volcanobig %>%
+#'volcanobig %>% 
 #'  sphere_shade() %>%
 #'  plot_map()
 #'}
@@ -76,7 +76,6 @@ resize_matrix = function(heightmap, scale=1, width=NULL, height=NULL, method = "
     #Fraction amount between matrices
     fraction_height = scaled_height - index_height + 1
     fraction_width = scaled_width - index_width + 1 
-    vec_interp = Vectorize(bicubic_interpolate,"x")
     hmr = add_padding(add_padding(heightmap))
     for(i in seq_len(length(index_height)-1)) {
       for(j in seq_len(length(index_width)-1)) {

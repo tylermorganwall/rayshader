@@ -4,12 +4,15 @@
 \alias{plot_map}
 \title{Plot Map}
 \usage{
-plot_map(hillshade, rotate = 0, keep_user_par = FALSE, ...)
+plot_map(hillshade, rotate = 0, asp = 1, keep_user_par = FALSE, ...)
 }
 \arguments{
 \item{hillshade}{Hillshade to be plotted.}
 
 \item{rotate}{Default `0`. Rotates the output. Possible values: `0`, `90`, `180`, `270`.}
+
+\item{asp}{Default `1`. Aspect ratio of the resulting plot. Use `asp = 1/cospi(mean_latitude/180)` to rescale
+lat/long at higher latitudes to the correct the aspect ratio.}
 
 \item{keep_user_par}{Default `TRUE`. Whether to keep the user's `par()` settings. Set to `FALSE` if you 
 want to set up a multi-pane plot (e.g. set `par(mfrow)`).}
@@ -20,6 +23,27 @@ want to set up a multi-pane plot (e.g. set `par(mfrow)`).}
 Displays the map in the current device.
 }
 \examples{
-#Plotting a spherical texture map of the volcano dataset.
-plot_map(sphere_shade(volcano))
+#Plotting the Monterey Bay dataset with bathymetry data
+\donttest{
+water_palette = colorRampPalette(c("darkblue", "dodgerblue", "lightblue"))(200)
+bathy_hs = height_shade(montereybay, texture = water_palette)
+
+#Set everything below 0m to water palette
+montereybay \%>\%
+ sphere_shade(zscale=10) \%>\%
+ add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0))  \%>\%
+ add_shadow(ray_shade(montereybay,zscale=50),0.3) \%>\%
+ plot_map()
+
+#Correcting the aspect ratio for the latitude of Monterey Bay
+
+extent_mb = attr(montereybay,"extent")
+mean_latitude = mean(c(extent_mb@ymax,extent_mb@ymin))
+
+montereybay \%>\%
+ sphere_shade(zscale=10) \%>\%
+ add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0))  \%>\%
+ add_shadow(ray_shade(montereybay,zscale=50),0.3) \%>\%
+ plot_map(asp = 1/cospi(mean_latitude/180))
+}
 }

@@ -32,6 +32,7 @@ plot_3d(
   background = "white",
   windowsize = 600,
   precomputed_normals = NULL,
+  asp = 1,
   triangulate = FALSE,
   max_error = 0,
   max_tri = 0,
@@ -101,6 +102,9 @@ window does not currently work on macOS (tested on Mojave), but the size can sti
 
 \item{precomputed_normals}{Default `NULL`. Takes the output of `calculate_normals()` to save
 computing normals internally.}
+
+\item{asp}{Default `1`. Aspect ratio of the resulting plot. Use `asp = 1/cospi(mean_latitude/180)` to rescale
+lat/long at higher latitudes to the correct the aspect ratio.}
 
 \item{triangulate}{Default `FALSE`. Reduce the size of the 3D model by triangulating the height map.
 Set this to `TRUE` if generating the model is slow, or moving it is choppy. Will also reduce the size

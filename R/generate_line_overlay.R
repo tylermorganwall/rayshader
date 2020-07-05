@@ -53,6 +53,9 @@ generate_line_overlay = function(geometry, extent, heightmap = NULL,
   if(!("sf" %in% rownames(utils::installed.packages()))) {
     stop("{sf} package required for generate_line_overlay()")
   }
+  if(is.null(extent)) {
+    stop("`extent` must not be NULL")
+  }
   stopifnot(!is.null(heightmap) || (!is.na(width) && !is.na(height)))
   stopifnot(!missing(extent))
   stopifnot(!missing(geometry))
@@ -81,7 +84,7 @@ generate_line_overlay = function(geometry, extent, heightmap = NULL,
   grDevices::png(filename = tempoverlay, width = width, height = height, units="px",bg = "transparent")
   graphics::par(mar = c(0,0,0,0))
   graphics::plot(base::suppressWarnings(sf::st_geometry(sf_contours_cropped)), xlim = c(extent@xmin,extent@xmax), 
-                 ylim =  c(extent@ymin,extent@ymax), asp = 1,
+                 ylim =  c(extent@ymin,extent@ymax), asp=1,
                  xaxs = "i", yaxs = "i", lwd = widthvals, col = color)
   grDevices::dev.off() #resets par
   png::readPNG(tempoverlay)

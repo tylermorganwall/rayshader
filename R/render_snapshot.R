@@ -104,7 +104,6 @@ render_snapshot = function(filename, clear=FALSE,
                                   title_position = title_position,
                                   title_size = title_size, title_font = title_font)
   }
-  tempmap = png::readPNG(temp)
   if(missing(filename)) {
     plot_map(tempmap, keep_user_par = FALSE)
   } else {

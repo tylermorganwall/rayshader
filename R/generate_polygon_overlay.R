@@ -65,7 +65,10 @@ generate_polygon_overlay = function(geometry, extent, heightmap = NULL,
   if(!("sf" %in% rownames(utils::installed.packages()))) {
     stop("{sf} package required for generate_line_overlay()")
   }
-  stopifnot(!is.null(heightmap) || (is.na(width) && is.na(height)))
+  if(is.null(extent)) {
+    stop("`extent` must not be NULL")
+  }
+  stopifnot(!is.null(heightmap) || (!is.na(width) && !is.na(height)))
   stopifnot(!missing(extent))
   stopifnot(!missing(geometry))
   if(!inherits(geometry,"sf")) {
@@ -131,12 +134,14 @@ generate_polygon_overlay = function(geometry, extent, heightmap = NULL,
   graphics::par(mar = c(0,0,0,0))
   if(!transparent) {
     graphics::plot(sf::st_geometry(sf_contours_cropped), xlim = c(extent@xmin,extent@xmax),
-                   ylim =  c(extent@ymin,extent@ymax), asp = 1, lty = lty, border = NA,
+                   ylim =  c(extent@ymin,extent@ymax), 
+                   lty = lty, border = NA, asp = 1,
                    xaxs = "i", yaxs = "i", lwd = linewidth, col = fillvals)
   }
   if(!is.na(linewidth) && linewidth > 0) {
     graphics::plot(sf::st_geometry(sf_contours_cropped), xlim = c(extent@xmin,extent@xmax), 
-                   ylim =  c(extent@ymin,extent@ymax), asp = 1, lty = lty, add=!transparent,
+                   ylim =  c(extent@ymin,extent@ymax),
+                   lty = lty, add=!transparent, asp = 1,
                    xaxs = "i", yaxs = "i", lwd = linewidth, col = NA, border = linecolor)
   }
   grDevices::dev.off() #resets par

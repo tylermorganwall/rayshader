@@ -4,7 +4,7 @@
 \alias{save_png}
 \title{Save PNG}
 \usage{
-save_png(hillshade, filename, rotate = 0, dpi = NULL)
+save_png(hillshade, filename, rotate = 0, asp = 1)
 }
 \arguments{
 \item{hillshade}{Array (or matrix) of hillshade to be written.}
@@ -13,7 +13,8 @@ save_png(hillshade, filename, rotate = 0, dpi = NULL)
 
 \item{rotate}{Default 0. Rotates the output. Possible values: 0, 90, 180, 270.}
 
-\item{dpi}{Default `NULL`. Optional DPI (dots per inch) specifying the resolution of the image.}
+\item{asp}{Default `1`. Aspect ratio of the resulting plot. Use `asp = 1/cospi(mean_latitude/180)` to rescale
+lat/long at higher latitudes to the correct the aspect ratio.}
 }
 \description{
 Writes the hillshaded map to file.
