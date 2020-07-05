@@ -160,6 +160,34 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// cubic_interpolate
+double cubic_interpolate(double p0, double p1, double p2, double p3, double x);
+RcppExport SEXP _rayshader_cubic_interpolate(SEXP p0SEXP, SEXP p1SEXP, SEXP p2SEXP, SEXP p3SEXP, SEXP xSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type p0(p0SEXP);
+    Rcpp::traits::input_parameter< double >::type p1(p1SEXP);
+    Rcpp::traits::input_parameter< double >::type p2(p2SEXP);
+    Rcpp::traits::input_parameter< double >::type p3(p3SEXP);
+    Rcpp::traits::input_parameter< double >::type x(xSEXP);
+    rcpp_result_gen = Rcpp::wrap(cubic_interpolate(p0, p1, p2, p3, x));
+    return rcpp_result_gen;
+END_RCPP
+}
+// bicubic_interpolate
+double bicubic_interpolate(NumericMatrix p, double x, double y);
+RcppExport SEXP _rayshader_bicubic_interpolate(SEXP pSEXP, SEXP xSEXP, SEXP ySEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix >::type p(pSEXP);
+    Rcpp::traits::input_parameter< double >::type x(xSEXP);
+    Rcpp::traits::input_parameter< double >::type y(ySEXP);
+    rcpp_result_gen = Rcpp::wrap(bicubic_interpolate(p, x, y));
+    return rcpp_result_gen;
+END_RCPP
+}
 // subsample
 arma::mat subsample(arma::mat& circle, int size);
 RcppExport SEXP _rayshader_subsample(SEXP circleSEXP, SEXP sizeSEXP) {
@@ -305,6 +333,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_rayshader_make_water_cpp", (DL_FUNC) &_rayshader_make_water_cpp, 3},
     {"_rayshader_make_waterlines_cpp", (DL_FUNC) &_rayshader_make_waterlines_cpp, 3},
     {"_rayshader_make_baselines_cpp", (DL_FUNC) &_rayshader_make_baselines_cpp, 3},
+    {"_rayshader_cubic_interpolate", (DL_FUNC) &_rayshader_cubic_interpolate, 5},
+    {"_rayshader_bicubic_interpolate", (DL_FUNC) &_rayshader_bicubic_interpolate, 3},
     {"_rayshader_subsample", (DL_FUNC) &_rayshader_subsample, 2},
     {"_rayshader_subsample_rect", (DL_FUNC) &_rayshader_subsample_rect, 3},
     {"_rayshader_gen_circle_psf", (DL_FUNC) &_rayshader_gen_circle_psf, 1},

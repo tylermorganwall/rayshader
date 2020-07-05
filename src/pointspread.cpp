@@ -4,6 +4,24 @@
 using namespace Rcpp;
 
 // [[Rcpp::export]]
+double cubic_interpolate(double p0, double p1, double p2, double p3, double x) {
+  return(p1 + 0.5 * x*(p2 - p0 + 
+         x*(2.0*p0 - 5.0*p1 + 4.0*p2 - p3 + 
+         x*(3.0*(p1 - p2) + p3 - p0))));
+}
+
+// [[Rcpp::export]]
+double bicubic_interpolate(NumericMatrix p, double x, double y) {
+  double arr[4];
+  arr[0] = cubic_interpolate(p(0,0),p(0,1),p(0,2),p(0,3), y);
+  arr[1] = cubic_interpolate(p(1,0),p(1,1),p(1,2),p(1,3), y);
+  arr[2] = cubic_interpolate(p(2,0),p(2,1),p(2,2),p(2,3), y);
+  arr[3] = cubic_interpolate(p(3,0),p(3,1),p(3,2),p(3,3), y);
+  return(cubic_interpolate(arr[0], arr[1], arr[2], arr[3], x));
+}
+
+
+// [[Rcpp::export]]
 arma::mat subsample(arma::mat& circle, int size) {
   int binsize = circle.n_cols/size;
   arma::mat subsampled(size,size,arma::fill::zeros);
