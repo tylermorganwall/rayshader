@@ -4,17 +4,17 @@ pkgdown_sha: 2f40b4769ea9ad2312aa4cc93f27ab116461543b
 articles: []
 
 reference:
-  - title: "Creating Hillshades and Color Mappings"
-    desc: "Functions for generating hillshades from elevation matrices"
+  - title: "Creating Hillshades and Overlays"
+    desc: "Functions for generating hillshades and overlays"
     contents: 
       - ends_with("shade")
       - starts_with("create")
+      - starts_with("generate")
+      - starts_with("detect")
   - title: "Adding Shadows and Overlays to Maps"
-    desc: "Functions for detecting and adding layers to maps."
+    desc: "Functions adding layers to maps."
     contents:
       - starts_with("add")
-      - starts_with("detect")
-      - starts_with("generate")
   - title: "Plotting and Saving 2D and 3D Visualizations"
     desc: "Functions for displaying/saving 2D visualizations and 3D prints"
     contents:
@@ -29,11 +29,13 @@ reference:
     contents:   
       - starts_with("calculate")
       - starts_with("raster")
-      - starts_with("reduce")
+      - starts_with("resize")
   - title: "Included Data"
     desc: "Elevation data included with rayshader"
     contents:
       - "montereybay"
+      - "monterey_counties_sf"
+      - "monterey_roads_sf"
      
 navbar: 
   title: "rayshader"

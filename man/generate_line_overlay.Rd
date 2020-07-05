@@ -16,6 +16,8 @@ generate_line_overlay(
 )
 }
 \arguments{
+\item{geometry}{An `sf` object with LINESTRING geometry.}
+
 \item{extent}{A `raster::Extent` object with the bounding box for the height map used to generate the original map.}
 
 \item{heightmap}{Default `NULL`. The original height map. Pass this in to extract the dimensions of the resulting 
@@ -25,7 +27,7 @@ overlay automatically.}
 
 \item{height}{Default `NA`. Width of the resulting overlay. Default the same dimensions as height map.}
 
-\item{color}{Default `black`. Color.}
+\item{color}{Default `black`. Color of the lines.}
 
 \item{linewidth}{Default `1`. Line width.}
 
@@ -39,15 +41,36 @@ Semi-transparent overlay with contours.
 Calculates and returns an overlay of contour lines for the current height map.
 }
 \examples{
-#Add contours to the montereybay dataset
+#Add the included `sf` object with roads to the montereybay dataset
 \donttest{
 water_palette = colorRampPalette(c("darkblue", "dodgerblue", "lightblue"))(200)
 bathy_hs = height_shade(montereybay, texture = water_palette)
+montereybay \%>\% 
+ height_shade() \%>\%
+ add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0))  \%>\%
+ add_overlay(generate_line_overlay(monterey_roads_sf, 
+                                   attr(montereybay,"extent"), heightmap = montereybay))  \%>\%
+ add_shadow(ray_shade(montereybay,zscale=50),0.3) \%>\%
+ plot_map()
+ 
+#Change the line width, color, and transparency
 montereybay \%>\%
  height_shade() \%>\%
  add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0))  \%>\%
- add_overlay(generate_line_overlay(montbay$osm_lines, attr(montereybay,"extent"), heightmap=montereybay))  \%>\%
+ add_overlay(generate_line_overlay(monterey_roads_sf, linewidth=3, color="white",
+                                   attr(montereybay,"extent"), heightmap = montereybay),
+                                   alphalayer=0.8)  \%>\%
  add_shadow(ray_shade(montereybay,zscale=50),0.3) \%>\%
+ plot_map()
+ 
+#Manually specify the width and height to improve visual quality of the lines
+montereybay \%>\%
+ height_shade() \%>\%
+ add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0))  \%>\%
+ add_shadow(ray_shade(montereybay,zscale=50),0.3) \%>\%
+ add_overlay(generate_line_overlay(monterey_roads_sf, linewidth=3, color="white",
+                                   attr(montereybay,"extent"), width = 1080, height = 1080),
+                                   alphalayer=0.8)  \%>\%
  plot_map()
 }
 }

@@ -2,12 +2,13 @@
 #'
 #'@description Calculates and returns an overlay of contour lines for the current height map.
 #'
-#'@param heightmap A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All grid points are assumed to be evenly spaced.
+#'@param geometry An `sf` object with POLYGON geometry.
 #'@param extent A `raster::Extent` object with the bounding box for the height map used to generate the original map.
 #'@param heightmap Default `NULL`. The original height map. Pass this in to extract the dimensions of the resulting 
 #'overlay automatically.
 #'@param width Default `NA`. Width of the resulting overlay. Default the same dimensions as height map.
 #'@param height Default `NA`. Width of the resulting overlay. Default the same dimensions as height map.
+#'@param linecolor Default `black`. Color of the lines.
 #'@param palette Default `black`. Single color, named vector color palette, or palette function. 
 #'If this is a named vector and `data_column_fill` is not `NULL`, 
 #'it will map the colors in the vector to the names. If `data_column_fill` is a numeric column,
@@ -17,15 +18,45 @@
 #'@return Semi-transparent overlay with contours.
 #'@export
 #'@examples
-#'#Add contours to the montereybay dataset
+#'#Plot the counties around Monterey Bay, CA
 #'\donttest{
+#'generate_polygon_overlay(monterey_counties_sf, palette = rainbow, 
+#'                         extent = attr(montereybay,"extent"), heightmap = montereybay) %>%
+#'  plot_map() 
+#'
+#'#These counties include the water, so we'll plot bathymetry data over the polygon
+#'#data to only include parts of the polygon that fall on land.
 #'water_palette = colorRampPalette(c("darkblue", "dodgerblue", "lightblue"))(200)
 #'bathy_hs = height_shade(montereybay, texture = water_palette)
+#'
+#'generate_polygon_overlay(monterey_counties_sf, palette = rainbow, 
+#'                         extent = attr(montereybay,"extent"), heightmap = montereybay) %>%
+#'  add_overlay(generate_altitude_overlay(bathy_hs, montereybay, start_transition = 0)) %>%
+#'  plot_map()
+#'
+#'#Add a semi-transparent hillshade and change the palette, and remove the polygon lines
 #'montereybay %>%
-#'  height_shade() %>%
-#'  add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0))  %>%
-#'  add_overlay(generate_line_overlay(montbay$osm_lines, attr(montereybay,"extent"), heightmap=montereybay))  %>%
-#'  add_shadow(ray_shade(montereybay,zscale=50),0.3) %>%
+#'  sphere_shade(texture = "bw") %>%
+#'  add_overlay(generate_polygon_overlay(monterey_counties_sf, 
+#'                         palette = terrain.colors, linewidth=NA,
+#'                         extent = attr(montereybay,"extent"), heightmap = montereybay),
+#'                         alphalayer=0.7) %>%
+#'  add_overlay(generate_altitude_overlay(bathy_hs, montereybay, start_transition = 0)) %>%
+#'  add_shadow(ray_shade(montereybay,zscale=50),0) %>%
+#'  plot_map()
+#'
+#'#Map one of the variables in the sf object and use an explicitly defined color palette
+#'county_palette = c("087" = "red",    "053" = "blue",   "081" = "green", 
+#'                   "069" = "yellow", "085" = "orange", "099" = "purple") 
+#'montereybay %>%
+#'  sphere_shade(texture = "bw") %>%
+#'  add_shadow(ray_shade(montereybay,zscale=50),0) %>%
+#'  add_overlay(generate_polygon_overlay(monterey_counties_sf, linecolor="white", linewidth=3,
+#'                         palette = county_palette, data_column_fill = "COUNTYFP",
+#'                         extent = attr(montereybay,"extent"), heightmap = montereybay),
+#'                         alphalayer=0.7) %>%
+#'  add_overlay(generate_altitude_overlay(bathy_hs, montereybay, start_transition = 0)) %>%
+#'  add_shadow(ray_shade(montereybay,zscale=50),0.5) %>%
 #'  plot_map()
 #'}
 generate_polygon_overlay = function(geometry, extent, heightmap = NULL, 
@@ -40,7 +71,7 @@ generate_polygon_overlay = function(geometry, extent, heightmap = NULL,
   if(!inherits(geometry,"sf")) {
     stop("geometry must be {sf} object")
   }
-  sf_contours_cropped = sf::st_crop(geometry, extent)
+  sf_contours_cropped = base::suppressMessages(base::suppressWarnings(sf::st_crop(geometry, extent)))
   
   if(is.na(height)) {
     height  = ncol(heightmap)
