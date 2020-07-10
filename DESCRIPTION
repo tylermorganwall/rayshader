@@ -33,5 +33,5 @@ Suggests: reshape2,
           isoband
 LinkingTo: Rcpp, progress, RcppArmadillo
 RoxygenNote: 7.1.0
-URL: https://github.com/tylermorganwall/rayshader
+URL: https://github.com/tylermorganwall/rayshader, https://www.rayshader.com/
 BugReports: https://github.com/tylermorganwall/rayshader/issues
