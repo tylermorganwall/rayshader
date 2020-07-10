@@ -312,6 +312,6 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
   if(asp != 1) {
     height_range = range(heightmap,na.rm=TRUE)/zscale
     height_scale = height_range[2]-height_range[1]
-    rgl::aspect3d(x = dim(heightmap)[1], y = height_scale, z = dim(heightmap)[2]*asp)
+    rgl::aspect3d(x = dim(heightmap)[1]/height_scale, y = 1, z = dim(heightmap)[2]*asp/height_scale)
   }
 }

@@ -157,6 +157,9 @@ render_highquality = function(filename = NULL, light = TRUE, lightdirection = 31
     }
     cache_filename = paste0(tempdir(), sepval, "temprayfile.obj")
   }
+  surfaceid = get_ids_with_labels(typeval = c("surface", "surface_tris"))
+  surfacevertices = rgl.attrib(surfaceid$id[1], "vertices")
+  surfacerange = range(surfacevertices[,2],na.rm=TRUE)
   shadowid = get_ids_with_labels(typeval = "shadow")
   if(nrow(shadowid) > 0) {
     shadowvertices = rgl.attrib(shadowid$id[1], "vertices")
@@ -171,6 +174,8 @@ render_highquality = function(filename = NULL, light = TRUE, lightdirection = 31
   rotmat = rot_to_euler(rgl::par3d()$userMatrix)
   projmat = rgl::par3d()$projMatrix
   zoom = rgl::par3d()$zoom
+  scalevals = rgl::par3d("scale")
+  
   phi = rotmat[1]
   if(0.001 > abs(abs(rotmat[3]) - 180)) {
     theta = -rotmat[2] + 180
@@ -187,6 +192,7 @@ render_highquality = function(filename = NULL, light = TRUE, lightdirection = 31
   movevec = movevec[1:3]
   observer_radius = rgl::par3d()$observer[3]
   lookvals = rgl::par3d()$bbox
+  lookvals[4] = surfacerange[2]
   if(fov == 0) {
     ortho_dimensions = c(2/projmat[1,1],2/projmat[2,2])
   } else {
@@ -407,6 +413,10 @@ render_highquality = function(filename = NULL, light = TRUE, lightdirection = 31
   if(has_shadow) {
     scene = rayrender::add_object(scene, rayrender::xz_rect(zwidth=ground_size,xwidth=ground_size,
                                                             y=shadowdepth-bbox_center[2], material = ground_material))
+  }
+  if(any(round(scalevals,4) != 1)) {
+    scene = rayrender::group_objects(scene, group_scale = scalevals, group_translate = scalevals*bbox_center,
+                                     pivot_point = bbox_center)
   }
   if(light) {
     if(is.null(lightsize)) {
