@@ -244,6 +244,11 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1) {
         cat("g Surface", file=con, sep ="\n")
         cat("usemtl ray_surface", file=con, sep ="\n")
       }
+      if(!is.na(vertex_info$startindexnormals[row]) && !is.na(vertex_info$endindexnormals[row])) {
+        hasnormals = vertex_info$startindexnormals[row] < vertex_info$endindexnormals[row]
+      } else {
+        hasnormals = FALSE
+      }
       indices = vertex_info$startindextex[row]:vertex_info$endindex[row]
       indices = sprintf("%d/%d", indices, indices)
       indices = matrix(indices, ncol=3, byrow=TRUE)
