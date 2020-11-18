@@ -262,25 +262,25 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
     tris = terrainmeshr::triangulate_matrix(heightmap, maxError = max_error, 
                                             maxTriangles = max_tri, start_index = 0, 
                                             verbose = verbose)
-    if(!precomputed) {
-      normals = calculate_normal(heightmap,zscale=zscale)
-    }
-    normalsx = as.vector(t(flipud(normals$x[c(-1,-nrow(normals$x)),c(-1,-ncol(normals$x))])))
-    normalsy = as.vector(t(flipud(normals$z[c(-1,-nrow(normals$z)),c(-1,-ncol(normals$z))])))
-    normalsz = as.vector(t(flipud(normals$y[c(-1,-nrow(normals$y)),c(-1,-ncol(normals$y))])))
+    # if(!precomputed) {
+    #   normals = calculate_normal(heightmap,zscale=zscale)
+    # }
+    # normalsx = as.vector(t(flipud(normals$x[c(-1,-nrow(normals$x)),c(-1,-ncol(normals$x))])))
+    # normalsy = as.vector(t(flipud(normals$z[c(-1,-nrow(normals$z)),c(-1,-ncol(normals$z))])))
+    # normalsz = as.vector(t(flipud(normals$y[c(-1,-nrow(normals$y)),c(-1,-ncol(normals$y))])))
     tris[,2] =  tris[,2]/zscale
     nr = nrow(heightmap)
     nc = ncol(heightmap)
     rn = tris[,1]+1
     cn = tris[,3]+1
-    normals = matrix(c(normalsx[rn + nr*cn],normalsy[rn + nr*cn],normalsz[rn + nr*cn]),ncol=3)
+    # normal_comp = matrix(c(normalsz[rn + nr*(cn-1)],normalsy[rn + nr*(cn-1)],-normalsx[rn + nr*(cn-1)]),ncol=3)
     texcoords = tris[,c(1,3)]
     texcoords[,1] = texcoords[,1]/nrow(heightmap)
     texcoords[,2] = texcoords[,2]/ncol(heightmap)
     tris[,1] = tris[,1] - nrow(heightmap)/2 +1
     tris[,3] = tris[,3] - ncol(heightmap)/2
     tris[,3] = -tris[,3]
-    rgl.triangles(tris, texcoords = texcoords, normals = normals,
+    rgl.triangles(tris, texcoords = texcoords, #normals = normal_comp,
                   texture=paste0(tempmap,".png"),lit=FALSE,ambient = "#000017")
   }
   bg3d(color = background,texture=NULL)

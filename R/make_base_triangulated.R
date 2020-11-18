@@ -20,10 +20,10 @@ make_base_triangulated = function(tris, basedepth=0,basecolor="grey20") {
                                tris[,3] == edge_col_min),])
   edge_verts = list()
   counter = 1
-  edge_verts[[counter]] = matrix(c(edge_row_max, edge_row_max, edge_row_min, basedepth,basedepth,basedepth,edge_col_min, edge_col_max,edge_col_min),3,3)
-  counter = counter + 1
-  edge_verts[[counter]] = matrix(c(edge_row_min, edge_row_max,edge_row_min,basedepth,basedepth,basedepth, edge_col_min, edge_col_max,edge_col_max),3,3)
-  counter = counter + 1
+  # edge_verts[[counter]] = matrix(c(edge_row_max, edge_row_max, edge_row_min, basedepth,basedepth,basedepth,edge_col_min, edge_col_max,edge_col_min),3,3)
+  # counter = counter + 1
+  # edge_verts[[counter]] = matrix(c(edge_row_min, edge_row_max,edge_row_min,basedepth,basedepth,basedepth, edge_col_min, edge_col_max,edge_col_max),3,3)
+  # counter = counter + 1
   # normallist[[1]]= matrix(c(0,0,0,-1,-1,-1,0,0,0),3,3)
   # normallist[[2]]= matrix(c(0,0,0,-1,-1,-1,0,0,0),3,3)
   side_r_min = just_edge_verts[just_edge_verts[,1] == edge_row_min,]
@@ -65,4 +65,28 @@ make_base_triangulated = function(tris, basedepth=0,basecolor="grey20") {
   fullsides = do.call(rbind,edge_verts)
   rgl::triangles3d(fullsides, #normals = fullnormals,
                    lit=FALSE,color=basecolor,front="filled",back="culled",ambient = "#000002")
+  
+  base_entries = unique(fullsides[fullsides[,2] == basedepth,])
+  base_entries_up = base_entries[base_entries[,1] == edge_row_max | base_entries[,1] == edge_row_min, ]
+  base_entries_up = base_entries_up[order(base_entries_up[,1],base_entries_up[,3]),]
+  base_entries_up1 = base_entries_up[base_entries_up[,1] == edge_row_min,]
+  base_entries_up1 = base_entries_up1[nrow(base_entries_up1):1,]
+  base_entries_up2 = base_entries_up[base_entries_up[,1] == edge_row_max,]
+  
+  base_entries_side = base_entries[base_entries[,3] == edge_col_max | base_entries[,3] == edge_col_min, ]
+  base_entries_side = base_entries_side[order(base_entries_side[,3],base_entries_side[,1]),]
+  base_entries_side1 = base_entries_side[base_entries_side[,3] == edge_col_min,]
+  base_entries_side2 = base_entries_side[base_entries_side[,3] == edge_col_max,]
+  base_entries_side2 = base_entries_side2[nrow(base_entries_side2):1,]
+  edges = unique(do.call(rbind,list(base_entries_up1,base_entries_side1,base_entries_up2, base_entries_side2)))
+  edges = rbind(edges,edges[1,])
+  full_bottom_final = list()
+  counter = 1
+  center = c(0,basedepth,0)
+  for(i in 1:(nrow(edges)-1)) {
+    full_bottom_final[[counter]] = matrix(c(edges[i,],edges[i+1,],center), 3,3,byrow=TRUE)
+    counter = counter + 1
+  }
+  bottom_tris = do.call(rbind,full_bottom_final)
+  rgl::triangles3d(bottom_tris, lit=FALSE,color=basecolor,front="filled",back="culled",ambient = "#000002")
 }
