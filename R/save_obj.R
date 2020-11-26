@@ -155,6 +155,12 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
       cat(paste("Kd", sprintf("%1.4f %1.4f %1.4f",tempcol[1],tempcol[2],tempcol[3]),collapse = " "), file=con, sep="\n")
       cat(paste("Ka", sprintf("%1.4f %1.4f %1.4f",tempcol[1],tempcol[2],tempcol[3]),collapse = " "), file=con, sep="\n")
       cat("\n", file=con)
+    } else if (!is.na(idrow$tricolor[[1]])) {
+      tempcol = col2rgb(idrow$tricolor[[1]])/256
+      cat(paste("newmtl ray_polygon3d"), file=con, sep="\n")
+      cat(paste("Kd", sprintf("%1.4f %1.4f %1.4f",tempcol[1],tempcol[2],tempcol[3]),collapse = " "), file=con, sep="\n")
+      cat(paste("Ka", sprintf("%1.4f %1.4f %1.4f",tempcol[1],tempcol[2],tempcol[3]),collapse = " "), file=con, sep="\n")
+      cat("\n", file=con)
     }
   }
   write_comment = function(comment, con) {
@@ -185,7 +191,7 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
     if(vertex_info$raytype[row] %in% c("surface","base","basebottom","water",
                                        "north_symbol","arrow_symbol", "bevel_symbol",
                                        "background_symbol", "scalebar_col1", "scalebar_col2",
-                                       "surface_tris")) {
+                                       "surface_tris","polygon3d")) {
       vertex_info$startindex[row] = number_vertices + 1
       vertex_info$startindextex[row] = number_texcoords + 1
       vertex_info$startindexnormals[row] = number_normals + 1
@@ -441,6 +447,14 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
         cat(paste("f", baseindices[,1], baseindices[,2], baseindices[,3]), 
             sep="\n", file=con)
       }
+    } else if (vertex_info$raytype[row] == "polygon3d") {
+      if(save_texture) {
+        cat("g Polygon", file=con, sep ="\n")
+        cat("usemtl ray_polygon3d", file=con, sep ="\n")
+      }
+      baseindices = matrix(vertex_info$startindex[row]:vertex_info$endindex[row], ncol=3, byrow=TRUE)
+      cat(paste("f", baseindices[,1], baseindices[,2], baseindices[,3]), 
+          sep="\n", file=con)
     }
   }
   if(manifold_geometry) {

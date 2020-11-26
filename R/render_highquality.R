@@ -128,7 +128,7 @@ render_highquality = function(filename = NULL, light = TRUE, lightdirection = 31
                               title_color = "black", title_size = 30, title_font = "sans",
                               title_bar_color = NULL, title_bar_alpha = 0.5,
                               ground_material = rayrender::diffuse(), ground_size=100000,scene_elements=NULL, 
-                              camera_location = NULL, camera_lookat = c(0,0,0), 
+                              camera_location = NULL, camera_lookat = NULL, 
                               camera_interpolate=1, clear  = FALSE, 
                               print_scene_info = FALSE, clamp_value = 10, ...) {
   if(rgl::rgl.cur() == 0) {
@@ -161,7 +161,44 @@ render_highquality = function(filename = NULL, light = TRUE, lightdirection = 31
   }
   surfaceid = get_ids_with_labels(typeval = c("surface", "surface_tris"))
   surfacevertices = rgl.attrib(surfaceid$id[1], "vertices")
+  polygonid = get_ids_with_labels(typeval = c("polygon3d"))
+  baseid = get_ids_with_labels(typeval = c("base"))
+  if(nrow(polygonid) > 0) {
+    polyrange = c()
+    polyrange_x = c()
+    polyrange_z = c()
+    for(i in seq_len(nrow(polygonid))) {
+      tempverts = range(rgl.attrib(polygonid$id[i], "vertices")[,2])
+      tempverts_x = range(rgl.attrib(polygonid$id[i], "vertices")[,1])
+      tempverts_z = range(rgl.attrib(polygonid$id[i], "vertices")[,3])
+      
+      if(all(!is.na(tempverts))) {
+        polyrange = range(c(tempverts,polyrange))
+      }
+      if(all(!is.na(tempverts_x))) {
+        polyrange_x = range(c(tempverts_x,polyrange_x))
+      }
+      if(all(!is.na(tempverts_z))) {
+        polyrange_z = range(c(tempverts_z,polyrange_z))
+      }
+    }
+  }
+  if(nrow(baseid) > 0) {
+    baserange = c()
+    for(i in seq_len(nrow(baseid))) {
+      tempverts = range(rgl.attrib(baseid$id[i], "vertices")[,2])
+      if(all(!is.na(tempverts))) {
+        baserange = range(c(tempverts,baserange))
+      }
+    }
+  }
   surfacerange = range(surfacevertices[,2],na.rm=TRUE)
+  if(nrow(polygonid) > 0) {
+    surfacerange[2] = range(c(surfacerange,polyrange))[2]
+  }
+  if(nrow(baseid) > 0) {
+    surfacerange[2] = range(c(surfacerange,baserange))[2]
+  }
   shadowid = get_ids_with_labels(typeval = "shadow")
   if(nrow(shadowid) > 0) {
     shadowvertices = rgl.attrib(shadowid$id[1], "vertices")
@@ -191,6 +228,7 @@ render_highquality = function(filename = NULL, light = TRUE, lightdirection = 31
       rgl::rotationMatrix(-rotmat[1]*pi/180, 1, 0, 0) %*% 
       rgl::par3d()$userMatrix[,4]
   }
+  browser()
   movevec = movevec[1:3]
   observer_radius = rgl::par3d()$observer[3]
   lookvals = rgl::par3d()$bbox
@@ -202,9 +240,9 @@ render_highquality = function(filename = NULL, light = TRUE, lightdirection = 31
     ortho_dimensions = c(1,1)
   }
   bbox_center = c(mean(lookvals[1:2]),mean(lookvals[3:4]),mean(lookvals[5:6])) - movevec
-  observery = sinpi(phi/180) * observer_radius
-  observerx = cospi(phi/180) * sinpi(theta/180) * observer_radius 
-  observerz = cospi(phi/180) * cospi(theta/180) * observer_radius 
+  observery = sinpi(phi/180) * observer_radius + bbox_center[2]
+  observerx = cospi(phi/180) * sinpi(theta/180) * observer_radius + bbox_center[1]
+  observerz = cospi(phi/180) * cospi(theta/180) * observer_radius + bbox_center[3]
   if(is.null(camera_location)) {
     lookfrom = c(observerx, observery, observerz) 
   } else {
@@ -212,6 +250,12 @@ render_highquality = function(filename = NULL, light = TRUE, lightdirection = 31
   }
   if(length(camera_interpolate) == 1) {
     camera_interpolate = c(camera_interpolate,camera_interpolate)
+  }
+  if(is.null(camera_lookat)) {
+    #Broken on monterey examples (with water?)
+    # camera_lookat = bbox_center
+    
+    camera_lookat = c(0,0,0)
   }
   if(all(camera_interpolate != 1)) {
     if(!is.null(camera_location)) {
@@ -233,11 +277,15 @@ render_highquality = function(filename = NULL, light = TRUE, lightdirection = 31
     }
   }
   if(obj_material$type %in% c("diffuse","oren-nayar")) {
-    scene = rayrender::obj_model(cache_filename, x = -bbox_center[1], y = -bbox_center[2],
-                      z = -bbox_center[3], texture = TRUE,
-                      material = obj_material)
+    scene = rayrender::obj_model(cache_filename, 
+                      x = -bbox_center[1],
+                      y = -bbox_center[2],
+                      z = -bbox_center[3],
+                      texture = TRUE, material = obj_material)
   } else {
-    scene = rayrender::obj_model(cache_filename, x = -bbox_center[1], y = -bbox_center[2], 
+    scene = rayrender::obj_model(cache_filename, 
+                      x = -bbox_center[1],
+                      y = -bbox_center[2],
                       z = -bbox_center[3],
                       material = obj_material)
   }
@@ -425,7 +473,9 @@ render_highquality = function(filename = NULL, light = TRUE, lightdirection = 31
                                                             y=shadowdepth-bbox_center[2], material = ground_material))
   }
   if(any(round(scalevals,4) != 1)) {
-    scene = rayrender::group_objects(scene, group_scale = scalevals, group_translate = scalevals*bbox_center,
+    scene = rayrender::group_objects(scene, 
+                                     group_scale = scalevals, 
+                                     group_translate = scalevals*bbox_center,
                                      pivot_point = bbox_center)
   }
   if(light) {
@@ -466,8 +516,9 @@ render_highquality = function(filename = NULL, light = TRUE, lightdirection = 31
     }
   }
   if(print_scene_info) {
-    print(paste0(c("Camera position: c(", paste0(lookfrom,collapse=","), 
-                   "), Camera lookat: c(", paste0(camera_lookat,collapse=","), ")"),collapse=""))
+    dist_val = sqrt(sum((camera_lookat - lookfrom)^2))
+    print(sprintf("Camera position: c(%0.2f, %0.2f, %0.2f), Camera Lookat: c(%0.2f, %0.2f, %0.2f) Focal Distance: %0.2f",
+                  lookfrom[1],lookfrom[2],lookfrom[3], camera_lookat[1], camera_lookat[2], camera_lookat[3], dist_val))
   }
   if(!is.null(scene_elements)) {
     scene = rayrender::add_object(scene,scene_elements)
