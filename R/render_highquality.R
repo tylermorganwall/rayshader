@@ -228,7 +228,6 @@ render_highquality = function(filename = NULL, light = TRUE, lightdirection = 31
       rgl::rotationMatrix(-rotmat[1]*pi/180, 1, 0, 0) %*% 
       rgl::par3d()$userMatrix[,4]
   }
-  browser()
   movevec = movevec[1:3]
   observer_radius = rgl::par3d()$observer[3]
   lookvals = rgl::par3d()$bbox
@@ -240,9 +239,9 @@ render_highquality = function(filename = NULL, light = TRUE, lightdirection = 31
     ortho_dimensions = c(1,1)
   }
   bbox_center = c(mean(lookvals[1:2]),mean(lookvals[3:4]),mean(lookvals[5:6])) - movevec
-  observery = sinpi(phi/180) * observer_radius + bbox_center[2]
-  observerx = cospi(phi/180) * sinpi(theta/180) * observer_radius + bbox_center[1]
-  observerz = cospi(phi/180) * cospi(theta/180) * observer_radius + bbox_center[3]
+  observery = sinpi(phi/180) * observer_radius
+  observerx = cospi(phi/180) * sinpi(theta/180) * observer_radius
+  observerz = cospi(phi/180) * cospi(theta/180) * observer_radius
   if(is.null(camera_location)) {
     lookfrom = c(observerx, observery, observerz) 
   } else {
@@ -252,9 +251,6 @@ render_highquality = function(filename = NULL, light = TRUE, lightdirection = 31
     camera_interpolate = c(camera_interpolate,camera_interpolate)
   }
   if(is.null(camera_lookat)) {
-    #Broken on monterey examples (with water?)
-    # camera_lookat = bbox_center
-    
     camera_lookat = c(0,0,0)
   }
   if(all(camera_interpolate != 1)) {
@@ -475,8 +471,7 @@ render_highquality = function(filename = NULL, light = TRUE, lightdirection = 31
   if(any(round(scalevals,4) != 1)) {
     scene = rayrender::group_objects(scene, 
                                      group_scale = scalevals, 
-                                     group_translate = scalevals*bbox_center,
-                                     pivot_point = bbox_center)
+                                     pivot_point = c(0,0,0))
   }
   if(light) {
     if(is.null(lightsize)) {
