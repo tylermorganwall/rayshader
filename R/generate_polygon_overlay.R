@@ -1,6 +1,6 @@
 #'@title Generate Polygon Overlay
 #'
-#'@description Calculates and returns an overlay of contour lines for the current height map.
+#'@description Transforms an input `sf` object into an image overlay for the current height map.
 #'
 #'@param geometry An `sf` object with POLYGON geometry.
 #'@param extent A `raster::Extent` object with the bounding box for the height map used to generate the original map.
@@ -14,8 +14,8 @@
 #'it will map the colors in the vector to the names. If `data_column_fill` is a numeric column,
 #'this will give a continuous mapping.
 #'@param linewidth Default `1`. Line width.
-#'@param data_column_fill Default `NULL`. The column to map the polygon fill color. If numeric
-#'@return Semi-transparent overlay with contours.
+#'@param data_column_fill Default `NULL`. The column to map the polygon fill color to.
+#'@return Image overlay representing the input polygon data.
 #'@export
 #'@examples
 #'#Plot the counties around Monterey Bay, CA
