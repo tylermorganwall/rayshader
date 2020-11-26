@@ -5,6 +5,8 @@
 #'@param filename String with the filename. If `.obj` is not at the end of the string, it will be appended automatically.
 #'@param save_texture Default `TRUE`. If the texture should be saved along with the geometry.
 #'@param water_index_refraction Default `1`. The index of refraction for the rendered water.
+#'@param manifold_geometry Default `FALSE`. If `TRUE`, this will take the additional step of making the mesh manifold.
+#'@param all_face_fields Default `FALSE`. If `TRUE`, all OBJ face fields (v/vn/vt) will always be written.
 #'@export
 #'@examples
 #'filename_obj = tempfile(fileext = ".obj")
@@ -33,7 +35,8 @@
 #'save_obj(filename_obj, water_index_refraction = 1.5)
 #'rgl::rgl.close()
 #'}
-save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1) {
+save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1, 
+                    manifold_geometry = FALSE, all_face_fields = FALSE) {
   if(is.null(filename)) {
     stop("save_obj requires a filename")
   }
@@ -81,6 +84,7 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1) {
     # allvertices <<- rbind(allvertices,vertices) #Debug line
     textures = rgl.attrib(id, "texcoords")
     normals = rgl.attrib(id, "normals")
+    # has_degenerate_normals = any(normals[,1] == 0 & normals[,2] == 0 & normals[,3] == 0)
     cat(paste0("v ", sprintf("%1.6f %1.6f %1.6f",vertices[,1], vertices[,2], vertices[,3])), file=con, sep = "\n")
     number_vertices <<- number_vertices + nrow(vertices)
     if (nrow(textures) > 0) {
@@ -88,6 +92,7 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1) {
       number_texcoords <<- number_texcoords + nrow(textures)
     }
     if (nrow(normals) > 0) {
+      
       cat(paste0("vn ",sprintf("%1.6f %1.6f %1.6f", normals[,1], normals[,2], normals[,3])), file=con, sep = "\n" )
       number_normals <<- number_normals + nrow(normals)
     }
@@ -152,6 +157,9 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1) {
       cat("\n", file=con)
     }
   }
+  write_comment = function(comment, con) {
+    cat(comment, file=con)
+  }
   
   string_num = function(n) {
     sprintf("%d", n)
@@ -171,7 +179,7 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1) {
   vertex_info$endindextex = NA
   vertex_info$endindexnormals = NA
   wrote_water = FALSE
-
+  wrote_base = FALSE
   for(row in 1:nrow(vertex_info)) {
     id = vertex_info$id[row]
     if(vertex_info$raytype[row] %in% c("surface","base","basebottom","water",
@@ -181,10 +189,18 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1) {
       vertex_info$startindex[row] = number_vertices + 1
       vertex_info$startindextex[row] = number_texcoords + 1
       vertex_info$startindexnormals[row] = number_normals + 1
+      write_comment(sprintf("# %s\n",vertex_info$raytype[row]), con)
       write_data(id, con)
       if(vertex_info$raytype[row] != "water") {
         if(save_texture) {
-          write_mtl(vertex_info[row,], con_mtl)
+          if(vertex_info$raytype[row] != "base") {
+            write_mtl(vertex_info[row,], con_mtl)
+          } else {
+            if(!wrote_base) {
+              write_mtl(vertex_info[row,], con_mtl)
+              wrote_base = TRUE
+            }
+          }
         }
       } else {
         if(!wrote_water) {
@@ -207,7 +223,11 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1) {
       }
       dims = rgl::rgl.attrib(vertex_info$id[row], "dim")
       vertices_y = rgl.attrib(vertex_info$id[row], "vertices")[,2]
-      hasnormals = vertex_info$startindexnormals[row] < vertex_info$endindexnormals[row]
+      if(!is.na(vertex_info$startindexnormals[row]) && !is.na(vertex_info$endindexnormals[row])) {
+        hasnormals = vertex_info$startindexnormals[row] < vertex_info$endindexnormals[row]
+      } else {
+        hasnormals = FALSE
+      }
       nx = dims[1]
       nz = dims[2] 
       indices = rep(0, 6 * (nz - 1) * (nx - 1))
@@ -229,7 +249,7 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1) {
       if(hasnormals) {
         indices = sprintf("%d/%d/%d", indices, indices, indices)
       } else {
-        indices = sprintf("%d/%d", indices, indices)
+        indices = sprintf("%d/%d/", indices, indices)
       }
       indices = matrix(indices, ncol=3, byrow=TRUE)
       indices = indices[1:(nrow(indices)-na_counter),]
@@ -240,8 +260,17 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1) {
         cat("g Surface", file=con, sep ="\n")
         cat("usemtl ray_surface", file=con, sep ="\n")
       }
+      if(!is.na(vertex_info$startindexnormals[row]) && !is.na(vertex_info$endindexnormals[row])) {
+        hasnormals = vertex_info$startindexnormals[row] < vertex_info$endindexnormals[row]
+      } else {
+        hasnormals = FALSE
+      }
       indices = vertex_info$startindextex[row]:vertex_info$endindex[row]
-      indices = sprintf("%d/%d", indices, indices)
+      if(hasnormals) {
+        indices = sprintf("%d/%d/%d", indices, indices, indices)
+      } else {
+        indices = sprintf("%d/%d/", indices, indices)
+      }
       indices = matrix(indices, ncol=3, byrow=TRUE)
       cat(paste("f", indices[,1], indices[,2], indices[,3]), 
           sep="\n", file=con)
@@ -249,6 +278,11 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1) {
       if(save_texture) {
         cat("g Basebottom", file=con, sep ="\n")
         cat("usemtl ray_base", file=con, sep ="\n")
+      }
+      if(!is.na(vertex_info$startindexnormals[row]) && !is.na(vertex_info$endindexnormals[row])) {
+        hasnormals = vertex_info$startindexnormals[row] < vertex_info$endindexnormals[row]
+      } else {
+        hasnormals = FALSE
       }
       dims = rgl::rgl.attrib(vertex_info$id[row], "dim")
       vertices_y = rgl.attrib(vertex_info$id[row], "vertices")[,2]
@@ -271,7 +305,12 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1) {
         }
       }
       indices = indices + vertex_info$startindextex[row] - 1
-      indices = sprintf("%d//%d", indices, indices)
+      if(all_face_fields) {
+        indices = sprintf("%d//", indices)
+      } else {
+        indices = sprintf("%d", indices)
+      }
+      
       indices = matrix(indices, ncol=3, byrow=TRUE)
       indices = indices[1:(nrow(indices)-na_counter),]
       cat(paste("f", indices[,3], indices[,2], indices[,1]), 
@@ -281,11 +320,22 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1) {
         cat("g Base", file=con, sep ="\n")
         cat("usemtl ray_base", file=con, sep ="\n")
       }
+      if(!is.na(vertex_info$startindexnormals[row]) && !is.na(vertex_info$endindexnormals[row])) {
+        hasnormals = vertex_info$startindexnormals[row] < vertex_info$endindexnormals[row]
+      } else {
+        hasnormals = FALSE
+      }
       baseindices = matrix(vertex_info$startindex[row]:vertex_info$endindex[row], ncol=3, byrow=TRUE)
-      if(vertex_info$endindexnormals[row] > vertex_info$startindexnormals[row]) {
-        cat(paste("f", sprintf("%d/%d %d/%d %d/%d", baseindices[,1], baseindices[,1],
-                               baseindices[,2], baseindices[,2], 
-                               baseindices[,3], baseindices[,3])), 
+      # if(hasnormals) {
+      #   cat(paste("f", sprintf("%d//%d %d//%d %d//%d", baseindices[,1], baseindices[,1],
+      #                          baseindices[,2], baseindices[,2], 
+      #                          baseindices[,3], baseindices[,3])), 
+            # sep="\n", file=con)
+      # } else {
+      if(all_face_fields) {
+        cat(paste("f", sprintf("%d// %d// %d//", baseindices[,1],
+                               baseindices[,2], 
+                               baseindices[,3])), 
             sep="\n", file=con)
       } else {
         cat(paste("f", sprintf("%d %d %d", baseindices[,1],
@@ -293,6 +343,7 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1) {
                                baseindices[,3])), 
             sep="\n", file=con)
       }
+      # }
     } else if (vertex_info$raytype[row] == "water") {
       if(save_texture) {
         cat("g Water", file=con, sep ="\n")
@@ -391,5 +442,8 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1) {
             sep="\n", file=con)
       }
     }
+  }
+  if(manifold_geometry) {
+    fix_manifold_geometry(filename)
   }
 }

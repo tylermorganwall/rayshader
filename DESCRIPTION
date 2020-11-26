@@ -1,7 +1,8 @@
 Package: rayshader
 Type: Package
 Title: Create Maps and Visualize Data in 2D and 3D
-Version: 0.19.1
+Version: 0.19.5
+Date: 2020-11-17
 Author: Tyler Morgan-Wall
 Maintainer: Tyler Morgan-Wall <tylermw@gmail.com>
 Description: Uses a combination of raytracing and multiple hill shading methods to produce 2D and 3D data visualizations and maps. Includes water detection and layering functions, programmable color palette generation, several built-in textures for hill shading, 2D and 3D plotting options, a built-in path tracer, 'Wavefront' OBJ file export, and the ability to save 3D visualizations to a 3D printable format.
@@ -32,6 +33,6 @@ Suggests: reshape2,
           rayrender,
           isoband
 LinkingTo: Rcpp, progress, RcppArmadillo
-RoxygenNote: 7.1.0
+RoxygenNote: 7.1.1
 URL: https://github.com/tylermorganwall/rayshader, https://www.rayshader.com/
 BugReports: https://github.com/tylermorganwall/rayshader/issues

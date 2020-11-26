@@ -25,6 +25,8 @@
 #'@param text_size Default `6`. Height of the text.
 #'@param text_offset Default `c(0,0,0)`. Offset to be applied to all text labels.
 #'@param line_radius Default `0.5`. Radius of line/path segments.
+#'@param smooth_line Default `FALSE`. If `TRUE`, the line will be rendered with a continuous smooth line, rather
+#'than straight segments.
 #'@param point_radius Default `0.5`. Radius of 3D points (rendered with `render_points()`.
 #'@param scale_text_angle Default `NULL`. Same as `text_angle`, but for the scale bar.
 #'@param scale_text_size Default `6`. Height of the scale bar text.
@@ -120,7 +122,7 @@ render_highquality = function(filename = NULL, light = TRUE, lightdirection = 31
                               lightintensity = 500, lightcolor = "white", obj_material = rayrender::diffuse(),
                               cache_filename=NULL, width = NULL, height = NULL, 
                               text_angle = NULL, text_size = 6, text_offset = c(0,0,0), 
-                              line_radius=0.5, point_radius = 0.5,
+                              line_radius=0.5, point_radius = 0.5, smooth_line = FALSE,
                               scale_text_angle = NULL, scale_text_size = 6, scale_text_offset = c(0,0,0), 
                               title_text = NULL, title_offset = c(20,20), 
                               title_color = "black", title_size = 30, title_font = "sans",
@@ -313,25 +315,33 @@ render_highquality = function(filename = NULL, light = TRUE, lightdirection = 31
     if(nrow(temp_color) == 1) {
       temp_color = matrix(temp_color[1:3], byrow = TRUE, ncol = 3, nrow = nrow(temp_verts))
     }
-    for(j in seq_len(nrow(temp_verts)-1)) {
-      pathline[[counter]] = rayrender::segment(start = temp_verts[j,] - bbox_center, 
-                                                end   = temp_verts[j+1,] - bbox_center,
-                                                radius = line_radius,
-                                                material = rayrender::diffuse(color = temp_color[j,1:3]))
+    if(smooth_line) {
+      matrix_center = matrix(bbox_center, byrow=TRUE,ncol=3,nrow = nrow(temp_verts))
+      pathline[[counter]] = rayrender::path(points = temp_verts - matrix_center, 
+                                            width = line_radius * 2,
+                                            material = rayrender::diffuse(color = temp_color[1,1:3]))
       counter = counter + 1
-      pathline[[counter]] = rayrender::sphere(x = temp_verts[j,1] - bbox_center[1],
-                                               y = temp_verts[j,2] - bbox_center[2],
-                                               z = temp_verts[j,3] - bbox_center[3],
-                                               radius = line_radius,
-                                               material = rayrender::diffuse(color = temp_color[j,1:3]))
+    } else {
+      for(j in seq_len(nrow(temp_verts)-1)) {
+        pathline[[counter]] = rayrender::segment(start = temp_verts[j,] - bbox_center, 
+                                                  end   = temp_verts[j+1,] - bbox_center,
+                                                  radius = line_radius,
+                                                  material = rayrender::diffuse(color = temp_color[j,1:3]))
+        counter = counter + 1
+        pathline[[counter]] = rayrender::sphere(x = temp_verts[j,1] - bbox_center[1],
+                                                 y = temp_verts[j,2] - bbox_center[2],
+                                                 z = temp_verts[j,3] - bbox_center[3],
+                                                 radius = line_radius,
+                                                 material = rayrender::diffuse(color = temp_color[j,1:3]))
+        counter = counter + 1
+      }
+      pathline[[counter]] = rayrender::sphere(x = temp_verts[nrow(temp_verts),1] - bbox_center[1],
+                                              y = temp_verts[nrow(temp_verts),2] - bbox_center[2],
+                                              z = temp_verts[nrow(temp_verts),3] - bbox_center[3],
+                                              radius = line_radius,
+                                              material = rayrender::diffuse(color = temp_color[nrow(temp_verts),1:3]))
       counter = counter + 1
     }
-    pathline[[counter]] = rayrender::sphere(x = temp_verts[nrow(temp_verts),1] - bbox_center[1],
-                                            y = temp_verts[nrow(temp_verts),2] - bbox_center[2],
-                                            z = temp_verts[nrow(temp_verts),3] - bbox_center[3],
-                                            radius = line_radius,
-                                            material = rayrender::diffuse(color = temp_color[nrow(temp_verts),1:3]))
-    counter = counter + 1
   }
   pointids = get_ids_with_labels(typeval = "points3d")$id
   pointlist = list()
