@@ -21,12 +21,12 @@ from the NOAA National Map website.
 }
 \examples{
 # This is the full code (commented out) used to generate this dataset from the original NOAA data:
-#raster::raster("monterey_13_navd88_2012.nc")
+#montbay = raster::raster("monterey_13_navd88_2012.nc")
 #bottom_left = c(y=-122.366765, x=36.179392)
 #top_right   = c(y=-121.366765, x=37.179392) 
 #extent_latlong = sp::SpatialPoints(rbind(bottom_left, top_right), 
 #                 proj4string=sp::CRS("+proj=longlat +ellps=WGS84 +datum=WGS84"))
-#monterey_cropped = raster::crop(montbay,extent_latlong)
+#montbay_cropped = raster::crop(montbay,extent_latlong)
 #montbay_mat = raster_to_matrix(montbay_cropped)
 #montereybay = resize_matrix(montbay_mat,0.05)
 #attr(montereybay, "extent") = extent_latlong
