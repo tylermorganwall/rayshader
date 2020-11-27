@@ -5,9 +5,9 @@
 #'above the heightmap. If the path goes off the edge, the nearest height on the heightmap will be used.
 #'
 #' @param polygon `sf` object, "SpatialPolygon" `sp` object,  or xy coordinates
-#'   of polygon represented in a way that can be processed by `xy.coords()`.  If
-#'   xy-coordinate based polygons are open, they will be closed by adding an
-#'   edge from the last point to the first.
+#' of polygon represented in a way that can be processed by `xy.coords()`.  If
+#' xy-coordinate based polygons are open, they will be closed by adding an
+#' edge from the last point to the first.
 #' @param extent A `raster::Extent` object with the bounding box for the height map 
 #' used to generate the original map.
 #' @param color Default `black`. Color of the polygon.
@@ -28,7 +28,6 @@
 #' @param heightmap Default `NULL`. Automatically extracted from the rgl window--only use if auto-extraction
 #' of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
 #'  All points are assumed to be evenly spaced.
-#' @param offset Default `5`. Offset of the track from the surface, if `altitude = NULL`.
 #' @param clear_previous Default `FALSE`. If `TRUE`, it will clear all existing paths.
 #' @export
 #' @examples
@@ -37,7 +36,7 @@
 #'    montereybay %>%
 #'      sphere_shade(texture = "desert") %>%
 #'      add_shadow(ray_shade(montereybay,zscale=50)) %>%
-#'      plot_3d(montereybay,water=TRUE, windowsize=800)
+#'      plot_3d(montereybay,water=TRUE, windowsize=800, watercolor="dodgerblue")
 #'    render_camera(theta=140,  phi=55, zoom = 0.85, fov=30)
 #'    #We will apply a negative buffer to create space between adjacent polygons:
 #'    render_polygons(sf::st_simplify(sf::st_buffer(monterey_counties_sf,-0.003), dTolerance=0.001), 
@@ -51,17 +50,18 @@
 #'    render_camera(theta=-60,  phi=60, zoom = 0.85, fov=30)
 #'    render_polygons(sf::st_simplify(sf::st_buffer(monterey_counties_sf,-0.003), dTolerance=0.001), 
 #'                    extent = attr(montereybay,"extent"), data_column_top = "ALAND",
-#'                    scale_data = 220/(2.6E9), color="green",
+#'                    scale_data = 300/(2.6E9), color="chartreuse4",
 #'                    parallel=TRUE)
 #'    render_snapshot()        
 #'    #This function also works with `render_highquality()`
-#'    render_highquality()
+#'    render_highquality(sample_method="stratified", samples=400, clamp_value=10)
 #'    rgl::rgl.close()
 #' }
 #' }
 render_polygons = function(polygon, extent,  color = "red", top = 1, bottom = NA,
                            data_column_top = NULL, data_column_bottom = NULL,
                            heightmap = NULL, scale_data = 1, parallel = FALSE,
+                           holes = 0,
                            clear_previous = FALSE) {
   if(rgl::rgl.cur() == 0) {
     stop("No rgl window currently open.")
@@ -97,7 +97,7 @@ render_polygons = function(polygon, extent,  color = "red", top = 1, bottom = NA
         poly = rayrender::extruded_polygon(polygon[i,],top=top,bottom=bottom,
                                            data_column_top=data_column_top,
                                            data_column_bottom=data_column_bottom,
-                                           scale_data=scale_data)
+                                           scale_data=scale_data,holes=holes)
         vertex_list[[i]] = do.call(rbind,lapply(poly$properties, shape_to_vertex))
         if(any(is.na(vertex_list[[i]]))) {
           vertex_list[[i]] = NULL

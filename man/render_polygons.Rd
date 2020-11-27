@@ -15,6 +15,7 @@ render_polygons(
   heightmap = NULL,
   scale_data = 1,
   parallel = FALSE,
+  holes = 0,
   clear_previous = FALSE
 )
 }
@@ -51,12 +52,10 @@ much to scale that value when rendering.}
 \item{parallel}{Default `FALSE`. If `TRUE`, polygons will be extruded in parallel, which
 may be faster (depending on how many geometries are in `polygon`).}
 
-\item{clear_previous}{Default `FALSE`. If `TRUE`, it will clear all existing paths.}
-
 \item{holes}{Default `0`. If passing in a polygon directly, this specifies which index represents
 the holes in the polygon. See the `earcut` function in the `decido` package for more information.}
 
-\item{offset}{Default `5`. Offset of the track from the surface, if `altitude = NULL`.}
+\item{clear_previous}{Default `FALSE`. If `TRUE`, it will clear all existing paths.}
 }
 \description{
 Adds a 3D path to the current scene, using latitude/longitude or coordinates in the reference
@@ -69,7 +68,7 @@ if("sf" \%in\% rownames(utils::installed.packages())) {
    montereybay \%>\%
      sphere_shade(texture = "desert") \%>\%
      add_shadow(ray_shade(montereybay,zscale=50)) \%>\%
-     plot_3d(montereybay,water=TRUE, windowsize=800)
+     plot_3d(montereybay,water=TRUE, windowsize=800, watercolor="dodgerblue")
    render_camera(theta=140,  phi=55, zoom = 0.85, fov=30)
    #We will apply a negative buffer to create space between adjacent polygons:
    render_polygons(sf::st_simplify(sf::st_buffer(monterey_counties_sf,-0.003), dTolerance=0.001), 
@@ -83,11 +82,11 @@ if("sf" \%in\% rownames(utils::installed.packages())) {
    render_camera(theta=-60,  phi=60, zoom = 0.85, fov=30)
    render_polygons(sf::st_simplify(sf::st_buffer(monterey_counties_sf,-0.003), dTolerance=0.001), 
                    extent = attr(montereybay,"extent"), data_column_top = "ALAND",
-                   scale_data = 220/(2.6E9), color="green",
+                   scale_data = 300/(2.6E9), color="chartreuse4",
                    parallel=TRUE)
    render_snapshot()        
    #This function also works with `render_highquality()`
-   render_highquality()
+   render_highquality(sample_method="stratified", samples=400, clamp_value=10)
    rgl::rgl.close()
 }
 }
