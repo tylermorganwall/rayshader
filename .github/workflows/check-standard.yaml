@@ -18,10 +18,10 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - {os: windows-latest, r: '3.6'}
-          - {os: macOS-latest, r: '3.6'}
+          - {os: windows-latest, r: '4.0'}
+          - {os: macOS-latest, r: '4.0'}
           - {os: macOS-latest, r: 'devel'}
-          - {os: ubuntu-16.04, r: '3.6', rspm: "https://demo.rstudiopm.com/all/__linux__/xenial/latest"}
+          - {os: ubuntu-16.04, r: '4.0', rspm: "https://demo.rstudiopm.com/all/__linux__/xenial/latest"}
 
     env:
       R_REMOTES_NO_ERRORS_FROM_WARNINGS: true
@@ -57,8 +57,6 @@ jobs:
           RHUB_PLATFORM: linux-x86_64-ubuntu-gcc
         run: |
           sudo apt-get build-dep mesa
-          sudo apt-get install libtiff-dev
-          sudo apt-get install libgdal-dev
           Rscript -e "remotes::install_github('r-hub/sysreqs')"
           sysreqs=$(Rscript -e "cat(sysreqs::sysreq_commands('DESCRIPTION'))")
           sudo -s eval "$sysreqs"
