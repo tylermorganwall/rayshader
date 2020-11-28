@@ -110,7 +110,7 @@
 plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
                    solid = TRUE, soliddepth="auto", solidcolor="grey20",solidlinecolor="grey30",
                    shadow = TRUE, shadowdepth = "auto", shadowcolor = "grey50", shadowwidth = "auto", 
-                   water = FALSE, waterdepth = 0, watercolor="lightblue", wateralpha = 0.5, 
+                   water = FALSE, waterdepth = 0, watercolor="dodgerblue", wateralpha = 0.5, 
                    waterlinecolor=NULL, waterlinealpha = 1, 
                    linewidth = 2, lineantialias = FALSE,
                    theta=45, phi = 45, fov=0, zoom = 1, background="white", windowsize = 600,
