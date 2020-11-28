@@ -19,7 +19,7 @@ plot_3d(
   shadowwidth = "auto",
   water = FALSE,
   waterdepth = 0,
-  watercolor = "lightblue",
+  watercolor = "dodgerblue",
   wateralpha = 0.5,
   waterlinecolor = NULL,
   waterlinealpha = 1,

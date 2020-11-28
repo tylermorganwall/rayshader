@@ -16,6 +16,10 @@ render_polygons(
   scale_data = 1,
   parallel = FALSE,
   holes = 0,
+  lit = TRUE,
+  light_altitude = c(45, 30),
+  light_direction = c(315, 135),
+  light_intensity = 0.3,
   clear_previous = FALSE
 )
 }
@@ -54,6 +58,14 @@ may be faster (depending on how many geometries are in `polygon`).}
 
 \item{holes}{Default `0`. If passing in a polygon directly, this specifies which index represents
 the holes in the polygon. See the `earcut` function in the `decido` package for more information.}
+
+\item{lit}{Default `TRUE`. Whether to light the polygons.}
+
+\item{light_altitude}{Default `c(45, 60)`. Degree(s) from the horizon from which to light the polygons.}
+
+\item{light_direction}{Default `c(45, 60)`. Degree(s) from north from which to light the polygons.}
+
+\item{light_intensity}{Default `0.3`. Intensity of the specular highlight on the polygons.}
 
 \item{clear_previous}{Default `FALSE`. If `TRUE`, it will clear all existing paths.}
 }

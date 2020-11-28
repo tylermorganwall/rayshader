@@ -28,6 +28,10 @@
 #' @param heightmap Default `NULL`. Automatically extracted from the rgl window--only use if auto-extraction
 #' of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
 #'  All points are assumed to be evenly spaced.
+#' @param lit Default `TRUE`. Whether to light the polygons. 
+#' @param light_altitude Default `c(45, 60)`. Degree(s) from the horizon from which to light the polygons.
+#' @param light_direction Default `c(45, 60)`. Degree(s) from north from which to light the polygons.
+#' @param light_intensity Default `0.3`. Intensity of the specular highlight on the polygons.
 #' @param clear_previous Default `FALSE`. If `TRUE`, it will clear all existing paths.
 #' @export
 #' @examples
@@ -61,8 +65,9 @@
 render_polygons = function(polygon, extent,  color = "red", top = 1, bottom = NA,
                            data_column_top = NULL, data_column_bottom = NULL,
                            heightmap = NULL, scale_data = 1, parallel = FALSE,
-                           holes = 0,
-                           clear_previous = FALSE) {
+                           holes = 0, lit = TRUE, 
+                           light_altitude = c(45,30), light_direction = c(315,135), 
+                           light_intensity = 0.3, clear_previous = FALSE) {
   if(rgl::rgl.cur() == 0) {
     stop("No rgl window currently open.")
   }
@@ -146,8 +151,22 @@ render_polygons = function(polygon, extent,  color = "red", top = 1, bottom = NA
       single_poly[,3] = ncol_map/2 - (single_poly[,3]-e@ymin)/(e@ymax - e@ymin) * ncol_map 
       single_poly[,2] = single_poly[,2]
       
-      rgl::rgl.material(color = color, ambient = "#000020")
+      rgl::rgl.material(color = color, ambient = "#000020", lit = lit)
       rgl::triangles3d(single_poly)
     }
   }
+  if(lit) {
+    existing_lights = rgl::rgl.ids(type = "lights")
+    for(i in 1:nrow(existing_lights)) {
+      rgl::rgl.pop(type="lights")
+    }
+    if(length(light_altitude) < length(light_direction)) {
+      stop("light_altitude and light_direction must be same length")
+    }
+    for(i in 1:length(light_direction)) {
+      rgl::rgl.light(theta = -light_direction[i]+180, phi = light_altitude[i], 
+                     specular = convert_color(rep(light_intensity,3), as_hex = TRUE),
+                     viewpoint.rel = FALSE)
+    }
+  } 
 }
