@@ -20,6 +20,10 @@ calculate_normal = function(heightmap, zscale=1, progbar=FALSE) {
   heightmap = add_padding(heightmap)
   heightmap = heightmap / zscale
   matrices = calculate_normal_cpp(heightmap=heightmap, progbar = progbar)
+  matrices$x[is.na(heightmap)] = NA
+  matrices$y[is.na(heightmap)] = NA
+  matrices$z[is.na(heightmap)] = NA
+  
   returnnormal = list()
   returnnormal[["x"]] = t(matrices$x)
   returnnormal[["y"]] = t(matrices$y)

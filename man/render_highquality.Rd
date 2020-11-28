@@ -36,7 +36,7 @@ render_highquality(
   ground_size = 1e+05,
   scene_elements = NULL,
   camera_location = NULL,
-  camera_lookat = c(0, 0, 0),
+  camera_lookat = NULL,
   camera_interpolate = 1,
   clear = FALSE,
   print_scene_info = FALSE,

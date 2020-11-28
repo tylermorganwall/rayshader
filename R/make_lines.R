@@ -29,7 +29,7 @@ make_lines = function(heightmap,basedepth=0,linecolor="grey20",zscale=1,alpha=1,
       heightlist[[7]] = matrix(c(nrow(heightmap),nrow(heightmap),basedepth,basedepth,-ncol(heightmap),-1),2,3)
       heightlist[[8]] = matrix(c(nrow(heightmap),1,basedepth,basedepth,-1,-1),2,3)
     } else {
-      basedepth = basedepth
+      basedepth = basedepth/zscale
       counter = 1
       if(basedepth > heightval1) {
         heightlist[[counter]] = matrix(c(1,1,basedepth,heightval1,-1,-1),2,3)

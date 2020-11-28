@@ -58,7 +58,7 @@ plot_map(ambient_shade(montereybay, sunbreaks = 24,maxsearch = 100, multicore=TR
 }
 #Create the Red Relief Image Map (RRIM) technique using a custom texture and ambient_shade(),
 #with an addition lambertian layer added with lamb_shade() to improve topographic clarity.
-\donttest{
+\dontrun{
 bigmb = resize_matrix(montereybay, scale=2, method="cubic")
 bigmb \%>\%
  sphere_shade(zscale=3, texture = create_texture("red","red","red","red","white")) \%>\%

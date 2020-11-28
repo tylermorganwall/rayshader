@@ -28,7 +28,7 @@
 #'}
 #'#Create the Red Relief Image Map (RRIM) technique using a custom texture and ambient_shade(),
 #'#with an addition lambertian layer added with lamb_shade() to improve topographic clarity.
-#'\donttest{
+#'\dontrun{
 #'bigmb = resize_matrix(montereybay, scale=2, method="cubic")
 #'bigmb %>%
 #'  sphere_shade(zscale=3, texture = create_texture("red","red","red","red","white")) %>%
@@ -59,7 +59,8 @@ ambient_shade = function(heightmap, anglebreaks = 90*cospi(seq(5,85,by=5)/180), 
     cl = parallel::makeCluster(numbercores, ...)
     doParallel::registerDoParallel(cl, cores = numbercores)
     shademat = tryCatch({
-      foreach::foreach(angle=seq(0,360,length.out = sunbreaks+1)[-(sunbreaks+1)],.export = c("ray_shade"),.combine = "+") %dopar% {
+      foreach::foreach(angle=seq(0,360,length.out = sunbreaks+1)[-(sunbreaks+1)],.export = c("ray_shade"),
+                       .combine = "+", .packages = "rayshader") %dopar% {
         ray_shade(heightmap,anglebreaks=anglebreaks,sunangle = angle, 
                   maxsearch = maxsearch, zscale=zscale, lambert=FALSE, 
                   cache_mask = cache_mask, progbar = progbar, ...)^2.2

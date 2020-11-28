@@ -14,7 +14,7 @@ get_ids_with_labels = function(typeval = NULL) {
                       "#000012" = "bevel_symbol", "#000013" = "background_symbol",
                       "#000014" = "scalebar_col1", "#000015" = "scalebar_col2",
                       "#000016" = "text_scalebar", "#000017" = "surface_tris",
-                      "#000018" = "path3d", "#000019" = "points3d")
+                      "#000018" = "path3d", "#000019" = "points3d",  "#000020" = "polygon3d")
   get_rgl_material = getFromNamespace("rgl.getmaterial", "rgl")
   idvals = rgl::rgl.ids()
   material_type = list()
@@ -36,6 +36,7 @@ get_ids_with_labels = function(typeval = NULL) {
     material_properties[[i]]$scalebar1_color = NA
     material_properties[[i]]$scalebar2_color = NA
     material_properties[[i]]$point_color = NA
+    material_properties[[i]]$tricolor = NA
     
     if(idvals$type[i] != "text") {
       material_type[[i]] = ambient_encoder[material_type_single$ambient]
@@ -79,6 +80,9 @@ get_ids_with_labels = function(typeval = NULL) {
       }
       if(material_type[[i]] == "scalebar_col2") {
         material_properties[[i]]$scalebar2_color = material_type_single$color
+      }
+      if(material_type[[i]] == "polygon3d") {
+        material_properties[[i]]$tricolor = material_type_single$color
       }
     } else {
       material_type[[i]] = ambient_encoder[material_type_single$ambient]

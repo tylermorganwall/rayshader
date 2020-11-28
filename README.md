@@ -358,6 +358,77 @@ render_highquality(samples=200, line_radius = 1, text_size = 18, text_offset = c
 
 ![](man/figures/README_hqlabels-1.png)<!-- -->
 
+3D paths, points, and polygons can be added directly from spatial
+objects from the `sf` library:
+
+Polygons:
+
+``` r
+montereybay %>%
+  sphere_shade(texture = "desert") %>%
+  add_shadow(ray_shade(montereybay,zscale=50)) %>%
+  plot_3d(montereybay,water=TRUE, windowsize=c(1000,800), watercolor="dodgerblue")
+render_camera(theta=-60,  phi=60, zoom = 0.85, fov=30)
+
+#We will apply a negative buffer to create space between adjacent polygons:
+mont_county_buff = sf::st_simplify(sf::st_buffer(monterey_counties_sf,-0.003), dTolerance=0.001)
+
+render_polygons(mont_county_buff, 
+                extent = attr(montereybay,"extent"), data_column_top = "ALAND",
+                scale_data = 300/(2.6E9), color="chartreuse4",
+                parallel=TRUE)
+render_highquality(clamp_value=10,sample_method="stratified")
+```
+
+![](man/figures/README_polygon-1.png)<!-- -->
+
+``` r
+render_polygons(clear_previous = TRUE)
+render_camera(theta=225, phi=23,zoom=0.27,fov=48)
+```
+
+Points:
+
+``` r
+moss_landing_coord = c(36.806807, -121.793332)
+x_vel_out = -0.001 + rnorm(1000)[1:500]/1000
+y_vel_out = rnorm(1000)[1:500]/200
+z_out = c(seq(0,2000,length.out = 180), seq(2000,0,length.out=10),
+          seq(0,2000,length.out = 100), seq(2000,0,length.out=10))
+
+bird_track_lat = list()
+bird_track_long = list()
+bird_track_lat[[1]] = moss_landing_coord[1]
+bird_track_long[[1]] = moss_landing_coord[2]
+
+for(i in 2:500) {
+  bird_track_lat[[i]] = bird_track_lat[[i-1]] + y_vel_out[i]
+  bird_track_long[[i]] = bird_track_long[[i-1]] + x_vel_out[i]
+}
+
+render_points(extent = attr(montereybay,"extent"), 
+              lat = unlist(bird_track_lat), long = unlist(bird_track_long), 
+              altitude = z_out, zscale=50, color="red")
+render_highquality(point_radius = 1,sample_method="stratified")
+```
+
+![](man/figures/README_points-1.png)<!-- -->
+
+``` r
+render_points(clear_previous = TRUE)
+```
+
+Paths:
+
+``` r
+render_path(extent = attr(montereybay,"extent"), 
+            lat = unlist(bird_track_lat), long = unlist(bird_track_long),
+            altitude = z_out, zscale=50,color="white", antialias=TRUE)
+render_highquality(line_radius = 1,sample_method="stratified", clear=TRUE)
+```
+
+![](man/figures/README_paths-1.png)<!-- -->
+
 You can also apply a post-processing effect to the 3D maps to render
 maps with depth of field with the `render_depth()` function:
 
