@@ -8,7 +8,7 @@
 #'of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10. Adjust the zscale down to exaggerate elevation features.
 #'@param baseshape Default `rectangle`. Shape of the base. Options are c("rectangle","circle","hex").
 #'@param solid Default `TRUE`. If `FALSE`, just the surface is rendered.
-#'@param soliddepth Default `auto`, which sets it to the lowest elevation in the matrix minus one unit (scaled by zscale). Depth of the solid base.
+#'@param soliddepth Default `auto`, which sets it to the lowest elevation in the matrix minus one unit (scaled by zscale). Depth of the solid base. This should normally be a negative value.
 #'@param solidcolor Default `grey20`. Base color.
 #'@param solidlinecolor Default `grey30`. Base edge line color.
 #'@param shadow Default `TRUE`. If `FALSE`, no shadow is rendered.
