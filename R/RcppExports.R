@@ -5,6 +5,10 @@ bilineargrid <- function(colorarray) {
     .Call(`_rayshader_bilineargrid`, colorarray)
 }
 
+get_boolean_distance <- function(input) {
+    .Call(`_rayshader_get_boolean_distance`, input)
+}
+
 calculate_normal_cpp <- function(heightmap, progbar) {
     .Call(`_rayshader_calculate_normal_cpp`, heightmap, progbar)
 }

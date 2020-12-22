@@ -4,7 +4,10 @@
 \alias{height_shade}
 \title{Calculate Terrain Color Map}
 \usage{
-height_shade(heightmap, texture = grDevices::terrain.colors(256))
+height_shade(
+  heightmap,
+  texture = (grDevices::colorRampPalette(c("#6AA85B", "#D9CC9A", "#FFFFFF")))(256)
+)
 }
 \arguments{
 \item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point.}

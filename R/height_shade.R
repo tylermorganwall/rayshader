@@ -35,7 +35,8 @@
 #'  add_shadow(ray_shade(montereybay,zscale=50),0.3) %>%
 #'  plot_map()
 #'}
-height_shade = function(heightmap, texture=grDevices::terrain.colors(256)) {
+height_shade = function(heightmap, 
+                        texture=grDevices::colorRampPalette(c("#6AA85B","#D9CC9A","#FFFFFF"))(256)) {
   tempfilename = tempfile()
   old.par = graphics::par(no.readonly = TRUE)
   if(all(old.par$pin > 0)) {
