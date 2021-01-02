@@ -6,6 +6,17 @@
 #'@param rotate Default `0`. Rotates the output. Possible values: `0`, `90`, `180`, `270`.
 #'@param asp Default `1`. Aspect ratio of the resulting plot. Use `asp = 1/cospi(mean_latitude/180)` to rescale
 #'lat/long at higher latitudes to the correct the aspect ratio.
+#'@param title_text Default `NULL`. Text. Adds a title to the image, using `magick::image_annotate()`.
+#'@param title_offset Default `c(20,20)`. Distance from the top-left (default, `gravity` direction in
+#'image_annotate) corner to offset the title.
+#'@param title_size Default `30`. Font size in pixels.
+#'@param title_color Default `black`. Font color.
+#'@param title_font Default `sans`. String with font family such as "sans", "mono", "serif", "Times", "Helvetica",
+#'"Trebuchet", "Georgia", "Palatino" or "Comic Sans".
+#'@param title_style Default `normal`. Font style (e.g. `italic`).
+#'@param title_bar_color Default `NULL`. If a color, this will create a colored bar under the title.
+#'@param title_bar_alpha Default `0.5`. Transparency of the title bar.
+#'@param title_position Default `northwest`. Position of the title.
 #'@param keep_user_par Default `TRUE`. Whether to keep the user's `par()` settings. Set to `FALSE` if you 
 #'want to set up a multi-pane plot (e.g. set `par(mfrow)`).
 #'@param ... Additional arguments to pass to the `raster::plotRGB` function that displays the map.
@@ -34,10 +45,20 @@
 #'  add_shadow(ray_shade(montereybay,zscale=50),0.3) %>%
 #'  plot_map(asp = 1/cospi(mean_latitude/180))
 #'}
-plot_map = function(hillshade, rotate=0, asp = 1, keep_user_par = FALSE, ...) {
+plot_map = function(hillshade, rotate=0, asp = 1, 
+                    title_text = NA, title_offset = c(20,20),
+                    title_color = "black", title_size = 30,
+                    title_font = "sans", title_style = "normal",
+                    title_bar_color = NULL, title_bar_alpha = 0.5, title_position = "northwest",
+                    keep_user_par = FALSE, ...) {
   if(keep_user_par) {
     old.par = graphics::par(no.readonly = TRUE)
     on.exit(graphics::par(old.par))
+  }
+  has_title = !is.na(title_text)
+  if(!("rayimage" %in% rownames(utils::installed.packages())) && has_title) {
+    warning("`rayimage` package required for title text")
+    has_title = FALSE
   }
   rotatef = function(x) t(apply(x, 2, rev))
   if(!(rotate %in% c(0,90,180,270))) {
@@ -69,6 +90,13 @@ plot_map = function(hillshade, rotate=0, asp = 1, keep_user_par = FALSE, ...) {
         hillshade = newarrayt
       }
     }
+    if(has_title) {
+      hillshade = rayimage::add_title(hillshade, title_text = title_text, title_offset = title_offset,
+                          title_color = title_color, title_size = title_size,
+                          title_font = title_font, title_style = title_style,
+                          title_bar_color = title_bar_color, title_bar_alpha = title_bar_alpha, 
+                          title_position = title_position)
+    }
     suppressWarnings(raster::plotRGB(raster::brick(hillshade, xmn = 0.5, xmx = dim(hillshade)[2]+ 0.5,
                                                    ymn = 0.5, ymx = dim(hillshade)[1] + 0.5, ...),scale=1, 
                                      asp = asp,
@@ -80,6 +108,13 @@ plot_map = function(hillshade, rotate=0, asp = 1, keep_user_par = FALSE, ...) {
       }
     }
     array_from_mat = array(fliplr(t(hillshade)),dim=c(ncol(hillshade),nrow(hillshade),3))
+    if(has_title) {
+      array_from_mat = rayimage::add_title(array_from_mat, title_text = title_text, title_offset = title_offset,
+                          title_color = title_color, title_size = title_size,
+                          title_font = title_font, title_style = title_style,
+                          title_bar_color = title_bar_color, title_bar_alpha = title_bar_alpha, 
+                          title_position = title_position)
+    }
     suppressWarnings(raster::plotRGB(raster::brick(array_from_mat, xmn = 0.5, xmx = dim(array_from_mat)[2] + 0.5,ymn =  0.5, 
                                                    ymx = dim(array_from_mat)[1] +  0.5, ...),
                                      asp = asp,

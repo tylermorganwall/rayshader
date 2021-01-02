@@ -18,7 +18,7 @@ generate_contour_overlay(
 \arguments{
 \item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All grid points are assumed to be evenly spaced.}
 
-\item{levels}{Default `NA`. Automatically generated with 10 levels.}
+\item{levels}{Default `NA`. Automatically generated with 10 levels. This argument specifies the exact height levels of each contour.}
 
 \item{nlevels}{Default `NA`. Controls the auto-generation of levels. If levels is length-2, 
 this will automatically generate `nlevels` breaks between `levels[1]` and `levels[2]`.}

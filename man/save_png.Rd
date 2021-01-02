@@ -4,12 +4,46 @@
 \alias{save_png}
 \title{Save PNG}
 \usage{
-save_png(hillshade, filename, rotate = 0, asp = 1)
+save_png(
+  hillshade,
+  filename,
+  title_text = NA,
+  title_offset = c(20, 20),
+  title_color = "black",
+  title_size = 30,
+  title_font = "sans",
+  title_style = "normal",
+  title_bar_color = NULL,
+  title_bar_alpha = 0.5,
+  title_position = "northwest",
+  rotate = 0,
+  asp = 1
+)
 }
 \arguments{
 \item{hillshade}{Array (or matrix) of hillshade to be written.}
 
 \item{filename}{String with the filename. If `.png` is not at the end of the string, it will be appended automatically.}
+
+\item{title_text}{Default `NULL`. Text. Adds a title to the image, using `magick::image_annotate()`.}
+
+\item{title_offset}{Default `c(20,20)`. Distance from the top-left (default, `gravity` direction in
+image_annotate) corner to offset the title.}
+
+\item{title_color}{Default `black`. Font color.}
+
+\item{title_size}{Default `30`. Font size in pixels.}
+
+\item{title_font}{Default `sans`. String with font family such as "sans", "mono", "serif", "Times", "Helvetica",
+"Trebuchet", "Georgia", "Palatino" or "Comic Sans".}
+
+\item{title_style}{Default `normal`. Font style (e.g. `italic`).}
+
+\item{title_bar_color}{Default `NULL`. If a color, this will create a colored bar under the title.}
+
+\item{title_bar_alpha}{Default `0.5`. Transparency of the title bar.}
+
+\item{title_position}{Default `northwest`. Position of the title.}
 
 \item{rotate}{Default 0. Rotates the output. Possible values: 0, 90, 180, 270.}
 

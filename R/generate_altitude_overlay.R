@@ -42,9 +42,6 @@ generate_altitude_overlay = function(hillshade, heightmap,
   if(is.null(end_transition)) {
     end_transition = start_transition
   }
-  stopifnot(start_transition <= max(heightmap,na.rm=TRUE) && start_transition >= min(heightmap,na.rm=TRUE))
-  stopifnot(end_transition <= max(heightmap,na.rm=TRUE) && end_transition >= min(heightmap,na.rm=TRUE))
-  stopifnot(start_transition <= end_transition)
   if(length(dim(hillshade)) == 2) {
     hillarray = array(0,dim=c(nrow(hillshade),ncol(hillshade),4))
     hillarray[,,1] = hillshade

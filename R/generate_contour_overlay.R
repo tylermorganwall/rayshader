@@ -5,7 +5,7 @@
 #'@param heightmap A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All grid points are assumed to be evenly spaced.
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
 #'of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
-#'@param levels Default `NA`. Automatically generated with 10 levels.
+#'@param levels Default `NA`. Automatically generated with 10 levels. This argument specifies the exact height levels of each contour.
 #'@param nlevels Default `NA`. Controls the auto-generation of levels. If levels is length-2, 
 #'this will automatically generate `nlevels` breaks between `levels[1]` and `levels[2]`.
 #'@param width Default `NA`. Width of the resulting overlay. Default the same dimensions as heightmap.

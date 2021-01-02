@@ -23,6 +23,8 @@
 #'@param instant_capture Default `TRUE` if interactive, `FALSE` otherwise. If `FALSE`, a slight delay is added 
 #'before taking the snapshot. This can help stop prevent rendering issues when running scripts.
 #'@param bring_to_front Default `FALSE`. Whether to bring the window to the front when taking the snapshot.
+#'@param keep_user_par Default `TRUE`. Whether to keep the user's `par()` settings. Set to `FALSE` if you 
+#'want to set up a multi-pane plot (e.g. set `par(mfrow)`).
 #'@param ... Additional parameters to pass to magick::image_annotate. 
 #'@return Displays snapshot of current rgl plot (or saves to disk).
 #'@export
@@ -61,7 +63,8 @@ render_snapshot = function(filename, clear=FALSE,
                            title_bar_color = NULL, title_bar_alpha = 0.5, 
                            title_position = "northwest",
                            image_overlay = NULL, vignette = FALSE,
-                           instant_capture = interactive(), bring_to_front = FALSE, ...) {
+                           instant_capture = interactive(), bring_to_front = FALSE, 
+                           keep_user_par = FALSE, ...) {
   if(rgl::rgl.cur() == 0) {
     stop("No rgl window currently open.")
   }
@@ -105,7 +108,7 @@ render_snapshot = function(filename, clear=FALSE,
                                   title_size = title_size, title_font = title_font)
   }
   if(missing(filename)) {
-    plot_map(tempmap, keep_user_par = FALSE)
+    plot_map(tempmap, keep_user_par = keep_user_par)
   } else {
     save_png(tempmap, filename)
   }

@@ -4,6 +4,8 @@
 #'
 #'@param heightmap A two-dimensional matrix, where each entry in the matrix is the elevation at that point. 
 #'@param texture Default `terrain.colors(256)`. A color palette for the plot.
+#'@param keep_user_par Default `TRUE`. Whether to keep the user's `par()` settings. Set to `FALSE` if you 
+#'want to set up a multi-pane plot (e.g. set `par(mfrow)`).
 #'@return RGB array of hillshaded texture mappings.
 #'@export
 #'@examples
@@ -36,11 +38,14 @@
 #'  plot_map()
 #'}
 height_shade = function(heightmap, 
-                        texture=grDevices::colorRampPalette(c("#6AA85B","#D9CC9A","#FFFFFF"))(256)) {
-  tempfilename = tempfile()
-  old.par = graphics::par(no.readonly = TRUE)
-  if(all(old.par$pin > 0)) {
-    on.exit(suppressWarnings(graphics::par(old.par)))
+                        texture=grDevices::colorRampPalette(c("#6AA85B","#D9CC9A","#FFFFFF"))(256),
+                        keep_user_par = TRUE) {
+  tempfilename = tempfile() 
+  if(keep_user_par) {
+    old.par = graphics::par(no.readonly = TRUE)
+    if(all(old.par$pin > 0)) {
+      on.exit(suppressWarnings(graphics::par(old.par)))
+    }
   }
   grDevices::png(tempfilename,width = nrow(heightmap),height=ncol(heightmap))
   graphics::par(mar = c(0,0,0,0))

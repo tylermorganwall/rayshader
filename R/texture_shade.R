@@ -61,6 +61,7 @@
 texture_shade = function(heightmap, detail=0.5, 
                          contrast = 1, brightness = 0, transform = TRUE,
                          dx = 1, dy = 1, pad = 50) {
+  heightmap[is.na(heightmap)] = mean(heightmap,na.rm=TRUE)
   if(detail < 0 || detail > 1) {
     stop("`detail` should be a number between 0 and 1.")
   }
@@ -70,7 +71,7 @@ texture_shade = function(heightmap, detail=0.5,
   if(pad < 0) {
     stop("`pad` should be an integer greater than zero.")
   }
-  heightmap = heightmap - min(heightmap)
+  heightmap = heightmap - min(heightmap,na.rm=TRUE)
   heightmap = add_multi_padding(heightmap,pad)
   odd_padded_cols = FALSE
   odd_padded_rows = FALSE

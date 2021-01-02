@@ -12,7 +12,9 @@ generate_line_overlay(
   height = NA,
   color = "black",
   linewidth = 1,
-  data_column_width = NULL
+  lty = 1,
+  data_column_width = NULL,
+  offset = c(0, 0)
 )
 }
 \arguments{
@@ -31,8 +33,13 @@ overlay automatically.}
 
 \item{linewidth}{Default `1`. Line width.}
 
+\item{lty}{Default `1`. Line type. `1` is solid, `2` is dashed, `3` is dotted,`4` is dot-dash,
+`5` is long dash, and `6` is dash-long-dash.}
+
 \item{data_column_width}{Default `NULL`. The numeric column to map the width to. The maximum width will be the value
 specified in `linewidth`.}
+
+\item{offset}{Default `c(0,0)`. Horizontal and vertical offset to apply to the line, in units of `geometry`.}
 }
 \value{
 Semi-transparent overlay with contours.

@@ -10,6 +10,7 @@ generate_polygon_overlay(
   heightmap = NULL,
   width = NA,
   height = NA,
+  offset = c(0, 0),
   data_column_fill = NULL,
   linecolor = "black",
   palette = "white",
@@ -27,6 +28,8 @@ overlay automatically.}
 \item{width}{Default `NA`. Width of the resulting overlay. Default the same dimensions as height map.}
 
 \item{height}{Default `NA`. Width of the resulting overlay. Default the same dimensions as height map.}
+
+\item{offset}{Default `c(0,0)`. Horizontal and vertical offset to apply to the polygon, in units of `geometry`.}
 
 \item{data_column_fill}{Default `NULL`. The column to map the polygon fill color to.}
 

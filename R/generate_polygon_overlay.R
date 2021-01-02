@@ -14,6 +14,7 @@
 #'it will map the colors in the vector to the names. If `data_column_fill` is a numeric column,
 #'this will give a continuous mapping.
 #'@param linewidth Default `1`. Line width.
+#'@param offset Default `c(0,0)`. Horizontal and vertical offset to apply to the polygon, in units of `geometry`.
 #'@param data_column_fill Default `NULL`. The column to map the polygon fill color to.
 #'@return Image overlay representing the input polygon data.
 #'@export
@@ -60,7 +61,7 @@
 #'  plot_map()
 #'}
 generate_polygon_overlay = function(geometry, extent, heightmap = NULL, 
-                                    width=NA, height=NA, data_column_fill = NULL, 
+                                    width=NA, height=NA, offset = c(0,0), data_column_fill = NULL, 
                                     linecolor = "black", palette = "white", linewidth = 1) {
   if(!("sf" %in% rownames(utils::installed.packages()))) {
     stop("{sf} package required for generate_line_overlay()")
@@ -74,7 +75,7 @@ generate_polygon_overlay = function(geometry, extent, heightmap = NULL,
   if(!inherits(geometry,"sf")) {
     stop("geometry must be {sf} object")
   }
-  sf_contours_cropped = base::suppressMessages(base::suppressWarnings(sf::st_crop(geometry, extent)))
+  sf_polygons_cropped = base::suppressMessages(base::suppressWarnings(sf::st_crop(geometry, extent)))
   
   if(is.na(height)) {
     height  = ncol(heightmap)
@@ -83,7 +84,7 @@ generate_polygon_overlay = function(geometry, extent, heightmap = NULL,
     width  = nrow(heightmap)
   }
   if (is.function(palette)) {
-    palette = palette(nrow(sf_contours_cropped))
+    palette = palette(nrow(sf_polygons_cropped))
   }
   if(is.function(palette)) {
     transparent = FALSE
@@ -96,20 +97,20 @@ generate_polygon_overlay = function(geometry, extent, heightmap = NULL,
     #Calculate colors
     stopifnot(is.character(palette))
     if(!is.null(data_column_fill)) {
-      if(data_column_fill %in% colnames(sf_contours_cropped)) {
-        if(is.numeric(sf_contours_cropped[[data_column_fill]])) {
-          max_col = max(sf_contours_cropped[[data_column_fill]],na.rm = TRUE)
-          min_col = min(sf_contours_cropped[[data_column_fill]],na.rm = TRUE)
-          indices = (sf_contours_cropped[[data_column_fill]] - min_col) / (max_col - min_col) * length(palette)
+      if(data_column_fill %in% colnames(sf_polygons_cropped)) {
+        if(is.numeric(sf_polygons_cropped[[data_column_fill]])) {
+          max_col = max(sf_polygons_cropped[[data_column_fill]],na.rm = TRUE)
+          min_col = min(sf_polygons_cropped[[data_column_fill]],na.rm = TRUE)
+          indices = (sf_polygons_cropped[[data_column_fill]] - min_col) / (max_col - min_col) * length(palette)
           fillvals = palette[as.integer(indices)]
-        } else if (is.character(sf_contours_cropped[[data_column_fill]])) {
+        } else if (is.character(sf_polygons_cropped[[data_column_fill]])) {
           mapping = names(palette)
-          indices = match(sf_contours_cropped[[data_column_fill]],mapping)
+          indices = match(sf_polygons_cropped[[data_column_fill]],mapping)
           fillvals = palette[as.integer(indices)]
-        } else if  (is.factor(sf_contours_cropped[[data_column_fill]])) {
-          character_col = as.character(sf_contours_cropped[[data_column_fill]])
+        } else if  (is.factor(sf_polygons_cropped[[data_column_fill]])) {
+          character_col = as.character(sf_polygons_cropped[[data_column_fill]])
           mapping = names(palette)
-          indices = match(sf_contours_cropped[[data_column_fill]],mapping)
+          indices = match(sf_polygons_cropped[[data_column_fill]],mapping)
           fillvals = palette[as.integer(indices)]
         }
       } else {
@@ -117,7 +118,7 @@ generate_polygon_overlay = function(geometry, extent, heightmap = NULL,
         fillvals = palette
       }
     } else {
-      if(nrow(sf_contours_cropped) %% length(palette) != 0) {
+      if(nrow(sf_polygons_cropped) %% length(palette) != 0) {
         stop("Number of explicitly defined colors does not match (or recycle within) number of polygons")
       }
       fillvals = palette
@@ -129,17 +130,26 @@ generate_polygon_overlay = function(geometry, extent, heightmap = NULL,
   } else {
     lty = "solid"
   }
+  if(any(offset != 0)) {
+    if(length(offset) == 2) {
+      for(i in seq_len(length(sf_polygons_cropped$geometry))) {
+        sf_polygons_cropped$geometry[[i]] = sf_polygons_cropped$geometry[[i]] + offset
+      }
+    } else {
+      stop("`offset` must be of length-2")
+    }
+  }
   tempoverlay = tempfile(fileext = ".png")
   grDevices::png(filename = tempoverlay, width = width, height = height, units="px",bg = "transparent")
   graphics::par(mar = c(0,0,0,0))
   if(!transparent) {
-    graphics::plot(sf::st_geometry(sf_contours_cropped), xlim = c(extent@xmin,extent@xmax),
+    graphics::plot(sf::st_geometry(sf_polygons_cropped), xlim = c(extent@xmin,extent@xmax),
                    ylim =  c(extent@ymin,extent@ymax), 
                    lty = lty, border = NA, asp = 1,
                    xaxs = "i", yaxs = "i", lwd = linewidth, col = fillvals)
   }
   if(!is.na(linewidth) && linewidth > 0) {
-    graphics::plot(sf::st_geometry(sf_contours_cropped), xlim = c(extent@xmin,extent@xmax), 
+    graphics::plot(sf::st_geometry(sf_polygons_cropped), xlim = c(extent@xmin,extent@xmax), 
                    ylim =  c(extent@ymin,extent@ymax),
                    lty = lty, add=!transparent, asp = 1,
                    xaxs = "i", yaxs = "i", lwd = linewidth, col = NA, border = linecolor)

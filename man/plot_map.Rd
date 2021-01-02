@@ -4,7 +4,22 @@
 \alias{plot_map}
 \title{Plot Map}
 \usage{
-plot_map(hillshade, rotate = 0, asp = 1, keep_user_par = FALSE, ...)
+plot_map(
+  hillshade,
+  rotate = 0,
+  asp = 1,
+  title_text = NA,
+  title_offset = c(20, 20),
+  title_color = "black",
+  title_size = 30,
+  title_font = "sans",
+  title_style = "normal",
+  title_bar_color = NULL,
+  title_bar_alpha = 0.5,
+  title_position = "northwest",
+  keep_user_par = FALSE,
+  ...
+)
 }
 \arguments{
 \item{hillshade}{Hillshade to be plotted.}
@@ -13,6 +28,26 @@ plot_map(hillshade, rotate = 0, asp = 1, keep_user_par = FALSE, ...)
 
 \item{asp}{Default `1`. Aspect ratio of the resulting plot. Use `asp = 1/cospi(mean_latitude/180)` to rescale
 lat/long at higher latitudes to the correct the aspect ratio.}
+
+\item{title_text}{Default `NULL`. Text. Adds a title to the image, using `magick::image_annotate()`.}
+
+\item{title_offset}{Default `c(20,20)`. Distance from the top-left (default, `gravity` direction in
+image_annotate) corner to offset the title.}
+
+\item{title_color}{Default `black`. Font color.}
+
+\item{title_size}{Default `30`. Font size in pixels.}
+
+\item{title_font}{Default `sans`. String with font family such as "sans", "mono", "serif", "Times", "Helvetica",
+"Trebuchet", "Georgia", "Palatino" or "Comic Sans".}
+
+\item{title_style}{Default `normal`. Font style (e.g. `italic`).}
+
+\item{title_bar_color}{Default `NULL`. If a color, this will create a colored bar under the title.}
+
+\item{title_bar_alpha}{Default `0.5`. Transparency of the title bar.}
+
+\item{title_position}{Default `northwest`. Position of the title.}
 
 \item{keep_user_par}{Default `TRUE`. Whether to keep the user's `par()` settings. Set to `FALSE` if you 
 want to set up a multi-pane plot (e.g. set `par(mfrow)`).}

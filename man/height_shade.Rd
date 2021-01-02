@@ -6,13 +6,17 @@
 \usage{
 height_shade(
   heightmap,
-  texture = (grDevices::colorRampPalette(c("#6AA85B", "#D9CC9A", "#FFFFFF")))(256)
+  texture = (grDevices::colorRampPalette(c("#6AA85B", "#D9CC9A", "#FFFFFF")))(256),
+  keep_user_par = TRUE
 )
 }
 \arguments{
 \item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point.}
 
 \item{texture}{Default `terrain.colors(256)`. A color palette for the plot.}
+
+\item{keep_user_par}{Default `TRUE`. Whether to keep the user's `par()` settings. Set to `FALSE` if you 
+want to set up a multi-pane plot (e.g. set `par(mfrow)`).}
 }
 \value{
 RGB array of hillshaded texture mappings.

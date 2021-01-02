@@ -48,6 +48,17 @@ add_overlay = function(hillshade, overlay, alphacolor=NULL,
         overlay = temparray
       }
     }
+  } else {
+    if(length(dim(overlay)) == 3) {
+      if(dim(overlay)[3] == 3) {
+        temparray = array(0,dim = c(nrow(overlay),ncol(overlay),4))
+        temparray[,,1] = overlay[,,1]
+        temparray[,,2] = overlay[,,2]
+        temparray[,,3] = overlay[,,3]
+        temparray[,,4] = alphalayer[1]
+        overlay = temparray
+      }
+    }
   }
   if(alphalayer != 1) {
     if(alphamethod == "max") {
