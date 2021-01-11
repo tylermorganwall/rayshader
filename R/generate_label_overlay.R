@@ -197,7 +197,7 @@ generate_label_overlay = function(labels, extent, x=NULL, y=NULL,
                          xaxs = "i", yaxs = "i",  col = halo_color)
     grDevices::dev.off() #resets par
     overlay_temp_under = png::readPNG(tempoverlay)
-    if(halo_expand != 0) {
+    if(halo_expand != 0 || any(halo_offset != 0)) {
       temp_alpha = overlay_temp_under[,,4]
       temp_alpha[temp_alpha > 0] = 1
       booldistance = get_boolean_distance(temp_alpha)

@@ -4,11 +4,14 @@ pkgdown_sha: 2f40b4769ea9ad2312aa4cc93f27ab116461543b
 articles: []
 
 reference:
-  - title: "Creating Hillshades and Overlays"
-    desc: "Functions for generating hillshades and overlays"
+  - title: "Creating Hillshades"
+    desc: "Functions for generating hillshades"
     contents: 
       - ends_with("shade")
       - starts_with("create")
+  - title: "Creating Overlays"
+    desc: "Functions for generating overlays to add to maps"
+    contents: 
       - starts_with("generate")
       - starts_with("detect")
   - title: "Adding Shadows and Overlays to Maps"
@@ -45,6 +48,8 @@ navbar:
       href: index.html
     - text: "Tutorials/Blog Posts"
       menu:
+      -  text: "Tutorial: Adding Open Street Map Data to Rayshader Maps in R"
+         href: https://www.tylermw.com/adding-open-street-map-data-to-rayshader-maps-in-r/
       -  text: "A Step-by-Step Guide to Making 3D Maps with Satellite Imagery in R"
          href: https://www.tylermw.com/a-step-by-step-guide-to-making-3d-maps-with-satellite-imagery-in-r/
       -  text: "Introducing 3D ggplots with rayshader"

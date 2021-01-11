@@ -12,13 +12,27 @@
 #'@return Matrix of light intensities at each point.
 #'@export
 #'@examples
-#'#Here we produce a light intensity map of the `volcano` elevation map.
-#'volcanointensity = lamb_shade(heightmap = volcano, 
-#'    sunaltitude = 60, 
-#'    sunangle = 25, 
-#'    zscale = 1) 
-#'    
-#'plot_map(volcanointensity)
+#'\donttest{
+#'#Generate a basic hillshade
+#'montereybay %>% 
+#'  lamb_shade(zscale=200) %>% 
+#'  plot_map()
+#'  
+#'#Increase the intensity by decreasing the zscale
+#'montereybay %>% 
+#'  lamb_shade(zscale=50) %>% 
+#'  plot_map()
+#'  
+#'#Change the sun direction
+#'montereybay %>% 
+#'  lamb_shade(zscale=200, sunangle=45) %>% 
+#'  plot_map()
+#'  
+#'#Change the sun altitude
+#'montereybay %>% 
+#'  lamb_shade(zscale=200, sunaltitude=60) %>% 
+#'  plot_map()
+#'}
 lamb_shade = function(heightmap, sunaltitude=45,  sunangle=315, zscale = 1, zero_negative = TRUE) {
   sunang_rad = pi-sunangle*pi/180;
   rayang_rad = sunaltitude*pi/180;
