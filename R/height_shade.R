@@ -39,7 +39,13 @@
 #'}
 height_shade = function(heightmap, 
                         texture=grDevices::colorRampPalette(c("#6AA85B","#D9CC9A","#FFFFFF"))(256),
+                        range = NULL,
                         keep_user_par = TRUE) {
+  if(!is.null(range)) {
+    range = base::sort(range[1:2])
+  } else {
+    range = range(heightmap,na.rm=TRUE)
+  }
   tempfilename = tempfile() 
   if(keep_user_par) {
     old.par = graphics::par(no.readonly = TRUE)
@@ -49,7 +55,7 @@ height_shade = function(heightmap,
   }
   grDevices::png(tempfilename,width = nrow(heightmap),height=ncol(heightmap))
   graphics::par(mar = c(0,0,0,0))
-  raster::image(fliplr(heightmap),axes = FALSE,col = texture, useRaster=TRUE)
+  graphics::image(fliplr(heightmap),axes = FALSE,col = texture, useRaster=TRUE,zlim=range)
   grDevices::dev.off()
   tempmap = png::readPNG(tempfilename)
   return(tempmap)

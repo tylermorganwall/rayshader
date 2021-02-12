@@ -117,7 +117,7 @@ generate_waterline_overlay = function(heightmap, color = "white", linewidth=1, b
   } else {
     is_water = heightmap
   }
-  water_dist = get_boolean_distance(is_water != 1)
+  water_dist = rayimage::render_boolean_distance(is_water != 1)
   if(return_distance_matrix) {
     return(flipud(water_dist))
   }

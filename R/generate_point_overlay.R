@@ -50,8 +50,11 @@ generate_point_overlay = function(geometry, extent, heightmap = NULL,
   stopifnot(!is.null(heightmap) || (!is.na(width) && !is.na(height)))
   stopifnot(!missing(extent))
   stopifnot(!missing(geometry))
-  if(!inherits(geometry,"sf") && !inherits(geometry,"sfc")) {
+  if(!(inherits(geometry,"sf") || inherits(geometry,"sfc") || inherits(geometry,"sfg"))) {
     stop("geometry must be {sf} object")
+  }
+  if(inherits(geometry,"sfg")) {
+    geometry = sf::st_sfc(geometry)
   }
   sf_point_cropped = base::suppressMessages(base::suppressWarnings(sf::st_crop(geometry, extent)))
   

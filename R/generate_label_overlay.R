@@ -200,7 +200,7 @@ generate_label_overlay = function(labels, extent, x=NULL, y=NULL,
     if(halo_expand != 0 || any(halo_offset != 0)) {
       temp_alpha = overlay_temp_under[,,4]
       temp_alpha[temp_alpha > 0] = 1
-      booldistance = get_boolean_distance(temp_alpha)
+      booldistance = rayimage::render_boolean_distance(temp_alpha)
       temp_alpha[booldistance <= halo_expand] = 1
       temp_alpha[booldistance > halo_expand] = 0
       col_below = convert_color(halo_color)
