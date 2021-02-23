@@ -142,7 +142,7 @@ ground and add additional scene elements.
 volcano \%>\%
  sphere_shade() \%>\%
  plot_3d(volcano,zscale = 2)
-render_highquality()
+render_highquality() 
 }
 
 #Change position of light

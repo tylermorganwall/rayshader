@@ -72,7 +72,7 @@ bird_track_long[[i]] = bird_track_long[[i-1]] + x_vel_out[i]
 montereybay \%>\%
  sphere_shade() \%>\%
  plot_3d(montereybay,zscale=50,water=TRUE,
-         shadowcolor="#40310a", watercolor="#233aa1", background = "tan",
+         shadowcolor="#40310a", background = "tan",
          theta=210,  phi=22, zoom=0.20, fov=55)
 
 #Pass in the extent of the underlying raster (stored in an attribute for the montereybay

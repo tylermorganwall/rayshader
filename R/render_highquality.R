@@ -60,7 +60,7 @@
 #'volcano %>%
 #'  sphere_shade() %>%
 #'  plot_3d(volcano,zscale = 2)
-#'render_highquality()
+#'render_highquality() 
 #'}
 #'
 #'#Change position of light
@@ -301,16 +301,6 @@ render_highquality = function(filename = NULL, light = TRUE, lightdirection = 31
     temp_center = rgl.attrib(labelids[i], "centers")
     temp_color = rgl.attrib(labelids[i], "colors")
     for(j in seq_len(nrow(temp_label))) {
-      labelfile = ""
-      if(!no_cache) {
-        labelfile = paste0(temp_label[j,1],".png")
-      } else {
-        labelfile = tempfile(fileext = ".png")
-      }
-      rayimage::add_title(matrix(0,ncol = nchar(temp_label[j,1])*60, nrow=60), 
-                          title_size  = 60,
-                          title_offset = c(0,0),title_text = temp_label, title_color = "white",
-                          title_position = "center", filename = labelfile)
       if(is.null(text_angle)) {
         anglevec = c(rotmat[1],theta,0)
       } else {
@@ -320,12 +310,13 @@ render_highquality = function(filename = NULL, light = TRUE, lightdirection = 31
           anglevec = text_angle
         }
       }
-      labels[[counter]] = rayrender::xy_rect(x=temp_center[j,1] - bbox_center[1] + text_offset[1], 
+      labels[[counter]] = rayrender::text3d(label=temp_label[j,1],
+                                  x=temp_center[j,1] - bbox_center[1] + text_offset[1], 
                                   y=temp_center[j,2] - bbox_center[2] + text_offset[2], 
                                   z=temp_center[j,3] - bbox_center[3] + text_offset[3],
                                   angle = anglevec,
-                                  xwidth = nchar(temp_label[j,1])*text_size, ywidth = text_size,
-                                  material = rayrender::diffuse(color = temp_color[j,1:3], alpha_texture = labelfile))
+                                  text_height = text_size,
+                                  material = rayrender::diffuse(color = temp_color[j,1:3]))
       counter = counter + 1
     }
   }

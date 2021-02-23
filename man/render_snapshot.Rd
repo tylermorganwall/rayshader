@@ -20,6 +20,9 @@ render_snapshot(
   instant_capture = interactive(),
   bring_to_front = FALSE,
   keep_user_par = FALSE,
+  webshot = FALSE,
+  width = NULL,
+  height = NULL,
   ...
 )
 }
@@ -61,6 +64,15 @@ before taking the snapshot. This can help stop prevent rendering issues when run
 
 \item{keep_user_par}{Default `TRUE`. Whether to keep the user's `par()` settings. Set to `FALSE` if you 
 want to set up a multi-pane plot (e.g. set `par(mfrow)`).}
+
+\item{webshot}{Default `FALSE`. Set to `TRUE` to have rgl use the `webshot2` package to take images,
+which can be used when `rgl.useNULL = TRUE`.}
+
+\item{width}{Default `NULL`. Optional argument to pass to `rgl::snapshot3d()` to specify the
+width when `webshot = TRUE`.}
+
+\item{height}{Default `NULL`. Optional argument to pass to `rgl::snapshot3d()` to specify the
+height when `webshot = TRUE`.}
 
 \item{...}{Additional parameters to pass to magick::image_annotate.}
 }

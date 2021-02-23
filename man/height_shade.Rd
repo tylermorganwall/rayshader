@@ -7,6 +7,7 @@
 height_shade(
   heightmap,
   texture = (grDevices::colorRampPalette(c("#6AA85B", "#D9CC9A", "#FFFFFF")))(256),
+  range = NULL,
   keep_user_par = TRUE
 )
 }

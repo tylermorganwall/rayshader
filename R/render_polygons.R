@@ -68,7 +68,7 @@
 #' render_snapshot()        
 #' 
 #' #This function also works with `render_highquality()`
-#' render_highquality(sample_method="stratified", samples=400, clamp_value=10)
+#' render_highquality(samples=400, clamp_value=10)
 #' rgl::rgl.close()
 #' }
 render_polygons = function(polygon, extent,  color = "red", top = 1, bottom = NA,

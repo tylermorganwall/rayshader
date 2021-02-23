@@ -25,6 +25,12 @@
 #'@param bring_to_front Default `FALSE`. Whether to bring the window to the front when taking the snapshot.
 #'@param keep_user_par Default `TRUE`. Whether to keep the user's `par()` settings. Set to `FALSE` if you 
 #'want to set up a multi-pane plot (e.g. set `par(mfrow)`).
+#'@param webshot Default `FALSE`. Set to `TRUE` to have rgl use the `webshot2` package to take images,
+#'which can be used when `rgl.useNULL = TRUE`.
+#'@param width Default `NULL`. Optional argument to pass to `rgl::snapshot3d()` to specify the
+#'width when `webshot = TRUE`.
+#'@param height Default `NULL`. Optional argument to pass to `rgl::snapshot3d()` to specify the
+#'height when `webshot = TRUE`.
 #'@param ... Additional parameters to pass to magick::image_annotate. 
 #'@return Displays snapshot of current rgl plot (or saves to disk).
 #'@export
@@ -64,7 +70,8 @@ render_snapshot = function(filename, clear=FALSE,
                            title_position = "northwest",
                            image_overlay = NULL, vignette = FALSE,
                            instant_capture = interactive(), bring_to_front = FALSE, 
-                           keep_user_par = FALSE, ...) {
+                           keep_user_par = FALSE, webshot = FALSE, 
+                           width = NULL, height = NULL, ...) {
   if(rgl::rgl.cur() == 0) {
     stop("No rgl window currently open.")
   }
@@ -91,8 +98,16 @@ render_snapshot = function(filename, clear=FALSE,
   } else {
     has_overlay = FALSE
   }
-  temp = paste0(tempfile(),".png")
-  rgl::snapshot3d(filename = temp, top = bring_to_front)
+  temp = tempfile(fileext = ".png")
+  if("webshot" %in% names(formals(rgl::snapshot3d))) {
+    if(webshot) {
+      rgl::snapshot3d(filename = temp, webshot = webshot, width = width, height = height)
+    } else {
+      rgl::snapshot3d(filename = temp, top = bring_to_front, webshot = webshot)
+    }
+  } else {
+    rgl::snapshot3d(filename = temp, top = bring_to_front)
+  }
   tempmap = png::readPNG(temp)
   if(has_overlay) {
     tempmap = rayimage::add_image_overlay(tempmap, image_overlay = image_overlay_file)
