@@ -4,6 +4,8 @@
 #'
 #'@param heightmap A two-dimensional matrix, where each entry in the matrix is the elevation at that point. 
 #'@param texture Default `terrain.colors(256)`. A color palette for the plot.
+#'@param range Default `NULL`, the full range of the heightmap. A length-2 vector specifying the maximum
+#'and minimum values to map the color palette to.
 #'@param keep_user_par Default `TRUE`. Whether to keep the user's `par()` settings. Set to `FALSE` if you 
 #'want to set up a multi-pane plot (e.g. set `par(mfrow)`).
 #'@return RGB array of hillshaded texture mappings.
