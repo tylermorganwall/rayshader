@@ -13,7 +13,7 @@ make_water = function(heightmap,waterheight=mean(heightmap),watercolor="lightblu
   heightmap = heightmap/zscale
   na_matrix = is.na(heightmap)
   waterheight = waterheight/zscale
-  if(all(heightmap >= waterheight)) {
+  if(all(heightmap >= waterheight, na.rm=TRUE)) {
     warning("No water rendered--all elevations above or equal to water level. Range of heights: ",
             min(heightmap,na.rm = TRUE)*zscale,"-", max(heightmap,na.rm = TRUE)*zscale, ". Depth specified: ",
             waterheight * zscale)
