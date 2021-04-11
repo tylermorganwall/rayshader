@@ -511,7 +511,7 @@ render_highquality = function(filename = NULL, light = TRUE, lightdirection = 31
   }
   if(has_title) {
     temp = tempfile(fileext = ".png")
-    rayrender::render_scene(scene, lookfrom = lookfrom, lookat = camera_lookat, fov = fov, filename=temp,
+    debug_return = rayrender::render_scene(scene, lookfrom = lookfrom, lookat = camera_lookat, fov = fov, filename=temp,
                  ortho_dimensions = ortho_dimensions, width = width, height = height, 
                  clamp_value = clamp_value, ...)
     if(has_title) {
@@ -528,11 +528,12 @@ render_highquality = function(filename = NULL, light = TRUE, lightdirection = 31
       }
     }
   } else {
-    rayrender::render_scene(scene, lookfrom = lookfrom, lookat = camera_lookat, fov = fov, filename=filename,
+    debug_return = rayrender::render_scene(scene, lookfrom = lookfrom, lookat = camera_lookat, fov = fov, filename=filename,
                  ortho_dimensions = ortho_dimensions, width = width, height = height, 
                  clamp_value = clamp_value, ...)
   }
   if(clear) {
     rgl::rgl.clear()
   }
+  return(invisible(debug_return))
 }
