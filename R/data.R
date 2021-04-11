@@ -48,7 +48,7 @@
 #' the `montereybay` dataset.
 #'
 #' @format An `sf` object with LINESTRING geometry.
-#' @source \url{http://www2.census.gov/geo/tiger/TIGER2015/PRISECROADS/tl_2015_06_prisecroads.zip}
+#' @source \url{https://www2.census.gov/geo/tiger/TIGER2015/PRISECROADS/tl_2015_06_prisecroads.zip}
 #' @examples 
 #' # This is the full code (commented out) used to generate this dataset from the original data:
 #' #counties = sf::st_read("tl_2015_06_prisecroads.shp")
