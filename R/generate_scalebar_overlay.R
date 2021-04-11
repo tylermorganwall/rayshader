@@ -176,7 +176,7 @@ generate_scalebar_overlay = function(extent, length, x=0.05, y=0.05,
   if(is.na(width)) {
     width  = nrow(heightmap)
   }
-  if(!is.na(labels) && length(labels) != 3) {
+  if(all(!is.na(labels)) && length(labels) != 3) {
     stop("If specified, `labels` must be length-3 vector")
   }
 
@@ -312,7 +312,7 @@ generate_scalebar_overlay = function(extent, length, x=0.05, y=0.05,
                        col=tick_color, lwd = tick_width)
   }
   
-  if(is.na(labels) || length(labels) != 3) {
+  if(all(is.na(labels)) || length(labels) != 3) {
     format_string = paste0(c("%0.",decimals,"f"),collapse="")
     labels <- paste0(c(sprintf(format_string,c(0,length/2,length))),c("","",unit))
   }
