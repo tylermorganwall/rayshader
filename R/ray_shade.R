@@ -96,10 +96,16 @@ ray_shade = function(heightmap, sunaltitude=45, sunangle=315, maxsearch=NULL, la
     }
     return(shadowmatrix)
   } else {
-    if(is.null(options("cores")[[1]])) {
-      numbercores = parallel::detectCores()
-    } else {
-      numbercores = options("cores")[[1]]
+    #Limit number of cores during CRAN checks
+    chk = Sys.getenv("_R_CHECK_LIMIT_CORES_", "")
+    if (nzchar(chk) && chk == "TRUE") { 
+      numbercores = 2L
+    } else { 
+      if(is.null(options("cores")[[1]])) {
+        numbercores = parallel::detectCores()
+      } else {
+        numbercores = options("cores")[[1]]
+      }
     }
     if(nrow(heightmap) < numbercores*16) {
       if(nrow(heightmap) < 4) {
