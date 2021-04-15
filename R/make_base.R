@@ -43,6 +43,7 @@ make_base = function(heightmap,basedepth=0,basecolor="grey20",zscale=1) {
     fullsides = fullsides[nrow(fullsides):1,]
     # fullnormals = fullnormals[nrow(fullnormals):1,]
     rgl::triangles3d(fullsides, #normals=fullnormals,
+                     texture = NULL,
                      lit=FALSE,color=basecolor,front="filled",back="culled",ambient = "#000002")
   } else if(all(!is.na(heightmap))) {
     na_matrix = is.na(heightmap)
@@ -60,6 +61,7 @@ make_base = function(heightmap,basedepth=0,basecolor="grey20",zscale=1) {
     fullsides = fullsides[nrow(fullsides):1,]
     fullnormals = fullnormals[nrow(fullnormals):1,]
     rgl::triangles3d(fullsides, normals=fullnormals,
+                     texture = NULL,
                      lit=FALSE,color=basecolor,front="filled",back="filled",ambient = "#000002")
   } else {
     na_matrix = is.na(heightmap)
@@ -83,6 +85,7 @@ make_base = function(heightmap,basedepth=0,basecolor="grey20",zscale=1) {
                 lit=FALSE,back="filled",front="filled",ambient = "#000007", 
                 normal_x = xznormals, normal_z = xznormals, normal_y = ynormals)
     rgl::triangles3d(fullsides, normals = fullnormals,
+                     texture = NULL,
                      lit=FALSE,color=basecolor,front="filled",back="filled",ambient = "#000002")
   }
 }

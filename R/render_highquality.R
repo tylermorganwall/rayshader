@@ -149,15 +149,17 @@ render_highquality = function(filename = NULL, light = TRUE, lightdirection = 31
   if(is.null(height)) {
     height = windowrect[4]-windowrect[2]
   }
+  if(.Platform$OS.type == "windows") {
+    sepval = "\\"
+  } else {
+    sepval = "/"
+  }
   no_cache = FALSE
   if(is.null(cache_filename)) {
     no_cache = TRUE
-    if(.Platform$OS.type == "windows") {
-      sepval = "\\"
-    } else {
-      sepval = "/"
-    }
     cache_filename = paste0(tempdir(), sepval, "temprayfile.obj")
+  } else {
+    cache_filename = paste0(tempdir(), sepval, cache_filename)
   }
   surfaceid = get_ids_with_labels(typeval = c("surface", "surface_tris"))
   surfacevertices = rgl.attrib(surfaceid$id[1], "vertices")
