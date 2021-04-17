@@ -37,6 +37,9 @@
 #'}
 save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1, 
                     manifold_geometry = FALSE, all_face_fields = FALSE) {
+  if(rgl::rgl.cur() == 0) {
+    stop("No rgl window currently open.")
+  }
   if(is.null(filename)) {
     stop("save_obj requires a filename")
   }
@@ -103,7 +106,7 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
       cat(paste("newmtl ray_surface \n"), file=con)
       file.copy(idrow$texture_file[[1]], sprintf("%s.png",noext_filename), overwrite = TRUE)
       
-      cat(sprintf("map_Kd %s.png \n",tools::file_path_sans_ext(basename(filename))), file=con)
+      cat(sprintf("map_Kd %s.png \n",tools::file_path_sans_ext(filename)), file=con)
       cat("\n", file=con)
     } else if (!is.na(idrow$base_color[[1]])) {
       tempcol = col2rgb(idrow$base_color[[1]])/256
