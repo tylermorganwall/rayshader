@@ -14,14 +14,13 @@ Please note the code of conduct, please follow it in all your interactions with 
 external data (unless the data is included in an R package, or can be easily requested via one, e.g. the
 elevatr package). I recommend using the reprex package.  Be sure to include your system information via the `Sys.info()` function.
 
+## Documentation
+
+1. This one's easy! Just update the Roxygen comments and rebuild the documentation, and include both changed filed (.man and .R) in your pull request.
+
 ## Pull Request Process
 
 1. Be sure to have opened an issue describing your intended changes first. 
 2. Fork the repo and make your changes.
-3. Run the included tests using testthat, ensuring there are no regressions/bugs introduced from previous versions.
-The tests check consistency with previous renders: if your contributions result in intended changes to the rendering
-behavior (via changes the random number generation process, lighting integrator, surface materials, objects, etc), document
-the changes and each failing test in your pull request. Further instructions are at the bottom of each testthat file that
-describe how to regenerate new standard checksums that incorporate the requested changes.
-4. Ensure the package passes an R CMD CHECK with no warnings or errors, preferably with `rhub::check_for_cran()`. If making changes
+3. Ensure the package passes an R CMD CHECK with no warnings or errors, preferably with `rhub::check_for_cran()`. If making changes
 to the compiled code, please also use `rhub::check_on_solaris()`, `rhub::check_on_macos()`, and `rhub::check_on_windows()` (or upload the source packages to Win-Builder).
