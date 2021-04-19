@@ -8,7 +8,7 @@
 An `sf` object with LINESTRING geometry.
 }
 \source{
-\url{https://www2.census.gov/geo/tiger/TIGER2015/PRISECROADS/tl_2015_06_prisecroads.zip}
+https://www2.census.gov/geo/tiger/TIGER2015/PRISECROADS/tl_2015_06_prisecroads.zip
 }
 \usage{
 monterey_roads_sf

@@ -8,7 +8,7 @@
 An `sf` object with MULTIPOLYGON geometry.
 }
 \source{
-\url{https://catalog.data.gov/dataset/tiger-line-shapefile-2016-state-california-current-county-subdivision-state-based}
+https://catalog.data.gov/dataset/tiger-line-shapefile-2016-state-california-current-county-subdivision-state-based
 }
 \usage{
 monterey_counties_sf

@@ -9,7 +9,7 @@ A matrix with 540 rows and 540 columns. Elevation is in meters, and the spacing 
 coordinate is 200 meters (zscale = 200). Water level is 0. Raster extent located in "extent" attribute. CRS located in "CRS" attribute.
 }
 \source{
-\url{https://www.ncei.noaa.gov/metadata/geoportal/rest/metadata/item/gov.noaa.ngdc.mgg.dem:3544/html}
+https://www.ncei.noaa.gov/metadata/geoportal/rest/metadata/item/gov.noaa.ngdc.mgg.dem:3544/html
 }
 \usage{
 montereybay

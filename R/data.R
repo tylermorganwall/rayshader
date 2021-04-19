@@ -6,7 +6,7 @@
 #'
 #' @format A matrix with 540 rows and 540 columns. Elevation is in meters, and the spacing between each
 #' coordinate is 200 meters (zscale = 200). Water level is 0. Raster extent located in "extent" attribute. CRS located in "CRS" attribute.
-#' @source \url{https://www.ncei.noaa.gov/metadata/geoportal/rest/metadata/item/gov.noaa.ngdc.mgg.dem:3544/html}
+#' @source https://www.ncei.noaa.gov/metadata/geoportal/rest/metadata/item/gov.noaa.ngdc.mgg.dem:3544/html
 #' @examples 
 #' # This is the full code (commented out) used to generate this dataset from the original NOAA data:
 #' #raster::raster("monterey_13_navd88_2012.nc")
@@ -32,7 +32,7 @@
 #' the `montereybay` dataset.
 #'
 #' @format An `sf` object with MULTIPOLYGON geometry.
-#' @source \url{https://catalog.data.gov/dataset/tiger-line-shapefile-2016-state-california-current-county-subdivision-state-based}
+#' @source https://catalog.data.gov/dataset/tiger-line-shapefile-2016-state-california-current-county-subdivision-state-based
 #' @examples 
 #' # This is the full code (commented out) used to generate this dataset from the original data:
 #' #counties = sf::st_read("tl_2016_06_cousub.shp")
@@ -48,7 +48,7 @@
 #' the `montereybay` dataset.
 #'
 #' @format An `sf` object with LINESTRING geometry.
-#' @source \url{https://www2.census.gov/geo/tiger/TIGER2015/PRISECROADS/tl_2015_06_prisecroads.zip}
+#' @source https://www2.census.gov/geo/tiger/TIGER2015/PRISECROADS/tl_2015_06_prisecroads.zip
 #' @examples 
 #' # This is the full code (commented out) used to generate this dataset from the original data:
 #' #counties = sf::st_read("tl_2015_06_prisecroads.shp")
