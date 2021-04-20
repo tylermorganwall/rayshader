@@ -38,8 +38,10 @@ Hillshade with overlay.
 Overlays an image (with a transparency layer) on the current map.
 }
 \examples{
+#Only run these examples if the magick package is installed.
+if (!("magick" \%in\% rownames(utils::installed.packages()))) {
 #Combining base R plotting with rayshader's spherical color mapping and raytracing:
-\dontrun{
+\donttest{
 montereybay \%>\%
   sphere_shade() \%>\%
   add_overlay(height_shade(montereybay),alphalayer = 0.6)  \%>\%
@@ -47,10 +49,13 @@ montereybay \%>\%
   plot_map()
 }
 
+\donttest{
 #Add contours with `generate_contour_overlay()`
 montereybay \%>\%
   height_shade() \%>\%
   add_overlay(generate_contour_overlay(montereybay))  \%>\%
   add_shadow(ray_shade(montereybay,zscale=50)) \%>\%
   plot_map()
+}
+}
 }
