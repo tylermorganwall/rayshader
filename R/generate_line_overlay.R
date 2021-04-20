@@ -19,6 +19,8 @@
 #'@export
 #'@examples
 #'#Add the included `sf` object with roads to the montereybay dataset
+#'#Only run these examples if the `magick` package is installed.
+#'if ("magick" %in% rownames(utils::installed.packages())) {
 #'\donttest{
 #'water_palette = colorRampPalette(c("darkblue", "dodgerblue", "lightblue"))(200)
 #'bathy_hs = height_shade(montereybay, texture = water_palette)
@@ -49,6 +51,7 @@
 #'                                    attr(montereybay,"extent"), width = 1080, height = 1080),
 #'                                    alphalayer=0.8)  %>%
 #'  plot_map()
+#'}
 #'}
 generate_line_overlay = function(geometry, extent, heightmap = NULL,
                                  width=NA, height=NA, 

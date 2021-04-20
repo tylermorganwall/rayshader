@@ -43,6 +43,8 @@ Calculates and returns an overlay of contour lines for the current height map.
 \examples{
 #Add contours to the montereybay dataset
 
+#Only run these examples if the `magick` package is installed.
+if ("magick" \%in\% rownames(utils::installed.packages())) {
 \donttest{
 montereybay \%>\%
  height_shade() \%>\%
@@ -93,5 +95,6 @@ montereybay \%>\%
  add_overlay(generate_contour_overlay(montereybay, linewidth=2, levels = seq(-2000,0,100))) \%>\%
  add_shadow(ray_shade(montereybay,zscale=50),0.3) \%>\%
  plot_map()
+}
 }
 }

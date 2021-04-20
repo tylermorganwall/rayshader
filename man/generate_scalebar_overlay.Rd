@@ -118,6 +118,8 @@ and then creates a scale bar at a specified x/y proportion across the map. If th
 scale bar of the proper length.
 }
 \examples{
+#Only run these examples if the `magick` package is installed.
+if ("magick" \%in\% rownames(utils::installed.packages())) {
 \donttest{
 #Create the water palette
 water_palette = colorRampPalette(c("darkblue", "dodgerblue", "lightblue"))(200)
@@ -220,5 +222,6 @@ base_map \%>\%
                                        height = nrow(montereybay)*2,
                                        latlong=TRUE), rescale_original=TRUE) \%>\%
  plot_map()
+}
 }
 }

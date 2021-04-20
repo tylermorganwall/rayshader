@@ -40,6 +40,8 @@
 #'@export
 #'@examples
 #'#Add the included `sf` object with roads to the montereybay dataset
+#'#Only run these examples if the `magick` package is installed.
+#'if ("magick" %in% rownames(utils::installed.packages())) {
 #'\donttest{
 #'#Create the water palette
 #'water_palette = colorRampPalette(c("darkblue", "dodgerblue", "lightblue"))(200)
@@ -115,6 +117,7 @@
 #'                                     halo_color = "white", halo_expand = 3, halo_blur=10,
 #'                                     seed=2))  %>%
 #'  plot_map()
+#'}
 #'}
 generate_label_overlay = function(labels, extent, x=NULL, y=NULL, 
                                   heightmap = NULL, width=NA, height=NA, text_size = 1,

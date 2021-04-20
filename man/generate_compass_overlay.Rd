@@ -75,6 +75,8 @@ This adds the compass
 Based on code from "Auxiliary Cartographic Functions in R: North Arrow, Scale Bar, and Label with a Leader Arrow"
 }
 \examples{
+#Only run these examples if the `magick` package is installed.
+if ("magick" \%in\% rownames(utils::installed.packages())) {
 \donttest{
 #Create the water palette
 water_palette = colorRampPalette(c("darkblue", "dodgerblue", "lightblue"))(200)
@@ -162,5 +164,6 @@ base_map \%>\%
              text_color="white", halo_alpha=0.5, halo_blur=2,
              halo_color="black", halo_expand = 1, halo_offset = c(0.003,-0.003))) \%>\% 
  plot_map()
+}
 }
 }

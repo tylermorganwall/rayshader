@@ -27,7 +27,7 @@
 #'@examples
 #'#Add the included `sf` object with roads to the montereybay dataset
 #'\donttest{
-#'if("sf" %in% rownames(utils::installed.packages())) {
+#'if(all(c("sf","magick") %in% rownames(utils::installed.packages()))) {
 #'  monterey_city = sf::st_sfc(sf::st_point(c(-121.893611, 36.603056)))
 #'  montereybay %>% 
 #'    height_shade() %>%

@@ -50,6 +50,8 @@ Transforms an input `sf` object into an image overlay for the current height map
 }
 \examples{
 #Plot the counties around Monterey Bay, CA
+#Only run these examples if the `magick` package is installed.
+if ("magick" \%in\% rownames(utils::installed.packages())) {
 \donttest{
 generate_polygon_overlay(monterey_counties_sf, palette = rainbow, 
                         extent = attr(montereybay,"extent"), heightmap = montereybay) \%>\%
@@ -89,5 +91,6 @@ montereybay \%>\%
  add_overlay(generate_altitude_overlay(bathy_hs, montereybay, start_transition = 0)) \%>\%
  add_shadow(ray_shade(montereybay,zscale=50),0.5) \%>\%
  plot_map()
+}
 }
 }

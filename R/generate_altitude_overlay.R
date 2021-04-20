@@ -13,6 +13,8 @@
 #'@export
 #'@examples
 #'#Create a bathymetric hillshade
+#'#Only run these examples if the `magick` package is installed.
+#'if ("magick" %in% rownames(utils::installed.packages())) {
 #'\donttest{
 #'water_palette = colorRampPalette(c("darkblue", "dodgerblue", "lightblue"))(200)
 #'bathy_hs = height_shade(montereybay, texture = water_palette)
@@ -36,6 +38,7 @@
 #'  add_overlay(generate_altitude_overlay(snow_hs, montereybay, 500, 1200, lower=FALSE))  %>%
 #'  add_shadow(ambient_shade(montereybay,zscale=50,maxsearch=100),0) %>%
 #'  plot_map()
+#'}
 #'}
 generate_altitude_overlay = function(hillshade, heightmap, 
                                        start_transition, end_transition=NULL, lower = TRUE) {

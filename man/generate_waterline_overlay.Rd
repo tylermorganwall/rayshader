@@ -79,8 +79,10 @@ to calculate the distance to the coast. This distance matrix can be returned dir
 the `return_distance_matrix` argument to `TRUE`.
 }
 \examples{
-#Create a flat body of water for Monterey Bay
+#Only run these examples if the `magick` package is installed.
+if ("magick" \%in\% rownames(utils::installed.packages())) {
 \donttest{
+#Create a flat body of water for Monterey Bay
 montbay = montereybay
 montbay[montbay < 0] = 0
 
@@ -138,5 +140,6 @@ basemap \%>\%
   add_overlay(generate_waterline_overlay(montbay, fade=FALSE, max=1, alpha = 0.5, color="white",
                                          evenly_spaced = TRUE, breaks=50)) \%>\% 
   plot_map()
+}
 }
 }

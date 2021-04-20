@@ -48,6 +48,8 @@
 #'@return Semi-transparent overlay with a scale bar.
 #'@export
 #'@examples
+#'#Only run these examples if the `magick` package is installed.
+#'if ("magick" %in% rownames(utils::installed.packages())) {
 #'\donttest{
 #'#Create the water palette
 #'water_palette = colorRampPalette(c("darkblue", "dodgerblue", "lightblue"))(200)
@@ -150,6 +152,7 @@
 #'                                        height = nrow(montereybay)*2,
 #'                                        latlong=TRUE), rescale_original=TRUE) %>%
 #'  plot_map()
+#'}
 #'}
 generate_scalebar_overlay = function(extent, length, x=0.05, y=0.05, 
                                      latlong = FALSE, thickness = NA,

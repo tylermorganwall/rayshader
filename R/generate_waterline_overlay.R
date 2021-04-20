@@ -33,8 +33,10 @@
 #'@return 4-layer RGB array representing the waterline overlay.
 #'@export
 #'@examples
-#' #Create a flat body of water for Monterey Bay
+#'#Only run these examples if the `magick` package is installed.
+#'if ("magick" %in% rownames(utils::installed.packages())) {
 #' \donttest{
+#' #Create a flat body of water for Monterey Bay
 #' montbay = montereybay
 #' montbay[montbay < 0] = 0
 #' 
@@ -92,6 +94,7 @@
 #'   add_overlay(generate_waterline_overlay(montbay, fade=FALSE, max=1, alpha = 0.5, color="white",
 #'                                          evenly_spaced = TRUE, breaks=50)) %>% 
 #'   plot_map()
+#' }
 #' }
 generate_waterline_overlay = function(heightmap, color = "white", linewidth=1, boolean = FALSE, 
                                       min = 0.001, max = 0.20, breaks = 9, smooth = 0, 

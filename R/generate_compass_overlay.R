@@ -29,6 +29,8 @@
 #'@return Semi-transparent overlay with a compass.
 #'@export
 #'@examples
+#'#Only run these examples if the `magick` package is installed.
+#'if ("magick" %in% rownames(utils::installed.packages())) {
 #'\donttest{
 #'#Create the water palette
 #'water_palette = colorRampPalette(c("darkblue", "dodgerblue", "lightblue"))(200)
@@ -116,6 +118,7 @@
 #'              text_color="white", halo_alpha=0.5, halo_blur=2,
 #'              halo_color="black", halo_expand = 1, halo_offset = c(0.003,-0.003))) %>% 
 #'  plot_map()
+#'}
 #'}
 generate_compass_overlay = function(x=0.85, y=0.15, 
                                     size=0.075, text_size=1, bearing=0,

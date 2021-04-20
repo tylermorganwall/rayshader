@@ -17,6 +17,8 @@
 #'@examples
 #'#Add contours to the montereybay dataset
 #'
+#'#Only run these examples if the `magick` package is installed.
+#'if ("magick" %in% rownames(utils::installed.packages())) {
 #'\donttest{
 #'montereybay %>%
 #'  height_shade() %>%
@@ -67,6 +69,7 @@
 #'  add_overlay(generate_contour_overlay(montereybay, linewidth=2, levels = seq(-2000,0,100))) %>%
 #'  add_shadow(ray_shade(montereybay,zscale=50),0.3) %>%
 #'  plot_map()
+#'}
 #'}
 generate_contour_overlay = function(heightmap, levels=NA, nlevels=NA, 
                                     zscale = 1, width=NA, height=NA, 

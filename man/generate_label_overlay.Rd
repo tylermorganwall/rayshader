@@ -92,6 +92,8 @@ use an `sf` object or manually specify the x/y coordinates and label.
 }
 \examples{
 #Add the included `sf` object with roads to the montereybay dataset
+#Only run these examples if the `magick` package is installed.
+if ("magick" \%in\% rownames(utils::installed.packages())) {
 \donttest{
 #Create the water palette
 water_palette = colorRampPalette(c("darkblue", "dodgerblue", "lightblue"))(200)
@@ -167,5 +169,6 @@ montereybay \%>\%
                                     halo_color = "white", halo_expand = 3, halo_blur=10,
                                     seed=2))  \%>\%
  plot_map()
+}
 }
 }
