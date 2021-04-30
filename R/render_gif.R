@@ -5,34 +5,16 @@
 #'the values must be equal in length to `frames` (or of length `1`, in which the value will be fixed).
 #'
 #'@param filename Filename. If not appended with `.gif`, it will be appended automatically.
-#'@param type Default `orbit`, which orbits the 3D object at the user-set camera settings `phi`, `zoom`, and `fov`. 
-#'Other options are `oscillate` (sine wave around `theta` value, covering 90 degrees), or `custom` (which uses the values from the 
-#'`theta`, `phi`, `zoom`, and `fov` vectors passed in by the user).
-#'@param frames Default `360`. Number of frames to render.
-#'@param fps Default `30`. Frames per second. Recommmend either 30 or 60 for web.
-#'@param phi Defaults to current view. Azimuth values, in degrees. 
-#'@param theta Default to current view. Theta values, in degrees. 
-#'@param zoom Defaults to the current view. Zoom value, between `0` and `1`. 
-#'@param fov Defaults to the current view. Field of view values, in degrees.
 #'@param title_text Default `NULL`. Text. Adds a title to the gif, using magick::image_annotate. 
-#'@param title_offset Default `c(20,20)`. Distance from the top-left (default, `gravity` direction in 
-#'image_annotate) corner to offset the title.
-#'@param title_size Default `30`. Font size in pixels.
-#'@param title_color Default `black`. Font color.
-#'@param title_font Default `sans`. String with font family such as "sans", "mono", "serif", "Times", "Helvetica", 
-#'"Trebuchet", "Georgia", "Palatino" or "Comic Sans".
-#'@param title_bar_color Default `NULL`. If a color, this will create a colored bar under the title.
-#'@param title_bar_alpha Default `0.5`. Transparency of the title bar.
-#'@param title_position Default `northwest`. Position of the title.
 #'@param image_overlay Default `NULL`. Either a string indicating the location of a png image to overlay
 #'over the whole gif (transparency included), or a 4-layer RGBA array. This image will be resized to the 
 #'dimension of the gif if it does not match exactly.
-#'@param vignette Default `FALSE`. If `TRUE` or numeric, a camera vignetting effect will be added to the image.
-#'`1` is the darkest vignetting, while `0` is no vignetting. If vignette is a length-2 vector, the second entry will
-#'control the blurriness of the vignette effect.
 #'@param loop should the gif play forever (FALSE to only play once).
 #'@param progbar Default `TRUE` if interactive, `FALSE` otherwise. If `FALSE`, turns off progress bar. 
 #'Will display a progress bar when adding an overlay or title and while generating the gif.
+#' 
+#'@inheritParams render_movie
+#'
 #'@param ... Additional parameters to pass to magick::image_annotate. 
 #'@export
 #'@examples
