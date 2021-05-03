@@ -86,6 +86,7 @@ using either a standard orbit, or accepts vectors listing user-defined values fo
 the values must be equal in length to `frames` (or of length `1`, in which the value will be fixed).
 }
 \examples{
+if(interactive()) {
 filename_movie = tempfile()
 
 #By default, the function produces a 12 second orbit at 30 frames per second, at 30 degrees azimuth.
@@ -130,5 +131,6 @@ montereybay \%>\%
 #render_movie(filename = filename_movie, type = "custom", 
 #             frames = 360,  phi = phivecfull, zoom = zoomvecfull, theta = thetavec)
 rgl::rgl.close()
+}
 }
 }

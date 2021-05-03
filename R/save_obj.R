@@ -9,6 +9,7 @@
 #'@param all_face_fields Default `FALSE`. If `TRUE`, all OBJ face fields (v/vn/vt) will always be written.
 #'@export
 #'@examples
+#'if(interactive()) {
 #'filename_obj = tempfile(fileext = ".obj")
 #'
 #'#Save model of volcano
@@ -34,6 +35,7 @@
 #'  
 #'save_obj(filename_obj, water_index_refraction = 1.5)
 #'rgl::rgl.close()
+#'}
 #'}
 save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1, 
                     manifold_geometry = FALSE, all_face_fields = FALSE) {
@@ -105,8 +107,7 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
     if(!is.na(idrow$texture_file)) {
       cat(paste("newmtl ray_surface \n"), file=con)
       file.copy(idrow$texture_file[[1]], sprintf("%s.png",noext_filename), overwrite = TRUE)
-      
-      cat(sprintf("map_Kd %s.png \n",tools::file_path_sans_ext(filename)), file=con)
+      cat(sprintf("map_Kd %s.png \n",tools::file_path_sans_ext(basename(filename))), file=con)
       cat("\n", file=con)
     } else if (!is.na(idrow$base_color[[1]])) {
       tempcol = col2rgb(idrow$base_color[[1]])/256
@@ -169,7 +170,7 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
   #Begin file
   cat("#", paste0(filename, " produced by rayshader"), "\n", file=con)
   if(save_texture) {
-    cat("mtllib", gsub(paste0(dirname(filename), .Platform$file.sep), replacement="", x=filename_mtl), "\n", file=con)
+    cat(sprintf("mtllib %s \n", basename(filename_mtl)), file=con)
   }
   
   vertex_info = get_ids_with_labels()

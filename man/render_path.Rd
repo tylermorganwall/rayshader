@@ -52,6 +52,7 @@ system defined by the extent object. If no altitude is provided, the path will b
 above the heightmap. If the path goes off the edge, the nearest height on the heightmap will be used.
 }
 \examples{
+if(interactive()) {
 \donttest{
 #Starting at Moss Landing in Monterey Bay, we are going to simulate a flight of a bird going
 #out to sea and diving for food.
@@ -112,5 +113,6 @@ render_snapshot()
 #And all of these work with `render_highquality()`
 render_highquality(clamp_value=10, line_radius=3)
 rgl::rgl.close()
+}
 }
 }

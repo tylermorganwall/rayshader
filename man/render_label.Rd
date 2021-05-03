@@ -91,6 +91,7 @@ other arguments are passed to `render_label()`, this will just remove all existi
 Adds a marker and label to the current 3D plot
 }
 \examples{
+if(interactive()) {
 \dontrun{
 montereybay \%>\%
  sphere_shade() \%>\%
@@ -155,5 +156,6 @@ render_highquality(samples=200,text_size = 24, line_radius = 2, text_offset = c(
 render_label(clear_previous = TRUE) 
 render_snapshot()
 rgl::rgl.close()
+}
 }
 }

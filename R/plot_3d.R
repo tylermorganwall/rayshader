@@ -57,6 +57,7 @@
 #'@import rgl
 #'@export
 #'@examples
+#'if(interactive()) {
 #'#Plotting a spherical texture map of the built-in `montereybay` dataset.
 #'\donttest{
 #'montereybay %>%
@@ -106,6 +107,7 @@
 #'  plot_3d(mb_water, zscale=50, water = TRUE, watercolor="imhof1", theta=-45,
 #'          waterlinecolor="white", waterlinealpha=0.5)
 #'render_snapshot(clear = TRUE)
+#'}
 #'}
 plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
                    solid = TRUE, soliddepth="auto", solidcolor="grey20",solidlinecolor="grey30",

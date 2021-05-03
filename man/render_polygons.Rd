@@ -74,6 +74,7 @@ Adds 3D polygons to the current scene, using latitude/longitude or coordinates i
 system defined by the extent object.
 }
 \examples{
+if(interactive()) {
 \donttest{
 #Render the county borders as polygons in Monterey Bay
 montereybay \%>\%
@@ -110,5 +111,6 @@ render_snapshot()
 #This function also works with `render_highquality()`
 render_highquality(samples=400, clamp_value=10)
 rgl::rgl.close()
+}
 }
 }

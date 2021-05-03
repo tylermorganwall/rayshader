@@ -11,6 +11,7 @@
 #'@return Writes an STL file to `filename`. Regardless of the unit displayed, the output STL is in millimeters.
 #'@export
 #'@examples
+#'if(interactive()) {
 #'filename_stl = tempfile()
 #'
 #'#Save the STL file into `filename_stl`
@@ -46,6 +47,7 @@
 #'  plot_3d(volcano,zscale=3)
 #'render_snapshot()
 #'save_3dprint(filename_stl, maxwidth = "120mm", clear=TRUE)
+#'}
 #'}
 save_3dprint = function(filename,maxwidth=125,unit="mm",rotate=TRUE,remove_extras = TRUE,
                         clear=FALSE) {

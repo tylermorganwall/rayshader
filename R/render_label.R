@@ -31,6 +31,7 @@
 #'@param textcolor Default `black`. Color of the text.
 #'@export
 #'@examples
+#'if(interactive()) {
 #'\dontrun{
 #'montereybay %>%
 #'  sphere_shade() %>%
@@ -95,6 +96,7 @@
 #'render_label(clear_previous = TRUE) 
 #'render_snapshot()
 #'rgl::rgl.close()
+#'}
 #'}
 render_label = function(heightmap, text, lat, long, altitude=NULL, extent=NULL, 
                         x=NULL, y=NULL, z=NULL, zscale=1, 

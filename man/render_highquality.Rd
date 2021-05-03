@@ -138,6 +138,7 @@ ground and add additional scene elements.
 }
 \examples{
 #Render the volcano dataset using pathtracing
+if(interactive()) {
 \donttest{
 volcano \%>\%
  sphere_shade() \%>\%
@@ -199,5 +200,6 @@ render_highquality(lightdirection = c(240), lightaltitude=30, lightcolor=c("#555
                   scene_elements = rayrender::sphere(z=0,y=15, x=-18, radius=5,
                                    material=rayrender::light(color="red",intensity=10)))
 rgl::rgl.close()
+}
 }
 }
