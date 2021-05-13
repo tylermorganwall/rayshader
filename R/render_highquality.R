@@ -56,6 +56,7 @@
 #'@export
 #'@examples
 #'#Render the volcano dataset using pathtracing
+#'if(interactive()) {
 #'\donttest{
 #'volcano %>%
 #'  sphere_shade() %>%
@@ -118,6 +119,7 @@
 #'                                    material=rayrender::light(color="red",intensity=10)))
 #'rgl::rgl.close()
 #'}
+#'}
 render_highquality = function(filename = NULL, light = TRUE, lightdirection = 315, lightaltitude = 45, lightsize=NULL,
                               lightintensity = 500, lightcolor = "white", obj_material = rayrender::diffuse(),
                               cache_filename=NULL, width = NULL, height = NULL, 
@@ -158,9 +160,7 @@ render_highquality = function(filename = NULL, light = TRUE, lightdirection = 31
   if(is.null(cache_filename)) {
     no_cache = TRUE
     cache_filename = paste0(tempdir(), sepval, "temprayfile.obj")
-  } else {
-    cache_filename = paste0(tempdir(), sepval, cache_filename)
-  }
+  } 
   surfaceid = get_ids_with_labels(typeval = c("surface", "surface_tris"))
   surfacevertices = rgl.attrib(surfaceid$id[1], "vertices")
   polygonid = get_ids_with_labels(typeval = c("polygon3d"))

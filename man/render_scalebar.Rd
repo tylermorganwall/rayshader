@@ -69,6 +69,7 @@ Displays snapshot of current rgl plot (or saves to disk).
 Places a compass on the map to specify the North direction.
 }
 \examples{
+if(interactive()) {
 #Add a scale bar to the montereybay dataset, here representing about 80km
 \dontrun{
 montereybay \%>\%
@@ -123,5 +124,6 @@ render_scalebar(clear_scalebar = TRUE)
 render_scalebar(limits=c(0,20, 40), segments = 4, scale_length = c(0.5,1), 
                label_unit = "km", radius=10,text_y_offset=-20,text_x_offset=20)
 render_snapshot(clear=TRUE)
+}
 }
 }

@@ -27,6 +27,7 @@ save_obj(
 Writes the textured 3D rayshader visualization to an OBJ file.
 }
 \examples{
+if(interactive()) {
 filename_obj = tempfile(fileext = ".obj")
 
 #Save model of volcano
@@ -52,5 +53,6 @@ montereybay \%>\%
  
 save_obj(filename_obj, water_index_refraction = 1.5)
 rgl::rgl.close()
+}
 }
 }

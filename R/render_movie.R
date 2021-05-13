@@ -36,6 +36,7 @@
 #'@param ... Additional parameters to pass to magick::image_annotate. 
 #'@export
 #'@examples
+#'if(interactive()) {
 #'filename_movie = tempfile()
 #'
 #'#By default, the function produces a 12 second orbit at 30 frames per second, at 30 degrees azimuth.
@@ -80,6 +81,7 @@
 #'#render_movie(filename = filename_movie, type = "custom", 
 #'#             frames = 360,  phi = phivecfull, zoom = zoomvecfull, theta = thetavec)
 #'rgl::rgl.close()
+#'}
 #'}
 render_movie = function(filename, type = "orbit", frames = 360, fps = 30, 
                         phi = 30, theta = 0, zoom = NULL, fov = NULL, 

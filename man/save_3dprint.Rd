@@ -33,6 +33,7 @@ Writes an STL file to `filename`. Regardless of the unit displayed, the output S
 Writes a stereolithography (STL) file that can be used in 3D printing.
 }
 \examples{
+if(interactive()) {
 filename_stl = tempfile()
 
 #Save the STL file into `filename_stl`
@@ -68,5 +69,6 @@ volcano \%>\%
  plot_3d(volcano,zscale=3)
 render_snapshot()
 save_3dprint(filename_stl, maxwidth = "120mm", clear=TRUE)
+}
 }
 }

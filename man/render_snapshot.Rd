@@ -83,22 +83,20 @@ Displays snapshot of current rgl plot (or saves to disk).
 Either captures the current rgl view and displays, or saves the current view to disk.
 }
 \examples{
-\dontrun{
+if(interactive()) {
+\donttest{
 montereybay \%>\%
  sphere_shade() \%>\%
  plot_3d(montereybay,zscale=50,zoom=0.6,theta=-90,phi=30)
 }
  
-\dontrun{
+\donttest{
 render_snapshot()
-}
-
-\dontrun{
 }
  
 #Create a title, but also pass the `gravity` argument to magick::image_annotate using ...
 #to center the text.
-\dontrun{
+\donttest{
 render_snapshot(title_text = "Monterey Bay, California", 
                title_color = "white", title_bar_color = "black",
                title_font = "Helvetica", gravity = "North")
@@ -110,5 +108,6 @@ render_snapshot(title_text = "Monterey Bay, California",
                vignette = TRUE, 
                title_font = "Helvetica", gravity = "North")
 rgl::rgl.close() 
+}
 }
 }

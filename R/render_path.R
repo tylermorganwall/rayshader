@@ -22,6 +22,7 @@
 #'@param clear_previous Default `FALSE`. If `TRUE`, it will clear all existing paths.
 #'@export
 #'@examples
+#'if(interactive()) {
 #'\donttest{
 #'#Starting at Moss Landing in Monterey Bay, we are going to simulate a flight of a bird going
 #'#out to sea and diving for food.
@@ -82,6 +83,7 @@
 #'#And all of these work with `render_highquality()`
 #'render_highquality(clamp_value=10, line_radius=3)
 #'rgl::rgl.close()
+#'}
 #'}
 render_path = function(extent = NULL, lat, long = NULL, altitude = NULL, 
                        zscale=1, heightmap = NULL,

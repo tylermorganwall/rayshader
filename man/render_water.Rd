@@ -40,6 +40,7 @@ of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
 Adds water layer to the scene, removing the previous water layer if desired.
 }
 \examples{
+if(interactive()) {
 \dontrun{
 montereybay \%>\%
  sphere_shade() \%>\%
@@ -65,5 +66,6 @@ render_camera(theta=-45)
 render_water(montereybay,zscale=50,waterlinecolor="white")
 render_snapshot(clear = TRUE)
 rgl::rgl.close()
+}
 }
 }

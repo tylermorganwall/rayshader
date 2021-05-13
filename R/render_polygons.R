@@ -34,6 +34,7 @@
 #' @param clear_previous Default `FALSE`. If `TRUE`, it will clear all existing polygons.
 #' @export
 #' @examples
+#' if(interactive()) {
 #' \donttest{
 #' #Render the county borders as polygons in Monterey Bay
 #' montereybay %>%
@@ -70,6 +71,7 @@
 #' #This function also works with `render_highquality()`
 #' render_highquality(samples=400, clamp_value=10)
 #' rgl::rgl.close()
+#' }
 #' }
 render_polygons = function(polygon, extent,  color = "red", top = 1, bottom = NA,
                            data_column_top = NULL, data_column_bottom = NULL,

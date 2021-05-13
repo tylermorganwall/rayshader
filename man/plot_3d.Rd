@@ -130,6 +130,7 @@ if `triangulate = TRUE`.}
 Displays the shaded map in 3D with the `rgl` package.
 }
 \examples{
+if(interactive()) {
 #Plotting a spherical texture map of the built-in `montereybay` dataset.
 \donttest{
 montereybay \%>\%
@@ -179,5 +180,6 @@ montereybay \%>\%
  plot_3d(mb_water, zscale=50, water = TRUE, watercolor="imhof1", theta=-45,
          waterlinecolor="white", waterlinealpha=0.5)
 render_snapshot(clear = TRUE)
+}
 }
 }

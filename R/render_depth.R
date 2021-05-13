@@ -50,6 +50,8 @@
 #'@export
 #'@examples
 #'\donttest{
+#'#Only run these examples if the webshot2
+#'if(interactive()) {
 #'montereybay %>%
 #'  sphere_shade() %>%
 #'  plot_3d(montereybay,zscale=50, water=TRUE, waterlinecolor="white",
@@ -93,6 +95,7 @@
 #'#
 #'rgl::rgl.close()
 #'}
+#'}
 render_depth = function(focus = 0.5, focallength = 100, fstop = 4, filename=NULL,
                      preview_focus = FALSE, bokehshape = "circle", bokehintensity = 1, bokehlimit=0.8, 
                      rotation = 0, gamma_correction = TRUE, aberration = 0,
@@ -131,6 +134,10 @@ render_depth = function(focus = 0.5, focallength = 100, fstop = 4, filename=NULL
   if(preview_focus) {
     arraydepth = png::readPNG(temp)
     depthmap = rgl::rgl.pixels(component = "depth")
+    if(nrow(depthmap) < 1) {
+      message("Can't fetch depth component, stopping")
+      return(NULL)
+    }
     maxval = max(depthmap[depthmap != 1])
     depthmap[depthmap == 1] = maxval
     rayimage::render_bokeh(arraydepth, depthmap, focus = focus, preview_focus = TRUE, preview = TRUE)

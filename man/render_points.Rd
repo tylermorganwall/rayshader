@@ -46,6 +46,7 @@ system defined by the extent object. If no altitude is provided, the points will
 above the heightmap. If the points goes off the edge, the nearest height on the heightmap will be used.
 }
 \examples{
+if(interactive()) {
 \donttest{
 #Starting at Moss Landing in Monterey Bay, we are going to simulate a flight of a bird going
 #out to sea and diving for food.
@@ -107,5 +108,6 @@ render_snapshot()
 #And all of these work with `render_highquality()`
 render_highquality(point_radius = 3, clamp_value=10)
 rgl::rgl.close()
+}
 }
 }

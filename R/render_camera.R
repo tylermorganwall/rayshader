@@ -9,6 +9,7 @@
 #'@param fov Defaults to current value. Field of view of the camera. Maximum `180`.
 #'@export
 #'@examples
+#'if(interactive()) {
 #'\dontrun{
 #'montereybay %>%
 #'  sphere_shade() %>%
@@ -75,7 +76,7 @@
 #'#             theta = thetavec, phi = phivecfull, zoom = zoomvec, fov=0)
 #'rgl::rgl.close()
 #'}
-#'
+#'}
 #'
 #'
 render_camera = function(theta = NULL, phi = NULL, zoom = NULL, fov = NULL) {

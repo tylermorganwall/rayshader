@@ -9,12 +9,14 @@
 #'#Save montereybay as a raster and open using the filename.
 #'
 #'\donttest{
+#'if("rgdal" %in% rownames(utils::installed.packages())) {
 #'temp_raster_filename = paste0(tempfile(),".tif")
 #'raster::writeRaster(raster::raster(t(montereybay)),temp_raster_filename)
 #'elmat = raster_to_matrix(temp_raster_filename)
 #'elmat %>%
 #'  sphere_shade() %>%
 #'  plot_map()
+#'}
 #'}
 raster_to_matrix = function(raster, verbose = interactive()) {
   if(is.character(raster)) {
