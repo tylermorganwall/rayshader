@@ -119,7 +119,6 @@ Displays snapshot of current rgl plot (or saves to disk).
 Either captures the current rgl view and displays, or saves the current view to disk.
 }
 \examples{
-if(interactive()) {
 \donttest{
 montereybay \%>\%
  sphere_shade() \%>\%
@@ -144,6 +143,5 @@ render_snapshot(title_text = "Monterey Bay, California",
                vignette = TRUE, 
                title_font = "Helvetica", gravity = "North")
 rgl::rgl.close() 
-}
 }
 }

@@ -58,7 +58,6 @@ Places a compass on the map to specify the North direction.
 }
 \examples{
 #Add a North arrow to the map, by default in the bottom right (SE)
-if(interactive()) {
 \dontrun{
 montereybay \%>\%
  sphere_shade() \%>\%
@@ -133,6 +132,4 @@ render_compass(position = "NW", color_n = c(0.7,0,0), color_arrow = c(0.3,0,0),
             color_background = c(0.7,0.5,0.5), color_bevel = c(0.2,0,0), position_circular = TRUE)
 render_snapshot(clear=TRUE)
 }
-}
-
 }

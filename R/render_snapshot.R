@@ -51,7 +51,6 @@
 #'@return Displays snapshot of current rgl plot (or saves to disk).
 #'@export
 #'@examples
-#'if(interactive()) {
 #'\donttest{
 #'montereybay %>%
 #'  sphere_shade() %>%
@@ -76,7 +75,6 @@
 #'                vignette = TRUE, 
 #'                title_font = "Helvetica", gravity = "North")
 #'rgl::rgl.close() 
-#'}
 #'}
 render_snapshot = function(filename, clear=FALSE, 
                            title_text = NULL, title_offset = c(20,20), 

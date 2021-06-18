@@ -66,7 +66,6 @@
 #'@return Opens a 3D plot in rgl.
 #'@export
 #'@examples
-#'if(interactive()) {
 #'library(ggplot2)
 #'library(viridis)
 #'\dontshow{
@@ -155,7 +154,6 @@
 #'plot_gg(mtplot_density_facet, width = 6, windowsize=c(1400,866),
 #'        zoom = 0.55, theta = -10, phi = 25, scale=300)
 #'render_snapshot(clear = TRUE)
-#'}
 #'}
 plot_gg = function(ggobj, width = 3, height = 3, 
                    height_aes = NULL, invert = FALSE, shadow_intensity = 0.5,

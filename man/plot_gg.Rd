@@ -126,7 +126,6 @@ custom, solid shapes. By default in ggplot2, only the first three shapes are sol
 into 3D.
 }
 \examples{
-if(interactive()) {
 library(ggplot2)
 library(viridis)
 \dontshow{
@@ -215,6 +214,5 @@ plot_gg(mtplot_density_facet, width = 6, preview = TRUE)
 plot_gg(mtplot_density_facet, width = 6, windowsize=c(1400,866),
        zoom = 0.55, theta = -10, phi = 25, scale=300)
 render_snapshot(clear = TRUE)
-}
 }
 }

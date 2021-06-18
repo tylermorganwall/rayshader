@@ -56,7 +56,6 @@
 #'@export
 #'@examples
 #'#Render the volcano dataset using pathtracing
-#'if(interactive()) {
 #'\donttest{
 #'volcano %>%
 #'  sphere_shade() %>%
@@ -118,7 +117,6 @@
 #'                   scene_elements = rayrender::sphere(z=0,y=15, x=-18, radius=5,
 #'                                    material=rayrender::light(color="red",intensity=10)))
 #'rgl::rgl.close()
-#'}
 #'}
 render_highquality = function(filename = NULL, light = TRUE, lightdirection = 315, lightaltitude = 45, lightsize=NULL,
                               lightintensity = 500, lightcolor = "white", obj_material = rayrender::diffuse(),

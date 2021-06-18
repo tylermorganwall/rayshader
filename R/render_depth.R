@@ -50,8 +50,6 @@
 #'@export
 #'@examples
 #'\donttest{
-#'#Only run these examples if the webshot2
-#'if(interactive()) {
 #'montereybay %>%
 #'  sphere_shade() %>%
 #'  plot_3d(montereybay,zscale=50, water=TRUE, waterlinecolor="white",
@@ -94,7 +92,6 @@
 #'             
 #'#
 #'rgl::rgl.close()
-#'}
 #'}
 render_depth = function(focus = 0.5, focallength = 100, fstop = 4, filename=NULL,
                      preview_focus = FALSE, bokehshape = "circle", bokehintensity = 1, bokehlimit=0.8, 

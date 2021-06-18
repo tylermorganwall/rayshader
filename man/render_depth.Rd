@@ -118,8 +118,6 @@ The size of the circle of confusion is determined by the following formula (z_de
 }
 \examples{
 \donttest{
-#Only run these examples if the webshot2
-if(interactive()) {
 montereybay \%>\%
  sphere_shade() \%>\%
  plot_3d(montereybay,zscale=50, water=TRUE, waterlinecolor="white",
@@ -162,6 +160,5 @@ render_depth(focus = 0.75,focallength = 100, title_text = "Monterey Bay, CA",
             
 #
 rgl::rgl.close()
-}
 }
 }

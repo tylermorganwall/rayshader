@@ -24,7 +24,6 @@
 #'@export
 #'@examples
 #'#Add a North arrow to the map, by default in the bottom right (SE)
-#'if(interactive()) {
 #'\dontrun{
 #'montereybay %>%
 #'  sphere_shade() %>%
@@ -99,8 +98,6 @@
 #'             color_background = c(0.7,0.5,0.5), color_bevel = c(0.2,0,0), position_circular = TRUE)
 #'render_snapshot(clear=TRUE)
 #'}
-#'}
-#'
 render_compass = function(angle = 0, position = "SE", 
                         x = NULL, y = NULL, z = NULL, compass_radius = NULL, scale_distance = 1,
                         color_n = "darkred", color_arrow = "grey90",

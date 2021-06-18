@@ -18,7 +18,6 @@
 #'@param clear_previous Default `FALSE`. If `TRUE`, it will clear all existing points.
 #'@export
 #'@examples
-#'if(interactive()) {
 #'\donttest{
 #'#Starting at Moss Landing in Monterey Bay, we are going to simulate a flight of a bird going
 #'#out to sea and diving for food.
@@ -80,7 +79,6 @@
 #'#And all of these work with `render_highquality()`
 #'render_highquality(point_radius = 3, clamp_value=10)
 #'rgl::rgl.close()
-#'}
 #'}
 render_points = function(extent = NULL, lat = NULL, long = NULL, altitude=NULL, 
                          zscale=1, heightmap = NULL, 
