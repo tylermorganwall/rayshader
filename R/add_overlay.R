@@ -17,7 +17,7 @@
 #'@export
 #'@examples
 #'#Only run these examples if the `magick` package is installed.
-#'if ("magick" %in% rownames(utils::installed.packages())) {
+#'if (length(find.package("magick", quiet = TRUE)) > 0) {
 #'#Combining base R plotting with rayshader's spherical color mapping and raytracing:
 #'\donttest{
 #'montereybay %>%

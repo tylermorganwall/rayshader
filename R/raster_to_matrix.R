@@ -9,7 +9,7 @@
 #'#Save montereybay as a raster and open using the filename.
 #'
 #'\donttest{
-#'if("rgdal" %in% rownames(utils::installed.packages())) {
+#'if(length(find.package("rgdal", quiet = TRUE)) > 0) {
 #'temp_raster_filename = paste0(tempfile(),".tif")
 #'raster::writeRaster(raster::raster(t(montereybay)),temp_raster_filename)
 #'elmat = raster_to_matrix(temp_raster_filename)

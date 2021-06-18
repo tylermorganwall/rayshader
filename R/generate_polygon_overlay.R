@@ -21,7 +21,7 @@
 #'@examples
 #'#Plot the counties around Monterey Bay, CA
 #'#Only run these examples if the `magick` package is installed.
-#'if ("magick" %in% rownames(utils::installed.packages())) {
+#'if (length(find.package("magick", quiet = TRUE)) > 0) {
 #'\donttest{
 #'generate_polygon_overlay(monterey_counties_sf, palette = rainbow, 
 #'                         extent = attr(montereybay,"extent"), heightmap = montereybay) %>%
@@ -66,7 +66,7 @@
 generate_polygon_overlay = function(geometry, extent, heightmap = NULL, 
                                     width=NA, height=NA, offset = c(0,0), data_column_fill = NULL, 
                                     linecolor = "black", palette = "white", linewidth = 1) {
-  if(!("sf" %in% rownames(utils::installed.packages()))) {
+  if(!(length(find.package("sf", quiet = TRUE)) > 0)) {
     stop("{sf} package required for generate_line_overlay()")
   }
   if(is.null(extent)) {

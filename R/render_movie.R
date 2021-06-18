@@ -93,7 +93,7 @@ render_movie = function(filename, type = "orbit", frames = 360, fps = 30,
   if(rgl::rgl.cur() == 0) {
     stop("No rgl window currently open.")
   }
-  if(!("av" %in% rownames(utils::installed.packages()))) {
+  if(!(length(find.package("av", quiet = TRUE)) > 0)) {
     stop("`av` package required for render_movie()")
   }
   if(is.null(filename)) {
@@ -177,7 +177,7 @@ render_movie = function(filename, type = "orbit", frames = 360, fps = 30,
     dimensions[1] = dimensions[1] - 1
   }
   if(has_overlay) {
-    if(!("magick" %in% rownames(utils::installed.packages()))) {
+    if(!(length(find.package("magick", quiet = TRUE)) > 0)) {
       stop("`magick` package required for adding overlay")
     }
     if(progbar) {
@@ -194,7 +194,7 @@ render_movie = function(filename, type = "orbit", frames = 360, fps = 30,
     }
   }
   if(vignette || is.numeric(vignette)) {
-    if(!("magick" %in% rownames(utils::installed.packages()))) {
+    if(!(length(find.package("magick", quiet = TRUE)) > 0)) {
       stop("`magick` package required for adding overlay")
     }
     if(progbar) {
@@ -210,7 +210,7 @@ render_movie = function(filename, type = "orbit", frames = 360, fps = 30,
     }
   }
   if(has_title) {
-    if(!("magick" %in% rownames(utils::installed.packages()))) {
+    if(!(length(find.package("magick", quiet = TRUE)) > 0)) {
       stop("`magick` package required for adding title")
     }
     if(progbar) {

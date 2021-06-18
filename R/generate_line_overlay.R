@@ -20,7 +20,7 @@
 #'@examples
 #'#Add the included `sf` object with roads to the montereybay dataset
 #'#Only run these examples if the `magick` package is installed.
-#'if ("magick" %in% rownames(utils::installed.packages())) {
+#'if (length(find.package("magick", quiet = TRUE)) > 0) {
 #'\donttest{
 #'water_palette = colorRampPalette(c("darkblue", "dodgerblue", "lightblue"))(200)
 #'bathy_hs = height_shade(montereybay, texture = water_palette)
@@ -57,7 +57,7 @@ generate_line_overlay = function(geometry, extent, heightmap = NULL,
                                  width=NA, height=NA, 
                                  color = "black", linewidth = 1,  lty = 1,
                                  data_column_width = NULL, offset = c(0,0)) {
-  if(!("sf" %in% rownames(utils::installed.packages()))) {
+  if(!(length(find.package("sf", quiet = TRUE)) > 0)) {
     stop("{sf} package required for generate_line_overlay()")
   }
   if(is.null(extent)) {

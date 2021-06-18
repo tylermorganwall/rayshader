@@ -92,7 +92,7 @@ render_polygons = function(polygon, extent,  color = "red", top = 1, bottom = NA
       }
     }
   }
-  if(!"rayrender" %in% rownames(utils::installed.packages())) {
+  if(!(length(find.package("rayrender", quiet = TRUE)) > 0)) {
     stop("rayrender required to use render_polygon()")
   }
   if(is.na(bottom)) {

@@ -165,7 +165,7 @@ plot_gg = function(ggobj, width = 3, height = 3,
                    max_error = 0.001, max_tri = 0, verbose= FALSE,
                    reduce_size = NULL, save_height_matrix = FALSE, 
                    save_shadow_matrix = FALSE, saved_shadow_matrix=NULL, ...) {
-  if(!"ggplot2" %in% rownames(utils::installed.packages())) {
+  if(!(length(find.package("ggplot2", quiet = TRUE)) > 0)) {
     stop("Must have ggplot2 installed to use plot_gg()")
   }
   heightmaptemp = tempfile()
@@ -657,7 +657,7 @@ plot_gg = function(ggobj, width = 3, height = 3,
     }
   })
   if(!is.null(reduce_size)) {
-    if(!("magick" %in% rownames(utils::installed.packages()))) {
+    if(!(length(find.package("magick", quiet = TRUE)) > 0)) {
       stop("magick package required to use argument reduce_size")
     } else {
       if(length(reduce_size) == 1 && reduce_size < 1) {

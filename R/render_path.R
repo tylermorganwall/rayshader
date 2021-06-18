@@ -142,7 +142,7 @@ render_path = function(extent = NULL, lat, long = NULL, altitude = NULL,
       distances_y_index[floor(distances_y_index) > ncol(heightmap)] = ncol(heightmap)
       distances_x_index[floor(distances_x_index) < 1] = 1
       distances_y_index[floor(distances_y_index) < 1] = 1
-      if(!"rayimage" %in% rownames(utils::installed.packages())) {
+      if(!length(find.package("rayimage", quiet = TRUE)) > 0) {
         xy = matrix(c(floor(distances_x_index),floor(distances_y_index)),
                     nrow=length(distances_x_index),ncol=2)
         flipped_mat = flipud(t(heightmap))

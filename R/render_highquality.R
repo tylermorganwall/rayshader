@@ -136,7 +136,7 @@ render_highquality = function(filename = NULL, light = TRUE, lightdirection = 31
   if(rgl::rgl.cur() == 0) {
     stop("No rgl window currently open.")
   }
-  if(!("rayrender" %in% rownames(utils::installed.packages()))) {
+  if(!(length(find.package("sf", quiet = TRUE)) > 0)) {
     stop("`rayrender` package required for render_highquality()")
   }
   windowrect = rgl::par3d()$windowRect
@@ -160,7 +160,7 @@ render_highquality = function(filename = NULL, light = TRUE, lightdirection = 31
   if(is.null(cache_filename)) {
     no_cache = TRUE
     cache_filename = paste0(tempdir(), sepval, "temprayfile.obj")
-  } 
+  }
   surfaceid = get_ids_with_labels(typeval = c("surface", "surface_tris"))
   surfacevertices = rgl.attrib(surfaceid$id[1], "vertices")
   polygonid = get_ids_with_labels(typeval = c("polygon3d"))
@@ -269,9 +269,9 @@ render_highquality = function(filename = NULL, light = TRUE, lightdirection = 31
   }
   if(no_cache || !file.exists(cache_filename)) {
     if(obj_material$type %in% c("diffuse","oren-nayar")) {
-      save_obj(cache_filename)
+      save_obj(cache_filename, save_shadow = FALSE)
     } else {
-      save_obj(cache_filename, save_texture = FALSE)
+      save_obj(cache_filename, save_shadow = FALSE, save_texture = FALSE)
     }
   }
   if(obj_material$type %in% c("diffuse","oren-nayar")) {
@@ -288,7 +288,7 @@ render_highquality = function(filename = NULL, light = TRUE, lightdirection = 31
                       material = obj_material)
   }
   has_rayimage = TRUE
-  if(!("rayimage" %in% rownames(utils::installed.packages()))) {
+  if(!(length(find.package("rayimage", quiet = TRUE)) > 0)) {
     warning("`rayimage` package required for labels")
     has_rayimage = FALSE
   }
@@ -411,7 +411,7 @@ render_highquality = function(filename = NULL, light = TRUE, lightdirection = 31
     for(j in seq_len(nrow(temp_label))) {
       scalelabelfile = ""
       if(!no_cache) {
-        scalelabelfile = paste0(temp_label[j,1],".png")
+        scalelabelfile = sprintf("%s_%s.png",tools::file_path_sans_ext(cache_filename),temp_label[j,1])
       } else {
         scalelabelfile = tempfile(fileext = ".png")
       }

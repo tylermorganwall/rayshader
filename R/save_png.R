@@ -42,7 +42,7 @@ save_png = function(hillshade, filename,
     stop("save_png requires a filename")
   }
   has_title = !is.na(title_text)
-  if(!("rayimage" %in% rownames(utils::installed.packages())) && has_title) {
+  if(!(length(find.package("rayimage", quiet = TRUE)) > 0) && has_title) {
     warning("`rayimage` package required for title text")
     has_title = FALSE
   }

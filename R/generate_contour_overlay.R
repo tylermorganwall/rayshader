@@ -18,7 +18,7 @@
 #'#Add contours to the montereybay dataset
 #'
 #'#Only run these examples if the `magick` package is installed.
-#'if ("magick" %in% rownames(utils::installed.packages())) {
+#'if (length(find.package("magick", quiet = TRUE)) > 0) {
 #'\donttest{
 #'montereybay %>%
 #'  height_shade() %>%
@@ -74,10 +74,10 @@
 generate_contour_overlay = function(heightmap, levels=NA, nlevels=NA, 
                                     zscale = 1, width=NA, height=NA, 
                                     color = "black", linewidth = 1) {
-  if(!("sf" %in% rownames(utils::installed.packages()))) {
+  if(!(length(find.package("sf", quiet = TRUE)) > 0)) {
     stop("`sf` package required for generate_contour_overlay()")
   }
-  if(!("isoband" %in% rownames(utils::installed.packages()))) {
+  if(!(length(find.package("isoband", quiet = TRUE)) > 0)) {
     stop("`isobands` package required for generate_contour_overlay()")
   }
   if(is.na(levels[1])) {

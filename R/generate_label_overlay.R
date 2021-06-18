@@ -41,7 +41,7 @@
 #'@examples
 #'#Add the included `sf` object with roads to the montereybay dataset
 #'#Only run these examples if the `magick` package is installed.
-#'if ("magick" %in% rownames(utils::installed.packages())) {
+#'if (length(find.package("magick", quiet = TRUE)) > 0) {
 #'\donttest{
 #'#Create the water palette
 #'water_palette = colorRampPalette(c("darkblue", "dodgerblue", "lightblue"))(200)
@@ -135,13 +135,13 @@ generate_label_overlay = function(labels, extent, x=NULL, y=NULL,
   if(is.na(point_color)) {
     point_color = color
   }
-  if(!("maptools" %in% rownames(utils::installed.packages()))) {
+  if(!(length(find.package("maptools", quiet = TRUE)) > 0)) {
     stop("{maptools} package required for generate_label_overlay()")
   }
   if((inherits(labels,"sf") || inherits(labels,"sfc")) && 
      (is.null(x) && is.null(y)) &&
      !is.null(data_label_column)) {
-    if(!("sf" %in% rownames(utils::installed.packages()))) {
+    if(!(length(find.package("sf", quiet = TRUE)) > 0)) {
       stop("{sf} package required for {sf} object support")
     }
     geometry_list = sf::st_geometry(labels)
@@ -184,7 +184,7 @@ generate_label_overlay = function(labels, extent, x=NULL, y=NULL,
   grDevices::dev.off() #resets par
   overlay_temp = png::readPNG(tempoverlay)
   if(!is.na(halo_color)) {
-    if(!("rayimage" %in% rownames(utils::installed.packages()))) {
+    if(!(length(find.package("rayimage", quiet = TRUE)) > 0)) {
       stop("{rayimage} package required for `halo_color`")
     }
     set.seed(seed)
