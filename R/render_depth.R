@@ -45,6 +45,10 @@
 #'before taking the snapshot. This can help stop prevent rendering issues when running scripts.
 #'@param clear Default `FALSE`. If `TRUE`, the current `rgl` device will be cleared.
 #'@param bring_to_front Default `FALSE`. Whether to bring the window to the front when rendering the snapshot.
+#'@param software_render Default `FALSE`. If `TRUE`, rayshader will use the rayvertex package to render the snapshot, which
+#'is not constrained by the screen size or requires OpenGL. 
+#'Consider settings a `cache_filename` so a new OBJ file doesn't have to be written with every snapshot.
+#'@param cache_filename Default `NULL`. Name of temporary filename to store OBJ file, if the user does not want to rewrite the file each time.
 #'@param ... Additional parameters to pass to magick::image_annotate. 
 #'@return 4-layer RGBA array.
 #'@export
@@ -101,7 +105,7 @@ render_depth = function(focus = 0.5, focallength = 100, fstop = 4, filename=NULL
                      title_color = "black", title_size = 30, title_font = "sans",
                      title_bar_color = NULL, title_bar_alpha = 0.5, title_position = "northwest",
                      image_overlay = NULL, vignette = FALSE,
-                     progbar = interactive(), software_render = FALSE,
+                     progbar = interactive(), software_render = FALSE, cache_filename = NULL,
                      instant_capture = interactive(), clear = FALSE, bring_to_front = FALSE, ...) {
   if(rgl::rgl.cur() == 0) {
     stop("No rgl window currently open.")
@@ -117,7 +121,7 @@ render_depth = function(focus = 0.5, focallength = 100, fstop = 4, filename=NULL
   }
   temp = paste0(tempfile(),".png")
 
-  render_snapshot(filename=temp, software_render = software_render)
+  render_snapshot(filename=temp, software_render = software_render, cache_filename = cache_filename)
   if(transparent_water) {
     idlist = get_ids_with_labels(typeval = c("water","waterlines"))
     waterid = idlist$id[idlist$raytype == "water"][1]
@@ -138,7 +142,8 @@ render_depth = function(focus = 0.5, focallength = 100, fstop = 4, filename=NULL
     if(!software_render) {
       depthmap = rgl::rgl.pixels(component = "depth")
     } else {
-      render_snapshot(filename=temp_depth, debug="depth", software_render = TRUE)
+      render_snapshot(filename=temp_depth, debug="depth", software_render = TRUE,
+                      cache_filename = cache_filename)
       depthmap = png::readPNG(temp_depth)[,,1]
     }
     if(nrow(depthmap) < 1) {

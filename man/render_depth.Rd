@@ -31,6 +31,7 @@ render_depth(
   vignette = FALSE,
   progbar = interactive(),
   software_render = FALSE,
+  cache_filename = NULL,
   instant_capture = interactive(),
   clear = FALSE,
   bring_to_front = FALSE,
@@ -97,6 +98,12 @@ dimension of the image if it does not match exactly.}
 control the blurriness of the vignette effect.}
 
 \item{progbar}{Default `TRUE` if in an interactive session. Displays a progress bar.}
+
+\item{software_render}{Default `FALSE`. If `TRUE`, rayshader will use the rayvertex package to render the snapshot, which
+is not constrained by the screen size or requires OpenGL. 
+Consider settings a `cache_filename` so a new OBJ file doesn't have to be written with every snapshot.}
+
+\item{cache_filename}{Default `NULL`. Name of temporary filename to store OBJ file, if the user does not want to rewrite the file each time.}
 
 \item{instant_capture}{Default `TRUE` if interactive, `FALSE` otherwise. If `FALSE`, a slight delay is added 
 before taking the snapshot. This can help stop prevent rendering issues when running scripts.}
