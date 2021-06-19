@@ -140,7 +140,7 @@ render_snapshot = function(filename, clear=FALSE,
                              background="white",
                              width = width, height = height, light_direction = c(0,1,0), fake_shadow = TRUE, 
                              text_angle = text_angle, text_size = text_size, text_offset = text_offset,
-                             print_scene_info = print_scene_info, point_radius = point_radius)
+                             print_scene_info = print_scene_info, point_radius = point_radius, ...)
   }
   tempmap = png::readPNG(temp)
   if(has_overlay) {

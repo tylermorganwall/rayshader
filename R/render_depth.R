@@ -101,7 +101,7 @@ render_depth = function(focus = 0.5, focallength = 100, fstop = 4, filename=NULL
                      title_color = "black", title_size = 30, title_font = "sans",
                      title_bar_color = NULL, title_bar_alpha = 0.5, title_position = "northwest",
                      image_overlay = NULL, vignette = FALSE,
-                     progbar = interactive(), 
+                     progbar = interactive(), software_render = FALSE,
                      instant_capture = interactive(), clear = FALSE, bring_to_front = FALSE, ...) {
   if(rgl::rgl.cur() == 0) {
     stop("No rgl window currently open.")
@@ -113,7 +113,8 @@ render_depth = function(focus = 0.5, focallength = 100, fstop = 4, filename=NULL
     stop("focal length must be greater than 1")
   }
   temp = paste0(tempfile(),".png")
-  rgl::snapshot3d(filename=temp, top = bring_to_front)
+
+  render_snapshot(filename=temp, software_render = software_render)
   if(transparent_water) {
     idlist = get_ids_with_labels(typeval = c("water","waterlines"))
     waterid = idlist$id[idlist$raytype == "water"][1]
@@ -130,7 +131,13 @@ render_depth = function(focus = 0.5, focallength = 100, fstop = 4, filename=NULL
   }
   if(preview_focus) {
     arraydepth = png::readPNG(temp)
-    depthmap = rgl::rgl.pixels(component = "depth")
+    temp_depth = paste0(tempfile(),".png")
+    if(!software_render) {
+      depthmap = rgl::rgl.pixels(component = "depth")
+    } else {
+      render_snapshot(filename=temp_depth, debug="depth", software_render = TRUE)
+      depthmap = png::readPNG(temp_depth)[,,1]
+    }
     if(nrow(depthmap) < 1) {
       message("Can't fetch depth component, stopping")
       return(NULL)
