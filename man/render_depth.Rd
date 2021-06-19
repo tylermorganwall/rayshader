@@ -30,6 +30,7 @@ render_depth(
   image_overlay = NULL,
   vignette = FALSE,
   progbar = interactive(),
+  software_render = FALSE,
   instant_capture = interactive(),
   clear = FALSE,
   bring_to_front = FALSE,

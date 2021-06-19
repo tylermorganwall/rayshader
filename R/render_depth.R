@@ -112,6 +112,9 @@ render_depth = function(focus = 0.5, focallength = 100, fstop = 4, filename=NULL
   if(focallength < 1) {
     stop("focal length must be greater than 1")
   }
+  if(rgl::rgl.useNULL()) {
+    software_render = TRUE
+  }
   temp = paste0(tempfile(),".png")
 
   render_snapshot(filename=temp, software_render = software_render)
