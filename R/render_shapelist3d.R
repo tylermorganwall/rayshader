@@ -15,7 +15,7 @@
 #'montereybay %>%
 #'  sphere_shade() %>%
 #'  plot_3d(montereybay,theta=-45, water=TRUE)
-#'render_compass()
+#'render_shapelist3d()
 #'render_snapshot()
 #'
 #'
@@ -28,9 +28,9 @@
 #'}
 #'}
 #'
-render_shapelist3d = function(shapelist = shapelist3d(shapes = list(cube3d()), plot = FALSE), 
-                              color = "blue",
-                              ambient = "#000020") {
+render_shapelist3d = function(shapelist = shapelist3d(icosahedron3d(), x = 0, y = 0,
+                                                      z = 0, col = 1, size = 40, plot = FALSE)
+                              ) {
   if(rgl::rgl.cur() == 0) {
     stop("No rgl window currently open.")
   }
@@ -41,7 +41,6 @@ render_shapelist3d = function(shapelist = shapelist3d(shapes = list(cube3d()), p
   }
   
   shapelist = change_color_shape(shapelist, color, 1)
-  rgl::rgl.material(color = color, ambient = ambient, size = 1)
-  rgl::shade3d(shapelist,  
-          lit=FALSE, ambient = "#000010", skipRedraw = FALSE)
+  #rgl::rgl.material(color = color, ambient = ambient, size = 1)
+  rgl::shade3d(shapelist, skipRedraw = FALSE)
 }
