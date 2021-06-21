@@ -47,7 +47,7 @@
 #'be derived from the rgl window.
 #'@param text_offset Default `c(0,0,0)`. Offset to be applied to all text labels.
 #'@param print_scene_info Default `FALSE`. If `TRUE`, it will print the position and lookat point of the camera.
-#'@param ... Additional parameters to pass to magick::image_annotate. 
+#'@param ... Additional parameters to pass to `rayvertex::rasterize_scene()`. 
 #'@return Displays snapshot of current rgl plot (or saves to disk).
 #'@export
 #'@examples
@@ -135,12 +135,15 @@ render_snapshot = function(filename, clear=FALSE,
       rgl::snapshot3d(filename = temp, top = bring_to_front)
     }
   } else {
-    render_snapshot_software(filename = temp, cache_filename = cache_filename,
+    debug = render_snapshot_software(filename = temp, cache_filename = cache_filename,
                              camera_location = camera_location, camera_lookat = camera_lookat,
-                             background="white",
+                             background=background,
                              width = width, height = height, light_direction = c(0,1,0), fake_shadow = TRUE, 
                              text_angle = text_angle, text_size = text_size, text_offset = text_offset,
                              print_scene_info = print_scene_info, point_radius = point_radius, ...)
+    if(length(dim(debug)) == 2) {
+      return(flipud(debug))
+    }
   }
   tempmap = png::readPNG(temp)
   if(has_overlay) {

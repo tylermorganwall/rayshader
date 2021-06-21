@@ -110,7 +110,7 @@ will specify the absolute angle all the labels are facing. If three angles, this
 
 \item{print_scene_info}{Default `FALSE`. If `TRUE`, it will print the position and lookat point of the camera.}
 
-\item{...}{Additional parameters to pass to magick::image_annotate.}
+\item{...}{Additional parameters to pass to `rayvertex::rasterize_scene()`.}
 }
 \value{
 Displays snapshot of current rgl plot (or saves to disk).

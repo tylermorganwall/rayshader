@@ -10,6 +10,7 @@ render_snapshot_software(
   camera_location = NULL,
   camera_lookat = c(0, 0, 0),
   background = "white",
+  return_all = FALSE,
   width = NULL,
   height = NULL,
   light_direction = c(0, 1, 0),

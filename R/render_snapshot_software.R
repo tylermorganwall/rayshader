@@ -7,7 +7,7 @@
 #'@param ... Additional parameters to pass to `rayrender::render_scene`()
 #'@keywords internal
 render_snapshot_software = function(filename, cache_filename = NULL, camera_location = NULL, 
-                                    camera_lookat = c(0,0,0),background="white",
+                                    camera_lookat = c(0,0,0),background="white", return_all = FALSE,
                                     width = NULL, height = NULL, light_direction = c(0,1,0), fake_shadow = TRUE, 
                                     text_angle = NULL, text_size = 1, text_offset = c(0,0,0), fov=NULL, 
                                     print_scene_info = FALSE, point_radius = 1, ...) {
@@ -89,9 +89,7 @@ render_snapshot_software = function(filename, cache_filename = NULL, camera_loca
     has_shadow = FALSE
   }
   
-  # if(is.null(fov)) {
-    fov = rgl::par3d()$FOV
-  # }
+  fov = rgl::par3d()$FOV
   rotmat = rot_to_euler(rgl::par3d()$userMatrix)
   projmat = rgl::par3d()$projMatrix
   zoom = rgl::par3d()$zoom
@@ -167,7 +165,7 @@ render_snapshot_software = function(filename, cache_filename = NULL, camera_loca
                                             color = temp_color[j,1:3]))
     }
   }
-  labellineids = get_ids_with_labels(typeval = c("textline","lines"))$id
+  labellineids = get_ids_with_labels(typeval = c("textline","lines","waterlines"))$id
   labelline = matrix(nrow=0,ncol=9)
   for(i in seq_len(length(labellineids))) {
     temp_verts = rgl.attrib(labellineids[i], "vertices")
@@ -265,10 +263,11 @@ render_snapshot_software = function(filename, cache_filename = NULL, camera_loca
     print(sprintf("Camera position: c(%0.2f, %0.2f, %0.2f), Camera Lookat: c(%0.2f, %0.2f, %0.2f)",
                   lookfrom[1],lookfrom[2],lookfrom[3], camera_lookat[1], camera_lookat[2], camera_lookat[3]))
   }
-  rayvertex::rasterize_scene(scene,lookat=c(0,0,0),
-                             filename = filename,
+  debug = rayvertex::rasterize_scene(scene,lookat=c(0,0,0),
+                             filename = filename, 
                              lookfrom=lookfrom,width=width,height=height, ortho_dimensions = ortho_dimensions,
                              fov=fov, background = background, light_info = rayvertex::directional_light(light_direction),
                              line_info = rayvertex::add_lines(labelline,pathline),
                              ...)
+  return(invisible(debug))
 }
