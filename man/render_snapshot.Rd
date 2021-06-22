@@ -26,11 +26,11 @@ render_snapshot(
   software_render = FALSE,
   camera_location = NULL,
   camera_lookat = c(0, 0, 0),
-  background = "white",
+  background = NULL,
   text_angle = NULL,
   text_size = 30,
   text_offset = c(0, 0, 0),
-  point_radius = 0.5,
+  point_radius = 2,
   cache_filename = NULL,
   print_scene_info = FALSE,
   ...
@@ -94,7 +94,7 @@ be derived from the rgl window.}
 \item{camera_lookat}{Default `NULL`. Custom point at which the camera is directed. The `FOV`, `width`, and `height` arguments will still
 be derived from the rgl window.}
 
-\item{background}{Default `"white"`. Background color when `software_render = TRUE`.}
+\item{background}{Default `NULL`. Background color when `software_render = TRUE`.}
 
 \item{text_angle}{Default `NULL`, which forces the text always to face the camera. If a single angle (degrees),
 will specify the absolute angle all the labels are facing. If three angles, this will specify all three orientations
@@ -104,7 +104,7 @@ will specify the absolute angle all the labels are facing. If three angles, this
 
 \item{text_offset}{Default `c(0,0,0)`. Offset to be applied to all text labels.}
 
-\item{point_radius}{Default `0.5`. Radius of 3D points (rendered with `render_points()`.}
+\item{point_radius}{Default `2`. Radius of 3D points (rendered with `render_points()`.}
 
 \item{cache_filename}{Default `NULL`. Name of temporary filename to store OBJ file, if the user does not want to rewrite the file each time.}
 

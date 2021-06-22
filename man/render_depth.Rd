@@ -167,11 +167,6 @@ montereybay \%>\%
  plot_3d(montereybay,zscale=50, water=TRUE, waterlinecolor="white",
          zoom=0.3,theta=-135,fov=70, phi=20) 
  
-\dontshow{
-render_depth = function(...) {
- rayshader::render_depth(..., software_render=TRUE)
-}
-}
 #Preview where the focal plane lies
 render_depth(preview_focus=TRUE)
 

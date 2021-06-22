@@ -129,24 +129,25 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
       cat("\n", file=con)
     } else if (!is.na(idrow$north_color[[1]])) {
       tempcol = col2rgb(idrow$north_color[[1]])/256
-      cat(paste("newmtl ray_north"), file=con, sep="\n")
+      cat(sprintf("newmtl ray_north%d",current_compass_number), file=con, sep="\n")
       cat(paste("Kd", sprintf("%1.4f %1.4f %1.4f",tempcol[1],tempcol[2],tempcol[3]),collapse = " "), file=con, sep="\n")
       cat("\n", file=con)
     } else if (!is.na(idrow$arrow_color[[1]])) {
       tempcol = col2rgb(idrow$arrow_color[[1]])/256
-      cat(paste("newmtl ray_arrow"), file=con, sep="\n")
+      cat(sprintf("newmtl ray_arrow%d",current_compass_number), file=con, sep="\n")
       cat(paste("Kd", sprintf("%1.4f %1.4f %1.4f",tempcol[1],tempcol[2],tempcol[3]),collapse = " "), file=con, sep="\n")
       cat("\n", file=con)
     } else if (!is.na(idrow$bevel_color[[1]])) {
       tempcol = col2rgb(idrow$bevel_color[[1]])/256
-      cat(paste("newmtl ray_bevel"), file=con, sep="\n")
+      cat(sprintf("newmtl ray_bevel%d",current_compass_number), file=con, sep="\n")
       cat(paste("Kd", sprintf("%1.4f %1.4f %1.4f",tempcol[1],tempcol[2],tempcol[3]),collapse = " "), file=con, sep="\n")
       cat("\n", file=con)
     } else if (!is.na(idrow$background_color[[1]])) {
       tempcol = col2rgb(idrow$background_color[[1]])/256
-      cat(paste("newmtl ray_background"), file=con, sep="\n")
+      cat(sprintf("newmtl ray_background%d",current_compass_number), file=con, sep="\n")
       cat(paste("Kd", sprintf("%1.4f %1.4f %1.4f",tempcol[1],tempcol[2],tempcol[3]),collapse = " "), file=con, sep="\n")
       cat("\n", file=con)
+      current_compass_number <<- current_compass_number + 1
     } else if (!is.na(idrow$scalebar1_color[[1]])) {
       tempcol = col2rgb(idrow$scalebar1_color[[1]])/256
       if(!scalebar1_written) {
@@ -192,6 +193,10 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
   }
   
   vertex_info = get_ids_with_labels()
+  
+  
+  number_compass = sum(vertex_info$raytype == "north_symbol")
+  current_compass_number = 1
   vertex_info$startindex = NA
   vertex_info$startindextex = NA
   vertex_info$startindexnormals = NA
@@ -237,6 +242,7 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
       vertex_info$endindexnormals[row] = number_normals
     }
   }
+  current_compass_number = 1
   for(row in 1:nrow(vertex_info)) {
     if(vertex_info$raytype[row] == "surface") {
       if(save_texture) {
@@ -326,7 +332,7 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
           }
         }
       }
-      indices = indices + vertex_info$startindextex[row] - 1
+      indices = indices + vertex_info$startindex[row] - 1
       if(all_face_fields) {
         indices = sprintf("%d//", indices)
       } else {
@@ -396,7 +402,7 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
         indices = matrix(indices, ncol=3, byrow=TRUE)
         indices = indices[1:(nrow(indices)-na_counter),]
         
-        cat(paste("f", sprintf("%f %f %f", indices[,1], indices[,2], indices[,3])), 
+        cat(paste("f", sprintf("%d %d %d", indices[,1], indices[,2], indices[,3])), 
             sep="\n", file=con)
       } else {
         baseindices = matrix(vertex_info$startindex[row]:vertex_info$endindex[row], ncol=3, byrow=TRUE)
@@ -406,7 +412,7 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
     } else if (vertex_info$raytype[row] == "north_symbol") {
       if(save_texture) {
         cat("g North", file=con, sep ="\n")
-        cat("usemtl ray_north", file=con, sep ="\n")
+        cat(sprintf("usemtl ray_north%d",current_compass_number), file=con, sep ="\n")
       }
       baseindices = matrix(vertex_info$startindex[row]:vertex_info$endindex[row], ncol=3, byrow=TRUE)
       cat(paste("f", baseindices[,1], baseindices[,2], baseindices[,3]), 
@@ -414,7 +420,7 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
     } else if (vertex_info$raytype[row] == "arrow_symbol") {
       if(save_texture) {
         cat("g Arrow", file=con, sep ="\n")
-        cat("usemtl ray_arrow", file=con, sep ="\n")
+        cat(sprintf("usemtl ray_arrow%d",current_compass_number), file=con, sep ="\n")
       }
       baseindices = matrix(vertex_info$startindex[row]:vertex_info$endindex[row], ncol=3, byrow=TRUE)
       cat(paste("f", baseindices[,1], baseindices[,2], baseindices[,3]), 
@@ -422,7 +428,7 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
     } else if (vertex_info$raytype[row] == "bevel_symbol") {
       if(save_texture) {
         cat("g Bevel", file=con, sep ="\n")
-        cat("usemtl ray_bevel", file=con, sep ="\n")
+        cat(sprintf("usemtl ray_bevel%d",current_compass_number), file=con, sep ="\n")
       }
       baseindices = matrix(vertex_info$startindex[row]:vertex_info$endindex[row], ncol=3, byrow=TRUE)
       cat(paste("f", baseindices[,1], baseindices[,2], baseindices[,3]), 
@@ -430,11 +436,12 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
     } else if (vertex_info$raytype[row] == "background_symbol") {
       if(save_texture) {
         cat("g Background", file=con, sep ="\n")
-        cat("usemtl ray_background", file=con, sep ="\n")
+        cat(sprintf("usemtl ray_background%d",current_compass_number), file=con, sep ="\n")
       }
       baseindices = matrix(vertex_info$startindex[row]:vertex_info$endindex[row], ncol=3, byrow=TRUE)
       cat(paste("f", baseindices[,1], baseindices[,2], baseindices[,3]), 
           sep="\n", file=con)
+      current_compass_number = current_compass_number + 1
     } else if (vertex_info$raytype[row] == "scalebar_col1") {
       if(save_texture) {
         cat("g Scalebar1", file=con, sep ="\n")

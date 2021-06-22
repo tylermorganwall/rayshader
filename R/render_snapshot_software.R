@@ -7,7 +7,7 @@
 #'@param ... Additional parameters to pass to `rayrender::render_scene`()
 #'@keywords internal
 render_snapshot_software = function(filename, cache_filename = NULL, camera_location = NULL, 
-                                    camera_lookat = c(0,0,0),background="white", return_all = FALSE,
+                                    camera_lookat = c(0,0,0),background=NULL, return_all = FALSE,
                                     width = NULL, height = NULL, light_direction = c(0,1,0), fake_shadow = TRUE, 
                                     text_angle = NULL, text_size = 1, text_offset = c(0,0,0), fov=NULL, 
                                     print_scene_info = FALSE, point_radius = 1, ...) {
@@ -148,7 +148,7 @@ render_snapshot_software = function(filename, cache_filename = NULL, camera_loca
     temp_color = rgl.attrib(labelids[i], "colors")
     for(j in seq_len(nrow(temp_label))) {
       if(is.null(text_angle)) {
-        anglevec = c(rotmat[1],theta,0)
+        anglevec = c(rotmat[1],-theta,0)
       } else {
         if(length(text_angle) == 1) {
           anglevec = c(0,text_angle,0)
@@ -157,7 +157,7 @@ render_snapshot_software = function(filename, cache_filename = NULL, camera_loca
         }
       }
       labels = rayvertex::add_shape(labels, rayvertex::text3d_mesh(label=temp_label[j,1],
-                                            x=c(temp_center[j,1] - bbox_center[1] + text_offset[1], 
+                                            position=c(temp_center[j,1] - bbox_center[1] + text_offset[1], 
                                             temp_center[j,2] - bbox_center[2] + text_offset[2], 
                                             temp_center[j,3] - bbox_center[3] + text_offset[3]),
                                             angle = anglevec,
@@ -263,11 +263,22 @@ render_snapshot_software = function(filename, cache_filename = NULL, camera_loca
     print(sprintf("Camera position: c(%0.2f, %0.2f, %0.2f), Camera Lookat: c(%0.2f, %0.2f, %0.2f)",
                   lookfrom[1],lookfrom[2],lookfrom[3], camera_lookat[1], camera_lookat[2], camera_lookat[3]))
   }
+  if(is.null(background)) {
+    if(!is.null(scene$materials$ray_shadow)) {
+      shdw = png::readPNG(scene$materials$ray_shadow$diffuse_texname)
+      background = c(shdw[1,1,1],shdw[1,1,2],shdw[1,1,3])
+    } else {
+      background = "white"
+    }
+  } 
+  if(!is.null(scene$materials$ray_polygon3d)) {
+    scene$materials$ray_polygon3d$type = "diffuse"
+  }
   debug = rayvertex::rasterize_scene(scene,lookat=c(0,0,0),
                              filename = filename, 
                              lookfrom=lookfrom,width=width,height=height, ortho_dimensions = ortho_dimensions,
                              fov=fov, background = background, light_info = rayvertex::directional_light(light_direction),
-                             line_info = rayvertex::add_lines(labelline,pathline),
+                             line_info = rayvertex::add_lines(labelline,pathline), line_offset = -1e-7,
                              ...)
   return(invisible(debug))
 }

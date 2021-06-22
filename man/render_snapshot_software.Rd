@@ -9,7 +9,7 @@ render_snapshot_software(
   cache_filename = NULL,
   camera_location = NULL,
   camera_lookat = c(0, 0, 0),
-  background = "white",
+  background = NULL,
   return_all = FALSE,
   width = NULL,
   height = NULL,

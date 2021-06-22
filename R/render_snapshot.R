@@ -35,12 +35,12 @@
 #'is not constrained by the screen size or requires OpenGL. 
 #'Consider settings a `cache_filename` so a new OBJ file doesn't have to be written with every snapshot.
 #'@param cache_filename Default `NULL`. Name of temporary filename to store OBJ file, if the user does not want to rewrite the file each time.
-#'@param background Default `"white"`. Background color when `software_render = TRUE`.
+#'@param background Default `NULL`. Background color when `software_render = TRUE`.
 #'@param text_angle Default `NULL`, which forces the text always to face the camera. If a single angle (degrees),
 #'will specify the absolute angle all the labels are facing. If three angles, this will specify all three orientations
 #'(relative to the x,y, and z axes) of the text labels.
 #'@param text_size Default `30`. Height of the text.
-#'@param point_radius Default `0.5`. Radius of 3D points (rendered with `render_points()`.
+#'@param point_radius Default `2`. Radius of 3D points (rendered with `render_points()`.
 #'@param camera_location Default `NULL`. Custom position of the camera. The `FOV`, `width`, and `height` arguments will still
 #'be derived from the rgl window.
 #'@param camera_lookat Default `NULL`. Custom point at which the camera is directed. The `FOV`, `width`, and `height` arguments will still
@@ -86,9 +86,9 @@ render_snapshot = function(filename, clear=FALSE,
                            keep_user_par = FALSE, webshot = FALSE, 
                            width = NULL, height = NULL, 
                            software_render = FALSE, camera_location = NULL, camera_lookat = c(0,0,0),
-                           background = "white",
+                           background = NULL,
                            text_angle = NULL, text_size = 30, text_offset = c(0,0,0),
-                           point_radius = 0.5,
+                           point_radius = 2,
                            cache_filename  = NULL,  
                            print_scene_info = FALSE, ...) {
   if(rgl::rgl.useNULL()) {

@@ -75,11 +75,6 @@
 #'  plot_3d(montereybay,zscale=50, water=TRUE, waterlinecolor="white",
 #'          zoom=0.3,theta=-135,fov=70, phi=20) 
 #'  
-#'\dontshow{
-#'render_depth = function(...) {
-#'  rayshader::render_depth(..., software_render=TRUE)
-#'}
-#'}
 #'#Preview where the focal plane lies
 #'render_depth(preview_focus=TRUE)
 #'
@@ -206,7 +201,7 @@ render_depth = function(focus = NULL, focallength = 100, fstop = 4, filename=NUL
   }
   if(!software_render) {
     image_to_convolve = png::readPNG(temp)
-    depthmap = rgl::rgl.pixels(component = "depth")
+    depthmap = flipud(rgl::rgl.pixels(component = "depth"))
     depthmap = 2*depthmap-1
     projmat = rgl::par3d()$projMatrix
     A = projmat[3,3]
@@ -219,7 +214,7 @@ render_depth = function(focus = NULL, focallength = 100, fstop = 4, filename=NUL
     image_to_convolve[,,1] = flipud(t(all_image$r))
     image_to_convolve[,,2] = flipud(t(all_image$g))
     image_to_convolve[,,3] = flipud(t(all_image$b))
-    depthmap = all_image$linear_depth
+    depthmap = flipud(all_image$linear_depth)
   }
   if(preview_focus) {
     temp_depth = paste0(tempfile(),".png")
