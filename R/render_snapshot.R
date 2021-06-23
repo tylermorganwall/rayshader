@@ -61,19 +61,18 @@
 #'render_snapshot()
 #'}
 #'  
-#'#Create a title, but also pass the `gravity` argument to magick::image_annotate using ...
-#'#to center the text.
+#'#Create a title
 #'\donttest{
 #'render_snapshot(title_text = "Monterey Bay, California", 
 #'                title_color = "white", title_bar_color = "black",
-#'                title_font = "Helvetica", gravity = "North")
+#'                title_font = "Helvetica", title_position = "North")
 #'                
 #'#Add a vignette effect
 #'render_camera(zoom=0.8)
 #'render_snapshot(title_text = "Monterey Bay, California", 
 #'                title_color = "white", title_bar_color = "darkgreen",
 #'                vignette = TRUE, 
-#'                title_font = "Helvetica", gravity = "North")
+#'                title_font = "Helvetica", title_position = "North")
 #'rgl::rgl.close() 
 #'}
 render_snapshot = function(filename, clear=FALSE, 
