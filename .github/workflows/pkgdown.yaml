@@ -18,10 +18,6 @@ jobs:
       - uses: r-lib/actions/setup-r@v1
 
       - uses: r-lib/actions/setup-pandoc@v1
-      
-      - name: Install Rayshader System Dependencies
-        run: |
-          brew install freetype
 
       - name: Query dependencies
         run: |
@@ -39,6 +35,7 @@ jobs:
           
       - name: Install dependencies
         run: |
+          remotes::install_github("dmurdoch/rgl")
           remotes::install_github("tylermorganwall/rayvertex")
           remotes::install_github("tylermorganwall/rayimage")
           remotes::install_github("tylermorganwall/rayrender")
