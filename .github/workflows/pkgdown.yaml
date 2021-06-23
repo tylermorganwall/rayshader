@@ -18,6 +18,10 @@ jobs:
       - uses: r-lib/actions/setup-r@v1
 
       - uses: r-lib/actions/setup-pandoc@v1
+      
+      - name: Install Rayshader System Dependencies
+        run: |
+          brew install freetype
 
       - name: Query dependencies
         run: |
@@ -32,7 +36,7 @@ jobs:
           path: ${{ env.R_LIBS_USER }}
           key: ${{ runner.os }}-${{ hashFiles('.github/R-version') }}-1-${{ hashFiles('.github/depends.Rds') }}
           restore-keys: ${{ runner.os }}-${{ hashFiles('.github/R-version') }}-1-
-
+          
       - name: Install dependencies
         run: |
           remotes::install_github("tylermorganwall/rayvertex")
