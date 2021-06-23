@@ -82,7 +82,8 @@ montereybay \%>\%
   plot_3d(montereybay,water=TRUE, windowsize=800, watercolor="dodgerblue")
 render_camera(theta=140,  phi=55, zoom = 0.85, fov=30)
 
-#We will apply a negative buffer to create space between adjacent polygons:
+#We will apply a negative buffer to create space between adjacent polygons. You may 
+#have to call `sf::sf_use_s2(FALSE)` before running this code to get it to run.
 mont_county_buff = sf::st_simplify(sf::st_buffer(monterey_counties_sf,-0.003), dTolerance=0.001)
 
 render_polygons(mont_county_buff, 
