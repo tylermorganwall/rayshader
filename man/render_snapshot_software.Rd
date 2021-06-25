@@ -21,6 +21,7 @@ render_snapshot_software(
   fov = NULL,
   print_scene_info = FALSE,
   point_radius = 1,
+  line_offset = -1e-07,
   ...
 )
 }

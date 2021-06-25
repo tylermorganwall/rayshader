@@ -10,7 +10,7 @@ render_snapshot_software = function(filename, cache_filename = NULL, camera_loca
                                     camera_lookat = c(0,0,0),background=NULL, return_all = FALSE,
                                     width = NULL, height = NULL, light_direction = c(0,1,0), fake_shadow = TRUE, 
                                     text_angle = NULL, text_size = 1, text_offset = c(0,0,0), fov=NULL, 
-                                    print_scene_info = FALSE, point_radius = 1, ...) {
+                                    print_scene_info = FALSE, point_radius = 1, line_offset=-1e-7, ...) {
   if(rgl::rgl.cur() == 0) {
     stop("No rgl window currently open.")
   }
@@ -285,7 +285,7 @@ render_snapshot_software = function(filename, cache_filename = NULL, camera_loca
                              filename = filename, 
                              lookfrom=lookfrom,width=width,height=height, ortho_dimensions = ortho_dimensions,
                              fov=fov, background = background, light_info = rayvertex::directional_light(light_direction),
-                             line_info = rayvertex::add_lines(labelline,pathline), 
+                             line_info = rayvertex::add_lines(labelline,pathline), line_offset=line_offset,
                              ...)
   return(invisible(debug))
 }

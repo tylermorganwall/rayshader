@@ -31,6 +31,7 @@ render_snapshot(
   text_size = 30,
   text_offset = c(0, 0, 0),
   point_radius = 2,
+  line_offset = 1e-07,
   cache_filename = NULL,
   print_scene_info = FALSE,
   ...
@@ -105,6 +106,9 @@ will specify the absolute angle all the labels are facing. If three angles, this
 \item{text_offset}{Default `c(0,0,0)`. Offset to be applied to all text labels.}
 
 \item{point_radius}{Default `2`. Radius of 3D points (rendered with `render_points()`.}
+
+\item{line_offset}{Default `1e-7`. Small number indicating the offset in the scene to apply to lines if using software rendering. Increase this if your lines 
+aren't showing up, or decrease it if lines are appearing through solid objects.}
 
 \item{cache_filename}{Default `NULL`. Name of temporary filename to store OBJ file, if the user does not want to rewrite the file each time.}
 
