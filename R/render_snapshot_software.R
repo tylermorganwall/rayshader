@@ -265,8 +265,15 @@ render_snapshot_software = function(filename, cache_filename = NULL, camera_loca
   }
   if(is.null(background)) {
     if(!is.null(scene$materials$ray_shadow)) {
-      shdw = png::readPNG(scene$materials$ray_shadow$diffuse_texname)
-      background = c(shdw[1,1,1],shdw[1,1,2],shdw[1,1,3])
+      if(file.exists(scene$materials$ray_shadow$diffuse_texname)) {
+        shdw = png::readPNG(scene$materials$ray_shadow$diffuse_texname)
+        background = c(shdw[1,1,1],shdw[1,1,2],shdw[1,1,3])
+      } else if(file.exists(sprintf("%s%s%s",tempdir(), sepval, scene$materials$ray_shadow$diffuse_texname))) {
+        shdw = png::readPNG(sprintf("%s%s%s",tempdir(), sepval, scene$materials$ray_shadow$diffuse_texname))
+        background = c(shdw[1,1,1],shdw[1,1,2],shdw[1,1,3])
+      } else {
+        background = "white"
+      }
     } else {
       background = "white"
     }
@@ -278,7 +285,7 @@ render_snapshot_software = function(filename, cache_filename = NULL, camera_loca
                              filename = filename, 
                              lookfrom=lookfrom,width=width,height=height, ortho_dimensions = ortho_dimensions,
                              fov=fov, background = background, light_info = rayvertex::directional_light(light_direction),
-                             line_info = rayvertex::add_lines(labelline,pathline), line_offset = -1e-7,
+                             line_info = rayvertex::add_lines(labelline,pathline), 
                              ...)
   return(invisible(debug))
 }
