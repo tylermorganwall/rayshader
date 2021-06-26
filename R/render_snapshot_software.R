@@ -282,7 +282,7 @@ render_snapshot_software = function(filename, cache_filename = NULL, camera_loca
     scene$materials$ray_polygon3d$type = "diffuse"
   }
   debug = rayvertex::rasterize_scene(scene,lookat=c(0,0,0),
-                             filename = filename, 
+                             filename = filename, fsaa = 1,
                              lookfrom=lookfrom,width=width,height=height, ortho_dimensions = ortho_dimensions,
                              fov=fov, background = background, light_info = rayvertex::directional_light(light_direction),
                              line_info = rayvertex::add_lines(labelline,pathline), line_offset=line_offset,

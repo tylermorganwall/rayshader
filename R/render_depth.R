@@ -57,7 +57,7 @@
 #'@param text_angle Default `NULL`, which forces the text always to face the camera. If a single angle (degrees),
 #'will specify the absolute angle all the labels are facing. If three angles, this will specify all three orientations
 #'(relative to the x,y, and z axes) of the text labels.
-#'@param text_size Default `30`. Height of the text.
+#'@param text_size Default `10`. Height of the text.
 #'@param point_radius Default `0.5`. Radius of 3D points (rendered with `render_points()`.
 #'@param line_offset Default `1e-7`. Small number indicating the offset in the scene to apply to lines if using software rendering. Increase this if your lines 
 #'aren't showing up, or decrease it if lines are appearing through solid objects.
@@ -121,7 +121,7 @@ render_depth = function(focus = NULL, focallength = 100, fstop = 4, filename=NUL
                      width = NULL, height = NULL, 
                      camera_location = NULL, camera_lookat = c(0,0,0),
                      background = "white",
-                     text_angle = NULL, text_size = 30, text_offset = c(0,0,0),
+                     text_angle = NULL, text_size = 10, text_offset = c(0,0,0),
                      point_radius = 0.5, line_offset = 1e-7,
                      cache_filename  = NULL,  
                      print_scene_info = FALSE,
@@ -220,6 +220,7 @@ render_depth = function(focus = NULL, focallength = 100, fstop = 4, filename=NUL
     depthmap = flipud(all_image$linear_depth)
   }
   if(preview_focus) {
+    depthmap = flipud(depthmap)
     temp_depth = paste0(tempfile(),".png")
     if(nrow(depthmap) < 1) {
       message("Can't fetch depth component, stopping")
