@@ -32,8 +32,7 @@ If left `NULL`, this will be just the elevation value at ths surface, offset by 
 
 \item{zscale}{Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.}
 
-\item{heightmap}{Default `NULL`. Automatically extracted from the rgl window--only use if auto-extraction
-of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
+\item{heightmap}{Default `NULL`. Pass this if not including an `altitude` argument, or if no extent passed. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
 All points are assumed to be evenly spaced.}
 
 \item{linewidth}{Default `3`. The line width.}

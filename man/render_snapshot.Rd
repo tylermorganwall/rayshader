@@ -135,16 +135,16 @@ render_snapshot()
  
 #Create a title
 \donttest{
-render_snapshot(title_text = "Monterey Bay, California", 
+render_snapshot(title_text = "Monterey Bay, California", title_offset=c(0,20),
                title_color = "white", title_bar_color = "black",
-               title_font = "Helvetica", title_position = "North")
+               title_font = "Helvetica", title_position = "north")
                
 #Add a vignette effect
 render_camera(zoom=0.8)
 render_snapshot(title_text = "Monterey Bay, California", 
                title_color = "white", title_bar_color = "darkgreen",
-               vignette = TRUE, 
-               title_font = "Helvetica", title_position = "North")
+               vignette = TRUE, title_offset=c(0,20),
+               title_font = "Helvetica", title_position = "north")
 rgl::rgl.close() 
 }
 }

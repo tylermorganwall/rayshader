@@ -12,8 +12,7 @@
 #'@param altitude Default `NULL`. Elevation of each point, in units of the elevation matrix (scaled by zscale).
 #'If left `NULL`, this will be just the elevation value at ths surface, offset by `offset`.
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.
-#'@param heightmap Default `NULL`. Automatically extracted from the rgl window--only use if auto-extraction
-#'of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
+#'@param heightmap Default `NULL`. Pass this if not including an `altitude` argument, or if no extent passed. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
 #' All points are assumed to be evenly spaced.
 #'@param linewidth Default `3`. The line width.
 #'@param antialias Default `FALSE`. If `TRUE`, the line with be have anti-aliasing applied. NOTE: anti-aliasing can cause some unpredictable behavior with transparent surfaces.
