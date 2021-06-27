@@ -204,7 +204,7 @@ render_depth = function(focus = NULL, focallength = 100, fstop = 4, filename=NUL
   }
   if(!software_render) {
     image_to_convolve = png::readPNG(temp)
-    depthmap = flipud(rgl::rgl.pixels(component = "depth"))
+    depthmap = (rgl::rgl.pixels(component = "depth"))
     depthmap = 2*depthmap-1
     projmat = rgl::par3d()$projMatrix
     A = projmat[3,3]
@@ -217,10 +217,10 @@ render_depth = function(focus = NULL, focallength = 100, fstop = 4, filename=NUL
     image_to_convolve[,,1] = flipud(t(all_image$r))
     image_to_convolve[,,2] = flipud(t(all_image$g))
     image_to_convolve[,,3] = flipud(t(all_image$b))
-    depthmap = flipud(all_image$linear_depth)
+    depthmap = (all_image$linear_depth)
   }
   if(preview_focus) {
-    depthmap = flipud(depthmap)
+    depthmap = (depthmap)
     temp_depth = paste0(tempfile(),".png")
     if(nrow(depthmap) < 1) {
       message("Can't fetch depth component, stopping")
