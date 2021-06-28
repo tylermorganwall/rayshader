@@ -50,7 +50,7 @@ add_shadow = function(hillshade, shadowmap, max_darken = 0.7, rescale_original =
   }
   if(length(dim(hillshade)) == 3) {
     hillshade = hillshade ^ 2.2
-    if(!all(dim(hillshade)[1:2] == dim(shadowmap))) {
+    if(!all(dim(hillshade)[1:2] == dim(shadowmap)[2:1])) {
       if(rescale_original) {
         temphillshade = array(0, dim = c(dim(shadowmap),3))
         temphillshade[,,1] = rayimage::render_resized(hillshade[,,1], dims = dim(shadowmap))
