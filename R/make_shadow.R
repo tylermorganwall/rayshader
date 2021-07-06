@@ -30,7 +30,7 @@ make_shadow = function(heightmap, basedepth, shadowwidth, color, shadowcolor) {
   temppreblur = tempfile(fileext = ".png")
   tempmap = tempfile(fileext = ".png")
   png::writePNG(shadowarray, temppreblur)
-  if("magick" %in% rownames(utils::installed.packages())) {
+  if(length(find.package("magick", quiet = TRUE)) > 0) {
     magick::image_read(temppreblur) %>%
       magick::image_blur(sigma =  shadowwidth/2, radius=shadowwidth/2) %>%
       (function(x) as.double(x[[1]])) %>%

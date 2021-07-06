@@ -20,7 +20,6 @@ Changes the position and properties of the camera around the scene. If no
 values are entered, prints and returns the current values.
 }
 \examples{
-if(interactive()) {
 \dontrun{
 montereybay \%>\%
  sphere_shade() \%>\%
@@ -87,7 +86,4 @@ for(i in 1:360) {
 #             theta = thetavec, phi = phivecfull, zoom = zoomvec, fov=0)
 rgl::rgl.close()
 }
-}
-
-
 }

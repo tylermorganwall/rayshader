@@ -53,10 +53,6 @@
 #'#You can change to an oscillating orbit. The magnification is increased and azimuth angle set to 30.
 #'#A title has also been added using the title_text argument.
 #'\donttest{
-#'montereybay %>%
-#'  sphere_shade(texture="imhof1") %>%
-#'  plot_3d(montereybay, zscale=50, water = TRUE, watercolor="imhof1", 
-#'          waterlinecolor="white", waterlinealpha=0.5)
 #'#Un-comment the following to run:
 #'#render_movie(filename = filename_movie, type = "oscillate", 
 #'#             frames = 60,  phi = 30, zoom = 0.8, theta = -90,
@@ -73,10 +69,6 @@
 #'zoomvec = 0.45 + 0.2 * 1/(1 + exp(seq(-5, 20, length.out = 180)))
 #'zoomvecfull = c(zoomvec, rev(zoomvec))
 #'\donttest{
-#'montereybay %>%
-#'  sphere_shade(texture="imhof1") %>%
-#'  plot_3d(montereybay, zscale=50, water = TRUE, watercolor="imhof1", 
-#'          waterlinecolor="white", waterlinealpha=0.5)
 #'#Un-comment the following to run
 #'#render_movie(filename = filename_movie, type = "custom", 
 #'#             frames = 360,  phi = phivecfull, zoom = zoomvecfull, theta = thetavec)
@@ -93,7 +85,7 @@ render_movie = function(filename, type = "orbit", frames = 360, fps = 30,
   if(rgl::rgl.cur() == 0) {
     stop("No rgl window currently open.")
   }
-  if(!("av" %in% rownames(utils::installed.packages()))) {
+  if(!(length(find.package("av", quiet = TRUE)) > 0)) {
     stop("`av` package required for render_movie()")
   }
   if(is.null(filename)) {
@@ -177,7 +169,7 @@ render_movie = function(filename, type = "orbit", frames = 360, fps = 30,
     dimensions[1] = dimensions[1] - 1
   }
   if(has_overlay) {
-    if(!("magick" %in% rownames(utils::installed.packages()))) {
+    if(!(length(find.package("magick", quiet = TRUE)) > 0)) {
       stop("`magick` package required for adding overlay")
     }
     if(progbar) {
@@ -194,7 +186,7 @@ render_movie = function(filename, type = "orbit", frames = 360, fps = 30,
     }
   }
   if(vignette || is.numeric(vignette)) {
-    if(!("magick" %in% rownames(utils::installed.packages()))) {
+    if(!(length(find.package("magick", quiet = TRUE)) > 0)) {
       stop("`magick` package required for adding overlay")
     }
     if(progbar) {
@@ -210,7 +202,7 @@ render_movie = function(filename, type = "orbit", frames = 360, fps = 30,
     }
   }
   if(has_title) {
-    if(!("magick" %in% rownames(utils::installed.packages()))) {
+    if(!(length(find.package("magick", quiet = TRUE)) > 0)) {
       stop("`magick` package required for adding title")
     }
     if(progbar) {

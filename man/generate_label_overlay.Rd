@@ -93,7 +93,7 @@ use an `sf` object or manually specify the x/y coordinates and label.
 \examples{
 #Add the included `sf` object with roads to the montereybay dataset
 #Only run these examples if the `magick` package is installed.
-if ("magick" \%in\% rownames(utils::installed.packages())) {
+if (length(find.package("magick", quiet = TRUE)) > 0) {
 \donttest{
 #Create the water palette
 water_palette = colorRampPalette(c("darkblue", "dodgerblue", "lightblue"))(200)

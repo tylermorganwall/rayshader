@@ -119,7 +119,7 @@ scale bar of the proper length.
 }
 \examples{
 #Only run these examples if the `magick` package is installed.
-if ("magick" \%in\% rownames(utils::installed.packages())) {
+if (length(find.package("magick", quiet = TRUE)) > 0) {
 \donttest{
 #Create the water palette
 water_palette = colorRampPalette(c("darkblue", "dodgerblue", "lightblue"))(200)

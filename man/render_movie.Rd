@@ -103,10 +103,6 @@ filename_movie = tempfile()
 #You can change to an oscillating orbit. The magnification is increased and azimuth angle set to 30.
 #A title has also been added using the title_text argument.
 \donttest{
-montereybay \%>\%
- sphere_shade(texture="imhof1") \%>\%
- plot_3d(montereybay, zscale=50, water = TRUE, watercolor="imhof1", 
-         waterlinecolor="white", waterlinealpha=0.5)
 #Un-comment the following to run:
 #render_movie(filename = filename_movie, type = "oscillate", 
 #             frames = 60,  phi = 30, zoom = 0.8, theta = -90,
@@ -123,10 +119,6 @@ thetavec = -90 + 45 * sin(seq(0,359,length.out = 360) * pi/180)
 zoomvec = 0.45 + 0.2 * 1/(1 + exp(seq(-5, 20, length.out = 180)))
 zoomvecfull = c(zoomvec, rev(zoomvec))
 \donttest{
-montereybay \%>\%
- sphere_shade(texture="imhof1") \%>\%
- plot_3d(montereybay, zscale=50, water = TRUE, watercolor="imhof1", 
-         waterlinecolor="white", waterlinealpha=0.5)
 #Un-comment the following to run
 #render_movie(filename = filename_movie, type = "custom", 
 #             frames = 360,  phi = phivecfull, zoom = zoomvecfull, theta = thetavec)

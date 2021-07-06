@@ -34,7 +34,6 @@
 #' @param clear_previous Default `FALSE`. If `TRUE`, it will clear all existing polygons.
 #' @export
 #' @examples
-#' if(interactive()) {
 #' \donttest{
 #' #Render the county borders as polygons in Monterey Bay
 #' montereybay %>%
@@ -43,7 +42,8 @@
 #'   plot_3d(montereybay,water=TRUE, windowsize=800, watercolor="dodgerblue")
 #' render_camera(theta=140,  phi=55, zoom = 0.85, fov=30)
 #' 
-#' #We will apply a negative buffer to create space between adjacent polygons:
+#' #We will apply a negative buffer to create space between adjacent polygons. You may 
+#' #have to call `sf::sf_use_s2(FALSE)` before running this code to get it to run.
 #' mont_county_buff = sf::st_simplify(sf::st_buffer(monterey_counties_sf,-0.003), dTolerance=0.001)
 #' 
 #' render_polygons(mont_county_buff, 
@@ -72,7 +72,6 @@
 #' render_highquality(samples=400, clamp_value=10)
 #' rgl::rgl.close()
 #' }
-#' }
 render_polygons = function(polygon, extent,  color = "red", top = 1, bottom = NA,
                            data_column_top = NULL, data_column_bottom = NULL,
                            heightmap = NULL, scale_data = 1, parallel = FALSE,
@@ -92,7 +91,7 @@ render_polygons = function(polygon, extent,  color = "red", top = 1, bottom = NA
       }
     }
   }
-  if(!"rayrender" %in% rownames(utils::installed.packages())) {
+  if(!(length(find.package("rayrender", quiet = TRUE)) > 0)) {
     stop("rayrender required to use render_polygon()")
   }
   if(is.na(bottom)) {

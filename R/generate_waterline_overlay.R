@@ -34,7 +34,7 @@
 #'@export
 #'@examples
 #'#Only run these examples if the `magick` package is installed.
-#'if ("magick" %in% rownames(utils::installed.packages())) {
+#'if (length(find.package("magick", quiet = TRUE)) > 0) {
 #' \donttest{
 #' #Create a flat body of water for Monterey Bay
 #' montbay = montereybay

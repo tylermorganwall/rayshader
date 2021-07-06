@@ -32,8 +32,7 @@ If left `NULL`, this will be just the elevation value at ths surface, offset by 
 
 \item{zscale}{Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.}
 
-\item{heightmap}{Default `NULL`. Automatically extracted from the rgl window--only use if auto-extraction
-of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
+\item{heightmap}{Default `NULL`. Pass this if not including an `altitude` argument, or if no extent passed. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
 All points are assumed to be evenly spaced.}
 
 \item{linewidth}{Default `3`. The line width.}
@@ -52,7 +51,6 @@ system defined by the extent object. If no altitude is provided, the path will b
 above the heightmap. If the path goes off the edge, the nearest height on the heightmap will be used.
 }
 \examples{
-if(interactive()) {
 \donttest{
 #Starting at Moss Landing in Monterey Bay, we are going to simulate a flight of a bird going
 #out to sea and diving for food.
@@ -113,6 +111,5 @@ render_snapshot()
 #And all of these work with `render_highquality()`
 render_highquality(clamp_value=10, line_radius=3)
 rgl::rgl.close()
-}
 }
 }

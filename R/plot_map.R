@@ -56,7 +56,7 @@ plot_map = function(hillshade, rotate=0, asp = 1,
     on.exit(graphics::par(old.par))
   }
   has_title = !is.na(title_text)
-  if(!("rayimage" %in% rownames(utils::installed.packages())) && has_title) {
+  if(!(length(find.package("rayimage", quiet = TRUE)) > 0) && has_title) {
     warning("`rayimage` package required for title text")
     has_title = FALSE
   }

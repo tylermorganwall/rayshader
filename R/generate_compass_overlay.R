@@ -30,7 +30,7 @@
 #'@export
 #'@examples
 #'#Only run these examples if the `magick` package is installed.
-#'if ("magick" %in% rownames(utils::installed.packages())) {
+#'if (length(find.package("magick", quiet = TRUE)) > 0) {
 #'\donttest{
 #'#Create the water palette
 #'water_palette = colorRampPalette(c("darkblue", "dodgerblue", "lightblue"))(200)
@@ -169,7 +169,7 @@ generate_compass_overlay = function(x=0.85, y=0.15,
   grDevices::dev.off() #resets par
   overlay_temp = png::readPNG(tempoverlay)
   if(!is.na(halo_color)) {
-    if(!("rayimage" %in% rownames(utils::installed.packages()))) {
+    if(!(length(find.package("rayimage", quiet = TRUE)) > 0)) {
       stop("{rayimage} package required for `halo_color`")
     }
     tempoverlay = tempfile(fileext = ".png")

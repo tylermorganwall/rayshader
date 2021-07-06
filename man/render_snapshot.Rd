@@ -23,6 +23,17 @@ render_snapshot(
   webshot = FALSE,
   width = NULL,
   height = NULL,
+  software_render = FALSE,
+  camera_location = NULL,
+  camera_lookat = c(0, 0, 0),
+  background = NULL,
+  text_angle = NULL,
+  text_size = 10,
+  text_offset = c(0, 0, 0),
+  point_radius = 2,
+  line_offset = 1e-07,
+  cache_filename = NULL,
+  print_scene_info = FALSE,
   ...
 )
 }
@@ -69,12 +80,41 @@ want to set up a multi-pane plot (e.g. set `par(mfrow)`).}
 which can be used when `rgl.useNULL = TRUE`.}
 
 \item{width}{Default `NULL`. Optional argument to pass to `rgl::snapshot3d()` to specify the
-width when `webshot = TRUE`.}
+width when `software_render = TRUE`..}
 
 \item{height}{Default `NULL`. Optional argument to pass to `rgl::snapshot3d()` to specify the
-height when `webshot = TRUE`.}
+height when `software_render = TRUE`.}
 
-\item{...}{Additional parameters to pass to magick::image_annotate.}
+\item{software_render}{Default `FALSE`. If `TRUE`, rayshader will use the rayvertex package to render the snapshot, which
+is not constrained by the screen size or requires OpenGL. 
+Consider settings a `cache_filename` so a new OBJ file doesn't have to be written with every snapshot.}
+
+\item{camera_location}{Default `NULL`. Custom position of the camera. The `FOV`, `width`, and `height` arguments will still
+be derived from the rgl window.}
+
+\item{camera_lookat}{Default `NULL`. Custom point at which the camera is directed. The `FOV`, `width`, and `height` arguments will still
+be derived from the rgl window.}
+
+\item{background}{Default `NULL`. Background color when `software_render = TRUE`.}
+
+\item{text_angle}{Default `NULL`, which forces the text always to face the camera. If a single angle (degrees),
+will specify the absolute angle all the labels are facing. If three angles, this will specify all three orientations
+(relative to the x,y, and z axes) of the text labels.}
+
+\item{text_size}{Default `10`. Height of the text.}
+
+\item{text_offset}{Default `c(0,0,0)`. Offset to be applied to all text labels.}
+
+\item{point_radius}{Default `2`. Radius of 3D points (rendered with `render_points()`.}
+
+\item{line_offset}{Default `1e-7`. Small number indicating the offset in the scene to apply to lines if using software rendering. Increase this if your lines 
+aren't showing up, or decrease it if lines are appearing through solid objects.}
+
+\item{cache_filename}{Default `NULL`. Name of temporary filename to store OBJ file, if the user does not want to rewrite the file each time.}
+
+\item{print_scene_info}{Default `FALSE`. If `TRUE`, it will print the position and lookat point of the camera.}
+
+\item{...}{Additional parameters to pass to `rayvertex::rasterize_scene()`.}
 }
 \value{
 Displays snapshot of current rgl plot (or saves to disk).
@@ -83,7 +123,6 @@ Displays snapshot of current rgl plot (or saves to disk).
 Either captures the current rgl view and displays, or saves the current view to disk.
 }
 \examples{
-if(interactive()) {
 \donttest{
 montereybay \%>\%
  sphere_shade() \%>\%
@@ -94,20 +133,18 @@ montereybay \%>\%
 render_snapshot()
 }
  
-#Create a title, but also pass the `gravity` argument to magick::image_annotate using ...
-#to center the text.
+#Create a title
 \donttest{
-render_snapshot(title_text = "Monterey Bay, California", 
+render_snapshot(title_text = "Monterey Bay, California", title_offset=c(0,20),
                title_color = "white", title_bar_color = "black",
-               title_font = "Helvetica", gravity = "North")
+               title_font = "Helvetica", title_position = "north")
                
 #Add a vignette effect
 render_camera(zoom=0.8)
 render_snapshot(title_text = "Monterey Bay, California", 
                title_color = "white", title_bar_color = "darkgreen",
-               vignette = TRUE, 
-               title_font = "Helvetica", gravity = "North")
+               vignette = TRUE, title_offset=c(0,20),
+               title_font = "Helvetica", title_position = "north")
 rgl::rgl.close() 
-}
 }
 }

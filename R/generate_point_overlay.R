@@ -27,7 +27,8 @@
 #'@examples
 #'#Add the included `sf` object with roads to the montereybay dataset
 #'\donttest{
-#'if(all(c("sf","magick") %in% rownames(utils::installed.packages()))) {
+#'if(all(length(find.package("sf", quiet = TRUE)) > 0, 
+#'       length(find.package("magick", quiet = TRUE)) > 0)) {
 #'  monterey_city = sf::st_sfc(sf::st_point(c(-121.893611, 36.603056)))
 #'  montereybay %>% 
 #'    height_shade() %>%
@@ -41,7 +42,7 @@
 generate_point_overlay = function(geometry, extent, heightmap = NULL,
                                   width=NA, height=NA, pch = 20,  
                                   color = "black", size = 1, offset = c(0,0), data_column_width = NULL) {
-  if(!("sf" %in% rownames(utils::installed.packages()))) {
+  if(!(length(find.package("sf", quiet = TRUE)) > 0)) {
     stop("{sf} package required for generate_line_overlay()")
   }
   if(is.null(extent)) {

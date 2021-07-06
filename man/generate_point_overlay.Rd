@@ -57,7 +57,8 @@ Calculates and returns an overlay of points for the current map.
 \examples{
 #Add the included `sf` object with roads to the montereybay dataset
 \donttest{
-if(all(c("sf","magick") \%in\% rownames(utils::installed.packages()))) {
+if(all(length(find.package("sf", quiet = TRUE)) > 0, 
+      length(find.package("magick", quiet = TRUE)) > 0)) {
  monterey_city = sf::st_sfc(sf::st_point(c(-121.893611, 36.603056)))
  montereybay \%>\% 
    height_shade() \%>\%

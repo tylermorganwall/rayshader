@@ -12,8 +12,7 @@
 #'@param altitude Default `NULL`. Elevation of each point, in units of the elevation matrix (scaled by zscale).
 #'If left `NULL`, this will be just the elevation value at ths surface, offset by `offset`.
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.
-#'@param heightmap Default `NULL`. Automatically extracted from the rgl window--only use if auto-extraction
-#'of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
+#'@param heightmap Default `NULL`. Pass this if not including an `altitude` argument, or if no extent passed. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
 #' All points are assumed to be evenly spaced.
 #'@param linewidth Default `3`. The line width.
 #'@param antialias Default `FALSE`. If `TRUE`, the line with be have anti-aliasing applied. NOTE: anti-aliasing can cause some unpredictable behavior with transparent surfaces.
@@ -22,7 +21,6 @@
 #'@param clear_previous Default `FALSE`. If `TRUE`, it will clear all existing paths.
 #'@export
 #'@examples
-#'if(interactive()) {
 #'\donttest{
 #'#Starting at Moss Landing in Monterey Bay, we are going to simulate a flight of a bird going
 #'#out to sea and diving for food.
@@ -84,7 +82,6 @@
 #'render_highquality(clamp_value=10, line_radius=3)
 #'rgl::rgl.close()
 #'}
-#'}
 render_path = function(extent = NULL, lat, long = NULL, altitude = NULL, 
                        zscale=1, heightmap = NULL,
                        linewidth = 3, color = "black", antialias = FALSE, offset = 5,
@@ -142,7 +139,7 @@ render_path = function(extent = NULL, lat, long = NULL, altitude = NULL,
       distances_y_index[floor(distances_y_index) > ncol(heightmap)] = ncol(heightmap)
       distances_x_index[floor(distances_x_index) < 1] = 1
       distances_y_index[floor(distances_y_index) < 1] = 1
-      if(!"rayimage" %in% rownames(utils::installed.packages())) {
+      if(!length(find.package("rayimage", quiet = TRUE)) > 0) {
         xy = matrix(c(floor(distances_x_index),floor(distances_y_index)),
                     nrow=length(distances_x_index),ncol=2)
         flipped_mat = flipud(t(heightmap))
