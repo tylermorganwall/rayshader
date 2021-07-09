@@ -184,7 +184,7 @@ plot_gg = function(ggobj, width = 3, height = 3,
       for(j in seq_len(length(grob$children))) {
         grob$children[[j]] = set_to_white(grob$children[[j]])
       }
-    } else if(!inherits(grob,c("points","polygon"))) {
+    } else if(!(length(grep("geom", x = grob$name)) > 0)) {
       grob$gp$col = "white"
       grob$gp$alpha =0
       grob$gp$fill = "white"
