@@ -5,9 +5,9 @@
 #'@param hillshade A three-dimensional RGB array or 2D matrix of shadow intensities. 
 #'@param overlay A three or four dimensional RGB array, where the 4th dimension represents the alpha (transparency) channel. 
 #'If the array is 3D, `alphacolor` should also be passed to indicate transparent regions.
-#'@param alphacolor Default `NULL`. If `overlay` is a 3-layer array, this argument tells which color is interpretted as completely transparent.
 #'@param alphalayer Default `1`. Defines minimum tranparaency of layer. If transparency already exists in `overlay`, the way `add_overlay` combines 
 #'the two is determined in argument `alphamethod`.
+#'@param alphacolor Default `NULL`. If `overlay` is a 3-layer array, this argument tells which color is interpretted as completely transparent.
 #'@param alphamethod Default `max`. Method for dealing with pre-existing transparency with `layeralpha`. 
 #'If `max`, converts all alpha levels higher than `layeralpha` to the value set in `layeralpha`. Otherwise,
 #'this just sets all transparency to `layeralpha`.
@@ -36,8 +36,8 @@
 #'   plot_map()
 #'}
 #'}
-add_overlay = function(hillshade, overlay, alphacolor=NULL, 
-                       alphamethod = "max", alphalayer = 1, rescale_original = FALSE) {
+add_overlay = function(hillshade, overlay, alphalayer = 1, alphacolor=NULL, 
+                       alphamethod = "max", rescale_original = FALSE) {
   if(any(alphalayer > 1 || alphalayer < 0)) {
     stop("Argument `alphalayer` must not be less than 0 or more than 1")
   }
