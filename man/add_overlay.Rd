@@ -7,9 +7,9 @@
 add_overlay(
   hillshade,
   overlay,
+  alphalayer = 1,
   alphacolor = NULL,
   alphamethod = "max",
-  alphalayer = 1,
   rescale_original = FALSE
 )
 }
@@ -19,14 +19,14 @@ add_overlay(
 \item{overlay}{A three or four dimensional RGB array, where the 4th dimension represents the alpha (transparency) channel. 
 If the array is 3D, `alphacolor` should also be passed to indicate transparent regions.}
 
+\item{alphalayer}{Default `1`. Defines minimum tranparaency of layer. If transparency already exists in `overlay`, the way `add_overlay` combines 
+the two is determined in argument `alphamethod`.}
+
 \item{alphacolor}{Default `NULL`. If `overlay` is a 3-layer array, this argument tells which color is interpretted as completely transparent.}
 
 \item{alphamethod}{Default `max`. Method for dealing with pre-existing transparency with `layeralpha`. 
 If `max`, converts all alpha levels higher than `layeralpha` to the value set in `layeralpha`. Otherwise,
 this just sets all transparency to `layeralpha`.}
-
-\item{alphalayer}{Default `1`. Defines minimum tranparaency of layer. If transparency already exists in `overlay`, the way `add_overlay` combines 
-the two is determined in argument `alphamethod`.}
 
 \item{rescale_original}{Default `FALSE`. If `TRUE`, `hillshade` will be scaled to match the dimensions of `overlay` (instead of
 the other way around).}

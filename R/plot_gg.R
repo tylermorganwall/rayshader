@@ -166,15 +166,34 @@ plot_gg = function(ggobj, width = 3, height = 3,
   if(!(length(find.package("ggplot2", quiet = TRUE)) > 0)) {
     stop("Must have ggplot2 installed to use plot_gg()")
   }
-  heightmaptemp = tempfile()
-  colormaptemp = tempfile()
+  heightmaptemp = tempfile(fileext = ".png")
+  colormaptemp = tempfile(fileext = ".png")
   if(methods::is(ggobj,"list") && length(ggobj) == 2) {
     ggplotobj2 = unserialize(serialize(ggobj[[2]], NULL))
-    ggplot2::ggsave(paste0(colormaptemp,".png"),ggobj[[1]],width = width,height = height)
+    ggplot2::ggsave(colormaptemp,ggobj[[1]],width = width,height = height,dpi=300)
   } else {
     ggplotobj2 = unserialize(serialize(ggobj, NULL))
-    ggplot2::ggsave(paste0(colormaptemp,".png"),ggplotobj2,width = width,height = height)
+    ggplot2::ggsave(colormaptemp,ggplotobj2,width = width,height = height,dpi=300)
   }
+  set_to_white = function(grob) {
+    if(!is.null(grob[["grobs"]])) {
+      for(j in seq_len(length(grob$grobs))) {
+        grob$grobs[[j]] = set_to_white(grob$grobs[[j]])
+      }
+    } else if (!is.null(grob[["children"]])) {
+      for(j in seq_len(length(grob$children))) {
+        grob$children[[j]] = set_to_white(grob$children[[j]])
+      }
+    } else if(!inherits(grob,c("points","polygon"))) {
+      grob$gp$col = "white"
+      grob$gp$alpha =0
+      grob$gp$fill = "white"
+      grob$gp$lwd = 0
+      class(grob$gp) = "gpar"
+    }
+    return(grob)
+  }
+  #Determine if auto fill or color aes to be mapped to 3D
   isfill = FALSE
   iscolor = FALSE
   if(is.null(height_aes)) {
@@ -215,54 +234,7 @@ plot_gg = function(ggobj, width = 3, height = 3,
   }
   polygon_offset_geoms = c("GeomPolygon","GeomSf", "GeomHex", "GeomTile")
   other_height_type = ifelse(height_aes == "colour", "fill", "colour")
-  colortheme = c("line","rect","text","axis.title", "axis.title.x",
-    "axis.title.x.top","axis.title.y","axis.title.y.right","axis.text",
-    "axis.text.x" ,"axis.text.x.top","axis.text.y","axis.text.y.right",
-    "axis.ticks" ,"axis.ticks.length","axis.line"  ,"axis.line.x",
-    "axis.line.y","legend.background","legend.margin","legend.spacing",
-    "legend.spacing.x","legend.spacing.y","legend.key" ,"legend.key.size",
-    "legend.key.height","legend.key.width","legend.text","legend.text.align",
-    "legend.title","legend.title.align","legend.position","legend.direction",
-    "legend.justification" ,"legend.box","legend.box.margin","legend.box.background",
-    "legend.box.spacing","panel.background","panel.border","panel.spacing",
-    "panel.spacing.x","panel.spacing.y","panel.grid" ,"panel.grid.minor",
-    "panel.ontop","plot.background","plot.title" ,"plot.subtitle",
-    "plot.caption","plot.tag","plot.tag.position","plot.margin",
-    "strip.background","strip.placement","strip.text" ,"strip.text.x",
-    "strip.text.y","strip.switch.pad.grid","strip.switch.pad.wrap","panel.grid.major",
-    "title","axis.ticks.length.x","axis.ticks.length.y","axis.ticks.length.x.top",
-    "axis.ticks.length.x.bottom","axis.ticks.length.y.left","axis.ticks.length.y.right","axis.title.x.bottom",
-    "axis.text.x.bottom","axis.text.y.left","axis.title.y.left", "aspect.ratio")
   
-  key_theme_elements = c("text", "line", "axis.line", "axis.title", 
-                         "axis.title.x",
-                         "axis.title.y",
-                         "axis.text", 
-                         "axis.text.x", "axis.text.y", "axis.text.x.top", "axis.text.x.bottom", 
-                         "axis.text.y.left", "axis.text.y.right",
-                         "axis.ticks", "strip.background", "strip.text", "legend.text", "strip.text.x","strip.text.y",
-                         "legend.title","legend.background", "legend.title", "panel.background")
-  theme_bool = rep(TRUE,length(key_theme_elements))
-  names(theme_bool) = key_theme_elements
-
-  typetheme = c("line","rect","text","text","text", 
-    "text","text","text","text",
-    "text","text","text","text",
-    "line","unit","line","line",
-    "line","rect","margin","unit",
-    "unit","unit","rect","unit", 
-    "unit","unit","text","none",
-    "text","none","none","none", 
-    "none","rect","margin","rect",
-    "unit","rect","rect","unit",
-    "unit","unit","line","line", 
-    "none","rect","text","text",
-    "text","text","none","margin",
-    "rect","none","text","text",
-    "text","unit","unit","line",
-    "text","line","line","line",
-    "line","line","line","text",
-    "text","text","text","none")
   black_white_pal = function(x) {
     grDevices::colorRampPalette(c("white", "black"))(255)[x * 254 + 1]
   }
@@ -275,7 +247,6 @@ plot_gg = function(ggobj, width = 3, height = 3,
     }
   }
   
-  #aes_with_guides = c("size","shape","colour","fill","alpha","linetype")
   #Shift all continuous palettes of height_aes to black/white, and set all discrete key colors to white.
   if(ggplotobj2$scales$n() != 0) {
     anyfound = FALSE
@@ -406,218 +377,75 @@ plot_gg = function(ggobj, width = 3, height = 3,
       }
     }
   }
-  #Set all elements to white if custom theme passed, and color aesthetic geoms to size = 0 if height_aes == "fill"
-  if(length(ggplotobj2$theme) > 0) {
-    if(height_aes == "fill") {
-      for(layer in seq_along(1:length(ggplotobj2$layers))) {
-        if("colour" %in% names(ggplotobj2$layers[[layer]]$mapping) || 
-           0 == length(names(ggplotobj2$layers[[layer]]$mapping))) {
+  if(height_aes == "fill") {
+    for(layer in seq_along(1:length(ggplotobj2$layers))) {
+      if("colour" %in% names(ggplotobj2$layers[[layer]]$mapping) || 
+         0 == length(names(ggplotobj2$layers[[layer]]$mapping))) {
+        ggplotobj2$layers[[layer]]$aes_params$colour = "white"
+      }
+      if("fill" %in% names(ggplotobj2$layers[[layer]]$mapping)) {
+        ggplotobj2$layers[[layer]]$aes_params$size = NA
+        if(any(polygon_offset_geoms %in% class(ggplotobj2$layers[[layer]]$geom)) && offset_edges) {
+          ggplotobj2$layers[[layer]]$aes_params$size = polygon_offset_value
           ggplotobj2$layers[[layer]]$aes_params$colour = "white"
         }
-        if("fill" %in% names(ggplotobj2$layers[[layer]]$mapping)) {
-          ggplotobj2$layers[[layer]]$aes_params$size = NA
-          if(any(polygon_offset_geoms %in% class(ggplotobj2$layers[[layer]]$geom)) && offset_edges) {
-            ggplotobj2$layers[[layer]]$aes_params$size = polygon_offset_value
-            ggplotobj2$layers[[layer]]$aes_params$colour = "white"
-          }
-        }
-        if("shape" %in% names(ggplotobj2$layers[[layer]]$mapping)) {
-          shapedata = ggplot2::layer_data(ggplotobj2)
-          numbershapes = length(unique(shapedata$shape))
-          if(numbershapes > 3) {
-            warning("Non-solid shapes will not be projected to 3D.")
-          }
-          ggplotobj2$layers[[layer]]$geom$draw_key = drawkeyfunction_points
-        }
-        if("size" %in% names(ggplotobj2$layers[[layer]]$mapping)) {
-          ggplotobj2$layers[[layer]]$geom$draw_key = drawkeyfunction_points
-        }
-        if("alpha" %in% names(ggplotobj2$layers[[layer]]$mapping)) {
-          ggplotobj2$layers[[layer]]$geom$draw_key = drawkeyfunction_points
-          for(j in seq_len(length(ggplotobj2$layers))) {
-            if("stroke" %in% names(ggplotobj2$layers[[j]]$geom$default_aes)) {
-              ggplotobj2$layers[[j]]$geom$default_aes$stroke = 0
-            }
-          }
-          ggplotobj2 = suppressMessages({ggplotobj2 + ggplot2::scale_alpha_continuous(range=c(1,1))})
-        }
-        if("linetype" %in% names(ggplotobj2$layers[[layer]]$mapping)) {
-          ggplotobj2$layers[[layer]]$geom$draw_key = drawkeyfunction_lines
-        }
       }
-    } else {
-      for(layer in seq_along(1:length(ggplotobj2$layers))) {
-        if("fill" %in% names(ggplotobj2$layers[[layer]]$mapping) || 
-           0 == length(names(ggplotobj2$layers[[layer]]$mapping))) {
-          ggplotobj2$layers[[layer]]$aes_params$fill = "white"
+      if("shape" %in% names(ggplotobj2$layers[[layer]]$mapping)) {
+        shapedata = ggplot2::layer_data(ggplotobj2)
+        numbershapes = length(unique(shapedata$shape))
+        if(numbershapes > 3) {
+          warning("Non-solid shapes will not be projected to 3D.")
         }
-        if("shape" %in% names(ggplotobj2$layers[[layer]]$mapping)) {
-          shapedata = ggplot2::layer_data(ggplotobj2)
-          numbershapes = length(unique(shapedata$shape))
-          if(numbershapes > 3) {
-            warning("Non-solid shapes will not be projected to 3D.")
+        ggplotobj2$layers[[layer]]$geom$draw_key = drawkeyfunction_points
+      }
+      if("size" %in% names(ggplotobj2$layers[[layer]]$mapping)) {
+        ggplotobj2$layers[[layer]]$geom$draw_key = drawkeyfunction_points
+      }
+      if("alpha" %in% names(ggplotobj2$layers[[layer]]$mapping)) {
+        ggplotobj2$layers[[layer]]$geom$draw_key = drawkeyfunction_points
+        for(j in seq_len(length(ggplotobj2$layers))) {
+          if("stroke" %in% names(ggplotobj2$layers[[j]]$geom$default_aes)) {
+            ggplotobj2$layers[[j]]$geom$default_aes$stroke = 0
           }
-          ggplotobj2$layers[[layer]]$geom$draw_key = drawkeyfunction_points
         }
-        if("size" %in% names(ggplotobj2$layers[[layer]]$mapping)) {
-          ggplotobj2$layers[[layer]]$geom$draw_key = drawkeyfunction_points
-        }
-        if("alpha" %in% names(ggplotobj2$layers[[layer]]$mapping)) {
-          ggplotobj2$layers[[layer]]$geom$draw_key = drawkeyfunction_points
-          for(j in seq_len(length(ggplotobj2$layers))) {
-            if("stroke" %in% names(ggplotobj2$layers[[j]]$geom$default_aes)) {
-              ggplotobj2$layers[[j]]$geom$default_aes$stroke = 0
-            }
-          }
-          ggplotobj2 = suppressMessages({ggplotobj2 + ggplot2::scale_alpha_continuous(range=c(1,1))})
-        }
-        if("linetype" %in% names(ggplotobj2$layers[[layer]]$mapping)) {
-          ggplotobj2$layers[[layer]]$geom$draw_key = drawkeyfunction_lines
-        }
+        ggplotobj2 = suppressMessages({ggplotobj2 + ggplot2::scale_alpha_continuous(range=c(1,1))})
+      }
+      if("linetype" %in% names(ggplotobj2$layers[[layer]]$mapping)) {
+        ggplotobj2$layers[[layer]]$geom$draw_key = drawkeyfunction_lines
       }
     }
-    #switch all elements to white
-    for(i in 1:length(ggplotobj2$theme)) {
-      tempname = names(ggplotobj2$theme[i])
-      if(tempname %in% key_theme_elements) {
-        theme_bool[tempname] = FALSE
-      } else if ("element_blank" %in% class(ggplotobj2$theme[[i]])) {
-        theme_bool[tempname] = FALSE
-      }
-      whichtype = typetheme[which(tempname == colortheme)]
-      if(length(whichtype) > 0) {
-        if(whichtype %in% c("text","line")) {
-          if(!is.null(ggplotobj2$theme[[i]])) {
-            ggplotobj2$theme[[i]]$colour = "white"
-          }
-        } else if(whichtype == "rect") {
-          if(!(tempname %in% c("panel.border","rect"))) {
-            if(!is.null(ggplotobj2$theme[[i]])) {
-              ggplotobj2$theme[[i]]$colour = "white"
-              ggplotobj2$theme[[i]]$fill = "white"
-            }
-          } else {
-            ggplotobj2$theme[[i]]$colour = "white"
-            ggplotobj2$theme[[i]]$fill = NA
-          }
-        } 
-      }
-    }
-    if(ggplotobj2$scales$n() > 0) {
-      for(i in 1:ggplotobj2$scales$n()) {
-        if(length(ggplotobj2$scales$scales[[i]]$guide) > 1) {
-          ggplotobj2$scales$scales[[i]]$guide$frame.colour = "white"
-          ggplotobj2$scales$scales[[i]]$guide$ticks = FALSE
-          ggplotobj2$scales$scales[[i]]$guide$nbin = 256
-          ggplotobj2$scales$scales[[i]]$guide$draw.llim = FALSE
-          ggplotobj2$scales$scales[[i]]$na.value = "white"
-        }
-      }
-    }
-    if(theme_bool["text"]) ggplotobj2 = ggplotobj2 + ggplot2::theme(text = ggplot2::element_text(color="white"))
-    if(theme_bool["line"]) ggplotobj2 = ggplotobj2 + ggplot2::theme(line = ggplot2::element_line(color="white"))
-    if(theme_bool["axis.line"]) ggplotobj2 = ggplotobj2 + ggplot2::theme(axis.line = ggplot2::element_line(color="white"))
-    if(theme_bool["axis.title"]) ggplotobj2 = ggplotobj2 + ggplot2::theme(axis.title = ggplot2::element_text(color="white"))
-    if(theme_bool["axis.title.x"]) ggplotobj2 = ggplotobj2 + ggplot2::theme(axis.title.x = ggplot2::element_text(color="white"))
-    if(theme_bool["axis.title.y"]) ggplotobj2 = ggplotobj2 + ggplot2::theme(axis.title.y = ggplot2::element_text(color="white"))
-    if(theme_bool["axis.text"]) ggplotobj2 = ggplotobj2 + ggplot2::theme(axis.text = ggplot2::element_text(color="white"))
-    if(theme_bool["axis.text.x"]) ggplotobj2 = ggplotobj2 + ggplot2::theme(axis.text.x = ggplot2::element_text(color="white"))
-    if(theme_bool["axis.text.y"]) ggplotobj2 = ggplotobj2 + ggplot2::theme(axis.text.y = ggplot2::element_text(color="white"))
-    if(theme_bool["strip.text.x"]) ggplotobj2 = ggplotobj2 + ggplot2::theme(strip.text.x = ggplot2::element_text(color="white"))
-    if(theme_bool["strip.text.y"]) ggplotobj2 = ggplotobj2 + ggplot2::theme(strip.text.y = ggplot2::element_text(color="white"))
-    if(theme_bool["axis.ticks"]) ggplotobj2 = ggplotobj2 + ggplot2::theme(axis.ticks = ggplot2::element_line(color="white"))
-    if(theme_bool["strip.background"]) ggplotobj2 = ggplotobj2 + ggplot2::theme(strip.background = ggplot2::element_rect(fill = "white", color = "white"))
-    if(theme_bool["strip.text"]) ggplotobj2 = ggplotobj2 + ggplot2::theme(strip.text = ggplot2::element_text(color="white"))
-    if(theme_bool["legend.text"]) ggplotobj2 = ggplotobj2 + ggplot2::theme(legend.text = ggplot2::element_text(color="white"))
-    if(theme_bool["legend.title"]) ggplotobj2 = ggplotobj2 + ggplot2::theme(legend.title = ggplot2::element_text(color="white"))
-    if(theme_bool["legend.background"]) ggplotobj2 = ggplotobj2 + ggplot2::theme(legend.background = ggplot2::element_rect(fill = "white", color = "white"))
-    if(theme_bool["legend.title"]) ggplotobj2 = ggplotobj2 + ggplot2::theme(legend.title = ggplot2::element_text(color="white"))
-    if(theme_bool["panel.background"]) ggplotobj2 = ggplotobj2 + ggplot2::theme(panel.background = ggplot2::element_rect(fill = "white", color = "white"))
   } else {
-    if(height_aes == "fill") {
-      for(layer in seq_along(1:length(ggplotobj2$layers))) {
-        if("colour" %in% names(ggplotobj2$layers[[layer]]$mapping) || 
-           0 == length(names(ggplotobj2$layers[[layer]]$mapping))) {
-          ggplotobj2$layers[[layer]]$aes_params$colour = "white"
-        }
-        if("fill" %in% names(ggplotobj2$layers[[layer]]$mapping)) {
-          ggplotobj2$layers[[layer]]$aes_params$size = NA
-          if(any(polygon_offset_geoms %in% class(ggplotobj2$layers[[layer]]$geom)) && offset_edges) {
-            ggplotobj2$layers[[layer]]$aes_params$size = polygon_offset_value
-            ggplotobj2$layers[[layer]]$aes_params$colour = "white"
-          }
-        }
-        if("shape" %in% names(ggplotobj2$layers[[layer]]$mapping)) {
-          shapedata = ggplot2::layer_data(ggplotobj2)
-          numbershapes = length(unique(shapedata$shape))
-          if(numbershapes > 3) {
-            warning("Non-solid shapes will not be projected to 3D.")
-          }
-          ggplotobj2$layers[[layer]]$geom$draw_key = drawkeyfunction_points
-        }
-        if("size" %in% names(ggplotobj2$layers[[layer]]$mapping)) {
-          ggplotobj2$layers[[layer]]$geom$draw_key = drawkeyfunction_points
-        }
-        if("alpha" %in% names(ggplotobj2$layers[[layer]]$mapping)) {
-          ggplotobj2$layers[[layer]]$geom$draw_key = drawkeyfunction_points
-          for(j in seq_len(length(ggplotobj2$layers))) {
-            if("stroke" %in% names(ggplotobj2$layers[[j]]$geom$default_aes)) {
-              ggplotobj2$layers[[j]]$geom$default_aes$stroke = 0
-            }
-          }
-          ggplotobj2 = suppressMessages({ggplotobj2 + ggplot2::scale_alpha_continuous(range=c(1,1))})
-        }
-        if("linetype" %in% names(ggplotobj2$layers[[layer]]$mapping)) {
-          ggplotobj2$layers[[layer]]$geom$draw_key = drawkeyfunction_lines
-        }
+    for(layer in seq_len(length(ggplotobj2$layers))) {
+      if("fill" %in% names(ggplotobj2$layers[[layer]]$mapping) || 
+         0 == length(names(ggplotobj2$layers[[layer]]$mapping))) {
+        ggplotobj2$layers[[layer]]$aes_params$fill = "white"
       }
-    } else {
-      for(layer in seq_len(length(ggplotobj2$layers))) {
-        if("fill" %in% names(ggplotobj2$layers[[layer]]$mapping) || 
-           0 == length(names(ggplotobj2$layers[[layer]]$mapping))) {
-          ggplotobj2$layers[[layer]]$aes_params$fill = "white"
+      if("shape" %in% names(ggplotobj2$layers[[layer]]$mapping)) {
+        shapedata = ggplot2::layer_data(ggplotobj2)
+        numbershapes = length(unique(shapedata$shape))
+        if(numbershapes > 3) {
+          warning("Non-solid shapes will not be projected to 3D.")
         }
-        if("shape" %in% names(ggplotobj2$layers[[layer]]$mapping)) {
-          shapedata = ggplot2::layer_data(ggplotobj2)
-          numbershapes = length(unique(shapedata$shape))
-          if(numbershapes > 3) {
-            warning("Non-solid shapes will not be projected to 3D.")
+        ggplotobj2$layers[[layer]]$geom$draw_key = drawkeyfunction_points
+      }
+      if("size" %in% names(ggplotobj2$layers[[layer]]$mapping)) {
+        ggplotobj2$layers[[layer]]$geom$draw_key = drawkeyfunction_points
+      }
+      if("alpha" %in% names(ggplotobj2$layers[[layer]]$mapping)) {
+        ggplotobj2$layers[[layer]]$geom$draw_key = drawkeyfunction_points
+        for(j in seq_len(length(ggplotobj2$layers))) {
+          if("stroke" %in% names(ggplotobj2$layers[[j]]$geom$default_aes)) {
+            ggplotobj2$layers[[j]]$geom$default_aes$stroke = 0
           }
-          ggplotobj2$layers[[layer]]$geom$draw_key = drawkeyfunction_points
         }
-        if("size" %in% names(ggplotobj2$layers[[layer]]$mapping)) {
-          ggplotobj2$layers[[layer]]$geom$draw_key = drawkeyfunction_points
-        }
-        if("alpha" %in% names(ggplotobj2$layers[[layer]]$mapping)) {
-          ggplotobj2$layers[[layer]]$geom$draw_key = drawkeyfunction_points
-          for(j in seq_len(length(ggplotobj2$layers))) {
-            if("stroke" %in% names(ggplotobj2$layers[[j]]$geom$default_aes)) {
-              ggplotobj2$layers[[j]]$geom$default_aes$stroke = 0
-            }
-          }
-          ggplotobj2 = suppressMessages({ggplotobj2 + ggplot2::scale_alpha_continuous(range=c(1,1))})
-        }
-        if("linetype" %in% names(ggplotobj2$layers[[layer]]$mapping)) {
-          ggplotobj2$layers[[layer]]$geom$draw_key = drawkeyfunction_lines
-        }
+        ggplotobj2 = suppressMessages({ggplotobj2 + ggplot2::scale_alpha_continuous(range=c(1,1))})
+      }
+      if("linetype" %in% names(ggplotobj2$layers[[layer]]$mapping)) {
+        ggplotobj2$layers[[layer]]$geom$draw_key = drawkeyfunction_lines
       }
     }
-    #No custom theme passed, just create one.
-    ggplotobj2 = ggplotobj2 +
-      ggplot2::theme(text = ggplot2::element_text(color="white"),
-            line = ggplot2::element_line(color="white"),
-            axis.line = ggplot2::element_line(color="white"),
-            axis.title = ggplot2::element_text(color="white"),
-            axis.text = ggplot2::element_text(color="white"),
-            axis.ticks = ggplot2::element_line(color="white"),
-            strip.background = ggplot2::element_rect(fill = "white", color = "white"),
-            strip.text = ggplot2::element_text(color="white"),
-            legend.key = ggplot2::element_rect(fill = "white", color = "white"),
-            legend.text = ggplot2::element_text(color="white"),
-            legend.background = ggplot2::element_rect(fill = "white", color = "white"),
-            legend.title = ggplot2::element_text(color="white"),
-            panel.background = ggplot2::element_rect(fill = "white", color = "white"))
   }
+  #Offset edges for polygons/Perform point contraction
   if(height_aes == "fill") {
     if(length(ggplotobj2$layers) > 0) {
       for(i in seq_along(1:length(ggplotobj2$layers))) {
@@ -647,39 +475,41 @@ plot_gg = function(ggobj, width = 3, height = 3,
       }
     }
   }
-  tryCatch({
-    ggplot2::ggsave(paste0(heightmaptemp,".png"),ggplotobj2,width = width,height = height)
-  }, error = function(e) {
-    if(any(grepl("Error: Discrete value supplied to continuous scale", as.character(e),fixed = TRUE))) {
-      stop(paste0("Error: Discrete variable cannot be mapped to 3D. Did you mean to choose `",ifelse(height_aes == "fill","color","fill"), "` as the `height_aes`?"),call.=FALSE)
-    }
-  })
+  
+  ggplotobj2 = set_to_white(ggplot2::ggplotGrob(ggplotobj2))
+  old_dev = grDevices::dev.cur()
+  png(filename = heightmaptemp, width = width, height = height, units = "in",res=300)
+  grid::grid.draw(ggplotobj2)
+  grDevices::dev.off()
+  if (old_dev > 1) {
+    grDevices::dev.set(old_dev)
+  }
   if(!is.null(reduce_size)) {
     if(!(length(find.package("magick", quiet = TRUE)) > 0)) {
       stop("magick package required to use argument reduce_size")
     } else {
       if(length(reduce_size) == 1 && reduce_size < 1) {
         scale = scale * reduce_size
-        image_info = magick::image_read(paste0(heightmaptemp,".png")) %>%
+        image_info = magick::image_read(heightmaptemp) %>%
           magick::image_info() 
-        magick::image_read(paste0(heightmaptemp,".png")) %>%
+        magick::image_read(heightmaptemp) %>%
           magick::image_resize(paste0(image_info$width * reduce_size,"x",image_info$height * reduce_size)) %>%
-          magick::image_write(paste0(heightmaptemp,".png"))
+          magick::image_write(heightmaptemp)
       } else if (length(reduce_size) == 2 && all(reduce_size < 1)) {
         scale = scale * reduce_size[1]
-        image_info = magick::image_read(paste0(heightmaptemp,".png")) %>%
+        image_info = magick::image_read(heightmaptemp) %>%
           magick::image_info() 
-        magick::image_read(paste0(heightmaptemp,".png")) %>%
+        magick::image_read(heightmaptemp) %>%
           magick::image_resize(paste0(image_info$width * reduce_size[1],"x",image_info$height * reduce_size[1])) %>%
-          magick::image_write(paste0(heightmaptemp,".png"))
-        magick::image_read(paste0(colormaptemp,".png")) %>%
+          magick::image_write(heightmaptemp)
+        magick::image_read(colormaptemp) %>%
           magick::image_resize(paste0(image_info$width * reduce_size[2],"x",image_info$height * reduce_size[2])) %>%
-          magick::image_write(paste0(colormaptemp,".png"))
+          magick::image_write(colormaptemp)
       }
     }
   }
-  mapcolor = png::readPNG(paste0(colormaptemp,".png"))
-  mapheight = png::readPNG(paste0(heightmaptemp,".png"))
+  mapcolor = png::readPNG(colormaptemp)
+  mapheight = png::readPNG(heightmaptemp)
   if(length(dim(mapheight)) == 3) {
     mapheight = mapheight[,,1]
   } 
