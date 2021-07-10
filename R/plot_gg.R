@@ -184,6 +184,8 @@ plot_gg = function(ggobj, width = 3, height = 3,
       for(j in seq_len(length(grob$children))) {
         grob$children[[j]] = set_to_white(grob$children[[j]])
       }
+    } else if (length(grob) == 1 && inherits(grob[[1]],"gTree")) {
+      grob[[1]] = set_to_white(grob[[1]])
     } else if(!(length(grep("geom", x = grob$name)) > 0)) {
       grob$gp$col = "white"
       grob$gp$alpha =0

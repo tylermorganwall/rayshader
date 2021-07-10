@@ -1,10 +1,11 @@
 #'@title Render Movie
 #'
-#'@description Renders a movie using the \pkg{av} package. Moves the camera around a 3D visualization 
+#'@description Renders a movie using the \pkg{av} or \pkg{gifski} packages. Moves the camera around a 3D visualization 
 #'using either a standard orbit, or accepts vectors listing user-defined values for each camera parameter. If the latter,
 #'the values must be equal in length to `frames` (or of length `1`, in which the value will be fixed).
 #'
-#'@param filename Filename. If not appended with `.mp4`, it will be appended automatically.
+#'@param filename Filename. If not appended with `.mp4`, it will be appended automatically. If the file extension is `gif`, 
+#'the \pkg{gifski} package will be used to generate the animation.
 #'@param type Default `orbit`, which orbits the 3D object at the user-set camera settings `phi`, `zoom`, and `fov`. 
 #'Other options are `oscillate` (sine wave around `theta` value, covering 90 degrees), or `custom` (which uses the values from the 
 #'`theta`, `phi`, `zoom`, and `fov` vectors passed in by the user).
@@ -85,12 +86,25 @@ render_movie = function(filename, type = "orbit", frames = 360, fps = 30,
   if(rgl::rgl.cur() == 0) {
     stop("No rgl window currently open.")
   }
-  if(!(length(find.package("av", quiet = TRUE)) > 0)) {
-    stop("`av` package required for render_movie()")
-  }
   if(is.null(filename)) {
     stop("render_movie requires a filename")
   }
+  movie_type = tools::file_ext(filename)
+  use_av = TRUE
+  if(movie_type %in% c("mp4","mkv", "mov","flv","")) {
+    if(movie_type == "") {
+      filename = paste0(filename,".mp4")
+    }
+    if(!(length(find.package("av", quiet = TRUE)) > 0)) {
+      stop("`av` package required for render_movie()")
+    }
+  } else if (movie_type == "gif") {
+    if(!(length(find.package("gifski", quiet = TRUE)) > 0)) {
+      stop("`gifski` package required for render_movie() gifs")
+    }
+    use_av = FALSE
+  }
+
   if(!is.null(title_text)) {
     has_title = TRUE
   } else {
@@ -110,9 +124,6 @@ render_movie = function(filename, type = "orbit", frames = 360, fps = 30,
     }
   } else {
     has_overlay = FALSE
-  }
-  if(substring(filename, nchar(filename)-3,nchar(filename)) != ".mp4") {
-    filename = paste0(filename,".mp4")
   }
   windowsize = rgl::par3d()$viewport
   if(is.null(fov)) {
@@ -221,6 +232,11 @@ render_movie = function(filename, type = "orbit", frames = 360, fps = 30,
                           title_size = title_size, title_font = title_font)
     }
   }
-  av::av_encode_video(png_files, output = filename, framerate = fps, 
-                      vfilter = paste0("scale=",dimensions[1],":-2"), audio=audio)
+  if(use_av) {
+    av::av_encode_video(png_files, output = filename, framerate = fps, 
+                        vfilter = paste0("scale=",dimensions[1],":-2"), audio=audio)
+  } else {
+    gifski::gifski(png_files=png_files, gif_file = filename, delay = 1/fps, 
+                   width = dimensions[1],height= dimensions[2])
+  }
 }

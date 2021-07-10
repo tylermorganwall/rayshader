@@ -30,15 +30,20 @@ make_shadow = function(heightmap, basedepth, shadowwidth, color, shadowcolor) {
   temppreblur = tempfile(fileext = ".png")
   tempmap = tempfile(fileext = ".png")
   png::writePNG(shadowarray, temppreblur)
-  if(length(find.package("magick", quiet = TRUE)) > 0) {
+  has_rayimage = length(find.package("rayimage", quiet = TRUE)) > 0
+  has_magick = length(find.package("magick", quiet = TRUE)) > 0
+  if(has_magick) {
     magick::image_read(temppreblur) %>%
-      magick::image_blur(sigma =  shadowwidth/2, radius=shadowwidth/2) %>%
+      magick::image_blur(sigma =  shadowwidth/4, radius=shadowwidth/2) %>%
       (function(x) as.double(x[[1]])) %>%
       png::writePNG(tempmap)
+  } else if (has_rayimage) {
+    rayimage::render_convolution_fft(shadowarray, filename = tempmap, kernel = rayimage::generate_2d_gaussian(dim=c(shadowwidth/2,shadowwidth/2)))
   } else {
-    warning("`magick` package required for smooth shadow--using basic shadow instead.")
+    warning("`magick` or `rayimage` package required for smooth shadow--using basic shadow instead.")
     png::writePNG(shadowarray,tempmap)
   }
+  
   rowmin = min((-shadowwidth+1):(rows+shadowwidth) - rows/2)
   rowmax = max((-shadowwidth+1):(rows+shadowwidth) - rows/2)
   colmin = min(-(-shadowwidth+1):-(cols+shadowwidth) + cols/2+1)
