@@ -25,6 +25,7 @@ plot_gg(
   max_error = 0.001,
   max_tri = 0,
   verbose = FALSE,
+  emboss_text = 0,
   reduce_size = NULL,
   save_height_matrix = FALSE,
   save_shadow_matrix = FALSE,
@@ -96,6 +97,8 @@ to save a smaller 3D OBJ file to disk with `save_obj()`,}
 
 \item{verbose}{Default `TRUE`, if `interactive()`. Prints information about the mesh triangulation
 if `triangulate = TRUE`.}
+
+\item{emboss_text}{Default `0`, max `1`. Amount to emboss the text, where `1` is the tallest feature in the scene.}
 
 \item{reduce_size}{Default `NULL`. A number between `0` and `1` that specifies how much to reduce the resolution of the plot, for faster plotting. By
 default, this just decreases the size of height map, not the image. If you wish the image to be reduced in resolution as well, pass a numeric vector of size 2.}

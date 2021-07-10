@@ -55,6 +55,7 @@
 #'to save a smaller 3D OBJ file to disk with `save_obj()`,
 #'@param verbose Default `TRUE`, if `interactive()`. Prints information about the mesh triangulation
 #'if `triangulate = TRUE`.
+#'@param emboss_text Default `0`, max `1`. Amount to emboss the text, where `1` is the tallest feature in the scene.
 #'@param reduce_size Default `NULL`. A number between `0` and `1` that specifies how much to reduce the resolution of the plot, for faster plotting. By
 #'default, this just decreases the size of height map, not the image. If you wish the image to be reduced in resolution as well, pass a numeric vector of size 2.
 #'@param multicore Default `FALSE`. If raytracing and `TRUE`, multiple cores will be used to compute the shadow matrix. By default, this uses all cores available, unless the user has
@@ -160,9 +161,9 @@ plot_gg = function(ggobj, width = 3, height = 3,
                    units = c("in", "cm", "mm"), scale=150, pointcontract = 0.7, offset_edges = FALSE,
                    preview = FALSE, raytrace = TRUE, sunangle = 315, anglebreaks = seq(30,40,0.1), 
                    multicore = FALSE, lambert=TRUE, triangulate = TRUE,
-                   max_error = 0.001, max_tri = 0, verbose= FALSE,
+                   max_error = 0.001, max_tri = 0, verbose= FALSE, emboss_text = 0,
                    reduce_size = NULL, save_height_matrix = FALSE, 
-                   save_shadow_matrix = FALSE, saved_shadow_matrix=NULL, ...) {
+                   save_shadow_matrix = FALSE, saved_shadow_matrix=NULL,  ...) {
   if(!(length(find.package("ggplot2", quiet = TRUE)) > 0)) {
     stop("Must have ggplot2 installed to use plot_gg()")
   }
@@ -191,6 +192,25 @@ plot_gg = function(ggobj, width = 3, height = 3,
       grob$gp$alpha =0
       grob$gp$fill = "white"
       grob$gp$lwd = 0
+      class(grob$gp) = "gpar"
+    }
+    return(grob)
+  }
+  set_to_grey = function(grob, emboss) {
+    if(!is.null(grob[["grobs"]])) {
+      for(j in seq_len(length(grob$grobs))) {
+        grob$grobs[[j]] = set_to_grey(grob$grobs[[j]], emboss)
+      }
+    } else if (!is.null(grob[["children"]])) {
+      for(j in seq_len(length(grob$children))) {
+        grob$children[[j]] = set_to_grey(grob$children[[j]], emboss)
+      }
+    } else if(all(inherits(grob, c("text","grob"), which=TRUE)>0)) {
+      emboss = ceiling(max(c(min(c(emboss,1)),0))*100)
+      colval = ifelse(emboss != 100, sprintf("grey%d",emboss), "white")
+      grob$gp$col = colval
+      grob$gp$alpha =1
+      grob$gp$fill = colval
       class(grob$gp) = "gpar"
     }
     return(grob)
@@ -479,6 +499,10 @@ plot_gg = function(ggobj, width = 3, height = 3,
   }
   
   ggplotobj2 = set_to_white(ggplot2::ggplotGrob(ggplotobj2))
+  if(emboss_text > 0) {
+    emboss_text=1-emboss_text
+    ggplotobj2 = set_to_grey(ggplotobj2, emboss_text)
+  }
   old_dev = grDevices::dev.cur()
   png(filename = heightmaptemp, width = width, height = height, units = "in",res=300)
   grid::grid.draw(ggplotobj2)
