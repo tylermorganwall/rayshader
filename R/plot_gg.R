@@ -32,8 +32,8 @@
 #'mapping `alpha` in the same variable you are projecting to height is probably not a good choice. as the `alpha`
 #'variable is ignored when performing the 3D projection).
 #'@param offset_edges Default `FALSE`. If `TRUE`, inserts a small amount of space between polygons for "geom_sf", "geom_tile", "geom_hex", and "geom_polygon" layers.
-#'If you pass in a number, the space between polygons will be a line of that width. Note: this feature may end up removing thin polygons 
-#'from the plot entirely--use with care.
+#'If you pass in a number, the space between polygons will be a line of that width. You can also specify a number to control the thickness of the offset. 
+#'Note: this feature may end up removing thin polygons from the plot entirely--use with care.
 #'@param preview Default `FALSE`. If `TRUE`, the raytraced 2D ggplot will be displayed on the current device.
 #'@param raytrace Default `FALSE`. Whether to add a raytraced layer.
 #'@param sunangle Default `315` (NW). If raytracing, the angle (in degrees) around the matrix from which the light originates. 
@@ -56,6 +56,9 @@
 #'@param verbose Default `TRUE`, if `interactive()`. Prints information about the mesh triangulation
 #'if `triangulate = TRUE`.
 #'@param emboss_text Default `0`, max `1`. Amount to emboss the text, where `1` is the tallest feature in the scene.
+#'@param emboss_grid Default `0`, max `1`. Amount to emboss the grid lines, where `1` is the tallest feature in the scene.
+#'By default, the minor grid lines will be half the size of the major lines. Pass a length-2 vector to specify them seperately (second value 
+#'is the minor grid height).
 #'@param reduce_size Default `NULL`. A number between `0` and `1` that specifies how much to reduce the resolution of the plot, for faster plotting. By
 #'default, this just decreases the size of height map, not the image. If you wish the image to be reduced in resolution as well, pass a numeric vector of size 2.
 #'@param multicore Default `FALSE`. If raytracing and `TRUE`, multiple cores will be used to compute the shadow matrix. By default, this uses all cores available, unless the user has
@@ -161,7 +164,7 @@ plot_gg = function(ggobj, width = 3, height = 3,
                    units = c("in", "cm", "mm"), scale=150, pointcontract = 0.7, offset_edges = FALSE,
                    preview = FALSE, raytrace = TRUE, sunangle = 315, anglebreaks = seq(30,40,0.1), 
                    multicore = FALSE, lambert=TRUE, triangulate = TRUE,
-                   max_error = 0.001, max_tri = 0, verbose= FALSE, emboss_text = 0,
+                   max_error = 0.001, max_tri = 0, verbose= FALSE, emboss_text = 0, emboss_grid = 0,
                    reduce_size = NULL, save_height_matrix = FALSE, 
                    save_shadow_matrix = FALSE, saved_shadow_matrix=NULL,  ...) {
   if(!(length(find.package("ggplot2", quiet = TRUE)) > 0)) {
@@ -187,7 +190,7 @@ plot_gg = function(ggobj, width = 3, height = 3,
       }
     } else if (length(grob) == 1 && inherits(grob[[1]],"gTree")) {
       grob[[1]] = set_to_white(grob[[1]])
-    } else if(!(length(grep("geom", x = grob$name)) > 0)) {
+    } else if(!(length(grep("geom", x = grob$name)) > 0) && !(length(grep("pathgrob", x = grob$name)) > 0)) {
       grob$gp$col = "white"
       grob$gp$alpha =0
       grob$gp$fill = "white"
@@ -196,21 +199,53 @@ plot_gg = function(ggobj, width = 3, height = 3,
     }
     return(grob)
   }
-  set_to_grey = function(grob, emboss) {
+  emboss_gg_text = function(grob, emboss) {
     if(!is.null(grob[["grobs"]])) {
       for(j in seq_len(length(grob$grobs))) {
-        grob$grobs[[j]] = set_to_grey(grob$grobs[[j]], emboss)
+        grob$grobs[[j]] = emboss_gg_text(grob$grobs[[j]], emboss)
       }
     } else if (!is.null(grob[["children"]])) {
       for(j in seq_len(length(grob$children))) {
-        grob$children[[j]] = set_to_grey(grob$children[[j]], emboss)
+        grob$children[[j]] = emboss_gg_text(grob$children[[j]], emboss)
       }
     } else if(all(inherits(grob, c("text","grob"), which=TRUE)>0)) {
       emboss = ceiling(max(c(min(c(emboss,1)),0))*100)
       colval = ifelse(emboss != 100, sprintf("grey%d",emboss), "white")
       grob$gp$col = colval
-      grob$gp$alpha =1
+      grob$gp$alpha = 1
       grob$gp$fill = colval
+      class(grob$gp) = "gpar"
+    }
+    return(grob)
+  }
+  emboss_gg_grid = function(grob, emboss) {
+    if(!is.null(grob[["grobs"]])) {
+      for(j in seq_len(length(grob$grobs))) {
+        grob$grobs[[j]] = emboss_gg_grid(grob$grobs[[j]], emboss)
+      }
+    } else if (!is.null(grob[["children"]])) {
+      for(j in seq_len(length(grob$children))) {
+        grob$children[[j]] = emboss_gg_grid(grob$children[[j]], emboss)
+      }
+    } else if((all(inherits(grob, c("polyline","grob"), which=TRUE)>0) && 
+              length(grep("panel.grid", grob$name)) > 0) || 
+              (all(inherits(grob, c("lines","grob"), which=TRUE)>0) && 
+              (length(grep("GRID.lines", grob$name)) > 0)) ) {
+      if(length(grep("GRID.lines", grob$name)) > 0) {
+        emboss = emboss[1]
+      }
+      if(length(grep("panel.grid.major", grob$name)) > 0) {
+        emboss = emboss[1]
+      }
+      if(length(grep("panel.grid.minor", grob$name)) > 0) {
+        emboss = emboss[2]
+      }
+      emboss = ceiling(max(c(min(c(emboss,1)),0))*100)
+      colval = ifelse(emboss != 100, sprintf("grey%d",emboss), "white")
+      grob$gp$col = colval
+      grob$gp$alpha = 1
+      grob$gp$fill = colval
+      grob$gp$lwd = 1
       class(grob$gp) = "gpar"
     }
     return(grob)
@@ -501,7 +536,14 @@ plot_gg = function(ggobj, width = 3, height = 3,
   ggplotobj2 = set_to_white(ggplot2::ggplotGrob(ggplotobj2))
   if(emboss_text > 0) {
     emboss_text=1-emboss_text
-    ggplotobj2 = set_to_grey(ggplotobj2, emboss_text)
+    ggplotobj2 = emboss_gg_text(ggplotobj2, emboss_text)
+  }
+  if(emboss_grid > 0) {
+    if(length(emboss_grid) == 1) {
+      emboss_grid = c(emboss_grid,emboss_grid/2)
+    }
+    emboss_grid=1-emboss_grid
+    ggplotobj2 = emboss_gg_grid(ggplotobj2, emboss_grid)
   }
   old_dev = grDevices::dev.cur()
   png(filename = heightmaptemp, width = width, height = height, units = "in",res=300)

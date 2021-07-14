@@ -26,6 +26,7 @@ plot_gg(
   max_tri = 0,
   verbose = FALSE,
   emboss_text = 0,
+  emboss_grid = 0,
   reduce_size = NULL,
   save_height_matrix = FALSE,
   save_shadow_matrix = FALSE,
@@ -62,8 +63,8 @@ mapping `alpha` in the same variable you are projecting to height is probably no
 variable is ignored when performing the 3D projection).}
 
 \item{offset_edges}{Default `FALSE`. If `TRUE`, inserts a small amount of space between polygons for "geom_sf", "geom_tile", "geom_hex", and "geom_polygon" layers.
-If you pass in a number, the space between polygons will be a line of that width. Note: this feature may end up removing thin polygons 
-from the plot entirely--use with care.}
+If you pass in a number, the space between polygons will be a line of that width. You can also specify a number to control the thickness of the offset. 
+Note: this feature may end up removing thin polygons from the plot entirely--use with care.}
 
 \item{preview}{Default `FALSE`. If `TRUE`, the raytraced 2D ggplot will be displayed on the current device.}
 
@@ -99,6 +100,10 @@ to save a smaller 3D OBJ file to disk with `save_obj()`,}
 if `triangulate = TRUE`.}
 
 \item{emboss_text}{Default `0`, max `1`. Amount to emboss the text, where `1` is the tallest feature in the scene.}
+
+\item{emboss_grid}{Default `0`, max `1`. Amount to emboss the grid lines, where `1` is the tallest feature in the scene.
+By default, the minor grid lines will be half the size of the major lines. Pass a length-2 vector to specify them seperately (second value 
+is the minor grid height).}
 
 \item{reduce_size}{Default `NULL`. A number between `0` and `1` that specifies how much to reduce the resolution of the plot, for faster plotting. By
 default, this just decreases the size of height map, not the image. If you wish the image to be reduced in resolution as well, pass a numeric vector of size 2.}

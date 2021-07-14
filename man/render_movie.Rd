@@ -29,7 +29,8 @@ render_movie(
 )
 }
 \arguments{
-\item{filename}{Filename. If not appended with `.mp4`, it will be appended automatically.}
+\item{filename}{Filename. If not appended with `.mp4`, it will be appended automatically. If the file extension is `gif`, 
+the \pkg{gifski} package will be used to generate the animation.}
 
 \item{type}{Default `orbit`, which orbits the 3D object at the user-set camera settings `phi`, `zoom`, and `fov`. 
 Other options are `oscillate` (sine wave around `theta` value, covering 90 degrees), or `custom` (which uses the values from the 
@@ -81,7 +82,7 @@ Will display a progress bar when adding an overlay or title.}
 \item{...}{Additional parameters to pass to magick::image_annotate.}
 }
 \description{
-Renders a movie using the \pkg{av} package. Moves the camera around a 3D visualization 
+Renders a movie using the \pkg{av} or \pkg{gifski} packages. Moves the camera around a 3D visualization 
 using either a standard orbit, or accepts vectors listing user-defined values for each camera parameter. If the latter,
 the values must be equal in length to `frames` (or of length `1`, in which the value will be fixed).
 }
