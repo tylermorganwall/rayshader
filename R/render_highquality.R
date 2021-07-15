@@ -134,7 +134,7 @@ render_highquality = function(filename = NULL, light = TRUE, lightdirection = 31
   if(rgl::rgl.cur() == 0) {
     stop("No rgl window currently open.")
   }
-  if(!(length(find.package("sf", quiet = TRUE)) > 0)) {
+  if(!(length(find.package("rayrender", quiet = TRUE)) > 0)) {
     stop("`rayrender` package required for render_highquality()")
   }
   windowrect = rgl::par3d()$windowRect
