@@ -1,6 +1,6 @@
 #'@title Render Scale Bar
 #'
-#'@description Places a compass on the map to specify the North direction.
+#'@description Places a scale bar on the map in 3D.
 #'
 #
 #'@param limits The distance represented by the scale bar. If a numeric vector greater than length 1, 

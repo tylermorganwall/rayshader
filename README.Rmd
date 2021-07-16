@@ -14,9 +14,9 @@ rayshader<img src="man/figures/raylogosmall.png" align="right" />
 Overview
 --------
 
-**rayshader** is an open source package for producing 2D and 3D data visualizations in R. **rayshader** uses elevation data in a base R matrix and a combination of raytracing, spherical texture mapping, overlays, and ambient occlusion to generate beautiful topographic 2D and 3D maps. In addition to maps, **rayshader** also allows the user to translate **ggplot2** objects into beautiful 3D data visualizations.
+**rayshader** is an open source package for producing 2D and 3D data visualizations in R. **rayshader** uses elevation data in a base R matrix and a combination of raytracing, hillshading algorithms, and overlays to generate stunning 2D and 3D maps. In addition to maps, **rayshader** also allows the user to translate **ggplot2** objects into beautiful 3D data visualizations.
 
-The models can be rotated and examined interactively or the camera movement can be scripted to create animations. Scenes can also be rendered using a high-quality pathtracer, **rayrender**.The user can also create a cinematic depth of field post-processing effect to direct the user's focus to important regions in the figure. The 3D models can also be exported to a 3D-printable format with a built-in STL export function. 
+The models can be rotated and examined interactively or the camera movement can be scripted to create animations. Scenes can also be rendered using a high-quality pathtracer, **rayrender**. The user can also create a cinematic depth of field post-processing effect to direct the user's focus to important regions in the figure. The 3D models can also be exported to a 3D-printable format with a built-in STL export function, and can be exported to an OBJ file.
 
 Installation
 ------------
@@ -33,37 +33,59 @@ Functions
 
 Rayshader has seven functions related to mapping:
 
-- `ray_shade` uses user specified light directions to calculate a global shadow map for an elevation matrix. By default, this also scales the light intensity at each point by the dot product of the mean ray direction and the surface normal (also implemented in function `lamb_shade`, this can be turned off by setting `lambert=FALSE`.
-- `sphere_shade` maps an RGB texture to a hillshade by spherical mapping. A texture can be generated with the `create_texture` function, or loaded from an image. `sphere_shade` also includes 7 built-in palettes: "imhof1", "imhof2", "imhof3", imhof4", "desert", "bw", "unicorn". 
-- `create_texture`  programmatically creates texture maps given five colors: a highlight, a shadow, a left fill light, a right fill light, and a center color for flat areas. The user can also optionally specify the colors at the corners, but `create_texture` will interpolate those if they aren't given.
-- `ambient_shade` creates an ambient occlusion shadow layer, darkening areas that have less scattered light from the atmosphere. This results in valleys being darker than flat areas and ridges. 
-- `lamb_shade` uses a single user specified light direction to calculate a local shadow map based on the dot product between the surface normal and the light direction for an elevation matrix. 
-- `add_shadow` takes two of the shadow maps above and combines them, scaling the second one (or, if the second is an RGB array, the matrix) as specified by the user.
-- `add_overlay` takes a 3 or 4-layer RGB/RGBA array and overlays it on the current map. If the map includes transparency, this is taken into account when overlaying the image. Otherwise, the user can specify a single color that will be marked as completely transparent, or set the full overlay as partly transparent.
+- `ray_shade()` uses user specified light directions to calculate a global shadow map for an elevation matrix. By default, this also scales the light intensity at each point by the dot product of the mean ray direction and the surface normal (also implemented in function `lamb_shade`, this can be turned off by setting `lambert=FALSE`.
+- `sphere_shade()` maps an RGB texture to a hillshade by spherical mapping. A texture can be generated with the `create_texture` function, or loaded from an image. `sphere_shade` also includes 7 built-in palettes: "imhof1", "imhof2", "imhof3", imhof4", "desert", "bw", "unicorn". 
+- `ambient_shade()` creates an ambient occlusion shadow layer, darkening areas that have less scattered light from the atmosphere. This results in valleys being darker than flat areas and ridges. 
+- `texture_shade()` calculates a shadow for each point on the surface using the method described by Leland Brown in "Texture Shading: A New Technique for Depicting Terrain Relief."
+- `height_shade()` calculates a color for each point on the surface using a direct elevation-to-color mapping.
+- `lamb_shade()` uses a single user specified light direction to calculate a local shadow map based on the dot product between the surface normal and the light direction for an elevation matrix. 
+- `add_shadow()` takes two of the shadow maps above and combines them, scaling the second one (or, if the second is an RGB array, the matrix) as specified by the user.
+- `add_overlay()` takes a 3 or 4-layer RGB/RGBA array and overlays it on the current map. If the map includes transparency, this is taken into account when overlaying the image. Otherwise, the user can specify a single color that will be marked as completely transparent, or set the full overlay as partly transparent.
+- `create_texture()`  programmatically creates texture maps given five colors: a highlight, a shadow, a left fill light, a right fill light, and a center color for flat areas. The user can also optionally specify the colors at the corners, but `create_texture` will interpolate those if they aren't given.
 
-Rayshader also has three functions to detect and add water to maps:
+Rayshader also has functions to add water and generate overlays:
 
-- `detect_water` uses a flood-fill algorithm to detect bodies of water of a user-specified minimum area. 
-- `add_water` uses the output of `detect_water` to add a water color to the map. The user can input their own color, or pass the name of one of the pre-defined palettes from `sphere_shade` to get a matching hue.
-- `render_water` adds a 3D tranparent water layer to 3D maps, after the rgl device has already been created. This can either add to a map that does not already have a water layer, or replace an existing water layer on the map.
+- `detect_water()` uses a flood-fill algorithm to detect bodies of water of a user-specified minimum area. 
+- `add_water()` uses the output of `detect_water` to add a water color to the map. The user can input their own color, or pass the name of one of the pre-defined palettes from `sphere_shade` to get a matching hue.
+- `generate_altitude_overlay()` uses a hillshade and the height map to generate a semi-transparent hillshade whose transparency varies with altitude. 
+- `generate_compass_overlay()` generates an overlay with a compass.
+- `generate_contour_overlay()` calculates and returns an overlay of contour lines.
+- `generate_label_overlay()` this uses the `maptools::placeLabel()` function to generate labels for the given scene. Either use an `sf` object or manually specify the x/y coordinates and label.
+- `generate_line_overlay()` generates an overlay of lines, using an `sf` object with LINESTRING geometry.
+- `generate_point_overlay()` generates an overlay of points, using an `sf` object with POINT geometry.
+- `generate_polygon_overlay()` generates an overlay of points, using an `sf` object with POLYGON geometry.
+- `generate_scalebar_overlay()` this function creates an overlay with a scale bar of a user-specified length. It uses the coordinates of the map (specified by passing an extent) and then creates a scale bar at a specified x/y proportion across the map. If the map is not projected (i.e. is in lat/long coordinates) this function will use the `geosphere` package to create a scale bar of the proper length.
+- `generate_waterline_overlay()` generates a semi-transparent waterline overlay to layer onto an existing map using a height map or a boolean matrix.
 
-Also included are two functions to add additional effects and information to your 3D visualizations:
+Also included are functions to add additional effects and information to your 3D visualizations:
 
--  `render_highquality` renders in the scene with a built-in pathtracer, powered by the **rayrender** package. Use this for high-quality maps with realistic light transport.
--  `render_depth` generates a depth of field effect for the 3D map. The user can specify the focal distance, focal length, and f-stop of the camera, as well as aperture shape and bokeh intensity. This either plots the image to the local device, or saves it to a file if given a filename.
--  `render_label` adds a text label to the `x` and `y` coordinate of the map at a specified altitude `z` (in units of the matrix). The altitude can either be specified relative to the elevation at that point (the default), or absolutely. 
+-  `render_highquality()` renders in the scene with a built-in pathtracer, powered by the **rayrender** package. Use this for high-quality maps with realistic light transport.
+-  `render_depth()` generates a depth of field effect for the 3D map. The user can specify the focal distance, focal length, and f-stop of the camera, as well as aperture shape and bokeh intensity. This either plots the image to the local device, or saves it to a file if given a filename.
+-  `render_label()` adds a text label to the `x` and `y` coordinate of the map at a specified altitude `z` (in units of the matrix). The altitude can either be specified relative to the elevation at that point (the default), or absolutely. 
+- `render_water()` adds a 3D tranparent water layer to 3D maps, after the rgl device has already been created. This can either add to a map that does not already have a water layer, or replace an existing water layer on the map.
+- `render_compass()` places a compass on the map in 3D.
+- `render_path()` adds a 3D path to the current scene, using latitude/longitude or coordinates in the reference system defined by the extent object. If no altitude is provided, the path will be elevated a constant offset above the heightmap. 
+- `render_points()` Adds 3D points to the current scene, using latitude/longitude or coordinates in the reference system defined by the extent object. If no altitude is provided, the points will be elevated a constant offset above the heightmap.
+- `render_polygons()` Adds 3D polygons to the current scene, using latitude/longitude or coordinates in the reference system defined by the extent object.
+- `render_scalebar()` places a scalebar on the map in 3D.
+
+And several helper functions for converting rasters to matrices:
+
+- `raster_to_matrix()` converts a `raster` objects into a matrix.
+- `resize_matrix()` resizes a matrix (preserving contents) by specifying the desired output dimensions or a scaling factor.
 
 And four functions to display and save your visualizations:
 
-- `plot_map` Plots the current map. Accepts either a matrix or an array.
-- `write_png` Writes the current map to disk with a user-specified filename.
-- `plot_3d` Creates a 3D map, given a texture and an elevation matrix. You can customize the appearance of the map, as well as add a user-defined water level.
-- `render_snapshot` Saves an image of the current 3D view to disk (if given a filename), or plots the 3D view to the current device (useful for including images in R Markdown files).
-- `render_movie` Creates and saves a mp4 file of the camera rotating around the 3D scene by either using a built-in orbit or by using one provided by the user.
+- `plot_map()` Plots the current map. Accepts either a matrix or an array.
+- `write_png()` Writes the current map to disk with a user-specified filename.
+- `plot_3d()` Creates a 3D map, given a texture and an elevation matrix. You can customize the appearance of the map, as well as add a user-defined water level.
+- `render_camera()` Changes the camera orientation.
+- `render_snapshot()` Saves an image of the current 3D view to disk (if given a filename), or plots the 3D view to the current device (useful for including images in R Markdown files).
+- `render_movie()` Creates and saves a mp4/gif file of the camera rotating around the 3D scene by either using a built-in orbit or by using one provided by the user.
 
 Finally, rayshader has a single function to generate 3D plots using ggplot2 objects:
 
-- `plot_gg` Takes a ggplot2 object (or a list of two ggplot2 objects) and uses the fill or color aesthetic to transform the plot into a 3D surface. You can pass any of the arguments used to specify the camera and the background/shadow colors in `plot_3d()`, and manipulate the displayed 3D plot using `render_camera()` and `render_depth()`.
+- `plot_gg()` Takes a ggplot2 object (or a list of two ggplot2 objects) and uses the fill or color aesthetic to transform the plot into a 3D surface. You can pass any of the arguments used to specify the camera and the background/shadow colors in `plot_3d()`, and manipulate the displayed 3D plot using `render_camera()` and `render_depth()`.
 
 All of these functions are designed to be used with the magrittr pipe `%>%`.
 
@@ -85,7 +107,7 @@ Rayshader can be used for two purposes: both creating hillshaded maps and 3D dat
 
 ## Mapping with rayshader 
 
-```{r README_basicmapping}
+```{r README_basicmapping, warning = FALSE}
 library(rayshader)
 
 #Here, I load a map with the raster package.
@@ -212,8 +234,9 @@ montereybay %>%
             waterlinecolor = "white", waterlinealpha = 0.5)
 Sys.sleep(0.2)
 render_highquality(lightdirection = c(-45,45), lightaltitude  = 30, clamp_value = 10, 
-                   samples = 200, camera_lookat= c(0,-50,0),
-                   ground_material = diffuse(color="grey50",checkercolor = "grey20", checkerperiod = 100))
+                   samples = 256, camera_lookat= c(0,-50,0),
+                   ground_material = diffuse(color="grey50",checkercolor = "grey20", checkerperiod = 100),
+                   clear = TRUE)
 
 
 ```
@@ -221,7 +244,7 @@ render_highquality(lightdirection = c(-45,45), lightaltitude  = 30, clamp_value 
 Rayshader also has map shapes other than rectangular included `c("hex", "circle")`, and you can customize the map into any shape you want by setting the areas you do not want to display to `NA`. 
 
 ```{r  README_three-d-shapes, fig.width = 15, fig.height = 6}
-par(mfrow = c(1, 2))
+par(mfrow = c(1, 2)) 
 montereybay %>% 
     sphere_shade(zscale = 10, texture = "imhof1") %>% 
     add_shadow(montshadow, 0.5) %>%
@@ -288,7 +311,7 @@ render_label(montereybay, x = 50, y = 270, z = 1000, zscale = 50,  textcolor = "
 
 ```{r README_hqlabels, fig.width =  10, fig.height = 8}
 
-render_highquality(samples=200, line_radius = 1, text_size = 18, text_offset = c(0,12,0),
+render_highquality(samples=256, line_radius = 1, text_size = 18, text_offset = c(0,12,0),
                    clamp_value=10, clear = TRUE)
 
 ```
@@ -312,9 +335,9 @@ render_polygons(mont_county_buff,
                 extent = attr(montereybay,"extent"), data_column_top = "ALAND",
                 scale_data = 300/(2.6E9), color="chartreuse4",
                 parallel=TRUE)
-render_highquality(clamp_value=10,sample_method="stratified")
+render_highquality(clamp_value=10,samples=256)
 render_polygons(clear_previous = TRUE)
-render_camera(theta=225, phi=23,zoom=0.27,fov=48)
+render_camera(theta=225, phi=30,zoom=0.37,fov=48)
 
 
 ```
@@ -323,7 +346,7 @@ Points:
 
 ```{r README_points, fig.width =  10, fig.height = 8}
 
-moss_landing_coord = c(36.806807, -121.793332)
+moss_landing_coord = c(36.806807, -121.793332) 
 x_vel_out = -0.001 + rnorm(1000)[1:500]/1000
 y_vel_out = rnorm(1000)[1:500]/200
 z_out = c(seq(0,2000,length.out = 180), seq(2000,0,length.out=10),
@@ -342,7 +365,7 @@ for(i in 2:500) {
 render_points(extent = attr(montereybay,"extent"), 
               lat = unlist(bird_track_lat), long = unlist(bird_track_long), 
               altitude = z_out, zscale=50, color="red")
-render_highquality(point_radius = 1,sample_method="stratified")
+render_highquality(point_radius = 1, samples = 256)
 render_points(clear_previous = TRUE)
 ```
 
@@ -350,10 +373,10 @@ Paths:
 
 ```{r README_paths, fig.width =  10, fig.height = 8}
 
-render_path(extent = attr(montereybay,"extent"), 
+render_path(extent = attr(montereybay,"extent"),  
             lat = unlist(bird_track_lat), long = unlist(bird_track_long),
             altitude = z_out, zscale=50,color="white", antialias=TRUE)
-render_highquality(line_radius = 1,sample_method="stratified", clear=TRUE)
+render_highquality(line_radius = 1,samples=256, clear=TRUE)
 
 ```
 
@@ -368,7 +391,7 @@ elmat %>%
   add_shadow(ambient_shade(elmat), 0) %>%
   plot_3d(elmat, zscale = 10, fov = 30, theta = -225, phi = 25, windowsize = c(1000, 800), zoom = 0.3)
 Sys.sleep(0.2)
-render_depth(focus = 0.6, focallength = 200, clear = TRUE)
+render_depth(focallength = 800, clear = TRUE)
 
 ```
 
@@ -380,7 +403,7 @@ Rayshader can also be used to make 3D plots out of ggplot2 objects using the `pl
 library(ggplot2)
 ggdiamonds = ggplot(diamonds) +
   stat_density_2d(aes(x = x, y = depth, fill = stat(nlevel)), 
-                  geom = "polygon", n = 100, bins = 10, contour = TRUE) +
+                  geom = "polygon", n = 200, bins = 50,contour = TRUE) +
   facet_wrap(clarity~.) +
   scale_fill_viridis_c(option = "A")
 
@@ -466,7 +489,7 @@ par(mfrow = c(1, 1))
 plot_gg(pp, width = 5, height = 4, scale = 300, multicore = TRUE, windowsize = c(1200, 960),
         fov = 70, zoom = 0.4, theta = 330, phi = 40)
 Sys.sleep(0.2)
-render_depth(focus = 0.68, focallength = 200,clear=TRUE)
+render_depth(focallength = 100,clear=TRUE)
 ```
 
 Finally, you can increase the allowable error in triangulating the model to vastly reduce the size. Here, we reduce the model to 1/100th of it's raw (un-triangulated) size, while maintaining model quality. This can improve the performance when rendering 3D ggplots with `render_highquality()`, as well as improve performance on slower computers. This triangulation is powered by the {terrainmeshr} package. 
@@ -474,12 +497,15 @@ Finally, you can increase the allowable error in triangulating the model to vast
 Here, we make a 3D ggplot out of glass, using a triangulated model and `render_highquality()`.
 
 ```{r README_ggplots_6, fig.width = 10, fig.height = 8}
+tempfilehdr = tempfile(fileext = ".hdr")
+download.file("https://www.tylermw.com/data/venice_sunset_2k.hdr",tempfilehdr)
 
 par(mfrow = c(1, 1))
 plot_gg(pp, width = 5, height = 4, scale = 300, raytrace = FALSE, windowsize = c(1200, 960),
         fov = 70, zoom = 0.4, theta = 330, phi = 20,  max_error = 0.01, verbose = TRUE)
 Sys.sleep(0.2)
-render_highquality(samples = 400, aperture=30, light = FALSE, ambient = TRUE,focal_distance = 1700,
+render_highquality(samples = 256, aperture=30, light = FALSE, focal_distance = 1700,
                    obj_material = rayrender::dielectric(attenuation = c(1,1,0.3)/200), 
-                   ground_material = rayrender::diffuse(checkercolor = "grey80",sigma=90,checkerperiod = 100))
+                   ground_material = rayrender::diffuse(checkercolor = "grey80",sigma=90,checkerperiod = 100),
+                   environment_light = tempfilehdr, camera_lookat = c(0,-150,0))
 ```

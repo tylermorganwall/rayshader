@@ -1,6 +1,6 @@
 #'@title Generate Line Overlay
 #'
-#'@description Calculates and returns an overlay of contour lines for the current height map.
+#'@description Calculates and returns an overlay of lines for the current height map.
 #'
 #'@param geometry An `sf` object with LINESTRING geometry.
 #'@param extent A `raster::Extent` object with the bounding box for the height map used to generate the original map.

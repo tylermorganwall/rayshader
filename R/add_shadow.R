@@ -58,7 +58,7 @@ add_shadow = function(hillshade, shadowmap, max_darken = 0.7, rescale_original =
         temphillshade[,,3] = rayimage::render_resized(hillshade[,,3], dims = dim(shadowmap))
         hillshade = temphillshade
       } else {
-        shadowmap = t(flipud(rayimage::render_resized(shadowmap, dims = dim(hillshade))))
+        shadowmap = fliplr(rayimage::render_resized(t(shadowmap), dims = dim(hillshade)))
       }
     } else {
       shadowmap = t(flipud(shadowmap))
