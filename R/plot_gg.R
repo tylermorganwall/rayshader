@@ -546,7 +546,7 @@ plot_gg = function(ggobj, width = 3, height = 3,
     ggplotobj2 = emboss_gg_grid(ggplotobj2, emboss_grid)
   }
   old_dev = grDevices::dev.cur()
-  png(filename = heightmaptemp, width = width, height = height, units = "in",res=300)
+  grDevices::png(filename = heightmaptemp, width = width, height = height, units = "in",res=300)
   grid::grid.draw(ggplotobj2)
   grDevices::dev.off()
   if (old_dev > 1) {

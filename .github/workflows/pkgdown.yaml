@@ -36,6 +36,7 @@ jobs:
           
       - name: Install dependencies
         run: |
+          install.packages("sf")
           remotes::install_github("dmurdoch/rgl")
           remotes::install_github("tylermorganwall/rayvertex")
           remotes::install_github("tylermorganwall/rayimage")
