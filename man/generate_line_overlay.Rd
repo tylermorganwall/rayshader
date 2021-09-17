@@ -45,7 +45,7 @@ specified in `linewidth`.}
 Semi-transparent overlay with contours.
 }
 \description{
-Calculates and returns an overlay of contour lines for the current height map.
+Calculates and returns an overlay of lines for the current height map.
 }
 \examples{
 #Add the included `sf` object with roads to the montereybay dataset

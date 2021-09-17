@@ -66,7 +66,7 @@ If `NULL`, automatically calculated.}
 Displays snapshot of current rgl plot (or saves to disk).
 }
 \description{
-Places a compass on the map to specify the North direction.
+Places a scale bar on the map in 3D.
 }
 \examples{
 #Add a scale bar to the montereybay dataset, here representing about 80km
