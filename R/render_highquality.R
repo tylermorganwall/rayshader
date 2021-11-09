@@ -216,16 +216,19 @@ render_highquality = function(filename = NULL, light = TRUE, lightdirection = 31
   scalevals = rgl::par3d("scale")
   
   phi = rotmat[1]
+  if(90 - abs(phi) < 1e-3) {
+    phi = -phi
+  }
   if(0.001 > abs(abs(rotmat[3]) - 180)) {
     theta = -rotmat[2] + 180
     movevec = rgl::rotationMatrix(-rotmat[2]*pi/180, 0, 1, 0) %*%
-      rgl::rotationMatrix(-rotmat[1]*pi/180, 1, 0, 0) %*% 
+      rgl::rotationMatrix(-phi*pi/180, 1, 0, 0) %*% 
       rgl::par3d()$userMatrix[,4]
   } else {
     theta = rotmat[2]
     movevec = rgl::rotationMatrix(rotmat[3]*pi/180, 0, 0, 1) %*%
       rgl::rotationMatrix(-rotmat[2]*pi/180, 0, 1, 0) %*%
-      rgl::rotationMatrix(-rotmat[1]*pi/180, 1, 0, 0) %*% 
+      rgl::rotationMatrix(-phi*pi/180, 1, 0, 0) %*% 
       rgl::par3d()$userMatrix[,4]
   }
   movevec = movevec[1:3]
@@ -302,7 +305,7 @@ render_highquality = function(filename = NULL, light = TRUE, lightdirection = 31
     temp_color = rgl.attrib(labelids[i], "colors")
     for(j in seq_len(nrow(temp_label))) {
       if(is.null(text_angle)) {
-        anglevec = c(rotmat[1],theta,0)
+        anglevec = c(phi,theta,0)
       } else {
         if(length(text_angle) == 1) {
           anglevec = c(0,text_angle,0)
@@ -418,7 +421,7 @@ render_highquality = function(filename = NULL, light = TRUE, lightdirection = 31
                           title_offset = c(0,0),title_text = temp_label, title_color = "white",
                           title_position = "center", filename = scalelabelfile)
       if(is.null(text_angle)) {
-        anglevec = c(rotmat[1],theta,0)
+        anglevec = c(phi,theta,0)
       } else {
         if(length(text_angle) == 1) {
           anglevec = c(0,text_angle,0)
@@ -461,7 +464,7 @@ render_highquality = function(filename = NULL, light = TRUE, lightdirection = 31
   }
   if(any(round(scalevals,4) != 1)) {
     scene = rayrender::group_objects(scene, 
-                                     group_scale = scalevals, 
+                                     scale = scalevals, 
                                      pivot_point = c(0,0,0))
   }
   if(light) {
@@ -509,10 +512,11 @@ render_highquality = function(filename = NULL, light = TRUE, lightdirection = 31
   if(!is.null(scene_elements)) {
     scene = rayrender::add_object(scene,scene_elements)
   }
+  
   if(has_title) {
     temp = tempfile(fileext = ".png")
     debug_return = rayrender::render_scene(scene, lookfrom = lookfrom, lookat = camera_lookat, fov = fov, filename=temp,
-                 ortho_dimensions = ortho_dimensions, width = width, height = height, 
+                 ortho_dimensions = ortho_dimensions, width = width, height = height,  #camera_up = camera_up,
                  clamp_value = clamp_value, ...)
     if(has_title) {
       if(is.null(filename)) {
@@ -529,7 +533,7 @@ render_highquality = function(filename = NULL, light = TRUE, lightdirection = 31
     }
   } else {
     debug_return = rayrender::render_scene(scene, lookfrom = lookfrom, lookat = camera_lookat, fov = fov, filename=filename,
-                 ortho_dimensions = ortho_dimensions, width = width, height = height, 
+                 ortho_dimensions = ortho_dimensions, width = width, height = height, #camera_up = camera_up,
                  clamp_value = clamp_value, ...)
   }
   if(clear) {
