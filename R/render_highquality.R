@@ -305,7 +305,7 @@ render_highquality = function(filename = NULL, light = TRUE, lightdirection = 31
     temp_color = rgl.attrib(labelids[i], "colors")
     for(j in seq_len(nrow(temp_label))) {
       if(is.null(text_angle)) {
-        anglevec = c(phi,theta,0)
+        anglevec = c(-phi,theta,0)
       } else {
         if(length(text_angle) == 1) {
           anglevec = c(0,text_angle,0)
@@ -421,7 +421,7 @@ render_highquality = function(filename = NULL, light = TRUE, lightdirection = 31
                           title_offset = c(0,0),title_text = temp_label, title_color = "white",
                           title_position = "center", filename = scalelabelfile)
       if(is.null(text_angle)) {
-        anglevec = c(phi,theta,0)
+        anglevec = c(-phi,theta,0)
       } else {
         if(length(text_angle) == 1) {
           anglevec = c(0,text_angle,0)

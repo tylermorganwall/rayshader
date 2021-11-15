@@ -180,15 +180,15 @@ render_depth = function(focus = NULL, focallength = 100, fstop = 4, filename=NUL
   
   if(transparent_water) {
     idlist = get_ids_with_labels(typeval = c("water","waterlines"))
-    waterid = idlist$id[idlist$raytype == "water"][1]
+    waterid = idlist$id[idlist$tag == "water"][1]
     waterdepthval = max(rgl::rgl.attrib(waterid, "vertices")[1:3,2],na.rm=TRUE)
     has_waterlines = FALSE
-    water_color = idlist$water_color[idlist$raytype == "water"][1]
-    water_alpha = idlist$water_alpha[idlist$raytype == "water"][1]
-    if("waterlines" %in% idlist$raytype) {
+    water_color = idlist$water_color[idlist$tag == "water"][1]
+    water_alpha = idlist$water_alpha[idlist$tag == "water"][1]
+    if("waterlines" %in% idlist$tag) {
       has_waterlines = TRUE
-      water_line_color = idlist$waterline_color[idlist$raytype == "waterlines"][1]
-      water_line_alpha = idlist$waterline_alpha[idlist$raytype == "waterlines"][1]
+      water_line_color = idlist$waterline_color[idlist$tag == "waterlines"][1]
+      water_line_alpha = idlist$waterline_alpha[idlist$tag == "waterlines"][1]
     }
     rgl::pop3d(id=idlist$id)
     if(!is.null(cache_filename) && software_render) {
@@ -251,8 +251,7 @@ render_depth = function(focus = NULL, focallength = 100, fstop = 4, filename=NUL
       return(NULL)
     }
     if(transparent_water) {
-      remove_ids = get_ids_with_labels(typeval = "waterlines")$id
-      rgl::pop3d(id=remove_ids)
+      rgl::pop3d(tag="waterlines")
     }
     tempmap = png::readPNG(temp)
     if(transparent_water && !is.null(heightmap)) {

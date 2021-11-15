@@ -87,13 +87,9 @@ render_points = function(extent = NULL, lat = NULL, long = NULL, altitude=NULL,
     stop("No rgl window currently open.")
   }
   if(clear_previous) {
-    ray_ids = get_ids_with_labels(c("points3d"))
-    if(nrow(ray_ids) > 0) {
-      remove_ids = ray_ids$id
-      rgl::pop3d(id = remove_ids)
-      if(missing(lat) || missing(long)) {
-        return(invisible())
-      }
+    rgl::pop3d(tag = "points3d")
+    if(missing(lat) || missing(long)) {
+      return(invisible())
     }
   }
   if(is.null(heightmap)) {
@@ -127,6 +123,6 @@ render_points = function(extent = NULL, lat = NULL, long = NULL, altitude=NULL,
       altitude = rayimage::interpolate_array((t(heightmap)), distances_x_index,distances_y_index) + offset
     }
   }
-  rgl::rgl.material(color = color, ambient = "#000019", size = size)
+  rgl::rgl.material(color = color, tag = "points3d", size = size)
   rgl::points3d(distances_x-nrow_map/2, altitude/zscale, distances_y-ncol_map/2)
 }

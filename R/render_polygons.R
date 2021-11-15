@@ -82,13 +82,9 @@ render_polygons = function(polygon, extent,  color = "red", top = 1, bottom = NA
     stop("No rgl window currently open.")
   }
   if(clear_previous) {
-    ray_ids = get_ids_with_labels(c("polygon3d"))
-    if(nrow(ray_ids) > 0) {
-      remove_ids = ray_ids$id
-      rgl::pop3d(id = remove_ids)
-      if(missing(polygon)) {
-        return(invisible())
-      }
+    rgl::pop3d(tag = "polygon3d")
+    if(missing(polygon)) {
+      return(invisible())
     }
   }
   if(!(length(find.package("rayrender", quiet = TRUE)) > 0)) {
@@ -161,7 +157,7 @@ render_polygons = function(polygon, extent,  color = "red", top = 1, bottom = NA
       single_poly[,3] = ncol_map/2 - (single_poly[,3]-e@ymin)/(e@ymax - e@ymin) * ncol_map 
       single_poly[,2] = single_poly[,2]
       
-      rgl::rgl.material(color = color, ambient = "#000020", lit = lit)
+      rgl::rgl.material(color = color, tag = "polygon3d", lit = lit)
       rgl::triangles3d(single_poly)
     }
   }

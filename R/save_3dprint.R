@@ -50,9 +50,7 @@
 save_3dprint = function(filename,maxwidth=125,unit="mm",rotate=TRUE,remove_extras = TRUE,
                         clear=FALSE) {
   if(remove_extras) {
-    idlist = get_ids_with_labels()
-    remove_ids = idlist$id[!(idlist$raytype %in% c("surface","surface_tris", "base"))]
-    rgl::pop3d(id=remove_ids)
+    rgl::pop3d(tag=c("surface","surface_tris", "base"))
   }
   if(substring(filename, nchar(filename)-3,nchar(filename)) != ".stl") {
     filename = paste0(filename,".stl")

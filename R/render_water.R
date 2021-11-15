@@ -47,9 +47,7 @@ render_water = function(heightmap, waterdepth=0, watercolor="lightblue",
     stop("No rgl window currently open.")
   }
   if(remove_water) {
-    idlist = get_ids_with_labels()
-    remove_ids = idlist$id[idlist$raytype %in% c("waterlines", "water")]
-    rgl::pop3d(id=remove_ids)
+    rgl::pop3d(tag=c("waterlines", "water"))
   }
   make_water(heightmap/zscale,waterheight=waterdepth/zscale,wateralpha=wateralpha,watercolor=watercolor)
   if(!is.null(waterlinecolor)) {

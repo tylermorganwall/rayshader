@@ -44,7 +44,7 @@ make_base = function(heightmap,basedepth=0,basecolor="grey20",zscale=1) {
     # fullnormals = fullnormals[nrow(fullnormals):1,]
     rgl::triangles3d(fullsides, #normals=fullnormals,
                      texture = NULL,
-                     lit=FALSE,color=basecolor,front="filled",back="culled",ambient = "#000002")
+                     lit=FALSE,color=basecolor,front="filled",back="culled",tag = "base")
   } else if(all(!is.na(heightmap))) {
     na_matrix = is.na(heightmap)
     baselist = make_base_cpp(heightmap, na_matrix, basedepth)
@@ -62,7 +62,7 @@ make_base = function(heightmap,basedepth=0,basecolor="grey20",zscale=1) {
     fullnormals = fullnormals[nrow(fullnormals):1,]
     rgl::triangles3d(fullsides, normals=fullnormals,
                      texture = NULL,
-                     lit=FALSE,color=basecolor,front="filled",back="filled",ambient = "#000002")
+                     lit=FALSE,color=basecolor,front="filled",back="filled",tag = "base")
   } else {
     na_matrix = is.na(heightmap)
     baselist = make_base_cpp(heightmap, na_matrix, basedepth)
@@ -82,10 +82,10 @@ make_base = function(heightmap,basedepth=0,basecolor="grey20",zscale=1) {
     xznormals[!is.na(xznormals)] = 0
     ynormals[!is.na(ynormals)] = -1
     rgl.surface(1:nrow(basemat)-nrow(basemat)/2,1:ncol(basemat)-ncol(basemat)/2,basemat,color=basecolor,
-                lit=FALSE,back="filled",front="filled",ambient = "#000007", 
+                lit=FALSE,back="filled",front="filled",tag = "basebottom", 
                 normal_x = xznormals, normal_z = xznormals, normal_y = ynormals)
     rgl::triangles3d(fullsides, normals = fullnormals,
                      texture = NULL,
-                     lit=FALSE,color=basecolor,front="filled",back="filled",ambient = "#000002")
+                     lit=FALSE,color=basecolor,front="filled",back="filled",tag = "base")
   }
 }

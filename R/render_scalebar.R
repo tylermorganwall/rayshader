@@ -213,8 +213,8 @@ render_scalebar = function(limits, position = "W", y = NULL,
       }
     }
   } 
-  shapelist3d(meshlist1, lit=FALSE, ambient = "#000014", color = color_first, plot=TRUE)
-  shapelist3d(meshlist2, lit=FALSE, ambient = "#000015", color = color_second, plot=TRUE)
+  shapelist3d(meshlist1, lit=FALSE, tag = "scalebar_col1", color = color_first, plot=TRUE)
+  shapelist3d(meshlist2, lit=FALSE, tag = "scalebar_col2", color = color_second, plot=TRUE)
   
   max_distance = max(limits)
   breakpoints = limits/max_distance 
@@ -223,41 +223,41 @@ render_scalebar = function(limits, position = "W", y = NULL,
       if(text_switch_side) {
         break_dist = breakpoints[i] * xend + (1-breakpoints[i]) * xstart
         text3d(x=break_dist+text_x_offset, y=y+text_y_offset+radius*3, z=zend-offset+text_z_offset-radius*5, 
-               texts = paste0(c(as.character(limits[i]), label_unit),collapse=""), color = color_text, ambient = "#000016")
+               texts = paste0(c(as.character(limits[i]), label_unit),collapse=""), color = color_text, tag = "text_scalebar")
       } else {
         break_dist = breakpoints[i] * xstart + (1-breakpoints[i]) * xend
         text3d(x=break_dist+text_x_offset, y=y+text_y_offset+radius*3, z=zend-offset+text_z_offset-radius*5, 
-               texts = paste0(c(as.character(limits[i]), label_unit),collapse=""), color = color_text, ambient = "#000016")
+               texts = paste0(c(as.character(limits[i]), label_unit),collapse=""), color = color_text, tag = "text_scalebar")
       }
     } else if(position == "W") {
       if(text_switch_side) {
         break_dist = breakpoints[i] * zstart + (1-breakpoints[i]) * zend
         text3d(x=xend-offset+text_x_offset-radius*5, y=y+text_y_offset+radius*3, z=break_dist+text_z_offset, 
-               texts = paste0(c(as.character(limits[i]), label_unit),collapse=""), color = color_text, ambient = "#000016")
+               texts = paste0(c(as.character(limits[i]), label_unit),collapse=""), color = color_text, tag = "text_scalebar")
       } else {
         break_dist = breakpoints[i] * zend + (1-breakpoints[i]) * zstart
         text3d(x=xend-offset+text_x_offset-radius*5, y=y+text_y_offset+radius*3, z=break_dist+text_z_offset, 
-               texts = paste0(c(as.character(limits[i]), label_unit),collapse=""), color = color_text, ambient = "#000016")
+               texts = paste0(c(as.character(limits[i]), label_unit),collapse=""), color = color_text, tag = "text_scalebar")
       }
     } else if(position == "S") {
       if(text_switch_side) {
         break_dist = breakpoints[i] * xstart + (1-breakpoints[i]) * xend
         text3d(x=break_dist+text_x_offset, y=y+text_y_offset+radius*3, z=zstart+offset+text_z_offset+radius*5, 
-               texts = paste0(c(as.character(limits[i]), label_unit),collapse=""), color = color_text, ambient = "#000016")
+               texts = paste0(c(as.character(limits[i]), label_unit),collapse=""), color = color_text, tag = "text_scalebar")
       } else {
         break_dist = breakpoints[i] * xend + (1-breakpoints[i]) * xstart
         text3d(x=break_dist+text_x_offset, y=y+text_y_offset+radius*3, z=zstart+offset+text_z_offset+radius*5, 
-               texts = paste0(c(as.character(limits[i]), label_unit),collapse=""), color = color_text, ambient = "#000016")
+               texts = paste0(c(as.character(limits[i]), label_unit),collapse=""), color = color_text, tag = "text_scalebar")
       }
     } else if(position == "E") {
       if(text_switch_side) {
         break_dist = breakpoints[i] * zend + (1-breakpoints[i]) * zstart
         text3d(x=xstart+offset+text_x_offset+radius*5, y=y+text_y_offset+radius*3, z=break_dist+text_z_offset,
-               texts = paste0(c(as.character(limits[i]), label_unit),collapse=""), color = color_text, ambient = "#000016")
+               texts = paste0(c(as.character(limits[i]), label_unit),collapse=""), color = color_text, tag = "text_scalebar")
       } else {
         break_dist = breakpoints[i] * zstart + (1-breakpoints[i]) * zend
         text3d(x=xstart+offset+text_x_offset+radius*5, y=y+text_y_offset+radius*3, z=break_dist+text_z_offset, 
-               texts = paste0(c(as.character(limits[i]), label_unit),collapse=""), color = color_text, ambient = "#000016")
+               texts = paste0(c(as.character(limits[i]), label_unit),collapse=""), color = color_text, tag = "text_scalebar")
       }
     }
   }

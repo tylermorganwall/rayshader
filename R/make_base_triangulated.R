@@ -64,7 +64,7 @@ make_base_triangulated = function(tris, basedepth=0,basecolor="grey20") {
   }
   fullsides = do.call(rbind,edge_verts)
   rgl::triangles3d(fullsides, #normals = fullnormals,
-                   lit=FALSE,color=basecolor,front="filled",back="culled",ambient = "#000002")
+                   lit=FALSE,color=basecolor,front="filled",back="culled",tag = "base")
   
   base_entries = unique(fullsides[fullsides[,2] == basedepth,])
   base_entries_up = base_entries[base_entries[,1] == edge_row_max | base_entries[,1] == edge_row_min, ]
@@ -88,5 +88,5 @@ make_base_triangulated = function(tris, basedepth=0,basecolor="grey20") {
     counter = counter + 1
   }
   bottom_tris = do.call(rbind,full_bottom_final)
-  rgl::triangles3d(bottom_tris, lit=FALSE,color=basecolor,front="filled",back="culled",ambient = "#000002")
+  rgl::triangles3d(bottom_tris, lit=FALSE,color=basecolor,front="filled",back="culled",tag = "base")
 }

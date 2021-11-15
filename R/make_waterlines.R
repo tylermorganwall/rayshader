@@ -19,6 +19,7 @@ make_waterlines = function(heightmap,waterdepth=0,linecolor="grey40",zscale=1,al
     segmentlist = do.call(rbind,heightlist)
     segmentlist[,1] = segmentlist[,1] - nrow(heightmap)/2
     segmentlist[,3] = -(segmentlist[,3] + ncol(heightmap)/2)
-    rgl::segments3d(segmentlist,color=linecolor,lwd=linewidth,alpha=alpha,depth_mask=TRUE, line_antialias=antialias, depth_test="lequal",ambient = "#000005")
+    rgl::segments3d(segmentlist,color=linecolor,lwd=linewidth,alpha=alpha,depth_mask=TRUE, 
+                    line_antialias=antialias, depth_test="lequal",tag = "waterlines")
   }
 }

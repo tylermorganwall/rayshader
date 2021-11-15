@@ -54,5 +54,5 @@ make_shadow = function(heightmap, basedepth, shadowwidth, color, shadowcolor) {
   
   rgl.triangles(rbind(tri1,tri2), texcoords = matrix(c(1,1,0,0,1,0,1,0,0,1,1,0),nrow=6,ncol=2),
                 texture=tempmap,
-                lit=FALSE,back="culled",ambient = "#000006")
+                lit=FALSE,back="culled",tag = "shadow")
 }

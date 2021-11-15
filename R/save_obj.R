@@ -195,7 +195,7 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
   vertex_info = get_ids_with_labels()
   
   
-  number_compass = sum(vertex_info$raytype == "north_symbol")
+  number_compass = sum(vertex_info$tag == "north_symbol")
   current_compass_number = 1
   vertex_info$startindex = NA
   vertex_info$startindextex = NA
@@ -207,20 +207,20 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
   wrote_base = FALSE
   for(row in 1:nrow(vertex_info)) {
     id = vertex_info$id[row]
-    if(vertex_info$raytype[row] %in% c("surface","base","basebottom","water",
+    if(vertex_info$tag[row] %in% c("surface","base","basebottom","water",
                                        "north_symbol","arrow_symbol", "bevel_symbol",
                                        "background_symbol", "scalebar_col1", "scalebar_col2",
                                        "surface_tris","polygon3d", "shadow")) {
       vertex_info$startindex[row] = number_vertices + 1
-      if(vertex_info$raytype[row] %in%  c("surface", "surface_tris", "shadow")) {
+      if(vertex_info$tag[row] %in%  c("surface", "surface_tris", "shadow")) {
         vertex_info$startindextex[row] = number_texcoords + 1
       }
       vertex_info$startindexnormals[row] = number_normals + 1
-      write_comment(sprintf("# %s\n",vertex_info$raytype[row]), con)
+      write_comment(sprintf("# %s\n",vertex_info$tag[row]), con)
       write_data(id, con)
-      if(vertex_info$raytype[row] != "water") {
+      if(vertex_info$tag[row] != "water") {
         if(save_texture) {
-          if(vertex_info$raytype[row] != "base") {
+          if(vertex_info$tag[row] != "base") {
             write_mtl(vertex_info[row,], con_mtl)
           } else {
             if(!wrote_base) {
@@ -244,7 +244,7 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
   }
   current_compass_number = 1
   for(row in 1:nrow(vertex_info)) {
-    if(vertex_info$raytype[row] == "surface") {
+    if(vertex_info$tag[row] == "surface") {
       if(save_texture) {
         cat("g Surface", file=con, sep ="\n")
         cat("usemtl ray_surface", file=con, sep ="\n")
@@ -283,7 +283,7 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
       indices = indices[1:(nrow(indices)-na_counter),]
       cat(paste("f", indices[,1], indices[,2], indices[,3]), 
           sep="\n", file=con)
-    } else if(vertex_info$raytype[row] == "surface_tris") {
+    } else if(vertex_info$tag[row] == "surface_tris") {
       if(save_texture) {
         cat("g Surface", file=con, sep ="\n")
         cat("usemtl ray_surface", file=con, sep ="\n")
@@ -302,7 +302,7 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
       indices = matrix(indices, ncol=3, byrow=TRUE)
       cat(paste("f", indices[,1], indices[,2], indices[,3]), 
           sep="\n", file=con)
-    } else if (vertex_info$raytype[row] == "basebottom") {
+    } else if (vertex_info$tag[row] == "basebottom") {
       if(save_texture) {
         cat("g Basebottom", file=con, sep ="\n")
         cat("usemtl ray_base", file=con, sep ="\n")
@@ -343,7 +343,7 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
       indices = indices[1:(nrow(indices)-na_counter),]
       cat(paste("f", indices[,3], indices[,2], indices[,1]), 
           sep="\n", file=con)
-    } else if (vertex_info$raytype[row] == "base") {
+    } else if (vertex_info$tag[row] == "base") {
       if(save_texture) {
         cat("g Base", file=con, sep ="\n")
         cat("usemtl ray_base", file=con, sep ="\n")
@@ -372,7 +372,7 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
             sep="\n", file=con)
       }
       # }
-    } else if (vertex_info$raytype[row] == "water") {
+    } else if (vertex_info$tag[row] == "water") {
       if(save_texture) {
         cat("g Water", file=con, sep ="\n")
         cat("usemtl ray_water", file=con, sep ="\n")
@@ -409,7 +409,7 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
         cat(paste("f", baseindices[,1], baseindices[,2], baseindices[,3]), 
             sep="\n", file=con)
       }
-    } else if (vertex_info$raytype[row] == "north_symbol") {
+    } else if (vertex_info$tag[row] == "north_symbol") {
       if(save_texture) {
         cat("g North", file=con, sep ="\n")
         cat(sprintf("usemtl ray_north%d",current_compass_number), file=con, sep ="\n")
@@ -417,7 +417,7 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
       baseindices = matrix(vertex_info$startindex[row]:vertex_info$endindex[row], ncol=3, byrow=TRUE)
       cat(paste("f", baseindices[,1], baseindices[,2], baseindices[,3]), 
           sep="\n", file=con)
-    } else if (vertex_info$raytype[row] == "arrow_symbol") {
+    } else if (vertex_info$tag[row] == "arrow_symbol") {
       if(save_texture) {
         cat("g Arrow", file=con, sep ="\n")
         cat(sprintf("usemtl ray_arrow%d",current_compass_number), file=con, sep ="\n")
@@ -425,7 +425,7 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
       baseindices = matrix(vertex_info$startindex[row]:vertex_info$endindex[row], ncol=3, byrow=TRUE)
       cat(paste("f", baseindices[,1], baseindices[,2], baseindices[,3]), 
           sep="\n", file=con)
-    } else if (vertex_info$raytype[row] == "bevel_symbol") {
+    } else if (vertex_info$tag[row] == "bevel_symbol") {
       if(save_texture) {
         cat("g Bevel", file=con, sep ="\n")
         cat(sprintf("usemtl ray_bevel%d",current_compass_number), file=con, sep ="\n")
@@ -433,7 +433,7 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
       baseindices = matrix(vertex_info$startindex[row]:vertex_info$endindex[row], ncol=3, byrow=TRUE)
       cat(paste("f", baseindices[,1], baseindices[,2], baseindices[,3]), 
           sep="\n", file=con)
-    } else if (vertex_info$raytype[row] == "background_symbol") {
+    } else if (vertex_info$tag[row] == "background_symbol") {
       if(save_texture) {
         cat("g Background", file=con, sep ="\n")
         cat(sprintf("usemtl ray_background%d",current_compass_number), file=con, sep ="\n")
@@ -442,7 +442,7 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
       cat(paste("f", baseindices[,1], baseindices[,2], baseindices[,3]), 
           sep="\n", file=con)
       current_compass_number = current_compass_number + 1
-    } else if (vertex_info$raytype[row] == "scalebar_col1") {
+    } else if (vertex_info$tag[row] == "scalebar_col1") {
       if(save_texture) {
         cat("g Scalebar1", file=con, sep ="\n")
         cat("usemtl ray_scalebar1", file=con, sep ="\n")
@@ -456,7 +456,7 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
         cat(paste("f", baseindices[,1], baseindices[,2], baseindices[,3]), 
             sep="\n", file=con)
       }
-    } else if (vertex_info$raytype[row] == "scalebar_col2") {
+    } else if (vertex_info$tag[row] == "scalebar_col2") {
       if(save_texture) {
         cat("g Scalebar1", file=con, sep ="\n")
         cat("usemtl ray_scalebar2", file=con, sep ="\n")
@@ -470,7 +470,7 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
         cat(paste("f", baseindices[,1], baseindices[,2], baseindices[,3]), 
             sep="\n", file=con)
       }
-    } else if (vertex_info$raytype[row] == "polygon3d") {
+    } else if (vertex_info$tag[row] == "polygon3d") {
       if(save_texture) {
         cat("g Polygon", file=con, sep ="\n")
         cat("usemtl ray_polygon3d", file=con, sep ="\n")
@@ -478,7 +478,7 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
       baseindices = matrix(vertex_info$startindex[row]:vertex_info$endindex[row], ncol=3, byrow=TRUE)
       cat(paste("f", baseindices[,1], baseindices[,2], baseindices[,3]), 
           sep="\n", file=con)
-    } else if(vertex_info$raytype[row] == "shadow" && save_shadow) {
+    } else if(vertex_info$tag[row] == "shadow" && save_shadow) {
       if(save_texture) {
         cat("g Shadow", file=con, sep ="\n")
         cat("usemtl ray_shadow", file=con, sep ="\n")

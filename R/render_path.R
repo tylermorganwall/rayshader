@@ -90,13 +90,9 @@ render_path = function(extent = NULL, lat, long = NULL, altitude = NULL,
     stop("No rgl window currently open.")
   }
   if(clear_previous) {
-    ray_ids = get_ids_with_labels(c("path3d"))
-    if(nrow(ray_ids) > 0) {
-      remove_ids = ray_ids$id
-      rgl::pop3d(id = remove_ids)
-      if(missing(lat)) {
-        return(invisible())
-      }
+    rgl::pop3d(tag = "path3d")
+    if(missing(lat)) {
+      return(invisible())
     }
   }
   if(inherits(lat,"SpatialLinesDataFrame")) {
@@ -148,7 +144,7 @@ render_path = function(extent = NULL, lat, long = NULL, altitude = NULL,
         altitude = rayimage::interpolate_array((t(heightmap)), distances_x_index,distances_y_index) + offset
       }
     }
-    rgl::rgl.material(color = color, ambient = "#000018", lwd = linewidth, line_antialias = antialias)
+    rgl::rgl.material(color = color, tag = "path3d", lwd = linewidth, line_antialias = antialias)
     rgl::lines3d(distances_x-nrow_map/2, altitude/zscale, distances_y-ncol_map/2)
     altitude = NULL
   }

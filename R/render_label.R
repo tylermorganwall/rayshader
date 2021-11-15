@@ -105,13 +105,9 @@ render_label = function(heightmap, text, lat, long, altitude=NULL, extent=NULL,
                         linecolor = "black", textcolor = "black") {
   exit_early = FALSE
   if(clear_previous) {
-    ray_text_ids = get_ids_with_labels(c("textline", "raytext"))
-    if(nrow(ray_text_ids) > 0 || missing(text)) {
-      remove_ids = ray_text_ids$id
-      rgl::pop3d(id = remove_ids)
-      if(missing(text)) {
-        exit_early = TRUE
-      }
+    rgl::pop3d(tag = c("textline", "raytext"))
+    if(missing(text)) {
+      exit_early = TRUE
     }
   }
   if(!exit_early) {
@@ -171,7 +167,7 @@ render_label = function(heightmap, text, lat, long, altitude=NULL, extent=NULL,
       rgl::rgl.material(color=linecolor)
       rgl::lines3d(linelist[[i]], color = linecolor, 
                    lwd = linewidth, lit = FALSE, line_antialias = antialias,
-                   depth_test = "less", alpha = alpha, ambient = "#000008")
+                   depth_test = "less", alpha = alpha, tag = "textline")
     }
     if(freetype) {
       seriflist = c("fonts/FreeSerif.ttf", "fonts/FreeSerifBold.ttf", 
@@ -279,7 +275,7 @@ render_label = function(heightmap, text, lat, long, altitude=NULL, extent=NULL,
     text3d(x, z+offset, y, 
            text,color=textcolor,adj=adjustvec,useFreeType=freetype,
            alpha=textalpha,family=family,font=fonttype,cex=textsize,
-           depth_test="less", ambient = "#000009", lit=FALSE)
+           depth_test="less", tag = "raytext", lit=FALSE)
     par3d(ignoreExtent = ignoreex)
   }
 }

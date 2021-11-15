@@ -25,7 +25,7 @@
 #'@examples
 #'#Add a North arrow to the map, by default in the bottom right (SE)
 #'\dontrun{
-#'montereybay %>%
+#'montereybay %>% 
 #'  sphere_shade() %>%
 #'  plot_3d(montereybay,theta=-45, water=TRUE)
 #'render_compass()
@@ -104,8 +104,7 @@ render_compass = function(angle = 0, position = "SE",
                         color_background = "grey60", color_bevel = "grey20",
                         position_circular = FALSE, clear_compass = FALSE) {
   if(clear_compass) {
-    ids = get_ids_with_labels(c("north_symbol","arrow_symbol","bevel_symbol","background_symbol"))$id
-    rgl::rgl.pop(id=ids)
+    rgl::rgl.pop(tag = c("north_symbol","arrow_symbol","bevel_symbol","background_symbol"))
     return(invisible())
   }
   if(rgl::rgl.cur() == 0) {
@@ -204,18 +203,18 @@ render_compass = function(angle = 0, position = "SE",
   shade3d(translate3d(scale3d(rotate_vertices(north_symbol[[1]],angle),
                               compass_radius[1],compass_radius[2],compass_radius[3]),
                       x, y, z), 
-          lit=FALSE, ambient = "#000010", skipRedraw = FALSE)
+          lit=FALSE, tag = "north_symbol", skipRedraw = FALSE)
 
   shade3d(translate3d(scale3d(rotate_vertices(north_symbol[[2]],angle),
                               compass_radius[1],compass_radius[2],compass_radius[3]),
                       x, y, z), 
-          lit=FALSE, ambient = "#000011", skipRedraw = FALSE)
+          lit=FALSE, tag = "arrow_symbol", skipRedraw = FALSE)
   shade3d(translate3d(scale3d(rotate_vertices(north_symbol[[3]],angle),
                               compass_radius[1],compass_radius[2],compass_radius[3]),
                       x, y, z), 
-          lit=FALSE, ambient = "#000012", skipRedraw = FALSE)
+          lit=FALSE, tag = "bevel_symbol", skipRedraw = FALSE)
   shade3d(translate3d(scale3d(rotate_vertices(north_symbol[[4]],angle),
                               compass_radius[1],compass_radius[2],compass_radius[3]),
                       x, y, z), 
-          lit=FALSE, ambient = "#000013", skipRedraw = FALSE)
+          lit=FALSE, tag = "background_symbol", skipRedraw = FALSE)
 }
