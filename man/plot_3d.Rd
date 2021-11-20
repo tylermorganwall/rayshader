@@ -16,6 +16,7 @@ plot_3d(
   shadow = TRUE,
   shadowdepth = "auto",
   shadowcolor = "auto",
+  shadow_darkness = 0.5,
   shadowwidth = "auto",
   water = FALSE,
   waterdepth = 0,
@@ -62,8 +63,10 @@ of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
 
 \item{shadowdepth}{Default `auto`, which sets it to `soliddepth - soliddepth/10`. Depth of the shadow layer.}
 
-\item{shadowcolor}{Default `auto`. Color of the shadow, automatically computed as half
+\item{shadowcolor}{Default `auto`. Color of the shadow, automatically computed as `shadow_darkness`
 the luminance of the `background` color in the CIELab colorspace if not specified.}
+
+\item{shadow_darkness}{Default `0.5`. Darkness of the shadow, if `shadowcolor = "auto"`.}
 
 \item{shadowwidth}{Default `auto`, which sizes it to 1/10th the smallest dimension of `heightmap`. Width of the shadow in units of the matrix.}
 

@@ -13,8 +13,9 @@
 #'@param solidlinecolor Default `grey30`. Base edge line color.
 #'@param shadow Default `TRUE`. If `FALSE`, no shadow is rendered.
 #'@param shadowdepth Default `auto`, which sets it to `soliddepth - soliddepth/10`. Depth of the shadow layer.
-#'@param shadowcolor Default `auto`. Color of the shadow, automatically computed as half
+#'@param shadowcolor Default `auto`. Color of the shadow, automatically computed as `shadow_darkness`
 #'the luminance of the `background` color in the CIELab colorspace if not specified.
+#'@param shadow_darkness Default `0.5`. Darkness of the shadow, if `shadowcolor = "auto"`.
 #'@param shadowwidth Default `auto`, which sizes it to 1/10th the smallest dimension of `heightmap`. Width of the shadow in units of the matrix. 
 #'@param water Default `FALSE`. If `TRUE`, a water layer is rendered.
 #'@param waterdepth Default `0`. Water level.
@@ -110,7 +111,8 @@
 #'}
 plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
                    solid = TRUE, soliddepth="auto", solidcolor="grey20",solidlinecolor="grey30",
-                   shadow = TRUE, shadowdepth = "auto", shadowcolor = "auto", shadowwidth = "auto", 
+                   shadow = TRUE, shadowdepth = "auto", shadowcolor = "auto", shadow_darkness = 0.5,
+                   shadowwidth = "auto", 
                    water = FALSE, waterdepth = 0, watercolor="dodgerblue", wateralpha = 0.5, 
                    waterlinecolor=NULL, waterlinealpha = 1, 
                    linewidth = 2, lineantialias = FALSE,
@@ -137,7 +139,7 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
     }
   }
   if(shadowcolor == "auto") {
-    shadowcolor = convert_color(darken_color(background, darken=0.5), as_hex = TRUE)
+    shadowcolor = convert_color(darken_color(background, darken=shadow_darkness), as_hex = TRUE)
   }
   #Set window size and position
   if(length(windowsize) == 1) {
