@@ -50,7 +50,14 @@
 save_3dprint = function(filename,maxwidth=125,unit="mm",rotate=TRUE,remove_extras = TRUE,
                         clear=FALSE) {
   if(remove_extras) {
-    rgl::pop3d(tag=c("surface","surface_tris", "base"))
+    extra_types = c("water",
+                  "lines",             "waterlines",    "shadow",
+                  "basebottom",        "textline",      "raytext",
+                  "north_symbol",      "arrow_symbol",  "bevel_symbol",  
+                  "background_symbol", "scalebar_col1", "scalebar_col2",
+                  "text_scalebar",     "path3d",       
+                  "points3d",          "polygon3d")
+    rgl::pop3d(tag=extra_types)
   }
   if(substring(filename, nchar(filename)-3,nchar(filename)) != ".stl") {
     filename = paste0(filename,".stl")
