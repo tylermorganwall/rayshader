@@ -28,6 +28,12 @@ function, and can be exported to an OBJ file.
 devtools::install_github("tylermorganwall/rayshader")
 ```
 
+On Ubuntu, the following libraries are required:
+
+``` bash
+libpng-dev libjpeg-dev libfreetype6-dev libglu1-mesa-dev libgl1-mesa-dev pandoc zlib1g-dev libicu-dev libgdal-dev gdal-bin libgeos-dev libproj-dev
+```
+
 ## Functions
 
 <img  src="man/figures/smallfeature.png">
