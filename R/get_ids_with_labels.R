@@ -15,7 +15,7 @@ get_ids_with_labels = function(typeval = NULL) {
                 "text_scalebar",     "surface_tris",  "path3d",       
                 "points3d",          "polygon3d")
   get_rgl_material = getFromNamespace("rgl.getmaterial", "rgl")
-  idvals = rgl::rgl.ids()
+  idvals = rgl::rgl.ids(tags = TRUE)
   material_type = idvals$tag
   material_properties = vector("list", nrow(idvals))
   for(i in 1:nrow(idvals)) {

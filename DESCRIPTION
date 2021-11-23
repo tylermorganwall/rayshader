@@ -1,7 +1,7 @@
 Package: rayshader
 Type: Package
 Title: Create Maps and Visualize Data in 2D and 3D
-Version: 0.26.6
+Version: 0.26.7
 Date: 2021-11-09
 Author: Tyler Morgan-Wall
 Maintainer: Tyler Morgan-Wall <tylermw@gmail.com>
@@ -17,7 +17,7 @@ Imports: doParallel,
          scales,
          png,
          magrittr,
-         rgl (>= 0.107.20),
+         rgl (>= 0.108.3),
          grDevices,
          grid,
          utils,

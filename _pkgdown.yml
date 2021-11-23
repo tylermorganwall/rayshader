@@ -85,11 +85,6 @@ navbar:
     - icon: fa-github fa-lg
       text: "GitHub"
       href: https://github.com/tylermorganwall/rayshader
-      
-home:
-  title: Rayshader: 3D Dataviz in R
-  description: >
-    An open source package for producing 2D and 3D data visualizations in R.
     
 authors:
   Tyler Morgan-Wall: 
