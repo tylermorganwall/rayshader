@@ -257,6 +257,7 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
     if(!precomputed) {
       normals = calculate_normal(heightmap,zscale=zscale)
     }
+    dim(heightmap) = unname(dim(heightmap))
     normalsx = (t(normals$x[c(-1,-nrow(normals$x)),c(-1,-ncol(normals$x))]))
     normalsy = (t(normals$z[c(-1,-nrow(normals$z)),c(-1,-ncol(normals$z))]))
     normalsz = (t(normals$y[c(-1,-nrow(normals$y)),c(-1,-ncol(normals$y))]))
