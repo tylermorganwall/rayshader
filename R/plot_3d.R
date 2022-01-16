@@ -240,7 +240,7 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
       waterlinecolor = "#ffd1fb"
     }
   }
-  tempmap = tempfile()
+  tempmap = tempfile(fileext=".png")
   save_png(hillshade,tempmap)
   precomputed = FALSE
   if(is.list(precomputed_normals)) {
@@ -264,7 +264,7 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
     rgl.surface(x=1:nrow(heightmap)-nrow(heightmap)/2,z=(1:ncol(heightmap)-ncol(heightmap)/2),
                 y=heightmap/zscale,
                 normal_x = normalsz, normal_y = normalsy, normal_z = -normalsx,
-                texture=paste0(tempmap,".png"),lit=FALSE,tag = "surface")
+                texture = tempmap, lit=FALSE,tag = "surface")
   } else {
     tris = terrainmeshr::triangulate_matrix(heightmap, maxError = max_error, 
                                             maxTriangles = max_tri, start_index = 0, 
@@ -288,7 +288,7 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
     tris[,3] = tris[,3] - ncol(heightmap)/2
     tris[,3] = -tris[,3]
     rgl.triangles(tris, texcoords = texcoords, #normals = normal_comp,
-                  texture=paste0(tempmap,".png"),lit=FALSE,tag = "surface_tris")
+                  texture=tempmap,lit=FALSE,tag = "surface_tris")
   }
   bg3d(color = background,texture=NULL)
   rgl.viewpoint(zoom=zoom,phi=phi,theta=theta,fov=fov)
