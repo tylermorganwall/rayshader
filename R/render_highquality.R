@@ -234,7 +234,7 @@ render_highquality = function(filename = NULL, light = TRUE, lightdirection = 31
   movevec = movevec[1:3]
   observer_radius = rgl::par3d()$observer[3]
   lookvals = rgl::par3d()$bbox
-  lookvals[4] = surfacerange[2]
+  # lookvals[4] = surfacerange[2]
   if(fov == 0) {
     ortho_dimensions = c(2/projmat[1,1],2/projmat[2,2])
   } else {

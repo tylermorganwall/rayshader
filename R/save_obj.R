@@ -107,6 +107,7 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
   }
   scalebar1_written = FALSE
   scalebar2_written = FALSE
+  floating_layer_num = 1
   
   write_mtl = function(idrow, con) {
     if(!is.na(idrow$texture_file)) {
@@ -176,6 +177,13 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
         cat(sprintf("map_Kd %s \n",sprintf("%s_shadow.png",basename(noext_filename))), file=con)
         cat("\n", file=con)
       }
+    } else if(!is.na(idrow$layer_texture_file)) {
+      cat(sprintf("newmtl ray_layer_texture%d \n",floating_layer_num), file=con)
+      file.copy(idrow$layer_texture_file[[1]], sprintf("%s_layer%d.png",noext_filename,floating_layer_num), overwrite = TRUE)
+      cat(sprintf("map_Kd %s \n",sprintf("%s_layer%d.png",basename(noext_filename),floating_layer_num)), file=con)
+      floating_layer_num <<- floating_layer_num + 1
+      
+      cat("\n", file=con)
     }
   }
   write_comment = function(comment, con) {
@@ -210,9 +218,9 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
     if(vertex_info$tag[row] %in% c("surface","base","basebottom","water",
                                        "north_symbol","arrow_symbol", "bevel_symbol",
                                        "background_symbol", "scalebar_col1", "scalebar_col2",
-                                       "surface_tris","polygon3d", "shadow")) {
+                                       "surface_tris","polygon3d", "shadow","floating_overlay","floating_overlay_tris")) {
       vertex_info$startindex[row] = number_vertices + 1
-      if(vertex_info$tag[row] %in%  c("surface", "surface_tris", "shadow")) {
+      if(vertex_info$tag[row] %in%  c("surface", "surface_tris", "shadow","floating_overlay","floating_overlay_tris")) {
         vertex_info$startindextex[row] = number_texcoords + 1
       }
       vertex_info$startindexnormals[row] = number_normals + 1
@@ -243,6 +251,8 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
     }
   }
   current_compass_number = 1
+  current_floating_number = 1
+  
   for(row in 1:nrow(vertex_info)) {
     if(vertex_info$tag[row] == "surface") {
       if(save_texture) {
@@ -492,6 +502,20 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
                              shadowindices[,3], shadowtexindices[,3], shadownormalindices[,3])), 
           sep="\n", file=con)
 
+    } else if(vertex_info$tag[row] %in% c("floating_overlay","floating_overlay_tris")) {
+      if(save_texture) {
+        cat("g Floating", file=con, sep ="\n")
+        cat(sprintf("usemtl ray_layer_texture%d",current_floating_number), file=con, sep ="\n")
+      }
+      floating_layer_indices = matrix(vertex_info$startindex[row]:vertex_info$endindex[row], ncol=3, byrow=TRUE)
+      floating_layer_texindices = matrix(vertex_info$startindextex[row]:vertex_info$endindextex[row], ncol=3, byrow=TRUE)
+      floating_layer_normalindices = matrix(vertex_info$startindexnormals[row]:vertex_info$startindexnormals[row], ncol=3, byrow=TRUE)
+      cat(paste("f", sprintf("%d/%d/%d %d/%d/%d %d/%d/%d", 
+                             floating_layer_indices[,1], floating_layer_texindices[,1], floating_layer_normalindices[,1],
+                             floating_layer_indices[,2], floating_layer_texindices[,2], floating_layer_normalindices[,2],
+                             floating_layer_indices[,3], floating_layer_texindices[,3], floating_layer_normalindices[,3])),
+          sep="\n", file=con)
+      
     }
   }
   if(manifold_geometry) {

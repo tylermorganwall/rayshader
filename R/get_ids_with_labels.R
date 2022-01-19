@@ -13,7 +13,8 @@ get_ids_with_labels = function(typeval = NULL) {
                 "north_symbol",      "arrow_symbol",  "bevel_symbol",  
                 "background_symbol", "scalebar_col1", "scalebar_col2",
                 "text_scalebar",     "surface_tris",  "path3d",       
-                "points3d",          "polygon3d")
+                "points3d",          "polygon3d", 
+                "floating_overlay", "floating_overlay_tris")
   get_rgl_material = getFromNamespace("rgl.getmaterial", "rgl")
   idvals = rgl::rgl.ids(tags = TRUE)
   material_type = idvals$tag
@@ -21,6 +22,7 @@ get_ids_with_labels = function(typeval = NULL) {
   for(i in 1:nrow(idvals)) {
     material_type_single = get_rgl_material(id=idvals[i,1])
     material_properties[[i]]$texture_file = NA
+    material_properties[[i]]$layer_texture_file = NA
     material_properties[[i]]$base_color = NA
     material_properties[[i]]$water_color = NA
     material_properties[[i]]$water_alpha = NA
@@ -40,6 +42,9 @@ get_ids_with_labels = function(typeval = NULL) {
     if(idvals$type[i] != "text") {
       if(material_type[i] %in% c("surface", "surface_tris")) {
         material_properties[[i]]$texture_file = material_type_single$texture
+      } 
+      if(material_type[i] %in% c("floating_overlay", "floating_overlay_tris")) {
+        material_properties[[i]]$layer_texture_file = material_type_single$texture
       } 
       if(material_type[i] == "base") {
         material_properties[[i]]$base_color = material_type_single$color

@@ -4,7 +4,7 @@
 \alias{load_image}
 \title{Load Image}
 \usage{
-load_image(image)
+load_image(image, reorient)
 }
 \arguments{
 \item{image}{Matrix}

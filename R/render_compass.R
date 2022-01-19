@@ -6,6 +6,9 @@
 #'@param angle Default `0`. The direction the arrow should be facing.
 #'@param position Default `SE`. A string representing a cardinal direction. Ignored if `x`, `y`, and `z`
 #'are manually specified.
+#'@param altitude Default `NULL`. Altitude of the compass, defaults to maximum height in the map.
+#'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. 
+#'Only used in combination with `altitude`.
 #'@param x Default `NULL`. X position. If not entered, automatically calculated using `position` argument. 
 #'@param y Default `NULL`. Y position. If not entered, automatically calculated using `position` argument. 
 #'@param z Default `NULL`. Z position. If not entered, automatically calculated using `position` argument. 
@@ -98,7 +101,7 @@
 #'             color_background = c(0.7,0.5,0.5), color_bevel = c(0.2,0,0), position_circular = TRUE)
 #'render_snapshot(clear=TRUE)
 #'}
-render_compass = function(angle = 0, position = "SE", 
+render_compass = function(angle = 0, position = "SE", altitude = NULL, zscale = 1,
                         x = NULL, y = NULL, z = NULL, compass_radius = NULL, scale_distance = 1,
                         color_n = "darkred", color_arrow = "grey90",
                         color_background = "grey60", color_bevel = "grey20",
@@ -117,7 +120,7 @@ render_compass = function(angle = 0, position = "SE",
       id_base = get_ids_with_labels("surface_tris")$id
     }
     fullverts = rgl::rgl.attrib(id_base,"vertices")
-    xyz_range = apply(fullverts,2,range)
+    xyz_range = apply(fullverts,2,range,na.rm=TRUE)
     widths = xyz_range[2,c(1,3)] - xyz_range[1,c(1,3)]
     maxwidth = max(widths) 
     compass_radius = c(maxwidth/10,maxwidth/10,maxwidth/10)
@@ -139,10 +142,14 @@ render_compass = function(angle = 0, position = "SE",
     } else {
       fullverts = rgl::rgl.attrib(id_shadow,"vertices")
     }
-    xyz_range = apply(fullverts,2,range) * scale_distance * 
+    xyz_range = apply(fullverts,2,range,na.rm=TRUE) * scale_distance * 
       matrix(c(1,1,1/scale_distance,1/scale_distance,1,1),ncol=3,nrow=2)
     radial_dist = sqrt((xyz_range[1,1] - radius)^2 + (xyz_range[1,3] - radius)^2)
-    y = xyz_range[2,2]
+    if(is.null(altitude)) {
+      y = xyz_range[2,2]
+    } else {
+      y = altitude/zscale
+    }
     if(position == "N") {
       x = 0
       if(position_circular) {

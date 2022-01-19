@@ -282,8 +282,8 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
     cn = tris[,3]+1
     # normal_comp = matrix(c(normalsz[rn + nr*(cn-1)],normalsy[rn + nr*(cn-1)],-normalsx[rn + nr*(cn-1)]),ncol=3)
     texcoords = tris[,c(1,3)]
-    texcoords[,1] = texcoords[,1]/nrow(heightmap)
-    texcoords[,2] = texcoords[,2]/ncol(heightmap)
+    texcoords[,1] = texcoords[,1]/(nrow(heightmap)-1)
+    texcoords[,2] = texcoords[,2]/(ncol(heightmap)-1)
     tris[,1] = tris[,1] - nrow(heightmap)/2 +1
     tris[,3] = tris[,3] - ncol(heightmap)/2
     tris[,3] = -tris[,3]

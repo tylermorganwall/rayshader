@@ -115,7 +115,7 @@ render_label = function(heightmap, text, lat, long, altitude=NULL, extent=NULL,
       z = altitude
     }
     if(is.null(z)) {
-      z = max(heightmap)*1.1
+      z = max(heightmap,na.rm=TRUE)*1.1
     }
     if(is.null(extent) && (!missing(lat) || !missing(long)) && (!is.null(x) && !is.null(y))) {
       stop("extent required when using lat/long instead of x/y")
@@ -135,10 +135,24 @@ render_label = function(heightmap, text, lat, long, altitude=NULL, extent=NULL,
     }
     fontlist = list("standard"=1,"bold"=2,"italic"=3,"bolditalic"=4)
     fonttype = fontlist[[fonttype]]
+    in_bounds = TRUE
+    if(x > nrow(heightmap) || x < 1 || y < 1 || y > ncol(heightmap)) {
+      in_bounds = FALSE
+      shadow_id = get_ids_with_labels("shadow")$id
+      if(length(shadow_id) > 0) {
+        shadow_vertices = rgl::rgl.attrib(shadow_id, "vertices")
+        startline = min(shadow_vertices[,2],na.rm=TRUE)
+      } else {
+        offset = startline
+      }
+    } 
+    
     z=z/zscale
     offset = offset/zscale
-    startline = heightmap[x,y]/zscale
-    if(relativez)  {
+    if(in_bounds) {
+      startline = heightmap[x,y]/zscale
+    } 
+    if(relativez && in_bounds)  {
       z = z + startline
     }
     if(dashlength == "auto") {

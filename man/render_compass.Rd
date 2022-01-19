@@ -59,7 +59,7 @@ Places a compass on the map to specify the North direction.
 \examples{
 #Add a North arrow to the map, by default in the bottom right (SE)
 \dontrun{
-montereybay \%>\%
+montereybay \%>\% 
  sphere_shade() \%>\%
  plot_3d(montereybay,theta=-45, water=TRUE)
 render_compass()
