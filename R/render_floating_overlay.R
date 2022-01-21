@@ -24,6 +24,7 @@
 #'to save a smaller 3D OBJ file to disk with `save_obj()`,
 #'@param verbose Default `TRUE`, if `interactive()`. Prints information about the mesh triangulation
 #'if `triangulate = TRUE`.
+#'@param clear_layers Default `FALSE`. Clears all existing floating layers on the visualization.
 #'@return Adds a 3D floating layer to the map. No return value.
 #'@export
 #'@examples
@@ -58,13 +59,25 @@
 #'  render_floating_overlay(point_overlay, altitude = 100,zscale = 50)
 #'}
 #'}
-render_floating_overlay = function(overlay, altitude, heightmap = NULL, zscale=1, 
+render_floating_overlay = function(overlay = NULL, altitude = NULL, heightmap = NULL, zscale=1, 
                                    alpha = 1,
                                    triangulate = TRUE, max_error = 0, max_tri = 0,
                                    reorient = TRUE,
-                                   verbose=FALSE) {
+                                   verbose=FALSE, clear_layers = FALSE) {
   if(!is.null(heightmap)) {
     reorient = FALSE
+  }
+  if(clear_layers) {
+    rgl::pop3d(tag = c("floating_overlay","floating_overlay_tris"))
+    if(is.null(overlay)) {
+      return(invisible())
+    }
+  }
+  if(is.null(overlay)) {
+    stop("Must specify overlay")
+  }
+  if(is.null(altitude)) {
+    stop("Must specify altitude")
   }
   overlay = load_image(overlay, reorient)
   if(alpha != 1 && length(dim(overlay)) == 3) {
@@ -144,22 +157,5 @@ render_floating_overlay = function(overlay, altitude, heightmap = NULL, zscale=1
                                                          1,0,0,1,1,0),nrow=6,ncol=2),
                   texture=tempmap, normals = matrix(c(0,0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0,0), nrow=6,ncol=3),
                   lit=FALSE,tag = "floating_overlay_tris",textype = "rgba")
-    # triangles3d(matrix(c(-nrow(heightmap)/2+1, nrow(heightmap)/2, -nrow(heightmap)/2+1,
-    #                      depth,depth,depth,
-    #                      ncol(heightmap)/2,-ncol(heightmap)/2+1,-ncol(heightmap)/2+1),3,3), lit=FALSE,
-    #             texture=tempmap,tag = "floating_overlay_tris")
-    # triangles3d(matrix(c(-nrow(heightmap)/2+1, nrow(heightmap)/2, nrow(heightmap)/2,
-    #                      depth,depth,depth,
-    #                      texcoords=m
-    #                      ncol(heightmap)/2,ncol(heightmap)/2,-ncol(heightmap)/2+1),3,3), lit=FALSE,
-    #             texture=tempmap,tag = "floating_overlay_tris")
-    # rgl.triangles(tri1, texcoords = matrix(c(1,1,0,
-    #                                          1,0,0),nrow=3,ncol=2),
-    #               texture=tempmap,
-    #               lit=FALSE,tag = "floating_overlay_tris",textype = "rgba")
-    # rgl.triangles(rbind(tri1,tri2), texcoords = matrix(c(1,1,0,0,1,0,
-    #                                                      1,0,0,1,1,0),nrow=6,ncol=2),
-    #               texture=tempmap,
-    #               lit=FALSE,tag = "floating_overlay_tris",textype = "rgba")
   }
 }

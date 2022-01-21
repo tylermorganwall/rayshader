@@ -5,8 +5,8 @@
 \title{Render Floating overlay}
 \usage{
 render_floating_overlay(
-  overlay,
-  altitude,
+  overlay = NULL,
+  altitude = NULL,
   heightmap = NULL,
   zscale = 1,
   alpha = 1,
@@ -14,7 +14,8 @@ render_floating_overlay(
   max_error = 0,
   max_tri = 0,
   reorient = TRUE,
-  verbose = FALSE
+  verbose = FALSE,
+  clear_layers = FALSE
 )
 }
 \arguments{
@@ -46,6 +47,8 @@ to save a smaller 3D OBJ file to disk with `save_obj()`,}
 
 \item{verbose}{Default `TRUE`, if `interactive()`. Prints information about the mesh triangulation
 if `triangulate = TRUE`.}
+
+\item{clear_layers}{Default `FALSE`. Clears all existing floating layers on the visualization.}
 }
 \value{
 Adds a 3D floating layer to the map. No return value.

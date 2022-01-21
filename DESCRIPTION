@@ -35,7 +35,8 @@ Suggests: reshape2,
           isoband,
           maptools,
           geosphere,
-          gifski
+          gifski,
+          ambient
 LinkingTo: Rcpp, progress, RcppArmadillo
 RoxygenNote: 7.1.2
 URL: https://www.rayshader.com, https://github.com/tylermorganwall/rayshader, https://www.rayshader.com/

@@ -7,6 +7,8 @@
 render_compass(
   angle = 0,
   position = "SE",
+  altitude = NULL,
+  zscale = 1,
   x = NULL,
   y = NULL,
   z = NULL,
@@ -25,6 +27,11 @@ render_compass(
 
 \item{position}{Default `SE`. A string representing a cardinal direction. Ignored if `x`, `y`, and `z`
 are manually specified.}
+
+\item{altitude}{Default `NULL`. Altitude of the compass, defaults to maximum height in the map.}
+
+\item{zscale}{Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. 
+Only used in combination with `altitude`.}
 
 \item{x}{Default `NULL`. X position. If not entered, automatically calculated using `position` argument.}
 
