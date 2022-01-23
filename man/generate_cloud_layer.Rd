@@ -13,7 +13,6 @@ generate_cloud_layer(
   alpha_coef = 0.8,
   nrow = 540,
   ncol = 540,
-  step = 100,
   freq = 0.01/2,
   coef = 0.05,
   seed = 1

@@ -11,43 +11,22 @@ render_floating_overlay(
   zscale = 1,
   alpha = 1,
   baseshape = "rectangle",
-  triangulate = TRUE,
-  max_error = 0,
-  max_tri = 0,
+  remove_na = TRUE,
   reorient = TRUE,
-  verbose = FALSE,
   clear_layers = FALSE
 )
 }
 \arguments{
-\item{overlay}{Overlay to be added to the 3D map, eit}
+\item{overlay}{Overlay (4D RGBA array) to be added to the 3D map.}
 
 \item{altitude}{Altitude to place the overlay.}
 
-\item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point.}
+\item{heightmap}{The underlying surface. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.}
 
 \item{zscale}{Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
 of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10. Adjust the zscale down to exaggerate elevation features.}
 
 \item{alpha}{Default `1`. Multiplies the layer's transparency by this factor. 0 is completely transparent.}
-
-\item{triangulate}{Default `TRUE`. If a `heightmap` is passed, this will triangulate the height field for a smaller map.
-Set this to `TRUE` if generating the model is slow, or moving it is choppy. Will also reduce the size
-of 3D models saved to disk.}
-
-\item{max_error}{Default `0.001`. Maximum allowable error when triangulating the height map,
-when `triangulate = TRUE`. Increase this if you encounter problems with 3D performance, want
-to decrease render time with `render_highquality()`, or need 
-to save a smaller 3D OBJ file to disk with `save_obj()`,}
-
-\item{max_tri}{Default `0`, which turns this setting off and uses `max_error`. 
-Maximum number of triangles allowed with triangulating the
-height map, when `triangulate = TRUE`. Increase this if you encounter problems with 3D performance, want
-to decrease render time with `render_highquality()`, or need 
-to save a smaller 3D OBJ file to disk with `save_obj()`,}
-
-\item{verbose}{Default `TRUE`, if `interactive()`. Prints information about the mesh triangulation
-if `triangulate = TRUE`.}
 
 \item{clear_layers}{Default `FALSE`. Clears all existing floating layers on the visualization.}
 }
@@ -55,7 +34,7 @@ if `triangulate = TRUE`.}
 Adds a 3D floating layer to the map. No return value.
 }
 \description{
-Render a 2D/3D floating overlay over the map. 
+Render a 2D floating overlay over the map. 
 
 Note: Multiple layers with transparency can cause rendering issues in rgl.
 }

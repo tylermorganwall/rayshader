@@ -158,9 +158,9 @@ raymarch_cloud_layer = function(heightmap, sun_altitude = 90, sun_angle=315, lev
 #'#Render a cloud layer
 #'}
 render_clouds = function(heightmap, altitude = NULL, zscale=1, layers = 10, baseshape="rectangle",
-                         sun_altitude = 45, sun_angle=315, 
+                         sun_altitude = 10, sun_angle=315, 
                          start_altitude = 1000, end_altitude=2000, 
-                         frequency = 0.005, fractal_levels = 8,
+                         frequency = 0.005, fractal_levels = 16,
                          cloud_cover = 0.5, seed = 1, attenuation_coef = 0.1,
                          clear_clouds = FALSE) {
   if(all(length(find.package("ambient", quiet = TRUE)) == 0)) {
@@ -226,9 +226,9 @@ render_clouds = function(heightmap, altitude = NULL, zscale=1, layers = 10, base
 #'#Render a cloud layer
 #'}
 cloud_shade = function(heightmap, altitude = NULL, zscale=1, baseshape="rectangle",
-                       layers = 10, sun_altitude = 45, sun_angle=315, 
+                       layers = 10, sun_altitude = 10, sun_angle=315, 
                        start_altitude = 1000, end_altitude=2000, 
-                       frequency = 0.005, fractal_levels = 8,
+                       frequency = 0.01, fractal_levels = 16,
                        cloud_cover = 0.5, seed = 1, attenuation_coef = 0.1) {
   if(all(length(find.package("ambient", quiet = TRUE)) == 0)) {
     stop("`render_clouds()` requires the `ambient` package to be installed")

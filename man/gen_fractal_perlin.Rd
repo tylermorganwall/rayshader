@@ -7,7 +7,7 @@
 gen_fractal_perlin(
   ray_d,
   xyz,
-  start_altitude,
+  altitude,
   nrow,
   ncol,
   levels = 8,
