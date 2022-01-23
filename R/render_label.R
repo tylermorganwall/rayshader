@@ -136,7 +136,7 @@ render_label = function(heightmap, text, lat, long, altitude=NULL, extent=NULL,
     fontlist = list("standard"=1,"bold"=2,"italic"=3,"bolditalic"=4)
     fonttype = fontlist[[fonttype]]
     in_bounds = TRUE
-    if(x > nrow(heightmap) || x < 1 || y < 1 || y > ncol(heightmap)) {
+    if(x > nrow(heightmap) || x < 1 || y < 1 || y > ncol(heightmap) || is.na(heightmap[x,y])) {
       in_bounds = FALSE
       shadow_id = get_ids_with_labels("shadow")$id
       if(length(shadow_id) > 0) {

@@ -10,6 +10,7 @@ render_floating_overlay(
   heightmap = NULL,
   zscale = 1,
   alpha = 1,
+  baseshape = "rectangle",
   triangulate = TRUE,
   max_error = 0,
   max_tri = 0,

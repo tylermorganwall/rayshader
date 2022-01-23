@@ -32,3 +32,51 @@ load_image = function(image, reorient) {
     }
   }
 }
+
+#' Generate Base Shape
+#'
+#' @param image Matrix
+#'
+#' @return image array
+#' @keywords internal
+#'
+#' @examples
+#' #Fake example
+generate_base_shape = function(heightmap, baseshape, angle=0) {
+  if(baseshape == "circle") {
+    radius = ifelse(nrow(heightmap) <= ncol(heightmap),nrow(heightmap)/2-1,ncol(heightmap)/2-1)
+    radmat = gen_circle_psf(radius+1)
+    if(min(dim(heightmap)) != min(dim(radmat))) {
+      radmat = radmat[2:nrow(radmat),2:ncol(radmat)]
+    }
+    if(max(dim(heightmap)) != max(dim(radmat))) {
+      difference = max(dim(heightmap)) - max(dim(radmat))
+      radtemp = matrix(0,nrow=nrow(heightmap),ncol=ncol(heightmap))
+      if(ncol(heightmap) != ncol(radmat)) {
+        radtemp[,(difference/2):(difference/2+ncol(radmat)-1)] = radmat
+      } else {
+        radtemp[(difference/2):(difference/2+nrow(radmat)-1),] = radmat
+      }
+      radmat = radtemp
+    }
+    heightmap[radmat == 0] = NA
+  } else if(baseshape == "hex") {
+    radius = ifelse(nrow(heightmap) <= ncol(heightmap),nrow(heightmap)/2-1,ncol(heightmap)/2-1)
+    radmat = gen_hex_psf(radius+1,rotation = angle)
+    if(min(dim(heightmap)) != min(dim(radmat))) {
+      radmat = radmat[2:nrow(radmat),2:ncol(radmat)]
+    }
+    if(max(dim(heightmap)) != max(dim(radmat))) {
+      difference = max(dim(heightmap)) - max(dim(radmat))
+      radtemp = matrix(0,nrow=nrow(heightmap),ncol=ncol(heightmap))
+      if(ncol(heightmap) != ncol(radmat)) {
+        radtemp[,(difference/2):(difference/2+ncol(radmat)-1)] = radmat
+      } else {
+        radtemp[(difference/2):(difference/2+nrow(radmat)-1),] = radmat
+      }
+      radmat = radtemp
+    }
+    heightmap[radmat == 0] = NA
+  }
+  return(heightmap)
+}

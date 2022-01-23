@@ -153,41 +153,8 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
   } else {
     stop(paste0("Don't know what to do with `windowsize` argument of length ",length(windowsize)))
   }
-  if(baseshape == "circle") {
-    radius = ifelse(nrow(heightmap) <= ncol(heightmap),nrow(heightmap)/2-1,ncol(heightmap)/2-1)
-    radmat = gen_circle_psf(radius+1)
-    if(min(dim(heightmap)) != min(dim(radmat))) {
-      radmat = radmat[2:nrow(radmat),2:ncol(radmat)]
-    }
-    if(max(dim(heightmap)) != max(dim(radmat))) {
-      difference = max(dim(heightmap)) - max(dim(radmat))
-      radtemp = matrix(0,nrow=nrow(heightmap),ncol=ncol(heightmap))
-      if(ncol(heightmap) != ncol(radmat)) {
-        radtemp[,(difference/2):(difference/2+ncol(radmat)-1)] = radmat
-      } else {
-        radtemp[(difference/2):(difference/2+nrow(radmat)-1),] = radmat
-      }
-      radmat = radtemp
-    }
-    heightmap[radmat == 0] = NA
-  } else if(baseshape == "hex") {
-    radius = ifelse(nrow(heightmap) <= ncol(heightmap),nrow(heightmap)/2-1,ncol(heightmap)/2-1)
-    radmat = gen_hex_psf(radius+1,rotation = 0)
-    if(min(dim(heightmap)) != min(dim(radmat))) {
-      radmat = radmat[2:nrow(radmat),2:ncol(radmat)]
-    }
-    if(max(dim(heightmap)) != max(dim(radmat))) {
-      difference = max(dim(heightmap)) - max(dim(radmat))
-      radtemp = matrix(0,nrow=nrow(heightmap),ncol=ncol(heightmap))
-      if(ncol(heightmap) != ncol(radmat)) {
-        radtemp[,(difference/2):(difference/2+ncol(radmat)-1)] = radmat
-      } else {
-        radtemp[(difference/2):(difference/2+nrow(radmat)-1),] = radmat
-      }
-      radmat = radtemp
-    }
-    heightmap[radmat == 0] = NA
-  }
+  heightmap = generate_base_shape(heightmap, baseshape)
+  
   if(any(hillshade > 1 | hillshade < 0, na.rm = TRUE)) {
     stop("Argument `hillshade` must not contain any entries less than 0 or more than 1")
   }
