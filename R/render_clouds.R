@@ -42,7 +42,7 @@ generate_cloud_layer = function(sun_altitude = 90, sun_angle=315, levels=8,
             sinpi(sun_altitude/180),
             cospi(sun_altitude/180)*sinpi(sun_angle/180))
   xyz = as.matrix(expand.grid(x = 1:nrow, y = 0, z = 1:ncol))
-  alpha_layer = scales::rescale(gen_fractal_perlin(x=xyz,ray_d = ray_d, nrow=nrow,ncol=ncol,
+  alpha_layer = scales::rescale(gen_fractal_perlin(xyz=xyz,ray_d = ray_d, nrow=nrow,ncol=ncol,
                                                    altitude=start_altitude, levels=levels,
                                                    inc=0,seed=seed,freq=freq),
                                 to = c(alpha_coef, 1.0))
@@ -96,7 +96,7 @@ raymarch_cloud_layer = function(heightmap, sun_altitude = 90, sun_angle=315, lev
   xyz = as.matrix(expand.grid(x = 1:nrow, y = 1, z = 1:ncol))
   xyz[,2] = heightmap
   
-  alpha_layer = scales::rescale(gen_fractal_perlin(x=xyz,ray_d = ray_d, nrow=nrow,ncol=ncol,
+  alpha_layer = scales::rescale(gen_fractal_perlin(xyz=xyz,ray_d = ray_d, nrow=nrow,ncol=ncol,
                                                    altitude=start_altitude, levels=levels,
                                                    inc=0,seed=seed,freq=freq),
                                 to = c(alpha_coef, 1.0))
@@ -130,38 +130,90 @@ raymarch_cloud_layer = function(heightmap, sun_altitude = 90, sun_angle=315, lev
 #'
 #'Note: Underlying layers with transparency can cause rendering issues in rgl.
 #'
-#'@param heightmap A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
-#'@param altitude Altitude to place the overlay.
-#'@param heightmap A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
+#'@param heightmap A two-dimensional matrix, where each entry in the matrix is the elevation at that point. This is used by `render_clouds()` to 
+#'calculate the regions the clouds should be rendered in.
+#'@param start_altitude Default `1000`. The bottom of the cloud layer.
+#'@param end_altitude Default `2000`. The top of the cloud layer.
+#'@param sun_altitude Default `10`. The angle, in degrees (as measured from the horizon) from which the light originates.
+#'@param sun_angle Default `315` (NW). The angle, in degrees, around the matrix from which the light originates. Zero degrees is North, increasing clockwise
+#'@param cloud_cover Default `0.5`. The percentage of cloud cover.
+#'@param layers Default `10`. The number of layers to render the cloud layer. 
+#'@param frequency Default `0.005`. The base frequency of the noise used to calculate the fractal cloud structure.
+#'@param fractal_levels Default `16`. The fractal dimension used to calculate the noise. Higher values give more fine structure, but take longer to calculate.
+#'@param attenuation_coef Default `1`. Amount of attenuation in the cloud (higher numbers give darker shadows).  This value is automatically scaled to account for increasing the number of layers.
+#'@param seed Default `1`. Random seed used to generate clouds.
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
-#'of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10. Adjust the zscale down to exaggerate elevation features.
-#'@param alpha Default `1`. Multiplies the layer's transparency by this factor. 0 is completely transparent.
-#'@param triangulate Default `TRUE`. If a `heightmap` is passed, this will triangulate the height field for a smaller map.
-#'Set this to `TRUE` if generating the model is slow, or moving it is choppy. Will also reduce the size
-#'of 3D models saved to disk.
-#'@param max_error Default `0.001`. Maximum allowable error when triangulating the height map,
-#'when `triangulate = TRUE`. Increase this if you encounter problems with 3D performance, want
-#'to decrease render time with `render_highquality()`, or need 
-#'to save a smaller 3D OBJ file to disk with `save_obj()`,
-#'@param max_tri Default `0`, which turns this setting off and uses `max_error`. 
-#'Maximum number of triangles allowed with triangulating the
-#'height map, when `triangulate = TRUE`. Increase this if you encounter problems with 3D performance, want
-#'to decrease render time with `render_highquality()`, or need 
-#'to save a smaller 3D OBJ file to disk with `save_obj()`,
-#'@param verbose Default `TRUE`, if `interactive()`. Prints information about the mesh triangulation
-#'if `triangulate = TRUE`.
-#'@param clear_layers Default `FALSE`. Clears all existing floating layers on the visualization.
-#'@return Adds a 3D floating layer to the map. No return value.
+#'of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10. 
+#'@param baseshape Default `rectangle`. Shape of the base. Options are `c("rectangle","circle","hex")`.
+#'@param clear_clouds Default `FALSE`. Clears all existing floating layers on the visualization.
+#'@return Adds a 3D floating cloud layer to the map. No return value.
 #'@export
 #'@examples
 #'\dontrun{
-#'#Render a cloud layer
+#'#Render a cloud layer over monterey bay
+#'montereybay  %>%
+#'  sphere_shade()  %>%
+#'  plot_3d(montereybay,background="brown",zscale=50)
+#'
+#'#Render some clouds
+#'render_clouds(montereybay,zscale=50)  
+#'render_snapshot()
+#'
+#'#Change the seed for a different set of clouds
+#'render_clouds(montereybay,zscale=50, seed=2, clear_clouds = T)    
+#'render_snapshot()
+#'
+#'#Lower the frequency for larger, smoother clouds
+#'render_clouds(montereybay,zscale=50, frequency = 0.001, clear_clouds = T)
+#'render_snapshot()
+#'
+#'#Increase the frequency for more broken clouds
+#'render_clouds(montereybay,zscale=50, frequency = 0.05, clear_clouds = T)
+#'render_snapshot()
+#'
+#'#Increase the fractal level for fluffier, bumpier clouds
+#'render_clouds(montereybay,zscale=50, clear_clouds = T, fractal_levels = 32)
+#'render_snapshot()
+#'
+#'#Decrease the fractal level for more smoother, continuous clouds
+#'render_clouds(montereybay,zscale=50, clear_clouds = T, fractal_levels = 4)
+#'render_snapshot()
+#'
+#'#Increase the cloud cover
+#'render_clouds(montereybay,zscale=50, cloud_cover=0.8, clear_clouds = T)            
+#'render_snapshot()
+#'
+#'#Decrease the cloud cover
+#'render_clouds(montereybay,zscale=50, cloud_cover=0.2, clear_clouds = T)            
+#'render_snapshot()
+#'
+#'#Change the altitude range of the clouds
+#'render_clouds(montereybay,zscale=50,start_altitude=2000,end_altitude = 4000, clear_clouds = T)            
+#'render_snapshot()
+#'
+#'#Increase the number of layers 
+#'render_clouds(montereybay,zscale=50,start_altitude=2000,end_altitude = 4000, clear_clouds = T, layers = 20)
+#'render_snapshot()
+#'
+#'#Change the sun angle and altitude, and increase the attenuation for darker clouds
+#'render_clouds(montereybay,zscale=50,sun_angle=45, sun_altitude= 5, attenuation_coef = 5,clear_clouds = T)
+#'render_snapshot()
+#'
+#'#Render the scene with a different baseshape
+#'montereybay  %>%
+#'  sphere_shade()  %>%
+#'  plot_3d(montereybay,background="brown",zscale=50, baseshape="hex")
+#'render_clouds(montereybay,zscale=50, seed=3, clear_clouds = T, baseshape="hex")  
+#'render_camera(zoom=0.65)
+#'render_snapshot()
+#'rgl::rgl.close()
 #'}
-render_clouds = function(heightmap, altitude = NULL, zscale=1, layers = 10, baseshape="rectangle",
+render_clouds = function(heightmap, start_altitude = 1000, end_altitude=2000, 
                          sun_altitude = 10, sun_angle=315, 
-                         start_altitude = 1000, end_altitude=2000, 
+                         cloud_cover = 0.5, layers = 10, 
                          frequency = 0.005, fractal_levels = 16,
-                         cloud_cover = 0.5, seed = 1, attenuation_coef = 0.1,
+                         attenuation_coef = 1, seed = 1, 
+                         zscale=1, baseshape="rectangle",
                          clear_clouds = FALSE) {
   if(all(length(find.package("ambient", quiet = TRUE)) == 0)) {
     stop("`render_clouds()` requires the `ambient` package to be installed")
@@ -173,13 +225,20 @@ render_clouds = function(heightmap, altitude = NULL, zscale=1, layers = 10, base
       return(invisible())
     }
   }
+  if(cloud_cover < 0 || cloud_cover > 1) {
+    stop("`cloud_cover` must be between zero and one.")
+  }
   alpha_coef = 1-1/cloud_cover
   layers = layers[1]
   display_altitudes = seq(start_altitude,end_altitude,length.out=layers)
+  stopifnot(start_altitude < end_altitude)
+  stopifnot(layers > 0)
   
   altitudes = seq(start_altitude,start_altitude+layers,length.out=layers)
   nr = nrow(heightmap)
   nc = ncol(heightmap)
+  attenuation_coef = attenuation_coef/layers
+  
   for(i in seq_len(layers)) {
     render_floating_overlay(generate_cloud_layer(coef=attenuation_coef, 
                                                  start_altitude = i-1, end_altitude = layers,
@@ -198,58 +257,55 @@ render_clouds = function(heightmap, altitude = NULL, zscale=1, layers = 10, base
 #'
 #'Note: Underlying layers with transparency can cause rendering issues in rgl.
 #'
-#'@param overlay Overlay to be added to the 3D map, eit
-#'@param altitude Altitude to place the overlay.
-#'@param heightmap A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
+#'@param heightmap A two-dimensional matrix, where each entry in the matrix is the elevation at that point. This is used by `render_clouds()` to 
+#'calculate the regions the clouds should be rendered in.
+#'@param start_altitude Default `1000`. The bottom of the cloud layer.
+#'@param end_altitude Default `2000`. The top of the cloud layer.
+#'@param sun_altitude Default `10`. The angle, in degrees (as measured from the horizon) from which the light originates.
+#'@param sun_angle Default `315` (NW). The angle, in degrees, around the matrix from which the light originates. Zero degrees is North, increasing clockwise
+#'@param cloud_cover Default `0.5`. The percentage of cloud cover.
+#'@param layers Default `10`. The number of layers to render the cloud layer.
+#'@param frequency Default `0.005`. The base frequency of the noise used to calculate the fractal cloud structure.
+#'@param fractal_levels Default `16`. The fractal dimension used to calculate the noise. Higher values give more fine structure, but take longer to calculate.
+#'@param attenuation_coef Default `1`. Amount of attenuation in the cloud (higher numbers give darker shadows). This value is automatically scaled to account for increasing the number of layers.
+#'@param seed Default `1`. Random seed used to generate clouds.
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
-#'of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10. Adjust the zscale down to exaggerate elevation features.
-#'@param alpha Default `1`. Multiplies the layer's transparency by this factor. 0 is completely transparent.
-#'@param triangulate Default `TRUE`. If a `heightmap` is passed, this will triangulate the height field for a smaller map.
-#'Set this to `TRUE` if generating the model is slow, or moving it is choppy. Will also reduce the size
-#'of 3D models saved to disk.
-#'@param max_error Default `0.001`. Maximum allowable error when triangulating the height map,
-#'when `triangulate = TRUE`. Increase this if you encounter problems with 3D performance, want
-#'to decrease render time with `render_highquality()`, or need 
-#'to save a smaller 3D OBJ file to disk with `save_obj()`,
-#'@param max_tri Default `0`, which turns this setting off and uses `max_error`. 
-#'Maximum number of triangles allowed with triangulating the
-#'height map, when `triangulate = TRUE`. Increase this if you encounter problems with 3D performance, want
-#'to decrease render time with `render_highquality()`, or need 
-#'to save a smaller 3D OBJ file to disk with `save_obj()`,
-#'@param verbose Default `TRUE`, if `interactive()`. Prints information about the mesh triangulation
-#'if `triangulate = TRUE`.
-#'@param clear_layers Default `FALSE`. Clears all existing floating layers on the visualization.
-#'@return Adds a 3D floating layer to the map. No return value.
+#'of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10. 
+#'@return A 2D shadow matrix.
 #'@export
 #'@examples
 #'\dontrun{
 #'#Render a cloud layer
 #'}
-cloud_shade = function(heightmap, altitude = NULL, zscale=1, baseshape="rectangle",
-                       layers = 10, sun_altitude = 10, sun_angle=315, 
-                       start_altitude = 1000, end_altitude=2000, 
-                       frequency = 0.01, fractal_levels = 16,
-                       cloud_cover = 0.5, seed = 1, attenuation_coef = 0.1) {
+cloud_shade = function(heightmap, start_altitude = 1000, end_altitude=2000, 
+                       sun_altitude = 10, sun_angle=315, 
+                       cloud_cover = 0.5, layers = 10, 
+                       frequency = 0.005, fractal_levels = 16,
+                       attenuation_coef = 1, seed = 1, 
+                       zscale=1) {
   if(all(length(find.package("ambient", quiet = TRUE)) == 0)) {
     stop("`render_clouds()` requires the `ambient` package to be installed")
   }
+  if(cloud_cover < 0 || cloud_cover > 1) {
+    stop("`cloud_cover` must be between zero and one.")
+  }
   sun_angle = sun_angle + 180
-  
   alpha_coef = 1-1/cloud_cover
   layers = layers[1]
   display_altitudes = seq(start_altitude,end_altitude,length.out=layers)
   altitudes = seq(start_altitude,start_altitude+layers,length.out=layers)
+  stopifnot(start_altitude < end_altitude)
+  stopifnot(layers > 0)
+  
   nr = nrow(heightmap)
   nc = ncol(heightmap)
+  attenuation_coef = attenuation_coef/layers
   for(i in seq_len(layers)) {
-    render_floating_overlay(generate_cloud_layer(coef=attenuation_coef, 
-                                                 start_altitude = i-1, end_altitude = layers,
-                                                 sun_altitude = sun_altitude, alpha_coef = alpha_coef, 
-                                                 sun_angle = sun_angle, levels = fractal_levels,
-                                                 nrow = nr, ncol=nc,
-                                                 seed=seed,freq=frequency)  ,
-                            display_altitudes[i], baseshape = baseshape,
-                            heightmap = heightmap,
-                            zscale=zscale)
+    generate_cloud_layer(coef=attenuation_coef, 
+                         start_altitude = i-1, end_altitude = layers,
+                         sun_altitude = sun_altitude, alpha_coef = alpha_coef, 
+                         sun_angle = sun_angle, levels = fractal_levels,
+                         nrow = nr, ncol=nc,
+                         seed=seed,freq=frequency)
   }
 }

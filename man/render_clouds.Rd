@@ -6,54 +6,54 @@
 \usage{
 render_clouds(
   heightmap,
-  altitude = NULL,
-  zscale = 1,
-  layers = 10,
-  baseshape = "rectangle",
-  sun_altitude = 10,
-  sun_angle = 315,
   start_altitude = 1000,
   end_altitude = 2000,
+  sun_altitude = 10,
+  sun_angle = 315,
+  cloud_cover = 0.5,
+  layers = 10,
   frequency = 0.005,
   fractal_levels = 16,
-  cloud_cover = 0.5,
+  attenuation_coef = 1,
   seed = 1,
-  attenuation_coef = 0.1,
+  zscale = 1,
+  baseshape = "rectangle",
   clear_clouds = FALSE
 )
 }
 \arguments{
-\item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point.}
+\item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. This is used by `render_clouds()` to 
+calculate the regions the clouds should be rendered in.}
 
-\item{altitude}{Altitude to place the overlay.}
+\item{start_altitude}{Default `1000`. The bottom of the cloud layer.}
+
+\item{end_altitude}{Default `2000`. The top of the cloud layer.}
+
+\item{sun_altitude}{Default `10`. The angle, in degrees (as measured from the horizon) from which the light originates.}
+
+\item{sun_angle}{Default `315` (NW). The angle, in degrees, around the matrix from which the light originates. Zero degrees is North, increasing clockwise}
+
+\item{cloud_cover}{Default `0.5`. The percentage of cloud cover.}
+
+\item{layers}{Default `10`. The number of layers to render the cloud layer.}
+
+\item{frequency}{Default `0.005`. The base frequency of the noise used to calculate the fractal cloud structure.}
+
+\item{fractal_levels}{Default `16`. The fractal dimension used to calculate the noise. Higher values give more fine structure, but take longer to calculate.}
+
+\item{attenuation_coef}{Default `1`. Amount of attenuation in the cloud (higher numbers give darker shadows).  This value is automatically scaled to account for increasing the number of layers.}
+
+\item{seed}{Default `1`. Random seed used to generate clouds.}
 
 \item{zscale}{Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
-of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10. Adjust the zscale down to exaggerate elevation features.}
+of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.}
 
-\item{alpha}{Default `1`. Multiplies the layer's transparency by this factor. 0 is completely transparent.}
+\item{baseshape}{Default `rectangle`. Shape of the base. Options are `c("rectangle","circle","hex")`.}
 
-\item{triangulate}{Default `TRUE`. If a `heightmap` is passed, this will triangulate the height field for a smaller map.
-Set this to `TRUE` if generating the model is slow, or moving it is choppy. Will also reduce the size
-of 3D models saved to disk.}
-
-\item{max_error}{Default `0.001`. Maximum allowable error when triangulating the height map,
-when `triangulate = TRUE`. Increase this if you encounter problems with 3D performance, want
-to decrease render time with `render_highquality()`, or need 
-to save a smaller 3D OBJ file to disk with `save_obj()`,}
-
-\item{max_tri}{Default `0`, which turns this setting off and uses `max_error`. 
-Maximum number of triangles allowed with triangulating the
-height map, when `triangulate = TRUE`. Increase this if you encounter problems with 3D performance, want
-to decrease render time with `render_highquality()`, or need 
-to save a smaller 3D OBJ file to disk with `save_obj()`,}
-
-\item{verbose}{Default `TRUE`, if `interactive()`. Prints information about the mesh triangulation
-if `triangulate = TRUE`.}
-
-\item{clear_layers}{Default `FALSE`. Clears all existing floating layers on the visualization.}
+\item{clear_clouds}{Default `FALSE`. Clears all existing floating layers on the visualization.}
 }
 \value{
-Adds a 3D floating layer to the map. No return value.
+Adds a 3D floating cloud layer to the map. No return value.
 }
 \description{
 Render a 3D floating cloud layer of the map.
@@ -62,6 +62,62 @@ Note: Underlying layers with transparency can cause rendering issues in rgl.
 }
 \examples{
 \dontrun{
-#Render a cloud layer
+#Render a cloud layer over monterey bay
+montereybay  \%>\%
+ sphere_shade()  \%>\%
+ plot_3d(montereybay,background="brown",zscale=50)
+
+#Render some clouds
+render_clouds(montereybay,zscale=50)  
+render_snapshot()
+
+#Change the seed for a different set of clouds
+render_clouds(montereybay,zscale=50, seed=2, clear_clouds = T)    
+render_snapshot()
+
+#Lower the frequency for larger, smoother clouds
+render_clouds(montereybay,zscale=50, frequency = 0.001, clear_clouds = T)
+render_snapshot()
+
+#Increase the frequency for more broken clouds
+render_clouds(montereybay,zscale=50, frequency = 0.05, clear_clouds = T)
+render_snapshot()
+
+#Increase the fractal level for fluffier, bumpier clouds
+render_clouds(montereybay,zscale=50, clear_clouds = T, fractal_levels = 32)
+render_snapshot()
+
+#Decrease the fractal level for more smoother, continuous clouds
+render_clouds(montereybay,zscale=50, clear_clouds = T, fractal_levels = 4)
+render_snapshot()
+
+#Increase the cloud cover
+render_clouds(montereybay,zscale=50, cloud_cover=0.8, clear_clouds = T)            
+render_snapshot()
+
+#Decrease the cloud cover
+render_clouds(montereybay,zscale=50, cloud_cover=0.2, clear_clouds = T)            
+render_snapshot()
+
+#Change the altitude range of the clouds
+render_clouds(montereybay,zscale=50,start_altitude=2000,end_altitude = 4000, clear_clouds = T)            
+render_snapshot()
+
+#Increase the number of layers 
+render_clouds(montereybay,zscale=50,start_altitude=2000,end_altitude = 4000, clear_clouds = T, layers = 20)
+render_snapshot()
+
+#Change the sun angle and altitude, and increase the attenuation for darker clouds
+render_clouds(montereybay,zscale=50,sun_angle=45, sun_altitude= 5, attenuation_coef = 5,clear_clouds = T)
+render_snapshot()
+
+#Render the scene with a different baseshape
+montereybay  \%>\%
+ sphere_shade()  \%>\%
+ plot_3d(montereybay,background="brown",zscale=50, baseshape="hex")
+render_clouds(montereybay,zscale=50, seed=3, clear_clouds = T, baseshape="hex")  
+render_camera(zoom=0.65)
+render_snapshot()
+rgl::rgl.close()
 }
 }

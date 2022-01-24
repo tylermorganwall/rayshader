@@ -4,13 +4,16 @@
 #'
 #'Note: Multiple layers with transparency can cause rendering issues in rgl.
 #'
-#'@param overlay Overlay (4D RGBA array) to be added to the 3D map.
+#'@param overlay Overlay (4D RGBA array) to be rendered on the 3D map.
 #'@param altitude Altitude to place the overlay.
 #'@param heightmap The underlying surface. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
 #'of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10. Adjust the zscale down to exaggerate elevation features.
 #'@param alpha Default `1`. Multiplies the layer's transparency by this factor. 0 is completely transparent.
+#'@param baseshape Default `rectangle`. Shape of the overlay. Options are `c("rectangle", "circle", "hex")`.
 #'@param clear_layers Default `FALSE`. Clears all existing floating layers on the visualization.
+#'@param remove_na Default `TRUE`. Whether to make the overlay transparent above empty spaces (represented by `NA` values) in the underlying elevation matrix.
+#'@param reorient Default `TRUE`. Whether to reorient the image array to match the 3D plot.
 #'@return Adds a 3D floating layer to the map. No return value.
 #'@export
 #'@examples

@@ -17,7 +17,7 @@ render_floating_overlay(
 )
 }
 \arguments{
-\item{overlay}{Overlay (4D RGBA array) to be added to the 3D map.}
+\item{overlay}{Overlay (4D RGBA array) to be rendered on the 3D map.}
 
 \item{altitude}{Altitude to place the overlay.}
 
@@ -27,6 +27,12 @@ render_floating_overlay(
 of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10. Adjust the zscale down to exaggerate elevation features.}
 
 \item{alpha}{Default `1`. Multiplies the layer's transparency by this factor. 0 is completely transparent.}
+
+\item{baseshape}{Default `rectangle`. Shape of the overlay. Options are `c("rectangle", "circle", "hex")`.}
+
+\item{remove_na}{Default `TRUE`. Whether to make the overlay transparent above empty spaces (represented by `NA` values) in the underlying elevation matrix.}
+
+\item{reorient}{Default `TRUE`. Whether to reorient the image array to match the 3D plot.}
 
 \item{clear_layers}{Default `FALSE`. Clears all existing floating layers on the visualization.}
 }

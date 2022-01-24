@@ -49,7 +49,7 @@ plot_3d(
 \item{zscale}{Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
 of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10. Adjust the zscale down to exaggerate elevation features.}
 
-\item{baseshape}{Default `rectangle`. Shape of the base. Options are c("rectangle","circle","hex").}
+\item{baseshape}{Default `rectangle`. Shape of the base. Options are `c("rectangle","circle","hex")`.}
 
 \item{solid}{Default `TRUE`. If `FALSE`, just the surface is rendered.}
 
