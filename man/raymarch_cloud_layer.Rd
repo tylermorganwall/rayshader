@@ -12,6 +12,7 @@ raymarch_cloud_layer(
   start_altitude = 1000,
   end_altitude = 2500,
   alpha_coef = 0.8,
+  layers = 10,
   step = 100,
   freq = 0.01/2,
   coef = 0.05,

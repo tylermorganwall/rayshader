@@ -8,7 +8,7 @@ cloud_shade(
   heightmap,
   start_altitude = 1000,
   end_altitude = 2000,
-  sun_altitude = 10,
+  sun_altitude = 90,
   sun_angle = 315,
   cloud_cover = 0.5,
   layers = 10,
@@ -33,7 +33,7 @@ calculate the regions the clouds should be rendered in.}
 
 \item{cloud_cover}{Default `0.5`. The percentage of cloud cover.}
 
-\item{layers}{Default `10`. The number of layers to render the cloud layer.}
+\item{layers}{Default `90`. The number of layers to render the cloud layer.}
 
 \item{frequency}{Default `0.005`. The base frequency of the noise used to calculate the fractal cloud structure.}
 
