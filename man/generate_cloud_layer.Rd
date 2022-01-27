@@ -8,6 +8,8 @@ generate_cloud_layer(
   sun_altitude = 90,
   sun_angle = 315,
   levels = 8,
+  offset_x = 0,
+  offset_y = 0,
   start_altitude = 1000,
   end_altitude = 2500,
   alpha_coef = 0.8,

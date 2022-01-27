@@ -2,7 +2,7 @@
 % Please edit documentation in R/render_clouds.R
 \name{cloud_shade}
 \alias{cloud_shade}
-\title{Render Clouds}
+\title{Cloud Shade}
 \usage{
 cloud_shade(
   heightmap,
@@ -10,8 +10,11 @@ cloud_shade(
   end_altitude = 2000,
   sun_altitude = 90,
   sun_angle = 315,
+  time = 0,
   cloud_cover = 0.5,
   layers = 10,
+  offset_x = 0,
+  offset_y = 0,
   frequency = 0.005,
   fractal_levels = 16,
   attenuation_coef = 1,
@@ -31,9 +34,15 @@ calculate the regions the clouds should be rendered in.}
 
 \item{sun_angle}{Default `315` (NW). The angle, in degrees, around the matrix from which the light originates. Zero degrees is North, increasing clockwise}
 
+\item{time}{Default `0`. Advance this to make the clouds evolve and change in shape.}
+
 \item{cloud_cover}{Default `0.5`. The percentage of cloud cover.}
 
 \item{layers}{Default `90`. The number of layers to render the cloud layer.}
+
+\item{offset_x}{Default `0`. Change this to move the cloud layer sideways.}
+
+\item{offset_y}{Default `0`. Change this to move the cloud layer backwards and forwards.}
 
 \item{frequency}{Default `0.005`. The base frequency of the noise used to calculate the fractal cloud structure.}
 
@@ -50,12 +59,22 @@ of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
 A 2D shadow matrix.
 }
 \description{
-Render a 3D floating cloud layer of the map.
+Render shadows from the 3D floating cloud layer on the ground. Use this function
+to add shadows to the map with the `add_shadow()` function.
 
-Note: Underlying layers with transparency can cause rendering issues in rgl.
+For realistic results, argument should match those passed to `render_clouds()`. The exception to this
+is `attenuation_coef`, which can be used to adjust the darkness of the resulting shadows.
 }
 \examples{
 \dontrun{
-#Render a cloud layer
+#Render clouds with cloud shadows on the ground
+montereybay  \%>\%
+ sphere_shade()  \%>\%
+ add_shadow(cloud_shade(montereybay,zscale=50), 0.0) \%>\%
+ plot_3d(montereybay,background="brown",zscale=50)
+render_camera(theta=-65, phi = 25, zoom = 0.45, fov = 80)
+render_clouds(montereybay, zscale=50)    
+render_snapshot()
+rgl::rgl.clear()
 }
 }
