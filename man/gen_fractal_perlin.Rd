@@ -8,12 +8,17 @@ gen_fractal_perlin(
   ray_d,
   xyz,
   altitude,
-  nrow,
-  ncol,
+  nrow = NULL,
+  ncol = NULL,
+  t_mat = NULL,
   levels = 8,
   inc = 100,
   freq = 0.01/2,
-  seed = 1
+  seed = 1,
+  time = 0,
+  scale_x = 1,
+  scale_y = 1,
+  scale_z = 1
 )
 }
 \arguments{

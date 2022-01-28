@@ -277,7 +277,50 @@ render_compass(position = "E")
 render_snapshot(clear=TRUE)
 ```
 
-![](man/figures/unnamed-chunk-1-1.png)<!-- -->
+![](man/figures/scalebar-1.png)<!-- -->
+
+Rayshader also includes the option to add a procedurally-generated cloud
+layer (and optionally, shadows):
+
+``` r
+elmat %>%
+  sphere_shade(texture = "desert") %>%
+  add_water(detect_water(elmat), color = "lightblue") %>%
+  add_shadow(cloud_shade(elmat, zscale = 10, start_altitude = 500, end_altitude = 1000,), 0) %>%
+  plot_3d(elmat, zscale = 10, fov = 0, theta = 135, zoom = 0.75, phi = 45, windowsize = c(1000, 800),
+          background="darkred")
+render_camera(theta = 20, phi=40,zoom= 0.64, fov= 56 )
+
+render_clouds(elmat, zscale = 10, start_altitude = 800, end_altitude = 1000, attenuation_coef = 2, clear_clouds = T)
+render_snapshot(clear=TRUE)
+```
+
+![](man/figures/clouds-1.png)<!-- -->
+
+``` r
+rgl::rgl.clear()
+```
+
+These clouds can be customized:
+
+``` r
+elmat %>%
+  sphere_shade(texture = "desert") %>%
+  add_water(detect_water(elmat), color = "lightblue") %>%
+  add_shadow(cloud_shade(elmat,zscale = 10, start_altitude = 500, end_altitude = 700, 
+                         sun_altitude = 45, attenuation_coef = 2, offset_y = 300,
+              cloud_cover = 0.55, frequency = 0.01, scale_y=3, fractal_levels = 32), 0) %>%
+  plot_3d(elmat, zscale = 10, fov = 0, theta = 135, zoom = 0.75, phi = 45, windowsize = c(1000, 800),
+          background="darkred")
+render_camera(theta = 125, phi=22,zoom= 0.47, fov= 60 )
+
+render_clouds(elmat, zscale = 10, start_altitude = 500, end_altitude = 700, 
+              sun_altitude = 45, attenuation_coef = 2, offset_y = 300,
+              cloud_cover = 0.55, frequency = 0.01, scale_y=3, fractal_levels = 32, clear_clouds = T)
+render_snapshot(clear=TRUE)
+```
+
+![](man/figures/clouds2-1.png)<!-- -->
 
 You can also render using the built-in pathtracer, powered by
 [rayrender](https://www.rayrender.net). Simply replace
@@ -333,11 +376,20 @@ down slightly to center the map.
 
 ``` r
 library(rayrender)
+```
 
+    ## 
+    ## Attaching package: 'rayrender'
+
+    ## The following object is masked from 'package:rgl':
+    ## 
+    ##     text3d
+
+``` r
 montereybay %>%
     sphere_shade(zscale = 10, texture = "imhof1") %>%
     plot_3d(montereybay, zscale = 50, fov = 70, theta = 270, phi = 30, 
-            windowsize = c(1000, 800), zoom = 0.6, 
+            windowsize = c(1000, 800), zoom = 0.6,  
             water = TRUE, waterdepth = 0, wateralpha = 0.5, watercolor = "#233aa1",
             waterlinecolor = "white", waterlinealpha = 0.5)
 Sys.sleep(0.2)
@@ -427,9 +479,10 @@ montereybay %>%
 render_camera(theta=-60,  phi=60, zoom = 0.85, fov=30)
 
 #We will apply a negative buffer to create space between adjacent polygons:
-mont_county_buff = sf::st_simplify(sf::st_buffer(monterey_counties_sf,-0.003), dTolerance=0.001)
+sf::sf_use_s2(FALSE) 
+mont_county_buff = sf::st_simplify(sf::st_buffer(monterey_counties_sf,-0.003), dTolerance=0.004)
 
-render_polygons(mont_county_buff, 
+render_polygons(mont_county_buff,  
                 extent = attr(montereybay,"extent"), data_column_top = "ALAND",
                 scale_data = 300/(2.6E9), color="chartreuse4",
                 parallel=TRUE)
@@ -449,7 +502,7 @@ Points:
 moss_landing_coord = c(36.806807, -121.793332) 
 x_vel_out = -0.001 + rnorm(1000)[1:500]/1000
 y_vel_out = rnorm(1000)[1:500]/200
-z_out = c(seq(0,2000,length.out = 180), seq(2000,0,length.out=10),
+z_out = c(seq(0,2000,length.out = 180), seq(2000,0,length.out=10), 
           seq(0,2000,length.out = 100), seq(2000,0,length.out=10))
 
 bird_track_lat = list()
@@ -478,7 +531,7 @@ Paths:
 
 ``` r
 render_path(extent = attr(montereybay,"extent"),  
-            lat = unlist(bird_track_lat), long = unlist(bird_track_long),
+            lat = unlist(bird_track_lat), long = unlist(bird_track_long), 
             altitude = z_out, zscale=50,color="white", antialias=TRUE)
 render_highquality(line_radius = 1,samples=256, clear=TRUE)
 ```
@@ -513,6 +566,16 @@ aesthetic to color and uses that information to project the figure into
 
 ``` r
 library(ggplot2)
+```
+
+    ## 
+    ## Attaching package: 'ggplot2'
+
+    ## The following object is masked from 'package:rayrender':
+    ## 
+    ##     arrow
+
+``` r
 ggdiamonds = ggplot(diamonds) +
   stat_density_2d(aes(x = x, y = depth, fill = stat(nlevel)), 
                   geom = "polygon", n = 200, bins = 50,contour = TRUE) +

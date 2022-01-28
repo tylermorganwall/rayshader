@@ -15,6 +15,9 @@ cloud_shade(
   layers = 10,
   offset_x = 0,
   offset_y = 0,
+  scale_x = 1,
+  scale_y = 1,
+  scale_z = 1,
   frequency = 0.005,
   fractal_levels = 16,
   attenuation_coef = 1,
@@ -42,7 +45,13 @@ calculate the regions the clouds should be rendered in.}
 
 \item{offset_x}{Default `0`. Change this to move the cloud layer sideways.}
 
-\item{offset_y}{Default `0`. Change this to move the cloud layer backwards and forwards.}
+\item{offset_y}{Default `0`. Change this to move the cloud layer backwards and forward}
+
+\item{scale_x}{Default `1`. Scale the fractal pattern in the x direction.}
+
+\item{scale_y}{Default `1`. Scale the fractal pattern in the y direction.}
+
+\item{scale_z}{Default `1`. Scale the fractal pattern in the z (altitude) direction. (automatically calculated). Scale the fractal pattern in the z (vertical) direction. s.}
 
 \item{frequency}{Default `0.005`. The base frequency of the noise used to calculate the fractal cloud structure.}
 
@@ -71,10 +80,19 @@ is `attenuation_coef`, which can be used to adjust the darkness of the resulting
 montereybay  \%>\%
  sphere_shade()  \%>\%
  add_shadow(cloud_shade(montereybay,zscale=50), 0.0) \%>\%
- plot_3d(montereybay,background="brown",zscale=50)
+ plot_3d(montereybay,background="darkred",zscale=50)
+render_camera(theta=-65, phi = 25, zoom = 0.45, fov = 80)
+render_clouds(montereybay, zscale=50)    
+render_snapshot(clear=TRUE)
+
+#Adjust the light direction for shadows and increase the attenuation for darker clouds
+montereybay  \%>\%
+ sphere_shade()  \%>\%
+ add_shadow(cloud_shade(montereybay,zscale=50, sun_altitude=20, attenuation_coef = 3), 0.0) \%>\%
+ plot_3d(montereybay,background="darkred",zscale=50)
 render_camera(theta=-65, phi = 25, zoom = 0.45, fov = 80)
 render_clouds(montereybay, zscale=50)    
 render_snapshot()
-rgl::rgl.clear()
+rgl::rgl.close()
 }
 }

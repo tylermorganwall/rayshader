@@ -97,11 +97,16 @@ render_floating_overlay = function(overlay = NULL, altitude = NULL, heightmap = 
       overlay[,,4][is.na(heightmap)] = 0
     }
   }
+  if(is.null(heightmap)) {
+    rows = nrow(hm)
+    cols = ncol(hm)
+  } else {
+    rows = nrow(heightmap)
+    cols = ncol(heightmap)
+  }
 
   save_png(overlay,tempmap)
   dim(heightmap) = unname(dim(heightmap))
-  rows = nrow(hm)
-  cols = ncol(hm)
   rowmin = min((+1):(rows) - rows/2)
   rowmax = max((+1):(rows) - rows/2)
   colmin = min(-(+1):-(cols) + cols/2+1)

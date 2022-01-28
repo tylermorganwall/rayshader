@@ -8,13 +8,16 @@ render_clouds(
   heightmap,
   start_altitude = 1000,
   end_altitude = 2000,
-  sun_altitude = 90,
+  sun_altitude = 10,
   sun_angle = 315,
   time = 0,
   cloud_cover = 0.5,
   layers = 10,
   offset_x = 0,
   offset_y = 0,
+  scale_x = 1,
+  scale_y = 1,
+  scale_z = 1,
   frequency = 0.005,
   fractal_levels = 16,
   attenuation_coef = 1,
@@ -40,11 +43,18 @@ calculate the regions the clouds should be rendered in.}
 
 \item{cloud_cover}{Default `0.5`. The percentage of cloud cover.}
 
-\item{layers}{Default `10`. The number of layers to render the cloud layer.}
+\item{layers}{Default `10`. The number of layers to render the cloud layer. 
+The default is `layers/(start_altitude - end_altitude)`.}
 
 \item{offset_x}{Default `0`. Change this to move the cloud layer sideways.}
 
 \item{offset_y}{Default `0`. Change this to move the cloud layer backwards and forwards.}
+
+\item{scale_x}{Default `1`. Scale the fractal pattern in the x direction.}
+
+\item{scale_y}{Default `1`. Scale the fractal pattern in the y direction.}
+
+\item{scale_z}{Default `1`. Scale the fractal pattern in the z (vertical) direction. (automatically calculated). Scale the fractal pattern in the z (vertical) direction.}
 
 \item{frequency}{Default `0.005`. The base frequency of the noise used to calculate the fractal cloud structure.}
 

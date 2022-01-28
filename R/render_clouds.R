@@ -7,20 +7,31 @@
 #'
 #' @examples
 #' #Fake example
-gen_fractal_perlin = function(ray_d, xyz, altitude, nrow,ncol, levels=8, inc=100, freq=0.01/2, seed=1, time = 0) {
-  fract_perlin = ambient::gen_perlin(x=xyz[,1]       + ray_d[1] * inc,
-                                     y=altitude + ray_d[2] * inc + time,
-                                     z=xyz[,3]        - ray_d[3] * inc,
+gen_fractal_perlin = function(ray_d, xyz, altitude, nrow = NULL, ncol = NULL, t_mat = NULL, levels=8, inc=100, 
+                              freq=0.01/2, seed=1, time = 0,
+                              scale_x = 1, scale_y = 1, scale_z = 1) {
+  fract_perlin = ambient::gen_perlin(x = (xyz[,1]  + ray_d[1] * inc) / scale_x,
+                                     y = (altitude + ray_d[2] * inc) / scale_z + time,
+                                     z = (xyz[,3]  - ray_d[3] * inc) / scale_y,
                                      frequency = freq / 2, 
                                      seed = seed)
   if(levels > 1) {
     for(i in seq_len(levels)) {
-      fract_perlin = fract_perlin + 1/i *  ambient::gen_perlin(x = xyz[,1]   +     ray_d[1] * inc,
-                                                               y = altitude + ray_d[2] * inc + time,
-                                                               z = xyz[,3]   -      ray_d[3] * inc,
-                                                               frequency = freq * i, 
-                                                               seed = seed+i)
+      temp_fract =  1/i *  ambient::gen_perlin(x = (xyz[,1]   + ray_d[1] * inc) / scale_x,
+                                               y = (altitude  + ray_d[2] * inc) / scale_z + time,
+                                               z = (xyz[,3]   - ray_d[3] * inc) / scale_y,
+                                               frequency = freq * i, 
+                                               seed = seed+i)
+      fract_perlin = fract_perlin + temp_fract
     }
+  }
+  shadow = !is.null(t_mat)
+  if(shadow) {
+    ncol = ncol(t_mat)
+    nrow = nrow(t_mat)
+  }
+  if(shadow) {
+    fract_perlin[t_mat <= 0] = NA
   }
   return(matrix(fract_perlin,nrow,ncol))
 }
@@ -34,49 +45,55 @@ gen_fractal_perlin = function(ray_d, xyz, altitude, nrow,ncol, levels=8, inc=100
 #'
 #' @examples
 #' #Fake example
-generate_cloud_layer = function(sun_altitude = 90, sun_angle=315, levels=8,
+generate_cloud_layer = function(heightmap, sun_altitude = 90, sun_angle=315, levels=8,
                                 offset_x = 0, offset_y = 0,
                                 time = 0,
                                 start_altitude = 1000, end_altitude=2500, 
-                                alpha_coef = 0.8, nrow=540, ncol=540,
+                                alpha_coef = 0.8, 
                                 scale_x = 1, scale_y = 1, scale_z = 1,
                                 freq=0.01/2, coef = 0.05,seed=1) {
+  nrow = nrow(heightmap)
+  ncol = ncol(heightmap)
   ray_d = c(cospi(sun_altitude/180)*cospi(sun_angle/180),
             sinpi(sun_altitude/180),
             cospi(sun_altitude/180)*sinpi(sun_angle/180))
-  xyz = as.matrix(expand.grid(x = 1:nrow + offset_y, y = 0, z = 1:ncol + offset_x))
-  alpha_layer = scales::rescale(gen_fractal_perlin(xyz=xyz,ray_d = ray_d, nrow=nrow,ncol=ncol,
+  xyz = as.matrix(expand.grid(x = 1:nrow - offset_x, y = 0, z = 1:ncol - offset_y))
+  alpha_layer = scales::rescale(gen_fractal_perlin(ray_d = ray_d, xyz=xyz, nrow = nrow, ncol = ncol,
                                                    time = time,
-                                                   altitude=start_altitude, levels=levels,
-                                                   inc=0,seed=seed,freq=freq),
+                                                   altitude = start_altitude, levels = levels,
+                                                   inc = 0, seed = seed, freq = freq,
+                                                   scale_x  = scale_x, scale_y  = scale_y, scale_z = scale_z),
                                 to = c(alpha_coef, 1.0))
+  alpha_layer[alpha_layer < 0] = 0
+  
   if(ray_d[2] > 0) {
     step = 1/ray_d[2]
   } else {
     stop("Zero/negative sun altitudes are not valid")
   }
   
-  alpha_layer[alpha_layer < 0] = 0
   atten = matrix(1, nrow, ncol)
-  altitude = start_altitude
-  inc = step
-  while(altitude < end_altitude-1) {
-    trans_mat = scales::rescale(gen_fractal_perlin(ray_d, xyz, nrow = nrow, ncol = ncol,
+  altitude = start_altitude 
+  inc = 1
+  while(altitude < end_altitude) {
+    trans_mat = scales::rescale(gen_fractal_perlin(ray_d = ray_d, xyz = xyz, nrow = nrow, ncol = ncol,
                                                    time = time,
                                                    altitude = start_altitude, levels = levels,
-                                                   inc = inc, seed = seed, freq = freq),
+                                                   inc = inc, seed = seed, freq = freq,
+                                                   scale_x  = scale_x, scale_y  = scale_y, scale_z = scale_z),
                                 to = c(alpha_coef, 1.0))
     trans_mat[trans_mat < 0] = 0
     atten = atten * (1 - coef * trans_mat)
-    altitude = start_altitude + ray_d[2] * inc
-    inc = inc + step
+    altitude = start_altitude +  inc
+    inc = inc + 1
   }
+  atten[atten < 0] = 0
   full_layer = array(1, dim = c(nrow, ncol, 4))
   full_layer[,,1] = atten
   full_layer[,,2] = atten
   full_layer[,,3] = atten
   full_layer[,,4] = alpha_layer
-  return(full_layer)
+  return(aperm(full_layer,c(2,1,3)))
 }
 
 #'@title Render Clouds
@@ -99,7 +116,7 @@ generate_cloud_layer = function(sun_altitude = 90, sun_angle=315, levels=8,
 #'@param offset_y Default `0`. Change this to move the cloud layer backwards and forwards.
 #'@param scale_x Default `1`. Scale the fractal pattern in the x direction.
 #'@param scale_y Default `1`. Scale the fractal pattern in the y direction.
-#'@param scale_z Default `NULL` (automatically calculated). Scale the fractal pattern in the z (vertical) direction. 
+#'@param scale_z Default `1`. Scale the fractal pattern in the z (vertical) direction. (automatically calculated). Scale the fractal pattern in the z (vertical) direction. 
 #'@param frequency Default `0.005`. The base frequency of the noise used to calculate the fractal cloud structure.
 #'@param fractal_levels Default `16`. The fractal dimension used to calculate the noise. Higher values give more fine structure, but take longer to calculate.
 #'@param attenuation_coef Default `1`. Amount of attenuation in the cloud (higher numbers give darker shadows).  This value is automatically scaled to account for increasing the number of layers.
@@ -185,29 +202,28 @@ generate_cloud_layer = function(sun_altitude = 90, sun_angle=315, levels=8,
 #'rgl::rgl.close()
 #'}
 render_clouds = function(heightmap, start_altitude = 1000, end_altitude=2000, 
-                         sun_altitude = 90, sun_angle=315, time = 0,
+                         sun_altitude = 10, sun_angle=315, time = 0,
                          cloud_cover = 0.5, layers = 10, offset_x = 0, offset_y = 0,
-                         scale_x = 1, scale_y = 1, scale_z = NULL,
+                         scale_x = 1, scale_y = 1, scale_z = 1,
                          frequency = 0.005, fractal_levels = 16,
                          attenuation_coef = 1, seed = 1, 
                          zscale=1, baseshape="rectangle",
                          clear_clouds = FALSE) {
+  if(all(length(find.package("ambient", quiet = TRUE)) == 0)) {
+    stop("`render_clouds()` requires the `ambient` package to be installed")
+  }
   time = -time
   if(start_altitude > end_altitude) {
     temp_alt = start_altitude
     start_altitude = end_altitude
     end_altitude = temp_alt
   }
-  if(is.null(scale_z)) {
-    if(end_altitude != start_altitude) {
-      scale_z = layers/(end_altitude - start_altitude)
-    } else {
-      scale_z = 1
-    }
-  }
-  if(all(length(find.package("ambient", quiet = TRUE)) == 0)) {
-    stop("`render_clouds()` requires the `ambient` package to be installed")
-  }
+  if(end_altitude != start_altitude) {
+    scale_layers = layers/(end_altitude - start_altitude)
+  } else {
+    scale_layers = 1
+    layers = 1
+  } 
   sun_angle = sun_angle + 180
   if(clear_clouds) {
     rgl::pop3d(tag = c("floating_overlay","floating_overlay_tris"))
@@ -220,66 +236,34 @@ render_clouds = function(heightmap, start_altitude = 1000, end_altitude=2000,
   }
   alpha_coef = 1-1/cloud_cover
   layers = layers[1]
-  display_altitudes = seq(start_altitude,end_altitude,length.out=layers)
+  altitudes = seq(start_altitude,end_altitude,length.out=layers)
   stopifnot(start_altitude < end_altitude)
   stopifnot(layers > 0)
   stopifnot(sun_altitude > 0 && sun_altitude <= 90)
   
-  altitudes = seq(start_altitude,start_altitude+layers,length.out=layers)
-  nr = nrow(heightmap)
-  nc = ncol(heightmap)
+  altitudes = seq(start_altitude,end_altitude,length.out=layers+1)
   attenuation_coef = attenuation_coef/layers
-
+  
+  if(sun_altitude != 90) {
+    scaled_angle = zscale * tanpi(sun_altitude/180)
+    sun_altitude = atan(scaled_angle)*180/pi
+  }
+  
+  #Generate single slices, ranging from 0 to n_layers
   for(i in seq_len(layers)) {
-    render_floating_overlay(generate_cloud_layer(coef=attenuation_coef, 
-                                                 start_altitude = i-1 + time, end_altitude = layers + time,
+    render_floating_overlay(generate_cloud_layer(heightmap, coef=attenuation_coef, 
+                                                 start_altitude = (altitudes[i]-start_altitude)*scale_layers, 
+                                                 end_altitude = (end_altitude-start_altitude)*scale_layers,
                                                  time = time,
                                                  sun_altitude = sun_altitude, alpha_coef = alpha_coef, 
                                                  sun_angle = sun_angle, levels = fractal_levels,
                                                  offset_x = offset_x, offset_y = offset_y,
                                                  scale_x = scale_x, scale_y = scale_y, scale_z = scale_z,
-                                                 nrow = nr, ncol=nc,
                                                  seed=seed,freq=frequency)  ,
-                            display_altitudes[i], baseshape = baseshape,
+                            altitudes[i], baseshape = baseshape, heightmap = heightmap,
                             zscale=zscale)
   }
 }
-
-
-#' Generate Fractal Perlin Noise
-#'
-#' @param image Matrix
-#'
-#' @return image array
-#' @keywords internal
-#'
-#' @examples
-#' #Fake example
-gen_fractal_perlin_shadow = function(ray_d, xyz, t_mat, levels=8, inc=100, freq=0.01/2, seed=1) {
-  ncol = ncol(t_mat)
-  nrow = nrow(t_mat)
-  
-  fract_perlin = ambient::gen_perlin(x=xyz[,1],
-                                     y=xyz[,2],
-                                     z=xyz[,3],
-                                     frequency = freq / 2, 
-                                     seed = seed)
-  fract_perlin[t_mat < 0] = 0
-  if(levels > 1) {
-    for(i in seq_len(levels)) {
-      temp_fract = 1/i *  ambient::gen_perlin(x = xyz[,1]   +     ray_d[1] * inc,
-                                              y = xyz[,2]   +     ray_d[2] * inc,
-                                              z = xyz[,3]   -     ray_d[3] * inc,
-                                              frequency = freq * i, 
-                                              seed = seed+i)
-      temp_fract[t_mat < 0] = 0
-      fract_perlin = fract_perlin + temp_fract
-    }
-  }
-  return(matrix(fract_perlin,nrow,ncol))
-}
-
-
 
 #' Calculate a single raymarched cloud layer
 #'
@@ -291,7 +275,9 @@ gen_fractal_perlin_shadow = function(ray_d, xyz, t_mat, levels=8, inc=100, freq=
 #' @examples
 #' #Fake example
 raymarch_cloud_layer = function(heightmap, sun_altitude = 90, sun_angle=315, levels=8,
-                                start_altitude = 1000, end_altitude=2500,  time = 0,
+                                start_noise = 0, end_noise=10,  
+                                start_altitude_real = 0, end_altitude_real = 0,
+                                time = 0, 
                                 alpha_coef = 0.8, layers = 10,
                                 offset_x = 0, offset_y = 0,
                                 scale_x = 1, scale_y = 1, scale_z = 1,
@@ -299,40 +285,51 @@ raymarch_cloud_layer = function(heightmap, sun_altitude = 90, sun_angle=315, lev
   ray_d = c(cospi(sun_altitude/180)*cospi(sun_angle/180),
             sinpi(sun_altitude/180),
             cospi(sun_altitude/180)*sinpi(sun_angle/180))
+  nrow = nrow(heightmap)
+  ncol = ncol(heightmap)
+  xyz = as.matrix(expand.grid(x = 1:nrow - offset_x, y = 0, z = 1:ncol - offset_y))
+  t_mat = (start_altitude_real - heightmap) / ray_d[2]
   if(ray_d[2] > 0) {
     step = 1/ray_d[2]
-    real_step = (end_altitude - start_altitude)/layers/ray_d[2]
   } else {
     stop("Zero/negative sun altitudes are not valid")
   }
-  nrow = nrow(heightmap)
-  ncol = ncol(heightmap)
-  t_mat = matrix(start_altitude - heightmap, nrow, ncol) / ray_d[2]
+  if(ray_d[2] > 0) {
+    step = 1/ray_d[2]
+    real_step = 1/ray_d[2]
+    
+  } else {
+    stop("Zero/negative sun altitudes are not valid")
+  }
 
-  xyz = as.matrix(expand.grid(x = 1:nrow + offset_y, y = 1, z = 1:ncol + offset_x))
-
+  #Offset x/y positions from heightmap to first altitude layer 
   xyz[,1] = xyz[,1] + ray_d[1] * t_mat
-  xyz[,2] = time
+  xyz[,2] = 0
   xyz[,3] = xyz[,3] - ray_d[3] * t_mat
   
   atten = matrix(1, nrow, ncol)
-  altitude = start_altitude
-  inc = step
+  noise_height = start_noise
   
-  while(altitude <= end_altitude) {
-    trans_mat = scales::rescale(gen_fractal_perlin_shadow(ray_d, xyz, t_mat = t_mat, 
-                                                   levels = levels,
-                                                   inc = inc, seed = seed, freq = freq),
+  #This starts at 0 because it needs to take into account bottom layer when calculating the shadow
+  inc = 0
+  while(noise_height < end_noise) {
+    trans_mat = scales::rescale(gen_fractal_perlin(ray_d, xyz, t_mat = t_mat, 
+                                                   altitude = noise_height,
+                                                   levels = levels, 
+                                                   inc = inc, seed = seed, freq = freq, time = time,
+                                                   scale_x = scale_x, scale_y = scale_y, scale_z = scale_z),
                                 to = c(alpha_coef, 1.0))
+    trans_mat[is.na(trans_mat)] = 0
     trans_mat[trans_mat < 0] = 0
     atten = atten * (1 - coef * trans_mat)
-    altitude = start_altitude + ray_d[2] * inc
+    noise_height = noise_height + 1
     t_mat = t_mat + real_step
-    inc = inc + step
+    inc = inc + 1
     if(step == 0) {
       break
     }
   }
+  atten[atten < 0] = 0
   return(atten)
 }
 
@@ -357,7 +354,7 @@ raymarch_cloud_layer = function(heightmap, sun_altitude = 90, sun_angle=315, lev
 #'@param offset_y Default `0`. Change this to move the cloud layer backwards and forward
 #'@param scale_x Default `1`. Scale the fractal pattern in the x direction.
 #'@param scale_y Default `1`. Scale the fractal pattern in the y direction.
-#'@param scale_z Default `NULL` (automatically calculated). Scale the fractal pattern in the z (vertical) direction. s.
+#'@param scale_z Default `1`. Scale the fractal pattern in the z (altitude) direction. (automatically calculated). Scale the fractal pattern in the z (vertical) direction. s.
 #'@param frequency Default `0.005`. The base frequency of the noise used to calculate the fractal cloud structure.
 #'@param fractal_levels Default `16`. The fractal dimension used to calculate the noise. Higher values give more fine structure, but take longer to calculate.
 #'@param attenuation_coef Default `1`. Amount of attenuation in the cloud (higher numbers give darker shadows). This value is automatically scaled to account for increasing the number of layers.
@@ -372,16 +369,25 @@ raymarch_cloud_layer = function(heightmap, sun_altitude = 90, sun_angle=315, lev
 #'montereybay  %>%
 #'  sphere_shade()  %>%
 #'  add_shadow(cloud_shade(montereybay,zscale=50), 0.0) %>%
-#'  plot_3d(montereybay,background="brown",zscale=50)
+#'  plot_3d(montereybay,background="darkred",zscale=50)
+#'render_camera(theta=-65, phi = 25, zoom = 0.45, fov = 80)
+#'render_clouds(montereybay, zscale=50)    
+#'render_snapshot(clear=TRUE)
+#'
+#'#Adjust the light direction for shadows and increase the attenuation for darker clouds
+#'montereybay  %>%
+#'  sphere_shade()  %>%
+#'  add_shadow(cloud_shade(montereybay,zscale=50, sun_altitude=20, attenuation_coef = 3), 0.0) %>%
+#'  plot_3d(montereybay,background="darkred",zscale=50)
 #'render_camera(theta=-65, phi = 25, zoom = 0.45, fov = 80)
 #'render_clouds(montereybay, zscale=50)    
 #'render_snapshot()
-#'rgl::rgl.clear()
+#'rgl::rgl.close()
 #'}
 cloud_shade = function(heightmap, start_altitude = 1000, end_altitude=2000, 
                        sun_altitude = 90, sun_angle=315, time = 0,
                        cloud_cover = 0.5, layers = 10, offset_x = 0, offset_y = 0,
-                       scale_x = 1, scale_y = 1, scale_z = NULL,
+                       scale_x = 1, scale_y = 1, scale_z = 1,
                        frequency = 0.005, fractal_levels = 16,
                        attenuation_coef = 1, seed = 1, 
                        zscale=1) {
@@ -391,13 +397,12 @@ cloud_shade = function(heightmap, start_altitude = 1000, end_altitude=2000,
     start_altitude = end_altitude
     end_altitude = temp_alt
   }
-  if(is.null(scale_z)) {
-    if(end_altitude != start_altitude) {
-      scale_z = layers/(end_altitude - start_altitude)
-    } else {
-      scale_z = 1
-    }
-  }
+  if(end_altitude != start_altitude) {
+    scale_layers = layers/(end_altitude - start_altitude)
+  } else {
+    scale_layers = 1
+    layers = 1
+  } 
   if(all(length(find.package("ambient", quiet = TRUE)) == 0)) {
     stop("`render_clouds()` requires the `ambient` package to be installed")
   }
@@ -410,17 +415,21 @@ cloud_shade = function(heightmap, start_altitude = 1000, end_altitude=2000,
   stopifnot(start_altitude < end_altitude)
   stopifnot(layers > 0)
   
-  nr = nrow(heightmap)
-  nc = ncol(heightmap)
   attenuation_coef = attenuation_coef/layers
   if(layers == 1) {
     end_altitude = start_altitude
   }
-  return(flipud(t(raymarch_cloud_layer(heightmap = (t(heightmap))/zscale, coef = attenuation_coef, 
-                              start_altitude = start_altitude/zscale, end_altitude = end_altitude/zscale, time = time, 
+  if(sun_altitude != 90) {
+    scaled_angle = zscale * tanpi(sun_altitude/180)
+    sun_altitude = atan(scaled_angle)*180/pi
+  }
+  return(flipud(raymarch_cloud_layer(heightmap = heightmap, coef = attenuation_coef, 
+                              start_noise = 0, end_noise = (end_altitude-start_altitude)*scale_layers,
+                              start_altitude_real = start_altitude, end_altitude_real = end_altitude,
+                              time = time, 
                               sun_altitude = sun_altitude, alpha_coef = alpha_coef, 
                               sun_angle = sun_angle, levels = fractal_levels, layers = layers,
                               offset_x = offset_x, offset_y = offset_y,
                               scale_x = scale_x, scale_y = scale_y, scale_z = scale_z, 
-                              seed = seed, freq = frequency))))
+                              seed = seed, freq = frequency)))
 }
