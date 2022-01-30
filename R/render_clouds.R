@@ -57,7 +57,7 @@ generate_cloud_layer = function(heightmap, sun_altitude = 90, sun_angle=315, lev
   ray_d = c(cospi(sun_altitude/180)*cospi(sun_angle/180),
             sinpi(sun_altitude/180),
             cospi(sun_altitude/180)*sinpi(sun_angle/180))
-  xyz = as.matrix(expand.grid(x = 1:nrow - offset_x, y = 0, z = 1:ncol - offset_y))
+  xyz = as.matrix(expand.grid(x = 1:nrow - offset_x, y = 0, z = 1:ncol + offset_y))
   alpha_layer = scales::rescale(gen_fractal_perlin(ray_d = ray_d, xyz=xyz, nrow = nrow, ncol = ncol,
                                                    time = time,
                                                    altitude = start_altitude, levels = levels,
@@ -287,7 +287,7 @@ raymarch_cloud_layer = function(heightmap, sun_altitude = 90, sun_angle=315, lev
             cospi(sun_altitude/180)*sinpi(sun_angle/180))
   nrow = nrow(heightmap)
   ncol = ncol(heightmap)
-  xyz = as.matrix(expand.grid(x = 1:nrow - offset_x, y = 0, z = 1:ncol - offset_y))
+  xyz = as.matrix(expand.grid(x = 1:nrow - offset_x, y = 0, z = 1:ncol + offset_y))
   t_mat = (start_altitude_real - heightmap) / ray_d[2]
   if(ray_d[2] > 0) {
     step = 1/ray_d[2]
