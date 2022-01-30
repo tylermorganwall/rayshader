@@ -166,9 +166,13 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
   }
   if(soliddepth == "auto") {
     soliddepth = min(heightmap,na.rm = TRUE)/zscale - (max(heightmap,na.rm = TRUE)/zscale-min(heightmap,na.rm = TRUE)/zscale)/5
+  } else {
+    soliddepth = soliddepth/zscale
   }
   if(shadowdepth == "auto") {
     shadowdepth = soliddepth - (max(heightmap,na.rm = TRUE)/zscale-min(heightmap,na.rm = TRUE)/zscale)/5
+  } else {
+    shadowdepth = shadowdepth/zscale
   }
   if(shadowwidth == "auto") {
     shadowwidth = floor(min(dim(heightmap))/10)

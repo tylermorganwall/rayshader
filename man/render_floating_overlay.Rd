@@ -74,6 +74,8 @@ if(all(length(find.package("sf", quiet = TRUE)) > 0,
  #Render Floating Overlays
  render_floating_overlay(road_overlay, altitude = 10000,zscale = 50)
  render_floating_overlay(point_overlay, altitude = 100,zscale = 50)
+ render_snapshot()
+ rgl::rgl.close()
 }
 }
 }

@@ -142,12 +142,12 @@ render_snapshot()
 #Change the sun angle and altitude, and increase the attenuation for darker clouds
 render_clouds(montereybay,zscale=50,sun_angle=45, sun_altitude= 5, attenuation_coef = 5,
              clear_clouds = T)
-render_snapshot()
+render_snapshot(clear=TRUE)
 
 #Render the scene with a different baseshape
 montereybay  \%>\%
  sphere_shade()  \%>\%
- plot_3d(montereybay,background="brown",zscale=50, baseshape="hex")
+ plot_3d(montereybay,background="darkred",zscale=50, baseshape="hex")
 render_clouds(montereybay,zscale=50, seed=3, baseshape="hex", clear_clouds = T)  
 render_camera(zoom=0.65)
 render_snapshot()
