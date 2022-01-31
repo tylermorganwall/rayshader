@@ -1,0 +1,707 @@
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Create Maps and Visualize Data in 2D and 3D • rayshader</title>
+<!-- favicons --><link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+<link rel="apple-touch-icon" type="image/png" sizes="180x180" href="apple-touch-icon.png">
+<link rel="apple-touch-icon" type="image/png" sizes="120x120" href="apple-touch-icon-120x120.png">
+<link rel="apple-touch-icon" type="image/png" sizes="76x76" href="apple-touch-icon-76x76.png">
+<link rel="apple-touch-icon" type="image/png" sizes="60x60" href="apple-touch-icon-60x60.png">
+<!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script><!-- Bootstrap --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha256-bZLfwXAP04zRMK2BjiO8iu9pf4FbLqX6zitd+tIvLhE=" crossorigin="anonymous">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script><!-- bootstrap-toc --><link rel="stylesheet" href="bootstrap-toc.css">
+<script src="bootstrap-toc.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous">
+<!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- pkgdown --><link href="pkgdown.css" rel="stylesheet">
+<script src="pkgdown.js"></script><meta property="og:title" content="Create Maps and Visualize Data in 2D and 3D">
+<meta property="og:description" content="Uses a combination of raytracing and multiple hill shading methods to produce 2D and 3D data visualizations and maps. Includes water detection and layering functions, programmable color palette generation, several built-in textures for hill shading, 2D and 3D plotting options, a built-in path tracer, Wavefront OBJ file export, and the ability to save 3D visualizations to a 3D printable format.">
+<meta property="og:image" content="https://www.rayshader.com/reference/figures/website.jpg">
+<meta property="og:image:alt" content="Picture of a 3D map made with rayshader">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:creator" content="@tylermorganwall">
+<meta name="twitter:site" content="@tylermorganwall">
+<!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
+<script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+<script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+<![endif]--><meta property="twitter:image:src" content="https://www.rayshader.com/reference/figures/website.png">
+<meta name="twitter:site" content="@github">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="tylermorganwall/rayshader">
+<meta name="twitter:description" content="R Package for Producing and Visualizing Hillshaded Maps from Elevation Matrices, in 2D and 3D - tylermorganwall/rayshader">
+</head>
+<body data-spy="scroll" data-target="#toc">
+    
+
+    <div class="container template-home">
+      <header><div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <span class="navbar-brand">
+        <a class="navbar-link" href="index.html">rayshader</a>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.27.0</span>
+      </span>
+    </div>
+
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+<li>
+  <a href="index.html">
+    <span class="fa fa-home"></span>
+     
+  </a>
+</li>
+<li class="dropdown">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+    Tutorials/Blog Posts
+     
+    <span class="caret"></span>
+  </a>
+  <ul class="dropdown-menu" role="menu">
+<li>
+      <a href="https://www.tylermw.com/adding-open-street-map-data-to-rayshader-maps-in-r/" class="external-link">Tutorial: Adding Open Street Map Data to Rayshader Maps in R</a>
+    </li>
+    <li>
+      <a href="https://www.tylermw.com/a-step-by-step-guide-to-making-3d-maps-with-satellite-imagery-in-r/" class="external-link">A Step-by-Step Guide to Making 3D Maps with Satellite Imagery in R</a>
+    </li>
+    <li>
+      <a href="https://www.tylermw.com/3d-ggplots-with-rayshader/" class="external-link">Introducing 3D ggplots with rayshader</a>
+    </li>
+    <li>
+      <a href="https://www.tylermw.com/portrait-mode-data/" class="external-link">Portrait Mode for Data: Rayshader + Rayfocus</a>
+    </li>
+    <li>
+      <a href="https://www.tylermw.com/3d-printing-rayshader/" class="external-link">From R to Reality: 3D Printing Maps with Rayshader</a>
+    </li>
+    <li>
+      <a href="https://www.tylermw.com/3d-maps-with-rayshader/" class="external-link">Slicing Through Monterey Bay: Creating 3D Maps with Rayshader</a>
+    </li>
+    <li>
+      <a href="https://www.tylermw.com/making-beautiful-maps/" class="external-link">Draining Lake Mead: Making Beautiful Maps with Rayshader</a>
+    </li>
+    <li>
+      <a href="https://www.tylermw.com/throwing-shade/" class="external-link">Throwing Shade at the Cartographer Illuminati: Raytracing the Washington Monument in R</a>
+    </li>
+  </ul>
+</li>
+<li>
+  <a href="news/index.html">
+    <span class="fa fa-newspaper-o"></span>
+     
+    Changelog
+  </a>
+</li>
+      </ul>
+<ul class="nav navbar-nav navbar-right">
+<li>
+  <a href="reference/index.html">
+    <span class="fa fa-file-code-o"></span>
+     
+    functions
+  </a>
+</li>
+<li>
+  <a href="https://github.com/tylermorganwall/rayshader" class="external-link">
+    <span class="fa fa-github fa-lg"></span>
+     
+    GitHub
+  </a>
+</li>
+      </ul>
+</div>
+<!--/.nav-collapse -->
+  </div>
+<!--/.container -->
+</div>
+<!--/.navbar -->
+
+      
+
+      </header><div class="row">
+  <div class="contents col-md-9">
+<div class="section level1">
+<div class="page-header"><h1 id="rayshader">rayshader<img src="reference/figures/raylogosmall.png" align="right"><a class="anchor" aria-label="anchor" href="#rayshader"></a>
+</h1></div>
+<p><img src="reference/figures/smallhobart.gif"></p>
+<div class="section level2">
+<h2 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
+</h2>
+<p><strong>rayshader</strong> is an open source package for producing 2D and 3D data visualizations in R. <strong>rayshader</strong> uses elevation data in a base R matrix and a combination of raytracing, hillshading algorithms, and overlays to generate stunning 2D and 3D maps. In addition to maps, <strong>rayshader</strong> also allows the user to translate <strong>ggplot2</strong> objects into beautiful 3D data visualizations.</p>
+<p>The models can be rotated and examined interactively or the camera movement can be scripted to create animations. Scenes can also be rendered using a high-quality pathtracer, <strong>rayrender</strong>. The user can also create a cinematic depth of field post-processing effect to direct the user’s focus to important regions in the figure. The 3D models can also be exported to a 3D-printable format with a built-in STL export function, and can be exported to an OBJ file.</p>
+</div>
+<div class="section level2">
+<h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
+</h2>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="co"># To install the latest version from Github:</span>
+<span class="co"># install.packages("devtools")</span>
+<span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"tylermorganwall/rayshader"</span><span class="op">)</span></code></pre></div>
+<p>On Ubuntu, the following libraries are required:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">libpng-dev</span> libjpeg-dev libfreetype6-dev libglu1-mesa-dev libgl1-mesa-dev pandoc zlib1g-dev libicu-dev libgdal-dev gdal-bin libgeos-dev libproj-dev</span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="functions">Functions<a class="anchor" aria-label="anchor" href="#functions"></a>
+</h2>
+<p><img src="reference/figures/smallfeature.png"></p>
+<p>Rayshader has seven functions related to mapping:</p>
+<ul>
+<li>
+<code><a href="reference/ray_shade.html">ray_shade()</a></code> uses user specified light directions to calculate a global shadow map for an elevation matrix. By default, this also scales the light intensity at each point by the dot product of the mean ray direction and the surface normal (also implemented in function <code>lamb_shade</code>, this can be turned off by setting <code>lambert=FALSE</code>.</li>
+<li>
+<code><a href="reference/sphere_shade.html">sphere_shade()</a></code> maps an RGB texture to a hillshade by spherical mapping. A texture can be generated with the <code>create_texture</code> function, or loaded from an image. <code>sphere_shade</code> also includes 7 built-in palettes: “imhof1”, “imhof2”, “imhof3”, imhof4“,”desert“,”bw“,”unicorn".</li>
+<li>
+<code><a href="reference/ambient_shade.html">ambient_shade()</a></code> creates an ambient occlusion shadow layer, darkening areas that have less scattered light from the atmosphere. This results in valleys being darker than flat areas and ridges.</li>
+<li>
+<code><a href="reference/texture_shade.html">texture_shade()</a></code> calculates a shadow for each point on the surface using the method described by Leland Brown in “Texture Shading: A New Technique for Depicting Terrain Relief.”</li>
+<li>
+<code><a href="reference/height_shade.html">height_shade()</a></code> calculates a color for each point on the surface using a direct elevation-to-color mapping.</li>
+<li>
+<code><a href="reference/lamb_shade.html">lamb_shade()</a></code> uses a single user specified light direction to calculate a local shadow map based on the dot product between the surface normal and the light direction for an elevation matrix.</li>
+<li>
+<code><a href="reference/add_shadow.html">add_shadow()</a></code> takes two of the shadow maps above and combines them, scaling the second one (or, if the second is an RGB array, the matrix) as specified by the user.</li>
+<li>
+<code><a href="reference/add_overlay.html">add_overlay()</a></code> takes a 3 or 4-layer RGB/RGBA array and overlays it on the current map. If the map includes transparency, this is taken into account when overlaying the image. Otherwise, the user can specify a single color that will be marked as completely transparent, or set the full overlay as partly transparent.</li>
+<li>
+<code><a href="reference/create_texture.html">create_texture()</a></code> programmatically creates texture maps given five colors: a highlight, a shadow, a left fill light, a right fill light, and a center color for flat areas. The user can also optionally specify the colors at the corners, but <code>create_texture</code> will interpolate those if they aren’t given.</li>
+</ul>
+<p>Rayshader also has functions to add water and generate overlays:</p>
+<ul>
+<li>
+<code><a href="reference/detect_water.html">detect_water()</a></code> uses a flood-fill algorithm to detect bodies of water of a user-specified minimum area.</li>
+<li>
+<code><a href="reference/add_water.html">add_water()</a></code> uses the output of <code>detect_water</code> to add a water color to the map. The user can input their own color, or pass the name of one of the pre-defined palettes from <code>sphere_shade</code> to get a matching hue.</li>
+<li>
+<code><a href="reference/generate_altitude_overlay.html">generate_altitude_overlay()</a></code> uses a hillshade and the height map to generate a semi-transparent hillshade whose transparency varies with altitude.</li>
+<li>
+<code><a href="reference/generate_compass_overlay.html">generate_compass_overlay()</a></code> generates an overlay with a compass.</li>
+<li>
+<code><a href="reference/generate_contour_overlay.html">generate_contour_overlay()</a></code> calculates and returns an overlay of contour lines.</li>
+<li>
+<code><a href="reference/generate_label_overlay.html">generate_label_overlay()</a></code> this uses the <code>maptools::placeLabel()</code> function to generate labels for the given scene. Either use an <code>sf</code> object or manually specify the x/y coordinates and label.</li>
+<li>
+<code><a href="reference/generate_line_overlay.html">generate_line_overlay()</a></code> generates an overlay of lines, using an <code>sf</code> object with LINESTRING geometry.</li>
+<li>
+<code><a href="reference/generate_point_overlay.html">generate_point_overlay()</a></code> generates an overlay of points, using an <code>sf</code> object with POINT geometry.</li>
+<li>
+<code><a href="reference/generate_polygon_overlay.html">generate_polygon_overlay()</a></code> generates an overlay of points, using an <code>sf</code> object with POLYGON geometry.</li>
+<li>
+<code><a href="reference/generate_scalebar_overlay.html">generate_scalebar_overlay()</a></code> this function creates an overlay with a scale bar of a user-specified length. It uses the coordinates of the map (specified by passing an extent) and then creates a scale bar at a specified x/y proportion across the map. If the map is not projected (i.e. is in lat/long coordinates) this function will use the <code>geosphere</code> package to create a scale bar of the proper length.</li>
+<li>
+<code><a href="reference/generate_waterline_overlay.html">generate_waterline_overlay()</a></code> generates a semi-transparent waterline overlay to layer onto an existing map using a height map or a boolean matrix.</li>
+</ul>
+<p>Also included are functions to add additional effects and information to your 3D visualizations:</p>
+<ul>
+<li>
+<code><a href="reference/render_highquality.html">render_highquality()</a></code> renders in the scene with a built-in pathtracer, powered by the <strong>rayrender</strong> package. Use this for high-quality maps with realistic light transport.</li>
+<li>
+<code><a href="reference/render_depth.html">render_depth()</a></code> generates a depth of field effect for the 3D map. The user can specify the focal distance, focal length, and f-stop of the camera, as well as aperture shape and bokeh intensity. This either plots the image to the local device, or saves it to a file if given a filename.</li>
+<li>
+<code><a href="reference/render_label.html">render_label()</a></code> adds a text label to the <code>x</code> and <code>y</code> coordinate of the map at a specified altitude <code>z</code> (in units of the matrix). The altitude can either be specified relative to the elevation at that point (the default), or absolutely.</li>
+<li>
+<code><a href="reference/render_water.html">render_water()</a></code> adds a 3D tranparent water layer to 3D maps, after the rgl device has already been created. This can either add to a map that does not already have a water layer, or replace an existing water layer on the map.</li>
+<li>
+<code><a href="reference/render_compass.html">render_compass()</a></code> places a compass on the map in 3D.</li>
+<li>
+<code><a href="reference/render_path.html">render_path()</a></code> adds a 3D path to the current scene, using latitude/longitude or coordinates in the reference system defined by the extent object. If no altitude is provided, the path will be elevated a constant offset above the heightmap.</li>
+<li>
+<code><a href="reference/render_points.html">render_points()</a></code> Adds 3D points to the current scene, using latitude/longitude or coordinates in the reference system defined by the extent object. If no altitude is provided, the points will be elevated a constant offset above the heightmap.</li>
+<li>
+<code><a href="reference/render_polygons.html">render_polygons()</a></code> Adds 3D polygons to the current scene, using latitude/longitude or coordinates in the reference system defined by the extent object.</li>
+<li>
+<code><a href="reference/render_scalebar.html">render_scalebar()</a></code> places a scalebar on the map in 3D.</li>
+</ul>
+<p>And several helper functions for converting rasters to matrices:</p>
+<ul>
+<li>
+<code><a href="reference/raster_to_matrix.html">raster_to_matrix()</a></code> converts a <code>raster</code> objects into a matrix.</li>
+<li>
+<code><a href="reference/resize_matrix.html">resize_matrix()</a></code> resizes a matrix (preserving contents) by specifying the desired output dimensions or a scaling factor.</li>
+</ul>
+<p>And four functions to display and save your visualizations:</p>
+<ul>
+<li>
+<code><a href="reference/plot_map.html">plot_map()</a></code> Plots the current map. Accepts either a matrix or an array.</li>
+<li>
+<code>write_png()</code> Writes the current map to disk with a user-specified filename.</li>
+<li>
+<code><a href="reference/plot_3d.html">plot_3d()</a></code> Creates a 3D map, given a texture and an elevation matrix. You can customize the appearance of the map, as well as add a user-defined water level.</li>
+<li>
+<code><a href="reference/render_camera.html">render_camera()</a></code> Changes the camera orientation.</li>
+<li>
+<code><a href="reference/render_snapshot.html">render_snapshot()</a></code> Saves an image of the current 3D view to disk (if given a filename), or plots the 3D view to the current device (useful for including images in R Markdown files).</li>
+<li>
+<code><a href="reference/render_movie.html">render_movie()</a></code> Creates and saves a mp4/gif file of the camera rotating around the 3D scene by either using a built-in orbit or by using one provided by the user.</li>
+</ul>
+<p>Finally, rayshader has a single function to generate 3D plots using ggplot2 objects:</p>
+<ul>
+<li>
+<code><a href="reference/plot_gg.html">plot_gg()</a></code> Takes a ggplot2 object (or a list of two ggplot2 objects) and uses the fill or color aesthetic to transform the plot into a 3D surface. You can pass any of the arguments used to specify the camera and the background/shadow colors in <code><a href="reference/plot_3d.html">plot_3d()</a></code>, and manipulate the displayed 3D plot using <code><a href="reference/render_camera.html">render_camera()</a></code> and <code><a href="reference/render_depth.html">render_depth()</a></code>.</li>
+</ul>
+<p>All of these functions are designed to be used with the magrittr pipe <code>%&gt;%</code>.</p>
+</div>
+<div class="section level2">
+<h2 id="usage">Usage<a class="anchor" aria-label="anchor" href="#usage"></a>
+</h2>
+<p>Rayshader can be used for two purposes: both creating hillshaded maps and 3D data visualizations plots. First, let’s look at rayshader’s mapping capabilities. For the latter, scroll below.</p>
+</div>
+<div class="section level2">
+<h2 id="mapping-with-rayshader">Mapping with rayshader<a class="anchor" aria-label="anchor" href="#mapping-with-rayshader"></a>
+</h2>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://www.rayshader.com">rayshader</a></span><span class="op">)</span>
+
+<span class="co">#Here, I load a map with the raster package.</span>
+<span class="va">loadzip</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span><span class="op">)</span> 
+<span class="fu"><a href="https://rdrr.io/r/utils/download.file.html" class="external-link">download.file</a></span><span class="op">(</span><span class="st">"https://tylermw.com/data/dem_01.tif.zip"</span>, <span class="va">loadzip</span><span class="op">)</span>
+<span class="va">localtif</span> <span class="op">=</span> <span class="fu">raster</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/raster/man/raster.html" class="external-link">raster</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/utils/unzip.html" class="external-link">unzip</a></span><span class="op">(</span><span class="va">loadzip</span>, <span class="st">"dem_01.tif"</span><span class="op">)</span><span class="op">)</span>
+<span class="fu"><a href="https://rdrr.io/r/base/unlink.html" class="external-link">unlink</a></span><span class="op">(</span><span class="va">loadzip</span><span class="op">)</span>
+
+<span class="co">#And convert it to a matrix:</span>
+<span class="va">elmat</span> <span class="op">=</span> <span class="fu"><a href="reference/raster_to_matrix.html">raster_to_matrix</a></span><span class="op">(</span><span class="va">localtif</span><span class="op">)</span>
+
+<span class="co">#We use another one of rayshader's built-in textures:</span>
+<span class="va">elmat</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span>
+  <span class="fu"><a href="reference/sphere_shade.html">sphere_shade</a></span><span class="op">(</span>texture <span class="op">=</span> <span class="st">"desert"</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span>
+  <span class="fu"><a href="reference/plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></code></pre></div>
+<p><img src="reference/figures/README_basicmapping-1.png"><!-- --></p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="co">#sphere_shade can shift the sun direction:</span>
+<span class="va">elmat</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span>
+  <span class="fu"><a href="reference/sphere_shade.html">sphere_shade</a></span><span class="op">(</span>sunangle <span class="op">=</span> <span class="fl">45</span>, texture <span class="op">=</span> <span class="st">"desert"</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span>
+  <span class="fu"><a href="reference/plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></code></pre></div>
+<p><img src="reference/figures/README_basicmapping-2.png"><!-- --></p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="co">#detect_water and add_water adds a water layer to the map:</span>
+<span class="va">elmat</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span>
+  <span class="fu"><a href="reference/sphere_shade.html">sphere_shade</a></span><span class="op">(</span>texture <span class="op">=</span> <span class="st">"desert"</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span>
+  <span class="fu"><a href="reference/add_water.html">add_water</a></span><span class="op">(</span><span class="fu"><a href="reference/detect_water.html">detect_water</a></span><span class="op">(</span><span class="va">elmat</span><span class="op">)</span>, color <span class="op">=</span> <span class="st">"desert"</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span>
+  <span class="fu"><a href="reference/plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></code></pre></div>
+<p><img src="reference/figures/README_basicmapping-3.png"><!-- --></p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="co">#And we can add a raytraced layer from that sun direction as well:</span>
+<span class="va">elmat</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span>
+  <span class="fu"><a href="reference/sphere_shade.html">sphere_shade</a></span><span class="op">(</span>texture <span class="op">=</span> <span class="st">"desert"</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span>
+  <span class="fu"><a href="reference/add_water.html">add_water</a></span><span class="op">(</span><span class="fu"><a href="reference/detect_water.html">detect_water</a></span><span class="op">(</span><span class="va">elmat</span><span class="op">)</span>, color <span class="op">=</span> <span class="st">"desert"</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span>
+  <span class="fu"><a href="reference/add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="fu"><a href="reference/ray_shade.html">ray_shade</a></span><span class="op">(</span><span class="va">elmat</span><span class="op">)</span>, <span class="fl">0.5</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span>
+  <span class="fu"><a href="reference/plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></code></pre></div>
+<p><img src="reference/figures/README_basicmapping-4.png"><!-- --></p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="co">#And here we add an ambient occlusion shadow layer, which models </span>
+<span class="co">#lighting from atmospheric scattering:</span>
+
+<span class="va">elmat</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span>
+  <span class="fu"><a href="reference/sphere_shade.html">sphere_shade</a></span><span class="op">(</span>texture <span class="op">=</span> <span class="st">"desert"</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span>
+  <span class="fu"><a href="reference/add_water.html">add_water</a></span><span class="op">(</span><span class="fu"><a href="reference/detect_water.html">detect_water</a></span><span class="op">(</span><span class="va">elmat</span><span class="op">)</span>, color <span class="op">=</span> <span class="st">"desert"</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span>
+  <span class="fu"><a href="reference/add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="fu"><a href="reference/ray_shade.html">ray_shade</a></span><span class="op">(</span><span class="va">elmat</span><span class="op">)</span>, <span class="fl">0.5</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span>
+  <span class="fu"><a href="reference/add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="fu"><a href="reference/ambient_shade.html">ambient_shade</a></span><span class="op">(</span><span class="va">elmat</span><span class="op">)</span>, <span class="fl">0</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span>
+  <span class="fu"><a href="reference/plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></code></pre></div>
+<p><img src="reference/figures/README_basicmapping-5.png"><!-- --></p>
+<p>Rayshader also supports 3D mapping by passing a texture map (either external or one produced by rayshader) into the <code>plot_3d</code> function.</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">elmat</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span>
+  <span class="fu"><a href="reference/sphere_shade.html">sphere_shade</a></span><span class="op">(</span>texture <span class="op">=</span> <span class="st">"desert"</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span>
+  <span class="fu"><a href="reference/add_water.html">add_water</a></span><span class="op">(</span><span class="fu"><a href="reference/detect_water.html">detect_water</a></span><span class="op">(</span><span class="va">elmat</span><span class="op">)</span>, color <span class="op">=</span> <span class="st">"desert"</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span>
+  <span class="fu"><a href="reference/add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="fu"><a href="reference/ray_shade.html">ray_shade</a></span><span class="op">(</span><span class="va">elmat</span>, zscale <span class="op">=</span> <span class="fl">3</span><span class="op">)</span>, <span class="fl">0.5</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span>
+  <span class="fu"><a href="reference/add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="fu"><a href="reference/ambient_shade.html">ambient_shade</a></span><span class="op">(</span><span class="va">elmat</span><span class="op">)</span>, <span class="fl">0</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span>
+  <span class="fu"><a href="reference/plot_3d.html">plot_3d</a></span><span class="op">(</span><span class="va">elmat</span>, zscale <span class="op">=</span> <span class="fl">10</span>, fov <span class="op">=</span> <span class="fl">0</span>, theta <span class="op">=</span> <span class="fl">135</span>, zoom <span class="op">=</span> <span class="fl">0.75</span>, phi <span class="op">=</span> <span class="fl">45</span>, windowsize <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1000</span>, <span class="fl">800</span><span class="op">)</span><span class="op">)</span>
+<span class="fu"><a href="https://rdrr.io/r/base/Sys.sleep.html" class="external-link">Sys.sleep</a></span><span class="op">(</span><span class="fl">0.2</span><span class="op">)</span>
+<span class="fu"><a href="reference/render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></code></pre></div>
+<p><img src="reference/figures/README_three-d-1.png"><!-- --></p>
+<p>You can add a scale bar, as well as a compass using <code><a href="reference/render_scalebar.html">render_scalebar()</a></code> and <code><a href="reference/render_compass.html">render_compass()</a></code></p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="reference/render_camera.html">render_camera</a></span><span class="op">(</span>fov <span class="op">=</span> <span class="fl">0</span>, theta <span class="op">=</span> <span class="fl">60</span>, zoom <span class="op">=</span> <span class="fl">0.75</span>, phi <span class="op">=</span> <span class="fl">45</span><span class="op">)</span>
+<span class="fu"><a href="reference/render_scalebar.html">render_scalebar</a></span><span class="op">(</span>limits<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">5</span>, <span class="fl">10</span><span class="op">)</span>,label_unit <span class="op">=</span> <span class="st">"km"</span>,position <span class="op">=</span> <span class="st">"W"</span>, y<span class="op">=</span><span class="fl">50</span>,
+                scale_length <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.33</span>,<span class="fl">1</span><span class="op">)</span><span class="op">)</span>
+<span class="fu"><a href="reference/render_compass.html">render_compass</a></span><span class="op">(</span>position <span class="op">=</span> <span class="st">"E"</span><span class="op">)</span>
+<span class="fu"><a href="reference/render_snapshot.html">render_snapshot</a></span><span class="op">(</span>clear<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></code></pre></div>
+<p><img src="reference/figures/scalebar-1.png"><!-- --></p>
+<p>Rayshader also includes the option to add a procedurally-generated cloud layer (and optionally, shadows):</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">elmat</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span>
+  <span class="fu"><a href="reference/sphere_shade.html">sphere_shade</a></span><span class="op">(</span>texture <span class="op">=</span> <span class="st">"desert"</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span>
+  <span class="fu"><a href="reference/add_water.html">add_water</a></span><span class="op">(</span><span class="fu"><a href="reference/detect_water.html">detect_water</a></span><span class="op">(</span><span class="va">elmat</span><span class="op">)</span>, color <span class="op">=</span> <span class="st">"lightblue"</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span>
+  <span class="fu"><a href="reference/add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="fu"><a href="reference/cloud_shade.html">cloud_shade</a></span><span class="op">(</span><span class="va">elmat</span>, zscale <span class="op">=</span> <span class="fl">10</span>, start_altitude <span class="op">=</span> <span class="fl">500</span>, end_altitude <span class="op">=</span> <span class="fl">1000</span>,<span class="op">)</span>, <span class="fl">0</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span>
+  <span class="fu"><a href="reference/plot_3d.html">plot_3d</a></span><span class="op">(</span><span class="va">elmat</span>, zscale <span class="op">=</span> <span class="fl">10</span>, fov <span class="op">=</span> <span class="fl">0</span>, theta <span class="op">=</span> <span class="fl">135</span>, zoom <span class="op">=</span> <span class="fl">0.75</span>, phi <span class="op">=</span> <span class="fl">45</span>, windowsize <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1000</span>, <span class="fl">800</span><span class="op">)</span>,
+          background<span class="op">=</span><span class="st">"darkred"</span><span class="op">)</span>
+<span class="fu"><a href="reference/render_camera.html">render_camera</a></span><span class="op">(</span>theta <span class="op">=</span> <span class="fl">20</span>, phi<span class="op">=</span><span class="fl">40</span>,zoom<span class="op">=</span> <span class="fl">0.64</span>, fov<span class="op">=</span> <span class="fl">56</span> <span class="op">)</span>
+
+<span class="fu"><a href="reference/render_clouds.html">render_clouds</a></span><span class="op">(</span><span class="va">elmat</span>, zscale <span class="op">=</span> <span class="fl">10</span>, start_altitude <span class="op">=</span> <span class="fl">800</span>, end_altitude <span class="op">=</span> <span class="fl">1000</span>, attenuation_coef <span class="op">=</span> <span class="fl">2</span>, clear_clouds <span class="op">=</span> <span class="cn">T</span><span class="op">)</span>
+<span class="fu"><a href="reference/render_snapshot.html">render_snapshot</a></span><span class="op">(</span>clear<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></code></pre></div>
+<p><img src="reference/figures/clouds-1.png"><!-- --></p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu">rgl</span><span class="fu">::</span><span class="fu"><a href="https://dmurdoch.github.io/rgl/dev/reference/rgl.fns.html" class="external-link">rgl.clear</a></span><span class="op">(</span><span class="op">)</span></code></pre></div>
+<p>These clouds can be customized:</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">elmat</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span>
+  <span class="fu"><a href="reference/sphere_shade.html">sphere_shade</a></span><span class="op">(</span>texture <span class="op">=</span> <span class="st">"desert"</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span>
+  <span class="fu"><a href="reference/add_water.html">add_water</a></span><span class="op">(</span><span class="fu"><a href="reference/detect_water.html">detect_water</a></span><span class="op">(</span><span class="va">elmat</span><span class="op">)</span>, color <span class="op">=</span> <span class="st">"lightblue"</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span>
+  <span class="fu"><a href="reference/add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="fu"><a href="reference/cloud_shade.html">cloud_shade</a></span><span class="op">(</span><span class="va">elmat</span>,zscale <span class="op">=</span> <span class="fl">10</span>, start_altitude <span class="op">=</span> <span class="fl">500</span>, end_altitude <span class="op">=</span> <span class="fl">700</span>, 
+                         sun_altitude <span class="op">=</span> <span class="fl">45</span>, attenuation_coef <span class="op">=</span> <span class="fl">2</span>, offset_y <span class="op">=</span> <span class="fl">300</span>,
+              cloud_cover <span class="op">=</span> <span class="fl">0.55</span>, frequency <span class="op">=</span> <span class="fl">0.01</span>, scale_y<span class="op">=</span><span class="fl">3</span>, fractal_levels <span class="op">=</span> <span class="fl">32</span><span class="op">)</span>, <span class="fl">0</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span>
+  <span class="fu"><a href="reference/plot_3d.html">plot_3d</a></span><span class="op">(</span><span class="va">elmat</span>, zscale <span class="op">=</span> <span class="fl">10</span>, fov <span class="op">=</span> <span class="fl">0</span>, theta <span class="op">=</span> <span class="fl">135</span>, zoom <span class="op">=</span> <span class="fl">0.75</span>, phi <span class="op">=</span> <span class="fl">45</span>, windowsize <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1000</span>, <span class="fl">800</span><span class="op">)</span>,
+          background<span class="op">=</span><span class="st">"darkred"</span><span class="op">)</span>
+<span class="fu"><a href="reference/render_camera.html">render_camera</a></span><span class="op">(</span>theta <span class="op">=</span> <span class="fl">125</span>, phi<span class="op">=</span><span class="fl">22</span>,zoom<span class="op">=</span> <span class="fl">0.47</span>, fov<span class="op">=</span> <span class="fl">60</span> <span class="op">)</span>
+
+<span class="fu"><a href="reference/render_clouds.html">render_clouds</a></span><span class="op">(</span><span class="va">elmat</span>, zscale <span class="op">=</span> <span class="fl">10</span>, start_altitude <span class="op">=</span> <span class="fl">500</span>, end_altitude <span class="op">=</span> <span class="fl">700</span>, 
+              sun_altitude <span class="op">=</span> <span class="fl">45</span>, attenuation_coef <span class="op">=</span> <span class="fl">2</span>, offset_y <span class="op">=</span> <span class="fl">300</span>,
+              cloud_cover <span class="op">=</span> <span class="fl">0.55</span>, frequency <span class="op">=</span> <span class="fl">0.01</span>, scale_y<span class="op">=</span><span class="fl">3</span>, fractal_levels <span class="op">=</span> <span class="fl">32</span>, clear_clouds <span class="op">=</span> <span class="cn">T</span><span class="op">)</span>
+<span class="fu"><a href="reference/render_snapshot.html">render_snapshot</a></span><span class="op">(</span>clear<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></code></pre></div>
+<p><img src="reference/figures/clouds2-1.png"><!-- --></p>
+<p>You can also render using the built-in pathtracer, powered by <a href="https://www.rayrender.net" class="external-link">rayrender</a>. Simply replace <code><a href="reference/render_snapshot.html">render_snapshot()</a></code> with <code><a href="reference/render_highquality.html">render_highquality()</a></code>. When <code><a href="reference/render_highquality.html">render_highquality()</a></code> is called, there’s no need to pre-compute the shadows with any of the <code>_shade()</code> functions, so we remove those:</p>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">elmat</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span>
+  <span class="fu"><a href="reference/sphere_shade.html">sphere_shade</a></span><span class="op">(</span>texture <span class="op">=</span> <span class="st">"desert"</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span>
+  <span class="fu"><a href="reference/add_water.html">add_water</a></span><span class="op">(</span><span class="fu"><a href="reference/detect_water.html">detect_water</a></span><span class="op">(</span><span class="va">elmat</span><span class="op">)</span>, color <span class="op">=</span> <span class="st">"desert"</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span>
+  <span class="fu"><a href="reference/plot_3d.html">plot_3d</a></span><span class="op">(</span><span class="va">elmat</span>, zscale <span class="op">=</span> <span class="fl">10</span>, fov <span class="op">=</span> <span class="fl">0</span>, theta <span class="op">=</span> <span class="fl">60</span>, zoom <span class="op">=</span> <span class="fl">0.75</span>, phi <span class="op">=</span> <span class="fl">45</span>, windowsize <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1000</span>, <span class="fl">800</span><span class="op">)</span><span class="op">)</span>
+
+<span class="fu"><a href="reference/render_scalebar.html">render_scalebar</a></span><span class="op">(</span>limits<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">5</span>, <span class="fl">10</span><span class="op">)</span>,label_unit <span class="op">=</span> <span class="st">"km"</span>,position <span class="op">=</span> <span class="st">"W"</span>, y<span class="op">=</span><span class="fl">50</span>,
+                scale_length <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.33</span>,<span class="fl">1</span><span class="op">)</span><span class="op">)</span>
+
+<span class="fu"><a href="reference/render_compass.html">render_compass</a></span><span class="op">(</span>position <span class="op">=</span> <span class="st">"E"</span><span class="op">)</span>
+<span class="fu"><a href="https://rdrr.io/r/base/Sys.sleep.html" class="external-link">Sys.sleep</a></span><span class="op">(</span><span class="fl">0.2</span><span class="op">)</span>
+<span class="fu"><a href="reference/render_highquality.html">render_highquality</a></span><span class="op">(</span>samples<span class="op">=</span><span class="fl">200</span>, scale_text_size <span class="op">=</span> <span class="fl">24</span>,clear<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></code></pre></div>
+<p><img src="reference/figures/README_three-dhq-1.png"><!-- --></p>
+<p>You can also easily add a water layer by setting <code>water = TRUE</code> in <code><a href="reference/plot_3d.html">plot_3d()</a></code> (and setting <code>waterdepth</code> if the water level is not 0), or by using the function <code><a href="reference/render_water.html">render_water()</a></code> after the 3D map has been rendered. You can customize the appearance and transparancy of the water layer via function arguments. Here’s an example using bathymetric/topographic data of Monterey Bay, CA (included with rayshader):</p>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">montshadow</span> <span class="op">=</span> <span class="fu"><a href="reference/ray_shade.html">ray_shade</a></span><span class="op">(</span><span class="va">montereybay</span>, zscale <span class="op">=</span> <span class="fl">50</span>, lambert <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span>
+<span class="va">montamb</span> <span class="op">=</span> <span class="fu"><a href="reference/ambient_shade.html">ambient_shade</a></span><span class="op">(</span><span class="va">montereybay</span>, zscale <span class="op">=</span> <span class="fl">50</span><span class="op">)</span>
+<span class="va">montereybay</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span>
+    <span class="fu"><a href="reference/sphere_shade.html">sphere_shade</a></span><span class="op">(</span>zscale <span class="op">=</span> <span class="fl">10</span>, texture <span class="op">=</span> <span class="st">"imhof1"</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span>
+    <span class="fu"><a href="reference/add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="va">montshadow</span>, <span class="fl">0.5</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span>
+    <span class="fu"><a href="reference/add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="va">montamb</span>, <span class="fl">0</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span>
+    <span class="fu"><a href="reference/plot_3d.html">plot_3d</a></span><span class="op">(</span><span class="va">montereybay</span>, zscale <span class="op">=</span> <span class="fl">50</span>, fov <span class="op">=</span> <span class="fl">0</span>, theta <span class="op">=</span> <span class="op">-</span><span class="fl">45</span>, phi <span class="op">=</span> <span class="fl">45</span>, 
+            windowsize <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1000</span>, <span class="fl">800</span><span class="op">)</span>, zoom <span class="op">=</span> <span class="fl">0.75</span>,
+            water <span class="op">=</span> <span class="cn">TRUE</span>, waterdepth <span class="op">=</span> <span class="fl">0</span>, wateralpha <span class="op">=</span> <span class="fl">0.5</span>, watercolor <span class="op">=</span> <span class="st">"lightblue"</span>,
+            waterlinecolor <span class="op">=</span> <span class="st">"white"</span>, waterlinealpha <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span>
+<span class="fu"><a href="https://rdrr.io/r/base/Sys.sleep.html" class="external-link">Sys.sleep</a></span><span class="op">(</span><span class="fl">0.2</span><span class="op">)</span>
+<span class="fu"><a href="reference/render_snapshot.html">render_snapshot</a></span><span class="op">(</span>clear<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></code></pre></div>
+<p><img src="reference/figures/README_three-d-water-1.png"><!-- --></p>
+<p>Water is also supported in <code><a href="reference/render_highquality.html">render_highquality()</a></code>. We load the <code>rayrender</code> package to change the ground material to include a checker pattern. By default, the camera looks at the origin, but we shift it down slightly to center the map.</p>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://www.rayrender.net" class="external-link">rayrender</a></span><span class="op">)</span></code></pre></div>
+<div class="sourceCode" id="cb16"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="do">## </span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="do">## Attaching package: 'rayrender'</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="do">## The following object is masked from 'package:rgl':</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="do">## </span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="do">##     text3d</span></span></code></pre></div>
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">montereybay</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span>
+    <span class="fu"><a href="reference/sphere_shade.html">sphere_shade</a></span><span class="op">(</span>zscale <span class="op">=</span> <span class="fl">10</span>, texture <span class="op">=</span> <span class="st">"imhof1"</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span>
+    <span class="fu"><a href="reference/plot_3d.html">plot_3d</a></span><span class="op">(</span><span class="va">montereybay</span>, zscale <span class="op">=</span> <span class="fl">50</span>, fov <span class="op">=</span> <span class="fl">70</span>, theta <span class="op">=</span> <span class="fl">270</span>, phi <span class="op">=</span> <span class="fl">30</span>, 
+            windowsize <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1000</span>, <span class="fl">800</span><span class="op">)</span>, zoom <span class="op">=</span> <span class="fl">0.6</span>,  
+            water <span class="op">=</span> <span class="cn">TRUE</span>, waterdepth <span class="op">=</span> <span class="fl">0</span>, wateralpha <span class="op">=</span> <span class="fl">0.5</span>, watercolor <span class="op">=</span> <span class="st">"#233aa1"</span>,
+            waterlinecolor <span class="op">=</span> <span class="st">"white"</span>, waterlinealpha <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span>
+<span class="fu"><a href="https://rdrr.io/r/base/Sys.sleep.html" class="external-link">Sys.sleep</a></span><span class="op">(</span><span class="fl">0.2</span><span class="op">)</span>
+<span class="fu"><a href="reference/render_highquality.html">render_highquality</a></span><span class="op">(</span>lightdirection <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">45</span>,<span class="fl">45</span><span class="op">)</span>, lightaltitude  <span class="op">=</span> <span class="fl">30</span>, clamp_value <span class="op">=</span> <span class="fl">10</span>, 
+                   samples <span class="op">=</span> <span class="fl">256</span>, camera_lookat<span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>,<span class="op">-</span><span class="fl">50</span>,<span class="fl">0</span><span class="op">)</span>,
+                   ground_material <span class="op">=</span> <span class="fu"><a href="https://www.rayrender.net/reference/diffuse.html" class="external-link">diffuse</a></span><span class="op">(</span>color<span class="op">=</span><span class="st">"grey50"</span>,checkercolor <span class="op">=</span> <span class="st">"grey20"</span>, checkerperiod <span class="op">=</span> <span class="fl">100</span><span class="op">)</span>,
+                   clear <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></code></pre></div>
+<p><img src="reference/figures/hq-1.png"><!-- --></p>
+<p>Rayshader also has map shapes other than rectangular included <code>c("hex", "circle")</code>, and you can customize the map into any shape you want by setting the areas you do not want to display to <code>NA</code>.</p>
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span> 
+<span class="va">montereybay</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span> 
+    <span class="fu"><a href="reference/sphere_shade.html">sphere_shade</a></span><span class="op">(</span>zscale <span class="op">=</span> <span class="fl">10</span>, texture <span class="op">=</span> <span class="st">"imhof1"</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span> 
+    <span class="fu"><a href="reference/add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="va">montshadow</span>, <span class="fl">0.5</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span>
+    <span class="fu"><a href="reference/add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="va">montamb</span>, <span class="fl">0</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span>
+    <span class="fu"><a href="reference/plot_3d.html">plot_3d</a></span><span class="op">(</span><span class="va">montereybay</span>, zscale <span class="op">=</span> <span class="fl">50</span>, fov <span class="op">=</span> <span class="fl">0</span>, theta <span class="op">=</span> <span class="op">-</span><span class="fl">45</span>, phi <span class="op">=</span> <span class="fl">45</span>, windowsize <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1000</span>, <span class="fl">800</span><span class="op">)</span>, zoom <span class="op">=</span> <span class="fl">0.6</span>,
+            water <span class="op">=</span> <span class="cn">TRUE</span>, waterdepth <span class="op">=</span> <span class="fl">0</span>, wateralpha <span class="op">=</span> <span class="fl">0.5</span>, watercolor <span class="op">=</span> <span class="st">"lightblue"</span>,
+            waterlinecolor <span class="op">=</span> <span class="st">"white"</span>, waterlinealpha <span class="op">=</span> <span class="fl">0.5</span>, baseshape <span class="op">=</span> <span class="st">"circle"</span><span class="op">)</span>
+
+<span class="fu"><a href="reference/render_snapshot.html">render_snapshot</a></span><span class="op">(</span>clear <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>
+
+<span class="va">montereybay</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span> 
+    <span class="fu"><a href="reference/sphere_shade.html">sphere_shade</a></span><span class="op">(</span>zscale <span class="op">=</span> <span class="fl">10</span>, texture <span class="op">=</span> <span class="st">"imhof1"</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span> 
+    <span class="fu"><a href="reference/add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="va">montshadow</span>, <span class="fl">0.5</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span>
+    <span class="fu"><a href="reference/add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="va">montamb</span>, <span class="fl">0</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span>
+    <span class="fu"><a href="reference/plot_3d.html">plot_3d</a></span><span class="op">(</span><span class="va">montereybay</span>, zscale <span class="op">=</span> <span class="fl">50</span>, fov <span class="op">=</span> <span class="fl">0</span>, theta <span class="op">=</span> <span class="op">-</span><span class="fl">45</span>, phi <span class="op">=</span> <span class="fl">45</span>, windowsize <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1000</span>, <span class="fl">800</span><span class="op">)</span>, zoom <span class="op">=</span> <span class="fl">0.6</span>,
+            water <span class="op">=</span> <span class="cn">TRUE</span>, waterdepth <span class="op">=</span> <span class="fl">0</span>, wateralpha <span class="op">=</span> <span class="fl">0.5</span>, watercolor <span class="op">=</span> <span class="st">"lightblue"</span>,
+            waterlinecolor <span class="op">=</span> <span class="st">"white"</span>, waterlinealpha <span class="op">=</span> <span class="fl">0.5</span>, baseshape <span class="op">=</span> <span class="st">"hex"</span><span class="op">)</span>
+
+<span class="fu"><a href="reference/render_snapshot.html">render_snapshot</a></span><span class="op">(</span>clear <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></code></pre></div>
+<p><img src="reference/figures/README_three-d-shapes-1.png"><!-- --></p>
+<p>Adding text labels is done with the <code><a href="reference/render_label.html">render_label()</a></code> function, which also allows you to customize the line type, color, and size along with the font:</p>
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">montereybay</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span> 
+    <span class="fu"><a href="reference/sphere_shade.html">sphere_shade</a></span><span class="op">(</span>zscale <span class="op">=</span> <span class="fl">10</span>, texture <span class="op">=</span> <span class="st">"imhof1"</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span> 
+    <span class="fu"><a href="reference/add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="va">montshadow</span>, <span class="fl">0.5</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span>
+    <span class="fu"><a href="reference/add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="va">montamb</span>,<span class="fl">0</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span>
+    <span class="fu"><a href="reference/plot_3d.html">plot_3d</a></span><span class="op">(</span><span class="va">montereybay</span>, zscale <span class="op">=</span> <span class="fl">50</span>, fov <span class="op">=</span> <span class="fl">0</span>, theta <span class="op">=</span> <span class="op">-</span><span class="fl">100</span>, phi <span class="op">=</span> <span class="fl">30</span>, windowsize <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1000</span>, <span class="fl">800</span><span class="op">)</span>, zoom <span class="op">=</span> <span class="fl">0.6</span>,
+            water <span class="op">=</span> <span class="cn">TRUE</span>, waterdepth <span class="op">=</span> <span class="fl">0</span>, waterlinecolor <span class="op">=</span> <span class="st">"white"</span>, waterlinealpha <span class="op">=</span> <span class="fl">0.5</span>,
+            wateralpha <span class="op">=</span> <span class="fl">0.5</span>, watercolor <span class="op">=</span> <span class="st">"lightblue"</span><span class="op">)</span>
+<span class="fu"><a href="reference/render_label.html">render_label</a></span><span class="op">(</span><span class="va">montereybay</span>, x <span class="op">=</span> <span class="fl">350</span>, y <span class="op">=</span> <span class="fl">160</span>, z <span class="op">=</span> <span class="fl">1000</span>, zscale <span class="op">=</span> <span class="fl">50</span>,
+             text <span class="op">=</span> <span class="st">"Moss Landing"</span>, textsize <span class="op">=</span> <span class="fl">2</span>, linewidth <span class="op">=</span> <span class="fl">5</span><span class="op">)</span>
+<span class="fu"><a href="reference/render_label.html">render_label</a></span><span class="op">(</span><span class="va">montereybay</span>, x <span class="op">=</span> <span class="fl">220</span>, y <span class="op">=</span> <span class="fl">70</span>, z <span class="op">=</span> <span class="fl">7000</span>, zscale <span class="op">=</span> <span class="fl">50</span>,
+             text <span class="op">=</span> <span class="st">"Santa Cruz"</span>, textcolor <span class="op">=</span> <span class="st">"darkred"</span>, linecolor <span class="op">=</span> <span class="st">"darkred"</span>,
+             textsize <span class="op">=</span> <span class="fl">2</span>, linewidth <span class="op">=</span> <span class="fl">5</span><span class="op">)</span>
+<span class="fu"><a href="reference/render_label.html">render_label</a></span><span class="op">(</span><span class="va">montereybay</span>, x <span class="op">=</span> <span class="fl">300</span>, y <span class="op">=</span> <span class="fl">270</span>, z <span class="op">=</span> <span class="fl">4000</span>, zscale <span class="op">=</span> <span class="fl">50</span>,
+             text <span class="op">=</span> <span class="st">"Monterey"</span>, dashed <span class="op">=</span> <span class="cn">TRUE</span>, textsize <span class="op">=</span> <span class="fl">2</span>, linewidth <span class="op">=</span> <span class="fl">5</span><span class="op">)</span>
+<span class="fu"><a href="reference/render_label.html">render_label</a></span><span class="op">(</span><span class="va">montereybay</span>, x <span class="op">=</span> <span class="fl">50</span>, y <span class="op">=</span> <span class="fl">270</span>, z <span class="op">=</span> <span class="fl">1000</span>, zscale <span class="op">=</span> <span class="fl">50</span>,  textcolor <span class="op">=</span> <span class="st">"white"</span>, linecolor <span class="op">=</span> <span class="st">"white"</span>,
+             text <span class="op">=</span> <span class="st">"Monterey Canyon"</span>, relativez <span class="op">=</span> <span class="cn">FALSE</span>, textsize <span class="op">=</span> <span class="fl">2</span>, linewidth <span class="op">=</span> <span class="fl">5</span><span class="op">)</span> 
+<span class="fu"><a href="https://rdrr.io/r/base/Sys.sleep.html" class="external-link">Sys.sleep</a></span><span class="op">(</span><span class="fl">0.2</span><span class="op">)</span>
+<span class="fu"><a href="reference/render_snapshot.html">render_snapshot</a></span><span class="op">(</span>clear<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></code></pre></div>
+<p><img src="reference/figures/README_three-d-labels-1.png"><!-- --></p>
+<p>Labels are also supported in <code><a href="reference/render_highquality.html">render_highquality()</a></code>:</p>
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="reference/render_highquality.html">render_highquality</a></span><span class="op">(</span>samples<span class="op">=</span><span class="fl">256</span>, line_radius <span class="op">=</span> <span class="fl">1</span>, text_size <span class="op">=</span> <span class="fl">18</span>, text_offset <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">12</span>,<span class="fl">0</span><span class="op">)</span>,
+                   clamp_value<span class="op">=</span><span class="fl">10</span>, clear <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></code></pre></div>
+<p><img src="reference/figures/README_hqlabels-1.png"><!-- --></p>
+<p>3D paths, points, and polygons can be added directly from spatial objects from the <code>sf</code> library:</p>
+<p>Polygons:</p>
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">montereybay</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span>
+  <span class="fu"><a href="reference/sphere_shade.html">sphere_shade</a></span><span class="op">(</span>texture <span class="op">=</span> <span class="st">"desert"</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span>
+  <span class="fu"><a href="reference/add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="fu"><a href="reference/ray_shade.html">ray_shade</a></span><span class="op">(</span><span class="va">montereybay</span>,zscale<span class="op">=</span><span class="fl">50</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span>
+  <span class="fu"><a href="reference/plot_3d.html">plot_3d</a></span><span class="op">(</span><span class="va">montereybay</span>,water<span class="op">=</span><span class="cn">TRUE</span>, windowsize<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1000</span>,<span class="fl">800</span><span class="op">)</span>, watercolor<span class="op">=</span><span class="st">"dodgerblue"</span><span class="op">)</span>
+<span class="fu"><a href="reference/render_camera.html">render_camera</a></span><span class="op">(</span>theta<span class="op">=</span><span class="op">-</span><span class="fl">60</span>,  phi<span class="op">=</span><span class="fl">60</span>, zoom <span class="op">=</span> <span class="fl">0.85</span>, fov<span class="op">=</span><span class="fl">30</span><span class="op">)</span>
+
+<span class="co">#We will apply a negative buffer to create space between adjacent polygons:</span>
+<span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/s2.html" class="external-link">sf_use_s2</a></span><span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> 
+<span class="va">mont_county_buff</span> <span class="op">=</span> <span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/geos_unary.html" class="external-link">st_simplify</a></span><span class="op">(</span><span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/geos_unary.html" class="external-link">st_buffer</a></span><span class="op">(</span><span class="va">monterey_counties_sf</span>,<span class="op">-</span><span class="fl">0.003</span><span class="op">)</span>, dTolerance<span class="op">=</span><span class="fl">0.004</span><span class="op">)</span>
+
+<span class="fu"><a href="reference/render_polygons.html">render_polygons</a></span><span class="op">(</span><span class="va">mont_county_buff</span>,  
+                extent <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>,<span class="st">"extent"</span><span class="op">)</span>, data_column_top <span class="op">=</span> <span class="st">"ALAND"</span>,
+                scale_data <span class="op">=</span> <span class="fl">300</span><span class="op">/</span><span class="op">(</span><span class="fl">2.6E9</span><span class="op">)</span>, color<span class="op">=</span><span class="st">"chartreuse4"</span>,
+                parallel<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span>
+<span class="fu"><a href="reference/render_highquality.html">render_highquality</a></span><span class="op">(</span>clamp_value<span class="op">=</span><span class="fl">10</span>,samples<span class="op">=</span><span class="fl">256</span><span class="op">)</span></code></pre></div>
+<p><img src="reference/figures/README_polygon-1.png"><!-- --></p>
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="reference/render_polygons.html">render_polygons</a></span><span class="op">(</span>clear_previous <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>
+<span class="fu"><a href="reference/render_camera.html">render_camera</a></span><span class="op">(</span>theta<span class="op">=</span><span class="fl">225</span>, phi<span class="op">=</span><span class="fl">30</span>,zoom<span class="op">=</span><span class="fl">0.37</span>,fov<span class="op">=</span><span class="fl">48</span><span class="op">)</span></code></pre></div>
+<p>Points:</p>
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">moss_landing_coord</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">36.806807</span>, <span class="op">-</span><span class="fl">121.793332</span><span class="op">)</span> 
+<span class="va">x_vel_out</span> <span class="op">=</span> <span class="op">-</span><span class="fl">0.001</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">1000</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">500</span><span class="op">]</span><span class="op">/</span><span class="fl">1000</span>
+<span class="va">y_vel_out</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">1000</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">500</span><span class="op">]</span><span class="op">/</span><span class="fl">200</span>
+<span class="va">z_out</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">2000</span>,length.out <span class="op">=</span> <span class="fl">180</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">2000</span>,<span class="fl">0</span>,length.out<span class="op">=</span><span class="fl">10</span><span class="op">)</span>, 
+          <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">2000</span>,length.out <span class="op">=</span> <span class="fl">100</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">2000</span>,<span class="fl">0</span>,length.out<span class="op">=</span><span class="fl">10</span><span class="op">)</span><span class="op">)</span>
+
+<span class="va">bird_track_lat</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>
+<span class="va">bird_track_long</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>
+<span class="va">bird_track_lat</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span> <span class="op">=</span> <span class="va">moss_landing_coord</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>
+<span class="va">bird_track_long</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span> <span class="op">=</span> <span class="va">moss_landing_coord</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span>
+
+<span class="kw">for</span><span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fl">2</span><span class="op">:</span><span class="fl">500</span><span class="op">)</span> <span class="op">{</span>
+  <span class="va">bird_track_lat</span><span class="op">[[</span><span class="va">i</span><span class="op">]</span><span class="op">]</span> <span class="op">=</span> <span class="va">bird_track_lat</span><span class="op">[[</span><span class="va">i</span><span class="op">-</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span> <span class="op">+</span> <span class="va">y_vel_out</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>
+  <span class="va">bird_track_long</span><span class="op">[[</span><span class="va">i</span><span class="op">]</span><span class="op">]</span> <span class="op">=</span> <span class="va">bird_track_long</span><span class="op">[[</span><span class="va">i</span><span class="op">-</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span> <span class="op">+</span> <span class="va">x_vel_out</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>
+<span class="op">}</span>
+
+<span class="fu"><a href="reference/render_points.html">render_points</a></span><span class="op">(</span>extent <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>,<span class="st">"extent"</span><span class="op">)</span>, 
+              lat <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unlist.html" class="external-link">unlist</a></span><span class="op">(</span><span class="va">bird_track_lat</span><span class="op">)</span>, long <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unlist.html" class="external-link">unlist</a></span><span class="op">(</span><span class="va">bird_track_long</span><span class="op">)</span>, 
+              altitude <span class="op">=</span> <span class="va">z_out</span>, zscale<span class="op">=</span><span class="fl">50</span>, color<span class="op">=</span><span class="st">"red"</span><span class="op">)</span>
+<span class="fu"><a href="reference/render_highquality.html">render_highquality</a></span><span class="op">(</span>point_radius <span class="op">=</span> <span class="fl">1</span>, samples <span class="op">=</span> <span class="fl">256</span><span class="op">)</span></code></pre></div>
+<p><img src="reference/figures/README_points-1.png"><!-- --></p>
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="reference/render_points.html">render_points</a></span><span class="op">(</span>clear_previous <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></code></pre></div>
+<p>Paths:</p>
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="reference/render_path.html">render_path</a></span><span class="op">(</span>extent <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>,<span class="st">"extent"</span><span class="op">)</span>,  
+            lat <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unlist.html" class="external-link">unlist</a></span><span class="op">(</span><span class="va">bird_track_lat</span><span class="op">)</span>, long <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unlist.html" class="external-link">unlist</a></span><span class="op">(</span><span class="va">bird_track_long</span><span class="op">)</span>, 
+            altitude <span class="op">=</span> <span class="va">z_out</span>, zscale<span class="op">=</span><span class="fl">50</span>,color<span class="op">=</span><span class="st">"white"</span>, antialias<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span>
+<span class="fu"><a href="reference/render_highquality.html">render_highquality</a></span><span class="op">(</span>line_radius <span class="op">=</span> <span class="fl">1</span>,samples<span class="op">=</span><span class="fl">256</span>, clear<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></code></pre></div>
+<p><img src="reference/figures/README_paths-1.png"><!-- --></p>
+<p>You can also apply a post-processing effect to the 3D maps to render maps with depth of field with the <code><a href="reference/render_depth.html">render_depth()</a></code> function:</p>
+<div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">elmat</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span>
+  <span class="fu"><a href="reference/sphere_shade.html">sphere_shade</a></span><span class="op">(</span>texture <span class="op">=</span> <span class="st">"desert"</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span>
+  <span class="fu"><a href="reference/add_water.html">add_water</a></span><span class="op">(</span><span class="fu"><a href="reference/detect_water.html">detect_water</a></span><span class="op">(</span><span class="va">elmat</span><span class="op">)</span>, color <span class="op">=</span> <span class="st">"desert"</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span>
+  <span class="fu"><a href="reference/add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="fu"><a href="reference/ray_shade.html">ray_shade</a></span><span class="op">(</span><span class="va">elmat</span>, zscale <span class="op">=</span> <span class="fl">3</span><span class="op">)</span>, <span class="fl">0.5</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span>
+  <span class="fu"><a href="reference/add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="fu"><a href="reference/ambient_shade.html">ambient_shade</a></span><span class="op">(</span><span class="va">elmat</span><span class="op">)</span>, <span class="fl">0</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span>
+  <span class="fu"><a href="reference/plot_3d.html">plot_3d</a></span><span class="op">(</span><span class="va">elmat</span>, zscale <span class="op">=</span> <span class="fl">10</span>, fov <span class="op">=</span> <span class="fl">30</span>, theta <span class="op">=</span> <span class="op">-</span><span class="fl">225</span>, phi <span class="op">=</span> <span class="fl">25</span>, windowsize <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1000</span>, <span class="fl">800</span><span class="op">)</span>, zoom <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span>
+<span class="fu"><a href="https://rdrr.io/r/base/Sys.sleep.html" class="external-link">Sys.sleep</a></span><span class="op">(</span><span class="fl">0.2</span><span class="op">)</span>
+<span class="fu"><a href="reference/render_depth.html">render_depth</a></span><span class="op">(</span>focallength <span class="op">=</span> <span class="fl">800</span>, clear <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></code></pre></div>
+<div class="sourceCode" id="cb27"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Focus distance: 1732.75</span></span></code></pre></div>
+<p><img src="reference/figures/README_three-d-depth-1.png"><!-- --></p>
+</div>
+<div class="section level2">
+<h2 id="3d-plotting-with-rayshader-and-ggplot2">3D plotting with rayshader and ggplot2<a class="anchor" aria-label="anchor" href="#3d-plotting-with-rayshader-and-ggplot2"></a>
+</h2>
+<p>Rayshader can also be used to make 3D plots out of ggplot2 objects using the <code><a href="reference/plot_gg.html">plot_gg()</a></code> function. Here, I turn a color density plot into a 3D density plot. <code><a href="reference/plot_gg.html">plot_gg()</a></code> detects that the user mapped the <code>fill</code> aesthetic to color and uses that information to project the figure into 3D.</p>
+<div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></code></pre></div>
+<div class="sourceCode" id="cb29"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="do">## </span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="do">## Attaching package: 'ggplot2'</span></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a><span class="do">## The following object is masked from 'package:rayrender':</span></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a><span class="do">## </span></span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a><span class="do">##     arrow</span></span></code></pre></div>
+<div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">ggdiamonds</span> <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">diamonds</span><span class="op">)</span> <span class="op">+</span>
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_density_2d.html" class="external-link">stat_density_2d</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">x</span>, y <span class="op">=</span> <span class="va">depth</span>, fill <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes_eval.html" class="external-link">stat</a></span><span class="op">(</span><span class="va">nlevel</span><span class="op">)</span><span class="op">)</span>, 
+                  geom <span class="op">=</span> <span class="st">"polygon"</span>, n <span class="op">=</span> <span class="fl">200</span>, bins <span class="op">=</span> <span class="fl">50</span>,contour <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">+</span>
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="va">clarity</span><span class="op">~</span><span class="va">.</span><span class="op">)</span> <span class="op">+</span>
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_fill_viridis_c</a></span><span class="op">(</span>option <span class="op">=</span> <span class="st">"A"</span><span class="op">)</span>
+
+<span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span>
+
+<span class="fu"><a href="reference/plot_gg.html">plot_gg</a></span><span class="op">(</span><span class="va">ggdiamonds</span>, width <span class="op">=</span> <span class="fl">5</span>, height <span class="op">=</span> <span class="fl">5</span>, raytrace <span class="op">=</span> <span class="cn">FALSE</span>, preview <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>
+<span class="fu"><a href="reference/plot_gg.html">plot_gg</a></span><span class="op">(</span><span class="va">ggdiamonds</span>, width <span class="op">=</span> <span class="fl">5</span>, height <span class="op">=</span> <span class="fl">5</span>, multicore <span class="op">=</span> <span class="cn">TRUE</span>, scale <span class="op">=</span> <span class="fl">250</span>, 
+        zoom <span class="op">=</span> <span class="fl">0.7</span>, theta <span class="op">=</span> <span class="fl">10</span>, phi <span class="op">=</span> <span class="fl">30</span>, windowsize <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">800</span>, <span class="fl">800</span><span class="op">)</span><span class="op">)</span>
+<span class="fu"><a href="https://rdrr.io/r/base/Sys.sleep.html" class="external-link">Sys.sleep</a></span><span class="op">(</span><span class="fl">0.2</span><span class="op">)</span>
+<span class="fu"><a href="reference/render_snapshot.html">render_snapshot</a></span><span class="op">(</span>clear <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></code></pre></div>
+<p><img src="reference/figures/README_ggplots-1.png"><!-- --></p>
+<p>Rayshader will automatically ignore lines and other elements that should not be mapped to 3D. Here’s a contour plot of the <code>volcano</code> dataset.</p>
+<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/hadley/reshape" class="external-link">reshape2</a></span><span class="op">)</span>
+<span class="co">#Contours and other lines will automatically be ignored. Here is the volcano dataset:</span>
+
+<span class="va">ggvolcano</span> <span class="op">=</span> <span class="va">volcano</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span> 
+  <span class="fu"><a href="https://rdrr.io/pkg/reshape2/man/melt.html" class="external-link">melt</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="reference/pipe.html">%&gt;%</a></span>
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span>
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_tile.html" class="external-link">geom_tile</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">Var1</span>, y <span class="op">=</span> <span class="va">Var2</span>, fill <span class="op">=</span> <span class="va">value</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span>
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_contour.html" class="external-link">geom_contour</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">Var1</span>, y <span class="op">=</span> <span class="va">Var2</span>, z <span class="op">=</span> <span class="va">value</span><span class="op">)</span>, color <span class="op">=</span> <span class="st">"black"</span><span class="op">)</span> <span class="op">+</span>
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html" class="external-link">scale_x_continuous</a></span><span class="op">(</span><span class="st">"X"</span>, expand <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span>
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html" class="external-link">scale_y_continuous</a></span><span class="op">(</span><span class="st">"Y"</span>, expand <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span>
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_gradient.html" class="external-link">scale_fill_gradientn</a></span><span class="op">(</span><span class="st">"Z"</span>, colours <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/grDevices/palettes.html" class="external-link">terrain.colors</a></span><span class="op">(</span><span class="fl">10</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span>
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/coord_fixed.html" class="external-link">coord_fixed</a></span><span class="op">(</span><span class="op">)</span>
+
+<span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span>
+<span class="fu"><a href="reference/plot_gg.html">plot_gg</a></span><span class="op">(</span><span class="va">ggvolcano</span>, width <span class="op">=</span> <span class="fl">7</span>, height <span class="op">=</span> <span class="fl">4</span>, raytrace <span class="op">=</span> <span class="cn">FALSE</span>, preview <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></code></pre></div>
+<div class="sourceCode" id="cb32"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Warning: Removed 1861 row(s) containing missing values (geom_path).</span></span></code></pre></div>
+<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="reference/plot_gg.html">plot_gg</a></span><span class="op">(</span><span class="va">ggvolcano</span>, multicore <span class="op">=</span> <span class="cn">TRUE</span>, raytrace <span class="op">=</span> <span class="cn">TRUE</span>, width <span class="op">=</span> <span class="fl">7</span>, height <span class="op">=</span> <span class="fl">4</span>, 
+        scale <span class="op">=</span> <span class="fl">300</span>, windowsize <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1400</span>, <span class="fl">866</span><span class="op">)</span>, zoom <span class="op">=</span> <span class="fl">0.6</span>, phi <span class="op">=</span> <span class="fl">30</span>, theta <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></code></pre></div>
+<div class="sourceCode" id="cb34"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Warning: Removed 1861 row(s) containing missing values (geom_path).</span></span></code></pre></div>
+<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/base/Sys.sleep.html" class="external-link">Sys.sleep</a></span><span class="op">(</span><span class="fl">0.2</span><span class="op">)</span>
+
+<span class="fu"><a href="reference/render_snapshot.html">render_snapshot</a></span><span class="op">(</span>clear <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></code></pre></div>
+<p><img src="reference/figures/README_ggplots_2-1.png"><!-- --></p>
+<p>Rayshader also detects when the user passes the <code>color</code> aesthetic, and maps those values to 3D. If both <code>color</code> and <code>fill</code> are passed, however, rayshader will default to <code>fill</code>.</p>
+<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">mtplot</span> <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">mtcars</span><span class="op">)</span> <span class="op">+</span> 
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">mpg</span>, y <span class="op">=</span> <span class="va">disp</span>, color <span class="op">=</span> <span class="va">cyl</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> 
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_colour_continuous.html" class="external-link">scale_color_continuous</a></span><span class="op">(</span>limits <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">8</span><span class="op">)</span><span class="op">)</span>
+
+<span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span>
+<span class="fu"><a href="reference/plot_gg.html">plot_gg</a></span><span class="op">(</span><span class="va">mtplot</span>, width <span class="op">=</span> <span class="fl">3.5</span>, raytrace <span class="op">=</span> <span class="cn">FALSE</span>, preview <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>
+
+<span class="fu"><a href="reference/plot_gg.html">plot_gg</a></span><span class="op">(</span><span class="va">mtplot</span>, width <span class="op">=</span> <span class="fl">3.5</span>, multicore <span class="op">=</span> <span class="cn">TRUE</span>, windowsize <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">800</span>, <span class="fl">800</span><span class="op">)</span>, 
+        zoom <span class="op">=</span> <span class="fl">0.85</span>, phi <span class="op">=</span> <span class="fl">35</span>, theta <span class="op">=</span> <span class="fl">30</span>, sunangle <span class="op">=</span> <span class="fl">225</span>, soliddepth <span class="op">=</span> <span class="op">-</span><span class="fl">100</span><span class="op">)</span>
+<span class="fu"><a href="https://rdrr.io/r/base/Sys.sleep.html" class="external-link">Sys.sleep</a></span><span class="op">(</span><span class="fl">0.2</span><span class="op">)</span>
+<span class="fu"><a href="reference/render_snapshot.html">render_snapshot</a></span><span class="op">(</span>clear <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></code></pre></div>
+<p><img src="reference/figures/README_ggplots_3-1.png"><!-- --></p>
+<p>Utilize combinations of line color and fill to create different effects. Here is a terraced hexbin plot, created by mapping the line colors of the hexagons to black.</p>
+<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">a</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">20000</span>, <span class="fl">10</span>, <span class="fl">1.9</span><span class="op">)</span>, y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">20000</span>, <span class="fl">10</span>, <span class="fl">1.2</span><span class="op">)</span><span class="op">)</span>
+<span class="va">b</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">20000</span>, <span class="fl">14.5</span>, <span class="fl">1.9</span><span class="op">)</span>, y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">20000</span>, <span class="fl">14.5</span>, <span class="fl">1.9</span><span class="op">)</span><span class="op">)</span>
+<span class="va">c</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">20000</span>, <span class="fl">9.5</span>, <span class="fl">1.9</span><span class="op">)</span>, y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">20000</span>, <span class="fl">15.5</span>, <span class="fl">1.9</span><span class="op">)</span><span class="op">)</span>
+<span class="va">data</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span><span class="va">a</span>, <span class="va">b</span>, <span class="va">c</span><span class="op">)</span>
+
+<span class="co">#Lines</span>
+<span class="va">pp</span> <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">data</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">x</span>, y <span class="op">=</span> <span class="va">y</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span>
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_hex.html" class="external-link">geom_hex</a></span><span class="op">(</span>bins <span class="op">=</span> <span class="fl">20</span>, size <span class="op">=</span> <span class="fl">0.5</span>, color <span class="op">=</span> <span class="st">"black"</span><span class="op">)</span> <span class="op">+</span>
+  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_fill_viridis_c</a></span><span class="op">(</span>option <span class="op">=</span> <span class="st">"C"</span><span class="op">)</span>
+
+<span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span>
+<span class="fu"><a href="reference/plot_gg.html">plot_gg</a></span><span class="op">(</span><span class="va">pp</span>, width <span class="op">=</span> <span class="fl">5</span>, height <span class="op">=</span> <span class="fl">4</span>, scale <span class="op">=</span> <span class="fl">300</span>, raytrace <span class="op">=</span> <span class="cn">FALSE</span>, preview <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>
+<span class="fu"><a href="reference/plot_gg.html">plot_gg</a></span><span class="op">(</span><span class="va">pp</span>, width <span class="op">=</span> <span class="fl">5</span>, height <span class="op">=</span> <span class="fl">4</span>, scale <span class="op">=</span> <span class="fl">300</span>, multicore <span class="op">=</span> <span class="cn">TRUE</span>, windowsize <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1000</span>, <span class="fl">800</span><span class="op">)</span><span class="op">)</span>
+<span class="fu"><a href="reference/render_camera.html">render_camera</a></span><span class="op">(</span>fov <span class="op">=</span> <span class="fl">70</span>, zoom <span class="op">=</span> <span class="fl">0.5</span>, theta <span class="op">=</span> <span class="fl">130</span>, phi <span class="op">=</span> <span class="fl">35</span><span class="op">)</span>
+<span class="fu"><a href="https://rdrr.io/r/base/Sys.sleep.html" class="external-link">Sys.sleep</a></span><span class="op">(</span><span class="fl">0.2</span><span class="op">)</span>
+<span class="fu"><a href="reference/render_snapshot.html">render_snapshot</a></span><span class="op">(</span>clear <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></code></pre></div>
+<p><img src="reference/figures/README_ggplots_4-1.png"><!-- --></p>
+<p>You can also use the <code><a href="reference/render_depth.html">render_depth()</a></code> function to direct the viewer’s focus to a important areas in the figure.</p>
+<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span>
+<span class="fu"><a href="reference/plot_gg.html">plot_gg</a></span><span class="op">(</span><span class="va">pp</span>, width <span class="op">=</span> <span class="fl">5</span>, height <span class="op">=</span> <span class="fl">4</span>, scale <span class="op">=</span> <span class="fl">300</span>, multicore <span class="op">=</span> <span class="cn">TRUE</span>, windowsize <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1200</span>, <span class="fl">960</span><span class="op">)</span>,
+        fov <span class="op">=</span> <span class="fl">70</span>, zoom <span class="op">=</span> <span class="fl">0.4</span>, theta <span class="op">=</span> <span class="fl">330</span>, phi <span class="op">=</span> <span class="fl">40</span><span class="op">)</span>
+<span class="fu"><a href="https://rdrr.io/r/base/Sys.sleep.html" class="external-link">Sys.sleep</a></span><span class="op">(</span><span class="fl">0.2</span><span class="op">)</span>
+<span class="fu"><a href="reference/render_depth.html">render_depth</a></span><span class="op">(</span>focallength <span class="op">=</span> <span class="fl">100</span>,clear<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></code></pre></div>
+<div class="sourceCode" id="cb39"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="do">## Focus distance: 2001.41</span></span></code></pre></div>
+<p><img src="reference/figures/README_ggplots_5-1.png"><!-- --></p>
+<p>Finally, you can increase the allowable error in triangulating the model to vastly reduce the size. Here, we reduce the model to 1/100th of it’s raw (un-triangulated) size, while maintaining model quality. This can improve the performance when rendering 3D ggplots with <code><a href="reference/render_highquality.html">render_highquality()</a></code>, as well as improve performance on slower computers. This triangulation is powered by the {terrainmeshr} package.</p>
+<p>Here, we make a 3D ggplot out of glass, using a triangulated model and <code><a href="reference/render_highquality.html">render_highquality()</a></code>.</p>
+<div class="sourceCode" id="cb40"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="va">tempfilehdr</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".hdr"</span><span class="op">)</span>
+<span class="fu"><a href="https://rdrr.io/r/utils/download.file.html" class="external-link">download.file</a></span><span class="op">(</span><span class="st">"https://www.tylermw.com/data/venice_sunset_2k.hdr"</span>,<span class="va">tempfilehdr</span><span class="op">)</span>
+
+<span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span>
+<span class="fu"><a href="reference/plot_gg.html">plot_gg</a></span><span class="op">(</span><span class="va">pp</span>, width <span class="op">=</span> <span class="fl">5</span>, height <span class="op">=</span> <span class="fl">4</span>, scale <span class="op">=</span> <span class="fl">300</span>, raytrace <span class="op">=</span> <span class="cn">FALSE</span>, windowsize <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1200</span>, <span class="fl">960</span><span class="op">)</span>,
+        fov <span class="op">=</span> <span class="fl">70</span>, zoom <span class="op">=</span> <span class="fl">0.4</span>, theta <span class="op">=</span> <span class="fl">330</span>, phi <span class="op">=</span> <span class="fl">20</span>,  max_error <span class="op">=</span> <span class="fl">0.01</span>, verbose <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></code></pre></div>
+<div class="sourceCode" id="cb41"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="do">## 98.8% reduction: Number of triangles reduced from 3600000 to 43606. Error: 0.009982</span></span></code></pre></div>
+<div class="sourceCode" id="cb42"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span class="fu"><a href="https://rdrr.io/r/base/Sys.sleep.html" class="external-link">Sys.sleep</a></span><span class="op">(</span><span class="fl">0.2</span><span class="op">)</span>
+<span class="fu"><a href="reference/render_highquality.html">render_highquality</a></span><span class="op">(</span>samples <span class="op">=</span> <span class="fl">256</span>, aperture<span class="op">=</span><span class="fl">30</span>, light <span class="op">=</span> <span class="cn">FALSE</span>, focal_distance <span class="op">=</span> <span class="fl">1700</span>,
+                   obj_material <span class="op">=</span> <span class="fu">rayrender</span><span class="fu">::</span><span class="fu"><a href="https://www.rayrender.net/reference/dielectric.html" class="external-link">dielectric</a></span><span class="op">(</span>attenuation <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">1</span>,<span class="fl">0.3</span><span class="op">)</span><span class="op">/</span><span class="fl">200</span><span class="op">)</span>, 
+                   ground_material <span class="op">=</span> <span class="fu">rayrender</span><span class="fu">::</span><span class="fu"><a href="https://www.rayrender.net/reference/diffuse.html" class="external-link">diffuse</a></span><span class="op">(</span>checkercolor <span class="op">=</span> <span class="st">"grey80"</span>,sigma<span class="op">=</span><span class="fl">90</span>,checkerperiod <span class="op">=</span> <span class="fl">100</span><span class="op">)</span>,
+                   environment_light <span class="op">=</span> <span class="va">tempfilehdr</span>, camera_lookat <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>,<span class="op">-</span><span class="fl">150</span>,<span class="fl">0</span><span class="op">)</span><span class="op">)</span></code></pre></div>
+<p><img src="reference/figures/README_ggplots_6-1.png"><!-- --></p>
+</div>
+</div>
+  </div>
+
+  <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
+    <div class="links">
+<h2 data-toc-skip>Links</h2>
+<ul class="list-unstyled">
+<li><a href="https://cloud.r-project.org/package=rayshader" class="external-link">View on CRAN</a></li>
+<li><a href="https://github.com/tylermorganwall/rayshader/" class="external-link">Browse source code</a></li>
+<li><a href="https://github.com/tylermorganwall/rayshader/issues" class="external-link">Report a bug</a></li>
+</ul>
+</div>
+
+<div class="license">
+<h2 data-toc-skip>License</h2>
+<ul class="list-unstyled">
+<li><a href="https://www.r-project.org/Licenses/GPL-3" class="external-link">GPL-3</a></li>
+</ul>
+</div>
+
+<div class="community">
+<h2 data-toc-skip>Community</h2>
+<ul class="list-unstyled">
+<li><a href="CONTRIBUTING.html">Contributing guide</a></li>
+<li><a href="CODE_OF_CONDUCT.html">Code of conduct</a></li>
+</ul>
+</div>
+
+<div class="citation">
+<h2 data-toc-skip>Citation</h2>
+<ul class="list-unstyled">
+<li><a href="authors.html#citation">Citing rayshader</a></li>
+</ul>
+</div>
+
+<div class="developers">
+<h2 data-toc-skip>Developers</h2>
+<ul class="list-unstyled">
+<li>
+<a href="https://www.tylermw.com" class="external-link">Tyler Morgan-Wall</a> <br><small class="roles"> Maintainer </small>  </li>
+</ul>
+</div>
+
+
+
+  </div>
+</div>
+
+
+      <footer><div class="copyright">
+  <p></p>
+<p>Developed by <a href="https://www.tylermw.com" class="external-link">Tyler Morgan-Wall</a>.</p>
+</div>
+
+<div class="pkgdown">
+  <p></p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.1.</p>
+</div>
+
+      </footer>
+</div>
+
+  
+
+
+  
+
+  </body>
+</html>
