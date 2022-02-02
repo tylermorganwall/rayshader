@@ -506,6 +506,7 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
       if(save_texture) {
         cat("g Floating", file=con, sep ="\n")
         cat(sprintf("usemtl ray_layer_texture%d",current_floating_number), file=con, sep ="\n")
+        current_floating_number = current_floating_number + 1
       }
       floating_layer_indices = matrix(vertex_info$startindex[row]:vertex_info$endindex[row], ncol=3, byrow=TRUE)
       floating_layer_texindices = matrix(vertex_info$startindextex[row]:vertex_info$endindextex[row], ncol=3, byrow=TRUE)
