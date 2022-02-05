@@ -44,6 +44,7 @@ reference:
       - starts_with("calculate")
       - starts_with("raster")
       - starts_with("resize")
+      - starts_with("reduce_matrix_size")
   - title: "Included Data"
     desc: "Elevation data included with rayshader"
     contents:
