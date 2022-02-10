@@ -8,7 +8,7 @@
 #'of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10. Adjust the zscale down to exaggerate elevation features.
 #'@param baseshape Default `rectangle`. Shape of the base. Options are `c("rectangle","circle","hex")`.
 #'@param solid Default `TRUE`. If `FALSE`, just the surface is rendered.
-#'@param soliddepth Default `auto`, which sets it to the lowest elevation in the matrix minus one unit (scaled by zscale). Depth of the solid base.
+#'@param soliddepth Default `auto`, which sets it to the lowest elevation in the matrix minus one unit (scaled by zscale). Depth of the solid base. If heightmap is uniform and set on `auto`, this is automatically set to a slightly lower level than the uniform elevation.
 #'@param solidcolor Default `grey20`. Base color.
 #'@param solidlinecolor Default `grey30`. Base edge line color.
 #'@param shadow Default `TRUE`. If `FALSE`, no shadow is rendered.
@@ -165,12 +165,22 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
     stop("heightmap argument missing--need to input both hillshade and original elevation matrix")
   }
   if(soliddepth == "auto") {
-    soliddepth = min(heightmap,na.rm = TRUE)/zscale - (max(heightmap,na.rm = TRUE)/zscale-min(heightmap,na.rm = TRUE)/zscale)/5
+    if(min(heightmap,na.rm=TRUE) != max(heightmap,na.rm=TRUE)) {
+      soliddepth = min(heightmap,na.rm = TRUE)/zscale - (max(heightmap,na.rm = TRUE)/zscale-min(heightmap,na.rm = TRUE)/zscale)/5
+    } else {
+      max_dim = max(dim(heightmap))
+      soliddepth = min(heightmap,na.rm = TRUE)/zscale - max_dim/25
+    }
   } else {
     soliddepth = soliddepth/zscale
   }
   if(shadowdepth == "auto") {
-    shadowdepth = soliddepth - (max(heightmap,na.rm = TRUE)/zscale-min(heightmap,na.rm = TRUE)/zscale)/5
+    if(min(heightmap,na.rm=TRUE) != max(heightmap,na.rm=TRUE)) {
+      shadowdepth = soliddepth - (max(heightmap,na.rm = TRUE)/zscale-min(heightmap,na.rm = TRUE)/zscale)/5
+    } else {
+      max_dim = max(dim(heightmap))
+      shadowdepth = soliddepth - max_dim/25
+    }
   } else {
     shadowdepth = shadowdepth/zscale
   }

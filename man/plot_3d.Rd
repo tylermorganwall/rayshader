@@ -53,7 +53,7 @@ of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
 
 \item{solid}{Default `TRUE`. If `FALSE`, just the surface is rendered.}
 
-\item{soliddepth}{Default `auto`, which sets it to the lowest elevation in the matrix minus one unit (scaled by zscale). Depth of the solid base.}
+\item{soliddepth}{Default `auto`, which sets it to the lowest elevation in the matrix minus one unit (scaled by zscale). Depth of the solid base. If heightmap is uniform and set on `auto`, this is automatically set to a slightly lower level than the uniform elevation.}
 
 \item{solidcolor}{Default `grey20`. Base color.}
 
