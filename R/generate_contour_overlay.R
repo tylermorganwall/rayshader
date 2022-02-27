@@ -78,7 +78,7 @@ generate_contour_overlay = function(heightmap, levels=NA, nlevels=NA,
     stop("`sf` package required for generate_contour_overlay()")
   }
   if(!(length(find.package("isoband", quiet = TRUE)) > 0)) {
-    stop("`isobands` package required for generate_contour_overlay()")
+    stop("`isoband` package required for generate_contour_overlay()")
   }
   if(is.na(levels[1])) {
     if(is.na(nlevels[1])) {
