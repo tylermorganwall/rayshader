@@ -38,6 +38,9 @@ get_ids_with_labels = function(typeval = NULL) {
     material_properties[[i]]$scalebar2_color = NA
     material_properties[[i]]$point_color = NA
     material_properties[[i]]$tricolor = NA
+    material_properties[[i]]$polygon_alpha = NA
+    material_properties[[i]]$lit = NA
+    
     
     if(idvals$type[i] != "text") {
       if(material_type[i] %in% c("surface", "surface_tris")) {
@@ -86,6 +89,8 @@ get_ids_with_labels = function(typeval = NULL) {
       }
       if(material_type[i] == "polygon3d") {
         material_properties[[i]]$tricolor = material_type_single$color
+        material_properties[[i]]$polygon_alpha = material_type_single$alpha
+        material_properties[[i]]$lit = material_type_single$lit
       }
     } 
   }

@@ -169,6 +169,11 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
       tempcol = col2rgb(idrow$tricolor[[1]])/256
       cat(paste("newmtl ray_polygon3d"), file=con, sep="\n")
       cat(paste("Kd", sprintf("%1.4f %1.4f %1.4f",tempcol[1],tempcol[2],tempcol[3]),collapse = " "), file=con, sep="\n")
+      if(!idrow$lit[[1]]) {
+        cat(paste("Ka", sprintf("%1.4f %1.4f %1.4f",tempcol[1],tempcol[2],tempcol[3]),collapse = " "), file=con, sep="\n")
+      }
+      cat(paste("d", sprintf("%1.4f",idrow$polygon_alpha[[1]]),collapse = " "), file=con, sep="\n")
+      
       cat("\n", file=con)
     } else if(!is.na(idrow$shadow_texture_file)) {
       if(save_shadow) {

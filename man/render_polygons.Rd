@@ -16,6 +16,7 @@ render_polygons(
   scale_data = 1,
   parallel = FALSE,
   holes = 0,
+  alpha = 1,
   lit = TRUE,
   light_altitude = c(45, 30),
   light_direction = c(315, 135),
@@ -58,6 +59,8 @@ may be faster (depending on how many geometries are in `polygon`).}
 
 \item{holes}{Default `0`. If passing in a polygon directly, this specifies which index represents
 the holes in the polygon. See the `earcut` function in the `decido` package for more information.}
+
+\item{alpha}{Default `1`. Transparency of the polygons.}
 
 \item{lit}{Default `TRUE`. Whether to light the polygons.}
 

@@ -277,6 +277,9 @@ render_snapshot_software = function(filename, cache_filename = NULL, camera_loca
   } 
   if(!is.null(scene$materials$ray_polygon3d)) {
     scene$materials$ray_polygon3d$type = "diffuse"
+    if(any(scene$materials$ray_polygon3d$ambient != 0)) {
+      scene$materials$ray_polygon3d$diffuse_intensity = 0
+    }
   }
   debug = rayvertex::rasterize_scene(scene,lookat=c(0,0,0),
                              filename = filename, fsaa = 1,

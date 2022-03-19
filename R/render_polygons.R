@@ -27,6 +27,7 @@
 #' @param heightmap Default `NULL`. Automatically extracted from the rgl window--only use if auto-extraction
 #' of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
 #'  All points are assumed to be evenly spaced.
+#' @param alpha Default `1`. Transparency of the polygons.
 #' @param lit Default `TRUE`. Whether to light the polygons. 
 #' @param light_altitude Default `c(45, 60)`. Degree(s) from the horizon from which to light the polygons.
 #' @param light_direction Default `c(45, 60)`. Degree(s) from north from which to light the polygons.
@@ -75,7 +76,7 @@
 render_polygons = function(polygon, extent,  color = "red", top = 1, bottom = NA,
                            data_column_top = NULL, data_column_bottom = NULL,
                            heightmap = NULL, scale_data = 1, parallel = FALSE,
-                           holes = 0, lit = TRUE, 
+                           holes = 0, alpha = 1, lit = TRUE, 
                            light_altitude = c(45,30), light_direction = c(315,135), 
                            light_intensity = 0.3, clear_previous = FALSE) {
   if(rgl::rgl.cur() == 0) {
@@ -157,7 +158,7 @@ render_polygons = function(polygon, extent,  color = "red", top = 1, bottom = NA
       single_poly[,3] = ncol_map/2 - (single_poly[,3]-e@ymin)/(e@ymax - e@ymin) * ncol_map 
       single_poly[,2] = single_poly[,2]
       
-      rgl::rgl.material(color = color, tag = "polygon3d", lit = lit)
+      rgl::rgl.material(color = color, tag = "polygon3d", lit = lit, alpha = alpha)
       rgl::triangles3d(single_poly)
     }
   }
