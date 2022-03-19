@@ -18,7 +18,7 @@ system defined by the extent object."><meta property="og:image" content="https:/
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.27.2</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.27.3</span>
       </span>
     </div>
 
@@ -30,7 +30,7 @@ system defined by the extent object."><meta property="og:image" content="https:/
   </a>
 </li>
 <li class="dropdown">
-  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
     Tutorials/Blog Posts
      
     <span class="caret"></span>
@@ -113,6 +113,7 @@ system defined by the extent object.</p>
   scale_data <span class="op">=</span> <span class="fl">1</span>,
   parallel <span class="op">=</span> <span class="cn">FALSE</span>,
   holes <span class="op">=</span> <span class="fl">0</span>,
+  alpha <span class="op">=</span> <span class="fl">1</span>,
   lit <span class="op">=</span> <span class="cn">TRUE</span>,
   light_altitude <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">45</span>, <span class="fl">30</span><span class="op">)</span>,
   light_direction <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">315</span>, <span class="fl">135</span><span class="op">)</span>,
@@ -158,6 +159,8 @@ may be faster (depending on how many geometries are in `polygon`).</p></dd>
 <dt>holes</dt>
 <dd><p>Default `0`. If passing in a polygon directly, this specifies which index represents
 the holes in the polygon. See the `earcut` function in the `decido` package for more information.</p></dd>
+<dt>alpha</dt>
+<dd><p>Default `1`. Transparency of the polygons.</p></dd>
 <dt>lit</dt>
 <dd><p>Default `TRUE`. Whether to light the polygons.</p></dd>
 <dt>light_altitude</dt>
