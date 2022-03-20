@@ -52,7 +52,9 @@
 #'@param clear Default `FALSE`. If `TRUE`, the current `rgl` device will be cleared.
 #'@param print_scene_info Default `FALSE`. If `TRUE`, it will print the position and lookat point of the camera.
 #'@param clamp_value Default `10`. See documentation for `rayrender::render_scene()`.
+#'@param return_scene Default `FALSE`. If `TRUE`, this will return the rayrender scene (instead of rendering the image).
 #'@param ... Additional parameters to pass to `rayrender::render_scene`()
+#'
 #'@export
 #'@examples
 #'#Render the volcano dataset using pathtracing
@@ -129,7 +131,7 @@ render_highquality = function(filename = NULL, light = TRUE, lightdirection = 31
                               title_bar_color = NULL, title_bar_alpha = 0.5,
                               ground_material = rayrender::diffuse(), ground_size=100000,scene_elements=NULL, 
                               camera_location = NULL, camera_lookat = NULL, 
-                              camera_interpolate=1, clear  = FALSE, 
+                              camera_interpolate=1, clear  = FALSE, return_scene = FALSE,
                               print_scene_info = FALSE, clamp_value = 10, ...) {
   if(rgl::rgl.cur() == 0) {
     stop("No rgl window currently open.")
@@ -506,11 +508,15 @@ render_highquality = function(filename = NULL, light = TRUE, lightdirection = 31
   }
   if(print_scene_info) {
     dist_val = sqrt(sum((camera_lookat - lookfrom)^2))
-    print(sprintf("Camera position: c(%0.2f, %0.2f, %0.2f), Camera Lookat: c(%0.2f, %0.2f, %0.2f) Focal Distance: %0.2f",
-                  lookfrom[1],lookfrom[2],lookfrom[3], camera_lookat[1], camera_lookat[2], camera_lookat[3], dist_val))
+    print(sprintf("Camera position: c(%0.2f, %0.2f, %0.2f), Camera Lookat: c(%0.2f, %0.2f, %0.2f) Focal Distance: %0.2f Scene Offset:  c(%0.2f, %0.2f, %0.2f)",
+                  lookfrom[1],lookfrom[2],lookfrom[3], camera_lookat[1], camera_lookat[2], camera_lookat[3], dist_val,
+                  -bbox_center[1],-bbox_center[2],-bbox_center[3]))
   }
   if(!is.null(scene_elements)) {
     scene = rayrender::add_object(scene,scene_elements)
+  }
+  if(return_scene) {
+    return(scene)
   }
   
   if(has_title) {
