@@ -19,7 +19,7 @@ ground and add additional scene elements."><meta property="og:image" content="ht
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.27.4</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.27.5</span>
       </span>
     </div>
 
@@ -138,6 +138,7 @@ ground and add additional scene elements.</p>
   camera_lookat <span class="op">=</span> <span class="cn">NULL</span>,
   camera_interpolate <span class="op">=</span> <span class="fl">1</span>,
   clear <span class="op">=</span> <span class="cn">FALSE</span>,
+  return_scene <span class="op">=</span> <span class="cn">FALSE</span>,
   print_scene_info <span class="op">=</span> <span class="cn">FALSE</span>,
   clamp_value <span class="op">=</span> <span class="fl">10</span>,
   <span class="va">...</span>
@@ -226,6 +227,8 @@ be derived from the rgl window.</p></dd>
 and `camera_lookat` vectors.</p></dd>
 <dt>clear</dt>
 <dd><p>Default `FALSE`. If `TRUE`, the current `rgl` device will be cleared.</p></dd>
+<dt>return_scene</dt>
+<dd><p>Default `FALSE`. If `TRUE`, this will return the rayrender scene (instead of rendering the image).</p></dd>
 <dt>print_scene_info</dt>
 <dd><p>Default `FALSE`. If `TRUE`, it will print the position and lookat point of the camera.</p></dd>
 <dt>clamp_value</dt>
