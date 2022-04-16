@@ -39,6 +39,7 @@ render_highquality(
   camera_lookat = NULL,
   camera_interpolate = 1,
   clear = FALSE,
+  return_scene = FALSE,
   print_scene_info = FALSE,
   clamp_value = 10,
   ...
@@ -124,6 +125,8 @@ be derived from the rgl window.}
 and `camera_lookat` vectors.}
 
 \item{clear}{Default `FALSE`. If `TRUE`, the current `rgl` device will be cleared.}
+
+\item{return_scene}{Default `FALSE`. If `TRUE`, this will return the rayrender scene (instead of rendering the image).}
 
 \item{print_scene_info}{Default `FALSE`. If `TRUE`, it will print the position and lookat point of the camera.}
 
