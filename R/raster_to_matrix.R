@@ -2,7 +2,7 @@
 #'
 #'@description Turns a raster into a matrix suitable for rayshader. 
 #'
-#'@param raster The input raster. Either a RasterLayer object, or a filename.
+#'@param raster The input raster. Either a RasterLayer object, a terra SpatRaster object, or a filename.
 #'@param verbose Default `interactive()`. Will print dimensions of the resulting matrix.
 #'@export
 #'@examples
@@ -28,6 +28,13 @@ raster_to_matrix = function(raster, verbose = interactive()) {
       print(paste0("Dimensions of matrix are: ", ncol(raster_mat),"x" , nrow(raster_mat)))
     } else {
       print(paste0("Dimensions of matrix are: ", ncol(raster),"x" , nrow(raster), "."))
+    }
+    if(inherits(raster,"SpatRaster")) {
+      if(length(find.package("terra", quiet = TRUE)) > 0) {
+        raster_mat = as.matrix(raster)
+      } else {
+        stop("{terra} package required if passing SpatRaster object")
+      }
     }
   }
   return(matrix(raster::extract(raster, raster::extent(raster)), 
