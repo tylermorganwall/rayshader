@@ -104,8 +104,8 @@ generate_polygon_overlay = function(geometry, extent, heightmap = NULL,
         if(is.numeric(sf_polygons_cropped[[data_column_fill]])) {
           max_col = max(sf_polygons_cropped[[data_column_fill]],na.rm = TRUE)
           min_col = min(sf_polygons_cropped[[data_column_fill]],na.rm = TRUE)
-          indices = (sf_polygons_cropped[[data_column_fill]] - min_col) / (max_col - min_col) * length(palette)
-          fillvals = palette[as.integer(indices)]
+          indices = (sf_polygons_cropped[[data_column_fill]] - min_col) / (max_col - min_col) * (length(palette)-1)
+          fillvals = palette[as.integer(indices)+1]
         } else if (is.character(sf_polygons_cropped[[data_column_fill]])) {
           mapping = names(palette)
           indices = match(sf_polygons_cropped[[data_column_fill]],mapping)
