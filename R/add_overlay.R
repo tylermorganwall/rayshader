@@ -75,7 +75,9 @@ add_overlay = function(hillshade, overlay, alphalayer = 1, alphacolor=NULL,
   if(!is.null(alphacolor)) {
     colorvals = col2rgb(alphacolor)/255
     alphalayer1 = overlay[,,1] == colorvals[1] & overlay[,,2] == colorvals[2] & overlay[,,3] == colorvals[3]
-    overlay[alphalayer1,4] = 0
+    temp_over = overlay[,,4]
+    temp_over[alphalayer1] = 0
+    overlay[,,4] = temp_over
   }
   if(length(dim(hillshade)) == 2) {
     rayimage::add_image_overlay(fliplr(t(hillshade)),overlay,alpha=alphalayer, rescale_original = rescale_original)
