@@ -185,7 +185,7 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
     shadowdepth = shadowdepth/zscale
   }
   if(shadowwidth == "auto") {
-    shadowwidth = floor(min(dim(heightmap))/10)
+    shadowwidth = max(floor(min(dim(heightmap))/10),5)
   }
   if(water) {
     if (watercolor == "imhof1") {
