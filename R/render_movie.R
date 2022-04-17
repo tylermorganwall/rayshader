@@ -155,13 +155,13 @@ render_movie = function(filename, type = "orbit", frames = 360, fps = 30,
     theta_vector = seq(0,360,length.out = frames+1)[-(frames+1)]
     for(i in seq_len(frames)) {
       render_camera(theta = theta_vector[i], phi = phi, zoom = zoom, fov = fov)
-      rgl::snapshot3d(filename = png_files[i], top = FALSE)
+      rgl::snapshot3d(filename = png_files[i], top = FALSE, webshot = FALSE)
     }
   } else if (type == "oscillate") {
     theta_vector = theta + 45 * sin(seq(0,360,length.out = frames+1)[-(frames+1)]*pi/180)
     for(i in seq_len(frames)) {
       render_camera(theta = theta_vector[i], phi = phi, zoom = zoom, fov = fov)
-      rgl::snapshot3d(filename = png_files[i], top = FALSE)
+      rgl::snapshot3d(filename = png_files[i], top = FALSE, webshot = FALSE)
     }
   } else if (type == "custom") {
     if(length(theta) == 1) theta = rep(theta, frames)
@@ -173,7 +173,7 @@ render_movie = function(filename, type = "orbit", frames = 360, fps = 30,
     }
     for(i in seq_len(frames)) {
       render_camera(theta = theta[i], phi = phi[i], zoom = zoom[i], fov = fov[i])
-      rgl::snapshot3d(filename = png_files[i], top = FALSE)
+      rgl::snapshot3d(filename = png_files[i], top = FALSE, webshot = FALSE)
     }
   } else {
     stop("Unknown type: ", type)
