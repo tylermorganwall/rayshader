@@ -31,6 +31,8 @@
 #'@param vignette Default `FALSE`. If `TRUE` or numeric, a camera vignetting effect will be added to the image.
 #'`1` is the darkest vignetting, while `0` is no vignetting. If vignette is a length-2 vector, the second entry will
 #'control the blurriness of the vignette effect.
+#'@param vignette_color Default `"black"`. Color of the vignette.
+#'@param vignette_radius Default `1.3`. Radius of the vignette, as a porportion of the image dimensions.
 #'@param audio Default `NULL`. Optional file with audio to add to the video.
 #'@param progbar Default `TRUE` if interactive, `FALSE` otherwise. If `FALSE`, turns off progress bar. 
 #'Will display a progress bar when adding an overlay or title.
@@ -81,7 +83,9 @@ render_movie = function(filename, type = "orbit", frames = 360, fps = 30,
                         title_text = NULL, title_offset = c(20,20), 
                         title_color = "black", title_size = 30, title_font = "sans",
                         title_bar_color = NULL, title_bar_alpha = 0.5,
-                        image_overlay = NULL, vignette = FALSE, title_position = "northwest",
+                        image_overlay = NULL, 
+                        vignette = FALSE, vignette_color = "black", vignette_radius = 1.3,
+                        title_position = "northwest",
                         audio=NULL, progbar = interactive(), ...) {
   if(rgl::rgl.cur() == 0) {
     stop("No rgl window currently open.")
@@ -209,7 +213,9 @@ render_movie = function(filename, type = "orbit", frames = 360, fps = 30,
       if(progbar) {
         pb$tick()
       }
-      rayimage::add_vignette(png_files[i], vignette = vignette, filename = png_files[i])
+      rayimage::add_vignette(png_files[i], vignette = vignette, filename = png_files[i], 
+                             color = vignette_color,
+                             radius = vignette_radius)
     }
   }
   if(has_title) {

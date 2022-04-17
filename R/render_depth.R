@@ -40,6 +40,8 @@
 #'@param vignette Default `FALSE`. If `TRUE` or numeric, a camera vignetting effect will be added to the image.
 #'`1` is the darkest vignetting, while `0` is no vignetting. If vignette is a length-2 vector, the second entry will
 #'control the blurriness of the vignette effect.
+#'@param vignette_color Default `"black"`. Color of the vignette.
+#'@param vignette_radius Default `1.3`. Radius of the vignette, as a porportion of the image dimensions.
 #'@param width Default `NULL`. Optional argument to pass to `rgl::snapshot3d()` to specify the
 #'width when `software_render = TRUE`..
 #'@param height Default `NULL`. Optional argument to pass to `rgl::snapshot3d()` to specify the
@@ -116,7 +118,8 @@ render_depth = function(focus = NULL, focallength = 100, fstop = 4, filename=NUL
                      title_text = NULL, title_offset = c(20,20),
                      title_color = "black", title_size = 30, title_font = "sans",
                      title_bar_color = NULL, title_bar_alpha = 0.5, title_position = "northwest",
-                     image_overlay = NULL, vignette = FALSE,
+                     image_overlay = NULL, 
+                     vignette = FALSE, vignette_color = "black", vignette_radius = 1.3,
                      progbar = interactive(), software_render = FALSE, 
                      width = NULL, height = NULL, 
                      camera_location = NULL, camera_lookat = c(0,0,0),
@@ -298,7 +301,8 @@ render_depth = function(focus = NULL, focallength = 100, fstop = 4, filename=NUL
       tempmap = rayimage::add_image_overlay(tempmap, image_overlay = image_overlay_file)
     }
     if(vignette || is.numeric(vignette)) {
-      tempmap = rayimage::add_vignette(tempmap, vignette = vignette)
+      tempmap = rayimage::add_vignette(tempmap, vignette = vignette, color = vignette_color,
+                                       radius = vignette_radius)
     }
     if(has_title) {
       tempmap = rayimage::add_title(tempmap, title_text = title_text, 
