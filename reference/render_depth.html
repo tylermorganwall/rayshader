@@ -19,7 +19,7 @@ abs(z_depth-focus)*focal_length^2/(f_stop*z_depth*(focus - focal_length))"><meta
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.27.5</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.27.6</span>
       </span>
     </div>
 
@@ -128,6 +128,8 @@ abs(z_depth-focus)*focal_length^2/(f_stop*z_depth*(focus - focal_length))"><meta
   title_position <span class="op">=</span> <span class="st">"northwest"</span>,
   image_overlay <span class="op">=</span> <span class="cn">NULL</span>,
   vignette <span class="op">=</span> <span class="cn">FALSE</span>,
+  vignette_color <span class="op">=</span> <span class="st">"black"</span>,
+  vignette_radius <span class="op">=</span> <span class="fl">1.3</span>,
   progbar <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/interactive.html" class="external-link">interactive</a></span><span class="op">(</span><span class="op">)</span>,
   software_render <span class="op">=</span> <span class="cn">FALSE</span>,
   width <span class="op">=</span> <span class="cn">NULL</span>,
@@ -209,6 +211,10 @@ dimension of the image if it does not match exactly.</p></dd>
 <dd><p>Default `FALSE`. If `TRUE` or numeric, a camera vignetting effect will be added to the image.
 `1` is the darkest vignetting, while `0` is no vignetting. If vignette is a length-2 vector, the second entry will
 control the blurriness of the vignette effect.</p></dd>
+<dt>vignette_color</dt>
+<dd><p>Default `"black"`. Color of the vignette.</p></dd>
+<dt>vignette_radius</dt>
+<dd><p>Default `1.3`. Radius of the vignette, as a porportion of the image dimensions.</p></dd>
 <dt>progbar</dt>
 <dd><p>Default `TRUE` if in an interactive session. Displays a progress bar.</p></dd>
 <dt>software_render</dt>
