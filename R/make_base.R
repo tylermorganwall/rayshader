@@ -8,7 +8,7 @@
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
 #'of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
 #'@keywords internal
-make_base = function(heightmap,basedepth=0,basecolor="grey20",zscale=1) {
+make_base = function(heightmap,basedepth=0,basecolor="grey20",zscale=1, dirt = FALSE) {
   heightmap = heightmap/zscale
   edge_vals = unique(c(heightmap[1,], heightmap[,1],heightmap[nrow(heightmap),],heightmap[,ncol(heightmap)]))
   if(length(edge_vals) == 1 && all(!is.na(edge_vals))) {
@@ -66,34 +66,32 @@ make_base = function(heightmap,basedepth=0,basecolor="grey20",zscale=1) {
     fullsides = fullsides[nrow(fullsides):1,]
     fullnormals = fullnormals[nrow(fullnormals):1,]
     
-    horizontal_sides = fullsides[!direction_vec,]
-    vertical_sides = fullsides[direction_vec,]
-    
-    horizontal_normals = fullnormals[!direction_vec,]
-    vertical_normals = fullnormals[direction_vec,]
-    
-    textures = generate_dirt_textures(heightmap, base_depth = max(fullsides[,2],na.rm=TRUE) - basedepth)
-    
-    horizontal_texcoords_x = (horizontal_sides[,1] + nrow(heightmap)/2-1)/(nrow(heightmap)-1)
-    horizontal_texcoords_y = (horizontal_sides[,2]-min(horizontal_sides[,2],na.rm=TRUE))/(max(horizontal_sides[,2],na.rm=TRUE)-min(horizontal_sides[,2],na.rm=TRUE))
-    
-    vertical_texcoords_x = (vertical_sides[,3] + ncol(heightmap)/2-1)/(ncol(heightmap)-1)
-    vertical_texcoords_y = (vertical_sides[,2]-min(vertical_sides[,2],na.rm=TRUE))/(max(vertical_sides[,2],na.rm=TRUE)-min(vertical_sides[,2],na.rm=TRUE))
-    
-    rgl::triangles3d(horizontal_sides, normals=horizontal_normals,
-                     texture = textures[1], texcoords = cbind(horizontal_texcoords_x,horizontal_texcoords_y),
-                     lit=FALSE,front="filled",back="filled",tag = "base")
-    
-    rgl::triangles3d(vertical_sides, normals=vertical_normals,
-                     texture = textures[2],texcoords = cbind(vertical_texcoords_x,vertical_texcoords_y),
-                     lit=FALSE,front="filled",back="filled",tag = "base")
-    # rgl::triangles3d(horizontal_sides, normals=horizontal_normals,
-    #                  texture = textures[1], texcoords = cbind(horizontal_texcoords_x,horizontal_texcoords_y),
-    #                  lit=FALSE,color=basecolor,front="filled",back="filled",tag = "base")
-    # 
-    # rgl::triangles3d(vertical_sides, normals=vertical_normals,
-    #                  texture = textures[2],texcoords = cbind(vertical_texcoords_x,vertical_texcoords_y),
-    #                  lit=FALSE,color=basecolor,front="filled",back="filled",tag = "base")
+    if(dirt) {
+      horizontal_sides = fullsides[!direction_vec,]
+      vertical_sides = fullsides[direction_vec,]
+      
+      horizontal_normals = fullnormals[!direction_vec,]
+      vertical_normals = fullnormals[direction_vec,]
+      
+      textures = generate_dirt_textures(heightmap, base_depth = max(fullsides[,2],na.rm=TRUE) - basedepth)
+      
+      horizontal_texcoords_x = (horizontal_sides[,1] + nrow(heightmap)/2-1)/(nrow(heightmap)-1)
+      horizontal_texcoords_y = (horizontal_sides[,2]-min(horizontal_sides[,2],na.rm=TRUE))/(max(horizontal_sides[,2],na.rm=TRUE)-min(horizontal_sides[,2],na.rm=TRUE))
+      
+      vertical_texcoords_x = (vertical_sides[,3] + ncol(heightmap)/2-1)/(ncol(heightmap)-1)
+      vertical_texcoords_y = (vertical_sides[,2]-min(vertical_sides[,2],na.rm=TRUE))/(max(vertical_sides[,2],na.rm=TRUE)-min(vertical_sides[,2],na.rm=TRUE))
+      
+      rgl::triangles3d(horizontal_sides, normals=horizontal_normals,
+                       texture = textures[1], texcoords = cbind(horizontal_texcoords_x,horizontal_texcoords_y),
+                       lit=FALSE,front="filled",back="filled",tag = "base")
+      
+      rgl::triangles3d(vertical_sides, normals=vertical_normals,
+                       texture = textures[2],texcoords = cbind(vertical_texcoords_x,vertical_texcoords_y),
+                       lit=FALSE,front="filled",back="filled",tag = "base")
+    } else {
+      rgl::triangles3d(fullsides, normals=fullnormals,
+                       lit=FALSE,color=basecolor,front="filled",back="filled",tag = "base")
+    }
   } else {
     na_matrix = is.na(heightmap)
     baselist = make_base_cpp(heightmap, na_matrix, basedepth)
@@ -115,33 +113,36 @@ make_base = function(heightmap,basedepth=0,basecolor="grey20",zscale=1) {
     xznormals[!is.na(xznormals)] = 0
     ynormals[!is.na(ynormals)] = -1
     
-    horizontal_sides = fullsides[!direction_vec,]
-    vertical_sides = fullsides[direction_vec,]
+    if(dirt) {
+      horizontal_sides = fullsides[!direction_vec,]
+      vertical_sides = fullsides[direction_vec,]
+      
+      horizontal_normals = fullnormals[!direction_vec,]
+      vertical_normals = fullnormals[direction_vec,]
+      
+      textures = generate_dirt_textures(heightmap, base_depth = max(fullsides[,2],na.rm=TRUE) - basedepth)
+      
+      horizontal_texcoords_x = (horizontal_sides[,1] + nrow(heightmap)/2-1)/(nrow(heightmap)-1)
+      horizontal_texcoords_y = (horizontal_sides[,2]-min(horizontal_sides[,2],na.rm=TRUE))/(max(horizontal_sides[,2],na.rm=TRUE)-min(horizontal_sides[,2],na.rm=TRUE))
+      
+      vertical_texcoords_x = (vertical_sides[,3] + ncol(heightmap)/2-1)/(ncol(heightmap)-1)
+      vertical_texcoords_y = (vertical_sides[,2]-min(vertical_sides[,2],na.rm=TRUE))/(max(vertical_sides[,2],na.rm=TRUE)-min(vertical_sides[,2],na.rm=TRUE))
+      rgl::triangles3d(horizontal_sides, #normals=horizontal_normals,
+                       texture = textures[1], texcoords = cbind(horizontal_texcoords_x,horizontal_texcoords_y),
+                       lit=FALSE,front="filled",back="filled",tag = "base")
+      
+      rgl::triangles3d(vertical_sides, #normals=vertical_normals,
+                       texture = textures[2],texcoords = cbind(vertical_texcoords_x,vertical_texcoords_y),
+                       lit=FALSE,front="filled",back="filled",tag = "base")
+    } else {
+      rgl::triangles3d(fullsides, normals = fullnormals,
+                       texture = NULL,
+                       lit=FALSE,color=basecolor,front="filled",back="filled",tag = "base")
+    }
     
-    horizontal_normals = fullnormals[!direction_vec,]
-    vertical_normals = fullnormals[direction_vec,]
+    rgl.surface(1:nrow(basemat)-nrow(basemat)/2,1:ncol(basemat)-ncol(basemat)/2,basemat,color=basecolor,
+                lit=FALSE,back="filled",front="filled",tag = "basebottom",
+                normal_x = xznormals, normal_z = xznormals, normal_y = ynormals)
     
-    textures = generate_dirt_textures(heightmap, base_depth = max(fullsides[,2],na.rm=TRUE) - basedepth)
-    
-    horizontal_texcoords_x = (horizontal_sides[,1] + nrow(heightmap)/2-1)/(nrow(heightmap)-1)
-    horizontal_texcoords_y = (horizontal_sides[,2]-min(horizontal_sides[,2],na.rm=TRUE))/(max(horizontal_sides[,2],na.rm=TRUE)-min(horizontal_sides[,2],na.rm=TRUE))
-    
-    vertical_texcoords_x = (vertical_sides[,3] + ncol(heightmap)/2-1)/(ncol(heightmap)-1)
-    vertical_texcoords_y = (vertical_sides[,2]-min(vertical_sides[,2],na.rm=TRUE))/(max(vertical_sides[,2],na.rm=TRUE)-min(vertical_sides[,2],na.rm=TRUE))
-    
-    
-    # rgl.surface(1:nrow(basemat)-nrow(basemat)/2,1:ncol(basemat)-ncol(basemat)/2,basemat,color=basecolor,
-    #             lit=FALSE,back="filled",front="filled",tag = "basebottom", 
-    #             normal_x = xznormals, normal_z = xznormals, normal_y = ynormals)
-    # rgl::triangles3d(fullsides, normals = fullnormals,
-    #                  texture = NULL,
-    #                  lit=FALSE,color=basecolor,front="filled",back="filled",tag = "base")
-    rgl::triangles3d(horizontal_sides, #normals=horizontal_normals,
-                     texture = textures[1], texcoords = cbind(horizontal_texcoords_x,horizontal_texcoords_y),
-                     lit=FALSE,front="filled",back="filled",tag = "base")
-    
-    rgl::triangles3d(vertical_sides, #normals=vertical_normals,
-                     texture = textures[2],texcoords = cbind(vertical_texcoords_x,vertical_texcoords_y),
-                     lit=FALSE,front="filled",back="filled",tag = "base")
   }
 }

@@ -115,7 +115,7 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
                    shadowwidth = "auto", 
                    water = FALSE, waterdepth = 0, watercolor="dodgerblue", wateralpha = 0.5, 
                    waterlinecolor=NULL, waterlinealpha = 1, 
-                   linewidth = 2, lineantialias = FALSE,
+                   linewidth = 2, lineantialias = FALSE, dirt = FALSE,
                    theta=45, phi = 45, fov=0, zoom = 1, background="white", windowsize = 600,
                    precomputed_normals = NULL, asp = 1,
                    triangulate = FALSE, max_error = 0, max_tri = 0, verbose = FALSE,
@@ -275,7 +275,7 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
   rgl.viewpoint(zoom=zoom,phi=phi,theta=theta,fov=fov)
   par3d(windowRect = windowsize,...)
   if(solid && !triangulate) {
-    make_base(heightmap,basedepth=soliddepth,basecolor=solidcolor,zscale=zscale)
+    make_base(heightmap,basedepth=soliddepth,basecolor=solidcolor,zscale=zscale, dirt = dirt)
   } else if(solid && triangulate) {
     make_base_triangulated(tris,basedepth=soliddepth,basecolor=solidcolor)
   }
