@@ -240,7 +240,7 @@ render_movie = function(filename, type = "orbit", frames = 360, fps = 30,
   }
   if(use_av) {
     av::av_encode_video(png_files, output = filename, framerate = fps, 
-                        vfilter = paste0("scale=",dimensions[1],":-2"), audio=audio)
+                        vfilter = paste0("scale=",dimensions[2],":-2"), audio=audio)
   } else {
     gifski::gifski(png_files=png_files, gif_file = filename, delay = 1/fps, 
                    width = dimensions[1],height= dimensions[2])
