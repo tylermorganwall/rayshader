@@ -29,13 +29,18 @@ raster_to_matrix = function(raster, verbose = interactive()) {
     } else {
       print(paste0("Dimensions of matrix are: ", ncol(raster),"x" , nrow(raster), "."))
     }
-    if(inherits(raster,"SpatRaster")) {
-      if(length(find.package("terra", quiet = TRUE)) > 0) {
-        raster_mat = as.matrix(raster)
-      } else {
-        stop("{terra} package required if passing SpatRaster object")
-      }
+  }
+  if(inherits(raster,"SpatRaster")) {
+    if(length(find.package("terra", quiet = TRUE)) > 0) {
+      raster_mat = as.matrix(raster)
+    } else {
+      stop("{terra} package required if passing SpatRaster object")
     }
+    return(matrix(as.numeric(unlist(terra::extract(raster, terra::ext(raster)))), 
+                  nrow = ncol(raster), ncol = nrow(raster)))
+  } else {
+    return(matrix(raster::extract(raster, raster::extent(raster)), 
+                  nrow = ncol(raster), ncol = nrow(raster))) 
   }
   return(matrix(raster::extract(raster, raster::extent(raster)), 
          nrow = ncol(raster), ncol = nrow(raster)))
