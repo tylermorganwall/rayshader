@@ -108,6 +108,7 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
   scalebar1_written = FALSE
   scalebar2_written = FALSE
   floating_layer_num = 1
+  dirt_textures = 1
   
   write_mtl = function(idrow, con) {
     if(!is.na(idrow$texture_file)) {
@@ -116,12 +117,12 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
       cat(sprintf("map_Kd %s.png \n",basename(noext_filename)), file=con)
       cat("\n", file=con)
     } else if (!is.na(idrow$base_color[[1]])) {
-      tempcol = col2rgb(idrow$base_color[[1]])/256
+      tempcol = col2rgb(idrow$base_color[[1]])/255
       cat(paste("newmtl ray_base"), file=con, sep="\n")
       cat(paste("Kd", sprintf("%1.4f %1.4f %1.4f",tempcol[1],tempcol[2],tempcol[3]),collapse = " "), file=con, sep="\n")
       cat("\n", file=con)
     } else if (!is.na(idrow$water_color[[1]])) {
-      tempcol = col2rgb(idrow$water_color[[1]])/256
+      tempcol = col2rgb(idrow$water_color[[1]])/255
       cat(paste("newmtl ray_water"), file=con, sep="\n")
       cat(paste("Ns", sprintf("%1.4f %1.4f %1.4f",tempcol[1],tempcol[2],tempcol[3]),collapse = " "), file=con, sep="\n")
       cat(paste("Kd", sprintf("%1.4f %1.4f %1.4f",tempcol[1],tempcol[2],tempcol[3]),collapse = " "), file=con, sep="\n")
@@ -129,28 +130,28 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
       cat(paste("Ni", sprintf("%1.4f",water_index_refraction),collapse = " "), file=con, sep="\n")
       cat("\n", file=con)
     } else if (!is.na(idrow$north_color[[1]])) {
-      tempcol = col2rgb(idrow$north_color[[1]])/256
+      tempcol = col2rgb(idrow$north_color[[1]])/255
       cat(sprintf("newmtl ray_north%d",current_compass_number), file=con, sep="\n")
       cat(paste("Kd", sprintf("%1.4f %1.4f %1.4f",tempcol[1],tempcol[2],tempcol[3]),collapse = " "), file=con, sep="\n")
       cat("\n", file=con)
     } else if (!is.na(idrow$arrow_color[[1]])) {
-      tempcol = col2rgb(idrow$arrow_color[[1]])/256
+      tempcol = col2rgb(idrow$arrow_color[[1]])/255
       cat(sprintf("newmtl ray_arrow%d",current_compass_number), file=con, sep="\n")
       cat(paste("Kd", sprintf("%1.4f %1.4f %1.4f",tempcol[1],tempcol[2],tempcol[3]),collapse = " "), file=con, sep="\n")
       cat("\n", file=con)
     } else if (!is.na(idrow$bevel_color[[1]])) {
-      tempcol = col2rgb(idrow$bevel_color[[1]])/256
+      tempcol = col2rgb(idrow$bevel_color[[1]])/255
       cat(sprintf("newmtl ray_bevel%d",current_compass_number), file=con, sep="\n")
       cat(paste("Kd", sprintf("%1.4f %1.4f %1.4f",tempcol[1],tempcol[2],tempcol[3]),collapse = " "), file=con, sep="\n")
       cat("\n", file=con)
     } else if (!is.na(idrow$background_color[[1]])) {
-      tempcol = col2rgb(idrow$background_color[[1]])/256
+      tempcol = col2rgb(idrow$background_color[[1]])/255
       cat(sprintf("newmtl ray_background%d",current_compass_number), file=con, sep="\n")
       cat(paste("Kd", sprintf("%1.4f %1.4f %1.4f",tempcol[1],tempcol[2],tempcol[3]),collapse = " "), file=con, sep="\n")
       cat("\n", file=con)
       current_compass_number <<- current_compass_number + 1
     } else if (!is.na(idrow$scalebar1_color[[1]])) {
-      tempcol = col2rgb(idrow$scalebar1_color[[1]])/256
+      tempcol = col2rgb(idrow$scalebar1_color[[1]])/255
       if(!scalebar1_written) {
         scalebar1_written <<- TRUE
         cat(paste("newmtl ray_scalebar1"), file=con, sep="\n")
@@ -158,7 +159,7 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
         cat("\n", file=con)
       }
     } else if (!is.na(idrow$scalebar2_color[[1]])) {
-      tempcol = col2rgb(idrow$scalebar2_color[[1]])/256
+      tempcol = col2rgb(idrow$scalebar2_color[[1]])/255
       if(!scalebar2_written) {
         scalebar2_written <<- TRUE
         cat(paste("newmtl ray_scalebar2"), file=con, sep="\n")
@@ -166,7 +167,7 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
         cat("\n", file=con)
       }
     } else if (!is.na(idrow$tricolor[[1]])) {
-      tempcol = col2rgb(idrow$tricolor[[1]])/256
+      tempcol = col2rgb(idrow$tricolor[[1]])/255
       cat(paste("newmtl ray_polygon3d"), file=con, sep="\n")
       cat(paste("Kd", sprintf("%1.4f %1.4f %1.4f",tempcol[1],tempcol[2],tempcol[3]),collapse = " "), file=con, sep="\n")
       if(!idrow$lit[[1]]) {
@@ -188,6 +189,13 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
       cat(sprintf("map_Kd %s \n",sprintf("%s_layer%d.png",basename(noext_filename),floating_layer_num)), file=con)
       floating_layer_num <<- floating_layer_num + 1
       
+      cat("\n", file=con)
+    } else if(!is.na(idrow$dirt_texture)) {
+      cat(sprintf("newmtl ray_dirt_base%d \n",dirt_textures), file=con)
+      file.copy(idrow$dirt_texture[[1]], sprintf("%s_dirt%d.png",noext_filename, dirt_textures), overwrite = TRUE)
+      cat(sprintf("map_Kd %s \n",sprintf("%s_dirt%d.png",basename(noext_filename),dirt_textures)), file=con)
+      dirt_textures <<- dirt_textures + 1
+
       cat("\n", file=con)
     }
   }
@@ -221,11 +229,12 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
   for(row in 1:nrow(vertex_info)) {
     id = vertex_info$id[row]
     if(vertex_info$tag[row] %in% c("surface","base","basebottom","water",
-                                       "north_symbol","arrow_symbol", "bevel_symbol",
-                                       "background_symbol", "scalebar_col1", "scalebar_col2",
-                                       "surface_tris","polygon3d", "shadow","floating_overlay","floating_overlay_tris")) {
+                                   "north_symbol","arrow_symbol", "bevel_symbol",
+                                   "background_symbol", "scalebar_col1", "scalebar_col2",
+                                   "surface_tris","polygon3d", "shadow","floating_overlay","floating_overlay_tris",
+                                   "base_dirt1", "base_dirt2")) {
       vertex_info$startindex[row] = number_vertices + 1
-      if(vertex_info$tag[row] %in%  c("surface", "surface_tris", "shadow","floating_overlay","floating_overlay_tris")) {
+      if(vertex_info$tag[row] %in%  c("surface", "surface_tris", "shadow","floating_overlay","floating_overlay_tris", "base_dirt1", "base_dirt2")) {
         vertex_info$startindextex[row] = number_texcoords + 1
       }
       vertex_info$startindexnormals[row] = number_normals + 1
@@ -522,6 +531,23 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
                              floating_layer_indices[,3], floating_layer_texindices[,3], floating_layer_normalindices[,3])),
           sep="\n", file=con)
       
+    } else if (vertex_info$tag[row] %in% c("base_dirt1","base_dirt2")) {
+      if(save_texture) {
+        cat("g Base", file=con, sep ="\n")
+        if(vertex_info$tag[row] == "base_dirt1") {
+          cat("usemtl ray_dirt_base1", file=con, sep ="\n")
+        } else {
+          cat("usemtl ray_dirt_base2", file=con, sep ="\n")
+        }
+      }
+      dirt_layer_indices = matrix(vertex_info$startindex[row]:vertex_info$endindex[row], ncol=3, byrow=TRUE)
+      dirt_layer_texindices = matrix(vertex_info$startindextex[row]:vertex_info$endindextex[row], ncol=3, byrow=TRUE)
+      # dirt_layer_normalindices = matrix(vertex_info$startindexnormals[row]:vertex_info$startindexnormals[row], ncol=3, byrow=TRUE)
+      cat(paste("f", sprintf("%d/%d %d/%d %d/%d", 
+                             dirt_layer_indices[,1], dirt_layer_texindices[,1], #dirt_layer_normalindices[,1],
+                             dirt_layer_indices[,2], dirt_layer_texindices[,2], #dirt_layer_normalindices[,2],
+                             dirt_layer_indices[,3], dirt_layer_texindices[,3])), #dirt_layer_normalindices[,3])),
+          sep="\n", file=con)
     }
   }
   if(manifold_geometry) {

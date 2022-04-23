@@ -115,7 +115,10 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
                    shadowwidth = "auto", 
                    water = FALSE, waterdepth = 0, watercolor="dodgerblue", wateralpha = 0.5, 
                    waterlinecolor=NULL, waterlinealpha = 1, 
-                   linewidth = 2, lineantialias = FALSE, dirt = FALSE,
+                   linewidth = 2, lineantialias = FALSE, 
+                   dirt = FALSE, dirt_freq = 0.1, dirt_levels = 8, 
+                   dirt_color1= "#b39474", dirt_color2="#8a623b", 
+                   dirt_gradient = 4, dirt_gradient_darken = 4,
                    theta=45, phi = 45, fov=0, zoom = 1, background="white", windowsize = 600,
                    precomputed_normals = NULL, asp = 1,
                    triangulate = FALSE, max_error = 0, max_tri = 0, verbose = FALSE,
@@ -275,7 +278,9 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
   rgl.viewpoint(zoom=zoom,phi=phi,theta=theta,fov=fov)
   par3d(windowRect = windowsize,...)
   if(solid && !triangulate) {
-    make_base(heightmap,basedepth=soliddepth,basecolor=solidcolor,zscale=zscale, dirt = dirt)
+    make_base(heightmap,basedepth=soliddepth,basecolor=solidcolor,zscale=zscale, 
+              dirt = dirt, dirt_freq = dirt_freq, dirt_levels = dirt_levels, dirt_color1=dirt_color1,
+              dirt_color2=dirt_color2, dirt_gradient = dirt_gradient, gradient_darken = dirt_gradient_darken)
   } else if(solid && triangulate) {
     make_base_triangulated(tris,basedepth=soliddepth,basecolor=solidcolor)
   }

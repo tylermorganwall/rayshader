@@ -9,7 +9,7 @@
 #'of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
 #'@keywords internal
 generate_dirt_textures = function(heightmap, base_depth = 10, color1= "#7d6f5b", color2="#3b3020", freq=0.1,
-                                  zscale=1, levels=8) {
+                                  zscale=1, levels=8, dirt_gradient = 0, gradient_darken = 4) {
   if(all(length(find.package("ambient", quiet = TRUE)) == 0)) {
     stop("textured dirt requires the `ambient` package to be installed")
   }
@@ -22,6 +22,26 @@ generate_dirt_textures = function(heightmap, base_depth = 10, color1= "#7d6f5b",
                                                     frequency = freq, 
                                                     octaves = levels),
                               texture = grDevices::colorRampPalette(c(color1,color2))(256)) 
+  if(dirt_gradient > 0) {
+    color2 = convert_color(darken_color(color2, darken=1/gradient_darken))
+    grad_dirt1 = array(0,dim = c(nrow(heightmap),floor(full_range),4))
+    grad_dirt1[,,1] = color2[1]
+    grad_dirt1[,,2] = color2[2]
+    grad_dirt1[,,3] = color2[3]
+    grad_dirt1[,,4] = matrix(1-seq(0,1,length.out=nrow(heightmap))^(dirt_gradient),nrow=nrow(heightmap), ncol = floor(full_range))
+    
+    
+    dirt_array1 = add_overlay(dirt_array1, grad_dirt1)
+  
+    grad_dirt2 = array(0,dim = c(ncol(heightmap),floor(full_range),4))
+    grad_dirt2[,,1] = color2[1]
+    grad_dirt2[,,2] = color2[2]
+    grad_dirt2[,,3] = color2[3]
+    grad_dirt2[,,4] = matrix(1-seq(0,1,length.out=ncol(heightmap))^(dirt_gradient),nrow=ncol(heightmap), ncol = floor(full_range))
+    
+    dirt_array2 = add_overlay(dirt_array2, grad_dirt2)
+  }
+  
   tempfile1 = tempfile(fileext = ".png")
   tempfile2 = tempfile(fileext = ".png")
   
