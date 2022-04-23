@@ -72,13 +72,13 @@ add_water = function(hillshade, watermap, color="imhof1") {
   for(i in 1:3) {
     tempmat = hillshade[,,i]
     if(color[1] != "unicorn") {
-      tempmat[watermap >= 1] = color[i]/256
+      tempmat[watermap >= 1] = color[i]/255
     } else {
       unicolors = col2rgb(rainbow(256))
       for(row in 1:nrow(watermap)) {
         for(col in 1:ncol(watermap)) {
           if(watermap[row,col] >= 1) {
-            tempmat[row,col] = unicolors[i,col %% 256+1]/256
+            tempmat[row,col] = unicolors[i,col %% 255+1]/255
           }
         }
       }

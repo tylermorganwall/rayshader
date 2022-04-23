@@ -1,7 +1,7 @@
 Package: rayshader
 Type: Package
 Title: Create Maps and Visualize Data in 2D and 3D
-Version: 0.27.5
+Version: 0.27.9
 Date: 2022-04-15
 Author: Tyler Morgan-Wall
 Maintainer: Tyler Morgan-Wall <tylermw@gmail.com>
@@ -24,7 +24,7 @@ Imports: doParallel,
          utils,
          methods,
          terrainmeshr,
-         rayimage (>= 0.6.2),
+         rayimage (>= 0.6.4),
          rayvertex (>= 0.3.3),
          rayrender (>= 0.23.5)
 Suggests: reshape2,
@@ -43,4 +43,8 @@ LinkingTo: Rcpp, progress, RcppArmadillo
 RoxygenNote: 7.1.2
 URL: https://www.rayshader.com, https://github.com/tylermorganwall/rayshader, https://www.rayshader.com/
 BugReports: https://github.com/tylermorganwall/rayshader/issues
+Remotes: tylermorganwall/rayimage,
+         tylermorganwall/rayrender,
+         tylermorganwall/rayvertex
 
+  

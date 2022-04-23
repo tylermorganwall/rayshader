@@ -19,6 +19,8 @@
 #'@param vignette Default `FALSE`. If `TRUE` or numeric, a camera vignetting effect will be added to the image.
 #'`1` is the darkest vignetting, while `0` is no vignetting. If vignette is a length-2 vector, the second entry will
 #'control the blurriness of the vignette effect.
+#'@param vignette_color Default `"black"`. Color of the vignette.
+#'@param vignette_radius Default `1.3`. Radius of the vignette, as a porportion of the image dimensions.
 #'@param clear Default `FALSE`. If `TRUE`, the current `rgl` device will be cleared.
 #'@param instant_capture Default `TRUE` if interactive, `FALSE` otherwise. If `FALSE`, a slight delay is added 
 #'before taking the snapshot. This can help stop prevent rendering issues when running scripts.
@@ -82,7 +84,8 @@ render_snapshot = function(filename, clear=FALSE,
                            title_color = "black", title_size = 30, title_font = "sans",
                            title_bar_color = NULL, title_bar_alpha = 0.5, 
                            title_position = "northwest",
-                           image_overlay = NULL, vignette = FALSE,
+                           image_overlay = NULL, 
+                           vignette = FALSE, vignette_color = "black", vignette_radius = 1.3,
                            instant_capture = interactive(), bring_to_front = FALSE, 
                            keep_user_par = FALSE, webshot = FALSE, 
                            width = NULL, height = NULL, 
@@ -152,7 +155,8 @@ render_snapshot = function(filename, clear=FALSE,
     tempmap = rayimage::add_image_overlay(tempmap, image_overlay = image_overlay_file)
   }
   if(vignette || is.numeric(vignette)) {
-    tempmap = rayimage::add_vignette(tempmap, vignette = vignette)
+    tempmap = rayimage::add_vignette(tempmap, vignette = vignette, color = vignette_color,
+                                     radius = vignette_radius)
   }
   if(has_title) {
     tempmap = rayimage::add_title(tempmap, title_text = title_text, 

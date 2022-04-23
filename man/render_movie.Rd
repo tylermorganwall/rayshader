@@ -22,6 +22,8 @@ render_movie(
   title_bar_alpha = 0.5,
   image_overlay = NULL,
   vignette = FALSE,
+  vignette_color = "black",
+  vignette_radius = 1.3,
   title_position = "northwest",
   audio = NULL,
   progbar = interactive(),
@@ -71,6 +73,10 @@ dimension of the movie if it does not match exactly.}
 \item{vignette}{Default `FALSE`. If `TRUE` or numeric, a camera vignetting effect will be added to the image.
 `1` is the darkest vignetting, while `0` is no vignetting. If vignette is a length-2 vector, the second entry will
 control the blurriness of the vignette effect.}
+
+\item{vignette_color}{Default `"black"`. Color of the vignette.}
+
+\item{vignette_radius}{Default `1.3`. Radius of the vignette, as a porportion of the image dimensions.}
 
 \item{title_position}{Default `northwest`. Position of the title.}
 

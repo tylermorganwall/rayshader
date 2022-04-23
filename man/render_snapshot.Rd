@@ -17,6 +17,8 @@ render_snapshot(
   title_position = "northwest",
   image_overlay = NULL,
   vignette = FALSE,
+  vignette_color = "black",
+  vignette_radius = 1.3,
   instant_capture = interactive(),
   bring_to_front = FALSE,
   keep_user_par = FALSE,
@@ -67,6 +69,10 @@ dimension of the image if it does not match exactly.}
 \item{vignette}{Default `FALSE`. If `TRUE` or numeric, a camera vignetting effect will be added to the image.
 `1` is the darkest vignetting, while `0` is no vignetting. If vignette is a length-2 vector, the second entry will
 control the blurriness of the vignette effect.}
+
+\item{vignette_color}{Default `"black"`. Color of the vignette.}
+
+\item{vignette_radius}{Default `1.3`. Radius of the vignette, as a porportion of the image dimensions.}
 
 \item{instant_capture}{Default `TRUE` if interactive, `FALSE` otherwise. If `FALSE`, a slight delay is added 
 before taking the snapshot. This can help stop prevent rendering issues when running scripts.}
