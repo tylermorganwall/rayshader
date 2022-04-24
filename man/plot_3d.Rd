@@ -173,6 +173,16 @@ montereybay \%>\%
 render_snapshot(clear = TRUE)
 }
 
+#With a dirt texture to the base  
+\donttest{
+montereybay \%>\%
+ sphere_shade(texture="imhof3") \%>\%
+ plot_3d(montereybay, zscale=50, water = TRUE,  watercolor="imhof4", 
+         waterlinecolor="white", waterlinealpha=0.5, dirt=TRUE)
+render_camera(theta=225, phi=7, zoom=0.5, fov=67)
+render_snapshot(clear = TRUE)
+}
+
 #We can also change the base by setting "baseshape" to "hex" or "circle"
 \donttest{
 montereybay \%>\%
@@ -189,6 +199,8 @@ montereybay \%>\%
          waterlinecolor="white", waterlinealpha=0.5,baseshape="hex")
 render_snapshot(clear = TRUE)
 }
+
+
 
 #Or we can carve out the region of interest ourselves, by setting those entries to NA
 #to the elevation map passed into `plot_3d`
