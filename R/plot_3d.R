@@ -25,6 +25,14 @@
 #'@param waterlinealpha Default `1`. Water line tranparency. 
 #'@param linewidth Default `2`. Width of the edge lines in the scene.
 #'@param lineantialias Default `FALSE`. Whether to anti-alias the lines in the scene.
+#'@param dirt Default `FALSE`. Whether to draw the solid base with a textured dirt layer.
+#'@param dirt_freq Default `0.1`. Frequency of dirt clumps. Higher frequency values give smaller dirt clumps.
+#'@param dirt_levels Default `16`. Fractal level of the dirt.
+#'@param dirt_color_light Default `"#b39474"`. Light tint of dirt.
+#'@param dirt_color_dark Default `"#8a623b"`. Dark tint of dirt.
+#'@param dirt_gradient Default `2`. Sharpness of the dirt darkening gradient. `0` turns off the gradient entirely.
+#'@param dirt_gradient_darken Default `4`. Amount to darken the `dirt_color_dark` value for the deepest dirt layers. Higher
+#'numbers increase the darkening effect.
 #'@param theta Default `45`. Rotation around z-axis.
 #'@param phi Default `45`. Azimuth angle.
 #'@param fov Default `0`--isometric. Field-of-view angle.
@@ -56,6 +64,7 @@
 #'@param verbose Default `TRUE`, if `interactive()`. Prints information about the mesh triangulation
 #'if `triangulate = TRUE`.
 #'@param ... Additional arguments to pass to the `rgl::par3d` function.
+#'
 #'@import rgl
 #'@export
 #'@examples
@@ -116,9 +125,9 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
                    water = FALSE, waterdepth = 0, watercolor="dodgerblue", wateralpha = 0.5, 
                    waterlinecolor=NULL, waterlinealpha = 1, 
                    linewidth = 2, lineantialias = FALSE, 
-                   dirt = FALSE, dirt_freq = 0.1, dirt_levels = 8, 
-                   dirt_color1= "#b39474", dirt_color2="#8a623b", 
-                   dirt_gradient = 4, dirt_gradient_darken = 4,
+                   dirt = FALSE, dirt_freq = 0.1, dirt_levels = 16, 
+                   dirt_color_light = "#b39474", dirt_color_dark = "#8a623b", 
+                   dirt_gradient = 2, dirt_gradient_darken = 4,
                    theta=45, phi = 45, fov=0, zoom = 1, background="white", windowsize = 600,
                    precomputed_normals = NULL, asp = 1,
                    triangulate = FALSE, max_error = 0, max_tri = 0, verbose = FALSE,
@@ -279,8 +288,8 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
   par3d(windowRect = windowsize,...)
   if(solid && !triangulate) {
     make_base(heightmap,basedepth=soliddepth,basecolor=solidcolor,zscale=zscale, 
-              dirt = dirt, dirt_freq = dirt_freq, dirt_levels = dirt_levels, dirt_color1=dirt_color1,
-              dirt_color2=dirt_color2, dirt_gradient = dirt_gradient, gradient_darken = dirt_gradient_darken)
+              dirt = dirt, dirt_freq = dirt_freq, dirt_levels = dirt_levels, dirt_color1=dirt_color_light,
+              dirt_color2=dirt_color_dark, dirt_gradient = dirt_gradient, gradient_darken = dirt_gradient_darken)
   } else if(solid && triangulate) {
     make_base_triangulated(tris,basedepth=soliddepth,basecolor=solidcolor)
   }

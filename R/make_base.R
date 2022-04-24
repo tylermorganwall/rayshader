@@ -60,8 +60,8 @@ make_base = function(heightmap,basedepth=0,basecolor="grey20",zscale=1, dirt = F
 
       vertical_sides = fullsides[direction_vec,]
       vertical_heights = edge_heights[direction_vec]
-
-      textures = generate_dirt_textures(heightmap, base_depth = max(fullsides[,2],na.rm=TRUE) - basedepth,
+      
+      textures = generate_dirt_textures(heightmap, base_depth = max(fullsides[,2],na.rm=TRUE) - basedepth, zscale=zscale,
                                         freq=dirt_freq, levels = dirt_levels,  color1= dirt_color1, color2= dirt_color2,
                                         dirt_gradient = dirt_gradient, gradient_darken = gradient_darken)
       
@@ -72,7 +72,8 @@ make_base = function(heightmap,basedepth=0,basecolor="grey20",zscale=1, dirt = F
       # horizontal_texcoords_y = (horizontal_sides[,2]-min_hside_y)/(max_hside_y-min_hside_y)
       
       horizontal_texcoords_y = rep(0,length(horizontal_sides[,2]))
-      horizontal_texcoords_y[horizontal_sides[,2] == basedepth] = horizontal_heights[horizontal_sides[,2] == basedepth]/(max_hside_y-min_hside_y)
+      # horizontal_texcoords_y[horizontal_sides[,2] == basedepth] = horizontal_heights[horizontal_sides[,2] == basedepth]/(max_hside_y-min_hside_y)
+      horizontal_texcoords_y[horizontal_sides[,2] == basedepth] = 1
 
       #Set bottom texcoords
       horizontal_texcoords_x[1:6] = 0.99
@@ -84,7 +85,8 @@ make_base = function(heightmap,basedepth=0,basecolor="grey20",zscale=1, dirt = F
       vertical_texcoords_x = (vertical_sides[,3] + ncol(heightmap)/2-1)/(ncol(heightmap)-1)
       # vertical_texcoords_y = (vertical_sides[,2]-min_vside_y)/(max_vside_y-min_vside_y)
       vertical_texcoords_y = rep(0,length(vertical_sides[,2]))
-      vertical_texcoords_y[vertical_sides[,2] == basedepth] = vertical_heights[vertical_sides[,2] == basedepth]/(max_vside_y-min_vside_y)
+      # vertical_texcoords_y[vertical_sides[,2] == basedepth] = vertical_heights[vertical_sides[,2] == basedepth]/(max_vside_y-min_vside_y)
+      vertical_texcoords_y[vertical_sides[,2] == basedepth] = 1
       
       rgl::triangles3d(horizontal_sides, 
                        texture = textures[1], texcoords = cbind(horizontal_texcoords_x,horizontal_texcoords_y),
@@ -123,7 +125,7 @@ make_base = function(heightmap,basedepth=0,basecolor="grey20",zscale=1, dirt = F
       vertical_sides = fullsides[direction_vec,]
       vertical_heights = edge_heights[direction_vec]
 
-      textures = generate_dirt_textures(heightmap, base_depth = max(fullsides[,2],na.rm=TRUE) - basedepth,
+      textures = generate_dirt_textures(heightmap, base_depth = max(fullsides[,2],na.rm=TRUE) - basedepth, zscale=zscale,
                                         freq=dirt_freq, levels = dirt_levels,  color1= dirt_color1, color2= dirt_color2,
                                         dirt_gradient = dirt_gradient, gradient_darken = gradient_darken)
       

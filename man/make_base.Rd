@@ -14,7 +14,8 @@ make_base(
   dirt_levels = 8,
   dirt_color1 = "black",
   dirt_color2 = "black",
-  dirt_gradient = 0
+  dirt_gradient = 0,
+  gradient_darken = 1
 )
 }
 \arguments{

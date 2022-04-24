@@ -28,10 +28,10 @@ plot_3d(
   lineantialias = FALSE,
   dirt = FALSE,
   dirt_freq = 0.1,
-  dirt_levels = 8,
-  dirt_color1 = "#7d6f5b",
-  dirt_color2 = "#3b3020",
-  dirt_gradient = 4,
+  dirt_levels = 16,
+  dirt_color_light = "#b39474",
+  dirt_color_dark = "#8a623b",
+  dirt_gradient = 2,
   dirt_gradient_darken = 4,
   theta = 45,
   phi = 45,
@@ -92,6 +92,21 @@ the luminance of the `background` color in the CIELab colorspace if not specifie
 \item{linewidth}{Default `2`. Width of the edge lines in the scene.}
 
 \item{lineantialias}{Default `FALSE`. Whether to anti-alias the lines in the scene.}
+
+\item{dirt}{Default `FALSE`. Whether to draw the solid base with a textured dirt layer.}
+
+\item{dirt_freq}{Default `0.1`. Frequency of dirt clumps. Higher frequency values give smaller dirt clumps.}
+
+\item{dirt_levels}{Default `16`. Fractal level of the dirt.}
+
+\item{dirt_color_light}{Default `"#b39474"`. Light tint of dirt.}
+
+\item{dirt_color_dark}{Default `"#8a623b"`. Dark tint of dirt.}
+
+\item{dirt_gradient}{Default `2`. Sharpness of the dirt darkening gradient. `0` turns off the gradient entirely.}
+
+\item{dirt_gradient_darken}{Default `4`. Amount to darken the `dirt_color_dark` value for the deepest dirt layers. Higher
+numbers increase the darkening effect.}
 
 \item{theta}{Default `45`. Rotation around z-axis.}
 
