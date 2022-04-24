@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.27.9</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.28.0</span>
       </span>
     </div>
 
@@ -99,7 +99,19 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">make_base</span><span class="op">(</span><span class="va">heightmap</span>, basedepth <span class="op">=</span> <span class="fl">0</span>, basecolor <span class="op">=</span> <span class="st">"grey20"</span>, zscale <span class="op">=</span> <span class="fl">1</span><span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">make_base</span><span class="op">(</span>
+  <span class="va">heightmap</span>,
+  basedepth <span class="op">=</span> <span class="fl">0</span>,
+  basecolor <span class="op">=</span> <span class="st">"grey20"</span>,
+  zscale <span class="op">=</span> <span class="fl">1</span>,
+  dirt <span class="op">=</span> <span class="cn">FALSE</span>,
+  dirt_freq <span class="op">=</span> <span class="fl">0.1</span>,
+  dirt_levels <span class="op">=</span> <span class="fl">8</span>,
+  dirt_color1 <span class="op">=</span> <span class="st">"black"</span>,
+  dirt_color2 <span class="op">=</span> <span class="st">"black"</span>,
+  dirt_gradient <span class="op">=</span> <span class="fl">0</span>,
+  gradient_darken <span class="op">=</span> <span class="fl">1</span>
+<span class="op">)</span></code></pre></div>
     </div>
 
     <div id="arguments">

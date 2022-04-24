@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.27.9</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.28.0</span>
       </span>
     </div>
 
@@ -121,6 +121,13 @@
   waterlinealpha <span class="op">=</span> <span class="fl">1</span>,
   linewidth <span class="op">=</span> <span class="fl">2</span>,
   lineantialias <span class="op">=</span> <span class="cn">FALSE</span>,
+  dirt <span class="op">=</span> <span class="cn">FALSE</span>,
+  dirt_freq <span class="op">=</span> <span class="fl">0.1</span>,
+  dirt_levels <span class="op">=</span> <span class="fl">16</span>,
+  dirt_color_light <span class="op">=</span> <span class="st">"#b39474"</span>,
+  dirt_color_dark <span class="op">=</span> <span class="st">"#8a623b"</span>,
+  dirt_gradient <span class="op">=</span> <span class="fl">2</span>,
+  dirt_gradient_darken <span class="op">=</span> <span class="fl">4</span>,
   theta <span class="op">=</span> <span class="fl">45</span>,
   phi <span class="op">=</span> <span class="fl">45</span>,
   fov <span class="op">=</span> <span class="fl">0</span>,
@@ -183,6 +190,21 @@ the luminance of the `background` color in the CIELab colorspace if not specifie
 <dd><p>Default `2`. Width of the edge lines in the scene.</p></dd>
 <dt>lineantialias</dt>
 <dd><p>Default `FALSE`. Whether to anti-alias the lines in the scene.</p></dd>
+<dt>dirt</dt>
+<dd><p>Default `FALSE`. Whether to draw the solid base with a textured dirt layer.</p></dd>
+<dt>dirt_freq</dt>
+<dd><p>Default `0.1`. Frequency of dirt clumps. Higher frequency values give smaller dirt clumps.</p></dd>
+<dt>dirt_levels</dt>
+<dd><p>Default `16`. Fractal level of the dirt.</p></dd>
+<dt>dirt_color_light</dt>
+<dd><p>Default `"#b39474"`. Light tint of dirt.</p></dd>
+<dt>dirt_color_dark</dt>
+<dd><p>Default `"#8a623b"`. Dark tint of dirt.</p></dd>
+<dt>dirt_gradient</dt>
+<dd><p>Default `2`. Sharpness of the dirt darkening gradient. `0` turns off the gradient entirely.</p></dd>
+<dt>dirt_gradient_darken</dt>
+<dd><p>Default `4`. Amount to darken the `dirt_color_dark` value for the deepest dirt layers. Higher
+numbers increase the darkening effect.</p></dd>
 <dt>theta</dt>
 <dd><p>Default `45`. Rotation around z-axis.</p></dd>
 <dt>phi</dt>
@@ -250,6 +272,17 @@ if `triangulate = TRUE`.</p></dd>
 <span class="r-plt img"><img src="plot_3d-2.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span class="co"># }</span></span>
 <span class="r-in"></span>
+<span class="r-in"><span class="co">#With a dirt texture to the base  </span></span>
+<span class="r-in"><span class="co"># \donttest{</span></span>
+<span class="r-in"><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
+<span class="r-in"> <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span>texture<span class="op">=</span><span class="st">"imhof3"</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
+<span class="r-in"> <span class="fu">plot_3d</span><span class="op">(</span><span class="va">montereybay</span>, zscale<span class="op">=</span><span class="fl">50</span>, water <span class="op">=</span> <span class="cn">TRUE</span>,  watercolor<span class="op">=</span><span class="st">"imhof4"</span>, </span>
+<span class="r-in">         waterlinecolor<span class="op">=</span><span class="st">"white"</span>, waterlinealpha<span class="op">=</span><span class="fl">0.5</span>, dirt<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span>
+<span class="r-in"><span class="fu"><a href="render_camera.html">render_camera</a></span><span class="op">(</span>theta<span class="op">=</span><span class="fl">225</span>, phi<span class="op">=</span><span class="fl">7</span>, zoom<span class="op">=</span><span class="fl">0.5</span>, fov<span class="op">=</span><span class="fl">67</span><span class="op">)</span></span>
+<span class="r-in"><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span>clear <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span class="r-plt img"><img src="plot_3d-3.png" alt="" width="700" height="433"></span>
+<span class="r-in"><span class="co"># }</span></span>
+<span class="r-in"></span>
 <span class="r-in"><span class="co">#We can also change the base by setting "baseshape" to "hex" or "circle"</span></span>
 <span class="r-in"><span class="co"># \donttest{</span></span>
 <span class="r-in"><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
@@ -257,7 +290,7 @@ if `triangulate = TRUE`.</p></dd>
 <span class="r-in"> <span class="fu">plot_3d</span><span class="op">(</span><span class="va">montereybay</span>, zscale<span class="op">=</span><span class="fl">50</span>, water <span class="op">=</span> <span class="cn">TRUE</span>, watercolor<span class="op">=</span><span class="st">"imhof1"</span>, theta<span class="op">=</span><span class="op">-</span><span class="fl">45</span>, zoom<span class="op">=</span><span class="fl">0.7</span>,</span>
 <span class="r-in">         waterlinecolor<span class="op">=</span><span class="st">"white"</span>, waterlinealpha<span class="op">=</span><span class="fl">0.5</span>,baseshape<span class="op">=</span><span class="st">"circle"</span><span class="op">)</span></span>
 <span class="r-in"><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span>clear <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span class="r-plt img"><img src="plot_3d-3.png" alt="" width="700" height="433"></span>
+<span class="r-plt img"><img src="plot_3d-4.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span class="co"># }</span></span>
 <span class="r-in"></span>
 <span class="r-in"><span class="co"># \donttest{</span></span>
@@ -266,8 +299,10 @@ if `triangulate = TRUE`.</p></dd>
 <span class="r-in"> <span class="fu">plot_3d</span><span class="op">(</span><span class="va">montereybay</span>, zscale<span class="op">=</span><span class="fl">50</span>, water <span class="op">=</span> <span class="cn">TRUE</span>, watercolor<span class="op">=</span><span class="st">"imhof1"</span>, theta<span class="op">=</span><span class="op">-</span><span class="fl">45</span>, zoom<span class="op">=</span><span class="fl">0.7</span>,</span>
 <span class="r-in">         waterlinecolor<span class="op">=</span><span class="st">"white"</span>, waterlinealpha<span class="op">=</span><span class="fl">0.5</span>,baseshape<span class="op">=</span><span class="st">"hex"</span><span class="op">)</span></span>
 <span class="r-in"><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span>clear <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span class="r-plt img"><img src="plot_3d-4.png" alt="" width="700" height="433"></span>
+<span class="r-plt img"><img src="plot_3d-5.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span class="co"># }</span></span>
+<span class="r-in"></span>
+<span class="r-in"></span>
 <span class="r-in"></span>
 <span class="r-in"><span class="co">#Or we can carve out the region of interest ourselves, by setting those entries to NA</span></span>
 <span class="r-in"><span class="co">#to the elevation map passed into `plot_3d`</span></span>
@@ -284,7 +319,7 @@ if `triangulate = TRUE`.</p></dd>
 <span class="r-in"> <span class="fu">plot_3d</span><span class="op">(</span><span class="va">mb_water</span>, zscale<span class="op">=</span><span class="fl">50</span>, water <span class="op">=</span> <span class="cn">TRUE</span>, watercolor<span class="op">=</span><span class="st">"imhof1"</span>, theta<span class="op">=</span><span class="op">-</span><span class="fl">45</span>,</span>
 <span class="r-in">         waterlinecolor<span class="op">=</span><span class="st">"white"</span>, waterlinealpha<span class="op">=</span><span class="fl">0.5</span><span class="op">)</span></span>
 <span class="r-in"><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span>clear <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span class="r-plt img"><img src="plot_3d-5.png" alt="" width="700" height="433"></span>
+<span class="r-plt img"><img src="plot_3d-6.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span class="co"># }</span></span>
 </code></pre></div>
     </div>
