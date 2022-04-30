@@ -22,26 +22,24 @@ raster_to_matrix = function(raster, verbose = interactive()) {
   if(is.character(raster)) {
     raster = raster::raster(raster)
   }
-  if(verbose) {
-    if(is.na(raster::projection(raster))) {
-      raster_mat = raster::as.matrix(raster)
-      print(paste0("Dimensions of matrix are: ", ncol(raster_mat),"x" , nrow(raster_mat)))
-    } else {
-      print(paste0("Dimensions of matrix are: ", ncol(raster),"x" , nrow(raster), "."))
-    }
-  }
+  return_mat = matrix(ncol=0,nrow=0)
   if(inherits(raster,"SpatRaster")) {
     if(length(find.package("terra", quiet = TRUE)) > 0) {
       raster_mat = as.matrix(raster)
     } else {
       stop("{terra} package required if passing SpatRaster object")
     }
-    return(matrix(as.numeric(unlist(terra::extract(raster, terra::ext(raster)))), 
-                  nrow = ncol(raster), ncol = nrow(raster)))
+    return_mat = matrix(as.numeric(terra::values(raster)), 
+                  nrow = ncol(raster), ncol = nrow(raster))
   } else {
-    return(matrix(raster::extract(raster, raster::extent(raster)), 
-                  nrow = ncol(raster), ncol = nrow(raster))) 
+    return_mat = matrix(raster::extract(raster, raster::extent(raster)), 
+                  nrow = ncol(raster), ncol = nrow(raster))
   }
-  return(matrix(raster::extract(raster, raster::extent(raster)), 
-         nrow = ncol(raster), ncol = nrow(raster)))
+  if(verbose) {
+    print(paste0("Dimensions of matrix are: ", ncol(return_mat),"x" , nrow(return_mat)))
+  }
+  if(all(dim(return_mat) == 0)) {
+    stop("Was not able to convert object to a matrix: double check to ensure object is either of class `character`, `RasterLayer`, or `SpatRaster`.")
+  }
+  return(return_mat)
 }
