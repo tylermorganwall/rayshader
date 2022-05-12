@@ -26,6 +26,13 @@ plot_3d(
   waterlinealpha = 1,
   linewidth = 2,
   lineantialias = FALSE,
+  dirt = FALSE,
+  dirt_freq = 0.1,
+  dirt_levels = 16,
+  dirt_color_light = "#b39474",
+  dirt_color_dark = "#8a623b",
+  dirt_gradient = 2,
+  dirt_gradient_darken = 4,
   theta = 45,
   phi = 45,
   fov = 0,
@@ -85,6 +92,21 @@ the luminance of the `background` color in the CIELab colorspace if not specifie
 \item{linewidth}{Default `2`. Width of the edge lines in the scene.}
 
 \item{lineantialias}{Default `FALSE`. Whether to anti-alias the lines in the scene.}
+
+\item{dirt}{Default `FALSE`. Whether to draw the solid base with a textured dirt layer.}
+
+\item{dirt_freq}{Default `0.1`. Frequency of dirt clumps. Higher frequency values give smaller dirt clumps.}
+
+\item{dirt_levels}{Default `16`. Fractal level of the dirt.}
+
+\item{dirt_color_light}{Default `"#b39474"`. Light tint of dirt.}
+
+\item{dirt_color_dark}{Default `"#8a623b"`. Dark tint of dirt.}
+
+\item{dirt_gradient}{Default `2`. Sharpness of the dirt darkening gradient. `0` turns off the gradient entirely.}
+
+\item{dirt_gradient_darken}{Default `4`. Amount to darken the `dirt_color_dark` value for the deepest dirt layers. Higher
+numbers increase the darkening effect.}
 
 \item{theta}{Default `45`. Rotation around z-axis.}
 
@@ -151,6 +173,16 @@ montereybay \%>\%
 render_snapshot(clear = TRUE)
 }
 
+#With a dirt texture to the base  
+\donttest{
+montereybay \%>\%
+ sphere_shade(texture="imhof3") \%>\%
+ plot_3d(montereybay, zscale=50, water = TRUE,  watercolor="imhof4", 
+         waterlinecolor="white", waterlinealpha=0.5, dirt=TRUE)
+render_camera(theta=225, phi=7, zoom=0.5, fov=67)
+render_snapshot(clear = TRUE)
+}
+
 #We can also change the base by setting "baseshape" to "hex" or "circle"
 \donttest{
 montereybay \%>\%
@@ -167,6 +199,8 @@ montereybay \%>\%
          waterlinecolor="white", waterlinealpha=0.5,baseshape="hex")
 render_snapshot(clear = TRUE)
 }
+
+
 
 #Or we can carve out the region of interest ourselves, by setting those entries to NA
 #to the elevation map passed into `plot_3d`

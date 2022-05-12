@@ -14,7 +14,7 @@ get_ids_with_labels = function(typeval = NULL) {
                 "background_symbol", "scalebar_col1", "scalebar_col2",
                 "text_scalebar",     "surface_tris",  "path3d",       
                 "points3d",          "polygon3d", 
-                "floating_overlay", "floating_overlay_tris")
+                "floating_overlay", "floating_overlay_tris", "base_dirt1", "base_dirt2")
   get_rgl_material = getFromNamespace("rgl.getmaterial", "rgl")
   idvals = rgl::rgl.ids(tags = TRUE)
   material_type = idvals$tag
@@ -24,6 +24,7 @@ get_ids_with_labels = function(typeval = NULL) {
     material_properties[[i]]$texture_file = NA
     material_properties[[i]]$layer_texture_file = NA
     material_properties[[i]]$base_color = NA
+    material_properties[[i]]$dirt_texture = NA
     material_properties[[i]]$water_color = NA
     material_properties[[i]]$water_alpha = NA
     material_properties[[i]]$line_color = NA
@@ -91,6 +92,9 @@ get_ids_with_labels = function(typeval = NULL) {
         material_properties[[i]]$tricolor = material_type_single$color
         material_properties[[i]]$polygon_alpha = material_type_single$alpha
         material_properties[[i]]$lit = material_type_single$lit
+      }
+      if(material_type[i] %in% c("base_dirt1", "base_dirt2")) {
+        material_properties[[i]]$dirt_texture = material_type_single$texture
       }
     } 
   }
