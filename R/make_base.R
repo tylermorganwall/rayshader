@@ -104,6 +104,8 @@ make_base = function(heightmap,basedepth=0,basecolor="grey20",zscale=1, dirt = F
     na_matrix = is.na(heightmap)
     baselist = make_base_cpp(heightmap, na_matrix, basedepth)
     heightlist = baselist$vertices
+    edge_heights = rev(as.vector(t(cbind(baselist$edge_heights,baselist$edge_heights,baselist$edge_heights))))
+    
     direction_vec = rev(as.vector(t(cbind(baselist$is_horizontal,baselist$is_horizontal,baselist$is_horizontal))))
     
     fullsides = do.call(rbind,heightlist)
