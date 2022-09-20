@@ -97,10 +97,7 @@ plot_map = function(hillshade, rotate=0, asp = 1,
                           title_bar_color = title_bar_color, title_bar_alpha = title_bar_alpha, 
                           title_position = title_position)
     }
-    suppressWarnings(raster::plotRGB(raster::brick(hillshade, xmn = 0.5, xmx = dim(hillshade)[2]+ 0.5,
-                                                   ymn = 0.5, ymx = dim(hillshade)[1] + 0.5, ...),scale=1, 
-                                     asp = asp,
-                                     maxpixels=nrow(hillshade)*ncol(hillshade),...))
+    rayimage::plot_image(hillshade, asp = asp)
   } else if(length(dim(hillshade)) == 2) {
     if(number_of_rots != 0) {
       for(j in 1:number_of_rots) {
@@ -115,10 +112,7 @@ plot_map = function(hillshade, rotate=0, asp = 1,
                           title_bar_color = title_bar_color, title_bar_alpha = title_bar_alpha, 
                           title_position = title_position)
     }
-    suppressWarnings(raster::plotRGB(raster::brick(array_from_mat, xmn = 0.5, xmx = dim(array_from_mat)[2] + 0.5,ymn =  0.5, 
-                                                   ymx = dim(array_from_mat)[1] +  0.5, ...),
-                                     asp = asp,
-                                     scale=1, maxpixels=nrow(hillshade)*ncol(hillshade), ...))
+    rayimage::plot_image(hillshade, asp = asp)
   } else {
     stop("`hillshade` is neither array nor matrix--convert to either to plot.")
   }

@@ -35,6 +35,7 @@ render_snapshot(
   point_radius = 2,
   line_offset = 1e-07,
   cache_filename = NULL,
+  new_page = TRUE,
   print_scene_info = FALSE,
   ...
 )
@@ -117,6 +118,8 @@ will specify the absolute angle all the labels are facing. If three angles, this
 aren't showing up, or decrease it if lines are appearing through solid objects.}
 
 \item{cache_filename}{Default `NULL`. Name of temporary filename to store OBJ file, if the user does not want to rewrite the file each time.}
+
+\item{new_page}{Default `TRUE`. Whether to call `grid::grid.newpage()` before plotting the image.}
 
 \item{print_scene_info}{Default `FALSE`. If `TRUE`, it will print the position and lookat point of the camera.}
 

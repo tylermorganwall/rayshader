@@ -51,6 +51,7 @@
 #'be derived from the rgl window.
 #'@param text_offset Default `c(0,0,0)`. Offset to be applied to all text labels.
 #'@param print_scene_info Default `FALSE`. If `TRUE`, it will print the position and lookat point of the camera.
+#'@param new_page  Default `TRUE`. Whether to call `grid::grid.newpage()` before plotting the image.
 #'@param ... Additional parameters to pass to `rayvertex::rasterize_scene()`. 
 #'@return Displays snapshot of current rgl plot (or saves to disk).
 #'@export
@@ -93,7 +94,7 @@ render_snapshot = function(filename, clear=FALSE,
                            background = NULL,
                            text_angle = NULL, text_size = 10, text_offset = c(0,0,0),
                            point_radius = 2, line_offset = 1e-7,
-                           cache_filename  = NULL,  
+                           cache_filename  = NULL,  new_page = TRUE,
                            print_scene_info = FALSE, ...) {
   if(rgl::rgl.useNULL()) {
     software_render = TRUE
@@ -166,7 +167,7 @@ render_snapshot = function(filename, clear=FALSE,
                                   title_size = title_size, title_font = title_font)
   }
   if(missing(filename)) {
-    plot_map(tempmap, keep_user_par = keep_user_par)
+    rayimage::plot_image(tempmap, keep_user_par = keep_user_par)
   } else {
     save_png(tempmap, filename)
   }
