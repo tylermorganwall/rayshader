@@ -18,7 +18,7 @@ Leland Brown in "Texture Shading: A New Technique for Depicting Terrain Relief."
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.28.2</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.28.3</span>
       </span>
     </div>
 
@@ -101,94 +101,111 @@ Leland Brown in "Texture Shading: A New Technique for Depicting Terrain Relief."
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">texture_shade</span><span class="op">(</span>
-  <span class="va">heightmap</span>,
-  detail <span class="op">=</span> <span class="fl">0.5</span>,
-  contrast <span class="op">=</span> <span class="fl">1</span>,
-  brightness <span class="op">=</span> <span class="fl">0</span>,
-  transform <span class="op">=</span> <span class="cn">TRUE</span>,
-  dx <span class="op">=</span> <span class="fl">1</span>,
-  dy <span class="op">=</span> <span class="fl">1</span>,
-  pad <span class="op">=</span> <span class="fl">50</span>
-<span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">texture_shade</span><span class="op">(</span></span>
+<span>  <span class="va">heightmap</span>,</span>
+<span>  detail <span class="op">=</span> <span class="fl">0.5</span>,</span>
+<span>  contrast <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  brightness <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  transform <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  dx <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  dy <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  pad <span class="op">=</span> <span class="fl">50</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>heightmap</dt>
 <dd><p>A two-dimensional matrix, where each entry in the matrix is the elevation at that point.</p></dd>
+
+
 <dt>detail</dt>
 <dd><p>Default `0.5`. Amount of detail in texture shading algorithm. `0` is the least detail, 
 while `1` is the most.</p></dd>
+
+
 <dt>contrast</dt>
 <dd><p>Default `1`,standard brightness. Amount of contrast in the texture shading. 
 This transforms the resulting darkness using the formula `tanh(input * contrast + brightness)`.</p></dd>
+
+
 <dt>brightness</dt>
 <dd><p>Default `0`, standard brightness. Higher values will brighten the texture hillshade, 
 while lower values will darken it.</p></dd>
+
+
 <dt>transform</dt>
 <dd><p>Default `TRUE`. Whether to apply the `tanh(input * contrast + brightness)` transformation.
 This transforms the resulting darkness using the formula `tanh(input * contrast + brightness)`.</p></dd>
+
+
 <dt>dx</dt>
 <dd><p>Default `1`. The distance between each row of data (compared to the height axis).</p></dd>
+
+
 <dt>dy</dt>
 <dd><p>Default `1`. The distance between each column of data (compared to the height axis).</p></dd>
+
+
 <dt>pad</dt>
 <dd><p>Default `50`. The amount to pad the heightmap so edge effects don't appear from the
 fourier transform. Only increase this if you encounter boundary effects.</p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>2D matrix of hillshade values.</p>
+    
+
+<p>2D matrix of hillshade values.</p>
     </div>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span class="co">#Create a direct mapping of elevation to color:</span></span>
-<span class="r-in"><span class="co"># \donttest{</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co">#Plut using default values</span></span>
-<span class="r-in"><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> </span>
-<span class="r-in">  <span class="fu">texture_shade</span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> </span>
-<span class="r-in">  <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co">#Create a direct mapping of elevation to color:</span></span></span>
+<span class="r-in"><span><span class="co"># \donttest{</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#Plut using default values</span></span></span>
+<span class="r-in"><span><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> </span></span>
+<span class="r-in"><span>  <span class="fu">texture_shade</span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> </span></span>
+<span class="r-in"><span>  <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in xlim/ylim:</span> non-numeric argument to binary operator</span>
+<span class="r-in"><span>  </span></span>
+<span class="r-in"><span><span class="co">#Increase the level of detail</span></span></span>
+<span class="r-in"><span><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> </span></span>
+<span class="r-in"><span>  <span class="fu">texture_shade</span><span class="op">(</span>detail<span class="op">=</span><span class="fl">1</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> </span></span>
+<span class="r-in"><span>  <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in xlim/ylim:</span> non-numeric argument to binary operator</span>
+<span class="r-in"><span>  </span></span>
+<span class="r-in"><span><span class="co">#Decrease the level of detail</span></span></span>
+<span class="r-in"><span><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> </span></span>
+<span class="r-in"><span>  <span class="fu">texture_shade</span><span class="op">(</span>detail<span class="op">=</span><span class="fl">0</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> </span></span>
+<span class="r-in"><span>  <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in xlim/ylim:</span> non-numeric argument to binary operator</span>
+<span class="r-in"><span>  </span></span>
+<span class="r-in"><span><span class="co">#Increase the level of contrast</span></span></span>
+<span class="r-in"><span><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> </span></span>
+<span class="r-in"><span>  <span class="fu">texture_shade</span><span class="op">(</span>contrast<span class="op">=</span><span class="fl">3</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> </span></span>
+<span class="r-in"><span>  <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in xlim/ylim:</span> non-numeric argument to binary operator</span>
+<span class="r-in"><span>  </span></span>
+<span class="r-in"><span><span class="co">#Increase the brightness for this level of contrast</span></span></span>
+<span class="r-in"><span><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> </span></span>
+<span class="r-in"><span>  <span class="fu">texture_shade</span><span class="op">(</span>contrast<span class="op">=</span><span class="fl">5</span>, brightness <span class="op">=</span> <span class="fl">2</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> </span></span>
+<span class="r-in"><span>  <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in xlim/ylim:</span> non-numeric argument to binary operator</span>
+<span class="r-in"><span>  </span></span>
+<span class="r-in"><span><span class="co">#Add a texture_shade() layer into a map</span></span></span>
+<span class="r-in"><span><span class="va">montbay</span> <span class="op">=</span> <span class="va">montereybay</span></span></span>
+<span class="r-in"><span><span class="va">montbay</span><span class="op">[</span><span class="va">montbay</span> <span class="op">&lt;</span> <span class="fl">0</span><span class="op">]</span> <span class="op">=</span> <span class="fl">0</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">montbay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="height_shade.html">height_shade</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="add_water.html">add_water</a></span><span class="op">(</span><span class="fu"><a href="detect_water.html">detect_water</a></span><span class="op">(</span><span class="va">montbay</span><span class="op">)</span>, color<span class="op">=</span><span class="st">"dodgerblue"</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="fu">texture_shade</span><span class="op">(</span><span class="va">montbay</span>, detail<span class="op">=</span><span class="fl">1</span><span class="op">/</span><span class="fl">3</span>, contrast <span class="op">=</span> <span class="fl">5</span>, brightness <span class="op">=</span> <span class="fl">6</span><span class="op">)</span>,<span class="fl">0</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="fu"><a href="lamb_shade.html">lamb_shade</a></span><span class="op">(</span><span class="va">montbay</span>,zscale<span class="op">=</span><span class="fl">50</span><span class="op">)</span>,<span class="fl">0</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> </span></span>
+<span class="r-in"><span>  <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="texture_shade-1.png" alt="" width="700" height="433"></span>
-<span class="r-in">  </span>
-<span class="r-in"><span class="co">#Increase the level of detail</span></span>
-<span class="r-in"><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> </span>
-<span class="r-in">  <span class="fu">texture_shade</span><span class="op">(</span>detail<span class="op">=</span><span class="fl">1</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> </span>
-<span class="r-in">  <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-plt img"><img src="texture_shade-2.png" alt="" width="700" height="433"></span>
-<span class="r-in">  </span>
-<span class="r-in"><span class="co">#Decrease the level of detail</span></span>
-<span class="r-in"><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> </span>
-<span class="r-in">  <span class="fu">texture_shade</span><span class="op">(</span>detail<span class="op">=</span><span class="fl">0</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> </span>
-<span class="r-in">  <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-plt img"><img src="texture_shade-3.png" alt="" width="700" height="433"></span>
-<span class="r-in">  </span>
-<span class="r-in"><span class="co">#Increase the level of contrast</span></span>
-<span class="r-in"><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> </span>
-<span class="r-in">  <span class="fu">texture_shade</span><span class="op">(</span>contrast<span class="op">=</span><span class="fl">3</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> </span>
-<span class="r-in">  <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-plt img"><img src="texture_shade-4.png" alt="" width="700" height="433"></span>
-<span class="r-in">  </span>
-<span class="r-in"><span class="co">#Increase the brightness for this level of contrast</span></span>
-<span class="r-in"><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> </span>
-<span class="r-in">  <span class="fu">texture_shade</span><span class="op">(</span>contrast<span class="op">=</span><span class="fl">5</span>, brightness <span class="op">=</span> <span class="fl">2</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> </span>
-<span class="r-in">  <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-plt img"><img src="texture_shade-5.png" alt="" width="700" height="433"></span>
-<span class="r-in">  </span>
-<span class="r-in"><span class="co">#Add a texture_shade() layer into a map</span></span>
-<span class="r-in"><span class="va">montbay</span> <span class="op">=</span> <span class="va">montereybay</span></span>
-<span class="r-in"><span class="va">montbay</span><span class="op">[</span><span class="va">montbay</span> <span class="op">&lt;</span> <span class="fl">0</span><span class="op">]</span> <span class="op">=</span> <span class="fl">0</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="va">montbay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in">  <span class="fu"><a href="height_shade.html">height_shade</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in">  <span class="fu"><a href="add_water.html">add_water</a></span><span class="op">(</span><span class="fu"><a href="detect_water.html">detect_water</a></span><span class="op">(</span><span class="va">montbay</span><span class="op">)</span>, color<span class="op">=</span><span class="st">"dodgerblue"</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in">  <span class="fu"><a href="add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="fu">texture_shade</span><span class="op">(</span><span class="va">montbay</span>, detail<span class="op">=</span><span class="fl">1</span><span class="op">/</span><span class="fl">3</span>, contrast <span class="op">=</span> <span class="fl">5</span>, brightness <span class="op">=</span> <span class="fl">6</span><span class="op">)</span>,<span class="fl">0</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in">  <span class="fu"><a href="add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="fu"><a href="lamb_shade.html">lamb_shade</a></span><span class="op">(</span><span class="va">montbay</span>,zscale<span class="op">=</span><span class="fl">50</span><span class="op">)</span>,<span class="fl">0</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> </span>
-<span class="r-in">  <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-plt img"><img src="texture_shade-6.png" alt="" width="700" height="433"></span>
-<span class="r-in"><span class="co"># }</span></span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </div>
@@ -203,7 +220,7 @@ fourier transform. Only increase this if you encounter boundary effects.</p></dd
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
 </div>
 
       </footer></div>

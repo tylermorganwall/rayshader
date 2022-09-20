@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.28.2</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.28.3</span>
       </span>
     </div>
 
@@ -99,48 +99,53 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">add_water</span><span class="op">(</span><span class="va">hillshade</span>, <span class="va">watermap</span>, color <span class="op">=</span> <span class="st">"imhof1"</span><span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">add_water</span><span class="op">(</span><span class="va">hillshade</span>, <span class="va">watermap</span>, color <span class="op">=</span> <span class="st">"imhof1"</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>hillshade</dt>
 <dd><p>A three-dimensional RGB array.</p></dd>
+
+
 <dt>watermap</dt>
 <dd><p>Matrix indicating whether water was detected at that point. 1 indicates water, 0 indicates no water.</p></dd>
+
+
 <dt>color</dt>
 <dd><p>Default `imhof1`. The water fill color. A hexcode or recognized color string. 
 Also includes built-in colors to match the palettes included in sphere_shade: 
 (`imhof1`,`imhof2`,`imhof3`,`imhof4`, `desert`, `bw`, and `unicorn`).</p></dd>
+
 </dl></div>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span class="co">#Here we even out a portion of the volcano dataset to simulate water:</span></span>
-<span class="r-in"><span class="va">island_volcano</span> <span class="op">=</span> <span class="va">volcano</span></span>
-<span class="r-in"><span class="va">island_volcano</span><span class="op">[</span><span class="va">island_volcano</span> <span class="op">&lt;</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">island_volcano</span><span class="op">)</span><span class="op">]</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">island_volcano</span><span class="op">)</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co">#Setting a minimum area avoids classifying small flat areas as water:</span></span>
-<span class="r-in"><span class="co"># \donttest{</span></span>
-<span class="r-in"><span class="va">island_volcano</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span>texture<span class="op">=</span><span class="st">"imhof3"</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu">add_water</span><span class="op">(</span><span class="fu"><a href="detect_water.html">detect_water</a></span><span class="op">(</span><span class="va">island_volcano</span>, min_area <span class="op">=</span> <span class="fl">400</span><span class="op">)</span>,color<span class="op">=</span><span class="st">"imhof3"</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co">#Here we even out a portion of the volcano dataset to simulate water:</span></span></span>
+<span class="r-in"><span><span class="va">island_volcano</span> <span class="op">=</span> <span class="va">volcano</span></span></span>
+<span class="r-in"><span><span class="va">island_volcano</span><span class="op">[</span><span class="va">island_volcano</span> <span class="op">&lt;</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">island_volcano</span><span class="op">)</span><span class="op">]</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">island_volcano</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#Setting a minimum area avoids classifying small flat areas as water:</span></span></span>
+<span class="r-in"><span><span class="co"># \donttest{</span></span></span>
+<span class="r-in"><span><span class="va">island_volcano</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span>texture<span class="op">=</span><span class="st">"imhof3"</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu">add_water</span><span class="op">(</span><span class="fu"><a href="detect_water.html">detect_water</a></span><span class="op">(</span><span class="va">island_volcano</span>, min_area <span class="op">=</span> <span class="fl">400</span><span class="op">)</span>,color<span class="op">=</span><span class="st">"imhof3"</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="add_water-1.png" alt="" width="700" height="433"></span>
-<span class="r-in"><span class="co"># }</span></span>
-<span class="r-in"> </span>
-<span class="r-in"><span class="co">#We'll do the same thing with the Monterey Bay dataset to fill in the ocean:</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="va">montbay_water</span> <span class="op">=</span> <span class="va">montereybay</span></span>
-<span class="r-in"><span class="va">montbay_water</span><span class="op">[</span><span class="va">montbay_water</span> <span class="op">&lt;</span> <span class="fl">0</span><span class="op">]</span> <span class="op">=</span> <span class="fl">0</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co"># \donttest{</span></span>
-<span class="r-in"><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span>texture<span class="op">=</span><span class="st">"imhof4"</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu">add_water</span><span class="op">(</span><span class="fu"><a href="detect_water.html">detect_water</a></span><span class="op">(</span><span class="va">montbay_water</span><span class="op">)</span>,color<span class="op">=</span><span class="st">"imhof4"</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
+<span class="r-in"><span> </span></span>
+<span class="r-in"><span><span class="co">#We'll do the same thing with the Monterey Bay dataset to fill in the ocean:</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">montbay_water</span> <span class="op">=</span> <span class="va">montereybay</span></span></span>
+<span class="r-in"><span><span class="va">montbay_water</span><span class="op">[</span><span class="va">montbay_water</span> <span class="op">&lt;</span> <span class="fl">0</span><span class="op">]</span> <span class="op">=</span> <span class="fl">0</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># \donttest{</span></span></span>
+<span class="r-in"><span><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span>texture<span class="op">=</span><span class="st">"imhof4"</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu">add_water</span><span class="op">(</span><span class="fu"><a href="detect_water.html">detect_water</a></span><span class="op">(</span><span class="va">montbay_water</span><span class="op">)</span>,color<span class="op">=</span><span class="st">"imhof4"</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="add_water-2.png" alt="" width="700" height="433"></span>
-<span class="r-in"><span class="co"># }</span></span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </div>
@@ -155,7 +160,7 @@ Also includes built-in colors to match the palettes included in sphere_shade:
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
 </div>
 
       </footer></div>

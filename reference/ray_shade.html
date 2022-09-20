@@ -18,7 +18,7 @@ lowering the brightness at each point for each ray that intersects the surface."
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.28.2</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.28.3</span>
       </span>
     </div>
 
@@ -101,96 +101,121 @@ lowering the brightness at each point for each ray that intersects the surface.<
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">ray_shade</span><span class="op">(</span>
-  <span class="va">heightmap</span>,
-  sunaltitude <span class="op">=</span> <span class="fl">45</span>,
-  sunangle <span class="op">=</span> <span class="fl">315</span>,
-  maxsearch <span class="op">=</span> <span class="cn">NULL</span>,
-  lambert <span class="op">=</span> <span class="cn">TRUE</span>,
-  zscale <span class="op">=</span> <span class="fl">1</span>,
-  multicore <span class="op">=</span> <span class="cn">FALSE</span>,
-  cache_mask <span class="op">=</span> <span class="cn">NULL</span>,
-  shadow_cache <span class="op">=</span> <span class="cn">NULL</span>,
-  progbar <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/interactive.html" class="external-link">interactive</a></span><span class="op">(</span><span class="op">)</span>,
-  anglebreaks <span class="op">=</span> <span class="cn">NULL</span>,
-  <span class="va">...</span>
-<span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">ray_shade</span><span class="op">(</span></span>
+<span>  <span class="va">heightmap</span>,</span>
+<span>  sunaltitude <span class="op">=</span> <span class="fl">45</span>,</span>
+<span>  sunangle <span class="op">=</span> <span class="fl">315</span>,</span>
+<span>  maxsearch <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  lambert <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  zscale <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  multicore <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  cache_mask <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  shadow_cache <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  progbar <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/interactive.html" class="external-link">interactive</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  anglebreaks <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  <span class="va">...</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>heightmap</dt>
 <dd><p>A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.</p></dd>
+
+
 <dt>sunaltitude</dt>
 <dd><p>Default `45`. The angle, in degrees (as measured from the horizon) from which the light originates. The width of the light
 is centered on this value and has an angular extent of 0.533 degrees, which is the angular extent of the sun. Use the `anglebreaks` argument
 to create a softer (wider) light. This has a hard minimum/maximum of 0/90 degrees.</p></dd>
+
+
 <dt>sunangle</dt>
 <dd><p>Default `315` (NW). The angle, in degrees, around the matrix from which the light originates. Zero degrees is North, increasing clockwise.</p></dd>
+
+
 <dt>maxsearch</dt>
 <dd><p>Defaults to the longest possible shadow given the `sunaltitude` and `heightmap`. 
 Otherwise, this argument specifies the maximum distance that the system should propagate rays to check.</p></dd>
+
+
 <dt>lambert</dt>
 <dd><p>Default `TRUE`. Changes the intensity of the light at each point based proportional to the
 dot product of the ray direction and the surface normal at that point. Zeros out all values directed away from
 the ray.</p></dd>
+
+
 <dt>zscale</dt>
 <dd><p>Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation is in units
 of meters and the grid values are separated by 10 meters, `zscale` would be 10.</p></dd>
+
+
 <dt>multicore</dt>
 <dd><p>Default `FALSE`. If `TRUE`, multiple cores will be used to compute the shadow matrix. By default, this uses all cores available, unless the user has
 set `options("cores")` in which the multicore option will only use that many cores.</p></dd>
+
+
 <dt>cache_mask</dt>
 <dd><p>Default `NULL`. A matrix of 1 and 0s, indicating which points on which the raytracer will operate.</p></dd>
+
+
 <dt>shadow_cache</dt>
 <dd><p>Default `NULL`. The shadow matrix to be updated at the points defined by the argument `cache_mask`.
 If present, this will only compute the raytraced shadows for those points with value `1` in the mask.</p></dd>
+
+
 <dt>progbar</dt>
 <dd><p>Default `TRUE` if interactive, `FALSE` otherwise. If `FALSE`, turns off progress bar.</p></dd>
+
+
 <dt>anglebreaks</dt>
 <dd><p>Default `NULL`. A vector of angle(s) in degrees (as measured from the horizon) specifying from where the light originates. 
 Use this instead of `sunaltitude` to create a softer shadow by specifying a wider light. E.g. `anglebreaks = seq(40,50,by=0.5)` creates a light 
 10 degrees wide, as opposed to the default</p></dd>
+
+
 <dt>...</dt>
 <dd><p>Additional arguments to pass to the `makeCluster` function when `multicore=TRUE`.</p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>Matrix of light intensities at each point.</p>
+    
+
+<p>Matrix of light intensities at each point.</p>
     </div>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span class="co">#First we ray trace the Monterey Bay dataset.</span></span>
-<span class="r-in"><span class="co">#The default angle is from 40-50 degrees azimuth, from the north east.</span></span>
-<span class="r-in"><span class="co"># \donttest{</span></span>
-<span class="r-in"><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu">ray_shade</span><span class="op">(</span>zscale<span class="op">=</span><span class="fl">50</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-plt img"><img src="ray_shade-1.png" alt="" width="700" height="433"></span>
-<span class="r-in"><span class="co"># }</span></span>
-<span class="r-in"><span class="co">#Change the altitude of the sun to 25 degrees</span></span>
-<span class="r-in"><span class="co"># \donttest{</span></span>
-<span class="r-in"><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu">ray_shade</span><span class="op">(</span>zscale<span class="op">=</span><span class="fl">50</span>, sunaltitude<span class="op">=</span><span class="fl">25</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-plt img"><img src="ray_shade-2.png" alt="" width="700" height="433"></span>
-<span class="r-in"><span class="co"># }</span></span>
-<span class="r-in"><span class="co">#Remove the lambertian shading to just calculate shadow intensity.</span></span>
-<span class="r-in"><span class="co"># \donttest{</span></span>
-<span class="r-in"><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu">ray_shade</span><span class="op">(</span>zscale<span class="op">=</span><span class="fl">50</span>, sunaltitude<span class="op">=</span><span class="fl">25</span>, lambert<span class="op">=</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-plt img"><img src="ray_shade-3.png" alt="" width="700" height="433"></span>
-<span class="r-in"><span class="co"># }</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co">#Change the direction of the sun to the South East</span></span>
-<span class="r-in"><span class="co"># \donttest{</span></span>
-<span class="r-in"><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu">ray_shade</span><span class="op">(</span>zscale<span class="op">=</span><span class="fl">50</span>, sunaltitude<span class="op">=</span><span class="fl">25</span>, sunangle<span class="op">=</span><span class="fl">225</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-plt img"><img src="ray_shade-4.png" alt="" width="700" height="433"></span>
-<span class="r-in"><span class="co"># }</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co">#First we ray trace the Monterey Bay dataset.</span></span></span>
+<span class="r-in"><span><span class="co">#The default angle is from 40-50 degrees azimuth, from the north east.</span></span></span>
+<span class="r-in"><span><span class="co"># \donttest{</span></span></span>
+<span class="r-in"><span><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu">ray_shade</span><span class="op">(</span>zscale<span class="op">=</span><span class="fl">50</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in xlim/ylim:</span> non-numeric argument to binary operator</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
+<span class="r-in"><span><span class="co">#Change the altitude of the sun to 25 degrees</span></span></span>
+<span class="r-in"><span><span class="co"># \donttest{</span></span></span>
+<span class="r-in"><span><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu">ray_shade</span><span class="op">(</span>zscale<span class="op">=</span><span class="fl">50</span>, sunaltitude<span class="op">=</span><span class="fl">25</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in xlim/ylim:</span> non-numeric argument to binary operator</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
+<span class="r-in"><span><span class="co">#Remove the lambertian shading to just calculate shadow intensity.</span></span></span>
+<span class="r-in"><span><span class="co"># \donttest{</span></span></span>
+<span class="r-in"><span><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu">ray_shade</span><span class="op">(</span>zscale<span class="op">=</span><span class="fl">50</span>, sunaltitude<span class="op">=</span><span class="fl">25</span>, lambert<span class="op">=</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in xlim/ylim:</span> non-numeric argument to binary operator</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#Change the direction of the sun to the South East</span></span></span>
+<span class="r-in"><span><span class="co"># \donttest{</span></span></span>
+<span class="r-in"><span><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu">ray_shade</span><span class="op">(</span>zscale<span class="op">=</span><span class="fl">50</span>, sunaltitude<span class="op">=</span><span class="fl">25</span>, sunangle<span class="op">=</span><span class="fl">225</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in xlim/ylim:</span> non-numeric argument to binary operator</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </div>
@@ -205,7 +230,7 @@ Use this instead of `sunaltitude` to create a softer shadow by specifying a wide
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
 </div>
 
       </footer></div>

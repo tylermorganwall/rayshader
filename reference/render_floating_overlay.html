@@ -18,7 +18,7 @@ Note: Multiple layers with transparency can cause rendering issues in rgl."><met
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.28.2</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.28.3</span>
       </span>
     </div>
 
@@ -101,83 +101,102 @@ Note: Multiple layers with transparency can cause rendering issues in rgl."><met
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">render_floating_overlay</span><span class="op">(</span>
-  overlay <span class="op">=</span> <span class="cn">NULL</span>,
-  altitude <span class="op">=</span> <span class="cn">NULL</span>,
-  heightmap <span class="op">=</span> <span class="cn">NULL</span>,
-  zscale <span class="op">=</span> <span class="fl">1</span>,
-  alpha <span class="op">=</span> <span class="fl">1</span>,
-  baseshape <span class="op">=</span> <span class="st">"rectangle"</span>,
-  remove_na <span class="op">=</span> <span class="cn">TRUE</span>,
-  reorient <span class="op">=</span> <span class="cn">TRUE</span>,
-  clear_layers <span class="op">=</span> <span class="cn">FALSE</span>
-<span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">render_floating_overlay</span><span class="op">(</span></span>
+<span>  overlay <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  altitude <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  heightmap <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  zscale <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  alpha <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  baseshape <span class="op">=</span> <span class="st">"rectangle"</span>,</span>
+<span>  remove_na <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  reorient <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  clear_layers <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>overlay</dt>
 <dd><p>Overlay (4D RGBA array) to be rendered on the 3D map.</p></dd>
+
+
 <dt>altitude</dt>
 <dd><p>Altitude to place the overlay.</p></dd>
+
+
 <dt>heightmap</dt>
 <dd><p>The underlying surface. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.</p></dd>
+
+
 <dt>zscale</dt>
 <dd><p>Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
 of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10. Adjust the zscale down to exaggerate elevation features.</p></dd>
+
+
 <dt>alpha</dt>
 <dd><p>Default `1`. Multiplies the layer's transparency by this factor. 0 is completely transparent.</p></dd>
+
+
 <dt>baseshape</dt>
 <dd><p>Default `rectangle`. Shape of the overlay. Options are `c("rectangle", "circle", "hex")`.</p></dd>
+
+
 <dt>remove_na</dt>
 <dd><p>Default `TRUE`. Whether to make the overlay transparent above empty spaces (represented by `NA` values) in the underlying elevation matrix.</p></dd>
+
+
 <dt>reorient</dt>
 <dd><p>Default `TRUE`. Whether to reorient the image array to match the 3D plot.</p></dd>
+
+
 <dt>clear_layers</dt>
 <dd><p>Default `FALSE`. Clears all existing floating layers on the visualization.</p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>Adds a 3D floating layer to the map. No return value.</p>
+    
+
+<p>Adds a 3D floating layer to the map. No return value.</p>
     </div>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span class="co"># \dontrun{</span></span>
-<span class="r-in"><span class="co">#Render the road network as a floating overlay layer, along with a label annotation and a floating</span></span>
-<span class="r-in"><span class="co">#point annotation</span></span>
-<span class="r-in"><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/all.html" class="external-link">all</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/find.package.html" class="external-link">find.package</a></span><span class="op">(</span><span class="st">"sf"</span>, quiet <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span>,</span>
-<span class="r-in">      <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/find.package.html" class="external-link">find.package</a></span><span class="op">(</span><span class="st">"magick"</span>, quiet <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span class="r-in"> <span class="va">monterey</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">121.892933</span>,<span class="fl">36.603053</span><span class="op">)</span></span>
-<span class="r-in"> <span class="va">monterey_city</span> <span class="op">=</span> <span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/sfc.html" class="external-link">st_sfc</a></span><span class="op">(</span><span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st.html" class="external-link">st_point</a></span><span class="op">(</span><span class="va">monterey</span><span class="op">)</span><span class="op">)</span></span>
-<span class="r-in"> </span>
-<span class="r-in"> <span class="co">#Generate Overlays</span></span>
-<span class="r-in"> <span class="va">road_overlay</span> <span class="op">=</span> <span class="fu"><a href="generate_line_overlay.html">generate_line_overlay</a></span><span class="op">(</span><span class="va">monterey_roads_sf</span>, <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>,<span class="st">"extent"</span><span class="op">)</span>, </span>
-<span class="r-in">                                      heightmap <span class="op">=</span> <span class="va">montereybay</span><span class="op">)</span></span>
-<span class="r-in"> <span class="va">point_overlay</span> <span class="op">=</span> <span class="fu"><a href="generate_point_overlay.html">generate_point_overlay</a></span><span class="op">(</span><span class="va">monterey_city</span>, color<span class="op">=</span><span class="st">"red"</span>, size<span class="op">=</span><span class="fl">12</span>,</span>
-<span class="r-in">                                        <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>,<span class="st">"extent"</span><span class="op">)</span>, heightmap <span class="op">=</span> <span class="va">montereybay</span><span class="op">)</span></span>
-<span class="r-in">                                        </span>
-<span class="r-in"> <span class="co">#Create 3D plot (water transparency set to 1 because multiple transparency layers can interfere)</span></span>
-<span class="r-in"> <span class="va">montereybay</span> |&gt;</span>
-<span class="r-in">   <span class="fu"><a href="height_shade.html">height_shade</a></span><span class="op">(</span><span class="op">)</span> |&gt;</span>
-<span class="r-in">   <span class="fu"><a href="add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="fu"><a href="ray_shade.html">ray_shade</a></span><span class="op">(</span><span class="va">montereybay</span>,zscale<span class="op">=</span><span class="fl">50</span><span class="op">)</span>,<span class="fl">0.3</span><span class="op">)</span> |&gt; </span>
-<span class="r-in">   <span class="fu"><a href="plot_3d.html">plot_3d</a></span><span class="op">(</span><span class="va">montereybay</span>, water <span class="op">=</span> <span class="cn">T</span>, wateralpha <span class="op">=</span> <span class="fl">1</span>, windowsize <span class="op">=</span> <span class="fl">800</span>, watercolor <span class="op">=</span> <span class="st">"lightblue"</span><span class="op">)</span></span>
-<span class="r-in"> <span class="fu"><a href="render_camera.html">render_camera</a></span><span class="op">(</span>theta<span class="op">=</span><span class="op">-</span><span class="fl">85</span>,phi<span class="op">=</span><span class="fl">25</span>,zoom<span class="op">=</span><span class="fl">0.8</span><span class="op">)</span></span>
-<span class="r-in"> </span>
-<span class="r-in"> <span class="co">#Render label</span></span>
-<span class="r-in"> <span class="fu"><a href="render_label.html">render_label</a></span><span class="op">(</span><span class="va">montereybay</span>, lat <span class="op">=</span> <span class="va">monterey</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span>, long <span class="op">=</span> <span class="va">monterey</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, altitude <span class="op">=</span> <span class="fl">9900</span>,</span>
-<span class="r-in">              extent <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>, <span class="st">"extent"</span><span class="op">)</span>,</span>
-<span class="r-in">              zscale <span class="op">=</span> <span class="fl">50</span>, text <span class="op">=</span> <span class="st">"Monterey"</span>, textcolor <span class="op">=</span> <span class="st">"black"</span>, linecolor<span class="op">=</span><span class="st">"darkred"</span><span class="op">)</span></span>
-<span class="r-in"> </span>
-<span class="r-in"> <span class="co">#Render Floating Overlays</span></span>
-<span class="r-in"> <span class="fu">render_floating_overlay</span><span class="op">(</span><span class="va">road_overlay</span>, altitude <span class="op">=</span> <span class="fl">10000</span>,zscale <span class="op">=</span> <span class="fl">50</span><span class="op">)</span></span>
-<span class="r-in"> <span class="fu">render_floating_overlay</span><span class="op">(</span><span class="va">point_overlay</span>, altitude <span class="op">=</span> <span class="fl">100</span>,zscale <span class="op">=</span> <span class="fl">50</span><span class="op">)</span></span>
-<span class="r-in"> <span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-in"> <span class="fu">rgl</span><span class="fu">::</span><span class="fu"><a href="https://dmurdoch.github.io/rgl/dev/reference/rgl.open.html" class="external-link">rgl.close</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-in"><span class="op">}</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \dontrun{</span></span></span>
+<span class="r-in"><span><span class="co">#Render the road network as a floating overlay layer, along with a label annotation and a floating</span></span></span>
+<span class="r-in"><span><span class="co">#point annotation</span></span></span>
+<span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/all.html" class="external-link">all</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/find.package.html" class="external-link">find.package</a></span><span class="op">(</span><span class="st">"sf"</span>, quiet <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span>,</span></span>
+<span class="r-in"><span>      <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/find.package.html" class="external-link">find.package</a></span><span class="op">(</span><span class="st">"magick"</span>, quiet <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span> <span class="va">monterey</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">121.892933</span>,<span class="fl">36.603053</span><span class="op">)</span></span></span>
+<span class="r-in"><span> <span class="va">monterey_city</span> <span class="op">=</span> <span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/sfc.html" class="external-link">st_sfc</a></span><span class="op">(</span><span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st.html" class="external-link">st_point</a></span><span class="op">(</span><span class="va">monterey</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span> </span></span>
+<span class="r-in"><span> <span class="co">#Generate Overlays</span></span></span>
+<span class="r-in"><span> <span class="va">road_overlay</span> <span class="op">=</span> <span class="fu"><a href="generate_line_overlay.html">generate_line_overlay</a></span><span class="op">(</span><span class="va">monterey_roads_sf</span>, <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>,<span class="st">"extent"</span><span class="op">)</span>, </span></span>
+<span class="r-in"><span>                                      heightmap <span class="op">=</span> <span class="va">montereybay</span><span class="op">)</span></span></span>
+<span class="r-in"><span> <span class="va">point_overlay</span> <span class="op">=</span> <span class="fu"><a href="generate_point_overlay.html">generate_point_overlay</a></span><span class="op">(</span><span class="va">monterey_city</span>, color<span class="op">=</span><span class="st">"red"</span>, size<span class="op">=</span><span class="fl">12</span>,</span></span>
+<span class="r-in"><span>                                        <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>,<span class="st">"extent"</span><span class="op">)</span>, heightmap <span class="op">=</span> <span class="va">montereybay</span><span class="op">)</span></span></span>
+<span class="r-in"><span>                                        </span></span>
+<span class="r-in"><span> <span class="co">#Create 3D plot (water transparency set to 1 because multiple transparency layers can interfere)</span></span></span>
+<span class="r-in"><span> <span class="va">montereybay</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span>   <span class="fu"><a href="height_shade.html">height_shade</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span>   <span class="fu"><a href="add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="fu"><a href="ray_shade.html">ray_shade</a></span><span class="op">(</span><span class="va">montereybay</span>,zscale<span class="op">=</span><span class="fl">50</span><span class="op">)</span>,<span class="fl">0.3</span><span class="op">)</span> <span class="op">|&gt;</span> </span></span>
+<span class="r-in"><span>   <span class="fu"><a href="plot_3d.html">plot_3d</a></span><span class="op">(</span><span class="va">montereybay</span>, water <span class="op">=</span> <span class="cn">T</span>, wateralpha <span class="op">=</span> <span class="fl">1</span>, windowsize <span class="op">=</span> <span class="fl">800</span>, watercolor <span class="op">=</span> <span class="st">"lightblue"</span><span class="op">)</span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="render_camera.html">render_camera</a></span><span class="op">(</span>theta<span class="op">=</span><span class="op">-</span><span class="fl">85</span>,phi<span class="op">=</span><span class="fl">25</span>,zoom<span class="op">=</span><span class="fl">0.8</span><span class="op">)</span></span></span>
+<span class="r-in"><span> </span></span>
+<span class="r-in"><span> <span class="co">#Render label</span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="render_label.html">render_label</a></span><span class="op">(</span><span class="va">montereybay</span>, lat <span class="op">=</span> <span class="va">monterey</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span>, long <span class="op">=</span> <span class="va">monterey</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, altitude <span class="op">=</span> <span class="fl">9900</span>,</span></span>
+<span class="r-in"><span>              extent <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>, <span class="st">"extent"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>              zscale <span class="op">=</span> <span class="fl">50</span>, text <span class="op">=</span> <span class="st">"Monterey"</span>, textcolor <span class="op">=</span> <span class="st">"black"</span>, linecolor<span class="op">=</span><span class="st">"darkred"</span><span class="op">)</span></span></span>
+<span class="r-in"><span> </span></span>
+<span class="r-in"><span> <span class="co">#Render Floating Overlays</span></span></span>
+<span class="r-in"><span> <span class="fu">render_floating_overlay</span><span class="op">(</span><span class="va">road_overlay</span>, altitude <span class="op">=</span> <span class="fl">10000</span>,zscale <span class="op">=</span> <span class="fl">50</span><span class="op">)</span></span></span>
+<span class="r-in"><span> <span class="fu">render_floating_overlay</span><span class="op">(</span><span class="va">point_overlay</span>, altitude <span class="op">=</span> <span class="fl">100</span>,zscale <span class="op">=</span> <span class="fl">50</span><span class="op">)</span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span> <span class="fu">rgl</span><span class="fu">::</span><span class="fu"><a href="https://dmurdoch.github.io/rgl/dev/reference/rgl.open.html" class="external-link">rgl.close</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> `montereybay` dataset used with no zscale--setting `zscale=50`.  For a realistic depiction, raise `zscale` to 200.</span>
-<span class="r-plt img"><img src="render_floating_overlay-1.png" alt="" width="700" height="433"></span>
-<span class="r-in"><span class="co"># }</span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in mesh$vertices[[j]]:</span> subscript out of bounds</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </div>
@@ -192,7 +211,7 @@ of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
 </div>
 
       </footer></div>

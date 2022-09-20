@@ -18,7 +18,7 @@ Note: Underlying layers with transparency can cause rendering issues in rgl."><m
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.28.2</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.28.3</span>
       </span>
     </div>
 
@@ -101,28 +101,28 @@ Note: Underlying layers with transparency can cause rendering issues in rgl."><m
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">render_clouds</span><span class="op">(</span>
-  <span class="va">heightmap</span>,
-  start_altitude <span class="op">=</span> <span class="fl">1000</span>,
-  end_altitude <span class="op">=</span> <span class="fl">2000</span>,
-  sun_altitude <span class="op">=</span> <span class="fl">10</span>,
-  sun_angle <span class="op">=</span> <span class="fl">315</span>,
-  time <span class="op">=</span> <span class="fl">0</span>,
-  cloud_cover <span class="op">=</span> <span class="fl">0.5</span>,
-  layers <span class="op">=</span> <span class="fl">10</span>,
-  offset_x <span class="op">=</span> <span class="fl">0</span>,
-  offset_y <span class="op">=</span> <span class="fl">0</span>,
-  scale_x <span class="op">=</span> <span class="fl">1</span>,
-  scale_y <span class="op">=</span> <span class="fl">1</span>,
-  scale_z <span class="op">=</span> <span class="fl">1</span>,
-  frequency <span class="op">=</span> <span class="fl">0.005</span>,
-  fractal_levels <span class="op">=</span> <span class="fl">16</span>,
-  attenuation_coef <span class="op">=</span> <span class="fl">1</span>,
-  seed <span class="op">=</span> <span class="fl">1</span>,
-  zscale <span class="op">=</span> <span class="fl">1</span>,
-  baseshape <span class="op">=</span> <span class="st">"rectangle"</span>,
-  clear_clouds <span class="op">=</span> <span class="cn">FALSE</span>
-<span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">render_clouds</span><span class="op">(</span></span>
+<span>  <span class="va">heightmap</span>,</span>
+<span>  start_altitude <span class="op">=</span> <span class="fl">1000</span>,</span>
+<span>  end_altitude <span class="op">=</span> <span class="fl">2000</span>,</span>
+<span>  sun_altitude <span class="op">=</span> <span class="fl">10</span>,</span>
+<span>  sun_angle <span class="op">=</span> <span class="fl">315</span>,</span>
+<span>  time <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  cloud_cover <span class="op">=</span> <span class="fl">0.5</span>,</span>
+<span>  layers <span class="op">=</span> <span class="fl">10</span>,</span>
+<span>  offset_x <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  offset_y <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  scale_x <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  scale_y <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  scale_z <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  frequency <span class="op">=</span> <span class="fl">0.005</span>,</span>
+<span>  fractal_levels <span class="op">=</span> <span class="fl">16</span>,</span>
+<span>  attenuation_coef <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  seed <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  zscale <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  baseshape <span class="op">=</span> <span class="st">"rectangle"</span>,</span>
+<span>  clear_clouds <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
@@ -130,62 +130,103 @@ Note: Underlying layers with transparency can cause rendering issues in rgl."><m
     <dl><dt>heightmap</dt>
 <dd><p>A two-dimensional matrix, where each entry in the matrix is the elevation at that point. This is used by `render_clouds()` to 
 calculate the regions the clouds should be rendered in.</p></dd>
+
+
 <dt>start_altitude</dt>
 <dd><p>Default `1000`. The bottom of the cloud layer.</p></dd>
+
+
 <dt>end_altitude</dt>
 <dd><p>Default `2000`. The top of the cloud layer.</p></dd>
+
+
 <dt>sun_altitude</dt>
 <dd><p>Default `90`. The angle, in degrees (as measured from the horizon) from which the light originates.</p></dd>
+
+
 <dt>sun_angle</dt>
 <dd><p>Default `315` (NW). The angle, in degrees, around the matrix from which the light originates. Zero degrees is North, increasing clockwise</p></dd>
+
+
 <dt>time</dt>
 <dd><p>Default `0`. Advance this to make the clouds evolve and change in shape.</p></dd>
+
+
 <dt>cloud_cover</dt>
 <dd><p>Default `0.5`. The percentage of cloud cover.</p></dd>
+
+
 <dt>layers</dt>
 <dd><p>Default `10`. The number of layers to render the cloud layer. 
 The default is `layers/(start_altitude - end_altitude)`.</p></dd>
+
+
 <dt>offset_x</dt>
 <dd><p>Default `0`. Change this to move the cloud layer sideways.</p></dd>
+
+
 <dt>offset_y</dt>
 <dd><p>Default `0`. Change this to move the cloud layer backwards and forwards.</p></dd>
+
+
 <dt>scale_x</dt>
 <dd><p>Default `1`. Scale the fractal pattern in the x direction.</p></dd>
+
+
 <dt>scale_y</dt>
 <dd><p>Default `1`. Scale the fractal pattern in the y direction.</p></dd>
+
+
 <dt>scale_z</dt>
 <dd><p>Default `1`. Scale the fractal pattern in the z (vertical) direction. (automatically calculated). Scale the fractal pattern in the z (vertical) direction.</p></dd>
+
+
 <dt>frequency</dt>
 <dd><p>Default `0.005`. The base frequency of the noise used to calculate the fractal cloud structure.</p></dd>
+
+
 <dt>fractal_levels</dt>
 <dd><p>Default `16`. The fractal dimension used to calculate the noise. Higher values give more fine structure, but take longer to calculate.</p></dd>
+
+
 <dt>attenuation_coef</dt>
 <dd><p>Default `1`. Amount of attenuation in the cloud (higher numbers give darker shadows).  This value is automatically scaled to account for increasing the number of layers.</p></dd>
+
+
 <dt>seed</dt>
 <dd><p>Default `1`. Random seed used to generate clouds.</p></dd>
+
+
 <dt>zscale</dt>
 <dd><p>Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
 of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.</p></dd>
+
+
 <dt>baseshape</dt>
 <dd><p>Default `rectangle`. Shape of the base. Options are `c("rectangle","circle","hex")`.</p></dd>
+
+
 <dt>clear_clouds</dt>
 <dd><p>Default `FALSE`. Clears all existing floating layers on the visualization.</p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>Adds a 3D floating cloud layer to the map. No return value.</p>
+    
+
+<p>Adds a 3D floating cloud layer to the map. No return value.</p>
     </div>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span class="co"># \dontrun{</span></span>
-<span class="r-in"><span class="co">#Render a cloud layer over Monterey Bay</span></span>
-<span class="r-in"><span class="va">montereybay</span>  <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span><span class="op">)</span>  <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="plot_3d.html">plot_3d</a></span><span class="op">(</span><span class="va">montereybay</span>,background<span class="op">=</span><span class="st">"brown"</span>,zscale<span class="op">=</span><span class="fl">50</span><span class="op">)</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co">#Render some clouds</span></span>
-<span class="r-in"><span class="fu">render_clouds</span><span class="op">(</span><span class="va">montereybay</span>, zscale<span class="op">=</span><span class="fl">50</span><span class="op">)</span>  </span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \dontrun{</span></span></span>
+<span class="r-in"><span><span class="co">#Render a cloud layer over Monterey Bay</span></span></span>
+<span class="r-in"><span><span class="va">montereybay</span>  <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span><span class="op">)</span>  <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="plot_3d.html">plot_3d</a></span><span class="op">(</span><span class="va">montereybay</span>,background<span class="op">=</span><span class="st">"brown"</span>,zscale<span class="op">=</span><span class="fl">50</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#Render some clouds</span></span></span>
+<span class="r-in"><span><span class="fu">render_clouds</span><span class="op">(</span><span class="va">montereybay</span>, zscale<span class="op">=</span><span class="fl">50</span><span class="op">)</span>  </span></span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
@@ -196,18 +237,18 @@ of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
-<span class="r-in"><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-plt img"><img src="render_clouds-1.png" alt="" width="700" height="433"></span>
-<span class="r-in"><span class="fu">rgl</span><span class="fu">::</span><span class="fu"><a href="https://dmurdoch.github.io/rgl/dev/reference/rgl.fns.html" class="external-link">rgl.clear</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-in"></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co">#Change the seed for a different set of clouds and add cloud shadows on the ground</span></span>
-<span class="r-in"><span class="va">montereybay</span>  <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span><span class="op">)</span>  <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="fu"><a href="cloud_shade.html">cloud_shade</a></span><span class="op">(</span><span class="va">montereybay</span>,zscale<span class="op">=</span><span class="fl">50</span>, seed <span class="op">=</span> <span class="fl">2</span><span class="op">)</span>, <span class="fl">0.0</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="plot_3d.html">plot_3d</a></span><span class="op">(</span><span class="va">montereybay</span>,background<span class="op">=</span><span class="st">"brown"</span>,zscale<span class="op">=</span><span class="fl">50</span><span class="op">)</span></span>
-<span class="r-in"><span class="fu"><a href="render_camera.html">render_camera</a></span><span class="op">(</span>theta<span class="op">=</span><span class="op">-</span><span class="fl">65</span>, phi <span class="op">=</span> <span class="fl">25</span>, zoom <span class="op">=</span> <span class="fl">0.45</span>, fov <span class="op">=</span> <span class="fl">80</span><span class="op">)</span></span>
-<span class="r-in"><span class="fu">render_clouds</span><span class="op">(</span><span class="va">montereybay</span>, zscale<span class="op">=</span><span class="fl">50</span>, seed<span class="op">=</span><span class="fl">2</span>, clear_clouds <span class="op">=</span> <span class="cn">T</span><span class="op">)</span>    </span>
+<span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in mesh$vertices[[j]]:</span> subscript out of bounds</span>
+<span class="r-in"><span><span class="fu">rgl</span><span class="fu">::</span><span class="fu"><a href="https://dmurdoch.github.io/rgl/dev/reference/rgl.fns.html" class="external-link">rgl.clear</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#Change the seed for a different set of clouds and add cloud shadows on the ground</span></span></span>
+<span class="r-in"><span><span class="va">montereybay</span>  <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span><span class="op">)</span>  <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="fu"><a href="cloud_shade.html">cloud_shade</a></span><span class="op">(</span><span class="va">montereybay</span>,zscale<span class="op">=</span><span class="fl">50</span>, seed <span class="op">=</span> <span class="fl">2</span><span class="op">)</span>, <span class="fl">0.0</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="plot_3d.html">plot_3d</a></span><span class="op">(</span><span class="va">montereybay</span>,background<span class="op">=</span><span class="st">"brown"</span>,zscale<span class="op">=</span><span class="fl">50</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="render_camera.html">render_camera</a></span><span class="op">(</span>theta<span class="op">=</span><span class="op">-</span><span class="fl">65</span>, phi <span class="op">=</span> <span class="fl">25</span>, zoom <span class="op">=</span> <span class="fl">0.45</span>, fov <span class="op">=</span> <span class="fl">80</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">render_clouds</span><span class="op">(</span><span class="va">montereybay</span>, zscale<span class="op">=</span><span class="fl">50</span>, seed<span class="op">=</span><span class="fl">2</span>, clear_clouds <span class="op">=</span> <span class="cn">T</span><span class="op">)</span>    </span></span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
@@ -218,16 +259,16 @@ of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
-<span class="r-in"><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-plt img"><img src="render_clouds-2.png" alt="" width="700" height="433"></span>
-<span class="r-in"><span class="fu">rgl</span><span class="fu">::</span><span class="fu"><a href="https://dmurdoch.github.io/rgl/dev/reference/rgl.fns.html" class="external-link">rgl.clear</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="va">montereybay</span>  <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span><span class="op">)</span>  <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="plot_3d.html">plot_3d</a></span><span class="op">(</span><span class="va">montereybay</span>,background<span class="op">=</span><span class="st">"brown"</span>,zscale<span class="op">=</span><span class="fl">50</span><span class="op">)</span></span>
-<span class="r-in"> </span>
-<span class="r-in"><span class="co">#Lower the frequency for larger, smoother clouds</span></span>
-<span class="r-in"><span class="fu">render_clouds</span><span class="op">(</span><span class="va">montereybay</span>, zscale<span class="op">=</span><span class="fl">50</span>, frequency <span class="op">=</span> <span class="fl">0.001</span>, clear_clouds <span class="op">=</span> <span class="cn">T</span><span class="op">)</span></span>
+<span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in mesh$vertices[[j]]:</span> subscript out of bounds</span>
+<span class="r-in"><span><span class="fu">rgl</span><span class="fu">::</span><span class="fu"><a href="https://dmurdoch.github.io/rgl/dev/reference/rgl.fns.html" class="external-link">rgl.clear</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">montereybay</span>  <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span><span class="op">)</span>  <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="plot_3d.html">plot_3d</a></span><span class="op">(</span><span class="va">montereybay</span>,background<span class="op">=</span><span class="st">"brown"</span>,zscale<span class="op">=</span><span class="fl">50</span><span class="op">)</span></span></span>
+<span class="r-in"><span> </span></span>
+<span class="r-in"><span><span class="co">#Lower the frequency for larger, smoother clouds</span></span></span>
+<span class="r-in"><span><span class="fu">render_clouds</span><span class="op">(</span><span class="va">montereybay</span>, zscale<span class="op">=</span><span class="fl">50</span>, frequency <span class="op">=</span> <span class="fl">0.001</span>, clear_clouds <span class="op">=</span> <span class="cn">T</span><span class="op">)</span></span></span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
@@ -238,11 +279,11 @@ of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
-<span class="r-in"><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-plt img"><img src="render_clouds-3.png" alt="" width="700" height="433"></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co">#Increase the frequency for more broken clouds</span></span>
-<span class="r-in"><span class="fu">render_clouds</span><span class="op">(</span><span class="va">montereybay</span>, zscale<span class="op">=</span><span class="fl">50</span>, frequency <span class="op">=</span> <span class="fl">0.05</span>, clear_clouds <span class="op">=</span> <span class="cn">T</span><span class="op">)</span></span>
+<span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in mesh$vertices[[j]]:</span> subscript out of bounds</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#Increase the frequency for more broken clouds</span></span></span>
+<span class="r-in"><span><span class="fu">render_clouds</span><span class="op">(</span><span class="va">montereybay</span>, zscale<span class="op">=</span><span class="fl">50</span>, frequency <span class="op">=</span> <span class="fl">0.05</span>, clear_clouds <span class="op">=</span> <span class="cn">T</span><span class="op">)</span></span></span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
@@ -253,11 +294,11 @@ of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
-<span class="r-in"><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-plt img"><img src="render_clouds-4.png" alt="" width="700" height="433"></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co">#Increase the fractal level for fluffier, bumpier clouds</span></span>
-<span class="r-in"><span class="fu">render_clouds</span><span class="op">(</span><span class="va">montereybay</span>, zscale<span class="op">=</span><span class="fl">50</span>, fractal_levels <span class="op">=</span> <span class="fl">32</span>, clear_clouds <span class="op">=</span> <span class="cn">T</span><span class="op">)</span></span>
+<span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in mesh$vertices[[j]]:</span> subscript out of bounds</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#Increase the fractal level for fluffier, bumpier clouds</span></span></span>
+<span class="r-in"><span><span class="fu">render_clouds</span><span class="op">(</span><span class="va">montereybay</span>, zscale<span class="op">=</span><span class="fl">50</span>, fractal_levels <span class="op">=</span> <span class="fl">32</span>, clear_clouds <span class="op">=</span> <span class="cn">T</span><span class="op">)</span></span></span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
@@ -268,11 +309,11 @@ of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
-<span class="r-in"><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-plt img"><img src="render_clouds-5.png" alt="" width="700" height="433"></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co">#Decrease the fractal level for more smoother, continuous clouds</span></span>
-<span class="r-in"><span class="fu">render_clouds</span><span class="op">(</span><span class="va">montereybay</span>, zscale<span class="op">=</span><span class="fl">50</span>, fractal_levels <span class="op">=</span> <span class="fl">4</span>, clear_clouds <span class="op">=</span> <span class="cn">T</span><span class="op">)</span></span>
+<span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in mesh$vertices[[j]]:</span> subscript out of bounds</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#Decrease the fractal level for more smoother, continuous clouds</span></span></span>
+<span class="r-in"><span><span class="fu">render_clouds</span><span class="op">(</span><span class="va">montereybay</span>, zscale<span class="op">=</span><span class="fl">50</span>, fractal_levels <span class="op">=</span> <span class="fl">4</span>, clear_clouds <span class="op">=</span> <span class="cn">T</span><span class="op">)</span></span></span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
@@ -283,11 +324,11 @@ of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
-<span class="r-in"><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-plt img"><img src="render_clouds-6.png" alt="" width="700" height="433"></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co">#Increase the cloud cover</span></span>
-<span class="r-in"><span class="fu">render_clouds</span><span class="op">(</span><span class="va">montereybay</span>, zscale<span class="op">=</span><span class="fl">50</span>, cloud_cover<span class="op">=</span><span class="fl">0.8</span>, clear_clouds <span class="op">=</span> <span class="cn">T</span><span class="op">)</span>            </span>
+<span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in mesh$vertices[[j]]:</span> subscript out of bounds</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#Increase the cloud cover</span></span></span>
+<span class="r-in"><span><span class="fu">render_clouds</span><span class="op">(</span><span class="va">montereybay</span>, zscale<span class="op">=</span><span class="fl">50</span>, cloud_cover<span class="op">=</span><span class="fl">0.8</span>, clear_clouds <span class="op">=</span> <span class="cn">T</span><span class="op">)</span>            </span></span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
@@ -298,11 +339,11 @@ of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
-<span class="r-in"><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-plt img"><img src="render_clouds-7.png" alt="" width="700" height="433"></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co">#Decrease the cloud cover</span></span>
-<span class="r-in"><span class="fu">render_clouds</span><span class="op">(</span><span class="va">montereybay</span>, zscale<span class="op">=</span><span class="fl">50</span>, cloud_cover<span class="op">=</span><span class="fl">0.2</span>, clear_clouds <span class="op">=</span> <span class="cn">T</span><span class="op">)</span>            </span>
+<span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in mesh$vertices[[j]]:</span> subscript out of bounds</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#Decrease the cloud cover</span></span></span>
+<span class="r-in"><span><span class="fu">render_clouds</span><span class="op">(</span><span class="va">montereybay</span>, zscale<span class="op">=</span><span class="fl">50</span>, cloud_cover<span class="op">=</span><span class="fl">0.2</span>, clear_clouds <span class="op">=</span> <span class="cn">T</span><span class="op">)</span>            </span></span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
@@ -313,11 +354,11 @@ of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
-<span class="r-in"><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-plt img"><img src="render_clouds-8.png" alt="" width="700" height="433"></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co">#Change the altitude range of the clouds</span></span>
-<span class="r-in"><span class="fu">render_clouds</span><span class="op">(</span><span class="va">montereybay</span>,zscale<span class="op">=</span><span class="fl">50</span>,start_altitude<span class="op">=</span><span class="fl">2000</span>,end_altitude <span class="op">=</span> <span class="fl">4000</span>, clear_clouds <span class="op">=</span> <span class="cn">T</span><span class="op">)</span>            </span>
+<span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in mesh$vertices[[j]]:</span> subscript out of bounds</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#Change the altitude range of the clouds</span></span></span>
+<span class="r-in"><span><span class="fu">render_clouds</span><span class="op">(</span><span class="va">montereybay</span>,zscale<span class="op">=</span><span class="fl">50</span>,start_altitude<span class="op">=</span><span class="fl">2000</span>,end_altitude <span class="op">=</span> <span class="fl">4000</span>, clear_clouds <span class="op">=</span> <span class="cn">T</span><span class="op">)</span>            </span></span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
@@ -328,12 +369,12 @@ of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
-<span class="r-in"><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-plt img"><img src="render_clouds-9.png" alt="" width="700" height="433"></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co">#Increase the number of layers </span></span>
-<span class="r-in"><span class="fu">render_clouds</span><span class="op">(</span><span class="va">montereybay</span>, zscale<span class="op">=</span><span class="fl">50</span>,start_altitude<span class="op">=</span><span class="fl">2000</span>,end_altitude <span class="op">=</span> <span class="fl">4000</span>, layers <span class="op">=</span> <span class="fl">20</span>,</span>
-<span class="r-in">             clear_clouds <span class="op">=</span> <span class="cn">T</span><span class="op">)</span></span>
+<span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in mesh$vertices[[j]]:</span> subscript out of bounds</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#Increase the number of layers </span></span></span>
+<span class="r-in"><span><span class="fu">render_clouds</span><span class="op">(</span><span class="va">montereybay</span>, zscale<span class="op">=</span><span class="fl">50</span>,start_altitude<span class="op">=</span><span class="fl">2000</span>,end_altitude <span class="op">=</span> <span class="fl">4000</span>, layers <span class="op">=</span> <span class="fl">20</span>,</span></span>
+<span class="r-in"><span>             clear_clouds <span class="op">=</span> <span class="cn">T</span><span class="op">)</span></span></span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
@@ -354,12 +395,12 @@ of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
-<span class="r-in"><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-plt img"><img src="render_clouds-10.png" alt="" width="700" height="433"></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co">#Change the sun angle and altitude, and increase the attenuation for darker clouds</span></span>
-<span class="r-in"><span class="fu">render_clouds</span><span class="op">(</span><span class="va">montereybay</span>,zscale<span class="op">=</span><span class="fl">50</span>,sun_angle<span class="op">=</span><span class="fl">45</span>, sun_altitude<span class="op">=</span> <span class="fl">5</span>, attenuation_coef <span class="op">=</span> <span class="fl">5</span>,</span>
-<span class="r-in">             clear_clouds <span class="op">=</span> <span class="cn">T</span><span class="op">)</span></span>
+<span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in mesh$vertices[[j]]:</span> subscript out of bounds</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#Change the sun angle and altitude, and increase the attenuation for darker clouds</span></span></span>
+<span class="r-in"><span><span class="fu">render_clouds</span><span class="op">(</span><span class="va">montereybay</span>,zscale<span class="op">=</span><span class="fl">50</span>,sun_angle<span class="op">=</span><span class="fl">45</span>, sun_altitude<span class="op">=</span> <span class="fl">5</span>, attenuation_coef <span class="op">=</span> <span class="fl">5</span>,</span></span>
+<span class="r-in"><span>             clear_clouds <span class="op">=</span> <span class="cn">T</span><span class="op">)</span></span></span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
@@ -370,14 +411,14 @@ of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
-<span class="r-in"><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span>clear<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span>
-<span class="r-plt img"><img src="render_clouds-11.png" alt="" width="700" height="433"></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co">#Render the scene with a different baseshape</span></span>
-<span class="r-in"><span class="va">montereybay</span>  <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span><span class="op">)</span>  <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="plot_3d.html">plot_3d</a></span><span class="op">(</span><span class="va">montereybay</span>,background<span class="op">=</span><span class="st">"darkred"</span>,zscale<span class="op">=</span><span class="fl">50</span>, baseshape<span class="op">=</span><span class="st">"hex"</span><span class="op">)</span></span>
-<span class="r-in"><span class="fu">render_clouds</span><span class="op">(</span><span class="va">montereybay</span>,zscale<span class="op">=</span><span class="fl">50</span>, seed<span class="op">=</span><span class="fl">3</span>, baseshape<span class="op">=</span><span class="st">"hex"</span>, clear_clouds <span class="op">=</span> <span class="cn">T</span><span class="op">)</span>  </span>
+<span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span>clear<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in mesh$vertices[[j]]:</span> subscript out of bounds</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#Render the scene with a different baseshape</span></span></span>
+<span class="r-in"><span><span class="va">montereybay</span>  <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span><span class="op">)</span>  <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="plot_3d.html">plot_3d</a></span><span class="op">(</span><span class="va">montereybay</span>,background<span class="op">=</span><span class="st">"darkred"</span>,zscale<span class="op">=</span><span class="fl">50</span>, baseshape<span class="op">=</span><span class="st">"hex"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">render_clouds</span><span class="op">(</span><span class="va">montereybay</span>,zscale<span class="op">=</span><span class="fl">50</span>, seed<span class="op">=</span><span class="fl">3</span>, baseshape<span class="op">=</span><span class="st">"hex"</span>, clear_clouds <span class="op">=</span> <span class="cn">T</span><span class="op">)</span>  </span></span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
@@ -388,11 +429,11 @@ of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>'length(x) = 2 &gt; 1' in coercion to 'logical(1)'</span>
-<span class="r-in"><span class="fu"><a href="render_camera.html">render_camera</a></span><span class="op">(</span>zoom<span class="op">=</span><span class="fl">0.65</span><span class="op">)</span></span>
-<span class="r-in"><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-plt img"><img src="render_clouds-12.png" alt="" width="700" height="433"></span>
-<span class="r-in"><span class="fu">rgl</span><span class="fu">::</span><span class="fu"><a href="https://dmurdoch.github.io/rgl/dev/reference/rgl.open.html" class="external-link">rgl.close</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-in"><span class="co"># }</span></span>
+<span class="r-in"><span><span class="fu"><a href="render_camera.html">render_camera</a></span><span class="op">(</span>zoom<span class="op">=</span><span class="fl">0.65</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in mesh$vertices[[j]]:</span> subscript out of bounds</span>
+<span class="r-in"><span><span class="fu">rgl</span><span class="fu">::</span><span class="fu"><a href="https://dmurdoch.github.io/rgl/dev/reference/rgl.open.html" class="external-link">rgl.close</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </div>
@@ -407,7 +448,7 @@ of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
 </div>
 
       </footer></div>

@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.28.2</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.28.3</span>
       </span>
     </div>
 
@@ -99,39 +99,46 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">render_snapshot_software</span><span class="op">(</span>
-  <span class="va">filename</span>,
-  cache_filename <span class="op">=</span> <span class="cn">NULL</span>,
-  camera_location <span class="op">=</span> <span class="cn">NULL</span>,
-  camera_lookat <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span>,
-  background <span class="op">=</span> <span class="cn">NULL</span>,
-  return_all <span class="op">=</span> <span class="cn">FALSE</span>,
-  width <span class="op">=</span> <span class="cn">NULL</span>,
-  height <span class="op">=</span> <span class="cn">NULL</span>,
-  light_direction <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">0</span><span class="op">)</span>,
-  fake_shadow <span class="op">=</span> <span class="cn">TRUE</span>,
-  text_angle <span class="op">=</span> <span class="cn">NULL</span>,
-  text_size <span class="op">=</span> <span class="fl">1</span>,
-  text_offset <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span>,
-  fov <span class="op">=</span> <span class="cn">NULL</span>,
-  print_scene_info <span class="op">=</span> <span class="cn">FALSE</span>,
-  point_radius <span class="op">=</span> <span class="fl">1</span>,
-  line_offset <span class="op">=</span> <span class="op">-</span><span class="fl">1e-07</span>,
-  <span class="va">...</span>
-<span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">render_snapshot_software</span><span class="op">(</span></span>
+<span>  <span class="va">filename</span>,</span>
+<span>  cache_filename <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  camera_location <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  camera_lookat <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span>,</span>
+<span>  background <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  return_all <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  width <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  height <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  light_direction <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">0</span><span class="op">)</span>,</span>
+<span>  fake_shadow <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  text_angle <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  text_size <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  text_offset <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span>,</span>
+<span>  fov <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  print_scene_info <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  point_radius <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  line_offset <span class="op">=</span> <span class="op">-</span><span class="fl">1e-07</span>,</span>
+<span>  <span class="va">...</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>cache_filename</dt>
 <dd><p>Name of temporary filename to store OBJ file, if the user does not want to rewrite the file each time.</p></dd>
+
+
 <dt>camera_location</dt>
 <dd><p>Default `NULL`. Custom position of the camera. The `FOV`, `width`, and `height` arguments will still
 be derived from the rgl window.</p></dd>
+
+
 <dt>...</dt>
 <dd><p>Additional parameters to pass to `rayrender::render_scene`()</p></dd>
+
+
 <dt>ground_size</dt>
 <dd><p>Default `10000`. The width of the plane representing the ground.</p></dd>
+
 </dl></div>
 
   </div>
@@ -146,7 +153,7 @@ be derived from the rgl window.</p></dd>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
 </div>
 
       </footer></div>

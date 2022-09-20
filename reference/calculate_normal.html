@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.28.2</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.28.3</span>
       </span>
     </div>
 
@@ -99,38 +99,45 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">calculate_normal</span><span class="op">(</span><span class="va">heightmap</span>, zscale <span class="op">=</span> <span class="fl">1</span>, progbar <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">calculate_normal</span><span class="op">(</span><span class="va">heightmap</span>, zscale <span class="op">=</span> <span class="fl">1</span>, progbar <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>heightmap</dt>
 <dd><p>A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.</p></dd>
+
+
 <dt>zscale</dt>
 <dd><p>Default 1.</p></dd>
+
+
 <dt>progbar</dt>
 <dd><p>Default `FALSE`. If `TRUE`, turns on progress bar.</p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>Matrix of light intensities at each point.</p>
+    
+
+<p>Matrix of light intensities at each point.</p>
     </div>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span class="co">#Here we produce a light intensity map of the `volcano` elevation map.</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co">#Cache the normal vectors of the volcano dataset</span></span>
-<span class="r-in"><span class="co"># \donttest{</span></span>
-<span class="r-in"><span class="va">volcanocache</span> <span class="op">=</span> <span class="fu">calculate_normal</span><span class="op">(</span><span class="va">volcano</span><span class="op">)</span></span>
-<span class="r-in"><span class="co"># }</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co">#Use the cached vectors to speed up calculation of `sphere_shade()` on a map.</span></span>
-<span class="r-in"><span class="co"># \donttest{</span></span>
-<span class="r-in"><span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span><span class="va">volcano</span>,normalvectors <span class="op">=</span> <span class="va">volcanocache</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co">#Here we produce a light intensity map of the `volcano` elevation map.</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#Cache the normal vectors of the volcano dataset</span></span></span>
+<span class="r-in"><span><span class="co"># \donttest{</span></span></span>
+<span class="r-in"><span><span class="va">volcanocache</span> <span class="op">=</span> <span class="fu">calculate_normal</span><span class="op">(</span><span class="va">volcano</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#Use the cached vectors to speed up calculation of `sphere_shade()` on a map.</span></span></span>
+<span class="r-in"><span><span class="co"># \donttest{</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span><span class="va">volcano</span>,normalvectors <span class="op">=</span> <span class="va">volcanocache</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="calculate_normal-1.png" alt="" width="700" height="433"></span>
-<span class="r-in"><span class="co"># }</span></span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </div>
@@ -145,7 +152,7 @@
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
 </div>
 
       </footer></div>

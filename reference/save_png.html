@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.28.2</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.28.3</span>
       </span>
     </div>
 
@@ -99,70 +99,95 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">save_png</span><span class="op">(</span>
-  <span class="va">hillshade</span>,
-  <span class="va">filename</span>,
-  title_text <span class="op">=</span> <span class="cn">NA</span>,
-  title_offset <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">20</span>, <span class="fl">20</span><span class="op">)</span>,
-  title_color <span class="op">=</span> <span class="st">"black"</span>,
-  title_size <span class="op">=</span> <span class="fl">30</span>,
-  title_font <span class="op">=</span> <span class="st">"sans"</span>,
-  title_style <span class="op">=</span> <span class="st">"normal"</span>,
-  title_bar_color <span class="op">=</span> <span class="cn">NULL</span>,
-  title_bar_alpha <span class="op">=</span> <span class="fl">0.5</span>,
-  title_position <span class="op">=</span> <span class="st">"northwest"</span>,
-  rotate <span class="op">=</span> <span class="fl">0</span>,
-  asp <span class="op">=</span> <span class="fl">1</span>
-<span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">save_png</span><span class="op">(</span></span>
+<span>  <span class="va">hillshade</span>,</span>
+<span>  <span class="va">filename</span>,</span>
+<span>  title_text <span class="op">=</span> <span class="cn">NA</span>,</span>
+<span>  title_offset <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">20</span>, <span class="fl">20</span><span class="op">)</span>,</span>
+<span>  title_color <span class="op">=</span> <span class="st">"black"</span>,</span>
+<span>  title_size <span class="op">=</span> <span class="fl">30</span>,</span>
+<span>  title_font <span class="op">=</span> <span class="st">"sans"</span>,</span>
+<span>  title_style <span class="op">=</span> <span class="st">"normal"</span>,</span>
+<span>  title_bar_color <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  title_bar_alpha <span class="op">=</span> <span class="fl">0.5</span>,</span>
+<span>  title_position <span class="op">=</span> <span class="st">"northwest"</span>,</span>
+<span>  rotate <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  asp <span class="op">=</span> <span class="fl">1</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>hillshade</dt>
 <dd><p>Array (or matrix) of hillshade to be written.</p></dd>
+
+
 <dt>filename</dt>
 <dd><p>String with the filename. If `.png` is not at the end of the string, it will be appended automatically.</p></dd>
+
+
 <dt>title_text</dt>
 <dd><p>Default `NULL`. Text. Adds a title to the image, using `magick::image_annotate()`.</p></dd>
+
+
 <dt>title_offset</dt>
 <dd><p>Default `c(20,20)`. Distance from the top-left (default, `gravity` direction in
 image_annotate) corner to offset the title.</p></dd>
+
+
 <dt>title_color</dt>
 <dd><p>Default `black`. Font color.</p></dd>
+
+
 <dt>title_size</dt>
 <dd><p>Default `30`. Font size in pixels.</p></dd>
+
+
 <dt>title_font</dt>
 <dd><p>Default `sans`. String with font family such as "sans", "mono", "serif", "Times", "Helvetica",
 "Trebuchet", "Georgia", "Palatino" or "Comic Sans".</p></dd>
+
+
 <dt>title_style</dt>
 <dd><p>Default `normal`. Font style (e.g. `italic`).</p></dd>
+
+
 <dt>title_bar_color</dt>
 <dd><p>Default `NULL`. If a color, this will create a colored bar under the title.</p></dd>
+
+
 <dt>title_bar_alpha</dt>
 <dd><p>Default `0.5`. Transparency of the title bar.</p></dd>
+
+
 <dt>title_position</dt>
 <dd><p>Default `northwest`. Position of the title.</p></dd>
+
+
 <dt>rotate</dt>
 <dd><p>Default 0. Rotates the output. Possible values: 0, 90, 180, 270.</p></dd>
+
+
 <dt>asp</dt>
 <dd><p>Default `1`. Aspect ratio of the resulting plot. Use `asp = 1/cospi(mean_latitude/180)` to rescale
 lat/long at higher latitudes to the correct the aspect ratio.</p></dd>
+
 </dl></div>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span class="va">filename_map</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co">#Save the map into `filename_map`</span></span>
-<span class="r-in"><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu">save_png</span><span class="op">(</span><span class="va">filename_map</span><span class="op">)</span></span>
-<span class="r-in"> </span>
-<span class="r-in"><span class="co">#Rotate the map 180 degrees:</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu">save_png</span><span class="op">(</span><span class="va">filename_map</span>,rotate<span class="op">=</span><span class="fl">180</span><span class="op">)</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">filename_map</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#Save the map into `filename_map`</span></span></span>
+<span class="r-in"><span><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu">save_png</span><span class="op">(</span><span class="va">filename_map</span><span class="op">)</span></span></span>
+<span class="r-in"><span> </span></span>
+<span class="r-in"><span><span class="co">#Rotate the map 180 degrees:</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu">save_png</span><span class="op">(</span><span class="va">filename_map</span>,rotate<span class="op">=</span><span class="fl">180</span><span class="op">)</span></span></span>
 </code></pre></div>
     </div>
   </div>
@@ -177,7 +202,7 @@ lat/long at higher latitudes to the correct the aspect ratio.</p></dd>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
 </div>
 
       </footer></div>

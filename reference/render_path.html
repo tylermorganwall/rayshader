@@ -19,7 +19,7 @@ above the heightmap. If the path goes off the edge, the nearest height on the he
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.28.2</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.28.3</span>
       </span>
     </div>
 
@@ -103,118 +103,139 @@ above the heightmap. If the path goes off the edge, the nearest height on the he
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">render_path</span><span class="op">(</span>
-  extent <span class="op">=</span> <span class="cn">NULL</span>,
-  <span class="va">lat</span>,
-  long <span class="op">=</span> <span class="cn">NULL</span>,
-  altitude <span class="op">=</span> <span class="cn">NULL</span>,
-  zscale <span class="op">=</span> <span class="fl">1</span>,
-  heightmap <span class="op">=</span> <span class="cn">NULL</span>,
-  linewidth <span class="op">=</span> <span class="fl">3</span>,
-  color <span class="op">=</span> <span class="st">"black"</span>,
-  antialias <span class="op">=</span> <span class="cn">FALSE</span>,
-  offset <span class="op">=</span> <span class="fl">5</span>,
-  clear_previous <span class="op">=</span> <span class="cn">FALSE</span>
-<span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">render_path</span><span class="op">(</span></span>
+<span>  extent <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  <span class="va">lat</span>,</span>
+<span>  long <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  altitude <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  zscale <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  heightmap <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  linewidth <span class="op">=</span> <span class="fl">3</span>,</span>
+<span>  color <span class="op">=</span> <span class="st">"black"</span>,</span>
+<span>  antialias <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  offset <span class="op">=</span> <span class="fl">5</span>,</span>
+<span>  clear_previous <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>extent</dt>
 <dd><p>A `raster::Extent` object with the bounding box of the displayed 3D scene.</p></dd>
+
+
 <dt>lat</dt>
 <dd><p>Vector of latitudes (or other coordinate in the same coordinate reference system as extent).
 Can also be an `sf` or `SpatialLineDataFrame` object.</p></dd>
+
+
 <dt>long</dt>
 <dd><p>Default `NULL`. Vector of longitudes (or other coordinate in the same coordinate reference system as extent).
 Ignored if lat is an `sf` or `SpatialLineDataFrame` object.</p></dd>
+
+
 <dt>altitude</dt>
 <dd><p>Default `NULL`. Elevation of each point, in units of the elevation matrix (scaled by zscale).
 If left `NULL`, this will be just the elevation value at ths surface, offset by `offset`.</p></dd>
+
+
 <dt>zscale</dt>
 <dd><p>Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.</p></dd>
+
+
 <dt>heightmap</dt>
 <dd><p>Default `NULL`. Pass this if not including an `altitude` argument, or if no extent passed. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
 All points are assumed to be evenly spaced.</p></dd>
+
+
 <dt>linewidth</dt>
 <dd><p>Default `3`. The line width.</p></dd>
+
+
 <dt>color</dt>
 <dd><p>Default `black`. Color of the line.</p></dd>
+
+
 <dt>antialias</dt>
 <dd><p>Default `FALSE`. If `TRUE`, the line with be have anti-aliasing applied. NOTE: anti-aliasing can cause some unpredictable behavior with transparent surfaces.</p></dd>
+
+
 <dt>offset</dt>
 <dd><p>Default `5`. Offset of the track from the surface, if `altitude = NULL`.</p></dd>
+
+
 <dt>clear_previous</dt>
 <dd><p>Default `FALSE`. If `TRUE`, it will clear all existing paths.</p></dd>
+
 </dl></div>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span class="co"># \donttest{</span></span>
-<span class="r-in"><span class="co">#Starting at Moss Landing in Monterey Bay, we are going to simulate a flight of a bird going</span></span>
-<span class="r-in"><span class="co">#out to sea and diving for food.</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co">#First, create simulated lat/long data</span></span>
-<span class="r-in"><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">2009</span><span class="op">)</span></span>
-<span class="r-in"><span class="va">moss_landing_coord</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">36.806807</span>, <span class="op">-</span><span class="fl">121.793332</span><span class="op">)</span></span>
-<span class="r-in"><span class="va">x_vel_out</span> <span class="op">=</span> <span class="op">-</span><span class="fl">0.001</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">1000</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">300</span><span class="op">]</span><span class="op">/</span><span class="fl">1000</span></span>
-<span class="r-in"><span class="va">y_vel_out</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">1000</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">300</span><span class="op">]</span><span class="op">/</span><span class="fl">200</span></span>
-<span class="r-in"><span class="va">z_out</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">2000</span>,length.out <span class="op">=</span> <span class="fl">180</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">2000</span>,<span class="fl">0</span>,length.out<span class="op">=</span><span class="fl">10</span><span class="op">)</span>,</span>
-<span class="r-in">         <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">2000</span>,length.out <span class="op">=</span> <span class="fl">100</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">2000</span>,<span class="fl">0</span>,length.out<span class="op">=</span><span class="fl">10</span><span class="op">)</span><span class="op">)</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="va">bird_track_lat</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-in"><span class="va">bird_track_long</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-in"><span class="va">bird_track_lat</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span> <span class="op">=</span> <span class="va">moss_landing_coord</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span></span>
-<span class="r-in"><span class="va">bird_track_long</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span> <span class="op">=</span> <span class="va">moss_landing_coord</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span></span>
-<span class="r-in"><span class="kw">for</span><span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fl">2</span><span class="op">:</span><span class="fl">300</span><span class="op">)</span> <span class="op">{</span></span>
-<span class="r-in"><span class="va">bird_track_lat</span><span class="op">[[</span><span class="va">i</span><span class="op">]</span><span class="op">]</span> <span class="op">=</span> <span class="va">bird_track_lat</span><span class="op">[[</span><span class="va">i</span><span class="op">-</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span> <span class="op">+</span> <span class="va">y_vel_out</span><span class="op">[</span><span class="va">i</span><span class="op">]</span></span>
-<span class="r-in"><span class="va">bird_track_long</span><span class="op">[[</span><span class="va">i</span><span class="op">]</span><span class="op">]</span> <span class="op">=</span> <span class="va">bird_track_long</span><span class="op">[[</span><span class="va">i</span><span class="op">-</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span> <span class="op">+</span> <span class="va">x_vel_out</span><span class="op">[</span><span class="va">i</span><span class="op">]</span></span>
-<span class="r-in"><span class="op">}</span></span>
-<span class="r-in"></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co">#Render the 3D map </span></span>
-<span class="r-in"><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="plot_3d.html">plot_3d</a></span><span class="op">(</span><span class="va">montereybay</span>,zscale<span class="op">=</span><span class="fl">50</span>,water<span class="op">=</span><span class="cn">TRUE</span>,</span>
-<span class="r-in">         shadowcolor<span class="op">=</span><span class="st">"#40310a"</span>, watercolor<span class="op">=</span><span class="st">"#233aa1"</span>, background <span class="op">=</span> <span class="st">"tan"</span>,</span>
-<span class="r-in">         theta<span class="op">=</span><span class="fl">210</span>,  phi<span class="op">=</span><span class="fl">22</span>, zoom<span class="op">=</span><span class="fl">0.20</span>, fov<span class="op">=</span><span class="fl">55</span><span class="op">)</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co">#Pass in the extent of the underlying raster (stored in an attribute for the montereybay</span></span>
-<span class="r-in"><span class="co">#dataset) and the latitudes, longitudes, and altitudes of the track.</span></span>
-<span class="r-in"><span class="fu">render_path</span><span class="op">(</span>extent <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>,<span class="st">"extent"</span><span class="op">)</span>, </span>
-<span class="r-in">           lat <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unlist.html" class="external-link">unlist</a></span><span class="op">(</span><span class="va">bird_track_lat</span><span class="op">)</span>, long <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unlist.html" class="external-link">unlist</a></span><span class="op">(</span><span class="va">bird_track_long</span><span class="op">)</span>, </span>
-<span class="r-in">           altitude <span class="op">=</span> <span class="va">z_out</span>, zscale<span class="op">=</span><span class="fl">50</span>,color<span class="op">=</span><span class="st">"white"</span>, antialias<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span>
-<span class="r-in"><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-plt img"><img src="render_path-1.png" alt="" width="700" height="433"></span>
-<span class="r-in">    </span>
-<span class="r-in"><span class="co">#We'll set the altitude to right above the water to give the tracks a "shadow".</span></span>
-<span class="r-in"><span class="fu">render_path</span><span class="op">(</span>extent <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>,<span class="st">"extent"</span><span class="op">)</span>, </span>
-<span class="r-in">           lat <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unlist.html" class="external-link">unlist</a></span><span class="op">(</span><span class="va">bird_track_lat</span><span class="op">)</span>, long <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unlist.html" class="external-link">unlist</a></span><span class="op">(</span><span class="va">bird_track_long</span><span class="op">)</span>, </span>
-<span class="r-in">           altitude <span class="op">=</span> <span class="fl">10</span>, zscale<span class="op">=</span><span class="fl">50</span>, color<span class="op">=</span><span class="st">"black"</span>, antialias<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span>
-<span class="r-in"><span class="fu"><a href="render_camera.html">render_camera</a></span><span class="op">(</span>theta<span class="op">=</span><span class="fl">30</span>,phi<span class="op">=</span><span class="fl">35</span>,zoom<span class="op">=</span><span class="fl">0.45</span>,fov<span class="op">=</span><span class="fl">70</span><span class="op">)</span></span>
-<span class="r-in"><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-plt img"><img src="render_path-2.png" alt="" width="700" height="433"></span>
-<span class="r-in"><span class="co">#Remove the path:</span></span>
-<span class="r-in"><span class="fu">render_path</span><span class="op">(</span>clear_previous<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co">#Finally, we can also plot just GPS coordinates offset from the surface by leaving altitude `NULL`</span></span>
-<span class="r-in"><span class="co"># Here we plot a spiral of values surrounding Moss Landing. This requires the original heightmap.</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="va">t</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">2</span><span class="op">*</span><span class="va">pi</span>,length.out<span class="op">=</span><span class="fl">1000</span><span class="op">)</span></span>
-<span class="r-in"><span class="va">circle_coords_lat</span> <span class="op">=</span> <span class="va">moss_landing_coord</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span> <span class="op">+</span> <span class="fl">0.5</span> <span class="op">*</span> <span class="va">t</span><span class="op">/</span><span class="fl">8</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="va">t</span><span class="op">*</span><span class="fl">6</span><span class="op">)</span></span>
-<span class="r-in"><span class="va">circle_coords_long</span> <span class="op">=</span> <span class="va">moss_landing_coord</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span> <span class="op">+</span> <span class="fl">0.5</span> <span class="op">*</span> <span class="va">t</span><span class="op">/</span><span class="fl">8</span> <span class="op">*</span>  <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">cos</a></span><span class="op">(</span><span class="va">t</span><span class="op">*</span><span class="fl">6</span><span class="op">)</span></span>
-<span class="r-in"><span class="fu">render_path</span><span class="op">(</span>extent <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>,<span class="st">"extent"</span><span class="op">)</span>, heightmap <span class="op">=</span> <span class="va">montereybay</span>,</span>
-<span class="r-in">           lat <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unlist.html" class="external-link">unlist</a></span><span class="op">(</span><span class="va">circle_coords_lat</span><span class="op">)</span>, long <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unlist.html" class="external-link">unlist</a></span><span class="op">(</span><span class="va">circle_coords_long</span><span class="op">)</span>, </span>
-<span class="r-in">           zscale<span class="op">=</span><span class="fl">50</span>, color<span class="op">=</span><span class="st">"red"</span>, antialias<span class="op">=</span><span class="cn">TRUE</span>,offset<span class="op">=</span><span class="fl">100</span>, linewidth<span class="op">=</span><span class="fl">5</span><span class="op">)</span></span>
-<span class="r-in"><span class="fu"><a href="render_camera.html">render_camera</a></span><span class="op">(</span>theta <span class="op">=</span> <span class="fl">160</span>, phi<span class="op">=</span><span class="fl">33</span>, zoom<span class="op">=</span><span class="fl">0.4</span>, fov<span class="op">=</span><span class="fl">55</span><span class="op">)</span></span>
-<span class="r-in"><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-plt img"><img src="render_path-3.png" alt="" width="700" height="433"></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co">#And all of these work with `render_highquality()`</span></span>
-<span class="r-in"><span class="fu"><a href="render_highquality.html">render_highquality</a></span><span class="op">(</span>clamp_value<span class="op">=</span><span class="fl">10</span>, line_radius<span class="op">=</span><span class="fl">3</span><span class="op">)</span></span>
-<span class="r-plt img"><img src="render_path-4.png" alt="" width="700" height="433"></span>
-<span class="r-in"><span class="fu">rgl</span><span class="fu">::</span><span class="fu"><a href="https://dmurdoch.github.io/rgl/dev/reference/rgl.open.html" class="external-link">rgl.close</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-in"><span class="co"># }</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
+<span class="r-in"><span><span class="co">#Starting at Moss Landing in Monterey Bay, we are going to simulate a flight of a bird going</span></span></span>
+<span class="r-in"><span><span class="co">#out to sea and diving for food.</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#First, create simulated lat/long data</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">2009</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">moss_landing_coord</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">36.806807</span>, <span class="op">-</span><span class="fl">121.793332</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">x_vel_out</span> <span class="op">=</span> <span class="op">-</span><span class="fl">0.001</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">1000</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">300</span><span class="op">]</span><span class="op">/</span><span class="fl">1000</span></span></span>
+<span class="r-in"><span><span class="va">y_vel_out</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">1000</span><span class="op">)</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">300</span><span class="op">]</span><span class="op">/</span><span class="fl">200</span></span></span>
+<span class="r-in"><span><span class="va">z_out</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">2000</span>,length.out <span class="op">=</span> <span class="fl">180</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">2000</span>,<span class="fl">0</span>,length.out<span class="op">=</span><span class="fl">10</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>         <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">2000</span>,length.out <span class="op">=</span> <span class="fl">100</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">2000</span>,<span class="fl">0</span>,length.out<span class="op">=</span><span class="fl">10</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">bird_track_lat</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">bird_track_long</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">bird_track_lat</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span> <span class="op">=</span> <span class="va">moss_landing_coord</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span></span></span>
+<span class="r-in"><span><span class="va">bird_track_long</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span> <span class="op">=</span> <span class="va">moss_landing_coord</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span></span></span>
+<span class="r-in"><span><span class="kw">for</span><span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fl">2</span><span class="op">:</span><span class="fl">300</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span><span class="va">bird_track_lat</span><span class="op">[[</span><span class="va">i</span><span class="op">]</span><span class="op">]</span> <span class="op">=</span> <span class="va">bird_track_lat</span><span class="op">[[</span><span class="va">i</span><span class="op">-</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span> <span class="op">+</span> <span class="va">y_vel_out</span><span class="op">[</span><span class="va">i</span><span class="op">]</span></span></span>
+<span class="r-in"><span><span class="va">bird_track_long</span><span class="op">[[</span><span class="va">i</span><span class="op">]</span><span class="op">]</span> <span class="op">=</span> <span class="va">bird_track_long</span><span class="op">[[</span><span class="va">i</span><span class="op">-</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span> <span class="op">+</span> <span class="va">x_vel_out</span><span class="op">[</span><span class="va">i</span><span class="op">]</span></span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#Render the 3D map </span></span></span>
+<span class="r-in"><span><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="plot_3d.html">plot_3d</a></span><span class="op">(</span><span class="va">montereybay</span>,zscale<span class="op">=</span><span class="fl">50</span>,water<span class="op">=</span><span class="cn">TRUE</span>,</span></span>
+<span class="r-in"><span>         shadowcolor<span class="op">=</span><span class="st">"#40310a"</span>, watercolor<span class="op">=</span><span class="st">"#233aa1"</span>, background <span class="op">=</span> <span class="st">"tan"</span>,</span></span>
+<span class="r-in"><span>         theta<span class="op">=</span><span class="fl">210</span>,  phi<span class="op">=</span><span class="fl">22</span>, zoom<span class="op">=</span><span class="fl">0.20</span>, fov<span class="op">=</span><span class="fl">55</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#Pass in the extent of the underlying raster (stored in an attribute for the montereybay</span></span></span>
+<span class="r-in"><span><span class="co">#dataset) and the latitudes, longitudes, and altitudes of the track.</span></span></span>
+<span class="r-in"><span><span class="fu">render_path</span><span class="op">(</span>extent <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>,<span class="st">"extent"</span><span class="op">)</span>, </span></span>
+<span class="r-in"><span>           lat <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unlist.html" class="external-link">unlist</a></span><span class="op">(</span><span class="va">bird_track_lat</span><span class="op">)</span>, long <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unlist.html" class="external-link">unlist</a></span><span class="op">(</span><span class="va">bird_track_long</span><span class="op">)</span>, </span></span>
+<span class="r-in"><span>           altitude <span class="op">=</span> <span class="va">z_out</span>, zscale<span class="op">=</span><span class="fl">50</span>,color<span class="op">=</span><span class="st">"white"</span>, antialias<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in mesh$vertices[[j]]:</span> subscript out of bounds</span>
+<span class="r-in"><span>    </span></span>
+<span class="r-in"><span><span class="co">#We'll set the altitude to right above the water to give the tracks a "shadow".</span></span></span>
+<span class="r-in"><span><span class="fu">render_path</span><span class="op">(</span>extent <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>,<span class="st">"extent"</span><span class="op">)</span>, </span></span>
+<span class="r-in"><span>           lat <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unlist.html" class="external-link">unlist</a></span><span class="op">(</span><span class="va">bird_track_lat</span><span class="op">)</span>, long <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unlist.html" class="external-link">unlist</a></span><span class="op">(</span><span class="va">bird_track_long</span><span class="op">)</span>, </span></span>
+<span class="r-in"><span>           altitude <span class="op">=</span> <span class="fl">10</span>, zscale<span class="op">=</span><span class="fl">50</span>, color<span class="op">=</span><span class="st">"black"</span>, antialias<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="render_camera.html">render_camera</a></span><span class="op">(</span>theta<span class="op">=</span><span class="fl">30</span>,phi<span class="op">=</span><span class="fl">35</span>,zoom<span class="op">=</span><span class="fl">0.45</span>,fov<span class="op">=</span><span class="fl">70</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in mesh$vertices[[j]]:</span> subscript out of bounds</span>
+<span class="r-in"><span><span class="co">#Remove the path:</span></span></span>
+<span class="r-in"><span><span class="fu">render_path</span><span class="op">(</span>clear_previous<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#Finally, we can also plot just GPS coordinates offset from the surface by leaving altitude `NULL`</span></span></span>
+<span class="r-in"><span><span class="co"># Here we plot a spiral of values surrounding Moss Landing. This requires the original heightmap.</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">t</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">2</span><span class="op">*</span><span class="va">pi</span>,length.out<span class="op">=</span><span class="fl">1000</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">circle_coords_lat</span> <span class="op">=</span> <span class="va">moss_landing_coord</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span> <span class="op">+</span> <span class="fl">0.5</span> <span class="op">*</span> <span class="va">t</span><span class="op">/</span><span class="fl">8</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="va">t</span><span class="op">*</span><span class="fl">6</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">circle_coords_long</span> <span class="op">=</span> <span class="va">moss_landing_coord</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span> <span class="op">+</span> <span class="fl">0.5</span> <span class="op">*</span> <span class="va">t</span><span class="op">/</span><span class="fl">8</span> <span class="op">*</span>  <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">cos</a></span><span class="op">(</span><span class="va">t</span><span class="op">*</span><span class="fl">6</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">render_path</span><span class="op">(</span>extent <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>,<span class="st">"extent"</span><span class="op">)</span>, heightmap <span class="op">=</span> <span class="va">montereybay</span>,</span></span>
+<span class="r-in"><span>           lat <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unlist.html" class="external-link">unlist</a></span><span class="op">(</span><span class="va">circle_coords_lat</span><span class="op">)</span>, long <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unlist.html" class="external-link">unlist</a></span><span class="op">(</span><span class="va">circle_coords_long</span><span class="op">)</span>, </span></span>
+<span class="r-in"><span>           zscale<span class="op">=</span><span class="fl">50</span>, color<span class="op">=</span><span class="st">"red"</span>, antialias<span class="op">=</span><span class="cn">TRUE</span>,offset<span class="op">=</span><span class="fl">100</span>, linewidth<span class="op">=</span><span class="fl">5</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="render_camera.html">render_camera</a></span><span class="op">(</span>theta <span class="op">=</span> <span class="fl">160</span>, phi<span class="op">=</span><span class="fl">33</span>, zoom<span class="op">=</span><span class="fl">0.4</span>, fov<span class="op">=</span><span class="fl">55</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in mesh$vertices[[j]]:</span> subscript out of bounds</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#And all of these work with `render_highquality()`</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="render_highquality.html">render_highquality</a></span><span class="op">(</span>clamp_value<span class="op">=</span><span class="fl">10</span>, line_radius<span class="op">=</span><span class="fl">3</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in rayrender::obj_model(cache_filename, x = -bbox_center[1], y = -bbox_center[2],     z = -bbox_center[3], texture = TRUE, material = obj_material):</span> unused argument (texture = TRUE)</span>
+<span class="r-in"><span><span class="fu">rgl</span><span class="fu">::</span><span class="fu"><a href="https://dmurdoch.github.io/rgl/dev/reference/rgl.open.html" class="external-link">rgl.close</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </div>
@@ -229,7 +250,7 @@ All points are assumed to be evenly spaced.</p></dd>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
 </div>
 
       </footer></div>

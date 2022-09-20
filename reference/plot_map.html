@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.28.2</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.28.3</span>
       </span>
     </div>
 
@@ -99,87 +99,114 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">plot_map</span><span class="op">(</span>
-  <span class="va">hillshade</span>,
-  rotate <span class="op">=</span> <span class="fl">0</span>,
-  asp <span class="op">=</span> <span class="fl">1</span>,
-  title_text <span class="op">=</span> <span class="cn">NA</span>,
-  title_offset <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">20</span>, <span class="fl">20</span><span class="op">)</span>,
-  title_color <span class="op">=</span> <span class="st">"black"</span>,
-  title_size <span class="op">=</span> <span class="fl">30</span>,
-  title_font <span class="op">=</span> <span class="st">"sans"</span>,
-  title_style <span class="op">=</span> <span class="st">"normal"</span>,
-  title_bar_color <span class="op">=</span> <span class="cn">NULL</span>,
-  title_bar_alpha <span class="op">=</span> <span class="fl">0.5</span>,
-  title_position <span class="op">=</span> <span class="st">"northwest"</span>,
-  keep_user_par <span class="op">=</span> <span class="cn">FALSE</span>,
-  <span class="va">...</span>
-<span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">plot_map</span><span class="op">(</span></span>
+<span>  <span class="va">hillshade</span>,</span>
+<span>  rotate <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  asp <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  title_text <span class="op">=</span> <span class="cn">NA</span>,</span>
+<span>  title_offset <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">20</span>, <span class="fl">20</span><span class="op">)</span>,</span>
+<span>  title_color <span class="op">=</span> <span class="st">"black"</span>,</span>
+<span>  title_size <span class="op">=</span> <span class="fl">30</span>,</span>
+<span>  title_font <span class="op">=</span> <span class="st">"sans"</span>,</span>
+<span>  title_style <span class="op">=</span> <span class="st">"normal"</span>,</span>
+<span>  title_bar_color <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  title_bar_alpha <span class="op">=</span> <span class="fl">0.5</span>,</span>
+<span>  title_position <span class="op">=</span> <span class="st">"northwest"</span>,</span>
+<span>  keep_user_par <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  <span class="va">...</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>hillshade</dt>
 <dd><p>Hillshade to be plotted.</p></dd>
+
+
 <dt>rotate</dt>
 <dd><p>Default `0`. Rotates the output. Possible values: `0`, `90`, `180`, `270`.</p></dd>
+
+
 <dt>asp</dt>
 <dd><p>Default `1`. Aspect ratio of the resulting plot. Use `asp = 1/cospi(mean_latitude/180)` to rescale
 lat/long at higher latitudes to the correct the aspect ratio.</p></dd>
+
+
 <dt>title_text</dt>
 <dd><p>Default `NULL`. Text. Adds a title to the image, using `magick::image_annotate()`.</p></dd>
+
+
 <dt>title_offset</dt>
 <dd><p>Default `c(20,20)`. Distance from the top-left (default, `gravity` direction in
 image_annotate) corner to offset the title.</p></dd>
+
+
 <dt>title_color</dt>
 <dd><p>Default `black`. Font color.</p></dd>
+
+
 <dt>title_size</dt>
 <dd><p>Default `30`. Font size in pixels.</p></dd>
+
+
 <dt>title_font</dt>
 <dd><p>Default `sans`. String with font family such as "sans", "mono", "serif", "Times", "Helvetica",
 "Trebuchet", "Georgia", "Palatino" or "Comic Sans".</p></dd>
+
+
 <dt>title_style</dt>
 <dd><p>Default `normal`. Font style (e.g. `italic`).</p></dd>
+
+
 <dt>title_bar_color</dt>
 <dd><p>Default `NULL`. If a color, this will create a colored bar under the title.</p></dd>
+
+
 <dt>title_bar_alpha</dt>
 <dd><p>Default `0.5`. Transparency of the title bar.</p></dd>
+
+
 <dt>title_position</dt>
 <dd><p>Default `northwest`. Position of the title.</p></dd>
+
+
 <dt>keep_user_par</dt>
 <dd><p>Default `TRUE`. Whether to keep the user's `par()` settings. Set to `FALSE` if you 
 want to set up a multi-pane plot (e.g. set `par(mfrow)`).</p></dd>
+
+
 <dt>...</dt>
 <dd><p>Additional arguments to pass to the `raster::plotRGB` function that displays the map.</p></dd>
+
 </dl></div>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span class="co">#Plotting the Monterey Bay dataset with bathymetry data</span></span>
-<span class="r-in"><span class="co"># \donttest{</span></span>
-<span class="r-in"><span class="va">water_palette</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/grDevices/colorRamp.html" class="external-link">colorRampPalette</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"darkblue"</span>, <span class="st">"dodgerblue"</span>, <span class="st">"lightblue"</span><span class="op">)</span><span class="op">)</span><span class="op">(</span><span class="fl">200</span><span class="op">)</span></span>
-<span class="r-in"><span class="va">bathy_hs</span> <span class="op">=</span> <span class="fu"><a href="height_shade.html">height_shade</a></span><span class="op">(</span><span class="va">montereybay</span>, texture <span class="op">=</span> <span class="va">water_palette</span><span class="op">)</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co">#Set everything below 0m to water palette</span></span>
-<span class="r-in"><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span>zscale<span class="op">=</span><span class="fl">10</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu"><a href="generate_altitude_overlay.html">generate_altitude_overlay</a></span><span class="op">(</span><span class="va">bathy_hs</span>, <span class="va">montereybay</span>, <span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span>  <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="fu"><a href="ray_shade.html">ray_shade</a></span><span class="op">(</span><span class="va">montereybay</span>,zscale<span class="op">=</span><span class="fl">50</span><span class="op">)</span>,<span class="fl">0.3</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu">plot_map</span><span class="op">(</span><span class="op">)</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co">#Plotting the Monterey Bay dataset with bathymetry data</span></span></span>
+<span class="r-in"><span><span class="co"># \donttest{</span></span></span>
+<span class="r-in"><span><span class="va">water_palette</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/grDevices/colorRamp.html" class="external-link">colorRampPalette</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"darkblue"</span>, <span class="st">"dodgerblue"</span>, <span class="st">"lightblue"</span><span class="op">)</span><span class="op">)</span><span class="op">(</span><span class="fl">200</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">bathy_hs</span> <span class="op">=</span> <span class="fu"><a href="height_shade.html">height_shade</a></span><span class="op">(</span><span class="va">montereybay</span>, texture <span class="op">=</span> <span class="va">water_palette</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#Set everything below 0m to water palette</span></span></span>
+<span class="r-in"><span><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span>zscale<span class="op">=</span><span class="fl">10</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu"><a href="generate_altitude_overlay.html">generate_altitude_overlay</a></span><span class="op">(</span><span class="va">bathy_hs</span>, <span class="va">montereybay</span>, <span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span>  <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="fu"><a href="ray_shade.html">ray_shade</a></span><span class="op">(</span><span class="va">montereybay</span>,zscale<span class="op">=</span><span class="fl">50</span><span class="op">)</span>,<span class="fl">0.3</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu">plot_map</span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="plot_map-1.png" alt="" width="700" height="433"></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co">#Correcting the aspect ratio for the latitude of Monterey Bay</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="va">extent_mb</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>,<span class="st">"extent"</span><span class="op">)</span></span>
-<span class="r-in"><span class="va">mean_latitude</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">extent_mb</span><span class="op">@</span><span class="va">ymax</span>,<span class="va">extent_mb</span><span class="op">@</span><span class="va">ymin</span><span class="op">)</span><span class="op">)</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span>zscale<span class="op">=</span><span class="fl">10</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu"><a href="generate_altitude_overlay.html">generate_altitude_overlay</a></span><span class="op">(</span><span class="va">bathy_hs</span>, <span class="va">montereybay</span>, <span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span>  <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="fu"><a href="ray_shade.html">ray_shade</a></span><span class="op">(</span><span class="va">montereybay</span>,zscale<span class="op">=</span><span class="fl">50</span><span class="op">)</span>,<span class="fl">0.3</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu">plot_map</span><span class="op">(</span>asp <span class="op">=</span> <span class="fl">1</span><span class="op">/</span><span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">cospi</a></span><span class="op">(</span><span class="va">mean_latitude</span><span class="op">/</span><span class="fl">180</span><span class="op">)</span><span class="op">)</span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#Correcting the aspect ratio for the latitude of Monterey Bay</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">extent_mb</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>,<span class="st">"extent"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">mean_latitude</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">extent_mb</span><span class="op">@</span><span class="va">ymax</span>,<span class="va">extent_mb</span><span class="op">@</span><span class="va">ymin</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span>zscale<span class="op">=</span><span class="fl">10</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu"><a href="generate_altitude_overlay.html">generate_altitude_overlay</a></span><span class="op">(</span><span class="va">bathy_hs</span>, <span class="va">montereybay</span>, <span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span>  <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="fu"><a href="ray_shade.html">ray_shade</a></span><span class="op">(</span><span class="va">montereybay</span>,zscale<span class="op">=</span><span class="fl">50</span><span class="op">)</span>,<span class="fl">0.3</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu">plot_map</span><span class="op">(</span>asp <span class="op">=</span> <span class="fl">1</span><span class="op">/</span><span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">cospi</a></span><span class="op">(</span><span class="va">mean_latitude</span><span class="op">/</span><span class="fl">180</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="plot_map-2.png" alt="" width="700" height="433"></span>
-<span class="r-in"><span class="co"># }</span></span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </div>
@@ -194,7 +221,7 @@ want to set up a multi-pane plot (e.g. set `par(mfrow)`).</p></dd>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
 </div>
 
       </footer></div>

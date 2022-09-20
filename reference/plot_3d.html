@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.28.2</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.28.3</span>
       </span>
     </div>
 
@@ -99,122 +99,188 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">plot_3d</span><span class="op">(</span>
-  <span class="va">hillshade</span>,
-  <span class="va">heightmap</span>,
-  zscale <span class="op">=</span> <span class="fl">1</span>,
-  baseshape <span class="op">=</span> <span class="st">"rectangle"</span>,
-  solid <span class="op">=</span> <span class="cn">TRUE</span>,
-  soliddepth <span class="op">=</span> <span class="st">"auto"</span>,
-  solidcolor <span class="op">=</span> <span class="st">"grey20"</span>,
-  solidlinecolor <span class="op">=</span> <span class="st">"grey30"</span>,
-  shadow <span class="op">=</span> <span class="cn">TRUE</span>,
-  shadowdepth <span class="op">=</span> <span class="st">"auto"</span>,
-  shadowcolor <span class="op">=</span> <span class="st">"auto"</span>,
-  shadow_darkness <span class="op">=</span> <span class="fl">0.5</span>,
-  shadowwidth <span class="op">=</span> <span class="st">"auto"</span>,
-  water <span class="op">=</span> <span class="cn">FALSE</span>,
-  waterdepth <span class="op">=</span> <span class="fl">0</span>,
-  watercolor <span class="op">=</span> <span class="st">"dodgerblue"</span>,
-  wateralpha <span class="op">=</span> <span class="fl">0.5</span>,
-  waterlinecolor <span class="op">=</span> <span class="cn">NULL</span>,
-  waterlinealpha <span class="op">=</span> <span class="fl">1</span>,
-  linewidth <span class="op">=</span> <span class="fl">2</span>,
-  lineantialias <span class="op">=</span> <span class="cn">FALSE</span>,
-  dirt <span class="op">=</span> <span class="cn">FALSE</span>,
-  dirt_freq <span class="op">=</span> <span class="fl">0.1</span>,
-  dirt_levels <span class="op">=</span> <span class="fl">16</span>,
-  dirt_color_light <span class="op">=</span> <span class="st">"#b39474"</span>,
-  dirt_color_dark <span class="op">=</span> <span class="st">"#8a623b"</span>,
-  dirt_gradient <span class="op">=</span> <span class="fl">2</span>,
-  dirt_gradient_darken <span class="op">=</span> <span class="fl">4</span>,
-  theta <span class="op">=</span> <span class="fl">45</span>,
-  phi <span class="op">=</span> <span class="fl">45</span>,
-  fov <span class="op">=</span> <span class="fl">0</span>,
-  zoom <span class="op">=</span> <span class="fl">1</span>,
-  background <span class="op">=</span> <span class="st">"white"</span>,
-  windowsize <span class="op">=</span> <span class="fl">600</span>,
-  precomputed_normals <span class="op">=</span> <span class="cn">NULL</span>,
-  asp <span class="op">=</span> <span class="fl">1</span>,
-  triangulate <span class="op">=</span> <span class="cn">FALSE</span>,
-  max_error <span class="op">=</span> <span class="fl">0</span>,
-  max_tri <span class="op">=</span> <span class="fl">0</span>,
-  verbose <span class="op">=</span> <span class="cn">FALSE</span>,
-  <span class="va">...</span>
-<span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">plot_3d</span><span class="op">(</span></span>
+<span>  <span class="va">hillshade</span>,</span>
+<span>  <span class="va">heightmap</span>,</span>
+<span>  zscale <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  baseshape <span class="op">=</span> <span class="st">"rectangle"</span>,</span>
+<span>  solid <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  soliddepth <span class="op">=</span> <span class="st">"auto"</span>,</span>
+<span>  solidcolor <span class="op">=</span> <span class="st">"grey20"</span>,</span>
+<span>  solidlinecolor <span class="op">=</span> <span class="st">"grey30"</span>,</span>
+<span>  shadow <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  shadowdepth <span class="op">=</span> <span class="st">"auto"</span>,</span>
+<span>  shadowcolor <span class="op">=</span> <span class="st">"auto"</span>,</span>
+<span>  shadow_darkness <span class="op">=</span> <span class="fl">0.5</span>,</span>
+<span>  shadowwidth <span class="op">=</span> <span class="st">"auto"</span>,</span>
+<span>  water <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  waterdepth <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  watercolor <span class="op">=</span> <span class="st">"dodgerblue"</span>,</span>
+<span>  wateralpha <span class="op">=</span> <span class="fl">0.5</span>,</span>
+<span>  waterlinecolor <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  waterlinealpha <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  linewidth <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>  lineantialias <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  dirt <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  dirt_freq <span class="op">=</span> <span class="fl">0.1</span>,</span>
+<span>  dirt_levels <span class="op">=</span> <span class="fl">16</span>,</span>
+<span>  dirt_color_light <span class="op">=</span> <span class="st">"#b39474"</span>,</span>
+<span>  dirt_color_dark <span class="op">=</span> <span class="st">"#8a623b"</span>,</span>
+<span>  dirt_gradient <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>  dirt_gradient_darken <span class="op">=</span> <span class="fl">4</span>,</span>
+<span>  theta <span class="op">=</span> <span class="fl">45</span>,</span>
+<span>  phi <span class="op">=</span> <span class="fl">45</span>,</span>
+<span>  fov <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  zoom <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  background <span class="op">=</span> <span class="st">"white"</span>,</span>
+<span>  windowsize <span class="op">=</span> <span class="fl">600</span>,</span>
+<span>  precomputed_normals <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  asp <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  triangulate <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  max_error <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  max_tri <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  verbose <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  <span class="va">...</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>hillshade</dt>
 <dd><p>Hillshade/image to be added to 3D surface map.</p></dd>
+
+
 <dt>heightmap</dt>
 <dd><p>A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.</p></dd>
+
+
 <dt>zscale</dt>
 <dd><p>Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
 of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10. Adjust the zscale down to exaggerate elevation features.</p></dd>
+
+
 <dt>baseshape</dt>
 <dd><p>Default `rectangle`. Shape of the base. Options are `c("rectangle","circle","hex")`.</p></dd>
+
+
 <dt>solid</dt>
 <dd><p>Default `TRUE`. If `FALSE`, just the surface is rendered.</p></dd>
+
+
 <dt>soliddepth</dt>
 <dd><p>Default `auto`, which sets it to the lowest elevation in the matrix minus one unit (scaled by zscale). Depth of the solid base. If heightmap is uniform and set on `auto`, this is automatically set to a slightly lower level than the uniform elevation.</p></dd>
+
+
 <dt>solidcolor</dt>
 <dd><p>Default `grey20`. Base color.</p></dd>
+
+
 <dt>solidlinecolor</dt>
 <dd><p>Default `grey30`. Base edge line color.</p></dd>
+
+
 <dt>shadow</dt>
 <dd><p>Default `TRUE`. If `FALSE`, no shadow is rendered.</p></dd>
+
+
 <dt>shadowdepth</dt>
 <dd><p>Default `auto`, which sets it to `soliddepth - soliddepth/10`. Depth of the shadow layer.</p></dd>
+
+
 <dt>shadowcolor</dt>
 <dd><p>Default `auto`. Color of the shadow, automatically computed as `shadow_darkness`
 the luminance of the `background` color in the CIELab colorspace if not specified.</p></dd>
+
+
 <dt>shadow_darkness</dt>
 <dd><p>Default `0.5`. Darkness of the shadow, if `shadowcolor = "auto"`.</p></dd>
+
+
 <dt>shadowwidth</dt>
 <dd><p>Default `auto`, which sizes it to 1/10th the smallest dimension of `heightmap`. Width of the shadow in units of the matrix.</p></dd>
+
+
 <dt>water</dt>
 <dd><p>Default `FALSE`. If `TRUE`, a water layer is rendered.</p></dd>
+
+
 <dt>waterdepth</dt>
 <dd><p>Default `0`. Water level.</p></dd>
+
+
 <dt>watercolor</dt>
 <dd><p>Default `lightblue`. Color of the water.</p></dd>
+
+
 <dt>wateralpha</dt>
 <dd><p>Default `0.5`. Water transparency.</p></dd>
+
+
 <dt>waterlinecolor</dt>
 <dd><p>Default `NULL`. Color of the lines around the edges of the water layer.</p></dd>
+
+
 <dt>waterlinealpha</dt>
 <dd><p>Default `1`. Water line tranparency.</p></dd>
+
+
 <dt>linewidth</dt>
 <dd><p>Default `2`. Width of the edge lines in the scene.</p></dd>
+
+
 <dt>lineantialias</dt>
 <dd><p>Default `FALSE`. Whether to anti-alias the lines in the scene.</p></dd>
+
+
 <dt>dirt</dt>
 <dd><p>Default `FALSE`. Whether to draw the solid base with a textured dirt layer.</p></dd>
+
+
 <dt>dirt_freq</dt>
 <dd><p>Default `0.1`. Frequency of dirt clumps. Higher frequency values give smaller dirt clumps.</p></dd>
+
+
 <dt>dirt_levels</dt>
 <dd><p>Default `16`. Fractal level of the dirt.</p></dd>
+
+
 <dt>dirt_color_light</dt>
 <dd><p>Default `"#b39474"`. Light tint of dirt.</p></dd>
+
+
 <dt>dirt_color_dark</dt>
 <dd><p>Default `"#8a623b"`. Dark tint of dirt.</p></dd>
+
+
 <dt>dirt_gradient</dt>
 <dd><p>Default `2`. Sharpness of the dirt darkening gradient. `0` turns off the gradient entirely.</p></dd>
+
+
 <dt>dirt_gradient_darken</dt>
 <dd><p>Default `4`. Amount to darken the `dirt_color_dark` value for the deepest dirt layers. Higher
 numbers increase the darkening effect.</p></dd>
+
+
 <dt>theta</dt>
 <dd><p>Default `45`. Rotation around z-axis.</p></dd>
+
+
 <dt>phi</dt>
 <dd><p>Default `45`. Azimuth angle.</p></dd>
+
+
 <dt>fov</dt>
 <dd><p>Default `0`--isometric. Field-of-view angle.</p></dd>
+
+
 <dt>zoom</dt>
 <dd><p>Default `1`. Zoom factor.</p></dd>
+
+
 <dt>background</dt>
 <dd><p>Default `grey10`. Color of the background.</p></dd>
+
+
 <dt>windowsize</dt>
 <dd><p>Default `600`. Position, width, and height of the `rgl` device displaying the plot. 
 If a single number, viewport will be a square and located in upper left corner. 
@@ -223,104 +289,119 @@ If four numbers (e.g. `c(200,0,600,800)`), the first two coordinates
 specify the location of the x-y coordinates of the bottom-left corner of the viewport on the screen,
 and the next two (or one, if square) specify the window size. NOTE: The absolute positioning of the
 window does not currently work on macOS (tested on Mojave), but the size can still be specified.</p></dd>
+
+
 <dt>precomputed_normals</dt>
 <dd><p>Default `NULL`. Takes the output of `calculate_normals()` to save
 computing normals internally.</p></dd>
+
+
 <dt>asp</dt>
 <dd><p>Default `1`. Aspect ratio of the resulting plot. Use `asp = 1/cospi(mean_latitude/180)` to rescale
 lat/long at higher latitudes to the correct the aspect ratio.</p></dd>
+
+
 <dt>triangulate</dt>
 <dd><p>Default `FALSE`. Reduce the size of the 3D model by triangulating the height map.
 Set this to `TRUE` if generating the model is slow, or moving it is choppy. Will also reduce the size
 of 3D models saved to disk.</p></dd>
+
+
 <dt>max_error</dt>
 <dd><p>Default `0.001`. Maximum allowable error when triangulating the height map,
 when `triangulate = TRUE`. Increase this if you encounter problems with 3D performance, want
 to decrease render time with `render_highquality()`, or need 
 to save a smaller 3D OBJ file to disk with `save_obj()`,</p></dd>
+
+
 <dt>max_tri</dt>
 <dd><p>Default `0`, which turns this setting off and uses `max_error`. 
 Maximum number of triangles allowed with triangulating the
 height map, when `triangulate = TRUE`. Increase this if you encounter problems with 3D performance, want
 to decrease render time with `render_highquality()`, or need 
 to save a smaller 3D OBJ file to disk with `save_obj()`,</p></dd>
+
+
 <dt>verbose</dt>
 <dd><p>Default `TRUE`, if `interactive()`. Prints information about the mesh triangulation
 if `triangulate = TRUE`.</p></dd>
+
+
 <dt>...</dt>
 <dd><p>Additional arguments to pass to the `rgl::par3d` function.</p></dd>
+
 </dl></div>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span class="co">#Plotting a spherical texture map of the built-in `montereybay` dataset.</span></span>
-<span class="r-in"><span class="co"># \donttest{</span></span>
-<span class="r-in"><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span>texture<span class="op">=</span><span class="st">"desert"</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu">plot_3d</span><span class="op">(</span><span class="va">montereybay</span>,zscale<span class="op">=</span><span class="fl">50</span><span class="op">)</span></span>
-<span class="r-in"><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span>clear <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span class="r-plt img"><img src="plot_3d-1.png" alt="" width="700" height="433"></span>
-<span class="r-in"><span class="co"># }</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co">#With a water layer  </span></span>
-<span class="r-in"><span class="co"># \donttest{</span></span>
-<span class="r-in"><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span>texture<span class="op">=</span><span class="st">"imhof2"</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu">plot_3d</span><span class="op">(</span><span class="va">montereybay</span>, zscale<span class="op">=</span><span class="fl">50</span>, water <span class="op">=</span> <span class="cn">TRUE</span>, watercolor<span class="op">=</span><span class="st">"imhof2"</span>, </span>
-<span class="r-in">         waterlinecolor<span class="op">=</span><span class="st">"white"</span>, waterlinealpha<span class="op">=</span><span class="fl">0.5</span><span class="op">)</span></span>
-<span class="r-in"><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span>clear <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span class="r-plt img"><img src="plot_3d-2.png" alt="" width="700" height="433"></span>
-<span class="r-in"><span class="co"># }</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co">#With a dirt texture to the base  </span></span>
-<span class="r-in"><span class="co"># \donttest{</span></span>
-<span class="r-in"><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span>texture<span class="op">=</span><span class="st">"imhof3"</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu">plot_3d</span><span class="op">(</span><span class="va">montereybay</span>, zscale<span class="op">=</span><span class="fl">50</span>, water <span class="op">=</span> <span class="cn">TRUE</span>,  watercolor<span class="op">=</span><span class="st">"imhof4"</span>, </span>
-<span class="r-in">         waterlinecolor<span class="op">=</span><span class="st">"white"</span>, waterlinealpha<span class="op">=</span><span class="fl">0.5</span>, dirt<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span>
-<span class="r-in"><span class="fu"><a href="render_camera.html">render_camera</a></span><span class="op">(</span>theta<span class="op">=</span><span class="fl">225</span>, phi<span class="op">=</span><span class="fl">7</span>, zoom<span class="op">=</span><span class="fl">0.5</span>, fov<span class="op">=</span><span class="fl">67</span><span class="op">)</span></span>
-<span class="r-in"><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span>clear <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span class="r-plt img"><img src="plot_3d-3.png" alt="" width="700" height="433"></span>
-<span class="r-in"><span class="co"># }</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co">#We can also change the base by setting "baseshape" to "hex" or "circle"</span></span>
-<span class="r-in"><span class="co"># \donttest{</span></span>
-<span class="r-in"><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span>texture<span class="op">=</span><span class="st">"imhof1"</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu">plot_3d</span><span class="op">(</span><span class="va">montereybay</span>, zscale<span class="op">=</span><span class="fl">50</span>, water <span class="op">=</span> <span class="cn">TRUE</span>, watercolor<span class="op">=</span><span class="st">"imhof1"</span>, theta<span class="op">=</span><span class="op">-</span><span class="fl">45</span>, zoom<span class="op">=</span><span class="fl">0.7</span>,</span>
-<span class="r-in">         waterlinecolor<span class="op">=</span><span class="st">"white"</span>, waterlinealpha<span class="op">=</span><span class="fl">0.5</span>,baseshape<span class="op">=</span><span class="st">"circle"</span><span class="op">)</span></span>
-<span class="r-in"><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span>clear <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span class="r-plt img"><img src="plot_3d-4.png" alt="" width="700" height="433"></span>
-<span class="r-in"><span class="co"># }</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co"># \donttest{</span></span>
-<span class="r-in"><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span>texture<span class="op">=</span><span class="st">"imhof1"</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu">plot_3d</span><span class="op">(</span><span class="va">montereybay</span>, zscale<span class="op">=</span><span class="fl">50</span>, water <span class="op">=</span> <span class="cn">TRUE</span>, watercolor<span class="op">=</span><span class="st">"imhof1"</span>, theta<span class="op">=</span><span class="op">-</span><span class="fl">45</span>, zoom<span class="op">=</span><span class="fl">0.7</span>,</span>
-<span class="r-in">         waterlinecolor<span class="op">=</span><span class="st">"white"</span>, waterlinealpha<span class="op">=</span><span class="fl">0.5</span>,baseshape<span class="op">=</span><span class="st">"hex"</span><span class="op">)</span></span>
-<span class="r-in"><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span>clear <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span class="r-plt img"><img src="plot_3d-5.png" alt="" width="700" height="433"></span>
-<span class="r-in"><span class="co"># }</span></span>
-<span class="r-in"></span>
-<span class="r-in"></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co">#Or we can carve out the region of interest ourselves, by setting those entries to NA</span></span>
-<span class="r-in"><span class="co">#to the elevation map passed into `plot_3d`</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co">#Here, we only include the deep bathymetry data by setting all points greater than -10</span></span>
-<span class="r-in"><span class="co">#in the copied elevation matrix to NA.</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="va">mb_water</span> <span class="op">=</span> <span class="va">montereybay</span></span>
-<span class="r-in"><span class="va">mb_water</span><span class="op">[</span><span class="va">mb_water</span> <span class="op">&gt;</span> <span class="op">-</span><span class="fl">10</span><span class="op">]</span> <span class="op">=</span> <span class="cn">NA</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co"># \donttest{</span></span>
-<span class="r-in"><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span>texture<span class="op">=</span><span class="st">"imhof1"</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu">plot_3d</span><span class="op">(</span><span class="va">mb_water</span>, zscale<span class="op">=</span><span class="fl">50</span>, water <span class="op">=</span> <span class="cn">TRUE</span>, watercolor<span class="op">=</span><span class="st">"imhof1"</span>, theta<span class="op">=</span><span class="op">-</span><span class="fl">45</span>,</span>
-<span class="r-in">         waterlinecolor<span class="op">=</span><span class="st">"white"</span>, waterlinealpha<span class="op">=</span><span class="fl">0.5</span><span class="op">)</span></span>
-<span class="r-in"><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span>clear <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span class="r-plt img"><img src="plot_3d-6.png" alt="" width="700" height="433"></span>
-<span class="r-in"><span class="co"># }</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co">#Plotting a spherical texture map of the built-in `montereybay` dataset.</span></span></span>
+<span class="r-in"><span><span class="co"># \donttest{</span></span></span>
+<span class="r-in"><span><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span>texture<span class="op">=</span><span class="st">"desert"</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu">plot_3d</span><span class="op">(</span><span class="va">montereybay</span>,zscale<span class="op">=</span><span class="fl">50</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span>clear <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in mesh$vertices[[j]]:</span> subscript out of bounds</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#With a water layer  </span></span></span>
+<span class="r-in"><span><span class="co"># \donttest{</span></span></span>
+<span class="r-in"><span><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span>texture<span class="op">=</span><span class="st">"imhof2"</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu">plot_3d</span><span class="op">(</span><span class="va">montereybay</span>, zscale<span class="op">=</span><span class="fl">50</span>, water <span class="op">=</span> <span class="cn">TRUE</span>, watercolor<span class="op">=</span><span class="st">"imhof2"</span>, </span></span>
+<span class="r-in"><span>         waterlinecolor<span class="op">=</span><span class="st">"white"</span>, waterlinealpha<span class="op">=</span><span class="fl">0.5</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span>clear <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in mesh$vertices[[j]]:</span> subscript out of bounds</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#With a dirt texture to the base  </span></span></span>
+<span class="r-in"><span><span class="co"># \donttest{</span></span></span>
+<span class="r-in"><span><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span>texture<span class="op">=</span><span class="st">"imhof3"</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu">plot_3d</span><span class="op">(</span><span class="va">montereybay</span>, zscale<span class="op">=</span><span class="fl">50</span>, water <span class="op">=</span> <span class="cn">TRUE</span>,  watercolor<span class="op">=</span><span class="st">"imhof4"</span>, </span></span>
+<span class="r-in"><span>         waterlinecolor<span class="op">=</span><span class="st">"white"</span>, waterlinealpha<span class="op">=</span><span class="fl">0.5</span>, dirt<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="render_camera.html">render_camera</a></span><span class="op">(</span>theta<span class="op">=</span><span class="fl">225</span>, phi<span class="op">=</span><span class="fl">7</span>, zoom<span class="op">=</span><span class="fl">0.5</span>, fov<span class="op">=</span><span class="fl">67</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span>clear <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in mesh$vertices[[j]]:</span> subscript out of bounds</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#We can also change the base by setting "baseshape" to "hex" or "circle"</span></span></span>
+<span class="r-in"><span><span class="co"># \donttest{</span></span></span>
+<span class="r-in"><span><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span>texture<span class="op">=</span><span class="st">"imhof1"</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu">plot_3d</span><span class="op">(</span><span class="va">montereybay</span>, zscale<span class="op">=</span><span class="fl">50</span>, water <span class="op">=</span> <span class="cn">TRUE</span>, watercolor<span class="op">=</span><span class="st">"imhof1"</span>, theta<span class="op">=</span><span class="op">-</span><span class="fl">45</span>, zoom<span class="op">=</span><span class="fl">0.7</span>,</span></span>
+<span class="r-in"><span>         waterlinecolor<span class="op">=</span><span class="st">"white"</span>, waterlinealpha<span class="op">=</span><span class="fl">0.5</span>,baseshape<span class="op">=</span><span class="st">"circle"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span>clear <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in mesh$vertices[[j]]:</span> subscript out of bounds</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># \donttest{</span></span></span>
+<span class="r-in"><span><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span>texture<span class="op">=</span><span class="st">"imhof1"</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu">plot_3d</span><span class="op">(</span><span class="va">montereybay</span>, zscale<span class="op">=</span><span class="fl">50</span>, water <span class="op">=</span> <span class="cn">TRUE</span>, watercolor<span class="op">=</span><span class="st">"imhof1"</span>, theta<span class="op">=</span><span class="op">-</span><span class="fl">45</span>, zoom<span class="op">=</span><span class="fl">0.7</span>,</span></span>
+<span class="r-in"><span>         waterlinecolor<span class="op">=</span><span class="st">"white"</span>, waterlinealpha<span class="op">=</span><span class="fl">0.5</span>,baseshape<span class="op">=</span><span class="st">"hex"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span>clear <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in mesh$vertices[[j]]:</span> subscript out of bounds</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#Or we can carve out the region of interest ourselves, by setting those entries to NA</span></span></span>
+<span class="r-in"><span><span class="co">#to the elevation map passed into `plot_3d`</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#Here, we only include the deep bathymetry data by setting all points greater than -10</span></span></span>
+<span class="r-in"><span><span class="co">#in the copied elevation matrix to NA.</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">mb_water</span> <span class="op">=</span> <span class="va">montereybay</span></span></span>
+<span class="r-in"><span><span class="va">mb_water</span><span class="op">[</span><span class="va">mb_water</span> <span class="op">&gt;</span> <span class="op">-</span><span class="fl">10</span><span class="op">]</span> <span class="op">=</span> <span class="cn">NA</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># \donttest{</span></span></span>
+<span class="r-in"><span><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span>texture<span class="op">=</span><span class="st">"imhof1"</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu">plot_3d</span><span class="op">(</span><span class="va">mb_water</span>, zscale<span class="op">=</span><span class="fl">50</span>, water <span class="op">=</span> <span class="cn">TRUE</span>, watercolor<span class="op">=</span><span class="st">"imhof1"</span>, theta<span class="op">=</span><span class="op">-</span><span class="fl">45</span>,</span></span>
+<span class="r-in"><span>         waterlinecolor<span class="op">=</span><span class="st">"white"</span>, waterlinealpha<span class="op">=</span><span class="fl">0.5</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span>clear <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in mesh$vertices[[j]]:</span> subscript out of bounds</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </div>
@@ -335,7 +416,7 @@ if `triangulate = TRUE`.</p></dd>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
 </div>
 
       </footer></div>

@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.28.2</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.28.3</span>
       </span>
     </div>
 
@@ -99,74 +99,95 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">ambient_shade</span><span class="op">(</span>
-  <span class="va">heightmap</span>,
-  anglebreaks <span class="op">=</span> <span class="fl">90</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">cospi</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">5</span>, <span class="fl">85</span>, by <span class="op">=</span> <span class="fl">5</span><span class="op">)</span><span class="op">/</span><span class="fl">180</span><span class="op">)</span>,
-  sunbreaks <span class="op">=</span> <span class="fl">24</span>,
-  maxsearch <span class="op">=</span> <span class="fl">30</span>,
-  multicore <span class="op">=</span> <span class="cn">FALSE</span>,
-  zscale <span class="op">=</span> <span class="fl">1</span>,
-  cache_mask <span class="op">=</span> <span class="cn">NULL</span>,
-  shadow_cache <span class="op">=</span> <span class="cn">NULL</span>,
-  progbar <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/interactive.html" class="external-link">interactive</a></span><span class="op">(</span><span class="op">)</span>,
-  <span class="va">...</span>
-<span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">ambient_shade</span><span class="op">(</span></span>
+<span>  <span class="va">heightmap</span>,</span>
+<span>  anglebreaks <span class="op">=</span> <span class="fl">90</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">cospi</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">5</span>, <span class="fl">85</span>, by <span class="op">=</span> <span class="fl">5</span><span class="op">)</span><span class="op">/</span><span class="fl">180</span><span class="op">)</span>,</span>
+<span>  sunbreaks <span class="op">=</span> <span class="fl">24</span>,</span>
+<span>  maxsearch <span class="op">=</span> <span class="fl">30</span>,</span>
+<span>  multicore <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  zscale <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  cache_mask <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  shadow_cache <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  progbar <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/interactive.html" class="external-link">interactive</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  <span class="va">...</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>heightmap</dt>
 <dd><p>A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.</p></dd>
+
+
 <dt>anglebreaks</dt>
 <dd><p>Default `90*cospi(seq(5, 85,by =5)/180)`. The angle(s), in degrees, as measured from the horizon from which the light originates.</p></dd>
+
+
 <dt>sunbreaks</dt>
 <dd><p>Default `24`. Number of rays to be sent out in a circle, evenly spaced, around the point being tested.</p></dd>
+
+
 <dt>maxsearch</dt>
 <dd><p>Default `30`. The maximum horizontal distance that the system should propogate rays to check for surface intersections.</p></dd>
+
+
 <dt>multicore</dt>
 <dd><p>Default FALSE. If TRUE, multiple cores will be used to compute the shadow matrix. By default, this uses all cores available, unless the user has
 set `options("cores")` in which the multicore option will only use that many cores.</p></dd>
+
+
 <dt>zscale</dt>
 <dd><p>Default 1. The ratio between the x and y spacing (which are assumed to be equal) and the z axis.</p></dd>
+
+
 <dt>cache_mask</dt>
 <dd><p>Default `NULL`. A matrix of 1 and 0s, indicating which points on which the raytracer will operate.</p></dd>
+
+
 <dt>shadow_cache</dt>
 <dd><p>Default `NULL`. The shadow matrix to be updated at the points defined by the argument `cache_mask`.</p></dd>
+
+
 <dt>progbar</dt>
 <dd><p>Default `TRUE` if interactive, `FALSE` otherwise. If `FALSE`, turns off progress bar.</p></dd>
+
+
 <dt>...</dt>
 <dd><p>Additional arguments to pass to the `makeCluster` function when `multicore=TRUE`.</p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>Shaded texture map.</p>
+    
+
+<p>Shaded texture map.</p>
     </div>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span class="co">#Here we produce a ambient occlusion map of the `montereybay` elevation map.</span></span>
-<span class="r-in"><span class="co"># \dontrun{</span></span>
-<span class="r-in"><span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="fu">ambient_shade</span><span class="op">(</span>heightmap <span class="op">=</span> <span class="va">montereybay</span><span class="op">)</span><span class="op">)</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co">#Here we produce a ambient occlusion map of the `montereybay` elevation map.</span></span></span>
+<span class="r-in"><span><span class="co"># \dontrun{</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="fu">ambient_shade</span><span class="op">(</span>heightmap <span class="op">=</span> <span class="va">montereybay</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in rayimage::plot_image(hillshade, asp = asp):</span> object 'xlim' not found</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#We can increase the distance to look for surface intersections `maxsearch`</span></span></span>
+<span class="r-in"><span><span class="co">#and the density of rays sent out around the point `sunbreaks`.</span></span></span>
+<span class="r-in"><span><span class="co"># \dontrun{</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="fu">ambient_shade</span><span class="op">(</span><span class="va">montereybay</span>, sunbreaks <span class="op">=</span> <span class="fl">24</span>,maxsearch <span class="op">=</span> <span class="fl">100</span>, multicore<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in rayimage::plot_image(hillshade, asp = asp):</span> object 'xlim' not found</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
+<span class="r-in"><span><span class="co">#Create the Red Relief Image Map (RRIM) technique using a custom texture and ambient_shade(),</span></span></span>
+<span class="r-in"><span><span class="co">#with an addition lambertian layer added with lamb_shade() to improve topographic clarity.</span></span></span>
+<span class="r-in"><span><span class="co"># \dontrun{</span></span></span>
+<span class="r-in"><span><span class="va">bigmb</span> <span class="op">=</span> <span class="fu"><a href="resize_matrix.html">resize_matrix</a></span><span class="op">(</span><span class="va">montereybay</span>, scale<span class="op">=</span><span class="fl">2</span>, method<span class="op">=</span><span class="st">"cubic"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">bigmb</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span>zscale<span class="op">=</span><span class="fl">3</span>, texture <span class="op">=</span> <span class="fu"><a href="create_texture.html">create_texture</a></span><span class="op">(</span><span class="st">"red"</span>,<span class="st">"red"</span>,<span class="st">"red"</span>,<span class="st">"red"</span>,<span class="st">"white"</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="fu">ambient_shade</span><span class="op">(</span><span class="va">bigmb</span>, maxsearch <span class="op">=</span> <span class="fl">100</span>, multicore <span class="op">=</span> <span class="cn">TRUE</span>,zscale<span class="op">=</span><span class="fl">1</span><span class="op">)</span>,<span class="fl">0</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="fu"><a href="lamb_shade.html">lamb_shade</a></span><span class="op">(</span><span class="va">bigmb</span><span class="op">)</span>,<span class="fl">0.5</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="ambient_shade-1.png" alt="" width="700" height="433"></span>
-<span class="r-in"><span class="co"># }</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co">#We can increase the distance to look for surface intersections `maxsearch`</span></span>
-<span class="r-in"><span class="co">#and the density of rays sent out around the point `sunbreaks`.</span></span>
-<span class="r-in"><span class="co"># \dontrun{</span></span>
-<span class="r-in"><span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="fu">ambient_shade</span><span class="op">(</span><span class="va">montereybay</span>, sunbreaks <span class="op">=</span> <span class="fl">24</span>,maxsearch <span class="op">=</span> <span class="fl">100</span>, multicore<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span>
-<span class="r-plt img"><img src="ambient_shade-2.png" alt="" width="700" height="433"></span>
-<span class="r-in"><span class="co"># }</span></span>
-<span class="r-in"><span class="co">#Create the Red Relief Image Map (RRIM) technique using a custom texture and ambient_shade(),</span></span>
-<span class="r-in"><span class="co">#with an addition lambertian layer added with lamb_shade() to improve topographic clarity.</span></span>
-<span class="r-in"><span class="co"># \dontrun{</span></span>
-<span class="r-in"><span class="va">bigmb</span> <span class="op">=</span> <span class="fu"><a href="resize_matrix.html">resize_matrix</a></span><span class="op">(</span><span class="va">montereybay</span>, scale<span class="op">=</span><span class="fl">2</span>, method<span class="op">=</span><span class="st">"cubic"</span><span class="op">)</span></span>
-<span class="r-in"><span class="va">bigmb</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span>zscale<span class="op">=</span><span class="fl">3</span>, texture <span class="op">=</span> <span class="fu"><a href="create_texture.html">create_texture</a></span><span class="op">(</span><span class="st">"red"</span>,<span class="st">"red"</span>,<span class="st">"red"</span>,<span class="st">"red"</span>,<span class="st">"white"</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="fu">ambient_shade</span><span class="op">(</span><span class="va">bigmb</span>, maxsearch <span class="op">=</span> <span class="fl">100</span>, multicore <span class="op">=</span> <span class="cn">TRUE</span>,zscale<span class="op">=</span><span class="fl">1</span><span class="op">)</span>,<span class="fl">0</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="fu"><a href="lamb_shade.html">lamb_shade</a></span><span class="op">(</span><span class="va">bigmb</span><span class="op">)</span>,<span class="fl">0.5</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-plt img"><img src="ambient_shade-3.png" alt="" width="700" height="433"></span>
-<span class="r-in"><span class="co"># }</span></span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </div>
@@ -181,7 +202,7 @@ set `options("cores")` in which the multicore option will only use that many cor
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
 </div>
 
       </footer></div>

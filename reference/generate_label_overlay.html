@@ -18,7 +18,7 @@ use an `sf` object or manually specify the x/y coordinates and label."><meta pro
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.28.2</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.28.3</span>
       </span>
     </div>
 
@@ -101,56 +101,76 @@ use an `sf` object or manually specify the x/y coordinates and label.</p>
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">generate_label_overlay</span><span class="op">(</span>
-  <span class="va">labels</span>,
-  <span class="va">extent</span>,
-  x <span class="op">=</span> <span class="cn">NULL</span>,
-  y <span class="op">=</span> <span class="cn">NULL</span>,
-  heightmap <span class="op">=</span> <span class="cn">NULL</span>,
-  width <span class="op">=</span> <span class="cn">NA</span>,
-  height <span class="op">=</span> <span class="cn">NA</span>,
-  text_size <span class="op">=</span> <span class="fl">1</span>,
-  color <span class="op">=</span> <span class="st">"black"</span>,
-  font <span class="op">=</span> <span class="fl">1</span>,
-  pch <span class="op">=</span> <span class="fl">16</span>,
-  point_size <span class="op">=</span> <span class="fl">1</span>,
-  point_color <span class="op">=</span> <span class="cn">NA</span>,
-  offset <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span>,
-  data_label_column <span class="op">=</span> <span class="cn">NULL</span>,
-  halo_color <span class="op">=</span> <span class="cn">NA</span>,
-  halo_expand <span class="op">=</span> <span class="fl">0</span>,
-  halo_alpha <span class="op">=</span> <span class="fl">1</span>,
-  halo_offset <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span>,
-  halo_blur <span class="op">=</span> <span class="fl">1</span>,
-  seed <span class="op">=</span> <span class="cn">NA</span>
-<span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">generate_label_overlay</span><span class="op">(</span></span>
+<span>  <span class="va">labels</span>,</span>
+<span>  <span class="va">extent</span>,</span>
+<span>  x <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  y <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  heightmap <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  width <span class="op">=</span> <span class="cn">NA</span>,</span>
+<span>  height <span class="op">=</span> <span class="cn">NA</span>,</span>
+<span>  text_size <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  color <span class="op">=</span> <span class="st">"black"</span>,</span>
+<span>  font <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  pch <span class="op">=</span> <span class="fl">16</span>,</span>
+<span>  point_size <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  point_color <span class="op">=</span> <span class="cn">NA</span>,</span>
+<span>  offset <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span>,</span>
+<span>  data_label_column <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  halo_color <span class="op">=</span> <span class="cn">NA</span>,</span>
+<span>  halo_expand <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  halo_alpha <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  halo_offset <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span>,</span>
+<span>  halo_blur <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  seed <span class="op">=</span> <span class="cn">NA</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>labels</dt>
 <dd><p>A character vector of labels, or an `sf` object with `POINT` geometry and a column for labels.</p></dd>
+
+
 <dt>extent</dt>
 <dd><p>A `raster::Extent` object with the bounding box for the height map used to generate the original map.</p></dd>
+
+
 <dt>x</dt>
 <dd><p>Default `NULL`. The x-coordinate, if `labels` is not an `sf` object.</p></dd>
+
+
 <dt>y</dt>
 <dd><p>Default `NULL`. The y-coordinate, if `labels` is not an `sf` object.</p></dd>
+
+
 <dt>heightmap</dt>
 <dd><p>Default `NULL`. The original height map. Pass this in to extract the dimensions of the resulting 
 overlay automatically.</p></dd>
+
+
 <dt>width</dt>
 <dd><p>Default `NA`. Width of the resulting overlay. Default the same dimensions as height map.</p></dd>
+
+
 <dt>height</dt>
 <dd><p>Default `NA`. Width of the resulting overlay. Default the same dimensions as height map.</p></dd>
+
+
 <dt>text_size</dt>
 <dd><p>Default `1`. Text size.</p></dd>
+
+
 <dt>color</dt>
 <dd><p>Default `black`. Color of the labels.</p></dd>
+
+
 <dt>font</dt>
 <dd><p>Default `1`. An integer which specifies which font to use for text. 
 If possible, device drivers arrange so that 1 corresponds to plain text (the default), 
 2 to bold face, 3 to italic and 4 to bold italic.</p></dd>
+
+
 <dt>pch</dt>
 <dd><p>Default `20`, solid. Point symbol. 
 `0` = square, `1` = circle, `2` = triangle point up, `3` = plus, `4` = cross, 
@@ -161,120 +181,139 @@ If possible, device drivers arrange so that 1 corresponds to plain text (the def
 `18` = filled diamond, `19` = solid circle, `20` = bullet (smaller circle), 
 `21` = filled circle blue, `22` = filled square blue, `23` = filled diamond blue, 
 `24` = filled triangle point-up blue, `25` = filled triangle point down blue</p></dd>
+
+
 <dt>point_size</dt>
 <dd><p>Default `0`, no points. Point size.</p></dd>
+
+
 <dt>point_color</dt>
 <dd><p>Default `NA`. Colors of the points. Unless otherwise specified, this defaults to `color`.</p></dd>
+
+
 <dt>offset</dt>
 <dd><p>Default `c(0,0)`. Horizontal and vertical offset to apply to the label, in units of `geometry`.</p></dd>
+
+
 <dt>data_label_column</dt>
 <dd><p>Default `NULL`. The column in the `sf` object that contains the labels.</p></dd>
+
+
 <dt>halo_color</dt>
 <dd><p>Default `NA`, no halo. If a color is specified, the text label will be surrounded by a halo
 of this color.</p></dd>
+
+
 <dt>halo_expand</dt>
 <dd><p>Default `2`. Number of pixels to expand the halo.</p></dd>
+
+
 <dt>halo_alpha</dt>
 <dd><p>Default `1`. Transparency of the halo.</p></dd>
+
+
 <dt>halo_offset</dt>
 <dd><p>Default `c(0,0)`. Horizontal and vertical offset to apply to the halo, in units of `geometry`.</p></dd>
+
+
 <dt>halo_blur</dt>
 <dd><p>Default `1`. Amount of blur to apply to the halo. Values greater than `30` won't result in further blurring.</p></dd>
+
+
 <dt>seed</dt>
 <dd><p>Default `NA`, no seed. Random seed for ensuring the consistent placement of labels around points.</p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>Semi-transparent overlay with labels.</p>
+    
+
+<p>Semi-transparent overlay with labels.</p>
     </div>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span class="co">#Add the included `sf` object with roads to the montereybay dataset</span></span>
-<span class="r-in"><span class="co">#Only run these examples if the `magick` package is installed.</span></span>
-<span class="r-in"><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/find.package.html" class="external-link">find.package</a></span><span class="op">(</span><span class="st">"magick"</span>, quiet <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span> <span class="op">{</span></span>
-<span class="r-in"><span class="co"># \donttest{</span></span>
-<span class="r-in"><span class="co">#Create the water palette</span></span>
-<span class="r-in"><span class="va">water_palette</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/grDevices/colorRamp.html" class="external-link">colorRampPalette</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"darkblue"</span>, <span class="st">"dodgerblue"</span>, <span class="st">"lightblue"</span><span class="op">)</span><span class="op">)</span><span class="op">(</span><span class="fl">200</span><span class="op">)</span></span>
-<span class="r-in"><span class="va">bathy_hs</span> <span class="op">=</span> <span class="fu"><a href="height_shade.html">height_shade</a></span><span class="op">(</span><span class="va">montereybay</span>, texture <span class="op">=</span> <span class="va">water_palette</span><span class="op">)</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co">#We're plotting the polygon data here for counties around Monterey Bay. We'll first</span></span>
-<span class="r-in"><span class="co">#plot the county names at the polygon centroids.</span></span>
-<span class="r-in"><span class="va">bathy_hs</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> </span>
-<span class="r-in"> <span class="fu"><a href="add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="fu"><a href="lamb_shade.html">lamb_shade</a></span><span class="op">(</span><span class="va">montereybay</span>,zscale<span class="op">=</span><span class="fl">50</span><span class="op">)</span>,<span class="fl">0.3</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu"><a href="generate_polygon_overlay.html">generate_polygon_overlay</a></span><span class="op">(</span><span class="va">monterey_counties_sf</span>, palette <span class="op">=</span> <span class="va">rainbow</span>, </span>
-<span class="r-in">                                      extent <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>,<span class="st">"extent"</span><span class="op">)</span>,</span>
-<span class="r-in">                                      heightmap <span class="op">=</span> <span class="va">montereybay</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> </span>
-<span class="r-in"> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu">generate_label_overlay</span><span class="op">(</span>labels<span class="op">=</span><span class="va">monterey_counties_sf</span>,</span>
-<span class="r-in">                                    color<span class="op">=</span><span class="st">"black"</span>, point_size <span class="op">=</span> <span class="fl">1</span>, text_size <span class="op">=</span> <span class="fl">1</span>,</span>
-<span class="r-in">                                    data_label_column <span class="op">=</span> <span class="st">"NAME"</span>,</span>
-<span class="r-in">                                    extent<span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>,<span class="st">"extent"</span><span class="op">)</span>, heightmap <span class="op">=</span> <span class="va">montereybay</span>,</span>
-<span class="r-in">                                    seed<span class="op">=</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span>  <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co">#It's hard to read these values, so we'll add a white halo.</span></span>
-<span class="r-in"><span class="va">bathy_hs</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> </span>
-<span class="r-in"> <span class="fu"><a href="add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="fu"><a href="lamb_shade.html">lamb_shade</a></span><span class="op">(</span><span class="va">montereybay</span>,zscale<span class="op">=</span><span class="fl">50</span><span class="op">)</span>,<span class="fl">0.3</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu"><a href="generate_polygon_overlay.html">generate_polygon_overlay</a></span><span class="op">(</span><span class="va">monterey_counties_sf</span>, palette <span class="op">=</span> <span class="va">rainbow</span>, </span>
-<span class="r-in">                                      extent <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>,<span class="st">"extent"</span><span class="op">)</span>,</span>
-<span class="r-in">                                      heightmap <span class="op">=</span> <span class="va">montereybay</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> </span>
-<span class="r-in"> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu">generate_label_overlay</span><span class="op">(</span>labels<span class="op">=</span><span class="va">monterey_counties_sf</span>,</span>
-<span class="r-in">                                    color<span class="op">=</span><span class="st">"black"</span>, point_size <span class="op">=</span> <span class="fl">1</span>, text_size <span class="op">=</span> <span class="fl">1</span>,</span>
-<span class="r-in">                                    data_label_column <span class="op">=</span> <span class="st">"NAME"</span>,</span>
-<span class="r-in">                                    extent<span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>,<span class="st">"extent"</span><span class="op">)</span>, heightmap <span class="op">=</span> <span class="va">montereybay</span>,</span>
-<span class="r-in">                                    halo_color <span class="op">=</span> <span class="st">"white"</span>, halo_expand <span class="op">=</span> <span class="fl">3</span>,</span>
-<span class="r-in">                                    seed<span class="op">=</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span>  <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-in"></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co">#Plot the actual town locations, using the manual plotting interface instead of the `sf` object</span></span>
-<span class="r-in"><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="height_shade.html">height_shade</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu"><a href="generate_altitude_overlay.html">generate_altitude_overlay</a></span><span class="op">(</span><span class="va">bathy_hs</span>, <span class="va">montereybay</span>, <span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> </span>
-<span class="r-in"> <span class="fu"><a href="add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="fu"><a href="lamb_shade.html">lamb_shade</a></span><span class="op">(</span><span class="va">montereybay</span>,zscale<span class="op">=</span><span class="fl">50</span><span class="op">)</span>,<span class="fl">0.3</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu">generate_label_overlay</span><span class="op">(</span>labels<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="va">monterey_counties_sf</span><span class="op">$</span><span class="va">NAME</span><span class="op">)</span>,</span>
-<span class="r-in">                                    x<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="va">monterey_counties_sf</span><span class="op">$</span><span class="va">INTPTLON</span><span class="op">)</span><span class="op">)</span>,</span>
-<span class="r-in">                                    y<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="va">monterey_counties_sf</span><span class="op">$</span><span class="va">INTPTLAT</span><span class="op">)</span><span class="op">)</span>,</span>
-<span class="r-in">                                    color<span class="op">=</span><span class="st">"black"</span>, point_size <span class="op">=</span> <span class="fl">1</span>, text_size <span class="op">=</span> <span class="fl">1</span>,</span>
-<span class="r-in">                                    extent<span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>,<span class="st">"extent"</span><span class="op">)</span>, heightmap <span class="op">=</span> <span class="va">montereybay</span>,</span>
-<span class="r-in">                                    halo_color <span class="op">=</span> <span class="st">"white"</span>, halo_expand <span class="op">=</span> <span class="fl">3</span>,</span>
-<span class="r-in">                                    seed<span class="op">=</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span>  <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co">#Adding a softer blurred halo</span></span>
-<span class="r-in"><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="height_shade.html">height_shade</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu"><a href="generate_altitude_overlay.html">generate_altitude_overlay</a></span><span class="op">(</span><span class="va">bathy_hs</span>, <span class="va">montereybay</span>, <span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> </span>
-<span class="r-in"> <span class="fu"><a href="add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="fu"><a href="lamb_shade.html">lamb_shade</a></span><span class="op">(</span><span class="va">montereybay</span>,zscale<span class="op">=</span><span class="fl">50</span><span class="op">)</span>,<span class="fl">0.3</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu">generate_label_overlay</span><span class="op">(</span>labels<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="va">monterey_counties_sf</span><span class="op">$</span><span class="va">NAME</span><span class="op">)</span>,</span>
-<span class="r-in">                                    x<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="va">monterey_counties_sf</span><span class="op">$</span><span class="va">INTPTLON</span><span class="op">)</span><span class="op">)</span>,</span>
-<span class="r-in">                                    y<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="va">monterey_counties_sf</span><span class="op">$</span><span class="va">INTPTLAT</span><span class="op">)</span><span class="op">)</span>,</span>
-<span class="r-in">                                    color<span class="op">=</span><span class="st">"black"</span>, point_size <span class="op">=</span> <span class="fl">1</span>, text_size <span class="op">=</span> <span class="fl">1</span>,</span>
-<span class="r-in">                                    extent<span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>,<span class="st">"extent"</span><span class="op">)</span>, heightmap <span class="op">=</span> <span class="va">montereybay</span>,</span>
-<span class="r-in">                                    halo_color <span class="op">=</span> <span class="st">"white"</span>, halo_expand <span class="op">=</span> <span class="fl">3</span>, halo_blur<span class="op">=</span><span class="fl">10</span>,</span>
-<span class="r-in">                                    seed<span class="op">=</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span>  <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-in"> </span>
-<span class="r-in"><span class="co">#Changing the seed changes the locations of the labels</span></span>
-<span class="r-in"><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="height_shade.html">height_shade</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu"><a href="generate_altitude_overlay.html">generate_altitude_overlay</a></span><span class="op">(</span><span class="va">bathy_hs</span>, <span class="va">montereybay</span>, <span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> </span>
-<span class="r-in"> <span class="fu"><a href="add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="fu"><a href="lamb_shade.html">lamb_shade</a></span><span class="op">(</span><span class="va">montereybay</span>,zscale<span class="op">=</span><span class="fl">50</span><span class="op">)</span>,<span class="fl">0.3</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu">generate_label_overlay</span><span class="op">(</span>labels<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="va">monterey_counties_sf</span><span class="op">$</span><span class="va">NAME</span><span class="op">)</span>,</span>
-<span class="r-in">                                    x<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="va">monterey_counties_sf</span><span class="op">$</span><span class="va">INTPTLON</span><span class="op">)</span><span class="op">)</span>,</span>
-<span class="r-in">                                    y<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="va">monterey_counties_sf</span><span class="op">$</span><span class="va">INTPTLAT</span><span class="op">)</span><span class="op">)</span>,</span>
-<span class="r-in">                                    color<span class="op">=</span><span class="st">"black"</span>, point_size <span class="op">=</span> <span class="fl">1</span>, text_size <span class="op">=</span> <span class="fl">1</span>,</span>
-<span class="r-in">                                    extent<span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>,<span class="st">"extent"</span><span class="op">)</span>, heightmap <span class="op">=</span> <span class="va">montereybay</span>,</span>
-<span class="r-in">                                    halo_color <span class="op">=</span> <span class="st">"white"</span>, halo_expand <span class="op">=</span> <span class="fl">3</span>, halo_blur<span class="op">=</span><span class="fl">10</span>,</span>
-<span class="r-in">                                    seed<span class="op">=</span><span class="fl">2</span><span class="op">)</span><span class="op">)</span>  <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-in"><span class="co"># }</span></span>
-<span class="r-in"><span class="op">}</span></span>
-<span class="r-plt img"><img src="generate_label_overlay-1.png" alt="" width="700" height="433"></span>
-<span class="r-plt img"><img src="generate_label_overlay-2.png" alt="" width="700" height="433"></span>
-<span class="r-plt img"><img src="generate_label_overlay-3.png" alt="" width="700" height="433"></span>
-<span class="r-plt img"><img src="generate_label_overlay-4.png" alt="" width="700" height="433"></span>
-<span class="r-plt img"><img src="generate_label_overlay-5.png" alt="" width="700" height="433"></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co">#Add the included `sf` object with roads to the montereybay dataset</span></span></span>
+<span class="r-in"><span><span class="co">#Only run these examples if the `magick` package is installed.</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/find.package.html" class="external-link">find.package</a></span><span class="op">(</span><span class="st">"magick"</span>, quiet <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span><span class="co"># \donttest{</span></span></span>
+<span class="r-in"><span><span class="co">#Create the water palette</span></span></span>
+<span class="r-in"><span><span class="va">water_palette</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/grDevices/colorRamp.html" class="external-link">colorRampPalette</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"darkblue"</span>, <span class="st">"dodgerblue"</span>, <span class="st">"lightblue"</span><span class="op">)</span><span class="op">)</span><span class="op">(</span><span class="fl">200</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">bathy_hs</span> <span class="op">=</span> <span class="fu"><a href="height_shade.html">height_shade</a></span><span class="op">(</span><span class="va">montereybay</span>, texture <span class="op">=</span> <span class="va">water_palette</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#We're plotting the polygon data here for counties around Monterey Bay. We'll first</span></span></span>
+<span class="r-in"><span><span class="co">#plot the county names at the polygon centroids.</span></span></span>
+<span class="r-in"><span><span class="va">bathy_hs</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> </span></span>
+<span class="r-in"><span> <span class="fu"><a href="add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="fu"><a href="lamb_shade.html">lamb_shade</a></span><span class="op">(</span><span class="va">montereybay</span>,zscale<span class="op">=</span><span class="fl">50</span><span class="op">)</span>,<span class="fl">0.3</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu"><a href="generate_polygon_overlay.html">generate_polygon_overlay</a></span><span class="op">(</span><span class="va">monterey_counties_sf</span>, palette <span class="op">=</span> <span class="va">rainbow</span>, </span></span>
+<span class="r-in"><span>                                      extent <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>,<span class="st">"extent"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                                      heightmap <span class="op">=</span> <span class="va">montereybay</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> </span></span>
+<span class="r-in"><span> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu">generate_label_overlay</span><span class="op">(</span>labels<span class="op">=</span><span class="va">monterey_counties_sf</span>,</span></span>
+<span class="r-in"><span>                                    color<span class="op">=</span><span class="st">"black"</span>, point_size <span class="op">=</span> <span class="fl">1</span>, text_size <span class="op">=</span> <span class="fl">1</span>,</span></span>
+<span class="r-in"><span>                                    data_label_column <span class="op">=</span> <span class="st">"NAME"</span>,</span></span>
+<span class="r-in"><span>                                    extent<span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>,<span class="st">"extent"</span><span class="op">)</span>, heightmap <span class="op">=</span> <span class="va">montereybay</span>,</span></span>
+<span class="r-in"><span>                                    seed<span class="op">=</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span>  <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#It's hard to read these values, so we'll add a white halo.</span></span></span>
+<span class="r-in"><span><span class="va">bathy_hs</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> </span></span>
+<span class="r-in"><span> <span class="fu"><a href="add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="fu"><a href="lamb_shade.html">lamb_shade</a></span><span class="op">(</span><span class="va">montereybay</span>,zscale<span class="op">=</span><span class="fl">50</span><span class="op">)</span>,<span class="fl">0.3</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu"><a href="generate_polygon_overlay.html">generate_polygon_overlay</a></span><span class="op">(</span><span class="va">monterey_counties_sf</span>, palette <span class="op">=</span> <span class="va">rainbow</span>, </span></span>
+<span class="r-in"><span>                                      extent <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>,<span class="st">"extent"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                                      heightmap <span class="op">=</span> <span class="va">montereybay</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> </span></span>
+<span class="r-in"><span> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu">generate_label_overlay</span><span class="op">(</span>labels<span class="op">=</span><span class="va">monterey_counties_sf</span>,</span></span>
+<span class="r-in"><span>                                    color<span class="op">=</span><span class="st">"black"</span>, point_size <span class="op">=</span> <span class="fl">1</span>, text_size <span class="op">=</span> <span class="fl">1</span>,</span></span>
+<span class="r-in"><span>                                    data_label_column <span class="op">=</span> <span class="st">"NAME"</span>,</span></span>
+<span class="r-in"><span>                                    extent<span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>,<span class="st">"extent"</span><span class="op">)</span>, heightmap <span class="op">=</span> <span class="va">montereybay</span>,</span></span>
+<span class="r-in"><span>                                    halo_color <span class="op">=</span> <span class="st">"white"</span>, halo_expand <span class="op">=</span> <span class="fl">3</span>,</span></span>
+<span class="r-in"><span>                                    seed<span class="op">=</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span>  <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#Plot the actual town locations, using the manual plotting interface instead of the `sf` object</span></span></span>
+<span class="r-in"><span><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="height_shade.html">height_shade</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu"><a href="generate_altitude_overlay.html">generate_altitude_overlay</a></span><span class="op">(</span><span class="va">bathy_hs</span>, <span class="va">montereybay</span>, <span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> </span></span>
+<span class="r-in"><span> <span class="fu"><a href="add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="fu"><a href="lamb_shade.html">lamb_shade</a></span><span class="op">(</span><span class="va">montereybay</span>,zscale<span class="op">=</span><span class="fl">50</span><span class="op">)</span>,<span class="fl">0.3</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu">generate_label_overlay</span><span class="op">(</span>labels<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="va">monterey_counties_sf</span><span class="op">$</span><span class="va">NAME</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                                    x<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="va">monterey_counties_sf</span><span class="op">$</span><span class="va">INTPTLON</span><span class="op">)</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                                    y<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="va">monterey_counties_sf</span><span class="op">$</span><span class="va">INTPTLAT</span><span class="op">)</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                                    color<span class="op">=</span><span class="st">"black"</span>, point_size <span class="op">=</span> <span class="fl">1</span>, text_size <span class="op">=</span> <span class="fl">1</span>,</span></span>
+<span class="r-in"><span>                                    extent<span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>,<span class="st">"extent"</span><span class="op">)</span>, heightmap <span class="op">=</span> <span class="va">montereybay</span>,</span></span>
+<span class="r-in"><span>                                    halo_color <span class="op">=</span> <span class="st">"white"</span>, halo_expand <span class="op">=</span> <span class="fl">3</span>,</span></span>
+<span class="r-in"><span>                                    seed<span class="op">=</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span>  <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#Adding a softer blurred halo</span></span></span>
+<span class="r-in"><span><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="height_shade.html">height_shade</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu"><a href="generate_altitude_overlay.html">generate_altitude_overlay</a></span><span class="op">(</span><span class="va">bathy_hs</span>, <span class="va">montereybay</span>, <span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> </span></span>
+<span class="r-in"><span> <span class="fu"><a href="add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="fu"><a href="lamb_shade.html">lamb_shade</a></span><span class="op">(</span><span class="va">montereybay</span>,zscale<span class="op">=</span><span class="fl">50</span><span class="op">)</span>,<span class="fl">0.3</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu">generate_label_overlay</span><span class="op">(</span>labels<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="va">monterey_counties_sf</span><span class="op">$</span><span class="va">NAME</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                                    x<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="va">monterey_counties_sf</span><span class="op">$</span><span class="va">INTPTLON</span><span class="op">)</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                                    y<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="va">monterey_counties_sf</span><span class="op">$</span><span class="va">INTPTLAT</span><span class="op">)</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                                    color<span class="op">=</span><span class="st">"black"</span>, point_size <span class="op">=</span> <span class="fl">1</span>, text_size <span class="op">=</span> <span class="fl">1</span>,</span></span>
+<span class="r-in"><span>                                    extent<span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>,<span class="st">"extent"</span><span class="op">)</span>, heightmap <span class="op">=</span> <span class="va">montereybay</span>,</span></span>
+<span class="r-in"><span>                                    halo_color <span class="op">=</span> <span class="st">"white"</span>, halo_expand <span class="op">=</span> <span class="fl">3</span>, halo_blur<span class="op">=</span><span class="fl">10</span>,</span></span>
+<span class="r-in"><span>                                    seed<span class="op">=</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span>  <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span> </span></span>
+<span class="r-in"><span><span class="co">#Changing the seed changes the locations of the labels</span></span></span>
+<span class="r-in"><span><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="height_shade.html">height_shade</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu"><a href="generate_altitude_overlay.html">generate_altitude_overlay</a></span><span class="op">(</span><span class="va">bathy_hs</span>, <span class="va">montereybay</span>, <span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> </span></span>
+<span class="r-in"><span> <span class="fu"><a href="add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="fu"><a href="lamb_shade.html">lamb_shade</a></span><span class="op">(</span><span class="va">montereybay</span>,zscale<span class="op">=</span><span class="fl">50</span><span class="op">)</span>,<span class="fl">0.3</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu">generate_label_overlay</span><span class="op">(</span>labels<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="va">monterey_counties_sf</span><span class="op">$</span><span class="va">NAME</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                                    x<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="va">monterey_counties_sf</span><span class="op">$</span><span class="va">INTPTLON</span><span class="op">)</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                                    y<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/numeric.html" class="external-link">as.numeric</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="va">monterey_counties_sf</span><span class="op">$</span><span class="va">INTPTLAT</span><span class="op">)</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                                    color<span class="op">=</span><span class="st">"black"</span>, point_size <span class="op">=</span> <span class="fl">1</span>, text_size <span class="op">=</span> <span class="fl">1</span>,</span></span>
+<span class="r-in"><span>                                    extent<span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>,<span class="st">"extent"</span><span class="op">)</span>, heightmap <span class="op">=</span> <span class="va">montereybay</span>,</span></span>
+<span class="r-in"><span>                                    halo_color <span class="op">=</span> <span class="st">"white"</span>, halo_expand <span class="op">=</span> <span class="fl">3</span>, halo_blur<span class="op">=</span><span class="fl">10</span>,</span></span>
+<span class="r-in"><span>                                    seed<span class="op">=</span><span class="fl">2</span><span class="op">)</span><span class="op">)</span>  <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in if (newscore &lt;= score || runif(1) &lt; exp((score - newscore)/T)) {    k &lt;- k + 1    score &lt;- newscore    gene &lt;- newgene}:</span> missing value where TRUE/FALSE needed</span>
 </code></pre></div>
     </div>
   </div>
@@ -289,7 +328,7 @@ of this color.</p></dd>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
 </div>
 
       </footer></div>

@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.28.2</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.28.3</span>
       </span>
     </div>
 
@@ -99,30 +99,37 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">generate_dirt_textures</span><span class="op">(</span>
-  <span class="va">heightmap</span>,
-  base_depth <span class="op">=</span> <span class="fl">10</span>,
-  color1 <span class="op">=</span> <span class="st">"#7d6f5b"</span>,
-  color2 <span class="op">=</span> <span class="st">"#3b3020"</span>,
-  freq <span class="op">=</span> <span class="fl">0.1</span>,
-  zscale <span class="op">=</span> <span class="fl">1</span>,
-  levels <span class="op">=</span> <span class="fl">8</span>,
-  dirt_gradient <span class="op">=</span> <span class="fl">0</span>,
-  gradient_darken <span class="op">=</span> <span class="fl">4</span>
-<span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">generate_dirt_textures</span><span class="op">(</span></span>
+<span>  <span class="va">heightmap</span>,</span>
+<span>  base_depth <span class="op">=</span> <span class="fl">10</span>,</span>
+<span>  color1 <span class="op">=</span> <span class="st">"#7d6f5b"</span>,</span>
+<span>  color2 <span class="op">=</span> <span class="st">"#3b3020"</span>,</span>
+<span>  freq <span class="op">=</span> <span class="fl">0.1</span>,</span>
+<span>  zscale <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  levels <span class="op">=</span> <span class="fl">8</span>,</span>
+<span>  dirt_gradient <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  gradient_darken <span class="op">=</span> <span class="fl">4</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>heightmap</dt>
 <dd><p>Height matrix;</p></dd>
+
+
 <dt>color1</dt>
 <dd><p>Default `tan`.</p></dd>
+
+
 <dt>color2</dt>
 <dd><p>Default `brown`.</p></dd>
+
+
 <dt>zscale</dt>
 <dd><p>Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
 of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.</p></dd>
+
 </dl></div>
 
   </div>
@@ -137,7 +144,7 @@ of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
 </div>
 
       </footer></div>

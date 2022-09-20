@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.28.2</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.28.3</span>
       </span>
     </div>
 
@@ -99,46 +99,57 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">create_texture</span><span class="op">(</span>
-  <span class="va">lightcolor</span>,
-  <span class="va">shadowcolor</span>,
-  <span class="va">leftcolor</span>,
-  <span class="va">rightcolor</span>,
-  <span class="va">centercolor</span>,
-  cornercolors <span class="op">=</span> <span class="cn">NULL</span>
-<span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">create_texture</span><span class="op">(</span></span>
+<span>  <span class="va">lightcolor</span>,</span>
+<span>  <span class="va">shadowcolor</span>,</span>
+<span>  <span class="va">leftcolor</span>,</span>
+<span>  <span class="va">rightcolor</span>,</span>
+<span>  <span class="va">centercolor</span>,</span>
+<span>  cornercolors <span class="op">=</span> <span class="cn">NULL</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>lightcolor</dt>
 <dd><p>The main highlight color. Corresponds to the top center of the texture map.</p></dd>
+
+
 <dt>shadowcolor</dt>
 <dd><p>The main shadow color. Corresponds to the bottom center of the texture map. This color represents slopes directed 
 directly opposite to the main highlight color.</p></dd>
+
+
 <dt>leftcolor</dt>
 <dd><p>The left fill color. Corresponds to the left center of the texture map. This color represents slopes directed 
 90 degrees to the left of the main highlight color.</p></dd>
+
+
 <dt>rightcolor</dt>
 <dd><p>The right fill color. Corresponds to the right center of the texture map. This color represents slopes directed 
 90 degrees to the right of the main highlight color.</p></dd>
+
+
 <dt>centercolor</dt>
 <dd><p>The center color. Corresponds to the center of the texture map. This color represents flat areas.</p></dd>
+
+
 <dt>cornercolors</dt>
 <dd><p>Default `NULL`. The colors at the corners, in this order: NW, NE, SW, SE. If this vector isn't present (or
 all corners are specified), the mid-points will just be interpolated from the main colors.</p></dd>
+
 </dl></div>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span class="co">#Here is the `imhof1` palette:</span></span>
-<span class="r-in"><span class="fu">create_texture</span><span class="op">(</span><span class="st">"#fff673"</span>,<span class="st">"#55967a"</span>,<span class="st">"#8fb28a"</span>,<span class="st">"#55967a"</span>,<span class="st">"#cfe0a9"</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co">#Here is the `imhof1` palette:</span></span></span>
+<span class="r-in"><span><span class="fu">create_texture</span><span class="op">(</span><span class="st">"#fff673"</span>,<span class="st">"#55967a"</span>,<span class="st">"#8fb28a"</span>,<span class="st">"#55967a"</span>,<span class="st">"#cfe0a9"</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="create_texture-1.png" alt="" width="700" height="433"></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co">#Here is the `unicorn` palette:</span></span>
-<span class="r-in"><span class="fu">create_texture</span><span class="op">(</span><span class="st">"red"</span>,<span class="st">"green"</span>,<span class="st">"blue"</span>,<span class="st">"yellow"</span>,<span class="st">"white"</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#Here is the `unicorn` palette:</span></span></span>
+<span class="r-in"><span><span class="fu">create_texture</span><span class="op">(</span><span class="st">"red"</span>,<span class="st">"green"</span>,<span class="st">"blue"</span>,<span class="st">"yellow"</span>,<span class="st">"white"</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="create_texture-2.png" alt="" width="700" height="433"></span>
 </code></pre></div>
     </div>
@@ -154,7 +165,7 @@ all corners are specified), the mid-points will just be interpolated from the ma
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
 </div>
 
       </footer></div>

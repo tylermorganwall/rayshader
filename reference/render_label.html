@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.28.2</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.28.3</span>
       </span>
     </div>
 
@@ -99,167 +99,218 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">render_label</span><span class="op">(</span>
-  <span class="va">heightmap</span>,
-  <span class="va">text</span>,
-  <span class="va">lat</span>,
-  <span class="va">long</span>,
-  altitude <span class="op">=</span> <span class="cn">NULL</span>,
-  extent <span class="op">=</span> <span class="cn">NULL</span>,
-  x <span class="op">=</span> <span class="cn">NULL</span>,
-  y <span class="op">=</span> <span class="cn">NULL</span>,
-  z <span class="op">=</span> <span class="cn">NULL</span>,
-  zscale <span class="op">=</span> <span class="fl">1</span>,
-  relativez <span class="op">=</span> <span class="cn">TRUE</span>,
-  offset <span class="op">=</span> <span class="fl">0</span>,
-  clear_previous <span class="op">=</span> <span class="cn">FALSE</span>,
-  textsize <span class="op">=</span> <span class="fl">1</span>,
-  dashed <span class="op">=</span> <span class="cn">FALSE</span>,
-  dashlength <span class="op">=</span> <span class="st">"auto"</span>,
-  linewidth <span class="op">=</span> <span class="fl">3</span>,
-  antialias <span class="op">=</span> <span class="cn">FALSE</span>,
-  alpha <span class="op">=</span> <span class="fl">1</span>,
-  textalpha <span class="op">=</span> <span class="fl">1</span>,
-  freetype <span class="op">=</span> <span class="cn">TRUE</span>,
-  adjustvec <span class="op">=</span> <span class="cn">NULL</span>,
-  family <span class="op">=</span> <span class="st">"sans"</span>,
-  fonttype <span class="op">=</span> <span class="st">"standard"</span>,
-  linecolor <span class="op">=</span> <span class="st">"black"</span>,
-  textcolor <span class="op">=</span> <span class="st">"black"</span>
-<span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">render_label</span><span class="op">(</span></span>
+<span>  <span class="va">heightmap</span>,</span>
+<span>  <span class="va">text</span>,</span>
+<span>  <span class="va">lat</span>,</span>
+<span>  <span class="va">long</span>,</span>
+<span>  altitude <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  extent <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  x <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  y <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  z <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  zscale <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  relativez <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  offset <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  clear_previous <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  textsize <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  dashed <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  dashlength <span class="op">=</span> <span class="st">"auto"</span>,</span>
+<span>  linewidth <span class="op">=</span> <span class="fl">3</span>,</span>
+<span>  antialias <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  alpha <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  textalpha <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  freetype <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  adjustvec <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  family <span class="op">=</span> <span class="st">"sans"</span>,</span>
+<span>  fonttype <span class="op">=</span> <span class="st">"standard"</span>,</span>
+<span>  linecolor <span class="op">=</span> <span class="st">"black"</span>,</span>
+<span>  textcolor <span class="op">=</span> <span class="st">"black"</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>heightmap</dt>
 <dd><p>A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.</p></dd>
+
+
 <dt>text</dt>
 <dd><p>The label text.</p></dd>
+
+
 <dt>lat</dt>
 <dd><p>A latitude for the text. Must provide an `raster::extent` object to argument `extent` for the map.</p></dd>
+
+
 <dt>long</dt>
 <dd><p>A latitude for the text. Must provide an `raster::extent` object to argument `extent` for the map.</p></dd>
+
+
 <dt>altitude</dt>
 <dd><p>Default `NULL`. Elevation of the label, in units of the elevation matrix (scaled by zscale). If none is passed, this will default to 10 percent above the maximum altitude in the heightmap.</p></dd>
+
+
 <dt>extent</dt>
 <dd><p>Default `NULL`. A `raster::Extent` object with the bounding box of the displayed 3D scene.</p></dd>
+
+
 <dt>x</dt>
 <dd><p>Default `NULL`. Directly specify the `x` index in the matrix to place the label.</p></dd>
+
+
 <dt>y</dt>
 <dd><p>Default `NULL`. Directly specify the `y` index in the matrix to place the label.</p></dd>
+
+
 <dt>z</dt>
 <dd><p>Default `NULL`. Elevation of the label, in units of the elevation matrix (scaled by zscale).</p></dd>
+
+
 <dt>zscale</dt>
 <dd><p>Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units</p></dd>
+
+
 <dt>relativez</dt>
 <dd><p>Default `TRUE`. Whether `z` should be measured in relation to the underlying elevation at that point in the heightmap, or set absolutely (`FALSE`).</p></dd>
+
+
 <dt>offset</dt>
 <dd><p>Elevation above the surface (at the label point) to start drawing the line.</p></dd>
+
+
 <dt>clear_previous</dt>
 <dd><p>Default `FALSE`. If `TRUE`, it will clear all existing text and lines rendered with `render_label()`. If no
 other arguments are passed to `render_label()`, this will just remove all existing lines.</p></dd>
+
+
 <dt>textsize</dt>
 <dd><p>Default `1`. A numeric character expansion value.</p></dd>
+
+
 <dt>dashed</dt>
 <dd><p>Default `FALSE`. If `TRUE`, the label line is dashed.</p></dd>
+
+
 <dt>dashlength</dt>
 <dd><p>Default `auto`. Length, in units of the elevation matrix (scaled by `zscale`) of the dashes if `dashed = TRUE`.</p></dd>
+
+
 <dt>linewidth</dt>
 <dd><p>Default `3`. The line width.</p></dd>
+
+
 <dt>antialias</dt>
 <dd><p>Default `FALSE`. If `TRUE`, the line with be have anti-aliasing applied. NOTE: anti-aliasing can cause some unpredictable behavior with transparent surfaces.</p></dd>
+
+
 <dt>alpha</dt>
 <dd><p>Default `1`. Transparency of the label line.</p></dd>
+
+
 <dt>textalpha</dt>
 <dd><p>Default `1`. Transparency of the label text.</p></dd>
+
+
 <dt>freetype</dt>
 <dd><p>Default `TRUE`. Set to `FALSE` if freetype is not installed (freetype enables anti-aliased fonts). NOTE: There are occasionally transparency issues when positioning Freetype fonts in front and behind a transparent surface.</p></dd>
+
+
 <dt>adjustvec</dt>
 <dd><p>Default `c(0.5,-0.5)`. The horizontal and vertical offset for the text. If `freetype = FALSE` and on macOS/Linux, this is adjusted to `c(0.33,-0.5)` to keep the type centered.</p></dd>
+
+
 <dt>family</dt>
 <dd><p>Default `"sans"`. Font family. Choices are `c("serif", "sans", "mono", "symbol")`.</p></dd>
+
+
 <dt>fonttype</dt>
 <dd><p>Default `"standard"`. The font type. Choices are `c("standard", "bold", "italic", "bolditalic")`. NOTE: These require FreeType fonts, which may not be installed on your system. See the documentation for rgl::text3d() for more information.</p></dd>
+
+
 <dt>linecolor</dt>
 <dd><p>Default `black`. Color of the line.</p></dd>
+
+
 <dt>textcolor</dt>
 <dd><p>Default `black`. Color of the text.</p></dd>
+
 </dl></div>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span class="co"># \dontrun{</span></span>
-<span class="r-in"><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="plot_3d.html">plot_3d</a></span><span class="op">(</span><span class="va">montereybay</span>,zscale<span class="op">=</span><span class="fl">50</span>,water<span class="op">=</span><span class="cn">TRUE</span>, watercolor<span class="op">=</span><span class="st">"#233aa1"</span><span class="op">)</span></span>
-<span class="r-in"><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span> </span>
-<span class="r-plt img"><img src="render_label-1.png" alt="" width="700" height="433"></span>
-<span class="r-in"><span class="co"># }</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="va">santa_cruz</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">36.962957</span>, <span class="op">-</span><span class="fl">122.021033</span><span class="op">)</span> </span>
-<span class="r-in"><span class="co">#We want to add a label to Santa Cruz, so we use the x and y matrix coordinate (x=220 and y=330)</span></span>
-<span class="r-in"><span class="co"># \dontrun{</span></span>
-<span class="r-in"><span class="fu">render_label</span><span class="op">(</span><span class="va">montereybay</span>,lat <span class="op">=</span> <span class="va">santa_cruz</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, long <span class="op">=</span> <span class="va">santa_cruz</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span>,</span>
-<span class="r-in">            extent <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>, <span class="st">"extent"</span><span class="op">)</span>,</span>
-<span class="r-in">            altitude<span class="op">=</span><span class="fl">12000</span>, zscale<span class="op">=</span><span class="fl">50</span>, text <span class="op">=</span> <span class="st">"Santa Cruz"</span><span class="op">)</span></span>
-<span class="r-in"><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-plt img"><img src="render_label-2.png" alt="" width="700" height="433"></span>
-<span class="r-in"><span class="co"># }</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="va">monterey</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">36.603053</span>, <span class="op">-</span><span class="fl">121.892933</span><span class="op">)</span></span>
-<span class="r-in"><span class="co">#We can also change the linetype to dashed by setting `dashed = TRUE` (additional options allow</span></span>
-<span class="r-in"><span class="co">#the user to control the dash length). You can clear the existing lines by setting </span></span>
-<span class="r-in"><span class="co">#`clear_previous = TRUE`.</span></span>
-<span class="r-in"><span class="co"># \dontrun{</span></span>
-<span class="r-in"><span class="fu">render_label</span><span class="op">(</span><span class="va">montereybay</span>, lat <span class="op">=</span> <span class="va">monterey</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, long <span class="op">=</span> <span class="va">monterey</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span>, altitude <span class="op">=</span> <span class="fl">10000</span>, </span>
-<span class="r-in">            extent <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>, <span class="st">"extent"</span><span class="op">)</span>,</span>
-<span class="r-in">            zscale <span class="op">=</span> <span class="fl">50</span>, text <span class="op">=</span> <span class="st">"Monterey"</span>, textcolor <span class="op">=</span> <span class="st">"white"</span>, linecolor<span class="op">=</span><span class="st">"darkred"</span>,</span>
-<span class="r-in">            dashed <span class="op">=</span> <span class="cn">TRUE</span>, clear_previous <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span class="r-in"><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-plt img"><img src="render_label-3.png" alt="" width="700" height="433"></span>
-<span class="r-in"><span class="co"># }</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="va">canyon</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">36.621049</span>, <span class="op">-</span><span class="fl">122.333912</span><span class="op">)</span></span>
-<span class="r-in"><span class="co">#By default, z specifies the altitude above that point on the elevation matrix. We can also specify </span></span>
-<span class="r-in"><span class="co">#an absolute height by setting `relativez=FALSE`.</span></span>
-<span class="r-in"><span class="co"># \dontrun{</span></span>
-<span class="r-in"><span class="fu">render_label</span><span class="op">(</span><span class="va">montereybay</span>,lat<span class="op">=</span><span class="va">canyon</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, long <span class="op">=</span> <span class="va">canyon</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span>, altitude <span class="op">=</span> <span class="fl">2000</span>,</span>
-<span class="r-in">            extent <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>,<span class="st">"extent"</span><span class="op">)</span>,</span>
-<span class="r-in">            zscale<span class="op">=</span><span class="fl">50</span>,text <span class="op">=</span> <span class="st">"Monterey Canyon"</span>, relativez<span class="op">=</span><span class="cn">FALSE</span><span class="op">)</span></span>
-<span class="r-in"><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-plt img"><img src="render_label-4.png" alt="" width="700" height="433"></span>
-<span class="r-in"><span class="co"># }</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co">#We can also render labels in high quality with `render_highquality()`, specifying a custom</span></span>
-<span class="r-in"><span class="co">#line radius. By default, the labels point towards the camera, but you can fix their angle with</span></span>
-<span class="r-in"><span class="co">#argument `text_angle`.</span></span>
-<span class="r-in"><span class="co"># \dontrun{</span></span>
-<span class="r-in"><span class="fu"><a href="render_camera.html">render_camera</a></span><span class="op">(</span>theta<span class="op">=</span><span class="fl">35</span>, phi <span class="op">=</span> <span class="fl">35</span>, zoom <span class="op">=</span> <span class="fl">0.80</span>, fov<span class="op">=</span><span class="fl">60</span><span class="op">)</span></span>
-<span class="r-in"><span class="fu">render_label</span><span class="op">(</span><span class="va">montereybay</span>, lat <span class="op">=</span> <span class="va">monterey</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, long <span class="op">=</span> <span class="va">monterey</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span>, altitude <span class="op">=</span> <span class="fl">10000</span>, </span>
-<span class="r-in">            extent <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>, <span class="st">"extent"</span><span class="op">)</span>,</span>
-<span class="r-in">            zscale <span class="op">=</span> <span class="fl">50</span>, text <span class="op">=</span> <span class="st">"Monterey"</span>, textcolor <span class="op">=</span> <span class="st">"white"</span>, linecolor<span class="op">=</span><span class="st">"darkred"</span>,</span>
-<span class="r-in">            dashed <span class="op">=</span> <span class="cn">TRUE</span>, clear_previous <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span class="r-in">               </span>
-<span class="r-in"><span class="fu">render_label</span><span class="op">(</span><span class="va">montereybay</span>,lat<span class="op">=</span><span class="va">canyon</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, long <span class="op">=</span> <span class="va">canyon</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span>, altitude <span class="op">=</span> <span class="fl">2000</span>, zscale<span class="op">=</span><span class="fl">50</span>,</span>
-<span class="r-in">            extent <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>,<span class="st">"extent"</span><span class="op">)</span>, textcolor <span class="op">=</span> <span class="st">"white"</span>, linecolor<span class="op">=</span><span class="st">"white"</span>,</span>
-<span class="r-in">            text <span class="op">=</span> <span class="st">"Monterey Canyon"</span>, relativez<span class="op">=</span><span class="cn">FALSE</span><span class="op">)</span></span>
-<span class="r-in">            </span>
-<span class="r-in"><span class="fu"><a href="render_highquality.html">render_highquality</a></span><span class="op">(</span>samples<span class="op">=</span><span class="fl">200</span>,text_size <span class="op">=</span> <span class="fl">24</span>, line_radius <span class="op">=</span> <span class="fl">2</span>, text_offset <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">20</span>,<span class="fl">0</span><span class="op">)</span>,</span>
-<span class="r-in">                  lightdirection<span class="op">=</span><span class="fl">180</span>, clamp_value<span class="op">=</span><span class="fl">10</span><span class="op">)</span></span>
-<span class="r-plt img"><img src="render_label-5.png" alt="" width="700" height="433"></span>
-<span class="r-in">                  </span>
-<span class="r-in"><span class="co">#Fixed text angle</span></span>
-<span class="r-in"><span class="fu"><a href="render_highquality.html">render_highquality</a></span><span class="op">(</span>samples<span class="op">=</span><span class="fl">200</span>,text_size <span class="op">=</span> <span class="fl">24</span>, line_radius <span class="op">=</span> <span class="fl">2</span>, text_offset <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">20</span>,<span class="fl">0</span><span class="op">)</span>,</span>
-<span class="r-in">                  lightdirection<span class="op">=</span><span class="fl">180</span>, text_angle<span class="op">=</span><span class="fl">0</span>, clamp_value<span class="op">=</span><span class="fl">10</span><span class="op">)</span></span>
-<span class="r-plt img"><img src="render_label-6.png" alt="" width="700" height="433"></span>
-<span class="r-in"><span class="co"># }</span></span>
-<span class="r-in"><span class="co">#We can remove all existing labels by calling `render_label(clear_previous = TRUE)`</span></span>
-<span class="r-in"><span class="co"># \dontrun{</span></span>
-<span class="r-in"><span class="fu">render_label</span><span class="op">(</span>clear_previous <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> </span>
-<span class="r-in"><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-plt img"><img src="render_label-7.png" alt="" width="700" height="433"></span>
-<span class="r-in"><span class="fu">rgl</span><span class="fu">::</span><span class="fu"><a href="https://dmurdoch.github.io/rgl/dev/reference/rgl.open.html" class="external-link">rgl.close</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-in"><span class="co"># }</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \dontrun{</span></span></span>
+<span class="r-in"><span><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="plot_3d.html">plot_3d</a></span><span class="op">(</span><span class="va">montereybay</span>,zscale<span class="op">=</span><span class="fl">50</span>,water<span class="op">=</span><span class="cn">TRUE</span>, watercolor<span class="op">=</span><span class="st">"#233aa1"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span> </span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in mesh$vertices[[j]]:</span> subscript out of bounds</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">santa_cruz</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">36.962957</span>, <span class="op">-</span><span class="fl">122.021033</span><span class="op">)</span> </span></span>
+<span class="r-in"><span><span class="co">#We want to add a label to Santa Cruz, so we use the x and y matrix coordinate (x=220 and y=330)</span></span></span>
+<span class="r-in"><span><span class="co"># \dontrun{</span></span></span>
+<span class="r-in"><span><span class="fu">render_label</span><span class="op">(</span><span class="va">montereybay</span>,lat <span class="op">=</span> <span class="va">santa_cruz</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, long <span class="op">=</span> <span class="va">santa_cruz</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span>,</span></span>
+<span class="r-in"><span>            extent <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>, <span class="st">"extent"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>            altitude<span class="op">=</span><span class="fl">12000</span>, zscale<span class="op">=</span><span class="fl">50</span>, text <span class="op">=</span> <span class="st">"Santa Cruz"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in mesh$vertices[[j]]:</span> subscript out of bounds</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">monterey</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">36.603053</span>, <span class="op">-</span><span class="fl">121.892933</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co">#We can also change the linetype to dashed by setting `dashed = TRUE` (additional options allow</span></span></span>
+<span class="r-in"><span><span class="co">#the user to control the dash length). You can clear the existing lines by setting </span></span></span>
+<span class="r-in"><span><span class="co">#`clear_previous = TRUE`.</span></span></span>
+<span class="r-in"><span><span class="co"># \dontrun{</span></span></span>
+<span class="r-in"><span><span class="fu">render_label</span><span class="op">(</span><span class="va">montereybay</span>, lat <span class="op">=</span> <span class="va">monterey</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, long <span class="op">=</span> <span class="va">monterey</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span>, altitude <span class="op">=</span> <span class="fl">10000</span>, </span></span>
+<span class="r-in"><span>            extent <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>, <span class="st">"extent"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>            zscale <span class="op">=</span> <span class="fl">50</span>, text <span class="op">=</span> <span class="st">"Monterey"</span>, textcolor <span class="op">=</span> <span class="st">"white"</span>, linecolor<span class="op">=</span><span class="st">"darkred"</span>,</span></span>
+<span class="r-in"><span>            dashed <span class="op">=</span> <span class="cn">TRUE</span>, clear_previous <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in mesh$vertices[[j]]:</span> subscript out of bounds</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">canyon</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">36.621049</span>, <span class="op">-</span><span class="fl">122.333912</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co">#By default, z specifies the altitude above that point on the elevation matrix. We can also specify </span></span></span>
+<span class="r-in"><span><span class="co">#an absolute height by setting `relativez=FALSE`.</span></span></span>
+<span class="r-in"><span><span class="co"># \dontrun{</span></span></span>
+<span class="r-in"><span><span class="fu">render_label</span><span class="op">(</span><span class="va">montereybay</span>,lat<span class="op">=</span><span class="va">canyon</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, long <span class="op">=</span> <span class="va">canyon</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span>, altitude <span class="op">=</span> <span class="fl">2000</span>,</span></span>
+<span class="r-in"><span>            extent <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>,<span class="st">"extent"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>            zscale<span class="op">=</span><span class="fl">50</span>,text <span class="op">=</span> <span class="st">"Monterey Canyon"</span>, relativez<span class="op">=</span><span class="cn">FALSE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in mesh$vertices[[j]]:</span> subscript out of bounds</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#We can also render labels in high quality with `render_highquality()`, specifying a custom</span></span></span>
+<span class="r-in"><span><span class="co">#line radius. By default, the labels point towards the camera, but you can fix their angle with</span></span></span>
+<span class="r-in"><span><span class="co">#argument `text_angle`.</span></span></span>
+<span class="r-in"><span><span class="co"># \dontrun{</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="render_camera.html">render_camera</a></span><span class="op">(</span>theta<span class="op">=</span><span class="fl">35</span>, phi <span class="op">=</span> <span class="fl">35</span>, zoom <span class="op">=</span> <span class="fl">0.80</span>, fov<span class="op">=</span><span class="fl">60</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">render_label</span><span class="op">(</span><span class="va">montereybay</span>, lat <span class="op">=</span> <span class="va">monterey</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, long <span class="op">=</span> <span class="va">monterey</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span>, altitude <span class="op">=</span> <span class="fl">10000</span>, </span></span>
+<span class="r-in"><span>            extent <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>, <span class="st">"extent"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>            zscale <span class="op">=</span> <span class="fl">50</span>, text <span class="op">=</span> <span class="st">"Monterey"</span>, textcolor <span class="op">=</span> <span class="st">"white"</span>, linecolor<span class="op">=</span><span class="st">"darkred"</span>,</span></span>
+<span class="r-in"><span>            dashed <span class="op">=</span> <span class="cn">TRUE</span>, clear_previous <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span>               </span></span>
+<span class="r-in"><span><span class="fu">render_label</span><span class="op">(</span><span class="va">montereybay</span>,lat<span class="op">=</span><span class="va">canyon</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, long <span class="op">=</span> <span class="va">canyon</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span>, altitude <span class="op">=</span> <span class="fl">2000</span>, zscale<span class="op">=</span><span class="fl">50</span>,</span></span>
+<span class="r-in"><span>            extent <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>,<span class="st">"extent"</span><span class="op">)</span>, textcolor <span class="op">=</span> <span class="st">"white"</span>, linecolor<span class="op">=</span><span class="st">"white"</span>,</span></span>
+<span class="r-in"><span>            text <span class="op">=</span> <span class="st">"Monterey Canyon"</span>, relativez<span class="op">=</span><span class="cn">FALSE</span><span class="op">)</span></span></span>
+<span class="r-in"><span>            </span></span>
+<span class="r-in"><span><span class="fu"><a href="render_highquality.html">render_highquality</a></span><span class="op">(</span>samples<span class="op">=</span><span class="fl">200</span>,text_size <span class="op">=</span> <span class="fl">24</span>, line_radius <span class="op">=</span> <span class="fl">2</span>, text_offset <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">20</span>,<span class="fl">0</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                  lightdirection<span class="op">=</span><span class="fl">180</span>, clamp_value<span class="op">=</span><span class="fl">10</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in rayrender::obj_model(cache_filename, x = -bbox_center[1], y = -bbox_center[2],     z = -bbox_center[3], texture = TRUE, material = obj_material):</span> unused argument (texture = TRUE)</span>
+<span class="r-in"><span>                  </span></span>
+<span class="r-in"><span><span class="co">#Fixed text angle</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="render_highquality.html">render_highquality</a></span><span class="op">(</span>samples<span class="op">=</span><span class="fl">200</span>,text_size <span class="op">=</span> <span class="fl">24</span>, line_radius <span class="op">=</span> <span class="fl">2</span>, text_offset <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">20</span>,<span class="fl">0</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                  lightdirection<span class="op">=</span><span class="fl">180</span>, text_angle<span class="op">=</span><span class="fl">0</span>, clamp_value<span class="op">=</span><span class="fl">10</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in rayrender::obj_model(cache_filename, x = -bbox_center[1], y = -bbox_center[2],     z = -bbox_center[3], texture = TRUE, material = obj_material):</span> unused argument (texture = TRUE)</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
+<span class="r-in"><span><span class="co">#We can remove all existing labels by calling `render_label(clear_previous = TRUE)`</span></span></span>
+<span class="r-in"><span><span class="co"># \dontrun{</span></span></span>
+<span class="r-in"><span><span class="fu">render_label</span><span class="op">(</span>clear_previous <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> </span></span>
+<span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in mesh$vertices[[j]]:</span> subscript out of bounds</span>
+<span class="r-in"><span><span class="fu">rgl</span><span class="fu">::</span><span class="fu"><a href="https://dmurdoch.github.io/rgl/dev/reference/rgl.open.html" class="external-link">rgl.close</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </div>
@@ -274,7 +325,7 @@ other arguments are passed to `render_label()`, this will just remove all existi
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
 </div>
 
       </footer></div>

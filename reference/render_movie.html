@@ -19,7 +19,7 @@ the values must be equal in length to `frames` (or of length `1`, in which the v
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.28.2</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.28.3</span>
       </span>
     </div>
 
@@ -103,31 +103,31 @@ the values must be equal in length to `frames` (or of length `1`, in which the v
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">render_movie</span><span class="op">(</span>
-  <span class="va">filename</span>,
-  type <span class="op">=</span> <span class="st">"orbit"</span>,
-  frames <span class="op">=</span> <span class="fl">360</span>,
-  fps <span class="op">=</span> <span class="fl">30</span>,
-  phi <span class="op">=</span> <span class="fl">30</span>,
-  theta <span class="op">=</span> <span class="fl">0</span>,
-  zoom <span class="op">=</span> <span class="cn">NULL</span>,
-  fov <span class="op">=</span> <span class="cn">NULL</span>,
-  title_text <span class="op">=</span> <span class="cn">NULL</span>,
-  title_offset <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">20</span>, <span class="fl">20</span><span class="op">)</span>,
-  title_color <span class="op">=</span> <span class="st">"black"</span>,
-  title_size <span class="op">=</span> <span class="fl">30</span>,
-  title_font <span class="op">=</span> <span class="st">"sans"</span>,
-  title_bar_color <span class="op">=</span> <span class="cn">NULL</span>,
-  title_bar_alpha <span class="op">=</span> <span class="fl">0.5</span>,
-  image_overlay <span class="op">=</span> <span class="cn">NULL</span>,
-  vignette <span class="op">=</span> <span class="cn">FALSE</span>,
-  vignette_color <span class="op">=</span> <span class="st">"black"</span>,
-  vignette_radius <span class="op">=</span> <span class="fl">1.3</span>,
-  title_position <span class="op">=</span> <span class="st">"northwest"</span>,
-  audio <span class="op">=</span> <span class="cn">NULL</span>,
-  progbar <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/interactive.html" class="external-link">interactive</a></span><span class="op">(</span><span class="op">)</span>,
-  <span class="va">...</span>
-<span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">render_movie</span><span class="op">(</span></span>
+<span>  <span class="va">filename</span>,</span>
+<span>  type <span class="op">=</span> <span class="st">"orbit"</span>,</span>
+<span>  frames <span class="op">=</span> <span class="fl">360</span>,</span>
+<span>  fps <span class="op">=</span> <span class="fl">30</span>,</span>
+<span>  phi <span class="op">=</span> <span class="fl">30</span>,</span>
+<span>  theta <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  zoom <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  fov <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  title_text <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  title_offset <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">20</span>, <span class="fl">20</span><span class="op">)</span>,</span>
+<span>  title_color <span class="op">=</span> <span class="st">"black"</span>,</span>
+<span>  title_size <span class="op">=</span> <span class="fl">30</span>,</span>
+<span>  title_font <span class="op">=</span> <span class="st">"sans"</span>,</span>
+<span>  title_bar_color <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  title_bar_alpha <span class="op">=</span> <span class="fl">0.5</span>,</span>
+<span>  image_overlay <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  vignette <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  vignette_color <span class="op">=</span> <span class="st">"black"</span>,</span>
+<span>  vignette_radius <span class="op">=</span> <span class="fl">1.3</span>,</span>
+<span>  title_position <span class="op">=</span> <span class="st">"northwest"</span>,</span>
+<span>  audio <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  progbar <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/interactive.html" class="external-link">interactive</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  <span class="va">...</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
@@ -135,102 +135,147 @@ the values must be equal in length to `frames` (or of length `1`, in which the v
     <dl><dt>filename</dt>
 <dd><p>Filename. If not appended with `.mp4`, it will be appended automatically. If the file extension is `gif`, 
 the <span class="pkg">gifski</span> package will be used to generate the animation.</p></dd>
+
+
 <dt>type</dt>
 <dd><p>Default `orbit`, which orbits the 3D object at the user-set camera settings `phi`, `zoom`, and `fov`. 
 Other options are `oscillate` (sine wave around `theta` value, covering 90 degrees), or `custom` (which uses the values from the 
 `theta`, `phi`, `zoom`, and `fov` vectors passed in by the user).</p></dd>
+
+
 <dt>frames</dt>
 <dd><p>Default `360`. Number of frames to render.</p></dd>
+
+
 <dt>fps</dt>
 <dd><p>Default `30`. Frames per second. Recommmend either 30 or 60 for web.</p></dd>
+
+
 <dt>phi</dt>
 <dd><p>Defaults to current view. Azimuth values, in degrees.</p></dd>
+
+
 <dt>theta</dt>
 <dd><p>Default to current view. Theta values, in degrees.</p></dd>
+
+
 <dt>zoom</dt>
 <dd><p>Defaults to the current view. Zoom value, between `0` and `1`.</p></dd>
+
+
 <dt>fov</dt>
 <dd><p>Defaults to the current view. Field of view values, in degrees.</p></dd>
+
+
 <dt>title_text</dt>
 <dd><p>Default `NULL`. Text. Adds a title to the movie, using magick::image_annotate.</p></dd>
+
+
 <dt>title_offset</dt>
 <dd><p>Default `c(20,20)`. Distance from the top-left (default, `gravity` direction in 
 image_annotate) corner to offset the title.</p></dd>
+
+
 <dt>title_color</dt>
 <dd><p>Default `black`. Font color.</p></dd>
+
+
 <dt>title_size</dt>
 <dd><p>Default `30`. Font size in pixels.</p></dd>
+
+
 <dt>title_font</dt>
 <dd><p>Default `sans`. String with font family such as "sans", "mono", "serif", "Times", "Helvetica", 
 "Trebuchet", "Georgia", "Palatino" or "Comic Sans".</p></dd>
+
+
 <dt>title_bar_color</dt>
 <dd><p>Default `NULL`. If a color, this will create a colored bar under the title.</p></dd>
+
+
 <dt>title_bar_alpha</dt>
 <dd><p>Default `0.5`. Transparency of the title bar.</p></dd>
+
+
 <dt>image_overlay</dt>
 <dd><p>Default `NULL`. Either a string indicating the location of a png image to overlay
 over the whole movie (transparency included), or a 4-layer RGBA array. This image will be resized to the 
 dimension of the movie if it does not match exactly.</p></dd>
+
+
 <dt>vignette</dt>
 <dd><p>Default `FALSE`. If `TRUE` or numeric, a camera vignetting effect will be added to the image.
 `1` is the darkest vignetting, while `0` is no vignetting. If vignette is a length-2 vector, the second entry will
 control the blurriness of the vignette effect.</p></dd>
+
+
 <dt>vignette_color</dt>
 <dd><p>Default `"black"`. Color of the vignette.</p></dd>
+
+
 <dt>vignette_radius</dt>
 <dd><p>Default `1.3`. Radius of the vignette, as a porportion of the image dimensions.</p></dd>
+
+
 <dt>title_position</dt>
 <dd><p>Default `northwest`. Position of the title.</p></dd>
+
+
 <dt>audio</dt>
 <dd><p>Default `NULL`. Optional file with audio to add to the video.</p></dd>
+
+
 <dt>progbar</dt>
 <dd><p>Default `TRUE` if interactive, `FALSE` otherwise. If `FALSE`, turns off progress bar. 
 Will display a progress bar when adding an overlay or title.</p></dd>
+
+
 <dt>...</dt>
 <dd><p>Additional parameters to pass to magick::image_annotate.</p></dd>
+
 </dl></div>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/interactive.html" class="external-link">interactive</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span class="r-in"><span class="va">filename_movie</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co">#By default, the function produces a 12 second orbit at 30 frames per second, at 30 degrees azimuth.</span></span>
-<span class="r-in"><span class="co"># \donttest{</span></span>
-<span class="r-in"><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span>texture<span class="op">=</span><span class="st">"imhof1"</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="plot_3d.html">plot_3d</a></span><span class="op">(</span><span class="va">montereybay</span>, zscale<span class="op">=</span><span class="fl">50</span>, water <span class="op">=</span> <span class="cn">TRUE</span>, watercolor<span class="op">=</span><span class="st">"imhof1"</span>, </span>
-<span class="r-in">         waterlinecolor<span class="op">=</span><span class="st">"white"</span>, waterlinealpha<span class="op">=</span><span class="fl">0.5</span><span class="op">)</span></span>
-<span class="r-in"><span class="co">#Un-comment the following to run:</span></span>
-<span class="r-in"><span class="co">#render_movie(filename = filename_movie)</span></span>
-<span class="r-in"><span class="co"># }    </span></span>
-<span class="r-in"><span class="va">filename_movie</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co">#You can change to an oscillating orbit. The magnification is increased and azimuth angle set to 30.</span></span>
-<span class="r-in"><span class="co">#A title has also been added using the title_text argument.</span></span>
-<span class="r-in"><span class="co"># \donttest{</span></span>
-<span class="r-in"><span class="co">#Un-comment the following to run:</span></span>
-<span class="r-in"><span class="co">#render_movie(filename = filename_movie, type = "oscillate", </span></span>
-<span class="r-in"><span class="co">#             frames = 60,  phi = 30, zoom = 0.8, theta = -90,</span></span>
-<span class="r-in"><span class="co">#             title_text = "Monterey Bay: Oscillating")</span></span>
-<span class="r-in"><span class="co"># }             </span></span>
-<span class="r-in"><span class="va">filename_movie</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co">#Finally, you can pass your own set of values to the </span></span>
-<span class="r-in"><span class="co">#camera parameters as a vector with type = "custom".</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="va">phivechalf</span> <span class="op">=</span> <span class="fl">30</span> <span class="op">+</span> <span class="fl">60</span> <span class="op">*</span> <span class="fl">1</span><span class="op">/</span><span class="op">(</span><span class="fl">1</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="op">-</span><span class="fl">7</span>, <span class="fl">20</span>, length.out <span class="op">=</span> <span class="fl">180</span><span class="op">)</span><span class="op">/</span><span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
-<span class="r-in"><span class="va">phivecfull</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">phivechalf</span>, <span class="fu"><a href="https://rdrr.io/r/base/rev.html" class="external-link">rev</a></span><span class="op">(</span><span class="va">phivechalf</span><span class="op">)</span><span class="op">)</span></span>
-<span class="r-in"><span class="va">thetavec</span> <span class="op">=</span> <span class="op">-</span><span class="fl">90</span> <span class="op">+</span> <span class="fl">45</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">359</span>,length.out <span class="op">=</span> <span class="fl">360</span><span class="op">)</span> <span class="op">*</span> <span class="va">pi</span><span class="op">/</span><span class="fl">180</span><span class="op">)</span></span>
-<span class="r-in"><span class="va">zoomvec</span> <span class="op">=</span> <span class="fl">0.45</span> <span class="op">+</span> <span class="fl">0.2</span> <span class="op">*</span> <span class="fl">1</span><span class="op">/</span><span class="op">(</span><span class="fl">1</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="op">-</span><span class="fl">5</span>, <span class="fl">20</span>, length.out <span class="op">=</span> <span class="fl">180</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
-<span class="r-in"><span class="va">zoomvecfull</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">zoomvec</span>, <span class="fu"><a href="https://rdrr.io/r/base/rev.html" class="external-link">rev</a></span><span class="op">(</span><span class="va">zoomvec</span><span class="op">)</span><span class="op">)</span></span>
-<span class="r-in"><span class="co"># \donttest{</span></span>
-<span class="r-in"><span class="co">#Un-comment the following to run</span></span>
-<span class="r-in"><span class="co">#render_movie(filename = filename_movie, type = "custom", </span></span>
-<span class="r-in"><span class="co">#             frames = 360,  phi = phivecfull, zoom = zoomvecfull, theta = thetavec)</span></span>
-<span class="r-in"><span class="fu">rgl</span><span class="fu">::</span><span class="fu"><a href="https://dmurdoch.github.io/rgl/dev/reference/rgl.open.html" class="external-link">rgl.close</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-in"><span class="co"># }</span></span>
-<span class="r-in"><span class="op">}</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/interactive.html" class="external-link">interactive</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span><span class="va">filename_movie</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#By default, the function produces a 12 second orbit at 30 frames per second, at 30 degrees azimuth.</span></span></span>
+<span class="r-in"><span><span class="co"># \donttest{</span></span></span>
+<span class="r-in"><span><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span>texture<span class="op">=</span><span class="st">"imhof1"</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="plot_3d.html">plot_3d</a></span><span class="op">(</span><span class="va">montereybay</span>, zscale<span class="op">=</span><span class="fl">50</span>, water <span class="op">=</span> <span class="cn">TRUE</span>, watercolor<span class="op">=</span><span class="st">"imhof1"</span>, </span></span>
+<span class="r-in"><span>         waterlinecolor<span class="op">=</span><span class="st">"white"</span>, waterlinealpha<span class="op">=</span><span class="fl">0.5</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co">#Un-comment the following to run:</span></span></span>
+<span class="r-in"><span><span class="co">#render_movie(filename = filename_movie)</span></span></span>
+<span class="r-in"><span><span class="co"># }    </span></span></span>
+<span class="r-in"><span><span class="va">filename_movie</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#You can change to an oscillating orbit. The magnification is increased and azimuth angle set to 30.</span></span></span>
+<span class="r-in"><span><span class="co">#A title has also been added using the title_text argument.</span></span></span>
+<span class="r-in"><span><span class="co"># \donttest{</span></span></span>
+<span class="r-in"><span><span class="co">#Un-comment the following to run:</span></span></span>
+<span class="r-in"><span><span class="co">#render_movie(filename = filename_movie, type = "oscillate", </span></span></span>
+<span class="r-in"><span><span class="co">#             frames = 60,  phi = 30, zoom = 0.8, theta = -90,</span></span></span>
+<span class="r-in"><span><span class="co">#             title_text = "Monterey Bay: Oscillating")</span></span></span>
+<span class="r-in"><span><span class="co"># }             </span></span></span>
+<span class="r-in"><span><span class="va">filename_movie</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#Finally, you can pass your own set of values to the </span></span></span>
+<span class="r-in"><span><span class="co">#camera parameters as a vector with type = "custom".</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">phivechalf</span> <span class="op">=</span> <span class="fl">30</span> <span class="op">+</span> <span class="fl">60</span> <span class="op">*</span> <span class="fl">1</span><span class="op">/</span><span class="op">(</span><span class="fl">1</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="op">-</span><span class="fl">7</span>, <span class="fl">20</span>, length.out <span class="op">=</span> <span class="fl">180</span><span class="op">)</span><span class="op">/</span><span class="fl">2</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">phivecfull</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">phivechalf</span>, <span class="fu"><a href="https://rdrr.io/r/base/rev.html" class="external-link">rev</a></span><span class="op">(</span><span class="va">phivechalf</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">thetavec</span> <span class="op">=</span> <span class="op">-</span><span class="fl">90</span> <span class="op">+</span> <span class="fl">45</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">359</span>,length.out <span class="op">=</span> <span class="fl">360</span><span class="op">)</span> <span class="op">*</span> <span class="va">pi</span><span class="op">/</span><span class="fl">180</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">zoomvec</span> <span class="op">=</span> <span class="fl">0.45</span> <span class="op">+</span> <span class="fl">0.2</span> <span class="op">*</span> <span class="fl">1</span><span class="op">/</span><span class="op">(</span><span class="fl">1</span> <span class="op">+</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">exp</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="op">-</span><span class="fl">5</span>, <span class="fl">20</span>, length.out <span class="op">=</span> <span class="fl">180</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">zoomvecfull</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">zoomvec</span>, <span class="fu"><a href="https://rdrr.io/r/base/rev.html" class="external-link">rev</a></span><span class="op">(</span><span class="va">zoomvec</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># \donttest{</span></span></span>
+<span class="r-in"><span><span class="co">#Un-comment the following to run</span></span></span>
+<span class="r-in"><span><span class="co">#render_movie(filename = filename_movie, type = "custom", </span></span></span>
+<span class="r-in"><span><span class="co">#             frames = 360,  phi = phivecfull, zoom = zoomvecfull, theta = thetavec)</span></span></span>
+<span class="r-in"><span><span class="fu">rgl</span><span class="fu">::</span><span class="fu"><a href="https://dmurdoch.github.io/rgl/dev/reference/rgl.open.html" class="external-link">rgl.close</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
 </code></pre></div>
     </div>
   </div>
@@ -245,7 +290,7 @@ Will display a progress bar when adding an overlay or title.</p></dd>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
 </div>
 
       </footer></div>

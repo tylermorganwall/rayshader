@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.28.2</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.28.3</span>
       </span>
     </div>
 
@@ -99,34 +99,47 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">make_lines</span><span class="op">(</span>
-  <span class="va">heightmap</span>,
-  basedepth <span class="op">=</span> <span class="fl">0</span>,
-  linecolor <span class="op">=</span> <span class="st">"grey20"</span>,
-  zscale <span class="op">=</span> <span class="fl">1</span>,
-  alpha <span class="op">=</span> <span class="fl">1</span>,
-  linewidth <span class="op">=</span> <span class="fl">2</span>,
-  solid <span class="op">=</span> <span class="cn">TRUE</span>
-<span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">make_lines</span><span class="op">(</span></span>
+<span>  <span class="va">heightmap</span>,</span>
+<span>  basedepth <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  linecolor <span class="op">=</span> <span class="st">"grey20"</span>,</span>
+<span>  zscale <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  alpha <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  linewidth <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>  solid <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>heightmap</dt>
 <dd><p>A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.</p></dd>
+
+
 <dt>basedepth</dt>
 <dd><p>Default `0`.</p></dd>
+
+
 <dt>linecolor</dt>
 <dd><p>Default `grey40`.</p></dd>
+
+
 <dt>zscale</dt>
 <dd><p>Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
 of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.</p></dd>
+
+
 <dt>alpha</dt>
 <dd><p>Default `1`. Transparency.</p></dd>
+
+
 <dt>linewidth</dt>
 <dd><p>Default `2`. Linewidth</p></dd>
+
+
 <dt>solid</dt>
 <dd><p>Default `TRUE`. Whether it's solid or water.</p></dd>
+
 </dl></div>
 
   </div>
@@ -141,7 +154,7 @@ of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
 </div>
 
       </footer></div>

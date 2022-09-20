@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.28.2</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.28.3</span>
       </span>
     </div>
 
@@ -99,153 +99,184 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">render_compass</span><span class="op">(</span>
-  angle <span class="op">=</span> <span class="fl">0</span>,
-  position <span class="op">=</span> <span class="st">"SE"</span>,
-  altitude <span class="op">=</span> <span class="cn">NULL</span>,
-  zscale <span class="op">=</span> <span class="fl">1</span>,
-  x <span class="op">=</span> <span class="cn">NULL</span>,
-  y <span class="op">=</span> <span class="cn">NULL</span>,
-  z <span class="op">=</span> <span class="cn">NULL</span>,
-  compass_radius <span class="op">=</span> <span class="cn">NULL</span>,
-  scale_distance <span class="op">=</span> <span class="fl">1</span>,
-  color_n <span class="op">=</span> <span class="st">"darkred"</span>,
-  color_arrow <span class="op">=</span> <span class="st">"grey90"</span>,
-  color_background <span class="op">=</span> <span class="st">"grey60"</span>,
-  color_bevel <span class="op">=</span> <span class="st">"grey20"</span>,
-  position_circular <span class="op">=</span> <span class="cn">FALSE</span>,
-  clear_compass <span class="op">=</span> <span class="cn">FALSE</span>
-<span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">render_compass</span><span class="op">(</span></span>
+<span>  angle <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  position <span class="op">=</span> <span class="st">"SE"</span>,</span>
+<span>  altitude <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  zscale <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  x <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  y <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  z <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  compass_radius <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  scale_distance <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  color_n <span class="op">=</span> <span class="st">"darkred"</span>,</span>
+<span>  color_arrow <span class="op">=</span> <span class="st">"grey90"</span>,</span>
+<span>  color_background <span class="op">=</span> <span class="st">"grey60"</span>,</span>
+<span>  color_bevel <span class="op">=</span> <span class="st">"grey20"</span>,</span>
+<span>  position_circular <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  clear_compass <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>angle</dt>
 <dd><p>Default `0`. The direction the arrow should be facing.</p></dd>
+
+
 <dt>position</dt>
 <dd><p>Default `SE`. A string representing a cardinal direction. Ignored if `x`, `y`, and `z`
 are manually specified.</p></dd>
+
+
 <dt>altitude</dt>
 <dd><p>Default `NULL`. Altitude of the compass, defaults to maximum height in the map.</p></dd>
+
+
 <dt>zscale</dt>
 <dd><p>Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. 
 Only used in combination with `altitude`.</p></dd>
+
+
 <dt>x</dt>
 <dd><p>Default `NULL`. X position. If not entered, automatically calculated using `position` argument.</p></dd>
+
+
 <dt>y</dt>
 <dd><p>Default `NULL`. Y position. If not entered, automatically calculated using `position` argument.</p></dd>
+
+
 <dt>z</dt>
 <dd><p>Default `NULL`. Z position. If not entered, automatically calculated using `position` argument.</p></dd>
+
+
 <dt>compass_radius</dt>
 <dd><p>Default `NULL`. The radius of the compass. If not entered, automatically calculated. 
 Increase or decrease the size of the compass.</p></dd>
+
+
 <dt>scale_distance</dt>
 <dd><p>Default `1`. Multiplier that moves the compass away from the center of the map.</p></dd>
+
+
 <dt>color_n</dt>
 <dd><p>Default `darkred`. Color of the letter N.</p></dd>
+
+
 <dt>color_arrow</dt>
 <dd><p>Default `grey90`. Color of the arrow.</p></dd>
+
+
 <dt>color_background</dt>
 <dd><p>Default `grey20`. Color of the area right under the arrow.</p></dd>
+
+
 <dt>color_bevel</dt>
 <dd><p>Default `grey20`. Color of the bevel.</p></dd>
+
+
 <dt>position_circular</dt>
 <dd><p>Default `FALSE`. If `TRUE`, will place compass at a constant radius away from
 the map, as opposed to directly next to it. Overridden if user manually specifies position.</p></dd>
+
+
 <dt>clear_compass</dt>
 <dd><p>Default `FALSE`. Clears the compass symbol(s) on the map.</p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>Adds compass to map. No return value.</p>
+    
+
+<p>Adds compass to map. No return value.</p>
     </div>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span class="co">#Add a North arrow to the map, by default in the bottom right (SE)</span></span>
-<span class="r-in"><span class="co"># \dontrun{</span></span>
-<span class="r-in"><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> </span>
-<span class="r-in"> <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="plot_3d.html">plot_3d</a></span><span class="op">(</span><span class="va">montereybay</span>,theta<span class="op">=</span><span class="op">-</span><span class="fl">45</span>, water<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co">#Add a North arrow to the map, by default in the bottom right (SE)</span></span></span>
+<span class="r-in"><span><span class="co"># \dontrun{</span></span></span>
+<span class="r-in"><span><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> </span></span>
+<span class="r-in"><span> <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="plot_3d.html">plot_3d</a></span><span class="op">(</span><span class="va">montereybay</span>,theta<span class="op">=</span><span class="op">-</span><span class="fl">45</span>, water<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> `montereybay` dataset used with no zscale--setting `zscale=50`.  For a realistic depiction, raise `zscale` to 200.</span>
-<span class="r-in"><span class="fu">render_compass</span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-in"><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-plt img"><img src="render_compass-1.png" alt="" width="700" height="433"></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co">#Remove the existing symbol with `clear_compass = TRUE`</span></span>
-<span class="r-in"><span class="fu">render_compass</span><span class="op">(</span>clear_compass <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co">#Point the N towards the light, at 315 degrees:</span></span>
-<span class="r-in"><span class="fu">render_compass</span><span class="op">(</span>angle <span class="op">=</span> <span class="fl">315</span><span class="op">)</span></span>
-<span class="r-in"><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-plt img"><img src="render_compass-2.png" alt="" width="700" height="433"></span>
-<span class="r-in"><span class="fu">render_compass</span><span class="op">(</span>clear_compass <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co">#We can change the position by specifying a direction (here are three):</span></span>
-<span class="r-in"><span class="fu"><a href="render_camera.html">render_camera</a></span><span class="op">(</span>theta<span class="op">=</span><span class="fl">45</span>,phi<span class="op">=</span><span class="fl">45</span><span class="op">)</span></span>
-<span class="r-in"><span class="fu">render_compass</span><span class="op">(</span>position <span class="op">=</span> <span class="st">"NW"</span><span class="op">)</span></span>
-<span class="r-in"><span class="fu">render_compass</span><span class="op">(</span>position <span class="op">=</span> <span class="st">"E"</span><span class="op">)</span></span>
-<span class="r-in"><span class="fu">render_compass</span><span class="op">(</span>position <span class="op">=</span> <span class="st">"S"</span><span class="op">)</span></span>
-<span class="r-in"><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-plt img"><img src="render_compass-3.png" alt="" width="700" height="433"></span>
-<span class="r-in"><span class="fu">render_compass</span><span class="op">(</span>clear_compass <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co">#We can also change the distance away from the edge by setting the `scale_distance` argument.</span></span>
-<span class="r-in"><span class="fu">render_compass</span><span class="op">(</span>position <span class="op">=</span> <span class="st">"NW"</span>, scale_distance <span class="op">=</span> <span class="fl">1.4</span><span class="op">)</span></span>
-<span class="r-in"><span class="fu">render_compass</span><span class="op">(</span>position <span class="op">=</span> <span class="st">"E"</span>, scale_distance <span class="op">=</span> <span class="fl">1.4</span><span class="op">)</span></span>
-<span class="r-in"><span class="fu">render_compass</span><span class="op">(</span>position <span class="op">=</span> <span class="st">"S"</span>, scale_distance <span class="op">=</span> <span class="fl">1.4</span><span class="op">)</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co">#Zoom in slightly:</span></span>
-<span class="r-in"><span class="fu"><a href="render_camera.html">render_camera</a></span><span class="op">(</span>theta<span class="op">=</span><span class="fl">45</span>,phi<span class="op">=</span><span class="fl">45</span>,zoom<span class="op">=</span><span class="fl">0.7</span><span class="op">)</span></span>
-<span class="r-in"><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-plt img"><img src="render_compass-4.png" alt="" width="700" height="433"></span>
-<span class="r-in"><span class="fu">render_compass</span><span class="op">(</span>clear_compass <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co">#We can also specify the radius directly with `compass_radius`:</span></span>
-<span class="r-in"><span class="fu"><a href="render_camera.html">render_camera</a></span><span class="op">(</span>theta<span class="op">=</span><span class="fl">0</span>,phi<span class="op">=</span><span class="fl">45</span>,zoom<span class="op">=</span><span class="fl">1</span><span class="op">)</span></span>
-<span class="r-in"><span class="fu">render_compass</span><span class="op">(</span>position <span class="op">=</span> <span class="st">"N"</span>, scale_distance <span class="op">=</span> <span class="fl">1.5</span>, compass_radius<span class="op">=</span><span class="fl">200</span><span class="op">)</span></span>
-<span class="r-in"><span class="fu">render_compass</span><span class="op">(</span>position <span class="op">=</span> <span class="st">"E"</span>, scale_distance <span class="op">=</span> <span class="fl">1.4</span>, compass_radius<span class="op">=</span><span class="fl">50</span><span class="op">)</span></span>
-<span class="r-in"><span class="fu">render_compass</span><span class="op">(</span>position <span class="op">=</span> <span class="st">"S"</span>, scale_distance <span class="op">=</span> <span class="fl">1.3</span>, compass_radius<span class="op">=</span><span class="fl">25</span><span class="op">)</span></span>
-<span class="r-in"><span class="fu">render_compass</span><span class="op">(</span>position <span class="op">=</span> <span class="st">"W"</span>, scale_distance <span class="op">=</span> <span class="fl">1.2</span>, compass_radius<span class="op">=</span><span class="fl">10</span><span class="op">)</span></span>
-<span class="r-in"><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-plt img"><img src="render_compass-5.png" alt="" width="700" height="433"></span>
-<span class="r-in"><span class="fu">render_compass</span><span class="op">(</span>clear_compass <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co">#We can also adjust the position manually, be specifying all x, y and z arguments.</span></span>
-<span class="r-in"><span class="fu"><a href="render_camera.html">render_camera</a></span><span class="op">(</span>theta<span class="op">=</span><span class="op">-</span><span class="fl">45</span>,phi<span class="op">=</span><span class="fl">45</span>,zoom<span class="op">=</span><span class="fl">0.9</span><span class="op">)</span></span>
-<span class="r-in"><span class="fu">render_compass</span><span class="op">(</span>x <span class="op">=</span> <span class="fl">150</span>, y <span class="op">=</span> <span class="fl">50</span>, z <span class="op">=</span> <span class="fl">150</span><span class="op">)</span></span>
-<span class="r-in"><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-plt img"><img src="render_compass-6.png" alt="" width="700" height="433"></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co"># Compass support is also included in render_highquality()</span></span>
-<span class="r-in"><span class="fu"><a href="render_highquality.html">render_highquality</a></span><span class="op">(</span>clamp_value<span class="op">=</span><span class="fl">10</span><span class="op">)</span></span>
-<span class="r-plt img"><img src="render_compass-7.png" alt="" width="700" height="433"></span>
-<span class="r-in"><span class="fu">render_compass</span><span class="op">(</span>clear_compass <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co">#We can change the colors in the compass, and also set it a constant distance away with</span></span>
-<span class="r-in"><span class="co">#`position_circular = TRUE`:</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="fu"><a href="render_camera.html">render_camera</a></span><span class="op">(</span>theta<span class="op">=</span><span class="fl">0</span>,phi<span class="op">=</span><span class="fl">45</span>,zoom<span class="op">=</span><span class="fl">0.75</span><span class="op">)</span></span>
-<span class="r-in"><span class="fu">render_compass</span><span class="op">(</span>position <span class="op">=</span> <span class="st">"N"</span>, color_n <span class="op">=</span> <span class="st">"#55967a"</span>, color_arrow <span class="op">=</span> <span class="st">"#fff673"</span>, </span>
-<span class="r-in">            color_background <span class="op">=</span> <span class="st">"#cfe0a9"</span>, color_bevel <span class="op">=</span> <span class="st">"#8fb28a"</span>, position_circular <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span class="r-in"><span class="fu">render_compass</span><span class="op">(</span>position <span class="op">=</span> <span class="st">"NE"</span>, color_n <span class="op">=</span> <span class="st">"black"</span>, color_arrow <span class="op">=</span> <span class="st">"grey90"</span>, </span>
-<span class="r-in">            color_background <span class="op">=</span> <span class="st">"grey50"</span>, color_bevel <span class="op">=</span> <span class="st">"grey20"</span>, position_circular <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span class="r-in"><span class="fu">render_compass</span><span class="op">(</span>position <span class="op">=</span> <span class="st">"E"</span>, color_n <span class="op">=</span> <span class="st">"red"</span>, color_arrow <span class="op">=</span> <span class="st">"blue"</span>,</span>
-<span class="r-in">            color_background <span class="op">=</span> <span class="st">"yellow"</span>, color_bevel <span class="op">=</span> <span class="st">"purple"</span>, position_circular <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span class="r-in"><span class="fu">render_compass</span><span class="op">(</span>position <span class="op">=</span> <span class="st">"SE"</span>, color_n <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.7</span>,<span class="fl">0.5</span>,<span class="fl">0.9</span><span class="op">)</span>, color_arrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.8</span>,<span class="fl">0.8</span>,<span class="fl">1</span><span class="op">)</span>, </span>
-<span class="r-in">            color_background <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.2</span>,<span class="fl">0.2</span>,<span class="fl">1</span><span class="op">)</span>, color_bevel <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.6</span>,<span class="fl">0.4</span>,<span class="fl">0.6</span><span class="op">)</span>, </span>
-<span class="r-in">            position_circular <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span class="r-in"><span class="fu">render_compass</span><span class="op">(</span>position <span class="op">=</span> <span class="st">"S"</span>, color_n <span class="op">=</span> <span class="st">"#ffe3b3"</span>, color_arrow <span class="op">=</span> <span class="st">"#6a463a"</span>, </span>
-<span class="r-in">            color_background <span class="op">=</span> <span class="st">"#abaf98"</span>, color_bevel <span class="op">=</span> <span class="st">"grey20"</span>, position_circular <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span class="r-in"><span class="fu">render_compass</span><span class="op">(</span>position <span class="op">=</span> <span class="st">"SW"</span>, color_n <span class="op">=</span> <span class="st">"#ffe3a3"</span>, color_arrow <span class="op">=</span> <span class="st">"#f1c3a9"</span>, </span>
-<span class="r-in">            color_background <span class="op">=</span> <span class="st">"#abaf98"</span>, color_bevel <span class="op">=</span> <span class="st">"#66615e"</span>, position_circular <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span class="r-in"><span class="fu">render_compass</span><span class="op">(</span>position <span class="op">=</span> <span class="st">"W"</span>, color_n <span class="op">=</span> <span class="st">"#e9e671"</span>, color_arrow <span class="op">=</span> <span class="st">"#cbb387"</span>, </span>
-<span class="r-in">            color_background <span class="op">=</span> <span class="st">"#7c9695"</span>, color_bevel <span class="op">=</span> <span class="st">"#cbb387"</span>, position_circular <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span class="r-in"><span class="fu">render_compass</span><span class="op">(</span>position <span class="op">=</span> <span class="st">"NW"</span>, color_n <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.7</span>,<span class="fl">0</span>,<span class="fl">0</span><span class="op">)</span>, color_arrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.3</span>,<span class="fl">0</span>,<span class="fl">0</span><span class="op">)</span>, </span>
-<span class="r-in">            color_background <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.7</span>,<span class="fl">0.5</span>,<span class="fl">0.5</span><span class="op">)</span>, color_bevel <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.2</span>,<span class="fl">0</span>,<span class="fl">0</span><span class="op">)</span>, position_circular <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span class="r-in"><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span>clear<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span>
-<span class="r-plt img"><img src="render_compass-8.png" alt="" width="700" height="433"></span>
-<span class="r-in"><span class="co"># }</span></span>
+<span class="r-in"><span><span class="fu">render_compass</span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in mesh$vertices[[j]]:</span> subscript out of bounds</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#Remove the existing symbol with `clear_compass = TRUE`</span></span></span>
+<span class="r-in"><span><span class="fu">render_compass</span><span class="op">(</span>clear_compass <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#Point the N towards the light, at 315 degrees:</span></span></span>
+<span class="r-in"><span><span class="fu">render_compass</span><span class="op">(</span>angle <span class="op">=</span> <span class="fl">315</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in mesh$vertices[[j]]:</span> subscript out of bounds</span>
+<span class="r-in"><span><span class="fu">render_compass</span><span class="op">(</span>clear_compass <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#We can change the position by specifying a direction (here are three):</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="render_camera.html">render_camera</a></span><span class="op">(</span>theta<span class="op">=</span><span class="fl">45</span>,phi<span class="op">=</span><span class="fl">45</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">render_compass</span><span class="op">(</span>position <span class="op">=</span> <span class="st">"NW"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">render_compass</span><span class="op">(</span>position <span class="op">=</span> <span class="st">"E"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">render_compass</span><span class="op">(</span>position <span class="op">=</span> <span class="st">"S"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in mesh$vertices[[j]]:</span> subscript out of bounds</span>
+<span class="r-in"><span><span class="fu">render_compass</span><span class="op">(</span>clear_compass <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#We can also change the distance away from the edge by setting the `scale_distance` argument.</span></span></span>
+<span class="r-in"><span><span class="fu">render_compass</span><span class="op">(</span>position <span class="op">=</span> <span class="st">"NW"</span>, scale_distance <span class="op">=</span> <span class="fl">1.4</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">render_compass</span><span class="op">(</span>position <span class="op">=</span> <span class="st">"E"</span>, scale_distance <span class="op">=</span> <span class="fl">1.4</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">render_compass</span><span class="op">(</span>position <span class="op">=</span> <span class="st">"S"</span>, scale_distance <span class="op">=</span> <span class="fl">1.4</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#Zoom in slightly:</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="render_camera.html">render_camera</a></span><span class="op">(</span>theta<span class="op">=</span><span class="fl">45</span>,phi<span class="op">=</span><span class="fl">45</span>,zoom<span class="op">=</span><span class="fl">0.7</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in mesh$vertices[[j]]:</span> subscript out of bounds</span>
+<span class="r-in"><span><span class="fu">render_compass</span><span class="op">(</span>clear_compass <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#We can also specify the radius directly with `compass_radius`:</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="render_camera.html">render_camera</a></span><span class="op">(</span>theta<span class="op">=</span><span class="fl">0</span>,phi<span class="op">=</span><span class="fl">45</span>,zoom<span class="op">=</span><span class="fl">1</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">render_compass</span><span class="op">(</span>position <span class="op">=</span> <span class="st">"N"</span>, scale_distance <span class="op">=</span> <span class="fl">1.5</span>, compass_radius<span class="op">=</span><span class="fl">200</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">render_compass</span><span class="op">(</span>position <span class="op">=</span> <span class="st">"E"</span>, scale_distance <span class="op">=</span> <span class="fl">1.4</span>, compass_radius<span class="op">=</span><span class="fl">50</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">render_compass</span><span class="op">(</span>position <span class="op">=</span> <span class="st">"S"</span>, scale_distance <span class="op">=</span> <span class="fl">1.3</span>, compass_radius<span class="op">=</span><span class="fl">25</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">render_compass</span><span class="op">(</span>position <span class="op">=</span> <span class="st">"W"</span>, scale_distance <span class="op">=</span> <span class="fl">1.2</span>, compass_radius<span class="op">=</span><span class="fl">10</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in mesh$vertices[[j]]:</span> subscript out of bounds</span>
+<span class="r-in"><span><span class="fu">render_compass</span><span class="op">(</span>clear_compass <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#We can also adjust the position manually, be specifying all x, y and z arguments.</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="render_camera.html">render_camera</a></span><span class="op">(</span>theta<span class="op">=</span><span class="op">-</span><span class="fl">45</span>,phi<span class="op">=</span><span class="fl">45</span>,zoom<span class="op">=</span><span class="fl">0.9</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">render_compass</span><span class="op">(</span>x <span class="op">=</span> <span class="fl">150</span>, y <span class="op">=</span> <span class="fl">50</span>, z <span class="op">=</span> <span class="fl">150</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in mesh$vertices[[j]]:</span> subscript out of bounds</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Compass support is also included in render_highquality()</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="render_highquality.html">render_highquality</a></span><span class="op">(</span>clamp_value<span class="op">=</span><span class="fl">10</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in rayrender::obj_model(cache_filename, x = -bbox_center[1], y = -bbox_center[2],     z = -bbox_center[3], texture = TRUE, material = obj_material):</span> unused argument (texture = TRUE)</span>
+<span class="r-in"><span><span class="fu">render_compass</span><span class="op">(</span>clear_compass <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#We can change the colors in the compass, and also set it a constant distance away with</span></span></span>
+<span class="r-in"><span><span class="co">#`position_circular = TRUE`:</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="fu"><a href="render_camera.html">render_camera</a></span><span class="op">(</span>theta<span class="op">=</span><span class="fl">0</span>,phi<span class="op">=</span><span class="fl">45</span>,zoom<span class="op">=</span><span class="fl">0.75</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">render_compass</span><span class="op">(</span>position <span class="op">=</span> <span class="st">"N"</span>, color_n <span class="op">=</span> <span class="st">"#55967a"</span>, color_arrow <span class="op">=</span> <span class="st">"#fff673"</span>, </span></span>
+<span class="r-in"><span>            color_background <span class="op">=</span> <span class="st">"#cfe0a9"</span>, color_bevel <span class="op">=</span> <span class="st">"#8fb28a"</span>, position_circular <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">render_compass</span><span class="op">(</span>position <span class="op">=</span> <span class="st">"NE"</span>, color_n <span class="op">=</span> <span class="st">"black"</span>, color_arrow <span class="op">=</span> <span class="st">"grey90"</span>, </span></span>
+<span class="r-in"><span>            color_background <span class="op">=</span> <span class="st">"grey50"</span>, color_bevel <span class="op">=</span> <span class="st">"grey20"</span>, position_circular <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">render_compass</span><span class="op">(</span>position <span class="op">=</span> <span class="st">"E"</span>, color_n <span class="op">=</span> <span class="st">"red"</span>, color_arrow <span class="op">=</span> <span class="st">"blue"</span>,</span></span>
+<span class="r-in"><span>            color_background <span class="op">=</span> <span class="st">"yellow"</span>, color_bevel <span class="op">=</span> <span class="st">"purple"</span>, position_circular <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">render_compass</span><span class="op">(</span>position <span class="op">=</span> <span class="st">"SE"</span>, color_n <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.7</span>,<span class="fl">0.5</span>,<span class="fl">0.9</span><span class="op">)</span>, color_arrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.8</span>,<span class="fl">0.8</span>,<span class="fl">1</span><span class="op">)</span>, </span></span>
+<span class="r-in"><span>            color_background <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.2</span>,<span class="fl">0.2</span>,<span class="fl">1</span><span class="op">)</span>, color_bevel <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.6</span>,<span class="fl">0.4</span>,<span class="fl">0.6</span><span class="op">)</span>, </span></span>
+<span class="r-in"><span>            position_circular <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">render_compass</span><span class="op">(</span>position <span class="op">=</span> <span class="st">"S"</span>, color_n <span class="op">=</span> <span class="st">"#ffe3b3"</span>, color_arrow <span class="op">=</span> <span class="st">"#6a463a"</span>, </span></span>
+<span class="r-in"><span>            color_background <span class="op">=</span> <span class="st">"#abaf98"</span>, color_bevel <span class="op">=</span> <span class="st">"grey20"</span>, position_circular <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">render_compass</span><span class="op">(</span>position <span class="op">=</span> <span class="st">"SW"</span>, color_n <span class="op">=</span> <span class="st">"#ffe3a3"</span>, color_arrow <span class="op">=</span> <span class="st">"#f1c3a9"</span>, </span></span>
+<span class="r-in"><span>            color_background <span class="op">=</span> <span class="st">"#abaf98"</span>, color_bevel <span class="op">=</span> <span class="st">"#66615e"</span>, position_circular <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">render_compass</span><span class="op">(</span>position <span class="op">=</span> <span class="st">"W"</span>, color_n <span class="op">=</span> <span class="st">"#e9e671"</span>, color_arrow <span class="op">=</span> <span class="st">"#cbb387"</span>, </span></span>
+<span class="r-in"><span>            color_background <span class="op">=</span> <span class="st">"#7c9695"</span>, color_bevel <span class="op">=</span> <span class="st">"#cbb387"</span>, position_circular <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">render_compass</span><span class="op">(</span>position <span class="op">=</span> <span class="st">"NW"</span>, color_n <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.7</span>,<span class="fl">0</span>,<span class="fl">0</span><span class="op">)</span>, color_arrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.3</span>,<span class="fl">0</span>,<span class="fl">0</span><span class="op">)</span>, </span></span>
+<span class="r-in"><span>            color_background <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.7</span>,<span class="fl">0.5</span>,<span class="fl">0.5</span><span class="op">)</span>, color_bevel <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.2</span>,<span class="fl">0</span>,<span class="fl">0</span><span class="op">)</span>, position_circular <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span>clear<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in mesh$vertices[[j]]:</span> subscript out of bounds</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </div>
@@ -260,7 +291,7 @@ the map, as opposed to directly next to it. Overridden if user manually specifie
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
 </div>
 
       </footer></div>

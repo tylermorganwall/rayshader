@@ -19,7 +19,7 @@ abs(z_depth-focus)*focal_length^2/(f_stop*z_depth*(focus - focal_length))"><meta
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.28.2</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.28.3</span>
       </span>
     </div>
 
@@ -103,226 +103,313 @@ abs(z_depth-focus)*focal_length^2/(f_stop*z_depth*(focus - focal_length))"><meta
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">render_depth</span><span class="op">(</span>
-  focus <span class="op">=</span> <span class="cn">NULL</span>,
-  focallength <span class="op">=</span> <span class="fl">100</span>,
-  fstop <span class="op">=</span> <span class="fl">4</span>,
-  filename <span class="op">=</span> <span class="cn">NULL</span>,
-  preview_focus <span class="op">=</span> <span class="cn">FALSE</span>,
-  bokehshape <span class="op">=</span> <span class="st">"circle"</span>,
-  bokehintensity <span class="op">=</span> <span class="fl">1</span>,
-  bokehlimit <span class="op">=</span> <span class="fl">0.8</span>,
-  rotation <span class="op">=</span> <span class="fl">0</span>,
-  gamma_correction <span class="op">=</span> <span class="cn">TRUE</span>,
-  aberration <span class="op">=</span> <span class="fl">0</span>,
-  transparent_water <span class="op">=</span> <span class="cn">FALSE</span>,
-  heightmap <span class="op">=</span> <span class="cn">NULL</span>,
-  zscale <span class="op">=</span> <span class="cn">NULL</span>,
-  title_text <span class="op">=</span> <span class="cn">NULL</span>,
-  title_offset <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">20</span>, <span class="fl">20</span><span class="op">)</span>,
-  title_color <span class="op">=</span> <span class="st">"black"</span>,
-  title_size <span class="op">=</span> <span class="fl">30</span>,
-  title_font <span class="op">=</span> <span class="st">"sans"</span>,
-  title_bar_color <span class="op">=</span> <span class="cn">NULL</span>,
-  title_bar_alpha <span class="op">=</span> <span class="fl">0.5</span>,
-  title_position <span class="op">=</span> <span class="st">"northwest"</span>,
-  image_overlay <span class="op">=</span> <span class="cn">NULL</span>,
-  vignette <span class="op">=</span> <span class="cn">FALSE</span>,
-  vignette_color <span class="op">=</span> <span class="st">"black"</span>,
-  vignette_radius <span class="op">=</span> <span class="fl">1.3</span>,
-  progbar <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/interactive.html" class="external-link">interactive</a></span><span class="op">(</span><span class="op">)</span>,
-  software_render <span class="op">=</span> <span class="cn">FALSE</span>,
-  width <span class="op">=</span> <span class="cn">NULL</span>,
-  height <span class="op">=</span> <span class="cn">NULL</span>,
-  camera_location <span class="op">=</span> <span class="cn">NULL</span>,
-  camera_lookat <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span>,
-  background <span class="op">=</span> <span class="st">"white"</span>,
-  text_angle <span class="op">=</span> <span class="cn">NULL</span>,
-  text_size <span class="op">=</span> <span class="fl">10</span>,
-  text_offset <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span>,
-  point_radius <span class="op">=</span> <span class="fl">0.5</span>,
-  line_offset <span class="op">=</span> <span class="fl">1e-07</span>,
-  cache_filename <span class="op">=</span> <span class="cn">NULL</span>,
-  print_scene_info <span class="op">=</span> <span class="cn">FALSE</span>,
-  instant_capture <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/interactive.html" class="external-link">interactive</a></span><span class="op">(</span><span class="op">)</span>,
-  clear <span class="op">=</span> <span class="cn">FALSE</span>,
-  bring_to_front <span class="op">=</span> <span class="cn">FALSE</span>,
-  <span class="va">...</span>
-<span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">render_depth</span><span class="op">(</span></span>
+<span>  focus <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  focallength <span class="op">=</span> <span class="fl">100</span>,</span>
+<span>  fstop <span class="op">=</span> <span class="fl">4</span>,</span>
+<span>  filename <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  preview_focus <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  bokehshape <span class="op">=</span> <span class="st">"circle"</span>,</span>
+<span>  bokehintensity <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  bokehlimit <span class="op">=</span> <span class="fl">0.8</span>,</span>
+<span>  rotation <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  gamma_correction <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  aberration <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  transparent_water <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  heightmap <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  zscale <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  title_text <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  title_offset <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">20</span>, <span class="fl">20</span><span class="op">)</span>,</span>
+<span>  title_color <span class="op">=</span> <span class="st">"black"</span>,</span>
+<span>  title_size <span class="op">=</span> <span class="fl">30</span>,</span>
+<span>  title_font <span class="op">=</span> <span class="st">"sans"</span>,</span>
+<span>  title_bar_color <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  title_bar_alpha <span class="op">=</span> <span class="fl">0.5</span>,</span>
+<span>  title_position <span class="op">=</span> <span class="st">"northwest"</span>,</span>
+<span>  image_overlay <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  vignette <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  vignette_color <span class="op">=</span> <span class="st">"black"</span>,</span>
+<span>  vignette_radius <span class="op">=</span> <span class="fl">1.3</span>,</span>
+<span>  progbar <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/interactive.html" class="external-link">interactive</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  software_render <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  width <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  height <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  camera_location <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  camera_lookat <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span>,</span>
+<span>  background <span class="op">=</span> <span class="st">"white"</span>,</span>
+<span>  text_angle <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  text_size <span class="op">=</span> <span class="fl">10</span>,</span>
+<span>  text_offset <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span>,</span>
+<span>  point_radius <span class="op">=</span> <span class="fl">0.5</span>,</span>
+<span>  line_offset <span class="op">=</span> <span class="fl">1e-07</span>,</span>
+<span>  cache_filename <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  print_scene_info <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  instant_capture <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/interactive.html" class="external-link">interactive</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  clear <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  bring_to_front <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  <span class="va">...</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>focus</dt>
 <dd><p>Focal point. Defaults to the center of the bounding box. Depth in which to blur, in distance to the camera plane.</p></dd>
+
+
 <dt>focallength</dt>
 <dd><p>Default `1`. Focal length of the virtual camera.</p></dd>
+
+
 <dt>fstop</dt>
 <dd><p>Default `1`. F-stop of the virtual camera.</p></dd>
+
+
 <dt>filename</dt>
 <dd><p>The filename of the image to be saved. If this is not given, the image will be plotted instead.</p></dd>
+
+
 <dt>preview_focus</dt>
 <dd><p>Default `FALSE`. If `TRUE`, a red line will be drawn across the image
 showing where the camera will be focused.</p></dd>
+
+
 <dt>bokehshape</dt>
 <dd><p>Default `circle`. Also built-in: `hex`. The shape of the bokeh.</p></dd>
+
+
 <dt>bokehintensity</dt>
 <dd><p>Default `3`. Intensity of the bokeh when the pixel intensity is greater than `bokehlimit`.</p></dd>
+
+
 <dt>bokehlimit</dt>
 <dd><p>Default `0.8`. Limit after which the bokeh intensity is increased by `bokehintensity`.</p></dd>
+
+
 <dt>rotation</dt>
 <dd><p>Default `0`. Number of degrees to rotate the hexagon bokeh shape.</p></dd>
+
+
 <dt>gamma_correction</dt>
 <dd><p>Default `TRUE`. Controls gamma correction when adding colors. Default exponent of 2.2.</p></dd>
+
+
 <dt>aberration</dt>
 <dd><p>Default `0`. Adds chromatic aberration to the image. Maximum of `1`.</p></dd>
+
+
 <dt>transparent_water</dt>
 <dd><p>Default `FALSE`. If `TRUE`, depth is determined without water layer. User will have to re-render the water
 layer with `render_water()` if they want to recreate the water layer.</p></dd>
+
+
 <dt>heightmap</dt>
 <dd><p>Default `NULL`. The height matrix for the scene. Passing this will allow `render_depth()` 
 to automatically redraw the water layer if `transparent_water = TRUE`.</p></dd>
+
+
 <dt>zscale</dt>
 <dd><p>Default `NULL`. The zscale value for the heightmap. Passing this will allow `render_depth()` 
 to automatically redraw the water layer if `transparent_water = TRUE`.</p></dd>
+
+
 <dt>title_text</dt>
 <dd><p>Default `NULL`. Text. Adds a title to the image, using magick::image_annotate.</p></dd>
+
+
 <dt>title_offset</dt>
 <dd><p>Default `c(20,20)`. Distance from the top-left (default, `gravity` direction in 
 image_annotate) corner to offset the title.</p></dd>
+
+
 <dt>title_color</dt>
 <dd><p>Default `black`. Font color.</p></dd>
+
+
 <dt>title_size</dt>
 <dd><p>Default `30`. Font size in pixels.</p></dd>
+
+
 <dt>title_font</dt>
 <dd><p>Default `sans`. String with font family such as "sans", "mono", "serif", "Times", "Helvetica", 
 "Trebuchet", "Georgia", "Palatino" or "Comic Sans".</p></dd>
+
+
 <dt>title_bar_color</dt>
 <dd><p>Default `NULL`. If a color, this will create a colored bar under the title.</p></dd>
+
+
 <dt>title_bar_alpha</dt>
 <dd><p>Default `0.5`. Transparency of the title bar.</p></dd>
+
+
 <dt>title_position</dt>
 <dd><p>Default `northwest`. Position of the title.</p></dd>
+
+
 <dt>image_overlay</dt>
 <dd><p>Default `NULL`. Either a string indicating the location of a png image to overlay
 over the image (transparency included), or a 4-layer RGBA array. This image will be resized to the 
 dimension of the image if it does not match exactly.</p></dd>
+
+
 <dt>vignette</dt>
 <dd><p>Default `FALSE`. If `TRUE` or numeric, a camera vignetting effect will be added to the image.
 `1` is the darkest vignetting, while `0` is no vignetting. If vignette is a length-2 vector, the second entry will
 control the blurriness of the vignette effect.</p></dd>
+
+
 <dt>vignette_color</dt>
 <dd><p>Default `"black"`. Color of the vignette.</p></dd>
+
+
 <dt>vignette_radius</dt>
 <dd><p>Default `1.3`. Radius of the vignette, as a porportion of the image dimensions.</p></dd>
+
+
 <dt>progbar</dt>
 <dd><p>Default `TRUE` if in an interactive session. Displays a progress bar.</p></dd>
+
+
 <dt>software_render</dt>
 <dd><p>Default `FALSE`. If `TRUE`, rayshader will use the rayvertex package to render the snapshot, which
 is not constrained by the screen size or requires OpenGL. 
 Consider settings a `cache_filename` so a new OBJ file doesn't have to be written with every snapshot.</p></dd>
+
+
 <dt>width</dt>
 <dd><p>Default `NULL`. Optional argument to pass to `rgl::snapshot3d()` to specify the
 width when `software_render = TRUE`..</p></dd>
+
+
 <dt>height</dt>
 <dd><p>Default `NULL`. Optional argument to pass to `rgl::snapshot3d()` to specify the
 height when `software_render = TRUE`.</p></dd>
+
+
 <dt>camera_location</dt>
 <dd><p>Default `NULL`. Custom position of the camera. The `FOV`, `width`, and `height` arguments will still
 be derived from the rgl window.</p></dd>
+
+
 <dt>camera_lookat</dt>
 <dd><p>Default `NULL`. Custom point at which the camera is directed. The `FOV`, `width`, and `height` arguments will still
 be derived from the rgl window.</p></dd>
+
+
 <dt>background</dt>
 <dd><p>Default `"white"`. Background color when `software_render = TRUE`.</p></dd>
+
+
 <dt>text_angle</dt>
 <dd><p>Default `NULL`, which forces the text always to face the camera. If a single angle (degrees),
 will specify the absolute angle all the labels are facing. If three angles, this will specify all three orientations
 (relative to the x,y, and z axes) of the text labels.</p></dd>
+
+
 <dt>text_size</dt>
 <dd><p>Default `10`. Height of the text.</p></dd>
+
+
 <dt>text_offset</dt>
 <dd><p>Default `c(0,0,0)`. Offset to be applied to all text labels.</p></dd>
+
+
 <dt>point_radius</dt>
 <dd><p>Default `0.5`. Radius of 3D points (rendered with `render_points()`.</p></dd>
+
+
 <dt>line_offset</dt>
 <dd><p>Default `1e-7`. Small number indicating the offset in the scene to apply to lines if using software rendering. Increase this if your lines 
 aren't showing up, or decrease it if lines are appearing through solid objects.</p></dd>
+
+
 <dt>cache_filename</dt>
 <dd><p>Default `NULL`. Name of temporary filename to store OBJ file, if the user does not want to rewrite the file each time.</p></dd>
+
+
 <dt>print_scene_info</dt>
 <dd><p>Default `FALSE`. If `TRUE`, it will print the position and lookat point of the camera.</p></dd>
+
+
 <dt>instant_capture</dt>
 <dd><p>Default `TRUE` if interactive, `FALSE` otherwise. If `FALSE`, a slight delay is added 
 before taking the snapshot. This can help stop prevent rendering issues when running scripts.</p></dd>
+
+
 <dt>clear</dt>
 <dd><p>Default `FALSE`. If `TRUE`, the current `rgl` device will be cleared.</p></dd>
+
+
 <dt>bring_to_front</dt>
 <dd><p>Default `FALSE`. Whether to bring the window to the front when rendering the snapshot.</p></dd>
+
+
 <dt>...</dt>
 <dd><p>Additional parameters to pass to `rayvertex::rasterize_scene()`.</p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>4-layer RGBA array.</p>
+    
+
+<p>4-layer RGBA array.</p>
     </div>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span class="co"># \donttest{</span></span>
-<span class="r-in"><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="plot_3d.html">plot_3d</a></span><span class="op">(</span><span class="va">montereybay</span>,zscale<span class="op">=</span><span class="fl">50</span>, water<span class="op">=</span><span class="cn">TRUE</span>, waterlinecolor<span class="op">=</span><span class="st">"white"</span>,</span>
-<span class="r-in">         zoom<span class="op">=</span><span class="fl">0.3</span>,theta<span class="op">=</span><span class="op">-</span><span class="fl">135</span>,fov<span class="op">=</span><span class="fl">70</span>, phi<span class="op">=</span><span class="fl">20</span><span class="op">)</span> </span>
-<span class="r-in"> </span>
-<span class="r-in"><span class="co">#Preview where the focal plane lies</span></span>
-<span class="r-in"><span class="fu">render_depth</span><span class="op">(</span>preview_focus<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Focus distance: 804.568</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Focal range: 448.99-1728.53</span>
-<span class="r-plt img"><img src="render_depth-1.png" alt="" width="700" height="433"></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co">#Render the depth of field effect</span></span>
-<span class="r-in"><span class="fu">render_depth</span><span class="op">(</span>focallength <span class="op">=</span> <span class="fl">300</span><span class="op">)</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Focus distance: 804.568</span>
-<span class="r-plt img"><img src="render_depth-2.png" alt="" width="700" height="433"></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co">#Add a chromatic aberration effect</span></span>
-<span class="r-in"><span class="fu">render_depth</span><span class="op">(</span>focallength <span class="op">=</span> <span class="fl">300</span>, aberration <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Focus distance: 804.568</span>
-<span class="r-plt img"><img src="render_depth-3.png" alt="" width="700" height="433"></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co">#Render the depth of field effect, ignoring water and re-drawing the waterlayer</span></span>
-<span class="r-in"><span class="fu">render_depth</span><span class="op">(</span>preview_focus<span class="op">=</span><span class="cn">TRUE</span>, </span>
-<span class="r-in">            heightmap <span class="op">=</span> <span class="va">montereybay</span>, zscale<span class="op">=</span><span class="fl">50</span>, focallength<span class="op">=</span><span class="fl">300</span>, transparent_water<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Focus distance: 804.568</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Focal range: 448.99-1728.53</span>
-<span class="r-plt img"><img src="render_depth-4.png" alt="" width="700" height="433"></span>
-<span class="r-in"><span class="fu">render_depth</span><span class="op">(</span>heightmap <span class="op">=</span> <span class="va">montereybay</span>, zscale<span class="op">=</span><span class="fl">50</span>, focallength<span class="op">=</span><span class="fl">300</span>, transparent_water<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Focus distance: 804.568</span>
-<span class="r-plt img"><img src="render_depth-5.png" alt="" width="700" height="433"></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="fu"><a href="render_camera.html">render_camera</a></span><span class="op">(</span>theta<span class="op">=</span><span class="fl">45</span>,zoom<span class="op">=</span><span class="fl">0.15</span>,phi<span class="op">=</span><span class="fl">20</span><span class="op">)</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co">#Change the bokeh shape and intensity</span></span>
-<span class="r-in"><span class="fu">render_depth</span><span class="op">(</span>focus<span class="op">=</span><span class="fl">900</span>, bokehshape <span class="op">=</span> <span class="st">"circle"</span>,focallength<span class="op">=</span><span class="fl">500</span>,bokehintensity<span class="op">=</span><span class="fl">30</span>,</span>
-<span class="r-in">            title_text <span class="op">=</span> <span class="st">"Circular Bokeh"</span>, title_size <span class="op">=</span> <span class="fl">30</span>, title_color <span class="op">=</span> <span class="st">"white"</span>, </span>
-<span class="r-in">            title_bar_color <span class="op">=</span> <span class="st">"black"</span><span class="op">)</span></span>
-<span class="r-plt img"><img src="render_depth-6.png" alt="" width="700" height="433"></span>
-<span class="r-in"><span class="fu">render_depth</span><span class="op">(</span>focus<span class="op">=</span><span class="fl">900</span>, bokehshape <span class="op">=</span> <span class="st">"hex"</span>,focallength<span class="op">=</span><span class="fl">500</span>,bokehintensity<span class="op">=</span><span class="fl">30</span>,</span>
-<span class="r-in">            title_text <span class="op">=</span> <span class="st">"Hexagonal Bokeh"</span>, title_size <span class="op">=</span> <span class="fl">30</span>, title_color <span class="op">=</span> <span class="st">"white"</span>, </span>
-<span class="r-in">            title_bar_color <span class="op">=</span> <span class="st">"black"</span><span class="op">)</span></span>
-<span class="r-plt img"><img src="render_depth-7.png" alt="" width="700" height="433"></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co">#Add a title and vignette effect.</span></span>
-<span class="r-in"><span class="fu"><a href="render_camera.html">render_camera</a></span><span class="op">(</span>theta<span class="op">=</span><span class="fl">0</span>,zoom<span class="op">=</span><span class="fl">0.7</span>,phi<span class="op">=</span><span class="fl">30</span><span class="op">)</span></span>
-<span class="r-in"><span class="fu">render_depth</span><span class="op">(</span>focallength <span class="op">=</span> <span class="fl">250</span>, title_text <span class="op">=</span> <span class="st">"Monterey Bay, CA"</span>, </span>
-<span class="r-in">            title_size <span class="op">=</span> <span class="fl">20</span>, title_color <span class="op">=</span> <span class="st">"white"</span>, title_bar_color <span class="op">=</span> <span class="st">"black"</span>, vignette <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Focus distance: 804.568</span>
-<span class="r-plt img"><img src="render_depth-8.png" alt="" width="700" height="433"></span>
-<span class="r-in">            </span>
-<span class="r-in"><span class="co">#</span></span>
-<span class="r-in"><span class="fu">rgl</span><span class="fu">::</span><span class="fu"><a href="https://dmurdoch.github.io/rgl/dev/reference/rgl.open.html" class="external-link">rgl.close</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-in"><span class="co"># }</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
+<span class="r-in"><span><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="plot_3d.html">plot_3d</a></span><span class="op">(</span><span class="va">montereybay</span>,zscale<span class="op">=</span><span class="fl">50</span>, water<span class="op">=</span><span class="cn">TRUE</span>, waterlinecolor<span class="op">=</span><span class="st">"white"</span>,</span></span>
+<span class="r-in"><span>         zoom<span class="op">=</span><span class="fl">0.3</span>,theta<span class="op">=</span><span class="op">-</span><span class="fl">135</span>,fov<span class="op">=</span><span class="fl">70</span>, phi<span class="op">=</span><span class="fl">20</span><span class="op">)</span> </span></span>
+<span class="r-in"><span> </span></span>
+<span class="r-in"><span><span class="co">#Preview where the focal plane lies</span></span></span>
+<span class="r-in"><span><span class="fu">render_depth</span><span class="op">(</span>preview_focus<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Focus distance: 1522.06</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in mesh$vertices[[j]]:</span> subscript out of bounds</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#Render the depth of field effect</span></span></span>
+<span class="r-in"><span><span class="fu">render_depth</span><span class="op">(</span>focallength <span class="op">=</span> <span class="fl">300</span><span class="op">)</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Focus distance: 1522.06</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in mesh$vertices[[j]]:</span> subscript out of bounds</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#Add a chromatic aberration effect</span></span></span>
+<span class="r-in"><span><span class="fu">render_depth</span><span class="op">(</span>focallength <span class="op">=</span> <span class="fl">300</span>, aberration <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Focus distance: 1522.06</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in mesh$vertices[[j]]:</span> subscript out of bounds</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#Render the depth of field effect, ignoring water and re-drawing the waterlayer</span></span></span>
+<span class="r-in"><span><span class="fu">render_depth</span><span class="op">(</span>preview_focus<span class="op">=</span><span class="cn">TRUE</span>, </span></span>
+<span class="r-in"><span>            heightmap <span class="op">=</span> <span class="va">montereybay</span>, zscale<span class="op">=</span><span class="fl">50</span>, focallength<span class="op">=</span><span class="fl">300</span>, transparent_water<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Focus distance: 1522.06</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in mesh$vertices[[j]]:</span> subscript out of bounds</span>
+<span class="r-in"><span><span class="fu">render_depth</span><span class="op">(</span>heightmap <span class="op">=</span> <span class="va">montereybay</span>, zscale<span class="op">=</span><span class="fl">50</span>, focallength<span class="op">=</span><span class="fl">300</span>, transparent_water<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Focus distance: 1522.06</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in mesh$vertices[[j]]:</span> subscript out of bounds</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="fu"><a href="render_camera.html">render_camera</a></span><span class="op">(</span>theta<span class="op">=</span><span class="fl">45</span>,zoom<span class="op">=</span><span class="fl">0.15</span>,phi<span class="op">=</span><span class="fl">20</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#Change the bokeh shape and intensity</span></span></span>
+<span class="r-in"><span><span class="fu">render_depth</span><span class="op">(</span>focus<span class="op">=</span><span class="fl">900</span>, bokehshape <span class="op">=</span> <span class="st">"circle"</span>,focallength<span class="op">=</span><span class="fl">500</span>,bokehintensity<span class="op">=</span><span class="fl">30</span>,</span></span>
+<span class="r-in"><span>            title_text <span class="op">=</span> <span class="st">"Circular Bokeh"</span>, title_size <span class="op">=</span> <span class="fl">30</span>, title_color <span class="op">=</span> <span class="st">"white"</span>, </span></span>
+<span class="r-in"><span>            title_bar_color <span class="op">=</span> <span class="st">"black"</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in mesh$vertices[[j]]:</span> subscript out of bounds</span>
+<span class="r-in"><span><span class="fu">render_depth</span><span class="op">(</span>focus<span class="op">=</span><span class="fl">900</span>, bokehshape <span class="op">=</span> <span class="st">"hex"</span>,focallength<span class="op">=</span><span class="fl">500</span>,bokehintensity<span class="op">=</span><span class="fl">30</span>,</span></span>
+<span class="r-in"><span>            title_text <span class="op">=</span> <span class="st">"Hexagonal Bokeh"</span>, title_size <span class="op">=</span> <span class="fl">30</span>, title_color <span class="op">=</span> <span class="st">"white"</span>, </span></span>
+<span class="r-in"><span>            title_bar_color <span class="op">=</span> <span class="st">"black"</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in mesh$vertices[[j]]:</span> subscript out of bounds</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#Add a title and vignette effect.</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="render_camera.html">render_camera</a></span><span class="op">(</span>theta<span class="op">=</span><span class="fl">0</span>,zoom<span class="op">=</span><span class="fl">0.7</span>,phi<span class="op">=</span><span class="fl">30</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">render_depth</span><span class="op">(</span>focallength <span class="op">=</span> <span class="fl">250</span>, title_text <span class="op">=</span> <span class="st">"Monterey Bay, CA"</span>, </span></span>
+<span class="r-in"><span>            title_size <span class="op">=</span> <span class="fl">20</span>, title_color <span class="op">=</span> <span class="st">"white"</span>, title_bar_color <span class="op">=</span> <span class="st">"black"</span>, vignette <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Focus distance: 1522.06</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in mesh$vertices[[j]]:</span> subscript out of bounds</span>
+<span class="r-in"><span>            </span></span>
+<span class="r-in"><span><span class="co">#</span></span></span>
+<span class="r-in"><span><span class="fu">rgl</span><span class="fu">::</span><span class="fu"><a href="https://dmurdoch.github.io/rgl/dev/reference/rgl.open.html" class="external-link">rgl.close</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </div>
@@ -337,7 +424,7 @@ before taking the snapshot. This can help stop prevent rendering issues when run
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
 </div>
 
       </footer></div>

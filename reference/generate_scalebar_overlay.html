@@ -21,7 +21,7 @@ scale bar of the proper length."><meta property="og:image" content="https://www.
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.28.2</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.28.3</span>
       </span>
     </div>
 
@@ -107,38 +107,38 @@ scale bar of the proper length.</p>
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">generate_scalebar_overlay</span><span class="op">(</span>
-  <span class="va">extent</span>,
-  <span class="va">length</span>,
-  x <span class="op">=</span> <span class="fl">0.05</span>,
-  y <span class="op">=</span> <span class="fl">0.05</span>,
-  latlong <span class="op">=</span> <span class="cn">FALSE</span>,
-  thickness <span class="op">=</span> <span class="cn">NA</span>,
-  bearing <span class="op">=</span> <span class="fl">90</span>,
-  unit <span class="op">=</span> <span class="st">"m"</span>,
-  flip_ticks <span class="op">=</span> <span class="cn">FALSE</span>,
-  labels <span class="op">=</span> <span class="cn">NA</span>,
-  text_size <span class="op">=</span> <span class="fl">1</span>,
-  decimals <span class="op">=</span> <span class="fl">0</span>,
-  text_offset <span class="op">=</span> <span class="fl">1</span>,
-  adj <span class="op">=</span> <span class="fl">0.5</span>,
-  heightmap <span class="op">=</span> <span class="cn">NULL</span>,
-  width <span class="op">=</span> <span class="cn">NA</span>,
-  height <span class="op">=</span> <span class="cn">NA</span>,
-  color1 <span class="op">=</span> <span class="st">"white"</span>,
-  color2 <span class="op">=</span> <span class="st">"black"</span>,
-  text_color <span class="op">=</span> <span class="st">"black"</span>,
-  font <span class="op">=</span> <span class="fl">1</span>,
-  border_color <span class="op">=</span> <span class="st">"black"</span>,
-  tick_color <span class="op">=</span> <span class="st">"black"</span>,
-  border_width <span class="op">=</span> <span class="fl">1</span>,
-  tick_width <span class="op">=</span> <span class="fl">1</span>,
-  halo_color <span class="op">=</span> <span class="cn">NA</span>,
-  halo_expand <span class="op">=</span> <span class="fl">1</span>,
-  halo_alpha <span class="op">=</span> <span class="fl">1</span>,
-  halo_offset <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span>,
-  halo_blur <span class="op">=</span> <span class="fl">1</span>
-<span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">generate_scalebar_overlay</span><span class="op">(</span></span>
+<span>  <span class="va">extent</span>,</span>
+<span>  <span class="va">length</span>,</span>
+<span>  x <span class="op">=</span> <span class="fl">0.05</span>,</span>
+<span>  y <span class="op">=</span> <span class="fl">0.05</span>,</span>
+<span>  latlong <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  thickness <span class="op">=</span> <span class="cn">NA</span>,</span>
+<span>  bearing <span class="op">=</span> <span class="fl">90</span>,</span>
+<span>  unit <span class="op">=</span> <span class="st">"m"</span>,</span>
+<span>  flip_ticks <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  labels <span class="op">=</span> <span class="cn">NA</span>,</span>
+<span>  text_size <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  decimals <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  text_offset <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  adj <span class="op">=</span> <span class="fl">0.5</span>,</span>
+<span>  heightmap <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  width <span class="op">=</span> <span class="cn">NA</span>,</span>
+<span>  height <span class="op">=</span> <span class="cn">NA</span>,</span>
+<span>  color1 <span class="op">=</span> <span class="st">"white"</span>,</span>
+<span>  color2 <span class="op">=</span> <span class="st">"black"</span>,</span>
+<span>  text_color <span class="op">=</span> <span class="st">"black"</span>,</span>
+<span>  font <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  border_color <span class="op">=</span> <span class="st">"black"</span>,</span>
+<span>  tick_color <span class="op">=</span> <span class="st">"black"</span>,</span>
+<span>  border_width <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  tick_width <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  halo_color <span class="op">=</span> <span class="cn">NA</span>,</span>
+<span>  halo_expand <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  halo_alpha <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  halo_offset <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span>,</span>
+<span>  halo_blur <span class="op">=</span> <span class="fl">1</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
@@ -146,186 +146,247 @@ scale bar of the proper length.</p>
     <dl><dt>extent</dt>
 <dd><p>A `raster::Extent` object with the bounding box for the height map used to generate the original map. If this is in
 lat/long coordinates, be sure to set `latlong = TRUE`.</p></dd>
+
+
 <dt>length</dt>
 <dd><p>The length of the scale bar, in `units`. This should match the units used on the map, 
 unless `extent` uses lat/long coordinates. In that case, the distance should be in meters.</p></dd>
+
+
 <dt>x</dt>
 <dd><p>Default `0.05`. The x-coordinate of the bottom-left corner of the scale bar, as a proportion of the full map width.</p></dd>
+
+
 <dt>y</dt>
 <dd><p>Default `0.05`. The y-coordinate of the bottom-left corner of the scale bar, as a proportion of the full map height.</p></dd>
+
+
 <dt>latlong</dt>
 <dd><p>Default `FALSE`. Set to `TRUE` if the map is in lat/long coordinates to get an accurate
 scale bar (using distance calculated with the `geosphere` package).</p></dd>
+
+
 <dt>thickness</dt>
 <dd><p>Default `NA`, automatically computed as 1/20th the length of the scale bar. Width of the scale bar.</p></dd>
+
+
 <dt>bearing</dt>
 <dd><p>Default `90`, horizontal. Direction (measured from north) of the scale bar.</p></dd>
+
+
 <dt>unit</dt>
 <dd><p>Default `m`. Displayed unit on the scale bar.</p></dd>
+
+
 <dt>flip_ticks</dt>
 <dd><p>Default `FALSE`. Whether to flip the ticks to the other side of the scale bar.</p></dd>
+
+
 <dt>labels</dt>
 <dd><p>Default `NA`. Manually specify the three labels with a length-3 character vector. 
 Use this if you want display units other than meters.</p></dd>
+
+
 <dt>text_size</dt>
 <dd><p>Default `1`. Text size.</p></dd>
+
+
 <dt>decimals</dt>
 <dd><p>Default `0`. Number of decimal places for scale bar labels.</p></dd>
+
+
 <dt>text_offset</dt>
 <dd><p>Default `1`. Amount of offset to apply to the text from the scale bar, as a multiple of
 `thickness`.</p></dd>
+
+
 <dt>adj</dt>
 <dd><p>Default `0.5`, centered. Text justification. `0` is left-justified, and `1` is right-justified.</p></dd>
+
+
 <dt>heightmap</dt>
 <dd><p>Default `NULL`. The original height map. Pass this in to extract the dimensions of the resulting 
 RGB image array automatically.</p></dd>
+
+
 <dt>width</dt>
 <dd><p>Default `NA`. Width of the resulting image array. Default the same dimensions as height map.</p></dd>
+
+
 <dt>height</dt>
 <dd><p>Default `NA`. Width of the resulting image array. Default the same dimensions as height map.</p></dd>
+
+
 <dt>color1</dt>
 <dd><p>Default `black`. Primary color of the scale bar.</p></dd>
+
+
 <dt>color2</dt>
 <dd><p>Default `white`. Secondary color of the scale bar.</p></dd>
+
+
 <dt>text_color</dt>
 <dd><p>Default `black`. Text color.</p></dd>
+
+
 <dt>font</dt>
 <dd><p>Default `1`. An integer which specifies which font to use for text. 
 If possible, device drivers arrange so that 1 corresponds to plain text (the default), 
 2 to bold face, 3 to italic and 4 to bold italic.</p></dd>
+
+
 <dt>border_color</dt>
 <dd><p>Default `black`. Border color of the scale bar.</p></dd>
+
+
 <dt>tick_color</dt>
 <dd><p>Default `black`. Tick color of the scale bar.</p></dd>
+
+
 <dt>border_width</dt>
 <dd><p>Default `1`. Width of the scale bar border.</p></dd>
+
+
 <dt>tick_width</dt>
 <dd><p>Default `1`. Width of the tick.</p></dd>
+
+
 <dt>halo_color</dt>
 <dd><p>Default `NA`, no halo. If a color is specified, the text label will be surrounded by a halo
 of this color.</p></dd>
+
+
 <dt>halo_expand</dt>
 <dd><p>Default `1`. Number of pixels to expand the halo.</p></dd>
+
+
 <dt>halo_alpha</dt>
 <dd><p>Default `1`. Transparency of the halo.</p></dd>
+
+
 <dt>halo_offset</dt>
 <dd><p>Default `c(0,0)`. Horizontal and vertical offset to apply to the halo, as a proportion of the full scene.</p></dd>
+
+
 <dt>halo_blur</dt>
 <dd><p>Default `1`. Amount of blur to apply to the halo. Values greater than `30` won't result in further blurring.</p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>Semi-transparent overlay with a scale bar.</p>
+    
+
+<p>Semi-transparent overlay with a scale bar.</p>
     </div>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span class="co">#Only run these examples if the `magick` package is installed.</span></span>
-<span class="r-in"><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/find.package.html" class="external-link">find.package</a></span><span class="op">(</span><span class="st">"magick"</span>, quiet <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span> <span class="op">{</span></span>
-<span class="r-in"><span class="co"># \donttest{</span></span>
-<span class="r-in"><span class="co">#Create the water palette</span></span>
-<span class="r-in"><span class="va">water_palette</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/grDevices/colorRamp.html" class="external-link">colorRampPalette</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"darkblue"</span>, <span class="st">"dodgerblue"</span>, <span class="st">"lightblue"</span><span class="op">)</span><span class="op">)</span><span class="op">(</span><span class="fl">200</span><span class="op">)</span></span>
-<span class="r-in"><span class="va">bathy_hs</span> <span class="op">=</span> <span class="fu"><a href="height_shade.html">height_shade</a></span><span class="op">(</span><span class="va">montereybay</span>, texture <span class="op">=</span> <span class="va">water_palette</span><span class="op">)</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co">#Generate flat water heightmap</span></span>
-<span class="r-in"><span class="va">mbay</span> <span class="op">=</span> <span class="va">montereybay</span></span>
-<span class="r-in"><span class="va">mbay</span><span class="op">[</span><span class="va">mbay</span> <span class="op">&lt;</span> <span class="fl">0</span><span class="op">]</span> <span class="op">=</span> <span class="fl">0</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="va">base_map</span> <span class="op">=</span> <span class="va">mbay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"><span class="fu"><a href="height_shade.html">height_shade</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"><span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu"><a href="generate_altitude_overlay.html">generate_altitude_overlay</a></span><span class="op">(</span><span class="va">bathy_hs</span>, <span class="va">montereybay</span>, <span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span>  <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"><span class="fu"><a href="add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="fu"><a href="lamb_shade.html">lamb_shade</a></span><span class="op">(</span><span class="va">montereybay</span>,zscale<span class="op">=</span><span class="fl">50</span><span class="op">)</span>,<span class="fl">0.3</span><span class="op">)</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co">#For convenience, the extent of the montereybay dataset is included as an attribute</span></span>
-<span class="r-in"><span class="va">mb_extent</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>, <span class="st">"extent"</span><span class="op">)</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co">#Add a scalebar</span></span>
-<span class="r-in"><span class="va">base_map</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"><span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu">generate_scalebar_overlay</span><span class="op">(</span>extent <span class="op">=</span> <span class="va">mb_extent</span>, length <span class="op">=</span> <span class="fl">40000</span>,</span>
-<span class="r-in">                                      heightmap <span class="op">=</span> <span class="va">montereybay</span>, </span>
-<span class="r-in">                                      latlong<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"><span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-in"></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co">#Change the text color</span></span>
-<span class="r-in"><span class="va">base_map</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu">generate_scalebar_overlay</span><span class="op">(</span>extent <span class="op">=</span> <span class="va">mb_extent</span>, length <span class="op">=</span> <span class="fl">40000</span>,</span>
-<span class="r-in">                                       text_color <span class="op">=</span> <span class="st">"white"</span>,</span>
-<span class="r-in">                                       heightmap <span class="op">=</span> <span class="va">montereybay</span>, </span>
-<span class="r-in">                                       latlong<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-in"></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co">#Change the length</span></span>
-<span class="r-in"><span class="va">base_map</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu">generate_scalebar_overlay</span><span class="op">(</span>extent <span class="op">=</span> <span class="va">mb_extent</span>, length <span class="op">=</span> <span class="fl">30000</span>,</span>
-<span class="r-in">                                       text_color <span class="op">=</span> <span class="st">"white"</span>,</span>
-<span class="r-in">                                       heightmap <span class="op">=</span> <span class="va">montereybay</span>, </span>
-<span class="r-in">                                       latlong<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co">#Change the thickness (default is length/20)</span></span>
-<span class="r-in"><span class="va">base_map</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu">generate_scalebar_overlay</span><span class="op">(</span>extent <span class="op">=</span> <span class="va">mb_extent</span>, length <span class="op">=</span> <span class="fl">30000</span>,</span>
-<span class="r-in">                                       text_color <span class="op">=</span> <span class="st">"white"</span>, thickness <span class="op">=</span> <span class="fl">30000</span><span class="op">/</span><span class="fl">10</span>,</span>
-<span class="r-in">                                       heightmap <span class="op">=</span> <span class="va">montereybay</span>, </span>
-<span class="r-in">                                       latlong<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co">#Change the text offset (given in multiples of thickness)</span></span>
-<span class="r-in"><span class="va">base_map</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu">generate_scalebar_overlay</span><span class="op">(</span>extent <span class="op">=</span> <span class="va">mb_extent</span>, length <span class="op">=</span> <span class="fl">30000</span>,</span>
-<span class="r-in">                                       text_color <span class="op">=</span> <span class="st">"white"</span>, thickness <span class="op">=</span> <span class="fl">30000</span><span class="op">/</span><span class="fl">10</span>,</span>
-<span class="r-in">                                       text_offset <span class="op">=</span> <span class="fl">0.75</span>,</span>
-<span class="r-in">                                       heightmap <span class="op">=</span> <span class="va">montereybay</span>, </span>
-<span class="r-in">                                       latlong<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co">#Change the primary and secondary colors, along with the border and tick color</span></span>
-<span class="r-in"><span class="va">base_map</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu">generate_scalebar_overlay</span><span class="op">(</span>extent <span class="op">=</span> <span class="va">mb_extent</span>, length <span class="op">=</span> <span class="fl">30000</span>,</span>
-<span class="r-in">                                       text_color <span class="op">=</span> <span class="st">"white"</span>, border_color <span class="op">=</span> <span class="st">"white"</span>,</span>
-<span class="r-in">                                       tick_color <span class="op">=</span> <span class="st">"white"</span>,</span>
-<span class="r-in">                                       color1 <span class="op">=</span> <span class="st">"darkolivegreen4"</span>, color2 <span class="op">=</span> <span class="st">"burlywood3"</span>,</span>
-<span class="r-in">                                       heightmap <span class="op">=</span> <span class="va">montereybay</span>, </span>
-<span class="r-in">                                       latlong<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co">#Add a halo</span></span>
-<span class="r-in"><span class="va">base_map</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu">generate_scalebar_overlay</span><span class="op">(</span>extent <span class="op">=</span> <span class="va">mb_extent</span>, length <span class="op">=</span> <span class="fl">40000</span>,</span>
-<span class="r-in">                                       halo_color <span class="op">=</span> <span class="st">"white"</span>, halo_expand <span class="op">=</span> <span class="fl">1</span>,</span>
-<span class="r-in">                                       heightmap <span class="op">=</span> <span class="va">montereybay</span>, </span>
-<span class="r-in">                                       latlong<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co">#Change the orientation, position, text alignment, and flip the ticks to the other side</span></span>
-<span class="r-in"><span class="va">base_map</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu">generate_scalebar_overlay</span><span class="op">(</span>extent <span class="op">=</span> <span class="va">mb_extent</span>, length <span class="op">=</span> <span class="fl">40000</span>, x <span class="op">=</span> <span class="fl">0.07</span>,</span>
-<span class="r-in">                                       bearing<span class="op">=</span><span class="fl">0</span>, adj <span class="op">=</span> <span class="fl">0</span>, flip_ticks <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span class="r-in">                                       halo_color <span class="op">=</span> <span class="st">"white"</span>, halo_expand <span class="op">=</span> <span class="fl">1.5</span>,</span>
-<span class="r-in">                                       heightmap <span class="op">=</span> <span class="va">montereybay</span>, </span>
-<span class="r-in">                                       latlong<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-in"> </span>
-<span class="r-in"> </span>
-<span class="r-in"><span class="co">#64373.8 meters in 40 miles</span></span>
-<span class="r-in"><span class="co">#Create custom labels, change font and text size, remove the border/ticks, and change the color</span></span>
-<span class="r-in"><span class="co">#Here, we specify a width and height to double the resolution of the image (for sharper text)</span></span>
-<span class="r-in"><span class="va">base_map</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu">generate_scalebar_overlay</span><span class="op">(</span>extent <span class="op">=</span> <span class="va">mb_extent</span>, length <span class="op">=</span> <span class="fl">64373.8</span>, x <span class="op">=</span> <span class="fl">0.07</span>,</span>
-<span class="r-in">                                       labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"0"</span>, <span class="st">"20"</span>, <span class="st">"40 miles"</span><span class="op">)</span>, thickness<span class="op">=</span><span class="fl">2500</span>,</span>
-<span class="r-in">                                       text_size<span class="op">=</span><span class="fl">3</span>, font <span class="op">=</span> <span class="fl">2</span>, text_offset <span class="op">=</span> <span class="fl">0</span>,</span>
-<span class="r-in">                                       text_color<span class="op">=</span><span class="st">"white"</span>, color2<span class="op">=</span><span class="st">"#bf323b"</span>, border_color<span class="op">=</span><span class="cn">NA</span>,</span>
-<span class="r-in">                                       tick_color<span class="op">=</span><span class="st">"red"</span>, tick_width<span class="op">=</span><span class="fl">0</span>,</span>
-<span class="r-in">                                       bearing<span class="op">=</span><span class="fl">0</span>, adj <span class="op">=</span> <span class="fl">0</span>, flip_ticks <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span class="r-in">                                       halo_color<span class="op">=</span><span class="st">"black"</span>, halo_blur<span class="op">=</span><span class="fl">3</span>, halo_alpha<span class="op">=</span><span class="fl">0.5</span>,</span>
-<span class="r-in">                                       width <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">montereybay</span><span class="op">)</span><span class="op">*</span><span class="fl">2</span>,</span>
-<span class="r-in">                                       height <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">montereybay</span><span class="op">)</span><span class="op">*</span><span class="fl">2</span>,</span>
-<span class="r-in">                                       latlong<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span>, rescale_original<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-in"><span class="co"># }</span></span>
-<span class="r-in"><span class="op">}</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co">#Only run these examples if the `magick` package is installed.</span></span></span>
+<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/find.package.html" class="external-link">find.package</a></span><span class="op">(</span><span class="st">"magick"</span>, quiet <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span><span class="co"># \donttest{</span></span></span>
+<span class="r-in"><span><span class="co">#Create the water palette</span></span></span>
+<span class="r-in"><span><span class="va">water_palette</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/grDevices/colorRamp.html" class="external-link">colorRampPalette</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"darkblue"</span>, <span class="st">"dodgerblue"</span>, <span class="st">"lightblue"</span><span class="op">)</span><span class="op">)</span><span class="op">(</span><span class="fl">200</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">bathy_hs</span> <span class="op">=</span> <span class="fu"><a href="height_shade.html">height_shade</a></span><span class="op">(</span><span class="va">montereybay</span>, texture <span class="op">=</span> <span class="va">water_palette</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#Generate flat water heightmap</span></span></span>
+<span class="r-in"><span><span class="va">mbay</span> <span class="op">=</span> <span class="va">montereybay</span></span></span>
+<span class="r-in"><span><span class="va">mbay</span><span class="op">[</span><span class="va">mbay</span> <span class="op">&lt;</span> <span class="fl">0</span><span class="op">]</span> <span class="op">=</span> <span class="fl">0</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">base_map</span> <span class="op">=</span> <span class="va">mbay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span><span class="fu"><a href="height_shade.html">height_shade</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span><span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu"><a href="generate_altitude_overlay.html">generate_altitude_overlay</a></span><span class="op">(</span><span class="va">bathy_hs</span>, <span class="va">montereybay</span>, <span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span>  <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span><span class="fu"><a href="add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="fu"><a href="lamb_shade.html">lamb_shade</a></span><span class="op">(</span><span class="va">montereybay</span>,zscale<span class="op">=</span><span class="fl">50</span><span class="op">)</span>,<span class="fl">0.3</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#For convenience, the extent of the montereybay dataset is included as an attribute</span></span></span>
+<span class="r-in"><span><span class="va">mb_extent</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>, <span class="st">"extent"</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#Add a scalebar</span></span></span>
+<span class="r-in"><span><span class="va">base_map</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span><span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu">generate_scalebar_overlay</span><span class="op">(</span>extent <span class="op">=</span> <span class="va">mb_extent</span>, length <span class="op">=</span> <span class="fl">40000</span>,</span></span>
+<span class="r-in"><span>                                      heightmap <span class="op">=</span> <span class="va">montereybay</span>, </span></span>
+<span class="r-in"><span>                                      latlong<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span><span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#Change the text color</span></span></span>
+<span class="r-in"><span><span class="va">base_map</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu">generate_scalebar_overlay</span><span class="op">(</span>extent <span class="op">=</span> <span class="va">mb_extent</span>, length <span class="op">=</span> <span class="fl">40000</span>,</span></span>
+<span class="r-in"><span>                                       text_color <span class="op">=</span> <span class="st">"white"</span>,</span></span>
+<span class="r-in"><span>                                       heightmap <span class="op">=</span> <span class="va">montereybay</span>, </span></span>
+<span class="r-in"><span>                                       latlong<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#Change the length</span></span></span>
+<span class="r-in"><span><span class="va">base_map</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu">generate_scalebar_overlay</span><span class="op">(</span>extent <span class="op">=</span> <span class="va">mb_extent</span>, length <span class="op">=</span> <span class="fl">30000</span>,</span></span>
+<span class="r-in"><span>                                       text_color <span class="op">=</span> <span class="st">"white"</span>,</span></span>
+<span class="r-in"><span>                                       heightmap <span class="op">=</span> <span class="va">montereybay</span>, </span></span>
+<span class="r-in"><span>                                       latlong<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#Change the thickness (default is length/20)</span></span></span>
+<span class="r-in"><span><span class="va">base_map</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu">generate_scalebar_overlay</span><span class="op">(</span>extent <span class="op">=</span> <span class="va">mb_extent</span>, length <span class="op">=</span> <span class="fl">30000</span>,</span></span>
+<span class="r-in"><span>                                       text_color <span class="op">=</span> <span class="st">"white"</span>, thickness <span class="op">=</span> <span class="fl">30000</span><span class="op">/</span><span class="fl">10</span>,</span></span>
+<span class="r-in"><span>                                       heightmap <span class="op">=</span> <span class="va">montereybay</span>, </span></span>
+<span class="r-in"><span>                                       latlong<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#Change the text offset (given in multiples of thickness)</span></span></span>
+<span class="r-in"><span><span class="va">base_map</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu">generate_scalebar_overlay</span><span class="op">(</span>extent <span class="op">=</span> <span class="va">mb_extent</span>, length <span class="op">=</span> <span class="fl">30000</span>,</span></span>
+<span class="r-in"><span>                                       text_color <span class="op">=</span> <span class="st">"white"</span>, thickness <span class="op">=</span> <span class="fl">30000</span><span class="op">/</span><span class="fl">10</span>,</span></span>
+<span class="r-in"><span>                                       text_offset <span class="op">=</span> <span class="fl">0.75</span>,</span></span>
+<span class="r-in"><span>                                       heightmap <span class="op">=</span> <span class="va">montereybay</span>, </span></span>
+<span class="r-in"><span>                                       latlong<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#Change the primary and secondary colors, along with the border and tick color</span></span></span>
+<span class="r-in"><span><span class="va">base_map</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu">generate_scalebar_overlay</span><span class="op">(</span>extent <span class="op">=</span> <span class="va">mb_extent</span>, length <span class="op">=</span> <span class="fl">30000</span>,</span></span>
+<span class="r-in"><span>                                       text_color <span class="op">=</span> <span class="st">"white"</span>, border_color <span class="op">=</span> <span class="st">"white"</span>,</span></span>
+<span class="r-in"><span>                                       tick_color <span class="op">=</span> <span class="st">"white"</span>,</span></span>
+<span class="r-in"><span>                                       color1 <span class="op">=</span> <span class="st">"darkolivegreen4"</span>, color2 <span class="op">=</span> <span class="st">"burlywood3"</span>,</span></span>
+<span class="r-in"><span>                                       heightmap <span class="op">=</span> <span class="va">montereybay</span>, </span></span>
+<span class="r-in"><span>                                       latlong<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#Add a halo</span></span></span>
+<span class="r-in"><span><span class="va">base_map</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu">generate_scalebar_overlay</span><span class="op">(</span>extent <span class="op">=</span> <span class="va">mb_extent</span>, length <span class="op">=</span> <span class="fl">40000</span>,</span></span>
+<span class="r-in"><span>                                       halo_color <span class="op">=</span> <span class="st">"white"</span>, halo_expand <span class="op">=</span> <span class="fl">1</span>,</span></span>
+<span class="r-in"><span>                                       heightmap <span class="op">=</span> <span class="va">montereybay</span>, </span></span>
+<span class="r-in"><span>                                       latlong<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#Change the orientation, position, text alignment, and flip the ticks to the other side</span></span></span>
+<span class="r-in"><span><span class="va">base_map</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu">generate_scalebar_overlay</span><span class="op">(</span>extent <span class="op">=</span> <span class="va">mb_extent</span>, length <span class="op">=</span> <span class="fl">40000</span>, x <span class="op">=</span> <span class="fl">0.07</span>,</span></span>
+<span class="r-in"><span>                                       bearing<span class="op">=</span><span class="fl">0</span>, adj <span class="op">=</span> <span class="fl">0</span>, flip_ticks <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
+<span class="r-in"><span>                                       halo_color <span class="op">=</span> <span class="st">"white"</span>, halo_expand <span class="op">=</span> <span class="fl">1.5</span>,</span></span>
+<span class="r-in"><span>                                       heightmap <span class="op">=</span> <span class="va">montereybay</span>, </span></span>
+<span class="r-in"><span>                                       latlong<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span> </span></span>
+<span class="r-in"><span> </span></span>
+<span class="r-in"><span><span class="co">#64373.8 meters in 40 miles</span></span></span>
+<span class="r-in"><span><span class="co">#Create custom labels, change font and text size, remove the border/ticks, and change the color</span></span></span>
+<span class="r-in"><span><span class="co">#Here, we specify a width and height to double the resolution of the image (for sharper text)</span></span></span>
+<span class="r-in"><span><span class="va">base_map</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu">generate_scalebar_overlay</span><span class="op">(</span>extent <span class="op">=</span> <span class="va">mb_extent</span>, length <span class="op">=</span> <span class="fl">64373.8</span>, x <span class="op">=</span> <span class="fl">0.07</span>,</span></span>
+<span class="r-in"><span>                                       labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"0"</span>, <span class="st">"20"</span>, <span class="st">"40 miles"</span><span class="op">)</span>, thickness<span class="op">=</span><span class="fl">2500</span>,</span></span>
+<span class="r-in"><span>                                       text_size<span class="op">=</span><span class="fl">3</span>, font <span class="op">=</span> <span class="fl">2</span>, text_offset <span class="op">=</span> <span class="fl">0</span>,</span></span>
+<span class="r-in"><span>                                       text_color<span class="op">=</span><span class="st">"white"</span>, color2<span class="op">=</span><span class="st">"#bf323b"</span>, border_color<span class="op">=</span><span class="cn">NA</span>,</span></span>
+<span class="r-in"><span>                                       tick_color<span class="op">=</span><span class="st">"red"</span>, tick_width<span class="op">=</span><span class="fl">0</span>,</span></span>
+<span class="r-in"><span>                                       bearing<span class="op">=</span><span class="fl">0</span>, adj <span class="op">=</span> <span class="fl">0</span>, flip_ticks <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
+<span class="r-in"><span>                                       halo_color<span class="op">=</span><span class="st">"black"</span>, halo_blur<span class="op">=</span><span class="fl">3</span>, halo_alpha<span class="op">=</span><span class="fl">0.5</span>,</span></span>
+<span class="r-in"><span>                                       width <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">montereybay</span><span class="op">)</span><span class="op">*</span><span class="fl">2</span>,</span></span>
+<span class="r-in"><span>                                       height <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">montereybay</span><span class="op">)</span><span class="op">*</span><span class="fl">2</span>,</span></span>
+<span class="r-in"><span>                                       latlong<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span>, rescale_original<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-plt img"><img src="generate_scalebar_overlay-1.png" alt="" width="700" height="433"></span>
 <span class="r-plt img"><img src="generate_scalebar_overlay-2.png" alt="" width="700" height="433"></span>
 <span class="r-plt img"><img src="generate_scalebar_overlay-3.png" alt="" width="700" height="433"></span>
@@ -349,7 +410,7 @@ of this color.</p></dd>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
 </div>
 
       </footer></div>

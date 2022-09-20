@@ -19,7 +19,7 @@ from the NOAA National Map website."><meta property="og:image" content="https://
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.28.2</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.28.3</span>
       </span>
     </div>
 
@@ -103,7 +103,7 @@ from the NOAA National Map website.</p>
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="va">montereybay</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="va">montereybay</span></span></code></pre></div>
     </div>
 
     <div id="format">
@@ -118,19 +118,19 @@ coordinate is 200 meters (zscale = 200). Water level is 0. Raster extent located
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span class="co"># This is the full code (commented out) used to generate this dataset from the original NOAA data:</span></span>
-<span class="r-in"><span class="co">#raster::raster("monterey_13_navd88_2012.nc")</span></span>
-<span class="r-in"><span class="co">#bottom_left = c(y=-122.366765, x=36.179392)</span></span>
-<span class="r-in"><span class="co">#top_right   = c(y=-121.366765, x=37.179392) </span></span>
-<span class="r-in"><span class="co">#extent_latlong = sp::SpatialPoints(rbind(bottom_left, top_right), </span></span>
-<span class="r-in"><span class="co">#                 proj4string=sp::CRS("+proj=longlat +ellps=WGS84 +datum=WGS84"))</span></span>
-<span class="r-in"><span class="co">#monterey_cropped = raster::crop(montbay,extent_latlong)</span></span>
-<span class="r-in"><span class="co">#montbay_mat = raster_to_matrix(montbay_cropped)</span></span>
-<span class="r-in"><span class="co">#montereybay = resize_matrix(montbay_mat,0.05)</span></span>
-<span class="r-in"><span class="co">#attr(montereybay, "extent") = extent_latlong</span></span>
-<span class="r-in"><span class="co">#attr(montereybay, "crs") = crs(monterey_cropped)</span></span>
-<span class="r-in"><span class="co">#attr(montereybay, "crs") = crs(monterey_cropped)</span></span>
-<span class="r-in"><span class="co">#attr(montereybay, "rayshader_data") = TRUE</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># This is the full code (commented out) used to generate this dataset from the original NOAA data:</span></span></span>
+<span class="r-in"><span><span class="co">#raster::raster("monterey_13_navd88_2012.nc")</span></span></span>
+<span class="r-in"><span><span class="co">#bottom_left = c(y=-122.366765, x=36.179392)</span></span></span>
+<span class="r-in"><span><span class="co">#top_right   = c(y=-121.366765, x=37.179392) </span></span></span>
+<span class="r-in"><span><span class="co">#extent_latlong = sp::SpatialPoints(rbind(bottom_left, top_right), </span></span></span>
+<span class="r-in"><span><span class="co">#                 proj4string=sp::CRS("+proj=longlat +ellps=WGS84 +datum=WGS84"))</span></span></span>
+<span class="r-in"><span><span class="co">#monterey_cropped = raster::crop(montbay,extent_latlong)</span></span></span>
+<span class="r-in"><span><span class="co">#montbay_mat = raster_to_matrix(montbay_cropped)</span></span></span>
+<span class="r-in"><span><span class="co">#montereybay = resize_matrix(montbay_mat,0.05)</span></span></span>
+<span class="r-in"><span><span class="co">#attr(montereybay, "extent") = extent_latlong</span></span></span>
+<span class="r-in"><span><span class="co">#attr(montereybay, "crs") = crs(monterey_cropped)</span></span></span>
+<span class="r-in"><span><span class="co">#attr(montereybay, "crs") = crs(monterey_cropped)</span></span></span>
+<span class="r-in"><span><span class="co">#attr(montereybay, "rayshader_data") = TRUE</span></span></span>
 <span class="r-in"></span>
 </code></pre></div>
     </div>
@@ -146,7 +146,7 @@ coordinate is 200 meters (zscale = 200). Water level is 0. Raster extent located
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
 </div>
 
       </footer></div>

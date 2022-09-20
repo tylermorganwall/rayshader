@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.28.2</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.28.3</span>
       </span>
     </div>
 
@@ -99,55 +99,72 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">detect_water</span><span class="op">(</span>
-  <span class="va">heightmap</span>,
-  zscale <span class="op">=</span> <span class="fl">1</span>,
-  cutoff <span class="op">=</span> <span class="fl">0.999</span>,
-  min_area <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">heightmap</span><span class="op">)</span><span class="op">/</span><span class="fl">400</span>,
-  max_height <span class="op">=</span> <span class="cn">NULL</span>,
-  normalvectors <span class="op">=</span> <span class="cn">NULL</span>,
-  keep_groups <span class="op">=</span> <span class="cn">FALSE</span>,
-  progbar <span class="op">=</span> <span class="cn">FALSE</span>
-<span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">detect_water</span><span class="op">(</span></span>
+<span>  <span class="va">heightmap</span>,</span>
+<span>  zscale <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  cutoff <span class="op">=</span> <span class="fl">0.999</span>,</span>
+<span>  min_area <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">heightmap</span><span class="op">)</span><span class="op">/</span><span class="fl">400</span>,</span>
+<span>  max_height <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  normalvectors <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  keep_groups <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  progbar <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>heightmap</dt>
 <dd><p>A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All grid points are assumed to be evenly spaced.</p></dd>
+
+
 <dt>zscale</dt>
 <dd><p>Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
 of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.</p></dd>
+
+
 <dt>cutoff</dt>
 <dd><p>Default `0.999`. The lower limit of the z-component of the unit normal vector to be classified as water.</p></dd>
+
+
 <dt>min_area</dt>
 <dd><p>Default length(heightmap)/400. Minimum area (in units of the height matrix x and y spacing) to be considered a body of water.</p></dd>
+
+
 <dt>max_height</dt>
 <dd><p>Default `NULL`. If passed, this number will specify the maximum height a point can be considered to be water.</p></dd>
+
+
 <dt>normalvectors</dt>
 <dd><p>Default `NULL`. Pre-computed array of normal vectors from the `calculate_normal` function. Supplying this will speed up water detection.</p></dd>
+
+
 <dt>keep_groups</dt>
 <dd><p>Default `FALSE`. If `TRUE`, the matrix returned will retain the numbered grouping information.</p></dd>
+
+
 <dt>progbar</dt>
 <dd><p>Default `FALSE`. If `TRUE`, turns on progress bar.</p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>Matrix indicating whether water was detected at that point. 1 indicates water, 0 indicates no water.</p>
+    
+
+<p>Matrix indicating whether water was detected at that point. 1 indicates water, 0 indicates no water.</p>
     </div>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://magrittr.tidyverse.org" class="external-link">magrittr</a></span><span class="op">)</span></span>
-<span class="r-in"><span class="co">#Here we even out a portion of the volcano dataset to simulate water:</span></span>
-<span class="r-in"><span class="va">island_volcano</span> <span class="op">=</span> <span class="va">volcano</span></span>
-<span class="r-in"><span class="va">island_volcano</span><span class="op">[</span><span class="va">island_volcano</span> <span class="op">&lt;</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">island_volcano</span><span class="op">)</span><span class="op">]</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">island_volcano</span><span class="op">)</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co">#Setting a minimum area avoids classifying small flat areas as water:</span></span>
-<span class="r-in"><span class="va">island_volcano</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span>texture<span class="op">=</span><span class="st">"imhof3"</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="add_water.html">add_water</a></span><span class="op">(</span><span class="fu">detect_water</span><span class="op">(</span><span class="va">island_volcano</span>, min_area <span class="op">=</span> <span class="fl">400</span><span class="op">)</span>,color<span class="op">=</span><span class="st">"imhof3"</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://magrittr.tidyverse.org" class="external-link">magrittr</a></span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co">#Here we even out a portion of the volcano dataset to simulate water:</span></span></span>
+<span class="r-in"><span><span class="va">island_volcano</span> <span class="op">=</span> <span class="va">volcano</span></span></span>
+<span class="r-in"><span><span class="va">island_volcano</span><span class="op">[</span><span class="va">island_volcano</span> <span class="op">&lt;</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">island_volcano</span><span class="op">)</span><span class="op">]</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">island_volcano</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#Setting a minimum area avoids classifying small flat areas as water:</span></span></span>
+<span class="r-in"><span><span class="va">island_volcano</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span>texture<span class="op">=</span><span class="st">"imhof3"</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="add_water.html">add_water</a></span><span class="op">(</span><span class="fu">detect_water</span><span class="op">(</span><span class="va">island_volcano</span>, min_area <span class="op">=</span> <span class="fl">400</span><span class="op">)</span>,color<span class="op">=</span><span class="st">"imhof3"</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="detect_water-1.png" alt="" width="700" height="433"></span>
 </code></pre></div>
     </div>
@@ -163,7 +180,7 @@ of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
 </div>
 
       </footer></div>

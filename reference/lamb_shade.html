@@ -19,7 +19,7 @@ intensity is proportional to the cosine of the normal vector."><meta property="o
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.28.2</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.28.3</span>
       </span>
     </div>
 
@@ -103,60 +103,71 @@ intensity is proportional to the cosine of the normal vector.</p>
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">lamb_shade</span><span class="op">(</span>
-  <span class="va">heightmap</span>,
-  sunaltitude <span class="op">=</span> <span class="fl">45</span>,
-  sunangle <span class="op">=</span> <span class="fl">315</span>,
-  zscale <span class="op">=</span> <span class="fl">1</span>,
-  zero_negative <span class="op">=</span> <span class="cn">TRUE</span>
-<span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">lamb_shade</span><span class="op">(</span></span>
+<span>  <span class="va">heightmap</span>,</span>
+<span>  sunaltitude <span class="op">=</span> <span class="fl">45</span>,</span>
+<span>  sunangle <span class="op">=</span> <span class="fl">315</span>,</span>
+<span>  zscale <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  zero_negative <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>heightmap</dt>
 <dd><p>A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.</p></dd>
+
+
 <dt>sunaltitude</dt>
 <dd><p>Default `45`. The azimuth angle as measured from the horizon from which the light originates.</p></dd>
+
+
 <dt>sunangle</dt>
 <dd><p>Default `315` (NW). The angle around the matrix from which the light originates.</p></dd>
+
+
 <dt>zscale</dt>
 <dd><p>Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis.</p></dd>
+
+
 <dt>zero_negative</dt>
 <dd><p>Default `TRUE`. Zeros out all values below 0 (corresponding to surfaces facing away from the light source).</p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>Matrix of light intensities at each point.</p>
+    
+
+<p>Matrix of light intensities at each point.</p>
     </div>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span class="co"># \donttest{</span></span>
-<span class="r-in"><span class="co">#Generate a basic hillshade</span></span>
-<span class="r-in"><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> </span>
-<span class="r-in"> <span class="fu">lamb_shade</span><span class="op">(</span>zscale<span class="op">=</span><span class="fl">200</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> </span>
-<span class="r-in"> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-plt img"><img src="lamb_shade-1.png" alt="" width="700" height="433"></span>
-<span class="r-in"> </span>
-<span class="r-in"><span class="co">#Increase the intensity by decreasing the zscale</span></span>
-<span class="r-in"><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> </span>
-<span class="r-in"> <span class="fu">lamb_shade</span><span class="op">(</span>zscale<span class="op">=</span><span class="fl">50</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> </span>
-<span class="r-in"> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-plt img"><img src="lamb_shade-2.png" alt="" width="700" height="433"></span>
-<span class="r-in"> </span>
-<span class="r-in"><span class="co">#Change the sun direction</span></span>
-<span class="r-in"><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> </span>
-<span class="r-in"> <span class="fu">lamb_shade</span><span class="op">(</span>zscale<span class="op">=</span><span class="fl">200</span>, sunangle<span class="op">=</span><span class="fl">45</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> </span>
-<span class="r-in"> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-plt img"><img src="lamb_shade-3.png" alt="" width="700" height="433"></span>
-<span class="r-in"> </span>
-<span class="r-in"><span class="co">#Change the sun altitude</span></span>
-<span class="r-in"><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> </span>
-<span class="r-in"> <span class="fu">lamb_shade</span><span class="op">(</span>zscale<span class="op">=</span><span class="fl">200</span>, sunaltitude<span class="op">=</span><span class="fl">60</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> </span>
-<span class="r-in"> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-plt img"><img src="lamb_shade-4.png" alt="" width="700" height="433"></span>
-<span class="r-in"><span class="co"># }</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
+<span class="r-in"><span><span class="co">#Generate a basic hillshade</span></span></span>
+<span class="r-in"><span><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> </span></span>
+<span class="r-in"><span> <span class="fu">lamb_shade</span><span class="op">(</span>zscale<span class="op">=</span><span class="fl">200</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> </span></span>
+<span class="r-in"><span> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in rayimage::plot_image(hillshade, asp = asp):</span> object 'xlim' not found</span>
+<span class="r-in"><span> </span></span>
+<span class="r-in"><span><span class="co">#Increase the intensity by decreasing the zscale</span></span></span>
+<span class="r-in"><span><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> </span></span>
+<span class="r-in"><span> <span class="fu">lamb_shade</span><span class="op">(</span>zscale<span class="op">=</span><span class="fl">50</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> </span></span>
+<span class="r-in"><span> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in rayimage::plot_image(hillshade, asp = asp):</span> object 'xlim' not found</span>
+<span class="r-in"><span> </span></span>
+<span class="r-in"><span><span class="co">#Change the sun direction</span></span></span>
+<span class="r-in"><span><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> </span></span>
+<span class="r-in"><span> <span class="fu">lamb_shade</span><span class="op">(</span>zscale<span class="op">=</span><span class="fl">200</span>, sunangle<span class="op">=</span><span class="fl">45</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> </span></span>
+<span class="r-in"><span> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in rayimage::plot_image(hillshade, asp = asp):</span> object 'xlim' not found</span>
+<span class="r-in"><span> </span></span>
+<span class="r-in"><span><span class="co">#Change the sun altitude</span></span></span>
+<span class="r-in"><span><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> </span></span>
+<span class="r-in"><span> <span class="fu">lamb_shade</span><span class="op">(</span>zscale<span class="op">=</span><span class="fl">200</span>, sunaltitude<span class="op">=</span><span class="fl">60</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> </span></span>
+<span class="r-in"><span> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in rayimage::plot_image(hillshade, asp = asp):</span> object 'xlim' not found</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </div>
@@ -171,7 +182,7 @@ intensity is proportional to the cosine of the normal vector.</p>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
 </div>
 
       </footer></div>

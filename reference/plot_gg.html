@@ -25,7 +25,7 @@ into 3D.'><meta property="og:image" content="https://www.rayshader.com/reference
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.28.2</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.28.3</span>
       </span>
     </div>
 
@@ -115,58 +115,74 @@ into 3D.</p>
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="fu">plot_gg</span><span class="op">(</span>
-  <span class="va">ggobj</span>,
-  width <span class="op">=</span> <span class="fl">3</span>,
-  height <span class="op">=</span> <span class="fl">3</span>,
-  height_aes <span class="op">=</span> <span class="cn">NULL</span>,
-  invert <span class="op">=</span> <span class="cn">FALSE</span>,
-  shadow_intensity <span class="op">=</span> <span class="fl">0.5</span>,
-  units <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"in"</span>, <span class="st">"cm"</span>, <span class="st">"mm"</span><span class="op">)</span>,
-  scale <span class="op">=</span> <span class="fl">150</span>,
-  pointcontract <span class="op">=</span> <span class="fl">0.7</span>,
-  offset_edges <span class="op">=</span> <span class="cn">FALSE</span>,
-  preview <span class="op">=</span> <span class="cn">FALSE</span>,
-  raytrace <span class="op">=</span> <span class="cn">TRUE</span>,
-  sunangle <span class="op">=</span> <span class="fl">315</span>,
-  anglebreaks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">30</span>, <span class="fl">40</span>, <span class="fl">0.1</span><span class="op">)</span>,
-  multicore <span class="op">=</span> <span class="cn">FALSE</span>,
-  lambert <span class="op">=</span> <span class="cn">TRUE</span>,
-  triangulate <span class="op">=</span> <span class="cn">TRUE</span>,
-  max_error <span class="op">=</span> <span class="fl">0.001</span>,
-  max_tri <span class="op">=</span> <span class="fl">0</span>,
-  verbose <span class="op">=</span> <span class="cn">FALSE</span>,
-  emboss_text <span class="op">=</span> <span class="fl">0</span>,
-  emboss_grid <span class="op">=</span> <span class="fl">0</span>,
-  reduce_size <span class="op">=</span> <span class="cn">NULL</span>,
-  save_height_matrix <span class="op">=</span> <span class="cn">FALSE</span>,
-  save_shadow_matrix <span class="op">=</span> <span class="cn">FALSE</span>,
-  saved_shadow_matrix <span class="op">=</span> <span class="cn">NULL</span>,
-  <span class="va">...</span>
-<span class="op">)</span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">plot_gg</span><span class="op">(</span></span>
+<span>  <span class="va">ggobj</span>,</span>
+<span>  width <span class="op">=</span> <span class="fl">3</span>,</span>
+<span>  height <span class="op">=</span> <span class="fl">3</span>,</span>
+<span>  height_aes <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  invert <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  shadow_intensity <span class="op">=</span> <span class="fl">0.5</span>,</span>
+<span>  units <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"in"</span>, <span class="st">"cm"</span>, <span class="st">"mm"</span><span class="op">)</span>,</span>
+<span>  scale <span class="op">=</span> <span class="fl">150</span>,</span>
+<span>  pointcontract <span class="op">=</span> <span class="fl">0.7</span>,</span>
+<span>  offset_edges <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  preview <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  raytrace <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  sunangle <span class="op">=</span> <span class="fl">315</span>,</span>
+<span>  anglebreaks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">30</span>, <span class="fl">40</span>, <span class="fl">0.1</span><span class="op">)</span>,</span>
+<span>  multicore <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  lambert <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  triangulate <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  max_error <span class="op">=</span> <span class="fl">0.001</span>,</span>
+<span>  max_tri <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  verbose <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  emboss_text <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  emboss_grid <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  reduce_size <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  save_height_matrix <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  save_shadow_matrix <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  saved_shadow_matrix <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  <span class="va">...</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
     <h2>Arguments</h2>
     <dl><dt>ggobj</dt>
 <dd><p>ggplot object to projected into 3D.</p></dd>
+
+
 <dt>width</dt>
 <dd><p>Default `3`. Width of ggplot, in `units`.</p></dd>
+
+
 <dt>height</dt>
 <dd><p>Default `3`. Height of ggplot, in `units`.</p></dd>
+
+
 <dt>height_aes</dt>
 <dd><p>Default `NULL`. Whether the `fill` or `color` aesthetic should be used for height values, 
 which the user can specify by passing either `fill` or `color` to this argument.
 Automatically detected. If both `fill` and `color` aesthetics are present, then `fill` is default.</p></dd>
+
+
 <dt>invert</dt>
 <dd><p>Default `FALSE`. If `TRUE`, the height mapping is inverted.</p></dd>
+
+
 <dt>shadow_intensity</dt>
 <dd><p>Default `0.5`. The intensity of the calculated shadows.</p></dd>
+
+
 <dt>units</dt>
 <dd><p>Default `in`. One of c("in", "cm", "mm").</p></dd>
+
+
 <dt>scale</dt>
 <dd><p>Default `150`. Multiplier for vertical scaling: a higher number increases the height
 of the 3D transformation.</p></dd>
+
+
 <dt>pointcontract</dt>
 <dd><p>Default `0.7`. This multiplies the size of the points and shrinks
 them around their center in the 3D surface mapping. Decrease this to reduce color bleed on edges, and set to
@@ -175,171 +191,216 @@ that is being mapped to elevation, this scaling will not be applied. If `alpha` 
 being mapped, you may want to set this to `1`, since the points now have a non-zero width stroke outline (however,
 mapping `alpha` in the same variable you are projecting to height is probably not a good choice. as the `alpha`
 variable is ignored when performing the 3D projection).</p></dd>
+
+
 <dt>offset_edges</dt>
 <dd><p>Default `FALSE`. If `TRUE`, inserts a small amount of space between polygons for "geom_sf", "geom_tile", "geom_hex", and "geom_polygon" layers.
 If you pass in a number, the space between polygons will be a line of that width. You can also specify a number to control the thickness of the offset. 
 Note: this feature may end up removing thin polygons from the plot entirely--use with care.</p></dd>
+
+
 <dt>preview</dt>
 <dd><p>Default `FALSE`. If `TRUE`, the raytraced 2D ggplot will be displayed on the current device.</p></dd>
+
+
 <dt>raytrace</dt>
 <dd><p>Default `FALSE`. Whether to add a raytraced layer.</p></dd>
+
+
 <dt>sunangle</dt>
 <dd><p>Default `315` (NW). If raytracing, the angle (in degrees) around the matrix from which the light originates.</p></dd>
+
+
 <dt>anglebreaks</dt>
 <dd><p>Default `seq(30,40,0.1)`. The azimuth angle(s), in degrees, as measured from the horizon from which the light originates.</p></dd>
+
+
 <dt>multicore</dt>
 <dd><p>Default `FALSE`. If raytracing and `TRUE`, multiple cores will be used to compute the shadow matrix. By default, this uses all cores available, unless the user has
 set `options("cores")` in which the multicore option will only use that many cores.</p></dd>
+
+
 <dt>lambert</dt>
 <dd><p>Default `TRUE`. If raytracing, changes the intensity of the light at each point based proportional to the
 dot product of the ray direction and the surface normal at that point. Zeros out all values directed away from
 the ray.</p></dd>
+
+
 <dt>triangulate</dt>
 <dd><p>Default `FALSE`. Reduce the size of the 3D model by triangulating the height map.
 Set this to `TRUE` if generating the model is slow, or moving it is choppy. Will also reduce the size
 of 3D models saved to disk.</p></dd>
+
+
 <dt>max_error</dt>
 <dd><p>Default `0.001`. Maximum allowable error when triangulating the height map,
 when `triangulate = TRUE`. Increase this if you encounter problems with 3D performance, want
 to decrease render time with `render_highquality()`, or need 
 to save a smaller 3D OBJ file to disk with `save_obj()`,</p></dd>
+
+
 <dt>max_tri</dt>
 <dd><p>Default `0`, which turns this setting off and uses `max_error`. 
 Maximum number of triangles allowed with triangulating the
 height map, when `triangulate = TRUE`. Increase this if you encounter problems with 3D performance, want
 to decrease render time with `render_highquality()`, or need 
 to save a smaller 3D OBJ file to disk with `save_obj()`,</p></dd>
+
+
 <dt>verbose</dt>
 <dd><p>Default `TRUE`, if `interactive()`. Prints information about the mesh triangulation
 if `triangulate = TRUE`.</p></dd>
+
+
 <dt>emboss_text</dt>
 <dd><p>Default `0`, max `1`. Amount to emboss the text, where `1` is the tallest feature in the scene.</p></dd>
+
+
 <dt>emboss_grid</dt>
 <dd><p>Default `0`, max `1`. Amount to emboss the grid lines, where `1` is the tallest feature in the scene.
 By default, the minor grid lines will be half the size of the major lines. Pass a length-2 vector to specify them seperately (second value 
 is the minor grid height).</p></dd>
+
+
 <dt>reduce_size</dt>
 <dd><p>Default `NULL`. A number between `0` and `1` that specifies how much to reduce the resolution of the plot, for faster plotting. By
 default, this just decreases the size of height map, not the image. If you wish the image to be reduced in resolution as well, pass a numeric vector of size 2.</p></dd>
+
+
 <dt>save_height_matrix</dt>
 <dd><p>Default `FALSE`. If `TRUE`, the function will return the height matrix used for the ggplot.</p></dd>
+
+
 <dt>save_shadow_matrix</dt>
 <dd><p>Default `FALSE`. If `TRUE`, the function will return the shadow matrix for use in future updates via the `shadow_cache` argument passed to `ray_shade`.</p></dd>
+
+
 <dt>saved_shadow_matrix</dt>
 <dd><p>Default `NULL`. A cached shadow matrix (saved by the a previous invocation of `plot_gg(..., save_shadow_matrix=TRUE)` to use instead of raytracing a shadow map each time.</p></dd>
+
+
 <dt>...</dt>
 <dd><p>Additional arguments to be passed to `plot_3d()`.</p></dd>
+
 </dl></div>
     <div id="value">
     <h2>Value</h2>
-    <p>Opens a 3D plot in rgl.</p>
+    
+
+<p>Opens a 3D plot in rgl.</p>
     </div>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
-<span class="r-in"><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://sjmgarnier.github.io/viridis/" class="external-link">viridis</a></span><span class="op">)</span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://sjmgarnier.github.io/viridis/" class="external-link">viridis</a></span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Loading required package: viridisLite</span>
-<span class="r-in"><span class="co"># \dontshow{</span></span>
-<span class="r-in"><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span><span class="st">"cores"</span><span class="op">=</span><span class="fl">2</span><span class="op">)</span></span>
-<span class="r-in"><span class="co"># }</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="va">ggdiamonds</span> <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">diamonds</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">depth</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span class="r-in"> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_density_2d.html" class="external-link">stat_density_2d</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes_eval.html" class="external-link">stat</a></span><span class="op">(</span><span class="va">nlevel</span><span class="op">)</span><span class="op">)</span>, geom <span class="op">=</span> <span class="st">"polygon"</span>, n <span class="op">=</span> <span class="fl">200</span>, bins <span class="op">=</span> <span class="fl">50</span>,contour <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">+</span></span>
-<span class="r-in"> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="va">clarity</span><span class="op">~</span><span class="va">.</span><span class="op">)</span> <span class="op">+</span></span>
-<span class="r-in"> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_fill_viridis_c</a></span><span class="op">(</span>option <span class="op">=</span> <span class="st">"A"</span><span class="op">)</span></span>
-<span class="r-in"><span class="co"># \dontrun{</span></span>
-<span class="r-in"><span class="fu">plot_gg</span><span class="op">(</span><span class="va">ggdiamonds</span>,multicore <span class="op">=</span> <span class="cn">TRUE</span>,width<span class="op">=</span><span class="fl">5</span>,height<span class="op">=</span><span class="fl">5</span>,scale<span class="op">=</span><span class="fl">250</span>,windowsize<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1400</span>,<span class="fl">866</span><span class="op">)</span>,</span>
-<span class="r-in">       zoom <span class="op">=</span> <span class="fl">0.55</span>, phi <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span>
-<span class="r-in"><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-plt img"><img src="plot_gg-1.png" alt="" width="700" height="433"></span>
-<span class="r-in"><span class="co"># }</span></span>
-<span class="r-in"><span class="co">#Change the camera angle and take a snapshot:</span></span>
-<span class="r-in"><span class="co"># \dontrun{</span></span>
-<span class="r-in"><span class="fu"><a href="render_camera.html">render_camera</a></span><span class="op">(</span>zoom<span class="op">=</span><span class="fl">0.5</span>,theta<span class="op">=</span><span class="op">-</span><span class="fl">30</span>,phi<span class="op">=</span><span class="fl">30</span><span class="op">)</span></span>
-<span class="r-in"><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span>clear <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span class="r-plt img"><img src="plot_gg-2.png" alt="" width="700" height="433"></span>
-<span class="r-in"><span class="co"># }</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co">#Contours and other lines will automatically be ignored. Here is the volcano dataset:</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="va">ggvolcano</span> <span class="op">=</span> <span class="va">volcano</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> </span>
-<span class="r-in"> <span class="fu">reshape2</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/reshape2/man/melt.html" class="external-link">melt</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span>
-<span class="r-in"> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
-<span class="r-in"> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_tile.html" class="external-link">geom_tile</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x<span class="op">=</span><span class="va">Var1</span>,y<span class="op">=</span><span class="va">Var2</span>,fill<span class="op">=</span><span class="va">value</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span class="r-in"> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_contour.html" class="external-link">geom_contour</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x<span class="op">=</span><span class="va">Var1</span>,y<span class="op">=</span><span class="va">Var2</span>,z<span class="op">=</span><span class="va">value</span><span class="op">)</span>,color<span class="op">=</span><span class="st">"black"</span><span class="op">)</span> <span class="op">+</span></span>
-<span class="r-in"> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html" class="external-link">scale_x_continuous</a></span><span class="op">(</span><span class="st">"X"</span>,expand <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">0</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span class="r-in"> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html" class="external-link">scale_y_continuous</a></span><span class="op">(</span><span class="st">"Y"</span>,expand <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">0</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span class="r-in"> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_gradient.html" class="external-link">scale_fill_gradientn</a></span><span class="op">(</span><span class="st">"Z"</span>,colours <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/grDevices/palettes.html" class="external-link">terrain.colors</a></span><span class="op">(</span><span class="fl">10</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span class="r-in"> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/coord_fixed.html" class="external-link">coord_fixed</a></span><span class="op">(</span><span class="op">)</span></span>
-<span class="r-in"><span class="va">ggvolcano</span></span>
-<span class="r-plt img"><img src="plot_gg-3.png" alt="" width="700" height="433"></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co"># \dontrun{</span></span>
-<span class="r-in"><span class="fu">plot_gg</span><span class="op">(</span><span class="va">ggvolcano</span>, multicore <span class="op">=</span> <span class="cn">TRUE</span>, raytrace <span class="op">=</span> <span class="cn">TRUE</span>, width <span class="op">=</span> <span class="fl">7</span>, height <span class="op">=</span> <span class="fl">4</span>, </span>
-<span class="r-in">       scale <span class="op">=</span> <span class="fl">300</span>, windowsize <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1400</span>, <span class="fl">866</span><span class="op">)</span>, zoom <span class="op">=</span> <span class="fl">0.6</span>, phi <span class="op">=</span> <span class="fl">30</span>, theta <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span>
+<span class="r-in"><span><span class="co"># \dontshow{</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span><span class="st">"cores"</span><span class="op">=</span><span class="fl">2</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">ggdiamonds</span> <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">diamonds</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">depth</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_density_2d.html" class="external-link">stat_density_2d</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes_eval.html" class="external-link">stat</a></span><span class="op">(</span><span class="va">nlevel</span><span class="op">)</span><span class="op">)</span>, geom <span class="op">=</span> <span class="st">"polygon"</span>, n <span class="op">=</span> <span class="fl">200</span>, bins <span class="op">=</span> <span class="fl">50</span>,contour <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">+</span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="va">clarity</span><span class="op">~</span><span class="va">.</span><span class="op">)</span> <span class="op">+</span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_fill_viridis_c</a></span><span class="op">(</span>option <span class="op">=</span> <span class="st">"A"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># \dontrun{</span></span></span>
+<span class="r-in"><span><span class="fu">plot_gg</span><span class="op">(</span><span class="va">ggdiamonds</span>,multicore <span class="op">=</span> <span class="cn">TRUE</span>,width<span class="op">=</span><span class="fl">5</span>,height<span class="op">=</span><span class="fl">5</span>,scale<span class="op">=</span><span class="fl">250</span>,windowsize<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1400</span>,<span class="fl">866</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>       zoom <span class="op">=</span> <span class="fl">0.55</span>, phi <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y,     resolveHJust(x$just, x$hjust), resolveVJust(x$just, x$vjust),     x$rot, 0):</span> polygon edge not found</span>
+<span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in mesh$vertices[[j]]:</span> subscript out of bounds</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
+<span class="r-in"><span><span class="co">#Change the camera angle and take a snapshot:</span></span></span>
+<span class="r-in"><span><span class="co"># \dontrun{</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="render_camera.html">render_camera</a></span><span class="op">(</span>zoom<span class="op">=</span><span class="fl">0.5</span>,theta<span class="op">=</span><span class="op">-</span><span class="fl">30</span>,phi<span class="op">=</span><span class="fl">30</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span>clear <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in mesh$vertices[[j]]:</span> subscript out of bounds</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#Contours and other lines will automatically be ignored. Here is the volcano dataset:</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">ggvolcano</span> <span class="op">=</span> <span class="va">volcano</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> </span></span>
+<span class="r-in"><span> <span class="fu">reshape2</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/reshape2/man/melt.html" class="external-link">melt</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_tile.html" class="external-link">geom_tile</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x<span class="op">=</span><span class="va">Var1</span>,y<span class="op">=</span><span class="va">Var2</span>,fill<span class="op">=</span><span class="va">value</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_contour.html" class="external-link">geom_contour</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x<span class="op">=</span><span class="va">Var1</span>,y<span class="op">=</span><span class="va">Var2</span>,z<span class="op">=</span><span class="va">value</span><span class="op">)</span>,color<span class="op">=</span><span class="st">"black"</span><span class="op">)</span> <span class="op">+</span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html" class="external-link">scale_x_continuous</a></span><span class="op">(</span><span class="st">"X"</span>,expand <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">0</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html" class="external-link">scale_y_continuous</a></span><span class="op">(</span><span class="st">"Y"</span>,expand <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">0</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_gradient.html" class="external-link">scale_fill_gradientn</a></span><span class="op">(</span><span class="st">"Z"</span>,colours <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/grDevices/palettes.html" class="external-link">terrain.colors</a></span><span class="op">(</span><span class="fl">10</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/coord_fixed.html" class="external-link">coord_fixed</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">ggvolcano</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y,     resolveHJust(x$just, x$hjust), resolveVJust(x$just, x$vjust),     x$rot, 0):</span> polygon edge not found</span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># \dontrun{</span></span></span>
+<span class="r-in"><span><span class="fu">plot_gg</span><span class="op">(</span><span class="va">ggvolcano</span>, multicore <span class="op">=</span> <span class="cn">TRUE</span>, raytrace <span class="op">=</span> <span class="cn">TRUE</span>, width <span class="op">=</span> <span class="fl">7</span>, height <span class="op">=</span> <span class="fl">4</span>, </span></span>
+<span class="r-in"><span>       scale <span class="op">=</span> <span class="fl">300</span>, windowsize <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1400</span>, <span class="fl">866</span><span class="op">)</span>, zoom <span class="op">=</span> <span class="fl">0.6</span>, phi <span class="op">=</span> <span class="fl">30</span>, theta <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span></span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Removed 1861 row(s) containing missing values (geom_path).</span>
-<span class="r-in"><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span>clear <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span class="r-plt img"><img src="plot_gg-4.png" alt="" width="700" height="433"></span>
-<span class="r-in"><span class="co"># }</span></span>
-<span class="r-in"><span class="co">#Here, we will create a 3D plot of the mtcars dataset. This automatically detects </span></span>
-<span class="r-in"><span class="co">#that the user used the `color` aesthetic instead of the `fill`.</span></span>
-<span class="r-in"><span class="va">mtplot</span> <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">mtcars</span><span class="op">)</span> <span class="op">+</span> </span>
-<span class="r-in"> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x<span class="op">=</span><span class="va">mpg</span>,y<span class="op">=</span><span class="va">disp</span>,color<span class="op">=</span><span class="va">cyl</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> </span>
-<span class="r-in"> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_colour_continuous.html" class="external-link">scale_color_continuous</a></span><span class="op">(</span>limits<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">8</span><span class="op">)</span><span class="op">)</span> </span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co">#Preview how the plot will look by setting `preview = TRUE`: We also adjust the angle of the light.</span></span>
-<span class="r-in"><span class="co"># \dontrun{</span></span>
-<span class="r-in"><span class="fu">plot_gg</span><span class="op">(</span><span class="va">mtplot</span>, width<span class="op">=</span><span class="fl">3.5</span>, sunangle<span class="op">=</span><span class="fl">225</span>, preview <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span class="r-plt img"><img src="plot_gg-5.png" alt="" width="700" height="433"></span>
-<span class="r-in"><span class="co"># }</span></span>
-<span class="r-in"><span class="co"># \dontrun{</span></span>
-<span class="r-in"><span class="fu">plot_gg</span><span class="op">(</span><span class="va">mtplot</span>, width<span class="op">=</span><span class="fl">3.5</span>, multicore <span class="op">=</span> <span class="cn">TRUE</span>, windowsize <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1400</span>,<span class="fl">866</span><span class="op">)</span>, sunangle<span class="op">=</span><span class="fl">225</span>,</span>
-<span class="r-in">       zoom <span class="op">=</span> <span class="fl">0.60</span>, phi <span class="op">=</span> <span class="fl">30</span>, theta <span class="op">=</span> <span class="fl">45</span><span class="op">)</span></span>
-<span class="r-in"><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span>clear <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span class="r-plt img"><img src="plot_gg-6.png" alt="" width="700" height="433"></span>
-<span class="r-in"><span class="co"># }</span></span>
-<span class="r-in"><span class="co">#Now let's plot a density plot in 3D.</span></span>
-<span class="r-in"><span class="va">mtplot_density</span> <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">mtcars</span><span class="op">)</span> <span class="op">+</span> </span>
-<span class="r-in"> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_density_2d.html" class="external-link">stat_density_2d</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x<span class="op">=</span><span class="va">mpg</span>,y<span class="op">=</span><span class="va">disp</span>, fill<span class="op">=</span><span class="va">..density..</span><span class="op">)</span>, geom <span class="op">=</span> <span class="st">"raster"</span>, contour <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span> <span class="op">+</span></span>
-<span class="r-in"> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html" class="external-link">scale_x_continuous</a></span><span class="op">(</span>expand<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">0</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span class="r-in"> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html" class="external-link">scale_y_continuous</a></span><span class="op">(</span>expand<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">0</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
-<span class="r-in"> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_gradient.html" class="external-link">scale_fill_gradient</a></span><span class="op">(</span>low<span class="op">=</span><span class="st">"pink"</span>, high<span class="op">=</span><span class="st">"red"</span><span class="op">)</span></span>
-<span class="r-in"><span class="va">mtplot_density</span></span>
-<span class="r-plt img"><img src="plot_gg-7.png" alt="" width="700" height="433"></span>
-<span class="r-in"><span class="co"># \dontrun{</span></span>
-<span class="r-in"><span class="fu">plot_gg</span><span class="op">(</span><span class="va">mtplot_density</span>, width <span class="op">=</span> <span class="fl">4</span>,zoom <span class="op">=</span> <span class="fl">0.60</span>, theta <span class="op">=</span> <span class="op">-</span><span class="fl">45</span>, phi <span class="op">=</span> <span class="fl">30</span>, </span>
-<span class="r-in">       windowsize <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1400</span>,<span class="fl">866</span><span class="op">)</span><span class="op">)</span></span>
-<span class="r-in"><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span>clear <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span class="r-plt img"><img src="plot_gg-8.png" alt="" width="700" height="433"></span>
-<span class="r-in"><span class="co"># }</span></span>
-<span class="r-in"><span class="co">#This also works facetted.</span></span>
-<span class="r-in"><span class="va">mtplot_density_facet</span> <span class="op">=</span> <span class="va">mtplot_density</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="op">~</span><span class="va">cyl</span><span class="op">)</span> </span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co">#Preview this plot in 2D:</span></span>
-<span class="r-in"><span class="co"># \dontrun{</span></span>
-<span class="r-in"><span class="fu">plot_gg</span><span class="op">(</span><span class="va">mtplot_density_facet</span>, preview <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span class="r-plt img"><img src="plot_gg-9.png" alt="" width="700" height="433"></span>
-<span class="r-in"><span class="co"># }</span></span>
-<span class="r-in"><span class="co"># \dontrun{</span></span>
-<span class="r-in"><span class="fu">plot_gg</span><span class="op">(</span><span class="va">mtplot_density_facet</span>, windowsize<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1400</span>,<span class="fl">866</span><span class="op">)</span>,</span>
-<span class="r-in">       zoom <span class="op">=</span> <span class="fl">0.55</span>, theta <span class="op">=</span> <span class="op">-</span><span class="fl">10</span>, phi <span class="op">=</span> <span class="fl">25</span><span class="op">)</span></span>
-<span class="r-in"><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span>clear <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span class="r-plt img"><img src="plot_gg-10.png" alt="" width="700" height="433"></span>
-<span class="r-in"><span class="co"># }</span></span>
-<span class="r-in"><span class="co">#That is a little cramped. Specifying a larger width will improve the readability of this plot.</span></span>
-<span class="r-in"><span class="co"># \dontrun{</span></span>
-<span class="r-in"><span class="fu">plot_gg</span><span class="op">(</span><span class="va">mtplot_density_facet</span>, width <span class="op">=</span> <span class="fl">6</span>, preview <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span class="r-plt img"><img src="plot_gg-11.png" alt="" width="700" height="433"></span>
-<span class="r-in"><span class="co"># }</span></span>
-<span class="r-in"></span>
-<span class="r-in"><span class="co">#That's better. Let's plot it in 3D, and increase the scale.</span></span>
-<span class="r-in"><span class="co"># \dontrun{</span></span>
-<span class="r-in"><span class="fu">plot_gg</span><span class="op">(</span><span class="va">mtplot_density_facet</span>, width <span class="op">=</span> <span class="fl">6</span>, windowsize<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1400</span>,<span class="fl">866</span><span class="op">)</span>,</span>
-<span class="r-in">       zoom <span class="op">=</span> <span class="fl">0.55</span>, theta <span class="op">=</span> <span class="op">-</span><span class="fl">10</span>, phi <span class="op">=</span> <span class="fl">25</span>, scale<span class="op">=</span><span class="fl">300</span><span class="op">)</span></span>
-<span class="r-in"><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span>clear <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span class="r-plt img"><img src="plot_gg-12.png" alt="" width="700" height="433"></span>
-<span class="r-in"><span class="co"># }</span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y,     resolveHJust(x$just, x$hjust), resolveVJust(x$just, x$vjust),     x$rot, 0):</span> polygon edge not found</span>
+<span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span>clear <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in mesh$vertices[[j]]:</span> subscript out of bounds</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
+<span class="r-in"><span><span class="co">#Here, we will create a 3D plot of the mtcars dataset. This automatically detects </span></span></span>
+<span class="r-in"><span><span class="co">#that the user used the `color` aesthetic instead of the `fill`.</span></span></span>
+<span class="r-in"><span><span class="va">mtplot</span> <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">mtcars</span><span class="op">)</span> <span class="op">+</span> </span></span>
+<span class="r-in"><span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x<span class="op">=</span><span class="va">mpg</span>,y<span class="op">=</span><span class="va">disp</span>,color<span class="op">=</span><span class="va">cyl</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> </span></span>
+<span class="r-in"><span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_colour_continuous.html" class="external-link">scale_color_continuous</a></span><span class="op">(</span>limits<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">8</span><span class="op">)</span><span class="op">)</span> </span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#Preview how the plot will look by setting `preview = TRUE`: We also adjust the angle of the light.</span></span></span>
+<span class="r-in"><span><span class="co"># \dontrun{</span></span></span>
+<span class="r-in"><span><span class="fu">plot_gg</span><span class="op">(</span><span class="va">mtplot</span>, width<span class="op">=</span><span class="fl">3.5</span>, sunangle<span class="op">=</span><span class="fl">225</span>, preview <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y,     resolveHJust(x$just, x$hjust), resolveVJust(x$just, x$vjust),     x$rot, 0):</span> polygon edge not found</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
+<span class="r-in"><span><span class="co"># \dontrun{</span></span></span>
+<span class="r-in"><span><span class="fu">plot_gg</span><span class="op">(</span><span class="va">mtplot</span>, width<span class="op">=</span><span class="fl">3.5</span>, multicore <span class="op">=</span> <span class="cn">TRUE</span>, windowsize <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1400</span>,<span class="fl">866</span><span class="op">)</span>, sunangle<span class="op">=</span><span class="fl">225</span>,</span></span>
+<span class="r-in"><span>       zoom <span class="op">=</span> <span class="fl">0.60</span>, phi <span class="op">=</span> <span class="fl">30</span>, theta <span class="op">=</span> <span class="fl">45</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y,     resolveHJust(x$just, x$hjust), resolveVJust(x$just, x$vjust),     x$rot, 0):</span> polygon edge not found</span>
+<span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span>clear <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in mesh$vertices[[j]]:</span> subscript out of bounds</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
+<span class="r-in"><span><span class="co">#Now let's plot a density plot in 3D.</span></span></span>
+<span class="r-in"><span><span class="va">mtplot_density</span> <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">mtcars</span><span class="op">)</span> <span class="op">+</span> </span></span>
+<span class="r-in"><span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_density_2d.html" class="external-link">stat_density_2d</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x<span class="op">=</span><span class="va">mpg</span>,y<span class="op">=</span><span class="va">disp</span>, fill<span class="op">=</span><span class="va">..density..</span><span class="op">)</span>, geom <span class="op">=</span> <span class="st">"raster"</span>, contour <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span> <span class="op">+</span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html" class="external-link">scale_x_continuous</a></span><span class="op">(</span>expand<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">0</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html" class="external-link">scale_y_continuous</a></span><span class="op">(</span>expand<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">0</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_gradient.html" class="external-link">scale_fill_gradient</a></span><span class="op">(</span>low<span class="op">=</span><span class="st">"pink"</span>, high<span class="op">=</span><span class="st">"red"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">mtplot_density</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y,     resolveHJust(x$just, x$hjust), resolveVJust(x$just, x$vjust),     x$rot, 0):</span> polygon edge not found</span>
+<span class="r-in"><span><span class="co"># \dontrun{</span></span></span>
+<span class="r-in"><span><span class="fu">plot_gg</span><span class="op">(</span><span class="va">mtplot_density</span>, width <span class="op">=</span> <span class="fl">4</span>,zoom <span class="op">=</span> <span class="fl">0.60</span>, theta <span class="op">=</span> <span class="op">-</span><span class="fl">45</span>, phi <span class="op">=</span> <span class="fl">30</span>, </span></span>
+<span class="r-in"><span>       windowsize <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1400</span>,<span class="fl">866</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y,     resolveHJust(x$just, x$hjust), resolveVJust(x$just, x$vjust),     x$rot, 0):</span> polygon edge not found</span>
+<span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span>clear <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in mesh$vertices[[j]]:</span> subscript out of bounds</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
+<span class="r-in"><span><span class="co">#This also works facetted.</span></span></span>
+<span class="r-in"><span><span class="va">mtplot_density_facet</span> <span class="op">=</span> <span class="va">mtplot_density</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="op">~</span><span class="va">cyl</span><span class="op">)</span> </span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#Preview this plot in 2D:</span></span></span>
+<span class="r-in"><span><span class="co"># \dontrun{</span></span></span>
+<span class="r-in"><span><span class="fu">plot_gg</span><span class="op">(</span><span class="va">mtplot_density_facet</span>, preview <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y,     resolveHJust(x$just, x$hjust), resolveVJust(x$just, x$vjust),     x$rot, 0):</span> polygon edge not found</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
+<span class="r-in"><span><span class="co"># \dontrun{</span></span></span>
+<span class="r-in"><span><span class="fu">plot_gg</span><span class="op">(</span><span class="va">mtplot_density_facet</span>, windowsize<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1400</span>,<span class="fl">866</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>       zoom <span class="op">=</span> <span class="fl">0.55</span>, theta <span class="op">=</span> <span class="op">-</span><span class="fl">10</span>, phi <span class="op">=</span> <span class="fl">25</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y,     resolveHJust(x$just, x$hjust), resolveVJust(x$just, x$vjust),     x$rot, 0):</span> polygon edge not found</span>
+<span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span>clear <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in mesh$vertices[[j]]:</span> subscript out of bounds</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
+<span class="r-in"><span><span class="co">#That is a little cramped. Specifying a larger width will improve the readability of this plot.</span></span></span>
+<span class="r-in"><span><span class="co"># \dontrun{</span></span></span>
+<span class="r-in"><span><span class="fu">plot_gg</span><span class="op">(</span><span class="va">mtplot_density_facet</span>, width <span class="op">=</span> <span class="fl">6</span>, preview <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y,     resolveHJust(x$just, x$hjust), resolveVJust(x$just, x$vjust),     x$rot, 0):</span> polygon edge not found</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#That's better. Let's plot it in 3D, and increase the scale.</span></span></span>
+<span class="r-in"><span><span class="co"># \dontrun{</span></span></span>
+<span class="r-in"><span><span class="fu">plot_gg</span><span class="op">(</span><span class="va">mtplot_density_facet</span>, width <span class="op">=</span> <span class="fl">6</span>, windowsize<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1400</span>,<span class="fl">866</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>       zoom <span class="op">=</span> <span class="fl">0.55</span>, theta <span class="op">=</span> <span class="op">-</span><span class="fl">10</span>, phi <span class="op">=</span> <span class="fl">25</span>, scale<span class="op">=</span><span class="fl">300</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y,     resolveHJust(x$just, x$hjust), resolveVJust(x$just, x$vjust),     x$rot, 0):</span> polygon edge not found</span>
+<span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span>clear <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in mesh$vertices[[j]]:</span> subscript out of bounds</span>
+<span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </div>
@@ -354,7 +415,7 @@ default, this just decreases the size of height map, not the image. If you wish 
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.6.</p>
 </div>
 
       </footer></div>
