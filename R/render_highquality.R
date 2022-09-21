@@ -282,7 +282,8 @@ render_highquality = function(filename = NULL, light = TRUE, lightdirection = 31
                       x = -bbox_center[1],
                       y = -bbox_center[2],
                       z = -bbox_center[3],
-                      texture = TRUE, material = obj_material)
+                      load_material = TRUE, calculate_consistent_normals = FALSE,
+                      material = obj_material)
   } else {
     scene = rayrender::obj_model(cache_filename, 
                       x = -bbox_center[1],
