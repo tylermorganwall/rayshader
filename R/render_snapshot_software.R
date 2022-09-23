@@ -247,8 +247,7 @@ render_snapshot_software = function(filename, cache_filename = NULL, camera_loca
   if(length(pointlist) > 0) {
     scene = rayvertex::add_shape(scene, pointlist)
   }
-  
-  ranges = apply(scene$vertices,2,range)
+  ranges = apply(do.call(rbind,scene$vertices),2,range)
   
   scene = rayvertex::change_material(scene,type="color")
   if(has_shadow && !fake_shadow) {
