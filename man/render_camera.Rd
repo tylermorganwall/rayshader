@@ -36,7 +36,7 @@ render_snapshot(title_text = "Monterey Bay, CA",
 
 #Shift to an overhead view (and change the text/title bar color)
 \dontrun{
-render_camera(theta = 0, phi = 90, zoom = 0.9)
+render_camera(theta = 0, phi = 89.9, zoom = 0.9)
 render_snapshot(title_text = "Monterey Bay, CA",
                title_color = "white",
                title_bar_color = "darkgreen")

@@ -92,7 +92,7 @@ render_floating_overlay = function(overlay = NULL, altitude = NULL, heightmap = 
     overlay[,,4][overlay_alpha] = 0
   }
   if(remove_na && !is.null(heightmap)) {
-    if(dim(overlay)[1:2] != dim(heightmap)[1:2] && any(is.na(heightmap))) {
+    if(any(dim(overlay)[1:2] != dim(heightmap)[1:2]) && any(is.na(heightmap))) {
       stop("If `remove_na = TRUE`, `heightmap` and `overlay` must have same number of rows and columns to make overlay transparent at those points")
     }
     if(any(is.na(heightmap))) {

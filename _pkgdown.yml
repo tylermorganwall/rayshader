@@ -14,6 +14,17 @@ template:
       creator: "@tylermorganwall"
       card: summary_large_image
 
+figures:
+  dpi: 96
+  dev.args: []
+  fig.ext: png
+  fig.width: 8
+  fig.height: ~
+  fig.retina: 2
+  fig.asp: 1
+  bg: NA
+  other.parameters: []
+
 reference:
   - title: "Creating Hillshades"
     desc: "Functions for generating hillshades"

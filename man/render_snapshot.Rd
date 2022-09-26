@@ -30,7 +30,7 @@ render_snapshot(
   camera_lookat = c(0, 0, 0),
   background = NULL,
   text_angle = NULL,
-  text_size = 10,
+  text_size = 30,
   text_offset = c(0, 0, 0),
   point_radius = 2,
   line_offset = 1e-07,
@@ -108,7 +108,7 @@ be derived from the rgl window.}
 will specify the absolute angle all the labels are facing. If three angles, this will specify all three orientations
 (relative to the x,y, and z axes) of the text labels.}
 
-\item{text_size}{Default `10`. Height of the text.}
+\item{text_size}{Default `30`. Height of the text.}
 
 \item{text_offset}{Default `c(0,0,0)`. Offset to be applied to all text labels.}
 

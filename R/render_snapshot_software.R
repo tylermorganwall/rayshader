@@ -14,6 +14,7 @@ render_snapshot_software = function(filename, cache_filename = NULL, camera_loca
   if(rgl::rgl.cur() == 0) {
     stop("No rgl window currently open.")
   }
+  text_offset = text_offset + c(0,text_size,0)
   has_rayimage = TRUE
   if(!(length(find.package("rayimage", quiet = TRUE)) > 0)) {
     warning("`rayimage` package required for labels")

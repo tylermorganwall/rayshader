@@ -89,6 +89,7 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
   #Writes data and increments vertex/normal/texture counter
   write_data = function(id, con) {
     vertices = rgl.attrib(id, "vertices")
+    vertices[is.na(vertices)] = 0
     # allvertices <<- rbind(allvertices,vertices) #Debug line
     textures = rgl.attrib(id, "texcoords")
     normals = rgl.attrib(id, "normals")
@@ -415,7 +416,7 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
       }
       if(vertex_info$type[row] == "surface") {
         dims = rgl::rgl.attrib(vertex_info$id[row], "dim")
-        vertices_y = rgl.attrib(vertex_info$id[row], "vertices")[,2]
+        vertices_y = rgl::rgl.attrib(vertex_info$id[row], "vertices")[,2]
         
         nx = dims[1]
         nz = dims[2] 
@@ -438,7 +439,7 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
         indices = matrix(indices, ncol=3, byrow=TRUE)
         indices = indices[1:(nrow(indices)-na_counter),]
         
-        cat(paste("f", sprintf("%d %d %d", indices[1], indices[,2], indices[,3])), 
+        cat(paste("f", sprintf("%d %d %d", indices[,1], indices[,2], indices[,3])), 
             sep="\n", file=con)
       } else {
         baseindices = matrix(vertex_info$startindex[row]:vertex_info$endindex[row], ncol=3, byrow=TRUE)

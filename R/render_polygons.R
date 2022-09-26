@@ -39,17 +39,17 @@
 #' #Render the county borders as polygons in Monterey Bay
 #' montereybay %>%
 #'   sphere_shade(texture = "desert") %>%
-#'   add_shadow(ray_shade(montereybay,zscale=50)) %>%
-#'   plot_3d(montereybay,water=TRUE, windowsize=800, watercolor="dodgerblue")
-#' render_camera(theta=140,  phi=55, zoom = 0.85, fov=30)
+#'   add_shadow(ray_shade(montereybay,zscale = 50)) %>%
+#'   plot_3d(montereybay, water = TRUE, windowsize = 800, watercolor = "dodgerblue")
+#' render_camera(theta = 140,  phi = 55, zoom = 0.85, fov = 30)
 #' 
 #' #We will apply a negative buffer to create space between adjacent polygons. You may 
 #' #have to call `sf::sf_use_s2(FALSE)` before running this code to get it to run.
 #' mont_county_buff = sf::st_simplify(sf::st_buffer(monterey_counties_sf,-0.003), dTolerance=0.001)
 #' 
 #' render_polygons(mont_county_buff, 
-#'                 extent = attr(montereybay,"extent"), top=10,
-#'                 parallel=TRUE)
+#'                 extent = attr(montereybay,"extent"), top = 10,
+#'                 parallel = TRUE)
 #' render_snapshot()
 #' 
 #' #We can specify the bottom of the polygons as well. Here I float the polygons above the surface
@@ -61,16 +61,16 @@
 #' render_snapshot()
 #' 
 #' #We can set the height of the data to a column in the sf object: we'll use the land area.
-#' #We'll have to scale this value because it's max value is 2.6 billion:
+#' #We'll have to scale this value because its max value is 2.6 billion:
 #' render_camera(theta=-60,  phi=60, zoom = 0.85, fov=30)
 #' render_polygons(mont_county_buff, 
-#'                 extent = attr(montereybay,"extent"), data_column_top = "ALAND",
-#'                 scale_data = 300/(2.6E9), color="chartreuse4",
-#'                 parallel=TRUE,clear_previous=TRUE)
+#'                 extent = attr(montereybay, "extent"), data_column_top = "ALAND",
+#'                 scale_data = 300/(2.6E9), color = "chartreuse4",
+#'                 parallel = TRUE, clear_previous = TRUE)
 #' render_snapshot()        
 #' 
 #' #This function also works with `render_highquality()`
-#' render_highquality(samples=400, clamp_value=10)
+#' render_highquality(samples = 256, clamp_value = 10, sample_method="sobol_blue")
 #' rgl::rgl.close()
 #' }
 render_polygons = function(polygon, extent,  color = "red", top = 1, bottom = NA,
@@ -106,14 +106,17 @@ render_polygons = function(polygon, extent,  color = "red", top = 1, bottom = NA
   if(!parallel) {
     if(inherits(polygon,"data.frame")) {
       for(i in 1:nrow(polygon)) {
-        poly = rayrender::extruded_polygon(polygon[i,],top=top,bottom=bottom,
+        if(inherits(polygon[i,],"SpatialPolygonsDataFrame") || 
+           inherits(polygon[i,],"SpatialPolygons")) {
+          holes = NULL
+        }
+        mesh = rayrender::extruded_polygon(polygon[i,],top=top,bottom=bottom,
                                            data_column_top=data_column_top,
                                            data_column_bottom=data_column_bottom,
-                                           scale_data=scale_data,holes=holes)
-        vertex_list[[i]] = do.call(rbind,lapply(poly$properties, shape_to_vertex))
-        if(any(is.na(vertex_list[[i]]))) {
-          vertex_list[[i]] = NULL
-        }
+                                           scale_data=scale_data,holes=holes)$mesh_info[[1]]
+        mesh_obj = rgl::mesh3d(vertices=c(t(mesh$vertices)),
+                               triangles =c(t(mesh$indices))+1)
+        vertex_list[[i]] = mesh_obj
       }
     }
   } else {
@@ -126,15 +129,17 @@ render_polygons = function(polygon, extent,  color = "red", top = 1, bottom = NA
     doParallel::registerDoParallel(cl, cores = numbercores)
     vertex_list = tryCatch({
       foreach::foreach(i=1:nrow(polygon), .packages = c("rayrender","sf")) %dopar% {
-        poly = rayrender::extruded_polygon(polygon[i,],top=top,bottom=bottom,
+        if(inherits(polygon[i,],"SpatialPolygonsDataFrame") || 
+           inherits(polygon[i,],"SpatialPolygons")) {
+          holes = NULL
+        }
+        mesh = rayrender::extruded_polygon(polygon[i,],top=top,bottom=bottom,
                                            data_column_top=data_column_top,
                                            data_column_bottom=data_column_bottom,
-                                           scale_data=scale_data)
-        vl = do.call(rbind,lapply(poly$properties, shape_to_vertex))
-        if(any(is.na(vl))) {
-          vl = NULL
-        }
-        vl
+                                           scale_data=scale_data,holes=holes)$mesh_info[[1]]
+        mesh_obj = rgl::mesh3d(vertices=c(t(mesh$vertices)),
+                               triangles =c(t(mesh$indices))+1)
+        mesh_obj
       }
     }, finally = {
       tryCatch({
@@ -154,12 +159,12 @@ render_polygons = function(polygon, extent,  color = "red", top = 1, bottom = NA
   for(group in seq_along(vertex_list)) {
     if(!is.null(vertex_list[[group]])) {
       single_poly = vertex_list[[group]]
-      single_poly[,1] = (-single_poly[,1]-e@xmin)/(e@xmax - e@xmin) * nrow_map - nrow_map/2
-      single_poly[,3] = ncol_map/2 - (single_poly[,3]-e@ymin)/(e@ymax - e@ymin) * ncol_map 
-      single_poly[,2] = single_poly[,2]
+      single_poly$vb[1,] = (-single_poly$vb[1,]-e@xmin)/(e@xmax - e@xmin) * nrow_map - nrow_map/2
+      single_poly$vb[3,] = ncol_map/2 - (single_poly$vb[3,]-e@ymin)/(e@ymax - e@ymin) * ncol_map 
+      single_poly$vb[2,] = single_poly$vb[2,]
       
       rgl::rgl.material(color = color, tag = "polygon3d", lit = lit, alpha = alpha)
-      rgl::triangles3d(single_poly)
+      rgl::shade3d(single_poly)
     }
   }
   if(lit) {
