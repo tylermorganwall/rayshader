@@ -18,7 +18,7 @@ system defined by the extent object."><meta property="og:image" content="https:/
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.28.7</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.28.8</span>
       </span>
     </div>
 
@@ -212,10 +212,10 @@ the holes in the polygon. See the `earcut` function in the `decido` package for 
 <span class="r-in"><span><span class="co">#Render the county borders as polygons in Monterey Bay</span></span></span>
 <span class="r-in"><span><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span>texture <span class="op">=</span> <span class="st">"desert"</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="fu"><a href="ray_shade.html">ray_shade</a></span><span class="op">(</span><span class="va">montereybay</span>,zscale<span class="op">=</span><span class="fl">50</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="plot_3d.html">plot_3d</a></span><span class="op">(</span><span class="va">montereybay</span>,water<span class="op">=</span><span class="cn">TRUE</span>, windowsize<span class="op">=</span><span class="fl">800</span>, watercolor<span class="op">=</span><span class="st">"dodgerblue"</span><span class="op">)</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="fu"><a href="ray_shade.html">ray_shade</a></span><span class="op">(</span><span class="va">montereybay</span>,zscale <span class="op">=</span> <span class="fl">50</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="plot_3d.html">plot_3d</a></span><span class="op">(</span><span class="va">montereybay</span>, water <span class="op">=</span> <span class="cn">TRUE</span>, windowsize <span class="op">=</span> <span class="fl">800</span>, watercolor <span class="op">=</span> <span class="st">"dodgerblue"</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> `montereybay` dataset used with no zscale--setting `zscale=50`.  For a realistic depiction, raise `zscale` to 200.</span>
-<span class="r-in"><span><span class="fu"><a href="render_camera.html">render_camera</a></span><span class="op">(</span>theta<span class="op">=</span><span class="fl">140</span>,  phi<span class="op">=</span><span class="fl">55</span>, zoom <span class="op">=</span> <span class="fl">0.85</span>, fov<span class="op">=</span><span class="fl">30</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="render_camera.html">render_camera</a></span><span class="op">(</span>theta <span class="op">=</span> <span class="fl">140</span>,  phi <span class="op">=</span> <span class="fl">55</span>, zoom <span class="op">=</span> <span class="fl">0.85</span>, fov <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#We will apply a negative buffer to create space between adjacent polygons. You may </span></span></span>
 <span class="r-in"><span><span class="co">#have to call `sf::sf_use_s2(FALSE)` before running this code to get it to run.</span></span></span>
@@ -225,10 +225,10 @@ the holes in the polygon. See the `earcut` function in the `decido` package for 
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>st_simplify does not correctly simplify longitude/latitude data, dTolerance needs to be in decimal degrees</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu">render_polygons</span><span class="op">(</span><span class="va">mont_county_buff</span>, </span></span>
-<span class="r-in"><span>                extent <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>,<span class="st">"extent"</span><span class="op">)</span>, top<span class="op">=</span><span class="fl">10</span>,</span></span>
-<span class="r-in"><span>                parallel<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span>                extent <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>,<span class="st">"extent"</span><span class="op">)</span>, top <span class="op">=</span> <span class="fl">10</span>,</span></span>
+<span class="r-in"><span>                parallel <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-plt img"><img src="render_polygons-1.png" alt="" width="700" height="433"></span>
+<span class="r-plt img"><img src="render_polygons-1.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#We can specify the bottom of the polygons as well. Here I float the polygons above the surface</span></span></span>
 <span class="r-in"><span><span class="co">#by specifying the bottom argument. We clear the previous polygons with `clear_previous = TRUE`.</span></span></span>
@@ -237,21 +237,21 @@ the holes in the polygon. See the `earcut` function in the `decido` package for 
 <span class="r-in"><span>                extent <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>,<span class="st">"extent"</span><span class="op">)</span>, bottom <span class="op">=</span> <span class="fl">190</span>, top<span class="op">=</span><span class="fl">200</span>,</span></span>
 <span class="r-in"><span>                parallel<span class="op">=</span><span class="cn">TRUE</span>,clear_previous<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-plt img"><img src="render_polygons-2.png" alt="" width="700" height="433"></span>
+<span class="r-plt img"><img src="render_polygons-2.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#We can set the height of the data to a column in the sf object: we'll use the land area.</span></span></span>
-<span class="r-in"><span><span class="co">#We'll have to scale this value because it's max value is 2.6 billion:</span></span></span>
+<span class="r-in"><span><span class="co">#We'll have to scale this value because its max value is 2.6 billion:</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_camera.html">render_camera</a></span><span class="op">(</span>theta<span class="op">=</span><span class="op">-</span><span class="fl">60</span>,  phi<span class="op">=</span><span class="fl">60</span>, zoom <span class="op">=</span> <span class="fl">0.85</span>, fov<span class="op">=</span><span class="fl">30</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">render_polygons</span><span class="op">(</span><span class="va">mont_county_buff</span>, </span></span>
-<span class="r-in"><span>                extent <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>,<span class="st">"extent"</span><span class="op">)</span>, data_column_top <span class="op">=</span> <span class="st">"ALAND"</span>,</span></span>
-<span class="r-in"><span>                scale_data <span class="op">=</span> <span class="fl">300</span><span class="op">/</span><span class="op">(</span><span class="fl">2.6E9</span><span class="op">)</span>, color<span class="op">=</span><span class="st">"chartreuse4"</span>,</span></span>
-<span class="r-in"><span>                parallel<span class="op">=</span><span class="cn">TRUE</span>,clear_previous<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span>                extent <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>, <span class="st">"extent"</span><span class="op">)</span>, data_column_top <span class="op">=</span> <span class="st">"ALAND"</span>,</span></span>
+<span class="r-in"><span>                scale_data <span class="op">=</span> <span class="fl">300</span><span class="op">/</span><span class="op">(</span><span class="fl">2.6E9</span><span class="op">)</span>, color <span class="op">=</span> <span class="st">"chartreuse4"</span>,</span></span>
+<span class="r-in"><span>                parallel <span class="op">=</span> <span class="cn">TRUE</span>, clear_previous <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span>        </span></span>
-<span class="r-plt img"><img src="render_polygons-3.png" alt="" width="700" height="433"></span>
+<span class="r-plt img"><img src="render_polygons-3.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#This function also works with `render_highquality()`</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="render_highquality.html">render_highquality</a></span><span class="op">(</span>samples<span class="op">=</span><span class="fl">400</span>, clamp_value<span class="op">=</span><span class="fl">10</span><span class="op">)</span></span></span>
-<span class="r-plt img"><img src="render_polygons-4.png" alt="" width="700" height="433"></span>
+<span class="r-in"><span><span class="fu"><a href="render_highquality.html">render_highquality</a></span><span class="op">(</span>samples <span class="op">=</span> <span class="fl">256</span>, clamp_value <span class="op">=</span> <span class="fl">10</span>, sample_method<span class="op">=</span><span class="st">"sobol_blue"</span><span class="op">)</span></span></span>
+<span class="r-plt img"><img src="render_polygons-4.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="fu">rgl</span><span class="fu">::</span><span class="fu"><a href="https://dmurdoch.github.io/rgl/dev/reference/rgl.open.html" class="external-link">rgl.close</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>

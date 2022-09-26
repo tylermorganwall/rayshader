@@ -19,7 +19,7 @@ above the heightmap. If the points goes off the edge, the nearest height on the 
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.28.7</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.28.8</span>
       </span>
     </div>
 
@@ -199,7 +199,7 @@ All points are assumed to be evenly spaced.</p></dd>
 <span class="r-in"><span>             lat <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unlist.html" class="external-link">unlist</a></span><span class="op">(</span><span class="va">bird_track_lat</span><span class="op">)</span>, long <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unlist.html" class="external-link">unlist</a></span><span class="op">(</span><span class="va">bird_track_long</span><span class="op">)</span>, </span></span>
 <span class="r-in"><span>             altitude <span class="op">=</span> <span class="va">z_out</span>, zscale<span class="op">=</span><span class="fl">50</span>,color<span class="op">=</span><span class="st">"white"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-plt img"><img src="render_points-1.png" alt="" width="700" height="433"></span>
+<span class="r-plt img"><img src="render_points-1.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span>    </span></span>
 <span class="r-in"><span><span class="co">#We'll set the altitude to zero to give the tracks a "shadow" over the water. </span></span></span>
 <span class="r-in"><span><span class="fu">render_points</span><span class="op">(</span>extent <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>,<span class="st">"extent"</span><span class="op">)</span>, </span></span>
@@ -207,7 +207,7 @@ All points are assumed to be evenly spaced.</p></dd>
 <span class="r-in"><span>             altitude <span class="op">=</span> <span class="fl">0</span>, zscale<span class="op">=</span><span class="fl">50</span>, color<span class="op">=</span><span class="st">"black"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_camera.html">render_camera</a></span><span class="op">(</span>theta<span class="op">=</span><span class="fl">30</span>,phi<span class="op">=</span><span class="fl">35</span>,zoom<span class="op">=</span><span class="fl">0.45</span>,fov<span class="op">=</span><span class="fl">70</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-plt img"><img src="render_points-2.png" alt="" width="700" height="433"></span>
+<span class="r-plt img"><img src="render_points-2.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#Remove the points:</span></span></span>
 <span class="r-in"><span><span class="fu">render_points</span><span class="op">(</span>clear_previous<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span></span>
@@ -223,11 +223,11 @@ All points are assumed to be evenly spaced.</p></dd>
 <span class="r-in"><span>           zscale<span class="op">=</span><span class="fl">50</span>, color<span class="op">=</span><span class="st">"red"</span>, offset<span class="op">=</span><span class="fl">100</span>, size<span class="op">=</span><span class="fl">5</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_camera.html">render_camera</a></span><span class="op">(</span>theta <span class="op">=</span> <span class="fl">160</span>, phi<span class="op">=</span><span class="fl">33</span>, zoom<span class="op">=</span><span class="fl">0.4</span>, fov<span class="op">=</span><span class="fl">55</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-plt img"><img src="render_points-3.png" alt="" width="700" height="433"></span>
+<span class="r-plt img"><img src="render_points-3.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#And all of these work with `render_highquality()`</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_highquality.html">render_highquality</a></span><span class="op">(</span>point_radius <span class="op">=</span> <span class="fl">3</span>, clamp_value<span class="op">=</span><span class="fl">10</span><span class="op">)</span></span></span>
-<span class="r-plt img"><img src="render_points-4.png" alt="" width="700" height="433"></span>
+<span class="r-plt img"><img src="render_points-4.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="fu">rgl</span><span class="fu">::</span><span class="fu"><a href="https://dmurdoch.github.io/rgl/dev/reference/rgl.open.html" class="external-link">rgl.close</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>

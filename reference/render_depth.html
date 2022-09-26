@@ -19,7 +19,7 @@ abs(z_depth-focus)*focal_length^2/(f_stop*z_depth*(focus - focal_length))"><meta
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.28.7</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.28.8</span>
       </span>
     </div>
 
@@ -368,27 +368,27 @@ before taking the snapshot. This can help stop prevent rendering issues when run
 <span class="r-in"><span><span class="fu">render_depth</span><span class="op">(</span>preview_focus<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Focus distance: 804.568</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Focal range: 448.99-1728.53</span>
-<span class="r-plt img"><img src="render_depth-1.png" alt="" width="700" height="433"></span>
+<span class="r-plt img"><img src="render_depth-1.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#Render the depth of field effect</span></span></span>
 <span class="r-in"><span><span class="fu">render_depth</span><span class="op">(</span>focallength <span class="op">=</span> <span class="fl">300</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Focus distance: 804.568</span>
-<span class="r-plt img"><img src="render_depth-2.png" alt="" width="700" height="433"></span>
+<span class="r-plt img"><img src="render_depth-2.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#Add a chromatic aberration effect</span></span></span>
 <span class="r-in"><span><span class="fu">render_depth</span><span class="op">(</span>focallength <span class="op">=</span> <span class="fl">300</span>, aberration <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Focus distance: 804.568</span>
-<span class="r-plt img"><img src="render_depth-3.png" alt="" width="700" height="433"></span>
+<span class="r-plt img"><img src="render_depth-3.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#Render the depth of field effect, ignoring water and re-drawing the waterlayer</span></span></span>
 <span class="r-in"><span><span class="fu">render_depth</span><span class="op">(</span>preview_focus<span class="op">=</span><span class="cn">TRUE</span>, </span></span>
 <span class="r-in"><span>            heightmap <span class="op">=</span> <span class="va">montereybay</span>, zscale<span class="op">=</span><span class="fl">50</span>, focallength<span class="op">=</span><span class="fl">300</span>, transparent_water<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Focus distance: 804.568</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Focal range: 448.99-1728.53</span>
-<span class="r-plt img"><img src="render_depth-4.png" alt="" width="700" height="433"></span>
+<span class="r-plt img"><img src="render_depth-4.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="fu">render_depth</span><span class="op">(</span>heightmap <span class="op">=</span> <span class="va">montereybay</span>, zscale<span class="op">=</span><span class="fl">50</span>, focallength<span class="op">=</span><span class="fl">300</span>, transparent_water<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Focus distance: 804.568</span>
-<span class="r-plt img"><img src="render_depth-5.png" alt="" width="700" height="433"></span>
+<span class="r-plt img"><img src="render_depth-5.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_camera.html">render_camera</a></span><span class="op">(</span>theta<span class="op">=</span><span class="fl">45</span>,zoom<span class="op">=</span><span class="fl">0.15</span>,phi<span class="op">=</span><span class="fl">20</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
@@ -396,18 +396,18 @@ before taking the snapshot. This can help stop prevent rendering issues when run
 <span class="r-in"><span><span class="fu">render_depth</span><span class="op">(</span>focus<span class="op">=</span><span class="fl">900</span>, bokehshape <span class="op">=</span> <span class="st">"circle"</span>,focallength<span class="op">=</span><span class="fl">500</span>,bokehintensity<span class="op">=</span><span class="fl">30</span>,</span></span>
 <span class="r-in"><span>            title_text <span class="op">=</span> <span class="st">"Circular Bokeh"</span>, title_size <span class="op">=</span> <span class="fl">30</span>, title_color <span class="op">=</span> <span class="st">"white"</span>, </span></span>
 <span class="r-in"><span>            title_bar_color <span class="op">=</span> <span class="st">"black"</span><span class="op">)</span></span></span>
-<span class="r-plt img"><img src="render_depth-6.png" alt="" width="700" height="433"></span>
+<span class="r-plt img"><img src="render_depth-6.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="fu">render_depth</span><span class="op">(</span>focus<span class="op">=</span><span class="fl">900</span>, bokehshape <span class="op">=</span> <span class="st">"hex"</span>,focallength<span class="op">=</span><span class="fl">500</span>,bokehintensity<span class="op">=</span><span class="fl">30</span>,</span></span>
 <span class="r-in"><span>            title_text <span class="op">=</span> <span class="st">"Hexagonal Bokeh"</span>, title_size <span class="op">=</span> <span class="fl">30</span>, title_color <span class="op">=</span> <span class="st">"white"</span>, </span></span>
 <span class="r-in"><span>            title_bar_color <span class="op">=</span> <span class="st">"black"</span><span class="op">)</span></span></span>
-<span class="r-plt img"><img src="render_depth-7.png" alt="" width="700" height="433"></span>
+<span class="r-plt img"><img src="render_depth-7.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#Add a title and vignette effect.</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_camera.html">render_camera</a></span><span class="op">(</span>theta<span class="op">=</span><span class="fl">0</span>,zoom<span class="op">=</span><span class="fl">0.7</span>,phi<span class="op">=</span><span class="fl">30</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">render_depth</span><span class="op">(</span>focallength <span class="op">=</span> <span class="fl">250</span>, title_text <span class="op">=</span> <span class="st">"Monterey Bay, CA"</span>, </span></span>
 <span class="r-in"><span>            title_size <span class="op">=</span> <span class="fl">20</span>, title_color <span class="op">=</span> <span class="st">"white"</span>, title_bar_color <span class="op">=</span> <span class="st">"black"</span>, vignette <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Focus distance: 804.568</span>
-<span class="r-plt img"><img src="render_depth-8.png" alt="" width="700" height="433"></span>
+<span class="r-plt img"><img src="render_depth-8.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span>            </span></span>
 <span class="r-in"><span><span class="co">#</span></span></span>
 <span class="r-in"><span><span class="fu">rgl</span><span class="fu">::</span><span class="fu"><a href="https://dmurdoch.github.io/rgl/dev/reference/rgl.open.html" class="external-link">rgl.close</a></span><span class="op">(</span><span class="op">)</span></span></span>
