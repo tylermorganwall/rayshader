@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.28.9</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.28.11</span>
       </span>
     </div>
 
@@ -121,13 +121,13 @@
 <span>  waterlinealpha <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  linewidth <span class="op">=</span> <span class="fl">2</span>,</span>
 <span>  lineantialias <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  dirt <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  dirt_freq <span class="op">=</span> <span class="fl">0.1</span>,</span>
-<span>  dirt_levels <span class="op">=</span> <span class="fl">16</span>,</span>
-<span>  dirt_color_light <span class="op">=</span> <span class="st">"#b39474"</span>,</span>
-<span>  dirt_color_dark <span class="op">=</span> <span class="st">"#8a623b"</span>,</span>
-<span>  dirt_gradient <span class="op">=</span> <span class="fl">2</span>,</span>
-<span>  dirt_gradient_darken <span class="op">=</span> <span class="fl">4</span>,</span>
+<span>  soil <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  soil_freq <span class="op">=</span> <span class="fl">0.1</span>,</span>
+<span>  soil_levels <span class="op">=</span> <span class="fl">16</span>,</span>
+<span>  soil_color_light <span class="op">=</span> <span class="st">"#b39474"</span>,</span>
+<span>  soil_color_dark <span class="op">=</span> <span class="st">"#8a623b"</span>,</span>
+<span>  soil_gradient <span class="op">=</span> <span class="fl">2</span>,</span>
+<span>  soil_gradient_darken <span class="op">=</span> <span class="fl">4</span>,</span>
 <span>  theta <span class="op">=</span> <span class="fl">45</span>,</span>
 <span>  phi <span class="op">=</span> <span class="fl">45</span>,</span>
 <span>  fov <span class="op">=</span> <span class="fl">0</span>,</span>
@@ -232,32 +232,32 @@ the luminance of the `background` color in the CIELab colorspace if not specifie
 <dd><p>Default `FALSE`. Whether to anti-alias the lines in the scene.</p></dd>
 
 
-<dt>dirt</dt>
-<dd><p>Default `FALSE`. Whether to draw the solid base with a textured dirt layer.</p></dd>
+<dt>soil</dt>
+<dd><p>Default `FALSE`. Whether to draw the solid base with a textured soil layer.</p></dd>
 
 
-<dt>dirt_freq</dt>
-<dd><p>Default `0.1`. Frequency of dirt clumps. Higher frequency values give smaller dirt clumps.</p></dd>
+<dt>soil_freq</dt>
+<dd><p>Default `0.1`. Frequency of soil clumps. Higher frequency values give smaller soil clumps.</p></dd>
 
 
-<dt>dirt_levels</dt>
-<dd><p>Default `16`. Fractal level of the dirt.</p></dd>
+<dt>soil_levels</dt>
+<dd><p>Default `16`. Fractal level of the soil.</p></dd>
 
 
-<dt>dirt_color_light</dt>
-<dd><p>Default `"#b39474"`. Light tint of dirt.</p></dd>
+<dt>soil_color_light</dt>
+<dd><p>Default `"#b39474"`. Light tint of soil.</p></dd>
 
 
-<dt>dirt_color_dark</dt>
-<dd><p>Default `"#8a623b"`. Dark tint of dirt.</p></dd>
+<dt>soil_color_dark</dt>
+<dd><p>Default `"#8a623b"`. Dark tint of soil.</p></dd>
 
 
-<dt>dirt_gradient</dt>
-<dd><p>Default `2`. Sharpness of the dirt darkening gradient. `0` turns off the gradient entirely.</p></dd>
+<dt>soil_gradient</dt>
+<dd><p>Default `2`. Sharpness of the soil darkening gradient. `0` turns off the gradient entirely.</p></dd>
 
 
-<dt>dirt_gradient_darken</dt>
-<dd><p>Default `4`. Amount to darken the `dirt_color_dark` value for the deepest dirt layers. Higher
+<dt>soil_gradient_darken</dt>
+<dd><p>Default `4`. Amount to darken the `soil_color_dark` value for the deepest soil layers. Higher
 numbers increase the darkening effect.</p></dd>
 
 
@@ -353,12 +353,12 @@ if `triangulate = TRUE`.</p></dd>
 <span class="r-plt img"><img src="plot_3d-2.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co">#With a dirt texture to the base  </span></span></span>
+<span class="r-in"><span><span class="co">#With a soil texture to the base  </span></span></span>
 <span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span> <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span>texture<span class="op">=</span><span class="st">"imhof3"</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span> <span class="fu">plot_3d</span><span class="op">(</span><span class="va">montereybay</span>, zscale<span class="op">=</span><span class="fl">50</span>, water <span class="op">=</span> <span class="cn">TRUE</span>,  watercolor<span class="op">=</span><span class="st">"imhof4"</span>, </span></span>
-<span class="r-in"><span>         waterlinecolor<span class="op">=</span><span class="st">"white"</span>, waterlinealpha<span class="op">=</span><span class="fl">0.5</span>, dirt<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span>         waterlinecolor<span class="op">=</span><span class="st">"white"</span>, waterlinealpha<span class="op">=</span><span class="fl">0.5</span>, soil<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_camera.html">render_camera</a></span><span class="op">(</span>theta<span class="op">=</span><span class="fl">225</span>, phi<span class="op">=</span><span class="fl">7</span>, zoom<span class="op">=</span><span class="fl">0.5</span>, fov<span class="op">=</span><span class="fl">67</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span>clear <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="plot_3d-3.png" alt="" width="768" height="768"></span>

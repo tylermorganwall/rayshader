@@ -88,9 +88,6 @@
     <loc>https://www.rayshader.com/reference/generate_contour_overlay.html</loc>
   </url>
   <url>
-    <loc>https://www.rayshader.com/reference/generate_dirt_textures.html</loc>
-  </url>
-  <url>
     <loc>https://www.rayshader.com/reference/generate_label_overlay.html</loc>
   </url>
   <url>
@@ -104,6 +101,9 @@
   </url>
   <url>
     <loc>https://www.rayshader.com/reference/generate_scalebar_overlay.html</loc>
+  </url>
+  <url>
+    <loc>https://www.rayshader.com/reference/generate_soil_textures.html</loc>
   </url>
   <url>
     <loc>https://www.rayshader.com/reference/generate_waterline_overlay.html</loc>
