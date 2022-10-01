@@ -329,11 +329,11 @@ plot_gg = function(ggobj, width = 3, height = 3,
       } else if (is.null(fillscale$breaks) && is.null(colorscale$breaks)) {
         same_breaks = TRUE
       }
-      if((class(fillscale$labels) != "waiver" && class(colorscale$labels) != "waiver")) {
+      if(!inherits(fillscale$labels, "waiver") && !inherits(colorscale$labels, "waiver")) {
         if(all(fillscale$labels == colorscale$labels)) {
           same_labels = TRUE
         }
-      } else if ((class(fillscale$labels) == "waiver" && class(colorscale$labels) == "waiver")) {
+      } else if (inherits(fillscale$labels, "waiver") && inherits(colorscale$labels, "waiver")) {
         same_labels = TRUE
       }
       if(fillscale$call == colorscale$call) {
@@ -352,8 +352,8 @@ plot_gg = function(ggobj, width = 3, height = 3,
       if(height_aes %in% ggplotobj2$scales$scales[[i]]$aesthetics) {
         ggplotobj2$scales$scales[[i]]$palette = black_white_pal
         ggplotobj2$scales$scales[[i]]$na.value = "white"
-        has_guide = !any("guide" %in% class(ggplotobj2$scales$scales[[i]]$guide))
-        if(any(c("logical" %in% class(ggplotobj2$scales$scales[[i]]$guide)))) {
+        has_guide = !any(inherits(ggplotobj2$scales$scales[[i]]$guide,"guide"))
+        if(any(inherits(ggplotobj2$scales$scales[[i]]$guide,"logical"))) {
           has_guide = ggplotobj2$scales$scales[[i]]$guide
         }
         if(has_guide) {
@@ -442,7 +442,7 @@ plot_gg = function(ggobj, width = 3, height = 3,
       }
       if("fill" %in% names(ggplotobj2$layers[[layer]]$mapping)) {
         ggplotobj2$layers[[layer]]$aes_params$size = NA
-        if(any(polygon_offset_geoms %in% class(ggplotobj2$layers[[layer]]$geom)) && offset_edges) {
+        if(any(as.logical(inherits(ggplotobj2$layers[[layer]]$geom,polygon_offset_geoms))) && offset_edges) {
           ggplotobj2$layers[[layer]]$aes_params$size = polygon_offset_value
           ggplotobj2$layers[[layer]]$aes_params$colour = "white"
         }
@@ -507,7 +507,7 @@ plot_gg = function(ggobj, width = 3, height = 3,
     if(length(ggplotobj2$layers) > 0) {
       for(i in seq_along(1:length(ggplotobj2$layers))) {
         ggplotobj2$layers[[i]]$aes_params$size = NA
-        if(any(polygon_offset_geoms %in% class(ggplotobj2$layers[[layer]]$geom)) && offset_edges) {
+        if(any(as.logical(inherits(ggplotobj2$layers[[layer]]$geom,polygon_offset_geoms))) && offset_edges) {
           ggplotobj2$layers[[i]]$aes_params$size = polygon_offset_value
           ggplotobj2$layers[[i]]$aes_params$colour = "white"
         }
@@ -517,7 +517,7 @@ plot_gg = function(ggobj, width = 3, height = 3,
     if(length(ggplotobj2$layers) > 0) {
       for(i in seq_along(1:length(ggplotobj2$layers))) {
         ggplotobj2$layers[[i]]$aes_params$fill = "white"
-        if("GeomContour" %in% class(ggplotobj2$layers[[i]]$geom)) {
+        if(inherits(ggplotobj2$layers[[i]]$geom,"GeomContour")) {
           ggplotobj2$layers[[i]]$aes_params$alpha = 0
         }
       }
