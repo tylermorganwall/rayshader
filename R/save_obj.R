@@ -109,7 +109,7 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
   scalebar1_written = FALSE
   scalebar2_written = FALSE
   floating_layer_num = 1
-  dirt_textures = 1
+  soil_textures = 1
   
   write_mtl = function(idrow, con) {
     if(!is.na(idrow$texture_file)) {
@@ -202,11 +202,11 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
       cat("illum 1 \n", file=con)
       
       cat("\n", file=con)
-    } else if(!is.na(idrow$dirt_texture)) {
-      cat(sprintf("newmtl ray_dirt_base%d \n",dirt_textures), file=con)
-      file.copy(idrow$dirt_texture[[1]], sprintf("%s_dirt%d.png",noext_filename, dirt_textures), overwrite = TRUE)
-      cat(sprintf("map_Kd %s \n",sprintf("%s_dirt%d.png",basename(noext_filename),dirt_textures)), file=con)
-      dirt_textures <<- dirt_textures + 1
+    } else if(!is.na(idrow$soil_texture)) {
+      cat(sprintf("newmtl ray_soil_base%d \n",soil_textures), file=con)
+      file.copy(idrow$soil_texture[[1]], sprintf("%s_soil%d.png",noext_filename, soil_textures), overwrite = TRUE)
+      cat(sprintf("map_Kd %s \n",sprintf("%s_soil%d.png",basename(noext_filename),soil_textures)), file=con)
+      soil_textures <<- soil_textures + 1
       cat("illum 1 \n", file=con)
       
       cat("\n", file=con)
@@ -245,9 +245,9 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
                                    "north_symbol","arrow_symbol", "bevel_symbol",
                                    "background_symbol", "scalebar_col1", "scalebar_col2",
                                    "surface_tris","polygon3d", "shadow","floating_overlay","floating_overlay_tris",
-                                   "base_dirt1", "base_dirt2")) {
+                                   "base_soil1", "base_soil2")) {
       vertex_info$startindex[row] = number_vertices + 1
-      if(vertex_info$tag[row] %in%  c("surface", "surface_tris", "shadow","floating_overlay","floating_overlay_tris", "base_dirt1", "base_dirt2")) {
+      if(vertex_info$tag[row] %in%  c("surface", "surface_tris", "shadow","floating_overlay","floating_overlay_tris", "base_soil1", "base_soil2")) {
         vertex_info$startindextex[row] = number_texcoords + 1
       }
       vertex_info$startindexnormals[row] = number_normals + 1
@@ -544,22 +544,22 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
                              floating_layer_indices[,3], floating_layer_texindices[,3], floating_layer_normalindices[,3])),
           sep="\n", file=con)
       
-    } else if (vertex_info$tag[row] %in% c("base_dirt1","base_dirt2")) {
+    } else if (vertex_info$tag[row] %in% c("base_soil1","base_soil2")) {
       if(save_texture) {
         cat("g Base", file=con, sep ="\n")
-        if(vertex_info$tag[row] == "base_dirt1") {
-          cat("usemtl ray_dirt_base1", file=con, sep ="\n")
+        if(vertex_info$tag[row] == "base_soil1") {
+          cat("usemtl ray_soil_base1", file=con, sep ="\n")
         } else {
-          cat("usemtl ray_dirt_base2", file=con, sep ="\n")
+          cat("usemtl ray_soil_base2", file=con, sep ="\n")
         }
       }
-      dirt_layer_indices = matrix(vertex_info$startindex[row]:vertex_info$endindex[row], ncol=3, byrow=TRUE)
-      dirt_layer_texindices = matrix(vertex_info$startindextex[row]:vertex_info$endindextex[row], ncol=3, byrow=TRUE)
-      # dirt_layer_normalindices = matrix(vertex_info$startindexnormals[row]:vertex_info$startindexnormals[row], ncol=3, byrow=TRUE)
+      soil_layer_indices = matrix(vertex_info$startindex[row]:vertex_info$endindex[row], ncol=3, byrow=TRUE)
+      soil_layer_texindices = matrix(vertex_info$startindextex[row]:vertex_info$endindextex[row], ncol=3, byrow=TRUE)
+      # soil_layer_normalindices = matrix(vertex_info$startindexnormals[row]:vertex_info$startindexnormals[row], ncol=3, byrow=TRUE)
       cat(paste("f", sprintf("%d/%d %d/%d %d/%d", 
-                             dirt_layer_indices[,1], dirt_layer_texindices[,1], #dirt_layer_normalindices[,1],
-                             dirt_layer_indices[,2], dirt_layer_texindices[,2], #dirt_layer_normalindices[,2],
-                             dirt_layer_indices[,3], dirt_layer_texindices[,3])), #dirt_layer_normalindices[,3])),
+                             soil_layer_indices[,1], soil_layer_texindices[,1], #soil_layer_normalindices[,1],
+                             soil_layer_indices[,2], soil_layer_texindices[,2], #soil_layer_normalindices[,2],
+                             soil_layer_indices[,3], soil_layer_texindices[,3])), #soil_layer_normalindices[,3])),
           sep="\n", file=con)
     }
   }

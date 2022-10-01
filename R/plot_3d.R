@@ -25,13 +25,13 @@
 #'@param waterlinealpha Default `1`. Water line tranparency. 
 #'@param linewidth Default `2`. Width of the edge lines in the scene.
 #'@param lineantialias Default `FALSE`. Whether to anti-alias the lines in the scene.
-#'@param dirt Default `FALSE`. Whether to draw the solid base with a textured dirt layer.
-#'@param dirt_freq Default `0.1`. Frequency of dirt clumps. Higher frequency values give smaller dirt clumps.
-#'@param dirt_levels Default `16`. Fractal level of the dirt.
-#'@param dirt_color_light Default `"#b39474"`. Light tint of dirt.
-#'@param dirt_color_dark Default `"#8a623b"`. Dark tint of dirt.
-#'@param dirt_gradient Default `2`. Sharpness of the dirt darkening gradient. `0` turns off the gradient entirely.
-#'@param dirt_gradient_darken Default `4`. Amount to darken the `dirt_color_dark` value for the deepest dirt layers. Higher
+#'@param soil Default `FALSE`. Whether to draw the solid base with a textured soil layer.
+#'@param soil_freq Default `0.1`. Frequency of soil clumps. Higher frequency values give smaller soil clumps.
+#'@param soil_levels Default `16`. Fractal level of the soil.
+#'@param soil_color_light Default `"#b39474"`. Light tint of soil.
+#'@param soil_color_dark Default `"#8a623b"`. Dark tint of soil.
+#'@param soil_gradient Default `2`. Sharpness of the soil darkening gradient. `0` turns off the gradient entirely.
+#'@param soil_gradient_darken Default `4`. Amount to darken the `soil_color_dark` value for the deepest soil layers. Higher
 #'numbers increase the darkening effect.
 #'@param theta Default `45`. Rotation around z-axis.
 #'@param phi Default `45`. Azimuth angle.
@@ -85,12 +85,12 @@
 #'render_snapshot(clear = TRUE)
 #'}
 #'
-#'#With a dirt texture to the base  
+#'#With a soil texture to the base  
 #'\donttest{
 #'montereybay %>%
 #'  sphere_shade(texture="imhof3") %>%
 #'  plot_3d(montereybay, zscale=50, water = TRUE,  watercolor="imhof4", 
-#'          waterlinecolor="white", waterlinealpha=0.5, dirt=TRUE)
+#'          waterlinecolor="white", waterlinealpha=0.5, soil=TRUE)
 #'render_camera(theta=225, phi=7, zoom=0.5, fov=67)
 #'render_snapshot(clear = TRUE)
 #'}
@@ -137,9 +137,9 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
                    water = FALSE, waterdepth = 0, watercolor="dodgerblue", wateralpha = 0.5, 
                    waterlinecolor=NULL, waterlinealpha = 1, 
                    linewidth = 2, lineantialias = FALSE, 
-                   dirt = FALSE, dirt_freq = 0.1, dirt_levels = 16, 
-                   dirt_color_light = "#b39474", dirt_color_dark = "#8a623b", 
-                   dirt_gradient = 2, dirt_gradient_darken = 4,
+                   soil = FALSE, soil_freq = 0.1, soil_levels = 16, 
+                   soil_color_light = "#b39474", soil_color_dark = "#8a623b", 
+                   soil_gradient = 2, soil_gradient_darken = 4,
                    theta=45, phi = 45, fov=0, zoom = 1, background="white", windowsize = 600,
                    precomputed_normals = NULL, asp = 1,
                    triangulate = FALSE, max_error = 0, max_tri = 0, verbose = FALSE,
@@ -300,8 +300,8 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
   par3d(windowRect = windowsize,...)
   if(solid && !triangulate) {
     make_base(heightmap,basedepth=soliddepth,basecolor=solidcolor,zscale=zscale, 
-              dirt = dirt, dirt_freq = dirt_freq, dirt_levels = dirt_levels, dirt_color1=dirt_color_light,
-              dirt_color2=dirt_color_dark, dirt_gradient = dirt_gradient, gradient_darken = dirt_gradient_darken)
+              soil = soil, soil_freq = soil_freq, soil_levels = soil_levels, soil_color1=soil_color_light,
+              soil_color2=soil_color_dark, soil_gradient = soil_gradient, gradient_darken = soil_gradient_darken)
   } else if(solid && triangulate) {
     make_base_triangulated(tris,basedepth=soliddepth,basecolor=solidcolor)
   }

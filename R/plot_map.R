@@ -97,7 +97,7 @@ plot_map = function(hillshade, rotate=0, asp = 1,
                           title_bar_color = title_bar_color, title_bar_alpha = title_bar_alpha, 
                           title_position = title_position)
     }
-    rayimage::plot_image(hillshade, asp = asp)
+    rayimage::plot_image(hillshade, asp = asp, ...)
   } else if(length(dim(hillshade)) == 2) {
     if(number_of_rots != 0) {
       for(j in 1:number_of_rots) {
@@ -112,7 +112,7 @@ plot_map = function(hillshade, rotate=0, asp = 1,
                           title_bar_color = title_bar_color, title_bar_alpha = title_bar_alpha, 
                           title_position = title_position)
     }
-    rayimage::plot_image(array_from_mat, asp = asp)
+    rayimage::plot_image(array_from_mat, asp = asp, ...)
   } else {
     stop("`hillshade` is neither array nor matrix--convert to either to plot.")
   }

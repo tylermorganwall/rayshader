@@ -8,9 +8,9 @@
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
 #'of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
 #'@keywords internal
-make_base = function(heightmap,basedepth=0,basecolor="grey20",zscale=1, dirt = FALSE,
-                     dirt_freq = 0.1, dirt_levels = 8, dirt_color1 = "black", dirt_color2 = "black",
-                     dirt_gradient = 0, gradient_darken = 1) {
+make_base = function(heightmap,basedepth=0,basecolor="grey20",zscale=1, soil = FALSE,
+                     soil_freq = 0.1, soil_levels = 8, soil_color1 = "black", soil_color2 = "black",
+                     soil_gradient = 0, gradient_darken = 1) {
   heightmap = heightmap/zscale
   edge_vals = unique(c(heightmap[1,], heightmap[,1],heightmap[nrow(heightmap),],heightmap[,ncol(heightmap)]))
   if(length(edge_vals) == 1 && all(!is.na(edge_vals))) {
@@ -54,16 +54,16 @@ make_base = function(heightmap,basedepth=0,basecolor="grey20",zscale=1, dirt = F
     fullsides[,3] = -fullsides[,3] - ncol(heightmap)/2
     fullsides = fullsides[nrow(fullsides):1,]
 
-    if(dirt) {
+    if(soil) {
       horizontal_sides = fullsides[!direction_vec,]
       horizontal_heights = edge_heights[!direction_vec]
 
       vertical_sides = fullsides[direction_vec,]
       vertical_heights = edge_heights[direction_vec]
       
-      textures = generate_dirt_textures(heightmap, base_depth = max(fullsides[,2],na.rm=TRUE) - basedepth, zscale=zscale,
-                                        freq=dirt_freq, levels = dirt_levels,  color1= dirt_color1, color2= dirt_color2,
-                                        dirt_gradient = dirt_gradient, gradient_darken = gradient_darken)
+      textures = generate_soil_textures(heightmap, base_depth = max(fullsides[,2],na.rm=TRUE) - basedepth, zscale=zscale,
+                                        freq=soil_freq, levels = soil_levels,  color1= soil_color1, color2= soil_color2,
+                                        soil_gradient = soil_gradient, gradient_darken = gradient_darken)
       
       min_hside_y = min(horizontal_sides[,2],na.rm=TRUE)
       max_hside_y = max(horizontal_sides[,2],na.rm=TRUE)
@@ -90,11 +90,11 @@ make_base = function(heightmap,basedepth=0,basecolor="grey20",zscale=1, dirt = F
       
       rgl::triangles3d(horizontal_sides, 
                        texture = textures[1], texcoords = cbind(horizontal_texcoords_x,horizontal_texcoords_y),
-                       lit=FALSE,front="filled",back="cull",tag = "base_dirt1")
+                       lit=FALSE,front="filled",back="cull",tag = "base_soil1")
       
       rgl::triangles3d(vertical_sides, 
                        texture = textures[2],texcoords = cbind(vertical_texcoords_x,vertical_texcoords_y),
-                       lit=FALSE,front="filled",back="cull",tag = "base_dirt2")
+                       lit=FALSE,front="filled",back="cull",tag = "base_soil2")
       
     } else {
       rgl::triangles3d(fullsides, 
@@ -120,16 +120,16 @@ make_base = function(heightmap,basedepth=0,basecolor="grey20",zscale=1, dirt = F
     xznormals[!is.na(xznormals)] = 0
     ynormals[!is.na(ynormals)] = -1
     
-    if(dirt) {
+    if(soil) {
       horizontal_sides = fullsides[!direction_vec,]
       horizontal_heights = edge_heights[!direction_vec]
 
       vertical_sides = fullsides[direction_vec,]
       vertical_heights = edge_heights[direction_vec]
 
-      textures = generate_dirt_textures(heightmap, base_depth = max(fullsides[,2],na.rm=TRUE) - basedepth, zscale=zscale,
-                                        freq=dirt_freq, levels = dirt_levels,  color1= dirt_color1, color2= dirt_color2,
-                                        dirt_gradient = dirt_gradient, gradient_darken = gradient_darken)
+      textures = generate_soil_textures(heightmap, base_depth = max(fullsides[,2],na.rm=TRUE) - basedepth, zscale=zscale,
+                                        freq=soil_freq, levels = soil_levels,  color1= soil_color1, color2= soil_color2,
+                                        soil_gradient = soil_gradient, gradient_darken = gradient_darken)
       
       min_hside_y = min(horizontal_sides[,2],na.rm=TRUE)
       max_hside_y = max(horizontal_sides[,2],na.rm=TRUE)
@@ -154,11 +154,11 @@ make_base = function(heightmap,basedepth=0,basecolor="grey20",zscale=1, dirt = F
       
       rgl::triangles3d(horizontal_sides, 
                        texture = textures[1], texcoords = cbind(horizontal_texcoords_x,horizontal_texcoords_y),
-                       lit=FALSE,front="filled",back="cull",tag = "base_dirt1")
+                       lit=FALSE,front="filled",back="cull",tag = "base_soil1")
       
       rgl::triangles3d(vertical_sides, 
                        texture = textures[2],texcoords = cbind(vertical_texcoords_x,vertical_texcoords_y),
-                       lit=FALSE,front="filled",back="cull",tag = "base_dirt2")
+                       lit=FALSE,front="filled",back="cull",tag = "base_soil2")
     } else {
       rgl::triangles3d(fullsides,
                        texture = NULL,
