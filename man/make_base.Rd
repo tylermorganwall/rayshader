@@ -9,12 +9,12 @@ make_base(
   basedepth = 0,
   basecolor = "grey20",
   zscale = 1,
-  dirt = FALSE,
-  dirt_freq = 0.1,
-  dirt_levels = 8,
-  dirt_color1 = "black",
-  dirt_color2 = "black",
-  dirt_gradient = 0,
+  soil = FALSE,
+  soil_freq = 0.1,
+  soil_levels = 8,
+  soil_color1 = "black",
+  soil_color2 = "black",
+  soil_gradient = 0,
   gradient_darken = 1
 )
 }

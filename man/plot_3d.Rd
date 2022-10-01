@@ -26,13 +26,13 @@ plot_3d(
   waterlinealpha = 1,
   linewidth = 2,
   lineantialias = FALSE,
-  dirt = FALSE,
-  dirt_freq = 0.1,
-  dirt_levels = 16,
-  dirt_color_light = "#b39474",
-  dirt_color_dark = "#8a623b",
-  dirt_gradient = 2,
-  dirt_gradient_darken = 4,
+  soil = FALSE,
+  soil_freq = 0.1,
+  soil_levels = 16,
+  soil_color_light = "#b39474",
+  soil_color_dark = "#8a623b",
+  soil_gradient = 2,
+  soil_gradient_darken = 4,
   theta = 45,
   phi = 45,
   fov = 0,
@@ -93,19 +93,19 @@ the luminance of the `background` color in the CIELab colorspace if not specifie
 
 \item{lineantialias}{Default `FALSE`. Whether to anti-alias the lines in the scene.}
 
-\item{dirt}{Default `FALSE`. Whether to draw the solid base with a textured dirt layer.}
+\item{soil}{Default `FALSE`. Whether to draw the solid base with a textured soil layer.}
 
-\item{dirt_freq}{Default `0.1`. Frequency of dirt clumps. Higher frequency values give smaller dirt clumps.}
+\item{soil_freq}{Default `0.1`. Frequency of soil clumps. Higher frequency values give smaller soil clumps.}
 
-\item{dirt_levels}{Default `16`. Fractal level of the dirt.}
+\item{soil_levels}{Default `16`. Fractal level of the soil.}
 
-\item{dirt_color_light}{Default `"#b39474"`. Light tint of dirt.}
+\item{soil_color_light}{Default `"#b39474"`. Light tint of soil.}
 
-\item{dirt_color_dark}{Default `"#8a623b"`. Dark tint of dirt.}
+\item{soil_color_dark}{Default `"#8a623b"`. Dark tint of soil.}
 
-\item{dirt_gradient}{Default `2`. Sharpness of the dirt darkening gradient. `0` turns off the gradient entirely.}
+\item{soil_gradient}{Default `2`. Sharpness of the soil darkening gradient. `0` turns off the gradient entirely.}
 
-\item{dirt_gradient_darken}{Default `4`. Amount to darken the `dirt_color_dark` value for the deepest dirt layers. Higher
+\item{soil_gradient_darken}{Default `4`. Amount to darken the `soil_color_dark` value for the deepest soil layers. Higher
 numbers increase the darkening effect.}
 
 \item{theta}{Default `45`. Rotation around z-axis.}
@@ -173,12 +173,12 @@ montereybay \%>\%
 render_snapshot(clear = TRUE)
 }
 
-#With a dirt texture to the base  
+#With a soil texture to the base  
 \donttest{
 montereybay \%>\%
  sphere_shade(texture="imhof3") \%>\%
  plot_3d(montereybay, zscale=50, water = TRUE,  watercolor="imhof4", 
-         waterlinecolor="white", waterlinealpha=0.5, dirt=TRUE)
+         waterlinecolor="white", waterlinealpha=0.5, soil=TRUE)
 render_camera(theta=225, phi=7, zoom=0.5, fov=67)
 render_snapshot(clear = TRUE)
 }
