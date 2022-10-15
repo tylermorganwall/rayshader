@@ -631,6 +631,10 @@ plot_gg = function(ggobj, width = 3, height = 3,
         flat_distance = -3
       }
     }
+  } else {
+    if(flat_direction == "-z") {
+      flat_distance = -flat_distance
+    } 
   }
   shadow_flat = flat_plot_render && shadow && flat_distance*scale < shadowdepth
   shadowdepth = ifelse(shadow_flat, flat_distance*scale + shadowdepth, shadowdepth)
