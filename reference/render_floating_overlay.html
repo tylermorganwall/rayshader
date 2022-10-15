@@ -18,7 +18,7 @@ Note: Multiple layers with transparency can cause rendering issues in rgl."><met
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.28.11</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.29.0</span>
       </span>
     </div>
 
@@ -110,7 +110,8 @@ Note: Multiple layers with transparency can cause rendering issues in rgl."><met
 <span>  baseshape <span class="op">=</span> <span class="st">"rectangle"</span>,</span>
 <span>  remove_na <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  reorient <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  clear_layers <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  clear_layers <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  horizontal_offset <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -151,6 +152,10 @@ of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
 
 <dt>clear_layers</dt>
 <dd><p>Default `FALSE`. Clears all existing floating layers on the visualization.</p></dd>
+
+
+<dt>horizontal_offset</dt>
+<dd><p>Default `c(0,0)`. Distance (in 3D space) to offset the floating offset in the x/y directions.</p></dd>
 
 </dl></div>
     <div id="value">
