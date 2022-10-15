@@ -14,6 +14,7 @@
 #'@param clear_layers Default `FALSE`. Clears all existing floating layers on the visualization.
 #'@param remove_na Default `TRUE`. Whether to make the overlay transparent above empty spaces (represented by `NA` values) in the underlying elevation matrix.
 #'@param reorient Default `TRUE`. Whether to reorient the image array to match the 3D plot.
+#'@param horizontal_offset Default `c(0,0)`. Distance (in 3D space) to offset the floating offset in the x/y directions.
 #'@return Adds a 3D floating layer to the map. No return value.
 #'@export
 #'@examples
@@ -52,7 +53,7 @@
 #'}
 render_floating_overlay = function(overlay = NULL, altitude = NULL, heightmap = NULL, zscale=1, 
                                    alpha = 1, baseshape="rectangle", remove_na = TRUE, 
-                                   reorient = TRUE, clear_layers = FALSE) {
+                                   reorient = TRUE, clear_layers = FALSE, horizontal_offset = c(0,0)) {
   if(clear_layers) {
     rgl::pop3d(tag = c("floating_overlay","floating_overlay_tris"))
     if(is.null(overlay)) {
@@ -81,9 +82,6 @@ render_floating_overlay = function(overlay = NULL, altitude = NULL, heightmap = 
   if(any(overlay > 1 | overlay < 0, na.rm = TRUE)) {
     stop("Argument `overlay` must not contain any entries less than 0 or more than 1")
   }
-  flipud = function(x) {
-    x[nrow(x):1,]
-  }
 
   hm = matrix(altitude,nrow=dim(overlay)[1],ncol=dim(overlay)[2])
   tempmap = tempfile(fileext = ".png")
@@ -109,10 +107,10 @@ render_floating_overlay = function(overlay = NULL, altitude = NULL, heightmap = 
 
   save_png(overlay,tempmap)
   dim(heightmap) = unname(dim(heightmap))
-  rowmin = min((+1):(rows) - rows/2)
-  rowmax = max((+1):(rows) - rows/2)
-  colmin = min(-(+1):-(cols) + cols/2+1)
-  colmax = max(-(+1):-(cols) + cols/2+1)
+  rowmin = min((+1):(rows) - rows/2) + horizontal_offset[1]
+  rowmax = max((+1):(rows) - rows/2) + horizontal_offset[1]
+  colmin = min(-(+1):-(cols) + cols/2+1) + horizontal_offset[2]
+  colmax = max(-(+1):-(cols) + cols/2+1) + horizontal_offset[2]
   depth = altitude/zscale
   
   tri1 = matrix(c(rowmax,rowmax,rowmin,
@@ -122,7 +120,7 @@ render_floating_overlay = function(overlay = NULL, altitude = NULL, heightmap = 
                   depth,depth,depth,
                   colmax,colmax,colmin), nrow=3,ncol=3)
   rgl.triangles(rbind(tri1,tri2), texcoords = matrix(c(1,1,0,0,1,0,
-                                                       1,0,0,1,1,0),nrow=6,ncol=2),
+                                                       0,1,1,0,0,1),nrow=6,ncol=2),
                 texture=tempmap, normals = matrix(c(0,0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0,0), nrow=6,ncol=3),
                 lit=FALSE,tag = "floating_overlay_tris",textype = "rgba")
 }

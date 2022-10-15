@@ -15,6 +15,12 @@ plot_gg(
   scale = 150,
   pointcontract = 0.7,
   offset_edges = FALSE,
+  flat_plot_render = FALSE,
+  flat_distance = "auto",
+  flat_transparent_bg = FALSE,
+  flat_direction = "-z",
+  shadow = TRUE,
+  shadowdepth = "auto",
   preview = FALSE,
   raytrace = TRUE,
   sunangle = 315,
@@ -65,6 +71,19 @@ variable is ignored when performing the 3D projection).}
 \item{offset_edges}{Default `FALSE`. If `TRUE`, inserts a small amount of space between polygons for "geom_sf", "geom_tile", "geom_hex", and "geom_polygon" layers.
 If you pass in a number, the space between polygons will be a line of that width. You can also specify a number to control the thickness of the offset. 
 Note: this feature may end up removing thin polygons from the plot entirely--use with care.}
+
+\item{flat_plot_render}{Default `FALSE`. Whether to render a flat version of the ggplot above (or alongside) the 3D version.}
+
+\item{flat_distance}{Default `"auto"`. Distance to render the flat version of the plot from the 3D version.}
+
+\item{flat_transparent_bg}{Default `FALSE`. Whether to set the background of the flat version of the ggplot to transparent.}
+
+\item{flat_direction}{Default `"-z"`. Direction to render the flat copy of the plot, if `flat_plot_render = TRUE`.
+Other options `c("z", "x", "-x", "y", "-y")`.}
+
+\item{shadow}{Default `TRUE`. If `FALSE`, no shadow is rendered.}
+
+\item{shadowdepth}{Default `auto`, which sets it to `soliddepth - soliddepth/10`. Depth of the shadow layer.}
 
 \item{preview}{Default `FALSE`. If `TRUE`, the raytraced 2D ggplot will be displayed on the current device.}
 
@@ -221,6 +240,14 @@ plot_gg(mtplot_density_facet, width = 6, preview = TRUE)
 \dontrun{
 plot_gg(mtplot_density_facet, width = 6, windowsize=c(1400,866),
        zoom = 0.55, theta = -10, phi = 25, scale=300)
+render_snapshot(clear = TRUE)
+}
+
+#We can also render a flat version of the plot alongside (or above/below) the 3D version.
+\dontrun{
+plot_gg(mtplot_density_facet, width = 6, windowsize=c(1400,866),
+       zoom = 0.65, theta = -25, phi = 35, scale=300, flat_plot_render=TRUE,
+       flat_direction = "x", background = "grey80")
 render_snapshot(clear = TRUE)
 }
 }

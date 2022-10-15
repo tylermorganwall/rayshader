@@ -13,7 +13,8 @@ render_floating_overlay(
   baseshape = "rectangle",
   remove_na = TRUE,
   reorient = TRUE,
-  clear_layers = FALSE
+  clear_layers = FALSE,
+  horizontal_offset = c(0, 0)
 )
 }
 \arguments{
@@ -35,6 +36,8 @@ of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
 \item{reorient}{Default `TRUE`. Whether to reorient the image array to match the 3D plot.}
 
 \item{clear_layers}{Default `FALSE`. Clears all existing floating layers on the visualization.}
+
+\item{horizontal_offset}{Default `c(0,0)`. Distance (in 3D space) to offset the floating offset in the x/y directions.}
 }
 \value{
 Adds a 3D floating layer to the map. No return value.

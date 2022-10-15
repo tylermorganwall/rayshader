@@ -34,6 +34,13 @@
 #'@param offset_edges Default `FALSE`. If `TRUE`, inserts a small amount of space between polygons for "geom_sf", "geom_tile", "geom_hex", and "geom_polygon" layers.
 #'If you pass in a number, the space between polygons will be a line of that width. You can also specify a number to control the thickness of the offset. 
 #'Note: this feature may end up removing thin polygons from the plot entirely--use with care.
+#'@param flat_plot_render Default `FALSE`. Whether to render a flat version of the ggplot above (or alongside) the 3D version.
+#'@param flat_distance Default `"auto"`. Distance to render the flat version of the plot from the 3D version.
+#'@param flat_transparent_bg Default `FALSE`. Whether to set the background of the flat version of the ggplot to transparent.
+#'@param flat_direction Default `"-z"`. Direction to render the flat copy of the plot, if `flat_plot_render = TRUE`.
+#'Other options `c("z", "x", "-x", "y", "-y")`.
+#'@param shadow Default `TRUE`. If `FALSE`, no shadow is rendered.
+#'@param shadowdepth Default `auto`, which sets it to `soliddepth - soliddepth/10`. Depth of the shadow layer.
 #'@param preview Default `FALSE`. If `TRUE`, the raytraced 2D ggplot will be displayed on the current device.
 #'@param raytrace Default `FALSE`. Whether to add a raytraced layer.
 #'@param sunangle Default `315` (NW). If raytracing, the angle (in degrees) around the matrix from which the light originates. 
@@ -159,9 +166,20 @@
 #'        zoom = 0.55, theta = -10, phi = 25, scale=300)
 #'render_snapshot(clear = TRUE)
 #'}
+#'
+#'#We can also render a flat version of the plot alongside (or above/below) the 3D version.
+#'\dontrun{
+#'plot_gg(mtplot_density_facet, width = 6, windowsize=c(1400,866),
+#'        zoom = 0.65, theta = -25, phi = 35, scale=300, flat_plot_render=TRUE,
+#'        flat_direction = "x", background = "grey80")
+#'render_snapshot(clear = TRUE)
+#'}
 plot_gg = function(ggobj, width = 3, height = 3, 
                    height_aes = NULL, invert = FALSE, shadow_intensity = 0.5,
                    units = c("in", "cm", "mm"), scale=150, pointcontract = 0.7, offset_edges = FALSE,
+                   flat_plot_render = FALSE, flat_distance = "auto", 
+                   flat_transparent_bg = FALSE, flat_direction = "-z",
+                   shadow = TRUE, shadowdepth = "auto",
                    preview = FALSE, raytrace = TRUE, sunangle = 315, anglebreaks = seq(30,40,0.1), 
                    multicore = FALSE, lambert=TRUE, triangulate = TRUE,
                    max_error = 0.001, max_tri = 0, verbose= FALSE, emboss_text = 0, emboss_grid = 0,
@@ -174,9 +192,11 @@ plot_gg = function(ggobj, width = 3, height = 3,
   colormaptemp = tempfile(fileext = ".png")
   if(methods::is(ggobj,"list") && length(ggobj) == 2) {
     ggplotobj2 = unserialize(serialize(ggobj[[2]], NULL))
+    color_gg = unserialize(serialize(ggobj[[1]], NULL))
     ggplot2::ggsave(colormaptemp,ggobj[[1]],width = width,height = height,dpi=300)
   } else {
     ggplotobj2 = unserialize(serialize(ggobj, NULL))
+    color_gg = unserialize(serialize(ggobj, NULL))
     ggplot2::ggsave(colormaptemp,ggplotobj2,width = width,height = height,dpi=300)
   }
   set_to_white = function(grob) {
@@ -584,6 +604,31 @@ plot_gg = function(ggobj, width = 3, height = 3,
   if(invert) {
     mapheight = 1 - mapheight
   }
+  zscale = 1/scale
+  
+  if(shadowdepth == "auto") {
+    if(min(mapheight,na.rm=TRUE) != max(mapheight,na.rm=TRUE)) {
+      shadowdepth = -scale/5
+    } else {
+      max_dim = max(dim(mapheight))
+      shadowdepth = -max_dim/25
+    }
+  } else {
+    shadowdepth = shadowdepth/zscale
+  }
+  if(flat_distance == "auto") {
+    if(flat_direction == "x" || flat_direction == "-x" || flat_direction == "y" || flat_direction == "-y") {
+      flat_distance = 0.5
+    } else {
+      if(flat_direction == "z") {
+        flat_distance = 3
+      } else {
+        flat_distance = -3
+      }
+    }
+  }
+  shadow_flat = flat_plot_render && shadow && flat_distance*scale < shadowdepth
+  shadowdepth = ifelse(shadow_flat, flat_distance*scale + shadowdepth, shadowdepth)
   if(raytrace) {
     if(is.null(saved_shadow_matrix)) {
       raylayer = ray_shade(t(1-mapheight),maxsearch = 600,sunangle = sunangle,anglebreaks = anglebreaks,
@@ -591,8 +636,9 @@ plot_gg = function(ggobj, width = 3, height = 3,
       if(!preview) {
         mapcolor %>%
           add_shadow(raylayer,shadow_intensity) %>%
-          plot_3d((t(1-mapheight)),zscale=1/scale, triangulate = triangulate,
-                  max_error = max_error, max_tri = max_tri, verbose = verbose, ... )
+          plot_3d((t(1-mapheight)),zscale=1/scale, triangulate = triangulate, 
+                  max_error = max_error, max_tri = max_tri, verbose = verbose, shadow = shadow,
+                  shadowdepth=shadowdepth/scale, ... )
       } else {
         mapcolor %>%
           add_shadow(raylayer,shadow_intensity) %>%
@@ -604,7 +650,8 @@ plot_gg = function(ggobj, width = 3, height = 3,
         mapcolor %>%
           add_shadow(raylayer,shadow_intensity) %>%
           plot_3d((t(1-mapheight)),zscale=1/scale, triangulate = triangulate,
-                  max_error = max_error, max_tri = max_tri, verbose = verbose, ... )
+                  max_error = max_error, max_tri = max_tri, verbose = verbose, shadow = shadow, 
+                  shadowdepth=shadowdepth/scale, ... )
       } else {
         mapcolor %>%
           add_shadow(raylayer,shadow_intensity) %>%
@@ -614,10 +661,38 @@ plot_gg = function(ggobj, width = 3, height = 3,
   } else {
     if(!preview) {
       plot_3d(mapcolor, (t(1-mapheight)), zscale=1/scale, triangulate = triangulate,
-              max_error = max_error, max_tri = max_tri, verbose = verbose, ...)
+              max_error = max_error, max_tri = max_tri, verbose = verbose, shadow = shadow, 
+              shadowdepth=shadowdepth/scale, ...)
     } else {
       plot_map(mapcolor, keep_user_par = FALSE)
     }
+  }
+  if(!preview && flat_plot_render) {
+    if(flat_transparent_bg) {
+      new_temp = tempfile(fileext = ".png")
+      color_gg = color_gg + ggplot2::theme(plot.background = ggplot2::element_rect(fill=NA,color=NA))
+      ggplot2::ggsave(new_temp,color_gg,width = width,height = height,dpi=300)
+      colormaptemp = new_temp
+    }
+    mapcolor = png::readPNG(colormaptemp)
+    horizontal_offset = c(0,0)
+    shadowwidth = max(floor(min(dim((t(1-mapheight))))/10),5)
+    if(flat_direction == "x" || flat_direction == "-x") {
+      horizontal_offset = abs(c(width*300,0)*flat_distance + c(width*150,0) + c(shadowwidth*2,0))
+      if(flat_direction == "-x") {
+        horizontal_offset = -horizontal_offset
+      } 
+      flat_distance = 0
+    } else if (flat_direction == "y" || flat_direction == "-y") {
+      horizontal_offset = abs(c(0,height*300)*flat_distance + c(0,height*150) + c(0,shadowwidth*2))
+      if(flat_direction == "y") {
+        horizontal_offset = -horizontal_offset
+      } 
+      flat_distance = 0
+    }
+
+    render_floating_overlay(mapcolor, altitude = flat_distance, heightmap = (t(1-mapheight)),
+                            zscale=1/scale, horizontal_offset = horizontal_offset)
   }
   if(save_shadow_matrix & !save_height_matrix) {
     return(raylayer)
