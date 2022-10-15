@@ -6,7 +6,8 @@
 #'@param basedepth Default `grey20`.
 #'@param shadowwidth Default `50`. Shadow width.
 #'@keywords internal
-make_shadow = function(heightmap, basedepth, shadowwidth, color, shadowcolor) {
+make_shadow = function(heightmap, basedepth, shadowwidth, color, shadowcolor,
+                       offset = c(0,0)) {
   rows = nrow(heightmap)
   cols = ncol(heightmap)
   colors = col2rgb(color)
@@ -44,10 +45,10 @@ make_shadow = function(heightmap, basedepth, shadowwidth, color, shadowcolor) {
     png::writePNG(shadowarray,tempmap)
   }
   
-  rowmin = min((-shadowwidth+1):(rows+shadowwidth) - rows/2)
-  rowmax = max((-shadowwidth+1):(rows+shadowwidth) - rows/2)
-  colmin = min(-(-shadowwidth+1):-(cols+shadowwidth) + cols/2+1)
-  colmax = max(-(-shadowwidth+1):-(cols+shadowwidth) + cols/2+1)
+  rowmin = min((-shadowwidth+1):(rows+shadowwidth) - rows/2) + offset[1]
+  rowmax = max((-shadowwidth+1):(rows+shadowwidth) - rows/2) + offset[1]
+  colmin = min(-(-shadowwidth+1):-(cols+shadowwidth) + cols/2+1) + offset[2]
+  colmax = max(-(-shadowwidth+1):-(cols+shadowwidth) + cols/2+1) + offset[2]
   
   tri1 = matrix(c(rowmax,rowmax,rowmin,basedepth,basedepth,basedepth,colmax,colmin,colmin), nrow=3,ncol=3)
   tri2 = matrix(c(rowmin,rowmax,rowmin,basedepth,basedepth,basedepth,colmax,colmax,colmin), nrow=3,ncol=3)

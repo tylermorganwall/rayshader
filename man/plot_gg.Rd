@@ -21,6 +21,9 @@ plot_gg(
   flat_direction = "-z",
   shadow = TRUE,
   shadowdepth = "auto",
+  shadowcolor = "auto",
+  shadow_darkness = 0.5,
+  background = "white",
   preview = FALSE,
   raytrace = TRUE,
   sunangle = 315,
@@ -84,6 +87,13 @@ Other options `c("z", "x", "-x", "y", "-y")`.}
 \item{shadow}{Default `TRUE`. If `FALSE`, no shadow is rendered.}
 
 \item{shadowdepth}{Default `auto`, which sets it to `soliddepth - soliddepth/10`. Depth of the shadow layer.}
+
+\item{shadowcolor}{Default `auto`. Color of the shadow, automatically computed as `shadow_darkness`
+the luminance of the `background` color in the CIELab colorspace if not specified.}
+
+\item{shadow_darkness}{Default `0.5`. Darkness of the shadow, if `shadowcolor = "auto"`.}
+
+\item{background}{Default `"white"`. Background color.}
 
 \item{preview}{Default `FALSE`. If `TRUE`, the raytraced 2D ggplot will be displayed on the current device.}
 
@@ -247,7 +257,7 @@ render_snapshot(clear = TRUE)
 \dontrun{
 plot_gg(mtplot_density_facet, width = 6, windowsize=c(1400,866),
        zoom = 0.65, theta = -25, phi = 35, scale=300, flat_plot_render=TRUE,
-       flat_direction = "x", background = "grey80")
+       flat_direction = "x")
 render_snapshot(clear = TRUE)
 }
 }

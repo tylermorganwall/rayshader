@@ -41,6 +41,10 @@
 #'Other options `c("z", "x", "-x", "y", "-y")`.
 #'@param shadow Default `TRUE`. If `FALSE`, no shadow is rendered.
 #'@param shadowdepth Default `auto`, which sets it to `soliddepth - soliddepth/10`. Depth of the shadow layer.
+#'@param shadow_darkness Default `0.5`. Darkness of the shadow, if `shadowcolor = "auto"`.
+#'@param shadowcolor Default `auto`. Color of the shadow, automatically computed as `shadow_darkness`
+#'the luminance of the `background` color in the CIELab colorspace if not specified.
+#'@param background Default `"white"`. Background color.
 #'@param preview Default `FALSE`. If `TRUE`, the raytraced 2D ggplot will be displayed on the current device.
 #'@param raytrace Default `FALSE`. Whether to add a raytraced layer.
 #'@param sunangle Default `315` (NW). If raytracing, the angle (in degrees) around the matrix from which the light originates. 
@@ -171,7 +175,7 @@
 #'\dontrun{
 #'plot_gg(mtplot_density_facet, width = 6, windowsize=c(1400,866),
 #'        zoom = 0.65, theta = -25, phi = 35, scale=300, flat_plot_render=TRUE,
-#'        flat_direction = "x", background = "grey80")
+#'        flat_direction = "x")
 #'render_snapshot(clear = TRUE)
 #'}
 plot_gg = function(ggobj, width = 3, height = 3, 
@@ -179,7 +183,8 @@ plot_gg = function(ggobj, width = 3, height = 3,
                    units = c("in", "cm", "mm"), scale=150, pointcontract = 0.7, offset_edges = FALSE,
                    flat_plot_render = FALSE, flat_distance = "auto", 
                    flat_transparent_bg = FALSE, flat_direction = "-z",
-                   shadow = TRUE, shadowdepth = "auto",
+                   shadow = TRUE, shadowdepth = "auto", shadowcolor = "auto", shadow_darkness = 0.5,
+                   background = "white",
                    preview = FALSE, raytrace = TRUE, sunangle = 315, anglebreaks = seq(30,40,0.1), 
                    multicore = FALSE, lambert=TRUE, triangulate = TRUE,
                    max_error = 0.001, max_tri = 0, verbose= FALSE, emboss_text = 0, emboss_grid = 0,
@@ -638,7 +643,7 @@ plot_gg = function(ggobj, width = 3, height = 3,
           add_shadow(raylayer,shadow_intensity) %>%
           plot_3d((t(1-mapheight)),zscale=1/scale, triangulate = triangulate, 
                   max_error = max_error, max_tri = max_tri, verbose = verbose, shadow = shadow,
-                  shadowdepth=shadowdepth/scale, ... )
+                  shadowdepth=shadowdepth/scale, background = background, shadowcolor = shadowcolor,  ... )
       } else {
         mapcolor %>%
           add_shadow(raylayer,shadow_intensity) %>%
@@ -651,7 +656,7 @@ plot_gg = function(ggobj, width = 3, height = 3,
           add_shadow(raylayer,shadow_intensity) %>%
           plot_3d((t(1-mapheight)),zscale=1/scale, triangulate = triangulate,
                   max_error = max_error, max_tri = max_tri, verbose = verbose, shadow = shadow, 
-                  shadowdepth=shadowdepth/scale, ... )
+                  shadowdepth=shadowdepth/scale, background = background, shadowcolor = shadowcolor, ... )
       } else {
         mapcolor %>%
           add_shadow(raylayer,shadow_intensity) %>%
@@ -662,7 +667,7 @@ plot_gg = function(ggobj, width = 3, height = 3,
     if(!preview) {
       plot_3d(mapcolor, (t(1-mapheight)), zscale=1/scale, triangulate = triangulate,
               max_error = max_error, max_tri = max_tri, verbose = verbose, shadow = shadow, 
-              shadowdepth=shadowdepth/scale, ...)
+              shadowdepth=shadowdepth/scale, background = background, shadowcolor = shadowcolor, ...)
     } else {
       plot_map(mapcolor, keep_user_par = FALSE)
     }
@@ -693,6 +698,13 @@ plot_gg = function(ggobj, width = 3, height = 3,
 
     render_floating_overlay(mapcolor, altitude = flat_distance, heightmap = (t(1-mapheight)),
                             zscale=1/scale, horizontal_offset = horizontal_offset)
+    if(shadow && flat_direction %in% c("x", "-x", "y", "-y")) {
+      if(shadowcolor == "auto") {
+        shadowcolor = convert_color(darken_color(background, darken=shadow_darkness), as_hex = TRUE)
+      }
+      make_shadow((t(1-mapheight)), shadowdepth, shadowwidth, background, shadowcolor,
+                  offset = horizontal_offset)
+    }
   }
   if(save_shadow_matrix & !save_height_matrix) {
     return(raylayer)
