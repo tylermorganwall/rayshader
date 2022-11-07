@@ -96,23 +96,24 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
     # has_degenerate_normals = any(normals[,1] == 0 & normals[,2] == 0 & normals[,3] == 0)
     cat(paste0("v ", sprintf("%1.6f %1.6f %1.6f",vertices[,1], vertices[,2], vertices[,3])), file=con, sep = "\n")
     number_vertices <<- number_vertices + nrow(vertices)
+  
     if (nrow(textures) > 0) {
       cat(paste0("vt ", sprintf("%1.6f %1.6f", textures[,1], textures[,2])), file=con, sep = "\n" )
       number_texcoords <<- number_texcoords + nrow(textures)
-    }
+    } 
     if (nrow(normals) > 0) {
-      
       cat(paste0("vn ",sprintf("%1.6f %1.6f %1.6f", normals[,1], normals[,2], normals[,3])), file=con, sep = "\n" )
       number_normals <<- number_normals + nrow(normals)
-    }
+    } 
   }
   scalebar1_written = FALSE
   scalebar2_written = FALSE
   floating_layer_num = 1
   soil_textures = 1
+  obj_materials = 1
   
   write_mtl = function(idrow, con) {
-    if(!is.na(idrow$texture_file)) {
+    if(!is.na(idrow$texture_file) && is.na(idrow$obj_color)) {
       cat(paste("newmtl ray_surface \n"), file=con)
       file.copy(idrow$texture_file[[1]], sprintf("%s.png",noext_filename), overwrite = TRUE)
       cat(sprintf("map_Kd %s.png \n",basename(noext_filename)), file=con)
@@ -210,6 +211,27 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
       cat("illum 1 \n", file=con)
       
       cat("\n", file=con)
+    } else if(!is.na(idrow$obj_color)) {
+      tempcol = col2rgb(idrow$obj_color[[1]])/255
+      tempalpha = idrow$obj_alpha[[1]]
+      tempambient = col2rgb(idrow$obj_ambient[[1]])/255
+      tempspecular = col2rgb(idrow$obj_specular[[1]])/255
+      tempemission = col2rgb(idrow$obj_emission[[1]])/255
+      cat(sprintf("newmtl ray_obj%d \n",obj_materials), file=con)
+      if(!is.na(idrow$texture_file[[1]]) && file.exists(idrow$texture_file[[1]])) {
+        file.copy(idrow$texture_file[[1]], sprintf("%s_obj%d.png",noext_filename, obj_materials), overwrite = TRUE)
+        cat(sprintf("map_Kd %s \n",sprintf("%s_obj%d.png",basename(noext_filename),obj_materials)), file=con)
+      }
+      cat(paste("Kd", sprintf("%1.4f %1.4f %1.4f",tempcol[1],tempcol[2],tempcol[3]),collapse = " "), file=con, sep="\n")
+      cat(paste("Ka", sprintf("%1.4f %1.4f %1.4f",tempambient[1],tempambient[2],tempambient[3]),collapse = " "), file=con, sep="\n")
+      cat(paste("Ks", sprintf("%1.4f %1.4f %1.4f",tempspecular[1],tempspecular[2],tempspecular[3]),collapse = " "), file=con, sep="\n")
+      cat(paste("Ke", sprintf("%1.4f %1.4f %1.4f",tempemission[1],tempemission[2],tempemission[3]),collapse = " "), file=con, sep="\n")
+      cat(paste("d",  sprintf("%1.4f",tempalpha),collapse = " "), file=con, sep="\n")
+      
+      cat("illum 2 \n", file=con)
+      cat("\n", file=con)
+      
+      obj_materials <<- obj_materials + 1
     }
   }
   write_comment = function(comment, con) {
@@ -245,9 +267,9 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
                                    "north_symbol","arrow_symbol", "bevel_symbol",
                                    "background_symbol", "scalebar_col1", "scalebar_col2",
                                    "surface_tris","polygon3d", "shadow","floating_overlay","floating_overlay_tris",
-                                   "base_soil1", "base_soil2")) {
+                                   "base_soil1", "base_soil2") || grepl("obj",vertex_info$tag[row], fixed=TRUE)) {
       vertex_info$startindex[row] = number_vertices + 1
-      if(vertex_info$tag[row] %in%  c("surface", "surface_tris", "shadow","floating_overlay","floating_overlay_tris", "base_soil1", "base_soil2")) {
+      if(vertex_info$tag[row] %in%  c("surface", "surface_tris", "shadow","floating_overlay","floating_overlay_tris", "base_soil1", "base_soil2") || grepl("obj", vertex_info$tag[row], fixed=TRUE)) {
         vertex_info$startindextex[row] = number_texcoords + 1
       }
       vertex_info$startindexnormals[row] = number_normals + 1
@@ -279,6 +301,7 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
   }
   current_compass_number = 1
   current_floating_number = 1
+  current_obj_number = 1
   
   for(row in 1:nrow(vertex_info)) {
     if(vertex_info$tag[row] == "surface") {
@@ -561,6 +584,45 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
                              soil_layer_indices[,2], soil_layer_texindices[,2], #soil_layer_normalindices[,2],
                              soil_layer_indices[,3], soil_layer_texindices[,3])), #soil_layer_normalindices[,3])),
           sep="\n", file=con)
+    } else if (grepl("obj", vertex_info$tag[row], fixed=TRUE)) {
+      if(save_texture) {
+        cat("g Obj", file=con, sep ="\n")
+        cat(sprintf("usemtl ray_obj%d",current_obj_number), file=con, sep ="\n")
+        current_obj_number = current_obj_number + 1
+      }
+      id = as.character(vertex_info$id[row])
+      has_norm = get(id, envir = ray_has_norm_envir)
+      has_tex = get(id, envir = ray_has_tex_envir)
+      inds = rgl::rgl.attrib(vertex_info$id[row], "indices") - 1
+      obj_indices = matrix(inds +  vertex_info$startindex[row],byrow=TRUE, ncol=3)
+      obj_tex_indices = matrix(inds +  vertex_info$startindextex[row],byrow=TRUE, ncol=3)
+      obj_norm_indices = matrix(inds +  vertex_info$startindexnormals[row],byrow=TRUE, ncol=3)
+      
+      if(has_tex && has_norm) {
+        cat(paste("f", sprintf("%d/%d/%d %d/%d/%d %d/%d/%d",
+                               obj_indices[,1], obj_tex_indices[,1], obj_norm_indices[,1],
+                               obj_indices[,2], obj_tex_indices[,2], obj_norm_indices[,2],
+                               obj_indices[,3], obj_tex_indices[,3], obj_norm_indices[,3])),
+            sep="\n", file=con)
+      } else if (has_norm) {
+        cat(paste("f", sprintf("%d//%d %d//%d %d//%d",
+                               obj_indices[,1], obj_norm_indices[,1],
+                               obj_indices[,2], obj_norm_indices[,2],
+                               obj_indices[,3], obj_norm_indices[,3])),
+            sep="\n", file=con)
+      } else if (has_tex) {
+        cat(paste("f", sprintf("%d/%d %d/%d %d/%d",
+                               obj_indices[,1], obj_tex_indices[,1],
+                               obj_indices[,2], obj_tex_indices[,2],
+                               obj_indices[,3], obj_tex_indices[,3])),
+            sep="\n", file=con)
+      } else {
+        cat(paste("f", sprintf("%d %d %d",
+                               obj_indices[,1], 
+                               obj_indices[,2], 
+                               obj_indices[,3])),
+            sep="\n", file=con)
+      }
     }
   }
   if(manifold_geometry) {

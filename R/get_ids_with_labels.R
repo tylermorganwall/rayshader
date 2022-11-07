@@ -14,7 +14,8 @@ get_ids_with_labels = function(typeval = NULL) {
                 "background_symbol", "scalebar_col1", "scalebar_col2",
                 "text_scalebar",     "surface_tris",  "path3d",       
                 "points3d",          "polygon3d", 
-                "floating_overlay", "floating_overlay_tris", "base_soil1", "base_soil2")
+                "floating_overlay", "floating_overlay_tris", "base_soil1", "base_soil2",
+                "obj")
   get_rgl_material = getFromNamespace("rgl.getmaterial", "rgl")
   idvals = rgl::rgl.ids(tags = TRUE)
   material_type = idvals$tag
@@ -41,6 +42,12 @@ get_ids_with_labels = function(typeval = NULL) {
     material_properties[[i]]$tricolor = NA
     material_properties[[i]]$polygon_alpha = NA
     material_properties[[i]]$lit = NA
+    material_properties[[i]]$obj_color = NA_character_
+    material_properties[[i]]$obj_alpha = NA_real_
+    material_properties[[i]]$obj_ambient = NA_character_
+    material_properties[[i]]$obj_specular = NA_character_
+    material_properties[[i]]$obj_emission = NA_character_
+    
     
     
     if(idvals$type[i] != "text") {
@@ -52,6 +59,9 @@ get_ids_with_labels = function(typeval = NULL) {
       } 
       if(material_type[i] == "base") {
         material_properties[[i]]$base_color = material_type_single$color
+      } 
+      if(material_type[i] == "base") {
+        material_properties[[i]]$obj_color = material_type_single$color
       } 
       if(material_type[i] == "water") {
         material_properties[[i]]$water_color = material_type_single$color
@@ -96,13 +106,25 @@ get_ids_with_labels = function(typeval = NULL) {
       if(material_type[i] %in% c("base_soil1", "base_soil2")) {
         material_properties[[i]]$soil_texture = material_type_single$texture
       }
+      if(grepl("obj", material_type[i], fixed=TRUE)) {
+        if(!is.null(material_type_single$texture)) {
+          material_properties[[i]]$texture_file = material_type_single$texture
+        } else {
+          material_properties[[i]]$texture_file = NA
+        }
+        material_properties[[i]]$obj_color    = material_type_single$color
+        material_properties[[i]]$obj_alpha    = material_type_single$alpha
+        material_properties[[i]]$obj_ambient  = material_type_single$ambient
+        material_properties[[i]]$obj_specular = material_type_single$specular
+        material_properties[[i]]$obj_emission = material_type_single$emission
+      }
     } 
   }
   full_properties = do.call(rbind,material_properties)
   retval = cbind(idvals,full_properties)
   if(!is.null(typeval)) {
-    if(any(typeval %in% ray_types)) {
-      retval = retval[retval$tag %in% typeval,]
+    if(any(typeval %in% ray_types) || any(grepl("obj", retval$tag, fixed=TRUE)) ) {
+      retval = retval[retval$tag %in% typeval | grepl("obj", retval$tag, fixed=TRUE),]
     } 
   }
   return(retval)

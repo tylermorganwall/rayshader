@@ -38,7 +38,8 @@ Suggests: reshape2,
           geosphere,
           gifski,
           ambient,
-          terra
+          terra,
+          lidR
 LinkingTo: Rcpp, progress, RcppArmadillo
 RoxygenNote: 7.2.1
 URL: https://www.rayshader.com, https://github.com/tylermorganwall/rayshader, https://www.rayshader.com/

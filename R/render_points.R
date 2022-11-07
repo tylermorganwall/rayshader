@@ -92,37 +92,8 @@ render_points = function(extent = NULL, lat = NULL, long = NULL, altitude=NULL,
       return(invisible())
     }
   }
-  if(is.null(heightmap)) {
-    vertex_info = get_ids_with_labels(typeval = c("surface", "surface_tris"))
-    nrow_map = max(rgl::rgl.attrib(vertex_info$id[1], "vertices")[,1]) - min(rgl::rgl.attrib(vertex_info$id[1], "vertices")[,1])
-    ncol_map = max(rgl::rgl.attrib(vertex_info$id[1], "vertices")[,3]) - min(rgl::rgl.attrib(vertex_info$id[1], "vertices")[,3])
-  } else {
-    ncol_map = ncol(heightmap)
-    nrow_map = nrow(heightmap)
-  }
-  e = extent
-  distances_x = (long-e@xmin)/(e@xmax - e@xmin) * nrow_map
-  distances_y = ncol_map - (lat-e@ymin)/(e@ymax - e@ymin) * ncol_map
-
-  if(is.null(altitude)) {
-    if(is.null(heightmap)) {
-      stop("No altitude data requires heightmap argument be passed")
-    }
-    distances_x_index = distances_x
-    distances_y_index = distances_y
-    distances_x_index[floor(distances_x_index) > nrow(heightmap)] = nrow(heightmap)
-    distances_y_index[floor(distances_y_index) > ncol(heightmap)] = ncol(heightmap)
-    distances_x_index[floor(distances_x_index) < 1] = 1
-    distances_y_index[floor(distances_y_index) < 1] = 1
-    if(!length(find.package("rayimage", quiet = TRUE)) > 0) {
-      xy = matrix(c(floor(distances_x_index),floor(distances_y_index)),
-                  nrow=length(distances_x_index),ncol=2)
-      flipped_mat = flipud(t(heightmap))
-      altitude = apply(xy,1,(function(x) flipped_mat[x[2],x[1]])) + offset
-    } else {
-      altitude = rayimage::interpolate_array((t(heightmap)), distances_x_index,distances_y_index) + offset
-    }
-  }
+  xyz = transform_into_heightmap_coords(extent, heightmap, lat, long, 
+                                        altitude, offset, zscale)
   rgl::rgl.material(color = color, tag = "points3d", size = size)
-  rgl::points3d(distances_x-nrow_map/2, altitude/zscale, distances_y-ncol_map/2)
+  rgl::points3d(xyz[,1],xyz[,2],xyz[,3])
 }

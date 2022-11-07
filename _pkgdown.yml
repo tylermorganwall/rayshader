@@ -62,7 +62,8 @@ reference:
       - "montereybay"
       - "monterey_counties_sf"
       - "monterey_roads_sf"
-     
+      - starts_with("flag")
+
 navbar: 
   title: "rayshader"
   type: inverse
