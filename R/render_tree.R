@@ -94,13 +94,14 @@
 #'las = lidR::readLAS(LASfile, filter = "-inside 273450 5274350 273550 5274450")
 #'
 #'#Convert the lidar point data to a DEM and detect the location of trees from the same data
-#'dem = lidR::rasterize_terrain(las, algorithm = tin())
-#'tree_top_data = lidR::locate_trees(las, lmf(ws = 5))
+#'dem = lidR::rasterize_terrain(las, algorithm = lidR::tin())
+#'tree_top_data = lidR::locate_trees(las, lidR::lmf(ws = 5))
 #'tree_locations = sf::st_coordinates(tree_top_data)
 #'
 #'#Convert DEM to a matrix and extract the extent of the scene
 #'dem_matrix = raster_to_matrix(dem)
 #'dem_extent = terra::ext(dem)
+#'extent_values = dem_extent@ptr$vector
 #'
 #'#Plot the ground
 #'dem_matrix |>

@@ -123,8 +123,11 @@ get_ids_with_labels = function(typeval = NULL) {
   full_properties = do.call(rbind,material_properties)
   retval = cbind(idvals,full_properties)
   if(!is.null(typeval)) {
-    if(any(typeval %in% ray_types) || any(grepl("obj", retval$tag, fixed=TRUE)) ) {
-      retval = retval[retval$tag %in% typeval | grepl("obj", retval$tag, fixed=TRUE),]
+    if(any(typeval %in% ray_types))  {
+      retval = retval[retval$tag %in% typeval,]
+    } 
+    if(any(grepl("obj", retval$tag, fixed=TRUE)) ) {
+      retval = retval[grepl("obj", retval$tag, fixed=TRUE),]
     } 
   }
   return(retval)

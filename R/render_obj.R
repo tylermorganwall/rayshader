@@ -174,7 +174,7 @@ render_obj = function(filename, extent = NULL, lat = NULL, long = NULL, altitude
       base_offset = 0
     }
     scenelist[[1]] = rayvertex::translate_mesh(scenelist[[1]], c(-minpoint_x,-base_offset,-minpoint_y)) |> 
-      rayvertex::scale_mesh(c(scale_x,scale_y,-scale_z))
+      rayvertex::scale_mesh(c(scale_x,scale_y,scale_z))
   }
   if(nrow(xyz) == 0) {
     scenelist[[1]] = obj
@@ -242,6 +242,7 @@ render_obj = function(filename, extent = NULL, lat = NULL, long = NULL, altitude
                            normals = new_norm,
                            texture = texture,
                            tag = sprintf("obj%s",rgl_tag),
+                           back = "culled",
                            ...)
         
       } else {
@@ -253,6 +254,7 @@ render_obj = function(filename, extent = NULL, lat = NULL, long = NULL, altitude
                            indices = ind_temp,
                            texture = texture,
                            tag = sprintf("obj%s",rgl_tag),
+                           back = "culled",
                            ...)
       }
     } else {
@@ -264,6 +266,7 @@ render_obj = function(filename, extent = NULL, lat = NULL, long = NULL, altitude
                            ambient = ambient_col,
                            normals = new_norm,
                            tag = sprintf("obj%s",rgl_tag),
+                           back = "culled",
                            ...)
       } else {
         id = rgl::rgl.triangles(x=obj$vertices,
@@ -272,6 +275,7 @@ render_obj = function(filename, extent = NULL, lat = NULL, long = NULL, altitude
                            ambient = ambient_col,
                            indices = ind_temp,
                            tag = sprintf("obj%s",rgl_tag),
+                           back = "culled",
                            ...)
       }
     }
