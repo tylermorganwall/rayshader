@@ -15,7 +15,6 @@
 #'rgl::open3d()
 #'render_obj(filename=obj_temp, xyz=matrix(c(0,0,0),ncol=3), color="red")
 #'render_camera(theta=30,phi=40)
-#'render_snapshot()
 #'rgl::rgl.close()
 save_multipolygonz_to_obj = function(sfobj, filename, swap_yz = FALSE) {
   con = file(filename, "w")
