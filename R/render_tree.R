@@ -27,6 +27,7 @@
 #'each row (or list entry) specifies the rotation of the nth tree specified (number of rows/length of list must
 #'equal the length of `lat`/`long`).
 #'@param extent A `raster::Extent` object with the bounding box of the displayed 3D scene.
+#'@param baseshape Default `rectangle`. Shape of the base. Options are `c("rectangle","circle","hex")`.
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.
 #'@param heightmap Default `NULL`. Automatically extracted from the rgl window--only use if auto-extraction
 #'of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
@@ -127,7 +128,7 @@
 #'  
 #'#Render tree also works with `render_highquality()`
 #'render_highquality(lightdirection=c(90,45),lightaltitude=c(90,45), 
-#'                   lightcolor=c("dodgerblue","orange"), camera_lookat=c(0,-10,0),
+#'                   lightcolor=c("dodgerblue","orange"), 
 #'                   min_variance = 0, sample_method="sobol_blue", clamp_value=10)
 #'rgl::rgl.close()
 #'}
@@ -137,7 +138,7 @@ render_tree = function(lat = NULL, long = NULL, extent = NULL,
                        absolute_height = FALSE, canopy_height = 9, canopy_width_ratio = NULL, 
                        trunk_height = NULL, trunk_radius = NULL, 
                        tree_zscale = TRUE, min_height = NULL,
-                       zscale=1, heightmap = NULL,
+                       zscale=1, heightmap = NULL, baseshape = "rectangle",
                        angle=c(0,0,0), clear_previous = FALSE,
                        ...) {
   if(clear_previous) {
@@ -237,21 +238,25 @@ render_tree = function(lat = NULL, long = NULL, extent = NULL,
                lat = lat, long = long, extent = extent, zscale = zscale,
                offset = (trunk_height + canopy_height/3)*height_zscale,
                heightmap = heightmap, angle = angle, scale = tree_scale, 
+               baseshape = baseshape,
                clear_previous = FALSE, rgl_tag = "tree",
                ...)
     render_obj(tree_trunk_obj(), color = trunk_color,
                lat = lat, long = long, extent = extent, zscale = zscale, offset = 0,
+               baseshape = baseshape,
                heightmap = heightmap, angle = angle, scale = trunk_scale, rgl_tag = "tree", 
                ...)
   } else if (type == "cone") {
     render_obj(tree_cone_center_obj(), color = canopy_color,
               lat = lat, long = long, extent = extent, zscale = zscale, 
               offset = trunk_height*height_zscale,
+              baseshape = baseshape,
               heightmap = heightmap, angle = angle, scale = tree_scale, clear_previous = FALSE,
               rgl_tag = "tree",
               ...)
     render_obj(tree_trunk_obj(), color = trunk_color,
                lat = lat, long = long, extent = extent, zscale = zscale, offset = 0,
+               baseshape = baseshape,
                heightmap = heightmap, angle = angle, scale = trunk_scale, rgl_tag = "tree",
                ...)
   } else {

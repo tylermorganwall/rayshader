@@ -10,6 +10,7 @@ render_obj(
   lat = NULL,
   long = NULL,
   altitude = NULL,
+  xyz = NULL,
   zscale = 1,
   heightmap = NULL,
   load_material = FALSE,
@@ -17,9 +18,12 @@ render_obj(
   color = "grey50",
   offset = 0,
   obj_zscale = FALSE,
+  swap_yz = TRUE,
   angle = c(0, 0, 0),
   scale = c(1, 1, 1),
   clear_previous = FALSE,
+  baseshape = "rectangle",
+  rgl_tag = "",
   ...
 )
 }
@@ -33,6 +37,9 @@ render_obj(
 \item{long}{Vector of longitudes (or other coordinate in the same coordinate reference system as extent).}
 
 \item{altitude}{Elevation of each point, in units of the elevation matrix (scaled by zscale).}
+
+\item{xyz}{Default `NULL`, ignored. A 3 column numeric matrix, with each row specifying the x/y/z 
+coordinates of the OBJ model(s). Overrides lat/long/altitude and ignores extent to plot the OBJ in raw rgl coordinates.}
 
 \item{zscale}{Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.}
 
@@ -51,6 +58,9 @@ All points are assumed to be evenly spaced.}
 \item{obj_zscale}{Default `FALSE`. Whether to scale the size of the OBJ by zscale to have it match
 the size of the map. If zscale is very big, this will make the model very small.}
 
+\item{swap_yz}{Default `TRUE`. Whether to swap and Y and Z axes. (Y axis is vertical in 
+rayshader coordinates, but data is often provided with Z being vertical).}
+
 \item{angle}{Default `c(0,0,0)`. Angle of rotation around the x, y, and z axes. If this is a matrix or list,
 each row (or list entry) specifies the rotation of the nth model specified (number of rows/length of list must
 equal the length of `lat`/`long`).}
@@ -61,12 +71,20 @@ equal the length of `lat`/`long`).}
 
 \item{clear_previous}{Default `FALSE`. If `TRUE`, it will clear all existing points.}
 
+\item{baseshape}{Default `rectangle`. Shape of the base. Options are `c("rectangle","circle","hex")`.}
+
+\item{rgl_tag}{Default `""`. Tag to add to the rgl scene id, will be prefixed by `"obj"`}
+
 \item{...}{Additional arguments to pass to `rgl::rgl.triangles()`.}
 }
 \description{
 Adds 3D OBJ model to the current scene, using latitude/longitude or coordinates in the reference
 system defined by the extent object. If no altitude is provided, the OBJ will be elevated a constant offset 
-above the heightmap. If the OBJ goes off the edge, the nearest height on the heightmap will be used.
+above the heightmap. If the OBJ goes off the edge, the OBJ will be filtered out.
+
+If no latitudes or longitudes are passed in, the OBJ will be plotted in the coordinate system set by the user-specified
+`extent` argument as-is. Use this alongside `save_multipolygonz_to_obj()` to plot 3D polygons imported from geospatial sources
+in the proper location (but for ease of use, use `render_multipolygonz()` to plot this data directly).
 }
 \examples{
 \donttest{
@@ -110,7 +128,7 @@ render_obj(flag_banner_obj(), extent = attr(montereybay,"extent"), heightmap = m
           zscale=50, color=rainbow(100), smooth = FALSE) 
 
 #And all of these work with `render_highquality()`
-render_highquality()
+render_highquality(sample_method="sobol_blue",clamp_value=10)
 rgl::rgl.close()
 }
 }

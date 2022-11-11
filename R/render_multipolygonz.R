@@ -1,0 +1,87 @@
+#'@title Render MULTIPOLYGON Z Geometry
+#'
+#'@description Adds MULTIPOLYGONZ will be plotted in the coordinate system set by the user-specified
+#'`extent` argument as-is. 
+#'
+#'You can also use `save_multipolygonz_to_obj()` manually to convert sf objects
+#'
+#'@param sfobj An sf object with MULTIPOLYGON Z geometry.
+#'@param extent A `raster::Extent` object with the bounding box of the displayed 3D scene.
+#'@param obj_zscale Default `FALSE`. Whether to scale the size of the OBJ by zscale to have it match
+#'the size of the map. If zscale is very big, this will make the model very small.
+#'@param swap_yz Default `TRUE`. Whether to swap and Y and Z axes. (Y axis is vertical in 
+#'rayshader coordinates, but data is often provided with Z being vertical).
+#'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.
+#'@param heightmap Default `NULL`. Automatically extracted from the rgl window--only use if auto-extraction
+#'of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
+#' All points are assumed to be evenly spaced.
+#'@param color Default `black`. Color of the 3D model, if `load_material = FALSE`.
+#'@param offset Default `5`. Offset of the track from the surface, if `altitude = NULL`.
+#'@param clear_previous Default `FALSE`. If `TRUE`, it will clear all existing points.
+#'@param rgl_tag Default `""`. Tag to add to the rgl scene id, will be prefixed by `"obj"`
+#'@param baseshape Default `rectangle`. Shape of the base. Options are `c("rectangle","circle","hex")`.
+#'@param ... Additional arguments to pass to `rgl::rgl.triangles()`.
+#'@export
+#'@examples
+#'\donttest{
+#'if (length(find.package("sf", quiet = TRUE)) &&
+#'    length(find.package("elevatr", quiet = TRUE))) {
+#'library(sf)
+#'#Set location of washington monument (to far too many decimal places)
+#'washington_monument_location =  st_point(c(-77.03524937618121, 38.88946200298283))
+#'
+#'elevation_data = elevatr::get_elev_raster(locations = st_buffer(monument_point_crs, dist=1000), 
+#'                                          z = 14)
+#'                                          
+#'bbox = c(396933.1, 135728.3, 396959.5, 135745.8)   
+#'cropped_data = raster::crop(elevation_data, scene_bbox)
+#'
+#'#Use rayshader to convert that raster data to a matrix
+#'dc_elevation_matrix = raster_to_matrix(cropped_data)
+#'
+#'#Remove negative elevation data
+#'dc_elevation_matrix[dc_elevation_matrix < 0] = 0
+#'
+#'#Plot a 3D map of the national mall
+#'dc_elevation_matrix |> 
+#'  height_shade() |>
+#'  add_shadow(lamb_shade(dc_elevation_matrix), 0) |> 
+#'  plot_3d(dc_elevation_matrix,
+#'          solid=T,zscale=4, water=T, waterdepth = 1, zoom=0.8,
+#'          shadow=F, soliddepth=-50, windowsize = 800, 
+#'          baseshape = "circle")
+#'render_snapshot()
+#'
+#'#Zoom in on the monument
+#'render_camera(theta=116,  phi=15, zoom= 0.1, fov=70)
+#'#Render the national monument
+#'render_multipolygonz(washington_monument_multipolygonz, 
+#'                     extent = extent(cropped_data), obj_zscale = TRUE,
+#'                     angle = c(0,0,0), clear_previous = T, zscale = 4,
+#'                     color = "grey80",
+#'                     heightmap = dc_elevation_matrix)
+#'render_snapshot()
+#'
+#'#This works with `render_highquality()`
+#'render_highquality(sample_method="sobol_blue", clamp_value=10)
+#'}
+render_multipolygonz = function(sfobj, extent = NULL, 
+                                zscale = 1, heightmap = NULL, 
+                                color = "grey50", offset = 0, obj_zscale = FALSE, swap_yz = TRUE,
+                                clear_previous = FALSE, baseshape = "rectangle",
+                                rgl_tag = "_multipolygon",
+                                ...) {
+  if(clear_previous) {
+    rgl::pop3d(tag = sprintf("obj%s", rgl_tag))
+    if(missing(sfobj)) {
+      return(invisible())
+    }
+  }
+  obj_temp = tempfile(fileext = ".obj")
+  save_multipolygonz_to_obj(sfobj, obj_temp)
+  render_obj(filename = obj_temp, 
+             extent = extent, obj_zscale = obj_zscale,
+             clear_previous = FALSE, zscale = zscale,
+             color = color, offset = offset, swap_yz = swap_yz,
+             heightmap = heightmap, baseshape = baseshape, rgl_tag = rgl_tag)
+}

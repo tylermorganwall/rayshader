@@ -41,10 +41,11 @@ reference:
     contents:
       - starts_with("add")
   - title: "Plotting and Saving 2D and 3D Visualizations"
-    desc: "Functions for displaying/saving 2D visualizations and 3D prints"
+    desc: "Functions for displaying/saving 2D visualizations and 3D prints/models"
     contents:
       - starts_with("plot")
       - starts_with("save")
+      - starts_with("convert")
   - title: "Manipulate and Capture 3D Maps"
     desc: "Functions for adding features to 3D maps, rendering post-processing effects, and saving snapshots"
     contents:
@@ -62,6 +63,7 @@ reference:
       - "montereybay"
       - "monterey_counties_sf"
       - "monterey_roads_sf"
+      - "washington_monument_multipolygonz"
       - starts_with("flag")
 
 navbar: 

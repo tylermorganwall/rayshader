@@ -20,6 +20,7 @@ render_tree(
   min_height = NULL,
   zscale = 1,
   heightmap = NULL,
+  baseshape = "rectangle",
   angle = c(0, 0, 0),
   clear_previous = FALSE,
   ...
@@ -65,6 +66,8 @@ below that height.}
 \item{heightmap}{Default `NULL`. Automatically extracted from the rgl window--only use if auto-extraction
 of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
 All points are assumed to be evenly spaced.}
+
+\item{baseshape}{Default `rectangle`. Shape of the base. Options are `c("rectangle","circle","hex")`.}
 
 \item{angle}{Default `c(0,0,0)`. Angle of rotation around the x, y, and z axes. If this is a matrix or list,
 each row (or list entry) specifies the rotation of the nth tree specified (number of rows/length of list must
@@ -138,13 +141,14 @@ LASfile = system.file("extdata", "Topography.laz", package="lidR")
 las = lidR::readLAS(LASfile, filter = "-inside 273450 5274350 273550 5274450")
 
 #Convert the lidar point data to a DEM and detect the location of trees from the same data
-dem = lidR::rasterize_terrain(las, algorithm = tin())
-tree_top_data = lidR::locate_trees(las, lmf(ws = 5))
+dem = lidR::rasterize_terrain(las, algorithm = lidR::tin())
+tree_top_data = lidR::locate_trees(las, lidR::lmf(ws = 5))
 tree_locations = sf::st_coordinates(tree_top_data)
 
 #Convert DEM to a matrix and extract the extent of the scene
 dem_matrix = raster_to_matrix(dem)
 dem_extent = terra::ext(dem)
+extent_values = dem_extent@ptr$vector
 
 #Plot the ground
 dem_matrix |>
@@ -170,7 +174,7 @@ render_snapshot()
  
 #Render tree also works with `render_highquality()`
 render_highquality(lightdirection=c(90,45),lightaltitude=c(90,45), 
-                  lightcolor=c("dodgerblue","orange"), camera_lookat=c(0,-10,0),
+                  lightcolor=c("dodgerblue","orange"), 
                   min_variance = 0, sample_method="sobol_blue", clamp_value=10)
 rgl::rgl.close()
 }
