@@ -25,7 +25,7 @@ into 3D.'><meta property="og:image" content="https://www.rayshader.com/reference
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.29.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.30.0</span>
       </span>
     </div>
 
@@ -353,17 +353,16 @@ default, this just decreases the size of height map, not the image. If you wish 
 <span class="r-in"><span><span class="co"># \dontrun{</span></span></span>
 <span class="r-in"><span><span class="fu">plot_gg</span><span class="op">(</span><span class="va">ggdiamonds</span>,multicore <span class="op">=</span> <span class="cn">TRUE</span>,width<span class="op">=</span><span class="fl">5</span>,height<span class="op">=</span><span class="fl">5</span>,scale<span class="op">=</span><span class="fl">250</span>,windowsize<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1400</span>,<span class="fl">866</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>       zoom <span class="op">=</span> <span class="fl">0.55</span>, phi <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span></span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>no font could be found for family "Arial"</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>no font could be found for family "Arial"</span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y,     resolveHJust(x$just, x$hjust), resolveVJust(x$just, x$vjust),     x$rot, 0):</span> polygon edge not found</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>`stat(nlevel)` was deprecated in ggplot2 3.4.0.</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Please use `after_stat(nlevel)` instead.</span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in if (id) rgl.attrib.count(id, "colors") else rgl.getcolorcount():</span> argument is not interpretable as logical</span>
+<span class="r-plt img"><img src="plot_gg-1.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span><span class="co">#Change the camera angle and take a snapshot:</span></span></span>
 <span class="r-in"><span><span class="co"># \dontrun{</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_camera.html">render_camera</a></span><span class="op">(</span>zoom<span class="op">=</span><span class="fl">0.5</span>,theta<span class="op">=</span><span class="op">-</span><span class="fl">30</span>,phi<span class="op">=</span><span class="fl">30</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span>clear <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in if (id) rgl.attrib.count(id, "colors") else rgl.getcolorcount():</span> argument is not interpretable as logical</span>
+<span class="r-plt img"><img src="plot_gg-2.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#Contours and other lines will automatically be ignored. Here is the volcano dataset:</span></span></span>
@@ -378,46 +377,14 @@ default, this just decreases the size of height map, not the image. If you wish 
 <span class="r-in"><span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_gradient.html" class="external-link">scale_fill_gradientn</a></span><span class="op">(</span><span class="st">"Z"</span>,colours <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/grDevices/palettes.html" class="external-link">terrain.colors</a></span><span class="op">(</span><span class="fl">10</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/coord_fixed.html" class="external-link">coord_fixed</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">ggvolcano</span></span></span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>no font could be found for family "Arial"</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>no font could be found for family "Arial"</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>no font could be found for family "Arial"</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>no font could be found for family "Arial"</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>no font could be found for family "Arial"</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>no font could be found for family "Arial"</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>no font could be found for family "Arial"</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>no font could be found for family "Arial"</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>no font could be found for family "Arial"</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>no font could be found for family "Arial"</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>no font could be found for family "Arial"</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>no font could be found for family "Arial"</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>no font could be found for family "Arial"</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>no font could be found for family "Arial"</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>no font could be found for family "Arial"</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>no font could be found for family "Arial"</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>no font could be found for family "Arial"</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>no font could be found for family "Arial"</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>no font could be found for family "Arial"</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>no font could be found for family "Arial"</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>no font could be found for family "Arial"</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>no font could be found for family "Arial"</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>no font could be found for family "Arial"</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>no font could be found for family "Arial"</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>no font could be found for family "Arial"</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>no font could be found for family "Arial"</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>no font could be found for family "Arial"</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>no font could be found for family "Arial"</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>no font could be found for family "Arial"</span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y,     resolveHJust(x$just, x$hjust), resolveVJust(x$just, x$vjust),     x$rot, 0):</span> polygon edge not found</span>
+<span class="r-plt img"><img src="plot_gg-3.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># \dontrun{</span></span></span>
 <span class="r-in"><span><span class="fu">plot_gg</span><span class="op">(</span><span class="va">ggvolcano</span>, multicore <span class="op">=</span> <span class="cn">TRUE</span>, raytrace <span class="op">=</span> <span class="cn">TRUE</span>, width <span class="op">=</span> <span class="fl">7</span>, height <span class="op">=</span> <span class="fl">4</span>, </span></span>
 <span class="r-in"><span>       scale <span class="op">=</span> <span class="fl">300</span>, windowsize <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1400</span>, <span class="fl">866</span><span class="op">)</span>, zoom <span class="op">=</span> <span class="fl">0.6</span>, phi <span class="op">=</span> <span class="fl">30</span>, theta <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span></span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Removed 1861 row(s) containing missing values (geom_path).</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>no font could be found for family "Arial"</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>no font could be found for family "Arial"</span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y,     resolveHJust(x$just, x$hjust), resolveVJust(x$just, x$vjust),     x$rot, 0):</span> polygon edge not found</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Removed 1861 rows containing missing values (`geom_contour()`).</span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span>clear <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in if (id) rgl.attrib.count(id, "colors") else rgl.getcolorcount():</span> argument is not interpretable as logical</span>
+<span class="r-plt img"><img src="plot_gg-4.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span><span class="co">#Here, we will create a 3D plot of the mtcars dataset. This automatically detects </span></span></span>
 <span class="r-in"><span><span class="co">#that the user used the `color` aesthetic instead of the `fill`.</span></span></span>
@@ -428,18 +395,13 @@ default, this just decreases the size of height map, not the image. If you wish 
 <span class="r-in"><span><span class="co">#Preview how the plot will look by setting `preview = TRUE`: We also adjust the angle of the light.</span></span></span>
 <span class="r-in"><span><span class="co"># \dontrun{</span></span></span>
 <span class="r-in"><span><span class="fu">plot_gg</span><span class="op">(</span><span class="va">mtplot</span>, width<span class="op">=</span><span class="fl">3.5</span>, sunangle<span class="op">=</span><span class="fl">225</span>, preview <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>no font could be found for family "Arial"</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>no font could be found for family "Arial"</span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y,     resolveHJust(x$just, x$hjust), resolveVJust(x$just, x$vjust),     x$rot, 0):</span> polygon edge not found</span>
+<span class="r-plt img"><img src="plot_gg-5.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span><span class="co"># \dontrun{</span></span></span>
 <span class="r-in"><span><span class="fu">plot_gg</span><span class="op">(</span><span class="va">mtplot</span>, width<span class="op">=</span><span class="fl">3.5</span>, multicore <span class="op">=</span> <span class="cn">TRUE</span>, windowsize <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1400</span>,<span class="fl">866</span><span class="op">)</span>, sunangle<span class="op">=</span><span class="fl">225</span>,</span></span>
 <span class="r-in"><span>       zoom <span class="op">=</span> <span class="fl">0.60</span>, phi <span class="op">=</span> <span class="fl">30</span>, theta <span class="op">=</span> <span class="fl">45</span><span class="op">)</span></span></span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>no font could be found for family "Arial"</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>no font could be found for family "Arial"</span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y,     resolveHJust(x$just, x$hjust), resolveVJust(x$just, x$vjust),     x$rot, 0):</span> polygon edge not found</span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span>clear <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in if (id) rgl.attrib.count(id, "colors") else rgl.getcolorcount():</span> argument is not interpretable as logical</span>
+<span class="r-plt img"><img src="plot_gg-6.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span><span class="co">#Now let's plot a density plot in 3D.</span></span></span>
 <span class="r-in"><span><span class="va">mtplot_density</span> <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">mtcars</span><span class="op">)</span> <span class="op">+</span> </span></span>
@@ -448,16 +410,14 @@ default, this just decreases the size of height map, not the image. If you wish 
 <span class="r-in"><span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html" class="external-link">scale_y_continuous</a></span><span class="op">(</span>expand<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">0</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_gradient.html" class="external-link">scale_fill_gradient</a></span><span class="op">(</span>low<span class="op">=</span><span class="st">"pink"</span>, high<span class="op">=</span><span class="st">"red"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">mtplot_density</span></span></span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>no font could be found for family "Arial"</span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y,     resolveHJust(x$just, x$hjust), resolveVJust(x$just, x$vjust),     x$rot, 0):</span> polygon edge not found</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>The dot-dot notation (`..density..`) was deprecated in ggplot2 3.4.0.</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Please use `after_stat(density)` instead.</span>
+<span class="r-plt img"><img src="plot_gg-7.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="co"># \dontrun{</span></span></span>
 <span class="r-in"><span><span class="fu">plot_gg</span><span class="op">(</span><span class="va">mtplot_density</span>, width <span class="op">=</span> <span class="fl">4</span>,zoom <span class="op">=</span> <span class="fl">0.60</span>, theta <span class="op">=</span> <span class="op">-</span><span class="fl">45</span>, phi <span class="op">=</span> <span class="fl">30</span>, </span></span>
 <span class="r-in"><span>       windowsize <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1400</span>,<span class="fl">866</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>no font could be found for family "Arial"</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>no font could be found for family "Arial"</span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y,     resolveHJust(x$just, x$hjust), resolveVJust(x$just, x$vjust),     x$rot, 0):</span> polygon edge not found</span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span>clear <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in if (id) rgl.attrib.count(id, "colors") else rgl.getcolorcount():</span> argument is not interpretable as logical</span>
+<span class="r-plt img"><img src="plot_gg-8.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span><span class="co">#This also works facetted.</span></span></span>
 <span class="r-in"><span><span class="va">mtplot_density_facet</span> <span class="op">=</span> <span class="va">mtplot_density</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="op">~</span><span class="va">cyl</span><span class="op">)</span> </span></span>
@@ -465,36 +425,26 @@ default, this just decreases the size of height map, not the image. If you wish 
 <span class="r-in"><span><span class="co">#Preview this plot in 2D:</span></span></span>
 <span class="r-in"><span><span class="co"># \dontrun{</span></span></span>
 <span class="r-in"><span><span class="fu">plot_gg</span><span class="op">(</span><span class="va">mtplot_density_facet</span>, preview <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>no font could be found for family "Arial"</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>no font could be found for family "Arial"</span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y,     resolveHJust(x$just, x$hjust), resolveVJust(x$just, x$vjust),     x$rot, 0):</span> polygon edge not found</span>
+<span class="r-plt img"><img src="plot_gg-9.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span><span class="co"># \dontrun{</span></span></span>
 <span class="r-in"><span><span class="fu">plot_gg</span><span class="op">(</span><span class="va">mtplot_density_facet</span>, windowsize<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1400</span>,<span class="fl">866</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>       zoom <span class="op">=</span> <span class="fl">0.55</span>, theta <span class="op">=</span> <span class="op">-</span><span class="fl">10</span>, phi <span class="op">=</span> <span class="fl">25</span><span class="op">)</span></span></span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>no font could be found for family "Arial"</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>no font could be found for family "Arial"</span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y,     resolveHJust(x$just, x$hjust), resolveVJust(x$just, x$vjust),     x$rot, 0):</span> polygon edge not found</span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span>clear <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in if (id) rgl.attrib.count(id, "colors") else rgl.getcolorcount():</span> argument is not interpretable as logical</span>
+<span class="r-plt img"><img src="plot_gg-10.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span><span class="co">#That is a little cramped. Specifying a larger width will improve the readability of this plot.</span></span></span>
 <span class="r-in"><span><span class="co"># \dontrun{</span></span></span>
 <span class="r-in"><span><span class="fu">plot_gg</span><span class="op">(</span><span class="va">mtplot_density_facet</span>, width <span class="op">=</span> <span class="fl">6</span>, preview <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>no font could be found for family "Arial"</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>no font could be found for family "Arial"</span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y,     resolveHJust(x$just, x$hjust), resolveVJust(x$just, x$vjust),     x$rot, 0):</span> polygon edge not found</span>
+<span class="r-plt img"><img src="plot_gg-11.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#That's better. Let's plot it in 3D, and increase the scale.</span></span></span>
 <span class="r-in"><span><span class="co"># \dontrun{</span></span></span>
 <span class="r-in"><span><span class="fu">plot_gg</span><span class="op">(</span><span class="va">mtplot_density_facet</span>, width <span class="op">=</span> <span class="fl">6</span>, windowsize<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1400</span>,<span class="fl">866</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>       zoom <span class="op">=</span> <span class="fl">0.55</span>, theta <span class="op">=</span> <span class="op">-</span><span class="fl">10</span>, phi <span class="op">=</span> <span class="fl">25</span>, scale<span class="op">=</span><span class="fl">300</span><span class="op">)</span></span></span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>no font could be found for family "Arial"</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>no font could be found for family "Arial"</span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y,     resolveHJust(x$just, x$hjust), resolveVJust(x$just, x$vjust),     x$rot, 0):</span> polygon edge not found</span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span>clear <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in if (id) rgl.attrib.count(id, "colors") else rgl.getcolorcount():</span> argument is not interpretable as logical</span>
+<span class="r-plt img"><img src="plot_gg-12.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#We can also render a flat version of the plot alongside (or above/below) the 3D version.</span></span></span>
@@ -502,11 +452,8 @@ default, this just decreases the size of height map, not the image. If you wish 
 <span class="r-in"><span><span class="fu">plot_gg</span><span class="op">(</span><span class="va">mtplot_density_facet</span>, width <span class="op">=</span> <span class="fl">6</span>, windowsize<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1400</span>,<span class="fl">866</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>       zoom <span class="op">=</span> <span class="fl">0.65</span>, theta <span class="op">=</span> <span class="op">-</span><span class="fl">25</span>, phi <span class="op">=</span> <span class="fl">35</span>, scale<span class="op">=</span><span class="fl">300</span>, flat_plot_render<span class="op">=</span><span class="cn">TRUE</span>,</span></span>
 <span class="r-in"><span>       flat_direction <span class="op">=</span> <span class="st">"x"</span><span class="op">)</span></span></span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>no font could be found for family "Arial"</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>no font could be found for family "Arial"</span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y,     resolveHJust(x$just, x$hjust), resolveVJust(x$just, x$vjust),     x$rot, 0):</span> polygon edge not found</span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span>clear <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in if (id) rgl.attrib.count(id, "colors") else rgl.getcolorcount():</span> argument is not interpretable as logical</span>
+<span class="r-plt img"><img src="plot_gg-13.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 </code></pre></div>
     </div>

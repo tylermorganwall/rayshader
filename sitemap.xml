@@ -64,6 +64,15 @@
     <loc>https://www.rayshader.com/reference/fix_manifold_geometry.html</loc>
   </url>
   <url>
+    <loc>https://www.rayshader.com/reference/flag_banner_obj.html</loc>
+  </url>
+  <url>
+    <loc>https://www.rayshader.com/reference/flag_full_obj.html</loc>
+  </url>
+  <url>
+    <loc>https://www.rayshader.com/reference/flag_pole_obj.html</loc>
+  </url>
+  <url>
     <loc>https://www.rayshader.com/reference/fliplr.html</loc>
   </url>
   <url>
@@ -199,6 +208,12 @@
     <loc>https://www.rayshader.com/reference/render_movie.html</loc>
   </url>
   <url>
+    <loc>https://www.rayshader.com/reference/render_multipolygonz.html</loc>
+  </url>
+  <url>
+    <loc>https://www.rayshader.com/reference/render_obj.html</loc>
+  </url>
+  <url>
     <loc>https://www.rayshader.com/reference/render_path.html</loc>
   </url>
   <url>
@@ -217,6 +232,9 @@
     <loc>https://www.rayshader.com/reference/render_snapshot_software.html</loc>
   </url>
   <url>
+    <loc>https://www.rayshader.com/reference/render_tree.html</loc>
+  </url>
+  <url>
     <loc>https://www.rayshader.com/reference/render_water.html</loc>
   </url>
   <url>
@@ -226,7 +244,13 @@
     <loc>https://www.rayshader.com/reference/rot_to_euler.html</loc>
   </url>
   <url>
+    <loc>https://www.rayshader.com/reference/run_documentation.html</loc>
+  </url>
+  <url>
     <loc>https://www.rayshader.com/reference/save_3dprint.html</loc>
+  </url>
+  <url>
+    <loc>https://www.rayshader.com/reference/save_multipolygonz_to_obj.html</loc>
   </url>
   <url>
     <loc>https://www.rayshader.com/reference/save_obj.html</loc>
@@ -241,9 +265,24 @@
     <loc>https://www.rayshader.com/reference/texture_shade.html</loc>
   </url>
   <url>
+    <loc>https://www.rayshader.com/reference/transform_into_heightmap_coords.html</loc>
+  </url>
+  <url>
     <loc>https://www.rayshader.com/reference/translate_shape_string.html</loc>
   </url>
   <url>
+    <loc>https://www.rayshader.com/reference/tree_basic_center_obj.html</loc>
+  </url>
+  <url>
+    <loc>https://www.rayshader.com/reference/tree_cone_center_obj.html</loc>
+  </url>
+  <url>
+    <loc>https://www.rayshader.com/reference/tree_trunk_obj.html</loc>
+  </url>
+  <url>
     <loc>https://www.rayshader.com/reference/trim_padding.html</loc>
+  </url>
+  <url>
+    <loc>https://www.rayshader.com/reference/washington_monument_multipolygonz.html</loc>
   </url>
 </urlset>
