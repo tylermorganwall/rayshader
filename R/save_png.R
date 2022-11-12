@@ -62,7 +62,7 @@ save_png = function(hillshade, filename,
         hillshade = rotatef(hillshade)
       }
     }
-    final = array(t(hillshade[,ncol(hillshade):1]),dim=c(ncol(hillshade),nrow(hillshade),3))
+    final = array(t(hillshade[ncol(hillshade):1,]),dim=c(ncol(hillshade),nrow(hillshade),3))
     if(has_title) {
       final = rayimage::add_title(final, title_text = title_text, title_offset = title_offset,
                                            title_color = title_color, title_size = title_size,

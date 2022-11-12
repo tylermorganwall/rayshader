@@ -84,6 +84,7 @@
 #'            clear_previous = TRUE, 
 #'            lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), zscale=50) 
 #'render_snapshot()
+#'rgl::rgl.close()
 #'
 #'#We will use the lidR package to generate a DEM and detect the canopy tops of trees, and
 #'#then use rayshader to render 3D tree models scaled to those heights on the map.
