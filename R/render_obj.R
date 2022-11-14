@@ -186,10 +186,10 @@ render_obj = function(filename, extent = NULL, lat = NULL, long = NULL, altitude
     ncol_map = ncol(heightmap)
     
     
-    minpoint_x = (extent@xmax + extent@xmin) / 2
-    minpoint_y = (extent@ymax + extent@ymin) / 2
-    scale_x = nrow_map / (extent@xmax - extent@xmin) 
-    scale_z = ncol_map / (extent@ymax - extent@ymin) 
+    minpoint_x = (extent@xmax + extent@xmin) / 2 - zscale / 2
+    minpoint_y = (extent@ymax + extent@ymin) / 2 + zscale / 2
+    scale_x = (nrow_map-1) / (extent@xmax - extent@xmin)
+    scale_z = (ncol_map-1) / (extent@ymax - extent@ymin) 
     scale_y = 1/zscale
     if(is.null(lat) || is.null(long) && length(scenelist[[k]]) == 1) {
       obj_zscale = FALSE
