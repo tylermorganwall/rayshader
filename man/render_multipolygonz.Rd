@@ -11,7 +11,7 @@ render_multipolygonz(
   heightmap = NULL,
   color = "grey50",
   offset = 0,
-  obj_zscale = FALSE,
+  obj_zscale = TRUE,
   swap_yz = TRUE,
   clear_previous = FALSE,
   baseshape = "rectangle",
@@ -34,7 +34,7 @@ All points are assumed to be evenly spaced.}
 
 \item{offset}{Default `5`. Offset of the track from the surface, if `altitude = NULL`.}
 
-\item{obj_zscale}{Default `FALSE`. Whether to scale the size of the OBJ by zscale to have it match
+\item{obj_zscale}{Default `TRUE`. Whether to scale the size of the OBJ by zscale to have it match
 the size of the map. If zscale is very big, this will make the model very small.}
 
 \item{swap_yz}{Default `TRUE`. Whether to swap and Y and Z axes. (Y axis is vertical in 
@@ -53,4 +53,50 @@ Adds MULTIPOLYGONZ will be plotted in the coordinate system set by the user-spec
 `extent` argument as-is. 
 
 You can also use `save_multipolygonz_to_obj()` manually to convert sf objects
+}
+\examples{
+if(length(find.package("sf", quiet = TRUE)) &&
+  length(find.package("elevatr", quiet = TRUE)) &&
+  length(find.package("raster", quiet = TRUE))) {
+library(sf)
+#Set location of washington monument
+washington_monument_location =  st_point(c(-77.035249, 38.889462))
+wm_point = washington_monument_location |> 
+ st_point() |> 
+ st_sfc(crs = 4326) |> 
+ st_transform(st_crs(washington_monument_multipolygonz))
+ 
+elevation_data = elevatr::get_elev_raster(locations = wm_point, z = 14)
+                                         
+scene_bbox = st_bbox(st_buffer(wm_point,300))
+cropped_data = raster::crop(elevation_data, scene_bbox)
+
+#Use rayshader to convert that raster data to a matrix
+dc_elevation_matrix = raster_to_matrix(cropped_data)
+
+#Remove negative elevation data
+dc_elevation_matrix[dc_elevation_matrix < 0] = 0
+
+#Plot a 3D map of the national mall
+dc_elevation_matrix |> 
+ height_shade() |>
+ add_shadow(lamb_shade(dc_elevation_matrix), 0) |> 
+ plot_3d(dc_elevation_matrix, zscale=3.7, water = TRUE, waterdepth = 1, 
+         soliddepth=-50, windowsize = 800)
+render_snapshot()
+
+#Zoom in on the monument
+render_camera(theta=150,  phi=35, zoom= 0.55, fov=70)
+#Render the national monument
+rgl::par3d(ignoreExtent = TRUE)
+render_multipolygonz(washington_monument_multipolygonz, 
+                    extent = raster::extent(cropped_data), 
+                    zscale = 4, color = "white",
+                    heightmap = dc_elevation_matrix)
+render_snapshot()
+
+#This works with `render_highquality()`
+render_highquality(sample_method="sobol_blue", clamp_value=10)
+rgl::rgl.close()
+}
 }

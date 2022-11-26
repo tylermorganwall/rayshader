@@ -51,6 +51,9 @@ generate_base_shape = function(heightmap, baseshape, angle=0) {
     }
     if(max(dim(heightmap)) != max(dim(radmat))) {
       difference = max(dim(heightmap)) - max(dim(radmat))
+      if(difference == 1) {
+        difference = difference + 1
+      }
       radtemp = matrix(0,nrow=nrow(heightmap),ncol=ncol(heightmap))
       if(ncol(heightmap) != ncol(radmat)) {
         radtemp[,(difference/2):(difference/2+ncol(radmat)-1)] = radmat

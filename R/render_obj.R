@@ -94,12 +94,24 @@ render_obj = function(filename, extent = NULL, lat = NULL, long = NULL, altitude
   if(rgl::rgl.cur() == 0) {
     stop("No rgl window currently open.")
   }
+  if(is.null(lat) || is.null(long) && length(scenelist[[k]]) == 1) {
+    single_obj = TRUE
+  } else {
+    single_obj = FALSE
+  }
   heightmap = generate_base_shape(heightmap, baseshape)
-  
   if(is.null(xyz)) {
     raw_coords = FALSE
-    xyz = transform_into_heightmap_coords(extent, heightmap, lat, long, 
-                                          altitude, offset, zscale)
+    if(!single_obj) {
+      xyz = transform_into_heightmap_coords(extent, heightmap, lat, long, 
+                                            altitude, offset, zscale)
+    } else {
+      xyz = transform_into_heightmap_coords(extent, heightmap, lat, long, 
+                                            altitude, offset, zscale, use_altitude = FALSE)
+    }
+    if(swap_yz) {
+      xyz = xyz[,c(1,3,2), drop = FALSE]
+    }
   } else {
     raw_coords = TRUE
   }
@@ -191,7 +203,7 @@ render_obj = function(filename, extent = NULL, lat = NULL, long = NULL, altitude
     scale_x = (nrow_map-1) / (extent@xmax - extent@xmin)
     scale_z = (ncol_map-1) / (extent@ymax - extent@ymin) 
     scale_y = 1/zscale
-    if(is.null(lat) || is.null(long) && length(scenelist[[k]]) == 1) {
+    if(single_obj) {
       obj_zscale = FALSE
       idvals = rgl::ids3d(tags=TRUE)
       if(any(c("surface","surface_tris") %in% idvals$tag)) {

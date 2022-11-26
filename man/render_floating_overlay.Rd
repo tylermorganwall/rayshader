@@ -14,7 +14,8 @@ render_floating_overlay(
   remove_na = TRUE,
   reorient = TRUE,
   clear_layers = FALSE,
-  horizontal_offset = c(0, 0)
+  horizontal_offset = c(0, 0),
+  ...
 )
 }
 \arguments{
@@ -38,6 +39,8 @@ of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
 \item{clear_layers}{Default `FALSE`. Clears all existing floating layers on the visualization.}
 
 \item{horizontal_offset}{Default `c(0,0)`. Distance (in 3D space) to offset the floating offset in the x/y directions.}
+
+\item{...}{Additional arguments to pass to `rgl::rgl.triangles()`.}
 }
 \value{
 Adds a 3D floating layer to the map. No return value.

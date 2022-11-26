@@ -15,6 +15,7 @@
 #'@param remove_na Default `TRUE`. Whether to make the overlay transparent above empty spaces (represented by `NA` values) in the underlying elevation matrix.
 #'@param reorient Default `TRUE`. Whether to reorient the image array to match the 3D plot.
 #'@param horizontal_offset Default `c(0,0)`. Distance (in 3D space) to offset the floating offset in the x/y directions.
+#'@param ... Additional arguments to pass to `rgl::rgl.triangles()`.
 #'@return Adds a 3D floating layer to the map. No return value.
 #'@export
 #'@examples
@@ -53,7 +54,8 @@
 #'}
 render_floating_overlay = function(overlay = NULL, altitude = NULL, heightmap = NULL, zscale=1, 
                                    alpha = 1, baseshape="rectangle", remove_na = TRUE, 
-                                   reorient = TRUE, clear_layers = FALSE, horizontal_offset = c(0,0)) {
+                                   reorient = TRUE, clear_layers = FALSE, horizontal_offset = c(0,0),
+                                   ...) {
   if(clear_layers) {
     rgl::pop3d(tag = c("floating_overlay","floating_overlay_tris"))
     if(is.null(overlay)) {
@@ -122,5 +124,5 @@ render_floating_overlay = function(overlay = NULL, altitude = NULL, heightmap = 
   rgl.triangles(rbind(tri1,tri2), texcoords = matrix(c(1,1,0,0,1,0,
                                                        0,1,1,0,0,1),nrow=6,ncol=2),
                 texture=tempmap, normals = matrix(c(0,0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0,0), nrow=6,ncol=3),
-                lit=FALSE,tag = "floating_overlay_tris",textype = "rgba")
+                lit=FALSE,tag = "floating_overlay_tris",textype = "rgba", ...)
 }

@@ -9,6 +9,7 @@
 #' #Fake example
 transform_into_heightmap_coords = function(extent, heightmap, lat = NULL, long = NULL,
                                            altitude = NULL, offset = 0, zscale = 1,
+                                           use_altitude = TRUE,
                                            filter_bounds = TRUE) {
   e = extent
   if(is.null(lat)) {
@@ -52,11 +53,15 @@ transform_into_heightmap_coords = function(extent, heightmap, lat = NULL, long =
       xy = matrix(c(floor(distances_x_index),floor(distances_y_index)),
                   nrow=length(distances_x_index),ncol=2)
       flipped_mat = flipud(t(heightmap))
-      altitude = apply(xy,1,(function(x) flipped_mat[x[2],x[1]])) + offset
+      altitude = apply(xy,1,(function(x) flipped_mat[x[2],x[1]])) 
     } else {
-      altitude = rayimage::interpolate_array((t(heightmap)), distances_x_index,distances_y_index) + offset
+      altitude = rayimage::interpolate_array((t(heightmap)), distances_x_index,distances_y_index)
     }
   }
   altitude[filter_out] = NA
-  return(matrix(c(distances_x-nrow_map/2, altitude/zscale, distances_y-ncol_map/2),ncol=3,nrow=length(altitude)))
+  if(use_altitude) {
+    return(matrix(c(distances_x-nrow_map/2, altitude/zscale  + offset, distances_y-ncol_map/2),ncol=3,nrow=length(altitude)))
+  } else {
+    return(matrix(c(distances_x-nrow_map/2, offset, distances_y-ncol_map/2),ncol=3,nrow=length(altitude)))
+  }
 }

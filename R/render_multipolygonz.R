@@ -7,7 +7,7 @@
 #'
 #'@param sfobj An sf object with MULTIPOLYGON Z geometry.
 #'@param extent A `raster::Extent` object with the bounding box of the displayed 3D scene.
-#'@param obj_zscale Default `FALSE`. Whether to scale the size of the OBJ by zscale to have it match
+#'@param obj_zscale Default `TRUE`. Whether to scale the size of the OBJ by zscale to have it match
 #'the size of the map. If zscale is very big, this will make the model very small.
 #'@param swap_yz Default `TRUE`. Whether to swap and Y and Z axes. (Y axis is vertical in 
 #'rayshader coordinates, but data is often provided with Z being vertical).
@@ -23,17 +23,20 @@
 #'@param ... Additional arguments to pass to `rgl::rgl.triangles()`.
 #'@export
 #'@examples
-#'\donttest{
-#'if (length(find.package("sf", quiet = TRUE)) &&
-#'    length(find.package("elevatr", quiet = TRUE))) {
+#'if(length(find.package("sf", quiet = TRUE)) &&
+#'   length(find.package("elevatr", quiet = TRUE)) &&
+#'   length(find.package("raster", quiet = TRUE))) {
 #'library(sf)
-#'#Set location of washington monument (to far too many decimal places)
-#'washington_monument_location =  st_point(c(-77.03524937618121, 38.88946200298283))
-#'
-#'elevation_data = elevatr::get_elev_raster(locations = st_buffer(monument_point_crs, dist=1000), 
-#'                                          z = 14)
+#'#Set location of washington monument
+#'washington_monument_location =  st_point(c(-77.035249, 38.889462))
+#'wm_point = washington_monument_location |> 
+#'  st_point() |> 
+#'  st_sfc(crs = 4326) |> 
+#'  st_transform(st_crs(washington_monument_multipolygonz))
+#'  
+#'elevation_data = elevatr::get_elev_raster(locations = wm_point, z = 14)
 #'                                          
-#'bbox = c(396933.1, 135728.3, 396959.5, 135745.8)   
+#'scene_bbox = st_bbox(st_buffer(wm_point,300))
 #'cropped_data = raster::crop(elevation_data, scene_bbox)
 #'
 #'#Use rayshader to convert that raster data to a matrix
@@ -46,28 +49,27 @@
 #'dc_elevation_matrix |> 
 #'  height_shade() |>
 #'  add_shadow(lamb_shade(dc_elevation_matrix), 0) |> 
-#'  plot_3d(dc_elevation_matrix,
-#'          solid=T,zscale=4, water=T, waterdepth = 1, zoom=0.8,
-#'          shadow=F, soliddepth=-50, windowsize = 800, 
-#'          baseshape = "circle")
+#'  plot_3d(dc_elevation_matrix, zscale=3.7, water = TRUE, waterdepth = 1, 
+#'          soliddepth=-50, windowsize = 800)
 #'render_snapshot()
 #'
 #'#Zoom in on the monument
-#'render_camera(theta=116,  phi=15, zoom= 0.1, fov=70)
+#'render_camera(theta=150,  phi=35, zoom= 0.55, fov=70)
 #'#Render the national monument
+#'rgl::par3d(ignoreExtent = TRUE)
 #'render_multipolygonz(washington_monument_multipolygonz, 
-#'                     extent = extent(cropped_data), obj_zscale = TRUE,
-#'                     angle = c(0,0,0), clear_previous = T, zscale = 4,
-#'                     color = "grey80",
+#'                     extent = raster::extent(cropped_data), 
+#'                     zscale = 4, color = "white",
 #'                     heightmap = dc_elevation_matrix)
 #'render_snapshot()
 #'
 #'#This works with `render_highquality()`
 #'render_highquality(sample_method="sobol_blue", clamp_value=10)
+#'rgl::rgl.close()
 #'}
 render_multipolygonz = function(sfobj, extent = NULL, 
                                 zscale = 1, heightmap = NULL, 
-                                color = "grey50", offset = 0, obj_zscale = FALSE, swap_yz = TRUE,
+                                color = "grey50", offset = 0, obj_zscale = TRUE, swap_yz = TRUE,
                                 clear_previous = FALSE, baseshape = "rectangle",
                                 rgl_tag = "_multipolygon",
                                 ...) {
@@ -83,5 +85,5 @@ render_multipolygonz = function(sfobj, extent = NULL,
              extent = extent, obj_zscale = obj_zscale,
              clear_previous = FALSE, zscale = zscale,
              color = color, offset = offset, swap_yz = swap_yz,
-             heightmap = heightmap, baseshape = baseshape, rgl_tag = rgl_tag)
+             heightmap = heightmap, baseshape = baseshape, rgl_tag = rgl_tag, ...)
 }
