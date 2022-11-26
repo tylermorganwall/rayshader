@@ -18,7 +18,7 @@ system defined by the extent object."><meta property="og:image" content="https:/
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.30.2</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.30.4</span>
       </span>
     </div>
 
@@ -114,7 +114,8 @@ system defined by the extent object.</p>
 <span>  trunk_height <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  trunk_radius <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  tree_zscale <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  min_height <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  min_height <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  max_height <span class="op">=</span> <span class="cn">Inf</span>,</span>
 <span>  zscale <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  heightmap <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  baseshape <span class="op">=</span> <span class="st">"rectangle"</span>,</span>
@@ -184,6 +185,11 @@ the size of the map. If zscale is very big, this will make the trees very small.
 <dt>min_height</dt>
 <dd><p>Default `NULL`. Minimum height of a tree. Set to a positive number to filter out trees 
 below that height.</p></dd>
+
+
+<dt>max_height</dt>
+<dd><p>Default `NA`. Maximum height of a tree. Set to a positive number to filter out trees 
+above that height.</p></dd>
 
 
 <dt>zscale</dt>

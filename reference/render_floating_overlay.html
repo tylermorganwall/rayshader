@@ -18,7 +18,7 @@ Note: Multiple layers with transparency can cause rendering issues in rgl."><met
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.30.2</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.30.4</span>
       </span>
     </div>
 
@@ -111,7 +111,8 @@ Note: Multiple layers with transparency can cause rendering issues in rgl."><met
 <span>  remove_na <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  reorient <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  clear_layers <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  horizontal_offset <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span></span>
+<span>  horizontal_offset <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span>,</span>
+<span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -156,6 +157,10 @@ of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
 
 <dt>horizontal_offset</dt>
 <dd><p>Default `c(0,0)`. Distance (in 3D space) to offset the floating offset in the x/y directions.</p></dd>
+
+
+<dt>...</dt>
+<dd><p>Additional arguments to pass to `rgl::rgl.triangles()`.</p></dd>
 
 </dl></div>
     <div id="value">
