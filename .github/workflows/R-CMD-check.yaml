@@ -36,8 +36,6 @@ jobs:
       - name: "[Custom block] [macOS] Install spatial libraries"
         if: runner.os == 'macOS'
         run: |
-          # conflicts with gfortran from r-lib/actions when linking gcc
-          rm '/usr/local/bin/gfortran'
           brew install pkg-config gdal proj geos
 
       - uses: actions/checkout@v3
@@ -58,6 +56,7 @@ jobs:
       - name: Install dependencies
         run: |
           install.packages("rgdal")
+          install.packages("remotes")
           remotes::install_deps(dependencies = TRUE)
           remotes::install_cran("rcmdcheck")
         shell: Rscript {0}
