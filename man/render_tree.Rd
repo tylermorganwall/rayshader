@@ -17,7 +17,8 @@ render_tree(
   trunk_height = NULL,
   trunk_radius = NULL,
   tree_zscale = TRUE,
-  min_height = NULL,
+  min_height = 0,
+  max_height = Inf,
   zscale = 1,
   heightmap = NULL,
   baseshape = "rectangle",
@@ -60,6 +61,9 @@ the size of the map. If zscale is very big, this will make the trees very small.
 
 \item{min_height}{Default `NULL`. Minimum height of a tree. Set to a positive number to filter out trees 
 below that height.}
+
+\item{max_height}{Default `NA`. Maximum height of a tree. Set to a positive number to filter out trees 
+above that height.}
 
 \item{zscale}{Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.}
 

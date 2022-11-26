@@ -23,6 +23,8 @@
 #'the size of the map. If zscale is very big, this will make the trees very small.
 #'@param min_height Default `NULL`. Minimum height of a tree. Set to a positive number to filter out trees 
 #'below that height.
+#'@param max_height Default `NA`. Maximum height of a tree. Set to a positive number to filter out trees 
+#'above that height.
 #'@param angle Default `c(0,0,0)`. Angle of rotation around the x, y, and z axes. If this is a matrix or list,
 #'each row (or list entry) specifies the rotation of the nth tree specified (number of rows/length of list must
 #'equal the length of `lat`/`long`).
@@ -138,7 +140,7 @@ render_tree = function(lat = NULL, long = NULL, extent = NULL,
                        type = "basic", canopy_color = "#22aa22", trunk_color = "#964B00",
                        absolute_height = FALSE, canopy_height = 9, canopy_width_ratio = NULL, 
                        trunk_height = NULL, trunk_radius = NULL, 
-                       tree_zscale = TRUE, min_height = NULL,
+                       tree_zscale = TRUE, min_height = 0, max_height = Inf,
                        zscale=1, heightmap = NULL, baseshape = "rectangle",
                        angle=c(0,0,0), clear_previous = FALSE,
                        ...) {
@@ -158,8 +160,8 @@ render_tree = function(lat = NULL, long = NULL, extent = NULL,
                                                altitude = NULL, offset = 0, zscale = 1)
     z_tree = xyz_tree[,2]
     filter_nan = is.na(z_tree)
-    if(filter_heights) {
-      filter_nan = filter_nan | z_tree <= min_height
+    if(all(filter_nan)) {
+      return(invisible())
     }
     z_tree = z_tree[!filter_nan]
     lat = lat[!filter_nan]
@@ -180,6 +182,19 @@ render_tree = function(lat = NULL, long = NULL, extent = NULL,
       canopy_height = canopy_height[!filter_nan]
     }
     canopy_height = canopy_height - z_tree
+    if(!is.infinite(max_height) || min_height > 0) {
+      filter_height = canopy_height >= max_height | canopy_height <= min_height 
+      long = long[!filter_height]
+      lat = lat[!filter_height]
+      trunk_color = trunk_color[!filter_height]
+      trunk_height = trunk_height[!filter_height]
+      trunk_radius = trunk_radius[!filter_height]
+      canopy_width_ratio = canopy_width_ratio[!filter_height]
+      canopy_height = canopy_height[!filter_height]
+    }
+    if(length(long) == 0) {
+      return(invisible())
+    }
   }
   if(is.null(trunk_height)) {
     if(type == "cone") {

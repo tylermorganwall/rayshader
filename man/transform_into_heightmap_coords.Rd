@@ -12,7 +12,7 @@ transform_into_heightmap_coords(
   altitude = NULL,
   offset = 0,
   zscale = 1,
-  use_zscale = TRUE,
+  use_altitude = TRUE,
   filter_bounds = TRUE
 )
 }
