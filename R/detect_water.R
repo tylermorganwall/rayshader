@@ -2,7 +2,9 @@
 #'
 #'@description Detects bodies of water (of a user-defined minimum size) within an elevation matrix.
 #'
-#'@param heightmap A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All grid points are assumed to be evenly spaced.
+#'@param heightmap A two-dimensional matrix, where each entry in the matrix is the elevation at that point. 
+#'All grid points are assumed to be evenly spaced. Alternatively, if heightmap is a logical matrix, each entry
+#'specifies whether that point is water or not.
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
 #'of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
 #'@param cutoff Default `0.999`. The lower limit of the z-component of the unit normal vector to be classified as water.
@@ -29,6 +31,9 @@ detect_water = function(heightmap, zscale = 1, cutoff = 0.999,
                         max_height = NULL,
                         normalvectors=NULL,
                         keep_groups=FALSE, progbar = FALSE) {
+  if(is.logical(heightmap) && is.matrix(heightmap)) {
+    return(flipud(heightmap))
+  }
   if(!is.null(normalvectors)) {
     zmatrix = abs(normalvectors$z)
     zmatrix = abs(zmatrix)
