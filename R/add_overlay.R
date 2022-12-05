@@ -16,10 +16,8 @@
 #'@return Hillshade with overlay.
 #'@export
 #'@examples
-#'#Only run these examples if the `magick` package is installed.
-#'if (length(find.package("magick", quiet = TRUE)) > 0) {
 #'#Combining base R plotting with rayshader's spherical color mapping and raytracing:
-#'\donttest{
+#'if(rayshader:::run_documentation()) {
 #'montereybay %>%
 #'   sphere_shade() %>%
 #'   add_overlay(height_shade(montereybay),alphalayer = 0.6)  %>%
@@ -27,14 +25,13 @@
 #'   plot_map()
 #'}
 #'
-#'\donttest{
+#'if(rayshader:::run_documentation()) {
 #'#Add contours with `generate_contour_overlay()`
 #'montereybay %>%
 #'   height_shade() %>%
 #'   add_overlay(generate_contour_overlay(montereybay))  %>%
 #'   add_shadow(ray_shade(montereybay,zscale=50)) %>%
 #'   plot_map()
-#'}
 #'}
 add_overlay = function(hillshade, overlay, alphalayer = 1, alphacolor=NULL, 
                        alphamethod = "max", rescale_original = FALSE) {

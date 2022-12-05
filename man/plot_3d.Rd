@@ -157,7 +157,7 @@ Displays the shaded map in 3D with the `rgl` package.
 }
 \examples{
 #Plotting a spherical texture map of the built-in `montereybay` dataset.
-\donttest{
+if(rayshader:::run_documentation()) {
 montereybay \%>\%
  sphere_shade(texture="desert") \%>\%
  plot_3d(montereybay,zscale=50)
@@ -165,7 +165,7 @@ render_snapshot(clear = TRUE)
 }
 
 #With a water layer  
-\donttest{
+if(rayshader:::run_documentation()) {
 montereybay \%>\%
  sphere_shade(texture="imhof2") \%>\%
  plot_3d(montereybay, zscale=50, water = TRUE, watercolor="imhof2", 
@@ -174,7 +174,7 @@ render_snapshot(clear = TRUE)
 }
 
 #With a soil texture to the base  
-\donttest{
+if(rayshader:::run_documentation()) {
 montereybay \%>\%
  sphere_shade(texture="imhof3") \%>\%
  plot_3d(montereybay, zscale=50, water = TRUE,  watercolor="imhof4", 
@@ -184,7 +184,7 @@ render_snapshot(clear = TRUE)
 }
 
 #We can also change the base by setting "baseshape" to "hex" or "circle"
-\donttest{
+if(rayshader:::run_documentation()) {
 montereybay \%>\%
  sphere_shade(texture="imhof1") \%>\%
  plot_3d(montereybay, zscale=50, water = TRUE, watercolor="imhof1", theta=-45, zoom=0.7,
@@ -192,7 +192,7 @@ montereybay \%>\%
 render_snapshot(clear = TRUE)
 }
 
-\donttest{
+if(rayshader:::run_documentation()) {
 montereybay \%>\%
  sphere_shade(texture="imhof1") \%>\%
  plot_3d(montereybay, zscale=50, water = TRUE, watercolor="imhof1", theta=-45, zoom=0.7,
@@ -211,7 +211,7 @@ render_snapshot(clear = TRUE)
 mb_water = montereybay
 mb_water[mb_water > -10] = NA
 
-\donttest{
+if(rayshader:::run_documentation()) {
 montereybay \%>\%
  sphere_shade(texture="imhof1") \%>\%
  plot_3d(mb_water, zscale=50, water = TRUE, watercolor="imhof1", theta=-45,

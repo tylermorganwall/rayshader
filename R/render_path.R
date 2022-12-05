@@ -19,9 +19,11 @@
 #'@param color Default `black`. Color of the line.
 #'@param offset Default `5`. Offset of the track from the surface, if `altitude = NULL`.
 #'@param clear_previous Default `FALSE`. If `TRUE`, it will clear all existing paths.
+#'@param return_coords Default `FALSE`. If `TRUE`, this will return the internal rayshader coordinates of the path, instead of 
+#'plotting the line. 
 #'@export
 #'@examples
-#'\donttest{
+#'if(rayshader:::run_documentation()) {
 #'#Starting at Moss Landing in Monterey Bay, we are going to simulate a flight of a bird going
 #'#out to sea and diving for food.
 #'
@@ -56,13 +58,16 @@
 #'            lat = unlist(bird_track_lat), long = unlist(bird_track_long), 
 #'            altitude = z_out, zscale=50,color="white", antialias=TRUE)
 #'render_snapshot()
-#'     
+#'}
+#'if(rayshader:::run_documentation()) {
 #'#We'll set the altitude to right above the water to give the tracks a "shadow".
 #'render_path(extent = attr(montereybay,"extent"), 
 #'            lat = unlist(bird_track_lat), long = unlist(bird_track_long), 
 #'            altitude = 10, zscale=50, color="black", antialias=TRUE)
 #'render_camera(theta=30,phi=35,zoom=0.45,fov=70)
 #'render_snapshot()
+#'}
+#'if(rayshader:::run_documentation()) {
 #'#Remove the path:
 #'render_path(clear_previous=TRUE)
 #'
@@ -77,7 +82,8 @@
 #'            zscale=50, color="red", antialias=TRUE,offset=100, linewidth=5)
 #'render_camera(theta = 160, phi=33, zoom=0.4, fov=55)
 #'render_snapshot()
-#'
+#'}
+#'if(rayshader:::run_documentation()) {
 #'#And all of these work with `render_highquality()`
 #'render_highquality(clamp_value=10, line_radius=3)
 #'rgl::rgl.close()
@@ -85,7 +91,7 @@
 render_path = function(extent = NULL, lat, long = NULL, altitude = NULL, 
                        zscale=1, heightmap = NULL,
                        linewidth = 3, color = "black", antialias = FALSE, offset = 5,
-                       clear_previous = FALSE) {
+                       clear_previous = FALSE, return_coords = FALSE) {
   if(rgl::rgl.cur() == 0) {
     stop("No rgl window currently open.")
   }
@@ -110,42 +116,32 @@ render_path = function(extent = NULL, lat, long = NULL, altitude = NULL,
   }
   split_lat = split(lat, groups)
   split_long = split(long, groups)
+  if(is.null(heightmap)) {
+    vertex_info = get_ids_with_labels(typeval = c("surface", "surface_tris"))
+    nrow_map = max(rgl::rgl.attrib(vertex_info$id[1], "vertices")[,1]) - min(rgl::rgl.attrib(vertex_info$id[1], "vertices")[,1])
+    ncol_map = max(rgl::rgl.attrib(vertex_info$id[1], "vertices")[,3]) - min(rgl::rgl.attrib(vertex_info$id[1], "vertices")[,3])
+  } else {
+    ncol_map = ncol(heightmap)
+    nrow_map = nrow(heightmap)
+  }
+  if(!is.null(altitude)) {
+    offset = 0
+  }
+  coord_list = list()
   for(group in seq_along(split_lat)) {
     lat = split_lat[[group]]
     long = split_long[[group]]
-  
-    if(is.null(heightmap)) {
-      vertex_info = get_ids_with_labels(typeval = c("surface", "surface_tris"))
-      nrow_map = max(rgl::rgl.attrib(vertex_info$id[1], "vertices")[,1]) - min(rgl::rgl.attrib(vertex_info$id[1], "vertices")[,1])
-      ncol_map = max(rgl::rgl.attrib(vertex_info$id[1], "vertices")[,3]) - min(rgl::rgl.attrib(vertex_info$id[1], "vertices")[,3])
+    
+    xyz = transform_into_heightmap_coords(extent, heightmap, lat, long, 
+                                          altitude, offset, zscale, filter_bounds = FALSE)
+    if(!return_coords) {
+      rgl::rgl.material(color = color, tag = "path3d", lwd = linewidth, line_antialias = antialias)
+      rgl::lines3d(xyz[,1] + 0.5,xyz[,2],xyz[,3] + 0.5)
     } else {
-      ncol_map = ncol(heightmap)
-      nrow_map = nrow(heightmap)
+      coord_list[[group]] = xyz
     }
-    e = extent
-    distances_x = (long-e@xmin)/(e@xmax - e@xmin) * nrow_map
-    distances_y = ncol_map - (lat-e@ymin)/(e@ymax - e@ymin) * ncol_map
-    if(is.null(altitude)) {
-      if(is.null(heightmap)) {
-        stop("No altitude data requires heightmap argument be passed")
-      }
-      distances_x_index = distances_x
-      distances_y_index = distances_y
-      distances_x_index[floor(distances_x_index) > nrow(heightmap)] = nrow(heightmap)
-      distances_y_index[floor(distances_y_index) > ncol(heightmap)] = ncol(heightmap)
-      distances_x_index[floor(distances_x_index) < 1] = 1
-      distances_y_index[floor(distances_y_index) < 1] = 1
-      if(!length(find.package("rayimage", quiet = TRUE)) > 0) {
-        xy = matrix(c(floor(distances_x_index),floor(distances_y_index)),
-                    nrow=length(distances_x_index),ncol=2)
-        flipped_mat = flipud(t(heightmap))
-        altitude = apply(xy,1,(function(x) flipped_mat[x[2],x[1]])) + offset
-      } else {
-        altitude = rayimage::interpolate_array((t(heightmap)), distances_x_index,distances_y_index) + offset
-      }
-    }
-    rgl::rgl.material(color = color, tag = "path3d", lwd = linewidth, line_antialias = antialias)
-    rgl::lines3d(distances_x-nrow_map/2, altitude/zscale, distances_y-ncol_map/2)
-    altitude = NULL
+  }
+  if(return_coords) {
+    return(coord_list)
   }
 }

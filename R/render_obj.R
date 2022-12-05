@@ -39,7 +39,7 @@
 #'@param ... Additional arguments to pass to `rgl::rgl.triangles()`.
 #'@export
 #'@examples
-#'\donttest{
+#'if(rayshader:::run_documentation()) {
 #'#Render the 3D map
 #'moss_landing_coord = c(36.806807, -121.793332)
 #'montereybay %>%
@@ -58,7 +58,8 @@
 #'           scale=c(2,2,2), angle=c(0,45,0),
 #'           zscale=50, color=rainbow(100), smooth = FALSE, clear_previous = TRUE) 
 #'render_snapshot()
-#'
+#'}
+#'if(rayshader:::run_documentation()) {
 #'#Rotate the flag to follow the circle
 #'render_obj(flag_full_obj(), extent = attr(montereybay,"extent"), heightmap = montereybay,
 #'           lat = unlist(circle_coords_lat), long = unlist(circle_coords_long),
@@ -66,7 +67,8 @@
 #'           angle=matrix(c(rep(0,100), seq(0,-360,length.out=101)[-1],rep(0,100)),ncol=3),
 #'           zscale=50, color=rainbow(100), smooth = FALSE, clear_previous = TRUE) 
 #'render_snapshot()
-#'
+#'}
+#'if(rayshader:::run_documentation()) {
 #'#Style the pole with a different color
 #'render_obj(flag_pole_obj(), extent = attr(montereybay,"extent"), heightmap = montereybay,
 #'           lat = unlist(circle_coords_lat), long = unlist(circle_coords_long),

@@ -132,18 +132,18 @@ Displays snapshot of current rgl plot (or saves to disk).
 Either captures the current rgl view and displays, or saves the current view to disk.
 }
 \examples{
-\donttest{
+if(rayshader:::run_documentation()) {
 montereybay \%>\%
  sphere_shade() \%>\%
  plot_3d(montereybay,zscale=50,zoom=0.6,theta=-90,phi=30)
 }
  
-\donttest{
+if(rayshader:::run_documentation()) {
 render_snapshot()
 }
  
 #Create a title
-\donttest{
+if(rayshader:::run_documentation()) {
 render_snapshot(title_text = "Monterey Bay, California", title_offset=c(0,20),
                title_color = "white", title_bar_color = "black",
                title_font = "Helvetica", title_position = "north")

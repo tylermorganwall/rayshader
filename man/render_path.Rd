@@ -15,7 +15,8 @@ render_path(
   color = "black",
   antialias = FALSE,
   offset = 5,
-  clear_previous = FALSE
+  clear_previous = FALSE,
+  return_coords = FALSE
 )
 }
 \arguments{
@@ -44,6 +45,9 @@ All points are assumed to be evenly spaced.}
 \item{offset}{Default `5`. Offset of the track from the surface, if `altitude = NULL`.}
 
 \item{clear_previous}{Default `FALSE`. If `TRUE`, it will clear all existing paths.}
+
+\item{return_coords}{Default `FALSE`. If `TRUE`, this will return the internal rayshader coordinates of the path, instead of 
+plotting the line.}
 }
 \description{
 Adds a 3D path to the current scene, using latitude/longitude or coordinates in the reference
@@ -51,7 +55,7 @@ system defined by the extent object. If no altitude is provided, the path will b
 above the heightmap. If the path goes off the edge, the nearest height on the heightmap will be used.
 }
 \examples{
-\donttest{
+if(rayshader:::run_documentation()) {
 #Starting at Moss Landing in Monterey Bay, we are going to simulate a flight of a bird going
 #out to sea and diving for food.
 
@@ -86,13 +90,16 @@ render_path(extent = attr(montereybay,"extent"),
            lat = unlist(bird_track_lat), long = unlist(bird_track_long), 
            altitude = z_out, zscale=50,color="white", antialias=TRUE)
 render_snapshot()
-    
+}
+if(rayshader:::run_documentation()) {
 #We'll set the altitude to right above the water to give the tracks a "shadow".
 render_path(extent = attr(montereybay,"extent"), 
            lat = unlist(bird_track_lat), long = unlist(bird_track_long), 
            altitude = 10, zscale=50, color="black", antialias=TRUE)
 render_camera(theta=30,phi=35,zoom=0.45,fov=70)
 render_snapshot()
+}
+if(rayshader:::run_documentation()) {
 #Remove the path:
 render_path(clear_previous=TRUE)
 
@@ -107,7 +114,8 @@ render_path(extent = attr(montereybay,"extent"), heightmap = montereybay,
            zscale=50, color="red", antialias=TRUE,offset=100, linewidth=5)
 render_camera(theta = 160, phi=33, zoom=0.4, fov=55)
 render_snapshot()
-
+}
+if(rayshader:::run_documentation()) {
 #And all of these work with `render_highquality()`
 render_highquality(clamp_value=10, line_radius=3)
 rgl::rgl.close()

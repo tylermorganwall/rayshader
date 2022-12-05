@@ -14,7 +14,7 @@
 #'filename_stl = tempfile()
 #'
 #'#Save the STL file into `filename_stl`
-#'\donttest{
+#'if(rayshader:::run_documentation()) {
 #'volcano %>%
 #'  sphere_shade() %>%
 #'  plot_3d(volcano,zscale=3)
@@ -23,7 +23,7 @@
 #'}
 #'
 #'#Save the STL file into `filename_stl`, setting maximum width to 100 mm
-#'\donttest{
+#'if(rayshader:::run_documentation()) {
 #'volcano %>%
 #'  sphere_shade() %>%
 #'  plot_3d(volcano,zscale=3)
@@ -32,7 +32,7 @@
 #'}
 #'
 #'#'#Save the STL file into `filename_stl`, setting maximum width to 4 inches
-#'\donttest{
+#'if(rayshader:::run_documentation()) {
 #'volcano %>%
 #'  sphere_shade() %>%
 #'  plot_3d(volcano,zscale=3)
@@ -40,7 +40,7 @@
 #'save_3dprint(filename_stl, maxwidth = 4, unit = "in", clear=TRUE)
 #'}
 #'#'#'#Save the STL file into `filename_stl`, setting maximum width (character) to 120mm
-#'\donttest{
+#'if(rayshader:::run_documentation()) {
 #'volcano %>%
 #'  sphere_shade() %>%
 #'  plot_3d(volcano,zscale=3)

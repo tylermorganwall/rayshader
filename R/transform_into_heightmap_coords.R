@@ -11,6 +11,7 @@ transform_into_heightmap_coords = function(extent, heightmap, lat = NULL, long =
                                            altitude = NULL, offset = 0, zscale = 1,
                                            use_altitude = TRUE,
                                            filter_bounds = TRUE) {
+  offset = offset/zscale
   e = extent
   if(is.null(lat)) {
     lat = (e@ymax + e@ymin)/2 

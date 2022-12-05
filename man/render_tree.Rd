@@ -86,7 +86,7 @@ Adds 3D tree to the current scene, using latitude/longitude or coordinates in th
 system defined by the extent object.
 }
 \examples{
-\donttest{
+if(rayshader:::run_documentation()) {
 #Let's first start by drawing some trees in a circle around Monterey Bay
 #We won't scale these to a realistic size (yet)
 moss_landing_coord = c(36.806807, -121.793332)
@@ -104,28 +104,32 @@ render_tree(extent = attr(montereybay,"extent"), heightmap = montereybay,
            tree_zscale = FALSE, canopy_height = 30, canopy_width_ratio = 0.5,
            lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), zscale=50) 
 render_snapshot()
-
+}
+if(rayshader:::run_documentation()) {
 #Change the canopy width ratio (compared to the height)
 render_tree(extent = attr(montereybay,"extent"), heightmap = montereybay,
            tree_zscale = FALSE, canopy_height = 30, canopy_width_ratio = 0.5,
            clear_previous = TRUE, 
            lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), zscale=50) 
 render_snapshot()
-
+}
+if(rayshader:::run_documentation()) {
 #Change the trunk height and width
 render_tree(extent = attr(montereybay,"extent"), heightmap = montereybay,
            tree_zscale = FALSE, canopy_height = 10, canopy_width_ratio = 2,
            clear_previous = TRUE, trunk_height=15, trunk_radius = 1.5,
            lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), zscale=50) 
 render_snapshot()
-
+}
+if(rayshader:::run_documentation()) {
 #Change the tree type
 render_tree(extent = attr(montereybay,"extent"), heightmap = montereybay,
            tree_zscale = FALSE, canopy_height = 30,
            clear_previous = TRUE, type = "cone",
            lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), zscale=50) 
 render_snapshot()
-
+}
+if(rayshader:::run_documentation()) {
 #Change the canopy color:
 render_camera(theta = 150,  phi = 38, zoom = 0.4, fov = 55)
 render_tree(extent = attr(montereybay,"extent"), heightmap = montereybay,
@@ -135,12 +139,15 @@ render_tree(extent = attr(montereybay,"extent"), heightmap = montereybay,
            lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), zscale=50) 
 render_snapshot()
 rgl::rgl.close()
+}
 
 #We will use the lidR package to generate a DEM and detect the canopy tops of trees, and
 #then use rayshader to render 3D tree models scaled to those heights on the map.
-if (length(find.package("lidR", quiet = TRUE)) > 0 && 
-   length(find.package("sf", quiet = TRUE)) > 0 && 
-   length(find.package("terra", quiet = TRUE)) > 0) {
+run_example = length(find.package("lidR", quiet = TRUE)) > 0 && 
+             length(find.package("sf", quiet = TRUE)) > 0 && 
+             length(find.package("terra", quiet = TRUE)) > 0 &&
+             rayshader:::run_documentation()
+if (run_example) {
 #Load the example data from the lidR package
 LASfile = system.file("extdata", "Topography.laz", package="lidR")
 las = lidR::readLAS(LASfile, filter = "-inside 273450 5274350 273550 5274450")
@@ -162,7 +169,8 @@ dem_matrix |>
  add_shadow(lamb_shade(dem_matrix),0) |> 
  plot_3d(dem_matrix)
 render_snapshot()
-
+}
+if (run_example) {
 #The tree locations are given as an absolute height (as opposed to relative to the surface)
 #so we set `absolute_height = TRUE`.
 render_tree(lat = tree_locations[,2], long = tree_locations[,1],
@@ -176,12 +184,12 @@ rgl::rgl.pop("lights")
 rgl::light3d(phi=35,theta=90, viewpoint.rel=F, diffuse="#ffffff", specular="#000000")
 rgl::light3d(phi=-45,theta=-40, viewpoint.rel=F, diffuse="#aaaaaa", specular="#000000")
 render_snapshot() 
- 
+}
+if (run_example) {
 #Render tree also works with `render_highquality()`
 render_highquality(lightdirection=c(90,45),lightaltitude=c(90,45), 
                   lightcolor=c("dodgerblue","orange"), 
                   min_variance = 0, sample_method="sobol_blue", clamp_value=10)
 rgl::rgl.close()
-}
 }
 }

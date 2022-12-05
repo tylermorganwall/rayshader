@@ -59,7 +59,7 @@ Displays the map in the current device.
 }
 \examples{
 #Plotting the Monterey Bay dataset with bathymetry data
-\donttest{
+if(rayshader:::run_documentation()) {
 water_palette = colorRampPalette(c("darkblue", "dodgerblue", "lightblue"))(200)
 bathy_hs = height_shade(montereybay, texture = water_palette)
 
@@ -69,12 +69,12 @@ montereybay \%>\%
  add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0))  \%>\%
  add_shadow(ray_shade(montereybay,zscale=50),0.3) \%>\%
  plot_map()
-
+}
 #Correcting the aspect ratio for the latitude of Monterey Bay
 
 extent_mb = attr(montereybay,"extent")
 mean_latitude = mean(c(extent_mb@ymax,extent_mb@ymin))
-
+if(rayshader:::run_documentation()) {
 montereybay \%>\%
  sphere_shade(zscale=10) \%>\%
  add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0))  \%>\%

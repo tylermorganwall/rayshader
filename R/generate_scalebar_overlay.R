@@ -48,9 +48,7 @@
 #'@return Semi-transparent overlay with a scale bar.
 #'@export
 #'@examples
-#'#Only run these examples if the `magick` package is installed.
-#'if (length(find.package("magick", quiet = TRUE)) > 0) {
-#'\donttest{
+#'if(rayshader:::run_documentation()) {
 #'#Create the water palette
 #'water_palette = colorRampPalette(c("darkblue", "dodgerblue", "lightblue"))(200)
 #'bathy_hs = height_shade(montereybay, texture = water_palette)
@@ -73,8 +71,8 @@
 #'                                       heightmap = montereybay, 
 #'                                       latlong=TRUE)) %>%
 #' plot_map()
-#'
-#'
+#'}
+#'if(rayshader:::run_documentation()) {
 #'#Change the text color
 #'base_map %>%
 #'  add_overlay(generate_scalebar_overlay(extent = mb_extent, length = 40000,
@@ -82,8 +80,8 @@
 #'                                        heightmap = montereybay, 
 #'                                        latlong=TRUE)) %>%
 #'  plot_map()
-#'
-#'
+#'}
+#'if(rayshader:::run_documentation()) {
 #'#Change the length
 #'base_map %>%
 #'  add_overlay(generate_scalebar_overlay(extent = mb_extent, length = 30000,
@@ -91,7 +89,8 @@
 #'                                        heightmap = montereybay, 
 #'                                        latlong=TRUE)) %>%
 #'  plot_map()
-#'
+#'}
+#'if(rayshader:::run_documentation()) {
 #'#Change the thickness (default is length/20)
 #'base_map %>%
 #'  add_overlay(generate_scalebar_overlay(extent = mb_extent, length = 30000,
@@ -99,7 +98,8 @@
 #'                                        heightmap = montereybay, 
 #'                                        latlong=TRUE)) %>%
 #'  plot_map()
-#'
+#'}
+#'if(rayshader:::run_documentation()) {
 #'#Change the text offset (given in multiples of thickness)
 #'base_map %>%
 #'  add_overlay(generate_scalebar_overlay(extent = mb_extent, length = 30000,
@@ -108,7 +108,8 @@
 #'                                        heightmap = montereybay, 
 #'                                        latlong=TRUE)) %>%
 #'  plot_map()
-#'
+#'}
+#'if(rayshader:::run_documentation()) {
 #'#Change the primary and secondary colors, along with the border and tick color
 #'base_map %>%
 #'  add_overlay(generate_scalebar_overlay(extent = mb_extent, length = 30000,
@@ -118,7 +119,8 @@
 #'                                        heightmap = montereybay, 
 #'                                        latlong=TRUE)) %>%
 #'  plot_map()
-#'
+#'}
+#'if(rayshader:::run_documentation()) {
 #'#Add a halo
 #'base_map %>%
 #'  add_overlay(generate_scalebar_overlay(extent = mb_extent, length = 40000,
@@ -126,7 +128,8 @@
 #'                                        heightmap = montereybay, 
 #'                                        latlong=TRUE)) %>%
 #'  plot_map()
-#'
+#'}
+#'if(rayshader:::run_documentation()) {
 #'#Change the orientation, position, text alignment, and flip the ticks to the other side
 #'base_map %>%
 #'  add_overlay(generate_scalebar_overlay(extent = mb_extent, length = 40000, x = 0.07,
@@ -135,8 +138,8 @@
 #'                                        heightmap = montereybay, 
 #'                                        latlong=TRUE)) %>%
 #'  plot_map()
-#'  
-#'  
+#'}
+##'if(rayshader:::run_documentation()) { 
 #'#64373.8 meters in 40 miles
 #'#Create custom labels, change font and text size, remove the border/ticks, and change the color
 #'#Here, we specify a width and height to double the resolution of the image (for sharper text)
@@ -152,7 +155,6 @@
 #'                                        height = nrow(montereybay)*2,
 #'                                        latlong=TRUE), rescale_original=TRUE) %>%
 #'  plot_map()
-#'}
 #'}
 generate_scalebar_overlay = function(extent, length, x=0.05, y=0.05, 
                                      latlong = FALSE, thickness = NA,

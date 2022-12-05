@@ -4,7 +4,10 @@
 #'User can specify the light direction, intensity, and color, as well as specify the material of the 
 #'ground and add additional scene elements.
 #'
-#'@param filename Filename of saved image. If missing, will display to current device.
+#'This function can also generate frames for an animation by passing camera animation information from 
+#'either `convert_path_to_animation_coords()` or `rayrender::generate_camera_motion()` functions.
+#'
+#'@param filename Default `NA`. Filename of saved image. If missing, will display to current device.
 #'@param light Default `TRUE`. Whether there should be a light in the scene. If not, the scene will be lit with a bluish sky.
 #'@param lightdirection Default `315`. Position of the light angle around the scene. 
 #'If this is a vector longer than one, multiple lights will be generated (using values from 
@@ -27,6 +30,8 @@
 #'@param line_radius Default `0.5`. Radius of line/path segments.
 #'@param smooth_line Default `FALSE`. If `TRUE`, the line will be rendered with a continuous smooth line, rather
 #'than straight segments.
+#'@param use_extruded_paths Default `FALSE`. If `TRUE`, paths will be generated with the `rayrender::extruded_path()` object, instead
+#'of `rayrender::path()`.
 #'@param point_radius Default `0.5`. Radius of 3D points (rendered with `render_points()`.
 #'@param scale_text_angle Default `NULL`. Same as `text_angle`, but for the scale bar.
 #'@param scale_text_size Default `6`. Height of the scale bar text.
@@ -53,12 +58,14 @@
 #'@param print_scene_info Default `FALSE`. If `TRUE`, it will print the position and lookat point of the camera.
 #'@param clamp_value Default `10`. See documentation for `rayrender::render_scene()`.
 #'@param return_scene Default `FALSE`. If `TRUE`, this will return the rayrender scene (instead of rendering the image).
+#'@param animation_camera_coords Default `NULL`. Expects camera animation output from either `convert_path_to_animation_coords()`
+#'or `rayrender::generate_camera_motion()` functions.
 #'@param ... Additional parameters to pass to `rayrender::render_scene`()
 #'
 #'@export
 #'@examples
 #'#Render the volcano dataset using pathtracing
-#'\donttest{
+#'if(rayshader:::run_documentation()) {
 #'volcano %>%
 #'  sphere_shade() %>%
 #'  plot_3d(volcano,zscale = 2)
@@ -66,36 +73,36 @@
 #'}
 #'
 #'#Change position of light
-#'\donttest{
+#'if(rayshader:::run_documentation()) {
 #'render_highquality(lightdirection = 45)
 #'}
 #'
 #'#Change vertical position of light
-#'\donttest{
+#'if(rayshader:::run_documentation()) {
 #'render_highquality(lightdirection = 45, lightaltitude=10)
 #'}
 #'
 #'#Change the ground material
-#'\donttest{
+#'if(rayshader:::run_documentation()) {
 #'render_highquality(lightdirection = 45, lightaltitude=60,
 #'                   ground_material = rayrender::diffuse(checkerperiod = 30, checkercolor="grey50"))
 #'}
 #'
 #'#Add three different color lights and a title
-#'\donttest{
+#'if(rayshader:::run_documentation()) {
 #'render_highquality(lightdirection = c(0,120,240), lightaltitude=45,
 #'                   lightcolor=c("red","green","blue"), title_text = "Red, Green, Blue",
 #'                   title_bar_color="white", title_bar_alpha=0.8)
 #'}
 #'
 #'#Change the camera:
-#'\donttest{
+#'if(rayshader:::run_documentation()) {
 #'render_camera(theta=-45,phi=60,fov=60,zoom=0.8)
 #'render_highquality(lightdirection = c(0),
 #'                   title_bar_color="white", title_bar_alpha=0.8)
 #'}
 #'#Add a shiny metal sphere
-#'\donttest{
+#'if(rayshader:::run_documentation()) {
 #'render_camera(theta=-45,phi=60,fov=60,zoom=0.8)
 #'render_highquality(lightdirection = c(0,120,240), lightaltitude=45, 
 #'                   lightcolor=c("red","green","blue"),
@@ -104,7 +111,7 @@
 #'}
 #'
 #'#Add a red light to the volcano and change the ambient light to dusk
-#'\donttest{
+#'if(rayshader:::run_documentation()) {
 #'render_camera(theta=45,phi=45)
 #'render_highquality(lightdirection = c(240), lightaltitude=30, 
 #'                   lightcolor=c("#5555ff"),
@@ -112,7 +119,7 @@
 #'                                    material=rayrender::light(color="red",intensity=10)))
 #'}
 #'#Manually change the camera location and direction
-#'\donttest{
+#'if(rayshader:::run_documentation()) {
 #'render_camera(theta=45,phi=45,fov=90)
 #'render_highquality(lightdirection = c(240), lightaltitude=30, lightcolor=c("#5555ff"), 
 #'                   camera_location = c(50,10,10), camera_lookat = c(0,15,0),
@@ -120,11 +127,13 @@
 #'                                    material=rayrender::light(color="red",intensity=10)))
 #'rgl::rgl.close()
 #'}
-render_highquality = function(filename = NULL, light = TRUE, lightdirection = 315, lightaltitude = 45, lightsize=NULL,
+render_highquality = function(filename = NULL, light = TRUE, 
+                              lightdirection = 315, lightaltitude = 45, lightsize=NULL,
                               lightintensity = 500, lightcolor = "white", obj_material = rayrender::diffuse(),
                               cache_filename=NULL, width = NULL, height = NULL, 
                               text_angle = NULL, text_size = 6, text_offset = c(0,0,0), 
                               line_radius=0.5, point_radius = 0.5, smooth_line = FALSE,
+                              use_extruded_paths = FALSE,
                               scale_text_angle = NULL, scale_text_size = 6, scale_text_offset = c(0,0,0), 
                               title_text = NULL, title_offset = c(20,20), 
                               title_color = "black", title_size = 30, title_font = "sans",
@@ -132,7 +141,8 @@ render_highquality = function(filename = NULL, light = TRUE, lightdirection = 31
                               ground_material = rayrender::diffuse(), ground_size=100000,scene_elements=NULL, 
                               camera_location = NULL, camera_lookat = NULL, 
                               camera_interpolate=1, clear  = FALSE, return_scene = FALSE,
-                              print_scene_info = FALSE, clamp_value = 10, ...) {
+                              print_scene_info = FALSE, clamp_value = 10, 
+                              animation_camera_coords = NULL, ...) {
   if(rgl::rgl.cur() == 0) {
     stop("No rgl window currently open.")
   }
@@ -358,9 +368,15 @@ render_highquality = function(filename = NULL, light = TRUE, lightdirection = 31
     }
     if(smooth_line) {
       matrix_center = matrix(bbox_center, byrow=TRUE,ncol=3,nrow = nrow(temp_verts))
-      pathline[[counter]] = rayrender::path(points = temp_verts - matrix_center, 
-                                            width = line_radius * 2,
-                                            material = rayrender::diffuse(color = temp_color[1,1:3]))
+      if(use_extruded_paths) {
+        pathline[[counter]] = rayrender::extruded_path(points = temp_verts - matrix_center , 
+                                              width = line_radius * 2,
+                                              material = rayrender::diffuse(color = temp_color[1,1:3]))
+      } else {
+        pathline[[counter]] = rayrender::path(points = temp_verts - matrix_center, 
+                                              width = line_radius * 2,
+                                              material = rayrender::diffuse(color = temp_color[1,1:3]))
+      }
       counter = counter + 1
     } else {
       for(j in seq_len(nrow(temp_verts)-1)) {
@@ -520,13 +536,23 @@ render_highquality = function(filename = NULL, light = TRUE, lightdirection = 31
     return(scene)
   }
   
+  if(!is.null(animation_camera_coords)) {
+    stopifnot(ncol(animation_camera_coords) == 14)
+    if(is.null(filename)) {
+      filename = NA
+    }
+    rayrender::render_animation(scene, camera_motion = animation_camera_coords, width = width, height = height,
+                                filename = filename, clamp_value = clamp_value, ...)
+    return()
+  }
+  
   if(has_title) {
     temp = tempfile(fileext = ".png")
     debug_return = rayrender::render_scene(scene, lookfrom = lookfrom, lookat = camera_lookat, fov = fov, filename=temp,
                  ortho_dimensions = ortho_dimensions, width = width, height = height,  #camera_up = camera_up,
                  clamp_value = clamp_value, ...)
     if(has_title) {
-      if(is.null(filename)) {
+      if(is.na(filename)) {
         rayimage::add_title(temp, title_text = title_text, title_color = title_color, 
                             title_font = title_font, title_offset = title_offset, 
                             title_bar_alpha =  title_bar_alpha, title_bar_color = title_bar_color,

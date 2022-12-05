@@ -40,9 +40,7 @@
 #'@export
 #'@examples
 #'#Add the included `sf` object with roads to the montereybay dataset
-#'#Only run these examples if the `magick` package is installed.
-#'if (length(find.package("magick", quiet = TRUE)) > 0) {
-#'\donttest{
+#'if(rayshader:::run_documentation()) {
 #'#Create the water palette
 #'water_palette = colorRampPalette(c("darkblue", "dodgerblue", "lightblue"))(200)
 #'bathy_hs = height_shade(montereybay, texture = water_palette)
@@ -60,7 +58,8 @@
 #'                                     extent= attr(montereybay,"extent"), heightmap = montereybay,
 #'                                     seed=1))  %>%
 #'  plot_map()
-#'
+#'}
+#'if(rayshader:::run_documentation()) {
 #'#It's hard to read these values, so we'll add a white halo.
 #'bathy_hs %>% 
 #'  add_shadow(lamb_shade(montereybay,zscale=50),0.3) %>%
@@ -74,8 +73,8 @@
 #'                                     halo_color = "white", halo_expand = 3,
 #'                                     seed=1))  %>%
 #'  plot_map()
-#'
-#'
+#'}
+#'if(rayshader:::run_documentation()) {
 #'#Plot the actual town locations, using the manual plotting interface instead of the `sf` object
 #'montereybay %>%
 #'  height_shade() %>%
@@ -89,7 +88,8 @@
 #'                                     halo_color = "white", halo_expand = 3,
 #'                                     seed=1))  %>%
 #'  plot_map()
-#'
+#'}
+#'if(rayshader:::run_documentation()) {
 #'#Adding a softer blurred halo
 #'montereybay %>%
 #'  height_shade() %>%
@@ -103,7 +103,8 @@
 #'                                     halo_color = "white", halo_expand = 3, halo_blur=10,
 #'                                     seed=1))  %>%
 #'  plot_map()
-#'  
+#'}
+#'if(rayshader:::run_documentation()) {
 #'#Changing the seed changes the locations of the labels
 #'montereybay %>%
 #'  height_shade() %>%
@@ -117,7 +118,6 @@
 #'                                     halo_color = "white", halo_expand = 3, halo_blur=10,
 #'                                     seed=2))  %>%
 #'  plot_map()
-#'}
 #'}
 generate_label_overlay = function(labels, extent, x=NULL, y=NULL, 
                                   heightmap = NULL, width=NA, height=NA, text_size = 1,

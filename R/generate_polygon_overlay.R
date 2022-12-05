@@ -20,13 +20,12 @@
 #'@export
 #'@examples
 #'#Plot the counties around Monterey Bay, CA
-#'#Only run these examples if the `magick` package is installed.
-#'if (length(find.package("magick", quiet = TRUE)) > 0) {
-#'\donttest{
+#'if(rayshader:::run_documentation()) {
 #'generate_polygon_overlay(monterey_counties_sf, palette = rainbow, 
 #'                         extent = attr(montereybay,"extent"), heightmap = montereybay) %>%
 #'  plot_map() 
-#'
+#'}
+#'if(rayshader:::run_documentation()) {
 #'#These counties include the water, so we'll plot bathymetry data over the polygon
 #'#data to only include parts of the polygon that fall on land.
 #'water_palette = colorRampPalette(c("darkblue", "dodgerblue", "lightblue"))(200)
@@ -36,7 +35,8 @@
 #'                         extent = attr(montereybay,"extent"), heightmap = montereybay) %>%
 #'  add_overlay(generate_altitude_overlay(bathy_hs, montereybay, start_transition = 0)) %>%
 #'  plot_map()
-#'
+#'}
+#'if(rayshader:::run_documentation()) {
 #'#Add a semi-transparent hillshade and change the palette, and remove the polygon lines
 #'montereybay %>%
 #'  sphere_shade(texture = "bw") %>%
@@ -47,7 +47,8 @@
 #'  add_overlay(generate_altitude_overlay(bathy_hs, montereybay, start_transition = 0)) %>%
 #'  add_shadow(ray_shade(montereybay,zscale=50),0) %>%
 #'  plot_map()
-#'
+#'}
+#'if(rayshader:::run_documentation()) {
 #'#Map one of the variables in the sf object and use an explicitly defined color palette
 #'county_palette = c("087" = "red",    "053" = "blue",   "081" = "green", 
 #'                   "069" = "yellow", "085" = "orange", "099" = "purple") 
@@ -61,7 +62,6 @@
 #'  add_overlay(generate_altitude_overlay(bathy_hs, montereybay, start_transition = 0)) %>%
 #'  add_shadow(ray_shade(montereybay,zscale=50),0.5) %>%
 #'  plot_map()
-#'}
 #'}
 generate_polygon_overlay = function(geometry, extent, heightmap = NULL, 
                                     width=NA, height=NA, offset = c(0,0), data_column_fill = NULL, 

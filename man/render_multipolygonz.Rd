@@ -55,9 +55,11 @@ Adds MULTIPOLYGONZ will be plotted in the coordinate system set by the user-spec
 You can also use `save_multipolygonz_to_obj()` manually to convert sf objects
 }
 \examples{
-if(length(find.package("sf", quiet = TRUE)) &&
-  length(find.package("elevatr", quiet = TRUE)) &&
-  length(find.package("raster", quiet = TRUE))) {
+run_examples = length(find.package("sf", quiet = TRUE)) &&
+              length(find.package("elevatr", quiet = TRUE)) &&
+              length(find.package("raster", quiet = TRUE)) &&
+              rayshader:::run_documentation()
+if(run_examples) {
 library(sf)
 #Set location of washington monument
 washington_monument_location =  st_point(c(-77.035249, 38.889462))
@@ -84,7 +86,8 @@ dc_elevation_matrix |>
  plot_3d(dc_elevation_matrix, zscale=3.7, water = TRUE, waterdepth = 1, 
          soliddepth=-50, windowsize = 800)
 render_snapshot()
-
+}
+if(run_examples) {
 #Zoom in on the monument
 render_camera(theta=150,  phi=35, zoom= 0.55, fov=70)
 #Render the national monument
@@ -94,7 +97,8 @@ render_multipolygonz(washington_monument_multipolygonz,
                     zscale = 4, color = "white",
                     heightmap = dc_elevation_matrix)
 render_snapshot()
-
+}
+if(run_examples) {
 #This works with `render_highquality()`
 render_highquality(sample_method="sobol_blue", clamp_value=10)
 rgl::rgl.close()

@@ -12,22 +12,25 @@
 #'@return Matrix of light intensities at each point.
 #'@export
 #'@examples
-#'\donttest{
+#'if(rayshader:::run_documentation()) {
 #'#Generate a basic hillshade
 #'montereybay %>% 
 #'  lamb_shade(zscale=200) %>% 
 #'  plot_map()
-#'  
+#'}
+#'if(rayshader:::run_documentation()) {
 #'#Increase the intensity by decreasing the zscale
 #'montereybay %>% 
 #'  lamb_shade(zscale=50) %>% 
 #'  plot_map()
-#'  
+#'}
+#'if(rayshader:::run_documentation()) { 
 #'#Change the sun direction
 #'montereybay %>% 
 #'  lamb_shade(zscale=200, sunangle=45) %>% 
 #'  plot_map()
-#'  
+#'}
+#'if(rayshader:::run_documentation()) {
 #'#Change the sun altitude
 #'montereybay %>% 
 #'  lamb_shade(zscale=200, sunaltitude=60) %>% 

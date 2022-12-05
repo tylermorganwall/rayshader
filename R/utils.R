@@ -90,6 +90,9 @@ generate_base_shape = function(heightmap, baseshape, angle=0) {
 #'
 #' @keywords internal
 run_documentation = function() {
-  return(identical(Sys.getenv("IN_PKGDOWN"), "true"))
+  return(identical(Sys.getenv("IN_PKGDOWN"), "true") && 
+         length(find.package("magick", quiet = TRUE)) > 0 && 
+         length(find.package("sf", quiet = TRUE)) > 0 && 
+         length(find.package("rgdal", quiet = TRUE)) > 0)
 }
 

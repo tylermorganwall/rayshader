@@ -46,7 +46,7 @@ system defined by the extent object. If no altitude is provided, the points will
 above the heightmap. If the points goes off the edge, the nearest height on the heightmap will be used.
 }
 \examples{
-\donttest{
+if(rayshader:::run_documentation()) {
 #Starting at Moss Landing in Monterey Bay, we are going to simulate a flight of a bird going
 #out to sea and diving for food.
 
@@ -81,14 +81,16 @@ render_points(extent = attr(montereybay,"extent"),
              lat = unlist(bird_track_lat), long = unlist(bird_track_long), 
              altitude = z_out, zscale=50,color="white")
 render_snapshot()
-    
+}
+if(rayshader:::run_documentation()) {
 #We'll set the altitude to zero to give the tracks a "shadow" over the water. 
 render_points(extent = attr(montereybay,"extent"), 
              lat = unlist(bird_track_lat), long = unlist(bird_track_long), 
              altitude = 0, zscale=50, color="black")
 render_camera(theta=30,phi=35,zoom=0.45,fov=70)
 render_snapshot()
-
+}
+if(rayshader:::run_documentation()) {
 #Remove the points:
 render_points(clear_previous=TRUE)
 
@@ -103,7 +105,8 @@ render_points(extent = attr(montereybay,"extent"), heightmap = montereybay,
            zscale=50, color="red", offset=100, size=5)
 render_camera(theta = 160, phi=33, zoom=0.4, fov=55)
 render_snapshot()
-
+}
+if(rayshader:::run_documentation()) {
 #And all of these work with `render_highquality()`
 render_highquality(point_radius = 3, clamp_value=10)
 rgl::rgl.close()

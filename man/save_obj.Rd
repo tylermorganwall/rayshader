@@ -34,7 +34,7 @@ if(interactive()) {
 filename_obj = tempfile(fileext = ".obj")
 
 #Save model of volcano
-\donttest{
+if(rayshader:::run_documentation()) {
 volcano \%>\%
  sphere_shade() \%>\%
  plot_3d(volcano, zscale = 2)
@@ -43,13 +43,13 @@ save_obj(filename_obj)
 }
 
 #Save model of volcano without texture
-\donttest{
+if(rayshader:::run_documentation()) {
 save_obj(filename_obj, save_texture = FALSE)
 rgl::rgl.close()
 }
 
 #Make water have realistic index of refraction
-\donttest{
+if(rayshader:::run_documentation()) {
 montereybay \%>\%
  sphere_shade() \%>\%
  plot_3d(montereybay, zscale = 50)

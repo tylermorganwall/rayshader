@@ -22,6 +22,7 @@ render_highquality(
   line_radius = 0.5,
   point_radius = 0.5,
   smooth_line = FALSE,
+  use_extruded_paths = FALSE,
   scale_text_angle = NULL,
   scale_text_size = 6,
   scale_text_offset = c(0, 0, 0),
@@ -42,11 +43,12 @@ render_highquality(
   return_scene = FALSE,
   print_scene_info = FALSE,
   clamp_value = 10,
+  animation_camera_coords = NULL,
   ...
 )
 }
 \arguments{
-\item{filename}{Filename of saved image. If missing, will display to current device.}
+\item{filename}{Default `NA`. Filename of saved image. If missing, will display to current device.}
 
 \item{light}{Default `TRUE`. Whether there should be a light in the scene. If not, the scene will be lit with a bluish sky.}
 
@@ -86,6 +88,9 @@ will specify the absolute angle all the labels are facing. If three angles, this
 
 \item{smooth_line}{Default `FALSE`. If `TRUE`, the line will be rendered with a continuous smooth line, rather
 than straight segments.}
+
+\item{use_extruded_paths}{Default `FALSE`. If `TRUE`, paths will be generated with the `rayrender::extruded_path()` object, instead
+of `rayrender::path()`.}
 
 \item{scale_text_angle}{Default `NULL`. Same as `text_angle`, but for the scale bar.}
 
@@ -132,16 +137,22 @@ and `camera_lookat` vectors.}
 
 \item{clamp_value}{Default `10`. See documentation for `rayrender::render_scene()`.}
 
+\item{animation_camera_coords}{Default `NULL`. Expects camera animation output from either `convert_path_to_animation_coords()`
+or `rayrender::generate_camera_motion()` functions.}
+
 \item{...}{Additional parameters to pass to `rayrender::render_scene`()}
 }
 \description{
 Renders a raytraced version of the displayed rgl scene, using the `rayrender` package. 
 User can specify the light direction, intensity, and color, as well as specify the material of the 
 ground and add additional scene elements.
+
+This function can also generate frames for an animation by passing camera animation information from 
+either `convert_path_to_animation_coords()` or `rayrender::generate_camera_motion()` functions.
 }
 \examples{
 #Render the volcano dataset using pathtracing
-\donttest{
+if(rayshader:::run_documentation()) {
 volcano \%>\%
  sphere_shade() \%>\%
  plot_3d(volcano,zscale = 2)
@@ -149,36 +160,36 @@ render_highquality()
 }
 
 #Change position of light
-\donttest{
+if(rayshader:::run_documentation()) {
 render_highquality(lightdirection = 45)
 }
 
 #Change vertical position of light
-\donttest{
+if(rayshader:::run_documentation()) {
 render_highquality(lightdirection = 45, lightaltitude=10)
 }
 
 #Change the ground material
-\donttest{
+if(rayshader:::run_documentation()) {
 render_highquality(lightdirection = 45, lightaltitude=60,
                   ground_material = rayrender::diffuse(checkerperiod = 30, checkercolor="grey50"))
 }
 
 #Add three different color lights and a title
-\donttest{
+if(rayshader:::run_documentation()) {
 render_highquality(lightdirection = c(0,120,240), lightaltitude=45,
                   lightcolor=c("red","green","blue"), title_text = "Red, Green, Blue",
                   title_bar_color="white", title_bar_alpha=0.8)
 }
 
 #Change the camera:
-\donttest{
+if(rayshader:::run_documentation()) {
 render_camera(theta=-45,phi=60,fov=60,zoom=0.8)
 render_highquality(lightdirection = c(0),
                   title_bar_color="white", title_bar_alpha=0.8)
 }
 #Add a shiny metal sphere
-\donttest{
+if(rayshader:::run_documentation()) {
 render_camera(theta=-45,phi=60,fov=60,zoom=0.8)
 render_highquality(lightdirection = c(0,120,240), lightaltitude=45, 
                   lightcolor=c("red","green","blue"),
@@ -187,7 +198,7 @@ render_highquality(lightdirection = c(0,120,240), lightaltitude=45,
 }
 
 #Add a red light to the volcano and change the ambient light to dusk
-\donttest{
+if(rayshader:::run_documentation()) {
 render_camera(theta=45,phi=45)
 render_highquality(lightdirection = c(240), lightaltitude=30, 
                   lightcolor=c("#5555ff"),
@@ -195,7 +206,7 @@ render_highquality(lightdirection = c(240), lightaltitude=30,
                                    material=rayrender::light(color="red",intensity=10)))
 }
 #Manually change the camera location and direction
-\donttest{
+if(rayshader:::run_documentation()) {
 render_camera(theta=45,phi=45,fov=90)
 render_highquality(lightdirection = c(240), lightaltitude=30, lightcolor=c("#5555ff"), 
                   camera_location = c(50,10,10), camera_lookat = c(0,15,0),

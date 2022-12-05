@@ -56,9 +56,7 @@ Calculates and returns an overlay of points for the current map.
 }
 \examples{
 #Add the included `sf` object with roads to the montereybay dataset
-\donttest{
-if(all(length(find.package("sf", quiet = TRUE)) > 0, 
-      length(find.package("magick", quiet = TRUE)) > 0)) {
+if(rayshader:::run_documentation()) {
  monterey_city = sf::st_sfc(sf::st_point(c(-121.893611, 36.603056)))
  montereybay \%>\% 
    height_shade() \%>\%
@@ -66,7 +64,5 @@ if(all(length(find.package("sf", quiet = TRUE)) > 0,
                                    attr(montereybay,"extent"), heightmap = montereybay))  \%>\%
    add_shadow(ray_shade(montereybay,zscale=50),0.3) \%>\%
    plot_map()
- 
-}
 }
 }

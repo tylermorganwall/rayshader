@@ -11,12 +11,12 @@
 #'#Here we produce a light intensity map of the `volcano` elevation map.
 #'
 #'#Cache the normal vectors of the volcano dataset
-#'\donttest{
+#'if(rayshader:::run_documentation()) {
 #'volcanocache = calculate_normal(volcano)
 #'}
 #'
 #'#Use the cached vectors to speed up calculation of `sphere_shade()` on a map.
-#'\donttest{
+#'if(rayshader:::run_documentation()) {
 #'sphere_shade(volcano,normalvectors = volcanocache) %>%
 #'  plot_map()
 #'}
