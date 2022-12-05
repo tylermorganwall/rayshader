@@ -19,7 +19,7 @@ You can also use `save_multipolygonz_to_obj()` manually to convert sf objects"><
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.31.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.32.0</span>
       </span>
     </div>
 
@@ -176,9 +176,11 @@ rayshader coordinates, but data is often provided with Z being vertical).</p></d
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/find.package.html" class="external-link">find.package</a></span><span class="op">(</span><span class="st">"sf"</span>, quiet <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">&amp;&amp;</span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/find.package.html" class="external-link">find.package</a></span><span class="op">(</span><span class="st">"elevatr"</span>, quiet <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">&amp;&amp;</span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/find.package.html" class="external-link">find.package</a></span><span class="op">(</span><span class="st">"raster"</span>, quiet <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">run_examples</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/find.package.html" class="external-link">find.package</a></span><span class="op">(</span><span class="st">"sf"</span>, quiet <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">&amp;&amp;</span></span></span>
+<span class="r-in"><span>              <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/find.package.html" class="external-link">find.package</a></span><span class="op">(</span><span class="st">"elevatr"</span>, quiet <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">&amp;&amp;</span></span></span>
+<span class="r-in"><span>              <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/find.package.html" class="external-link">find.package</a></span><span class="op">(</span><span class="st">"raster"</span>, quiet <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">&amp;&amp;</span></span></span>
+<span class="r-in"><span>              <span class="fu">rayshader</span><span class="fu">:::</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="va">run_examples</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://r-spatial.github.io/sf/" class="external-link">sf</a></span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="co">#Set location of washington monument</span></span></span>
 <span class="r-in"><span><span class="va">washington_monument_location</span> <span class="op">=</span>  <span class="fu"><a href="https://r-spatial.github.io/sf/reference/st.html" class="external-link">st_point</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">77.035249</span>, <span class="fl">38.889462</span><span class="op">)</span><span class="op">)</span></span></span>
@@ -205,7 +207,8 @@ rayshader coordinates, but data is often provided with Z being vertical).</p></d
 <span class="r-in"><span> <span class="fu"><a href="plot_3d.html">plot_3d</a></span><span class="op">(</span><span class="va">dc_elevation_matrix</span>, zscale<span class="op">=</span><span class="fl">3.7</span>, water <span class="op">=</span> <span class="cn">TRUE</span>, waterdepth <span class="op">=</span> <span class="fl">1</span>, </span></span>
 <span class="r-in"><span>         soliddepth<span class="op">=</span><span class="op">-</span><span class="fl">50</span>, windowsize <span class="op">=</span> <span class="fl">800</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="va">run_examples</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#Zoom in on the monument</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_camera.html">render_camera</a></span><span class="op">(</span>theta<span class="op">=</span><span class="fl">150</span>,  phi<span class="op">=</span><span class="fl">35</span>, zoom<span class="op">=</span> <span class="fl">0.55</span>, fov<span class="op">=</span><span class="fl">70</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="co">#Render the national monument</span></span></span>
@@ -215,13 +218,12 @@ rayshader coordinates, but data is often provided with Z being vertical).</p></d
 <span class="r-in"><span>                    zscale <span class="op">=</span> <span class="fl">4</span>, color <span class="op">=</span> <span class="st">"white"</span>,</span></span>
 <span class="r-in"><span>                    heightmap <span class="op">=</span> <span class="va">dc_elevation_matrix</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="va">run_examples</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#This works with `render_highquality()`</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_highquality.html">render_highquality</a></span><span class="op">(</span>sample_method<span class="op">=</span><span class="st">"sobol_blue"</span>, clamp_value<span class="op">=</span><span class="fl">10</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">rgl</span><span class="fu">::</span><span class="fu"><a href="https://dmurdoch.github.io/rgl/dev/reference/rgl.open.html" class="external-link">rgl.close</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Linking to GEOS 3.10.2, GDAL 3.4.2, PROJ 8.2.1; sf_use_s2() is FALSE</span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in loadNamespace(x):</span> there is no package called ‘rgdal’</span>
 </code></pre></div>
     </div>
   </div>

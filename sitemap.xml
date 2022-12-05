@@ -49,6 +49,9 @@
     <loc>https://www.rayshader.com/reference/convert_color.html</loc>
   </url>
   <url>
+    <loc>https://www.rayshader.com/reference/convert_path_to_animation_coords.html</loc>
+  </url>
+  <url>
     <loc>https://www.rayshader.com/reference/create_texture.html</loc>
   </url>
   <url>
@@ -122,6 +125,9 @@
   </url>
   <url>
     <loc>https://www.rayshader.com/reference/get_ids_with_labels.html</loc>
+  </url>
+  <url>
+    <loc>https://www.rayshader.com/reference/get_scene_depth.html</loc>
   </url>
   <url>
     <loc>https://www.rayshader.com/reference/height_shade.html</loc>

@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.31.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.32.0</span>
       </span>
     </div>
 
@@ -168,9 +168,7 @@ specified in `linewidth`.</p></dd>
     <div id="ref-examples">
     <h2>Examples</h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co">#Add the included `sf` object with roads to the montereybay dataset</span></span></span>
-<span class="r-in"><span><span class="co">#Only run these examples if the `magick` package is installed.</span></span></span>
-<span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/find.package.html" class="external-link">find.package</a></span><span class="op">(</span><span class="st">"magick"</span>, quiet <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span> <span class="op">{</span></span></span>
-<span class="r-in"><span><span class="co"># \donttest{</span></span></span>
+<span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu">rayshader</span><span class="fu">:::</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="va">water_palette</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/grDevices/colorRamp.html" class="external-link">colorRampPalette</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"darkblue"</span>, <span class="st">"dodgerblue"</span>, <span class="st">"lightblue"</span><span class="op">)</span><span class="op">)</span><span class="op">(</span><span class="fl">200</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">bathy_hs</span> <span class="op">=</span> <span class="fu"><a href="height_shade.html">height_shade</a></span><span class="op">(</span><span class="va">montereybay</span>, texture <span class="op">=</span> <span class="va">water_palette</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> </span></span>
@@ -180,7 +178,8 @@ specified in `linewidth`.</p></dd>
 <span class="r-in"><span>                                   <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>,<span class="st">"extent"</span><span class="op">)</span>, heightmap <span class="op">=</span> <span class="va">montereybay</span><span class="op">)</span><span class="op">)</span>  <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span> <span class="fu"><a href="add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="fu"><a href="ray_shade.html">ray_shade</a></span><span class="op">(</span><span class="va">montereybay</span>,zscale<span class="op">=</span><span class="fl">50</span><span class="op">)</span>,<span class="fl">0.3</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-in"><span> </span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu">rayshader</span><span class="fu">:::</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#Change the line width, color, and transparency</span></span></span>
 <span class="r-in"><span><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span> <span class="fu"><a href="height_shade.html">height_shade</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
@@ -190,7 +189,8 @@ specified in `linewidth`.</p></dd>
 <span class="r-in"><span>                                   alphalayer<span class="op">=</span><span class="fl">0.8</span><span class="op">)</span>  <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span> <span class="fu"><a href="add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="fu"><a href="ray_shade.html">ray_shade</a></span><span class="op">(</span><span class="va">montereybay</span>,zscale<span class="op">=</span><span class="fl">50</span><span class="op">)</span>,<span class="fl">0.3</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-in"><span> </span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu">rayshader</span><span class="fu">:::</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#Manually specify the width and height to improve visual quality of the lines</span></span></span>
 <span class="r-in"><span><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span> <span class="fu"><a href="height_shade.html">height_shade</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
@@ -200,11 +200,7 @@ specified in `linewidth`.</p></dd>
 <span class="r-in"><span>                                   <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>,<span class="st">"extent"</span><span class="op">)</span>, width <span class="op">=</span> <span class="fl">1080</span>, height <span class="op">=</span> <span class="fl">1080</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                                   alphalayer<span class="op">=</span><span class="fl">0.8</span><span class="op">)</span>  <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-plt img"><img src="generate_line_overlay-1.png" alt="" width="768" height="768"></span>
-<span class="r-plt img"><img src="generate_line_overlay-2.png" alt="" width="768" height="768"></span>
-<span class="r-plt img"><img src="generate_line_overlay-3.png" alt="" width="768" height="768"></span>
 </code></pre></div>
     </div>
   </div>
