@@ -117,7 +117,7 @@ resize_matrix = function(heightmap, scale=1, width=NULL, height=NULL, method = "
 #'
 #' @examples
 #' #Deprecated lambertian material. Will display a warning.
-#'\donttest{
+#'if(rayshader:::run_documentation()) {
 #'montbaysmall = reduce_matrix_size(montereybay, scale=0.5)
 #'montbaysmall %>%
 #'  sphere_shade() %>%
