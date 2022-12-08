@@ -25,7 +25,8 @@
 #'equal the length of `lat`/`long`).
 #'@param obj_zscale Default `FALSE`. Whether to scale the size of the OBJ by zscale to have it match
 #'the size of the map. If zscale is very big, this will make the model very small.
-#'@param swap_yz Default `TRUE`. Whether to swap and Y and Z axes. (Y axis is vertical in 
+#'@param swap_yz Default `NULL`, defaults to `FALSE` unless plotting raw coordinates (no lat or long passed).
+#' Whether to swap and Y and Z axes. (Y axis is vertical in 
 #'rayshader coordinates, but data is often provided with Z being vertical).
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.
 #'@param heightmap Default `NULL`. Automatically extracted from the rgl window--only use if auto-extraction
@@ -88,7 +89,7 @@
 render_obj = function(filename, extent = NULL, lat = NULL, long = NULL, altitude=NULL, 
                       xyz = NULL,
                       zscale=1, heightmap = NULL, load_material = FALSE, load_normals = TRUE,
-                      color = "grey50", offset = 0, obj_zscale = FALSE, swap_yz = TRUE,
+                      color = "grey50", offset = 0, obj_zscale = FALSE, swap_yz = NULL,
                       angle=c(0,0,0), scale = c(1,1,1), clear_previous = FALSE,
                       baseshape = "rectangle",
                       rgl_tag = "",
@@ -96,7 +97,7 @@ render_obj = function(filename, extent = NULL, lat = NULL, long = NULL, altitude
   if(rgl::rgl.cur() == 0) {
     stop("No rgl window currently open.")
   }
-  if(is.null(lat) || is.null(long) && length(scenelist[[k]]) == 1) {
+  if(is.null(lat) || is.null(long)) {
     single_obj = TRUE
   } else {
     single_obj = FALSE
@@ -105,9 +106,15 @@ render_obj = function(filename, extent = NULL, lat = NULL, long = NULL, altitude
   if(is.null(xyz)) {
     raw_coords = FALSE
     if(!single_obj) {
+      if(is.null(swap_yz)) {
+        swap_yz = FALSE
+      }
       xyz = transform_into_heightmap_coords(extent, heightmap, lat, long, 
                                             altitude, offset, zscale)
     } else {
+      if(is.null(swap_yz)) {
+        swap_yz = TRUE
+      }
       xyz = transform_into_heightmap_coords(extent, heightmap, lat, long, 
                                             altitude, offset, zscale, use_altitude = FALSE)
     }
