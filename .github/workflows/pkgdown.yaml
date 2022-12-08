@@ -30,6 +30,11 @@ jobs:
           writeLines(sprintf("R-%i.%i", getRversion()$major, getRversion()$minor), ".github/R-version")
         shell: Rscript {0}
 
+      - name: Load fonts
+        run: |
+          install.packages('extrafont')
+          extrafont::font_import()
+          
       - name: Restore R package cache
         uses: actions/cache@v2
         with:
