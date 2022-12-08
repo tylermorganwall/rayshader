@@ -37,7 +37,7 @@
 #'is not constrained by the screen size or requires OpenGL. 
 #'Consider settings a `cache_filename` so a new OBJ file doesn't have to be written with every snapshot.
 #'@param cache_filename Default `NULL`. Name of temporary filename to store OBJ file, if the user does not want to rewrite the file each time.
-#'@param background Default `NULL`. Background color when `software_render = TRUE`.
+#'@param background Default `NULL`, defaults to device background. Background color when `software_render = TRUE`.
 #'@param text_angle Default `NULL`, which forces the text always to face the camera. If a single angle (degrees),
 #'will specify the absolute angle all the labels are facing. If three angles, this will specify all three orientations
 #'(relative to the x,y, and z axes) of the text labels.
@@ -140,10 +140,14 @@ render_snapshot = function(filename, clear=FALSE,
       rgl::snapshot3d(filename = temp, top = bring_to_front)
     }
   } else {
+    if(is.null(background)) {
+      bgid = rgl::ids3d("background")$id
+      background = rgl::rgl.attrib(bgid,"colors")
+    }
     stopifnot(length(text_offset) == 3)
     debug = render_snapshot_software(filename = temp, cache_filename = cache_filename,
                              camera_location = camera_location, camera_lookat = camera_lookat,
-                             background=background,
+                             background = background,
                              width = width, height = height, light_direction = c(0,1,0), fake_shadow = TRUE, 
                              text_angle = text_angle, text_size = text_size, text_offset = text_offset,
                              print_scene_info = print_scene_info, point_radius = point_radius, 
