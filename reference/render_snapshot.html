@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.32.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.32.1</span>
       </span>
     </div>
 
@@ -132,6 +132,7 @@
 <span>  cache_filename <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  new_page <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  print_scene_info <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  fsaa <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -246,7 +247,7 @@ be derived from the rgl window.</p></dd>
 
 
 <dt>background</dt>
-<dd><p>Default `NULL`. Background color when `software_render = TRUE`.</p></dd>
+<dd><p>Default `NULL`, defaults to device background. Background color when `software_render = TRUE`.</p></dd>
 
 
 <dt>text_angle</dt>
@@ -282,6 +283,10 @@ aren't showing up, or decrease it if lines are appearing through solid objects.<
 
 <dt>print_scene_info</dt>
 <dd><p>Default `FALSE`. If `TRUE`, it will print the position and lookat point of the camera.</p></dd>
+
+
+<dt>fsaa</dt>
+<dd><p>Default `1`. Integer specifying the amount of anti-aliasing applied `software_render = TRUE`.</p></dd>
 
 
 <dt>...</dt>

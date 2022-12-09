@@ -22,7 +22,7 @@ in the proper location (but for ease of use, use `render_multipolygonz()` to plo
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.32.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.32.1</span>
       </span>
     </div>
 
@@ -123,7 +123,7 @@ in the proper location (but for ease of use, use `render_multipolygonz()` to plo
 <span>  color <span class="op">=</span> <span class="st">"grey50"</span>,</span>
 <span>  offset <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  obj_zscale <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  swap_yz <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  swap_yz <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  angle <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span>,</span>
 <span>  scale <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span>,</span>
 <span>  clear_previous <span class="op">=</span> <span class="cn">FALSE</span>,</span>
@@ -192,7 +192,8 @@ the size of the map. If zscale is very big, this will make the model very small.
 
 
 <dt>swap_yz</dt>
-<dd><p>Default `TRUE`. Whether to swap and Y and Z axes. (Y axis is vertical in 
+<dd><p>Default `NULL`, defaults to `FALSE` unless plotting raw coordinates (no lat or long passed).
+Whether to swap and Y and Z axes. (Y axis is vertical in 
 rayshader coordinates, but data is often provided with Z being vertical).</p></dd>
 
 

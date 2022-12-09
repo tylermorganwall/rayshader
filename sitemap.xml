@@ -37,6 +37,9 @@
     <loc>https://www.rayshader.com/reference/ambient_shade.html</loc>
   </url>
   <url>
+    <loc>https://www.rayshader.com/reference/build_from_w.html</loc>
+  </url>
+  <url>
     <loc>https://www.rayshader.com/reference/calculate_normal.html</loc>
   </url>
   <url>
@@ -53,6 +56,9 @@
   </url>
   <url>
     <loc>https://www.rayshader.com/reference/create_texture.html</loc>
+  </url>
+  <url>
+    <loc>https://www.rayshader.com/reference/cross.html</loc>
   </url>
   <url>
     <loc>https://www.rayshader.com/reference/darken_color.html</loc>
@@ -140,6 +146,9 @@
   </url>
   <url>
     <loc>https://www.rayshader.com/reference/load_image.html</loc>
+  </url>
+  <url>
+    <loc>https://www.rayshader.com/reference/local_to_world.html</loc>
   </url>
   <url>
     <loc>https://www.rayshader.com/reference/make_base.html</loc>
@@ -290,6 +299,9 @@
   </url>
   <url>
     <loc>https://www.rayshader.com/reference/trim_padding.html</loc>
+  </url>
+  <url>
+    <loc>https://www.rayshader.com/reference/unit_vector.html</loc>
   </url>
   <url>
     <loc>https://www.rayshader.com/reference/washington_monument_multipolygonz.html</loc>

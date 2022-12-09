@@ -18,7 +18,7 @@ system defined by the extent object."><meta property="og:image" content="https:/
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.32.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.32.1</span>
       </span>
     </div>
 
@@ -238,7 +238,7 @@ equal the length of `lat`/`long`).</p></dd>
 <span class="r-in"><span><span class="va">circle_coords_long</span> <span class="op">=</span> <span class="va">moss_landing_coord</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span> <span class="op">+</span> <span class="fl">0.3</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">cos</a></span><span class="op">(</span><span class="va">t</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu">render_tree</span><span class="op">(</span>extent <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>,<span class="st">"extent"</span><span class="op">)</span>, heightmap <span class="op">=</span> <span class="va">montereybay</span>,</span></span>
-<span class="r-in"><span>           tree_zscale <span class="op">=</span> <span class="cn">FALSE</span>, canopy_height <span class="op">=</span> <span class="fl">30</span>, canopy_width_ratio <span class="op">=</span> <span class="fl">0.5</span>,</span></span>
+<span class="r-in"><span>           tree_zscale <span class="op">=</span> <span class="cn">FALSE</span>, canopy_height <span class="op">=</span> <span class="fl">30</span>, canopy_width_ratio <span class="op">=</span> <span class="fl">1</span>,</span></span>
 <span class="r-in"><span>           lat <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unlist.html" class="external-link">unlist</a></span><span class="op">(</span><span class="va">circle_coords_lat</span><span class="op">)</span>, long <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unlist.html" class="external-link">unlist</a></span><span class="op">(</span><span class="va">circle_coords_long</span><span class="op">)</span>, zscale<span class="op">=</span><span class="fl">50</span><span class="op">)</span> </span></span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>

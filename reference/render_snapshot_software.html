@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.32.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.32.1</span>
       </span>
     </div>
 
@@ -108,7 +108,7 @@
 <span>  return_all <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  width <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  height <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  light_direction <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">1</span>, <span class="fl">0</span><span class="op">)</span>,</span>
+<span>  light_direction <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  fake_shadow <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  text_angle <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  text_size <span class="op">=</span> <span class="fl">1</span>,</span>
@@ -117,6 +117,7 @@
 <span>  print_scene_info <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  point_radius <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  line_offset <span class="op">=</span> <span class="op">-</span><span class="fl">1e-07</span>,</span>
+<span>  fsaa <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -133,7 +134,7 @@ be derived from the rgl window.</p></dd>
 
 
 <dt>...</dt>
-<dd><p>Additional parameters to pass to `rayrender::render_scene`()</p></dd>
+<dd><p>Additional parameters to pass to `rayvertex::rasterize_scene`()</p></dd>
 
 
 <dt>ground_size</dt>
