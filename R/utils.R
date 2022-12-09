@@ -96,3 +96,44 @@ run_documentation = function() {
          length(find.package("rgdal", quiet = TRUE)) > 0)
 }
 
+#' Unit Vector
+#' 
+#' @return vec
+#' @keywords internal
+unit_vector = function(x) {
+  x/sqrt(sum(x * x))
+}
+
+#' Cross Product 
+#' 
+#' @return vec
+#' @keywords internal
+cross = function(u, v) {
+  return(c(u[2] * v[3] - u[3] * v[2],
+           u[3] * v[1] - u[1] * v[3],
+           u[1] * v[2] - u[2] * v[1]))
+}
+
+#' Build From W
+#' 
+#' @return mat
+#' @keywords internal
+build_from_w = function(dir) {
+  basis = matrix(0,3,3)
+  basis[3,] = unit_vector(dir)
+  if(abs(basis[3,1]) > 0.9) {
+    a = c(0,1,0)
+  } else {
+    a = c(1,0,0)
+  }
+  basis[2,] = unit_vector(cross(basis[3,],a))
+  basis[1,] = -cross(basis[3,], basis[2,])
+  basis
+}
+#' Local To World
+#' 
+#' @return mat
+#' @keywords internal
+local_to_world = function(a, mat) {
+  return(a[1]*mat[1,1] + a[2]*mat[2,] + a[3] *mat[3,]);
+}

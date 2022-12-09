@@ -87,7 +87,7 @@ of this color.}
 Semi-transparent overlay with labels.
 }
 \description{
-This uses the `maptools::placeLabel()` function to generate labels for the given scene. Either
+This uses the `car::placeLabel()` function to generate labels for the given scene. Either
 use an `sf` object or manually specify the x/y coordinates and label.
 }
 \examples{
@@ -96,6 +96,8 @@ if(rayshader:::run_documentation()) {
 #Create the water palette
 water_palette = colorRampPalette(c("darkblue", "dodgerblue", "lightblue"))(200)
 bathy_hs = height_shade(montereybay, texture = water_palette)
+#Set label font
+par(family = "Arial")
 
 #We're plotting the polygon data here for counties around Monterey Bay. We'll first
 #plot the county names at the polygon centroids.

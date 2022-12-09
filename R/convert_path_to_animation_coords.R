@@ -56,14 +56,23 @@
 #'                                               lat = unlist(circle_coords_lat), 
 #'                                               long = unlist(circle_coords_long),
 #'                                               fovs = 80,
-#'                                               zscale=50, offset=250, frames = 24)
+#'                                               zscale=50, offset=250, frames = 25)
 #' 
 #'#Render a series of frames, following out 
+#'temp_dir = tempdir()
 #'render_highquality(samples=16, animation_camera_coords = camera_path, 
-#'                   width=200,height=200,
+#'                   width=200,height=200, filename = sprintf("%s/frame",temp_dir),
 #'                   use_extruded_paths = TRUE,
 #'                   sample_method="sobol_blue")
 #'
+#'#Plot all these frames
+#'grob_list = list()
+#'for(i in 1:25) {
+#'   grob_list[[i]] = rayimage::plot_image(sprintf("%s/frame%d.png",temp_dir,i), return_grob = TRUE)
+#'}
+#'layout_matrix = matrix(1:25, ncol=5, byrow=TRUE)
+#'gridExtra::grid.arrange(grobs=grob_list, layout_matrix = layout_matrix)
+#'rgl::rgl.close()
 #'}
 convert_path_to_animation_coords = function(extent = NULL, lat, long = NULL, altitude = NULL, 
                                             frames = 360, 

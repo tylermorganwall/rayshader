@@ -62,6 +62,8 @@ Displays the map in the current device.
 if(rayshader:::run_documentation()) {
 water_palette = colorRampPalette(c("darkblue", "dodgerblue", "lightblue"))(200)
 bathy_hs = height_shade(montereybay, texture = water_palette)
+#For compass text
+par(family = "Arial")
 
 #Set everything below 0m to water palette
 montereybay \%>\%

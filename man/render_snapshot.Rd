@@ -37,6 +37,7 @@ render_snapshot(
   cache_filename = NULL,
   new_page = TRUE,
   print_scene_info = FALSE,
+  fsaa = 1,
   ...
 )
 }
@@ -102,7 +103,7 @@ be derived from the rgl window.}
 \item{camera_lookat}{Default `NULL`. Custom point at which the camera is directed. The `FOV`, `width`, and `height` arguments will still
 be derived from the rgl window.}
 
-\item{background}{Default `NULL`. Background color when `software_render = TRUE`.}
+\item{background}{Default `NULL`, defaults to device background. Background color when `software_render = TRUE`.}
 
 \item{text_angle}{Default `NULL`, which forces the text always to face the camera. If a single angle (degrees),
 will specify the absolute angle all the labels are facing. If three angles, this will specify all three orientations
@@ -122,6 +123,8 @@ aren't showing up, or decrease it if lines are appearing through solid objects.}
 \item{new_page}{Default `TRUE`. Whether to call `grid::grid.newpage()` before plotting the image.}
 
 \item{print_scene_info}{Default `FALSE`. If `TRUE`, it will print the position and lookat point of the camera.}
+
+\item{fsaa}{Default `1`. Integer specifying the amount of anti-aliasing applied `software_render = TRUE`.}
 
 \item{...}{Additional parameters to pass to `rayvertex::rasterize_scene()`.}
 }

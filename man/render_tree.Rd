@@ -101,7 +101,7 @@ circle_coords_lat = moss_landing_coord[1] + 0.3 * sin(t)
 circle_coords_long = moss_landing_coord[2] + 0.3 * cos(t)
 
 render_tree(extent = attr(montereybay,"extent"), heightmap = montereybay,
-           tree_zscale = FALSE, canopy_height = 30, canopy_width_ratio = 0.5,
+           tree_zscale = FALSE, canopy_height = 30, canopy_width_ratio = 1,
            lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), zscale=50) 
 render_snapshot()
 }

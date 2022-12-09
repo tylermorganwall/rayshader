@@ -52,6 +52,7 @@
 #'@param text_offset Default `c(0,0,0)`. Offset to be applied to all text labels.
 #'@param print_scene_info Default `FALSE`. If `TRUE`, it will print the position and lookat point of the camera.
 #'@param new_page  Default `TRUE`. Whether to call `grid::grid.newpage()` before plotting the image.
+#'@param fsaa Default `1`. Integer specifying the amount of anti-aliasing applied `software_render = TRUE`.
 #'@param ... Additional parameters to pass to `rayvertex::rasterize_scene()`. 
 #'@return Displays snapshot of current rgl plot (or saves to disk).
 #'@export
@@ -95,10 +96,12 @@ render_snapshot = function(filename, clear=FALSE,
                            text_angle = NULL, text_size = 30, text_offset = c(0,0,0),
                            point_radius = 2, line_offset = 1e-7,
                            cache_filename  = NULL,  new_page = TRUE,
-                           print_scene_info = FALSE, ...) {
+                           print_scene_info = FALSE, fsaa = 1, ...) {
   if(rgl::rgl.useNULL()) {
     software_render = TRUE
   }
+  fsaa = as.integer(fsaa)
+  stopifnot(fsaa >= 1)
   if(rgl::rgl.cur() == 0) {
     stop("No rgl window currently open.")
   }
@@ -148,10 +151,10 @@ render_snapshot = function(filename, clear=FALSE,
     debug = render_snapshot_software(filename = temp, cache_filename = cache_filename,
                              camera_location = camera_location, camera_lookat = camera_lookat,
                              background = background,
-                             width = width, height = height, light_direction = c(0,1,0), fake_shadow = TRUE, 
+                             width = width, height = height, light_direction = NULL, fake_shadow = TRUE, 
                              text_angle = text_angle, text_size = text_size, text_offset = text_offset,
                              print_scene_info = print_scene_info, point_radius = point_radius, 
-                             line_offset = -line_offset, ...)
+                             line_offset = -line_offset, fsaa = fsaa, ...)
     if(length(dim(debug)) == 2) {
       return(flipud(debug))
     }

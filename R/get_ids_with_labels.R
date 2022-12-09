@@ -117,6 +117,8 @@ get_ids_with_labels = function(typeval = NULL) {
         material_properties[[i]]$obj_ambient  = material_type_single$ambient
         material_properties[[i]]$obj_specular = material_type_single$specular
         material_properties[[i]]$obj_emission = material_type_single$emission
+        material_properties[[i]]$lit          = material_type_single$lit
+        
       }
     } 
   }

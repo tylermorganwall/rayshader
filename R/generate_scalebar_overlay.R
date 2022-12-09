@@ -52,6 +52,8 @@
 #'#Create the water palette
 #'water_palette = colorRampPalette(c("darkblue", "dodgerblue", "lightblue"))(200)
 #'bathy_hs = height_shade(montereybay, texture = water_palette)
+#'#Set scalebar font
+#'par(family = "Arial")
 #'
 #'#Generate flat water heightmap
 #'mbay = montereybay

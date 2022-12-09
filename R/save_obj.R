@@ -117,13 +117,13 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
       cat(paste("newmtl ray_surface \n"), file=con)
       file.copy(idrow$texture_file[[1]], sprintf("%s.png",noext_filename), overwrite = TRUE)
       cat(sprintf("map_Kd %s.png \n",basename(noext_filename)), file=con)
-      cat("illum 1 \n", file=con)
+      cat("illum 0 \n", file=con)
       cat("\n", file=con)
     } else if (!is.na(idrow$base_color[[1]])) {
       tempcol = col2rgb(idrow$base_color[[1]])/255
       cat(paste("newmtl ray_base"), file=con, sep="\n")
       cat(paste("Kd", sprintf("%1.4f %1.4f %1.4f",tempcol[1],tempcol[2],tempcol[3]),collapse = " "), file=con, sep="\n")
-      cat("illum 1 \n", file=con)
+      cat("illum 0 \n", file=con)
       cat("\n", file=con)
     } else if (!is.na(idrow$water_color[[1]])) {
       tempcol = col2rgb(idrow$water_color[[1]])/255
@@ -139,25 +139,25 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
       tempcol = col2rgb(idrow$north_color[[1]])/255
       cat(sprintf("newmtl ray_north%d",current_compass_number), file=con, sep="\n")
       cat(paste("Kd", sprintf("%1.4f %1.4f %1.4f",tempcol[1],tempcol[2],tempcol[3]),collapse = " "), file=con, sep="\n")
-      cat("illum 1 \n", file=con)
+      cat("illum 0 \n", file=con)
       cat("\n", file=con)
     } else if (!is.na(idrow$arrow_color[[1]])) {
       tempcol = col2rgb(idrow$arrow_color[[1]])/255
       cat(sprintf("newmtl ray_arrow%d",current_compass_number), file=con, sep="\n")
       cat(paste("Kd", sprintf("%1.4f %1.4f %1.4f",tempcol[1],tempcol[2],tempcol[3]),collapse = " "), file=con, sep="\n")
-      cat("illum 1 \n", file=con)
+      cat("illum 0 \n", file=con)
       cat("\n", file=con)
     } else if (!is.na(idrow$bevel_color[[1]])) {
       tempcol = col2rgb(idrow$bevel_color[[1]])/255
       cat(sprintf("newmtl ray_bevel%d",current_compass_number), file=con, sep="\n")
       cat(paste("Kd", sprintf("%1.4f %1.4f %1.4f",tempcol[1],tempcol[2],tempcol[3]),collapse = " "), file=con, sep="\n")
-      cat("illum 1 \n", file=con)
+      cat("illum 0 \n", file=con)
       cat("\n", file=con)
     } else if (!is.na(idrow$background_color[[1]])) {
       tempcol = col2rgb(idrow$background_color[[1]])/255
       cat(sprintf("newmtl ray_background%d",current_compass_number), file=con, sep="\n")
       cat(paste("Kd", sprintf("%1.4f %1.4f %1.4f",tempcol[1],tempcol[2],tempcol[3]),collapse = " "), file=con, sep="\n")
-      cat("illum 1 \n", file=con)
+      cat("illum 0 \n", file=con)
       cat("\n", file=con)
       current_compass_number <<- current_compass_number + 1
     } else if (!is.na(idrow$scalebar1_color[[1]])) {
@@ -166,7 +166,7 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
         scalebar1_written <<- TRUE
         cat(paste("newmtl ray_scalebar1"), file=con, sep="\n")
         cat(paste("Kd", sprintf("%1.4f %1.4f %1.4f",tempcol[1],tempcol[2],tempcol[3]),collapse = " "), file=con, sep="\n")
-        cat("illum 1 \n", file=con)
+        cat("illum 0 \n", file=con)
         cat("\n", file=con)
       }
     } else if (!is.na(idrow$scalebar2_color[[1]])) {
@@ -175,7 +175,7 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
         scalebar2_written <<- TRUE
         cat(paste("newmtl ray_scalebar2"), file=con, sep="\n")
         cat(paste("Kd", sprintf("%1.4f %1.4f %1.4f",tempcol[1],tempcol[2],tempcol[3]),collapse = " "), file=con, sep="\n")
-        cat("illum 1 \n", file=con)
+        cat("illum 0 \n", file=con)
         cat("\n", file=con)
       }
     } else if (!is.na(idrow$tricolor[[1]])) {
@@ -186,7 +186,11 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
         cat(paste("Ka", sprintf("%1.4f %1.4f %1.4f",tempcol[1],tempcol[2],tempcol[3]),collapse = " "), file=con, sep="\n")
       }
       cat(paste("d", sprintf("%1.4f",idrow$polygon_alpha[[1]]),collapse = " "), file=con, sep="\n")
-      cat("illum 1 \n", file=con)
+      if(idrow$lit[[1]]) {
+        cat("illum 1 \n", file=con)
+      } else {
+        cat("illum 0 \n", file=con)
+      }
       cat("\n", file=con)
     } else if(!is.na(idrow$shadow_texture_file)) {
       if(save_shadow) {
@@ -200,7 +204,7 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
       file.copy(idrow$layer_texture_file[[1]], sprintf("%s_layer%d.png",noext_filename,floating_layer_num), overwrite = TRUE)
       cat(sprintf("map_Kd %s \n",sprintf("%s_layer%d.png",basename(noext_filename),floating_layer_num)), file=con)
       floating_layer_num <<- floating_layer_num + 1
-      cat("illum 1 \n", file=con)
+      cat("illum 0 \n", file=con)
       
       cat("\n", file=con)
     } else if(!is.na(idrow$soil_texture)) {
@@ -208,7 +212,7 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
       file.copy(idrow$soil_texture[[1]], sprintf("%s_soil%d.png",noext_filename, soil_textures), overwrite = TRUE)
       cat(sprintf("map_Kd %s \n",sprintf("%s_soil%d.png",basename(noext_filename),soil_textures)), file=con)
       soil_textures <<- soil_textures + 1
-      cat("illum 1 \n", file=con)
+      cat("illum 0 \n", file=con)
       
       cat("\n", file=con)
     } else if(!is.na(idrow$obj_color)) {
@@ -228,7 +232,11 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
       cat(paste("Ke", sprintf("%1.4f %1.4f %1.4f",tempemission[1],tempemission[2],tempemission[3]),collapse = " "), file=con, sep="\n")
       cat(paste("d",  sprintf("%1.4f",tempalpha),collapse = " "), file=con, sep="\n")
       
-      cat("illum 2 \n", file=con)
+      if(idrow$lit[[1]]) {
+        cat("illum 1 \n", file=con)
+      } else {
+        cat("illum 0 \n", file=con)
+      }
       cat("\n", file=con)
       
       obj_materials <<- obj_materials + 1

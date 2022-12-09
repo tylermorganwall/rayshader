@@ -26,6 +26,8 @@
 #'if(rayshader:::run_documentation()) {
 #'water_palette = colorRampPalette(c("darkblue", "dodgerblue", "lightblue"))(200)
 #'bathy_hs = height_shade(montereybay, texture = water_palette)
+#'#For compass text
+#'par(family = "Arial")
 #'
 #'#Set everything below 0m to water palette
 #'montereybay %>%
@@ -48,7 +50,7 @@
 plot_map = function(hillshade, rotate=0, asp = 1, 
                     title_text = NA, title_offset = c(20,20),
                     title_color = "black", title_size = 30,
-                    title_font = "sans", title_style = "normal",
+                    title_font = "sans", title_style = "normal", 
                     title_bar_color = NULL, title_bar_alpha = 0.5, title_position = "northwest",
                     keep_user_par = FALSE, ...) {
   if(keep_user_par) {

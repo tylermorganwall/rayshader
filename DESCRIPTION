@@ -1,8 +1,8 @@
 Package: rayshader
 Type: Package
 Title: Create Maps and Visualize Data in 2D and 3D
-Version: 0.32.0
-Date: 2022-12-5
+Version: 0.32.1
+Date: 2022-12-8
 Author: Tyler Morgan-Wall
 Maintainer: Tyler Morgan-Wall <tylermw@gmail.com>
 Description: Uses a combination of raytracing and multiple hill shading methods to produce 2D and 3D data visualizations and maps. Includes water detection and layering functions, programmable color palette generation, several built-in textures for hill shading, 2D and 3D plotting options, a built-in path tracer, 'Wavefront' OBJ file export, and the ability to save 3D visualizations to a 3D printable format.
@@ -24,8 +24,8 @@ Imports: doParallel,
          utils,
          methods,
          terrainmeshr,
-         rayimage (>= 0.7.1),
-         rayvertex (>= 0.4.14),
+         rayimage (>= 0.7.4),
+         rayvertex (>= 0.4.16),
          rayrender (>= 0.28.4)
 Suggests: reshape2,
           viridis,
@@ -34,13 +34,14 @@ Suggests: reshape2,
           ggplot2,
           sf,
           isoband,
-          maptools,
+          car (>= 3.1-1),
           geosphere,
           gifski,
           ambient,
           terra,
           lidR,
-          elevatr
+          elevatr,
+          gridExtra
 LinkingTo: Rcpp, progress, RcppArmadillo
 RoxygenNote: 7.2.1
 URL: https://www.rayshader.com, https://github.com/tylermorganwall/rayshader, https://www.rayshader.com/

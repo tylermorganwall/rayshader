@@ -13,7 +13,7 @@ render_snapshot_software(
   return_all = FALSE,
   width = NULL,
   height = NULL,
-  light_direction = c(0, 1, 0),
+  light_direction = NULL,
   fake_shadow = TRUE,
   text_angle = NULL,
   text_size = 1,
@@ -22,6 +22,7 @@ render_snapshot_software(
   print_scene_info = FALSE,
   point_radius = 1,
   line_offset = -1e-07,
+  fsaa = 1,
   ...
 )
 }
@@ -31,7 +32,7 @@ render_snapshot_software(
 \item{camera_location}{Default `NULL`. Custom position of the camera. The `FOV`, `width`, and `height` arguments will still
 be derived from the rgl window.}
 
-\item{...}{Additional parameters to pass to `rayrender::render_scene`()}
+\item{...}{Additional parameters to pass to `rayvertex::rasterize_scene`()}
 
 \item{ground_size}{Default `10000`. The width of the plane representing the ground.}
 }

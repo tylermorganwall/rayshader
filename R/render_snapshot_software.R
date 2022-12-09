@@ -4,13 +4,17 @@
 #'@param ground_size Default `10000`. The width of the plane representing the ground.
 #'@param camera_location Default `NULL`. Custom position of the camera. The `FOV`, `width`, and `height` arguments will still
 #'be derived from the rgl window.
-#'@param ... Additional parameters to pass to `rayrender::render_scene`()
+#'@param ... Additional parameters to pass to `rayvertex::rasterize_scene`()
 #'@keywords internal
 render_snapshot_software = function(filename, cache_filename = NULL, camera_location = NULL, 
                                     camera_lookat = c(0,0,0),background=NULL, return_all = FALSE,
-                                    width = NULL, height = NULL, light_direction = c(0,1,0), fake_shadow = TRUE, 
+                                    width = NULL, height = NULL, light_direction = NULL, fake_shadow = TRUE, 
                                     text_angle = NULL, text_size = 1, text_offset = c(0,0,0), fov=NULL, 
-                                    print_scene_info = FALSE, point_radius = 1, line_offset=-1e-7, ...) {
+                                    print_scene_info = FALSE, point_radius = 1, line_offset=-1e-7, 
+                                    fsaa = 1, ...) {
+  if(run_documentation()) {
+    fsaa = 2
+  }
   if(rgl::rgl.cur() == 0) {
     stop("No rgl window currently open.")
   }
@@ -109,13 +113,16 @@ render_snapshot_software = function(filename, cache_filename = NULL, camera_loca
   movevec = movevec[1:3]
   observer_radius = rgl::par3d()$observer[3]
   lookvals = rgl::par3d()$bbox
-  lookvals[4] = surfacerange[2]
+  # lookvals[4] = surfacerange[2]
+  # lookvals = rgl::par3d()$bbox
+  
   if(fov == 0) {
     ortho_dimensions = c(2/projmat[1,1],2/projmat[2,2])
   } else {
     fov = 2 * atan(1/projmat[2,2]) * 180/pi
     ortho_dimensions = c(1,1)
   }
+  
   bbox_center = c(mean(lookvals[1:2]),mean(lookvals[3:4]),mean(lookvals[5:6])) - movevec
   observery = sinpi(phi/180) * observer_radius
   observerx = cospi(phi/180) * sinpi(theta/180) * observer_radius
@@ -132,7 +139,8 @@ render_snapshot_software = function(filename, cache_filename = NULL, camera_loca
   if(no_cache || !file.exists(cache_filename)) {
     save_obj(cache_filename, save_shadow = TRUE)
   }
-  scene = rayvertex::obj_mesh(cache_filename, position = c(-bbox_center[1],-bbox_center[2],-bbox_center[3]))
+  scene = rayvertex::obj_mesh(cache_filename, 
+                              position = c(-bbox_center[1],-bbox_center[2],-bbox_center[3]))
   
   ##########
   labelids = get_ids_with_labels(typeval = "raytext")$id
@@ -190,7 +198,8 @@ render_snapshot_software = function(filename, cache_filename = NULL, camera_loca
 
     
     for(j in seq_len(nrow(temp_verts)-1)) {
-      pathline = rayvertex::add_lines(pathline, rayvertex::generate_line(start = temp_verts[j,] - bbox_center, 
+      pathline = rayvertex::add_lines(pathline, 
+                                      rayvertex::generate_line(start = temp_verts[j,] - bbox_center, 
                                                end   = temp_verts[j+1,] - bbox_center,
                                                color = temp_color[j,1:3]))
     }
@@ -249,8 +258,6 @@ render_snapshot_software = function(filename, cache_filename = NULL, camera_loca
     scene = rayvertex::add_shape(scene, pointlist)
   }
   ranges = apply(do.call(rbind,scene$vertices),2,range)
-  
-  scene = rayvertex::change_material(scene,type="color")
   if(has_shadow && !fake_shadow) {
     scene = rayvertex::add_shape(scene, rayvertex::xz_rect_mesh(position=c(0,shadowdepth-bbox_center[2],0),
                                                                 scale=c(ranges[2,1]-ranges[1,1],1,ranges[2,3]-ranges[1,3])*2,
@@ -281,11 +288,36 @@ render_snapshot_software = function(filename, cache_filename = NULL, camera_loca
       scene$materials$ray_polygon3d$diffuse_intensity = 0
     }
   }
-  debug = rayvertex::rasterize_scene(scene,lookat=c(0,0,0),
-                             filename = filename, fsaa = 1,
-                             lookfrom=lookfrom,width=width,height=height, ortho_dimensions = ortho_dimensions,
-                             fov=fov, background = background, light_info = rayvertex::directional_light(light_direction),
-                             line_info = rayvertex::add_lines(labelline,pathline), line_offset=line_offset,
-                             ...)
+  if(is.null(light_direction)) {
+    #Get light info
+    lightinfo = rgl::rgl.ids(type = "lights")
+    light_list = list()
+    for(i in seq_len(nrow(lightinfo))) {
+      idval = lightinfo$id[i]
+      direction = rgl::rgl.attrib(idval, "vertices")
+      flags = rgl::rgl.attrib(idval, "flags")
+      is_viewpoint = flags[1]
+      if(is_viewpoint) {
+        direction = local_to_world(direction,build_from_w(lookfrom))
+      }
+      is_finite = flags[2]
+      if(!is_finite) {
+        light_list[[i]] = rayvertex::directional_light(direction = direction)
+      } else {
+        light_list[[i]] = rayvertex::point_light(position = direction)
+      }
+      lights = do.call(rbind,light_list)
+    }
+  } else {
+    lights = rayvertex::directional_light(light_direction)
+  }
+  debug = rayvertex::rasterize_scene(scene, lookat = c(0,0,0),
+                                     filename = filename, fsaa = fsaa,
+                                     lookfrom = lookfrom, width = width, height = height, 
+                                     ortho_dimensions = ortho_dimensions,
+                                     fov=fov, background = background, light_info = lights,
+                                     line_info = rayvertex::add_lines(labelline, pathline), 
+                                     line_offset=line_offset, shadow_map = FALSE,
+                                     ...)
   return(invisible(debug))
 }

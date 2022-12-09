@@ -18,7 +18,7 @@ render_obj(
   color = "grey50",
   offset = 0,
   obj_zscale = FALSE,
-  swap_yz = TRUE,
+  swap_yz = NULL,
   angle = c(0, 0, 0),
   scale = c(1, 1, 1),
   clear_previous = FALSE,
@@ -58,7 +58,8 @@ All points are assumed to be evenly spaced.}
 \item{obj_zscale}{Default `FALSE`. Whether to scale the size of the OBJ by zscale to have it match
 the size of the map. If zscale is very big, this will make the model very small.}
 
-\item{swap_yz}{Default `TRUE`. Whether to swap and Y and Z axes. (Y axis is vertical in 
+\item{swap_yz}{Default `NULL`, defaults to `FALSE` unless plotting raw coordinates (no lat or long passed).
+Whether to swap and Y and Z axes. (Y axis is vertical in 
 rayshader coordinates, but data is often provided with Z being vertical).}
 
 \item{angle}{Default `c(0,0,0)`. Angle of rotation around the x, y, and z axes. If this is a matrix or list,

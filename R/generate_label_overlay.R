@@ -1,6 +1,6 @@
 #'@title Generate Label Overlay
 #'
-#'@description This uses the `maptools::placeLabel()` function to generate labels for the given scene. Either
+#'@description This uses the `car::placeLabel()` function to generate labels for the given scene. Either
 #'use an `sf` object or manually specify the x/y coordinates and label. 
 #'
 #'@param labels A character vector of labels, or an `sf` object with `POINT` geometry and a column for labels.
@@ -44,6 +44,8 @@
 #'#Create the water palette
 #'water_palette = colorRampPalette(c("darkblue", "dodgerblue", "lightblue"))(200)
 #'bathy_hs = height_shade(montereybay, texture = water_palette)
+#'#Set label font
+#'par(family = "Arial")
 #'
 #'#We're plotting the polygon data here for counties around Monterey Bay. We'll first
 #'#plot the county names at the polygon centroids.
@@ -135,8 +137,8 @@ generate_label_overlay = function(labels, extent, x=NULL, y=NULL,
   if(is.na(point_color)) {
     point_color = color
   }
-  if(!(length(find.package("maptools", quiet = TRUE)) > 0)) {
-    stop("{maptools} package required for generate_label_overlay()")
+  if(!(length(find.package("car", quiet = TRUE)) > 0)) {
+    stop("{car} package required for generate_label_overlay()")
   }
   if((inherits(labels,"sf") || inherits(labels,"sfc")) && 
      (is.null(x) && is.null(y)) &&
@@ -177,10 +179,10 @@ generate_label_overlay = function(labels, extent, x=NULL, y=NULL,
   graphics::plot(x=x+offset[1],y=y+offset[2], xlim = c(extent@xmin,extent@xmax),
                  ylim =  c(extent@ymin,extent@ymax), asp=1, pch = pch,bty="n",axes=FALSE,
                  xaxs = "i", yaxs = "i", cex = point_size, col = point_color)
-  maptools::pointLabel(x=x+offset[1],y=y+offset[2],labels=labels, cex = text_size,
-                 xlim = c(extent@xmin,extent@xmax), bty="n",
-                 ylim =  c(extent@ymin,extent@ymax), asp=1, font = font,
-                 xaxs = "i", yaxs = "i",  col = color)
+  car::pointLabel(x=x+offset[1],y=y+offset[2],labels=labels, cex = text_size,
+                  xlim = c(extent@xmin,extent@xmax), bty="n",
+                  ylim =  c(extent@ymin,extent@ymax), asp=1, font = font,
+                  xaxs = "i", yaxs = "i",  col = color)
   grDevices::dev.off() #resets par
   overlay_temp = png::readPNG(tempoverlay)
   if(!is.na(halo_color)) {
@@ -194,10 +196,10 @@ generate_label_overlay = function(labels, extent, x=NULL, y=NULL,
     graphics::plot(x=x+halo_offset[1],y=y+halo_offset[2], xlim = c(extent@xmin,extent@xmax),
                    ylim =  c(extent@ymin,extent@ymax), asp=1, pch = pch, bty="n",axes=FALSE,
                    xaxs = "i", yaxs = "i", cex = point_size, col = halo_color)
-    maptools::pointLabel(x=x+halo_offset[1],y=y+halo_offset[2],labels=labels, cex = text_size, 
-                         xlim = c(extent@xmin,extent@xmax), bty="n", 
-                         ylim =  c(extent@ymin,extent@ymax), asp=1, font = font,
-                         xaxs = "i", yaxs = "i",  col = halo_color)
+    car::pointLabel(x=x+halo_offset[1],y=y+halo_offset[2],labels=labels, cex = text_size, 
+                    xlim = c(extent@xmin,extent@xmax), bty="n", 
+                    ylim =  c(extent@ymin,extent@ymax), asp=1, font = font,
+                    xaxs = "i", yaxs = "i",  col = halo_color)
     grDevices::dev.off() #resets par
     overlay_temp_under = png::readPNG(tempoverlay)
     if(halo_expand != 0 || any(halo_offset != 0)) {
