@@ -38,7 +38,7 @@
 #'    height_shade() |>
 #'    add_shadow(ray_shade(montereybay,zscale=50),0.3) |> 
 #'    plot_3d(montereybay, water = T, wateralpha = 1, windowsize = 800, watercolor = "lightblue")
-#'  render_camera(theta=-85,phi=25,zoom=0.8)
+#'  render_camera(theta=-55,phi=45,zoom=0.8)
 #'  
 #'  #Render label
 #'  render_label(montereybay, lat = monterey[2], long = monterey[1], altitude = 9900,
