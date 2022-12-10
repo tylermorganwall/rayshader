@@ -311,6 +311,12 @@ render_snapshot_software = function(filename, cache_filename = NULL, camera_loca
   } else {
     lights = rayvertex::directional_light(light_direction)
   }
+  for(i in seq_len(length(scene$materials[[1]]))) {
+    if(scene$materials[[1]][[i]]$illum == 5) {
+      scene$materials[[1]][[i]]$illum = 0
+      scene$materials[[1]][[i]]$type = "color"
+    }
+  }
   debug = rayvertex::rasterize_scene(scene, lookat = c(0,0,0),
                                      filename = filename, fsaa = fsaa,
                                      lookfrom = lookfrom, width = width, height = height, 
