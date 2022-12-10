@@ -129,11 +129,11 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
       tempcol = col2rgb(idrow$water_color[[1]])/255
       cat(paste("newmtl ray_water"), file=con, sep="\n")
       cat(paste("Ks", sprintf("%1.4f %1.4f %1.4f",tempcol[1],tempcol[2],tempcol[3]),collapse = " "), file=con, sep="\n")
-      cat(paste("Ns", sprintf("%1.4f %1.4f %1.4f",tempcol[1],tempcol[2],tempcol[3]),collapse = " "), file=con, sep="\n")
+      cat("Ns 100", file=con, sep="\n")
       cat(paste("Kd", sprintf("%1.4f %1.4f %1.4f",tempcol[1],tempcol[2],tempcol[3]),collapse = " "), file=con, sep="\n")
       cat(paste("d", sprintf("%1.4f",idrow$water_alpha[[1]]),collapse = " "), file=con, sep="\n")
       cat(paste("Ni", sprintf("%1.4f",water_index_refraction),collapse = " "), file=con, sep="\n")
-      cat("illum 0 \n", file=con)
+      cat("illum 5 \n", file=con)
       cat("\n", file=con)
     } else if (!is.na(idrow$north_color[[1]])) {
       tempcol = col2rgb(idrow$north_color[[1]])/255
