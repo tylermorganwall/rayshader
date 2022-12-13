@@ -18,6 +18,14 @@ convert_path_to_animation_coords(
   constant_step = TRUE,
   curvature_adjust = "none",
   curvature_scale = 30,
+  follow_camera = FALSE,
+  follow_distance = 100,
+  follow_angle = 45,
+  follow_rotations = 0,
+  follow_fixed = FALSE,
+  follow_fixed_offset = c(10, 10, 10),
+  damp_motion = FALSE,
+  damp_magnitude = 0.1,
   ...
 )
 }
@@ -59,6 +67,29 @@ and providing an `offset_lookat` value, which ensures the curvature will be the 
 path more, potentially finding a smoother path, but increasing the calculation time. Only used for curve `type = bezier`.
 Increasing this value after a certain point will not increase the quality of the path, but it is scene-dependent.}
 
+\item{follow_camera}{Default `FALSE`. If `TRUE`, this generates a 3rd person view that follows the path specified in `lat`, `long`, and `altitude`.
+The distance to the camera is specified by `follow_distance`, and the angle (off the ground) is specified by `follow_angle`. 
+Make the camera rotate around the point as it moves by setting `follow_rotations` to a non-zero number. The camera points in the direction of the 
+You can also set the camera to be a fixed distance and angle above the by settings `follow_fixed = TRUE` and specifying the distance
+in `follow_fixed_offset`.}
+
+\item{follow_distance}{Default `100`. Distance for the camera to follow the point when `follow_camera = TRUE`.}
+
+\item{follow_angle}{Default `45`.  Angle (off the ground) of the camera when `follow_camera = TRUE`.}
+
+\item{follow_rotations}{Default `0`. Number of rotations around the point when `follow_camera = TRUE`.}
+
+\item{follow_fixed}{Default `FALSE`. If `TRUE`, the camera doesn't look in the direction of the path,
+but rather sits at a fixed relative location to the path.}
+
+\item{follow_fixed_offset}{Default `c(10,10,10)`. If `follow_fixed = TRUE`, the offset from the path to place
+the camera.}
+
+\item{damp_motion}{Default `FALSE`. Whether the suppress quick, jerky movements of the camera by linearly interpolating
+between the current camera position and the goal position. Amount of linear interpolation set in `damp_magnitude`.}
+
+\item{damp_magnitude}{Default `0.1`. Amount of linear interpolation if `damp_motion = TRUE`.}
+
 \item{...}{Other arguments to pass to `rayrender::generate_camera_motion()`}
 }
 \description{
@@ -76,16 +107,17 @@ montereybay \%>\%
  sphere_shade() \%>\%
  plot_3d(montereybay,zscale=50,water=TRUE,
          shadowcolor="#40310a", background = "tan",
-         theta=210,  phi=22, zoom=0.20, fov=55)
+         theta=210,  phi=22, zoom=0.40, fov=55)
          
 moss_landing_coord = c(36.806807, -121.793332)
 t = seq(0,2*pi,length.out=1000)
-circle_coords_lat = moss_landing_coord[1] + 0.25 * sin(t*6)
-circle_coords_long = moss_landing_coord[2] + 0.25  *  cos(t*6)
+circle_coords_lat = moss_landing_coord[1] + 0.25 * sin(t)
+circle_coords_long = moss_landing_coord[2] + 0.25  *  cos(t)
 render_path(extent = attr(montereybay,"extent"), heightmap = montereybay,
            lat = unlist(circle_coords_lat), long = unlist(circle_coords_long),
            zscale=50, color="red", antialias=TRUE,
-           offset=100, linewidth=2, clear_previous = T)
+           offset=100, linewidth=2)
+render_snapshot()
 
 camera_path = convert_path_to_animation_coords(extent = attr(montereybay,"extent"), 
                                               heightmap = montereybay,
@@ -94,7 +126,33 @@ camera_path = convert_path_to_animation_coords(extent = attr(montereybay,"extent
                                               fovs = 80,
                                               zscale=50, offset=250, frames = 25)
 
-#Render a series of frames, following out 
+#Render a series of frames, following the path specified above
+temp_dir = tempdir()
+render_highquality(samples=16, animation_camera_coords = camera_path, 
+                  width=200,height=200, filename = sprintf("\%s/frame",temp_dir),
+                  use_extruded_paths = TRUE,
+                  sample_method="sobol_blue")
+
+#Plot all these frames
+grob_list = list()
+for(i in 1:25) {
+  grob_list[[i]] = rayimage::plot_image(sprintf("\%s/frame\%d.png",temp_dir,i), return_grob = TRUE)
+}
+layout_matrix = matrix(1:25, ncol=5, byrow=TRUE)
+gridExtra::grid.arrange(grobs=grob_list, layout_matrix = layout_matrix)
+}
+
+if(rayshader:::run_documentation()) {
+#Now render a third-person view by setting `follow_camera = TRUE`
+camera_path = convert_path_to_animation_coords(extent = attr(montereybay,"extent"), 
+                                              heightmap = montereybay,
+                                              lat = unlist(circle_coords_lat), 
+                                              long = unlist(circle_coords_long),
+                                              fovs = 80,
+                                              follow_camera = TRUE,
+                                              zscale=50, offset=250, frames = 25)
+
+#Render a series of frames, following the path specified above
 temp_dir = tempdir()
 render_highquality(samples=16, animation_camera_coords = camera_path, 
                   width=200,height=200, filename = sprintf("\%s/frame",temp_dir),

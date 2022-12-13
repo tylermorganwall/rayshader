@@ -137,3 +137,19 @@ build_from_w = function(dir) {
 local_to_world = function(a, mat) {
   return(a[1]*mat[1,1] + a[2]*mat[2,] + a[3] *mat[3,]);
 }
+
+#' Generate Rotation Matrix
+#' 
+#' @return mat
+#' @keywords internal
+generate_rot_matrix = function(angle, order_rotation = c(1,2,3)) {
+  rots = list()
+  rots[[1]] = matrix(c(1,0,0,0,cos(angle[1]),sin(angle[1]),0,-sin(angle[1]),cos(angle[1])),3,3)
+  rots[[2]] = matrix(c(cos(angle[2]),0,-sin(angle[2]),0,1,0,sin(angle[2]),0,cos(angle[2])),3,3)
+  rots[[3]] = matrix(c(cos(angle[3]),sin(angle[3]),0,-sin(angle[3]),cos(angle[3]),0,0,0,1),3,3)
+  returnmat = matrix(c(1,0,0,0,1,0,0,0,1),3,3)
+  for(i in 1:3) {
+    returnmat = returnmat %*% rots[[order_rotation[i]]]
+  }
+  return(returnmat)
+}

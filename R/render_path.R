@@ -92,7 +92,7 @@ render_path = function(extent = NULL, lat, long = NULL, altitude = NULL,
                        zscale=1, heightmap = NULL,
                        linewidth = 3, color = "black", antialias = FALSE, offset = 5,
                        clear_previous = FALSE, return_coords = FALSE) {
-  if(rgl::rgl.cur() == 0) {
+  if(rgl::rgl.cur() == 0 && !return_coords) {
     stop("No rgl window currently open.")
   }
   if(clear_previous) {
