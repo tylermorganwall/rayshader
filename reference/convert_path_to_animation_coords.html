@@ -21,7 +21,7 @@ and then subtracts out the rgl y-offset, which can be obtained by calling the in
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.32.4</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.32.5</span>
       </span>
     </div>
 
@@ -121,6 +121,14 @@ and then subtracts out the rgl y-offset, which can be obtained by calling the in
 <span>  constant_step <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  curvature_adjust <span class="op">=</span> <span class="st">"none"</span>,</span>
 <span>  curvature_scale <span class="op">=</span> <span class="fl">30</span>,</span>
+<span>  follow_camera <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  follow_distance <span class="op">=</span> <span class="fl">100</span>,</span>
+<span>  follow_angle <span class="op">=</span> <span class="fl">45</span>,</span>
+<span>  follow_rotations <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  follow_fixed <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  follow_fixed_offset <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">10</span>, <span class="fl">10</span>, <span class="fl">10</span><span class="op">)</span>,</span>
+<span>  damp_motion <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  damp_magnitude <span class="op">=</span> <span class="fl">0.1</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -190,6 +198,45 @@ path more, potentially finding a smoother path, but increasing the calculation t
 Increasing this value after a certain point will not increase the quality of the path, but it is scene-dependent.</p></dd>
 
 
+<dt>follow_camera</dt>
+<dd><p>Default `FALSE`. If `TRUE`, this generates a 3rd person view that follows the path specified in `lat`, `long`, and `altitude`.
+The distance to the camera is specified by `follow_distance`, and the angle (off the ground) is specified by `follow_angle`. 
+Make the camera rotate around the point as it moves by setting `follow_rotations` to a non-zero number. The camera points in the direction of the 
+You can also set the camera to be a fixed distance and angle above the by settings `follow_fixed = TRUE` and specifying the distance
+in `follow_fixed_offset`.</p></dd>
+
+
+<dt>follow_distance</dt>
+<dd><p>Default `100`. Distance for the camera to follow the point when `follow_camera = TRUE`.</p></dd>
+
+
+<dt>follow_angle</dt>
+<dd><p>Default `45`.  Angle (off the ground) of the camera when `follow_camera = TRUE`.</p></dd>
+
+
+<dt>follow_rotations</dt>
+<dd><p>Default `0`. Number of rotations around the point when `follow_camera = TRUE`.</p></dd>
+
+
+<dt>follow_fixed</dt>
+<dd><p>Default `FALSE`. If `TRUE`, the camera doesn't look in the direction of the path,
+but rather sits at a fixed relative location to the path.</p></dd>
+
+
+<dt>follow_fixed_offset</dt>
+<dd><p>Default `c(10,10,10)`. If `follow_fixed = TRUE`, the offset from the path to place
+the camera.</p></dd>
+
+
+<dt>damp_motion</dt>
+<dd><p>Default `FALSE`. Whether the suppress quick, jerky movements of the camera by linearly interpolating
+between the current camera position and the goal position. Amount of linear interpolation set in `damp_magnitude`.</p></dd>
+
+
+<dt>damp_magnitude</dt>
+<dd><p>Default `0.1`. Amount of linear interpolation if `damp_motion = TRUE`.</p></dd>
+
+
 <dt>...</dt>
 <dd><p>Other arguments to pass to `rayrender::generate_camera_motion()`</p></dd>
 
@@ -203,16 +250,17 @@ Increasing this value after a certain point will not increase the quality of the
 <span class="r-in"><span> <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span> <span class="fu"><a href="plot_3d.html">plot_3d</a></span><span class="op">(</span><span class="va">montereybay</span>,zscale<span class="op">=</span><span class="fl">50</span>,water<span class="op">=</span><span class="cn">TRUE</span>,</span></span>
 <span class="r-in"><span>         shadowcolor<span class="op">=</span><span class="st">"#40310a"</span>, background <span class="op">=</span> <span class="st">"tan"</span>,</span></span>
-<span class="r-in"><span>         theta<span class="op">=</span><span class="fl">210</span>,  phi<span class="op">=</span><span class="fl">22</span>, zoom<span class="op">=</span><span class="fl">0.20</span>, fov<span class="op">=</span><span class="fl">55</span><span class="op">)</span></span></span>
+<span class="r-in"><span>         theta<span class="op">=</span><span class="fl">210</span>,  phi<span class="op">=</span><span class="fl">22</span>, zoom<span class="op">=</span><span class="fl">0.40</span>, fov<span class="op">=</span><span class="fl">55</span><span class="op">)</span></span></span>
 <span class="r-in"><span>         </span></span>
 <span class="r-in"><span><span class="va">moss_landing_coord</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">36.806807</span>, <span class="op">-</span><span class="fl">121.793332</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">t</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">2</span><span class="op">*</span><span class="va">pi</span>,length.out<span class="op">=</span><span class="fl">1000</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">circle_coords_lat</span> <span class="op">=</span> <span class="va">moss_landing_coord</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span> <span class="op">+</span> <span class="fl">0.25</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="va">t</span><span class="op">*</span><span class="fl">6</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">circle_coords_long</span> <span class="op">=</span> <span class="va">moss_landing_coord</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span> <span class="op">+</span> <span class="fl">0.25</span>  <span class="op">*</span>  <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">cos</a></span><span class="op">(</span><span class="va">t</span><span class="op">*</span><span class="fl">6</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">circle_coords_lat</span> <span class="op">=</span> <span class="va">moss_landing_coord</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span> <span class="op">+</span> <span class="fl">0.25</span> <span class="op">*</span> <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">sin</a></span><span class="op">(</span><span class="va">t</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">circle_coords_long</span> <span class="op">=</span> <span class="va">moss_landing_coord</span><span class="op">[</span><span class="fl">2</span><span class="op">]</span> <span class="op">+</span> <span class="fl">0.25</span>  <span class="op">*</span>  <span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">cos</a></span><span class="op">(</span><span class="va">t</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_path.html">render_path</a></span><span class="op">(</span>extent <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>,<span class="st">"extent"</span><span class="op">)</span>, heightmap <span class="op">=</span> <span class="va">montereybay</span>,</span></span>
 <span class="r-in"><span>           lat <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unlist.html" class="external-link">unlist</a></span><span class="op">(</span><span class="va">circle_coords_lat</span><span class="op">)</span>, long <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unlist.html" class="external-link">unlist</a></span><span class="op">(</span><span class="va">circle_coords_long</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>           zscale<span class="op">=</span><span class="fl">50</span>, color<span class="op">=</span><span class="st">"red"</span>, antialias<span class="op">=</span><span class="cn">TRUE</span>,</span></span>
-<span class="r-in"><span>           offset<span class="op">=</span><span class="fl">100</span>, linewidth<span class="op">=</span><span class="fl">2</span>, clear_previous <span class="op">=</span> <span class="cn">T</span><span class="op">)</span></span></span>
+<span class="r-in"><span>           offset<span class="op">=</span><span class="fl">100</span>, linewidth<span class="op">=</span><span class="fl">2</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">camera_path</span> <span class="op">=</span> <span class="fu">convert_path_to_animation_coords</span><span class="op">(</span>extent <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>,<span class="st">"extent"</span><span class="op">)</span>, </span></span>
 <span class="r-in"><span>                                              heightmap <span class="op">=</span> <span class="va">montereybay</span>,</span></span>
@@ -221,7 +269,35 @@ Increasing this value after a certain point will not increase the quality of the
 <span class="r-in"><span>                                              fovs <span class="op">=</span> <span class="fl">80</span>,</span></span>
 <span class="r-in"><span>                                              zscale<span class="op">=</span><span class="fl">50</span>, offset<span class="op">=</span><span class="fl">250</span>, frames <span class="op">=</span> <span class="fl">25</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co">#Render a series of frames, following out </span></span></span>
+<span class="r-in"><span><span class="co">#Render a series of frames, following the path specified above</span></span></span>
+<span class="r-in"><span><span class="va">temp_dir</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="render_highquality.html">render_highquality</a></span><span class="op">(</span>samples<span class="op">=</span><span class="fl">16</span>, animation_camera_coords <span class="op">=</span> <span class="va">camera_path</span>, </span></span>
+<span class="r-in"><span>                  width<span class="op">=</span><span class="fl">200</span>,height<span class="op">=</span><span class="fl">200</span>, filename <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"%s/frame"</span>,<span class="va">temp_dir</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                  use_extruded_paths <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
+<span class="r-in"><span>                  sample_method<span class="op">=</span><span class="st">"sobol_blue"</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#Plot all these frames</span></span></span>
+<span class="r-in"><span><span class="va">grob_list</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="kw">for</span><span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fl">1</span><span class="op">:</span><span class="fl">25</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span>  <span class="va">grob_list</span><span class="op">[[</span><span class="va">i</span><span class="op">]</span><span class="op">]</span> <span class="op">=</span> <span class="fu">rayimage</span><span class="fu">::</span><span class="fu"><a href="https://www.rayimage.dev/reference/plot_image.html" class="external-link">plot_image</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"%s/frame%d.png"</span>,<span class="va">temp_dir</span>,<span class="va">i</span><span class="op">)</span>, return_grob <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-in"><span><span class="va">layout_matrix</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">25</span>, ncol<span class="op">=</span><span class="fl">5</span>, byrow<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">gridExtra</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/gridExtra/man/arrangeGrob.html" class="external-link">grid.arrange</a></span><span class="op">(</span>grobs<span class="op">=</span><span class="va">grob_list</span>, layout_matrix <span class="op">=</span> <span class="va">layout_matrix</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-plt img"><img src="convert_path_to_animation_coords-1.png" alt="" width="768" height="768"></span>
+<span class="r-plt img"><img src="convert_path_to_animation_coords-2.png" alt="" width="768" height="768"></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu">rayshader</span><span class="fu">:::</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span><span class="co">#Now render a third-person view by setting `follow_camera = TRUE`</span></span></span>
+<span class="r-in"><span><span class="va">camera_path</span> <span class="op">=</span> <span class="fu">convert_path_to_animation_coords</span><span class="op">(</span>extent <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>,<span class="st">"extent"</span><span class="op">)</span>, </span></span>
+<span class="r-in"><span>                                              heightmap <span class="op">=</span> <span class="va">montereybay</span>,</span></span>
+<span class="r-in"><span>                                              lat <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unlist.html" class="external-link">unlist</a></span><span class="op">(</span><span class="va">circle_coords_lat</span><span class="op">)</span>, </span></span>
+<span class="r-in"><span>                                              long <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unlist.html" class="external-link">unlist</a></span><span class="op">(</span><span class="va">circle_coords_long</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                                              fovs <span class="op">=</span> <span class="fl">80</span>,</span></span>
+<span class="r-in"><span>                                              follow_camera <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
+<span class="r-in"><span>                                              zscale<span class="op">=</span><span class="fl">50</span>, offset<span class="op">=</span><span class="fl">250</span>, frames <span class="op">=</span> <span class="fl">25</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#Render a series of frames, following the path specified above</span></span></span>
 <span class="r-in"><span><span class="va">temp_dir</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_highquality.html">render_highquality</a></span><span class="op">(</span>samples<span class="op">=</span><span class="fl">16</span>, animation_camera_coords <span class="op">=</span> <span class="va">camera_path</span>, </span></span>
 <span class="r-in"><span>                  width<span class="op">=</span><span class="fl">200</span>,height<span class="op">=</span><span class="fl">200</span>, filename <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"%s/frame"</span>,<span class="va">temp_dir</span><span class="op">)</span>,</span></span>
@@ -237,7 +313,7 @@ Increasing this value after a certain point will not increase the quality of the
 <span class="r-in"><span><span class="fu">gridExtra</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/gridExtra/man/arrangeGrob.html" class="external-link">grid.arrange</a></span><span class="op">(</span>grobs<span class="op">=</span><span class="va">grob_list</span>, layout_matrix <span class="op">=</span> <span class="va">layout_matrix</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">rgl</span><span class="fu">::</span><span class="fu"><a href="https://dmurdoch.github.io/rgl/dev/reference/rgl.open.html" class="external-link">rgl.close</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-plt img"><img src="convert_path_to_animation_coords-1.png" alt="" width="768" height="768"></span>
+<span class="r-plt img"><img src="convert_path_to_animation_coords-3.png" alt="" width="768" height="768"></span>
 </code></pre></div>
     </div>
   </div>
