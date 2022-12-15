@@ -27,7 +27,7 @@ get_extent = function(extent) {
     }
   }
   if(inherits(extent, "Extent")) {
-    extent = as.vector(extent)
+    extent = unname(as.vector(extent))
     xmin = extent[1]
     xmax = extent[2]
     ymin = extent[3]
@@ -35,7 +35,7 @@ get_extent = function(extent) {
     return(c("xmin" = xmin, "xmax" = xmax, "ymin" = ymin, "ymax" = ymax))
   }
   if(inherits(extent, "SpatExtent")) {
-    extent = as.vector(extent)
+    extent = unname(as.vector(extent))
     xmin = extent[1]
     xmax = extent[2]
     ymin = extent[3]
@@ -43,7 +43,7 @@ get_extent = function(extent) {
     return(c("xmin" = xmin, "xmax" = xmax, "ymin" = ymin, "ymax" = ymax))
   }
   if(inherits(extent, "bbox")) {
-    extent = as.vector(extent)
+    extent = unname(as.vector(extent))
     xmin = extent[1]
     xmax = extent[3]
     ymin = extent[2]
@@ -51,6 +51,7 @@ get_extent = function(extent) {
     return(c("xmin" = xmin, "xmax" = xmax, "ymin" = ymin, "ymax" = ymax))
   }
   if(inherits(extent, "numeric")) {
+    extent = unname(as.vector(extent))
     xmin = extent[1]
     xmax = extent[2]
     ymin = extent[3]
