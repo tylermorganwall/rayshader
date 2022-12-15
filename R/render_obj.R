@@ -9,7 +9,10 @@
 #'in the proper location (but for ease of use, use `render_multipolygonz()` to plot this data directly).
 #'
 #'@param filename Filename for the OBJ file.
-#'@param extent A `raster::Extent` object with the bounding box of the displayed 3D scene.
+#'@param extent Either an object representing the spatial extent of the scene 
+#' (either from the `raster`, `terra`, `sf`, or `sp` packages), 
+#' a length-4 numeric vector specifying `c("xmin", "xmax","ymin","ymax")`, or the spatial object (from 
+#' the previously aforementioned packages) which will be automatically converted to an extent object. 
 #'@param long Vector of longitudes (or other coordinate in the same coordinate reference system as extent).
 #'@param lat Vector of latitudes (or other coordinate in the same coordinate reference system as extent).
 #'@param altitude Elevation of each point, in units of the elevation matrix (scaled by zscale).
@@ -206,11 +209,11 @@ render_obj = function(filename, extent = NULL, lat = NULL, long = NULL, altitude
     nrow_map = nrow(heightmap)
     ncol_map = ncol(heightmap)
     
-    
-    minpoint_x = (extent@xmax + extent@xmin) / 2 - zscale / 2
-    minpoint_y = (extent@ymax + extent@ymin) / 2 + zscale / 2
-    scale_x = (nrow_map-1) / (extent@xmax - extent@xmin)
-    scale_z = (ncol_map-1) / (extent@ymax - extent@ymin) 
+    extent = get_extent(extent)
+    minpoint_x = (extent["xmax"] + extent["xmin"]) / 2 - zscale / 2
+    minpoint_y = (extent["ymax"] + extent["ymin"]) / 2 + zscale / 2
+    scale_x = (nrow_map-1) / (extent["xmax"] - extent["xmin"])
+    scale_z = (ncol_map-1) / (extent["ymax"] - extent["ymin"]) 
     scale_y = 1/zscale
     if(single_obj) {
       obj_zscale = FALSE
@@ -225,12 +228,13 @@ render_obj = function(filename, extent = NULL, lat = NULL, long = NULL, altitude
       }
       
       if(swap_yz) {
-        scenelist[[1]] = rayvertex::translate_mesh(scenelist[[1]], c(-minpoint_x,-minpoint_y, 0
-                                                                     )) |> 
+        scenelist[[1]] = rayvertex::translate_mesh(scenelist[[1]], 
+                                                   c(-minpoint_x,-minpoint_y, 0)) |> 
           rayvertex::rotate_mesh(c(90,0,0))|> 
           rayvertex::scale_mesh(c(scale_x,scale_y,scale_z))
       } else {
-        scenelist[[1]] = rayvertex::translate_mesh(scenelist[[1]], c(-minpoint_x,0, -minpoint_y)) |> 
+        scenelist[[1]] = rayvertex::translate_mesh(scenelist[[1]], 
+                                                   c(-minpoint_x,0, -minpoint_y)) |> 
           rayvertex::scale_mesh(c(scale_x,scale_y,scale_z))
       }
     }

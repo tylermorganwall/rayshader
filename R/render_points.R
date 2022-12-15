@@ -4,10 +4,13 @@
 #'system defined by the extent object. If no altitude is provided, the points will be elevated a constant offset 
 #'above the heightmap. If the points goes off the edge, the nearest height on the heightmap will be used.
 #'
-#'@param extent A `raster::Extent` object with the bounding box of the displayed 3D scene.
 #'@param long Vector of longitudes (or other coordinate in the same coordinate reference system as extent).
 #'@param lat Vector of latitudes (or other coordinate in the same coordinate reference system as extent).
 #'@param altitude Elevation of each point, in units of the elevation matrix (scaled by zscale).
+#'@param extent Either an object representing the spatial extent of the 3D scene 
+#' (either from the `raster`, `terra`, `sf`, or `sp` packages), 
+#' a length-4 numeric vector specifying `c("xmin", "xmax","ymin","ymax")`, or the spatial object (from 
+#' the previously aforementioned packages) which will be automatically converted to an extent object. 
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.
 #'@param heightmap Default `NULL`. Automatically extracted from the rgl window--only use if auto-extraction
 #'of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
@@ -83,8 +86,8 @@
 #'render_highquality(point_radius = 3, clamp_value=10)
 #'rgl::rgl.close()
 #'}
-render_points = function(extent = NULL, lat = NULL, long = NULL, altitude=NULL, 
-                         zscale=1, heightmap = NULL, 
+render_points = function(lat = NULL, long = NULL, altitude = NULL, extent = NULL, 
+                         zscale = 1, heightmap = NULL, 
                          size = 3, color = "black", offset = 5, clear_previous = FALSE) {
   if(rgl::rgl.cur() == 0) {
     stop("No rgl window currently open.")
@@ -98,5 +101,5 @@ render_points = function(extent = NULL, lat = NULL, long = NULL, altitude=NULL,
   xyz = transform_into_heightmap_coords(extent, heightmap, lat, long, 
                                         altitude, offset, zscale)
   rgl::rgl.material(color = color, tag = "points3d", size = size)
-  rgl::points3d(xyz[,1],xyz[,2],xyz[,3])
+  rgl::points3d(xyz[,1], xyz[,2], xyz[,3])
 }

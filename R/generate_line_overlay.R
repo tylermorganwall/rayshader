@@ -3,7 +3,10 @@
 #'@description Calculates and returns an overlay of lines for the current height map.
 #'
 #'@param geometry An `sf` object with LINESTRING geometry.
-#'@param extent A `raster::Extent` object with the bounding box for the height map used to generate the original map.
+#'@param extent Either an object representing the spatial extent of the scene 
+#' (either from the `raster`, `terra`, `sf`, or `sp` packages), 
+#' a length-4 numeric vector specifying `c("xmin", "xmax","ymin","ymax")`, or the spatial object (from 
+#' the previously aforementioned packages) which will be automatically converted to an extent object. 
 #'@param heightmap Default `NULL`. The original height map. Pass this in to extract the dimensions of the resulting 
 #'overlay automatically.
 #'@param width Default `NA`. Width of the resulting overlay. Default the same dimensions as height map.
@@ -98,11 +101,13 @@ generate_line_overlay = function(geometry, extent, heightmap = NULL,
       stop("`offset` must be of length-2")
     }
   }
+  extent = get_extent(extent)
   tempoverlay = tempfile(fileext = ".png")
   grDevices::png(filename = tempoverlay, width = width, height = height, units="px",bg = "transparent")
   graphics::par(mar = c(0,0,0,0))
-  graphics::plot(base::suppressWarnings(sf::st_geometry(sf_lines_cropped)), xlim = c(extent@xmin,extent@xmax), 
-                 ylim =  c(extent@ymin,extent@ymax), asp=1, lty = lty,
+  graphics::plot(base::suppressWarnings(sf::st_geometry(sf_lines_cropped)), 
+                 xlim = c(extent["xmin"],extent["xmax"]), 
+                 ylim = c(extent["ymin"],extent["ymax"]), asp=1, lty = lty,
                  xaxs = "i", yaxs = "i", lwd = widthvals, col = color)
   grDevices::dev.off() #resets par
   png::readPNG(tempoverlay)

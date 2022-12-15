@@ -7,8 +7,10 @@
 #' of polygon represented in a way that can be processed by `xy.coords()`.  If
 #' xy-coordinate based polygons are open, they will be closed by adding an
 #' edge from the last point to the first.
-#' @param extent A `raster::Extent` object with the bounding box for the height map 
-#' used to generate the original map.
+#' #'@param extent Either an object representing the spatial extent of the 3D scene 
+#' (either from the `raster`, `terra`, `sf`, or `sp` packages), 
+#' a length-4 numeric vector specifying `c("xmin", "xmax", "ymin", "ymax")`, or the spatial object (from 
+#' the previously aforementioned packages) which will be automatically converted to an extent object. 
 #' @param color Default `black`. Color of the polygon.
 #' @param top Default `1`. Extruded top distance. If this equals `bottom`, the polygon will not be
 #' extruded and just the one side will be rendered.
@@ -159,12 +161,12 @@ render_polygons = function(polygon, extent,  color = "red", top = 1, bottom = NA
     ncol_map = ncol(heightmap)
     nrow_map = nrow(heightmap)
   }
-  e = extent
+  e = get_extent(extent)
   for(group in seq_along(vertex_list)) {
     if(!is.null(vertex_list[[group]])) {
       single_poly = vertex_list[[group]]
-      single_poly$vb[1,] = (-single_poly$vb[1,]-e@xmin)/(e@xmax - e@xmin) * nrow_map - nrow_map/2
-      single_poly$vb[3,] = ncol_map/2 - (single_poly$vb[3,]-e@ymin)/(e@ymax - e@ymin) * ncol_map 
+      single_poly$vb[1,] = (-single_poly$vb[1,]-e["xmin"])/(e["xmax"] - e["xmin"]) * nrow_map - nrow_map/2
+      single_poly$vb[3,] = ncol_map/2 - (single_poly$vb[3,]-e["ymin"])/(e["ymax"] - e["ymin"]) * ncol_map 
       single_poly$vb[2,] = single_poly$vb[2,]
       
       rgl::rgl.material(color = color, tag = "polygon3d", lit = lit, alpha = alpha)

@@ -7,7 +7,10 @@
 #'@param lat A latitude for the text. Must provide an `raster::extent` object to argument `extent` for the map.
 #'@param long A latitude for the text. Must provide an `raster::extent` object to argument `extent` for the map.
 #'@param altitude Default `NULL`. Elevation of the label, in units of the elevation matrix (scaled by zscale). If none is passed, this will default to 10 percent above the maximum altitude in the heightmap.
-#'@param extent Default `NULL`. A `raster::Extent` object with the bounding box of the displayed 3D scene.
+#'@param extent Either an object representing the spatial extent of the scene 
+#' (either from the `raster`, `terra`, `sf`, or `sp` packages), 
+#' a length-4 numeric vector specifying `c("xmin", "xmax","ymin","ymax")`, or the spatial object (from 
+#' the previously aforementioned packages) which will be automatically converted to an extent object. 
 #'@param x Default `NULL`. Directly specify the `x` index in the matrix to place the label.
 #'@param y Default `NULL`. Directly specify the `y` index in the matrix to place the label.
 #'@param z Default `NULL`. Elevation of the label, in units of the elevation matrix (scaled by zscale).
@@ -121,9 +124,9 @@ render_label = function(heightmap, text, lat, long, altitude=NULL, extent=NULL,
       stop("extent required when using lat/long instead of x/y")
     }
     if(!is.null(extent)) {
-      e = extent
-      x = (long-e@xmin)/(e@xmax - e@xmin) * nrow(heightmap)
-      y = ncol(heightmap) - (lat-e@ymin)/(e@ymax - e@ymin) * ncol(heightmap)
+      e = get_extent(extent)
+      x = (long-e["xmin"])/(e["xmax"] - e["xmin"]) * nrow(heightmap)
+      y = ncol(heightmap) - (lat-e["ymin"])/(e["ymax"] - e["ymin"]) * ncol(heightmap)
     }
     if(rgl::rgl.cur() == 0) {
       stop("No rgl window currently open.")

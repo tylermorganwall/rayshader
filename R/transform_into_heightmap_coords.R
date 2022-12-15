@@ -12,12 +12,12 @@ transform_into_heightmap_coords = function(extent, heightmap, lat = NULL, long =
                                            use_altitude = TRUE,
                                            filter_bounds = TRUE) {
   offset = offset/zscale
-  e = extent
+  e = get_extent(extent)
   if(is.null(lat)) {
-    lat = (e@ymax + e@ymin)/2 
+    lat = (e["ymax"] + e["ymin"])/2 
   }
   if(is.null(long)) {
-    long = (e@xmax + e@xmin)/2
+    long = (e["xmax"] + e["xmin"])/2
   }
   if(is.null(heightmap)) {
     vertex_info = get_ids_with_labels(typeval = c("surface", "surface_tris"))
@@ -27,8 +27,8 @@ transform_into_heightmap_coords = function(extent, heightmap, lat = NULL, long =
     ncol_map = ncol(heightmap)
     nrow_map = nrow(heightmap)
   }
-  distances_x = (long-e@xmin)/(e@xmax - e@xmin) * nrow_map
-  distances_y = ncol_map - (lat-e@ymin)/(e@ymax - e@ymin) * ncol_map
+  distances_x = (long-e["xmin"])/(e["xmax"] - e["xmin"]) * nrow_map
+  distances_y = ncol_map - (lat-e["ymin"])/(e["ymax"] - e["ymin"]) * ncol_map
   
   if(filter_bounds) {
     filter_out = distances_y > ncol(heightmap) | 

@@ -4,7 +4,10 @@
 #'use an `sf` object or manually specify the x/y coordinates and label. 
 #'
 #'@param labels A character vector of labels, or an `sf` object with `POINT` geometry and a column for labels.
-#'@param extent A `raster::Extent` object with the bounding box for the height map used to generate the original map.
+#'@param extent Either an object representing the spatial extent of the scene 
+#' (either from the `raster`, `terra`, `sf`, or `sp` packages), 
+#' a length-4 numeric vector specifying `c("xmin", "xmax","ymin","ymax")`, or the spatial object (from 
+#' the previously aforementioned packages) which will be automatically converted to an extent object. 
 #'@param x Default `NULL`. The x-coordinate, if `labels` is not an `sf` object.
 #'@param y Default `NULL`. The y-coordinate, if `labels` is not an `sf` object.
 #'@param heightmap Default `NULL`. The original height map. Pass this in to extract the dimensions of the resulting 
@@ -167,6 +170,7 @@ generate_label_overlay = function(labels, extent, x=NULL, y=NULL,
   stopifnot(!missing(extent))
   stopifnot(!missing(labels))
 
+  extent = get_extent(extent)
   if(is.na(height)) {
     height  = ncol(heightmap)
   }
@@ -176,12 +180,12 @@ generate_label_overlay = function(labels, extent, x=NULL, y=NULL,
   tempoverlay = tempfile(fileext = ".png")
   grDevices::png(filename = tempoverlay, width = width, height = height, units="px",bg = "transparent")
   graphics::par(mar = c(0,0,0,0))
-  graphics::plot(x=x+offset[1],y=y+offset[2], xlim = c(extent@xmin,extent@xmax),
-                 ylim =  c(extent@ymin,extent@ymax), asp=1, pch = pch,bty="n",axes=FALSE,
+  graphics::plot(x=x+offset[1],y=y+offset[2], xlim = c(extent["xmin"],extent["xmax"]),
+                 ylim =  c(extent["ymin"],extent["ymax"]), asp=1, pch = pch,bty="n",axes=FALSE,
                  xaxs = "i", yaxs = "i", cex = point_size, col = point_color)
   car::pointLabel(x=x+offset[1],y=y+offset[2],labels=labels, cex = text_size,
-                  xlim = c(extent@xmin,extent@xmax), bty="n",
-                  ylim =  c(extent@ymin,extent@ymax), asp=1, font = font,
+                  xlim = c(extent["xmin"],extent["xmax"]), bty="n",
+                  ylim = c(extent["ymin"],extent["ymax"]), asp=1, font = font,
                   xaxs = "i", yaxs = "i",  col = color)
   grDevices::dev.off() #resets par
   overlay_temp = png::readPNG(tempoverlay)
@@ -193,12 +197,12 @@ generate_label_overlay = function(labels, extent, x=NULL, y=NULL,
     tempoverlay = tempfile(fileext = ".png")
     grDevices::png(filename = tempoverlay, width = width, height = height, units="px",bg = "transparent")
     graphics::par(mar = c(0,0,0,0))
-    graphics::plot(x=x+halo_offset[1],y=y+halo_offset[2], xlim = c(extent@xmin,extent@xmax),
-                   ylim =  c(extent@ymin,extent@ymax), asp=1, pch = pch, bty="n",axes=FALSE,
+    graphics::plot(x=x+halo_offset[1],y=y+halo_offset[2], xlim = c(extent["xmin"],extent["xmax"]),
+                   ylim =  c(extent["ymin"],extent["ymax"]), asp=1, pch = pch, bty="n",axes=FALSE,
                    xaxs = "i", yaxs = "i", cex = point_size, col = halo_color)
     car::pointLabel(x=x+halo_offset[1],y=y+halo_offset[2],labels=labels, cex = text_size, 
-                    xlim = c(extent@xmin,extent@xmax), bty="n", 
-                    ylim =  c(extent@ymin,extent@ymax), asp=1, font = font,
+                    xlim = c(extent["xmin"],extent["xmax"]), bty="n", 
+                    ylim = c(extent["ymin"],extent["ymax"]), asp=1, font = font,
                     xaxs = "i", yaxs = "i",  col = halo_color)
     grDevices::dev.off() #resets par
     overlay_temp_under = png::readPNG(tempoverlay)

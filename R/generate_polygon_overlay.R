@@ -3,7 +3,10 @@
 #'@description Transforms an input `sf` object into an image overlay for the current height map.
 #'
 #'@param geometry An `sf` object with POLYGON geometry.
-#'@param extent A `raster::Extent` object with the bounding box for the height map used to generate the original map.
+#'@param extent Either an object representing the spatial extent of the scene 
+#' (either from the `raster`, `terra`, `sf`, or `sp` packages), 
+#' a length-4 numeric vector specifying `c("xmin", "xmax","ymin","ymax")`, or the spatial object (from 
+#' the previously aforementioned packages) which will be automatically converted to an extent object. 
 #'@param heightmap Default `NULL`. The original height map. Pass this in to extract the dimensions of the resulting 
 #'overlay automatically.
 #'@param width Default `NA`. Width of the resulting overlay. Default the same dimensions as height map.
@@ -142,18 +145,21 @@ generate_polygon_overlay = function(geometry, extent, heightmap = NULL,
       stop("`offset` must be of length-2")
     }
   }
+  extent = get_extent(extent)
   tempoverlay = tempfile(fileext = ".png")
   grDevices::png(filename = tempoverlay, width = width, height = height, units="px",bg = "transparent")
   graphics::par(mar = c(0,0,0,0))
   if(!transparent) {
-    graphics::plot(sf::st_geometry(sf_polygons_cropped), xlim = c(extent@xmin,extent@xmax),
-                   ylim =  c(extent@ymin,extent@ymax), 
+    graphics::plot(sf::st_geometry(sf_polygons_cropped), 
+                   xlim = c(extent["xmin"],extent["xmax"]), 
+                   ylim = c(extent["ymin"],extent["ymax"]), 
                    lty = lty, border = NA, asp = 1,
                    xaxs = "i", yaxs = "i", lwd = linewidth, col = fillvals)
   }
   if(!is.na(linewidth) && linewidth > 0) {
-    graphics::plot(sf::st_geometry(sf_polygons_cropped), xlim = c(extent@xmin,extent@xmax), 
-                   ylim =  c(extent@ymin,extent@ymax),
+    graphics::plot(sf::st_geometry(sf_polygons_cropped), 
+                   xlim = c(extent["xmin"],extent["xmax"]), 
+                   ylim = c(extent["ymin"],extent["ymax"]), 
                    lty = lty, add=!transparent, asp = 1,
                    xaxs = "i", yaxs = "i", lwd = linewidth, col = NA, border = linecolor)
   }

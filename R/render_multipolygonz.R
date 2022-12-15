@@ -6,7 +6,10 @@
 #'You can also use `save_multipolygonz_to_obj()` manually to convert sf objects
 #'
 #'@param sfobj An sf object with MULTIPOLYGON Z geometry.
-#'@param extent A `raster::Extent` object with the bounding box of the displayed 3D scene.
+#'@param extent Either an object representing the spatial extent of the scene 
+#' (either from the `raster`, `terra`, `sf`, or `sp` packages), 
+#' a length-4 numeric vector specifying `c("xmin", "xmax","ymin","ymax")`, or the spatial object (from 
+#' the previously aforementioned packages) which will be automatically converted to an extent object. 
 #'@param obj_zscale Default `TRUE`. Whether to scale the size of the OBJ by zscale to have it match
 #'the size of the map. If zscale is very big, this will make the model very small.
 #'@param swap_yz Default `TRUE`. Whether to swap and Y and Z axes. (Y axis is vertical in 

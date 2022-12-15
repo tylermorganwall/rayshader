@@ -28,7 +28,10 @@
 #'@param angle Default `c(0,0,0)`. Angle of rotation around the x, y, and z axes. If this is a matrix or list,
 #'each row (or list entry) specifies the rotation of the nth tree specified (number of rows/length of list must
 #'equal the length of `lat`/`long`).
-#'@param extent A `raster::Extent` object with the bounding box of the displayed 3D scene.
+#'@param extent Either an object representing the spatial extent of the 3D scene 
+#' (either from the `raster`, `terra`, `sf`, or `sp` packages), 
+#' a length-4 numeric vector specifying `c("xmin", "xmax", "ymin", "ymax")`, or the spatial object (from 
+#' the previously aforementioned packages) which will be automatically converted to an extent object. 
 #'@param baseshape Default `rectangle`. Shape of the base. Options are `c("rectangle","circle","hex")`.
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.
 #'@param heightmap Default `NULL`. Automatically extracted from the rgl window--only use if auto-extraction

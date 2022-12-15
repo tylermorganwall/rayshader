@@ -7,10 +7,13 @@
 #'This function converts the path values to rayshader coordinates (by setting `return_coords = TRUE` in `render_path()`) 
 #'and then subtracts out the rgl y-offset, which can be obtained by calling the internal function `rayshader:::get_scene_depth()`. 
 #'
-#'@param extent A `raster::Extent` object with the bounding box of the displayed 3D scene.
 #'@param long Vector of longitudes (or other coordinate in the same coordinate reference system as extent).
 #'@param lat Vector of latitudes (or other coordinate in the same coordinate reference system as extent).
 #'@param altitude Elevation of each point, in units of the elevation matrix (scaled by zscale).
+#'@param extent Either an object representing the spatial extent of the scene 
+#' (either from the `raster`, `terra`, `sf`, or `sp` packages), 
+#' a length-4 numeric vector specifying `c("xmin", "xmax","ymin","ymax")`, or the spatial object (from 
+#' the previously aforementioned packages) which will be automatically converted to an extent object. 
 #'@param frames Default `360`. Total number of animation frames.
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.
 #'@param heightmap Default `NULL`. Automatically extracted from the rgl window--only use if auto-extraction
@@ -116,7 +119,7 @@
 #'gridExtra::grid.arrange(grobs=grob_list, layout_matrix = layout_matrix)
 #'rgl::rgl.close()
 #'}
-convert_path_to_animation_coords = function(extent = NULL, lat, long = NULL, altitude = NULL, 
+convert_path_to_animation_coords = function(lat, long = NULL, altitude = NULL, extent = NULL, 
                                             frames = 360, 
                                             zscale=1, heightmap = NULL, offset = 5,
                                             type = "bezier", offset_lookat = 1,

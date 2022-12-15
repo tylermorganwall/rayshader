@@ -6,8 +6,11 @@
 #'(i.e. is in lat/long coordinates) this function will use the `geosphere` package to create a 
 #'scale bar of the proper length.
 #'
-#'@param extent A `raster::Extent` object with the bounding box for the height map used to generate the original map. If this is in
-#'lat/long coordinates, be sure to set `latlong = TRUE`.
+#'@param extent Either an object representing the spatial extent of the scene 
+#' (either from the `raster`, `terra`, `sf`, or `sp` packages), 
+#' a length-4 numeric vector specifying `c("xmin", "xmax","ymin","ymax")`, or the spatial object (from 
+#' the previously aforementioned packages) which will be automatically converted to an extent object. If this is in
+#' lat/long coordinates, be sure to set `latlong = TRUE`.
 #'@param length The length of the scale bar, in `units`. This should match the units used on the map, 
 #'unless `extent` uses lat/long coordinates. In that case, the distance should be in meters.
 #'@param x Default `0.05`. The x-coordinate of the bottom-left corner of the scale bar, as a proportion of the full map width. 
@@ -171,11 +174,15 @@ generate_scalebar_overlay = function(extent, length, x=0.05, y=0.05,
                                      halo_color = NA, halo_expand = 1,
                                      halo_alpha = 1, halo_offset = c(0,0), halo_blur = 1) {
   loc = rep(0,2)
-  loc[1] = x * (extent[2]-extent[1]) + extent[1]
-  loc[2] = y * (extent[4]-extent[3]) + extent[3]
+  extent = get_extent(extent)
+  xdiff = extent["xmax"]-extent["xmin"]
+  ydiff = extent["ymax"]-extent["ymin"]
   
-  halo_offset[1] = halo_offset[1] * (extent[2]-extent[1])
-  halo_offset[2] = halo_offset[2] * (extent[4]-extent[3])
+  loc[1] = x * xdiff + extent["xmin"]
+  loc[2] = y * ydiff + extent["ymin"]
+  
+  halo_offset[1] = halo_offset[1] * xdiff
+  halo_offset[2] = halo_offset[2] * ydiff
   
   if(is.na(height)) {
     height  = ncol(heightmap)
@@ -305,8 +312,10 @@ generate_scalebar_overlay = function(extent, length, x=0.05, y=0.05,
   tempoverlay = tempfile(fileext = ".png")
   grDevices::png(filename = tempoverlay, width = width, height = height, units="px",bg = "transparent")
   graphics::par(mar = c(0,0,0,0))
-  graphics::plot(x=c(extent[1],extent[3]),y=c(extent[2],extent[4]), xlim = c(extent[1],extent[2]),
-                 ylim =  c(extent[3],extent[4]), pch = 0,bty="n",axes=FALSE,
+  graphics::plot(x=c(extent["xmin"],extent["ymin"]),y=c(extent["xmax"],extent["ymax"]), 
+                 xlim = c(extent["xmin"],extent["xmax"]), 
+                 ylim = c(extent["ymin"],extent["ymax"]), 
+                 pch = 0,bty="n",axes=FALSE,
                  xaxs = "i", yaxs = "i", cex = 0, col = NA)
   
   cols <- rep(c(color1,color2),2)
@@ -340,8 +349,9 @@ generate_scalebar_overlay = function(extent, length, x=0.05, y=0.05,
     tempoverlay = tempfile(fileext = ".png")
     grDevices::png(filename = tempoverlay, width = width, height = height, units="px",bg = "transparent")
     graphics::par(mar = c(0,0,0,0))
-    graphics::plot(x=c(extent[1],extent[3]),y=c(extent[2],extent[4]), xlim = c(extent[1],extent[2]),
-         ylim =  c(extent[3],extent[4]), pch = 0,bty="n",axes=FALSE,
+    graphics::plot(x=c(extent["xmin"],extent["ymin"]),y=c(extent["xmax"],extent["ymax"]), 
+                   xlim = c(extent["xmin"],extent["xmax"]), 
+                   ylim = c(extent["ymin"],extent["ymax"]),  pch = 0,bty="n",axes=FALSE,
          xaxs = "i", yaxs = "i", cex = 0, col = NA)
     
     cols <- rep(c(color1,color2),2)
