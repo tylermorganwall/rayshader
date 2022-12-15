@@ -19,7 +19,7 @@ above the heightmap. If the points goes off the edge, the nearest height on the 
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.32.5</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.32.6</span>
       </span>
     </div>
 
@@ -104,10 +104,10 @@ above the heightmap. If the points goes off the edge, the nearest height on the 
 
     <div id="ref-usage">
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">render_points</span><span class="op">(</span></span>
-<span>  extent <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  lat <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  long <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  altitude <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  extent <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  zscale <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  heightmap <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  size <span class="op">=</span> <span class="fl">3</span>,</span>
@@ -119,11 +119,7 @@ above the heightmap. If the points goes off the edge, the nearest height on the 
 
     <div id="arguments">
     <h2>Arguments</h2>
-    <dl><dt>extent</dt>
-<dd><p>A `raster::Extent` object with the bounding box of the displayed 3D scene.</p></dd>
-
-
-<dt>lat</dt>
+    <dl><dt>lat</dt>
 <dd><p>Vector of latitudes (or other coordinate in the same coordinate reference system as extent).</p></dd>
 
 
@@ -133,6 +129,13 @@ above the heightmap. If the points goes off the edge, the nearest height on the 
 
 <dt>altitude</dt>
 <dd><p>Elevation of each point, in units of the elevation matrix (scaled by zscale).</p></dd>
+
+
+<dt>extent</dt>
+<dd><p>Either an object representing the spatial extent of the 3D scene 
+(either from the `raster`, `terra`, `sf`, or `sp` packages), 
+a length-4 numeric vector specifying `c("xmin", "xmax","ymin","ymax")`, or the spatial object (from 
+the previously aforementioned packages) which will be automatically converted to an extent object.</p></dd>
 
 
 <dt>zscale</dt>

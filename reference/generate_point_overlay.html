@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.32.5</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.32.6</span>
       </span>
     </div>
 
@@ -120,7 +120,10 @@
 
 
 <dt>extent</dt>
-<dd><p>A `raster::Extent` object with the bounding box for the height map used to generate the original map.</p></dd>
+<dd><p>Either an object representing the spatial extent of the scene 
+(either from the `raster`, `terra`, `sf`, or `sp` packages), 
+a length-4 numeric vector specifying `c("xmin", "xmax","ymin","ymax")`, or the spatial object (from 
+the previously aforementioned packages) which will be automatically converted to an extent object.</p></dd>
 
 
 <dt>heightmap</dt>
