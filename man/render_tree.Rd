@@ -32,7 +32,10 @@ render_tree(
 
 \item{long}{Vector of longitudes (or other coordinate in the same coordinate reference system as extent).}
 
-\item{extent}{A `raster::Extent` object with the bounding box of the displayed 3D scene.}
+\item{extent}{Either an object representing the spatial extent of the 3D scene 
+(either from the `raster`, `terra`, `sf`, or `sp` packages), 
+a length-4 numeric vector specifying `c("xmin", "xmax", "ymin", "ymax")`, or the spatial object (from 
+the previously aforementioned packages) which will be automatically converted to an extent object.}
 
 \item{type}{Default `"basic"`. Type of tree. Other built-in option: `"cone"`.}
 

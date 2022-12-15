@@ -38,7 +38,10 @@ generate_scalebar_overlay(
 )
 }
 \arguments{
-\item{extent}{A `raster::Extent` object with the bounding box for the height map used to generate the original map. If this is in
+\item{extent}{Either an object representing the spatial extent of the scene 
+(either from the `raster`, `terra`, `sf`, or `sp` packages), 
+a length-4 numeric vector specifying `c("xmin", "xmax","ymin","ymax")`, or the spatial object (from 
+the previously aforementioned packages) which will be automatically converted to an extent object. If this is in
 lat/long coordinates, be sure to set `latlong = TRUE`.}
 
 \item{length}{The length of the scale bar, in `units`. This should match the units used on the map, 

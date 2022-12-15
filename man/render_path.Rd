@@ -5,10 +5,10 @@
 \title{Render Path}
 \usage{
 render_path(
-  extent = NULL,
   lat,
   long = NULL,
   altitude = NULL,
+  extent = NULL,
   zscale = 1,
   heightmap = NULL,
   linewidth = 3,
@@ -20,8 +20,6 @@ render_path(
 )
 }
 \arguments{
-\item{extent}{A `raster::Extent` object with the bounding box of the displayed 3D scene.}
-
 \item{lat}{Vector of latitudes (or other coordinate in the same coordinate reference system as extent).
 Can also be an `sf` or `SpatialLineDataFrame` object.}
 
@@ -30,6 +28,11 @@ Ignored if lat is an `sf` or `SpatialLineDataFrame` object.}
 
 \item{altitude}{Default `NULL`. Elevation of each point, in units of the elevation matrix (scaled by zscale).
 If left `NULL`, this will be just the elevation value at ths surface, offset by `offset`.}
+
+\item{extent}{Either an object representing the spatial extent of the 3D scene 
+(either from the `raster`, `terra`, `sf`, or `sp` packages), 
+a length-4 numeric vector specifying `c("xmin", "xmax","ymin","ymax")`, or the spatial object (from 
+the previously aforementioned packages) which will be automatically converted to an extent object.}
 
 \item{zscale}{Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.}
 

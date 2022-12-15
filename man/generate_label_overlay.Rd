@@ -31,7 +31,10 @@ generate_label_overlay(
 \arguments{
 \item{labels}{A character vector of labels, or an `sf` object with `POINT` geometry and a column for labels.}
 
-\item{extent}{A `raster::Extent` object with the bounding box for the height map used to generate the original map.}
+\item{extent}{Either an object representing the spatial extent of the scene 
+(either from the `raster`, `terra`, `sf`, or `sp` packages), 
+a length-4 numeric vector specifying `c("xmin", "xmax","ymin","ymax")`, or the spatial object (from 
+the previously aforementioned packages) which will be automatically converted to an extent object.}
 
 \item{x}{Default `NULL`. The x-coordinate, if `labels` is not an `sf` object.}
 

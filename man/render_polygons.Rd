@@ -28,10 +28,11 @@ render_polygons(
 \item{polygon}{`sf` object, "SpatialPolygon" `sp` object,  or xy coordinates
 of polygon represented in a way that can be processed by `xy.coords()`.  If
 xy-coordinate based polygons are open, they will be closed by adding an
-edge from the last point to the first.}
-
-\item{extent}{A `raster::Extent` object with the bounding box for the height map 
-used to generate the original map.}
+edge from the last point to the first.
+#'@param extent Either an object representing the spatial extent of the 3D scene 
+(either from the `raster`, `terra`, `sf`, or `sp` packages), 
+a length-4 numeric vector specifying `c("xmin", "xmax", "ymin", "ymax")`, or the spatial object (from 
+the previously aforementioned packages) which will be automatically converted to an extent object.}
 
 \item{color}{Default `black`. Color of the polygon.}
 

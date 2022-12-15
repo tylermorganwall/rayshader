@@ -22,7 +22,10 @@ render_multipolygonz(
 \arguments{
 \item{sfobj}{An sf object with MULTIPOLYGON Z geometry.}
 
-\item{extent}{A `raster::Extent` object with the bounding box of the displayed 3D scene.}
+\item{extent}{Either an object representing the spatial extent of the scene 
+(either from the `raster`, `terra`, `sf`, or `sp` packages), 
+a length-4 numeric vector specifying `c("xmin", "xmax","ymin","ymax")`, or the spatial object (from 
+the previously aforementioned packages) which will be automatically converted to an extent object.}
 
 \item{zscale}{Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.}
 

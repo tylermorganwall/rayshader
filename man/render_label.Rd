@@ -44,7 +44,10 @@ render_label(
 
 \item{altitude}{Default `NULL`. Elevation of the label, in units of the elevation matrix (scaled by zscale). If none is passed, this will default to 10 percent above the maximum altitude in the heightmap.}
 
-\item{extent}{Default `NULL`. A `raster::Extent` object with the bounding box of the displayed 3D scene.}
+\item{extent}{Either an object representing the spatial extent of the scene 
+(either from the `raster`, `terra`, `sf`, or `sp` packages), 
+a length-4 numeric vector specifying `c("xmin", "xmax","ymin","ymax")`, or the spatial object (from 
+the previously aforementioned packages) which will be automatically converted to an extent object.}
 
 \item{x}{Default `NULL`. Directly specify the `x` index in the matrix to place the label.}
 
