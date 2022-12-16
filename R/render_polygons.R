@@ -7,7 +7,7 @@
 #' of polygon represented in a way that can be processed by `xy.coords()`.  If
 #' xy-coordinate based polygons are open, they will be closed by adding an
 #' edge from the last point to the first.
-#' #'@param extent Either an object representing the spatial extent of the 3D scene 
+#' @param extent Either an object representing the spatial extent of the 3D scene 
 #' (either from the `raster`, `terra`, `sf`, or `sp` packages), 
 #' a length-4 numeric vector specifying `c("xmin", "xmax", "ymin", "ymax")`, or the spatial object (from 
 #' the previously aforementioned packages) which will be automatically converted to an extent object. 
