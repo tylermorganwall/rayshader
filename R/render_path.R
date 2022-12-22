@@ -111,9 +111,15 @@ render_path = function(lat, long = NULL, altitude = NULL, extent = NULL,
     groups = latlong[,3]
   } else if(inherits(lat,"sf")) {
     latlong = sf::st_coordinates(lat)
-    long = latlong[,1]
-    lat = latlong[,2]
-    groups = latlong[,3]
+    if(ncol(latlong) == 3) {
+      long = latlong[,1]
+      lat = latlong[,2]
+      groups = latlong[,3]
+    } else if (ncol(latlong) == 4) {
+      long = latlong[,1]
+      lat = latlong[,2]
+      groups = interaction(latlong[,3],latlong[,4])
+    }
   } else {
     groups = rep(1,length(lat))
   }

@@ -297,7 +297,7 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
   }
   bg3d(color = background,texture=NULL)
   rgl.viewpoint(zoom=zoom,phi=phi,theta=theta,fov=fov)
-  par3d(windowRect = windowsize,...)
+  par3d(windowRect = windowsize, mouseMode = c("none", "polar", "fov", "zoom", "pull"), ...)
   if(solid && !triangulate) {
     make_base(heightmap,basedepth=soliddepth,basecolor=solidcolor,zscale=zscale, 
               soil = soil, soil_freq = soil_freq, soil_levels = soil_levels, soil_color1=soil_color_light,
