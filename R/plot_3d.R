@@ -258,6 +258,11 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
     }
     triangulate = FALSE
   }
+  
+  # We don't want rgl lighting
+  save <- material3d(lit = FALSE)
+  on.exit(material3d(save))
+  
   if(!triangulate) {
     if(!precomputed) {
       normals = calculate_normal(heightmap,zscale=zscale)
@@ -266,10 +271,11 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
     normalsx = (t(normals$x[c(-1,-nrow(normals$x)),c(-1,-ncol(normals$x))]))
     normalsy = (t(normals$z[c(-1,-nrow(normals$z)),c(-1,-ncol(normals$z))]))
     normalsz = (t(normals$y[c(-1,-nrow(normals$y)),c(-1,-ncol(normals$y))]))
-    rgl.surface(x=1:nrow(heightmap)-nrow(heightmap)/2,z=(1:ncol(heightmap)-ncol(heightmap)/2),
+    surface3d(x=1:nrow(heightmap)-nrow(heightmap)/2,z=(1:ncol(heightmap)-ncol(heightmap)/2),
                 y=heightmap/zscale,
                 normal_x = normalsz, normal_y = normalsy, normal_z = -normalsx,
-                texture = tempmap, lit=FALSE,tag = "surface")
+                texture = tempmap, tag = "surface",
+                col = "white", lit = FALSE)
   } else {
     tris = terrainmeshr::triangulate_matrix(heightmap, maxError = max_error, 
                                             maxTriangles = max_tri, start_index = 0, 
@@ -293,7 +299,7 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
     tris[,3] = tris[,3] - ncol(heightmap)/2
     tris[,3] = -tris[,3]
     rgl.triangles(tris, texcoords = texcoords, #normals = normal_comp,
-                  texture=tempmap,lit=FALSE,tag = "surface_tris")
+                  texture=tempmap,tag = "surface_tris")
   }
   bg3d(color = background,texture=NULL)
   rgl.viewpoint(zoom=zoom,phi=phi,theta=theta,fov=fov)
@@ -306,7 +312,6 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
     make_base_triangulated(tris,basedepth=soliddepth,basecolor=solidcolor)
   }
   if(!is.null(solidlinecolor) && solid) {
-    rgl::rgl.material(color=solidlinecolor, lit=FALSE)
     make_lines(heightmap,basedepth=soliddepth,linecolor=solidlinecolor,zscale=zscale,linewidth = linewidth)
   }
   if(shadow) {
@@ -317,11 +322,9 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
   }
   if(!is.null(waterlinecolor) && water) {
     if(all(!is.na(heightmap))) {
-      rgl::rgl.material(color=waterlinecolor,lit=FALSE)
       make_lines(fliplr(heightmap),basedepth=waterdepth,linecolor=waterlinecolor,
                  zscale=zscale,linewidth = linewidth,alpha=waterlinealpha,solid=FALSE)
     }
-    rgl::rgl.material(color=waterlinecolor,lit=FALSE)
     make_waterlines(heightmap,waterdepth=waterdepth,linecolor=waterlinecolor,
                     zscale=zscale,alpha=waterlinealpha,linewidth=linewidth,antialias=lineantialias)
   }
