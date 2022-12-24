@@ -117,7 +117,7 @@
 #'}
 #'layout_matrix = matrix(1:25, ncol=5, byrow=TRUE)
 #'gridExtra::grid.arrange(grobs=grob_list, layout_matrix = layout_matrix)
-#'rgl::rgl.close()
+#'rgl::close3d()
 #'}
 convert_path_to_animation_coords = function(lat, long = NULL, altitude = NULL, extent = NULL, 
                                             frames = 360, 
@@ -137,7 +137,7 @@ convert_path_to_animation_coords = function(lat, long = NULL, altitude = NULL, e
   xyz = render_path(extent = extent, lat = lat, long = long, altitude = altitude, 
                     zscale=zscale, heightmap = heightmap, offset = offset,
                     clear_previous = FALSE, return_coords = TRUE)[[1]]
-  if(rgl::rgl.cur() != 0) {
+  if(rgl::cur3d() != 0) {
     scene_offset = get_scene_depth()
   } else {
     warning("No rgl window open--animation coordinates will be vertically offset from specified values")

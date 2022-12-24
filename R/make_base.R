@@ -165,7 +165,8 @@ make_base = function(heightmap,basedepth=0,basecolor="grey20",zscale=1, soil = F
                        lit=FALSE,color=basecolor,front="filled",back="filled",tag = "base")
     }
     
-    rgl.surface(1:nrow(basemat)-nrow(basemat)/2,1:ncol(basemat)-ncol(basemat)/2,basemat,color=basecolor,
+    surface3d(1:nrow(basemat)-nrow(basemat)/2,
+              basemat,1:ncol(basemat)-ncol(basemat)/2,color=basecolor,
                 lit=FALSE,back="filled",front="filled",tag = "basebottom",
                 normal_x = xznormals, normal_z = xznormals, normal_y = ynormals)
     

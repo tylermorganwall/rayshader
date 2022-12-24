@@ -169,6 +169,6 @@ for(i in 1:25) {
 }
 layout_matrix = matrix(1:25, ncol=5, byrow=TRUE)
 gridExtra::grid.arrange(grobs=grob_list, layout_matrix = layout_matrix)
-rgl::rgl.close()
+rgl::close3d()
 }
 }

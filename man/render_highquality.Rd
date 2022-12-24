@@ -212,6 +212,6 @@ render_highquality(lightdirection = c(240), lightaltitude=30, lightcolor=c("#555
                   camera_location = c(50,10,10), camera_lookat = c(0,15,0),
                   scene_elements = rayrender::sphere(z=0,y=15, x=-18, radius=5,
                                    material=rayrender::light(color="red",intensity=10)))
-rgl::rgl.close()
+rgl::close3d()
 }
 }

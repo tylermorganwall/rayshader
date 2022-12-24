@@ -93,10 +93,10 @@ render_scalebar = function(limits, position = "W", y = NULL,
                           clear_scalebar = FALSE) {
   if(clear_scalebar) {
     ids = get_ids_with_labels(c("scalebar_col1","scalebar_col2","text_scalebar"))$id
-    rgl::rgl.pop(id=ids)
+    rgl::pop3d(id=ids)
     return(invisible())
   }
-  if(rgl::rgl.cur() == 0) {
+  if(rgl::cur3d() == 0) {
     stop("No rgl window currently open.")
   }
   if(length(scale_length) > 2) {

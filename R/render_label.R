@@ -97,7 +97,7 @@
 #'\dontrun{
 #'render_label(clear_previous = TRUE) 
 #'render_snapshot()
-#'rgl::rgl.close()
+#'rgl::close3d()
 #'}
 render_label = function(heightmap, text, lat, long, altitude=NULL, extent=NULL, 
                         x=NULL, y=NULL, z=NULL, zscale=1, 
@@ -128,7 +128,7 @@ render_label = function(heightmap, text, lat, long, altitude=NULL, extent=NULL,
       x = (long-e["xmin"])/(e["xmax"] - e["xmin"]) * nrow(heightmap)
       y = ncol(heightmap) - (lat-e["ymin"])/(e["ymax"] - e["ymin"]) * ncol(heightmap)
     }
-    if(rgl::rgl.cur() == 0) {
+    if(rgl::cur3d() == 0) {
       stop("No rgl window currently open.")
     }
     if(.Platform$OS.type == "unix") {
@@ -181,7 +181,6 @@ render_label = function(heightmap, text, lat, long, altitude=NULL, extent=NULL,
       linelist[[1]] = matrix(c(x, x, z+offset, startline + offset, y,y),2,3)
     }
     for(i in 1:length(linelist)) {
-      rgl::rgl.material(color=linecolor)
       rgl::lines3d(linelist[[i]], color = linecolor, 
                    lwd = linewidth, lit = FALSE, line_antialias = antialias,
                    depth_test = "less", alpha = alpha, tag = "textline")

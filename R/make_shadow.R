@@ -53,7 +53,7 @@ make_shadow = function(heightmap, basedepth, shadowwidth, color, shadowcolor,
   tri1 = matrix(c(rowmax,rowmax,rowmin,basedepth,basedepth,basedepth,colmax,colmin,colmin), nrow=3,ncol=3)
   tri2 = matrix(c(rowmin,rowmax,rowmin,basedepth,basedepth,basedepth,colmax,colmax,colmin), nrow=3,ncol=3)
   
-  rgl.triangles(rbind(tri1,tri2), texcoords = matrix(c(1,1,0,0,1,0,1,0,0,1,1,0),nrow=6,ncol=2),
-                texture=tempmap,
+  triangles3d(rbind(tri1,tri2), texcoords = matrix(c(1,1,0,0,1,0,1,0,0,1,1,0),nrow=6,ncol=2),
+                texture=tempmap, col = "white",
                 lit=FALSE,back="culled",tag = "shadow")
 }

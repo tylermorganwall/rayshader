@@ -298,7 +298,7 @@ render_snapshot(clear=TRUE)
 ![](man/figures/clouds-1.png)<!-- -->
 
 ``` r
-rgl::rgl.clear()
+rgl::clear3d()
 ```
 
 These clouds can be customized:

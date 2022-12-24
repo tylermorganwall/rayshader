@@ -25,7 +25,7 @@
 #'#Save model of volcano without texture
 #'if(rayshader:::run_documentation()) {
 #'save_obj(filename_obj, save_texture = FALSE)
-#'rgl::rgl.close()
+#'rgl::close3d()
 #'}
 #'
 #'#Make water have realistic index of refraction
@@ -35,13 +35,13 @@
 #'  plot_3d(montereybay, zscale = 50)
 #'  
 #'save_obj(filename_obj, water_index_refraction = 1.5)
-#'rgl::rgl.close()
+#'rgl::close3d()
 #'}
 #'}
 save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1, 
                     manifold_geometry = FALSE, all_face_fields = FALSE,
                     save_shadow = FALSE) {
-  if(rgl::rgl.cur() == 0) {
+  if(rgl::cur3d() == 0) {
     stop("No rgl window currently open.")
   }
   if(is.null(filename)) {

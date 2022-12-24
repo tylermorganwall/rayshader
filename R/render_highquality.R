@@ -125,7 +125,7 @@
 #'                   camera_location = c(50,10,10), camera_lookat = c(0,15,0),
 #'                   scene_elements = rayrender::sphere(z=0,y=15, x=-18, radius=5,
 #'                                    material=rayrender::light(color="red",intensity=10)))
-#'rgl::rgl.close()
+#'rgl::close3d()
 #'}
 render_highquality = function(filename = NULL, light = TRUE, 
                               lightdirection = 315, lightaltitude = 45, lightsize=NULL,
@@ -143,7 +143,7 @@ render_highquality = function(filename = NULL, light = TRUE,
                               camera_interpolate=1, clear  = FALSE, return_scene = FALSE,
                               print_scene_info = FALSE, clamp_value = 10, 
                               animation_camera_coords = NULL, ...) {
-  if(rgl::rgl.cur() == 0) {
+  if(rgl::cur3d() == 0) {
     stop("No rgl window currently open.")
   }
   if(!(length(find.package("rayrender", quiet = TRUE)) > 0)) {
@@ -570,7 +570,7 @@ render_highquality = function(filename = NULL, light = TRUE,
                  clamp_value = clamp_value, ...)
   }
   if(clear) {
-    rgl::rgl.clear()
+    rgl::clear3d()
   }
   return(invisible(debug_return))
 }

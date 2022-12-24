@@ -107,10 +107,10 @@ render_compass = function(angle = 0, position = "SE", altitude = NULL, zscale = 
                         color_background = "grey60", color_bevel = "grey20",
                         position_circular = FALSE, clear_compass = FALSE) {
   if(clear_compass) {
-    rgl::rgl.pop(tag = c("north_symbol","arrow_symbol","bevel_symbol","background_symbol"))
+    rgl::pop3d(tag = c("north_symbol","arrow_symbol","bevel_symbol","background_symbol"))
     return(invisible())
   }
-  if(rgl::rgl.cur() == 0) {
+  if(rgl::cur3d() == 0) {
     stop("No rgl window currently open.")
   }
   radius = 1.3

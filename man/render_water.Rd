@@ -64,6 +64,6 @@ render_snapshot()
 render_camera(theta=-45)
 render_water(montereybay,zscale=50,waterlinecolor="white")
 render_snapshot(clear = TRUE)
-rgl::rgl.close()
+rgl::close3d()
 }
 }

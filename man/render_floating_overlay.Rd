@@ -40,7 +40,7 @@ of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
 
 \item{horizontal_offset}{Default `c(0,0)`. Distance (in 3D space) to offset the floating offset in the x/y directions.}
 
-\item{...}{Additional arguments to pass to `rgl::rgl.triangles()`.}
+\item{...}{Additional arguments to pass to `rgl::triangles3d()`.}
 }
 \value{
 Adds a 3D floating layer to the map. No return value.
@@ -81,7 +81,7 @@ if(all(length(find.package("sf", quiet = TRUE)) > 0,
  render_floating_overlay(road_overlay, altitude = 10000,zscale = 50)
  render_floating_overlay(point_overlay, altitude = 100,zscale = 50)
  render_snapshot()
- rgl::rgl.close()
+ rgl::close3d()
 }
 }
 }

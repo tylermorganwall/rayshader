@@ -79,7 +79,7 @@ equal the length of `lat`/`long`).}
 
 \item{rgl_tag}{Default `""`. Tag to add to the rgl scene id, will be prefixed by `"obj"`}
 
-\item{...}{Additional arguments to pass to `rgl::rgl.triangles()`.}
+\item{...}{Additional arguments to pass to `rgl::triangles3d()`.}
 }
 \description{
 Adds 3D OBJ model to the current scene, using latitude/longitude or coordinates in the reference
@@ -135,6 +135,6 @@ render_obj(flag_banner_obj(), extent = attr(montereybay,"extent"), heightmap = m
 
 #And all of these work with `render_highquality()`
 render_highquality(sample_method="sobol_blue",clamp_value=10)
-rgl::rgl.close()
+rgl::close3d()
 }
 }

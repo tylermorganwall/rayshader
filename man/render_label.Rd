@@ -157,6 +157,6 @@ render_highquality(samples=200,text_size = 24, line_radius = 2, text_offset = c(
 \dontrun{
 render_label(clear_previous = TRUE) 
 render_snapshot()
-rgl::rgl.close()
+rgl::close3d()
 }
 }

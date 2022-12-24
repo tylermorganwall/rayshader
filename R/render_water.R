@@ -38,12 +38,12 @@
 #'render_camera(theta=-45)
 #'render_water(montereybay,zscale=50,waterlinecolor="white")
 #'render_snapshot(clear = TRUE)
-#'rgl::rgl.close()
+#'rgl::close3d()
 #'}
 render_water = function(heightmap, waterdepth=0, watercolor="lightblue",
                         zscale=1, wateralpha=0.5, waterlinecolor=NULL, waterlinealpha = 1, 
                         linewidth = 2, remove_water = TRUE) {
-  if(rgl::rgl.cur() == 0) {
+  if(rgl::cur3d() == 0) {
     stop("No rgl window currently open.")
   }
   if(remove_water) {
@@ -51,12 +51,13 @@ render_water = function(heightmap, waterdepth=0, watercolor="lightblue",
   }
   make_water(heightmap/zscale,waterheight=waterdepth/zscale,wateralpha=wateralpha,watercolor=watercolor)
   if(!is.null(waterlinecolor)) {
+    savematerial <- material3d(color = waterlinecolor, lit = FALSE)
+    on.exit(material3d(savematerial))
     if(all(!is.na(heightmap))) {
-      rgl::rgl.material(color=waterlinecolor,lit=FALSE)
       make_lines(fliplr(heightmap),basedepth=waterdepth/zscale,linecolor=waterlinecolor,
-                 zscale=zscale,linewidth = linewidth, alpha=waterlinealpha, solid=FALSE)
+                 zscale=zscale,linewidth = linewidth, alpha=waterlinealpha, 
+                 solid=FALSE)
     }
-    rgl::rgl.material(color=waterlinecolor,lit=FALSE)
     make_waterlines(heightmap,waterdepth=waterdepth/zscale,linecolor=waterlinecolor,
                     zscale=zscale,alpha=waterlinealpha,linewidth=linewidth)
   }

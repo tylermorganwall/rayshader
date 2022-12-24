@@ -121,6 +121,6 @@ render_snapshot()
 if(rayshader:::run_documentation()) {
 #And all of these work with `render_highquality()`
 render_highquality(clamp_value=10, line_radius=3)
-rgl::rgl.close()
+rgl::close3d()
 }
 }

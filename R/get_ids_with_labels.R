@@ -17,7 +17,7 @@ get_ids_with_labels = function(typeval = NULL) {
                 "floating_overlay", "floating_overlay_tris", "base_soil1", "base_soil2",
                 "obj")
   get_rgl_material = getFromNamespace("rgl.getmaterial", "rgl")
-  idvals = rgl::rgl.ids(tags = TRUE)
+  idvals = rgl::ids3d(tags = TRUE)
   material_type = idvals$tag
   material_properties = vector("list", nrow(idvals))
   for(i in 1:nrow(idvals)) {

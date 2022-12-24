@@ -89,7 +89,7 @@ montereybay  \%>\%
 #Render some clouds
 render_clouds(montereybay, zscale=50)  
 render_snapshot()
-rgl::rgl.clear()
+rgl::clear3d()
 
 
 #Change the seed for a different set of clouds and add cloud shadows on the ground
@@ -100,7 +100,7 @@ montereybay  \%>\%
 render_camera(theta=-65, phi = 25, zoom = 0.45, fov = 80)
 render_clouds(montereybay, zscale=50, seed=2, clear_clouds = T)    
 render_snapshot()
-rgl::rgl.clear()
+rgl::clear3d()
 
 montereybay  \%>\%
  sphere_shade()  \%>\%
@@ -151,6 +151,6 @@ montereybay  \%>\%
 render_clouds(montereybay,zscale=50, seed=3, baseshape="hex", clear_clouds = T)  
 render_camera(zoom=0.65)
 render_snapshot()
-rgl::rgl.close()
+rgl::close3d()
 }
 }

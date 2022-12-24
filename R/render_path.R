@@ -89,13 +89,13 @@
 #'if(rayshader:::run_documentation()) {
 #'#And all of these work with `render_highquality()`
 #'render_highquality(clamp_value=10, line_radius=3)
-#'rgl::rgl.close()
+#'rgl::close3d()
 #'}
 render_path = function(lat, long = NULL, altitude = NULL, extent = NULL, 
                        zscale=1, heightmap = NULL,
                        linewidth = 3, color = "black", antialias = FALSE, offset = 5,
                        clear_previous = FALSE, return_coords = FALSE) {
-  if(rgl::rgl.cur() == 0 && !return_coords) {
+  if(rgl::cur3d() == 0 && !return_coords) {
     stop("No rgl window currently open.")
   }
   if(clear_previous) {
@@ -144,8 +144,9 @@ render_path = function(lat, long = NULL, altitude = NULL, extent = NULL,
     xyz = transform_into_heightmap_coords(extent, heightmap, lat, long, 
                                           altitude, offset, zscale, filter_bounds = FALSE)
     if(!return_coords) {
-      rgl::rgl.material(color = color, tag = "path3d", lwd = linewidth, line_antialias = antialias)
-      rgl::lines3d(xyz[,1] + 0.5,xyz[,2],xyz[,3] + 0.5)
+      rgl::lines3d(xyz[,1] + 0.5,xyz[,2],xyz[,3] + 0.5,
+                   color = color, tag = "path3d", lwd = linewidth, 
+                   line_antialias = antialias)
     } else {
       coord_list[[group]] = xyz
     }

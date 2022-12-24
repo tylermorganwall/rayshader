@@ -15,7 +15,7 @@ render_snapshot_software = function(filename, cache_filename = NULL, camera_loca
   if(run_documentation()) {
     fsaa = 2
   }
-  if(rgl::rgl.cur() == 0) {
+  if(rgl::cur3d() == 0) {
     stop("No rgl window currently open.")
   }
   text_offset = text_offset + c(0,text_size,0)
@@ -290,7 +290,7 @@ render_snapshot_software = function(filename, cache_filename = NULL, camera_loca
   }
   if(is.null(light_direction)) {
     #Get light info
-    lightinfo = rgl::rgl.ids(type = "lights")
+    lightinfo = rgl::ids3d(type = "lights")
     light_list = list()
     for(i in seq_len(nrow(lightinfo))) {
       idval = lightinfo$id[i]

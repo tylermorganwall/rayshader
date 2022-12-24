@@ -200,7 +200,7 @@ render_camera(theta = 20, phi=40,zoom= 0.64, fov= 56 )
 
 render_clouds(elmat, zscale = 10, start_altitude = 800, end_altitude = 1000, attenuation_coef = 2, clear_clouds = T)
 render_snapshot(clear=TRUE)
-rgl::rgl.clear()
+rgl::clear3d()
 
 ```
 
@@ -226,7 +226,7 @@ render_snapshot(clear=TRUE)
 ```
 
 ```{r include = FALSE}
-rgl::rgl.close()
+rgl::close3d()
 ```
 
 You can also render using the built-in pathtracer, powered by [rayrender](https://www.rayrender.net). Simply replace `render_snapshot()` with `render_highquality()`. When `render_highquality()` is called, there's no need to pre-compute the shadows with any of the `_shade()` functions, so we remove those:
@@ -248,7 +248,7 @@ render_highquality(samples=200, scale_text_size = 24,clear=TRUE)
 ```
 
 ```{r include = FALSE}
-rgl::rgl.close()
+rgl::close3d()
 system("rm dem_01.tif")
 ```
 

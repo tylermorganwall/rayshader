@@ -73,7 +73,7 @@
 #'#Or we can use render_movie() to do this all automatically with type="custom" (uncomment to run):
 #'#render_movie(filename = tempfile(fileext = ".mp4"), type = "custom", 
 #'#             theta = thetavec, phi = phivecfull, zoom = zoomvec, fov=0)
-#'rgl::rgl.close()
+#'rgl::close3d()
 #'}
 render_camera = function(theta = NULL, phi = NULL, zoom = NULL, fov = NULL) {
   if(is.null(theta) && is.null(phi) && is.null(zoom) && is.null(fov)) {
@@ -81,7 +81,7 @@ render_camera = function(theta = NULL, phi = NULL, zoom = NULL, fov = NULL) {
   } else {
     allmissing = FALSE
   }
-  if(rgl::rgl.cur() == 0) {
+  if(rgl::cur3d() == 0) {
     stop("No rgl window currently open.")
   }
   if(is.null(fov)) {
@@ -103,7 +103,7 @@ render_camera = function(theta = NULL, phi = NULL, zoom = NULL, fov = NULL) {
       }
     }
   }
-  rgl::rgl.viewpoint(theta = theta, phi = phi, fov = fov, zoom = zoom)
+  rgl::view3d(theta = theta, phi = phi, fov = fov, zoom = zoom)
   if(allmissing) {
     return(c("theta"=theta,"phi"=phi,"zoom"=zoom,"fov"=fov))
   }
