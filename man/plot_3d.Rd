@@ -45,6 +45,7 @@ plot_3d(
   max_error = 0,
   max_tri = 0,
   verbose = FALSE,
+  add = FALSE,
   ...
 )
 }
@@ -149,6 +150,9 @@ to save a smaller 3D OBJ file to disk with `save_obj()`,}
 
 \item{verbose}{Default `TRUE`, if `interactive()`. Prints information about the mesh triangulation
 if `triangulate = TRUE`.}
+
+\item{add}{Default `FALSE`.  Whether to add to existing 
+plot, or open a new one.}
 
 \item{...}{Additional arguments to pass to the `rgl::par3d` function.}
 }

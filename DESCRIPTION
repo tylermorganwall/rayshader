@@ -18,7 +18,7 @@ Imports: doParallel,
          png,
          jpeg,
          magrittr,
-         rgl (>= 0.108.3),
+         rgl (>= 0.110.4),
          grDevices,
          grid,
          utils,
@@ -43,7 +43,7 @@ Suggests: reshape2,
           elevatr,
           gridExtra
 LinkingTo: Rcpp, progress, RcppArmadillo
-RoxygenNote: 7.2.1
+RoxygenNote: 7.2.2.9000
 URL: https://www.rayshader.com, https://github.com/tylermorganwall/rayshader, https://www.rayshader.com/
 BugReports: https://github.com/tylermorganwall/rayshader/issues
 Remotes: tylermorganwall/rayimage,

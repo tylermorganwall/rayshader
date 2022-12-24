@@ -63,6 +63,8 @@
 #'to save a smaller 3D OBJ file to disk with `save_obj()`,
 #'@param verbose Default `TRUE`, if `interactive()`. Prints information about the mesh triangulation
 #'if `triangulate = TRUE`.
+#'@param add Default `FALSE`.  Whether to add to existing 
+#'plot, or open a new one.
 #'@param ... Additional arguments to pass to the `rgl::par3d` function.
 #'
 #'@import rgl
@@ -142,7 +144,7 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
                    soil_gradient = 2, soil_gradient_darken = 4,
                    theta=45, phi = 45, fov=0, zoom = 1, background="white", windowsize = 600,
                    precomputed_normals = NULL, asp = 1,
-                   triangulate = FALSE, max_error = 0, max_tri = 0, verbose = FALSE,
+                   triangulate = FALSE, max_error = 0, max_tri = 0, verbose = FALSE, add = FALSE,
                    ...) {
   #setting default zscale if montereybay is used and tell user about zscale
   argnameschar = unlist(lapply(as.list(sys.call()),as.character))[-1]
@@ -259,6 +261,10 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
     triangulate = FALSE
   }
   
+  # Open a new window, or move to the next pane
+  if (!add || !cur3d())
+    next3d()
+  
   # We don't want rgl lighting
   save <- material3d(lit = FALSE)
   on.exit(material3d(save))
@@ -275,7 +281,7 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
                 y=heightmap/zscale,
                 normal_x = normalsz, normal_y = normalsy, normal_z = -normalsx,
                 texture = tempmap, tag = "surface",
-                col = "white", lit = FALSE)
+                col = "white")
   } else {
     tris = terrainmeshr::triangulate_matrix(heightmap, maxError = max_error, 
                                             maxTriangles = max_tri, start_index = 0, 
@@ -298,11 +304,12 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
     tris[,1] = tris[,1] - nrow(heightmap)/2 +1
     tris[,3] = tris[,3] - ncol(heightmap)/2
     tris[,3] = -tris[,3]
-    rgl.triangles(tris, texcoords = texcoords, #normals = normal_comp,
-                  texture=tempmap,tag = "surface_tris")
+    triangles3d(tris, texcoords = texcoords, #normals = normal_comp,
+                  texture=tempmap,tag = "surface_tris",
+                col = "white")
   }
-  bg3d(color = background,texture=NULL)
-  rgl.viewpoint(zoom=zoom,phi=phi,theta=theta,fov=fov)
+  bg3d(color = background, texture=NULL)
+  view3d(zoom=zoom,phi=phi,theta=theta,fov=fov)
   par3d(windowRect = windowsize, mouseMode = c("none", "polar", "fov", "zoom", "pull"), ...)
   if(solid && !triangulate) {
     make_base(heightmap,basedepth=soliddepth,basecolor=solidcolor,zscale=zscale, 
