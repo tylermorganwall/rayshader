@@ -44,7 +44,7 @@ make_water = function(heightmap,waterheight=mean(heightmap),watercolor="lightblu
       }
       basemat = matrix(waterheight,nrow(heightmap),ncol(heightmap))
       basemat[is.na(heightmap)] = NA
-      surface3d(1:nrow(basemat)-nrow(basemat)/2,1:ncol(basemat)-ncol(basemat)/2,basemat,color=watercolor,alpha=wateralpha,
+      surface3d(x = 1:nrow(basemat)-nrow(basemat)/2,z = 1:ncol(basemat)-ncol(basemat)/2, y = basemat,color=watercolor,alpha=wateralpha,
                   lit=FALSE,texture=NULL,tag = "water")
     }
   }

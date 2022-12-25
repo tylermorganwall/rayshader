@@ -16,12 +16,11 @@ get_ids_with_labels = function(typeval = NULL) {
                 "points3d",          "polygon3d", 
                 "floating_overlay", "floating_overlay_tris", "base_soil1", "base_soil2",
                 "obj")
-  get_rgl_material = getFromNamespace("rgl.getmaterial", "rgl")
   idvals = rgl::ids3d(tags = TRUE)
   material_type = idvals$tag
   material_properties = vector("list", nrow(idvals))
   for(i in 1:nrow(idvals)) {
-    material_type_single = get_rgl_material(id=idvals[i,1])
+    material_type_single = rgl::material3d(id=idvals[i,1])
     material_properties[[i]]$texture_file = NA
     material_properties[[i]]$layer_texture_file = NA
     material_properties[[i]]$base_color = NA

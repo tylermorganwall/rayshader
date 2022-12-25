@@ -90,11 +90,11 @@ make_base = function(heightmap,basedepth=0,basecolor="grey20",zscale=1, soil = F
       
       rgl::triangles3d(horizontal_sides, 
                        texture = textures[1], texcoords = cbind(horizontal_texcoords_x,horizontal_texcoords_y),
-                       lit=FALSE,front="filled",back="cull",tag = "base_soil1")
+                       lit=FALSE,front="filled",back="cull",tag = "base_soil1", col = "white")
       
       rgl::triangles3d(vertical_sides, 
                        texture = textures[2],texcoords = cbind(vertical_texcoords_x,vertical_texcoords_y),
-                       lit=FALSE,front="filled",back="cull",tag = "base_soil2")
+                       lit=FALSE,front="filled",back="cull",tag = "base_soil2", col = "white")
       
     } else {
       rgl::triangles3d(fullsides, 
@@ -165,8 +165,8 @@ make_base = function(heightmap,basedepth=0,basecolor="grey20",zscale=1, soil = F
                        lit=FALSE,color=basecolor,front="filled",back="filled",tag = "base")
     }
     
-    surface3d(1:nrow(basemat)-nrow(basemat)/2,
-              basemat,1:ncol(basemat)-ncol(basemat)/2,color=basecolor,
+    surface3d(x = 1:nrow(basemat)-nrow(basemat)/2,
+              y = basemat, z = 1:ncol(basemat)-ncol(basemat)/2,color=basecolor,
                 lit=FALSE,back="filled",front="filled",tag = "basebottom",
                 normal_x = xznormals, normal_z = xznormals, normal_y = ynormals)
     
