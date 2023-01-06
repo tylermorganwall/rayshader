@@ -88,11 +88,11 @@ make_base = function(heightmap,basedepth=0,basecolor="grey20",zscale=1, soil = F
       # vertical_texcoords_y[vertical_sides[,2] == basedepth] = vertical_heights[vertical_sides[,2] == basedepth]/(max_vside_y-min_vside_y)
       vertical_texcoords_y[vertical_sides[,2] == basedepth] = 1
       
-      rgl::triangles3d(horizontal_sides, 
+      rgl::triangles3d(horizontal_sides, color="white",
                        texture = textures[1], texcoords = cbind(horizontal_texcoords_x,horizontal_texcoords_y),
                        lit=FALSE,front="filled",back="cull",tag = "base_soil1")
       
-      rgl::triangles3d(vertical_sides, 
+      rgl::triangles3d(vertical_sides,  color="white",
                        texture = textures[2],texcoords = cbind(vertical_texcoords_x,vertical_texcoords_y),
                        lit=FALSE,front="filled",back="cull",tag = "base_soil2")
       
@@ -154,20 +154,24 @@ make_base = function(heightmap,basedepth=0,basecolor="grey20",zscale=1, soil = F
       
       rgl::triangles3d(horizontal_sides, 
                        texture = textures[1], texcoords = cbind(horizontal_texcoords_x,horizontal_texcoords_y),
-                       lit=FALSE,front="filled",back="cull",tag = "base_soil1")
+                       lit=FALSE,front="filled",back="cull",tag = "base_soil1",
+                       color = "white")
       
       rgl::triangles3d(vertical_sides, 
                        texture = textures[2],texcoords = cbind(vertical_texcoords_x,vertical_texcoords_y),
-                       lit=FALSE,front="filled",back="cull",tag = "base_soil2")
+                       lit=FALSE,front="filled",back="cull",tag = "base_soil2",
+                       color = "white")
     } else {
       rgl::triangles3d(fullsides,
                        texture = NULL,
                        lit=FALSE,color=basecolor,front="filled",back="filled",tag = "base")
     }
-    
-    rgl.surface(1:nrow(basemat)-nrow(basemat)/2,1:ncol(basemat)-ncol(basemat)/2,basemat,color=basecolor,
-                lit=FALSE,back="filled",front="filled",tag = "basebottom",
-                normal_x = xznormals, normal_z = xznormals, normal_y = ynormals)
+    rgl::surface3d(x=1:nrow(basemat)-nrow(basemat)/2,
+                   z=1:ncol(basemat)-ncol(basemat)/2,
+                   y=basemat,
+                   color=basecolor, 
+                   lit=FALSE,back="filled",front="filled",tag = "basebottom",
+                   normal_x = xznormals, normal_z = xznormals, normal_y = ynormals)
     
   }
 }

@@ -49,7 +49,7 @@ rayshader coordinates, but data is often provided with Z being vertical).}
 
 \item{rgl_tag}{Default `""`. Tag to add to the rgl scene id, will be prefixed by `"obj"`}
 
-\item{...}{Additional arguments to pass to `rgl::rgl.triangles()`.}
+\item{...}{Additional arguments to pass to `rgl::triangles3d()`.}
 }
 \description{
 Adds MULTIPOLYGONZ will be plotted in the coordinate system set by the user-specified
@@ -104,6 +104,6 @@ render_snapshot()
 if(run_examples) {
 #This works with `render_highquality()`
 render_highquality(sample_method="sobol_blue", clamp_value=10)
-rgl::rgl.close()
+rgl::close3d()
 }
 }

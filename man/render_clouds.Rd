@@ -80,7 +80,7 @@ Render a 3D floating cloud layer of the map.
 Note: Underlying layers with transparency can cause rendering issues in rgl.
 }
 \examples{
-\dontrun{
+if(rayshader:::run_documentation()) {
 #Render a cloud layer over Monterey Bay
 montereybay  \%>\%
  sphere_shade()  \%>\%
@@ -89,9 +89,9 @@ montereybay  \%>\%
 #Render some clouds
 render_clouds(montereybay, zscale=50)  
 render_snapshot()
-rgl::rgl.clear()
-
-
+rgl::clear3d()
+}
+if(rayshader:::run_documentation()) {
 #Change the seed for a different set of clouds and add cloud shadows on the ground
 montereybay  \%>\%
  sphere_shade()  \%>\%
@@ -100,8 +100,10 @@ montereybay  \%>\%
 render_camera(theta=-65, phi = 25, zoom = 0.45, fov = 80)
 render_clouds(montereybay, zscale=50, seed=2, clear_clouds = T)    
 render_snapshot()
-rgl::rgl.clear()
+rgl::clear3d()
+}
 
+if(rayshader:::run_documentation()) {
 montereybay  \%>\%
  sphere_shade()  \%>\%
  plot_3d(montereybay,background="brown",zscale=50)
@@ -109,41 +111,50 @@ montereybay  \%>\%
 #Lower the frequency for larger, smoother clouds
 render_clouds(montereybay, zscale=50, frequency = 0.001, clear_clouds = T)
 render_snapshot()
-
+}
+if(rayshader:::run_documentation()) {
 #Increase the frequency for more broken clouds
 render_clouds(montereybay, zscale=50, frequency = 0.05, clear_clouds = T)
 render_snapshot()
-
+}
+if(rayshader:::run_documentation()) {
 #Increase the fractal level for fluffier, bumpier clouds
 render_clouds(montereybay, zscale=50, fractal_levels = 32, clear_clouds = T)
 render_snapshot()
-
+}
+if(rayshader:::run_documentation()) {
 #Decrease the fractal level for more smoother, continuous clouds
 render_clouds(montereybay, zscale=50, fractal_levels = 4, clear_clouds = T)
 render_snapshot()
-
+}
+if(rayshader:::run_documentation()) {
 #Increase the cloud cover
 render_clouds(montereybay, zscale=50, cloud_cover=0.8, clear_clouds = T)            
 render_snapshot()
-
+}
+if(rayshader:::run_documentation()) {
 #Decrease the cloud cover
 render_clouds(montereybay, zscale=50, cloud_cover=0.2, clear_clouds = T)            
 render_snapshot()
-
+}
+if(rayshader:::run_documentation()) {
 #Change the altitude range of the clouds
 render_clouds(montereybay,zscale=50,start_altitude=2000,end_altitude = 4000, clear_clouds = T)            
 render_snapshot()
-
+}
+if(rayshader:::run_documentation()) {
 #Increase the number of layers 
 render_clouds(montereybay, zscale=50,start_altitude=2000,end_altitude = 4000, layers = 20,
              clear_clouds = T)
 render_snapshot()
-
+}
+if(rayshader:::run_documentation()) {
 #Change the sun angle and altitude, and increase the attenuation for darker clouds
 render_clouds(montereybay,zscale=50,sun_angle=45, sun_altitude= 5, attenuation_coef = 5,
              clear_clouds = T)
 render_snapshot(clear=TRUE)
-
+}
+if(rayshader:::run_documentation()) {
 #Render the scene with a different baseshape
 montereybay  \%>\%
  sphere_shade()  \%>\%
@@ -151,6 +162,6 @@ montereybay  \%>\%
 render_clouds(montereybay,zscale=50, seed=3, baseshape="hex", clear_clouds = T)  
 render_camera(zoom=0.65)
 render_snapshot()
-rgl::rgl.close()
+rgl::close3d()
 }
 }

@@ -15,11 +15,11 @@
 #'@param remove_na Default `TRUE`. Whether to make the overlay transparent above empty spaces (represented by `NA` values) in the underlying elevation matrix.
 #'@param reorient Default `TRUE`. Whether to reorient the image array to match the 3D plot.
 #'@param horizontal_offset Default `c(0,0)`. Distance (in 3D space) to offset the floating offset in the x/y directions.
-#'@param ... Additional arguments to pass to `rgl::rgl.triangles()`.
+#'@param ... Additional arguments to pass to `rgl::triangles3d()`.
 #'@return Adds a 3D floating layer to the map. No return value.
 #'@export
 #'@examples
-#'\dontrun{
+#'if(rayshader:::run_documentation()) {
 #'#Render the road network as a floating overlay layer, along with a label annotation and a floating
 #'#point annotation
 #'if(all(length(find.package("sf", quiet = TRUE)) > 0,
@@ -49,7 +49,7 @@
 #'  render_floating_overlay(road_overlay, altitude = 10000,zscale = 50)
 #'  render_floating_overlay(point_overlay, altitude = 100,zscale = 50)
 #'  render_snapshot()
-#'  rgl::rgl.close()
+#'  rgl::close3d()
 #'}
 #'}
 render_floating_overlay = function(overlay = NULL, altitude = NULL, heightmap = NULL, zscale=1, 
@@ -121,8 +121,9 @@ render_floating_overlay = function(overlay = NULL, altitude = NULL, heightmap = 
   tri2 = matrix(c(rowmin,rowmax,rowmin,
                   depth,depth,depth,
                   colmax,colmax,colmin), nrow=3,ncol=3)
-  rgl.triangles(rbind(tri1,tri2), texcoords = matrix(c(1,1,0,0,1,0,
-                                                       0,1,1,0,0,1),nrow=6,ncol=2),
-                texture=tempmap, normals = matrix(c(0,0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0,0), nrow=6,ncol=3),
-                lit=FALSE,tag = "floating_overlay_tris",textype = "rgba", ...)
+  rgl::triangles3d(x=rbind(tri1,tri2), 
+                   texcoords = matrix(c(1,1,0,0,1,0,0,1,1,0,0,1),nrow=6,ncol=2),
+                   normals = matrix(c(0,0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0,0), nrow=6,ncol=3),
+                   texture=tempmap,  color = "white",
+                   lit=FALSE,tag = "floating_overlay_tris",textype = "rgba", ...)
 }

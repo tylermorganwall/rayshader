@@ -43,6 +43,8 @@ render_highquality(
   return_scene = FALSE,
   print_scene_info = FALSE,
   clamp_value = 10,
+  calculate_consistent_normals = FALSE,
+  load_normals = TRUE,
   animation_camera_coords = NULL,
   ...
 )
@@ -137,6 +139,11 @@ and `camera_lookat` vectors.}
 
 \item{clamp_value}{Default `10`. See documentation for `rayrender::render_scene()`.}
 
+\item{calculate_consistent_normals}{Default `FALSE`. Whether to calculate consistent vertex normals to prevent energy 
+loss at edges.}
+
+\item{load_normals}{Default `TRUE`. Whether to load the vertex normals if they exist in the OBJ file.}
+
 \item{animation_camera_coords}{Default `NULL`. Expects camera animation output from either `convert_path_to_animation_coords()`
 or `rayrender::generate_camera_motion()` functions.}
 
@@ -212,6 +219,6 @@ render_highquality(lightdirection = c(240), lightaltitude=30, lightcolor=c("#555
                   camera_location = c(50,10,10), camera_lookat = c(0,15,0),
                   scene_elements = rayrender::sphere(z=0,y=15, x=-18, radius=5,
                                    material=rayrender::light(color="red",intensity=10)))
-rgl::rgl.close()
+rgl::close3d()
 }
 }

@@ -21,6 +21,23 @@
 #'@param antialias Default `FALSE`. If `TRUE`, the line with be have anti-aliasing applied. NOTE: anti-aliasing can cause some unpredictable behavior with transparent surfaces.
 #'@param color Default `black`. Color of the line.
 #'@param offset Default `5`. Offset of the track from the surface, if `altitude = NULL`.
+#'@param reorder Default `FALSE`. If `TRUE`, this will attempt to re-order the rows within an `sf` object with
+#'multiple paths to be one continuous, end-to-end path. This happens in two steps: merging duplicate 
+#'paths that have end points that match with another object (within `reorder_duplicate_tolerance` distance), and then
+#'merges them (within `reorder_merge_tolerance` distance) to form a continuous path.
+#'@param reorder_first_index Default `1`. The index (row) of the `sf` object in which to begin the reordering
+#'process. This merges and reorders paths within `reorder_merge_tolerance` distance until it cannot 
+#'merge any more, and then repeats the process in the opposite direction.
+#'@param reorder_duplicate_tolerance Default `0.1`. Lines that have start and end points (does not matter which)
+#'within this tolerance that match a line already processed (order determined by `reorder_first_index`) will be 
+#'discarded.
+#'@param reorder_merge_tolerance Default `1`. Lines that have start points that are within this distance 
+#'to a previously processed line's end point (order determined by `reorder_first_index`) will be reordered 
+#'within the `sf` object to form a continuous, end-to-end path. 
+#'@param simplify_tolerance Default `0` (no simplification). If greater than zero, simplifies
+#'the path to the tolerance specified. This happens after the data has been merged if `reorder = TRUE`. 
+#'If the input data is specified with long-lat coordinates and `sf_use_s2()` returns `TRUE`, 
+#'then the value of simplify_tolerance must be specified in meters.
 #'@param clear_previous Default `FALSE`. If `TRUE`, it will clear all existing paths.
 #'@param return_coords Default `FALSE`. If `TRUE`, this will return the internal rayshader coordinates of the path, instead of 
 #'plotting the line. 
@@ -70,6 +87,7 @@
 #'render_camera(theta=30,phi=35,zoom=0.45,fov=70)
 #'render_snapshot()
 #'}
+#'
 #'if(rayshader:::run_documentation()) {
 #'#Remove the path:
 #'render_path(clear_previous=TRUE)
@@ -86,16 +104,22 @@
 #'render_camera(theta = 160, phi=33, zoom=0.4, fov=55)
 #'render_snapshot()
 #'}
+#'
 #'if(rayshader:::run_documentation()) {
 #'#And all of these work with `render_highquality()`
 #'render_highquality(clamp_value=10, line_radius=3)
-#'rgl::rgl.close()
+#'rgl::close3d()
 #'}
 render_path = function(lat, long = NULL, altitude = NULL, extent = NULL, 
-                       zscale=1, heightmap = NULL,
+                       zscale=1, heightmap = NULL, 
+                       reorder = FALSE, 
+                       reorder_first_index = 1,
+                       reorder_duplicate_tolerance = 0.1, 
+                       reorder_merge_tolerance = 1, 
+                       simplify_tolerance = 0,
                        linewidth = 3, color = "black", antialias = FALSE, offset = 5,
                        clear_previous = FALSE, return_coords = FALSE) {
-  if(rgl::rgl.cur() == 0 && !return_coords) {
+  if(rgl::cur3d() == 0 && !return_coords) {
     stop("No rgl window currently open.")
   }
   if(clear_previous) {
@@ -104,6 +128,23 @@ render_path = function(lat, long = NULL, altitude = NULL, extent = NULL,
       return(invisible())
     }
   }
+  
+  #Remove empty geometries
+  if(inherits(lat, "sf")) {
+    lat = lat[!sf::st_is_empty(lat),]
+  }
+  if(reorder && inherits(lat, "sf")) {
+    lat = ray_merge_reorder(lat, start_index = reorder_first_index, 
+                            merge_tolerance = reorder_merge_tolerance,
+                            duplicate_tolerance = reorder_duplicate_tolerance)
+  }
+  
+  if(simplify_tolerance > 0 && (inherits(lat, "sf") || inherits(lat, "sfc_LINESTRING"))) {
+    lat = sf::st_sf(sf::st_simplify(lat, dTolerance = simplify_tolerance, preserveTopology = TRUE))
+    lat = lat[!sf::st_is_empty(lat),]
+    lat = suppressWarnings(sf::st_cast(sf::st_cast(lat, "MULTILINESTRING"),"LINESTRING"))
+  }
+  
   if(inherits(lat,"SpatialLinesDataFrame")) {
     latlong = sf::st_coordinates(sf::st_as_sf(lat))
     long = latlong[,1]
@@ -111,6 +152,32 @@ render_path = function(lat, long = NULL, altitude = NULL, extent = NULL,
     groups = latlong[,3]
   } else if(inherits(lat,"sf")) {
     latlong = sf::st_coordinates(lat)
+    if(ncol(latlong) == 3) {
+      long = latlong[,1]
+      lat = latlong[,2]
+      groups = latlong[,3]
+    } else if (ncol(latlong) == 4) {
+      long = latlong[,1]
+      lat = latlong[,2]
+      groups = interaction(latlong[,3],latlong[,4])
+    }
+  } else if(inherits(lat,"sfc_LINESTRING")) {
+    latlong = sf::st_coordinates(lat)
+    if(ncol(latlong) == 3) {
+      long = latlong[,1]
+      lat = latlong[,2]
+      groups = latlong[,3]
+    } else if (ncol(latlong) == 4) {
+      long = latlong[,1]
+      lat = latlong[,2]
+      groups = interaction(latlong[,3],latlong[,4])
+    }
+  } else if (inherits(lat,"sfc_GEOMETRY")) {
+    geometry_list = list()
+    for(i in seq_len(lat)) {
+      geometry_list[[i]] = sf::st_coordinates(lat[i])
+    }
+    lat = do.call(rbind,geometry_list)
     if(ncol(latlong) == 3) {
       long = latlong[,1]
       lat = latlong[,2]
@@ -144,8 +211,8 @@ render_path = function(lat, long = NULL, altitude = NULL, extent = NULL,
     xyz = transform_into_heightmap_coords(extent, heightmap, lat, long, 
                                           altitude, offset, zscale, filter_bounds = FALSE)
     if(!return_coords) {
-      rgl::rgl.material(color = color, tag = "path3d", lwd = linewidth, line_antialias = antialias)
-      rgl::lines3d(xyz[,1] + 0.5,xyz[,2],xyz[,3] + 0.5)
+      rgl::lines3d(xyz[,1] + 0.5,xyz[,2],xyz[,3] + 0.5,
+                   color = color, tag = "path3d", lwd = linewidth, line_antialias = antialias)
     } else {
       coord_list[[group]] = xyz
     }

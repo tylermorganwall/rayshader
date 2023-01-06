@@ -25,5 +25,5 @@ save_multipolygonz_to_obj(washington_monument_multipolygonz, obj_temp, swap_yz=T
 rgl::open3d()
 render_obj(filename=obj_temp, xyz=matrix(c(0,0,0),ncol=3), color="red")
 render_camera(theta=30,phi=40)
-rgl::rgl.close()
+rgl::close3d()
 }

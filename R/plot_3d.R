@@ -63,6 +63,10 @@
 #'to save a smaller 3D OBJ file to disk with `save_obj()`,
 #'@param verbose Default `TRUE`, if `interactive()`. Prints information about the mesh triangulation
 #'if `triangulate = TRUE`.
+#'@param plot_new Default `TRUE`, opens new window with each `plot_3d()` call. If `FALSE`, 
+#'the data will be plotted in the same window.
+#'@param close_previous Default `TRUE`. Closes any previously open `rgl` window. If `FALSE`, 
+#'old windows will be kept open.
 #'@param ... Additional arguments to pass to the `rgl::par3d` function.
 #'
 #'@import rgl
@@ -73,7 +77,7 @@
 #'montereybay %>%
 #'  sphere_shade(texture="desert") %>%
 #'  plot_3d(montereybay,zscale=50)
-#'render_snapshot(clear = TRUE)
+#'render_snapshot()
 #'}
 #'
 #'#With a water layer  
@@ -82,7 +86,7 @@
 #'  sphere_shade(texture="imhof2") %>%
 #'  plot_3d(montereybay, zscale=50, water = TRUE, watercolor="imhof2", 
 #'          waterlinecolor="white", waterlinealpha=0.5)
-#'render_snapshot(clear = TRUE)
+#'render_snapshot()
 #'}
 #'
 #'#With a soil texture to the base  
@@ -92,7 +96,7 @@
 #'  plot_3d(montereybay, zscale=50, water = TRUE,  watercolor="imhof4", 
 #'          waterlinecolor="white", waterlinealpha=0.5, soil=TRUE)
 #'render_camera(theta=225, phi=7, zoom=0.5, fov=67)
-#'render_snapshot(clear = TRUE)
+#'render_snapshot()
 #'}
 #'
 #'#We can also change the base by setting "baseshape" to "hex" or "circle"
@@ -101,7 +105,7 @@
 #'  sphere_shade(texture="imhof1") %>%
 #'  plot_3d(montereybay, zscale=50, water = TRUE, watercolor="imhof1", theta=-45, zoom=0.7,
 #'          waterlinecolor="white", waterlinealpha=0.5,baseshape="circle")
-#'render_snapshot(clear = TRUE)
+#'render_snapshot()
 #'}
 #'
 #'if(rayshader:::run_documentation()) {
@@ -109,7 +113,7 @@
 #'  sphere_shade(texture="imhof1") %>%
 #'  plot_3d(montereybay, zscale=50, water = TRUE, watercolor="imhof1", theta=-45, zoom=0.7,
 #'          waterlinecolor="white", waterlinealpha=0.5,baseshape="hex")
-#'render_snapshot(clear = TRUE)
+#'render_snapshot()
 #'}
 #'
 #'
@@ -128,7 +132,7 @@
 #'  sphere_shade(texture="imhof1") %>%
 #'  plot_3d(mb_water, zscale=50, water = TRUE, watercolor="imhof1", theta=-45,
 #'          waterlinecolor="white", waterlinealpha=0.5)
-#'render_snapshot(clear = TRUE)
+#'render_snapshot()
 #'}
 plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
                    solid = TRUE, soliddepth="auto", solidcolor="grey20",solidlinecolor="grey30",
@@ -143,6 +147,7 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
                    theta=45, phi = 45, fov=0, zoom = 1, background="white", windowsize = 600,
                    precomputed_normals = NULL, asp = 1,
                    triangulate = FALSE, max_error = 0, max_tri = 0, verbose = FALSE,
+                   plot_new = TRUE, close_previous = TRUE,
                    ...) {
   #setting default zscale if montereybay is used and tell user about zscale
   argnameschar = unlist(lapply(as.list(sys.call()),as.character))[-1]
@@ -258,18 +263,31 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
     }
     triangulate = FALSE
   }
+  
+  if(close_previous && rgl::cur3d() != 0) {
+    rgl::close3d()
+  }
+  if(plot_new || rgl::cur3d() == 0) {
+    rgl::open3d(windowRect = windowsize, 
+                mouseMode = c("none", "polar", "fov", "zoom", "pull"))
+  }
+  rgl::view3d(zoom = zoom, phi = phi, theta = theta, fov = fov)
+  attributes(heightmap) = attributes(heightmap)["dim"]
   if(!triangulate) {
     if(!precomputed) {
-      normals = calculate_normal(heightmap,zscale=zscale)
+      normals = calculate_normal(heightmap, zscale = zscale)
     }
     dim(heightmap) = unname(dim(heightmap))
-    normalsx = (t(normals$x[c(-1,-nrow(normals$x)),c(-1,-ncol(normals$x))]))
-    normalsy = (t(normals$z[c(-1,-nrow(normals$z)),c(-1,-ncol(normals$z))]))
-    normalsz = (t(normals$y[c(-1,-nrow(normals$y)),c(-1,-ncol(normals$y))]))
-    rgl.surface(x=1:nrow(heightmap)-nrow(heightmap)/2,z=(1:ncol(heightmap)-ncol(heightmap)/2),
-                y=heightmap/zscale,
-                normal_x = normalsz, normal_y = normalsy, normal_z = -normalsx,
-                texture = tempmap, lit=FALSE,tag = "surface")
+    normalsx = (t(normals$x[c(-1, -nrow(normals$x)), c(-1,-ncol(normals$x))]))
+    normalsy = (t(normals$z[c(-1, -nrow(normals$z)), c(-1,-ncol(normals$z))]))
+    normalsz = (t(normals$y[c(-1, -nrow(normals$y)), c(-1,-ncol(normals$y))]))
+    ray_surface = generate_surface(heightmap, zscale = zscale)
+    rgl::triangles3d(x = ray_surface$verts, 
+                     indices = ray_surface$inds, 
+                     texcoords = ray_surface$texcoords, 
+                     normals = matrix(c(normalsz,normalsy,-normalsx), ncol = 3L),
+                     texture = tempmap, color="white", lit = FALSE, tag = "surface_tris",
+                     back = "culled")
   } else {
     tris = terrainmeshr::triangulate_matrix(heightmap, maxError = max_error, 
                                             maxTriangles = max_tri, start_index = 0, 
@@ -292,12 +310,11 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
     tris[,1] = tris[,1] - nrow(heightmap)/2 +1
     tris[,3] = tris[,3] - ncol(heightmap)/2
     tris[,3] = -tris[,3]
-    rgl.triangles(tris, texcoords = texcoords, #normals = normal_comp,
-                  texture=tempmap,lit=FALSE,tag = "surface_tris")
+    rgl::triangles3d(tris, texcoords = texcoords, #normals = normal_comp,
+                texture=tempmap,lit=FALSE,color="white",tag = "surface_tris")
   }
-  bg3d(color = background,texture=NULL)
-  rgl.viewpoint(zoom=zoom,phi=phi,theta=theta,fov=fov)
-  par3d(windowRect = windowsize, mouseMode = c("none", "polar", "fov", "zoom", "pull"), ...)
+  rgl::bg3d(color = background,texture=NULL)
+  # rgl::par3d(windowRect = windowsize, mouseMode = c("none", "polar", "fov", "zoom", "pull"), ...)
   if(solid && !triangulate) {
     make_base(heightmap,basedepth=soliddepth,basecolor=solidcolor,zscale=zscale, 
               soil = soil, soil_freq = soil_freq, soil_levels = soil_levels, soil_color1=soil_color_light,
@@ -306,7 +323,6 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
     make_base_triangulated(tris,basedepth=soliddepth,basecolor=solidcolor)
   }
   if(!is.null(solidlinecolor) && solid) {
-    rgl::rgl.material(color=solidlinecolor, lit=FALSE)
     make_lines(heightmap,basedepth=soliddepth,linecolor=solidlinecolor,zscale=zscale,linewidth = linewidth)
   }
   if(shadow) {
@@ -317,11 +333,9 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
   }
   if(!is.null(waterlinecolor) && water) {
     if(all(!is.na(heightmap))) {
-      rgl::rgl.material(color=waterlinecolor,lit=FALSE)
       make_lines(fliplr(heightmap),basedepth=waterdepth,linecolor=waterlinecolor,
                  zscale=zscale,linewidth = linewidth,alpha=waterlinealpha,solid=FALSE)
     }
-    rgl::rgl.material(color=waterlinecolor,lit=FALSE)
     make_waterlines(heightmap,waterdepth=waterdepth,linecolor=waterlinecolor,
                     zscale=zscale,alpha=waterlinealpha,linewidth=linewidth,antialias=lineantialias)
   }

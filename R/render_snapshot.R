@@ -79,7 +79,7 @@
 #'                title_color = "white", title_bar_color = "darkgreen",
 #'                vignette = TRUE, title_offset=c(0,20),
 #'                title_font = "Helvetica", title_position = "north")
-#'rgl::rgl.close() 
+#'rgl::close3d() 
 #'}
 render_snapshot = function(filename, clear=FALSE, 
                            title_text = NULL, title_offset = c(20,20), 
@@ -102,7 +102,7 @@ render_snapshot = function(filename, clear=FALSE,
   }
   fsaa = as.integer(fsaa)
   stopifnot(fsaa >= 1)
-  if(rgl::rgl.cur() == 0) {
+  if(rgl::cur3d() == 0) {
     stop("No rgl window currently open.")
   }
   if(!instant_capture) {
@@ -180,6 +180,6 @@ render_snapshot = function(filename, clear=FALSE,
     save_png(tempmap, filename)
   }
   if(clear) {
-    rgl::rgl.clear()
+    rgl::clear3d()
   }
 }

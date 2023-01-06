@@ -7,9 +7,10 @@
 #'@param phi Defaults to current value. Azimuth angle. Maximum `90`.
 #'@param zoom Defaults to current value. Positive value indicating camera magnification.
 #'@param fov Defaults to current value. Field of view of the camera. Maximum `180`.
+#'@param shift_vertical Default `0`. Amount to shift the viewpoint. 
 #'@export
 #'@examples
-#'\dontrun{
+#'if(rayshader:::run_documentation()) {
 #'montereybay %>%
 #'  sphere_shade() %>%
 #'  plot_3d(montereybay,zscale = 50, water = TRUE, waterlinecolor="white")
@@ -17,14 +18,14 @@
 #'}
 #'
 #'#Shift the camera over and add a title
-#'\dontrun{
+#'if(rayshader:::run_documentation()) {
 #'render_camera(theta = -45, phi = 45)
 #'render_snapshot(title_text = "Monterey Bay, CA",
 #'                title_bar_color = "grey50")
 #'}
 #'
 #'#Shift to an overhead view (and change the text/title bar color)
-#'\dontrun{
+#'if(rayshader:::run_documentation()) {
 #'render_camera(theta = 0, phi = 89.9, zoom = 0.9)
 #'render_snapshot(title_text = "Monterey Bay, CA",
 #'                title_color = "white",
@@ -32,7 +33,7 @@
 #'}
 #'
 #'#Shift to an front view and add a vignette effect
-#'\dontrun{
+#'if(rayshader:::run_documentation()) {
 #'render_camera(theta = -90, phi = 30,zoom = 0.8)
 #'render_snapshot(title_text = "Monterey Bay, CA",
 #'                title_color = "white",
@@ -41,7 +42,7 @@
 #'}
 #'
 #'#Change the field of view (fov) and make the title bar opaque.
-#'\dontrun{
+#'if(rayshader:::run_documentation()) {
 #'render_camera(theta = -90, phi = 30,zoom = 0.5,fov = 130)
 #'render_snapshot(title_text = "Monterey Bay, CA",
 #'                title_color = "black",
@@ -52,7 +53,7 @@
 #'
 #'#Here we render a series of frames to later stitch together into a movie.
 #'
-#'\dontrun{
+#'if(rayshader:::run_documentation()) {
 #'phivec = 20 + 70 * 1/(1 + exp(seq(-5, 10, length.out = 180)))
 #'phivecfull = c(phivec, rev(phivec))
 #'thetavec = 270 + 45 * sin(seq(0,359,length.out = 360) * pi/180)
@@ -73,15 +74,16 @@
 #'#Or we can use render_movie() to do this all automatically with type="custom" (uncomment to run):
 #'#render_movie(filename = tempfile(fileext = ".mp4"), type = "custom", 
 #'#             theta = thetavec, phi = phivecfull, zoom = zoomvec, fov=0)
-#'rgl::rgl.close()
+#'rgl::close3d()
 #'}
-render_camera = function(theta = NULL, phi = NULL, zoom = NULL, fov = NULL) {
+render_camera = function(theta = NULL, phi = NULL, zoom = NULL, fov = NULL,
+                         shift_vertical = 0) {
   if(is.null(theta) && is.null(phi) && is.null(zoom) && is.null(fov)) {
     allmissing = TRUE
   } else {
     allmissing = FALSE
   }
-  if(rgl::rgl.cur() == 0) {
+  if(rgl::cur3d() == 0) {
     stop("No rgl window currently open.")
   }
   if(is.null(fov)) {
@@ -103,7 +105,11 @@ render_camera = function(theta = NULL, phi = NULL, zoom = NULL, fov = NULL) {
       }
     }
   }
-  rgl::rgl.viewpoint(theta = theta, phi = phi, fov = fov, zoom = zoom)
+  rgl::view3d(theta = theta, phi = phi, fov = fov, zoom = zoom)
+  if(shift_vertical != 0) {
+    rgl::par3d(userMatrix = t(rgl::translationMatrix(0,-shift_vertical,0)) %*% 
+                 rgl::par3d("userMatrix"))
+  }
   if(allmissing) {
     return(c("theta"=theta,"phi"=phi,"zoom"=zoom,"fov"=fov))
   }

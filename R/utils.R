@@ -153,3 +153,21 @@ generate_rot_matrix = function(angle, order_rotation = c(1,2,3)) {
   }
   return(returnmat)
 }
+
+#' Generate LookAt Matrix
+#' 
+#' @return mat
+#' @keywords internal
+lookat = function(from, to, up = c(0,1,0)) { 
+  forward = unit_vector(from - to)
+  right = unit_vector(cross(up, forward))
+  newup = cross(forward, right)
+  
+  m = matrix(0,4,4)
+  m[1:3,1] = right 
+  m[1:3,2] = newup 
+  m[1:3,3] = forward 
+  m[1:3,4] = from 
+  m[4,4] = 1
+  return(m)
+} 

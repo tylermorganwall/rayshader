@@ -119,6 +119,6 @@ render_snapshot()
 if(rayshader:::run_documentation()) {
 #This function also works with `render_highquality()`
 render_highquality(samples = 256, clamp_value = 10, sample_method="sobol_blue")
-rgl::rgl.close()
+rgl::close3d()
 }
 }

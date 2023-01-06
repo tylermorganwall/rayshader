@@ -58,6 +58,9 @@
 #'@param print_scene_info Default `FALSE`. If `TRUE`, it will print the position and lookat point of the camera.
 #'@param clamp_value Default `10`. See documentation for `rayrender::render_scene()`.
 #'@param return_scene Default `FALSE`. If `TRUE`, this will return the rayrender scene (instead of rendering the image).
+#'@param load_normals Default `TRUE`. Whether to load the vertex normals if they exist in the OBJ file.
+#'@param calculate_consistent_normals Default `FALSE`. Whether to calculate consistent vertex normals to prevent energy 
+#'loss at edges.
 #'@param animation_camera_coords Default `NULL`. Expects camera animation output from either `convert_path_to_animation_coords()`
 #'or `rayrender::generate_camera_motion()` functions.
 #'@param ... Additional parameters to pass to `rayrender::render_scene`()
@@ -125,7 +128,7 @@
 #'                   camera_location = c(50,10,10), camera_lookat = c(0,15,0),
 #'                   scene_elements = rayrender::sphere(z=0,y=15, x=-18, radius=5,
 #'                                    material=rayrender::light(color="red",intensity=10)))
-#'rgl::rgl.close()
+#'rgl::close3d()
 #'}
 render_highquality = function(filename = NULL, light = TRUE, 
                               lightdirection = 315, lightaltitude = 45, lightsize=NULL,
@@ -142,8 +145,9 @@ render_highquality = function(filename = NULL, light = TRUE,
                               camera_location = NULL, camera_lookat = NULL, 
                               camera_interpolate=1, clear  = FALSE, return_scene = FALSE,
                               print_scene_info = FALSE, clamp_value = 10, 
+                              calculate_consistent_normals = FALSE, load_normals = TRUE,
                               animation_camera_coords = NULL, ...) {
-  if(rgl::rgl.cur() == 0) {
+  if(rgl::cur3d() == 0) {
     stop("No rgl window currently open.")
   }
   if(!(length(find.package("rayrender", quiet = TRUE)) > 0)) {
@@ -292,13 +296,16 @@ render_highquality = function(filename = NULL, light = TRUE,
                       x = -bbox_center[1],
                       y = -bbox_center[2],
                       z = -bbox_center[3],
-                      load_material = TRUE, calculate_consistent_normals = FALSE,
+                      load_normals = load_normals,
+                      load_material = TRUE, calculate_consistent_normals = calculate_consistent_normals,
                       material = obj_material)
   } else {
     scene = rayrender::obj_model(cache_filename, 
                       x = -bbox_center[1],
                       y = -bbox_center[2],
                       z = -bbox_center[3],
+                      load_normals = load_normals,
+                      calculate_consistent_normals = calculate_consistent_normals,
                       material = obj_material)
   }
   has_rayimage = TRUE
@@ -570,7 +577,7 @@ render_highquality = function(filename = NULL, light = TRUE,
                  clamp_value = clamp_value, ...)
   }
   if(clear) {
-    rgl::rgl.clear()
+    rgl::clear3d()
   }
   return(invisible(debug_return))
 }

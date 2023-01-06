@@ -82,7 +82,7 @@ equal the length of `lat`/`long`).}
 
 \item{clear_previous}{Default `FALSE`. If `TRUE`, it will clear all existing trees.}
 
-\item{...}{Additional arguments to pass to `rgl::rgl.triangles()`.}
+\item{...}{Additional arguments to pass to `rgl::triangles3d()`.}
 }
 \description{
 Adds 3D tree to the current scene, using latitude/longitude or coordinates in the reference
@@ -141,7 +141,7 @@ render_tree(extent = attr(montereybay,"extent"), heightmap = montereybay,
            clear_previous = TRUE, 
            lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), zscale=50) 
 render_snapshot()
-rgl::rgl.close()
+rgl::close3d()
 }
 
 #We will use the lidR package to generate a DEM and detect the canopy tops of trees, and
@@ -183,7 +183,7 @@ render_tree(lat = tree_locations[,2], long = tree_locations[,1],
            extent = raster::extent(extent_values), heightmap = dem_matrix)
            
 #Remove existing lights and add our own with rgl
-rgl::rgl.pop("lights")
+rgl::pop3d("lights")
 rgl::light3d(phi=35,theta=90, viewpoint.rel=F, diffuse="#ffffff", specular="#000000")
 rgl::light3d(phi=-45,theta=-40, viewpoint.rel=F, diffuse="#aaaaaa", specular="#000000")
 render_snapshot() 
@@ -193,6 +193,6 @@ if (run_example) {
 render_highquality(lightdirection=c(90,45),lightaltitude=c(90,45), 
                   lightcolor=c("dodgerblue","orange"), 
                   min_variance = 0, sample_method="sobol_blue", clamp_value=10)
-rgl::rgl.close()
+rgl::close3d()
 }
 }

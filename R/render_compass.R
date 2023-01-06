@@ -27,19 +27,22 @@
 #'@export
 #'@examples
 #'#Add a North arrow to the map, by default in the bottom right (SE)
-#'\dontrun{
+#'if(rayshader:::run_documentation()) {
 #'montereybay %>% 
 #'  sphere_shade() %>%
 #'  plot_3d(montereybay,theta=-45, water=TRUE)
 #'render_compass()
 #'render_snapshot()
-#'
+#'}
+#'if(rayshader:::run_documentation()) {
 #'#Remove the existing symbol with `clear_compass = TRUE`
 #'render_compass(clear_compass = TRUE)
 #'
 #'#Point the N towards the light, at 315 degrees:
 #'render_compass(angle = 315)
 #'render_snapshot()
+#'}
+#'if(rayshader:::run_documentation()) {
 #'render_compass(clear_compass = TRUE)
 #'
 #'#We can change the position by specifying a direction (here are three):
@@ -48,6 +51,8 @@
 #'render_compass(position = "E")
 #'render_compass(position = "S")
 #'render_snapshot()
+#'}
+#'if(rayshader:::run_documentation()) {
 #'render_compass(clear_compass = TRUE)
 #'
 #'#We can also change the distance away from the edge by setting the `scale_distance` argument.
@@ -58,6 +63,8 @@
 #'#Zoom in slightly:
 #'render_camera(theta=45,phi=45,zoom=0.7)
 #'render_snapshot()
+#'}
+#'if(rayshader:::run_documentation()) {
 #'render_compass(clear_compass = TRUE)
 #'
 #'#We can also specify the radius directly with `compass_radius`:
@@ -67,15 +74,20 @@
 #'render_compass(position = "S", scale_distance = 1.3, compass_radius=25)
 #'render_compass(position = "W", scale_distance = 1.2, compass_radius=10)
 #'render_snapshot()
-#'render_compass(clear_compass = TRUE)
 #'
+#'render_compass(clear_compass = TRUE)
+#'}
+#'if(rayshader:::run_documentation()) {
 #'#We can also adjust the position manually, be specifying all x, y and z arguments.
 #'render_camera(theta=-45,phi=45,zoom=0.9)
 #'render_compass(x = 150, y = 50, z = 150)
 #'render_snapshot()
-#'
+#'}
+#'if(rayshader:::run_documentation()) {
 #'# Compass support is also included in render_highquality()
 #'render_highquality(clamp_value=10)
+#'}
+#'if(rayshader:::run_documentation()) {
 #'render_compass(clear_compass = TRUE)
 #'
 #'#We can change the colors in the compass, and also set it a constant distance away with
@@ -107,10 +119,10 @@ render_compass = function(angle = 0, position = "SE", altitude = NULL, zscale = 
                         color_background = "grey60", color_bevel = "grey20",
                         position_circular = FALSE, clear_compass = FALSE) {
   if(clear_compass) {
-    rgl::rgl.pop(tag = c("north_symbol","arrow_symbol","bevel_symbol","background_symbol"))
+    rgl::pop3d(tag = c("north_symbol","arrow_symbol","bevel_symbol","background_symbol"))
     return(invisible())
   }
-  if(rgl::rgl.cur() == 0) {
+  if(rgl::cur3d() == 0) {
     stop("No rgl window currently open.")
   }
   radius = 1.3

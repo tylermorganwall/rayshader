@@ -77,7 +77,7 @@
 #' if(rayshader:::run_documentation()) {
 #' #This function also works with `render_highquality()`
 #' render_highquality(samples = 256, clamp_value = 10, sample_method="sobol_blue")
-#' rgl::rgl.close()
+#' rgl::close3d()
 #' }
 render_polygons = function(polygon, extent,  color = "red", top = 1, bottom = NA,
                            data_column_top = NULL, data_column_bottom = NULL,
@@ -85,7 +85,7 @@ render_polygons = function(polygon, extent,  color = "red", top = 1, bottom = NA
                            holes = 0, alpha = 1, lit = TRUE, 
                            light_altitude = c(45,30), light_direction = c(315,135), 
                            light_intensity = 0.3, clear_previous = FALSE) {
-  if(rgl::rgl.cur() == 0) {
+  if(rgl::cur3d() == 0) {
     stop("No rgl window currently open.")
   }
   if(clear_previous) {
@@ -174,15 +174,15 @@ render_polygons = function(polygon, extent,  color = "red", top = 1, bottom = NA
     }
   }
   if(lit) {
-    existing_lights = rgl::rgl.ids(type = "lights")
+    existing_lights = rgl::ids3d(type = "lights")
     for(i in 1:nrow(existing_lights)) {
-      rgl::rgl.pop(type="lights")
+      rgl::pop3d(type="lights")
     }
     if(length(light_altitude) < length(light_direction)) {
       stop("light_altitude and light_direction must be same length")
     }
     for(i in 1:length(light_direction)) {
-      rgl::rgl.light(theta = -light_direction[i]+180, phi = light_altitude[i], 
+      rgl::light3d(theta = -light_direction[i]+180, phi = light_altitude[i], 
                      specular = convert_color(rep(light_intensity,3), as_hex = TRUE),
                      viewpoint.rel = FALSE)
     }

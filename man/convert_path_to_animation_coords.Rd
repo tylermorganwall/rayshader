@@ -10,6 +10,11 @@ convert_path_to_animation_coords(
   altitude = NULL,
   extent = NULL,
   frames = 360,
+  reorder = FALSE,
+  reorder_first_index = 1,
+  reorder_duplicate_tolerance = 0.1,
+  reorder_merge_tolerance = 1,
+  simplify_tolerance = 0,
   zscale = 1,
   heightmap = NULL,
   offset = 5,
@@ -26,6 +31,7 @@ convert_path_to_animation_coords(
   follow_fixed_offset = c(10, 10, 10),
   damp_motion = FALSE,
   damp_magnitude = 0.1,
+  resample_path_evenly = TRUE,
   ...
 )
 }
@@ -42,6 +48,28 @@ a length-4 numeric vector specifying `c("xmin", "xmax","ymin","ymax")`, or the s
 the previously aforementioned packages) which will be automatically converted to an extent object.}
 
 \item{frames}{Default `360`. Total number of animation frames.}
+
+\item{reorder}{Default `TRUE`. If `TRUE`, this will attempt to re-order the rows within an `sf` object with
+multiple paths to be one continuous, end-to-end path. This happens in two steps: merging duplicate 
+paths that have end points that match with another object (within `reorder_duplicate_tolerance` distance), and then
+merges them (within `reorder_merge_tolerance` distance) to form a continuous path.}
+
+\item{reorder_first_index}{Default `1`. The index (row) of the `sf` object in which to begin the reordering
+process. This merges and reorders paths within `reorder_merge_tolerance` distance until it cannot 
+merge any more, and then repeats the process in the opposite direction.}
+
+\item{reorder_duplicate_tolerance}{Default `0.1`. Lines that have start and end points (does not matter which)
+within this tolerance that match a line already processed (order determined by `reorder_first_index`) will be 
+discarded.}
+
+\item{reorder_merge_tolerance}{Default `1`. Lines that have start points that are within this distance 
+to a previously processed line's end point (order determined by `reorder_first_index`) will be reordered 
+within the `sf` object to form a continuous, end-to-end path.}
+
+\item{simplify_tolerance}{Default `0` (no simplification). If greater than zero, simplifies
+the path to the tolerance specified. This happens after the data has been merged if `reorder = TRUE`. 
+If the input data is specified with long-lat coordinates and `sf_use_s2()` returns `TRUE`, 
+then the value of simplify_tolerance must be specified in meters.}
 
 \item{zscale}{Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.}
 
@@ -92,6 +120,10 @@ the camera.}
 between the current camera position and the goal position. Amount of linear interpolation set in `damp_magnitude`.}
 
 \item{damp_magnitude}{Default `0.1`. Amount of linear interpolation if `damp_motion = TRUE`.}
+
+\item{resample_path_evenly}{Default `TRUE`. This re-samples points along the path so that the camera moves 
+at a constant speed along the path. This also allows paths with large numbers of points to be used with a
+smaller number of frames, and improves computation time of the animation path in those instances.}
 
 \item{...}{Other arguments to pass to `rayrender::generate_camera_motion()`}
 }
@@ -169,6 +201,6 @@ for(i in 1:25) {
 }
 layout_matrix = matrix(1:25, ncol=5, byrow=TRUE)
 gridExtra::grid.arrange(grobs=grob_list, layout_matrix = layout_matrix)
-rgl::rgl.close()
+rgl::close3d()
 }
 }
