@@ -38,7 +38,7 @@
 #'of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
 #' All points are assumed to be evenly spaced.
 #'@param clear_previous Default `FALSE`. If `TRUE`, it will clear all existing trees.
-#'@param ... Additional arguments to pass to `rgl::rgl.triangles()`.
+#'@param ... Additional arguments to pass to `rgl::triangles3d()`.
 #'@export
 #'@examples
 #'if(rayshader:::run_documentation()) {
@@ -93,7 +93,7 @@
 #'            clear_previous = TRUE, 
 #'            lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), zscale=50) 
 #'render_snapshot()
-#'rgl::rgl.close()
+#'rgl::close3d()
 #'}
 #'
 #'#We will use the lidR package to generate a DEM and detect the canopy tops of trees, and
@@ -135,7 +135,7 @@
 #'            extent = raster::extent(extent_values), heightmap = dem_matrix)
 #'            
 #'#Remove existing lights and add our own with rgl
-#'rgl::rgl.pop("lights")
+#'rgl::pop3d("lights")
 #'rgl::light3d(phi=35,theta=90, viewpoint.rel=F, diffuse="#ffffff", specular="#000000")
 #'rgl::light3d(phi=-45,theta=-40, viewpoint.rel=F, diffuse="#aaaaaa", specular="#000000")
 #'render_snapshot() 
@@ -145,7 +145,7 @@
 #'render_highquality(lightdirection=c(90,45),lightaltitude=c(90,45), 
 #'                   lightcolor=c("dodgerblue","orange"), 
 #'                   min_variance = 0, sample_method="sobol_blue", clamp_value=10)
-#'rgl::rgl.close()
+#'rgl::close3d()
 #'}
 render_tree = function(lat = NULL, long = NULL, extent = NULL,  
                        type = "basic", canopy_color = "#22aa22", trunk_color = "#964B00",

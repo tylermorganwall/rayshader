@@ -84,12 +84,12 @@
 #'if(rayshader:::run_documentation()) {
 #'#And all of these work with `render_highquality()`
 #'render_highquality(point_radius = 3, clamp_value=10)
-#'rgl::rgl.close()
+#'rgl::close3d()
 #'}
 render_points = function(lat = NULL, long = NULL, altitude = NULL, extent = NULL, 
                          zscale = 1, heightmap = NULL, 
                          size = 3, color = "black", offset = 5, clear_previous = FALSE) {
-  if(rgl::rgl.cur() == 0) {
+  if(rgl::cur3d() == 0) {
     stop("No rgl window currently open.")
   }
   if(clear_previous) {
@@ -100,6 +100,5 @@ render_points = function(lat = NULL, long = NULL, altitude = NULL, extent = NULL
   }
   xyz = transform_into_heightmap_coords(extent, heightmap, lat, long, 
                                         altitude, offset, zscale)
-  rgl::rgl.material(color = color, tag = "points3d", size = size)
-  rgl::points3d(xyz[,1], xyz[,2], xyz[,3])
+  rgl::points3d(xyz[,1], xyz[,2], xyz[,3], color = color, tag = "points3d", size = size)
 }

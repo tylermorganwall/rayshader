@@ -23,7 +23,7 @@
 #'@param clear_previous Default `FALSE`. If `TRUE`, it will clear all existing points.
 #'@param rgl_tag Default `""`. Tag to add to the rgl scene id, will be prefixed by `"obj"`
 #'@param baseshape Default `rectangle`. Shape of the base. Options are `c("rectangle","circle","hex")`.
-#'@param ... Additional arguments to pass to `rgl::rgl.triangles()`.
+#'@param ... Additional arguments to pass to `rgl::triangles3d()`.
 #'@export
 #'@examples
 #'run_examples = length(find.package("sf", quiet = TRUE)) &&
@@ -72,7 +72,7 @@
 #'if(run_examples) {
 #'#This works with `render_highquality()`
 #'render_highquality(sample_method="sobol_blue", clamp_value=10)
-#'rgl::rgl.close()
+#'rgl::close3d()
 #'}
 render_multipolygonz = function(sfobj, extent = NULL, 
                                 zscale = 1, heightmap = NULL, 

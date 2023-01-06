@@ -4,7 +4,13 @@
 \alias{render_camera}
 \title{Render Camera}
 \usage{
-render_camera(theta = NULL, phi = NULL, zoom = NULL, fov = NULL)
+render_camera(
+  theta = NULL,
+  phi = NULL,
+  zoom = NULL,
+  fov = NULL,
+  shift_vertical = 0
+)
 }
 \arguments{
 \item{theta}{Defaults to current value. Rotation angle.}
@@ -14,13 +20,15 @@ render_camera(theta = NULL, phi = NULL, zoom = NULL, fov = NULL)
 \item{zoom}{Defaults to current value. Positive value indicating camera magnification.}
 
 \item{fov}{Defaults to current value. Field of view of the camera. Maximum `180`.}
+
+\item{shift_vertical}{Default `0`. Amount to shift the viewpoint.}
 }
 \description{
 Changes the position and properties of the camera around the scene. If no 
 values are entered, prints and returns the current values.
 }
 \examples{
-\dontrun{
+if(rayshader:::run_documentation()) {
 montereybay \%>\%
  sphere_shade() \%>\%
  plot_3d(montereybay,zscale = 50, water = TRUE, waterlinecolor="white")
@@ -28,14 +36,14 @@ render_snapshot()
 }
 
 #Shift the camera over and add a title
-\dontrun{
+if(rayshader:::run_documentation()) {
 render_camera(theta = -45, phi = 45)
 render_snapshot(title_text = "Monterey Bay, CA",
                title_bar_color = "grey50")
 }
 
 #Shift to an overhead view (and change the text/title bar color)
-\dontrun{
+if(rayshader:::run_documentation()) {
 render_camera(theta = 0, phi = 89.9, zoom = 0.9)
 render_snapshot(title_text = "Monterey Bay, CA",
                title_color = "white",
@@ -43,7 +51,7 @@ render_snapshot(title_text = "Monterey Bay, CA",
 }
 
 #Shift to an front view and add a vignette effect
-\dontrun{
+if(rayshader:::run_documentation()) {
 render_camera(theta = -90, phi = 30,zoom = 0.8)
 render_snapshot(title_text = "Monterey Bay, CA",
                title_color = "white",
@@ -52,7 +60,7 @@ render_snapshot(title_text = "Monterey Bay, CA",
 }
 
 #Change the field of view (fov) and make the title bar opaque.
-\dontrun{
+if(rayshader:::run_documentation()) {
 render_camera(theta = -90, phi = 30,zoom = 0.5,fov = 130)
 render_snapshot(title_text = "Monterey Bay, CA",
                title_color = "black",
@@ -63,7 +71,7 @@ render_snapshot(title_text = "Monterey Bay, CA",
 
 #Here we render a series of frames to later stitch together into a movie.
 
-\dontrun{
+if(rayshader:::run_documentation()) {
 phivec = 20 + 70 * 1/(1 + exp(seq(-5, 10, length.out = 180)))
 phivecfull = c(phivec, rev(phivec))
 thetavec = 270 + 45 * sin(seq(0,359,length.out = 360) * pi/180)
@@ -84,6 +92,6 @@ for(i in 1:360) {
 #Or we can use render_movie() to do this all automatically with type="custom" (uncomment to run):
 #render_movie(filename = tempfile(fileext = ".mp4"), type = "custom", 
 #             theta = thetavec, phi = phivecfull, zoom = zoomvec, fov=0)
-rgl::rgl.close()
+rgl::close3d()
 }
 }

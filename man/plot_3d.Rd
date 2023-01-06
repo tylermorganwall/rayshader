@@ -45,6 +45,8 @@ plot_3d(
   max_error = 0,
   max_tri = 0,
   verbose = FALSE,
+  plot_new = TRUE,
+  close_previous = TRUE,
   ...
 )
 }
@@ -150,6 +152,12 @@ to save a smaller 3D OBJ file to disk with `save_obj()`,}
 \item{verbose}{Default `TRUE`, if `interactive()`. Prints information about the mesh triangulation
 if `triangulate = TRUE`.}
 
+\item{plot_new}{Default `TRUE`, opens new window with each `plot_3d()` call. If `FALSE`, 
+the data will be plotted in the same window.}
+
+\item{close_previous}{Default `TRUE`. Closes any previously open `rgl` window. If `FALSE`, 
+old windows will be kept open.}
+
 \item{...}{Additional arguments to pass to the `rgl::par3d` function.}
 }
 \description{
@@ -161,7 +169,7 @@ if(rayshader:::run_documentation()) {
 montereybay \%>\%
  sphere_shade(texture="desert") \%>\%
  plot_3d(montereybay,zscale=50)
-render_snapshot(clear = TRUE)
+render_snapshot()
 }
 
 #With a water layer  
@@ -170,7 +178,7 @@ montereybay \%>\%
  sphere_shade(texture="imhof2") \%>\%
  plot_3d(montereybay, zscale=50, water = TRUE, watercolor="imhof2", 
          waterlinecolor="white", waterlinealpha=0.5)
-render_snapshot(clear = TRUE)
+render_snapshot()
 }
 
 #With a soil texture to the base  
@@ -180,7 +188,7 @@ montereybay \%>\%
  plot_3d(montereybay, zscale=50, water = TRUE,  watercolor="imhof4", 
          waterlinecolor="white", waterlinealpha=0.5, soil=TRUE)
 render_camera(theta=225, phi=7, zoom=0.5, fov=67)
-render_snapshot(clear = TRUE)
+render_snapshot()
 }
 
 #We can also change the base by setting "baseshape" to "hex" or "circle"
@@ -189,7 +197,7 @@ montereybay \%>\%
  sphere_shade(texture="imhof1") \%>\%
  plot_3d(montereybay, zscale=50, water = TRUE, watercolor="imhof1", theta=-45, zoom=0.7,
          waterlinecolor="white", waterlinealpha=0.5,baseshape="circle")
-render_snapshot(clear = TRUE)
+render_snapshot()
 }
 
 if(rayshader:::run_documentation()) {
@@ -197,7 +205,7 @@ montereybay \%>\%
  sphere_shade(texture="imhof1") \%>\%
  plot_3d(montereybay, zscale=50, water = TRUE, watercolor="imhof1", theta=-45, zoom=0.7,
          waterlinecolor="white", waterlinealpha=0.5,baseshape="hex")
-render_snapshot(clear = TRUE)
+render_snapshot()
 }
 
 
@@ -216,6 +224,6 @@ montereybay \%>\%
  sphere_shade(texture="imhof1") \%>\%
  plot_3d(mb_water, zscale=50, water = TRUE, watercolor="imhof1", theta=-45,
          waterlinecolor="white", waterlinealpha=0.5)
-render_snapshot(clear = TRUE)
+render_snapshot()
 }
 }

@@ -75,7 +75,7 @@
 #'#Un-comment the following to run
 #'#render_movie(filename = filename_movie, type = "custom", 
 #'#             frames = 360,  phi = phivecfull, zoom = zoomvecfull, theta = thetavec)
-#'rgl::rgl.close()
+#'rgl::close3d()
 #'}
 #'}
 render_movie = function(filename, type = "orbit", frames = 360, fps = 30, 
@@ -87,7 +87,7 @@ render_movie = function(filename, type = "orbit", frames = 360, fps = 30,
                         vignette = FALSE, vignette_color = "black", vignette_radius = 1.3,
                         title_position = "northwest",
                         audio=NULL, progbar = interactive(), ...) {
-  if(rgl::rgl.cur() == 0) {
+  if(rgl::cur3d() == 0) {
     stop("No rgl window currently open.")
   }
   if(is.null(filename)) {

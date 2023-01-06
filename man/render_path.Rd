@@ -11,6 +11,11 @@ render_path(
   extent = NULL,
   zscale = 1,
   heightmap = NULL,
+  reorder = FALSE,
+  reorder_first_index = 1,
+  reorder_duplicate_tolerance = 0.1,
+  reorder_merge_tolerance = 1,
+  simplify_tolerance = 0,
   linewidth = 3,
   color = "black",
   antialias = FALSE,
@@ -38,6 +43,28 @@ the previously aforementioned packages) which will be automatically converted to
 
 \item{heightmap}{Default `NULL`. Pass this if not including an `altitude` argument, or if no extent passed. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
 All points are assumed to be evenly spaced.}
+
+\item{reorder}{Default `FALSE`. If `TRUE`, this will attempt to re-order the rows within an `sf` object with
+multiple paths to be one continuous, end-to-end path. This happens in two steps: merging duplicate 
+paths that have end points that match with another object (within `reorder_duplicate_tolerance` distance), and then
+merges them (within `reorder_merge_tolerance` distance) to form a continuous path.}
+
+\item{reorder_first_index}{Default `1`. The index (row) of the `sf` object in which to begin the reordering
+process. This merges and reorders paths within `reorder_merge_tolerance` distance until it cannot 
+merge any more, and then repeats the process in the opposite direction.}
+
+\item{reorder_duplicate_tolerance}{Default `0.1`. Lines that have start and end points (does not matter which)
+within this tolerance that match a line already processed (order determined by `reorder_first_index`) will be 
+discarded.}
+
+\item{reorder_merge_tolerance}{Default `1`. Lines that have start points that are within this distance 
+to a previously processed line's end point (order determined by `reorder_first_index`) will be reordered 
+within the `sf` object to form a continuous, end-to-end path.}
+
+\item{simplify_tolerance}{Default `0` (no simplification). If greater than zero, simplifies
+the path to the tolerance specified. This happens after the data has been merged if `reorder = TRUE`. 
+If the input data is specified with long-lat coordinates and `sf_use_s2()` returns `TRUE`, 
+then the value of simplify_tolerance must be specified in meters.}
 
 \item{linewidth}{Default `3`. The line width.}
 
@@ -102,6 +129,7 @@ render_path(extent = attr(montereybay,"extent"),
 render_camera(theta=30,phi=35,zoom=0.45,fov=70)
 render_snapshot()
 }
+
 if(rayshader:::run_documentation()) {
 #Remove the path:
 render_path(clear_previous=TRUE)
@@ -118,9 +146,10 @@ render_path(extent = attr(montereybay,"extent"), heightmap = montereybay,
 render_camera(theta = 160, phi=33, zoom=0.4, fov=55)
 render_snapshot()
 }
+
 if(rayshader:::run_documentation()) {
 #And all of these work with `render_highquality()`
 render_highquality(clamp_value=10, line_radius=3)
-rgl::rgl.close()
+rgl::close3d()
 }
 }

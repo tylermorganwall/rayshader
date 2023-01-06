@@ -153,6 +153,6 @@ save_3dprint = function(filename,maxwidth=125,unit="mm",rotate=TRUE,remove_extra
     message(sprintf("Dimensions of model are: %1.2f in x %1.2f in x %1.2f in",dim1width*0.0393*multiplier,dim2width*0.0393*multiplier,dim3width*0.0393*multiplier))
   }
   if(clear) {
-    rgl::rgl.clear()
+    rgl::clear3d()
   }
 }

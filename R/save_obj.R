@@ -25,7 +25,7 @@
 #'#Save model of volcano without texture
 #'if(rayshader:::run_documentation()) {
 #'save_obj(filename_obj, save_texture = FALSE)
-#'rgl::rgl.close()
+#'rgl::close3d()
 #'}
 #'
 #'#Make water have realistic index of refraction
@@ -35,13 +35,13 @@
 #'  plot_3d(montereybay, zscale = 50)
 #'  
 #'save_obj(filename_obj, water_index_refraction = 1.5)
-#'rgl::rgl.close()
+#'rgl::close3d()
 #'}
 #'}
 save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1, 
                     manifold_geometry = FALSE, all_face_fields = FALSE,
                     save_shadow = FALSE) {
-  if(rgl::rgl.cur() == 0) {
+  if(rgl::cur3d() == 0) {
     stop("No rgl window currently open.")
   }
   if(is.null(filename)) {
@@ -361,14 +361,16 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
       } else {
         hasnormals = FALSE
       }
-      indices = vertex_info$startindextex[row]:vertex_info$endindex[row]
+      
+      indices = matrix(rgl::rgl.attrib(vertex_info$id[row], "indices"),
+                       ncol = 3L)
       if(hasnormals) {
         indices = sprintf("%d/%d/%d", indices, indices, indices)
       } else {
         indices = sprintf("%d/%d/", indices, indices)
       }
       indices = matrix(indices, ncol=3, byrow=TRUE)
-      cat(paste("f", indices[,1], indices[,2], indices[,3]), 
+      cat(paste("f", indices[,1], indices[,2], indices[,3]),
           sep="\n", file=con)
     } else if (vertex_info$tag[row] == "basebottom") {
       if(save_texture) {

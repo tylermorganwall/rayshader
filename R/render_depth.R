@@ -113,7 +113,7 @@
 #'render_camera(theta=0,zoom=0.7,phi=30)
 #'render_depth(focallength = 250, title_text = "Monterey Bay, CA", 
 #'             title_size = 20, title_color = "white", title_bar_color = "black", vignette = TRUE)
-#'rgl::rgl.close()
+#'rgl::close3d()
 #'}
 render_depth = function(focus = NULL, focallength = 100, fstop = 4, filename=NULL,
                      preview_focus = FALSE, bokehshape = "circle", bokehintensity = 1, bokehlimit=0.8, 
@@ -133,7 +133,7 @@ render_depth = function(focus = NULL, focallength = 100, fstop = 4, filename=NUL
                      cache_filename  = NULL,  
                      print_scene_info = FALSE,
                      instant_capture = interactive(), clear = FALSE, bring_to_front = FALSE, ...) {
-  if(rgl::rgl.cur() == 0) {
+  if(rgl::cur3d() == 0) {
     stop("No rgl window currently open.")
   }
   if(!instant_capture) {
@@ -321,7 +321,7 @@ render_depth = function(focus = NULL, focallength = 100, fstop = 4, filename=NUL
       save_png(tempmap,filename)
     }
     if(clear) {
-      rgl::rgl.clear()
+      rgl::clear3d()
     }
   }
 }

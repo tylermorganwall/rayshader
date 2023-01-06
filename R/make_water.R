@@ -42,10 +42,16 @@ make_water = function(heightmap,waterheight=mean(heightmap),watercolor="lightblu
         rgl::triangles3d(fullsides,lit=FALSE,color=watercolor,alpha=wateralpha,front="fill",
                          texture=NULL,tag = "water")
       }
+      
       basemat = matrix(waterheight,nrow(heightmap),ncol(heightmap))
       basemat[is.na(heightmap)] = NA
-      rgl.surface(1:nrow(basemat)-nrow(basemat)/2,1:ncol(basemat)-ncol(basemat)/2,basemat,color=watercolor,alpha=wateralpha,
-                  lit=FALSE,texture=NULL,tag = "water")
+      ray_surface = generate_surface(basemat, zscale = zscale)
+      
+      rgl::triangles3d(x = ray_surface$verts, 
+                       indices = ray_surface$inds, 
+                       texcoords = ray_surface$texcoords, 
+                       color=watercolor,alpha=wateralpha,
+                       lit=FALSE,texture=NULL,tag = "water")
     }
   }
 }

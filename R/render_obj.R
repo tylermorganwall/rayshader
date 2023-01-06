@@ -40,7 +40,7 @@
 #'@param offset Default `5`. Offset of the track from the surface, if `altitude = NULL`.
 #'@param clear_previous Default `FALSE`. If `TRUE`, it will clear all existing points.
 #'@param rgl_tag Default `""`. Tag to add to the rgl scene id, will be prefixed by `"obj"`
-#'@param ... Additional arguments to pass to `rgl::rgl.triangles()`.
+#'@param ... Additional arguments to pass to `rgl::triangles3d()`.
 #'@export
 #'@examples
 #'if(rayshader:::run_documentation()) {
@@ -87,7 +87,7 @@
 #'
 #'#And all of these work with `render_highquality()`
 #'render_highquality(sample_method="sobol_blue",clamp_value=10)
-#'rgl::rgl.close()
+#'rgl::close3d()
 #'}
 render_obj = function(filename, extent = NULL, lat = NULL, long = NULL, altitude=NULL, 
                       xyz = NULL,
@@ -97,7 +97,7 @@ render_obj = function(filename, extent = NULL, lat = NULL, long = NULL, altitude
                       baseshape = "rectangle",
                       rgl_tag = "",
                       ...) {
-  if(rgl::rgl.cur() == 0) {
+  if(rgl::cur3d() == 0) {
     stop("No rgl window currently open.")
   }
   if(is.null(lat) || is.null(long)) {
@@ -299,7 +299,7 @@ render_obj = function(filename, extent = NULL, lat = NULL, long = NULL, altitude
     mat_has_norm = all(new_norm != 0) && load_normals
     if(has_texture) {
       if(mat_has_norm) {
-        id = rgl::rgl.triangles(x=obj$vertices,
+        id = rgl::triangles3d(x=obj$vertices,
                            texcoords = new_tex,
                            indices = ind_temp,
                            textype = "rgba",
@@ -312,7 +312,7 @@ render_obj = function(filename, extent = NULL, lat = NULL, long = NULL, altitude
                            ...)
         
       } else {
-        id = rgl::rgl.triangles(x=obj$vertices,
+        id = rgl::triangles3d(x=obj$vertices,
                            texcoords = new_tex,
                            textype = "rgba",
                            specular="black",
@@ -325,7 +325,7 @@ render_obj = function(filename, extent = NULL, lat = NULL, long = NULL, altitude
       }
     } else {
       if(mat_has_norm) {
-        id = rgl::rgl.triangles(x=obj$vertices,
+        id = rgl::triangles3d(x=obj$vertices,
                            indices = ind_temp,
                            specular=specular_col,
                            color =  diffuse_col,
@@ -335,7 +335,7 @@ render_obj = function(filename, extent = NULL, lat = NULL, long = NULL, altitude
                            back = "culled",
                            ...)
       } else {
-        id = rgl::rgl.triangles(x=obj$vertices,
+        id = rgl::triangles3d(x=obj$vertices,
                            specular= specular_col,
                            color = diffuse_col,
                            ambient = ambient_col,
