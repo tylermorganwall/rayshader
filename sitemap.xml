@@ -130,6 +130,9 @@
     <loc>https://www.rayshader.com/reference/generate_soil_textures.html</loc>
   </url>
   <url>
+    <loc>https://www.rayshader.com/reference/generate_surface.html</loc>
+  </url>
+  <url>
     <loc>https://www.rayshader.com/reference/generate_waterline_overlay.html</loc>
   </url>
   <url>
@@ -137,6 +140,9 @@
   </url>
   <url>
     <loc>https://www.rayshader.com/reference/get_ids_with_labels.html</loc>
+  </url>
+  <url>
+    <loc>https://www.rayshader.com/reference/get_interpolated_points_path.html</loc>
   </url>
   <url>
     <loc>https://www.rayshader.com/reference/get_scene_depth.html</loc>
@@ -155,6 +161,9 @@
   </url>
   <url>
     <loc>https://www.rayshader.com/reference/local_to_world.html</loc>
+  </url>
+  <url>
+    <loc>https://www.rayshader.com/reference/lookat.html</loc>
   </url>
   <url>
     <loc>https://www.rayshader.com/reference/make_base.html</loc>
@@ -197,6 +206,9 @@
   </url>
   <url>
     <loc>https://www.rayshader.com/reference/raster_to_matrix.html</loc>
+  </url>
+  <url>
+    <loc>https://www.rayshader.com/reference/ray_merge_reorder.html</loc>
   </url>
   <url>
     <loc>https://www.rayshader.com/reference/ray_shade.html</loc>

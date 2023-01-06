@@ -21,7 +21,7 @@ and then subtracts out the rgl y-offset, which can be obtained by calling the in
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.32.7</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.33.0</span>
       </span>
     </div>
 
@@ -113,6 +113,11 @@ and then subtracts out the rgl y-offset, which can be obtained by calling the in
 <span>  altitude <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  extent <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  frames <span class="op">=</span> <span class="fl">360</span>,</span>
+<span>  reorder <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  reorder_first_index <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  reorder_duplicate_tolerance <span class="op">=</span> <span class="fl">0.1</span>,</span>
+<span>  reorder_merge_tolerance <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  simplify_tolerance <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  zscale <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  heightmap <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  offset <span class="op">=</span> <span class="fl">5</span>,</span>
@@ -129,6 +134,7 @@ and then subtracts out the rgl y-offset, which can be obtained by calling the in
 <span>  follow_fixed_offset <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">10</span>, <span class="fl">10</span>, <span class="fl">10</span><span class="op">)</span>,</span>
 <span>  damp_motion <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  damp_magnitude <span class="op">=</span> <span class="fl">0.1</span>,</span>
+<span>  resample_path_evenly <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -156,6 +162,38 @@ the previously aforementioned packages) which will be automatically converted to
 
 <dt>frames</dt>
 <dd><p>Default `360`. Total number of animation frames.</p></dd>
+
+
+<dt>reorder</dt>
+<dd><p>Default `TRUE`. If `TRUE`, this will attempt to re-order the rows within an `sf` object with
+multiple paths to be one continuous, end-to-end path. This happens in two steps: merging duplicate 
+paths that have end points that match with another object (within `reorder_duplicate_tolerance` distance), and then
+merges them (within `reorder_merge_tolerance` distance) to form a continuous path.</p></dd>
+
+
+<dt>reorder_first_index</dt>
+<dd><p>Default `1`. The index (row) of the `sf` object in which to begin the reordering
+process. This merges and reorders paths within `reorder_merge_tolerance` distance until it cannot 
+merge any more, and then repeats the process in the opposite direction.</p></dd>
+
+
+<dt>reorder_duplicate_tolerance</dt>
+<dd><p>Default `0.1`. Lines that have start and end points (does not matter which)
+within this tolerance that match a line already processed (order determined by `reorder_first_index`) will be 
+discarded.</p></dd>
+
+
+<dt>reorder_merge_tolerance</dt>
+<dd><p>Default `1`. Lines that have start points that are within this distance 
+to a previously processed line's end point (order determined by `reorder_first_index`) will be reordered 
+within the `sf` object to form a continuous, end-to-end path.</p></dd>
+
+
+<dt>simplify_tolerance</dt>
+<dd><p>Default `0` (no simplification). If greater than zero, simplifies
+the path to the tolerance specified. This happens after the data has been merged if `reorder = TRUE`. 
+If the input data is specified with long-lat coordinates and `sf_use_s2()` returns `TRUE`, 
+then the value of simplify_tolerance must be specified in meters.</p></dd>
 
 
 <dt>zscale</dt>
@@ -240,6 +278,12 @@ between the current camera position and the goal position. Amount of linear inte
 <dd><p>Default `0.1`. Amount of linear interpolation if `damp_motion = TRUE`.</p></dd>
 
 
+<dt>resample_path_evenly</dt>
+<dd><p>Default `TRUE`. This re-samples points along the path so that the camera moves 
+at a constant speed along the path. This also allows paths with large numbers of points to be used with a
+smaller number of frames, and improves computation time of the animation path in those instances.</p></dd>
+
+
 <dt>...</dt>
 <dd><p>Other arguments to pass to `rayrender::generate_camera_motion()`</p></dd>
 
@@ -314,7 +358,7 @@ between the current camera position and the goal position. Amount of linear inte
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-in"><span><span class="va">layout_matrix</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">25</span>, ncol<span class="op">=</span><span class="fl">5</span>, byrow<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">gridExtra</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/gridExtra/man/arrangeGrob.html" class="external-link">grid.arrange</a></span><span class="op">(</span>grobs<span class="op">=</span><span class="va">grob_list</span>, layout_matrix <span class="op">=</span> <span class="va">layout_matrix</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu">rgl</span><span class="fu">::</span><span class="fu"><a href="https://dmurdoch.github.io/rgl/dev/reference/rgl.open.html" class="external-link">rgl.close</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">rgl</span><span class="fu">::</span><span class="fu"><a href="https://dmurdoch.github.io/rgl/dev/reference/open3d.html" class="external-link">close3d</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-plt img"><img src="convert_path_to_animation_coords-3.png" alt="" width="768" height="768"></span>
 </code></pre></div>
