@@ -169,8 +169,7 @@ render_polygons = function(polygon, extent,  color = "red", top = 1, bottom = NA
       single_poly$vb[3,] = ncol_map/2 - (single_poly$vb[3,]-e["ymin"])/(e["ymax"] - e["ymin"]) * ncol_map 
       single_poly$vb[2,] = single_poly$vb[2,]
       
-      rgl::rgl.material(color = color, tag = "polygon3d", lit = lit, alpha = alpha)
-      rgl::shade3d(single_poly)
+      rgl::shade3d(single_poly, color = color, tag = "polygon3d", lit = lit, alpha = alpha)
     }
   }
   if(lit) {
