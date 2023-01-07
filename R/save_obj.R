@@ -363,7 +363,7 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
       }
       
       indices = matrix(rgl::rgl.attrib(vertex_info$id[row], "indices"),
-                       ncol = 3L)
+                       ncol = 3L) + vertex_info$startindex[row] - 1
       if(hasnormals) {
         indices = sprintf("%d/%d/%d", indices, indices, indices)
       } else {
@@ -447,38 +447,17 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
         cat("g Water", file=con, sep ="\n")
         cat("usemtl ray_water", file=con, sep ="\n")
       }
-      if(vertex_info$type[row] == "surface") {
-        dims = rgl::rgl.attrib(vertex_info$id[row], "dim")
-        vertices_y = rgl::rgl.attrib(vertex_info$id[row], "vertices")[,2]
-        
-        nx = dims[1]
-        nz = dims[2] 
-        indices = rep(0, 6 * (nz - 1) * (nx - 1))
-        counter = 0
-        na_counter = 0
-        for(i in seq_len(nz)[-nz]) {
-          for(j in seq_len(nx)[-nx]) {
-            if(!is.na(vertices_y[(i-1)*nx + j]) && !is.na(vertices_y[(i+1-1)*nx + j]) && 
-               !is.na(vertices_y[(i-1)*nx + j+1]) && !is.na(vertices_y[(i+1-1)*nx + j+1]))  {
-              cindices = (i-1)*nx + c(j, j + nx, j + 1, j + nx, j + nx + 1, j + 1)
-              indices[(1:6 + 6*counter)] = cindices
-              counter = counter + 1
-            } else {
-              na_counter = na_counter + 2
-            }
-          }
-        }
-        indices = indices + vertex_info$startindex[row] - 1
-        indices = matrix(indices, ncol=3, byrow=TRUE)
-        indices = indices[1:(nrow(indices)-na_counter),]
-        
-        cat(paste("f", sprintf("%d %d %d", indices[,1], indices[,2], indices[,3])), 
-            sep="\n", file=con)
+      if(!is.na(vertex_info$startindexnormals[row]) && !is.na(vertex_info$endindexnormals[row])) {
+        hasnormals = vertex_info$startindexnormals[row] < vertex_info$endindexnormals[row]
       } else {
-        baseindices = matrix(vertex_info$startindex[row]:vertex_info$endindex[row], ncol=3, byrow=TRUE)
-        cat(paste("f", sprintf("%d %d %d", baseindices[,1], baseindices[,2], baseindices[,3])), 
-            sep="\n", file=con)
+        hasnormals = FALSE
       }
+      
+      indices = matrix(rgl::rgl.attrib(vertex_info$id[row], "indices"),
+                       ncol = 3L, byrow = TRUE) + vertex_info$startindex[row] - 1
+      
+      cat(paste("f", sprintf("%d %d %d", indices[,1], indices[,2], indices[,3])),
+            sep="\n", file=con)
     } else if (vertex_info$tag[row] == "north_symbol") {
       if(save_texture) {
         cat("g North", file=con, sep ="\n")

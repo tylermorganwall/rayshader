@@ -290,8 +290,9 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
                      back = "culled")
   } else {
     tris = terrainmeshr::triangulate_matrix(heightmap, maxError = max_error, 
-                                            maxTriangles = max_tri, start_index = 0, 
+                                            maxTriangles = max_tri, start_index = 0L, 
                                             verbose = verbose)
+    index_vals = seq_len(nrow(tris))
     # if(!precomputed) {
     #   normals = calculate_normal(heightmap,zscale=zscale)
     # }
@@ -310,8 +311,10 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
     tris[,1] = tris[,1] - nrow(heightmap)/2 +1
     tris[,3] = tris[,3] - ncol(heightmap)/2
     tris[,3] = -tris[,3]
-    rgl::triangles3d(tris, texcoords = texcoords, #normals = normal_comp,
-                texture=tempmap,lit=FALSE,color="white",tag = "surface_tris")
+    rgl::triangles3d(tris, texcoords = texcoords, 
+                     indices = index_vals,
+                     #normals = normal_comp,
+                     texture=tempmap,lit=FALSE,color="white",tag = "surface_tris")
   }
   rgl::bg3d(color = background,texture=NULL)
   # rgl::par3d(windowRect = windowsize, mouseMode = c("none", "polar", "fov", "zoom", "pull"), ...)

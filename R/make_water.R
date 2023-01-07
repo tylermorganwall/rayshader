@@ -26,20 +26,29 @@ make_water = function(heightmap,waterheight=mean(heightmap),watercolor="lightblu
       fullsides = fullsides[nrow(fullsides):1,]
     } 
     if(all(!na_matrix)) {
-      triangles3d(matrix(c(-nrow(heightmap)/2+1, nrow(heightmap)/2, -nrow(heightmap)/2+1,
-                           waterheight,waterheight,waterheight,
-                           ncol(heightmap)/2,-ncol(heightmap)/2+1,-ncol(heightmap)/2+1),3,3), lit=FALSE,
-                  color=watercolor,alpha=wateralpha,front="filled",back="culled",texture=NULL,tag = "water")
-      triangles3d(matrix(c(-nrow(heightmap)/2+1, nrow(heightmap)/2, nrow(heightmap)/2,
-                           waterheight,waterheight,waterheight,
-                           ncol(heightmap)/2,ncol(heightmap)/2,-ncol(heightmap)/2+1),3,3), lit=FALSE,
-                  color=watercolor,alpha=wateralpha,front="filled",back="culled",texture=NULL,tag = "water")
+      vertices = rbind(matrix(c(-nrow(heightmap)/2+1, nrow(heightmap)/2, -nrow(heightmap)/2+1,
+                                waterheight,waterheight,waterheight,
+                                ncol(heightmap)/2,-ncol(heightmap)/2+1,-ncol(heightmap)/2+1), 
+                              nrow = 3L, ncol = 3L),
+                       matrix(c(-nrow(heightmap)/2+1, nrow(heightmap)/2, nrow(heightmap)/2,
+                                waterheight,waterheight,waterheight,
+                                ncol(heightmap)/2,ncol(heightmap)/2,-ncol(heightmap)/2+1), 
+                              nrow = 3L, ncol = 3L))
+      indices = 1L:6L
+      rgl::triangles3d(x = vertices,
+                       indices = indices,
+                       color=watercolor,alpha=wateralpha, lit = FALSE,
+                       front="filled",back="culled",texture=NULL,tag = "water")
       if(length(heightlist) > 0) {
-        rgl::triangles3d(fullsides,lit=FALSE,color=watercolor,alpha=wateralpha,front="fill",depth_test="less",texture=NULL,tag = "water")
+        indices = 1L:nrow(fullsides)
+        rgl::triangles3d(fullsides, indices = indices,
+                         lit=FALSE,color=watercolor,alpha=wateralpha,front="fill",depth_test="less",texture=NULL,tag = "water")
       }
     } else {
       if(length(heightlist) > 0) {
-        rgl::triangles3d(fullsides,lit=FALSE,color=watercolor,alpha=wateralpha,front="fill",
+        indices = 1L:nrow(fullsides)
+        rgl::triangles3d(fullsides,indices = indices,
+                         lit=FALSE,color=watercolor,alpha=wateralpha,front="fill",
                          texture=NULL,tag = "water")
       }
       
