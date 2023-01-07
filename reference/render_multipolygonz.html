@@ -19,7 +19,7 @@ You can also use `save_multipolygonz_to_obj()` manually to convert sf objects"><
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.33.2</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.33.3</span>
       </span>
     </div>
 
@@ -231,7 +231,7 @@ rayshader coordinates, but data is often provided with Z being vertical).</p></d
 <span class="r-plt img"><img src="render_multipolygonz-2.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="va">run_examples</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#This works with `render_highquality()`</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="render_highquality.html">render_highquality</a></span><span class="op">(</span>sample_method<span class="op">=</span><span class="st">"sobol_blue"</span>, clamp_value<span class="op">=</span><span class="fl">10</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="render_highquality.html">render_highquality</a></span><span class="op">(</span>sample_method<span class="op">=</span><span class="st">"sobol_blue"</span>, clamp_value<span class="op">=</span><span class="fl">10</span>, min_variance <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">rgl</span><span class="fu">::</span><span class="fu"><a href="https://dmurdoch.github.io/rgl/dev/reference/open3d.html" class="external-link">close3d</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-plt img"><img src="render_multipolygonz-3.png" alt="" width="768" height="768"></span>

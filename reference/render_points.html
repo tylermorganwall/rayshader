@@ -19,7 +19,7 @@ above the heightmap. If the points goes off the edge, the nearest height on the 
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.33.2</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.33.3</span>
       </span>
     </div>
 
@@ -128,7 +128,8 @@ above the heightmap. If the points goes off the edge, the nearest height on the 
 
 
 <dt>altitude</dt>
-<dd><p>Elevation of each point, in units of the elevation matrix (scaled by zscale).</p></dd>
+<dd><p>Default `NULL`. Elevation of each point, in units of the elevation matrix (scaled by zscale). If a single value, 
+all data will be rendered at that altitude.</p></dd>
 
 
 <dt>extent</dt>
@@ -208,12 +209,11 @@ All points are assumed to be evenly spaced.</p></dd>
 <span class="r-in"><span><span class="co">#We'll set the altitude to zero to give the tracks a "shadow" over the water. </span></span></span>
 <span class="r-in"><span><span class="fu">render_points</span><span class="op">(</span>extent <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>,<span class="st">"extent"</span><span class="op">)</span>, </span></span>
 <span class="r-in"><span>             lat <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unlist.html" class="external-link">unlist</a></span><span class="op">(</span><span class="va">bird_track_lat</span><span class="op">)</span>, long <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unlist.html" class="external-link">unlist</a></span><span class="op">(</span><span class="va">bird_track_long</span><span class="op">)</span>, </span></span>
-<span class="r-in"><span>             altitude <span class="op">=</span> <span class="fl">0</span>, zscale<span class="op">=</span><span class="fl">50</span>, color<span class="op">=</span><span class="st">"black"</span><span class="op">)</span></span></span>
+<span class="r-in"><span>             offset <span class="op">=</span> <span class="fl">0</span>, zscale<span class="op">=</span><span class="fl">50</span>, color<span class="op">=</span><span class="st">"black"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_camera.html">render_camera</a></span><span class="op">(</span>theta<span class="op">=</span><span class="fl">30</span>,phi<span class="op">=</span><span class="fl">35</span>,zoom<span class="op">=</span><span class="fl">0.45</span>,fov<span class="op">=</span><span class="fl">70</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>data length [601] is not a sub-multiple or multiple of the number of columns [3]</span>
-<span class="r-plt img"><img src="render_points-2.png" alt="" width="768" height="768"></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in transform_into_heightmap_coords(extent, heightmap, lat, long,     altitude, offset, zscale):</span> No altitude data requires heightmap argument be passed</span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu">rayshader</span><span class="fu">:::</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#Remove the points:</span></span></span>
 <span class="r-in"><span><span class="fu">render_points</span><span class="op">(</span>clear_previous<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span></span>
@@ -230,13 +230,14 @@ All points are assumed to be evenly spaced.</p></dd>
 <span class="r-in"><span><span class="fu"><a href="render_camera.html">render_camera</a></span><span class="op">(</span>theta <span class="op">=</span> <span class="fl">160</span>, phi<span class="op">=</span><span class="fl">33</span>, zoom<span class="op">=</span><span class="fl">0.4</span>, fov<span class="op">=</span><span class="fl">55</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-plt img"><img src="render_points-3.png" alt="" width="768" height="768"></span>
+<span class="r-plt img"><img src="render_points-2.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu">rayshader</span><span class="fu">:::</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#And all of these work with `render_highquality()`</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="render_highquality.html">render_highquality</a></span><span class="op">(</span>point_radius <span class="op">=</span> <span class="fl">3</span>, clamp_value<span class="op">=</span><span class="fl">10</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="render_highquality.html">render_highquality</a></span><span class="op">(</span>point_radius <span class="op">=</span> <span class="fl">3</span>, clamp_value<span class="op">=</span><span class="fl">10</span>, min_variance <span class="op">=</span> <span class="fl">0</span>,</span></span>
+<span class="r-in"><span>                  sample_method <span class="op">=</span> <span class="st">"sobol_blue"</span>, samples <span class="op">=</span> <span class="fl">128</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">rgl</span><span class="fu">::</span><span class="fu"><a href="https://dmurdoch.github.io/rgl/dev/reference/open3d.html" class="external-link">close3d</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-plt img"><img src="render_points-4.png" alt="" width="768" height="768"></span>
+<span class="r-plt img"><img src="render_points-3.png" alt="" width="768" height="768"></span>
 </code></pre></div>
     </div>
   </div>

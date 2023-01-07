@@ -21,7 +21,7 @@ and then subtracts out the rgl y-offset, which can be obtained by calling the in
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.33.2</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.33.3</span>
       </span>
     </div>
 
@@ -150,7 +150,9 @@ and then subtracts out the rgl y-offset, which can be obtained by calling the in
 
 
 <dt>altitude</dt>
-<dd><p>Elevation of each point, in units of the elevation matrix (scaled by zscale).</p></dd>
+<dd><p>Elevation of each point, in units of the elevation matrix (scaled by zscale). 
+If left `NULL`, this will be just the elevation value at ths surface, offset by `offset`. If a single value, 
+all data will be rendered at that altitude.</p></dd>
 
 
 <dt>extent</dt>

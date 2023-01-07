@@ -19,7 +19,7 @@ above the heightmap. If the path goes off the edge, the nearest height on the he
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.33.2</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.33.3</span>
       </span>
     </div>
 
@@ -138,7 +138,8 @@ Ignored if lat is an `sf` or `SpatialLineDataFrame` object.</p></dd>
 
 <dt>altitude</dt>
 <dd><p>Default `NULL`. Elevation of each point, in units of the elevation matrix (scaled by zscale).
-If left `NULL`, this will be just the elevation value at ths surface, offset by `offset`.</p></dd>
+If left `NULL`, this will be just the elevation value at ths surface, offset by `offset`. If a single value, 
+all data will be rendered at that altitude.</p></dd>
 
 
 <dt>extent</dt>
@@ -284,7 +285,8 @@ plotting the line.</p></dd>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu">rayshader</span><span class="fu">:::</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#And all of these work with `render_highquality()`</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="render_highquality.html">render_highquality</a></span><span class="op">(</span>clamp_value<span class="op">=</span><span class="fl">10</span>, line_radius<span class="op">=</span><span class="fl">3</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="render_highquality.html">render_highquality</a></span><span class="op">(</span>clamp_value<span class="op">=</span><span class="fl">10</span>, line_radius<span class="op">=</span><span class="fl">3</span>, min_variance <span class="op">=</span> <span class="fl">0</span>,</span></span>
+<span class="r-in"><span>                  sample_method <span class="op">=</span> <span class="st">"sobol_blue"</span>, samples <span class="op">=</span> <span class="fl">128</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">rgl</span><span class="fu">::</span><span class="fu"><a href="https://dmurdoch.github.io/rgl/dev/reference/open3d.html" class="external-link">close3d</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-plt img"><img src="render_path-4.png" alt="" width="768" height="768"></span>
