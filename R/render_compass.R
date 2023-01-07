@@ -85,7 +85,7 @@
 #'}
 #'if(rayshader:::run_documentation()) {
 #'# Compass support is also included in render_highquality()
-#'render_highquality(clamp_value=10)
+#'render_highquality(clamp_value=10, min_variance = 0, sample_method = "sobol_blue")
 #'}
 #'if(rayshader:::run_documentation()) {
 #'render_compass(clear_compass = TRUE)

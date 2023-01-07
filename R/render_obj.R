@@ -15,7 +15,9 @@
 #' the previously aforementioned packages) which will be automatically converted to an extent object. 
 #'@param long Vector of longitudes (or other coordinate in the same coordinate reference system as extent).
 #'@param lat Vector of latitudes (or other coordinate in the same coordinate reference system as extent).
-#'@param altitude Elevation of each point, in units of the elevation matrix (scaled by zscale).
+#'@param altitude Default `NULL`. Elevation of each point, in units of the elevation matrix (scaled by `zscale`). 
+#'If left `NULL`, this will be just the elevation value at ths surface, offset by `offset`. If a single value, 
+#'the OBJ will be rendered at that altitude.
 #'@param xyz Default `NULL`, ignored. A 3 column numeric matrix, with each row specifying the x/y/z 
 #'coordinates of the OBJ model(s). Overrides lat/long/altitude and ignores extent to plot the OBJ in raw rgl coordinates.
 #'@param load_material Default `TRUE`. Whether to load the accompanying MTL file to load materials for the 3D model.

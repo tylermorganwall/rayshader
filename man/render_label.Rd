@@ -146,13 +146,15 @@ render_label(montereybay,lat=canyon[1], long = canyon[2], altitude = 2000, zscal
             extent = attr(montereybay,"extent"), textcolor = "white", linecolor="white",
             text = "Monterey Canyon", relativez=FALSE)
             
-render_highquality(samples=200,text_size = 24, line_radius = 2, text_offset = c(0,20,0),
-                  lightdirection=180, clamp_value=10)
+render_highquality(samples = 128,text_size = 24, line_radius = 2, text_offset = c(0, 20, 0),
+                  lightdirection = 180, clamp_value = 10, min_variance = 0,
+                  sample_method = "sobol_blue")
 }
 if(rayshader:::run_documentation()) {
 #Fixed text angle
-render_highquality(samples=200,text_size = 24, line_radius = 2, text_offset = c(0,20,0),
-                  lightdirection=180, text_angle=0, clamp_value=10)
+render_highquality(samples = 128,text_size = 24, line_radius = 2, text_offset = c(0, 20, 0),
+                  lightdirection = 180, text_angle = 0, clamp_value=10, min_variance = 0,
+                  sample_method = "sobol_blue")
 }
 #We can remove all existing labels by calling `render_label(clear_previous = TRUE)`
 if(rayshader:::run_documentation()) {

@@ -22,7 +22,8 @@ render_points(
 
 \item{long}{Vector of longitudes (or other coordinate in the same coordinate reference system as extent).}
 
-\item{altitude}{Elevation of each point, in units of the elevation matrix (scaled by zscale).}
+\item{altitude}{Default `NULL`. Elevation of each point, in units of the elevation matrix (scaled by zscale). If a single value, 
+all data will be rendered at that altitude.}
 
 \item{extent}{Either an object representing the spatial extent of the 3D scene 
 (either from the `raster`, `terra`, `sf`, or `sp` packages), 
@@ -89,7 +90,7 @@ if(rayshader:::run_documentation()) {
 #We'll set the altitude to zero to give the tracks a "shadow" over the water. 
 render_points(extent = attr(montereybay,"extent"), 
              lat = unlist(bird_track_lat), long = unlist(bird_track_long), 
-             altitude = 0, zscale=50, color="black")
+             offset = 0, zscale=50, color="black")
 render_camera(theta=30,phi=35,zoom=0.45,fov=70)
 render_snapshot()
 }
@@ -111,7 +112,8 @@ render_snapshot()
 }
 if(rayshader:::run_documentation()) {
 #And all of these work with `render_highquality()`
-render_highquality(point_radius = 3, clamp_value=10)
+render_highquality(point_radius = 3, clamp_value=10, min_variance = 0,
+                  sample_method = "sobol_blue", samples = 128)
 rgl::close3d()
 }
 }

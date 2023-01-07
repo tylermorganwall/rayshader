@@ -58,6 +58,10 @@ transform_into_heightmap_coords = function(extent, heightmap, lat = NULL, long =
     } else {
       altitude = rayimage::interpolate_array((t(heightmap)), distances_x_index,distances_y_index)
     }
+  } else {
+    if(length(altitude) == 1) {
+      altitude = rep(altitude, length(distances_x))
+    }
   }
   altitude[filter_out] = NA
   if(use_altitude) {

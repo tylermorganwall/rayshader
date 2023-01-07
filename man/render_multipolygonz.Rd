@@ -103,7 +103,7 @@ render_snapshot()
 }
 if(run_examples) {
 #This works with `render_highquality()`
-render_highquality(sample_method="sobol_blue", clamp_value=10)
+render_highquality(sample_method="sobol_blue", clamp_value=10, min_variance = 0)
 rgl::close3d()
 }
 }

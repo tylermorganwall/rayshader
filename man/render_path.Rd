@@ -32,7 +32,8 @@ Can also be an `sf` or `SpatialLineDataFrame` object.}
 Ignored if lat is an `sf` or `SpatialLineDataFrame` object.}
 
 \item{altitude}{Default `NULL`. Elevation of each point, in units of the elevation matrix (scaled by zscale).
-If left `NULL`, this will be just the elevation value at ths surface, offset by `offset`.}
+If left `NULL`, this will be just the elevation value at ths surface, offset by `offset`. If a single value, 
+all data will be rendered at that altitude.}
 
 \item{extent}{Either an object representing the spatial extent of the 3D scene 
 (either from the `raster`, `terra`, `sf`, or `sp` packages), 
@@ -149,7 +150,8 @@ render_snapshot()
 
 if(rayshader:::run_documentation()) {
 #And all of these work with `render_highquality()`
-render_highquality(clamp_value=10, line_radius=3)
+render_highquality(clamp_value=10, line_radius=3, min_variance = 0,
+                  sample_method = "sobol_blue", samples = 128)
 rgl::close3d()
 }
 }

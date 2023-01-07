@@ -9,7 +9,8 @@
 #'@param long Default `NULL`. Vector of longitudes (or other coordinate in the same coordinate reference system as extent).
 #'Ignored if lat is an `sf` or `SpatialLineDataFrame` object.
 #'@param altitude Default `NULL`. Elevation of each point, in units of the elevation matrix (scaled by zscale).
-#'If left `NULL`, this will be just the elevation value at ths surface, offset by `offset`.
+#'If left `NULL`, this will be just the elevation value at ths surface, offset by `offset`. If a single value, 
+#'all data will be rendered at that altitude.
 #'@param extent Either an object representing the spatial extent of the 3D scene 
 #' (either from the `raster`, `terra`, `sf`, or `sp` packages), 
 #' a length-4 numeric vector specifying `c("xmin", "xmax","ymin","ymax")`, or the spatial object (from 
@@ -107,7 +108,8 @@
 #'
 #'if(rayshader:::run_documentation()) {
 #'#And all of these work with `render_highquality()`
-#'render_highquality(clamp_value=10, line_radius=3)
+#'render_highquality(clamp_value=10, line_radius=3, min_variance = 0,
+#'                   sample_method = "sobol_blue", samples = 128)
 #'rgl::close3d()
 #'}
 render_path = function(lat, long = NULL, altitude = NULL, extent = NULL, 
