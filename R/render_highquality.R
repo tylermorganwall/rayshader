@@ -157,6 +157,13 @@ render_highquality = function(filename = NULL, light = TRUE,
   if(rgl::cur3d() == 0) {
     stop("No rgl window currently open.")
   }
+  if(!is.null(filename)) {
+    if(dirname(filename) != ".") {
+      if(!dir.exists(dirname(filename))) {
+        stop(sprintf("Error: directory '%s' does not exist.", dirname(filename)))
+      }
+    }
+  }
   if(!(length(find.package("rayrender", quiet = TRUE)) > 0)) {
     stop("`rayrender` package required for render_highquality()")
   }
