@@ -19,7 +19,7 @@
 #'  sphere_shade() %>%
 #'  plot_3d(volcano,zscale=3)
 #'render_snapshot()
-#'save_3dprint(filename_stl, clear=TRUE)
+#'save_3dprint(filename_stl)
 #'}
 #'
 #'#Save the STL file into `filename_stl`, setting maximum width to 100 mm
@@ -28,7 +28,7 @@
 #'  sphere_shade() %>%
 #'  plot_3d(volcano,zscale=3)
 #'render_snapshot()
-#'save_3dprint(filename_stl, maxwidth = 100, clear=TRUE)
+#'save_3dprint(filename_stl, maxwidth = 100)
 #'}
 #'
 #'#'#Save the STL file into `filename_stl`, setting maximum width to 4 inches
@@ -37,7 +37,7 @@
 #'  sphere_shade() %>%
 #'  plot_3d(volcano,zscale=3)
 #'render_snapshot()
-#'save_3dprint(filename_stl, maxwidth = 4, unit = "in", clear=TRUE)
+#'save_3dprint(filename_stl, maxwidth = 4, unit = "in")
 #'}
 #'#'#'#Save the STL file into `filename_stl`, setting maximum width (character) to 120mm
 #'if(rayshader:::run_documentation()) {
@@ -45,7 +45,7 @@
 #'  sphere_shade() %>%
 #'  plot_3d(volcano,zscale=3)
 #'render_snapshot()
-#'save_3dprint(filename_stl, maxwidth = "120mm", clear=TRUE)
+#'save_3dprint(filename_stl, maxwidth = "120mm")
 #'}
 save_3dprint = function(filename,maxwidth=125,unit="mm",rotate=TRUE,remove_extras = TRUE,
                         clear=FALSE) {

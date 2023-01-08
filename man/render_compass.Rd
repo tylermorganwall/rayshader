@@ -149,6 +149,6 @@ render_compass(position = "W", color_n = "#e9e671", color_arrow = "#cbb387",
             color_background = "#7c9695", color_bevel = "#cbb387", position_circular = TRUE)
 render_compass(position = "NW", color_n = c(0.7,0,0), color_arrow = c(0.3,0,0), 
             color_background = c(0.7,0.5,0.5), color_bevel = c(0.2,0,0), position_circular = TRUE)
-render_snapshot(clear=TRUE)
+render_snapshot()
 }
 }

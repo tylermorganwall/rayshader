@@ -99,7 +99,7 @@
 #'#Change the camera angle and take a snapshot:
 #'if(rayshader:::run_documentation()) {
 #'render_camera(zoom=0.5,theta=-30,phi=30)
-#'render_snapshot(clear = TRUE)
+#'render_snapshot()
 #'}
 #'
 #'#Contours and other lines will automatically be ignored. Here is the volcano dataset:
@@ -118,7 +118,7 @@
 #'if(rayshader:::run_documentation()) {
 #'plot_gg(ggvolcano, multicore = TRUE, raytrace = TRUE, width = 7, height = 4, 
 #'        scale = 300, windowsize = c(1400, 866), zoom = 0.6, phi = 30, theta = 30)
-#'render_snapshot(clear = TRUE)
+#'render_snapshot()
 #'}
 #'#Here, we will create a 3D plot of the mtcars dataset. This automatically detects 
 #'#that the user used the `color` aesthetic instead of the `fill`.
@@ -133,7 +133,7 @@
 #'if(rayshader:::run_documentation()) {
 #'plot_gg(mtplot, width=3.5, multicore = TRUE, windowsize = c(1400,866), sunangle=225,
 #'        zoom = 0.60, phi = 30, theta = 45)
-#'render_snapshot(clear = TRUE)
+#'render_snapshot()
 #'}
 #'#Now let's plot a density plot in 3D.
 #'mtplot_density = ggplot(mtcars) + 
@@ -146,7 +146,7 @@
 #'if(rayshader:::run_documentation()) {
 #'plot_gg(mtplot_density, width = 4,zoom = 0.60, theta = -45, phi = 30, 
 #'        windowsize = c(1400,866))
-#'render_snapshot(clear = TRUE)
+#'render_snapshot()
 #'}
 #'#This also works facetted.
 #'mtplot_density_facet = mtplot_density + facet_wrap(~cyl) 
@@ -158,7 +158,7 @@
 #'if(rayshader:::run_documentation()) {
 #'plot_gg(mtplot_density_facet, windowsize=c(1400,866),
 #'        zoom = 0.55, theta = -10, phi = 25)
-#'render_snapshot(clear = TRUE)
+#'render_snapshot()
 #'}
 #'#That is a little cramped. Specifying a larger width will improve the readability of this plot.
 #'if(rayshader:::run_documentation()) {
@@ -169,7 +169,7 @@
 #'if(rayshader:::run_documentation()) {
 #'plot_gg(mtplot_density_facet, width = 6, windowsize=c(1400,866),
 #'        zoom = 0.55, theta = -10, phi = 25, scale=300)
-#'render_snapshot(clear = TRUE)
+#'render_snapshot()
 #'}
 #'
 #'#We can also render a flat version of the plot alongside (or above/below) the 3D version.
@@ -177,7 +177,7 @@
 #'plot_gg(mtplot_density_facet, width = 6, windowsize=c(1400,866),
 #'        zoom = 0.65, theta = -25, phi = 35, scale=300, flat_plot_render=TRUE,
 #'        flat_direction = "x")
-#'render_snapshot(clear = TRUE)
+#'render_snapshot()
 #'}
 plot_gg = function(ggobj, width = 3, height = 3, 
                    height_aes = NULL, invert = FALSE, shadow_intensity = 0.5,

@@ -200,7 +200,7 @@ generate_cloud_layer = function(heightmap, sun_altitude = 90, sun_angle=315, lev
 #'#Change the sun angle and altitude, and increase the attenuation for darker clouds
 #'render_clouds(montereybay,zscale=50,sun_angle=45, sun_altitude= 5, attenuation_coef = 5,
 #'              clear_clouds = T)
-#'render_snapshot(clear=TRUE)
+#'render_snapshot()
 #'}
 #'if(rayshader:::run_documentation()) {
 #'#Render the scene with a different baseshape
@@ -383,7 +383,7 @@ raymarch_cloud_layer = function(heightmap, sun_altitude = 90, sun_angle=315, lev
 #'  plot_3d(montereybay,background="darkred",zscale=50)
 #'render_camera(theta=-65, phi = 25, zoom = 0.45, fov = 80)
 #'render_clouds(montereybay, zscale=50)    
-#'render_snapshot(clear=TRUE)
+#'render_snapshot()
 #'}
 #'if(rayshader:::run_documentation()) {
 #'#Adjust the light direction for shadows and increase the attenuation for darker clouds

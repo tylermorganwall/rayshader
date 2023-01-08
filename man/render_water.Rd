@@ -63,7 +63,7 @@ render_snapshot()
 if(rayshader:::run_documentation()) {
 render_camera(theta=-45)
 render_water(montereybay,zscale=50,waterlinecolor="white")
-render_snapshot(clear = TRUE)
+render_snapshot()
 rgl::close3d()
 }
 }

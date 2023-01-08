@@ -111,7 +111,7 @@
 #'             color_background = "#7c9695", color_bevel = "#cbb387", position_circular = TRUE)
 #'render_compass(position = "NW", color_n = c(0.7,0,0), color_arrow = c(0.3,0,0), 
 #'             color_background = c(0.7,0.5,0.5), color_bevel = c(0.2,0,0), position_circular = TRUE)
-#'render_snapshot(clear=TRUE)
+#'render_snapshot()
 #'}
 render_compass = function(angle = 0, position = "SE", altitude = NULL, zscale = 1,
                         x = NULL, y = NULL, z = NULL, compass_radius = NULL, scale_distance = 1,

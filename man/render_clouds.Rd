@@ -152,7 +152,7 @@ if(rayshader:::run_documentation()) {
 #Change the sun angle and altitude, and increase the attenuation for darker clouds
 render_clouds(montereybay,zscale=50,sun_angle=45, sun_altitude= 5, attenuation_coef = 5,
              clear_clouds = T)
-render_snapshot(clear=TRUE)
+render_snapshot()
 }
 if(rayshader:::run_documentation()) {
 #Render the scene with a different baseshape
