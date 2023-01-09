@@ -11,7 +11,7 @@ render_snapshot_software = function(filename, cache_filename = NULL, camera_loca
                                     width = NULL, height = NULL, light_direction = NULL, fake_shadow = TRUE, 
                                     text_angle = NULL, text_size = 1, text_offset = c(0,0,0), fov=NULL, 
                                     print_scene_info = FALSE, point_radius = 1, line_offset=-1e-7, 
-                                    fsaa = 1, ...) {
+                                    fsaa = 1, thick_lines = FALSE, line_radius = 0.5, ...) {
   if(run_documentation()) {
     fsaa = 2
   }
@@ -173,16 +173,29 @@ render_snapshot_software = function(filename, cache_filename = NULL, camera_loca
   }
   labellineids = get_ids_with_labels(typeval = c("textline","lines","waterlines"))$id
   labelline = matrix(nrow=0,ncol=9)
+  line_scene = list()
+  line_counter = 1
   for(i in seq_len(length(labellineids))) {
     temp_verts = rgl.attrib(labellineids[i], "vertices")
     temp_color = rgl.attrib(labellineids[i], "colors")
     if(nrow(temp_color) == 1) {
       temp_color = matrix(temp_color[1:3], byrow = TRUE, ncol = 3, nrow = nrow(temp_verts))
     }
-    for(j in seq_len(nrow(temp_verts)/2)) {
-      labelline = rayvertex::add_lines(labelline, rayvertex::generate_line(start = temp_verts[2*j-1,] - bbox_center, 
-                                                end   = temp_verts[2*j,] - bbox_center,
-                                                color = temp_color[j,1:3]))
+    if(thick_lines) {
+      for(j in seq_len(nrow(temp_verts)/2)) {
+        line_mat = rayvertex::material_list(diffuse = temp_color[j,1:3], type = "color")
+        line_scene[[line_counter]] = rayvertex::segment_mesh(start = temp_verts[2*j-1,] - bbox_center, 
+                                                             end   = temp_verts[2*j,] - bbox_center,
+                                                             radius = line_radius,
+                                                             material = line_mat)
+        line_counter = line_counter + 1
+      }
+    } else {
+      for(j in seq_len(nrow(temp_verts)/2)) {
+        labelline = rayvertex::add_lines(labelline, rayvertex::generate_line(start = temp_verts[2*j-1,] - bbox_center, 
+                                                  end   = temp_verts[2*j,] - bbox_center,
+                                                  color = temp_color[j,1:3]))
+      }
     }
   }
   
@@ -197,11 +210,22 @@ render_snapshot_software = function(filename, cache_filename = NULL, camera_loca
     }
 
     
-    for(j in seq_len(nrow(temp_verts)-1)) {
-      pathline = rayvertex::add_lines(pathline, 
-                                      rayvertex::generate_line(start = temp_verts[j,] - bbox_center, 
-                                               end   = temp_verts[j+1,] - bbox_center,
-                                               color = temp_color[j,1:3]))
+    if(thick_lines) {
+      for(j in seq_len(nrow(temp_verts)-1)) {
+        line_mat = rayvertex::material_list(diffuse = temp_color[j,1:3], type = "color")
+        line_scene[[line_counter]] = rayvertex::segment_mesh(start = temp_verts[j,] - bbox_center, 
+                                                             end   = temp_verts[j+1,] - bbox_center,
+                                                             radius = line_radius,
+                                                             material = line_mat)
+        line_counter = line_counter + 1
+      }
+    } else {
+      for(j in seq_len(nrow(temp_verts)-1)) {
+        pathline = rayvertex::add_lines(pathline, 
+                                        rayvertex::generate_line(start = temp_verts[j,] - bbox_center, 
+                                                 end   = temp_verts[j+1,] - bbox_center,
+                                                 color = temp_color[j,1:3]))
+      }
     }
   }
   pointids = get_ids_with_labels(typeval = "points3d")$id
@@ -310,6 +334,10 @@ render_snapshot_software = function(filename, cache_filename = NULL, camera_loca
     }
   } else {
     lights = rayvertex::directional_light(light_direction)
+  }
+  if(thick_lines) {
+    line_scene_processed = rayvertex::scene_from_list(line_scene)
+    scene = rayvertex::add_shape(scene, line_scene_processed)
   }
   for(i in seq_len(length(scene$materials[[1]]))) {
     if(scene$materials[[1]][[i]]$illum == 5) {

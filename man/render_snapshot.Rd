@@ -34,6 +34,8 @@ render_snapshot(
   text_offset = c(0, 0, 0),
   point_radius = 2,
   line_offset = 1e-07,
+  thick_lines = TRUE,
+  line_radius = 0.5,
   cache_filename = NULL,
   new_page = TRUE,
   print_scene_info = FALSE,
@@ -117,6 +119,11 @@ will specify the absolute angle all the labels are facing. If three angles, this
 
 \item{line_offset}{Default `1e-7`. Small number indicating the offset in the scene to apply to lines if using software rendering. Increase this if your lines 
 aren't showing up, or decrease it if lines are appearing through solid objects.}
+
+\item{thick_lines}{Default `TRUE`. If `software_render = TRUE`, this will render path segments as thick cylinders. Otherwise, it will 
+render the lines using a single-pixel anti-aliased line algorithm.}
+
+\item{line_radius}{Default `0.5`. The radius of the thick cylinders if `thick_lines = TRUE` and `software_render = TRUE`.}
 
 \item{cache_filename}{Default `NULL`. Name of temporary filename to store OBJ file, if the user does not want to rewrite the file each time.}
 

@@ -23,6 +23,8 @@ render_snapshot_software(
   point_radius = 1,
   line_offset = -1e-07,
   fsaa = 1,
+  thick_lines = FALSE,
+  line_radius = 0.5,
   ...
 )
 }

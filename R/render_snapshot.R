@@ -45,6 +45,9 @@
 #'@param point_radius Default `2`. Radius of 3D points (rendered with `render_points()`.
 #'@param line_offset Default `1e-7`. Small number indicating the offset in the scene to apply to lines if using software rendering. Increase this if your lines 
 #'aren't showing up, or decrease it if lines are appearing through solid objects.
+#'@param thick_lines Default `TRUE`. If `software_render = TRUE`, this will render path segments as thick cylinders. Otherwise, it will 
+#'render the lines using a single-pixel anti-aliased line algorithm.
+#'@param line_radius Default `0.5`. The radius of the thick cylinders if `thick_lines = TRUE` and `software_render = TRUE`.
 #'@param camera_location Default `NULL`. Custom position of the camera. The `FOV`, `width`, and `height` arguments will still
 #'be derived from the rgl window.
 #'@param camera_lookat Default `NULL`. Custom point at which the camera is directed. The `FOV`, `width`, and `height` arguments will still
@@ -94,7 +97,8 @@ render_snapshot = function(filename, clear=FALSE,
                            software_render = FALSE, camera_location = NULL, camera_lookat = c(0,0,0),
                            background = NULL,
                            text_angle = NULL, text_size = 30, text_offset = c(0,0,0),
-                           point_radius = 2, line_offset = 1e-7,
+                           point_radius = 2, 
+                           line_offset = 1e-7, thick_lines = TRUE, line_radius = 0.5,
                            cache_filename  = NULL,  new_page = TRUE,
                            print_scene_info = FALSE, fsaa = 1, ...) {
   if(rgl::rgl.useNULL()) {
@@ -154,7 +158,8 @@ render_snapshot = function(filename, clear=FALSE,
                              width = width, height = height, light_direction = NULL, fake_shadow = TRUE, 
                              text_angle = text_angle, text_size = text_size, text_offset = text_offset,
                              print_scene_info = print_scene_info, point_radius = point_radius, 
-                             line_offset = -line_offset, fsaa = fsaa, ...)
+                             line_offset = -line_offset, fsaa = fsaa, thick_lines = thick_lines,
+                             line_radius = line_radius, ...)
     if(length(dim(debug)) == 2) {
       return(flipud(debug))
     }
