@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.33.6</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.33.7</span>
       </span>
     </div>
 
@@ -129,6 +129,8 @@
 <span>  text_offset <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span>,</span>
 <span>  point_radius <span class="op">=</span> <span class="fl">2</span>,</span>
 <span>  line_offset <span class="op">=</span> <span class="fl">1e-07</span>,</span>
+<span>  thick_lines <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  line_radius <span class="op">=</span> <span class="fl">0.5</span>,</span>
 <span>  cache_filename <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  new_page <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  print_scene_info <span class="op">=</span> <span class="cn">FALSE</span>,</span>
@@ -271,6 +273,15 @@ will specify the absolute angle all the labels are facing. If three angles, this
 <dt>line_offset</dt>
 <dd><p>Default `1e-7`. Small number indicating the offset in the scene to apply to lines if using software rendering. Increase this if your lines 
 aren't showing up, or decrease it if lines are appearing through solid objects.</p></dd>
+
+
+<dt>thick_lines</dt>
+<dd><p>Default `TRUE`. If `software_render = TRUE`, this will render path segments as thick cylinders. Otherwise, it will 
+render the lines using a single-pixel anti-aliased line algorithm.</p></dd>
+
+
+<dt>line_radius</dt>
+<dd><p>Default `0.5`. The radius of the thick cylinders if `thick_lines = TRUE` and `software_render = TRUE`.</p></dd>
 
 
 <dt>cache_filename</dt>
