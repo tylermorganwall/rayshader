@@ -15,6 +15,10 @@
 #'@param theta Default to current view. Theta values, in degrees. 
 #'@param zoom Defaults to the current view. Zoom value, between `0` and `1`. 
 #'@param fov Defaults to the current view. Field of view values, in degrees.
+#'@param width Default `NULL`, uses the window size by default. Width of the movie. Note that the frames will still
+#'be captured at the resolution (and aspect ratio) of the rgl window.
+#'@param height Default `NULL`, uses the window size by default. Height of the movie. Note that the frames will still
+#'be captured at the resolution (and aspect ratio) of the rgl window.
 #'@param title_text Default `NULL`. Text. Adds a title to the movie, using magick::image_annotate. 
 #'@param title_offset Default `c(20,20)`. Distance from the top-left (default, `gravity` direction in 
 #'image_annotate) corner to offset the title.
@@ -80,6 +84,7 @@
 #'}
 render_movie = function(filename, type = "orbit", frames = 360, fps = 30, 
                         phi = 30, theta = 0, zoom = NULL, fov = NULL, 
+                        width = NULL, height = NULL,
                         title_text = NULL, title_offset = c(20,20), 
                         title_color = "black", title_size = 30, title_font = "sans",
                         title_bar_color = NULL, title_bar_alpha = 0.5,
@@ -180,6 +185,12 @@ render_movie = function(filename, type = "orbit", frames = 360, fps = 30,
   }
   temp = png::readPNG(png_files[1])
   dimensions = dim(temp)
+  if(!is.null(width)) {
+    dimensions[1] = width
+  }
+  if(!is.null(height)) {
+    dimensions[2] = height
+  }
   if(dimensions[1] %% 2 != 0) {
     dimensions[1] = dimensions[1] - 1
   }

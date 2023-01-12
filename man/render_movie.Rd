@@ -13,6 +13,8 @@ render_movie(
   theta = 0,
   zoom = NULL,
   fov = NULL,
+  width = NULL,
+  height = NULL,
   title_text = NULL,
   title_offset = c(20, 20),
   title_color = "black",
@@ -49,6 +51,12 @@ Other options are `oscillate` (sine wave around `theta` value, covering 90 degre
 \item{zoom}{Defaults to the current view. Zoom value, between `0` and `1`.}
 
 \item{fov}{Defaults to the current view. Field of view values, in degrees.}
+
+\item{width}{Default `NULL`, uses the window size by default. Width of the movie. Note that the frames will still
+be captured at the resolution (and aspect ratio) of the rgl window.}
+
+\item{height}{Default `NULL`, uses the window size by default. Height of the movie. Note that the frames will still
+be captured at the resolution (and aspect ratio) of the rgl window.}
 
 \item{title_text}{Default `NULL`. Text. Adds a title to the movie, using magick::image_annotate.}
 
