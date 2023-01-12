@@ -23,7 +23,7 @@ get_interpolated_points_path = function(points, n = 360, use_altitude = FALSE) {
     abs_dists = abs(path_distance - interval_dists[i])
     min_index = which.min(abs_dists)[1]
     sing_dist =  interval_dists[i] - path_distance[min_index]
-
+    
     #Return if exact match in distances
     if(sing_dist == 0) {
       new_points[[i]] = points[min_index,]
@@ -36,7 +36,15 @@ get_interpolated_points_path = function(points, n = 360, use_altitude = FALSE) {
     }
     min_dist = path_distance[min_index]
     max_dist = path_distance[max_index]
-    
+    while(max_dist - min_dist == 0) {
+      if(max_index + 1 < length(path_distance)) {
+        max_index = max_index + 1
+        max_dist = path_distance[max_index]
+      } else {
+        min_dist = min_dist - 1
+        min_dist = path_distance[min_dist]
+      }
+    }
     t_val = (interval_dists[i] - min_dist) / (max_dist - min_dist)
     new_points[[i]] = points[min_index,] * (1 - t_val) + points[max_index,] * t_val
   }
