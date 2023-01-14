@@ -100,7 +100,6 @@
 #'if(rayshader:::run_documentation()) {
 #'render_label(clear_previous = TRUE) 
 #'render_snapshot()
-#'rgl::close3d()
 #'}
 render_label = function(heightmap, text, lat, long, altitude=NULL, extent=NULL, 
                         x=NULL, y=NULL, z=NULL, zscale=1, 

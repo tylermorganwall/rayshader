@@ -93,7 +93,6 @@
 #'            clear_previous = TRUE, 
 #'            lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), zscale=50) 
 #'render_snapshot()
-#'rgl::close3d()
 #'}
 #'
 #'#We will use the lidR package to generate a DEM and detect the canopy tops of trees, and
@@ -145,7 +144,6 @@
 #'render_highquality(lightdirection=c(90,45),lightaltitude=c(90,45), 
 #'                   lightcolor=c("dodgerblue","orange"), 
 #'                   min_variance = 0, sample_method="sobol_blue", clamp_value=10)
-#'rgl::close3d()
 #'}
 render_tree = function(lat = NULL, long = NULL, extent = NULL,  
                        type = "basic", canopy_color = "#22aa22", trunk_color = "#964B00",

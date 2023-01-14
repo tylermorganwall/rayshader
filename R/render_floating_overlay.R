@@ -49,7 +49,6 @@
 #'  render_floating_overlay(road_overlay, altitude = 10000,zscale = 50)
 #'  render_floating_overlay(point_overlay, altitude = 100,zscale = 50)
 #'  render_snapshot()
-#'  rgl::close3d()
 #'}
 #'}
 render_floating_overlay = function(overlay = NULL, altitude = NULL, heightmap = NULL, zscale=1, 

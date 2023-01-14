@@ -38,7 +38,6 @@
 #'render_camera(theta=-45)
 #'render_water(montereybay,zscale=50,waterlinecolor="white")
 #'render_snapshot()
-#'rgl::close3d()
 #'}
 render_water = function(heightmap, waterdepth=0, watercolor="lightblue",
                         zscale=1, wateralpha=0.5, waterlinecolor=NULL, waterlinealpha = 1, 

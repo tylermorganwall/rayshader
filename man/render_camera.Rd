@@ -92,6 +92,5 @@ for(i in 1:360) {
 #Or we can use render_movie() to do this all automatically with type="custom" (uncomment to run):
 #render_movie(filename = tempfile(fileext = ".mp4"), type = "custom", 
 #             theta = thetavec, phi = phivecfull, zoom = zoomvec, fov=0)
-rgl::close3d()
 }
 }

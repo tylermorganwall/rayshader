@@ -137,6 +137,5 @@ render_obj(flag_banner_obj(), extent = attr(montereybay,"extent"), heightmap = m
 
 #And all of these work with `render_highquality()`
 render_highquality(sample_method="sobol_blue",clamp_value=10)
-rgl::close3d()
 }
 }

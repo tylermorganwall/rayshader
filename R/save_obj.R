@@ -25,7 +25,6 @@
 #'#Save model of volcano without texture
 #'if(rayshader:::run_documentation()) {
 #'save_obj(filename_obj, save_texture = FALSE)
-#'rgl::close3d()
 #'}
 #'
 #'#Make water have realistic index of refraction
@@ -35,7 +34,6 @@
 #'  plot_3d(montereybay, zscale = 50)
 #'  
 #'save_obj(filename_obj, water_index_refraction = 1.5)
-#'rgl::close3d()
 #'}
 #'}
 save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1, 

@@ -137,7 +137,6 @@ zoomvecfull = c(zoomvec, rev(zoomvec))
 #Un-comment the following to run
 #render_movie(filename = filename_movie, type = "custom", 
 #             frames = 360,  phi = phivecfull, zoom = zoomvecfull, theta = thetavec)
-rgl::close3d()
 }
 }
 }

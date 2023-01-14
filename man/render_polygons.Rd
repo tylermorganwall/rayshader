@@ -120,6 +120,5 @@ if(rayshader:::run_documentation()) {
 #This function also works with `render_highquality()`
 render_highquality(samples = 128, clamp_value = 10, sample_method="sobol_blue",
                    min_variance = 0)
-rgl::close3d()
 }
 }

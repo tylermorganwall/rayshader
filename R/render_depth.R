@@ -113,7 +113,6 @@
 #'render_camera(theta=0,zoom=0.7,phi=30)
 #'render_depth(focallength = 250, title_text = "Monterey Bay, CA", 
 #'             title_size = 20, title_color = "white", title_bar_color = "black", vignette = TRUE)
-#'rgl::close3d()
 #'}
 render_depth = function(focus = NULL, focallength = 100, fstop = 4, filename=NULL,
                      preview_focus = FALSE, bokehshape = "circle", bokehintensity = 1, bokehlimit=0.8, 
@@ -276,6 +275,9 @@ render_depth = function(focus = NULL, focallength = 100, fstop = 4, filename=NUL
                      watercolor = water_color, wateralpha = water_alpha,
                      zscale = zscale)
       }
+    }
+    if(all(dim(tempmap)[1:2] != dim(depthmap)[1:2])) {
+      depthmap = rayimage::render_resized(depthmap, dims = dim(tempmap)[1:2])
     }
     tempmap = rayimage::render_bokeh(tempmap, depthmap = depthmap, focus = focus, focallength = focallength,
                            fstop = fstop, bokehshape = bokehshape, bokehintensity = bokehintensity,

@@ -211,6 +211,5 @@ if(rayshader:::run_documentation()) {
 render_camera(theta=0,zoom=0.7,phi=30)
 render_depth(focallength = 250, title_text = "Monterey Bay, CA", 
             title_size = 20, title_color = "white", title_bar_color = "black", vignette = TRUE)
-rgl::close3d()
 }
 }

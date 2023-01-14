@@ -82,7 +82,6 @@
 #'                title_color = "white", title_bar_color = "darkgreen",
 #'                vignette = TRUE, title_offset=c(0,20),
 #'                title_font = "Helvetica", title_position = "north")
-#'rgl::close3d() 
 #'}
 render_snapshot = function(filename, clear=FALSE, 
                            title_text = NULL, title_offset = c(20,20), 

@@ -79,7 +79,6 @@
 #'#Un-comment the following to run
 #'#render_movie(filename = filename_movie, type = "custom", 
 #'#             frames = 360,  phi = phivecfull, zoom = zoomvecfull, theta = thetavec)
-#'rgl::close3d()
 #'}
 #'}
 render_movie = function(filename, type = "orbit", frames = 360, fps = 30, 

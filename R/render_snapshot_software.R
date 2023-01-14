@@ -4,7 +4,7 @@
 #'@param ground_size Default `10000`. The width of the plane representing the ground.
 #'@param camera_location Default `NULL`. Custom position of the camera. The `FOV`, `width`, and `height` arguments will still
 #'be derived from the rgl window.
-#'@param ... Additional parameters to pass to `rayvertex::rasterize_scene`()
+#'@param ... Additional parameters to pass to `rayvertex::rasterize_scene()`
 #'@keywords internal
 render_snapshot_software = function(filename, cache_filename = NULL, camera_location = NULL, 
                                     camera_lookat = c(0,0,0),background=NULL, return_all = FALSE,

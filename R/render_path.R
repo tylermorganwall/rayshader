@@ -114,7 +114,6 @@
 #'#And all of these work with `render_highquality()`
 #'render_highquality(clamp_value=10, line_radius=3, min_variance = 0,
 #'                   sample_method = "sobol_blue", samples = 128)
-#'rgl::close3d()
 #'}
 render_path = function(lat, long = NULL, altitude = NULL, extent = NULL, 
                        zscale=1, heightmap = NULL, 

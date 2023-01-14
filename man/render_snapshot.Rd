@@ -164,6 +164,5 @@ render_snapshot(title_text = "Monterey Bay, California",
                title_color = "white", title_bar_color = "darkgreen",
                vignette = TRUE, title_offset=c(0,20),
                title_font = "Helvetica", title_position = "north")
-rgl::close3d() 
 }
 }

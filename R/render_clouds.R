@@ -137,7 +137,6 @@ generate_cloud_layer = function(heightmap, sun_altitude = 90, sun_angle=315, lev
 #'#Render some clouds
 #'render_clouds(montereybay, zscale=50)  
 #'render_snapshot()
-#'rgl::clear3d()
 #'}
 #'if(rayshader:::run_documentation()) {
 #'#Change the seed for a different set of clouds and add cloud shadows on the ground
@@ -148,7 +147,6 @@ generate_cloud_layer = function(heightmap, sun_altitude = 90, sun_angle=315, lev
 #'render_camera(theta=-65, phi = 25, zoom = 0.45, fov = 80)
 #'render_clouds(montereybay, zscale=50, seed=2, clear_clouds = T)    
 #'render_snapshot()
-#'rgl::clear3d()
 #'}
 #'
 #'if(rayshader:::run_documentation()) {
@@ -210,7 +208,6 @@ generate_cloud_layer = function(heightmap, sun_altitude = 90, sun_angle=315, lev
 #'render_clouds(montereybay,zscale=50, seed=3, baseshape="hex", clear_clouds = T)  
 #'render_camera(zoom=0.65)
 #'render_snapshot()
-#'rgl::close3d()
 #'}
 render_clouds = function(heightmap, start_altitude = 1000, end_altitude=2000, 
                          sun_altitude = 10, sun_angle=315, time = 0,
@@ -394,7 +391,6 @@ raymarch_cloud_layer = function(heightmap, sun_altitude = 90, sun_angle=315, lev
 #'render_camera(theta=-65, phi = 25, zoom = 0.45, fov = 80)
 #'render_clouds(montereybay, zscale=50)    
 #'render_snapshot()
-#'rgl::close3d()
 #'}
 cloud_shade = function(heightmap, start_altitude = 1000, end_altitude=2000, 
                        sun_altitude = 90, sun_angle=315, time = 0,

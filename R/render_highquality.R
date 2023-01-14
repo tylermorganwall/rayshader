@@ -135,7 +135,6 @@
 #'                   scene_elements = rayrender::sphere(z=0,y=15, x=-18, radius=5,
 #'                                    material=rayrender::light(color="red",intensity=10)),
 #'                   min_variance = 0, sample_method = "sobol_blue")
-#'rgl::close3d()
 #'}
 render_highquality = function(filename = NULL, light = TRUE, 
                               lightdirection = 315, lightaltitude = 45, lightsize=NULL,

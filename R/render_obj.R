@@ -89,7 +89,6 @@
 #'
 #'#And all of these work with `render_highquality()`
 #'render_highquality(sample_method="sobol_blue",clamp_value=10)
-#'rgl::close3d()
 #'}
 render_obj = function(filename, extent = NULL, lat = NULL, long = NULL, altitude=NULL, 
                       xyz = NULL,

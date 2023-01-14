@@ -160,6 +160,5 @@ render_highquality(samples = 128,text_size = 24, line_radius = 2, text_offset = 
 if(rayshader:::run_documentation()) {
 render_label(clear_previous = TRUE) 
 render_snapshot()
-rgl::close3d()
 }
 }
