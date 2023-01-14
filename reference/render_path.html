@@ -19,7 +19,7 @@ above the heightmap. If the path goes off the edge, the nearest height on the he
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.34.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.34.1</span>
       </span>
     </div>
 
@@ -110,6 +110,8 @@ above the heightmap. If the path goes off the edge, the nearest height on the he
 <span>  extent <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  zscale <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  heightmap <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  resample_evenly <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  resample_n <span class="op">=</span> <span class="fl">360</span>,</span>
 <span>  reorder <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  reorder_first_index <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  reorder_duplicate_tolerance <span class="op">=</span> <span class="fl">0.1</span>,</span>
@@ -156,6 +158,16 @@ the previously aforementioned packages) which will be automatically converted to
 <dt>heightmap</dt>
 <dd><p>Default `NULL`. Pass this if not including an `altitude` argument, or if no extent passed. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
 All points are assumed to be evenly spaced.</p></dd>
+
+
+<dt>resample_evenly</dt>
+<dd><p>Default `FALSE`. If `TRUE`, this will re-sample the path evenly from beginning to end, which can help vastly
+reduce the number of points used to draw it (which can improve the performance of `render_highquality()` and `render_snapshot(software_render = TRUE)`).
+This function works only if `reorder = TRUE`, or if the sf object is already ordered from beginning to end.</p></dd>
+
+
+<dt>resample_n</dt>
+<dd><p>Default `360`. Number of breaks in which to evenly resample the line if `resample_evenly = TRUE`.</p></dd>
 
 
 <dt>reorder</dt>
