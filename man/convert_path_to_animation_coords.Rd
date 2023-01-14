@@ -171,12 +171,11 @@ render_highquality(samples=16, animation_camera_coords = camera_path,
                   sample_method="sobol_blue")
 
 #Plot all these frames
-grob_list = list()
+image_list = list()
 for(i in 1:25) {
-  grob_list[[i]] = rayimage::plot_image(sprintf("\%s/frame\%d.png",temp_dir,i), return_grob = TRUE)
+  image_list[[i]] = png::readPNG(sprintf("\%s/frame\%d.png",temp_dir,i))
 }
-layout_matrix = matrix(1:25, ncol=5, byrow=TRUE)
-gridExtra::grid.arrange(grobs=grob_list, layout_matrix = layout_matrix)
+rayimage::plot_image_grid(image_list, dim = c(5,5))
 }
 
 if(rayshader:::run_documentation()) {
@@ -197,12 +196,10 @@ render_highquality(samples=16, animation_camera_coords = camera_path,
                   sample_method="sobol_blue")
 
 #Plot all these frames
-grob_list = list()
+image_list = list()
 for(i in 1:25) {
-  grob_list[[i]] = rayimage::plot_image(sprintf("\%s/frame\%d.png",temp_dir,i), return_grob = TRUE)
+  image_list[[i]] = png::readPNG(sprintf("\%s/frame\%d.png",temp_dir,i))
 }
-layout_matrix = matrix(1:25, ncol=5, byrow=TRUE)
-gridExtra::grid.arrange(grobs=grob_list, layout_matrix = layout_matrix)
-rgl::close3d()
+rayimage::plot_image_grid(image_list, dim = c(5,5))
 }
 }

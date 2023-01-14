@@ -226,6 +226,7 @@ render_depth = function(focus = NULL, focallength = 100, fstop = 4, filename=NUL
     image_to_convolve[,,3] = flipud(t(all_image$b))
     depthmap = (all_image$linear_depth)
   }
+  depthmap = rayimage::render_reorient(depthmap, flipx = TRUE, transpose = TRUE)
   if(preview_focus) {
     depthmap = (depthmap)
     temp_depth = paste0(tempfile(),".png")

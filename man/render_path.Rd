@@ -11,6 +11,8 @@ render_path(
   extent = NULL,
   zscale = 1,
   heightmap = NULL,
+  resample_evenly = FALSE,
+  resample_n = 360,
   reorder = FALSE,
   reorder_first_index = 1,
   reorder_duplicate_tolerance = 0.1,
@@ -44,6 +46,12 @@ the previously aforementioned packages) which will be automatically converted to
 
 \item{heightmap}{Default `NULL`. Pass this if not including an `altitude` argument, or if no extent passed. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
 All points are assumed to be evenly spaced.}
+
+\item{resample_evenly}{Default `FALSE`. If `TRUE`, this will re-sample the path evenly from beginning to end, which can help vastly
+reduce the number of points used to draw it (which can improve the performance of `render_highquality()` and `render_snapshot(software_render = TRUE)`).
+This function works only if `reorder = TRUE`, or if the sf object is already ordered from beginning to end.}
+
+\item{resample_n}{Default `360`. Number of breaks in which to evenly resample the line if `resample_evenly = TRUE`.}
 
 \item{reorder}{Default `FALSE`. If `TRUE`, this will attempt to re-order the rows within an `sf` object with
 multiple paths to be one continuous, end-to-end path. This happens in two steps: merging duplicate 

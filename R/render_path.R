@@ -18,6 +18,10 @@
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.
 #'@param heightmap Default `NULL`. Pass this if not including an `altitude` argument, or if no extent passed. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
 #' All points are assumed to be evenly spaced.
+#'@param resample_evenly Default `FALSE`. If `TRUE`, this will re-sample the path evenly from beginning to end, which can help vastly
+#'reduce the number of points used to draw it (which can improve the performance of `render_highquality()` and `render_snapshot(software_render = TRUE)`).
+#'This function works only if `reorder = TRUE`, or if the sf object is already ordered from beginning to end.
+#'@param resample_n Default `360`. Number of breaks in which to evenly resample the line if `resample_evenly = TRUE`.
 #'@param linewidth Default `3`. The line width.
 #'@param antialias Default `FALSE`. If `TRUE`, the line with be have anti-aliasing applied. NOTE: anti-aliasing can cause some unpredictable behavior with transparent surfaces.
 #'@param color Default `black`. Color of the line.
@@ -114,6 +118,7 @@
 #'}
 render_path = function(lat, long = NULL, altitude = NULL, extent = NULL, 
                        zscale=1, heightmap = NULL, 
+                       resample_evenly = FALSE, resample_n = 360,
                        reorder = FALSE, 
                        reorder_first_index = 1,
                        reorder_duplicate_tolerance = 0.1, 
@@ -130,6 +135,26 @@ render_path = function(lat, long = NULL, altitude = NULL, extent = NULL,
       return(invisible())
     }
   }
+  if(resample_evenly) {
+    stopifnot(resample_n > 1)
+    xyz = render_path(extent = extent, lat = lat, long = long, altitude = altitude, 
+                      zscale=zscale, heightmap = heightmap, offset = offset, resample_evenly = FALSE,
+                      reorder = reorder, reorder_first_index = reorder_first_index, 
+                      reorder_duplicate_tolerance = reorder_duplicate_tolerance,
+                      reorder_merge_tolerance = reorder_merge_tolerance,
+                      simplify_tolerance = simplify_tolerance,
+                      clear_previous = FALSE, return_coords = TRUE)
+    xyz = do.call(rbind,xyz)
+    xyz = get_interpolated_points_path(xyz, n = resample_n)
+    if(!return_coords) {
+      rgl::lines3d(xyz[,1] + 0.5,xyz[,2],xyz[,3] + 0.5,
+                   color = color, tag = "path3d", lwd = linewidth, line_antialias = antialias)
+      return(invisible())
+    } else {
+      return(xyz)
+    }
+  }
+  
   
   #Remove empty geometries
   if(inherits(lat, "sf")) {
@@ -205,6 +230,7 @@ render_path = function(lat, long = NULL, altitude = NULL, extent = NULL,
   if(!is.null(altitude)) {
     offset = 0
   }
+  
   coord_list = list()
   for(group in seq_along(split_lat)) {
     lat = split_lat[[group]]
