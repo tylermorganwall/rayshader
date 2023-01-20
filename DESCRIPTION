@@ -1,7 +1,7 @@
 Package: rayshader
 Type: Package
 Title: Create Maps and Visualize Data in 2D and 3D
-Version: 0.34.3
+Version: 0.34.4
 Date: 2023-01-19
 Author: Tyler Morgan-Wall
 Maintainer: Tyler Morgan-Wall <tylermw@gmail.com>
@@ -26,7 +26,7 @@ Imports: doParallel,
          terrainmeshr,
          rayimage (>= 0.9.0),
          rayvertex (>= 0.4.16),
-         rayrender (>= 0.28.4)
+         rayrender (>= 0.29.2)
 Suggests: reshape2,
           viridis,
           av,
