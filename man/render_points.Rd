@@ -112,7 +112,16 @@ render_snapshot()
 }
 if(rayshader:::run_documentation()) {
 #And all of these work with `render_highquality()`
-render_highquality(point_radius = 3, clamp_value=10, min_variance = 0,
+render_highquality(point_radius = 6, clamp_value=10, min_variance = 0,
                   sample_method = "sobol_blue", samples = 128)
+}
+
+if(rayshader:::run_documentation()) {
+#We can also change the material of the objects by setting the `point_material` and
+#`point_material_args` arguments in `render_highquality()`
+render_highquality(point_radius = 6, clamp_value=10, min_variance = 0,
+                  sample_method = "sobol_blue", samples = 128,
+                  point_material = rayrender::glossy, 
+                  point_material_args = list(gloss = 0.5, reflectance = 0.2))
 }
 }

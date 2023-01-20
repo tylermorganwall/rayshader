@@ -45,6 +45,10 @@ render_highquality(
   clamp_value = 10,
   calculate_consistent_normals = FALSE,
   load_normals = TRUE,
+  point_material = rayrender::diffuse,
+  point_material_args = list(),
+  path_material = rayrender::diffuse,
+  path_material_args = list(),
   animation_camera_coords = NULL,
   ...
 )
@@ -91,8 +95,8 @@ will specify the absolute angle all the labels are facing. If three angles, this
 \item{smooth_line}{Default `FALSE`. If `TRUE`, the line will be rendered with a continuous smooth line, rather
 than straight segments.}
 
-\item{use_extruded_paths}{Default `FALSE`. If `TRUE`, paths will be generated with the `rayrender::extruded_path()` object, instead
-of `rayrender::path()`.}
+\item{use_extruded_paths}{Default `TRUE`. If `FALSE`, paths will be generated with the `rayrender::path()` object, instead
+of `rayrender::extruded_path()`.}
 
 \item{scale_text_angle}{Default `NULL`. Same as `text_angle`, but for the scale bar.}
 
@@ -143,6 +147,20 @@ and `camera_lookat` vectors.}
 loss at edges.}
 
 \item{load_normals}{Default `TRUE`. Whether to load the vertex normals if they exist in the OBJ file.}
+
+\item{point_material}{Default `rayrender::diffuse`. The rayrender material function to be applied
+to point data.}
+
+\item{point_material_args}{Default empty `list()`. The function arguments to `point_material`. 
+The argument `color` will be automatically extracted from the rgl scene, but all other arguments 
+can be specified here.}
+
+\item{path_material}{Default `rayrender::diffuse`. The rayrender material function to be applied
+to path data.}
+
+\item{path_material_args}{Default empty `list()`. The function arguments to `path_material`. 
+The argument `color` will be automatically extracted from the rgl scene, but all other arguments 
+can be specified here.}
 
 \item{animation_camera_coords}{Default `NULL`. Expects camera animation output from either `convert_path_to_animation_coords()`
 or `rayrender::generate_camera_motion()` functions.}

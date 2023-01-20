@@ -115,6 +115,28 @@
 #'render_highquality(clamp_value=10, line_radius=3, min_variance = 0,
 #'                   sample_method = "sobol_blue", samples = 128)
 #'}
+#'if(rayshader:::run_documentation()) {
+#'#We can also change the material of the objects by setting the `point_material` and
+#'#`point_material_args` arguments in `render_highquality()`
+#'render_highquality(clamp_value=10, line_radius=3, min_variance = 0,
+#'                   sample_method = "sobol_blue", samples = 128,
+#'                   path_material = rayrender::glossy, 
+#'                   path_material_args = list(gloss = 0.5, reflectance = 0.2))
+#'}
+#'
+#'if(rayshader:::run_documentation()) {
+#'#For transmissive materials (like `dielectric`), we should specify that the path
+#'#should be rendered with an extruded path. We'll use the `attenuation` argument in 
+#'#the `dielectric` function to specify a realistic glass color.
+#'render_path(extent = attr(montereybay,"extent"), heightmap = montereybay, clear_previous = TRUE,
+#'            lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), 
+#'            zscale=50, color="white", offset=200, linewidth=5)
+#'render_highquality(clamp_value=10, line_radius=6, min_variance = 0,
+#'                   sample_method = "sobol_blue", samples = 128,
+#'                   lightsize = 2000, lightintensity = 10,
+#'                   path_material = rayrender::dielectric, use_extruded_paths = TRUE,
+#'                   path_material_args = list(refraction = 1.5, attenuation = c(0.05,0.2,0.2)))
+#'}
 render_path = function(lat, long = NULL, altitude = NULL, extent = NULL, 
                        zscale=1, heightmap = NULL, 
                        resample_evenly = FALSE, resample_n = 360,

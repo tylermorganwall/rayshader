@@ -217,7 +217,8 @@ convert_path_to_animation_coords = function(lat, long = NULL, altitude = NULL, e
           xyz_follow[i,1:3] = xyz_follow[i,1:3] + follow_fixed_offset_rot
         }
       } else {
-        follow_fixed_offset_rot = follow_fixed_offset
+        xyz_follow[,1:3] = xyz_follow[,1:3] + matrix(follow_fixed_offset, 
+                                                     nrow = nrow(xyz_follow), ncol=3L, byrow=TRUE)
       }
       xyz_follow$focal = sqrt(apply((xyz_follow[,1:3] - xyz_follow[,4:6])^2,1,sum))
       return(xyz_follow)

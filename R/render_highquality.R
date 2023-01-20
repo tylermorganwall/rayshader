@@ -30,8 +30,8 @@
 #'@param line_radius Default `0.5`. Radius of line/path segments.
 #'@param smooth_line Default `FALSE`. If `TRUE`, the line will be rendered with a continuous smooth line, rather
 #'than straight segments.
-#'@param use_extruded_paths Default `FALSE`. If `TRUE`, paths will be generated with the `rayrender::extruded_path()` object, instead
-#'of `rayrender::path()`.
+#'@param use_extruded_paths Default `TRUE`. If `FALSE`, paths will be generated with the `rayrender::path()` object, instead
+#'of `rayrender::extruded_path()`.
 #'@param point_radius Default `0.5`. Radius of 3D points (rendered with `render_points()`.
 #'@param scale_text_angle Default `NULL`. Same as `text_angle`, but for the scale bar.
 #'@param scale_text_size Default `6`. Height of the scale bar text.
@@ -61,6 +61,16 @@
 #'@param load_normals Default `TRUE`. Whether to load the vertex normals if they exist in the OBJ file.
 #'@param calculate_consistent_normals Default `FALSE`. Whether to calculate consistent vertex normals to prevent energy 
 #'loss at edges.
+#'@param point_material Default `rayrender::diffuse`. The rayrender material function to be applied
+#'to point data.
+#'@param point_material_args Default empty `list()`. The function arguments to `point_material`. 
+#'The argument `color` will be automatically extracted from the rgl scene, but all other arguments 
+#'can be specified here. 
+#'@param path_material Default `rayrender::diffuse`. The rayrender material function to be applied
+#'to path data.
+#'@param path_material_args Default empty `list()`. The function arguments to `path_material`. 
+#'The argument `color` will be automatically extracted from the rgl scene, but all other arguments 
+#'can be specified here. 
 #'@param animation_camera_coords Default `NULL`. Expects camera animation output from either `convert_path_to_animation_coords()`
 #'or `rayrender::generate_camera_motion()` functions.
 #'@param ... Additional parameters to pass to `rayrender::render_scene`()
@@ -147,11 +157,16 @@ render_highquality = function(filename = NULL, light = TRUE,
                               title_text = NULL, title_offset = c(20,20), 
                               title_color = "black", title_size = 30, title_font = "sans",
                               title_bar_color = NULL, title_bar_alpha = 0.5,
-                              ground_material = rayrender::diffuse(), ground_size=100000,scene_elements=NULL, 
+                              ground_material = rayrender::diffuse(), ground_size=100000,
+                              scene_elements=NULL, 
                               camera_location = NULL, camera_lookat = NULL, 
                               camera_interpolate=1, clear  = FALSE, return_scene = FALSE,
                               print_scene_info = FALSE, clamp_value = 10, 
                               calculate_consistent_normals = FALSE, load_normals = TRUE,
+                              point_material = rayrender::diffuse, 
+                              point_material_args = list(),
+                              path_material = rayrender::diffuse, 
+                              path_material_args = list(),
                               animation_camera_coords = NULL, ...) {
   if(rgl::cur3d() == 0) {
     stop("No rgl window currently open.")
@@ -166,6 +181,41 @@ render_highquality = function(filename = NULL, light = TRUE,
   if(!(length(find.package("rayrender", quiet = TRUE)) > 0)) {
     stop("`rayrender` package required for render_highquality()")
   }
+  
+  #Check path/point material arguments
+  if(!inherits(path_material, "function")) {
+    stop("`path_material` is not a function: did you forget to remove the `()` at the end?")
+  }
+  arg_names = names(formals(path_material))
+  not_matching = !(names(path_material_args) %in% arg_names)
+  if(any(not_matching)) {
+    arg_names = arg_names[arg_names != "color"]
+    all_arg_names = paste(arg_names, collapse = ", ")
+    all_not_matching = paste(names(path_material_args)[not_matching], collapse = ", ")
+    stop(sprintf("Path material arguments `%s` not valid for the material. Valid argument names are: \n%s", 
+                 all_not_matching, all_arg_names))
+  }
+  if(!inherits(point_material, "function")) {
+    stop("`point_material` is not a function: did you forget to remove the `()` at the end?")
+  }
+  arg_names = names(formals(point_material))
+  not_matching = !(names(point_material_args) %in% arg_names)
+  if(any(not_matching)) {
+    arg_names = arg_names[arg_names != "color"]
+    all_arg_names = paste(arg_names, collapse = ", ")
+    all_not_matching = paste(names(point_material_args)[not_matching], collapse = ", ")
+    stop(sprintf("Point material arguments `%s` not valid for the material. Valid argument names are: \n%s", 
+                 all_not_matching, all_arg_names))
+  }
+  
+  #Set use_extruded_path to TRUE if path_material is dielectric
+  path_material_df = path_material()
+  if(path_material_df$type == "dielectric" && !use_extruded_paths) {
+    message("dielectric material for paths selected--setting `use_extruded_paths = TRUE` for accurate rendering of material")
+    use_extruded_paths = TRUE
+  }
+  
+  #Get scene info
   windowrect = rgl::par3d()$windowRect
   if(!is.null(title_text)) {
     has_title = TRUE
@@ -386,39 +436,21 @@ render_highquality = function(filename = NULL, light = TRUE,
     if(nrow(temp_color) == 1) {
       temp_color = matrix(temp_color[1:3], byrow = TRUE, ncol = 3, nrow = nrow(temp_verts))
     }
-    if(smooth_line) {
-      matrix_center = matrix(bbox_center, byrow=TRUE,ncol=3,nrow = nrow(temp_verts))
-      if(use_extruded_paths) {
-        pathline[[counter]] = rayrender::extruded_path(points = temp_verts - matrix_center , 
-                                              width = line_radius * 2,
-                                              material = rayrender::diffuse(color = temp_color[1,1:3]))
-      } else {
-        pathline[[counter]] = rayrender::path(points = temp_verts - matrix_center, 
-                                              width = line_radius * 2,
-                                              material = rayrender::diffuse(color = temp_color[1,1:3]))
-      }
-      counter = counter + 1
+    matrix_center = matrix(bbox_center, byrow=TRUE,ncol=3,nrow = nrow(temp_verts))
+    path_material_args$color = temp_color[1,1:3]
+    if(use_extruded_paths) {
+      pathline[[counter]] = rayrender::extruded_path(points = temp_verts - matrix_center , 
+                                            width = line_radius * 2,
+                                            smooth_normals = TRUE, 
+                                            straight = !smooth_line,
+                                            material = do.call("path_material", args = path_material_args))
     } else {
-      for(j in seq_len(nrow(temp_verts)-1)) {
-        pathline[[counter]] = rayrender::segment(start = temp_verts[j,] - bbox_center, 
-                                                  end   = temp_verts[j+1,] - bbox_center,
-                                                  radius = line_radius,
-                                                  material = rayrender::diffuse(color = temp_color[j,1:3]))
-        counter = counter + 1
-        pathline[[counter]] = rayrender::sphere(x = temp_verts[j,1] - bbox_center[1],
-                                                 y = temp_verts[j,2] - bbox_center[2],
-                                                 z = temp_verts[j,3] - bbox_center[3],
-                                                 radius = line_radius,
-                                                 material = rayrender::diffuse(color = temp_color[j,1:3]))
-        counter = counter + 1
-      }
-      pathline[[counter]] = rayrender::sphere(x = temp_verts[nrow(temp_verts),1] - bbox_center[1],
-                                              y = temp_verts[nrow(temp_verts),2] - bbox_center[2],
-                                              z = temp_verts[nrow(temp_verts),3] - bbox_center[3],
-                                              radius = line_radius,
-                                              material = rayrender::diffuse(color = temp_color[nrow(temp_verts),1:3]))
-      counter = counter + 1
+      pathline[[counter]] = rayrender::path(points = temp_verts - matrix_center, 
+                                            width = line_radius * 2,
+                                            straight = !smooth_line,
+                                            material = do.call("path_material", args = path_material_args))
     }
+    counter = counter + 1
   }
   pointids = get_ids_with_labels(typeval = "points3d")$id
   pointlist = list()
@@ -430,11 +462,13 @@ render_highquality = function(filename = NULL, light = TRUE,
       temp_color = matrix(temp_color[1:3], byrow = TRUE, ncol = 3, nrow = nrow(temp_verts))
     }
     for(j in seq_len(nrow(temp_verts))) {
+      point_material_args$color = temp_color[j,1:3]
+      
       pointlist[[counter]] = rayrender::sphere(x = temp_verts[j,1] - bbox_center[1],
                                               y = temp_verts[j,2] - bbox_center[2],
                                               z = temp_verts[j,3] - bbox_center[3],
                                               radius = point_radius,
-                                              material = rayrender::diffuse(color = temp_color[j,1:3]))
+                                              material = do.call("point_material", args = point_material_args))
       counter = counter + 1
     }
   }
