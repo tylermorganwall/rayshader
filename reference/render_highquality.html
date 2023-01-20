@@ -21,7 +21,7 @@ either `convert_path_to_animation_coords()` or `rayrender::generate_camera_motio
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.34.2</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.34.4</span>
       </span>
     </div>
 
@@ -148,6 +148,10 @@ either `convert_path_to_animation_coords()` or `rayrender::generate_camera_motio
 <span>  clamp_value <span class="op">=</span> <span class="fl">10</span>,</span>
 <span>  calculate_consistent_normals <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  load_normals <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  point_material <span class="op">=</span> <span class="fu">rayrender</span><span class="fu">::</span><span class="va"><a href="https://www.rayrender.net/reference/diffuse.html" class="external-link">diffuse</a></span>,</span>
+<span>  point_material_args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  path_material <span class="op">=</span> <span class="fu">rayrender</span><span class="fu">::</span><span class="va"><a href="https://www.rayrender.net/reference/diffuse.html" class="external-link">diffuse</a></span>,</span>
+<span>  path_material_args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  animation_camera_coords <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -231,8 +235,8 @@ than straight segments.</p></dd>
 
 
 <dt>use_extruded_paths</dt>
-<dd><p>Default `FALSE`. If `TRUE`, paths will be generated with the `rayrender::extruded_path()` object, instead
-of `rayrender::path()`.</p></dd>
+<dd><p>Default `TRUE`. If `FALSE`, paths will be generated with the `rayrender::path()` object, instead
+of `rayrender::extruded_path()`.</p></dd>
 
 
 <dt>scale_text_angle</dt>
@@ -327,6 +331,28 @@ loss at edges.</p></dd>
 
 <dt>load_normals</dt>
 <dd><p>Default `TRUE`. Whether to load the vertex normals if they exist in the OBJ file.</p></dd>
+
+
+<dt>point_material</dt>
+<dd><p>Default `rayrender::diffuse`. The rayrender material function to be applied
+to point data.</p></dd>
+
+
+<dt>point_material_args</dt>
+<dd><p>Default empty `list()`. The function arguments to `point_material`. 
+The argument `color` will be automatically extracted from the rgl scene, but all other arguments 
+can be specified here.</p></dd>
+
+
+<dt>path_material</dt>
+<dd><p>Default `rayrender::diffuse`. The rayrender material function to be applied
+to path data.</p></dd>
+
+
+<dt>path_material_args</dt>
+<dd><p>Default empty `list()`. The function arguments to `path_material`. 
+The argument `color` will be automatically extracted from the rgl scene, but all other arguments 
+can be specified here.</p></dd>
 
 
 <dt>animation_camera_coords</dt>
