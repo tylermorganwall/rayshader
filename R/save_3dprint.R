@@ -47,18 +47,7 @@
 #'render_snapshot()
 #'save_3dprint(filename_stl, maxwidth = "120mm")
 #'}
-save_3dprint = function(filename,maxwidth=125,unit="mm",rotate=TRUE,remove_extras = TRUE,
-                        clear=FALSE) {
-  if(remove_extras) {
-    extra_types = c("water",
-                  "lines",             "waterlines",    "shadow",
-                  "basebottom",        "textline",      "raytext",
-                  "north_symbol",      "arrow_symbol",  "bevel_symbol",  
-                  "background_symbol", "scalebar_col1", "scalebar_col2",
-                  "text_scalebar",     "path3d",       
-                  "points3d",          "polygon3d")
-    rgl::pop3d(tag=extra_types)
-  }
+save_3dprint = function(filename,maxwidth=125,unit="mm", rotate = FALSE) {
   if(substring(filename, nchar(filename)-3,nchar(filename)) != ".stl") {
     filename = paste0(filename,".stl")
   }
@@ -75,84 +64,5 @@ save_3dprint = function(filename,maxwidth=125,unit="mm",rotate=TRUE,remove_extra
   if(!(unit %in% c("in", "mm"))) {
     stop(paste0("unit: ",unit," not recognized: use `mm` or `in`."))
   }
-  if(rotate) {
-    zrot = matrix(0,3,3)
-    zrot[1,1] = 1
-    zrot[2,2] = 0
-    zrot[3,3] = 0
-    zrot[2,3] = 1
-    zrot[3,2] = -1
-  } else {
-    zrot = matrix(0,3,3)
-    zrot[1,1] = 1
-    zrot[2,2] = 1
-    zrot[3,3] = 1
-  }
-  rot_z_90 = function(vec) {
-    vec %*% zrot
-  }
-  temp = paste0(tempfile(),".stl")
-  rgl::writeSTL(temp)
-  
-  #Read STL file and manipulate
-  stlfile = file(temp, "rb") 
-  header = readChar(stlfile, nchars = 80)
-  
-  numbertriangles = readBin(stlfile, integer(),size=4, endian = "little")
-  
-  vertexmatrix = matrix(0,nrow=numbertriangles*3,ncol=3)
-  normalmatrix = matrix(0,nrow=numbertriangles,ncol=3)
-  zeros = list()
-  
-  for(i in 1:numbertriangles) {
-    normalmatrix[i,] = readBin(stlfile, "double",size=4,endian = "little", n=3)
-    vertexmatrix[3*(i-1)+1,] = readBin(stlfile, "double",size=4,endian = "little", n=3)
-    vertexmatrix[3*(i-1)+2,] = readBin(stlfile, "double",size=4,endian = "little", n=3)
-    vertexmatrix[3*(i-1)+3,] = readBin(stlfile, "double",size=4,endian = "little", n=3)
-    zeros[[i]] = readBin(stlfile, "integer",size=2,endian = "little", n=1)
-  }
-  
-  close.connection(stlfile)
-  dim1width = abs(min(vertexmatrix[,1],na.rm = TRUE)-max(vertexmatrix[,1],na.rm = TRUE))
-  dim2width = abs(min(vertexmatrix[,3],na.rm = TRUE)-max(vertexmatrix[,3],na.rm = TRUE))
-  dim3width = abs(min(vertexmatrix[,2],na.rm = TRUE)-max(vertexmatrix[,2],na.rm = TRUE))
-  maxdim = max(dim1width,dim2width)
-  multiplier = maxwidth/maxdim
-  
-  stlfilewrite = file(filename, "wb")
-  
-  writeChar(header,stlfilewrite,nchars = 80,eos=NULL)
-  adjustednumbertriangles = 0L
-  for(i in 1:numbertriangles) {
-    if(all(!is.nan(normalmatrix[i,,drop=FALSE])) && all(!is.nan(vertexmatrix[3*(i-1)+1,,drop=FALSE])) &&
-       all(!is.nan(vertexmatrix[3*(i-1)+2,,drop=FALSE])) && all(!is.nan(vertexmatrix[3*(i-1)+3,,drop=FALSE]))) {
-      adjustednumbertriangles = adjustednumbertriangles + 1L
-    }
-  }
-  writeBin(adjustednumbertriangles, stlfilewrite, size=4, endian = "little")
-  
-  for(i in 1:numbertriangles) {
-    if(all(!is.nan(normalmatrix[i,,drop=FALSE])) && all(!is.nan(vertexmatrix[3*(i-1)+1,,drop=FALSE])) &&
-    all(!is.nan(vertexmatrix[3*(i-1)+2,,drop=FALSE])) && all(!is.nan(vertexmatrix[3*(i-1)+3,,drop=FALSE]))) {
-      writeBin(as.double(rot_z_90(normalmatrix[i,,drop=FALSE])), stlfilewrite,endian = "little",size=4)
-      writeBin(as.double(rot_z_90(vertexmatrix[3*(i-1)+1,,drop=FALSE])*multiplier), stlfilewrite, endian = "little",size=4)
-      writeBin(as.double(rot_z_90(vertexmatrix[3*(i-1)+2,,drop=FALSE])*multiplier), stlfilewrite, endian = "little",size=4)
-      writeBin(as.double(rot_z_90(vertexmatrix[3*(i-1)+3,,drop=FALSE])*multiplier), stlfilewrite, endian = "little",size=4)
-      writeBin(0L, stlfilewrite,size=2, endian = "little")
-    }
-  }
-  close.connection(stlfilewrite)
-  if(!rotate) {
-    temp1 = dim2width
-    dim2width = dim3width
-    dim3width = temp1
-  }
-  if(unit == "mm") {
-    message(sprintf("Dimensions of model are: %1.1f mm x %1.1f mm x %1.1f mm",dim1width*multiplier,dim2width*multiplier,dim3width*multiplier))
-  } else {
-    message(sprintf("Dimensions of model are: %1.2f in x %1.2f in x %1.2f in",dim1width*0.0393*multiplier,dim2width*0.0393*multiplier,dim3width*0.0393*multiplier))
-  }
-  if(clear) {
-    rgl::clear3d()
-  }
+  write_stl(filename, rotate = rotate, maxwidth = maxwidth, unit=unit)
 }
