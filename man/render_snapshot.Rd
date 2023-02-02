@@ -40,6 +40,9 @@ render_snapshot(
   new_page = TRUE,
   print_scene_info = FALSE,
   fsaa = 1,
+  rayvertex_lighting = FALSE,
+  rayvertex_lights = NULL,
+  rayvertex_shadow_map = FALSE,
   ...
 )
 }
@@ -133,6 +136,16 @@ render the lines using a single-pixel anti-aliased line algorithm.}
 
 \item{fsaa}{Default `1`. Integer specifying the amount of anti-aliasing applied `software_render = TRUE`.}
 
+\item{rayvertex_lighting}{Default `FALSE`. If `TRUE` and `software_render = TRUE`, the scene will use rayvertex lighting when rendering
+the scene, using the lights specified in `rayvertex_lights`. If no lights are specified there, they will be pulled
+from `light` objects in the `rgl` scene.}
+
+\item{rayvertex_lights}{Default `NULL`. Use `rayvertex::directional_light()` and `rayvertex::point_light()` along with the 
+`rayvertex::add_light()` function to specify lighting for your scene when `rayvertex_lighting = TRUE`.}
+
+\item{rayvertex_shadow_map}{Default `FALSE`. If `TRUE` and `rayvertex_lighting = TRUE` along with `software_render = TRUE`, shadow mapping will also
+be applied to the rendered scene.}
+
 \item{...}{Additional parameters to pass to `rayvertex::rasterize_scene()`.}
 }
 \value{
@@ -164,5 +177,20 @@ render_snapshot(title_text = "Monterey Bay, California",
                title_color = "white", title_bar_color = "darkgreen",
                vignette = TRUE, title_offset=c(0,20),
                title_font = "Helvetica", title_position = "north")
+}
+#Use software rendering to render a scene with shadow mapping
+if(rayshader:::run_documentation()) {
+montereybay |> 
+ height_shade() |> 
+ plot_3d(montereybay, shadow=FALSE, solidlinecolor = NULL)
+#No shadows
+render_snapshot(software_render = TRUE)
+}
+if(rayshader:::run_documentation()) {
+#Now with shadow mapped shadows, calculated in rayvertex
+render_snapshot(rayvertex_lighting = TRUE, 
+               rayvertex_lights = rayvertex::directional_light(intensity = 2.5, 
+                                                               direction = c(-1, 0.8, -1)), 
+               rayvertex_shadow_map = TRUE, software_render = TRUE)
 }
 }

@@ -11,7 +11,9 @@ render_snapshot_software = function(filename, cache_filename = NULL, camera_loca
                                     width = NULL, height = NULL, light_direction = NULL, fake_shadow = TRUE, 
                                     text_angle = NULL, text_size = 1, text_offset = c(0,0,0), fov=NULL, 
                                     print_scene_info = FALSE, point_radius = 1, line_offset=-1e-7, 
-                                    fsaa = 1, thick_lines = FALSE, line_radius = 0.5, ...) {
+                                    fsaa = 1, thick_lines = FALSE, line_radius = 0.5, 
+                                    rayvertex_lighting = FALSE,
+                                    rayvertex_lights = NULL, rayvertex_shadow_map = FALSE, ...) {
   if(run_documentation()) {
     fsaa = 2
   }
@@ -312,7 +314,7 @@ render_snapshot_software = function(filename, cache_filename = NULL, camera_loca
       scene$materials$ray_polygon3d$diffuse_intensity = 0
     }
   }
-  if(is.null(light_direction)) {
+  if(!rayvertex_lighting) {
     #Get light info
     lightinfo = rgl::ids3d(type = "lights")
     light_list = list()
@@ -330,10 +332,11 @@ render_snapshot_software = function(filename, cache_filename = NULL, camera_loca
       } else {
         light_list[[i]] = rayvertex::point_light(position = direction)
       }
-      lights = do.call(rbind,light_list)
     }
+    lights = do.call(rbind,light_list)
   } else {
-    lights = rayvertex::directional_light(light_direction)
+    scene = rayvertex::change_material(scene, type = "diffuse")
+    lights = rayvertex_lights
   }
   if(thick_lines) {
     line_scene_processed = rayvertex::scene_from_list(line_scene)
@@ -351,7 +354,7 @@ render_snapshot_software = function(filename, cache_filename = NULL, camera_loca
                                      ortho_dimensions = ortho_dimensions,
                                      fov=fov, background = background, light_info = lights,
                                      line_info = rayvertex::add_lines(labelline, pathline), 
-                                     line_offset=line_offset, shadow_map = FALSE,
+                                     line_offset=line_offset, shadow_map = rayvertex_shadow_map,
                                      ...)
   return(invisible(debug))
 }

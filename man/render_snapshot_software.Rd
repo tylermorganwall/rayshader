@@ -25,6 +25,9 @@ render_snapshot_software(
   fsaa = 1,
   thick_lines = FALSE,
   line_radius = 0.5,
+  rayvertex_lighting = FALSE,
+  rayvertex_lights = NULL,
+  rayvertex_shadow_map = FALSE,
   ...
 )
 }

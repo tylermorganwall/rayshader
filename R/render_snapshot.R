@@ -56,6 +56,13 @@
 #'@param print_scene_info Default `FALSE`. If `TRUE`, it will print the position and lookat point of the camera.
 #'@param new_page  Default `TRUE`. Whether to call `grid::grid.newpage()` before plotting the image.
 #'@param fsaa Default `1`. Integer specifying the amount of anti-aliasing applied `software_render = TRUE`.
+#'@param rayvertex_lighting Default `FALSE`. If `TRUE` and `software_render = TRUE`, the scene will use rayvertex lighting when rendering
+#'the scene, using the lights specified in `rayvertex_lights`. If no lights are specified there, they will be pulled
+#'from `light` objects in the `rgl` scene.
+#'@param rayvertex_lights Default `NULL`. Use `rayvertex::directional_light()` and `rayvertex::point_light()` along with the 
+#'`rayvertex::add_light()` function to specify lighting for your scene when `rayvertex_lighting = TRUE`.
+#'@param rayvertex_shadow_map Default `FALSE`. If `TRUE` and `rayvertex_lighting = TRUE` along with `software_render = TRUE`, shadow mapping will also
+#'be applied to the rendered scene.
 #'@param ... Additional parameters to pass to `rayvertex::rasterize_scene()`. 
 #'@return Displays snapshot of current rgl plot (or saves to disk).
 #'@export
@@ -83,6 +90,21 @@
 #'                vignette = TRUE, title_offset=c(0,20),
 #'                title_font = "Helvetica", title_position = "north")
 #'}
+#'#Use software rendering to render a scene with shadow mapping
+#'if(rayshader:::run_documentation()) {
+#'montereybay |> 
+#'  height_shade() |> 
+#'  plot_3d(montereybay, shadow=FALSE, solidlinecolor = NULL)
+#'#No shadows
+#'render_snapshot(software_render = TRUE)
+#'}
+#'if(rayshader:::run_documentation()) {
+#'#Now with shadow mapped shadows, calculated in rayvertex
+#'render_snapshot(rayvertex_lighting = TRUE, 
+#'                rayvertex_lights = rayvertex::directional_light(intensity = 2.5, 
+#'                                                                direction = c(-1, 0.8, -1)), 
+#'                rayvertex_shadow_map = TRUE, software_render = TRUE)
+#'}
 render_snapshot = function(filename, clear=FALSE, 
                            title_text = NULL, title_offset = c(20,20), 
                            title_color = "black", title_size = 30, title_font = "sans",
@@ -99,7 +121,10 @@ render_snapshot = function(filename, clear=FALSE,
                            point_radius = 2, 
                            line_offset = 1e-7, thick_lines = TRUE, line_radius = 0.5,
                            cache_filename  = NULL,  new_page = TRUE,
-                           print_scene_info = FALSE, fsaa = 1, ...) {
+                           print_scene_info = FALSE, fsaa = 1, 
+                           rayvertex_lighting = FALSE, rayvertex_lights = NULL,
+                           rayvertex_shadow_map = FALSE,
+                           ...) {
   if(rgl::rgl.useNULL()) {
     software_render = TRUE
   }
@@ -158,7 +183,8 @@ render_snapshot = function(filename, clear=FALSE,
                              text_angle = text_angle, text_size = text_size, text_offset = text_offset,
                              print_scene_info = print_scene_info, point_radius = point_radius, 
                              line_offset = -line_offset, fsaa = fsaa, thick_lines = thick_lines,
-                             line_radius = line_radius, ...)
+                             line_radius = line_radius, rayvertex_lighting = rayvertex_lighting,
+                             rayvertex_lights = rayvertex_lights, rayvertex_shadow_map = rayvertex_shadow_map, ...)
     if(length(dim(debug)) == 2) {
       return(flipud(debug))
     }
