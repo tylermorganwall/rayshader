@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.34.5</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.34.6</span>
       </span>
     </div>
 
@@ -135,6 +135,9 @@
 <span>  new_page <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  print_scene_info <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  fsaa <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  rayvertex_lighting <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  rayvertex_lights <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  rayvertex_shadow_map <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -300,6 +303,22 @@ render the lines using a single-pixel anti-aliased line algorithm.</p></dd>
 <dd><p>Default `1`. Integer specifying the amount of anti-aliasing applied `software_render = TRUE`.</p></dd>
 
 
+<dt>rayvertex_lighting</dt>
+<dd><p>Default `FALSE`. If `TRUE` and `software_render = TRUE`, the scene will use rayvertex lighting when rendering
+the scene, using the lights specified in `rayvertex_lights`. If no lights are specified there, they will be pulled
+from `light` objects in the `rgl` scene.</p></dd>
+
+
+<dt>rayvertex_lights</dt>
+<dd><p>Default `NULL`. Use `rayvertex::directional_light()` and `rayvertex::point_light()` along with the 
+`rayvertex::add_light()` function to specify lighting for your scene when `rayvertex_lighting = TRUE`.</p></dd>
+
+
+<dt>rayvertex_shadow_map</dt>
+<dd><p>Default `FALSE`. If `TRUE` and `rayvertex_lighting = TRUE` along with `software_render = TRUE`, shadow mapping will also
+be applied to the rendered scene.</p></dd>
+
+
 <dt>...</dt>
 <dd><p>Additional parameters to pass to `rayvertex::rasterize_scene()`.</p></dd>
 
@@ -339,6 +358,24 @@ render the lines using a single-pixel anti-aliased line algorithm.</p></dd>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-plt img"><img src="render_snapshot-2.png" alt="" width="768" height="768"></span>
 <span class="r-plt img"><img src="render_snapshot-3.png" alt="" width="768" height="768"></span>
+<span class="r-in"><span><span class="co">#Use software rendering to render a scene with shadow mapping</span></span></span>
+<span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu">rayshader</span><span class="fu">:::</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span><span class="va">montereybay</span> <span class="op">|&gt;</span> </span></span>
+<span class="r-in"><span> <span class="fu"><a href="height_shade.html">height_shade</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span> </span></span>
+<span class="r-in"><span> <span class="fu"><a href="plot_3d.html">plot_3d</a></span><span class="op">(</span><span class="va">montereybay</span>, shadow<span class="op">=</span><span class="cn">FALSE</span>, solidlinecolor <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co">#No shadows</span></span></span>
+<span class="r-in"><span><span class="fu">render_snapshot</span><span class="op">(</span>software_render <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> `montereybay` dataset used with no zscale--setting `zscale=50`.  For a realistic depiction, raise `zscale` to 200.</span>
+<span class="r-plt img"><img src="render_snapshot-4.png" alt="" width="768" height="768"></span>
+<span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu">rayshader</span><span class="fu">:::</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span><span class="co">#Now with shadow mapped shadows, calculated in rayvertex</span></span></span>
+<span class="r-in"><span><span class="fu">render_snapshot</span><span class="op">(</span>rayvertex_lighting <span class="op">=</span> <span class="cn">TRUE</span>, </span></span>
+<span class="r-in"><span>               rayvertex_lights <span class="op">=</span> <span class="fu">rayvertex</span><span class="fu">::</span><span class="fu"><a href="https://www.rayvertex.com/reference/directional_light.html" class="external-link">directional_light</a></span><span class="op">(</span>intensity <span class="op">=</span> <span class="fl">2.5</span>, </span></span>
+<span class="r-in"><span>                                                               direction <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1</span>, <span class="fl">0.8</span>, <span class="op">-</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span>, </span></span>
+<span class="r-in"><span>               rayvertex_shadow_map <span class="op">=</span> <span class="cn">TRUE</span>, software_render <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-plt img"><img src="render_snapshot-5.png" alt="" width="768" height="768"></span>
 </code></pre></div>
     </div>
   </div>
