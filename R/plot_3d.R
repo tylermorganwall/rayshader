@@ -67,6 +67,7 @@
 #'the data will be plotted in the same window.
 #'@param close_previous Default `TRUE`. Closes any previously open `rgl` window. If `FALSE`, 
 #'old windows will be kept open.
+#'@param clear_previous Default `TRUE`. Clears the previously open `rgl` window if `plot_new = FALSE`.
 #'@param ... Additional arguments to pass to the `rgl::par3d` function.
 #'
 #'@import rgl
@@ -147,8 +148,11 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
                    theta=45, phi = 45, fov=0, zoom = 1, background="white", windowsize = 600,
                    precomputed_normals = NULL, asp = 1,
                    triangulate = FALSE, max_error = 0, max_tri = 0, verbose = FALSE,
-                   plot_new = TRUE, close_previous = TRUE,
+                   plot_new = TRUE, close_previous = TRUE, clear_previous = TRUE,
                    ...) {
+  if(!plot_new && clear_previous) {
+    rgl::clear3d()
+  }
   #setting default zscale if montereybay is used and tell user about zscale
   argnameschar = unlist(lapply(as.list(sys.call()),as.character))[-1]
   argnames = as.list(sys.call())
@@ -193,25 +197,52 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
   if(is.null(heightmap)) {
     stop("heightmap argument missing--need to input both hillshade and original elevation matrix")
   }
+  min_height = min(heightmap,na.rm=TRUE)
+  max_height = max(heightmap,na.rm=TRUE)
   if(soliddepth == "auto") {
-    if(min(heightmap,na.rm=TRUE) != max(heightmap,na.rm=TRUE)) {
-      soliddepth = min(heightmap,na.rm = TRUE)/zscale - (max(heightmap,na.rm = TRUE)/zscale-min(heightmap,na.rm = TRUE)/zscale)/5
+    if(min_height != max_height) {
+      soliddepth = min_height/zscale - (max_height/zscale-min_height/zscale)/5
     } else {
       max_dim = max(dim(heightmap))
-      soliddepth = min(heightmap,na.rm = TRUE)/zscale - max_dim/25
+      soliddepth = min_height/zscale - max_dim/25
     }
   } else {
-    soliddepth = soliddepth/zscale
+    if(soliddepth > min_height) {
+      message(sprintf("`soliddepth` (set to %f) must be less than or equal to heightmap minimum value (%f). Setting to min(heightmap)",
+                      soliddepth, min_height))
+      soliddepth = min_height/zscale
+    } else {
+      soliddepth = soliddepth/zscale
+    }
+  }
+  if(solid) {
+    min_height_shadow = min(c(min_height, soliddepth*zscale))
+  } else {
+    min_height_shadow = min_height
   }
   if(shadowdepth == "auto") {
-    if(min(heightmap,na.rm=TRUE) != max(heightmap,na.rm=TRUE)) {
-      shadowdepth = soliddepth - (max(heightmap,na.rm = TRUE)/zscale-min(heightmap,na.rm = TRUE)/zscale)/5
+    if(min_height_shadow != max_height) {
+      if(solid) {
+        shadowdepth = soliddepth - (max_height/zscale-min_height_shadow/zscale)/5
+      } else {
+        shadowdepth = min_height_shadow/zscale - (max_height/zscale-min_height_shadow/zscale)/5
+      }
     } else {
-      max_dim = max(dim(heightmap))
-      shadowdepth = soliddepth - max_dim/25
+      if(solid) {
+        max_dim = max(dim(heightmap))
+        shadowdepth = soliddepth - max_dim/25
+      } else {
+        max_dim = max(dim(heightmap))
+        shadowdepth = min_height - max_dim/25
+      }
     }
   } else {
-    shadowdepth = shadowdepth/zscale
+    if(shadowdepth > min_height) {
+      message(sprintf("`shadowdepth` (set to %f) is greater to heightmap minimum value (%f). Shadow will appear to be intersecting 3D model.",
+                      shadowdepth, min_height))
+    } else {
+      shadowdepth = shadowdepth/zscale
+    }
   }
   if(shadowwidth == "auto") {
     shadowwidth = max(floor(min(dim(heightmap))/10),5)

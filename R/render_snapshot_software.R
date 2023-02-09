@@ -95,6 +95,13 @@ render_snapshot_software = function(filename, cache_filename = NULL, camera_loca
   
   fov = rgl::par3d()$FOV
   rotmat = rot_to_euler(rgl::par3d()$userMatrix)
+  if(abs(rotmat[1]) == 90) {
+    camera_up = rgl::rotationMatrix(rotmat[2]*pi/180, 0, 1, 0) %*% 
+      matrix(c(1,0,0,1),nrow=4,ncol=1)
+    camera_up = camera_up[1:3]
+  } else {
+    camera_up = c(0,1,0)
+  }
   projmat = rgl::par3d()$projMatrix
   zoom = rgl::par3d()$zoom
   scalevals = rgl::par3d("scale")
@@ -135,6 +142,7 @@ render_snapshot_software = function(filename, cache_filename = NULL, camera_loca
   } else {
     lookfrom = camera_location
   }
+  
   if(tools::file_ext(cache_filename) != "obj") {
     cache_filename = paste0(cache_filename, ".obj")
   }
@@ -348,7 +356,7 @@ render_snapshot_software = function(filename, cache_filename = NULL, camera_loca
       scene$materials[[1]][[i]]$type = "color"
     }
   }
-  debug = rayvertex::rasterize_scene(scene, lookat = c(0,0,0),
+  debug = rayvertex::rasterize_scene(scene, lookat = camera_lookat, camera_up = camera_up,
                                      filename = filename, fsaa = fsaa,
                                      lookfrom = lookfrom, width = width, height = height, 
                                      ortho_dimensions = ortho_dimensions,

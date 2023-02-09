@@ -47,6 +47,7 @@ plot_3d(
   verbose = FALSE,
   plot_new = TRUE,
   close_previous = TRUE,
+  clear_previous = TRUE,
   ...
 )
 }
@@ -157,6 +158,8 @@ the data will be plotted in the same window.}
 
 \item{close_previous}{Default `TRUE`. Closes any previously open `rgl` window. If `FALSE`, 
 old windows will be kept open.}
+
+\item{clear_previous}{Default `TRUE`. Clears the previously open `rgl` window if `plot_new = FALSE`.}
 
 \item{...}{Additional arguments to pass to the `rgl::par3d` function.}
 }

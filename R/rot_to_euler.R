@@ -8,16 +8,26 @@
 #'@examples
 #'#None
 rot_to_euler = function(rotmat) {
-  x = atan2(-rotmat[2,3],rotmat[3,3])
-  y = -asin(rotmat[1,3])
-  sinz = cos(x) * rotmat[2,1] + sin(x) * rotmat[3,1]
-  cosz = cos(x) * rotmat[2,2] + sin(x) * rotmat[3,2]
-  z = atan2(sinz,cosz)
-  if(x*180/pi < -90) {
-    x = x + pi
-  }
-  if(x*180/pi > 90) {
-    x = x - pi
+  if(abs(rotmat[3,2]) == 1) {
+    if(rotmat[3,2] < 0) {
+      x = -pi/2
+    } else {
+      x = pi/2
+    }
+    y = atan2(rotmat[1,1],rotmat[1,3])
+    z = 0
+  } else {
+    x = atan2(-rotmat[2,3],rotmat[3,3])
+    y = -asin(rotmat[1,3])
+    sinz = cos(x) * rotmat[2,1] + sin(x) * rotmat[3,1]
+    cosz = cos(x) * rotmat[2,2] + sin(x) * rotmat[3,2]
+    z = atan2(sinz,cosz)
+    if(x*180/pi < -90) {
+      x = x + pi
+    }
+    if(x*180/pi > 90) {
+      x = x - pi
+    }
   }
   return(c(x, y, z)*180/pi)
 }
