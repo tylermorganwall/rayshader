@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.34.6</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.34.7</span>
       </span>
     </div>
 
@@ -142,6 +142,7 @@
 <span>  verbose <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  plot_new <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  close_previous <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  clear_previous <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -337,6 +338,10 @@ the data will be plotted in the same window.</p></dd>
 <dt>close_previous</dt>
 <dd><p>Default `TRUE`. Closes any previously open `rgl` window. If `FALSE`, 
 old windows will be kept open.</p></dd>
+
+
+<dt>clear_previous</dt>
+<dd><p>Default `TRUE`. Clears the previously open `rgl` window if `plot_new = FALSE`.</p></dd>
 
 
 <dt>...</dt>
