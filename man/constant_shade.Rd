@@ -20,26 +20,29 @@ RGB array of a single color layer.
 Generates a constant color layer.
 }
 \examples{
+if(rayshader:::run_documentation()) {
 #Shade a red map
 montereybay \%>\%
  constant_shade("red") \%>\%
  add_shadow(lamb_shade(montereybay),0) |> 
  plot_map()
- 
- 
+}
+if(rayshader:::run_documentation()) {
 #Shade a green map
 montereybay \%>\%
  constant_shade("green") \%>\%
  add_shadow(lamb_shade(montereybay),0) |> 
  plot_map()
- 
+}
+if(rayshader:::run_documentation()) {
 #Add a blue tint
 montereybay \%>\%
  height_shade() |> 
  add_overlay(constant_shade(montereybay, "dodgerblue", alpha=0.25)) \%>\%
  add_shadow(lamb_shade(montereybay,zscale=50),0) |> 
  plot_map()
- 
+}
+if(rayshader:::run_documentation()) {
 #Use a blank map on which to draw other data
 montereybay \%>\%
  constant_shade() \%>\%
@@ -48,4 +51,5 @@ montereybay \%>\%
                                    alphalayer=0.8)  \%>\%
  add_water(detect_water(montereybay < 0), "dodgerblue") \%>\%
  plot_map()
+}
 }

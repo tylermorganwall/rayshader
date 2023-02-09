@@ -14,10 +14,6 @@ save_3dprint(filename, maxwidth = 125, unit = "mm", rotate = FALSE)
 \item{unit}{Default `mm`. Units of the `maxwidth` argument. Can also be set to inches with `in`.}
 
 \item{rotate}{Default `TRUE`. If `FALSE`, the map will be printing on its side. This may improve resolution for some 3D printing types.}
-
-\item{remove_extras}{Default `TRUE`. Removes non-topographic features from base: lines, water, labels, and the shadow.}
-
-\item{clear}{Default `FALSE`. If `TRUE`, the current `rgl` device will be cleared.}
 }
 \value{
 Writes an STL file to `filename`. Regardless of the unit displayed, the output STL is in millimeters.

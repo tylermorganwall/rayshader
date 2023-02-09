@@ -6,8 +6,6 @@
 #'@param maxwidth Default `125`. Desired maximum width of the 3D print in millimeters. Uses the units set in `unit` argument. Can also pass in a string, "125mm" or "5in".
 #'@param unit Default `mm`. Units of the `maxwidth` argument. Can also be set to inches with `in`. 
 #'@param rotate Default `TRUE`. If `FALSE`, the map will be printing on its side. This may improve resolution for some 3D printing types.
-#'@param remove_extras Default `TRUE`. Removes non-topographic features from base: lines, water, labels, and the shadow.
-#'@param clear Default `FALSE`. If `TRUE`, the current `rgl` device will be cleared.
 #'@return Writes an STL file to `filename`. Regardless of the unit displayed, the output STL is in millimeters.
 #'@export
 #'@examples
