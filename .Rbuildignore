@@ -13,7 +13,6 @@
 ^README_files$
 ^CODE_OF_CONDUCT\.md$
 ^CONTRIBUTING\.md$
-^tests$
 ^.*yml$
 ^docs$
 ^pkgdown$
