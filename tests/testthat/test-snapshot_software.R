@@ -63,7 +63,7 @@ test_that("Checking render_snapshot(software_render = TRUE) features", {
   
   render_path(extent = attr(montereybay,"extent"),
               lat = unlist(bird_track_lat), long = unlist(bird_track_long),
-              altitude = z_out, zscale=50,color="white", antialias=TRUE)
+              altitude = z_out, zscale=50,color="orange", antialias=TRUE)
   render_points(extent = attr(montereybay,"extent"),
                 lat = unlist(bird_track_lat)-0.1, long = unlist(bird_track_long),
                 altitude = z_out, zscale=50,color="purple", clear_previous = T)
@@ -74,14 +74,18 @@ test_that("Checking render_snapshot(software_render = TRUE) features", {
              lat = unlist(circle_coords_lat2), long = unlist(circle_coords_long2),
              scale=c(2,2,2), angle=c(0,45,0),
              zscale=50, color=rainbow(40), smooth = FALSE, clear_previous = TRUE)
-  render_scalebar(limits=c(0, 80), label_unit = "km", position="S")
   santa_cruz = c(36.962957, -122.021033) 
-  render_label(montereybay,lat = santa_cruz[1]+0.1, long = santa_cruz[2],
-               extent = attr(montereybay, "extent"),
-               altitude=2000, zscale=50, text = "Santa Cruz 2", clear_previous = T)
-  render_label(montereybay,lat = santa_cruz[1], long = santa_cruz[2],
-               extent = attr(montereybay, "extent"),
-               altitude=2000, zscale=50, text = "Santa Cruz")
+  
+  #Can't do text: fonts different on other systems
+  # render_label(montereybay,lat = santa_cruz[1]+0.1, long = santa_cruz[2],
+  #              extent = attr(montereybay, "extent"), 
+  #              altitude=2000, zscale=50, text = "Santa Cruz 2", clear_previous = T)
+  # render_label(montereybay,lat = santa_cruz[1], long = santa_cruz[2],
+  #              extent = attr(montereybay, "extent"),
+  #              altitude=2000, zscale=50, text = "Santa Cruz")
+  #                
+  # render_scalebar(limits=c(0, 80), label_unit = "", position="S")
+
   # render_polygons(monterey_counties_sf[7,], 
   #                 extent = attr(montereybay, "extent"), data_column_top = "ALAND",
   #                 scale_data = 100/(2.6E9), color = "chartreuse4",
@@ -111,18 +115,18 @@ test_that("Checking render_snapshot(software_render = TRUE) features", {
   software_render_args_lines = expand.grid(software_render = list(TRUE),
                                      thick_lines = list(TRUE, FALSE),
                                      line_offset = list(1e-07,1e-06),
-                                     line_radius = list(0.5,2))
+                                     line_radius = list(0.5,10))
   
   run_tests_sw("render_snapshot", software_render_args_lines, plot_prefix = "sw_render_lines",
                list(cache_filename = temp_cache))
   
-  software_render_text_args = expand.grid(software_render = list(TRUE),
-                                     text_size = list(10,30),
-                                     text_angle = list(NULL,180),
-                                     text_offset = list(c(1,0,0),c(0,1,0),c(0,0,1)))
-  
-  run_tests_sw("render_snapshot", software_render_text_args, plot_prefix = "sw_render_text",
-               list(cache_filename = temp_cache))
+  # software_render_text_args = expand.grid(software_render = list(TRUE),
+  #                                    text_size = list(10,30),
+  #                                    text_angle = list(NULL,180),
+  #                                    text_offset = list(c(1,0,0),c(0,1,0),c(0,0,1)))
+  # 
+  # run_tests_sw("render_snapshot", software_render_text_args, plot_prefix = "sw_render_text",
+  #              list(cache_filename = temp_cache))
   
   software_render_points_args = expand.grid(software_render = list(TRUE),
                                             point_radius = list(2,10))
