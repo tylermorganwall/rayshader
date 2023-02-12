@@ -55,3 +55,50 @@ test_that("texture_shade", {
                         pad = list(50,200))
   run_tests_success("texture_shade", ts_args, list(heightmap = volcano))
 })
+
+test_that("ray_shade", {
+  rs_args = expand.grid(sunangle = list(-45,90),
+                        sunaltitude = list(10,90),
+                        zscale = list(1,3),
+                        maxsearch = list(NULL, 10),
+                        anglebreaks = list(NULL, seq(10,20,by=1), seq(10,50,by=5)))
+  run_tests_success("ray_shade", rs_args, list(heightmap = volcano))
+  
+  #Test with shadow cache
+  shadow_cache = ray_shade(volcano)
+  cache_mask = volcano > 150
+
+  run_tests_success("ray_shade", rs_args, list(heightmap = volcano,
+                                               cache_mask = cache_mask,
+                                               shadow_cache = shadow_cache))
+  
+})
+
+test_that("ambient_shade", {
+  as_args = expand.grid(sunbreaks=list(3,12,24),
+                        zscale = list(1,3),
+                        maxsearch = list(10, 30),
+                        anglebreaks = list(NULL, seq(10,20,by=1)))
+  run_tests_success("ambient_shade", as_args, list(heightmap = volcano))
+  
+  #Test with shadow cache
+  shadow_cache = ray_shade(volcano)
+  cache_mask = volcano > 150
+  
+  run_tests_success("ambient_shade", as_args, list(heightmap = volcano,
+                                               cache_mask = cache_mask,
+                                               shadow_cache = shadow_cache))
+  
+})
+
+test_that("constant_shade", {
+  cs_args = expand.grid(color=list("white","red","black"),
+                        alpha = list(0,0.5,1))
+  run_tests_success("constant_shade", cs_args, list(heightmap = volcano))
+})
+
+test_that("create_texture", {
+  expect_no_condition(create_texture("#fff673","#55967a","#8fb28a","#55967a","#cfe0a9"))
+  expect_no_condition(create_texture("#fff673","#55967a","#8fb28a","#55967a","#cfe0a9",
+                                              cornercolors = c("red","blue","pink","orange")))
+})
