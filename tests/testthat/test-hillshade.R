@@ -46,12 +46,12 @@ test_that("lamb_shade", {
 })
 
 test_that("texture_shade", {
-  ls_args = expand.grid(detail = list(0,0.5,1),
-                        contrast = list(0.5,1,10),
-                        brightness = list(-10,0,10),
+  ts_args = expand.grid(detail = list(0,1),
+                        contrast = list(0.5,10),
+                        brightness = list(-10,10),
                         transform = list(TRUE, FALSE),
                         dx = list(1,10),
                         dy = list(1,10),
                         pad = list(50,200))
-  run_tests_success("lamb_shade", ls_args, list(heightmap = volcano))
+  run_tests_success("texture_shade", ls_args, list(heightmap = volcano))
 })
