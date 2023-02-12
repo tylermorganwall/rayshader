@@ -53,5 +53,5 @@ test_that("texture_shade", {
                         dx = list(1,10),
                         dy = list(1,10),
                         pad = list(50,200))
-  run_tests_success("texture_shade", ls_args, list(heightmap = volcano))
+  run_tests_success("texture_shade", ts_args, list(heightmap = volcano))
 })
