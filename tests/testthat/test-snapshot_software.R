@@ -13,9 +13,9 @@ run_tests_sw = function(func, argument_grid, plot_prefix="", ...) {
   stopifnot(inherits(argument_grid,"data.frame"))
   for(i in seq_len(nrow(argument_grid))){
     args = unlist(argument_grid[i,], recursive = FALSE)
-    test_filename = paste0(sprintf("%s-%s", names(args), args),collapse="_")
-    test_filename = sprintf("%s_test%i_%s.png",
-                            plot_prefix , i, test_filename)
+    # test_filename = paste0(sprintf("%s-%s", names(args), args),collapse="_")
+    test_filename = sprintf("%s_test%i.png",
+                            plot_prefix , i)
     path = tempfile(fileext = ".png")
     
     args = append(args, ...)
