@@ -14,6 +14,8 @@
 #'into 3D.
 #'
 #'@param ggobj ggplot object to projected into 3D. 
+#'@param ggobj_height Default `NULL`. A ggplot object that can be used to specify the 3D extrusion separately from the
+#'`ggobj`. 
 #'@param width Default `3`. Width of ggplot, in `units`.
 #'@param height Default `3`. Height of ggplot, in `units`.
 #'@param height_aes Default `NULL`. Whether the `fill` or `color` aesthetic should be used for height values, 
@@ -88,7 +90,7 @@
 #'}
 #'
 #'ggdiamonds = ggplot(diamonds, aes(x, depth)) +
-#'  stat_density_2d(aes(fill = stat(nlevel)), geom = "polygon", n = 200, bins = 50,contour = TRUE) +
+#'  stat_density_2d(aes(fill = after_stat(nlevel)), geom = "polygon", n = 200, bins = 50,contour = TRUE) +
 #'  facet_wrap(clarity~.) +
 #'  scale_fill_viridis_c(option = "A")
 #'if(rayshader:::run_documentation()) {
@@ -120,6 +122,24 @@
 #'        scale = 300, windowsize = c(1400, 866), zoom = 0.6, phi = 30, theta = 30)
 #'render_snapshot()
 #'}
+#'
+#'if(rayshader:::run_documentation()) {
+#'#You can specify the color and height separately using the `ggobj_height()` argument.
+#'ggvolcano_surface = volcano %>%
+#' reshape2::melt() %>%
+#' ggplot() +
+#'  geom_tile(aes(x=Var1,y=Var2,fill=value), alpha=0) +
+#' geom_contour(aes(x=Var1,y=Var2,z=value),color="black") +
+#' scale_x_continuous("X",expand = c(0,0)) +
+#' scale_y_continuous("Y",expand = c(0,0)) +
+#' scale_fill_gradientn("Z",colours = terrain.colors(10)) +
+#' coord_fixed()
+#'
+#'plot_gg(ggvolcano_surface, ggobj_height = ggvolcano, 
+#'       multicore = TRUE, raytrace = TRUE, width = 7, height = 4,
+#'       scale = 300, windowsize = c(1400, 866), zoom = 0.6, phi = 30, theta = 30)
+#'render_snapshot()
+#'}
 #'#Here, we will create a 3D plot of the mtcars dataset. This automatically detects 
 #'#that the user used the `color` aesthetic instead of the `fill`.
 #'mtplot = ggplot(mtcars) + 
@@ -137,7 +157,7 @@
 #'}
 #'#Now let's plot a density plot in 3D.
 #'mtplot_density = ggplot(mtcars) + 
-#'  stat_density_2d(aes(x=mpg,y=disp, fill=..density..), geom = "raster", contour = FALSE) +
+#'  stat_density_2d(aes(x=mpg,y=disp, fill=after_stat(!!str2lang("density"))), geom = "raster", contour = FALSE) +
 #'  scale_x_continuous(expand=c(0,0)) +
 #'  scale_y_continuous(expand=c(0,0)) +
 #'  scale_fill_gradient(low="pink", high="red")
@@ -179,7 +199,7 @@
 #'        flat_direction = "x")
 #'render_snapshot()
 #'}
-plot_gg = function(ggobj, width = 3, height = 3, 
+plot_gg = function(ggobj, ggobj_height = NULL, width = 3, height = 3, 
                    height_aes = NULL, invert = FALSE, shadow_intensity = 0.5,
                    units = c("in", "cm", "mm"), scale=150, pointcontract = 0.7, offset_edges = FALSE,
                    flat_plot_render = FALSE, flat_distance = "auto", 
@@ -196,15 +216,27 @@ plot_gg = function(ggobj, width = 3, height = 3,
   }
   heightmaptemp = tempfile(fileext = ".png")
   colormaptemp = tempfile(fileext = ".png")
-  if(methods::is(ggobj,"list") && length(ggobj) == 2) {
-    ggplotobj2 = unserialize(serialize(ggobj[[2]], NULL))
-    color_gg = unserialize(serialize(ggobj[[1]], NULL))
-    ggplot2::ggsave(colormaptemp,ggobj[[1]],width = width,height = height,dpi=300)
+  if(is.null(ggobj_height)) {
+    if(methods::is(ggobj,"list") && length(ggobj) == 2) {
+      stopifnot(inherits(ggobj[[2]], "ggplot"))
+      stopifnot(inherits(ggobj[[1]], "ggplot"))
+      ggplotobj2 = unserialize(serialize(ggobj[[2]], NULL))
+      color_gg = unserialize(serialize(ggobj[[1]], NULL))
+      ggplot2::ggsave(colormaptemp,ggobj[[1]],width = width,height = height,dpi=300)
+    } else {
+      stopifnot(inherits(ggobj, "ggplot"))
+      ggplotobj2 = unserialize(serialize(ggobj, NULL))
+      color_gg = unserialize(serialize(ggobj, NULL))
+      ggplot2::ggsave(colormaptemp,ggplotobj2,width = width,height = height,dpi=300)
+    }
   } else {
-    ggplotobj2 = unserialize(serialize(ggobj, NULL))
+    stopifnot(inherits(ggobj, "ggplot"))
+    stopifnot(inherits(ggobj_height, "ggplot"))
+    ggplotobj2 = unserialize(serialize(ggobj_height, NULL))
     color_gg = unserialize(serialize(ggobj, NULL))
-    ggplot2::ggsave(colormaptemp,ggplotobj2,width = width,height = height,dpi=300)
+    ggplot2::ggsave(colormaptemp,color_gg,width = width,height = height,dpi=300)
   }
+  
   set_to_white = function(grob) {
     if(!is.null(grob[["grobs"]])) {
       for(j in seq_len(length(grob$grobs))) {

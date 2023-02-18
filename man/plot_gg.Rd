@@ -6,6 +6,7 @@
 \usage{
 plot_gg(
   ggobj,
+  ggobj_height = NULL,
   width = 3,
   height = 3,
   height_aes = NULL,
@@ -45,6 +46,9 @@ plot_gg(
 }
 \arguments{
 \item{ggobj}{ggplot object to projected into 3D.}
+
+\item{ggobj_height}{Default `NULL`. A ggplot object that can be used to specify the 3D extrusion separately from the
+`ggobj`.}
 
 \item{width}{Default `3`. Width of ggplot, in `units`.}
 
@@ -170,7 +174,7 @@ options("cores"=2)
 }
 
 ggdiamonds = ggplot(diamonds, aes(x, depth)) +
- stat_density_2d(aes(fill = stat(nlevel)), geom = "polygon", n = 200, bins = 50,contour = TRUE) +
+ stat_density_2d(aes(fill = after_stat(nlevel)), geom = "polygon", n = 200, bins = 50,contour = TRUE) +
  facet_wrap(clarity~.) +
  scale_fill_viridis_c(option = "A")
 if(rayshader:::run_documentation()) {
@@ -200,6 +204,24 @@ ggvolcano
 if(rayshader:::run_documentation()) {
 plot_gg(ggvolcano, multicore = TRUE, raytrace = TRUE, width = 7, height = 4, 
        scale = 300, windowsize = c(1400, 866), zoom = 0.6, phi = 30, theta = 30)
+render_snapshot()
+}
+
+if(rayshader:::run_documentation()) {
+#You can specify the color and height separately using the `ggobj_height()` argument.
+ggvolcano_surface = volcano \%>\%
+reshape2::melt() \%>\%
+ggplot() +
+ geom_tile(aes(x=Var1,y=Var2,fill=value), alpha=0) +
+geom_contour(aes(x=Var1,y=Var2,z=value),color="black") +
+scale_x_continuous("X",expand = c(0,0)) +
+scale_y_continuous("Y",expand = c(0,0)) +
+scale_fill_gradientn("Z",colours = terrain.colors(10)) +
+coord_fixed()
+
+plot_gg(ggvolcano_surface, ggobj_height = ggvolcano, 
+      multicore = TRUE, raytrace = TRUE, width = 7, height = 4,
+      scale = 300, windowsize = c(1400, 866), zoom = 0.6, phi = 30, theta = 30)
 render_snapshot()
 }
 #Here, we will create a 3D plot of the mtcars dataset. This automatically detects 

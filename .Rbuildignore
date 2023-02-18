@@ -17,6 +17,6 @@
 ^docs$
 ^pkgdown$
 ^\.github$
-^.+\.png$
+^man/.+.png$
 ^.+\.mp4$
 ^_pkgdown\.yml$
