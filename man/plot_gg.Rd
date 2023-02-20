@@ -241,7 +241,7 @@ render_snapshot()
 }
 #Now let's plot a density plot in 3D.
 mtplot_density = ggplot(mtcars) + 
- stat_density_2d(aes(x=mpg,y=disp, fill=..density..), geom = "raster", contour = FALSE) +
+ stat_density_2d(aes(x=mpg,y=disp, fill=after_stat(!!str2lang("density"))), geom = "raster", contour = FALSE) +
  scale_x_continuous(expand=c(0,0)) +
  scale_y_continuous(expand=c(0,0)) +
  scale_fill_gradient(low="pink", high="red")

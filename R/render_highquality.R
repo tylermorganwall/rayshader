@@ -427,7 +427,7 @@ render_highquality = function(filename = NULL, light = TRUE,
       counter = counter + 1
     }
   }
-  pathids = get_ids_with_labels(typeval = "path3d")$id
+  pathids = get_ids_with_labels(typeval = c("path3d","contour3d"))$id
   pathline = list()
   counter = 1
   for(i in seq_len(length(pathids))) {

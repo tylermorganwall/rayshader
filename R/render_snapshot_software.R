@@ -209,7 +209,7 @@ render_snapshot_software = function(filename, cache_filename = NULL, camera_loca
     }
   }
   
-  pathids = get_ids_with_labels(typeval = "path3d")$id
+  pathids = get_ids_with_labels(typeval = c("path3d","contour3d"))$id
   pathline = matrix(nrow=0,ncol=9)
   
   for(i in seq_len(length(pathids))) {

@@ -11,6 +11,9 @@
 #'@param altitude Default `NULL`. Elevation of each point, in units of the elevation matrix (scaled by zscale).
 #'If left `NULL`, this will be just the elevation value at ths surface, offset by `offset`. If a single value, 
 #'all data will be rendered at that altitude.
+#'@param groups Default `NULL`. Integer vector specifying the grouping of each lat/long path segment, if lat/long are
+#'specified as numeric vectors (as opposed to `sf` or `SpatialLineDataFrame` objects, where this information
+#'is built-in to the object).
 #'@param extent Either an object representing the spatial extent of the 3D scene 
 #' (either from the `raster`, `terra`, `sf`, or `sp` packages), 
 #' a length-4 numeric vector specifying `c("xmin", "xmax","ymin","ymax")`, or the spatial object (from 
@@ -46,6 +49,7 @@
 #'@param clear_previous Default `FALSE`. If `TRUE`, it will clear all existing paths.
 #'@param return_coords Default `FALSE`. If `TRUE`, this will return the internal rayshader coordinates of the path, instead of 
 #'plotting the line. 
+#'@param tag Default `"path3d"`. The rgl tag to use when adding the path to the scene.
 #'@export
 #'@examples
 #'if(rayshader:::run_documentation()) {
@@ -137,7 +141,8 @@
 #'                   path_material = rayrender::dielectric, use_extruded_paths = TRUE,
 #'                   path_material_args = list(refraction = 1.5, attenuation = c(0.05,0.2,0.2)))
 #'}
-render_path = function(lat, long = NULL, altitude = NULL, extent = NULL, 
+render_path = function(lat, long = NULL, altitude = NULL, groups = NULL,
+                       extent = NULL, 
                        zscale=1, heightmap = NULL, 
                        resample_evenly = FALSE, resample_n = 360,
                        reorder = FALSE, 
@@ -146,12 +151,13 @@ render_path = function(lat, long = NULL, altitude = NULL, extent = NULL,
                        reorder_merge_tolerance = 1, 
                        simplify_tolerance = 0,
                        linewidth = 3, color = "black", antialias = FALSE, offset = 5,
-                       clear_previous = FALSE, return_coords = FALSE) {
+                       clear_previous = FALSE, return_coords = FALSE,
+                       tag = "path3d") {
   if(rgl::cur3d() == 0 && !return_coords) {
     stop("No rgl window currently open.")
   }
   if(clear_previous) {
-    rgl::pop3d(tag = "path3d")
+    rgl::pop3d(tag = tag)
     if(missing(lat)) {
       return(invisible())
     }
@@ -169,7 +175,7 @@ render_path = function(lat, long = NULL, altitude = NULL, extent = NULL,
     xyz = get_interpolated_points_path(xyz, n = resample_n)
     if(!return_coords) {
       rgl::lines3d(xyz[,1] + 0.5,xyz[,2],xyz[,3] + 0.5,
-                   color = color, tag = "path3d", lwd = linewidth, line_antialias = antialias)
+                   color = color, tag = tag, lwd = linewidth, line_antialias = antialias)
       return(invisible())
     } else {
       return(xyz)
@@ -235,7 +241,7 @@ render_path = function(lat, long = NULL, altitude = NULL, extent = NULL,
       lat = latlong[,2]
       groups = interaction(latlong[,3],latlong[,4])
     }
-  } else {
+  } else if (is.null(groups)) {
     groups = rep(1,length(lat))
   }
   split_lat = split(lat, groups)
@@ -261,7 +267,8 @@ render_path = function(lat, long = NULL, altitude = NULL, extent = NULL,
                                           altitude, offset, zscale, filter_bounds = FALSE)
     if(!return_coords) {
       rgl::lines3d(xyz[,1] + 0.5,xyz[,2],xyz[,3] + 0.5,
-                   color = color, tag = "path3d", lwd = linewidth, line_antialias = antialias)
+                   color = color, tag = tag, 
+                   lwd = linewidth, line_antialias = antialias)
     } else {
       coord_list[[group]] = xyz
     }

@@ -12,7 +12,7 @@ get_ids_with_labels = function(typeval = NULL) {
                 "basebottom",        "textline",      "raytext",
                 "north_symbol",      "arrow_symbol",  "bevel_symbol",  
                 "background_symbol", "scalebar_col1", "scalebar_col2",
-                "text_scalebar",     "surface_tris",  "path3d",       
+                "text_scalebar",     "surface_tris",  "path3d", "contour3d",      
                 "points3d",          "polygon3d", 
                 "floating_overlay", "floating_overlay_tris", "base_soil1", "base_soil2",
                 "obj")
@@ -66,7 +66,7 @@ get_ids_with_labels = function(typeval = NULL) {
         material_properties[[i]]$water_color = material_type_single$color
         material_properties[[i]]$water_alpha = material_type_single$alpha
       } 
-      if(material_type[i] == "lines" || material_type[i] == "path3d") {
+      if(material_type[i] == "lines" || material_type[i] == "path3d" || material_type[i] == "contour3d") {
         material_properties[[i]]$line_color = material_type_single$color
       }
       if(material_type[i] == "points3d") {

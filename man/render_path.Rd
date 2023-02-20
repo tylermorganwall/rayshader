@@ -8,6 +8,7 @@ render_path(
   lat,
   long = NULL,
   altitude = NULL,
+  groups = NULL,
   extent = NULL,
   zscale = 1,
   heightmap = NULL,
@@ -23,7 +24,8 @@ render_path(
   antialias = FALSE,
   offset = 5,
   clear_previous = FALSE,
-  return_coords = FALSE
+  return_coords = FALSE,
+  tag = "path3d"
 )
 }
 \arguments{
@@ -36,6 +38,10 @@ Ignored if lat is an `sf` or `SpatialLineDataFrame` object.}
 \item{altitude}{Default `NULL`. Elevation of each point, in units of the elevation matrix (scaled by zscale).
 If left `NULL`, this will be just the elevation value at ths surface, offset by `offset`. If a single value, 
 all data will be rendered at that altitude.}
+
+\item{groups}{Default `NULL`. Integer vector specifying the grouping of each lat/long path segment, if lat/long are
+specified as numeric vectors (as opposed to `sf` or `SpatialLineDataFrame` objects, where this information
+is built-in to the object).}
 
 \item{extent}{Either an object representing the spatial extent of the 3D scene 
 (either from the `raster`, `terra`, `sf`, or `sp` packages), 
@@ -87,6 +93,8 @@ then the value of simplify_tolerance must be specified in meters.}
 
 \item{return_coords}{Default `FALSE`. If `TRUE`, this will return the internal rayshader coordinates of the path, instead of 
 plotting the line.}
+
+\item{tag}{Default `"path3d"`. The rgl tag to use when adding the path to the scene.}
 }
 \description{
 Adds a 3D path to the current scene, using latitude/longitude or coordinates in the reference
