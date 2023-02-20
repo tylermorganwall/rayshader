@@ -45,7 +45,7 @@ render_contours = function(heightmap = NULL,
                            linewidth = 3, 
                            color = "black", 
                            antialias = FALSE, 
-                           offset = 5,
+                           offset = 0,
                            clear_previous = FALSE) {
   if(clear_previous) {
     rgl::pop3d(tag = "contour3d")
