@@ -19,7 +19,7 @@ above the heightmap. If the path goes off the edge, the nearest height on the he
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.34.8</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.35.0</span>
       </span>
     </div>
 
@@ -107,6 +107,7 @@ above the heightmap. If the path goes off the edge, the nearest height on the he
 <span>  <span class="va">lat</span>,</span>
 <span>  long <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  altitude <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  groups <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  extent <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  zscale <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  heightmap <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -122,7 +123,8 @@ above the heightmap. If the path goes off the edge, the nearest height on the he
 <span>  antialias <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  offset <span class="op">=</span> <span class="fl">5</span>,</span>
 <span>  clear_previous <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  return_coords <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  return_coords <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  tag <span class="op">=</span> <span class="st">"path3d"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -142,6 +144,12 @@ Ignored if lat is an `sf` or `SpatialLineDataFrame` object.</p></dd>
 <dd><p>Default `NULL`. Elevation of each point, in units of the elevation matrix (scaled by zscale).
 If left `NULL`, this will be just the elevation value at ths surface, offset by `offset`. If a single value, 
 all data will be rendered at that altitude.</p></dd>
+
+
+<dt>groups</dt>
+<dd><p>Default `NULL`. Integer vector specifying the grouping of each lat/long path segment, if lat/long are
+specified as numeric vectors (as opposed to `sf` or `SpatialLineDataFrame` objects, where this information
+is built-in to the object).</p></dd>
 
 
 <dt>extent</dt>
@@ -225,6 +233,10 @@ then the value of simplify_tolerance must be specified in meters.</p></dd>
 <dt>return_coords</dt>
 <dd><p>Default `FALSE`. If `TRUE`, this will return the internal rayshader coordinates of the path, instead of 
 plotting the line.</p></dd>
+
+
+<dt>tag</dt>
+<dd><p>Default `"path3d"`. The rgl tag to use when adding the path to the scene.</p></dd>
 
 </dl></div>
 
