@@ -12,7 +12,7 @@ render_contours(
   linewidth = 3,
   color = "black",
   antialias = FALSE,
-  offset = 5,
+  offset = 0,
   clear_previous = FALSE
 )
 }

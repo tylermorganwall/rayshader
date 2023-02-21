@@ -90,7 +90,8 @@
 #'}
 #'
 #'ggdiamonds = ggplot(diamonds, aes(x, depth)) +
-#'  stat_density_2d(aes(fill = after_stat(nlevel)), geom = "polygon", n = 200, bins = 50,contour = TRUE) +
+#'  stat_density_2d(aes(fill = after_stat(nlevel)), geom = "polygon", 
+#'                  n = 200, bins = 50,contour = TRUE) +
 #'  facet_wrap(clarity~.) +
 #'  scale_fill_viridis_c(option = "A")
 #'if(rayshader:::run_documentation()) {
@@ -157,7 +158,8 @@
 #'}
 #'#Now let's plot a density plot in 3D.
 #'mtplot_density = ggplot(mtcars) + 
-#'  stat_density_2d(aes(x=mpg,y=disp, fill=after_stat(!!str2lang("density"))), geom = "raster", contour = FALSE) +
+#'  stat_density_2d(aes(x=mpg,y=disp, fill=after_stat(!!str2lang("density"))), 
+#'                  geom = "raster", contour = FALSE) +
 #'  scale_x_continuous(expand=c(0,0)) +
 #'  scale_y_continuous(expand=c(0,0)) +
 #'  scale_fill_gradient(low="pink", high="red")
