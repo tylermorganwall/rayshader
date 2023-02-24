@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.35.0</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.35.1</span>
       </span>
     </div>
 
@@ -106,6 +106,7 @@
 <span>  nlevels <span class="op">=</span> <span class="cn">NA</span>,</span>
 <span>  linewidth <span class="op">=</span> <span class="fl">3</span>,</span>
 <span>  color <span class="op">=</span> <span class="st">"black"</span>,</span>
+<span>  palette <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  antialias <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  offset <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  clear_previous <span class="op">=</span> <span class="cn">FALSE</span></span>
@@ -138,6 +139,11 @@ this will automatically generate `nlevels` breaks between `levels[1]` and `level
 
 <dt>color</dt>
 <dd><p>Default `black`. Color of the line.</p></dd>
+
+
+<dt>palette</dt>
+<dd><p>Default `NULL`. Overrides `color`. Either a function that returns a color palette 
+of `n` colors, or a character vector with colors that specifies each color manually.</p></dd>
 
 
 <dt>antialias</dt>
@@ -181,6 +187,27 @@ this will automatically generate `nlevels` breaks between `levels[1]` and `level
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-plt img"><img src="render_contours-3.png" alt="" width="768" height="768"></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu">rayshader</span><span class="fu">:::</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span><span class="co">#Use a color palette for the contours </span></span></span>
+<span class="r-in"><span><span class="va">volcano</span> <span class="op">|&gt;</span> </span></span>
+<span class="r-in"><span> <span class="fu"><a href="constant_shade.html">constant_shade</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span> </span></span>
+<span class="r-in"><span> <span class="fu"><a href="plot_3d.html">plot_3d</a></span><span class="op">(</span><span class="va">volcano</span>, zscale <span class="op">=</span> <span class="fl">2</span>, solid <span class="op">=</span> <span class="cn">FALSE</span>, zoom <span class="op">=</span> <span class="fl">0.8</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">palette</span> <span class="op">=</span> <span class="fu">grDevices</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/grDevices/colorRamp.html" class="external-link">colorRampPalette</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"red"</span>, <span class="st">"purple"</span>, <span class="st">"pink"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">render_contours</span><span class="op">(</span><span class="va">volcano</span>, offset <span class="op">=</span> <span class="fl">1</span>, palette <span class="op">=</span> <span class="va">palette</span>, zscale <span class="op">=</span> <span class="fl">2</span>, nlevels <span class="op">=</span> <span class="fl">20</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-plt img"><img src="render_contours-4.png" alt="" width="768" height="768"></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu">rayshader</span><span class="fu">:::</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span><span class="co">#Render using `render_highquality()` for a neon light effect</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="render_highquality.html">render_highquality</a></span><span class="op">(</span>light <span class="op">=</span> <span class="cn">FALSE</span>, smooth_line <span class="op">=</span> <span class="cn">TRUE</span>, </span></span>
+<span class="r-in"><span>                  line_radius <span class="op">=</span> <span class="fl">0.1</span>, sample_method<span class="op">=</span><span class="st">"sobol_blue"</span>,</span></span>
+<span class="r-in"><span>                  path_material <span class="op">=</span> <span class="fu">rayrender</span><span class="fu">::</span><span class="va"><a href="https://www.rayrender.net/reference/light.html" class="external-link">light</a></span>, ground_size <span class="op">=</span> <span class="fl">0</span>,</span></span>
+<span class="r-in"><span>                  path_material_args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>importance_sample <span class="op">=</span> <span class="cn">FALSE</span>,</span></span>
+<span class="r-in"><span>                                            color <span class="op">=</span> <span class="st">"purple"</span>, intensity <span class="op">=</span> <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-plt img"><img src="render_contours-5.png" alt="" width="768" height="768"></span>
 </code></pre></div>
     </div>
   </div>
