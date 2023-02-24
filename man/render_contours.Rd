@@ -11,6 +11,7 @@ render_contours(
   nlevels = NA,
   linewidth = 3,
   color = "black",
+  palette = NULL,
   antialias = FALSE,
   offset = 0,
   clear_previous = FALSE
@@ -30,6 +31,9 @@ this will automatically generate `nlevels` breaks between `levels[1]` and `level
 \item{linewidth}{Default `3`. The line width.}
 
 \item{color}{Default `black`. Color of the line.}
+
+\item{palette}{Default `NULL`. Overrides `color`. Either a function that returns a color palette 
+of `n` colors, or a character vector with colors that specifies each color manually.}
 
 \item{antialias}{Default `FALSE`. If `TRUE`, the line with be have anti-aliasing applied. NOTE: anti-aliasing can cause some unpredictable behavior with transparent surfaces.}
 
@@ -63,5 +67,24 @@ if(rayshader:::run_documentation()) {
 render_contours(montereybay, linewidth = 2,  offset = 100, zscale = 50,
                levels = seq(-2000, 0, 100), clear_previous = TRUE)
 render_snapshot()
+}
+
+if(rayshader:::run_documentation()) {
+#Use a color palette for the contours 
+volcano |> 
+ constant_shade() |> 
+ plot_3d(volcano, zscale = 2, solid = FALSE, zoom = 0.8)
+palette = grDevices::colorRampPalette(c("red", "purple", "pink"))
+render_contours(volcano, offset = 1, palette = palette, zscale = 2, nlevels = 20)
+render_snapshot()
+}
+
+if(rayshader:::run_documentation()) {
+#Render using `render_highquality()` for a neon light effect
+render_highquality(light = FALSE, smooth_line = TRUE, 
+                  line_radius = 0.1, sample_method="sobol_blue",
+                  path_material = rayrender::light, ground_size = 0,
+                  path_material_args = list(importance_sample = FALSE,
+                                            color = "purple", intensity = 2))
 }
 }

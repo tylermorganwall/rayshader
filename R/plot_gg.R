@@ -127,14 +127,14 @@
 #'if(rayshader:::run_documentation()) {
 #'#You can specify the color and height separately using the `ggobj_height()` argument.
 #'ggvolcano_surface = volcano %>%
-#' reshape2::melt() %>%
-#' ggplot() +
-#'  geom_tile(aes(x=Var1,y=Var2,fill=value), alpha=0) +
-#' geom_contour(aes(x=Var1,y=Var2,z=value),color="black") +
-#' scale_x_continuous("X",expand = c(0,0)) +
-#' scale_y_continuous("Y",expand = c(0,0)) +
-#' scale_fill_gradientn("Z",colours = terrain.colors(10)) +
-#' coord_fixed()
+#'reshape2::melt() %>%
+#'  ggplot() +
+#'  geom_contour(aes(x=Var1,y=Var2,z=value),color="black") +
+#'  geom_contour_filled(aes(x=Var1,y=Var2,z=value))+
+#'  scale_x_continuous("X",expand = c(0,0)) +
+#'  scale_y_continuous("Y",expand = c(0,0)) +
+#'  coord_fixed() +
+#'  theme(legend.position = "none")
 #'
 #'plot_gg(ggvolcano_surface, ggobj_height = ggvolcano, 
 #'       multicore = TRUE, raytrace = TRUE, width = 7, height = 4,

@@ -11,6 +11,8 @@
 #'@param linewidth Default `3`. The line width.
 #'@param antialias Default `FALSE`. If `TRUE`, the line with be have anti-aliasing applied. NOTE: anti-aliasing can cause some unpredictable behavior with transparent surfaces.
 #'@param color Default `black`. Color of the line.
+#'@param palette Default `NULL`. Overrides `color`. Either a function that returns a color palette 
+#'of `n` colors, or a character vector with colors that specifies each color manually.
 #'@param offset Default `5`. Offset of the track from the surface, if `altitude = NULL`.
 #'@param clear_previous Default `FALSE`. If `TRUE`, it will clear all existing paths.
 #'@export
@@ -38,12 +40,32 @@
 #'                levels = seq(-2000, 0, 100), clear_previous = TRUE)
 #'render_snapshot()
 #'}
+#'
+#'if(rayshader:::run_documentation()) {
+#'#Use a color palette for the contours 
+#'volcano |> 
+#'  constant_shade() |> 
+#'  plot_3d(volcano, zscale = 2, solid = FALSE, zoom = 0.8)
+#'palette = grDevices::colorRampPalette(c("red", "purple", "pink"))
+#'render_contours(volcano, offset = 1, palette = palette, zscale = 2, nlevels = 20)
+#'render_snapshot()
+#'}
+#'
+#'if(rayshader:::run_documentation()) {
+#'#Render using `render_highquality()` for a neon light effect
+#'render_highquality(light = FALSE, smooth_line = TRUE, 
+#'                   line_radius = 0.1, sample_method="sobol_blue",
+#'                   path_material = rayrender::light, ground_size = 0,
+#'                   path_material_args = list(importance_sample = FALSE,
+#'                                             color = "purple", intensity = 2))
+#'}
 render_contours = function(heightmap = NULL, 
-                           zscale=1, 
-                           levels=NA, 
-                           nlevels=NA, 
+                           zscale = 1, 
+                           levels = NA, 
+                           nlevels = NA, 
                            linewidth = 3, 
                            color = "black", 
+                           palette = NULL,
                            antialias = FALSE, 
                            offset = 0,
                            clear_previous = FALSE) {
@@ -79,12 +101,23 @@ render_contours = function(heightmap = NULL,
                                  z = heightmap, 
                                  levels=levels)
   contour_heights = as.numeric(names(isolineval))
+  if(!is.null(palette)) {
+    if(is.function(palette)) {
+      color = palette(length(isolineval))
+    } else {
+      if(length(palette) == length(isolineval) && is.character(palette)) {
+        color = palette
+      }
+    }
+  } else {
+    color = rep(color,length(isolineval))
+  }
   for(i in seq_len(length(isolineval))) {
     contour_height = contour_heights[i] + offset
     render_path(lat = isolineval[[i]]$y, long = isolineval[[i]]$x,
                 groups = isolineval[[i]]$id, altitude = contour_height,
                 extent = extent_heightmap, tag = "contour3d", 
                 zscale = zscale, linewidth = linewidth,
-                offset = offset, antialias = antialias, color = color)
+                offset = offset, antialias = antialias, color = color[i])
   }
 }
