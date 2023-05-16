@@ -309,7 +309,7 @@ render_obj = function(filename, extent = NULL, lat = NULL, long = NULL, altitude
                            normals = new_norm,
                            texture = texture,
                            tag = sprintf("obj%s",rgl_tag),
-                           back = "culled",
+                           back = "filled",
                            ...)
         
       } else {
@@ -321,7 +321,7 @@ render_obj = function(filename, extent = NULL, lat = NULL, long = NULL, altitude
                            indices = ind_temp,
                            texture = texture,
                            tag = sprintf("obj%s",rgl_tag),
-                           back = "culled",
+                           back = "filled",
                            ...)
       }
     } else {
@@ -333,7 +333,7 @@ render_obj = function(filename, extent = NULL, lat = NULL, long = NULL, altitude
                            ambient = ambient_col,
                            normals = new_norm,
                            tag = sprintf("obj%s",rgl_tag),
-                           back = "culled",
+                           back = "filled",
                            ...)
       } else {
         id = rgl::triangles3d(x=obj$vertices,
@@ -342,7 +342,7 @@ render_obj = function(filename, extent = NULL, lat = NULL, long = NULL, altitude
                            ambient = ambient_col,
                            indices = ind_temp,
                            tag = sprintf("obj%s",rgl_tag),
-                           back = "culled",
+                           back = "filled",
                            ...)
       }
     }

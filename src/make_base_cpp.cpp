@@ -626,7 +626,7 @@ List make_baselines_cpp(NumericMatrix& heightmap,
         //It is NA right in front of that entry
         if((!na_matrix(j,i) &&
            (((na_matrix(j+offset2,i-offsetside) || na_matrix(j-offset,i-offsetside)) && (!na_matrix(j+offset2,i+offsetside2) || !na_matrix(j-offset,i+offsetside2))) ||
-           na_matrix(j,i+offsetside))) || i == cols - 1) {
+           na_matrix(j,i+offsetside2))) || i == cols - 1) {
           drawing = false;
           if(i != cols-1) {
             endcoord = (double)i+1;
@@ -708,7 +708,7 @@ List make_baselines_cpp(NumericMatrix& heightmap,
         //It is NA right in front of that entry
         if((!na_matrix(i,j) &&
            (((na_matrix(i-offsetside,j-offset) || na_matrix(i-offsetside,j+offset2)) && (!na_matrix(i+offsetside2,j-offset) || !na_matrix(i+offsetside2,j+offset2))) ||
-           na_matrix(i+offsetside,j)))  || i == rows - 1) {
+           na_matrix(i+offsetside2,j)))  || i == rows - 1) {
           drawing = false;
           if(i != rows-1) {
             endcoord = (double)i+1;

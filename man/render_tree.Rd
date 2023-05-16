@@ -9,11 +9,14 @@ render_tree(
   long = NULL,
   extent = NULL,
   type = "basic",
-  canopy_color = "#22aa22",
+  custom_obj_tree = NULL,
+  custom_obj_crown = NULL,
+  custom_obj_trunk = NULL,
+  crown_color = "#22aa22",
   trunk_color = "#964B00",
   absolute_height = FALSE,
-  canopy_height = 9,
-  canopy_width_ratio = NULL,
+  crown_height = NULL,
+  crown_width_ratio = NULL,
   trunk_height = NULL,
   trunk_radius = NULL,
   tree_zscale = TRUE,
@@ -39,22 +42,33 @@ the previously aforementioned packages) which will be automatically converted to
 
 \item{type}{Default `"basic"`. Type of tree. Other built-in option: `"cone"`.}
 
-\item{canopy_color}{Default `"darkgreen"`. Color(s) of the canopy.}
+\item{custom_obj_tree}{Default `NULL`. Instead of using the built-in types, users can also load a custom tree 
+model in OBJ format. This function loads and manipulates the model, assuming the tree model's trunk begins 
+at the origin. Color and specific trunk/crown proportions will be fixed to the model specified, although the overall 
+scale can be changed per-tree via `crown_height`.}
+
+\item{custom_obj_crown}{Default `NULL`. Instead of using the built-in types, users can also load a custom crown 
+model in OBJ format. This function loads a crown model and allows you to control the crown and trunk proportions separately.}
+
+\item{custom_obj_trunk}{Default `NULL`.  Instead of using the built-in types, users can also load a custom trunk 
+model in OBJ format. This function loads a trunk model and allows you to control the crown and trunk proportions separately.}
+
+\item{crown_color}{Default `"darkgreen"`. Color(s) of the crown.}
 
 \item{trunk_color}{Default `"#964B00"` (brown). Color(s) of the trunk,}
 
 \item{absolute_height}{Default `FALSE`. Default is specifying the tree height directly, relative to the 
-underlying height map. If `TRUE`, `canopy_height` will specified by the actual altitude of the top of the tree.  
-Total tree height will be `canopy_height + trunk_height`.}
+underlying height map. If `TRUE`, `crown_height` will specified by the actual altitude of the top of the tree.  
+Total tree height will be `crown_height + trunk_height`.}
 
-\item{canopy_height}{Default `9`. Height of the canopy, in units of height map. 
-Total tree height will be `canopy_height + trunk_height`.}
+\item{crown_height}{Default `9`. Height of the crown, in units of height map. 
+Total tree height will be `crown_height + trunk_height`. The default for `custom_obj_crown` objects is assumed to have a height of `1`.}
 
-\item{canopy_width_ratio}{Default `1`. Ratio of the canopy width to the canopy height. `1` is spherical.}
+\item{crown_width_ratio}{Default `1`. Ratio of the crown width to the crown height. `1` is spherical. The default for `custom_obj_crown` objects is assumed to have a pre-existing `crown_width_ratio` of `1`.}
 
 \item{trunk_height}{Default `NULL`, automatically computed. Height of the trunk, from the ground.
-Default is 1/3rd the canopy height if `type = "basic"`, and 1/6th the canopy height if `type = "cone"`.
-Total tree height will be `canopy_height + trunk_height`.}
+Default is 1/3rd the crown height if `type = "basic"`, and 1/6th the crown height if `type = "cone"`.
+Total tree height will be `crown_height + trunk_height`.}
 
 \item{trunk_radius}{Default `NULL`, automatically computed.
 Default is 1/5rd the trunk height if `type = "basic"`, and 1/10th the trunk height if `type = "cone"`.}
@@ -85,8 +99,12 @@ equal the length of `lat`/`long`).}
 \item{...}{Additional arguments to pass to `rgl::triangles3d()`.}
 }
 \description{
-Adds 3D tree to the current scene, using latitude/longitude or coordinates in the reference
-system defined by the extent object.
+Adds a 3D representation of trees to an existing 3D scene generated with rayshader.
+Users can specify the trees' geographical positions using latitude and longitude or the same coordinate reference system as `extent`.
+Different types of tree models can be used, including a basic and a cone-shaped tree. Users can also use their own custom tree model in
+OBJ format. The function allows customization of various aspects of the tree, including the color of the crown and the trunk,
+the size of the crown (the leafy part of the tree) and the trunk, the overall scale of the tree, and the rotation angle around the x, y, and z axes.
+Users can also specify the minimum and maximum height of the trees to be rendered.
 }
 \examples{
 if(rayshader:::run_documentation()) {
@@ -104,14 +122,14 @@ circle_coords_lat = moss_landing_coord[1] + 0.3 * sin(t)
 circle_coords_long = moss_landing_coord[2] + 0.3 * cos(t)
 
 render_tree(extent = attr(montereybay,"extent"), heightmap = montereybay,
-           tree_zscale = FALSE, canopy_height = 30, canopy_width_ratio = 1,
+           tree_zscale = FALSE, crown_height = 30, crown_width_ratio = 1,
            lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), zscale=50) 
 render_snapshot()
 }
 if(rayshader:::run_documentation()) {
-#Change the canopy width ratio (compared to the height)
+#Change the crown width ratio (compared to the height)
 render_tree(extent = attr(montereybay,"extent"), heightmap = montereybay,
-           tree_zscale = FALSE, canopy_height = 30, canopy_width_ratio = 0.5,
+           tree_zscale = FALSE, crown_height = 30, crown_width_ratio = 0.5,
            clear_previous = TRUE, 
            lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), zscale=50) 
 render_snapshot()
@@ -119,7 +137,7 @@ render_snapshot()
 if(rayshader:::run_documentation()) {
 #Change the trunk height and width
 render_tree(extent = attr(montereybay,"extent"), heightmap = montereybay,
-           tree_zscale = FALSE, canopy_height = 10, canopy_width_ratio = 2,
+           tree_zscale = FALSE, crown_height = 10, crown_width_ratio = 2,
            clear_previous = TRUE, trunk_height=15, trunk_radius = 1.5,
            lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), zscale=50) 
 render_snapshot()
@@ -127,23 +145,23 @@ render_snapshot()
 if(rayshader:::run_documentation()) {
 #Change the tree type
 render_tree(extent = attr(montereybay,"extent"), heightmap = montereybay,
-           tree_zscale = FALSE, canopy_height = 30,
+           tree_zscale = FALSE, crown_height = 30,
            clear_previous = TRUE, type = "cone",
            lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), zscale=50) 
 render_snapshot()
 }
 if(rayshader:::run_documentation()) {
-#Change the canopy color:
+#Change the crown color:
 render_camera(theta = 150,  phi = 38, zoom = 0.4, fov = 55)
 render_tree(extent = attr(montereybay,"extent"), heightmap = montereybay,
-           tree_zscale = FALSE, canopy_height = 30, canopy_width_ratio = 1,
-           canopy_color = rainbow(20),  trunk_height=20, 
+           tree_zscale = FALSE, crown_height = 30, crown_width_ratio = 1,
+           crown_color = rainbow(20),  trunk_height=20, 
            clear_previous = TRUE, 
            lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), zscale=50) 
 render_snapshot()
 }
 
-#We will use the lidR package to generate a DEM and detect the canopy tops of trees, and
+#We will use the lidR package to generate a DEM and detect the crown tops of trees, and
 #then use rayshader to render 3D tree models scaled to those heights on the map.
 run_example = length(find.package("lidR", quiet = TRUE)) > 0 && 
              length(find.package("sf", quiet = TRUE)) > 0 && 
@@ -176,9 +194,9 @@ if (run_example) {
 #The tree locations are given as an absolute height (as opposed to relative to the surface)
 #so we set `absolute_height = TRUE`.
 render_tree(lat = tree_locations[,2], long = tree_locations[,1],
-           canopy_width_ratio = 0.5, clear_previous = T,
-           absolute_height = TRUE, canopy_height = tree_locations[,3],
-           canopy_color = "#00aa00",
+           crown_width_ratio = 0.5, clear_previous = T,
+           absolute_height = TRUE, crown_height = tree_locations[,3],
+           crown_color = "#00aa00",
            extent = raster::extent(extent_values), heightmap = dem_matrix)
            
 #Remove existing lights and add our own with rgl

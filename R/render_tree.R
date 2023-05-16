@@ -1,22 +1,34 @@
 #'@title Render Tree
 #'
-#'@description Adds 3D tree to the current scene, using latitude/longitude or coordinates in the reference
-#'system defined by the extent object. 
+#'@description Adds a 3D representation of trees to an existing 3D scene generated with rayshader.
+#'Users can specify the trees' geographical positions using latitude and longitude or the same coordinate reference system as `extent`.
+#'Different types of tree models can be used, including a basic and a cone-shaped tree. Users can also use their own custom tree model in
+#'OBJ format. The function allows customization of various aspects of the tree, including the color of the crown and the trunk,
+#'the size of the crown (the leafy part of the tree) and the trunk, the overall scale of the tree, and the rotation angle around the x, y, and z axes.
+#'Users can also specify the minimum and maximum height of the trees to be rendered.
 #'
 #'@param long Vector of longitudes (or other coordinate in the same coordinate reference system as extent).
 #'@param lat Vector of latitudes (or other coordinate in the same coordinate reference system as extent).
 #'@param type Default `"basic"`. Type of tree. Other built-in option: `"cone"`.
-#'@param canopy_color Default `"darkgreen"`. Color(s) of the canopy.
+#'@param custom_obj_tree Default `NULL`. Instead of using the built-in types, users can also load a custom tree 
+#'model in OBJ format. This function loads and manipulates the model, assuming the tree model's trunk begins 
+#'at the origin. Color and specific trunk/crown proportions will be fixed to the model specified, although the overall 
+#'scale can be changed per-tree via `crown_height`.
+#'@param custom_obj_crown Default `NULL`. Instead of using the built-in types, users can also load a custom crown 
+#'model in OBJ format. This function loads a crown model and allows you to control the crown and trunk proportions separately.
+#'@param custom_obj_trunk Default `NULL`.  Instead of using the built-in types, users can also load a custom trunk 
+#'model in OBJ format. This function loads a trunk model and allows you to control the crown and trunk proportions separately.
+#'@param crown_color Default `"darkgreen"`. Color(s) of the crown.
 #'@param trunk_color Default `"#964B00"` (brown). Color(s) of the trunk,
 #'@param absolute_height Default `FALSE`. Default is specifying the tree height directly, relative to the 
-#'underlying height map. If `TRUE`, `canopy_height` will specified by the actual altitude of the top of the tree.  
-#'Total tree height will be `canopy_height + trunk_height`.
-#'@param canopy_height Default `9`. Height of the canopy, in units of height map. 
-#'Total tree height will be `canopy_height + trunk_height`.
-#'@param canopy_width_ratio Default `1`. Ratio of the canopy width to the canopy height. `1` is spherical.
+#'underlying height map. If `TRUE`, `crown_height` will specified by the actual altitude of the top of the tree.  
+#'Total tree height will be `crown_height + trunk_height`.
+#'@param crown_height Default `9`. Height of the crown, in units of height map. 
+#'Total tree height will be `crown_height + trunk_height`. The default for `custom_obj_crown` objects is assumed to have a height of `1`.
+#'@param crown_width_ratio Default `1`. Ratio of the crown width to the crown height. `1` is spherical. The default for `custom_obj_crown` objects is assumed to have a pre-existing `crown_width_ratio` of `1`.
 #'@param trunk_height Default `NULL`, automatically computed. Height of the trunk, from the ground.  
-#'Default is 1/3rd the canopy height if `type = "basic"`, and 1/6th the canopy height if `type = "cone"`.
-#'Total tree height will be `canopy_height + trunk_height`.
+#'Default is 1/3rd the crown height if `type = "basic"`, and 1/6th the crown height if `type = "cone"`.
+#'Total tree height will be `crown_height + trunk_height`.
 #'@param trunk_radius Default `NULL`, automatically computed.
 #'Default is 1/5rd the trunk height if `type = "basic"`, and 1/10th the trunk height if `type = "cone"`.
 #'@param tree_zscale Default `TRUE`. Whether to scale the size of the tree by zscale to have it match
@@ -56,14 +68,14 @@
 #'circle_coords_long = moss_landing_coord[2] + 0.3 * cos(t)
 #'
 #'render_tree(extent = attr(montereybay,"extent"), heightmap = montereybay,
-#'            tree_zscale = FALSE, canopy_height = 30, canopy_width_ratio = 1,
+#'            tree_zscale = FALSE, crown_height = 30, crown_width_ratio = 1,
 #'            lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), zscale=50) 
 #'render_snapshot()
 #'}
 #'if(rayshader:::run_documentation()) {
-#'#Change the canopy width ratio (compared to the height)
+#'#Change the crown width ratio (compared to the height)
 #'render_tree(extent = attr(montereybay,"extent"), heightmap = montereybay,
-#'            tree_zscale = FALSE, canopy_height = 30, canopy_width_ratio = 0.5,
+#'            tree_zscale = FALSE, crown_height = 30, crown_width_ratio = 0.5,
 #'            clear_previous = TRUE, 
 #'            lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), zscale=50) 
 #'render_snapshot()
@@ -71,7 +83,7 @@
 #'if(rayshader:::run_documentation()) {
 #'#Change the trunk height and width
 #'render_tree(extent = attr(montereybay,"extent"), heightmap = montereybay,
-#'            tree_zscale = FALSE, canopy_height = 10, canopy_width_ratio = 2,
+#'            tree_zscale = FALSE, crown_height = 10, crown_width_ratio = 2,
 #'            clear_previous = TRUE, trunk_height=15, trunk_radius = 1.5,
 #'            lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), zscale=50) 
 #'render_snapshot()
@@ -79,23 +91,23 @@
 #'if(rayshader:::run_documentation()) {
 #'#Change the tree type
 #'render_tree(extent = attr(montereybay,"extent"), heightmap = montereybay,
-#'            tree_zscale = FALSE, canopy_height = 30,
+#'            tree_zscale = FALSE, crown_height = 30,
 #'            clear_previous = TRUE, type = "cone",
 #'            lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), zscale=50) 
 #'render_snapshot()
 #'}
 #'if(rayshader:::run_documentation()) {
-#'#Change the canopy color:
+#'#Change the crown color:
 #'render_camera(theta = 150,  phi = 38, zoom = 0.4, fov = 55)
 #'render_tree(extent = attr(montereybay,"extent"), heightmap = montereybay,
-#'            tree_zscale = FALSE, canopy_height = 30, canopy_width_ratio = 1,
-#'            canopy_color = rainbow(20),  trunk_height=20, 
+#'            tree_zscale = FALSE, crown_height = 30, crown_width_ratio = 1,
+#'            crown_color = rainbow(20),  trunk_height=20, 
 #'            clear_previous = TRUE, 
 #'            lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), zscale=50) 
 #'render_snapshot()
 #'}
 #'
-#'#We will use the lidR package to generate a DEM and detect the canopy tops of trees, and
+#'#We will use the lidR package to generate a DEM and detect the crown tops of trees, and
 #'#then use rayshader to render 3D tree models scaled to those heights on the map.
 #'run_example = length(find.package("lidR", quiet = TRUE)) > 0 && 
 #'              length(find.package("sf", quiet = TRUE)) > 0 && 
@@ -128,9 +140,9 @@
 #'#The tree locations are given as an absolute height (as opposed to relative to the surface)
 #'#so we set `absolute_height = TRUE`.
 #'render_tree(lat = tree_locations[,2], long = tree_locations[,1],
-#'            canopy_width_ratio = 0.5, clear_previous = T,
-#'            absolute_height = TRUE, canopy_height = tree_locations[,3],
-#'            canopy_color = "#00aa00",
+#'            crown_width_ratio = 0.5, clear_previous = T,
+#'            absolute_height = TRUE, crown_height = tree_locations[,3],
+#'            crown_color = "#00aa00",
 #'            extent = raster::extent(extent_values), heightmap = dem_matrix)
 #'            
 #'#Remove existing lights and add our own with rgl
@@ -145,26 +157,74 @@
 #'                   lightcolor=c("dodgerblue","orange"), 
 #'                   min_variance = 0, sample_method="sobol_blue", clamp_value=10)
 #'}
-render_tree = function(lat = NULL, long = NULL, extent = NULL,  
-                       type = "basic", canopy_color = "#22aa22", trunk_color = "#964B00",
-                       absolute_height = FALSE, canopy_height = 9, canopy_width_ratio = NULL, 
-                       trunk_height = NULL, trunk_radius = NULL, 
-                       tree_zscale = TRUE, min_height = 0, max_height = Inf,
-                       zscale=1, heightmap = NULL, baseshape = "rectangle",
-                       angle=c(0,0,0), clear_previous = FALSE,
+render_tree = function(lat = NULL, 
+                       long = NULL, 
+                       extent = NULL,  
+                       type = "basic", 
+                       custom_obj_tree = NULL,
+                       custom_obj_crown = NULL,
+                       custom_obj_trunk = NULL,
+                       crown_color = "#22aa22", 
+                       trunk_color = "#964B00",
+                       absolute_height = FALSE, 
+                       crown_height = NULL, 
+                       crown_width_ratio = NULL, 
+                       trunk_height = NULL, 
+                       trunk_radius = NULL, 
+                       tree_zscale = TRUE, 
+                       min_height = 0, 
+                       max_height = Inf,
+                       zscale=1, 
+                       heightmap = NULL, 
+                       baseshape = "rectangle",
+                       angle=c(0,0,0), 
+                       clear_previous = FALSE,
                        ...) {
+  # If clear_previous is TRUE, remove previous tree object
   if(clear_previous) {
     rgl::pop3d(tag = "objtree")
     if(missing(lat) || missing(long)) {
       return(invisible())
     }
   }
-  if(!is.null(min_height) && is.numeric(min_height) && min_height > 0) {
-    filter_heights = TRUE
-  } else {
-    filter_heights = FALSE
+  # Check if custom tree models exist
+  has_custom_tree = !is.null(custom_obj_tree) && file.exists(custom_obj_tree)
+  has_custom_crown = !is.null(custom_obj_crown) && file.exists(custom_obj_crown)
+  has_custom_trunk = !is.null(custom_obj_trunk) && file.exists(custom_obj_trunk)
+  
+  if((has_custom_trunk && !has_custom_crown) || (!has_custom_trunk && has_custom_crown)) {
+    stop("If specifying either one of `custom_obj_crown` or `custom_obj_trunk`, both must be specified.")
   }
-  if(absolute_height && length(canopy_height) == length(lat)) {
+  
+  # Check if the tree is fully custom or partially custom
+  fully_custom_tree = has_custom_trunk && has_custom_crown
+  custom_tree = any(c(has_custom_tree, has_custom_crown, has_custom_trunk))
+  
+  # Handling case where both full tree and parts are specified
+  if(custom_tree && has_custom_tree && (has_custom_crown || has_custom_trunk)) {
+    warning("Using `custom_obj_tree` over models specied in `custom_obj_crown` and `custom_obj_trunk`")
+    has_custom_crown = FALSE
+    has_custom_trunk = FALSE
+  }
+  
+  use_default_crown_height = FALSE
+  use_default_trunk_height = FALSE
+  use_default_trunk_radius = FALSE
+  if(is.null(crown_height)) {
+    use_default_crown_height = TRUE
+    crown_height = 9
+  }
+  if(is.null(trunk_height)) {
+    use_default_trunk_height = TRUE
+    trunk_height = 1
+  }
+  if(is.null(trunk_radius)) {
+    use_default_trunk_radius = TRUE
+    trunk_radius = 0.1
+  }
+
+  # If absolute height is specified, calculate offset in heightmap coordinates
+  if(absolute_height && length(crown_height) == length(lat)) {
     xyz_tree = transform_into_heightmap_coords(extent = extent, heightmap = heightmap, lat = lat, long = long, 
                                                altitude = NULL, offset = 0, zscale = 1)
     z_tree = xyz_tree[,2]
@@ -184,60 +244,109 @@ render_tree = function(lat = NULL, long = NULL, extent = NULL,
     if(length(trunk_radius) == nrow(xyz_tree)) {
       trunk_radius = trunk_radius[!filter_nan]
     }
-    if(length(canopy_width_ratio) == nrow(xyz_tree)) {
-      canopy_width_ratio = canopy_width_ratio[!filter_nan]
+    if(length(crown_width_ratio) == nrow(xyz_tree)) {
+      crown_width_ratio = crown_width_ratio[!filter_nan]
     }
-    if(length(canopy_height) == nrow(xyz_tree)) {
-      canopy_height = canopy_height[!filter_nan]
+    if(length(crown_height) == nrow(xyz_tree)) {
+      crown_height = crown_height[!filter_nan]
     }
-    canopy_height = canopy_height - z_tree
+    crown_height = crown_height - z_tree
     if(!is.infinite(max_height) || min_height > 0) {
-      filter_height = canopy_height >= max_height | canopy_height <= min_height 
+      filter_height = crown_height >= max_height | crown_height <= min_height 
       long = long[!filter_height]
       lat = lat[!filter_height]
       trunk_color = trunk_color[!filter_height]
       trunk_height = trunk_height[!filter_height]
       trunk_radius = trunk_radius[!filter_height]
-      canopy_width_ratio = canopy_width_ratio[!filter_height]
-      canopy_height = canopy_height[!filter_height]
+      crown_width_ratio = crown_width_ratio[!filter_height]
+      crown_height = crown_height[!filter_height]
     }
     if(length(long) == 0) {
       return(invisible())
     }
   }
-  if(is.null(trunk_height)) {
-    if(type == "cone") {
-      trunk_height = canopy_height/6
-    } else {
-      trunk_height = canopy_height/3
+  # Determine default trunk height and radius based on tree type
+  # The basic trunk included has a radius of 0.6 units and a height of 1.0 units, 
+  # with the bottom of the trunk located at 0.0 (midpoint at 0.5).
+  # The basic spherical crown is centered at zero with a radius of 5.0 units
+  # The basic conical crown has a radius of 5.0 units and a height of 10 units, with the base at 0.0
+  if(!custom_tree) {
+    if(use_default_trunk_height) {
+      # If user not customizing trunk height, set defaults proportions.
+      # This sets the trunk height to be 1/6th of the crown height if a cone,
+      # and 1/3th if spherical.
+      if(type == "cone") {
+        trunk_height = crown_height/6
+      } else {
+        trunk_height = crown_height/3
+      }
     }
-  }
-  if(is.null(trunk_radius)) {
-    if(type == "cone") {
-      trunk_radius = trunk_height/5
-    } else {
-      trunk_radius = trunk_height/10
+    if(use_default_trunk_radius) {
+      # If user not customizing trunk radius, set defaults proportions.
+      # This sets the trunk height to be 1/5th of the trunk radius 
+      # (and thus, 1/30th the crown height if using default values) if a cone,
+      # and 1/3th if spherical (also 1/30th the crown height).
+      if(type == "cone") {
+        trunk_radius = trunk_height/5
+      } else {
+        trunk_radius = trunk_height/10
+      }
     }
-  }
-  canopy_radius = canopy_height * canopy_width_ratio / 2
-  if(is.null(canopy_radius)) {
-    canopy_radius = canopy_height/4
-  }
-  if(tree_zscale) {
-    canopy_radius = canopy_radius/zscale
-    trunk_radius = trunk_radius/zscale
-  }
-  if(type == "cone") {
-    canopy_radius = canopy_radius*2
+    # Calculate crown radius
+    crown_radius = crown_height * crown_width_ratio / 2
+    if(is.null(crown_radius)) {
+      crown_radius = crown_height/4
+    }
+    # Scaling tree dimensions if tree_zscale is TRUE
+    if(tree_zscale) {
+      crown_radius = crown_radius/zscale
+      trunk_radius = trunk_radius/zscale
+    }
+    #This just ensures the aspect ratio is correct
+    if(type == "cone") {
+      crown_radius = crown_radius*2
+    }
+  } else {
+    if(!fully_custom_tree) {
+      if(is.null(crown_height)) {
+        crown_height = 1
+      }
+      if(!is.null(trunk_height) || !is.null(trunk_radius)) {
+        warning("When specifying single `crown_obj_tree` file (instead of separate ",
+                "crown and trunk OBJs), `crown_height` controls the overall scale of ",
+                "the tree and trunk settings cannot be changed.")
+        trunk_height = 1
+        trunk_radius = 1
+      } 
+      if(!is.null(crown_width_ratio)) {
+        crown_radius = crown_height * crown_width_ratio / 2
+      } else {
+        crown_radius = 1
+      }
+    } else {
+      if(is.null(trunk_height)) {
+        trunk_height = 1
+      }
+      if(is.null(trunk_radius)) {
+        trunk_radius = 1
+      }
+      if(!is.null(crown_width_ratio)) {
+        crown_radius = crown_height * crown_width_ratio / 2
+      } else {
+        crown_radius = crown_height / 2
+      }
+    }
   }
   stopifnot(length(lat) == length(long))
-  canopy_width = canopy_radius
+  crown_width = crown_radius
   height_zscale = 1
-  if(length(canopy_height) == 1) {
-    canopy_height = rep(canopy_height,length(lat))
+  
+  # Expand scalar dimensions to vectors if needed
+  if(length(crown_height) == 1) {
+    crown_height = rep(crown_height,length(lat))
   }
-  if(length(canopy_width) == 1) {
-    canopy_width = rep(canopy_width,length(lat))
+  if(length(crown_width) == 1) {
+    crown_width = rep(crown_width,length(lat))
   }
   if(length(trunk_radius) == 1) {
     trunk_radius = rep(trunk_radius,length(lat))
@@ -245,23 +354,84 @@ render_tree = function(lat = NULL, long = NULL, extent = NULL,
   if(length(trunk_height) == 1) {
     trunk_height = rep(trunk_height,length(lat))
   }
-  if(tree_zscale) {
-    tree_scale = matrix(c(canopy_width/5,canopy_height/10/zscale,canopy_width/5),
-                        ncol=3,nrow=length(lat))
-    trunk_scale = matrix(c(trunk_radius/0.3,(trunk_height + canopy_height/3)/zscale,trunk_radius/0.3),
-                         ncol=3,nrow=length(lat))
+  if(!custom_tree) {
+    if(tree_zscale) {
+      tree_scale = matrix(c(crown_width/5,crown_height/10/zscale,crown_width/5),
+                          ncol=3,nrow=length(lat))
+      trunk_scale = matrix(c(trunk_radius/0.3,(trunk_height + crown_height/3)/zscale,trunk_radius/0.3),
+                           ncol=3,nrow=length(lat))
+    } else {
+      tree_scale = matrix(c(crown_width/5,crown_height/10,crown_width/5),
+                          ncol=3,nrow=length(lat))
+      trunk_scale = matrix(c(trunk_radius/0.3,(trunk_height + crown_height/3),trunk_radius/0.3),
+                           ncol=3,nrow=length(lat))
+      height_zscale = zscale
+    }
   } else {
-    tree_scale = matrix(c(canopy_width/5,canopy_height/10,canopy_width/5),
-                        ncol=3,nrow=length(lat))
-    trunk_scale = matrix(c(trunk_radius/0.3,(trunk_height + canopy_height/3),trunk_radius/0.3),
-                         ncol=3,nrow=length(lat))
-    height_zscale = zscale
+    #Scale the custom trees
+    if(fully_custom_tree) {
+      # For this version, we can control all proportions. 
+      # This assumes the tree trunk/crown has a radius of 1 and a height of 1.
+      if(tree_zscale) {
+        tree_scale = matrix(c(crown_width,crown_height/zscale,crown_width),
+                            ncol=3,nrow=length(lat))
+        trunk_scale = matrix(c(trunk_radius,trunk_height/zscale,trunk_radius),
+                             ncol=3,nrow=length(lat))
+      } else {
+        tree_scale = matrix(c(crown_width,crown_height,crown_width),
+                            ncol=3,nrow=length(lat))
+        trunk_scale = matrix(c(trunk_radius,trunk_height,trunk_radius),
+                             ncol=3,nrow=length(lat))
+        height_zscale = zscale
+      }
+    } else {
+      if(tree_zscale) {
+        tree_scale = matrix(c(crown_width,crown_height/zscale,crown_width),
+                            ncol=3,nrow=length(lat))
+        trunk_scale = matrix(c(trunk_radius,trunk_height/zscale,trunk_radius),
+                             ncol=3,nrow=length(lat))
+      } else {
+        tree_scale = matrix(c(crown_width,crown_height,crown_width),
+                            ncol=3,nrow=length(lat))
+        height_zscale = zscale
+      }
+    }
   }
-
-  if(type == "basic") {
-    render_obj(tree_basic_center_obj(), color = canopy_color,
+  if(fully_custom_tree) {
+    # If a fully custom tree is specified, render the custom crown and trunk
+    render_obj(custom_obj_crown, color = crown_color,
                lat = lat, long = long, extent = extent, zscale = zscale,
-               offset = (trunk_height + canopy_height/3)*height_zscale,
+               offset = trunk_height*height_zscale,
+               heightmap = heightmap, angle = angle, scale = tree_scale, 
+               baseshape = baseshape,
+               clear_previous = FALSE, rgl_tag = "tree",
+               ...)
+    render_obj(custom_obj_trunk, color = trunk_color,
+               lat = lat, long = long, extent = extent, zscale = zscale, offset = 0,
+               baseshape = baseshape,
+               heightmap = heightmap, angle = angle, scale = trunk_scale, rgl_tag = "tree", 
+               ...)
+  } else if(custom_tree) {
+    # If a custom tree is specified (but not fully custom), render the custom tree
+    render_obj(custom_obj_tree, 
+               load_material = TRUE,
+               lat = lat, 
+               long = long, 
+               extent = extent, 
+               zscale = zscale,
+               offset = 0,
+               heightmap = heightmap, 
+               angle = angle, 
+               scale = tree_scale, 
+               baseshape = baseshape,
+               clear_previous = FALSE, 
+               rgl_tag = "tree",
+               ...)
+  } else if(type == "basic") {
+    # If a basic type is specified, render the basic tree's crown and trunk
+    render_obj(tree_basic_center_obj(), color = crown_color,
+               lat = lat, long = long, extent = extent, zscale = zscale,
+               offset = (trunk_height + crown_height/3)*height_zscale,
                heightmap = heightmap, angle = angle, scale = tree_scale, 
                baseshape = baseshape,
                clear_previous = FALSE, rgl_tag = "tree",
@@ -272,7 +442,8 @@ render_tree = function(lat = NULL, long = NULL, extent = NULL,
                heightmap = heightmap, angle = angle, scale = trunk_scale, rgl_tag = "tree", 
                ...)
   } else if (type == "cone") {
-    render_obj(tree_cone_center_obj(), color = canopy_color,
+    # If a cone type is specified, render the cone tree's crown and trunk
+    render_obj(tree_cone_center_obj(), color = crown_color,
               lat = lat, long = long, extent = extent, zscale = zscale, 
               offset = trunk_height*height_zscale,
               baseshape = baseshape,
