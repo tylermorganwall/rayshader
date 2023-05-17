@@ -373,12 +373,12 @@ render_tree = function(lat = NULL,
       # For this version, we can control all proportions. 
       # This assumes the tree trunk/crown has a radius of 1 and a height of 1.
       if(tree_zscale) {
-        tree_scale = matrix(c(crown_width,crown_height/zscale,crown_width),
+        tree_scale = matrix(c(crown_width*2,crown_height/zscale,crown_width*2),
                             ncol=3,nrow=length(lat))
         trunk_scale = matrix(c(trunk_radius,trunk_height/zscale,trunk_radius),
                              ncol=3,nrow=length(lat))
       } else {
-        tree_scale = matrix(c(crown_width,crown_height,crown_width),
+        tree_scale = matrix(c(crown_width*2,crown_height,crown_width*2),
                             ncol=3,nrow=length(lat))
         trunk_scale = matrix(c(trunk_radius,trunk_height,trunk_radius),
                              ncol=3,nrow=length(lat))

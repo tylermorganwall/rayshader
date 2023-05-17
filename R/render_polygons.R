@@ -113,7 +113,8 @@ render_polygons = function(polygon, extent,  color = "red", top = 1, bottom = NA
     if(inherits(polygon,"data.frame")) {
       for(i in 1:nrow(polygon)) {
         if(inherits(polygon[i,],"SpatialPolygonsDataFrame") || 
-           inherits(polygon[i,],"SpatialPolygons")) {
+           inherits(polygon[i,],"SpatialPolygons") ||
+           inherits(polygon[i,],"sf")) {
           holes = NULL
         }
         mesh = rayrender::extruded_polygon(polygon[i,],top=top,bottom=bottom,
@@ -136,7 +137,8 @@ render_polygons = function(polygon, extent,  color = "red", top = 1, bottom = NA
     vertex_list = tryCatch({
       foreach::foreach(i=1:nrow(polygon), .packages = c("rayrender","sf")) %dopar% {
         if(inherits(polygon[i,],"SpatialPolygonsDataFrame") || 
-           inherits(polygon[i,],"SpatialPolygons")) {
+           inherits(polygon[i,],"SpatialPolygons") ||
+           inherits(polygon[i,],"sf")) {
           holes = NULL
         }
         mesh = rayrender::extruded_polygon(polygon[i,],top=top,bottom=bottom,
