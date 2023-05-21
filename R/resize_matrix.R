@@ -8,7 +8,7 @@
 #'e.g. 0.5 would halve the resolution for the width. 
 #'@param height Default `NULL`. Alternative to `scale` argument. The desired output width. If `height` is less than 1, it will be interpreted as a scaling factor--
 #'e.g. 0.5 would halve the resolution for the height.
-#'@param method Default `bilinear`. Method of interpolation. Alteratively `cubic`, which is slightly smoother, although
+#'@param method Default `bilinear`. Method of interpolation. Alternatively `cubic`, which is slightly smoother, although
 #'current implementation slightly scales the image.
 #'@export
 #'@examples

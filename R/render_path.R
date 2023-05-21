@@ -9,7 +9,7 @@
 #'@param long Default `NULL`. Vector of longitudes (or other coordinate in the same coordinate reference system as extent).
 #'Ignored if lat is an `sf` or `SpatialLineDataFrame` object.
 #'@param altitude Default `NULL`. Elevation of each point, in units of the elevation matrix (scaled by zscale).
-#'If left `NULL`, this will be just the elevation value at ths surface, offset by `offset`. If a single value, 
+#'If left `NULL`, this will be just the elevation value at this surface, offset by `offset`. If a single value, 
 #'all data will be rendered at that altitude.
 #'@param groups Default `NULL`. Integer vector specifying the grouping of each lat/long path segment, if lat/long are
 #'specified as numeric vectors (as opposed to `sf` or `SpatialLineDataFrame` objects, where this information

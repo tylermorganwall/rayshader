@@ -40,7 +40,7 @@ the previously aforementioned packages) which will be automatically converted to
 \item{long}{Vector of longitudes (or other coordinate in the same coordinate reference system as extent).}
 
 \item{altitude}{Default `NULL`. Elevation of each point, in units of the elevation matrix (scaled by `zscale`). 
-If left `NULL`, this will be just the elevation value at ths surface, offset by `offset`. If a single value, 
+If left `NULL`, this will be just the elevation value at this surface, offset by `offset`. If a single value, 
 the OBJ will be rendered at that altitude.}
 
 \item{xyz}{Default `NULL`, ignored. A 3 column numeric matrix, with each row specifying the x/y/z 
