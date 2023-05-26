@@ -15,9 +15,10 @@ render_tree(
   crown_color = "#22aa22",
   trunk_color = "#964B00",
   absolute_height = FALSE,
-  crown_height = NULL,
+  tree_height = NULL,
+  trunk_height_ratio = NULL,
   crown_width_ratio = NULL,
-  trunk_height = NULL,
+  crown_width = NULL,
   trunk_radius = NULL,
   tree_zscale = TRUE,
   min_height = 0,
@@ -61,14 +62,17 @@ model in OBJ format. This function loads a trunk model and allows you to control
 underlying height map. If `TRUE`, `crown_height` will specified by the actual altitude of the top of the tree.  
 Total tree height will be `crown_height + trunk_height`.}
 
-\item{crown_height}{Default `9`. Height of the crown, in units of height map. 
-Total tree height will be `crown_height + trunk_height`. The default for `custom_obj_crown` objects is assumed to have a height of `1`.}
+\item{tree_height}{Default `NULL`. Height of the tree, automatically set to `10` if not specified. If `absolute_height = TRUE`, then this is interpreted as 
+the altitude of the top of the tree in the coordinate reference system used. If `absolute_height = FALSE`, then 
+this is interpreted as the height of the tree relative to the underlying heightmap.}
 
-\item{crown_width_ratio}{Default `1`. Ratio of the crown width to the crown height. `1` is spherical. The default for `custom_obj_crown` objects is assumed to have a pre-existing `crown_width_ratio` of `1`.}
+\item{trunk_height_ratio}{Default `NULL`. The ratio of the height of the trunk to the total height of the tree.
+Default is 1/3rd the crown height if `type = "basic"`, and 1/6th the crown height if `type = "cone"`.}
 
-\item{trunk_height}{Default `NULL`, automatically computed. Height of the trunk, from the ground.
-Default is 1/3rd the crown height if `type = "basic"`, and 1/6th the crown height if `type = "cone"`.
-Total tree height will be `crown_height + trunk_height`.}
+\item{crown_width_ratio}{Default `NULL`. Ratio of the crown width to the tree height. A value of `1` is spherical.}
+
+\item{crown_width}{Default `NULL`. As an alternative to specifying the ratio, you can use this argument to 
+specify the crown width directly.}
 
 \item{trunk_radius}{Default `NULL`, automatically computed.
 Default is 1/5rd the trunk height if `type = "basic"`, and 1/10th the trunk height if `type = "cone"`.}
@@ -122,14 +126,14 @@ circle_coords_lat = moss_landing_coord[1] + 0.3 * sin(t)
 circle_coords_long = moss_landing_coord[2] + 0.3 * cos(t)
 
 render_tree(extent = attr(montereybay,"extent"), heightmap = montereybay,
-           tree_zscale = FALSE, crown_height = 30, crown_width_ratio = 1,
+           tree_zscale = FALSE, tree_height = 30, crown_width_ratio = 1,
            lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), zscale=50) 
 render_snapshot()
 }
 if(rayshader:::run_documentation()) {
 #Change the crown width ratio (compared to the height)
 render_tree(extent = attr(montereybay,"extent"), heightmap = montereybay,
-           tree_zscale = FALSE, crown_height = 30, crown_width_ratio = 0.5,
+           tree_zscale = FALSE, tree_height = 30, crown_width_ratio = 0.5,
            clear_previous = TRUE, 
            lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), zscale=50) 
 render_snapshot()
@@ -137,15 +141,15 @@ render_snapshot()
 if(rayshader:::run_documentation()) {
 #Change the trunk height and width
 render_tree(extent = attr(montereybay,"extent"), heightmap = montereybay,
-           tree_zscale = FALSE, crown_height = 10, crown_width_ratio = 2,
-           clear_previous = TRUE, trunk_height=15, trunk_radius = 1.5,
+           tree_zscale = FALSE, tree_height = 15, crown_width_ratio = 4,
+           clear_previous = TRUE, trunk_height_ratio=2/3, trunk_radius = 1.5,
            lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), zscale=50) 
 render_snapshot()
 }
 if(rayshader:::run_documentation()) {
 #Change the tree type
 render_tree(extent = attr(montereybay,"extent"), heightmap = montereybay,
-           tree_zscale = FALSE, crown_height = 30,
+           tree_zscale = FALSE, tree_height = 30,
            clear_previous = TRUE, type = "cone",
            lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), zscale=50) 
 render_snapshot()
@@ -154,8 +158,8 @@ if(rayshader:::run_documentation()) {
 #Change the crown color:
 render_camera(theta = 150,  phi = 38, zoom = 0.4, fov = 55)
 render_tree(extent = attr(montereybay,"extent"), heightmap = montereybay,
-           tree_zscale = FALSE, crown_height = 30, crown_width_ratio = 1,
-           crown_color = rainbow(20),  trunk_height=20, 
+           tree_zscale = FALSE, tree_height = 30, crown_width_ratio = 1,
+           crown_color = rainbow(20),  trunk_height_ratio=1/3, 
            clear_previous = TRUE, 
            lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), zscale=50) 
 render_snapshot()
@@ -193,11 +197,16 @@ render_snapshot()
 if (run_example) {
 #The tree locations are given as an absolute height (as opposed to relative to the surface)
 #so we set `absolute_height = TRUE`.
-render_tree(lat = tree_locations[,2], long = tree_locations[,1],
-           crown_width_ratio = 0.5, clear_previous = T,
-           absolute_height = TRUE, crown_height = tree_locations[,3],
+render_tree(lat = tree_locations[,2], 
+           long = tree_locations[,1],
+           crown_width_ratio = 0.5, 
+           absolute_height = TRUE, 
+           tree_height = tree_locations[,3],
+           trunk_height_ratio = 0.2 + 0.1*runif(nrow(tree_locations)),
            crown_color = "#00aa00",
-           extent = raster::extent(extent_values), heightmap = dem_matrix)
+           extent = raster::extent(extent_values), 
+           heightmap = dem_matrix,
+           clear_previous = TRUE)
            
 #Remove existing lights and add our own with rgl
 rgl::pop3d("lights")
