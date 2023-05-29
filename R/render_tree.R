@@ -28,7 +28,7 @@
 #'this is interpreted as the height of the tree relative to the underlying heightmap. 
 #'@param trunk_height_ratio Default `NULL`. The ratio of the height of the trunk to the total height of the tree.
 #'Default is 1/3rd the crown height if `type = "basic"`, and 1/6th the crown height if `type = "cone"`.
-#'@param crown_width_ratio Default `NULL`. Ratio of the crown width to the tree height. A value of `1` is spherical.
+#'@param crown_width_ratio Default `NULL`. Ratio of the crown width to the crown height. A value of `1` is spherical.
 #'@param crown_width Default `NULL`. As an alternative to specifying the ratio, you can use this argument to 
 #'specify the crown width directly. 
 #'@param trunk_radius Default `NULL`, automatically computed.

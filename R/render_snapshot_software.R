@@ -105,7 +105,6 @@ render_snapshot_software = function(filename, cache_filename = NULL, camera_loca
   projmat = rgl::par3d()$projMatrix
   zoom = rgl::par3d()$zoom
   scalevals = rgl::par3d("scale")
-  
   phi = rotmat[1]
   if(0.001 > abs(abs(rotmat[3]) - 180)) {
     theta = -rotmat[2] + 180
@@ -115,7 +114,7 @@ render_snapshot_software = function(filename, cache_filename = NULL, camera_loca
   } else {
     theta = rotmat[2]
     movevec = rgl::rotationMatrix(rotmat[3]*pi/180, 0, 0, 1) %*%
-      rgl::rotationMatrix(-rotmat[2]*pi/180, 0, 1, 0) %*%
+      rgl::rotationMatrix(rotmat[2]*pi/180, 0, 1, 0) %*%
       rgl::rotationMatrix(-rotmat[1]*pi/180, 1, 0, 0) %*% 
       rgl::par3d()$userMatrix[,4]
   }
@@ -354,6 +353,8 @@ render_snapshot_software = function(filename, cache_filename = NULL, camera_loca
     if(scene$materials[[1]][[i]]$illum == 5) {
       scene$materials[[1]][[i]]$illum = 0
       scene$materials[[1]][[i]]$type = "color"
+    } else {
+      scene$materials[[1]][[i]]$two_sided = TRUE
     }
   }
   debug = rayvertex::rasterize_scene(scene, lookat = camera_lookat, camera_up = camera_up,
