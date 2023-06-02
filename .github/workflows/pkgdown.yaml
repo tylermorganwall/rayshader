@@ -1,8 +1,11 @@
 on:
   push:
-    branches:
-      - main
-      - master
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  release:
+    types: [published]
+  workflow_dispatch:
 
 name: pkgdown
 
@@ -14,11 +17,16 @@ jobs:
       RGL_USE_NULL: true
       _SF_USE_S2: false
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
-      - uses: r-lib/actions/setup-r@v1
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
 
-      - uses: r-lib/actions/setup-pandoc@v1
+      - uses: r-lib/actions/setup-pandoc@v2
+        with:
+          extra-packages: any::pkgdown, local::.
+          needs: website
 
       - name: Query dependencies
         run: |
@@ -36,8 +44,8 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ${{ env.R_LIBS_USER }}
-          key: ${{ runner.os }}-${{ hashFiles('.github/R-version') }}-3-${{ hashFiles('.github/depends.Rds') }}
-          restore-keys: ${{ runner.os }}-${{ hashFiles('.github/R-version') }}-3-
+          key: ${{ runner.os }}-${{ hashFiles('.github/R-version') }}-4-${{ hashFiles('.github/depends.Rds') }}
+          restore-keys: ${{ runner.os }}-${{ hashFiles('.github/R-version') }}-4-
           
       - name: Install dependencies
         run: |
@@ -53,8 +61,10 @@ jobs:
       - name: Install package
         run: R CMD INSTALL .
 
-      - name: Deploy package
-        run: |
-          git config --local user.email "actions@github.com"
-          git config --local user.name "GitHub Actions"
-          Rscript -e 'pkgdown::deploy_to_branch(new_process = FALSE, run_dont_run = TRUE)'
+      - name: Deploy to GitHub pages 🚀
+        if: github.event_name != 'pull_request'
+        uses: JamesIves/github-pages-deploy-action@v4.4.1
+        with:
+          clean: false
+          branch: gh-pages
+          folder: docs
