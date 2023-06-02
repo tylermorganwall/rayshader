@@ -306,7 +306,7 @@ render_highquality = function(filename = NULL, light = TRUE,
   } else {
     theta = rotmat[2]
     movevec = rgl::rotationMatrix(rotmat[3]*pi/180, 0, 0, 1) %*%
-      rgl::rotationMatrix(-rotmat[2]*pi/180, 0, 1, 0) %*%
+      rgl::rotationMatrix(rotmat[2]*pi/180, 0, 1, 0) %*%
       rgl::rotationMatrix(-phi*pi/180, 1, 0, 0) %*% 
       rgl::par3d()$userMatrix[,4]
   }

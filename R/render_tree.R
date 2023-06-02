@@ -237,7 +237,6 @@ render_tree = function(lat = NULL,
   
   if(is.null(trunk_radius)) {
     use_default_trunk_radius = TRUE
-    trunk_radius = 0.1
   }
   if(!is.null(crown_width)) {
     use_absolute_widths = TRUE
@@ -384,13 +383,18 @@ render_tree = function(lat = NULL,
       if(is.null(trunk_height)) {
         trunk_height = 1
       }
-      if(is.null(trunk_radius)) {
-        trunk_radius = 1
-      }
       if(!is.null(crown_width_ratio)) {
         crown_radius = crown_height * crown_width_ratio / 2
       } else {
         crown_radius = crown_height / 2
+      }
+      if(is.null(trunk_radius)) {
+        trunk_radius = crown_radius / 6
+      }
+      # Scaling tree dimensions if tree_zscale is TRUE
+      if(tree_zscale) {
+        crown_radius = crown_radius/zscale
+        trunk_radius = trunk_radius/zscale
       }
     }
   }
