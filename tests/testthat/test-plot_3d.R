@@ -138,7 +138,7 @@ test_that("plot_3d plots line options", {
 
 test_that("plot_3d plots soil options", {
   skip_if(rgl::rgl.useNULL(), message = "rgl.useNULL is TRUE--not testing raw rgl snapshots")
-  
+
   hillshade = sphere_shade(volcano)
   plot_3d_args_soil = expand.grid(soil = list(TRUE),
                                   soil_freq = list(0.1,0.5),
@@ -148,7 +148,7 @@ test_that("plot_3d plots soil options", {
                                   soil_gradient = list(0,2,8),
                                   soil_gradient_darken = list(1,4,8))
 
-
+  set.seed(1)
   run_tests("plot_3d", plot_3d_args_soil, plot_prefix = "soil",
             list(hillshade=hillshade, 
                  heightmap = volcano, 
