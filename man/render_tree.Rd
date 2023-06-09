@@ -126,14 +126,14 @@ circle_coords_lat = moss_landing_coord[1] + 0.3 * sin(t)
 circle_coords_long = moss_landing_coord[2] + 0.3 * cos(t)
 
 render_tree(extent = attr(montereybay,"extent"), heightmap = montereybay,
-           tree_zscale = FALSE, tree_height = 30, crown_width_ratio = 1,
+           tree_zscale = FALSE, tree_height = 30, 
            lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), zscale=50) 
 render_snapshot()
 }
 if(rayshader:::run_documentation()) {
 #Change the crown width ratio (compared to the height)
 render_tree(extent = attr(montereybay,"extent"), heightmap = montereybay,
-           tree_zscale = FALSE, tree_height = 30, crown_width_ratio = 0.5,
+           tree_zscale = FALSE, tree_height = 60, crown_width_ratio = 0.5,
            clear_previous = TRUE, 
            lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), zscale=50) 
 render_snapshot()
@@ -141,16 +141,16 @@ render_snapshot()
 if(rayshader:::run_documentation()) {
 #Change the trunk height and width
 render_tree(extent = attr(montereybay,"extent"), heightmap = montereybay,
-           tree_zscale = FALSE, tree_height = 15, crown_width_ratio = 4,
-           clear_previous = TRUE, trunk_height_ratio=2/3, trunk_radius = 1.5,
+           tree_zscale = FALSE, tree_height = 40, crown_width_ratio = 2,
+           clear_previous = TRUE, trunk_height_ratio=1/2, trunk_radius = 1.5,
            lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), zscale=50) 
 render_snapshot()
 }
 if(rayshader:::run_documentation()) {
 #Change the tree type
 render_tree(extent = attr(montereybay,"extent"), heightmap = montereybay,
-           tree_zscale = FALSE, tree_height = 30,
-           clear_previous = TRUE, type = "cone",
+           tree_zscale = FALSE, tree_height = 30, 
+           clear_previous = TRUE, type = "cone",trunk_height_ratio = 1/6,
            lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), zscale=50) 
 render_snapshot()
 }
@@ -158,9 +158,8 @@ if(rayshader:::run_documentation()) {
 #Change the crown color:
 render_camera(theta = 150,  phi = 38, zoom = 0.4, fov = 55)
 render_tree(extent = attr(montereybay,"extent"), heightmap = montereybay,
-           tree_zscale = FALSE, tree_height = 30, crown_width_ratio = 1,
-           crown_color = rainbow(20),  trunk_height_ratio=1/3, 
-           clear_previous = TRUE, 
+           tree_zscale = FALSE, tree_height = 30, crown_width_ratio = 0.5 + runif(20),
+           crown_color = rainbow(20),  clear_previous = TRUE, 
            lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), zscale=50) 
 render_snapshot()
 }

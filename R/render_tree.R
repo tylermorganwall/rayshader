@@ -70,14 +70,14 @@
 #'circle_coords_long = moss_landing_coord[2] + 0.3 * cos(t)
 #'
 #'render_tree(extent = attr(montereybay,"extent"), heightmap = montereybay,
-#'            tree_zscale = FALSE, tree_height = 30, crown_width_ratio = 1,
+#'            tree_zscale = FALSE, tree_height = 30, 
 #'            lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), zscale=50) 
 #'render_snapshot()
 #'}
 #'if(rayshader:::run_documentation()) {
 #'#Change the crown width ratio (compared to the height)
 #'render_tree(extent = attr(montereybay,"extent"), heightmap = montereybay,
-#'            tree_zscale = FALSE, tree_height = 30, crown_width_ratio = 0.5,
+#'            tree_zscale = FALSE, tree_height = 60, crown_width_ratio = 0.5,
 #'            clear_previous = TRUE, 
 #'            lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), zscale=50) 
 #'render_snapshot()
@@ -85,16 +85,16 @@
 #'if(rayshader:::run_documentation()) {
 #'#Change the trunk height and width
 #'render_tree(extent = attr(montereybay,"extent"), heightmap = montereybay,
-#'            tree_zscale = FALSE, tree_height = 15, crown_width_ratio = 4,
-#'            clear_previous = TRUE, trunk_height_ratio=2/3, trunk_radius = 1.5,
+#'            tree_zscale = FALSE, tree_height = 40, crown_width_ratio = 2,
+#'            clear_previous = TRUE, trunk_height_ratio=1/2, trunk_radius = 1.5,
 #'            lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), zscale=50) 
 #'render_snapshot()
 #'}
 #'if(rayshader:::run_documentation()) {
 #'#Change the tree type
 #'render_tree(extent = attr(montereybay,"extent"), heightmap = montereybay,
-#'            tree_zscale = FALSE, tree_height = 30,
-#'            clear_previous = TRUE, type = "cone",
+#'            tree_zscale = FALSE, tree_height = 30, 
+#'            clear_previous = TRUE, type = "cone",trunk_height_ratio = 1/6,
 #'            lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), zscale=50) 
 #'render_snapshot()
 #'}
@@ -102,9 +102,8 @@
 #'#Change the crown color:
 #'render_camera(theta = 150,  phi = 38, zoom = 0.4, fov = 55)
 #'render_tree(extent = attr(montereybay,"extent"), heightmap = montereybay,
-#'            tree_zscale = FALSE, tree_height = 30, crown_width_ratio = 1,
-#'            crown_color = rainbow(20),  trunk_height_ratio=1/3, 
-#'            clear_previous = TRUE, 
+#'            tree_zscale = FALSE, tree_height = 30, crown_width_ratio = 0.5 + runif(20),
+#'            crown_color = rainbow(20),  clear_previous = TRUE, 
 #'            lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), zscale=50) 
 #'render_snapshot()
 #'}
@@ -226,7 +225,16 @@ render_tree = function(lat = NULL,
   if(is.null(trunk_height_ratio)) {
     use_default_crown_height = TRUE
     use_default_trunk_height = TRUE
-    trunk_height_ratio = 1/9
+    if(!custom_tree) {
+      if(type == "cone") {
+        trunk_height_ratio = 1/6
+      }
+      if(type == "basic") {
+        trunk_height_ratio = 1/3
+      }
+    } else {
+      trunk_height_ratio = 1/3
+    }
   } else {
     stopifnot(all(trunk_height_ratio < 1 & trunk_height_ratio >= 0))
   }
@@ -234,6 +242,15 @@ render_tree = function(lat = NULL,
     crown_height = (1 - trunk_height_ratio) * tree_height
     trunk_height = (trunk_height_ratio) * tree_height
   }
+  if(is.null(crown_width_ratio)) {
+    if(type == "cone") {
+      crown_width_ratio = 1/2
+    }
+    if(type == "basic") {
+      crown_width_ratio = 1
+    }
+  }
+  
   
   if(is.null(trunk_radius)) {
     use_default_trunk_radius = TRUE
@@ -327,27 +344,6 @@ render_tree = function(lat = NULL,
   # The basic spherical crown is centered at zero with a radius of 5.0 units
   # The basic conical crown has a radius of 5.0 units and a height of 10 units, with the base at 0.0
   if(!custom_tree) {
-    if(use_default_trunk_height) {
-      # If user not customizing trunk height, set defaults proportions.
-      # This sets the trunk height to be 1/6th of the crown height if a cone,
-      # and 1/3th if spherical.
-      if(type == "cone") {
-        trunk_height = crown_height/6
-      } else {
-        trunk_height = crown_height/3
-      }
-    }
-    if(use_default_trunk_radius) {
-      # If user not customizing trunk radius, set defaults proportions.
-      # This sets the trunk height to be 1/5th of the trunk radius 
-      # (and thus, 1/30th the crown height if using default values) if a cone,
-      # and 1/3th if spherical (also 1/30th the crown height).
-      if(type == "cone") {
-        trunk_radius = trunk_height/5
-      } else {
-        trunk_radius = trunk_height/10
-      }
-    }
     # Calculate crown radius
     crown_radius = crown_height * crown_width_ratio / 2
     if(is.null(crown_radius)) {
@@ -362,6 +358,7 @@ render_tree = function(lat = NULL,
     if(type == "cone") {
       crown_radius = crown_radius*2
     }
+    crown_width = crown_radius
   } else {
     if(!fully_custom_tree) {
       if(is.null(crown_height)) {
@@ -383,27 +380,27 @@ render_tree = function(lat = NULL,
       if(is.null(trunk_height)) {
         trunk_height = 1
       }
-      if(!is.null(crown_width_ratio)) {
-        crown_radius = crown_height * crown_width_ratio / 2
-      } else {
-        crown_radius = crown_height / 2
-      }
-      if(is.null(trunk_radius)) {
-        trunk_radius = crown_radius / 6
-      }
+      if(!use_absolute_widths) {
+        if(!is.null(crown_width_ratio)) {
+          crown_width = crown_height * crown_width_ratio
+        } else {
+          crown_width = crown_height
+        }
+      } 
       # Scaling tree dimensions if tree_zscale is TRUE
       if(tree_zscale) {
-        crown_radius = crown_radius/zscale
+        crown_width = crown_width/zscale
         trunk_radius = trunk_radius/zscale
       }
     }
   }
-  stopifnot(length(lat) == length(long))
-  if(!use_absolute_widths) {
-    crown_width = crown_radius
-  } else {
-    crown_width = crown_width / 2
+  if(use_default_trunk_radius) {
+    trunk_radius = crown_width / 6
+    if(type == "cone") {
+      trunk_radius = trunk_radius / 2
+    }
   }
+  stopifnot(length(lat) == length(long))
   height_zscale = 1
   
   # Expand scalar dimensions to vectors if needed
@@ -438,12 +435,12 @@ render_tree = function(lat = NULL,
       # For this version, we can control all proportions. 
       # This assumes the tree trunk/crown has a radius of 1 and a height of 1.
       if(tree_zscale) {
-        tree_scale = matrix(c(crown_width*2,crown_height/zscale,crown_width*2),
+        tree_scale = matrix(c(crown_width,crown_height/zscale,crown_width),
                             ncol=3,nrow=length(lat))
         trunk_scale = matrix(c(trunk_radius,trunk_height/zscale,trunk_radius),
                              ncol=3,nrow=length(lat))
       } else {
-        tree_scale = matrix(c(crown_width*2,crown_height,crown_width*2),
+        tree_scale = matrix(c(crown_width,crown_height,crown_width),
                             ncol=3,nrow=length(lat))
         trunk_scale = matrix(c(trunk_radius,trunk_height,trunk_radius),
                              ncol=3,nrow=length(lat))
