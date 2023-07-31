@@ -1,0 +1,248 @@
+#'@title Convert RGL to ray_mesh
+#'
+#'@description Converts the current RGL scene to a ray_mesh object
+#'
+#'@param filename String with the filename. If `.obj` is not at the end of the string, it will be appended automatically.
+#'@param save_texture Default `TRUE`. If the texture should be saved along with the geometry.
+#'@param water_index_refraction Default `1`. The index of refraction for the rendered water.
+#'@param manifold_geometry Default `FALSE`. If `TRUE`, this will take the additional step of making the mesh manifold.
+#'@param all_face_fields Default `FALSE`. If `TRUE`, all OBJ face fields (v/vn/vt) will always be written.
+#'@param save_shadow Default `FALSE`. If `TRUE`, this saves a plane with the shadow texture below the model.
+#'@export
+#'@examples
+#'if(interactive()) {
+#'filename_obj = tempfile(fileext = ".obj")
+#'
+#'#Save model of volcano
+#'if(rayshader:::run_documentation()) {
+#'volcano %>%
+#'  sphere_shade() %>%
+#'  plot_3d(volcano, zscale = 2)
+#'
+#'save_obj(filename_obj)
+#'}
+#'
+#'#Save model of volcano without texture
+#'if(rayshader:::run_documentation()) {
+#'save_obj(filename_obj, save_texture = FALSE)
+#'}
+#'
+#'#Make water have realistic index of refraction
+#'if(rayshader:::run_documentation()) {
+#'montereybay %>%
+#'  sphere_shade() %>%
+#'  plot_3d(montereybay, zscale = 50)
+#'  
+#'save_obj(filename_obj, water_index_refraction = 1.5)
+#'}
+#'}
+convert_rgl_to_raymesh = function(water_index_refraction = 1, 
+                                  save_shadow = TRUE) {
+  if(rgl::cur3d() == 0) {
+    stop("No rgl window currently open.")
+  }
+  final_scene = list()
+  num_elems = 1
+  
+  vertex_info = get_ids_with_labels()
+  basic_load_mesh = function(row, texture_loc, color = "white", alpha=1, obj = FALSE, specular = "white") {
+    id = as.character(vertex_info$id[row])
+    
+    indices = matrix(rgl::rgl.attrib(vertex_info$id[row], "indices"),
+                     ncol = 3L, byrow = TRUE) - 1
+    vertices = rgl.attrib(vertex_info$id[row], "vertices")
+    if(nrow(indices) == 0) {
+      indices = matrix(seq_len(nrow(vertices))-1, ncol = 3, nrow = nrow(vertices)/3, byrow = TRUE)
+    }
+    textures = rgl.attrib(vertex_info$id[row], "texcoords")
+    normals = rgl.attrib(vertex_info$id[row], "normals")
+    if(obj) {
+      has_norm = get(id, envir = ray_has_norm_envir)
+      if(!has_norm || nrow(normals) == 0) {
+        normals = NULL
+        norm_indices = NULL
+      } else {
+        norm_indices = indices
+      }
+      has_tex = get(id, envir = ray_has_tex_envir)
+      if(!has_tex || nrow(textures) == 0) {
+        textures = NULL
+        tex_indices = NULL
+      } else {
+        tex_indices = indices
+      }
+    } else {
+      if(nrow(normals) != 0) {
+        norm_indices = indices
+      } else {
+        normals = NULL
+        norm_indices = NULL
+      }
+      if(nrow(textures) != 0) {
+        tex_indices = indices
+      } else {
+        textures = NULL
+        tex_indices = NULL
+      }
+    }
+    
+    texture_loc = ifelse(!is.na(texture_loc), texture_loc, "")
+    return(rayvertex::construct_mesh(indices = indices,
+                                     vertices = vertices,
+                                     texcoords = textures,
+                                     normals = normals,
+                                     tex_indices = tex_indices,
+                                     norm_indices = norm_indices,
+                                     material = rayvertex::material_list(texture_location = texture_loc, 
+                                                                         diffuse = color,
+                                                                         type = "color",
+                                                                         dissolve = alpha,
+                                                                         specular = specular)))
+  }
+  for(row in 1:nrow(vertex_info)) {
+    if(vertex_info$tag[row] == "surface") {
+      dims = rgl::rgl.attrib(vertex_info$id[row], "dim")
+      vertices = rgl.attrib(vertex_info$id[row], "vertices")
+      textures = rgl.attrib(vertex_info$id[row], "texcoords")
+      vertices_y = vertices[,2]
+      #Need to add has_normals
+      nx = dims[1]
+      nz = dims[2] 
+      indices = rep(0, 6 * (nz - 1) * (nx - 1))
+      counter = 0
+      na_counter = 0
+      for(i in seq_len(nz)[-nz]) {
+        for(j in seq_len(nx)[-nx]) {
+          if(!is.na(vertices_y[(i-1)*nx + j]) && !is.na(vertices_y[(i+1-1)*nx + j]) && 
+             !is.na(vertices_y[(i-1)*nx + j+1]) && !is.na(vertices_y[(i+1-1)*nx + j+1]))  {
+            cindices = (i-1)*nx + c(j, j + nx, j + 1, j + nx, j + nx + 1, j + 1)
+            indices[(1:6 + 6*counter)] = cindices
+            counter = counter + 1
+          } else {
+            na_counter = na_counter + 2
+          }
+        }
+      }
+      vertices[is.na(vertices_y)] = mean(vertices_y)
+      
+      indices = indices - 1
+      indices = matrix(indices, ncol=3, byrow=TRUE)
+      indices = indices[1:(nrow(indices)-na_counter),]
+      texture_loc = vertex_info$texture_file[[row]]
+      texture_loc = ifelse(!is.na(texture_loc), texture_loc, "")
+      final_scene[[num_elems]] = rayvertex::construct_mesh(indices = indices,
+                                                           vertices = vertices,
+                                                           texcoords = textures,
+                                                           tex_indices = indices,
+                                                           material = rayvertex::material_list(texture_location = texture_loc, 
+                                                                                               type = "color"))
+    } else if(vertex_info$tag[row] == "surface_tris") {
+      final_scene[[num_elems]] = basic_load_mesh(row, texture_loc = vertex_info$texture_file[[row]])
+    } else if (vertex_info$tag[row] == "basebottom") {
+      indices = matrix(rgl::rgl.attrib(vertex_info$id[row], "indices"),
+                       ncol = 3L, byrow = TRUE) - 1
+      vertices = rgl.attrib(vertex_info$id[row], "vertices")
+      textures = rgl.attrib(vertex_info$id[row], "texcoords")
+      dims = rgl::rgl.attrib(vertex_info$id[row], "dim")
+      vertices_y = vertices[,2]
+      nx = dims[1]
+      nz = dims[2] 
+      indices = rep(0, 6 * (nz - 1) * (nx - 1))
+      counter = 0
+      na_counter = 0
+      
+      for(i in seq_len(nz)[-nz]) {
+        for(j in seq_len(nx)[-nx]) {
+          if(!is.na(vertices_y[(i-1)*nx + j]) && !is.na(vertices_y[(i+1-1)*nx + j]) && 
+             !is.na(vertices_y[(i-1)*nx + j+1]) && !is.na(vertices_y[(i+1-1)*nx + j+1]))  {
+            cindices = (i-1)*nx + c(j, j + nx, j + 1, j + nx, j + nx + 1, j + 1)
+            indices[(1:6 + 6*counter)] = cindices
+            counter = counter + 1
+          } else {
+            na_counter = na_counter + 2
+          }
+        }
+      }
+      indices = indices - 1
+      vertices_y[is.na(vertices_y)] = mean(vertices_y)
+      
+      indices = matrix(indices, ncol=3, byrow=TRUE)
+      indices = indices[1:(nrow(indices)-na_counter),]
+      texture_loc = vertex_info$texture_file[[row]]
+      texture_loc = ifelse(!is.na(texture_loc), texture_loc, "")
+      final_scene[[num_elems]] = rayvertex::construct_mesh(indices = indices,
+                                                           vertices = vertices,
+                                                           texcoords = textures,
+                                                           tex_indices = indices,
+                                                           material = rayvertex::material_list(texture_location = texture_loc, 
+                                                                                               type = "color"))
+    } else if (vertex_info$tag[row] == "base") {
+      final_scene[[num_elems]] = basic_load_mesh(row, 
+                                                 texture_loc = NA,
+                                                 color = vertex_info$base_color[[row]])
+    } else if (vertex_info$tag[row] == "water") {
+      final_scene[[num_elems]] = basic_load_mesh(row,
+                                                 texture_loc = NA,
+                                                 color = vertex_info$water_color[[row]],
+                                                 alpha = vertex_info$water_alpha[[row]],
+                                                 specular = vertex_info$water_color[[row]])
+    } else if (vertex_info$tag[row] == "north_symbol") {
+      final_scene[[num_elems]] = basic_load_mesh(row,
+                                                 texture_loc = vertex_info$north_color[[row]])
+    } else if (vertex_info$tag[row] == "arrow_symbol") {
+      final_scene[[num_elems]] = basic_load_mesh(row,
+                                                 texture_loc = vertex_info$arrow_color[[row]])
+    } else if (vertex_info$tag[row] == "bevel_symbol") {
+      final_scene[[num_elems]] = basic_load_mesh(row,
+                                                 texture_loc = vertex_info$bevel_color[[row]])
+    } else if (vertex_info$tag[row] == "background_symbol") {
+      final_scene[[num_elems]] = basic_load_mesh(row,
+                                                 texture_loc = vertex_info$background_color[[row]])
+    } else if (vertex_info$tag[row] == "scalebar_col1") {
+      if(vertex_info$type[row] == "quads") {
+        #Need to handle quads
+        baseindices = matrix(vertex_info$startindex[row]:vertex_info$endindex[row], ncol=4, byrow=TRUE)
+      } else {
+        final_scene[[num_elems]] = basic_load_mesh(row, texture_loc = NA)
+      }
+    } else if (vertex_info$tag[row] == "scalebar_col2") {
+      if(vertex_info$type[row] == "quads") {
+        #Need to handle quads
+        
+        baseindices = matrix(vertex_info$startindex[row]:vertex_info$endindex[row], ncol=4, byrow=TRUE)
+      } else {
+        final_scene[[num_elems]] = basic_load_mesh(row, texture_loc = NA)
+      }
+    } else if (vertex_info$tag[row] == "polygon3d") {
+      final_scene[[num_elems]] = basic_load_mesh(row, texture_loc = NA,
+                                                 color =  vertex_info$tricolor[[row]])
+    } else if(vertex_info$tag[row] == "shadow" && save_shadow) {
+      final_scene[[num_elems]] = basic_load_mesh(row,
+                                                 texture_loc = vertex_info$shadow_texture_file[[row]])
+    } else if(vertex_info$tag[row] %in% c("floating_overlay","floating_overlay_tris")) {
+      final_scene[[num_elems]] = basic_load_mesh(row,
+                                                 texture_loc = vertex_info$layer_texture_file[[row]])
+    } else if (vertex_info$tag[row] %in% c("base_soil1","base_soil2")) {
+      final_scene[[num_elems]] = basic_load_mesh(row,
+                                                 texture_loc = vertex_info$soil_texture[[row]])
+    } else if (grepl("obj", vertex_info$tag[row], fixed=TRUE)) {
+      tmp_obj = basic_load_mesh(row, texture_loc = vertex_info$texture_file[[row]],
+                                obj = TRUE)
+      obj_color = vertex_info$obj_color[[row]]
+      obj_alpha = vertex_info$obj_alpha[[row]]
+      obj_ambient = vertex_info$obj_ambient[[row]]
+      obj_specular = vertex_info$obj_specular[[row]]
+      obj_emission = vertex_info$obj_emission[[row]]
+      tmp_obj = rayvertex::change_material(tmp_obj, 
+                                 diffuse = ifelse(is.na(obj_color), NULL, obj_color) ,
+                                 dissolve = ifelse(is.na(obj_alpha), NULL, obj_alpha),   
+                                 ambient = ifelse(is.na(obj_ambient), NULL, obj_ambient),   
+                                 specular = ifelse(is.na(obj_specular),NULL, obj_specular),   
+                                 emission = ifelse(is.na(obj_emission),NULL, obj_emission))
+      final_scene[[num_elems]] = tmp_obj
+      
+    }
+    num_elems = num_elems + 1
+  }
+  return(rayvertex::scene_from_list(final_scene))
+}
