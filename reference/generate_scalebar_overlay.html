@@ -21,7 +21,7 @@ scale bar of the proper length."><meta property="og:image" content="https://www.
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.35.7</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.36.0</span>
       </span>
     </div>
 
@@ -284,7 +284,7 @@ of this color.</p></dd>
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu">rayshader</span><span class="fu">:::</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#Create the water palette</span></span></span>
 <span class="r-in"><span><span class="va">water_palette</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/grDevices/colorRamp.html" class="external-link">colorRampPalette</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"darkblue"</span>, <span class="st">"dodgerblue"</span>, <span class="st">"lightblue"</span><span class="op">)</span><span class="op">)</span><span class="op">(</span><span class="fl">200</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">bathy_hs</span> <span class="op">=</span> <span class="fu"><a href="height_shade.html">height_shade</a></span><span class="op">(</span><span class="va">montereybay</span>, texture <span class="op">=</span> <span class="va">water_palette</span><span class="op">)</span></span></span>
@@ -311,7 +311,7 @@ of this color.</p></dd>
 <span class="r-in"><span><span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-plt img"><img src="generate_scalebar_overlay-1.png" alt="" width="768" height="768"></span>
-<span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu">rayshader</span><span class="fu">:::</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#Change the text color</span></span></span>
 <span class="r-in"><span><span class="va">base_map</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu">generate_scalebar_overlay</span><span class="op">(</span>extent <span class="op">=</span> <span class="va">mb_extent</span>, length <span class="op">=</span> <span class="fl">40000</span>,</span></span>
@@ -321,7 +321,7 @@ of this color.</p></dd>
 <span class="r-in"><span> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-plt img"><img src="generate_scalebar_overlay-2.png" alt="" width="768" height="768"></span>
-<span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu">rayshader</span><span class="fu">:::</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#Change the length</span></span></span>
 <span class="r-in"><span><span class="va">base_map</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu">generate_scalebar_overlay</span><span class="op">(</span>extent <span class="op">=</span> <span class="va">mb_extent</span>, length <span class="op">=</span> <span class="fl">30000</span>,</span></span>
@@ -331,7 +331,7 @@ of this color.</p></dd>
 <span class="r-in"><span> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-plt img"><img src="generate_scalebar_overlay-3.png" alt="" width="768" height="768"></span>
-<span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu">rayshader</span><span class="fu">:::</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#Change the thickness (default is length/20)</span></span></span>
 <span class="r-in"><span><span class="va">base_map</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu">generate_scalebar_overlay</span><span class="op">(</span>extent <span class="op">=</span> <span class="va">mb_extent</span>, length <span class="op">=</span> <span class="fl">30000</span>,</span></span>
@@ -341,7 +341,7 @@ of this color.</p></dd>
 <span class="r-in"><span> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-plt img"><img src="generate_scalebar_overlay-4.png" alt="" width="768" height="768"></span>
-<span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu">rayshader</span><span class="fu">:::</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#Change the text offset (given in multiples of thickness)</span></span></span>
 <span class="r-in"><span><span class="va">base_map</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu">generate_scalebar_overlay</span><span class="op">(</span>extent <span class="op">=</span> <span class="va">mb_extent</span>, length <span class="op">=</span> <span class="fl">30000</span>,</span></span>
@@ -352,7 +352,7 @@ of this color.</p></dd>
 <span class="r-in"><span> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-plt img"><img src="generate_scalebar_overlay-5.png" alt="" width="768" height="768"></span>
-<span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu">rayshader</span><span class="fu">:::</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#Change the primary and secondary colors, along with the border and tick color</span></span></span>
 <span class="r-in"><span><span class="va">base_map</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu">generate_scalebar_overlay</span><span class="op">(</span>extent <span class="op">=</span> <span class="va">mb_extent</span>, length <span class="op">=</span> <span class="fl">30000</span>,</span></span>
@@ -364,7 +364,7 @@ of this color.</p></dd>
 <span class="r-in"><span> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-plt img"><img src="generate_scalebar_overlay-6.png" alt="" width="768" height="768"></span>
-<span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu">rayshader</span><span class="fu">:::</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#Add a halo</span></span></span>
 <span class="r-in"><span><span class="va">base_map</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu">generate_scalebar_overlay</span><span class="op">(</span>extent <span class="op">=</span> <span class="va">mb_extent</span>, length <span class="op">=</span> <span class="fl">40000</span>,</span></span>
@@ -374,7 +374,7 @@ of this color.</p></dd>
 <span class="r-in"><span> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-plt img"><img src="generate_scalebar_overlay-7.png" alt="" width="768" height="768"></span>
-<span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu">rayshader</span><span class="fu">:::</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#Change the orientation, position, text alignment, and flip the ticks to the other side</span></span></span>
 <span class="r-in"><span><span class="va">base_map</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu">generate_scalebar_overlay</span><span class="op">(</span>extent <span class="op">=</span> <span class="va">mb_extent</span>, length <span class="op">=</span> <span class="fl">40000</span>, x <span class="op">=</span> <span class="fl">0.07</span>,</span></span>
@@ -385,7 +385,7 @@ of this color.</p></dd>
 <span class="r-in"><span> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-plt img"><img src="generate_scalebar_overlay-8.png" alt="" width="768" height="768"></span>
-<span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu">rayshader</span><span class="fu">:::</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span> </span></span>
+<span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span> </span></span>
 <span class="r-in"><span><span class="co">#64373.8 meters in 40 miles</span></span></span>
 <span class="r-in"><span><span class="co">#Create custom labels, change font and text size, remove the border/ticks, and change the color</span></span></span>
 <span class="r-in"><span><span class="co">#Here, we specify a width and height to double the resolution of the image (for sharper text)</span></span></span>

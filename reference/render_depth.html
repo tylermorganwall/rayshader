@@ -19,7 +19,7 @@ abs(z_depth-focus)*focal_length^2/(f_stop*z_depth*(focus - focal_length))"><meta
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.35.7</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.36.0</span>
       </span>
     </div>
 
@@ -142,7 +142,8 @@ abs(z_depth-focus)*focal_length^2/(f_stop*z_depth*(focus - focal_length))"><meta
 <span>  text_offset <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span>,</span>
 <span>  point_radius <span class="op">=</span> <span class="fl">0.5</span>,</span>
 <span>  line_offset <span class="op">=</span> <span class="fl">1e-07</span>,</span>
-<span>  cache_filename <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  cache_scene <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  reset_scene_cache <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  print_scene_info <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  instant_capture <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/interactive.html" class="external-link">interactive</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  clear <span class="op">=</span> <span class="cn">FALSE</span>,</span>
@@ -273,8 +274,7 @@ control the blurriness of the vignette effect.</p></dd>
 
 <dt>software_render</dt>
 <dd><p>Default `FALSE`. If `TRUE`, rayshader will use the rayvertex package to render the snapshot, which
-is not constrained by the screen size or requires OpenGL. 
-Consider settings a `cache_filename` so a new OBJ file doesn't have to be written with every snapshot.</p></dd>
+is not constrained by the screen size or requires OpenGL.</p></dd>
 
 
 <dt>width</dt>
@@ -324,8 +324,13 @@ will specify the absolute angle all the labels are facing. If three angles, this
 aren't showing up, or decrease it if lines are appearing through solid objects.</p></dd>
 
 
-<dt>cache_filename</dt>
-<dd><p>Default `NULL`. Name of temporary filename to store OBJ file, if the user does not want to rewrite the file each time.</p></dd>
+<dt>cache_scene</dt>
+<dd><p>Default `FALSE`. Whether to cache the current scene to memory so it does not have to be converted to a `raymesh` object 
+each time `render_snapshot()` is called. If `TRUE` and a scene has been cached, it will be used when rendering.</p></dd>
+
+
+<dt>reset_scene_cache</dt>
+<dd><p>Default `FALSE`. Resets the scene cache before rendering.</p></dd>
 
 
 <dt>print_scene_info</dt>
@@ -358,7 +363,7 @@ before taking the snapshot. This can help stop prevent rendering issues when run
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu">rayshader</span><span class="fu">:::</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span> <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span> <span class="fu"><a href="plot_3d.html">plot_3d</a></span><span class="op">(</span><span class="va">montereybay</span>,zscale<span class="op">=</span><span class="fl">50</span>, water<span class="op">=</span><span class="cn">TRUE</span>, waterlinecolor<span class="op">=</span><span class="st">"white"</span>,</span></span>
@@ -370,19 +375,19 @@ before taking the snapshot. This can help stop prevent rendering issues when run
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Focus distance: 804.968</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Focal range: 445.468-1729.39</span>
 <span class="r-plt img"><img src="render_depth-1.png" alt="" width="768" height="768"></span>
-<span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu">rayshader</span><span class="fu">:::</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#Render the depth of field effect</span></span></span>
 <span class="r-in"><span><span class="fu">render_depth</span><span class="op">(</span>focallength <span class="op">=</span> <span class="fl">300</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Focus distance: 804.968</span>
 <span class="r-plt img"><img src="render_depth-2.png" alt="" width="768" height="768"></span>
-<span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu">rayshader</span><span class="fu">:::</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#Add a chromatic aberration effect</span></span></span>
 <span class="r-in"><span><span class="fu">render_depth</span><span class="op">(</span>focallength <span class="op">=</span> <span class="fl">300</span>, aberration <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Focus distance: 804.968</span>
 <span class="r-plt img"><img src="render_depth-3.png" alt="" width="768" height="768"></span>
-<span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu">rayshader</span><span class="fu">:::</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#Render the depth of field effect, ignoring water and re-drawing the waterlayer</span></span></span>
 <span class="r-in"><span><span class="fu">render_depth</span><span class="op">(</span>preview_focus<span class="op">=</span><span class="cn">TRUE</span>, </span></span>
 <span class="r-in"><span>            heightmap <span class="op">=</span> <span class="va">montereybay</span>, zscale<span class="op">=</span><span class="fl">50</span>, focallength<span class="op">=</span><span class="fl">300</span>, transparent_water<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span></span>
@@ -390,12 +395,11 @@ before taking the snapshot. This can help stop prevent rendering issues when run
 <span class="r-in"><span><span class="fu"><a href="render_camera.html">render_camera</a></span><span class="op">(</span>theta<span class="op">=</span><span class="fl">45</span>,zoom<span class="op">=</span><span class="fl">0.15</span>,phi<span class="op">=</span><span class="fl">20</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Focus distance: 804.968</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Focal range: 445.468-1729.39</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Focus point (804.968) not in focal range: 0.185818-0.999998</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Focus distance: 804.968</span>
 <span class="r-plt img"><img src="render_depth-4.png" alt="" width="768" height="768"></span>
-<span class="r-plt img"><img src="render_depth-5.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu">rayshader</span><span class="fu">:::</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#Change the bokeh shape and intensity</span></span></span>
 <span class="r-in"><span><span class="fu">render_depth</span><span class="op">(</span>focus<span class="op">=</span><span class="fl">900</span>, bokehshape <span class="op">=</span> <span class="st">"circle"</span>,focallength<span class="op">=</span><span class="fl">500</span>,bokehintensity<span class="op">=</span><span class="fl">30</span>,</span></span>
 <span class="r-in"><span>            title_text <span class="op">=</span> <span class="st">"Circular Bokeh"</span>, title_size <span class="op">=</span> <span class="fl">30</span>, title_color <span class="op">=</span> <span class="st">"white"</span>, </span></span>
@@ -404,17 +408,17 @@ before taking the snapshot. This can help stop prevent rendering issues when run
 <span class="r-in"><span>            title_text <span class="op">=</span> <span class="st">"Hexagonal Bokeh"</span>, title_size <span class="op">=</span> <span class="fl">30</span>, title_color <span class="op">=</span> <span class="st">"white"</span>, </span></span>
 <span class="r-in"><span>            title_bar_color <span class="op">=</span> <span class="st">"black"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-plt img"><img src="render_depth-5.png" alt="" width="768" height="768"></span>
 <span class="r-plt img"><img src="render_depth-6.png" alt="" width="768" height="768"></span>
-<span class="r-plt img"><img src="render_depth-7.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu">rayshader</span><span class="fu">:::</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#Add a title and vignette effect.</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_camera.html">render_camera</a></span><span class="op">(</span>theta<span class="op">=</span><span class="fl">0</span>,zoom<span class="op">=</span><span class="fl">0.7</span>,phi<span class="op">=</span><span class="fl">30</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">render_depth</span><span class="op">(</span>focallength <span class="op">=</span> <span class="fl">250</span>, title_text <span class="op">=</span> <span class="st">"Monterey Bay, CA"</span>, </span></span>
 <span class="r-in"><span>            title_size <span class="op">=</span> <span class="fl">20</span>, title_color <span class="op">=</span> <span class="st">"white"</span>, title_bar_color <span class="op">=</span> <span class="st">"black"</span>, vignette <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Focus distance: 804.968</span>
-<span class="r-plt img"><img src="render_depth-8.png" alt="" width="768" height="768"></span>
+<span class="r-plt img"><img src="render_depth-7.png" alt="" width="768" height="768"></span>
 </code></pre></div>
     </div>
   </div>

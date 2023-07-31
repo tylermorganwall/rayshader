@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.35.7</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.36.0</span>
       </span>
     </div>
 
@@ -116,7 +116,7 @@
     <div id="ref-examples">
     <h2>Examples</h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co">#Save montereybay as a raster and open using the filename.</span></span></span>
-<span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu">rayshader</span><span class="fu">:::</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="va">temp_raster_filename</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span><span class="op">)</span>,<span class="st">".tif"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">raster</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/terra/man/writeRaster.html" class="external-link">writeRaster</a></span><span class="op">(</span><span class="fu">raster</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/raster/man/raster.html" class="external-link">raster</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">montereybay</span><span class="op">)</span><span class="op">)</span>,<span class="va">temp_raster_filename</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">elmat</span> <span class="op">=</span> <span class="fu">raster_to_matrix</span><span class="op">(</span><span class="va">temp_raster_filename</span><span class="op">)</span></span></span>
@@ -124,22 +124,6 @@
 <span class="r-in"><span> <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Please note that rgdal will be retired during October 2023,</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> plan transition to sf/stars/terra functions using GDAL and PROJ</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> at your earliest convenience.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> See https://r-spatial.org/r/2023/05/15/evolution4.html and https://github.com/r-spatial/evolution</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> rgdal: version: 1.6-7, (SVN revision 1203)</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Geospatial Data Abstraction Library extensions to R successfully loaded</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Loaded GDAL runtime: GDAL 3.5.3, released 2022/10/21</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Path to GDAL shared files: /Users/runner/work/_temp/Library/rgdal/gdal</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>  GDAL does not use iconv for recoding strings.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> GDAL binary built with GEOS: TRUE </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Loaded PROJ runtime: Rel. 9.1.0, September 1st, 2022, [PJ_VERSION: 910]</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Path to PROJ shared files: /Users/runner/work/_temp/Library/rgdal/proj</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> PROJ CDN enabled: FALSE</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Linking to sp version:1.6-1</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> To mute warnings of possible GDAL/OSR exportToProj4() degradation,</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> use options("rgdal_show_exportToProj4_warnings"="none") before loading sp or rgdal.</span>
 <span class="r-plt img"><img src="raster_to_matrix-1.png" alt="" width="768" height="768"></span>
 </code></pre></div>
     </div>

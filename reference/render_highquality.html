@@ -21,7 +21,7 @@ either `convert_path_to_animation_coords()` or `rayrender::generate_camera_motio
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.35.7</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.36.0</span>
       </span>
     </div>
 
@@ -109,6 +109,9 @@ either `convert_path_to_animation_coords()` or `rayrender::generate_camera_motio
     <div id="ref-usage">
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">render_highquality</span><span class="op">(</span></span>
 <span>  filename <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  samples <span class="op">=</span> <span class="fl">128</span>,</span>
+<span>  sample_method <span class="op">=</span> <span class="st">"sobol_blue"</span>,</span>
+<span>  min_variance <span class="op">=</span> <span class="fl">1e-07</span>,</span>
 <span>  light <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  lightdirection <span class="op">=</span> <span class="fl">315</span>,</span>
 <span>  lightaltitude <span class="op">=</span> <span class="fl">45</span>,</span>
@@ -116,7 +119,9 @@ either `convert_path_to_animation_coords()` or `rayrender::generate_camera_motio
 <span>  lightintensity <span class="op">=</span> <span class="fl">500</span>,</span>
 <span>  lightcolor <span class="op">=</span> <span class="st">"white"</span>,</span>
 <span>  obj_material <span class="op">=</span> <span class="fu">rayrender</span><span class="fu">::</span><span class="fu"><a href="https://www.rayrender.net/reference/diffuse.html" class="external-link">diffuse</a></span><span class="op">(</span><span class="op">)</span>,</span>
-<span>  cache_filename <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  override_material <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  cache_scene <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  reset_scene_cache <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  width <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  height <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  text_angle <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -163,6 +168,24 @@ either `convert_path_to_animation_coords()` or `rayrender::generate_camera_motio
 <dd><p>Default `NA`. Filename of saved image. If missing, will display to current device.</p></dd>
 
 
+<dt>samples</dt>
+<dd><p>Default `128`. The maximum number of samples for each pixel. Increase this to increase the quality of the rendering.</p></dd>
+
+
+<dt>sample_method</dt>
+<dd><p>Default `"sobol_blue"`, unless `samples &gt; 256`, in which it defaults to `"sobol"`.
+The type of sampling method used to generate random numbers. 
+The other options are `random` (worst quality but fastest), 
+`sobol_blue` (best option for sample counts below 256), and `sobol` 
+(slowest but best quality, better than `sobol_blue` for sample counts greater than 256).</p></dd>
+
+
+<dt>min_variance</dt>
+<dd><p>Default `1e-6`. Minimum acceptable variance for a block of pixels for the adaptive sampler. 
+Smaller numbers give higher quality images, at the expense of longer rendering times. 
+If this is set to zero, the adaptive sampler will be turned off and the renderer will use the maximum number of samples everywhere.</p></dd>
+
+
 <dt>light</dt>
 <dd><p>Default `TRUE`. Whether there should be a light in the scene. If not, the scene will be lit with a bluish sky.</p></dd>
 
@@ -195,8 +218,13 @@ If this is a vector longer than one, multiple lights will be generated (using va
 <dd><p>Default `rayrender::diffuse()`. The material properties of the object file.</p></dd>
 
 
-<dt>cache_filename</dt>
-<dd><p>Name of temporary filename to store OBJ file, if the user does not want to rewrite the file each time.</p></dd>
+<dt>cache_scene</dt>
+<dd><p>Default `FALSE`. Whether to cache the current scene to memory so it does not have to be converted to a `raymesh` object 
+each time `render_snapshot()` is called. If `TRUE` and a scene has been cached, it will be used when rendering.</p></dd>
+
+
+<dt>reset_scene_cache</dt>
+<dd><p>Default `FALSE`. Resets the scene cache before rendering.</p></dd>
 
 
 <dt>width</dt>
@@ -368,7 +396,7 @@ or `rayrender::generate_camera_motion()` functions.</p></dd>
     <div id="ref-examples">
     <h2>Examples</h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co">#Render the volcano dataset using pathtracing</span></span></span>
-<span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu">rayshader</span><span class="fu">:::</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="va">volcano</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span> <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span> <span class="fu"><a href="plot_3d.html">plot_3d</a></span><span class="op">(</span><span class="va">volcano</span>,zscale <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></span>
@@ -377,20 +405,20 @@ or `rayrender::generate_camera_motion()` functions.</p></dd>
 <span class="r-plt img"><img src="render_highquality-1.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#Change position of light</span></span></span>
-<span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu">rayshader</span><span class="fu">:::</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="fu">render_highquality</span><span class="op">(</span>lightdirection <span class="op">=</span> <span class="fl">45</span>, min_variance <span class="op">=</span> <span class="fl">0</span>, sample_method <span class="op">=</span> <span class="st">"sobol_blue"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-plt img"><img src="render_highquality-2.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#Change vertical position of light</span></span></span>
-<span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu">rayshader</span><span class="fu">:::</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="fu">render_highquality</span><span class="op">(</span>lightdirection <span class="op">=</span> <span class="fl">45</span>, lightaltitude <span class="op">=</span> <span class="fl">10</span>, </span></span>
 <span class="r-in"><span>                  min_variance <span class="op">=</span> <span class="fl">0</span>, sample_method <span class="op">=</span> <span class="st">"sobol_blue"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-plt img"><img src="render_highquality-3.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#Change the ground material</span></span></span>
-<span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu">rayshader</span><span class="fu">:::</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="fu">render_highquality</span><span class="op">(</span>lightdirection <span class="op">=</span> <span class="fl">45</span>, lightaltitude<span class="op">=</span><span class="fl">60</span>,</span></span>
 <span class="r-in"><span>                  ground_material <span class="op">=</span> <span class="fu">rayrender</span><span class="fu">::</span><span class="fu"><a href="https://www.rayrender.net/reference/diffuse.html" class="external-link">diffuse</a></span><span class="op">(</span>checkerperiod <span class="op">=</span> <span class="fl">30</span>, checkercolor<span class="op">=</span><span class="st">"grey50"</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                  min_variance <span class="op">=</span> <span class="fl">0</span>, sample_method <span class="op">=</span> <span class="st">"sobol_blue"</span><span class="op">)</span></span></span>
@@ -398,7 +426,7 @@ or `rayrender::generate_camera_motion()` functions.</p></dd>
 <span class="r-plt img"><img src="render_highquality-4.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#Add three different color lights and a title</span></span></span>
-<span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu">rayshader</span><span class="fu">:::</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="fu">render_highquality</span><span class="op">(</span>lightdirection <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">120</span>,<span class="fl">240</span><span class="op">)</span>, lightaltitude<span class="op">=</span><span class="fl">45</span>,</span></span>
 <span class="r-in"><span>                  lightcolor<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"red"</span>,<span class="st">"green"</span>,<span class="st">"blue"</span><span class="op">)</span>, title_text <span class="op">=</span> <span class="st">"Red, Green, Blue"</span>,</span></span>
 <span class="r-in"><span>                  title_bar_color<span class="op">=</span><span class="st">"white"</span>, title_bar_alpha<span class="op">=</span><span class="fl">0.8</span>,</span></span>
@@ -407,7 +435,7 @@ or `rayrender::generate_camera_motion()` functions.</p></dd>
 <span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in if (is.na(filename)) {    rayimage::add_title(temp, title_text = title_text, title_color = title_color,         title_font = title_font, title_offset = title_offset,         title_bar_alpha = title_bar_alpha, title_bar_color = title_bar_color,         title_size = title_size, preview = TRUE)} else {    rayimage::add_title(temp, title_text = title_text, title_color = title_color,         title_font = title_font, title_offset = title_offset,         title_bar_alpha = title_bar_alpha, title_bar_color = title_bar_color,         title_size = title_size, filename = filename)}:</span> argument is of length zero</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#Change the camera:</span></span></span>
-<span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu">rayshader</span><span class="fu">:::</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_camera.html">render_camera</a></span><span class="op">(</span>theta<span class="op">=</span><span class="op">-</span><span class="fl">45</span>,phi<span class="op">=</span><span class="fl">60</span>,fov<span class="op">=</span><span class="fl">60</span>,zoom<span class="op">=</span><span class="fl">0.8</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">render_highquality</span><span class="op">(</span>lightdirection <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                  title_bar_color<span class="op">=</span><span class="st">"white"</span>, title_bar_alpha<span class="op">=</span><span class="fl">0.8</span>,</span></span>
@@ -415,7 +443,7 @@ or `rayrender::generate_camera_motion()` functions.</p></dd>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-plt img"><img src="render_highquality-5.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="co">#Add a shiny metal sphere</span></span></span>
-<span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu">rayshader</span><span class="fu">:::</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_camera.html">render_camera</a></span><span class="op">(</span>theta<span class="op">=</span><span class="op">-</span><span class="fl">45</span>,phi<span class="op">=</span><span class="fl">60</span>,fov<span class="op">=</span><span class="fl">60</span>,zoom<span class="op">=</span><span class="fl">0.8</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">render_highquality</span><span class="op">(</span>lightdirection <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">120</span>,<span class="fl">240</span><span class="op">)</span>, lightaltitude<span class="op">=</span><span class="fl">45</span>, </span></span>
 <span class="r-in"><span>                  lightcolor<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"red"</span>,<span class="st">"green"</span>,<span class="st">"blue"</span><span class="op">)</span>,</span></span>
@@ -426,7 +454,7 @@ or `rayrender::generate_camera_motion()` functions.</p></dd>
 <span class="r-plt img"><img src="render_highquality-6.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#Add a red light to the volcano and change the ambient light to dusk</span></span></span>
-<span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu">rayshader</span><span class="fu">:::</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_camera.html">render_camera</a></span><span class="op">(</span>theta<span class="op">=</span><span class="fl">45</span>,phi<span class="op">=</span><span class="fl">45</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">render_highquality</span><span class="op">(</span>lightdirection <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">240</span><span class="op">)</span>, lightaltitude<span class="op">=</span><span class="fl">30</span>, </span></span>
 <span class="r-in"><span>                  lightcolor<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"#5555ff"</span><span class="op">)</span>,</span></span>
@@ -436,7 +464,7 @@ or `rayrender::generate_camera_motion()` functions.</p></dd>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-plt img"><img src="render_highquality-7.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="co">#Manually change the camera location and direction</span></span></span>
-<span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu">rayshader</span><span class="fu">:::</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_camera.html">render_camera</a></span><span class="op">(</span>theta<span class="op">=</span><span class="fl">45</span>,phi<span class="op">=</span><span class="fl">45</span>,fov<span class="op">=</span><span class="fl">90</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">render_highquality</span><span class="op">(</span>lightdirection <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">240</span><span class="op">)</span>, lightaltitude<span class="op">=</span><span class="fl">30</span>, lightcolor<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"#5555ff"</span><span class="op">)</span>, </span></span>
 <span class="r-in"><span>                  camera_location <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">50</span>,<span class="fl">10</span>,<span class="fl">10</span><span class="op">)</span>, camera_lookat <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">15</span>,<span class="fl">0</span><span class="op">)</span>,</span></span>
