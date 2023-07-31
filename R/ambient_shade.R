@@ -17,18 +17,18 @@
 #'@export
 #'@examples
 #'#Here we produce a ambient occlusion map of the `montereybay` elevation map.
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'plot_map(ambient_shade(heightmap = montereybay))
 #'}
 #'
 #'#We can increase the distance to look for surface intersections `maxsearch`
 #'#and the density of rays sent out around the point `sunbreaks`.
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'plot_map(ambient_shade(montereybay, sunbreaks = 24,maxsearch = 100, multicore=TRUE))
 #'}
 #'#Create the Red Relief Image Map (RRIM) technique using a custom texture and ambient_shade(),
 #'#with an addition lambertian layer added with lamb_shade() to improve topographic clarity.
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'bigmb = resize_matrix(montereybay, scale=2, method="cubic")
 #'bigmb %>%
 #'  sphere_shade(zscale=3, texture = create_texture("red","red","red","red","white")) %>%

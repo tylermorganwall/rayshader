@@ -7,9 +7,12 @@
 run_documentation()
 }
 \value{
-bool
+Boolean value.
 }
 \description{
-Run Documentation
+This function determines if the examples are being run in pkgdown. It is not meant to be called by the user.
 }
-\keyword{internal}
+\examples{
+# See if the documentation should be run.
+run_documentation()
+}

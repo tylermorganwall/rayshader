@@ -27,14 +27,14 @@
 #'@export
 #'@examples
 #'#Add a North arrow to the map, by default in the bottom right (SE)
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'montereybay %>% 
 #'  sphere_shade() %>%
 #'  plot_3d(montereybay,theta=-45, water=TRUE)
 #'render_compass()
 #'render_snapshot()
 #'}
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'#Remove the existing symbol with `clear_compass = TRUE`
 #'render_compass(clear_compass = TRUE)
 #'
@@ -42,7 +42,7 @@
 #'render_compass(angle = 315)
 #'render_snapshot()
 #'}
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'render_compass(clear_compass = TRUE)
 #'
 #'#We can change the position by specifying a direction (here are three):
@@ -52,7 +52,7 @@
 #'render_compass(position = "S")
 #'render_snapshot()
 #'}
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'render_compass(clear_compass = TRUE)
 #'
 #'#We can also change the distance away from the edge by setting the `scale_distance` argument.
@@ -64,7 +64,7 @@
 #'render_camera(theta=45,phi=45,zoom=0.7)
 #'render_snapshot()
 #'}
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'render_compass(clear_compass = TRUE)
 #'
 #'#We can also specify the radius directly with `compass_radius`:
@@ -77,17 +77,17 @@
 #'
 #'render_compass(clear_compass = TRUE)
 #'}
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'#We can also adjust the position manually, be specifying all x, y and z arguments.
 #'render_camera(theta=-45,phi=45,zoom=0.9)
 #'render_compass(x = 150, y = 50, z = 150)
 #'render_snapshot()
 #'}
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'# Compass support is also included in render_highquality()
 #'render_highquality(clamp_value=10, min_variance = 0, sample_method = "sobol_blue")
 #'}
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'render_compass(clear_compass = TRUE)
 #'
 #'#We can change the colors in the compass, and also set it a constant distance away with

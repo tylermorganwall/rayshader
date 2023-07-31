@@ -29,7 +29,7 @@
 #'run_examples = length(find.package("sf", quiet = TRUE)) &&
 #'               length(find.package("elevatr", quiet = TRUE)) &&
 #'               length(find.package("raster", quiet = TRUE)) &&
-#'               rayshader:::run_documentation()
+#'               run_documentation()
 #'if(run_examples) {
 #'library(sf)
 #'#Set location of washington monument

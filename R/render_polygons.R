@@ -37,7 +37,7 @@
 #' @param clear_previous Default `FALSE`. If `TRUE`, it will clear all existing polygons.
 #' @export
 #' @examples
-#' if(rayshader:::run_documentation()) {
+#' if(run_documentation()) {
 #' #Render the county borders as polygons in Monterey Bay
 #' montereybay %>%
 #'   sphere_shade(texture = "desert") %>%
@@ -55,7 +55,7 @@
 #'                 parallel = TRUE)
 #' render_snapshot()
 #' }
-#' if(rayshader:::run_documentation()) {
+#' if(run_documentation()) {
 #' #We can specify the bottom of the polygons as well. Here I float the polygons above the surface
 #' #by specifying the bottom argument. We clear the previous polygons with `clear_previous = TRUE`.
 #' render_camera(theta=-60,  phi=20, zoom = 0.85, fov=0)
@@ -64,7 +64,7 @@
 #'                 parallel=TRUE,clear_previous=TRUE)
 #' render_snapshot()
 #' }
-#' if(rayshader:::run_documentation()) {
+#' if(run_documentation()) {
 #' #We can set the height of the data to a column in the sf object: we'll use the land area.
 #' #We'll have to scale this value because its max value is 2.6 billion:
 #' render_camera(theta=-60,  phi=60, zoom = 0.85, fov=30)
@@ -74,7 +74,7 @@
 #'                 parallel = TRUE, clear_previous = TRUE)
 #' render_snapshot()      
 #' }  
-#' if(rayshader:::run_documentation()) {
+#' if(run_documentation()) {
 #' #This function also works with `render_highquality()`
 #' render_highquality(samples = 128, clamp_value = 10, sample_method="sobol_blue",
 #'                    min_variance = 0)

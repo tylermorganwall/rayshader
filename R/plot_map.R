@@ -23,7 +23,7 @@
 #'@export
 #'@examples
 #'#Plotting the Monterey Bay dataset with bathymetry data
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'water_palette = colorRampPalette(c("darkblue", "dodgerblue", "lightblue"))(200)
 #'bathy_hs = height_shade(montereybay, texture = water_palette)
 #'#For compass text
@@ -40,7 +40,7 @@
 #'
 #'extent_mb = attr(montereybay,"extent")
 #'mean_latitude = mean(c(extent_mb@ymax,extent_mb@ymin))
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'montereybay %>%
 #'  sphere_shade(zscale=10) %>%
 #'  add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0))  %>%

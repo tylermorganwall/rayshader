@@ -44,6 +44,7 @@ render_depth(
   point_radius = 0.5,
   line_offset = 1e-07,
   cache_scene = FALSE,
+  reset_scene_cache = FALSE,
   print_scene_info = FALSE,
   instant_capture = interactive(),
   clear = FALSE,
@@ -147,7 +148,9 @@ will specify the absolute angle all the labels are facing. If three angles, this
 aren't showing up, or decrease it if lines are appearing through solid objects.}
 
 \item{cache_scene}{Default `FALSE`. Whether to cache the current scene to memory so it does not have to be converted to a `raymesh` object 
-each time `render_depth()` is called.}
+each time `render_snapshot()` is called. If `TRUE` and a scene has been cached, it will be used when rendering.}
+
+\item{reset_scene_cache}{Default `FALSE`. Resets the scene cache before rendering.}
 
 \item{print_scene_info}{Default `FALSE`. If `TRUE`, it will print the position and lookat point of the camera.}
 
@@ -171,7 +174,7 @@ The size of the circle of confusion is determined by the following formula (z_de
 \code{abs(z_depth-focus)*focal_length^2/(f_stop*z_depth*(focus - focal_length))}
 }
 \examples{
-if(rayshader:::run_documentation()) {
+if(run_documentation()) {
 montereybay \%>\%
  sphere_shade() \%>\%
  plot_3d(montereybay,zscale=50, water=TRUE, waterlinecolor="white",
@@ -180,15 +183,15 @@ montereybay \%>\%
 #Preview where the focal plane lies
 render_depth(preview_focus=TRUE)
 }
-if(rayshader:::run_documentation()) {
+if(run_documentation()) {
 #Render the depth of field effect
 render_depth(focallength = 300)
 }
-if(rayshader:::run_documentation()) {
+if(run_documentation()) {
 #Add a chromatic aberration effect
 render_depth(focallength = 300, aberration = 0.3)
 }
-if(rayshader:::run_documentation()) {
+if(run_documentation()) {
 #Render the depth of field effect, ignoring water and re-drawing the waterlayer
 render_depth(preview_focus=TRUE, 
             heightmap = montereybay, zscale=50, focallength=300, transparent_water=TRUE)
@@ -196,7 +199,7 @@ render_depth(heightmap = montereybay, zscale=50, focallength=300, transparent_wa
 render_camera(theta=45,zoom=0.15,phi=20)
 }
 
-if(rayshader:::run_documentation()) {
+if(run_documentation()) {
 #Change the bokeh shape and intensity
 render_depth(focus=900, bokehshape = "circle",focallength=500,bokehintensity=30,
             title_text = "Circular Bokeh", title_size = 30, title_color = "white", 
@@ -206,7 +209,7 @@ render_depth(focus=900, bokehshape = "hex",focallength=500,bokehintensity=30,
             title_bar_color = "black")
 }
 
-if(rayshader:::run_documentation()) {
+if(run_documentation()) {
 #Add a title and vignette effect.
 render_camera(theta=0,zoom=0.7,phi=30)
 render_depth(focallength = 250, title_text = "Monterey Bay, CA", 

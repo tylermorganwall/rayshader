@@ -15,7 +15,7 @@
 #'island_volcano[island_volcano < mean(island_volcano)] = mean(island_volcano)
 #'
 #'#Setting a minimum area avoids classifying small flat areas as water:
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'island_volcano %>%
 #'  sphere_shade(texture="imhof3") %>%
 #'  add_water(detect_water(island_volcano, min_area = 400),color="imhof3") %>%
@@ -27,7 +27,7 @@
 #'montbay_water = montereybay
 #'montbay_water[montbay_water < 0] = 0
 #'
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'montereybay %>%
 #'  sphere_shade(texture="imhof4") %>%
 #'  add_water(detect_water(montbay_water),color="imhof4") %>%

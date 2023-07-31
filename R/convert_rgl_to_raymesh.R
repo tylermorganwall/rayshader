@@ -3,10 +3,6 @@
 #'@description Converts the current RGL scene to a ray_mesh object
 #'
 #'@param filename String with the filename. If `.obj` is not at the end of the string, it will be appended automatically.
-#'@param save_texture Default `TRUE`. If the texture should be saved along with the geometry.
-#'@param water_index_refraction Default `1`. The index of refraction for the rendered water.
-#'@param manifold_geometry Default `FALSE`. If `TRUE`, this will take the additional step of making the mesh manifold.
-#'@param all_face_fields Default `FALSE`. If `TRUE`, all OBJ face fields (v/vn/vt) will always be written.
 #'@param save_shadow Default `FALSE`. If `TRUE`, this saves a plane with the shadow texture below the model.
 #'@export
 #'@examples
@@ -14,27 +10,12 @@
 #'filename_obj = tempfile(fileext = ".obj")
 #'
 #'#Save model of volcano
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'volcano %>%
 #'  sphere_shade() %>%
 #'  plot_3d(volcano, zscale = 2)
 #'
-#'save_obj(filename_obj)
-#'}
-#'
-#'#Save model of volcano without texture
-#'if(rayshader:::run_documentation()) {
-#'save_obj(filename_obj, save_texture = FALSE)
-#'}
-#'
-#'#Make water have realistic index of refraction
-#'if(rayshader:::run_documentation()) {
-#'montereybay %>%
-#'  sphere_shade() %>%
-#'  plot_3d(montereybay, zscale = 50)
-#'  
-#'save_obj(filename_obj, water_index_refraction = 1.5)
-#'}
+#'rm_obj = convert_rgl_to_raymesh()
 #'}
 convert_rgl_to_raymesh = function(water_index_refraction = 1, 
                                   save_shadow = TRUE) {

@@ -93,7 +93,7 @@ If no latitudes or longitudes are passed in, the OBJ will be plotted in the coor
 in the proper location (but for ease of use, use `render_multipolygonz()` to plot this data directly).
 }
 \examples{
-if(rayshader:::run_documentation()) {
+if(run_documentation()) {
 #Render the 3D map
 moss_landing_coord = c(36.806807, -121.793332)
 montereybay \%>\%
@@ -113,7 +113,7 @@ render_obj(flag_full_obj(), extent = attr(montereybay,"extent"), heightmap = mon
           zscale=50, color=rainbow(100), smooth = FALSE, clear_previous = TRUE) 
 render_snapshot()
 }
-if(rayshader:::run_documentation()) {
+if(run_documentation()) {
 #Rotate the flag to follow the circle
 render_obj(flag_full_obj(), extent = attr(montereybay,"extent"), heightmap = montereybay,
           lat = unlist(circle_coords_lat), long = unlist(circle_coords_long),
@@ -122,7 +122,7 @@ render_obj(flag_full_obj(), extent = attr(montereybay,"extent"), heightmap = mon
           zscale=50, color=rainbow(100), smooth = FALSE, clear_previous = TRUE) 
 render_snapshot()
 }
-if(rayshader:::run_documentation()) {
+if(run_documentation()) {
 #Style the pole with a different color
 render_obj(flag_pole_obj(), extent = attr(montereybay,"extent"), heightmap = montereybay,
           lat = unlist(circle_coords_lat), long = unlist(circle_coords_long),

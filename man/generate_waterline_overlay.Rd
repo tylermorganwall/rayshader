@@ -79,7 +79,7 @@ to calculate the distance to the coast. This distance matrix can be returned dir
 the `return_distance_matrix` argument to `TRUE`.
 }
 \examples{
-if(rayshader:::run_documentation()) {
+if(run_documentation()) {
 #Create a flat body of water for Monterey Bay
 montbay = montereybay
 montbay[montbay < 0] = 0
@@ -93,55 +93,55 @@ basemap = montbay \%>\%
 
 plot_map(basemap)
 }
-if(rayshader:::run_documentation()) {
+if(run_documentation()) {
 #Add waterlines
 basemap \%>\% 
   add_overlay(generate_waterline_overlay(montbay)) \%>\% 
   plot_map()
 }
-if(rayshader:::run_documentation()) {
+if(run_documentation()) {
 #Change minimum line distance:
 basemap \%>\% 
   add_overlay(generate_waterline_overlay(montbay, min = 0.02)) \%>\% 
   plot_map()
 }
-if(rayshader:::run_documentation()) {
+if(run_documentation()) {
 #Change maximum line distance
 basemap \%>\% 
   add_overlay(generate_waterline_overlay(montbay, max = 0.4)) \%>\% 
   plot_map()
 }
-if(rayshader:::run_documentation()) {
+if(run_documentation()) {
 #Smooth waterlines
 basemap \%>\% 
   add_overlay(generate_waterline_overlay(montbay, max = 0.4, smooth=2)) \%>\% 
   plot_map()
 }
-if(rayshader:::run_documentation()) {
+if(run_documentation()) {
 #Increase number of breaks
 basemap \%>\% 
   add_overlay(generate_waterline_overlay(montbay, breaks = 20, max=0.4)) \%>\% 
   plot_map()
 }
-if(rayshader:::run_documentation()) {
+if(run_documentation()) {
 #Make lines evenly spaced:
 basemap \%>\% 
   add_overlay(generate_waterline_overlay(montbay, evenly_spaced = TRUE)) \%>\% 
   plot_map()
 }
-if(rayshader:::run_documentation()) {
+if(run_documentation()) {
 #Change variable distance between each line
 basemap \%>\% 
   add_overlay(generate_waterline_overlay(montbay, falloff=1.5)) \%>\% 
   plot_map()
 }
-if(rayshader:::run_documentation()) {
+if(run_documentation()) {
 #Turn off fading
 basemap \%>\% 
   add_overlay(generate_waterline_overlay(montbay, fade=FALSE)) \%>\% 
   plot_map()
 }
-if(rayshader:::run_documentation()) {
+if(run_documentation()) {
 #Fill up the entire body of water with lines and make them all 50\% transparent
 basemap \%>\% 
   add_overlay(generate_waterline_overlay(montbay, fade=FALSE, max=1, alpha = 0.5, color="white",

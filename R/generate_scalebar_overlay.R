@@ -51,7 +51,7 @@
 #'@return Semi-transparent overlay with a scale bar.
 #'@export
 #'@examples
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'#Create the water palette
 #'water_palette = colorRampPalette(c("darkblue", "dodgerblue", "lightblue"))(200)
 #'bathy_hs = height_shade(montereybay, texture = water_palette)
@@ -77,7 +77,7 @@
 #'                                       latlong=TRUE)) %>%
 #' plot_map()
 #'}
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'#Change the text color
 #'base_map %>%
 #'  add_overlay(generate_scalebar_overlay(extent = mb_extent, length = 40000,
@@ -86,7 +86,7 @@
 #'                                        latlong=TRUE)) %>%
 #'  plot_map()
 #'}
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'#Change the length
 #'base_map %>%
 #'  add_overlay(generate_scalebar_overlay(extent = mb_extent, length = 30000,
@@ -95,7 +95,7 @@
 #'                                        latlong=TRUE)) %>%
 #'  plot_map()
 #'}
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'#Change the thickness (default is length/20)
 #'base_map %>%
 #'  add_overlay(generate_scalebar_overlay(extent = mb_extent, length = 30000,
@@ -104,7 +104,7 @@
 #'                                        latlong=TRUE)) %>%
 #'  plot_map()
 #'}
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'#Change the text offset (given in multiples of thickness)
 #'base_map %>%
 #'  add_overlay(generate_scalebar_overlay(extent = mb_extent, length = 30000,
@@ -114,7 +114,7 @@
 #'                                        latlong=TRUE)) %>%
 #'  plot_map()
 #'}
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'#Change the primary and secondary colors, along with the border and tick color
 #'base_map %>%
 #'  add_overlay(generate_scalebar_overlay(extent = mb_extent, length = 30000,
@@ -125,7 +125,7 @@
 #'                                        latlong=TRUE)) %>%
 #'  plot_map()
 #'}
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'#Add a halo
 #'base_map %>%
 #'  add_overlay(generate_scalebar_overlay(extent = mb_extent, length = 40000,
@@ -134,7 +134,7 @@
 #'                                        latlong=TRUE)) %>%
 #'  plot_map()
 #'}
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'#Change the orientation, position, text alignment, and flip the ticks to the other side
 #'base_map %>%
 #'  add_overlay(generate_scalebar_overlay(extent = mb_extent, length = 40000, x = 0.07,
@@ -144,7 +144,7 @@
 #'                                        latlong=TRUE)) %>%
 #'  plot_map()
 #'}
-##'if(rayshader:::run_documentation()) { 
+##'if(run_documentation()) { 
 #'#64373.8 meters in 40 miles
 #'#Create custom labels, change font and text size, remove the border/ticks, and change the color
 #'#Here, we specify a width and height to double the resolution of the image (for sharper text)

@@ -164,11 +164,13 @@ old windows will be kept open.}
 \item{...}{Additional arguments to pass to the `rgl::par3d` function.}
 }
 \description{
-Displays the shaded map in 3D with the `rgl` package.
+Displays the shaded map in 3D with the `rgl` package. 
+
+Note: Calling `plot_3d()` resets the scene cache for the `render_snapshot()`, `render_depth()`, and `render_highquality()`
 }
 \examples{
 #Plotting a spherical texture map of the built-in `montereybay` dataset.
-if(rayshader:::run_documentation()) {
+if(run_documentation()) {
 montereybay \%>\%
  sphere_shade(texture="desert") \%>\%
  plot_3d(montereybay,zscale=50)
@@ -176,7 +178,7 @@ render_snapshot()
 }
 
 #With a water layer  
-if(rayshader:::run_documentation()) {
+if(run_documentation()) {
 montereybay \%>\%
  sphere_shade(texture="imhof2") \%>\%
  plot_3d(montereybay, zscale=50, water = TRUE, watercolor="imhof2", 
@@ -185,7 +187,7 @@ render_snapshot()
 }
 
 #With a soil texture to the base  
-if(rayshader:::run_documentation()) {
+if(run_documentation()) {
 montereybay \%>\%
  sphere_shade(texture="imhof3") \%>\%
  plot_3d(montereybay, zscale=50, water = TRUE,  watercolor="imhof4", 
@@ -195,7 +197,7 @@ render_snapshot()
 }
 
 #We can also change the base by setting "baseshape" to "hex" or "circle"
-if(rayshader:::run_documentation()) {
+if(run_documentation()) {
 montereybay \%>\%
  sphere_shade(texture="imhof1") \%>\%
  plot_3d(montereybay, zscale=50, water = TRUE, watercolor="imhof1", theta=-45, zoom=0.7,
@@ -203,7 +205,7 @@ montereybay \%>\%
 render_snapshot()
 }
 
-if(rayshader:::run_documentation()) {
+if(run_documentation()) {
 montereybay \%>\%
  sphere_shade(texture="imhof1") \%>\%
  plot_3d(montereybay, zscale=50, water = TRUE, watercolor="imhof1", theta=-45, zoom=0.7,
@@ -222,7 +224,7 @@ render_snapshot()
 mb_water = montereybay
 mb_water[mb_water > -10] = NA
 
-if(rayshader:::run_documentation()) {
+if(run_documentation()) {
 montereybay \%>\%
  sphere_shade(texture="imhof1") \%>\%
  plot_3d(mb_water, zscale=50, water = TRUE, watercolor="imhof1", theta=-45,

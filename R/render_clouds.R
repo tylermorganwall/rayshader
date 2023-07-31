@@ -128,7 +128,7 @@ generate_cloud_layer = function(heightmap, sun_altitude = 90, sun_angle=315, lev
 #'@return Adds a 3D floating cloud layer to the map. No return value.
 #'@export
 #'@examples
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'#Render a cloud layer over Monterey Bay
 #'montereybay  %>%
 #'  sphere_shade()  %>%
@@ -138,7 +138,7 @@ generate_cloud_layer = function(heightmap, sun_altitude = 90, sun_angle=315, lev
 #'render_clouds(montereybay, zscale=50)  
 #'render_snapshot()
 #'}
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'#Change the seed for a different set of clouds and add cloud shadows on the ground
 #'montereybay  %>%
 #'  sphere_shade()  %>%
@@ -149,7 +149,7 @@ generate_cloud_layer = function(heightmap, sun_altitude = 90, sun_angle=315, lev
 #'render_snapshot()
 #'}
 #'
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'montereybay  %>%
 #'  sphere_shade()  %>%
 #'  plot_3d(montereybay,background="brown",zscale=50)
@@ -158,49 +158,49 @@ generate_cloud_layer = function(heightmap, sun_altitude = 90, sun_angle=315, lev
 #'render_clouds(montereybay, zscale=50, frequency = 0.001, clear_clouds = T)
 #'render_snapshot()
 #'}
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'#Increase the frequency for more broken clouds
 #'render_clouds(montereybay, zscale=50, frequency = 0.05, clear_clouds = T)
 #'render_snapshot()
 #'}
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'#Increase the fractal level for fluffier, bumpier clouds
 #'render_clouds(montereybay, zscale=50, fractal_levels = 32, clear_clouds = T)
 #'render_snapshot()
 #'}
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'#Decrease the fractal level for more smoother, continuous clouds
 #'render_clouds(montereybay, zscale=50, fractal_levels = 4, clear_clouds = T)
 #'render_snapshot()
 #'}
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'#Increase the cloud cover
 #'render_clouds(montereybay, zscale=50, cloud_cover=0.8, clear_clouds = T)            
 #'render_snapshot()
 #'}
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'#Decrease the cloud cover
 #'render_clouds(montereybay, zscale=50, cloud_cover=0.2, clear_clouds = T)            
 #'render_snapshot()
 #'}
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'#Change the altitude range of the clouds
 #'render_clouds(montereybay,zscale=50,start_altitude=2000,end_altitude = 4000, clear_clouds = T)            
 #'render_snapshot()
 #'}
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'#Increase the number of layers 
 #'render_clouds(montereybay, zscale=50,start_altitude=2000,end_altitude = 4000, layers = 20,
 #'              clear_clouds = T)
 #'render_snapshot()
 #'}
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'#Change the sun angle and altitude, and increase the attenuation for darker clouds
 #'render_clouds(montereybay,zscale=50,sun_angle=45, sun_altitude= 5, attenuation_coef = 5,
 #'              clear_clouds = T)
 #'render_snapshot()
 #'}
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'#Render the scene with a different baseshape
 #'montereybay  %>%
 #'  sphere_shade()  %>%
@@ -372,7 +372,7 @@ raymarch_cloud_layer = function(heightmap, sun_altitude = 90, sun_angle=315, lev
 #'@return A 2D shadow matrix.
 #'@export
 #'@examples
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'#Render clouds with cloud shadows on the ground
 #'montereybay  %>%
 #'  sphere_shade()  %>%
@@ -382,7 +382,7 @@ raymarch_cloud_layer = function(heightmap, sun_altitude = 90, sun_angle=315, lev
 #'render_clouds(montereybay, zscale=50)    
 #'render_snapshot()
 #'}
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'#Adjust the light direction for shadows and increase the attenuation for darker clouds
 #'montereybay  %>%
 #'  sphere_shade()  %>%

@@ -17,7 +17,7 @@
 #'  plot_map()
 #'  
 #'#Add a shadow:
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'montereybay %>%
 #'  height_shade() %>%
 #'  add_shadow(ray_shade(montereybay,zscale=50),0.3) %>%
@@ -25,7 +25,7 @@
 #'}
 #'
 #'#Change the palette:
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'montereybay %>%
 #'  height_shade(texture = topo.colors(256)) %>%
 #'  add_shadow(ray_shade(montereybay,zscale=50),0.3) %>%
@@ -33,7 +33,7 @@
 #'}
 #'
 #'#Really change the palette:
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'montereybay %>%
 #'  height_shade(texture = rainbow(256)) %>%
 #'  add_shadow(ray_shade(montereybay,zscale=50),0.3) %>%

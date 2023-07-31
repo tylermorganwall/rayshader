@@ -37,6 +37,7 @@ render_snapshot(
   thick_lines = TRUE,
   line_radius = 0.5,
   cache_scene = FALSE,
+  reset_scene_cache = FALSE,
   new_page = TRUE,
   print_scene_info = FALSE,
   fsaa = 1,
@@ -128,7 +129,9 @@ render the lines using a single-pixel anti-aliased line algorithm.}
 \item{line_radius}{Default `0.5`. The radius of the thick cylinders if `thick_lines = TRUE` and `software_render = TRUE`.}
 
 \item{cache_scene}{Default `FALSE`. Whether to cache the current scene to memory so it does not have to be converted to a `raymesh` object 
-each time `render_snapshot()` is called.}
+each time `render_snapshot()` is called. If `TRUE` and a scene has been cached, it will be used when rendering.}
+
+\item{reset_scene_cache}{Default `FALSE`. Resets the scene cache before rendering.}
 
 \item{new_page}{Default `TRUE`. Whether to call `grid::grid.newpage()` before plotting the image.}
 
@@ -155,18 +158,18 @@ Displays snapshot of current rgl plot (or saves to disk).
 Either captures the current rgl view and displays, or saves the current view to disk.
 }
 \examples{
-if(rayshader:::run_documentation()) {
+if(run_documentation()) {
 montereybay \%>\%
  sphere_shade() \%>\%
  plot_3d(montereybay,zscale=50,zoom=0.6,theta=-90,phi=30)
 }
  
-if(rayshader:::run_documentation()) {
+if(run_documentation()) {
 render_snapshot()
 }
  
 #Create a title
-if(rayshader:::run_documentation()) {
+if(run_documentation()) {
 render_snapshot(title_text = "Monterey Bay, California", title_offset=c(0,20),
                title_color = "white", title_bar_color = "black",
                title_font = "Helvetica", title_position = "north")
@@ -179,14 +182,14 @@ render_snapshot(title_text = "Monterey Bay, California",
                title_font = "Helvetica", title_position = "north")
 }
 #Use software rendering to render a scene with shadow mapping
-if(rayshader:::run_documentation()) {
+if(run_documentation()) {
 montereybay |> 
  height_shade() |> 
  plot_3d(montereybay, shadow=FALSE, solidlinecolor = NULL)
 #No shadows
 render_snapshot(software_render = TRUE)
 }
-if(rayshader:::run_documentation()) {
+if(run_documentation()) {
 #Now with shadow mapped shadows, calculated in rayvertex
 render_snapshot(rayvertex_lighting = TRUE, 
                rayvertex_lights = rayvertex::directional_light(intensity = 2.5, 

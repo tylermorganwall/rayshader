@@ -19,7 +19,7 @@ Resize the rgl Window
 }
 \examples{
 #Resize the rgl window to various sizes
-if(rayshader:::run_documentation()) {
+if(run_documentation()) {
 montereybay \%>\%
  sphere_shade() \%>\%
  plot_3d(montereybay,zscale=50,zoom=0.6,theta=-90,phi=30)
@@ -27,11 +27,11 @@ render_resize_window(width = 800, height = 800)
 render_snapshot()
 }
  
-if(rayshader:::run_documentation()) {
+if(run_documentation()) {
 render_resize_window(width = 200, height = 200)
 render_snapshot()
 }
-if(rayshader:::run_documentation()) {
+if(run_documentation()) {
 render_resize_window(width = 800, height = 400)
 render_snapshot()
 }

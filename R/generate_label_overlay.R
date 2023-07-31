@@ -43,7 +43,7 @@
 #'@export
 #'@examples
 #'#Add the included `sf` object with roads to the montereybay dataset
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'#Create the water palette
 #'water_palette = colorRampPalette(c("darkblue", "dodgerblue", "lightblue"))(200)
 #'bathy_hs = height_shade(montereybay, texture = water_palette)
@@ -64,7 +64,7 @@
 #'                                     seed=1))  %>%
 #'  plot_map()
 #'}
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'#It's hard to read these values, so we'll add a white halo.
 #'bathy_hs %>% 
 #'  add_shadow(lamb_shade(montereybay,zscale=50),0.3) %>%
@@ -79,7 +79,7 @@
 #'                                     seed=1))  %>%
 #'  plot_map()
 #'}
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'#Plot the actual town locations, using the manual plotting interface instead of the `sf` object
 #'montereybay %>%
 #'  height_shade() %>%
@@ -94,7 +94,7 @@
 #'                                     seed=1))  %>%
 #'  plot_map()
 #'}
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'#Adding a softer blurred halo
 #'montereybay %>%
 #'  height_shade() %>%
@@ -109,7 +109,7 @@
 #'                                     seed=1))  %>%
 #'  plot_map()
 #'}
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'#Changing the seed changes the locations of the labels
 #'montereybay %>%
 #'  height_shade() %>%

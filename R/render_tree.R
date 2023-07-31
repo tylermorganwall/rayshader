@@ -55,7 +55,7 @@
 #'@param ... Additional arguments to pass to `rgl::triangles3d()`.
 #'@export
 #'@examples
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'#Let's first start by drawing some trees in a circle around Monterey Bay
 #'#We won't scale these to a realistic size (yet)
 #'moss_landing_coord = c(36.806807, -121.793332)
@@ -74,7 +74,7 @@
 #'            lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), zscale=50) 
 #'render_snapshot()
 #'}
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'#Change the crown width ratio (compared to the height)
 #'render_tree(extent = attr(montereybay,"extent"), heightmap = montereybay,
 #'            tree_zscale = FALSE, tree_height = 60, crown_width_ratio = 0.5,
@@ -82,7 +82,7 @@
 #'            lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), zscale=50) 
 #'render_snapshot()
 #'}
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'#Change the trunk height and width
 #'render_tree(extent = attr(montereybay,"extent"), heightmap = montereybay,
 #'            tree_zscale = FALSE, tree_height = 40, crown_width_ratio = 2,
@@ -90,7 +90,7 @@
 #'            lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), zscale=50) 
 #'render_snapshot()
 #'}
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'#Change the tree type
 #'render_tree(extent = attr(montereybay,"extent"), heightmap = montereybay,
 #'            tree_zscale = FALSE, tree_height = 30, 
@@ -98,7 +98,7 @@
 #'            lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), zscale=50) 
 #'render_snapshot()
 #'}
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'#Change the crown color:
 #'render_camera(theta = 150,  phi = 38, zoom = 0.4, fov = 55)
 #'render_tree(extent = attr(montereybay,"extent"), heightmap = montereybay,
@@ -113,7 +113,7 @@
 #'run_example = length(find.package("lidR", quiet = TRUE)) > 0 && 
 #'              length(find.package("sf", quiet = TRUE)) > 0 && 
 #'              length(find.package("terra", quiet = TRUE)) > 0 &&
-#'              rayshader:::run_documentation()
+#'              run_documentation()
 #'if (run_example) {
 #'#Load the example data from the lidR package
 #'LASfile = system.file("extdata", "Topography.laz", package="lidR")

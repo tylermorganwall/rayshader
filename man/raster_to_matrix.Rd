@@ -16,7 +16,7 @@ Turns a raster into a matrix suitable for rayshader.
 }
 \examples{
 #Save montereybay as a raster and open using the filename.
-if(rayshader:::run_documentation()) {
+if(run_documentation()) {
 temp_raster_filename = paste0(tempfile(),".tif")
 raster::writeRaster(raster::raster(t(montereybay)),temp_raster_filename)
 elmat = raster_to_matrix(temp_raster_filename)

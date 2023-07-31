@@ -75,7 +75,7 @@ For realistic results, argument should match those passed to `render_clouds()`. 
 is `attenuation_coef`, which can be used to adjust the darkness of the resulting shadows.
 }
 \examples{
-if(rayshader:::run_documentation()) {
+if(run_documentation()) {
 #Render clouds with cloud shadows on the ground
 montereybay  \%>\%
  sphere_shade()  \%>\%
@@ -85,7 +85,7 @@ render_camera(theta=-65, phi = 25, zoom = 0.45, fov = 80)
 render_clouds(montereybay, zscale=50)    
 render_snapshot()
 }
-if(rayshader:::run_documentation()) {
+if(run_documentation()) {
 #Adjust the light direction for shadows and increase the attenuation for darker clouds
 montereybay  \%>\%
  sphere_shade()  \%>\%

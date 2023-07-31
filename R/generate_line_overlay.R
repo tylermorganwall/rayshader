@@ -22,7 +22,7 @@
 #'@export
 #'@examples
 #'#Add the included `sf` object with roads to the montereybay dataset
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'water_palette = colorRampPalette(c("darkblue", "dodgerblue", "lightblue"))(200)
 #'bathy_hs = height_shade(montereybay, texture = water_palette)
 #'montereybay %>% 
@@ -33,7 +33,7 @@
 #'  add_shadow(ray_shade(montereybay,zscale=50),0.3) %>%
 #'  plot_map()
 #'}
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'#Change the line width, color, and transparency
 #'montereybay %>%
 #'  height_shade() %>%
@@ -44,7 +44,7 @@
 #'  add_shadow(ray_shade(montereybay,zscale=50),0.3) %>%
 #'  plot_map()
 #'}
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'#Manually specify the width and height to improve visual quality of the lines
 #'montereybay %>%
 #'  height_shade() %>%

@@ -74,7 +74,7 @@
 #'@return 4-layer RGBA array.
 #'@export
 #'@examples
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'montereybay %>%
 #'  sphere_shade() %>%
 #'  plot_3d(montereybay,zscale=50, water=TRUE, waterlinecolor="white",
@@ -83,15 +83,15 @@
 #'#Preview where the focal plane lies
 #'render_depth(preview_focus=TRUE)
 #'}
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'#Render the depth of field effect
 #'render_depth(focallength = 300)
 #'}
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'#Add a chromatic aberration effect
 #'render_depth(focallength = 300, aberration = 0.3)
 #'}
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'#Render the depth of field effect, ignoring water and re-drawing the waterlayer
 #'render_depth(preview_focus=TRUE, 
 #'             heightmap = montereybay, zscale=50, focallength=300, transparent_water=TRUE)
@@ -99,7 +99,7 @@
 #'render_camera(theta=45,zoom=0.15,phi=20)
 #'}
 #'
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'#Change the bokeh shape and intensity
 #'render_depth(focus=900, bokehshape = "circle",focallength=500,bokehintensity=30,
 #'             title_text = "Circular Bokeh", title_size = 30, title_color = "white", 
@@ -109,7 +109,7 @@
 #'             title_bar_color = "black")
 #'}
 #'
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'#Add a title and vignette effect.
 #'render_camera(theta=0,zoom=0.7,phi=30)
 #'render_depth(focallength = 250, title_text = "Monterey Bay, CA", 
@@ -201,8 +201,8 @@ render_depth = function(focus = NULL, focallength = 100, fstop = 4, filename=NUL
       water_line_alpha = idlist$waterline_alpha[idlist$tag == "waterlines"][1]
     }
     rgl::pop3d(id=idlist$id)
-    if(!is.null(cache_filename) && software_render) {
-      new_depth = render_snapshot_software(filename = temp, 
+    if(software_render) {
+      new_depth = render_snapshot_software(filename = temp, cache_scene = cache_scene,
                                            camera_location = camera_location, camera_lookat = camera_lookat,
                                            background = background, debug="linear_depth",
                                            width = width, height = height, light_direction = c(0,1,0), fake_shadow = TRUE, 

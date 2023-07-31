@@ -14,7 +14,7 @@
 #'filename_obj = tempfile(fileext = ".obj")
 #'
 #'#Save model of volcano
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'volcano %>%
 #'  sphere_shade() %>%
 #'  plot_3d(volcano, zscale = 2)
@@ -23,12 +23,12 @@
 #'}
 #'
 #'#Save model of volcano without texture
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'save_obj(filename_obj, save_texture = FALSE)
 #'}
 #'
 #'#Make water have realistic index of refraction
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'montereybay %>%
 #'  sphere_shade() %>%
 #'  plot_3d(montereybay, zscale = 50)

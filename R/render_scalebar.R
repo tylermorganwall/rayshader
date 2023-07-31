@@ -30,21 +30,21 @@
 #'@export
 #'@examples
 #'#Add a scale bar to the montereybay dataset, here representing about 80km
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'montereybay %>%
 #'  sphere_shade() %>%
 #'  plot_3d(montereybay,theta=45, water=TRUE)
 #'render_scalebar(limits=c(0, 80), label_unit = "km")
 #'render_snapshot()
 #'}
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'#This function works with `render_highquality()`
 #'render_highquality(lightdirection = 250, lightaltitude = 40, 
 #'                   scale_text_size = 24, clamp_value = 10,
 #'                   sample_method = "sobol_blue", samples = 128)
 #'render_scalebar(clear_scalebar = TRUE)
 #'}
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'#We can change the position by specifying a cardinal direction to `position`, and the 
 #'#color by setting `color_first` and `color_second`
 #'
@@ -53,28 +53,28 @@
 #'render_snapshot()
 #'render_scalebar(clear_scalebar = TRUE)
 #'}
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'#And switch the orientation by setting `text_switch_side = TRUE`
 #'render_scalebar(limits=c(0,80), label_unit = "km", position = "N", text_switch_side = TRUE,
 #'                color_first = "darkgreen", color_second = "lightgreen")
 #'render_snapshot()
 #'render_scalebar(clear_scalebar = TRUE)
 #'}
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'#We can add additional breaks by specifying additional distances in `limits`
 #'
 #'render_scalebar(limits=c(0,40,80), label_unit = "km")
 #'render_snapshot()
 #'render_scalebar(clear_scalebar = TRUE)
 #'}
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'#We can also manually specify the height by setting the `y` argument:
 #'
 #'render_scalebar(limits=c(0,40,80), y=-70, label_unit = "km")
 #'render_snapshot()
 #'render_scalebar(clear_scalebar = TRUE)
 #'}
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'#Here we change the total size by specifying a start and end point along the side,
 #'#and set the number of colored `segments`:
 #'
@@ -84,7 +84,7 @@
 #'render_snapshot()
 #'render_scalebar(clear_scalebar = TRUE)
 #'}
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'#Change the radius of the scale bar with `radius`. Here, the autopositioning doesn't work well with
 #'#the labels, so we provide additional offsets with `text_y_offset` and `text_x_offset` to fix it.
 #'

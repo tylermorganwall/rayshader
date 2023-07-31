@@ -75,7 +75,7 @@
 #'@export
 #'@examples
 #'#Generate a circle in Monterey Bay and fly around on top of it
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'montereybay %>%
 #'  sphere_shade() %>%
 #'  plot_3d(montereybay,zscale=50,water=TRUE,
@@ -114,7 +114,7 @@
 #'rayimage::plot_image_grid(image_list, dim = c(5,5))
 #'}
 #'
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'#Now render a third-person view by setting `follow_camera = TRUE`
 #'camera_path = convert_path_to_animation_coords(extent = attr(montereybay,"extent"), 
 #'                                               heightmap = montereybay,

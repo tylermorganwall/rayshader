@@ -25,7 +25,7 @@ Writes a stereolithography (STL) file that can be used in 3D printing.
 filename_stl = tempfile()
 
 #Save the STL file into `filename_stl`
-if(rayshader:::run_documentation()) {
+if(run_documentation()) {
 volcano \%>\%
  sphere_shade() \%>\%
  plot_3d(volcano,zscale=3)
@@ -34,7 +34,7 @@ save_3dprint(filename_stl)
 }
 
 #Save the STL file into `filename_stl`, setting maximum width to 100 mm
-if(rayshader:::run_documentation()) {
+if(run_documentation()) {
 volcano \%>\%
  sphere_shade() \%>\%
  plot_3d(volcano,zscale=3)
@@ -43,7 +43,7 @@ save_3dprint(filename_stl, maxwidth = 100)
 }
 
 #'#Save the STL file into `filename_stl`, setting maximum width to 4 inches
-if(rayshader:::run_documentation()) {
+if(run_documentation()) {
 volcano \%>\%
  sphere_shade() \%>\%
  plot_3d(volcano,zscale=3)
@@ -51,7 +51,7 @@ render_snapshot()
 save_3dprint(filename_stl, maxwidth = 4, unit = "in")
 }
 #'#'#Save the STL file into `filename_stl`, setting maximum width (character) to 120mm
-if(rayshader:::run_documentation()) {
+if(run_documentation()) {
 volcano \%>\%
  sphere_shade() \%>\%
  plot_3d(volcano,zscale=3)

@@ -18,7 +18,7 @@
 #'@export
 #'@examples
 #'#Add contours to the montereybay dataset
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'montereybay %>%
 #'  height_shade() %>%
 #'  add_shadow(ray_shade(montereybay,zscale=50),0.3) %>%
@@ -27,21 +27,21 @@
 #'render_snapshot()
 #'}
 #'
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'#Specify the number of levels
 #'render_contours(montereybay, zscale = 50, offset = 100, nlevels = 30,
 #'                clear_previous = TRUE)
 #'render_snapshot()
 #'}
 #'
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'#Manually specify the breaks with levels
 #'render_contours(montereybay, linewidth = 2,  offset = 100, zscale = 50,
 #'                levels = seq(-2000, 0, 100), clear_previous = TRUE)
 #'render_snapshot()
 #'}
 #'
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'#Use a color palette for the contours 
 #'volcano |> 
 #'  constant_shade() |> 
@@ -51,7 +51,7 @@
 #'render_snapshot()
 #'}
 #'
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'#Render using `render_highquality()` for a neon light effect
 #'render_highquality(light = FALSE, smooth_line = TRUE, 
 #'                   line_radius = 0.1, sample_method="sobol_blue",

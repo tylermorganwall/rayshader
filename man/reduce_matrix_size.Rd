@@ -17,7 +17,7 @@ Reduce Matrix Size (deprecated)
 }
 \examples{
 #Deprecated lambertian material. Will display a warning.
-if(rayshader:::run_documentation()) {
+if(run_documentation()) {
 montbaysmall = reduce_matrix_size(montereybay, scale=0.5)
 montbaysmall \%>\%
  sphere_shade() \%>\%

@@ -68,18 +68,18 @@
 #'@return Displays snapshot of current rgl plot (or saves to disk).
 #'@export
 #'@examples
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'montereybay %>%
 #'  sphere_shade() %>%
 #'  plot_3d(montereybay,zscale=50,zoom=0.6,theta=-90,phi=30)
 #'}
 #'  
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'render_snapshot()
 #'}
 #'  
 #'#Create a title
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'render_snapshot(title_text = "Monterey Bay, California", title_offset=c(0,20),
 #'                title_color = "white", title_bar_color = "black",
 #'                title_font = "Helvetica", title_position = "north")
@@ -92,14 +92,14 @@
 #'                title_font = "Helvetica", title_position = "north")
 #'}
 #'#Use software rendering to render a scene with shadow mapping
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'montereybay |> 
 #'  height_shade() |> 
 #'  plot_3d(montereybay, shadow=FALSE, solidlinecolor = NULL)
 #'#No shadows
 #'render_snapshot(software_render = TRUE)
 #'}
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'#Now with shadow mapped shadows, calculated in rayvertex
 #'render_snapshot(rayvertex_lighting = TRUE, 
 #'                rayvertex_lights = rayvertex::directional_light(intensity = 2.5, 

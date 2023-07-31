@@ -53,12 +53,12 @@ Transforms an input `sf` object into an image overlay for the current height map
 }
 \examples{
 #Plot the counties around Monterey Bay, CA
-if(rayshader:::run_documentation()) {
+if(run_documentation()) {
 generate_polygon_overlay(monterey_counties_sf, palette = rainbow, 
                         extent = attr(montereybay,"extent"), heightmap = montereybay) \%>\%
  plot_map() 
 }
-if(rayshader:::run_documentation()) {
+if(run_documentation()) {
 #These counties include the water, so we'll plot bathymetry data over the polygon
 #data to only include parts of the polygon that fall on land.
 water_palette = colorRampPalette(c("darkblue", "dodgerblue", "lightblue"))(200)
@@ -69,7 +69,7 @@ generate_polygon_overlay(monterey_counties_sf, palette = rainbow,
  add_overlay(generate_altitude_overlay(bathy_hs, montereybay, start_transition = 0)) \%>\%
  plot_map()
 }
-if(rayshader:::run_documentation()) {
+if(run_documentation()) {
 #Add a semi-transparent hillshade and change the palette, and remove the polygon lines
 montereybay \%>\%
  sphere_shade(texture = "bw") \%>\%
@@ -81,7 +81,7 @@ montereybay \%>\%
  add_shadow(ray_shade(montereybay,zscale=50),0) \%>\%
  plot_map()
 }
-if(rayshader:::run_documentation()) {
+if(run_documentation()) {
 #Map one of the variables in the sf object and use an explicitly defined color palette
 county_palette = c("087" = "red",    "053" = "blue",   "081" = "green", 
                   "069" = "yellow", "085" = "orange", "099" = "purple") 

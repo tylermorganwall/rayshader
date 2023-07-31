@@ -65,6 +65,10 @@ reference:
       - "monterey_roads_sf"
       - "washington_monument_multipolygonz"
       - starts_with("flag")
+  - title: "pkgdown utils"
+    desc: "Internal but must be exported to meet CRAN guidelines"
+    contents:
+      - starts_with("run")
 
 navbar: 
   title: "rayshader"

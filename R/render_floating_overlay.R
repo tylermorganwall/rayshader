@@ -19,7 +19,7 @@
 #'@return Adds a 3D floating layer to the map. No return value.
 #'@export
 #'@examples
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'#Render the road network as a floating overlay layer, along with a label annotation and a floating
 #'#point annotation
 #'if(all(length(find.package("sf", quiet = TRUE)) > 0,

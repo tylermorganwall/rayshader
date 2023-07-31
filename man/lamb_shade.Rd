@@ -32,25 +32,25 @@ product between light direction and the surface normal vector at that point. Eac
 intensity is proportional to the cosine of the normal vector.
 }
 \examples{
-if(rayshader:::run_documentation()) {
+if(run_documentation()) {
 #Generate a basic hillshade
 montereybay \%>\% 
  lamb_shade(zscale=200) \%>\% 
  plot_map()
 }
-if(rayshader:::run_documentation()) {
+if(run_documentation()) {
 #Increase the intensity by decreasing the zscale
 montereybay \%>\% 
  lamb_shade(zscale=50) \%>\% 
  plot_map()
 }
-if(rayshader:::run_documentation()) { 
+if(run_documentation()) { 
 #Change the sun direction
 montereybay \%>\% 
  lamb_shade(zscale=200, sunangle=45) \%>\% 
  plot_map()
 }
-if(rayshader:::run_documentation()) {
+if(run_documentation()) {
 #Change the sun altitude
 montereybay \%>\% 
  lamb_shade(zscale=200, sunaltitude=60) \%>\% 

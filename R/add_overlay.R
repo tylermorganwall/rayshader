@@ -17,7 +17,7 @@
 #'@export
 #'@examples
 #'#Combining base R plotting with rayshader's spherical color mapping and raytracing:
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'montereybay %>%
 #'   sphere_shade() %>%
 #'   add_overlay(height_shade(montereybay),alphalayer = 0.6)  %>%
@@ -25,7 +25,7 @@
 #'   plot_map()
 #'}
 #'
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'#Add contours with `generate_contour_overlay()`
 #'montereybay %>%
 #'   height_shade() %>%

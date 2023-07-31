@@ -51,7 +51,7 @@ Render a 2D floating overlay over the map.
 Note: Multiple layers with transparency can cause rendering issues in rgl.
 }
 \examples{
-if(rayshader:::run_documentation()) {
+if(run_documentation()) {
 #Render the road network as a floating overlay layer, along with a label annotation and a floating
 #point annotation
 if(all(length(find.package("sf", quiet = TRUE)) > 0,

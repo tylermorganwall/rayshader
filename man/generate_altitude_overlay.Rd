@@ -33,13 +33,13 @@ layer onto an existing map.
 }
 \examples{
 #Create a bathymetric hillshade
-if(rayshader:::run_documentation()) {
+if(run_documentation()) {
 water_palette = colorRampPalette(c("darkblue", "dodgerblue", "lightblue"))(200)
 bathy_hs = height_shade(montereybay, texture = water_palette)
 plot_map(bathy_hs)
 }
 
-if(rayshader:::run_documentation()) {
+if(run_documentation()) {
 #Set everything below 0m to water palette
 montereybay \%>\%
  sphere_shade(zscale=10) \%>\%
@@ -52,7 +52,7 @@ montereybay \%>\%
 snow_palette = "white"
 snow_hs = height_shade(montereybay, texture = snow_palette)
 
-if(rayshader:::run_documentation()) {
+if(run_documentation()) {
 #Set the snow transition region from 500m to 1200m
 montereybay \%>\%
  sphere_shade(zscale=10, texture = "desert") \%>\%

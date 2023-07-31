@@ -42,7 +42,7 @@ Calculates and returns an overlay of contour lines for the current height map.
 }
 \examples{
 #Add contours to the montereybay dataset
-if(rayshader:::run_documentation()) {
+if(run_documentation()) {
 montereybay \%>\%
  height_shade() \%>\%
  add_overlay(generate_contour_overlay(montereybay))  \%>\%
@@ -57,7 +57,7 @@ breaks = seq(range(montereybay)[1],range(montereybay)[2],length.out=50)
 water_breaks = breaks[breaks < 0]
 land_breaks = breaks[breaks > 0]
 
-if(rayshader:::run_documentation()) {
+if(run_documentation()) {
 montereybay \%>\%
  height_shade() \%>\%
  add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0))  \%>\%
@@ -66,7 +66,7 @@ montereybay \%>\%
  add_overlay(generate_contour_overlay(montereybay, levels = land_breaks, color="black"))  \%>\%
  plot_map()
 }
-if(rayshader:::run_documentation()) {
+if(run_documentation()) {
 #Increase the resolution of the contour to improve the appearance of lines
 montereybay \%>\%
  height_shade() \%>\%
@@ -80,7 +80,7 @@ montereybay \%>\%
                                       width  = ncol(montereybay)*2))  \%>\%
  plot_map()
 }
-if(rayshader:::run_documentation()) {
+if(run_documentation()) {
 #Increase the number of breaks and the transparency (via add_overlay)
 montereybay \%>\%
  height_shade() \%>\%
@@ -90,7 +90,7 @@ montereybay \%>\%
                                       width  = ncol(montereybay)*2), alphalayer=0.5) \%>\%
  plot_map()
 }
-if(rayshader:::run_documentation()) {
+if(run_documentation()) {
 #Manually specify the breaks with levels
 montereybay \%>\%
  height_shade() \%>\%

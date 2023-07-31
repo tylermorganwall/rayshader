@@ -14,7 +14,7 @@
 #'@param remove_water Default `TRUE`. If `TRUE`, will remove existing water layer and replace it with new layer.
 #'@export
 #'@examples
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'montereybay %>%
 #'  sphere_shade() %>%
 #'  plot_3d(montereybay,zscale=50)
@@ -22,19 +22,19 @@
 #'}
 #'  
 #'#We want to add a layer of water after the initial render.
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'render_water(montereybay,zscale=50)
 #'render_snapshot()
 #'}
 #'
 #'#Call it again to change the water depth
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'render_water(montereybay,zscale=50,waterdepth=-1000)
 #'render_snapshot()
 #'}
 #'
 #'#Add waterlines
-#'if(rayshader:::run_documentation()) {
+#'if(run_documentation()) {
 #'render_camera(theta=-45)
 #'render_water(montereybay,zscale=50,waterlinecolor="white")
 #'render_snapshot()
