@@ -20,3 +20,4 @@
 ^man/.+.png$
 ^.+\.mp4$
 ^_pkgdown\.yml$
+^tests/.+$

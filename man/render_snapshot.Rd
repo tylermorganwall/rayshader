@@ -36,7 +36,7 @@ render_snapshot(
   line_offset = 1e-07,
   thick_lines = TRUE,
   line_radius = 0.5,
-  cache_filename = NULL,
+  cache_scene = FALSE,
   new_page = TRUE,
   print_scene_info = FALSE,
   fsaa = 1,
@@ -99,8 +99,7 @@ width when `software_render = TRUE`..}
 height when `software_render = TRUE`.}
 
 \item{software_render}{Default `FALSE`. If `TRUE`, rayshader will use the rayvertex package to render the snapshot, which
-is not constrained by the screen size or requires OpenGL. 
-Consider settings a `cache_filename` so a new OBJ file doesn't have to be written with every snapshot.}
+is not constrained by the screen size or requires OpenGL.}
 
 \item{camera_location}{Default `NULL`. Custom position of the camera. The `FOV`, `width`, and `height` arguments will still
 be derived from the rgl window.}
@@ -128,7 +127,8 @@ render the lines using a single-pixel anti-aliased line algorithm.}
 
 \item{line_radius}{Default `0.5`. The radius of the thick cylinders if `thick_lines = TRUE` and `software_render = TRUE`.}
 
-\item{cache_filename}{Default `NULL`. Name of temporary filename to store OBJ file, if the user does not want to rewrite the file each time.}
+\item{cache_scene}{Default `FALSE`. Whether to cache the current scene to memory so it does not have to be converted to a `raymesh` object 
+each time `render_snapshot()` is called.}
 
 \item{new_page}{Default `TRUE`. Whether to call `grid::grid.newpage()` before plotting the image.}
 

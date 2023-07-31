@@ -2,6 +2,8 @@
 #'
 #'@description Displays the shaded map in 3D with the `rgl` package. 
 #'
+#'Note: Calling `plot_3d()` resets the scene cache for the `render_snapshot()`, `render_depth()`, and `render_highquality()`
+#'
 #'@param hillshade Hillshade/image to be added to 3D surface map.
 #'@param heightmap A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
@@ -152,6 +154,9 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
                    ...) {
   if(!plot_new && clear_previous) {
     rgl::clear3d()
+  }
+  if(!is.null(get("scene_cache", envir = ray_cache_scene_envir))) {
+    assign("scene_cache", NULL, envir = ray_cache_scene_envir)
   }
   #setting default zscale if montereybay is used and tell user about zscale
   argnameschar = unlist(lapply(as.list(sys.call()),as.character))[-1]

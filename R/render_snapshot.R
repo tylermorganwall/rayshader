@@ -35,8 +35,9 @@
 #'height when `software_render = TRUE`.
 #'@param software_render Default `FALSE`. If `TRUE`, rayshader will use the rayvertex package to render the snapshot, which
 #'is not constrained by the screen size or requires OpenGL. 
-#'Consider settings a `cache_filename` so a new OBJ file doesn't have to be written with every snapshot.
-#'@param cache_filename Default `NULL`. Name of temporary filename to store OBJ file, if the user does not want to rewrite the file each time.
+#'@param cache_scene Default `FALSE`. Whether to cache the current scene to memory so it does not have to be converted to a `raymesh` object 
+#'each time `render_snapshot()` is called. If `TRUE` and a scene has been cached, it will be used when rendering.
+#'@param reset_scene_cache Default `FALSE`. Resets the scene cache before rendering.
 #'@param background Default `NULL`, defaults to device background. Background color when `software_render = TRUE`.
 #'@param text_angle Default `NULL`, which forces the text always to face the camera. If a single angle (degrees),
 #'will specify the absolute angle all the labels are facing. If three angles, this will specify all three orientations
@@ -120,13 +121,16 @@ render_snapshot = function(filename, clear=FALSE,
                            text_angle = NULL, text_size = 30, text_offset = c(0,0,0),
                            point_radius = 2, 
                            line_offset = 1e-7, thick_lines = TRUE, line_radius = 0.5,
-                           cache_filename  = NULL,  new_page = TRUE,
+                           cache_scene  = FALSE, reset_scene_cache = FALSE, new_page = TRUE,
                            print_scene_info = FALSE, fsaa = 1, 
                            rayvertex_lighting = FALSE, rayvertex_lights = NULL,
                            rayvertex_shadow_map = FALSE,
                            ...) {
   if(rgl::rgl.useNULL()) {
     software_render = TRUE
+  }
+  if(reset_scene_cache) {
+    assign("scene_cache", NULL, envir = ray_cache_scene_envir)
   }
   fsaa = as.integer(fsaa)
   stopifnot(fsaa >= 1)
@@ -176,7 +180,7 @@ render_snapshot = function(filename, clear=FALSE,
       background = rgl::rgl.attrib(bgid,"colors")
     }
     stopifnot(length(text_offset) == 3)
-    debug = render_snapshot_software(filename = temp, cache_filename = cache_filename,
+    debug = render_snapshot_software(filename = temp, cache_scene = cache_scene,
                              camera_location = camera_location, camera_lookat = camera_lookat,
                              background = background,
                              width = width, height = height, light_direction = NULL, fake_shadow = TRUE, 

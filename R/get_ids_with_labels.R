@@ -59,9 +59,6 @@ get_ids_with_labels = function(typeval = NULL) {
       if(material_type[i] == "base") {
         material_properties[[i]]$base_color = material_type_single$color
       } 
-      if(material_type[i] == "base") {
-        material_properties[[i]]$obj_color = material_type_single$color
-      } 
       if(material_type[i] == "water") {
         material_properties[[i]]$water_color = material_type_single$color
         material_properties[[i]]$water_alpha = material_type_single$alpha

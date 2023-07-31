@@ -53,8 +53,9 @@
 #'@param bring_to_front Default `FALSE`. Whether to bring the window to the front when rendering the snapshot.
 #'@param software_render Default `FALSE`. If `TRUE`, rayshader will use the rayvertex package to render the snapshot, which
 #'is not constrained by the screen size or requires OpenGL. 
-#'Consider settings a `cache_filename` so a new OBJ file doesn't have to be written with every snapshot.
-#'@param cache_filename Default `NULL`. Name of temporary filename to store OBJ file, if the user does not want to rewrite the file each time.
+#'@param cache_scene Default `FALSE`. Whether to cache the current scene to memory so it does not have to be converted to a `raymesh` object 
+#'each time `render_snapshot()` is called. If `TRUE` and a scene has been cached, it will be used when rendering.
+#'@param reset_scene_cache Default `FALSE`. Resets the scene cache before rendering.
 #'@param background Default `"white"`. Background color when `software_render = TRUE`.
 #'@param text_angle Default `NULL`, which forces the text always to face the camera. If a single angle (degrees),
 #'will specify the absolute angle all the labels are facing. If three angles, this will specify all three orientations
@@ -129,7 +130,7 @@ render_depth = function(focus = NULL, focallength = 100, fstop = 4, filename=NUL
                      background = "white",
                      text_angle = NULL, text_size = 10, text_offset = c(0,0,0),
                      point_radius = 0.5, line_offset = 1e-7,
-                     cache_filename  = NULL,  
+                     cache_scene  = FALSE,  reset_scene_cache = FALSE,
                      print_scene_info = FALSE,
                      instant_capture = interactive(), clear = FALSE, bring_to_front = FALSE, ...) {
   if(rgl::cur3d() == 0) {
@@ -140,6 +141,9 @@ render_depth = function(focus = NULL, focallength = 100, fstop = 4, filename=NUL
   }
   if(focallength < 1) {
     stop("focal length must be greater than 1")
+  }
+  if(reset_scene_cache) {
+    assign("scene_cache", NULL, envir = ray_cache_scene_envir)
   }
   if(is.null(focus)) {
     fov = rgl::par3d()$FOV
@@ -174,9 +178,9 @@ render_depth = function(focus = NULL, focallength = 100, fstop = 4, filename=NUL
   }
   temp = paste0(tempfile(),".png")
   if(!software_render) {
-    render_snapshot(filename=temp, software_render = software_render, cache_filename = cache_filename)
+    render_snapshot(filename=temp, software_render = software_render)
   } else {
-    all_image = render_snapshot_software(filename = temp, cache_filename = cache_filename,
+    all_image = render_snapshot_software(filename = temp, cache_scene = cache_scene,
                              camera_location = camera_location, camera_lookat = camera_lookat,
                              background = background, debug="all",
                              width = width, height = height, light_direction = c(0,1,0), fake_shadow = TRUE, 

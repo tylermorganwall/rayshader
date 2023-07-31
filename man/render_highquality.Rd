@@ -6,6 +6,9 @@
 \usage{
 render_highquality(
   filename = NULL,
+  samples = 128,
+  sample_method = "sobol_blue",
+  min_variance = 1e-07,
   light = TRUE,
   lightdirection = 315,
   lightaltitude = 45,
@@ -13,7 +16,7 @@ render_highquality(
   lightintensity = 500,
   lightcolor = "white",
   obj_material = rayrender::diffuse(),
-  cache_filename = NULL,
+  cache_scene = FALSE,
   width = NULL,
   height = NULL,
   text_angle = NULL,
@@ -56,6 +59,18 @@ render_highquality(
 \arguments{
 \item{filename}{Default `NA`. Filename of saved image. If missing, will display to current device.}
 
+\item{samples}{Default `128`. The maximum number of samples for each pixel. Increase this to increase the quality of the rendering.}
+
+\item{sample_method}{Default `"sobol_blue"`, unless `samples > 256`, in which it defaults to `"sobol"`.
+The type of sampling method used to generate random numbers. 
+The other options are `random` (worst quality but fastest), 
+`sobol_blue` (best option for sample counts below 256), and `sobol` 
+(slowest but best quality, better than `sobol_blue` for sample counts greater than 256).}
+
+\item{min_variance}{Default `1e-6`. Minimum acceptable variance for a block of pixels for the adaptive sampler. 
+Smaller numbers give higher quality images, at the expense of longer rendering times. 
+If this is set to zero, the adaptive sampler will be turned off and the renderer will use the maximum number of samples everywhere.}
+
 \item{light}{Default `TRUE`. Whether there should be a light in the scene. If not, the scene will be lit with a bluish sky.}
 
 \item{lightdirection}{Default `315`. Position of the light angle around the scene. 
@@ -74,7 +89,8 @@ If this is a vector longer than one, multiple lights will be generated (using va
 
 \item{obj_material}{Default `rayrender::diffuse()`. The material properties of the object file.}
 
-\item{cache_filename}{Name of temporary filename to store OBJ file, if the user does not want to rewrite the file each time.}
+\item{cache_scene}{Default `FALSE`. Whether to cache the current scene to memory so it does not have to be converted to a `raymesh` object 
+each time `render_snapshot()` is called.}
 
 \item{width}{Defaults to the width of the rgl window. Width of the rendering.}
 

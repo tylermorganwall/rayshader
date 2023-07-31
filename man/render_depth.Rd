@@ -43,7 +43,7 @@ render_depth(
   text_offset = c(0, 0, 0),
   point_radius = 0.5,
   line_offset = 1e-07,
-  cache_filename = NULL,
+  cache_scene = FALSE,
   print_scene_info = FALSE,
   instant_capture = interactive(),
   clear = FALSE,
@@ -117,8 +117,7 @@ control the blurriness of the vignette effect.}
 \item{progbar}{Default `TRUE` if in an interactive session. Displays a progress bar.}
 
 \item{software_render}{Default `FALSE`. If `TRUE`, rayshader will use the rayvertex package to render the snapshot, which
-is not constrained by the screen size or requires OpenGL. 
-Consider settings a `cache_filename` so a new OBJ file doesn't have to be written with every snapshot.}
+is not constrained by the screen size or requires OpenGL.}
 
 \item{width}{Default `NULL`. Optional argument to pass to `rgl::snapshot3d()` to specify the
 width when `software_render = TRUE`..}
@@ -147,7 +146,8 @@ will specify the absolute angle all the labels are facing. If three angles, this
 \item{line_offset}{Default `1e-7`. Small number indicating the offset in the scene to apply to lines if using software rendering. Increase this if your lines 
 aren't showing up, or decrease it if lines are appearing through solid objects.}
 
-\item{cache_filename}{Default `NULL`. Name of temporary filename to store OBJ file, if the user does not want to rewrite the file each time.}
+\item{cache_scene}{Default `FALSE`. Whether to cache the current scene to memory so it does not have to be converted to a `raymesh` object 
+each time `render_depth()` is called.}
 
 \item{print_scene_info}{Default `FALSE`. If `TRUE`, it will print the position and lookat point of the camera.}
 
