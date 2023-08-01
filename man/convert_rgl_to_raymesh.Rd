@@ -2,15 +2,16 @@
 % Please edit documentation in R/convert_rgl_to_raymesh.R
 \name{convert_rgl_to_raymesh}
 \alias{convert_rgl_to_raymesh}
-\title{Convert RGL to ray_mesh}
+\title{Convert rayshader RGL scene to ray_mesh object}
 \usage{
-convert_rgl_to_raymesh(water_index_refraction = 1, save_shadow = TRUE)
+convert_rgl_to_raymesh(save_shadow = TRUE)
 }
 \arguments{
 \item{save_shadow}{Default `FALSE`. If `TRUE`, this saves a plane with the shadow texture below the model.}
-
-\item{filename}{String with the filename. If `.obj` is not at the end of the string, it will be appended automatically.}
+}
+\value{
+A `ray_mesh` object
 }
 \description{
-Converts the current RGL scene to a ray_mesh object
+Converts the current RGL rayshader scene to a `ray_mesh` object (see `rayvertex` package for more information)
 }

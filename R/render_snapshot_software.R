@@ -221,11 +221,13 @@ render_snapshot_software = function(filename, cache_scene = FALSE, camera_locati
     if(thick_lines) {
       for(j in seq_len(nrow(temp_verts)-1)) {
         line_mat = rayvertex::material_list(diffuse = temp_color[j,1:3], type = "color")
-        line_scene[[line_counter]] = rayvertex::segment_mesh(start = temp_verts[j,] - bbox_center, 
-                                                             end   = temp_verts[j+1,] - bbox_center,
-                                                             radius = line_radius,
-                                                             material = line_mat)
-        line_counter = line_counter + 1
+        if(!all(temp_verts[j+1,] == temp_verts[j,])) {
+          line_scene[[line_counter]] = rayvertex::segment_mesh(start = temp_verts[j,] - bbox_center, 
+                                                               end   = temp_verts[j+1,] - bbox_center,
+                                                               radius = line_radius,
+                                                               material = line_mat)
+          line_counter = line_counter + 1
+        }
       }
     } else {
       for(j in seq_len(nrow(temp_verts)-1)) {

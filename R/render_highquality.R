@@ -27,7 +27,8 @@
 #'@param lightsize Default `NULL`. Radius of the light(s). Automatically chosen, but can be set here by the user.
 #'@param lightintensity Default `500`. Intensity of the light.
 #'@param lightcolor Default `white`. The color of the light.
-#'@param obj_material Default `rayrender::diffuse()`. The material properties of the object file. 
+#'@param material Default `rayrender::diffuse()`. The material properties of the object file. Only used if `override_material = TRUE`
+#'@param override_material Default `FALSE`. Whether to override the default diffuse material with that in argument `material`.
 #'@param cache_scene Default `FALSE`. Whether to cache the current scene to memory so it does not have to be converted to a `raymesh` object 
 #'each time `render_snapshot()` is called. If `TRUE` and a scene has been cached, it will be used when rendering.
 #'@param reset_scene_cache Default `FALSE`. Resets the scene cache before rendering.
@@ -157,11 +158,11 @@
 #'                                    material=rayrender::light(color="red",intensity=10)),
 #'                   min_variance = 0, sample_method = "sobol_blue")
 #'}
-render_highquality = function(filename = NULL, samples = 128, 
+render_highquality = function(filename = NA, samples = 128, 
                               sample_method = "sobol_blue", min_variance=1e-7,
                               light = TRUE, 
                               lightdirection = 315, lightaltitude = 45, lightsize=NULL,
-                              lightintensity = 500, lightcolor = "white", obj_material = rayrender::diffuse(),
+                              lightintensity = 500, lightcolor = "white", material = rayrender::diffuse(),
                               override_material = FALSE,
                               cache_scene = FALSE, reset_scene_cache = FALSE, 
                               width = NULL, height = NULL, 
@@ -193,7 +194,7 @@ render_highquality = function(filename = NULL, samples = 128,
   if(reset_scene_cache) {
     assign("scene_cache", NULL, envir = ray_cache_scene_envir)
   }
-  if(!is.null(filename)) {
+  if(!is.na(filename)) {
     if(dirname(filename) != ".") {
       if(!dir.exists(dirname(filename))) {
         stop(sprintf("Error: directory '%s' does not exist.", dirname(filename)))
@@ -365,11 +366,11 @@ render_highquality = function(filename = NULL, samples = 128,
   if(cache_scene) {
     ray_scene = get("scene_cache", envir = ray_cache_scene_envir)
     if(is.null(ray_scene)) {
-      ray_scene = convert_rgl_to_raymesh()
+      ray_scene = convert_rgl_to_raymesh(save_shadow = FALSE)
       assign("scene_cache", ray_scene, envir = ray_cache_scene_envir)
     }
   } else {
-    ray_scene = convert_rgl_to_raymesh()
+    ray_scene = convert_rgl_to_raymesh(save_shadow = FALSE)
   }
   
   if(!override_material) {
@@ -384,7 +385,7 @@ render_highquality = function(filename = NULL, samples = 128,
                                      x = -bbox_center[1],
                                      y = -bbox_center[2],
                                      z = -bbox_center[3],
-                                     material = obj_material,
+                                     material = material,
                                      override_material = TRUE,
                                      calculate_consistent_normals = calculate_consistent_normals)
   }
@@ -604,9 +605,6 @@ render_highquality = function(filename = NULL, samples = 128,
   
   if(!is.null(animation_camera_coords)) {
     stopifnot(ncol(animation_camera_coords) == 14)
-    if(is.null(filename)) {
-      filename = NA
-    }
     rayrender::render_animation(scene, camera_motion = animation_camera_coords, width = width, height = height,
                                 min_variance = min_variance, samples = samples, sample_method = sample_method,
                                 filename = filename, clamp_value = clamp_value, ...)
@@ -633,10 +631,17 @@ render_highquality = function(filename = NULL, samples = 128,
       }
     }
   } else {
-    debug_return = rayrender::render_scene(scene, lookfrom = lookfrom, lookat = camera_lookat, fov = fov, filename=filename,
-                                           min_variance = min_variance, samples = samples, sample_method = sample_method,
-                 ortho_dimensions = ortho_dimensions, width = width, height = height, #camera_up = camera_up,
-                 clamp_value = clamp_value, ...)
+    if(!is.na(filename)) {
+      debug_return = rayrender::render_scene(scene, lookfrom = lookfrom, lookat = camera_lookat, fov = fov, filename=filename,
+                                             min_variance = min_variance, samples = samples, sample_method = sample_method,
+                   ortho_dimensions = ortho_dimensions, width = width, height = height, #camera_up = camera_up,
+                   clamp_value = clamp_value, ...)
+    } else {
+      debug_return = rayrender::render_scene(scene, lookfrom = lookfrom, lookat = camera_lookat, fov = fov, 
+                                             min_variance = min_variance, samples = samples, sample_method = sample_method,
+                                             ortho_dimensions = ortho_dimensions, width = width, height = height, #camera_up = camera_up,
+                                             clamp_value = clamp_value, ...)
+    }
   }
   if(clear) {
     rgl::clear3d()

@@ -1,9 +1,9 @@
-#'@title Convert RGL to ray_mesh
+#'@title Convert rayshader RGL scene to ray_mesh object
 #'
-#'@description Converts the current RGL scene to a ray_mesh object
+#'@description Converts the current RGL rayshader scene to a `ray_mesh` object (see `rayvertex` package for more information)
 #'
-#'@param filename String with the filename. If `.obj` is not at the end of the string, it will be appended automatically.
 #'@param save_shadow Default `FALSE`. If `TRUE`, this saves a plane with the shadow texture below the model.
+#'@return A `ray_mesh` object
 #'@export
 #'@examples
 #'if(interactive()) {
@@ -17,8 +17,7 @@
 #'
 #'rm_obj = convert_rgl_to_raymesh()
 #'}
-convert_rgl_to_raymesh = function(water_index_refraction = 1, 
-                                  save_shadow = TRUE) {
+convert_rgl_to_raymesh = function(save_shadow = TRUE) {
   if(rgl::cur3d() == 0) {
     stop("No rgl window currently open.")
   }
@@ -26,14 +25,20 @@ convert_rgl_to_raymesh = function(water_index_refraction = 1,
   num_elems = 1
   
   vertex_info = get_ids_with_labels()
-  basic_load_mesh = function(row, texture_loc, color = "white", alpha=1, obj = FALSE, specular = "white") {
+  basic_load_mesh = function(row, texture_loc, 
+                             color = "white", alpha=1, obj = FALSE, specular = "white",
+                             lit = FALSE, quads = FALSE) {
     id = as.character(vertex_info$id[row])
     
     indices = matrix(rgl::rgl.attrib(vertex_info$id[row], "indices"),
                      ncol = 3L, byrow = TRUE) - 1
     vertices = rgl.attrib(vertex_info$id[row], "vertices")
-    if(nrow(indices) == 0) {
+    if(nrow(indices) == 0 && !quads) {
       indices = matrix(seq_len(nrow(vertices))-1, ncol = 3, nrow = nrow(vertices)/3, byrow = TRUE)
+    } else if (quads) {
+      quads = matrix(seq_len(nrow(vertices))-1,nrow=4)
+      indices = t(matrix(rbind(quads[c(1L, 2L, 4L),], 
+                               quads[c(2L, 3L, 4L),]), 3L))
     }
     textures = rgl.attrib(vertex_info$id[row], "texcoords")
     normals = rgl.attrib(vertex_info$id[row], "normals")
@@ -76,11 +81,16 @@ convert_rgl_to_raymesh = function(water_index_refraction = 1,
                                      norm_indices = norm_indices,
                                      material = rayvertex::material_list(texture_location = texture_loc, 
                                                                          diffuse = color,
-                                                                         type = "color",
+                                                                         type = ifelse(lit, "diffuse", "color"),
                                                                          dissolve = alpha,
                                                                          specular = specular)))
   }
   for(row in 1:nrow(vertex_info)) {
+    if(!is.na(vertex_info$lit[row])) {
+      lit_val = vertex_info$lit[row]
+    } else {
+      lit_val = FALSE
+    }
     if(vertex_info$tag[row] == "surface") {
       dims = rgl::rgl.attrib(vertex_info$id[row], "dim")
       vertices = rgl.attrib(vertex_info$id[row], "vertices")
@@ -159,6 +169,7 @@ convert_rgl_to_raymesh = function(water_index_refraction = 1,
                                                                                                type = "color"))
     } else if (vertex_info$tag[row] == "base") {
       final_scene[[num_elems]] = basic_load_mesh(row, 
+                                                 lit = lit_val,
                                                  texture_loc = NA,
                                                  color = vertex_info$base_color[[row]])
     } else if (vertex_info$tag[row] == "water") {
@@ -169,33 +180,53 @@ convert_rgl_to_raymesh = function(water_index_refraction = 1,
                                                  specular = vertex_info$water_color[[row]])
     } else if (vertex_info$tag[row] == "north_symbol") {
       final_scene[[num_elems]] = basic_load_mesh(row,
-                                                 texture_loc = vertex_info$north_color[[row]])
+                                                 lit = lit_val,
+                                                 texture_loc = NA,
+                                                 color = vertex_info$north_color[[row]])
     } else if (vertex_info$tag[row] == "arrow_symbol") {
       final_scene[[num_elems]] = basic_load_mesh(row,
-                                                 texture_loc = vertex_info$arrow_color[[row]])
+                                                 lit = lit_val,
+                                                 texture_loc = NA,
+                                                 color = vertex_info$arrow_color[[row]])
     } else if (vertex_info$tag[row] == "bevel_symbol") {
       final_scene[[num_elems]] = basic_load_mesh(row,
-                                                 texture_loc = vertex_info$bevel_color[[row]])
+                                                 lit = lit_val,
+                                                 texture_loc = NA,
+                                                 color = vertex_info$bevel_color[[row]])
     } else if (vertex_info$tag[row] == "background_symbol") {
       final_scene[[num_elems]] = basic_load_mesh(row,
-                                                 texture_loc = vertex_info$background_color[[row]])
+                                                 lit = lit_val,
+                                                 texture_loc = NA,
+                                                 color = vertex_info$background_color[[row]])
     } else if (vertex_info$tag[row] == "scalebar_col1") {
       if(vertex_info$type[row] == "quads") {
-        #Need to handle quads
-        baseindices = matrix(vertex_info$startindex[row]:vertex_info$endindex[row], ncol=4, byrow=TRUE)
+        final_scene[[num_elems]] = basic_load_mesh(row,
+                                                   lit = lit_val,
+                                                   texture_loc = NA,
+                                                   quads = TRUE,
+                                                   color = vertex_info$scalebar1_color[[row]])
       } else {
-        final_scene[[num_elems]] = basic_load_mesh(row, texture_loc = NA)
+        final_scene[[num_elems]] = basic_load_mesh(row, 
+                                                   lit = lit_val,
+                                                   color = vertex_info$scalebar1_color[[row]],
+                                                   texture_loc = NA)
       }
     } else if (vertex_info$tag[row] == "scalebar_col2") {
       if(vertex_info$type[row] == "quads") {
-        #Need to handle quads
-        
-        baseindices = matrix(vertex_info$startindex[row]:vertex_info$endindex[row], ncol=4, byrow=TRUE)
+        final_scene[[num_elems]] = basic_load_mesh(row,
+                                                   lit = lit_val,
+                                                   texture_loc = NA,
+                                                   quads = TRUE,
+                                                   color = vertex_info$scalebar2_color[[row]])
       } else {
-        final_scene[[num_elems]] = basic_load_mesh(row, texture_loc = NA)
+        final_scene[[num_elems]] = basic_load_mesh(row, 
+                                                   lit = lit_val,
+                                                   color = vertex_info$scalebar2_color[[row]],
+                                                   texture_loc = NA)
       }
     } else if (vertex_info$tag[row] == "polygon3d") {
       final_scene[[num_elems]] = basic_load_mesh(row, texture_loc = NA,
+                                                 lit = lit_val,
                                                  color =  vertex_info$tricolor[[row]])
     } else if(vertex_info$tag[row] == "shadow" && save_shadow) {
       final_scene[[num_elems]] = basic_load_mesh(row,
@@ -205,9 +236,11 @@ convert_rgl_to_raymesh = function(water_index_refraction = 1,
                                                  texture_loc = vertex_info$layer_texture_file[[row]])
     } else if (vertex_info$tag[row] %in% c("base_soil1","base_soil2")) {
       final_scene[[num_elems]] = basic_load_mesh(row,
+                                                 lit = lit_val,
                                                  texture_loc = vertex_info$soil_texture[[row]])
     } else if (grepl("obj", vertex_info$tag[row], fixed=TRUE)) {
       tmp_obj = basic_load_mesh(row, texture_loc = vertex_info$texture_file[[row]],
+                                lit = lit_val,
                                 obj = TRUE)
       obj_color = vertex_info$obj_color[[row]]
       obj_alpha = vertex_info$obj_alpha[[row]]

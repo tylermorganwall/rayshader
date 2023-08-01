@@ -15,7 +15,7 @@ render_highquality(
   lightsize = NULL,
   lightintensity = 500,
   lightcolor = "white",
-  obj_material = rayrender::diffuse(),
+  material = rayrender::diffuse(),
   override_material = FALSE,
   cache_scene = FALSE,
   reset_scene_cache = FALSE,
@@ -89,7 +89,9 @@ If this is a vector longer than one, multiple lights will be generated (using va
 
 \item{lightcolor}{Default `white`. The color of the light.}
 
-\item{obj_material}{Default `rayrender::diffuse()`. The material properties of the object file.}
+\item{material}{Default `rayrender::diffuse()`. The material properties of the object file. Only used if `override_material = TRUE`}
+
+\item{override_material}{Default `FALSE`. Whether to override the default diffuse material with that in argument `material`.}
 
 \item{cache_scene}{Default `FALSE`. Whether to cache the current scene to memory so it does not have to be converted to a `raymesh` object 
 each time `render_snapshot()` is called. If `TRUE` and a scene has been cached, it will be used when rendering.}

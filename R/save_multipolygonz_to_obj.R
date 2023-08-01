@@ -21,17 +21,16 @@ save_multipolygonz_to_obj = function(sfobj, filename, swap_yz = FALSE) {
   total_verts = 0
   cat_list = list()
   counter = 1
-  geometry_list = sf::st_geometry(sfobj)
-  num_polygons = length(sfobj)
-  
-  for(j in seq_len(num_polygons)) {
-    single_geom = geometry_list
-    number = length(single_geom)
-    for(i in seq_len(number)) {
+
+  for(j in seq_len(nrow(sfobj))) {
+    mat_coords = sf::st_coordinates(sf::st_geometry(sfobj[j,]))
+    geometry_list = lapply(split(mat_coords[,1:3],mat_coords[,5]),matrix,ncol=3)
+    for(i in seq_len(length(geometry_list))) {
+      single_geom = geometry_list[[i]]
       if(swap_yz) {
-        mat = as.matrix(single_geom[[i]])[-1,c(1,3,2)]
+        mat = as.matrix(single_geom)[-1,c(1,3,2)]
       } else {
-        mat = as.matrix(single_geom[[i]])[-1,]
+        mat = as.matrix(single_geom)[-1,]
       }
       text_mat = matrix(sprintf("%0.4f", mat),ncol=ncol(mat), nrow=nrow(mat))
       indices = sprintf("%d", seq_len(nrow(mat))+total_verts)
