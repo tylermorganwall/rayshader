@@ -6,9 +6,7 @@
 #'@return A `ray_mesh` object
 #'@export
 #'@examples
-#'if(interactive()) {
 #'filename_obj = tempfile(fileext = ".obj")
-#'
 #'#Save model of volcano
 #'if(run_documentation()) {
 #'volcano %>%

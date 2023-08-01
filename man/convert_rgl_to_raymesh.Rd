@@ -15,3 +15,14 @@ A `ray_mesh` object
 \description{
 Converts the current RGL rayshader scene to a `ray_mesh` object (see `rayvertex` package for more information)
 }
+\examples{
+filename_obj = tempfile(fileext = ".obj")
+#Save model of volcano
+if(run_documentation()) {
+volcano \%>\%
+ sphere_shade() \%>\%
+ plot_3d(volcano, zscale = 2)
+
+rm_obj = convert_rgl_to_raymesh()
+}
+}
