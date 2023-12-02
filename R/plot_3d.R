@@ -353,7 +353,6 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
                      texture=tempmap,lit=FALSE,color="white",tag = "surface_tris")
   }
   rgl::bg3d(color = background,texture=NULL)
-  # rgl::par3d(windowRect = windowsize, mouseMode = c("none", "polar", "fov", "zoom", "pull"), ...)
   if(solid && !triangulate) {
     make_base(heightmap,basedepth=soliddepth,basecolor=solidcolor,zscale=zscale, 
               soil = soil, soil_freq = soil_freq, soil_levels = soil_levels, soil_color1=soil_color_light,
@@ -383,4 +382,8 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
     height_scale = height_range[2]-height_range[1]
     rgl::aspect3d(x = dim(heightmap)[1]/height_scale, y = 1, z = dim(heightmap)[2]*asp/height_scale)
   }
+  
+  rgl::par3d(...)
+  
+  invisible()
 }
