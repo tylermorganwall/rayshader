@@ -209,7 +209,7 @@ render_snapshot = function(filename, clear=FALSE,
                                   title_size = title_size, title_font = title_font)
   }
   if(missing(filename)) {
-    rayimage::plot_image(tempmap, keep_user_par = keep_user_par, new_page = new_page)
+    rayimage::plot_image(tempmap, new_page = new_page)
   } else {
     save_png(tempmap, filename)
   }
