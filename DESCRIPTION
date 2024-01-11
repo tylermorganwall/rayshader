@@ -54,6 +54,6 @@ BugReports: https://github.com/tylermorganwall/rayshader/issues
 Remotes: tylermorganwall/rayimage,
          tylermorganwall/rayrender,
          tylermorganwall/rayvertex,
-         tylermorganwall/raybevel
+         tylermorganwall/raybevel,
          dmurdoch/rgl
 Config/testthat/edition: 3
