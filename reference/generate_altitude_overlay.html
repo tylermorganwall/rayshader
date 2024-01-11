@@ -18,7 +18,7 @@ layer onto an existing map."><meta property="og:image" content="https://www.rays
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.36.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.37.0</span>
       </span>
     </div>
 
@@ -148,7 +148,6 @@ layer onto an existing map.</p>
 <span class="r-in"><span><span class="va">bathy_hs</span> <span class="op">=</span> <span class="fu"><a href="height_shade.html">height_shade</a></span><span class="op">(</span><span class="va">montereybay</span>, texture <span class="op">=</span> <span class="va">water_palette</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="va">bathy_hs</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-plt img"><img src="generate_altitude_overlay-1.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#Set everything below 0m to water palette</span></span></span>
@@ -158,7 +157,6 @@ layer onto an existing map.</p>
 <span class="r-in"><span> <span class="fu"><a href="add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="fu"><a href="ray_shade.html">ray_shade</a></span><span class="op">(</span><span class="va">montereybay</span>,zscale<span class="op">=</span><span class="fl">50</span><span class="op">)</span>,<span class="fl">0.3</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-plt img"><img src="generate_altitude_overlay-2.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#Add snow peaks by setting `lower = FALSE`  </span></span></span>
 <span class="r-in"><span><span class="va">snow_palette</span> <span class="op">=</span> <span class="st">"white"</span></span></span>
@@ -173,7 +171,6 @@ layer onto an existing map.</p>
 <span class="r-in"><span> <span class="fu"><a href="add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="fu"><a href="ambient_shade.html">ambient_shade</a></span><span class="op">(</span><span class="va">montereybay</span>,zscale<span class="op">=</span><span class="fl">50</span>,maxsearch<span class="op">=</span><span class="fl">100</span><span class="op">)</span>,<span class="fl">0</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-plt img"><img src="generate_altitude_overlay-3.png" alt="" width="768" height="768"></span>
 </code></pre></div>
     </div>
   </div>

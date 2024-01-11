@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.36.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.37.0</span>
       </span>
     </div>
 
@@ -100,8 +100,8 @@
 
     <div id="ref-usage">
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">add_overlay</span><span class="op">(</span></span>
-<span>  <span class="va">hillshade</span>,</span>
-<span>  <span class="va">overlay</span>,</span>
+<span>  hillshade <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  overlay <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  alphalayer <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  alphacolor <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  alphamethod <span class="op">=</span> <span class="st">"max"</span>,</span>
@@ -157,7 +157,6 @@ the other way around).</p></dd>
 <span class="r-in"><span>  <span class="fu"><a href="add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="fu"><a href="ray_shade.html">ray_shade</a></span><span class="op">(</span><span class="va">montereybay</span>,zscale<span class="op">=</span><span class="fl">50</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-plt img"><img src="add_overlay-1.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#Add contours with `generate_contour_overlay()`</span></span></span>
@@ -167,7 +166,6 @@ the other way around).</p></dd>
 <span class="r-in"><span>  <span class="fu"><a href="add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="fu"><a href="ray_shade.html">ray_shade</a></span><span class="op">(</span><span class="va">montereybay</span>,zscale<span class="op">=</span><span class="fl">50</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-plt img"><img src="add_overlay-2.png" alt="" width="768" height="768"></span>
 </code></pre></div>
     </div>
   </div>

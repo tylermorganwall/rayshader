@@ -18,7 +18,7 @@ system defined by the extent object."><meta property="og:image" content="https:/
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.36.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.37.0</span>
       </span>
     </div>
 
@@ -118,6 +118,7 @@ system defined by the extent object.</p>
 <span>  light_altitude <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">45</span>, <span class="fl">30</span><span class="op">)</span>,</span>
 <span>  light_direction <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">315</span>, <span class="fl">135</span><span class="op">)</span>,</span>
 <span>  light_intensity <span class="op">=</span> <span class="fl">0.3</span>,</span>
+<span>  light_relative <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  clear_previous <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -203,6 +204,11 @@ the holes in the polygon. See the `earcut` function in the `decido` package for 
 <dd><p>Default `0.3`. Intensity of the specular highlight on the polygons.</p></dd>
 
 
+<dt>light_relative</dt>
+<dd><p>Default `FALSE`. Whether the light direction should be taken relative to the camera,
+or absolute.</p></dd>
+
+
 <dt>clear_previous</dt>
 <dd><p>Default `FALSE`. If `TRUE`, it will clear all existing polygons.</p></dd>
 
@@ -225,24 +231,18 @@ the holes in the polygon. See the `earcut` function in the `decido` package for 
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="fu">render_polygons</span><span class="op">(</span><span class="va">mont_county_buff</span>, </span></span>
 <span class="r-in"><span>                extent <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>,<span class="st">"extent"</span><span class="op">)</span>, top <span class="op">=</span> <span class="fl">10</span>,</span></span>
-<span class="r-in"><span>                parallel <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span>                parallel <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> `montereybay` dataset used with no zscale--setting `zscale=50`.  For a realistic depiction, raise `zscale` to 200.</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>st_buffer does not correctly buffer longitude/latitude data</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> dist is assumed to be in decimal degrees (arc_degrees).</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>st_simplify does not correctly simplify longitude/latitude data, dTolerance needs to be in decimal degrees</span>
-<span class="r-plt img"><img src="render_polygons-1.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#We can specify the bottom of the polygons as well. Here I float the polygons above the surface</span></span></span>
 <span class="r-in"><span><span class="co">#by specifying the bottom argument. We clear the previous polygons with `clear_previous = TRUE`.</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_camera.html">render_camera</a></span><span class="op">(</span>theta<span class="op">=</span><span class="op">-</span><span class="fl">60</span>,  phi<span class="op">=</span><span class="fl">20</span>, zoom <span class="op">=</span> <span class="fl">0.85</span>, fov<span class="op">=</span><span class="fl">0</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">render_polygons</span><span class="op">(</span><span class="va">mont_county_buff</span>, </span></span>
 <span class="r-in"><span>                extent <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>,<span class="st">"extent"</span><span class="op">)</span>, bottom <span class="op">=</span> <span class="fl">190</span>, top<span class="op">=</span><span class="fl">200</span>,</span></span>
-<span class="r-in"><span>                parallel<span class="op">=</span><span class="cn">TRUE</span>,clear_previous<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span>                parallel<span class="op">=</span><span class="cn">FALSE</span>,clear_previous<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-plt img"><img src="render_polygons-2.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#We can set the height of the data to a column in the sf object: we'll use the land area.</span></span></span>
 <span class="r-in"><span><span class="co">#We'll have to scale this value because its max value is 2.6 billion:</span></span></span>
@@ -250,16 +250,14 @@ the holes in the polygon. See the `earcut` function in the `decido` package for 
 <span class="r-in"><span><span class="fu">render_polygons</span><span class="op">(</span><span class="va">mont_county_buff</span>, </span></span>
 <span class="r-in"><span>                extent <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>, <span class="st">"extent"</span><span class="op">)</span>, data_column_top <span class="op">=</span> <span class="st">"ALAND"</span>,</span></span>
 <span class="r-in"><span>                scale_data <span class="op">=</span> <span class="fl">300</span><span class="op">/</span><span class="op">(</span><span class="fl">2.6E9</span><span class="op">)</span>, color <span class="op">=</span> <span class="st">"chartreuse4"</span>,</span></span>
-<span class="r-in"><span>                parallel <span class="op">=</span> <span class="cn">TRUE</span>, clear_previous <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span>                clear_previous <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span>      </span></span>
 <span class="r-in"><span><span class="op">}</span>  </span></span>
-<span class="r-plt img"><img src="render_polygons-3.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#This function also works with `render_highquality()`</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_highquality.html">render_highquality</a></span><span class="op">(</span>samples <span class="op">=</span> <span class="fl">128</span>, clamp_value <span class="op">=</span> <span class="fl">10</span>, sample_method<span class="op">=</span><span class="st">"sobol_blue"</span>,</span></span>
 <span class="r-in"><span>                   min_variance <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-plt img"><img src="render_polygons-4.png" alt="" width="768" height="768"></span>
 </code></pre></div>
     </div>
   </div>

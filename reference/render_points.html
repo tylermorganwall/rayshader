@@ -19,7 +19,7 @@ above the heightmap. If the points goes off the edge, the nearest height on the 
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.36.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.37.0</span>
       </span>
     </div>
 
@@ -204,7 +204,6 @@ All points are assumed to be evenly spaced.</p></dd>
 <span class="r-in"><span>             altitude <span class="op">=</span> <span class="va">z_out</span>, zscale<span class="op">=</span><span class="fl">50</span>,color<span class="op">=</span><span class="st">"white"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-plt img"><img src="render_points-1.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#We'll set the altitude to zero to give the tracks a "shadow" over the water. </span></span></span>
 <span class="r-in"><span><span class="fu">render_points</span><span class="op">(</span>extent <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>,<span class="st">"extent"</span><span class="op">)</span>, </span></span>
@@ -213,7 +212,6 @@ All points are assumed to be evenly spaced.</p></dd>
 <span class="r-in"><span><span class="fu"><a href="render_camera.html">render_camera</a></span><span class="op">(</span>theta<span class="op">=</span><span class="fl">30</span>,phi<span class="op">=</span><span class="fl">35</span>,zoom<span class="op">=</span><span class="fl">0.45</span>,fov<span class="op">=</span><span class="fl">70</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in transform_into_heightmap_coords(extent, heightmap, lat, long,     altitude, offset, zscale):</span> No altitude data requires heightmap argument be passed</span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#Remove the points:</span></span></span>
 <span class="r-in"><span><span class="fu">render_points</span><span class="op">(</span>clear_previous<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span></span>
@@ -230,13 +228,11 @@ All points are assumed to be evenly spaced.</p></dd>
 <span class="r-in"><span><span class="fu"><a href="render_camera.html">render_camera</a></span><span class="op">(</span>theta <span class="op">=</span> <span class="fl">160</span>, phi<span class="op">=</span><span class="fl">33</span>, zoom<span class="op">=</span><span class="fl">0.4</span>, fov<span class="op">=</span><span class="fl">55</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-plt img"><img src="render_points-2.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#And all of these work with `render_highquality()`</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_highquality.html">render_highquality</a></span><span class="op">(</span>point_radius <span class="op">=</span> <span class="fl">6</span>, clamp_value<span class="op">=</span><span class="fl">10</span>, min_variance <span class="op">=</span> <span class="fl">0</span>,</span></span>
 <span class="r-in"><span>                  sample_method <span class="op">=</span> <span class="st">"sobol_blue"</span>, samples <span class="op">=</span> <span class="fl">128</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-plt img"><img src="render_points-3.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#We can also change the material of the objects by setting the `point_material` and</span></span></span>
@@ -246,7 +242,6 @@ All points are assumed to be evenly spaced.</p></dd>
 <span class="r-in"><span>                  point_material <span class="op">=</span> <span class="fu">rayrender</span><span class="fu">::</span><span class="va"><a href="https://www.rayrender.net/reference/glossy.html" class="external-link">glossy</a></span>, </span></span>
 <span class="r-in"><span>                  point_material_args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>gloss <span class="op">=</span> <span class="fl">0.5</span>, reflectance <span class="op">=</span> <span class="fl">0.2</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-plt img"><img src="render_points-4.png" alt="" width="768" height="768"></span>
 </code></pre></div>
     </div>
   </div>

@@ -22,7 +22,7 @@ in the proper location (but for ease of use, use `render_multipolygonz()` to plo
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.36.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.37.0</span>
       </span>
     </div>
 
@@ -128,6 +128,11 @@ in the proper location (but for ease of use, use `render_multipolygonz()` to plo
 <span>  scale <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span>,</span>
 <span>  clear_previous <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  baseshape <span class="op">=</span> <span class="st">"rectangle"</span>,</span>
+<span>  lit <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  light_altitude <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">45</span>, <span class="fl">30</span><span class="op">)</span>,</span>
+<span>  light_direction <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">315</span>, <span class="fl">135</span><span class="op">)</span>,</span>
+<span>  light_intensity <span class="op">=</span> <span class="fl">0.3</span>,</span>
+<span>  light_relative <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  rgl_tag <span class="op">=</span> <span class="st">""</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -188,7 +193,7 @@ All points are assumed to be evenly spaced.</p></dd>
 
 
 <dt>offset</dt>
-<dd><p>Default `5`. Offset of the track from the surface, if `altitude = NULL`.</p></dd>
+<dd><p>Default `5`. Offset of the model from the surface, if `altitude = NULL`.</p></dd>
 
 
 <dt>obj_zscale</dt>
@@ -222,6 +227,27 @@ equal the length of `lat`/`long`).</p></dd>
 <dd><p>Default `rectangle`. Shape of the base. Options are `c("rectangle","circle","hex")`.</p></dd>
 
 
+<dt>lit</dt>
+<dd><p>Default `TRUE`. Whether to light the polygons.</p></dd>
+
+
+<dt>light_altitude</dt>
+<dd><p>Default `c(45, 60)`. Degree(s) from the horizon from which to light the polygons.</p></dd>
+
+
+<dt>light_direction</dt>
+<dd><p>Default `c(45, 60)`. Degree(s) from north from which to light the polygons.</p></dd>
+
+
+<dt>light_intensity</dt>
+<dd><p>Default `0.3`. Intensity of the specular highlight on the polygons.</p></dd>
+
+
+<dt>light_relative</dt>
+<dd><p>Default `FALSE`. Whether the light direction should be taken relative to the camera,
+or absolute.</p></dd>
+
+
 <dt>rgl_tag</dt>
 <dd><p>Default `""`. Tag to add to the rgl scene id, will be prefixed by `"obj"`</p></dd>
 
@@ -253,7 +279,6 @@ equal the length of `lat`/`long`).</p></dd>
 <span class="r-in"><span>          zscale<span class="op">=</span><span class="fl">50</span>, color<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/grDevices/palettes.html" class="external-link">rainbow</a></span><span class="op">(</span><span class="fl">100</span><span class="op">)</span>, smooth <span class="op">=</span> <span class="cn">FALSE</span>, clear_previous <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> </span></span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-plt img"><img src="render_obj-1.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#Rotate the flag to follow the circle</span></span></span>
 <span class="r-in"><span><span class="fu">render_obj</span><span class="op">(</span><span class="fu"><a href="flag_full_obj.html">flag_full_obj</a></span><span class="op">(</span><span class="op">)</span>, extent <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>,<span class="st">"extent"</span><span class="op">)</span>, heightmap <span class="op">=</span> <span class="va">montereybay</span>,</span></span>
@@ -263,7 +288,6 @@ equal the length of `lat`/`long`).</p></dd>
 <span class="r-in"><span>          zscale<span class="op">=</span><span class="fl">50</span>, color<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/grDevices/palettes.html" class="external-link">rainbow</a></span><span class="op">(</span><span class="fl">100</span><span class="op">)</span>, smooth <span class="op">=</span> <span class="cn">FALSE</span>, clear_previous <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> </span></span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-plt img"><img src="render_obj-2.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#Style the pole with a different color</span></span></span>
 <span class="r-in"><span><span class="fu">render_obj</span><span class="op">(</span><span class="fu"><a href="flag_pole_obj.html">flag_pole_obj</a></span><span class="op">(</span><span class="op">)</span>, extent <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>,<span class="st">"extent"</span><span class="op">)</span>, heightmap <span class="op">=</span> <span class="va">montereybay</span>,</span></span>
@@ -280,7 +304,6 @@ equal the length of `lat`/`long`).</p></dd>
 <span class="r-in"><span><span class="co">#And all of these work with `render_highquality()`</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_highquality.html">render_highquality</a></span><span class="op">(</span>sample_method<span class="op">=</span><span class="st">"sobol_blue"</span>,clamp_value<span class="op">=</span><span class="fl">10</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-plt img"><img src="render_obj-3.png" alt="" width="768" height="768"></span>
 </code></pre></div>
     </div>
   </div>

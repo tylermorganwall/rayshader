@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.36.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.37.0</span>
       </span>
     </div>
 
@@ -169,14 +169,12 @@ set `options("cores")` in which the multicore option will only use that many cor
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="fu">ambient_shade</span><span class="op">(</span>heightmap <span class="op">=</span> <span class="va">montereybay</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-plt img"><img src="ambient_shade-1.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#We can increase the distance to look for surface intersections `maxsearch`</span></span></span>
 <span class="r-in"><span><span class="co">#and the density of rays sent out around the point `sunbreaks`.</span></span></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="fu">ambient_shade</span><span class="op">(</span><span class="va">montereybay</span>, sunbreaks <span class="op">=</span> <span class="fl">24</span>,maxsearch <span class="op">=</span> <span class="fl">100</span>, multicore<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-plt img"><img src="ambient_shade-2.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="co">#Create the Red Relief Image Map (RRIM) technique using a custom texture and ambient_shade(),</span></span></span>
 <span class="r-in"><span><span class="co">#with an addition lambertian layer added with lamb_shade() to improve topographic clarity.</span></span></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
@@ -187,7 +185,6 @@ set `options("cores")` in which the multicore option will only use that many cor
 <span class="r-in"><span> <span class="fu"><a href="add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="fu"><a href="lamb_shade.html">lamb_shade</a></span><span class="op">(</span><span class="va">bigmb</span><span class="op">)</span>,<span class="fl">0.5</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-plt img"><img src="ambient_shade-3.png" alt="" width="768" height="768"></span>
 </code></pre></div>
     </div>
   </div>

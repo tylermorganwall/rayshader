@@ -148,6 +148,9 @@
     <loc>https://www.rayshader.com/reference/get_interpolated_points_path.html</loc>
   </url>
   <url>
+    <loc>https://www.rayshader.com/reference/get_polygon_data_value.html</loc>
+  </url>
+  <url>
     <loc>https://www.rayshader.com/reference/get_scene_depth.html</loc>
   </url>
   <url>
@@ -223,6 +226,12 @@
     <loc>https://www.rayshader.com/reference/reduce_matrix_size.html</loc>
   </url>
   <url>
+    <loc>https://www.rayshader.com/reference/render_beveled_polygons.html</loc>
+  </url>
+  <url>
+    <loc>https://www.rayshader.com/reference/render_buildings.html</loc>
+  </url>
+  <url>
     <loc>https://www.rayshader.com/reference/render_camera.html</loc>
   </url>
   <url>
@@ -263,6 +272,9 @@
   </url>
   <url>
     <loc>https://www.rayshader.com/reference/render_polygons.html</loc>
+  </url>
+  <url>
+    <loc>https://www.rayshader.com/reference/render_raymesh.html</loc>
   </url>
   <url>
     <loc>https://www.rayshader.com/reference/render_resize_window.html</loc>
@@ -311,6 +323,18 @@
   </url>
   <url>
     <loc>https://www.rayshader.com/reference/transform_into_heightmap_coords.html</loc>
+  </url>
+  <url>
+    <loc>https://www.rayshader.com/reference/transform_points_custom_crs.html</loc>
+  </url>
+  <url>
+    <loc>https://www.rayshader.com/reference/transform_points_into_raycoords.html</loc>
+  </url>
+  <url>
+    <loc>https://www.rayshader.com/reference/transform_polygon_custom_crs.html</loc>
+  </url>
+  <url>
+    <loc>https://www.rayshader.com/reference/transform_polygon_into_raycoords.html</loc>
   </url>
   <url>
     <loc>https://www.rayshader.com/reference/translate_shape_string.html</loc>

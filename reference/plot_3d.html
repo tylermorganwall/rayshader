@@ -18,7 +18,7 @@ Note: Calling `plot_3d()` resets the scene cache for the `render_snapshot()`, `r
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.36.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.37.0</span>
       </span>
     </div>
 
@@ -144,8 +144,7 @@ Note: Calling `plot_3d()` resets the scene cache for the `render_snapshot()`, `r
 <span>  verbose <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  plot_new <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  close_previous <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  clear_previous <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  <span class="va">...</span></span>
+<span>  clear_previous <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -194,7 +193,7 @@ of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
 
 <dt>shadowcolor</dt>
 <dd><p>Default `auto`. Color of the shadow, automatically computed as `shadow_darkness`
-the luminance of the `background` color in the CIELab colorspace if not specified.</p></dd>
+the luminance of the `background` color in the CIELuv colorspace if not specified.</p></dd>
 
 
 <dt>shadow_darkness</dt>
@@ -345,10 +344,6 @@ old windows will be kept open.</p></dd>
 <dt>clear_previous</dt>
 <dd><p>Default `TRUE`. Clears the previously open `rgl` window if `plot_new = FALSE`.</p></dd>
 
-
-<dt>...</dt>
-<dd><p>Additional arguments to pass to the `rgl::par3d` function.</p></dd>
-
 </dl></div>
 
     <div id="ref-examples">
@@ -360,7 +355,6 @@ old windows will be kept open.</p></dd>
 <span class="r-in"><span> <span class="fu">plot_3d</span><span class="op">(</span><span class="va">montereybay</span>,zscale<span class="op">=</span><span class="fl">50</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-plt img"><img src="plot_3d-1.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#With a water layer  </span></span></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
@@ -370,7 +364,6 @@ old windows will be kept open.</p></dd>
 <span class="r-in"><span>         waterlinecolor<span class="op">=</span><span class="st">"white"</span>, waterlinealpha<span class="op">=</span><span class="fl">0.5</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-plt img"><img src="plot_3d-2.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#With a soil texture to the base  </span></span></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
@@ -381,7 +374,6 @@ old windows will be kept open.</p></dd>
 <span class="r-in"><span><span class="fu"><a href="render_camera.html">render_camera</a></span><span class="op">(</span>theta<span class="op">=</span><span class="fl">225</span>, phi<span class="op">=</span><span class="fl">7</span>, zoom<span class="op">=</span><span class="fl">0.5</span>, fov<span class="op">=</span><span class="fl">67</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-plt img"><img src="plot_3d-3.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#We can also change the base by setting "baseshape" to "hex" or "circle"</span></span></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
@@ -391,7 +383,6 @@ old windows will be kept open.</p></dd>
 <span class="r-in"><span>         waterlinecolor<span class="op">=</span><span class="st">"white"</span>, waterlinealpha<span class="op">=</span><span class="fl">0.5</span>,baseshape<span class="op">=</span><span class="st">"circle"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in validate_mesh(scene):</span> !any(is.na(normals)) is not TRUE</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
@@ -400,7 +391,6 @@ old windows will be kept open.</p></dd>
 <span class="r-in"><span>         waterlinecolor<span class="op">=</span><span class="st">"white"</span>, waterlinealpha<span class="op">=</span><span class="fl">0.5</span>,baseshape<span class="op">=</span><span class="st">"hex"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in validate_mesh(scene):</span> !any(is.na(normals)) is not TRUE</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span></span></span>
@@ -420,7 +410,6 @@ old windows will be kept open.</p></dd>
 <span class="r-in"><span>         waterlinecolor<span class="op">=</span><span class="st">"white"</span>, waterlinealpha<span class="op">=</span><span class="fl">0.5</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in validate_mesh(scene):</span> !any(is.na(normals)) is not TRUE</span>
 </code></pre></div>
     </div>
   </div>

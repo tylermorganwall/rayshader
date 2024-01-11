@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.36.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.37.0</span>
       </span>
     </div>
 
@@ -112,7 +112,6 @@
 <span>  title_bar_color <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  title_bar_alpha <span class="op">=</span> <span class="fl">0.5</span>,</span>
 <span>  title_position <span class="op">=</span> <span class="st">"northwest"</span>,</span>
-<span>  keep_user_par <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -170,11 +169,6 @@ image_annotate) corner to offset the title.</p></dd>
 <dd><p>Default `northwest`. Position of the title.</p></dd>
 
 
-<dt>keep_user_par</dt>
-<dd><p>Default `TRUE`. Whether to keep the user's `par()` settings. Set to `FALSE` if you 
-want to set up a multi-pane plot (e.g. set `par(mfrow)`).</p></dd>
-
-
 <dt>...</dt>
 <dd><p>Additional arguments to pass to the `raster::plotRGB` function that displays the map.</p></dd>
 
@@ -196,7 +190,6 @@ want to set up a multi-pane plot (e.g. set `par(mfrow)`).</p></dd>
 <span class="r-in"><span> <span class="fu"><a href="add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="fu"><a href="ray_shade.html">ray_shade</a></span><span class="op">(</span><span class="va">montereybay</span>,zscale<span class="op">=</span><span class="fl">50</span><span class="op">)</span>,<span class="fl">0.3</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span> <span class="fu">plot_map</span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-plt img"><img src="plot_map-1.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="co">#Correcting the aspect ratio for the latitude of Monterey Bay</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">extent_mb</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>,<span class="st">"extent"</span><span class="op">)</span></span></span>
@@ -208,7 +201,6 @@ want to set up a multi-pane plot (e.g. set `par(mfrow)`).</p></dd>
 <span class="r-in"><span> <span class="fu"><a href="add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="fu"><a href="ray_shade.html">ray_shade</a></span><span class="op">(</span><span class="va">montereybay</span>,zscale<span class="op">=</span><span class="fl">50</span><span class="op">)</span>,<span class="fl">0.3</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span> <span class="fu">plot_map</span><span class="op">(</span>asp <span class="op">=</span> <span class="fl">1</span><span class="op">/</span><span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">cospi</a></span><span class="op">(</span><span class="va">mean_latitude</span><span class="op">/</span><span class="fl">180</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-plt img"><img src="plot_map-2.png" alt="" width="768" height="768"></span>
 </code></pre></div>
     </div>
   </div>
