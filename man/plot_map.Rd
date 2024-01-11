@@ -17,7 +17,6 @@ plot_map(
   title_bar_color = NULL,
   title_bar_alpha = 0.5,
   title_position = "northwest",
-  keep_user_par = FALSE,
   ...
 )
 }
@@ -48,9 +47,6 @@ image_annotate) corner to offset the title.}
 \item{title_bar_alpha}{Default `0.5`. Transparency of the title bar.}
 
 \item{title_position}{Default `northwest`. Position of the title.}
-
-\item{keep_user_par}{Default `TRUE`. Whether to keep the user's `par()` settings. Set to `FALSE` if you 
-want to set up a multi-pane plot (e.g. set `par(mfrow)`).}
 
 \item{...}{Additional arguments to pass to the `raster::plotRGB` function that displays the map.}
 }

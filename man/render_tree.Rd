@@ -24,6 +24,7 @@ render_tree(
   min_height = 0,
   max_height = Inf,
   zscale = 1,
+  lit = TRUE,
   heightmap = NULL,
   baseshape = "rectangle",
   angle = c(0, 0, 0),
@@ -88,6 +89,8 @@ above that height.}
 
 \item{zscale}{Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.}
 
+\item{lit}{Default `TRUE`. Whether to apply lighting to the tree.}
+
 \item{heightmap}{Default `NULL`. Automatically extracted from the rgl window--only use if auto-extraction
 of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
 All points are assumed to be evenly spaced.}
@@ -126,7 +129,7 @@ circle_coords_lat = moss_landing_coord[1] + 0.3 * sin(t)
 circle_coords_long = moss_landing_coord[2] + 0.3 * cos(t)
 
 render_tree(extent = attr(montereybay,"extent"), heightmap = montereybay,
-           tree_zscale = FALSE, tree_height = 30, 
+           tree_zscale = FALSE, tree_height = 30,  lit = TRUE,
            lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), zscale=50) 
 render_snapshot()
 }

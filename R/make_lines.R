@@ -13,48 +13,57 @@
 #'@keywords internal
 make_lines = function(heightmap,basedepth=0,linecolor="grey20",zscale=1,alpha=1,linewidth = 2,solid=TRUE) {
   heightmap = heightmap/zscale
-  heightval3 = heightmap[1,1]
-  heightval4 = heightmap[nrow(heightmap),1]
-  heightval1 = heightmap[1,ncol(heightmap)]
-  heightval2 = heightmap[nrow(heightmap),ncol(heightmap)]
+  nr = nrow(heightmap)
+  nc = ncol(heightmap)
+  heightval3 = heightmap[1, 1 ]
+  heightval4 = heightmap[nr,1 ]
+  heightval1 = heightmap[1, nc]
+  heightval2 = heightmap[nr,nc]
   heightlist = list()
   if(all(!is.na(heightmap))) {
     if(solid) {
-      heightlist[[1]] = matrix(c(1,1,basedepth,heightval3,-1,-1),2,3)
-      heightlist[[2]] = matrix(c(nrow(heightmap),nrow(heightmap),basedepth,heightval4,-1,-1),2,3)
-      heightlist[[3]] = matrix(c(1,1,basedepth,heightval1,-ncol(heightmap),-ncol(heightmap)),2,3)
-      heightlist[[4]] = matrix(c(nrow(heightmap),nrow(heightmap),basedepth,heightval2,-ncol(heightmap),-ncol(heightmap)),2,3)
-      heightlist[[5]] = matrix(c(1,1,basedepth,basedepth,-1,-ncol(heightmap)),2,3)
-      heightlist[[6]] = matrix(c(1,nrow(heightmap),basedepth,basedepth,-ncol(heightmap),-ncol(heightmap)),2,3)
-      heightlist[[7]] = matrix(c(nrow(heightmap),nrow(heightmap),basedepth,basedepth,-ncol(heightmap),-1),2,3)
-      heightlist[[8]] = matrix(c(nrow(heightmap),1,basedepth,basedepth,-1,-1),2,3)
+      heightlist[[1]] = matrix(c(1,1,basedepth,heightval3,1,1),2,3)
+      heightlist[[2]] = matrix(c(nr,nr,basedepth,heightval4,1,1),2,3)
+      heightlist[[3]] = matrix(c(1,1,basedepth,heightval1,nc,nc),2,3)
+      heightlist[[4]] = matrix(c(nr,nr,basedepth,heightval2,nc,nc),2,3)
+      heightlist[[5]] = matrix(c(1,1,basedepth,basedepth,1,nc),2,3)
+      heightlist[[6]] = matrix(c(1,nr,basedepth,basedepth,nc,nc),2,3)
+      heightlist[[7]] = matrix(c(nr,nr,basedepth,basedepth,nc,1),2,3)
+      heightlist[[8]] = matrix(c(nr,1,basedepth,basedepth,1,1),2,3)
     } else {
       basedepth = basedepth/zscale
       counter = 1
       if(basedepth > heightval1) {
-        heightlist[[counter]] = matrix(c(1,1,basedepth,heightval1,-1,-1),2,3)
+        heightlist[[counter]] = matrix(c(1,1,basedepth,heightval1,1,1),2,3)
         counter = counter + 1
       }
       if(basedepth > heightval2) {
-        heightlist[[counter]] = matrix(c(nrow(heightmap),nrow(heightmap),basedepth,heightval2,-1,-1),2,3)
+        heightlist[[counter]] = matrix(c(nr,nr,basedepth,heightval2,1,1),2,3)
         counter = counter + 1
       }
       if(basedepth > heightval3) {
-        heightlist[[counter]] = matrix(c(1,1,basedepth,heightval3,-ncol(heightmap),-ncol(heightmap)),2,3)
+        heightlist[[counter]] = matrix(c(1,1,basedepth,heightval3,nc,nc),2,3)
         counter = counter + 1
       }
       if(basedepth > heightval4) {
-        heightlist[[counter]] = matrix(c(nrow(heightmap),nrow(heightmap),basedepth,heightval4,-ncol(heightmap),-ncol(heightmap)),2,3)
+        heightlist[[counter]] = matrix(c(nr,nr,basedepth,heightval4,nc,nc),2,3)
         counter = counter + 1
       }
     }
+    reverse_z = FALSE
   } else {
     heightlist = make_baselines_cpp(heightmap,is.na(heightmap),basedepth)
+    reverse_z = TRUE
   }
   if(length(heightlist) > 0) {
     segmentlist = do.call(rbind,heightlist)
-    segmentlist[,1] = segmentlist[,1] - nrow(heightmap)/2
-    segmentlist[,3] = -segmentlist[,3] - ncol(heightmap)/2 
+    if(reverse_z) {
+      segmentlist[,3] = -segmentlist[,3]
+    }
+    segmentlist[,1] = segmentlist[,1] - 1
+    segmentlist[,3] = segmentlist[,3] - 1
+    segmentlist[,1] = segmentlist[,1] - (nr-1)/2
+    segmentlist[,3] = segmentlist[,3] - (nc-1)/2 
     rgl::segments3d(segmentlist,color=linecolor,lwd=linewidth,alpha=alpha,depth_mask=TRUE, 
                     line_antialias=FALSE, depth_test="lequal",tag = ifelse(solid,"lines","waterlines"))
   }

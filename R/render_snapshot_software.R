@@ -1,6 +1,5 @@
-#'@title Render High Quality
+#'@title Render Software Snapshot
 #'
-#'@param cache_filename Name of temporary filename to store OBJ file, if the user does not want to rewrite the file each time.
 #'@param ground_size Default `10000`. The width of the plane representing the ground.
 #'@param camera_location Default `NULL`. Custom position of the camera. The `FOV`, `width`, and `height` arguments will still
 #'be derived from the rgl window.

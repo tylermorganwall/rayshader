@@ -47,8 +47,7 @@ plot_3d(
   verbose = FALSE,
   plot_new = TRUE,
   close_previous = TRUE,
-  clear_previous = TRUE,
-  ...
+  clear_previous = TRUE
 )
 }
 \arguments{
@@ -74,7 +73,7 @@ of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
 \item{shadowdepth}{Default `auto`, which sets it to `soliddepth - soliddepth/10`. Depth of the shadow layer.}
 
 \item{shadowcolor}{Default `auto`. Color of the shadow, automatically computed as `shadow_darkness`
-the luminance of the `background` color in the CIELab colorspace if not specified.}
+the luminance of the `background` color in the CIELuv colorspace if not specified.}
 
 \item{shadow_darkness}{Default `0.5`. Darkness of the shadow, if `shadowcolor = "auto"`.}
 
@@ -160,8 +159,6 @@ the data will be plotted in the same window.}
 old windows will be kept open.}
 
 \item{clear_previous}{Default `TRUE`. Clears the previously open `rgl` window if `plot_new = FALSE`.}
-
-\item{...}{Additional arguments to pass to the `rgl::par3d` function.}
 }
 \description{
 Displays the shaded map in 3D with the `rgl` package. 

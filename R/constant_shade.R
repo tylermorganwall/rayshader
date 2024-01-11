@@ -41,7 +41,7 @@
 #'  plot_map()
 #'}
 constant_shade = function(heightmap, color = "white", alpha = 1) {
-  return_array = array(alpha, dim = c(nrow(heightmap),ncol(heightmap),4))
+  return_array = array(alpha, dim = c(ncol(heightmap),nrow(heightmap),4))
   const_col = convert_color(color)
   return_array[,,1] = const_col[1]
   return_array[,,2] = const_col[2]

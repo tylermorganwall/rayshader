@@ -11,6 +11,10 @@
 #'overlay automatically.
 #'@param width Default `NA`. Width of the resulting overlay. Default the same dimensions as height map.
 #'@param height Default `NA`. Width of the resulting overlay. Default the same dimensions as height map.
+#'@param resolution_multiply Default `1`. If passing in `heightmap` instead of width/height, amount to 
+#'increase the resolution of the overlay, which should make lines/polygons/points finer. 
+#'Should be combined with `add_overlay(rescale_original = TRUE)` to ensure those added details are captured
+#'in the final map.
 #'@param color Default `black`. Color of the points.
 #'@param size Default `1`. Point size.
 #'@param pch Default `20`, solid. Point symbol. 
@@ -39,7 +43,8 @@
 #'    plot_map()
 #'}
 generate_point_overlay = function(geometry, extent, heightmap = NULL,
-                                  width=NA, height=NA, pch = 20,  
+                                  width=NA, height=NA, resolution_multiply = 1,
+                                  pch = 20,  
                                   color = "black", size = 1, offset = c(0,0), data_column_width = NULL) {
   if(!(length(find.package("sf", quiet = TRUE)) > 0)) {
     stop("{sf} package required for generate_line_overlay()")
@@ -59,11 +64,14 @@ generate_point_overlay = function(geometry, extent, heightmap = NULL,
   sf_point_cropped = base::suppressMessages(base::suppressWarnings(sf::st_crop(geometry, extent)))
   
   if(is.na(height)) {
-    height  = ncol(heightmap)
+    height = ncol(heightmap)
   }
   if(is.na(width)) {
     width  = nrow(heightmap)
   }
+  height = height * resolution_multiply
+  width = width * resolution_multiply
+  
   if(!is.null(data_column_width)) {
     if(data_column_width %in% colnames(sf_point_cropped)) {
       widthvals = sf_point_cropped[[data_column_width]] / max(sf_point_cropped[[data_column_width]],na.rm = TRUE) * size

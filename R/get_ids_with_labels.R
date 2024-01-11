@@ -46,6 +46,7 @@ get_ids_with_labels = function(typeval = NULL) {
     material_properties[[i]]$obj_ambient = NA_character_
     material_properties[[i]]$obj_specular = NA_character_
     material_properties[[i]]$obj_emission = NA_character_
+    material_properties[[i]]$shininess = NA
     
     
     
@@ -56,7 +57,7 @@ get_ids_with_labels = function(typeval = NULL) {
       if(material_type[i] %in% c("floating_overlay", "floating_overlay_tris")) {
         material_properties[[i]]$layer_texture_file = material_type_single$texture
       } 
-      if(material_type[i] == "base") {
+      if(material_type[i] == "base" || material_type[i] == "basebottom") {
         material_properties[[i]]$base_color = material_type_single$color
       } 
       if(material_type[i] == "water") {
@@ -98,6 +99,7 @@ get_ids_with_labels = function(typeval = NULL) {
         material_properties[[i]]$tricolor = material_type_single$color
         material_properties[[i]]$polygon_alpha = material_type_single$alpha
         material_properties[[i]]$lit = material_type_single$lit
+        material_properties[[i]]$shininess  = material_type_single$shininess
       }
       if(material_type[i] %in% c("base_soil1", "base_soil2")) {
         material_properties[[i]]$soil_texture = material_type_single$texture
@@ -114,6 +116,7 @@ get_ids_with_labels = function(typeval = NULL) {
         material_properties[[i]]$obj_specular = material_type_single$specular
         material_properties[[i]]$obj_emission = material_type_single$emission
         material_properties[[i]]$lit          = material_type_single$lit
+        material_properties[[i]]$shininess    = material_type_single$shininess
         
       }
     } 

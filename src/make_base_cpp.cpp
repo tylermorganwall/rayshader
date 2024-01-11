@@ -366,7 +366,14 @@ List make_waterlines_cpp(NumericMatrix& heightmap,
           drawing = false;
           if((heightmap(j,i) > waterdepth || i == cols-1 ) && !na_matrix(j,i)) {
             if(i != cols-1) {
-              endcoord = -(double)i - (waterdepth - heightmap(j,i-1))/(heightmap(j,i)-heightmap(j,i-1));
+              double diff = heightmap(j,i)-heightmap(j,i-1);
+              double adjustment_factor;
+              if(diff == 0) {
+                adjustment_factor = 0;
+              } else {
+                adjustment_factor = (waterdepth - heightmap(j,i-1))/diff;
+              }
+              endcoord = -(double)i - adjustment_factor;
             } else {
               endcoord = -cols;
             }
@@ -381,10 +388,19 @@ List make_waterlines_cpp(NumericMatrix& heightmap,
         }
       }
       if(!drawing && (j == 0 || j == rows - 1)) {
-        if((heightmap(j,i) < waterdepth) || (na_matrix(j,i-offsetside) && heightmap(j,i+offsetside2) < waterdepth)) {
+        if(((heightmap(j,i) < waterdepth) || 
+           (na_matrix(j,i-offsetside) && heightmap(j,i+offsetside2) < waterdepth)) &&
+           ((j == 0 && !na_matrix(1, i)) || (j == rows - 1 && !na_matrix(rows - 2, i)))) {
           if(!na_matrix(j,i-offsetside)) {
             if(i != 0) {
-              startcoord = ((double)i-1) + (waterdepth - heightmap(j,i-1))/(heightmap(j,i)-heightmap(j,i-1));
+              double diff = heightmap(j,i)-heightmap(j,i-1);
+              double adjustment_factor;
+              if(diff == 0) {
+                adjustment_factor = 0;
+              } else {
+                adjustment_factor = (waterdepth - heightmap(j,i-1))/diff;
+              }
+              startcoord = ((double)i-1) + adjustment_factor;
             } else {
               startcoord = 0;
             }
@@ -476,7 +492,14 @@ List make_waterlines_cpp(NumericMatrix& heightmap,
           drawing = false;
           if((heightmap(i,j)  > waterdepth || i == rows-1) && !na_matrix(i,j)) {
             if(i != rows-1) {
-              endcoord = (double)i + (waterdepth - heightmap(i-1,j))/(heightmap(i,j)-heightmap(i-1,j));
+              double diff = heightmap(i,j)-heightmap(i-1,j);
+              double adjustment_factor;
+              if(diff == 0) {
+                adjustment_factor = 0;
+              } else {
+                adjustment_factor = (waterdepth - heightmap(i-1,j))/diff;
+              }
+              endcoord = (double)i + adjustment_factor;
             } else {
               endcoord = rows;
             }
@@ -491,10 +514,19 @@ List make_waterlines_cpp(NumericMatrix& heightmap,
         }
       }
       if(!drawing && (j == 0 || j == cols - 1)) {
-        if((heightmap(i,j) < waterdepth || (na_matrix(i-offsetside,j) && heightmap(i+offsetside2,j) < waterdepth))) {
+        if((heightmap(i,j) < waterdepth || 
+           (na_matrix(i - offsetside,j) && heightmap(i + offsetside2,j) < waterdepth)) &&
+           ((j == 0 && !na_matrix(i, 1)) || (j == cols - 1 && !na_matrix(i, cols - 2)))) {
           if(!na_matrix(i-offsetside,j)) {
             if(i != 0) {
-              startcoord = ((double)i-1) + (waterdepth - heightmap(i-1,j))/(heightmap(i,j)-heightmap(i-1,j));
+              double diff = heightmap(i,j)-heightmap(i-1,j);
+              double adjustment_factor;
+              if(diff == 0) {
+                adjustment_factor = 0;
+              } else {
+                adjustment_factor = (waterdepth - heightmap(i-1,j))/diff;
+              }
+              startcoord = ((double)i-1) + adjustment_factor;
             } else {
               startcoord = 0;
             }
@@ -539,8 +571,8 @@ List make_waterlines_cpp(NumericMatrix& heightmap,
         //The matrix is not NA in the next entry AND
         //the current entry is not NA AND
         //the left OR right OR left front OR right front is NA
-        if((heightmap(i,j) < waterdepth || (heightmap(i,j) >= waterdepth && heightmap(i+offsetside2,j) < waterdepth)) &&
-           !na_matrix(i+offsetside2,j) &&
+        if((heightmap(i,j) < waterdepth || (heightmap(i,j) >= waterdepth && heightmap(i+offsetside2,j) < waterdepth) ) && //Check depths
+           !na_matrix(i+offsetside2,j) && //Not NA in the next entry
            (!na_matrix(i,j) && (na_matrix(i,j-offset) || na_matrix(i,j+offset2) || na_matrix(i+offsetside2,j-offset) || na_matrix(i+offsetside2,j+offset2)))) {
           if(i != 0) {
             adjust = (waterdepth - heightmap(i-1,j))/(heightmap(i,j)-heightmap(i-1,j));

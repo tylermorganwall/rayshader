@@ -9,12 +9,12 @@
 generate_surface = function(heightmap, zscale) {
   nr = nrow(heightmap)
   nc = ncol(heightmap)
-  vertex_matrix_row = matrix(seq_len(nr), 
+  vertex_matrix_row = matrix(seq_len(nr)-1, 
                              nrow = nr, 
-                             ncol = nc) - nr/2
-  vertex_matrix_col = matrix(seq_len(nc), 
+                             ncol = nc) - (nr-1)/2
+  vertex_matrix_col = matrix(seq_len(nc)-1, 
                              nrow = nr, 
-                             ncol = nc, byrow = TRUE) - nc/2
+                             ncol = nc, byrow = TRUE) - (nc-1)/2
   row_vert = c(vertex_matrix_row)
   col_vert = c(vertex_matrix_col)
   verts = matrix(c(row_vert,c(heightmap)/zscale,col_vert), ncol = 3L)

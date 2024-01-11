@@ -21,7 +21,6 @@ render_snapshot(
   vignette_radius = 1.3,
   instant_capture = interactive(),
   bring_to_front = FALSE,
-  keep_user_par = FALSE,
   webshot = FALSE,
   width = NULL,
   height = NULL,
@@ -86,9 +85,6 @@ control the blurriness of the vignette effect.}
 before taking the snapshot. This can help stop prevent rendering issues when running scripts.}
 
 \item{bring_to_front}{Default `FALSE`. Whether to bring the window to the front when taking the snapshot.}
-
-\item{keep_user_par}{Default `TRUE`. Whether to keep the user's `par()` settings. Set to `FALSE` if you 
-want to set up a multi-pane plot (e.g. set `par(mfrow)`).}
 
 \item{webshot}{Default `FALSE`. Set to `TRUE` to have rgl use the `webshot2` package to take images,
 which can be used when `rgl.useNULL = TRUE`.}
@@ -192,8 +188,8 @@ render_snapshot(software_render = TRUE)
 if(run_documentation()) {
 #Now with shadow mapped shadows, calculated in rayvertex
 render_snapshot(rayvertex_lighting = TRUE, 
-               rayvertex_lights = rayvertex::directional_light(intensity = 2.5, 
-                                                               direction = c(-1, 0.8, -1)), 
+               rayvertex_lights = rayvertex::directional_light(intensity = 1.2, 
+                                                               direction = c(-1, 1, -1)), 
                rayvertex_shadow_map = TRUE, software_render = TRUE)
 }
 }

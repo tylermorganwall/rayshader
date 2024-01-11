@@ -21,6 +21,7 @@ render_polygons(
   light_altitude = c(45, 30),
   light_direction = c(315, 135),
   light_intensity = 0.3,
+  light_relative = FALSE,
   clear_previous = FALSE
 )
 }
@@ -72,6 +73,9 @@ the holes in the polygon. See the `earcut` function in the `decido` package for 
 
 \item{light_intensity}{Default `0.3`. Intensity of the specular highlight on the polygons.}
 
+\item{light_relative}{Default `FALSE`. Whether the light direction should be taken relative to the camera,
+or absolute.}
+
 \item{clear_previous}{Default `FALSE`. If `TRUE`, it will clear all existing polygons.}
 }
 \description{
@@ -94,7 +98,7 @@ mont_county_buff = sf::st_simplify(sf::st_buffer(monterey_counties_sf,-0.003), d
 
 render_polygons(mont_county_buff, 
                 extent = attr(montereybay,"extent"), top = 10,
-                parallel = TRUE)
+                parallel = FALSE)
 render_snapshot()
 }
 if(run_documentation()) {
@@ -103,7 +107,7 @@ if(run_documentation()) {
 render_camera(theta=-60,  phi=20, zoom = 0.85, fov=0)
 render_polygons(mont_county_buff, 
                 extent = attr(montereybay,"extent"), bottom = 190, top=200,
-                parallel=TRUE,clear_previous=TRUE)
+                parallel=FALSE,clear_previous=TRUE)
 render_snapshot()
 }
 if(run_documentation()) {
@@ -113,7 +117,7 @@ render_camera(theta=-60,  phi=60, zoom = 0.85, fov=30)
 render_polygons(mont_county_buff, 
                 extent = attr(montereybay, "extent"), data_column_top = "ALAND",
                 scale_data = 300/(2.6E9), color = "chartreuse4",
-                parallel = TRUE, clear_previous = TRUE)
+                clear_previous = TRUE)
 render_snapshot()      
 }  
 if(run_documentation()) {

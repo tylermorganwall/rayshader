@@ -4,7 +4,7 @@
 \alias{darken_color}
 \title{Darken Color}
 \usage{
-darken_color(col, darken = 0.5)
+darken_color(col, darken = 0.3)
 }
 \arguments{
 \item{col}{RGB colors}

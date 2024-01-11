@@ -157,7 +157,7 @@ render_path(clear_previous=TRUE)
 t = seq(0,2*pi,length.out=1000)
 circle_coords_lat = moss_landing_coord[1] + 0.5 * t/8 * sin(t*6)
 circle_coords_long = moss_landing_coord[2] + 0.5 * t/8 *  cos(t*6)
-render_path(extent = attr(montereybay,"extent"), heightmap = montereybay,
+render_path(extent = attr(montereybay,"extent"), heightmap = montereybay, 
            lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), 
            zscale=50, color="red", antialias=TRUE,offset=100, linewidth=5)
 render_camera(theta = 160, phi=33, zoom=0.4, fov=55)
@@ -165,8 +165,10 @@ render_snapshot()
 }
 
 if(run_documentation()) {
-#And all of these work with `render_highquality()`
+#And all of these work with `render_highquality()`. Here, I set `use_extruded_paths = TRUE`
+#to get thick continuous paths.
 render_highquality(clamp_value=10, line_radius=3, min_variance = 0,
+                  use_extruded_paths = TRUE,
                   sample_method = "sobol_blue", samples = 128)
 }
 if(run_documentation()) {
@@ -174,7 +176,7 @@ if(run_documentation()) {
 #`point_material_args` arguments in `render_highquality()`
 render_highquality(clamp_value=10, line_radius=3, min_variance = 0,
                   sample_method = "sobol_blue", samples = 128,
-                  path_material = rayrender::glossy, 
+                  path_material = rayrender::glossy,  use_extruded_paths = TRUE,
                   path_material_args = list(gloss = 0.5, reflectance = 0.2))
 }
 

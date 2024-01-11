@@ -10,6 +10,10 @@
 #'this will automatically generate `nlevels` breaks between `levels[1]` and `levels[2]`.
 #'@param width Default `NA`. Width of the resulting overlay. Default the same dimensions as heightmap.
 #'@param height Default `NA`. Width of the resulting overlay. Default the same dimensions as heightmap.
+#'@param resolution_multiply Default `1`. If passing in `heightmap` instead of width/height, amount to 
+#'increase the resolution of the overlay, which should make lines/polygons finer. 
+#'Should be combined with `add_overlay(rescale_original = TRUE)` to ensure those added details are captured
+#'in the final map.
 #'@param color Default `black`. Color.
 #'@param linewidth Default `1`. Line width.
 #'@return Semi-transparent overlay with contours.
@@ -73,7 +77,7 @@
 #'  plot_map()
 #'}
 generate_contour_overlay = function(heightmap, levels=NA, nlevels=NA, 
-                                    zscale = 1, width=NA, height=NA, 
+                                    zscale = 1, width=NA, height=NA, resolution_multiply = 1,
                                     color = "black", linewidth = 1) {
   if(!(length(find.package("sf", quiet = TRUE)) > 0)) {
     stop("`sf` package required for generate_contour_overlay()")
@@ -100,12 +104,15 @@ generate_contour_overlay = function(heightmap, levels=NA, nlevels=NA,
                                  levels=levels)
   contours = isoband::iso_to_sfg(isolineval)
   sf_contours = sf::st_sf(level = names(contours), geometry = sf::st_sfc(contours))
-  if(is.na(width)) {
-    width  = ncol(heightmap)
-  }
   if(is.na(height)) {
-    height  = nrow(heightmap)
+    height = ncol(heightmap)
   }
+  if(is.na(width)) {
+    width  = nrow(heightmap)
+  }
+  height = height * resolution_multiply
+  width = width * resolution_multiply
+  
   tempoverlay = tempfile(fileext = ".png")
   grDevices::png(filename = tempoverlay, width = width, height = height, units="px",bg = "transparent")
   graphics::par(mar = c(0,0,0,0))

@@ -15,10 +15,16 @@ make_waterlines = function(heightmap,waterdepth=0,linecolor="grey40",zscale=1,al
   heightmap = heightmap/zscale
   na_matrix = is.na(heightmap)
   heightlist = make_waterlines_cpp(heightmap,na_matrix,waterdepth/zscale)
+  nr = nrow(heightmap)
+  nc = ncol(heightmap)
   if(length(heightlist) > 0) {
     segmentlist = do.call(rbind,heightlist)
-    segmentlist[,1] = segmentlist[,1] - nrow(heightmap)/2
-    segmentlist[,3] = -(segmentlist[,3] + ncol(heightmap)/2)
+    segmentlist[,3] = -segmentlist[,3]
+    segmentlist[,1] = segmentlist[,1] - 1
+    segmentlist[,3] = segmentlist[,3] - 1
+    
+    segmentlist[,1] = segmentlist[,1] - (nr-1)/2
+    segmentlist[,3] = segmentlist[,3] - (nc-1)/2
     rgl::segments3d(segmentlist,color=linecolor,lwd=linewidth,alpha=alpha,depth_mask=TRUE, 
                     line_antialias=antialias, depth_test="lequal",tag = "waterlines",
                     lit = FALSE)

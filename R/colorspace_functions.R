@@ -7,14 +7,14 @@
 #'@keywords internal
 #'@examples
 #'#None
-darken_color = function(col, darken = 0.5) {
+darken_color = function(col, darken = 0.3) {
   as.numeric(
     grDevices::convertColor(
       as.numeric(
         grDevices::convertColor(
           convert_color(col),
-          from = "sRGB", to = "Lab")
-        ) * c(darken,1,1),
-      from = "Lab", to = "sRGB")
-    )
+        from = "sRGB", to = "Luv")
+      ) * c(darken,1,1),
+    from = "Luv", to = "sRGB")
+  )
 }

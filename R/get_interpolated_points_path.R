@@ -6,8 +6,8 @@
 #' 
 #' @keywords internal
 get_interpolated_points_path = function(points, n = 360, use_altitude = FALSE) {
-  points_lead = points[-1,]
-  points_lag = points[-nrow(points),]
+  points_lead = points[-1,,drop=FALSE]
+  points_lag = points[-nrow(points),,drop=FALSE]
   if(use_altitude) {
     path_distance = c(0,cumsum(sqrt((points_lead[,1] - points_lag[,1])^2 +
                                     (points_lead[,2] - points_lag[,2])^2 +

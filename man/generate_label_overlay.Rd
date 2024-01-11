@@ -12,6 +12,7 @@ generate_label_overlay(
   heightmap = NULL,
   width = NA,
   height = NA,
+  resolution_multiply = 1,
   text_size = 1,
   color = "black",
   font = 1,
@@ -46,6 +47,11 @@ overlay automatically.}
 \item{width}{Default `NA`. Width of the resulting overlay. Default the same dimensions as height map.}
 
 \item{height}{Default `NA`. Width of the resulting overlay. Default the same dimensions as height map.}
+
+\item{resolution_multiply}{Default `1`. If passing in `heightmap` instead of width/height, amount to 
+increase the resolution of the overlay, which should make lines/polygons/text finer. 
+Should be combined with `add_overlay(rescale_original = TRUE)` to ensure those added details are captured
+in the final map.}
 
 \item{text_size}{Default `1`. Text size.}
 

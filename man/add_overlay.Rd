@@ -5,8 +5,8 @@
 \title{Add Overlay}
 \usage{
 add_overlay(
-  hillshade,
-  overlay,
+  hillshade = NULL,
+  overlay = NULL,
   alphalayer = 1,
   alphacolor = NULL,
   alphamethod = "max",

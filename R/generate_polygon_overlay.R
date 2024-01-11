@@ -11,6 +11,10 @@
 #'overlay automatically.
 #'@param width Default `NA`. Width of the resulting overlay. Default the same dimensions as height map.
 #'@param height Default `NA`. Width of the resulting overlay. Default the same dimensions as height map.
+#'@param resolution_multiply Default `1`. If passing in `heightmap` instead of width/height, amount to 
+#'increase the resolution of the overlay, which should make lines/polygons/text finer. 
+#'Should be combined with `add_overlay(rescale_original = TRUE)` to ensure those added details are captured
+#'in the final map.
 #'@param linecolor Default `black`. Color of the lines.
 #'@param palette Default `black`. Single color, named vector color palette, or palette function. 
 #'If this is a named vector and `data_column_fill` is not `NULL`, 
@@ -67,7 +71,8 @@
 #'  plot_map()
 #'}
 generate_polygon_overlay = function(geometry, extent, heightmap = NULL, 
-                                    width=NA, height=NA, offset = c(0,0), data_column_fill = NULL, 
+                                    width=NA, height=NA, resolution_multiply = 1,
+                                    offset = c(0,0), data_column_fill = NULL, 
                                     linecolor = "black", palette = "white", linewidth = 1) {
   if(!(length(find.package("sf", quiet = TRUE)) > 0)) {
     stop("{sf} package required for generate_line_overlay()")
@@ -81,14 +86,20 @@ generate_polygon_overlay = function(geometry, extent, heightmap = NULL,
   if(!inherits(geometry,"sf")) {
     stop("geometry must be {sf} object")
   }
+  if(is.numeric(extent)) {
+    extent = raster::extent(extent)
+  }
   sf_polygons_cropped = base::suppressMessages(base::suppressWarnings(sf::st_crop(geometry, extent)))
   
   if(is.na(height)) {
-    height  = ncol(heightmap)
+    height = ncol(heightmap)
   }
   if(is.na(width)) {
     width  = nrow(heightmap)
   }
+  height = height * resolution_multiply
+  width = width * resolution_multiply
+  
   if (is.function(palette)) {
     palette = palette(nrow(sf_polygons_cropped))
   }

@@ -1,7 +1,7 @@
 Package: rayshader
 Type: Package
 Title: Create Maps and Visualize Data in 2D and 3D
-Version: 0.36.1
+Version: 0.37.0
 Date: 2023-08-01
 Author: Tyler Morgan-Wall
 Maintainer: Tyler Morgan-Wall <tylermw@gmail.com>
@@ -43,7 +43,9 @@ Suggests:
     lidR,
     elevatr,
     gridExtra,
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    osmdata,
+    raybevel
 LinkingTo: Rcpp, progress, RcppArmadillo
 RoxygenNote: 7.2.3
 URL: https://www.rayshader.com,
@@ -52,5 +54,6 @@ BugReports: https://github.com/tylermorganwall/rayshader/issues
 Remotes: tylermorganwall/rayimage,
          tylermorganwall/rayrender,
          tylermorganwall/rayvertex,
+         tylermorganwall/raybevel
          dmurdoch/rgl
 Config/testthat/edition: 3

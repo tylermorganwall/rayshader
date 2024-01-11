@@ -34,6 +34,8 @@
 #' @param light_altitude Default `c(45, 60)`. Degree(s) from the horizon from which to light the polygons.
 #' @param light_direction Default `c(45, 60)`. Degree(s) from north from which to light the polygons.
 #' @param light_intensity Default `0.3`. Intensity of the specular highlight on the polygons.
+#' @param light_relative Default `FALSE`. Whether the light direction should be taken relative to the camera,
+#' or absolute.
 #' @param clear_previous Default `FALSE`. If `TRUE`, it will clear all existing polygons.
 #' @export
 #' @examples
@@ -52,7 +54,7 @@
 #' 
 #' render_polygons(mont_county_buff, 
 #'                 extent = attr(montereybay,"extent"), top = 10,
-#'                 parallel = TRUE)
+#'                 parallel = FALSE)
 #' render_snapshot()
 #' }
 #' if(run_documentation()) {
@@ -61,7 +63,7 @@
 #' render_camera(theta=-60,  phi=20, zoom = 0.85, fov=0)
 #' render_polygons(mont_county_buff, 
 #'                 extent = attr(montereybay,"extent"), bottom = 190, top=200,
-#'                 parallel=TRUE,clear_previous=TRUE)
+#'                 parallel=FALSE,clear_previous=TRUE)
 #' render_snapshot()
 #' }
 #' if(run_documentation()) {
@@ -71,7 +73,7 @@
 #' render_polygons(mont_county_buff, 
 #'                 extent = attr(montereybay, "extent"), data_column_top = "ALAND",
 #'                 scale_data = 300/(2.6E9), color = "chartreuse4",
-#'                 parallel = TRUE, clear_previous = TRUE)
+#'                 clear_previous = TRUE)
 #' render_snapshot()      
 #' }  
 #' if(run_documentation()) {
@@ -84,7 +86,8 @@ render_polygons = function(polygon, extent,  color = "red", top = 1, bottom = NA
                            heightmap = NULL, scale_data = 1, parallel = FALSE,
                            holes = 0, alpha = 1, lit = TRUE, 
                            light_altitude = c(45,30), light_direction = c(315,135), 
-                           light_intensity = 0.3, clear_previous = FALSE) {
+                           light_intensity = 0.3, light_relative = FALSE,
+                           clear_previous = FALSE) {
   if(rgl::cur3d() == 0) {
     stop("No rgl window currently open.")
   }
@@ -111,7 +114,7 @@ render_polygons = function(polygon, extent,  color = "red", top = 1, bottom = NA
   vertex_list = list()
   if(!parallel) {
     if(inherits(polygon,"data.frame")) {
-      for(i in 1:nrow(polygon)) {
+      for(i in seq_len(nrow(polygon))) {
         if(inherits(polygon[i,],"SpatialPolygonsDataFrame") || 
            inherits(polygon[i,],"SpatialPolygons") ||
            inherits(polygon[i,],"sf")) {
@@ -135,7 +138,7 @@ render_polygons = function(polygon, extent,  color = "red", top = 1, bottom = NA
     cl = parallel::makeCluster(numbercores)
     doParallel::registerDoParallel(cl, cores = numbercores)
     vertex_list = tryCatch({
-      foreach::foreach(i=1:nrow(polygon), .packages = c("rayrender","sf")) %dopar% {
+      foreach::foreach(i=seq_len(nrow(polygon)), .packages = c("rayrender","sf")) %dopar% {
         if(inherits(polygon[i,],"SpatialPolygonsDataFrame") || 
            inherits(polygon[i,],"SpatialPolygons") ||
            inherits(polygon[i,],"sf")) {
@@ -176,16 +179,16 @@ render_polygons = function(polygon, extent,  color = "red", top = 1, bottom = NA
   }
   if(lit) {
     existing_lights = rgl::ids3d(type = "lights")
-    for(i in 1:nrow(existing_lights)) {
+    for(i in seq_len(nrow(existing_lights))) {
       rgl::pop3d(type="lights")
     }
     if(length(light_altitude) < length(light_direction)) {
       stop("light_altitude and light_direction must be same length")
     }
-    for(i in 1:length(light_direction)) {
+    for(i in seq_len(length(light_direction))) {
       rgl::light3d(theta = -light_direction[i]+180, phi = light_altitude[i], 
-                     specular = convert_color(rep(light_intensity,3), as_hex = TRUE),
-                     viewpoint.rel = FALSE)
+                   specular = convert_color(rep(light_intensity,3), as_hex = TRUE),
+                   viewpoint.rel = light_relative)
     }
   } 
 }

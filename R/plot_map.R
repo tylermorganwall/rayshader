@@ -17,8 +17,6 @@
 #'@param title_bar_color Default `NULL`. If a color, this will create a colored bar under the title.
 #'@param title_bar_alpha Default `0.5`. Transparency of the title bar.
 #'@param title_position Default `northwest`. Position of the title.
-#'@param keep_user_par Default `TRUE`. Whether to keep the user's `par()` settings. Set to `FALSE` if you 
-#'want to set up a multi-pane plot (e.g. set `par(mfrow)`).
 #'@param ... Additional arguments to pass to the `raster::plotRGB` function that displays the map.
 #'@export
 #'@examples
@@ -52,11 +50,7 @@ plot_map = function(hillshade, rotate=0, asp = 1,
                     title_color = "black", title_size = 30,
                     title_font = "sans", title_style = "normal", 
                     title_bar_color = NULL, title_bar_alpha = 0.5, title_position = "northwest",
-                    keep_user_par = FALSE, ...) {
-  if(keep_user_par) {
-    old.par = graphics::par(no.readonly = TRUE)
-    on.exit(graphics::par(old.par))
-  }
+                    ...) {
   has_title = !is.na(title_text)
   if(!(length(find.package("rayimage", quiet = TRUE)) > 0) && has_title) {
     warning("`rayimage` package required for title text")

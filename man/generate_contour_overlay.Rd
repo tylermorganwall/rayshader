@@ -11,6 +11,7 @@ generate_contour_overlay(
   zscale = 1,
   width = NA,
   height = NA,
+  resolution_multiply = 1,
   color = "black",
   linewidth = 1
 )
@@ -29,6 +30,11 @@ of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
 \item{width}{Default `NA`. Width of the resulting overlay. Default the same dimensions as heightmap.}
 
 \item{height}{Default `NA`. Width of the resulting overlay. Default the same dimensions as heightmap.}
+
+\item{resolution_multiply}{Default `1`. If passing in `heightmap` instead of width/height, amount to 
+increase the resolution of the overlay, which should make lines/polygons finer. 
+Should be combined with `add_overlay(rescale_original = TRUE)` to ensure those added details are captured
+in the final map.}
 
 \item{color}{Default `black`. Color.}
 

@@ -20,6 +20,9 @@ generate_waterline_overlay(
   evenly_spaced = FALSE,
   zscale = 1,
   cutoff = 0.999,
+  width = NA,
+  height = NA,
+  resolution_multiply = 1,
   min_area = length(heightmap)/400,
   max_height = NULL,
   return_distance_matrix = FALSE
@@ -59,6 +62,15 @@ waterlines fade entirely, when `fade = TRUE`.}
 of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.}
 
 \item{cutoff}{Default `0.999`. Arguments passed to `detect_water()`. Ignored if `boolean = TRUE`.The lower limit of the z-component of the unit normal vector to be classified as water.}
+
+\item{width}{Default `NA`. Width of the resulting image array. Default the same dimensions as height map.}
+
+\item{height}{Default `NA`. Width of the resulting image array. Default the same dimensions as height map.}
+
+\item{resolution_multiply}{Default `1`. If passing in `heightmap` instead of width/height, amount to 
+increase the resolution of the overlay, which should make lines/polygons/text finer. 
+Should be combined with `add_overlay(rescale_original = TRUE)` to ensure those added details are captured
+in the final map.}
 
 \item{min_area}{Default `length(heightmap)/400`. Arguments passed to `detect_water()`. Ignored if `boolean = TRUE`. Minimum area (in units of the height matrix x and y spacing) to be considered a body of water.}
 

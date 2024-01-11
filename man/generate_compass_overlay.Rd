@@ -13,6 +13,7 @@ generate_compass_overlay(
   heightmap = NULL,
   width = NA,
   height = NA,
+  resolution_multiply = 1,
   color1 = "white",
   color2 = "black",
   text_color = "black",
@@ -44,6 +45,11 @@ RGB image array automatically.}
 \item{width}{Default `NA`. Width of the resulting image array. Default the same dimensions as height map.}
 
 \item{height}{Default `NA`. Width of the resulting image array. Default the same dimensions as height map.}
+
+\item{resolution_multiply}{Default `1`. If passing in `heightmap` instead of width/height, amount to 
+increase the resolution of the overlay, which should make lines/polygons finer. 
+Should be combined with `add_overlay(rescale_original = TRUE)` to ensure those added details are captured
+in the final map.}
 
 \item{color1}{Default `white`. Primary color of the compass.}
 

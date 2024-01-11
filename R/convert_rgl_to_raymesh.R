@@ -24,7 +24,7 @@ convert_rgl_to_raymesh = function(save_shadow = TRUE) {
   
   vertex_info = get_ids_with_labels()
   basic_load_mesh = function(row, texture_loc, 
-                             color = "white", alpha=1, obj = FALSE, specular = "white",
+                             color = "white", alpha=1, obj = FALSE, specular = "white",shininess = 50,
                              lit = FALSE, quads = FALSE) {
     id = as.character(vertex_info$id[row])
     
@@ -69,6 +69,19 @@ convert_rgl_to_raymesh = function(save_shadow = TRUE) {
         tex_indices = NULL
       }
     }
+    #Get type
+    if(is.na(lit)) {
+      lit = FALSE
+    }
+    if(lit) {
+      if(shininess < 10) {
+        type_val = "diffuse"
+      } else {
+        type_val = "phong"
+      }
+    } else {
+      type_val = "color"
+    }
     
     texture_loc = ifelse(!is.na(texture_loc), texture_loc, "")
     return(rayvertex::construct_mesh(indices = indices,
@@ -79,13 +92,14 @@ convert_rgl_to_raymesh = function(save_shadow = TRUE) {
                                      norm_indices = norm_indices,
                                      material = rayvertex::material_list(texture_location = texture_loc, 
                                                                          diffuse = color,
-                                                                         type = ifelse(lit, "diffuse", "color"),
+                                                                         type = type_val,
+                                                                         shininess = shininess,
                                                                          dissolve = alpha,
                                                                          specular = specular)))
   }
   for(row in 1:nrow(vertex_info)) {
     if(!is.na(vertex_info$lit[row])) {
-      lit_val = vertex_info$lit[row]
+      lit_val = unlist(vertex_info$lit[row])
     } else {
       lit_val = FALSE
     }
@@ -126,45 +140,16 @@ convert_rgl_to_raymesh = function(save_shadow = TRUE) {
                                                            material = rayvertex::material_list(texture_location = texture_loc, 
                                                                                                type = "color"))
     } else if(vertex_info$tag[row] == "surface_tris") {
-      final_scene[[num_elems]] = basic_load_mesh(row, texture_loc = vertex_info$texture_file[[row]])
+      final_scene[[num_elems]] = basic_load_mesh(row, 
+                                                 texture_loc = vertex_info$texture_file[[row]])
     } else if (vertex_info$tag[row] == "basebottom") {
-      indices = matrix(rgl::rgl.attrib(vertex_info$id[row], "indices"),
-                       ncol = 3L, byrow = TRUE) - 1
-      vertices = rgl.attrib(vertex_info$id[row], "vertices")
-      textures = rgl.attrib(vertex_info$id[row], "texcoords")
-      dims = rgl::rgl.attrib(vertex_info$id[row], "dim")
-      vertices_y = vertices[,2]
-      nx = dims[1]
-      nz = dims[2] 
-      indices = rep(0, 6 * (nz - 1) * (nx - 1))
-      counter = 0
-      na_counter = 0
       
-      for(i in seq_len(nz)[-nz]) {
-        for(j in seq_len(nx)[-nx]) {
-          if(!is.na(vertices_y[(i-1)*nx + j]) && !is.na(vertices_y[(i+1-1)*nx + j]) && 
-             !is.na(vertices_y[(i-1)*nx + j+1]) && !is.na(vertices_y[(i+1-1)*nx + j+1]))  {
-            cindices = (i-1)*nx + c(j, j + nx, j + 1, j + nx, j + nx + 1, j + 1)
-            indices[(1:6 + 6*counter)] = cindices
-            counter = counter + 1
-          } else {
-            na_counter = na_counter + 2
-          }
-        }
-      }
-      indices = indices - 1
-      vertices_y[is.na(vertices_y)] = mean(vertices_y)
-      
-      indices = matrix(indices, ncol=3, byrow=TRUE)
-      indices = indices[1:(nrow(indices)-na_counter),]
       texture_loc = vertex_info$texture_file[[row]]
       texture_loc = ifelse(!is.na(texture_loc), texture_loc, "")
-      final_scene[[num_elems]] = rayvertex::construct_mesh(indices = indices,
-                                                           vertices = vertices,
-                                                           texcoords = textures,
-                                                           tex_indices = indices,
-                                                           material = rayvertex::material_list(texture_location = texture_loc, 
-                                                                                               type = "color"))
+      final_scene[[num_elems]] = basic_load_mesh(row, 
+                                                 texture_loc = texture_loc,
+                                                 lit = lit_val,
+                                                 color = vertex_info$base_color[[row]])
     } else if (vertex_info$tag[row] == "base") {
       final_scene[[num_elems]] = basic_load_mesh(row, 
                                                  lit = lit_val,
@@ -225,6 +210,7 @@ convert_rgl_to_raymesh = function(save_shadow = TRUE) {
     } else if (vertex_info$tag[row] == "polygon3d") {
       final_scene[[num_elems]] = basic_load_mesh(row, texture_loc = NA,
                                                  lit = lit_val,
+                                                 shininess = vertex_info$shininess[[row]],
                                                  color =  vertex_info$tricolor[[row]])
     } else if(vertex_info$tag[row] == "shadow" && save_shadow) {
       final_scene[[num_elems]] = basic_load_mesh(row,
@@ -245,12 +231,14 @@ convert_rgl_to_raymesh = function(save_shadow = TRUE) {
       obj_ambient = vertex_info$obj_ambient[[row]]
       obj_specular = vertex_info$obj_specular[[row]]
       obj_emission = vertex_info$obj_emission[[row]]
+      shininess = vertex_info$shininess[[row]]
       tmp_obj = rayvertex::change_material(tmp_obj, 
                                  diffuse = ifelse(is.na(obj_color), NULL, obj_color) ,
                                  dissolve = ifelse(is.na(obj_alpha), NULL, obj_alpha),   
                                  ambient = ifelse(is.na(obj_ambient), NULL, obj_ambient),   
                                  specular = ifelse(is.na(obj_specular),NULL, obj_specular),   
-                                 emission = ifelse(is.na(obj_emission),NULL, obj_emission))
+                                 emission = ifelse(is.na(obj_emission),NULL, obj_emission),
+                                 shininess = ifelse(is.na(shininess), 50, shininess))
       final_scene[[num_elems]] = tmp_obj
       
     }

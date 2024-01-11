@@ -102,6 +102,9 @@ render_camera = function(theta = NULL, phi = NULL, zoom = NULL, fov = NULL,
       } else {
         theta = rotmat[2]
       }
+      if(abs(phi) == 90) {
+        theta = theta - 90
+      }
     }
   }
   rgl::view3d(theta = theta, phi = phi, fov = fov, zoom = zoom)

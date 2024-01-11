@@ -107,7 +107,7 @@
 #'t = seq(0,2*pi,length.out=1000)
 #'circle_coords_lat = moss_landing_coord[1] + 0.5 * t/8 * sin(t*6)
 #'circle_coords_long = moss_landing_coord[2] + 0.5 * t/8 *  cos(t*6)
-#'render_path(extent = attr(montereybay,"extent"), heightmap = montereybay,
+#'render_path(extent = attr(montereybay,"extent"), heightmap = montereybay, 
 #'            lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), 
 #'            zscale=50, color="red", antialias=TRUE,offset=100, linewidth=5)
 #'render_camera(theta = 160, phi=33, zoom=0.4, fov=55)
@@ -115,8 +115,10 @@
 #'}
 #'
 #'if(run_documentation()) {
-#'#And all of these work with `render_highquality()`
+#'#And all of these work with `render_highquality()`. Here, I set `use_extruded_paths = TRUE`
+#'#to get thick continuous paths.
 #'render_highquality(clamp_value=10, line_radius=3, min_variance = 0,
+#'                   use_extruded_paths = TRUE,
 #'                   sample_method = "sobol_blue", samples = 128)
 #'}
 #'if(run_documentation()) {
@@ -124,7 +126,7 @@
 #'#`point_material_args` arguments in `render_highquality()`
 #'render_highquality(clamp_value=10, line_radius=3, min_variance = 0,
 #'                   sample_method = "sobol_blue", samples = 128,
-#'                   path_material = rayrender::glossy, 
+#'                   path_material = rayrender::glossy,  use_extruded_paths = TRUE,
 #'                   path_material_args = list(gloss = 0.5, reflectance = 0.2))
 #'}
 #'
@@ -171,10 +173,11 @@ render_path = function(lat, long = NULL, altitude = NULL, groups = NULL,
                       reorder_merge_tolerance = reorder_merge_tolerance,
                       simplify_tolerance = simplify_tolerance,
                       clear_previous = FALSE, return_coords = TRUE)
-    xyz = do.call(rbind,xyz)
-    xyz = get_interpolated_points_path(xyz, n = resample_n)
+    xyz = lapply(xyz, get_interpolated_points_path, n = resample_n)
+    xyz = do.call("rbind",lapply(xyz, 
+                                 \(x) rbind(x,matrix(NA,ncol=3,nrow=1))))
     if(!return_coords) {
-      rgl::lines3d(xyz[,1] + 0.5,xyz[,2],xyz[,3] + 0.5,
+      rgl::lines3d(xyz,
                    color = color, tag = tag, lwd = linewidth, line_antialias = antialias)
       return(invisible())
     } else {
@@ -246,14 +249,14 @@ render_path = function(lat, long = NULL, altitude = NULL, groups = NULL,
   }
   split_lat = split(lat, groups)
   split_long = split(long, groups)
-  if(is.null(heightmap)) {
-    vertex_info = get_ids_with_labels(typeval = c("surface", "surface_tris"))
-    nrow_map = max(rgl::rgl.attrib(vertex_info$id[1], "vertices")[,1]) - min(rgl::rgl.attrib(vertex_info$id[1], "vertices")[,1])
-    ncol_map = max(rgl::rgl.attrib(vertex_info$id[1], "vertices")[,3]) - min(rgl::rgl.attrib(vertex_info$id[1], "vertices")[,3])
+  
+  if(length(altitude) == length(lat)) {
+    split_altitude = split(altitude, groups)
+    single_altitude = FALSE
   } else {
-    ncol_map = ncol(heightmap)
-    nrow_map = nrow(heightmap)
+    single_altitude = TRUE
   }
+  
   if(!is.null(altitude)) {
     offset = 0
   }
@@ -262,18 +265,20 @@ render_path = function(lat, long = NULL, altitude = NULL, groups = NULL,
   for(group in seq_along(split_lat)) {
     lat = split_lat[[group]]
     long = split_long[[group]]
-    
-    xyz = transform_into_heightmap_coords(extent, heightmap, lat, long, 
+    if(!single_altitude) {
+      altitude = split_altitude[[group]]
+    } 
+    coord_list[[group]] = transform_into_heightmap_coords(extent, heightmap, lat, long, 
                                           altitude, offset, zscale, filter_bounds = FALSE)
-    if(!return_coords) {
-      rgl::lines3d(xyz[,1] + 0.5,xyz[,2],xyz[,3] + 0.5,
-                   color = color, tag = tag, 
-                   lwd = linewidth, line_antialias = antialias)
-    } else {
-      coord_list[[group]] = xyz
-    }
   }
-  if(return_coords) {
+  if(!return_coords) {
+    xyz = do.call("rbind",lapply(coord_list, 
+                                 \(x) rbind(x,matrix(NA,ncol=3,nrow=1))))
+    xyz = xyz[-nrow(xyz),]
+    rgl::lines3d(xyz,
+                 color = color, tag = tag, 
+                 lwd = linewidth, line_antialias = antialias)
+  } else {
     return(coord_list)
   }
 }

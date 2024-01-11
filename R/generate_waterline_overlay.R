@@ -8,6 +8,12 @@
 #'
 #'@param heightmap A two-dimensional matrix, where each entry in the matrix is the elevation at that point. 
 #'If `boolean = TRUE`, this will instead be interpreted as a logical matrix indicating areas of water.
+#'@param width Default `NA`. Width of the resulting image array. Default the same dimensions as height map.
+#'@param height Default `NA`. Width of the resulting image array. Default the same dimensions as height map.
+#'@param resolution_multiply Default `1`. If passing in `heightmap` instead of width/height, amount to 
+#'increase the resolution of the overlay, which should make lines/polygons/text finer. 
+#'Should be combined with `add_overlay(rescale_original = TRUE)` to ensure those added details are captured
+#'in the final map.
 #'@param color Default `white`. Color of the lines.
 #'@param linewidth Default `1`. Line width.
 #'@param boolean Default `FALSE`. If `TRUE`, this is a boolean matrix (0 and 1) indicating contiguous areas in 
@@ -107,6 +113,7 @@ generate_waterline_overlay = function(heightmap, color = "white", linewidth=1, b
                                       fade = TRUE, alpha_dist = max, alpha = 1,
                                       falloff = 1.3, evenly_spaced = FALSE, 
                                       zscale = 1, cutoff = 0.999, 
+                                      width = NA, height = NA, resolution_multiply = 1,
                                       min_area=length(heightmap)/400,
                                       max_height = NULL, return_distance_matrix = FALSE) {
   breaks = breaks + 1
@@ -149,6 +156,8 @@ generate_waterline_overlay = function(heightmap, color = "white", linewidth=1, b
   }
   levels = scales::rescale(levels, to = c(min, max))
   overlay = generate_contour_overlay(water_dist_bool, levels=levels, 
+                                     width=width, height=height, 
+                                     resolution_multiply = resolution_multiply,
                                      color = color, linewidth=linewidth)
   if(fade) {
     alpha_vals = water_dist_bool

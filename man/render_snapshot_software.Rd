@@ -2,7 +2,7 @@
 % Please edit documentation in R/render_snapshot_software.R
 \name{render_snapshot_software}
 \alias{render_snapshot_software}
-\title{Render High Quality}
+\title{Render Software Snapshot}
 \usage{
 render_snapshot_software(
   filename,
@@ -37,11 +37,9 @@ be derived from the rgl window.}
 
 \item{...}{Additional parameters to pass to `rayvertex::rasterize_scene()`}
 
-\item{cache_filename}{Name of temporary filename to store OBJ file, if the user does not want to rewrite the file each time.}
-
 \item{ground_size}{Default `10000`. The width of the plane representing the ground.}
 }
 \description{
-Render High Quality
+Render Software Snapshot
 }
 \keyword{internal}

@@ -106,7 +106,6 @@
 #'}
 #'
 #'#Contours and other lines will automatically be ignored. Here is the volcano dataset:
-#'
 #'ggvolcano = volcano %>% 
 #'  reshape2::melt() %>%
 #'  ggplot() +
@@ -115,7 +114,8 @@
 #'  scale_x_continuous("X",expand = c(0,0)) +
 #'  scale_y_continuous("Y",expand = c(0,0)) +
 #'  scale_fill_gradientn("Z",colours = terrain.colors(10)) +
-#'  coord_fixed()
+#'  coord_fixed() + 
+#'  theme(legend.position = "none")
 #'ggvolcano
 #'
 #'if(run_documentation()) {
@@ -686,7 +686,7 @@ plot_gg = function(ggobj, ggobj_height = NULL, width = 3, height = 3,
       } else {
         mapcolor %>%
           add_shadow(raylayer,shadow_intensity) %>%
-          plot_map(keep_user_par = FALSE)
+          plot_map()
       }
     } else {
       raylayer = saved_shadow_matrix
@@ -699,7 +699,7 @@ plot_gg = function(ggobj, ggobj_height = NULL, width = 3, height = 3,
       } else {
         mapcolor %>%
           add_shadow(raylayer,shadow_intensity) %>%
-          plot_map(keep_user_par = FALSE)
+          plot_map()
       }
     }
   } else {
@@ -708,7 +708,7 @@ plot_gg = function(ggobj, ggobj_height = NULL, width = 3, height = 3,
               max_error = max_error, max_tri = max_tri, verbose = verbose, shadow = shadow, 
               shadowdepth=shadowdepth/scale, background = background, shadowcolor = shadowcolor, ...)
     } else {
-      plot_map(mapcolor, keep_user_par = FALSE)
+      plot_map(mapcolor)
     }
   }
   if(!preview && flat_plot_render) {

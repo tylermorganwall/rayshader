@@ -81,7 +81,7 @@ render_snapshot()
 
 if(run_documentation()) {
 #Render using `render_highquality()` for a neon light effect
-render_highquality(light = FALSE, smooth_line = TRUE, 
+render_highquality(light = FALSE, 
                   line_radius = 0.1, sample_method="sobol_blue",
                   path_material = rayrender::light, ground_size = 0,
                   path_material_args = list(importance_sample = FALSE,

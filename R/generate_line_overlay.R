@@ -11,6 +11,10 @@
 #'overlay automatically.
 #'@param width Default `NA`. Width of the resulting overlay. Default the same dimensions as height map.
 #'@param height Default `NA`. Width of the resulting overlay. Default the same dimensions as height map.
+#'@param resolution_multiply Default `1`. If passing in `heightmap` instead of width/height, amount to 
+#'increase the resolution of the overlay, which should make lines/polygons/text finer. 
+#'Should be combined with `add_overlay(rescale_original = TRUE)` to ensure those added details are captured
+#'in the final map.
 #'@param color Default `black`. Color of the lines.
 #'@param linewidth Default `1`. Line width.
 #'@param lty Default `1`. Line type. `1` is solid, `2` is dashed, `3` is dotted,`4` is dot-dash,
@@ -56,7 +60,7 @@
 #'  plot_map()
 #'}
 generate_line_overlay = function(geometry, extent, heightmap = NULL,
-                                 width=NA, height=NA, 
+                                 width=NA, height=NA, resolution_multiply = 1,
                                  color = "black", linewidth = 1,  lty = 1,
                                  data_column_width = NULL, offset = c(0,0)) {
   if(!(length(find.package("sf", quiet = TRUE)) > 0)) {
@@ -74,14 +78,18 @@ generate_line_overlay = function(geometry, extent, heightmap = NULL,
   if(inherits(geometry,"sfg")) {
     geometry = sf::st_sfc(geometry)
   }
-  sf_lines_cropped = base::suppressMessages(base::suppressWarnings(sf::st_crop(geometry, extent)))
+  # sf_lines_cropped = base::suppressMessages(base::suppressWarnings(sf::st_crop(geometry, extent)))
   
+  sf_lines_cropped = geometry
   if(is.na(height)) {
-    height  = ncol(heightmap)
+    height = ncol(heightmap)
   }
   if(is.na(width)) {
     width  = nrow(heightmap)
   }
+  height = height * resolution_multiply
+  width = width * resolution_multiply
+  
   if(!is.null(data_column_width)) {
     if(data_column_width %in% colnames(sf_lines_cropped)) {
       widthvals = sf_lines_cropped[[data_column_width]] / max(sf_lines_cropped[[data_column_width]],na.rm = TRUE) * linewidth

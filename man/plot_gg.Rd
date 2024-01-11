@@ -190,7 +190,6 @@ render_snapshot()
 }
 
 #Contours and other lines will automatically be ignored. Here is the volcano dataset:
-
 ggvolcano = volcano \%>\% 
  reshape2::melt() \%>\%
  ggplot() +
@@ -199,7 +198,8 @@ ggvolcano = volcano \%>\%
  scale_x_continuous("X",expand = c(0,0)) +
  scale_y_continuous("Y",expand = c(0,0)) +
  scale_fill_gradientn("Z",colours = terrain.colors(10)) +
- coord_fixed()
+ coord_fixed() + 
+ theme(legend.position = "none")
 ggvolcano
 
 if(run_documentation()) {

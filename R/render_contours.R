@@ -53,7 +53,7 @@
 #'
 #'if(run_documentation()) {
 #'#Render using `render_highquality()` for a neon light effect
-#'render_highquality(light = FALSE, smooth_line = TRUE, 
+#'render_highquality(light = FALSE, 
 #'                   line_radius = 0.1, sample_method="sobol_blue",
 #'                   path_material = rayrender::light, ground_size = 0,
 #'                   path_material_args = list(importance_sample = FALSE,
@@ -95,10 +95,10 @@ render_contours = function(heightmap = NULL,
   
   levels = levels[levels > min(heightmap,na.rm = TRUE)] 
   levels = levels[levels < max(heightmap,na.rm = TRUE)] 
-  heightmap = flipud(t(heightmap))
-  isolineval = isoband::isolines(x = 1:ncol(heightmap), 
-                                 y = 1:nrow(heightmap), 
-                                 z = heightmap, 
+  heightmap2 = flipud(t(heightmap))
+  isolineval = isoband::isolines(x = seq_len(ncol(heightmap2)), 
+                                 y = seq_len(nrow(heightmap2)), 
+                                 z = heightmap2, 
                                  levels=levels)
   contour_heights = as.numeric(names(isolineval))
   if(!is.null(palette)) {
@@ -109,15 +109,30 @@ render_contours = function(heightmap = NULL,
         color = palette
       }
     }
+    for(i in seq_len(length(isolineval))) {
+      contour_height = contour_heights[i] + offset
+      render_path(lat = isolineval[[i]]$y, long = isolineval[[i]]$x,
+                  groups = isolineval[[i]]$id, altitude = contour_height,
+                  heightmap = heightmap,
+                  extent = extent_heightmap, tag = "contour3d", 
+                  zscale = zscale, linewidth = linewidth,
+                  offset = offset, antialias = antialias, color = color[i])
+    }
   } else {
-    color = rep(color,length(isolineval))
-  }
-  for(i in seq_len(length(isolineval))) {
-    contour_height = contour_heights[i] + offset
-    render_path(lat = isolineval[[i]]$y, long = isolineval[[i]]$x,
-                groups = isolineval[[i]]$id, altitude = contour_height,
+    prev_id_max = 0
+    isoline_list = vector("list", length = length(isolineval))
+    for(i in seq_len(length(isolineval))) {
+      isolineval[[i]]$id = isolineval[[i]]$id + prev_id_max
+      isolineval[[i]]$altitude = contour_heights[i] + offset
+      prev_id_max = max(isolineval[[i]]$id)
+      isoline_list[[i]] = data.frame(isolineval[[i]])
+    }
+    isolines_combined = do.call("rbind",isoline_list)
+    render_path(lat = isolines_combined$y, long = isolines_combined$x,
+                groups = isolines_combined$id, altitude = isolines_combined$altitude,
                 extent = extent_heightmap, tag = "contour3d", 
+                heightmap = heightmap,
                 zscale = zscale, linewidth = linewidth,
-                offset = offset, antialias = antialias, color = color[i])
+                offset = offset, antialias = antialias, color = color)
   }
 }

@@ -51,6 +51,7 @@
 #'@param heightmap Default `NULL`. Automatically extracted from the rgl window--only use if auto-extraction
 #'of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
 #' All points are assumed to be evenly spaced.
+#'@param lit Default `TRUE`. Whether to apply lighting to the tree.
 #'@param clear_previous Default `FALSE`. If `TRUE`, it will clear all existing trees.
 #'@param ... Additional arguments to pass to `rgl::triangles3d()`.
 #'@export
@@ -70,7 +71,7 @@
 #'circle_coords_long = moss_landing_coord[2] + 0.3 * cos(t)
 #'
 #'render_tree(extent = attr(montereybay,"extent"), heightmap = montereybay,
-#'            tree_zscale = FALSE, tree_height = 30, 
+#'            tree_zscale = FALSE, tree_height = 30,  lit = TRUE,
 #'            lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), zscale=50) 
 #'render_snapshot()
 #'}
@@ -182,6 +183,7 @@ render_tree = function(lat = NULL,
                        min_height = 0, 
                        max_height = Inf,
                        zscale=1, 
+                       lit = TRUE,
                        heightmap = NULL, 
                        baseshape = "rectangle",
                        angle=c(0,0,0), 
@@ -465,12 +467,14 @@ render_tree = function(lat = NULL,
                lat = lat, long = long, extent = extent, zscale = zscale,
                offset = trunk_height*height_zscale,
                heightmap = heightmap, angle = angle, scale = tree_scale, 
-               baseshape = baseshape,
+               baseshape = baseshape, 
+               lit = lit,
                clear_previous = FALSE, rgl_tag = "tree",
                ...)
     render_obj(custom_obj_trunk, color = trunk_color,
                lat = lat, long = long, extent = extent, zscale = zscale, offset = 0,
                baseshape = baseshape,
+               lit = lit,
                heightmap = heightmap, angle = angle, scale = trunk_scale, rgl_tag = "tree", 
                ...)
   } else if(custom_tree) {
@@ -488,6 +492,7 @@ render_tree = function(lat = NULL,
                baseshape = baseshape,
                clear_previous = FALSE, 
                rgl_tag = "tree",
+               lit = lit,
                ...)
   } else if(type == "basic") {
     # If a basic type is specified, render the basic tree's crown and trunk
@@ -496,11 +501,13 @@ render_tree = function(lat = NULL,
                offset = (trunk_height + crown_height/3)*height_zscale,
                heightmap = heightmap, angle = angle, scale = tree_scale, 
                baseshape = baseshape,
+               lit = lit,
                clear_previous = FALSE, rgl_tag = "tree",
                ...)
     render_obj(tree_trunk_obj(), color = trunk_color,
                lat = lat, long = long, extent = extent, zscale = zscale, offset = 0,
                baseshape = baseshape,
+               lit = lit,
                heightmap = heightmap, angle = angle, scale = trunk_scale, rgl_tag = "tree", 
                ...)
   } else if (type == "cone") {
@@ -509,12 +516,14 @@ render_tree = function(lat = NULL,
               lat = lat, long = long, extent = extent, zscale = zscale, 
               offset = trunk_height*height_zscale,
               baseshape = baseshape,
+              lit = lit,
               heightmap = heightmap, angle = angle, scale = tree_scale, clear_previous = FALSE,
               rgl_tag = "tree",
               ...)
     render_obj(tree_trunk_obj(), color = trunk_color,
                lat = lat, long = long, extent = extent, zscale = zscale, offset = 0,
                baseshape = baseshape,
+               lit = lit,
                heightmap = heightmap, angle = angle, scale = trunk_scale, rgl_tag = "tree",
                ...)
   } else {

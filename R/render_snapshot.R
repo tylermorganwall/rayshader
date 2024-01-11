@@ -25,8 +25,6 @@
 #'@param instant_capture Default `TRUE` if interactive, `FALSE` otherwise. If `FALSE`, a slight delay is added 
 #'before taking the snapshot. This can help stop prevent rendering issues when running scripts.
 #'@param bring_to_front Default `FALSE`. Whether to bring the window to the front when taking the snapshot.
-#'@param keep_user_par Default `TRUE`. Whether to keep the user's `par()` settings. Set to `FALSE` if you 
-#'want to set up a multi-pane plot (e.g. set `par(mfrow)`).
 #'@param webshot Default `FALSE`. Set to `TRUE` to have rgl use the `webshot2` package to take images,
 #'which can be used when `rgl.useNULL = TRUE`.
 #'@param width Default `NULL`. Optional argument to pass to `rgl::snapshot3d()` to specify the
@@ -102,8 +100,8 @@
 #'if(run_documentation()) {
 #'#Now with shadow mapped shadows, calculated in rayvertex
 #'render_snapshot(rayvertex_lighting = TRUE, 
-#'                rayvertex_lights = rayvertex::directional_light(intensity = 2.5, 
-#'                                                                direction = c(-1, 0.8, -1)), 
+#'                rayvertex_lights = rayvertex::directional_light(intensity = 1.2, 
+#'                                                                direction = c(-1, 1, -1)), 
 #'                rayvertex_shadow_map = TRUE, software_render = TRUE)
 #'}
 render_snapshot = function(filename, clear=FALSE, 
@@ -114,7 +112,7 @@ render_snapshot = function(filename, clear=FALSE,
                            image_overlay = NULL, 
                            vignette = FALSE, vignette_color = "black", vignette_radius = 1.3,
                            instant_capture = interactive(), bring_to_front = FALSE, 
-                           keep_user_par = FALSE, webshot = FALSE, 
+                           webshot = FALSE, 
                            width = NULL, height = NULL, 
                            software_render = FALSE, camera_location = NULL, camera_lookat = c(0,0,0),
                            background = NULL,
@@ -209,7 +207,7 @@ render_snapshot = function(filename, clear=FALSE,
                                   title_size = title_size, title_font = title_font)
   }
   if(missing(filename)) {
-    rayimage::plot_image(tempmap, keep_user_par = keep_user_par, new_page = new_page)
+    rayimage::plot_image(tempmap, new_page = new_page)
   } else {
     save_png(tempmap, filename)
   }
