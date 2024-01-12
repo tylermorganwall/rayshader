@@ -35,6 +35,7 @@ jobs:
           install.packages('sf')
           install.packages('rgdal')
           install.packages('extrafont')
+          install.packages('magick')
           extrafont::font_import()
           saveRDS(remotes::dev_package_deps(dependencies = TRUE), ".github/depends.Rds", version = 2)
           writeLines(sprintf("R-%i.%i", getRversion()$major, getRversion()$minor), ".github/R-version")
@@ -44,8 +45,8 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ${{ env.R_LIBS_USER }}
-          key: ${{ runner.os }}-${{ hashFiles('.github/R-version') }}-4-${{ hashFiles('.github/depends.Rds') }}
-          restore-keys: ${{ runner.os }}-${{ hashFiles('.github/R-version') }}-4-
+          key: ${{ runner.os }}-${{ hashFiles('.github/R-version') }}-5-${{ hashFiles('.github/depends.Rds') }}
+          restore-keys: ${{ runner.os }}-${{ hashFiles('.github/R-version') }}-5-
           
       - name: Install dependencies
         run: |
@@ -54,6 +55,7 @@ jobs:
           remotes::install_github("tylermorganwall/rayvertex")
           remotes::install_github("tylermorganwall/rayimage")
           remotes::install_github("tylermorganwall/rayrender")
+          remotes::install_github("tylermorganwall/raybevel")
           remotes::install_deps(dependencies = TRUE)
           install.packages("pkgdown", type = "binary")
         shell: Rscript {0}
