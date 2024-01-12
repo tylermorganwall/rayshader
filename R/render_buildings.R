@@ -204,7 +204,7 @@ render_buildings = function(polygon, extent,
   
   if(!heights_relative_to_centroid) {
     roof_mesh = raybevel::generate_roof(skeletons, 
-                                        offset = top, 
+                                        vertical_offset = top, 
                                         base_height = 0,
                                         angle = angle,
                                         material = material,
@@ -213,7 +213,7 @@ render_buildings = function(polygon, extent,
                                         sides = TRUE)
   } else {
     roof_mesh = raybevel::generate_roof(skeletons, 
-                                        offset = top, 
+                                        vertical_offset = top, 
                                         base_height = bottom,
                                         angle = angle,
                                         material = material,
