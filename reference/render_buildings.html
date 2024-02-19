@@ -18,7 +18,7 @@ using latitude/longitude or coordinates in the reference system defined by the e
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.37.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.37.2</span>
       </span>
     </div>
 
@@ -280,12 +280,12 @@ or absolute.</p></dd>
 <span class="r-in"><span><span class="co"># Crop DEM, but note that the cropped DEM will have an extent slightly different than what's </span></span></span>
 <span class="r-in"><span><span class="co"># specified in `e`. Save that new extent to `new_e`.</span></span></span>
 <span class="r-in"><span><span class="va">osm_dem</span> <span class="op">|&gt;</span> </span></span>
-<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/pkg/terra/man/crop.html" class="external-link">crop</a></span><span class="op">(</span><span class="va">e</span><span class="op">)</span> <span class="op">|&gt;</span> </span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rspatial.github.io/terra/reference/crop.html" class="external-link">crop</a></span><span class="op">(</span><span class="va">e</span><span class="op">)</span> <span class="op">|&gt;</span> </span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/pkg/raster/man/extent.html" class="external-link">extent</a></span><span class="op">(</span><span class="op">)</span> <span class="op">-&gt;</span></span></span>
 <span class="r-in"><span><span class="va">new_e</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">osm_dem</span> <span class="op">|&gt;</span> </span></span>
-<span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/pkg/terra/man/crop.html" class="external-link">crop</a></span><span class="op">(</span><span class="va">e</span><span class="op">)</span> <span class="op">|&gt;</span> </span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rspatial.github.io/terra/reference/crop.html" class="external-link">crop</a></span><span class="op">(</span><span class="va">e</span><span class="op">)</span> <span class="op">|&gt;</span> </span></span>
 <span class="r-in"><span>  <span class="fu"><a href="raster_to_matrix.html">raster_to_matrix</a></span><span class="op">(</span><span class="op">)</span> <span class="op">-&gt;</span></span></span>
 <span class="r-in"><span><span class="va">osm_mat</span></span></span>
 <span class="r-in"><span></span></span>

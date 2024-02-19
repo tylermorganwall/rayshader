@@ -19,7 +19,7 @@ You can also use `save_multipolygonz_to_obj()` manually to convert sf objects"><
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.37.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.37.2</span>
       </span>
     </div>
 
@@ -195,7 +195,7 @@ rayshader coordinates, but data is often provided with Z being vertical).</p></d
 <span class="r-in"><span><span class="va">elevation_data</span> <span class="op">=</span> <span class="fu">elevatr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/elevatr/man/get_elev_raster.html" class="external-link">get_elev_raster</a></span><span class="op">(</span>locations <span class="op">=</span> <span class="va">wm_point</span>, z <span class="op">=</span> <span class="fl">14</span><span class="op">)</span></span></span>
 <span class="r-in"><span>                                         </span></span>
 <span class="r-in"><span><span class="va">scene_bbox</span> <span class="op">=</span> <span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_bbox.html" class="external-link">st_bbox</a></span><span class="op">(</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/geos_unary.html" class="external-link">st_buffer</a></span><span class="op">(</span><span class="va">wm_point</span>,<span class="fl">300</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">cropped_data</span> <span class="op">=</span> <span class="fu">raster</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/terra/man/crop.html" class="external-link">crop</a></span><span class="op">(</span><span class="va">elevation_data</span>, <span class="va">scene_bbox</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">cropped_data</span> <span class="op">=</span> <span class="fu">raster</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/crop.html" class="external-link">crop</a></span><span class="op">(</span><span class="va">elevation_data</span>, <span class="va">scene_bbox</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#Use rayshader to convert that raster data to a matrix</span></span></span>
 <span class="r-in"><span><span class="va">dc_elevation_matrix</span> <span class="op">=</span> <span class="fu"><a href="raster_to_matrix.html">raster_to_matrix</a></span><span class="op">(</span><span class="va">cropped_data</span><span class="op">)</span></span></span>

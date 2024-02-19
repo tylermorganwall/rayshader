@@ -22,7 +22,7 @@ Users can also specify the minimum and maximum height of the trees to be rendere
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.37.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.37.2</span>
       </span>
     </div>
 
@@ -336,7 +336,7 @@ equal the length of `lat`/`long`).</p></dd>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#Convert DEM to a matrix and extract the extent of the scene</span></span></span>
 <span class="r-in"><span><span class="va">dem_matrix</span> <span class="op">=</span> <span class="fu"><a href="raster_to_matrix.html">raster_to_matrix</a></span><span class="op">(</span><span class="va">dem</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">dem_extent</span> <span class="op">=</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/terra/man/ext.html" class="external-link">ext</a></span><span class="op">(</span><span class="va">dem</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">dem_extent</span> <span class="op">=</span> <span class="fu">terra</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/ext.html" class="external-link">ext</a></span><span class="op">(</span><span class="va">dem</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">extent_values</span> <span class="op">=</span> <span class="va">dem_extent</span><span class="op">@</span><span class="va">ptr</span><span class="op">$</span><span class="va">vector</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#Plot the ground</span></span></span>
