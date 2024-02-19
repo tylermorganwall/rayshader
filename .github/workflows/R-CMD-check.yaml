@@ -29,6 +29,9 @@ jobs:
       R_KEEP_PKG_SOURCE: yes
 
     steps:
+      - name: Set RGL_USE_NULL for Ubuntu
+        if: runner.os == 'Linux'
+        run: echo "RGL_USE_NULL=TRUE" >> $GITHUB_ENV
       - name: Install system dependencies
         if: runner.os == 'Linux'
         run: |
