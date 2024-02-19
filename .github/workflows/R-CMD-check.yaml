@@ -29,6 +29,11 @@ jobs:
       R_KEEP_PKG_SOURCE: yes
 
     steps:
+      - name: Install system dependencies
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install libavfilter-dev
       - uses: actions/checkout@v4
 
       - uses: r-lib/actions/setup-pandoc@v2
