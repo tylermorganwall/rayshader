@@ -16,6 +16,7 @@ jobs:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       RGL_USE_NULL: true
       _SF_USE_S2: false
+      IN_PKGDOWN: true
     steps:
       - uses: actions/checkout@v3
 
