@@ -32,12 +32,7 @@ render_snapshot_software(
 )
 }
 \arguments{
-\item{camera_location}{Default `NULL`. Custom position of the camera. The `FOV`, `width`, and `height` arguments will still
-be derived from the rgl window.}
-
 \item{...}{Additional parameters to pass to `rayvertex::rasterize_scene()`}
-
-\item{ground_size}{Default `10000`. The width of the plane representing the ground.}
 }
 \description{
 Render Software Snapshot

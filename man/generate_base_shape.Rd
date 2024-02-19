@@ -6,9 +6,6 @@
 \usage{
 generate_base_shape(heightmap, baseshape, angle = 0)
 }
-\arguments{
-\item{image}{Matrix}
-}
 \value{
 image array
 }

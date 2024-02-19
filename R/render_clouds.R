@@ -1,6 +1,5 @@
 #' Generate Fractal Perlin Noise
 #'
-#' @param image Matrix
 #'
 #' @return image array
 #' @keywords internal
@@ -37,8 +36,6 @@ gen_fractal_perlin = function(ray_d, xyz, altitude, nrow = NULL, ncol = NULL, t_
 }
 
 #' Calculate a single raymarched cloud layer
-#'
-#' @param image Matrix
 #'
 #' @return image array
 #' @keywords internal
@@ -274,8 +271,6 @@ render_clouds = function(heightmap, start_altitude = 1000, end_altitude=2000,
 }
 
 #' Calculate a single raymarched cloud layer
-#'
-#' @param image Matrix
 #'
 #' @return image array
 #' @keywords internal

@@ -35,8 +35,6 @@ load_image = function(image, reorient) {
 
 #' Generate Base Shape
 #'
-#' @param image Matrix
-#'
 #' @return image array
 #' @keywords internal
 #'

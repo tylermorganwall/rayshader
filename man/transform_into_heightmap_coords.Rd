@@ -16,9 +16,6 @@ transform_into_heightmap_coords(
   filter_bounds = TRUE
 )
 }
-\arguments{
-\item{image}{Matrix}
-}
 \value{
 x/y/z
 }

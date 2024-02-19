@@ -21,9 +21,6 @@ gen_fractal_perlin(
   scale_z = 1
 )
 }
-\arguments{
-\item{image}{Matrix}
-}
 \value{
 image array
 }

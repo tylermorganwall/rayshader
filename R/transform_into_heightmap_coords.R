@@ -1,7 +1,5 @@
 #' Get Position from Lat/Long and heightmap/extent
 #'
-#' @param image Matrix
-#'
 #' @return x/y/z
 #' @keywords internal
 #'

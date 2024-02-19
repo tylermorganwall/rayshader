@@ -27,9 +27,6 @@ raymarch_cloud_layer(
   seed = 1
 )
 }
-\arguments{
-\item{image}{Matrix}
-}
 \value{
 image array
 }

@@ -5,8 +5,6 @@
 #'@param tris A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.
 #'@param basedepth Default `0`.
 #'@param basecolor Default `grey20`.
-#'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
-#'of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
 #'@keywords internal
 make_base_triangulated = function(tris, basedepth=0,basecolor="grey20") {
   bd = basedepth
