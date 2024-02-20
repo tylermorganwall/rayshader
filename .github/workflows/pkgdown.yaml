@@ -16,7 +16,7 @@ jobs:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       RGL_USE_NULL: true
       _SF_USE_S2: false
-      IN_PKGDOWN: true
+      IN_PKGDOWN: "true"
     steps:
       - uses: actions/checkout@v3
 
@@ -46,8 +46,8 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ${{ env.R_LIBS_USER }}
-          key: ${{ runner.os }}-${{ hashFiles('.github/R-version') }}-5-${{ hashFiles('.github/depends.Rds') }}
-          restore-keys: ${{ runner.os }}-${{ hashFiles('.github/R-version') }}-5-
+          key: ${{ runner.os }}-${{ hashFiles('.github/R-version') }}-7-${{ hashFiles('.github/depends.Rds') }}
+          restore-keys: ${{ runner.os }}-${{ hashFiles('.github/R-version') }}-7-
           
       - name: Install dependencies
         run: |
