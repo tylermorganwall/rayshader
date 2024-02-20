@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.37.2</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.37.3</span>
       </span>
     </div>
 
@@ -340,6 +340,7 @@ be applied to the rendered scene.</p></dd>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="fu">render_snapshot</span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-plt img"><img src="render_snapshot-1.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span> </span></span>
 <span class="r-in"><span><span class="co">#Create a title</span></span></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
@@ -354,6 +355,8 @@ be applied to the rendered scene.</p></dd>
 <span class="r-in"><span>               vignette <span class="op">=</span> <span class="cn">TRUE</span>, title_offset<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">20</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>               title_font <span class="op">=</span> <span class="st">"Helvetica"</span>, title_position <span class="op">=</span> <span class="st">"north"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-plt img"><img src="render_snapshot-2.png" alt="" width="768" height="768"></span>
+<span class="r-plt img"><img src="render_snapshot-3.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="co">#Use software rendering to render a scene with shadow mapping</span></span></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="va">montereybay</span> <span class="op">|&gt;</span> </span></span>
@@ -362,6 +365,8 @@ be applied to the rendered scene.</p></dd>
 <span class="r-in"><span><span class="co">#No shadows</span></span></span>
 <span class="r-in"><span><span class="fu">render_snapshot</span><span class="op">(</span>software_render <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> `montereybay` dataset used with no zscale--setting `zscale=50`.  For a realistic depiction, raise `zscale` to 200.</span>
+<span class="r-plt img"><img src="render_snapshot-4.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#Now with shadow mapped shadows, calculated in rayvertex</span></span></span>
 <span class="r-in"><span><span class="fu">render_snapshot</span><span class="op">(</span>rayvertex_lighting <span class="op">=</span> <span class="cn">TRUE</span>, </span></span>
@@ -369,6 +374,7 @@ be applied to the rendered scene.</p></dd>
 <span class="r-in"><span>                                                               direction <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1</span>, <span class="fl">1</span>, <span class="op">-</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span>, </span></span>
 <span class="r-in"><span>               rayvertex_shadow_map <span class="op">=</span> <span class="cn">TRUE</span>, software_render <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-plt img"><img src="render_snapshot-5.png" alt="" width="768" height="768"></span>
 </code></pre></div>
     </div>
   </div>

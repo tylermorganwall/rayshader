@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.37.2</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.37.3</span>
       </span>
     </div>
 
@@ -185,6 +185,7 @@ this will give a continuous mapping.</p></dd>
 <span class="r-in"><span>                        extent <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>,<span class="st">"extent"</span><span class="op">)</span>, heightmap <span class="op">=</span> <span class="va">montereybay</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span> </span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-plt img"><img src="generate_polygon_overlay-1.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#These counties include the water, so we'll plot bathymetry data over the polygon</span></span></span>
 <span class="r-in"><span><span class="co">#data to only include parts of the polygon that fall on land.</span></span></span>
@@ -196,6 +197,7 @@ this will give a continuous mapping.</p></dd>
 <span class="r-in"><span> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu"><a href="generate_altitude_overlay.html">generate_altitude_overlay</a></span><span class="op">(</span><span class="va">bathy_hs</span>, <span class="va">montereybay</span>, start_transition <span class="op">=</span> <span class="fl">0</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-plt img"><img src="generate_polygon_overlay-2.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#Add a semi-transparent hillshade and change the palette, and remove the polygon lines</span></span></span>
 <span class="r-in"><span><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
@@ -208,6 +210,7 @@ this will give a continuous mapping.</p></dd>
 <span class="r-in"><span> <span class="fu"><a href="add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="fu"><a href="ray_shade.html">ray_shade</a></span><span class="op">(</span><span class="va">montereybay</span>,zscale<span class="op">=</span><span class="fl">50</span><span class="op">)</span>,<span class="fl">0</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-plt img"><img src="generate_polygon_overlay-3.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#Map one of the variables in the sf object and use an explicitly defined color palette</span></span></span>
 <span class="r-in"><span><span class="va">county_palette</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"087"</span> <span class="op">=</span> <span class="st">"red"</span>,    <span class="st">"053"</span> <span class="op">=</span> <span class="st">"blue"</span>,   <span class="st">"081"</span> <span class="op">=</span> <span class="st">"green"</span>, </span></span>
@@ -223,6 +226,7 @@ this will give a continuous mapping.</p></dd>
 <span class="r-in"><span> <span class="fu"><a href="add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="fu"><a href="ray_shade.html">ray_shade</a></span><span class="op">(</span><span class="va">montereybay</span>,zscale<span class="op">=</span><span class="fl">50</span><span class="op">)</span>,<span class="fl">0.5</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-plt img"><img src="generate_polygon_overlay-4.png" alt="" width="768" height="768"></span>
 </code></pre></div>
     </div>
   </div>

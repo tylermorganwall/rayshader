@@ -25,7 +25,7 @@ into 3D.'><meta property="og:image" content="https://www.rayshader.com/reference
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.37.2</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.37.3</span>
       </span>
     </div>
 
@@ -362,11 +362,13 @@ default, this just decreases the size of height map, not the image. If you wish 
 <span class="r-in"><span>       zoom <span class="op">=</span> <span class="fl">0.55</span>, phi <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-plt img"><img src="plot_gg-1.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="co">#Change the camera angle and take a snapshot:</span></span></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_camera.html">render_camera</a></span><span class="op">(</span>zoom<span class="op">=</span><span class="fl">0.5</span>,theta<span class="op">=</span><span class="op">-</span><span class="fl">30</span>,phi<span class="op">=</span><span class="fl">30</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-plt img"><img src="plot_gg-2.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#Contours and other lines will automatically be ignored. Here is the volcano dataset:</span></span></span>
 <span class="r-in"><span><span class="va">ggvolcano</span> <span class="op">=</span> <span class="va">volcano</span> <span class="op"><a href="pipe.html">%&gt;%</a></span> </span></span>
@@ -380,13 +382,15 @@ default, this just decreases the size of height map, not the image. If you wish 
 <span class="r-in"><span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/coord_fixed.html" class="external-link">coord_fixed</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> </span></span>
 <span class="r-in"><span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>legend.position <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">ggvolcano</span></span></span>
-<span class="r-plt img"><img src="plot_gg-1.png" alt="" width="768" height="768"></span>
+<span class="r-plt img"><img src="plot_gg-3.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="fu">plot_gg</span><span class="op">(</span><span class="va">ggvolcano</span>, multicore <span class="op">=</span> <span class="cn">TRUE</span>, raytrace <span class="op">=</span> <span class="cn">TRUE</span>, width <span class="op">=</span> <span class="fl">7</span>, height <span class="op">=</span> <span class="fl">4</span>, </span></span>
 <span class="r-in"><span>       scale <span class="op">=</span> <span class="fl">300</span>, windowsize <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1400</span>, <span class="fl">866</span><span class="op">)</span>, zoom <span class="op">=</span> <span class="fl">0.6</span>, phi <span class="op">=</span> <span class="fl">30</span>, theta <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Removed 1861 rows containing missing values (`geom_contour()`).</span>
+<span class="r-plt img"><img src="plot_gg-4.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#You can specify the color and height separately using the `ggobj_height()` argument.</span></span></span>
@@ -405,6 +409,8 @@ default, this just decreases the size of height map, not the image. If you wish 
 <span class="r-in"><span>      scale <span class="op">=</span> <span class="fl">300</span>, windowsize <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1400</span>, <span class="fl">866</span><span class="op">)</span>, zoom <span class="op">=</span> <span class="fl">0.6</span>, phi <span class="op">=</span> <span class="fl">30</span>, theta <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Removed 1861 rows containing missing values (`geom_contour()`).</span>
+<span class="r-plt img"><img src="plot_gg-5.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="co">#Here, we will create a 3D plot of the mtcars dataset. This automatically detects </span></span></span>
 <span class="r-in"><span><span class="co">#that the user used the `color` aesthetic instead of the `fill`.</span></span></span>
 <span class="r-in"><span><span class="va">mtplot</span> <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">mtcars</span><span class="op">)</span> <span class="op">+</span> </span></span>
@@ -415,11 +421,13 @@ default, this just decreases the size of height map, not the image. If you wish 
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="fu">plot_gg</span><span class="op">(</span><span class="va">mtplot</span>, width<span class="op">=</span><span class="fl">3.5</span>, sunangle<span class="op">=</span><span class="fl">225</span>, preview <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-plt img"><img src="plot_gg-6.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="fu">plot_gg</span><span class="op">(</span><span class="va">mtplot</span>, width<span class="op">=</span><span class="fl">3.5</span>, multicore <span class="op">=</span> <span class="cn">TRUE</span>, windowsize <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1400</span>,<span class="fl">866</span><span class="op">)</span>, sunangle<span class="op">=</span><span class="fl">225</span>,</span></span>
 <span class="r-in"><span>       zoom <span class="op">=</span> <span class="fl">0.60</span>, phi <span class="op">=</span> <span class="fl">30</span>, theta <span class="op">=</span> <span class="fl">45</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-plt img"><img src="plot_gg-7.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="co">#Now let's plot a density plot in 3D.</span></span></span>
 <span class="r-in"><span><span class="va">mtplot_density</span> <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">mtcars</span><span class="op">)</span> <span class="op">+</span> </span></span>
 <span class="r-in"><span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_density_2d.html" class="external-link">stat_density_2d</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x<span class="op">=</span><span class="va">mpg</span>,y<span class="op">=</span><span class="va">disp</span>, fill<span class="op">=</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes_eval.html" class="external-link">after_stat</a></span><span class="op">(</span><span class="op">!</span><span class="op">!</span><span class="fu"><a href="https://rdrr.io/r/base/parse.html" class="external-link">str2lang</a></span><span class="op">(</span><span class="st">"density"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>, </span></span>
@@ -428,13 +436,14 @@ default, this just decreases the size of height map, not the image. If you wish 
 <span class="r-in"><span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html" class="external-link">scale_y_continuous</a></span><span class="op">(</span>expand<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">0</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_gradient.html" class="external-link">scale_fill_gradient</a></span><span class="op">(</span>low<span class="op">=</span><span class="st">"pink"</span>, high<span class="op">=</span><span class="st">"red"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">mtplot_density</span></span></span>
-<span class="r-plt img"><img src="plot_gg-2.png" alt="" width="768" height="768"></span>
+<span class="r-plt img"><img src="plot_gg-8.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="fu">plot_gg</span><span class="op">(</span><span class="va">mtplot_density</span>, width <span class="op">=</span> <span class="fl">4</span>,zoom <span class="op">=</span> <span class="fl">0.60</span>, theta <span class="op">=</span> <span class="op">-</span><span class="fl">45</span>, phi <span class="op">=</span> <span class="fl">30</span>, </span></span>
 <span class="r-in"><span>       windowsize <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1400</span>,<span class="fl">866</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-plt img"><img src="plot_gg-9.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="co">#This also works facetted.</span></span></span>
 <span class="r-in"><span><span class="va">mtplot_density_facet</span> <span class="op">=</span> <span class="va">mtplot_density</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="op">~</span><span class="va">cyl</span><span class="op">)</span> </span></span>
 <span class="r-in"><span></span></span>
@@ -442,15 +451,18 @@ default, this just decreases the size of height map, not the image. If you wish 
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="fu">plot_gg</span><span class="op">(</span><span class="va">mtplot_density_facet</span>, preview <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-plt img"><img src="plot_gg-10.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="fu">plot_gg</span><span class="op">(</span><span class="va">mtplot_density_facet</span>, windowsize<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1400</span>,<span class="fl">866</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>       zoom <span class="op">=</span> <span class="fl">0.55</span>, theta <span class="op">=</span> <span class="op">-</span><span class="fl">10</span>, phi <span class="op">=</span> <span class="fl">25</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-plt img"><img src="plot_gg-11.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="co">#That is a little cramped. Specifying a larger width will improve the readability of this plot.</span></span></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="fu">plot_gg</span><span class="op">(</span><span class="va">mtplot_density_facet</span>, width <span class="op">=</span> <span class="fl">6</span>, preview <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-plt img"><img src="plot_gg-12.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#That's better. Let's plot it in 3D, and increase the scale.</span></span></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
@@ -458,6 +470,7 @@ default, this just decreases the size of height map, not the image. If you wish 
 <span class="r-in"><span>       zoom <span class="op">=</span> <span class="fl">0.55</span>, theta <span class="op">=</span> <span class="op">-</span><span class="fl">10</span>, phi <span class="op">=</span> <span class="fl">25</span>, scale<span class="op">=</span><span class="fl">300</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-plt img"><img src="plot_gg-13.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#We can also render a flat version of the plot alongside (or above/below) the 3D version.</span></span></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
@@ -466,6 +479,7 @@ default, this just decreases the size of height map, not the image. If you wish 
 <span class="r-in"><span>       flat_direction <span class="op">=</span> <span class="st">"x"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-plt img"><img src="plot_gg-14.png" alt="" width="768" height="768"></span>
 </code></pre></div>
     </div>
   </div>
