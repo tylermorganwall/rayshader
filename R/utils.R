@@ -93,10 +93,7 @@ generate_base_shape = function(heightmap, baseshape, angle=0) {
 #' # See if the documentation should be run.
 #' run_documentation()
 run_documentation = function() {
-  return(identical(Sys.getenv("IN_PKGDOWN"), "true") && 
-         length(find.package("magick", quiet = TRUE)) > 0 && 
-         length(find.package("sf", quiet = TRUE)) > 0 && 
-         length(find.package("rgdal", quiet = TRUE)) > 0)
+  return(identical(Sys.getenv("IN_PKGDOWN"), "true"))
 }
 
 #' Unit Vector

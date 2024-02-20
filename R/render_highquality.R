@@ -230,14 +230,14 @@ render_highquality = function(filename = NA, samples = 128,
     stop(sprintf("Point material arguments `%s` not valid for the material. Valid argument names are: \n%s", 
                  all_not_matching, all_arg_names))
   }
-  
   #Set use_extruded_path to TRUE if path_material is dielectric
-  path_material_df = path_material()
+  path_material_raw = path_material()
+  path_material_df = path_material_raw[[1]]
   if(path_material_df$type == "dielectric" && !use_extruded_paths) {
     message("dielectric material for paths selected--setting `use_extruded_paths = TRUE` for accurate rendering of material")
     use_extruded_paths = TRUE
   }
-  
+
   #Get scene info
   windowrect = rgl::par3d()$windowRect
   if(!is.null(title_text)) {
