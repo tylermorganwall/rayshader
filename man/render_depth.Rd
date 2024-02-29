@@ -113,7 +113,7 @@ control the blurriness of the vignette effect.}
 
 \item{vignette_color}{Default `"black"`. Color of the vignette.}
 
-\item{vignette_radius}{Default `1.3`. Radius of the vignette, as a porportion of the image dimensions.}
+\item{vignette_radius}{Default `1.3`. Radius of the vignette, as a proportion of the image dimensions.}
 
 \item{progbar}{Default `TRUE` if in an interactive session. Displays a progress bar.}
 

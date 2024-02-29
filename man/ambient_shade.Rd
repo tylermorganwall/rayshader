@@ -24,7 +24,7 @@ ambient_shade(
 
 \item{sunbreaks}{Default `24`. Number of rays to be sent out in a circle, evenly spaced, around the point being tested.}
 
-\item{maxsearch}{Default `30`. The maximum horizontal distance that the system should propogate rays to check for surface intersections.}
+\item{maxsearch}{Default `30`. The maximum horizontal distance that the system should propagate rays to check for surface intersections.}
 
 \item{multicore}{Default FALSE. If TRUE, multiple cores will be used to compute the shadow matrix. By default, this uses all cores available, unless the user has
 set `options("cores")` in which the multicore option will only use that many cores.}

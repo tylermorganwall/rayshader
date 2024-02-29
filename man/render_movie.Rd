@@ -42,7 +42,7 @@ Other options are `oscillate` (sine wave around `theta` value, covering 90 degre
 
 \item{frames}{Default `360`. Number of frames to render.}
 
-\item{fps}{Default `30`. Frames per second. Recommmend either 30 or 60 for web.}
+\item{fps}{Default `30`. Frames per second. Recommend either 30 or 60 for web.}
 
 \item{phi}{Defaults to current view. Azimuth values, in degrees.}
 
@@ -84,7 +84,7 @@ control the blurriness of the vignette effect.}
 
 \item{vignette_color}{Default `"black"`. Color of the vignette.}
 
-\item{vignette_radius}{Default `1.3`. Radius of the vignette, as a porportion of the image dimensions.}
+\item{vignette_radius}{Default `1.3`. Radius of the vignette, as a proportion of the image dimensions.}
 
 \item{title_position}{Default `northwest`. Position of the title.}
 
