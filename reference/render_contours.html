@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.37.3</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.38.0</span>
       </span>
     </div>
 
@@ -170,7 +170,7 @@ of `n` colors, or a character vector with colors that specifies each color manua
 <span class="r-in"><span><span class="fu">render_contours</span><span class="op">(</span><span class="va">montereybay</span>, zscale <span class="op">=</span> <span class="fl">50</span>, offset <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in if (!all(temp_verts[j + 1, ] == temp_verts[j, ])) {    line_scene[[line_counter]] = rayvertex::segment_mesh(start = temp_verts[j,         ] - bbox_center, end = temp_verts[j + 1, ] - bbox_center,         radius = line_radius, material = line_mat)    line_counter = line_counter + 1}:</span> missing value where TRUE/FALSE needed</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in if (!all(temp_verts[j + 1, ] == temp_verts[j, ])) {    line_scene[[line_counter]] = rayvertex::segment_mesh(start = temp_verts[j,         ] - bbox_center, end = temp_verts[j + 1, ] - bbox_center,         radius = temp_lwd, material = line_mat)    line_counter = line_counter + 1}:</span> missing value where TRUE/FALSE needed</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#Specify the number of levels</span></span></span>
@@ -178,7 +178,7 @@ of `n` colors, or a character vector with colors that specifies each color manua
 <span class="r-in"><span>               clear_previous <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in if (!all(temp_verts[j + 1, ] == temp_verts[j, ])) {    line_scene[[line_counter]] = rayvertex::segment_mesh(start = temp_verts[j,         ] - bbox_center, end = temp_verts[j + 1, ] - bbox_center,         radius = line_radius, material = line_mat)    line_counter = line_counter + 1}:</span> missing value where TRUE/FALSE needed</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in if (!all(temp_verts[j + 1, ] == temp_verts[j, ])) {    line_scene[[line_counter]] = rayvertex::segment_mesh(start = temp_verts[j,         ] - bbox_center, end = temp_verts[j + 1, ] - bbox_center,         radius = temp_lwd, material = line_mat)    line_counter = line_counter + 1}:</span> missing value where TRUE/FALSE needed</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#Manually specify the breaks with levels</span></span></span>
@@ -186,7 +186,7 @@ of `n` colors, or a character vector with colors that specifies each color manua
 <span class="r-in"><span>               levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="op">-</span><span class="fl">2000</span>, <span class="fl">0</span>, <span class="fl">100</span><span class="op">)</span>, clear_previous <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in if (!all(temp_verts[j + 1, ] == temp_verts[j, ])) {    line_scene[[line_counter]] = rayvertex::segment_mesh(start = temp_verts[j,         ] - bbox_center, end = temp_verts[j + 1, ] - bbox_center,         radius = line_radius, material = line_mat)    line_counter = line_counter + 1}:</span> missing value where TRUE/FALSE needed</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in if (!all(temp_verts[j + 1, ] == temp_verts[j, ])) {    line_scene[[line_counter]] = rayvertex::segment_mesh(start = temp_verts[j,         ] - bbox_center, end = temp_verts[j + 1, ] - bbox_center,         radius = temp_lwd, material = line_mat)    line_counter = line_counter + 1}:</span> missing value where TRUE/FALSE needed</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#Use a color palette for the contours </span></span></span>
@@ -197,7 +197,7 @@ of `n` colors, or a character vector with colors that specifies each color manua
 <span class="r-in"><span><span class="fu">render_contours</span><span class="op">(</span><span class="va">volcano</span>, offset <span class="op">=</span> <span class="fl">1</span>, palette <span class="op">=</span> <span class="va">palette</span>, zscale <span class="op">=</span> <span class="fl">2</span>, nlevels <span class="op">=</span> <span class="fl">20</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in if (!all(temp_verts[j + 1, ] == temp_verts[j, ])) {    line_scene[[line_counter]] = rayvertex::segment_mesh(start = temp_verts[j,         ] - bbox_center, end = temp_verts[j + 1, ] - bbox_center,         radius = line_radius, material = line_mat)    line_counter = line_counter + 1}:</span> missing value where TRUE/FALSE needed</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in if (!all(temp_verts[j + 1, ] == temp_verts[j, ])) {    line_scene[[line_counter]] = rayvertex::segment_mesh(start = temp_verts[j,         ] - bbox_center, end = temp_verts[j + 1, ] - bbox_center,         radius = temp_lwd, material = line_mat)    line_counter = line_counter + 1}:</span> missing value where TRUE/FALSE needed</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#Render using `render_highquality()` for a neon light effect</span></span></span>
