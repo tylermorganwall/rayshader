@@ -209,6 +209,8 @@ render_snapshot_software = function(filename, cache_scene = FALSE, camera_locati
   for(i in seq_len(length(pathids))) {
     temp_verts = rgl.attrib(pathids[i], "vertices")
     temp_color = rgl.attrib(pathids[i], "colors")
+    temp_lwd = material3d("lwd", id = pathids[i]) * line_radius
+    
     if(nrow(temp_color) == 1) {
       temp_color = matrix(temp_color[1:3], byrow = TRUE, ncol = 3, nrow = nrow(temp_verts))
     }
@@ -220,7 +222,7 @@ render_snapshot_software = function(filename, cache_scene = FALSE, camera_locati
         if(!all(temp_verts[j+1,] == temp_verts[j,])) {
           line_scene[[line_counter]] = rayvertex::segment_mesh(start = temp_verts[j,] - bbox_center, 
                                                                end   = temp_verts[j+1,] - bbox_center,
-                                                               radius = line_radius,
+                                                               radius = temp_lwd,
                                                                material = line_mat)
           line_counter = line_counter + 1
         }
@@ -239,14 +241,16 @@ render_snapshot_software = function(filename, cache_scene = FALSE, camera_locati
   for(i in seq_len(length(pointids))) {
     temp_verts = rgl.attrib(pointids[i], "vertices")
     temp_color = rgl.attrib(pointids[i], "colors")
+    temp_size = material3d("size", id = pointids[i]) * point_radius
     if(nrow(temp_color) == 1) {
       temp_color = matrix(temp_color[1:3], byrow = TRUE, ncol = 3, nrow = nrow(temp_verts))
     }
     for(j in seq_len(nrow(temp_verts))) {
-      pointlist = rayvertex::add_shape(pointlist, rayvertex::sphere_mesh(position = c(temp_verts[j,1] - bbox_center[1],
+      pointlist = rayvertex::add_shape(pointlist, 
+                                       rayvertex::sphere_mesh(position = c(temp_verts[j,1] - bbox_center[1],
                                                temp_verts[j,2] - bbox_center[2],
                                                temp_verts[j,3] - bbox_center[3]),
-                                               radius = point_radius,
+                                               radius = temp_size,
                                                material = rayvertex::material_list(diffuse = temp_color[j,1:3])))
     }
   }

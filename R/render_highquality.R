@@ -44,7 +44,8 @@
 #'than straight segments.
 #'@param use_extruded_paths Default `TRUE`. If `FALSE`, paths will be generated with the `rayrender::path()` object, instead
 #'of `rayrender::extruded_path()`.
-#'@param point_radius Default `0.5`. Radius of 3D points (rendered with `render_points()`.
+#'@param point_radius Default `1`. Radius of 3D points (rendered with `render_points()`). This scales the existing
+#'value of size specified in `render_points()`.
 #'@param scale_text_angle Default `NULL`. Same as `text_angle`, but for the scale bar.
 #'@param scale_text_size Default `6`. Height of the scale bar text.
 #'@param scale_text_offset Default `c(0,0,0)`. Offset to be applied to all scale bar text labels.
@@ -451,6 +452,8 @@ render_highquality = function(filename = NA, samples = 128,
   for(i in seq_len(length(pathids))) {
     temp_verts = rgl.attrib(pathids[i], "vertices")
     temp_color = rgl.attrib(pathids[i], "colors")
+    temp_lwd = material3d("lwd", id = pathids[i]) * line_radius
+    
     if(nrow(temp_color) == 1) {
       temp_color = matrix(temp_color[1:3], byrow = TRUE, ncol = 3, nrow = nrow(temp_verts))
     }
@@ -458,13 +461,13 @@ render_highquality = function(filename = NA, samples = 128,
     path_material_args$color = temp_color[1,1:3]
     if(use_extruded_paths) {
       pathline[[counter]] = rayrender::extruded_path(points = temp_verts - matrix_center , 
-                                            width = line_radius * 2,
+                                            width = temp_lwd * 2,
                                             smooth_normals = TRUE, 
                                             straight = !smooth_line,
                                             material = do.call("path_material", args = path_material_args))
     } else {
       pathline[[counter]] = rayrender::path(points = temp_verts - matrix_center, 
-                                            width = line_radius * 2,
+                                            width = temp_lwd * 2,
                                             straight = !smooth_line,
                                             material = do.call("path_material", args = path_material_args))
     }
@@ -476,6 +479,7 @@ render_highquality = function(filename = NA, samples = 128,
   for(i in seq_len(length(pointids))) {
     temp_verts = rgl.attrib(pointids[i], "vertices")
     temp_color = rgl.attrib(pointids[i], "colors")
+    temp_size = material3d("size", id = pointids[i]) * point_radius
     if(nrow(temp_color) == 1) {
       temp_color = matrix(temp_color[1:3], byrow = TRUE, ncol = 3, nrow = nrow(temp_verts))
     }
@@ -485,7 +489,7 @@ render_highquality = function(filename = NA, samples = 128,
       pointlist[[counter]] = rayrender::sphere(x = temp_verts[j,1] - bbox_center[1],
                                               y = temp_verts[j,2] - bbox_center[2],
                                               z = temp_verts[j,3] - bbox_center[3],
-                                              radius = point_radius,
+                                              radius = temp_size,
                                               material = do.call("point_material", args = point_material_args))
       counter = counter + 1
     }

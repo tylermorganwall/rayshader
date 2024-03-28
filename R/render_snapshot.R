@@ -41,7 +41,8 @@
 #'will specify the absolute angle all the labels are facing. If three angles, this will specify all three orientations
 #'(relative to the x,y, and z axes) of the text labels.
 #'@param text_size Default `30`. Height of the text.
-#'@param point_radius Default `2`. Radius of 3D points (rendered with `render_points()`.
+#'@param point_radius Default `1`. Radius of 3D points (rendered with `render_points()`). This scales the existing
+#'value of size specified in `render_points()`.
 #'@param line_offset Default `1e-7`. Small number indicating the offset in the scene to apply to lines if using software rendering. Increase this if your lines 
 #'aren't showing up, or decrease it if lines are appearing through solid objects.
 #'@param thick_lines Default `TRUE`. If `software_render = TRUE`, this will render path segments as thick cylinders. Otherwise, it will 
@@ -117,8 +118,8 @@ render_snapshot = function(filename, clear=FALSE,
                            software_render = FALSE, camera_location = NULL, camera_lookat = c(0,0,0),
                            background = NULL,
                            text_angle = NULL, text_size = 30, text_offset = c(0,0,0),
-                           point_radius = 2, 
-                           line_offset = 1e-7, thick_lines = TRUE, line_radius = 0.5,
+                           point_radius = 1, 
+                           line_offset = 1e-7, thick_lines = TRUE, line_radius = 1,
                            cache_scene  = FALSE, reset_scene_cache = FALSE, new_page = TRUE,
                            print_scene_info = FALSE, fsaa = 1, 
                            rayvertex_lighting = FALSE, rayvertex_lights = NULL,

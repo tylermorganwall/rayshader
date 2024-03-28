@@ -36,9 +36,10 @@ the previously aforementioned packages) which will be automatically converted to
 of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
 All points are assumed to be evenly spaced.}
 
-\item{size}{Default `3`. The point size.}
+\item{size}{Default `3`. The point size. This can be a vector (the same length as `lat` and `long`) specifying
+a size for each point.}
 
-\item{color}{Default `black`. Color of the point.}
+\item{color}{Default `black`. Color of the point. This can also be a vector specifying the color of each point.}
 
 \item{offset}{Default `5`. Offset of the track from the surface, if `altitude = NULL`.}
 

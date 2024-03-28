@@ -148,7 +148,7 @@
 #'                                        latlong=TRUE)) %>%
 #'  plot_map()
 #'}
-##'if(run_documentation()) { 
+#'if(run_documentation()) { 
 #'#64373.8 meters in 40 miles
 #'#Create custom labels, change font and text size, remove the border/ticks, and change the color
 #'#Here, we specify a width and height to double the resolution of the image (for sharper text)

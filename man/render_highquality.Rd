@@ -112,7 +112,8 @@ will specify the absolute angle all the labels are facing. If three angles, this
 
 \item{line_radius}{Default `0.5`. Radius of line/path segments.}
 
-\item{point_radius}{Default `0.5`. Radius of 3D points (rendered with `render_points()`.}
+\item{point_radius}{Default `1`. Radius of 3D points (rendered with `render_points()`). This scales the existing
+value of size specified in `render_points()`.}
 
 \item{smooth_line}{Default `FALSE`. If `TRUE`, the line will be rendered with a continuous smooth line, rather
 than straight segments.}

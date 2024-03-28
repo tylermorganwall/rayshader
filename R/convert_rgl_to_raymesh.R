@@ -97,7 +97,7 @@ convert_rgl_to_raymesh = function(save_shadow = TRUE) {
                                                                          dissolve = alpha,
                                                                          specular = specular)))
   }
-  for(row in 1:nrow(vertex_info)) {
+  for(row in seq_len(nrow(vertex_info))) {
     if(!is.na(vertex_info$lit[row])) {
       lit_val = unlist(vertex_info$lit[row])
     } else {
@@ -130,7 +130,7 @@ convert_rgl_to_raymesh = function(save_shadow = TRUE) {
       
       indices = indices - 1
       indices = matrix(indices, ncol=3, byrow=TRUE)
-      indices = indices[1:(nrow(indices)-na_counter),]
+      indices = indices[seq_len(nrow(indices)-na_counter),]
       texture_loc = vertex_info$texture_file[[row]]
       texture_loc = ifelse(!is.na(texture_loc), texture_loc, "")
       final_scene[[num_elems]] = rayvertex::construct_mesh(indices = indices,

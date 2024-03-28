@@ -4,8 +4,8 @@
 #'system defined by the extent object. If no altitude is provided, the points will be elevated a constant offset 
 #'above the heightmap. If the points goes off the edge, the nearest height on the heightmap will be used.
 #'
-#'@param long Vector of longitudes (or other coordinate in the same coordinate reference system as extent).
 #'@param lat Vector of latitudes (or other coordinate in the same coordinate reference system as extent).
+#'@param long Vector of longitudes (or other coordinate in the same coordinate reference system as extent).
 #'@param altitude Default `NULL`. Elevation of each point, in units of the elevation matrix (scaled by zscale). If a single value, 
 #'all data will be rendered at that altitude.
 #'@param extent Either an object representing the spatial extent of the 3D scene 
@@ -16,8 +16,9 @@
 #'@param heightmap Default `NULL`. Automatically extracted from the rgl window--only use if auto-extraction
 #'of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
 #' All points are assumed to be evenly spaced.
-#'@param size Default `3`. The point size.
-#'@param color Default `black`. Color of the point.
+#'@param size Default `3`. The point size. This can be a vector (the same length as `lat` and `long`) specifying
+#'a size for each point.
+#'@param color Default `black`. Color of the point. This can also be a vector specifying the color of each point.
 #'@param offset Default `5`. Offset of the track from the surface, if `altitude = NULL`.
 #'@param clear_previous Default `FALSE`. If `TRUE`, it will clear all existing points.
 #'@export
@@ -110,5 +111,14 @@ render_points = function(lat = NULL, long = NULL, altitude = NULL, extent = NULL
   }
   xyz = transform_into_heightmap_coords(extent, heightmap, lat, long, 
                                         altitude, offset, zscale)
-  rgl::points3d(xyz[,1], xyz[,2], xyz[,3], color = color, tag = "points3d", size = size)
+  if(length(size) > 1) {
+    stopifnot(length(size) == nrow(xyz))
+    color_length = length(color)
+    for(i in seq_len(nrow(xyz))) {
+      rgl::points3d(xyz[i,1], xyz[i,2], xyz[i,3], color = color[((i-1) %% color_length) + 1], 
+                    tag = "points3d", size = size[i])
+    }
+  } else {
+    rgl::points3d(xyz[,1], xyz[,2], xyz[,3], color = color, tag = "points3d", size = size)
+  }
 }

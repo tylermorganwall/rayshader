@@ -166,20 +166,36 @@ render_path = function(lat, long = NULL, altitude = NULL, groups = NULL,
   }
   if(resample_evenly) {
     stopifnot(resample_n > 1)
-    xyz = render_path(extent = extent, lat = lat, long = long, altitude = altitude, 
-                      zscale=zscale, heightmap = heightmap, offset = offset, resample_evenly = FALSE,
+    xyz = render_path(extent = extent, lat = lat, long = long, 
+                      altitude = altitude, 
+                      zscale=zscale, heightmap = heightmap, 
+                      offset = offset, resample_evenly = FALSE,
                       reorder = reorder, reorder_first_index = reorder_first_index, 
                       reorder_duplicate_tolerance = reorder_duplicate_tolerance,
                       reorder_merge_tolerance = reorder_merge_tolerance,
                       simplify_tolerance = simplify_tolerance,
                       clear_previous = FALSE, return_coords = TRUE)
     xyz = lapply(xyz, get_interpolated_points_path, n = resample_n)
-    xyz = do.call("rbind",lapply(xyz, 
-                                 \(x) rbind(x,matrix(NA,ncol=3,nrow=1))))
+    xyz = do.call("rbind",lapply(xyz, \(x) rbind(x,matrix(NA,ncol=3,nrow=1))))
     if(!return_coords) {
-      rgl::lines3d(xyz,
-                   color = color, tag = tag, lwd = linewidth, line_antialias = antialias)
-      return(invisible())
+      if(length(linewidth) > 1) {
+        if(length(linewidth) == nrow(xyz)) {
+          linewidth = (linewidth[seq_len(length(linewidth))[-1]] + 
+            linewidth[seq_len(length(linewidth)-1)])/2
+        }
+        color_length = length(color)
+        for(i in seq_len(nrow(xyz)-1)) {
+          rgl::lines3d(xyz[i:(i+1),], 
+                       color = color[((i-1) %% color_length) + 1], 
+                       tag = tag, lwd = linewidth[i],
+                       line_antialias = antialias)
+        }
+        return(invisible())
+      } else {
+        rgl::lines3d(xyz,
+                     color = color, tag = tag, lwd = linewidth, line_antialias = antialias)
+        return(invisible())
+      }
     } else {
       return(xyz)
     }
@@ -272,12 +288,39 @@ render_path = function(lat, long = NULL, altitude = NULL, groups = NULL,
                                           altitude, offset, zscale, filter_bounds = FALSE)
   }
   if(!return_coords) {
-    xyz = do.call("rbind",lapply(coord_list, 
-                                 \(x) rbind(x,matrix(NA,ncol=3,nrow=1))))
-    xyz = xyz[-nrow(xyz),]
-    rgl::lines3d(xyz,
-                 color = color, tag = tag, 
-                 lwd = linewidth, line_antialias = antialias)
+    if(length(linewidth) > 1) {
+      if(length(coord_list) == 1) {
+        xyz = do.call("rbind",coord_list)
+        if(length(linewidth) == nrow(xyz)) {
+          linewidth = (linewidth[seq_len(length(linewidth))[-1]] + 
+                         linewidth[seq_len(length(linewidth)-1)])/2
+        }
+        stopifnot(length(linewidth) == (nrow(xyz)-1))
+        color_length = length(color)
+        for(i in seq_len(nrow(xyz)-1)) {
+          rgl::lines3d(xyz[i:(i+1),], 
+                       color = color[((i-1) %% color_length) + 1], 
+                       tag = tag, lwd = linewidth[i],
+                       line_antialias = antialias)
+        }
+      } else {
+        stopifnot(length(coord_list) == length(linewidth))
+        color_length = length(color)
+        for(i in seq_len(length(coord_list))) {
+          rgl::lines3d(coord_list[[i]], 
+                       color = color[((i-1) %% color_length) + 1], 
+                       tag = tag, lwd = linewidth[i],
+                       line_antialias = antialias)
+        }
+      }
+    } else {
+      xyz = do.call("rbind",lapply(coord_list, 
+                                   \(x) rbind(x,matrix(NA,ncol=3,nrow=1))))
+      xyz = xyz[-nrow(xyz),]
+      rgl::lines3d(xyz,
+                   color = color, tag = tag, 
+                   lwd = linewidth, line_antialias = antialias)
+    }
   } else {
     return(coord_list)
   }
