@@ -32,6 +32,9 @@ jobs:
       - name: Set RGL_USE_NULL for Ubuntu
         if: runner.os == 'Linux'
         run: echo "RGL_USE_NULL=TRUE" >> $GITHUB_ENV
+      - name: Install XQuartz on macOS
+        if: runner.os == 'macOS'
+        run: brew cask install xquartz
       - name: Install system dependencies
         if: runner.os == 'Linux'
         run: |
