@@ -157,3 +157,18 @@ test_that("plot_3d plots soil options", {
                  clear_previous = TRUE, 
                  plot_new = FALSE))
 })
+
+test_that("test raymesh conversion", {
+  volcano %>%
+    sphere_shade() %>%
+    plot_3d(volcano,zscale = 2)
+  raymesh = convert_rgl_to_raymesh()
+  rgl::close3d()
+  raymesh$material_hashes = as.character(c(1,2,3))
+  raymesh$materials[[1]][[1]]$diffuse_texname = "texture_location"
+  raymesh$materials[[2]][[1]]$diffuse_texname = "texture_location"
+  raymesh$materials[[3]][[1]]$diffuse_texname = "texture_location"
+  class(raymesh) = "list"
+  expect_snapshot_value(as.list(raymesh), style = "json2")
+})
+
