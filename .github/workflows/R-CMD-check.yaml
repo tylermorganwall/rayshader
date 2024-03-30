@@ -46,6 +46,11 @@ jobs:
           r-version: ${{ matrix.config.r }}
           http-user-agent: ${{ matrix.config.http-user-agent }}
           use-public-rspm: true
+          
+      - name: Install GitHub package raybevel
+        run: |
+          Rscript -e "if(!requireNamespace('remotes', quietly = TRUE)) install.packages('remotes')"
+          Rscript -e "remotes::install_github('tylermorganwall/raybevel')"
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
