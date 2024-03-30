@@ -50,6 +50,7 @@ Suggests:
     raybevel
 LinkingTo: Rcpp, progress, RcppArmadillo
 RoxygenNote: 7.3.1
+Encoding: UTF-8
 URL: https://www.rayshader.com,
      https://github.com/tylermorganwall/rayshader
 BugReports: https://github.com/tylermorganwall/rayshader/issues

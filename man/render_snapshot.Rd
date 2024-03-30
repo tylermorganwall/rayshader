@@ -34,7 +34,7 @@ render_snapshot(
   point_radius = 1,
   line_offset = 1e-07,
   thick_lines = TRUE,
-  line_radius = 0.5,
+  line_radius = 1,
   cache_scene = FALSE,
   reset_scene_cache = FALSE,
   new_page = TRUE,
