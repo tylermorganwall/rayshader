@@ -55,3 +55,4 @@ URL: https://www.rayshader.com,
 BugReports: https://github.com/tylermorganwall/rayshader/issues
 Config/testthat/edition: 3
 Additional_repositories: https://tylermorganwall.r-universe.dev/
+Remotes: tylermorganwall/raybevel
