@@ -34,7 +34,7 @@ jobs:
         run: echo "RGL_USE_NULL=TRUE" >> $GITHUB_ENV
       - name: Install XQuartz on macOS
         if: runner.os == 'macOS'
-        run: brew cask install xquartz
+        run: brew install --cask xquartz
       - name: Install system dependencies
         if: runner.os == 'Linux'
         run: |
