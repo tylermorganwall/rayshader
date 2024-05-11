@@ -123,7 +123,7 @@ render_polygons = function(polygon, extent,  color = "red", top = 1, bottom = NA
         mesh = rayrender::extruded_polygon(polygon[i,],top=top,bottom=bottom,
                                            data_column_top=data_column_top,
                                            data_column_bottom=data_column_bottom,
-                                           scale_data=scale_data,holes=holes)$mesh_info[[1]]
+                                           scale_data=scale_data,holes=holes)$shape_info[[1]]$mesh_info[[1]]
         mesh_obj = rgl::mesh3d(vertices=c(t(mesh$vertices)),
                                triangles =c(t(mesh$indices))+1)
         vertex_list[[i]] = mesh_obj
