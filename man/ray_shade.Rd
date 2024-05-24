@@ -58,7 +58,7 @@ Use this instead of `sunaltitude` to create a softer shadow by specifying a wide
 Matrix of light intensities at each point.
 }
 \description{
-Calculates shadow map for a elevation matrix by propogating rays from each matrix point to the light source(s),
+Calculates shadow map for a elevation matrix by propagating rays from each matrix point to the light source(s),
 lowering the brightness at each point for each ray that intersects the surface.
 }
 \examples{

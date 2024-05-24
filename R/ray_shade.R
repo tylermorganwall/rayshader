@@ -1,6 +1,6 @@
 #'@title Calculate Raytraced Shadow Map
 #'
-#'@description Calculates shadow map for a elevation matrix by propogating rays from each matrix point to the light source(s),
+#'@description Calculates shadow map for a elevation matrix by propagating rays from each matrix point to the light source(s),
 #' lowering the brightness at each point for each ray that intersects the surface.
 #'
 #'@param heightmap A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.

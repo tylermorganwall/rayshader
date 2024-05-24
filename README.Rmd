@@ -68,7 +68,7 @@ Also included are functions to add additional effects and information to your 3D
 -  `render_highquality()` renders in the scene with a built-in pathtracer, powered by the **rayrender** package. Use this for high-quality maps with realistic light transport.
 -  `render_depth()` generates a depth of field effect for the 3D map. The user can specify the focal distance, focal length, and f-stop of the camera, as well as aperture shape and bokeh intensity. This either plots the image to the local device, or saves it to a file if given a filename.
 -  `render_label()` adds a text label to the `x` and `y` coordinate of the map at a specified altitude `z` (in units of the matrix). The altitude can either be specified relative to the elevation at that point (the default), or absolutely. 
-- `render_water()` adds a 3D tranparent water layer to 3D maps, after the rgl device has already been created. This can either add to a map that does not already have a water layer, or replace an existing water layer on the map.
+- `render_water()` adds a 3D transparent water layer to 3D maps, after the rgl device has already been created. This can either add to a map that does not already have a water layer, or replace an existing water layer on the map.
 - `render_compass()` places a compass on the map in 3D.
 - `render_path()` adds a 3D path to the current scene, using latitude/longitude or coordinates in the reference system defined by the extent object. If no altitude is provided, the path will be elevated a constant offset above the heightmap. 
 - `render_points()` Adds 3D points to the current scene, using latitude/longitude or coordinates in the reference system defined by the extent object. If no altitude is provided, the points will be elevated a constant offset above the heightmap.
@@ -252,7 +252,7 @@ rgl::rgl.close()
 system("rm dem_01.tif")
 ```
 
-You can also easily add a water layer by setting `water = TRUE` in `plot_3d()` (and setting `waterdepth` if the water level is not 0), or by using the function `render_water()` after the 3D map has been rendered. You can customize the appearance and transparancy of the water layer via function arguments. Here's an example using bathymetric/topographic data of Monterey Bay, CA (included with rayshader):
+You can also easily add a water layer by setting `water = TRUE` in `plot_3d()` (and setting `waterdepth` if the water level is not 0), or by using the function `render_water()` after the 3D map has been rendered. You can customize the appearance and transparency of the water layer via function arguments. Here's an example using bathymetric/topographic data of Monterey Bay, CA (included with rayshader):
 
 ```{r README_three-d-water, fig.width =  10, fig.height = 8}
 

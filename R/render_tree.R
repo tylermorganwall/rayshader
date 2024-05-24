@@ -211,7 +211,7 @@ render_tree = function(lat = NULL,
   
   # Handling case where both full tree and parts are specified
   if(custom_tree && has_custom_tree && (has_custom_crown || has_custom_trunk)) {
-    warning("Using `custom_obj_tree` over models specied in `custom_obj_crown` and `custom_obj_trunk`")
+    warning("Using `custom_obj_tree` over models specified in `custom_obj_crown` and `custom_obj_trunk`")
     has_custom_crown = FALSE
     has_custom_trunk = FALSE
   }

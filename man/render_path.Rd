@@ -36,7 +36,7 @@ Can also be an `sf` or `SpatialLineDataFrame` object.}
 Ignored if lat is an `sf` or `SpatialLineDataFrame` object.}
 
 \item{altitude}{Default `NULL`. Elevation of each point, in units of the elevation matrix (scaled by zscale).
-If left `NULL`, this will be just the elevation value at ths surface, offset by `offset`. If a single value, 
+If left `NULL`, this will be just the elevation value at this surface, offset by `offset`. If a single value, 
 all data will be rendered at that altitude.}
 
 \item{groups}{Default `NULL`. Integer vector specifying the grouping of each lat/long path segment, if lat/long are
