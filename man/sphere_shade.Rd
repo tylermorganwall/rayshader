@@ -62,7 +62,8 @@ montereybay \%>\%
 
 #Create our own texture using the `create_texture` function:
 montereybay \%>\%
- sphere_shade(texture=create_texture("springgreen","darkgreen",
-                                     "turquoise","steelblue3","white")) \%>\%
+ sphere_shade(zscale=10,texture=create_texture("#E9C68D","#AF7F38",
+                                               "#674F30","#494D30",
+                                               "#B3BEA3")) \%>\%
  plot_map()
 }

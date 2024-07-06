@@ -5,10 +5,10 @@
 \title{Render Points}
 \usage{
 render_points(
-  extent = NULL,
   lat = NULL,
   long = NULL,
   altitude = NULL,
+  extent = NULL,
   zscale = 1,
   heightmap = NULL,
   size = 3,
@@ -18,13 +18,17 @@ render_points(
 )
 }
 \arguments{
-\item{extent}{A `raster::Extent` object with the bounding box of the displayed 3D scene.}
-
 \item{lat}{Vector of latitudes (or other coordinate in the same coordinate reference system as extent).}
 
 \item{long}{Vector of longitudes (or other coordinate in the same coordinate reference system as extent).}
 
-\item{altitude}{Elevation of each point, in units of the elevation matrix (scaled by zscale).}
+\item{altitude}{Default `NULL`. Elevation of each point, in units of the elevation matrix (scaled by zscale). If a single value, 
+all data will be rendered at that altitude.}
+
+\item{extent}{Either an object representing the spatial extent of the 3D scene 
+(either from the `raster`, `terra`, `sf`, or `sp` packages), 
+a length-4 numeric vector specifying `c("xmin", "xmax","ymin","ymax")`, or the spatial object (from 
+the previously aforementioned packages) which will be automatically converted to an extent object.}
 
 \item{zscale}{Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.}
 
@@ -32,9 +36,10 @@ render_points(
 of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
 All points are assumed to be evenly spaced.}
 
-\item{size}{Default `3`. The point size.}
+\item{size}{Default `3`. The point size. This can be a vector (the same length as `lat` and `long`) specifying
+a size for each point.}
 
-\item{color}{Default `black`. Color of the point.}
+\item{color}{Default `black`. Color of the point. This can also be a vector specifying the color of each point.}
 
 \item{offset}{Default `5`. Offset of the track from the surface, if `altitude = NULL`.}
 
@@ -46,8 +51,7 @@ system defined by the extent object. If no altitude is provided, the points will
 above the heightmap. If the points goes off the edge, the nearest height on the heightmap will be used.
 }
 \examples{
-if(interactive()) {
-\donttest{
+if(run_documentation()) {
 #Starting at Moss Landing in Monterey Bay, we are going to simulate a flight of a bird going
 #out to sea and diving for food.
 
@@ -82,14 +86,16 @@ render_points(extent = attr(montereybay,"extent"),
              lat = unlist(bird_track_lat), long = unlist(bird_track_long), 
              altitude = z_out, zscale=50,color="white")
 render_snapshot()
-    
+}
+if(run_documentation()) {
 #We'll set the altitude to zero to give the tracks a "shadow" over the water. 
 render_points(extent = attr(montereybay,"extent"), 
              lat = unlist(bird_track_lat), long = unlist(bird_track_long), 
-             altitude = 0, zscale=50, color="black")
+             offset = 0, zscale=50, color="black")
 render_camera(theta=30,phi=35,zoom=0.45,fov=70)
 render_snapshot()
-
+}
+if(run_documentation()) {
 #Remove the points:
 render_points(clear_previous=TRUE)
 
@@ -104,10 +110,19 @@ render_points(extent = attr(montereybay,"extent"), heightmap = montereybay,
            zscale=50, color="red", offset=100, size=5)
 render_camera(theta = 160, phi=33, zoom=0.4, fov=55)
 render_snapshot()
-
-#And all of these work with `render_highquality()`
-render_highquality(point_radius = 3, clamp_value=10)
-rgl::rgl.close()
 }
+if(run_documentation()) {
+#And all of these work with `render_highquality()`
+render_highquality(point_radius = 6, clamp_value=10, min_variance = 0,
+                  sample_method = "sobol_blue", samples = 128)
+}
+
+if(run_documentation()) {
+#We can also change the material of the objects by setting the `point_material` and
+#`point_material_args` arguments in `render_highquality()`
+render_highquality(point_radius = 6, clamp_value=10, min_variance = 0,
+                  sample_method = "sobol_blue", samples = 128,
+                  point_material = rayrender::glossy, 
+                  point_material_args = list(gloss = 0.5, reflectance = 0.2))
 }
 }

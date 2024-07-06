@@ -15,20 +15,24 @@
 #'island_volcano[island_volcano < mean(island_volcano)] = mean(island_volcano)
 #'
 #'#Setting a minimum area avoids classifying small flat areas as water:
+#'if(run_documentation()) {
 #'island_volcano %>%
 #'  sphere_shade(texture="imhof3") %>%
 #'  add_water(detect_water(island_volcano, min_area = 400),color="imhof3") %>%
 #'  plot_map()
+#'}
 #'  
 #'#We'll do the same thing with the Monterey Bay dataset to fill in the ocean:
 #'
 #'montbay_water = montereybay
 #'montbay_water[montbay_water < 0] = 0
 #'
+#'if(run_documentation()) {
 #'montereybay %>%
 #'  sphere_shade(texture="imhof4") %>%
 #'  add_water(detect_water(montbay_water),color="imhof4") %>%
 #'  plot_map()
+#'}
 add_water = function(hillshade, watermap, color="imhof1") {
   watermap = t(flipud(watermap))
   if (color == "imhof1") {
@@ -68,13 +72,13 @@ add_water = function(hillshade, watermap, color="imhof1") {
   for(i in 1:3) {
     tempmat = hillshade[,,i]
     if(color[1] != "unicorn") {
-      tempmat[watermap >= 1] = color[i]/256
+      tempmat[watermap >= 1] = color[i]/255
     } else {
       unicolors = col2rgb(rainbow(256))
       for(row in 1:nrow(watermap)) {
         for(col in 1:ncol(watermap)) {
           if(watermap[row,col] >= 1) {
-            tempmat[row,col] = unicolors[i,col %% 256+1]/256
+            tempmat[row,col] = unicolors[i,col %% 255+1]/255
           }
         }
       }

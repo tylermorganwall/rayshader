@@ -1,0 +1,71 @@
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  release:
+    types: [published]
+  workflow_dispatch:
+
+name: pkgdown
+
+jobs:
+  pkgdown:
+    runs-on: macOS-latest
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      RGL_USE_NULL: true
+      _SF_USE_S2: false
+      IN_PKGDOWN: true
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-pandoc@v2
+        with:
+          extra-packages: any::pkgdown, local::.
+          needs: website
+
+      - name: Query dependencies
+        run: |
+          install.packages('remotes')
+          install.packages('av')
+          install.packages('sf')
+          install.packages('rgdal')
+          install.packages('extrafont')
+          install.packages('magick')
+          extrafont::font_import()
+          saveRDS(remotes::dev_package_deps(dependencies = TRUE), ".github/depends.Rds", version = 2)
+          writeLines(sprintf("R-%i.%i", getRversion()$major, getRversion()$minor), ".github/R-version")
+        shell: Rscript {0}
+          
+      - name: Restore R package cache
+        uses: actions/cache@v2
+        with:
+          path: ${{ env.R_LIBS_USER }}
+          key: ${{ runner.os }}-${{ hashFiles('.github/R-version') }}-7-${{ hashFiles('.github/depends.Rds') }}
+          restore-keys: ${{ runner.os }}-${{ hashFiles('.github/R-version') }}-7-
+          
+      - name: Install dependencies
+        run: |
+          install.packages("sf")
+          remotes::install_github("dmurdoch/rgl")
+          remotes::install_github("tylermorganwall/rayvertex")
+          remotes::install_github("tylermorganwall/rayimage")
+          remotes::install_github("tylermorganwall/rayrender")
+          remotes::install_github("tylermorganwall/raybevel")
+          remotes::install_deps(dependencies = TRUE)
+          install.packages("pkgdown", type = "binary")
+        shell: Rscript {0}
+
+      - name: Install package
+        run: R CMD INSTALL .
+
+      - name: Deploy to GitHub pages 🚀
+        run: |
+          git config --local user.email "actions@github.com"
+          git config --local user.name "GitHub Actions"
+          Rscript -e 'pkgdown::deploy_to_branch(new_process = FALSE, run_dont_run = TRUE)'

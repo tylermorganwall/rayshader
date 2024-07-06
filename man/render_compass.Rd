@@ -7,6 +7,8 @@
 render_compass(
   angle = 0,
   position = "SE",
+  altitude = NULL,
+  zscale = 1,
   x = NULL,
   y = NULL,
   z = NULL,
@@ -25,6 +27,11 @@ render_compass(
 
 \item{position}{Default `SE`. A string representing a cardinal direction. Ignored if `x`, `y`, and `z`
 are manually specified.}
+
+\item{altitude}{Default `NULL`. Altitude of the compass, defaults to maximum height in the map.}
+
+\item{zscale}{Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. 
+Only used in combination with `altitude`.}
 
 \item{x}{Default `NULL`. X position. If not entered, automatically calculated using `position` argument.}
 
@@ -58,20 +65,22 @@ Places a compass on the map to specify the North direction.
 }
 \examples{
 #Add a North arrow to the map, by default in the bottom right (SE)
-if(interactive()) {
-\dontrun{
-montereybay \%>\%
+if(run_documentation()) {
+montereybay \%>\% 
  sphere_shade() \%>\%
  plot_3d(montereybay,theta=-45, water=TRUE)
 render_compass()
 render_snapshot()
-
+}
+if(run_documentation()) {
 #Remove the existing symbol with `clear_compass = TRUE`
 render_compass(clear_compass = TRUE)
 
 #Point the N towards the light, at 315 degrees:
 render_compass(angle = 315)
 render_snapshot()
+}
+if(run_documentation()) {
 render_compass(clear_compass = TRUE)
 
 #We can change the position by specifying a direction (here are three):
@@ -80,6 +89,8 @@ render_compass(position = "NW")
 render_compass(position = "E")
 render_compass(position = "S")
 render_snapshot()
+}
+if(run_documentation()) {
 render_compass(clear_compass = TRUE)
 
 #We can also change the distance away from the edge by setting the `scale_distance` argument.
@@ -90,6 +101,8 @@ render_compass(position = "S", scale_distance = 1.4)
 #Zoom in slightly:
 render_camera(theta=45,phi=45,zoom=0.7)
 render_snapshot()
+}
+if(run_documentation()) {
 render_compass(clear_compass = TRUE)
 
 #We can also specify the radius directly with `compass_radius`:
@@ -99,15 +112,20 @@ render_compass(position = "E", scale_distance = 1.4, compass_radius=50)
 render_compass(position = "S", scale_distance = 1.3, compass_radius=25)
 render_compass(position = "W", scale_distance = 1.2, compass_radius=10)
 render_snapshot()
-render_compass(clear_compass = TRUE)
 
+render_compass(clear_compass = TRUE)
+}
+if(run_documentation()) {
 #We can also adjust the position manually, be specifying all x, y and z arguments.
 render_camera(theta=-45,phi=45,zoom=0.9)
 render_compass(x = 150, y = 50, z = 150)
 render_snapshot()
-
+}
+if(run_documentation()) {
 # Compass support is also included in render_highquality()
-render_highquality(clamp_value=10)
+render_highquality(clamp_value=10, min_variance = 0, sample_method = "sobol_blue")
+}
+if(run_documentation()) {
 render_compass(clear_compass = TRUE)
 
 #We can change the colors in the compass, and also set it a constant distance away with
@@ -131,8 +149,6 @@ render_compass(position = "W", color_n = "#e9e671", color_arrow = "#cbb387",
             color_background = "#7c9695", color_bevel = "#cbb387", position_circular = TRUE)
 render_compass(position = "NW", color_n = c(0.7,0,0), color_arrow = c(0.3,0,0), 
             color_background = c(0.7,0.5,0.5), color_bevel = c(0.2,0,0), position_circular = TRUE)
-render_snapshot(clear=TRUE)
+render_snapshot()
 }
-}
-
 }

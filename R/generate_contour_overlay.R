@@ -10,22 +10,24 @@
 #'this will automatically generate `nlevels` breaks between `levels[1]` and `levels[2]`.
 #'@param width Default `NA`. Width of the resulting overlay. Default the same dimensions as heightmap.
 #'@param height Default `NA`. Width of the resulting overlay. Default the same dimensions as heightmap.
+#'@param resolution_multiply Default `1`. If passing in `heightmap` instead of width/height, amount to 
+#'increase the resolution of the overlay, which should make lines/polygons finer. 
+#'Should be combined with `add_overlay(rescale_original = TRUE)` to ensure those added details are captured
+#'in the final map.
 #'@param color Default `black`. Color.
 #'@param linewidth Default `1`. Line width.
 #'@return Semi-transparent overlay with contours.
 #'@export
 #'@examples
 #'#Add contours to the montereybay dataset
-#'
-#'#Only run these examples if the `magick` package is installed.
-#'if ("magick" %in% rownames(utils::installed.packages())) {
-#'\donttest{
+#'if(run_documentation()) {
 #'montereybay %>%
 #'  height_shade() %>%
 #'  add_overlay(generate_contour_overlay(montereybay))  %>%
 #'  add_shadow(ray_shade(montereybay,zscale=50),0.3) %>%
 #'  plot_map()
-#'  
+#'}
+#'
 #'#Add a different contour color for above and below water, and specify levels manually
 #'water_palette = colorRampPalette(c("darkblue", "dodgerblue", "lightblue"))(200)
 #'bathy_hs = height_shade(montereybay, texture = water_palette)
@@ -33,6 +35,7 @@
 #'water_breaks = breaks[breaks < 0]
 #'land_breaks = breaks[breaks > 0]
 #'
+#'if(run_documentation()) {
 #'montereybay %>%
 #'  height_shade() %>%
 #'  add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0))  %>%
@@ -40,7 +43,8 @@
 #'  add_overlay(generate_contour_overlay(montereybay, levels = water_breaks, color="white"))  %>%
 #'  add_overlay(generate_contour_overlay(montereybay, levels = land_breaks, color="black"))  %>%
 #'  plot_map()
-#'  
+#'}
+#'if(run_documentation()) {
 #'#Increase the resolution of the contour to improve the appearance of lines
 #'montereybay %>%
 #'  height_shade() %>%
@@ -53,7 +57,8 @@
 #'                                       height = nrow(montereybay)*2, 
 #'                                       width  = ncol(montereybay)*2))  %>%
 #'  plot_map()
-#'  
+#'}
+#'if(run_documentation()) {
 #'#Increase the number of breaks and the transparency (via add_overlay)
 #'montereybay %>%
 #'  height_shade() %>%
@@ -62,7 +67,8 @@
 #'                                       height = nrow(montereybay)*2, color="black",
 #'                                       width  = ncol(montereybay)*2), alphalayer=0.5) %>%
 #'  plot_map()
-#'  
+#'}
+#'if(run_documentation()) {
 #'#Manually specify the breaks with levels
 #'montereybay %>%
 #'  height_shade() %>%
@@ -70,15 +76,14 @@
 #'  add_shadow(ray_shade(montereybay,zscale=50),0.3) %>%
 #'  plot_map()
 #'}
-#'}
 generate_contour_overlay = function(heightmap, levels=NA, nlevels=NA, 
-                                    zscale = 1, width=NA, height=NA, 
+                                    zscale = 1, width=NA, height=NA, resolution_multiply = 1,
                                     color = "black", linewidth = 1) {
-  if(!("sf" %in% rownames(utils::installed.packages()))) {
+  if(!(length(find.package("sf", quiet = TRUE)) > 0)) {
     stop("`sf` package required for generate_contour_overlay()")
   }
-  if(!("isoband" %in% rownames(utils::installed.packages()))) {
-    stop("`isobands` package required for generate_contour_overlay()")
+  if(!(length(find.package("isoband", quiet = TRUE)) > 0)) {
+    stop("`isoband` package required for generate_contour_overlay()")
   }
   if(is.na(levels[1])) {
     if(is.na(nlevels[1])) {
@@ -99,12 +104,15 @@ generate_contour_overlay = function(heightmap, levels=NA, nlevels=NA,
                                  levels=levels)
   contours = isoband::iso_to_sfg(isolineval)
   sf_contours = sf::st_sf(level = names(contours), geometry = sf::st_sfc(contours))
-  if(is.na(width)) {
-    width  = ncol(heightmap)
-  }
   if(is.na(height)) {
-    height  = nrow(heightmap)
+    height = ncol(heightmap)
   }
+  if(is.na(width)) {
+    width  = nrow(heightmap)
+  }
+  height = height * resolution_multiply
+  width = width * resolution_multiply
+  
   tempoverlay = tempfile(fileext = ".png")
   grDevices::png(filename = tempoverlay, width = width, height = height, units="px",bg = "transparent")
   graphics::par(mar = c(0,0,0,0))

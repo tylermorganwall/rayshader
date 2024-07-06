@@ -17,12 +17,32 @@ render_snapshot(
   title_position = "northwest",
   image_overlay = NULL,
   vignette = FALSE,
+  vignette_color = "black",
+  vignette_radius = 1.3,
   instant_capture = interactive(),
   bring_to_front = FALSE,
-  keep_user_par = FALSE,
   webshot = FALSE,
   width = NULL,
   height = NULL,
+  software_render = FALSE,
+  camera_location = NULL,
+  camera_lookat = c(0, 0, 0),
+  background = NULL,
+  text_angle = NULL,
+  text_size = 30,
+  text_offset = c(0, 0, 0),
+  point_radius = 1,
+  line_offset = 1e-07,
+  thick_lines = TRUE,
+  line_radius = 1,
+  cache_scene = FALSE,
+  reset_scene_cache = FALSE,
+  new_page = TRUE,
+  print_scene_info = FALSE,
+  fsaa = 1,
+  rayvertex_lighting = FALSE,
+  rayvertex_lights = NULL,
+  rayvertex_shadow_map = FALSE,
   ...
 )
 }
@@ -57,24 +77,76 @@ dimension of the image if it does not match exactly.}
 `1` is the darkest vignetting, while `0` is no vignetting. If vignette is a length-2 vector, the second entry will
 control the blurriness of the vignette effect.}
 
+\item{vignette_color}{Default `"black"`. Color of the vignette.}
+
+\item{vignette_radius}{Default `1.3`. Radius of the vignette, as a porportion of the image dimensions.}
+
 \item{instant_capture}{Default `TRUE` if interactive, `FALSE` otherwise. If `FALSE`, a slight delay is added 
 before taking the snapshot. This can help stop prevent rendering issues when running scripts.}
 
 \item{bring_to_front}{Default `FALSE`. Whether to bring the window to the front when taking the snapshot.}
 
-\item{keep_user_par}{Default `TRUE`. Whether to keep the user's `par()` settings. Set to `FALSE` if you 
-want to set up a multi-pane plot (e.g. set `par(mfrow)`).}
-
 \item{webshot}{Default `FALSE`. Set to `TRUE` to have rgl use the `webshot2` package to take images,
 which can be used when `rgl.useNULL = TRUE`.}
 
 \item{width}{Default `NULL`. Optional argument to pass to `rgl::snapshot3d()` to specify the
-width when `webshot = TRUE`.}
+width when `software_render = TRUE`..}
 
 \item{height}{Default `NULL`. Optional argument to pass to `rgl::snapshot3d()` to specify the
-height when `webshot = TRUE`.}
+height when `software_render = TRUE`.}
 
-\item{...}{Additional parameters to pass to magick::image_annotate.}
+\item{software_render}{Default `FALSE`. If `TRUE`, rayshader will use the rayvertex package to render the snapshot, which
+is not constrained by the screen size or requires OpenGL.}
+
+\item{camera_location}{Default `NULL`. Custom position of the camera. The `FOV`, `width`, and `height` arguments will still
+be derived from the rgl window.}
+
+\item{camera_lookat}{Default `NULL`. Custom point at which the camera is directed. The `FOV`, `width`, and `height` arguments will still
+be derived from the rgl window.}
+
+\item{background}{Default `NULL`, defaults to device background. Background color when `software_render = TRUE`.}
+
+\item{text_angle}{Default `NULL`, which forces the text always to face the camera. If a single angle (degrees),
+will specify the absolute angle all the labels are facing. If three angles, this will specify all three orientations
+(relative to the x,y, and z axes) of the text labels.}
+
+\item{text_size}{Default `30`. Height of the text.}
+
+\item{text_offset}{Default `c(0,0,0)`. Offset to be applied to all text labels.}
+
+\item{point_radius}{Default `1`. Radius of 3D points (rendered with `render_points()`). This scales the existing
+value of size specified in `render_points()`.}
+
+\item{line_offset}{Default `1e-7`. Small number indicating the offset in the scene to apply to lines if using software rendering. Increase this if your lines 
+aren't showing up, or decrease it if lines are appearing through solid objects.}
+
+\item{thick_lines}{Default `TRUE`. If `software_render = TRUE`, this will render path segments as thick cylinders. Otherwise, it will 
+render the lines using a single-pixel anti-aliased line algorithm.}
+
+\item{line_radius}{Default `0.5`. The radius of the thick cylinders if `thick_lines = TRUE` and `software_render = TRUE`.}
+
+\item{cache_scene}{Default `FALSE`. Whether to cache the current scene to memory so it does not have to be converted to a `raymesh` object 
+each time `render_snapshot()` is called. If `TRUE` and a scene has been cached, it will be used when rendering.}
+
+\item{reset_scene_cache}{Default `FALSE`. Resets the scene cache before rendering.}
+
+\item{new_page}{Default `TRUE`. Whether to call `grid::grid.newpage()` before plotting the image.}
+
+\item{print_scene_info}{Default `FALSE`. If `TRUE`, it will print the position and lookat point of the camera.}
+
+\item{fsaa}{Default `1`. Integer specifying the amount of anti-aliasing applied `software_render = TRUE`.}
+
+\item{rayvertex_lighting}{Default `FALSE`. If `TRUE` and `software_render = TRUE`, the scene will use rayvertex lighting when rendering
+the scene, using the lights specified in `rayvertex_lights`. If no lights are specified there, they will be pulled
+from `light` objects in the `rgl` scene.}
+
+\item{rayvertex_lights}{Default `NULL`. Use `rayvertex::directional_light()` and `rayvertex::point_light()` along with the 
+`rayvertex::add_light()` function to specify lighting for your scene when `rayvertex_lighting = TRUE`.}
+
+\item{rayvertex_shadow_map}{Default `FALSE`. If `TRUE` and `rayvertex_lighting = TRUE` along with `software_render = TRUE`, shadow mapping will also
+be applied to the rendered scene.}
+
+\item{...}{Additional parameters to pass to `rayvertex::rasterize_scene()`.}
 }
 \value{
 Displays snapshot of current rgl plot (or saves to disk).
@@ -83,31 +155,42 @@ Displays snapshot of current rgl plot (or saves to disk).
 Either captures the current rgl view and displays, or saves the current view to disk.
 }
 \examples{
-if(interactive()) {
-\donttest{
+if(run_documentation()) {
 montereybay \%>\%
  sphere_shade() \%>\%
  plot_3d(montereybay,zscale=50,zoom=0.6,theta=-90,phi=30)
 }
  
-\donttest{
+if(run_documentation()) {
 render_snapshot()
 }
  
-#Create a title, but also pass the `gravity` argument to magick::image_annotate using ...
-#to center the text.
-\donttest{
-render_snapshot(title_text = "Monterey Bay, California", 
+#Create a title
+if(run_documentation()) {
+render_snapshot(title_text = "Monterey Bay, California", title_offset=c(0,20),
                title_color = "white", title_bar_color = "black",
-               title_font = "Helvetica", gravity = "North")
+               title_font = "Helvetica", title_position = "north")
                
 #Add a vignette effect
 render_camera(zoom=0.8)
 render_snapshot(title_text = "Monterey Bay, California", 
                title_color = "white", title_bar_color = "darkgreen",
-               vignette = TRUE, 
-               title_font = "Helvetica", gravity = "North")
-rgl::rgl.close() 
+               vignette = TRUE, title_offset=c(0,20),
+               title_font = "Helvetica", title_position = "north")
 }
+#Use software rendering to render a scene with shadow mapping
+if(run_documentation()) {
+montereybay |> 
+ height_shade() |> 
+ plot_3d(montereybay, shadow=FALSE, solidlinecolor = NULL)
+#No shadows
+render_snapshot(software_render = TRUE)
+}
+if(run_documentation()) {
+#Now with shadow mapped shadows, calculated in rayvertex
+render_snapshot(rayvertex_lighting = TRUE, 
+               rayvertex_lights = rayvertex::directional_light(intensity = 1.2, 
+                                                               direction = c(-1, 1, -1)), 
+               rayvertex_shadow_map = TRUE, software_render = TRUE)
 }
 }

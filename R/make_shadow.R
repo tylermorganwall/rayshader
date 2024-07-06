@@ -6,7 +6,8 @@
 #'@param basedepth Default `grey20`.
 #'@param shadowwidth Default `50`. Shadow width.
 #'@keywords internal
-make_shadow = function(heightmap, basedepth, shadowwidth, color, shadowcolor) {
+make_shadow = function(heightmap, basedepth, shadowwidth, color, shadowcolor,
+                       offset = c(0,0)) {
   rows = nrow(heightmap)
   cols = ncol(heightmap)
   colors = col2rgb(color)
@@ -30,24 +31,30 @@ make_shadow = function(heightmap, basedepth, shadowwidth, color, shadowcolor) {
   temppreblur = tempfile(fileext = ".png")
   tempmap = tempfile(fileext = ".png")
   png::writePNG(shadowarray, temppreblur)
-  if("magick" %in% rownames(utils::installed.packages())) {
+  has_rayimage = length(find.package("rayimage", quiet = TRUE)) > 0
+  has_magick = length(find.package("magick", quiet = TRUE)) > 0
+  if(has_magick) {
     magick::image_read(temppreblur) %>%
-      magick::image_blur(sigma =  shadowwidth/2, radius=shadowwidth/2) %>%
+      magick::image_blur(sigma =  shadowwidth/4, radius=shadowwidth/2) %>%
       (function(x) as.double(x[[1]])) %>%
       png::writePNG(tempmap)
+  } else if (has_rayimage) {
+    rayimage::render_convolution_fft(shadowarray, filename = tempmap, kernel = rayimage::generate_2d_gaussian(dim=c(shadowwidth/2,shadowwidth/2)))
   } else {
-    warning("`magick` package required for smooth shadow--using basic shadow instead.")
+    warning("`magick` or `rayimage` package required for smooth shadow--using basic shadow instead.")
     png::writePNG(shadowarray,tempmap)
   }
-  rowmin = min((-shadowwidth+1):(rows+shadowwidth) - rows/2)
-  rowmax = max((-shadowwidth+1):(rows+shadowwidth) - rows/2)
-  colmin = min(-(-shadowwidth+1):-(cols+shadowwidth) + cols/2+1)
-  colmax = max(-(-shadowwidth+1):-(cols+shadowwidth) + cols/2+1)
+  
+  rowmin = min((-shadowwidth+1):(rows+shadowwidth) - rows/2) + offset[1]
+  rowmax = max((-shadowwidth+1):(rows+shadowwidth) - rows/2) + offset[1]
+  colmin = min(-(-shadowwidth+1):-(cols+shadowwidth) + cols/2+1) + offset[2]
+  colmax = max(-(-shadowwidth+1):-(cols+shadowwidth) + cols/2+1) + offset[2]
   
   tri1 = matrix(c(rowmax,rowmax,rowmin,basedepth,basedepth,basedepth,colmax,colmin,colmin), nrow=3,ncol=3)
   tri2 = matrix(c(rowmin,rowmax,rowmin,basedepth,basedepth,basedepth,colmax,colmax,colmin), nrow=3,ncol=3)
   
-  rgl.triangles(rbind(tri1,tri2), texcoords = matrix(c(1,1,0,0,1,0,1,0,0,1,1,0),nrow=6,ncol=2),
-                texture=tempmap,
-                lit=FALSE,back="culled",ambient = "#000006")
+  rgl::triangles3d(x=rbind(tri1,tri2), 
+                   texcoords = matrix(c(1,1,0,0,1,0,1,0,0,1,1,0),nrow=6,ncol=2),
+                   texture=tempmap, color = "white",
+                   lit=FALSE,back="culled",tag = "shadow")
 }

@@ -20,6 +20,9 @@ generate_waterline_overlay(
   evenly_spaced = FALSE,
   zscale = 1,
   cutoff = 0.999,
+  width = NA,
+  height = NA,
+  resolution_multiply = 1,
   min_area = length(heightmap)/400,
   max_height = NULL,
   return_distance_matrix = FALSE
@@ -60,6 +63,15 @@ of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
 
 \item{cutoff}{Default `0.999`. Arguments passed to `detect_water()`. Ignored if `boolean = TRUE`.The lower limit of the z-component of the unit normal vector to be classified as water.}
 
+\item{width}{Default `NA`. Width of the resulting image array. Default the same dimensions as height map.}
+
+\item{height}{Default `NA`. Width of the resulting image array. Default the same dimensions as height map.}
+
+\item{resolution_multiply}{Default `1`. If passing in `heightmap` instead of width/height, amount to 
+increase the resolution of the overlay, which should make lines/polygons/text finer. 
+Should be combined with `add_overlay(rescale_original = TRUE)` to ensure those added details are captured
+in the final map.}
+
 \item{min_area}{Default `length(heightmap)/400`. Arguments passed to `detect_water()`. Ignored if `boolean = TRUE`. Minimum area (in units of the height matrix x and y spacing) to be considered a body of water.}
 
 \item{max_height}{Default `NULL`. Arguments passed to `detect_water()`. Ignored if `boolean = TRUE`. If passed, this number will specify the maximum height a point can be considered to be water.
@@ -79,9 +91,7 @@ to calculate the distance to the coast. This distance matrix can be returned dir
 the `return_distance_matrix` argument to `TRUE`.
 }
 \examples{
-#Only run these examples if the `magick` package is installed.
-if ("magick" \%in\% rownames(utils::installed.packages())) {
-\donttest{
+if(run_documentation()) {
 #Create a flat body of water for Monterey Bay
 montbay = montereybay
 montbay[montbay < 0] = 0
@@ -94,52 +104,60 @@ basemap = montbay \%>\%
   add_shadow(lamb_shade(montbay,zscale=50),0) 
 
 plot_map(basemap)
-
+}
+if(run_documentation()) {
 #Add waterlines
 basemap \%>\% 
   add_overlay(generate_waterline_overlay(montbay)) \%>\% 
   plot_map()
-
+}
+if(run_documentation()) {
 #Change minimum line distance:
 basemap \%>\% 
   add_overlay(generate_waterline_overlay(montbay, min = 0.02)) \%>\% 
   plot_map()
-
+}
+if(run_documentation()) {
 #Change maximum line distance
 basemap \%>\% 
   add_overlay(generate_waterline_overlay(montbay, max = 0.4)) \%>\% 
   plot_map()
-
+}
+if(run_documentation()) {
 #Smooth waterlines
 basemap \%>\% 
   add_overlay(generate_waterline_overlay(montbay, max = 0.4, smooth=2)) \%>\% 
   plot_map()
-
+}
+if(run_documentation()) {
 #Increase number of breaks
 basemap \%>\% 
   add_overlay(generate_waterline_overlay(montbay, breaks = 20, max=0.4)) \%>\% 
   plot_map()
-
+}
+if(run_documentation()) {
 #Make lines evenly spaced:
 basemap \%>\% 
   add_overlay(generate_waterline_overlay(montbay, evenly_spaced = TRUE)) \%>\% 
   plot_map()
-
+}
+if(run_documentation()) {
 #Change variable distance between each line
 basemap \%>\% 
   add_overlay(generate_waterline_overlay(montbay, falloff=1.5)) \%>\% 
   plot_map()
-
+}
+if(run_documentation()) {
 #Turn off fading
 basemap \%>\% 
   add_overlay(generate_waterline_overlay(montbay, fade=FALSE)) \%>\% 
   plot_map()
-
+}
+if(run_documentation()) {
 #Fill up the entire body of water with lines and make them all 50\% transparent
 basemap \%>\% 
   add_overlay(generate_waterline_overlay(montbay, fade=FALSE, max=1, alpha = 0.5, color="white",
                                          evenly_spaced = TRUE, breaks=50)) \%>\% 
   plot_map()
-}
 }
 }

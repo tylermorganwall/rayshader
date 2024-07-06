@@ -4,7 +4,19 @@
 \alias{make_base}
 \title{make_base}
 \usage{
-make_base(heightmap, basedepth = 0, basecolor = "grey20", zscale = 1)
+make_base(
+  heightmap,
+  basedepth = 0,
+  basecolor = "grey20",
+  zscale = 1,
+  soil = FALSE,
+  soil_freq = 0.1,
+  soil_levels = 8,
+  soil_color1 = "black",
+  soil_color2 = "black",
+  soil_gradient = 0,
+  gradient_darken = 1
+)
 }
 \arguments{
 \item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.}

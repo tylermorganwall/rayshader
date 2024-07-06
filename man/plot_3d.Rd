@@ -15,7 +15,8 @@ plot_3d(
   solidlinecolor = "grey30",
   shadow = TRUE,
   shadowdepth = "auto",
-  shadowcolor = "grey50",
+  shadowcolor = "auto",
+  shadow_darkness = 0.5,
   shadowwidth = "auto",
   water = FALSE,
   waterdepth = 0,
@@ -25,6 +26,13 @@ plot_3d(
   waterlinealpha = 1,
   linewidth = 2,
   lineantialias = FALSE,
+  soil = FALSE,
+  soil_freq = 0.1,
+  soil_levels = 16,
+  soil_color_light = "#b39474",
+  soil_color_dark = "#8a623b",
+  soil_gradient = 2,
+  soil_gradient_darken = 4,
   theta = 45,
   phi = 45,
   fov = 0,
@@ -37,7 +45,9 @@ plot_3d(
   max_error = 0,
   max_tri = 0,
   verbose = FALSE,
-  ...
+  plot_new = TRUE,
+  close_previous = TRUE,
+  clear_previous = TRUE
 )
 }
 \arguments{
@@ -48,11 +58,11 @@ plot_3d(
 \item{zscale}{Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
 of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10. Adjust the zscale down to exaggerate elevation features.}
 
-\item{baseshape}{Default `rectangle`. Shape of the base. Options are c("rectangle","circle","hex").}
+\item{baseshape}{Default `rectangle`. Shape of the base. Options are `c("rectangle","circle","hex")`.}
 
 \item{solid}{Default `TRUE`. If `FALSE`, just the surface is rendered.}
 
-\item{soliddepth}{Default `auto`, which sets it to the lowest elevation in the matrix minus one unit (scaled by zscale). Depth of the solid base.}
+\item{soliddepth}{Default `auto`, which sets it to the lowest elevation in the matrix minus one unit (scaled by zscale). Depth of the solid base. If heightmap is uniform and set on `auto`, this is automatically set to a slightly lower level than the uniform elevation.}
 
 \item{solidcolor}{Default `grey20`. Base color.}
 
@@ -62,7 +72,10 @@ of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
 
 \item{shadowdepth}{Default `auto`, which sets it to `soliddepth - soliddepth/10`. Depth of the shadow layer.}
 
-\item{shadowcolor}{Default `grey50`. Color of the shadow.}
+\item{shadowcolor}{Default `auto`. Color of the shadow, automatically computed as `shadow_darkness`
+the luminance of the `background` color in the CIELuv colorspace if not specified.}
+
+\item{shadow_darkness}{Default `0.5`. Darkness of the shadow, if `shadowcolor = "auto"`.}
 
 \item{shadowwidth}{Default `auto`, which sizes it to 1/10th the smallest dimension of `heightmap`. Width of the shadow in units of the matrix.}
 
@@ -81,6 +94,21 @@ of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
 \item{linewidth}{Default `2`. Width of the edge lines in the scene.}
 
 \item{lineantialias}{Default `FALSE`. Whether to anti-alias the lines in the scene.}
+
+\item{soil}{Default `FALSE`. Whether to draw the solid base with a textured soil layer.}
+
+\item{soil_freq}{Default `0.1`. Frequency of soil clumps. Higher frequency values give smaller soil clumps.}
+
+\item{soil_levels}{Default `16`. Fractal level of the soil.}
+
+\item{soil_color_light}{Default `"#b39474"`. Light tint of soil.}
+
+\item{soil_color_dark}{Default `"#8a623b"`. Dark tint of soil.}
+
+\item{soil_gradient}{Default `2`. Sharpness of the soil darkening gradient. `0` turns off the gradient entirely.}
+
+\item{soil_gradient_darken}{Default `4`. Amount to darken the `soil_color_dark` value for the deepest soil layers. Higher
+numbers increase the darkening effect.}
 
 \item{theta}{Default `45`. Rotation around z-axis.}
 
@@ -124,46 +152,65 @@ to save a smaller 3D OBJ file to disk with `save_obj()`,}
 \item{verbose}{Default `TRUE`, if `interactive()`. Prints information about the mesh triangulation
 if `triangulate = TRUE`.}
 
-\item{...}{Additional arguments to pass to the `rgl::par3d` function.}
+\item{plot_new}{Default `TRUE`, opens new window with each `plot_3d()` call. If `FALSE`, 
+the data will be plotted in the same window.}
+
+\item{close_previous}{Default `TRUE`. Closes any previously open `rgl` window. If `FALSE`, 
+old windows will be kept open.}
+
+\item{clear_previous}{Default `TRUE`. Clears the previously open `rgl` window if `plot_new = FALSE`.}
 }
 \description{
-Displays the shaded map in 3D with the `rgl` package.
+Displays the shaded map in 3D with the `rgl` package. 
+
+Note: Calling `plot_3d()` resets the scene cache for the `render_snapshot()`, `render_depth()`, and `render_highquality()`
 }
 \examples{
-if(interactive()) {
 #Plotting a spherical texture map of the built-in `montereybay` dataset.
-\donttest{
+if(run_documentation()) {
 montereybay \%>\%
  sphere_shade(texture="desert") \%>\%
  plot_3d(montereybay,zscale=50)
-render_snapshot(clear = TRUE)
+render_snapshot()
 }
 
 #With a water layer  
-\donttest{
+if(run_documentation()) {
 montereybay \%>\%
  sphere_shade(texture="imhof2") \%>\%
  plot_3d(montereybay, zscale=50, water = TRUE, watercolor="imhof2", 
          waterlinecolor="white", waterlinealpha=0.5)
-render_snapshot(clear = TRUE)
+render_snapshot()
+}
+
+#With a soil texture to the base  
+if(run_documentation()) {
+montereybay \%>\%
+ sphere_shade(texture="imhof3") \%>\%
+ plot_3d(montereybay, zscale=50, water = TRUE,  watercolor="imhof4", 
+         waterlinecolor="white", waterlinealpha=0.5, soil=TRUE)
+render_camera(theta=225, phi=7, zoom=0.5, fov=67)
+render_snapshot()
 }
 
 #We can also change the base by setting "baseshape" to "hex" or "circle"
-\donttest{
+if(run_documentation()) {
 montereybay \%>\%
  sphere_shade(texture="imhof1") \%>\%
  plot_3d(montereybay, zscale=50, water = TRUE, watercolor="imhof1", theta=-45, zoom=0.7,
          waterlinecolor="white", waterlinealpha=0.5,baseshape="circle")
-render_snapshot(clear = TRUE)
+render_snapshot()
 }
 
-\donttest{
+if(run_documentation()) {
 montereybay \%>\%
  sphere_shade(texture="imhof1") \%>\%
  plot_3d(montereybay, zscale=50, water = TRUE, watercolor="imhof1", theta=-45, zoom=0.7,
          waterlinecolor="white", waterlinealpha=0.5,baseshape="hex")
-render_snapshot(clear = TRUE)
+render_snapshot()
 }
+
+
 
 #Or we can carve out the region of interest ourselves, by setting those entries to NA
 #to the elevation map passed into `plot_3d`
@@ -174,12 +221,11 @@ render_snapshot(clear = TRUE)
 mb_water = montereybay
 mb_water[mb_water > -10] = NA
 
-\donttest{
+if(run_documentation()) {
 montereybay \%>\%
  sphere_shade(texture="imhof1") \%>\%
  plot_3d(mb_water, zscale=50, water = TRUE, watercolor="imhof1", theta=-45,
          waterlinecolor="white", waterlinealpha=0.5)
-render_snapshot(clear = TRUE)
-}
+render_snapshot()
 }
 }

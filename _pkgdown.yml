@@ -1,7 +1,29 @@
+url: https://www.rayshader.com
+
 pandoc: 2.3.1
 pkgdown: 1.3.0.9000
 pkgdown_sha: 2f40b4769ea9ad2312aa4cc93f27ab116461543b
 articles: []
+
+template:
+  opengraph:
+    image:
+      src: man/figures/website.jpg
+      alt: "Picture of a 3D map made with rayshader"
+    twitter:
+      creator: "@tylermorganwall"
+      card: summary_large_image
+
+figures:
+  dpi: 96
+  dev.args: []
+  fig.ext: png
+  fig.width: 8
+  fig.height: ~
+  fig.retina: 2
+  fig.asp: 1
+  bg: NA
+  other.parameters: []
 
 reference:
   - title: "Creating Hillshades"
@@ -19,10 +41,11 @@ reference:
     contents:
       - starts_with("add")
   - title: "Plotting and Saving 2D and 3D Visualizations"
-    desc: "Functions for displaying/saving 2D visualizations and 3D prints"
+    desc: "Functions for displaying/saving 2D visualizations and 3D prints/models"
     contents:
       - starts_with("plot")
       - starts_with("save")
+      - starts_with("convert")
   - title: "Manipulate and Capture 3D Maps"
     desc: "Functions for adding features to 3D maps, rendering post-processing effects, and saving snapshots"
     contents:
@@ -33,13 +56,20 @@ reference:
       - starts_with("calculate")
       - starts_with("raster")
       - starts_with("resize")
+      - starts_with("reduce_matrix_size")
   - title: "Included Data"
     desc: "Elevation data included with rayshader"
     contents:
       - "montereybay"
       - "monterey_counties_sf"
       - "monterey_roads_sf"
-     
+      - "washington_monument_multipolygonz"
+      - starts_with("flag")
+  - title: "pkgdown utils"
+    desc: "Internal but must be exported to meet CRAN guidelines"
+    contents:
+      - starts_with("run")
+
 navbar: 
   title: "rayshader"
   type: inverse
@@ -74,7 +104,7 @@ navbar:
     - icon: fa-github fa-lg
       text: "GitHub"
       href: https://github.com/tylermorganwall/rayshader
-      
+    
 authors:
   Tyler Morgan-Wall: 
     href: https://www.tylermw.com

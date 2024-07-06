@@ -5,7 +5,7 @@
 \title{Render Depth of Field}
 \usage{
 render_depth(
-  focus = 0.5,
+  focus = NULL,
   focallength = 100,
   fstop = 4,
   filename = NULL,
@@ -29,7 +29,23 @@ render_depth(
   title_position = "northwest",
   image_overlay = NULL,
   vignette = FALSE,
+  vignette_color = "black",
+  vignette_radius = 1.3,
   progbar = interactive(),
+  software_render = FALSE,
+  width = NULL,
+  height = NULL,
+  camera_location = NULL,
+  camera_lookat = c(0, 0, 0),
+  background = "white",
+  text_angle = NULL,
+  text_size = 10,
+  text_offset = c(0, 0, 0),
+  point_radius = 0.5,
+  line_offset = 1e-07,
+  cache_scene = FALSE,
+  reset_scene_cache = FALSE,
+  print_scene_info = FALSE,
   instant_capture = interactive(),
   clear = FALSE,
   bring_to_front = FALSE,
@@ -37,7 +53,7 @@ render_depth(
 )
 }
 \arguments{
-\item{focus}{Defaults `0.5`. Depth in which to blur. Minimum 0, maximum 1.}
+\item{focus}{Focal point. Defaults to the center of the bounding box. Depth in which to blur, in distance to the camera plane.}
 
 \item{focallength}{Default `1`. Focal length of the virtual camera.}
 
@@ -95,7 +111,48 @@ dimension of the image if it does not match exactly.}
 `1` is the darkest vignetting, while `0` is no vignetting. If vignette is a length-2 vector, the second entry will
 control the blurriness of the vignette effect.}
 
+\item{vignette_color}{Default `"black"`. Color of the vignette.}
+
+\item{vignette_radius}{Default `1.3`. Radius of the vignette, as a porportion of the image dimensions.}
+
 \item{progbar}{Default `TRUE` if in an interactive session. Displays a progress bar.}
+
+\item{software_render}{Default `FALSE`. If `TRUE`, rayshader will use the rayvertex package to render the snapshot, which
+is not constrained by the screen size or requires OpenGL.}
+
+\item{width}{Default `NULL`. Optional argument to pass to `rgl::snapshot3d()` to specify the
+width when `software_render = TRUE`..}
+
+\item{height}{Default `NULL`. Optional argument to pass to `rgl::snapshot3d()` to specify the
+height when `software_render = TRUE`.}
+
+\item{camera_location}{Default `NULL`. Custom position of the camera. The `FOV`, `width`, and `height` arguments will still
+be derived from the rgl window.}
+
+\item{camera_lookat}{Default `NULL`. Custom point at which the camera is directed. The `FOV`, `width`, and `height` arguments will still
+be derived from the rgl window.}
+
+\item{background}{Default `"white"`. Background color when `software_render = TRUE`.}
+
+\item{text_angle}{Default `NULL`, which forces the text always to face the camera. If a single angle (degrees),
+will specify the absolute angle all the labels are facing. If three angles, this will specify all three orientations
+(relative to the x,y, and z axes) of the text labels.}
+
+\item{text_size}{Default `10`. Height of the text.}
+
+\item{text_offset}{Default `c(0,0,0)`. Offset to be applied to all text labels.}
+
+\item{point_radius}{Default `0.5`. Radius of 3D points (rendered with `render_points()`.}
+
+\item{line_offset}{Default `1e-7`. Small number indicating the offset in the scene to apply to lines if using software rendering. Increase this if your lines 
+aren't showing up, or decrease it if lines are appearing through solid objects.}
+
+\item{cache_scene}{Default `FALSE`. Whether to cache the current scene to memory so it does not have to be converted to a `raymesh` object 
+each time `render_snapshot()` is called. If `TRUE` and a scene has been cached, it will be used when rendering.}
+
+\item{reset_scene_cache}{Default `FALSE`. Resets the scene cache before rendering.}
+
+\item{print_scene_info}{Default `FALSE`. If `TRUE`, it will print the position and lookat point of the camera.}
 
 \item{instant_capture}{Default `TRUE` if interactive, `FALSE` otherwise. If `FALSE`, a slight delay is added 
 before taking the snapshot. This can help stop prevent rendering issues when running scripts.}
@@ -104,7 +161,7 @@ before taking the snapshot. This can help stop prevent rendering issues when run
 
 \item{bring_to_front}{Default `FALSE`. Whether to bring the window to the front when rendering the snapshot.}
 
-\item{...}{Additional parameters to pass to magick::image_annotate.}
+\item{...}{Additional parameters to pass to `rayvertex::rasterize_scene()`.}
 }
 \value{
 4-layer RGBA array.
@@ -117,51 +174,45 @@ The size of the circle of confusion is determined by the following formula (z_de
 \code{abs(z_depth-focus)*focal_length^2/(f_stop*z_depth*(focus - focal_length))}
 }
 \examples{
-\donttest{
-#Only run these examples if the webshot2
-if(interactive()) {
+if(run_documentation()) {
 montereybay \%>\%
  sphere_shade() \%>\%
  plot_3d(montereybay,zscale=50, water=TRUE, waterlinecolor="white",
          zoom=0.3,theta=-135,fov=70, phi=20) 
  
 #Preview where the focal plane lies
-render_depth(focus=0.75, preview_focus=TRUE)
-
+render_depth(preview_focus=TRUE)
+}
+if(run_documentation()) {
 #Render the depth of field effect
-render_depth(focus=0.75, focallength = 100)
-
+render_depth(focallength = 300)
+}
+if(run_documentation()) {
 #Add a chromatic aberration effect
-render_depth(focus=0.75, focallength = 100, aberration = 0.3)
-
+render_depth(focallength = 300, aberration = 0.3)
+}
+if(run_documentation()) {
 #Render the depth of field effect, ignoring water and re-drawing the waterlayer
-render_depth(focus=0.9, preview_focus=TRUE, 
-            heightmap = montereybay, zscale=50, transparent_water=TRUE)
-render_depth(focus=0.9, heightmap = montereybay, zscale=50, transparent_water=TRUE)
-rgl::rgl.close()
-
-montereybay \%>\%
- sphere_shade() \%>\%
- plot_3d(montereybay,zscale=50, water=TRUE, waterlinecolor="white",
-         zoom=0.7,phi=30,fov=60,theta=-90)
-         
+render_depth(preview_focus=TRUE, 
+            heightmap = montereybay, zscale=50, focallength=300, transparent_water=TRUE)
+render_depth(heightmap = montereybay, zscale=50, focallength=300, transparent_water=TRUE)
 render_camera(theta=45,zoom=0.15,phi=20)
+}
 
+if(run_documentation()) {
 #Change the bokeh shape and intensity
-render_depth(focus=0.7, bokehshape = "circle",focallength=300,bokehintensity=30,
+render_depth(focus=900, bokehshape = "circle",focallength=500,bokehintensity=30,
             title_text = "Circular Bokeh", title_size = 30, title_color = "white", 
             title_bar_color = "black")
-render_depth(focus=0.7, bokehshape = "hex",focallength=300,bokehintensity=30,
+render_depth(focus=900, bokehshape = "hex",focallength=500,bokehintensity=30,
             title_text = "Hexagonal Bokeh", title_size = 30, title_color = "white", 
             title_bar_color = "black")
+}
 
+if(run_documentation()) {
 #Add a title and vignette effect.
 render_camera(theta=0,zoom=0.7,phi=30)
-render_depth(focus = 0.75,focallength = 100, title_text = "Monterey Bay, CA", 
+render_depth(focallength = 250, title_text = "Monterey Bay, CA", 
             title_size = 20, title_color = "white", title_bar_color = "black", vignette = TRUE)
-            
-#
-rgl::rgl.close()
-}
 }
 }

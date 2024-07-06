@@ -3,11 +3,18 @@
 #'@description Transforms an input `sf` object into an image overlay for the current height map.
 #'
 #'@param geometry An `sf` object with POLYGON geometry.
-#'@param extent A `raster::Extent` object with the bounding box for the height map used to generate the original map.
+#'@param extent Either an object representing the spatial extent of the scene 
+#' (either from the `raster`, `terra`, `sf`, or `sp` packages), 
+#' a length-4 numeric vector specifying `c("xmin", "xmax","ymin","ymax")`, or the spatial object (from 
+#' the previously aforementioned packages) which will be automatically converted to an extent object. 
 #'@param heightmap Default `NULL`. The original height map. Pass this in to extract the dimensions of the resulting 
 #'overlay automatically.
 #'@param width Default `NA`. Width of the resulting overlay. Default the same dimensions as height map.
 #'@param height Default `NA`. Width of the resulting overlay. Default the same dimensions as height map.
+#'@param resolution_multiply Default `1`. If passing in `heightmap` instead of width/height, amount to 
+#'increase the resolution of the overlay, which should make lines/polygons/text finer. 
+#'Should be combined with `add_overlay(rescale_original = TRUE)` to ensure those added details are captured
+#'in the final map.
 #'@param linecolor Default `black`. Color of the lines.
 #'@param palette Default `black`. Single color, named vector color palette, or palette function. 
 #'If this is a named vector and `data_column_fill` is not `NULL`, 
@@ -20,13 +27,12 @@
 #'@export
 #'@examples
 #'#Plot the counties around Monterey Bay, CA
-#'#Only run these examples if the `magick` package is installed.
-#'if ("magick" %in% rownames(utils::installed.packages())) {
-#'\donttest{
+#'if(run_documentation()) {
 #'generate_polygon_overlay(monterey_counties_sf, palette = rainbow, 
 #'                         extent = attr(montereybay,"extent"), heightmap = montereybay) %>%
 #'  plot_map() 
-#'
+#'}
+#'if(run_documentation()) {
 #'#These counties include the water, so we'll plot bathymetry data over the polygon
 #'#data to only include parts of the polygon that fall on land.
 #'water_palette = colorRampPalette(c("darkblue", "dodgerblue", "lightblue"))(200)
@@ -36,7 +42,8 @@
 #'                         extent = attr(montereybay,"extent"), heightmap = montereybay) %>%
 #'  add_overlay(generate_altitude_overlay(bathy_hs, montereybay, start_transition = 0)) %>%
 #'  plot_map()
-#'
+#'}
+#'if(run_documentation()) {
 #'#Add a semi-transparent hillshade and change the palette, and remove the polygon lines
 #'montereybay %>%
 #'  sphere_shade(texture = "bw") %>%
@@ -47,7 +54,8 @@
 #'  add_overlay(generate_altitude_overlay(bathy_hs, montereybay, start_transition = 0)) %>%
 #'  add_shadow(ray_shade(montereybay,zscale=50),0) %>%
 #'  plot_map()
-#'
+#'}
+#'if(run_documentation()) {
 #'#Map one of the variables in the sf object and use an explicitly defined color palette
 #'county_palette = c("087" = "red",    "053" = "blue",   "081" = "green", 
 #'                   "069" = "yellow", "085" = "orange", "099" = "purple") 
@@ -62,11 +70,11 @@
 #'  add_shadow(ray_shade(montereybay,zscale=50),0.5) %>%
 #'  plot_map()
 #'}
-#'}
 generate_polygon_overlay = function(geometry, extent, heightmap = NULL, 
-                                    width=NA, height=NA, offset = c(0,0), data_column_fill = NULL, 
+                                    width=NA, height=NA, resolution_multiply = 1,
+                                    offset = c(0,0), data_column_fill = NULL, 
                                     linecolor = "black", palette = "white", linewidth = 1) {
-  if(!("sf" %in% rownames(utils::installed.packages()))) {
+  if(!(length(find.package("sf", quiet = TRUE)) > 0)) {
     stop("{sf} package required for generate_line_overlay()")
   }
   if(is.null(extent)) {
@@ -78,14 +86,20 @@ generate_polygon_overlay = function(geometry, extent, heightmap = NULL,
   if(!inherits(geometry,"sf")) {
     stop("geometry must be {sf} object")
   }
+  if(is.numeric(extent)) {
+    extent = raster::extent(extent)
+  }
   sf_polygons_cropped = base::suppressMessages(base::suppressWarnings(sf::st_crop(geometry, extent)))
   
   if(is.na(height)) {
-    height  = ncol(heightmap)
+    height = ncol(heightmap)
   }
   if(is.na(width)) {
     width  = nrow(heightmap)
   }
+  height = height * resolution_multiply
+  width = width * resolution_multiply
+  
   if (is.function(palette)) {
     palette = palette(nrow(sf_polygons_cropped))
   }
@@ -104,8 +118,8 @@ generate_polygon_overlay = function(geometry, extent, heightmap = NULL,
         if(is.numeric(sf_polygons_cropped[[data_column_fill]])) {
           max_col = max(sf_polygons_cropped[[data_column_fill]],na.rm = TRUE)
           min_col = min(sf_polygons_cropped[[data_column_fill]],na.rm = TRUE)
-          indices = (sf_polygons_cropped[[data_column_fill]] - min_col) / (max_col - min_col) * length(palette)
-          fillvals = palette[as.integer(indices)]
+          indices = (sf_polygons_cropped[[data_column_fill]] - min_col) / (max_col - min_col) * (length(palette)-1)
+          fillvals = palette[as.integer(indices)+1]
         } else if (is.character(sf_polygons_cropped[[data_column_fill]])) {
           mapping = names(palette)
           indices = match(sf_polygons_cropped[[data_column_fill]],mapping)
@@ -142,18 +156,21 @@ generate_polygon_overlay = function(geometry, extent, heightmap = NULL,
       stop("`offset` must be of length-2")
     }
   }
+  extent = get_extent(extent)
   tempoverlay = tempfile(fileext = ".png")
   grDevices::png(filename = tempoverlay, width = width, height = height, units="px",bg = "transparent")
   graphics::par(mar = c(0,0,0,0))
   if(!transparent) {
-    graphics::plot(sf::st_geometry(sf_polygons_cropped), xlim = c(extent@xmin,extent@xmax),
-                   ylim =  c(extent@ymin,extent@ymax), 
+    graphics::plot(sf::st_geometry(sf_polygons_cropped), 
+                   xlim = c(extent["xmin"],extent["xmax"]), 
+                   ylim = c(extent["ymin"],extent["ymax"]), 
                    lty = lty, border = NA, asp = 1,
                    xaxs = "i", yaxs = "i", lwd = linewidth, col = fillvals)
   }
   if(!is.na(linewidth) && linewidth > 0) {
-    graphics::plot(sf::st_geometry(sf_polygons_cropped), xlim = c(extent@xmin,extent@xmax), 
-                   ylim =  c(extent@ymin,extent@ymax),
+    graphics::plot(sf::st_geometry(sf_polygons_cropped), 
+                   xlim = c(extent["xmin"],extent["xmax"]), 
+                   ylim = c(extent["ymin"],extent["ymax"]), 
                    lty = lty, add=!transparent, asp = 1,
                    xaxs = "i", yaxs = "i", lwd = linewidth, col = NA, border = linecolor)
   }

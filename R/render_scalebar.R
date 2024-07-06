@@ -1,6 +1,6 @@
 #'@title Render Scale Bar
 #'
-#'@description Places a compass on the map to specify the North direction.
+#'@description Places a scale bar on the map in 3D.
 #'
 #
 #'@param limits The distance represented by the scale bar. If a numeric vector greater than length 1, 
@@ -29,20 +29,22 @@
 #'@return Displays snapshot of current rgl plot (or saves to disk).
 #'@export
 #'@examples
-#'if(interactive()) {
 #'#Add a scale bar to the montereybay dataset, here representing about 80km
-#'\dontrun{
+#'if(run_documentation()) {
 #'montereybay %>%
 #'  sphere_shade() %>%
 #'  plot_3d(montereybay,theta=45, water=TRUE)
 #'render_scalebar(limits=c(0, 80), label_unit = "km")
 #'render_snapshot()
-#'
+#'}
+#'if(run_documentation()) {
 #'#This function works with `render_highquality()`
-#'
-#'render_highquality(lightdirection=250, lightaltitude=40, scale_text_size=24,clamp_value=10)
+#'render_highquality(lightdirection = 250, lightaltitude = 40, 
+#'                   scale_text_size = 24, clamp_value = 10,
+#'                   sample_method = "sobol_blue", samples = 128)
 #'render_scalebar(clear_scalebar = TRUE)
-#'
+#'}
+#'if(run_documentation()) {
 #'#We can change the position by specifying a cardinal direction to `position`, and the 
 #'#color by setting `color_first` and `color_second`
 #'
@@ -50,25 +52,29 @@
 #'                color_first = "darkgreen", color_second = "lightgreen")
 #'render_snapshot()
 #'render_scalebar(clear_scalebar = TRUE)
-#'
+#'}
+#'if(run_documentation()) {
 #'#And switch the orientation by setting `text_switch_side = TRUE`
 #'render_scalebar(limits=c(0,80), label_unit = "km", position = "N", text_switch_side = TRUE,
 #'                color_first = "darkgreen", color_second = "lightgreen")
 #'render_snapshot()
 #'render_scalebar(clear_scalebar = TRUE)
-#'
+#'}
+#'if(run_documentation()) {
 #'#We can add additional breaks by specifying additional distances in `limits`
 #'
 #'render_scalebar(limits=c(0,40,80), label_unit = "km")
 #'render_snapshot()
 #'render_scalebar(clear_scalebar = TRUE)
-#'
+#'}
+#'if(run_documentation()) {
 #'#We can also manually specify the height by setting the `y` argument:
 #'
 #'render_scalebar(limits=c(0,40,80), y=-70, label_unit = "km")
 #'render_snapshot()
 #'render_scalebar(clear_scalebar = TRUE)
-#'
+#'}
+#'if(run_documentation()) {
 #'#Here we change the total size by specifying a start and end point along the side,
 #'#and set the number of colored `segments`:
 #'
@@ -77,14 +83,14 @@
 #'                scale_length = c(0.25,0.75), label_unit = "km")
 #'render_snapshot()
 #'render_scalebar(clear_scalebar = TRUE)
-#'
+#'}
+#'if(run_documentation()) {
 #'#Change the radius of the scale bar with `radius`. Here, the autopositioning doesn't work well with
 #'#the labels, so we provide additional offsets with `text_y_offset` and `text_x_offset` to fix it.
 #'
 #'render_scalebar(limits=c(0,20, 40), segments = 4, scale_length = c(0.5,1), 
 #'                label_unit = "km", radius=10,text_y_offset=-20,text_x_offset=20)
-#'render_snapshot(clear=TRUE)
-#'}
+#'render_snapshot()
 #'}
 render_scalebar = function(limits, position = "W", y = NULL,
                           segments = 10, scale_length = 1, label_unit = "",
@@ -95,10 +101,10 @@ render_scalebar = function(limits, position = "W", y = NULL,
                           clear_scalebar = FALSE) {
   if(clear_scalebar) {
     ids = get_ids_with_labels(c("scalebar_col1","scalebar_col2","text_scalebar"))$id
-    rgl::rgl.pop(id=ids)
+    rgl::pop3d(id=ids)
     return(invisible())
   }
-  if(rgl::rgl.cur() == 0) {
+  if(rgl::cur3d() == 0) {
     stop("No rgl window currently open.")
   }
   if(length(scale_length) > 2) {
@@ -118,7 +124,7 @@ render_scalebar = function(limits, position = "W", y = NULL,
     id_base = get_ids_with_labels("surface_tris")$id
   }
   fullverts = rgl::rgl.attrib(id_base,"vertices")
-  xyz_range = apply(fullverts,2,range) 
+  xyz_range = apply(fullverts,2,range,na.rm=TRUE) 
   widths = xyz_range[2,c(1,3)] - xyz_range[1,c(1,3)]
   
   if(is.null(offset)) {
@@ -215,8 +221,8 @@ render_scalebar = function(limits, position = "W", y = NULL,
       }
     }
   } 
-  shapelist3d(meshlist1, lit=FALSE, ambient = "#000014", color = color_first, plot=TRUE)
-  shapelist3d(meshlist2, lit=FALSE, ambient = "#000015", color = color_second, plot=TRUE)
+  shapelist3d(meshlist1, lit=FALSE, tag = "scalebar_col1", color = color_first, plot=TRUE)
+  shapelist3d(meshlist2, lit=FALSE, tag = "scalebar_col2", color = color_second, plot=TRUE)
   
   max_distance = max(limits)
   breakpoints = limits/max_distance 
@@ -225,41 +231,41 @@ render_scalebar = function(limits, position = "W", y = NULL,
       if(text_switch_side) {
         break_dist = breakpoints[i] * xend + (1-breakpoints[i]) * xstart
         text3d(x=break_dist+text_x_offset, y=y+text_y_offset+radius*3, z=zend-offset+text_z_offset-radius*5, 
-               texts = paste0(c(as.character(limits[i]), label_unit),collapse=""), color = color_text, ambient = "#000016")
+               texts = paste0(c(as.character(limits[i]), label_unit),collapse=""), color = color_text, tag = "text_scalebar")
       } else {
         break_dist = breakpoints[i] * xstart + (1-breakpoints[i]) * xend
         text3d(x=break_dist+text_x_offset, y=y+text_y_offset+radius*3, z=zend-offset+text_z_offset-radius*5, 
-               texts = paste0(c(as.character(limits[i]), label_unit),collapse=""), color = color_text, ambient = "#000016")
+               texts = paste0(c(as.character(limits[i]), label_unit),collapse=""), color = color_text, tag = "text_scalebar")
       }
     } else if(position == "W") {
       if(text_switch_side) {
         break_dist = breakpoints[i] * zstart + (1-breakpoints[i]) * zend
         text3d(x=xend-offset+text_x_offset-radius*5, y=y+text_y_offset+radius*3, z=break_dist+text_z_offset, 
-               texts = paste0(c(as.character(limits[i]), label_unit),collapse=""), color = color_text, ambient = "#000016")
+               texts = paste0(c(as.character(limits[i]), label_unit),collapse=""), color = color_text, tag = "text_scalebar")
       } else {
         break_dist = breakpoints[i] * zend + (1-breakpoints[i]) * zstart
         text3d(x=xend-offset+text_x_offset-radius*5, y=y+text_y_offset+radius*3, z=break_dist+text_z_offset, 
-               texts = paste0(c(as.character(limits[i]), label_unit),collapse=""), color = color_text, ambient = "#000016")
+               texts = paste0(c(as.character(limits[i]), label_unit),collapse=""), color = color_text, tag = "text_scalebar")
       }
     } else if(position == "S") {
       if(text_switch_side) {
         break_dist = breakpoints[i] * xstart + (1-breakpoints[i]) * xend
         text3d(x=break_dist+text_x_offset, y=y+text_y_offset+radius*3, z=zstart+offset+text_z_offset+radius*5, 
-               texts = paste0(c(as.character(limits[i]), label_unit),collapse=""), color = color_text, ambient = "#000016")
+               texts = paste0(c(as.character(limits[i]), label_unit),collapse=""), color = color_text, tag = "text_scalebar")
       } else {
         break_dist = breakpoints[i] * xend + (1-breakpoints[i]) * xstart
         text3d(x=break_dist+text_x_offset, y=y+text_y_offset+radius*3, z=zstart+offset+text_z_offset+radius*5, 
-               texts = paste0(c(as.character(limits[i]), label_unit),collapse=""), color = color_text, ambient = "#000016")
+               texts = paste0(c(as.character(limits[i]), label_unit),collapse=""), color = color_text, tag = "text_scalebar")
       }
     } else if(position == "E") {
       if(text_switch_side) {
         break_dist = breakpoints[i] * zend + (1-breakpoints[i]) * zstart
         text3d(x=xstart+offset+text_x_offset+radius*5, y=y+text_y_offset+radius*3, z=break_dist+text_z_offset,
-               texts = paste0(c(as.character(limits[i]), label_unit),collapse=""), color = color_text, ambient = "#000016")
+               texts = paste0(c(as.character(limits[i]), label_unit),collapse=""), color = color_text, tag = "text_scalebar")
       } else {
         break_dist = breakpoints[i] * zstart + (1-breakpoints[i]) * zend
         text3d(x=xstart+offset+text_x_offset+radius*5, y=y+text_y_offset+radius*3, z=break_dist+text_z_offset, 
-               texts = paste0(c(as.character(limits[i]), label_unit),collapse=""), color = color_text, ambient = "#000016")
+               texts = paste0(c(as.character(limits[i]), label_unit),collapse=""), color = color_text, tag = "text_scalebar")
       }
     }
   }

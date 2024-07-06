@@ -22,6 +22,7 @@ generate_scalebar_overlay(
   heightmap = NULL,
   width = NA,
   height = NA,
+  resolution_multiply = 1,
   color1 = "white",
   color2 = "black",
   text_color = "black",
@@ -38,7 +39,10 @@ generate_scalebar_overlay(
 )
 }
 \arguments{
-\item{extent}{A `raster::Extent` object with the bounding box for the height map used to generate the original map. If this is in
+\item{extent}{Either an object representing the spatial extent of the scene 
+(either from the `raster`, `terra`, `sf`, or `sp` packages), 
+a length-4 numeric vector specifying `c("xmin", "xmax","ymin","ymax")`, or the spatial object (from 
+the previously aforementioned packages) which will be automatically converted to an extent object. If this is in
 lat/long coordinates, be sure to set `latlong = TRUE`.}
 
 \item{length}{The length of the scale bar, in `units`. This should match the units used on the map, 
@@ -77,6 +81,11 @@ RGB image array automatically.}
 \item{width}{Default `NA`. Width of the resulting image array. Default the same dimensions as height map.}
 
 \item{height}{Default `NA`. Width of the resulting image array. Default the same dimensions as height map.}
+
+\item{resolution_multiply}{Default `1`. If passing in `heightmap` instead of width/height, amount to 
+increase the resolution of the overlay, which should make lines/polygons/text finer. 
+Should be combined with `add_overlay(rescale_original = TRUE)` to ensure those added details are captured
+in the final map.}
 
 \item{color1}{Default `black`. Primary color of the scale bar.}
 
@@ -118,12 +127,12 @@ and then creates a scale bar at a specified x/y proportion across the map. If th
 scale bar of the proper length.
 }
 \examples{
-#Only run these examples if the `magick` package is installed.
-if ("magick" \%in\% rownames(utils::installed.packages())) {
-\donttest{
+if(run_documentation()) {
 #Create the water palette
 water_palette = colorRampPalette(c("darkblue", "dodgerblue", "lightblue"))(200)
 bathy_hs = height_shade(montereybay, texture = water_palette)
+#Set scalebar font
+par(family = "Arial")
 
 #Generate flat water heightmap
 mbay = montereybay
@@ -143,8 +152,8 @@ add_overlay(generate_scalebar_overlay(extent = mb_extent, length = 40000,
                                       heightmap = montereybay, 
                                       latlong=TRUE)) \%>\%
 plot_map()
-
-
+}
+if(run_documentation()) {
 #Change the text color
 base_map \%>\%
  add_overlay(generate_scalebar_overlay(extent = mb_extent, length = 40000,
@@ -152,8 +161,8 @@ base_map \%>\%
                                        heightmap = montereybay, 
                                        latlong=TRUE)) \%>\%
  plot_map()
-
-
+}
+if(run_documentation()) {
 #Change the length
 base_map \%>\%
  add_overlay(generate_scalebar_overlay(extent = mb_extent, length = 30000,
@@ -161,7 +170,8 @@ base_map \%>\%
                                        heightmap = montereybay, 
                                        latlong=TRUE)) \%>\%
  plot_map()
-
+}
+if(run_documentation()) {
 #Change the thickness (default is length/20)
 base_map \%>\%
  add_overlay(generate_scalebar_overlay(extent = mb_extent, length = 30000,
@@ -169,7 +179,8 @@ base_map \%>\%
                                        heightmap = montereybay, 
                                        latlong=TRUE)) \%>\%
  plot_map()
-
+}
+if(run_documentation()) {
 #Change the text offset (given in multiples of thickness)
 base_map \%>\%
  add_overlay(generate_scalebar_overlay(extent = mb_extent, length = 30000,
@@ -178,7 +189,8 @@ base_map \%>\%
                                        heightmap = montereybay, 
                                        latlong=TRUE)) \%>\%
  plot_map()
-
+}
+if(run_documentation()) {
 #Change the primary and secondary colors, along with the border and tick color
 base_map \%>\%
  add_overlay(generate_scalebar_overlay(extent = mb_extent, length = 30000,
@@ -188,7 +200,8 @@ base_map \%>\%
                                        heightmap = montereybay, 
                                        latlong=TRUE)) \%>\%
  plot_map()
-
+}
+if(run_documentation()) {
 #Add a halo
 base_map \%>\%
  add_overlay(generate_scalebar_overlay(extent = mb_extent, length = 40000,
@@ -196,7 +209,8 @@ base_map \%>\%
                                        heightmap = montereybay, 
                                        latlong=TRUE)) \%>\%
  plot_map()
-
+}
+if(run_documentation()) {
 #Change the orientation, position, text alignment, and flip the ticks to the other side
 base_map \%>\%
  add_overlay(generate_scalebar_overlay(extent = mb_extent, length = 40000, x = 0.07,
@@ -205,8 +219,8 @@ base_map \%>\%
                                        heightmap = montereybay, 
                                        latlong=TRUE)) \%>\%
  plot_map()
- 
- 
+}
+if(run_documentation()) { 
 #64373.8 meters in 40 miles
 #Create custom labels, change font and text size, remove the border/ticks, and change the color
 #Here, we specify a width and height to double the resolution of the image (for sharper text)
@@ -222,6 +236,5 @@ base_map \%>\%
                                        height = nrow(montereybay)*2,
                                        latlong=TRUE), rescale_original=TRUE) \%>\%
  plot_map()
-}
 }
 }

@@ -54,3 +54,13 @@
 #' #counties = sf::st_read("tl_2015_06_prisecroads.shp")
 #' #monterey_roads_sf = sf::st_crop(counties, attr(montereybay,"extent"))
 "monterey_roads_sf"
+
+#' Washington Monument 3D Model as Multipolygon Z Data 
+#'
+#' This dataset is an `sf` object containing MULTIPOLYGON Z 3D data of the Washington Monument in Washington, DC.
+#'
+#' @format An `sf` object with MULTIPOLYGONZ geometry.
+#' @source https://opendata.dc.gov/documents/DCGIS::buildings-in-3d/
+#' @examples 
+#' # See the `render_multipolygonz()` documentation for examples of using this data.
+"washington_monument_multipolygonz"

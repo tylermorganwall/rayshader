@@ -42,7 +42,7 @@ save_png = function(hillshade, filename,
     stop("save_png requires a filename")
   }
   has_title = !is.na(title_text)
-  if(!("rayimage" %in% rownames(utils::installed.packages())) && has_title) {
+  if(!(length(find.package("rayimage", quiet = TRUE)) > 0) && has_title) {
     warning("`rayimage` package required for title text")
     has_title = FALSE
   }
@@ -62,7 +62,12 @@ save_png = function(hillshade, filename,
         hillshade = rotatef(hillshade)
       }
     }
-    final = array(t(hillshade[,ncol(hillshade):1]),dim=c(ncol(hillshade),nrow(hillshade),3))
+    hillshade = rayimage::render_reorient(hillshade, flipy = TRUE, transpose = TRUE)
+    final = array(0, dim= c(dim(hillshade),3))
+    final[,,1] = hillshade
+    final[,,2] = hillshade
+    final[,,3] = hillshade
+    
     if(has_title) {
       final = rayimage::add_title(final, title_text = title_text, title_offset = title_offset,
                                            title_color = title_color, title_size = title_size,

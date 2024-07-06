@@ -4,14 +4,7 @@
 \alias{save_3dprint}
 \title{Save 3D Print}
 \usage{
-save_3dprint(
-  filename,
-  maxwidth = 125,
-  unit = "mm",
-  rotate = TRUE,
-  remove_extras = TRUE,
-  clear = FALSE
-)
+save_3dprint(filename, maxwidth = 125, unit = "mm", rotate = FALSE)
 }
 \arguments{
 \item{filename}{String with the filename. If `.stl` is not at the end of the string, it will be appended automatically.}
@@ -21,10 +14,6 @@ save_3dprint(
 \item{unit}{Default `mm`. Units of the `maxwidth` argument. Can also be set to inches with `in`.}
 
 \item{rotate}{Default `TRUE`. If `FALSE`, the map will be printing on its side. This may improve resolution for some 3D printing types.}
-
-\item{remove_extras}{Default `TRUE`. Removes non-topographic features from base: lines, water, labels, and the shadow.}
-
-\item{clear}{Default `FALSE`. If `TRUE`, the current `rgl` device will be cleared.}
 }
 \value{
 Writes an STL file to `filename`. Regardless of the unit displayed, the output STL is in millimeters.
@@ -33,42 +22,40 @@ Writes an STL file to `filename`. Regardless of the unit displayed, the output S
 Writes a stereolithography (STL) file that can be used in 3D printing.
 }
 \examples{
-if(interactive()) {
 filename_stl = tempfile()
 
 #Save the STL file into `filename_stl`
-\donttest{
+if(run_documentation()) {
 volcano \%>\%
  sphere_shade() \%>\%
  plot_3d(volcano,zscale=3)
 render_snapshot()
-save_3dprint(filename_stl, clear=TRUE)
+save_3dprint(filename_stl)
 }
 
 #Save the STL file into `filename_stl`, setting maximum width to 100 mm
-\donttest{
+if(run_documentation()) {
 volcano \%>\%
  sphere_shade() \%>\%
  plot_3d(volcano,zscale=3)
 render_snapshot()
-save_3dprint(filename_stl, maxwidth = 100, clear=TRUE)
+save_3dprint(filename_stl, maxwidth = 100)
 }
 
 #'#Save the STL file into `filename_stl`, setting maximum width to 4 inches
-\donttest{
+if(run_documentation()) {
 volcano \%>\%
  sphere_shade() \%>\%
  plot_3d(volcano,zscale=3)
 render_snapshot()
-save_3dprint(filename_stl, maxwidth = 4, unit = "in", clear=TRUE)
+save_3dprint(filename_stl, maxwidth = 4, unit = "in")
 }
 #'#'#Save the STL file into `filename_stl`, setting maximum width (character) to 120mm
-\donttest{
+if(run_documentation()) {
 volcano \%>\%
  sphere_shade() \%>\%
  plot_3d(volcano,zscale=3)
 render_snapshot()
-save_3dprint(filename_stl, maxwidth = "120mm", clear=TRUE)
-}
+save_3dprint(filename_stl, maxwidth = "120mm")
 }
 }

@@ -16,10 +16,12 @@ render_polygons(
   scale_data = 1,
   parallel = FALSE,
   holes = 0,
+  alpha = 1,
   lit = TRUE,
   light_altitude = c(45, 30),
   light_direction = c(315, 135),
   light_intensity = 0.3,
+  light_relative = FALSE,
   clear_previous = FALSE
 )
 }
@@ -29,8 +31,10 @@ of polygon represented in a way that can be processed by `xy.coords()`.  If
 xy-coordinate based polygons are open, they will be closed by adding an
 edge from the last point to the first.}
 
-\item{extent}{A `raster::Extent` object with the bounding box for the height map 
-used to generate the original map.}
+\item{extent}{Either an object representing the spatial extent of the 3D scene 
+(either from the `raster`, `terra`, `sf`, or `sp` packages), 
+a length-4 numeric vector specifying `c("xmin", "xmax", "ymin", "ymax")`, or the spatial object (from 
+the previously aforementioned packages) which will be automatically converted to an extent object.}
 
 \item{color}{Default `black`. Color of the polygon.}
 
@@ -59,6 +63,8 @@ may be faster (depending on how many geometries are in `polygon`).}
 \item{holes}{Default `0`. If passing in a polygon directly, this specifies which index represents
 the holes in the polygon. See the `earcut` function in the `decido` package for more information.}
 
+\item{alpha}{Default `1`. Transparency of the polygons.}
+
 \item{lit}{Default `TRUE`. Whether to light the polygons.}
 
 \item{light_altitude}{Default `c(45, 60)`. Degree(s) from the horizon from which to light the polygons.}
@@ -67,6 +73,9 @@ the holes in the polygon. See the `earcut` function in the `decido` package for 
 
 \item{light_intensity}{Default `0.3`. Intensity of the specular highlight on the polygons.}
 
+\item{light_relative}{Default `FALSE`. Whether the light direction should be taken relative to the camera,
+or absolute.}
+
 \item{clear_previous}{Default `FALSE`. If `TRUE`, it will clear all existing polygons.}
 }
 \description{
@@ -74,43 +83,46 @@ Adds 3D polygons to the current scene, using latitude/longitude or coordinates i
 system defined by the extent object.
 }
 \examples{
-if(interactive()) {
-\donttest{
+if(run_documentation()) {
 #Render the county borders as polygons in Monterey Bay
 montereybay \%>\%
   sphere_shade(texture = "desert") \%>\%
-  add_shadow(ray_shade(montereybay,zscale=50)) \%>\%
-  plot_3d(montereybay,water=TRUE, windowsize=800, watercolor="dodgerblue")
-render_camera(theta=140,  phi=55, zoom = 0.85, fov=30)
+  add_shadow(ray_shade(montereybay,zscale = 50)) \%>\%
+  plot_3d(montereybay, water = TRUE, windowsize = 800, watercolor = "dodgerblue")
+render_camera(theta = 140,  phi = 55, zoom = 0.85, fov = 30)
 
-#We will apply a negative buffer to create space between adjacent polygons:
+#We will apply a negative buffer to create space between adjacent polygons. You may 
+#have to call `sf::sf_use_s2(FALSE)` before running this code to get it to run.
+sf::sf_use_s2(FALSE)
 mont_county_buff = sf::st_simplify(sf::st_buffer(monterey_counties_sf,-0.003), dTolerance=0.001)
 
 render_polygons(mont_county_buff, 
-                extent = attr(montereybay,"extent"), top=10,
-                parallel=TRUE)
+                extent = attr(montereybay,"extent"), top = 10,
+                parallel = FALSE)
 render_snapshot()
-
+}
+if(run_documentation()) {
 #We can specify the bottom of the polygons as well. Here I float the polygons above the surface
 #by specifying the bottom argument. We clear the previous polygons with `clear_previous = TRUE`.
 render_camera(theta=-60,  phi=20, zoom = 0.85, fov=0)
 render_polygons(mont_county_buff, 
                 extent = attr(montereybay,"extent"), bottom = 190, top=200,
-                parallel=TRUE,clear_previous=TRUE)
+                parallel=FALSE,clear_previous=TRUE)
 render_snapshot()
-
+}
+if(run_documentation()) {
 #We can set the height of the data to a column in the sf object: we'll use the land area.
-#We'll have to scale this value because it's max value is 2.6 billion:
+#We'll have to scale this value because its max value is 2.6 billion:
 render_camera(theta=-60,  phi=60, zoom = 0.85, fov=30)
 render_polygons(mont_county_buff, 
-                extent = attr(montereybay,"extent"), data_column_top = "ALAND",
-                scale_data = 300/(2.6E9), color="chartreuse4",
-                parallel=TRUE,clear_previous=TRUE)
-render_snapshot()        
-
+                extent = attr(montereybay, "extent"), data_column_top = "ALAND",
+                scale_data = 300/(2.6E9), color = "chartreuse4",
+                clear_previous = TRUE)
+render_snapshot()      
+}  
+if(run_documentation()) {
 #This function also works with `render_highquality()`
-render_highquality(samples=400, clamp_value=10)
-rgl::rgl.close()
-}
+render_highquality(samples = 128, clamp_value = 10, sample_method="sobol_blue",
+                   min_variance = 0)
 }
 }

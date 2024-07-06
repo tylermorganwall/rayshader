@@ -13,14 +13,14 @@
 #'@examples
 #'#First we plot the sphere_shade() hillshade of `montereybay` with no shadows
 #'
-#'\donttest{
+#'if(run_documentation()) {
 #'montereybay %>%
 #'  sphere_shade(colorintensity=0.5) %>%
 #'  plot_map()
 #'}
 #'
 #'#Raytrace the `montereybay` elevation map and add that shadow to the output of sphere_shade()
-#'\donttest{
+#'if(run_documentation()) {
 #'montereybay %>%
 #'  sphere_shade(colorintensity=0.5) %>%
 #'  add_shadow(ray_shade(montereybay,sunaltitude=20,zscale=50),max_darken=0.3) %>%
@@ -28,7 +28,7 @@
 #'}
 #'
 #'#Increase the intensity of the shadow map with the max_darken argument.
-#'\donttest{
+#'if(run_documentation()) {
 #'montereybay %>%
 #'  sphere_shade(colorintensity=0.5) %>%
 #'  add_shadow(ray_shade(montereybay,sunaltitude=20,zscale=50),max_darken=0.1) %>%
@@ -36,7 +36,7 @@
 #'}
 #'
 #'#Decrease the intensity of the shadow map.
-#'\donttest{
+#'if(run_documentation()) {
 #'montereybay %>%
 #'  sphere_shade(colorintensity=0.5) %>%
 #'  add_shadow(ray_shade(montereybay,sunaltitude=20,zscale=50),max_darken=0.7) %>%
@@ -50,7 +50,7 @@ add_shadow = function(hillshade, shadowmap, max_darken = 0.7, rescale_original =
   }
   if(length(dim(hillshade)) == 3) {
     hillshade = hillshade ^ 2.2
-    if(!all(dim(hillshade)[1:2] == dim(shadowmap))) {
+    if(!all(dim(hillshade)[1:2] == dim(shadowmap)[2:1])) {
       if(rescale_original) {
         temphillshade = array(0, dim = c(dim(shadowmap),3))
         temphillshade[,,1] = rayimage::render_resized(hillshade[,,1], dims = dim(shadowmap))
@@ -58,7 +58,7 @@ add_shadow = function(hillshade, shadowmap, max_darken = 0.7, rescale_original =
         temphillshade[,,3] = rayimage::render_resized(hillshade[,,3], dims = dim(shadowmap))
         hillshade = temphillshade
       } else {
-        shadowmap = t(flipud(rayimage::render_resized(shadowmap, dims = dim(hillshade))))
+        shadowmap = fliplr(rayimage::render_resized(t(shadowmap), dims = dim(hillshade)))
       }
     } else {
       shadowmap = t(flipud(shadowmap))
@@ -73,7 +73,7 @@ add_shadow = function(hillshade, shadowmap, max_darken = 0.7, rescale_original =
       stop("Error: Not a shadow matrix. Intensities must be between 0 and 1. Pass your elevation matrix to ray_shade/lamb_shade/ambient_shade/sphere_shade first.")
     }
     hillshade = hillshade ^ 2.2
-    hillshade = hillshade * t(scales::rescale(shadowmap[nrow(shadowmap):1,],c(max_darken,1)))
+    hillshade = hillshade *  scales::rescale(shadowmap,c(max_darken,1))
     hillshade = hillshade ^ (1/2.2)
     hillshade
   } else {

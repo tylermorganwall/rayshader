@@ -9,7 +9,8 @@ save_obj(
   save_texture = TRUE,
   water_index_refraction = 1,
   manifold_geometry = FALSE,
-  all_face_fields = FALSE
+  all_face_fields = FALSE,
+  save_shadow = FALSE
 )
 }
 \arguments{
@@ -22,6 +23,8 @@ save_obj(
 \item{manifold_geometry}{Default `FALSE`. If `TRUE`, this will take the additional step of making the mesh manifold.}
 
 \item{all_face_fields}{Default `FALSE`. If `TRUE`, all OBJ face fields (v/vn/vt) will always be written.}
+
+\item{save_shadow}{Default `FALSE`. If `TRUE`, this saves a plane with the shadow texture below the model.}
 }
 \description{
 Writes the textured 3D rayshader visualization to an OBJ file.
@@ -31,7 +34,7 @@ if(interactive()) {
 filename_obj = tempfile(fileext = ".obj")
 
 #Save model of volcano
-\donttest{
+if(run_documentation()) {
 volcano \%>\%
  sphere_shade() \%>\%
  plot_3d(volcano, zscale = 2)
@@ -40,19 +43,17 @@ save_obj(filename_obj)
 }
 
 #Save model of volcano without texture
-\donttest{
+if(run_documentation()) {
 save_obj(filename_obj, save_texture = FALSE)
-rgl::rgl.close()
 }
 
 #Make water have realistic index of refraction
-\donttest{
+if(run_documentation()) {
 montereybay \%>\%
  sphere_shade() \%>\%
  plot_3d(montereybay, zscale = 50)
  
 save_obj(filename_obj, water_index_refraction = 1.5)
-rgl::rgl.close()
 }
 }
 }

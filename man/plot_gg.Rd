@@ -6,6 +6,7 @@
 \usage{
 plot_gg(
   ggobj,
+  ggobj_height = NULL,
   width = 3,
   height = 3,
   height_aes = NULL,
@@ -15,6 +16,15 @@ plot_gg(
   scale = 150,
   pointcontract = 0.7,
   offset_edges = FALSE,
+  flat_plot_render = FALSE,
+  flat_distance = "auto",
+  flat_transparent_bg = FALSE,
+  flat_direction = "-z",
+  shadow = TRUE,
+  shadowdepth = "auto",
+  shadowcolor = "auto",
+  shadow_darkness = 0.5,
+  background = "white",
   preview = FALSE,
   raytrace = TRUE,
   sunangle = 315,
@@ -25,6 +35,8 @@ plot_gg(
   max_error = 0.001,
   max_tri = 0,
   verbose = FALSE,
+  emboss_text = 0,
+  emboss_grid = 0,
   reduce_size = NULL,
   save_height_matrix = FALSE,
   save_shadow_matrix = FALSE,
@@ -34,6 +46,9 @@ plot_gg(
 }
 \arguments{
 \item{ggobj}{ggplot object to projected into 3D.}
+
+\item{ggobj_height}{Default `NULL`. A ggplot object that can be used to specify the 3D extrusion separately from the
+`ggobj`.}
 
 \item{width}{Default `3`. Width of ggplot, in `units`.}
 
@@ -61,8 +76,28 @@ mapping `alpha` in the same variable you are projecting to height is probably no
 variable is ignored when performing the 3D projection).}
 
 \item{offset_edges}{Default `FALSE`. If `TRUE`, inserts a small amount of space between polygons for "geom_sf", "geom_tile", "geom_hex", and "geom_polygon" layers.
-If you pass in a number, the space between polygons will be a line of that width. Note: this feature may end up removing thin polygons 
-from the plot entirely--use with care.}
+If you pass in a number, the space between polygons will be a line of that width. You can also specify a number to control the thickness of the offset. 
+Note: this feature may end up removing thin polygons from the plot entirely--use with care.}
+
+\item{flat_plot_render}{Default `FALSE`. Whether to render a flat version of the ggplot above (or alongside) the 3D version.}
+
+\item{flat_distance}{Default `"auto"`. Distance to render the flat version of the plot from the 3D version.}
+
+\item{flat_transparent_bg}{Default `FALSE`. Whether to set the background of the flat version of the ggplot to transparent.}
+
+\item{flat_direction}{Default `"-z"`. Direction to render the flat copy of the plot, if `flat_plot_render = TRUE`.
+Other options `c("z", "x", "-x", "y", "-y")`.}
+
+\item{shadow}{Default `TRUE`. If `FALSE`, no shadow is rendered.}
+
+\item{shadowdepth}{Default `auto`, which sets it to `soliddepth - soliddepth/10`. Depth of the shadow layer.}
+
+\item{shadowcolor}{Default `auto`. Color of the shadow, automatically computed as `shadow_darkness`
+the luminance of the `background` color in the CIELab colorspace if not specified.}
+
+\item{shadow_darkness}{Default `0.5`. Darkness of the shadow, if `shadowcolor = "auto"`.}
+
+\item{background}{Default `"white"`. Background color.}
 
 \item{preview}{Default `FALSE`. If `TRUE`, the raytraced 2D ggplot will be displayed on the current device.}
 
@@ -97,6 +132,12 @@ to save a smaller 3D OBJ file to disk with `save_obj()`,}
 \item{verbose}{Default `TRUE`, if `interactive()`. Prints information about the mesh triangulation
 if `triangulate = TRUE`.}
 
+\item{emboss_text}{Default `0`, max `1`. Amount to emboss the text, where `1` is the tallest feature in the scene.}
+
+\item{emboss_grid}{Default `0`, max `1`. Amount to emboss the grid lines, where `1` is the tallest feature in the scene.
+By default, the minor grid lines will be half the size of the major lines. Pass a length-2 vector to specify them seperately (second value 
+is the minor grid height).}
+
 \item{reduce_size}{Default `NULL`. A number between `0` and `1` that specifies how much to reduce the resolution of the plot, for faster plotting. By
 default, this just decreases the size of height map, not the image. If you wish the image to be reduced in resolution as well, pass a numeric vector of size 2.}
 
@@ -126,7 +167,6 @@ custom, solid shapes. By default in ggplot2, only the first three shapes are sol
 into 3D.
 }
 \examples{
-if(interactive()) {
 library(ggplot2)
 library(viridis)
 \dontshow{
@@ -134,22 +174,22 @@ options("cores"=2)
 }
 
 ggdiamonds = ggplot(diamonds, aes(x, depth)) +
- stat_density_2d(aes(fill = stat(nlevel)), geom = "polygon", n = 200, bins = 50,contour = TRUE) +
+ stat_density_2d(aes(fill = after_stat(nlevel)), geom = "polygon", 
+                 n = 200, bins = 50,contour = TRUE) +
  facet_wrap(clarity~.) +
  scale_fill_viridis_c(option = "A")
-\dontrun{
+if(run_documentation()) {
 plot_gg(ggdiamonds,multicore = TRUE,width=5,height=5,scale=250,windowsize=c(1400,866),
        zoom = 0.55, phi = 30)
 render_snapshot()
 }
 #Change the camera angle and take a snapshot:
-\dontrun{
+if(run_documentation()) {
 render_camera(zoom=0.5,theta=-30,phi=30)
-render_snapshot(clear = TRUE)
+render_snapshot()
 }
 
 #Contours and other lines will automatically be ignored. Here is the volcano dataset:
-
 ggvolcano = volcano \%>\% 
  reshape2::melt() \%>\%
  ggplot() +
@@ -158,13 +198,32 @@ ggvolcano = volcano \%>\%
  scale_x_continuous("X",expand = c(0,0)) +
  scale_y_continuous("Y",expand = c(0,0)) +
  scale_fill_gradientn("Z",colours = terrain.colors(10)) +
- coord_fixed()
+ coord_fixed() + 
+ theme(legend.position = "none")
 ggvolcano
 
-\dontrun{
+if(run_documentation()) {
 plot_gg(ggvolcano, multicore = TRUE, raytrace = TRUE, width = 7, height = 4, 
        scale = 300, windowsize = c(1400, 866), zoom = 0.6, phi = 30, theta = 30)
-render_snapshot(clear = TRUE)
+render_snapshot()
+}
+
+if(run_documentation()) {
+#You can specify the color and height separately using the `ggobj_height()` argument.
+ggvolcano_surface = volcano \%>\%
+reshape2::melt() \%>\%
+ ggplot() +
+ geom_contour(aes(x=Var1,y=Var2,z=value),color="black") +
+ geom_contour_filled(aes(x=Var1,y=Var2,z=value))+
+ scale_x_continuous("X",expand = c(0,0)) +
+ scale_y_continuous("Y",expand = c(0,0)) +
+ coord_fixed() +
+ theme(legend.position = "none")
+
+plot_gg(ggvolcano_surface, ggobj_height = ggvolcano, 
+      multicore = TRUE, raytrace = TRUE, width = 7, height = 4,
+      scale = 300, windowsize = c(1400, 866), zoom = 0.6, phi = 30, theta = 30)
+render_snapshot()
 }
 #Here, we will create a 3D plot of the mtcars dataset. This automatically detects 
 #that the user used the `color` aesthetic instead of the `fill`.
@@ -173,48 +232,57 @@ mtplot = ggplot(mtcars) +
  scale_color_continuous(limits=c(0,8)) 
 
 #Preview how the plot will look by setting `preview = TRUE`: We also adjust the angle of the light.
-\dontrun{
+if(run_documentation()) {
 plot_gg(mtplot, width=3.5, sunangle=225, preview = TRUE)
 }
-\dontrun{
+if(run_documentation()) {
 plot_gg(mtplot, width=3.5, multicore = TRUE, windowsize = c(1400,866), sunangle=225,
        zoom = 0.60, phi = 30, theta = 45)
-render_snapshot(clear = TRUE)
+render_snapshot()
 }
 #Now let's plot a density plot in 3D.
 mtplot_density = ggplot(mtcars) + 
- stat_density_2d(aes(x=mpg,y=disp, fill=..density..), geom = "raster", contour = FALSE) +
+ stat_density_2d(aes(x=mpg,y=disp, fill=after_stat(!!str2lang("density"))), 
+                 geom = "raster", contour = FALSE) +
  scale_x_continuous(expand=c(0,0)) +
  scale_y_continuous(expand=c(0,0)) +
  scale_fill_gradient(low="pink", high="red")
 mtplot_density
-\dontrun{
+
+if(run_documentation()) {
 plot_gg(mtplot_density, width = 4,zoom = 0.60, theta = -45, phi = 30, 
        windowsize = c(1400,866))
-render_snapshot(clear = TRUE)
+render_snapshot()
 }
 #This also works facetted.
 mtplot_density_facet = mtplot_density + facet_wrap(~cyl) 
 
 #Preview this plot in 2D:
-\dontrun{
+if(run_documentation()) {
 plot_gg(mtplot_density_facet, preview = TRUE)
 }
-\dontrun{
+if(run_documentation()) {
 plot_gg(mtplot_density_facet, windowsize=c(1400,866),
        zoom = 0.55, theta = -10, phi = 25)
-render_snapshot(clear = TRUE)
+render_snapshot()
 }
 #That is a little cramped. Specifying a larger width will improve the readability of this plot.
-\dontrun{
+if(run_documentation()) {
 plot_gg(mtplot_density_facet, width = 6, preview = TRUE)
 }
 
 #That's better. Let's plot it in 3D, and increase the scale.
-\dontrun{
+if(run_documentation()) {
 plot_gg(mtplot_density_facet, width = 6, windowsize=c(1400,866),
        zoom = 0.55, theta = -10, phi = 25, scale=300)
-render_snapshot(clear = TRUE)
+render_snapshot()
 }
+
+#We can also render a flat version of the plot alongside (or above/below) the 3D version.
+if(run_documentation()) {
+plot_gg(mtplot_density_facet, width = 6, windowsize=c(1400,866),
+       zoom = 0.65, theta = -25, phi = 35, scale=300, flat_plot_render=TRUE,
+       flat_direction = "x")
+render_snapshot()
 }
 }

@@ -8,6 +8,12 @@
 #'
 #'@param heightmap A two-dimensional matrix, where each entry in the matrix is the elevation at that point. 
 #'If `boolean = TRUE`, this will instead be interpreted as a logical matrix indicating areas of water.
+#'@param width Default `NA`. Width of the resulting image array. Default the same dimensions as height map.
+#'@param height Default `NA`. Width of the resulting image array. Default the same dimensions as height map.
+#'@param resolution_multiply Default `1`. If passing in `heightmap` instead of width/height, amount to 
+#'increase the resolution of the overlay, which should make lines/polygons/text finer. 
+#'Should be combined with `add_overlay(rescale_original = TRUE)` to ensure those added details are captured
+#'in the final map.
 #'@param color Default `white`. Color of the lines.
 #'@param linewidth Default `1`. Line width.
 #'@param boolean Default `FALSE`. If `TRUE`, this is a boolean matrix (0 and 1) indicating contiguous areas in 
@@ -33,9 +39,7 @@
 #'@return 4-layer RGB array representing the waterline overlay.
 #'@export
 #'@examples
-#'#Only run these examples if the `magick` package is installed.
-#'if ("magick" %in% rownames(utils::installed.packages())) {
-#' \donttest{
+#'if(run_documentation()) {
 #' #Create a flat body of water for Monterey Bay
 #' montbay = montereybay
 #' montbay[montbay < 0] = 0
@@ -48,59 +52,68 @@
 #'   add_shadow(lamb_shade(montbay,zscale=50),0) 
 #' 
 #' plot_map(basemap)
-#' 
+#' }
+#' if(run_documentation()) {
 #' #Add waterlines
 #' basemap %>% 
 #'   add_overlay(generate_waterline_overlay(montbay)) %>% 
 #'   plot_map()
-#' 
+#' }
+#' if(run_documentation()) {
 #' #Change minimum line distance:
 #' basemap %>% 
 #'   add_overlay(generate_waterline_overlay(montbay, min = 0.02)) %>% 
 #'   plot_map()
-#' 
+#' }
+#' if(run_documentation()) {
 #' #Change maximum line distance
 #' basemap %>% 
 #'   add_overlay(generate_waterline_overlay(montbay, max = 0.4)) %>% 
 #'   plot_map()
-#' 
+#' }
+#' if(run_documentation()) {
 #' #Smooth waterlines
 #' basemap %>% 
 #'   add_overlay(generate_waterline_overlay(montbay, max = 0.4, smooth=2)) %>% 
 #'   plot_map()
-#' 
+#' }
+#' if(run_documentation()) {
 #' #Increase number of breaks
 #' basemap %>% 
 #'   add_overlay(generate_waterline_overlay(montbay, breaks = 20, max=0.4)) %>% 
 #'   plot_map()
-#' 
+#' }
+#' if(run_documentation()) {
 #' #Make lines evenly spaced:
 #' basemap %>% 
 #'   add_overlay(generate_waterline_overlay(montbay, evenly_spaced = TRUE)) %>% 
 #'   plot_map()
-#' 
+#' }
+#' if(run_documentation()) {
 #' #Change variable distance between each line
 #' basemap %>% 
 #'   add_overlay(generate_waterline_overlay(montbay, falloff=1.5)) %>% 
 #'   plot_map()
-#' 
+#' }
+#' if(run_documentation()) {
 #' #Turn off fading
 #' basemap %>% 
 #'   add_overlay(generate_waterline_overlay(montbay, fade=FALSE)) %>% 
 #'   plot_map()
-#' 
+#' }
+#' if(run_documentation()) {
 #' #Fill up the entire body of water with lines and make them all 50% transparent
 #' basemap %>% 
 #'   add_overlay(generate_waterline_overlay(montbay, fade=FALSE, max=1, alpha = 0.5, color="white",
 #'                                          evenly_spaced = TRUE, breaks=50)) %>% 
 #'   plot_map()
 #' }
-#' }
 generate_waterline_overlay = function(heightmap, color = "white", linewidth=1, boolean = FALSE, 
                                       min = 0.001, max = 0.20, breaks = 9, smooth = 0, 
                                       fade = TRUE, alpha_dist = max, alpha = 1,
                                       falloff = 1.3, evenly_spaced = FALSE, 
                                       zscale = 1, cutoff = 0.999, 
+                                      width = NA, height = NA, resolution_multiply = 1,
                                       min_area=length(heightmap)/400,
                                       max_height = NULL, return_distance_matrix = FALSE) {
   breaks = breaks + 1
@@ -143,6 +156,8 @@ generate_waterline_overlay = function(heightmap, color = "white", linewidth=1, b
   }
   levels = scales::rescale(levels, to = c(min, max))
   overlay = generate_contour_overlay(water_dist_bool, levels=levels, 
+                                     width=width, height=height, 
+                                     resolution_multiply = resolution_multiply,
                                      color = color, linewidth=linewidth)
   if(fade) {
     alpha_vals = water_dist_bool

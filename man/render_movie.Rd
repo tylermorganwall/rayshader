@@ -13,6 +13,8 @@ render_movie(
   theta = 0,
   zoom = NULL,
   fov = NULL,
+  width = NULL,
+  height = NULL,
   title_text = NULL,
   title_offset = c(20, 20),
   title_color = "black",
@@ -22,6 +24,8 @@ render_movie(
   title_bar_alpha = 0.5,
   image_overlay = NULL,
   vignette = FALSE,
+  vignette_color = "black",
+  vignette_radius = 1.3,
   title_position = "northwest",
   audio = NULL,
   progbar = interactive(),
@@ -29,7 +33,8 @@ render_movie(
 )
 }
 \arguments{
-\item{filename}{Filename. If not appended with `.mp4`, it will be appended automatically.}
+\item{filename}{Filename. If not appended with `.mp4`, it will be appended automatically. If the file extension is `gif`, 
+the \pkg{gifski} package will be used to generate the animation.}
 
 \item{type}{Default `orbit`, which orbits the 3D object at the user-set camera settings `phi`, `zoom`, and `fov`. 
 Other options are `oscillate` (sine wave around `theta` value, covering 90 degrees), or `custom` (which uses the values from the 
@@ -46,6 +51,12 @@ Other options are `oscillate` (sine wave around `theta` value, covering 90 degre
 \item{zoom}{Defaults to the current view. Zoom value, between `0` and `1`.}
 
 \item{fov}{Defaults to the current view. Field of view values, in degrees.}
+
+\item{width}{Default `NULL`, uses the window size by default. Width of the movie. Note that the frames will still
+be captured at the resolution (and aspect ratio) of the rgl window.}
+
+\item{height}{Default `NULL`, uses the window size by default. Height of the movie. Note that the frames will still
+be captured at the resolution (and aspect ratio) of the rgl window.}
 
 \item{title_text}{Default `NULL`. Text. Adds a title to the movie, using magick::image_annotate.}
 
@@ -71,6 +82,10 @@ dimension of the movie if it does not match exactly.}
 `1` is the darkest vignetting, while `0` is no vignetting. If vignette is a length-2 vector, the second entry will
 control the blurriness of the vignette effect.}
 
+\item{vignette_color}{Default `"black"`. Color of the vignette.}
+
+\item{vignette_radius}{Default `1.3`. Radius of the vignette, as a porportion of the image dimensions.}
+
 \item{title_position}{Default `northwest`. Position of the title.}
 
 \item{audio}{Default `NULL`. Optional file with audio to add to the video.}
@@ -81,7 +96,7 @@ Will display a progress bar when adding an overlay or title.}
 \item{...}{Additional parameters to pass to magick::image_annotate.}
 }
 \description{
-Renders a movie using the \pkg{av} package. Moves the camera around a 3D visualization 
+Renders a movie using the \pkg{av} or \pkg{gifski} packages. Moves the camera around a 3D visualization 
 using either a standard orbit, or accepts vectors listing user-defined values for each camera parameter. If the latter,
 the values must be equal in length to `frames` (or of length `1`, in which the value will be fixed).
 }
@@ -103,10 +118,6 @@ filename_movie = tempfile()
 #You can change to an oscillating orbit. The magnification is increased and azimuth angle set to 30.
 #A title has also been added using the title_text argument.
 \donttest{
-montereybay \%>\%
- sphere_shade(texture="imhof1") \%>\%
- plot_3d(montereybay, zscale=50, water = TRUE, watercolor="imhof1", 
-         waterlinecolor="white", waterlinealpha=0.5)
 #Un-comment the following to run:
 #render_movie(filename = filename_movie, type = "oscillate", 
 #             frames = 60,  phi = 30, zoom = 0.8, theta = -90,
@@ -123,14 +134,9 @@ thetavec = -90 + 45 * sin(seq(0,359,length.out = 360) * pi/180)
 zoomvec = 0.45 + 0.2 * 1/(1 + exp(seq(-5, 20, length.out = 180)))
 zoomvecfull = c(zoomvec, rev(zoomvec))
 \donttest{
-montereybay \%>\%
- sphere_shade(texture="imhof1") \%>\%
- plot_3d(montereybay, zscale=50, water = TRUE, watercolor="imhof1", 
-         waterlinecolor="white", waterlinealpha=0.5)
 #Un-comment the following to run
 #render_movie(filename = filename_movie, type = "custom", 
 #             frames = 360,  phi = phivecfull, zoom = zoomvecfull, theta = thetavec)
-rgl::rgl.close()
 }
 }
 }

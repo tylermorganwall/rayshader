@@ -17,7 +17,6 @@ plot_map(
   title_bar_color = NULL,
   title_bar_alpha = 0.5,
   title_position = "northwest",
-  keep_user_par = FALSE,
   ...
 )
 }
@@ -49,9 +48,6 @@ image_annotate) corner to offset the title.}
 
 \item{title_position}{Default `northwest`. Position of the title.}
 
-\item{keep_user_par}{Default `TRUE`. Whether to keep the user's `par()` settings. Set to `FALSE` if you 
-want to set up a multi-pane plot (e.g. set `par(mfrow)`).}
-
 \item{...}{Additional arguments to pass to the `raster::plotRGB` function that displays the map.}
 }
 \description{
@@ -59,9 +55,11 @@ Displays the map in the current device.
 }
 \examples{
 #Plotting the Monterey Bay dataset with bathymetry data
-\donttest{
+if(run_documentation()) {
 water_palette = colorRampPalette(c("darkblue", "dodgerblue", "lightblue"))(200)
 bathy_hs = height_shade(montereybay, texture = water_palette)
+#For compass text
+par(family = "Arial")
 
 #Set everything below 0m to water palette
 montereybay \%>\%
@@ -69,12 +67,12 @@ montereybay \%>\%
  add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0))  \%>\%
  add_shadow(ray_shade(montereybay,zscale=50),0.3) \%>\%
  plot_map()
-
+}
 #Correcting the aspect ratio for the latitude of Monterey Bay
 
 extent_mb = attr(montereybay,"extent")
 mean_latitude = mean(c(extent_mb@ymax,extent_mb@ymin))
-
+if(run_documentation()) {
 montereybay \%>\%
  sphere_shade(zscale=10) \%>\%
  add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0))  \%>\%

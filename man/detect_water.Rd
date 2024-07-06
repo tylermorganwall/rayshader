@@ -16,7 +16,9 @@ detect_water(
 )
 }
 \arguments{
-\item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All grid points are assumed to be evenly spaced.}
+\item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. 
+All grid points are assumed to be evenly spaced. Alternatively, if heightmap is a logical matrix, each entry
+specifies whether that point is water or not.}
 
 \item{zscale}{Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
 of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.}

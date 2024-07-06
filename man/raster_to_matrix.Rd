@@ -7,7 +7,7 @@
 raster_to_matrix(raster, verbose = interactive())
 }
 \arguments{
-\item{raster}{The input raster. Either a RasterLayer object, or a filename.}
+\item{raster}{The input raster. Either a RasterLayer object, a terra SpatRaster object, or a filename.}
 
 \item{verbose}{Default `interactive()`. Will print dimensions of the resulting matrix.}
 }
@@ -16,15 +16,12 @@ Turns a raster into a matrix suitable for rayshader.
 }
 \examples{
 #Save montereybay as a raster and open using the filename.
-
-\donttest{
-if("rgdal" \%in\% rownames(utils::installed.packages())) {
+if(run_documentation()) {
 temp_raster_filename = paste0(tempfile(),".tif")
 raster::writeRaster(raster::raster(t(montereybay)),temp_raster_filename)
 elmat = raster_to_matrix(temp_raster_filename)
 elmat \%>\%
  sphere_shade() \%>\%
  plot_map()
-}
 }
 }
