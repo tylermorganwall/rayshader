@@ -1,12 +1,12 @@
 #'@title Render a generic mesh3d
 #'
-#'@description Places a mesh3d object on the map.
+#'@description Places a mesh shapelists to the current scene, using latitude/longitude or coordinates in the reference
 #'
 #
-#'@param mesh3d Default `0`. The direction the arrow should be facing.
-#'@param color Default `blue`.
+#'@param shapelist The shapelists RGL meshes generated with shapelist3d function
+#'@param color Default NULL.
 #'
-#'@return Adds mesh3d to map. No return value.
+#'@return Adds shapelists to current scene. No return value.
 #'@export
 #'@examples
 #'#Add a North arrow to the map, by default in the bottom right (SE)
@@ -15,7 +15,12 @@
 #'montereybay %>%
 #'  sphere_shade() %>%
 #'  plot_3d(montereybay,theta=-45, water=TRUE)
-#'render_shapelist3d()
+#' 
+#'render_shapelist3d(shapelist3d(icosahedron3d(), 
+#'                   x = rnorm(3, sd = shape.scale), y = rnorm(3, sd = shape.scale),
+#'                   z = rnorm(3, mean = shape.scale, sd = shape.scale), 
+#'                   alpha = 0.3, col = 1:5, size = 10, plot = FALSE))
+#' 
 #'render_snapshot()
 #'
 #'
@@ -23,7 +28,13 @@
 #'#`position_circular = TRUE`:
 #'
 #'render_camera(theta=0,phi=45,zoom=0.75)
-#'render_mesh3d(mesh3d = cube3d(), color = "blue)
+#' 
+#'render_shapelist3d(shapelist3d(icosahedron3d(), 
+#'                   x = rnorm(3, sd = shape.scale), y = rnorm(3, sd = shape.scale),
+#'                   z = rnorm(3, mean = shape.scale, sd = shape.scale), 
+#'                   alpha = 0.3, col = 1:5, size = 10, plot = FALSE))
+#' 
+
 #'render_snapshot(clear=TRUE)
 #'}
 #'}
