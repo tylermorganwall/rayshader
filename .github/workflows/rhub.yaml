@@ -49,6 +49,8 @@ jobs:
         config: ${{ fromJson(needs.setup.outputs.containers) }}
     container:
       image: ${{ matrix.config.container }}
+    env:
+      RGL_USE_NULL: true
 
     steps:
       - uses: r-hub/actions/checkout@v1
@@ -56,6 +58,10 @@ jobs:
         with:
           token: ${{ secrets.RHUB_TOKEN }}
           job-config: ${{ matrix.config.job-config }}
+      - name: Install rlas from GitHub
+        run: |
+          R -e "install.packages('remotes')"
+          R -e "remotes::install_github('r-lidar/rlas')"
       - uses: r-hub/actions/setup-deps@v1
         with:
           token: ${{ secrets.RHUB_TOKEN }}
@@ -74,6 +80,8 @@ jobs:
       fail-fast: false
       matrix:
         config: ${{ fromJson(needs.setup.outputs.platforms) }}
+    env:
+      RGL_USE_NULL: true
 
     steps:
       - uses: r-hub/actions/checkout@v1
@@ -85,6 +93,10 @@ jobs:
         with:
           token: ${{ secrets.RHUB_TOKEN }}
           job-config: ${{ matrix.config.job-config }}
+      - name: Install rlas from GitHub
+        run: |
+          R -e "install.packages('remotes')"
+          R -e "remotes::install_github('r-lidar/rlas')"
       - uses: r-hub/actions/setup-deps@v1
         with:
           job-config: ${{ matrix.config.job-config }}
