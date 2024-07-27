@@ -60,8 +60,7 @@ jobs:
           job-config: ${{ matrix.config.job-config }}
       - name: Install rlas from GitHub
         run: |
-          R -e "install.packages('remotes')"
-          R -e "remotes::install_github('r-lidar/rlas')"
+          R -e "install.packages('rlas', repos = c('https://r-lidar.r-universe.dev', 'https://cloud.r-project.org'))"
       - uses: r-hub/actions/setup-deps@v1
         with:
           token: ${{ secrets.RHUB_TOKEN }}
@@ -95,8 +94,7 @@ jobs:
           job-config: ${{ matrix.config.job-config }}
       - name: Install rlas from GitHub
         run: |
-          R -e "install.packages('remotes')"
-          R -e "remotes::install_github('r-lidar/rlas')"
+          R -e "install.packages('rlas', repos = c('https://r-lidar.r-universe.dev', 'https://cloud.r-project.org'))"
       - uses: r-hub/actions/setup-deps@v1
         with:
           job-config: ${{ matrix.config.job-config }}
