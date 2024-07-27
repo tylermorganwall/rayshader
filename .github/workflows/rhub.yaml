@@ -58,13 +58,11 @@ jobs:
         with:
           token: ${{ secrets.RHUB_TOKEN }}
           job-config: ${{ matrix.config.job-config }}
-      - name: Install rlas from GitHub
-        run: |
-          R -e "install.packages('rlas', repos = c('https://r-lidar.r-universe.dev', 'https://cloud.r-project.org'))"
       - uses: r-hub/actions/setup-deps@v1
         with:
           token: ${{ secrets.RHUB_TOKEN }}
           job-config: ${{ matrix.config.job-config }}
+          extra-packages: rlas=?ignore
       - uses: r-hub/actions/run-check@v1
         with:
           token: ${{ secrets.RHUB_TOKEN }}
@@ -92,13 +90,11 @@ jobs:
         with:
           token: ${{ secrets.RHUB_TOKEN }}
           job-config: ${{ matrix.config.job-config }}
-      - name: Install rlas from GitHub
-        run: |
-          R -e "install.packages('rlas', repos = c('https://r-lidar.r-universe.dev', 'https://cloud.r-project.org'))"
       - uses: r-hub/actions/setup-deps@v1
         with:
           job-config: ${{ matrix.config.job-config }}
           token: ${{ secrets.RHUB_TOKEN }}
+          extra-packages: rlas=?ignore
       - uses: r-hub/actions/run-check@v1
         with:
           job-config: ${{ matrix.config.job-config }}
