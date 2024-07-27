@@ -1,47 +1,808 @@
-rayshader v0.6.1 (Release date: 2018-09-25):
-================
 
-• Moved Rcpp::checkUserInterrupt() to outer loop to speed up raytracing (thanks @brodieG)
+rayshader v0.38.1
+===================
+- Fix bug with render_polygons() due to new raymesh structure (tylermorganwall, 2024-05-10)
 
-rayshader v0.6.0 (Release date: 2018-09-22):
-================
+rayshader v0.38.0
+===================
+- Add variable point and line width support to `render_points()` and `render_lines()` (tylermorganwall, 2024-03-28)
 
-• Added `render_depth()`, a post-processing effect to add depth of field to 3D maps.
+rayshader v0.37.3
+===================
+- Update to support new rayrender scene class
+- Fix pkgdown GHA check
+- Update imports (tylermorganwall, 2024-02-19)
 
-• Added `render_water()`, which either adds or replaces a water layer on the existing 3D map.
+rayshader v0.37.2
+===================
+- CRAN doc fixes and update GHA CHECK (tylermorganwall, 2024-02-18)
 
-• Added `add_overlay()`, which adds a transparent or semi-transparent overlay to the current hillshade.
+rayshader v0.37.1
+===================
+- Version update for building fix and bump date (tylermorganwall, 2024-01-11)
 
-• Changed `save_3dprint()` to include the option to remove the shadow and water layers.
+rayshader v0.37.0
+===================
+- `render_buildings()`, `render_beveled_polygons()`, bugfixes and improvements! 
+- Add support for beveled polygons and 3D buildings via the `raybevel` package 
+- Greatly speed up `render_contours()` and `render_path()`
+- `render_camera()` Fix orientation when phi = 90
+- `render_obj()` Add `lit` option and custom lighting arguments
+- Center coordinate system at exactly 0/0
+- `plot_3d()` Ensure everything is built from rgl triangle primitives
+- `render_polygons()` add relative light angle option
+- `add_overlay()` return original image if other is NULL
+- `plot_3d()` Use LUV instead of LAB for darkened shadows
+- `constant_shade()` Fix transpose
+- Add shininess support to raymesh export
+- Add `resolution_multiply` option to ease increasing the resolution of scalebar/line/polygon/point/label/compass overlays
+- `generate_polygon_overlay()` ensure numeric extent is handled correctly
+- `plot_3d()` Replace potential NA values (from NaNs) in normals
+- `plot_gg()` Fix examples
+- `render_snapshot()` Fix keep_user_par issue
+- `render_tree()` Add lit option
+- `plot_3d()` Fix baselines and waterlines (tylermorganwall, 2024-01-11)
+
+rayshader v0.36.1
+===================
+- Fix raymesh conversion bugs
+- `render_multipolygonz()` fixes
+- Fix several bugs in rgl-to-raymesh conversion
+- Fix multipolygonz meshing
+- `render_highquality()` Change argument `obj_material` to `material`
+- Fix NA filename bugs in `render_highquality()`
+- Fix docs
+- Fix degenerate normals when specifying zero length path segment with render_path() (tylermorganwall, 2023-08-01)
+
+rayshader v0.36.0
+===================
+- Speed up render times for software/high quality rendering by removing filesystem write/read from the process
+- Add rayrender sampling-related arguments to `render_highquality()` (tylermorganwall, 2023-07-30)
+
+rayshader v0.35.7
+===================
+- Ensure trunk width is scaled to crown width (tylermorganwall, 2023-06-09)
+
+rayshader v0.35.6
+===================
+- Extend orientation fix to `render_highquality()`, update tree defaults
+- Fix CMD check (tylermorganwall, 2023-06-01)
+
+rayshader v0.35.5
+===================
+- Fix orientation from rgl when rendering software snapshot and vertical offset applied
+- Ensure all materials are two sided for more robust rendering (particularly with flat two-sided meshes) (tylermorganwall, 2023-05-29)
+
+rayshader v0.35.4
+===================
+- `render_tree()` updates
+- Change `crown_height` to `tree_height` and add `trunk_height_ratio` to determine trunk height instead of specifying it manually.
+- Add `crown_width` to specify widths directly, instead of as a ratio (tylermorganwall, 2023-05-26)
+
+rayshader v0.35.3
+===================
+- Add support for flat MULTIPOLYGONZ polygons in `render_polygons()`
+- Fix custom crown tree width
+- Better handling of multipolygonz data (tylermorganwall, 2023-05-17)
+
+rayshader v0.35.2
+===================
+- `render_tree()` enhancements
+- Add ability to specify customizable external crown and trunk models
+- Change "canopy" arguments to "crown"
+- `render_obj()` Set default to render backfacing triangles as filled for better 2D plane support
+- `plot_3d()` Fix EXEC_BAD_ACCESS crash when NA values are present and drawing baselines (tylermorganwall, 2023-05-16)
+
+rayshader v0.35.1
+===================
+- Add color palette support to `render_contours()` (tylermorganwall, 2023-02-24)
+
+rayshader v0.35.0
+===================
+- Add `render_contours()` for 3D contours
+- Add support for user-specified groups in `render_path()`
+- Fix tests (tylermorganwall, 2023-02-19)
+
+rayshader v0.34.8
+===================
+- Add argument to specify separate ggplot height and color objects.
+- Add plot_gg() tests (tylermorganwall, 2023-02-18)
+
+rayshader v0.34.7
+===================
+- Bug fixes and testing infrastructure
+- Add image-based unit tests to check for rendering regressions on future updates/external contributions
+- `plot_3d()` Add option to clear previous plot without opening a new window
+- `plot_3d()` Fix shadow and solid height bugs
+- `plot_3d()` Fix raw rgl water rendering culling
+- `render_snapshot()` Fix software rendering when phi = 90
+- `render_snapshot()` Fix camera_lookat doing nothing when `software_render = TRUE` (tylermorganwall, 2023-02-09)
+
+rayshader v0.34.6
+===================
+- Add support for rayvertex shadow mapping when software_render = TRUE (tylermorganwall, 2023-02-01)
+
+rayshader v0.34.5
+===================
+- Fix, speed up, and simplify `save_3dprint()` (tylermorganwall, 2023-01-20)
+
+rayshader v0.34.4
+===================
+- Update rayrender version dependency (tylermorganwall, 2023-01-19)
+
+rayshader v0.34.3
+===================
+- Add ability to specify path/point materials in `render_highquality()`
+- `render_highquality()` Always use path() or extruded_path() objects
+- `render_highquality()` Switch default in `use_extruded_path = TRUE`
+- Update docs (tylermorganwall, 2023-01-19)
+
+rayshader v0.34.2
+===================
+- Fix fsaa issue with render_depth() and remove unneeded close3d() and clear3d() calls in docs (tylermorganwall, 2023-01-14)
+
+rayshader v0.34.1
+===================
+- Improve `render_path()` with resampling/simplification and update rayimage requirement and some docs (tylermorganwall, 2023-01-14)
+
+rayshader v0.34.0
+===================
+- Add `render_resize_window()` and width and height options to `render_movie()` (tylermorganwall, 2023-01-11)
+
+rayshader v0.33.8
+===================
+- Fix NaN in camera motion when repeated points are in a path (tylermorganwall, 2023-01-11)
+
+rayshader v0.33.7
+===================
+- Add support for thick lines in `render_snapshot()` with using software rendering, and make it the default. (tylermorganwall, 2023-01-08)
+
+rayshader v0.33.6
+===================
+- Check filename early in `render_highquality()` (tylermorganwall, 2023-01-08)
+
+rayshader v0.33.5
+===================
+- Fix save_png() when passing a 2D matrix (tylermorganwall, 2023-01-08)
+
+rayshader v0.33.4
+===================
+- Fix pkgdown docs (remove blank rgl canvas plots) and update R required version (tylermorganwall, 2023-01-08)
+
+rayshader v0.33.3
+===================
+- Update docs and add support for single altitude value in `render_*()` functions (tylermorganwall, 2023-01-07)
+
+rayshader v0.33.2
+===================
+- Remove last rgl.* call (tylermorganwall, 2023-01-07)
+
+rayshader v0.33.1
+===================
+- Fix triangulated surfaces (tylermorganwall, 2023-01-06)
+
+rayshader v0.33.0
+===================
+- Path improvements and rgl changes
+- `render_path()` Add options to reorder and clean {sf} objects containing multiline objects to a single, contiguous, end-to-end path (for use primarily in animations)
+- `convert_path_animation_coords()` Add constant distance resampling of paths to improve camera animation smoothness
+- `render_camera()` `Add option to shift the viewpoint vertically to recenter the camera
+- `plot_3d()` Add `plot_new` and `close_previous` arguments to change the default to not overplotting the previous data, instead opening a new window
+- `plot_3d()` Replace rgl surface calls with internal fast triangle mesh construction, which should improve the interactive speed of scenes with lots of NA elevation values
+- `plot_3d()` Add support back in for scroll wheel zooming
+- Remove all references to now-deprecated rgl::rgl.*() functions and replace with *3d() equivalents
+- Add option to turn off normal loading in render_highquality() and calculate consistent normals
+- Fix pkgdown site and ensure no examples are run on the CRAN (tylermorganwall, 2023-01-05)
+
+rayshader v0.32.7
+===================
+- Fix `render_path()` rendering when `sf` object contains multistring data (tylermorganwall, 2022-12-22)
+
+rayshader v0.32.6
+===================
+- Add support to use bounding boxes from `terra`, `sf`, and `sp` in all functions that take an extent, as well as add the option to pass just the spatial object and have rayshader extract it for you (tylermorganwall, 2022-12-14)
+
+rayshader v0.32.5
+===================
+- Add 3D 3rd person follow camera support (and customization options) to render_highquality() animations (tylermorganwall, 2022-12-12)
+
+rayshader v0.32.4
+===================
+- Fix software rendering to use flat colors for water (tylermorganwall, 2022-12-10)
+
+rayshader v0.32.3
+===================
+- Fix previous fix with better fix (tylermorganwall, 2022-12-10)
+
+rayshader v0.32.2
+===================
+- Use flat colors for saved OBJ water materials (tylermorganwall, 2022-12-09)
+
+rayshader v0.32.1
+===================
+- All light support to software rendering, for objects with lit = TRUE
+- Switch to car::pointLabel as that function is moving from the maptools package
+- `save_obj()` save illum values to match displayed values in rgl (if lit)
+- `render_snapshot()` add ability to specify software
+- `render_snapshot()` fix vertical offset when using OBJ models
+- Anti-alias pkgdown software renders
+- Update docs
+- Add internal tooling for orthonormal bases (tylermorganwall, 2022-12-09)
+
+rayshader v0.32.0
+===================
+- Add animation support to render_highquality()
+- Add `convert_path_to_animation_coords()`: a function to convert paths to animation coordinates for render_highquality()
+- Update documentation for pkgdown/CRAN (tylermorganwall, 2022-12-05)
+
+rayshader v0.31.0
+===================
+- Add `constant_shade()` function
+- `detect_water()` Add support for logical matrices (tylermorganwall, 2022-11-28)
+
+rayshader v0.30.4
+===================
+- Add filter to render_trees() for max tree height (tylermorganwall, 2022-11-25)
+
+rayshader v0.30.3
+===================
+- Bug fixes and `render_floating_overlay()` add support for ...
+- `render_multipolygonz()` Change default for obj_zscale
+- Fix altitude bug when using offset (tylermorganwall, 2022-11-25)
+
+rayshader v0.30.2
+===================
+- Small scaling/offset fix to ensure OBJs are scaled to the right position (tylermorganwall, 2022-11-14)
+
+rayshader v0.30.1
+===================
+- Fix B&W orientation when saving PNG and fix documentation (tylermorganwall, 2022-11-11)
+
+rayshader v0.30.0
+===================
+- Real 3D models and trees!
+- `render_obj()` Add support for textured 3D OBJ models in scenes
+- `render_tree()` Add support for rendering user-customizable 3D trees in scenes
+- `render_multipolygonz()` Add support for rendering 3D MULTIPOLYGON Z data in scenes
+- `save_multipolygonz_to_obj()` Add function to convert MULTIPOLYGON Z data to OBJ files
+- Add built-in 3D flag objects
+- Add built-in 3D tree objects (tylermorganwall, 2022-11-11)
+
+rayshader v0.29.0
+===================
+- Add side-by-side flat ggplot rendering
+- `plot_gg()` Add `flat_plot_render` argument to add a flat version of the ggplot near (direction determined by `flat_direction`) the 3D version
+- `render_flat_overlay()` Add `horizontal_offset` argument
+- Make saved OBJ flat overlays have non-flipped source images (Tyler, 2022-10-14)
+
+rayshader v0.28.11
+===================
+- Fix class conditional comparison warnings in `plot_gg()` (Tyler, 2022-09-30)
+
+rayshader v0.28.10
+===================
+- Change `plot_3d()` argument `dirt` to `soil` (Tyler, 2022-09-30)
+
+rayshader v0.28.9
+===================
+- Fix add_shadow() bug when combining two 2D matrices (Tyler, 2022-09-30)
+
+rayshader v0.28.8
+===================
+- Bugfixes and doc improvements
+- Fix broken `render_polygons()` functionality
+- Fix software rendering bug when using water layer with NAs
+- Increase default software rendering text size to better match rgl
+- Adjust text height slightly higher when using software rendering
+- Adjust pkgdown figures to be square
+- Fix some doc issues
+- Fix floating overlay logical warning (Tyler, 2022-09-25)
+
+rayshader v0.28.6
+===================
+- Update rayvertex version requirement to fix software rendering bug
+- Fix wrong scene range in software rendering (Tyler, 2022-09-23)
+
+rayshader v0.28.5
+===================
+- Fix render_highquality() texture bug and update dependency version requirements (Tyler, 2022-09-20)
+
+rayshader v0.28.4
+===================
+- Add illum material values to 3D models saved with save_obj() for correct water rendering
+- Update remote version to get rayrender bugfix (Tyler, 2022-09-24)
+
+
+rayshader v0.28.3
+===================
+- Use rayimage `plot_image()` for much faster plotting in `plot_map()` and `render_snapshot()` (Tyler, 2022-09-19)
+
+rayshader v0.28.2
+===================
+- Add terra support (Tyler, 2022-05-11)
+
+rayshader v0.28.1
+===================
+- Fix dirt edges when NA values present (Tyler, 2022-05-11)
+
+rayshader v0.28.0
+===================
+- Dirt! 
+- `plot_3d()` Add dirt texture generation arguments
+- Auto-generate nicer dirt clumps for different aspect ratios
+- Change dirt texcoords to always go from 0 to 1 over base (scaling texture)
+- Update to use terra extract method (Tyler, 2022-04-24)
+
+rayshader v0.27.9
+===================
+- Fix `render_movie()` resolution order (Tyler, 2022-04-23)
+
+rayshader v0.27.8
+===================
+- Ensure a minimum shadow width (Tyler, 2022-04-16)
+
+rayshader v0.27.7
+===================
+- Bug fixes
+- `add_overlay()` Fix alphacolor specification
+- `add_water()` Fix water color specification (Tyler, 2022-04-16)
+
+rayshader v0.27.6
+===================
+- Vignette additions
+- Add ability to tint vignette
+- Remove vignetting code (Tyler, 2022-04-16)
+
+rayshader v0.27.5
+===================
+- Fix `generate_polygon_overlay()` palette generation for continuous factors (Tyler, 2022-04-15)
+
+rayshader v0.27.4
+===================
+- Add `return_scene` argument to `render_highquality()` (Tyler, 2022-03-20)
+
+rayshader v0.27.3
+===================
+- Add `alpha` argument to `render_polygons()` (Tyler, 2022-03-18)
+
+rayshader v0.27.2
+===================
+- Slight improvement to auto shadow/solid depth
+- Account for the case where all entries in a heightmap are the same and soliddepth/shadowdepth are set to auto (Tyler, 2022-02-10)
+
+rayshader v0.27.1
+===================
+- Fix floating overlay OBJ textures (Tyler, 2022-02-01)
+
+rayshader v0.27.0
+===================
+- Clouds and Floating Overlays Update
+- Fix direction of offset_y
+- Add clouds to README
+- Fix floating overlay to default to heightmap dimensions
+- Correctly scale and offset clouds, with right orientation
+- Fix sun_altitude angle when using zscale
+- Improve cloud noise algorithm (Tyler, 2022-01-30)
+
+rayshader v0.26.8
+===================
+- Fix named dimension rgl bug (Tyler, 2021-12-25)
+
+rayshader v0.26.7
+===================
+- Fix bug introduced by latest rgl changes (Tyler, 2021-11-23)
+
+rayshader v0.26.6
+===================
+- Better shadow color calculation, using perceptually uniform luminance based on bg color (Tyler, 2021-11-20)
+
+rayshader v0.26.5
+===================
+- Fix save_3dprint() deleted surface bug (Tyler, 2021-11-19)
+
+rayshader v0.26.4
+===================
+- Bug fixes and rgl updates
+- Fixed text orientation bug in `render_highquality()`
+- Changed code to use rgl's new `tag` feature
+- Update dependencies with minimum versions (Tyler, 2021-11-15)
+
+rayshader v0.26.3
+===================
+- Fix render_highquality() bugs (Tyler, 2021-11-09)
+
+rayshader v0.26.2
+===================
+- CRAN CHECK fix and pkgdown workflow update (Tyler, 2021-09-16)
+
+rayshader v0.26.1
+===================
+- add_shadow bugfix + doc improvements (Tyler, 2021-07-16)
+
+rayshader v0.26.0
+===================
+- Add plot element 3D embossing to `plot_gg()` for 3D printing accessibility (Tyler, 2021-07-13)
+
+rayshader v0.25.10
+===================
+- Add text embossing option to plot_gg() (Tyler, 2021-07-09)
+
+rayshader v0.25.9
+===================
+- Add gifski support + fix plot_gg() + change add_overlay() argument order (Tyler, 2021-07-09)
+
+rayshader v0.25.8
+===================
+- Fix add_shadow orientation after rayimage update (Tyler, 2021-06-27)
+
+rayshader v0.25.7
+===================
+- Fix scale bars when heightmap has NA values (Tyler, 2021-06-27)
+
+rayshader v0.25.6
+===================
+- Update orientation to match rayimage fixes for `render_depth()` (Tyler, 2021-06-27)
+
+rayshader v0.25.5
+===================
+- Fix `render_depth()` preview orientation and account for new FSAA option in rayvertex
+- Update text size default in SW snapshots (Tyler, 2021-06-26)
+
+rayshader v0.25.4
+===================
+- Add explicit line_offset argument to `render_snapshot()` (Tyler, 2021-06-24)
+
+rayshader v0.25.3
+===================
+- Fix background color loading with rayvertex and let user specify line_offset (Tyler, 2021-06-24)
+
+rayshader v0.25.2
+===================
+- Improve rayvertex support (Tyler, 2021-06-22)
+
+rayshader v0.25.1
+===================
+- `render_depth()` fully working with rayvertex (Tyler, 2021-06-20)
+
+rayshader v0.25.0
+===================
+- Add support for software rendering via rayvertex (Tyler, 2021-06-18)
+
+rayshader v0.24.11
+===================
+- CRAN doc hacks + bugfix
+- Fix bug introduced in render_highquality() to revert to old behavior of saving cached OBJ in current dir
+- Add interactive() code chunks around all examples to prevent CRAN-specific errors (Tyler, 2021-05-02)
+
+rayshader v0.24.10
+===================
+- Update examples for CRAN (Tyler, 2021-04-20)
+
+rayshader v0.24.9
+===================
+- Update version number for CRAN (Tyler, 2021-04-20)
+
+rayshader v0.24.8
+===================
+- Fix save_obj() to include full path to images (Tyler, 2021-04-17)
+
+rayshader v0.24.7
+===================
+- Small fixes and improvements
+- `render_highquality()` cache_filename now saves the temporary directory, rather than the working directory
+- `save_obj()` Remove unneeded Ka entry in saved MTL files
+- Cleaned up some rgl texture tracking
+- Cleaned code (Tyler, 2021-04-14)
+
+rayshader v0.24.6
+===================
+- Fix ncore check for CRAN (Tyler, 2021-04-12)
+
+rayshader v0.24.5
+===================
+- Fix length issue for CHECK (Tyler, 2021-04-11)
+
+rayshader v0.24.4
+===================
+- Have `render_highquality()` invisibly return debug renders (Tyler, 2021-04-11)
+
+rayshader v0.24.3
+===================
+- Fix bug when specifying water level when height map has NA values (Tyler, 2021-04-03)
+
+rayshader v0.24.2
+===================
+- Update to fix render_snapshot() not working in some cases due to rgl changes (Tyler, 2021-02-23)
+
+rayshader v0.24.1
+===================
+- Add height range option to height_shade() and move some internal code to rayimage (Tyler, 2021-02-11)
+
+rayshader v0.24.0
+===================
+- Scale bars and compass overlays (Tyler, 2021-01-11)
+
+rayshader v0.23.0
+===================
+- Added support for text labels in 2D with `generate_label_overlay()` (Tyler, 2021-01-06)
+
+rayshader v0.22.0
+===================
+- Add `generate_point_overlay()` + overlay offsets (Tyler, 2021-01-01)
+
+rayshader v0.21.0
+===================
+- Texture shading and water lines
+- Add `texture_shade()`, a function to perform Leland Brown's texture shading algorithm
+- Add `generate_waterline_overlay()`, a function to generate waterline overlays
+- `height_shade()` change default color palette (Tyler, 2020-12-21)
+
+rayshader v0.20.0
+===================
+- Add 3D polygons with `render_polygons()` (Tyler, 2020-11-28)
+
+rayshader v0.19.5
+===================
+- Added smooth line option to render_highquality() and option for exported OBJ file to have manifold geometry (Tyler, 2020-11-17)
+
+rayshader v0.19.4
+===================
+- Fix `save_3dprint()` bug (Tyler, 2020-09-13)
+
+rayshader v0.19.3
+===================
+- Small bug fixes (Tyler, 2020-08-28)
+
+rayshader v0.19.2
+===================
+- Fix texture coordinate bug in save_obj() that caused `render_highquality()` to crash (Tyler, 2020-07-17)
+
+rayshader v0.19.0
+===================
+- {sf} polygons + line overlays (Tyler, 2020-07-04)
+
+rayshader v0.18.0
+===================
+- Contour + overlay generation (Tyler, 2020-06-28)
+
+rayshader v0.17.2
+===================
+- Add sf and SpatialLines support to render_path() (Tyler, 2020-06-23)
+
+rayshader v0.17.1
+===================
+- Lat/long auto-offset (Tyler, 2020-06-13)
+
+rayshader v0.17.0
+===================
+- Lat/long data update (Tyler, 2020-06-05)
+
+rayshader v0.16.0
+===================
+- Add {terrainmeshr} triangulation support
+- Add triangulation options to `plot_3d()` and `plot_gg()`. Turn on triangulation by default for `plot_gg()` (Tyler, 2020-04-30)
+
+rayshader v0.15.2
+===================
+- Fix `plot_gg()` bug, remove lit_base argument, and replace `calculate_normals` with `precomputed_normals` in `plot_3d()` (Tyler, 2020-04-23)
+
+rayshader v0.15.1
+===================
+- Add render_label() and line segment support in render_highquality() (Tyler, 2020-04-12)
+
+rayshader v0.15.0
+===================
+- scalebar and compass update (Tyler, 2020-03-08)
+
+rayshader v0.14.2
+===================
+- Change `reduce_size` in `plot_gg()` to just reduce elevation size, not image. Pass in second number to reduce image as well (Tyler, 2020-02-18)
+
+rayshader v0.14.1
+===================
+- Fix normal vector generation with NA entries (Tyler, 2020-02-12)
+
+rayshader v0.14.0
+===================
+- Add support for non-rectangular 3D models in `render_highquality()` (Tyler, 2020-02-09)
+
+rayshader v0.13.8
+===================
+- Add better examples for ray_shade() and add_shadow() (Tyler, 2020-01-26)
+
+rayshader v0.13.7
+===================
+- Remove `imager` dependency due to CRAN orphaned package warning (Tyler, 2020-01-25)
+
+rayshader v0.13.6
+===================
+- Fix render_camera() printing code (Tyler, 2020-01-23)
+
+rayshader v0.13.5
+===================
+- Fix heightmap error on linux when greyscale png generated (Tyler, 2020-01-23)
+
+rayshader v0.13.4
+===================
+- Add return value to render_camera() if no values are missing, and adds camera interpolation option to render_highquality() (Tyler, 2020-01-23)
+
+rayshader v0.13.3
+===================
+- Fixed reduce_size bug, removed browser() call, and updated docs (Tyler, 2019-12-22)
+
+rayshader v0.13.2
+===================
+- Specify material in `render_highquality()`, chromatic aberration, and bugfixes (Tyler, 2019-12-17)
+
+rayshader v0.13.1
+===================
+- Added `max_height` argument to `detect_water()` and fixed some bugs/issues (Tyler, 2019-11-11)
+
+rayshader v0.13.0
+===================
+- render_highquality() update (Tyler, 2019-11-08)
+
+rayshader v0.12.0
+===================
+- Titles and image overlays (Tyler, 2019-07-30)
+
+rayshader v0.11.5
+===================
+- Change {av} Import to Suggest (Tyler, 2019-07-10)
+
+rayshader v0.11.4
+===================
+- Add offset_edges argument to plot_gg (Tyler, 2019-07-06)
+
+rayshader v0.11.3
+===================
+- Bugfixes and camera changes (Tyler, 2019-07-05)
+
+rayshader v0.11.2
+===================
+- Bugfixes (Tyler, 2019-07-03)
+
+rayshader v0.11.1
+===================
+- Fixes and improvements (Tyler, 2019-06-27)
+
+rayshader v0.11.0
+===================
+- 3D ggplots (Tyler, 2019-06-16)
+
+rayshader v0.10.2
+===================
+- Fix bug introduced in last update
+- Add `clear = TRUE` to `render_snapshot()` calls in documentation
+- Add build_gh_pages script to repo (Tyler, 2019-04-05)
+
+rayshader v0.10.0
+===================
+- render_camera() update completed (Tyler, 2019-02-17)
+
+rayshader v0.9.3
+===================
+- Add render_camera() (Tyler, 2019-02-16)
+
+rayshader v0.9.2
+===================
+- Changes to windowsize in plot_3d() (Tyler, 2019-02-12)
+
+rayshader v0.9.1
+===================
+- Fix out-of-bounds memory issue with water layer generation (Tyler, 2019-01-30)
+
+rayshader v0.9.0
+===================
+- Add save_obj() function (Tyler, 2019-10-03)
+
+rayshader v0.8.0
+===================
+- Flexible base shapes (Tyler, 2018-12-14)
+
+rayshader v0.7.0
+===================
+- Labels (Tyler, 2018-11-21)
+
+rayshader v0.6.4
+===================
+- Bugfixes (Tyler, 2018-11-08)
+
+rayshader v0.6.3
+===================
+- I feel the need... (Tyler, 2018-10-27)
+
+rayshader v0.6.2
+===================
+- Speed update (Tyler, 2018-10-26)
+
+rayshader v0.6.1
+===================
+- Moved Rcpp::checkUserInterrupt() to outer loop to speed up raytracing (thanks @brodieG)
+
+rayshader v0.6.0
+===================
+- Added `render_depth()`, a post-processing effect to add depth of field to 3D maps.
+- Added `render_water()`, which either adds or replaces a water layer on the existing 3D map.
+- Added `add_overlay()`, which adds a transparent or semi-transparent overlay to the current hillshade.
+- Changed `save_3dprint()` to include the option to remove the shadow and water layers.
 
 Minor change:
-
-• Altered coordinates of plot_map to align with the center of the grid (thanks @mdsumner)
-
-• Added attribute to `montereybay` to mark it as internal data (for better user messages)
+- Altered coordinates of plot_map to align with the center of the grid (thanks @mdsumner)
+- Added attribute to `montereybay` to mark it as internal data (for better user messages)
 
 Bug fixes:
+- Fix for add_water hex color (thanks @ozjimbob)
+- Fixed aspect ratio in plot_map() (thanks @mdsumner)
 
-• Fix for add_water hex color (thanks @ozjimbob)
+rayshader v0.5.4
+===================
+- Altered coordinates of plot_map to align with the center of the grid (Tyler, 2018-09-20)
 
-• Fixed aspect ratio in plot_map() (thanks @mdsumner)
+rayshader v0.5.3
+===================
+- Fix for add_water hex color (Tyler, 2018-09-18)
 
+rayshader v0.5.2
+===================
+- Fixed aspect ratio in plot_map() (Tyler, 2018-09-16)
 
-rayshader v0.5.1 (Release date: 2018-09-11):
-================
+rayshader v0.5.1
+===================
+- Bugfixes (Tyler, 2018-09-06)
 
-• Added `save_3dprint`, a function that exports 3D maps to a stereolithography (STL) format for 3D printing.
+rayshader v0.5.0
+===================
+- 3D printing update (Tyler, 2018-08-25)
 
-• Changed `write_png` to `save_png`.
+rayshader v0.4.7
+===================
+- CRAN fixes, removed `remove_edges` (Tyler, 2018-08-24)
 
-• Corrected orientation of polygons in `plot_3d`
+rayshader v0.4.6
+===================
+- Shadow bugfix (Tyler, 2018-08-20)
 
-• Fixed small overhand on 3D base.
+rayshader v0.4.5
+===================
+- Pre-CRAN clean-up (Tyler, 2018-08-17)
 
-• Fixed out-of-bounds bug in C++ normal vector generation.
+rayshader v0.4.4
+===================
+- Added shadow color option (Tyler, 2018-08-16)
 
-• `plot_map()` no longer crashes R when "rotate" is a matrix rather than a single numeric value.
+rayshader v0.4.3
+===================
+- Added default settings for zscale when `montereybay` dataset used and zscale is not passed in by user (Tyler, 2018-08-09)
 
-• `plot_3d()` now displays warning if hillshade argument contains any values below 0 or more than 1.
+rayshader v0.4.2
+===================
+- Added example dataset `montereybay` (Tyler, 2018-08-08)
 
-• Add hex logo to README
+rayshader v0.4.1
+===================
+- Update pipe import from magrittr (Tyler, 2018-08-06)
+
+rayshader v0.4.0
+===================
+- 3D mapping update (Tyler, 2018-07-04)
+
+rayshader v0.3.1
+===================
+- makeCluster argument update (Tyler, 2018-06-30)
+
+rayshader v0.3.0
+===================
+- Big Honkin' Update (Tyler, 2018-06-28)
+
+rayshader v0.2.1
+===================
+- Bugfix release (Tyler, 2018-05-20)
+
+rayshader v0.2.0
+===================
+- Lambert Update (Tyler, 2018-05-19)
+
+rayshader v0.1.0
+===================
+- Initial commit. Basic functionality implemented and documentation written (Tyler, 2018-05-13)
