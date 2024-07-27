@@ -1,363 +1,123 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>https://www.rayshader.com/404.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/CODE_OF_CONDUCT.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/CONTRIBUTING.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/authors.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/index.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/news/index.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/add_multi_padding.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/add_overlay.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/add_padding.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/add_shadow.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/add_water.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/ambient_shade.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/build_from_w.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/calculate_normal.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/cloud_shade.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/constant_shade.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/convert_color.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/convert_path_to_animation_coords.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/convert_rgl_to_raymesh.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/create_texture.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/cross.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/darken_color.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/detect_water.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/drawkeyfunction_lines.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/drawkeyfunction_points.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/fix_manifold_geometry.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/flag_banner_obj.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/flag_full_obj.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/flag_pole_obj.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/fliplr.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/flipud.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/gen_fractal_perlin.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/generate_altitude_overlay.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/generate_base_shape.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/generate_cloud_layer.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/generate_compass_overlay.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/generate_contour_overlay.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/generate_label_overlay.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/generate_line_overlay.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/generate_point_overlay.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/generate_polygon_overlay.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/generate_rot_matrix.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/generate_scalebar_overlay.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/generate_soil_textures.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/generate_surface.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/generate_waterline_overlay.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/get_extent.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/get_ids_with_labels.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/get_interpolated_points_path.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/get_polygon_data_value.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/get_scene_depth.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/height_shade.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/index.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/lamb_shade.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/load_image.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/local_to_world.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/lookat.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/make_base.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/make_base_triangulated.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/make_lines.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/make_shadow.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/make_water.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/make_waterlines.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/monterey_counties_sf.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/monterey_roads_sf.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/montereybay.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/pipe.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/plot_3d.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/plot_gg.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/plot_map.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/raster_to_matrix.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/ray_merge_reorder.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/ray_shade.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/raymarch_cloud_layer.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/reduce_matrix_size.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/render_beveled_polygons.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/render_buildings.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/render_camera.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/render_clouds.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/render_compass.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/render_contours.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/render_depth.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/render_floating_overlay.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/render_highquality.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/render_label.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/render_movie.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/render_multipolygonz.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/render_obj.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/render_path.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/render_points.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/render_polygons.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/render_raymesh.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/render_resize_window.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/render_scalebar.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/render_snapshot.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/render_snapshot_software.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/render_tree.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/render_water.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/resize_matrix.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/rot_to_euler.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/run_documentation.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/save_3dprint.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/save_multipolygonz_to_obj.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/save_obj.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/save_png.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/sphere_shade.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/texture_shade.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/transform_into_heightmap_coords.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/transform_points_custom_crs.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/transform_points_into_raycoords.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/transform_polygon_custom_crs.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/transform_polygon_into_raycoords.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/translate_shape_string.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/tree_basic_center_obj.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/tree_cone_center_obj.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/tree_trunk_obj.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/trim_padding.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/unit_vector.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/washington_monument_multipolygonz.html</loc>
-  </url>
-  <url>
-    <loc>https://www.rayshader.com/reference/write_stl.html</loc>
-  </url>
+<urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
+<url><loc>https://www.rayshader.com/404.html</loc></url>
+<url><loc>https://www.rayshader.com/CODE_OF_CONDUCT.html</loc></url>
+<url><loc>https://www.rayshader.com/CONTRIBUTING.html</loc></url>
+<url><loc>https://www.rayshader.com/authors.html</loc></url>
+<url><loc>https://www.rayshader.com/index.html</loc></url>
+<url><loc>https://www.rayshader.com/news/index.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/add_multi_padding.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/add_overlay.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/add_padding.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/add_shadow.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/add_water.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/ambient_shade.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/build_from_w.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/calculate_normal.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/cloud_shade.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/constant_shade.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/convert_color.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/convert_path_to_animation_coords.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/convert_rgl_to_raymesh.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/create_texture.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/cross.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/darken_color.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/detect_water.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/drawkeyfunction_lines.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/drawkeyfunction_points.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/fix_manifold_geometry.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/flag_banner_obj.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/flag_full_obj.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/flag_pole_obj.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/fliplr.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/flipud.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/gen_fractal_perlin.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/generate_altitude_overlay.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/generate_base_shape.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/generate_cloud_layer.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/generate_compass_overlay.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/generate_contour_overlay.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/generate_label_overlay.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/generate_line_overlay.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/generate_point_overlay.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/generate_polygon_overlay.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/generate_rot_matrix.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/generate_scalebar_overlay.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/generate_soil_textures.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/generate_surface.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/generate_waterline_overlay.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/get_extent.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/get_ids_with_labels.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/get_interpolated_points_path.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/get_polygon_data_value.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/get_scene_depth.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/height_shade.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/index.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/lamb_shade.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/load_image.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/local_to_world.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/lookat.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/make_base.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/make_base_triangulated.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/make_lines.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/make_shadow.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/make_water.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/make_waterlines.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/monterey_counties_sf.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/monterey_roads_sf.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/montereybay.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/pipe.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/plot_3d.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/plot_gg.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/plot_map.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/raster_to_matrix.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/ray_merge_reorder.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/ray_shade.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/raymarch_cloud_layer.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/reduce_matrix_size.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/render_beveled_polygons.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/render_buildings.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/render_camera.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/render_clouds.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/render_compass.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/render_contours.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/render_depth.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/render_floating_overlay.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/render_highquality.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/render_label.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/render_movie.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/render_multipolygonz.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/render_obj.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/render_path.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/render_points.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/render_polygons.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/render_raymesh.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/render_resize_window.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/render_scalebar.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/render_snapshot.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/render_snapshot_software.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/render_tree.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/render_water.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/resize_matrix.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/rot_to_euler.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/run_documentation.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/save_3dprint.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/save_multipolygonz_to_obj.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/save_obj.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/save_png.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/sphere_shade.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/texture_shade.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/transform_into_heightmap_coords.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/transform_points_custom_crs.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/transform_points_into_raycoords.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/transform_polygon_custom_crs.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/transform_polygon_into_raycoords.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/translate_shape_string.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/tree_basic_center_obj.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/tree_cone_center_obj.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/tree_trunk_obj.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/trim_padding.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/unit_vector.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/washington_monument_multipolygonz.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/write_stl.html</loc></url>
 </urlset>
+
