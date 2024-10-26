@@ -41,7 +41,7 @@ convert_path_to_animation_coords(
 \item{long}{Vector of longitudes (or other coordinate in the same coordinate reference system as extent).}
 
 \item{altitude}{Elevation of each point, in units of the elevation matrix (scaled by zscale). 
-If left `NULL`, this will be just the elevation value at ths surface, offset by `offset`. If a single value, 
+If left `NULL`, this will be just the elevation value at this surface, offset by `offset`. If a single value, 
 all data will be rendered at that altitude.}
 
 \item{extent}{Either an object representing the spatial extent of the scene 

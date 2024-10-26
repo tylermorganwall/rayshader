@@ -79,7 +79,7 @@ control the blurriness of the vignette effect.}
 
 \item{vignette_color}{Default `"black"`. Color of the vignette.}
 
-\item{vignette_radius}{Default `1.3`. Radius of the vignette, as a porportion of the image dimensions.}
+\item{vignette_radius}{Default `1.3`. Radius of the vignette, as a proportion of the image dimensions.}
 
 \item{instant_capture}{Default `TRUE` if interactive, `FALSE` otherwise. If `FALSE`, a slight delay is added 
 before taking the snapshot. This can help stop prevent rendering issues when running scripts.}

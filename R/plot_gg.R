@@ -70,7 +70,7 @@
 #'if `triangulate = TRUE`.
 #'@param emboss_text Default `0`, max `1`. Amount to emboss the text, where `1` is the tallest feature in the scene.
 #'@param emboss_grid Default `0`, max `1`. Amount to emboss the grid lines, where `1` is the tallest feature in the scene.
-#'By default, the minor grid lines will be half the size of the major lines. Pass a length-2 vector to specify them seperately (second value 
+#'By default, the minor grid lines will be half the size of the major lines. Pass a length-2 vector to specify them separately (second value 
 #'is the minor grid height).
 #'@param reduce_size Default `NULL`. A number between `0` and `1` that specifies how much to reduce the resolution of the plot, for faster plotting. By
 #'default, this just decreases the size of height map, not the image. If you wish the image to be reduced in resolution as well, pass a numeric vector of size 2.
