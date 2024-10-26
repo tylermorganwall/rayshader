@@ -240,7 +240,7 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
     }
   } else {
     if(shadowdepth > min_height) {
-      message(sprintf("`shadowdepth` (set to %f) is greater to heightmap minimum value (%f). Shadow will appear to be intersecting 3D model.",
+      message(sprintf("`shadowdepth` (set to %f) is greater than the heightmap minimum value (%f). Shadow will appear to be intersecting 3D model.",
                       shadowdepth, min_height))
     } else {
       shadowdepth = shadowdepth/zscale
