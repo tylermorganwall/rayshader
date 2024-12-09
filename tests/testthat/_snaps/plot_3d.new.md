@@ -11,7 +11,7 @@
         "material_hashes": {
           "type": "character",
           "attributes": {},
-          "value": ["85572a9eb434039e855c5c201767954f", "644c1a1c2ed4558cdd2145be2555adab", "3b2d8f9173e160ae19225b682daa1cc4"]
+          "value": ["656bdf74587483da6f39cad990aa7689", "644c1a1c2ed4558cdd2145be2555adab", "47572e64c8caf4ec3c6f98ef53f7a885"]
         }
       },
       "value": [

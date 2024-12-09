@@ -27,6 +27,11 @@
 #'@param lightsize Default `NULL`. Radius of the light(s). Automatically chosen, but can be set here by the user.
 #'@param lightintensity Default `500`. Intensity of the light.
 #'@param lightcolor Default `white`. The color of the light.
+#'@param water_attenuation Default `0`, no attenuation. Amount that light should be attenuated when traveling through water. This
+#'calculates 1-color 
+#'@param water_surface_color Default `TRUE`. Whether the water should have a colored surface or not. This is in contrast to
+#' setting a non-zero water attenuation, where the color comes from the attenuation of light in the water itself.
+#'@param water_ior Default `1`. Water index of refraction.
 #'@param material Default `rayrender::diffuse()`. The material properties of the object file. Only used if `override_material = TRUE`
 #'@param override_material Default `FALSE`. Whether to override the default diffuse material with that in argument `material`.
 #'@param cache_scene Default `FALSE`. Whether to cache the current scene to memory so it does not have to be converted to a `raymesh` object 
@@ -164,6 +169,7 @@ render_highquality = function(filename = NA, samples = 128,
                               light = TRUE, 
                               lightdirection = 315, lightaltitude = 45, lightsize=NULL,
                               lightintensity = 500, lightcolor = "white", material = rayrender::diffuse(),
+                              water_attenuation = 0, water_surface_color = TRUE, water_ior = 1,
                               override_material = FALSE,
                               cache_scene = FALSE, reset_scene_cache = FALSE, 
                               width = NULL, height = NULL, 
@@ -364,14 +370,23 @@ render_highquality = function(filename = NA, samples = 128,
       camera_lookat = camera_interpolate[2] * camera_lookat
     }
   }
+  water_attenuation = abs(water_attenuation)
+  if(any(water_attenuation > 1)) {
+    warnings("`water_attenuation` should only be a value of 1 or less--clamping at 0-1")
+    water_attenuation[water_attenuation > 1] = 1
+  }
   if(cache_scene) {
     ray_scene = get("scene_cache", envir = ray_cache_scene_envir)
     if(is.null(ray_scene)) {
-      ray_scene = convert_rgl_to_raymesh(save_shadow = FALSE)
+      ray_scene = convert_rgl_to_raymesh(save_shadow = FALSE, 
+        water_attenuation = water_attenuation,
+        water_surface_color = water_surface_color, water_ior = water_ior)
       assign("scene_cache", ray_scene, envir = ray_cache_scene_envir)
     }
   } else {
-    ray_scene = convert_rgl_to_raymesh(save_shadow = FALSE)
+    ray_scene = convert_rgl_to_raymesh(save_shadow = FALSE, 
+      water_attenuation = water_attenuation,
+      water_surface_color = water_surface_color, water_ior = water_ior)
   }
   
   if(!override_material) {
@@ -379,7 +394,7 @@ render_highquality = function(filename = NA, samples = 128,
                                      x = -bbox_center[1],
                                      y = -bbox_center[2],
                                      z = -bbox_center[3],
-                                     override_material = FALSE,
+                                     override_material = FALSE, flip_transmittance = FALSE,
                                      calculate_consistent_normals = calculate_consistent_normals)
   } else {
     scene = rayrender::raymesh_model(ray_scene,
@@ -387,7 +402,7 @@ render_highquality = function(filename = NA, samples = 128,
                                      y = -bbox_center[2],
                                      z = -bbox_center[3],
                                      material = material,
-                                     override_material = TRUE,
+                                     override_material = TRUE, flip_transmittance = FALSE,
                                      calculate_consistent_normals = calculate_consistent_normals)
   }
   has_rayimage = TRUE

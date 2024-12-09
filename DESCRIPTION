@@ -1,8 +1,8 @@
 Package: rayshader
 Type: Package
 Title: Create Maps and Visualize Data in 2D and 3D
-Version: 0.38.1
-Date: 2024-05-10
+Version: 0.38.3
+Date: 2024-12-08
 Authors@R: 
     person("Tyler", "Morgan-Wall", email = "tylermw@gmail.com",role = c("aut", "cph", "cre"), 
            comment = c(ORCID = "0000-0002-3131-3814"))
@@ -26,9 +26,9 @@ Imports: doParallel,
          utils,
          methods,
          terrainmeshr,
-         rayimage (>= 0.10.0),
-         rayvertex (>= 0.10.4),
-         rayrender (>= 0.32.2)
+         rayimage (>= 0.12.1),
+         rayvertex (>= 0.11.4),
+         rayrender (>= 0.36.5)
 Suggests: 
     reshape2,
     viridis,
@@ -47,13 +47,12 @@ Suggests:
     gridExtra,
     testthat (>= 3.0.0),
     osmdata,
-    raybevel
+    raybevel (>= 0.1.3)
 LinkingTo: Rcpp, progress, RcppArmadillo
-RoxygenNote: 7.3.1
+RoxygenNote: 7.3.2
 Encoding: UTF-8
 URL: https://www.rayshader.com,
      https://github.com/tylermorganwall/rayshader
 BugReports: https://github.com/tylermorganwall/rayshader/issues
 Config/testthat/edition: 3
-Additional_repositories: https://tylermorganwall.r-universe.dev/
-Remotes: tylermorganwall/raybevel
+Remotes: tylermorganwall/raybevel, tylermorganwall/rayimage, tylermorganwall/rayrender

@@ -3,6 +3,10 @@
 #'@description Converts the current RGL rayshader scene to a `ray_mesh` object (see `rayvertex` package for more information)
 #'
 #'@param save_shadow Default `FALSE`. If `TRUE`, this saves a plane with the shadow texture below the model.
+#'@param water_attenuation Default `0`, no attenuation. Amount that light should be attenuated when traveling through water.
+#'@param water_surface_color Default `TRUE`. Whether the water should have a colored surface or not. This is in contrast to
+#' setting a non-zero water attenuation, where the color comes from the attenuation of light in the water itself.
+#'@param water_ior Default `1`. Water index of refraction.
 #'@return A `ray_mesh` object
 #'@export
 #'@examples
@@ -15,7 +19,8 @@
 #'
 #'rm_obj = convert_rgl_to_raymesh()
 #'}
-convert_rgl_to_raymesh = function(save_shadow = TRUE) {
+convert_rgl_to_raymesh = function(save_shadow = TRUE, water_attenuation = 0, 
+                                  water_surface_color = TRUE, water_ior = 1) {
   if(rgl::cur3d() == 0) {
     stop("No rgl window currently open.")
   }
@@ -25,6 +30,7 @@ convert_rgl_to_raymesh = function(save_shadow = TRUE) {
   vertex_info = get_ids_with_labels()
   basic_load_mesh = function(row, texture_loc, 
                              color = "white", alpha=1, obj = FALSE, specular = "white",shininess = 50,
+                             attenuation = 0, water_surface = TRUE,
                              lit = FALSE, quads = FALSE) {
     id = as.character(vertex_info$id[row])
     
@@ -82,6 +88,11 @@ convert_rgl_to_raymesh = function(save_shadow = TRUE) {
     } else {
       type_val = "color"
     }
+    if(water_surface) {
+      specular = convert_color(specular)
+    } else {
+      specular = c(1,1,1)
+    }
     
     texture_loc = ifelse(!is.na(texture_loc), texture_loc, "")
     return(rayvertex::construct_mesh(indices = indices,
@@ -92,9 +103,11 @@ convert_rgl_to_raymesh = function(save_shadow = TRUE) {
                                      norm_indices = norm_indices,
                                      material = rayvertex::material_list(texture_location = texture_loc, 
                                                                          diffuse = color,
+                                                                         transmittance = (1-convert_color(color)) * water_attenuation,
                                                                          type = type_val,
                                                                          shininess = shininess,
                                                                          dissolve = alpha,
+                                                                         ior = water_ior,
                                                                          specular = specular)))
   }
   for(row in seq_len(nrow(vertex_info))) {
@@ -160,7 +173,9 @@ convert_rgl_to_raymesh = function(save_shadow = TRUE) {
                                                  texture_loc = NA,
                                                  color = vertex_info$water_color[[row]],
                                                  alpha = vertex_info$water_alpha[[row]],
-                                                 specular = vertex_info$water_color[[row]])
+                                                 specular = vertex_info$water_color[[row]],
+                                                 water_surface = water_surface_color,
+                                                 attenuation = water_attenuation)
     } else if (vertex_info$tag[row] == "north_symbol") {
       final_scene[[num_elems]] = basic_load_mesh(row,
                                                  lit = lit_val,

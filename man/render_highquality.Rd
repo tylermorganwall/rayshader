@@ -16,6 +16,9 @@ render_highquality(
   lightintensity = 500,
   lightcolor = "white",
   material = rayrender::diffuse(),
+  water_attenuation = 0,
+  water_surface_color = TRUE,
+  water_ior = 1,
   override_material = FALSE,
   cache_scene = FALSE,
   reset_scene_cache = FALSE,
@@ -90,6 +93,14 @@ If this is a vector longer than one, multiple lights will be generated (using va
 \item{lightcolor}{Default `white`. The color of the light.}
 
 \item{material}{Default `rayrender::diffuse()`. The material properties of the object file. Only used if `override_material = TRUE`}
+
+\item{water_attenuation}{Default `0`, no attenuation. Amount that light should be attenuated when traveling through water. This
+calculates 1-color}
+
+\item{water_surface_color}{Default `TRUE`. Whether the water should have a colored surface or not. This is in contrast to
+setting a non-zero water attenuation, where the color comes from the attenuation of light in the water itself.}
+
+\item{water_ior}{Default `1`. Water index of refraction.}
 
 \item{override_material}{Default `FALSE`. Whether to override the default diffuse material with that in argument `material`.}
 

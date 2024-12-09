@@ -4,10 +4,22 @@
 \alias{convert_rgl_to_raymesh}
 \title{Convert rayshader RGL scene to ray_mesh object}
 \usage{
-convert_rgl_to_raymesh(save_shadow = TRUE)
+convert_rgl_to_raymesh(
+  save_shadow = TRUE,
+  water_attenuation = 0,
+  water_surface_color = TRUE,
+  water_ior = 1
+)
 }
 \arguments{
 \item{save_shadow}{Default `FALSE`. If `TRUE`, this saves a plane with the shadow texture below the model.}
+
+\item{water_attenuation}{Default `0`, no attenuation. Amount that light should be attenuated when traveling through water.}
+
+\item{water_surface_color}{Default `TRUE`. Whether the water should have a colored surface or not. This is in contrast to
+setting a non-zero water attenuation, where the color comes from the attenuation of light in the water itself.}
+
+\item{water_ior}{Default `1`. Water index of refraction.}
 }
 \value{
 A `ray_mesh` object

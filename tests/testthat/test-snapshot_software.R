@@ -29,7 +29,7 @@ run_tests_sw = function(func, argument_grid, plot_prefix="", ...) {
 }
 
 test_that("Checking render_snapshot(software_render = TRUE) features", {
-  temp_cache = tempfile(fileext = ".obj")
+  testthat::skip_on_cran()
   #Render the 3D map
   montereybay %>%
     sphere_shade() %>%
@@ -104,13 +104,13 @@ test_that("Checking render_snapshot(software_render = TRUE) features", {
                                      camera_lookat = list(c(0,0,0), c(100, 100, 200)))
   
   run_tests_sw("render_snapshot", software_render_args, plot_prefix = "sw_render",
-               list(cache_filename = temp_cache))
+               list(cache_scene = TRUE))
   
   software_render_args_dims = expand.grid(software_render = list(TRUE),
                                           width = list(NULL, 600),
                                           height = list(NULL, 600))
   run_tests_sw("render_snapshot", software_render_args_dims, plot_prefix = "sw_render_dims",
-               list(cache_filename = temp_cache))
+               list(cache_scene = TRUE))
   
   software_render_args_lines = expand.grid(software_render = list(TRUE),
                                      thick_lines = list(TRUE, FALSE),
@@ -118,7 +118,7 @@ test_that("Checking render_snapshot(software_render = TRUE) features", {
                                      line_radius = list(0.5,10))
   
   run_tests_sw("render_snapshot", software_render_args_lines, plot_prefix = "sw_render_lines",
-               list(cache_filename = temp_cache))
+               list(cache_scene = TRUE))
   
   # software_render_text_args = expand.grid(software_render = list(TRUE),
   #                                    text_size = list(10,30),
@@ -126,12 +126,12 @@ test_that("Checking render_snapshot(software_render = TRUE) features", {
   #                                    text_offset = list(c(1,0,0),c(0,1,0),c(0,0,1)))
   # 
   # run_tests_sw("render_snapshot", software_render_text_args, plot_prefix = "sw_render_text",
-  #              list(cache_filename = temp_cache))
+  #              list(cache_scene = temp_cache))
   
   software_render_points_args = expand.grid(software_render = list(TRUE),
                                             point_radius = list(2,10))
   
   run_tests_sw("render_snapshot", software_render_points_args, plot_prefix = "sw_render_points",
-               list(cache_filename = temp_cache))
+               list(cache_scene = TRUE))
   rgl::close3d()
 })

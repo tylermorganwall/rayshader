@@ -419,15 +419,15 @@ plot_gg = function(ggobj, ggobj_height = NULL, width = 3, height = 3,
         if(has_guide) {
           if(height_aes == "fill") {
             if(is.null(ggplotobj2$guides$fill)) {
-              ggplotobj2 = ggplotobj2 + ggplot2::guides(fill = ggplot2::guide_colourbar(ticks = FALSE,nbin = 1000,order=i))
+              ggplotobj2 = ggplotobj2 + ggplot2::guides(fill = ggplot2::guide_colourbar(legend.ticks = ggplot2::element_blank(),nbin = 1000,order=i))
             } else {
               if(any(ggplotobj2$guides$fill != "none")) {
                 copyguide = ggplotobj2$guides$fill
                 copyguide$frame.linewidth = 0
-                copyguide$ticks = FALSE
+                copyguide$legend.ticks = ggplot2::element_blank()
                 copyguide$nbin = 1000
                 ggplotobj2 = ggplotobj2 + 
-                  ggplot2::guides(fill = ggplot2::guide_colourbar(ticks = FALSE,nbin = 1000))
+                  ggplot2::guides(fill = ggplot2::guide_colourbar(legend.ticks = ggplot2::element_blank(),nbin = 1000))
                 ggplotobj2$guides$fill = copyguide
               }
             }
@@ -438,15 +438,15 @@ plot_gg = function(ggobj, ggobj_height = NULL, width = 3, height = 3,
             }
           } else {
             if(is.null(ggplotobj2$guides$colour)) {
-              ggplotobj2 = ggplotobj2 + ggplot2::guides(colour = ggplot2::guide_colourbar(ticks = FALSE,nbin = 1000,order=i))
+              ggplotobj2 = ggplotobj2 + ggplot2::guides(colour = ggplot2::guide_colourbar(legend.ticks = ggplot2::element_blank(),nbin = 1000,order=i))
             } else {
               if(any(ggplotobj2$guides$colour != "none")) {
                 copyguide = ggplotobj2$guides$colour
                 copyguide$frame.linewidth = 0
-                copyguide$ticks = FALSE
+                copyguide$legend.ticks = ggplot2::element_blank()
                 copyguide$nbin = 1000
                 ggplotobj2 = ggplotobj2 + 
-                  ggplot2::guides(colour = ggplot2::guide_colourbar(ticks = FALSE,nbin = 1000))
+                  ggplot2::guides(colour = ggplot2::guide_colourbar(legend.ticks = ggplot2::element_blank(),nbin = 1000))
                 ggplotobj2$guides$colour = copyguide
               }
             }
@@ -464,12 +464,12 @@ plot_gg = function(ggobj, ggobj_height = NULL, width = 3, height = 3,
       if(height_aes == "colour") {
         ggplotobj2 = ggplotobj2 + 
           ggplot2::scale_color_gradientn(colours = grDevices::colorRampPalette(c("white","black"))(256), na.value = "white") +
-          ggplot2::guides(colour = ggplot2::guide_colourbar(ticks = FALSE,nbin = 1000))
+          ggplot2::guides(colour = ggplot2::guide_colourbar(legend.ticks = ggplot2::element_blank(),nbin = 1000))
       }
       if(height_aes == "fill") {
         ggplotobj2 = ggplotobj2 + 
           ggplot2::scale_fill_gradientn(colours = grDevices::colorRampPalette(c("white","black"))(256), na.value = "white") +
-          ggplot2::guides(fill = ggplot2::guide_colourbar(ticks = FALSE,nbin = 1000))
+          ggplot2::guides(fill = ggplot2::guide_colourbar(legend.ticks = ggplot2::element_blank(),nbin = 1000))
       }
     }
   } else {
@@ -478,19 +478,19 @@ plot_gg = function(ggobj, ggobj_height = NULL, width = 3, height = 3,
       if(height_aes == "fill") {
         ggplotobj2 = ggplotobj2 + 
           ggplot2::scale_fill_gradientn(colours = grDevices::colorRampPalette(c("white","black"))(256), na.value = "white") +
-          ggplot2::guides(fill = ggplot2::guide_colourbar(ticks = FALSE,nbin = 1000))
+          ggplot2::guides(fill = ggplot2::guide_colourbar(legend.ticks = ggplot2::element_blank(),nbin = 1000))
       } else {
         ggplotobj2 = ggplotobj2 + 
           ggplot2::scale_color_gradientn(colours = grDevices::colorRampPalette(c("white","black"))(256), na.value = "white") +
-          ggplot2::guides(colour = ggplot2::guide_colourbar(ticks = FALSE,nbin = 1000))
+          ggplot2::guides(colour = ggplot2::guide_colourbar(legend.ticks = ggplot2::element_blank(),nbin = 1000))
       }
     } else {
       if(height_aes == "fill") {
         ggplotobj2 = ggplotobj2 + ggplot2::scale_fill_gradientn(colours = grDevices::colorRampPalette(c("white","black"))(256), na.value = "white") +
-          ggplot2::guides(fill = ggplot2::guide_colourbar(ticks = FALSE,nbin = 1000))
+          ggplot2::guides(fill = ggplot2::guide_colourbar(legend.ticks = ggplot2::element_blank(),nbin = 1000))
       } else {
         ggplotobj2 = ggplotobj2 + ggplot2::scale_color_gradientn(colours = grDevices::colorRampPalette(c("white","black"))(256), na.value = "white") +
-          ggplot2::guides(colour = ggplot2::guide_colourbar(ticks = FALSE,nbin = 1000))
+          ggplot2::guides(colour = ggplot2::guide_colourbar(legend.ticks = ggplot2::element_blank(),nbin = 1000))
       }
     }
   }
