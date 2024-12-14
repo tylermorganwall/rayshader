@@ -466,27 +466,35 @@ render_highquality = function(filename = NA, samples = 128,
   counter = 1
   for(i in seq_len(length(pathids))) {
     temp_verts = rgl.attrib(pathids[i], "vertices")
+    temp_verts_split = split(as.data.frame(temp_verts),
+                             cumsum(apply(temp_verts,1,\(x) any(is.na(x)))))
+    for(j in seq_along(temp_verts_split)[-1]) {
+      temp_verts_split[[j]] = temp_verts_split[[j]][-1,]
+    }
     temp_color = rgl.attrib(pathids[i], "colors")
     temp_lwd = material3d("lwd", id = pathids[i]) * line_radius
-    
-    if(nrow(temp_color) == 1) {
-      temp_color = matrix(temp_color[1:3], byrow = TRUE, ncol = 3, nrow = nrow(temp_verts))
+    for(j in seq_along(temp_verts_split)) {
+      temp_verts_single = temp_verts_split[[j]]
+      if(nrow(temp_color) == 1) {
+        temp_color = matrix(temp_color[1:3], byrow = TRUE, ncol = 3, nrow = nrow(temp_verts_single))
+      }
+      matrix_center = matrix(bbox_center, byrow=TRUE,ncol=3,nrow = nrow(temp_verts_single))
+      path_material_args$color = temp_color[1,1:3]
+      
+      if(use_extruded_paths) {
+        pathline[[counter]] = rayrender::extruded_path(points = temp_verts_single - matrix_center , 
+                                              width = temp_lwd * 2,
+                                              smooth_normals = TRUE, 
+                                              straight = !smooth_line,
+                                              material = do.call("path_material", args = path_material_args))
+      } else {
+        pathline[[counter]] = rayrender::path(points = temp_verts_single - matrix_center, 
+                                              width = temp_lwd * 2,
+                                              straight = !smooth_line,
+                                              material = do.call("path_material", args = path_material_args))
+      }
+      counter = counter + 1
     }
-    matrix_center = matrix(bbox_center, byrow=TRUE,ncol=3,nrow = nrow(temp_verts))
-    path_material_args$color = temp_color[1,1:3]
-    if(use_extruded_paths) {
-      pathline[[counter]] = rayrender::extruded_path(points = temp_verts - matrix_center , 
-                                            width = temp_lwd * 2,
-                                            smooth_normals = TRUE, 
-                                            straight = !smooth_line,
-                                            material = do.call("path_material", args = path_material_args))
-    } else {
-      pathline[[counter]] = rayrender::path(points = temp_verts - matrix_center, 
-                                            width = temp_lwd * 2,
-                                            straight = !smooth_line,
-                                            material = do.call("path_material", args = path_material_args))
-    }
-    counter = counter + 1
   }
   pointids = get_ids_with_labels(typeval = "points3d")$id
   pointlist = list()
