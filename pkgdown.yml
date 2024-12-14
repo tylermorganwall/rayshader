@@ -1,8 +1,8 @@
 pandoc: 3.1.11
-pkgdown: 2.1.0
+pkgdown: 2.1.1
 pkgdown_sha: ~
 articles: {}
-last_built: 2024-07-27T13:59Z
+last_built: 2024-12-14T04:38Z
 urls:
   reference: https://www.rayshader.com/reference
   article: https://www.rayshader.com/articles

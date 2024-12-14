@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.38.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.38.4</span>
       </span>
     </div>
 
@@ -99,7 +99,12 @@
     </div>
 
     <div id="ref-usage">
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">convert_rgl_to_raymesh</span><span class="op">(</span>save_shadow <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">convert_rgl_to_raymesh</span><span class="op">(</span></span>
+<span>  save_shadow <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  water_attenuation <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  water_surface_color <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  water_ior <span class="op">=</span> <span class="fl">1</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div id="arguments">
@@ -108,6 +113,19 @@
 
 <dl><dt id="arg-save-shadow">save_shadow<a class="anchor" aria-label="anchor" href="#arg-save-shadow"></a></dt>
 <dd><p>Default `FALSE`. If `TRUE`, this saves a plane with the shadow texture below the model.</p></dd>
+
+
+<dt id="arg-water-attenuation">water_attenuation<a class="anchor" aria-label="anchor" href="#arg-water-attenuation"></a></dt>
+<dd><p>Default `0`, no attenuation. Amount that light should be attenuated when traveling through water.</p></dd>
+
+
+<dt id="arg-water-surface-color">water_surface_color<a class="anchor" aria-label="anchor" href="#arg-water-surface-color"></a></dt>
+<dd><p>Default `TRUE`. Whether the water should have a colored surface or not. This is in contrast to
+setting a non-zero water attenuation, where the color comes from the attenuation of light in the water itself.</p></dd>
+
+
+<dt id="arg-water-ior">water_ior<a class="anchor" aria-label="anchor" href="#arg-water-ior"></a></dt>
+<dd><p>Default `1`. Water index of refraction.</p></dd>
 
 </dl></div>
     <div id="value">
@@ -140,7 +158,7 @@
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.0.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
 </div>
 
       </footer></div>

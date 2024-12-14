@@ -21,7 +21,7 @@ either `convert_path_to_animation_coords()` or `rayrender::generate_camera_motio
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.38.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.38.4</span>
       </span>
     </div>
 
@@ -119,6 +119,9 @@ either `convert_path_to_animation_coords()` or `rayrender::generate_camera_motio
 <span>  lightintensity <span class="op">=</span> <span class="fl">500</span>,</span>
 <span>  lightcolor <span class="op">=</span> <span class="st">"white"</span>,</span>
 <span>  material <span class="op">=</span> <span class="fu">rayrender</span><span class="fu">::</span><span class="fu"><a href="https://www.rayrender.net/reference/diffuse.html" class="external-link">diffuse</a></span><span class="op">(</span><span class="op">)</span>,</span>
+<span>  water_attenuation <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  water_surface_color <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  water_ior <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  override_material <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  cache_scene <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  reset_scene_cache <span class="op">=</span> <span class="cn">FALSE</span>,</span>
@@ -218,6 +221,20 @@ If this is a vector longer than one, multiple lights will be generated (using va
 
 <dt id="arg-material">material<a class="anchor" aria-label="anchor" href="#arg-material"></a></dt>
 <dd><p>Default `rayrender::diffuse()`. The material properties of the object file. Only used if `override_material = TRUE`</p></dd>
+
+
+<dt id="arg-water-attenuation">water_attenuation<a class="anchor" aria-label="anchor" href="#arg-water-attenuation"></a></dt>
+<dd><p>Default `0`, no attenuation. Amount that light should be attenuated when traveling through water. This
+calculates 1-color</p></dd>
+
+
+<dt id="arg-water-surface-color">water_surface_color<a class="anchor" aria-label="anchor" href="#arg-water-surface-color"></a></dt>
+<dd><p>Default `TRUE`. Whether the water should have a colored surface or not. This is in contrast to
+setting a non-zero water attenuation, where the color comes from the attenuation of light in the water itself.</p></dd>
+
+
+<dt id="arg-water-ior">water_ior<a class="anchor" aria-label="anchor" href="#arg-water-ior"></a></dt>
+<dd><p>Default `1`. Water index of refraction.</p></dd>
 
 
 <dt id="arg-override-material">override_material<a class="anchor" aria-label="anchor" href="#arg-override-material"></a></dt>
@@ -494,7 +511,7 @@ or `rayrender::generate_camera_motion()` functions.</p></dd>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.0.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
 </div>
 
       </footer></div>

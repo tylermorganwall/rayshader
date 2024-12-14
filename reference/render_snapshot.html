@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.38.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.38.4</span>
       </span>
     </div>
 
@@ -126,10 +126,10 @@
 <span>  text_angle <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  text_size <span class="op">=</span> <span class="fl">30</span>,</span>
 <span>  text_offset <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span>,</span>
-<span>  point_radius <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  point_radius <span class="op">=</span> <span class="fl">0.5</span>,</span>
 <span>  line_offset <span class="op">=</span> <span class="fl">1e-07</span>,</span>
 <span>  thick_lines <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  line_radius <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  line_radius <span class="op">=</span> <span class="fl">0.25</span>,</span>
 <span>  cache_scene <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  reset_scene_cache <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  new_page <span class="op">=</span> <span class="cn">TRUE</span>,</span>
@@ -266,7 +266,7 @@ will specify the absolute angle all the labels are facing. If three angles, this
 
 
 <dt id="arg-point-radius">point_radius<a class="anchor" aria-label="anchor" href="#arg-point-radius"></a></dt>
-<dd><p>Default `1`. Radius of 3D points (rendered with `render_points()`). This scales the existing
+<dd><p>Default `0.5`. Radius of 3D points (rendered with `render_points()`). This scales the existing
 value of size specified in `render_points()`.</p></dd>
 
 
@@ -281,7 +281,7 @@ render the lines using a single-pixel anti-aliased line algorithm.</p></dd>
 
 
 <dt id="arg-line-radius">line_radius<a class="anchor" aria-label="anchor" href="#arg-line-radius"></a></dt>
-<dd><p>Default `0.5`. The radius of the thick cylinders if `thick_lines = TRUE` and `software_render = TRUE`.</p></dd>
+<dd><p>Default `0.25`. The radius of the thick cylinders if `thick_lines = TRUE` and `software_render = TRUE`.</p></dd>
 
 
 <dt id="arg-cache-scene">cache_scene<a class="anchor" aria-label="anchor" href="#arg-cache-scene"></a></dt>
@@ -356,7 +356,10 @@ be applied to the rendered scene.</p></dd>
 <span class="r-in"><span>               vignette <span class="op">=</span> <span class="cn">TRUE</span>, title_offset<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">20</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>               title_font <span class="op">=</span> <span class="st">"Helvetica"</span>, title_position <span class="op">=</span> <span class="st">"north"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> R: NonconformingDrawingPrimitiveDefinition `text' @ error/draw.c/RenderMVGContent/4456</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Title position is ignored when not using {magick}</span>
+<span class="r-plt img"><img src="render_snapshot-2.png" alt="" width="768" height="768"></span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Title position is ignored when not using {magick}</span>
+<span class="r-plt img"><img src="render_snapshot-3.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="co">#Use software rendering to render a scene with shadow mapping</span></span></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="va">montereybay</span> <span class="op">|&gt;</span> </span></span>
@@ -366,7 +369,7 @@ be applied to the rendered scene.</p></dd>
 <span class="r-in"><span><span class="fu">render_snapshot</span><span class="op">(</span>software_render <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> `montereybay` dataset used with no zscale--setting `zscale=50`.  For a realistic depiction, raise `zscale` to 200.</span>
-<span class="r-plt img"><img src="render_snapshot-2.png" alt="" width="768" height="768"></span>
+<span class="r-plt img"><img src="render_snapshot-4.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#Now with shadow mapped shadows, calculated in rayvertex</span></span></span>
 <span class="r-in"><span><span class="fu">render_snapshot</span><span class="op">(</span>rayvertex_lighting <span class="op">=</span> <span class="cn">TRUE</span>, </span></span>
@@ -374,7 +377,7 @@ be applied to the rendered scene.</p></dd>
 <span class="r-in"><span>                                                               direction <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1</span>, <span class="fl">1</span>, <span class="op">-</span><span class="fl">1</span><span class="op">)</span><span class="op">)</span>, </span></span>
 <span class="r-in"><span>               rayvertex_shadow_map <span class="op">=</span> <span class="cn">TRUE</span>, software_render <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-plt img"><img src="render_snapshot-3.png" alt="" width="768" height="768"></span>
+<span class="r-plt img"><img src="render_snapshot-5.png" alt="" width="768" height="768"></span>
 </code></pre></div>
     </div>
   </div>
@@ -389,7 +392,7 @@ be applied to the rendered scene.</p></dd>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.0.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
 </div>
 
       </footer></div>
