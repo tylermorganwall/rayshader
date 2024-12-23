@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.38.4</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.38.5</span>
       </span>
     </div>
 
@@ -185,7 +185,6 @@ this will give a continuous mapping.</p></dd>
 <span class="r-in"><span>                        extent <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>,<span class="st">"extent"</span><span class="op">)</span>, heightmap <span class="op">=</span> <span class="va">montereybay</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span> </span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Note: alpha channel will be ignored when plotting image.</span>
 <span class="r-plt img"><img src="generate_polygon_overlay-1.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#These counties include the water, so we'll plot bathymetry data over the polygon</span></span></span>
@@ -198,7 +197,6 @@ this will give a continuous mapping.</p></dd>
 <span class="r-in"><span> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu"><a href="generate_altitude_overlay.html">generate_altitude_overlay</a></span><span class="op">(</span><span class="va">bathy_hs</span>, <span class="va">montereybay</span>, start_transition <span class="op">=</span> <span class="fl">0</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Note: alpha channel will be ignored when plotting image.</span>
 <span class="r-plt img"><img src="generate_polygon_overlay-2.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#Add a semi-transparent hillshade and change the palette, and remove the polygon lines</span></span></span>

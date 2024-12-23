@@ -18,7 +18,7 @@ the `raybevel::generate_beveled_polygon()` function for more information."><meta
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.38.4</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.38.5</span>
       </span>
     </div>
 
@@ -324,7 +324,14 @@ or absolute.</p></dd>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>st_buffer does not correctly buffer longitude/latitude data</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> dist is assumed to be in decimal degrees (arc_degrees).</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>st_simplify does not correctly simplify longitude/latitude data, dTolerance needs to be in decimal degrees</span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in render_beveled_polygons(mont_county_buff, flat_shading = TRUE,     angle = 45, heightmap = montereybay, bevel_width = 2000,     material = "red", extent = attr(montereybay, "extent"), bevel_height = 5000,     base_height = 0, zscale = 200):</span> raybevel required to use render_roofs()</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>st_centroid assumes attributes are constant over geometries</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>st_centroid does not give correct centroids for longitude/latitude data</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> All `bevel_offset` greater than max offset in polygon of 6.905772, calculating full polygon model</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> All `bevel_offset` greater than max offset in polygon of 5.186830, calculating full polygon model</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> All `bevel_offset` greater than max offset in polygon of 4.704823, calculating full polygon model</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> All `bevel_offset` greater than max offset in polygon of 0.720301, calculating full polygon model</span>
+<span class="r-plt img"><img src="render_beveled_polygons-1.png" alt="" width="768" height="768"></span>
+<span class="r-plt img"><img src="render_beveled_polygons-2.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Changing the color of the beveled top:</span></span></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
@@ -335,12 +342,17 @@ or absolute.</p></dd>
 <span class="r-in"><span>                        bevel_height <span class="op">=</span> <span class="fl">5000</span>, base_height<span class="op">=</span><span class="fl">0</span>, </span></span>
 <span class="r-in"><span>                        zscale<span class="op">=</span><span class="fl">200</span><span class="op">)</span> </span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in render_beveled_polygons(mont_county_buff, flat_shading = TRUE,     angle = 45, heightmap = montereybay, bevel_width = 2000,     material = "tan", bevel_material = "darkgreen", extent = attr(montereybay,         "extent"), clear_previous = TRUE, bevel_height = 5000,     base_height = 0, zscale = 200):</span> raybevel required to use render_roofs()</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>st_centroid assumes attributes are constant over geometries</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>st_centroid does not give correct centroids for longitude/latitude data</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> All `bevel_offset` greater than max offset in polygon of 6.905772, calculating full polygon model</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> All `bevel_offset` greater than max offset in polygon of 5.186830, calculating full polygon model</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> All `bevel_offset` greater than max offset in polygon of 4.704823, calculating full polygon model</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> All `bevel_offset` greater than max offset in polygon of 0.720301, calculating full polygon model</span>
 <span class="r-in"><span><span class="co"># We can create a nice curved surface by passing in a bevel generated with the </span></span></span>
 <span class="r-in"><span><span class="co"># `raybevel::generate_bevel()` function. </span></span></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="fu">render_beveled_polygons</span><span class="op">(</span><span class="va">mont_county_buff</span>, flat_shading  <span class="op">=</span> <span class="cn">TRUE</span>, heightmap <span class="op">=</span> <span class="va">montereybay</span>,</span></span>
-<span class="r-in"><span>                        bevel <span class="op">=</span> <span class="fu">raybevel</span><span class="fu">::</span><span class="fu">generate_bevel</span><span class="op">(</span><span class="st">"exp"</span>,bevel_end <span class="op">=</span> <span class="fl">0.4</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                        bevel <span class="op">=</span> <span class="fu">raybevel</span><span class="fu">::</span><span class="fu"><a href="http://www.raybevel.com/reference/generate_bevel.html" class="external-link">generate_bevel</a></span><span class="op">(</span><span class="st">"exp"</span>,bevel_end <span class="op">=</span> <span class="fl">0.4</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                        <span class="co">#max_height = 10, scale_all_max = TRUE, set_max_height = TRUE,</span></span></span>
 <span class="r-in"><span>                        material <span class="op">=</span> <span class="fu">rayvertex</span><span class="fu">::</span><span class="fu"><a href="https://www.rayvertex.com/reference/material_list.html" class="external-link">material_list</a></span><span class="op">(</span>diffuse<span class="op">=</span><span class="st">"red"</span>, </span></span>
 <span class="r-in"><span>                                                            ambient <span class="op">=</span> <span class="st">"darkred"</span>, </span></span>
@@ -352,7 +364,9 @@ or absolute.</p></dd>
 <span class="r-in"><span>                        zscale<span class="op">=</span><span class="fl">200</span><span class="op">)</span> </span></span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in render_beveled_polygons(mont_county_buff, flat_shading = TRUE,     heightmap = montereybay, bevel = raybevel::generate_bevel("exp",         bevel_end = 0.4), material = rayvertex::material_list(diffuse = "red",         ambient = "darkred", diffuse_intensity = 0.2, ambient_intensity = 0.1),     light_intensity = 1, light_relative = FALSE, extent = attr(montereybay,         "extent"), bevel_height = 5000, base_height = 0, clear_previous = TRUE,     zscale = 200):</span> raybevel required to use render_roofs()</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>st_centroid assumes attributes are constant over geometries</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>st_centroid does not give correct centroids for longitude/latitude data</span>
+<span class="r-plt img"><img src="render_beveled_polygons-3.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># While the bevels all start at the same point in the above example,</span></span></span>
 <span class="r-in"><span><span class="co"># they rise to different levels due to being scaled by the maximum internal distance</span></span></span>
@@ -360,7 +374,7 @@ or absolute.</p></dd>
 <span class="r-in"><span><span class="co"># same maximum height (in this case, 3000m above the 5000m bevel start height).</span></span></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="fu">render_beveled_polygons</span><span class="op">(</span><span class="va">mont_county_buff</span>, flat_shading  <span class="op">=</span> <span class="cn">TRUE</span>, heightmap <span class="op">=</span> <span class="va">montereybay</span>,</span></span>
-<span class="r-in"><span>                 bevel <span class="op">=</span> <span class="fu">raybevel</span><span class="fu">::</span><span class="fu">generate_bevel</span><span class="op">(</span><span class="st">"exp"</span>,bevel_end <span class="op">=</span> <span class="fl">0.4</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                 bevel <span class="op">=</span> <span class="fu">raybevel</span><span class="fu">::</span><span class="fu"><a href="http://www.raybevel.com/reference/generate_bevel.html" class="external-link">generate_bevel</a></span><span class="op">(</span><span class="st">"exp"</span>,bevel_end <span class="op">=</span> <span class="fl">0.4</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                 max_height <span class="op">=</span> <span class="fl">3000</span>, scale_all_max <span class="op">=</span> <span class="cn">TRUE</span>, set_max_height <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
 <span class="r-in"><span>                 material <span class="op">=</span> <span class="fu">rayvertex</span><span class="fu">::</span><span class="fu"><a href="https://www.rayvertex.com/reference/material_list.html" class="external-link">material_list</a></span><span class="op">(</span>diffuse<span class="op">=</span><span class="st">"red"</span>, </span></span>
 <span class="r-in"><span>                                                     ambient <span class="op">=</span> <span class="st">"darkred"</span>, </span></span>
@@ -372,13 +386,15 @@ or absolute.</p></dd>
 <span class="r-in"><span>                 zscale<span class="op">=</span><span class="fl">200</span><span class="op">)</span> </span></span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in render_beveled_polygons(mont_county_buff, flat_shading = TRUE,     heightmap = montereybay, bevel = raybevel::generate_bevel("exp",         bevel_end = 0.4), max_height = 3000, scale_all_max = TRUE,     set_max_height = TRUE, material = rayvertex::material_list(diffuse = "red",         ambient = "darkred", diffuse_intensity = 0.2, ambient_intensity = 0.1),     light_intensity = 1, light_relative = FALSE, extent = attr(montereybay,         "extent"), bevel_height = 5000, base_height = 0, clear_previous = TRUE,     zscale = 200):</span> raybevel required to use render_roofs()</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>st_centroid assumes attributes are constant over geometries</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>st_centroid does not give correct centroids for longitude/latitude data</span>
+<span class="r-plt img"><img src="render_beveled_polygons-4.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Rendering the polygons with `render_highquality()`</span></span></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="render_highquality.html">render_highquality</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-plt img"><img src="render_beveled_polygons-1.png" alt="" width="768" height="768"></span>
+<span class="r-plt img"><img src="render_beveled_polygons-5.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># We can scale the size of the polygon to a column in the `sf` object as well:</span></span></span>
 <span class="r-in"><span><span class="co"># raybevel::generate_bevel() function. We can scale this data down using the `scale_data`</span></span></span>
@@ -395,7 +411,11 @@ or absolute.</p></dd>
 <span class="r-in"><span>                 zscale<span class="op">=</span><span class="fl">200</span><span class="op">)</span> </span></span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in render_beveled_polygons(mont_county_buff, flat_shading = TRUE,     angle = 45, bevel_width = 1000, data_column_top = "ALAND",     scale_data = 1e-05, heightmap = montereybay, material = rayvertex::material_list(diffuse = "red"),     light_intensity = 1, light_relative = FALSE, extent = attr(montereybay,         "extent"), clear_previous = TRUE, zscale = 200):</span> raybevel required to use render_roofs()</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>st_centroid assumes attributes are constant over geometries</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>st_centroid does not give correct centroids for longitude/latitude data</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> All `bevel_offset` greater than max offset in polygon of 4.704823, calculating full polygon model</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> All `bevel_offset` greater than max offset in polygon of 0.720301, calculating full polygon model</span>
+<span class="r-plt img"><img src="render_beveled_polygons-6.png" alt="" width="768" height="768"></span>
 </code></pre></div>
     </div>
   </div>
