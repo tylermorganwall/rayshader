@@ -48,7 +48,8 @@ a size for each point.}
 \description{
 Adds 3D datapoints to the current scene, using latitude/longitude or coordinates in the reference
 system defined by the extent object. If no altitude is provided, the points will be elevated a constant offset 
-above the heightmap. If the points goes off the edge, the nearest height on the heightmap will be used.
+above the heightmap. If the points goes off the edge, the nearest height on the heightmap will be used (unless that
+value is NA, in which the point will be removed).
 }
 \examples{
 if(run_documentation()) {

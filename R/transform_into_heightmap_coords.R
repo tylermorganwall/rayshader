@@ -64,8 +64,10 @@ transform_into_heightmap_coords = function(extent, heightmap, lat = NULL, long =
   }
   altitude[filter_out] = NA
   if(use_altitude) {
-    return(matrix(c(distances_x-nrow_map/2-1, altitude/zscale  + offset, distances_y-ncol_map/2-1),ncol=3,nrow=length(altitude)))
+    matrix_vals = (matrix(c(distances_x-nrow_map/2-1, altitude/zscale  + offset, distances_y-ncol_map/2-1),ncol=3,nrow=length(altitude)))
   } else {
-    return(matrix(c(distances_x-nrow_map/2-1, offset, distances_y-ncol_map/2-1),ncol=3,nrow=length(altitude)))
+    matrix_vals = (matrix(c(distances_x-nrow_map/2-1, offset, distances_y-ncol_map/2-1),ncol=3,nrow=length(altitude)))
   }
+  final_vals =  matrix_vals[!is.na(matrix_vals[,2]),]
+  return(final_vals)
 }
