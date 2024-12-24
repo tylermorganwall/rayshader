@@ -40,7 +40,7 @@
 #'if(run_documentation()) {
 #'#This function works with `render_highquality()`
 #'render_highquality(lightdirection = 250, lightaltitude = 40, 
-#'                   scale_text_size = 24, clamp_value = 10,
+#'                   scale_text_size = 36, clamp_value = 10,
 #'                   sample_method = "sobol_blue", samples = 128)
 #'render_scalebar(clear_scalebar = TRUE)
 #'}

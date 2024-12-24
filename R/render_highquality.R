@@ -173,10 +173,10 @@ render_highquality = function(filename = NA, samples = 128,
                               override_material = FALSE,
                               cache_scene = FALSE, reset_scene_cache = FALSE, 
                               width = NULL, height = NULL, 
-                              text_angle = NULL, text_size = 6, text_offset = c(0,0,0), 
+                              text_angle = NULL, text_size = 12, text_offset = c(0,text_size/2,0), 
                               line_radius=0.5, point_radius = 0.5, smooth_line = FALSE,
                               use_extruded_paths = FALSE,
-                              scale_text_angle = NULL, scale_text_size = 6, scale_text_offset = c(0,0,0), 
+                              scale_text_angle = NULL, scale_text_size = 12, scale_text_offset = c(0,scale_text_size/2,0), 
                               title_text = NULL, title_offset = c(20,20), 
                               title_color = "black", title_size = 30, title_font = "sans",
                               title_bar_color = NULL, title_bar_alpha = 0.5,
@@ -434,9 +434,8 @@ render_highquality = function(filename = NA, samples = 128,
                                   x=temp_center[j,1] - bbox_center[1] + text_offset[1], 
                                   y=temp_center[j,2] - bbox_center[2] + text_offset[2], 
                                   z=temp_center[j,3] - bbox_center[3] + text_offset[3],
-                                  angle = anglevec,
-                                  text_height = text_size,
-                                  material = rayrender::diffuse(color = temp_color[j,1:3]))
+                                  angle = anglevec, 
+                                  text_height = text_size, font_color =  temp_color[j,1:3])
       counter = counter + 1
     }
   }
@@ -528,11 +527,6 @@ render_highquality = function(filename = NA, samples = 128,
     temp_center = rgl.attrib(scalelabelids[i], "centers")
     temp_color = rgl.attrib(scalelabelids[i], "colors")
     for(j in seq_len(nrow(temp_label))) {
-      scalelabelfile = tempfile(fileext = ".png")
-      rayimage::add_title(matrix(0,ncol = nchar(temp_label[j,1])*60, nrow=60), 
-                          title_size  = 60,
-                          title_offset = c(0,0),title_text = temp_label, title_color = "white",
-                          title_position = "center", filename = scalelabelfile)
       if(is.null(text_angle)) {
         anglevec = c(-phi,theta,0)
       } else {
@@ -542,12 +536,11 @@ render_highquality = function(filename = NA, samples = 128,
           anglevec = text_angle
         }
       }
-      scalelabels[[counter]] = rayrender::xy_rect(x=temp_center[j,1] - bbox_center[1] + scale_text_offset[1], 
+      scalelabels[[counter]] = rayrender::text3d(x=temp_center[j,1] - bbox_center[1] + scale_text_offset[1], 
                                   y=temp_center[j,2] - bbox_center[2] + scale_text_offset[2], 
                                   z=temp_center[j,3] - bbox_center[3] + scale_text_offset[3],
-                                  angle = anglevec,
-                                  xwidth = nchar(temp_label[j,1])*scale_text_size, ywidth = scale_text_size,
-                                  material = rayrender::diffuse(color = temp_color[j,1:3], alpha_texture = scalelabelfile))
+                                  angle = anglevec, label = temp_label,
+                                  text_height = scale_text_size, font_color = temp_color[j,1:3])
       counter = counter + 1
     }
   }
@@ -646,11 +639,13 @@ render_highquality = function(filename = NA, samples = 128,
                  clamp_value = clamp_value, ...)
     if(has_title) {
       if(is.na(filename)) {
+        temp = rayimage::ray_read_image(temp)
         rayimage::add_title(temp, title_text = title_text, title_color = title_color, 
                             title_font = title_font, title_offset = title_offset, 
                             title_bar_alpha =  title_bar_alpha, title_bar_color = title_bar_color,
                             title_size = title_size, preview = TRUE)
       } else {
+        temp = rayimage::ray_read_image(temp)
         rayimage::add_title(temp, title_text = title_text, title_color = title_color, 
                             title_font = title_font, title_offset = title_offset, 
                             title_bar_alpha =  title_bar_alpha, title_bar_color = title_bar_color,
