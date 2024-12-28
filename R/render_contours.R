@@ -91,8 +91,15 @@ render_contours = function(heightmap = NULL,
     rangelevels = range(levels, na.rm=TRUE)
     levels = seq(rangelevels[1], rangelevels[2], length.out = nlevels + 2)
   }
+  levels = sort(unique(levels))
   extent_heightmap = c(1,nrow(heightmap),1,ncol(heightmap))
-  
+  if(all(levels > max(heightmap,na.rm = TRUE)) || 
+     all(levels < min(heightmap,na.rm = TRUE))) {
+    warning(sprintf("Contour levels [range %f-%f] do not fall between min [%f] and max [%f] of DEM: no contours drawn.",
+                    min(levels), max(levels),
+                    min(heightmap,na.rm = TRUE),max(heightmap,na.rm = TRUE)))
+    return(invisible())
+  }
   levels = levels[levels > min(heightmap,na.rm = TRUE)] 
   levels = levels[levels < max(heightmap,na.rm = TRUE)] 
   heightmap2 = flipud(t(heightmap))
