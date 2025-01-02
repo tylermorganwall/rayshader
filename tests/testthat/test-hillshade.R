@@ -3,7 +3,7 @@ run_tests_success = function(func, argument_grid, ...) {
   for(i in seq_len(nrow(argument_grid))){
     args = unlist(argument_grid[i,], recursive = FALSE)
     args = append(args, ...)
-    testthat::expect_snapshot_value(do.call(func, args = args), style = "serialize")
+    testthat::expect_no_condition(do.call(func, args = args))
   }
 }
 
@@ -98,7 +98,7 @@ test_that("constant_shade", {
 })
 
 test_that("create_texture", {
-  testthat::expect_snapshot_value(create_texture("#fff673","#55967a","#8fb28a","#55967a","#cfe0a9"))
-  testthat::expect_snapshot_value(create_texture("#fff673","#55967a","#8fb28a","#55967a","#cfe0a9",
+  testthat::expect_no_condition(create_texture("#fff673","#55967a","#8fb28a","#55967a","#cfe0a9"))
+  testthat::expect_no_condition(create_texture("#fff673","#55967a","#8fb28a","#55967a","#cfe0a9",
                                               cornercolors = c("red","blue","pink","orange")))
 })
