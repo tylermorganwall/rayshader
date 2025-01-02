@@ -176,8 +176,8 @@ render_raymesh = function(raymesh, extent = NULL, lat = NULL, long = NULL, altit
     if(single_obj) {
       obj_zscale = FALSE
       idvals = rgl::ids3d(tags=TRUE)
-      if(any(c("surface","surface_tris") %in% idvals$tag)) {
-        id = idvals$id[idvals$tag %in% c("surface","surface_tris")]
+      if(any(substr(idvals$tag,1,7) == "surface")) {
+        id = idvals$id[substr(idvals$tag,1,7) == "surface"]
         id = id[1]
         yvals = rgl::rgl.attrib(id,"vertices")[,2]
         base_offset = (max(yvals,na.rm=TRUE) - min(yvals, na.rm=TRUE))/2 

@@ -95,8 +95,7 @@ test_that("Checking render_snapshot(software_render = TRUE) features", {
   render_camera(zoom=0.35,phi=34,theta=220,fov=85)
   
 
-  software_render_args = expand.grid(software_render = list(TRUE),
-                                     fsaa   = list(1,2),
+  software_render_args = expand.grid(fsaa   = list(1,2),
                                      rayvertex_lighting = list(TRUE, FALSE),
                                      rayvertex_lights = list(rayvertex::directional_light(c(1,1,1))),
                                      rayvertex_shadow_map = list(TRUE, FALSE),
@@ -104,7 +103,7 @@ test_that("Checking render_snapshot(software_render = TRUE) features", {
                                      camera_lookat = list(c(0,0,0), c(100, 100, 200)))
   
   run_tests_sw("render_snapshot", software_render_args, plot_prefix = "sw_render",
-               list(cache_scene = TRUE))
+               list(cache_scene = TRUE, software_render = TRUE))
   
   software_render_args_dims = expand.grid(software_render = list(TRUE),
                                           width = list(NULL, 600),

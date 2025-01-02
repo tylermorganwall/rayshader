@@ -24,6 +24,7 @@ run_tests = function(func, argument_grid, plot_prefix="", ...) {
       suppressMessages() |> 
       suppressWarnings() |> 
     expect_snapshot_file(name = test_filename, compare = compare_image)
+    Sys.sleep(0.1)
   }
   rgl::close3d()
 }
@@ -169,6 +170,7 @@ test_that("test raymesh conversion", {
   raymesh$materials[[2]][[1]]$diffuse_texname = "texture_location"
   raymesh$materials[[3]][[1]]$diffuse_texname = "texture_location"
   class(raymesh) = "list"
+  attr(raymesh, "material_hashes") = c(1,2,3)
   expect_snapshot_value(as.list(raymesh), style = "json2")
 })
 

@@ -14,12 +14,13 @@ get_ids_with_labels = function(typeval = NULL) {
                 "background_symbol", "scalebar_col1", "scalebar_col2",
                 "text_scalebar",     "surface_tris",  "path3d", "contour3d",      
                 "points3d",          "polygon3d", 
-                "floating_overlay", "floating_overlay_tris", "base_soil1", "base_soil2",
+                "floating_overlay",  "floating_overlay_tris", 
+                "base_soil1", "base_soil2",
                 "obj")
   idvals = rgl::ids3d(tags = TRUE)
   material_type = idvals$tag
   material_properties = vector("list", nrow(idvals))
-  for(i in 1:nrow(idvals)) {
+  for(i in seq_len(nrow(idvals))) {
     material_type_single = rgl::material3d(id=idvals[i,1])
     material_properties[[i]]$texture_file = NA
     material_properties[[i]]$layer_texture_file = NA
@@ -51,7 +52,7 @@ get_ids_with_labels = function(typeval = NULL) {
     
     
     if(idvals$type[i] != "text") {
-      if(material_type[i] %in% c("surface", "surface_tris")) {
+      if(substr(material_type[i],1,7) == "surface") {
         material_properties[[i]]$texture_file = material_type_single$texture
       } 
       if(material_type[i] %in% c("floating_overlay", "floating_overlay_tris")) {
@@ -104,7 +105,7 @@ get_ids_with_labels = function(typeval = NULL) {
       if(material_type[i] %in% c("base_soil1", "base_soil2")) {
         material_properties[[i]]$soil_texture = material_type_single$texture
       }
-      if(grepl("obj", material_type[i], fixed=TRUE)) {
+      if(substr(material_type[i], 1, 3) == "obj") {
         if(!is.null(material_type_single$texture)) {
           material_properties[[i]]$texture_file = material_type_single$texture
         } else {
@@ -124,11 +125,12 @@ get_ids_with_labels = function(typeval = NULL) {
   full_properties = do.call(rbind,material_properties)
   retval = cbind(idvals,full_properties)
   if(!is.null(typeval)) {
-    if(any(typeval %in% ray_types))  {
-      retval = retval[retval$tag %in% typeval,]
-    } 
-    if(any(grepl("obj", retval$tag, fixed=TRUE)) ) {
-      retval = retval[grepl("obj", retval$tag, fixed=TRUE),]
+    is_surface_tri = substr(retval$tag,1,12) == "surface_tris" & any(typeval == "surface_tris")
+    is_surface = (substr(retval$tag,1,7) == "surface") & !is_surface_tri & any(typeval == "surface")
+    is_obj = substr(material_type, 1, 3) == "obj" & any(typeval == "obj")
+    
+    if(any(typeval %in% ray_types) || any(is_surface) || any(is_surface_tri) || any(is_obj) )  {
+      retval = retval[retval$tag %in% typeval | is_surface | is_surface_tri | is_obj,]
     } 
   }
   return(retval)

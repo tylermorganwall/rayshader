@@ -113,14 +113,16 @@ render_points = function(lat = NULL, long = NULL, altitude = NULL, extent = NULL
   xyz = transform_into_heightmap_coords(extent, heightmap, lat, long, 
                                         altitude, offset, zscale)
 
-  if(length(size) > 1) {
+  if(length(unique(size)) > 1) {
     stopifnot(length(size) == nrow(xyz))
     color_length = length(color)
     for(i in seq_len(nrow(xyz))) {
-      rgl::points3d(xyz[i,1], xyz[i,2], xyz[i,3], color = color[((i-1) %% color_length) + 1], 
+      rgl::points3d(xyz[i,1], xyz[i,2], xyz[i,3], 
+                    color = color[((i-1) %% color_length) + 1], 
                     tag = "points3d", size = size[i])
     }
   } else {
-    rgl::points3d(xyz[,1], xyz[,2], xyz[,3], color = color, tag = "points3d", size = size)
+    rgl::points3d(xyz[,1], xyz[,2], xyz[,3], 
+                  color = color, tag = "points3d", size = size)
   }
 }

@@ -273,7 +273,9 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
                                    "north_symbol","arrow_symbol", "bevel_symbol",
                                    "background_symbol", "scalebar_col1", "scalebar_col2",
                                    "surface_tris","polygon3d", "shadow","floating_overlay","floating_overlay_tris",
-                                   "base_soil1", "base_soil2") || grepl("obj",vertex_info$tag[row], fixed=TRUE)) {
+                                   "base_soil1", "base_soil2") || 
+                                    (substr(vertex_info$tag[row], 1, 3) == "obj") ||
+                                    (substr(vertex_info$tag[row], 1, 7) == "surface")) {
       vertex_info$startindex[row] = number_vertices + 1
       if(vertex_info$tag[row] %in%  c("surface", "surface_tris", "shadow","floating_overlay","floating_overlay_tris", "base_soil1", "base_soil2") || grepl("obj", vertex_info$tag[row], fixed=TRUE)) {
         vertex_info$startindextex[row] = number_texcoords + 1
@@ -309,8 +311,9 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
   current_floating_number = 1
   current_obj_number = 1
   
-  for(row in 1:nrow(vertex_info)) {
-    if(vertex_info$tag[row] == "surface") {
+  for(row in seq_len(nrow(vertex_info))) {
+    if(substr(vertex_info$tag[row],1,7) == "surface" && 
+       substr(vertex_info$tag[row],1,12) != "surface_tris") {
       if(save_texture) {
         cat("g Surface", file=con, sep ="\n")
         cat("usemtl ray_surface", file=con, sep ="\n")
@@ -349,7 +352,7 @@ save_obj = function(filename, save_texture = TRUE, water_index_refraction = 1,
       indices = indices[1:(nrow(indices)-na_counter),]
       cat(paste("f", indices[,1], indices[,2], indices[,3]), 
           sep="\n", file=con)
-    } else if(vertex_info$tag[row] == "surface_tris") {
+    } else if(substr(vertex_info$tag[row],1,12) == "surface_tris") {
       if(save_texture) {
         cat("g Surface", file=con, sep ="\n")
         cat("usemtl ray_surface", file=con, sep ="\n")

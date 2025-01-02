@@ -116,7 +116,8 @@ convert_rgl_to_raymesh = function(save_shadow = TRUE, water_attenuation = 0,
     } else {
       lit_val = FALSE
     }
-    if(vertex_info$tag[row] == "surface") {
+    if(substr(vertex_info$tag[row],1,7) == "surface" && 
+       substr(vertex_info$tag[row],1,12) != "surface_tris") {
       dims = rgl::rgl.attrib(vertex_info$id[row], "dim")
       vertices = rgl.attrib(vertex_info$id[row], "vertices")
       textures = rgl.attrib(vertex_info$id[row], "texcoords")
@@ -152,7 +153,7 @@ convert_rgl_to_raymesh = function(save_shadow = TRUE, water_attenuation = 0,
                                                            tex_indices = indices,
                                                            material = rayvertex::material_list(texture_location = texture_loc, 
                                                                                                type = "color"))
-    } else if(vertex_info$tag[row] == "surface_tris") {
+    } else if(substr(vertex_info$tag[row],1,12) == "surface_tris") {
       final_scene[[num_elems]] = basic_load_mesh(row, 
                                                  texture_loc = vertex_info$texture_file[[row]])
     } else if (vertex_info$tag[row] == "basebottom") {

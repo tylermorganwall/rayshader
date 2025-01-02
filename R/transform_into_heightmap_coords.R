@@ -8,7 +8,7 @@
 transform_into_heightmap_coords = function(extent, heightmap, lat = NULL, long = NULL,
                                            altitude = NULL, offset = 0, zscale = 1,
                                            use_altitude = TRUE,
-                                           filter_bounds = TRUE) {
+                                           filter_bounds = FALSE) {
   offset = offset/zscale
   e = get_extent(extent)
   if(is.null(lat)) {
@@ -38,7 +38,6 @@ transform_into_heightmap_coords = function(extent, heightmap, lat = NULL, long =
   } else {
     filter_out = rep(FALSE, length(lat))
   }
-  
   if(is.null(altitude)) {
     if(is.null(heightmap)) {
       stop("No altitude data requires heightmap argument be passed")
@@ -68,6 +67,6 @@ transform_into_heightmap_coords = function(extent, heightmap, lat = NULL, long =
   } else {
     matrix_vals = (matrix(c(distances_x-nrow_map/2-1, offset, distances_y-ncol_map/2-1),ncol=3,nrow=length(altitude)))
   }
-  final_vals =  matrix_vals[!is.na(matrix_vals[,2]),]
-  return(final_vals)
+  matrix_vals[is.na(matrix_vals[,2]),] = min(matrix_vals[,2], na.rm=TRUE)
+  return(matrix_vals)
 }

@@ -9,9 +9,9 @@
           "value": ["shapes", "vertices", "texcoords", "normals", "materials", "material_hashes"]
         },
         "material_hashes": {
-          "type": "character",
+          "type": "double",
           "attributes": {},
-          "value": ["254214f7e8d43b757f870268c8405e24", "644c1a1c2ed4558cdd2145be2555adab", "303a9d1de8704c45014b7b3b60907145"]
+          "value": [1, 2, 3]
         }
       },
       "value": [

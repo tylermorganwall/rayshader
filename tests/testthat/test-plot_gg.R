@@ -8,10 +8,10 @@ test_that("plot_gg() doesn't error", {
   
   expect_no_condition(plot_gg(ggdiamonds,multicore = TRUE,width=5,height=5,scale=250,windowsize=c(1400,866),
          zoom = 0.55, phi = 30))
-  expect_no_condition(render_snapshot())
+  expect_no_condition(render_snapshot(software_render = TRUE))
   #Contours and other lines will automatically be ignored. Here is the volcano dataset:
 
-  ggvolcano = volcano %>%
+  ggvolcano = volcano %>% 
    reshape2::melt() %>%
    ggplot() +
    geom_tile(aes(x=Var1,y=Var2,fill=value)) +
@@ -25,7 +25,7 @@ test_that("plot_gg() doesn't error", {
   expect_warning(plot_gg(ggvolcano, multicore = TRUE, raytrace = TRUE, width = 7, height = 4,
          scale = 300, windowsize = c(1400, 866), zoom = 0.6, phi = 30, theta = 30),
          "missing values")
-  expect_no_condition(render_snapshot())
+  expect_no_condition(render_snapshot(software_render = TRUE))
   
 
   
@@ -44,7 +44,7 @@ test_that("plot_gg() doesn't error", {
         multicore = TRUE, raytrace = TRUE, width = 7, height = 4,
         scale = 300, windowsize = c(1400, 866), zoom = 0.6, phi = 30, theta = 30),
         "missing values")
-  expect_no_condition(render_snapshot())
+  expect_no_condition(render_snapshot(software_render = TRUE))
   
   #Here, we will create a 3D plot of the mtcars dataset. This automatically detects
   #that the user used the `color` aesthetic instead of the `fill`.
@@ -59,7 +59,7 @@ test_that("plot_gg() doesn't error", {
   
   plot_gg(mtplot, width=3.5, multicore = TRUE, windowsize = c(1400,866), sunangle=225,
          zoom = 0.60, phi = 30, theta = 45)
-  expect_no_condition(render_snapshot())
+  expect_no_condition(render_snapshot(software_render = TRUE))
   
   #Now let's plot a density plot in 3D.
   mtplot_density = ggplot(mtcars) +
@@ -71,7 +71,7 @@ test_that("plot_gg() doesn't error", {
   
   expect_no_condition(plot_gg(mtplot_density, width = 4,zoom = 0.60, theta = -45, phi = 30,
          windowsize = c(1400,866)))
-  expect_no_condition(render_snapshot())
+  expect_no_condition(render_snapshot(software_render = TRUE))
   
   #This also works facetted.
   mtplot_density_facet = mtplot_density + facet_wrap(~cyl)
@@ -83,7 +83,7 @@ test_that("plot_gg() doesn't error", {
   
   expect_no_condition(plot_gg(mtplot_density_facet, windowsize=c(1400,866),
          zoom = 0.55, theta = -10, phi = 25))
-  expect_no_condition(render_snapshot())
+  expect_no_condition(render_snapshot(software_render = TRUE))
   
   #That is a little cramped. Specifying a larger width will improve the readability of this plot.
   
