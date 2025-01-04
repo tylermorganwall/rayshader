@@ -6,16 +6,13 @@ transform_polygon_into_raycoords = function(polygon, heightmap = NULL, e = NULL,
   if(inherits(polygon,"SpatialPolygonsDataFrame") || inherits(polygon,"SpatialPolygons")) {
     polygon = sf::st_as_sf(polygon)
   }
-  if(is.null(heightmap)) {
-    vertex_info = get_ids_with_labels(typeval = c("surface", "surface_tris"))
-    nrow_map = max(rgl::rgl.attrib(vertex_info$id[1], "vertices")[,1]) -
-      min(rgl::rgl.attrib(vertex_info$id[1], "vertices")[,1])
-    ncol_map = max(rgl::rgl.attrib(vertex_info$id[1], "vertices")[,3]) -
-      min(rgl::rgl.attrib(vertex_info$id[1], "vertices")[,3])
-  } else {
-    ncol_map = ncol(heightmap)
-    nrow_map = nrow(heightmap)
+  vertex_info = get_ids_with_labels(typeval = "surface_tris")
+  if(nrow(vertex_info) > 1) {
+    warning("Multiple surfaces detected: only using the first surface to transform coords")
   }
+  ncol_map = vertex_info$ncol[1]
+  nrow_map = vertex_info$nrow[1]
+  
   ncol_map = ncol_map - 1
   nrow_map = nrow_map - 1
   
@@ -54,16 +51,22 @@ transform_polygon_into_raycoords = function(polygon, heightmap = NULL, e = NULL,
 #'@keywords internal
 transform_points_into_raycoords = function(points, heightmap = NULL, e = NULL, 
                                            top = NULL, bottom = NULL) {
-  if(is.null(heightmap)) {
-    vertex_info = get_ids_with_labels(typeval = c("surface", "surface_tris"))
-    nrow_map = max(rgl::rgl.attrib(vertex_info$id[1], "vertices")[,1]) -
-      min(rgl::rgl.attrib(vertex_info$id[1], "vertices")[,1])
-    ncol_map = max(rgl::rgl.attrib(vertex_info$id[1], "vertices")[,3]) -
-      min(rgl::rgl.attrib(vertex_info$id[1], "vertices")[,3])
-  } else {
-    ncol_map = ncol(heightmap)
-    nrow_map = nrow(heightmap)
+  vertex_info = get_ids_with_labels(typeval = "surface_tris")
+  if(nrow(vertex_info) > 1) {
+    warning("Multiple surfaces detected: only using the first surface to transform coords")
   }
+  ncol_map = vertex_info$ncol[1]
+  nrow_map = vertex_info$nrow[1]
+  # if(is.null(heightmap)) {
+  #   vertex_info = get_ids_with_labels(typeval = c("surface", "surface_tris"))
+  #   nrow_map = max(rgl::rgl.attrib(vertex_info$id[1], "vertices")[,1]) -
+  #     min(rgl::rgl.attrib(vertex_info$id[1], "vertices")[,1])
+  #   ncol_map = max(rgl::rgl.attrib(vertex_info$id[1], "vertices")[,3]) -
+  #     min(rgl::rgl.attrib(vertex_info$id[1], "vertices")[,3])
+  # } else {
+  #   ncol_map = ncol(heightmap)
+  #   nrow_map = nrow(heightmap)
+  # }
   ncol_map = ncol_map - 1
   nrow_map = nrow_map - 1 
   if(inherits(points,"sf")) {

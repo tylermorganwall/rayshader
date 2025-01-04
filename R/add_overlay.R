@@ -83,8 +83,8 @@ add_overlay = function(hillshade = NULL, overlay = NULL, alphalayer = 1, alphaco
     return(hillshade)
   }
   if(length(dim(hillshade)) == 2) {
-    rayimage::add_image_overlay(fliplr(t(hillshade)),overlay,alpha=alphalayer, rescale_original = rescale_original)
+    rayimage::render_image_overlay(fliplr(t(hillshade)),overlay,alpha=alphalayer, rescale_original = rescale_original)
   } else {
-    rayimage::add_image_overlay(hillshade,overlay,alpha=alphalayer, rescale_original = rescale_original)
+    rayimage::render_image_overlay(hillshade,overlay,alpha=alphalayer, rescale_original = rescale_original)
   }
 }

@@ -206,7 +206,7 @@ render_movie = function(filename, type = "orbit", frames = 360, fps = 30,
       if(progbar) {
         pb$tick()
       }
-      rayimage::add_image_overlay(png_files[i], image_overlay = image_overlay_file,
+      rayimage::render_image_overlay(png_files[i], image_overlay = image_overlay_file,
                                             filename = png_files[i])
     }
   }
@@ -223,7 +223,7 @@ render_movie = function(filename, type = "orbit", frames = 360, fps = 30,
       if(progbar) {
         pb$tick()
       }
-      rayimage::add_vignette(png_files[i], vignette = vignette, filename = png_files[i], 
+      rayimage::render_vignette(png_files[i], vignette = vignette, filename = png_files[i], 
                              color = vignette_color,
                              radius = vignette_radius)
     }
@@ -241,7 +241,7 @@ render_movie = function(filename, type = "orbit", frames = 360, fps = 30,
       if(progbar) {
         pb$tick()
       }
-      rayimage::add_title(png_files[i], filename = png_files[i], title_text = title_text, 
+      rayimage::render_title(png_files[i], filename = png_files[i], title_text = title_text, 
                           title_bar_color = title_bar_color,title_bar_alpha = title_bar_alpha,
                           title_offset = title_offset, title_color = title_color,
                           title_position = title_position,

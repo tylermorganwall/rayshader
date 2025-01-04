@@ -306,6 +306,7 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
   }
   rgl::view3d(zoom = zoom, phi = phi, theta = theta, fov = fov)
   attributes(heightmap) = attributes(heightmap)["dim"]
+  tag_surface = sprintf("surface_tris-dim_%i_%i", nrow(heightmap),ncol(heightmap))
   if(!triangulate) {
     if(!precomputed) {
       normals = calculate_normal(heightmap, zscale = zscale)
@@ -324,7 +325,7 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
                      indices = ray_surface$inds, 
                      texcoords = ray_surface$texcoords, 
                      normals = matrix(c(normalsz,normalsy,-normalsx), ncol = 3L),
-                     texture = tempmap, color="white", lit = FALSE, tag = "surface_tris",
+                     texture = tempmap, color="white", lit = FALSE, tag = tag_surface,
                      back = "culled")
   } else {
     tris = terrainmeshr::triangulate_matrix(heightmap, maxError = max_error, 
@@ -350,10 +351,11 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
     tris[,1] = tris[,1] - (nr-1)/2# +1
     tris[,3] = tris[,3] - (nc-1)/2
     tris[,3] = -tris[,3]
+    
     rgl::triangles3d(tris, texcoords = texcoords, 
                      indices = index_vals, back = "cull",
                      #normals = normal_comp,
-                     texture=tempmap,lit=FALSE,color="white",tag = "surface_tris")
+                     texture=tempmap,lit=FALSE,color="white",tag = tag_surface)
   }
   rgl::bg3d(color = background,texture=NULL)
   if(solid && !triangulate) {

@@ -640,13 +640,13 @@ render_highquality = function(filename = NA, samples = 128,
     if(has_title) {
       if(is.na(filename)) {
         temp = rayimage::ray_read_image(temp)
-        rayimage::add_title(temp, title_text = title_text, title_color = title_color, 
+        rayimage::render_title(temp, title_text = title_text, title_color = title_color, 
                             title_font = title_font, title_offset = title_offset, 
                             title_bar_alpha =  title_bar_alpha, title_bar_color = title_bar_color,
                             title_size = title_size, preview = TRUE)
       } else {
         temp = rayimage::ray_read_image(temp)
-        rayimage::add_title(temp, title_text = title_text, title_color = title_color, 
+        rayimage::render_title(temp, title_text = title_text, title_color = title_color, 
                             title_font = title_font, title_offset = title_offset, 
                             title_bar_alpha =  title_bar_alpha, title_bar_color = title_bar_color,
                             title_size = title_size, filename = filename)

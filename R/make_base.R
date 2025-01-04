@@ -186,12 +186,5 @@ make_base = function(heightmap,basedepth=0,basecolor="grey20",zscale=1, soil = F
                      color=basecolor,back="cull", front="filled",
                      lit=FALSE,texture=NULL,tag = "basebottom")
     
-    # rgl::surface3d(x=1:nrow(basemat)-1-(nr-1)/2,
-    #                z=1:ncol(basemat)-1-(nc-1)/2,
-    #                y=basemat,
-    #                color=basecolor, 
-    #                lit=FALSE,back="cull",front="filled",tag = "basebottom",
-    #                normal_x = xznormals, normal_z = xznormals, normal_y = ynormals)
-    
   }
 }

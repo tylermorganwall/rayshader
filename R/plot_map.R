@@ -87,7 +87,7 @@ plot_map = function(hillshade, rotate=0, asp = 1,
       }
     }
     if(has_title) {
-      hillshade = rayimage::add_title(hillshade, title_text = title_text, title_offset = title_offset,
+      hillshade = rayimage::render_title(hillshade, title_text = title_text, title_offset = title_offset,
                           title_color = title_color, title_size = title_size,
                           title_font = title_font, title_style = title_style,
                           title_bar_color = title_bar_color, title_bar_alpha = title_bar_alpha, 
@@ -102,7 +102,7 @@ plot_map = function(hillshade, rotate=0, asp = 1,
     }
     array_from_mat = array(fliplr(t(hillshade)),dim=c(ncol(hillshade),nrow(hillshade),3))
     if(has_title) {
-      array_from_mat = rayimage::add_title(array_from_mat, title_text = title_text, title_offset = title_offset,
+      array_from_mat = rayimage::render_title(array_from_mat, title_text = title_text, title_offset = title_offset,
                           title_color = title_color, title_size = title_size,
                           title_font = title_font, title_style = title_style,
                           title_bar_color = title_bar_color, title_bar_alpha = title_bar_alpha, 

@@ -48,12 +48,19 @@ get_ids_with_labels = function(typeval = NULL) {
     material_properties[[i]]$obj_specular = NA_character_
     material_properties[[i]]$obj_emission = NA_character_
     material_properties[[i]]$shininess = NA
+    material_properties[[i]]$shininess = NA
+    material_properties[[i]]$nrow = NA
+    material_properties[[i]]$ncol = NA
     
     
     
     if(idvals$type[i] != "text") {
       if(substr(material_type[i],1,7) == "surface") {
         material_properties[[i]]$texture_file = material_type_single$texture
+        dim_string = strsplit(material_type[i], "-")[[1]][2]
+        dim_dem = as.integer(unlist(strsplit(dim_string,"_")[[1]])[2:3])
+        material_properties[[i]]$nrow = dim_dem[1]
+        material_properties[[i]]$ncol = dim_dem[2]
       } 
       if(material_type[i] %in% c("floating_overlay", "floating_overlay_tris")) {
         material_properties[[i]]$layer_texture_file = material_type_single$texture

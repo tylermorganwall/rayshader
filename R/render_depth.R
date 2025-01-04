@@ -309,14 +309,14 @@ render_depth = function(focus = NULL, focallength = 100, fstop = 4, filename=NUL
     }
     dimensions = dim(tempmap)
     if(has_overlay) {
-      tempmap = rayimage::add_image_overlay(tempmap, image_overlay = image_overlay_file)
+      tempmap = rayimage::render_image_overlay(tempmap, image_overlay = image_overlay_file)
     }
     if(vignette || is.numeric(vignette)) {
-      tempmap = rayimage::add_vignette(tempmap, vignette = vignette, color = vignette_color,
+      tempmap = rayimage::render_vignette(tempmap, vignette = vignette, color = vignette_color,
                                        radius = vignette_radius)
     }
     if(has_title) {
-      tempmap = rayimage::add_title(tempmap, title_text = title_text, 
+      tempmap = rayimage::render_title(tempmap, title_text = title_text, 
                           title_bar_color = title_bar_color,title_bar_alpha = title_bar_alpha,
                           title_offset = title_offset, title_color = title_color,
                           title_position = title_position,

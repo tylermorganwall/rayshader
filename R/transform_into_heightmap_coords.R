@@ -17,14 +17,13 @@ transform_into_heightmap_coords = function(extent, heightmap, lat = NULL, long =
   if(is.null(long)) {
     long = (e["xmax"] + e["xmin"])/2
   }
-  if(is.null(heightmap)) {
-    vertex_info = get_ids_with_labels(typeval = c("surface", "surface_tris"))
-    nrow_map = max(rgl::rgl.attrib(vertex_info$id[1], "vertices")[,1]) - min(rgl::rgl.attrib(vertex_info$id[1], "vertices")[,1])
-    ncol_map = max(rgl::rgl.attrib(vertex_info$id[1], "vertices")[,3]) - min(rgl::rgl.attrib(vertex_info$id[1], "vertices")[,3])
-  } else {
-    ncol_map = ncol(heightmap)
-    nrow_map = nrow(heightmap)
+  vertex_info = get_ids_with_labels(typeval = "surface_tris")
+  if(nrow(vertex_info) > 1) {
+    warning("Multiple surfaces detected: only using the first surface to transform coords")
   }
+  ncol_map = vertex_info$ncol[[1]]
+  nrow_map = vertex_info$nrow[[1]]
+  
   nrow_map = nrow_map - 1
   ncol_map = ncol_map - 1
   distances_x = (long-e["xmin"])/(e["xmax"] - e["xmin"]) * nrow_map + 1
@@ -66,6 +65,9 @@ transform_into_heightmap_coords = function(extent, heightmap, lat = NULL, long =
     matrix_vals = (matrix(c(distances_x-nrow_map/2-1, altitude/zscale  + offset, distances_y-ncol_map/2-1),ncol=3,nrow=length(altitude)))
   } else {
     matrix_vals = (matrix(c(distances_x-nrow_map/2-1, offset, distances_y-ncol_map/2-1),ncol=3,nrow=length(altitude)))
+  }
+  if(any(is.na(matrix_vals[,2]))) {
+    warning("Some coords outside of heightmap extent--the altitude of those points have been set to the heightmap minimum.")
   }
   matrix_vals[is.na(matrix_vals[,2]),] = min(matrix_vals[,2], na.rm=TRUE)
   return(matrix_vals)

@@ -69,7 +69,7 @@ save_png = function(hillshade, filename,
     final[,,3] = hillshade
     
     if(has_title) {
-      final = rayimage::add_title(final, title_text = title_text, title_offset = title_offset,
+      final = rayimage::render_title(final, title_text = title_text, title_offset = title_offset,
                                            title_color = title_color, title_size = title_size,
                                            title_font = title_font, title_style = title_style,
                                            title_bar_color = title_bar_color, title_bar_alpha = title_bar_alpha, 
@@ -107,7 +107,7 @@ save_png = function(hillshade, filename,
       hillshade = temp_hillshade
     }
     if(has_title) {
-      hillshade = rayimage::add_title(hillshade, title_text = title_text, title_offset = title_offset,
+      hillshade = rayimage::render_title(hillshade, title_text = title_text, title_offset = title_offset,
                                   title_color = title_color, title_size = title_size,
                                   title_font = title_font, title_style = title_style,
                                   title_bar_color = title_bar_color, title_bar_alpha = title_bar_alpha, 
