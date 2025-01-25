@@ -61,7 +61,8 @@
 #'@param title_color Default `black`. Font color.
 #'@param title_font Default `sans`. String with font family such as "sans", "mono", "serif", "Times", "Helvetica", 
 #'"Trebuchet", "Georgia", "Palatino" or "Comic Sans".
-#'@param title_bar_color Default `NULL`. If a color, this will create a colored bar under the title.
+#'@param title_just Default `left`. Justification of the title.
+#'@param title_bar_color Default `NA`. If a color, this will create a colored bar under the title.
 #'@param title_bar_alpha Default `0.5`. Transparency of the title bar.
 #'@param ground_material Default `diffuse()`. Material defined by the rayrender material functions.
 #'@param ground_size Default `100000`. The width of the plane representing the ground.
@@ -179,7 +180,8 @@ render_highquality = function(filename = NA, samples = 128,
                               scale_text_angle = NULL, scale_text_size = 12, scale_text_offset = c(0,scale_text_size/2,0), 
                               title_text = NULL, title_offset = c(20,20), 
                               title_color = "black", title_size = 30, title_font = "sans",
-                              title_bar_color = NULL, title_bar_alpha = 0.5,
+                              title_just = "left",
+                              title_bar_color = NA, title_bar_alpha = 0.5,
                               ground_material = rayrender::diffuse(), ground_size=100000,
                               scene_elements=NULL, 
                               camera_location = NULL, camera_lookat = NULL, 
@@ -641,13 +643,15 @@ render_highquality = function(filename = NA, samples = 128,
       if(is.na(filename)) {
         temp = rayimage::ray_read_image(temp)
         rayimage::render_title(temp, title_text = title_text, title_color = title_color, 
-                            title_font = title_font, title_offset = title_offset, 
+                            title_font = title_font, title_offset = title_offset,  
+                            title_just = title_just,
                             title_bar_alpha =  title_bar_alpha, title_bar_color = title_bar_color,
                             title_size = title_size, preview = TRUE)
       } else {
         temp = rayimage::ray_read_image(temp)
         rayimage::render_title(temp, title_text = title_text, title_color = title_color, 
                             title_font = title_font, title_offset = title_offset, 
+                            title_just = title_just,
                             title_bar_alpha =  title_bar_alpha, title_bar_color = title_bar_color,
                             title_size = title_size, filename = filename)
       }

@@ -20,13 +20,13 @@ render_movie(
   title_color = "black",
   title_size = 30,
   title_font = "sans",
-  title_bar_color = NULL,
+  title_bar_color = NA,
   title_bar_alpha = 0.5,
   image_overlay = NULL,
   vignette = FALSE,
   vignette_color = "black",
   vignette_radius = 1.3,
-  title_position = "northwest",
+  title_just = "northwest",
   audio = NULL,
   progbar = interactive(),
   ...
@@ -70,7 +70,7 @@ image_annotate) corner to offset the title.}
 \item{title_font}{Default `sans`. String with font family such as "sans", "mono", "serif", "Times", "Helvetica", 
 "Trebuchet", "Georgia", "Palatino" or "Comic Sans".}
 
-\item{title_bar_color}{Default `NULL`. If a color, this will create a colored bar under the title.}
+\item{title_bar_color}{Default `NA`. If a color, this will create a colored bar under the title.}
 
 \item{title_bar_alpha}{Default `0.5`. Transparency of the title bar.}
 
@@ -86,7 +86,7 @@ control the blurriness of the vignette effect.}
 
 \item{vignette_radius}{Default `1.3`. Radius of the vignette, as a porportion of the image dimensions.}
 
-\item{title_position}{Default `northwest`. Position of the title.}
+\item{title_just}{Default `left`. Justification of the title.}
 
 \item{audio}{Default `NULL`. Optional file with audio to add to the video.}
 

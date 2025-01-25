@@ -14,9 +14,9 @@ plot_map(
   title_size = 30,
   title_font = "sans",
   title_style = "normal",
-  title_bar_color = NULL,
+  title_bar_color = NA,
   title_bar_alpha = 0.5,
-  title_position = "northwest",
+  title_just = "left",
   ...
 )
 }
@@ -42,11 +42,11 @@ image_annotate) corner to offset the title.}
 
 \item{title_style}{Default `normal`. Font style (e.g. `italic`).}
 
-\item{title_bar_color}{Default `NULL`. If a color, this will create a colored bar under the title.}
+\item{title_bar_color}{Default `NA`. If a color, this will create a colored bar under the title.}
 
 \item{title_bar_alpha}{Default `0.5`. Transparency of the title bar.}
 
-\item{title_position}{Default `northwest`. Position of the title.}
+\item{title_just}{Default `left`. Justification of the title.}
 
 \item{...}{Additional arguments to pass to the `raster::plotRGB` function that displays the map.}
 }

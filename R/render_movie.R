@@ -26,9 +26,9 @@
 #'@param title_color Default `black`. Font color.
 #'@param title_font Default `sans`. String with font family such as "sans", "mono", "serif", "Times", "Helvetica", 
 #'"Trebuchet", "Georgia", "Palatino" or "Comic Sans".
-#'@param title_bar_color Default `NULL`. If a color, this will create a colored bar under the title.
+#'@param title_bar_color Default `NA`. If a color, this will create a colored bar under the title.
 #'@param title_bar_alpha Default `0.5`. Transparency of the title bar.
-#'@param title_position Default `northwest`. Position of the title.
+#'@param title_just Default `left`. Justification of the title.
 #'@param image_overlay Default `NULL`. Either a string indicating the location of a png image to overlay
 #'over the whole movie (transparency included), or a 4-layer RGBA array. This image will be resized to the 
 #'dimension of the movie if it does not match exactly.
@@ -86,10 +86,10 @@ render_movie = function(filename, type = "orbit", frames = 360, fps = 30,
                         width = NULL, height = NULL,
                         title_text = NULL, title_offset = c(20,20), 
                         title_color = "black", title_size = 30, title_font = "sans",
-                        title_bar_color = NULL, title_bar_alpha = 0.5,
+                        title_bar_color = NA, title_bar_alpha = 0.5,
                         image_overlay = NULL, 
                         vignette = FALSE, vignette_color = "black", vignette_radius = 1.3,
-                        title_position = "northwest",
+                        title_just = "northwest",
                         audio=NULL, progbar = interactive(), ...) {
   if(rgl::cur3d() == 0) {
     stop("No rgl window currently open.")
@@ -244,7 +244,7 @@ render_movie = function(filename, type = "orbit", frames = 360, fps = 30,
       rayimage::render_title(png_files[i], filename = png_files[i], title_text = title_text, 
                           title_bar_color = title_bar_color,title_bar_alpha = title_bar_alpha,
                           title_offset = title_offset, title_color = title_color,
-                          title_position = title_position,
+                          title_just = title_just,
                           title_size = title_size, title_font = title_font)
     }
   }

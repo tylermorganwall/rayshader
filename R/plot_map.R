@@ -14,9 +14,9 @@
 #'@param title_font Default `sans`. String with font family such as "sans", "mono", "serif", "Times", "Helvetica",
 #'"Trebuchet", "Georgia", "Palatino" or "Comic Sans".
 #'@param title_style Default `normal`. Font style (e.g. `italic`).
-#'@param title_bar_color Default `NULL`. If a color, this will create a colored bar under the title.
+#'@param title_bar_color Default `NA`. If a color, this will create a colored bar under the title.
 #'@param title_bar_alpha Default `0.5`. Transparency of the title bar.
-#'@param title_position Default `northwest`. Position of the title.
+#'@param title_just Default `left`. Justification of the title.
 #'@param ... Additional arguments to pass to the `raster::plotRGB` function that displays the map.
 #'@export
 #'@examples
@@ -49,7 +49,7 @@ plot_map = function(hillshade, rotate=0, asp = 1,
                     title_text = NA, title_offset = c(20,20),
                     title_color = "black", title_size = 30,
                     title_font = "sans", title_style = "normal", 
-                    title_bar_color = NULL, title_bar_alpha = 0.5, title_position = "northwest",
+                    title_bar_color = NA, title_bar_alpha = 0.5, title_just = "left",
                     ...) {
   has_title = !is.na(title_text)
   if(!(length(find.package("rayimage", quiet = TRUE)) > 0) && has_title) {
@@ -91,7 +91,7 @@ plot_map = function(hillshade, rotate=0, asp = 1,
                           title_color = title_color, title_size = title_size,
                           title_font = title_font, title_style = title_style,
                           title_bar_color = title_bar_color, title_bar_alpha = title_bar_alpha, 
-                          title_position = title_position)
+                          title_just = title_just)
     }
     rayimage::plot_image(hillshade, asp = asp, ...)
   } else if(length(dim(hillshade)) == 2) {
@@ -106,7 +106,7 @@ plot_map = function(hillshade, rotate=0, asp = 1,
                           title_color = title_color, title_size = title_size,
                           title_font = title_font, title_style = title_style,
                           title_bar_color = title_bar_color, title_bar_alpha = title_bar_alpha, 
-                          title_position = title_position)
+                          title_just = title_just)
     }
     rayimage::plot_image(array_from_mat, asp = asp, ...)
   } else {
