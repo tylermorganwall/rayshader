@@ -354,7 +354,7 @@ equal the length of `lat`/`long`).</p></dd>
 <span class="r-in"><span> <span class="fu"><a href="plot_3d.html">plot_3d</a></span><span class="op">(</span><span class="va">dem_matrix</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-plt img"><img src="render_tree-6.png" alt="" width="768" height="768"></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> no slot of name "ptr" for this object of class "SpatExtent"</span>
 <span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="va">run_example</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#The tree locations are given as an absolute height (as opposed to relative to the surface)</span></span></span>
 <span class="r-in"><span><span class="co">#so we set `absolute_height = TRUE`.</span></span></span>
@@ -375,14 +375,14 @@ equal the length of `lat`/`long`).</p></dd>
 <span class="r-in"><span><span class="fu">rgl</span><span class="fu">::</span><span class="fu"><a href="https://dmurdoch.github.io/rgl/dev/reference/light.html" class="external-link">light3d</a></span><span class="op">(</span>phi<span class="op">=</span><span class="op">-</span><span class="fl">45</span>,theta<span class="op">=</span><span class="op">-</span><span class="fl">40</span>, viewpoint.rel<span class="op">=</span><span class="cn">F</span>, diffuse<span class="op">=</span><span class="st">"#aaaaaa"</span>, specular<span class="op">=</span><span class="st">"#000000"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span> </span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-plt img"><img src="render_tree-7.png" alt="" width="768" height="768"></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in h(simpleError(msg, call)):</span> error in evaluating the argument 'x' in selecting a method for function 'extent': object 'extent_values' not found</span>
 <span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="va">run_example</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#Render tree also works with `render_highquality()`</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_highquality.html">render_highquality</a></span><span class="op">(</span>lightdirection<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">90</span>,<span class="fl">45</span><span class="op">)</span>,lightaltitude<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">90</span>,<span class="fl">45</span><span class="op">)</span>, </span></span>
 <span class="r-in"><span>                  lightcolor<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"dodgerblue"</span>,<span class="st">"orange"</span><span class="op">)</span>, </span></span>
 <span class="r-in"><span>                  min_variance <span class="op">=</span> <span class="fl">0</span>, sample_method<span class="op">=</span><span class="st">"sobol_blue"</span>, clamp_value<span class="op">=</span><span class="fl">10</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-plt img"><img src="render_tree-8.png" alt="" width="768" height="768"></span>
+<span class="r-plt img"><img src="render_tree-6.png" alt="" width="768" height="768"></span>
 </code></pre></div>
     </div>
   </div>

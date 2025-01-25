@@ -108,7 +108,7 @@
 <span>  title_size <span class="op">=</span> <span class="fl">30</span>,</span>
 <span>  title_font <span class="op">=</span> <span class="st">"sans"</span>,</span>
 <span>  title_style <span class="op">=</span> <span class="st">"normal"</span>,</span>
-<span>  title_bar_color <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  title_bar_color <span class="op">=</span> <span class="cn">NA</span>,</span>
 <span>  title_bar_alpha <span class="op">=</span> <span class="fl">0.5</span>,</span>
 <span>  title_position <span class="op">=</span> <span class="st">"northwest"</span>,</span>
 <span>  rotate <span class="op">=</span> <span class="fl">0</span>,</span>
@@ -155,15 +155,11 @@ image_annotate) corner to offset the title.</p></dd>
 
 
 <dt id="arg-title-bar-color">title_bar_color<a class="anchor" aria-label="anchor" href="#arg-title-bar-color"></a></dt>
-<dd><p>Default `NULL`. If a color, this will create a colored bar under the title.</p></dd>
+<dd><p>Default `NA`. If a color, this will create a colored bar under the title.</p></dd>
 
 
 <dt id="arg-title-bar-alpha">title_bar_alpha<a class="anchor" aria-label="anchor" href="#arg-title-bar-alpha"></a></dt>
 <dd><p>Default `0.5`. Transparency of the title bar.</p></dd>
-
-
-<dt id="arg-title-position">title_position<a class="anchor" aria-label="anchor" href="#arg-title-position"></a></dt>
-<dd><p>Default `northwest`. Position of the title.</p></dd>
 
 
 <dt id="arg-rotate">rotate<a class="anchor" aria-label="anchor" href="#arg-rotate"></a></dt>
@@ -173,6 +169,10 @@ image_annotate) corner to offset the title.</p></dd>
 <dt id="arg-asp">asp<a class="anchor" aria-label="anchor" href="#arg-asp"></a></dt>
 <dd><p>Default `1`. Aspect ratio of the resulting plot. Use `asp = 1/cospi(mean_latitude/180)` to rescale
 lat/long at higher latitudes to the correct the aspect ratio.</p></dd>
+
+
+<dt id="arg-title-just">title_just<a class="anchor" aria-label="anchor" href="#arg-title-just"></a></dt>
+<dd><p>Default `left`. Position of the title.</p></dd>
 
 </dl></div>
 
