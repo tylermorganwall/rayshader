@@ -36,7 +36,7 @@ save_png = function(hillshade, filename,
                     title_text = NA, title_offset = c(20,20),
                     title_color = "black", title_size = 30,
                     title_font = "sans", title_style = "normal",
-                    title_bar_color = NA, title_bar_alpha = 0.5, title_position = "northwest",
+                    title_bar_color = NA, title_bar_alpha = 0.5, title_just = "left",
                     rotate = 0, asp = 1) {
   if(is.null(filename)) {
     stop("save_png requires a filename")
