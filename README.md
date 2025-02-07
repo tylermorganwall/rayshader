@@ -124,7 +124,7 @@ your 3D visualizations:
     the map at a specified altitude `z` (in units of the matrix). The
     altitude can either be specified relative to the elevation at that
     point (the default), or absolutely.
--   `render_water()` adds a 3D tranparent water layer to 3D maps, after
+-   `render_water()` adds a 3D transparent water layer to 3D maps, after
     the rgl device has already been created. This can either add to a
     map that does not already have a water layer, or replace an existing
     water layer on the map.
@@ -347,7 +347,7 @@ render_highquality(samples=200, scale_text_size = 24,clear=TRUE)
 You can also easily add a water layer by setting `water = TRUE` in
 `plot_3d()` (and setting `waterdepth` if the water level is not 0), or
 by using the function `render_water()` after the 3D map has been
-rendered. You can customize the appearance and transparancy of the water
+rendered. You can customize the appearance and transparency of the water
 layer via function arguments. Here’s an example using
 bathymetric/topographic data of Monterey Bay, CA (included with
 rayshader):

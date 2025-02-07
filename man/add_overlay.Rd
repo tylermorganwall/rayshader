@@ -22,7 +22,7 @@ If the array is 3D, `alphacolor` should also be passed to indicate transparent r
 \item{alphalayer}{Default `1`. Defines minimum tranparaency of layer. If transparency already exists in `overlay`, the way `add_overlay` combines 
 the two is determined in argument `alphamethod`.}
 
-\item{alphacolor}{Default `NULL`. If `overlay` is a 3-layer array, this argument tells which color is interpretted as completely transparent.}
+\item{alphacolor}{Default `NULL`. If `overlay` is a 3-layer array, this argument tells which color is interpreted as completely transparent.}
 
 \item{alphamethod}{Default `max`. Method for dealing with pre-existing transparency with `layeralpha`. 
 If `max`, converts all alpha levels higher than `layeralpha` to the value set in `layeralpha`. Otherwise,

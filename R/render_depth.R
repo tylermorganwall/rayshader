@@ -41,7 +41,7 @@
 #'`1` is the darkest vignetting, while `0` is no vignetting. If vignette is a length-2 vector, the second entry will
 #'control the blurriness of the vignette effect.
 #'@param vignette_color Default `"black"`. Color of the vignette.
-#'@param vignette_radius Default `1.3`. Radius of the vignette, as a porportion of the image dimensions.
+#'@param vignette_radius Default `1.3`. Radius of the vignette, as a proportion of the image dimensions.
 #'@param width Default `NULL`. Optional argument to pass to `rgl::snapshot3d()` to specify the
 #'width when `software_render = TRUE`..
 #'@param height Default `NULL`. Optional argument to pass to `rgl::snapshot3d()` to specify the

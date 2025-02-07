@@ -20,7 +20,7 @@
 #'`1` is the darkest vignetting, while `0` is no vignetting. If vignette is a length-2 vector, the second entry will
 #'control the blurriness of the vignette effect.
 #'@param vignette_color Default `"black"`. Color of the vignette.
-#'@param vignette_radius Default `1.3`. Radius of the vignette, as a porportion of the image dimensions.
+#'@param vignette_radius Default `1.3`. Radius of the vignette, as a proportion of the image dimensions.
 #'@param clear Default `FALSE`. If `TRUE`, the current `rgl` device will be cleared.
 #'@param instant_capture Default `TRUE` if interactive, `FALSE` otherwise. If `FALSE`, a slight delay is added 
 #'before taking the snapshot. This can help stop prevent rendering issues when running scripts.

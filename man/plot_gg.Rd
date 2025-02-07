@@ -135,7 +135,7 @@ if `triangulate = TRUE`.}
 \item{emboss_text}{Default `0`, max `1`. Amount to emboss the text, where `1` is the tallest feature in the scene.}
 
 \item{emboss_grid}{Default `0`, max `1`. Amount to emboss the grid lines, where `1` is the tallest feature in the scene.
-By default, the minor grid lines will be half the size of the major lines. Pass a length-2 vector to specify them seperately (second value 
+By default, the minor grid lines will be half the size of the major lines. Pass a length-2 vector to specify them separately (second value 
 is the minor grid height).}
 
 \item{reduce_size}{Default `NULL`. A number between `0` and `1` that specifies how much to reduce the resolution of the plot, for faster plotting. By

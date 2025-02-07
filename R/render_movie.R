@@ -10,7 +10,7 @@
 #'Other options are `oscillate` (sine wave around `theta` value, covering 90 degrees), or `custom` (which uses the values from the 
 #'`theta`, `phi`, `zoom`, and `fov` vectors passed in by the user).
 #'@param frames Default `360`. Number of frames to render.
-#'@param fps Default `30`. Frames per second. Recommmend either 30 or 60 for web.
+#'@param fps Default `30`. Frames per second. Recommend either 30 or 60 for web.
 #'@param phi Defaults to current view. Azimuth values, in degrees. 
 #'@param theta Default to current view. Theta values, in degrees. 
 #'@param zoom Defaults to the current view. Zoom value, between `0` and `1`. 
@@ -36,7 +36,7 @@
 #'`1` is the darkest vignetting, while `0` is no vignetting. If vignette is a length-2 vector, the second entry will
 #'control the blurriness of the vignette effect.
 #'@param vignette_color Default `"black"`. Color of the vignette.
-#'@param vignette_radius Default `1.3`. Radius of the vignette, as a porportion of the image dimensions.
+#'@param vignette_radius Default `1.3`. Radius of the vignette, as a proportion of the image dimensions.
 #'@param audio Default `NULL`. Optional file with audio to add to the video.
 #'@param progbar Default `TRUE` if interactive, `FALSE` otherwise. If `FALSE`, turns off progress bar. 
 #'Will display a progress bar when adding an overlay or title.
