@@ -17,12 +17,12 @@ generate_altitude_overlay(
 
 \item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All grid points are assumed to be evenly spaced.}
 
-\item{start_transition}{Elevation above which `hillshade` is completely transparent.}
+\item{start_transition}{Elevation above which \code{hillshade} is completely transparent.}
 
-\item{end_transition}{Default `NULL`. Elevation below which `hillshade` is completely opaque. By default, this is equal to `start_transition`.}
+\item{end_transition}{Default \code{NULL}. Elevation below which \code{hillshade} is completely opaque. By default, this is equal to \code{start_transition}.}
 
-\item{lower}{Default `TRUE`. This makes `hillshade` completely opaque below `start_transition`. If
-`FALSE`, the direction will be reversed.}
+\item{lower}{Default \code{TRUE}. This makes \code{hillshade} completely opaque below \code{start_transition}. If
+\code{FALSE}, the direction will be reversed.}
 }
 \value{
 4-layer RGB array representing the semi-transparent hillshade.

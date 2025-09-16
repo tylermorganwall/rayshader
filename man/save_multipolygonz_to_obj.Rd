@@ -11,7 +11,7 @@ save_multipolygonz_to_obj(sfobj, filename, swap_yz = FALSE)
 
 \item{filename}{Filename of the OBJ to save the 3D model to.}
 
-\item{swap_yz}{Default `TRUE`., Whether to swap and Y and Z axes. (Y axis is vertical in 
+\item{swap_yz}{Default \code{TRUE}., Whether to swap and Y and Z axes. (Y axis is vertical in
 rayshader coordinates, but data is often provided with Z being vertical).}
 }
 \description{

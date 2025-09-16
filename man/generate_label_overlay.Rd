@@ -30,74 +30,74 @@ generate_label_overlay(
 )
 }
 \arguments{
-\item{labels}{A character vector of labels, or an `sf` object with `POINT` geometry and a column for labels.}
+\item{labels}{A character vector of labels, or an \code{sf} object with \code{POINT} geometry and a column for labels.}
 
-\item{extent}{Either an object representing the spatial extent of the scene 
-(either from the `raster`, `terra`, `sf`, or `sp` packages), 
-a length-4 numeric vector specifying `c("xmin", "xmax","ymin","ymax")`, or the spatial object (from 
+\item{extent}{Either an object representing the spatial extent of the scene
+(either from the \code{raster}, \code{terra}, \code{sf}, or \code{sp} packages),
+a length-4 numeric vector specifying \code{c("xmin", "xmax","ymin","ymax")}, or the spatial object (from
 the previously aforementioned packages) which will be automatically converted to an extent object.}
 
-\item{x}{Default `NULL`. The x-coordinate, if `labels` is not an `sf` object.}
+\item{x}{Default \code{NULL}. The x-coordinate, if \code{labels} is not an \code{sf} object.}
 
-\item{y}{Default `NULL`. The y-coordinate, if `labels` is not an `sf` object.}
+\item{y}{Default \code{NULL}. The y-coordinate, if \code{labels} is not an \code{sf} object.}
 
-\item{heightmap}{Default `NULL`. The original height map. Pass this in to extract the dimensions of the resulting 
+\item{heightmap}{Default \code{NULL}. The original height map. Pass this in to extract the dimensions of the resulting
 overlay automatically.}
 
-\item{width}{Default `NA`. Width of the resulting overlay. Default the same dimensions as height map.}
+\item{width}{Default \code{NA}. Width of the resulting overlay. Default the same dimensions as height map.}
 
-\item{height}{Default `NA`. Width of the resulting overlay. Default the same dimensions as height map.}
+\item{height}{Default \code{NA}. Width of the resulting overlay. Default the same dimensions as height map.}
 
-\item{resolution_multiply}{Default `1`. If passing in `heightmap` instead of width/height, amount to 
-increase the resolution of the overlay, which should make lines/polygons/text finer. 
-Should be combined with `add_overlay(rescale_original = TRUE)` to ensure those added details are captured
+\item{resolution_multiply}{Default \code{1}. If passing in \code{heightmap} instead of width/height, amount to
+increase the resolution of the overlay, which should make lines/polygons/text finer.
+Should be combined with \link{add_overlay(rescale_original = TRUE)} to ensure those added details are captured
 in the final map.}
 
-\item{text_size}{Default `1`. Text size.}
+\item{text_size}{Default \code{1}. Text size.}
 
-\item{color}{Default `black`. Color of the labels.}
+\item{color}{Default \code{black}. Color of the labels.}
 
-\item{font}{Default `1`. An integer which specifies which font to use for text. 
-If possible, device drivers arrange so that 1 corresponds to plain text (the default), 
+\item{font}{Default \code{1}. An integer which specifies which font to use for text.
+If possible, device drivers arrange so that 1 corresponds to plain text (the default),
 2 to bold face, 3 to italic and 4 to bold italic.}
 
-\item{pch}{Default `20`, solid. Point symbol. 
-`0` = square, `1` = circle, `2` = triangle point up, `3` = plus, `4` = cross, 
-`5` = diamond, `6` = triangle point down, `7` = square cross, `8` = star, 
-`9` = diamond plus, `10` = circle plus, `11` = triangles up and down, 
-`12` = square plus, `13` = circle cross, `14` = square and triangle down, 
-`15` = filled square, `16` = filled circle, `17` = filled triangle point-up, 
-`18` = filled diamond, `19` = solid circle, `20` = bullet (smaller circle), 
-`21` = filled circle blue, `22` = filled square blue, `23` = filled diamond blue, 
-`24` = filled triangle point-up blue, `25` = filled triangle point down blue}
+\item{pch}{Default \code{20}, solid. Point symbol.
+\code{0} = square, \code{1} = circle, \code{2} = triangle point up, \code{3} = plus, \code{4} = cross,
+\code{5} = diamond, \code{6} = triangle point down, \code{7} = square cross, \code{8} = star,
+\code{9} = diamond plus, \code{10} = circle plus, \code{11} = triangles up and down,
+\code{12} = square plus, \code{13} = circle cross, \code{14} = square and triangle down,
+\code{15} = filled square, \code{16} = filled circle, \code{17} = filled triangle point-up,
+\code{18} = filled diamond, \code{19} = solid circle, \code{20} = bullet (smaller circle),
+\code{21} = filled circle blue, \code{22} = filled square blue, \code{23} = filled diamond blue,
+\code{24} = filled triangle point-up blue, \code{25} = filled triangle point down blue}
 
-\item{point_size}{Default `0`, no points. Point size.}
+\item{point_size}{Default \code{0}, no points. Point size.}
 
-\item{point_color}{Default `NA`. Colors of the points. Unless otherwise specified, this defaults to `color`.}
+\item{point_color}{Default \code{NA}. Colors of the points. Unless otherwise specified, this defaults to \code{color}.}
 
-\item{offset}{Default `c(0,0)`. Horizontal and vertical offset to apply to the label, in units of `geometry`.}
+\item{offset}{Default \code{c(0,0)}. Horizontal and vertical offset to apply to the label, in units of \code{geometry}.}
 
-\item{data_label_column}{Default `NULL`. The column in the `sf` object that contains the labels.}
+\item{data_label_column}{Default \code{NULL}. The column in the \code{sf} object that contains the labels.}
 
-\item{halo_color}{Default `NA`, no halo. If a color is specified, the text label will be surrounded by a halo
+\item{halo_color}{Default \code{NA}, no halo. If a color is specified, the text label will be surrounded by a halo
 of this color.}
 
-\item{halo_expand}{Default `2`. Number of pixels to expand the halo.}
+\item{halo_expand}{Default \code{2}. Number of pixels to expand the halo.}
 
-\item{halo_alpha}{Default `1`. Transparency of the halo.}
+\item{halo_alpha}{Default \code{1}. Transparency of the halo.}
 
-\item{halo_offset}{Default `c(0,0)`. Horizontal and vertical offset to apply to the halo, in units of `geometry`.}
+\item{halo_offset}{Default \code{c(0,0)}. Horizontal and vertical offset to apply to the halo, in units of \code{geometry}.}
 
-\item{halo_blur}{Default `1`. Amount of blur to apply to the halo. Values greater than `30` won't result in further blurring.}
+\item{halo_blur}{Default \code{1}. Amount of blur to apply to the halo. Values greater than \code{30} won't result in further blurring.}
 
-\item{seed}{Default `NA`, no seed. Random seed for ensuring the consistent placement of labels around points.}
+\item{seed}{Default \code{NA}, no seed. Random seed for ensuring the consistent placement of labels around points.}
 }
 \value{
 Semi-transparent overlay with labels.
 }
 \description{
-This uses the `car::placeLabel()` function to generate labels for the given scene. Either
-use an `sf` object or manually specify the x/y coordinates and label.
+This uses the \code{car::placeLabel()} function to generate labels for the given scene. Either
+use an \code{sf} object or manually specify the x/y coordinates and label.
 }
 \examples{
 #Add the included `sf` object with roads to the montereybay dataset

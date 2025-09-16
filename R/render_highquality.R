@@ -5,7 +5,7 @@
 #'ground and add additional scene elements.
 #'
 #'This function can also generate frames for an animation by passing camera animation information from 
-#'either `convert_path_to_animation_coords()` or `rayrender::generate_camera_motion()` functions.
+#'either [convert_path_to_animation_coords()] or `rayrender::generate_camera_motion()` functions.
 #'
 #'@param filename Default `NA`. Filename of saved image. If missing, will display to current device.
 #'@param samples Default `128`. The maximum number of samples for each pixel. Increase this to increase the quality of the rendering.
@@ -35,7 +35,7 @@
 #'@param material Default `rayrender::diffuse()`. The material properties of the object file. Only used if `override_material = TRUE`
 #'@param override_material Default `FALSE`. Whether to override the default diffuse material with that in argument `material`.
 #'@param cache_scene Default `FALSE`. Whether to cache the current scene to memory so it does not have to be converted to a `raymesh` object 
-#'each time `render_snapshot()` is called. If `TRUE` and a scene has been cached, it will be used when rendering.
+#'each time [render_snapshot()] is called. If `TRUE` and a scene has been cached, it will be used when rendering.
 #'@param reset_scene_cache Default `FALSE`. Resets the scene cache before rendering.
 #'@param width Defaults to the width of the rgl window. Width of the rendering. 
 #'@param height Defaults to the height of the rgl window. Height of the rendering. 
@@ -49,8 +49,8 @@
 #'than straight segments.
 #'@param use_extruded_paths Default `TRUE`. If `FALSE`, paths will be generated with the `rayrender::path()` object, instead
 #'of `rayrender::extruded_path()`.
-#'@param point_radius Default `1`. Radius of 3D points (rendered with `render_points()`). This scales the existing
-#'value of size specified in `render_points()`.
+#'@param point_radius Default `1`. Radius of 3D points (rendered with [render_points()]). This scales the existing
+#'value of size specified in [render_points()].
 #'@param scale_text_angle Default `NULL`. Same as `text_angle`, but for the scale bar.
 #'@param scale_text_size Default `6`. Height of the scale bar text.
 #'@param scale_text_offset Default `c(0,0,0)`. Offset to be applied to all scale bar text labels.
@@ -90,7 +90,7 @@
 #'@param path_material_args Default empty `list()`. The function arguments to `path_material`. 
 #'The argument `color` will be automatically extracted from the rgl scene, but all other arguments 
 #'can be specified here. 
-#'@param animation_camera_coords Default `NULL`. Expects camera animation output from either `convert_path_to_animation_coords()`
+#'@param animation_camera_coords Default `NULL`. Expects camera animation output from either [convert_path_to_animation_coords()]
 #'or `rayrender::generate_camera_motion()` functions.
 #'@param ... Additional parameters to pass to `rayrender::render_scene`()
 #'

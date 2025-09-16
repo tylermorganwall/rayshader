@@ -7,7 +7,7 @@
 reduce_matrix_size(...)
 }
 \arguments{
-\item{...}{Arguments to pass to resize_matrix() function.}
+\item{...}{Arguments to pass to \code{\link[=resize_matrix]{resize_matrix()}} function.}
 }
 \value{
 Reduced matrix.

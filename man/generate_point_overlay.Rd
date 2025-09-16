@@ -19,43 +19,43 @@ generate_point_overlay(
 )
 }
 \arguments{
-\item{geometry}{An `sf` object with POINT geometry.}
+\item{geometry}{An \code{sf} object with POINT geometry.}
 
-\item{extent}{Either an object representing the spatial extent of the scene 
-(either from the `raster`, `terra`, `sf`, or `sp` packages), 
-a length-4 numeric vector specifying `c("xmin", "xmax","ymin","ymax")`, or the spatial object (from 
+\item{extent}{Either an object representing the spatial extent of the scene
+(either from the \code{raster}, \code{terra}, \code{sf}, or \code{sp} packages),
+a length-4 numeric vector specifying \code{c("xmin", "xmax","ymin","ymax")}, or the spatial object (from
 the previously aforementioned packages) which will be automatically converted to an extent object.}
 
-\item{heightmap}{Default `NULL`. The original height map. Pass this in to extract the dimensions of the resulting 
+\item{heightmap}{Default \code{NULL}. The original height map. Pass this in to extract the dimensions of the resulting
 overlay automatically.}
 
-\item{width}{Default `NA`. Width of the resulting overlay. Default the same dimensions as height map.}
+\item{width}{Default \code{NA}. Width of the resulting overlay. Default the same dimensions as height map.}
 
-\item{height}{Default `NA`. Width of the resulting overlay. Default the same dimensions as height map.}
+\item{height}{Default \code{NA}. Width of the resulting overlay. Default the same dimensions as height map.}
 
-\item{resolution_multiply}{Default `1`. If passing in `heightmap` instead of width/height, amount to 
-increase the resolution of the overlay, which should make lines/polygons/points finer. 
-Should be combined with `add_overlay(rescale_original = TRUE)` to ensure those added details are captured
+\item{resolution_multiply}{Default \code{1}. If passing in \code{heightmap} instead of width/height, amount to
+increase the resolution of the overlay, which should make lines/polygons/points finer.
+Should be combined with \link{add_overlay(rescale_original = TRUE)} to ensure those added details are captured
 in the final map.}
 
-\item{pch}{Default `20`, solid. Point symbol. 
-`0` = square, `1` = circle, `2` = triangle point up, `3` = plus, `4` = cross, 
-`5` = diamond, `6` = triangle point down, `7` = square cross, `8` = star, 
-`9` = diamond plus, `10` = circle plus, `11` = triangles up and down, 
-`12` = square plus, `13` = circle cross, `14` = square and triangle down, 
-`15` = filled square, `16` = filled circle, `17` = filled triangle point-up, 
-`18` = filled diamond, `19` = solid circle, `20` = bullet (smaller circle), 
-`21` = filled circle blue, `22` = filled square blue, `23` = filled diamond blue, 
-`24` = filled triangle point-up blue, `25` = filled triangle point down blue}
+\item{pch}{Default \code{20}, solid. Point symbol.
+\code{0} = square, \code{1} = circle, \code{2} = triangle point up, \code{3} = plus, \code{4} = cross,
+\code{5} = diamond, \code{6} = triangle point down, \code{7} = square cross, \code{8} = star,
+\code{9} = diamond plus, \code{10} = circle plus, \code{11} = triangles up and down,
+\code{12} = square plus, \code{13} = circle cross, \code{14} = square and triangle down,
+\code{15} = filled square, \code{16} = filled circle, \code{17} = filled triangle point-up,
+\code{18} = filled diamond, \code{19} = solid circle, \code{20} = bullet (smaller circle),
+\code{21} = filled circle blue, \code{22} = filled square blue, \code{23} = filled diamond blue,
+\code{24} = filled triangle point-up blue, \code{25} = filled triangle point down blue}
 
-\item{color}{Default `black`. Color of the points.}
+\item{color}{Default \code{black}. Color of the points.}
 
-\item{size}{Default `1`. Point size.}
+\item{size}{Default \code{1}. Point size.}
 
-\item{offset}{Default `c(0,0)`. Horizontal and vertical offset to apply to the polygon, in units of `geometry`.}
+\item{offset}{Default \code{c(0,0)}. Horizontal and vertical offset to apply to the polygon, in units of \code{geometry}.}
 
-\item{data_column_width}{Default `NULL`. The numeric column to map the width to. The maximum width will be the value
-specified in `linewidth`.}
+\item{data_column_width}{Default \code{NULL}. The numeric column to map the width to. The maximum width will be the value
+specified in \code{linewidth}.}
 }
 \value{
 Semi-transparent overlay with contours.

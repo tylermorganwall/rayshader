@@ -49,6 +49,7 @@ Suggests:
     osmdata,
     raybevel (>= 0.2.1)
 LinkingTo: Rcpp, progress, RcppArmadillo
+Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Encoding: UTF-8
 URL: https://www.rayshader.com,

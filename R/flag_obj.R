@@ -1,7 +1,7 @@
 #' Flag 3D Model
 #' 
-#' 3D obj model of a flag, to be used with `render_obj()`. Use `flag_full_obj()` to get the complete
-#' pole, and `flag_banner_obj()` and `flag_pole_obj()` to style them separately. 
+#' 3D obj model of a flag, to be used with [render_obj()]. Use [flag_full_obj()] to get the complete
+#' pole, and [flag_banner_obj()] and [flag_pole_obj()] to style them separately. 
 #' 
 #' @return File location of the included flag OBJ file (saved with a .txt extension)
 #' @export
@@ -15,8 +15,8 @@ flag_full_obj = function() {
 
 #' Flag Pole 3D Model
 #' 
-#' 3D obj model of a flag pole, to be used with `render_obj()`. Use `full_flag_obj()` to get the complete
-#' pole, and `flag_banner_obj()` and `flag_pole_obj()` to style them separately. 
+#' 3D obj model of a flag pole, to be used with [render_obj()]. Use [flag_full_obj()] to get the complete
+#' pole, and [flag_banner_obj()] and [flag_pole_obj()] to style them separately. 
 #' 
 #' @return File location of the included flag OBJ file (saved with a .txt extension)
 #' @export
@@ -30,8 +30,8 @@ flag_pole_obj = function() {
 
 #' Flag Banner 3D Model
 #' 
-#' 3D obj model of a flag (sans pole), to be used with `render_obj()`. Use `flag_full_obj()` to get the complete
-#' pole, and `flag_banner_obj()` and `flag_pole_obj()` to style them separately. 
+#' 3D obj model of a flag (sans pole), to be used with [render_obj()]. Use [flag_full_obj()] to get the complete
+#' pole, and [flag_banner_obj()] and [flag_pole_obj()] to style them separately. 
 #' 
 #' @return File location of the included flag OBJ file (saved with a .txt extension)
 #' @export

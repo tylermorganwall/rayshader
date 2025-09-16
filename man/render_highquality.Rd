@@ -63,154 +63,154 @@ render_highquality(
 )
 }
 \arguments{
-\item{filename}{Default `NA`. Filename of saved image. If missing, will display to current device.}
+\item{filename}{Default \code{NA}. Filename of saved image. If missing, will display to current device.}
 
-\item{samples}{Default `128`. The maximum number of samples for each pixel. Increase this to increase the quality of the rendering.}
+\item{samples}{Default \code{128}. The maximum number of samples for each pixel. Increase this to increase the quality of the rendering.}
 
-\item{sample_method}{Default `"sobol_blue"`, unless `samples > 256`, in which it defaults to `"sobol"`.
-The type of sampling method used to generate random numbers. 
-The other options are `random` (worst quality but fastest), 
-`sobol_blue` (best option for sample counts below 256), and `sobol` 
-(slowest but best quality, better than `sobol_blue` for sample counts greater than 256).}
+\item{sample_method}{Default \code{"sobol_blue"}, unless \code{samples > 256}, in which it defaults to \code{"sobol"}.
+The type of sampling method used to generate random numbers.
+The other options are \code{random} (worst quality but fastest),
+\code{sobol_blue} (best option for sample counts below 256), and \code{sobol}
+(slowest but best quality, better than \code{sobol_blue} for sample counts greater than 256).}
 
-\item{min_variance}{Default `1e-6`. Minimum acceptable variance for a block of pixels for the adaptive sampler. 
-Smaller numbers give higher quality images, at the expense of longer rendering times. 
+\item{min_variance}{Default \code{1e-6}. Minimum acceptable variance for a block of pixels for the adaptive sampler.
+Smaller numbers give higher quality images, at the expense of longer rendering times.
 If this is set to zero, the adaptive sampler will be turned off and the renderer will use the maximum number of samples everywhere.}
 
-\item{light}{Default `TRUE`. Whether there should be a light in the scene. If not, the scene will be lit with a bluish sky.}
+\item{light}{Default \code{TRUE}. Whether there should be a light in the scene. If not, the scene will be lit with a bluish sky.}
 
-\item{lightdirection}{Default `315`. Position of the light angle around the scene. 
-If this is a vector longer than one, multiple lights will be generated (using values from 
-`lightaltitude`, `lightintensity`, and `lightcolor`)}
+\item{lightdirection}{Default \code{315}. Position of the light angle around the scene.
+If this is a vector longer than one, multiple lights will be generated (using values from
+\code{lightaltitude}, \code{lightintensity}, and \code{lightcolor})}
 
-\item{lightaltitude}{Default `45`. Angle above the horizon that the light is located. 
-If this is a vector longer than one, multiple lights will be generated (using values from 
-`lightdirection`, `lightintensity`, and `lightcolor`)}
+\item{lightaltitude}{Default \code{45}. Angle above the horizon that the light is located.
+If this is a vector longer than one, multiple lights will be generated (using values from
+\code{lightdirection}, \code{lightintensity}, and \code{lightcolor})}
 
-\item{lightsize}{Default `NULL`. Radius of the light(s). Automatically chosen, but can be set here by the user.}
+\item{lightsize}{Default \code{NULL}. Radius of the light(s). Automatically chosen, but can be set here by the user.}
 
-\item{lightintensity}{Default `500`. Intensity of the light.}
+\item{lightintensity}{Default \code{500}. Intensity of the light.}
 
-\item{lightcolor}{Default `white`. The color of the light.}
+\item{lightcolor}{Default \code{white}. The color of the light.}
 
-\item{material}{Default `rayrender::diffuse()`. The material properties of the object file. Only used if `override_material = TRUE`}
+\item{material}{Default \code{rayrender::diffuse()}. The material properties of the object file. Only used if \code{override_material = TRUE}}
 
-\item{water_attenuation}{Default `0`, no attenuation. Amount that light should be attenuated when traveling through water. This
+\item{water_attenuation}{Default \code{0}, no attenuation. Amount that light should be attenuated when traveling through water. This
 calculates 1-color}
 
-\item{water_surface_color}{Default `TRUE`. Whether the water should have a colored surface or not. This is in contrast to
+\item{water_surface_color}{Default \code{TRUE}. Whether the water should have a colored surface or not. This is in contrast to
 setting a non-zero water attenuation, where the color comes from the attenuation of light in the water itself.}
 
-\item{water_ior}{Default `1`. Water index of refraction.}
+\item{water_ior}{Default \code{1}. Water index of refraction.}
 
-\item{override_material}{Default `FALSE`. Whether to override the default diffuse material with that in argument `material`.}
+\item{override_material}{Default \code{FALSE}. Whether to override the default diffuse material with that in argument \code{material}.}
 
-\item{cache_scene}{Default `FALSE`. Whether to cache the current scene to memory so it does not have to be converted to a `raymesh` object 
-each time `render_snapshot()` is called. If `TRUE` and a scene has been cached, it will be used when rendering.}
+\item{cache_scene}{Default \code{FALSE}. Whether to cache the current scene to memory so it does not have to be converted to a \code{raymesh} object
+each time \code{\link[=render_snapshot]{render_snapshot()}} is called. If \code{TRUE} and a scene has been cached, it will be used when rendering.}
 
-\item{reset_scene_cache}{Default `FALSE`. Resets the scene cache before rendering.}
+\item{reset_scene_cache}{Default \code{FALSE}. Resets the scene cache before rendering.}
 
 \item{width}{Defaults to the width of the rgl window. Width of the rendering.}
 
 \item{height}{Defaults to the height of the rgl window. Height of the rendering.}
 
-\item{text_angle}{Default `NULL`, which forces the text always to face the camera. If a single angle (degrees),
+\item{text_angle}{Default \code{NULL}, which forces the text always to face the camera. If a single angle (degrees),
 will specify the absolute angle all the labels are facing. If three angles, this will specify all three orientations
 (relative to the x,y, and z axes) of the text labels.}
 
-\item{text_size}{Default `6`. Height of the text.}
+\item{text_size}{Default \code{6}. Height of the text.}
 
-\item{text_offset}{Default `c(0,0,0)`. Offset to be applied to all text labels.}
+\item{text_offset}{Default \code{c(0,0,0)}. Offset to be applied to all text labels.}
 
-\item{line_radius}{Default `0.5`. Radius of line/path segments.}
+\item{line_radius}{Default \code{0.5}. Radius of line/path segments.}
 
-\item{point_radius}{Default `1`. Radius of 3D points (rendered with `render_points()`). This scales the existing
-value of size specified in `render_points()`.}
+\item{point_radius}{Default \code{1}. Radius of 3D points (rendered with \code{\link[=render_points]{render_points()}}). This scales the existing
+value of size specified in \code{\link[=render_points]{render_points()}}.}
 
-\item{smooth_line}{Default `FALSE`. If `TRUE`, the line will be rendered with a continuous smooth line, rather
+\item{smooth_line}{Default \code{FALSE}. If \code{TRUE}, the line will be rendered with a continuous smooth line, rather
 than straight segments.}
 
-\item{use_extruded_paths}{Default `TRUE`. If `FALSE`, paths will be generated with the `rayrender::path()` object, instead
-of `rayrender::extruded_path()`.}
+\item{use_extruded_paths}{Default \code{TRUE}. If \code{FALSE}, paths will be generated with the \code{rayrender::path()} object, instead
+of \code{rayrender::extruded_path()}.}
 
-\item{scale_text_angle}{Default `NULL`. Same as `text_angle`, but for the scale bar.}
+\item{scale_text_angle}{Default \code{NULL}. Same as \code{text_angle}, but for the scale bar.}
 
-\item{scale_text_size}{Default `6`. Height of the scale bar text.}
+\item{scale_text_size}{Default \code{6}. Height of the scale bar text.}
 
-\item{scale_text_offset}{Default `c(0,0,0)`. Offset to be applied to all scale bar text labels.}
+\item{scale_text_offset}{Default \code{c(0,0,0)}. Offset to be applied to all scale bar text labels.}
 
-\item{title_text}{Default `NULL`. Text. Adds a title to the image, using magick::image_annotate.}
+\item{title_text}{Default \code{NULL}. Text. Adds a title to the image, using magick::image_annotate.}
 
-\item{title_offset}{Default `c(20,20)`. Distance from the top-left (default, `gravity` direction in 
+\item{title_offset}{Default \code{c(20,20)}. Distance from the top-left (default, \code{gravity} direction in
 image_annotate) corner to offset the title.}
 
-\item{title_color}{Default `black`. Font color.}
+\item{title_color}{Default \code{black}. Font color.}
 
-\item{title_size}{Default `30`. Font size in pixels.}
+\item{title_size}{Default \code{30}. Font size in pixels.}
 
-\item{title_font}{Default `sans`. String with font family such as "sans", "mono", "serif", "Times", "Helvetica", 
+\item{title_font}{Default \code{sans}. String with font family such as "sans", "mono", "serif", "Times", "Helvetica",
 "Trebuchet", "Georgia", "Palatino" or "Comic Sans".}
 
-\item{title_just}{Default `left`. Justification of the title.}
+\item{title_just}{Default \code{left}. Justification of the title.}
 
-\item{title_bar_color}{Default `NA`. If a color, this will create a colored bar under the title.}
+\item{title_bar_color}{Default \code{NA}. If a color, this will create a colored bar under the title.}
 
-\item{title_bar_alpha}{Default `0.5`. Transparency of the title bar.}
+\item{title_bar_alpha}{Default \code{0.5}. Transparency of the title bar.}
 
-\item{ground_material}{Default `diffuse()`. Material defined by the rayrender material functions.}
+\item{ground_material}{Default \code{diffuse()}. Material defined by the rayrender material functions.}
 
-\item{ground_size}{Default `100000`. The width of the plane representing the ground.}
+\item{ground_size}{Default \code{100000}. The width of the plane representing the ground.}
 
-\item{scene_elements}{Default `NULL`. Extra scene elements to add to the scene, created with rayrender.}
+\item{scene_elements}{Default \code{NULL}. Extra scene elements to add to the scene, created with rayrender.}
 
-\item{camera_location}{Default `NULL`. Custom position of the camera. The `FOV`, `width`, and `height` arguments will still
+\item{camera_location}{Default \code{NULL}. Custom position of the camera. The \code{FOV}, \code{width}, and \code{height} arguments will still
 be derived from the rgl window.}
 
-\item{camera_lookat}{Default `NULL`. Custom point at which the camera is directed. The `FOV`, `width`, and `height` arguments will still
+\item{camera_lookat}{Default \code{NULL}. Custom point at which the camera is directed. The \code{FOV}, \code{width}, and \code{height} arguments will still
 be derived from the rgl window.}
 
-\item{camera_interpolate}{Default `c(0,0)`. Maximum `1`, minimum `0`. Sets the camera at a point between the `rgl` view and the `camera_location` 
-and `camera_lookat` vectors.}
+\item{camera_interpolate}{Default \code{c(0,0)}. Maximum \code{1}, minimum \code{0}. Sets the camera at a point between the \code{rgl} view and the \code{camera_location}
+and \code{camera_lookat} vectors.}
 
-\item{clear}{Default `FALSE`. If `TRUE`, the current `rgl` device will be cleared.}
+\item{clear}{Default \code{FALSE}. If \code{TRUE}, the current \code{rgl} device will be cleared.}
 
-\item{return_scene}{Default `FALSE`. If `TRUE`, this will return the rayrender scene (instead of rendering the image).}
+\item{return_scene}{Default \code{FALSE}. If \code{TRUE}, this will return the rayrender scene (instead of rendering the image).}
 
-\item{print_scene_info}{Default `FALSE`. If `TRUE`, it will print the position and lookat point of the camera.}
+\item{print_scene_info}{Default \code{FALSE}. If \code{TRUE}, it will print the position and lookat point of the camera.}
 
-\item{clamp_value}{Default `10`. See documentation for `rayrender::render_scene()`.}
+\item{clamp_value}{Default \code{10}. See documentation for \code{rayrender::render_scene()}.}
 
-\item{calculate_consistent_normals}{Default `FALSE`. Whether to calculate consistent vertex normals to prevent energy 
+\item{calculate_consistent_normals}{Default \code{FALSE}. Whether to calculate consistent vertex normals to prevent energy
 loss at edges.}
 
-\item{load_normals}{Default `TRUE`. Whether to load the vertex normals if they exist in the OBJ file.}
+\item{load_normals}{Default \code{TRUE}. Whether to load the vertex normals if they exist in the OBJ file.}
 
-\item{point_material}{Default `rayrender::diffuse`. The rayrender material function to be applied
+\item{point_material}{Default \code{rayrender::diffuse}. The rayrender material function to be applied
 to point data.}
 
-\item{point_material_args}{Default empty `list()`. The function arguments to `point_material`. 
-The argument `color` will be automatically extracted from the rgl scene, but all other arguments 
+\item{point_material_args}{Default empty \code{list()}. The function arguments to \code{point_material}.
+The argument \code{color} will be automatically extracted from the rgl scene, but all other arguments
 can be specified here.}
 
-\item{path_material}{Default `rayrender::diffuse`. The rayrender material function to be applied
+\item{path_material}{Default \code{rayrender::diffuse}. The rayrender material function to be applied
 to path data.}
 
-\item{path_material_args}{Default empty `list()`. The function arguments to `path_material`. 
-The argument `color` will be automatically extracted from the rgl scene, but all other arguments 
+\item{path_material_args}{Default empty \code{list()}. The function arguments to \code{path_material}.
+The argument \code{color} will be automatically extracted from the rgl scene, but all other arguments
 can be specified here.}
 
-\item{animation_camera_coords}{Default `NULL`. Expects camera animation output from either `convert_path_to_animation_coords()`
-or `rayrender::generate_camera_motion()` functions.}
+\item{animation_camera_coords}{Default \code{NULL}. Expects camera animation output from either \code{\link[=convert_path_to_animation_coords]{convert_path_to_animation_coords()}}
+or \code{rayrender::generate_camera_motion()} functions.}
 
-\item{...}{Additional parameters to pass to `rayrender::render_scene`()}
+\item{...}{Additional parameters to pass to \code{rayrender::render_scene}()}
 }
 \description{
-Renders a raytraced version of the displayed rgl scene, using the `rayrender` package. 
-User can specify the light direction, intensity, and color, as well as specify the material of the 
+Renders a raytraced version of the displayed rgl scene, using the \code{rayrender} package.
+User can specify the light direction, intensity, and color, as well as specify the material of the
 ground and add additional scene elements.
 
-This function can also generate frames for an animation by passing camera animation information from 
-either `convert_path_to_animation_coords()` or `rayrender::generate_camera_motion()` functions.
+This function can also generate frames for an animation by passing camera animation information from
+either \code{\link[=convert_path_to_animation_coords]{convert_path_to_animation_coords()}} or \code{rayrender::generate_camera_motion()} functions.
 }
 \examples{
 #Render the volcano dataset using pathtracing

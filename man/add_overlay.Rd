@@ -16,19 +16,19 @@ add_overlay(
 \arguments{
 \item{hillshade}{A three-dimensional RGB array or 2D matrix of shadow intensities.}
 
-\item{overlay}{A three or four dimensional RGB array, where the 4th dimension represents the alpha (transparency) channel. 
-If the array is 3D, `alphacolor` should also be passed to indicate transparent regions.}
+\item{overlay}{A three or four dimensional RGB array, where the 4th dimension represents the alpha (transparency) channel.
+If the array is 3D, \code{alphacolor} should also be passed to indicate transparent regions.}
 
-\item{alphalayer}{Default `1`. Defines minimum tranparaency of layer. If transparency already exists in `overlay`, the way `add_overlay` combines 
-the two is determined in argument `alphamethod`.}
+\item{alphalayer}{Default \code{1}. Defines minimum tranparaency of layer. If transparency already exists in \code{overlay}, the way \code{\link[=add_overlay]{add_overlay()}} combines
+the two is determined in argument \code{alphamethod}.}
 
-\item{alphacolor}{Default `NULL`. If `overlay` is a 3-layer array, this argument tells which color is interpretted as completely transparent.}
+\item{alphacolor}{Default \code{NULL}. If \code{overlay} is a 3-layer array, this argument tells which color is interpretted as completely transparent.}
 
-\item{alphamethod}{Default `max`. Method for dealing with pre-existing transparency with `layeralpha`. 
-If `max`, converts all alpha levels higher than `layeralpha` to the value set in `layeralpha`. Otherwise,
-this just sets all transparency to `layeralpha`.}
+\item{alphamethod}{Default \code{max}. Method for dealing with pre-existing transparency with \code{layeralpha}.
+If \code{max}, converts all alpha levels higher than \code{layeralpha} to the value set in \code{layeralpha}. Otherwise,
+this just sets all transparency to \code{layeralpha}.}
 
-\item{rescale_original}{Default `FALSE`. If `TRUE`, `hillshade` will be scaled to match the dimensions of `overlay` (instead of
+\item{rescale_original}{Default \code{FALSE}. If \code{TRUE}, \code{hillshade} will be scaled to match the dimensions of \code{overlay} (instead of
 the other way around).}
 }
 \value{

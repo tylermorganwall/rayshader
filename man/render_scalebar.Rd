@@ -24,43 +24,43 @@ render_scalebar(
 )
 }
 \arguments{
-\item{limits}{The distance represented by the scale bar. If a numeric vector greater than length 1, 
-this will specify the breaks along the scale bar to place labels, with the maximum value in 
+\item{limits}{The distance represented by the scale bar. If a numeric vector greater than length 1,
+this will specify the breaks along the scale bar to place labels, with the maximum value in
 limits assumed to be the last label. Must be non-negative.}
 
-\item{position}{Default `W`. A string representing a direction. Can be `N`, `E`, `S`, and `W`.}
+\item{position}{Default \code{W}. A string representing a direction. Can be \code{N}, \code{E}, \code{S}, and \code{W}.}
 
-\item{y}{Default `NULL`. The height of the scale bar, automatically calculated if `NULL`.}
+\item{y}{Default \code{NULL}. The height of the scale bar, automatically calculated if \code{NULL}.}
 
-\item{segments}{Default `10`. Number of colored segments in the scalebar.}
+\item{segments}{Default \code{10}. Number of colored segments in the scalebar.}
 
-\item{scale_length}{Default `1`. Length of the scale bar, relative to the 
-side of the map specified in `position`. If a length-2 vector, the first number specifies the start
+\item{scale_length}{Default \code{1}. Length of the scale bar, relative to the
+side of the map specified in \code{position}. If a length-2 vector, the first number specifies the start
 and stop points along the side.}
 
-\item{label_unit}{Default `NULL`. The distance unit for the label.}
+\item{label_unit}{Default \code{NULL}. The distance unit for the label.}
 
-\item{offset}{Default `NULL`. The distance away from the edge to place the scale bar.
-If `NULL`, automatically calculated.}
+\item{offset}{Default \code{NULL}. The distance away from the edge to place the scale bar.
+If \code{NULL}, automatically calculated.}
 
-\item{radius}{Default `NULL`. The radius of the cylinder representing the scale bar.
-If `NULL`, automatically calculated.}
+\item{radius}{Default \code{NULL}. The radius of the cylinder representing the scale bar.
+If \code{NULL}, automatically calculated.}
 
-\item{color_first}{Default `darkred`. Primary color in the scale bar.}
+\item{color_first}{Default \code{darkred}. Primary color in the scale bar.}
 
-\item{color_second}{Default `grey90`. Seconary color in the scale bar.}
+\item{color_second}{Default \code{grey90}. Seconary color in the scale bar.}
 
-\item{color_text}{Default `black`. Color of the text.}
+\item{color_text}{Default \code{black}. Color of the text.}
 
-\item{text_switch_side}{Default `FALSE`. Switches the order of the text.}
+\item{text_switch_side}{Default \code{FALSE}. Switches the order of the text.}
 
-\item{text_x_offset}{Default `0`. Distance offset for text in the x direction.}
+\item{text_x_offset}{Default \code{0}. Distance offset for text in the x direction.}
 
-\item{text_y_offset}{Default `0`. Distance offset for text in the y direction.}
+\item{text_y_offset}{Default \code{0}. Distance offset for text in the y direction.}
 
-\item{text_z_offset}{Default `0`. Distance offset for text in the z direction.}
+\item{text_z_offset}{Default \code{0}. Distance offset for text in the z direction.}
 
-\item{clear_scalebar}{Default `FALSE`. Clears the scale bar(s) on the map.}
+\item{clear_scalebar}{Default \code{FALSE}. Clears the scale bar(s) on the map.}
 }
 \value{
 Displays snapshot of current rgl plot (or saves to disk).

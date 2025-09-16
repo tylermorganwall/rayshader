@@ -5,7 +5,7 @@
 \alias{washington_monument_multipolygonz}
 \title{Washington Monument 3D Model as Multipolygon Z Data}
 \format{
-An `sf` object with MULTIPOLYGONZ geometry.
+An \code{sf} object with MULTIPOLYGONZ geometry.
 }
 \source{
 https://opendata.dc.gov/documents/DCGIS::buildings-in-3d/
@@ -14,7 +14,7 @@ https://opendata.dc.gov/documents/DCGIS::buildings-in-3d/
 washington_monument_multipolygonz
 }
 \description{
-This dataset is an `sf` object containing MULTIPOLYGON Z 3D data of the Washington Monument in Washington, DC.
+This dataset is an \code{sf} object containing MULTIPOLYGON Z 3D data of the Washington Monument in Washington, DC.
 }
 \examples{
 # See the `render_multipolygonz()` documentation for examples of using this data.

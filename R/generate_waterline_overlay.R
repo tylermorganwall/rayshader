@@ -12,12 +12,12 @@
 #'@param height Default `NA`. Width of the resulting image array. Default the same dimensions as height map.
 #'@param resolution_multiply Default `1`. If passing in `heightmap` instead of width/height, amount to 
 #'increase the resolution of the overlay, which should make lines/polygons/text finer. 
-#'Should be combined with `add_overlay(rescale_original = TRUE)` to ensure those added details are captured
+#'Should be combined with [add_overlay(rescale_original = TRUE)] to ensure those added details are captured
 #'in the final map.
 #'@param color Default `white`. Color of the lines.
 #'@param linewidth Default `1`. Line width.
 #'@param boolean Default `FALSE`. If `TRUE`, this is a boolean matrix (0 and 1) indicating contiguous areas in 
-#'which the lines are generated (instead of a height matrix, from which the boolean matrix is derived using `detect_water()`)
+#'which the lines are generated (instead of a height matrix, from which the boolean matrix is derived using [detect_water()])
 #'@param min Default `0.001`. Percent distance (measured from the furthest point from shore) where the waterlines stop.
 #'@param max Default `0.2`. Percent distance (measured from the furthest point from shore) where the waterlines begin.
 #'@param breaks Default `9`. Number of water lines.
@@ -28,11 +28,11 @@
 #'@param alpha Default `1`. Maximum transparency for waterlines. This scales the transparency for all other levels.
 #'@param falloff Default `1.3`. Multiplicative decrease in distance between each waterline level.
 #'@param evenly_spaced Default `FALSE`. If `TRUE`, `falloff` will be ignored and the lines will be evenly spaced.
-#'@param zscale Default `1`. Arguments passed to `detect_water()`. Ignored if `boolean = TRUE`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
+#'@param zscale Default `1`. Arguments passed to [detect_water()]. Ignored if `boolean = TRUE`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
 #'of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
-#'@param cutoff Default `0.999`. Arguments passed to `detect_water()`. Ignored if `boolean = TRUE`.The lower limit of the z-component of the unit normal vector to be classified as water.
-#'@param min_area Default `length(heightmap)/400`. Arguments passed to `detect_water()`. Ignored if `boolean = TRUE`. Minimum area (in units of the height matrix x and y spacing) to be considered a body of water.
-#'@param max_height Default `NULL`. Arguments passed to `detect_water()`. Ignored if `boolean = TRUE`. If passed, this number will specify the maximum height a point can be considered to be water.
+#'@param cutoff Default `0.999`. Arguments passed to [detect_water()]. Ignored if `boolean = TRUE`.The lower limit of the z-component of the unit normal vector to be classified as water.
+#'@param min_area Default `length(heightmap)/400`. Arguments passed to [detect_water()]. Ignored if `boolean = TRUE`. Minimum area (in units of the height matrix x and y spacing) to be considered a body of water.
+#'@param max_height Default `NULL`. Arguments passed to [detect_water()]. Ignored if `boolean = TRUE`. If passed, this number will specify the maximum height a point can be considered to be water.
 #'`FALSE`, the direction will be reversed.
 #'@param return_distance_matrix Default `FALSE`. If `TRUE`, this function will return the boolean distance matrix instead of
 #'contour lines.

@@ -7,7 +7,7 @@
 fix_manifold_geometry(filename)
 }
 \arguments{
-\item{filename}{String with the filename. If `.obj` is not at the end of the string, it will be appended automatically.}
+\item{filename}{String with the filename. If \code{.obj} is not at the end of the string, it will be appended automatically.}
 }
 \description{
 Writes the textured 3D rayshader visualization to an OBJ file.

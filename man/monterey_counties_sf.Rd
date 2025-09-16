@@ -5,7 +5,7 @@
 \alias{monterey_counties_sf}
 \title{California County Data Around Monterey Bay}
 \format{
-An `sf` object with MULTIPOLYGON geometry.
+An \code{sf} object with MULTIPOLYGON geometry.
 }
 \source{
 https://catalog.data.gov/dataset/tiger-line-shapefile-2016-state-california-current-county-subdivision-state-based
@@ -14,11 +14,11 @@ https://catalog.data.gov/dataset/tiger-line-shapefile-2016-state-california-curr
 monterey_counties_sf
 }
 \description{
-This dataset is an `sf` object containing polygon data from the U.S. Department of Commerce
-with selected geographic and cartographic information from the U.S. Census Bureau's Master 
-Address File / Topologically Integrated Geographic Encoding and Referencing (MAF/TIGER) 
+This dataset is an \code{sf} object containing polygon data from the U.S. Department of Commerce
+with selected geographic and cartographic information from the U.S. Census Bureau's Master
+Address File / Topologically Integrated Geographic Encoding and Referencing (MAF/TIGER)
 Database (MTDB). This data has been trimmed to only include 26 features in the extent of
-the `montereybay` dataset.
+the \code{montereybay} dataset.
 }
 \examples{
 # This is the full code (commented out) used to generate this dataset from the original data:

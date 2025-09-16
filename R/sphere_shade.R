@@ -5,10 +5,10 @@
 #' or a built-in color texture.
 #'
 #'@param heightmap A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.
-#'@param sunangle Default `315` (NW). The direction of the main highlight color (derived from the built-in palettes or the `create_texture` function).
+#'@param sunangle Default `315` (NW). The direction of the main highlight color (derived from the built-in palettes or the [create_texture()] function).
 #'@param texture Default `imhof1`. Either a square matrix indicating the spherical texture mapping, or a string indicating one 
 #'of the built-in palettes (`imhof1`,`imhof2`,`imhof3`,`imhof4`,`desert`, `bw`, and `unicorn`). 
-#'@param normalvectors Default `NULL`. Cache of the normal vectors (from `calculate_normal` function). Supply this to speed up texture mapping.
+#'@param normalvectors Default `NULL`. Cache of the normal vectors (from [calculate_normal()] function). Supply this to speed up texture mapping.
 #'@param colorintensity Default `1`. The intensity of the color mapping. Higher values will increase the intensity of the color mapping.
 #'@param zscale Default `1/colorintensity`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. 
 #'Ignored unless `colorintensity` missing.

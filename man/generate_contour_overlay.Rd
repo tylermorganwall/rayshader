@@ -19,26 +19,26 @@ generate_contour_overlay(
 \arguments{
 \item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All grid points are assumed to be evenly spaced.}
 
-\item{levels}{Default `NA`. Automatically generated with 10 levels. This argument specifies the exact height levels of each contour.}
+\item{levels}{Default \code{NA}. Automatically generated with 10 levels. This argument specifies the exact height levels of each contour.}
 
-\item{nlevels}{Default `NA`. Controls the auto-generation of levels. If levels is length-2, 
-this will automatically generate `nlevels` breaks between `levels[1]` and `levels[2]`.}
+\item{nlevels}{Default \code{NA}. Controls the auto-generation of levels. If levels is length-2,
+this will automatically generate \code{nlevels} breaks between \code{levels[1]} and \code{levels[2]}.}
 
-\item{zscale}{Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
-of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.}
+\item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
+of 1 meter and the grid values are separated by 10 meters, \code{zscale} would be 10.}
 
-\item{width}{Default `NA`. Width of the resulting overlay. Default the same dimensions as heightmap.}
+\item{width}{Default \code{NA}. Width of the resulting overlay. Default the same dimensions as heightmap.}
 
-\item{height}{Default `NA`. Width of the resulting overlay. Default the same dimensions as heightmap.}
+\item{height}{Default \code{NA}. Width of the resulting overlay. Default the same dimensions as heightmap.}
 
-\item{resolution_multiply}{Default `1`. If passing in `heightmap` instead of width/height, amount to 
-increase the resolution of the overlay, which should make lines/polygons finer. 
-Should be combined with `add_overlay(rescale_original = TRUE)` to ensure those added details are captured
+\item{resolution_multiply}{Default \code{1}. If passing in \code{heightmap} instead of width/height, amount to
+increase the resolution of the overlay, which should make lines/polygons finer.
+Should be combined with \link{add_overlay(rescale_original = TRUE)} to ensure those added details are captured
 in the final map.}
 
-\item{color}{Default `black`. Color.}
+\item{color}{Default \code{black}. Color.}
 
-\item{linewidth}{Default `1`. Line width.}
+\item{linewidth}{Default \code{1}. Line width.}
 }
 \value{
 Semi-transparent overlay with contours.

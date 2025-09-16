@@ -34,82 +34,82 @@ render_raymesh(
 )
 }
 \arguments{
-\item{raymesh}{`raymesh` object (see the rayvertex package for a description)}
+\item{raymesh}{\code{raymesh} object (see the rayvertex package for a description)}
 
-\item{extent}{Either an object representing the spatial extent of the scene 
-(either from the `raster`, `terra`, `sf`, or `sp` packages), 
-a length-4 numeric vector specifying `c("xmin", "xmax","ymin","ymax")`, or the spatial object (from 
+\item{extent}{Either an object representing the spatial extent of the scene
+(either from the \code{raster}, \code{terra}, \code{sf}, or \code{sp} packages),
+a length-4 numeric vector specifying \code{c("xmin", "xmax","ymin","ymax")}, or the spatial object (from
 the previously aforementioned packages) which will be automatically converted to an extent object.}
 
 \item{lat}{Vector of latitudes (or other coordinate in the same coordinate reference system as extent).}
 
 \item{long}{Vector of longitudes (or other coordinate in the same coordinate reference system as extent).}
 
-\item{altitude}{Default `NULL`. Elevation of each point, in units of the elevation matrix (scaled by `zscale`). 
-If left `NULL`, this will be just the elevation value at ths surface, offset by `offset`. If a single value, 
+\item{altitude}{Default \code{NULL}. Elevation of each point, in units of the elevation matrix (scaled by \code{zscale}).
+If left \code{NULL}, this will be just the elevation value at ths surface, offset by \code{offset}. If a single value,
 the OBJ will be rendered at that altitude.}
 
-\item{xyz}{Default `NULL`, ignored. A 3 column numeric matrix, with each row specifying the x/y/z 
+\item{xyz}{Default \code{NULL}, ignored. A 3 column numeric matrix, with each row specifying the x/y/z
 coordinates of the OBJ model(s). Overrides lat/long/altitude and ignores extent to plot the OBJ in raw rgl coordinates.}
 
-\item{zscale}{Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.}
+\item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.}
 
-\item{heightmap}{Default `NULL`. Automatically extracted from the rgl window--only use if auto-extraction
+\item{heightmap}{Default \code{NULL}. Automatically extracted from the rgl window--only use if auto-extraction
 of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
 All points are assumed to be evenly spaced.}
 
-\item{load_normals}{Default `TRUE`. Whether to load normals for the 3D model.}
+\item{load_normals}{Default \code{TRUE}. Whether to load normals for the 3D model.}
 
-\item{change_material}{Default `TRUE`. Whether to change the raymesh material (to customize the color).}
+\item{change_material}{Default \code{TRUE}. Whether to change the raymesh material (to customize the color).}
 
-\item{color}{Default `black`. Color of the 3D model, if `load_material = FALSE`.}
+\item{color}{Default \code{black}. Color of the 3D model, if \code{load_material = FALSE}.}
 
-\item{offset}{Default `5`. Offset of the track from the surface, if `altitude = NULL`.}
+\item{offset}{Default \code{5}. Offset of the track from the surface, if \code{altitude = NULL}.}
 
-\item{obj_zscale}{Default `FALSE`. Whether to scale the size of the OBJ by zscale to have it match
+\item{obj_zscale}{Default \code{FALSE}. Whether to scale the size of the OBJ by zscale to have it match
 the size of the map. If zscale is very big, this will make the model very small.}
 
-\item{swap_yz}{Default `NULL`, defaults to `FALSE` unless plotting raw coordinates (no lat or long passed).
-Whether to swap and Y and Z axes. (Y axis is vertical in 
+\item{swap_yz}{Default \code{NULL}, defaults to \code{FALSE} unless plotting raw coordinates (no lat or long passed).
+Whether to swap and Y and Z axes. (Y axis is vertical in
 rayshader coordinates, but data is often provided with Z being vertical).}
 
-\item{angle}{Default `c(0,0,0)`. Angle of rotation around the x, y, and z axes. If this is a matrix or list,
+\item{angle}{Default \code{c(0,0,0)}. Angle of rotation around the x, y, and z axes. If this is a matrix or list,
 each row (or list entry) specifies the rotation of the nth model specified (number of rows/length of list must
-equal the length of `lat`/`long`).}
+equal the length of \code{lat}/\code{long}).}
 
-\item{scale}{Default `c(1,1,1)`. Amount to scale the 3D model in the x, y, and z axes. If this is a matrix or list,
+\item{scale}{Default \code{c(1,1,1)}. Amount to scale the 3D model in the x, y, and z axes. If this is a matrix or list,
 each row (or list entry) specifies the scale of the nth model specified (number of rows/length of list must
-equal the length of `lat`/`long`).}
+equal the length of \code{lat}/\code{long}).}
 
-\item{clear_previous}{Default `FALSE`. If `TRUE`, it will clear all existing points.}
+\item{clear_previous}{Default \code{FALSE}. If \code{TRUE}, it will clear all existing points.}
 
-\item{baseshape}{Default `rectangle`. Shape of the base. Options are `c("rectangle","circle","hex")`.}
+\item{baseshape}{Default \code{rectangle}. Shape of the base. Options are \code{c("rectangle","circle","hex")}.}
 
-\item{flat_shading}{Default `FALSE`. If `TRUE`, this will use rgl's flat shading.}
+\item{flat_shading}{Default \code{FALSE}. If \code{TRUE}, this will use rgl's flat shading.}
 
-\item{lit}{Default `TRUE`. Whether to light the polygons.}
+\item{lit}{Default \code{TRUE}. Whether to light the polygons.}
 
-\item{light_altitude}{Default `c(45, 60)`. Degree(s) from the horizon from which to light the polygons.}
+\item{light_altitude}{Default \code{c(45, 60)}. Degree(s) from the horizon from which to light the polygons.}
 
-\item{light_direction}{Default `c(45, 60)`. Degree(s) from north from which to light the polygons.}
+\item{light_direction}{Default \code{c(45, 60)}. Degree(s) from north from which to light the polygons.}
 
-\item{light_intensity}{Default `0.3`. Intensity of the specular highlight on the polygons.}
+\item{light_intensity}{Default \code{0.3}. Intensity of the specular highlight on the polygons.}
 
-\item{light_relative}{Default `FALSE`. Whether the light direction should be taken relative to the camera,
+\item{light_relative}{Default \code{FALSE}. Whether the light direction should be taken relative to the camera,
 or absolute.}
 
-\item{rgl_tag}{Default `""`. Tag to add to the rgl scene id, will be prefixed by `"objraymsh"`}
+\item{rgl_tag}{Default \code{""}. Tag to add to the rgl scene id, will be prefixed by \code{"objraymsh"}}
 
-\item{...}{Additional arguments to pass to `rgl::triangles3d()`.}
+\item{...}{Additional arguments to pass to \code{rgl::triangles3d()}.}
 }
 \description{
 Adds 3D raymesh model to the current scene, using latitude/longitude or coordinates in the reference
-system defined by the extent object. If no altitude is provided, the raymesh will be elevated a constant offset 
+system defined by the extent object. If no altitude is provided, the raymesh will be elevated a constant offset
 above the heightmap. If the raymesh goes off the edge, the raymesh will be filtered out.
 
 If no latitudes or longitudes are passed in, the raymesh will be plotted in the coordinate system set by the user-specified
-`extent` argument as-is. Use this alongside `save_multipolygonz_to_obj()` to plot 3D polygons imported from geospatial sources
-in the proper location (but for ease of use, use `render_multipolygonz()` to plot this data directly).
+\code{extent} argument as-is. Use this alongside \code{\link[=save_multipolygonz_to_obj]{save_multipolygonz_to_obj()}} to plot 3D polygons imported from geospatial sources
+in the proper location (but for ease of use, use \code{\link[=render_multipolygonz]{render_multipolygonz()}} to plot this data directly).
 }
 \examples{
 if(run_documentation()) {

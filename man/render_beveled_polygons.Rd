@@ -39,97 +39,97 @@ render_beveled_polygons(
 )
 }
 \arguments{
-\item{polygon}{`sf` object, "SpatialPolygon" `sp` object,  or xy coordinates
-of polygon represented in a way that can be processed by `xy.coords()`.  If
+\item{polygon}{\code{sf} object, "SpatialPolygon" \code{sp} object,  or xy coordinates
+of polygon represented in a way that can be processed by \code{xy.coords()}.  If
 xy-coordinate based polygons are open, they will be closed by adding an
 edge from the last point to the first.}
 
-\item{extent}{Either an object representing the spatial extent of the 3D scene 
-(either from the `raster`, `terra`, `sf`, or `sp` packages), 
-a length-4 numeric vector specifying `c("xmin", "xmax", "ymin", "ymax")`, or the spatial object (from 
+\item{extent}{Either an object representing the spatial extent of the 3D scene
+(either from the \code{raster}, \code{terra}, \code{sf}, or \code{sp} packages),
+a length-4 numeric vector specifying \code{c("xmin", "xmax", "ymin", "ymax")}, or the spatial object (from
 the previously aforementioned packages) which will be automatically converted to an extent object.}
 
-\item{material}{Default `"grey80"`. If a color string, this will specify the color of the sides/base of the polygon. 
-Alternatively (for more customization), this can be a r`ayvertex::material_list()` object to specify
-the full color/appearance/material options for the resulting `ray_mesh` mesh.}
+\item{material}{Default \code{"grey80"}. If a color string, this will specify the color of the sides/base of the polygon.
+Alternatively (for more customization), this can be a r\code{ayvertex::material_list()} object to specify
+the full color/appearance/material options for the resulting \code{ray_mesh} mesh.}
 
-\item{bevel_material}{Default `NA`, defaults to the material specified in `material`. If a color string, this will specify the color of the polygon bevel. 
-Alternatively (for more customization), this can be a `rayvertex::material_list()` object to specify
-the full color/appearance/material options for the resulting `ray_mesh` mesh.}
+\item{bevel_material}{Default \code{NA}, defaults to the material specified in \code{material}. If a color string, this will specify the color of the polygon bevel.
+Alternatively (for more customization), this can be a \code{rayvertex::material_list()} object to specify
+the full color/appearance/material options for the resulting \code{ray_mesh} mesh.}
 
-\item{angle}{Default `45`. Angle of the bevel.}
+\item{angle}{Default \code{45}. Angle of the bevel.}
 
-\item{bevel_width}{Default `5`. Width of the bevel.}
+\item{bevel_width}{Default \code{5}. Width of the bevel.}
 
-\item{width_raw_units}{Default `FALSE`. Whether the bevel width should be measured in raw display units,
+\item{width_raw_units}{Default \code{FALSE}. Whether the bevel width should be measured in raw display units,
 or the actual units of the map.}
 
-\item{bevel}{Default `NULL`. A list with `x`/`y` components that specify a bevel profile. See `raybevel::generate_bevel()`}
+\item{bevel}{Default \code{NULL}. A list with \code{x}/\code{y} components that specify a bevel profile. See \code{raybevel::generate_bevel()}}
 
-\item{zscale}{Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.}
+\item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.}
 
-\item{bevel_height}{Default `1`. Height from the base of the polygon to the start of the beveled top.}
+\item{bevel_height}{Default \code{1}. Height from the base of the polygon to the start of the beveled top.}
 
-\item{base_height}{Default `0`. Height of the base of the polygon.}
+\item{base_height}{Default \code{0}. Height of the base of the polygon.}
 
-\item{raw_heights}{Default `FALSE`. A logical flag indicating whether the `bevel_heights` are already 
+\item{raw_heights}{Default \code{FALSE}. A logical flag indicating whether the \code{bevel_heights} are already
 in raw format and do not need to be multiplied by the maximum time of the skeleton.
-See the documentation for `raybevel::generate_beveled_polygon()` for more info.}
+See the documentation for \code{raybevel::generate_beveled_polygon()} for more info.}
 
-\item{raw_offsets}{Default `FALSE`. A logical flag indicating whether the `bevel_offsets` are already 
-in raw format and do not need to be multiplied by the maximum time of the skeleton. 
-See the documentation for `raybevel::generate_beveled_polygon()` for more info.}
+\item{raw_offsets}{Default \code{FALSE}. A logical flag indicating whether the \code{bevel_offsets} are already
+in raw format and do not need to be multiplied by the maximum time of the skeleton.
+See the documentation for \code{raybevel::generate_beveled_polygon()} for more info.}
 
-\item{heights_relative_to_centroid}{Default `FALSE`. Whether the heights should be measured in absolute
+\item{heights_relative_to_centroid}{Default \code{FALSE}. Whether the heights should be measured in absolute
 terms, or relative to the centroid of the polygon.}
 
-\item{set_max_height}{Default `FALSE`. A logical flag that controls whether to set the max height of the roof based on the `max_height` argument.}
+\item{set_max_height}{Default \code{FALSE}. A logical flag that controls whether to set the max height of the roof based on the \code{max_height} argument.}
 
-\item{max_height}{Default `1`. The maximum height of the polygon.}
+\item{max_height}{Default \code{1}. The maximum height of the polygon.}
 
-\item{scale_all_max}{Default `FALSE`. If passing in a list of multiple skeletons with polygons, whether to scale each polygon to the overall
+\item{scale_all_max}{Default \code{FALSE}. If passing in a list of multiple skeletons with polygons, whether to scale each polygon to the overall
 max height, or whether to scale each max height to the maximum internal distance in the polygon.}
 
-\item{data_column_top}{Default `NULL`. A string indicating the column in the `sf` object to use 
+\item{data_column_top}{Default \code{NULL}. A string indicating the column in the \code{sf} object to use
 to specify the top of the beveled polygon.}
 
-\item{data_column_bottom}{Default `NULL`. A string indicating the column in the `sf` object to use 
+\item{data_column_bottom}{Default \code{NULL}. A string indicating the column in the \code{sf} object to use
 to specify the bottom of the beveled polygon.}
 
-\item{heightmap}{Default `NULL`. Automatically extracted from the rgl window--only use if auto-extraction
+\item{heightmap}{Default \code{NULL}. Automatically extracted from the rgl window--only use if auto-extraction
 of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
- All points are assumed to be evenly spaced.}
+All points are assumed to be evenly spaced.}
 
-\item{scale_data}{Default `1`. If specifying `data_column_top` or `data_column_bottom`, how
+\item{scale_data}{Default \code{1}. If specifying \code{data_column_top} or \code{data_column_bottom}, how
 much to scale that value when rendering.}
 
-\item{holes}{Default `0`. If passing in a polygon directly, this specifies which index represents
-the holes in the polygon. See the `earcut` function in the `decido` package for more information.}
+\item{holes}{Default \code{0}. If passing in a polygon directly, this specifies which index represents
+the holes in the polygon. See the \code{earcut} function in the \code{decido} package for more information.}
 
-\item{alpha}{Default `1`. Transparency of the polygons.}
+\item{alpha}{Default \code{1}. Transparency of the polygons.}
 
-\item{lit}{Default `TRUE`. Whether to light the polygons.}
+\item{lit}{Default \code{TRUE}. Whether to light the polygons.}
 
-\item{flat_shading}{Default `FALSE`. Set to `TRUE` to have nicer shading on the 3D polygons. This comes
+\item{flat_shading}{Default \code{FALSE}. Set to \code{TRUE} to have nicer shading on the 3D polygons. This comes
 with the slight penalty of increasing the memory use of the scene due to vertex duplication. This
 will not affect software or high quality renders.}
 
-\item{light_altitude}{Default `c(45, 30)`. Degree(s) from the horizon from which to light the polygons.}
+\item{light_altitude}{Default \code{c(45, 30)}. Degree(s) from the horizon from which to light the polygons.}
 
-\item{light_direction}{Default `c(315, 225)`. Degree(s) from north from which to light the polygons.}
+\item{light_direction}{Default \code{c(315, 225)}. Degree(s) from north from which to light the polygons.}
 
-\item{light_intensity}{Default `1`. Intensity of the specular highlight on the polygons.}
+\item{light_intensity}{Default \code{1}. Intensity of the specular highlight on the polygons.}
 
-\item{light_relative}{Default `FALSE`. Whether the light direction should be taken relative to the camera,
+\item{light_relative}{Default \code{FALSE}. Whether the light direction should be taken relative to the camera,
 or absolute.}
 
-\item{clear_previous}{Default `FALSE`. If `TRUE`, it will clear all existing polygons.}
+\item{clear_previous}{Default \code{FALSE}. If \code{TRUE}, it will clear all existing polygons.}
 
-\item{...}{Additional arguments to pass to `rgl::triangles3d()`.}
+\item{...}{Additional arguments to pass to \code{rgl::triangles3d()}.}
 }
 \description{
-Adds beveled polygon to the scene using the `raybevel` package. See
-the `raybevel::generate_beveled_polygon()` function for more information.
+Adds beveled polygon to the scene using the \code{raybevel} package. See
+the \code{raybevel::generate_beveled_polygon()} function for more information.
 }
 \examples{
 

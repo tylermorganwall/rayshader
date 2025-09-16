@@ -15,15 +15,15 @@ resize_matrix(
 \arguments{
 \item{heightmap}{The elevation matrix.}
 
-\item{scale}{Default `0.5`. The amount to scale down the matrix. Scales using bilinear interpolation.}
+\item{scale}{Default \code{0.5}. The amount to scale down the matrix. Scales using bilinear interpolation.}
 
-\item{width}{Default `NULL`.  Alternative to `scale` argument. The desired output width. If `width` is less than 1, it will be interpreted as a scaling factor--
+\item{width}{Default \code{NULL}.  Alternative to \code{scale} argument. The desired output width. If \code{width} is less than 1, it will be interpreted as a scaling factor--
 e.g. 0.5 would halve the resolution for the width.}
 
-\item{height}{Default `NULL`. Alternative to `scale` argument. The desired output width. If `height` is less than 1, it will be interpreted as a scaling factor--
+\item{height}{Default \code{NULL}. Alternative to \code{scale} argument. The desired output width. If \code{height} is less than 1, it will be interpreted as a scaling factor--
 e.g. 0.5 would halve the resolution for the height.}
 
-\item{method}{Default `bilinear`. Method of interpolation. Alteratively `cubic`, which is slightly smoother, although
+\item{method}{Default \code{bilinear}. Method of interpolation. Alteratively \code{cubic}, which is slightly smoother, although
 current implementation slightly scales the image.}
 }
 \description{

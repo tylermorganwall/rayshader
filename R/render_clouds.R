@@ -99,7 +99,7 @@ generate_cloud_layer = function(heightmap, sun_altitude = 90, sun_angle=315, lev
 #'
 #'Note: Underlying layers with transparency can cause rendering issues in rgl.
 #'
-#'@param heightmap A two-dimensional matrix, where each entry in the matrix is the elevation at that point. This is used by `render_clouds()` to 
+#'@param heightmap A two-dimensional matrix, where each entry in the matrix is the elevation at that point. This is used by [render_clouds()] to 
 #'calculate the regions the clouds should be rendered in.
 #'@param start_altitude Default `1000`. The bottom of the cloud layer.
 #'@param end_altitude Default `2000`. The top of the cloud layer.
@@ -339,12 +339,12 @@ raymarch_cloud_layer = function(heightmap, sun_altitude = 90, sun_angle=315, lev
 #'@title Cloud Shade
 #'
 #'@description Render shadows from the 3D floating cloud layer on the ground. Use this function
-#'to add shadows to the map with the `add_shadow()` function.
+#'to add shadows to the map with the [add_shadow()] function.
 #'
-#'For realistic results, argument should match those passed to `render_clouds()`. The exception to this
+#'For realistic results, argument should match those passed to [render_clouds()]. The exception to this
 #'is `attenuation_coef`, which can be used to adjust the darkness of the resulting shadows.
 #'
-#'@param heightmap A two-dimensional matrix, where each entry in the matrix is the elevation at that point. This is used by `render_clouds()` to 
+#'@param heightmap A two-dimensional matrix, where each entry in the matrix is the elevation at that point. This is used by [render_clouds()] to 
 #'calculate the regions the clouds should be rendered in.
 #'@param start_altitude Default `1000`. The bottom of the cloud layer.
 #'@param end_altitude Default `2000`. The top of the cloud layer.

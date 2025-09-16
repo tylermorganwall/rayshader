@@ -7,9 +7,9 @@
 render_resize_window(width = NULL, height = NULL)
 }
 \arguments{
-\item{width}{Default `NULL`, no change to the current value. New window width.}
+\item{width}{Default \code{NULL}, no change to the current value. New window width.}
 
-\item{height}{Default `NULL`, no change to the current value. New window height}
+\item{height}{Default \code{NULL}, no change to the current value. New window height}
 }
 \value{
 None

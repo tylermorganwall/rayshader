@@ -19,36 +19,36 @@ generate_line_overlay(
 )
 }
 \arguments{
-\item{geometry}{An `sf` object with LINESTRING geometry.}
+\item{geometry}{An \code{sf} object with LINESTRING geometry.}
 
-\item{extent}{Either an object representing the spatial extent of the scene 
-(either from the `raster`, `terra`, `sf`, or `sp` packages), 
-a length-4 numeric vector specifying `c("xmin", "xmax","ymin","ymax")`, or the spatial object (from 
+\item{extent}{Either an object representing the spatial extent of the scene
+(either from the \code{raster}, \code{terra}, \code{sf}, or \code{sp} packages),
+a length-4 numeric vector specifying \code{c("xmin", "xmax","ymin","ymax")}, or the spatial object (from
 the previously aforementioned packages) which will be automatically converted to an extent object.}
 
-\item{heightmap}{Default `NULL`. The original height map. Pass this in to extract the dimensions of the resulting 
+\item{heightmap}{Default \code{NULL}. The original height map. Pass this in to extract the dimensions of the resulting
 overlay automatically.}
 
-\item{width}{Default `NA`. Width of the resulting overlay. Default the same dimensions as height map.}
+\item{width}{Default \code{NA}. Width of the resulting overlay. Default the same dimensions as height map.}
 
-\item{height}{Default `NA`. Width of the resulting overlay. Default the same dimensions as height map.}
+\item{height}{Default \code{NA}. Width of the resulting overlay. Default the same dimensions as height map.}
 
-\item{resolution_multiply}{Default `1`. If passing in `heightmap` instead of width/height, amount to 
-increase the resolution of the overlay, which should make lines/polygons/text finer. 
-Should be combined with `add_overlay(rescale_original = TRUE)` to ensure those added details are captured
+\item{resolution_multiply}{Default \code{1}. If passing in \code{heightmap} instead of width/height, amount to
+increase the resolution of the overlay, which should make lines/polygons/text finer.
+Should be combined with \link{add_overlay(rescale_original = TRUE)} to ensure those added details are captured
 in the final map.}
 
-\item{color}{Default `black`. Color of the lines.}
+\item{color}{Default \code{black}. Color of the lines.}
 
-\item{linewidth}{Default `1`. Line width.}
+\item{linewidth}{Default \code{1}. Line width.}
 
-\item{lty}{Default `1`. Line type. `1` is solid, `2` is dashed, `3` is dotted,`4` is dot-dash,
-`5` is long dash, and `6` is dash-long-dash.}
+\item{lty}{Default \code{1}. Line type. \code{1} is solid, \code{2} is dashed, \code{3} is dotted,\code{4} is dot-dash,
+\code{5} is long dash, and \code{6} is dash-long-dash.}
 
-\item{data_column_width}{Default `NULL`. The numeric column to map the width to. The maximum width will be the value
-specified in `linewidth`.}
+\item{data_column_width}{Default \code{NULL}. The numeric column to map the width to. The maximum width will be the value
+specified in \code{linewidth}.}
 
-\item{offset}{Default `c(0,0)`. Horizontal and vertical offset to apply to the line, in units of `geometry`.}
+\item{offset}{Default \code{c(0,0)}. Horizontal and vertical offset to apply to the line, in units of \code{geometry}.}
 }
 \value{
 Semi-transparent overlay with contours.

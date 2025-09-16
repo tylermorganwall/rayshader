@@ -2,7 +2,7 @@
 #'
 #'@description Displays the shaded map in 3D with the `rgl` package. 
 #'
-#'Note: Calling `plot_3d()` resets the scene cache for the `render_snapshot()`, `render_depth()`, and `render_highquality()`
+#'Note: Calling [plot_3d()] resets the scene cache for the [render_snapshot()], [render_depth()], and [render_highquality()]
 #'
 #'@param hillshade Hillshade/image to be added to 3D surface map.
 #'@param heightmap A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.
@@ -56,16 +56,16 @@
 #'of 3D models saved to disk.
 #'@param max_error Default `0.001`. Maximum allowable error when triangulating the height map,
 #'when `triangulate = TRUE`. Increase this if you encounter problems with 3D performance, want
-#'to decrease render time with `render_highquality()`, or need 
-#'to save a smaller 3D OBJ file to disk with `save_obj()`,
+#'to decrease render time with [render_highquality()], or need 
+#'to save a smaller 3D OBJ file to disk with [save_obj()],
 #'@param max_tri Default `0`, which turns this setting off and uses `max_error`. 
 #'Maximum number of triangles allowed with triangulating the
 #'height map, when `triangulate = TRUE`. Increase this if you encounter problems with 3D performance, want
-#'to decrease render time with `render_highquality()`, or need 
-#'to save a smaller 3D OBJ file to disk with `save_obj()`,
+#'to decrease render time with [render_highquality()], or need 
+#'to save a smaller 3D OBJ file to disk with [save_obj()],
 #'@param verbose Default `TRUE`, if `interactive()`. Prints information about the mesh triangulation
 #'if `triangulate = TRUE`.
-#'@param plot_new Default `TRUE`, opens new window with each `plot_3d()` call. If `FALSE`, 
+#'@param plot_new Default `TRUE`, opens new window with each [plot_3d()] call. If `FALSE`, 
 #'the data will be plotted in the same window.
 #'@param close_previous Default `TRUE`. Closes any previously open `rgl` window. If `FALSE`, 
 #'old windows will be kept open.

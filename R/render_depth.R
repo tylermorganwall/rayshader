@@ -19,10 +19,10 @@
 #'@param aberration Default `0`. Adds chromatic aberration to the image. Maximum of `1`. 
 #'@param gamma_correction Default `TRUE`. Controls gamma correction when adding colors. Default exponent of 2.2.
 #'@param transparent_water Default `FALSE`. If `TRUE`, depth is determined without water layer. User will have to re-render the water
-#'layer with `render_water()` if they want to recreate the water layer.
-#'@param heightmap Default `NULL`. The height matrix for the scene. Passing this will allow `render_depth()` 
+#'layer with [render_water()] if they want to recreate the water layer.
+#'@param heightmap Default `NULL`. The height matrix for the scene. Passing this will allow [render_depth()] 
 #'to automatically redraw the water layer if `transparent_water = TRUE`.
-#'@param zscale Default `NULL`. The zscale value for the heightmap. Passing this will allow `render_depth()` 
+#'@param zscale Default `NULL`. The zscale value for the heightmap. Passing this will allow [render_depth()] 
 #'to automatically redraw the water layer if `transparent_water = TRUE`.
 #'@param title_text Default `NULL`. Text. Adds a title to the image, using magick::image_annotate. 
 #'@param title_offset Default `c(20,20)`. Distance from the top-left (default, `gravity` direction in 
@@ -54,14 +54,14 @@
 #'@param software_render Default `FALSE`. If `TRUE`, rayshader will use the rayvertex package to render the snapshot, which
 #'is not constrained by the screen size or requires OpenGL. 
 #'@param cache_scene Default `FALSE`. Whether to cache the current scene to memory so it does not have to be converted to a `raymesh` object 
-#'each time `render_snapshot()` is called. If `TRUE` and a scene has been cached, it will be used when rendering.
+#'each time [render_snapshot()] is called. If `TRUE` and a scene has been cached, it will be used when rendering.
 #'@param reset_scene_cache Default `FALSE`. Resets the scene cache before rendering.
 #'@param background Default `"white"`. Background color when `software_render = TRUE`.
 #'@param text_angle Default `NULL`, which forces the text always to face the camera. If a single angle (degrees),
 #'will specify the absolute angle all the labels are facing. If three angles, this will specify all three orientations
 #'(relative to the x,y, and z axes) of the text labels.
 #'@param text_size Default `10`. Height of the text.
-#'@param point_radius Default `0.5`. Radius of 3D points (rendered with `render_points()`.
+#'@param point_radius Default `0.5`. Radius of 3D points (rendered with [render_points()].
 #'@param line_offset Default `1e-7`. Small number indicating the offset in the scene to apply to lines if using software rendering. Increase this if your lines 
 #'aren't showing up, or decrease it if lines are appearing through solid objects.
 #'@param camera_location Default `NULL`. Custom position of the camera. The `FOV`, `width`, and `height` arguments will still

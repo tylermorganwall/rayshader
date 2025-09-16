@@ -27,50 +27,50 @@ generate_compass_overlay(
 )
 }
 \arguments{
-\item{x}{Default `NULL`. The horizontal percentage across the map (measured from the bottom-left corner) where
+\item{x}{Default \code{NULL}. The horizontal percentage across the map (measured from the bottom-left corner) where
 the compass is located.}
 
-\item{y}{Default `NULL`. The vertical percentage across the map (measured from the bottom-left corner) where
+\item{y}{Default \code{NULL}. The vertical percentage across the map (measured from the bottom-left corner) where
 the compass is located.}
 
-\item{size}{Default `0.05`. Size of the compass, in percentage of the map size..}
+\item{size}{Default \code{0.05}. Size of the compass, in percentage of the map size..}
 
-\item{text_size}{Default `1`. Text size.}
+\item{text_size}{Default \code{1}. Text size.}
 
-\item{bearing}{Default `0`. Angle (in degrees) of north.}
+\item{bearing}{Default \code{0}. Angle (in degrees) of north.}
 
-\item{heightmap}{Default `NULL`. The original height map. Pass this in to extract the dimensions of the resulting 
+\item{heightmap}{Default \code{NULL}. The original height map. Pass this in to extract the dimensions of the resulting
 RGB image array automatically.}
 
-\item{width}{Default `NA`. Width of the resulting image array. Default the same dimensions as height map.}
+\item{width}{Default \code{NA}. Width of the resulting image array. Default the same dimensions as height map.}
 
-\item{height}{Default `NA`. Width of the resulting image array. Default the same dimensions as height map.}
+\item{height}{Default \code{NA}. Width of the resulting image array. Default the same dimensions as height map.}
 
-\item{resolution_multiply}{Default `1`. If passing in `heightmap` instead of width/height, amount to 
-increase the resolution of the overlay, which should make lines/polygons finer. 
-Should be combined with `add_overlay(rescale_original = TRUE)` to ensure those added details are captured
+\item{resolution_multiply}{Default \code{1}. If passing in \code{heightmap} instead of width/height, amount to
+increase the resolution of the overlay, which should make lines/polygons finer.
+Should be combined with \link{add_overlay(rescale_original = TRUE)} to ensure those added details are captured
 in the final map.}
 
-\item{color1}{Default `white`. Primary color of the compass.}
+\item{color1}{Default \code{white}. Primary color of the compass.}
 
-\item{color2}{Default `black`. Secondary color of the symcompass.}
+\item{color2}{Default \code{black}. Secondary color of the symcompass.}
 
-\item{text_color}{Default `black`. Text color.}
+\item{text_color}{Default \code{black}. Text color.}
 
-\item{border_color}{Default `black`. Border color of the scale bar.}
+\item{border_color}{Default \code{black}. Border color of the scale bar.}
 
-\item{border_width}{Default `1`. Width of the scale bar border.}
+\item{border_width}{Default \code{1}. Width of the scale bar border.}
 
-\item{halo_color}{Default `NA`, no halo. If a color is specified, the compass will be surrounded by a halo
+\item{halo_color}{Default \code{NA}, no halo. If a color is specified, the compass will be surrounded by a halo
 of this color.}
 
-\item{halo_expand}{Default `1`. Number of pixels to expand the halo.}
+\item{halo_expand}{Default \code{1}. Number of pixels to expand the halo.}
 
-\item{halo_alpha}{Default `1`. Transparency of the halo.}
+\item{halo_alpha}{Default \code{1}. Transparency of the halo.}
 
-\item{halo_offset}{Default `c(0,0)`. Horizontal and vertical offset to apply to the halo, in percentage of the image.}
+\item{halo_offset}{Default \code{c(0,0)}. Horizontal and vertical offset to apply to the halo, in percentage of the image.}
 
-\item{halo_blur}{Default `1`. Amount of blur to apply to the halo. Values greater than `30` won't result in further blurring.}
+\item{halo_blur}{Default \code{1}. Amount of blur to apply to the halo. Values greater than \code{30} won't result in further blurring.}
 }
 \value{
 Semi-transparent overlay with a compass.

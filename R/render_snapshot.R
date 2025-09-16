@@ -34,15 +34,15 @@
 #'@param software_render Default `FALSE`. If `TRUE`, rayshader will use the rayvertex package to render the snapshot, which
 #'is not constrained by the screen size or requires OpenGL. 
 #'@param cache_scene Default `FALSE`. Whether to cache the current scene to memory so it does not have to be converted to a `raymesh` object 
-#'each time `render_snapshot()` is called. If `TRUE` and a scene has been cached, it will be used when rendering.
+#'each time [render_snapshot()] is called. If `TRUE` and a scene has been cached, it will be used when rendering.
 #'@param reset_scene_cache Default `FALSE`. Resets the scene cache before rendering.
 #'@param background Default `NULL`, defaults to device background. Background color when `software_render = TRUE`.
 #'@param text_angle Default `NULL`, which forces the text always to face the camera. If a single angle (degrees),
 #'will specify the absolute angle all the labels are facing. If three angles, this will specify all three orientations
 #'(relative to the x,y, and z axes) of the text labels.
 #'@param text_size Default `30`. Height of the text.
-#'@param point_radius Default `0.5`. Radius of 3D points (rendered with `render_points()`). This scales the existing
-#'value of size specified in `render_points()`.
+#'@param point_radius Default `0.5`. Radius of 3D points (rendered with [render_points()]). This scales the existing
+#'value of size specified in [render_points()].
 #'@param line_offset Default `1e-7`. Small number indicating the offset in the scene to apply to lines if using software rendering. Increase this if your lines 
 #'aren't showing up, or decrease it if lines are appearing through solid objects.
 #'@param thick_lines Default `TRUE`. If `software_render = TRUE`, this will render path segments as thick cylinders. Otherwise, it will 

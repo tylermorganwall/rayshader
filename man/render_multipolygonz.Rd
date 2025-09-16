@@ -22,40 +22,40 @@ render_multipolygonz(
 \arguments{
 \item{sfobj}{An sf object with MULTIPOLYGON Z geometry.}
 
-\item{extent}{Either an object representing the spatial extent of the scene 
-(either from the `raster`, `terra`, `sf`, or `sp` packages), 
-a length-4 numeric vector specifying `c("xmin", "xmax","ymin","ymax")`, or the spatial object (from 
+\item{extent}{Either an object representing the spatial extent of the scene
+(either from the \code{raster}, \code{terra}, \code{sf}, or \code{sp} packages),
+a length-4 numeric vector specifying \code{c("xmin", "xmax","ymin","ymax")}, or the spatial object (from
 the previously aforementioned packages) which will be automatically converted to an extent object.}
 
-\item{zscale}{Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.}
+\item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.}
 
-\item{heightmap}{Default `NULL`. Automatically extracted from the rgl window--only use if auto-extraction
+\item{heightmap}{Default \code{NULL}. Automatically extracted from the rgl window--only use if auto-extraction
 of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
 All points are assumed to be evenly spaced.}
 
-\item{color}{Default `black`. Color of the 3D model, if `load_material = FALSE`.}
+\item{color}{Default \code{black}. Color of the 3D model, if \code{load_material = FALSE}.}
 
-\item{offset}{Default `5`. Offset of the track from the surface, if `altitude = NULL`.}
+\item{offset}{Default \code{5}. Offset of the track from the surface, if \code{altitude = NULL}.}
 
-\item{obj_zscale}{Default `TRUE`. Whether to scale the size of the OBJ by zscale to have it match
+\item{obj_zscale}{Default \code{TRUE}. Whether to scale the size of the OBJ by zscale to have it match
 the size of the map. If zscale is very big, this will make the model very small.}
 
-\item{swap_yz}{Default `TRUE`. Whether to swap and Y and Z axes. (Y axis is vertical in 
+\item{swap_yz}{Default \code{TRUE}. Whether to swap and Y and Z axes. (Y axis is vertical in
 rayshader coordinates, but data is often provided with Z being vertical).}
 
-\item{clear_previous}{Default `FALSE`. If `TRUE`, it will clear all existing points.}
+\item{clear_previous}{Default \code{FALSE}. If \code{TRUE}, it will clear all existing points.}
 
-\item{baseshape}{Default `rectangle`. Shape of the base. Options are `c("rectangle","circle","hex")`.}
+\item{baseshape}{Default \code{rectangle}. Shape of the base. Options are \code{c("rectangle","circle","hex")}.}
 
-\item{rgl_tag}{Default `""`. Tag to add to the rgl scene id, will be prefixed by `"obj"`}
+\item{rgl_tag}{Default \code{""}. Tag to add to the rgl scene id, will be prefixed by \code{"obj"}}
 
-\item{...}{Additional arguments to pass to `rgl::triangles3d()`.}
+\item{...}{Additional arguments to pass to \code{rgl::triangles3d()}.}
 }
 \description{
 Adds MULTIPOLYGONZ will be plotted in the coordinate system set by the user-specified
-`extent` argument as-is. 
+\code{extent} argument as-is.
 
-You can also use `save_multipolygonz_to_obj()` manually to convert sf objects
+You can also use \code{\link[=save_multipolygonz_to_obj]{save_multipolygonz_to_obj()}} manually to convert sf objects
 }
 \examples{
 run_examples = length(find.package("sf", quiet = TRUE)) &&

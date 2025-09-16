@@ -9,9 +9,9 @@ make_base_triangulated(tris, basedepth = 0, basecolor = "grey20")
 \arguments{
 \item{tris}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.}
 
-\item{basedepth}{Default `0`.}
+\item{basedepth}{Default \code{0}.}
 
-\item{basecolor}{Default `grey20`.}
+\item{basecolor}{Default \code{grey20}.}
 }
 \description{
 Makes the base below the 3D elevation map.

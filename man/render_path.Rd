@@ -30,75 +30,75 @@ render_path(
 }
 \arguments{
 \item{lat}{Vector of latitudes (or other coordinate in the same coordinate reference system as extent).
-Can also be an `sf` or `SpatialLineDataFrame` object.}
+Can also be an \code{sf} or \code{SpatialLineDataFrame} object.}
 
-\item{long}{Default `NULL`. Vector of longitudes (or other coordinate in the same coordinate reference system as extent).
-Ignored if lat is an `sf` or `SpatialLineDataFrame` object.}
+\item{long}{Default \code{NULL}. Vector of longitudes (or other coordinate in the same coordinate reference system as extent).
+Ignored if lat is an \code{sf} or \code{SpatialLineDataFrame} object.}
 
-\item{altitude}{Default `NULL`. Elevation of each point, in units of the elevation matrix (scaled by zscale).
-If left `NULL`, this will be just the elevation value at ths surface, offset by `offset`. If a single value, 
+\item{altitude}{Default \code{NULL}. Elevation of each point, in units of the elevation matrix (scaled by zscale).
+If left \code{NULL}, this will be just the elevation value at ths surface, offset by \code{offset}. If a single value,
 all data will be rendered at that altitude.}
 
-\item{groups}{Default `NULL`. Integer vector specifying the grouping of each lat/long path segment, if lat/long are
-specified as numeric vectors (as opposed to `sf` or `SpatialLineDataFrame` objects, where this information
+\item{groups}{Default \code{NULL}. Integer vector specifying the grouping of each lat/long path segment, if lat/long are
+specified as numeric vectors (as opposed to \code{sf} or \code{SpatialLineDataFrame} objects, where this information
 is built-in to the object).}
 
-\item{extent}{Either an object representing the spatial extent of the 3D scene 
-(either from the `raster`, `terra`, `sf`, or `sp` packages), 
-a length-4 numeric vector specifying `c("xmin", "xmax","ymin","ymax")`, or the spatial object (from 
+\item{extent}{Either an object representing the spatial extent of the 3D scene
+(either from the \code{raster}, \code{terra}, \code{sf}, or \code{sp} packages),
+a length-4 numeric vector specifying \code{c("xmin", "xmax","ymin","ymax")}, or the spatial object (from
 the previously aforementioned packages) which will be automatically converted to an extent object.}
 
-\item{zscale}{Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.}
+\item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.}
 
-\item{heightmap}{Default `NULL`. Pass this if not including an `altitude` argument, or if no extent passed. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
+\item{heightmap}{Default \code{NULL}. Pass this if not including an \code{altitude} argument, or if no extent passed. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
 All points are assumed to be evenly spaced.}
 
-\item{resample_evenly}{Default `FALSE`. If `TRUE`, this will re-sample the path evenly from beginning to end, which can help vastly
-reduce the number of points used to draw it (which can improve the performance of `render_highquality()` and `render_snapshot(software_render = TRUE)`).
-This function works only if `reorder = TRUE`, or if the sf object is already ordered from beginning to end.}
+\item{resample_evenly}{Default \code{FALSE}. If \code{TRUE}, this will re-sample the path evenly from beginning to end, which can help vastly
+reduce the number of points used to draw it (which can improve the performance of \code{\link[=render_highquality]{render_highquality()}} and \link{render_snapshot(software_render = TRUE)}).
+This function works only if \code{reorder = TRUE}, or if the sf object is already ordered from beginning to end.}
 
-\item{resample_n}{Default `360`. Number of breaks in which to evenly resample the line if `resample_evenly = TRUE`.}
+\item{resample_n}{Default \code{360}. Number of breaks in which to evenly resample the line if \code{resample_evenly = TRUE}.}
 
-\item{reorder}{Default `FALSE`. If `TRUE`, this will attempt to re-order the rows within an `sf` object with
-multiple paths to be one continuous, end-to-end path. This happens in two steps: merging duplicate 
-paths that have end points that match with another object (within `reorder_duplicate_tolerance` distance), and then
-merges them (within `reorder_merge_tolerance` distance) to form a continuous path.}
+\item{reorder}{Default \code{FALSE}. If \code{TRUE}, this will attempt to re-order the rows within an \code{sf} object with
+multiple paths to be one continuous, end-to-end path. This happens in two steps: merging duplicate
+paths that have end points that match with another object (within \code{reorder_duplicate_tolerance} distance), and then
+merges them (within \code{reorder_merge_tolerance} distance) to form a continuous path.}
 
-\item{reorder_first_index}{Default `1`. The index (row) of the `sf` object in which to begin the reordering
-process. This merges and reorders paths within `reorder_merge_tolerance` distance until it cannot 
+\item{reorder_first_index}{Default \code{1}. The index (row) of the \code{sf} object in which to begin the reordering
+process. This merges and reorders paths within \code{reorder_merge_tolerance} distance until it cannot
 merge any more, and then repeats the process in the opposite direction.}
 
-\item{reorder_duplicate_tolerance}{Default `0.1`. Lines that have start and end points (does not matter which)
-within this tolerance that match a line already processed (order determined by `reorder_first_index`) will be 
+\item{reorder_duplicate_tolerance}{Default \code{0.1}. Lines that have start and end points (does not matter which)
+within this tolerance that match a line already processed (order determined by \code{reorder_first_index}) will be
 discarded.}
 
-\item{reorder_merge_tolerance}{Default `1`. Lines that have start points that are within this distance 
-to a previously processed line's end point (order determined by `reorder_first_index`) will be reordered 
-within the `sf` object to form a continuous, end-to-end path.}
+\item{reorder_merge_tolerance}{Default \code{1}. Lines that have start points that are within this distance
+to a previously processed line's end point (order determined by \code{reorder_first_index}) will be reordered
+within the \code{sf} object to form a continuous, end-to-end path.}
 
-\item{simplify_tolerance}{Default `0` (no simplification). If greater than zero, simplifies
-the path to the tolerance specified. This happens after the data has been merged if `reorder = TRUE`. 
-If the input data is specified with long-lat coordinates and `sf_use_s2()` returns `TRUE`, 
+\item{simplify_tolerance}{Default \code{0} (no simplification). If greater than zero, simplifies
+the path to the tolerance specified. This happens after the data has been merged if \code{reorder = TRUE}.
+If the input data is specified with long-lat coordinates and \code{sf_use_s2()} returns \code{TRUE},
 then the value of simplify_tolerance must be specified in meters.}
 
-\item{linewidth}{Default `3`. The line width.}
+\item{linewidth}{Default \code{3}. The line width.}
 
-\item{color}{Default `black`. Color of the line.}
+\item{color}{Default \code{black}. Color of the line.}
 
-\item{antialias}{Default `FALSE`. If `TRUE`, the line with be have anti-aliasing applied. NOTE: anti-aliasing can cause some unpredictable behavior with transparent surfaces.}
+\item{antialias}{Default \code{FALSE}. If \code{TRUE}, the line with be have anti-aliasing applied. NOTE: anti-aliasing can cause some unpredictable behavior with transparent surfaces.}
 
-\item{offset}{Default `5`. Offset of the track from the surface, if `altitude = NULL`.}
+\item{offset}{Default \code{5}. Offset of the track from the surface, if \code{altitude = NULL}.}
 
-\item{clear_previous}{Default `FALSE`. If `TRUE`, it will clear all existing paths.}
+\item{clear_previous}{Default \code{FALSE}. If \code{TRUE}, it will clear all existing paths.}
 
-\item{return_coords}{Default `FALSE`. If `TRUE`, this will return the internal rayshader coordinates of the path, instead of 
+\item{return_coords}{Default \code{FALSE}. If \code{TRUE}, this will return the internal rayshader coordinates of the path, instead of
 plotting the line.}
 
-\item{tag}{Default `"path3d"`. The rgl tag to use when adding the path to the scene.}
+\item{tag}{Default \code{"path3d"}. The rgl tag to use when adding the path to the scene.}
 }
 \description{
 Adds a 3D path to the current scene, using latitude/longitude or coordinates in the reference
-system defined by the extent object. If no altitude is provided, the path will be elevated a constant offset 
+system defined by the extent object. If no altitude is provided, the path will be elevated a constant offset
 above the heightmap. If the path goes off the edge, the nearest height on the heightmap will be used.
 }
 \examples{

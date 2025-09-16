@@ -5,8 +5,8 @@
 #'above the heightmap. If the raymesh goes off the edge, the raymesh will be filtered out.
 #'
 #'If no latitudes or longitudes are passed in, the raymesh will be plotted in the coordinate system set by the user-specified
-#'`extent` argument as-is. Use this alongside `save_multipolygonz_to_obj()` to plot 3D polygons imported from geospatial sources
-#'in the proper location (but for ease of use, use `render_multipolygonz()` to plot this data directly).
+#'`extent` argument as-is. Use this alongside [save_multipolygonz_to_obj()] to plot 3D polygons imported from geospatial sources
+#'in the proper location (but for ease of use, use [render_multipolygonz()] to plot this data directly).
 #'
 #'@param raymesh `raymesh` object (see the rayvertex package for a description)
 #'@param extent Either an object representing the spatial extent of the scene 

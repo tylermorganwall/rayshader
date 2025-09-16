@@ -10,7 +10,7 @@
 #'@param cutoff Default `0.999`. The lower limit of the z-component of the unit normal vector to be classified as water.
 #'@param min_area Default length(heightmap)/400. Minimum area (in units of the height matrix x and y spacing) to be considered a body of water.
 #'@param max_height Default `NULL`. If passed, this number will specify the maximum height a point can be considered to be water.
-#'@param normalvectors Default `NULL`. Pre-computed array of normal vectors from the `calculate_normal` function. Supplying this will speed up water detection.
+#'@param normalvectors Default `NULL`. Pre-computed array of normal vectors from the [calculate_normal()] function. Supplying this will speed up water detection.
 #'@param keep_groups Default `FALSE`. If `TRUE`, the matrix returned will retain the numbered grouping information.
 #'@param progbar Default `FALSE`. If `TRUE`, turns on progress bar.
 #'@return Matrix indicating whether water was detected at that point. 1 indicates water, 0 indicates no water.

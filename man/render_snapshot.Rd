@@ -49,104 +49,104 @@ render_snapshot(
 \arguments{
 \item{filename}{Filename of snapshot. If missing, will display to current device.}
 
-\item{clear}{Default `FALSE`. If `TRUE`, the current `rgl` device will be cleared.}
+\item{clear}{Default \code{FALSE}. If \code{TRUE}, the current \code{rgl} device will be cleared.}
 
-\item{title_text}{Default `NULL`. Text. Adds a title to the image, using magick::image_annotate.}
+\item{title_text}{Default \code{NULL}. Text. Adds a title to the image, using magick::image_annotate.}
 
-\item{title_offset}{Default `c(20,20)`. Distance from the top-left (default, `gravity` direction in 
+\item{title_offset}{Default \code{c(20,20)}. Distance from the top-left (default, \code{gravity} direction in
 image_annotate) corner to offset the title.}
 
-\item{title_color}{Default `black`. Font color.}
+\item{title_color}{Default \code{black}. Font color.}
 
-\item{title_size}{Default `30`. Font size in pixels.}
+\item{title_size}{Default \code{30}. Font size in pixels.}
 
-\item{title_font}{Default `sans`. String with font family such as "sans", "mono", "serif", "Times", "Helvetica", 
+\item{title_font}{Default \code{sans}. String with font family such as "sans", "mono", "serif", "Times", "Helvetica",
 "Trebuchet", "Georgia", "Palatino" or "Comic Sans".}
 
-\item{title_bar_color}{Default `NA`. If a color, this will create a colored bar under the title.}
+\item{title_bar_color}{Default \code{NA}. If a color, this will create a colored bar under the title.}
 
-\item{title_bar_alpha}{Default `0.5`. Transparency of the title bar.}
+\item{title_bar_alpha}{Default \code{0.5}. Transparency of the title bar.}
 
-\item{title_just}{Default `left`. Justification of the title.}
+\item{title_just}{Default \code{left}. Justification of the title.}
 
-\item{image_overlay}{Default `NULL`. Either a string indicating the location of a png image to overlay
-over the image (transparency included), or a 4-layer RGBA array. This image will be resized to the 
+\item{image_overlay}{Default \code{NULL}. Either a string indicating the location of a png image to overlay
+over the image (transparency included), or a 4-layer RGBA array. This image will be resized to the
 dimension of the image if it does not match exactly.}
 
-\item{vignette}{Default `FALSE`. If `TRUE` or numeric, a camera vignetting effect will be added to the image.
-`1` is the darkest vignetting, while `0` is no vignetting. If vignette is a length-2 vector, the second entry will
+\item{vignette}{Default \code{FALSE}. If \code{TRUE} or numeric, a camera vignetting effect will be added to the image.
+\code{1} is the darkest vignetting, while \code{0} is no vignetting. If vignette is a length-2 vector, the second entry will
 control the blurriness of the vignette effect.}
 
-\item{vignette_color}{Default `"black"`. Color of the vignette.}
+\item{vignette_color}{Default \code{"black"}. Color of the vignette.}
 
-\item{vignette_radius}{Default `1.3`. Radius of the vignette, as a porportion of the image dimensions.}
+\item{vignette_radius}{Default \code{1.3}. Radius of the vignette, as a porportion of the image dimensions.}
 
-\item{instant_capture}{Default `TRUE` if interactive, `FALSE` otherwise. If `FALSE`, a slight delay is added 
+\item{instant_capture}{Default \code{TRUE} if interactive, \code{FALSE} otherwise. If \code{FALSE}, a slight delay is added
 before taking the snapshot. This can help stop prevent rendering issues when running scripts.}
 
-\item{bring_to_front}{Default `FALSE`. Whether to bring the window to the front when taking the snapshot.}
+\item{bring_to_front}{Default \code{FALSE}. Whether to bring the window to the front when taking the snapshot.}
 
-\item{webshot}{Default `FALSE`. Set to `TRUE` to have rgl use the `webshot2` package to take images,
-which can be used when `rgl.useNULL = TRUE`.}
+\item{webshot}{Default \code{FALSE}. Set to \code{TRUE} to have rgl use the \code{webshot2} package to take images,
+which can be used when \code{rgl.useNULL = TRUE}.}
 
-\item{width}{Default `NULL`. Optional argument to pass to `rgl::snapshot3d()` to specify the
-width when `software_render = TRUE`..}
+\item{width}{Default \code{NULL}. Optional argument to pass to \code{rgl::snapshot3d()} to specify the
+width when \code{software_render = TRUE}..}
 
-\item{height}{Default `NULL`. Optional argument to pass to `rgl::snapshot3d()` to specify the
-height when `software_render = TRUE`.}
+\item{height}{Default \code{NULL}. Optional argument to pass to \code{rgl::snapshot3d()} to specify the
+height when \code{software_render = TRUE}.}
 
-\item{software_render}{Default `FALSE`. If `TRUE`, rayshader will use the rayvertex package to render the snapshot, which
+\item{software_render}{Default \code{FALSE}. If \code{TRUE}, rayshader will use the rayvertex package to render the snapshot, which
 is not constrained by the screen size or requires OpenGL.}
 
-\item{camera_location}{Default `NULL`. Custom position of the camera. The `FOV`, `width`, and `height` arguments will still
+\item{camera_location}{Default \code{NULL}. Custom position of the camera. The \code{FOV}, \code{width}, and \code{height} arguments will still
 be derived from the rgl window.}
 
-\item{camera_lookat}{Default `NULL`. Custom point at which the camera is directed. The `FOV`, `width`, and `height` arguments will still
+\item{camera_lookat}{Default \code{NULL}. Custom point at which the camera is directed. The \code{FOV}, \code{width}, and \code{height} arguments will still
 be derived from the rgl window.}
 
-\item{background}{Default `NULL`, defaults to device background. Background color when `software_render = TRUE`.}
+\item{background}{Default \code{NULL}, defaults to device background. Background color when \code{software_render = TRUE}.}
 
-\item{text_angle}{Default `NULL`, which forces the text always to face the camera. If a single angle (degrees),
+\item{text_angle}{Default \code{NULL}, which forces the text always to face the camera. If a single angle (degrees),
 will specify the absolute angle all the labels are facing. If three angles, this will specify all three orientations
 (relative to the x,y, and z axes) of the text labels.}
 
-\item{text_size}{Default `30`. Height of the text.}
+\item{text_size}{Default \code{30}. Height of the text.}
 
-\item{text_offset}{Default `c(0,0,0)`. Offset to be applied to all text labels.}
+\item{text_offset}{Default \code{c(0,0,0)}. Offset to be applied to all text labels.}
 
-\item{point_radius}{Default `0.5`. Radius of 3D points (rendered with `render_points()`). This scales the existing
-value of size specified in `render_points()`.}
+\item{point_radius}{Default \code{0.5}. Radius of 3D points (rendered with \code{\link[=render_points]{render_points()}}). This scales the existing
+value of size specified in \code{\link[=render_points]{render_points()}}.}
 
-\item{line_offset}{Default `1e-7`. Small number indicating the offset in the scene to apply to lines if using software rendering. Increase this if your lines 
+\item{line_offset}{Default \code{1e-7}. Small number indicating the offset in the scene to apply to lines if using software rendering. Increase this if your lines
 aren't showing up, or decrease it if lines are appearing through solid objects.}
 
-\item{thick_lines}{Default `TRUE`. If `software_render = TRUE`, this will render path segments as thick cylinders. Otherwise, it will 
+\item{thick_lines}{Default \code{TRUE}. If \code{software_render = TRUE}, this will render path segments as thick cylinders. Otherwise, it will
 render the lines using a single-pixel anti-aliased line algorithm.}
 
-\item{line_radius}{Default `0.25`. The radius of the thick cylinders if `thick_lines = TRUE` and `software_render = TRUE`.}
+\item{line_radius}{Default \code{0.25}. The radius of the thick cylinders if \code{thick_lines = TRUE} and \code{software_render = TRUE}.}
 
-\item{cache_scene}{Default `FALSE`. Whether to cache the current scene to memory so it does not have to be converted to a `raymesh` object 
-each time `render_snapshot()` is called. If `TRUE` and a scene has been cached, it will be used when rendering.}
+\item{cache_scene}{Default \code{FALSE}. Whether to cache the current scene to memory so it does not have to be converted to a \code{raymesh} object
+each time \code{\link[=render_snapshot]{render_snapshot()}} is called. If \code{TRUE} and a scene has been cached, it will be used when rendering.}
 
-\item{reset_scene_cache}{Default `FALSE`. Resets the scene cache before rendering.}
+\item{reset_scene_cache}{Default \code{FALSE}. Resets the scene cache before rendering.}
 
-\item{new_page}{Default `TRUE`. Whether to call `grid::grid.newpage()` before plotting the image.}
+\item{new_page}{Default \code{TRUE}. Whether to call \code{grid::grid.newpage()} before plotting the image.}
 
-\item{print_scene_info}{Default `FALSE`. If `TRUE`, it will print the position and lookat point of the camera.}
+\item{print_scene_info}{Default \code{FALSE}. If \code{TRUE}, it will print the position and lookat point of the camera.}
 
-\item{fsaa}{Default `1`. Integer specifying the amount of anti-aliasing applied `software_render = TRUE`.}
+\item{fsaa}{Default \code{1}. Integer specifying the amount of anti-aliasing applied \code{software_render = TRUE}.}
 
-\item{rayvertex_lighting}{Default `FALSE`. If `TRUE` and `software_render = TRUE`, the scene will use rayvertex lighting when rendering
-the scene, using the lights specified in `rayvertex_lights`. If no lights are specified there, they will be pulled
-from `light` objects in the `rgl` scene.}
+\item{rayvertex_lighting}{Default \code{FALSE}. If \code{TRUE} and \code{software_render = TRUE}, the scene will use rayvertex lighting when rendering
+the scene, using the lights specified in \code{rayvertex_lights}. If no lights are specified there, they will be pulled
+from \code{light} objects in the \code{rgl} scene.}
 
-\item{rayvertex_lights}{Default `NULL`. Use `rayvertex::directional_light()` and `rayvertex::point_light()` along with the 
-`rayvertex::add_light()` function to specify lighting for your scene when `rayvertex_lighting = TRUE`.}
+\item{rayvertex_lights}{Default \code{NULL}. Use \code{rayvertex::directional_light()} and \code{rayvertex::point_light()} along with the
+\code{rayvertex::add_light()} function to specify lighting for your scene when \code{rayvertex_lighting = TRUE}.}
 
-\item{rayvertex_shadow_map}{Default `FALSE`. If `TRUE` and `rayvertex_lighting = TRUE` along with `software_render = TRUE`, shadow mapping will also
+\item{rayvertex_shadow_map}{Default \code{FALSE}. If \code{TRUE} and \code{rayvertex_lighting = TRUE} along with \code{software_render = TRUE}, shadow mapping will also
 be applied to the rendered scene.}
 
-\item{...}{Additional parameters to pass to `rayvertex::rasterize_scene()`.}
+\item{...}{Additional parameters to pass to \code{rayvertex::rasterize_scene()}.}
 }
 \value{
 Displays snapshot of current rgl plot (or saves to disk).

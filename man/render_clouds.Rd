@@ -28,48 +28,48 @@ render_clouds(
 )
 }
 \arguments{
-\item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. This is used by `render_clouds()` to 
+\item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. This is used by \code{\link[=render_clouds]{render_clouds()}} to
 calculate the regions the clouds should be rendered in.}
 
-\item{start_altitude}{Default `1000`. The bottom of the cloud layer.}
+\item{start_altitude}{Default \code{1000}. The bottom of the cloud layer.}
 
-\item{end_altitude}{Default `2000`. The top of the cloud layer.}
+\item{end_altitude}{Default \code{2000}. The top of the cloud layer.}
 
-\item{sun_altitude}{Default `90`. The angle, in degrees (as measured from the horizon) from which the light originates.}
+\item{sun_altitude}{Default \code{90}. The angle, in degrees (as measured from the horizon) from which the light originates.}
 
-\item{sun_angle}{Default `315` (NW). The angle, in degrees, around the matrix from which the light originates. Zero degrees is North, increasing clockwise}
+\item{sun_angle}{Default \code{315} (NW). The angle, in degrees, around the matrix from which the light originates. Zero degrees is North, increasing clockwise}
 
-\item{time}{Default `0`. Advance this to make the clouds evolve and change in shape.}
+\item{time}{Default \code{0}. Advance this to make the clouds evolve and change in shape.}
 
-\item{cloud_cover}{Default `0.5`. The percentage of cloud cover.}
+\item{cloud_cover}{Default \code{0.5}. The percentage of cloud cover.}
 
-\item{layers}{Default `10`. The number of layers to render the cloud layer. 
-The default is `layers/(start_altitude - end_altitude)`.}
+\item{layers}{Default \code{10}. The number of layers to render the cloud layer.
+The default is \code{layers/(start_altitude - end_altitude)}.}
 
-\item{offset_x}{Default `0`. Change this to move the cloud layer sideways.}
+\item{offset_x}{Default \code{0}. Change this to move the cloud layer sideways.}
 
-\item{offset_y}{Default `0`. Change this to move the cloud layer backwards and forwards.}
+\item{offset_y}{Default \code{0}. Change this to move the cloud layer backwards and forwards.}
 
-\item{scale_x}{Default `1`. Scale the fractal pattern in the x direction.}
+\item{scale_x}{Default \code{1}. Scale the fractal pattern in the x direction.}
 
-\item{scale_y}{Default `1`. Scale the fractal pattern in the y direction.}
+\item{scale_y}{Default \code{1}. Scale the fractal pattern in the y direction.}
 
-\item{scale_z}{Default `1`. Scale the fractal pattern in the z (vertical) direction. (automatically calculated). Scale the fractal pattern in the z (vertical) direction.}
+\item{scale_z}{Default \code{1}. Scale the fractal pattern in the z (vertical) direction. (automatically calculated). Scale the fractal pattern in the z (vertical) direction.}
 
-\item{frequency}{Default `0.005`. The base frequency of the noise used to calculate the fractal cloud structure.}
+\item{frequency}{Default \code{0.005}. The base frequency of the noise used to calculate the fractal cloud structure.}
 
-\item{fractal_levels}{Default `16`. The fractal dimension used to calculate the noise. Higher values give more fine structure, but take longer to calculate.}
+\item{fractal_levels}{Default \code{16}. The fractal dimension used to calculate the noise. Higher values give more fine structure, but take longer to calculate.}
 
-\item{attenuation_coef}{Default `1`. Amount of attenuation in the cloud (higher numbers give darker shadows).  This value is automatically scaled to account for increasing the number of layers.}
+\item{attenuation_coef}{Default \code{1}. Amount of attenuation in the cloud (higher numbers give darker shadows).  This value is automatically scaled to account for increasing the number of layers.}
 
-\item{seed}{Default `1`. Random seed used to generate clouds.}
+\item{seed}{Default \code{1}. Random seed used to generate clouds.}
 
-\item{zscale}{Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
-of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.}
+\item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
+of 1 meter and the grid values are separated by 10 meters, \code{zscale} would be 10.}
 
-\item{baseshape}{Default `rectangle`. Shape of the base. Options are `c("rectangle","circle","hex")`.}
+\item{baseshape}{Default \code{rectangle}. Shape of the base. Options are \code{c("rectangle","circle","hex")}.}
 
-\item{clear_clouds}{Default `FALSE`. Clears all existing floating layers on the visualization.}
+\item{clear_clouds}{Default \code{FALSE}. Clears all existing floating layers on the visualization.}
 }
 \value{
 Adds a 3D floating cloud layer to the map. No return value.

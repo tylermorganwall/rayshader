@@ -5,7 +5,7 @@
 \alias{monterey_roads_sf}
 \title{Road Data Around Monterey Bay}
 \format{
-An `sf` object with LINESTRING geometry.
+An \code{sf} object with LINESTRING geometry.
 }
 \source{
 https://www2.census.gov/geo/tiger/TIGER2015/PRISECROADS/tl_2015_06_prisecroads.zip
@@ -14,10 +14,10 @@ https://www2.census.gov/geo/tiger/TIGER2015/PRISECROADS/tl_2015_06_prisecroads.z
 monterey_roads_sf
 }
 \description{
-This dataset is an `sf` object containing line data from the U.S. Department of Commerce
-with selected roads, TIGER/Line Shapefile, 2015,  state, California, Primary and Secondary 
+This dataset is an \code{sf} object containing line data from the U.S. Department of Commerce
+with selected roads, TIGER/Line Shapefile, 2015,  state, California, Primary and Secondary
 Roads State-based Shapefile. This data has been trimmed to only include 330 features in the extent of
-the `montereybay` dataset.
+the \code{montereybay} dataset.
 }
 \examples{
 # This is the full code (commented out) used to generate this dataset from the original data:

@@ -37,77 +37,77 @@ render_tree(
 
 \item{long}{Vector of longitudes (or other coordinate in the same coordinate reference system as extent).}
 
-\item{extent}{Either an object representing the spatial extent of the 3D scene 
-(either from the `raster`, `terra`, `sf`, or `sp` packages), 
-a length-4 numeric vector specifying `c("xmin", "xmax", "ymin", "ymax")`, or the spatial object (from 
+\item{extent}{Either an object representing the spatial extent of the 3D scene
+(either from the \code{raster}, \code{terra}, \code{sf}, or \code{sp} packages),
+a length-4 numeric vector specifying \code{c("xmin", "xmax", "ymin", "ymax")}, or the spatial object (from
 the previously aforementioned packages) which will be automatically converted to an extent object.}
 
-\item{type}{Default `"basic"`. Type of tree. Other built-in option: `"cone"`.}
+\item{type}{Default \code{"basic"}. Type of tree. Other built-in option: \code{"cone"}.}
 
-\item{custom_obj_tree}{Default `NULL`. Instead of using the built-in types, users can also load a custom tree 
-model in OBJ format. This function loads and manipulates the model, assuming the tree model's trunk begins 
-at the origin. Color and specific trunk/crown proportions will be fixed to the model specified, although the overall 
-scale can be changed per-tree via `crown_height`.}
+\item{custom_obj_tree}{Default \code{NULL}. Instead of using the built-in types, users can also load a custom tree
+model in OBJ format. This function loads and manipulates the model, assuming the tree model's trunk begins
+at the origin. Color and specific trunk/crown proportions will be fixed to the model specified, although the overall
+scale can be changed per-tree via \code{crown_height}.}
 
-\item{custom_obj_crown}{Default `NULL`. Instead of using the built-in types, users can also load a custom crown 
+\item{custom_obj_crown}{Default \code{NULL}. Instead of using the built-in types, users can also load a custom crown
 model in OBJ format. This function loads a crown model and allows you to control the crown and trunk proportions separately.}
 
-\item{custom_obj_trunk}{Default `NULL`.  Instead of using the built-in types, users can also load a custom trunk 
+\item{custom_obj_trunk}{Default \code{NULL}.  Instead of using the built-in types, users can also load a custom trunk
 model in OBJ format. This function loads a trunk model and allows you to control the crown and trunk proportions separately.}
 
-\item{crown_color}{Default `"darkgreen"`. Color(s) of the crown.}
+\item{crown_color}{Default \code{"darkgreen"}. Color(s) of the crown.}
 
-\item{trunk_color}{Default `"#964B00"` (brown). Color(s) of the trunk,}
+\item{trunk_color}{Default \code{"#964B00"} (brown). Color(s) of the trunk,}
 
-\item{absolute_height}{Default `FALSE`. Default is specifying the tree height directly, relative to the 
-underlying height map. If `TRUE`, `crown_height` will specified by the actual altitude of the top of the tree.  
-Total tree height will be `crown_height + trunk_height`.}
+\item{absolute_height}{Default \code{FALSE}. Default is specifying the tree height directly, relative to the
+underlying height map. If \code{TRUE}, \code{crown_height} will specified by the actual altitude of the top of the tree.
+Total tree height will be \code{crown_height + trunk_height}.}
 
-\item{tree_height}{Default `NULL`. Height of the tree, automatically set to `10` if not specified. If `absolute_height = TRUE`, then this is interpreted as 
-the altitude of the top of the tree in the coordinate reference system used. If `absolute_height = FALSE`, then 
+\item{tree_height}{Default \code{NULL}. Height of the tree, automatically set to \code{10} if not specified. If \code{absolute_height = TRUE}, then this is interpreted as
+the altitude of the top of the tree in the coordinate reference system used. If \code{absolute_height = FALSE}, then
 this is interpreted as the height of the tree relative to the underlying heightmap.}
 
-\item{trunk_height_ratio}{Default `NULL`. The ratio of the height of the trunk to the total height of the tree.
-Default is 1/3rd the crown height if `type = "basic"`, and 1/6th the crown height if `type = "cone"`.}
+\item{trunk_height_ratio}{Default \code{NULL}. The ratio of the height of the trunk to the total height of the tree.
+Default is 1/3rd the crown height if \code{type = "basic"}, and 1/6th the crown height if \code{type = "cone"}.}
 
-\item{crown_width_ratio}{Default `NULL`. Ratio of the crown width to the crown height. A value of `1` is spherical.}
+\item{crown_width_ratio}{Default \code{NULL}. Ratio of the crown width to the crown height. A value of \code{1} is spherical.}
 
-\item{crown_width}{Default `NULL`. As an alternative to specifying the ratio, you can use this argument to 
+\item{crown_width}{Default \code{NULL}. As an alternative to specifying the ratio, you can use this argument to
 specify the crown width directly.}
 
-\item{trunk_radius}{Default `NULL`, automatically computed.
-Default is 1/5rd the trunk height if `type = "basic"`, and 1/10th the trunk height if `type = "cone"`.}
+\item{trunk_radius}{Default \code{NULL}, automatically computed.
+Default is 1/5rd the trunk height if \code{type = "basic"}, and 1/10th the trunk height if \code{type = "cone"}.}
 
-\item{tree_zscale}{Default `TRUE`. Whether to scale the size of the tree by zscale to have it match
+\item{tree_zscale}{Default \code{TRUE}. Whether to scale the size of the tree by zscale to have it match
 the size of the map. If zscale is very big, this will make the trees very small.}
 
-\item{min_height}{Default `NULL`. Minimum height of a tree. Set to a positive number to filter out trees 
+\item{min_height}{Default \code{NULL}. Minimum height of a tree. Set to a positive number to filter out trees
 below that height.}
 
-\item{max_height}{Default `NA`. Maximum height of a tree. Set to a positive number to filter out trees 
+\item{max_height}{Default \code{NA}. Maximum height of a tree. Set to a positive number to filter out trees
 above that height.}
 
-\item{zscale}{Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.}
+\item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.}
 
-\item{lit}{Default `TRUE`. Whether to apply lighting to the tree.}
+\item{lit}{Default \code{TRUE}. Whether to apply lighting to the tree.}
 
-\item{heightmap}{Default `NULL`. Automatically extracted from the rgl window--only use if auto-extraction
+\item{heightmap}{Default \code{NULL}. Automatically extracted from the rgl window--only use if auto-extraction
 of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
 All points are assumed to be evenly spaced.}
 
-\item{baseshape}{Default `rectangle`. Shape of the base. Options are `c("rectangle","circle","hex")`.}
+\item{baseshape}{Default \code{rectangle}. Shape of the base. Options are \code{c("rectangle","circle","hex")}.}
 
-\item{angle}{Default `c(0,0,0)`. Angle of rotation around the x, y, and z axes. If this is a matrix or list,
+\item{angle}{Default \code{c(0,0,0)}. Angle of rotation around the x, y, and z axes. If this is a matrix or list,
 each row (or list entry) specifies the rotation of the nth tree specified (number of rows/length of list must
-equal the length of `lat`/`long`).}
+equal the length of \code{lat}/\code{long}).}
 
-\item{clear_previous}{Default `FALSE`. If `TRUE`, it will clear all existing trees.}
+\item{clear_previous}{Default \code{FALSE}. If \code{TRUE}, it will clear all existing trees.}
 
-\item{...}{Additional arguments to pass to `rgl::triangles3d()`.}
+\item{...}{Additional arguments to pass to \code{rgl::triangles3d()}.}
 }
 \description{
 Adds a 3D representation of trees to an existing 3D scene generated with rayshader.
-Users can specify the trees' geographical positions using latitude and longitude or the same coordinate reference system as `extent`.
+Users can specify the trees' geographical positions using latitude and longitude or the same coordinate reference system as \code{extent}.
 Different types of tree models can be used, including a basic and a cone-shaped tree. Users can also use their own custom tree model in
 OBJ format. The function allows customization of various aspects of the tree, including the color of the crown and the trunk,
 the size of the crown (the leafy part of the tree) and the trunk, the overall scale of the tree, and the rotation angle around the x, y, and z axes.

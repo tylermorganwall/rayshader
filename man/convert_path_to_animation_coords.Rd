@@ -40,102 +40,102 @@ convert_path_to_animation_coords(
 
 \item{long}{Vector of longitudes (or other coordinate in the same coordinate reference system as extent).}
 
-\item{altitude}{Elevation of each point, in units of the elevation matrix (scaled by zscale). 
-If left `NULL`, this will be just the elevation value at ths surface, offset by `offset`. If a single value, 
+\item{altitude}{Elevation of each point, in units of the elevation matrix (scaled by zscale).
+If left \code{NULL}, this will be just the elevation value at ths surface, offset by \code{offset}. If a single value,
 all data will be rendered at that altitude.}
 
-\item{extent}{Either an object representing the spatial extent of the scene 
-(either from the `raster`, `terra`, `sf`, or `sp` packages), 
-a length-4 numeric vector specifying `c("xmin", "xmax","ymin","ymax")`, or the spatial object (from 
+\item{extent}{Either an object representing the spatial extent of the scene
+(either from the \code{raster}, \code{terra}, \code{sf}, or \code{sp} packages),
+a length-4 numeric vector specifying \code{c("xmin", "xmax","ymin","ymax")}, or the spatial object (from
 the previously aforementioned packages) which will be automatically converted to an extent object.}
 
-\item{frames}{Default `360`. Total number of animation frames.}
+\item{frames}{Default \code{360}. Total number of animation frames.}
 
-\item{reorder}{Default `TRUE`. If `TRUE`, this will attempt to re-order the rows within an `sf` object with
-multiple paths to be one continuous, end-to-end path. This happens in two steps: merging duplicate 
-paths that have end points that match with another object (within `reorder_duplicate_tolerance` distance), and then
-merges them (within `reorder_merge_tolerance` distance) to form a continuous path.}
+\item{reorder}{Default \code{TRUE}. If \code{TRUE}, this will attempt to re-order the rows within an \code{sf} object with
+multiple paths to be one continuous, end-to-end path. This happens in two steps: merging duplicate
+paths that have end points that match with another object (within \code{reorder_duplicate_tolerance} distance), and then
+merges them (within \code{reorder_merge_tolerance} distance) to form a continuous path.}
 
-\item{reorder_first_index}{Default `1`. The index (row) of the `sf` object in which to begin the reordering
-process. This merges and reorders paths within `reorder_merge_tolerance` distance until it cannot 
+\item{reorder_first_index}{Default \code{1}. The index (row) of the \code{sf} object in which to begin the reordering
+process. This merges and reorders paths within \code{reorder_merge_tolerance} distance until it cannot
 merge any more, and then repeats the process in the opposite direction.}
 
-\item{reorder_duplicate_tolerance}{Default `0.1`. Lines that have start and end points (does not matter which)
-within this tolerance that match a line already processed (order determined by `reorder_first_index`) will be 
+\item{reorder_duplicate_tolerance}{Default \code{0.1}. Lines that have start and end points (does not matter which)
+within this tolerance that match a line already processed (order determined by \code{reorder_first_index}) will be
 discarded.}
 
-\item{reorder_merge_tolerance}{Default `1`. Lines that have start points that are within this distance 
-to a previously processed line's end point (order determined by `reorder_first_index`) will be reordered 
-within the `sf` object to form a continuous, end-to-end path.}
+\item{reorder_merge_tolerance}{Default \code{1}. Lines that have start points that are within this distance
+to a previously processed line's end point (order determined by \code{reorder_first_index}) will be reordered
+within the \code{sf} object to form a continuous, end-to-end path.}
 
-\item{simplify_tolerance}{Default `0` (no simplification). If greater than zero, simplifies
-the path to the tolerance specified. This happens after the data has been merged if `reorder = TRUE`. 
-If the input data is specified with long-lat coordinates and `sf_use_s2()` returns `TRUE`, 
+\item{simplify_tolerance}{Default \code{0} (no simplification). If greater than zero, simplifies
+the path to the tolerance specified. This happens after the data has been merged if \code{reorder = TRUE}.
+If the input data is specified with long-lat coordinates and \code{sf_use_s2()} returns \code{TRUE},
 then the value of simplify_tolerance must be specified in meters.}
 
-\item{zscale}{Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.}
+\item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.}
 
-\item{heightmap}{Default `NULL`. Automatically extracted from the rgl window--only use if auto-extraction
+\item{heightmap}{Default \code{NULL}. Automatically extracted from the rgl window--only use if auto-extraction
 of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
 All points are assumed to be evenly spaced.}
 
-\item{offset}{Default `5`. Offset of the track from the surface, if `altitude = NULL`.}
+\item{offset}{Default \code{5}. Offset of the track from the surface, if \code{altitude = NULL}.}
 
-\item{type}{Default `cubic`. Type of transition between keyframes. 
-Other options are `linear`, `quad`, `bezier`, `exp`, and `manual`. `manual` just returns the values 
-passed in, properly formatted to be passed to `render_animation()`.}
+\item{type}{Default \code{cubic}. Type of transition between keyframes.
+Other options are \code{linear}, \code{quad}, \code{bezier}, \code{exp}, and \code{manual}. \code{manual} just returns the values
+passed in, properly formatted to be passed to \code{render_animation()}.}
 
-\item{offset_lookat}{Default `0`. Amount to offset the lookat position, either along the path (if `constant_step = TRUE`)
+\item{offset_lookat}{Default \code{0}. Amount to offset the lookat position, either along the path (if \code{constant_step = TRUE})
 or towards the derivative of the Bezier curve.}
 
-\item{constant_step}{Default `TRUE`. This will make the camera travel at a constant speed.}
+\item{constant_step}{Default \code{TRUE}. This will make the camera travel at a constant speed.}
 
-\item{curvature_adjust}{Default `none`. Other options are `position`, `lookat`, and `both`. Whether to slow down the camera at areas of high curvature
-to prevent fast swings. Only used for curve `type = bezier`. This does not preserve key frame positions.
-Note: This feature will likely result in the `lookat` and `position` diverging if they do not 
-have similar curvatures at each point. This feature is best used when passing the same set of points to `positions` and `lookats` 
-and providing an `offset_lookat` value, which ensures the curvature will be the same.}
+\item{curvature_adjust}{Default \code{none}. Other options are \code{position}, \code{lookat}, and \code{both}. Whether to slow down the camera at areas of high curvature
+to prevent fast swings. Only used for curve \code{type = bezier}. This does not preserve key frame positions.
+Note: This feature will likely result in the \code{lookat} and \code{position} diverging if they do not
+have similar curvatures at each point. This feature is best used when passing the same set of points to \code{positions} and \code{lookats}
+and providing an \code{offset_lookat} value, which ensures the curvature will be the same.}
 
-\item{curvature_scale}{Default `30`. Constant dividing factor for curvature. Higher values will subdivide the
-path more, potentially finding a smoother path, but increasing the calculation time. Only used for curve `type = bezier`.
+\item{curvature_scale}{Default \code{30}. Constant dividing factor for curvature. Higher values will subdivide the
+path more, potentially finding a smoother path, but increasing the calculation time. Only used for curve \code{type = bezier}.
 Increasing this value after a certain point will not increase the quality of the path, but it is scene-dependent.}
 
-\item{follow_camera}{Default `FALSE`. If `TRUE`, this generates a 3rd person view that follows the path specified in `lat`, `long`, and `altitude`.
-The distance to the camera is specified by `follow_distance`, and the angle (off the ground) is specified by `follow_angle`. 
-Make the camera rotate around the point as it moves by setting `follow_rotations` to a non-zero number. The camera points in the direction of the 
-You can also set the camera to be a fixed distance and angle above the by settings `follow_fixed = TRUE` and specifying the distance
-in `follow_fixed_offset`.}
+\item{follow_camera}{Default \code{FALSE}. If \code{TRUE}, this generates a 3rd person view that follows the path specified in \code{lat}, \code{long}, and \code{altitude}.
+The distance to the camera is specified by \code{follow_distance}, and the angle (off the ground) is specified by \code{follow_angle}.
+Make the camera rotate around the point as it moves by setting \code{follow_rotations} to a non-zero number. The camera points in the direction of the
+You can also set the camera to be a fixed distance and angle above the by settings \code{follow_fixed = TRUE} and specifying the distance
+in \code{follow_fixed_offset}.}
 
-\item{follow_distance}{Default `100`. Distance for the camera to follow the point when `follow_camera = TRUE`.}
+\item{follow_distance}{Default \code{100}. Distance for the camera to follow the point when \code{follow_camera = TRUE}.}
 
-\item{follow_angle}{Default `45`.  Angle (off the ground) of the camera when `follow_camera = TRUE`.}
+\item{follow_angle}{Default \code{45}.  Angle (off the ground) of the camera when \code{follow_camera = TRUE}.}
 
-\item{follow_rotations}{Default `0`. Number of rotations around the point when `follow_camera = TRUE`.}
+\item{follow_rotations}{Default \code{0}. Number of rotations around the point when \code{follow_camera = TRUE}.}
 
-\item{follow_fixed}{Default `FALSE`. If `TRUE`, the camera doesn't look in the direction of the path,
+\item{follow_fixed}{Default \code{FALSE}. If \code{TRUE}, the camera doesn't look in the direction of the path,
 but rather sits at a fixed relative location to the path.}
 
-\item{follow_fixed_offset}{Default `c(10,10,10)`. If `follow_fixed = TRUE`, the offset from the path to place
+\item{follow_fixed_offset}{Default \code{c(10,10,10)}. If \code{follow_fixed = TRUE}, the offset from the path to place
 the camera.}
 
-\item{damp_motion}{Default `FALSE`. Whether the suppress quick, jerky movements of the camera by linearly interpolating
-between the current camera position and the goal position. Amount of linear interpolation set in `damp_magnitude`.}
+\item{damp_motion}{Default \code{FALSE}. Whether the suppress quick, jerky movements of the camera by linearly interpolating
+between the current camera position and the goal position. Amount of linear interpolation set in \code{damp_magnitude}.}
 
-\item{damp_magnitude}{Default `0.1`. Amount of linear interpolation if `damp_motion = TRUE`.}
+\item{damp_magnitude}{Default \code{0.1}. Amount of linear interpolation if \code{damp_motion = TRUE}.}
 
-\item{resample_path_evenly}{Default `TRUE`. This re-samples points along the path so that the camera moves 
+\item{resample_path_evenly}{Default \code{TRUE}. This re-samples points along the path so that the camera moves
 at a constant speed along the path. This also allows paths with large numbers of points to be used with a
 smaller number of frames, and improves computation time of the animation path in those instances.}
 
-\item{...}{Other arguments to pass to `rayrender::generate_camera_motion()`}
+\item{...}{Other arguments to pass to \code{rayrender::generate_camera_motion()}}
 }
 \description{
-Transforms latitude/longitude/altitude coordinates to the reference system used in `render_highquality()`,
-so they can be used to create high quality pathtraced animations by passing the output to the `animation_camera_coords`
-argument in `render_highquality()`.
+Transforms latitude/longitude/altitude coordinates to the reference system used in \code{\link[=render_highquality]{render_highquality()}},
+so they can be used to create high quality pathtraced animations by passing the output to the \code{animation_camera_coords}
+argument in \code{\link[=render_highquality]{render_highquality()}}.
 
-This function converts the path values to rayshader coordinates (by setting `return_coords = TRUE` in `render_path()`) 
-and then subtracts out the rgl y-offset, which can be obtained by calling the internal function `rayshader:::get_scene_depth()`.
+This function converts the path values to rayshader coordinates (by setting \code{return_coords = TRUE} in \code{\link[=render_path]{render_path()}})
+and then subtracts out the rgl y-offset, which can be obtained by calling the internal function \code{rayshader:::get_scene_depth()}.
 }
 \examples{
 #Generate a circle in Monterey Bay and fly around on top of it

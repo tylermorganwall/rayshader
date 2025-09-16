@@ -55,119 +55,119 @@ render_depth(
 \arguments{
 \item{focus}{Focal point. Defaults to the center of the bounding box. Depth in which to blur, in distance to the camera plane.}
 
-\item{focallength}{Default `1`. Focal length of the virtual camera.}
+\item{focallength}{Default \code{1}. Focal length of the virtual camera.}
 
-\item{fstop}{Default `1`. F-stop of the virtual camera.}
+\item{fstop}{Default \code{1}. F-stop of the virtual camera.}
 
 \item{filename}{The filename of the image to be saved. If this is not given, the image will be plotted instead.}
 
-\item{preview_focus}{Default `FALSE`. If `TRUE`, a red line will be drawn across the image
+\item{preview_focus}{Default \code{FALSE}. If \code{TRUE}, a red line will be drawn across the image
 showing where the camera will be focused.}
 
-\item{bokehshape}{Default `circle`. Also built-in: `hex`. The shape of the bokeh.}
+\item{bokehshape}{Default \code{circle}. Also built-in: \code{hex}. The shape of the bokeh.}
 
-\item{bokehintensity}{Default `3`. Intensity of the bokeh when the pixel intensity is greater than `bokehlimit`.}
+\item{bokehintensity}{Default \code{3}. Intensity of the bokeh when the pixel intensity is greater than \code{bokehlimit}.}
 
-\item{bokehlimit}{Default `0.8`. Limit after which the bokeh intensity is increased by `bokehintensity`.}
+\item{bokehlimit}{Default \code{0.8}. Limit after which the bokeh intensity is increased by \code{bokehintensity}.}
 
-\item{rotation}{Default `0`. Number of degrees to rotate the hexagon bokeh shape.}
+\item{rotation}{Default \code{0}. Number of degrees to rotate the hexagon bokeh shape.}
 
-\item{gamma_correction}{Default `TRUE`. Controls gamma correction when adding colors. Default exponent of 2.2.}
+\item{gamma_correction}{Default \code{TRUE}. Controls gamma correction when adding colors. Default exponent of 2.2.}
 
-\item{aberration}{Default `0`. Adds chromatic aberration to the image. Maximum of `1`.}
+\item{aberration}{Default \code{0}. Adds chromatic aberration to the image. Maximum of \code{1}.}
 
-\item{transparent_water}{Default `FALSE`. If `TRUE`, depth is determined without water layer. User will have to re-render the water
-layer with `render_water()` if they want to recreate the water layer.}
+\item{transparent_water}{Default \code{FALSE}. If \code{TRUE}, depth is determined without water layer. User will have to re-render the water
+layer with \code{\link[=render_water]{render_water()}} if they want to recreate the water layer.}
 
-\item{heightmap}{Default `NULL`. The height matrix for the scene. Passing this will allow `render_depth()` 
-to automatically redraw the water layer if `transparent_water = TRUE`.}
+\item{heightmap}{Default \code{NULL}. The height matrix for the scene. Passing this will allow \code{\link[=render_depth]{render_depth()}}
+to automatically redraw the water layer if \code{transparent_water = TRUE}.}
 
-\item{zscale}{Default `NULL`. The zscale value for the heightmap. Passing this will allow `render_depth()` 
-to automatically redraw the water layer if `transparent_water = TRUE`.}
+\item{zscale}{Default \code{NULL}. The zscale value for the heightmap. Passing this will allow \code{\link[=render_depth]{render_depth()}}
+to automatically redraw the water layer if \code{transparent_water = TRUE}.}
 
-\item{title_text}{Default `NULL`. Text. Adds a title to the image, using magick::image_annotate.}
+\item{title_text}{Default \code{NULL}. Text. Adds a title to the image, using magick::image_annotate.}
 
-\item{title_offset}{Default `c(20,20)`. Distance from the top-left (default, `gravity` direction in 
+\item{title_offset}{Default \code{c(20,20)}. Distance from the top-left (default, \code{gravity} direction in
 image_annotate) corner to offset the title.}
 
-\item{title_color}{Default `black`. Font color.}
+\item{title_color}{Default \code{black}. Font color.}
 
-\item{title_size}{Default `30`. Font size in pixels.}
+\item{title_size}{Default \code{30}. Font size in pixels.}
 
-\item{title_font}{Default `sans`. String with font family such as "sans", "mono", "serif", "Times", "Helvetica", 
+\item{title_font}{Default \code{sans}. String with font family such as "sans", "mono", "serif", "Times", "Helvetica",
 "Trebuchet", "Georgia", "Palatino" or "Comic Sans".}
 
-\item{title_bar_color}{Default `NA`. If a color, this will create a colored bar under the title.}
+\item{title_bar_color}{Default \code{NA}. If a color, this will create a colored bar under the title.}
 
-\item{title_bar_alpha}{Default `0.5`. Transparency of the title bar.}
+\item{title_bar_alpha}{Default \code{0.5}. Transparency of the title bar.}
 
-\item{title_just}{Default `left`. Justification of the title.}
+\item{title_just}{Default \code{left}. Justification of the title.}
 
-\item{image_overlay}{Default `NULL`. Either a string indicating the location of a png image to overlay
-over the image (transparency included), or a 4-layer RGBA array. This image will be resized to the 
+\item{image_overlay}{Default \code{NULL}. Either a string indicating the location of a png image to overlay
+over the image (transparency included), or a 4-layer RGBA array. This image will be resized to the
 dimension of the image if it does not match exactly.}
 
-\item{vignette}{Default `FALSE`. If `TRUE` or numeric, a camera vignetting effect will be added to the image.
-`1` is the darkest vignetting, while `0` is no vignetting. If vignette is a length-2 vector, the second entry will
+\item{vignette}{Default \code{FALSE}. If \code{TRUE} or numeric, a camera vignetting effect will be added to the image.
+\code{1} is the darkest vignetting, while \code{0} is no vignetting. If vignette is a length-2 vector, the second entry will
 control the blurriness of the vignette effect.}
 
-\item{vignette_color}{Default `"black"`. Color of the vignette.}
+\item{vignette_color}{Default \code{"black"}. Color of the vignette.}
 
-\item{vignette_radius}{Default `1.3`. Radius of the vignette, as a porportion of the image dimensions.}
+\item{vignette_radius}{Default \code{1.3}. Radius of the vignette, as a porportion of the image dimensions.}
 
-\item{progbar}{Default `TRUE` if in an interactive session. Displays a progress bar.}
+\item{progbar}{Default \code{TRUE} if in an interactive session. Displays a progress bar.}
 
-\item{software_render}{Default `FALSE`. If `TRUE`, rayshader will use the rayvertex package to render the snapshot, which
+\item{software_render}{Default \code{FALSE}. If \code{TRUE}, rayshader will use the rayvertex package to render the snapshot, which
 is not constrained by the screen size or requires OpenGL.}
 
-\item{width}{Default `NULL`. Optional argument to pass to `rgl::snapshot3d()` to specify the
-width when `software_render = TRUE`..}
+\item{width}{Default \code{NULL}. Optional argument to pass to \code{rgl::snapshot3d()} to specify the
+width when \code{software_render = TRUE}..}
 
-\item{height}{Default `NULL`. Optional argument to pass to `rgl::snapshot3d()` to specify the
-height when `software_render = TRUE`.}
+\item{height}{Default \code{NULL}. Optional argument to pass to \code{rgl::snapshot3d()} to specify the
+height when \code{software_render = TRUE}.}
 
-\item{camera_location}{Default `NULL`. Custom position of the camera. The `FOV`, `width`, and `height` arguments will still
+\item{camera_location}{Default \code{NULL}. Custom position of the camera. The \code{FOV}, \code{width}, and \code{height} arguments will still
 be derived from the rgl window.}
 
-\item{camera_lookat}{Default `NULL`. Custom point at which the camera is directed. The `FOV`, `width`, and `height` arguments will still
+\item{camera_lookat}{Default \code{NULL}. Custom point at which the camera is directed. The \code{FOV}, \code{width}, and \code{height} arguments will still
 be derived from the rgl window.}
 
-\item{background}{Default `"white"`. Background color when `software_render = TRUE`.}
+\item{background}{Default \code{"white"}. Background color when \code{software_render = TRUE}.}
 
-\item{text_angle}{Default `NULL`, which forces the text always to face the camera. If a single angle (degrees),
+\item{text_angle}{Default \code{NULL}, which forces the text always to face the camera. If a single angle (degrees),
 will specify the absolute angle all the labels are facing. If three angles, this will specify all three orientations
 (relative to the x,y, and z axes) of the text labels.}
 
-\item{text_size}{Default `10`. Height of the text.}
+\item{text_size}{Default \code{10}. Height of the text.}
 
-\item{text_offset}{Default `c(0,0,0)`. Offset to be applied to all text labels.}
+\item{text_offset}{Default \code{c(0,0,0)}. Offset to be applied to all text labels.}
 
-\item{point_radius}{Default `0.5`. Radius of 3D points (rendered with `render_points()`.}
+\item{point_radius}{Default \code{0.5}. Radius of 3D points (rendered with \code{\link[=render_points]{render_points()}}.}
 
-\item{line_offset}{Default `1e-7`. Small number indicating the offset in the scene to apply to lines if using software rendering. Increase this if your lines 
+\item{line_offset}{Default \code{1e-7}. Small number indicating the offset in the scene to apply to lines if using software rendering. Increase this if your lines
 aren't showing up, or decrease it if lines are appearing through solid objects.}
 
-\item{cache_scene}{Default `FALSE`. Whether to cache the current scene to memory so it does not have to be converted to a `raymesh` object 
-each time `render_snapshot()` is called. If `TRUE` and a scene has been cached, it will be used when rendering.}
+\item{cache_scene}{Default \code{FALSE}. Whether to cache the current scene to memory so it does not have to be converted to a \code{raymesh} object
+each time \code{\link[=render_snapshot]{render_snapshot()}} is called. If \code{TRUE} and a scene has been cached, it will be used when rendering.}
 
-\item{reset_scene_cache}{Default `FALSE`. Resets the scene cache before rendering.}
+\item{reset_scene_cache}{Default \code{FALSE}. Resets the scene cache before rendering.}
 
-\item{print_scene_info}{Default `FALSE`. If `TRUE`, it will print the position and lookat point of the camera.}
+\item{print_scene_info}{Default \code{FALSE}. If \code{TRUE}, it will print the position and lookat point of the camera.}
 
-\item{instant_capture}{Default `TRUE` if interactive, `FALSE` otherwise. If `FALSE`, a slight delay is added 
+\item{instant_capture}{Default \code{TRUE} if interactive, \code{FALSE} otherwise. If \code{FALSE}, a slight delay is added
 before taking the snapshot. This can help stop prevent rendering issues when running scripts.}
 
-\item{clear}{Default `FALSE`. If `TRUE`, the current `rgl` device will be cleared.}
+\item{clear}{Default \code{FALSE}. If \code{TRUE}, the current \code{rgl} device will be cleared.}
 
-\item{bring_to_front}{Default `FALSE`. Whether to bring the window to the front when rendering the snapshot.}
+\item{bring_to_front}{Default \code{FALSE}. Whether to bring the window to the front when rendering the snapshot.}
 
-\item{...}{Additional parameters to pass to `rayvertex::rasterize_scene()`.}
+\item{...}{Additional parameters to pass to \code{rayvertex::rasterize_scene()}.}
 }
 \value{
 4-layer RGBA array.
 }
 \description{
-Adds depth of field to the current RGL scene by simulating a synthetic aperture. 
+Adds depth of field to the current RGL scene by simulating a synthetic aperture.
 
 The size of the circle of confusion is determined by the following formula (z_depth is from the image's depth map).
 

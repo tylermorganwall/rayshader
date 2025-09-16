@@ -15,8 +15,8 @@ https://www.ncei.noaa.gov/metadata/geoportal/rest/metadata/item/gov.noaa.ngdc.mg
 montereybay
 }
 \description{
-This dataset is a downsampled version of a combined topographic and bathymetric 
-elevation matrix representing the Monterey Bay, CA region. Original data from 
+This dataset is a downsampled version of a combined topographic and bathymetric
+elevation matrix representing the Monterey Bay, CA region. Original data from
 from the NOAA National Map website.
 }
 \examples{

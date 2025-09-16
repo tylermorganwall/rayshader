@@ -19,12 +19,12 @@ generate_soil_textures(
 \arguments{
 \item{heightmap}{Height matrix;}
 
-\item{color1}{Default `tan`.}
+\item{color1}{Default \code{tan}.}
 
-\item{color2}{Default `brown`.}
+\item{color2}{Default \code{brown}.}
 
-\item{zscale}{Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
-of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.}
+\item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
+of 1 meter and the grid values are separated by 10 meters, \code{zscale} would be 10.}
 }
 \description{
 Makes the base below the 3D elevation map.

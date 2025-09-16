@@ -110,7 +110,7 @@ resize_matrix = function(heightmap, scale=1, width=NULL, height=NULL, method = "
 
 #' Reduce Matrix Size (deprecated)
 #'
-#' @param ... Arguments to pass to resize_matrix() function.
+#' @param ... Arguments to pass to [resize_matrix()] function.
 #'
 #' @return Reduced matrix.
 #' @export

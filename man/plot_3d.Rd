@@ -55,115 +55,115 @@ plot_3d(
 
 \item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.}
 
-\item{zscale}{Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
-of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10. Adjust the zscale down to exaggerate elevation features.}
+\item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
+of 1 meter and the grid values are separated by 10 meters, \code{zscale} would be 10. Adjust the zscale down to exaggerate elevation features.}
 
-\item{baseshape}{Default `rectangle`. Shape of the base. Options are `c("rectangle","circle","hex")`.}
+\item{baseshape}{Default \code{rectangle}. Shape of the base. Options are \code{c("rectangle","circle","hex")}.}
 
-\item{solid}{Default `TRUE`. If `FALSE`, just the surface is rendered.}
+\item{solid}{Default \code{TRUE}. If \code{FALSE}, just the surface is rendered.}
 
-\item{soliddepth}{Default `auto`, which sets it to the lowest elevation in the matrix minus one unit (scaled by zscale). Depth of the solid base. If heightmap is uniform and set on `auto`, this is automatically set to a slightly lower level than the uniform elevation.}
+\item{soliddepth}{Default \code{auto}, which sets it to the lowest elevation in the matrix minus one unit (scaled by zscale). Depth of the solid base. If heightmap is uniform and set on \code{auto}, this is automatically set to a slightly lower level than the uniform elevation.}
 
-\item{solidcolor}{Default `grey20`. Base color.}
+\item{solidcolor}{Default \code{grey20}. Base color.}
 
-\item{solidlinecolor}{Default `grey30`. Base edge line color.}
+\item{solidlinecolor}{Default \code{grey30}. Base edge line color.}
 
-\item{shadow}{Default `TRUE`. If `FALSE`, no shadow is rendered.}
+\item{shadow}{Default \code{TRUE}. If \code{FALSE}, no shadow is rendered.}
 
-\item{shadowdepth}{Default `auto`, which sets it to `soliddepth - soliddepth/10`. Depth of the shadow layer.}
+\item{shadowdepth}{Default \code{auto}, which sets it to \code{soliddepth - soliddepth/10}. Depth of the shadow layer.}
 
-\item{shadowcolor}{Default `auto`. Color of the shadow, automatically computed as `shadow_darkness`
-the luminance of the `background` color in the CIELuv colorspace if not specified.}
+\item{shadowcolor}{Default \code{auto}. Color of the shadow, automatically computed as \code{shadow_darkness}
+the luminance of the \code{background} color in the CIELuv colorspace if not specified.}
 
-\item{shadow_darkness}{Default `0.5`. Darkness of the shadow, if `shadowcolor = "auto"`.}
+\item{shadow_darkness}{Default \code{0.5}. Darkness of the shadow, if \code{shadowcolor = "auto"}.}
 
-\item{shadowwidth}{Default `auto`, which sizes it to 1/10th the smallest dimension of `heightmap`. Width of the shadow in units of the matrix.}
+\item{shadowwidth}{Default \code{auto}, which sizes it to 1/10th the smallest dimension of \code{heightmap}. Width of the shadow in units of the matrix.}
 
-\item{water}{Default `FALSE`. If `TRUE`, a water layer is rendered.}
+\item{water}{Default \code{FALSE}. If \code{TRUE}, a water layer is rendered.}
 
-\item{waterdepth}{Default `0`. Water level.}
+\item{waterdepth}{Default \code{0}. Water level.}
 
-\item{watercolor}{Default `lightblue`. Color of the water.}
+\item{watercolor}{Default \code{lightblue}. Color of the water.}
 
-\item{wateralpha}{Default `0.5`. Water transparency.}
+\item{wateralpha}{Default \code{0.5}. Water transparency.}
 
-\item{waterlinecolor}{Default `NULL`. Color of the lines around the edges of the water layer.}
+\item{waterlinecolor}{Default \code{NULL}. Color of the lines around the edges of the water layer.}
 
-\item{waterlinealpha}{Default `1`. Water line tranparency.}
+\item{waterlinealpha}{Default \code{1}. Water line tranparency.}
 
-\item{linewidth}{Default `2`. Width of the edge lines in the scene.}
+\item{linewidth}{Default \code{2}. Width of the edge lines in the scene.}
 
-\item{lineantialias}{Default `FALSE`. Whether to anti-alias the lines in the scene.}
+\item{lineantialias}{Default \code{FALSE}. Whether to anti-alias the lines in the scene.}
 
-\item{soil}{Default `FALSE`. Whether to draw the solid base with a textured soil layer.}
+\item{soil}{Default \code{FALSE}. Whether to draw the solid base with a textured soil layer.}
 
-\item{soil_freq}{Default `0.1`. Frequency of soil clumps. Higher frequency values give smaller soil clumps.}
+\item{soil_freq}{Default \code{0.1}. Frequency of soil clumps. Higher frequency values give smaller soil clumps.}
 
-\item{soil_levels}{Default `16`. Fractal level of the soil.}
+\item{soil_levels}{Default \code{16}. Fractal level of the soil.}
 
-\item{soil_color_light}{Default `"#b39474"`. Light tint of soil.}
+\item{soil_color_light}{Default \code{"#b39474"}. Light tint of soil.}
 
-\item{soil_color_dark}{Default `"#8a623b"`. Dark tint of soil.}
+\item{soil_color_dark}{Default \code{"#8a623b"}. Dark tint of soil.}
 
-\item{soil_gradient}{Default `2`. Sharpness of the soil darkening gradient. `0` turns off the gradient entirely.}
+\item{soil_gradient}{Default \code{2}. Sharpness of the soil darkening gradient. \code{0} turns off the gradient entirely.}
 
-\item{soil_gradient_darken}{Default `4`. Amount to darken the `soil_color_dark` value for the deepest soil layers. Higher
+\item{soil_gradient_darken}{Default \code{4}. Amount to darken the \code{soil_color_dark} value for the deepest soil layers. Higher
 numbers increase the darkening effect.}
 
-\item{theta}{Default `45`. Rotation around z-axis.}
+\item{theta}{Default \code{45}. Rotation around z-axis.}
 
-\item{phi}{Default `45`. Azimuth angle.}
+\item{phi}{Default \code{45}. Azimuth angle.}
 
-\item{fov}{Default `0`--isometric. Field-of-view angle.}
+\item{fov}{Default \code{0}--isometric. Field-of-view angle.}
 
-\item{zoom}{Default `1`. Zoom factor.}
+\item{zoom}{Default \code{1}. Zoom factor.}
 
-\item{background}{Default `grey10`. Color of the background.}
+\item{background}{Default \code{grey10}. Color of the background.}
 
-\item{windowsize}{Default `600`. Position, width, and height of the `rgl` device displaying the plot. 
-If a single number, viewport will be a square and located in upper left corner. 
-If two numbers, (e.g. `c(600,800)`), user will specify width and height separately. 
-If four numbers (e.g. `c(200,0,600,800)`), the first two coordinates 
+\item{windowsize}{Default \code{600}. Position, width, and height of the \code{rgl} device displaying the plot.
+If a single number, viewport will be a square and located in upper left corner.
+If two numbers, (e.g. \code{c(600,800)}), user will specify width and height separately.
+If four numbers (e.g. \code{c(200,0,600,800)}), the first two coordinates
 specify the location of the x-y coordinates of the bottom-left corner of the viewport on the screen,
 and the next two (or one, if square) specify the window size. NOTE: The absolute positioning of the
 window does not currently work on macOS (tested on Mojave), but the size can still be specified.}
 
-\item{precomputed_normals}{Default `NULL`. Takes the output of `calculate_normals()` to save
+\item{precomputed_normals}{Default \code{NULL}. Takes the output of \code{calculate_normals()} to save
 computing normals internally.}
 
-\item{asp}{Default `1`. Aspect ratio of the resulting plot. Use `asp = 1/cospi(mean_latitude/180)` to rescale
+\item{asp}{Default \code{1}. Aspect ratio of the resulting plot. Use \code{asp = 1/cospi(mean_latitude/180)} to rescale
 lat/long at higher latitudes to the correct the aspect ratio.}
 
-\item{triangulate}{Default `FALSE`. Reduce the size of the 3D model by triangulating the height map.
-Set this to `TRUE` if generating the model is slow, or moving it is choppy. Will also reduce the size
+\item{triangulate}{Default \code{FALSE}. Reduce the size of the 3D model by triangulating the height map.
+Set this to \code{TRUE} if generating the model is slow, or moving it is choppy. Will also reduce the size
 of 3D models saved to disk.}
 
-\item{max_error}{Default `0.001`. Maximum allowable error when triangulating the height map,
-when `triangulate = TRUE`. Increase this if you encounter problems with 3D performance, want
-to decrease render time with `render_highquality()`, or need 
-to save a smaller 3D OBJ file to disk with `save_obj()`,}
+\item{max_error}{Default \code{0.001}. Maximum allowable error when triangulating the height map,
+when \code{triangulate = TRUE}. Increase this if you encounter problems with 3D performance, want
+to decrease render time with \code{\link[=render_highquality]{render_highquality()}}, or need
+to save a smaller 3D OBJ file to disk with \code{\link[=save_obj]{save_obj()}},}
 
-\item{max_tri}{Default `0`, which turns this setting off and uses `max_error`. 
+\item{max_tri}{Default \code{0}, which turns this setting off and uses \code{max_error}.
 Maximum number of triangles allowed with triangulating the
-height map, when `triangulate = TRUE`. Increase this if you encounter problems with 3D performance, want
-to decrease render time with `render_highquality()`, or need 
-to save a smaller 3D OBJ file to disk with `save_obj()`,}
+height map, when \code{triangulate = TRUE}. Increase this if you encounter problems with 3D performance, want
+to decrease render time with \code{\link[=render_highquality]{render_highquality()}}, or need
+to save a smaller 3D OBJ file to disk with \code{\link[=save_obj]{save_obj()}},}
 
-\item{verbose}{Default `TRUE`, if `interactive()`. Prints information about the mesh triangulation
-if `triangulate = TRUE`.}
+\item{verbose}{Default \code{TRUE}, if \code{interactive()}. Prints information about the mesh triangulation
+if \code{triangulate = TRUE}.}
 
-\item{plot_new}{Default `TRUE`, opens new window with each `plot_3d()` call. If `FALSE`, 
+\item{plot_new}{Default \code{TRUE}, opens new window with each \code{\link[=plot_3d]{plot_3d()}} call. If \code{FALSE},
 the data will be plotted in the same window.}
 
-\item{close_previous}{Default `TRUE`. Closes any previously open `rgl` window. If `FALSE`, 
+\item{close_previous}{Default \code{TRUE}. Closes any previously open \code{rgl} window. If \code{FALSE},
 old windows will be kept open.}
 
-\item{clear_previous}{Default `TRUE`. Clears the previously open `rgl` window if `plot_new = FALSE`.}
+\item{clear_previous}{Default \code{TRUE}. Clears the previously open \code{rgl} window if \code{plot_new = FALSE}.}
 }
 \description{
-Displays the shaded map in 3D with the `rgl` package. 
+Displays the shaded map in 3D with the \code{rgl} package.
 
-Note: Calling `plot_3d()` resets the scene cache for the `render_snapshot()`, `render_depth()`, and `render_highquality()`
+Note: Calling \code{\link[=plot_3d]{plot_3d()}} resets the scene cache for the \code{\link[=render_snapshot]{render_snapshot()}}, \code{\link[=render_depth]{render_depth()}}, and \code{\link[=render_highquality]{render_highquality()}}
 }
 \examples{
 #Plotting a spherical texture map of the built-in `montereybay` dataset.

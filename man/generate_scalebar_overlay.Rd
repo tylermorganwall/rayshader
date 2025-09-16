@@ -39,91 +39,91 @@ generate_scalebar_overlay(
 )
 }
 \arguments{
-\item{extent}{Either an object representing the spatial extent of the scene 
-(either from the `raster`, `terra`, `sf`, or `sp` packages), 
-a length-4 numeric vector specifying `c("xmin", "xmax","ymin","ymax")`, or the spatial object (from 
+\item{extent}{Either an object representing the spatial extent of the scene
+(either from the \code{raster}, \code{terra}, \code{sf}, or \code{sp} packages),
+a length-4 numeric vector specifying \code{c("xmin", "xmax","ymin","ymax")}, or the spatial object (from
 the previously aforementioned packages) which will be automatically converted to an extent object. If this is in
-lat/long coordinates, be sure to set `latlong = TRUE`.}
+lat/long coordinates, be sure to set \code{latlong = TRUE}.}
 
-\item{length}{The length of the scale bar, in `units`. This should match the units used on the map, 
-unless `extent` uses lat/long coordinates. In that case, the distance should be in meters.}
+\item{length}{The length of the scale bar, in \code{units}. This should match the units used on the map,
+unless \code{extent} uses lat/long coordinates. In that case, the distance should be in meters.}
 
-\item{x}{Default `0.05`. The x-coordinate of the bottom-left corner of the scale bar, as a proportion of the full map width.}
+\item{x}{Default \code{0.05}. The x-coordinate of the bottom-left corner of the scale bar, as a proportion of the full map width.}
 
-\item{y}{Default `0.05`. The y-coordinate of the bottom-left corner of the scale bar, as a proportion of the full map height.}
+\item{y}{Default \code{0.05}. The y-coordinate of the bottom-left corner of the scale bar, as a proportion of the full map height.}
 
-\item{latlong}{Default `FALSE`. Set to `TRUE` if the map is in lat/long coordinates to get an accurate
-scale bar (using distance calculated with the `geosphere` package).}
+\item{latlong}{Default \code{FALSE}. Set to \code{TRUE} if the map is in lat/long coordinates to get an accurate
+scale bar (using distance calculated with the \code{geosphere} package).}
 
-\item{thickness}{Default `NA`, automatically computed as 1/20th the length of the scale bar. Width of the scale bar.}
+\item{thickness}{Default \code{NA}, automatically computed as 1/20th the length of the scale bar. Width of the scale bar.}
 
-\item{bearing}{Default `90`, horizontal. Direction (measured from north) of the scale bar.}
+\item{bearing}{Default \code{90}, horizontal. Direction (measured from north) of the scale bar.}
 
-\item{unit}{Default `m`. Displayed unit on the scale bar.}
+\item{unit}{Default \code{m}. Displayed unit on the scale bar.}
 
-\item{flip_ticks}{Default `FALSE`. Whether to flip the ticks to the other side of the scale bar.}
+\item{flip_ticks}{Default \code{FALSE}. Whether to flip the ticks to the other side of the scale bar.}
 
-\item{labels}{Default `NA`. Manually specify the three labels with a length-3 character vector. 
+\item{labels}{Default \code{NA}. Manually specify the three labels with a length-3 character vector.
 Use this if you want display units other than meters.}
 
-\item{text_size}{Default `1`. Text size.}
+\item{text_size}{Default \code{1}. Text size.}
 
-\item{decimals}{Default `0`. Number of decimal places for scale bar labels.}
+\item{decimals}{Default \code{0}. Number of decimal places for scale bar labels.}
 
-\item{text_offset}{Default `1`. Amount of offset to apply to the text from the scale bar, as a multiple of
-`thickness`.}
+\item{text_offset}{Default \code{1}. Amount of offset to apply to the text from the scale bar, as a multiple of
+\code{thickness}.}
 
-\item{adj}{Default `0.5`, centered. Text justification. `0` is left-justified, and `1` is right-justified.}
+\item{adj}{Default \code{0.5}, centered. Text justification. \code{0} is left-justified, and \code{1} is right-justified.}
 
-\item{heightmap}{Default `NULL`. The original height map. Pass this in to extract the dimensions of the resulting 
+\item{heightmap}{Default \code{NULL}. The original height map. Pass this in to extract the dimensions of the resulting
 RGB image array automatically.}
 
-\item{width}{Default `NA`. Width of the resulting image array. Default the same dimensions as height map.}
+\item{width}{Default \code{NA}. Width of the resulting image array. Default the same dimensions as height map.}
 
-\item{height}{Default `NA`. Width of the resulting image array. Default the same dimensions as height map.}
+\item{height}{Default \code{NA}. Width of the resulting image array. Default the same dimensions as height map.}
 
-\item{resolution_multiply}{Default `1`. If passing in `heightmap` instead of width/height, amount to 
-increase the resolution of the overlay, which should make lines/polygons/text finer. 
-Should be combined with `add_overlay(rescale_original = TRUE)` to ensure those added details are captured
+\item{resolution_multiply}{Default \code{1}. If passing in \code{heightmap} instead of width/height, amount to
+increase the resolution of the overlay, which should make lines/polygons/text finer.
+Should be combined with \link{add_overlay(rescale_original = TRUE)} to ensure those added details are captured
 in the final map.}
 
-\item{color1}{Default `black`. Primary color of the scale bar.}
+\item{color1}{Default \code{black}. Primary color of the scale bar.}
 
-\item{color2}{Default `white`. Secondary color of the scale bar.}
+\item{color2}{Default \code{white}. Secondary color of the scale bar.}
 
-\item{text_color}{Default `black`. Text color.}
+\item{text_color}{Default \code{black}. Text color.}
 
-\item{font}{Default `1`. An integer which specifies which font to use for text. 
-If possible, device drivers arrange so that 1 corresponds to plain text (the default), 
+\item{font}{Default \code{1}. An integer which specifies which font to use for text.
+If possible, device drivers arrange so that 1 corresponds to plain text (the default),
 2 to bold face, 3 to italic and 4 to bold italic.}
 
-\item{border_color}{Default `black`. Border color of the scale bar.}
+\item{border_color}{Default \code{black}. Border color of the scale bar.}
 
-\item{tick_color}{Default `black`. Tick color of the scale bar.}
+\item{tick_color}{Default \code{black}. Tick color of the scale bar.}
 
-\item{border_width}{Default `1`. Width of the scale bar border.}
+\item{border_width}{Default \code{1}. Width of the scale bar border.}
 
-\item{tick_width}{Default `1`. Width of the tick.}
+\item{tick_width}{Default \code{1}. Width of the tick.}
 
-\item{halo_color}{Default `NA`, no halo. If a color is specified, the text label will be surrounded by a halo
+\item{halo_color}{Default \code{NA}, no halo. If a color is specified, the text label will be surrounded by a halo
 of this color.}
 
-\item{halo_expand}{Default `1`. Number of pixels to expand the halo.}
+\item{halo_expand}{Default \code{1}. Number of pixels to expand the halo.}
 
-\item{halo_alpha}{Default `1`. Transparency of the halo.}
+\item{halo_alpha}{Default \code{1}. Transparency of the halo.}
 
-\item{halo_offset}{Default `c(0,0)`. Horizontal and vertical offset to apply to the halo, as a proportion of the full scene.}
+\item{halo_offset}{Default \code{c(0,0)}. Horizontal and vertical offset to apply to the halo, as a proportion of the full scene.}
 
-\item{halo_blur}{Default `1`. Amount of blur to apply to the halo. Values greater than `30` won't result in further blurring.}
+\item{halo_blur}{Default \code{1}. Amount of blur to apply to the halo. Values greater than \code{30} won't result in further blurring.}
 }
 \value{
 Semi-transparent overlay with a scale bar.
 }
 \description{
-This function creates an overlay with a scale bar of a user-specified length. 
-It uses the coordinates of the map (specified by passing an extent) 
+This function creates an overlay with a scale bar of a user-specified length.
+It uses the coordinates of the map (specified by passing an extent)
 and then creates a scale bar at a specified x/y proportion across the map. If the map is not projected
-(i.e. is in lat/long coordinates) this function will use the `geosphere` package to create a 
+(i.e. is in lat/long coordinates) this function will use the \code{geosphere} package to create a
 scale bar of the proper length.
 }
 \examples{

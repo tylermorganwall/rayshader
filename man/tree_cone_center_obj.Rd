@@ -10,7 +10,7 @@ tree_cone_center_obj()
 File location of the included flag OBJ file (saved with a .txt extension)
 }
 \description{
-3D obj model of a flag pole, to be used with `render_obj()`. Use `full_flag_obj()` to get the complete
-pole, and `flag_banner_obj()` and `flag_pole_obj()` to style them separately.
+3D obj model of a flag pole, to be used with \code{\link[=render_obj]{render_obj()}}. Use \code{\link[=flag_full_obj]{flag_full_obj()}} to get the complete
+pole, and \code{\link[=flag_banner_obj]{flag_banner_obj()}} and \code{\link[=flag_pole_obj]{flag_pole_obj()}} to style them separately.
 }
 \keyword{internal}

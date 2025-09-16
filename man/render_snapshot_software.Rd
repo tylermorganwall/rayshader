@@ -32,7 +32,7 @@ render_snapshot_software(
 )
 }
 \arguments{
-\item{...}{Additional parameters to pass to `rayvertex::rasterize_scene()`}
+\item{...}{Additional parameters to pass to \code{rayvertex::rasterize_scene()}}
 }
 \description{
 Render Software Snapshot

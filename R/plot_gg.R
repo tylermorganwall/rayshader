@@ -59,13 +59,13 @@
 #'of 3D models saved to disk.
 #'@param max_error Default `0.001`. Maximum allowable error when triangulating the height map,
 #'when `triangulate = TRUE`. Increase this if you encounter problems with 3D performance, want
-#'to decrease render time with `render_highquality()`, or need 
-#'to save a smaller 3D OBJ file to disk with `save_obj()`,
+#'to decrease render time with [render_highquality()], or need 
+#'to save a smaller 3D OBJ file to disk with [save_obj()],
 #'@param max_tri Default `0`, which turns this setting off and uses `max_error`. 
 #'Maximum number of triangles allowed with triangulating the
 #'height map, when `triangulate = TRUE`. Increase this if you encounter problems with 3D performance, want
-#'to decrease render time with `render_highquality()`, or need 
-#'to save a smaller 3D OBJ file to disk with `save_obj()`,
+#'to decrease render time with [render_highquality()], or need 
+#'to save a smaller 3D OBJ file to disk with [save_obj()],
 #'@param verbose Default `TRUE`, if `interactive()`. Prints information about the mesh triangulation
 #'if `triangulate = TRUE`.
 #'@param emboss_text Default `0`, max `1`. Amount to emboss the text, where `1` is the tallest feature in the scene.
@@ -77,9 +77,9 @@
 #'@param multicore Default `FALSE`. If raytracing and `TRUE`, multiple cores will be used to compute the shadow matrix. By default, this uses all cores available, unless the user has
 #'set `options("cores")` in which the multicore option will only use that many cores.
 #'@param save_height_matrix Default `FALSE`. If `TRUE`, the function will return the height matrix used for the ggplot.
-#'@param save_shadow_matrix Default `FALSE`. If `TRUE`, the function will return the shadow matrix for use in future updates via the `shadow_cache` argument passed to `ray_shade`.
-#'@param saved_shadow_matrix Default `NULL`. A cached shadow matrix (saved by the a previous invocation of `plot_gg(..., save_shadow_matrix=TRUE)` to use instead of raytracing a shadow map each time.
-#'@param ... Additional arguments to be passed to `plot_3d()`.
+#'@param save_shadow_matrix Default `FALSE`. If `TRUE`, the function will return the shadow matrix for use in future updates via the `shadow_cache` argument passed to [ray_shade()].
+#'@param saved_shadow_matrix Default `NULL`. A cached shadow matrix (saved by the a previous invocation of [plot_gg(..., save_shadow_matrix=TRUE)] to use instead of raytracing a shadow map each time.
+#'@param ... Additional arguments to be passed to [plot_3d()].
 #'@return Opens a 3D plot in rgl.
 #'@export
 #'@examples

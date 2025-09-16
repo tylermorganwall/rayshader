@@ -19,43 +19,43 @@ generate_polygon_overlay(
 )
 }
 \arguments{
-\item{geometry}{An `sf` object with POLYGON geometry.}
+\item{geometry}{An \code{sf} object with POLYGON geometry.}
 
-\item{extent}{Either an object representing the spatial extent of the scene 
-(either from the `raster`, `terra`, `sf`, or `sp` packages), 
-a length-4 numeric vector specifying `c("xmin", "xmax","ymin","ymax")`, or the spatial object (from 
+\item{extent}{Either an object representing the spatial extent of the scene
+(either from the \code{raster}, \code{terra}, \code{sf}, or \code{sp} packages),
+a length-4 numeric vector specifying \code{c("xmin", "xmax","ymin","ymax")}, or the spatial object (from
 the previously aforementioned packages) which will be automatically converted to an extent object.}
 
-\item{heightmap}{Default `NULL`. The original height map. Pass this in to extract the dimensions of the resulting 
+\item{heightmap}{Default \code{NULL}. The original height map. Pass this in to extract the dimensions of the resulting
 overlay automatically.}
 
-\item{width}{Default `NA`. Width of the resulting overlay. Default the same dimensions as height map.}
+\item{width}{Default \code{NA}. Width of the resulting overlay. Default the same dimensions as height map.}
 
-\item{height}{Default `NA`. Width of the resulting overlay. Default the same dimensions as height map.}
+\item{height}{Default \code{NA}. Width of the resulting overlay. Default the same dimensions as height map.}
 
-\item{resolution_multiply}{Default `1`. If passing in `heightmap` instead of width/height, amount to 
-increase the resolution of the overlay, which should make lines/polygons/text finer. 
-Should be combined with `add_overlay(rescale_original = TRUE)` to ensure those added details are captured
+\item{resolution_multiply}{Default \code{1}. If passing in \code{heightmap} instead of width/height, amount to
+increase the resolution of the overlay, which should make lines/polygons/text finer.
+Should be combined with \link{add_overlay(rescale_original = TRUE)} to ensure those added details are captured
 in the final map.}
 
-\item{offset}{Default `c(0,0)`. Horizontal and vertical offset to apply to the polygon, in units of `geometry`.}
+\item{offset}{Default \code{c(0,0)}. Horizontal and vertical offset to apply to the polygon, in units of \code{geometry}.}
 
-\item{data_column_fill}{Default `NULL`. The column to map the polygon fill color to.}
+\item{data_column_fill}{Default \code{NULL}. The column to map the polygon fill color to.}
 
-\item{linecolor}{Default `black`. Color of the lines.}
+\item{linecolor}{Default \code{black}. Color of the lines.}
 
-\item{palette}{Default `black`. Single color, named vector color palette, or palette function. 
-If this is a named vector and `data_column_fill` is not `NULL`, 
-it will map the colors in the vector to the names. If `data_column_fill` is a numeric column,
+\item{palette}{Default \code{black}. Single color, named vector color palette, or palette function.
+If this is a named vector and \code{data_column_fill} is not \code{NULL},
+it will map the colors in the vector to the names. If \code{data_column_fill} is a numeric column,
 this will give a continuous mapping.}
 
-\item{linewidth}{Default `1`. Line width.}
+\item{linewidth}{Default \code{1}. Line width.}
 }
 \value{
 Image overlay representing the input polygon data.
 }
 \description{
-Transforms an input `sf` object into an image overlay for the current height map.
+Transforms an input \code{sf} object into an image overlay for the current height map.
 }
 \examples{
 #Plot the counties around Monterey Bay, CA

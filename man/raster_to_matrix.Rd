@@ -9,7 +9,7 @@ raster_to_matrix(raster, verbose = interactive())
 \arguments{
 \item{raster}{The input raster. Either a RasterLayer object, a terra SpatRaster object, or a filename.}
 
-\item{verbose}{Default `interactive()`. Will print dimensions of the resulting matrix.}
+\item{verbose}{Default \code{interactive()}. Will print dimensions of the resulting matrix.}
 }
 \description{
 Turns a raster into a matrix suitable for rayshader.

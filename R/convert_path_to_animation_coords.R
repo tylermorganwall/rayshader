@@ -1,10 +1,10 @@
 #'@title Calculate Animation Coordinates from Path
 #'
-#'@description Transforms latitude/longitude/altitude coordinates to the reference system used in `render_highquality()`,
+#'@description Transforms latitude/longitude/altitude coordinates to the reference system used in [render_highquality()],
 #'so they can be used to create high quality pathtraced animations by passing the output to the `animation_camera_coords`
-#'argument in `render_highquality()`.
+#'argument in [render_highquality()].
 #'
-#'This function converts the path values to rayshader coordinates (by setting `return_coords = TRUE` in `render_path()`) 
+#'This function converts the path values to rayshader coordinates (by setting `return_coords = TRUE` in [render_path()]) 
 #'and then subtracts out the rgl y-offset, which can be obtained by calling the internal function `rayshader:::get_scene_depth()`. 
 #'
 #'@param long Vector of longitudes (or other coordinate in the same coordinate reference system as extent).

@@ -7,16 +7,16 @@
 save_3dprint(filename, maxwidth = 125, unit = "mm", rotate = FALSE)
 }
 \arguments{
-\item{filename}{String with the filename. If `.stl` is not at the end of the string, it will be appended automatically.}
+\item{filename}{String with the filename. If \code{.stl} is not at the end of the string, it will be appended automatically.}
 
-\item{maxwidth}{Default `125`. Desired maximum width of the 3D print in millimeters. Uses the units set in `unit` argument. Can also pass in a string, "125mm" or "5in".}
+\item{maxwidth}{Default \code{125}. Desired maximum width of the 3D print in millimeters. Uses the units set in \code{unit} argument. Can also pass in a string, "125mm" or "5in".}
 
-\item{unit}{Default `mm`. Units of the `maxwidth` argument. Can also be set to inches with `in`.}
+\item{unit}{Default \code{mm}. Units of the \code{maxwidth} argument. Can also be set to inches with \verb{in}.}
 
-\item{rotate}{Default `TRUE`. If `FALSE`, the map will be printing on its side. This may improve resolution for some 3D printing types.}
+\item{rotate}{Default \code{TRUE}. If \code{FALSE}, the map will be printing on its side. This may improve resolution for some 3D printing types.}
 }
 \value{
-Writes an STL file to `filename`. Regardless of the unit displayed, the output STL is in millimeters.
+Writes an STL file to \code{filename}. Regardless of the unit displayed, the output STL is in millimeters.
 }
 \description{
 Writes a stereolithography (STL) file that can be used in 3D printing.

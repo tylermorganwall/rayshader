@@ -20,26 +20,26 @@ render_contours(
 \arguments{
 \item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All grid points are assumed to be evenly spaced.}
 
-\item{zscale}{Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
-of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.}
+\item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
+of 1 meter and the grid values are separated by 10 meters, \code{zscale} would be 10.}
 
-\item{levels}{Default `NA`. Automatically generated with 10 levels. This argument specifies the exact height levels of each contour.}
+\item{levels}{Default \code{NA}. Automatically generated with 10 levels. This argument specifies the exact height levels of each contour.}
 
-\item{nlevels}{Default `NA`. Controls the auto-generation of levels. If levels is length-2, 
-this will automatically generate `nlevels` breaks between `levels[1]` and `levels[2]`.}
+\item{nlevels}{Default \code{NA}. Controls the auto-generation of levels. If levels is length-2,
+this will automatically generate \code{nlevels} breaks between \code{levels[1]} and \code{levels[2]}.}
 
-\item{linewidth}{Default `3`. The line width.}
+\item{linewidth}{Default \code{3}. The line width.}
 
-\item{color}{Default `black`. Color of the line.}
+\item{color}{Default \code{black}. Color of the line.}
 
-\item{palette}{Default `NULL`. Overrides `color`. Either a function that returns a color palette 
-of `n` colors, or a character vector with colors that specifies each color manually.}
+\item{palette}{Default \code{NULL}. Overrides \code{color}. Either a function that returns a color palette
+of \code{n} colors, or a character vector with colors that specifies each color manually.}
 
-\item{antialias}{Default `FALSE`. If `TRUE`, the line with be have anti-aliasing applied. NOTE: anti-aliasing can cause some unpredictable behavior with transparent surfaces.}
+\item{antialias}{Default \code{FALSE}. If \code{TRUE}, the line with be have anti-aliasing applied. NOTE: anti-aliasing can cause some unpredictable behavior with transparent surfaces.}
 
-\item{offset}{Default `5`. Offset of the track from the surface, if `altitude = NULL`.}
+\item{offset}{Default \code{5}. Offset of the track from the surface, if \code{altitude = NULL}.}
 
-\item{clear_previous}{Default `FALSE`. If `TRUE`, it will clear all existing paths.}
+\item{clear_previous}{Default \code{FALSE}. If \code{TRUE}, it will clear all existing paths.}
 }
 \description{
 Adds 3D contours to the current scene, using the heightmap of the 3D surface.

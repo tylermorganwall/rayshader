@@ -22,7 +22,7 @@
 #'@param height Default `NA`. Width of the resulting image array. Default the same dimensions as height map.
 #'@param resolution_multiply Default `1`. If passing in `heightmap` instead of width/height, amount to 
 #'increase the resolution of the overlay, which should make lines/polygons finer. 
-#'Should be combined with `add_overlay(rescale_original = TRUE)` to ensure those added details are captured
+#'Should be combined with [add_overlay(rescale_original = TRUE)] to ensure those added details are captured
 #'in the final map.
 #'@param halo_color Default `NA`, no halo. If a color is specified, the compass will be surrounded by a halo
 #'of this color.

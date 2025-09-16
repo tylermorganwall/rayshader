@@ -9,9 +9,9 @@ constant_shade(heightmap, color = "white", alpha = 1)
 \arguments{
 \item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point.}
 
-\item{color}{Default `"white"`. Color for the constant layer.}
+\item{color}{Default \code{"white"}. Color for the constant layer.}
 
-\item{alpha}{Default `1`, the alpha transparency.}
+\item{alpha}{Default \code{1}, the alpha transparency.}
 }
 \value{
 RGB array of a single color layer.

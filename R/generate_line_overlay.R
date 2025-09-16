@@ -13,7 +13,7 @@
 #'@param height Default `NA`. Width of the resulting overlay. Default the same dimensions as height map.
 #'@param resolution_multiply Default `1`. If passing in `heightmap` instead of width/height, amount to 
 #'increase the resolution of the overlay, which should make lines/polygons/text finer. 
-#'Should be combined with `add_overlay(rescale_original = TRUE)` to ensure those added details are captured
+#'Should be combined with [add_overlay(rescale_original = TRUE)] to ensure those added details are captured
 #'in the final map.
 #'@param color Default `black`. Color of the lines.
 #'@param linewidth Default `1`. Line width.

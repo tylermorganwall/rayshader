@@ -38,57 +38,57 @@ render_label(
 
 \item{text}{The label text.}
 
-\item{lat}{A latitude for the text. Must provide an `raster::extent` object to argument `extent` for the map.}
+\item{lat}{A latitude for the text. Must provide an \code{raster::extent} object to argument \code{extent} for the map.}
 
-\item{long}{A latitude for the text. Must provide an `raster::extent` object to argument `extent` for the map.}
+\item{long}{A latitude for the text. Must provide an \code{raster::extent} object to argument \code{extent} for the map.}
 
-\item{altitude}{Default `NULL`. Elevation of the label, in units of the elevation matrix (scaled by zscale). If none is passed, this will default to 10 percent above the maximum altitude in the heightmap.}
+\item{altitude}{Default \code{NULL}. Elevation of the label, in units of the elevation matrix (scaled by zscale). If none is passed, this will default to 10 percent above the maximum altitude in the heightmap.}
 
-\item{extent}{Either an object representing the spatial extent of the scene 
-(either from the `raster`, `terra`, `sf`, or `sp` packages), 
-a length-4 numeric vector specifying `c("xmin", "xmax","ymin","ymax")`, or the spatial object (from 
+\item{extent}{Either an object representing the spatial extent of the scene
+(either from the \code{raster}, \code{terra}, \code{sf}, or \code{sp} packages),
+a length-4 numeric vector specifying \code{c("xmin", "xmax","ymin","ymax")}, or the spatial object (from
 the previously aforementioned packages) which will be automatically converted to an extent object.}
 
-\item{x}{Default `NULL`. Directly specify the `x` index in the matrix to place the label.}
+\item{x}{Default \code{NULL}. Directly specify the \code{x} index in the matrix to place the label.}
 
-\item{y}{Default `NULL`. Directly specify the `y` index in the matrix to place the label.}
+\item{y}{Default \code{NULL}. Directly specify the \code{y} index in the matrix to place the label.}
 
-\item{z}{Default `NULL`. Elevation of the label, in units of the elevation matrix (scaled by zscale).}
+\item{z}{Default \code{NULL}. Elevation of the label, in units of the elevation matrix (scaled by zscale).}
 
-\item{zscale}{Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units}
+\item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units}
 
-\item{relativez}{Default `TRUE`. Whether `z` should be measured in relation to the underlying elevation at that point in the heightmap, or set absolutely (`FALSE`).}
+\item{relativez}{Default \code{TRUE}. Whether \code{z} should be measured in relation to the underlying elevation at that point in the heightmap, or set absolutely (\code{FALSE}).}
 
 \item{offset}{Elevation above the surface (at the label point) to start drawing the line.}
 
-\item{clear_previous}{Default `FALSE`. If `TRUE`, it will clear all existing text and lines rendered with `render_label()`. If no
-other arguments are passed to `render_label()`, this will just remove all existing lines.}
+\item{clear_previous}{Default \code{FALSE}. If \code{TRUE}, it will clear all existing text and lines rendered with \code{\link[=render_label]{render_label()}}. If no
+other arguments are passed to \code{\link[=render_label]{render_label()}}, this will just remove all existing lines.}
 
-\item{textsize}{Default `1`. A numeric character expansion value.}
+\item{textsize}{Default \code{1}. A numeric character expansion value.}
 
-\item{dashed}{Default `FALSE`. If `TRUE`, the label line is dashed.}
+\item{dashed}{Default \code{FALSE}. If \code{TRUE}, the label line is dashed.}
 
-\item{dashlength}{Default `auto`. Length, in units of the elevation matrix (scaled by `zscale`) of the dashes if `dashed = TRUE`.}
+\item{dashlength}{Default \code{auto}. Length, in units of the elevation matrix (scaled by \code{zscale}) of the dashes if \code{dashed = TRUE}.}
 
-\item{linewidth}{Default `3`. The line width.}
+\item{linewidth}{Default \code{3}. The line width.}
 
-\item{antialias}{Default `FALSE`. If `TRUE`, the line with be have anti-aliasing applied. NOTE: anti-aliasing can cause some unpredictable behavior with transparent surfaces.}
+\item{antialias}{Default \code{FALSE}. If \code{TRUE}, the line with be have anti-aliasing applied. NOTE: anti-aliasing can cause some unpredictable behavior with transparent surfaces.}
 
-\item{alpha}{Default `1`. Transparency of the label line.}
+\item{alpha}{Default \code{1}. Transparency of the label line.}
 
-\item{textalpha}{Default `1`. Transparency of the label text.}
+\item{textalpha}{Default \code{1}. Transparency of the label text.}
 
-\item{freetype}{Default `TRUE`. Set to `FALSE` if freetype is not installed (freetype enables anti-aliased fonts). NOTE: There are occasionally transparency issues when positioning Freetype fonts in front and behind a transparent surface.}
+\item{freetype}{Default \code{TRUE}. Set to \code{FALSE} if freetype is not installed (freetype enables anti-aliased fonts). NOTE: There are occasionally transparency issues when positioning Freetype fonts in front and behind a transparent surface.}
 
-\item{adjustvec}{Default `c(0.5,-0.5)`. The horizontal and vertical offset for the text. If `freetype = FALSE` and on macOS/Linux, this is adjusted to `c(0.33,-0.5)` to keep the type centered.}
+\item{adjustvec}{Default \code{c(0.5,-0.5)}. The horizontal and vertical offset for the text. If \code{freetype = FALSE} and on macOS/Linux, this is adjusted to \code{c(0.33,-0.5)} to keep the type centered.}
 
-\item{family}{Default `"sans"`. Font family. Choices are `c("serif", "sans", "mono", "symbol")`.}
+\item{family}{Default \code{"sans"}. Font family. Choices are \code{c("serif", "sans", "mono", "symbol")}.}
 
-\item{fonttype}{Default `"standard"`. The font type. Choices are `c("standard", "bold", "italic", "bolditalic")`. NOTE: These require FreeType fonts, which may not be installed on your system. See the documentation for rgl::text3d() for more information.}
+\item{fonttype}{Default \code{"standard"}. The font type. Choices are \code{c("standard", "bold", "italic", "bolditalic")}. NOTE: These require FreeType fonts, which may not be installed on your system. See the documentation for rgl::text3d() for more information.}
 
-\item{linecolor}{Default `black`. Color of the line.}
+\item{linecolor}{Default \code{black}. Color of the line.}
 
-\item{textcolor}{Default `black`. Color of the text.}
+\item{textcolor}{Default \code{black}. Color of the text.}
 }
 \description{
 Adds a marker and label to the current 3D plot

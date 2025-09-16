@@ -14,13 +14,13 @@ height_shade(
 \arguments{
 \item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point.}
 
-\item{texture}{Default `terrain.colors(256)`. A color palette for the plot.}
+\item{texture}{Default \code{terrain.colors(256)}. A color palette for the plot.}
 
-\item{range}{Default `NULL`, the full range of the heightmap. A length-2 vector specifying the maximum
+\item{range}{Default \code{NULL}, the full range of the heightmap. A length-2 vector specifying the maximum
 and minimum values to map the color palette to.}
 
-\item{keep_user_par}{Default `TRUE`. Whether to keep the user's `par()` settings. Set to `FALSE` if you 
-want to set up a multi-pane plot (e.g. set `par(mfrow)`).}
+\item{keep_user_par}{Default \code{TRUE}. Whether to keep the user's \code{par()} settings. Set to \code{FALSE} if you
+want to set up a multi-pane plot (e.g. set \code{par(mfrow)}).}
 }
 \value{
 RGB array of hillshaded texture mappings.

@@ -25,28 +25,28 @@ render_floating_overlay(
 
 \item{heightmap}{The underlying surface. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.}
 
-\item{zscale}{Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
-of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10. Adjust the zscale down to exaggerate elevation features.}
+\item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
+of 1 meter and the grid values are separated by 10 meters, \code{zscale} would be 10. Adjust the zscale down to exaggerate elevation features.}
 
-\item{alpha}{Default `1`. Multiplies the layer's transparency by this factor. 0 is completely transparent.}
+\item{alpha}{Default \code{1}. Multiplies the layer's transparency by this factor. 0 is completely transparent.}
 
-\item{baseshape}{Default `rectangle`. Shape of the overlay. Options are `c("rectangle", "circle", "hex")`.}
+\item{baseshape}{Default \code{rectangle}. Shape of the overlay. Options are \code{c("rectangle", "circle", "hex")}.}
 
-\item{remove_na}{Default `TRUE`. Whether to make the overlay transparent above empty spaces (represented by `NA` values) in the underlying elevation matrix.}
+\item{remove_na}{Default \code{TRUE}. Whether to make the overlay transparent above empty spaces (represented by \code{NA} values) in the underlying elevation matrix.}
 
-\item{reorient}{Default `TRUE`. Whether to reorient the image array to match the 3D plot.}
+\item{reorient}{Default \code{TRUE}. Whether to reorient the image array to match the 3D plot.}
 
-\item{clear_layers}{Default `FALSE`. Clears all existing floating layers on the visualization.}
+\item{clear_layers}{Default \code{FALSE}. Clears all existing floating layers on the visualization.}
 
-\item{horizontal_offset}{Default `c(0,0)`. Distance (in 3D space) to offset the floating offset in the x/y directions.}
+\item{horizontal_offset}{Default \code{c(0,0)}. Distance (in 3D space) to offset the floating offset in the x/y directions.}
 
-\item{...}{Additional arguments to pass to `rgl::triangles3d()`.}
+\item{...}{Additional arguments to pass to \code{rgl::triangles3d()}.}
 }
 \value{
 Adds a 3D floating layer to the map. No return value.
 }
 \description{
-Render a 2D floating overlay over the map. 
+Render a 2D floating overlay over the map.
 
 Note: Multiple layers with transparency can cause rendering issues in rgl.
 }

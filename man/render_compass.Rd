@@ -23,39 +23,39 @@ render_compass(
 )
 }
 \arguments{
-\item{angle}{Default `0`. The direction the arrow should be facing.}
+\item{angle}{Default \code{0}. The direction the arrow should be facing.}
 
-\item{position}{Default `SE`. A string representing a cardinal direction. Ignored if `x`, `y`, and `z`
+\item{position}{Default \code{SE}. A string representing a cardinal direction. Ignored if \code{x}, \code{y}, and \code{z}
 are manually specified.}
 
-\item{altitude}{Default `NULL`. Altitude of the compass, defaults to maximum height in the map.}
+\item{altitude}{Default \code{NULL}. Altitude of the compass, defaults to maximum height in the map.}
 
-\item{zscale}{Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. 
-Only used in combination with `altitude`.}
+\item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis.
+Only used in combination with \code{altitude}.}
 
-\item{x}{Default `NULL`. X position. If not entered, automatically calculated using `position` argument.}
+\item{x}{Default \code{NULL}. X position. If not entered, automatically calculated using \code{position} argument.}
 
-\item{y}{Default `NULL`. Y position. If not entered, automatically calculated using `position` argument.}
+\item{y}{Default \code{NULL}. Y position. If not entered, automatically calculated using \code{position} argument.}
 
-\item{z}{Default `NULL`. Z position. If not entered, automatically calculated using `position` argument.}
+\item{z}{Default \code{NULL}. Z position. If not entered, automatically calculated using \code{position} argument.}
 
-\item{compass_radius}{Default `NULL`. The radius of the compass. If not entered, automatically calculated. 
+\item{compass_radius}{Default \code{NULL}. The radius of the compass. If not entered, automatically calculated.
 Increase or decrease the size of the compass.}
 
-\item{scale_distance}{Default `1`. Multiplier that moves the compass away from the center of the map.}
+\item{scale_distance}{Default \code{1}. Multiplier that moves the compass away from the center of the map.}
 
-\item{color_n}{Default `darkred`. Color of the letter N.}
+\item{color_n}{Default \code{darkred}. Color of the letter N.}
 
-\item{color_arrow}{Default `grey90`. Color of the arrow.}
+\item{color_arrow}{Default \code{grey90}. Color of the arrow.}
 
-\item{color_background}{Default `grey20`. Color of the area right under the arrow.}
+\item{color_background}{Default \code{grey20}. Color of the area right under the arrow.}
 
-\item{color_bevel}{Default `grey20`. Color of the bevel.}
+\item{color_bevel}{Default \code{grey20}. Color of the bevel.}
 
-\item{position_circular}{Default `FALSE`. If `TRUE`, will place compass at a constant radius away from
+\item{position_circular}{Default \code{FALSE}. If \code{TRUE}, will place compass at a constant radius away from
 the map, as opposed to directly next to it. Overridden if user manually specifies position.}
 
-\item{clear_compass}{Default `FALSE`. Clears the compass symbol(s) on the map.}
+\item{clear_compass}{Default \code{FALSE}. Clears the compass symbol(s) on the map.}
 }
 \value{
 Adds compass to map. No return value.

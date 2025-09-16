@@ -23,32 +23,32 @@ plot_map(
 \arguments{
 \item{hillshade}{Hillshade to be plotted.}
 
-\item{rotate}{Default `0`. Rotates the output. Possible values: `0`, `90`, `180`, `270`.}
+\item{rotate}{Default \code{0}. Rotates the output. Possible values: \code{0}, \code{90}, \code{180}, \code{270}.}
 
-\item{asp}{Default `1`. Aspect ratio of the resulting plot. Use `asp = 1/cospi(mean_latitude/180)` to rescale
+\item{asp}{Default \code{1}. Aspect ratio of the resulting plot. Use \code{asp = 1/cospi(mean_latitude/180)} to rescale
 lat/long at higher latitudes to the correct the aspect ratio.}
 
-\item{title_text}{Default `NULL`. Text. Adds a title to the image, using `magick::image_annotate()`.}
+\item{title_text}{Default \code{NULL}. Text. Adds a title to the image, using \code{magick::image_annotate()}.}
 
-\item{title_offset}{Default `c(20,20)`. Distance from the top-left (default, `gravity` direction in
+\item{title_offset}{Default \code{c(20,20)}. Distance from the top-left (default, \code{gravity} direction in
 image_annotate) corner to offset the title.}
 
-\item{title_color}{Default `black`. Font color.}
+\item{title_color}{Default \code{black}. Font color.}
 
-\item{title_size}{Default `30`. Font size in pixels.}
+\item{title_size}{Default \code{30}. Font size in pixels.}
 
-\item{title_font}{Default `sans`. String with font family such as "sans", "mono", "serif", "Times", "Helvetica",
+\item{title_font}{Default \code{sans}. String with font family such as "sans", "mono", "serif", "Times", "Helvetica",
 "Trebuchet", "Georgia", "Palatino" or "Comic Sans".}
 
-\item{title_style}{Default `normal`. Font style (e.g. `italic`).}
+\item{title_style}{Default \code{normal}. Font style (e.g. \code{italic}).}
 
-\item{title_bar_color}{Default `NA`. If a color, this will create a colored bar under the title.}
+\item{title_bar_color}{Default \code{NA}. If a color, this will create a colored bar under the title.}
 
-\item{title_bar_alpha}{Default `0.5`. Transparency of the title bar.}
+\item{title_bar_alpha}{Default \code{0.5}. Transparency of the title bar.}
 
-\item{title_just}{Default `left`. Justification of the title.}
+\item{title_just}{Default \code{left}. Justification of the title.}
 
-\item{...}{Additional arguments to pass to the `raster::plotRGB` function that displays the map.}
+\item{...}{Additional arguments to pass to the \code{raster::plotRGB} function that displays the map.}
 }
 \description{
 Displays the map in the current device.

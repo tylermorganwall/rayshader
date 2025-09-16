@@ -12,20 +12,20 @@ convert_rgl_to_raymesh(
 )
 }
 \arguments{
-\item{save_shadow}{Default `FALSE`. If `TRUE`, this saves a plane with the shadow texture below the model.}
+\item{save_shadow}{Default \code{FALSE}. If \code{TRUE}, this saves a plane with the shadow texture below the model.}
 
-\item{water_attenuation}{Default `0`, no attenuation. Amount that light should be attenuated when traveling through water.}
+\item{water_attenuation}{Default \code{0}, no attenuation. Amount that light should be attenuated when traveling through water.}
 
-\item{water_surface_color}{Default `TRUE`. Whether the water should have a colored surface or not. This is in contrast to
+\item{water_surface_color}{Default \code{TRUE}. Whether the water should have a colored surface or not. This is in contrast to
 setting a non-zero water attenuation, where the color comes from the attenuation of light in the water itself.}
 
-\item{water_ior}{Default `1`. Water index of refraction.}
+\item{water_ior}{Default \code{1}. Water index of refraction.}
 }
 \value{
-A `ray_mesh` object
+A \code{ray_mesh} object
 }
 \description{
-Converts the current RGL rayshader scene to a `ray_mesh` object (see `rayvertex` package for more information)
+Converts the current RGL rayshader scene to a \code{ray_mesh} object (see \code{rayvertex} package for more information)
 }
 \examples{
 filename_obj = tempfile(fileext = ".obj")

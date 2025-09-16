@@ -26,57 +26,57 @@ render_polygons(
 )
 }
 \arguments{
-\item{polygon}{`sf` object, "SpatialPolygon" `sp` object,  or xy coordinates
-of polygon represented in a way that can be processed by `xy.coords()`.  If
+\item{polygon}{\code{sf} object, "SpatialPolygon" \code{sp} object,  or xy coordinates
+of polygon represented in a way that can be processed by \code{xy.coords()}.  If
 xy-coordinate based polygons are open, they will be closed by adding an
 edge from the last point to the first.}
 
-\item{extent}{Either an object representing the spatial extent of the 3D scene 
-(either from the `raster`, `terra`, `sf`, or `sp` packages), 
-a length-4 numeric vector specifying `c("xmin", "xmax", "ymin", "ymax")`, or the spatial object (from 
+\item{extent}{Either an object representing the spatial extent of the 3D scene
+(either from the \code{raster}, \code{terra}, \code{sf}, or \code{sp} packages),
+a length-4 numeric vector specifying \code{c("xmin", "xmax", "ymin", "ymax")}, or the spatial object (from
 the previously aforementioned packages) which will be automatically converted to an extent object.}
 
-\item{color}{Default `black`. Color of the polygon.}
+\item{color}{Default \code{black}. Color of the polygon.}
 
-\item{top}{Default `1`. Extruded top distance. If this equals `bottom`, the polygon will not be
+\item{top}{Default \code{1}. Extruded top distance. If this equals \code{bottom}, the polygon will not be
 extruded and just the one side will be rendered.}
 
-\item{bottom}{Default `0`. Extruded bottom distance. If this equals `top`, the polygon will not be
+\item{bottom}{Default \code{0}. Extruded bottom distance. If this equals \code{top}, the polygon will not be
 extruded and just the one side will be rendered.}
 
-\item{data_column_top}{Default `NULL`. A string indicating the column in the `sf` object to use 
+\item{data_column_top}{Default \code{NULL}. A string indicating the column in the \code{sf} object to use
 to specify the top of the extruded polygon.}
 
-\item{data_column_bottom}{Default `NULL`. A string indicating the column in the `sf` object to use 
+\item{data_column_bottom}{Default \code{NULL}. A string indicating the column in the \code{sf} object to use
 to specify the bottom of the extruded polygon.}
 
-\item{heightmap}{Default `NULL`. Automatically extracted from the rgl window--only use if auto-extraction
+\item{heightmap}{Default \code{NULL}. Automatically extracted from the rgl window--only use if auto-extraction
 of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
- All points are assumed to be evenly spaced.}
+All points are assumed to be evenly spaced.}
 
-\item{scale_data}{Default `1`. If specifying `data_column_top` or `data_column_bottom`, how
+\item{scale_data}{Default \code{1}. If specifying \code{data_column_top} or \code{data_column_bottom}, how
 much to scale that value when rendering.}
 
-\item{parallel}{Default `FALSE`. If `TRUE`, polygons will be extruded in parallel, which
-may be faster (depending on how many geometries are in `polygon`).}
+\item{parallel}{Default \code{FALSE}. If \code{TRUE}, polygons will be extruded in parallel, which
+may be faster (depending on how many geometries are in \code{polygon}).}
 
-\item{holes}{Default `0`. If passing in a polygon directly, this specifies which index represents
-the holes in the polygon. See the `earcut` function in the `decido` package for more information.}
+\item{holes}{Default \code{0}. If passing in a polygon directly, this specifies which index represents
+the holes in the polygon. See the \code{earcut} function in the \code{decido} package for more information.}
 
-\item{alpha}{Default `1`. Transparency of the polygons.}
+\item{alpha}{Default \code{1}. Transparency of the polygons.}
 
-\item{lit}{Default `TRUE`. Whether to light the polygons.}
+\item{lit}{Default \code{TRUE}. Whether to light the polygons.}
 
-\item{light_altitude}{Default `c(45, 60)`. Degree(s) from the horizon from which to light the polygons.}
+\item{light_altitude}{Default \code{c(45, 60)}. Degree(s) from the horizon from which to light the polygons.}
 
-\item{light_direction}{Default `c(45, 60)`. Degree(s) from north from which to light the polygons.}
+\item{light_direction}{Default \code{c(45, 60)}. Degree(s) from north from which to light the polygons.}
 
-\item{light_intensity}{Default `0.3`. Intensity of the specular highlight on the polygons.}
+\item{light_intensity}{Default \code{0.3}. Intensity of the specular highlight on the polygons.}
 
-\item{light_relative}{Default `FALSE`. Whether the light direction should be taken relative to the camera,
+\item{light_relative}{Default \code{FALSE}. Whether the light direction should be taken relative to the camera,
 or absolute.}
 
-\item{clear_previous}{Default `FALSE`. If `TRUE`, it will clear all existing polygons.}
+\item{clear_previous}{Default \code{FALSE}. If \code{TRUE}, it will clear all existing polygons.}
 }
 \description{
 Adds 3D polygons to the current scene, using latitude/longitude or coordinates in the reference
