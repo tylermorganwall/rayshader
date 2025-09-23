@@ -9,7 +9,7 @@
 #'@export
 #'@examples
 #'#Convert the built-in Washington Monument MULTIPOLYGON Z data to an OBJ file
-#'obj_temp = tempfile(fileext=".obk")
+#'obj_temp = tempfile(fileext=".obj")
 #'save_multipolygonz_to_obj(washington_monument_multipolygonz, obj_temp, swap_yz=TRUE)
 #'#Render with rgl
 #'rgl::open3d()
