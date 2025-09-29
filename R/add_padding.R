@@ -6,6 +6,9 @@
 #'@return Hillshade with edges padded
 #'@keywords internal
 add_padding = function(heightmap) {
+	if(length(dim(heightmap)) == 3) {
+		heightmap = unclass(heightmap)[,,1]
+	}
   temp = matrix(0, nrow = nrow(heightmap) + 2, ncol = ncol(heightmap) + 2)
   temp[2:(nrow(temp)-1), 2:(ncol(temp)-1)] = heightmap
   temp[2:(nrow(temp)-1), 1] = heightmap[,1]

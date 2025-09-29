@@ -10,8 +10,8 @@ transform_polygon_into_raycoords = function(polygon, heightmap = NULL, e = NULL,
   if(nrow(vertex_info) > 1) {
     warning("Multiple surfaces detected: only using the first surface to transform coords")
   }
-  ncol_map = vertex_info$ncol[1]
-  nrow_map = vertex_info$nrow[1]
+  ncol_map = vertex_info$ncol[[1]]
+  nrow_map = vertex_info$nrow[[1]]
   
   ncol_map = ncol_map - 1
   nrow_map = nrow_map - 1

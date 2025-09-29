@@ -172,7 +172,7 @@ render_snapshot_software = function(filename, cache_scene = FALSE, camera_locati
                                             temp_center[j,3] - bbox_center[3] + text_offset[3]),
                                             angle = anglevec,
                                             text_height = text_size,
-                                            color = temp_color[j,1:3]))
+                                            font_color = temp_color[j,1:3]))
     }
   }
   labellineids = get_ids_with_labels(typeval = c("textline","lines","waterlines"))$id
@@ -279,7 +279,7 @@ render_snapshot_software = function(filename, cache_scene = FALSE, camera_locati
                                           temp_center[j,3] - bbox_center[3] + text_offset[3]),
                                           angle = anglevec, 
                                           text_height = text_size,
-                                          color = as.vector(temp_color[j,1:3])))
+                                          font_color = as.vector(temp_color[j,1:3])))
     }
   }
   if(length(labels) > 0) {

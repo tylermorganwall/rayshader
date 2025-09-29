@@ -1,8 +1,8 @@
 Package: rayshader
 Type: Package
 Title: Create Maps and Visualize Data in 2D and 3D
-Version: 0.38.11
-Date: 2025-01-28
+Version: 0.38.12
+Date: 2025-09-29
 Authors@R: 
     person("Tyler", "Morgan-Wall", email = "tylermw@gmail.com",role = c("aut", "cph", "cre"), 
            comment = c(ORCID = "0000-0002-3131-3814"))
