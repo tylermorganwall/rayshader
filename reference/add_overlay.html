@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.38.11</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.38.12</span>
       </span>
     </div>
 
@@ -119,26 +119,26 @@
 
 <dt id="arg-overlay">overlay<a class="anchor" aria-label="anchor" href="#arg-overlay"></a></dt>
 <dd><p>A three or four dimensional RGB array, where the 4th dimension represents the alpha (transparency) channel.
-If the array is 3D, `alphacolor` should also be passed to indicate transparent regions.</p></dd>
+If the array is 3D, <code>alphacolor</code> should also be passed to indicate transparent regions.</p></dd>
 
 
 <dt id="arg-alphalayer">alphalayer<a class="anchor" aria-label="anchor" href="#arg-alphalayer"></a></dt>
-<dd><p>Default `1`. Defines minimum tranparaency of layer. If transparency already exists in `overlay`, the way `add_overlay` combines
-the two is determined in argument `alphamethod`.</p></dd>
+<dd><p>Default <code>1</code>. Defines minimum tranparaency of layer. If transparency already exists in <code>overlay</code>, the way <code>add_overlay()</code> combines
+the two is determined in argument <code>alphamethod</code>.</p></dd>
 
 
 <dt id="arg-alphacolor">alphacolor<a class="anchor" aria-label="anchor" href="#arg-alphacolor"></a></dt>
-<dd><p>Default `NULL`. If `overlay` is a 3-layer array, this argument tells which color is interpretted as completely transparent.</p></dd>
+<dd><p>Default <code>NULL</code>. If <code>overlay</code> is a 3-layer array, this argument tells which color is interpretted as completely transparent.</p></dd>
 
 
 <dt id="arg-alphamethod">alphamethod<a class="anchor" aria-label="anchor" href="#arg-alphamethod"></a></dt>
-<dd><p>Default `max`. Method for dealing with pre-existing transparency with `layeralpha`.
-If `max`, converts all alpha levels higher than `layeralpha` to the value set in `layeralpha`. Otherwise,
-this just sets all transparency to `layeralpha`.</p></dd>
+<dd><p>Default <code>max</code>. Method for dealing with pre-existing transparency with <code>layeralpha</code>.
+If <code>max</code>, converts all alpha levels higher than <code>layeralpha</code> to the value set in <code>layeralpha</code>. Otherwise,
+this just sets all transparency to <code>layeralpha</code>.</p></dd>
 
 
 <dt id="arg-rescale-original">rescale_original<a class="anchor" aria-label="anchor" href="#arg-rescale-original"></a></dt>
-<dd><p>Default `FALSE`. If `TRUE`, `hillshade` will be scaled to match the dimensions of `overlay` (instead of
+<dd><p>Default <code>FALSE</code>. If <code>TRUE</code>, <code>hillshade</code> will be scaled to match the dimensions of <code>overlay</code> (instead of
 the other way around).</p></dd>
 
 </dl></div>
@@ -182,7 +182,7 @@ the other way around).</p></dd>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
 </div>
 
       </footer></div>

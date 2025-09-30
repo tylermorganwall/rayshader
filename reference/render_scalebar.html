@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.38.11</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.38.12</span>
       </span>
     </div>
 
@@ -130,67 +130,67 @@ limits assumed to be the last label. Must be non-negative.</p></dd>
 
 
 <dt id="arg-position">position<a class="anchor" aria-label="anchor" href="#arg-position"></a></dt>
-<dd><p>Default `W`. A string representing a direction. Can be `N`, `E`, `S`, and `W`.</p></dd>
+<dd><p>Default <code>W</code>. A string representing a direction. Can be <code>N</code>, <code>E</code>, <code>S</code>, and <code>W</code>.</p></dd>
 
 
 <dt id="arg-y">y<a class="anchor" aria-label="anchor" href="#arg-y"></a></dt>
-<dd><p>Default `NULL`. The height of the scale bar, automatically calculated if `NULL`.</p></dd>
+<dd><p>Default <code>NULL</code>. The height of the scale bar, automatically calculated if <code>NULL</code>.</p></dd>
 
 
 <dt id="arg-segments">segments<a class="anchor" aria-label="anchor" href="#arg-segments"></a></dt>
-<dd><p>Default `10`. Number of colored segments in the scalebar.</p></dd>
+<dd><p>Default <code>10</code>. Number of colored segments in the scalebar.</p></dd>
 
 
 <dt id="arg-scale-length">scale_length<a class="anchor" aria-label="anchor" href="#arg-scale-length"></a></dt>
-<dd><p>Default `1`. Length of the scale bar, relative to the
-side of the map specified in `position`. If a length-2 vector, the first number specifies the start
+<dd><p>Default <code>1</code>. Length of the scale bar, relative to the
+side of the map specified in <code>position</code>. If a length-2 vector, the first number specifies the start
 and stop points along the side.</p></dd>
 
 
 <dt id="arg-label-unit">label_unit<a class="anchor" aria-label="anchor" href="#arg-label-unit"></a></dt>
-<dd><p>Default `NULL`. The distance unit for the label.</p></dd>
+<dd><p>Default <code>NULL</code>. The distance unit for the label.</p></dd>
 
 
 <dt id="arg-offset">offset<a class="anchor" aria-label="anchor" href="#arg-offset"></a></dt>
-<dd><p>Default `NULL`. The distance away from the edge to place the scale bar.
-If `NULL`, automatically calculated.</p></dd>
+<dd><p>Default <code>NULL</code>. The distance away from the edge to place the scale bar.
+If <code>NULL</code>, automatically calculated.</p></dd>
 
 
 <dt id="arg-radius">radius<a class="anchor" aria-label="anchor" href="#arg-radius"></a></dt>
-<dd><p>Default `NULL`. The radius of the cylinder representing the scale bar.
-If `NULL`, automatically calculated.</p></dd>
+<dd><p>Default <code>NULL</code>. The radius of the cylinder representing the scale bar.
+If <code>NULL</code>, automatically calculated.</p></dd>
 
 
 <dt id="arg-color-first">color_first<a class="anchor" aria-label="anchor" href="#arg-color-first"></a></dt>
-<dd><p>Default `darkred`. Primary color in the scale bar.</p></dd>
+<dd><p>Default <code>darkred</code>. Primary color in the scale bar.</p></dd>
 
 
 <dt id="arg-color-second">color_second<a class="anchor" aria-label="anchor" href="#arg-color-second"></a></dt>
-<dd><p>Default `grey90`. Seconary color in the scale bar.</p></dd>
+<dd><p>Default <code>grey90</code>. Seconary color in the scale bar.</p></dd>
 
 
 <dt id="arg-color-text">color_text<a class="anchor" aria-label="anchor" href="#arg-color-text"></a></dt>
-<dd><p>Default `black`. Color of the text.</p></dd>
+<dd><p>Default <code>black</code>. Color of the text.</p></dd>
 
 
 <dt id="arg-text-switch-side">text_switch_side<a class="anchor" aria-label="anchor" href="#arg-text-switch-side"></a></dt>
-<dd><p>Default `FALSE`. Switches the order of the text.</p></dd>
+<dd><p>Default <code>FALSE</code>. Switches the order of the text.</p></dd>
 
 
 <dt id="arg-text-x-offset">text_x_offset<a class="anchor" aria-label="anchor" href="#arg-text-x-offset"></a></dt>
-<dd><p>Default `0`. Distance offset for text in the x direction.</p></dd>
+<dd><p>Default <code>0</code>. Distance offset for text in the x direction.</p></dd>
 
 
 <dt id="arg-text-y-offset">text_y_offset<a class="anchor" aria-label="anchor" href="#arg-text-y-offset"></a></dt>
-<dd><p>Default `0`. Distance offset for text in the y direction.</p></dd>
+<dd><p>Default <code>0</code>. Distance offset for text in the y direction.</p></dd>
 
 
 <dt id="arg-text-z-offset">text_z_offset<a class="anchor" aria-label="anchor" href="#arg-text-z-offset"></a></dt>
-<dd><p>Default `0`. Distance offset for text in the z direction.</p></dd>
+<dd><p>Default <code>0</code>. Distance offset for text in the z direction.</p></dd>
 
 
 <dt id="arg-clear-scalebar">clear_scalebar<a class="anchor" aria-label="anchor" href="#arg-clear-scalebar"></a></dt>
-<dd><p>Default `FALSE`. Clears the scale bar(s) on the map.</p></dd>
+<dd><p>Default <code>FALSE</code>. Clears the scale bar(s) on the map.</p></dd>
 
 </dl></div>
     <div id="value">
@@ -209,7 +209,7 @@ If `NULL`, automatically calculated.</p></dd>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> `montereybay` dataset used with no zscale--setting `zscale=50`.  For a realistic depiction, raise `zscale` to 200.</span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in rayvertex::text3d_mesh(as.character(temp_label), position = c(temp_center[j,     1] - bbox_center[1] + text_offset[1], temp_center[j, 2] -     bbox_center[2] + text_offset[2], temp_center[j, 3] - bbox_center[3] +     text_offset[3]), angle = anglevec, text_height = text_size,     color = as.vector(temp_color[j, 1:3])):</span> unused argument (color = as.vector(temp_color[j, 1:3]))</span>
+<span class="r-plt img"><img src="render_scalebar-1.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#This function works with `render_highquality()`</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_highquality.html">render_highquality</a></span><span class="op">(</span>lightdirection <span class="op">=</span> <span class="fl">250</span>, lightaltitude <span class="op">=</span> <span class="fl">40</span>, </span></span>
@@ -217,7 +217,7 @@ If `NULL`, automatically calculated.</p></dd>
 <span class="r-in"><span>                  sample_method <span class="op">=</span> <span class="st">"sobol_blue"</span>, samples <span class="op">=</span> <span class="fl">128</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">render_scalebar</span><span class="op">(</span>clear_scalebar <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-plt img"><img src="render_scalebar-1.png" alt="" width="768" height="768"></span>
+<span class="r-plt img"><img src="render_scalebar-2.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#We can change the position by specifying a cardinal direction to `position`, and the </span></span></span>
 <span class="r-in"><span><span class="co">#color by setting `color_first` and `color_second`</span></span></span>
@@ -227,7 +227,7 @@ If `NULL`, automatically calculated.</p></dd>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">render_scalebar</span><span class="op">(</span>clear_scalebar <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in rayvertex::text3d_mesh(as.character(temp_label), position = c(temp_center[j,     1] - bbox_center[1] + text_offset[1], temp_center[j, 2] -     bbox_center[2] + text_offset[2], temp_center[j, 3] - bbox_center[3] +     text_offset[3]), angle = anglevec, text_height = text_size,     color = as.vector(temp_color[j, 1:3])):</span> unused argument (color = as.vector(temp_color[j, 1:3]))</span>
+<span class="r-plt img"><img src="render_scalebar-3.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#And switch the orientation by setting `text_switch_side = TRUE`</span></span></span>
 <span class="r-in"><span><span class="fu">render_scalebar</span><span class="op">(</span>limits<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">80</span><span class="op">)</span>, label_unit <span class="op">=</span> <span class="st">"km"</span>, position <span class="op">=</span> <span class="st">"N"</span>, text_switch_side <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
@@ -235,7 +235,7 @@ If `NULL`, automatically calculated.</p></dd>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">render_scalebar</span><span class="op">(</span>clear_scalebar <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in rayvertex::text3d_mesh(as.character(temp_label), position = c(temp_center[j,     1] - bbox_center[1] + text_offset[1], temp_center[j, 2] -     bbox_center[2] + text_offset[2], temp_center[j, 3] - bbox_center[3] +     text_offset[3]), angle = anglevec, text_height = text_size,     color = as.vector(temp_color[j, 1:3])):</span> unused argument (color = as.vector(temp_color[j, 1:3]))</span>
+<span class="r-plt img"><img src="render_scalebar-4.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#We can add additional breaks by specifying additional distances in `limits`</span></span></span>
 <span class="r-in"><span></span></span>
@@ -243,7 +243,7 @@ If `NULL`, automatically calculated.</p></dd>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">render_scalebar</span><span class="op">(</span>clear_scalebar <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in rayvertex::text3d_mesh(as.character(temp_label), position = c(temp_center[j,     1] - bbox_center[1] + text_offset[1], temp_center[j, 2] -     bbox_center[2] + text_offset[2], temp_center[j, 3] - bbox_center[3] +     text_offset[3]), angle = anglevec, text_height = text_size,     color = as.vector(temp_color[j, 1:3])):</span> unused argument (color = as.vector(temp_color[j, 1:3]))</span>
+<span class="r-plt img"><img src="render_scalebar-5.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#We can also manually specify the height by setting the `y` argument:</span></span></span>
 <span class="r-in"><span></span></span>
@@ -251,7 +251,7 @@ If `NULL`, automatically calculated.</p></dd>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">render_scalebar</span><span class="op">(</span>clear_scalebar <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in rayvertex::text3d_mesh(as.character(temp_label), position = c(temp_center[j,     1] - bbox_center[1] + text_offset[1], temp_center[j, 2] -     bbox_center[2] + text_offset[2], temp_center[j, 3] - bbox_center[3] +     text_offset[3]), angle = anglevec, text_height = text_size,     color = as.vector(temp_color[j, 1:3])):</span> unused argument (color = as.vector(temp_color[j, 1:3]))</span>
+<span class="r-plt img"><img src="render_scalebar-6.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#Here we change the total size by specifying a start and end point along the side,</span></span></span>
 <span class="r-in"><span><span class="co">#and set the number of colored `segments`:</span></span></span>
@@ -262,7 +262,7 @@ If `NULL`, automatically calculated.</p></dd>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">render_scalebar</span><span class="op">(</span>clear_scalebar <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in rayvertex::text3d_mesh(as.character(temp_label), position = c(temp_center[j,     1] - bbox_center[1] + text_offset[1], temp_center[j, 2] -     bbox_center[2] + text_offset[2], temp_center[j, 3] - bbox_center[3] +     text_offset[3]), angle = anglevec, text_height = text_size,     color = as.vector(temp_color[j, 1:3])):</span> unused argument (color = as.vector(temp_color[j, 1:3]))</span>
+<span class="r-plt img"><img src="render_scalebar-7.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#Change the radius of the scale bar with `radius`. Here, the autopositioning doesn't work well with</span></span></span>
 <span class="r-in"><span><span class="co">#the labels, so we provide additional offsets with `text_y_offset` and `text_x_offset` to fix it.</span></span></span>
@@ -271,7 +271,7 @@ If `NULL`, automatically calculated.</p></dd>
 <span class="r-in"><span>               label_unit <span class="op">=</span> <span class="st">"km"</span>, radius<span class="op">=</span><span class="fl">10</span>,text_y_offset<span class="op">=</span><span class="op">-</span><span class="fl">20</span>,text_x_offset<span class="op">=</span><span class="fl">20</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in rayvertex::text3d_mesh(as.character(temp_label), position = c(temp_center[j,     1] - bbox_center[1] + text_offset[1], temp_center[j, 2] -     bbox_center[2] + text_offset[2], temp_center[j, 3] - bbox_center[3] +     text_offset[3]), angle = anglevec, text_height = text_size,     color = as.vector(temp_color[j, 1:3])):</span> unused argument (color = as.vector(temp_color[j, 1:3]))</span>
+<span class="r-plt img"><img src="render_scalebar-8.png" alt="" width="768" height="768"></span>
 </code></pre></div>
     </div>
   </div>
@@ -286,7 +286,7 @@ If `NULL`, automatically calculated.</p></dd>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
 </div>
 
       </footer></div>

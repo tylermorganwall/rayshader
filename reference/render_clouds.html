@@ -18,7 +18,7 @@ Note: Underlying layers with transparency can cause rendering issues in rgl."><m
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.38.11</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.38.12</span>
       </span>
     </div>
 
@@ -130,86 +130,86 @@ Note: Underlying layers with transparency can cause rendering issues in rgl."><m
 
 
 <dl><dt id="arg-heightmap">heightmap<a class="anchor" aria-label="anchor" href="#arg-heightmap"></a></dt>
-<dd><p>A two-dimensional matrix, where each entry in the matrix is the elevation at that point. This is used by `render_clouds()` to
+<dd><p>A two-dimensional matrix, where each entry in the matrix is the elevation at that point. This is used by <code>render_clouds()</code> to
 calculate the regions the clouds should be rendered in.</p></dd>
 
 
 <dt id="arg-start-altitude">start_altitude<a class="anchor" aria-label="anchor" href="#arg-start-altitude"></a></dt>
-<dd><p>Default `1000`. The bottom of the cloud layer.</p></dd>
+<dd><p>Default <code>1000</code>. The bottom of the cloud layer.</p></dd>
 
 
 <dt id="arg-end-altitude">end_altitude<a class="anchor" aria-label="anchor" href="#arg-end-altitude"></a></dt>
-<dd><p>Default `2000`. The top of the cloud layer.</p></dd>
+<dd><p>Default <code>2000</code>. The top of the cloud layer.</p></dd>
 
 
 <dt id="arg-sun-altitude">sun_altitude<a class="anchor" aria-label="anchor" href="#arg-sun-altitude"></a></dt>
-<dd><p>Default `90`. The angle, in degrees (as measured from the horizon) from which the light originates.</p></dd>
+<dd><p>Default <code>90</code>. The angle, in degrees (as measured from the horizon) from which the light originates.</p></dd>
 
 
 <dt id="arg-sun-angle">sun_angle<a class="anchor" aria-label="anchor" href="#arg-sun-angle"></a></dt>
-<dd><p>Default `315` (NW). The angle, in degrees, around the matrix from which the light originates. Zero degrees is North, increasing clockwise</p></dd>
+<dd><p>Default <code>315</code> (NW). The angle, in degrees, around the matrix from which the light originates. Zero degrees is North, increasing clockwise</p></dd>
 
 
 <dt id="arg-time">time<a class="anchor" aria-label="anchor" href="#arg-time"></a></dt>
-<dd><p>Default `0`. Advance this to make the clouds evolve and change in shape.</p></dd>
+<dd><p>Default <code>0</code>. Advance this to make the clouds evolve and change in shape.</p></dd>
 
 
 <dt id="arg-cloud-cover">cloud_cover<a class="anchor" aria-label="anchor" href="#arg-cloud-cover"></a></dt>
-<dd><p>Default `0.5`. The percentage of cloud cover.</p></dd>
+<dd><p>Default <code>0.5</code>. The percentage of cloud cover.</p></dd>
 
 
 <dt id="arg-layers">layers<a class="anchor" aria-label="anchor" href="#arg-layers"></a></dt>
-<dd><p>Default `10`. The number of layers to render the cloud layer.
-The default is `layers/(start_altitude - end_altitude)`.</p></dd>
+<dd><p>Default <code>10</code>. The number of layers to render the cloud layer.
+The default is <code>layers/(start_altitude - end_altitude)</code>.</p></dd>
 
 
 <dt id="arg-offset-x">offset_x<a class="anchor" aria-label="anchor" href="#arg-offset-x"></a></dt>
-<dd><p>Default `0`. Change this to move the cloud layer sideways.</p></dd>
+<dd><p>Default <code>0</code>. Change this to move the cloud layer sideways.</p></dd>
 
 
 <dt id="arg-offset-y">offset_y<a class="anchor" aria-label="anchor" href="#arg-offset-y"></a></dt>
-<dd><p>Default `0`. Change this to move the cloud layer backwards and forwards.</p></dd>
+<dd><p>Default <code>0</code>. Change this to move the cloud layer backwards and forwards.</p></dd>
 
 
 <dt id="arg-scale-x">scale_x<a class="anchor" aria-label="anchor" href="#arg-scale-x"></a></dt>
-<dd><p>Default `1`. Scale the fractal pattern in the x direction.</p></dd>
+<dd><p>Default <code>1</code>. Scale the fractal pattern in the x direction.</p></dd>
 
 
 <dt id="arg-scale-y">scale_y<a class="anchor" aria-label="anchor" href="#arg-scale-y"></a></dt>
-<dd><p>Default `1`. Scale the fractal pattern in the y direction.</p></dd>
+<dd><p>Default <code>1</code>. Scale the fractal pattern in the y direction.</p></dd>
 
 
 <dt id="arg-scale-z">scale_z<a class="anchor" aria-label="anchor" href="#arg-scale-z"></a></dt>
-<dd><p>Default `1`. Scale the fractal pattern in the z (vertical) direction. (automatically calculated). Scale the fractal pattern in the z (vertical) direction.</p></dd>
+<dd><p>Default <code>1</code>. Scale the fractal pattern in the z (vertical) direction. (automatically calculated). Scale the fractal pattern in the z (vertical) direction.</p></dd>
 
 
 <dt id="arg-frequency">frequency<a class="anchor" aria-label="anchor" href="#arg-frequency"></a></dt>
-<dd><p>Default `0.005`. The base frequency of the noise used to calculate the fractal cloud structure.</p></dd>
+<dd><p>Default <code>0.005</code>. The base frequency of the noise used to calculate the fractal cloud structure.</p></dd>
 
 
 <dt id="arg-fractal-levels">fractal_levels<a class="anchor" aria-label="anchor" href="#arg-fractal-levels"></a></dt>
-<dd><p>Default `16`. The fractal dimension used to calculate the noise. Higher values give more fine structure, but take longer to calculate.</p></dd>
+<dd><p>Default <code>16</code>. The fractal dimension used to calculate the noise. Higher values give more fine structure, but take longer to calculate.</p></dd>
 
 
 <dt id="arg-attenuation-coef">attenuation_coef<a class="anchor" aria-label="anchor" href="#arg-attenuation-coef"></a></dt>
-<dd><p>Default `1`. Amount of attenuation in the cloud (higher numbers give darker shadows).  This value is automatically scaled to account for increasing the number of layers.</p></dd>
+<dd><p>Default <code>1</code>. Amount of attenuation in the cloud (higher numbers give darker shadows).  This value is automatically scaled to account for increasing the number of layers.</p></dd>
 
 
 <dt id="arg-seed">seed<a class="anchor" aria-label="anchor" href="#arg-seed"></a></dt>
-<dd><p>Default `1`. Random seed used to generate clouds.</p></dd>
+<dd><p>Default <code>1</code>. Random seed used to generate clouds.</p></dd>
 
 
 <dt id="arg-zscale">zscale<a class="anchor" aria-label="anchor" href="#arg-zscale"></a></dt>
-<dd><p>Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
-of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.</p></dd>
+<dd><p>Default <code>1</code>. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
+of 1 meter and the grid values are separated by 10 meters, <code>zscale</code> would be 10.</p></dd>
 
 
 <dt id="arg-baseshape">baseshape<a class="anchor" aria-label="anchor" href="#arg-baseshape"></a></dt>
-<dd><p>Default `rectangle`. Shape of the base. Options are `c("rectangle","circle","hex")`.</p></dd>
+<dd><p>Default <code>rectangle</code>. Shape of the base. Options are <code>c("rectangle","circle","hex")</code>.</p></dd>
 
 
 <dt id="arg-clear-clouds">clear_clouds<a class="anchor" aria-label="anchor" href="#arg-clear-clouds"></a></dt>
-<dd><p>Default `FALSE`. Clears all existing floating layers on the visualization.</p></dd>
+<dd><p>Default <code>FALSE</code>. Clears all existing floating layers on the visualization.</p></dd>
 
 </dl></div>
     <div id="value">
@@ -326,7 +326,7 @@ of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
 </div>
 
       </footer></div>

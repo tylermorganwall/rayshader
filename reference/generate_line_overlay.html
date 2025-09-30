@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.38.11</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.38.12</span>
       </span>
     </div>
 
@@ -119,56 +119,56 @@
 
 
 <dl><dt id="arg-geometry">geometry<a class="anchor" aria-label="anchor" href="#arg-geometry"></a></dt>
-<dd><p>An `sf` object with LINESTRING geometry.</p></dd>
+<dd><p>An <code>sf</code> object with LINESTRING geometry.</p></dd>
 
 
 <dt id="arg-extent">extent<a class="anchor" aria-label="anchor" href="#arg-extent"></a></dt>
 <dd><p>Either an object representing the spatial extent of the scene
-(either from the `raster`, `terra`, `sf`, or `sp` packages),
-a length-4 numeric vector specifying `c("xmin", "xmax","ymin","ymax")`, or the spatial object (from
+(either from the <code>raster</code>, <code>terra</code>, <code>sf</code>, or <code>sp</code> packages),
+a length-4 numeric vector specifying <code>c("xmin", "xmax","ymin","ymax")</code>, or the spatial object (from
 the previously aforementioned packages) which will be automatically converted to an extent object.</p></dd>
 
 
 <dt id="arg-heightmap">heightmap<a class="anchor" aria-label="anchor" href="#arg-heightmap"></a></dt>
-<dd><p>Default `NULL`. The original height map. Pass this in to extract the dimensions of the resulting
+<dd><p>Default <code>NULL</code>. The original height map. Pass this in to extract the dimensions of the resulting
 overlay automatically.</p></dd>
 
 
 <dt id="arg-width">width<a class="anchor" aria-label="anchor" href="#arg-width"></a></dt>
-<dd><p>Default `NA`. Width of the resulting overlay. Default the same dimensions as height map.</p></dd>
+<dd><p>Default <code>NA</code>. Width of the resulting overlay. Default the same dimensions as height map.</p></dd>
 
 
 <dt id="arg-height">height<a class="anchor" aria-label="anchor" href="#arg-height"></a></dt>
-<dd><p>Default `NA`. Width of the resulting overlay. Default the same dimensions as height map.</p></dd>
+<dd><p>Default <code>NA</code>. Width of the resulting overlay. Default the same dimensions as height map.</p></dd>
 
 
 <dt id="arg-resolution-multiply">resolution_multiply<a class="anchor" aria-label="anchor" href="#arg-resolution-multiply"></a></dt>
-<dd><p>Default `1`. If passing in `heightmap` instead of width/height, amount to
+<dd><p>Default <code>1</code>. If passing in <code>heightmap</code> instead of width/height, amount to
 increase the resolution of the overlay, which should make lines/polygons/text finer.
-Should be combined with `add_overlay(rescale_original = TRUE)` to ensure those added details are captured
+Should be combined with add_overlay(rescale_original = TRUE) to ensure those added details are captured
 in the final map.</p></dd>
 
 
 <dt id="arg-color">color<a class="anchor" aria-label="anchor" href="#arg-color"></a></dt>
-<dd><p>Default `black`. Color of the lines.</p></dd>
+<dd><p>Default <code>black</code>. Color of the lines.</p></dd>
 
 
 <dt id="arg-linewidth">linewidth<a class="anchor" aria-label="anchor" href="#arg-linewidth"></a></dt>
-<dd><p>Default `1`. Line width.</p></dd>
+<dd><p>Default <code>1</code>. Line width.</p></dd>
 
 
 <dt id="arg-lty">lty<a class="anchor" aria-label="anchor" href="#arg-lty"></a></dt>
-<dd><p>Default `1`. Line type. `1` is solid, `2` is dashed, `3` is dotted,`4` is dot-dash,
-`5` is long dash, and `6` is dash-long-dash.</p></dd>
+<dd><p>Default <code>1</code>. Line type. <code>1</code> is solid, <code>2</code> is dashed, <code>3</code> is dotted,<code>4</code> is dot-dash,
+<code>5</code> is long dash, and <code>6</code> is dash-long-dash.</p></dd>
 
 
 <dt id="arg-data-column-width">data_column_width<a class="anchor" aria-label="anchor" href="#arg-data-column-width"></a></dt>
-<dd><p>Default `NULL`. The numeric column to map the width to. The maximum width will be the value
-specified in `linewidth`.</p></dd>
+<dd><p>Default <code>NULL</code>. The numeric column to map the width to. The maximum width will be the value
+specified in <code>linewidth</code>.</p></dd>
 
 
 <dt id="arg-offset">offset<a class="anchor" aria-label="anchor" href="#arg-offset"></a></dt>
-<dd><p>Default `c(0,0)`. Horizontal and vertical offset to apply to the line, in units of `geometry`.</p></dd>
+<dd><p>Default <code>c(0,0)</code>. Horizontal and vertical offset to apply to the line, in units of <code>geometry</code>.</p></dd>
 
 </dl></div>
     <div id="value">
@@ -229,7 +229,7 @@ specified in `linewidth`.</p></dd>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
 </div>
 
       </footer></div>

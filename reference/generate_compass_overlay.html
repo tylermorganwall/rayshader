@@ -18,7 +18,7 @@ Based on code from "Auxiliary Cartographic Functions in R: North Arrow, Scale Ba
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.38.11</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.38.12</span>
       </span>
     </div>
 
@@ -129,86 +129,86 @@ Based on code from "Auxiliary Cartographic Functions in R: North Arrow, Scale Ba
 
 
 <dl><dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
-<dd><p>Default `NULL`. The horizontal percentage across the map (measured from the bottom-left corner) where
+<dd><p>Default <code>NULL</code>. The horizontal percentage across the map (measured from the bottom-left corner) where
 the compass is located.</p></dd>
 
 
 <dt id="arg-y">y<a class="anchor" aria-label="anchor" href="#arg-y"></a></dt>
-<dd><p>Default `NULL`. The vertical percentage across the map (measured from the bottom-left corner) where
+<dd><p>Default <code>NULL</code>. The vertical percentage across the map (measured from the bottom-left corner) where
 the compass is located.</p></dd>
 
 
 <dt id="arg-size">size<a class="anchor" aria-label="anchor" href="#arg-size"></a></dt>
-<dd><p>Default `0.05`. Size of the compass, in percentage of the map size..</p></dd>
+<dd><p>Default <code>0.05</code>. Size of the compass, in percentage of the map size..</p></dd>
 
 
 <dt id="arg-text-size">text_size<a class="anchor" aria-label="anchor" href="#arg-text-size"></a></dt>
-<dd><p>Default `1`. Text size.</p></dd>
+<dd><p>Default <code>1</code>. Text size.</p></dd>
 
 
 <dt id="arg-bearing">bearing<a class="anchor" aria-label="anchor" href="#arg-bearing"></a></dt>
-<dd><p>Default `0`. Angle (in degrees) of north.</p></dd>
+<dd><p>Default <code>0</code>. Angle (in degrees) of north.</p></dd>
 
 
 <dt id="arg-heightmap">heightmap<a class="anchor" aria-label="anchor" href="#arg-heightmap"></a></dt>
-<dd><p>Default `NULL`. The original height map. Pass this in to extract the dimensions of the resulting
+<dd><p>Default <code>NULL</code>. The original height map. Pass this in to extract the dimensions of the resulting
 RGB image array automatically.</p></dd>
 
 
 <dt id="arg-width">width<a class="anchor" aria-label="anchor" href="#arg-width"></a></dt>
-<dd><p>Default `NA`. Width of the resulting image array. Default the same dimensions as height map.</p></dd>
+<dd><p>Default <code>NA</code>. Width of the resulting image array. Default the same dimensions as height map.</p></dd>
 
 
 <dt id="arg-height">height<a class="anchor" aria-label="anchor" href="#arg-height"></a></dt>
-<dd><p>Default `NA`. Width of the resulting image array. Default the same dimensions as height map.</p></dd>
+<dd><p>Default <code>NA</code>. Width of the resulting image array. Default the same dimensions as height map.</p></dd>
 
 
 <dt id="arg-resolution-multiply">resolution_multiply<a class="anchor" aria-label="anchor" href="#arg-resolution-multiply"></a></dt>
-<dd><p>Default `1`. If passing in `heightmap` instead of width/height, amount to
+<dd><p>Default <code>1</code>. If passing in <code>heightmap</code> instead of width/height, amount to
 increase the resolution of the overlay, which should make lines/polygons finer.
-Should be combined with `add_overlay(rescale_original = TRUE)` to ensure those added details are captured
+Should be combined with add_overlay(rescale_original = TRUE) to ensure those added details are captured
 in the final map.</p></dd>
 
 
 <dt id="arg-color-">color1<a class="anchor" aria-label="anchor" href="#arg-color-"></a></dt>
-<dd><p>Default `white`. Primary color of the compass.</p></dd>
+<dd><p>Default <code>white</code>. Primary color of the compass.</p></dd>
 
 
 <dt id="arg-color-">color2<a class="anchor" aria-label="anchor" href="#arg-color-"></a></dt>
-<dd><p>Default `black`. Secondary color of the symcompass.</p></dd>
+<dd><p>Default <code>black</code>. Secondary color of the symcompass.</p></dd>
 
 
 <dt id="arg-text-color">text_color<a class="anchor" aria-label="anchor" href="#arg-text-color"></a></dt>
-<dd><p>Default `black`. Text color.</p></dd>
+<dd><p>Default <code>black</code>. Text color.</p></dd>
 
 
 <dt id="arg-border-color">border_color<a class="anchor" aria-label="anchor" href="#arg-border-color"></a></dt>
-<dd><p>Default `black`. Border color of the scale bar.</p></dd>
+<dd><p>Default <code>black</code>. Border color of the scale bar.</p></dd>
 
 
 <dt id="arg-border-width">border_width<a class="anchor" aria-label="anchor" href="#arg-border-width"></a></dt>
-<dd><p>Default `1`. Width of the scale bar border.</p></dd>
+<dd><p>Default <code>1</code>. Width of the scale bar border.</p></dd>
 
 
 <dt id="arg-halo-color">halo_color<a class="anchor" aria-label="anchor" href="#arg-halo-color"></a></dt>
-<dd><p>Default `NA`, no halo. If a color is specified, the compass will be surrounded by a halo
+<dd><p>Default <code>NA</code>, no halo. If a color is specified, the compass will be surrounded by a halo
 of this color.</p></dd>
 
 
 <dt id="arg-halo-expand">halo_expand<a class="anchor" aria-label="anchor" href="#arg-halo-expand"></a></dt>
-<dd><p>Default `1`. Number of pixels to expand the halo.</p></dd>
+<dd><p>Default <code>1</code>. Number of pixels to expand the halo.</p></dd>
 
 
 <dt id="arg-halo-alpha">halo_alpha<a class="anchor" aria-label="anchor" href="#arg-halo-alpha"></a></dt>
-<dd><p>Default `1`. Transparency of the halo.</p></dd>
+<dd><p>Default <code>1</code>. Transparency of the halo.</p></dd>
 
 
 <dt id="arg-halo-offset">halo_offset<a class="anchor" aria-label="anchor" href="#arg-halo-offset"></a></dt>
-<dd><p>Default `c(0,0)`. Horizontal and vertical offset to apply to the halo, in percentage of the image.</p></dd>
+<dd><p>Default <code>c(0,0)</code>. Horizontal and vertical offset to apply to the halo, in percentage of the image.</p></dd>
 
 
 <dt id="arg-halo-blur">halo_blur<a class="anchor" aria-label="anchor" href="#arg-halo-blur"></a></dt>
-<dd><p>Default `1`. Amount of blur to apply to the halo. Values greater than `30` won't result in further blurring.</p></dd>
+<dd><p>Default <code>1</code>. Amount of blur to apply to the halo. Values greater than <code>30</code> won't result in further blurring.</p></dd>
 
 </dl></div>
     <div id="value">
@@ -340,7 +340,7 @@ of this color.</p></dd>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
 </div>
 
       </footer></div>

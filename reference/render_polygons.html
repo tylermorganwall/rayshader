@@ -18,7 +18,7 @@ system defined by the extent object."><meta property="og:image" content="https:/
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.38.11</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.38.12</span>
       </span>
     </div>
 
@@ -128,91 +128,91 @@ system defined by the extent object.</p>
 
 
 <dl><dt id="arg-polygon">polygon<a class="anchor" aria-label="anchor" href="#arg-polygon"></a></dt>
-<dd><p>`sf` object, "SpatialPolygon" `sp` object,  or xy coordinates
-of polygon represented in a way that can be processed by `xy.coords()`.  If
+<dd><p><code>sf</code> object, "SpatialPolygon" <code>sp</code> object,  or xy coordinates
+of polygon represented in a way that can be processed by <code><a href="https://rdrr.io/r/grDevices/xy.coords.html" class="external-link">xy.coords()</a></code>.  If
 xy-coordinate based polygons are open, they will be closed by adding an
 edge from the last point to the first.</p></dd>
 
 
 <dt id="arg-extent">extent<a class="anchor" aria-label="anchor" href="#arg-extent"></a></dt>
 <dd><p>Either an object representing the spatial extent of the 3D scene
-(either from the `raster`, `terra`, `sf`, or `sp` packages),
-a length-4 numeric vector specifying `c("xmin", "xmax", "ymin", "ymax")`, or the spatial object (from
+(either from the <code>raster</code>, <code>terra</code>, <code>sf</code>, or <code>sp</code> packages),
+a length-4 numeric vector specifying <code>c("xmin", "xmax", "ymin", "ymax")</code>, or the spatial object (from
 the previously aforementioned packages) which will be automatically converted to an extent object.</p></dd>
 
 
 <dt id="arg-color">color<a class="anchor" aria-label="anchor" href="#arg-color"></a></dt>
-<dd><p>Default `black`. Color of the polygon.</p></dd>
+<dd><p>Default <code>black</code>. Color of the polygon.</p></dd>
 
 
 <dt id="arg-top">top<a class="anchor" aria-label="anchor" href="#arg-top"></a></dt>
-<dd><p>Default `1`. Extruded top distance. If this equals `bottom`, the polygon will not be
+<dd><p>Default <code>1</code>. Extruded top distance. If this equals <code>bottom</code>, the polygon will not be
 extruded and just the one side will be rendered.</p></dd>
 
 
 <dt id="arg-bottom">bottom<a class="anchor" aria-label="anchor" href="#arg-bottom"></a></dt>
-<dd><p>Default `0`. Extruded bottom distance. If this equals `top`, the polygon will not be
+<dd><p>Default <code>0</code>. Extruded bottom distance. If this equals <code>top</code>, the polygon will not be
 extruded and just the one side will be rendered.</p></dd>
 
 
 <dt id="arg-data-column-top">data_column_top<a class="anchor" aria-label="anchor" href="#arg-data-column-top"></a></dt>
-<dd><p>Default `NULL`. A string indicating the column in the `sf` object to use
+<dd><p>Default <code>NULL</code>. A string indicating the column in the <code>sf</code> object to use
 to specify the top of the extruded polygon.</p></dd>
 
 
 <dt id="arg-data-column-bottom">data_column_bottom<a class="anchor" aria-label="anchor" href="#arg-data-column-bottom"></a></dt>
-<dd><p>Default `NULL`. A string indicating the column in the `sf` object to use
+<dd><p>Default <code>NULL</code>. A string indicating the column in the <code>sf</code> object to use
 to specify the bottom of the extruded polygon.</p></dd>
 
 
 <dt id="arg-heightmap">heightmap<a class="anchor" aria-label="anchor" href="#arg-heightmap"></a></dt>
-<dd><p>Default `NULL`. Automatically extracted from the rgl window–only use if auto-extraction
+<dd><p>Default <code>NULL</code>. Automatically extracted from the rgl window–only use if auto-extraction
 of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
- All points are assumed to be evenly spaced.</p></dd>
+All points are assumed to be evenly spaced.</p></dd>
 
 
 <dt id="arg-scale-data">scale_data<a class="anchor" aria-label="anchor" href="#arg-scale-data"></a></dt>
-<dd><p>Default `1`. If specifying `data_column_top` or `data_column_bottom`, how
+<dd><p>Default <code>1</code>. If specifying <code>data_column_top</code> or <code>data_column_bottom</code>, how
 much to scale that value when rendering.</p></dd>
 
 
 <dt id="arg-parallel">parallel<a class="anchor" aria-label="anchor" href="#arg-parallel"></a></dt>
-<dd><p>Default `FALSE`. If `TRUE`, polygons will be extruded in parallel, which
-may be faster (depending on how many geometries are in `polygon`).</p></dd>
+<dd><p>Default <code>FALSE</code>. If <code>TRUE</code>, polygons will be extruded in parallel, which
+may be faster (depending on how many geometries are in <code>polygon</code>).</p></dd>
 
 
 <dt id="arg-holes">holes<a class="anchor" aria-label="anchor" href="#arg-holes"></a></dt>
-<dd><p>Default `0`. If passing in a polygon directly, this specifies which index represents
-the holes in the polygon. See the `earcut` function in the `decido` package for more information.</p></dd>
+<dd><p>Default <code>0</code>. If passing in a polygon directly, this specifies which index represents
+the holes in the polygon. See the <code>earcut</code> function in the <code>decido</code> package for more information.</p></dd>
 
 
 <dt id="arg-alpha">alpha<a class="anchor" aria-label="anchor" href="#arg-alpha"></a></dt>
-<dd><p>Default `1`. Transparency of the polygons.</p></dd>
+<dd><p>Default <code>1</code>. Transparency of the polygons.</p></dd>
 
 
 <dt id="arg-lit">lit<a class="anchor" aria-label="anchor" href="#arg-lit"></a></dt>
-<dd><p>Default `TRUE`. Whether to light the polygons.</p></dd>
+<dd><p>Default <code>TRUE</code>. Whether to light the polygons.</p></dd>
 
 
 <dt id="arg-light-altitude">light_altitude<a class="anchor" aria-label="anchor" href="#arg-light-altitude"></a></dt>
-<dd><p>Default `c(45, 60)`. Degree(s) from the horizon from which to light the polygons.</p></dd>
+<dd><p>Default <code>c(45, 60)</code>. Degree(s) from the horizon from which to light the polygons.</p></dd>
 
 
 <dt id="arg-light-direction">light_direction<a class="anchor" aria-label="anchor" href="#arg-light-direction"></a></dt>
-<dd><p>Default `c(45, 60)`. Degree(s) from north from which to light the polygons.</p></dd>
+<dd><p>Default <code>c(45, 60)</code>. Degree(s) from north from which to light the polygons.</p></dd>
 
 
 <dt id="arg-light-intensity">light_intensity<a class="anchor" aria-label="anchor" href="#arg-light-intensity"></a></dt>
-<dd><p>Default `0.3`. Intensity of the specular highlight on the polygons.</p></dd>
+<dd><p>Default <code>0.3</code>. Intensity of the specular highlight on the polygons.</p></dd>
 
 
 <dt id="arg-light-relative">light_relative<a class="anchor" aria-label="anchor" href="#arg-light-relative"></a></dt>
-<dd><p>Default `FALSE`. Whether the light direction should be taken relative to the camera,
+<dd><p>Default <code>FALSE</code>. Whether the light direction should be taken relative to the camera,
 or absolute.</p></dd>
 
 
 <dt id="arg-clear-previous">clear_previous<a class="anchor" aria-label="anchor" href="#arg-clear-previous"></a></dt>
-<dd><p>Default `FALSE`. If `TRUE`, it will clear all existing polygons.</p></dd>
+<dd><p>Default <code>FALSE</code>. If <code>TRUE</code>, it will clear all existing polygons.</p></dd>
 
 </dl></div>
 
@@ -282,7 +282,7 @@ or absolute.</p></dd>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
 </div>
 
       </footer></div>

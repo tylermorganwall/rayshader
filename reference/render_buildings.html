@@ -18,7 +18,7 @@ using latitude/longitude or coordinates in the reference system defined by the e
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.38.11</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.38.12</span>
       </span>
     </div>
 
@@ -134,121 +134,121 @@ using latitude/longitude or coordinates in the reference system defined by the e
 
 
 <dl><dt id="arg-polygon">polygon<a class="anchor" aria-label="anchor" href="#arg-polygon"></a></dt>
-<dd><p>`sf` object, "SpatialPolygon" `sp` object,  or xy coordinates
-of polygon represented in a way that can be processed by `xy.coords()`.  If
+<dd><p><code>sf</code> object, "SpatialPolygon" <code>sp</code> object,  or xy coordinates
+of polygon represented in a way that can be processed by <code><a href="https://rdrr.io/r/grDevices/xy.coords.html" class="external-link">xy.coords()</a></code>.  If
 xy-coordinate based polygons are open, they will be closed by adding an
 edge from the last point to the first.</p></dd>
 
 
 <dt id="arg-extent">extent<a class="anchor" aria-label="anchor" href="#arg-extent"></a></dt>
 <dd><p>Either an object representing the spatial extent of the 3D scene
-(either from the `raster`, `terra`, `sf`, or `sp` packages),
-a length-4 numeric vector specifying `c("xmin", "xmax", "ymin", "ymax")`, or the spatial object (from
+(either from the <code>raster</code>, <code>terra</code>, <code>sf</code>, or <code>sp</code> packages),
+a length-4 numeric vector specifying <code>c("xmin", "xmax", "ymin", "ymax")</code>, or the spatial object (from
 the previously aforementioned packages) which will be automatically converted to an extent object.</p></dd>
 
 
 <dt id="arg-material">material<a class="anchor" aria-label="anchor" href="#arg-material"></a></dt>
-<dd><p>Default `"grey80"`. If a color string, this will specify the color of the sides/base of the building
-Alternatively (for more customization), this can be a r`ayvertex::material_list()` object to specify
-the full color/appearance/material options for the resulting `ray_mesh` mesh.</p></dd>
+<dd><p>Default <code>"grey80"</code>. If a color string, this will specify the color of the sides/base of the building
+Alternatively (for more customization), this can be a r<code>ayvertex::material_list()</code> object to specify
+the full color/appearance/material options for the resulting <code>ray_mesh</code> mesh.</p></dd>
 
 
 <dt id="arg-roof-material">roof_material<a class="anchor" aria-label="anchor" href="#arg-roof-material"></a></dt>
-<dd><p>Default `NA`, defaults to the material specified in `material`. If a color string, this will specify the color of the roof of the building.
-Alternatively (for more customization), this can be a `rayvertex::material_list()` object to specify
-the full color/appearance/material options for the resulting `ray_mesh` mesh.</p></dd>
+<dd><p>Default <code>NA</code>, defaults to the material specified in <code>material</code>. If a color string, this will specify the color of the roof of the building.
+Alternatively (for more customization), this can be a <code><a href="https://www.rayvertex.com/reference/material_list.html" class="external-link">rayvertex::material_list()</a></code> object to specify
+the full color/appearance/material options for the resulting <code>ray_mesh</code> mesh.</p></dd>
 
 
 <dt id="arg-angle">angle<a class="anchor" aria-label="anchor" href="#arg-angle"></a></dt>
-<dd><p>Default `45`. Angle of the roof.</p></dd>
+<dd><p>Default <code>45</code>. Angle of the roof.</p></dd>
 
 
 <dt id="arg-zscale">zscale<a class="anchor" aria-label="anchor" href="#arg-zscale"></a></dt>
-<dd><p>Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.</p></dd>
+<dd><p>Default <code>1</code>. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.</p></dd>
 
 
 <dt id="arg-scale-data">scale_data<a class="anchor" aria-label="anchor" href="#arg-scale-data"></a></dt>
-<dd><p>Default `1`. How much to scale the `top`/`bottom` value when rendering. Use
-`zscale` to adjust the data to account for `x`/`y` grid spacing, and this argument to scale the data
+<dd><p>Default <code>1</code>. How much to scale the <code>top</code>/<code>bottom</code> value when rendering. Use
+<code>zscale</code> to adjust the data to account for <code>x</code>/<code>y</code> grid spacing, and this argument to scale the data
 for visualization.</p></dd>
 
 
 <dt id="arg-relative-heights">relative_heights<a class="anchor" aria-label="anchor" href="#arg-relative-heights"></a></dt>
-<dd><p>Default `TRUE`. Whether the heights specified in `roof_height` and `base_height` should
+<dd><p>Default <code>TRUE</code>. Whether the heights specified in <code>roof_height</code> and <code>base_height</code> should
 be measured relative to the underlying heightmap.</p></dd>
 
 
 <dt id="arg-heights-relative-to-centroid">heights_relative_to_centroid<a class="anchor" aria-label="anchor" href="#arg-heights-relative-to-centroid"></a></dt>
-<dd><p>Default `FALSE`. Whether the heights should be measured in absolute
+<dd><p>Default <code>FALSE</code>. Whether the heights should be measured in absolute
 terms, or relative to the centroid of the polygon.</p></dd>
 
 
 <dt id="arg-roof-height">roof_height<a class="anchor" aria-label="anchor" href="#arg-roof-height"></a></dt>
-<dd><p>Default `1`. Height from the base of the building to the start of the roof.</p></dd>
+<dd><p>Default <code>1</code>. Height from the base of the building to the start of the roof.</p></dd>
 
 
 <dt id="arg-base-height">base_height<a class="anchor" aria-label="anchor" href="#arg-base-height"></a></dt>
-<dd><p>Default `0`. Height of the base of the roof.</p></dd>
+<dd><p>Default <code>0</code>. Height of the base of the roof.</p></dd>
 
 
 <dt id="arg-data-column-top">data_column_top<a class="anchor" aria-label="anchor" href="#arg-data-column-top"></a></dt>
-<dd><p>Default `NULL`. A string indicating the column in the `sf` object to use
+<dd><p>Default <code>NULL</code>. A string indicating the column in the <code>sf</code> object to use
 to specify the top of the extruded polygon.</p></dd>
 
 
 <dt id="arg-data-column-bottom">data_column_bottom<a class="anchor" aria-label="anchor" href="#arg-data-column-bottom"></a></dt>
-<dd><p>Default `NULL`. A string indicating the column in the `sf` object to use
+<dd><p>Default <code>NULL</code>. A string indicating the column in the <code>sf</code> object to use
 to specify the bottom of the extruded polygon.</p></dd>
 
 
 <dt id="arg-heightmap">heightmap<a class="anchor" aria-label="anchor" href="#arg-heightmap"></a></dt>
-<dd><p>Default `NULL`. Automatically extracted from the rgl window–only use if auto-extraction
+<dd><p>Default <code>NULL</code>. Automatically extracted from the rgl window–only use if auto-extraction
 of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
- All points are assumed to be evenly spaced.</p></dd>
+All points are assumed to be evenly spaced.</p></dd>
 
 
 <dt id="arg-holes">holes<a class="anchor" aria-label="anchor" href="#arg-holes"></a></dt>
-<dd><p>Default `0`. If passing in a polygon directly, this specifies which index represents
-the holes in the polygon. See the `earcut` function in the `decido` package for more information.</p></dd>
+<dd><p>Default <code>0</code>. If passing in a polygon directly, this specifies which index represents
+the holes in the polygon. See the <code>earcut</code> function in the <code>decido</code> package for more information.</p></dd>
 
 
 <dt id="arg-alpha">alpha<a class="anchor" aria-label="anchor" href="#arg-alpha"></a></dt>
-<dd><p>Default `1`. Transparency of the polygons.</p></dd>
+<dd><p>Default <code>1</code>. Transparency of the polygons.</p></dd>
 
 
 <dt id="arg-lit">lit<a class="anchor" aria-label="anchor" href="#arg-lit"></a></dt>
-<dd><p>Default `TRUE`. Whether to light the polygons.</p></dd>
+<dd><p>Default <code>TRUE</code>. Whether to light the polygons.</p></dd>
 
 
 <dt id="arg-flat-shading">flat_shading<a class="anchor" aria-label="anchor" href="#arg-flat-shading"></a></dt>
-<dd><p>Default `FALSE`. Set to `TRUE` to have nicer shading on the 3D polygons. This comes
+<dd><p>Default <code>FALSE</code>. Set to <code>TRUE</code> to have nicer shading on the 3D polygons. This comes
 with the slight penalty of increasing the memory use of the scene due to vertex duplication. This
 will not affect software or high quality renders.</p></dd>
 
 
 <dt id="arg-light-altitude">light_altitude<a class="anchor" aria-label="anchor" href="#arg-light-altitude"></a></dt>
-<dd><p>Default `c(45, 30)`. Degree(s) from the horizon from which to light the polygons.</p></dd>
+<dd><p>Default <code>c(45, 30)</code>. Degree(s) from the horizon from which to light the polygons.</p></dd>
 
 
 <dt id="arg-light-direction">light_direction<a class="anchor" aria-label="anchor" href="#arg-light-direction"></a></dt>
-<dd><p>Default `c(315, 225)`. Degree(s) from north from which to light the polygons.</p></dd>
+<dd><p>Default <code>c(315, 225)</code>. Degree(s) from north from which to light the polygons.</p></dd>
 
 
 <dt id="arg-light-intensity">light_intensity<a class="anchor" aria-label="anchor" href="#arg-light-intensity"></a></dt>
-<dd><p>Default `1`. Intensity of the specular highlight on the polygons.</p></dd>
+<dd><p>Default <code>1</code>. Intensity of the specular highlight on the polygons.</p></dd>
 
 
 <dt id="arg-light-relative">light_relative<a class="anchor" aria-label="anchor" href="#arg-light-relative"></a></dt>
-<dd><p>Default `FALSE`. Whether the light direction should be taken relative to the camera,
+<dd><p>Default <code>FALSE</code>. Whether the light direction should be taken relative to the camera,
 or absolute.</p></dd>
 
 
 <dt id="arg-clear-previous">clear_previous<a class="anchor" aria-label="anchor" href="#arg-clear-previous"></a></dt>
-<dd><p>Default `FALSE`. If `TRUE`, it will clear all existing polygons.</p></dd>
+<dd><p>Default <code>FALSE</code>. If <code>TRUE</code>, it will clear all existing polygons.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>Additional arguments to pass to `rgl::triangles3d()`.</p></dd>
+<dd><p>Additional arguments to pass to <code><a href="https://dmurdoch.github.io/rgl/dev/reference/primitives.html" class="external-link">rgl::triangles3d()</a></code>.</p></dd>
 
 </dl></div>
 
@@ -319,11 +319,12 @@ or absolute.</p></dd>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Data (c) OpenStreetMap contributors, ODbL 1.0. https://www.openstreetmap.org/copyright</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Linking to GEOS 3.11.0, GDAL 3.5.3, PROJ 9.1.0; sf_use_s2() is FALSE</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Linking to GEOS 3.13.0, GDAL 3.8.5, PROJ 9.5.1; sf_use_s2() is FALSE</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Loading required package: sp</span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in httr2::req_perform(req):</span> Failed to perform HTTP request.</span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span style="font-weight: bold;">Caused by error in `curl::curl_fetch_memory()`:</span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span style="color: #BBBB00;">!</span> Could not resolve hostname [overpass.kumi.systems]: Could not resolve host: overpass.kumi.systems</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Mosaicing &amp; Projecting</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Clipping DEM to bbox</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Note: Elevation units are in meters.</span>
+<span class="r-plt img"><img src="render_buildings-1.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#Zoom in to show roof details and render with render_highquality()</span></span></span>
@@ -334,7 +335,7 @@ or absolute.</p></dd>
 <span class="r-in"><span>                   lightdirection <span class="op">=</span> <span class="fl">45</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-plt img"><img src="render_buildings-1.png" alt="" width="768" height="768"></span>
+<span class="r-plt img"><img src="render_buildings-2.png" alt="" width="768" height="768"></span>
 </code></pre></div>
     </div>
   </div>
@@ -349,7 +350,7 @@ or absolute.</p></dd>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
 </div>
 
       </footer></div>

@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.38.11</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.38.12</span>
       </span>
     </div>
 
@@ -142,42 +142,42 @@
 
 
 <dt id="arg-lat">lat<a class="anchor" aria-label="anchor" href="#arg-lat"></a></dt>
-<dd><p>A latitude for the text. Must provide an `raster::extent` object to argument `extent` for the map.</p></dd>
+<dd><p>A latitude for the text. Must provide an <code><a href="https://rdrr.io/pkg/raster/man/extent.html" class="external-link">raster::extent</a></code> object to argument <code>extent</code> for the map.</p></dd>
 
 
 <dt id="arg-long">long<a class="anchor" aria-label="anchor" href="#arg-long"></a></dt>
-<dd><p>A latitude for the text. Must provide an `raster::extent` object to argument `extent` for the map.</p></dd>
+<dd><p>A latitude for the text. Must provide an <code><a href="https://rdrr.io/pkg/raster/man/extent.html" class="external-link">raster::extent</a></code> object to argument <code>extent</code> for the map.</p></dd>
 
 
 <dt id="arg-altitude">altitude<a class="anchor" aria-label="anchor" href="#arg-altitude"></a></dt>
-<dd><p>Default `NULL`. Elevation of the label, in units of the elevation matrix (scaled by zscale). If none is passed, this will default to 10 percent above the maximum altitude in the heightmap.</p></dd>
+<dd><p>Default <code>NULL</code>. Elevation of the label, in units of the elevation matrix (scaled by zscale). If none is passed, this will default to 10 percent above the maximum altitude in the heightmap.</p></dd>
 
 
 <dt id="arg-extent">extent<a class="anchor" aria-label="anchor" href="#arg-extent"></a></dt>
 <dd><p>Either an object representing the spatial extent of the scene
-(either from the `raster`, `terra`, `sf`, or `sp` packages),
-a length-4 numeric vector specifying `c("xmin", "xmax","ymin","ymax")`, or the spatial object (from
+(either from the <code>raster</code>, <code>terra</code>, <code>sf</code>, or <code>sp</code> packages),
+a length-4 numeric vector specifying <code>c("xmin", "xmax","ymin","ymax")</code>, or the spatial object (from
 the previously aforementioned packages) which will be automatically converted to an extent object.</p></dd>
 
 
 <dt id="arg-x">x<a class="anchor" aria-label="anchor" href="#arg-x"></a></dt>
-<dd><p>Default `NULL`. Directly specify the `x` index in the matrix to place the label.</p></dd>
+<dd><p>Default <code>NULL</code>. Directly specify the <code>x</code> index in the matrix to place the label.</p></dd>
 
 
 <dt id="arg-y">y<a class="anchor" aria-label="anchor" href="#arg-y"></a></dt>
-<dd><p>Default `NULL`. Directly specify the `y` index in the matrix to place the label.</p></dd>
+<dd><p>Default <code>NULL</code>. Directly specify the <code>y</code> index in the matrix to place the label.</p></dd>
 
 
 <dt id="arg-z">z<a class="anchor" aria-label="anchor" href="#arg-z"></a></dt>
-<dd><p>Default `NULL`. Elevation of the label, in units of the elevation matrix (scaled by zscale).</p></dd>
+<dd><p>Default <code>NULL</code>. Elevation of the label, in units of the elevation matrix (scaled by zscale).</p></dd>
 
 
 <dt id="arg-zscale">zscale<a class="anchor" aria-label="anchor" href="#arg-zscale"></a></dt>
-<dd><p>Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units</p></dd>
+<dd><p>Default <code>1</code>. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units</p></dd>
 
 
 <dt id="arg-relativez">relativez<a class="anchor" aria-label="anchor" href="#arg-relativez"></a></dt>
-<dd><p>Default `TRUE`. Whether `z` should be measured in relation to the underlying elevation at that point in the heightmap, or set absolutely (`FALSE`).</p></dd>
+<dd><p>Default <code>TRUE</code>. Whether <code>z</code> should be measured in relation to the underlying elevation at that point in the heightmap, or set absolutely (<code>FALSE</code>).</p></dd>
 
 
 <dt id="arg-offset">offset<a class="anchor" aria-label="anchor" href="#arg-offset"></a></dt>
@@ -185,60 +185,60 @@ the previously aforementioned packages) which will be automatically converted to
 
 
 <dt id="arg-clear-previous">clear_previous<a class="anchor" aria-label="anchor" href="#arg-clear-previous"></a></dt>
-<dd><p>Default `FALSE`. If `TRUE`, it will clear all existing text and lines rendered with `render_label()`. If no
-other arguments are passed to `render_label()`, this will just remove all existing lines.</p></dd>
+<dd><p>Default <code>FALSE</code>. If <code>TRUE</code>, it will clear all existing text and lines rendered with <code>render_label()</code>. If no
+other arguments are passed to <code>render_label()</code>, this will just remove all existing lines.</p></dd>
 
 
 <dt id="arg-textsize">textsize<a class="anchor" aria-label="anchor" href="#arg-textsize"></a></dt>
-<dd><p>Default `1`. A numeric character expansion value.</p></dd>
+<dd><p>Default <code>1</code>. A numeric character expansion value.</p></dd>
 
 
 <dt id="arg-dashed">dashed<a class="anchor" aria-label="anchor" href="#arg-dashed"></a></dt>
-<dd><p>Default `FALSE`. If `TRUE`, the label line is dashed.</p></dd>
+<dd><p>Default <code>FALSE</code>. If <code>TRUE</code>, the label line is dashed.</p></dd>
 
 
 <dt id="arg-dashlength">dashlength<a class="anchor" aria-label="anchor" href="#arg-dashlength"></a></dt>
-<dd><p>Default `auto`. Length, in units of the elevation matrix (scaled by `zscale`) of the dashes if `dashed = TRUE`.</p></dd>
+<dd><p>Default <code>auto</code>. Length, in units of the elevation matrix (scaled by <code>zscale</code>) of the dashes if <code>dashed = TRUE</code>.</p></dd>
 
 
 <dt id="arg-linewidth">linewidth<a class="anchor" aria-label="anchor" href="#arg-linewidth"></a></dt>
-<dd><p>Default `3`. The line width.</p></dd>
+<dd><p>Default <code>3</code>. The line width.</p></dd>
 
 
 <dt id="arg-antialias">antialias<a class="anchor" aria-label="anchor" href="#arg-antialias"></a></dt>
-<dd><p>Default `FALSE`. If `TRUE`, the line with be have anti-aliasing applied. NOTE: anti-aliasing can cause some unpredictable behavior with transparent surfaces.</p></dd>
+<dd><p>Default <code>FALSE</code>. If <code>TRUE</code>, the line with be have anti-aliasing applied. NOTE: anti-aliasing can cause some unpredictable behavior with transparent surfaces.</p></dd>
 
 
 <dt id="arg-alpha">alpha<a class="anchor" aria-label="anchor" href="#arg-alpha"></a></dt>
-<dd><p>Default `1`. Transparency of the label line.</p></dd>
+<dd><p>Default <code>1</code>. Transparency of the label line.</p></dd>
 
 
 <dt id="arg-textalpha">textalpha<a class="anchor" aria-label="anchor" href="#arg-textalpha"></a></dt>
-<dd><p>Default `1`. Transparency of the label text.</p></dd>
+<dd><p>Default <code>1</code>. Transparency of the label text.</p></dd>
 
 
 <dt id="arg-freetype">freetype<a class="anchor" aria-label="anchor" href="#arg-freetype"></a></dt>
-<dd><p>Default `TRUE`. Set to `FALSE` if freetype is not installed (freetype enables anti-aliased fonts). NOTE: There are occasionally transparency issues when positioning Freetype fonts in front and behind a transparent surface.</p></dd>
+<dd><p>Default <code>TRUE</code>. Set to <code>FALSE</code> if freetype is not installed (freetype enables anti-aliased fonts). NOTE: There are occasionally transparency issues when positioning Freetype fonts in front and behind a transparent surface.</p></dd>
 
 
 <dt id="arg-adjustvec">adjustvec<a class="anchor" aria-label="anchor" href="#arg-adjustvec"></a></dt>
-<dd><p>Default `c(0.5,-0.5)`. The horizontal and vertical offset for the text. If `freetype = FALSE` and on macOS/Linux, this is adjusted to `c(0.33,-0.5)` to keep the type centered.</p></dd>
+<dd><p>Default <code>c(0.5,-0.5)</code>. The horizontal and vertical offset for the text. If <code>freetype = FALSE</code> and on macOS/Linux, this is adjusted to <code>c(0.33,-0.5)</code> to keep the type centered.</p></dd>
 
 
 <dt id="arg-family">family<a class="anchor" aria-label="anchor" href="#arg-family"></a></dt>
-<dd><p>Default `"sans"`. Font family. Choices are `c("serif", "sans", "mono", "symbol")`.</p></dd>
+<dd><p>Default <code>"sans"</code>. Font family. Choices are <code>c("serif", "sans", "mono", "symbol")</code>.</p></dd>
 
 
 <dt id="arg-fonttype">fonttype<a class="anchor" aria-label="anchor" href="#arg-fonttype"></a></dt>
-<dd><p>Default `"standard"`. The font type. Choices are `c("standard", "bold", "italic", "bolditalic")`. NOTE: These require FreeType fonts, which may not be installed on your system. See the documentation for rgl::text3d() for more information.</p></dd>
+<dd><p>Default <code>"standard"</code>. The font type. Choices are <code>c("standard", "bold", "italic", "bolditalic")</code>. NOTE: These require FreeType fonts, which may not be installed on your system. See the documentation for rgl::text3d() for more information.</p></dd>
 
 
 <dt id="arg-linecolor">linecolor<a class="anchor" aria-label="anchor" href="#arg-linecolor"></a></dt>
-<dd><p>Default `black`. Color of the line.</p></dd>
+<dd><p>Default <code>black</code>. Color of the line.</p></dd>
 
 
 <dt id="arg-textcolor">textcolor<a class="anchor" aria-label="anchor" href="#arg-textcolor"></a></dt>
-<dd><p>Default `black`. Color of the text.</p></dd>
+<dd><p>Default <code>black</code>. Color of the text.</p></dd>
 
 </dl></div>
 
@@ -260,7 +260,7 @@ other arguments are passed to `render_label()`, this will just remove all existi
 <span class="r-in"><span>            altitude<span class="op">=</span><span class="fl">12000</span>, zscale<span class="op">=</span><span class="fl">50</span>, text <span class="op">=</span> <span class="st">"Santa Cruz"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in rayvertex::text3d_mesh(label = temp_label[j, 1], position = c(temp_center[j,     1] - bbox_center[1] + text_offset[1], temp_center[j, 2] -     bbox_center[2] + text_offset[2], temp_center[j, 3] - bbox_center[3] +     text_offset[3]), angle = anglevec, text_height = text_size,     color = temp_color[j, 1:3]):</span> unused argument (color = temp_color[j, 1:3])</span>
+<span class="r-plt img"><img src="render_label-2.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">monterey</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">36.603053</span>, <span class="op">-</span><span class="fl">121.892933</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="co">#We can also change the linetype to dashed by setting `dashed = TRUE` (additional options allow</span></span></span>
@@ -273,7 +273,7 @@ other arguments are passed to `render_label()`, this will just remove all existi
 <span class="r-in"><span>            dashed <span class="op">=</span> <span class="cn">TRUE</span>, clear_previous <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in rayvertex::text3d_mesh(label = temp_label[j, 1], position = c(temp_center[j,     1] - bbox_center[1] + text_offset[1], temp_center[j, 2] -     bbox_center[2] + text_offset[2], temp_center[j, 3] - bbox_center[3] +     text_offset[3]), angle = anglevec, text_height = text_size,     color = temp_color[j, 1:3]):</span> unused argument (color = temp_color[j, 1:3])</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in validate_mesh(scene):</span> !any(is.na(normals)) is not TRUE</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">canyon</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">36.621049</span>, <span class="op">-</span><span class="fl">122.333912</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="co">#By default, z specifies the altitude above that point on the elevation matrix. We can also specify </span></span></span>
@@ -284,7 +284,7 @@ other arguments are passed to `render_label()`, this will just remove all existi
 <span class="r-in"><span>            zscale<span class="op">=</span><span class="fl">50</span>,text <span class="op">=</span> <span class="st">"Monterey Canyon"</span>, relativez<span class="op">=</span><span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in rayvertex::text3d_mesh(label = temp_label[j, 1], position = c(temp_center[j,     1] - bbox_center[1] + text_offset[1], temp_center[j, 2] -     bbox_center[2] + text_offset[2], temp_center[j, 3] - bbox_center[3] +     text_offset[3]), angle = anglevec, text_height = text_size,     color = temp_color[j, 1:3]):</span> unused argument (color = temp_color[j, 1:3])</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in validate_mesh(scene):</span> !any(is.na(normals)) is not TRUE</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#We can also render labels in high quality with `render_highquality()`, specifying a custom</span></span></span>
 <span class="r-in"><span><span class="co">#line radius. By default, the labels point towards the camera, but you can fix their angle with</span></span></span>
@@ -304,20 +304,20 @@ other arguments are passed to `render_label()`, this will just remove all existi
 <span class="r-in"><span>                  lightdirection <span class="op">=</span> <span class="fl">180</span>, clamp_value <span class="op">=</span> <span class="fl">10</span>, min_variance <span class="op">=</span> <span class="fl">0</span>,</span></span>
 <span class="r-in"><span>                  sample_method <span class="op">=</span> <span class="st">"sobol_blue"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-plt img"><img src="render_label-2.png" alt="" width="768" height="768"></span>
+<span class="r-plt img"><img src="render_label-3.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#Fixed text angle</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_highquality.html">render_highquality</a></span><span class="op">(</span>samples <span class="op">=</span> <span class="fl">128</span>,text_size <span class="op">=</span> <span class="fl">24</span>, line_radius <span class="op">=</span> <span class="fl">2</span>, text_offset <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">20</span>, <span class="fl">0</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                  lightdirection <span class="op">=</span> <span class="fl">180</span>, text_angle <span class="op">=</span> <span class="fl">0</span>, clamp_value<span class="op">=</span><span class="fl">10</span>, min_variance <span class="op">=</span> <span class="fl">0</span>,</span></span>
 <span class="r-in"><span>                  sample_method <span class="op">=</span> <span class="st">"sobol_blue"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-plt img"><img src="render_label-3.png" alt="" width="768" height="768"></span>
+<span class="r-plt img"><img src="render_label-4.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="co">#We can remove all existing labels by calling `render_label(clear_previous = TRUE)`</span></span></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="fu">render_label</span><span class="op">(</span>clear_previous <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> </span></span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-plt img"><img src="render_label-4.png" alt="" width="768" height="768"></span>
+<span class="r-plt img"><img src="render_label-5.png" alt="" width="768" height="768"></span>
 </code></pre></div>
     </div>
   </div>
@@ -332,7 +332,7 @@ other arguments are passed to `render_label()`, this will just remove all existi
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
 </div>
 
       </footer></div>

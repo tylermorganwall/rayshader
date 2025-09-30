@@ -18,7 +18,7 @@ lowering the brightness at each point for each ray that intersects the surface."
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.38.11</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.38.12</span>
       </span>
     </div>
 
@@ -126,57 +126,57 @@ lowering the brightness at each point for each ray that intersects the surface.<
 
 
 <dt id="arg-sunaltitude">sunaltitude<a class="anchor" aria-label="anchor" href="#arg-sunaltitude"></a></dt>
-<dd><p>Default `45`. The angle, in degrees (as measured from the horizon) from which the light originates. The width of the light
-is centered on this value and has an angular extent of 0.533 degrees, which is the angular extent of the sun. Use the `anglebreaks` argument
+<dd><p>Default <code>45</code>. The angle, in degrees (as measured from the horizon) from which the light originates. The width of the light
+is centered on this value and has an angular extent of 0.533 degrees, which is the angular extent of the sun. Use the <code>anglebreaks</code> argument
 to create a softer (wider) light. This has a hard minimum/maximum of 0/90 degrees.</p></dd>
 
 
 <dt id="arg-sunangle">sunangle<a class="anchor" aria-label="anchor" href="#arg-sunangle"></a></dt>
-<dd><p>Default `315` (NW). The angle, in degrees, around the matrix from which the light originates. Zero degrees is North, increasing clockwise.</p></dd>
+<dd><p>Default <code>315</code> (NW). The angle, in degrees, around the matrix from which the light originates. Zero degrees is North, increasing clockwise.</p></dd>
 
 
 <dt id="arg-maxsearch">maxsearch<a class="anchor" aria-label="anchor" href="#arg-maxsearch"></a></dt>
-<dd><p>Defaults to the longest possible shadow given the `sunaltitude` and `heightmap`.
+<dd><p>Defaults to the longest possible shadow given the <code>sunaltitude</code> and <code>heightmap</code>.
 Otherwise, this argument specifies the maximum distance that the system should propagate rays to check.</p></dd>
 
 
 <dt id="arg-lambert">lambert<a class="anchor" aria-label="anchor" href="#arg-lambert"></a></dt>
-<dd><p>Default `TRUE`. Changes the intensity of the light at each point based proportional to the
+<dd><p>Default <code>TRUE</code>. Changes the intensity of the light at each point based proportional to the
 dot product of the ray direction and the surface normal at that point. Zeros out all values directed away from
 the ray.</p></dd>
 
 
 <dt id="arg-zscale">zscale<a class="anchor" aria-label="anchor" href="#arg-zscale"></a></dt>
-<dd><p>Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation is in units
-of meters and the grid values are separated by 10 meters, `zscale` would be 10.</p></dd>
+<dd><p>Default <code>1</code>. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation is in units
+of meters and the grid values are separated by 10 meters, <code>zscale</code> would be 10.</p></dd>
 
 
 <dt id="arg-multicore">multicore<a class="anchor" aria-label="anchor" href="#arg-multicore"></a></dt>
-<dd><p>Default `FALSE`. If `TRUE`, multiple cores will be used to compute the shadow matrix. By default, this uses all cores available, unless the user has
-set `options("cores")` in which the multicore option will only use that many cores.</p></dd>
+<dd><p>Default <code>FALSE</code>. If <code>TRUE</code>, multiple cores will be used to compute the shadow matrix. By default, this uses all cores available, unless the user has
+set <code>options("cores")</code> in which the multicore option will only use that many cores.</p></dd>
 
 
 <dt id="arg-cache-mask">cache_mask<a class="anchor" aria-label="anchor" href="#arg-cache-mask"></a></dt>
-<dd><p>Default `NULL`. A matrix of 1 and 0s, indicating which points on which the raytracer will operate.</p></dd>
+<dd><p>Default <code>NULL</code>. A matrix of 1 and 0s, indicating which points on which the raytracer will operate.</p></dd>
 
 
 <dt id="arg-shadow-cache">shadow_cache<a class="anchor" aria-label="anchor" href="#arg-shadow-cache"></a></dt>
-<dd><p>Default `NULL`. The shadow matrix to be updated at the points defined by the argument `cache_mask`.
-If present, this will only compute the raytraced shadows for those points with value `1` in the mask.</p></dd>
+<dd><p>Default <code>NULL</code>. The shadow matrix to be updated at the points defined by the argument <code>cache_mask</code>.
+If present, this will only compute the raytraced shadows for those points with value <code>1</code> in the mask.</p></dd>
 
 
 <dt id="arg-progbar">progbar<a class="anchor" aria-label="anchor" href="#arg-progbar"></a></dt>
-<dd><p>Default `TRUE` if interactive, `FALSE` otherwise. If `FALSE`, turns off progress bar.</p></dd>
+<dd><p>Default <code>TRUE</code> if interactive, <code>FALSE</code> otherwise. If <code>FALSE</code>, turns off progress bar.</p></dd>
 
 
 <dt id="arg-anglebreaks">anglebreaks<a class="anchor" aria-label="anchor" href="#arg-anglebreaks"></a></dt>
-<dd><p>Default `NULL`. A vector of angle(s) in degrees (as measured from the horizon) specifying from where the light originates.
-Use this instead of `sunaltitude` to create a softer shadow by specifying a wider light. E.g. `anglebreaks = seq(40,50,by=0.5)` creates a light
+<dd><p>Default <code>NULL</code>. A vector of angle(s) in degrees (as measured from the horizon) specifying from where the light originates.
+Use this instead of <code>sunaltitude</code> to create a softer shadow by specifying a wider light. E.g. <code>anglebreaks = seq(40,50,by=0.5)</code> creates a light
 10 degrees wide, as opposed to the default</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
-<dd><p>Additional arguments to pass to the `makeCluster` function when `multicore=TRUE`.</p></dd>
+<dd><p>Additional arguments to pass to the <code>makeCluster</code> function when <code>multicore=TRUE</code>.</p></dd>
 
 </dl></div>
     <div id="value">
@@ -230,7 +230,7 @@ Use this instead of `sunaltitude` to create a softer shadow by specifying a wide
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.1.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
 </div>
 
       </footer></div>
