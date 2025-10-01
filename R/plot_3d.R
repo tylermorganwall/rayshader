@@ -284,7 +284,7 @@ plot_3d = function(hillshade, heightmap, zscale=1, baseshape="rectangle",
     }
   }
   tempmap = tempfile(fileext=".png")
-  save_png(hillshade,tempmap)
+  rayimage::ray_write_image(hillshade, tempmap)
   precomputed = FALSE
   if(is.list(precomputed_normals)) {
     normals = precomputed_normals

@@ -192,7 +192,7 @@ render_snapshot = function(filename, clear=FALSE,
       return(flipud(debug))
     }
   }
-  tempmap = png::readPNG(temp)
+  tempmap = rayimage::ray_read_image(temp)
   if(has_overlay) {
     tempmap = rayimage::render_image_overlay(tempmap, image_overlay = image_overlay_file)
   }
@@ -210,7 +210,7 @@ render_snapshot = function(filename, clear=FALSE,
   if(missing(filename)) {
     rayimage::plot_image(tempmap, new_page = new_page)
   } else {
-    save_png(tempmap, filename)
+    rayimage::ray_write_image(tempmap, filename)
   }
   if(clear) {
     rgl::clear3d()

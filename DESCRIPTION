@@ -1,8 +1,8 @@
 Package: rayshader
 Type: Package
 Title: Create Maps and Visualize Data in 2D and 3D
-Version: 0.38.12
-Date: 2025-09-29
+Version: 0.38.13
+Date: 2025-09-30
 Authors@R: 
     person("Tyler", "Morgan-Wall", email = "tylermw@gmail.com",role = c("aut", "cph", "cre"), 
            comment = c(ORCID = "0000-0002-3131-3814"))
@@ -26,8 +26,8 @@ Imports: doParallel,
          utils,
          methods,
          terrainmeshr,
-         rayimage (>= 0.15.1),
-         rayvertex (>= 0.12.0),
+         rayimage (>= 0.19.1),
+         rayvertex (>= 0.13.1),
          rayrender (>= 0.38.3)
 Suggests: 
     reshape2,

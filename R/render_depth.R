@@ -325,7 +325,7 @@ render_depth = function(focus = NULL, focallength = 100, fstop = 4, filename=NUL
     if(is.null(filename)) {
       plot_map(tempmap)
     } else {
-      save_png(tempmap,filename)
+      rayimage::ray_write_image(tempmap,filename)
     }
     if(clear) {
       rgl::clear3d()
