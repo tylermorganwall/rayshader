@@ -54,7 +54,7 @@ the previously aforementioned packages) which will be automatically converted to
 All points are assumed to be evenly spaced.}
 
 \item{resample_evenly}{Default \code{FALSE}. If \code{TRUE}, this will re-sample the path evenly from beginning to end, which can help vastly
-reduce the number of points used to draw it (which can improve the performance of \code{\link[=render_highquality]{render_highquality()}} and \link{render_snapshot(software_render = TRUE)}).
+reduce the number of points used to draw it (which can improve the performance of \code{\link[=render_highquality]{render_highquality()}} and \link[=render_snapshot]{\code{render_snapshot(software_render = TRUE)}}).
 This function works only if \code{reorder = TRUE}, or if the sf object is already ordered from beginning to end.}
 
 \item{resample_n}{Default \code{360}. Number of breaks in which to evenly resample the line if \code{resample_evenly = TRUE}.}

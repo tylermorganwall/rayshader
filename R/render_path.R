@@ -22,7 +22,7 @@
 #'@param heightmap Default `NULL`. Pass this if not including an `altitude` argument, or if no extent passed. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
 #' All points are assumed to be evenly spaced.
 #'@param resample_evenly Default `FALSE`. If `TRUE`, this will re-sample the path evenly from beginning to end, which can help vastly
-#'reduce the number of points used to draw it (which can improve the performance of [render_highquality()] and [render_snapshot(software_render = TRUE)]).
+#'reduce the number of points used to draw it (which can improve the performance of [render_highquality()] and \link[=render_snapshot]{\code{render_snapshot(software_render = TRUE)}}).
 #'This function works only if `reorder = TRUE`, or if the sf object is already ordered from beginning to end.
 #'@param resample_n Default `360`. Number of breaks in which to evenly resample the line if `resample_evenly = TRUE`.
 #'@param linewidth Default `3`. The line width.

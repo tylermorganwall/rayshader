@@ -35,7 +35,7 @@ overlay automatically.}
 
 \item{resolution_multiply}{Default \code{1}. If passing in \code{heightmap} instead of width/height, amount to
 increase the resolution of the overlay, which should make lines/polygons/text finer.
-Should be combined with \link{add_overlay(rescale_original = TRUE)} to ensure those added details are captured
+Should be combined with \link[=add_overlay]{\code{add_overlay(rescale_original = TRUE)}} to ensure those added details are captured
 in the final map.}
 
 \item{color}{Default \code{black}. Color of the lines.}
