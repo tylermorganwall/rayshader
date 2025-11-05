@@ -46,8 +46,7 @@ Suggests:
     gridExtra,
     testthat (>= 3.0.0),
     osmdata,
-    raybevel (>= 0.2.1),
-    skymodelr
+    raybevel (>= 0.2.1)
 LinkingTo: Rcpp, progress, RcppArmadillo
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
