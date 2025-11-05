@@ -6,7 +6,6 @@
 \usage{
 plot_map(
   hillshade,
-  rotate = 0,
   asp = 1,
   title_text = NA,
   title_offset = c(20, 20),
@@ -22,8 +21,6 @@ plot_map(
 }
 \arguments{
 \item{hillshade}{Hillshade to be plotted.}
-
-\item{rotate}{Default \code{0}. Rotates the output. Possible values: \code{0}, \code{90}, \code{180}, \code{270}.}
 
 \item{asp}{Default \code{1}. Aspect ratio of the resulting plot. Use \code{asp = 1/cospi(mean_latitude/180)} to rescale
 lat/long at higher latitudes to the correct the aspect ratio.}

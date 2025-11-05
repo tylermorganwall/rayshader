@@ -1,6 +1,6 @@
 #'@title Save PNG
 #'
-#'@description Writes the hillshaded map to file.
+#'@description A wrapper around [rayimage::ray_write_image()] to write an image to file.
 #'
 #'@param hillshade Array (or matrix) of hillshade to be written.
 #'@param filename String with the filename. If `.png` is not at the end of the string, it will be appended automatically.
@@ -25,12 +25,6 @@
 #'montereybay |>
 #'  sphere_shade() |>
 #'  save_png(filename_map)
-#'
-#'#Rotate the map 180 degrees:
-#'
-#'montereybay |>
-#'  sphere_shade() |>
-#'  save_png(filename_map,rotate=180)
 save_png = function(
 	hillshade,
 	filename,
@@ -56,80 +50,22 @@ save_png = function(
 	if (substring(filename, nchar(filename) - 3, nchar(filename)) != ".png") {
 		filename = paste0(filename, ".png")
 	}
-	if (length(dim(hillshade)) == 2) {
-		hillshade = rayimage::render_reorient(
-			hillshade,
-			flipy = TRUE,
-			transpose = TRUE
+	hillshade_img = rayimage::ray_read_image(
+		hillshade
+	)
+	if (has_title) {
+		hillshade_img = rayimage::render_title(
+			hillshade_img,
+			title_text = title_text,
+			title_offset = title_offset,
+			title_color = title_color,
+			title_size = title_size,
+			title_font = title_font,
+			title_style = title_style,
+			title_bar_color = title_bar_color,
+			title_bar_alpha = title_bar_alpha,
+			title_just = title_just
 		)
-		final = array(0, dim = c(dim(hillshade), 3))
-		final[,, 1] = hillshade
-		final[,, 2] = hillshade
-		final[,, 3] = hillshade
-
-		if (has_title) {
-			final = rayimage::render_title(
-				final,
-				title_text = title_text,
-				title_offset = title_offset,
-				title_color = title_color,
-				title_size = title_size,
-				title_font = title_font,
-				title_style = title_style,
-				title_bar_color = title_bar_color,
-				title_bar_alpha = title_bar_alpha,
-				title_just = title_just
-			)
-		}
-		png::writePNG(final, filename, asp = asp, text = c("source" = "rayshader"))
-	} else {
-		if (number_of_rots != 0) {
-			newarray = hillshade
-			newarrayt = array(0, dim = c(ncol(hillshade), nrow(hillshade), 3))
-			for (i in 1:number_of_rots) {
-				for (j in 1:3) {
-					if (i == 2) {
-						newarray[,, j] = rotatef(newarrayt[,, j])
-					} else {
-						newarrayt[,, j] = rotatef(newarray[,, j])
-					}
-				}
-			}
-			if (number_of_rots == 2) {
-				hillshade = newarray
-			} else {
-				hillshade = newarrayt
-			}
-		}
-		if (asp != 1) {
-			dims = dim(hillshade)
-			dimensions = c(dims[1], dims[2] * 1 / asp, 3)
-			temp_hillshade = array(0, dim = dimensions)
-			for (i in 1:3) {
-				temp_hillshade[,, i] = resize_matrix(
-					hillshade[,, i],
-					width = ncol(temp_hillshade),
-					height = nrow(temp_hillshade)
-				)
-			}
-			temp_hillshade[temp_hillshade > 1] = 1
-			temp_hillshade[temp_hillshade < 0] = 0
-			hillshade = temp_hillshade
-		}
-		if (has_title) {
-			hillshade = rayimage::render_title(
-				hillshade,
-				title_text = title_text,
-				title_offset = title_offset,
-				title_color = title_color,
-				title_size = title_size,
-				title_font = title_font,
-				title_style = title_style,
-				title_bar_color = title_bar_color,
-				title_bar_alpha = title_bar_alpha,
-				title_just = title_just
-			)
-		}
-		png::writePNG(hillshade, filename, text = c("source" = "rayshader"))
 	}
+	rayimage::ray_write_image(hillshade_img, filename, clamp = TRUE)
 }

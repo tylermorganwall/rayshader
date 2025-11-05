@@ -141,11 +141,6 @@
 #'	framerate = 24
 #')
 #'}
-#' \if{html}{\Sexpr{
-#'   if (requireNamespace("pkgdown") && pkgdown::in_pkgdown()) {
-#'     "\\out{<video src='../man/figures/monterey-circle.mp4' controls loop muted playsinline style='max-width:100%'></video>}"
-#'   } else { "" }
-#' }}
 #'
 #' #Now we use a "follow camera" for a third person view:
 #' \dontrun{
@@ -173,18 +168,13 @@
 #'	use_extruded_paths = TRUE
 #')
 #'
-#'# Assemble frames -> GIF (pkgdown copies from man/figures)
+#'# See description for video (if on the documentation website)
 #'pngs = sprintf("%s/frame%d.png", tmp, seq_along(t))
 #'av::av_encode_video(
 #'	pngs,
 #'	framerate = 24
 #')
 #'}
-#' \if{html}{\Sexpr{
-#'   if (requireNamespace("pkgdown") && pkgdown::in_pkgdown()) {
-#'     "\\out{<video src='../man/figures/monterey-circle-follow.mp4' controls loop muted playsinline style='max-width:100%'></video>}"
-#'   } else { "" }
-#' }}
 convert_path_to_animation_coords = function(
 	lat,
 	long = NULL,

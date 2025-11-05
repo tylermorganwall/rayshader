@@ -16,7 +16,6 @@ save_png(
   title_bar_color = NA,
   title_bar_alpha = 0.5,
   title_just = "left",
-  rotate = 0,
   asp = 1
 )
 }
@@ -45,13 +44,11 @@ image_annotate) corner to offset the title.}
 
 \item{title_just}{Default \code{left}. Position of the title.}
 
-\item{rotate}{Default 0. Rotates the output. Possible values: 0, 90, 180, 270.}
-
 \item{asp}{Default \code{1}. Aspect ratio of the resulting plot. Use \code{asp = 1/cospi(mean_latitude/180)} to rescale
 lat/long at higher latitudes to the correct the aspect ratio.}
 }
 \description{
-Writes the hillshaded map to file.
+A wrapper around \code{\link[rayimage:ray_write_image]{rayimage::ray_write_image()}} to write an image to file.
 }
 \examples{
 filename_map = tempfile()
@@ -60,10 +57,4 @@ filename_map = tempfile()
 montereybay |>
  sphere_shade() |>
  save_png(filename_map)
-
-#Rotate the map 180 degrees:
-
-montereybay |>
- sphere_shade() |>
- save_png(filename_map,rotate=180)
 }
