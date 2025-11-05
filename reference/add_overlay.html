@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.38.13</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.39.0</span>
       </span>
     </div>
 
@@ -105,6 +105,7 @@
 <span>  alphalayer <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  alphacolor <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  alphamethod <span class="op">=</span> <span class="st">"max"</span>,</span>
+<span>  color_epsilon <span class="op">=</span> <span class="fl">0.001</span>,</span>
 <span>  rescale_original <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -137,6 +138,10 @@ If <code>max</code>, converts all alpha levels higher than <code>layeralpha</cod
 this just sets all transparency to <code>layeralpha</code>.</p></dd>
 
 
+<dt id="arg-color-epsilon">color_epsilon<a class="anchor" aria-label="anchor" href="#arg-color-epsilon"></a></dt>
+<dd><p>Default <code>1e-3</code>. Tolerance for equality for alphacolor to determine transparency.</p></dd>
+
+
 <dt id="arg-rescale-original">rescale_original<a class="anchor" aria-label="anchor" href="#arg-rescale-original"></a></dt>
 <dd><p>Default <code>FALSE</code>. If <code>TRUE</code>, <code>hillshade</code> will be scaled to match the dimensions of <code>overlay</code> (instead of
 the other way around).</p></dd>
@@ -151,20 +156,20 @@ the other way around).</p></dd>
     <h2>Examples</h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co">#Combining base R plotting with rayshader's spherical color mapping and raytracing:</span></span></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
-<span class="r-in"><span><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
-<span class="r-in"><span>  <span class="fu">add_overlay</span><span class="op">(</span><span class="fu"><a href="height_shade.html">height_shade</a></span><span class="op">(</span><span class="va">montereybay</span><span class="op">)</span>,alphalayer <span class="op">=</span> <span class="fl">0.6</span><span class="op">)</span>  <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="fu"><a href="ray_shade.html">ray_shade</a></span><span class="op">(</span><span class="va">montereybay</span>,zscale<span class="op">=</span><span class="fl">50</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span><span class="va">montereybay</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span>  <span class="fu">add_overlay</span><span class="op">(</span><span class="fu"><a href="height_shade.html">height_shade</a></span><span class="op">(</span><span class="va">montereybay</span><span class="op">)</span>,alphalayer <span class="op">=</span> <span class="fl">0.6</span><span class="op">)</span>  <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="fu"><a href="ray_shade.html">ray_shade</a></span><span class="op">(</span><span class="va">montereybay</span>,zscale<span class="op">=</span><span class="fl">50</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-plt img"><img src="add_overlay-1.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#Add contours with `generate_contour_overlay()`</span></span></span>
-<span class="r-in"><span><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="height_shade.html">height_shade</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
-<span class="r-in"><span>  <span class="fu">add_overlay</span><span class="op">(</span><span class="fu"><a href="generate_contour_overlay.html">generate_contour_overlay</a></span><span class="op">(</span><span class="va">montereybay</span><span class="op">)</span><span class="op">)</span>  <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="fu"><a href="ray_shade.html">ray_shade</a></span><span class="op">(</span><span class="va">montereybay</span>,zscale<span class="op">=</span><span class="fl">50</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span><span class="va">montereybay</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="height_shade.html">height_shade</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span>  <span class="fu">add_overlay</span><span class="op">(</span><span class="fu"><a href="generate_contour_overlay.html">generate_contour_overlay</a></span><span class="op">(</span><span class="va">montereybay</span><span class="op">)</span><span class="op">)</span>  <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="fu"><a href="ray_shade.html">ray_shade</a></span><span class="op">(</span><span class="va">montereybay</span>,zscale<span class="op">=</span><span class="fl">50</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-plt img"><img src="add_overlay-2.png" alt="" width="768" height="768"></span>

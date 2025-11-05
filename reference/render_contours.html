@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.38.13</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.39.0</span>
       </span>
     </div>
 
@@ -165,9 +165,9 @@ of <code>n</code> colors, or a character vector with colors that specifies each 
     <h2>Examples</h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co">#Add contours to the montereybay dataset</span></span></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
-<span class="r-in"><span><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
-<span class="r-in"><span> <span class="fu"><a href="height_shade.html">height_shade</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
-<span class="r-in"><span> <span class="fu"><a href="add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="fu"><a href="ray_shade.html">ray_shade</a></span><span class="op">(</span><span class="va">montereybay</span>,zscale<span class="op">=</span><span class="fl">50</span><span class="op">)</span>,<span class="fl">0.3</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span><span class="va">montereybay</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="height_shade.html">height_shade</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="fu"><a href="ray_shade.html">ray_shade</a></span><span class="op">(</span><span class="va">montereybay</span>,zscale<span class="op">=</span><span class="fl">50</span><span class="op">)</span>,<span class="fl">0.3</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span> <span class="fu"><a href="plot_3d.html">plot_3d</a></span><span class="op">(</span><span class="va">montereybay</span>, theta <span class="op">=</span> <span class="op">-</span><span class="fl">45</span>, zscale<span class="op">=</span><span class="fl">50</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">render_contours</span><span class="op">(</span><span class="va">montereybay</span>, zscale <span class="op">=</span> <span class="fl">50</span>, offset <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
@@ -191,9 +191,9 @@ of <code>n</code> colors, or a character vector with colors that specifies each 
 <span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in if (!all(temp_verts[j + 1, ] == temp_verts[j, ])) {    line_scene[[line_counter]] = rayvertex::segment_mesh(start = temp_verts[j,         ] - bbox_center, end = temp_verts[j + 1, ] - bbox_center,         radius = temp_lwd, material = line_mat)    line_counter = line_counter + 1}:</span> missing value where TRUE/FALSE needed</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
-<span class="r-in"><span><span class="co">#Use a color palette for the contours </span></span></span>
-<span class="r-in"><span><span class="va">volcano</span> <span class="op">|&gt;</span> </span></span>
-<span class="r-in"><span> <span class="fu"><a href="constant_shade.html">constant_shade</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span> </span></span>
+<span class="r-in"><span><span class="co">#Use a color palette for the contours</span></span></span>
+<span class="r-in"><span><span class="va">volcano</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="constant_shade.html">constant_shade</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span> <span class="fu"><a href="plot_3d.html">plot_3d</a></span><span class="op">(</span><span class="va">volcano</span>, zscale <span class="op">=</span> <span class="fl">2</span>, solid <span class="op">=</span> <span class="cn">FALSE</span>, zoom <span class="op">=</span> <span class="fl">0.8</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">palette</span> <span class="op">=</span> <span class="fu">grDevices</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/grDevices/colorRamp.html" class="external-link">colorRampPalette</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"red"</span>, <span class="st">"purple"</span>, <span class="st">"pink"</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">render_contours</span><span class="op">(</span><span class="va">volcano</span>, offset <span class="op">=</span> <span class="fl">1</span>, palette <span class="op">=</span> <span class="va">palette</span>, zscale <span class="op">=</span> <span class="fl">2</span>, nlevels <span class="op">=</span> <span class="fl">20</span><span class="op">)</span></span></span>
@@ -203,8 +203,8 @@ of <code>n</code> colors, or a character vector with colors that specifies each 
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#Render using `render_highquality()` for a neon light effect</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="render_highquality.html">render_highquality</a></span><span class="op">(</span>light <span class="op">=</span> <span class="cn">FALSE</span>, </span></span>
-<span class="r-in"><span>                  line_radius <span class="op">=</span> <span class="fl">0.1</span>, sample_method<span class="op">=</span><span class="st">"sobol_blue"</span>,</span></span>
+<span class="r-in"><span><span class="fu"><a href="render_highquality.html">render_highquality</a></span><span class="op">(</span>light <span class="op">=</span> <span class="cn">FALSE</span>, samples <span class="op">=</span> <span class="fl">16</span>,</span></span>
+<span class="r-in"><span>                  line_radius <span class="op">=</span> <span class="fl">0.1</span>,</span></span>
 <span class="r-in"><span>                  path_material <span class="op">=</span> <span class="fu">rayrender</span><span class="fu">::</span><span class="va"><a href="http://www.rayrender.net/reference/light.html" class="external-link">light</a></span>, ground_size <span class="op">=</span> <span class="fl">0</span>,</span></span>
 <span class="r-in"><span>                  path_material_args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>importance_sample <span class="op">=</span> <span class="cn">FALSE</span>,</span></span>
 <span class="r-in"><span>                                            color <span class="op">=</span> <span class="st">"purple"</span>, intensity <span class="op">=</span> <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span></span>

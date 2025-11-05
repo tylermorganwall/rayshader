@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.38.13</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.39.0</span>
       </span>
     </div>
 
@@ -157,15 +157,14 @@ of 1 meter and the grid values are separated by 10 meters, <code>zscale</code> w
 
     <div id="ref-examples">
     <h2>Examples</h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://magrittr.tidyverse.org" class="external-link">magrittr</a></span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="co">#Here we even out a portion of the volcano dataset to simulate water:</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co">#Here we even out a portion of the volcano dataset to simulate water:</span></span></span>
 <span class="r-in"><span><span class="va">island_volcano</span> <span class="op">=</span> <span class="va">volcano</span></span></span>
 <span class="r-in"><span><span class="va">island_volcano</span><span class="op">[</span><span class="va">island_volcano</span> <span class="op">&lt;</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">island_volcano</span><span class="op">)</span><span class="op">]</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="va">island_volcano</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#Setting a minimum area avoids classifying small flat areas as water:</span></span></span>
-<span class="r-in"><span><span class="va">island_volcano</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
-<span class="r-in"><span> <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span>texture<span class="op">=</span><span class="st">"imhof3"</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
-<span class="r-in"><span> <span class="fu"><a href="add_water.html">add_water</a></span><span class="op">(</span><span class="fu">detect_water</span><span class="op">(</span><span class="va">island_volcano</span>, min_area <span class="op">=</span> <span class="fl">400</span><span class="op">)</span>,color<span class="op">=</span><span class="st">"imhof3"</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span><span class="va">island_volcano</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span>texture<span class="op">=</span><span class="st">"imhof3"</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="add_water.html">add_water</a></span><span class="op">(</span><span class="fu">detect_water</span><span class="op">(</span><span class="va">island_volcano</span>, min_area <span class="op">=</span> <span class="fl">400</span><span class="op">)</span>,color<span class="op">=</span><span class="st">"imhof3"</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="detect_water-1.png" alt="" width="768" height="768"></span>
 </code></pre></div>

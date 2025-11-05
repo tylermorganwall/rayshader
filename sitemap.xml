@@ -14,6 +14,7 @@
 <url><loc>https://www.rayshader.com/reference/build_from_w.html</loc></url>
 <url><loc>https://www.rayshader.com/reference/calculate_normal.html</loc></url>
 <url><loc>https://www.rayshader.com/reference/cloud_shade.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/col2rgb_linear.html</loc></url>
 <url><loc>https://www.rayshader.com/reference/constant_shade.html</loc></url>
 <url><loc>https://www.rayshader.com/reference/convert_color.html</loc></url>
 <url><loc>https://www.rayshader.com/reference/convert_path_to_animation_coords.html</loc></url>
@@ -65,7 +66,6 @@
 <url><loc>https://www.rayshader.com/reference/monterey_counties_sf.html</loc></url>
 <url><loc>https://www.rayshader.com/reference/monterey_roads_sf.html</loc></url>
 <url><loc>https://www.rayshader.com/reference/montereybay.html</loc></url>
-<url><loc>https://www.rayshader.com/reference/pipe.html</loc></url>
 <url><loc>https://www.rayshader.com/reference/plot_3d.html</loc></url>
 <url><loc>https://www.rayshader.com/reference/plot_gg.html</loc></url>
 <url><loc>https://www.rayshader.com/reference/plot_map.html</loc></url>
@@ -73,6 +73,7 @@
 <url><loc>https://www.rayshader.com/reference/ray_merge_reorder.html</loc></url>
 <url><loc>https://www.rayshader.com/reference/ray_shade.html</loc></url>
 <url><loc>https://www.rayshader.com/reference/raymarch_cloud_layer.html</loc></url>
+<url><loc>https://www.rayshader.com/reference/rayshader-defunct.html</loc></url>
 <url><loc>https://www.rayshader.com/reference/reduce_matrix_size.html</loc></url>
 <url><loc>https://www.rayshader.com/reference/render_beveled_polygons.html</loc></url>
 <url><loc>https://www.rayshader.com/reference/render_buildings.html</loc></url>

@@ -18,7 +18,7 @@ Note: Underlying layers with transparency can cause rendering issues in rgl."><m
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.38.13</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.39.0</span>
       </span>
     </div>
 
@@ -221,32 +221,32 @@ of 1 meter and the grid values are separated by 10 meters, <code>zscale</code> w
     <h2>Examples</h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#Render a cloud layer over Monterey Bay</span></span></span>
-<span class="r-in"><span><span class="va">montereybay</span>  <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
-<span class="r-in"><span> <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span><span class="op">)</span>  <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span><span class="va">montereybay</span>  <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span><span class="op">)</span>  <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span> <span class="fu"><a href="plot_3d.html">plot_3d</a></span><span class="op">(</span><span class="va">montereybay</span>,background<span class="op">=</span><span class="st">"brown"</span>,zscale<span class="op">=</span><span class="fl">50</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#Render some clouds</span></span></span>
-<span class="r-in"><span><span class="fu">render_clouds</span><span class="op">(</span><span class="va">montereybay</span>, zscale<span class="op">=</span><span class="fl">50</span><span class="op">)</span>  </span></span>
+<span class="r-in"><span><span class="fu">render_clouds</span><span class="op">(</span><span class="va">montereybay</span>, zscale<span class="op">=</span><span class="fl">50</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-plt img"><img src="render_clouds-1.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#Change the seed for a different set of clouds and add cloud shadows on the ground</span></span></span>
-<span class="r-in"><span><span class="va">montereybay</span>  <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
-<span class="r-in"><span> <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span><span class="op">)</span>  <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
-<span class="r-in"><span> <span class="fu"><a href="add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="fu"><a href="cloud_shade.html">cloud_shade</a></span><span class="op">(</span><span class="va">montereybay</span>,zscale<span class="op">=</span><span class="fl">50</span>, seed <span class="op">=</span> <span class="fl">2</span><span class="op">)</span>, <span class="fl">0.0</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span><span class="va">montereybay</span>  <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span><span class="op">)</span>  <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="fu"><a href="cloud_shade.html">cloud_shade</a></span><span class="op">(</span><span class="va">montereybay</span>,zscale<span class="op">=</span><span class="fl">50</span>, seed <span class="op">=</span> <span class="fl">2</span><span class="op">)</span>, <span class="fl">0.0</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span> <span class="fu"><a href="plot_3d.html">plot_3d</a></span><span class="op">(</span><span class="va">montereybay</span>,background<span class="op">=</span><span class="st">"brown"</span>,zscale<span class="op">=</span><span class="fl">50</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_camera.html">render_camera</a></span><span class="op">(</span>theta<span class="op">=</span><span class="op">-</span><span class="fl">65</span>, phi <span class="op">=</span> <span class="fl">25</span>, zoom <span class="op">=</span> <span class="fl">0.45</span>, fov <span class="op">=</span> <span class="fl">80</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu">render_clouds</span><span class="op">(</span><span class="va">montereybay</span>, zscale<span class="op">=</span><span class="fl">50</span>, seed<span class="op">=</span><span class="fl">2</span>, clear_clouds <span class="op">=</span> <span class="cn">T</span><span class="op">)</span>    </span></span>
+<span class="r-in"><span><span class="fu">render_clouds</span><span class="op">(</span><span class="va">montereybay</span>, zscale<span class="op">=</span><span class="fl">50</span>, seed<span class="op">=</span><span class="fl">2</span>, clear_clouds <span class="op">=</span> <span class="cn">T</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-plt img"><img src="render_clouds-2.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
-<span class="r-in"><span><span class="va">montereybay</span>  <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
-<span class="r-in"><span> <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span><span class="op">)</span>  <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span><span class="va">montereybay</span>  <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span><span class="op">)</span>  <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span> <span class="fu"><a href="plot_3d.html">plot_3d</a></span><span class="op">(</span><span class="va">montereybay</span>,background<span class="op">=</span><span class="st">"brown"</span>,zscale<span class="op">=</span><span class="fl">50</span><span class="op">)</span></span></span>
-<span class="r-in"><span> </span></span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#Lower the frequency for larger, smoother clouds</span></span></span>
 <span class="r-in"><span><span class="fu">render_clouds</span><span class="op">(</span><span class="va">montereybay</span>, zscale<span class="op">=</span><span class="fl">50</span>, frequency <span class="op">=</span> <span class="fl">0.001</span>, clear_clouds <span class="op">=</span> <span class="cn">T</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
@@ -272,24 +272,24 @@ of 1 meter and the grid values are separated by 10 meters, <code>zscale</code> w
 <span class="r-plt img"><img src="render_clouds-6.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#Increase the cloud cover</span></span></span>
-<span class="r-in"><span><span class="fu">render_clouds</span><span class="op">(</span><span class="va">montereybay</span>, zscale<span class="op">=</span><span class="fl">50</span>, cloud_cover<span class="op">=</span><span class="fl">0.8</span>, clear_clouds <span class="op">=</span> <span class="cn">T</span><span class="op">)</span>            </span></span>
+<span class="r-in"><span><span class="fu">render_clouds</span><span class="op">(</span><span class="va">montereybay</span>, zscale<span class="op">=</span><span class="fl">50</span>, cloud_cover<span class="op">=</span><span class="fl">0.8</span>, clear_clouds <span class="op">=</span> <span class="cn">T</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-plt img"><img src="render_clouds-7.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#Decrease the cloud cover</span></span></span>
-<span class="r-in"><span><span class="fu">render_clouds</span><span class="op">(</span><span class="va">montereybay</span>, zscale<span class="op">=</span><span class="fl">50</span>, cloud_cover<span class="op">=</span><span class="fl">0.2</span>, clear_clouds <span class="op">=</span> <span class="cn">T</span><span class="op">)</span>            </span></span>
+<span class="r-in"><span><span class="fu">render_clouds</span><span class="op">(</span><span class="va">montereybay</span>, zscale<span class="op">=</span><span class="fl">50</span>, cloud_cover<span class="op">=</span><span class="fl">0.2</span>, clear_clouds <span class="op">=</span> <span class="cn">T</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-plt img"><img src="render_clouds-8.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#Change the altitude range of the clouds</span></span></span>
-<span class="r-in"><span><span class="fu">render_clouds</span><span class="op">(</span><span class="va">montereybay</span>,zscale<span class="op">=</span><span class="fl">50</span>,start_altitude<span class="op">=</span><span class="fl">2000</span>,end_altitude <span class="op">=</span> <span class="fl">4000</span>, clear_clouds <span class="op">=</span> <span class="cn">T</span><span class="op">)</span>            </span></span>
+<span class="r-in"><span><span class="fu">render_clouds</span><span class="op">(</span><span class="va">montereybay</span>,zscale<span class="op">=</span><span class="fl">50</span>,start_altitude<span class="op">=</span><span class="fl">2000</span>,end_altitude <span class="op">=</span> <span class="fl">4000</span>, clear_clouds <span class="op">=</span> <span class="cn">T</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-plt img"><img src="render_clouds-9.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
-<span class="r-in"><span><span class="co">#Increase the number of layers </span></span></span>
+<span class="r-in"><span><span class="co">#Increase the number of layers</span></span></span>
 <span class="r-in"><span><span class="fu">render_clouds</span><span class="op">(</span><span class="va">montereybay</span>, zscale<span class="op">=</span><span class="fl">50</span>,start_altitude<span class="op">=</span><span class="fl">2000</span>,end_altitude <span class="op">=</span> <span class="fl">4000</span>, layers <span class="op">=</span> <span class="fl">20</span>,</span></span>
 <span class="r-in"><span>             clear_clouds <span class="op">=</span> <span class="cn">T</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
@@ -304,10 +304,10 @@ of 1 meter and the grid values are separated by 10 meters, <code>zscale</code> w
 <span class="r-plt img"><img src="render_clouds-11.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#Render the scene with a different baseshape</span></span></span>
-<span class="r-in"><span><span class="va">montereybay</span>  <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
-<span class="r-in"><span> <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span><span class="op">)</span>  <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span><span class="va">montereybay</span>  <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span><span class="op">)</span>  <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span> <span class="fu"><a href="plot_3d.html">plot_3d</a></span><span class="op">(</span><span class="va">montereybay</span>,background<span class="op">=</span><span class="st">"darkred"</span>,zscale<span class="op">=</span><span class="fl">50</span>, baseshape<span class="op">=</span><span class="st">"hex"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu">render_clouds</span><span class="op">(</span><span class="va">montereybay</span>,zscale<span class="op">=</span><span class="fl">50</span>, seed<span class="op">=</span><span class="fl">3</span>, baseshape<span class="op">=</span><span class="st">"hex"</span>, clear_clouds <span class="op">=</span> <span class="cn">T</span><span class="op">)</span>  </span></span>
+<span class="r-in"><span><span class="fu">render_clouds</span><span class="op">(</span><span class="va">montereybay</span>,zscale<span class="op">=</span><span class="fl">50</span>, seed<span class="op">=</span><span class="fl">3</span>, baseshape<span class="op">=</span><span class="st">"hex"</span>, clear_clouds <span class="op">=</span> <span class="cn">T</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_camera.html">render_camera</a></span><span class="op">(</span>zoom<span class="op">=</span><span class="fl">0.65</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>

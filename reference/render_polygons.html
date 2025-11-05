@@ -18,7 +18,7 @@ system defined by the extent object."><meta property="og:image" content="https:/
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.38.13</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.39.0</span>
       </span>
     </div>
 
@@ -220,18 +220,18 @@ or absolute.</p></dd>
     <h2>Examples</h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#Render the county borders as polygons in Monterey Bay</span></span></span>
-<span class="r-in"><span><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span>texture <span class="op">=</span> <span class="st">"desert"</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="fu"><a href="ray_shade.html">ray_shade</a></span><span class="op">(</span><span class="va">montereybay</span>,zscale <span class="op">=</span> <span class="fl">50</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span><span class="va">montereybay</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span>texture <span class="op">=</span> <span class="st">"desert"</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="fu"><a href="ray_shade.html">ray_shade</a></span><span class="op">(</span><span class="va">montereybay</span>,zscale <span class="op">=</span> <span class="fl">50</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="plot_3d.html">plot_3d</a></span><span class="op">(</span><span class="va">montereybay</span>, water <span class="op">=</span> <span class="cn">TRUE</span>, windowsize <span class="op">=</span> <span class="fl">800</span>, watercolor <span class="op">=</span> <span class="st">"dodgerblue"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_camera.html">render_camera</a></span><span class="op">(</span>theta <span class="op">=</span> <span class="fl">140</span>,  phi <span class="op">=</span> <span class="fl">55</span>, zoom <span class="op">=</span> <span class="fl">0.85</span>, fov <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co">#We will apply a negative buffer to create space between adjacent polygons. You may </span></span></span>
+<span class="r-in"><span><span class="co">#We will apply a negative buffer to create space between adjacent polygons. You may</span></span></span>
 <span class="r-in"><span><span class="co">#have to call `sf::sf_use_s2(FALSE)` before running this code to get it to run.</span></span></span>
 <span class="r-in"><span><span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/s2.html" class="external-link">sf_use_s2</a></span><span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">mont_county_buff</span> <span class="op">=</span> <span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/geos_unary.html" class="external-link">st_simplify</a></span><span class="op">(</span><span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/geos_unary.html" class="external-link">st_buffer</a></span><span class="op">(</span><span class="va">monterey_counties_sf</span>,<span class="op">-</span><span class="fl">0.003</span><span class="op">)</span>, dTolerance<span class="op">=</span><span class="fl">0.001</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="fu">render_polygons</span><span class="op">(</span><span class="va">mont_county_buff</span>, </span></span>
+<span class="r-in"><span><span class="fu">render_polygons</span><span class="op">(</span><span class="va">mont_county_buff</span>,</span></span>
 <span class="r-in"><span>                extent <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>,<span class="st">"extent"</span><span class="op">)</span>, top <span class="op">=</span> <span class="fl">10</span>,</span></span>
 <span class="r-in"><span>                parallel <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
@@ -245,7 +245,7 @@ or absolute.</p></dd>
 <span class="r-in"><span><span class="co">#We can specify the bottom of the polygons as well. Here I float the polygons above the surface</span></span></span>
 <span class="r-in"><span><span class="co">#by specifying the bottom argument. We clear the previous polygons with `clear_previous = TRUE`.</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_camera.html">render_camera</a></span><span class="op">(</span>theta<span class="op">=</span><span class="op">-</span><span class="fl">60</span>,  phi<span class="op">=</span><span class="fl">20</span>, zoom <span class="op">=</span> <span class="fl">0.85</span>, fov<span class="op">=</span><span class="fl">0</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu">render_polygons</span><span class="op">(</span><span class="va">mont_county_buff</span>, </span></span>
+<span class="r-in"><span><span class="fu">render_polygons</span><span class="op">(</span><span class="va">mont_county_buff</span>,</span></span>
 <span class="r-in"><span>                extent <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>,<span class="st">"extent"</span><span class="op">)</span>, bottom <span class="op">=</span> <span class="fl">190</span>, top<span class="op">=</span><span class="fl">200</span>,</span></span>
 <span class="r-in"><span>                parallel<span class="op">=</span><span class="cn">FALSE</span>,clear_previous<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
@@ -255,17 +255,16 @@ or absolute.</p></dd>
 <span class="r-in"><span><span class="co">#We can set the height of the data to a column in the sf object: we'll use the land area.</span></span></span>
 <span class="r-in"><span><span class="co">#We'll have to scale this value because its max value is 2.6 billion:</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_camera.html">render_camera</a></span><span class="op">(</span>theta<span class="op">=</span><span class="op">-</span><span class="fl">60</span>,  phi<span class="op">=</span><span class="fl">60</span>, zoom <span class="op">=</span> <span class="fl">0.85</span>, fov<span class="op">=</span><span class="fl">30</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu">render_polygons</span><span class="op">(</span><span class="va">mont_county_buff</span>, </span></span>
+<span class="r-in"><span><span class="fu">render_polygons</span><span class="op">(</span><span class="va">mont_county_buff</span>,</span></span>
 <span class="r-in"><span>                extent <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>, <span class="st">"extent"</span><span class="op">)</span>, data_column_top <span class="op">=</span> <span class="st">"ALAND"</span>,</span></span>
 <span class="r-in"><span>                scale_data <span class="op">=</span> <span class="fl">300</span><span class="op">/</span><span class="op">(</span><span class="fl">2.6E9</span><span class="op">)</span>, color <span class="op">=</span> <span class="st">"chartreuse4"</span>,</span></span>
 <span class="r-in"><span>                clear_previous <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span>      </span></span>
-<span class="r-in"><span><span class="op">}</span>  </span></span>
+<span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-plt img"><img src="render_polygons-3.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#This function also works with `render_highquality()`</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="render_highquality.html">render_highquality</a></span><span class="op">(</span>samples <span class="op">=</span> <span class="fl">128</span>, clamp_value <span class="op">=</span> <span class="fl">10</span>, sample_method<span class="op">=</span><span class="st">"sobol_blue"</span>,</span></span>
-<span class="r-in"><span>                   min_variance <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="render_highquality.html">render_highquality</a></span><span class="op">(</span>samples <span class="op">=</span> <span class="fl">16</span>, min_variance <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-plt img"><img src="render_polygons-4.png" alt="" width="768" height="768"></span>
 </code></pre></div>

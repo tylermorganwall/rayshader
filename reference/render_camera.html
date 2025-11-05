@@ -18,7 +18,7 @@ values are entered, prints and returns the current values."><meta property="og:i
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.38.13</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.39.0</span>
       </span>
     </div>
 
@@ -138,8 +138,8 @@ values are entered, prints and returns the current values.</p>
     <div id="ref-examples">
     <h2>Examples</h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
-<span class="r-in"><span><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
-<span class="r-in"><span> <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span><span class="va">montereybay</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span> <span class="fu"><a href="plot_3d.html">plot_3d</a></span><span class="op">(</span><span class="va">montereybay</span>,zscale <span class="op">=</span> <span class="fl">50</span>, water <span class="op">=</span> <span class="cn">TRUE</span>, waterlinecolor<span class="op">=</span><span class="st">"white"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
@@ -204,7 +204,7 @@ values are entered, prints and returns the current values.</p>
 <span class="r-in"><span><span class="co">#ffmpeg -i raymovie.mp4 -pix_fmt yuv420p -profile:v baseline -level 3 -vf scale=-2:-2 rayweb.mp4</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#Or we can use render_movie() to do this all automatically with type="custom" (uncomment to run):</span></span></span>
-<span class="r-in"><span><span class="co">#render_movie(filename = tempfile(fileext = ".mp4"), type = "custom", </span></span></span>
+<span class="r-in"><span><span class="co">#render_movie(filename = tempfile(fileext = ".mp4"), type = "custom",</span></span></span>
 <span class="r-in"><span><span class="co">#             theta = thetavec, phi = phivecfull, zoom = zoomvec, fov=0)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 </code></pre></div>

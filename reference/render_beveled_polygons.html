@@ -18,7 +18,7 @@ the raybevel::generate_beveled_polygon() function for more information."><meta p
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.38.13</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.39.0</span>
       </span>
     </div>
 
@@ -294,13 +294,13 @@ or absolute.</p></dd>
     <div id="ref-examples">
     <h2>Examples</h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># This function can also create fake "terrain" from polygons by visualizing the distance </span></span></span>
+<span class="r-in"><span><span class="co"># This function can also create fake "terrain" from polygons by visualizing the distance</span></span></span>
 <span class="r-in"><span><span class="co"># to the nearest edge.</span></span></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#Render the county borders as polygons in Monterey Bay as terrain</span></span></span>
-<span class="r-in"><span><span class="va">montereybay</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span>texture <span class="op">=</span> <span class="st">"desert"</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
-<span class="r-in"><span>  <span class="fu"><a href="add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="fu"><a href="ray_shade.html">ray_shade</a></span><span class="op">(</span><span class="va">montereybay</span>,zscale <span class="op">=</span> <span class="fl">50</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span><span class="va">montereybay</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span>texture <span class="op">=</span> <span class="st">"desert"</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="fu"><a href="ray_shade.html">ray_shade</a></span><span class="op">(</span><span class="va">montereybay</span>,zscale <span class="op">=</span> <span class="fl">50</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="plot_3d.html">plot_3d</a></span><span class="op">(</span><span class="va">montereybay</span>, water <span class="op">=</span> <span class="cn">TRUE</span>, windowsize <span class="op">=</span> <span class="fl">800</span>, watercolor <span class="op">=</span> <span class="st">"dodgerblue"</span>,</span></span>
 <span class="r-in"><span>          background <span class="op">=</span> <span class="st">"pink"</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
@@ -309,12 +309,12 @@ or absolute.</p></dd>
 <span class="r-in"><span><span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/s2.html" class="external-link">sf_use_s2</a></span><span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">mont_county_buff</span> <span class="op">=</span> <span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/geos_unary.html" class="external-link">st_simplify</a></span><span class="op">(</span><span class="fu">sf</span><span class="fu">::</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/geos_unary.html" class="external-link">st_buffer</a></span><span class="op">(</span><span class="va">monterey_counties_sf</span>,<span class="op">-</span><span class="fl">0.003</span><span class="op">)</span>, dTolerance<span class="op">=</span><span class="fl">0.001</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="fu">render_beveled_polygons</span><span class="op">(</span><span class="va">mont_county_buff</span>,  flat_shading  <span class="op">=</span> <span class="cn">TRUE</span>, angle <span class="op">=</span> <span class="fl">45</span> , </span></span>
+<span class="r-in"><span><span class="fu">render_beveled_polygons</span><span class="op">(</span><span class="va">mont_county_buff</span>,  flat_shading  <span class="op">=</span> <span class="cn">TRUE</span>, angle <span class="op">=</span> <span class="fl">45</span> ,</span></span>
 <span class="r-in"><span>                        heightmap <span class="op">=</span> <span class="va">montereybay</span>, bevel_width<span class="op">=</span><span class="fl">2000</span>,</span></span>
 <span class="r-in"><span>                        material <span class="op">=</span> <span class="st">"red"</span>,</span></span>
-<span class="r-in"><span>                        extent <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>,<span class="st">"extent"</span><span class="op">)</span>,  </span></span>
-<span class="r-in"><span>                        bevel_height <span class="op">=</span> <span class="fl">5000</span>, base_height<span class="op">=</span><span class="fl">0</span>, </span></span>
-<span class="r-in"><span>                        zscale<span class="op">=</span><span class="fl">200</span><span class="op">)</span> </span></span>
+<span class="r-in"><span>                        extent <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>,<span class="st">"extent"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                        bevel_height <span class="op">=</span> <span class="fl">5000</span>, base_height<span class="op">=</span><span class="fl">0</span>,</span></span>
+<span class="r-in"><span>                        zscale<span class="op">=</span><span class="fl">200</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_camera.html">render_camera</a></span><span class="op">(</span>theta <span class="op">=</span> <span class="fl">0</span>,  phi <span class="op">=</span> <span class="fl">90</span>, zoom <span class="op">=</span> <span class="fl">0.65</span>, fov <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_camera.html">render_camera</a></span><span class="op">(</span>theta<span class="op">=</span><span class="fl">194</span>, phi<span class="op">=</span> <span class="fl">35</span>,   zoom <span class="op">=</span> <span class="fl">0.5</span>, fov<span class="op">=</span> <span class="fl">80</span><span class="op">)</span></span></span>
@@ -335,12 +335,12 @@ or absolute.</p></dd>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Changing the color of the beveled top:</span></span></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
-<span class="r-in"><span><span class="fu">render_beveled_polygons</span><span class="op">(</span><span class="va">mont_county_buff</span>,  flat_shading  <span class="op">=</span> <span class="cn">TRUE</span>, angle <span class="op">=</span> <span class="fl">45</span> , </span></span>
+<span class="r-in"><span><span class="fu">render_beveled_polygons</span><span class="op">(</span><span class="va">mont_county_buff</span>,  flat_shading  <span class="op">=</span> <span class="cn">TRUE</span>, angle <span class="op">=</span> <span class="fl">45</span> ,</span></span>
 <span class="r-in"><span>                        heightmap <span class="op">=</span> <span class="va">montereybay</span>, bevel_width<span class="op">=</span><span class="fl">2000</span>,</span></span>
 <span class="r-in"><span>                        material <span class="op">=</span> <span class="st">"tan"</span>, bevel_material <span class="op">=</span> <span class="st">"darkgreen"</span>,</span></span>
 <span class="r-in"><span>                        extent <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>,<span class="st">"extent"</span><span class="op">)</span>, clear_previous<span class="op">=</span><span class="cn">TRUE</span>,</span></span>
-<span class="r-in"><span>                        bevel_height <span class="op">=</span> <span class="fl">5000</span>, base_height<span class="op">=</span><span class="fl">0</span>, </span></span>
-<span class="r-in"><span>                        zscale<span class="op">=</span><span class="fl">200</span><span class="op">)</span> </span></span>
+<span class="r-in"><span>                        bevel_height <span class="op">=</span> <span class="fl">5000</span>, base_height<span class="op">=</span><span class="fl">0</span>,</span></span>
+<span class="r-in"><span>                        zscale<span class="op">=</span><span class="fl">200</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>st_centroid assumes attributes are constant over geometries</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>st_centroid does not give correct centroids for longitude/latitude data</span>
@@ -348,20 +348,20 @@ or absolute.</p></dd>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> All `bevel_offset` greater than max offset in polygon of 5.186830, calculating full polygon model</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> All `bevel_offset` greater than max offset in polygon of 4.704823, calculating full polygon model</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> All `bevel_offset` greater than max offset in polygon of 0.720301, calculating full polygon model</span>
-<span class="r-in"><span><span class="co"># We can create a nice curved surface by passing in a bevel generated with the </span></span></span>
-<span class="r-in"><span><span class="co"># `raybevel::generate_bevel()` function. </span></span></span>
+<span class="r-in"><span><span class="co"># We can create a nice curved surface by passing in a bevel generated with the</span></span></span>
+<span class="r-in"><span><span class="co"># `raybevel::generate_bevel()` function.</span></span></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="fu">render_beveled_polygons</span><span class="op">(</span><span class="va">mont_county_buff</span>, flat_shading  <span class="op">=</span> <span class="cn">TRUE</span>, heightmap <span class="op">=</span> <span class="va">montereybay</span>,</span></span>
 <span class="r-in"><span>                        bevel <span class="op">=</span> <span class="fu">raybevel</span><span class="fu">::</span><span class="fu"><a href="http://www.raybevel.com/reference/generate_bevel.html" class="external-link">generate_bevel</a></span><span class="op">(</span><span class="st">"exp"</span>,bevel_end <span class="op">=</span> <span class="fl">0.4</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                        <span class="co">#max_height = 10, scale_all_max = TRUE, set_max_height = TRUE,</span></span></span>
-<span class="r-in"><span>                        material <span class="op">=</span> <span class="fu">rayvertex</span><span class="fu">::</span><span class="fu"><a href="https://www.rayvertex.com/reference/material_list.html" class="external-link">material_list</a></span><span class="op">(</span>diffuse<span class="op">=</span><span class="st">"red"</span>, </span></span>
-<span class="r-in"><span>                                                            ambient <span class="op">=</span> <span class="st">"darkred"</span>, </span></span>
+<span class="r-in"><span>                        material <span class="op">=</span> <span class="fu">rayvertex</span><span class="fu">::</span><span class="fu"><a href="https://www.rayvertex.com/reference/material_list.html" class="external-link">material_list</a></span><span class="op">(</span>diffuse<span class="op">=</span><span class="st">"red"</span>,</span></span>
+<span class="r-in"><span>                                                            ambient <span class="op">=</span> <span class="st">"darkred"</span>,</span></span>
 <span class="r-in"><span>                                                            diffuse_intensity <span class="op">=</span> <span class="fl">0.2</span>,</span></span>
 <span class="r-in"><span>                                                            ambient_intensity <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                        light_intensity <span class="op">=</span> <span class="fl">1</span>, light_relative <span class="op">=</span> <span class="cn">FALSE</span>,</span></span>
-<span class="r-in"><span>                        extent <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>,<span class="st">"extent"</span><span class="op">)</span>, bevel_height <span class="op">=</span> <span class="fl">5000</span>, </span></span>
+<span class="r-in"><span>                        extent <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>,<span class="st">"extent"</span><span class="op">)</span>, bevel_height <span class="op">=</span> <span class="fl">5000</span>,</span></span>
 <span class="r-in"><span>                        base_height<span class="op">=</span><span class="fl">0</span>, clear_previous <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
-<span class="r-in"><span>                        zscale<span class="op">=</span><span class="fl">200</span><span class="op">)</span> </span></span>
+<span class="r-in"><span>                        zscale<span class="op">=</span><span class="fl">200</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>st_centroid assumes attributes are constant over geometries</span>
@@ -370,20 +370,20 @@ or absolute.</p></dd>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># While the bevels all start at the same point in the above example,</span></span></span>
 <span class="r-in"><span><span class="co"># they rise to different levels due to being scaled by the maximum internal distance</span></span></span>
-<span class="r-in"><span><span class="co"># in the polygon. Setting `scale_all_max = TRUE` ensures the bevels are all scaled to the </span></span></span>
+<span class="r-in"><span><span class="co"># in the polygon. Setting `scale_all_max = TRUE` ensures the bevels are all scaled to the</span></span></span>
 <span class="r-in"><span><span class="co"># same maximum height (in this case, 3000m above the 5000m bevel start height).</span></span></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="fu">render_beveled_polygons</span><span class="op">(</span><span class="va">mont_county_buff</span>, flat_shading  <span class="op">=</span> <span class="cn">TRUE</span>, heightmap <span class="op">=</span> <span class="va">montereybay</span>,</span></span>
 <span class="r-in"><span>                 bevel <span class="op">=</span> <span class="fu">raybevel</span><span class="fu">::</span><span class="fu"><a href="http://www.raybevel.com/reference/generate_bevel.html" class="external-link">generate_bevel</a></span><span class="op">(</span><span class="st">"exp"</span>,bevel_end <span class="op">=</span> <span class="fl">0.4</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                 max_height <span class="op">=</span> <span class="fl">3000</span>, scale_all_max <span class="op">=</span> <span class="cn">TRUE</span>, set_max_height <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
-<span class="r-in"><span>                 material <span class="op">=</span> <span class="fu">rayvertex</span><span class="fu">::</span><span class="fu"><a href="https://www.rayvertex.com/reference/material_list.html" class="external-link">material_list</a></span><span class="op">(</span>diffuse<span class="op">=</span><span class="st">"red"</span>, </span></span>
-<span class="r-in"><span>                                                     ambient <span class="op">=</span> <span class="st">"darkred"</span>, </span></span>
+<span class="r-in"><span>                 material <span class="op">=</span> <span class="fu">rayvertex</span><span class="fu">::</span><span class="fu"><a href="https://www.rayvertex.com/reference/material_list.html" class="external-link">material_list</a></span><span class="op">(</span>diffuse<span class="op">=</span><span class="st">"red"</span>,</span></span>
+<span class="r-in"><span>                                                     ambient <span class="op">=</span> <span class="st">"darkred"</span>,</span></span>
 <span class="r-in"><span>                                                     diffuse_intensity <span class="op">=</span> <span class="fl">0.2</span>,</span></span>
 <span class="r-in"><span>                                                     ambient_intensity <span class="op">=</span> <span class="fl">0.1</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                 light_intensity <span class="op">=</span> <span class="fl">1</span>, light_relative <span class="op">=</span> <span class="cn">FALSE</span>,</span></span>
-<span class="r-in"><span>                 extent <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>,<span class="st">"extent"</span><span class="op">)</span>, bevel_height <span class="op">=</span> <span class="fl">5000</span>, </span></span>
+<span class="r-in"><span>                 extent <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>,<span class="st">"extent"</span><span class="op">)</span>, bevel_height <span class="op">=</span> <span class="fl">5000</span>,</span></span>
 <span class="r-in"><span>                 base_height<span class="op">=</span><span class="fl">0</span>, clear_previous <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
-<span class="r-in"><span>                 zscale<span class="op">=</span><span class="fl">200</span><span class="op">)</span> </span></span>
+<span class="r-in"><span>                 zscale<span class="op">=</span><span class="fl">200</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>st_centroid assumes attributes are constant over geometries</span>
@@ -398,17 +398,17 @@ or absolute.</p></dd>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># We can scale the size of the polygon to a column in the `sf` object as well:</span></span></span>
 <span class="r-in"><span><span class="co"># raybevel::generate_bevel() function. We can scale this data down using the `scale_data`</span></span></span>
-<span class="r-in"><span><span class="co"># argument. Note that this is applied as well as the `zscale` argument, and that you </span></span></span>
+<span class="r-in"><span><span class="co"># argument. Note that this is applied as well as the `zscale` argument, and that you</span></span></span>
 <span class="r-in"><span><span class="co"># must think carefully about your scales and values if trying to represent a meaningful</span></span></span>
 <span class="r-in"><span><span class="co"># data visualization with this object.</span></span></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
-<span class="r-in"><span><span class="fu">render_beveled_polygons</span><span class="op">(</span><span class="va">mont_county_buff</span>,  flat_shading  <span class="op">=</span> <span class="cn">TRUE</span>, angle <span class="op">=</span> <span class="fl">45</span>, bevel_width<span class="op">=</span><span class="fl">1000</span>, </span></span>
+<span class="r-in"><span><span class="fu">render_beveled_polygons</span><span class="op">(</span><span class="va">mont_county_buff</span>,  flat_shading  <span class="op">=</span> <span class="cn">TRUE</span>, angle <span class="op">=</span> <span class="fl">45</span>, bevel_width<span class="op">=</span><span class="fl">1000</span>,</span></span>
 <span class="r-in"><span>                 data_column_top <span class="op">=</span> <span class="st">"ALAND"</span>, scale_data <span class="op">=</span> <span class="fl">1e-5</span>, heightmap <span class="op">=</span> <span class="va">montereybay</span>,</span></span>
 <span class="r-in"><span>                 <span class="co">#max_height = 1000, scale_all_max = TRUE, set_max_height = TRUE,</span></span></span>
 <span class="r-in"><span>                 material <span class="op">=</span> <span class="fu">rayvertex</span><span class="fu">::</span><span class="fu"><a href="https://www.rayvertex.com/reference/material_list.html" class="external-link">material_list</a></span><span class="op">(</span>diffuse<span class="op">=</span><span class="st">"red"</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                 light_intensity <span class="op">=</span> <span class="fl">1</span>, light_relative <span class="op">=</span> <span class="cn">FALSE</span>,</span></span>
 <span class="r-in"><span>                 extent <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>,<span class="st">"extent"</span><span class="op">)</span>, clear_previous <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
-<span class="r-in"><span>                 zscale<span class="op">=</span><span class="fl">200</span><span class="op">)</span> </span></span>
+<span class="r-in"><span>                 zscale<span class="op">=</span><span class="fl">200</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_snapshot.html">render_snapshot</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>st_centroid assumes attributes are constant over geometries</span>

@@ -18,7 +18,7 @@ using latitude/longitude or coordinates in the reference system defined by the e
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.38.13</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.39.0</span>
       </span>
     </div>
 
@@ -279,30 +279,30 @@ or absolute.</p></dd>
 <span class="r-in"><span><span class="va">osm_dem</span> <span class="op">=</span> <span class="fu">elevatr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/elevatr/man/get_elev_raster.html" class="external-link">get_elev_raster</a></span><span class="op">(</span><span class="va">building_polys</span>, z <span class="op">=</span> <span class="fl">11</span>, clip <span class="op">=</span> <span class="st">"bbox"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">e</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/raster/man/extent.html" class="external-link">extent</a></span><span class="op">(</span><span class="va">building_polys</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Crop DEM, but note that the cropped DEM will have an extent slightly different than what's </span></span></span>
+<span class="r-in"><span><span class="co"># Crop DEM, but note that the cropped DEM will have an extent slightly different than what's</span></span></span>
 <span class="r-in"><span><span class="co"># specified in `e`. Save that new extent to `new_e`.</span></span></span>
-<span class="r-in"><span><span class="va">osm_dem</span> <span class="op">|&gt;</span> </span></span>
-<span class="r-in"><span>  <span class="fu"><a href="https://rspatial.github.io/terra/reference/crop.html" class="external-link">crop</a></span><span class="op">(</span><span class="va">e</span><span class="op">)</span> <span class="op">|&gt;</span> </span></span>
+<span class="r-in"><span><span class="va">osm_dem</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rspatial.github.io/terra/reference/crop.html" class="external-link">crop</a></span><span class="op">(</span><span class="va">e</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="https://rdrr.io/pkg/raster/man/extent.html" class="external-link">extent</a></span><span class="op">(</span><span class="op">)</span> <span class="op">-&gt;</span></span></span>
 <span class="r-in"><span><span class="va">new_e</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">osm_dem</span> <span class="op">|&gt;</span> </span></span>
-<span class="r-in"><span>  <span class="fu"><a href="https://rspatial.github.io/terra/reference/crop.html" class="external-link">crop</a></span><span class="op">(</span><span class="va">e</span><span class="op">)</span> <span class="op">|&gt;</span> </span></span>
+<span class="r-in"><span><span class="va">osm_dem</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span>  <span class="fu"><a href="https://rspatial.github.io/terra/reference/crop.html" class="external-link">crop</a></span><span class="op">(</span><span class="va">e</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="raster_to_matrix.html">raster_to_matrix</a></span><span class="op">(</span><span class="op">)</span> <span class="op">-&gt;</span></span></span>
 <span class="r-in"><span><span class="va">osm_mat</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#Visualize areas less than one meter as water (approximate tidal range)</span></span></span>
 <span class="r-in"><span><span class="va">osm_mat</span><span class="op">[</span><span class="va">osm_mat</span> <span class="op">&lt;=</span> <span class="fl">1</span><span class="op">]</span> <span class="op">=</span> <span class="op">-</span><span class="fl">2</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">osm_mat</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
-<span class="r-in"><span>  <span class="fu">rayimage</span><span class="fu">::</span><span class="fu"><a href="https://www.rayimage.dev/reference/render_resized.html" class="external-link">render_resized</a></span><span class="op">(</span>mag<span class="op">=</span><span class="fl">4</span><span class="op">)</span> <span class="op">|&gt;</span> </span></span>
+<span class="r-in"><span><span class="va">osm_mat</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span>  <span class="fu">rayimage</span><span class="fu">::</span><span class="fu"><a href="https://www.rayimage.dev/reference/render_resized.html" class="external-link">render_resized</a></span><span class="op">(</span>mag<span class="op">=</span><span class="fl">4</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span>texture <span class="op">=</span> <span class="st">"desert"</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu"><a href="generate_polygon_overlay.html">generate_polygon_overlay</a></span><span class="op">(</span><span class="va">building_polys</span>, extent <span class="op">=</span> <span class="va">new_e</span>,</span></span>
-<span class="r-in"><span>                                       heightmap <span class="op">=</span> <span class="va">osm_mat</span>, </span></span>
+<span class="r-in"><span>                                       heightmap <span class="op">=</span> <span class="va">osm_mat</span>,</span></span>
 <span class="r-in"><span>                                       linewidth <span class="op">=</span> <span class="fl">6</span>,</span></span>
 <span class="r-in"><span>                                       resolution_multiply <span class="op">=</span> <span class="fl">50</span><span class="op">)</span>, rescale_original <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu"><a href="generate_line_overlay.html">generate_line_overlay</a></span><span class="op">(</span><span class="va">osm_road</span><span class="op">$</span><span class="va">osm_lines</span>, extent <span class="op">=</span> <span class="va">new_e</span>,</span></span>
-<span class="r-in"><span>                                    heightmap <span class="op">=</span> <span class="va">osm_mat</span>, </span></span>
+<span class="r-in"><span>                                    heightmap <span class="op">=</span> <span class="va">osm_mat</span>,</span></span>
 <span class="r-in"><span>                                    linewidth <span class="op">=</span> <span class="fl">6</span>,</span></span>
 <span class="r-in"><span>                                    resolution_multiply <span class="op">=</span> <span class="fl">50</span><span class="op">)</span>, rescale_original <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="plot_3d.html">plot_3d</a></span><span class="op">(</span><span class="va">osm_mat</span>, water <span class="op">=</span> <span class="cn">TRUE</span>, windowsize <span class="op">=</span> <span class="fl">800</span>, watercolor <span class="op">=</span> <span class="st">"dodgerblue"</span>,</span></span>
@@ -310,8 +310,8 @@ or absolute.</p></dd>
 <span class="r-in"><span>          background <span class="op">=</span> <span class="st">"pink"</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#Render buildings</span></span></span>
-<span class="r-in"><span><span class="fu">render_buildings</span><span class="op">(</span><span class="va">building_polys</span>,  flat_shading  <span class="op">=</span> <span class="cn">TRUE</span>, </span></span>
-<span class="r-in"><span>                 angle <span class="op">=</span> <span class="fl">30</span> , heightmap <span class="op">=</span> <span class="va">osm_mat</span>, </span></span>
+<span class="r-in"><span><span class="fu">render_buildings</span><span class="op">(</span><span class="va">building_polys</span>,  flat_shading  <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
+<span class="r-in"><span>                 angle <span class="op">=</span> <span class="fl">30</span> , heightmap <span class="op">=</span> <span class="va">osm_mat</span>,</span></span>
 <span class="r-in"><span>                 material <span class="op">=</span> <span class="st">"white"</span>, roof_material <span class="op">=</span> <span class="st">"white"</span>,</span></span>
 <span class="r-in"><span>                 extent <span class="op">=</span> <span class="va">new_e</span>, roof_height <span class="op">=</span> <span class="fl">3</span>, base_height <span class="op">=</span> <span class="fl">0</span>,</span></span>
 <span class="r-in"><span>                 zscale<span class="op">=</span><span class="fl">10</span><span class="op">)</span></span></span>
@@ -331,7 +331,7 @@ or absolute.</p></dd>
 <span class="r-in"><span><span class="fu"><a href="render_camera.html">render_camera</a></span><span class="op">(</span>fov<span class="op">=</span><span class="fl">110</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_highquality.html">render_highquality</a></span><span class="op">(</span>camera_location <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">18.22</span>, <span class="fl">0.57</span>, <span class="op">-</span><span class="fl">50.83</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                   camera_lookat <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">20.88</span>, <span class="op">-</span><span class="fl">2.83</span>, <span class="op">-</span><span class="fl">38.87</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                   focal_distance <span class="op">=</span> <span class="fl">13</span>, </span></span>
+<span class="r-in"><span>                   focal_distance <span class="op">=</span> <span class="fl">13</span>, samples <span class="op">=</span> <span class="fl">16</span>,</span></span>
 <span class="r-in"><span>                   lightdirection <span class="op">=</span> <span class="fl">45</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
