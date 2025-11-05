@@ -468,7 +468,7 @@
                     "names": {
                       "type": "character",
                       "attributes": {},
-                      "value": ["diffuse", "ambient", "specular", "transmittance", "emission", "shininess", "ior", "dissolve", "illum", "ambient_texname", "diffuse_texname", "bump_texname", "emissive_texname", "specular_texname", "normal_texname", "diffuse_intensity", "bump_intensity", "specular_intensity", "emission_intensity", "ambient_intensity", "culling", "type", "translucent", "toon_levels", "toon_outline_width", "toon_outline_color", "reflection_intensity", "reflection_sharpness", "two_sided"]
+                      "value": ["diffuse", "ambient", "specular", "transmittance", "emission", "shininess", "ior", "dissolve", "illum", "ambient_texname", "diffuse_texname", "bump_texname", "emissive_texname", "specular_texname", "normal_texname", "diffuse_intensity", "bump_intensity", "specular_intensity", "emission_intensity", "ambient_intensity", "culling", "type", "translucent", "toon_levels", "toon_outline_width", "toon_outline_color", "reflection_intensity", "reflection_sharpness", "two_sided", "sigma"]
                     },
                     "class": {
                       "type": "character",
@@ -621,6 +621,11 @@
                       "type": "logical",
                       "attributes": {},
                       "value": [false]
+                    },
+                    {
+                      "type": "double",
+                      "attributes": {},
+                      "value": [0]
                     }
                   ]
                 }
@@ -636,7 +641,7 @@
                     "names": {
                       "type": "character",
                       "attributes": {},
-                      "value": ["diffuse", "ambient", "specular", "transmittance", "emission", "shininess", "ior", "dissolve", "illum", "ambient_texname", "diffuse_texname", "bump_texname", "emissive_texname", "specular_texname", "normal_texname", "diffuse_intensity", "bump_intensity", "specular_intensity", "emission_intensity", "ambient_intensity", "culling", "type", "translucent", "toon_levels", "toon_outline_width", "toon_outline_color", "reflection_intensity", "reflection_sharpness", "two_sided"]
+                      "value": ["diffuse", "ambient", "specular", "transmittance", "emission", "shininess", "ior", "dissolve", "illum", "ambient_texname", "diffuse_texname", "bump_texname", "emissive_texname", "specular_texname", "normal_texname", "diffuse_intensity", "bump_intensity", "specular_intensity", "emission_intensity", "ambient_intensity", "culling", "type", "translucent", "toon_levels", "toon_outline_width", "toon_outline_color", "reflection_intensity", "reflection_sharpness", "two_sided", "sigma"]
                     },
                     "class": {
                       "type": "character",
@@ -789,6 +794,11 @@
                       "type": "logical",
                       "attributes": {},
                       "value": [false]
+                    },
+                    {
+                      "type": "double",
+                      "attributes": {},
+                      "value": [0]
                     }
                   ]
                 }
@@ -804,7 +814,7 @@
                     "names": {
                       "type": "character",
                       "attributes": {},
-                      "value": ["diffuse", "ambient", "specular", "transmittance", "emission", "shininess", "ior", "dissolve", "illum", "ambient_texname", "diffuse_texname", "bump_texname", "emissive_texname", "specular_texname", "normal_texname", "diffuse_intensity", "bump_intensity", "specular_intensity", "emission_intensity", "ambient_intensity", "culling", "type", "translucent", "toon_levels", "toon_outline_width", "toon_outline_color", "reflection_intensity", "reflection_sharpness", "two_sided"]
+                      "value": ["diffuse", "ambient", "specular", "transmittance", "emission", "shininess", "ior", "dissolve", "illum", "ambient_texname", "diffuse_texname", "bump_texname", "emissive_texname", "specular_texname", "normal_texname", "diffuse_intensity", "bump_intensity", "specular_intensity", "emission_intensity", "ambient_intensity", "culling", "type", "translucent", "toon_levels", "toon_outline_width", "toon_outline_color", "reflection_intensity", "reflection_sharpness", "two_sided", "sigma"]
                     },
                     "class": {
                       "type": "character",
@@ -957,6 +967,11 @@
                       "type": "logical",
                       "attributes": {},
                       "value": [false]
+                    },
+                    {
+                      "type": "double",
+                      "attributes": {},
+                      "value": [0]
                     }
                   ]
                 }
