@@ -118,8 +118,8 @@ if(run_documentation()) {
 #Let's first start by drawing some trees in a circle around Monterey Bay
 #We won't scale these to a realistic size (yet)
 moss_landing_coord = c(36.806807, -121.793332)
-montereybay \%>\%
- sphere_shade() \%>\%
+montereybay |>
+ sphere_shade() |>
  plot_3d(montereybay,zscale=50,water=TRUE,
          shadowcolor="#40310a", background = "tan",
          theta=210,  phi=22, zoom=0.20, fov=55)
@@ -130,15 +130,15 @@ circle_coords_long = moss_landing_coord[2] + 0.3 * cos(t)
 
 render_tree(extent = attr(montereybay,"extent"), heightmap = montereybay,
            tree_zscale = FALSE, tree_height = 30,  lit = TRUE,
-           lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), zscale=50) 
+           lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), zscale=50)
 render_snapshot()
 }
 if(run_documentation()) {
 #Change the crown width ratio (compared to the height)
 render_tree(extent = attr(montereybay,"extent"), heightmap = montereybay,
            tree_zscale = FALSE, tree_height = 60, crown_width_ratio = 0.5,
-           clear_previous = TRUE, 
-           lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), zscale=50) 
+           clear_previous = TRUE,
+           lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), zscale=50)
 render_snapshot()
 }
 if(run_documentation()) {
@@ -146,15 +146,15 @@ if(run_documentation()) {
 render_tree(extent = attr(montereybay,"extent"), heightmap = montereybay,
            tree_zscale = FALSE, tree_height = 40, crown_width_ratio = 2,
            clear_previous = TRUE, trunk_height_ratio=1/2, trunk_radius = 1.5,
-           lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), zscale=50) 
+           lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), zscale=50)
 render_snapshot()
 }
 if(run_documentation()) {
 #Change the tree type
 render_tree(extent = attr(montereybay,"extent"), heightmap = montereybay,
-           tree_zscale = FALSE, tree_height = 30, 
+           tree_zscale = FALSE, tree_height = 30,
            clear_previous = TRUE, type = "cone",trunk_height_ratio = 1/6,
-           lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), zscale=50) 
+           lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), zscale=50)
 render_snapshot()
 }
 if(run_documentation()) {
@@ -162,15 +162,15 @@ if(run_documentation()) {
 render_camera(theta = 150,  phi = 38, zoom = 0.4, fov = 55)
 render_tree(extent = attr(montereybay,"extent"), heightmap = montereybay,
            tree_zscale = FALSE, tree_height = 30, crown_width_ratio = 0.5 + runif(20),
-           crown_color = rainbow(20),  clear_previous = TRUE, 
-           lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), zscale=50) 
+           crown_color = rainbow(20),  clear_previous = TRUE,
+           lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), zscale=50)
 render_snapshot()
 }
 
 #We will use the lidR package to generate a DEM and detect the crown tops of trees, and
 #then use rayshader to render 3D tree models scaled to those heights on the map.
-run_example = length(find.package("lidR", quiet = TRUE)) > 0 && 
-             length(find.package("sf", quiet = TRUE)) > 0 && 
+run_example = length(find.package("lidR", quiet = TRUE)) > 0 &&
+             length(find.package("sf", quiet = TRUE)) > 0 &&
              length(find.package("terra", quiet = TRUE)) > 0 &&
              run_documentation()
 if (run_example) {
@@ -191,35 +191,35 @@ extent_values = dem_extent@ptr$vector
 #Plot the ground
 dem_matrix |>
  height_shade() |>
- add_shadow(texture_shade(dem_matrix),0.2) |> 
- add_shadow(lamb_shade(dem_matrix),0) |> 
+ add_shadow(texture_shade(dem_matrix),0.2) |>
+ add_shadow(lamb_shade(dem_matrix),0) |>
  plot_3d(dem_matrix)
 render_snapshot()
 }
 if (run_example) {
 #The tree locations are given as an absolute height (as opposed to relative to the surface)
 #so we set `absolute_height = TRUE`.
-render_tree(lat = tree_locations[,2], 
+render_tree(lat = tree_locations[,2],
            long = tree_locations[,1],
-           crown_width_ratio = 0.5, 
-           absolute_height = TRUE, 
+           crown_width_ratio = 0.5,
+           absolute_height = TRUE,
            tree_height = tree_locations[,3],
            trunk_height_ratio = 0.2 + 0.1*runif(nrow(tree_locations)),
            crown_color = "#00aa00",
-           extent = raster::extent(extent_values), 
+           extent = raster::extent(extent_values),
            heightmap = dem_matrix,
            clear_previous = TRUE)
-           
+
 #Remove existing lights and add our own with rgl
 rgl::pop3d("lights")
 rgl::light3d(phi=35,theta=90, viewpoint.rel=F, diffuse="#ffffff", specular="#000000")
 rgl::light3d(phi=-45,theta=-40, viewpoint.rel=F, diffuse="#aaaaaa", specular="#000000")
-render_snapshot() 
+render_snapshot()
 }
 if (run_example) {
 #Render tree also works with `render_highquality()`
-render_highquality(lightdirection=c(90,45),lightaltitude=c(90,45), 
-                  lightcolor=c("dodgerblue","orange"), 
-                  min_variance = 0, sample_method="sobol_blue", clamp_value=10)
+render_highquality(lightdirection=c(90,45),lightaltitude=c(90,45),
+                  lightcolor=c("dodgerblue","orange"), samples = 16,
+                  min_variance = 0)
 }
 }

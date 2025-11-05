@@ -29,8 +29,8 @@ values are entered, prints and returns the current values.
 }
 \examples{
 if(run_documentation()) {
-montereybay \%>\%
- sphere_shade() \%>\%
+montereybay |>
+ sphere_shade() |>
  plot_3d(montereybay,zscale = 50, water = TRUE, waterlinecolor="white")
 render_snapshot()
 }
@@ -90,7 +90,7 @@ for(i in 1:360) {
 #ffmpeg -i raymovie.mp4 -pix_fmt yuv420p -profile:v baseline -level 3 -vf scale=-2:-2 rayweb.mp4
 
 #Or we can use render_movie() to do this all automatically with type="custom" (uncomment to run):
-#render_movie(filename = tempfile(fileext = ".mp4"), type = "custom", 
+#render_movie(filename = tempfile(fileext = ".mp4"), type = "custom",
 #             theta = thetavec, phi = phivecfull, zoom = zoomvec, fov=0)
 }
 }

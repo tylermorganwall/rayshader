@@ -35,8 +35,8 @@ filename_obj = tempfile(fileext = ".obj")
 
 #Save model of volcano
 if(run_documentation()) {
-volcano \%>\%
- sphere_shade() \%>\%
+volcano |>
+ sphere_shade() |>
  plot_3d(volcano, zscale = 2)
 
 save_obj(filename_obj)
@@ -49,10 +49,10 @@ save_obj(filename_obj, save_texture = FALSE)
 
 #Make water have realistic index of refraction
 if(run_documentation()) {
-montereybay \%>\%
- sphere_shade() \%>\%
+montereybay |>
+ sphere_shade() |>
  plot_3d(montereybay, zscale = 50)
- 
+
 save_obj(filename_obj, water_index_refraction = 1.5)
 }
 }

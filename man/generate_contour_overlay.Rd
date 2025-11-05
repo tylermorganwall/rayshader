@@ -49,10 +49,10 @@ Calculates and returns an overlay of contour lines for the current height map.
 \examples{
 #Add contours to the montereybay dataset
 if(run_documentation()) {
-montereybay \%>\%
- height_shade() \%>\%
- add_overlay(generate_contour_overlay(montereybay))  \%>\%
- add_shadow(ray_shade(montereybay,zscale=50),0.3) \%>\%
+montereybay |>
+ height_shade() |>
+ add_overlay(generate_contour_overlay(montereybay))  |>
+ add_shadow(ray_shade(montereybay,zscale=50),0.3) |>
  plot_map()
 }
 
@@ -64,44 +64,44 @@ water_breaks = breaks[breaks < 0]
 land_breaks = breaks[breaks > 0]
 
 if(run_documentation()) {
-montereybay \%>\%
- height_shade() \%>\%
- add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0))  \%>\%
- add_shadow(ray_shade(montereybay,zscale=50),0.3) \%>\%
- add_overlay(generate_contour_overlay(montereybay, levels = water_breaks, color="white"))  \%>\%
- add_overlay(generate_contour_overlay(montereybay, levels = land_breaks, color="black"))  \%>\%
+montereybay |>
+ height_shade() |>
+ add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0))  |>
+ add_shadow(ray_shade(montereybay,zscale=50),0.3) |>
+ add_overlay(generate_contour_overlay(montereybay, levels = water_breaks, color="white"))  |>
+ add_overlay(generate_contour_overlay(montereybay, levels = land_breaks, color="black"))  |>
  plot_map()
 }
 if(run_documentation()) {
 #Increase the resolution of the contour to improve the appearance of lines
-montereybay \%>\%
- height_shade() \%>\%
- add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0))  \%>\%
- add_shadow(ray_shade(montereybay,zscale=50),0.3) \%>\%
+montereybay |>
+ height_shade() |>
+ add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0))  |>
+ add_shadow(ray_shade(montereybay,zscale=50),0.3) |>
  add_overlay(generate_contour_overlay(montereybay, levels = water_breaks, color="white",
-                                      height = nrow(montereybay)*2, 
-                                      width  = ncol(montereybay)*2))  \%>\%
+                                      height = nrow(montereybay)*2,
+                                      width  = ncol(montereybay)*2))  |>
  add_overlay(generate_contour_overlay(montereybay, levels = land_breaks, color="black",
-                                      height = nrow(montereybay)*2, 
-                                      width  = ncol(montereybay)*2))  \%>\%
+                                      height = nrow(montereybay)*2,
+                                      width  = ncol(montereybay)*2))  |>
  plot_map()
 }
 if(run_documentation()) {
 #Increase the number of breaks and the transparency (via add_overlay)
-montereybay \%>\%
- height_shade() \%>\%
- add_shadow(ray_shade(montereybay,zscale=50),0.3) \%>\%
+montereybay |>
+ height_shade() |>
+ add_shadow(ray_shade(montereybay,zscale=50),0.3) |>
  add_overlay(generate_contour_overlay(montereybay, linewidth=2, nlevels=100,
                                       height = nrow(montereybay)*2, color="black",
-                                      width  = ncol(montereybay)*2), alphalayer=0.5) \%>\%
+                                      width  = ncol(montereybay)*2), alphalayer=0.5) |>
  plot_map()
 }
 if(run_documentation()) {
 #Manually specify the breaks with levels
-montereybay \%>\%
- height_shade() \%>\%
- add_overlay(generate_contour_overlay(montereybay, linewidth=2, levels = seq(-2000,0,100))) \%>\%
- add_shadow(ray_shade(montereybay,zscale=50),0.3) \%>\%
+montereybay |>
+ height_shade() |>
+ add_overlay(generate_contour_overlay(montereybay, linewidth=2, levels = seq(-2000,0,100))) |>
+ add_shadow(ray_shade(montereybay,zscale=50),0.3) |>
  plot_map()
 }
 }

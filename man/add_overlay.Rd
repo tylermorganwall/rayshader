@@ -10,6 +10,7 @@ add_overlay(
   alphalayer = 1,
   alphacolor = NULL,
   alphamethod = "max",
+  color_epsilon = 0.001,
   rescale_original = FALSE
 )
 }
@@ -28,6 +29,8 @@ the two is determined in argument \code{alphamethod}.}
 If \code{max}, converts all alpha levels higher than \code{layeralpha} to the value set in \code{layeralpha}. Otherwise,
 this just sets all transparency to \code{layeralpha}.}
 
+\item{color_epsilon}{Default \code{1e-3}. Tolerance for equality for alphacolor to determine transparency.}
+
 \item{rescale_original}{Default \code{FALSE}. If \code{TRUE}, \code{hillshade} will be scaled to match the dimensions of \code{overlay} (instead of
 the other way around).}
 }
@@ -40,19 +43,19 @@ Overlays an image (with a transparency layer) on the current map.
 \examples{
 #Combining base R plotting with rayshader's spherical color mapping and raytracing:
 if(run_documentation()) {
-montereybay \%>\%
-  sphere_shade() \%>\%
-  add_overlay(height_shade(montereybay),alphalayer = 0.6)  \%>\%
-  add_shadow(ray_shade(montereybay,zscale=50)) \%>\%
+montereybay |>
+  sphere_shade() |>
+  add_overlay(height_shade(montereybay),alphalayer = 0.6)  |>
+  add_shadow(ray_shade(montereybay,zscale=50)) |>
   plot_map()
 }
 
 if(run_documentation()) {
 #Add contours with `generate_contour_overlay()`
-montereybay \%>\%
-  height_shade() \%>\%
-  add_overlay(generate_contour_overlay(montereybay))  \%>\%
-  add_shadow(ray_shade(montereybay,zscale=50)) \%>\%
+montereybay |>
+  height_shade() |>
+  add_overlay(generate_contour_overlay(montereybay))  |>
+  add_shadow(ray_shade(montereybay,zscale=50)) |>
   plot_map()
 }
 }

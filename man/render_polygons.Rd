@@ -85,18 +85,18 @@ system defined by the extent object.
 \examples{
 if(run_documentation()) {
 #Render the county borders as polygons in Monterey Bay
-montereybay \%>\%
-  sphere_shade(texture = "desert") \%>\%
-  add_shadow(ray_shade(montereybay,zscale = 50)) \%>\%
+montereybay |>
+  sphere_shade(texture = "desert") |>
+  add_shadow(ray_shade(montereybay,zscale = 50)) |>
   plot_3d(montereybay, water = TRUE, windowsize = 800, watercolor = "dodgerblue")
 render_camera(theta = 140,  phi = 55, zoom = 0.85, fov = 30)
 
-#We will apply a negative buffer to create space between adjacent polygons. You may 
+#We will apply a negative buffer to create space between adjacent polygons. You may
 #have to call `sf::sf_use_s2(FALSE)` before running this code to get it to run.
 sf::sf_use_s2(FALSE)
 mont_county_buff = sf::st_simplify(sf::st_buffer(monterey_counties_sf,-0.003), dTolerance=0.001)
 
-render_polygons(mont_county_buff, 
+render_polygons(mont_county_buff,
                 extent = attr(montereybay,"extent"), top = 10,
                 parallel = FALSE)
 render_snapshot()
@@ -105,7 +105,7 @@ if(run_documentation()) {
 #We can specify the bottom of the polygons as well. Here I float the polygons above the surface
 #by specifying the bottom argument. We clear the previous polygons with `clear_previous = TRUE`.
 render_camera(theta=-60,  phi=20, zoom = 0.85, fov=0)
-render_polygons(mont_county_buff, 
+render_polygons(mont_county_buff,
                 extent = attr(montereybay,"extent"), bottom = 190, top=200,
                 parallel=FALSE,clear_previous=TRUE)
 render_snapshot()
@@ -114,15 +114,14 @@ if(run_documentation()) {
 #We can set the height of the data to a column in the sf object: we'll use the land area.
 #We'll have to scale this value because its max value is 2.6 billion:
 render_camera(theta=-60,  phi=60, zoom = 0.85, fov=30)
-render_polygons(mont_county_buff, 
+render_polygons(mont_county_buff,
                 extent = attr(montereybay, "extent"), data_column_top = "ALAND",
                 scale_data = 300/(2.6E9), color = "chartreuse4",
                 clear_previous = TRUE)
-render_snapshot()      
-}  
+render_snapshot()
+}
 if(run_documentation()) {
 #This function also works with `render_highquality()`
-render_highquality(samples = 128, clamp_value = 10, sample_method="sobol_blue",
-                   min_variance = 0)
+render_highquality(samples = 16, min_variance = 0)
 }
 }

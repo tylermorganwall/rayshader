@@ -31,8 +31,8 @@ Converts the current RGL rayshader scene to a \code{ray_mesh} object (see \code{
 filename_obj = tempfile(fileext = ".obj")
 #Save model of volcano
 if(run_documentation()) {
-volcano \%>\%
- sphere_shade() \%>\%
+volcano |>
+ sphere_shade() |>
  plot_3d(volcano, zscale = 2)
 
 rm_obj = convert_rgl_to_raymesh()

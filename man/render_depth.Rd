@@ -14,7 +14,6 @@ render_depth(
   bokehintensity = 1,
   bokehlimit = 0.8,
   rotation = 0,
-  gamma_correction = TRUE,
   aberration = 0,
   transparent_water = FALSE,
   heightmap = NULL,
@@ -71,8 +70,6 @@ showing where the camera will be focused.}
 \item{bokehlimit}{Default \code{0.8}. Limit after which the bokeh intensity is increased by \code{bokehintensity}.}
 
 \item{rotation}{Default \code{0}. Number of degrees to rotate the hexagon bokeh shape.}
-
-\item{gamma_correction}{Default \code{TRUE}. Controls gamma correction when adding colors. Default exponent of 2.2.}
 
 \item{aberration}{Default \code{0}. Adds chromatic aberration to the image. Maximum of \code{1}.}
 
@@ -175,11 +172,11 @@ The size of the circle of confusion is determined by the following formula (z_de
 }
 \examples{
 if(run_documentation()) {
-montereybay \%>\%
- sphere_shade() \%>\%
+montereybay |>
+ sphere_shade() |>
  plot_3d(montereybay,zscale=50, water=TRUE, waterlinecolor="white",
-         zoom=0.3,theta=-135,fov=70, phi=20) 
- 
+         zoom=0.3,theta=-135,fov=70, phi=20)
+
 #Preview where the focal plane lies
 render_depth(preview_focus=TRUE)
 }
@@ -193,7 +190,7 @@ render_depth(focallength = 300, aberration = 0.3)
 }
 if(run_documentation()) {
 #Render the depth of field effect, ignoring water and re-drawing the waterlayer
-render_depth(preview_focus=TRUE, 
+render_depth(preview_focus=TRUE,
             heightmap = montereybay, zscale=50, focallength=300, transparent_water=TRUE)
 render_depth(heightmap = montereybay, zscale=50, focallength=300, transparent_water=TRUE)
 render_camera(theta=45,zoom=0.15,phi=20)
@@ -202,17 +199,17 @@ render_camera(theta=45,zoom=0.15,phi=20)
 if(run_documentation()) {
 #Change the bokeh shape and intensity
 render_depth(focus=900, bokehshape = "circle",focallength=500,bokehintensity=30,
-            title_text = "Circular Bokeh", title_size = 30, title_color = "white", 
+            title_text = "Circular Bokeh", title_size = 30, title_color = "white",
             title_bar_color = "black")
 render_depth(focus=900, bokehshape = "hex",focallength=500,bokehintensity=30,
-            title_text = "Hexagonal Bokeh", title_size = 30, title_color = "white", 
+            title_text = "Hexagonal Bokeh", title_size = 30, title_color = "white",
             title_bar_color = "black")
 }
 
 if(run_documentation()) {
 #Add a title and vignette effect.
 render_camera(theta=0,zoom=0.7,phi=30)
-render_depth(focallength = 250, title_text = "Monterey Bay, CA", 
+render_depth(focallength = 250, title_text = "Monterey Bay, CA",
             title_size = 20, title_color = "white", title_bar_color = "black", vignette = TRUE)
 }
 }

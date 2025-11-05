@@ -20,8 +20,8 @@ if(run_documentation()) {
 temp_raster_filename = paste0(tempfile(),".tif")
 raster::writeRaster(raster::raster(t(montereybay)),temp_raster_filename)
 elmat = raster_to_matrix(temp_raster_filename)
-elmat \%>\%
- sphere_shade() \%>\%
+elmat |>
+ sphere_shade() |>
  plot_map()
 }
 }

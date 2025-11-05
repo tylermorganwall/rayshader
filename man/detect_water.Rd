@@ -42,14 +42,13 @@ Matrix indicating whether water was detected at that point. 1 indicates water, 0
 Detects bodies of water (of a user-defined minimum size) within an elevation matrix.
 }
 \examples{
-library(magrittr)
 #Here we even out a portion of the volcano dataset to simulate water:
 island_volcano = volcano
 island_volcano[island_volcano < mean(island_volcano)] = mean(island_volcano)
 
 #Setting a minimum area avoids classifying small flat areas as water:
-island_volcano \%>\%
- sphere_shade(texture="imhof3") \%>\%
- add_water(detect_water(island_volcano, min_area = 400),color="imhof3") \%>\%
+island_volcano |>
+ sphere_shade(texture="imhof3") |>
+ add_water(detect_water(island_volcano, min_area = 400),color="imhof3") |>
  plot_map()
 }

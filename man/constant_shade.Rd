@@ -22,34 +22,34 @@ Generates a constant color layer.
 \examples{
 if(run_documentation()) {
 #Shade a red map
-montereybay \%>\%
- constant_shade("red") \%>\%
- add_shadow(lamb_shade(montereybay),0) |> 
+montereybay |>
+ constant_shade("red") |>
+ add_shadow(lamb_shade(montereybay),0) |>
  plot_map()
 }
 if(run_documentation()) {
 #Shade a green map
-montereybay \%>\%
- constant_shade("green") \%>\%
- add_shadow(lamb_shade(montereybay),0) |> 
+montereybay |>
+ constant_shade("green") |>
+ add_shadow(lamb_shade(montereybay),0) |>
  plot_map()
 }
 if(run_documentation()) {
 #Add a blue tint
-montereybay \%>\%
- height_shade() |> 
- add_overlay(constant_shade(montereybay, "dodgerblue", alpha=0.25)) \%>\%
- add_shadow(lamb_shade(montereybay,zscale=50),0) |> 
+montereybay |>
+ height_shade() |>
+ add_overlay(constant_shade(montereybay, "dodgerblue", alpha=0.25)) |>
+ add_shadow(lamb_shade(montereybay,zscale=50),0) |>
  plot_map()
 }
 if(run_documentation()) {
 #Use a blank map on which to draw other data
-montereybay \%>\%
- constant_shade() \%>\%
+montereybay |>
+ constant_shade() |>
  add_overlay(generate_line_overlay(monterey_roads_sf, linewidth=5, color="black",
                                    attr(montereybay,"extent"), width = 1080, height = 1080),
-                                   alphalayer=0.8)  \%>\%
- add_water(detect_water(montereybay < 0), "dodgerblue") \%>\%
+                                   alphalayer=0.8)  |>
+ add_water(detect_water(montereybay < 0), "dodgerblue") |>
  plot_map()
 }
 }

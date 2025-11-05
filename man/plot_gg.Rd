@@ -31,7 +31,7 @@ plot_gg(
   anglebreaks = seq(30, 40, 0.1),
   multicore = FALSE,
   lambert = TRUE,
-  triangulate = TRUE,
+  triangulate = FALSE,
   max_error = 0.001,
   max_tri = 0,
   verbose = FALSE,
@@ -174,7 +174,7 @@ options("cores"=2)
 }
 
 ggdiamonds = ggplot(diamonds, aes(x, depth)) +
- stat_density_2d(aes(fill = after_stat(nlevel)), geom = "polygon", 
+ stat_density_2d(aes(fill = after_stat(nlevel)), geom = "polygon",
                  n = 200, bins = 50,contour = TRUE) +
  facet_wrap(clarity~.) +
  scale_fill_viridis_c(option = "A")
@@ -190,28 +190,28 @@ render_snapshot()
 }
 
 #Contours and other lines will automatically be ignored. Here is the volcano dataset:
-ggvolcano = volcano \%>\% 
- reshape2::melt() \%>\%
+ggvolcano = volcano |>
+ reshape2::melt() |>
  ggplot() +
  geom_tile(aes(x=Var1,y=Var2,fill=value)) +
  geom_contour(aes(x=Var1,y=Var2,z=value),color="black") +
  scale_x_continuous("X",expand = c(0,0)) +
  scale_y_continuous("Y",expand = c(0,0)) +
  scale_fill_gradientn("Z",colours = terrain.colors(10)) +
- coord_fixed() + 
+ coord_fixed() +
  theme(legend.position = "none")
 ggvolcano
 
 if(run_documentation()) {
-plot_gg(ggvolcano, multicore = TRUE, raytrace = TRUE, width = 7, height = 4, 
+plot_gg(ggvolcano, multicore = TRUE, raytrace = TRUE, width = 7, height = 4,
        scale = 300, windowsize = c(1400, 866), zoom = 0.6, phi = 30, theta = 30)
 render_snapshot()
 }
 
 if(run_documentation()) {
 #You can specify the color and height separately using the `ggobj_height()` argument.
-ggvolcano_surface = volcano \%>\%
-reshape2::melt() \%>\%
+ggvolcano_surface = volcano |>
+reshape2::melt() |>
  ggplot() +
  geom_contour(aes(x=Var1,y=Var2,z=value),color="black") +
  geom_contour_filled(aes(x=Var1,y=Var2,z=value))+
@@ -220,16 +220,16 @@ reshape2::melt() \%>\%
  coord_fixed() +
  theme(legend.position = "none")
 
-plot_gg(ggvolcano_surface, ggobj_height = ggvolcano, 
+plot_gg(ggvolcano_surface, ggobj_height = ggvolcano,
       multicore = TRUE, raytrace = TRUE, width = 7, height = 4,
       scale = 300, windowsize = c(1400, 866), zoom = 0.6, phi = 30, theta = 30)
 render_snapshot()
 }
-#Here, we will create a 3D plot of the mtcars dataset. This automatically detects 
+#Here, we will create a 3D plot of the mtcars dataset. This automatically detects
 #that the user used the `color` aesthetic instead of the `fill`.
-mtplot = ggplot(mtcars) + 
- geom_point(aes(x=mpg,y=disp,color=cyl)) + 
- scale_color_continuous(limits=c(0,8)) 
+mtplot = ggplot(mtcars) +
+ geom_point(aes(x=mpg,y=disp,color=cyl)) +
+ scale_color_continuous(limits=c(0,8))
 
 #Preview how the plot will look by setting `preview = TRUE`: We also adjust the angle of the light.
 if(run_documentation()) {
@@ -241,8 +241,8 @@ plot_gg(mtplot, width=3.5, multicore = TRUE, windowsize = c(1400,866), sunangle=
 render_snapshot()
 }
 #Now let's plot a density plot in 3D.
-mtplot_density = ggplot(mtcars) + 
- stat_density_2d(aes(x=mpg,y=disp, fill=after_stat(!!str2lang("density"))), 
+mtplot_density = ggplot(mtcars) +
+ stat_density_2d(aes(x=mpg,y=disp, fill=after_stat(!!str2lang("density"))),
                  geom = "raster", contour = FALSE) +
  scale_x_continuous(expand=c(0,0)) +
  scale_y_continuous(expand=c(0,0)) +
@@ -250,12 +250,12 @@ mtplot_density = ggplot(mtcars) +
 mtplot_density
 
 if(run_documentation()) {
-plot_gg(mtplot_density, width = 4,zoom = 0.60, theta = -45, phi = 30, 
+plot_gg(mtplot_density, width = 4,zoom = 0.60, theta = -45, phi = 30,
        windowsize = c(1400,866))
 render_snapshot()
 }
 #This also works facetted.
-mtplot_density_facet = mtplot_density + facet_wrap(~cyl) 
+mtplot_density_facet = mtplot_density + facet_wrap(~cyl)
 
 #Preview this plot in 2D:
 if(run_documentation()) {

@@ -67,11 +67,11 @@ Calculates and returns an overlay of points for the current map.
 #Add the included `sf` object with roads to the montereybay dataset
 if(run_documentation()) {
  monterey_city = sf::st_sfc(sf::st_point(c(-121.893611, 36.603056)))
- montereybay \%>\% 
-   height_shade() \%>\%
-   add_overlay(generate_point_overlay(monterey_city, color="red", size=12, 
-                                   attr(montereybay,"extent"), heightmap = montereybay))  \%>\%
-   add_shadow(ray_shade(montereybay,zscale=50),0.3) \%>\%
+ montereybay |>
+   height_shade() |>
+   add_overlay(generate_point_overlay(monterey_city, color="red", size=12,
+                                   attr(montereybay,"extent"), heightmap = montereybay))  |>
+   add_shadow(ray_shade(montereybay,zscale=50),0.3) |>
    plot_map()
 }
 }

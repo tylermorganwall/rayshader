@@ -41,12 +41,12 @@ Adds water layer to the scene, removing the previous water layer if desired.
 }
 \examples{
 if(run_documentation()) {
-montereybay \%>\%
- sphere_shade() \%>\%
+montereybay |>
+ sphere_shade() |>
  plot_3d(montereybay,zscale=50)
 render_snapshot()
 }
- 
+
 #We want to add a layer of water after the initial render.
 if(run_documentation()) {
 render_water(montereybay,zscale=50)

@@ -66,8 +66,8 @@ Places a compass on the map to specify the North direction.
 \examples{
 #Add a North arrow to the map, by default in the bottom right (SE)
 if(run_documentation()) {
-montereybay \%>\% 
- sphere_shade() \%>\%
+montereybay |>
+ sphere_shade() |>
  plot_3d(montereybay,theta=-45, water=TRUE)
 render_compass()
 render_snapshot()
@@ -123,7 +123,7 @@ render_snapshot()
 }
 if(run_documentation()) {
 # Compass support is also included in render_highquality()
-render_highquality(clamp_value=10, min_variance = 0, sample_method = "sobol_blue")
+render_highquality(min_variance = 0, samples = 16)
 }
 if(run_documentation()) {
 render_compass(clear_compass = TRUE)
@@ -132,22 +132,22 @@ render_compass(clear_compass = TRUE)
 #`position_circular = TRUE`:
 
 render_camera(theta=0,phi=45,zoom=0.75)
-render_compass(position = "N", color_n = "#55967a", color_arrow = "#fff673", 
+render_compass(position = "N", color_n = "#55967a", color_arrow = "#fff673",
             color_background = "#cfe0a9", color_bevel = "#8fb28a", position_circular = TRUE)
-render_compass(position = "NE", color_n = "black", color_arrow = "grey90", 
+render_compass(position = "NE", color_n = "black", color_arrow = "grey90",
             color_background = "grey50", color_bevel = "grey20", position_circular = TRUE)
 render_compass(position = "E", color_n = "red", color_arrow = "blue",
             color_background = "yellow", color_bevel = "purple", position_circular = TRUE)
-render_compass(position = "SE", color_n = c(0.7,0.5,0.9), color_arrow = c(0.8,0.8,1), 
-            color_background = c(0.2,0.2,1), color_bevel = c(0.6,0.4,0.6), 
+render_compass(position = "SE", color_n = c(0.7,0.5,0.9), color_arrow = c(0.8,0.8,1),
+            color_background = c(0.2,0.2,1), color_bevel = c(0.6,0.4,0.6),
             position_circular = TRUE)
-render_compass(position = "S", color_n = "#ffe3b3", color_arrow = "#6a463a", 
+render_compass(position = "S", color_n = "#ffe3b3", color_arrow = "#6a463a",
             color_background = "#abaf98", color_bevel = "grey20", position_circular = TRUE)
-render_compass(position = "SW", color_n = "#ffe3a3", color_arrow = "#f1c3a9", 
+render_compass(position = "SW", color_n = "#ffe3a3", color_arrow = "#f1c3a9",
             color_background = "#abaf98", color_bevel = "#66615e", position_circular = TRUE)
-render_compass(position = "W", color_n = "#e9e671", color_arrow = "#cbb387", 
+render_compass(position = "W", color_n = "#e9e671", color_arrow = "#cbb387",
             color_background = "#7c9695", color_bevel = "#cbb387", position_circular = TRUE)
-render_compass(position = "NW", color_n = c(0.7,0,0), color_arrow = c(0.3,0,0), 
+render_compass(position = "NW", color_n = c(0.7,0,0), color_arrow = c(0.3,0,0),
             color_background = c(0.7,0.5,0.5), color_bevel = c(0.2,0,0), position_circular = TRUE)
 render_snapshot()
 }

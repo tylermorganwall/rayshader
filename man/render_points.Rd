@@ -75,23 +75,23 @@ bird_track_long[[i]] = bird_track_long[[i-1]] + x_vel_out[i]
 
 
 #Render the 3D map
-montereybay \%>\%
- sphere_shade() \%>\%
+montereybay |>
+ sphere_shade() |>
  plot_3d(montereybay,zscale=50,water=TRUE,
          shadowcolor="#40310a", background = "tan",
          theta=210,  phi=22, zoom=0.20, fov=55)
 
 #Pass in the extent of the underlying raster (stored in an attribute for the montereybay
 #dataset) and the latitudes, longitudes, and altitudes of the track.
-render_points(extent = attr(montereybay,"extent"), 
-             lat = unlist(bird_track_lat), long = unlist(bird_track_long), 
+render_points(extent = attr(montereybay,"extent"),
+             lat = unlist(bird_track_lat), long = unlist(bird_track_long),
              altitude = z_out, zscale=50,color="white")
 render_snapshot()
 }
 if(run_documentation()) {
-#We'll set the altitude to zero to give the tracks a "shadow" over the water. 
-render_points(extent = attr(montereybay,"extent"), 
-             lat = unlist(bird_track_lat), long = unlist(bird_track_long), 
+#We'll set the altitude to zero to give the tracks a "shadow" over the water.
+render_points(extent = attr(montereybay,"extent"),
+             lat = unlist(bird_track_lat), long = unlist(bird_track_long),
              offset = 0, zscale=50, color="black")
 render_camera(theta=30,phi=35,zoom=0.45,fov=70)
 render_snapshot()
@@ -107,23 +107,21 @@ t = seq(0,2*pi,length.out=100)
 circle_coords_lat = moss_landing_coord[1] + 0.3 * sin(t)
 circle_coords_long = moss_landing_coord[2] + 0.3 * cos(t)
 render_points(extent = attr(montereybay,"extent"), heightmap = montereybay,
-           lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), 
+           lat = unlist(circle_coords_lat), long = unlist(circle_coords_long),
            zscale=50, color="red", offset=100, size=5)
 render_camera(theta = 160, phi=33, zoom=0.4, fov=55)
 render_snapshot()
 }
 if(run_documentation()) {
 #And all of these work with `render_highquality()`
-render_highquality(point_radius = 6, clamp_value=10, min_variance = 0,
-                  sample_method = "sobol_blue", samples = 128)
+render_highquality(point_radius = 6, min_variance = 0, samples = 16)
 }
 
 if(run_documentation()) {
 #We can also change the material of the objects by setting the `point_material` and
 #`point_material_args` arguments in `render_highquality()`
-render_highquality(point_radius = 6, clamp_value=10, min_variance = 0,
-                  sample_method = "sobol_blue", samples = 128,
-                  point_material = rayrender::glossy, 
+render_highquality(point_radius = 6, min_variance = 0, samples = 16,
+                  point_material = rayrender::glossy,
                   point_material_args = list(gloss = 0.5, reflectance = 0.2))
 }
 }

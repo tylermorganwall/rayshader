@@ -82,30 +82,30 @@ Note: Underlying layers with transparency can cause rendering issues in rgl.
 \examples{
 if(run_documentation()) {
 #Render a cloud layer over Monterey Bay
-montereybay  \%>\%
- sphere_shade()  \%>\%
+montereybay  |>
+ sphere_shade()  |>
  plot_3d(montereybay,background="brown",zscale=50)
 
 #Render some clouds
-render_clouds(montereybay, zscale=50)  
+render_clouds(montereybay, zscale=50)
 render_snapshot()
 }
 if(run_documentation()) {
 #Change the seed for a different set of clouds and add cloud shadows on the ground
-montereybay  \%>\%
- sphere_shade()  \%>\%
- add_shadow(cloud_shade(montereybay,zscale=50, seed = 2), 0.0) \%>\%
+montereybay  |>
+ sphere_shade()  |>
+ add_shadow(cloud_shade(montereybay,zscale=50, seed = 2), 0.0) |>
  plot_3d(montereybay,background="brown",zscale=50)
 render_camera(theta=-65, phi = 25, zoom = 0.45, fov = 80)
-render_clouds(montereybay, zscale=50, seed=2, clear_clouds = T)    
+render_clouds(montereybay, zscale=50, seed=2, clear_clouds = T)
 render_snapshot()
 }
 
 if(run_documentation()) {
-montereybay  \%>\%
- sphere_shade()  \%>\%
+montereybay  |>
+ sphere_shade()  |>
  plot_3d(montereybay,background="brown",zscale=50)
- 
+
 #Lower the frequency for larger, smoother clouds
 render_clouds(montereybay, zscale=50, frequency = 0.001, clear_clouds = T)
 render_snapshot()
@@ -127,21 +127,21 @@ render_snapshot()
 }
 if(run_documentation()) {
 #Increase the cloud cover
-render_clouds(montereybay, zscale=50, cloud_cover=0.8, clear_clouds = T)            
+render_clouds(montereybay, zscale=50, cloud_cover=0.8, clear_clouds = T)
 render_snapshot()
 }
 if(run_documentation()) {
 #Decrease the cloud cover
-render_clouds(montereybay, zscale=50, cloud_cover=0.2, clear_clouds = T)            
+render_clouds(montereybay, zscale=50, cloud_cover=0.2, clear_clouds = T)
 render_snapshot()
 }
 if(run_documentation()) {
 #Change the altitude range of the clouds
-render_clouds(montereybay,zscale=50,start_altitude=2000,end_altitude = 4000, clear_clouds = T)            
+render_clouds(montereybay,zscale=50,start_altitude=2000,end_altitude = 4000, clear_clouds = T)
 render_snapshot()
 }
 if(run_documentation()) {
-#Increase the number of layers 
+#Increase the number of layers
 render_clouds(montereybay, zscale=50,start_altitude=2000,end_altitude = 4000, layers = 20,
              clear_clouds = T)
 render_snapshot()
@@ -154,10 +154,10 @@ render_snapshot()
 }
 if(run_documentation()) {
 #Render the scene with a different baseshape
-montereybay  \%>\%
- sphere_shade()  \%>\%
+montereybay  |>
+ sphere_shade()  |>
  plot_3d(montereybay,background="darkred",zscale=50, baseshape="hex")
-render_clouds(montereybay,zscale=50, seed=3, baseshape="hex", clear_clouds = T)  
+render_clouds(montereybay,zscale=50, seed=3, baseshape="hex", clear_clouds = T)
 render_camera(zoom=0.65)
 render_snapshot()
 }

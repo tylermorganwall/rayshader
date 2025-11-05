@@ -168,26 +168,26 @@ Note: Calling \code{\link[=plot_3d]{plot_3d()}} resets the scene cache for the \
 \examples{
 #Plotting a spherical texture map of the built-in `montereybay` dataset.
 if(run_documentation()) {
-montereybay \%>\%
- sphere_shade(texture="desert") \%>\%
+montereybay |>
+ sphere_shade(texture="desert") |>
  plot_3d(montereybay,zscale=50)
 render_snapshot()
 }
 
-#With a water layer  
+#With a water layer
 if(run_documentation()) {
-montereybay \%>\%
- sphere_shade(texture="imhof2") \%>\%
- plot_3d(montereybay, zscale=50, water = TRUE, watercolor="imhof2", 
+montereybay |>
+ sphere_shade(texture="imhof2") |>
+ plot_3d(montereybay, zscale=50, water = TRUE, watercolor="imhof2",
          waterlinecolor="white", waterlinealpha=0.5)
 render_snapshot()
 }
 
-#With a soil texture to the base  
+#With a soil texture to the base
 if(run_documentation()) {
-montereybay \%>\%
- sphere_shade(texture="imhof3") \%>\%
- plot_3d(montereybay, zscale=50, water = TRUE,  watercolor="imhof4", 
+montereybay |>
+ sphere_shade(texture="imhof3") |>
+ plot_3d(montereybay, zscale=50, water = TRUE,  watercolor="imhof4",
          waterlinecolor="white", waterlinealpha=0.5, soil=TRUE)
 render_camera(theta=225, phi=7, zoom=0.5, fov=67)
 render_snapshot()
@@ -195,16 +195,16 @@ render_snapshot()
 
 #We can also change the base by setting "baseshape" to "hex" or "circle"
 if(run_documentation()) {
-montereybay \%>\%
- sphere_shade(texture="imhof1") \%>\%
+montereybay |>
+ sphere_shade(texture="imhof1") |>
  plot_3d(montereybay, zscale=50, water = TRUE, watercolor="imhof1", theta=-45, zoom=0.7,
          waterlinecolor="white", waterlinealpha=0.5,baseshape="circle")
 render_snapshot()
 }
 
 if(run_documentation()) {
-montereybay \%>\%
- sphere_shade(texture="imhof1") \%>\%
+montereybay |>
+ sphere_shade(texture="imhof1") |>
  plot_3d(montereybay, zscale=50, water = TRUE, watercolor="imhof1", theta=-45, zoom=0.7,
          waterlinecolor="white", waterlinealpha=0.5,baseshape="hex")
 render_snapshot()
@@ -222,8 +222,8 @@ mb_water = montereybay
 mb_water[mb_water > -10] = NA
 
 if(run_documentation()) {
-montereybay \%>\%
- sphere_shade(texture="imhof1") \%>\%
+montereybay |>
+ sphere_shade(texture="imhof1") |>
  plot_3d(mb_water, zscale=50, water = TRUE, watercolor="imhof1", theta=-45,
          waterlinecolor="white", waterlinealpha=0.5)
 render_snapshot()

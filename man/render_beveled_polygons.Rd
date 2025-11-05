@@ -133,13 +133,13 @@ the \code{raybevel::generate_beveled_polygon()} function for more information.
 }
 \examples{
 
-# This function can also create fake "terrain" from polygons by visualizing the distance 
+# This function can also create fake "terrain" from polygons by visualizing the distance
 # to the nearest edge.
 if(run_documentation()) {
 #Render the county borders as polygons in Monterey Bay as terrain
-montereybay \%>\%
-  sphere_shade(texture = "desert") \%>\%
-  add_shadow(ray_shade(montereybay,zscale = 50)) \%>\%
+montereybay |>
+  sphere_shade(texture = "desert") |>
+  add_shadow(ray_shade(montereybay,zscale = 50)) |>
   plot_3d(montereybay, water = TRUE, windowsize = 800, watercolor = "dodgerblue",
           background = "pink")
 
@@ -148,12 +148,12 @@ montereybay \%>\%
 sf::sf_use_s2(FALSE)
 mont_county_buff = sf::st_simplify(sf::st_buffer(monterey_counties_sf,-0.003), dTolerance=0.001)
 
-render_beveled_polygons(mont_county_buff,  flat_shading  = TRUE, angle = 45 , 
+render_beveled_polygons(mont_county_buff,  flat_shading  = TRUE, angle = 45 ,
                         heightmap = montereybay, bevel_width=2000,
                         material = "red",
-                        extent = attr(montereybay,"extent"),  
-                        bevel_height = 5000, base_height=0, 
-                        zscale=200) 
+                        extent = attr(montereybay,"extent"),
+                        bevel_height = 5000, base_height=0,
+                        zscale=200)
 render_camera(theta = 0,  phi = 90, zoom = 0.65, fov = 0)
 render_snapshot()
 render_camera(theta=194, phi= 35,   zoom = 0.5, fov= 80)
@@ -162,46 +162,46 @@ render_snapshot()
 
 # Changing the color of the beveled top:
 if(run_documentation()) {
-render_beveled_polygons(mont_county_buff,  flat_shading  = TRUE, angle = 45 , 
+render_beveled_polygons(mont_county_buff,  flat_shading  = TRUE, angle = 45 ,
                         heightmap = montereybay, bevel_width=2000,
                         material = "tan", bevel_material = "darkgreen",
                         extent = attr(montereybay,"extent"), clear_previous=TRUE,
-                        bevel_height = 5000, base_height=0, 
-                        zscale=200) 
+                        bevel_height = 5000, base_height=0,
+                        zscale=200)
 }
-# We can create a nice curved surface by passing in a bevel generated with the 
-# `raybevel::generate_bevel()` function. 
+# We can create a nice curved surface by passing in a bevel generated with the
+# `raybevel::generate_bevel()` function.
 if(run_documentation()) {
 render_beveled_polygons(mont_county_buff, flat_shading  = TRUE, heightmap = montereybay,
                         bevel = raybevel::generate_bevel("exp",bevel_end = 0.4),
                         #max_height = 10, scale_all_max = TRUE, set_max_height = TRUE,
-                        material = rayvertex::material_list(diffuse="red", 
-                                                            ambient = "darkred", 
+                        material = rayvertex::material_list(diffuse="red",
+                                                            ambient = "darkred",
                                                             diffuse_intensity = 0.2,
                                                             ambient_intensity = 0.1),
                         light_intensity = 1, light_relative = FALSE,
-                        extent = attr(montereybay,"extent"), bevel_height = 5000, 
+                        extent = attr(montereybay,"extent"), bevel_height = 5000,
                         base_height=0, clear_previous = TRUE,
-                        zscale=200) 
+                        zscale=200)
 render_snapshot()
 }
 
 # While the bevels all start at the same point in the above example,
 # they rise to different levels due to being scaled by the maximum internal distance
-# in the polygon. Setting `scale_all_max = TRUE` ensures the bevels are all scaled to the 
+# in the polygon. Setting `scale_all_max = TRUE` ensures the bevels are all scaled to the
 # same maximum height (in this case, 3000m above the 5000m bevel start height).
 if(run_documentation()) {
 render_beveled_polygons(mont_county_buff, flat_shading  = TRUE, heightmap = montereybay,
                  bevel = raybevel::generate_bevel("exp",bevel_end = 0.4),
                  max_height = 3000, scale_all_max = TRUE, set_max_height = TRUE,
-                 material = rayvertex::material_list(diffuse="red", 
-                                                     ambient = "darkred", 
+                 material = rayvertex::material_list(diffuse="red",
+                                                     ambient = "darkred",
                                                      diffuse_intensity = 0.2,
                                                      ambient_intensity = 0.1),
                  light_intensity = 1, light_relative = FALSE,
-                 extent = attr(montereybay,"extent"), bevel_height = 5000, 
+                 extent = attr(montereybay,"extent"), bevel_height = 5000,
                  base_height=0, clear_previous = TRUE,
-                 zscale=200) 
+                 zscale=200)
 render_snapshot()
 }
 
@@ -212,17 +212,17 @@ if(run_documentation()) {
 
 # We can scale the size of the polygon to a column in the `sf` object as well:
 # raybevel::generate_bevel() function. We can scale this data down using the `scale_data`
-# argument. Note that this is applied as well as the `zscale` argument, and that you 
+# argument. Note that this is applied as well as the `zscale` argument, and that you
 # must think carefully about your scales and values if trying to represent a meaningful
 # data visualization with this object.
 if(run_documentation()) {
-render_beveled_polygons(mont_county_buff,  flat_shading  = TRUE, angle = 45, bevel_width=1000, 
+render_beveled_polygons(mont_county_buff,  flat_shading  = TRUE, angle = 45, bevel_width=1000,
                  data_column_top = "ALAND", scale_data = 1e-5, heightmap = montereybay,
                  #max_height = 1000, scale_all_max = TRUE, set_max_height = TRUE,
                  material = rayvertex::material_list(diffuse="red"),
                  light_intensity = 1, light_relative = FALSE,
                  extent = attr(montereybay,"extent"), clear_previous = TRUE,
-                 zscale=200) 
+                 zscale=200)
 render_snapshot()
 }
 }

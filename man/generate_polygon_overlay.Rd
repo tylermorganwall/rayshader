@@ -60,9 +60,9 @@ Transforms an input \code{sf} object into an image overlay for the current heigh
 \examples{
 #Plot the counties around Monterey Bay, CA
 if(run_documentation()) {
-generate_polygon_overlay(monterey_counties_sf, palette = rainbow, 
-                        extent = attr(montereybay,"extent"), heightmap = montereybay) \%>\%
- plot_map() 
+generate_polygon_overlay(monterey_counties_sf, palette = rainbow,
+                        extent = attr(montereybay,"extent"), heightmap = montereybay) |>
+ plot_map()
 }
 if(run_documentation()) {
 #These counties include the water, so we'll plot bathymetry data over the polygon
@@ -70,36 +70,36 @@ if(run_documentation()) {
 water_palette = colorRampPalette(c("darkblue", "dodgerblue", "lightblue"))(200)
 bathy_hs = height_shade(montereybay, texture = water_palette)
 
-generate_polygon_overlay(monterey_counties_sf, palette = rainbow, 
-                        extent = attr(montereybay,"extent"), heightmap = montereybay) \%>\%
- add_overlay(generate_altitude_overlay(bathy_hs, montereybay, start_transition = 0)) \%>\%
+generate_polygon_overlay(monterey_counties_sf, palette = rainbow,
+                        extent = attr(montereybay,"extent"), heightmap = montereybay) |>
+ add_overlay(generate_altitude_overlay(bathy_hs, montereybay, start_transition = 0)) |>
  plot_map()
 }
 if(run_documentation()) {
 #Add a semi-transparent hillshade and change the palette, and remove the polygon lines
-montereybay \%>\%
- sphere_shade(texture = "bw") \%>\%
- add_overlay(generate_polygon_overlay(monterey_counties_sf, 
+montereybay |>
+ sphere_shade(texture = "bw") |>
+ add_overlay(generate_polygon_overlay(monterey_counties_sf,
                         palette = terrain.colors, linewidth=NA,
                         extent = attr(montereybay,"extent"), heightmap = montereybay),
-                        alphalayer=0.7) \%>\%
- add_overlay(generate_altitude_overlay(bathy_hs, montereybay, start_transition = 0)) \%>\%
- add_shadow(ray_shade(montereybay,zscale=50),0) \%>\%
+                        alphalayer=0.7) |>
+ add_overlay(generate_altitude_overlay(bathy_hs, montereybay, start_transition = 0)) |>
+ add_shadow(ray_shade(montereybay,zscale=50),0) |>
  plot_map()
 }
 if(run_documentation()) {
 #Map one of the variables in the sf object and use an explicitly defined color palette
-county_palette = c("087" = "red",    "053" = "blue",   "081" = "green", 
-                  "069" = "yellow", "085" = "orange", "099" = "purple") 
-montereybay \%>\%
- sphere_shade(texture = "bw") \%>\%
- add_shadow(ray_shade(montereybay,zscale=50),0) \%>\%
+county_palette = c("087" = "red",    "053" = "blue",   "081" = "green",
+                  "069" = "yellow", "085" = "orange", "099" = "purple")
+montereybay |>
+ sphere_shade(texture = "bw") |>
+ add_shadow(ray_shade(montereybay,zscale=50),0) |>
  add_overlay(generate_polygon_overlay(monterey_counties_sf, linecolor="white", linewidth=3,
                         palette = county_palette, data_column_fill = "COUNTYFP",
                         extent = attr(montereybay,"extent"), heightmap = montereybay),
-                        alphalayer=0.7) \%>\%
- add_overlay(generate_altitude_overlay(bathy_hs, montereybay, start_transition = 0)) \%>\%
- add_shadow(ray_shade(montereybay,zscale=50),0.5) \%>\%
+                        alphalayer=0.7) |>
+ add_overlay(generate_altitude_overlay(bathy_hs, montereybay, start_transition = 0)) |>
+ add_shadow(ray_shade(montereybay,zscale=50),0.5) |>
  plot_map()
 }
 }

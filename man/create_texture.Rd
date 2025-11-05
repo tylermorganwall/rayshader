@@ -10,7 +10,9 @@ create_texture(
   leftcolor,
   rightcolor,
   centercolor,
-  cornercolors = NULL
+  cornercolors = NULL,
+  old_method = FALSE,
+  darken = 1
 )
 }
 \arguments{
@@ -29,16 +31,21 @@ directly opposite to the main highlight color.}
 
 \item{cornercolors}{Default \code{NULL}. The colors at the corners, in this order: NW, NE, SW, SE. If this vector isn't present (or
 all corners are specified), the mid-points will just be interpolated from the main colors.}
+
+\item{old_method}{Default \code{FALSE}. Whether to use the original method rayshader used for computing textures,
+which had non-standard color handling.}
+
+\item{darken}{Default \code{1}. Amount to darken the colors.}
 }
 \description{
 Creates a texture map based on 5 user-supplied colors.
 }
 \examples{
 #Here is the `imhof1` palette:
-create_texture("#fff673","#55967a","#8fb28a","#55967a","#cfe0a9") \%>\%
+create_texture("#fff673","#55967a","#8fb28a","#55967a","#cfe0a9") |>
  plot_map()
 
 #Here is the `unicorn` palette:
-create_texture("red","green","blue","yellow","white") \%>\%
+create_texture("red","green","blue","yellow","white") |>
  plot_map()
 }

@@ -29,7 +29,7 @@ volcanocache = calculate_normal(volcano)
 
 #Use the cached vectors to speed up calculation of `sphere_shade()` on a map.
 if(run_documentation()) {
-sphere_shade(volcano,normalvectors = volcanocache) \%>\%
+sphere_shade(volcano,normalvectors = volcanocache) |>
  plot_map()
 }
 }

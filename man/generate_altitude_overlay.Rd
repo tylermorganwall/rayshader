@@ -41,24 +41,24 @@ plot_map(bathy_hs)
 
 if(run_documentation()) {
 #Set everything below 0m to water palette
-montereybay \%>\%
- sphere_shade(zscale=10) \%>\%
- add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0))  \%>\%
- add_shadow(ray_shade(montereybay,zscale=50),0.3) \%>\%
+montereybay |>
+ sphere_shade(zscale=10) |>
+ add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0))  |>
+ add_shadow(ray_shade(montereybay,zscale=50),0.3) |>
  plot_map()
 }
 
-#Add snow peaks by setting `lower = FALSE`  
+#Add snow peaks by setting `lower = FALSE`
 snow_palette = "white"
 snow_hs = height_shade(montereybay, texture = snow_palette)
 
 if(run_documentation()) {
 #Set the snow transition region from 500m to 1200m
-montereybay \%>\%
- sphere_shade(zscale=10, texture = "desert") \%>\%
- add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0))  \%>\%
- add_overlay(generate_altitude_overlay(snow_hs, montereybay, 500, 1200, lower=FALSE))  \%>\%
- add_shadow(ambient_shade(montereybay,zscale=50,maxsearch=100),0) \%>\%
+montereybay |>
+ sphere_shade(zscale=10, texture = "desert") |>
+ add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0))  |>
+ add_overlay(generate_altitude_overlay(snow_hs, montereybay, 500, 1200, lower=FALSE))  |>
+ add_shadow(ambient_shade(montereybay,zscale=50,maxsearch=100),0) |>
  plot_map()
 }
 }

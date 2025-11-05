@@ -4,7 +4,7 @@
 \alias{convert_color}
 \title{Convert Color}
 \usage{
-convert_color(color, as_hex = FALSE)
+convert_color(color, as_hex = FALSE, linear = FALSE)
 }
 \arguments{
 \item{color}{The color to convert. Can be either a hexadecimal code, or a numeric rgb
@@ -15,8 +15,5 @@ Color vector
 }
 \description{
 Convert Color
-}
-\examples{
-#none
 }
 \keyword{internal}

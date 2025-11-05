@@ -138,93 +138,93 @@ par(family = "Arial")
 mbay = montereybay
 mbay[mbay < 0] = 0
 
-base_map = mbay \%>\%
-height_shade() \%>\%
-add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0))  \%>\%
+base_map = mbay |>
+height_shade() |>
+add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0))  |>
 add_shadow(lamb_shade(montereybay,zscale=50),0.3)
 
 #For convenience, the extent of the montereybay dataset is included as an attribute
 mb_extent = attr(montereybay, "extent")
 
 #Add a scalebar
-base_map \%>\%
+base_map |>
 add_overlay(generate_scalebar_overlay(extent = mb_extent, length = 40000,
-                                      heightmap = montereybay, 
-                                      latlong=TRUE)) \%>\%
+                                      heightmap = montereybay,
+                                      latlong=TRUE)) |>
 plot_map()
 }
 if(run_documentation()) {
 #Change the text color
-base_map \%>\%
+base_map |>
  add_overlay(generate_scalebar_overlay(extent = mb_extent, length = 40000,
                                        text_color = "white",
-                                       heightmap = montereybay, 
-                                       latlong=TRUE)) \%>\%
+                                       heightmap = montereybay,
+                                       latlong=TRUE)) |>
  plot_map()
 }
 if(run_documentation()) {
 #Change the length
-base_map \%>\%
+base_map |>
  add_overlay(generate_scalebar_overlay(extent = mb_extent, length = 30000,
                                        text_color = "white",
-                                       heightmap = montereybay, 
-                                       latlong=TRUE)) \%>\%
+                                       heightmap = montereybay,
+                                       latlong=TRUE)) |>
  plot_map()
 }
 if(run_documentation()) {
 #Change the thickness (default is length/20)
-base_map \%>\%
+base_map |>
  add_overlay(generate_scalebar_overlay(extent = mb_extent, length = 30000,
                                        text_color = "white", thickness = 30000/10,
-                                       heightmap = montereybay, 
-                                       latlong=TRUE)) \%>\%
+                                       heightmap = montereybay,
+                                       latlong=TRUE)) |>
  plot_map()
 }
 if(run_documentation()) {
 #Change the text offset (given in multiples of thickness)
-base_map \%>\%
+base_map |>
  add_overlay(generate_scalebar_overlay(extent = mb_extent, length = 30000,
                                        text_color = "white", thickness = 30000/10,
                                        text_offset = 0.75,
-                                       heightmap = montereybay, 
-                                       latlong=TRUE)) \%>\%
+                                       heightmap = montereybay,
+                                       latlong=TRUE)) |>
  plot_map()
 }
 if(run_documentation()) {
 #Change the primary and secondary colors, along with the border and tick color
-base_map \%>\%
+base_map |>
  add_overlay(generate_scalebar_overlay(extent = mb_extent, length = 30000,
                                        text_color = "white", border_color = "white",
                                        tick_color = "white",
                                        color1 = "darkolivegreen4", color2 = "burlywood3",
-                                       heightmap = montereybay, 
-                                       latlong=TRUE)) \%>\%
+                                       heightmap = montereybay,
+                                       latlong=TRUE)) |>
  plot_map()
 }
 if(run_documentation()) {
 #Add a halo
-base_map \%>\%
+base_map |>
  add_overlay(generate_scalebar_overlay(extent = mb_extent, length = 40000,
                                        halo_color = "white", halo_expand = 1,
-                                       heightmap = montereybay, 
-                                       latlong=TRUE)) \%>\%
+                                       heightmap = montereybay,
+                                       latlong=TRUE)) |>
  plot_map()
 }
 if(run_documentation()) {
 #Change the orientation, position, text alignment, and flip the ticks to the other side
-base_map \%>\%
+base_map |>
  add_overlay(generate_scalebar_overlay(extent = mb_extent, length = 40000, x = 0.07,
                                        bearing=0, adj = 0, flip_ticks = TRUE,
                                        halo_color = "white", halo_expand = 1.5,
-                                       heightmap = montereybay, 
-                                       latlong=TRUE)) \%>\%
+                                       heightmap = montereybay,
+                                       latlong=TRUE)) |>
  plot_map()
 }
-if(run_documentation()) { 
+if(run_documentation()) {
 #64373.8 meters in 40 miles
 #Create custom labels, change font and text size, remove the border/ticks, and change the color
 #Here, we specify a width and height to double the resolution of the image (for sharper text)
-base_map \%>\%
+base_map |>
  add_overlay(generate_scalebar_overlay(extent = mb_extent, length = 64373.8, x = 0.07,
                                        labels = c("0", "20", "40 miles"), thickness=2500,
                                        text_size=3, font = 2, text_offset = 0,
@@ -234,7 +234,7 @@ base_map \%>\%
                                        halo_color="black", halo_blur=3, halo_alpha=0.5,
                                        width = ncol(montereybay)*2,
                                        height = nrow(montereybay)*2,
-                                       latlong=TRUE), rescale_original=TRUE) \%>\%
+                                       latlong=TRUE), rescale_original=TRUE) |>
  plot_map()
 }
 }

@@ -65,27 +65,27 @@ lowering the brightness at each point for each ray that intersects the surface.
 #First we ray trace the Monterey Bay dataset.
 #The default angle is from 40-50 degrees azimuth, from the north east.
 if(run_documentation()) {
-montereybay \%>\%
- ray_shade(zscale=50) \%>\%
+montereybay |>
+ ray_shade(zscale=50) |>
  plot_map()
 }
 #Change the altitude of the sun to 25 degrees
 if(run_documentation()) {
-montereybay \%>\%
- ray_shade(zscale=50, sunaltitude=25) \%>\%
+montereybay |>
+ ray_shade(zscale=50, sunaltitude=25) |>
  plot_map()
 }
 #Remove the lambertian shading to just calculate shadow intensity.
 if(run_documentation()) {
-montereybay \%>\%
- ray_shade(zscale=50, sunaltitude=25, lambert=FALSE) \%>\%
+montereybay |>
+ ray_shade(zscale=50, sunaltitude=25, lambert=FALSE) |>
  plot_map()
 }
 
 #Change the direction of the sun to the South East
 if(run_documentation()) {
-montereybay \%>\%
- ray_shade(zscale=50, sunaltitude=25, sunangle=225) \%>\%
+montereybay |>
+ ray_shade(zscale=50, sunaltitude=25, sunangle=225) |>
  plot_map()
 }
 }

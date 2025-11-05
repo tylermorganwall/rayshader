@@ -71,21 +71,20 @@ Places a scale bar on the map in 3D.
 \examples{
 #Add a scale bar to the montereybay dataset, here representing about 80km
 if(run_documentation()) {
-montereybay \%>\%
- sphere_shade() \%>\%
+montereybay |>
+ sphere_shade() |>
  plot_3d(montereybay,theta=45, water=TRUE)
 render_scalebar(limits=c(0, 80), label_unit = "km")
 render_snapshot()
 }
 if(run_documentation()) {
 #This function works with `render_highquality()`
-render_highquality(lightdirection = 250, lightaltitude = 40, 
-                  scale_text_size = 36, clamp_value = 10,
-                  sample_method = "sobol_blue", samples = 128)
+render_highquality(lightdirection = 250, lightaltitude = 40,
+                  scale_text_size = 36, samples = 16)
 render_scalebar(clear_scalebar = TRUE)
 }
 if(run_documentation()) {
-#We can change the position by specifying a cardinal direction to `position`, and the 
+#We can change the position by specifying a cardinal direction to `position`, and the
 #color by setting `color_first` and `color_second`
 
 render_scalebar(limits=c(0,80), label_unit = "km", position = "N",
@@ -128,7 +127,7 @@ if(run_documentation()) {
 #Change the radius of the scale bar with `radius`. Here, the autopositioning doesn't work well with
 #the labels, so we provide additional offsets with `text_y_offset` and `text_x_offset` to fix it.
 
-render_scalebar(limits=c(0,20, 40), segments = 4, scale_length = c(0.5,1), 
+render_scalebar(limits=c(0,20, 40), segments = 4, scale_length = c(0.5,1),
                label_unit = "km", radius=10,text_y_offset=-20,text_x_offset=20)
 render_snapshot()
 }

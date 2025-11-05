@@ -41,29 +41,29 @@ or a built-in color texture.
 }
 \examples{
 #Basic example:
-montereybay \%>\%
- sphere_shade() \%>\%
+montereybay |>
+ sphere_shade() |>
  plot_map()
- 
+
 #Decrease the color intensity:
-montereybay \%>\%
- sphere_shade(colorintensity=0.1) \%>\%
+montereybay |>
+ sphere_shade(colorintensity=0.1) |>
  plot_map()
- 
+
 #Change to a built-in color texture:
-montereybay \%>\%
- sphere_shade(texture="desert") \%>\%
+montereybay |>
+ sphere_shade(texture="desert") |>
  plot_map()
 
 #Change the highlight angle:
-montereybay \%>\%
- sphere_shade(texture="desert", sunangle = 45) \%>\%
+montereybay |>
+ sphere_shade(texture="desert", sunangle = 45) |>
  plot_map()
 
 #Create our own texture using the `create_texture` function:
-montereybay \%>\%
+montereybay |>
  sphere_shade(zscale=10,texture=create_texture("#E9C68D","#AF7F38",
                                                "#674F30","#494D30",
-                                               "#B3BEA3")) \%>\%
+                                               "#B3BEA3")) |>
  plot_map()
 }

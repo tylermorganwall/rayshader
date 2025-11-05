@@ -57,13 +57,13 @@ Writes the hillshaded map to file.
 filename_map = tempfile()
 
 #Save the map into `filename_map`
-montereybay \%>\%
- sphere_shade() \%>\%
+montereybay |>
+ sphere_shade() |>
  save_png(filename_map)
- 
+
 #Rotate the map 180 degrees:
 
-montereybay \%>\%
- sphere_shade() \%>\%
+montereybay |>
+ sphere_shade() |>
  save_png(filename_map,rotate=180)
 }

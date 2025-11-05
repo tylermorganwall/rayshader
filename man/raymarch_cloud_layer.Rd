@@ -2,7 +2,7 @@
 % Please edit documentation in R/render_clouds.R
 \name{raymarch_cloud_layer}
 \alias{raymarch_cloud_layer}
-\title{Calculate a single raymarched cloud layer}
+\title{Calculate a single raymarched cloud layer (top-aligned with render_clouds)}
 \usage{
 raymarch_cloud_layer(
   heightmap,
@@ -31,9 +31,6 @@ raymarch_cloud_layer(
 image array
 }
 \description{
-Calculate a single raymarched cloud layer
-}
-\examples{
-#Fake example
+Calculate a single raymarched cloud layer (top-aligned with render_clouds)
 }
 \keyword{internal}

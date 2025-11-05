@@ -97,67 +97,67 @@ montbay = montereybay
 montbay[montbay < 0] = 0
 
 #Generate base map with no lines
-basemap = montbay \%>\%
-  height_shade() \%>\%
-  add_water(detect_water(montbay), color="dodgerblue") \%>\%
-  add_shadow(texture_shade(montbay, detail=1/3, brightness = 15, contrast = 5),0) \%>\%
-  add_shadow(lamb_shade(montbay,zscale=50),0) 
+basemap = montbay |>
+  height_shade() |>
+  add_water(detect_water(montbay), color="dodgerblue") |>
+  add_shadow(texture_shade(montbay, detail=1/3, brightness = 15, contrast = 5),0) |>
+  add_shadow(lamb_shade(montbay,zscale=50),0)
 
 plot_map(basemap)
 }
 if(run_documentation()) {
 #Add waterlines
-basemap \%>\% 
-  add_overlay(generate_waterline_overlay(montbay)) \%>\% 
+basemap |>
+  add_overlay(generate_waterline_overlay(montbay)) |>
   plot_map()
 }
 if(run_documentation()) {
 #Change minimum line distance:
-basemap \%>\% 
-  add_overlay(generate_waterline_overlay(montbay, min = 0.02)) \%>\% 
+basemap |>
+  add_overlay(generate_waterline_overlay(montbay, min = 0.02)) |>
   plot_map()
 }
 if(run_documentation()) {
 #Change maximum line distance
-basemap \%>\% 
-  add_overlay(generate_waterline_overlay(montbay, max = 0.4)) \%>\% 
+basemap |>
+  add_overlay(generate_waterline_overlay(montbay, max = 0.4)) |>
   plot_map()
 }
 if(run_documentation()) {
 #Smooth waterlines
-basemap \%>\% 
-  add_overlay(generate_waterline_overlay(montbay, max = 0.4, smooth=2)) \%>\% 
+basemap |>
+  add_overlay(generate_waterline_overlay(montbay, max = 0.4, smooth=2)) |>
   plot_map()
 }
 if(run_documentation()) {
 #Increase number of breaks
-basemap \%>\% 
-  add_overlay(generate_waterline_overlay(montbay, breaks = 20, max=0.4)) \%>\% 
+basemap |>
+  add_overlay(generate_waterline_overlay(montbay, breaks = 20, max=0.4)) |>
   plot_map()
 }
 if(run_documentation()) {
 #Make lines evenly spaced:
-basemap \%>\% 
-  add_overlay(generate_waterline_overlay(montbay, evenly_spaced = TRUE)) \%>\% 
+basemap |>
+  add_overlay(generate_waterline_overlay(montbay, evenly_spaced = TRUE)) |>
   plot_map()
 }
 if(run_documentation()) {
 #Change variable distance between each line
-basemap \%>\% 
-  add_overlay(generate_waterline_overlay(montbay, falloff=1.5)) \%>\% 
+basemap |>
+  add_overlay(generate_waterline_overlay(montbay, falloff=1.5)) |>
   plot_map()
 }
 if(run_documentation()) {
 #Turn off fading
-basemap \%>\% 
-  add_overlay(generate_waterline_overlay(montbay, fade=FALSE)) \%>\% 
+basemap |>
+  add_overlay(generate_waterline_overlay(montbay, fade=FALSE)) |>
   plot_map()
 }
 if(run_documentation()) {
 #Fill up the entire body of water with lines and make them all 50\% transparent
-basemap \%>\% 
+basemap |>
   add_overlay(generate_waterline_overlay(montbay, fade=FALSE, max=1, alpha = 0.5, color="white",
-                                         evenly_spaced = TRUE, breaks=50)) \%>\% 
+                                         evenly_spaced = TRUE, breaks=50)) |>
   plot_map()
 }
 }

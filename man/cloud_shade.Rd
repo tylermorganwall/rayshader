@@ -77,22 +77,22 @@ is \code{attenuation_coef}, which can be used to adjust the darkness of the resu
 \examples{
 if(run_documentation()) {
 #Render clouds with cloud shadows on the ground
-montereybay  \%>\%
- sphere_shade()  \%>\%
- add_shadow(cloud_shade(montereybay,zscale=50), 0.0) \%>\%
+montereybay  |>
+ sphere_shade()  |>
+ add_shadow(cloud_shade(montereybay,zscale=50), 0.0) |>
  plot_3d(montereybay,background="darkred",zscale=50)
 render_camera(theta=-65, phi = 25, zoom = 0.45, fov = 80)
-render_clouds(montereybay, zscale=50)    
+render_clouds(montereybay, zscale=50)
 render_snapshot()
 }
 if(run_documentation()) {
 #Adjust the light direction for shadows and increase the attenuation for darker clouds
-montereybay  \%>\%
- sphere_shade()  \%>\%
- add_shadow(cloud_shade(montereybay,zscale=50, sun_altitude=20, attenuation_coef = 3), 0.0) \%>\%
+montereybay  |>
+ sphere_shade()  |>
+ add_shadow(cloud_shade(montereybay,zscale=50, sun_altitude=20, attenuation_coef = 3), 0.0) |>
  plot_3d(montereybay,background="darkred",zscale=50)
 render_camera(theta=-65, phi = 25, zoom = 0.45, fov = 80)
-render_clouds(montereybay, zscale=50)    
+render_clouds(montereybay, zscale=50)
 render_snapshot()
 }
 }

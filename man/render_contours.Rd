@@ -47,9 +47,9 @@ Adds 3D contours to the current scene, using the heightmap of the 3D surface.
 \examples{
 #Add contours to the montereybay dataset
 if(run_documentation()) {
-montereybay \%>\%
- height_shade() \%>\%
- add_shadow(ray_shade(montereybay,zscale=50),0.3) \%>\%
+montereybay |>
+ height_shade() |>
+ add_shadow(ray_shade(montereybay,zscale=50),0.3) |>
  plot_3d(montereybay, theta = -45, zscale=50)
 render_contours(montereybay, zscale = 50, offset = 100)
 render_snapshot()
@@ -70,9 +70,9 @@ render_snapshot()
 }
 
 if(run_documentation()) {
-#Use a color palette for the contours 
-volcano |> 
- constant_shade() |> 
+#Use a color palette for the contours
+volcano |>
+ constant_shade() |>
  plot_3d(volcano, zscale = 2, solid = FALSE, zoom = 0.8)
 palette = grDevices::colorRampPalette(c("red", "purple", "pink"))
 render_contours(volcano, offset = 1, palette = palette, zscale = 2, nlevels = 20)
@@ -81,8 +81,8 @@ render_snapshot()
 
 if(run_documentation()) {
 #Render using `render_highquality()` for a neon light effect
-render_highquality(light = FALSE, 
-                  line_radius = 0.1, sample_method="sobol_blue",
+render_highquality(light = FALSE, samples = 16,
+                  line_radius = 0.1,
                   path_material = rayrender::light, ground_size = 0,
                   path_material_args = list(importance_sample = FALSE,
                                             color = "purple", intensity = 2))

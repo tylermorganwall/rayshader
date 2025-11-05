@@ -16,6 +16,11 @@ render_highquality(
   lightintensity = 500,
   lightcolor = "white",
   material = rayrender::diffuse(),
+  datetime = NULL,
+  lat = NULL,
+  lon = NULL,
+  altitude = NULL,
+  north_angle = NULL,
   water_attenuation = 0,
   water_surface_color = TRUE,
   water_ior = 1,
@@ -94,6 +99,18 @@ If this is a vector longer than one, multiple lights will be generated (using va
 \item{lightcolor}{Default \code{white}. The color of the light.}
 
 \item{material}{Default \code{rayrender::diffuse()}. The material properties of the object file. Only used if \code{override_material = TRUE}}
+
+\item{datetime}{Default \code{NULL}. When supplied (optionally alongside \code{lat}, \code{lon}, and \code{altitude}),
+this uses \code{generate_sky_latlong()} to create a sky environment map for \code{environment_light}.}
+
+\item{lat}{Default \code{NULL}. Latitude passed to \code{generate_sky_latlong()} when generating an environment map.}
+
+\item{lon}{Default \code{NULL}. Longitude passed to \code{generate_sky_latlong()} when generating an environment map.}
+
+\item{altitude}{Default \code{NULL}. Altitude passed to \code{generate_sky_latlong()} when generating an environment map.}
+
+\item{north_angle}{Default \code{NULL}. Angle (degrees, clockwise when looking down) used to rotate the environment map so
+geographic north aligns with the rendered scene. Passed to \code{rayrender::render_scene()} as \code{rotate_env}.}
 
 \item{water_attenuation}{Default \code{0}, no attenuation. Amount that light should be attenuated when traveling through water. This
 calculates 1-color}
@@ -212,31 +229,61 @@ ground and add additional scene elements.
 This function can also generate frames for an animation by passing camera animation information from
 either \code{\link[=convert_path_to_animation_coords]{convert_path_to_animation_coords()}} or \code{rayrender::generate_camera_motion()} functions.
 }
+\details{
+\code{north_angle} is a convenience wrapper around the \code{rotate_env} argument in \code{rayrender::render_scene()}.
+When you generate a sky environment with \code{datetime}, \code{lat}, \code{lon}, or \code{altitude}, supply the angle
+(in degrees, measured clockwise when looking down) that rotates the sky map so geographic north
+aligns with the scene's negative z-axis. With georeferenced heightmaps that retain an \code{extent}, you
+can derive that angle directly from the spatial metadata. For example:
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{e = attr(montereybay, "extent")
+center_lon = mean(c(e@xmin, e@xmax))
+center_lat = mean(c(e@ymin, e@ymax))
+center_pt = rayshader:::transform_into_heightmap_coords(e, montereybay,
+                                                       lat = center_lat,
+                                                       long = center_lon,
+                                                       altitude = 0,
+                                                       use_altitude = FALSE)
+north_pt = rayshader:::transform_into_heightmap_coords(e, montereybay,
+                                                      lat = center_lat + 1e-4,
+                                                      long = center_lon,
+                                                      altitude = 0,
+                                                      use_altitude = FALSE)
+north_vec = north_pt - center_pt
+north_angle = atan2(north_vec[1], -north_vec[3]) * 180 / pi
+
+render_highquality(datetime = Sys.time(), lat = center_lat, lon = center_lon,
+                  north_angle = north_angle)
+}\if{html}{\out{</div>}}
+
+This derives \code{north_angle} from the same extent used to build the heightmap, ensuring the sky map is
+rotated to the local north.
+}
 \examples{
 #Render the volcano dataset using pathtracing
 if(run_documentation()) {
-volcano \%>\%
- sphere_shade() \%>\%
+volcano |>
+ sphere_shade() |>
  plot_3d(volcano,zscale = 2)
-render_highquality(min_variance = 0, sample_method = "sobol_blue") 
+render_highquality(min_variance = 0, samples = 16)
 }
 
 #Change position of light
 if(run_documentation()) {
-render_highquality(lightdirection = 45, min_variance = 0, sample_method = "sobol_blue")
+render_highquality(lightdirection = 45, min_variance = 0, samples = 16)
 }
 
 #Change vertical position of light
 if(run_documentation()) {
-render_highquality(lightdirection = 45, lightaltitude = 10, 
-                  min_variance = 0, sample_method = "sobol_blue")
+render_highquality(lightdirection = 45, lightaltitude = 10,
+                  min_variance = 0, samples = 16)
 }
 
 #Change the ground material
 if(run_documentation()) {
 render_highquality(lightdirection = 45, lightaltitude=60,
                   ground_material = rayrender::diffuse(checkerperiod = 30, checkercolor="grey50"),
-                  min_variance = 0, sample_method = "sobol_blue")
+                  min_variance = 0, samples = 16)
 }
 
 #Add three different color lights and a title
@@ -244,7 +291,7 @@ if(run_documentation()) {
 render_highquality(lightdirection = c(0,120,240), lightaltitude=45,
                   lightcolor=c("red","green","blue"), title_text = "Red, Green, Blue",
                   title_bar_color="white", title_bar_alpha=0.8,
-                  min_variance = 0, sample_method = "sobol_blue")
+                  min_variance = 0, samples = 16)
 }
 
 #Change the camera:
@@ -252,34 +299,34 @@ if(run_documentation()) {
 render_camera(theta=-45,phi=60,fov=60,zoom=0.8)
 render_highquality(lightdirection = c(0),
                   title_bar_color="white", title_bar_alpha=0.8,
-                  min_variance = 0, sample_method = "sobol_blue")
+                  min_variance = 0, samples = 16)
 }
 #Add a shiny metal sphere
 if(run_documentation()) {
 render_camera(theta=-45,phi=60,fov=60,zoom=0.8)
-render_highquality(lightdirection = c(0,120,240), lightaltitude=45, 
+render_highquality(lightdirection = c(0,120,240), lightaltitude=45,
                   lightcolor=c("red","green","blue"),
                   scene_elements = rayrender::sphere(z=-60,y=0,
                                                      radius=20,material=rayrender::metal()),
-                  min_variance = 0, sample_method = "sobol_blue")
+                  min_variance = 0)
 }
 
 #Add a red light to the volcano and change the ambient light to dusk
 if(run_documentation()) {
 render_camera(theta=45,phi=45)
-render_highquality(lightdirection = c(240), lightaltitude=30, 
+render_highquality(lightdirection = c(240), lightaltitude=30,
                   lightcolor=c("#5555ff"),
                   scene_elements = rayrender::sphere(z=0,y=15, x=-18, radius=5,
                                    material=rayrender::light(color="red",intensity=10)),
-                  min_variance = 0, sample_method = "sobol_blue")
+                  min_variance = 0, samples = 16)
 }
 #Manually change the camera location and direction
 if(run_documentation()) {
 render_camera(theta=45,phi=45,fov=90)
-render_highquality(lightdirection = c(240), lightaltitude=30, lightcolor=c("#5555ff"), 
+render_highquality(lightdirection = c(240), lightaltitude=30, lightcolor=c("#5555ff"),
                   camera_location = c(50,10,10), camera_lookat = c(0,15,0),
                   scene_elements = rayrender::sphere(z=0,y=15, x=-18, radius=5,
                                    material=rayrender::light(color="red",intensity=10)),
-                  min_variance = 0, sample_method = "sobol_blue")
+                  min_variance = 0, samples = 16)
 }
 }

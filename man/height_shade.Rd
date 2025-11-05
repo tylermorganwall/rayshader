@@ -30,31 +30,31 @@ Calculates a color for each point on the surface using a direct elevation-to-col
 }
 \examples{
 #Create a direct mapping of elevation to color:
-montereybay \%>\%
- height_shade() \%>\%
+montereybay |>
+ height_shade() |>
  plot_map()
- 
+
 #Add a shadow:
 if(run_documentation()) {
-montereybay \%>\%
- height_shade() \%>\%
- add_shadow(ray_shade(montereybay,zscale=50),0.3) \%>\%
+montereybay |>
+ height_shade() |>
+ add_shadow(ray_shade(montereybay,zscale=50),0.3) |>
  plot_map()
 }
 
 #Change the palette:
 if(run_documentation()) {
-montereybay \%>\%
- height_shade(texture = topo.colors(256)) \%>\%
- add_shadow(ray_shade(montereybay,zscale=50),0.3) \%>\%
+montereybay |>
+ height_shade(texture = topo.colors(256)) |>
+ add_shadow(ray_shade(montereybay,zscale=50),0.3) |>
  plot_map()
 }
 
 #Really change the palette:
 if(run_documentation()) {
-montereybay \%>\%
- height_shade(texture = rainbow(256)) \%>\%
- add_shadow(ray_shade(montereybay,zscale=50),0.3) \%>\%
+montereybay |>
+ height_shade(texture = rainbow(256)) |>
+ add_shadow(ray_shade(montereybay,zscale=50),0.3) |>
  plot_map()
 }
 }

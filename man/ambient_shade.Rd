@@ -60,10 +60,10 @@ plot_map(ambient_shade(montereybay, sunbreaks = 24,maxsearch = 100, multicore=TR
 #with an addition lambertian layer added with lamb_shade() to improve topographic clarity.
 if(run_documentation()) {
 bigmb = resize_matrix(montereybay, scale=2, method="cubic")
-bigmb \%>\%
- sphere_shade(zscale=3, texture = create_texture("red","red","red","red","white")) \%>\%
- add_shadow(ambient_shade(bigmb, maxsearch = 100, multicore = TRUE,zscale=1),0) \%>\%
- add_shadow(lamb_shade(bigmb),0.5) \%>\%
+bigmb |>
+ sphere_shade(zscale=3, texture = create_texture("red","red","red","red","white")) |>
+ add_shadow(ambient_shade(bigmb, maxsearch = 100, multicore = TRUE,zscale=1),0) |>
+ add_shadow(lamb_shade(bigmb),0.5) |>
  plot_map()
 }
 }

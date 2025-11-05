@@ -66,13 +66,13 @@ if(run_examples) {
 library(sf)
 #Set location of washington monument
 washington_monument_location =  st_point(c(-77.035249, 38.889462))
-wm_point = washington_monument_location |> 
- st_point() |> 
- st_sfc(crs = 4326) |> 
+wm_point = washington_monument_location |>
+ st_point() |>
+ st_sfc(crs = 4326) |>
  st_transform(st_crs(washington_monument_multipolygonz))
- 
+
 elevation_data = elevatr::get_elev_raster(locations = wm_point, z = 14)
-                                         
+
 scene_bbox = st_bbox(st_buffer(wm_point,300))
 cropped_data = raster::crop(elevation_data, scene_bbox)
 
@@ -83,10 +83,10 @@ dc_elevation_matrix = raster_to_matrix(cropped_data)
 dc_elevation_matrix[dc_elevation_matrix < 0] = 0
 
 #Plot a 3D map of the national mall
-dc_elevation_matrix |> 
+dc_elevation_matrix |>
  height_shade() |>
- add_shadow(lamb_shade(dc_elevation_matrix), 0) |> 
- plot_3d(dc_elevation_matrix, zscale=3.7, water = TRUE, waterdepth = 1, 
+ add_shadow(lamb_shade(dc_elevation_matrix), 0) |>
+ plot_3d(dc_elevation_matrix, zscale=3.7, water = TRUE, waterdepth = 1,
          soliddepth=-50, windowsize = 800)
 render_snapshot()
 }
@@ -95,14 +95,14 @@ if(run_examples) {
 render_camera(theta=150,  phi=35, zoom= 0.55, fov=70)
 #Render the national monument
 rgl::par3d(ignoreExtent = TRUE)
-render_multipolygonz(washington_monument_multipolygonz, 
-                    extent = raster::extent(cropped_data), 
+render_multipolygonz(washington_monument_multipolygonz,
+                    extent = raster::extent(cropped_data),
                     zscale = 4, color = "white",
                     heightmap = dc_elevation_matrix)
 render_snapshot()
 }
 if(run_examples) {
 #This works with `render_highquality()`
-render_highquality(sample_method="sobol_blue", clamp_value=10, min_variance = 0)
+render_highquality(min_variance = 0, samples = 16)
 }
 }

@@ -139,67 +139,114 @@ and then subtracts out the rgl y-offset, which can be obtained by calling the in
 }
 \examples{
 #Generate a circle in Monterey Bay and fly around on top of it
-if(run_documentation()) {
-montereybay \%>\%
- sphere_shade() \%>\%
- plot_3d(montereybay,zscale=50,water=TRUE,
-         shadowcolor="#40310a", background = "tan",
-         theta=210,  phi=22, zoom=0.40, fov=55)
-         
+\dontrun{
+tmp = tempdir()
+
+# Recreate your original example but compact, with fewer frames & smaller size.
 moss_landing_coord = c(36.806807, -121.793332)
-t = seq(0,2*pi,length.out=1000)
+t = seq(0, 2 * pi, length.out = 360) # fewer frames for speed
 circle_coords_lat = moss_landing_coord[1] + 0.25 * sin(t)
-circle_coords_long = moss_landing_coord[2] + 0.25  *  cos(t)
-render_path(extent = attr(montereybay,"extent"), heightmap = montereybay,
-           lat = unlist(circle_coords_lat), long = unlist(circle_coords_long),
-           zscale=50, color="red", antialias=TRUE,
-           offset=100, linewidth=2)
-render_snapshot()
+circle_coords_long = moss_landing_coord[2] + 0.25 * cos(t)
 
-camera_path = convert_path_to_animation_coords(extent = attr(montereybay,"extent"), 
-                                              heightmap = montereybay,
-                                              lat = unlist(circle_coords_lat), 
-                                              long = unlist(circle_coords_long),
-                                              fovs = 80,
-                                              zscale=50, offset=250, frames = 25)
+# Minimal 3D render -> frames
+extent_mb = attr(montereybay, "extent")
+sphere_shade(montereybay) |>
+plot_3d(
+	montereybay,
+	zscale = 50,
+	water = TRUE,
+	shadowcolor = "#40310a",
+	background = "tan",
+	theta = 210,
+	phi = 22,
+	zoom = 0.40,
+	fov = 55
+)
 
-#Render a series of frames, following the path specified above
-temp_dir = tempdir()
-render_highquality(samples=16, animation_camera_coords = camera_path, 
-                  width=200,height=200, filename = sprintf("\%s/frame",temp_dir),
-                  use_extruded_paths = TRUE,
-                  sample_method="sobol_blue")
+render_path(
+extent = extent_mb,
+heightmap = montereybay,
+lat = circle_coords_lat,
+long = circle_coords_long,
+zscale = 50,
+color = "red",
+antialias = TRUE,
+offset = 500,
+linewidth = 2
+)
 
-#Plot all these frames
-image_list = list()
-for(i in 1:25) {
-  image_list[[i]] = png::readPNG(sprintf("\%s/frame\%d.png",temp_dir,i))
+cam = convert_path_to_animation_coords(
+extent = extent_mb,
+heightmap = montereybay,
+lat = circle_coords_lat,
+long = circle_coords_long,
+type = "bezier",
+damp_motion = TRUE,
+fovs = 80,
+zscale = 50,
+offset = 1000,
+frames = length(t)
+)
+
+render_highquality(
+samples = 4,
+animation_camera_coords = cam,
+width = 200,
+height = 200,
+preview = FALSE,
+filename = file.path(tmp, "frame"),
+use_extruded_paths = TRUE
+)
+
+# Assemble frames -> GIF (pkgdown copies from man/figures)
+pngs = sprintf("\%s/frame\%d.png", tmp, seq_along(t))
+av::av_encode_video(
+pngs,
+framerate = 24
+)
 }
-rayimage::plot_image_grid(image_list, dim = c(5,5))
-}
+\if{html}{\Sexpr{
+  if (requireNamespace("pkgdown") && pkgdown::in_pkgdown()) {
+    "\\\\out{<video src='../man/figures/monterey-circle.mp4' controls loop muted playsinline style='max-width:100\%'></video>}"
+  } else { "" }
+}}
 
-if(run_documentation()) {
-#Now render a third-person view by setting `follow_camera = TRUE`
-camera_path = convert_path_to_animation_coords(extent = attr(montereybay,"extent"), 
-                                              heightmap = montereybay,
-                                              lat = unlist(circle_coords_lat), 
-                                              long = unlist(circle_coords_long),
-                                              fovs = 80,
-                                              follow_camera = TRUE,
-                                              zscale=50, offset=250, frames = 25)
+#Now we use a "follow camera" for a third person view:
+\dontrun{
+follow_cam = convert_path_to_animation_coords(
+extent = extent_mb,
+heightmap = montereybay,
+lat = circle_coords_lat,
+long = circle_coords_long,
+type = "bezier",
+damp_motion = TRUE,
+fovs = 80,
+zscale = 50,
+follow_camera = TRUE,
+offset = 1000,
+frames = length(t)
+)
 
-#Render a series of frames, following the path specified above
-temp_dir = tempdir()
-render_highquality(samples=16, animation_camera_coords = camera_path, 
-                  width=200,height=200, filename = sprintf("\%s/frame",temp_dir),
-                  use_extruded_paths = TRUE,
-                  sample_method="sobol_blue")
+render_highquality(
+samples = 4,
+animation_camera_coords = follow_cam,
+width = 200,
+height = 200,
+preview = FALSE,
+filename = file.path(tmp, "frame"),
+use_extruded_paths = TRUE
+)
 
-#Plot all these frames
-image_list = list()
-for(i in 1:25) {
-  image_list[[i]] = png::readPNG(sprintf("\%s/frame\%d.png",temp_dir,i))
+# Assemble frames -> GIF (pkgdown copies from man/figures)
+pngs = sprintf("\%s/frame\%d.png", tmp, seq_along(t))
+av::av_encode_video(
+pngs,
+framerate = 24
+)
 }
-rayimage::plot_image_grid(image_list, dim = c(5,5))
-}
+\if{html}{\Sexpr{
+  if (requireNamespace("pkgdown") && pkgdown::in_pkgdown()) {
+    "\\\\out{<video src='../man/figures/monterey-circle-follow.mp4' controls loop muted playsinline style='max-width:100\%'></video>}"
+  } else { "" }
+}}
 }

@@ -95,13 +95,13 @@ Adds a marker and label to the current 3D plot
 }
 \examples{
 if(run_documentation()) {
-montereybay \%>\%
- sphere_shade() \%>\%
+montereybay |>
+ sphere_shade() |>
  plot_3d(montereybay,zscale=50,water=TRUE, watercolor="#233aa1")
-render_snapshot() 
+render_snapshot()
 }
 
-santa_cruz = c(36.962957, -122.021033) 
+santa_cruz = c(36.962957, -122.021033)
 #We want to add a label to Santa Cruz, so we use the x and y matrix coordinate (x=220 and y=330)
 if(run_documentation()) {
 render_label(montereybay,lat = santa_cruz[1], long = santa_cruz[2],
@@ -112,10 +112,10 @@ render_snapshot()
 
 monterey = c(36.603053, -121.892933)
 #We can also change the linetype to dashed by setting `dashed = TRUE` (additional options allow
-#the user to control the dash length). You can clear the existing lines by setting 
+#the user to control the dash length). You can clear the existing lines by setting
 #`clear_previous = TRUE`.
 if(run_documentation()) {
-render_label(montereybay, lat = monterey[1], long = monterey[2], altitude = 10000, 
+render_label(montereybay, lat = monterey[1], long = monterey[2], altitude = 10000,
             extent = attr(montereybay, "extent"),
             zscale = 50, text = "Monterey", textcolor = "white", linecolor="darkred",
             dashed = TRUE, clear_previous = TRUE)
@@ -123,7 +123,7 @@ render_snapshot()
 }
 
 canyon = c(36.621049, -122.333912)
-#By default, z specifies the altitude above that point on the elevation matrix. We can also specify 
+#By default, z specifies the altitude above that point on the elevation matrix. We can also specify
 #an absolute height by setting `relativez=FALSE`.
 if(run_documentation()) {
 render_label(montereybay,lat=canyon[1], long = canyon[2], altitude = 2000,
@@ -137,28 +137,26 @@ render_snapshot()
 #argument `text_angle`.
 if(run_documentation()) {
 render_camera(theta=35, phi = 35, zoom = 0.80, fov=60)
-render_label(montereybay, lat = monterey[1], long = monterey[2], altitude = 10000, 
+render_label(montereybay, lat = monterey[1], long = monterey[2], altitude = 10000,
             extent = attr(montereybay, "extent"),
             zscale = 50, text = "Monterey", textcolor = "white", linecolor="darkred",
             dashed = TRUE, clear_previous = TRUE)
-               
+
 render_label(montereybay,lat=canyon[1], long = canyon[2], altitude = 2000, zscale=50,
             extent = attr(montereybay,"extent"), textcolor = "white", linecolor="white",
             text = "Monterey Canyon", relativez=FALSE)
-            
-render_highquality(samples = 128,text_size = 24, line_radius = 2, text_offset = c(0, 20, 0),
-                  lightdirection = 180, clamp_value = 10, min_variance = 0,
-                  sample_method = "sobol_blue")
+
+render_highquality(samples = 16,text_size = 24, line_radius = 2, text_offset = c(0, 20, 0),
+                  lightdirection = 180, min_variance = 0)
 }
 if(run_documentation()) {
 #Fixed text angle
-render_highquality(samples = 128,text_size = 24, line_radius = 2, text_offset = c(0, 20, 0),
-                  lightdirection = 180, text_angle = 0, clamp_value=10, min_variance = 0,
-                  sample_method = "sobol_blue")
+render_highquality(samples = 16,text_size = 24, line_radius = 2, text_offset = c(0, 20, 0),
+                  lightdirection = 180, text_angle = 0, min_variance = 0)
 }
 #We can remove all existing labels by calling `render_label(clear_previous = TRUE)`
 if(run_documentation()) {
-render_label(clear_previous = TRUE) 
+render_label(clear_previous = TRUE)
 render_snapshot()
 }
 }

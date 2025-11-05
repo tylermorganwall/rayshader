@@ -1,6 +1,5 @@
 #' Generate Fractal Perlin Noise
 #'
-#'
 #' @return image array
 #' @keywords internal
 #'
@@ -49,7 +48,8 @@ gen_fractal_perlin = function(
 		nrow = nrow(t_mat)
 	}
 	if (shadow) {
-		fract_perlin[t_mat <= 0] = NA
+		# Only mask below the local start plane, t == 0 should count
+		fract_perlin[t_mat < 0] = NA
 	}
 	return(matrix(fract_perlin, nrow, ncol))
 }
@@ -356,14 +356,112 @@ render_clouds = function(
 		)
 	}
 }
+render_clouds = function(
+	heightmap,
+	start_altitude = 1000,
+	end_altitude = 2000,
+	sun_altitude = 10,
+	sun_angle = 315,
+	time = 0,
+	cloud_cover = 0.5,
+	layers = 10,
+	offset_x = 0,
+	offset_y = 0,
+	scale_x = 1,
+	scale_y = 1,
+	scale_z = 1,
+	frequency = 0.005,
+	fractal_levels = 16,
+	attenuation_coef = 1,
+	seed = 1,
+	zscale = 1,
+	baseshape = "rectangle",
+	clear_clouds = FALSE
+) {
+	if (all(length(find.package("ambient", quiet = TRUE)) == 0)) {
+		stop("`render_clouds()` requires the `ambient` package to be installed")
+	}
+	time = -time
+	if (start_altitude > end_altitude) {
+		temp_alt = start_altitude
+		start_altitude = end_altitude
+		end_altitude = temp_alt
+	}
+	if (end_altitude != start_altitude) {
+		scale_layers = layers / (end_altitude - start_altitude)
+	} else {
+		scale_layers = 1
+		layers = 1
+	}
+	sun_angle = sun_angle + 180
+	if (clear_clouds) {
+		rgl::pop3d(tag = c("floating_overlay", "floating_overlay_tris"))
+		if (missing(heightmap)) return(invisible())
+	}
+	if (cloud_cover < 0 || cloud_cover > 1) {
+		stop("`cloud_cover` must be between zero and one.")
+	}
+	alpha_coef = 1 - 1 / cloud_cover
+	layers = layers[1]
+	stopifnot(
+		start_altitude < end_altitude,
+		layers > 0,
+		sun_altitude > 0 && sun_altitude <= 90
+	)
 
-#' Calculate a single raymarched cloud layer
+	# Use layer boundaries; render at the UPPER boundary so the final quad is at end_altitude
+	altitudes = seq(start_altitude, end_altitude, length.out = layers + 1)
+	attenuation_coef = attenuation_coef / layers
+
+	if (sun_altitude != 90) {
+		scaled_angle = zscale * tanpi(sun_altitude / 180)
+		sun_altitude = atan(scaled_angle) * 180 / pi
+	}
+
+	for (i in seq_len(layers)) {
+		local_start = (altitudes[i] - start_altitude) * scale_layers
+		# For the top slice: no shading above → end == start and coef == 0
+		is_top = (i == layers)
+		local_end = if (is_top) {
+			local_start
+		} else {
+			(end_altitude - start_altitude) * scale_layers
+		}
+		local_coef = if (is_top) 0 else attenuation_coef
+
+		render_floating_overlay(
+			generate_cloud_layer(
+				heightmap,
+				coef = local_coef,
+				start_altitude = local_start,
+				end_altitude = local_end,
+				time = time,
+				sun_altitude = sun_altitude,
+				alpha_coef = alpha_coef,
+				sun_angle = sun_angle,
+				levels = fractal_levels,
+				offset_x = offset_x,
+				offset_y = offset_y,
+				scale_x = scale_x,
+				scale_y = scale_y,
+				scale_z = scale_z,
+				seed = seed,
+				freq = frequency
+			),
+			# Render at the upper boundary so the last slice sits at the true top
+			altitudes[i + 1],
+			baseshape = baseshape,
+			heightmap = heightmap,
+			zscale = zscale
+		)
+	}
+}
+
+
+#' Calculate a single raymarched cloud layer (top-aligned with render_clouds)
 #'
 #' @return image array
 #' @keywords internal
-#'
-#' @examples
-#' #Fake example
 raymarch_cloud_layer = function(
 	heightmap,
 	sun_altitude = 90,
@@ -398,34 +496,52 @@ raymarch_cloud_layer = function(
 		y = 0,
 		z = 1:ncol + offset_y
 	))
-	t_mat = (start_altitude_real - heightmap) / ray_d[2]
-	if (ray_d[2] > 0) {
-		step = 1 / ray_d[2]
-	} else {
-		stop("Zero/negative sun altitudes are not valid")
-	}
-	if (ray_d[2] > 0) {
-		step = 1 / ray_d[2]
-		real_step = 1 / ray_d[2]
-	} else {
-		stop("Zero/negative sun altitudes are not valid")
-	}
 
-	#Offset x/y positions from heightmap to first altitude layer
+	if (ray_d[2] <= 0) {
+		stop("Zero/negative sun altitudes are not valid")
+	}
+	real_step = 1 / ray_d[2]
+
+	# Per-pixel entry altitude into the cloud column (clamped into [base, top])
+	local_start = pmin(pmax(start_altitude_real, heightmap), end_altitude_real)
+
+	# Map physical thickness (above local_start) to discrete noise steps.
+	# Use floor() to match the render loop's exclusive upper bound, and clamp to global budget.
+	total_budget_global = max(0L, as.integer(round(end_noise - start_noise)))
+	denom = (end_altitude_real - start_altitude_real)
+	scale_layers_local = if (denom > 0) (end_noise - start_noise) / denom else 1
+
+	thickness = pmax(end_altitude_real - local_start, 0)
+	thickness_steps = thickness * scale_layers_local
+
+	# Critical: floor() (not ceiling) + clamp to the global budget
+	max_steps_mat = pmin(
+		total_budget_global,
+		pmax(0L, as.integer(floor(thickness_steps + 1e-12)))
+	)
+
+	# Marching parameter to lift positions up to local_start along the ray
+	t_mat = (local_start - heightmap) / ray_d[2]
+
+	# Offset x/z to the local start plane
 	xyz[, 1] = xyz[, 1] + ray_d[1] * t_mat
 	xyz[, 2] = 0
 	xyz[, 3] = xyz[, 3] - ray_d[3] * t_mat
 
 	atten = matrix(1, nrow, ncol)
 	noise_height = start_noise
-
-	#This starts at 0 because it needs to take into account bottom layer when calculating the shadow
 	inc = 0
+
 	while (noise_height < end_noise) {
+		active_mask = (inc < max_steps_mat)
+		if (!any(active_mask)) {
+			break
+		}
+
 		trans_mat = scales::rescale(
 			gen_fractal_perlin(
-				ray_d,
-				xyz,
+				ray_d = ray_d,
+				xyz = xyz,
 				t_mat = t_mat,
 				altitude = noise_height,
 				levels = levels,
@@ -439,19 +555,23 @@ raymarch_cloud_layer = function(
 			),
 			to = c(alpha_coef, 1.0)
 		)
+
+		trans_mat[!active_mask] = 0
 		trans_mat[is.na(trans_mat)] = 0
 		trans_mat[trans_mat < 0] = 0
+
 		atten = atten * (1 - coef * trans_mat)
+
 		noise_height = noise_height + 1
 		t_mat = t_mat + real_step
 		inc = inc + 1
-		if (step == 0) {
-			break
-		}
+		if (step == 0) break
 	}
+
 	atten[atten < 0] = 0
 	return(atten)
 }
+
 
 #'@title Cloud Shade
 #'
@@ -556,13 +676,18 @@ cloud_shade = function(
 		scaled_angle = zscale * tanpi(sun_altitude / 180)
 		sun_altitude = atan(scaled_angle) * 180 / pi
 	}
+
+	# IMPORTANT: keep units consistent with heightmap/zscale
+	start_altitude_scaled = start_altitude / zscale
+	end_altitude_scaled = end_altitude / zscale
+
 	return(flipud(raymarch_cloud_layer(
 		heightmap = heightmap / zscale,
 		coef = attenuation_coef,
 		start_noise = 0,
 		end_noise = (end_altitude - start_altitude) * scale_layers,
-		start_altitude_real = start_altitude,
-		end_altitude_real = end_altitude,
+		start_altitude_real = start_altitude_scaled, # << unit-consistent
+		end_altitude_real = end_altitude_scaled, # << unit-consistent
 		time = time,
 		sun_altitude = sun_altitude,
 		alpha_coef = alpha_coef,

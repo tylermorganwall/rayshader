@@ -1,18 +1,18 @@
 #'@title Render Points
 #'
 #'@description Adds 3D datapoints to the current scene, using latitude/longitude or coordinates in the reference
-#'system defined by the extent object. If no altitude is provided, the points will be elevated a constant offset 
+#'system defined by the extent object. If no altitude is provided, the points will be elevated a constant offset
 #'above the heightmap. If the points goes off the edge, the nearest height on the heightmap will be used (unless that
 #'value is NA, in which the point will be removed).
 #'
 #'@param lat Vector of latitudes (or other coordinate in the same coordinate reference system as extent).
 #'@param long Vector of longitudes (or other coordinate in the same coordinate reference system as extent).
-#'@param altitude Default `NULL`. Elevation of each point, in units of the elevation matrix (scaled by zscale). If a single value, 
+#'@param altitude Default `NULL`. Elevation of each point, in units of the elevation matrix (scaled by zscale). If a single value,
 #'all data will be rendered at that altitude.
-#'@param extent Either an object representing the spatial extent of the 3D scene 
-#' (either from the `raster`, `terra`, `sf`, or `sp` packages), 
-#' a length-4 numeric vector specifying `c("xmin", "xmax","ymin","ymax")`, or the spatial object (from 
-#' the previously aforementioned packages) which will be automatically converted to an extent object. 
+#'@param extent Either an object representing the spatial extent of the 3D scene
+#' (either from the `raster`, `terra`, `sf`, or `sp` packages),
+#' a length-4 numeric vector specifying `c("xmin", "xmax","ymin","ymax")`, or the spatial object (from
+#' the previously aforementioned packages) which will be automatically converted to an extent object.
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.
 #'@param heightmap Default `NULL`. Automatically extracted from the rgl window--only use if auto-extraction
 #'of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
@@ -47,23 +47,23 @@
 #'
 #'
 #'#Render the 3D map
-#'montereybay %>%
-#'  sphere_shade() %>%
+#'montereybay |>
+#'  sphere_shade() |>
 #'  plot_3d(montereybay,zscale=50,water=TRUE,
 #'          shadowcolor="#40310a", background = "tan",
 #'          theta=210,  phi=22, zoom=0.20, fov=55)
-#' 
+#'
 #'#Pass in the extent of the underlying raster (stored in an attribute for the montereybay
 #'#dataset) and the latitudes, longitudes, and altitudes of the track.
-#'render_points(extent = attr(montereybay,"extent"), 
-#'              lat = unlist(bird_track_lat), long = unlist(bird_track_long), 
+#'render_points(extent = attr(montereybay,"extent"),
+#'              lat = unlist(bird_track_lat), long = unlist(bird_track_long),
 #'              altitude = z_out, zscale=50,color="white")
 #'render_snapshot()
 #'}
 #'if(run_documentation()) {
-#'#We'll set the altitude to zero to give the tracks a "shadow" over the water. 
-#'render_points(extent = attr(montereybay,"extent"), 
-#'              lat = unlist(bird_track_lat), long = unlist(bird_track_long), 
+#'#We'll set the altitude to zero to give the tracks a "shadow" over the water.
+#'render_points(extent = attr(montereybay,"extent"),
+#'              lat = unlist(bird_track_lat), long = unlist(bird_track_long),
 #'              offset = 0, zscale=50, color="black")
 #'render_camera(theta=30,phi=35,zoom=0.45,fov=70)
 #'render_snapshot()
@@ -79,50 +79,75 @@
 #'circle_coords_lat = moss_landing_coord[1] + 0.3 * sin(t)
 #'circle_coords_long = moss_landing_coord[2] + 0.3 * cos(t)
 #'render_points(extent = attr(montereybay,"extent"), heightmap = montereybay,
-#'            lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), 
+#'            lat = unlist(circle_coords_lat), long = unlist(circle_coords_long),
 #'            zscale=50, color="red", offset=100, size=5)
 #'render_camera(theta = 160, phi=33, zoom=0.4, fov=55)
 #'render_snapshot()
 #'}
 #'if(run_documentation()) {
 #'#And all of these work with `render_highquality()`
-#'render_highquality(point_radius = 6, clamp_value=10, min_variance = 0,
-#'                   sample_method = "sobol_blue", samples = 128)
+#'render_highquality(point_radius = 6, min_variance = 0, samples = 16)
 #'}
 #'
 #'if(run_documentation()) {
 #'#We can also change the material of the objects by setting the `point_material` and
 #'#`point_material_args` arguments in `render_highquality()`
-#'render_highquality(point_radius = 6, clamp_value=10, min_variance = 0,
-#'                   sample_method = "sobol_blue", samples = 128,
-#'                   point_material = rayrender::glossy, 
+#'render_highquality(point_radius = 6, min_variance = 0, samples = 16,
+#'                   point_material = rayrender::glossy,
 #'                   point_material_args = list(gloss = 0.5, reflectance = 0.2))
 #'}
-render_points = function(lat = NULL, long = NULL, altitude = NULL, extent = NULL, 
-                         zscale = 1, heightmap = NULL, 
-                         size = 3, color = "black", offset = 5, clear_previous = FALSE) {
-  if(rgl::cur3d() == 0) {
-    stop("No rgl window currently open.")
-  }
-  if(clear_previous) {
-    rgl::pop3d(tag = "points3d")
-    if(missing(lat) || missing(long)) {
-      return(invisible())
-    }
-  }
-  xyz = transform_into_heightmap_coords(extent, heightmap, lat, long, 
-                                        altitude, offset, zscale)
+render_points = function(
+	lat = NULL,
+	long = NULL,
+	altitude = NULL,
+	extent = NULL,
+	zscale = 1,
+	heightmap = NULL,
+	size = 3,
+	color = "black",
+	offset = 5,
+	clear_previous = FALSE
+) {
+	if (rgl::cur3d() == 0) {
+		stop("No rgl window currently open.")
+	}
+	if (clear_previous) {
+		rgl::pop3d(tag = "points3d")
+		if (missing(lat) || missing(long)) {
+			return(invisible())
+		}
+	}
+	xyz = transform_into_heightmap_coords(
+		extent,
+		heightmap,
+		lat,
+		long,
+		altitude,
+		offset,
+		zscale
+	)
 
-  if(length(unique(size)) > 1) {
-    stopifnot(length(size) == nrow(xyz))
-    color_length = length(color)
-    for(i in seq_len(nrow(xyz))) {
-      rgl::points3d(xyz[i,1], xyz[i,2], xyz[i,3], 
-                    color = color[((i-1) %% color_length) + 1], 
-                    tag = "points3d", size = size[i])
-    }
-  } else {
-    rgl::points3d(xyz[,1], xyz[,2], xyz[,3], 
-                  color = color, tag = "points3d", size = size)
-  }
+	if (length(unique(size)) > 1) {
+		stopifnot(length(size) == nrow(xyz))
+		color_length = length(color)
+		for (i in seq_len(nrow(xyz))) {
+			rgl::points3d(
+				xyz[i, 1],
+				xyz[i, 2],
+				xyz[i, 3],
+				color = color[((i - 1) %% color_length) + 1],
+				tag = "points3d",
+				size = size[i]
+			)
+		}
+	} else {
+		rgl::points3d(
+			xyz[, 1],
+			xyz[, 2],
+			xyz[, 3],
+			color = color,
+			tag = "points3d",
+			size = size
+		)
+	}
 }

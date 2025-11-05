@@ -58,25 +58,25 @@ if(all(length(find.package("sf", quiet = TRUE)) > 0,
       length(find.package("magick", quiet = TRUE)) > 0)) {
  monterey = c(-121.892933,36.603053)
  monterey_city = sf::st_sfc(sf::st_point(monterey))
- 
+
  #Generate Overlays
- road_overlay = generate_line_overlay(monterey_roads_sf, attr(montereybay,"extent"), 
+ road_overlay = generate_line_overlay(monterey_roads_sf, attr(montereybay,"extent"),
                                       heightmap = montereybay)
  point_overlay = generate_point_overlay(monterey_city, color="red", size=12,
                                         attr(montereybay,"extent"), heightmap = montereybay)
-                                        
+
  #Create 3D plot (water transparency set to 1 because multiple transparency layers can interfere)
  montereybay |>
    height_shade() |>
-   add_shadow(ray_shade(montereybay,zscale=50),0.3) |> 
+   add_shadow(ray_shade(montereybay,zscale=50),0.3) |>
    plot_3d(montereybay, water = T, wateralpha = 1, windowsize = 800, watercolor = "lightblue")
  render_camera(theta=-55,phi=45,zoom=0.8)
- 
+
  #Render label
  render_label(montereybay, lat = monterey[2], long = monterey[1], altitude = 9900,
               extent = attr(montereybay, "extent"),
               zscale = 50, text = "Monterey", textcolor = "black", linecolor="darkred")
- 
+
  #Render Floating Overlays
  render_floating_overlay(road_overlay, altitude = 10000,zscale = 50)
  render_floating_overlay(point_overlay, altitude = 100,zscale = 50)

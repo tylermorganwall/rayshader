@@ -3,7 +3,6 @@
 #'@description Displays the map in the current device.
 #'
 #'@param hillshade Hillshade to be plotted.
-#'@param rotate Default `0`. Rotates the output. Possible values: `0`, `90`, `180`, `270`.
 #'@param asp Default `1`. Aspect ratio of the resulting plot. Use `asp = 1/cospi(mean_latitude/180)` to rescale
 #'lat/long at higher latitudes to the correct the aspect ratio.
 #'@param title_text Default `NULL`. Text. Adds a title to the image, using `magick::image_annotate()`.
@@ -28,10 +27,10 @@
 #'par(family = "Arial")
 #'
 #'#Set everything below 0m to water palette
-#'montereybay %>%
-#'  sphere_shade(zscale=10) %>%
-#'  add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0))  %>%
-#'  add_shadow(ray_shade(montereybay,zscale=50),0.3) %>%
+#'montereybay |>
+#'  sphere_shade(zscale=10) |>
+#'  add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0))  |>
+#'  add_shadow(ray_shade(montereybay,zscale=50),0.3) |>
 #'  plot_map()
 #'}
 #'#Correcting the aspect ratio for the latitude of Monterey Bay
@@ -39,77 +38,43 @@
 #'extent_mb = attr(montereybay,"extent")
 #'mean_latitude = mean(c(extent_mb@ymax,extent_mb@ymin))
 #'if(run_documentation()) {
-#'montereybay %>%
-#'  sphere_shade(zscale=10) %>%
-#'  add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0))  %>%
-#'  add_shadow(ray_shade(montereybay,zscale=50),0.3) %>%
+#'montereybay |>
+#'  sphere_shade(zscale=10) |>
+#'  add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0))  |>
+#'  add_shadow(ray_shade(montereybay,zscale=50),0.3) |>
 #'  plot_map(asp = 1/cospi(mean_latitude/180))
 #'}
-plot_map = function(hillshade, rotate=0, asp = 1, 
-                    title_text = NA, title_offset = c(20,20),
-                    title_color = "black", title_size = 30,
-                    title_font = "sans", title_style = "normal", 
-                    title_bar_color = NA, title_bar_alpha = 0.5, title_just = "left",
-                    ...) {
+plot_map = function(
+  hillshade,
+  asp = 1,
+  title_text = NA,
+  title_offset = c(20, 20),
+  title_color = "black",
+  title_size = 30,
+  title_font = "sans",
+  title_style = "normal",
+  title_bar_color = NA,
+  title_bar_alpha = 0.5,
+  title_just = "left",
+  ...
+) {
   has_title = !is.na(title_text)
-  if(!(length(find.package("rayimage", quiet = TRUE)) > 0) && has_title) {
-    warning("`rayimage` package required for title text")
-    has_title = FALSE
+  hillshade_img = rayimage::ray_read_image(
+    hillshade
+  )
+  if (has_title) {
+    hillshade_img = rayimage::render_title(
+      hillshade_img,
+      title_text = title_text,
+      title_offset = title_offset,
+      title_color = title_color,
+      title_size = title_size,
+      title_font = title_font,
+      title_style = title_style,
+      title_bar_color = title_bar_color,
+      title_bar_alpha = title_bar_alpha,
+      title_just = title_just
+    )
   }
-  rotatef = function(x) t(apply(x, 2, rev))
-  if(!(rotate %in% c(0,90,180,270))) {
-    if(length(rotate) == 1) {
-      warning(paste0("Rotation value ",rotate," not in c(0,90,180,270). Ignoring"))
-    } else {
-      warning(paste0("Rotation argument `rotate` not in c(0,90,180,270). Ignoring"))
-    }
-    number_of_rots = 0
-  } else {
-    number_of_rots = rotate/90
-  }
-  if(length(dim(hillshade)) == 3) {
-    if(number_of_rots != 0) {
-      newarray = hillshade
-      newarrayt = array(0,dim=c(ncol(hillshade),nrow(hillshade),3))
-      for(i in 1:number_of_rots) {
-        for(j in 1:3) {
-          if(i == 2) {
-            newarray[,,j] = rotatef(newarrayt[,,j])
-          } else {
-            newarrayt[,,j] = rotatef(newarray[,,j])
-          }
-        }
-      }
-      if(number_of_rots == 2) {
-        hillshade = newarray
-      } else {
-        hillshade = newarrayt
-      }
-    }
-    if(has_title) {
-      hillshade = rayimage::render_title(hillshade, title_text = title_text, title_offset = title_offset,
-                          title_color = title_color, title_size = title_size,
-                          title_font = title_font, title_style = title_style,
-                          title_bar_color = title_bar_color, title_bar_alpha = title_bar_alpha, 
-                          title_just = title_just)
-    }
-    rayimage::plot_image(hillshade, asp = asp, ...)
-  } else if(length(dim(hillshade)) == 2) {
-    if(number_of_rots != 0) {
-      for(j in 1:number_of_rots) {
-        hillshade = rotatef(hillshade)
-      }
-    }
-    array_from_mat = array(fliplr(t(hillshade)),dim=c(ncol(hillshade),nrow(hillshade),3))
-    if(has_title) {
-      array_from_mat = rayimage::render_title(array_from_mat, title_text = title_text, title_offset = title_offset,
-                          title_color = title_color, title_size = title_size,
-                          title_font = title_font, title_style = title_style,
-                          title_bar_color = title_bar_color, title_bar_alpha = title_bar_alpha, 
-                          title_just = title_just)
-    }
-    rayimage::plot_image(array_from_mat, asp = asp, ...)
-  } else {
-    stop("`hillshade` is neither array nor matrix--convert to either to plot.")
-  }
+  rayimage::plot_image(hillshade_img, asp = asp, ...)
 }

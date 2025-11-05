@@ -132,30 +132,30 @@ building_polys = osm_data$osm_polygons
 osm_dem = elevatr::get_elev_raster(building_polys, z = 11, clip = "bbox")
 e = extent(building_polys)
 
-# Crop DEM, but note that the cropped DEM will have an extent slightly different than what's 
+# Crop DEM, but note that the cropped DEM will have an extent slightly different than what's
 # specified in `e`. Save that new extent to `new_e`.
-osm_dem |> 
-  crop(e) |> 
+osm_dem |>
+  crop(e) |>
   extent() ->
 new_e
 
-osm_dem |> 
-  crop(e) |> 
+osm_dem |>
+  crop(e) |>
   raster_to_matrix() ->
 osm_mat
 
 #Visualize areas less than one meter as water (approximate tidal range)
 osm_mat[osm_mat <= 1] = -2
 
-osm_mat \%>\%
-  rayimage::render_resized(mag=4) |> 
+osm_mat |>
+  rayimage::render_resized(mag=4) |>
   sphere_shade(texture = "desert") |>
   add_overlay(generate_polygon_overlay(building_polys, extent = new_e,
-                                       heightmap = osm_mat, 
+                                       heightmap = osm_mat,
                                        linewidth = 6,
                                        resolution_multiply = 50), rescale_original = TRUE) |>
   add_overlay(generate_line_overlay(osm_road$osm_lines, extent = new_e,
-                                    heightmap = osm_mat, 
+                                    heightmap = osm_mat,
                                     linewidth = 6,
                                     resolution_multiply = 50), rescale_original = TRUE) |>
   plot_3d(osm_mat, water = TRUE, windowsize = 800, watercolor = "dodgerblue",
@@ -163,8 +163,8 @@ osm_mat \%>\%
           background = "pink")
 
 #Render buildings
-render_buildings(building_polys,  flat_shading  = TRUE, 
-                 angle = 30 , heightmap = osm_mat, 
+render_buildings(building_polys,  flat_shading  = TRUE,
+                 angle = 30 , heightmap = osm_mat,
                  material = "white", roof_material = "white",
                  extent = new_e, roof_height = 3, base_height = 0,
                  zscale=10)
@@ -177,7 +177,7 @@ if(run_documentation()) {
 render_camera(fov=110)
 render_highquality(camera_location = c(18.22, 0.57, -50.83),
                    camera_lookat = c(20.88, -2.83, -38.87),
-                   focal_distance = 13, 
+                   focal_distance = 13, samples = 16,
                    lightdirection = 45)
 
 }
