@@ -20,7 +20,7 @@ value is NA, in which the point will be removed)."><meta property="og:image" con
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.39.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.39.2</span>
       </span>
     </div>
 
@@ -112,7 +112,7 @@ value is NA, in which the point will be removed).</p>
 <span>  extent <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  zscale <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  heightmap <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  size <span class="op">=</span> <span class="fl">3</span>,</span>
+<span>  size <span class="op">=</span> <span class="fl">0.5</span>,</span>
 <span>  color <span class="op">=</span> <span class="st">"black"</span>,</span>
 <span>  offset <span class="op">=</span> <span class="fl">5</span>,</span>
 <span>  clear_previous <span class="op">=</span> <span class="cn">FALSE</span></span>
@@ -238,14 +238,14 @@ a size for each point.</p></dd>
 <span class="r-plt img"><img src="render_points-2.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#And all of these work with `render_highquality()`</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="render_highquality.html">render_highquality</a></span><span class="op">(</span>point_radius <span class="op">=</span> <span class="fl">6</span>, min_variance <span class="op">=</span> <span class="fl">0</span>, samples <span class="op">=</span> <span class="fl">16</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="render_highquality.html">render_highquality</a></span><span class="op">(</span>point_radius <span class="op">=</span> <span class="fl">0.5</span>, min_variance <span class="op">=</span> <span class="fl">0</span>, samples <span class="op">=</span> <span class="fl">16</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-plt img"><img src="render_points-3.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#We can also change the material of the objects by setting the `point_material` and</span></span></span>
 <span class="r-in"><span><span class="co">#`point_material_args` arguments in `render_highquality()`</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="render_highquality.html">render_highquality</a></span><span class="op">(</span>point_radius <span class="op">=</span> <span class="fl">6</span>, min_variance <span class="op">=</span> <span class="fl">0</span>, samples <span class="op">=</span> <span class="fl">16</span>,</span></span>
+<span class="r-in"><span><span class="fu"><a href="render_highquality.html">render_highquality</a></span><span class="op">(</span>point_radius <span class="op">=</span> <span class="fl">0.5</span>, min_variance <span class="op">=</span> <span class="fl">0</span>, samples <span class="op">=</span> <span class="fl">16</span>,</span></span>
 <span class="r-in"><span>                  point_material <span class="op">=</span> <span class="fu">rayrender</span><span class="fu">::</span><span class="va"><a href="http://www.rayrender.net/reference/glossy.html" class="external-link">glossy</a></span>,</span></span>
 <span class="r-in"><span>                  point_material_args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>gloss <span class="op">=</span> <span class="fl">0.5</span>, reflectance <span class="op">=</span> <span class="fl">0.2</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
