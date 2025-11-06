@@ -117,20 +117,23 @@ generate_contour_overlay = function(
 		level = names(contours),
 		geometry = sf::st_sfc(contours)
 	)
+	if (!(length(find.package("ragg", quiet = TRUE)) > 0)) {
+		png_device = grDevices::png
+	} else {
+		png_device = ragg::agg_png
+	}
 	if (is.na(height)) {
 		height = ncol(heightmap)
 	}
 	if (is.na(width)) {
 		width = nrow(heightmap)
 	}
-	height = height * resolution_multiply
-	width = width * resolution_multiply
 
 	tempoverlay = tempfile(fileext = ".png")
-	grDevices::png(
+	png_device(
 		filename = tempoverlay,
-		width = width,
-		height = height,
+		width = width * resolution_multiply,
+		height = height * resolution_multiply,
 		units = "px",
 		bg = "transparent"
 	)
@@ -141,9 +144,10 @@ generate_contour_overlay = function(
 		ylim = c(1, nrow(heightmap)),
 		xaxs = "i",
 		yaxs = "i",
-		lwd = linewidth,
+		lwd = linewidth_plot,
 		col = color
 	)
 	grDevices::dev.off() #resets par
-	png::readPNG(tempoverlay)
+	overlay_temp = rayimage::ray_read_image(tempoverlay)
+	return(overlay_temp)
 }

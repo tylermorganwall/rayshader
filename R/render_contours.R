@@ -22,7 +22,7 @@
 #'montereybay |>
 #'  height_shade() |>
 #'  add_shadow(ray_shade(montereybay,zscale=50),0.3) |>
-#'  plot_3d(montereybay, theta = -45, zscale=50)
+#'  plot_3d(montereybay, theta = -45, zscale=50, zoom=0.9, windowsize=800)
 #'render_contours(montereybay, zscale = 50, offset = 100)
 #'render_snapshot()
 #'}
@@ -64,7 +64,7 @@ render_contours = function(
 	zscale = 1,
 	levels = NA,
 	nlevels = NA,
-	linewidth = 3,
+	linewidth = 1,
 	color = "black",
 	palette = NULL,
 	antialias = FALSE,

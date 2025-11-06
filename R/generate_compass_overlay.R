@@ -9,7 +9,7 @@
 #'@param y Default `NULL`. The vertical percentage across the map (measured from the bottom-left corner) where
 #'the compass is located.
 #'@param size Default `0.05`. Size of the compass, in percentage of the map size..
-#'@param text_size Default `1`. Text size.
+#'@param text_size Default `1.5`. Text size.
 #'@param bearing Default `0`. Angle (in degrees) of north.
 #'@param color1 Default `white`. Primary color of the compass.
 #'@param color2 Default `black`. Secondary color of the symcompass.
@@ -127,15 +127,15 @@
 #'#Create a drop shadow effect
 #'base_map |>
 #'  add_overlay(generate_compass_overlay(heightmap = montereybay, x = 0.15, y=0.15,
-#'              text_color="white", halo_alpha=0.5, halo_blur=2,
-#'              halo_color="black", halo_expand = 1, halo_offset = c(0.003,-0.003))) |>
+#'              text_color="white", halo_alpha=0.7, halo_blur=3,
+#'              halo_color="black", halo_expand = 2, halo_offset = c(0.002,-0.002))) |>
 #'  plot_map()
 #'}
 generate_compass_overlay = function(
 	x = 0.85,
 	y = 0.15,
 	size = 0.075,
-	text_size = 1,
+	text_size = 1.5,
 	bearing = 0,
 	heightmap = NULL,
 	width = NA,
@@ -152,6 +152,11 @@ generate_compass_overlay = function(
 	halo_offset = c(0, 0),
 	halo_blur = 1
 ) {
+	if (!(length(find.package("ragg", quiet = TRUE)) > 0)) {
+		png_device = grDevices::png
+	} else {
+		png_device = ragg::agg_png
+	}
 	loc = rep(0, 2)
 	loc[1] = x
 	loc[2] = y
@@ -173,7 +178,7 @@ generate_compass_overlay = function(
 	y <- radii[(0:15) + 1] * sin((0:15) * pi / 8 + bearing) + loc[2]
 	# drawing polygons
 	tempoverlay = tempfile(fileext = ".png")
-	grDevices::png(
+	png_device(
 		filename = tempoverlay,
 		width = width,
 		height = height,
@@ -218,21 +223,26 @@ generate_compass_overlay = function(
 	b <- c("E", "N", "W", "S")
 	for (i in 0:3) {
 		graphics::text(
-			(size + graphics::par("cxy")[1]) * cos(bearing + i * pi / 2) + loc[1],
-			(size + graphics::par("cxy")[2]) * sin(bearing + i * pi / 2) + loc[2],
+			(size + graphics::par("cxy")[1] * resolution_multiply) *
+				cos(bearing + i * pi / 2) +
+				loc[1],
+			(size + graphics::par("cxy")[2] * resolution_multiply) *
+				sin(bearing + i * pi / 2) +
+				loc[2],
 			b[i + 1],
 			cex = text_size,
-			col = text_color
+			col = text_color,
+			font = 2
 		)
 	}
 	grDevices::dev.off() #resets par
-	overlay_temp = png::readPNG(tempoverlay)
+	overlay_temp = rayimage::ray_read_image(tempoverlay)
 	if (!is.na(halo_color)) {
 		if (!(length(find.package("rayimage", quiet = TRUE)) > 0)) {
 			stop("{rayimage} package required for `halo_color`")
 		}
 		tempoverlay = tempfile(fileext = ".png")
-		grDevices::png(
+		png_device(
 			filename = tempoverlay,
 			width = width,
 			height = height,
@@ -277,17 +287,18 @@ generate_compass_overlay = function(
 		b <- c("E", "N", "W", "S")
 		for (i in 0:3) {
 			graphics::text(
-				(size + graphics::par("cxy")[1]) *
+				(size + graphics::par("cxy")[1] * resolution_multiply) *
 					cos(bearing + i * pi / 2) +
 					loc[1] +
 					halo_offset[1],
-				(size + graphics::par("cxy")[2]) *
+				(size + graphics::par("cxy")[2] * resolution_multiply) *
 					sin(bearing + i * pi / 2) +
 					loc[2] +
 					halo_offset[2],
 				b[i + 1],
 				cex = text_size,
-				col = text_color
+				col = text_color,
+				font = 2
 			)
 		}
 		grDevices::dev.off() #resets par
@@ -302,25 +313,26 @@ generate_compass_overlay = function(
 				booldistance[booldistance < 1 & booldistance > 0]
 			temp_alpha[booldistance > 1] = 0
 			col_below = col2rgb_linear(halo_color)
-			temp_array = array(0, dim = dim(overlay_temp_under))
-			temp_array[,, 1] = col_below[1]
-			temp_array[,, 2] = col_below[2]
-			temp_array[,, 3] = col_below[3]
-			temp_array[,, 4] = temp_alpha * halo_alpha
-			overlay_temp_under = temp_array
+			overlay_temp_under[,, 1] = col_below[1]
+			overlay_temp_under[,, 2] = col_below[2]
+			overlay_temp_under[,, 3] = col_below[3]
+			overlay_temp_under[,, 4] = temp_alpha * halo_alpha
 		}
 		if (halo_blur > 0) {
-			overlay_temp_under = rayimage::render_convolution(
+			overlay_temp_under = rayimage::render_convolution_fft(
 				overlay_temp_under,
 				kernel = rayimage::generate_2d_gaussian(
 					sd = halo_blur,
 					dim = 31,
 					width = 30
 				),
-				progress = FALSE
+				include_alpha = TRUE
 			)
 		}
-		return(rayimage::render_image_overlay(overlay_temp_under, overlay_temp))
+		overlay_temp = rayimage::render_image_overlay(
+			overlay_temp_under,
+			overlay_temp
+		)
 	}
 	return(overlay_temp)
 }

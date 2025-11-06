@@ -8,7 +8,7 @@ generate_compass_overlay(
   x = 0.85,
   y = 0.15,
   size = 0.075,
-  text_size = 1,
+  text_size = 1.5,
   bearing = 0,
   heightmap = NULL,
   width = NA,
@@ -35,7 +35,7 @@ the compass is located.}
 
 \item{size}{Default \code{0.05}. Size of the compass, in percentage of the map size..}
 
-\item{text_size}{Default \code{1}. Text size.}
+\item{text_size}{Default \code{1.5}. Text size.}
 
 \item{bearing}{Default \code{0}. Angle (in degrees) of north.}
 
@@ -175,8 +175,8 @@ if(run_documentation()) {
 #Create a drop shadow effect
 base_map |>
  add_overlay(generate_compass_overlay(heightmap = montereybay, x = 0.15, y=0.15,
-             text_color="white", halo_alpha=0.5, halo_blur=2,
-             halo_color="black", halo_expand = 1, halo_offset = c(0.003,-0.003))) |>
+             text_color="white", halo_alpha=0.7, halo_blur=3,
+             halo_color="black", halo_expand = 2, halo_offset = c(0.002,-0.002))) |>
  plot_map()
 }
 }

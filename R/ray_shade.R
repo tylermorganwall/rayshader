@@ -69,6 +69,9 @@ ray_shade = function(
 	anglebreaks = NULL,
 	...
 ) {
+	stopifnot(is.matrix(heightmap))
+	originalheightmap = heightmap
+	heightmap = fliplr(t(heightmap))
 	if (is.null(anglebreaks)) {
 		anglebreaks = seq(
 			max(0, sunaltitude - 0.533 / 2),
@@ -85,8 +88,7 @@ ray_shade = function(
 	}
 	anglebreaks = anglebreaks[order(anglebreaks)]
 	anglebreaks_rad = anglebreaks * pi / 180
-	sunangle_rad = pi + sunangle * pi / 180
-	originalheightmap = heightmap
+	sunangle_rad_ray = -pi / 2 - sunangle * pi / 180
 	heightmap = add_padding(heightmap)
 	if (is.null(cache_mask)) {
 		cache_mask = matrix(1, nrow = nrow(heightmap), ncol = ncol(heightmap))
@@ -96,15 +98,15 @@ ray_shade = function(
 		cache_mask = padding
 	}
 	if (!multicore) {
-		shadowmatrix = rayshade_cpp(
-			sunangle = sunangle_rad,
+		shadowmatrix = fliplr(rayshade_cpp(
+			sunangle = sunangle_rad_ray,
 			anglebreaks = anglebreaks_rad,
-			heightmap = flipud(heightmap),
+			heightmap = heightmap,
 			zscale = zscale,
 			maxsearch = maxsearch,
 			cache_mask = cache_mask,
 			progbar = progbar
-		)
+		))
 		shadowmatrix = shadowmatrix[
 			c(-1, -nrow(shadowmatrix)),
 			c(-1, -ncol(shadowmatrix))
@@ -128,7 +130,7 @@ ray_shade = function(
 				ncol = ncol(shadowmatrix)
 			)
 		}
-		return(shadowmatrix)
+		return((shadowmatrix))
 	} else {
 		if (is.null(options("cores")[[1]])) {
 			numbercores = parallel::detectCores()
@@ -163,9 +165,9 @@ ray_shade = function(
 				) %dopar%
 					{
 						rayshade_multicore(
-							sunangle = sunangle_rad,
+							sunangle = sunangle_rad_ray,
 							anglebreaks = anglebreaks_rad,
-							heightmap = flipud(heightmap),
+							heightmap = heightmap,
 							zscale = zscale,
 							chunkindices = c(itervec[i], (itervec[i + 1])),
 							maxsearch = maxsearch,
@@ -190,6 +192,7 @@ ray_shade = function(
 			c(-1, -nrow(shadowmatrix)),
 			c(-1, -ncol(shadowmatrix))
 		]
+		shadowmatrix = fliplr(shadowmatrix)
 		cache_mask = cache_mask[c(-1, -nrow(cache_mask)), c(-1, -ncol(cache_mask))]
 		if (lambert) {
 			shadowmatrix = shadowmatrix *

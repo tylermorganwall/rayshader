@@ -30,7 +30,7 @@
 #'  #Generate Overlays
 #'  road_overlay = generate_line_overlay(monterey_roads_sf, attr(montereybay,"extent"),
 #'                                       heightmap = montereybay)
-#'  point_overlay = generate_point_overlay(monterey_city, color="red", size=12,
+#'  point_overlay = generate_point_overlay(monterey_city, color="red", size=1,
 #'                                         attr(montereybay,"extent"), heightmap = montereybay)
 #'
 #'  #Create 3D plot (water transparency set to 1 because multiple transparency layers can interfere)
@@ -52,109 +52,109 @@
 #'}
 #'}
 render_floating_overlay = function(
-  overlay = NULL,
-  altitude = NULL,
-  heightmap = NULL,
-  zscale = 1,
-  alpha = 1,
-  baseshape = "rectangle",
-  remove_na = TRUE,
-  reorient = TRUE,
-  clear_layers = FALSE,
-  horizontal_offset = c(0, 0),
-  ...
+	overlay = NULL,
+	altitude = NULL,
+	heightmap = NULL,
+	zscale = 1,
+	alpha = 1,
+	baseshape = "rectangle",
+	remove_na = TRUE,
+	reorient = TRUE,
+	clear_layers = FALSE,
+	horizontal_offset = c(0, 0),
+	...
 ) {
-  if (clear_layers) {
-    rgl::pop3d(tag = c("floating_overlay", "floating_overlay_tris"))
-    if (is.null(overlay)) {
-      return(invisible())
-    }
-  }
-  if (is.null(overlay)) {
-    stop("Must specify overlay")
-  }
-  if (is.null(altitude)) {
-    stop("Must specify altitude")
-  }
-  overlay = rayimage::ray_read_image(overlay)
-  if (alpha != 1 && length(dim(overlay)) == 3) {
-    if (dim(overlay)[3] == 4) {
-      overlay[,, 4] = overlay[,, 4] * alpha
-    }
-    if (dim(overlay)[3] == 2) {
-      overlay[,, 2] = overlay[,, 2] * alpha
-    }
-  }
-  if (missing(altitude)) {
-    stop("Must pass altitude value")
-  }
-  overlay = rayimage::render_clamp(overlay)
+	if (clear_layers) {
+		rgl::pop3d(tag = c("floating_overlay", "floating_overlay_tris"))
+		if (is.null(overlay)) {
+			return(invisible())
+		}
+	}
+	if (is.null(overlay)) {
+		stop("Must specify overlay")
+	}
+	if (is.null(altitude)) {
+		stop("Must specify altitude")
+	}
+	overlay = rayimage::ray_read_image(overlay)
+	if (alpha != 1 && length(dim(overlay)) == 3) {
+		if (dim(overlay)[3] == 4) {
+			overlay[,, 4] = overlay[,, 4] * alpha
+		}
+		if (dim(overlay)[3] == 2) {
+			overlay[,, 2] = overlay[,, 2] * alpha
+		}
+	}
+	if (missing(altitude)) {
+		stop("Must pass altitude value")
+	}
+	overlay = rayimage::render_clamp(overlay)
 
-  hm = matrix(altitude, nrow = dim(overlay)[1], ncol = dim(overlay)[2])
-  tempmap = tempfile(fileext = ".png")
-  if (baseshape != "rectangle") {
-    overlay_alpha = is.na(generate_base_shape(
-      overlay[,, 1],
-      baseshape,
-      angle = 30 * pi / 180
-    ))
-    overlay[,, 4][overlay_alpha] = 0
-  }
-  if (remove_na && !is.null(heightmap)) {
-    if (
-      any(dim(overlay)[1:2] != dim(heightmap)[1:2]) && any(is.na(heightmap))
-    ) {
-      stop(
-        "If `remove_na = TRUE`, `heightmap` and `overlay` must have same number of rows and columns to make overlay transparent at those points"
-      )
-    }
-    if (any(is.na(heightmap))) {
-      overlay[,, 4][is.na(heightmap)] = 0
-    }
-  }
-  if (is.null(heightmap)) {
-    rows = nrow(hm)
-    cols = ncol(hm)
-  } else {
-    rows = nrow(heightmap)
-    cols = ncol(heightmap)
-  }
+	hm = matrix(altitude, nrow = dim(overlay)[1], ncol = dim(overlay)[2])
+	tempmap = tempfile(fileext = ".png")
+	if (baseshape != "rectangle") {
+		overlay_alpha = is.na(generate_base_shape(
+			overlay[,, 1],
+			baseshape,
+			angle = 30 * pi / 180
+		))
+		overlay[,, 4][overlay_alpha] = 0
+	}
+	if (remove_na && !is.null(heightmap)) {
+		if (
+			any(dim(overlay)[1:2] != dim(heightmap)[1:2]) && any(is.na(heightmap))
+		) {
+			stop(
+				"If `remove_na = TRUE`, `heightmap` and `overlay` must have same number of rows and columns to make overlay transparent at those points"
+			)
+		}
+		if (any(is.na(heightmap))) {
+			overlay[,, 4][is.na(heightmap)] = 0
+		}
+	}
+	if (is.null(heightmap)) {
+		rows = nrow(hm)
+		cols = ncol(hm)
+	} else {
+		rows = nrow(heightmap)
+		cols = ncol(heightmap)
+	}
 
-  rayimage::ray_write_image(overlay, tempmap)
-  dim(heightmap) = unname(dim(heightmap))
-  rowmin = min((+1):(rows) - rows / 2) + horizontal_offset[1]
-  rowmax = max((+1):(rows) - rows / 2) + horizontal_offset[1]
-  colmin = min(-(+1):-(cols) + cols / 2 + 1) + horizontal_offset[2]
-  colmax = max(-(+1):-(cols) + cols / 2 + 1) + horizontal_offset[2]
-  depth = altitude / zscale
+	rayimage::ray_write_image(overlay, tempmap)
+	dim(heightmap) = unname(dim(heightmap))
+	rowmin = min((+1):(rows) - rows / 2) + horizontal_offset[1]
+	rowmax = max((+1):(rows) - rows / 2) + horizontal_offset[1]
+	colmin = min(-(+1):-(cols) + cols / 2 + 1) + horizontal_offset[2]
+	colmax = max(-(+1):-(cols) + cols / 2 + 1) + horizontal_offset[2]
+	depth = altitude / zscale
 
-  tri1 = matrix(
-    c(rowmax, rowmax, rowmin, depth, depth, depth, colmax, colmin, colmin),
-    nrow = 3,
-    ncol = 3
-  )
-  tri2 = matrix(
-    c(rowmin, rowmax, rowmin, depth, depth, depth, colmax, colmax, colmin),
-    nrow = 3,
-    ncol = 3
-  )
-  rgl::triangles3d(
-    x = rbind(tri1, tri2),
-    texcoords = matrix(
-      c(1, 1, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1),
-      nrow = 6,
-      ncol = 2
-    ),
-    normals = matrix(
-      c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0),
-      nrow = 6,
-      ncol = 3
-    ),
-    texture = tempmap,
-    color = "white",
-    lit = FALSE,
-    tag = "floating_overlay_tris",
-    textype = "rgba",
-    ...
-  )
+	tri1 = matrix(
+		c(rowmax, rowmax, rowmin, depth, depth, depth, colmax, colmin, colmin),
+		nrow = 3,
+		ncol = 3
+	)
+	tri2 = matrix(
+		c(rowmin, rowmax, rowmin, depth, depth, depth, colmax, colmax, colmin),
+		nrow = 3,
+		ncol = 3
+	)
+	rgl::triangles3d(
+		x = rbind(tri1, tri2),
+		texcoords = matrix(
+			c(1, 1, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1),
+			nrow = 6,
+			ncol = 2
+		),
+		normals = matrix(
+			c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0),
+			nrow = 6,
+			ncol = 3
+		),
+		texture = tempmap,
+		color = "white",
+		lit = FALSE,
+		tag = "floating_overlay_tris",
+		textype = "rgba",
+		...
+	)
 }

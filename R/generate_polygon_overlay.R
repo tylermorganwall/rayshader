@@ -103,14 +103,17 @@ generate_polygon_overlay = function(
 		extent
 	)))
 
+	if (!(length(find.package("ragg", quiet = TRUE)) > 0)) {
+		png_device = grDevices::png
+	} else {
+		png_device = ragg::agg_png
+	}
 	if (is.na(height)) {
 		height = ncol(heightmap)
 	}
 	if (is.na(width)) {
 		width = nrow(heightmap)
 	}
-	height = height * resolution_multiply
-	width = width * resolution_multiply
 
 	if (is.function(palette)) {
 		palette = palette(nrow(sf_polygons_cropped))
@@ -163,9 +166,10 @@ generate_polygon_overlay = function(
 	}
 	if (linewidth == 0 || is.na(linewidth)) {
 		lty = "blank"
-		linewidth = 10
+		linewidth_plot = 10
 	} else {
 		lty = "solid"
+		linewidth_plot = linewidth
 	}
 	if (any(offset != 0)) {
 		if (length(offset) == 2) {
@@ -179,10 +183,10 @@ generate_polygon_overlay = function(
 	}
 	extent = get_extent(extent)
 	tempoverlay = tempfile(fileext = ".png")
-	grDevices::png(
+	png_device(
 		filename = tempoverlay,
-		width = width,
-		height = height,
+		width = width * resolution_multiply,
+		height = height * resolution_multiply,
 		units = "px",
 		bg = "transparent"
 	)
@@ -197,7 +201,7 @@ generate_polygon_overlay = function(
 			asp = 1,
 			xaxs = "i",
 			yaxs = "i",
-			lwd = linewidth,
+			lwd = linewidth_plot,
 			col = fillvals
 		)
 	}
@@ -211,11 +215,12 @@ generate_polygon_overlay = function(
 			asp = 1,
 			xaxs = "i",
 			yaxs = "i",
-			lwd = linewidth,
+			lwd = linewidth_plot,
 			col = NA,
 			border = linecolor
 		)
 	}
 	grDevices::dev.off() #resets par
-	png::readPNG(tempoverlay)
+	overlay_temp = rayimage::ray_read_image(tempoverlay)
+	return(overlay_temp)
 }

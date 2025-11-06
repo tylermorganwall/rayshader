@@ -86,13 +86,13 @@
 #'}
 #'if(run_documentation()) {
 #'#And all of these work with `render_highquality()`
-#'render_highquality(point_radius = 6, min_variance = 0, samples = 16)
+#'render_highquality(point_radius = 0.5, min_variance = 0, samples = 16)
 #'}
 #'
 #'if(run_documentation()) {
 #'#We can also change the material of the objects by setting the `point_material` and
 #'#`point_material_args` arguments in `render_highquality()`
-#'render_highquality(point_radius = 6, min_variance = 0, samples = 16,
+#'render_highquality(point_radius = 0.5, min_variance = 0, samples = 16,
 #'                   point_material = rayrender::glossy,
 #'                   point_material_args = list(gloss = 0.5, reflectance = 0.2))
 #'}
@@ -103,7 +103,7 @@ render_points = function(
 	extent = NULL,
 	zscale = 1,
 	heightmap = NULL,
-	size = 3,
+	size = 0.5,
 	color = "black",
 	offset = 5,
 	clear_previous = FALSE

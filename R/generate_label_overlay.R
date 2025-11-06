@@ -196,6 +196,11 @@ generate_label_overlay = function(
 	stopifnot(!missing(labels))
 
 	extent = get_extent(extent)
+	if (!(length(find.package("ragg", quiet = TRUE)) > 0)) {
+		png_device = grDevices::png
+	} else {
+		png_device = ragg::agg_png
+	}
 	if (is.na(height)) {
 		height = ncol(heightmap)
 	}
@@ -206,7 +211,7 @@ generate_label_overlay = function(
 	width = width * resolution_multiply
 
 	tempoverlay = tempfile(fileext = ".png")
-	grDevices::png(
+	png_device(
 		filename = tempoverlay,
 		width = width,
 		height = height,
@@ -250,7 +255,7 @@ generate_label_overlay = function(
 		}
 		set.seed(seed)
 		tempoverlay = tempfile(fileext = ".png")
-		grDevices::png(
+		png_device(
 			filename = tempoverlay,
 			width = width,
 			height = height,
@@ -313,7 +318,10 @@ generate_label_overlay = function(
 				progress = FALSE
 			)
 		}
-		return(rayimage::render_image_overlay(overlay_temp_under, overlay_temp))
+		overlay_temp = rayimage::render_image_overlay(
+			overlay_temp_under,
+			overlay_temp
+		)
 	}
 	return(overlay_temp)
 }

@@ -294,43 +294,43 @@ render_highquality = function(
 	dots_names = names(dot_args)
 	environment_light_path = NULL
 	use_environment_light = FALSE
-	sky_params_provided = (!missing(datetime) && !is.null(datetime)) ||
-		(!missing(lat) && !is.null(lat)) ||
-		(!missing(lon) && !is.null(lon)) ||
-		(!missing(altitude) && !is.null(altitude))
-	if (sky_params_provided) {
-		if (!is.null(dots_names) && "environment_light" %in% dots_names) {
-			warning("`environment_light` supplied in `...`; skipping sky generation.")
-		} else {
-			environment_light_path = tempfile(fileext = ".exr")
-			sky_args = list(filename = environment_light_path)
-			if (!missing(datetime) && !is.null(datetime)) {
-				sky_args$datetime = datetime
-			}
-			if (!missing(lat) && !is.null(lat)) {
-				sky_args$lat = lat
-			}
-			if (!missing(lon) && !is.null(lon)) {
-				sky_args$lon = lon
-			}
-			if (!missing(altitude) && !is.null(altitude)) {
-				sky_args$altitude = altitude
-			}
-			do.call(skymodelr::generate_sky_latlong, sky_args)
-			use_environment_light = TRUE
-			on.exit(
-				{
-					if (
-						!is.null(environment_light_path) &&
-							file.exists(environment_light_path)
-					) {
-						unlink(environment_light_path)
-					}
-				},
-				add = TRUE
-			)
-		}
-	}
+	# sky_params_provided = (!missing(datetime) && !is.null(datetime)) ||
+	# 	(!missing(lat) && !is.null(lat)) ||
+	# 	(!missing(lon) && !is.null(lon)) ||
+	# 	(!missing(altitude) && !is.null(altitude))
+	# if (sky_params_provided) {
+	# 	if (!is.null(dots_names) && "environment_light" %in% dots_names) {
+	# 		warning("`environment_light` supplied in `...`; skipping sky generation.")
+	# 	} else {
+	# 		environment_light_path = tempfile(fileext = ".exr")
+	# 		sky_args = list(filename = environment_light_path)
+	# 		if (!missing(datetime) && !is.null(datetime)) {
+	# 			sky_args$datetime = datetime
+	# 		}
+	# 		if (!missing(lat) && !is.null(lat)) {
+	# 			sky_args$lat = lat
+	# 		}
+	# 		if (!missing(lon) && !is.null(lon)) {
+	# 			sky_args$lon = lon
+	# 		}
+	# 		if (!missing(altitude) && !is.null(altitude)) {
+	# 			sky_args$altitude = altitude
+	# 		}
+	# 		do.call(skymodelr::generate_sky_latlong, sky_args)
+	# 		use_environment_light = TRUE
+	# 		on.exit(
+	# 			{
+	# 				if (
+	# 					!is.null(environment_light_path) &&
+	# 						file.exists(environment_light_path)
+	# 				) {
+	# 					unlink(environment_light_path)
+	# 				}
+	# 			},
+	# 			add = TRUE
+	# 		)
+	# 	}
+	# }
 	environment_light_arg = if (use_environment_light) {
 		environment_light_path
 	} else {

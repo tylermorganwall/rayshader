@@ -11,7 +11,7 @@ generate_point_overlay(
   width = NA,
   height = NA,
   resolution_multiply = 1,
-  pch = 20,
+  pch = 16,
   color = "black",
   size = 1,
   offset = c(0, 0),
@@ -38,7 +38,7 @@ increase the resolution of the overlay, which should make lines/polygons/points 
 Should be combined with \link[=add_overlay]{\code{add_overlay(rescale_original = TRUE)}} to ensure those added details are captured
 in the final map.}
 
-\item{pch}{Default \code{20}, solid. Point symbol.
+\item{pch}{Default \code{16}, solid. Point symbol.
 \code{0} = square, \code{1} = circle, \code{2} = triangle point up, \code{3} = plus, \code{4} = cross,
 \code{5} = diamond, \code{6} = triangle point down, \code{7} = square cross, \code{8} = star,
 \code{9} = diamond plus, \code{10} = circle plus, \code{11} = triangles up and down,
@@ -69,7 +69,7 @@ if(run_documentation()) {
  monterey_city = sf::st_sfc(sf::st_point(c(-121.893611, 36.603056)))
  montereybay |>
    height_shade() |>
-   add_overlay(generate_point_overlay(monterey_city, color="red", size=12,
+   add_overlay(generate_point_overlay(monterey_city, color="red", size=2,
                                    attr(montereybay,"extent"), heightmap = montereybay))  |>
    add_shadow(ray_shade(montereybay,zscale=50),0.3) |>
    plot_map()

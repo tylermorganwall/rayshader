@@ -17,7 +17,7 @@
 #'in the final map.
 #'@param color Default `black`. Color of the points.
 #'@param size Default `1`. Point size.
-#'@param pch Default `20`, solid. Point symbol.
+#'@param pch Default `16`, solid. Point symbol.
 #' `0` = square, `1` = circle, `2` = triangle point up, `3` = plus, `4` = cross,
 #' `5` = diamond, `6` = triangle point down, `7` = square cross, `8` = star,
 #' `9` = diamond plus, `10` = circle plus, `11` = triangles up and down,
@@ -37,7 +37,7 @@
 #'  monterey_city = sf::st_sfc(sf::st_point(c(-121.893611, 36.603056)))
 #'  montereybay |>
 #'    height_shade() |>
-#'    add_overlay(generate_point_overlay(monterey_city, color="red", size=12,
+#'    add_overlay(generate_point_overlay(monterey_city, color="red", size=2,
 #'                                    attr(montereybay,"extent"), heightmap = montereybay))  |>
 #'    add_shadow(ray_shade(montereybay,zscale=50),0.3) |>
 #'    plot_map()
@@ -49,7 +49,7 @@ generate_point_overlay = function(
 	width = NA,
 	height = NA,
 	resolution_multiply = 1,
-	pch = 20,
+	pch = 16,
 	color = "black",
 	size = 1,
 	offset = c(0, 0),
@@ -79,15 +79,17 @@ generate_point_overlay = function(
 		extent
 	)))
 
+	if (!(length(find.package("ragg", quiet = TRUE)) > 0)) {
+		png_device = grDevices::png
+	} else {
+		png_device = ragg::agg_png
+	}
 	if (is.na(height)) {
 		height = ncol(heightmap)
 	}
 	if (is.na(width)) {
 		width = nrow(heightmap)
 	}
-	height = height * resolution_multiply
-	width = width * resolution_multiply
-
 	if (!is.null(data_column_width)) {
 		if (data_column_width %in% colnames(sf_point_cropped)) {
 			widthvals = sf_point_cropped[[data_column_width]] /
@@ -115,10 +117,10 @@ generate_point_overlay = function(
 	}
 	extent = get_extent(extent)
 	tempoverlay = tempfile(fileext = ".png")
-	grDevices::png(
+	png_device(
 		filename = tempoverlay,
-		width = width,
-		height = height,
+		width = width * resolution_multiply,
+		height = height * resolution_multiply,
 		units = "px",
 		bg = "transparent"
 	)
@@ -127,6 +129,7 @@ generate_point_overlay = function(
 		base::suppressWarnings(sf::st_geometry(sf_point_cropped)),
 		xlim = c(extent["xmin"], extent["xmax"]),
 		ylim = c(extent["ymin"], extent["ymax"]),
+		cex = size,
 		asp = 1,
 		pch = pch,
 		xaxs = "i",
@@ -135,5 +138,6 @@ generate_point_overlay = function(
 		col = color
 	)
 	grDevices::dev.off() #resets par
-	png::readPNG(tempoverlay)
+	overlay_temp = rayimage::ray_read_image(tempoverlay)
+	return(overlay_temp)
 }

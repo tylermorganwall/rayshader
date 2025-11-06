@@ -167,13 +167,13 @@ render_snapshot()
 if(run_documentation()) {
 #And all of these work with `render_highquality()`. Here, I set `use_extruded_paths = TRUE`
 #to get thick continuous paths.
-render_highquality(line_radius=3, min_variance = 0,
+render_highquality(line_radius=0.5, min_variance = 0,
                   use_extruded_paths = TRUE, samples = 16)
 }
 if(run_documentation()) {
 #We can also change the material of the objects by setting the `point_material` and
 #`point_material_args` arguments in `render_highquality()`
-render_highquality(line_radius=3, min_variance = 0, samples = 16,
+render_highquality(line_radius=0.5, min_variance = 0, samples = 16,
                   path_material = rayrender::glossy,  use_extruded_paths = TRUE,
                   path_material_args = list(gloss = 0.5, reflectance = 0.2))
 }

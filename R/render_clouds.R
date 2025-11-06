@@ -120,6 +120,7 @@ generate_cloud_layer = function(
 	atten = matrix(1, nrow, ncol)
 	altitude = start_altitude
 	inc = 1
+
 	while (altitude < end_altitude) {
 		trans_mat = scales::rescale(
 			gen_fractal_perlin(
@@ -681,13 +682,13 @@ cloud_shade = function(
 	start_altitude_scaled = start_altitude / zscale
 	end_altitude_scaled = end_altitude / zscale
 
-	return(flipud(raymarch_cloud_layer(
+	return(t(raymarch_cloud_layer(
 		heightmap = heightmap / zscale,
 		coef = attenuation_coef,
 		start_noise = 0,
 		end_noise = (end_altitude - start_altitude) * scale_layers,
-		start_altitude_real = start_altitude_scaled, # << unit-consistent
-		end_altitude_real = end_altitude_scaled, # << unit-consistent
+		start_altitude_real = start_altitude_scaled,
+		end_altitude_real = end_altitude_scaled,
 		time = time,
 		sun_altitude = sun_altitude,
 		alpha_coef = alpha_coef,

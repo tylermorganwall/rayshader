@@ -43,31 +43,31 @@
 #'  plot_map()
 #'}
 add_shadow = function(
-  hillshade,
-  shadowmap,
-  max_darken = 0.7,
-  rescale_original = FALSE
+	hillshade,
+	shadowmap,
+	max_darken = 0.7,
+	rescale_original = FALSE
 ) {
-  if (length(dim(shadowmap)) == 3 && length(dim(hillshade)) == 2) {
-    tempstore = hillshade
-    hillshade = shadowmap
-    shadowmap = tempstore
-  }
-  shadowmap = scales::rescale(shadowmap, to = c(max_darken, 1), from = c(0, 1))
-  shadow_array = array(0, dim = c(dim(shadowmap), 4))
-  shadow_array[,, 4] = 1 - shadowmap
-  shadow_array = rayimage::ray_read_image(
-    shadow_array,
-    assume_colorspace = rayimage::CS_SRGB,
-    assume_white = "D65",
-    source_linear = TRUE
-  )
-  return(rayimage::render_image_overlay(
-    hillshade,
-    image_overlay = rayimage::render_reorient(
-      shadow_array,
-      transpose = TRUE,
-      flipy = TRUE
-    )
-  ))
+	if (length(dim(shadowmap)) == 3 && length(dim(hillshade)) == 2) {
+		tempstore = hillshade
+		hillshade = shadowmap
+		shadowmap = tempstore
+	}
+	shadowmap = scales::rescale(shadowmap, to = c(max_darken, 1), from = c(0, 1))
+	shadow_array = array(0, dim = c(dim(shadowmap), 4))
+	shadow_array[,, 4] = 1 - shadowmap
+	shadow_array = rayimage::ray_read_image(
+		shadow_array,
+		assume_colorspace = rayimage::CS_SRGB,
+		assume_white = "D65",
+		source_linear = TRUE
+	)
+	return(rayimage::render_image_overlay(
+		hillshade,
+		image_overlay = rayimage::render_reorient(
+			shadow_array,
+			transpose = FALSE,
+			flipy = FALSE
+		)
+	))
 }

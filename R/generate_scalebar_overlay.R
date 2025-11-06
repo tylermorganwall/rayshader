@@ -134,7 +134,7 @@
 #'base_map |>
 #'  add_overlay(generate_scalebar_overlay(extent = mb_extent, length = 40000,
 #'                                        halo_color = "white", halo_expand = 1,
-#'                                        heightmap = montereybay,
+#'                                        heightmap = montereybay, font = 2,
 #'                                        latlong=TRUE)) |>
 #'  plot_map()
 #'}
@@ -144,7 +144,7 @@
 #'  add_overlay(generate_scalebar_overlay(extent = mb_extent, length = 40000, x = 0.07,
 #'                                        bearing=0, adj = 0, flip_ticks = TRUE,
 #'                                        halo_color = "white", halo_expand = 1.5,
-#'                                        heightmap = montereybay,
+#'                                        heightmap = montereybay, font = 2,
 #'                                        latlong=TRUE)) |>
 #'  plot_map()
 #'}
@@ -209,14 +209,26 @@ generate_scalebar_overlay = function(
 	halo_offset[1] = halo_offset[1] * xdiff
 	halo_offset[2] = halo_offset[2] * ydiff
 
+	if (!(length(find.package("ragg", quiet = TRUE)) > 0)) {
+		png_device = grDevices::png
+	} else {
+		png_device = ragg::agg_png
+	}
 	if (is.na(height)) {
 		height = ncol(heightmap)
 	}
 	if (is.na(width)) {
 		width = nrow(heightmap)
 	}
+	og_height = height
+	og_width = width
 	height = height * resolution_multiply
 	width = width * resolution_multiply
+	text_size = text_size * resolution_multiply
+	border_width = border_width * resolution_multiply
+	tick_width = tick_width * resolution_multiply
+	halo_expand = halo_expand * resolution_multiply
+	halo_blur = halo_blur * resolution_multiply
 
 	if (all(!is.na(labels)) && length(labels) != 3) {
 		stop("If specified, `labels` must be length-3 vector")
@@ -412,7 +424,7 @@ generate_scalebar_overlay = function(
 		}
 	}
 	tempoverlay = tempfile(fileext = ".png")
-	grDevices::png(
+	png_device(
 		filename = tempoverlay,
 		width = width,
 		height = height,
@@ -491,13 +503,13 @@ generate_scalebar_overlay = function(
 	)
 
 	grDevices::dev.off() #resets par
-	overlay_temp = png::readPNG(tempoverlay)
+	overlay_temp = rayimage::ray_read_image(tempoverlay)
 	if (!is.na(halo_color)) {
 		if (!(length(find.package("rayimage", quiet = TRUE)) > 0)) {
 			stop("{rayimage} package required for `halo_color`")
 		}
 		tempoverlay = tempfile(fileext = ".png")
-		grDevices::png(
+		png_device(
 			filename = tempoverlay,
 			width = width,
 			height = height,
@@ -588,17 +600,20 @@ generate_scalebar_overlay = function(
 			overlay_temp_under = temp_array
 		}
 		if (halo_blur > 0) {
-			overlay_temp_under = rayimage::render_convolution(
+			overlay_temp_under = rayimage::render_convolution_fft(
 				overlay_temp_under,
 				kernel = rayimage::generate_2d_gaussian(
 					sd = halo_blur,
 					dim = 31,
 					width = 30
 				),
-				progress = FALSE
+				include_alpha = TRUE
 			)
 		}
-		return(rayimage::render_image_overlay(overlay_temp_under, overlay_temp))
+		overlay_temp = rayimage::render_image_overlay(
+			overlay_temp_under,
+			overlay_temp
+		)
 	}
 	return(overlay_temp)
 }

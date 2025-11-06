@@ -1,7 +1,7 @@
 Package: rayshader
 Type: Package
 Title: Create Maps and Visualize Data in 2D and 3D
-Version: 0.39.1
+Version: 0.39.2
 Date: 2025-11-05
 Authors@R: 
     person("Tyler", "Morgan-Wall", email = "tylermw@gmail.com",role = c("aut", "cph", "cre"), 
@@ -46,7 +46,8 @@ Suggests:
     gridExtra,
     testthat (>= 3.0.0),
     osmdata,
-    raybevel (>= 0.2.1)
+    raybevel (>= 0.2.1),
+	ragg
 LinkingTo: Rcpp, progress, RcppArmadillo
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2

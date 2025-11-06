@@ -94,14 +94,19 @@ generate_line_overlay = function(
 	# sf_lines_cropped = base::suppressMessages(base::suppressWarnings(sf::st_crop(geometry, extent)))
 
 	sf_lines_cropped = geometry
+	if (!(length(find.package("ragg", quiet = TRUE)) > 0)) {
+		png_device = grDevices::png
+	} else {
+		png_device = ragg::agg_png
+	}
 	if (is.na(height)) {
 		height = ncol(heightmap)
 	}
 	if (is.na(width)) {
 		width = nrow(heightmap)
 	}
-	height = height * resolution_multiply
-	width = width * resolution_multiply
+	og_height = height
+	og_width = width
 
 	if (!is.null(data_column_width)) {
 		if (data_column_width %in% colnames(sf_lines_cropped)) {
@@ -130,10 +135,10 @@ generate_line_overlay = function(
 	}
 	extent = get_extent(extent)
 	tempoverlay = tempfile(fileext = ".png")
-	grDevices::png(
+	png_device(
 		filename = tempoverlay,
-		width = width,
-		height = height,
+		width = width * resolution_multiply,
+		height = height * resolution_multiply,
 		units = "px",
 		bg = "transparent"
 	)
@@ -150,5 +155,6 @@ generate_line_overlay = function(
 		col = color
 	)
 	grDevices::dev.off() #resets par
-	png::readPNG(tempoverlay)
+	overlay_temp = rayimage::ray_read_image(tempoverlay)
+	return(overlay_temp)
 }

@@ -72,6 +72,7 @@ texture_shade = function(
 	dy = 1,
 	pad = 50
 ) {
+	heightmap = t(heightmap)
 	heightmap[is.na(heightmap)] = mean(heightmap, na.rm = TRUE)
 	if (detail < 0 || detail > 1) {
 		stop("`detail` should be a number between 0 and 1.")
@@ -120,10 +121,10 @@ texture_shade = function(
 		]
 		rbind(cbind(fftcorn_se, fftcorn_sw), cbind(fftcorn_ne, fftcorn_nw))
 	}
-	fftmat = shift_fft(stats::fft(heightmap))
+	fft_heightmap = shift_fft(stats::fft(heightmap))
 
-	conv1 = matrix(0, nrow(fftmat), ncol(fftmat))
-	conv2 = matrix(0, nrow(fftmat), ncol(fftmat))
+	conv1 = matrix(0, nrow(fft_heightmap), ncol(fft_heightmap))
+	conv2 = matrix(0, nrow(fft_heightmap), ncol(fft_heightmap))
 
 	nr = nrow(conv1)
 	nc = ncol(conv1)
@@ -135,22 +136,22 @@ texture_shade = function(
 		}
 	}
 
-	vals = flipud(abs(stats::fft(
-		shift_fft(fftmat * conv1 * conv2),
+	heightmap_processed = abs(stats::fft(
+		shift_fft(fft_heightmap * conv1 * conv2),
 		inverse = TRUE
-	)))
+	))
 	if (odd_padded_cols) {
-		vals = vals[, -1]
+		heightmap_processed = heightmap_processed[, -1]
 	}
 	if (odd_padded_rows) {
-		vals = vals[-1, ]
+		heightmap_processed = heightmap_processed[-1, ]
 	}
-	vals = trim_padding(vals, pad)
+	heightmap_trimmed = trim_padding(heightmap_processed, pad)
 	if (transform) {
-		vals = scales::rescale(vals, to = c(-1, 1))
-		return((tanh(vals * contrast + brightness) + 1) / 2)
+		heightmap_trimmed = scales::rescale(heightmap_trimmed, to = c(-1, 1))
+		return((tanh(heightmap_trimmed * contrast + brightness) + 1) / 2)
 	} else {
-		vals = scales::rescale(vals, to = c(0, 1))
-		return(vals)
+		heightmap_trimmed = scales::rescale(heightmap_trimmed, to = c(0, 1))
+		return(heightmap_trimmed)
 	}
 }

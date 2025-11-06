@@ -48,10 +48,12 @@ ambient_shade = function(
 	progbar = interactive(),
 	...
 ) {
+	stopifnot(is.matrix(heightmap))
 	if (sunbreaks < 3) {
 		stop("sunbreaks needs to be at least 3")
 	}
-	shademat = matrix(0, nrow = nrow(heightmap), ncol = ncol(heightmap))
+
+	shademat = matrix(0, nrow = ncol(heightmap), ncol = nrow(heightmap))
 	if (!multicore) {
 		for (angle in seq(0, 360, length.out = sunbreaks + 1)[-(sunbreaks + 1)]) {
 			shademat = shademat +

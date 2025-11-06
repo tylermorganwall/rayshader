@@ -206,7 +206,7 @@ if(run_documentation()) {
 base_map |>
  add_overlay(generate_scalebar_overlay(extent = mb_extent, length = 40000,
                                        halo_color = "white", halo_expand = 1,
-                                       heightmap = montereybay,
+                                       heightmap = montereybay, font = 2,
                                        latlong=TRUE)) |>
  plot_map()
 }
@@ -216,7 +216,7 @@ base_map |>
  add_overlay(generate_scalebar_overlay(extent = mb_extent, length = 40000, x = 0.07,
                                        bearing=0, adj = 0, flip_ticks = TRUE,
                                        halo_color = "white", halo_expand = 1.5,
-                                       heightmap = montereybay,
+                                       heightmap = montereybay, font = 2,
                                        latlong=TRUE)) |>
  plot_map()
 }
