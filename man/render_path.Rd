@@ -19,7 +19,7 @@ render_path(
   reorder_duplicate_tolerance = 0.1,
   reorder_merge_tolerance = 1,
   simplify_tolerance = 0,
-  linewidth = 3,
+  linewidth = 0.5,
   color = "black",
   antialias = FALSE,
   offset = 5,

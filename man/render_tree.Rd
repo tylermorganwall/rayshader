@@ -186,14 +186,14 @@ tree_locations = sf::st_coordinates(tree_top_data)
 #Convert DEM to a matrix and extract the extent of the scene
 dem_matrix = raster_to_matrix(dem)
 dem_extent = terra::ext(dem)
-extent_values = dem_extent@ptr$vector
+extent_values = dem_extent@pntr$vector
 
 #Plot the ground
 dem_matrix |>
  height_shade() |>
  add_shadow(texture_shade(dem_matrix),0.2) |>
  add_shadow(lamb_shade(dem_matrix),0) |>
- plot_3d(dem_matrix)
+ plot_3d(dem_matrix, windowsize = 800)
 render_snapshot()
 }
 if (run_example) {
@@ -219,7 +219,7 @@ render_snapshot()
 if (run_example) {
 #Render tree also works with `render_highquality()`
 render_highquality(lightdirection=c(90,45),lightaltitude=c(90,45),
-                  lightcolor=c("dodgerblue","orange"), samples = 16,
+                  lightcolor=c("dodgerblue","orange"), samples = 32,
                   min_variance = 0)
 }
 }

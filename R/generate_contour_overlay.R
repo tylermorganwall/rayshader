@@ -77,77 +77,77 @@
 #'  plot_map()
 #'}
 generate_contour_overlay = function(
-	heightmap,
-	levels = NA,
-	nlevels = NA,
-	zscale = 1,
-	width = NA,
-	height = NA,
-	resolution_multiply = 1,
-	color = "black",
-	linewidth = 1
+  heightmap,
+  levels = NA,
+  nlevels = NA,
+  zscale = 1,
+  width = NA,
+  height = NA,
+  resolution_multiply = 1,
+  color = "black",
+  linewidth = 1
 ) {
-	if (!(length(find.package("sf", quiet = TRUE)) > 0)) {
-		stop("`sf` package required for generate_contour_overlay()")
-	}
-	if (!(length(find.package("isoband", quiet = TRUE)) > 0)) {
-		stop("`isoband` package required for generate_contour_overlay()")
-	}
-	if (is.na(levels[1])) {
-		if (is.na(nlevels[1])) {
-			nlevels = 10
-		}
-		rangelevels = range(heightmap, na.rm = TRUE)
-		levels = seq(rangelevels[1], rangelevels[2], length.out = nlevels + 2)
-	} else if (length(levels) == 2 && !is.na(nlevels)) {
-		rangelevels = range(levels, na.rm = TRUE)
-		levels = seq(rangelevels[1], rangelevels[2], length.out = nlevels + 2)
-	}
-	levels = levels[levels > min(heightmap, na.rm = TRUE)]
-	levels = levels[levels < max(heightmap, na.rm = TRUE)]
-	heightmap = flipud(t(heightmap))
-	isolineval = isoband::isolines(
-		x = 1:ncol(heightmap),
-		y = 1:nrow(heightmap),
-		z = heightmap,
-		levels = levels
-	)
-	contours = isoband::iso_to_sfg(isolineval)
-	sf_contours = sf::st_sf(
-		level = names(contours),
-		geometry = sf::st_sfc(contours)
-	)
-	if (!(length(find.package("ragg", quiet = TRUE)) > 0)) {
-		png_device = grDevices::png
-	} else {
-		png_device = ragg::agg_png
-	}
-	if (is.na(height)) {
-		height = ncol(heightmap)
-	}
-	if (is.na(width)) {
-		width = nrow(heightmap)
-	}
+  if (!(length(find.package("sf", quiet = TRUE)) > 0)) {
+    stop("`sf` package required for generate_contour_overlay()")
+  }
+  if (!(length(find.package("isoband", quiet = TRUE)) > 0)) {
+    stop("`isoband` package required for generate_contour_overlay()")
+  }
+  if (is.na(levels[1])) {
+    if (is.na(nlevels[1])) {
+      nlevels = 10
+    }
+    rangelevels = range(heightmap, na.rm = TRUE)
+    levels = seq(rangelevels[1], rangelevels[2], length.out = nlevels + 2)
+  } else if (length(levels) == 2 && !is.na(nlevels)) {
+    rangelevels = range(levels, na.rm = TRUE)
+    levels = seq(rangelevels[1], rangelevels[2], length.out = nlevels + 2)
+  }
+  levels = levels[levels > min(heightmap, na.rm = TRUE)]
+  levels = levels[levels < max(heightmap, na.rm = TRUE)]
+  heightmap = flipud(t(heightmap))
+  isolineval = isoband::isolines(
+    x = 1:ncol(heightmap),
+    y = 1:nrow(heightmap),
+    z = heightmap,
+    levels = levels
+  )
+  contours = isoband::iso_to_sfg(isolineval)
+  sf_contours = sf::st_sf(
+    level = names(contours),
+    geometry = sf::st_sfc(contours)
+  )
+  if (!(length(find.package("ragg", quiet = TRUE)) > 0)) {
+    png_device = grDevices::png
+  } else {
+    png_device = ragg::agg_png
+  }
+  if (is.na(height)) {
+    height = ncol(heightmap)
+  }
+  if (is.na(width)) {
+    width = nrow(heightmap)
+  }
 
-	tempoverlay = tempfile(fileext = ".png")
-	png_device(
-		filename = tempoverlay,
-		width = width * resolution_multiply,
-		height = height * resolution_multiply,
-		units = "px",
-		bg = "transparent"
-	)
-	graphics::par(mar = c(0, 0, 0, 0))
-	graphics::plot(
-		sf::st_geometry(sf_contours),
-		xlim = c(1, ncol(heightmap)),
-		ylim = c(1, nrow(heightmap)),
-		xaxs = "i",
-		yaxs = "i",
-		lwd = linewidth_plot,
-		col = color
-	)
-	grDevices::dev.off() #resets par
-	overlay_temp = rayimage::ray_read_image(tempoverlay)
-	return(overlay_temp)
+  tempoverlay = tempfile(fileext = ".png")
+  png_device(
+    filename = tempoverlay,
+    width = width * resolution_multiply,
+    height = height * resolution_multiply,
+    units = "px",
+    bg = "transparent"
+  )
+  graphics::par(mar = c(0, 0, 0, 0))
+  graphics::plot(
+    sf::st_geometry(sf_contours),
+    xlim = c(1, ncol(heightmap)),
+    ylim = c(1, nrow(heightmap)),
+    xaxs = "i",
+    yaxs = "i",
+    lwd = linewidth,
+    col = color
+  )
+  grDevices::dev.off() #resets par
+  overlay_temp = rayimage::ray_read_image(tempoverlay)
+  return(overlay_temp)
 }

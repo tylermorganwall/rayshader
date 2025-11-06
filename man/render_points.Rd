@@ -11,7 +11,7 @@ render_points(
   extent = NULL,
   zscale = 1,
   heightmap = NULL,
-  size = 3,
+  size = 0.5,
   color = "black",
   offset = 5,
   clear_previous = FALSE
