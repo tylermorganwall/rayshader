@@ -15,18 +15,6 @@ render_movie(
   fov = NULL,
   width = NULL,
   height = NULL,
-  title_text = NULL,
-  title_offset = c(20, 20),
-  title_color = "black",
-  title_size = 30,
-  title_font = "sans",
-  title_bar_color = NA,
-  title_bar_alpha = 0.5,
-  image_overlay = NULL,
-  vignette = FALSE,
-  vignette_color = "black",
-  vignette_radius = 1.3,
-  title_just = "northwest",
   audio = NULL,
   progbar = interactive(),
   ...
@@ -58,47 +46,20 @@ be captured at the resolution (and aspect ratio) of the rgl window.}
 \item{height}{Default \code{NULL}, uses the window size by default. Height of the movie. Note that the frames will still
 be captured at the resolution (and aspect ratio) of the rgl window.}
 
-\item{title_text}{Default \code{NULL}. Text. Adds a title to the movie, using magick::image_annotate.}
-
-\item{title_offset}{Default \code{c(20,20)}. Distance from the top-left (default, \code{gravity} direction in
-image_annotate) corner to offset the title.}
-
-\item{title_color}{Default \code{black}. Font color.}
-
-\item{title_size}{Default \code{30}. Font size in pixels.}
-
-\item{title_font}{Default \code{sans}. String with font family such as "sans", "mono", "serif", "Times", "Helvetica",
-"Trebuchet", "Georgia", "Palatino" or "Comic Sans".}
-
-\item{title_bar_color}{Default \code{NA}. If a color, this will create a colored bar under the title.}
-
-\item{title_bar_alpha}{Default \code{0.5}. Transparency of the title bar.}
-
-\item{image_overlay}{Default \code{NULL}. Either a string indicating the location of a png image to overlay
-over the whole movie (transparency included), or a 4-layer RGBA array. This image will be resized to the
-dimension of the movie if it does not match exactly.}
-
-\item{vignette}{Default \code{FALSE}. If \code{TRUE} or numeric, a camera vignetting effect will be added to the image.
-\code{1} is the darkest vignetting, while \code{0} is no vignetting. If vignette is a length-2 vector, the second entry will
-control the blurriness of the vignette effect.}
-
-\item{vignette_color}{Default \code{"black"}. Color of the vignette.}
-
-\item{vignette_radius}{Default \code{1.3}. Radius of the vignette, as a porportion of the image dimensions.}
-
-\item{title_just}{Default \code{left}. Justification of the title.}
-
 \item{audio}{Default \code{NULL}. Optional file with audio to add to the video.}
 
 \item{progbar}{Default \code{TRUE} if interactive, \code{FALSE} otherwise. If \code{FALSE}, turns off progress bar.
 Will display a progress bar when adding an overlay or title.}
 
-\item{...}{Additional parameters to pass to magick::image_annotate.}
+\item{...}{Additional parameters to pass to \code{\link[=render_snapshot]{render_snapshot()}}.}
 }
 \description{
 Renders a movie using the \pkg{av} or \pkg{gifski} packages. Moves the camera around a 3D visualization
 using either a standard orbit, or accepts vectors listing user-defined values for each camera parameter. If the latter,
 the values must be equal in length to \code{frames} (or of length \code{1}, in which the value will be fixed).
+
+Additional arguments are forwarded to \code{\link[=render_snapshot]{render_snapshot()}} for additional customization arguments (like
+adding titles).
 }
 \examples{
 if(interactive()) {

@@ -4,6 +4,9 @@
 #'using either a standard orbit, or accepts vectors listing user-defined values for each camera parameter. If the latter,
 #'the values must be equal in length to `frames` (or of length `1`, in which the value will be fixed).
 #'
+#'Additional arguments are forwarded to [render_snapshot()] for additional customization arguments (like
+#' adding titles).
+#'
 #'@param filename Filename. If not appended with `.mp4`, it will be appended automatically. If the file extension is `gif`,
 #'the \pkg{gifski} package will be used to generate the animation.
 #'@param type Default `orbit`, which orbits the 3D object at the user-set camera settings `phi`, `zoom`, and `fov`.
@@ -19,28 +22,10 @@
 #'be captured at the resolution (and aspect ratio) of the rgl window.
 #'@param height Default `NULL`, uses the window size by default. Height of the movie. Note that the frames will still
 #'be captured at the resolution (and aspect ratio) of the rgl window.
-#'@param title_text Default `NULL`. Text. Adds a title to the movie, using magick::image_annotate.
-#'@param title_offset Default `c(20,20)`. Distance from the top-left (default, `gravity` direction in
-#'image_annotate) corner to offset the title.
-#'@param title_size Default `30`. Font size in pixels.
-#'@param title_color Default `black`. Font color.
-#'@param title_font Default `sans`. String with font family such as "sans", "mono", "serif", "Times", "Helvetica",
-#'"Trebuchet", "Georgia", "Palatino" or "Comic Sans".
-#'@param title_bar_color Default `NA`. If a color, this will create a colored bar under the title.
-#'@param title_bar_alpha Default `0.5`. Transparency of the title bar.
-#'@param title_just Default `left`. Justification of the title.
-#'@param image_overlay Default `NULL`. Either a string indicating the location of a png image to overlay
-#'over the whole movie (transparency included), or a 4-layer RGBA array. This image will be resized to the
-#'dimension of the movie if it does not match exactly.
-#'@param vignette Default `FALSE`. If `TRUE` or numeric, a camera vignetting effect will be added to the image.
-#'`1` is the darkest vignetting, while `0` is no vignetting. If vignette is a length-2 vector, the second entry will
-#'control the blurriness of the vignette effect.
-#'@param vignette_color Default `"black"`. Color of the vignette.
-#'@param vignette_radius Default `1.3`. Radius of the vignette, as a porportion of the image dimensions.
 #'@param audio Default `NULL`. Optional file with audio to add to the video.
 #'@param progbar Default `TRUE` if interactive, `FALSE` otherwise. If `FALSE`, turns off progress bar.
 #'Will display a progress bar when adding an overlay or title.
-#'@param ... Additional parameters to pass to magick::image_annotate.
+#'@param ... Additional parameters to pass to [render_snapshot()].
 #'@export
 #'@examples
 #'if(interactive()) {
@@ -92,18 +77,6 @@ render_movie = function(
 	fov = NULL,
 	width = NULL,
 	height = NULL,
-	title_text = NULL,
-	title_offset = c(20, 20),
-	title_color = "black",
-	title_size = 30,
-	title_font = "sans",
-	title_bar_color = NA,
-	title_bar_alpha = 0.5,
-	image_overlay = NULL,
-	vignette = FALSE,
-	vignette_color = "black",
-	vignette_radius = 1.3,
-	title_just = "northwest",
 	audio = NULL,
 	progbar = interactive(),
 	...
@@ -130,26 +103,6 @@ render_movie = function(
 		use_av = FALSE
 	}
 
-	if (!is.null(title_text)) {
-		has_title = TRUE
-	} else {
-		has_title = FALSE
-	}
-	if (length(title_offset) != 2) {
-		stop("`title_offset` needs to be length-2 vector")
-	}
-	if (!is.null(image_overlay)) {
-		if ("character" %in% class(image_overlay)) {
-			image_overlay_file = image_overlay
-			has_overlay = TRUE
-		} else if ("array" %in% class(image_overlay)) {
-			image_overlay_file = tempfile()
-			png::writePNG(image_overlay_file)
-			has_overlay = TRUE
-		}
-	} else {
-		has_overlay = FALSE
-	}
 	windowsize = rgl::par3d()$viewport
 	if (is.null(fov)) {
 		fov = rgl::par3d()$FOV
@@ -173,49 +126,28 @@ render_movie = function(
 	png_files = file.path(tempdir(), sprintf("image%d.png", seq_len(frames)))
 	on.exit(unlink(png_files))
 	if (type == "orbit") {
-		theta_vector = seq(0, 360, length.out = frames + 1)[-(frames + 1)]
-		for (i in seq_len(frames)) {
-			render_camera(theta = theta_vector[i], phi = phi, zoom = zoom, fov = fov)
-			rgl::snapshot3d(filename = png_files[i], top = FALSE, webshot = FALSE)
-		}
+		theta = seq(0, 360, length.out = frames + 1)[-(frames + 1)]
 	} else if (type == "oscillate") {
-		theta_vector = theta +
+		theta = theta +
 			45 * sin(seq(0, 360, length.out = frames + 1)[-(frames + 1)] * pi / 180)
-		for (i in seq_len(frames)) {
-			render_camera(theta = theta_vector[i], phi = phi, zoom = zoom, fov = fov)
-			rgl::snapshot3d(filename = png_files[i], top = FALSE, webshot = FALSE)
-		}
-	} else if (type == "custom") {
-		if (length(theta) == 1) {
-			theta = rep(theta, frames)
-		}
-		if (length(phi) == 1) {
-			phi = rep(phi, frames)
-		}
-		if (length(zoom) == 1) {
-			zoom = rep(zoom, frames)
-		}
-		if (length(fov) == 1) {
-			fov = rep(fov, frames)
-		}
-		if (
-			!all(c(length(theta), length(phi), length(zoom), length(fov)) == frames)
-		) {
-			stop("All camera vectors must be the same length (or fixed values)")
-		}
-		for (i in seq_len(frames)) {
-			render_camera(
-				theta = theta[i],
-				phi = phi[i],
-				zoom = zoom[i],
-				fov = fov[i]
-			)
-			rgl::snapshot3d(filename = png_files[i], top = FALSE, webshot = FALSE)
-		}
-	} else {
+	} else if (type != "custom") {
 		stop("Unknown type: ", type)
 	}
-	temp = png::readPNG(png_files[1])
+	df_cam = data.frame(theta = theta, phi = phi, zoom = zoom, fov = fov)
+	theta = df_cam$theta
+	phi = df_cam$phi
+	zoom = df_cam$zoom
+	fov = df_cam$fov
+	for (i in seq_len(frames)) {
+		render_camera(
+			theta = theta[i],
+			phi = phi[i],
+			zoom = zoom[i],
+			fov = fov[i]
+		)
+		render_snapshot(filename = png_files[i], cache_scene = TRUE, ...)
+	}
+	temp = rayimage::ray_read_image(png_files[1])
 	dimensions = dim(temp)
 	if (!is.null(width)) {
 		dimensions[1] = width
@@ -225,81 +157,6 @@ render_movie = function(
 	}
 	if (dimensions[1] %% 2 != 0) {
 		dimensions[1] = dimensions[1] - 1
-	}
-	if (has_overlay) {
-		if (!(length(find.package("magick", quiet = TRUE)) > 0)) {
-			stop("`magick` package required for adding overlay")
-		}
-		if (progbar) {
-			pb = progress::progress_bar$new(
-				format = "  Adding overlay image [:bar] :percent eta: :eta",
-				total = frames,
-				width = 60
-			)
-		}
-		for (i in seq_len(frames)) {
-			if (progbar) {
-				pb$tick()
-			}
-			rayimage::render_image_overlay(
-				png_files[i],
-				image_overlay = image_overlay_file,
-				filename = png_files[i]
-			)
-		}
-	}
-	if (vignette || is.numeric(vignette)) {
-		if (!(length(find.package("magick", quiet = TRUE)) > 0)) {
-			stop("`magick` package required for adding overlay")
-		}
-		if (progbar) {
-			pb = progress::progress_bar$new(
-				format = "  Adding vignetting [:bar] :percent eta: :eta",
-				total = frames,
-				width = 60
-			)
-		}
-		for (i in seq_len(frames)) {
-			if (progbar) {
-				pb$tick()
-			}
-			rayimage::render_vignette(
-				png_files[i],
-				vignette = vignette,
-				filename = png_files[i],
-				color = vignette_color,
-				radius = vignette_radius
-			)
-		}
-	}
-	if (has_title) {
-		if (!(length(find.package("magick", quiet = TRUE)) > 0)) {
-			stop("`magick` package required for adding title")
-		}
-		if (progbar) {
-			pb = progress::progress_bar$new(
-				format = "  Adding title text [:bar] :percent eta: :eta",
-				total = frames,
-				width = 60
-			)
-		}
-		for (i in seq_len(frames)) {
-			if (progbar) {
-				pb$tick()
-			}
-			rayimage::render_title(
-				png_files[i],
-				filename = png_files[i],
-				title_text = title_text,
-				title_bar_color = title_bar_color,
-				title_bar_alpha = title_bar_alpha,
-				title_offset = title_offset,
-				title_color = title_color,
-				title_just = title_just,
-				title_size = title_size,
-				title_font = title_font
-			)
-		}
 	}
 	if (use_av) {
 		av::av_encode_video(
