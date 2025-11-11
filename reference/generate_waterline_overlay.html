@@ -21,7 +21,7 @@ the return_distance_matrix argument to TRUE.'><meta property="og:image" content=
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.39.2</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.39.3</span>
       </span>
     </div>
 
@@ -278,35 +278,35 @@ contour lines.</p></dd>
 <span class="r-in"><span>  <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu">generate_waterline_overlay</span><span class="op">(</span><span class="va">montbay</span>, max <span class="op">=</span> <span class="fl">0.4</span>, smooth<span class="op">=</span><span class="fl">2</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-plt img"><img src="generate_waterline_overlay-5.png" alt="" width="768" height="768"></span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in UseMethod("rescale"):</span> no applicable method for 'rescale' applied to an object of class "c('rayimg', 'matrix', 'array')"</span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#Increase number of breaks</span></span></span>
 <span class="r-in"><span><span class="va">basemap</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu">generate_waterline_overlay</span><span class="op">(</span><span class="va">montbay</span>, breaks <span class="op">=</span> <span class="fl">20</span>, max<span class="op">=</span><span class="fl">0.4</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-plt img"><img src="generate_waterline_overlay-6.png" alt="" width="768" height="768"></span>
+<span class="r-plt img"><img src="generate_waterline_overlay-5.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#Make lines evenly spaced:</span></span></span>
 <span class="r-in"><span><span class="va">basemap</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu">generate_waterline_overlay</span><span class="op">(</span><span class="va">montbay</span>, evenly_spaced <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-plt img"><img src="generate_waterline_overlay-7.png" alt="" width="768" height="768"></span>
+<span class="r-plt img"><img src="generate_waterline_overlay-6.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#Change variable distance between each line</span></span></span>
 <span class="r-in"><span><span class="va">basemap</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu">generate_waterline_overlay</span><span class="op">(</span><span class="va">montbay</span>, falloff<span class="op">=</span><span class="fl">1.5</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-plt img"><img src="generate_waterline_overlay-8.png" alt="" width="768" height="768"></span>
+<span class="r-plt img"><img src="generate_waterline_overlay-7.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#Turn off fading</span></span></span>
 <span class="r-in"><span><span class="va">basemap</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu">generate_waterline_overlay</span><span class="op">(</span><span class="va">montbay</span>, fade<span class="op">=</span><span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-plt img"><img src="generate_waterline_overlay-9.png" alt="" width="768" height="768"></span>
+<span class="r-plt img"><img src="generate_waterline_overlay-8.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#Fill up the entire body of water with lines and make them all 50% transparent</span></span></span>
 <span class="r-in"><span><span class="va">basemap</span> <span class="op">|&gt;</span></span></span>
@@ -314,7 +314,7 @@ contour lines.</p></dd>
 <span class="r-in"><span>                                         evenly_spaced <span class="op">=</span> <span class="cn">TRUE</span>, breaks<span class="op">=</span><span class="fl">50</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span>  <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-plt img"><img src="generate_waterline_overlay-10.png" alt="" width="768" height="768"></span>
+<span class="r-plt img"><img src="generate_waterline_overlay-9.png" alt="" width="768" height="768"></span>
 </code></pre></div>
     </div>
   </div>
@@ -329,7 +329,7 @@ contour lines.</p></dd>
 </div>
 
 <div class="pkgdown">
-  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
+  <p></p><p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
       </footer></div>
