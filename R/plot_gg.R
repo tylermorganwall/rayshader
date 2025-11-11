@@ -202,832 +202,832 @@
 #'render_snapshot()
 #'}
 plot_gg = function(
-	ggobj,
-	ggobj_height = NULL,
-	width = 3,
-	height = 3,
-	height_aes = NULL,
-	invert = FALSE,
-	shadow_intensity = 0.5,
-	units = c("in", "cm", "mm"),
-	scale = 150,
-	pointcontract = 0.7,
-	offset_edges = FALSE,
-	flat_plot_render = FALSE,
-	flat_distance = "auto",
-	flat_transparent_bg = FALSE,
-	flat_direction = "-z",
-	shadow = TRUE,
-	shadowdepth = "auto",
-	shadowcolor = "auto",
-	shadow_darkness = 0.5,
-	background = "white",
-	preview = FALSE,
-	raytrace = TRUE,
-	sunangle = 315,
-	anglebreaks = seq(30, 40, 0.1),
-	multicore = FALSE,
-	lambert = TRUE,
-	triangulate = FALSE,
-	max_error = 0.001,
-	max_tri = 0,
-	verbose = FALSE,
-	emboss_text = 0,
-	emboss_grid = 0,
-	reduce_size = NULL,
-	save_height_matrix = FALSE,
-	save_shadow_matrix = FALSE,
-	saved_shadow_matrix = NULL,
-	...
+  ggobj,
+  ggobj_height = NULL,
+  width = 3,
+  height = 3,
+  height_aes = NULL,
+  invert = FALSE,
+  shadow_intensity = 0.5,
+  units = c("in", "cm", "mm"),
+  scale = 150,
+  pointcontract = 0.7,
+  offset_edges = FALSE,
+  flat_plot_render = FALSE,
+  flat_distance = "auto",
+  flat_transparent_bg = FALSE,
+  flat_direction = "-z",
+  shadow = TRUE,
+  shadowdepth = "auto",
+  shadowcolor = "auto",
+  shadow_darkness = 0.5,
+  background = "white",
+  preview = FALSE,
+  raytrace = TRUE,
+  sunangle = 315,
+  anglebreaks = seq(30, 40, 0.1),
+  multicore = FALSE,
+  lambert = TRUE,
+  triangulate = FALSE,
+  max_error = 0.001,
+  max_tri = 0,
+  verbose = FALSE,
+  emboss_text = 0,
+  emboss_grid = 0,
+  reduce_size = NULL,
+  save_height_matrix = FALSE,
+  save_shadow_matrix = FALSE,
+  saved_shadow_matrix = NULL,
+  ...
 ) {
-	if (!(length(find.package("ggplot2", quiet = TRUE)) > 0)) {
-		stop("Must have ggplot2 installed to use plot_gg()")
-	}
-	heightmaptemp = tempfile(fileext = ".png")
-	colormaptemp = tempfile(fileext = ".png")
-	if (is.null(ggobj_height)) {
-		if (methods::is(ggobj, "list") && length(ggobj) == 2) {
-			stopifnot(inherits(ggobj[[2]], "ggplot"))
-			stopifnot(inherits(ggobj[[1]], "ggplot"))
-			ggplotobj2 = unserialize(serialize(ggobj[[2]], NULL))
-			color_gg = unserialize(serialize(ggobj[[1]], NULL))
-			ggplot2::ggsave(
-				colormaptemp,
-				ggobj[[1]],
-				width = width,
-				height = height,
-				dpi = 300
-			)
-		} else {
-			stopifnot(inherits(ggobj, "ggplot"))
-			ggplotobj2 = unserialize(serialize(ggobj, NULL))
-			color_gg = unserialize(serialize(ggobj, NULL))
-			ggplot2::ggsave(
-				colormaptemp,
-				ggplotobj2,
-				width = width,
-				height = height,
-				dpi = 300
-			)
-		}
-	} else {
-		stopifnot(inherits(ggobj, "ggplot"))
-		stopifnot(inherits(ggobj_height, "ggplot"))
-		ggplotobj2 = unserialize(serialize(ggobj_height, NULL))
-		color_gg = unserialize(serialize(ggobj, NULL))
-		ggplot2::ggsave(
-			colormaptemp,
-			color_gg,
-			width = width,
-			height = height,
-			dpi = 300
-		)
-	}
+  if (!(length(find.package("ggplot2", quiet = TRUE)) > 0)) {
+    stop("Must have ggplot2 installed to use plot_gg()")
+  }
+  heightmaptemp = tempfile(fileext = ".png")
+  colormaptemp = tempfile(fileext = ".png")
+  if (is.null(ggobj_height)) {
+    if (methods::is(ggobj, "list") && length(ggobj) == 2) {
+      stopifnot(inherits(ggobj[[2]], "ggplot"))
+      stopifnot(inherits(ggobj[[1]], "ggplot"))
+      ggplotobj2 = unserialize(serialize(ggobj[[2]], NULL))
+      color_gg = unserialize(serialize(ggobj[[1]], NULL))
+      ggplot2::ggsave(
+        colormaptemp,
+        ggobj[[1]],
+        width = width,
+        height = height,
+        dpi = 300
+      )
+    } else {
+      stopifnot(inherits(ggobj, "ggplot"))
+      ggplotobj2 = unserialize(serialize(ggobj, NULL))
+      color_gg = unserialize(serialize(ggobj, NULL))
+      ggplot2::ggsave(
+        colormaptemp,
+        ggplotobj2,
+        width = width,
+        height = height,
+        dpi = 300
+      )
+    }
+  } else {
+    stopifnot(inherits(ggobj, "ggplot"))
+    stopifnot(inherits(ggobj_height, "ggplot"))
+    ggplotobj2 = unserialize(serialize(ggobj_height, NULL))
+    color_gg = unserialize(serialize(ggobj, NULL))
+    ggplot2::ggsave(
+      colormaptemp,
+      color_gg,
+      width = width,
+      height = height,
+      dpi = 300
+    )
+  }
 
-	set_to_white = function(grob) {
-		if (!is.null(grob[["grobs"]])) {
-			for (j in seq_len(length(grob$grobs))) {
-				grob$grobs[[j]] = set_to_white(grob$grobs[[j]])
-			}
-		} else if (!is.null(grob[["children"]])) {
-			for (j in seq_len(length(grob$children))) {
-				grob$children[[j]] = set_to_white(grob$children[[j]])
-			}
-		} else if (length(grob) == 1 && inherits(grob[[1]], "gTree")) {
-			grob[[1]] = set_to_white(grob[[1]])
-		} else if (
-			!(length(grep("geom", x = grob$name)) > 0) &&
-				!(length(grep("pathgrob", x = grob$name)) > 0)
-		) {
-			grob$gp$col = "white"
-			grob$gp$alpha = 0
-			grob$gp$fill = "white"
-			grob$gp$lwd = 0
-			class(grob$gp) = "gpar"
-		}
-		return(grob)
-	}
-	emboss_gg_text = function(grob, emboss) {
-		if (!is.null(grob[["grobs"]])) {
-			for (j in seq_len(length(grob$grobs))) {
-				grob$grobs[[j]] = emboss_gg_text(grob$grobs[[j]], emboss)
-			}
-		} else if (!is.null(grob[["children"]])) {
-			for (j in seq_len(length(grob$children))) {
-				grob$children[[j]] = emboss_gg_text(grob$children[[j]], emboss)
-			}
-		} else if (all(inherits(grob, c("text", "grob"), which = TRUE) > 0)) {
-			emboss = ceiling(max(c(min(c(emboss, 1)), 0)) * 100)
-			colval = ifelse(emboss != 100, sprintf("grey%d", emboss), "white")
-			grob$gp$col = colval
-			grob$gp$alpha = 1
-			grob$gp$fill = colval
-			class(grob$gp) = "gpar"
-		}
-		return(grob)
-	}
-	emboss_gg_grid = function(grob, emboss) {
-		if (!is.null(grob[["grobs"]])) {
-			for (j in seq_len(length(grob$grobs))) {
-				grob$grobs[[j]] = emboss_gg_grid(grob$grobs[[j]], emboss)
-			}
-		} else if (!is.null(grob[["children"]])) {
-			for (j in seq_len(length(grob$children))) {
-				grob$children[[j]] = emboss_gg_grid(grob$children[[j]], emboss)
-			}
-		} else if (
-			(all(inherits(grob, c("polyline", "grob"), which = TRUE) > 0) &&
-				length(grep("panel.grid", grob$name)) > 0) ||
-				(all(inherits(grob, c("lines", "grob"), which = TRUE) > 0) &&
-					(length(grep("GRID.lines", grob$name)) > 0))
-		) {
-			if (length(grep("GRID.lines", grob$name)) > 0) {
-				emboss = emboss[1]
-			}
-			if (length(grep("panel.grid.major", grob$name)) > 0) {
-				emboss = emboss[1]
-			}
-			if (length(grep("panel.grid.minor", grob$name)) > 0) {
-				emboss = emboss[2]
-			}
-			emboss = ceiling(max(c(min(c(emboss, 1)), 0)) * 100)
-			colval = ifelse(emboss != 100, sprintf("grey%d", emboss), "white")
-			grob$gp$col = colval
-			grob$gp$alpha = 1
-			grob$gp$fill = colval
-			grob$gp$lwd = 1
-			class(grob$gp) = "gpar"
-		}
-		return(grob)
-	}
-	#Determine if auto fill or color aes to be mapped to 3D
-	isfill = FALSE
-	iscolor = FALSE
-	if (is.null(height_aes)) {
-		for (i in seq_len(length(ggplotobj2$layers))) {
-			if ("fill" %in% names(ggplotobj2$layers[[i]]$mapping)) {
-				isfill = TRUE
-			}
-			if (
-				any(c("color", "colour") %in% names(ggplotobj2$layers[[i]]$mapping))
-			) {
-				iscolor = TRUE
-			}
-		}
-		if (!iscolor && !isfill) {
-			if ("fill" %in% names(ggplotobj2$mapping)) {
-				isfill = TRUE
-			}
-			if (any(c("color", "colour") %in% names(ggplotobj2$mapping))) {
-				iscolor = TRUE
-			}
-		}
-		if (isfill && !iscolor) {
-			height_aes = "fill"
-		} else if (!isfill && iscolor) {
-			height_aes = "colour"
-		} else if (isfill && iscolor) {
-			height_aes = "fill"
-		} else {
-			height_aes = "fill"
-		}
-	}
-	if (height_aes == "color") {
-		height_aes = "colour"
-	}
-	if (is.numeric(offset_edges)) {
-		polygon_offset_value = offset_edges
-		offset_edges = TRUE
-	} else {
-		polygon_offset_value = 0.5
-	}
-	polygon_offset_geoms = c("GeomPolygon", "GeomSf", "GeomHex", "GeomTile")
-	other_height_type = ifelse(height_aes == "colour", "fill", "colour")
+  set_to_white = function(grob) {
+    if (!is.null(grob[["grobs"]])) {
+      for (j in seq_len(length(grob$grobs))) {
+        grob$grobs[[j]] = set_to_white(grob$grobs[[j]])
+      }
+    } else if (!is.null(grob[["children"]])) {
+      for (j in seq_len(length(grob$children))) {
+        grob$children[[j]] = set_to_white(grob$children[[j]])
+      }
+    } else if (length(grob) == 1 && inherits(grob[[1]], "gTree")) {
+      grob[[1]] = set_to_white(grob[[1]])
+    } else if (
+      !(length(grep("geom", x = grob$name)) > 0) &&
+        !(length(grep("pathgrob", x = grob$name)) > 0)
+    ) {
+      grob$gp$col = "white"
+      grob$gp$alpha = 0
+      grob$gp$fill = "white"
+      grob$gp$lwd = 0
+      class(grob$gp) = "gpar"
+    }
+    return(grob)
+  }
+  emboss_gg_text = function(grob, emboss) {
+    if (!is.null(grob[["grobs"]])) {
+      for (j in seq_len(length(grob$grobs))) {
+        grob$grobs[[j]] = emboss_gg_text(grob$grobs[[j]], emboss)
+      }
+    } else if (!is.null(grob[["children"]])) {
+      for (j in seq_len(length(grob$children))) {
+        grob$children[[j]] = emboss_gg_text(grob$children[[j]], emboss)
+      }
+    } else if (all(inherits(grob, c("text", "grob"), which = TRUE) > 0)) {
+      emboss = ceiling(max(c(min(c(emboss, 1)), 0)) * 100)
+      colval = ifelse(emboss != 100, sprintf("grey%d", emboss), "white")
+      grob$gp$col = colval
+      grob$gp$alpha = 1
+      grob$gp$fill = colval
+      class(grob$gp) = "gpar"
+    }
+    return(grob)
+  }
+  emboss_gg_grid = function(grob, emboss) {
+    if (!is.null(grob[["grobs"]])) {
+      for (j in seq_len(length(grob$grobs))) {
+        grob$grobs[[j]] = emboss_gg_grid(grob$grobs[[j]], emboss)
+      }
+    } else if (!is.null(grob[["children"]])) {
+      for (j in seq_len(length(grob$children))) {
+        grob$children[[j]] = emboss_gg_grid(grob$children[[j]], emboss)
+      }
+    } else if (
+      (all(inherits(grob, c("polyline", "grob"), which = TRUE) > 0) &&
+        length(grep("panel.grid", grob$name)) > 0) ||
+        (all(inherits(grob, c("lines", "grob"), which = TRUE) > 0) &&
+          (length(grep("GRID.lines", grob$name)) > 0))
+    ) {
+      if (length(grep("GRID.lines", grob$name)) > 0) {
+        emboss = emboss[1]
+      }
+      if (length(grep("panel.grid.major", grob$name)) > 0) {
+        emboss = emboss[1]
+      }
+      if (length(grep("panel.grid.minor", grob$name)) > 0) {
+        emboss = emboss[2]
+      }
+      emboss = ceiling(max(c(min(c(emboss, 1)), 0)) * 100)
+      colval = ifelse(emboss != 100, sprintf("grey%d", emboss), "white")
+      grob$gp$col = colval
+      grob$gp$alpha = 1
+      grob$gp$fill = colval
+      grob$gp$lwd = 1
+      class(grob$gp) = "gpar"
+    }
+    return(grob)
+  }
+  #Determine if auto fill or color aes to be mapped to 3D
+  isfill = FALSE
+  iscolor = FALSE
+  if (is.null(height_aes)) {
+    for (i in seq_len(length(ggplotobj2$layers))) {
+      if ("fill" %in% names(ggplotobj2$layers[[i]]$mapping)) {
+        isfill = TRUE
+      }
+      if (
+        any(c("color", "colour") %in% names(ggplotobj2$layers[[i]]$mapping))
+      ) {
+        iscolor = TRUE
+      }
+    }
+    if (!iscolor && !isfill) {
+      if ("fill" %in% names(ggplotobj2$mapping)) {
+        isfill = TRUE
+      }
+      if (any(c("color", "colour") %in% names(ggplotobj2$mapping))) {
+        iscolor = TRUE
+      }
+    }
+    if (isfill && !iscolor) {
+      height_aes = "fill"
+    } else if (!isfill && iscolor) {
+      height_aes = "colour"
+    } else if (isfill && iscolor) {
+      height_aes = "fill"
+    } else {
+      height_aes = "fill"
+    }
+  }
+  if (height_aes == "color") {
+    height_aes = "colour"
+  }
+  if (is.numeric(offset_edges)) {
+    polygon_offset_value = offset_edges
+    offset_edges = TRUE
+  } else {
+    polygon_offset_value = 0.5
+  }
+  polygon_offset_geoms = c("GeomPolygon", "GeomSf", "GeomHex", "GeomTile")
+  other_height_type = ifelse(height_aes == "colour", "fill", "colour")
 
-	black_white_pal = function(x) {
-		grDevices::colorRampPalette(c("white", "black"))(255)[x * 254 + 1]
-	}
-	white_white_pal = function(x) {
-		grDevices::colorRampPalette(c("white", "white"))(255)[x * 254 + 1]
-	}
-	ifelsefxn = function(entry) {
-		if (!is.null(entry)) {
-			return(entry)
-		}
-	}
+  black_white_pal = function(x) {
+    grDevices::colorRampPalette(c("white", "black"))(255)[x * 254 + 1]
+  }
+  white_white_pal = function(x) {
+    grDevices::colorRampPalette(c("white", "white"))(255)[x * 254 + 1]
+  }
+  ifelsefxn = function(entry) {
+    if (!is.null(entry)) {
+      return(entry)
+    }
+  }
 
-	#Remove legend.ticks, if they exist
-	ggplotobj2 = ggplotobj2 +
-		ggplot2::theme(legend.ticks = ggplot2::element_blank())
-	#Shift all continuous palettes of height_aes to black/white, and set all discrete key colors to white.
-	if (ggplotobj2$scales$n() != 0) {
-		anyfound = FALSE
-		#Check to see if same guide being used for both color and fill aesthetics
-		if (
-			ggplotobj2$scales$has_scale("colour") &&
-				ggplotobj2$scales$has_scale("fill")
-		) {
-			fillscale = ggplotobj2$scales$get_scales("fill")
-			colorscale = ggplotobj2$scales$get_scales("colour")
-			same_limits = FALSE
-			same_breaks = FALSE
-			same_labels = FALSE
-			same_calls = FALSE
-			if ((!is.null(fillscale$limits) && !is.null(colorscale$limits))) {
-				if (fillscale$limits == colorscale$limits) {
-					same_limits = TRUE
-				}
-			} else if (is.null(fillscale$limits) && is.null(colorscale$limits)) {
-				same_limits = TRUE
-			}
-			if ((!is.null(fillscale$breaks) && !is.null(colorscale$breaks))) {
-				if (all(fillscale$breaks == colorscale$breaks)) {
-					same_breaks = TRUE
-				}
-			} else if (is.null(fillscale$breaks) && is.null(colorscale$breaks)) {
-				same_breaks = TRUE
-			}
-			if (
-				!inherits(fillscale$labels, "waiver") &&
-					!inherits(colorscale$labels, "waiver")
-			) {
-				if (all(fillscale$labels == colorscale$labels)) {
-					same_labels = TRUE
-				}
-			} else if (
-				inherits(fillscale$labels, "waiver") &&
-					inherits(colorscale$labels, "waiver")
-			) {
-				same_labels = TRUE
-			}
-			if (fillscale$call == colorscale$call) {
-				same_calls = TRUE
-			}
-			if (same_limits && same_breaks && same_labels && same_calls) {
-				if (height_aes == "fill") {
-					ggplotobj2 = ggplotobj2 + ggplot2::guides(color = "none")
-				} else {
-					ggplotobj2 = ggplotobj2 + ggplot2::guides(fill = "none")
-				}
-			}
-		}
-		#Now check for scales and change to the b/w palette, but preserve guide traits.
-		for (i in seq_len(ggplotobj2$scales$n())) {
-			if (height_aes %in% ggplotobj2$scales$scales[[i]]$aesthetics) {
-				ggplotobj2$scales$scales[[i]]$palette = black_white_pal
-				ggplotobj2$scales$scales[[i]]$na.value = "white"
-				has_guide = !any(inherits(ggplotobj2$scales$scales[[i]]$guide, "guide"))
-				if (any(inherits(ggplotobj2$scales$scales[[i]]$guide, "logical"))) {
-					has_guide = ggplotobj2$scales$scales[[i]]$guide
-				}
-				if (has_guide) {
-					if (height_aes == "fill") {
-						if (is.null(ggplotobj2$guides$fill)) {
-							ggplotobj2 = ggplotobj2 +
-								ggplot2::guides(
-									fill = ggplot2::guide_colourbar(
-										# legend.ticks = ggplot2::element_blank(),
-										nbin = 1000,
-										order = i
-									)
-								)
-						} else {
-							if (any(ggplotobj2$guides$fill != "none")) {
-								copyguide = ggplotobj2$guides$fill
-								copyguide$frame.linewidth = 0
-								# copyguide$legend.ticks = ggplot2::element_blank()
-								copyguide$nbin = 1000
-								ggplotobj2 = ggplotobj2 +
-									ggplot2::guides(
-										fill = ggplot2::guide_colourbar(
-											# legend.ticks = ggplot2::element_blank(),
-											nbin = 1000
-										)
-									)
-								ggplotobj2$guides$fill = copyguide
-							}
-						}
-						for (j in seq_len(length(ggplotobj2$layers))) {
-							if ("colour" %in% names(ggplotobj2$layers[[j]]$mapping)) {
-								ggplotobj2$layers[[j]]$geom$draw_key = drawkeyfunction_points
-							}
-						}
-					} else {
-						if (is.null(ggplotobj2$guides$colour)) {
-							ggplotobj2 = ggplotobj2 +
-								ggplot2::guides(
-									colour = ggplot2::guide_colourbar(
-										# legend.ticks = ggplot2::element_blank(),
-										nbin = 1000,
-										order = i
-									)
-								)
-						} else {
-							if (any(ggplotobj2$guides$colour != "none")) {
-								copyguide = ggplotobj2$guides$colour
-								copyguide$frame.linewidth = 0
-								# copyguide$legend.ticks = ggplot2::element_blank()
-								copyguide$nbin = 1000
-								ggplotobj2 = ggplotobj2 +
-									ggplot2::guides(
-										colour = ggplot2::guide_colourbar(
-											# legend.ticks = ggplot2::element_blank(),
-											nbin = 1000
-										)
-									)
-								ggplotobj2$guides$colour = copyguide
-							}
-						}
-					}
-				}
-				anyfound = TRUE
-			} else if (
-				other_height_type %in% ggplotobj2$scales$scales[[i]]$aesthetics
-			) {
-				#change guides for other height_aes to be the all white palette
-				ggplotobj2$scales$scales[[i]]$palette = white_white_pal
-				ggplotobj2$scales$scales[[i]]$na.value = "white"
-			}
-		}
-		#If no scales found, just add one to the ggplot object.
-		if (!anyfound) {
-			if (height_aes == "colour") {
-				ggplotobj2 = ggplotobj2 +
-					ggplot2::scale_color_gradientn(
-						colours = grDevices::colorRampPalette(c("white", "black"))(256),
-						na.value = "white"
-					) +
-					ggplot2::guides(
-						colour = ggplot2::guide_colourbar(
-							# legend.ticks = ggplot2::element_blank(),
-							nbin = 1000
-						)
-					)
-			}
-			if (height_aes == "fill") {
-				ggplotobj2 = ggplotobj2 +
-					ggplot2::scale_fill_gradientn(
-						colours = grDevices::colorRampPalette(c("white", "black"))(256),
-						na.value = "white"
-					) +
-					ggplot2::guides(
-						fill = ggplot2::guide_colourbar(
-							# legend.ticks = ggplot2::element_blank(),
-							nbin = 1000
-						)
-					)
-			}
-		}
-	} else {
-		#If no scales found, just add one to the ggplot object.
-		if (ggplotobj2$scales$n() == 0) {
-			if (height_aes == "fill") {
-				ggplotobj2 = ggplotobj2 +
-					ggplot2::scale_fill_gradientn(
-						colours = grDevices::colorRampPalette(c("white", "black"))(256),
-						na.value = "white"
-					) +
-					ggplot2::guides(
-						fill = ggplot2::guide_colourbar(
-							# legend.ticks = ggplot2::element_blank(),
-							nbin = 1000
-						)
-					)
-			} else {
-				ggplotobj2 = ggplotobj2 +
-					ggplot2::scale_color_gradientn(
-						colours = grDevices::colorRampPalette(c("white", "black"))(256),
-						na.value = "white"
-					) +
-					ggplot2::guides(
-						colour = ggplot2::guide_colourbar(
-							# legend.ticks = ggplot2::element_blank(),
-							nbin = 1000
-						)
-					)
-			}
-		} else {
-			if (height_aes == "fill") {
-				ggplotobj2 = ggplotobj2 +
-					ggplot2::scale_fill_gradientn(
-						colours = grDevices::colorRampPalette(c("white", "black"))(256),
-						na.value = "white"
-					) +
-					ggplot2::guides(
-						fill = ggplot2::guide_colourbar(
-							# legend.ticks = ggplot2::element_blank(),
-							nbin = 1000
-						)
-					)
-			} else {
-				ggplotobj2 = ggplotobj2 +
-					ggplot2::scale_color_gradientn(
-						colours = grDevices::colorRampPalette(c("white", "black"))(256),
-						na.value = "white"
-					) +
-					ggplot2::guides(
-						colour = ggplot2::guide_colourbar(
-							# legend.ticks = ggplot2::element_blank(),
-							nbin = 1000
-						)
-					)
-			}
-		}
-	}
-	if (height_aes == "fill") {
-		for (layer in seq_along(1:length(ggplotobj2$layers))) {
-			if (
-				"colour" %in%
-					names(ggplotobj2$layers[[layer]]$mapping) ||
-					0 == length(names(ggplotobj2$layers[[layer]]$mapping))
-			) {
-				ggplotobj2$layers[[layer]]$aes_params$colour = "white"
-			}
-			if ("fill" %in% names(ggplotobj2$layers[[layer]]$mapping)) {
-				ggplotobj2$layers[[layer]]$aes_params$size = NA
-				if (
-					any(as.logical(inherits(
-						ggplotobj2$layers[[layer]]$geom,
-						polygon_offset_geoms
-					))) &&
-						offset_edges
-				) {
-					ggplotobj2$layers[[layer]]$aes_params$size = polygon_offset_value
-					ggplotobj2$layers[[layer]]$aes_params$colour = "white"
-				}
-			}
-			if ("shape" %in% names(ggplotobj2$layers[[layer]]$mapping)) {
-				shapedata = ggplot2::layer_data(ggplotobj2)
-				numbershapes = length(unique(shapedata$shape))
-				if (numbershapes > 3) {
-					warning("Non-solid shapes will not be projected to 3D.")
-				}
-				ggplotobj2$layers[[layer]]$geom$draw_key = drawkeyfunction_points
-			}
-			if ("size" %in% names(ggplotobj2$layers[[layer]]$mapping)) {
-				ggplotobj2$layers[[layer]]$geom$draw_key = drawkeyfunction_points
-			}
-			if ("alpha" %in% names(ggplotobj2$layers[[layer]]$mapping)) {
-				ggplotobj2$layers[[layer]]$geom$draw_key = drawkeyfunction_points
-				for (j in seq_len(length(ggplotobj2$layers))) {
-					geom_defaults = ggplot2::get_geom_defaults(ggplotobj2$layers[[j]])
-					if ("stroke" %in% names(geom_defaults)) {
-						ggplotobj2$layers[[j]]$geom$default_aes$stroke = 0
-					}
-				}
-				ggplotobj2 = suppressMessages({
-					ggplotobj2 + ggplot2::scale_alpha_continuous(range = c(1, 1))
-				})
-			}
-			if ("linetype" %in% names(ggplotobj2$layers[[layer]]$mapping)) {
-				ggplotobj2$layers[[layer]]$geom$draw_key = drawkeyfunction_lines
-			}
-		}
-	} else {
-		for (layer in seq_len(length(ggplotobj2$layers))) {
-			if (
-				"fill" %in%
-					names(ggplotobj2$layers[[layer]]$mapping) ||
-					0 == length(names(ggplotobj2$layers[[layer]]$mapping))
-			) {
-				ggplotobj2$layers[[layer]]$aes_params$fill = "white"
-			}
-			if ("shape" %in% names(ggplotobj2$layers[[layer]]$mapping)) {
-				shapedata = ggplot2::layer_data(ggplotobj2)
-				numbershapes = length(unique(shapedata$shape))
-				if (numbershapes > 3) {
-					warning("Non-solid shapes will not be projected to 3D.")
-				}
-				ggplotobj2$layers[[layer]]$geom$draw_key = drawkeyfunction_points
-			}
-			if ("size" %in% names(ggplotobj2$layers[[layer]]$mapping)) {
-				ggplotobj2$layers[[layer]]$geom$draw_key = drawkeyfunction_points
-			}
-			if ("alpha" %in% names(ggplotobj2$layers[[layer]]$mapping)) {
-				ggplotobj2$layers[[layer]]$geom$draw_key = drawkeyfunction_points
-				for (j in seq_len(length(ggplotobj2$layers))) {
-					geom_defaults = ggplot2::get_geom_defaults(ggplotobj2$layers[[j]])
-					if ("stroke" %in% names(geom_defaults)) {
-						ggplotobj2$layers[[j]]$geom$default_aes$stroke = 0
-					}
-				}
-				ggplotobj2 = suppressMessages({
-					ggplotobj2 + ggplot2::scale_alpha_continuous(range = c(1, 1))
-				})
-			}
-			if ("linetype" %in% names(ggplotobj2$layers[[layer]]$mapping)) {
-				ggplotobj2$layers[[layer]]$geom$draw_key = drawkeyfunction_lines
-			}
-		}
-	}
-	#Offset edges for polygons/Perform point contraction
-	if (height_aes == "fill") {
-		if (length(ggplotobj2$layers) > 0) {
-			for (i in seq_along(1:length(ggplotobj2$layers))) {
-				ggplotobj2$layers[[i]]$aes_params$size = NA
-				if (
-					any(as.logical(inherits(
-						ggplotobj2$layers[[layer]]$geom,
-						polygon_offset_geoms
-					))) &&
-						offset_edges
-				) {
-					ggplotobj2$layers[[i]]$aes_params$size = polygon_offset_value
-					ggplotobj2$layers[[i]]$aes_params$colour = "white"
-				}
-			}
-		}
-	} else {
-		if (length(ggplotobj2$layers) > 0) {
-			for (i in seq_along(1:length(ggplotobj2$layers))) {
-				ggplotobj2$layers[[i]]$aes_params$fill = "white"
-				if (inherits(ggplotobj2$layers[[i]]$geom, "GeomContour")) {
-					ggplotobj2$layers[[i]]$aes_params$alpha = 0
-				}
-			}
-			if (pointcontract != 1) {
-				for (i in 1:length(ggplotobj2$layers)) {
-					if (!is.null(ggplotobj2$layers[[i]]$aes_params$size)) {
-						ggplotobj2$layers[[i]]$aes_params$size = ggplotobj2$layers[[
-							i
-						]]$aes_params$size *
-							pointcontract
-					} else {
-						geom_defaults = ggplot2::get_geom_defaults(ggplotobj2$layers[[i]])
-						ggplotobj2 = ggplotobj2 +
-							ggplot2::theme(
-								geom = ggplot2::element_geom(
-									pointsize = geom_defaults$size * pointcontract
-								)
-							)
-					}
-				}
-			}
-		}
-	}
+  #Remove legend.ticks, if they exist
+  ggplotobj2 = ggplotobj2 +
+    ggplot2::theme(legend.ticks = ggplot2::element_blank())
+  #Shift all continuous palettes of height_aes to black/white, and set all discrete key colors to white.
+  if (ggplotobj2$scales$n() != 0) {
+    anyfound = FALSE
+    #Check to see if same guide being used for both color and fill aesthetics
+    if (
+      ggplotobj2$scales$has_scale("colour") &&
+        ggplotobj2$scales$has_scale("fill")
+    ) {
+      fillscale = ggplotobj2$scales$get_scales("fill")
+      colorscale = ggplotobj2$scales$get_scales("colour")
+      same_limits = FALSE
+      same_breaks = FALSE
+      same_labels = FALSE
+      same_calls = FALSE
+      if ((!is.null(fillscale$limits) && !is.null(colorscale$limits))) {
+        if (fillscale$limits == colorscale$limits) {
+          same_limits = TRUE
+        }
+      } else if (is.null(fillscale$limits) && is.null(colorscale$limits)) {
+        same_limits = TRUE
+      }
+      if ((!is.null(fillscale$breaks) && !is.null(colorscale$breaks))) {
+        if (all(fillscale$breaks == colorscale$breaks)) {
+          same_breaks = TRUE
+        }
+      } else if (is.null(fillscale$breaks) && is.null(colorscale$breaks)) {
+        same_breaks = TRUE
+      }
+      if (
+        !inherits(fillscale$labels, "waiver") &&
+          !inherits(colorscale$labels, "waiver")
+      ) {
+        if (all(fillscale$labels == colorscale$labels)) {
+          same_labels = TRUE
+        }
+      } else if (
+        inherits(fillscale$labels, "waiver") &&
+          inherits(colorscale$labels, "waiver")
+      ) {
+        same_labels = TRUE
+      }
+      if (fillscale$call == colorscale$call) {
+        same_calls = TRUE
+      }
+      if (same_limits && same_breaks && same_labels && same_calls) {
+        if (height_aes == "fill") {
+          ggplotobj2 = ggplotobj2 + ggplot2::guides(color = "none")
+        } else {
+          ggplotobj2 = ggplotobj2 + ggplot2::guides(fill = "none")
+        }
+      }
+    }
+    #Now check for scales and change to the b/w palette, but preserve guide traits.
+    for (i in seq_len(ggplotobj2$scales$n())) {
+      if (height_aes %in% ggplotobj2$scales$scales[[i]]$aesthetics) {
+        ggplotobj2$scales$scales[[i]]$palette = black_white_pal
+        ggplotobj2$scales$scales[[i]]$na.value = "white"
+        has_guide = !any(inherits(ggplotobj2$scales$scales[[i]]$guide, "guide"))
+        if (any(inherits(ggplotobj2$scales$scales[[i]]$guide, "logical"))) {
+          has_guide = ggplotobj2$scales$scales[[i]]$guide
+        }
+        if (has_guide) {
+          if (height_aes == "fill") {
+            if (is.null(ggplotobj2$guides$fill)) {
+              ggplotobj2 = ggplotobj2 +
+                ggplot2::guides(
+                  fill = ggplot2::guide_colourbar(
+                    # legend.ticks = ggplot2::element_blank(),
+                    nbin = 1000,
+                    order = i
+                  )
+                )
+            } else {
+              if (any(ggplotobj2$guides$fill != "none")) {
+                copyguide = ggplotobj2$guides$fill
+                copyguide$frame.linewidth = 0
+                # copyguide$legend.ticks = ggplot2::element_blank()
+                copyguide$nbin = 1000
+                ggplotobj2 = ggplotobj2 +
+                  ggplot2::guides(
+                    fill = ggplot2::guide_colourbar(
+                      # legend.ticks = ggplot2::element_blank(),
+                      nbin = 1000
+                    )
+                  )
+                ggplotobj2$guides$fill = copyguide
+              }
+            }
+            for (j in seq_len(length(ggplotobj2$layers))) {
+              if ("colour" %in% names(ggplotobj2$layers[[j]]$mapping)) {
+                ggplotobj2$layers[[j]]$geom$draw_key = drawkeyfunction_points
+              }
+            }
+          } else {
+            if (is.null(ggplotobj2$guides$colour)) {
+              ggplotobj2 = ggplotobj2 +
+                ggplot2::guides(
+                  colour = ggplot2::guide_colourbar(
+                    # legend.ticks = ggplot2::element_blank(),
+                    nbin = 1000,
+                    order = i
+                  )
+                )
+            } else {
+              if (any(ggplotobj2$guides$colour != "none")) {
+                copyguide = ggplotobj2$guides$colour
+                copyguide$frame.linewidth = 0
+                # copyguide$legend.ticks = ggplot2::element_blank()
+                copyguide$nbin = 1000
+                ggplotobj2 = ggplotobj2 +
+                  ggplot2::guides(
+                    colour = ggplot2::guide_colourbar(
+                      # legend.ticks = ggplot2::element_blank(),
+                      nbin = 1000
+                    )
+                  )
+                ggplotobj2$guides$colour = copyguide
+              }
+            }
+          }
+        }
+        anyfound = TRUE
+      } else if (
+        other_height_type %in% ggplotobj2$scales$scales[[i]]$aesthetics
+      ) {
+        #change guides for other height_aes to be the all white palette
+        ggplotobj2$scales$scales[[i]]$palette = white_white_pal
+        ggplotobj2$scales$scales[[i]]$na.value = "white"
+      }
+    }
+    #If no scales found, just add one to the ggplot object.
+    if (!anyfound) {
+      if (height_aes == "colour") {
+        ggplotobj2 = ggplotobj2 +
+          ggplot2::scale_color_gradientn(
+            colours = grDevices::colorRampPalette(c("white", "black"))(256),
+            na.value = "white"
+          ) +
+          ggplot2::guides(
+            colour = ggplot2::guide_colourbar(
+              # legend.ticks = ggplot2::element_blank(),
+              nbin = 1000
+            )
+          )
+      }
+      if (height_aes == "fill") {
+        ggplotobj2 = ggplotobj2 +
+          ggplot2::scale_fill_gradientn(
+            colours = grDevices::colorRampPalette(c("white", "black"))(256),
+            na.value = "white"
+          ) +
+          ggplot2::guides(
+            fill = ggplot2::guide_colourbar(
+              # legend.ticks = ggplot2::element_blank(),
+              nbin = 1000
+            )
+          )
+      }
+    }
+  } else {
+    #If no scales found, just add one to the ggplot object.
+    if (ggplotobj2$scales$n() == 0) {
+      if (height_aes == "fill") {
+        ggplotobj2 = ggplotobj2 +
+          ggplot2::scale_fill_gradientn(
+            colours = grDevices::colorRampPalette(c("white", "black"))(256),
+            na.value = "white"
+          ) +
+          ggplot2::guides(
+            fill = ggplot2::guide_colourbar(
+              # legend.ticks = ggplot2::element_blank(),
+              nbin = 1000
+            )
+          )
+      } else {
+        ggplotobj2 = ggplotobj2 +
+          ggplot2::scale_color_gradientn(
+            colours = grDevices::colorRampPalette(c("white", "black"))(256),
+            na.value = "white"
+          ) +
+          ggplot2::guides(
+            colour = ggplot2::guide_colourbar(
+              # legend.ticks = ggplot2::element_blank(),
+              nbin = 1000
+            )
+          )
+      }
+    } else {
+      if (height_aes == "fill") {
+        ggplotobj2 = ggplotobj2 +
+          ggplot2::scale_fill_gradientn(
+            colours = grDevices::colorRampPalette(c("white", "black"))(256),
+            na.value = "white"
+          ) +
+          ggplot2::guides(
+            fill = ggplot2::guide_colourbar(
+              # legend.ticks = ggplot2::element_blank(),
+              nbin = 1000
+            )
+          )
+      } else {
+        ggplotobj2 = ggplotobj2 +
+          ggplot2::scale_color_gradientn(
+            colours = grDevices::colorRampPalette(c("white", "black"))(256),
+            na.value = "white"
+          ) +
+          ggplot2::guides(
+            colour = ggplot2::guide_colourbar(
+              # legend.ticks = ggplot2::element_blank(),
+              nbin = 1000
+            )
+          )
+      }
+    }
+  }
+  if (height_aes == "fill") {
+    for (layer in seq_along(1:length(ggplotobj2$layers))) {
+      if (
+        "colour" %in%
+          names(ggplotobj2$layers[[layer]]$mapping) ||
+          0 == length(names(ggplotobj2$layers[[layer]]$mapping))
+      ) {
+        ggplotobj2$layers[[layer]]$aes_params$colour = "white"
+      }
+      if ("fill" %in% names(ggplotobj2$layers[[layer]]$mapping)) {
+        ggplotobj2$layers[[layer]]$aes_params$size = NA
+        if (
+          any(as.logical(inherits(
+            ggplotobj2$layers[[layer]]$geom,
+            polygon_offset_geoms
+          ))) &&
+            offset_edges
+        ) {
+          ggplotobj2$layers[[layer]]$aes_params$size = polygon_offset_value
+          ggplotobj2$layers[[layer]]$aes_params$colour = "white"
+        }
+      }
+      if ("shape" %in% names(ggplotobj2$layers[[layer]]$mapping)) {
+        shapedata = ggplot2::layer_data(ggplotobj2)
+        numbershapes = length(unique(shapedata$shape))
+        if (numbershapes > 3) {
+          warning("Non-solid shapes will not be projected to 3D.")
+        }
+        ggplotobj2$layers[[layer]]$geom$draw_key = drawkeyfunction_points
+      }
+      if ("size" %in% names(ggplotobj2$layers[[layer]]$mapping)) {
+        ggplotobj2$layers[[layer]]$geom$draw_key = drawkeyfunction_points
+      }
+      if ("alpha" %in% names(ggplotobj2$layers[[layer]]$mapping)) {
+        ggplotobj2$layers[[layer]]$geom$draw_key = drawkeyfunction_points
+        for (j in seq_len(length(ggplotobj2$layers))) {
+          geom_defaults = ggplot2::get_geom_defaults(ggplotobj2$layers[[j]])
+          if ("stroke" %in% names(geom_defaults)) {
+            ggplotobj2$layers[[j]]$geom$default_aes$stroke = 0
+          }
+        }
+        ggplotobj2 = suppressMessages({
+          ggplotobj2 + ggplot2::scale_alpha_continuous(range = c(1, 1))
+        })
+      }
+      if ("linetype" %in% names(ggplotobj2$layers[[layer]]$mapping)) {
+        ggplotobj2$layers[[layer]]$geom$draw_key = drawkeyfunction_lines
+      }
+    }
+  } else {
+    for (layer in seq_len(length(ggplotobj2$layers))) {
+      if (
+        "fill" %in%
+          names(ggplotobj2$layers[[layer]]$mapping) ||
+          0 == length(names(ggplotobj2$layers[[layer]]$mapping))
+      ) {
+        ggplotobj2$layers[[layer]]$aes_params$fill = "white"
+      }
+      if ("shape" %in% names(ggplotobj2$layers[[layer]]$mapping)) {
+        shapedata = ggplot2::layer_data(ggplotobj2)
+        numbershapes = length(unique(shapedata$shape))
+        if (numbershapes > 3) {
+          warning("Non-solid shapes will not be projected to 3D.")
+        }
+        ggplotobj2$layers[[layer]]$geom$draw_key = drawkeyfunction_points
+      }
+      if ("size" %in% names(ggplotobj2$layers[[layer]]$mapping)) {
+        ggplotobj2$layers[[layer]]$geom$draw_key = drawkeyfunction_points
+      }
+      if ("alpha" %in% names(ggplotobj2$layers[[layer]]$mapping)) {
+        ggplotobj2$layers[[layer]]$geom$draw_key = drawkeyfunction_points
+        for (j in seq_len(length(ggplotobj2$layers))) {
+          geom_defaults = ggplot2::get_geom_defaults(ggplotobj2$layers[[j]])
+          if ("stroke" %in% names(geom_defaults)) {
+            ggplotobj2$layers[[j]]$geom$default_aes$stroke = 0
+          }
+        }
+        ggplotobj2 = suppressMessages({
+          ggplotobj2 + ggplot2::scale_alpha_continuous(range = c(1, 1))
+        })
+      }
+      if ("linetype" %in% names(ggplotobj2$layers[[layer]]$mapping)) {
+        ggplotobj2$layers[[layer]]$geom$draw_key = drawkeyfunction_lines
+      }
+    }
+  }
+  #Offset edges for polygons/Perform point contraction
+  if (height_aes == "fill") {
+    if (length(ggplotobj2$layers) > 0) {
+      for (i in seq_along(1:length(ggplotobj2$layers))) {
+        ggplotobj2$layers[[i]]$aes_params$size = NA
+        if (
+          any(as.logical(inherits(
+            ggplotobj2$layers[[layer]]$geom,
+            polygon_offset_geoms
+          ))) &&
+            offset_edges
+        ) {
+          ggplotobj2$layers[[i]]$aes_params$size = polygon_offset_value
+          ggplotobj2$layers[[i]]$aes_params$colour = "white"
+        }
+      }
+    }
+  } else {
+    if (length(ggplotobj2$layers) > 0) {
+      for (i in seq_along(1:length(ggplotobj2$layers))) {
+        ggplotobj2$layers[[i]]$aes_params$fill = "white"
+        if (inherits(ggplotobj2$layers[[i]]$geom, "GeomContour")) {
+          ggplotobj2$layers[[i]]$aes_params$alpha = 0
+        }
+      }
+      if (pointcontract != 1) {
+        for (i in 1:length(ggplotobj2$layers)) {
+          if (!is.null(ggplotobj2$layers[[i]]$aes_params$size)) {
+            ggplotobj2$layers[[i]]$aes_params$size = ggplotobj2$layers[[
+              i
+            ]]$aes_params$size *
+              pointcontract
+          } else {
+            geom_defaults = ggplot2::get_geom_defaults(ggplotobj2$layers[[i]])
+            ggplotobj2 = ggplotobj2 +
+              ggplot2::theme(
+                geom = ggplot2::element_geom(
+                  pointsize = geom_defaults$size * pointcontract
+                )
+              )
+          }
+        }
+      }
+    }
+  }
 
-	ggplotobj2 = set_to_white(ggplot2::ggplotGrob(ggplotobj2))
-	if (emboss_text > 0) {
-		emboss_text = 1 - emboss_text
-		ggplotobj2 = emboss_gg_text(ggplotobj2, emboss_text)
-	}
-	if (emboss_grid > 0) {
-		if (length(emboss_grid) == 1) {
-			emboss_grid = c(emboss_grid, emboss_grid / 2)
-		}
-		emboss_grid = 1 - emboss_grid
-		ggplotobj2 = emboss_gg_grid(ggplotobj2, emboss_grid)
-	}
-	old_dev = grDevices::dev.cur()
-	grDevices::png(
-		filename = heightmaptemp,
-		width = width,
-		height = height,
-		units = "in",
-		res = 300
-	)
-	grid::grid.draw(ggplotobj2)
-	grDevices::dev.off()
-	if (old_dev > 1) {
-		grDevices::dev.set(old_dev)
-	}
-	if (!is.null(reduce_size)) {
-		if (!(length(find.package("magick", quiet = TRUE)) > 0)) {
-			stop("magick package required to use argument reduce_size")
-		} else {
-			if (length(reduce_size) == 1 && reduce_size < 1) {
-				scale = scale * reduce_size
-				image_info = magick::image_read(heightmaptemp) |>
-					magick::image_info()
-				magick::image_read(heightmaptemp) |>
-					magick::image_resize(paste0(
-						image_info$width * reduce_size,
-						"x",
-						image_info$height * reduce_size
-					)) |>
-					magick::image_write(heightmaptemp)
-			} else if (length(reduce_size) == 2 && all(reduce_size < 1)) {
-				scale = scale * reduce_size[1]
-				image_info = magick::image_read(heightmaptemp) |>
-					magick::image_info()
-				magick::image_read(heightmaptemp) |>
-					magick::image_resize(paste0(
-						image_info$width * reduce_size[1],
-						"x",
-						image_info$height * reduce_size[1]
-					)) |>
-					magick::image_write(heightmaptemp)
-				magick::image_read(colormaptemp) |>
-					magick::image_resize(paste0(
-						image_info$width * reduce_size[2],
-						"x",
-						image_info$height * reduce_size[2]
-					)) |>
-					magick::image_write(colormaptemp)
-			}
-		}
-	}
-	mapcolor = png::readPNG(colormaptemp) |>
-		rayimage::render_gamma_linear()
-	mapheight = png::readPNG(heightmaptemp)
-	if (length(dim(mapheight)) == 3) {
-		mapheight = mapheight[,, 1]
-	}
-	if (invert) {
-		mapheight = 1 - mapheight
-	}
-	zscale = 1 / scale
-	if (shadowdepth == "auto") {
-		if (min(mapheight, na.rm = TRUE) != max(mapheight, na.rm = TRUE)) {
-			shadowdepth = -scale / 5
-		} else {
-			max_dim = max(dim(mapheight))
-			shadowdepth = -max_dim / 25
-		}
-	} else {
-		shadowdepth = shadowdepth / zscale
-	}
+  ggplotobj2 = set_to_white(ggplot2::ggplotGrob(ggplotobj2))
+  if (emboss_text > 0) {
+    emboss_text = 1 - emboss_text
+    ggplotobj2 = emboss_gg_text(ggplotobj2, emboss_text)
+  }
+  if (emboss_grid > 0) {
+    if (length(emboss_grid) == 1) {
+      emboss_grid = c(emboss_grid, emboss_grid / 2)
+    }
+    emboss_grid = 1 - emboss_grid
+    ggplotobj2 = emboss_gg_grid(ggplotobj2, emboss_grid)
+  }
+  old_dev = grDevices::dev.cur()
+  grDevices::png(
+    filename = heightmaptemp,
+    width = width,
+    height = height,
+    units = "in",
+    res = 300
+  )
+  grid::grid.draw(ggplotobj2)
+  grDevices::dev.off()
+  if (old_dev > 1) {
+    grDevices::dev.set(old_dev)
+  }
+  if (!is.null(reduce_size)) {
+    if (!(length(find.package("magick", quiet = TRUE)) > 0)) {
+      stop("magick package required to use argument reduce_size")
+    } else {
+      if (length(reduce_size) == 1 && reduce_size < 1) {
+        scale = scale * reduce_size
+        image_info = magick::image_read(heightmaptemp) |>
+          magick::image_info()
+        magick::image_read(heightmaptemp) |>
+          magick::image_resize(paste0(
+            image_info$width * reduce_size,
+            "x",
+            image_info$height * reduce_size
+          )) |>
+          magick::image_write(heightmaptemp)
+      } else if (length(reduce_size) == 2 && all(reduce_size < 1)) {
+        scale = scale * reduce_size[1]
+        image_info = magick::image_read(heightmaptemp) |>
+          magick::image_info()
+        magick::image_read(heightmaptemp) |>
+          magick::image_resize(paste0(
+            image_info$width * reduce_size[1],
+            "x",
+            image_info$height * reduce_size[1]
+          )) |>
+          magick::image_write(heightmaptemp)
+        magick::image_read(colormaptemp) |>
+          magick::image_resize(paste0(
+            image_info$width * reduce_size[2],
+            "x",
+            image_info$height * reduce_size[2]
+          )) |>
+          magick::image_write(colormaptemp)
+      }
+    }
+  }
+  mapcolor = png::readPNG(colormaptemp) |>
+    rayimage::render_gamma_linear()
+  mapheight = png::readPNG(heightmaptemp)
+  if (length(dim(mapheight)) == 3) {
+    mapheight = mapheight[,, 1]
+  }
+  if (invert) {
+    mapheight = 1 - mapheight
+  }
+  zscale = 1 / scale
+  if (shadowdepth == "auto") {
+    if (min(mapheight, na.rm = TRUE) != max(mapheight, na.rm = TRUE)) {
+      shadowdepth = -scale / 5
+    } else {
+      max_dim = max(dim(mapheight))
+      shadowdepth = -max_dim / 25
+    }
+  } else {
+    shadowdepth = shadowdepth / zscale
+  }
 
-	if (flat_distance == "auto") {
-		if (
-			flat_direction == "x" ||
-				flat_direction == "-x" ||
-				flat_direction == "y" ||
-				flat_direction == "-y"
-		) {
-			flat_distance = 0.5
-		} else {
-			if (flat_direction == "z") {
-				flat_distance = 3
-			} else {
-				flat_distance = -3
-			}
-		}
-	} else {
-		if (flat_direction == "-z") {
-			flat_distance = -flat_distance
-		}
-	}
-	shadow_flat = flat_plot_render &&
-		shadow &&
-		flat_distance * scale < shadowdepth
-	shadowdepth = ifelse(
-		shadow_flat,
-		flat_distance * scale + shadowdepth,
-		shadowdepth
-	)
-	if (raytrace) {
-		if (is.null(saved_shadow_matrix)) {
-			raylayer = ray_shade(
-				t(1 - mapheight),
-				maxsearch = 600,
-				sunangle = sunangle,
-				anglebreaks = anglebreaks,
-				zscale = 1 / scale,
-				multicore = multicore,
-				lambert = lambert,
-				...
-			)
-			if (!preview) {
-				mapcolor |>
-					add_shadow(raylayer, shadow_intensity) |>
-					plot_3d(
-						(t(1 - mapheight)),
-						zscale = 1 / scale,
-						triangulate = triangulate,
-						max_error = max_error,
-						max_tri = max_tri,
-						verbose = verbose,
-						shadow = shadow,
-						shadowdepth = shadowdepth / scale,
-						background = background,
-						shadowcolor = shadowcolor,
-						...
-					)
-			} else {
-				mapcolor |>
-					add_shadow(raylayer, shadow_intensity) |>
-					plot_map()
-			}
-		} else {
-			raylayer = saved_shadow_matrix
-			if (!preview) {
-				mapcolor |>
-					add_shadow(raylayer, shadow_intensity) |>
-					plot_3d(
-						(t(1 - mapheight)),
-						zscale = 1 / scale,
-						triangulate = triangulate,
-						max_error = max_error,
-						max_tri = max_tri,
-						verbose = verbose,
-						shadow = shadow,
-						shadowdepth = shadowdepth / scale,
-						background = background,
-						shadowcolor = shadowcolor,
-						...
-					)
-			} else {
-				mapcolor |>
-					add_shadow(raylayer, shadow_intensity) |>
-					plot_map()
-			}
-		}
-	} else {
-		if (!preview) {
-			plot_3d(
-				mapcolor,
-				(t(1 - mapheight)),
-				zscale = 1 / scale,
-				triangulate = triangulate,
-				max_error = max_error,
-				max_tri = max_tri,
-				verbose = verbose,
-				shadow = shadow,
-				shadowdepth = shadowdepth / scale,
-				background = background,
-				shadowcolor = shadowcolor,
-				...
-			)
-		} else {
-			plot_map(mapcolor)
-		}
-	}
+  if (flat_distance == "auto") {
+    if (
+      flat_direction == "x" ||
+        flat_direction == "-x" ||
+        flat_direction == "y" ||
+        flat_direction == "-y"
+    ) {
+      flat_distance = 0.5
+    } else {
+      if (flat_direction == "z") {
+        flat_distance = 3
+      } else {
+        flat_distance = -3
+      }
+    }
+  } else {
+    if (flat_direction == "-z") {
+      flat_distance = -flat_distance
+    }
+  }
+  shadow_flat = flat_plot_render &&
+    shadow &&
+    flat_distance * scale < shadowdepth
+  shadowdepth = ifelse(
+    shadow_flat,
+    flat_distance * scale + shadowdepth,
+    shadowdepth
+  )
+  if (raytrace) {
+    if (is.null(saved_shadow_matrix)) {
+      raylayer = ray_shade(
+        t(1 - mapheight),
+        maxsearch = 600,
+        sunangle = sunangle,
+        anglebreaks = anglebreaks,
+        zscale = 1 / scale,
+        multicore = multicore,
+        lambert = lambert,
+        ...
+      )
+      if (!preview) {
+        mapcolor |>
+          add_shadow(raylayer, shadow_intensity) |>
+          plot_3d(
+            (t(1 - mapheight)),
+            zscale = 1 / scale,
+            triangulate = triangulate,
+            max_error = max_error,
+            max_tri = max_tri,
+            verbose = verbose,
+            shadow = shadow,
+            shadowdepth = shadowdepth / scale,
+            background = background,
+            shadowcolor = shadowcolor,
+            ...
+          )
+      } else {
+        mapcolor |>
+          add_shadow(raylayer, shadow_intensity) |>
+          plot_map()
+      }
+    } else {
+      raylayer = saved_shadow_matrix
+      if (!preview) {
+        mapcolor |>
+          add_shadow(raylayer, shadow_intensity) |>
+          plot_3d(
+            (t(1 - mapheight)),
+            zscale = 1 / scale,
+            triangulate = triangulate,
+            max_error = max_error,
+            max_tri = max_tri,
+            verbose = verbose,
+            shadow = shadow,
+            shadowdepth = shadowdepth / scale,
+            background = background,
+            shadowcolor = shadowcolor,
+            ...
+          )
+      } else {
+        mapcolor |>
+          add_shadow(raylayer, shadow_intensity) |>
+          plot_map()
+      }
+    }
+  } else {
+    if (!preview) {
+      plot_3d(
+        mapcolor,
+        (t(1 - mapheight)),
+        zscale = 1 / scale,
+        triangulate = triangulate,
+        max_error = max_error,
+        max_tri = max_tri,
+        verbose = verbose,
+        shadow = shadow,
+        shadowdepth = shadowdepth / scale,
+        background = background,
+        shadowcolor = shadowcolor,
+        ...
+      )
+    } else {
+      plot_map(mapcolor)
+    }
+  }
 
-	if (!preview && flat_plot_render) {
-		if (flat_transparent_bg) {
-			new_temp = tempfile(fileext = ".png")
-			color_gg = color_gg +
-				ggplot2::theme(
-					plot.background = ggplot2::element_rect(fill = NA, color = NA)
-				)
-			ggplot2::ggsave(
-				new_temp,
-				color_gg,
-				width = width,
-				height = height,
-				dpi = 300
-			)
-			colormaptemp = new_temp
-		}
-		mapcolor = png::readPNG(colormaptemp)
-		horizontal_offset = c(0, 0)
-		shadowwidth = max(floor(min(dim((t(1 - mapheight)))) / 10), 5)
-		if (flat_direction == "x" || flat_direction == "-x") {
-			horizontal_offset = abs(
-				c(width * 300, 0) *
-					flat_distance +
-					c(width * 150, 0) +
-					c(shadowwidth * 2, 0)
-			)
-			if (flat_direction == "-x") {
-				horizontal_offset = -horizontal_offset
-			}
-			flat_distance = 0
-		} else if (flat_direction == "y" || flat_direction == "-y") {
-			horizontal_offset = abs(
-				c(0, height * 300) *
-					flat_distance +
-					c(0, height * 150) +
-					c(0, shadowwidth * 2)
-			)
-			if (flat_direction == "y") {
-				horizontal_offset = -horizontal_offset
-			}
-			flat_distance = 0
-		}
+  if (!preview && flat_plot_render) {
+    if (flat_transparent_bg) {
+      new_temp = tempfile(fileext = ".png")
+      color_gg = color_gg +
+        ggplot2::theme(
+          plot.background = ggplot2::element_rect(fill = NA, color = NA)
+        )
+      ggplot2::ggsave(
+        new_temp,
+        color_gg,
+        width = width,
+        height = height,
+        dpi = 300
+      )
+      colormaptemp = new_temp
+    }
+    mapcolor = png::readPNG(colormaptemp)
+    horizontal_offset = c(0, 0)
+    shadowwidth = max(floor(min(dim((t(1 - mapheight)))) / 10), 5)
+    if (flat_direction == "x" || flat_direction == "-x") {
+      horizontal_offset = abs(
+        c(width * 300, 0) *
+          flat_distance +
+          c(width * 150, 0) +
+          c(shadowwidth * 2, 0)
+      )
+      if (flat_direction == "-x") {
+        horizontal_offset = -horizontal_offset
+      }
+      flat_distance = 0
+    } else if (flat_direction == "y" || flat_direction == "-y") {
+      horizontal_offset = abs(
+        c(0, height * 300) *
+          flat_distance +
+          c(0, height * 150) +
+          c(0, shadowwidth * 2)
+      )
+      if (flat_direction == "y") {
+        horizontal_offset = -horizontal_offset
+      }
+      flat_distance = 0
+    }
 
-		render_floating_overlay(
-			mapcolor,
-			altitude = flat_distance,
-			heightmap = (t(1 - mapheight)),
-			zscale = 1 / scale,
-			horizontal_offset = horizontal_offset
-		)
-		if (shadow && flat_direction %in% c("x", "-x", "y", "-y")) {
-			if (shadowcolor == "auto") {
-				shadowcolor = convert_color(
-					darken_color(background, darken = shadow_darkness),
-					as_hex = TRUE
-				)
-			}
-			make_shadow(
-				(t(1 - mapheight)),
-				shadowdepth,
-				shadowwidth,
-				background,
-				shadowcolor,
-				offset = horizontal_offset
-			)
-		}
-	}
-	if (save_shadow_matrix & !save_height_matrix) {
-		return(raylayer)
-	}
-	if (!save_shadow_matrix & save_height_matrix) {
-		return(1 - t(mapheight))
-	}
-	if (save_shadow_matrix & save_height_matrix) {
-		return(list(1 - t(mapheight), raylayer))
-	}
+    render_floating_overlay(
+      mapcolor,
+      altitude = flat_distance,
+      heightmap = (t(1 - mapheight)),
+      zscale = 1 / scale,
+      horizontal_offset = horizontal_offset
+    )
+    if (shadow && flat_direction %in% c("x", "-x", "y", "-y")) {
+      if (shadowcolor == "auto") {
+        shadowcolor = convert_color(
+          darken_color(background, darken = shadow_darkness),
+          as_hex = TRUE
+        )
+      }
+      make_shadow(
+        (t(1 - mapheight)),
+        shadowdepth,
+        shadowwidth,
+        background,
+        shadowcolor,
+        offset = horizontal_offset
+      )
+    }
+  }
+  if (save_shadow_matrix & !save_height_matrix) {
+    return(raylayer)
+  }
+  if (!save_shadow_matrix & save_height_matrix) {
+    return(1 - t(mapheight))
+  }
+  if (save_shadow_matrix & save_height_matrix) {
+    return(list(1 - t(mapheight), raylayer))
+  }
 }
