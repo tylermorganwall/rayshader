@@ -3,8 +3,6 @@
 #'@description Displays the map in the current device.
 #'
 #'@param hillshade Hillshade to be plotted.
-#'@param asp Default `1`. Aspect ratio of the resulting plot. Use `asp = 1/cospi(mean_latitude/180)` to rescale
-#'lat/long at higher latitudes to the correct the aspect ratio.
 #'@param title_text Default `NULL`. Text. Adds a title to the image, using `magick::image_annotate()`.
 #'@param title_offset Default `c(20,20)`. Distance from the top-left (default, `gravity` direction in
 #'image_annotate) corner to offset the title.
@@ -33,48 +31,36 @@
 #'  add_shadow(ray_shade(montereybay,zscale=50),0.3) |>
 #'  plot_map()
 #'}
-#'#Correcting the aspect ratio for the latitude of Monterey Bay
-#'
-#'extent_mb = attr(montereybay,"extent")
-#'mean_latitude = mean(c(extent_mb@ymax,extent_mb@ymin))
-#'if(run_documentation()) {
-#'montereybay |>
-#'  sphere_shade(zscale=10) |>
-#'  add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0))  |>
-#'  add_shadow(ray_shade(montereybay,zscale=50),0.3) |>
-#'  plot_map(asp = 1/cospi(mean_latitude/180))
-#'}
 plot_map = function(
-  hillshade,
-  asp = 1,
-  title_text = NA,
-  title_offset = c(20, 20),
-  title_color = "black",
-  title_size = 30,
-  title_font = "sans",
-  title_style = "normal",
-  title_bar_color = NA,
-  title_bar_alpha = 0.5,
-  title_just = "left",
-  ...
+	hillshade,
+	title_text = NA,
+	title_offset = c(20, 20),
+	title_color = "black",
+	title_size = 30,
+	title_font = "sans",
+	title_style = "normal",
+	title_bar_color = NA,
+	title_bar_alpha = 0.5,
+	title_just = "left",
+	...
 ) {
-  has_title = !is.na(title_text)
-  hillshade_img = rayimage::ray_read_image(
-    hillshade
-  )
-  if (has_title) {
-    hillshade_img = rayimage::render_title(
-      hillshade_img,
-      title_text = title_text,
-      title_offset = title_offset,
-      title_color = title_color,
-      title_size = title_size,
-      title_font = title_font,
-      title_style = title_style,
-      title_bar_color = title_bar_color,
-      title_bar_alpha = title_bar_alpha,
-      title_just = title_just
-    )
-  }
-  rayimage::plot_image(hillshade_img, asp = asp, ...)
+	has_title = !is.na(title_text)
+	hillshade_img = rayimage::ray_read_image(
+		hillshade
+	)
+	if (has_title) {
+		hillshade_img = rayimage::render_title(
+			hillshade_img,
+			title_text = title_text,
+			title_offset = title_offset,
+			title_color = title_color,
+			title_size = title_size,
+			title_font = title_font,
+			title_style = title_style,
+			title_bar_color = title_bar_color,
+			title_bar_alpha = title_bar_alpha,
+			title_just = title_just
+		)
+	}
+	rayimage::plot_image(hillshade_img, ...)
 }

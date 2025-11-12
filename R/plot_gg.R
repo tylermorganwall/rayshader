@@ -79,6 +79,8 @@
 #'@param save_height_matrix Default `FALSE`. If `TRUE`, the function will return the height matrix used for the ggplot.
 #'@param save_shadow_matrix Default `FALSE`. If `TRUE`, the function will return the shadow matrix for use in future updates via the `shadow_cache` argument passed to [ray_shade()].
 #'@param saved_shadow_matrix Default `NULL`. A cached shadow matrix (saved by the a previous invocation of \link[=plot_gg]{\code{plot_gg(..., save_shadow_matrix=TRUE)}} to use instead of raytracing a shadow map each time.
+#'@param monitor_gamma Default `1.8`. Undo the gamma correction applied by the png device. Ignored if `ragg` is installed or the `cairo` PNG device is available.
+#'@param plot Default `TRUE`. Whether to plot the image when `preview = TRUE`, or just return the RGBA rayimg.
 #'@param ... Additional arguments to be passed to [plot_3d()].
 #'@return Opens a 3D plot in rgl.
 #'@export
@@ -90,10 +92,12 @@
 #'}
 #'
 #'ggdiamonds = ggplot(diamonds, aes(x, depth)) +
-#'  stat_density_2d(aes(fill = after_stat(nlevel)), geom = "polygon",
+#'  stat_density_2d(aes(fill = after_stat(nlevel), color = after_stat(nlevel)),
+#'                  geom = "polygon",
 #'                  n = 200, bins = 50,contour = TRUE) +
 #'  facet_wrap(clarity~.) +
-#'  scale_fill_viridis_c(option = "A")
+#'  scale_fill_viridis_c(option = "A") +
+#'  scale_color_viridis_c(option = "A")
 #'if(run_documentation()) {
 #'plot_gg(ggdiamonds,multicore = TRUE,width=5,height=5,scale=250,windowsize=c(1400,866),
 #'        zoom = 0.55, phi = 30)
@@ -238,6 +242,8 @@ plot_gg = function(
   save_height_matrix = FALSE,
   save_shadow_matrix = FALSE,
   saved_shadow_matrix = NULL,
+  monitor_gamma = 1.8,
+  plot = TRUE,
   ...
 ) {
   if (!(length(find.package("ggplot2", quiet = TRUE)) > 0)) {
@@ -245,6 +251,15 @@ plot_gg = function(
   }
   heightmaptemp = tempfile(fileext = ".png")
   colormaptemp = tempfile(fileext = ".png")
+  png_device = grDevices::png
+  apply_manual_correction = FALSE
+  if (requireNamespace("ragg", quietly = TRUE)) {
+    png_device = function(...) ragg::agg_png(...)
+  } else if (isTRUE(capabilities("cairo"))) {
+    png_device = function(...) grDevices::png(..., type = "cairo")
+  } else {
+    apply_manual_correction = TRUE
+  }
   if (is.null(ggobj_height)) {
     if (methods::is(ggobj, "list") && length(ggobj) == 2) {
       stopifnot(inherits(ggobj[[2]], "ggplot"))
@@ -779,7 +794,7 @@ plot_gg = function(
     ggplotobj2 = emboss_gg_grid(ggplotobj2, emboss_grid)
   }
   old_dev = grDevices::dev.cur()
-  grDevices::png(
+  png_device(
     filename = heightmaptemp,
     width = width,
     height = height,
@@ -827,11 +842,15 @@ plot_gg = function(
       }
     }
   }
-  mapcolor = png::readPNG(colormaptemp) |>
-    rayimage::render_gamma_linear()
-  mapheight = png::readPNG(heightmaptemp)
-  if (length(dim(mapheight)) == 3) {
-    mapheight = mapheight[,, 1]
+  mapcolor = rayimage::ray_read_image(colormaptemp)
+  mapheight = mapheight = rayimage::ray_read_image(
+    heightmaptemp,
+    source_linear = TRUE
+  )[,, 1]
+
+  if (apply_manual_correction) {
+    gamma_ratio = monitor_gamma / 2.2
+    mapheight = mapheight^gamma_ratio
   }
   if (invert) {
     mapheight = 1 - mapheight
@@ -906,8 +925,11 @@ plot_gg = function(
           )
       } else {
         mapcolor |>
-          add_shadow(raylayer, shadow_intensity) |>
-          plot_map()
+          add_shadow(raylayer, shadow_intensity) -> map_with_shadow
+        if (plot) {
+          plot_map(map_with_shadow)
+        }
+        return(invisible(map_with_shadow))
       }
     } else {
       raylayer = saved_shadow_matrix
@@ -929,8 +951,11 @@ plot_gg = function(
           )
       } else {
         mapcolor |>
-          add_shadow(raylayer, shadow_intensity) |>
-          plot_map()
+          add_shadow(raylayer, shadow_intensity) -> map_with_shadow
+        if (plot) {
+          plot_map(map_with_shadow)
+        }
+        return(invisible(map_with_shadow))
       }
     }
   } else {
@@ -950,7 +975,10 @@ plot_gg = function(
         ...
       )
     } else {
-      plot_map(mapcolor)
+      if (plot) {
+        plot_map(mapcolor)
+      }
+      return(invisible(mapcolor))
     }
   }
 

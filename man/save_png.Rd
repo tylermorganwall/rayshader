@@ -15,8 +15,7 @@ save_png(
   title_style = "normal",
   title_bar_color = NA,
   title_bar_alpha = 0.5,
-  title_just = "left",
-  asp = 1
+  title_just = "left"
 )
 }
 \arguments{
@@ -43,9 +42,6 @@ image_annotate) corner to offset the title.}
 \item{title_bar_alpha}{Default \code{0.5}. Transparency of the title bar.}
 
 \item{title_just}{Default \code{left}. Position of the title.}
-
-\item{asp}{Default \code{1}. Aspect ratio of the resulting plot. Use \code{asp = 1/cospi(mean_latitude/180)} to rescale
-lat/long at higher latitudes to the correct the aspect ratio.}
 }
 \description{
 A wrapper around \code{\link[rayimage:ray_write_image]{rayimage::ray_write_image()}} to write an image to file.

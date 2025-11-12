@@ -72,6 +72,9 @@ ray_shade = function(
 	stopifnot(is.matrix(heightmap))
 	originalheightmap = heightmap
 	heightmap = fliplr(t(heightmap))
+	if (!is.null(cache_mask)) {
+		cache_mask = fliplr(t(cache_mask))
+	}
 	if (is.null(anglebreaks)) {
 		anglebreaks = seq(
 			max(0, sunaltitude - 0.533 / 2),

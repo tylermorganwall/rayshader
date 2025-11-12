@@ -3,14 +3,15 @@ library(ggplot2)
 test_that("plot_gg() doesn't error", {
 	ggdiamonds = ggplot(diamonds, aes(x, depth)) +
 		stat_density_2d(
-			aes(fill = after_stat(nlevel)),
+			aes(fill = after_stat(nlevel), color = after_stat(nlevel)),
 			geom = "polygon",
 			n = 200,
 			bins = 50,
 			contour = TRUE
 		) +
 		facet_wrap(clarity ~ .) +
-		scale_fill_viridis_c(option = "A")
+		scale_fill_viridis_c(option = "A") +
+		scale_color_viridis_c(option = "A")
 
 	expect_no_condition(plot_gg(
 		ggdiamonds,

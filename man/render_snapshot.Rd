@@ -43,6 +43,7 @@ render_snapshot(
   rayvertex_lighting = FALSE,
   rayvertex_lights = NULL,
   rayvertex_shadow_map = FALSE,
+  plot = TRUE,
   ...
 )
 }
@@ -146,10 +147,12 @@ from \code{light} objects in the \code{rgl} scene.}
 \item{rayvertex_shadow_map}{Default \code{FALSE}. If \code{TRUE} and \code{rayvertex_lighting = TRUE} along with \code{software_render = TRUE}, shadow mapping will also
 be applied to the rendered scene.}
 
+\item{plot}{Default \code{TRUE}. Whether to plot the snapshot.}
+
 \item{...}{Additional parameters to pass to \code{rayvertex::rasterize_scene()}.}
 }
 \value{
-Displays snapshot of current rgl plot (or saves to disk).
+Displays snapshot of current rgl plot (or saves to disk), as well as invisibly returns an RGBA \code{rayimg} array.
 }
 \description{
 Either captures the current rgl view and displays, or saves the current view to disk.

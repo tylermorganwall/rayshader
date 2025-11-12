@@ -143,8 +143,7 @@ test_that("plot_3d triangulation", {
 	plot_3d_args_triangulation = expand.grid(
 		triangulate = list(TRUE),
 		max_error = list(0, 0.001, 1, 10),
-		max_tri = list(0, 100, 1000),
-		asp = list(1, 2, 0.5)
+		max_tri = list(0, 100, 1000)
 	)
 	run_tests(
 		"plot_3d",

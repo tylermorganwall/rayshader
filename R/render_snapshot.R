@@ -63,8 +63,9 @@
 #'`rayvertex::add_light()` function to specify lighting for your scene when `rayvertex_lighting = TRUE`.
 #'@param rayvertex_shadow_map Default `FALSE`. If `TRUE` and `rayvertex_lighting = TRUE` along with `software_render = TRUE`, shadow mapping will also
 #'be applied to the rendered scene.
+#'@param plot Default `TRUE`. Whether to plot the snapshot.
 #'@param ... Additional parameters to pass to `rayvertex::rasterize_scene()`.
-#'@return Displays snapshot of current rgl plot (or saves to disk).
+#'@return Displays snapshot of current rgl plot (or saves to disk), as well as invisibly returns an RGBA `rayimg` array.
 #'@export
 #'@examples
 #'if(run_documentation()) {
@@ -144,6 +145,7 @@ render_snapshot = function(
 	rayvertex_lighting = FALSE,
 	rayvertex_lights = NULL,
 	rayvertex_shadow_map = FALSE,
+	plot = TRUE,
 	...
 ) {
 	if (rgl::rgl.useNULL()) {
@@ -181,6 +183,7 @@ render_snapshot = function(
 		has_overlay = FALSE
 	}
 	temp = tempfile(fileext = ".png")
+
 	if (!software_render) {
 		if ("webshot" %in% names(formals(rgl::snapshot3d))) {
 			if (!rgl::rgl.useNULL()) {
@@ -266,11 +269,14 @@ render_snapshot = function(
 		)
 	}
 	if (missing(filename)) {
-		rayimage::plot_image(tempmap, new_page = new_page)
+		if (plot) {
+			rayimage::plot_image(tempmap, new_page = new_page)
+		}
 	} else {
 		rayimage::ray_write_image(tempmap, filename)
 	}
 	if (clear) {
 		rgl::clear3d()
 	}
+	return(invisible(tempmap))
 }

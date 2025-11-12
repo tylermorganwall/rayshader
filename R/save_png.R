@@ -15,8 +15,6 @@
 #'@param title_bar_color Default `NA`. If a color, this will create a colored bar under the title.
 #'@param title_bar_alpha Default `0.5`. Transparency of the title bar.
 #'@param title_just Default `left`. Position of the title.
-#'@param asp Default `1`. Aspect ratio of the resulting plot. Use `asp = 1/cospi(mean_latitude/180)` to rescale
-#'lat/long at higher latitudes to the correct the aspect ratio.
 #'@export
 #'@examples
 #'filename_map = tempfile()
@@ -36,8 +34,7 @@ save_png = function(
 	title_style = "normal",
 	title_bar_color = NA,
 	title_bar_alpha = 0.5,
-	title_just = "left",
-	asp = 1
+	title_just = "left"
 ) {
 	if (is.null(filename)) {
 		stop("save_png requires a filename")

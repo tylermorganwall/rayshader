@@ -737,6 +737,7 @@ render_points(
     long = unlist(bird_track_long),
     altitude = z_out,
     zscale = 50,
+    size = 3,
     color = "red",
     clear_previous = TRUE
 )
@@ -758,6 +759,7 @@ render_path(
     long = unlist(bird_track_long),
     altitude = z_out,
     zscale = 50,
+    linewidth = 3,
     color = "white",
     antialias = TRUE
 )
@@ -821,31 +823,30 @@ library(ggplot2)
     ##     arrow
 
 ``` r
-ggdiamonds = ggplot(diamonds) +
+ggdiamonds = ggplot(diamonds, aes(x, depth)) +
     stat_density_2d(
-        aes(x = x, y = depth, fill = stat(nlevel)),
+        aes(fill = after_stat(nlevel), color = after_stat(nlevel)),
         geom = "polygon",
         n = 200,
         bins = 50,
         contour = TRUE
     ) +
     facet_wrap(clarity ~ .) +
-    scale_fill_viridis_c(option = "A")
+    scale_fill_viridis_c(option = "A") +
+    scale_color_viridis_c(option = "A")
 
-par(mfrow = c(1, 2))
-
-plot_gg(ggdiamonds, width = 5, height = 5, raytrace = FALSE, preview = TRUE)
+# Return a preview snapshot
+gg1 = plot_gg(
+    ggdiamonds,
+    width = 5,
+    height = 5,
+    raytrace = FALSE,
+    preview = TRUE
+)
 ```
 
-    ## Warning: `stat(nlevel)` was deprecated in ggplot2 3.4.0.
-    ## ℹ Please use `after_stat(nlevel)` instead.
-    ## This warning is displayed once every 8 hours.
-    ## Call `lifecycle::last_lifecycle_warnings()` to see where this warning was
-    ## generated.
-
-![](man/figures/README_ggplots-1.png)<!-- -->
-
 ``` r
+# Plot in 3D
 plot_gg(
     ggdiamonds,
     width = 5,
@@ -858,10 +859,14 @@ plot_gg(
     windowsize = c(800, 800)
 )
 Sys.sleep(0.2)
-render_snapshot(clear = TRUE)
+gg2 = render_snapshot(clear = TRUE, plot = FALSE)
 ```
 
-![](man/figures/README_ggplots-2.png)<!-- -->
+``` r
+rayimage::plot_image_grid(list(gg1, gg2), dim = c(1, 2))
+```
+
+![](man/figures/README_ggplots_plot-1.png)<!-- -->
 
 Rayshader will automatically ignore lines and other elements that should
 not be mapped to 3D. Here’s a contour plot of the `volcano` dataset.
@@ -880,16 +885,21 @@ ggvolcano = volcano |>
     scale_fill_gradientn("Z", colours = terrain.colors(10)) +
     coord_fixed()
 
-par(mfrow = c(1, 2))
-plot_gg(ggvolcano, width = 7, height = 4, raytrace = FALSE, preview = TRUE)
+# Return a preview snapshot
+gg3 = plot_gg(
+    ggvolcano,
+    width = 7,
+    height = 4,
+    raytrace = FALSE,
+    preview = TRUE
+)
 ```
 
     ## Warning: Removed 1861 rows containing missing values or values outside the scale range
     ## (`geom_contour()`).
 
-![](man/figures/README_ggplots_2-1.png)<!-- -->
-
 ``` r
+# Plot in 3D
 plot_gg(
     ggvolcano,
     multicore = TRUE,
@@ -910,10 +920,14 @@ plot_gg(
 ``` r
 Sys.sleep(0.2)
 
-render_snapshot(clear = TRUE)
+gg4 = render_snapshot(clear = TRUE, plot = FALSE)
 ```
 
-![](man/figures/README_ggplots_2-2.png)<!-- -->
+``` r
+rayimage::plot_image_grid(list(gg3, gg4), dim = c(1, 2))
+```
+
+![](man/figures/README_ggplots_plot_2-1.png)<!-- -->
 
 Rayshader also detects when the user passes the `color` aesthetic, and
 maps those values to 3D. If both `color` and `fill` are passed, however,
@@ -924,28 +938,31 @@ mtplot = ggplot(mtcars) +
     geom_point(aes(x = mpg, y = disp, color = cyl), size = 2) +
     scale_color_continuous(limits = c(0, 8))
 
-par(mfrow = c(1, 2))
-plot_gg(mtplot, width = 3.5, raytrace = FALSE, preview = TRUE)
+# Return a preview snapshot
+gg5 = plot_gg(mtplot, width = 3.5, raytrace = FALSE, preview = TRUE)
 ```
 
-![](man/figures/README_ggplots_3-1.png)<!-- -->
-
 ``` r
+# Plot in 3D
 plot_gg(
     mtplot,
     width = 3.5,
-    multicore = TRUE,
+    multicore = TRUE, 
     windowsize = c(800, 800),
     zoom = 0.85,
-    phi = 35,
+    phi = 35, 
     theta = 30,
     sunangle = 225
 )
 Sys.sleep(0.2)
-render_snapshot(clear = TRUE)
+gg6 = render_snapshot(clear = TRUE, plot = FALSE)
 ```
 
-![](man/figures/README_ggplots_3-2.png)<!-- -->
+``` r
+rayimage::plot_image_grid(list(gg5, gg6), dim = c(1, 2))
+```
+
+![](man/figures/README_ggplots_plot_3-1.png)<!-- -->
 
 Utilize combinations of line color and fill to create different effects.
 Here is a terraced hexbin plot, created by mapping the line colors of
@@ -958,14 +975,14 @@ c = data.frame(x = rnorm(20000, 9.5, 1.9), y = rnorm(20000, 15.5, 1.9))
 data = rbind(a, b, c)
 
 #Lines
-pp = ggplot(data, aes(x = x, y = y)) +
+pp = ggplot(data, aes(x = x, y = y, fill = after_stat(count))) +
     geom_hex(bins = 20, linewidth = 0.5, color = "black") +
-    scale_fill_viridis_c(option = "C")
+    scale_fill_viridis_c(option = "C") +  
+    scale_color_viridis_c(option = "C")
 
-par(mfrow = c(1, 2))
-plot_gg(
-    pp,
-    width = 5,
+gg7 = plot_gg(
+    pp, 
+    width = 5, 
     height = 4,
     scale = 300,
     raytrace = FALSE,
@@ -973,38 +990,39 @@ plot_gg(
 )
 ```
 
-![](man/figures/README_ggplots_4-1.png)<!-- -->
-
 ``` r
 plot_gg(
-    pp,
-    width = 5,
-    height = 4,
-    scale = 300,
+    pp,  
+    width = 5, 
+    height = 4, 
+    scale = 300, 
     multicore = TRUE,
     windowsize = c(1000, 800)
 )
 render_camera(fov = 70, zoom = 0.5, theta = 130, phi = 35)
 Sys.sleep(0.2)
-render_snapshot(clear = TRUE)
+gg8 = render_snapshot(clear = TRUE, plot = FALSE)
 ```
 
-![](man/figures/README_ggplots_4-2.png)<!-- -->
+``` r
+rayimage::plot_image_grid(list(gg7, gg8), dim = c(1, 2)) 
+```
+
+![](man/figures/README_ggplots_plot_4-1.png)<!-- -->
 
 You can also use the `render_depth()` function to direct the viewer’s
 focus to a important areas in the figure.
 
 ``` r
-par(mfrow = c(1, 1))
 plot_gg(
-    pp,
+    pp, 
     width = 5,
     height = 4,
     scale = 300,
-    multicore = TRUE,
-    windowsize = c(1200, 960),
-    fov = 70,
-    zoom = 0.4,
+    multicore = TRUE, offset_edges = 0,
+    windowsize = c(1200, 960), 
+    fov = 70, 
+    zoom = 0.4, 
     theta = 330,
     phi = 40
 )
@@ -1030,9 +1048,9 @@ download.file("https://www.tylermw.com/data/venice_sunset_2k.hdr", tempfilehdr)
 
 par(mfrow = c(1, 1))
 plot_gg(
-    pp,
+    pp, 
     width = 5,
-    height = 4,
+    height = 4, 
     scale = 300,
     raytrace = FALSE,
     windowsize = c(1200, 960),
@@ -1040,7 +1058,7 @@ plot_gg(
     zoom = 0.21,
     theta = -25,
     phi = 9,
-    max_error = 0.01,
+    max_error = 0.01, 
     verbose = TRUE,
 )
 Sys.sleep(0.2)
@@ -1048,15 +1066,16 @@ render_highquality(
     samples = 16,
     aperture = 30,
     light = FALSE,
-    override_material = TRUE,
-    focal_distance = 1043,
+    override_material = TRUE, 
+    focal_distance = 1043, 
     material = rayrender::dielectric(attenuation = c(1, 1, 0.3) / 200),
     ground_material = rayrender::diffuse(
-        checkercolor = "grey80",
+        checkercolor = "grey80", 
         sigma = 90,
         checkerperiod = 100
     ),
     environment_light = tempfilehdr,
+    rotate_env = 180
 )
 ```
 

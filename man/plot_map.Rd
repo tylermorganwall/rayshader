@@ -6,7 +6,6 @@
 \usage{
 plot_map(
   hillshade,
-  asp = 1,
   title_text = NA,
   title_offset = c(20, 20),
   title_color = "black",
@@ -21,9 +20,6 @@ plot_map(
 }
 \arguments{
 \item{hillshade}{Hillshade to be plotted.}
-
-\item{asp}{Default \code{1}. Aspect ratio of the resulting plot. Use \code{asp = 1/cospi(mean_latitude/180)} to rescale
-lat/long at higher latitudes to the correct the aspect ratio.}
 
 \item{title_text}{Default \code{NULL}. Text. Adds a title to the image, using \code{magick::image_annotate()}.}
 
@@ -64,16 +60,5 @@ montereybay |>
  add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0))  |>
  add_shadow(ray_shade(montereybay,zscale=50),0.3) |>
  plot_map()
-}
-#Correcting the aspect ratio for the latitude of Monterey Bay
-
-extent_mb = attr(montereybay,"extent")
-mean_latitude = mean(c(extent_mb@ymax,extent_mb@ymin))
-if(run_documentation()) {
-montereybay |>
- sphere_shade(zscale=10) |>
- add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0))  |>
- add_shadow(ray_shade(montereybay,zscale=50),0.3) |>
- plot_map(asp = 1/cospi(mean_latitude/180))
 }
 }

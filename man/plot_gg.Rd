@@ -41,6 +41,8 @@ plot_gg(
   save_height_matrix = FALSE,
   save_shadow_matrix = FALSE,
   saved_shadow_matrix = NULL,
+  monitor_gamma = 1.8,
+  plot = TRUE,
   ...
 )
 }
@@ -147,6 +149,10 @@ default, this just decreases the size of height map, not the image. If you wish 
 
 \item{saved_shadow_matrix}{Default \code{NULL}. A cached shadow matrix (saved by the a previous invocation of \link[=plot_gg]{\code{plot_gg(..., save_shadow_matrix=TRUE)}} to use instead of raytracing a shadow map each time.}
 
+\item{monitor_gamma}{Default \code{1.8}. Undo the gamma correction applied by the png device. Ignored if \code{ragg} is installed or the \code{cairo} PNG device is available.}
+
+\item{plot}{Default \code{TRUE}. Whether to plot the image when \code{preview = TRUE}, or just return the RGBA rayimg.}
+
 \item{...}{Additional arguments to be passed to \code{\link[=plot_3d]{plot_3d()}}.}
 }
 \value{
@@ -174,10 +180,12 @@ options("cores"=2)
 }
 
 ggdiamonds = ggplot(diamonds, aes(x, depth)) +
- stat_density_2d(aes(fill = after_stat(nlevel)), geom = "polygon",
+ stat_density_2d(aes(fill = after_stat(nlevel), color = after_stat(nlevel)),
+                 geom = "polygon",
                  n = 200, bins = 50,contour = TRUE) +
  facet_wrap(clarity~.) +
- scale_fill_viridis_c(option = "A")
+ scale_fill_viridis_c(option = "A") +
+ scale_color_viridis_c(option = "A")
 if(run_documentation()) {
 plot_gg(ggdiamonds,multicore = TRUE,width=5,height=5,scale=250,windowsize=c(1400,866),
        zoom = 0.55, phi = 30)

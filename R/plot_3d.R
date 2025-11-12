@@ -49,8 +49,6 @@
 #'window does not currently work on macOS (tested on Mojave), but the size can still be specified.
 #'@param precomputed_normals Default `NULL`. Takes the output of `calculate_normals()` to save
 #' computing normals internally.
-#'@param asp Default `1`. Aspect ratio of the resulting plot. Use `asp = 1/cospi(mean_latitude/180)` to rescale
-#'lat/long at higher latitudes to the correct the aspect ratio.
 #'@param triangulate Default `FALSE`. Reduce the size of the 3D model by triangulating the height map.
 #'Set this to `TRUE` if generating the model is slow, or moving it is choppy. Will also reduce the size
 #'of 3D models saved to disk.
@@ -172,7 +170,6 @@ plot_3d = function(
 	background = "white",
 	windowsize = 600,
 	precomputed_normals = NULL,
-	asp = 1,
 	triangulate = FALSE,
 	max_error = 0,
 	max_tri = 0,
@@ -497,15 +494,6 @@ plot_3d = function(
 			alpha = waterlinealpha,
 			linewidth = linewidth,
 			antialias = lineantialias
-		)
-	}
-	if (asp != 1) {
-		height_range = range(heightmap, na.rm = TRUE) / zscale
-		height_scale = height_range[2] - height_range[1]
-		rgl::aspect3d(
-			x = dim(heightmap)[1] / height_scale,
-			y = 1,
-			z = dim(heightmap)[2] * asp / height_scale
 		)
 	}
 }
