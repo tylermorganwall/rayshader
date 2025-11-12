@@ -18,7 +18,7 @@ Note: Calling plot_3d() resets the scene cache for the render_snapshot(), render
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.39.4</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.40.0</span>
       </span>
     </div>
 
@@ -137,7 +137,6 @@ Note: Calling plot_3d() resets the scene cache for the render_snapshot(), render
 <span>  background <span class="op">=</span> <span class="st">"white"</span>,</span>
 <span>  windowsize <span class="op">=</span> <span class="fl">600</span>,</span>
 <span>  precomputed_normals <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  asp <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  triangulate <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  max_error <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  max_tri <span class="op">=</span> <span class="fl">0</span>,</span>
@@ -300,11 +299,6 @@ window does not currently work on macOS (tested on Mojave), but the size can sti
 <dt id="arg-precomputed-normals">precomputed_normals<a class="anchor" aria-label="anchor" href="#arg-precomputed-normals"></a></dt>
 <dd><p>Default <code>NULL</code>. Takes the output of <code>calculate_normals()</code> to save
 computing normals internally.</p></dd>
-
-
-<dt id="arg-asp">asp<a class="anchor" aria-label="anchor" href="#arg-asp"></a></dt>
-<dd><p>Default <code>1</code>. Aspect ratio of the resulting plot. Use <code>asp = 1/cospi(mean_latitude/180)</code> to rescale
-lat/long at higher latitudes to the correct the aspect ratio.</p></dd>
 
 
 <dt id="arg-triangulate">triangulate<a class="anchor" aria-label="anchor" href="#arg-triangulate"></a></dt>

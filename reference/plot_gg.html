@@ -25,7 +25,7 @@ into 3D.'><meta property="og:image" content="https://www.rayshader.com/reference
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.39.4</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.40.0</span>
       </span>
     </div>
 
@@ -152,6 +152,8 @@ into 3D.</p>
 <span>  save_height_matrix <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  save_shadow_matrix <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  saved_shadow_matrix <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  monitor_gamma <span class="op">=</span> <span class="fl">1.8</span>,</span>
+<span>  plot <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -334,6 +336,14 @@ default, this just decreases the size of height map, not the image. If you wish 
 <dd><p>Default <code>NULL</code>. A cached shadow matrix (saved by the a previous invocation of <code>plot_gg(..., save_shadow_matrix=TRUE)</code> to use instead of raytracing a shadow map each time.</p></dd>
 
 
+<dt id="arg-monitor-gamma">monitor_gamma<a class="anchor" aria-label="anchor" href="#arg-monitor-gamma"></a></dt>
+<dd><p>Default <code>1.8</code>. Undo the gamma correction applied by the png device. Ignored if <code>ragg</code> is installed or the <code>cairo</code> PNG device is available.</p></dd>
+
+
+<dt id="arg-plot">plot<a class="anchor" aria-label="anchor" href="#arg-plot"></a></dt>
+<dd><p>Default <code>TRUE</code>. Whether to plot the image when <code>preview = TRUE</code>, or just return the RGBA rayimg.</p></dd>
+
+
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
 <dd><p>Additional arguments to be passed to <code><a href="plot_3d.html">plot_3d()</a></code>.</p></dd>
 
@@ -350,10 +360,12 @@ default, this just decreases the size of height map, not the image. If you wish 
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Loading required package: viridisLite</span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="va">ggdiamonds</span> <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">diamonds</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">depth</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span></span>
-<span class="r-in"><span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_density_2d.html" class="external-link">stat_density_2d</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes_eval.html" class="external-link">after_stat</a></span><span class="op">(</span><span class="va">nlevel</span><span class="op">)</span><span class="op">)</span>, geom <span class="op">=</span> <span class="st">"polygon"</span>,</span></span>
+<span class="r-in"><span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_density_2d.html" class="external-link">stat_density_2d</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes_eval.html" class="external-link">after_stat</a></span><span class="op">(</span><span class="va">nlevel</span><span class="op">)</span>, color <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes_eval.html" class="external-link">after_stat</a></span><span class="op">(</span><span class="va">nlevel</span><span class="op">)</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                 geom <span class="op">=</span> <span class="st">"polygon"</span>,</span></span>
 <span class="r-in"><span>                 n <span class="op">=</span> <span class="fl">200</span>, bins <span class="op">=</span> <span class="fl">50</span>,contour <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> <span class="op">+</span></span></span>
 <span class="r-in"><span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="va">clarity</span><span class="op">~</span><span class="va">.</span><span class="op">)</span> <span class="op">+</span></span></span>
-<span class="r-in"><span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_fill_viridis_c</a></span><span class="op">(</span>option <span class="op">=</span> <span class="st">"A"</span><span class="op">)</span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_fill_viridis_c</a></span><span class="op">(</span>option <span class="op">=</span> <span class="st">"A"</span><span class="op">)</span> <span class="op">+</span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_color_viridis_c</a></span><span class="op">(</span>option <span class="op">=</span> <span class="st">"A"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="fu">plot_gg</span><span class="op">(</span><span class="va">ggdiamonds</span>,multicore <span class="op">=</span> <span class="cn">TRUE</span>,width<span class="op">=</span><span class="fl">5</span>,height<span class="op">=</span><span class="fl">5</span>,scale<span class="op">=</span><span class="fl">250</span>,windowsize<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1400</span>,<span class="fl">866</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>       zoom <span class="op">=</span> <span class="fl">0.55</span>, phi <span class="op">=</span> <span class="fl">30</span><span class="op">)</span></span></span>

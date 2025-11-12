@@ -38,7 +38,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.39.4</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.40.0</span>
       </span>
     </div>
 
@@ -707,6 +707,7 @@
 <span>    long <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unlist.html" class="external-link">unlist</a></span><span class="op">(</span><span class="va">bird_track_long</span><span class="op">)</span>,</span>
 <span>    altitude <span class="op">=</span> <span class="va">z_out</span>,</span>
 <span>    zscale <span class="op">=</span> <span class="fl">50</span>,</span>
+<span>    size <span class="op">=</span> <span class="fl">3</span>,</span>
 <span>    color <span class="op">=</span> <span class="st">"red"</span>,</span>
 <span>    clear_previous <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span>
@@ -722,6 +723,7 @@
 <span>    long <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unlist.html" class="external-link">unlist</a></span><span class="op">(</span><span class="va">bird_track_long</span><span class="op">)</span>,</span>
 <span>    altitude <span class="op">=</span> <span class="va">z_out</span>,</span>
 <span>    zscale <span class="op">=</span> <span class="fl">50</span>,</span>
+<span>    linewidth <span class="op">=</span> <span class="fl">3</span>,</span>
 <span>    color <span class="op">=</span> <span class="st">"white"</span>,</span>
 <span>    antialias <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span>
@@ -769,28 +771,29 @@
 <span id="cb32-5"><a href="#cb32-5" tabindex="-1"></a><span class="do">## </span></span>
 <span id="cb32-6"><a href="#cb32-6" tabindex="-1"></a><span class="do">##     arrow</span></span></code></pre></div>
 <div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">ggdiamonds</span> <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">diamonds</span><span class="op">)</span> <span class="op">+</span></span>
+<code class="sourceCode R"><span><span class="va">ggdiamonds</span> <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">diamonds</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">depth</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_density_2d.html" class="external-link">stat_density_2d</a></span><span class="op">(</span></span>
-<span>        <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">x</span>, y <span class="op">=</span> <span class="va">depth</span>, fill <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes_eval.html" class="external-link">stat</a></span><span class="op">(</span><span class="va">nlevel</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>        <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes_eval.html" class="external-link">after_stat</a></span><span class="op">(</span><span class="va">nlevel</span><span class="op">)</span>, color <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes_eval.html" class="external-link">after_stat</a></span><span class="op">(</span><span class="va">nlevel</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>        geom <span class="op">=</span> <span class="st">"polygon"</span>,</span>
 <span>        n <span class="op">=</span> <span class="fl">200</span>,</span>
 <span>        bins <span class="op">=</span> <span class="fl">50</span>,</span>
 <span>        contour <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span>    <span class="op">)</span> <span class="op">+</span></span>
 <span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="va">clarity</span> <span class="op">~</span> <span class="va">.</span><span class="op">)</span> <span class="op">+</span></span>
-<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_fill_viridis_c</a></span><span class="op">(</span>option <span class="op">=</span> <span class="st">"A"</span><span class="op">)</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_fill_viridis_c</a></span><span class="op">(</span>option <span class="op">=</span> <span class="st">"A"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_color_viridis_c</a></span><span class="op">(</span>option <span class="op">=</span> <span class="st">"A"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="reference/plot_gg.html">plot_gg</a></span><span class="op">(</span><span class="va">ggdiamonds</span>, width <span class="op">=</span> <span class="fl">5</span>, height <span class="op">=</span> <span class="fl">5</span>, raytrace <span class="op">=</span> <span class="cn">FALSE</span>, preview <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<div class="sourceCode" id="cb34"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" tabindex="-1"></a><span class="do">## Warning: `stat(nlevel)` was deprecated in ggplot2 3.4.0.</span></span>
-<span id="cb34-2"><a href="#cb34-2" tabindex="-1"></a><span class="do">## ℹ Please use `after_stat(nlevel)` instead.</span></span>
-<span id="cb34-3"><a href="#cb34-3" tabindex="-1"></a><span class="do">## This warning is displayed once every 8 hours.</span></span>
-<span id="cb34-4"><a href="#cb34-4" tabindex="-1"></a><span class="do">## Call `lifecycle::last_lifecycle_warnings()` to see where this warning was</span></span>
-<span id="cb34-5"><a href="#cb34-5" tabindex="-1"></a><span class="do">## generated.</span></span></code></pre></div>
-<p><img src="reference/figures/README_ggplots-1.png"><!-- --></p>
-<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="reference/plot_gg.html">plot_gg</a></span><span class="op">(</span></span>
+<span><span class="co"># Return a preview snapshot</span></span>
+<span><span class="va">gg1</span> <span class="op">=</span> <span class="fu"><a href="reference/plot_gg.html">plot_gg</a></span><span class="op">(</span></span>
+<span>    <span class="va">ggdiamonds</span>,</span>
+<span>    width <span class="op">=</span> <span class="fl">5</span>,</span>
+<span>    height <span class="op">=</span> <span class="fl">5</span>,</span>
+<span>    raytrace <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>    preview <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Plot in 3D</span></span>
+<span><span class="fu"><a href="reference/plot_gg.html">plot_gg</a></span><span class="op">(</span></span>
 <span>    <span class="va">ggdiamonds</span>,</span>
 <span>    width <span class="op">=</span> <span class="fl">5</span>,</span>
 <span>    height <span class="op">=</span> <span class="fl">5</span>,</span>
@@ -802,8 +805,10 @@
 <span>    windowsize <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">800</span>, <span class="fl">800</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Sys.sleep.html" class="external-link">Sys.sleep</a></span><span class="op">(</span><span class="fl">0.2</span><span class="op">)</span></span>
-<span><span class="fu"><a href="reference/render_snapshot.html">render_snapshot</a></span><span class="op">(</span>clear <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<p><img src="reference/figures/README_ggplots-2.png"><!-- --></p>
+<span><span class="va">gg2</span> <span class="op">=</span> <span class="fu"><a href="reference/render_snapshot.html">render_snapshot</a></span><span class="op">(</span>clear <span class="op">=</span> <span class="cn">TRUE</span>, plot <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">rayimage</span><span class="fu">::</span><span class="fu"><a href="https://www.rayimage.dev/reference/plot_image_grid.html" class="external-link">plot_image_grid</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">gg1</span>, <span class="va">gg2</span><span class="op">)</span>, dim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p><img src="reference/figures/README_ggplots_plot-1.png"><!-- --></p>
 <p>Rayshader will automatically ignore lines and other elements that should not be mapped to 3D. Here’s a contour plot of the <code>volcano</code> dataset.</p>
 <div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/hadley/reshape" class="external-link">reshape2</a></span><span class="op">)</span></span>
@@ -819,13 +824,19 @@
 <span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_gradient.html" class="external-link">scale_fill_gradientn</a></span><span class="op">(</span><span class="st">"Z"</span>, colours <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/grDevices/palettes.html" class="external-link">terrain.colors</a></span><span class="op">(</span><span class="fl">10</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/coord_fixed.html" class="external-link">coord_fixed</a></span><span class="op">(</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="fu"><a href="reference/plot_gg.html">plot_gg</a></span><span class="op">(</span><span class="va">ggvolcano</span>, width <span class="op">=</span> <span class="fl">7</span>, height <span class="op">=</span> <span class="fl">4</span>, raytrace <span class="op">=</span> <span class="cn">FALSE</span>, preview <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<span><span class="co"># Return a preview snapshot</span></span>
+<span><span class="va">gg3</span> <span class="op">=</span> <span class="fu"><a href="reference/plot_gg.html">plot_gg</a></span><span class="op">(</span></span>
+<span>    <span class="va">ggvolcano</span>,</span>
+<span>    width <span class="op">=</span> <span class="fl">7</span>,</span>
+<span>    height <span class="op">=</span> <span class="fl">4</span>,</span>
+<span>    raytrace <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>    preview <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span></code></pre></div>
 <div class="sourceCode" id="cb37"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" tabindex="-1"></a><span class="do">## Warning: Removed 1861 rows containing missing values or values outside the scale range</span></span>
 <span id="cb37-2"><a href="#cb37-2" tabindex="-1"></a><span class="do">## (`geom_contour()`).</span></span></code></pre></div>
-<p><img src="reference/figures/README_ggplots_2-1.png"><!-- --></p>
 <div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="reference/plot_gg.html">plot_gg</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="co"># Plot in 3D</span></span>
+<span><span class="fu"><a href="reference/plot_gg.html">plot_gg</a></span><span class="op">(</span></span>
 <span>    <span class="va">ggvolcano</span>,</span>
 <span>    multicore <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>    raytrace <span class="op">=</span> <span class="cn">TRUE</span>,</span>
@@ -842,78 +853,82 @@
 <div class="sourceCode" id="cb40"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Sys.sleep.html" class="external-link">Sys.sleep</a></span><span class="op">(</span><span class="fl">0.2</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="reference/render_snapshot.html">render_snapshot</a></span><span class="op">(</span>clear <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<p><img src="reference/figures/README_ggplots_2-2.png"><!-- --></p>
-<p>Rayshader also detects when the user passes the <code>color</code> aesthetic, and maps those values to 3D. If both <code>color</code> and <code>fill</code> are passed, however, rayshader will default to <code>fill</code>.</p>
+<span><span class="va">gg4</span> <span class="op">=</span> <span class="fu"><a href="reference/render_snapshot.html">render_snapshot</a></span><span class="op">(</span>clear <span class="op">=</span> <span class="cn">TRUE</span>, plot <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
 <div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">rayimage</span><span class="fu">::</span><span class="fu"><a href="https://www.rayimage.dev/reference/plot_image_grid.html" class="external-link">plot_image_grid</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">gg3</span>, <span class="va">gg4</span><span class="op">)</span>, dim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p><img src="reference/figures/README_ggplots_plot_2-1.png"><!-- --></p>
+<p>Rayshader also detects when the user passes the <code>color</code> aesthetic, and maps those values to 3D. If both <code>color</code> and <code>fill</code> are passed, however, rayshader will default to <code>fill</code>.</p>
+<div class="sourceCode" id="cb42"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">mtplot</span> <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">mtcars</span><span class="op">)</span> <span class="op">+</span></span>
 <span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">mpg</span>, y <span class="op">=</span> <span class="va">disp</span>, color <span class="op">=</span> <span class="va">cyl</span><span class="op">)</span>, size <span class="op">=</span> <span class="fl">2</span><span class="op">)</span> <span class="op">+</span></span>
 <span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_colour_continuous.html" class="external-link">scale_color_continuous</a></span><span class="op">(</span>limits <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">8</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="fu"><a href="reference/plot_gg.html">plot_gg</a></span><span class="op">(</span><span class="va">mtplot</span>, width <span class="op">=</span> <span class="fl">3.5</span>, raytrace <span class="op">=</span> <span class="cn">FALSE</span>, preview <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<p><img src="reference/figures/README_ggplots_3-1.png"><!-- --></p>
-<div class="sourceCode" id="cb42"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="reference/plot_gg.html">plot_gg</a></span><span class="op">(</span></span>
+<span><span class="co"># Return a preview snapshot</span></span>
+<span><span class="va">gg5</span> <span class="op">=</span> <span class="fu"><a href="reference/plot_gg.html">plot_gg</a></span><span class="op">(</span><span class="va">mtplot</span>, width <span class="op">=</span> <span class="fl">3.5</span>, raytrace <span class="op">=</span> <span class="cn">FALSE</span>, preview <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb43"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Plot in 3D</span></span>
+<span><span class="fu"><a href="reference/plot_gg.html">plot_gg</a></span><span class="op">(</span></span>
 <span>    <span class="va">mtplot</span>,</span>
 <span>    width <span class="op">=</span> <span class="fl">3.5</span>,</span>
-<span>    multicore <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>    multicore <span class="op">=</span> <span class="cn">TRUE</span>, </span>
 <span>    windowsize <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">800</span>, <span class="fl">800</span><span class="op">)</span>,</span>
 <span>    zoom <span class="op">=</span> <span class="fl">0.85</span>,</span>
-<span>    phi <span class="op">=</span> <span class="fl">35</span>,</span>
+<span>    phi <span class="op">=</span> <span class="fl">35</span>, </span>
 <span>    theta <span class="op">=</span> <span class="fl">30</span>,</span>
 <span>    sunangle <span class="op">=</span> <span class="fl">225</span></span>
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Sys.sleep.html" class="external-link">Sys.sleep</a></span><span class="op">(</span><span class="fl">0.2</span><span class="op">)</span></span>
-<span><span class="fu"><a href="reference/render_snapshot.html">render_snapshot</a></span><span class="op">(</span>clear <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<p><img src="reference/figures/README_ggplots_3-2.png"><!-- --></p>
+<span><span class="va">gg6</span> <span class="op">=</span> <span class="fu"><a href="reference/render_snapshot.html">render_snapshot</a></span><span class="op">(</span>clear <span class="op">=</span> <span class="cn">TRUE</span>, plot <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb44"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">rayimage</span><span class="fu">::</span><span class="fu"><a href="https://www.rayimage.dev/reference/plot_image_grid.html" class="external-link">plot_image_grid</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">gg5</span>, <span class="va">gg6</span><span class="op">)</span>, dim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p><img src="reference/figures/README_ggplots_plot_3-1.png"><!-- --></p>
 <p>Utilize combinations of line color and fill to create different effects. Here is a terraced hexbin plot, created by mapping the line colors of the hexagons to black.</p>
-<div class="sourceCode" id="cb43"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb45"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">a</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">20000</span>, <span class="fl">10</span>, <span class="fl">1.9</span><span class="op">)</span>, y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">20000</span>, <span class="fl">10</span>, <span class="fl">1.2</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">b</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">20000</span>, <span class="fl">14.5</span>, <span class="fl">1.9</span><span class="op">)</span>, y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">20000</span>, <span class="fl">14.5</span>, <span class="fl">1.9</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">c</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>x <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">20000</span>, <span class="fl">9.5</span>, <span class="fl">1.9</span><span class="op">)</span>, y <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="fl">20000</span>, <span class="fl">15.5</span>, <span class="fl">1.9</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">data</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/cbind.html" class="external-link">rbind</a></span><span class="op">(</span><span class="va">a</span>, <span class="va">b</span>, <span class="va">c</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co">#Lines</span></span>
-<span><span class="va">pp</span> <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">data</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">x</span>, y <span class="op">=</span> <span class="va">y</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span><span class="va">pp</span> <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">data</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">x</span>, y <span class="op">=</span> <span class="va">y</span>, fill <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes_eval.html" class="external-link">after_stat</a></span><span class="op">(</span><span class="va">count</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_hex.html" class="external-link">geom_hex</a></span><span class="op">(</span>bins <span class="op">=</span> <span class="fl">20</span>, linewidth <span class="op">=</span> <span class="fl">0.5</span>, color <span class="op">=</span> <span class="st">"black"</span><span class="op">)</span> <span class="op">+</span></span>
-<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_fill_viridis_c</a></span><span class="op">(</span>option <span class="op">=</span> <span class="st">"C"</span><span class="op">)</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_fill_viridis_c</a></span><span class="op">(</span>option <span class="op">=</span> <span class="st">"C"</span><span class="op">)</span> <span class="op">+</span>  </span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_color_viridis_c</a></span><span class="op">(</span>option <span class="op">=</span> <span class="st">"C"</span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="fu"><a href="reference/plot_gg.html">plot_gg</a></span><span class="op">(</span></span>
-<span>    <span class="va">pp</span>,</span>
-<span>    width <span class="op">=</span> <span class="fl">5</span>,</span>
+<span><span class="va">gg7</span> <span class="op">=</span> <span class="fu"><a href="reference/plot_gg.html">plot_gg</a></span><span class="op">(</span></span>
+<span>    <span class="va">pp</span>, </span>
+<span>    width <span class="op">=</span> <span class="fl">5</span>, </span>
 <span>    height <span class="op">=</span> <span class="fl">4</span>,</span>
 <span>    scale <span class="op">=</span> <span class="fl">300</span>,</span>
 <span>    raytrace <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>    preview <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p><img src="reference/figures/README_ggplots_4-1.png"><!-- --></p>
-<div class="sourceCode" id="cb44"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb46"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="reference/plot_gg.html">plot_gg</a></span><span class="op">(</span></span>
-<span>    <span class="va">pp</span>,</span>
-<span>    width <span class="op">=</span> <span class="fl">5</span>,</span>
-<span>    height <span class="op">=</span> <span class="fl">4</span>,</span>
-<span>    scale <span class="op">=</span> <span class="fl">300</span>,</span>
+<span>    <span class="va">pp</span>,  </span>
+<span>    width <span class="op">=</span> <span class="fl">5</span>, </span>
+<span>    height <span class="op">=</span> <span class="fl">4</span>, </span>
+<span>    scale <span class="op">=</span> <span class="fl">300</span>, </span>
 <span>    multicore <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>    windowsize <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1000</span>, <span class="fl">800</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="reference/render_camera.html">render_camera</a></span><span class="op">(</span>fov <span class="op">=</span> <span class="fl">70</span>, zoom <span class="op">=</span> <span class="fl">0.5</span>, theta <span class="op">=</span> <span class="fl">130</span>, phi <span class="op">=</span> <span class="fl">35</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Sys.sleep.html" class="external-link">Sys.sleep</a></span><span class="op">(</span><span class="fl">0.2</span><span class="op">)</span></span>
-<span><span class="fu"><a href="reference/render_snapshot.html">render_snapshot</a></span><span class="op">(</span>clear <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<p><img src="reference/figures/README_ggplots_4-2.png"><!-- --></p>
+<span><span class="va">gg8</span> <span class="op">=</span> <span class="fu"><a href="reference/render_snapshot.html">render_snapshot</a></span><span class="op">(</span>clear <span class="op">=</span> <span class="cn">TRUE</span>, plot <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb47"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">rayimage</span><span class="fu">::</span><span class="fu"><a href="https://www.rayimage.dev/reference/plot_image_grid.html" class="external-link">plot_image_grid</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="va">gg7</span>, <span class="va">gg8</span><span class="op">)</span>, dim <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span><span class="op">)</span><span class="op">)</span> </span></code></pre></div>
+<p><img src="reference/figures/README_ggplots_plot_4-1.png"><!-- --></p>
 <p>You can also use the <code><a href="reference/render_depth.html">render_depth()</a></code> function to direct the viewer’s focus to a important areas in the figure.</p>
-<div class="sourceCode" id="cb45"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="fu"><a href="reference/plot_gg.html">plot_gg</a></span><span class="op">(</span></span>
-<span>    <span class="va">pp</span>,</span>
+<div class="sourceCode" id="cb48"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="reference/plot_gg.html">plot_gg</a></span><span class="op">(</span></span>
+<span>    <span class="va">pp</span>, </span>
 <span>    width <span class="op">=</span> <span class="fl">5</span>,</span>
 <span>    height <span class="op">=</span> <span class="fl">4</span>,</span>
 <span>    scale <span class="op">=</span> <span class="fl">300</span>,</span>
-<span>    multicore <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>    windowsize <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1200</span>, <span class="fl">960</span><span class="op">)</span>,</span>
-<span>    fov <span class="op">=</span> <span class="fl">70</span>,</span>
-<span>    zoom <span class="op">=</span> <span class="fl">0.4</span>,</span>
+<span>    multicore <span class="op">=</span> <span class="cn">TRUE</span>, offset_edges <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>    windowsize <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1200</span>, <span class="fl">960</span><span class="op">)</span>, </span>
+<span>    fov <span class="op">=</span> <span class="fl">70</span>, </span>
+<span>    zoom <span class="op">=</span> <span class="fl">0.4</span>, </span>
 <span>    theta <span class="op">=</span> <span class="fl">330</span>,</span>
 <span>    phi <span class="op">=</span> <span class="fl">40</span></span>
 <span><span class="op">)</span></span>
@@ -922,15 +937,15 @@
 <p><img src="reference/figures/README_ggplots_5-1.png"><!-- --></p>
 <p>Finally, you can increase the allowable error in triangulating the model to vastly reduce the size. Here, we reduce the model to 1/100th of it’s raw (un-triangulated) size, while maintaining model quality. This can improve the performance when rendering 3D ggplots with <code><a href="reference/render_highquality.html">render_highquality()</a></code>, as well as improve performance on slower computers. This triangulation is powered by the {terrainmeshr} package.</p>
 <p>Here, we make a 3D ggplot out of glass, using a triangulated model and <code><a href="reference/render_highquality.html">render_highquality()</a></code>.</p>
-<div class="sourceCode" id="cb46"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb49"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">tempfilehdr</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span>fileext <span class="op">=</span> <span class="st">".hdr"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/download.file.html" class="external-link">download.file</a></span><span class="op">(</span><span class="st">"https://www.tylermw.com/data/venice_sunset_2k.hdr"</span>, <span class="va">tempfilehdr</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span>mfrow <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="reference/plot_gg.html">plot_gg</a></span><span class="op">(</span></span>
-<span>    <span class="va">pp</span>,</span>
+<span>    <span class="va">pp</span>, </span>
 <span>    width <span class="op">=</span> <span class="fl">5</span>,</span>
-<span>    height <span class="op">=</span> <span class="fl">4</span>,</span>
+<span>    height <span class="op">=</span> <span class="fl">4</span>, </span>
 <span>    scale <span class="op">=</span> <span class="fl">300</span>,</span>
 <span>    raytrace <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>    windowsize <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1200</span>, <span class="fl">960</span><span class="op">)</span>,</span>
@@ -938,7 +953,7 @@
 <span>    zoom <span class="op">=</span> <span class="fl">0.21</span>,</span>
 <span>    theta <span class="op">=</span> <span class="op">-</span><span class="fl">25</span>,</span>
 <span>    phi <span class="op">=</span> <span class="fl">9</span>,</span>
-<span>    max_error <span class="op">=</span> <span class="fl">0.01</span>,</span>
+<span>    max_error <span class="op">=</span> <span class="fl">0.01</span>, </span>
 <span>    verbose <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/Sys.sleep.html" class="external-link">Sys.sleep</a></span><span class="op">(</span><span class="fl">0.2</span><span class="op">)</span></span>
@@ -946,15 +961,16 @@
 <span>    samples <span class="op">=</span> <span class="fl">16</span>,</span>
 <span>    aperture <span class="op">=</span> <span class="fl">30</span>,</span>
 <span>    light <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>    override_material <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>    focal_distance <span class="op">=</span> <span class="fl">1043</span>,</span>
+<span>    override_material <span class="op">=</span> <span class="cn">TRUE</span>, </span>
+<span>    focal_distance <span class="op">=</span> <span class="fl">1043</span>, </span>
 <span>    material <span class="op">=</span> <span class="fu">rayrender</span><span class="fu">::</span><span class="fu"><a href="http://www.rayrender.net/reference/dielectric.html" class="external-link">dielectric</a></span><span class="op">(</span>attenuation <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">0.3</span><span class="op">)</span> <span class="op">/</span> <span class="fl">200</span><span class="op">)</span>,</span>
 <span>    ground_material <span class="op">=</span> <span class="fu">rayrender</span><span class="fu">::</span><span class="fu"><a href="http://www.rayrender.net/reference/diffuse.html" class="external-link">diffuse</a></span><span class="op">(</span></span>
-<span>        checkercolor <span class="op">=</span> <span class="st">"grey80"</span>,</span>
+<span>        checkercolor <span class="op">=</span> <span class="st">"grey80"</span>, </span>
 <span>        sigma <span class="op">=</span> <span class="fl">90</span>,</span>
 <span>        checkerperiod <span class="op">=</span> <span class="fl">100</span></span>
 <span>    <span class="op">)</span>,</span>
 <span>    environment_light <span class="op">=</span> <span class="va">tempfilehdr</span>,</span>
+<span>    rotate_env <span class="op">=</span> <span class="fl">180</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p><img src="reference/figures/README_ggplots_6-1.png"><!-- --></p>
 </div>

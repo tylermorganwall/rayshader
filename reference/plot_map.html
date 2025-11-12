@@ -17,7 +17,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.39.4</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.40.0</span>
       </span>
     </div>
 
@@ -101,7 +101,6 @@
     <div id="ref-usage">
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">plot_map</span><span class="op">(</span></span>
 <span>  <span class="va">hillshade</span>,</span>
-<span>  asp <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  title_text <span class="op">=</span> <span class="cn">NA</span>,</span>
 <span>  title_offset <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">20</span>, <span class="fl">20</span><span class="op">)</span>,</span>
 <span>  title_color <span class="op">=</span> <span class="st">"black"</span>,</span>
@@ -121,11 +120,6 @@
 
 <dl><dt id="arg-hillshade">hillshade<a class="anchor" aria-label="anchor" href="#arg-hillshade"></a></dt>
 <dd><p>Hillshade to be plotted.</p></dd>
-
-
-<dt id="arg-asp">asp<a class="anchor" aria-label="anchor" href="#arg-asp"></a></dt>
-<dd><p>Default <code>1</code>. Aspect ratio of the resulting plot. Use <code>asp = 1/cospi(mean_latitude/180)</code> to rescale
-lat/long at higher latitudes to the correct the aspect ratio.</p></dd>
 
 
 <dt id="arg-title-text">title_text<a class="anchor" aria-label="anchor" href="#arg-title-text"></a></dt>
@@ -188,18 +182,6 @@ image_annotate) corner to offset the title.</p></dd>
 <span class="r-in"><span> <span class="fu">plot_map</span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-plt img"><img src="plot_map-1.png" alt="" width="768" height="768"></span>
-<span class="r-in"><span><span class="co">#Correcting the aspect ratio for the latitude of Monterey Bay</span></span></span>
-<span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="va">extent_mb</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/attr.html" class="external-link">attr</a></span><span class="op">(</span><span class="va">montereybay</span>,<span class="st">"extent"</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="va">mean_latitude</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/mean.html" class="external-link">mean</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">extent_mb</span><span class="op">@</span><span class="va">ymax</span>,<span class="va">extent_mb</span><span class="op">@</span><span class="va">ymin</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
-<span class="r-in"><span><span class="va">montereybay</span> <span class="op">|&gt;</span></span></span>
-<span class="r-in"><span> <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span>zscale<span class="op">=</span><span class="fl">10</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
-<span class="r-in"><span> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu"><a href="generate_altitude_overlay.html">generate_altitude_overlay</a></span><span class="op">(</span><span class="va">bathy_hs</span>, <span class="va">montereybay</span>, <span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span>  <span class="op">|&gt;</span></span></span>
-<span class="r-in"><span> <span class="fu"><a href="add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="fu"><a href="ray_shade.html">ray_shade</a></span><span class="op">(</span><span class="va">montereybay</span>,zscale<span class="op">=</span><span class="fl">50</span><span class="op">)</span>,<span class="fl">0.3</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
-<span class="r-in"><span> <span class="fu">plot_map</span><span class="op">(</span>asp <span class="op">=</span> <span class="fl">1</span><span class="op">/</span><span class="fu"><a href="https://rdrr.io/r/base/Trig.html" class="external-link">cospi</a></span><span class="op">(</span><span class="va">mean_latitude</span><span class="op">/</span><span class="fl">180</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-plt img"><img src="plot_map-2.png" alt="" width="768" height="768"></span>
 </code></pre></div>
     </div>
   </div>
