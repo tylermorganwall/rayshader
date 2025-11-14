@@ -65,7 +65,7 @@
 #'rgl::par3d(ignoreExtent = TRUE)
 #'render_multipolygonz(washington_monument_multipolygonz,
 #'                     extent = raster::extent(cropped_data),
-#'                     zscale = 4, color = "white",
+#'                     zscale = 4, color = "grey80",
 #'                     heightmap = dc_elevation_matrix)
 #'render_snapshot()
 #'}
@@ -74,39 +74,39 @@
 #'render_highquality(min_variance = 0, samples = 16)
 #'}
 render_multipolygonz = function(
-	sfobj,
-	extent = NULL,
-	zscale = 1,
-	heightmap = NULL,
-	color = "grey50",
-	offset = 0,
-	obj_zscale = TRUE,
-	swap_yz = TRUE,
-	clear_previous = FALSE,
-	baseshape = "rectangle",
-	rgl_tag = "_multipolygon",
-	...
+  sfobj,
+  extent = NULL,
+  zscale = 1,
+  heightmap = NULL,
+  color = "grey50",
+  offset = 0,
+  obj_zscale = TRUE,
+  swap_yz = TRUE,
+  clear_previous = FALSE,
+  baseshape = "rectangle",
+  rgl_tag = "_multipolygon",
+  ...
 ) {
-	if (clear_previous) {
-		rgl::pop3d(tag = sprintf("obj%s", rgl_tag))
-		if (missing(sfobj)) {
-			return(invisible())
-		}
-	}
-	obj_temp = tempfile(fileext = ".obj")
-	save_multipolygonz_to_obj(sfobj, obj_temp)
-	render_obj(
-		filename = obj_temp,
-		extent = extent,
-		obj_zscale = obj_zscale,
-		clear_previous = FALSE,
-		zscale = zscale,
-		color = color,
-		offset = offset,
-		swap_yz = swap_yz,
-		heightmap = heightmap,
-		baseshape = baseshape,
-		rgl_tag = rgl_tag,
-		...
-	)
+  if (clear_previous) {
+    rgl::pop3d(tag = sprintf("obj%s", rgl_tag))
+    if (missing(sfobj)) {
+      return(invisible())
+    }
+  }
+  obj_temp = tempfile(fileext = ".obj")
+  save_multipolygonz_to_obj(sfobj, obj_temp)
+  render_obj(
+    filename = obj_temp,
+    extent = extent,
+    obj_zscale = obj_zscale,
+    clear_previous = FALSE,
+    zscale = zscale,
+    color = color,
+    offset = offset,
+    swap_yz = swap_yz,
+    heightmap = heightmap,
+    baseshape = baseshape,
+    rgl_tag = rgl_tag,
+    ...
+  )
 }

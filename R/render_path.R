@@ -117,13 +117,13 @@
 #'if(run_documentation()) {
 #'#And all of these work with `render_highquality()`. Here, I set `use_extruded_paths = TRUE`
 #'#to get thick continuous paths.
-#'render_highquality(line_radius=0.5, min_variance = 0,
+#'render_highquality(line_radius=1, min_variance = 0,
 #'                   use_extruded_paths = TRUE, samples = 16)
 #'}
 #'if(run_documentation()) {
 #'#We can also change the material of the objects by setting the `point_material` and
 #'#`point_material_args` arguments in `render_highquality()`
-#'render_highquality(line_radius=0.5, min_variance = 0, samples = 16,
+#'render_highquality(line_radius=1, min_variance = 0, samples = 16,
 #'                   path_material = rayrender::glossy,  use_extruded_paths = TRUE,
 #'                   path_material_args = list(gloss = 0.5, reflectance = 0.2))
 #'}
@@ -135,254 +135,254 @@
 #'render_path(extent = attr(montereybay,"extent"), heightmap = montereybay, clear_previous = TRUE,
 #'            lat = unlist(circle_coords_lat), long = unlist(circle_coords_long),
 #'            zscale=50, color="white", offset=200, linewidth=5)
-#'render_highquality(line_radius=6, min_variance = 0, samples = 16,
+#'render_highquality(line_radius=1, min_variance = 0, samples = 16,
 #'                   lightsize = 2000, lightintensity = 10,
 #'                   path_material = rayrender::dielectric, use_extruded_paths = TRUE,
 #'                   path_material_args = list(refraction = 1.5, attenuation = c(0.05,0.2,0.2)))
 #'}
 render_path = function(
-	lat,
-	long = NULL,
-	altitude = NULL,
-	groups = NULL,
-	extent = NULL,
-	zscale = 1,
-	heightmap = NULL,
-	resample_evenly = FALSE,
-	resample_n = 360,
-	reorder = FALSE,
-	reorder_first_index = 1,
-	reorder_duplicate_tolerance = 0.1,
-	reorder_merge_tolerance = 1,
-	simplify_tolerance = 0,
-	linewidth = 0.5,
-	color = "black",
-	antialias = FALSE,
-	offset = 5,
-	clear_previous = FALSE,
-	return_coords = FALSE,
-	tag = "path3d"
+  lat,
+  long = NULL,
+  altitude = NULL,
+  groups = NULL,
+  extent = NULL,
+  zscale = 1,
+  heightmap = NULL,
+  resample_evenly = FALSE,
+  resample_n = 360,
+  reorder = FALSE,
+  reorder_first_index = 1,
+  reorder_duplicate_tolerance = 0.1,
+  reorder_merge_tolerance = 1,
+  simplify_tolerance = 0,
+  linewidth = 0.5,
+  color = "black",
+  antialias = FALSE,
+  offset = 5,
+  clear_previous = FALSE,
+  return_coords = FALSE,
+  tag = "path3d"
 ) {
-	if (rgl::cur3d() == 0 && !return_coords) {
-		stop("No rgl window currently open.")
-	}
-	if (clear_previous) {
-		rgl::pop3d(tag = tag)
-		if (missing(lat)) {
-			return(invisible())
-		}
-	}
-	if (resample_evenly) {
-		stopifnot(resample_n > 1)
-		xyz = render_path(
-			extent = extent,
-			lat = lat,
-			long = long,
-			altitude = altitude,
-			zscale = zscale,
-			heightmap = heightmap,
-			offset = offset,
-			resample_evenly = FALSE,
-			reorder = reorder,
-			reorder_first_index = reorder_first_index,
-			reorder_duplicate_tolerance = reorder_duplicate_tolerance,
-			reorder_merge_tolerance = reorder_merge_tolerance,
-			simplify_tolerance = simplify_tolerance,
-			clear_previous = FALSE,
-			return_coords = TRUE
-		)
-		xyz = lapply(xyz, get_interpolated_points_path, n = resample_n)
-		xyz = do.call(
-			"rbind",
-			lapply(xyz, \(x) rbind(x, matrix(NA, ncol = 3, nrow = 1)))
-		)
-		if (!return_coords) {
-			if (length(linewidth) > 1) {
-				if (length(linewidth) == nrow(xyz)) {
-					linewidth = (linewidth[seq_len(length(linewidth))[-1]] +
-						linewidth[seq_len(length(linewidth) - 1)]) /
-						2
-				}
-				color_length = length(color)
-				for (i in seq_len(nrow(xyz) - 1)) {
-					rgl::lines3d(
-						xyz[i:(i + 1), ],
-						color = color[((i - 1) %% color_length) + 1],
-						tag = tag,
-						lwd = linewidth[i],
-						line_antialias = antialias
-					)
-				}
-				return(invisible())
-			} else {
-				rgl::lines3d(
-					xyz,
-					color = color,
-					tag = tag,
-					lwd = linewidth,
-					line_antialias = antialias
-				)
-				return(invisible())
-			}
-		} else {
-			return(xyz)
-		}
-	}
+  if (rgl::cur3d() == 0 && !return_coords) {
+    stop("No rgl window currently open.")
+  }
+  if (clear_previous) {
+    rgl::pop3d(tag = tag)
+    if (missing(lat)) {
+      return(invisible())
+    }
+  }
+  if (resample_evenly) {
+    stopifnot(resample_n > 1)
+    xyz = render_path(
+      extent = extent,
+      lat = lat,
+      long = long,
+      altitude = altitude,
+      zscale = zscale,
+      heightmap = heightmap,
+      offset = offset,
+      resample_evenly = FALSE,
+      reorder = reorder,
+      reorder_first_index = reorder_first_index,
+      reorder_duplicate_tolerance = reorder_duplicate_tolerance,
+      reorder_merge_tolerance = reorder_merge_tolerance,
+      simplify_tolerance = simplify_tolerance,
+      clear_previous = FALSE,
+      return_coords = TRUE
+    )
+    xyz = lapply(xyz, get_interpolated_points_path, n = resample_n)
+    xyz = do.call(
+      "rbind",
+      lapply(xyz, \(x) rbind(x, matrix(NA, ncol = 3, nrow = 1)))
+    )
+    if (!return_coords) {
+      if (length(linewidth) > 1) {
+        if (length(linewidth) == nrow(xyz)) {
+          linewidth = (linewidth[seq_len(length(linewidth))[-1]] +
+            linewidth[seq_len(length(linewidth) - 1)]) /
+            2
+        }
+        color_length = length(color)
+        for (i in seq_len(nrow(xyz) - 1)) {
+          rgl::lines3d(
+            xyz[i:(i + 1), ],
+            color = color[((i - 1) %% color_length) + 1],
+            tag = tag,
+            lwd = linewidth[i],
+            line_antialias = antialias
+          )
+        }
+        return(invisible())
+      } else {
+        rgl::lines3d(
+          xyz,
+          color = color,
+          tag = tag,
+          lwd = linewidth,
+          line_antialias = antialias
+        )
+        return(invisible())
+      }
+    } else {
+      return(xyz)
+    }
+  }
 
-	#Remove empty geometries
-	if (inherits(lat, "sf")) {
-		lat = lat[!sf::st_is_empty(lat), ]
-	}
-	if (reorder && inherits(lat, "sf")) {
-		lat = ray_merge_reorder(
-			lat,
-			start_index = reorder_first_index,
-			merge_tolerance = reorder_merge_tolerance,
-			duplicate_tolerance = reorder_duplicate_tolerance
-		)
-	}
+  #Remove empty geometries
+  if (inherits(lat, "sf")) {
+    lat = lat[!sf::st_is_empty(lat), ]
+  }
+  if (reorder && inherits(lat, "sf")) {
+    lat = ray_merge_reorder(
+      lat,
+      start_index = reorder_first_index,
+      merge_tolerance = reorder_merge_tolerance,
+      duplicate_tolerance = reorder_duplicate_tolerance
+    )
+  }
 
-	if (
-		simplify_tolerance > 0 &&
-			(inherits(lat, "sf") || inherits(lat, "sfc_LINESTRING"))
-	) {
-		lat = sf::st_sf(sf::st_simplify(
-			lat,
-			dTolerance = simplify_tolerance,
-			preserveTopology = TRUE
-		))
-		lat = lat[!sf::st_is_empty(lat), ]
-		lat = suppressWarnings(sf::st_cast(
-			sf::st_cast(lat, "MULTILINESTRING"),
-			"LINESTRING"
-		))
-	}
+  if (
+    simplify_tolerance > 0 &&
+      (inherits(lat, "sf") || inherits(lat, "sfc_LINESTRING"))
+  ) {
+    lat = sf::st_sf(sf::st_simplify(
+      lat,
+      dTolerance = simplify_tolerance,
+      preserveTopology = TRUE
+    ))
+    lat = lat[!sf::st_is_empty(lat), ]
+    lat = suppressWarnings(sf::st_cast(
+      sf::st_cast(lat, "MULTILINESTRING"),
+      "LINESTRING"
+    ))
+  }
 
-	if (inherits(lat, "SpatialLinesDataFrame")) {
-		latlong = sf::st_coordinates(sf::st_as_sf(lat))
-		long = latlong[, 1]
-		lat = latlong[, 2]
-		groups = latlong[, 3]
-	} else if (inherits(lat, "sf")) {
-		latlong = sf::st_coordinates(lat)
-		if (ncol(latlong) == 3) {
-			long = latlong[, 1]
-			lat = latlong[, 2]
-			groups = latlong[, 3]
-		} else if (ncol(latlong) == 4) {
-			long = latlong[, 1]
-			lat = latlong[, 2]
-			groups = interaction(latlong[, 3], latlong[, 4])
-		}
-	} else if (inherits(lat, "sfc_LINESTRING")) {
-		latlong = sf::st_coordinates(lat)
-		if (ncol(latlong) == 3) {
-			long = latlong[, 1]
-			lat = latlong[, 2]
-			groups = latlong[, 3]
-		} else if (ncol(latlong) == 4) {
-			long = latlong[, 1]
-			lat = latlong[, 2]
-			groups = interaction(latlong[, 3], latlong[, 4])
-		}
-	} else if (inherits(lat, "sfc_GEOMETRY")) {
-		geometry_list = list()
-		for (i in seq_len(lat)) {
-			geometry_list[[i]] = sf::st_coordinates(lat[i])
-		}
-		lat = do.call(rbind, geometry_list)
-		if (ncol(latlong) == 3) {
-			long = latlong[, 1]
-			lat = latlong[, 2]
-			groups = latlong[, 3]
-		} else if (ncol(latlong) == 4) {
-			long = latlong[, 1]
-			lat = latlong[, 2]
-			groups = interaction(latlong[, 3], latlong[, 4])
-		}
-	} else if (is.null(groups)) {
-		groups = rep(1, length(lat))
-	}
-	split_lat = split(lat, groups)
-	split_long = split(long, groups)
+  if (inherits(lat, "SpatialLinesDataFrame")) {
+    latlong = sf::st_coordinates(sf::st_as_sf(lat))
+    long = latlong[, 1]
+    lat = latlong[, 2]
+    groups = latlong[, 3]
+  } else if (inherits(lat, "sf")) {
+    latlong = sf::st_coordinates(lat)
+    if (ncol(latlong) == 3) {
+      long = latlong[, 1]
+      lat = latlong[, 2]
+      groups = latlong[, 3]
+    } else if (ncol(latlong) == 4) {
+      long = latlong[, 1]
+      lat = latlong[, 2]
+      groups = interaction(latlong[, 3], latlong[, 4])
+    }
+  } else if (inherits(lat, "sfc_LINESTRING")) {
+    latlong = sf::st_coordinates(lat)
+    if (ncol(latlong) == 3) {
+      long = latlong[, 1]
+      lat = latlong[, 2]
+      groups = latlong[, 3]
+    } else if (ncol(latlong) == 4) {
+      long = latlong[, 1]
+      lat = latlong[, 2]
+      groups = interaction(latlong[, 3], latlong[, 4])
+    }
+  } else if (inherits(lat, "sfc_GEOMETRY")) {
+    geometry_list = list()
+    for (i in seq_len(lat)) {
+      geometry_list[[i]] = sf::st_coordinates(lat[i])
+    }
+    lat = do.call(rbind, geometry_list)
+    if (ncol(latlong) == 3) {
+      long = latlong[, 1]
+      lat = latlong[, 2]
+      groups = latlong[, 3]
+    } else if (ncol(latlong) == 4) {
+      long = latlong[, 1]
+      lat = latlong[, 2]
+      groups = interaction(latlong[, 3], latlong[, 4])
+    }
+  } else if (is.null(groups)) {
+    groups = rep(1, length(lat))
+  }
+  split_lat = split(lat, groups)
+  split_long = split(long, groups)
 
-	if (length(altitude) == length(lat)) {
-		split_altitude = split(altitude, groups)
-		single_altitude = FALSE
-	} else {
-		single_altitude = TRUE
-	}
+  if (length(altitude) == length(lat)) {
+    split_altitude = split(altitude, groups)
+    single_altitude = FALSE
+  } else {
+    single_altitude = TRUE
+  }
 
-	if (!is.null(altitude)) {
-		offset = 0
-	}
+  if (!is.null(altitude)) {
+    offset = 0
+  }
 
-	coord_list = list()
-	for (group in seq_along(split_lat)) {
-		lat = split_lat[[group]]
-		long = split_long[[group]]
-		if (!single_altitude) {
-			altitude = split_altitude[[group]]
-		}
-		coord_list[[group]] = transform_into_heightmap_coords(
-			extent,
-			heightmap,
-			lat,
-			long,
-			altitude,
-			offset,
-			zscale,
-			filter_bounds = FALSE
-		)
-	}
-	if (!return_coords) {
-		if (length(linewidth) > 1) {
-			if (length(coord_list) == 1) {
-				xyz = do.call("rbind", coord_list)
-				if (length(linewidth) == nrow(xyz)) {
-					linewidth = (linewidth[seq_len(length(linewidth))[-1]] +
-						linewidth[seq_len(length(linewidth) - 1)]) /
-						2
-				}
-				stopifnot(length(linewidth) == (nrow(xyz) - 1))
-				color_length = length(color)
-				for (i in seq_len(nrow(xyz) - 1)) {
-					rgl::lines3d(
-						xyz[i:(i + 1), ],
-						color = color[((i - 1) %% color_length) + 1],
-						tag = tag,
-						lwd = linewidth[i],
-						line_antialias = antialias
-					)
-				}
-			} else {
-				stopifnot(length(coord_list) == length(linewidth))
-				color_length = length(color)
-				for (i in seq_len(length(coord_list))) {
-					rgl::lines3d(
-						coord_list[[i]],
-						color = color[((i - 1) %% color_length) + 1],
-						tag = tag,
-						lwd = linewidth[i],
-						line_antialias = antialias
-					)
-				}
-			}
-		} else {
-			xyz = do.call(
-				"rbind",
-				lapply(coord_list, \(x) rbind(x, matrix(NA, ncol = 3, nrow = 1)))
-			)
-			xyz = xyz[-nrow(xyz), ]
-			rgl::lines3d(
-				xyz,
-				color = color,
-				tag = tag,
-				lwd = linewidth,
-				line_antialias = antialias
-			)
-		}
-	} else {
-		return(coord_list)
-	}
+  coord_list = list()
+  for (group in seq_along(split_lat)) {
+    lat = split_lat[[group]]
+    long = split_long[[group]]
+    if (!single_altitude) {
+      altitude = split_altitude[[group]]
+    }
+    coord_list[[group]] = transform_into_heightmap_coords(
+      extent,
+      heightmap,
+      lat,
+      long,
+      altitude,
+      offset,
+      zscale,
+      filter_bounds = FALSE
+    )
+  }
+  if (!return_coords) {
+    if (length(linewidth) > 1) {
+      if (length(coord_list) == 1) {
+        xyz = do.call("rbind", coord_list)
+        if (length(linewidth) == nrow(xyz)) {
+          linewidth = (linewidth[seq_len(length(linewidth))[-1]] +
+            linewidth[seq_len(length(linewidth) - 1)]) /
+            2
+        }
+        stopifnot(length(linewidth) == (nrow(xyz) - 1))
+        color_length = length(color)
+        for (i in seq_len(nrow(xyz) - 1)) {
+          rgl::lines3d(
+            xyz[i:(i + 1), ],
+            color = color[((i - 1) %% color_length) + 1],
+            tag = tag,
+            lwd = linewidth[i],
+            line_antialias = antialias
+          )
+        }
+      } else {
+        stopifnot(length(coord_list) == length(linewidth))
+        color_length = length(color)
+        for (i in seq_len(length(coord_list))) {
+          rgl::lines3d(
+            coord_list[[i]],
+            color = color[((i - 1) %% color_length) + 1],
+            tag = tag,
+            lwd = linewidth[i],
+            line_antialias = antialias
+          )
+        }
+      }
+    } else {
+      xyz = do.call(
+        "rbind",
+        lapply(coord_list, \(x) rbind(x, matrix(NA, ncol = 3, nrow = 1)))
+      )
+      xyz = xyz[-nrow(xyz), ]
+      rgl::lines3d(
+        xyz,
+        color = color,
+        tag = tag,
+        lwd = linewidth,
+        line_antialias = antialias
+      )
+    }
+  } else {
+    return(coord_list)
+  }
 }

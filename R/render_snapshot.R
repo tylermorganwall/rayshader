@@ -107,176 +107,176 @@
 #'                rayvertex_shadow_map = TRUE, software_render = TRUE)
 #'}
 render_snapshot = function(
-	filename,
-	clear = FALSE,
-	title_text = NULL,
-	title_offset = c(20, 20),
-	title_color = "black",
-	title_size = 30,
-	title_font = "sans",
-	title_bar_color = NA,
-	title_bar_alpha = 0.5,
-	title_just = "left",
-	image_overlay = NULL,
-	vignette = FALSE,
-	vignette_color = "black",
-	vignette_radius = 1.3,
-	instant_capture = interactive(),
-	bring_to_front = FALSE,
-	webshot = FALSE,
-	width = NULL,
-	height = NULL,
-	software_render = FALSE,
-	camera_location = NULL,
-	camera_lookat = c(0, 0, 0),
-	background = NULL,
-	text_angle = NULL,
-	text_size = 30,
-	text_offset = c(0, 0, 0),
-	point_radius = 0.5,
-	line_offset = 1e-7,
-	thick_lines = TRUE,
-	line_radius = 0.25,
-	cache_scene = FALSE,
-	reset_scene_cache = FALSE,
-	new_page = TRUE,
-	print_scene_info = FALSE,
-	fsaa = 1,
-	rayvertex_lighting = FALSE,
-	rayvertex_lights = NULL,
-	rayvertex_shadow_map = FALSE,
-	plot = TRUE,
-	...
+  filename,
+  clear = FALSE,
+  title_text = NULL,
+  title_offset = c(20, 20),
+  title_color = "black",
+  title_size = 30,
+  title_font = "sans",
+  title_bar_color = NA,
+  title_bar_alpha = 0.5,
+  title_just = "left",
+  image_overlay = NULL,
+  vignette = FALSE,
+  vignette_color = "black",
+  vignette_radius = 1.3,
+  instant_capture = interactive(),
+  bring_to_front = FALSE,
+  webshot = FALSE,
+  width = NULL,
+  height = NULL,
+  software_render = FALSE,
+  camera_location = NULL,
+  camera_lookat = c(0, 0, 0),
+  background = NULL,
+  text_angle = NULL,
+  text_size = 30,
+  text_offset = c(0, 0, 0),
+  point_radius = 0.5,
+  line_offset = 1e-7,
+  thick_lines = TRUE,
+  line_radius = 0.25,
+  cache_scene = FALSE,
+  reset_scene_cache = FALSE,
+  new_page = TRUE,
+  print_scene_info = FALSE,
+  fsaa = 1,
+  rayvertex_lighting = FALSE,
+  rayvertex_lights = NULL,
+  rayvertex_shadow_map = FALSE,
+  plot = TRUE,
+  ...
 ) {
-	if (rgl::rgl.useNULL()) {
-		software_render = TRUE
-	}
-	if (reset_scene_cache) {
-		assign("scene_cache", NULL, envir = ray_cache_scene_envir)
-	}
-	fsaa = as.integer(fsaa)
-	stopifnot(fsaa >= 1)
-	if (rgl::cur3d() == 0) {
-		stop("No rgl window currently open.")
-	}
-	if (!instant_capture) {
-		Sys.sleep(0.5)
-	}
-	if (!is.null(title_text)) {
-		has_title = TRUE
-	} else {
-		has_title = FALSE
-	}
-	if (length(title_offset) != 2) {
-		stop("`title_offset` needs to be length-2 vector")
-	}
-	if (!is.null(image_overlay)) {
-		if (inherits(image_overlay, "character")) {
-			image_overlay_file = image_overlay
-			has_overlay = TRUE
-		} else if (inherits(image_overlay, "array")) {
-			image_overlay_file = tempfile()
-			png::writePNG(image_overlay, image_overlay_file)
-			has_overlay = TRUE
-		}
-	} else {
-		has_overlay = FALSE
-	}
-	temp = tempfile(fileext = ".png")
+  if (rgl::rgl.useNULL()) {
+    software_render = TRUE
+  }
+  if (reset_scene_cache) {
+    assign("scene_cache", NULL, envir = ray_cache_scene_envir)
+  }
+  fsaa = as.integer(fsaa)
+  stopifnot(fsaa >= 1)
+  if (rgl::cur3d() == 0) {
+    stop("No rgl window currently open.")
+  }
+  if (!instant_capture) {
+    Sys.sleep(0.5)
+  }
+  if (!is.null(title_text)) {
+    has_title = TRUE
+  } else {
+    has_title = FALSE
+  }
+  if (length(title_offset) != 2) {
+    stop("`title_offset` needs to be length-2 vector")
+  }
+  if (!is.null(image_overlay)) {
+    if (inherits(image_overlay, "character")) {
+      image_overlay_file = image_overlay
+      has_overlay = TRUE
+    } else if (inherits(image_overlay, "array")) {
+      image_overlay_file = tempfile()
+      png::writePNG(image_overlay, image_overlay_file)
+      has_overlay = TRUE
+    }
+  } else {
+    has_overlay = FALSE
+  }
+  temp = tempfile(fileext = ".png")
 
-	if (!software_render) {
-		if ("webshot" %in% names(formals(rgl::snapshot3d))) {
-			if (!rgl::rgl.useNULL()) {
-				webshot = FALSE
-			}
-			if (webshot) {
-				rgl::snapshot3d(
-					filename = temp,
-					webshot = webshot,
-					width = width,
-					height = height
-				)
-			} else {
-				rgl::snapshot3d(
-					filename = temp,
-					top = bring_to_front,
-					webshot = webshot
-				)
-			}
-		} else {
-			rgl::snapshot3d(filename = temp, top = bring_to_front)
-		}
-	} else {
-		if (is.null(background)) {
-			bgid = rgl::ids3d("background")$id
-			background = rgl::rgl.attrib(bgid, "colors")
-		}
-		stopifnot(length(text_offset) == 3)
-		debug = render_snapshot_software(
-			filename = temp,
-			cache_scene = cache_scene,
-			camera_location = camera_location,
-			camera_lookat = camera_lookat,
-			background = background,
-			width = width,
-			height = height,
-			light_direction = NULL,
-			fake_shadow = TRUE,
-			text_angle = text_angle,
-			text_size = text_size,
-			text_offset = text_offset,
-			print_scene_info = print_scene_info,
-			point_radius = point_radius,
-			line_offset = -line_offset,
-			fsaa = fsaa,
-			thick_lines = thick_lines,
-			line_radius = line_radius,
-			rayvertex_lighting = rayvertex_lighting,
-			rayvertex_lights = rayvertex_lights,
-			rayvertex_shadow_map = rayvertex_shadow_map,
-			...
-		)
-		if (length(dim(debug)) == 2) {
-			return(flipud(debug))
-		}
-	}
-	tempmap = rayimage::ray_read_image(temp)
-	if (has_overlay) {
-		tempmap = rayimage::render_image_overlay(
-			tempmap,
-			image_overlay = image_overlay_file
-		)
-	}
-	if (vignette || is.numeric(vignette)) {
-		tempmap = rayimage::render_vignette(
-			tempmap,
-			vignette = vignette,
-			color = vignette_color,
-			radius = vignette_radius
-		)
-	}
-	if (has_title) {
-		tempmap = rayimage::render_title(
-			tempmap,
-			title_text = title_text,
-			title_bar_color = title_bar_color,
-			title_bar_alpha = title_bar_alpha,
-			title_offset = title_offset,
-			title_color = title_color,
-			title_just = title_just,
-			title_size = title_size,
-			title_font = title_font
-		)
-	}
-	if (missing(filename)) {
-		if (plot) {
-			rayimage::plot_image(tempmap, new_page = new_page)
-		}
-	} else {
-		rayimage::ray_write_image(tempmap, filename)
-	}
-	if (clear) {
-		rgl::clear3d()
-	}
-	return(invisible(tempmap))
+  if (!software_render) {
+    if ("webshot" %in% names(formals(rgl::snapshot3d))) {
+      if (!rgl::rgl.useNULL()) {
+        webshot = FALSE
+      }
+      if (webshot) {
+        rgl::snapshot3d(
+          filename = temp,
+          webshot = webshot,
+          width = width,
+          height = height
+        )
+      } else {
+        rgl::snapshot3d(
+          filename = temp,
+          top = bring_to_front,
+          webshot = webshot
+        )
+      }
+    } else {
+      rgl::snapshot3d(filename = temp, top = bring_to_front)
+    }
+  } else {
+    if (is.null(background)) {
+      bgid = rgl::ids3d("background")$id
+      background = rgl::rgl.attrib(bgid, "colors")
+    }
+    stopifnot(length(text_offset) == 3)
+    debug = render_snapshot_software(
+      filename = temp,
+      cache_scene = cache_scene,
+      camera_location = camera_location,
+      camera_lookat = camera_lookat,
+      background = background,
+      width = width,
+      height = height,
+      light_direction = NULL,
+      fake_shadow = TRUE,
+      text_angle = text_angle,
+      text_size = text_size,
+      text_offset = text_offset,
+      print_scene_info = print_scene_info,
+      point_radius = point_radius,
+      line_offset = -line_offset,
+      fsaa = fsaa,
+      thick_lines = thick_lines,
+      line_radius = line_radius,
+      rayvertex_lighting = rayvertex_lighting,
+      rayvertex_lights = rayvertex_lights,
+      rayvertex_shadow_map = rayvertex_shadow_map,
+      ...
+    )
+    if (length(dim(debug)) == 2) {
+      return(flipud(debug))
+    }
+  }
+  tempmap = rayimage::ray_read_image(temp)
+  if (has_overlay) {
+    tempmap = rayimage::render_image_overlay(
+      tempmap,
+      image_overlay = image_overlay_file
+    )
+  }
+  if (vignette || is.numeric(vignette)) {
+    tempmap = rayimage::render_vignette(
+      tempmap,
+      vignette = vignette,
+      color = vignette_color,
+      radius = vignette_radius
+    )
+  }
+  if (has_title) {
+    tempmap = rayimage::render_title(
+      tempmap,
+      title_text = title_text,
+      title_bar_color = title_bar_color,
+      title_bar_alpha = title_bar_alpha,
+      title_offset = title_offset,
+      title_color = title_color,
+      title_just = title_just,
+      title_size = title_size,
+      title_font = title_font
+    )
+  }
+  if (missing(filename)) {
+    if (plot) {
+      rayimage::plot_image(tempmap, new_page = new_page)
+    }
+  } else {
+    rayimage::ray_write_image(tempmap, filename)
+  }
+  if (clear) {
+    rgl::clear3d()
+  }
+  return(invisible(tempmap))
 }

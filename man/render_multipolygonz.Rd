@@ -97,7 +97,7 @@ render_camera(theta=150,  phi=35, zoom= 0.55, fov=70)
 rgl::par3d(ignoreExtent = TRUE)
 render_multipolygonz(washington_monument_multipolygonz,
                     extent = raster::extent(cropped_data),
-                    zscale = 4, color = "white",
+                    zscale = 4, color = "grey80",
                     heightmap = dc_elevation_matrix)
 render_snapshot()
 }

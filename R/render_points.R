@@ -86,68 +86,68 @@
 #'}
 #'if(run_documentation()) {
 #'#And all of these work with `render_highquality()`
-#'render_highquality(point_radius = 0.5, min_variance = 0, samples = 16)
+#'render_highquality(point_radius = 1, min_variance = 0, samples = 16)
 #'}
 #'
 #'if(run_documentation()) {
 #'#We can also change the material of the objects by setting the `point_material` and
 #'#`point_material_args` arguments in `render_highquality()`
-#'render_highquality(point_radius = 0.5, min_variance = 0, samples = 16,
+#'render_highquality(point_radius = 1, min_variance = 0, samples = 16,
 #'                   point_material = rayrender::glossy,
 #'                   point_material_args = list(gloss = 0.5, reflectance = 0.2))
 #'}
 render_points = function(
-	lat = NULL,
-	long = NULL,
-	altitude = NULL,
-	extent = NULL,
-	zscale = 1,
-	heightmap = NULL,
-	size = 0.5,
-	color = "black",
-	offset = 5,
-	clear_previous = FALSE
+  lat = NULL,
+  long = NULL,
+  altitude = NULL,
+  extent = NULL,
+  zscale = 1,
+  heightmap = NULL,
+  size = 0.5,
+  color = "black",
+  offset = 5,
+  clear_previous = FALSE
 ) {
-	if (rgl::cur3d() == 0) {
-		stop("No rgl window currently open.")
-	}
-	if (clear_previous) {
-		rgl::pop3d(tag = "points3d")
-		if (missing(lat) || missing(long)) {
-			return(invisible())
-		}
-	}
-	xyz = transform_into_heightmap_coords(
-		extent,
-		heightmap,
-		lat,
-		long,
-		altitude,
-		offset,
-		zscale
-	)
+  if (rgl::cur3d() == 0) {
+    stop("No rgl window currently open.")
+  }
+  if (clear_previous) {
+    rgl::pop3d(tag = "points3d")
+    if (missing(lat) || missing(long)) {
+      return(invisible())
+    }
+  }
+  xyz = transform_into_heightmap_coords(
+    extent,
+    heightmap,
+    lat,
+    long,
+    altitude,
+    offset,
+    zscale
+  )
 
-	if (length(unique(size)) > 1) {
-		stopifnot(length(size) == nrow(xyz))
-		color_length = length(color)
-		for (i in seq_len(nrow(xyz))) {
-			rgl::points3d(
-				xyz[i, 1],
-				xyz[i, 2],
-				xyz[i, 3],
-				color = color[((i - 1) %% color_length) + 1],
-				tag = "points3d",
-				size = size[i]
-			)
-		}
-	} else {
-		rgl::points3d(
-			xyz[, 1],
-			xyz[, 2],
-			xyz[, 3],
-			color = color,
-			tag = "points3d",
-			size = size
-		)
-	}
+  if (length(unique(size)) > 1) {
+    stopifnot(length(size) == nrow(xyz))
+    color_length = length(color)
+    for (i in seq_len(nrow(xyz))) {
+      rgl::points3d(
+        xyz[i, 1],
+        xyz[i, 2],
+        xyz[i, 3],
+        color = color[((i - 1) %% color_length) + 1],
+        tag = "points3d",
+        size = size[i]
+      )
+    }
+  } else {
+    rgl::points3d(
+      xyz[, 1],
+      xyz[, 2],
+      xyz[, 3],
+      color = color,
+      tag = "points3d",
+      size = size
+    )
+  }
 }
