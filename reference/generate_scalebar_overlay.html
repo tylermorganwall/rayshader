@@ -21,7 +21,7 @@ scale bar of the proper length."><meta property="og:image" content="https://www.
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.40.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.40.2</span>
       </span>
     </div>
 
@@ -138,7 +138,8 @@ scale bar of the proper length.</p>
 <span>  halo_expand <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  halo_alpha <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  halo_offset <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span>,</span>
-<span>  halo_blur <span class="op">=</span> <span class="fl">1</span></span>
+<span>  halo_blur <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  halo_edge_softness <span class="op">=</span> <span class="fl">0.1</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -282,7 +283,11 @@ of this color.</p></dd>
 
 
 <dt id="arg-halo-blur">halo_blur<a class="anchor" aria-label="anchor" href="#arg-halo-blur"></a></dt>
-<dd><p>Default <code>1</code>. Amount of blur to apply to the halo. Values greater than <code>30</code> won't result in further blurring.</p></dd>
+<dd><p>Default <code>0</code>. Amount of blur to apply to the halo. Values greater than <code>30</code> won't result in further blurring.</p></dd>
+
+
+<dt id="arg-halo-edge-softness">halo_edge_softness<a class="anchor" aria-label="anchor" href="#arg-halo-edge-softness"></a></dt>
+<dd><p>Default <code>0.1</code>. Width of the softened halo edge transition, in pixels.</p></dd>
 
 </dl></div>
     <div id="value">

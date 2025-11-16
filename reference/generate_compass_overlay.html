@@ -18,7 +18,7 @@ Based on code from "Auxiliary Cartographic Functions in R: North Arrow, Scale Ba
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.40.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.40.2</span>
       </span>
     </div>
 
@@ -104,23 +104,25 @@ Based on code from "Auxiliary Cartographic Functions in R: North Arrow, Scale Ba
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">generate_compass_overlay</span><span class="op">(</span></span>
 <span>  x <span class="op">=</span> <span class="fl">0.85</span>,</span>
 <span>  y <span class="op">=</span> <span class="fl">0.15</span>,</span>
-<span>  size <span class="op">=</span> <span class="fl">0.075</span>,</span>
-<span>  text_size <span class="op">=</span> <span class="fl">1.5</span>,</span>
+<span>  size <span class="op">=</span> <span class="fl">0.05</span>,</span>
+<span>  text_size <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  bearing <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  heightmap <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  width <span class="op">=</span> <span class="cn">NA</span>,</span>
 <span>  height <span class="op">=</span> <span class="cn">NA</span>,</span>
 <span>  resolution_multiply <span class="op">=</span> <span class="fl">1</span>,</span>
-<span>  color1 <span class="op">=</span> <span class="st">"white"</span>,</span>
-<span>  color2 <span class="op">=</span> <span class="st">"black"</span>,</span>
-<span>  text_color <span class="op">=</span> <span class="st">"black"</span>,</span>
+<span>  color1 <span class="op">=</span> <span class="cn">NA</span>,</span>
+<span>  color2 <span class="op">=</span> <span class="cn">NA</span>,</span>
+<span>  text_color <span class="op">=</span> <span class="cn">NA</span>,</span>
 <span>  border_color <span class="op">=</span> <span class="st">"black"</span>,</span>
 <span>  border_width <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  compass_type <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"classic"</span>, <span class="st">"split_arrow"</span>, <span class="st">"triangle_circle"</span>, <span class="st">"split_arrow_ring"</span><span class="op">)</span>,</span>
 <span>  halo_color <span class="op">=</span> <span class="cn">NA</span>,</span>
-<span>  halo_expand <span class="op">=</span> <span class="fl">1</span>,</span>
+<span>  halo_expand <span class="op">=</span> <span class="fl">2</span>,</span>
 <span>  halo_alpha <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  halo_offset <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">0</span><span class="op">)</span>,</span>
-<span>  halo_blur <span class="op">=</span> <span class="fl">1</span></span>
+<span>  halo_blur <span class="op">=</span> <span class="fl">0</span>,</span>
+<span>  halo_edge_softness <span class="op">=</span> <span class="fl">0.1</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -143,7 +145,7 @@ the compass is located.</p></dd>
 
 
 <dt id="arg-text-size">text_size<a class="anchor" aria-label="anchor" href="#arg-text-size"></a></dt>
-<dd><p>Default <code>1.5</code>. Text size.</p></dd>
+<dd><p>Default <code>1</code>. Text size.</p></dd>
 
 
 <dt id="arg-bearing">bearing<a class="anchor" aria-label="anchor" href="#arg-bearing"></a></dt>
@@ -171,11 +173,11 @@ in the final map.</p></dd>
 
 
 <dt id="arg-color-">color1<a class="anchor" aria-label="anchor" href="#arg-color-"></a></dt>
-<dd><p>Default <code>white</code>. Primary color of the compass.</p></dd>
+<dd><p>Default <code>NA</code>, <code>white</code> except for <code>compass_type == "triangle_circle"</code> . Primary color of the compass.</p></dd>
 
 
 <dt id="arg-color-">color2<a class="anchor" aria-label="anchor" href="#arg-color-"></a></dt>
-<dd><p>Default <code>black</code>. Secondary color of the symcompass.</p></dd>
+<dd><p>Default <code>NA</code>, <code>black</code>. Secondary color of the symcompass.</p></dd>
 
 
 <dt id="arg-text-color">text_color<a class="anchor" aria-label="anchor" href="#arg-text-color"></a></dt>
@@ -188,6 +190,11 @@ in the final map.</p></dd>
 
 <dt id="arg-border-width">border_width<a class="anchor" aria-label="anchor" href="#arg-border-width"></a></dt>
 <dd><p>Default <code>1</code>. Width of the scale bar border.</p></dd>
+
+
+<dt id="arg-compass-type">compass_type<a class="anchor" aria-label="anchor" href="#arg-compass-type"></a></dt>
+<dd><p>Default <code>"classic"</code>. Set to <code>"split_arrow"</code>, <code>"triangle_circle"</code>, or
+<code>"split_arrow_ring"</code> to draw simple polygon north arrows that match the styles shown above.</p></dd>
 
 
 <dt id="arg-halo-color">halo_color<a class="anchor" aria-label="anchor" href="#arg-halo-color"></a></dt>
@@ -209,6 +216,10 @@ of this color.</p></dd>
 
 <dt id="arg-halo-blur">halo_blur<a class="anchor" aria-label="anchor" href="#arg-halo-blur"></a></dt>
 <dd><p>Default <code>1</code>. Amount of blur to apply to the halo. Values greater than <code>30</code> won't result in further blurring.</p></dd>
+
+
+<dt id="arg-halo-edge-softness">halo_edge_softness<a class="anchor" aria-label="anchor" href="#arg-halo-edge-softness"></a></dt>
+<dd><p>Default <code>0.1</code>. Width of the softened halo edge transition, in pixels.</p></dd>
 
 </dl></div>
     <div id="value">
@@ -247,85 +258,111 @@ of this color.</p></dd>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-plt img"><img src="generate_compass_overlay-2.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
-<span class="r-in"><span><span class="co">#Change the text color for visibility</span></span></span>
+<span class="r-in"><span><span class="co">#Change the type</span></span></span>
 <span class="r-in"><span><span class="va">base_map</span> <span class="op">|&gt;</span></span></span>
-<span class="r-in"><span> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu">generate_compass_overlay</span><span class="op">(</span>heightmap <span class="op">=</span> <span class="va">montereybay</span>, x <span class="op">=</span> <span class="fl">0.15</span>, text_color<span class="op">=</span><span class="st">"white"</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu">generate_compass_overlay</span><span class="op">(</span>heightmap <span class="op">=</span> <span class="va">montereybay</span>, x <span class="op">=</span> <span class="fl">0.15</span>,</span></span>
+<span class="r-in"><span>                                      compass_type <span class="op">=</span> <span class="st">"split_arrow"</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-plt img"><img src="generate_compass_overlay-3.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
-<span class="r-in"><span><span class="co">#Alternatively, add a halo color to improve contrast</span></span></span>
+<span class="r-in"><span><span class="co">#Change the type</span></span></span>
 <span class="r-in"><span><span class="va">base_map</span> <span class="op">|&gt;</span></span></span>
-<span class="r-in"><span> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu">generate_compass_overlay</span><span class="op">(</span>heightmap <span class="op">=</span> <span class="va">montereybay</span>, x <span class="op">=</span> <span class="fl">0.15</span>, y<span class="op">=</span><span class="fl">0.15</span>,</span></span>
-<span class="r-in"><span>             halo_color<span class="op">=</span><span class="st">"white"</span>, halo_expand <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu">generate_compass_overlay</span><span class="op">(</span>heightmap <span class="op">=</span> <span class="va">montereybay</span>, x <span class="op">=</span> <span class="fl">0.15</span>,</span></span>
+<span class="r-in"><span>                                      compass_type <span class="op">=</span> <span class="st">"split_arrow_ring"</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-plt img"><img src="generate_compass_overlay-4.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
-<span class="r-in"><span><span class="co">#Alternatively, add a halo color to improve contrast</span></span></span>
+<span class="r-in"><span><span class="co">#Change the type</span></span></span>
 <span class="r-in"><span><span class="va">base_map</span> <span class="op">|&gt;</span></span></span>
-<span class="r-in"><span> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu">generate_compass_overlay</span><span class="op">(</span>heightmap <span class="op">=</span> <span class="va">montereybay</span>, x <span class="op">=</span> <span class="fl">0.15</span>, y<span class="op">=</span><span class="fl">0.15</span>,</span></span>
-<span class="r-in"><span>             halo_color<span class="op">=</span><span class="st">"white"</span>, halo_expand <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu">generate_compass_overlay</span><span class="op">(</span>heightmap <span class="op">=</span> <span class="va">montereybay</span>, x <span class="op">=</span> <span class="fl">0.15</span>,</span></span>
+<span class="r-in"><span>                                      compass_type <span class="op">=</span> <span class="st">"triangle_circle"</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-plt img"><img src="generate_compass_overlay-5.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
-<span class="r-in"><span><span class="co">#Change the color scheme</span></span></span>
+<span class="r-in"><span><span class="co">#Change the text color for visibility</span></span></span>
 <span class="r-in"><span><span class="va">base_map</span> <span class="op">|&gt;</span></span></span>
-<span class="r-in"><span> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu">generate_compass_overlay</span><span class="op">(</span>heightmap <span class="op">=</span> <span class="va">montereybay</span>, x <span class="op">=</span> <span class="fl">0.15</span>, y<span class="op">=</span><span class="fl">0.15</span>,</span></span>
-<span class="r-in"><span>             halo_color<span class="op">=</span><span class="st">"white"</span>, halo_expand <span class="op">=</span> <span class="fl">1</span>, color1 <span class="op">=</span> <span class="st">"purple"</span>, color2 <span class="op">=</span> <span class="st">"red"</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu">generate_compass_overlay</span><span class="op">(</span>heightmap <span class="op">=</span> <span class="va">montereybay</span>, compass_type <span class="op">=</span> <span class="st">"split_arrow"</span>,</span></span>
+<span class="r-in"><span>x <span class="op">=</span> <span class="fl">0.15</span>, text_color<span class="op">=</span><span class="st">"white"</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-plt img"><img src="generate_compass_overlay-6.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
-<span class="r-in"><span><span class="co">#Remove the inner border</span></span></span>
+<span class="r-in"><span><span class="co">#Alternatively, add a halo color to improve contrast</span></span></span>
 <span class="r-in"><span><span class="va">base_map</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu">generate_compass_overlay</span><span class="op">(</span>heightmap <span class="op">=</span> <span class="va">montereybay</span>, x <span class="op">=</span> <span class="fl">0.15</span>, y<span class="op">=</span><span class="fl">0.15</span>,</span></span>
-<span class="r-in"><span>             border_color<span class="op">=</span><span class="cn">NA</span>,</span></span>
-<span class="r-in"><span>             halo_color<span class="op">=</span><span class="st">"white"</span>, halo_expand <span class="op">=</span> <span class="fl">1</span>,</span></span>
-<span class="r-in"><span>             color1 <span class="op">=</span> <span class="st">"darkolivegreen4"</span>, color2 <span class="op">=</span> <span class="st">"burlywood3"</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span>             compass_type <span class="op">=</span> <span class="st">"split_arrow"</span>, halo_color<span class="op">=</span><span class="st">"white"</span>, halo_expand <span class="op">=</span> <span class="fl">2</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-plt img"><img src="generate_compass_overlay-7.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
-<span class="r-in"><span><span class="co">#Change the size of the compass and text</span></span></span>
+<span class="r-in"><span><span class="co">#Change the color scheme</span></span></span>
 <span class="r-in"><span><span class="va">base_map</span> <span class="op">|&gt;</span></span></span>
-<span class="r-in"><span> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu">generate_compass_overlay</span><span class="op">(</span>heightmap <span class="op">=</span> <span class="va">montereybay</span>, x <span class="op">=</span> <span class="fl">0.75</span>, y<span class="op">=</span><span class="fl">0.75</span>,</span></span>
-<span class="r-in"><span>             halo_color<span class="op">=</span><span class="st">"white"</span>, halo_expand <span class="op">=</span> <span class="fl">1</span>,</span></span>
-<span class="r-in"><span>             size<span class="op">=</span><span class="fl">0.075</span><span class="op">*</span><span class="fl">2</span>, text_size <span class="op">=</span> <span class="fl">1.25</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
-<span class="r-in"><span> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu">generate_compass_overlay</span><span class="op">(</span>heightmap <span class="op">=</span> <span class="va">montereybay</span>, x <span class="op">=</span> <span class="fl">0.45</span>, y<span class="op">=</span><span class="fl">0.45</span>,</span></span>
-<span class="r-in"><span>             halo_color<span class="op">=</span><span class="st">"white"</span>, halo_expand <span class="op">=</span> <span class="fl">1</span>,</span></span>
-<span class="r-in"><span>             size<span class="op">=</span><span class="fl">0.075</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu">generate_compass_overlay</span><span class="op">(</span>heightmap <span class="op">=</span> <span class="va">montereybay</span>, x <span class="op">=</span> <span class="fl">0.15</span>, y<span class="op">=</span><span class="fl">0.15</span>,</span></span>
-<span class="r-in"><span>             halo_color<span class="op">=</span><span class="st">"white"</span>, halo_expand <span class="op">=</span> <span class="fl">1</span>,</span></span>
-<span class="r-in"><span>             size<span class="op">=</span><span class="fl">0.075</span><span class="op">/</span><span class="fl">2</span>, text_size <span class="op">=</span> <span class="fl">0.75</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span>             compass_type <span class="op">=</span> <span class="st">"split_arrow"</span>, halo_color<span class="op">=</span><span class="st">"white"</span>,</span></span>
+<span class="r-in"><span>             halo_expand <span class="op">=</span> <span class="fl">2</span>, color1 <span class="op">=</span> <span class="st">"purple"</span>, color2 <span class="op">=</span> <span class="st">"red"</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-plt img"><img src="generate_compass_overlay-8.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
-<span class="r-in"><span><span class="co">#Change the bearing of the compass</span></span></span>
+<span class="r-in"><span><span class="co">#Remove the inner border</span></span></span>
 <span class="r-in"><span><span class="va">base_map</span> <span class="op">|&gt;</span></span></span>
-<span class="r-in"><span> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu">generate_compass_overlay</span><span class="op">(</span>heightmap <span class="op">=</span> <span class="va">montereybay</span>, x <span class="op">=</span> <span class="fl">0.85</span>, y<span class="op">=</span><span class="fl">0.85</span>,</span></span>
-<span class="r-in"><span>             halo_color<span class="op">=</span><span class="st">"white"</span>, halo_expand <span class="op">=</span> <span class="fl">1</span>, bearing<span class="op">=</span><span class="fl">30</span>,</span></span>
-<span class="r-in"><span>             size<span class="op">=</span><span class="fl">0.075</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
-<span class="r-in"><span> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu">generate_compass_overlay</span><span class="op">(</span>heightmap <span class="op">=</span> <span class="va">montereybay</span>, x <span class="op">=</span> <span class="fl">0.5</span>, y<span class="op">=</span><span class="fl">0.5</span>,</span></span>
-<span class="r-in"><span>             halo_color<span class="op">=</span><span class="st">"white"</span>, halo_expand <span class="op">=</span> <span class="fl">1</span>, bearing<span class="op">=</span><span class="fl">15</span>,</span></span>
-<span class="r-in"><span>             size<span class="op">=</span><span class="fl">0.075</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu">generate_compass_overlay</span><span class="op">(</span>heightmap <span class="op">=</span> <span class="va">montereybay</span>, x <span class="op">=</span> <span class="fl">0.15</span>, y<span class="op">=</span><span class="fl">0.15</span>,</span></span>
-<span class="r-in"><span>             halo_color<span class="op">=</span><span class="st">"white"</span>, halo_expand <span class="op">=</span> <span class="fl">1</span>, bearing<span class="op">=</span><span class="op">-</span><span class="fl">45</span>,</span></span>
-<span class="r-in"><span>             size<span class="op">=</span><span class="fl">0.075</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span>             border_color<span class="op">=</span><span class="cn">NA</span>,compass_type <span class="op">=</span> <span class="st">"split_arrow"</span>,</span></span>
+<span class="r-in"><span>             halo_color<span class="op">=</span><span class="st">"white"</span>, halo_expand <span class="op">=</span> <span class="fl">2</span>,</span></span>
+<span class="r-in"><span>             color1 <span class="op">=</span> <span class="st">"darkolivegreen4"</span>, color2 <span class="op">=</span> <span class="st">"burlywood3"</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-plt img"><img src="generate_compass_overlay-9.png" alt="" width="768" height="768"></span>
+<span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span><span class="co">#Change the size of the compass and text</span></span></span>
+<span class="r-in"><span><span class="va">base_map</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu">generate_compass_overlay</span><span class="op">(</span>heightmap <span class="op">=</span> <span class="va">montereybay</span>, x <span class="op">=</span> <span class="fl">0.75</span>, y<span class="op">=</span><span class="fl">0.75</span>,</span></span>
+<span class="r-in"><span>             halo_color<span class="op">=</span><span class="st">"white"</span>, halo_expand <span class="op">=</span> <span class="fl">2</span>,compass_type <span class="op">=</span> <span class="st">"classic"</span>,</span></span>
+<span class="r-in"><span>             size<span class="op">=</span><span class="fl">0.075</span><span class="op">*</span><span class="fl">2</span>, text_size <span class="op">=</span> <span class="fl">1.25</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu">generate_compass_overlay</span><span class="op">(</span>heightmap <span class="op">=</span> <span class="va">montereybay</span>, x <span class="op">=</span> <span class="fl">0.45</span>, y<span class="op">=</span><span class="fl">0.45</span>,</span></span>
+<span class="r-in"><span>             halo_color<span class="op">=</span><span class="st">"white"</span>, halo_expand <span class="op">=</span> <span class="fl">2</span>,compass_type <span class="op">=</span> <span class="st">"split_arrow_ring"</span>,</span></span>
+<span class="r-in"><span>             size<span class="op">=</span><span class="fl">0.075</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu">generate_compass_overlay</span><span class="op">(</span>heightmap <span class="op">=</span> <span class="va">montereybay</span>, x <span class="op">=</span> <span class="fl">0.15</span>, y<span class="op">=</span><span class="fl">0.15</span>,</span></span>
+<span class="r-in"><span>             halo_color<span class="op">=</span><span class="st">"white"</span>, halo_expand <span class="op">=</span> <span class="fl">2</span>,compass_type <span class="op">=</span> <span class="st">"split_arrow"</span>,</span></span>
+<span class="r-in"><span>             size<span class="op">=</span><span class="fl">0.075</span><span class="op">/</span><span class="fl">2</span>, text_size <span class="op">=</span> <span class="fl">0.75</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-plt img"><img src="generate_compass_overlay-10.png" alt="" width="768" height="768"></span>
+<span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span><span class="co">#Change the bearing of the compass</span></span></span>
+<span class="r-in"><span><span class="va">base_map</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu">generate_compass_overlay</span><span class="op">(</span>heightmap <span class="op">=</span> <span class="va">montereybay</span>, x <span class="op">=</span> <span class="fl">0.15</span>, y<span class="op">=</span><span class="fl">0.15</span>,</span></span>
+<span class="r-in"><span>             halo_color<span class="op">=</span><span class="st">"white"</span>, halo_expand <span class="op">=</span> <span class="fl">2</span>, bearing<span class="op">=</span><span class="fl">30</span>, compass_type <span class="op">=</span> <span class="st">"classic"</span>,</span></span>
+<span class="r-in"><span>             size<span class="op">=</span><span class="fl">0.075</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu">generate_compass_overlay</span><span class="op">(</span>heightmap <span class="op">=</span> <span class="va">montereybay</span>, x <span class="op">=</span> <span class="fl">0.35</span>, y<span class="op">=</span><span class="fl">0.15</span>,</span></span>
+<span class="r-in"><span>             halo_color<span class="op">=</span><span class="st">"white"</span>, halo_expand <span class="op">=</span> <span class="fl">2</span>, bearing<span class="op">=</span><span class="fl">15</span>, compass_type <span class="op">=</span> <span class="st">"triangle_circle"</span>,</span></span>
+<span class="r-in"><span>             size<span class="op">=</span><span class="fl">0.075</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu">generate_compass_overlay</span><span class="op">(</span>heightmap <span class="op">=</span> <span class="va">montereybay</span>, x <span class="op">=</span> <span class="fl">0.15</span>, y<span class="op">=</span><span class="fl">0.35</span>,</span></span>
+<span class="r-in"><span>             halo_color<span class="op">=</span><span class="st">"white"</span>, halo_expand <span class="op">=</span> <span class="fl">2</span>, bearing<span class="op">=</span><span class="op">-</span><span class="fl">45</span>, compass_type <span class="op">=</span> <span class="st">"split_arrow_ring"</span>,</span></span>
+<span class="r-in"><span>             size<span class="op">=</span><span class="fl">0.075</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-plt img"><img src="generate_compass_overlay-11.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="co">#Create a drop shadow effect</span></span></span>
 <span class="r-in"><span><span class="va">base_map</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span> <span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu">generate_compass_overlay</span><span class="op">(</span>heightmap <span class="op">=</span> <span class="va">montereybay</span>, x <span class="op">=</span> <span class="fl">0.15</span>, y<span class="op">=</span><span class="fl">0.15</span>,</span></span>
 <span class="r-in"><span>             text_color<span class="op">=</span><span class="st">"white"</span>, halo_alpha<span class="op">=</span><span class="fl">0.7</span>, halo_blur<span class="op">=</span><span class="fl">3</span>,</span></span>
 <span class="r-in"><span>             halo_color<span class="op">=</span><span class="st">"black"</span>, halo_expand <span class="op">=</span> <span class="fl">2</span>, halo_offset <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.002</span>,<span class="op">-</span><span class="fl">0.002</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu">generate_compass_overlay</span><span class="op">(</span>heightmap <span class="op">=</span> <span class="va">montereybay</span>, x <span class="op">=</span> <span class="fl">0.35</span>, y<span class="op">=</span><span class="fl">0.15</span>,</span></span>
+<span class="r-in"><span>             text_color<span class="op">=</span><span class="st">"white"</span>, halo_alpha<span class="op">=</span><span class="fl">0.7</span>, halo_blur<span class="op">=</span><span class="fl">3</span>,</span></span>
+<span class="r-in"><span>             compass_type <span class="op">=</span> <span class="st">"split_arrow"</span>,</span></span>
+<span class="r-in"><span>             halo_color<span class="op">=</span><span class="st">"black"</span>, halo_expand <span class="op">=</span> <span class="fl">2</span>, halo_offset <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.002</span>,<span class="op">-</span><span class="fl">0.002</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="add_overlay.html">add_overlay</a></span><span class="op">(</span><span class="fu">generate_compass_overlay</span><span class="op">(</span>heightmap <span class="op">=</span> <span class="va">montereybay</span>, x <span class="op">=</span> <span class="fl">0.15</span>, y<span class="op">=</span><span class="fl">0.35</span>,</span></span>
+<span class="r-in"><span>             text_color<span class="op">=</span><span class="st">"white"</span>, halo_alpha<span class="op">=</span><span class="fl">0.2</span>, halo_blur<span class="op">=</span><span class="fl">8</span>,</span></span>
+<span class="r-in"><span>             compass_type <span class="op">=</span> <span class="st">"split_arrow_ring"</span>,</span></span>
+<span class="r-in"><span>             halo_color<span class="op">=</span><span class="st">"white"</span>, halo_expand <span class="op">=</span> <span class="fl">2</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span> <span class="fu"><a href="plot_map.html">plot_map</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-plt img"><img src="generate_compass_overlay-10.png" alt="" width="768" height="768"></span>
+<span class="r-plt img"><img src="generate_compass_overlay-12.png" alt="" width="768" height="768"></span>
 </code></pre></div>
     </div>
   </div>
