@@ -25,7 +25,8 @@ generate_label_overlay(
   halo_expand = 0,
   halo_alpha = 1,
   halo_offset = c(0, 0),
-  halo_blur = 1,
+  halo_blur = 0,
+  halo_edge_softness = 0.1,
   seed = NA
 )
 }
@@ -88,7 +89,9 @@ of this color.}
 
 \item{halo_offset}{Default \code{c(0,0)}. Horizontal and vertical offset to apply to the halo, in units of \code{geometry}.}
 
-\item{halo_blur}{Default \code{1}. Amount of blur to apply to the halo. Values greater than \code{30} won't result in further blurring.}
+\item{halo_blur}{Default \code{0}. Amount of blur to apply to the halo. Values greater than \code{30} won't result in further blurring.}
+
+\item{halo_edge_softness}{Default \code{0.1}. Width of the softened halo edge transition, in pixels.}
 
 \item{seed}{Default \code{NA}, no seed. Random seed for ensuring the consistent placement of labels around points.}
 }

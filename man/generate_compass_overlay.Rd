@@ -7,23 +7,25 @@
 generate_compass_overlay(
   x = 0.85,
   y = 0.15,
-  size = 0.075,
-  text_size = 1.5,
+  size = 0.05,
+  text_size = 1,
   bearing = 0,
   heightmap = NULL,
   width = NA,
   height = NA,
   resolution_multiply = 1,
-  color1 = "white",
-  color2 = "black",
-  text_color = "black",
+  color1 = NA,
+  color2 = NA,
+  text_color = NA,
   border_color = "black",
   border_width = 1,
+  compass_type = c("classic", "split_arrow", "triangle_circle", "split_arrow_ring"),
   halo_color = NA,
-  halo_expand = 1,
+  halo_expand = 2,
   halo_alpha = 1,
   halo_offset = c(0, 0),
-  halo_blur = 1
+  halo_blur = 0,
+  halo_edge_softness = 0.1
 )
 }
 \arguments{
@@ -35,7 +37,7 @@ the compass is located.}
 
 \item{size}{Default \code{0.05}. Size of the compass, in percentage of the map size..}
 
-\item{text_size}{Default \code{1.5}. Text size.}
+\item{text_size}{Default \code{1}. Text size.}
 
 \item{bearing}{Default \code{0}. Angle (in degrees) of north.}
 
@@ -51,15 +53,18 @@ increase the resolution of the overlay, which should make lines/polygons finer.
 Should be combined with \link[=add_overlay]{\code{add_overlay(rescale_original = TRUE)}} to ensure those added details are captured
 in the final map.}
 
-\item{color1}{Default \code{white}. Primary color of the compass.}
+\item{color1}{Default \code{NA}, \code{white} except for \code{compass_type == "triangle_circle"} . Primary color of the compass.}
 
-\item{color2}{Default \code{black}. Secondary color of the symcompass.}
+\item{color2}{Default \code{NA}, \code{black}. Secondary color of the symcompass.}
 
 \item{text_color}{Default \code{black}. Text color.}
 
 \item{border_color}{Default \code{black}. Border color of the scale bar.}
 
 \item{border_width}{Default \code{1}. Width of the scale bar border.}
+
+\item{compass_type}{Default \code{"classic"}. Set to \code{"split_arrow"}, \code{"triangle_circle"}, or
+\code{"split_arrow_ring"} to draw simple polygon north arrows that match the styles shown above.}
 
 \item{halo_color}{Default \code{NA}, no halo. If a color is specified, the compass will be surrounded by a halo
 of this color.}
@@ -71,6 +76,8 @@ of this color.}
 \item{halo_offset}{Default \code{c(0,0)}. Horizontal and vertical offset to apply to the halo, in percentage of the image.}
 
 \item{halo_blur}{Default \code{1}. Amount of blur to apply to the halo. Values greater than \code{30} won't result in further blurring.}
+
+\item{halo_edge_softness}{Default \code{0.1}. Width of the softened halo edge transition, in pixels.}
 }
 \value{
 Semi-transparent overlay with a compass.
@@ -108,38 +115,54 @@ base_map |>
  plot_map()
 }
 if(run_documentation()) {
+#Change the type
+base_map |>
+ add_overlay(generate_compass_overlay(heightmap = montereybay, x = 0.15,
+                                      compass_type = "split_arrow")) |>
+ plot_map()
+}
+if(run_documentation()) {
+#Change the type
+base_map |>
+ add_overlay(generate_compass_overlay(heightmap = montereybay, x = 0.15,
+                                      compass_type = "split_arrow_ring")) |>
+ plot_map()
+}
+if(run_documentation()) {
+#Change the type
+base_map |>
+ add_overlay(generate_compass_overlay(heightmap = montereybay, x = 0.15,
+                                      compass_type = "triangle_circle")) |>
+ plot_map()
+}
+if(run_documentation()) {
 #Change the text color for visibility
 base_map |>
- add_overlay(generate_compass_overlay(heightmap = montereybay, x = 0.15, text_color="white")) |>
+ add_overlay(generate_compass_overlay(heightmap = montereybay, compass_type = "split_arrow",
+x = 0.15, text_color="white")) |>
  plot_map()
 }
 if(run_documentation()) {
 #Alternatively, add a halo color to improve contrast
 base_map |>
  add_overlay(generate_compass_overlay(heightmap = montereybay, x = 0.15, y=0.15,
-             halo_color="white", halo_expand = 1)) |>
- plot_map()
-}
-if(run_documentation()) {
-#Alternatively, add a halo color to improve contrast
-base_map |>
- add_overlay(generate_compass_overlay(heightmap = montereybay, x = 0.15, y=0.15,
-             halo_color="white", halo_expand = 1)) |>
+             compass_type = "split_arrow", halo_color="white", halo_expand = 2)) |>
  plot_map()
 }
 if(run_documentation()) {
 #Change the color scheme
 base_map |>
  add_overlay(generate_compass_overlay(heightmap = montereybay, x = 0.15, y=0.15,
-             halo_color="white", halo_expand = 1, color1 = "purple", color2 = "red")) |>
+             compass_type = "split_arrow", halo_color="white",
+             halo_expand = 2, color1 = "purple", color2 = "red")) |>
  plot_map()
 }
 if(run_documentation()) {
 #Remove the inner border
 base_map |>
  add_overlay(generate_compass_overlay(heightmap = montereybay, x = 0.15, y=0.15,
-             border_color=NA,
-             halo_color="white", halo_expand = 1,
+             border_color=NA,compass_type = "split_arrow",
+             halo_color="white", halo_expand = 2,
              color1 = "darkolivegreen4", color2 = "burlywood3")) |>
  plot_map()
 }
@@ -147,27 +170,27 @@ if(run_documentation()) {
 #Change the size of the compass and text
 base_map |>
  add_overlay(generate_compass_overlay(heightmap = montereybay, x = 0.75, y=0.75,
-             halo_color="white", halo_expand = 1,
+             halo_color="white", halo_expand = 2,compass_type = "classic",
              size=0.075*2, text_size = 1.25)) |>
  add_overlay(generate_compass_overlay(heightmap = montereybay, x = 0.45, y=0.45,
-             halo_color="white", halo_expand = 1,
+             halo_color="white", halo_expand = 2,compass_type = "split_arrow_ring",
              size=0.075)) |>
  add_overlay(generate_compass_overlay(heightmap = montereybay, x = 0.15, y=0.15,
-             halo_color="white", halo_expand = 1,
+             halo_color="white", halo_expand = 2,compass_type = "split_arrow",
              size=0.075/2, text_size = 0.75)) |>
  plot_map()
 }
 if(run_documentation()) {
 #Change the bearing of the compass
 base_map |>
- add_overlay(generate_compass_overlay(heightmap = montereybay, x = 0.85, y=0.85,
-             halo_color="white", halo_expand = 1, bearing=30,
-             size=0.075)) |>
- add_overlay(generate_compass_overlay(heightmap = montereybay, x = 0.5, y=0.5,
-             halo_color="white", halo_expand = 1, bearing=15,
-             size=0.075)) |>
  add_overlay(generate_compass_overlay(heightmap = montereybay, x = 0.15, y=0.15,
-             halo_color="white", halo_expand = 1, bearing=-45,
+             halo_color="white", halo_expand = 2, bearing=30, compass_type = "classic",
+             size=0.075)) |>
+ add_overlay(generate_compass_overlay(heightmap = montereybay, x = 0.35, y=0.15,
+             halo_color="white", halo_expand = 2, bearing=15, compass_type = "triangle_circle",
+             size=0.075)) |>
+ add_overlay(generate_compass_overlay(heightmap = montereybay, x = 0.15, y=0.35,
+             halo_color="white", halo_expand = 2, bearing=-45, compass_type = "split_arrow_ring",
              size=0.075)) |>
  plot_map()
 }
@@ -177,6 +200,14 @@ base_map |>
  add_overlay(generate_compass_overlay(heightmap = montereybay, x = 0.15, y=0.15,
              text_color="white", halo_alpha=0.7, halo_blur=3,
              halo_color="black", halo_expand = 2, halo_offset = c(0.002,-0.002))) |>
+add_overlay(generate_compass_overlay(heightmap = montereybay, x = 0.35, y=0.15,
+             text_color="white", halo_alpha=0.7, halo_blur=3,
+             compass_type = "split_arrow",
+             halo_color="black", halo_expand = 2, halo_offset = c(0.002,-0.002))) |>
+add_overlay(generate_compass_overlay(heightmap = montereybay, x = 0.15, y=0.35,
+             text_color="white", halo_alpha=0.2, halo_blur=8,
+             compass_type = "split_arrow_ring",
+             halo_color="white", halo_expand = 2)) |>
  plot_map()
 }
 }

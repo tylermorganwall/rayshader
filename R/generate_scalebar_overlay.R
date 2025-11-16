@@ -51,7 +51,8 @@
 #'@param halo_expand Default `1`. Number of pixels to expand the halo.
 #'@param halo_alpha Default `1`. Transparency of the halo.
 #'@param halo_offset Default `c(0,0)`. Horizontal and vertical offset to apply to the halo, as a proportion of the full scene.
-#'@param halo_blur Default `1`. Amount of blur to apply to the halo. Values greater than `30` won't result in further blurring.
+#'@param halo_blur Default `0`. Amount of blur to apply to the halo. Values greater than `30` won't result in further blurring.
+#'@param halo_edge_softness Default `0.1`. Width of the softened halo edge transition, in pixels.
 #'@return Semi-transparent overlay with a scale bar.
 #'@export
 #'@examples
@@ -196,7 +197,8 @@ generate_scalebar_overlay = function(
 	halo_expand = 1,
 	halo_alpha = 1,
 	halo_offset = c(0, 0),
-	halo_blur = 1
+	halo_blur = 0,
+	halo_edge_softness = 0.1
 ) {
 	loc = rep(0, 2)
 	extent = get_extent(extent)
@@ -229,6 +231,7 @@ generate_scalebar_overlay = function(
 	tick_width = tick_width * resolution_multiply
 	halo_expand = halo_expand * resolution_multiply
 	halo_blur = halo_blur * resolution_multiply
+	halo_edge_softness = halo_edge_softness * resolution_multiply
 
 	if (all(!is.na(labels)) && length(labels) != 3) {
 		stop("If specified, `labels` must be length-3 vector")
@@ -582,34 +585,15 @@ generate_scalebar_overlay = function(
 
 		grDevices::dev.off() #resets par
 		overlay_temp_under = rayimage::ray_read_image(tempoverlay)
-		if (halo_expand != 0 || any(halo_offset != 0)) {
-			temp_alpha = overlay_temp_under[,, 4]
-			temp_alpha[temp_alpha > 0] = 1
-			booldistance = rayimage::render_boolean_distance(temp_alpha)
-			booldistance = booldistance - halo_expand
-			temp_alpha[booldistance <= 0] = 1
-			temp_alpha[booldistance < 1 & booldistance > 0] = 1 -
-				booldistance[booldistance < 1 & booldistance > 0]
-			temp_alpha[booldistance > 1] = 0
-			col_below = col2rgb_linear(halo_color)
-			temp_array = array(0, dim = dim(overlay_temp_under))
-			temp_array[,, 1] = col_below[1]
-			temp_array[,, 2] = col_below[2]
-			temp_array[,, 3] = col_below[3]
-			temp_array[,, 4] = temp_alpha * halo_alpha
-			overlay_temp_under = temp_array
-		}
-		if (halo_blur > 0) {
-			overlay_temp_under = rayimage::render_convolution_fft(
-				overlay_temp_under,
-				kernel = rayimage::generate_2d_gaussian(
-					sd = halo_blur,
-					dim = 31,
-					width = 30
-				),
-				include_alpha = TRUE
-			)
-		}
+		overlay_temp_under = generate_halo_underlay(
+			overlay_temp_under,
+			halo_expand,
+			halo_offset,
+			halo_color,
+			halo_alpha,
+			halo_blur,
+			halo_edge_softness
+		)
 		overlay_temp = rayimage::render_image_overlay(
 			overlay_temp_under,
 			overlay_temp

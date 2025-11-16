@@ -41,7 +41,8 @@
 #'@param halo_expand Default `2`. Number of pixels to expand the halo.
 #'@param halo_alpha Default `1`. Transparency of the halo.
 #'@param halo_offset Default `c(0,0)`. Horizontal and vertical offset to apply to the halo, in units of `geometry`.
-#'@param halo_blur Default `1`. Amount of blur to apply to the halo. Values greater than `30` won't result in further blurring.
+#'@param halo_blur Default `0`. Amount of blur to apply to the halo. Values greater than `30` won't result in further blurring.
+#'@param halo_edge_softness Default `0.1`. Width of the softened halo edge transition, in pixels.
 #'@param seed Default `NA`, no seed. Random seed for ensuring the consistent placement of labels around points.
 #'@return Semi-transparent overlay with labels.
 #'@export
@@ -149,7 +150,8 @@ generate_label_overlay = function(
 	halo_expand = 0,
 	halo_alpha = 1,
 	halo_offset = c(0, 0),
-	halo_blur = 1,
+	halo_blur = 0,
+	halo_edge_softness = 0.1,
 	seed = NA
 ) {
 	if (!is.na(seed)) {
@@ -293,31 +295,15 @@ generate_label_overlay = function(
 		)
 		grDevices::dev.off() #resets par
 		overlay_temp_under = rayimage::ray_read_image(tempoverlay)
-		if (halo_expand != 0 || any(halo_offset != 0)) {
-			temp_alpha = overlay_temp_under[,, 4]
-			temp_alpha[temp_alpha > 0] = 1
-			booldistance = rayimage::render_boolean_distance(temp_alpha)
-			temp_alpha[booldistance <= halo_expand] = 1
-			temp_alpha[booldistance > halo_expand] = 0
-			col_below = col2rgb_linear(halo_color)
-			temp_array = array(0, dim = dim(overlay_temp_under))
-			temp_array[,, 1] = col_below[1]
-			temp_array[,, 2] = col_below[2]
-			temp_array[,, 3] = col_below[3]
-			temp_array[,, 4] = temp_alpha * halo_alpha
-			overlay_temp_under = temp_array
-		}
-		if (halo_blur > 0) {
-			overlay_temp_under = rayimage::render_convolution(
-				overlay_temp_under,
-				kernel = rayimage::generate_2d_gaussian(
-					sd = halo_blur,
-					dim = 31,
-					width = 30
-				),
-				progress = FALSE
-			)
-		}
+		overlay_temp_under = generate_halo_underlay(
+			overlay_temp_under,
+			halo_expand,
+			halo_offset,
+			halo_color,
+			halo_alpha,
+			halo_blur,
+			halo_edge_softness
+		)
 		overlay_temp = rayimage::render_image_overlay(
 			overlay_temp_under,
 			overlay_temp
