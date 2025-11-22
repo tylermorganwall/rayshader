@@ -37,30 +37,30 @@
 #'  plot_map()
 #'}
 lamb_shade = function(
-	heightmap,
-	sunaltitude = 45,
-	sunangle = 315,
-	zscale = 1,
-	zero_negative = TRUE
+  heightmap,
+  sunaltitude = 45,
+  sunangle = 315,
+  zscale = 1,
+  zero_negative = TRUE
 ) {
-	sunang_rad = sunangle * pi / 180
-	rayang_rad = sunaltitude * pi / 180
-	rayvector = c(
-		cos(sunang_rad) * cos(rayang_rad),
-		sin(sunang_rad) * cos(rayang_rad),
-		-cos(rayang_rad)
-	)
-	heightmap = add_padding(heightmap)
-	heightmap = heightmap / zscale
-	shadowmatrix = lambshade_cpp(heightmap = heightmap, rayvector = rayvector)
-	shadowmatrix = scales::rescale_max(shadowmatrix, c(0, 1))
-	if (zero_negative) {
-		shadowmatrix[shadowmatrix < 0] = 0
-	}
-	shadowmatrixremove = shadowmatrix[
-		c(-1, -nrow(shadowmatrix)),
-		c(-1, -ncol(shadowmatrix))
-	]
-	shadowmatrixremove[is.na(shadowmatrixremove)] = 0
-	return(t(shadowmatrixremove))
+  sunang_rad = sunangle * pi / 180
+  rayang_rad = sunaltitude * pi / 180
+  rayvector = c(
+    cos(sunang_rad) * cos(rayang_rad),
+    sin(sunang_rad) * cos(rayang_rad),
+    -sin(rayang_rad)
+  )
+  heightmap = add_padding(heightmap)
+  heightmap = heightmap / zscale
+  shadowmatrix = lambshade_cpp(heightmap = heightmap, rayvector = rayvector)
+  shadowmatrix = scales::rescale_max(shadowmatrix, c(0, 1))
+  if (zero_negative) {
+    shadowmatrix[shadowmatrix < 0] = 0
+  }
+  shadowmatrixremove = shadowmatrix[
+    c(-1, -nrow(shadowmatrix)),
+    c(-1, -ncol(shadowmatrix))
+  ]
+  shadowmatrixremove[is.na(shadowmatrixremove)] = 0
+  return(t(shadowmatrixremove))
 }
