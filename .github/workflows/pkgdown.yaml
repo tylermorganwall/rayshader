@@ -25,9 +25,21 @@ jobs:
           use-public-rspm: true
 
       - uses: r-lib/actions/setup-pandoc@v2
-        with:
-          extra-packages: any::pkgdown, local::.
-          needs: website
+
+      # Install OIDN (macOS)
+      - name: Install OIDN
+        run: |
+          ARCH=$(uname -m)
+          cd $RUNNER_TEMP
+          if [ "${ARCH}" = "arm64" ]; then
+            curl -LO https://github.com/OpenImageDenoise/oidn/releases/download/v2.3.1/oidn-2.3.1.arm64.macos.tar.gz
+            tar xzf oidn-2.3.1.arm64.macos.tar.gz
+            echo "OIDN_PATH=$(pwd)/oidn-2.3.1.arm64.macos" >> $GITHUB_ENV
+          else
+            curl -LO https://github.com/OpenImageDenoise/oidn/releases/download/v2.3.1/oidn-2.3.1.x86_64.macos.tar.gz
+            tar xzf oidn-2.3.1.x86_64.macos.tar.gz
+            echo "OIDN_PATH=$(pwd)/oidn-2.3.1.x86_64.macos" >> $GITHUB_ENV
+          fi
 
       - name: Query dependencies
         run: |
