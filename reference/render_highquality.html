@@ -21,7 +21,7 @@ either convert_path_to_animation_coords() or rayrender::generate_camera_motion()
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.40.2</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.40.5</span>
       </span>
     </div>
 
@@ -119,11 +119,6 @@ either <code><a href="convert_path_to_animation_coords.html">convert_path_to_ani
 <span>  lightintensity <span class="op">=</span> <span class="fl">500</span>,</span>
 <span>  lightcolor <span class="op">=</span> <span class="st">"white"</span>,</span>
 <span>  material <span class="op">=</span> <span class="fu">rayrender</span><span class="fu">::</span><span class="fu"><a href="http://www.rayrender.net/reference/diffuse.html" class="external-link">diffuse</a></span><span class="op">(</span><span class="op">)</span>,</span>
-<span>  datetime <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  lat <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  lon <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  altitude <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  north_angle <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  water_attenuation <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  water_surface_color <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  water_ior <span class="op">=</span> <span class="fl">1</span>,</span>
@@ -227,28 +222,6 @@ If this is a vector longer than one, multiple lights will be generated (using va
 
 <dt id="arg-material">material<a class="anchor" aria-label="anchor" href="#arg-material"></a></dt>
 <dd><p>Default <code><a href="http://www.rayrender.net/reference/diffuse.html" class="external-link">rayrender::diffuse()</a></code>. The material properties of the object file. Only used if <code>override_material = TRUE</code></p></dd>
-
-
-<dt id="arg-datetime">datetime<a class="anchor" aria-label="anchor" href="#arg-datetime"></a></dt>
-<dd><p>Default <code>NULL</code>. When supplied (optionally alongside <code>lat</code>, <code>lon</code>, and <code>altitude</code>),
-this uses <code>generate_sky_latlong()</code> to create a sky environment map for <code>environment_light</code>.</p></dd>
-
-
-<dt id="arg-lat">lat<a class="anchor" aria-label="anchor" href="#arg-lat"></a></dt>
-<dd><p>Default <code>NULL</code>. Latitude passed to <code>generate_sky_latlong()</code> when generating an environment map.</p></dd>
-
-
-<dt id="arg-lon">lon<a class="anchor" aria-label="anchor" href="#arg-lon"></a></dt>
-<dd><p>Default <code>NULL</code>. Longitude passed to <code>generate_sky_latlong()</code> when generating an environment map.</p></dd>
-
-
-<dt id="arg-altitude">altitude<a class="anchor" aria-label="anchor" href="#arg-altitude"></a></dt>
-<dd><p>Default <code>NULL</code>. Altitude passed to <code>generate_sky_latlong()</code> when generating an environment map.</p></dd>
-
-
-<dt id="arg-north-angle">north_angle<a class="anchor" aria-label="anchor" href="#arg-north-angle"></a></dt>
-<dd><p>Default <code>NULL</code>. Angle (degrees, clockwise when looking down) used to rotate the environment map so
-geographic north aligns with the rendered scene. Passed to <code><a href="http://www.rayrender.net/reference/render_scene.html" class="external-link">rayrender::render_scene()</a></code> as <code>rotate_env</code>.</p></dd>
 
 
 <dt id="arg-water-attenuation">water_attenuation<a class="anchor" aria-label="anchor" href="#arg-water-attenuation"></a></dt>
@@ -448,49 +421,21 @@ or <code><a href="http://www.rayrender.net/reference/generate_camera_motion.html
 <dd><p>Additional parameters to pass to <code><a href="http://www.rayrender.net/reference/render_scene.html" class="external-link">rayrender::render_scene</a></code>()</p></dd>
 
 </dl></div>
-    <div id="details">
-    <h2>Details</h2>
-    <p><code>north_angle</code> is a convenience wrapper around the <code>rotate_env</code> argument in <code><a href="http://www.rayrender.net/reference/render_scene.html" class="external-link">rayrender::render_scene()</a></code>.
-When you generate a sky environment with <code>datetime</code>, <code>lat</code>, <code>lon</code>, or <code>altitude</code>, supply the angle
-(in degrees, measured clockwise when looking down) that rotates the sky map so geographic north
-aligns with the scene's negative z-axis. With georeferenced heightmaps that retain an <code>extent</code>, you
-can derive that angle directly from the spatial metadata. For example:</p>
-<p></p><div class="sourceCode"><pre><code><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a>e <span class="ot">=</span> <span class="fu">attr</span>(montereybay, <span class="st">"extent"</span>)</span>
-<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a>center_lon <span class="ot">=</span> <span class="fu">mean</span>(<span class="fu">c</span>(e<span class="sc">@</span>xmin, e<span class="sc">@</span>xmax))</span>
-<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a>center_lat <span class="ot">=</span> <span class="fu">mean</span>(<span class="fu">c</span>(e<span class="sc">@</span>ymin, e<span class="sc">@</span>ymax))</span>
-<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a>center_pt <span class="ot">=</span> rayshader<span class="sc">:::</span><span class="fu">transform_into_heightmap_coords</span>(e, montereybay,</span>
-<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a>                                                       <span class="at">lat =</span> center_lat,</span>
-<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a>                                                       <span class="at">long =</span> center_lon,</span>
-<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a>                                                       <span class="at">altitude =</span> <span class="dv">0</span>,</span>
-<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a>                                                       <span class="at">use_altitude =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a>north_pt <span class="ot">=</span> rayshader<span class="sc">:::</span><span class="fu">transform_into_heightmap_coords</span>(e, montereybay,</span>
-<span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a>                                                      <span class="at">lat =</span> center_lat <span class="sc">+</span> <span class="fl">1e-4</span>,</span>
-<span id="cb1-11"><a href="#cb1-11" tabindex="-1"></a>                                                      <span class="at">long =</span> center_lon,</span>
-<span id="cb1-12"><a href="#cb1-12" tabindex="-1"></a>                                                      <span class="at">altitude =</span> <span class="dv">0</span>,</span>
-<span id="cb1-13"><a href="#cb1-13" tabindex="-1"></a>                                                      <span class="at">use_altitude =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb1-14"><a href="#cb1-14" tabindex="-1"></a>north_vec <span class="ot">=</span> north_pt <span class="sc">-</span> center_pt</span>
-<span id="cb1-15"><a href="#cb1-15" tabindex="-1"></a>north_angle <span class="ot">=</span> <span class="fu">atan2</span>(north_vec[<span class="dv">1</span>], <span class="sc">-</span>north_vec[<span class="dv">3</span>]) <span class="sc">*</span> <span class="dv">180</span> <span class="sc">/</span> pi</span>
-<span id="cb1-16"><a href="#cb1-16" tabindex="-1"></a></span>
-<span id="cb1-17"><a href="#cb1-17" tabindex="-1"></a><span class="fu">render_highquality</span>(<span class="at">datetime =</span> <span class="fu">Sys.time</span>(), <span class="at">lat =</span> center_lat, <span class="at">lon =</span> center_lon,</span>
-<span id="cb1-18"><a href="#cb1-18" tabindex="-1"></a>                  <span class="at">north_angle =</span> north_angle)</span></code></pre><p></p></div>
-<p>This derives <code>north_angle</code> from the same extent used to build the heightmap, ensuring the sky map is
-rotated to the local north.</p>
-    </div>
 
     <div id="ref-examples">
     <h2>Examples</h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co">#Render the volcano dataset using pathtracing</span></span></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
-<span class="r-in"><span><span class="va">volcano</span> <span class="op">|&gt;</span></span></span>
-<span class="r-in"><span> <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span><span class="va">volcano</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span></span>
 <span class="r-in"><span> <span class="fu"><a href="plot_3d.html">plot_3d</a></span><span class="op">(</span><span class="va">volcano</span>,zscale <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu">render_highquality</span><span class="op">(</span>min_variance <span class="op">=</span> <span class="fl">0</span>, samples <span class="op">=</span> <span class="fl">16</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">render_highquality</span><span class="op">(</span>min_variance <span class="op">=</span> <span class="fl">0</span>, sample_method <span class="op">=</span> <span class="st">"sobol_blue"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-plt img"><img src="render_highquality-1.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#Change position of light</span></span></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
-<span class="r-in"><span><span class="fu">render_highquality</span><span class="op">(</span>lightdirection <span class="op">=</span> <span class="fl">45</span>, min_variance <span class="op">=</span> <span class="fl">0</span>, samples <span class="op">=</span> <span class="fl">16</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu">render_highquality</span><span class="op">(</span>lightdirection <span class="op">=</span> <span class="fl">45</span>, min_variance <span class="op">=</span> <span class="fl">0</span>, sample_method <span class="op">=</span> <span class="st">"sobol_blue"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-plt img"><img src="render_highquality-2.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span></span></span>

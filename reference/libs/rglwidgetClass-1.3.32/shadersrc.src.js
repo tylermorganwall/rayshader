@@ -284,6 +284,8 @@ return  "#line 2 2\n"+
 "      col = col + pow(max(dot(halfVec, n), 0.), shininess) * specular[i];\n"+
 "      lighteffect = lighteffect + vec4(col, colDiff.a);\n"+
 "    }\n"+
+"#else\n"+
+"    lighteffect.a = 1.;\n"+
 "#endif\n"+
 "    \n"+
 "#else // not IS_LIT\n"+
