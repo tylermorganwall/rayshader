@@ -27,13 +27,6 @@
 #'@param lightsize Default `NULL`. Radius of the light(s). Automatically chosen, but can be set here by the user.
 #'@param lightintensity Default `500`. Intensity of the light.
 #'@param lightcolor Default `white`. The color of the light.
-#'@param datetime Default `NULL`. When supplied (optionally alongside `lat`, `lon`, and `altitude`),
-#'this uses `generate_sky_latlong()` to create a sky environment map for `environment_light`.
-#'@param lat Default `NULL`. Latitude passed to `generate_sky_latlong()` when generating an environment map.
-#'@param lon Default `NULL`. Longitude passed to `generate_sky_latlong()` when generating an environment map.
-#'@param altitude Default `NULL`. Altitude passed to `generate_sky_latlong()` when generating an environment map.
-#'@param north_angle Default `NULL`. Angle (degrees, clockwise when looking down) used to rotate the environment map so
-#' geographic north aligns with the rendered scene. Passed to `rayrender::render_scene()` as `rotate_env`.
 #'@param water_attenuation Default `0`, no attenuation. Amount that light should be attenuated when traveling through water. This
 #'calculates 1-color
 #'@param water_surface_color Default `TRUE`. Whether the water should have a colored surface or not. This is in contrast to
@@ -101,49 +94,19 @@
 #'or `rayrender::generate_camera_motion()` functions.
 #'@param ... Additional parameters to pass to `rayrender::render_scene`()
 #'
-#'@details
-#'`north_angle` is a convenience wrapper around the `rotate_env` argument in `rayrender::render_scene()`.
-#'When you generate a sky environment with `datetime`, `lat`, `lon`, or `altitude`, supply the angle
-#'(in degrees, measured clockwise when looking down) that rotates the sky map so geographic north
-#'aligns with the scene's negative z-axis. With georeferenced heightmaps that retain an `extent`, you
-#'can derive that angle directly from the spatial metadata. For example:
-#'
-#'```
-#'e = attr(montereybay, "extent")
-#'center_lon = mean(c(e@xmin, e@xmax))
-#'center_lat = mean(c(e@ymin, e@ymax))
-#'center_pt = rayshader:::transform_into_heightmap_coords(e, montereybay,
-#'                                                        lat = center_lat,
-#'                                                        long = center_lon,
-#'                                                        altitude = 0,
-#'                                                        use_altitude = FALSE)
-#'north_pt = rayshader:::transform_into_heightmap_coords(e, montereybay,
-#'                                                       lat = center_lat + 1e-4,
-#'                                                       long = center_lon,
-#'                                                       altitude = 0,
-#'                                                       use_altitude = FALSE)
-#'north_vec = north_pt - center_pt
-#'north_angle = atan2(north_vec[1], -north_vec[3]) * 180 / pi
-#'
-#'render_highquality(datetime = Sys.time(), lat = center_lat, lon = center_lon,
-#'                   north_angle = north_angle)
-#'```
-#'
-#'This derives `north_angle` from the same extent used to build the heightmap, ensuring the sky map is
-#'rotated to the local north.
 #'@export
 #'@examples
 #'#Render the volcano dataset using pathtracing
 #'if(run_documentation()) {
-#'volcano |>
-#'  sphere_shade() |>
+#'volcano %>%
+#'  sphere_shade() %>%
 #'  plot_3d(volcano,zscale = 2)
-#'render_highquality(min_variance = 0, samples = 16)
+#'render_highquality(min_variance = 0, sample_method = "sobol_blue")
 #'}
 #'
 #'#Change position of light
 #'if(run_documentation()) {
-#'render_highquality(lightdirection = 45, min_variance = 0, samples = 16)
+#'render_highquality(lightdirection = 45, min_variance = 0, sample_method = "sobol_blue")
 #'}
 #'
 #'#Change vertical position of light
@@ -214,11 +177,6 @@ render_highquality = function(
 	lightintensity = 500,
 	lightcolor = "white",
 	material = rayrender::diffuse(),
-	datetime = NULL,
-	lat = NULL,
-	lon = NULL,
-	altitude = NULL,
-	north_angle = NULL,
 	water_attenuation = 0,
 	water_surface_color = TRUE,
 	water_ior = 1,
@@ -288,68 +246,6 @@ render_highquality = function(
 	}
 	if (!(length(find.package("rayrender", quiet = TRUE)) > 0)) {
 		stop("`rayrender` package required for render_highquality()")
-	}
-
-	dot_args = list(...)
-	dots_names = names(dot_args)
-	environment_light_path = NULL
-	use_environment_light = FALSE
-	# sky_params_provided = (!missing(datetime) && !is.null(datetime)) ||
-	# 	(!missing(lat) && !is.null(lat)) ||
-	# 	(!missing(lon) && !is.null(lon)) ||
-	# 	(!missing(altitude) && !is.null(altitude))
-	# if (sky_params_provided) {
-	# 	if (!is.null(dots_names) && "environment_light" %in% dots_names) {
-	# 		warning("`environment_light` supplied in `...`; skipping sky generation.")
-	# 	} else {
-	# 		environment_light_path = tempfile(fileext = ".exr")
-	# 		sky_args = list(filename = environment_light_path)
-	# 		if (!missing(datetime) && !is.null(datetime)) {
-	# 			sky_args$datetime = datetime
-	# 		}
-	# 		if (!missing(lat) && !is.null(lat)) {
-	# 			sky_args$lat = lat
-	# 		}
-	# 		if (!missing(lon) && !is.null(lon)) {
-	# 			sky_args$lon = lon
-	# 		}
-	# 		if (!missing(altitude) && !is.null(altitude)) {
-	# 			sky_args$altitude = altitude
-	# 		}
-	# 		do.call(skymodelr::generate_sky_latlong, sky_args)
-	# 		use_environment_light = TRUE
-	# 		on.exit(
-	# 			{
-	# 				if (
-	# 					!is.null(environment_light_path) &&
-	# 						file.exists(environment_light_path)
-	# 				) {
-	# 					unlink(environment_light_path)
-	# 				}
-	# 			},
-	# 			add = TRUE
-	# 		)
-	# 	}
-	# }
-	environment_light_arg = if (use_environment_light) {
-		environment_light_path
-	} else {
-		NULL
-	}
-
-	rotate_env_arg = NULL
-	north_supplied = !missing(north_angle) &&
-		!is.null(north_angle) &&
-		!anyNA(north_angle)
-	if (north_supplied) {
-		if (!is.numeric(north_angle)) {
-			stop("`north_angle` must be numeric when supplied.")
-		}
-		if (!is.null(dots_names) && "rotate_env" %in% dots_names) {
-			warning("`rotate_env` supplied in `...`; skipping `north_angle`.")
-		} else {
-			rotate_env_arg = as.numeric(north_angle[1]) %% 360
-		}
 	}
 
 	#Check path/point material arguments
@@ -883,54 +779,38 @@ render_highquality = function(
 
 	if (!is.null(animation_camera_coords)) {
 		stopifnot(ncol(animation_camera_coords) == 14)
-		render_animation_args = dot_args
-		render_animation_args$scene = scene
-		render_animation_args$camera_motion = animation_camera_coords
-		render_animation_args$width = width
-		render_animation_args$height = height
-		render_animation_args$min_variance = min_variance
-		render_animation_args$samples = samples
-		render_animation_args$sample_method = sample_method
-		render_animation_args$filename = filename
-		render_animation_args$clamp_value = clamp_value
-		if (use_environment_light) {
-			render_animation_args$environment_light = environment_light_arg
-		}
-		if (!is.null(rotate_env_arg)) {
-			render_animation_args$rotate_env = rotate_env_arg
-		}
-		do.call(rayrender::render_animation, render_animation_args)
+		rayrender::render_animation(
+			scene,
+			camera_motion = animation_camera_coords,
+			width = width,
+			height = height,
+			min_variance = min_variance,
+			samples = samples,
+			sample_method = sample_method,
+			filename = filename,
+			clamp_value = clamp_value,
+			...
+		)
 		return()
-	}
-
-	render_scene_call = function(target_filename = NULL) {
-		render_scene_args = dot_args
-		render_scene_args$scene = scene
-		render_scene_args$lookfrom = lookfrom
-		render_scene_args$lookat = camera_lookat
-		render_scene_args$fov = fov
-		render_scene_args$min_variance = min_variance
-		render_scene_args$samples = samples
-		render_scene_args$sample_method = sample_method
-		render_scene_args$ortho_dimensions = ortho_dimensions
-		render_scene_args$width = width
-		render_scene_args$height = height
-		render_scene_args$clamp_value = clamp_value
-		if (!is.null(target_filename)) {
-			render_scene_args$filename = target_filename
-		}
-		if (use_environment_light) {
-			render_scene_args$environment_light = environment_light_arg
-		}
-		if (!is.null(rotate_env_arg)) {
-			render_scene_args$rotate_env = rotate_env_arg
-		}
-		do.call(rayrender::render_scene, render_scene_args)
 	}
 
 	if (has_title) {
 		temp = tempfile(fileext = ".png")
-		debug_return = render_scene_call(temp)
+		debug_return = rayrender::render_scene(
+			scene,
+			lookfrom = lookfrom,
+			lookat = camera_lookat,
+			fov = fov,
+			filename = temp,
+			min_variance = min_variance,
+			samples = samples,
+			sample_method = sample_method,
+			ortho_dimensions = ortho_dimensions,
+			width = width,
+			height = height, #camera_up = camera_up,
+			clamp_value = clamp_value,
+			...
+		)
 		if (has_title) {
 			if (is.na(filename)) {
 				temp = rayimage::ray_read_image(temp)
@@ -964,9 +844,36 @@ render_highquality = function(
 		}
 	} else {
 		if (!is.na(filename)) {
-			debug_return = render_scene_call(filename)
+			debug_return = rayrender::render_scene(
+				scene,
+				lookfrom = lookfrom,
+				lookat = camera_lookat,
+				fov = fov,
+				filename = filename,
+				min_variance = min_variance,
+				samples = samples,
+				sample_method = sample_method,
+				ortho_dimensions = ortho_dimensions,
+				width = width,
+				height = height, #camera_up = camera_up,
+				clamp_value = clamp_value,
+				...
+			)
 		} else {
-			debug_return = render_scene_call()
+			debug_return = rayrender::render_scene(
+				scene,
+				lookfrom = lookfrom,
+				lookat = camera_lookat,
+				fov = fov,
+				min_variance = min_variance,
+				samples = samples,
+				sample_method = sample_method,
+				ortho_dimensions = ortho_dimensions,
+				width = width,
+				height = height, #camera_up = camera_up,
+				clamp_value = clamp_value,
+				...
+			)
 		}
 	}
 	if (clear) {
