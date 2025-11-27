@@ -16,7 +16,7 @@
 #'@param height Default `NA`. Width of the resulting overlay. Default the same dimensions as height map.
 #'@param resolution_multiply Default `1`. If passing in `heightmap` instead of width/height, amount to
 #'increase the resolution of the overlay, which should make lines/polygons/text finer.
-#'Should be combined with \link[=add_overlay]{\code{add_overlay(rescale_original = TRUE)}} to ensure those added details are captured
+#'Should be combined with \code{\link[=add_overlay]{add_overlay()}} with `rescale_original = TRUE` to ensure those added details are captured
 #'in the final map.
 #'@param text_size Default `1`. Text size.
 #'@param point_size Default `0`, no points. Point size.

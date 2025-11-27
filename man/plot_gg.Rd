@@ -147,7 +147,7 @@ default, this just decreases the size of height map, not the image. If you wish 
 
 \item{save_shadow_matrix}{Default \code{FALSE}. If \code{TRUE}, the function will return the shadow matrix for use in future updates via the \code{shadow_cache} argument passed to \code{\link[=ray_shade]{ray_shade()}}.}
 
-\item{saved_shadow_matrix}{Default \code{NULL}. A cached shadow matrix (saved by the a previous invocation of \link[=plot_gg]{\code{plot_gg(..., save_shadow_matrix=TRUE)}} to use instead of raytracing a shadow map each time.}
+\item{saved_shadow_matrix}{Default \code{NULL}. A cached shadow matrix (saved by the a previous invocation of \code{\link[=plot_gg]{plot_gg()}} with \code{save_shadow_matrix = TRUE}) to use instead of raytracing a shadow map each time.}
 
 \item{monitor_gamma}{Default \code{1.8}. Undo the gamma correction applied by the png device. Ignored if \code{ragg} is installed or the \code{cairo} PNG device is available.}
 

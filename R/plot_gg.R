@@ -78,7 +78,7 @@
 #'set `options("cores")` in which the multicore option will only use that many cores.
 #'@param save_height_matrix Default `FALSE`. If `TRUE`, the function will return the height matrix used for the ggplot.
 #'@param save_shadow_matrix Default `FALSE`. If `TRUE`, the function will return the shadow matrix for use in future updates via the `shadow_cache` argument passed to [ray_shade()].
-#'@param saved_shadow_matrix Default `NULL`. A cached shadow matrix (saved by the a previous invocation of \link[=plot_gg]{\code{plot_gg(..., save_shadow_matrix=TRUE)}} to use instead of raytracing a shadow map each time.
+#'@param saved_shadow_matrix Default `NULL`. A cached shadow matrix (saved by the a previous invocation of \code{\link[=plot_gg]{plot_gg()}} with `save_shadow_matrix = TRUE`) to use instead of raytracing a shadow map each time.
 #'@param monitor_gamma Default `1.8`. Undo the gamma correction applied by the png device. Ignored if `ragg` is installed or the `cairo` PNG device is available.
 #'@param plot Default `TRUE`. Whether to plot the image when `preview = TRUE`, or just return the RGBA rayimg.
 #'@param ... Additional arguments to be passed to [plot_3d()].
