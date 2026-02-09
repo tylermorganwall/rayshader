@@ -113,6 +113,10 @@ either <code><a href="convert_path_to_animation_coords.html">convert_path_to_ani
 <span>  sample_method <span class="op">=</span> <span class="st">"sobol_blue"</span>,</span>
 <span>  min_variance <span class="op">=</span> <span class="fl">1e-07</span>,</span>
 <span>  light <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  lat <span class="op">=</span> <span class="cn">NA</span>,</span>
+<span>  long <span class="op">=</span> <span class="cn">NA</span>,</span>
+<span>  datetime <span class="op">=</span> <span class="cn">NA</span>,</span>
+<span>  sky_args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  lightdirection <span class="op">=</span> <span class="fl">315</span>,</span>
 <span>  lightaltitude <span class="op">=</span> <span class="fl">45</span>,</span>
 <span>  lightsize <span class="op">=</span> <span class="cn">NULL</span>,</span>
@@ -154,7 +158,7 @@ either <code><a href="convert_path_to_animation_coords.html">convert_path_to_ani
 <span>  clear <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  return_scene <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  print_scene_info <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  clamp_value <span class="op">=</span> <span class="fl">10</span>,</span>
+<span>  clamp_value <span class="op">=</span> <span class="cn">NA</span>,</span>
 <span>  calculate_consistent_normals <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  load_normals <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  point_material <span class="op">=</span> <span class="fu">rayrender</span><span class="fu">::</span><span class="va"><a href="http://www.rayrender.net/reference/diffuse.html" class="external-link">diffuse</a></span>,</span>
@@ -162,6 +166,7 @@ either <code><a href="convert_path_to_animation_coords.html">convert_path_to_ani
 <span>  path_material <span class="op">=</span> <span class="fu">rayrender</span><span class="fu">::</span><span class="va"><a href="http://www.rayrender.net/reference/diffuse.html" class="external-link">diffuse</a></span>,</span>
 <span>  path_material_args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
 <span>  animation_camera_coords <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  plot <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/NA.html" class="external-link">is.na</a></span><span class="op">(</span><span class="va">filename</span><span class="op">)</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -194,6 +199,27 @@ If this is set to zero, the adaptive sampler will be turned off and the renderer
 
 <dt id="arg-light">light<a class="anchor" aria-label="anchor" href="#arg-light"></a></dt>
 <dd><p>Default <code>TRUE</code>. Whether there should be a light in the scene. If not, the scene will be lit with a bluish sky.</p></dd>
+
+
+<dt id="arg-lat">lat<a class="anchor" aria-label="anchor" href="#arg-lat"></a></dt>
+<dd><p>Default <code>NA</code>. Latitude (degrees) for automatic sky generation.
+When <code>lat</code>, <code>long</code>, <code>datetime</code>, or <code>sky_args</code> are supplied, <code>render_highquality()</code> uses
+<code>skymodelr::generate_sky_latlong()</code> to create an EXR environment map, disables the default light,
+and sets <code>environment_light</code> for the render.</p></dd>
+
+
+<dt id="arg-long">long<a class="anchor" aria-label="anchor" href="#arg-long"></a></dt>
+<dd><p>Default <code>NA</code>. Longitude (degrees; west &lt; 0) for automatic sky generation.</p></dd>
+
+
+<dt id="arg-datetime">datetime<a class="anchor" aria-label="anchor" href="#arg-datetime"></a></dt>
+<dd><p>Default <code>NA</code>. POSIXct or character date-time used to position the sun.</p></dd>
+
+
+<dt id="arg-sky-args">sky_args<a class="anchor" aria-label="anchor" href="#arg-sky-args"></a></dt>
+<dd><p>Default empty <code><a href="https://rdrr.io/r/base/list.html" class="external-link">list()</a></code>. Additional arguments passed to
+<code>skymodelr::generate_sky_latlong()</code> (except <code>filename</code>, which is managed internally).
+The EXR is cached in <code><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir()</a></code> using a filename derived from these inputs.</p></dd>
 
 
 <dt id="arg-lightdirection">lightdirection<a class="anchor" aria-label="anchor" href="#arg-lightdirection"></a></dt>
@@ -378,7 +404,8 @@ and <code>camera_lookat</code> vectors.</p></dd>
 
 
 <dt id="arg-clamp-value">clamp_value<a class="anchor" aria-label="anchor" href="#arg-clamp-value"></a></dt>
-<dd><p>Default <code>10</code>. See documentation for <code><a href="http://www.rayrender.net/reference/render_scene.html" class="external-link">rayrender::render_scene()</a></code>.</p></dd>
+<dd><p>Default <code>NA</code>. If <code>NA</code>, uses <code>100</code> when the OIDN denoiser is unavailable
+and <code>10000</code> when it is available (via <code><a href="http://www.rayrender.net/reference/has_denoiser.html" class="external-link">rayrender::has_denoiser()</a></code>).</p></dd>
 
 
 <dt id="arg-calculate-consistent-normals">calculate_consistent_normals<a class="anchor" aria-label="anchor" href="#arg-calculate-consistent-normals"></a></dt>
@@ -415,6 +442,10 @@ can be specified here.</p></dd>
 <dt id="arg-animation-camera-coords">animation_camera_coords<a class="anchor" aria-label="anchor" href="#arg-animation-camera-coords"></a></dt>
 <dd><p>Default <code>NULL</code>. Expects camera animation output from either <code><a href="convert_path_to_animation_coords.html">convert_path_to_animation_coords()</a></code>
 or <code><a href="http://www.rayrender.net/reference/generate_camera_motion.html" class="external-link">rayrender::generate_camera_motion()</a></code> functions.</p></dd>
+
+
+<dt id="arg-plot">plot<a class="anchor" aria-label="anchor" href="#arg-plot"></a></dt>
+<dd><p>Default <code>is.na(filename)</code>. Whether to plot the scene, or just return the RGBA array.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
@@ -462,6 +493,7 @@ or <code><a href="http://www.rayrender.net/reference/generate_camera_motion.html
 <span class="r-in"><span>                  min_variance <span class="op">=</span> <span class="fl">0</span>, samples <span class="op">=</span> <span class="fl">16</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-plt img"><img src="render_highquality-5.png" alt="" width="768" height="768"></span>
+<span class="r-plt img"><img src="render_highquality-6.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#Change the camera:</span></span></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
@@ -470,7 +502,7 @@ or <code><a href="http://www.rayrender.net/reference/generate_camera_motion.html
 <span class="r-in"><span>                  title_bar_color<span class="op">=</span><span class="st">"white"</span>, title_bar_alpha<span class="op">=</span><span class="fl">0.8</span>,</span></span>
 <span class="r-in"><span>                  min_variance <span class="op">=</span> <span class="fl">0</span>, samples <span class="op">=</span> <span class="fl">16</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-plt img"><img src="render_highquality-6.png" alt="" width="768" height="768"></span>
+<span class="r-plt img"><img src="render_highquality-7.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="co">#Add a shiny metal sphere</span></span></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_camera.html">render_camera</a></span><span class="op">(</span>theta<span class="op">=</span><span class="op">-</span><span class="fl">45</span>,phi<span class="op">=</span><span class="fl">60</span>,fov<span class="op">=</span><span class="fl">60</span>,zoom<span class="op">=</span><span class="fl">0.8</span><span class="op">)</span></span></span>
@@ -480,7 +512,7 @@ or <code><a href="http://www.rayrender.net/reference/generate_camera_motion.html
 <span class="r-in"><span>                                                     radius<span class="op">=</span><span class="fl">20</span>,material<span class="op">=</span><span class="fu">rayrender</span><span class="fu">::</span><span class="fu"><a href="http://www.rayrender.net/reference/metal.html" class="external-link">metal</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                  min_variance <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-plt img"><img src="render_highquality-7.png" alt="" width="768" height="768"></span>
+<span class="r-plt img"><img src="render_highquality-8.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#Add a red light to the volcano and change the ambient light to dusk</span></span></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
@@ -491,7 +523,7 @@ or <code><a href="http://www.rayrender.net/reference/generate_camera_motion.html
 <span class="r-in"><span>                                   material<span class="op">=</span><span class="fu">rayrender</span><span class="fu">::</span><span class="fu"><a href="http://www.rayrender.net/reference/light.html" class="external-link">light</a></span><span class="op">(</span>color<span class="op">=</span><span class="st">"red"</span>,intensity<span class="op">=</span><span class="fl">10</span><span class="op">)</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                  min_variance <span class="op">=</span> <span class="fl">0</span>, samples <span class="op">=</span> <span class="fl">16</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-plt img"><img src="render_highquality-8.png" alt="" width="768" height="768"></span>
+<span class="r-plt img"><img src="render_highquality-9.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="co">#Manually change the camera location and direction</span></span></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_camera.html">render_camera</a></span><span class="op">(</span>theta<span class="op">=</span><span class="fl">45</span>,phi<span class="op">=</span><span class="fl">45</span>,fov<span class="op">=</span><span class="fl">90</span><span class="op">)</span></span></span>
@@ -501,7 +533,60 @@ or <code><a href="http://www.rayrender.net/reference/generate_camera_motion.html
 <span class="r-in"><span>                                   material<span class="op">=</span><span class="fu">rayrender</span><span class="fu">::</span><span class="fu"><a href="http://www.rayrender.net/reference/light.html" class="external-link">light</a></span><span class="op">(</span>color<span class="op">=</span><span class="st">"red"</span>,intensity<span class="op">=</span><span class="fl">10</span><span class="op">)</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                  min_variance <span class="op">=</span> <span class="fl">0</span>, samples <span class="op">=</span> <span class="fl">16</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-plt img"><img src="render_highquality-9.png" alt="" width="768" height="768"></span>
+<span class="r-plt img"><img src="render_highquality-10.png" alt="" width="768" height="768"></span>
+<span class="r-in"><span><span class="co"># Render the shadow of the Washington Monument with a realistic sky at that datetime</span></span></span>
+<span class="r-in"><span><span class="va">run_examples</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/find.package.html" class="external-link">find.package</a></span><span class="op">(</span><span class="st">"sf"</span>, quiet <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">&amp;&amp;</span></span></span>
+<span class="r-in"><span>              <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/find.package.html" class="external-link">find.package</a></span><span class="op">(</span><span class="st">"elevatr"</span>, quiet <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">&amp;&amp;</span></span></span>
+<span class="r-in"><span>              <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/find.package.html" class="external-link">find.package</a></span><span class="op">(</span><span class="st">"raster"</span>, quiet <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">&amp;&amp;</span></span></span>
+<span class="r-in"><span>              <span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="va">run_examples</span><span class="op">)</span> <span class="op">{</span></span></span>
+<span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://r-spatial.github.io/sf/" class="external-link">sf</a></span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co">#Set location of washington monument</span></span></span>
+<span class="r-in"><span><span class="va">washington_monument_location</span> <span class="op">=</span>  <span class="fu"><a href="https://r-spatial.github.io/sf/reference/st.html" class="external-link">st_point</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">77.035249</span>, <span class="fl">38.889462</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">wm_point</span> <span class="op">=</span> <span class="va">washington_monument_location</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="https://r-spatial.github.io/sf/reference/st.html" class="external-link">st_point</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="https://r-spatial.github.io/sf/reference/sfc.html" class="external-link">st_sfc</a></span><span class="op">(</span>crs <span class="op">=</span> <span class="fl">4326</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_transform.html" class="external-link">st_transform</a></span><span class="op">(</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_crs.html" class="external-link">st_crs</a></span><span class="op">(</span><span class="va">washington_monument_multipolygonz</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">elevation_data</span> <span class="op">=</span> <span class="fu">elevatr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/elevatr/man/get_elev_raster.html" class="external-link">get_elev_raster</a></span><span class="op">(</span>locations <span class="op">=</span> <span class="va">wm_point</span>, z <span class="op">=</span> <span class="fl">14</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="va">scene_bbox</span> <span class="op">=</span> <span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_bbox.html" class="external-link">st_bbox</a></span><span class="op">(</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/geos_unary.html" class="external-link">st_buffer</a></span><span class="op">(</span><span class="va">wm_point</span>,<span class="fl">300</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">cropped_data</span> <span class="op">=</span> <span class="fu">raster</span><span class="fu">::</span><span class="fu"><a href="https://rspatial.github.io/terra/reference/crop.html" class="external-link">crop</a></span><span class="op">(</span><span class="va">elevation_data</span>, <span class="va">scene_bbox</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#Use rayshader to convert that raster data to a matrix</span></span></span>
+<span class="r-in"><span><span class="va">dc_elevation_matrix</span> <span class="op">=</span> <span class="fu"><a href="raster_to_matrix.html">raster_to_matrix</a></span><span class="op">(</span><span class="va">cropped_data</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#Remove negative elevation data</span></span></span>
+<span class="r-in"><span><span class="va">dc_elevation_matrix</span><span class="op">[</span><span class="va">dc_elevation_matrix</span> <span class="op">&lt;</span> <span class="fl">0</span><span class="op">]</span> <span class="op">=</span> <span class="fl">0</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co">#Plot a 3D map of the national mall</span></span></span>
+<span class="r-in"><span><span class="va">dc_elevation_matrix</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="height_shade.html">height_shade</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="add_shadow.html">add_shadow</a></span><span class="op">(</span><span class="fu"><a href="lamb_shade.html">lamb_shade</a></span><span class="op">(</span><span class="va">dc_elevation_matrix</span><span class="op">)</span>, <span class="fl">0</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="plot_3d.html">plot_3d</a></span><span class="op">(</span><span class="va">dc_elevation_matrix</span>, zscale<span class="op">=</span><span class="fl">3.7</span>, water <span class="op">=</span> <span class="cn">TRUE</span>, waterdepth <span class="op">=</span> <span class="fl">1</span>,</span></span>
+<span class="r-in"><span>         soliddepth<span class="op">=</span><span class="op">-</span><span class="fl">50</span>, windowsize <span class="op">=</span> <span class="fl">800</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co">#Zoom in on the monument</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="render_camera.html">render_camera</a></span><span class="op">(</span>theta<span class="op">=</span><span class="fl">150</span>,  phi<span class="op">=</span><span class="fl">35</span>, zoom<span class="op">=</span> <span class="fl">0.55</span>, fov<span class="op">=</span><span class="fl">70</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co">#Render the national monument at solar noon on the solstice</span></span></span>
+<span class="r-in"><span><span class="fu">rgl</span><span class="fu">::</span><span class="fu"><a href="https://dmurdoch.github.io/rgl/dev/reference/par3d.html" class="external-link">par3d</a></span><span class="op">(</span>ignoreExtent <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="render_multipolygonz.html">render_multipolygonz</a></span><span class="op">(</span><span class="va">washington_monument_multipolygonz</span>,</span></span>
+<span class="r-in"><span>                    extent <span class="op">=</span> <span class="fu">raster</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/raster/man/extent.html" class="external-link">extent</a></span><span class="op">(</span><span class="va">cropped_data</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                    zscale <span class="op">=</span> <span class="fl">4</span>, color <span class="op">=</span> <span class="st">"grey80"</span>,</span></span>
+<span class="r-in"><span>                    heightmap <span class="op">=</span> <span class="va">dc_elevation_matrix</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co">#Render the (short) shadow the summer solstice</span></span></span>
+<span class="r-in"><span><span class="fu">render_highquality</span><span class="op">(</span>min_variance <span class="op">=</span> <span class="fl">0</span>, samples <span class="op">=</span> <span class="fl">16</span>,</span></span>
+<span class="r-in"><span>                  long <span class="op">=</span> <span class="op">-</span><span class="fl">77.035249</span>, lat <span class="op">=</span> <span class="fl">38.889462</span>,</span></span>
+<span class="r-in"><span>                  datetime <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.POSIXlt.html" class="external-link">as.POSIXct</a></span><span class="op">(</span><span class="st">"2025-06-21 12:00:00"</span>,tz<span class="op">=</span><span class="st">"EST"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co">#Render the shadow the winter solstice (using the higher quality prague model)</span></span></span>
+<span class="r-in"><span><span class="fu">render_highquality</span><span class="op">(</span>min_variance <span class="op">=</span> <span class="fl">0</span>, samples <span class="op">=</span> <span class="fl">16</span>,</span></span>
+<span class="r-in"><span>                  long <span class="op">=</span> <span class="op">-</span><span class="fl">77.035249</span>, lat <span class="op">=</span> <span class="fl">38.889462</span>,</span></span>
+<span class="r-in"><span>                  sky_args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>hosek <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>                  datetime <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.POSIXlt.html" class="external-link">as.POSIXct</a></span><span class="op">(</span><span class="st">"2025-12-21 12:00:00"</span>,tz<span class="op">=</span><span class="st">"EST"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">}</span></span></span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Mosaicing &amp; Projecting</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Note: Elevation units are in meters.</span>
+<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>No water rendered--all elevations above or equal to water level. Range of heights: 2.55567121505737-12.3973035812378. Depth specified: 1</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in render_highquality(min_variance = 0, samples = 16, long = -77.035249,     lat = 38.889462, datetime = as.POSIXct("2025-06-21 12:00:00",         tz = "EST")):</span> `skymodelr` package required for automatic sky generation. Install it or provide `environment_light` via `...`.</span>
 </code></pre></div>
     </div>
   </div>
