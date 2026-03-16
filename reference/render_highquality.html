@@ -21,7 +21,7 @@ either convert_path_to_animation_coords() or rayrender::generate_camera_motion()
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.40.5</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.41.0</span>
       </span>
     </div>
 
@@ -535,6 +535,7 @@ or <code><a href="http://www.rayrender.net/reference/generate_camera_motion.html
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-plt img"><img src="render_highquality-10.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="co"># Render the shadow of the Washington Monument with a realistic sky at that datetime</span></span></span>
+<span class="r-in"><span><span class="co"># using the `skymodelr` package.</span></span></span>
 <span class="r-in"><span><span class="va">run_examples</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/find.package.html" class="external-link">find.package</a></span><span class="op">(</span><span class="st">"sf"</span>, quiet <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">&amp;&amp;</span></span></span>
 <span class="r-in"><span>              <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/find.package.html" class="external-link">find.package</a></span><span class="op">(</span><span class="st">"elevatr"</span>, quiet <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">&amp;&amp;</span></span></span>
 <span class="r-in"><span>              <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/find.package.html" class="external-link">find.package</a></span><span class="op">(</span><span class="st">"raster"</span>, quiet <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">&amp;&amp;</span></span></span>
@@ -545,6 +546,7 @@ or <code><a href="http://www.rayrender.net/reference/generate_camera_motion.html
 <span class="r-in"><span><span class="va">washington_monument_location</span> <span class="op">=</span>  <span class="fu"><a href="https://r-spatial.github.io/sf/reference/st.html" class="external-link">st_point</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">77.035249</span>, <span class="fl">38.889462</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">wm_point</span> <span class="op">=</span> <span class="va">washington_monument_location</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span> <span class="fu"><a href="https://r-spatial.github.io/sf/reference/st.html" class="external-link">st_point</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="https://r-spatial.github.io/sf/reference/geos_unary.html" class="external-link">st_buffer</a></span><span class="op">(</span><span class="fl">0.01</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span> <span class="fu"><a href="https://r-spatial.github.io/sf/reference/sfc.html" class="external-link">st_sfc</a></span><span class="op">(</span>crs <span class="op">=</span> <span class="fl">4326</span><span class="op">)</span> <span class="op">|&gt;</span></span></span>
 <span class="r-in"><span> <span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_transform.html" class="external-link">st_transform</a></span><span class="op">(</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_crs.html" class="external-link">st_crs</a></span><span class="op">(</span><span class="va">washington_monument_multipolygonz</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
@@ -566,27 +568,42 @@ or <code><a href="http://www.rayrender.net/reference/generate_camera_motion.html
 <span class="r-in"><span> <span class="fu"><a href="plot_3d.html">plot_3d</a></span><span class="op">(</span><span class="va">dc_elevation_matrix</span>, zscale<span class="op">=</span><span class="fl">3.7</span>, water <span class="op">=</span> <span class="cn">TRUE</span>, waterdepth <span class="op">=</span> <span class="fl">1</span>,</span></span>
 <span class="r-in"><span>         soliddepth<span class="op">=</span><span class="op">-</span><span class="fl">50</span>, windowsize <span class="op">=</span> <span class="fl">800</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="co">#Zoom in on the monument</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="render_camera.html">render_camera</a></span><span class="op">(</span>theta<span class="op">=</span><span class="fl">150</span>,  phi<span class="op">=</span><span class="fl">35</span>, zoom<span class="op">=</span> <span class="fl">0.55</span>, fov<span class="op">=</span><span class="fl">70</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="render_camera.html">render_camera</a></span><span class="op">(</span>theta<span class="op">=</span><span class="fl">45</span>,  phi<span class="op">=</span><span class="fl">0</span>, zoom<span class="op">=</span> <span class="fl">0.03</span>, fov<span class="op">=</span><span class="fl">130</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="co">#Render the national monument at solar noon on the solstice</span></span></span>
 <span class="r-in"><span><span class="fu">rgl</span><span class="fu">::</span><span class="fu"><a href="https://dmurdoch.github.io/rgl/dev/reference/par3d.html" class="external-link">par3d</a></span><span class="op">(</span>ignoreExtent <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_multipolygonz.html">render_multipolygonz</a></span><span class="op">(</span><span class="va">washington_monument_multipolygonz</span>,</span></span>
 <span class="r-in"><span>                    extent <span class="op">=</span> <span class="fu">raster</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/raster/man/extent.html" class="external-link">extent</a></span><span class="op">(</span><span class="va">cropped_data</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                    zscale <span class="op">=</span> <span class="fl">4</span>, color <span class="op">=</span> <span class="st">"grey80"</span>,</span></span>
 <span class="r-in"><span>                    heightmap <span class="op">=</span> <span class="va">dc_elevation_matrix</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="co">#Render the (short) shadow the summer solstice</span></span></span>
-<span class="r-in"><span><span class="fu">render_highquality</span><span class="op">(</span>min_variance <span class="op">=</span> <span class="fl">0</span>, samples <span class="op">=</span> <span class="fl">16</span>,</span></span>
-<span class="r-in"><span>                  long <span class="op">=</span> <span class="op">-</span><span class="fl">77.035249</span>, lat <span class="op">=</span> <span class="fl">38.889462</span>,</span></span>
-<span class="r-in"><span>                  datetime <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.POSIXlt.html" class="external-link">as.POSIXct</a></span><span class="op">(</span><span class="st">"2025-06-21 12:00:00"</span>,tz<span class="op">=</span><span class="st">"EST"</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="co">#Render the shadow the winter solstice (using the higher quality prague model)</span></span></span>
-<span class="r-in"><span><span class="fu">render_highquality</span><span class="op">(</span>min_variance <span class="op">=</span> <span class="fl">0</span>, samples <span class="op">=</span> <span class="fl">16</span>,</span></span>
-<span class="r-in"><span>                  long <span class="op">=</span> <span class="op">-</span><span class="fl">77.035249</span>, lat <span class="op">=</span> <span class="fl">38.889462</span>,</span></span>
-<span class="r-in"><span>                  sky_args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>hosek <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span>,</span></span>
-<span class="r-in"><span>                  datetime <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.POSIXlt.html" class="external-link">as.POSIXct</a></span><span class="op">(</span><span class="st">"2025-12-21 12:00:00"</span>,tz<span class="op">=</span><span class="st">"EST"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co">#Render using the built-in (but less accurate) Hosek model.</span></span></span>
+<span class="r-in"><span><span class="co"># Here's it's more yellow than it should be, but it's accurate enough for most renders.</span></span></span>
+<span class="r-in"><span><span class="fu">render_highquality</span><span class="op">(</span></span></span>
+<span class="r-in"><span>min_variance <span class="op">=</span> <span class="fl">0</span>,</span></span>
+<span class="r-in"><span>samples <span class="op">=</span> <span class="fl">16</span>,</span></span>
+<span class="r-in"><span>long <span class="op">=</span> <span class="op">-</span><span class="fl">77.035249</span>,</span></span>
+<span class="r-in"><span>lat <span class="op">=</span> <span class="fl">38.889462</span>,</span></span>
+<span class="r-in"><span>iso <span class="op">=</span> <span class="fl">8</span>,</span></span>
+<span class="r-in"><span>clamp_value <span class="op">=</span> <span class="fl">10000</span>,</span></span>
+<span class="r-in"><span>datetime <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.POSIXlt.html" class="external-link">as.POSIXct</a></span><span class="op">(</span><span class="st">"2025-12-21 16:00:00"</span>, tz <span class="op">=</span> <span class="st">"EST"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># Render the more-accurate Praguq model (that requires</span></span></span>
+<span class="r-in"><span><span class="co"># supplemental data that will be downloaded on the first call) and</span></span></span>
+<span class="r-in"><span><span class="co"># specify a higher resolution environment map via `sky_args`</span></span></span>
+<span class="r-in"><span><span class="fu">render_highquality</span><span class="op">(</span></span></span>
+<span class="r-in"><span>min_variance <span class="op">=</span> <span class="fl">0</span>,</span></span>
+<span class="r-in"><span>samples <span class="op">=</span> <span class="fl">16</span>,</span></span>
+<span class="r-in"><span>long <span class="op">=</span> <span class="op">-</span><span class="fl">77.035249</span>,</span></span>
+<span class="r-in"><span>lat <span class="op">=</span> <span class="fl">38.889462</span>,</span></span>
+<span class="r-in"><span>sky_args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>hosek <span class="op">=</span> <span class="cn">FALSE</span>,resolution<span class="op">=</span><span class="fl">4000</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>iso <span class="op">=</span> <span class="fl">8</span>,</span></span>
+<span class="r-in"><span>clamp_value <span class="op">=</span> <span class="fl">10000</span>,</span></span>
+<span class="r-in"><span>datetime <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/as.POSIXlt.html" class="external-link">as.POSIXct</a></span><span class="op">(</span><span class="st">"2025-12-21 16:00:00"</span>, tz <span class="op">=</span> <span class="st">"EST"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Mosaicing &amp; Projecting</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Note: Elevation units are in meters.</span>
-<span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>No water rendered--all elevations above or equal to water level. Range of heights: 2.55567121505737-12.3973035812378. Depth specified: 1</span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in render_highquality(min_variance = 0, samples = 16, long = -77.035249,     lat = 38.889462, datetime = as.POSIXct("2025-06-21 12:00:00",         tz = "EST")):</span> `skymodelr` package required for automatic sky generation. Install it or provide `environment_light` via `...`.</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in render_highquality(min_variance = 0, samples = 16, long = -77.035249,     lat = 38.889462, iso = 8, clamp_value = 10000, datetime = as.POSIXct("2025-12-21 16:00:00",         tz = "EST")):</span> `skymodelr` package required for automatic sky generation. Install it or provide `environment_light` via `...`.</span>
 </code></pre></div>
     </div>
   </div>
