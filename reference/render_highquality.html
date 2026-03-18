@@ -204,7 +204,7 @@ If this is set to zero, the adaptive sampler will be turned off and the renderer
 <dt id="arg-lat">lat<a class="anchor" aria-label="anchor" href="#arg-lat"></a></dt>
 <dd><p>Default <code>NA</code>. Latitude (degrees) for automatic sky generation.
 When <code>lat</code>, <code>long</code>, <code>datetime</code>, or <code>sky_args</code> are supplied, <code>render_highquality()</code> uses
-<code>skymodelr::generate_sky_latlong()</code> to create an EXR environment map, disables the default light,
+<code><a href="https://tylermorganwall.github.io/skymodelr/reference/generate_sky_latlong.html" class="external-link">skymodelr::generate_sky_latlong()</a></code> to create an EXR environment map, disables the default light,
 and sets <code>environment_light</code> for the render.</p></dd>
 
 
@@ -218,7 +218,7 @@ and sets <code>environment_light</code> for the render.</p></dd>
 
 <dt id="arg-sky-args">sky_args<a class="anchor" aria-label="anchor" href="#arg-sky-args"></a></dt>
 <dd><p>Default empty <code><a href="https://rdrr.io/r/base/list.html" class="external-link">list()</a></code>. Additional arguments passed to
-<code>skymodelr::generate_sky_latlong()</code> (except <code>filename</code>, which is managed internally).
+<code><a href="https://tylermorganwall.github.io/skymodelr/reference/generate_sky_latlong.html" class="external-link">skymodelr::generate_sky_latlong()</a></code> (except <code>filename</code>, which is managed internally).
 The EXR is cached in <code><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir()</a></code> using a filename derived from these inputs.</p></dd>
 
 
@@ -603,7 +603,9 @@ or <code><a href="http://www.rayrender.net/reference/generate_camera_motion.html
 <span class="r-in"><span><span class="op">}</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Mosaicing &amp; Projecting</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Note: Elevation units are in meters.</span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in render_highquality(min_variance = 0, samples = 16, long = -77.035249,     lat = 38.889462, iso = 8, clamp_value = 10000, datetime = as.POSIXct("2025-12-21 16:00:00",         tz = "EST")):</span> `skymodelr` package required for automatic sky generation. Install it or provide `environment_light` via `...`.</span>
+<span class="r-plt img"><img src="render_highquality-11.png" alt="" width="768" height="768"></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>  Coefficient file for this setting not yet present: this is a large file (107MB), download? [y/n] </span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in check_coef_file("SkyModelDatasetGround.dat"):</span> Input not recognized.</span>
 </code></pre></div>
     </div>
   </div>
