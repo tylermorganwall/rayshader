@@ -140,6 +140,9 @@ ray_shade = function(
     } else {
       numbercores = options("cores")[[1]]
     }
+    if (is.na(numbercores) || numbercores < 1) {
+      numbercores = 1L
+    }
     if (nrow(heightmap) < numbercores * 16) {
       if (nrow(heightmap) < 4) {
         chunksize = 1

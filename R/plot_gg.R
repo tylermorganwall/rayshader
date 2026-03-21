@@ -249,6 +249,7 @@ plot_gg = function(
   if (!(length(find.package("ggplot2", quiet = TRUE)) > 0)) {
     stop("Must have ggplot2 installed to use plot_gg()")
   }
+  cache_plot_gg_panel_info(NULL)
   heightmaptemp = tempfile(fileext = ".png")
   colormaptemp = tempfile(fileext = ".png")
   png_device = grDevices::png
@@ -781,6 +782,7 @@ plot_gg = function(
     }
   }
 
+  ggplot_build_obj = ggplot2::ggplot_build(ggplotobj2)
   ggplotobj2 = set_to_white(ggplot2::ggplotGrob(ggplotobj2))
   if (emboss_text > 0) {
     emboss_text = 1 - emboss_text
@@ -802,6 +804,12 @@ plot_gg = function(
     res = 300
   )
   grid::grid.draw(ggplotobj2)
+  plot_gg_panel_info = capture_plot_gg_panel_info(
+    ggplotobj2,
+    ggplot_build_obj,
+    original_width_px = width * 300,
+    original_height_px = height * 300
+  )
   grDevices::dev.off()
   if (old_dev > 1) {
     grDevices::dev.set(old_dev)
@@ -847,6 +855,13 @@ plot_gg = function(
     heightmaptemp,
     source_linear = TRUE
   )[,, 1]
+  plot_gg_panel_info = finalize_plot_gg_panel_info(
+    plot_gg_panel_info,
+    original_width_px = width * 300,
+    original_height_px = height * 300,
+    scene_width_px = ncol(mapheight),
+    scene_height_px = nrow(mapheight)
+  )
 
   if (apply_manual_correction) {
     gamma_ratio = monitor_gamma / 2.2
@@ -855,6 +870,7 @@ plot_gg = function(
   if (invert) {
     mapheight = 1 - mapheight
   }
+  height_matrix = 1 - t(mapheight)
   zscale = 1 / scale
   if (shadowdepth == "auto") {
     if (min(mapheight, na.rm = TRUE) != max(mapheight, na.rm = TRUE)) {
@@ -898,7 +914,7 @@ plot_gg = function(
   if (raytrace) {
     if (is.null(saved_shadow_matrix)) {
       raylayer = ray_shade(
-        t(1 - mapheight),
+        height_matrix,
         maxsearch = 600,
         sunangle = sunangle,
         anglebreaks = anglebreaks,
@@ -911,7 +927,7 @@ plot_gg = function(
         mapcolor |>
           add_shadow(raylayer, shadow_intensity) |>
           plot_3d(
-            (t(1 - mapheight)),
+            height_matrix,
             zscale = 1 / scale,
             triangulate = triangulate,
             max_error = max_error,
@@ -937,7 +953,7 @@ plot_gg = function(
         mapcolor |>
           add_shadow(raylayer, shadow_intensity) |>
           plot_3d(
-            (t(1 - mapheight)),
+            height_matrix,
             zscale = 1 / scale,
             triangulate = triangulate,
             max_error = max_error,
@@ -962,7 +978,7 @@ plot_gg = function(
     if (!preview) {
       plot_3d(
         mapcolor,
-        (t(1 - mapheight)),
+        height_matrix,
         zscale = 1 / scale,
         triangulate = triangulate,
         max_error = max_error,
@@ -981,6 +997,7 @@ plot_gg = function(
       return(invisible(mapcolor))
     }
   }
+  cache_plot_gg_panel_info(plot_gg_panel_info)
 
   if (!preview && flat_plot_render) {
     if (flat_transparent_bg) {
@@ -1000,7 +1017,7 @@ plot_gg = function(
     }
     mapcolor = png::readPNG(colormaptemp)
     horizontal_offset = c(0, 0)
-    shadowwidth = max(floor(min(dim((t(1 - mapheight)))) / 10), 5)
+    shadowwidth = max(floor(min(dim(height_matrix)) / 10), 5)
     if (flat_direction == "x" || flat_direction == "-x") {
       horizontal_offset = abs(
         c(width * 300, 0) *
@@ -1028,7 +1045,7 @@ plot_gg = function(
     render_floating_overlay(
       mapcolor,
       altitude = flat_distance,
-      heightmap = (t(1 - mapheight)),
+      heightmap = height_matrix,
       zscale = 1 / scale,
       horizontal_offset = horizontal_offset
     )
@@ -1040,7 +1057,7 @@ plot_gg = function(
         )
       }
       make_shadow(
-        (t(1 - mapheight)),
+        height_matrix,
         shadowdepth,
         shadowwidth,
         background,
@@ -1049,13 +1066,24 @@ plot_gg = function(
       )
     }
   }
+  if (!is.null(plot_gg_panel_info)) {
+    attr(height_matrix, "ggplot_panel_info") = plot_gg_panel_info
+    if (nrow(plot_gg_panel_info) == 1) {
+      attr(height_matrix, "extent") = c(
+        xmin = plot_gg_panel_info$extent_xmin,
+        xmax = plot_gg_panel_info$extent_xmax,
+        ymin = plot_gg_panel_info$extent_ymin,
+        ymax = plot_gg_panel_info$extent_ymax
+      )
+    }
+  }
   if (save_shadow_matrix & !save_height_matrix) {
     return(raylayer)
   }
   if (!save_shadow_matrix & save_height_matrix) {
-    return(1 - t(mapheight))
+    return(height_matrix)
   }
   if (save_shadow_matrix & save_height_matrix) {
-    return(list(1 - t(mapheight), raylayer))
+    return(list(height_matrix, raylayer))
   }
 }
