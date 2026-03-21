@@ -87,6 +87,193 @@ get_ggplot_extent = function(heightmap = NULL, panel = NULL) {
 	extents
 }
 
+get_plot_gg_transform_info = function(heightmap = NULL) {
+	transform_info = NULL
+	if (!is.null(heightmap)) {
+		transform_info = attr(heightmap, "ggplot_transform_info", exact = TRUE)
+	}
+	if (is.null(transform_info)) {
+		transform_info = get0(
+			"plot_gg_transform_info",
+			envir = ray_cache_scene_envir,
+			inherits = FALSE
+		)
+	}
+	if (is.null(transform_info)) {
+		stop("No cached ggplot transform found. Call `plot_gg()` first.")
+	}
+	transform_info
+}
+
+#'@title Transform Coordinates via ggplot2 Scales and Coord System
+#'
+#'@description Transforms user coordinates through the same ggplot2 scale and coordinate
+#'system used by the most recent [plot_gg()] scene.
+#'
+#'@param x Numeric (or discrete) x values in the original ggplot data space.
+#'@param y Numeric (or discrete) y values in the original ggplot data space.
+#'@param panel Default `NULL`. Facet panel index to use. Required if the scene has
+#'multiple panels.
+#'@param heightmap Default `NULL`. Height matrix returned by [plot_gg()] with
+#'`save_height_matrix = TRUE`. If supplied, transformation metadata and extent are read
+#'from this matrix instead of the active scene.
+#'@param crs Default `NULL`. Only used for `coord_sf()`. Coordinate reference system for
+#'input `x`/`y` values. Can be anything accepted by [sf::st_crs()]. If `NULL`, values are
+#'assumed to already be in the plot CRS.
+#'
+#'@return Data frame with columns `long` and `lat` in the same coordinate space as
+#'`attr(result, "extent")`, suitable for `render_points()`/`render_path()`.
+#'@export
+#'
+#'@examples
+#'if(run_documentation()) {
+#'library(ggplot2)
+#'
+#'p = ggplot(mtcars) +
+#'  geom_point(aes(wt, mpg, color = mpg)) +
+#'  scale_x_log10()
+#'
+#'plot_gg(p, width = 4)
+#'pts = transform_ggplot_coords(x = c(2, 4), y = c(15, 30))
+#'
+#'render_points(
+#'  long = pts$long,
+#'  lat = pts$lat,
+#'  extent = attr(pts, "extent"),
+#'  altitude = 20,
+#'  color = "red",
+#'  size = 5
+#')
+#'render_snapshot()
+#'}
+transform_ggplot_coords = function(
+	x,
+	y,
+	panel = NULL,
+	heightmap = NULL,
+	crs = NULL
+) {
+	if (length(x) != length(y)) {
+		stop("`x` and `y` must have the same length.")
+	}
+	transform_info = get_plot_gg_transform_info(heightmap = heightmap)
+	panel_table = transform_info$layout
+	if (!nrow(panel_table)) {
+		stop("No ggplot panel transformation metadata found.")
+	}
+
+	if (is.null(panel)) {
+		if (nrow(panel_table) != 1) {
+			stop("`panel` must be supplied for faceted ggplots.")
+		}
+		panel = panel_table$panel[1]
+	}
+	panel_index = match(panel, panel_table$panel)
+	if (is.na(panel_index)) {
+		stop(sprintf(
+			"Could not find panel `%s`. Available panels: %s",
+			as.character(panel),
+			paste(panel_table$panel, collapse = ", ")
+		))
+	}
+	panel_params = transform_info$panel_params[[panel_index]]
+	coord_obj = transform_info$coord
+	transformed_extent = get_ggplot_extent(
+		heightmap = heightmap,
+		panel = panel
+	)
+	panel_extent_info = attr(transformed_extent, "panel_info")
+
+	x_vals = x
+	y_vals = y
+
+	if (inherits(coord_obj, "CoordSf")) {
+		if (!is.null(crs)) {
+			if (!(length(find.package("sf", quiet = TRUE)) > 0)) {
+				stop("`sf` package required when using `crs` with coord_sf().")
+			}
+			target_crs = panel_params$crs
+			if (is.null(target_crs)) {
+				target_crs = panel_params$default_crs
+			}
+			point_sf = sf::st_as_sf(
+				data.frame(x = as.numeric(x_vals), y = as.numeric(y_vals)),
+				coords = c("x", "y"),
+				crs = crs
+			)
+			point_sf = sf::st_transform(point_sf, target_crs)
+			point_coords = sf::st_coordinates(point_sf)
+			x_vals = point_coords[, 1]
+			y_vals = point_coords[, 2]
+		}
+		coord_input = data.frame(
+			x = as.numeric(x_vals),
+			y = as.numeric(y_vals),
+			PANEL = panel
+		)
+	} else {
+		scale_x_index = panel_table$scale_x[panel_index]
+		scale_y_index = panel_table$scale_y[panel_index]
+		x_scale = transform_info$panel_scales_x[[scale_x_index]]
+		y_scale = transform_info$panel_scales_y[[scale_y_index]]
+		if (x_scale$is_discrete()) {
+			x_transformed = as.numeric(x_scale$map(x_vals))
+		} else {
+			x_transformed = as.numeric(
+				x_scale$transform_df(data.frame(x = x_vals))[["x"]]
+			)
+		}
+		if (y_scale$is_discrete()) {
+			y_transformed = as.numeric(y_scale$map(y_vals))
+		} else {
+			y_transformed = as.numeric(
+				y_scale$transform_df(data.frame(y = y_vals))[["y"]]
+			)
+		}
+		coord_input = data.frame(
+			x = x_transformed,
+			y = y_transformed,
+			PANEL = panel
+		)
+	}
+
+	transformed = coord_obj$transform(coord_input, panel_params)
+	if (!all(c("x", "y") %in% names(transformed))) {
+		stop("ggplot coord transform did not return x/y columns.")
+	}
+	x_range = c(panel_extent_info$data_xmin[1], panel_extent_info$data_xmax[1])
+	y_range = c(panel_extent_info$data_ymin[1], panel_extent_info$data_ymax[1])
+	if (any(!is.finite(x_range))) {
+		x_range = tryCatch(
+			get_ggplot_panel_range(panel_params, "x"),
+			error = function(e) c(0, 1)
+		)
+	}
+	if (any(!is.finite(y_range))) {
+		y_range = tryCatch(
+			get_ggplot_panel_range(panel_params, "y"),
+			error = function(e) c(0, 1)
+		)
+	}
+	map_from_panel_npc = function(vals, target_range) {
+		vals = as.numeric(vals)
+		if (length(target_range) != 2 || any(!is.finite(target_range))) {
+			return(vals)
+		}
+		if (diff(target_range) == 0) {
+			return(rep(target_range[1], length(vals)))
+		}
+		target_range[1] + vals * diff(target_range)
+	}
+	transformed_coords = data.frame(
+		long = map_from_panel_npc(transformed$x, x_range),
+		lat = map_from_panel_npc(transformed$y, y_range)
+	)
+	attr(transformed_coords, "extent") = transformed_extent
+	attr(transformed_coords, "panel") = panel
+	transformed_coords
+}
+
 get_ggplot_panel_range = function(panel_params, axis = c("x", "y")) {
 	axis = match.arg(axis)
 	range_candidates = c(
@@ -156,6 +343,41 @@ cache_plot_gg_panel_info = function(panel_info = NULL) {
 	assign("plot_gg_panel_info", panel_info, envir = ray_cache_scene_envir)
 }
 
+cache_plot_gg_transform_info = function(transform_info = NULL) {
+	assign(
+		"plot_gg_transform_info",
+		transform_info,
+		envir = ray_cache_scene_envir
+	)
+}
+
+build_plot_gg_transform_info = function(ggplot_build_obj) {
+	build_layout = ggplot_build_obj$layout$layout
+	data.frame(
+		panel = as.integer(as.character(build_layout$PANEL)),
+		row = if ("ROW" %in% colnames(build_layout)) {
+			as.integer(as.character(build_layout$ROW))
+		} else {
+			NA_integer_
+		},
+		col = if ("COL" %in% colnames(build_layout)) {
+			as.integer(as.character(build_layout$COL))
+		} else {
+			NA_integer_
+		},
+		scale_x = as.integer(as.character(build_layout$SCALE_X)),
+		scale_y = as.integer(as.character(build_layout$SCALE_Y))
+	) -> panel_table
+
+	list(
+		coord = ggplot_build_obj$layout$coord,
+		panel_params = ggplot_build_obj$layout$panel_params,
+		panel_scales_x = ggplot_build_obj$layout$panel_scales_x,
+		panel_scales_y = ggplot_build_obj$layout$panel_scales_y,
+		layout = panel_table
+	)
+}
+
 capture_plot_gg_panel_info = function(
 	ggplot_grob,
 	ggplot_build_obj,
@@ -209,8 +431,14 @@ capture_plot_gg_panel_info = function(
 		bbox_orig = get_device_panel_bbox(original_width_px, original_height_px)
 		grid::upViewport(0)
 
-		x_range = get_ggplot_panel_range(panel_params[[i]], "x")
-		y_range = get_ggplot_panel_range(panel_params[[i]], "y")
+		x_range = tryCatch(
+			get_ggplot_panel_range(panel_params[[i]], "x"),
+			error = function(e) c(0, 1)
+		)
+		y_range = tryCatch(
+			get_ggplot_panel_range(panel_params[[i]], "y"),
+			error = function(e) c(0, 1)
+		)
 
 		panel_info[[i]] = data.frame(
 			panel = as.integer(as.character(build_layout$PANEL[i])),

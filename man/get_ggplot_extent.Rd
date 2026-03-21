@@ -35,12 +35,13 @@ plot_gg(mtplot, width = 4, windowsize = c(1000, 800))
 gg_extent = get_ggplot_extent()
 
 render_points(
- long = mtcars$wt,
- lat = mtcars$mpg,
- altitude = 20,
- color = "white",
- size = 4,
- extent = gg_extent
+long = mtcars$wt,
+lat = mtcars$mpg,
+altitude = mtcars$disp+150,
+color = "red",
+size = 6,
+extent = gg_extent,
+clear_previous = T
 )
 render_snapshot()
 }

@@ -185,6 +185,7 @@ plot_3d = function(
 		assign("scene_cache", NULL, envir = ray_cache_scene_envir)
 	}
 	cache_plot_gg_panel_info(NULL)
+	cache_plot_gg_transform_info(NULL)
 	#setting default zscale if montereybay is used and tell user about zscale
 	argnames = as.list(sys.call())
 	if (!is.null(attr(heightmap, "rayshader_data"))) {
