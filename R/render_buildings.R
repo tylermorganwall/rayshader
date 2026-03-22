@@ -200,7 +200,7 @@ render_buildings = function(
 		stopifnot(length(bottom) == nrow(polygon))
 	}
 	if (!is.null(data_column_bottom)) {
-		stopifnot(!data_column_bottom %in% colnames(polygon))
+		stopifnot(data_column_bottom %in% colnames(polygon))
 	}
 
 	top_values = get_polygon_data_value(
@@ -227,33 +227,44 @@ render_buildings = function(
 	top = polygon$top / zscale
 	bottom = polygon$bottom / zscale
 	skeletons = raybevel::skeletonize(polygon)
-	idx_sans_missing_geometry = unlist(lapply(skeletons, \(x) {
-		attr(x, "original_sf_row_index")
-	}))
+	idx_sans_missing_geometry = get_skeleton_source_indices(skeletons)
+	if (!length(idx_sans_missing_geometry)) {
+		idx_sans_missing_geometry = seq_len(length(top))
+	}
 	top = top[idx_sans_missing_geometry]
 	bottom = bottom[idx_sans_missing_geometry]
 
 	if (!heights_relative_to_centroid) {
-		roof_mesh = raybevel::generate_roof(
-			skeletons,
-			vertical_offset = top,
-			base_height = 0,
-			angle = angle,
-			material = material,
-			roof_material = roof_material,
-			base = TRUE,
-			sides = TRUE
+		roof_mesh = tryCatch(
+			raybevel::generate_roof(
+				skeletons,
+				vertical_offset = top,
+				base_height = 0,
+				angle = angle,
+				material = material,
+				roof_material = roof_material,
+				base = TRUE,
+				sides = TRUE
+			),
+			error = function(e) {
+				stop(format_raybevel_error(e, "render_buildings"), call. = FALSE)
+			}
 		)
 	} else {
-		roof_mesh = raybevel::generate_roof(
-			skeletons,
-			vertical_offset = top,
-			base_height = bottom,
-			angle = angle,
-			material = material,
-			roof_material = roof_material,
-			base = TRUE,
-			sides = TRUE
+		roof_mesh = tryCatch(
+			raybevel::generate_roof(
+				skeletons,
+				vertical_offset = top,
+				base_height = bottom,
+				angle = angle,
+				material = material,
+				roof_material = roof_material,
+				base = TRUE,
+				sides = TRUE
+			),
+			error = function(e) {
+				stop(format_raybevel_error(e, "render_buildings"), call. = FALSE)
+			}
 		)
 	}
 	if (relative_heights && !heights_relative_to_centroid) {

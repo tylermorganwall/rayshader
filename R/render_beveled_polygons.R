@@ -236,7 +236,7 @@ render_beveled_polygons = function(
 		stopifnot(length(bottom) == nrow(polygon))
 	}
 	if (!is.null(data_column_bottom)) {
-		stopifnot(!data_column_bottom %in% colnames(polygon))
+		stopifnot(data_column_bottom %in% colnames(polygon))
 	}
 
 	top_values = get_polygon_data_value(
@@ -263,9 +263,10 @@ render_beveled_polygons = function(
 	top = polygon$top / zscale
 	bottom = polygon$bottom / zscale
 	skeletons = raybevel::skeletonize(polygon)
-	idx_sans_missing_geometry = unlist(lapply(skeletons, \(x) {
-		attr(x, "original_sf_row_index")
-	}))
+	idx_sans_missing_geometry = get_skeleton_source_indices(skeletons)
+	if (!length(idx_sans_missing_geometry)) {
+		idx_sans_missing_geometry = seq_len(length(top))
+	}
 	top = top[idx_sans_missing_geometry]
 	bottom = bottom[idx_sans_missing_geometry]
 
@@ -286,36 +287,46 @@ render_beveled_polygons = function(
 	}
 
 	if (!heights_relative_to_centroid) {
-		poly_mesh = raybevel::generate_beveled_polygon(
-			skeletons,
-			bevel_offsets = bevel,
-			vertical_offset = top,
-			raw_heights = raw_heights,
-			raw_offsets = raw_offsets,
-			base_height = 0,
-			set_max_height = set_max_height,
-			max_height = max_height,
-			material = material,
-			bevel_material = bevel_material,
-			scale_all_max = scale_all_max,
-			sides = TRUE,
-			base = TRUE
+		poly_mesh = tryCatch(
+			raybevel::generate_beveled_polygon(
+				skeletons,
+				bevel_offsets = bevel,
+				vertical_offset = top,
+				raw_heights = raw_heights,
+				raw_offsets = raw_offsets,
+				base_height = 0,
+				set_max_height = set_max_height,
+				max_height = max_height,
+				material = material,
+				bevel_material = bevel_material,
+				scale_all_max = scale_all_max,
+				sides = TRUE,
+				base = TRUE
+			),
+			error = function(e) {
+				stop(format_raybevel_error(e, "render_beveled_polygons"), call. = FALSE)
+			}
 		)
 	} else {
-		poly_mesh = raybevel::generate_beveled_polygon(
-			skeletons,
-			bevel_offsets = bevel,
-			vertical_offset = top,
-			raw_heights = raw_heights,
-			raw_offsets = raw_offsets,
-			base_height = bottom,
-			set_max_height = set_max_height,
-			max_height = max_height,
-			material = material,
-			bevel_material = bevel_material,
-			scale_all_max = scale_all_max,
-			sides = TRUE,
-			base = TRUE
+		poly_mesh = tryCatch(
+			raybevel::generate_beveled_polygon(
+				skeletons,
+				bevel_offsets = bevel,
+				vertical_offset = top,
+				raw_heights = raw_heights,
+				raw_offsets = raw_offsets,
+				base_height = bottom,
+				set_max_height = set_max_height,
+				max_height = max_height,
+				material = material,
+				bevel_material = bevel_material,
+				scale_all_max = scale_all_max,
+				sides = TRUE,
+				base = TRUE
+			),
+			error = function(e) {
+				stop(format_raybevel_error(e, "render_beveled_polygons"), call. = FALSE)
+			}
 		)
 	}
 
