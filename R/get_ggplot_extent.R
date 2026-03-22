@@ -157,11 +157,31 @@ transform_ggplot_coords = function(
 		stop("`x` and `y` must have the same length.")
 	}
 	transform_info = get_plot_gg_transform_info(heightmap = heightmap)
+	transform_context = get_plot_gg_panel_transform_context(
+		transform_info = transform_info,
+		panel = panel,
+		heightmap = heightmap
+	)
+	transformed_coords = transform_ggplot_xy_with_context(
+		x_vals = x,
+		y_vals = y,
+		transform_context = transform_context,
+		crs = crs
+	)
+	attr(transformed_coords, "extent") = transform_context$transformed_extent
+	attr(transformed_coords, "panel") = transform_context$panel
+	transformed_coords
+}
+
+get_plot_gg_panel_transform_context = function(
+	transform_info,
+	panel = NULL,
+	heightmap = NULL
+) {
 	panel_table = transform_info$layout
 	if (!nrow(panel_table)) {
 		stop("No ggplot panel transformation metadata found.")
 	}
-
 	if (is.null(panel)) {
 		if (nrow(panel_table) != 1) {
 			stop("`panel` must be supplied for faceted ggplots.")
@@ -177,15 +197,49 @@ transform_ggplot_coords = function(
 		))
 	}
 	panel_params = transform_info$panel_params[[panel_index]]
-	coord_obj = transform_info$coord
 	transformed_extent = get_ggplot_extent(
 		heightmap = heightmap,
 		panel = panel
 	)
-	panel_extent_info = attr(transformed_extent, "panel_info")
+	list(
+		panel = panel,
+		panel_index = panel_index,
+		panel_table = panel_table,
+		panel_params = panel_params,
+		coord_obj = transform_info$coord,
+		panel_scales_x = transform_info$panel_scales_x,
+		panel_scales_y = transform_info$panel_scales_y,
+		transformed_extent = transformed_extent,
+		panel_extent_info = attr(transformed_extent, "panel_info")
+	)
+}
 
-	x_vals = x
-	y_vals = y
+map_from_panel_npc = function(vals, target_range) {
+	vals = as.numeric(vals)
+	if (length(target_range) != 2 || any(!is.finite(target_range))) {
+		return(vals)
+	}
+	if (diff(target_range) == 0) {
+		return(rep(target_range[1], length(vals)))
+	}
+	target_range[1] + vals * diff(target_range)
+}
+
+transform_ggplot_xy_with_context = function(
+	x_vals,
+	y_vals,
+	transform_context,
+	crs = NULL
+) {
+	if (length(x_vals) != length(y_vals)) {
+		stop("`x_vals` and `y_vals` must have the same length.")
+	}
+	panel = transform_context$panel
+	panel_index = transform_context$panel_index
+	panel_table = transform_context$panel_table
+	panel_params = transform_context$panel_params
+	panel_extent_info = transform_context$panel_extent_info
+	coord_obj = transform_context$coord_obj
 
 	if (inherits(coord_obj, "CoordSf")) {
 		if (!is.null(crs)) {
@@ -214,8 +268,8 @@ transform_ggplot_coords = function(
 	} else {
 		scale_x_index = panel_table$scale_x[panel_index]
 		scale_y_index = panel_table$scale_y[panel_index]
-		x_scale = transform_info$panel_scales_x[[scale_x_index]]
-		y_scale = transform_info$panel_scales_y[[scale_y_index]]
+		x_scale = transform_context$panel_scales_x[[scale_x_index]]
+		y_scale = transform_context$panel_scales_y[[scale_y_index]]
 		if (x_scale$is_discrete()) {
 			x_transformed = as.numeric(x_scale$map(x_vals))
 		} else {
@@ -255,23 +309,237 @@ transform_ggplot_coords = function(
 			error = function(e) c(0, 1)
 		)
 	}
-	map_from_panel_npc = function(vals, target_range) {
-		vals = as.numeric(vals)
-		if (length(target_range) != 2 || any(!is.finite(target_range))) {
-			return(vals)
-		}
-		if (diff(target_range) == 0) {
-			return(rep(target_range[1], length(vals)))
-		}
-		target_range[1] + vals * diff(target_range)
-	}
-	transformed_coords = data.frame(
+	data.frame(
 		long = map_from_panel_npc(transformed$x, x_range),
 		lat = map_from_panel_npc(transformed$y, y_range)
 	)
-	attr(transformed_coords, "extent") = transformed_extent
-	attr(transformed_coords, "panel") = panel
-	transformed_coords
+}
+
+#'@title Transform `sf` Geometries via ggplot2 Scales and Coord System
+#'
+#'@description Transforms `sf` geometries through the same ggplot2 scale and coordinate
+#'system used by the most recent [plot_gg()] scene.
+#'
+#'@param sf_object An `sf`, `sfc`, or `sfg` object containing 2D geometry.
+#'@param panel Default `NULL`. Facet panel index to use. Required if the scene has
+#'multiple panels.
+#'@param heightmap Default `NULL`. Height matrix returned by [plot_gg()] with
+#'`save_height_matrix = TRUE`. If supplied, transformation metadata and extent are read
+#'from this matrix instead of the active scene.
+#'@param crs Default `NULL`. Only used for `coord_sf()`. Coordinate reference system for
+#'input geometry if you want to override or define missing CRS metadata.
+#'@param segmentize_df_max_length Default `NULL`. If provided, calls [sf::st_segmentize()]
+#'before transformation to densify geometry edges. Units follow `sf` semantics.
+#'
+#'@return Geometry transformed into the same coordinate space as `attr(result, "extent")`.
+#'For `sf` input, returns `sf`; for `sfc` input, returns `sfc`; for `sfg` input, returns
+#'an `sfg`. The returned object includes `attr(result, "extent")` and `attr(result, "panel")`.
+#'@export
+#'
+#'@examples
+#'if(run_documentation()) {
+#'library(ggplot2)
+#'library(sf)
+#'
+#'p = ggplot(spData::world) +
+#'  geom_sf() +
+#'  coord_sf(crs = sf::st_crs("+proj=robin"))
+#'
+#'plot_gg(p, width = 6)
+#'countries = spData::world[spData::world$name_long %in% c("France", "Spain"), ]
+#'countries_t = transform_ggplot_sf(countries)
+#'
+#'render_polygons(
+#'  countries_t,
+#'  extent = attr(countries_t, "extent"),
+#'  top = 20,
+#'  color = "red"
+#')
+#'render_snapshot()
+#'}
+transform_ggplot_sf = function(
+	sf_object,
+	panel = NULL,
+	heightmap = NULL,
+	crs = NULL,
+	segmentize_df_max_length = NULL
+) {
+	if (!(length(find.package("sf", quiet = TRUE)) > 0)) {
+		stop("`sf` package required for `transform_ggplot_sf()`.")
+	}
+	input_class = if (inherits(sf_object, "sf")) {
+		"sf"
+	} else if (inherits(sf_object, "sfc")) {
+		"sfc"
+	} else if (inherits(sf_object, "sfg")) {
+		"sfg"
+	} else {
+		stop("`sf_object` must be an `sf`, `sfc`, or `sfg` object.")
+	}
+	if (input_class == "sf") {
+		sf_data = sf_object
+	} else if (input_class == "sfc") {
+		sf_data = sf::st_sf(geometry = sf_object)
+	} else {
+		sf_data = sf::st_sf(geometry = sf::st_sfc(sf_object))
+	}
+	sf_data = suppressWarnings(sf::st_zm(sf_data, drop = TRUE, what = "ZM"))
+	if (!is.null(segmentize_df_max_length)) {
+		sf_data = tryCatch(
+			sf::st_segmentize(
+				sf_data,
+				dfMaxLength = segmentize_df_max_length
+			),
+			error = function(e) {
+				stop(
+					paste0(
+						"Could not segmentize geometry. Install `lwgeom` if required ",
+						"for your geometry/CRS.\nOriginal error: ",
+						conditionMessage(e)
+					),
+					call. = FALSE
+				)
+			}
+		)
+	}
+
+	transform_info = get_plot_gg_transform_info(heightmap = heightmap)
+	transform_context = get_plot_gg_panel_transform_context(
+		transform_info = transform_info,
+		panel = panel,
+		heightmap = heightmap
+	)
+	if (inherits(transform_context$coord_obj, "CoordSf")) {
+		if (!is.null(crs)) {
+			input_crs = sf::st_crs(crs)
+			existing_crs = sf::st_crs(sf_data)
+			if (!is.na(existing_crs) &&
+				!is.na(input_crs) &&
+				!identical(existing_crs$wkt, input_crs$wkt)) {
+				warning("Replacing CRS metadata on `sf_object` with `crs`.")
+			}
+			sf_data = suppressWarnings(sf::st_set_crs(sf_data, input_crs))
+		}
+		sf_crs = sf::st_crs(sf_data)
+		if (!is.na(sf_crs)) {
+			crs = sf_crs
+		}
+	} else if (!is.null(crs)) {
+		warning("`crs` is only used when the plot uses `coord_sf()`.")
+	}
+
+	transform_matrix = function(mat) {
+		if (!is.matrix(mat) || ncol(mat) < 2) {
+			stop("Could not transform geometry: expected matrix coordinates.")
+		}
+		if (!nrow(mat)) {
+			return(mat[, 1:2, drop = FALSE])
+		}
+		xy = transform_ggplot_xy_with_context(
+			x_vals = mat[, 1],
+			y_vals = mat[, 2],
+			transform_context = transform_context,
+			crs = crs
+		)
+		out = cbind(xy$long, xy$lat)
+		colnames(out) = NULL
+		out
+	}
+
+	transform_sfg = NULL
+	transform_sfg = function(geom) {
+		supported_geom_types = c(
+			"POINT",
+			"LINESTRING",
+			"MULTIPOINT",
+			"POLYGON",
+			"MULTILINESTRING",
+			"MULTIPOLYGON",
+			"GEOMETRYCOLLECTION"
+		)
+		geom_type = intersect(class(geom), supported_geom_types)[1]
+		if (is.na(geom_type)) {
+			stop(sprintf(
+				"Unsupported geometry class `%s`.",
+				paste(class(geom), collapse = ", ")
+			))
+		}
+		if (geom_type == "POINT") {
+			coords = as.numeric(unclass(geom))[1:2]
+			xy = transform_ggplot_xy_with_context(
+				x_vals = coords[1],
+				y_vals = coords[2],
+				transform_context = transform_context,
+				crs = crs
+			)
+			return(sf::st_point(c(xy$long[1], xy$lat[1])))
+		}
+		if (geom_type == "LINESTRING") {
+			return(sf::st_linestring(transform_matrix(unclass(geom))))
+		}
+		if (geom_type == "MULTIPOINT") {
+			return(sf::st_multipoint(transform_matrix(unclass(geom))))
+		}
+		if (geom_type == "POLYGON") {
+			return(sf::st_polygon(
+				lapply(unclass(geom), transform_matrix)
+			))
+		}
+		if (geom_type == "MULTILINESTRING") {
+			return(sf::st_multilinestring(
+				lapply(unclass(geom), transform_matrix)
+			))
+		}
+		if (geom_type == "MULTIPOLYGON") {
+			return(sf::st_multipolygon(
+				lapply(unclass(geom), function(poly) {
+					lapply(poly, transform_matrix)
+				})
+			))
+		}
+		if (geom_type == "GEOMETRYCOLLECTION") {
+			return(sf::st_geometrycollection(
+				lapply(unclass(geom), transform_sfg)
+			))
+		}
+		stop(sprintf(
+			"Unsupported geometry type `%s`.",
+			geom_type
+		))
+	}
+
+	geom_transformed = lapply(sf::st_geometry(sf_data), transform_sfg)
+	output_crs = NULL
+	if (inherits(transform_context$coord_obj, "CoordSf")) {
+		output_crs = transform_context$panel_params$crs
+		if (is.null(output_crs)) {
+			output_crs = transform_context$panel_params$default_crs
+		}
+	}
+	if (is.null(output_crs)) {
+		sf::st_geometry(sf_data) = sf::st_sfc(geom_transformed)
+	} else {
+		sf::st_geometry(sf_data) = sf::st_sfc(
+			geom_transformed,
+			crs = output_crs
+		)
+	}
+	attr(sf_data, "extent") = transform_context$transformed_extent
+	attr(sf_data, "panel") = transform_context$panel
+
+	if (input_class == "sf") {
+		return(sf_data)
+	}
+	if (input_class == "sfc") {
+		out = sf::st_geometry(sf_data)
+		attr(out, "extent") = transform_context$transformed_extent
+		attr(out, "panel") = transform_context$panel
+		return(out)
+	}
+	out = sf::st_geometry(sf_data)[[1]]
+	attr(out, "extent") = transform_context$transformed_extent
+	attr(out, "panel") = transform_context$panel
+	out
 }
 
 get_ggplot_panel_range = function(panel_params, axis = c("x", "y")) {
