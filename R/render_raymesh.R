@@ -331,7 +331,8 @@ render_raymesh = function(
 				as_hex = TRUE
 			)
 		}
-		mat_has_norm = all(new_norm != 0) && load_normals
+		has_vertex_normals = length(norm_vec) > 0 && any(norm_vec != 0)
+		mat_has_norm = has_vertex_normals && load_normals
 
 		if (!flat_shading) {
 			verts = obj$vertices
@@ -345,6 +346,7 @@ render_raymesh = function(
 			}
 			new_norm = NULL
 			ind_temp = NULL
+			mat_has_norm = FALSE
 		}
 		if (has_texture) {
 			if (mat_has_norm) {
