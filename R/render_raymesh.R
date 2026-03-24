@@ -80,6 +80,14 @@ render_raymesh = function(
 	light_intensity = 1,
 	light_relative = FALSE,
 	rgl_tag = "",
+	zaxis = FALSE,
+	zaxis_location = "auto",
+	zaxis_breaks = NULL,
+	zaxis_labels = NULL,
+	zaxis_color = "black",
+	zaxis_linewidth = 2,
+	zaxis_text_offset = 3,
+	zaxis_tick_size = NULL,
 	...
 ) {
 	if (rgl::cur3d() == 0) {
@@ -131,6 +139,19 @@ render_raymesh = function(
 	if (clear_previous) {
 		rgl::pop3d(tag = sprintf("obj_raymesh%s", rgl_tag))
 		if (missing(raymesh)) {
+			render_zaxis_internal(
+				zaxis = zaxis,
+				extent = extent,
+				zscale = zscale,
+				heightmap = heightmap,
+				zaxis_location = zaxis_location,
+				zaxis_breaks = zaxis_breaks,
+				zaxis_labels = zaxis_labels,
+				zaxis_color = zaxis_color,
+				zaxis_linewidth = zaxis_linewidth,
+				zaxis_text_offset = zaxis_text_offset,
+		zaxis_tick_size = zaxis_tick_size
+			)
 			return(invisible())
 		}
 	}
@@ -433,4 +454,17 @@ render_raymesh = function(
 			)
 		}
 	}
+	render_zaxis_internal(
+		zaxis = zaxis,
+		extent = extent,
+		zscale = zscale,
+		heightmap = heightmap,
+		zaxis_location = zaxis_location,
+		zaxis_breaks = zaxis_breaks,
+		zaxis_labels = zaxis_labels,
+		zaxis_color = zaxis_color,
+		zaxis_linewidth = zaxis_linewidth,
+		zaxis_text_offset = zaxis_text_offset,
+		zaxis_tick_size = zaxis_tick_size
+	)
 }

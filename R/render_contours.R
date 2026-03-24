@@ -15,6 +15,11 @@
 #'of `n` colors, or a character vector with colors that specifies each color manually.
 #'@param offset Default `5`. Offset of the track from the surface, if `altitude = NULL`.
 #'@param clear_previous Default `FALSE`. If `TRUE`, it will clear all existing paths.
+#'@param zaxis Default `FALSE`. If `TRUE`, render a z-axis in the scene.
+#'@param zaxis_location Default `"auto"`. Z-axis location: one of `"auto"`, `"panel"`,
+#'`"bottomleft"`, `"bottomright"`, `"topleft"`, or `"topright"`.
+#'@param zaxis_breaks Default `NULL`. Optional numeric breaks (in altitude units) for z-axis ticks.
+#'@param zaxis_labels Default `NULL`. Optional labels for `zaxis_breaks`.
 #'@export
 #'@examples
 #'#Add contours to the montereybay dataset
@@ -69,7 +74,15 @@ render_contours = function(
 	palette = NULL,
 	antialias = FALSE,
 	offset = 0,
-	clear_previous = FALSE
+	clear_previous = FALSE,
+	zaxis = FALSE,
+	zaxis_location = "auto",
+	zaxis_breaks = NULL,
+	zaxis_labels = NULL,
+	zaxis_color = "black",
+	zaxis_linewidth = 2,
+	zaxis_text_offset = 3,
+	zaxis_tick_size = NULL
 ) {
 	if (clear_previous) {
 		rgl::pop3d(tag = "contour3d")
@@ -140,7 +153,15 @@ render_contours = function(
 				linewidth = linewidth,
 				offset = offset,
 				antialias = antialias,
-				color = color[i]
+				color = color[i],
+				zaxis = zaxis && i == length(isolineval),
+				zaxis_location = zaxis_location,
+				zaxis_breaks = zaxis_breaks,
+				zaxis_labels = zaxis_labels,
+				zaxis_color = zaxis_color,
+				zaxis_linewidth = zaxis_linewidth,
+				zaxis_text_offset = zaxis_text_offset,
+		zaxis_tick_size = zaxis_tick_size
 			)
 		}
 	} else {
@@ -165,7 +186,15 @@ render_contours = function(
 			linewidth = linewidth,
 			offset = offset,
 			antialias = antialias,
-			color = color
+			color = color,
+			zaxis = zaxis,
+			zaxis_location = zaxis_location,
+			zaxis_breaks = zaxis_breaks,
+			zaxis_labels = zaxis_labels,
+			zaxis_color = zaxis_color,
+			zaxis_linewidth = zaxis_linewidth,
+			zaxis_text_offset = zaxis_text_offset,
+		zaxis_tick_size = zaxis_tick_size
 		)
 	}
 }

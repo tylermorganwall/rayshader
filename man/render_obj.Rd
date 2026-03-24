@@ -29,6 +29,14 @@ render_obj(
   light_intensity = 0.3,
   light_relative = FALSE,
   rgl_tag = "",
+  zaxis = FALSE,
+  zaxis_location = "auto",
+  zaxis_breaks = NULL,
+  zaxis_labels = NULL,
+  zaxis_color = "black",
+  zaxis_linewidth = 2,
+  zaxis_text_offset = 3,
+  zaxis_tick_size = NULL,
   ...
 )
 }

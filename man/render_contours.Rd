@@ -14,7 +14,15 @@ render_contours(
   palette = NULL,
   antialias = FALSE,
   offset = 0,
-  clear_previous = FALSE
+  clear_previous = FALSE,
+  zaxis = FALSE,
+  zaxis_location = "auto",
+  zaxis_breaks = NULL,
+  zaxis_labels = NULL,
+  zaxis_color = "black",
+  zaxis_linewidth = 2,
+  zaxis_text_offset = 3,
+  zaxis_tick_size = NULL
 )
 }
 \arguments{
@@ -40,6 +48,15 @@ of \code{n} colors, or a character vector with colors that specifies each color 
 \item{offset}{Default \code{5}. Offset of the track from the surface, if \code{altitude = NULL}.}
 
 \item{clear_previous}{Default \code{FALSE}. If \code{TRUE}, it will clear all existing paths.}
+
+\item{zaxis}{Default \code{FALSE}. If \code{TRUE}, render a z-axis in the scene.}
+
+\item{zaxis_location}{Default \code{"auto"}. Z-axis location: one of \code{"auto"}, \code{"panel"},
+\code{"bottomleft"}, \code{"bottomright"}, \code{"topleft"}, or \code{"topright"}.}
+
+\item{zaxis_breaks}{Default \code{NULL}. Optional numeric breaks (in altitude units) for z-axis ticks.}
+
+\item{zaxis_labels}{Default \code{NULL}. Optional labels for \code{zaxis_breaks}.}
 }
 \description{
 Adds 3D contours to the current scene, using the heightmap of the 3D surface.

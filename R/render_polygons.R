@@ -89,6 +89,7 @@ render_polygons = function(
 	data_column_top = NULL,
 	data_column_bottom = NULL,
 	heightmap = NULL,
+	zscale = 1,
 	scale_data = 1,
 	parallel = FALSE,
 	holes = 0,
@@ -98,7 +99,15 @@ render_polygons = function(
 	light_direction = c(315, 135),
 	light_intensity = 0.3,
 	light_relative = FALSE,
-	clear_previous = FALSE
+	clear_previous = FALSE,
+	zaxis = FALSE,
+	zaxis_location = "auto",
+	zaxis_breaks = NULL,
+	zaxis_labels = NULL,
+	zaxis_color = "black",
+	zaxis_linewidth = 2,
+	zaxis_text_offset = 3,
+	zaxis_tick_size = NULL
 ) {
 	if (rgl::cur3d() == 0) {
 		stop("No rgl window currently open.")
@@ -106,6 +115,19 @@ render_polygons = function(
 	if (clear_previous) {
 		rgl::pop3d(tag = "polygon3d")
 		if (missing(polygon)) {
+			render_zaxis_internal(
+				zaxis = zaxis,
+				extent = extent,
+				zscale = zscale,
+				heightmap = heightmap,
+				zaxis_location = zaxis_location,
+				zaxis_breaks = zaxis_breaks,
+				zaxis_labels = zaxis_labels,
+				zaxis_color = zaxis_color,
+				zaxis_linewidth = zaxis_linewidth,
+				zaxis_text_offset = zaxis_text_offset,
+		zaxis_tick_size = zaxis_tick_size
+			)
 			return(invisible())
 		}
 	}
@@ -255,4 +277,17 @@ render_polygons = function(
 			)
 		}
 	}
+	render_zaxis_internal(
+		zaxis = zaxis,
+		extent = extent,
+		zscale = zscale,
+		heightmap = heightmap,
+		zaxis_location = zaxis_location,
+		zaxis_breaks = zaxis_breaks,
+		zaxis_labels = zaxis_labels,
+		zaxis_color = zaxis_color,
+		zaxis_linewidth = zaxis_linewidth,
+		zaxis_text_offset = zaxis_text_offset,
+		zaxis_tick_size = zaxis_tick_size
+	)
 }

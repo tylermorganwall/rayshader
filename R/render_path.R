@@ -158,20 +158,41 @@ render_path = function(
   linewidth = 0.5,
   color = "black",
   antialias = FALSE,
-  offset = 5,
-  clear_previous = FALSE,
-  return_coords = FALSE,
-  tag = "path3d"
+	offset = 5,
+	clear_previous = FALSE,
+	return_coords = FALSE,
+	tag = "path3d",
+	zaxis = FALSE,
+	zaxis_location = "auto",
+	zaxis_breaks = NULL,
+	zaxis_labels = NULL,
+	zaxis_color = "black",
+	zaxis_linewidth = 2,
+	zaxis_text_offset = 3,
+	zaxis_tick_size = NULL
 ) {
   if (rgl::cur3d() == 0 && !return_coords) {
     stop("No rgl window currently open.")
   }
-  if (clear_previous) {
-    rgl::pop3d(tag = tag)
-    if (missing(lat)) {
-      return(invisible())
-    }
-  }
+	if (clear_previous) {
+		rgl::pop3d(tag = tag)
+		if (missing(lat)) {
+			render_zaxis_internal(
+				zaxis = zaxis,
+				extent = extent,
+				zscale = zscale,
+				heightmap = heightmap,
+				zaxis_location = zaxis_location,
+				zaxis_breaks = zaxis_breaks,
+				zaxis_labels = zaxis_labels,
+				zaxis_color = zaxis_color,
+				zaxis_linewidth = zaxis_linewidth,
+				zaxis_text_offset = zaxis_text_offset,
+		zaxis_tick_size = zaxis_tick_size
+			)
+			return(invisible())
+		}
+	}
   if (resample_evenly) {
     stopifnot(resample_n > 1)
     xyz = render_path(
@@ -204,26 +225,52 @@ render_path = function(
             2
         }
         color_length = length(color)
-        for (i in seq_len(nrow(xyz) - 1)) {
-          rgl::lines3d(
+	        for (i in seq_len(nrow(xyz) - 1)) {
+	          rgl::lines3d(
             xyz[i:(i + 1), ],
             color = color[((i - 1) %% color_length) + 1],
             tag = tag,
             lwd = linewidth[i],
             line_antialias = antialias
-          )
-        }
-        return(invisible())
-      } else {
-        rgl::lines3d(
+	          )
+	        }
+	        render_zaxis_internal(
+	        	zaxis = zaxis,
+	        	extent = extent,
+	        	zscale = zscale,
+	        	heightmap = heightmap,
+	        	zaxis_location = zaxis_location,
+	        	zaxis_breaks = zaxis_breaks,
+	        	zaxis_labels = zaxis_labels,
+	        	zaxis_color = zaxis_color,
+	        	zaxis_linewidth = zaxis_linewidth,
+	        	zaxis_text_offset = zaxis_text_offset,
+		zaxis_tick_size = zaxis_tick_size
+	        )
+	        return(invisible())
+	      } else {
+	        rgl::lines3d(
           xyz,
           color = color,
           tag = tag,
           lwd = linewidth,
-          line_antialias = antialias
-        )
-        return(invisible())
-      }
+	          line_antialias = antialias
+	        )
+	        render_zaxis_internal(
+	        	zaxis = zaxis,
+	        	extent = extent,
+	        	zscale = zscale,
+	        	heightmap = heightmap,
+	        	zaxis_location = zaxis_location,
+	        	zaxis_breaks = zaxis_breaks,
+	        	zaxis_labels = zaxis_labels,
+	        	zaxis_color = zaxis_color,
+	        	zaxis_linewidth = zaxis_linewidth,
+	        	zaxis_text_offset = zaxis_text_offset,
+		zaxis_tick_size = zaxis_tick_size
+	        )
+	        return(invisible())
+	      }
     } else {
       return(xyz)
     }
@@ -374,15 +421,28 @@ render_path = function(
         lapply(coord_list, \(x) rbind(x, matrix(NA, ncol = 3, nrow = 1)))
       )
       xyz = xyz[-nrow(xyz), ]
-      rgl::lines3d(
-        xyz,
+	      rgl::lines3d(
+	        xyz,
         color = color,
         tag = tag,
         lwd = linewidth,
-        line_antialias = antialias
-      )
-    }
-  } else {
-    return(coord_list)
-  }
+	        line_antialias = antialias
+	      )
+	    }
+	    render_zaxis_internal(
+	    	zaxis = zaxis,
+	    	extent = extent,
+	    	zscale = zscale,
+	    	heightmap = heightmap,
+	    	zaxis_location = zaxis_location,
+	    	zaxis_breaks = zaxis_breaks,
+	    	zaxis_labels = zaxis_labels,
+	    	zaxis_color = zaxis_color,
+	    	zaxis_linewidth = zaxis_linewidth,
+	    	zaxis_text_offset = zaxis_text_offset,
+		zaxis_tick_size = zaxis_tick_size
+	    )
+	  } else {
+	    return(coord_list)
+	  }
 }

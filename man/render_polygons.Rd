@@ -13,6 +13,7 @@ render_polygons(
   data_column_top = NULL,
   data_column_bottom = NULL,
   heightmap = NULL,
+  zscale = 1,
   scale_data = 1,
   parallel = FALSE,
   holes = 0,
@@ -22,7 +23,15 @@ render_polygons(
   light_direction = c(315, 135),
   light_intensity = 0.3,
   light_relative = FALSE,
-  clear_previous = FALSE
+  clear_previous = FALSE,
+  zaxis = FALSE,
+  zaxis_location = "auto",
+  zaxis_breaks = NULL,
+  zaxis_labels = NULL,
+  zaxis_color = "black",
+  zaxis_linewidth = 2,
+  zaxis_text_offset = 3,
+  zaxis_tick_size = NULL
 )
 }
 \arguments{

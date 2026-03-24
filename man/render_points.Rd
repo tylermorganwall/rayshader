@@ -14,7 +14,15 @@ render_points(
   size = 0.5,
   color = "black",
   offset = 5,
-  clear_previous = FALSE
+  clear_previous = FALSE,
+  zaxis = FALSE,
+  zaxis_location = "auto",
+  zaxis_breaks = NULL,
+  zaxis_labels = NULL,
+  zaxis_color = "black",
+  zaxis_linewidth = 2,
+  zaxis_text_offset = 3,
+  zaxis_tick_size = NULL
 )
 }
 \arguments{

@@ -25,7 +25,15 @@ render_path(
   offset = 5,
   clear_previous = FALSE,
   return_coords = FALSE,
-  tag = "path3d"
+  tag = "path3d",
+  zaxis = FALSE,
+  zaxis_location = "auto",
+  zaxis_breaks = NULL,
+  zaxis_labels = NULL,
+  zaxis_color = "black",
+  zaxis_linewidth = 2,
+  zaxis_text_offset = 3,
+  zaxis_tick_size = NULL
 )
 }
 \arguments{

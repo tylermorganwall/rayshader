@@ -85,11 +85,32 @@ render_multipolygonz = function(
   clear_previous = FALSE,
   baseshape = "rectangle",
   rgl_tag = "_multipolygon",
+  zaxis = FALSE,
+  zaxis_location = "auto",
+  zaxis_breaks = NULL,
+  zaxis_labels = NULL,
+  zaxis_color = "black",
+  zaxis_linewidth = 2,
+  zaxis_text_offset = 3,
+	zaxis_tick_size = NULL,
   ...
 ) {
   if (clear_previous) {
     rgl::pop3d(tag = sprintf("obj%s", rgl_tag))
     if (missing(sfobj)) {
+      render_zaxis_internal(
+        zaxis = zaxis,
+        extent = extent,
+        zscale = zscale,
+        heightmap = heightmap,
+        zaxis_location = zaxis_location,
+        zaxis_breaks = zaxis_breaks,
+        zaxis_labels = zaxis_labels,
+        zaxis_color = zaxis_color,
+        zaxis_linewidth = zaxis_linewidth,
+        zaxis_text_offset = zaxis_text_offset,
+		zaxis_tick_size = zaxis_tick_size
+      )
       return(invisible())
     }
   }
@@ -107,6 +128,14 @@ render_multipolygonz = function(
     heightmap = heightmap,
     baseshape = baseshape,
     rgl_tag = rgl_tag,
+    zaxis = zaxis,
+    zaxis_location = zaxis_location,
+    zaxis_breaks = zaxis_breaks,
+    zaxis_labels = zaxis_labels,
+    zaxis_color = zaxis_color,
+    zaxis_linewidth = zaxis_linewidth,
+    zaxis_text_offset = zaxis_text_offset,
+		zaxis_tick_size = zaxis_tick_size,
     ...
   )
 }

@@ -150,6 +150,14 @@ render_buildings = function(
 	light_intensity = 1,
 	light_relative = FALSE,
 	clear_previous = FALSE,
+	zaxis = FALSE,
+	zaxis_location = "auto",
+	zaxis_breaks = NULL,
+	zaxis_labels = NULL,
+	zaxis_color = "black",
+	zaxis_linewidth = 2,
+	zaxis_text_offset = 3,
+	zaxis_tick_size = NULL,
 	...
 ) {
 	top = roof_height
@@ -163,6 +171,19 @@ render_buildings = function(
 	if (clear_previous) {
 		rgl::pop3d(tag = "obj_raymesh_building")
 		if (missing(polygon)) {
+			render_zaxis_internal(
+				zaxis = zaxis,
+				extent = extent,
+				zscale = zscale,
+				heightmap = heightmap,
+				zaxis_location = zaxis_location,
+				zaxis_breaks = zaxis_breaks,
+				zaxis_labels = zaxis_labels,
+				zaxis_color = zaxis_color,
+				zaxis_linewidth = zaxis_linewidth,
+				zaxis_text_offset = zaxis_text_offset,
+		zaxis_tick_size = zaxis_tick_size
+			)
 			return(invisible())
 		}
 	}
@@ -300,7 +321,10 @@ render_buildings = function(
 
 	render_raymesh(
 		roof_mesh,
+		extent = extent,
 		xyz = matrix(c(0, 0, 0), ncol = 3),
+		zscale = zscale,
+		heightmap = heightmap,
 		flat_shading = flat_shading,
 		change_material = FALSE,
 		lit = lit,
@@ -309,6 +333,14 @@ render_buildings = function(
 		light_intensity = light_intensity,
 		light_relative = light_relative,
 		rgl_tag = "_building",
+		zaxis = zaxis,
+		zaxis_location = zaxis_location,
+		zaxis_breaks = zaxis_breaks,
+		zaxis_labels = zaxis_labels,
+		zaxis_color = zaxis_color,
+		zaxis_linewidth = zaxis_linewidth,
+		zaxis_text_offset = zaxis_text_offset,
+		zaxis_tick_size = zaxis_tick_size,
 		...
 	)
 }
