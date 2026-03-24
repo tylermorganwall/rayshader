@@ -15,11 +15,8 @@
 #'of `n` colors, or a character vector with colors that specifies each color manually.
 #'@param offset Default `5`. Offset of the track from the surface, if `altitude = NULL`.
 #'@param clear_previous Default `FALSE`. If `TRUE`, it will clear all existing paths.
-#'@param zaxis Default `FALSE`. If `TRUE`, render a z-axis in the scene.
-#'@param zaxis_location Default `"auto"`. Z-axis location: one of `"auto"`, `"panel"`,
-#'`"bottomleft"`, `"bottomright"`, `"topleft"`, or `"topright"`.
-#'@param zaxis_breaks Default `NULL`. Optional numeric breaks (in altitude units) for z-axis ticks.
-#'@param zaxis_labels Default `NULL`. Optional labels for `zaxis_breaks`.
+#'@param ... Optional z-axis arguments passed to [render_zaxis()], such as
+#'`zaxis = TRUE`, `zaxis_location`, `zaxis_breaks`, and `zaxis_labels`.
 #'@export
 #'@examples
 #'#Add contours to the montereybay dataset
@@ -75,15 +72,9 @@ render_contours = function(
 	antialias = FALSE,
 	offset = 0,
 	clear_previous = FALSE,
-	zaxis = FALSE,
-	zaxis_location = "auto",
-	zaxis_breaks = NULL,
-	zaxis_labels = NULL,
-	zaxis_color = "black",
-	zaxis_linewidth = 2,
-	zaxis_text_offset = 3,
-	zaxis_tick_size = NULL
+	...
 ) {
+	zaxis_split = split_zaxis_dots(list(...))
 	if (clear_previous) {
 		rgl::pop3d(tag = "contour3d")
 		if (missing(heightmap)) {
@@ -141,7 +132,8 @@ render_contours = function(
 		}
 		for (i in seq_len(length(isolineval))) {
 			contour_height = contour_heights[i] + offset
-			render_path(
+			do.call(render_path, c(
+				list(
 				lat = isolineval[[i]]$y,
 				long = isolineval[[i]]$x,
 				groups = isolineval[[i]]$id,
@@ -153,16 +145,10 @@ render_contours = function(
 				linewidth = linewidth,
 				offset = offset,
 				antialias = antialias,
-				color = color[i],
-				zaxis = zaxis && i == length(isolineval),
-				zaxis_location = zaxis_location,
-				zaxis_breaks = zaxis_breaks,
-				zaxis_labels = zaxis_labels,
-				zaxis_color = zaxis_color,
-				zaxis_linewidth = zaxis_linewidth,
-				zaxis_text_offset = zaxis_text_offset,
-		zaxis_tick_size = zaxis_tick_size
-			)
+				color = color[i]
+				),
+				zaxis_split$other_args
+			))
 		}
 	} else {
 		prev_id_max = 0
@@ -174,7 +160,8 @@ render_contours = function(
 			isoline_list[[i]] = data.frame(isolineval[[i]])
 		}
 		isolines_combined = do.call("rbind", isoline_list)
-		render_path(
+		do.call(render_path, c(
+			list(
 			lat = isolines_combined$y,
 			long = isolines_combined$x,
 			groups = isolines_combined$id,
@@ -186,15 +173,15 @@ render_contours = function(
 			linewidth = linewidth,
 			offset = offset,
 			antialias = antialias,
-			color = color,
-			zaxis = zaxis,
-			zaxis_location = zaxis_location,
-			zaxis_breaks = zaxis_breaks,
-			zaxis_labels = zaxis_labels,
-			zaxis_color = zaxis_color,
-			zaxis_linewidth = zaxis_linewidth,
-			zaxis_text_offset = zaxis_text_offset,
-		zaxis_tick_size = zaxis_tick_size
-		)
+			color = color
+			),
+			zaxis_split$other_args
+		))
 	}
+	render_zaxis_from_dots(
+		zaxis_args = zaxis_split$zaxis_args,
+		extent = extent_heightmap,
+		zscale = zscale,
+		heightmap = heightmap
+	)
 }

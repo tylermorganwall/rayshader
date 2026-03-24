@@ -283,6 +283,8 @@ render_zaxis_internal = function(
 	if (length(y_vals) == 1 || identical(y_min, y_max)) {
 		y_max = y_min + 1 / zscale
 	}
+	eps_break = .Machine$double.eps^0.5
+	nonzero_idx = abs(zaxis_breaks) > eps_break
 
 	tick_len = 0.03 * max(xrange, yrange)
 	tick_marker_size = if (is.null(zaxis_tick_size)) {
@@ -315,20 +317,19 @@ render_zaxis_internal = function(
 		tag = "zaxis_axis"
 	)
 
-	# Do not draw a marker at the zero break.
-	marker_idx = abs(zaxis_breaks) > (.Machine$double.eps^0.5)
-	if (any(marker_idx)) {
+	# Never draw a marker at the zero break.
+	if (any(nonzero_idx)) {
 		rgl::points3d(
-			x = rep(anchor_xyz[1], sum(marker_idx)),
-			y = y_vals[marker_idx],
-			z = rep(anchor_xyz[3], sum(marker_idx)),
+			x = rep(anchor_xyz[1], sum(nonzero_idx)),
+			y = y_vals[nonzero_idx],
+			z = rep(anchor_xyz[3], sum(nonzero_idx)),
 			color = zaxis_color,
 			size = tick_marker_size,
 			tag = "zaxis_ticks"
 		)
 	}
 
-	for (i in seq_along(y_vals)) {
+	for (i in which(nonzero_idx)) {
 		text_x = anchor_xyz[1] + outside_unit[1] * tick_len * zaxis_text_offset
 		text_z = anchor_xyz[3] + outside_unit[2] * tick_len * zaxis_text_offset
 		rgl::texts3d(

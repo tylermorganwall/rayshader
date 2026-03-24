@@ -24,14 +24,7 @@ render_polygons(
   light_intensity = 0.3,
   light_relative = FALSE,
   clear_previous = FALSE,
-  zaxis = FALSE,
-  zaxis_location = "auto",
-  zaxis_breaks = NULL,
-  zaxis_labels = NULL,
-  zaxis_color = "black",
-  zaxis_linewidth = 2,
-  zaxis_text_offset = 3,
-  zaxis_tick_size = NULL
+  ...
 )
 }
 \arguments{
@@ -86,6 +79,9 @@ the holes in the polygon. See the \code{earcut} function in the \code{decido} pa
 or absolute.}
 
 \item{clear_previous}{Default \code{FALSE}. If \code{TRUE}, it will clear all existing polygons.}
+
+\item{...}{Optional z-axis arguments passed to \code{\link[=render_zaxis]{render_zaxis()}}, such as
+\code{zaxis = TRUE}, \code{zaxis_location}, \code{zaxis_breaks}, and \code{zaxis_labels}.}
 }
 \description{
 Adds 3D polygons to the current scene, using latitude/longitude or coordinates in the reference

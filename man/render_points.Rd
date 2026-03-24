@@ -15,14 +15,7 @@ render_points(
   color = "black",
   offset = 5,
   clear_previous = FALSE,
-  zaxis = FALSE,
-  zaxis_location = "auto",
-  zaxis_breaks = NULL,
-  zaxis_labels = NULL,
-  zaxis_color = "black",
-  zaxis_linewidth = 2,
-  zaxis_text_offset = 3,
-  zaxis_tick_size = NULL
+  ...
 )
 }
 \arguments{
@@ -52,6 +45,9 @@ a size for each point.}
 \item{offset}{Default \code{5}. Offset of the track from the surface, if \code{altitude = NULL}.}
 
 \item{clear_previous}{Default \code{FALSE}. If \code{TRUE}, it will clear all existing points.}
+
+\item{...}{Optional z-axis arguments passed to \code{\link[=render_zaxis]{render_zaxis()}}, such as
+\code{zaxis = TRUE}, \code{zaxis_location}, \code{zaxis_breaks}, and \code{zaxis_labels}.}
 }
 \description{
 Adds 3D datapoints to the current scene, using latitude/longitude or coordinates in the reference

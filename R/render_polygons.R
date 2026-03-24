@@ -37,6 +37,8 @@
 #' @param light_relative Default `FALSE`. Whether the light direction should be taken relative to the camera,
 #' or absolute.
 #' @param clear_previous Default `FALSE`. If `TRUE`, it will clear all existing polygons.
+#' @param ... Optional z-axis arguments passed to [render_zaxis()], such as
+#' `zaxis = TRUE`, `zaxis_location`, `zaxis_breaks`, and `zaxis_labels`.
 #' @export
 #' @examples
 #' if(run_documentation()) {
@@ -100,33 +102,20 @@ render_polygons = function(
 	light_intensity = 0.3,
 	light_relative = FALSE,
 	clear_previous = FALSE,
-	zaxis = FALSE,
-	zaxis_location = "auto",
-	zaxis_breaks = NULL,
-	zaxis_labels = NULL,
-	zaxis_color = "black",
-	zaxis_linewidth = 2,
-	zaxis_text_offset = 3,
-	zaxis_tick_size = NULL
+	...
 ) {
+	zaxis_split = split_zaxis_dots(list(...))
 	if (rgl::cur3d() == 0) {
 		stop("No rgl window currently open.")
 	}
 	if (clear_previous) {
 		rgl::pop3d(tag = "polygon3d")
 		if (missing(polygon)) {
-			render_zaxis_internal(
-				zaxis = zaxis,
+			render_zaxis_from_dots(
+				zaxis_args = zaxis_split$zaxis_args,
 				extent = extent,
 				zscale = zscale,
-				heightmap = heightmap,
-				zaxis_location = zaxis_location,
-				zaxis_breaks = zaxis_breaks,
-				zaxis_labels = zaxis_labels,
-				zaxis_color = zaxis_color,
-				zaxis_linewidth = zaxis_linewidth,
-				zaxis_text_offset = zaxis_text_offset,
-		zaxis_tick_size = zaxis_tick_size
+				heightmap = heightmap
 			)
 			return(invisible())
 		}
@@ -277,17 +266,10 @@ render_polygons = function(
 			)
 		}
 	}
-	render_zaxis_internal(
-		zaxis = zaxis,
+	render_zaxis_from_dots(
+		zaxis_args = zaxis_split$zaxis_args,
 		extent = extent,
 		zscale = zscale,
-		heightmap = heightmap,
-		zaxis_location = zaxis_location,
-		zaxis_breaks = zaxis_breaks,
-		zaxis_labels = zaxis_labels,
-		zaxis_color = zaxis_color,
-		zaxis_linewidth = zaxis_linewidth,
-		zaxis_text_offset = zaxis_text_offset,
-		zaxis_tick_size = zaxis_tick_size
+		heightmap = heightmap
 	)
 }

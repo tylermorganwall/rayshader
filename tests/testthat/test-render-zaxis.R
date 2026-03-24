@@ -50,8 +50,10 @@ test_that("render_points() can add a styled z-axis outside a specified corner", 
 	label_id = ids$id[ids$tag == "zaxis_labels"][1]
 	label_adj_left = rgl::rgl.attrib(label_id, "adj")
 	expect_equal(unname(label_adj_left[1]), 1)
+	label_texts_left = trimws(as.character(rgl::rgl.attrib(label_id, "texts")))
 	label_text_left = rgl::rgl.attrib(label_id, "texts")[1]
 	expect_true(grepl("\\s$", label_text_left))
+	expect_false(any(label_texts_left == "0"))
 
 	tick_verts = rgl::rgl.attrib(tick_id, "vertices")
 	axis_verts = rgl::rgl.attrib(axis_id, "vertices")
@@ -76,6 +78,41 @@ test_that("render_points() can add a styled z-axis outside a specified corner", 
 	expect_equal(unname(label_adj_right[1]), 0)
 	label_text_right = rgl::rgl.attrib(label_id_right, "texts")[1]
 	expect_true(grepl("^\\s", label_text_right))
+})
+
+test_that("render_zaxis() works as a standalone entry point", {
+	on.exit(rgl::close3d(), add = TRUE)
+	options(rgl.useNULL = TRUE)
+
+	heightmap = volcano
+	texture = sphere_shade(heightmap)
+	expect_no_condition(plot_3d(
+		texture,
+		heightmap,
+		zscale = 10,
+		shadow = FALSE,
+		water = FALSE,
+		windowsize = c(300, 300)
+	))
+
+	extent = c(
+		xmin = 0,
+		xmax = nrow(heightmap),
+		ymin = 0,
+		ymax = ncol(heightmap)
+	)
+	expect_no_condition(render_zaxis(
+		extent = extent,
+		zscale = 10,
+		heightmap = heightmap,
+		zaxis_breaks = c(0, 50, 100),
+		zaxis_tick_size = 5
+	))
+
+	ids = get_ids_with_labels()
+	expect_true(any(ids$tag == "zaxis_axis"))
+	expect_true(any(ids$tag == "zaxis_ticks"))
+	expect_true(any(ids$tag == "zaxis_labels"))
 })
 
 test_that("ggplot z-axis defaults to panel placement", {
@@ -178,6 +215,41 @@ test_that("ggplot z-axis supports explicit panel corners", {
 
 	expect_equal(unname(axis_verts[1, 1]), unname(expected_anchor[1]), tolerance = 1e-6)
 	expect_equal(unname(axis_verts[1, 3]), unname(expected_anchor[3]), tolerance = 1e-6)
+})
+
+test_that("ggplot panel inset omits zero marker", {
+	on.exit(rgl::close3d(), add = TRUE)
+	options(rgl.useNULL = TRUE)
+	skip_if_not_installed("ggplot2")
+
+	p = ggplot2::ggplot(mtcars) +
+		ggplot2::geom_point(ggplot2::aes(x = wt, y = mpg))
+	expect_no_condition(suppressWarnings(plot_gg(p, windowsize = c(300, 300))))
+
+	pts = transform_ggplot_coords(x = c(2, 4), y = c(15, 30))
+	ext = attr(pts, "extent")
+	expect_no_condition(render_points(
+		long = pts$long,
+		lat = pts$lat,
+		extent = ext,
+		altitude = 100,
+		zaxis = TRUE,
+		zaxis_location = "panelbottomleft",
+		zaxis_breaks = c(0, 50, 100)
+	))
+
+	ids = get_ids_with_labels()
+	tick_id = ids$id[ids$tag == "zaxis_ticks"][1]
+	axis_id = ids$id[ids$tag == "zaxis_axis"][1]
+	label_id = ids$id[ids$tag == "zaxis_labels"][1]
+	tick_verts = rgl::rgl.attrib(tick_id, "vertices")
+	axis_verts = rgl::rgl.attrib(axis_id, "vertices")
+	label_texts = trimws(as.character(rgl::rgl.attrib(label_id, "texts")))
+	base_y = min(axis_verts[, 2])
+
+	expect_equal(nrow(tick_verts), 2)
+	expect_gt(min(tick_verts[, 2]) - base_y, 1e-8)
+	expect_false(any(label_texts == "0"))
 })
 
 test_that("render_points() validates z-axis labels length", {

@@ -187,34 +187,25 @@ render_tree = function(
 	lit = TRUE,
 	heightmap = NULL,
 	baseshape = "rectangle",
-		angle = c(0, 0, 0),
-		clear_previous = FALSE,
-		zaxis = FALSE,
-		zaxis_location = "auto",
-		zaxis_breaks = NULL,
-		zaxis_labels = NULL,
-		zaxis_color = "black",
-		zaxis_linewidth = 2,
-		zaxis_text_offset = 3,
-	zaxis_tick_size = NULL,
-		...
+	angle = c(0, 0, 0),
+	clear_previous = FALSE,
+	...
 	) {
+	dot_split = split_zaxis_dots(list(...))
+	zaxis_args = dot_split$zaxis_args
+	tree_args = dot_split$other_args
+	render_obj_tree = function(...) {
+		do.call(render_obj, c(list(...), tree_args))
+	}
 	# If clear_previous is TRUE, remove previous tree object
 	if (clear_previous) {
 		rgl::pop3d(tag = "objtree")
 		if (missing(lat) || missing(long)) {
-			render_zaxis_internal(
-				zaxis = zaxis,
+			render_zaxis_from_dots(
+				zaxis_args = zaxis_args,
 				extent = extent,
 				zscale = zscale,
-				heightmap = heightmap,
-				zaxis_location = zaxis_location,
-				zaxis_breaks = zaxis_breaks,
-				zaxis_labels = zaxis_labels,
-				zaxis_color = zaxis_color,
-				zaxis_linewidth = zaxis_linewidth,
-				zaxis_text_offset = zaxis_text_offset,
-		zaxis_tick_size = zaxis_tick_size
+				heightmap = heightmap
 			)
 			return(invisible())
 		}
@@ -539,7 +530,7 @@ render_tree = function(
 	}
 	if (fully_custom_tree) {
 		# If a fully custom tree is specified, render the custom crown and trunk
-		render_obj(
+		render_obj_tree(
 			custom_obj_crown,
 			color = crown_color,
 			lat = lat,
@@ -553,10 +544,9 @@ render_tree = function(
 			baseshape = baseshape,
 			lit = lit,
 			clear_previous = FALSE,
-			rgl_tag = "tree",
-			...
+			rgl_tag = "tree"
 		)
-		render_obj(
+		render_obj_tree(
 			custom_obj_trunk,
 			color = trunk_color,
 			lat = lat,
@@ -569,12 +559,11 @@ render_tree = function(
 			heightmap = heightmap,
 			angle = angle,
 			scale = trunk_scale,
-			rgl_tag = "tree",
-			...
+			rgl_tag = "tree"
 		)
 	} else if (custom_tree) {
 		# If a custom tree is specified (but not fully custom), render the custom tree
-		render_obj(
+		render_obj_tree(
 			custom_obj_tree,
 			load_material = TRUE,
 			lat = lat,
@@ -588,12 +577,11 @@ render_tree = function(
 			baseshape = baseshape,
 			clear_previous = FALSE,
 			rgl_tag = "tree",
-			lit = lit,
-			...
+			lit = lit
 		)
 	} else if (type == "basic") {
 		# If a basic type is specified, render the basic tree's crown and trunk
-		render_obj(
+		render_obj_tree(
 			tree_basic_center_obj(),
 			color = crown_color,
 			lat = lat,
@@ -607,10 +595,9 @@ render_tree = function(
 			baseshape = baseshape,
 			lit = lit,
 			clear_previous = FALSE,
-			rgl_tag = "tree",
-			...
+			rgl_tag = "tree"
 		)
-		render_obj(
+		render_obj_tree(
 			tree_trunk_obj(),
 			color = trunk_color,
 			lat = lat,
@@ -623,12 +610,11 @@ render_tree = function(
 			heightmap = heightmap,
 			angle = angle,
 			scale = trunk_scale,
-			rgl_tag = "tree",
-			...
+			rgl_tag = "tree"
 		)
 	} else if (type == "cone") {
 		# If a cone type is specified, render the cone tree's crown and trunk
-		render_obj(
+		render_obj_tree(
 			tree_cone_center_obj(),
 			color = crown_color,
 			lat = lat,
@@ -642,10 +628,9 @@ render_tree = function(
 			angle = angle,
 			scale = tree_scale,
 			clear_previous = FALSE,
-			rgl_tag = "tree",
-			...
+			rgl_tag = "tree"
 		)
-		render_obj(
+		render_obj_tree(
 			tree_trunk_obj(),
 			color = trunk_color,
 			lat = lat,
@@ -658,23 +643,15 @@ render_tree = function(
 			heightmap = heightmap,
 			angle = angle,
 			scale = trunk_scale,
-			rgl_tag = "tree",
-			...
+			rgl_tag = "tree"
 		)
 	} else {
 		stop(sprintf("%s not recognized as built-in type of tree", type))
 	}
-	render_zaxis_internal(
-		zaxis = zaxis,
+	render_zaxis_from_dots(
+		zaxis_args = zaxis_args,
 		extent = extent,
 		zscale = zscale,
-		heightmap = heightmap,
-		zaxis_location = zaxis_location,
-		zaxis_breaks = zaxis_breaks,
-		zaxis_labels = zaxis_labels,
-		zaxis_color = zaxis_color,
-		zaxis_linewidth = zaxis_linewidth,
-		zaxis_text_offset = zaxis_text_offset,
-		zaxis_tick_size = zaxis_tick_size
+		heightmap = heightmap
 	)
 }

@@ -26,14 +26,7 @@ render_path(
   clear_previous = FALSE,
   return_coords = FALSE,
   tag = "path3d",
-  zaxis = FALSE,
-  zaxis_location = "auto",
-  zaxis_breaks = NULL,
-  zaxis_labels = NULL,
-  zaxis_color = "black",
-  zaxis_linewidth = 2,
-  zaxis_text_offset = 3,
-  zaxis_tick_size = NULL
+  ...
 )
 }
 \arguments{
@@ -103,6 +96,9 @@ then the value of simplify_tolerance must be specified in meters.}
 plotting the line.}
 
 \item{tag}{Default \code{"path3d"}. The rgl tag to use when adding the path to the scene.}
+
+\item{...}{Optional z-axis arguments passed to \code{\link[=render_zaxis]{render_zaxis()}}, such as
+\code{zaxis = TRUE}, \code{zaxis_location}, \code{zaxis_breaks}, and \code{zaxis_labels}.}
 }
 \description{
 Adds a 3D path to the current scene, using latitude/longitude or coordinates in the reference

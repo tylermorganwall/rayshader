@@ -50,6 +50,8 @@
 #'@param return_coords Default `FALSE`. If `TRUE`, this will return the internal rayshader coordinates of the path, instead of
 #'plotting the line.
 #'@param tag Default `"path3d"`. The rgl tag to use when adding the path to the scene.
+#'@param ... Optional z-axis arguments passed to [render_zaxis()], such as
+#'`zaxis = TRUE`, `zaxis_location`, `zaxis_breaks`, and `zaxis_labels`.
 #'@export
 #'@examples
 #'if(run_documentation()) {
@@ -157,38 +159,25 @@ render_path = function(
   simplify_tolerance = 0,
   linewidth = 0.5,
   color = "black",
-  antialias = FALSE,
+	antialias = FALSE,
 	offset = 5,
 	clear_previous = FALSE,
 	return_coords = FALSE,
 	tag = "path3d",
-	zaxis = FALSE,
-	zaxis_location = "auto",
-	zaxis_breaks = NULL,
-	zaxis_labels = NULL,
-	zaxis_color = "black",
-	zaxis_linewidth = 2,
-	zaxis_text_offset = 3,
-	zaxis_tick_size = NULL
+	...
 ) {
+  zaxis_split = split_zaxis_dots(list(...))
   if (rgl::cur3d() == 0 && !return_coords) {
     stop("No rgl window currently open.")
   }
 	if (clear_previous) {
 		rgl::pop3d(tag = tag)
 		if (missing(lat)) {
-			render_zaxis_internal(
-				zaxis = zaxis,
+			render_zaxis_from_dots(
+				zaxis_args = zaxis_split$zaxis_args,
 				extent = extent,
 				zscale = zscale,
-				heightmap = heightmap,
-				zaxis_location = zaxis_location,
-				zaxis_breaks = zaxis_breaks,
-				zaxis_labels = zaxis_labels,
-				zaxis_color = zaxis_color,
-				zaxis_linewidth = zaxis_linewidth,
-				zaxis_text_offset = zaxis_text_offset,
-		zaxis_tick_size = zaxis_tick_size
+				heightmap = heightmap
 			)
 			return(invisible())
 		}
@@ -234,18 +223,11 @@ render_path = function(
             line_antialias = antialias
 	          )
 	        }
-	        render_zaxis_internal(
-	        	zaxis = zaxis,
+	        render_zaxis_from_dots(
+	        	zaxis_args = zaxis_split$zaxis_args,
 	        	extent = extent,
 	        	zscale = zscale,
-	        	heightmap = heightmap,
-	        	zaxis_location = zaxis_location,
-	        	zaxis_breaks = zaxis_breaks,
-	        	zaxis_labels = zaxis_labels,
-	        	zaxis_color = zaxis_color,
-	        	zaxis_linewidth = zaxis_linewidth,
-	        	zaxis_text_offset = zaxis_text_offset,
-		zaxis_tick_size = zaxis_tick_size
+	        	heightmap = heightmap
 	        )
 	        return(invisible())
 	      } else {
@@ -256,18 +238,11 @@ render_path = function(
           lwd = linewidth,
 	          line_antialias = antialias
 	        )
-	        render_zaxis_internal(
-	        	zaxis = zaxis,
+	        render_zaxis_from_dots(
+	        	zaxis_args = zaxis_split$zaxis_args,
 	        	extent = extent,
 	        	zscale = zscale,
-	        	heightmap = heightmap,
-	        	zaxis_location = zaxis_location,
-	        	zaxis_breaks = zaxis_breaks,
-	        	zaxis_labels = zaxis_labels,
-	        	zaxis_color = zaxis_color,
-	        	zaxis_linewidth = zaxis_linewidth,
-	        	zaxis_text_offset = zaxis_text_offset,
-		zaxis_tick_size = zaxis_tick_size
+	        	heightmap = heightmap
 	        )
 	        return(invisible())
 	      }
@@ -429,20 +404,13 @@ render_path = function(
 	        line_antialias = antialias
 	      )
 	    }
-	    render_zaxis_internal(
-	    	zaxis = zaxis,
+	    render_zaxis_from_dots(
+	    	zaxis_args = zaxis_split$zaxis_args,
 	    	extent = extent,
 	    	zscale = zscale,
-	    	heightmap = heightmap,
-	    	zaxis_location = zaxis_location,
-	    	zaxis_breaks = zaxis_breaks,
-	    	zaxis_labels = zaxis_labels,
-	    	zaxis_color = zaxis_color,
-	    	zaxis_linewidth = zaxis_linewidth,
-	    	zaxis_text_offset = zaxis_text_offset,
-		zaxis_tick_size = zaxis_tick_size
+	    	heightmap = heightmap
 	    )
-	  } else {
+  } else {
 	    return(coord_list)
 	  }
 }

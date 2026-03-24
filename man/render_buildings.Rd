@@ -28,14 +28,6 @@ render_buildings(
   light_intensity = 1,
   light_relative = FALSE,
   clear_previous = FALSE,
-  zaxis = FALSE,
-  zaxis_location = "auto",
-  zaxis_breaks = NULL,
-  zaxis_labels = NULL,
-  zaxis_color = "black",
-  zaxis_linewidth = 2,
-  zaxis_text_offset = 3,
-  zaxis_tick_size = NULL,
   ...
 )
 }

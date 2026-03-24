@@ -186,16 +186,9 @@ render_beveled_polygons = function(
 	light_intensity = 1,
 	light_relative = FALSE,
 	clear_previous = FALSE,
-	zaxis = FALSE,
-	zaxis_location = "auto",
-	zaxis_breaks = NULL,
-	zaxis_labels = NULL,
-	zaxis_color = "black",
-	zaxis_linewidth = 2,
-	zaxis_text_offset = 3,
-	zaxis_tick_size = NULL,
 	...
 ) {
+	dot_split = split_zaxis_dots(list(...))
 	top = bevel_height
 	bottom = base_height
 	if (rgl::cur3d() == 0) {
@@ -207,18 +200,11 @@ render_beveled_polygons = function(
 	if (clear_previous) {
 		rgl::pop3d(tag = "obj_raymesh_beveled_polygon")
 		if (missing(polygon)) {
-			render_zaxis_internal(
-				zaxis = zaxis,
+			render_zaxis_from_dots(
+				zaxis_args = dot_split$zaxis_args,
 				extent = extent,
 				zscale = zscale,
-				heightmap = heightmap,
-				zaxis_location = zaxis_location,
-				zaxis_breaks = zaxis_breaks,
-				zaxis_labels = zaxis_labels,
-				zaxis_color = zaxis_color,
-				zaxis_linewidth = zaxis_linewidth,
-				zaxis_text_offset = zaxis_text_offset,
-		zaxis_tick_size = zaxis_tick_size
+				heightmap = heightmap
 			)
 			return(invisible())
 		}
@@ -365,14 +351,6 @@ render_beveled_polygons = function(
 		light_intensity = light_intensity,
 		light_relative = light_relative,
 		rgl_tag = "_beveled_polygon",
-		zaxis = zaxis,
-		zaxis_location = zaxis_location,
-		zaxis_breaks = zaxis_breaks,
-		zaxis_labels = zaxis_labels,
-		zaxis_color = zaxis_color,
-		zaxis_linewidth = zaxis_linewidth,
-		zaxis_text_offset = zaxis_text_offset,
-		zaxis_tick_size = zaxis_tick_size,
 		...
 	)
 }
