@@ -22,6 +22,7 @@ render_zaxis_internal = function(
 	}
 
 	extent_vals = get_extent(extent)
+	heightmap = resolve_scene_render_heightmap(heightmap)
 	panel_info = attr(extent, "panel_info", exact = TRUE)
 	if (is.null(panel_info)) {
 		panel_info = get0(
@@ -39,6 +40,30 @@ render_zaxis_internal = function(
 			c("data_xmin", "data_xmax", "data_ymin", "data_ymax") %in%
 				names(panel_info)
 		)
+	cached_scene_zscale = get_scene_zscale(default = NA_real_)
+	if (is.null(zscale)) {
+		zscale = cached_scene_zscale
+	} else {
+		zscale = as.numeric(zscale)[1]
+		if (is.na(zscale) || zscale <= 0) {
+			stop("`zscale` must be a positive number.")
+		}
+	}
+	if (!is.finite(zscale) || zscale <= 0) {
+		zscale = 1
+	}
+	# For terrain defaults, infer the scene zscale from the last plot_3d() call when
+	# the caller leaves zscale at its default and no explicit breaks are supplied.
+	if (
+		is.null(zaxis_breaks) &&
+			!has_panel_info &&
+			is.null(heightmap) &&
+			isTRUE(all.equal(zscale, 1)) &&
+			is.finite(cached_scene_zscale) &&
+			cached_scene_zscale > 0
+	) {
+		zscale = cached_scene_zscale
+	}
 
 	valid_locations = c(
 		"auto",
@@ -100,6 +125,10 @@ render_zaxis_internal = function(
 		if (is.na(zaxis_tick_size) || zaxis_tick_size <= 0) {
 			stop("`zaxis_tick_size` must be a positive number.")
 		}
+	}
+	# Clear previous z-axis objects before deriving scene-based defaults.
+	for (tag in c("zaxis_axis", "zaxis_ticks", "zaxis_labels")) {
+		try(rgl::pop3d(tag = tag), silent = TRUE)
 	}
 
 	xmin = extent_vals["xmin"]
@@ -302,10 +331,6 @@ render_zaxis_internal = function(
 		paste0(zaxis_labels, space_pad)
 	} else {
 		paste0(space_pad, zaxis_labels)
-	}
-
-	for (tag in c("zaxis_axis", "zaxis_ticks", "zaxis_labels")) {
-		try(rgl::pop3d(tag = tag), silent = TRUE)
 	}
 
 	rgl::segments3d(

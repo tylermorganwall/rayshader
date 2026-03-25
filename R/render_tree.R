@@ -48,7 +48,7 @@
 #' the previously aforementioned packages) which will be automatically converted to an extent object.
 #'@param baseshape Default `rectangle`. Shape of the base. Options are `c("rectangle","circle","hex")`.
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.
-#'@param heightmap Default `NULL`. Automatically extracted from the rgl window--only use if auto-extraction
+#'@param heightmap Default `NULL`. Height matrix for the current scene. If omitted, this is taken from the cached scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value.
 #'of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
 #' All points are assumed to be evenly spaced.
 #'@param lit Default `TRUE`. Whether to apply lighting to the tree.
@@ -192,6 +192,15 @@ render_tree = function(
 	...
 	) {
 	dot_split = split_zaxis_dots(list(...))
+	zscale = resolve_scene_render_zscale(
+		zscale,
+		missing(zscale),
+		caller = "render_tree"
+	)
+	heightmap = resolve_scene_render_heightmap(
+		heightmap,
+		caller = "render_tree"
+	)
 	zaxis_args = dot_split$zaxis_args
 	tree_args = dot_split$other_args
 	render_obj_tree = function(...) {

@@ -2,7 +2,7 @@
 #'
 #'@description Adds a marker and label to the current 3D plot
 #'
-#'@param heightmap A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.
+#'@param heightmap Default `NULL`. Height matrix for the current scene. If omitted, this is taken from the cached scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value.
 #'@param text The label text.
 #'@param lat A latitude for the text. Must provide an `raster::extent` object to argument `extent` for the map.
 #'@param long A latitude for the text. Must provide an `raster::extent` object to argument `extent` for the map.
@@ -102,7 +102,7 @@
 #'render_snapshot()
 #'}
 render_label = function(
-	heightmap,
+	heightmap = NULL,
 	text,
 	lat,
 	long,
@@ -137,6 +137,20 @@ render_label = function(
 		}
 	}
 	if (!exit_early) {
+		zscale = resolve_scene_render_zscale(
+			zscale,
+			missing(zscale),
+			caller = "render_label"
+		)
+		heightmap = resolve_scene_render_heightmap(
+			heightmap,
+			caller = "render_label"
+		)
+		if (is.null(heightmap)) {
+			stop(
+				"No heightmap found. Call `plot_3d()` or `plot_gg()` first, or pass `heightmap` explicitly."
+			)
+		}
 		if (!is.null(altitude)) {
 			z = altitude
 		}

@@ -2,7 +2,7 @@
 #'
 #'@description Adds 3D contours to the current scene, using the heightmap of the 3D surface.
 #'
-#'@param heightmap A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All grid points are assumed to be evenly spaced.
+#'@param heightmap Default `NULL`. Height matrix for the current scene. If omitted, this is taken from the cached scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value.
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
 #'of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
 #'@param levels Default `NA`. Automatically generated with 10 levels. This argument specifies the exact height levels of each contour.
@@ -75,11 +75,25 @@ render_contours = function(
 	...
 ) {
 	zaxis_split = split_zaxis_dots(list(...))
+	zscale = resolve_scene_render_zscale(
+		zscale,
+		missing(zscale),
+		caller = "render_contours"
+	)
 	if (clear_previous) {
 		rgl::pop3d(tag = "contour3d")
-		if (missing(heightmap)) {
+		if (missing(heightmap) && is.null(get_scene_heightmap(default = NULL))) {
 			return(invisible())
 		}
+	}
+	heightmap = resolve_scene_render_heightmap(
+		heightmap,
+		caller = "render_contours"
+	)
+	if (is.null(heightmap)) {
+		stop(
+			"No heightmap found. Call `plot_3d()` or `plot_gg()` first, or pass `heightmap` explicitly."
+		)
 	}
 	if (!(length(find.package("sf", quiet = TRUE)) > 0)) {
 		stop("`sf` package required for generate_contour_overlay()")

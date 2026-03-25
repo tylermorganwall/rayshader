@@ -115,6 +115,42 @@ test_that("render_zaxis() works as a standalone entry point", {
 	expect_true(any(ids$tag == "zaxis_labels"))
 })
 
+test_that("render_zaxis() infers cached terrain zscale for default breaks", {
+	on.exit(rgl::close3d(), add = TRUE)
+	options(rgl.useNULL = TRUE)
+
+	heightmap = volcano
+	texture = sphere_shade(heightmap)
+	expect_no_condition(plot_3d(
+		texture,
+		heightmap,
+		zscale = 10,
+		shadow = FALSE,
+		water = FALSE,
+		windowsize = c(300, 300)
+	))
+
+	extent = c(
+		xmin = 0,
+		xmax = nrow(heightmap),
+		ymin = 0,
+		ymax = ncol(heightmap)
+	)
+	expect_no_condition(render_zaxis(
+		extent = extent,
+		zaxis_location = "bottomleft"
+	))
+
+	ids = get_ids_with_labels()
+	label_id = ids$id[ids$tag == "zaxis_labels"][1]
+	label_texts = trimws(as.character(rgl::rgl.attrib(label_id, "texts")))
+	label_vals = suppressWarnings(as.numeric(label_texts))
+	label_vals = label_vals[is.finite(label_vals)]
+
+	expect_true(length(label_vals) >= 1)
+	expect_gte(max(label_vals), 20)
+})
+
 test_that("ggplot z-axis defaults to panel placement", {
 	on.exit(rgl::close3d(), add = TRUE)
 	options(rgl.useNULL = TRUE)

@@ -76,8 +76,7 @@ showing where the camera will be focused.}
 \item{transparent_water}{Default \code{FALSE}. If \code{TRUE}, depth is determined without water layer. User will have to re-render the water
 layer with \code{\link[=render_water]{render_water()}} if they want to recreate the water layer.}
 
-\item{heightmap}{Default \code{NULL}. The height matrix for the scene. Passing this will allow \code{\link[=render_depth]{render_depth()}}
-to automatically redraw the water layer if \code{transparent_water = TRUE}.}
+\item{heightmap}{Default \code{NULL}. Height matrix for the current scene. If omitted, this is taken from the cached scene set by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}. Pass explicitly to override the cached value. This allows \code{\link[=render_depth]{render_depth()}} to automatically redraw the water layer if \code{transparent_water = TRUE}.}
 
 \item{zscale}{Default \code{NULL}. The zscale value for the heightmap. Passing this will allow \code{\link[=render_depth]{render_depth()}}
 to automatically redraw the water layer if \code{transparent_water = TRUE}.}

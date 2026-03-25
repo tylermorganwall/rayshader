@@ -7,7 +7,9 @@
 #' a length-4 numeric vector specifying `c("xmin", "xmax","ymin","ymax")`, or the spatial object (from
 #' the previously aforementioned packages) which will be automatically converted to an extent object.
 #'@param zscale Default `1`. The ratio between x/y spacing and z units.
-#'@param heightmap Default `NULL`. Height matrix used to anchor the axis baseline to the surface.
+#'If left at `1` with `zaxis_breaks = NULL` on non-ggplot terrain scenes, rayshader
+#'will attempt to use the cached `plot_3d()` zscale to generate more meaningful defaults.
+#'@param heightmap Default `NULL`. Height matrix for the current scene. If omitted, this is taken from the cached scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value.
 #'@param zaxis_location Default `"auto"`. Axis location. Options:
 #'`"auto"`, `"panel"`, `"panelbottomleft"`, `"panelbottomright"`,
 #'`"paneltopleft"`, `"paneltopright"`, `"bottomleft"`, `"bottomright"`,
@@ -34,6 +36,15 @@ render_zaxis = function(
 	if (rgl::cur3d() == 0) {
 		stop("No rgl window currently open.")
 	}
+	zscale = resolve_scene_render_zscale(
+		zscale,
+		missing(zscale),
+		caller = "render_zaxis"
+	)
+	heightmap = resolve_scene_render_heightmap(
+		heightmap,
+		caller = "render_zaxis"
+	)
 	render_zaxis_internal(
 		zaxis = TRUE,
 		extent = extent,
@@ -86,6 +97,11 @@ render_zaxis_from_dots = function(
 	if (length(zaxis_args) == 0) {
 		return(invisible(NULL))
 	}
+	zscale = resolve_scene_render_zscale(
+		zscale,
+		zscale_missing = isTRUE(all.equal(as.numeric(zscale)[1], 1))
+	)
+	heightmap = resolve_scene_render_heightmap(heightmap)
 	if (is.null(zaxis_args$zaxis)) {
 		zaxis_args$zaxis = TRUE
 	}

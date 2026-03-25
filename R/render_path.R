@@ -19,7 +19,7 @@
 #' a length-4 numeric vector specifying `c("xmin", "xmax","ymin","ymax")`, or the spatial object (from
 #' the previously aforementioned packages) which will be automatically converted to an extent object.
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.
-#'@param heightmap Default `NULL`. Pass this if not including an `altitude` argument, or if no extent passed. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
+#'@param heightmap Default `NULL`. Height matrix for the current scene. If omitted, this is taken from the cached scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value.
 #' All points are assumed to be evenly spaced.
 #'@param resample_evenly Default `FALSE`. If `TRUE`, this will re-sample the path evenly from beginning to end, which can help vastly
 #'reduce the number of points used to draw it (which can improve the performance of [render_highquality()] and \code{\link[=render_snapshot]{render_snapshot()}} when using `software_render = TRUE`).
@@ -167,6 +167,15 @@ render_path = function(
 	...
 ) {
   zaxis_split = split_zaxis_dots(list(...))
+  zscale = resolve_scene_render_zscale(
+    zscale,
+    missing(zscale),
+    caller = "render_path"
+  )
+  heightmap = resolve_scene_render_heightmap(
+    heightmap,
+    caller = "render_path"
+  )
   if (rgl::cur3d() == 0 && !return_coords) {
     stop("No rgl window currently open.")
   }

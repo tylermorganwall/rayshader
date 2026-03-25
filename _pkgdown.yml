@@ -46,6 +46,9 @@ reference:
       - starts_with("plot")
       - starts_with("save")
       - starts_with("convert")
+      - get_ggplot_extent
+      - transform_ggplot_coords
+      - transform_ggplot_sf
   - title: "Manipulate and Capture 3D Maps"
     desc: "Functions for adding features to 3D maps, rendering post-processing effects, and saving snapshots"
     contents:

@@ -15,7 +15,7 @@
 #'@param swap_yz Default `TRUE`. Whether to swap and Y and Z axes. (Y axis is vertical in
 #'rayshader coordinates, but data is often provided with Z being vertical).
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.
-#'@param heightmap Default `NULL`. Automatically extracted from the rgl window--only use if auto-extraction
+#'@param heightmap Default `NULL`. Height matrix for the current scene. If omitted, this is taken from the cached scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value.
 #'of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
 #' All points are assumed to be evenly spaced.
 #'@param color Default `black`. Color of the 3D model, if `load_material = FALSE`.
@@ -88,6 +88,15 @@ render_multipolygonz = function(
   ...
 ) {
   dot_split = split_zaxis_dots(list(...))
+  zscale = resolve_scene_render_zscale(
+    zscale,
+    missing(zscale),
+    caller = "render_multipolygonz"
+  )
+  heightmap = resolve_scene_render_heightmap(
+    heightmap,
+    caller = "render_multipolygonz"
+  )
   if (clear_previous) {
     rgl::pop3d(tag = sprintf("obj%s", rgl_tag))
     if (missing(sfobj)) {

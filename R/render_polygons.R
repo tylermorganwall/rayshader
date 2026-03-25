@@ -26,7 +26,7 @@
 #' may be faster (depending on how many geometries are in `polygon`).
 #' @param holes Default `0`. If passing in a polygon directly, this specifies which index represents
 #' the holes in the polygon. See the `earcut` function in the `decido` package for more information.
-#' @param heightmap Default `NULL`. Automatically extracted from the rgl window--only use if auto-extraction
+#' @param heightmap Default `NULL`. Height matrix for the current scene. If omitted, this is taken from the cached scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value.
 #' of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
 #'  All points are assumed to be evenly spaced.
 #' @param alpha Default `1`. Transparency of the polygons.
@@ -105,6 +105,15 @@ render_polygons = function(
 	...
 ) {
 	zaxis_split = split_zaxis_dots(list(...))
+	zscale = resolve_scene_render_zscale(
+		zscale,
+		missing(zscale),
+		caller = "render_polygons"
+	)
+	heightmap = resolve_scene_render_heightmap(
+		heightmap,
+		caller = "render_polygons"
+	)
 	if (rgl::cur3d() == 0) {
 		stop("No rgl window currently open.")
 	}

@@ -249,6 +249,8 @@ plot_gg = function(
 	if (!(length(find.package("ggplot2", quiet = TRUE)) > 0)) {
 		stop("Must have ggplot2 installed to use plot_gg()")
 	}
+	cache_scene_zscale(NULL)
+	cache_scene_heightmap(NULL)
 	cache_plot_gg_panel_info(NULL)
 	cache_plot_gg_transform_info(NULL)
 	heightmaptemp = tempfile(fileext = ".png")

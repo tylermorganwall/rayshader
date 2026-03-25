@@ -160,8 +160,7 @@ generate_cloud_layer = function(
 #'
 #'Note: Underlying layers with transparency can cause rendering issues in rgl.
 #'
-#'@param heightmap A two-dimensional matrix, where each entry in the matrix is the elevation at that point. This is used by [render_clouds()] to
-#'calculate the regions the clouds should be rendered in.
+#'@param heightmap Default `NULL`. Height matrix for the current scene. If omitted, this is taken from the cached scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value.
 #'@param start_altitude Default `1000`. The bottom of the cloud layer.
 #'@param end_altitude Default `2000`. The top of the cloud layer.
 #'@param sun_altitude Default `90`. The angle, in degrees (as measured from the horizon) from which the light originates.
@@ -268,7 +267,7 @@ generate_cloud_layer = function(
 #'render_snapshot()
 #'}
 render_clouds = function(
-	heightmap,
+	heightmap = NULL,
 	start_altitude = 1000,
 	end_altitude = 2000,
 	sun_altitude = 10,
@@ -307,9 +306,23 @@ render_clouds = function(
 	sun_angle = sun_angle + 180
 	if (clear_clouds) {
 		rgl::pop3d(tag = c("floating_overlay", "floating_overlay_tris"))
-		if (missing(heightmap)) {
+		if (missing(heightmap) && is.null(get_scene_heightmap(default = NULL))) {
 			return(invisible())
 		}
+	}
+	zscale = resolve_scene_render_zscale(
+		zscale,
+		missing(zscale),
+		caller = "render_clouds"
+	)
+	heightmap = resolve_scene_render_heightmap(
+		heightmap,
+		caller = "render_clouds"
+	)
+	if (is.null(heightmap)) {
+		stop(
+			"No heightmap found. Call `plot_3d()` or `plot_gg()` first, or pass `heightmap` explicitly."
+		)
 	}
 	if (cloud_cover < 0 || cloud_cover > 1) {
 		stop("`cloud_cover` must be between zero and one.")
@@ -358,7 +371,7 @@ render_clouds = function(
 	}
 }
 render_clouds = function(
-	heightmap,
+	heightmap = NULL,
 	start_altitude = 1000,
 	end_altitude = 2000,
 	sun_altitude = 10,
@@ -397,7 +410,23 @@ render_clouds = function(
 	sun_angle = sun_angle + 180
 	if (clear_clouds) {
 		rgl::pop3d(tag = c("floating_overlay", "floating_overlay_tris"))
-		if (missing(heightmap)) return(invisible())
+		if (missing(heightmap) && is.null(get_scene_heightmap(default = NULL))) {
+			return(invisible())
+		}
+	}
+	zscale = resolve_scene_render_zscale(
+		zscale,
+		missing(zscale),
+		caller = "render_clouds"
+	)
+	heightmap = resolve_scene_render_heightmap(
+		heightmap,
+		caller = "render_clouds"
+	)
+	if (is.null(heightmap)) {
+		stop(
+			"No heightmap found. Call `plot_3d()` or `plot_gg()` first, or pass `heightmap` explicitly."
+		)
 	}
 	if (cloud_cover < 0 || cloud_cover > 1) {
 		stop("`cloud_cover` must be between zero and one.")

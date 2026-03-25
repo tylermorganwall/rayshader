@@ -23,9 +23,11 @@ render_zaxis(
 a length-4 numeric vector specifying \code{c("xmin", "xmax","ymin","ymax")}, or the spatial object (from
 the previously aforementioned packages) which will be automatically converted to an extent object.}
 
-\item{zscale}{Default \code{1}. The ratio between x/y spacing and z units.}
+\item{zscale}{Default \code{1}. The ratio between x/y spacing and z units.
+If left at \code{1} with \code{zaxis_breaks = NULL} on non-ggplot terrain scenes, rayshader
+will attempt to use the cached \code{plot_3d()} zscale to generate more meaningful defaults.}
 
-\item{heightmap}{Default \code{NULL}. Height matrix used to anchor the axis baseline to the surface.}
+\item{heightmap}{Default \code{NULL}. Height matrix for the current scene. If omitted, this is taken from the cached scene set by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}. Pass explicitly to override the cached value.}
 
 \item{zaxis_location}{Default \code{"auto"}. Axis location. Options:
 \code{"auto"}, \code{"panel"}, \code{"panelbottomleft"}, \code{"panelbottomright"},

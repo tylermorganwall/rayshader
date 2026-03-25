@@ -181,9 +181,18 @@ plot_3d = function(
 	if (!plot_new && clear_previous) {
 		rgl::clear3d()
 	}
+	zscale_was_missing = missing(zscale)
+	heightmap_cache_label = format_scene_cache_label(deparse(substitute(heightmap)))
+	zscale_cache_label = if (zscale_was_missing) {
+		NULL
+	} else {
+		format_scene_cache_label(deparse(substitute(zscale)))
+	}
 	if (!is.null(get("scene_cache", envir = ray_cache_scene_envir))) {
 		assign("scene_cache", NULL, envir = ray_cache_scene_envir)
 	}
+	cache_scene_zscale(NULL, label = NULL)
+	cache_scene_heightmap(NULL, label = NULL)
 	cache_plot_gg_panel_info(NULL)
 	cache_plot_gg_transform_info(NULL)
 	#setting default zscale if montereybay is used and tell user about zscale
@@ -498,4 +507,6 @@ plot_3d = function(
 			antialias = lineantialias
 		)
 	}
+	cache_scene_heightmap(heightmap, label = heightmap_cache_label)
+	cache_scene_zscale(zscale, label = zscale_cache_label)
 }

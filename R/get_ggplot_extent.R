@@ -619,6 +619,160 @@ cache_plot_gg_transform_info = function(transform_info = NULL) {
 	)
 }
 
+cache_scene_zscale = function(zscale = NULL, label = NULL) {
+	assign("scene_zscale", zscale, envir = ray_cache_scene_envir)
+	assign("scene_zscale_label", label, envir = ray_cache_scene_envir)
+}
+
+get_scene_zscale = function(default = NULL) {
+	scene_zscale = get0("scene_zscale", envir = ray_cache_scene_envir, inherits = FALSE)
+	if (is.null(scene_zscale)) {
+		return(default)
+	}
+	scene_zscale = suppressWarnings(as.numeric(scene_zscale)[1])
+	if (!is.finite(scene_zscale) || scene_zscale <= 0) {
+		return(default)
+	}
+	scene_zscale
+}
+
+get_scene_zscale_label = function(default = NULL) {
+	scene_zscale_label = get0(
+		"scene_zscale_label",
+		envir = ray_cache_scene_envir,
+		inherits = FALSE
+	)
+	if (is.null(scene_zscale_label)) {
+		return(default)
+	}
+	scene_zscale_label
+}
+
+cache_scene_heightmap = function(heightmap = NULL, label = NULL) {
+	assign("scene_heightmap", heightmap, envir = ray_cache_scene_envir)
+	assign("scene_heightmap_label", label, envir = ray_cache_scene_envir)
+}
+
+get_scene_heightmap = function(default = NULL) {
+	scene_heightmap = get0(
+		"scene_heightmap",
+		envir = ray_cache_scene_envir,
+		inherits = FALSE
+	)
+	if (is.null(scene_heightmap)) {
+		return(default)
+	}
+	scene_heightmap
+}
+
+get_scene_heightmap_label = function(default = NULL) {
+	scene_heightmap_label = get0(
+		"scene_heightmap_label",
+		envir = ray_cache_scene_envir,
+		inherits = FALSE
+	)
+	if (is.null(scene_heightmap_label)) {
+		return(default)
+	}
+	scene_heightmap_label
+}
+
+format_scene_cache_label = function(label) {
+	if (is.null(label)) {
+		return(NULL)
+	}
+	label = paste(label, collapse = " ")
+	label = gsub("[\r\n\t]+", " ", label)
+	label = trimws(label)
+	if (!nzchar(label)) {
+		return(NULL)
+	}
+	label
+}
+
+emit_scene_cache_message = function(caller, argument_name, cache_name, cache_label = NULL) {
+	if (is.null(caller) || !nzchar(caller)) {
+		return(invisible(NULL))
+	}
+	cache_label = format_scene_cache_label(cache_label)
+	if (is.null(cache_label)) {
+		cat(sprintf(
+			"%s(): using cached `%s` from `%s`.",
+			caller,
+			argument_name,
+			cache_name
+		), "\n")
+	} else {
+		cat(sprintf(
+			"%s(): using cached `%s` from `%s` (%s).",
+			caller,
+			argument_name,
+			cache_name,
+			cache_label
+		), "\n")
+	}
+	invisible(NULL)
+}
+
+resolve_scene_render_zscale = function(
+	zscale = 1,
+	zscale_missing = FALSE,
+	caller = NULL
+) {
+	cached_scene_zscale = get_scene_zscale(default = NA_real_)
+	if (isTRUE(zscale_missing) && is.finite(cached_scene_zscale) && cached_scene_zscale > 0) {
+		emit_scene_cache_message(
+			caller = caller,
+			argument_name = "zscale",
+			cache_name = "scene_zscale",
+			cache_label = get_scene_zscale_label(default = NULL)
+		)
+		return(cached_scene_zscale)
+	}
+	if (is.null(zscale)) {
+		if (is.finite(cached_scene_zscale) && cached_scene_zscale > 0) {
+			emit_scene_cache_message(
+				caller = caller,
+				argument_name = "zscale",
+				cache_name = "scene_zscale",
+				cache_label = get_scene_zscale_label(default = NULL)
+			)
+			return(cached_scene_zscale)
+		}
+		return(1)
+	}
+	zscale = suppressWarnings(as.numeric(zscale)[1])
+	if (!is.finite(zscale) || zscale <= 0) {
+		if (is.finite(cached_scene_zscale) && cached_scene_zscale > 0) {
+			emit_scene_cache_message(
+				caller = caller,
+				argument_name = "zscale",
+				cache_name = "scene_zscale",
+				cache_label = get_scene_zscale_label(default = NULL)
+			)
+			return(cached_scene_zscale)
+		}
+		return(1)
+	}
+	zscale
+}
+
+resolve_scene_render_heightmap = function(heightmap = NULL, caller = NULL) {
+	if (!is.null(heightmap)) {
+		return(heightmap)
+	}
+	scene_heightmap = get_scene_heightmap(default = NULL)
+	if (!is.null(scene_heightmap)) {
+		emit_scene_cache_message(
+			caller = caller,
+			argument_name = "heightmap",
+			cache_name = "scene_heightmap",
+			cache_label = get_scene_heightmap_label(default = NULL)
+		)
+	}
+	scene_heightmap
+}
+
 build_plot_gg_transform_info = function(ggplot_build_obj) {
 	build_layout = ggplot_build_obj$layout$layout
 	data.frame(

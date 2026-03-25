@@ -6,7 +6,7 @@
 #'
 #'@param overlay Overlay (4D RGBA array) to be rendered on the 3D map.
 #'@param altitude Altitude to place the overlay.
-#'@param heightmap The underlying surface. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
+#'@param heightmap Default `NULL`. Height matrix for the current scene. If omitted, this is taken from the cached scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value.
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
 #'of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10. Adjust the zscale down to exaggerate elevation features.
 #'@param alpha Default `1`. Multiplies the layer's transparency by this factor. 0 is completely transparent.
@@ -64,6 +64,15 @@ render_floating_overlay = function(
 	horizontal_offset = c(0, 0),
 	...
 ) {
+	zscale = resolve_scene_render_zscale(
+		zscale,
+		missing(zscale),
+		caller = "render_floating_overlay"
+	)
+	heightmap = resolve_scene_render_heightmap(
+		heightmap,
+		caller = "render_floating_overlay"
+	)
 	if (clear_layers) {
 		rgl::pop3d(tag = c("floating_overlay", "floating_overlay_tris"))
 		if (is.null(overlay)) {
@@ -118,10 +127,10 @@ render_floating_overlay = function(
 	} else {
 		rows = nrow(heightmap)
 		cols = ncol(heightmap)
+		dim(heightmap) = unname(dim(heightmap))
 	}
 
 	rayimage::ray_write_image(overlay, tempmap)
-	dim(heightmap) = unname(dim(heightmap))
 	rowmin = min((+1):(rows) - rows / 2) + horizontal_offset[1]
 	rowmax = max((+1):(rows) - rows / 2) + horizontal_offset[1]
 	colmin = min(-(+1):-(cols) + cols / 2 + 1) + horizontal_offset[2]

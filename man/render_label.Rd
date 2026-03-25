@@ -5,7 +5,7 @@
 \title{Render Label}
 \usage{
 render_label(
-  heightmap,
+  heightmap = NULL,
   text,
   lat,
   long,
@@ -34,7 +34,7 @@ render_label(
 )
 }
 \arguments{
-\item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.}
+\item{heightmap}{Default \code{NULL}. Height matrix for the current scene. If omitted, this is taken from the cached scene set by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}. Pass explicitly to override the cached value.}
 
 \item{text}{The label text.}
 

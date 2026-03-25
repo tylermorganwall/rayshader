@@ -5,7 +5,7 @@
 \title{Render Clouds}
 \usage{
 render_clouds(
-  heightmap,
+  heightmap = NULL,
   start_altitude = 1000,
   end_altitude = 2000,
   sun_altitude = 10,
@@ -28,8 +28,7 @@ render_clouds(
 )
 }
 \arguments{
-\item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. This is used by \code{\link[=render_clouds]{render_clouds()}} to
-calculate the regions the clouds should be rendered in.}
+\item{heightmap}{Default \code{NULL}. Height matrix for the current scene. If omitted, this is taken from the cached scene set by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}. Pass explicitly to override the cached value.}
 
 \item{start_altitude}{Default \code{1000}. The bottom of the cloud layer.}
 

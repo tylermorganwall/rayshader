@@ -19,8 +19,7 @@
 #'@param aberration Default `0`. Adds chromatic aberration to the image. Maximum of `1`.
 #'@param transparent_water Default `FALSE`. If `TRUE`, depth is determined without water layer. User will have to re-render the water
 #'layer with [render_water()] if they want to recreate the water layer.
-#'@param heightmap Default `NULL`. The height matrix for the scene. Passing this will allow [render_depth()]
-#'to automatically redraw the water layer if `transparent_water = TRUE`.
+#'@param heightmap Default `NULL`. Height matrix for the current scene. If omitted, this is taken from the cached scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value. This allows [render_depth()] to automatically redraw the water layer if `transparent_water = TRUE`.
 #'@param zscale Default `NULL`. The zscale value for the heightmap. Passing this will allow [render_depth()]
 #'to automatically redraw the water layer if `transparent_water = TRUE`.
 #'@param title_text Default `NULL`. Text. Adds a title to the image, using magick::image_annotate.
@@ -163,6 +162,15 @@ render_depth = function(
   if (rgl::cur3d() == 0) {
     stop("No rgl window currently open.")
   }
+  zscale = resolve_scene_render_zscale(
+    zscale,
+    missing(zscale),
+    caller = "render_depth"
+  )
+  heightmap = resolve_scene_render_heightmap(
+    heightmap,
+    caller = "render_depth"
+  )
   if (!instant_capture) {
     Sys.sleep(0.5)
   }

@@ -141,6 +141,11 @@ render_compass = function(
 		)
 		return(invisible())
 	}
+	zscale = resolve_scene_render_zscale(
+		zscale,
+		missing(zscale),
+		caller = "render_compass"
+	)
 	if (rgl::cur3d() == 0) {
 		stop("No rgl window currently open.")
 	}
