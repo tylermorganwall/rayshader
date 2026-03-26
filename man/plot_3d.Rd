@@ -46,7 +46,8 @@ plot_3d(
   verbose = FALSE,
   plot_new = TRUE,
   close_previous = TRUE,
-  clear_previous = TRUE
+  clear_previous = TRUE,
+  extent = NULL
 )
 }
 \arguments{
@@ -56,6 +57,10 @@ plot_3d(
 
 \item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
 of 1 meter and the grid values are separated by 10 meters, \code{zscale} would be 10. Adjust the zscale down to exaggerate elevation features.}
+
+\item{extent}{Default \code{NULL}. Optional extent metadata to cache with the scene for later
+calls (e.g., \code{\link[=render_zaxis]{render_zaxis()}} without an explicit \code{extent}). Accepts any input supported
+by \code{\link[=get_extent]{get_extent()}} (numeric xmin/xmax/ymin/ymax vector, \code{raster}, \code{terra}, \code{sf}, or \code{sp} objects).}
 
 \item{baseshape}{Default \code{rectangle}. Shape of the base. Options are \code{c("rectangle","circle","hex")}.}
 
@@ -167,6 +172,14 @@ if(run_documentation()) {
 montereybay |>
  sphere_shade(texture="desert") |>
  plot_3d(montereybay,zscale=50)
+render_snapshot()
+}
+
+if(run_documentation()) {
+montereybay |>
+ sphere_shade(texture="desert") |>
+ plot_3d(montereybay,zscale=50)
+render_zaxis(zaxis_location = "bottomleft")
 render_snapshot()
 }
 

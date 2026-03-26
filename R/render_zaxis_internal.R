@@ -11,7 +11,8 @@ render_zaxis_internal = function(
 	zaxis_labels = NULL,
 	zaxis_color = "black",
 	zaxis_linewidth = 2,
-	zaxis_text_offset = 3,
+	zaxis_text_offset = 1.5,
+	zaxis_corner_offset = NULL,
 	zaxis_tick_size = NULL
 ) {
 	if (!isTRUE(zaxis)) {
@@ -117,8 +118,16 @@ render_zaxis_internal = function(
 		stop("`zaxis_linewidth` must be a positive number.")
 	}
 	zaxis_text_offset = as.numeric(zaxis_text_offset)[1]
-	if (is.na(zaxis_text_offset) || zaxis_text_offset <= 1) {
-		stop("`zaxis_text_offset` must be a numeric value greater than 1.")
+	if (is.na(zaxis_text_offset) || zaxis_text_offset < 0) {
+		stop("`zaxis_text_offset` must be a non-negative number.")
+	}
+	if (is.null(zaxis_corner_offset)) {
+		zaxis_corner_offset = if (has_panel_info) 0 else 0.08
+	} else {
+		zaxis_corner_offset = as.numeric(zaxis_corner_offset)[1]
+		if (is.na(zaxis_corner_offset) || zaxis_corner_offset < 0) {
+			stop("`zaxis_corner_offset` must be a non-negative number.")
+		}
 	}
 	if (!is.null(zaxis_tick_size)) {
 		zaxis_tick_size = as.numeric(zaxis_tick_size)[1]
@@ -237,57 +246,59 @@ render_zaxis_internal = function(
 		zscale = zscale
 	)[1, ]
 
-	base_y = NA_real_
-	if (!is.null(heightmap)) {
-		base_y = tryCatch(
-			transform_into_heightmap_coords(
-				extent = extent_vals,
-				heightmap = heightmap,
-				lat = anchor_lat,
-				long = anchor_long,
-				zscale = zscale
-			)[1, 2],
-			error = function(e) NA_real_
+	surface_vertices = NULL
+	surface_ids = get_ids_with_labels(c("surface", "surface_tris"))$id
+	if (length(surface_ids) > 0) {
+		surface_vertices = lapply(
+			surface_ids,
+			function(id) rgl::rgl.attrib(id, "vertices")
 		)
-	}
-	if (!is.finite(base_y)) {
-		surface_ids = get_ids_with_labels(c("surface", "surface_tris"))$id
-		if (length(surface_ids) > 0) {
-			surface_vertices = lapply(
-				surface_ids,
-				function(id) rgl::rgl.attrib(id, "vertices")
-			)
-			surface_vertices = do.call("rbind", surface_vertices)
-			if (is.matrix(surface_vertices) && nrow(surface_vertices) > 0) {
-				valid = stats::complete.cases(surface_vertices[,
-					c(1, 2, 3),
-					drop = FALSE
-				])
-				if (any(valid)) {
-					surface_vertices = surface_vertices[valid, , drop = FALSE]
-					d2 = (surface_vertices[, 1] - anchor_xyz[1])^2 +
-						(surface_vertices[, 3] - anchor_xyz[3])^2
-					base_y = surface_vertices[which.min(d2), 2]
-				}
+		surface_vertices = do.call("rbind", surface_vertices)
+		if (!(is.matrix(surface_vertices) && nrow(surface_vertices) > 0)) {
+			surface_vertices = NULL
+		} else {
+			valid = stats::complete.cases(surface_vertices[, c(1, 2, 3), drop = FALSE])
+			if (!any(valid)) {
+				surface_vertices = NULL
+			} else {
+				surface_vertices = surface_vertices[valid, , drop = FALSE]
 			}
 		}
 	}
-	if (!is.finite(base_y)) {
-		base_y = rgl::par3d()$bbox[3]
+
+	anchor_vec_2d = c(anchor_xyz[1] - center_xyz[1], anchor_xyz[3] - center_xyz[3])
+	anchor_vec_norm = sqrt(sum(anchor_vec_2d^2))
+	if (is.finite(anchor_vec_norm) && anchor_vec_norm > 0) {
+		outside_unit_2d = anchor_vec_2d / anchor_vec_norm
+	} else {
+		outside_unit_2d = c(1, 0)
 	}
+	axis_offset = anchor_vec_norm * zaxis_corner_offset
+	anchor_xyz[1] = anchor_xyz[1] + outside_unit_2d[1] * axis_offset
+	anchor_xyz[3] = anchor_xyz[3] + outside_unit_2d[2] * axis_offset
 
 	if (is.null(zaxis_breaks)) {
-		max_altitude = max(0, (rgl::par3d()$bbox[4] - base_y) * zscale)
-		if (max_altitude == 0) {
-			max_altitude = 1
+		altitude_range = c(NA_real_, NA_real_)
+		if (!is.null(heightmap)) {
+			height_vals = as.numeric(heightmap)
+			height_vals = height_vals[is.finite(height_vals)]
+			if (length(height_vals) > 0) {
+				altitude_range = range(height_vals)
+			}
 		}
-		zaxis_breaks = pretty(c(0, max_altitude), n = 4)
-		zaxis_breaks = zaxis_breaks[
-			zaxis_breaks >= 0 &
-				zaxis_breaks <= max_altitude + .Machine$double.eps^0.5
-		]
+		if (any(!is.finite(altitude_range)) && !is.null(surface_vertices)) {
+			altitude_range = range(surface_vertices[, 2] * zscale)
+		}
+		if (any(!is.finite(altitude_range))) {
+			altitude_range = range(rgl::par3d()$bbox[3:4] * zscale)
+		}
+		if (length(unique(altitude_range)) == 1) {
+			span = max(1, abs(altitude_range[1]) * 0.1)
+			altitude_range = c(altitude_range[1] - span / 2, altitude_range[2] + span / 2)
+		}
+		zaxis_breaks = pretty(altitude_range, n = 4)
 		if (length(zaxis_breaks) < 2) {
-			zaxis_breaks = c(0, max_altitude)
+			zaxis_breaks = altitude_range
 		}
 	} else {
 		zaxis_breaks = as.numeric(zaxis_breaks)
@@ -306,7 +317,7 @@ render_zaxis_internal = function(
 		zaxis_labels = as.character(zaxis_labels)
 	}
 
-	y_vals = base_y + zaxis_breaks / zscale
+	y_vals = zaxis_breaks / zscale
 	y_min = min(y_vals)
 	y_max = max(y_vals)
 	if (length(y_vals) == 1 || identical(y_min, y_max)) {
@@ -314,6 +325,10 @@ render_zaxis_internal = function(
 	}
 	eps_break = .Machine$double.eps^0.5
 	nonzero_idx = abs(zaxis_breaks) > eps_break
+	# Panel inset axes can intersect the surface at zero; keep zero hidden there.
+	# For non-panel/corner-offset axes, include zero markers/labels.
+	show_zero = !grepl("^panel", zaxis_location)
+	draw_idx = nonzero_idx | show_zero
 
 	tick_len = 0.03 * max(xrange, yrange)
 	tick_marker_size = if (is.null(zaxis_tick_size)) {
@@ -321,8 +336,8 @@ render_zaxis_internal = function(
 	} else {
 		zaxis_tick_size
 	}
-	side_sign = if (anchor_xyz[1] >= center_xyz[1]) 1 else -1
-	outside_unit = c(side_sign, 0)
+	outside_unit = outside_unit_2d
+	side_sign = if (outside_unit[1] >= 0) 1 else -1
 	# Keep text extending away from the axis side instead of centered on the anchor point.
 	text_adj_x = if (side_sign > 0) 0 else 1
 	# Extra whitespace gives a reliable visual gap from the axis in billboarded text mode.
@@ -342,19 +357,18 @@ render_zaxis_internal = function(
 		tag = "zaxis_axis"
 	)
 
-	# Never draw a marker at the zero break.
-	if (any(nonzero_idx)) {
+	if (any(draw_idx)) {
 		rgl::points3d(
-			x = rep(anchor_xyz[1], sum(nonzero_idx)),
-			y = y_vals[nonzero_idx],
-			z = rep(anchor_xyz[3], sum(nonzero_idx)),
+			x = rep(anchor_xyz[1], sum(draw_idx)),
+			y = y_vals[draw_idx],
+			z = rep(anchor_xyz[3], sum(draw_idx)),
 			color = zaxis_color,
 			size = tick_marker_size,
 			tag = "zaxis_ticks"
 		)
 	}
 
-	for (i in which(nonzero_idx)) {
+	for (i in which(draw_idx)) {
 		text_x = anchor_xyz[1] + outside_unit[1] * tick_len * zaxis_text_offset
 		text_z = anchor_xyz[3] + outside_unit[2] * tick_len * zaxis_text_offset
 		rgl::texts3d(

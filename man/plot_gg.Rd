@@ -248,6 +248,12 @@ plot_gg(mtplot, width=3.5, multicore = TRUE, windowsize = c(1400,866), sunangle=
        zoom = 0.60, phi = 30, theta = 45)
 render_snapshot()
 }
+if(run_documentation()) {
+plot_gg(mtplot, width=3.5, multicore = TRUE, windowsize = c(1400,866), sunangle=225,
+       zoom = 0.60, phi = 30, theta = 45)
+render_zaxis(zaxis_location = "panel_bottomleft")
+render_snapshot()
+}
 #Now let's plot a density plot in 3D.
 mtplot_density = ggplot(mtcars) +
  stat_density_2d(aes(x=mpg,y=disp, fill=after_stat(!!str2lang("density"))),

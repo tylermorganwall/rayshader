@@ -609,6 +609,7 @@ expand_ggplot_y_extent = function(data_range, panel_range, scene_height) {
 
 cache_plot_gg_panel_info = function(panel_info = NULL) {
 	assign("plot_gg_panel_info", panel_info, envir = ray_cache_scene_envir)
+	invisible(NULL)
 }
 
 cache_plot_gg_transform_info = function(transform_info = NULL) {
@@ -617,11 +618,13 @@ cache_plot_gg_transform_info = function(transform_info = NULL) {
 		transform_info,
 		envir = ray_cache_scene_envir
 	)
+	invisible(NULL)
 }
 
 cache_scene_zscale = function(zscale = NULL, label = NULL) {
 	assign("scene_zscale", zscale, envir = ray_cache_scene_envir)
 	assign("scene_zscale_label", label, envir = ray_cache_scene_envir)
+	invisible(NULL)
 }
 
 get_scene_zscale = function(default = NULL) {
@@ -651,6 +654,37 @@ get_scene_zscale_label = function(default = NULL) {
 cache_scene_heightmap = function(heightmap = NULL, label = NULL) {
 	assign("scene_heightmap", heightmap, envir = ray_cache_scene_envir)
 	assign("scene_heightmap_label", label, envir = ray_cache_scene_envir)
+	invisible(NULL)
+}
+
+cache_scene_extent = function(extent = NULL, label = NULL) {
+	assign("scene_extent", extent, envir = ray_cache_scene_envir)
+	assign("scene_extent_label", label, envir = ray_cache_scene_envir)
+	invisible(NULL)
+}
+
+get_scene_extent = function(default = NULL) {
+	scene_extent = get0(
+		"scene_extent",
+		envir = ray_cache_scene_envir,
+		inherits = FALSE
+	)
+	if (is.null(scene_extent)) {
+		return(default)
+	}
+	scene_extent
+}
+
+get_scene_extent_label = function(default = NULL) {
+	scene_extent_label = get0(
+		"scene_extent_label",
+		envir = ray_cache_scene_envir,
+		inherits = FALSE
+	)
+	if (is.null(scene_extent_label)) {
+		return(default)
+	}
+	scene_extent_label
 }
 
 get_scene_heightmap = function(default = NULL) {

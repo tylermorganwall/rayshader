@@ -8,6 +8,9 @@
 #'@param heightmap A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
 #'of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10. Adjust the zscale down to exaggerate elevation features.
+#'@param extent Default `NULL`. Optional extent metadata to cache with the scene for later
+#'calls (e.g., [render_zaxis()] without an explicit `extent`). Accepts any input supported
+#'by [get_extent()] (numeric xmin/xmax/ymin/ymax vector, `raster`, `terra`, `sf`, or `sp` objects).
 #'@param baseshape Default `rectangle`. Shape of the base. Options are `c("rectangle","circle","hex")`.
 #'@param solid Default `TRUE`. If `FALSE`, just the surface is rendered.
 #'@param soliddepth Default `auto`, which sets it to the lowest elevation in the matrix minus one unit (scaled by zscale). Depth of the solid base. If heightmap is uniform and set on `auto`, this is automatically set to a slightly lower level than the uniform elevation.
@@ -77,6 +80,14 @@
 #'montereybay |>
 #'  sphere_shade(texture="desert") |>
 #'  plot_3d(montereybay,zscale=50)
+#'render_snapshot()
+#'}
+#'
+#'if(run_documentation()) {
+#'montereybay |>
+#'  sphere_shade(texture="desert") |>
+#'  plot_3d(montereybay,zscale=50)
+#'render_zaxis(zaxis_location = "bottomleft")
 #'render_snapshot()
 #'}
 #'
@@ -176,13 +187,32 @@ plot_3d = function(
 	verbose = FALSE,
 	plot_new = TRUE,
 	close_previous = TRUE,
-	clear_previous = TRUE
+	clear_previous = TRUE,
+	extent = NULL
 ) {
 	if (!plot_new && clear_previous) {
 		rgl::clear3d()
 	}
 	zscale_was_missing = missing(zscale)
 	heightmap_cache_label = format_scene_cache_label(deparse(substitute(heightmap)))
+	extent_was_missing = missing(extent)
+	is_builtin_monterey = isTRUE(attr(heightmap, "rayshader_data"))
+	extent_cache_value = NULL
+	extent_cache_label = NULL
+	if (!extent_was_missing && !is.null(extent)) {
+		extent_cache_value = extent
+		extent_cache_label = format_scene_cache_label(deparse(substitute(extent)))
+	} else if (is_builtin_monterey) {
+		# Built-in montereybay keeps geospatial metadata out of the generic matrix path:
+		# auto-cache this known extent explicitly for downstream render_* helpers.
+		extent_cache_value = c(
+			xmin = -122.366765,
+			xmax = -121.366765,
+			ymin = 36.179392,
+			ymax = 37.179392
+		)
+		extent_cache_label = "montereybay_builtin_extent"
+	}
 	zscale_cache_label = if (zscale_was_missing) {
 		NULL
 	} else {
@@ -193,6 +223,7 @@ plot_3d = function(
 	}
 	cache_scene_zscale(NULL, label = NULL)
 	cache_scene_heightmap(NULL, label = NULL)
+	cache_scene_extent(NULL, label = NULL)
 	cache_plot_gg_panel_info(NULL)
 	cache_plot_gg_transform_info(NULL)
 	#setting default zscale if montereybay is used and tell user about zscale
@@ -509,4 +540,6 @@ plot_3d = function(
 	}
 	cache_scene_heightmap(heightmap, label = heightmap_cache_label)
 	cache_scene_zscale(zscale, label = zscale_cache_label)
+	cache_scene_extent(extent_cache_value, label = extent_cache_label)
+	invisible(NULL)
 }

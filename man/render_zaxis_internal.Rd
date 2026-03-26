@@ -14,7 +14,8 @@ render_zaxis_internal(
   zaxis_labels = NULL,
   zaxis_color = "black",
   zaxis_linewidth = 2,
-  zaxis_text_offset = 3,
+  zaxis_text_offset = 1.5,
+  zaxis_corner_offset = NULL,
   zaxis_tick_size = NULL
 )
 }

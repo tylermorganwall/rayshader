@@ -161,7 +161,14 @@ ray_shade = function(
       itervec[i + 1] = 1 + i * chunksize
     }
     itervec[length(itervec)] = nrow(heightmap) + 1
-    cl = parallel::makeCluster(numbercores, ...)
+    cluster_args = list(...)
+    if (is.null(cluster_args$rscript_args)) {
+      cluster_args$rscript_args = "--vanilla"
+    }
+    cl = do.call(
+      parallel::makeCluster,
+      c(list(numbercores), cluster_args)
+    )
     doParallel::registerDoParallel(cl, cores = numbercores)
     shadowmatrixlist = tryCatch(
       {

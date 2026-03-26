@@ -5,7 +5,7 @@
 \title{Render Z-Axis}
 \usage{
 render_zaxis(
-  extent,
+  extent = NULL,
   zscale = 1,
   heightmap = NULL,
   zaxis_location = "auto",
@@ -13,15 +13,18 @@ render_zaxis(
   zaxis_labels = NULL,
   zaxis_color = "black",
   zaxis_linewidth = 2,
-  zaxis_text_offset = 3,
+  zaxis_text_offset = 0,
+  zaxis_corner_offset = NULL,
   zaxis_tick_size = NULL
 )
 }
 \arguments{
-\item{extent}{Either an object representing the spatial extent of the scene
+\item{extent}{Default \code{NULL}. Either an object representing the spatial extent of the scene
 (either from the \code{raster}, \code{terra}, \code{sf}, or \code{sp} packages),
 a length-4 numeric vector specifying \code{c("xmin", "xmax","ymin","ymax")}, or the spatial object (from
-the previously aforementioned packages) which will be automatically converted to an extent object.}
+the previously aforementioned packages) which will be automatically converted to an extent object.
+If omitted, rayshader will use cached extent metadata from \code{\link[=plot_gg]{plot_gg()}} or from \code{\link[=plot_3d]{plot_3d()}}
+(either from an explicitly passed \code{extent} argument, or the built-in \code{montereybay} scene metadata).}
 
 \item{zscale}{Default \code{1}. The ratio between x/y spacing and z units.
 If left at \code{1} with \code{zaxis_breaks = NULL} on non-ggplot terrain scenes, rayshader
@@ -34,7 +37,8 @@ will attempt to use the cached \code{plot_3d()} zscale to generate more meaningf
 \code{"paneltopleft"}, \code{"paneltopright"}, \code{"bottomleft"}, \code{"bottomright"},
 \code{"topleft"}, \code{"topright"}.}
 
-\item{zaxis_breaks}{Default \code{NULL}. Numeric breaks (in altitude units).}
+\item{zaxis_breaks}{Default \code{NULL}. Numeric breaks (in altitude units). If \code{NULL},
+breaks are generated from the full scene height range (minimum to maximum elevation).}
 
 \item{zaxis_labels}{Default \code{NULL}. Labels for \code{zaxis_breaks}.}
 
@@ -42,7 +46,12 @@ will attempt to use the cached \code{plot_3d()} zscale to generate more meaningf
 
 \item{zaxis_linewidth}{Default \code{2}. Axis line width.}
 
-\item{zaxis_text_offset}{Default \code{3}. Label offset multiplier from the axis.}
+\item{zaxis_text_offset}{Default \code{0}. Label offset multiplier from the axis,
+applied in the outward corner direction (diagonal for corner placements).}
+
+\item{zaxis_corner_offset}{Default \code{NULL}. Corner offset as a proportion of the
+center-to-corner planar distance. If \code{NULL}, this defaults to \code{0} for ggplot scenes
+and \code{0.08} for non-ggplot scenes. \code{0} places the axis exactly at the corner.}
 
 \item{zaxis_tick_size}{Default \code{NULL}. Tick marker size. If \code{NULL}, auto-sized from line width.}
 }

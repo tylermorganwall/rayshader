@@ -160,6 +160,12 @@
 #'        zoom = 0.60, phi = 30, theta = 45)
 #'render_snapshot()
 #'}
+#'if(run_documentation()) {
+#'plot_gg(mtplot, width=3.5, multicore = TRUE, windowsize = c(1400,866), sunangle=225,
+#'        zoom = 0.60, phi = 30, theta = 45)
+#'render_zaxis(zaxis_location = "panel_bottomleft")
+#'render_snapshot()
+#'}
 #'#Now let's plot a density plot in 3D.
 #'mtplot_density = ggplot(mtcars) +
 #'  stat_density_2d(aes(x=mpg,y=disp, fill=after_stat(!!str2lang("density"))),
@@ -251,6 +257,7 @@ plot_gg = function(
 	}
 	cache_scene_zscale(NULL)
 	cache_scene_heightmap(NULL)
+	cache_scene_extent(NULL)
 	cache_plot_gg_panel_info(NULL)
 	cache_plot_gg_transform_info(NULL)
 	heightmaptemp = tempfile(fileext = ".png")
@@ -1084,6 +1091,12 @@ plot_gg = function(
 				ymin = plot_gg_panel_info$extent_ymin,
 				ymax = plot_gg_panel_info$extent_ymax
 			)
+			cache_scene_extent(
+				attr(height_matrix, "extent"),
+				label = "ggplot_panel_extent"
+			)
+		} else {
+			cache_scene_extent(NULL)
 		}
 	}
 	if (save_shadow_matrix & !save_height_matrix) {
@@ -1095,4 +1108,5 @@ plot_gg = function(
 	if (save_shadow_matrix & save_height_matrix) {
 		return(list(height_matrix, raylayer))
 	}
+	invisible(NULL)
 }
