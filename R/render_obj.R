@@ -13,6 +13,7 @@
 #' (either from the `raster`, `terra`, `sf`, or `sp` packages),
 #' a length-4 numeric vector specifying `c("xmin", "xmax","ymin","ymax")`, or the spatial object (from
 #' the previously aforementioned packages) which will be automatically converted to an extent object.
+#' If omitted, rayshader will use extent metadata cached by [plot_3d()] or [plot_gg()].
 #'@param long Vector of longitudes (or other coordinate in the same coordinate reference system as extent).
 #'@param lat Vector of latitudes (or other coordinate in the same coordinate reference system as extent).
 #'@param altitude Default `NULL`. Elevation of each point, in units of the elevation matrix (scaled by `zscale`).
@@ -278,6 +279,11 @@ render_obj = function(
 		nrow_map = nrow(heightmap)
 		ncol_map = ncol(heightmap)
 
+		extent = resolve_scene_render_extent(
+			extent = extent,
+			heightmap = heightmap,
+			caller = "render_obj"
+		)
 		extent = get_extent(extent)
 		minpoint_x = (extent["xmax"] + extent["xmin"]) / 2 - zscale / 2
 		minpoint_y = (extent["ymax"] + extent["ymin"]) / 2 + zscale / 2

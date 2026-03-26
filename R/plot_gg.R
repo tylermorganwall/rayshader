@@ -258,6 +258,7 @@ plot_gg = function(
 	cache_scene_zscale(NULL)
 	cache_scene_heightmap(NULL)
 	cache_scene_extent(NULL)
+	cache_scene_crs(NULL)
 	cache_plot_gg_panel_info(NULL)
 	cache_plot_gg_transform_info(NULL)
 	heightmaptemp = tempfile(fileext = ".png")
@@ -277,37 +278,30 @@ plot_gg = function(
 			stopifnot(inherits(ggobj[[1]], "ggplot"))
 			ggplotobj2 = unserialize(serialize(ggobj[[2]], NULL))
 			color_gg = unserialize(serialize(ggobj[[1]], NULL))
-			ggplot2::ggsave(
-				colormaptemp,
-				ggobj[[1]],
-				width = width,
-				height = height,
-				dpi = 300
-			)
 		} else {
 			stopifnot(inherits(ggobj, "ggplot"))
 			ggplotobj2 = unserialize(serialize(ggobj, NULL))
 			color_gg = unserialize(serialize(ggobj, NULL))
-			ggplot2::ggsave(
-				colormaptemp,
-				ggplotobj2,
-				width = width,
-				height = height,
-				dpi = 300
-			)
 		}
 	} else {
 		stopifnot(inherits(ggobj, "ggplot"))
 		stopifnot(inherits(ggobj_height, "ggplot"))
 		ggplotobj2 = unserialize(serialize(ggobj_height, NULL))
 		color_gg = unserialize(serialize(ggobj, NULL))
-		ggplot2::ggsave(
-			colormaptemp,
-			color_gg,
-			width = width,
-			height = height,
-			dpi = 300
-		)
+	}
+	color_gg_grob = ggplot2::ggplotGrob(color_gg)
+	old_dev = grDevices::dev.cur()
+	png_device(
+		filename = colormaptemp,
+		width = width,
+		height = height,
+		units = "in",
+		res = 300
+	)
+	grid::grid.draw(color_gg_grob)
+	grDevices::dev.off()
+	if (old_dev > 1) {
+		grDevices::dev.set(old_dev)
 	}
 
 	set_to_white = function(grob) {
@@ -780,12 +774,10 @@ plot_gg = function(
 							pointcontract
 					} else {
 						geom_defaults = ggplot2::get_geom_defaults(ggplotobj2$layers[[i]])
-						ggplotobj2 = ggplotobj2 +
-							ggplot2::theme(
-								geom = ggplot2::element_geom(
-									pointsize = geom_defaults$size * pointcontract
-								)
-							)
+						if (!is.null(geom_defaults$size)) {
+							ggplotobj2$layers[[i]]$aes_params$size = geom_defaults$size *
+								pointcontract
+						}
 					}
 				}
 			}
@@ -795,6 +787,13 @@ plot_gg = function(
 	ggplot_build_obj = ggplot2::ggplot_build(ggplotobj2)
 	plot_gg_transform_info = build_plot_gg_transform_info(ggplot_build_obj)
 	ggplotobj2 = set_to_white(ggplot2::ggplotGrob(ggplotobj2))
+	if (
+		length(color_gg_grob$widths) == length(ggplotobj2$widths) &&
+			length(color_gg_grob$heights) == length(ggplotobj2$heights)
+	) {
+		ggplotobj2$widths = color_gg_grob$widths
+		ggplotobj2$heights = color_gg_grob$heights
+	}
 	if (emboss_text > 0) {
 		emboss_text = 1 - emboss_text
 		ggplotobj2 = emboss_gg_text(ggplotobj2, emboss_text)

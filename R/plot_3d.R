@@ -1,3 +1,79 @@
+is_spatial_heightmap_input = function(x) {
+	is.character(x) ||
+		inherits(x, "SpatRaster") ||
+		inherits(x, c("RasterLayer", "RasterBrick", "RasterStack"))
+}
+
+extract_spatial_heightmap_zscale = function(heightmap) {
+	resolution = NULL
+	if (inherits(heightmap, "SpatRaster")) {
+		resolution = terra::res(heightmap)
+	} else if (inherits(heightmap, c("RasterLayer", "RasterBrick", "RasterStack"))) {
+		resolution = raster::res(heightmap)
+	}
+	resolution = suppressWarnings(as.numeric(resolution))
+	resolution = abs(resolution[is.finite(resolution) & resolution > 0])
+	if (length(resolution) == 0) {
+		return(NA_real_)
+	}
+	mean(resolution)
+}
+
+extract_spatial_heightmap_crs = function(heightmap) {
+	if (inherits(heightmap, "SpatRaster")) {
+		crs_text = tryCatch(
+			terra::crs(heightmap, proj = TRUE),
+			error = function(e) NA_character_
+		)
+		if (length(crs_text) > 0 && is.character(crs_text) && nzchar(crs_text[1])) {
+			return(crs_text[1])
+		}
+		return(NULL)
+	}
+	if (inherits(heightmap, c("RasterLayer", "RasterBrick", "RasterStack"))) {
+		crs_val = tryCatch(raster::crs(heightmap), error = function(e) NULL)
+		if (is.null(crs_val)) {
+			return(NULL)
+		}
+		crs_text = tryCatch(as.character(crs_val), error = function(e) NULL)
+		if (!is.null(crs_text) && length(crs_text) > 0 && nzchar(crs_text[1])) {
+			return(crs_text[1])
+		}
+		return(crs_val)
+	}
+	NULL
+}
+
+coerce_plot_3d_heightmap = function(heightmap) {
+	info = list(
+		heightmap = heightmap,
+		extent = NULL,
+		crs = NULL,
+		zscale = NA_real_,
+		is_spatial = FALSE
+	)
+	if (!is_spatial_heightmap_input(heightmap)) {
+		return(info)
+	}
+	if (is.character(heightmap)) {
+		heightmap = raster::raster(heightmap)
+	}
+	if (inherits(heightmap, "SpatRaster") && terra::nlyr(heightmap) > 1) {
+		warning("`heightmap` has multiple layers; using the first layer.")
+		heightmap = heightmap[[1]]
+	}
+	if (inherits(heightmap, c("RasterBrick", "RasterStack"))) {
+		warning("`heightmap` has multiple layers; using the first layer.")
+		heightmap = raster::raster(heightmap, layer = 1)
+	}
+	info$is_spatial = TRUE
+	info$extent = get_extent(heightmap)
+	info$crs = extract_spatial_heightmap_crs(heightmap)
+	info$zscale = extract_spatial_heightmap_zscale(heightmap)
+	info$heightmap = raster_to_matrix(heightmap, verbose = FALSE)
+	info
+}
+
 #'@title Plot 3D
 #'
 #'@description Displays the shaded map in 3D with the `rgl` package.
@@ -5,12 +81,20 @@
 #'Note: Calling [plot_3d()] resets the scene cache for the [render_snapshot()], [render_depth()], and [render_highquality()]
 #'
 #'@param hillshade Hillshade/image to be added to 3D surface map.
-#'@param heightmap A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.
+#'@param heightmap Elevation input for the surface. Can be:
+#'a two-dimensional matrix (each entry is elevation),
+#'a `RasterLayer`/`RasterBrick`/`RasterStack`,
+#'a `terra::SpatRaster`, or a raster filename.
+#'Spatial raster inputs are automatically converted to matrix form with [raster_to_matrix()].
+#'For spatial raster inputs, rayshader also caches the raster extent and CRS for downstream `render_*` calls.
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
 #'of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10. Adjust the zscale down to exaggerate elevation features.
+#'If `zscale` is not supplied and `heightmap` is a spatial raster, rayshader automatically
+#'uses the raster cell resolution (mean x/y resolution).
 #'@param extent Default `NULL`. Optional extent metadata to cache with the scene for later
 #'calls (e.g., [render_zaxis()] without an explicit `extent`). Accepts any input supported
 #'by [get_extent()] (numeric xmin/xmax/ymin/ymax vector, `raster`, `terra`, `sf`, or `sp` objects).
+#'If omitted and `heightmap` is a spatial raster, extent is extracted automatically.
 #'@param baseshape Default `rectangle`. Shape of the base. Options are `c("rectangle","circle","hex")`.
 #'@param solid Default `TRUE`. If `FALSE`, just the surface is rendered.
 #'@param soliddepth Default `auto`, which sets it to the lowest elevation in the matrix minus one unit (scaled by zscale). Depth of the solid base. If heightmap is uniform and set on `auto`, this is automatically set to a slightly lower level than the uniform elevation.
@@ -193,15 +277,26 @@ plot_3d = function(
 	if (!plot_new && clear_previous) {
 		rgl::clear3d()
 	}
-	zscale_was_missing = missing(zscale)
 	heightmap_cache_label = format_scene_cache_label(deparse(substitute(heightmap)))
+	heightmap_info = coerce_plot_3d_heightmap(heightmap)
+	heightmap = heightmap_info$heightmap
+	zscale_was_missing = missing(zscale)
 	extent_was_missing = missing(extent)
+	auto_extent = heightmap_info$extent
+	auto_crs = heightmap_info$crs
+	auto_zscale = heightmap_info$zscale
 	is_builtin_monterey = isTRUE(attr(heightmap, "rayshader_data"))
 	extent_cache_value = NULL
 	extent_cache_label = NULL
 	if (!extent_was_missing && !is.null(extent)) {
 		extent_cache_value = extent
 		extent_cache_label = format_scene_cache_label(deparse(substitute(extent)))
+	} else if (!is.null(auto_extent)) {
+		extent_cache_value = auto_extent
+		extent_cache_label = format_scene_cache_label(sprintf(
+			"%s_auto_extent",
+			heightmap_cache_label
+		))
 	} else if (is_builtin_monterey) {
 		# Built-in montereybay keeps geospatial metadata out of the generic matrix path:
 		# auto-cache this known extent explicitly for downstream render_* helpers.
@@ -213,10 +308,30 @@ plot_3d = function(
 		)
 		extent_cache_label = "montereybay_builtin_extent"
 	}
-	zscale_cache_label = if (zscale_was_missing) {
+	zscale_from_spatial = zscale_was_missing &&
+		is.finite(auto_zscale) &&
+		auto_zscale > 0
+	if (zscale_from_spatial) {
+		zscale = auto_zscale
+	}
+	zscale_cache_label = if (zscale_from_spatial) {
+		format_scene_cache_label(sprintf(
+			"%s_auto_zscale",
+			heightmap_cache_label
+		))
+	} else if (zscale_was_missing) {
 		NULL
 	} else {
 		format_scene_cache_label(deparse(substitute(zscale)))
+	}
+	crs_cache_value = NULL
+	crs_cache_label = NULL
+	if (!is.null(auto_crs)) {
+		crs_cache_value = auto_crs
+		crs_cache_label = format_scene_cache_label(sprintf(
+			"%s_auto_crs",
+			heightmap_cache_label
+		))
 	}
 	if (!is.null(get("scene_cache", envir = ray_cache_scene_envir))) {
 		assign("scene_cache", NULL, envir = ray_cache_scene_envir)
@@ -224,28 +339,16 @@ plot_3d = function(
 	cache_scene_zscale(NULL, label = NULL)
 	cache_scene_heightmap(NULL, label = NULL)
 	cache_scene_extent(NULL, label = NULL)
+	cache_scene_crs(NULL, label = NULL)
 	cache_plot_gg_panel_info(NULL)
 	cache_plot_gg_transform_info(NULL)
-	#setting default zscale if montereybay is used and tell user about zscale
-	argnames = as.list(sys.call())
-	if (!is.null(attr(heightmap, "rayshader_data"))) {
-		if (!("zscale" %in% as.character(names(argnames)))) {
-			if (length(argnames) <= 3) {
-				zscale = 50
-				message(
-					"`montereybay` dataset used with no zscale--setting `zscale=50`. For a realistic depiction, raise `zscale` to 200."
-				)
-			} else {
-				if (!is.numeric(argnames[[4]]) || !is.null(names(argnames))) {
-					if (names(argnames)[4] != "") {
-						zscale = 50
-						message(
-							"`montereybay` dataset used with no zscale--setting `zscale=50`.  For a realistic depiction, raise `zscale` to 200."
-						)
-					}
-				}
-			}
-		}
+	# setting default zscale if montereybay matrix is used and zscale was omitted
+	if (is_builtin_monterey && zscale_was_missing && !zscale_from_spatial) {
+		zscale = 50
+		zscale_cache_label = "montereybay_default_zscale"
+		message(
+			"`montereybay` dataset used with no zscale--setting `zscale=50`. For a realistic depiction, raise `zscale` to 200."
+		)
 	}
 	if (shadowcolor == "auto") {
 		shadowcolor = convert_color(
@@ -541,5 +644,6 @@ plot_3d = function(
 	cache_scene_heightmap(heightmap, label = heightmap_cache_label)
 	cache_scene_zscale(zscale, label = zscale_cache_label)
 	cache_scene_extent(extent_cache_value, label = extent_cache_label)
+	cache_scene_crs(crs_cache_value, label = crs_cache_label)
 	invisible(NULL)
 }

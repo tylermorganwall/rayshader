@@ -11,6 +11,7 @@
 #' (either from the `raster`, `terra`, `sf`, or `sp` packages),
 #' a length-4 numeric vector specifying `c("xmin", "xmax", "ymin", "ymax")`, or the spatial object (from
 #' the previously aforementioned packages) which will be automatically converted to an extent object.
+#' If omitted, rayshader will use extent metadata cached by [plot_3d()] or [plot_gg()].
 #' @param bevel_width Default `5`. Width of the bevel.
 #' @param width_raw_units Default `FALSE`. Whether the bevel width should be measured in raw display units,
 #' or the actual units of the map.
@@ -157,7 +158,7 @@
 #' }
 render_beveled_polygons = function(
 	polygon,
-	extent,
+	extent = NULL,
 	material = "grey",
 	bevel_material = NA,
 	angle = 45,
@@ -224,6 +225,11 @@ render_beveled_polygons = function(
 	if (is.character(bevel_material)) {
 		bevel_material = rayvertex::material_list(diffuse = bevel_material)
 	}
+	extent = resolve_scene_render_extent(
+		extent = extent,
+		heightmap = heightmap,
+		caller = "render_beveled_polygons"
+	)
 	e = get_extent(extent)
 	if (heights_relative_to_centroid) {
 		if (is.null(heightmap)) {

@@ -11,6 +11,7 @@
 #' (either from the `raster`, `terra`, `sf`, or `sp` packages),
 #' a length-4 numeric vector specifying `c("xmin", "xmax","ymin","ymax")`, or the spatial object (from
 #' the previously aforementioned packages) which will be automatically converted to an extent object.
+#' If omitted, rayshader will use extent metadata cached by [plot_3d()] or [plot_gg()].
 #'@param x Default `NULL`. Directly specify the `x` index in the matrix to place the label.
 #'@param y Default `NULL`. Directly specify the `y` index in the matrix to place the label.
 #'@param z Default `NULL`. Elevation of the label, in units of the elevation matrix (scaled by zscale).
@@ -157,14 +158,21 @@ render_label = function(
 		if (is.null(z)) {
 			z = max(heightmap, na.rm = TRUE) * 1.1
 		}
-		if (
-			is.null(extent) &&
-				(!missing(lat) || !missing(long)) &&
-				(!is.null(x) && !is.null(y))
-		) {
-			stop("extent required when using lat/long instead of x/y")
-		}
-		if (!is.null(extent)) {
+		need_xy_from_latlong = is.null(x) || is.null(y)
+		if (need_xy_from_latlong) {
+			if (
+				missing(lat) ||
+					missing(long) ||
+					is.null(lat) ||
+					is.null(long)
+			) {
+				stop("Must provide either `x`/`y` or `lat`/`long` coordinates.")
+			}
+			extent = resolve_scene_render_extent(
+				extent = extent,
+				heightmap = heightmap,
+				caller = "render_label"
+			)
 			e = get_extent(extent)
 			x = (long - e["xmin"]) / (e["xmax"] - e["xmin"]) * nrow(heightmap)
 			y = ncol(heightmap) -

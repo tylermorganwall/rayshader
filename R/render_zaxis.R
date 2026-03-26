@@ -81,46 +81,6 @@ render_zaxis = function(
 	)
 }
 
-resolve_scene_render_extent = function(
-	extent = NULL,
-	heightmap = NULL,
-	caller = NULL
-) {
-	if (!is.null(extent)) {
-		return(extent)
-	}
-
-	gg_extent = tryCatch(
-		get_ggplot_extent(heightmap = heightmap),
-		error = function(e) NULL
-	)
-	if (is.list(gg_extent) && !is.data.frame(gg_extent)) {
-		if (length(gg_extent) > 0) {
-			gg_extent = gg_extent[[1]]
-		} else {
-			gg_extent = NULL
-		}
-	}
-	if (!is.null(gg_extent)) {
-		return(gg_extent)
-	}
-
-	scene_extent = get_scene_extent(default = NULL)
-	if (!is.null(scene_extent)) {
-		emit_scene_cache_message(
-			caller = caller,
-			argument_name = "extent",
-			cache_name = "scene_extent",
-			cache_label = get_scene_extent_label(default = NULL)
-		)
-		return(scene_extent)
-	}
-
-	stop(
-		"Could not determine `extent`. Pass `extent` explicitly, or use a scene with cached extent metadata."
-	)
-}
-
 zaxis_dot_names = function() {
 	c(
 		"zaxis",

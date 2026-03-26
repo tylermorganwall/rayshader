@@ -14,7 +14,7 @@ get_extent = function(extent) {
   if(inherits(extent, "SpatRaster")) {
     extent = terra::ext(extent)
   }
-  if(inherits(extent, "RasterLayer")) {
+  if(inherits(extent, c("RasterLayer", "RasterBrick", "RasterStack"))) {
     extent = raster::extent(extent)
   }
   

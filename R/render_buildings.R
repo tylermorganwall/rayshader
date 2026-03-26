@@ -11,6 +11,7 @@
 #' (either from the `raster`, `terra`, `sf`, or `sp` packages),
 #' a length-4 numeric vector specifying `c("xmin", "xmax", "ymin", "ymax")`, or the spatial object (from
 #' the previously aforementioned packages) which will be automatically converted to an extent object.
+#' If omitted, rayshader will use extent metadata cached by [plot_3d()] or [plot_gg()].
 #' @param material Default `"grey80"`. If a color string, this will specify the color of the sides/base of the building
 #' Alternatively (for more customization), this can be a r`ayvertex::material_list()` object to specify
 #' the full color/appearance/material options for the resulting `ray_mesh` mesh.
@@ -128,7 +129,7 @@
 #' }
 render_buildings = function(
 	polygon,
-	extent,
+	extent = NULL,
 	material = "grey",
 	roof_material = NA,
 	angle = 45,
@@ -188,6 +189,11 @@ render_buildings = function(
 	if (is.character(roof_material)) {
 		roof_material = rayvertex::material_list(diffuse = roof_material)
 	}
+	extent = resolve_scene_render_extent(
+		extent = extent,
+		heightmap = heightmap,
+		caller = "render_buildings"
+	)
 	e = get_extent(extent)
 	if (heights_relative_to_centroid) {
 		if (is.null(heightmap)) {

@@ -47,7 +47,8 @@ is built-in to the object).}
 \item{extent}{Either an object representing the spatial extent of the 3D scene
 (either from the \code{raster}, \code{terra}, \code{sf}, or \code{sp} packages),
 a length-4 numeric vector specifying \code{c("xmin", "xmax","ymin","ymax")}, or the spatial object (from
-the previously aforementioned packages) which will be automatically converted to an extent object.}
+the previously aforementioned packages) which will be automatically converted to an extent object.
+If omitted, rayshader will use extent metadata cached by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}.}
 
 \item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.}
 

@@ -11,6 +11,10 @@ transform_into_heightmap_coords = function(extent, heightmap, lat = NULL, long =
                                            filter_bounds = FALSE) {
   offset = offset/zscale
   heightmap = resolve_scene_render_heightmap(heightmap)
+  extent = resolve_scene_render_extent(
+    extent = extent,
+    heightmap = heightmap
+  )
   e = get_extent(extent)
   if(is.null(lat)) {
     lat = (e["ymax"] + e["ymin"])/2 

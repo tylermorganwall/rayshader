@@ -53,14 +53,17 @@ plot_3d(
 \arguments{
 \item{hillshade}{Hillshade/image to be added to 3D surface map.}
 
-\item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.}
+\item{heightmap}{Elevation input for the surface. Can be:
+a two-dimensional matrix (each entry is elevation),
+a \code{RasterLayer}/\code{RasterBrick}/\code{RasterStack},
+a \code{terra::SpatRaster}, or a raster filename.
+Spatial raster inputs are automatically converted to matrix form with \code{\link[=raster_to_matrix]{raster_to_matrix()}}.
+For spatial raster inputs, rayshader also caches the raster extent and CRS for downstream \verb{render_*} calls.}
 
 \item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
-of 1 meter and the grid values are separated by 10 meters, \code{zscale} would be 10. Adjust the zscale down to exaggerate elevation features.}
-
-\item{extent}{Default \code{NULL}. Optional extent metadata to cache with the scene for later
-calls (e.g., \code{\link[=render_zaxis]{render_zaxis()}} without an explicit \code{extent}). Accepts any input supported
-by \code{\link[=get_extent]{get_extent()}} (numeric xmin/xmax/ymin/ymax vector, \code{raster}, \code{terra}, \code{sf}, or \code{sp} objects).}
+of 1 meter and the grid values are separated by 10 meters, \code{zscale} would be 10. Adjust the zscale down to exaggerate elevation features.
+If \code{zscale} is not supplied and \code{heightmap} is a spatial raster, rayshader automatically
+uses the raster cell resolution (mean x/y resolution).}
 
 \item{baseshape}{Default \code{rectangle}. Shape of the base. Options are \code{c("rectangle","circle","hex")}.}
 
@@ -160,6 +163,11 @@ the data will be plotted in the same window.}
 old windows will be kept open.}
 
 \item{clear_previous}{Default \code{TRUE}. Clears the previously open \code{rgl} window if \code{plot_new = FALSE}.}
+
+\item{extent}{Default \code{NULL}. Optional extent metadata to cache with the scene for later
+calls (e.g., \code{\link[=render_zaxis]{render_zaxis()}} without an explicit \code{extent}). Accepts any input supported
+by \code{\link[=get_extent]{get_extent()}} (numeric xmin/xmax/ymin/ymax vector, \code{raster}, \code{terra}, \code{sf}, or \code{sp} objects).
+If omitted and \code{heightmap} is a spatial raster, extent is extracted automatically.}
 }
 \description{
 Displays the shaded map in 3D with the \code{rgl} package.

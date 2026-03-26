@@ -11,6 +11,7 @@
 #' (either from the `raster`, `terra`, `sf`, or `sp` packages),
 #' a length-4 numeric vector specifying `c("xmin", "xmax", "ymin", "ymax")`, or the spatial object (from
 #' the previously aforementioned packages) which will be automatically converted to an extent object.
+#' If omitted, rayshader will use extent metadata cached by [plot_3d()] or [plot_gg()].
 #' @param color Default `black`. Color of the polygon.
 #' @param top Default `1`. Extruded top distance. If this equals `bottom`, the polygon will not be
 #' extruded and just the one side will be rendered.
@@ -84,7 +85,7 @@
 #' }
 render_polygons = function(
 	polygon,
-	extent,
+	extent = NULL,
 	color = "red",
 	top = 1,
 	bottom = NA,
@@ -236,6 +237,11 @@ render_polygons = function(
 		ncol_map = ncol(heightmap)
 		nrow_map = nrow(heightmap)
 	}
+	extent = resolve_scene_render_extent(
+		extent = extent,
+		heightmap = heightmap,
+		caller = "render_polygons"
+	)
 	e = get_extent(extent)
 	for (group in seq_along(vertex_list)) {
 		if (!is.null(vertex_list[[group]])) {

@@ -10,6 +10,7 @@
 #' (either from the `raster`, `terra`, `sf`, or `sp` packages),
 #' a length-4 numeric vector specifying `c("xmin", "xmax","ymin","ymax")`, or the spatial object (from
 #' the previously aforementioned packages) which will be automatically converted to an extent object.
+#' If omitted, rayshader will use extent metadata cached by [plot_3d()] or [plot_gg()].
 #'@param obj_zscale Default `TRUE`. Whether to scale the size of the OBJ by zscale to have it match
 #'the size of the map. If zscale is very big, this will make the model very small.
 #'@param swap_yz Default `TRUE`. Whether to swap and Y and Z axes. (Y axis is vertical in

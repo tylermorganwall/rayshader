@@ -663,6 +663,12 @@ cache_scene_extent = function(extent = NULL, label = NULL) {
 	invisible(NULL)
 }
 
+cache_scene_crs = function(crs = NULL, label = NULL) {
+	assign("scene_crs", crs, envir = ray_cache_scene_envir)
+	assign("scene_crs_label", label, envir = ray_cache_scene_envir)
+	invisible(NULL)
+}
+
 get_scene_extent = function(default = NULL) {
 	scene_extent = get0(
 		"scene_extent",
@@ -685,6 +691,30 @@ get_scene_extent_label = function(default = NULL) {
 		return(default)
 	}
 	scene_extent_label
+}
+
+get_scene_crs = function(default = NULL) {
+	scene_crs = get0(
+		"scene_crs",
+		envir = ray_cache_scene_envir,
+		inherits = FALSE
+	)
+	if (is.null(scene_crs)) {
+		return(default)
+	}
+	scene_crs
+}
+
+get_scene_crs_label = function(default = NULL) {
+	scene_crs_label = get0(
+		"scene_crs_label",
+		envir = ray_cache_scene_envir,
+		inherits = FALSE
+	)
+	if (is.null(scene_crs_label)) {
+		return(default)
+	}
+	scene_crs_label
 }
 
 get_scene_heightmap = function(default = NULL) {
@@ -805,6 +835,56 @@ resolve_scene_render_heightmap = function(heightmap = NULL, caller = NULL) {
 		)
 	}
 	scene_heightmap
+}
+
+resolve_scene_render_extent = function(
+	extent = NULL,
+	heightmap = NULL,
+	caller = NULL,
+	allow_ggplot_extent = TRUE,
+	allow_scene_extent = TRUE,
+	error_if_missing = TRUE
+) {
+	if (!is.null(extent)) {
+		return(extent)
+	}
+
+	if (isTRUE(allow_ggplot_extent)) {
+		gg_extent = tryCatch(
+			get_ggplot_extent(heightmap = heightmap),
+			error = function(e) NULL
+		)
+		if (is.list(gg_extent) && !is.data.frame(gg_extent)) {
+			if (length(gg_extent) > 0) {
+				gg_extent = gg_extent[[1]]
+			} else {
+				gg_extent = NULL
+			}
+		}
+		if (!is.null(gg_extent)) {
+			return(gg_extent)
+		}
+	}
+
+	if (isTRUE(allow_scene_extent)) {
+		scene_extent = get_scene_extent(default = NULL)
+		if (!is.null(scene_extent)) {
+			emit_scene_cache_message(
+				caller = caller,
+				argument_name = "extent",
+				cache_name = "scene_extent",
+				cache_label = get_scene_extent_label(default = NULL)
+			)
+			return(scene_extent)
+		}
+	}
+
+	if (isTRUE(error_if_missing)) {
+		stop(
+			"Could not determine `extent`. Pass `extent` explicitly, or use a scene with cached extent metadata."
+		)
+	}
+	NULL
 }
 
 build_plot_gg_transform_info = function(ggplot_build_obj) {

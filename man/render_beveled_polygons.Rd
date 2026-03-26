@@ -6,7 +6,7 @@
 \usage{
 render_beveled_polygons(
   polygon,
-  extent,
+  extent = NULL,
   material = "grey",
   bevel_material = NA,
   angle = 45,
@@ -47,7 +47,8 @@ edge from the last point to the first.}
 \item{extent}{Either an object representing the spatial extent of the 3D scene
 (either from the \code{raster}, \code{terra}, \code{sf}, or \code{sp} packages),
 a length-4 numeric vector specifying \code{c("xmin", "xmax", "ymin", "ymax")}, or the spatial object (from
-the previously aforementioned packages) which will be automatically converted to an extent object.}
+the previously aforementioned packages) which will be automatically converted to an extent object.
+If omitted, rayshader will use extent metadata cached by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}.}
 
 \item{material}{Default \code{"grey80"}. If a color string, this will specify the color of the sides/base of the polygon.
 Alternatively (for more customization), this can be a r\code{ayvertex::material_list()} object to specify
