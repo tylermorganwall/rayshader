@@ -14,7 +14,7 @@
 #'`sky_args`), and returns an RGBA array that can be passed to [add_overlay()].
 #'The render runs in an isolated background R session with
 #'`options(rgl.useNULL = TRUE)`, and uses the standard rayshader pipeline:
-#'`plot_3d(..., solid = TRUE, shadow = FALSE)` followed by
+#'`plot_3d(..., solid = TRUE, shadow = shadow)` followed by
 #'`render_highquality(plot = FALSE)`.
 #'
 #'@param heightmap Default `NULL`. If `NULL`, uses the current rayshader rgl
@@ -33,6 +33,9 @@
 #'@param sample_method Default `"sobol_blue"`, unless `samples > 256`, in which
 #'case it is switched to `"sobol"`.
 #'@param min_variance Default `1e-7`. Adaptive sampler variance threshold.
+#'@param shadow Default `FALSE`. Whether to build the temporary top-down scene
+#'with the rayshader shadow plane underneath the model. Setting this to `TRUE`
+#'can help fill very dark corners in the radiance pass.
 #'@param light Default `TRUE`. Whether to add directional lights.
 #'@param lat Default `NA`. Latitude used for auto sky generation.
 #'@param long Default `NA`. Longitude used for auto sky generation.
@@ -86,6 +89,7 @@ radiance_shade = function(
 	samples = 128,
 	sample_method = "sobol_blue",
 	min_variance = 1e-7,
+	shadow = FALSE,
 	light = TRUE,
 	lat = NA,
 	long = NA,
@@ -225,7 +229,7 @@ radiance_shade = function(
 						heightmap = child_args$heightmap,
 						zscale = child_args$zscale,
 						solid = TRUE,
-						shadow = FALSE,
+						shadow = child_args$shadow,
 						water = FALSE,
 						theta = 0,
 						phi = 89.9,
@@ -464,6 +468,7 @@ radiance_shade = function(
 		samples = samples,
 		sample_method = sample_method,
 		min_variance = min_variance,
+		shadow = shadow,
 		light = light,
 		lat = lat,
 		long = long,
