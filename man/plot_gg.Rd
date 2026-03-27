@@ -37,6 +37,8 @@ plot_gg(
   verbose = FALSE,
   emboss_text = 0,
   emboss_grid = 0,
+  guide_bar_bleed_px = 3L,
+  guide_bar_bleed_target = c("height", "texture", "none"),
   reduce_size = NULL,
   save_height_matrix = FALSE,
   save_shadow_matrix = FALSE,
@@ -139,6 +141,12 @@ if \code{triangulate = TRUE}.}
 \item{emboss_grid}{Default \code{0}, max \code{1}. Amount to emboss the grid lines, where \code{1} is the tallest feature in the scene.
 By default, the minor grid lines will be half the size of the major lines. Pass a length-2 vector to specify them seperately (second value
 is the minor grid height).}
+
+\item{guide_bar_bleed_px}{Default \code{3L}. Number of rendered pixels to widen a continuous guide colorbar orthogonally without changing the guide layout. This ensures
+either the sidewalls of the colorbar are either solid or represent the color ramp.}
+
+\item{guide_bar_bleed_target}{Default \code{"texture"}. Which rendered grob should receive the colorbar bleed. Use \code{"height"} to keep white side walls,
+\code{"texture"} to color the side walls with the gradient, or \code{"none"} to disable it (rayshader's old default).}
 
 \item{reduce_size}{Default \code{NULL}. A number between \code{0} and \code{1} that specifies how much to reduce the resolution of the plot, for faster plotting. By
 default, this just decreases the size of height map, not the image. If you wish the image to be reduced in resolution as well, pass a numeric vector of size 2.}
@@ -246,6 +254,24 @@ plot_gg(mtplot, width=3.5, sunangle=225, preview = TRUE)
 if(run_documentation()) {
 plot_gg(mtplot, width=3.5, multicore = TRUE, windowsize = c(1400,866), sunangle=225,
        zoom = 0.60, phi = 30, theta = 45)
+render_snapshot()
+}
+
+#Colorbar side-wall bleed control with a continuous guide:
+bleedplot = ggplot(faithfuld, aes(waiting, eruptions, fill = density)) +
+ geom_raster(interpolate = TRUE) +
+ scale_fill_viridis_c() +
+ theme_minimal()
+if(run_documentation()) {
+plot_gg(bleedplot, width = 5, height = 4, scale = 220,
+       windowsize = c(1400,866), theta = -20, phi = 35,
+       guide_bar_bleed_target = "height")
+render_snapshot()
+}
+if(run_documentation()) {
+plot_gg(bleedplot, width = 5, height = 4, scale = 220,
+       windowsize = c(1400,866), theta = -20, phi = 35,
+       guide_bar_bleed_target = "texture")
 render_snapshot()
 }
 if(run_documentation()) {

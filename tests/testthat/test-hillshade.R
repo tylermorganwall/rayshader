@@ -177,3 +177,14 @@ test_that("create_texture", {
 		cornercolors = c("red", "blue", "pink", "orange")
 	))
 })
+
+test_that("radiance_shade requires scene or heightmap", {
+	skip_if_not_installed("rayrender")
+	on.exit(rgl::close3d(), add = TRUE)
+	options(rgl.useNULL = TRUE)
+	rgl::close3d()
+	expect_error(
+		radiance_shade(),
+		"No rgl window currently open and no `heightmap` supplied"
+	)
+})

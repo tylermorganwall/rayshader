@@ -72,6 +72,10 @@
 #'@param emboss_grid Default `0`, max `1`. Amount to emboss the grid lines, where `1` is the tallest feature in the scene.
 #'By default, the minor grid lines will be half the size of the major lines. Pass a length-2 vector to specify them seperately (second value
 #'is the minor grid height).
+#'@param guide_bar_bleed_px Default `3L`. Number of rendered pixels to widen a continuous guide colorbar orthogonally without changing the guide layout. This ensures
+#' either the sidewalls of the colorbar are either solid or represent the color ramp.
+#'@param guide_bar_bleed_target Default `"texture"`. Which rendered grob should receive the colorbar bleed. Use `"height"` to keep white side walls,
+#'`"texture"` to color the side walls with the gradient, or `"none"` to disable it (rayshader's old default).
 #'@param reduce_size Default `NULL`. A number between `0` and `1` that specifies how much to reduce the resolution of the plot, for faster plotting. By
 #'default, this just decreases the size of height map, not the image. If you wish the image to be reduced in resolution as well, pass a numeric vector of size 2.
 #'@param multicore Default `FALSE`. If raytracing and `TRUE`, multiple cores will be used to compute the shadow matrix. By default, this uses all cores available, unless the user has
@@ -160,6 +164,24 @@
 #'        zoom = 0.60, phi = 30, theta = 45)
 #'render_snapshot()
 #'}
+#'
+#'#Colorbar side-wall bleed control with a continuous guide:
+#'bleedplot = ggplot(faithfuld, aes(waiting, eruptions, fill = density)) +
+#'  geom_raster(interpolate = TRUE) +
+#'  scale_fill_viridis_c() +
+#'  theme_minimal()
+#'if(run_documentation()) {
+#'plot_gg(bleedplot, width = 5, height = 4, scale = 220,
+#'        windowsize = c(1400,866), theta = -20, phi = 35,
+#'        guide_bar_bleed_target = "height")
+#'render_snapshot()
+#'}
+#'if(run_documentation()) {
+#'plot_gg(bleedplot, width = 5, height = 4, scale = 220,
+#'        windowsize = c(1400,866), theta = -20, phi = 35,
+#'        guide_bar_bleed_target = "texture")
+#'render_snapshot()
+#'}
 #'if(run_documentation()) {
 #'plot_gg(mtplot, width=3.5, multicore = TRUE, windowsize = c(1400,866), sunangle=225,
 #'        zoom = 0.60, phi = 30, theta = 45)
@@ -244,6 +266,8 @@ plot_gg = function(
 	verbose = FALSE,
 	emboss_text = 0,
 	emboss_grid = 0,
+	guide_bar_bleed_px = 3L,
+	guide_bar_bleed_target = c("height", "texture", "none"),
 	reduce_size = NULL,
 	save_height_matrix = FALSE,
 	save_shadow_matrix = FALSE,
@@ -265,6 +289,7 @@ plot_gg = function(
 	colormaptemp = tempfile(fileext = ".png")
 	png_device = grDevices::png
 	apply_manual_correction = FALSE
+	guide_bar_bleed_target = match.arg(guide_bar_bleed_target)
 	if (requireNamespace("ragg", quietly = TRUE)) {
 		png_device = function(...) ragg::agg_png(...)
 	} else if (isTRUE(capabilities("cairo"))) {
@@ -290,42 +315,554 @@ plot_gg = function(
 		color_gg = unserialize(serialize(ggobj, NULL))
 	}
 	color_gg_grob = ggplot2::ggplotGrob(color_gg)
-	old_dev = grDevices::dev.cur()
-	png_device(
-		filename = colormaptemp,
-		width = width,
-		height = height,
-		units = "in",
-		res = 300
-	)
-	grid::grid.draw(color_gg_grob)
-	grDevices::dev.off()
-	if (old_dev > 1) {
-		grDevices::dev.set(old_dev)
-	}
 
-	set_to_white = function(grob) {
+	grob_name = function(grob) {
+		if (!is.null(grob$name)) {
+			return(grob$name)
+		}
+		return("")
+	}
+	set_grob_white = function(grob, alpha = 0, linewidth = 0) {
+		if (is.null(grob)) {
+			return(grob)
+		}
+		if (is.null(grob$gp)) {
+			grob$gp = grid::gpar()
+		}
+		grob$gp$col = "white"
+		grob$gp$alpha = alpha
+		grob$gp$fill = "white"
+		grob$gp$lwd = linewidth
+		class(grob$gp) = "gpar"
+		return(grob)
+	}
+	is_grob_container = function(grob) {
+		if (is.null(grob)) {
+			return(FALSE)
+		}
+		return(
+			!is.null(grob[["grobs"]]) ||
+				!is.null(grob[["children"]]) ||
+				(length(grob) == 1 && inherits(grob[[1]], "gTree")) ||
+				inherits(grob, c("gTree", "gtable"))
+		)
+	}
+	recursive_whiten_grob = function(grob) {
+		if (is.null(grob)) {
+			return(grob)
+		}
 		if (!is.null(grob[["grobs"]])) {
 			for (j in seq_len(length(grob$grobs))) {
-				grob$grobs[[j]] = set_to_white(grob$grobs[[j]])
+				grob$grobs[[j]] = recursive_whiten_grob(grob$grobs[[j]])
 			}
-		} else if (!is.null(grob[["children"]])) {
+		}
+		if (!is.null(grob[["children"]])) {
 			for (j in seq_len(length(grob$children))) {
-				grob$children[[j]] = set_to_white(grob$children[[j]])
+				grob$children[[j]] = recursive_whiten_grob(grob$children[[j]])
 			}
-		} else if (length(grob) == 1 && inherits(grob[[1]], "gTree")) {
-			grob[[1]] = set_to_white(grob[[1]])
-		} else if (
-			!(length(grep("geom", x = grob$name)) > 0) &&
-				!(length(grep("pathgrob", x = grob$name)) > 0)
-		) {
-			grob$gp$col = "white"
-			grob$gp$alpha = 0
-			grob$gp$fill = "white"
-			grob$gp$lwd = 0
-			class(grob$gp) = "gpar"
+		}
+		if (length(grob) == 1 && inherits(grob[[1]], "gTree")) {
+			grob[[1]] = recursive_whiten_grob(grob[[1]])
+		}
+		if (!is_grob_container(grob) && !inherits(grob, "zeroGrob")) {
+			grob = set_grob_white(grob)
 		}
 		return(grob)
+	}
+	set_to_white_except_panel_data = function(grob) {
+		if (is.null(grob)) {
+			return(grob)
+		}
+		if (!is.null(grob[["grobs"]])) {
+			for (j in seq_len(length(grob$grobs))) {
+				grob$grobs[[j]] = set_to_white_except_panel_data(grob$grobs[[j]])
+			}
+		}
+		if (!is.null(grob[["children"]])) {
+			for (j in seq_len(length(grob$children))) {
+				grob$children[[j]] = set_to_white_except_panel_data(grob$children[[j]])
+			}
+		}
+		if (length(grob) == 1 && inherits(grob[[1]], "gTree")) {
+			grob[[1]] = set_to_white_except_panel_data(grob[[1]])
+		}
+		if (is_grob_container(grob) || inherits(grob, "zeroGrob")) {
+			return(grob)
+		}
+		name = grob_name(grob)
+		if (
+			!(length(grep("geom", x = name)) > 0) &&
+				!(length(grep("pathgrob", x = name)) > 0)
+		) {
+			grob = set_grob_white(grob)
+		}
+		return(grob)
+	}
+	label_to_string = function(x) {
+		if (is.null(x) || inherits(x, "waiver")) {
+			return(NA_character_)
+		}
+		return(paste(as.character(x), collapse = ""))
+	}
+	normalize_guide_text = function(x) {
+		if (length(x) == 0 || is.na(x) || is.null(x)) {
+			return(NA_character_)
+		}
+		return(gsub("[[:space:]]+", " ", trimws(as.character(x))))
+	}
+	collect_text_grobs = function(grob) {
+		text_labels = character(0)
+		text_names = character(0)
+		recurse = function(x) {
+			if (is.null(x)) {
+				return(invisible(NULL))
+			}
+			if (
+				all(inherits(x, c("text", "grob"), which = TRUE) > 0) &&
+					!is.null(x$label)
+			) {
+				text_labels <<- c(text_labels, label_to_string(x$label))
+				text_names <<- c(text_names, grob_name(x))
+			}
+			if (!is.null(x[["grobs"]])) {
+				for (k in seq_len(length(x$grobs))) {
+					recurse(x$grobs[[k]])
+				}
+			}
+			if (!is.null(x[["children"]])) {
+				for (k in seq_len(length(x$children))) {
+					recurse(x$children[[k]])
+				}
+			}
+			if (length(x) == 1 && inherits(x[[1]], "gTree")) {
+				recurse(x[[1]])
+			}
+			invisible(NULL)
+		}
+		recurse(grob)
+		return(list(labels = text_labels, names = text_names))
+	}
+	extract_guide_title = function(grob) {
+		text_info = collect_text_grobs(grob)
+		if (!length(text_info$labels)) {
+			return(NA_character_)
+		}
+		title_index = which(grepl("title", text_info$names, ignore.case = TRUE))
+		if (length(title_index)) {
+			return(normalize_guide_text(text_info$labels[[title_index[1]]]))
+		}
+		return(normalize_guide_text(text_info$labels[[1]]))
+	}
+	guide_layout_names = function(grob) {
+		if (!inherits(grob, "gtable") || is.null(grob$layout$name)) {
+			return(character(0))
+		}
+		return(tolower(grob$layout$name))
+	}
+	is_candidate_guide = function(grob) {
+		layout_names = guide_layout_names(grob)
+		if (!length(layout_names)) {
+			return(FALSE)
+		}
+		return(
+			any(grepl("(^|-)bar($|-)", layout_names)) ||
+				any(grepl("^key", layout_names)) ||
+				any(grepl("label", layout_names)) ||
+				any(grepl("title", layout_names))
+		)
+	}
+	get_guide_entries = function(guide_box) {
+		if (!inherits(guide_box, "gtable") || is.null(guide_box$grobs)) {
+			return(list(indices = integer(0), grobs = list()))
+		}
+		guide_indices = which(vapply(
+			guide_box$grobs,
+			is_candidate_guide,
+			logical(1)
+		))
+		return(list(
+			indices = guide_indices,
+			grobs = guide_box$grobs[guide_indices]
+		))
+	}
+	match_guide_entry = function(
+		guides,
+		title = NA_character_,
+		prefer_bar = FALSE
+	) {
+		if (!length(guides$indices)) {
+			return(NA_integer_)
+		}
+		normalized_title = normalize_guide_text(title)
+		guide_titles = vapply(guides$grobs, extract_guide_title, character(1))
+		if (!is.na(normalized_title) && nzchar(normalized_title)) {
+			matched = which(guide_titles == normalized_title)
+			if (length(matched)) {
+				return(matched[1])
+			}
+		}
+		if (prefer_bar) {
+			has_bar = vapply(
+				guides$grobs,
+				function(x) any(grepl("(^|-)bar($|-)", guide_layout_names(x))),
+				logical(1)
+			)
+			if (any(has_bar)) {
+				return(which(has_bar)[1])
+			}
+		}
+		has_key = vapply(
+			guides$grobs,
+			function(x) any(grepl("^key", guide_layout_names(x))),
+			logical(1)
+		)
+		if (any(has_key)) {
+			return(which(has_key)[1])
+		}
+		return(1L)
+	}
+	translate_grob_copy = function(
+		grob,
+		x_off = grid::unit(0, "in"),
+		y_off = grid::unit(0, "in")
+	) {
+		grid::grobTree(
+			grob,
+			vp = grid::viewport(
+				x = grid::unit(0.5, "npc") + x_off,
+				y = grid::unit(0.5, "npc") + y_off,
+				width = grid::unit(1, "npc"),
+				height = grid::unit(1, "npc"),
+				just = c("center", "center"),
+				clip = "off"
+			)
+		)
+	}
+	is_whiteish_color = function(x, tol = 8L) {
+		if (is.null(x) || !length(x)) {
+			return(logical(0))
+		}
+		vapply(
+			x,
+			function(val) {
+				if (is.na(val) || identical(val, "transparent")) {
+					return(TRUE)
+				}
+				rgb = tryCatch(
+					grDevices::col2rgb(val, alpha = TRUE),
+					error = function(e) NULL
+				)
+				if (is.null(rgb)) {
+					return(FALSE)
+				}
+				if (rgb[4, 1] == 0) {
+					return(TRUE)
+				}
+				all(rgb[1:3, 1] >= (255 - tol))
+			},
+			logical(1)
+		)
+	}
+	leaf_grob_has_colored_content = function(grob) {
+		if (is.null(grob) || inherits(grob, "zeroGrob")) {
+			return(FALSE)
+		}
+		if (inherits(grob, "rastergrob")) {
+			return(TRUE)
+		}
+		gp = grob$gp
+		if (is.null(gp)) {
+			return(FALSE)
+		}
+		cols = c(gp$col, gp$fill)
+		cols = cols[!is.na(cols)]
+		if (!length(cols)) {
+			return(FALSE)
+		}
+		return(any(!is_whiteish_color(cols)))
+	}
+	bleed_leaf_grob = function(
+		grob,
+		delta,
+		orientation = c("vertical", "horizontal")
+	) {
+		orientation = match.arg(orientation)
+		if (orientation == "vertical") {
+			return(grid::grobTree(
+				grob,
+				translate_grob_copy(grob, x_off = -delta),
+				translate_grob_copy(grob, x_off = delta)
+			))
+		}
+		grid::grobTree(
+			grob,
+			translate_grob_copy(grob, y_off = -delta),
+			translate_grob_copy(grob, y_off = delta)
+		)
+	}
+	infer_guide_bar_orientation = function(grob) {
+		recurse = function(x) {
+			if (is.null(x)) {
+				return(NULL)
+			}
+			if (inherits(x, "gtable") && !is.null(x$layout$name)) {
+				idx = which(grepl("(^|-)bar($|-)", tolower(x$layout$name)))
+				if (length(idx)) {
+					idx = idx[1]
+					row_span = x$layout$b[idx] - x$layout$t[idx] + 1
+					col_span = x$layout$r[idx] - x$layout$l[idx] + 1
+					if (row_span > col_span) {
+						return("vertical")
+					}
+					if (col_span > row_span) {
+						return("horizontal")
+					}
+				}
+			}
+			if (!is.null(x[["grobs"]])) {
+				for (k in seq_len(length(x$grobs))) {
+					ans = recurse(x$grobs[[k]])
+					if (!is.null(ans)) {
+						return(ans)
+					}
+				}
+			}
+			if (!is.null(x[["children"]])) {
+				for (k in seq_len(length(x$children))) {
+					ans = recurse(x$children[[k]])
+					if (!is.null(ans)) {
+						return(ans)
+					}
+				}
+			}
+			if (length(x) == 1 && inherits(x[[1]], "gTree")) {
+				return(recurse(x[[1]]))
+			}
+			return(NULL)
+		}
+		orientation = recurse(grob)
+		if (is.null(orientation)) {
+			orientation = "vertical"
+		}
+		return(orientation)
+	}
+	widen_guide_bar_grob = function(
+		grob,
+		bleed_px = 3L,
+		orientation = c("vertical", "horizontal")
+	) {
+		orientation = match.arg(orientation)
+		bleed_in = bleed_px / 300
+		if (!is.finite(bleed_in) || bleed_in <= 0) {
+			return(grob)
+		}
+		delta = grid::unit(bleed_in, "in")
+		recurse = function(x) {
+			if (is.null(x)) {
+				return(x)
+			}
+			if (!is.null(x[["grobs"]])) {
+				for (k in seq_len(length(x$grobs))) {
+					x$grobs[[k]] = recurse(x$grobs[[k]])
+				}
+				return(x)
+			}
+			if (!is.null(x[["children"]])) {
+				for (k in seq_len(length(x$children))) {
+					x$children[[k]] = recurse(x$children[[k]])
+				}
+				return(x)
+			}
+			if (length(x) == 1 && inherits(x[[1]], "gTree")) {
+				x[[1]] = recurse(x[[1]])
+				return(x)
+			}
+			if (leaf_grob_has_colored_content(x)) {
+				return(bleed_leaf_grob(x, delta = delta, orientation = orientation))
+			}
+			return(x)
+		}
+		recurse(grob)
+	}
+	prepare_target_guide = function(
+		grob,
+		bleed_px = 0L,
+		render_mode = c("height", "texture")
+	) {
+		render_mode = match.arg(render_mode)
+		if (!inherits(grob, "gtable") || is.null(grob$layout$name)) {
+			if (render_mode == "height") {
+				return(set_to_white_except_panel_data(grob))
+			}
+			return(grob)
+		}
+		out = grob
+		layout_names = tolower(out$layout$name)
+		bar_orientation = infer_guide_bar_orientation(out)
+		for (j in seq_len(length(out$grobs))) {
+			child_name = layout_names[j]
+			if (grepl("(^|-)bar($|-)", child_name)) {
+				if (isTRUE(bleed_px > 0)) {
+					out$grobs[[j]] = widen_guide_bar_grob(
+						out$grobs[[j]],
+						bleed_px = bleed_px,
+						orientation = bar_orientation
+					)
+				}
+				next
+			}
+			if (render_mode == "texture") {
+				next
+			}
+			if (grepl("^key", child_name)) {
+				out$grobs[[j]] = set_to_white_except_panel_data(out$grobs[[j]])
+			} else {
+				out$grobs[[j]] = recursive_whiten_grob(out$grobs[[j]])
+			}
+		}
+		return(out)
+	}
+	compose_guide_box = function(
+		target_box,
+		source_box,
+		guide_title = NA_character_,
+		prefer_bar = FALSE,
+		bleed_px = 0L
+	) {
+		if (!inherits(target_box, "gtable")) {
+			return(recursive_whiten_grob(target_box))
+		}
+		out = target_box
+		for (j in seq_len(length(out$grobs))) {
+			out$grobs[[j]] = recursive_whiten_grob(out$grobs[[j]])
+		}
+		if (!inherits(source_box, "gtable")) {
+			return(out)
+		}
+		target_entries = get_guide_entries(target_box)
+		source_entries = get_guide_entries(source_box)
+		if (!length(target_entries$indices) || !length(source_entries$indices)) {
+			return(out)
+		}
+		target_match = match_guide_entry(
+			target_entries,
+			title = guide_title,
+			prefer_bar = prefer_bar
+		)
+		source_match = match_guide_entry(
+			source_entries,
+			title = guide_title,
+			prefer_bar = prefer_bar
+		)
+		if (is.na(target_match) || is.na(source_match)) {
+			return(out)
+		}
+		out$grobs[[target_entries$indices[[target_match]]]] = prepare_target_guide(
+			source_entries$grobs[[source_match]],
+			bleed_px = bleed_px,
+			render_mode = "height"
+		)
+		return(out)
+	}
+	apply_guide_bar_bleed_box = function(
+		target_box,
+		guide_title = NA_character_,
+		prefer_bar = FALSE,
+		bleed_px = 0L
+	) {
+		if (!inherits(target_box, "gtable") || !isTRUE(bleed_px > 0)) {
+			return(target_box)
+		}
+		entries = get_guide_entries(target_box)
+		if (!length(entries$indices)) {
+			return(target_box)
+		}
+		target_match = match_guide_entry(
+			entries,
+			title = guide_title,
+			prefer_bar = prefer_bar
+		)
+		if (is.na(target_match)) {
+			return(target_box)
+		}
+		out = target_box
+		out$grobs[[entries$indices[[target_match]]]] = prepare_target_guide(
+			entries$grobs[[target_match]],
+			bleed_px = bleed_px,
+			render_mode = "texture"
+		)
+		return(out)
+	}
+	apply_texture_grob = function(
+		color_grob,
+		guide_title = NA_character_,
+		prefer_bar = FALSE,
+		bleed_px = 0L
+	) {
+		out = color_grob
+		if (
+			!isTRUE(bleed_px > 0) ||
+				!inherits(out, "gtable") ||
+				is.null(out$layout$name)
+		) {
+			return(out)
+		}
+		guide_box_indices = which(grepl("^guide-box", out$layout$name))
+		if (!length(guide_box_indices)) {
+			return(out)
+		}
+		for (j in guide_box_indices) {
+			out$grobs[[j]] = apply_guide_bar_bleed_box(
+				target_box = out$grobs[[j]],
+				guide_title = guide_title,
+				prefer_bar = prefer_bar,
+				bleed_px = bleed_px
+			)
+		}
+		return(out)
+	}
+	compose_height_grob = function(
+		color_grob,
+		height_grob,
+		guide_title = NA_character_,
+		prefer_bar = FALSE,
+		bleed_px = 0L
+	) {
+		out = color_grob
+		layout_names = out$layout$name
+		panel_indices = which(layout_names == "panel")
+		height_panel_indices = which(height_grob$layout$name == "panel")
+		n_panels = min(length(panel_indices), length(height_panel_indices))
+		if (n_panels > 0) {
+			for (j in seq_len(n_panels)) {
+				out$grobs[[panel_indices[j]]] = set_to_white_except_panel_data(
+					height_grob$grobs[[height_panel_indices[j]]]
+				)
+			}
+		}
+		guide_box_indices = which(grepl("^guide-box", layout_names))
+		for (j in seq_len(length(out$grobs))) {
+			if (j %in% panel_indices) {
+				next
+			}
+			if (j %in% guide_box_indices) {
+				source_match = which(height_grob$layout$name == layout_names[j])
+				if (length(source_match)) {
+					out$grobs[[j]] = compose_guide_box(
+						target_box = out$grobs[[j]],
+						source_box = height_grob$grobs[[source_match[1]]],
+						guide_title = guide_title,
+						prefer_bar = prefer_bar,
+						bleed_px = bleed_px
+					)
+				} else {
+					out$grobs[[j]] = recursive_whiten_grob(out$grobs[[j]])
+				}
+			} else {
+				out$grobs[[j]] = recursive_whiten_grob(out$grobs[[j]])
+			}
+		}
+		return(out)
 	}
 	emboss_gg_text = function(grob, emboss) {
 		if (!is.null(grob[["grobs"]])) {
@@ -667,7 +1204,7 @@ plot_gg = function(
 				ggplotobj2$layers[[layer]]$aes_params$size = NA
 				if (
 					any(as.logical(inherits(
-						ggplotobj2$layers[[layer]]$geom,
+						ggplotobj2$layers[[i]]$geom,
 						polygon_offset_geoms
 					))) &&
 						offset_edges
@@ -747,7 +1284,7 @@ plot_gg = function(
 				ggplotobj2$layers[[i]]$aes_params$size = NA
 				if (
 					any(as.logical(inherits(
-						ggplotobj2$layers[[layer]]$geom,
+						ggplotobj2$layers[[i]]$geom,
 						polygon_offset_geoms
 					))) &&
 						offset_edges
@@ -785,15 +1322,69 @@ plot_gg = function(
 	}
 
 	ggplot_build_obj = ggplot2::ggplot_build(ggplotobj2)
-	plot_gg_transform_info = build_plot_gg_transform_info(ggplot_build_obj)
-	ggplotobj2 = set_to_white(ggplot2::ggplotGrob(ggplotobj2))
-	if (
-		length(color_gg_grob$widths) == length(ggplotobj2$widths) &&
-			length(color_gg_grob$heights) == length(ggplotobj2$heights)
-	) {
-		ggplotobj2$widths = color_gg_grob$widths
-		ggplotobj2$heights = color_gg_grob$heights
+	height_guide_title = c(
+		label_to_string(color_gg$labels[[height_aes]]),
+		label_to_string(color_gg$labels[[ifelse(
+			height_aes == "colour",
+			"color",
+			height_aes
+		)]]),
+		label_to_string(ggplotobj2$labels[[height_aes]]),
+		label_to_string(ggplotobj2$labels[[ifelse(
+			height_aes == "colour",
+			"color",
+			height_aes
+		)]]),
+		label_to_string(ggplotobj2$scales$get_scales(height_aes)$name)
+	)
+	height_guide_title = normalize_guide_text(height_guide_title[
+		!is.na(height_guide_title)
+	][1])
+	height_scale = ggplotobj2$scales$get_scales(height_aes)
+	height_guide_prefers_bar = FALSE
+	if (!is.null(height_scale)) {
+		height_guide_prefers_bar =
+			methods::is(height_scale, "ScaleContinuous") ||
+			methods::is(height_scale, "ScaleBinned")
 	}
+	if (
+		guide_bar_bleed_target %in%
+			c("texture") &&
+			isTRUE(guide_bar_bleed_px > 0)
+	) {
+		color_gg_grob = apply_texture_grob(
+			color_grob = color_gg_grob,
+			guide_title = height_guide_title,
+			prefer_bar = height_guide_prefers_bar,
+			bleed_px = guide_bar_bleed_px
+		)
+	}
+	old_dev = grDevices::dev.cur()
+	png_device(
+		filename = colormaptemp,
+		width = width,
+		height = height,
+		units = "in",
+		res = 300
+	)
+	grid::grid.draw(color_gg_grob)
+	grDevices::dev.off()
+	if (old_dev > 1) {
+		grDevices::dev.set(old_dev)
+	}
+	plot_gg_transform_info = build_plot_gg_transform_info(ggplot_build_obj)
+	height_gg_grob = ggplot2::ggplotGrob(ggplotobj2)
+	ggplotobj2 = compose_height_grob(
+		color_grob = color_gg_grob,
+		height_grob = height_gg_grob,
+		guide_title = height_guide_title,
+		prefer_bar = height_guide_prefers_bar,
+		bleed_px = ifelse(
+			guide_bar_bleed_target %in% c("height"),
+			guide_bar_bleed_px,
+			0L
+		)
+	)
 	if (emboss_text > 0) {
 		emboss_text = 1 - emboss_text
 		ggplotobj2 = emboss_gg_text(ggplotobj2, emboss_text)

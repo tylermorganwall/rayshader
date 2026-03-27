@@ -21,11 +21,18 @@
 #'@param lat Default `NA`. Latitude (degrees) for automatic sky generation.
 #'When `lat`, `long`, `datetime`, or `sky_args` are supplied, `render_highquality()` uses
 #'`skymodelr::generate_sky_latlong()` to create an EXR environment map, disables the default light,
-#'and sets `environment_light` for the render.
+#'and sets `environment_light` for the render unless direct sky arguments are provided.
 #'@param long Default `NA`. Longitude (degrees; west < 0) for automatic sky generation.
 #'@param datetime Default `NA`. POSIXct or character date-time used to position the sun.
+#'@param sky_sun_elevation Default `NA`. If supplied, uses `skymodelr::generate_sky()` and
+#'passes this value to its `elevation` argument.
+#'@param sky_sun_azimuth Default `NA`. If supplied, uses `skymodelr::generate_sky()` and
+#'passes this value to its `azimuth` argument.
+#'@param sky_altitude Default `NA`. If supplied, uses `skymodelr::generate_sky()` and
+#'passes this value to its `altitude` argument.
 #'@param sky_args Default empty `list()`. Additional arguments passed to
-#'`skymodelr::generate_sky_latlong()` (except `filename`, which is managed internally).
+#'`skymodelr::generate_sky_latlong()` (default) or `skymodelr::generate_sky()`
+#'when direct sun arguments are used (except `filename`, which is managed internally).
 #'The EXR is cached in `tempdir()` using a filename derived from these inputs.
 #'@param lightdirection Default `315`. Position of the light angle around the scene.
 #'If this is a vector longer than one, multiple lights will be generated (using values from
@@ -48,6 +55,9 @@
 #'@param reset_scene_cache Default `FALSE`. Resets the scene cache before rendering.
 #'@param width Defaults to the width of the rgl window. Width of the rendering.
 #'@param height Defaults to the height of the rgl window. Height of the rendering.
+#'@param ortho_dimensions Default `NULL`, which uses the orthographic dimensions
+#'inferred from the current rgl projection when `fov = 0`. Supply a numeric
+#'length-2 vector to override the inferred orthographic width/height.
 #'@param text_angle Default `NULL`, which forces the text always to face the camera. If a single angle (degrees),
 #'will specify the absolute angle all the labels are facing. If three angles, this will specify all three orientations
 #'(relative to the x,y, and z axes) of the text labels.
@@ -252,6 +262,9 @@ render_highquality = function(
 	lat = NA,
 	long = NA,
 	datetime = NA,
+	sky_sun_elevation = NA,
+	sky_sun_azimuth = NA,
+	sky_altitude = NA,
 	sky_args = list(),
 	lightdirection = 315,
 	lightaltitude = 45,
@@ -267,6 +280,7 @@ render_highquality = function(
 	reset_scene_cache = FALSE,
 	width = NULL,
 	height = NULL,
+	ortho_dimensions = NULL,
 	text_angle = NULL,
 	text_size = 12,
 	text_offset = c(0, text_size / 2, 0),
@@ -305,6 +319,7 @@ render_highquality = function(
 	plot = is.na(filename),
 	...
 ) {
+	ortho_dimensions_override = ortho_dimensions
 	if (rgl::cur3d() == 0) {
 		stop("No rgl window currently open.")
 	}
@@ -343,6 +358,7 @@ render_highquality = function(
 	}
 
 	use_sky = FALSE
+	has_direct_sky = FALSE
 	if (!is.null(lat) && !is.na(lat)) {
 		if (length(lat) != 1) {
 			stop("`lat` must be length 1.")
@@ -361,9 +377,50 @@ render_highquality = function(
 		}
 		use_sky = TRUE
 	}
+	if (!is.null(sky_sun_elevation) && !is.na(sky_sun_elevation)) {
+		if (length(sky_sun_elevation) != 1) {
+			stop("`sky_sun_elevation` must be length 1.")
+		}
+		use_sky = TRUE
+		has_direct_sky = TRUE
+	}
+	if (!is.null(sky_sun_azimuth) && !is.na(sky_sun_azimuth)) {
+		if (length(sky_sun_azimuth) != 1) {
+			stop("`sky_sun_azimuth` must be length 1.")
+		}
+		use_sky = TRUE
+		has_direct_sky = TRUE
+	}
+	if (!is.null(sky_altitude) && !is.na(sky_altitude)) {
+		if (length(sky_altitude) != 1) {
+			stop("`sky_altitude` must be length 1.")
+		}
+		use_sky = TRUE
+		has_direct_sky = TRUE
+	}
 	if (length(sky_args) > 0) {
 		use_sky = TRUE
 	}
+	sky_arg_names_raw = names(sky_args)
+	if (
+		!is.null(sky_arg_names_raw) &&
+			any(c("elevation", "azimuth") %in% sky_arg_names_raw)
+	) {
+		has_direct_sky = TRUE
+	}
+	if (
+		has_direct_sky &&
+			(
+				(!is.null(lat) && !is.na(lat)) ||
+					(!is.null(long) && !is.na(long)) ||
+					(!is.null(datetime) && !is.na(datetime))
+			)
+	) {
+		warning(
+			"Both lat/long/datetime and direct sun inputs detected. Using `skymodelr::generate_sky()` inputs."
+		)
+	}
+	sky_mode = ifelse(has_direct_sky, "direct", "latlong")
 
 	sky_file = NULL
 	if (use_sky) {
@@ -376,7 +433,8 @@ render_highquality = function(
 		if ("environment_light" %in% names(dot_args)) {
 			warning(
 				"`environment_light` supplied in `...` ignored because ",
-				"`lat`, `long`, `datetime`, or `sky_args` are set."
+				"`lat`, `long`, `datetime`, `sky_sun_elevation`, `sky_sun_azimuth`, ",
+				"`sky_altitude`, or `sky_args` are set."
 			)
 			dot_args$environment_light = NULL
 		}
@@ -412,7 +470,6 @@ render_highquality = function(
 			paste(utils::capture.output(dput(value)), collapse = "")
 		}
 
-		sky_arg_names_raw = names(sky_args)
 		lat_value = lat
 		if (
 			!is.null(sky_arg_names_raw) &&
@@ -444,6 +501,30 @@ render_highquality = function(
 		) {
 			datetime_value = sky_args$datetime
 		}
+		elevation_value = sky_sun_elevation
+		if (
+			!is.null(sky_arg_names_raw) &&
+				(is.null(elevation_value) || is.na(elevation_value)) &&
+				"elevation" %in% sky_arg_names_raw
+		) {
+			elevation_value = sky_args$elevation
+		}
+		azimuth_value = sky_sun_azimuth
+		if (
+			!is.null(sky_arg_names_raw) &&
+				(is.null(azimuth_value) || is.na(azimuth_value)) &&
+				"azimuth" %in% sky_arg_names_raw
+		) {
+			azimuth_value = sky_args$azimuth
+		}
+		altitude_value = sky_altitude
+		if (
+			!is.null(sky_arg_names_raw) &&
+				(is.null(altitude_value) || is.na(altitude_value)) &&
+				"altitude" %in% sky_arg_names_raw
+		) {
+			altitude_value = sky_args$altitude
+		}
 
 		lat_key = if (!is.null(lat_value) && !is.na(lat_value)) {
 			format_sky_value(lat_value)
@@ -460,9 +541,32 @@ render_highquality = function(
 		} else {
 			"default"
 		}
+		elevation_key = if (!is.null(elevation_value) && !is.na(elevation_value)) {
+			format_sky_value(elevation_value)
+		} else {
+			"default"
+		}
+		azimuth_key = if (!is.null(azimuth_value) && !is.na(azimuth_value)) {
+			format_sky_value(azimuth_value)
+		} else {
+			"default"
+		}
+		altitude_key = if (!is.null(altitude_value) && !is.na(altitude_value)) {
+			format_sky_value(altitude_value)
+		} else {
+			"default"
+		}
 
 		sky_args_for_key = sky_args
-		sky_args_for_key[c("lat", "lon", "long", "datetime")] = NULL
+		sky_args_for_key[c(
+			"lat",
+			"lon",
+			"long",
+			"datetime",
+			"elevation",
+			"azimuth",
+			"altitude"
+		)] = NULL
 		if (length(sky_args_for_key) > 0) {
 			sky_arg_names = names(sky_args_for_key)
 			if (is.null(sky_arg_names)) {
@@ -491,16 +595,33 @@ render_highquality = function(
 			sky_args_key = "default"
 		}
 
-		sky_key = paste(
-			"lat",
-			lat_key,
-			"long",
-			long_key,
-			"datetime",
-			datetime_key,
-			sky_args_key,
-			sep = "__"
-		)
+		if (sky_mode == "direct") {
+			sky_key = paste(
+				"mode",
+				"direct",
+				"elevation",
+				elevation_key,
+				"azimuth",
+				azimuth_key,
+				"altitude",
+				altitude_key,
+				sky_args_key,
+				sep = "__"
+			)
+		} else {
+			sky_key = paste(
+				"mode",
+				"latlong",
+				"lat",
+				lat_key,
+				"long",
+				long_key,
+				"datetime",
+				datetime_key,
+				sky_args_key,
+				sep = "__"
+			)
+		}
 		sky_key = gsub("[^A-Za-z0-9_-]", "-", sky_key)
 		sky_key = gsub("-+", "-", sky_key)
 		sky_key = substr(sky_key, 1, 160)
@@ -519,16 +640,38 @@ render_highquality = function(
 		if (!file.exists(sky_file)) {
 			sky_call_args = sky_args
 			sky_call_args$filename = sky_file
-			if (!is.null(lat) && !is.na(lat)) {
-				sky_call_args$lat = lat
+			if (sky_mode == "direct") {
+				sky_call_args[c("lat", "lon", "long", "datetime")] = NULL
+				if (!is.null(sky_sun_elevation) && !is.na(sky_sun_elevation)) {
+					sky_call_args$elevation = sky_sun_elevation
+				}
+				if (!is.null(sky_sun_azimuth) && !is.na(sky_sun_azimuth)) {
+					sky_call_args$azimuth = sky_sun_azimuth
+				}
+				if (!is.null(sky_altitude) && !is.na(sky_altitude)) {
+					sky_call_args$altitude = sky_altitude
+				}
+				do.call(skymodelr::generate_sky, sky_call_args)
+			} else {
+				sky_call_args[c("elevation", "azimuth")] = NULL
+				if (
+					"long" %in% names(sky_call_args) &&
+						!("lon" %in% names(sky_call_args))
+				) {
+					sky_call_args$lon = sky_call_args$long
+				}
+				sky_call_args$long = NULL
+				if (!is.null(lat) && !is.na(lat)) {
+					sky_call_args$lat = lat
+				}
+				if (!is.null(long) && !is.na(long)) {
+					sky_call_args$lon = long
+				}
+				if (!is.null(datetime) && !is.na(datetime)) {
+					sky_call_args$datetime = datetime
+				}
+				do.call(skymodelr::generate_sky_latlong, sky_call_args)
 			}
-			if (!is.null(long) && !is.na(long)) {
-				sky_call_args$lon = long
-			}
-			if (!is.null(datetime) && !is.na(datetime)) {
-				sky_call_args$datetime = datetime
-			}
-			do.call(skymodelr::generate_sky_latlong, sky_call_args)
 		}
 
 		light = FALSE
@@ -685,6 +828,17 @@ render_highquality = function(
 	} else {
 		fov = 2 * atan(1 / projmat[2, 2]) * 180 / pi
 		ortho_dimensions = c(1, 1)
+	}
+	if (!is.null(ortho_dimensions_override)) {
+		ortho_dimensions_override = suppressWarnings(as.numeric(ortho_dimensions_override)[1:2])
+		if (
+			length(ortho_dimensions_override) != 2 ||
+				any(!is.finite(ortho_dimensions_override)) ||
+				any(ortho_dimensions_override <= 0)
+		) {
+			stop("`ortho_dimensions` must be a length-2 numeric vector with positive values.")
+		}
+		ortho_dimensions = ortho_dimensions_override
 	}
 	bbox_center = c(
 		mean(lookvals[1:2]),
@@ -1115,6 +1269,10 @@ render_highquality = function(
 	)
 	if (!is.null(sky_file)) {
 		render_scene_args$environment_light = sky_file
+	}
+	duplicate_render_scene_args = intersect(names(render_scene_args), names(dot_args))
+	if (length(duplicate_render_scene_args) > 0) {
+		dot_args[duplicate_render_scene_args] = NULL
 	}
 	render_scene_call = function(extra_args = list()) {
 		do.call(

@@ -13,6 +13,9 @@ render_highquality(
   lat = NA,
   long = NA,
   datetime = NA,
+  sky_sun_elevation = NA,
+  sky_sun_azimuth = NA,
+  sky_altitude = NA,
   sky_args = list(),
   lightdirection = 315,
   lightaltitude = 45,
@@ -28,6 +31,7 @@ render_highquality(
   reset_scene_cache = FALSE,
   width = NULL,
   height = NULL,
+  ortho_dimensions = NULL,
   text_angle = NULL,
   text_size = 12,
   text_offset = c(0, text_size/2, 0),
@@ -87,14 +91,24 @@ If this is set to zero, the adaptive sampler will be turned off and the renderer
 \item{lat}{Default \code{NA}. Latitude (degrees) for automatic sky generation.
 When \code{lat}, \code{long}, \code{datetime}, or \code{sky_args} are supplied, \code{render_highquality()} uses
 \code{skymodelr::generate_sky_latlong()} to create an EXR environment map, disables the default light,
-and sets \code{environment_light} for the render.}
+and sets \code{environment_light} for the render unless direct sky arguments are provided.}
 
 \item{long}{Default \code{NA}. Longitude (degrees; west < 0) for automatic sky generation.}
 
 \item{datetime}{Default \code{NA}. POSIXct or character date-time used to position the sun.}
 
+\item{sky_sun_elevation}{Default \code{NA}. If supplied, uses \code{skymodelr::generate_sky()} and
+passes this value to its \code{elevation} argument.}
+
+\item{sky_sun_azimuth}{Default \code{NA}. If supplied, uses \code{skymodelr::generate_sky()} and
+passes this value to its \code{azimuth} argument.}
+
+\item{sky_altitude}{Default \code{NA}. If supplied, uses \code{skymodelr::generate_sky()} and
+passes this value to its \code{altitude} argument.}
+
 \item{sky_args}{Default empty \code{list()}. Additional arguments passed to
-\code{skymodelr::generate_sky_latlong()} (except \code{filename}, which is managed internally).
+\code{skymodelr::generate_sky_latlong()} (default) or \code{skymodelr::generate_sky()}
+when direct sun arguments are used (except \code{filename}, which is managed internally).
 The EXR is cached in \code{tempdir()} using a filename derived from these inputs.}
 
 \item{lightdirection}{Default \code{315}. Position of the light angle around the scene.
@@ -131,6 +145,10 @@ each time \code{\link[=render_snapshot]{render_snapshot()}} is called. If \code{
 \item{width}{Defaults to the width of the rgl window. Width of the rendering.}
 
 \item{height}{Defaults to the height of the rgl window. Height of the rendering.}
+
+\item{ortho_dimensions}{Default \code{NULL}, which uses the orthographic dimensions
+inferred from the current rgl projection when \code{fov = 0}. Supply a numeric
+length-2 vector to override the inferred orthographic width/height.}
 
 \item{text_angle}{Default \code{NULL}, which forces the text always to face the camera. If a single angle (degrees),
 will specify the absolute angle all the labels are facing. If three angles, this will specify all three orientations

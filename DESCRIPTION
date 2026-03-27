@@ -44,6 +44,7 @@ Suggests:
     lidR,
     elevatr,
     gridExtra,
+    callr,
     testthat (>= 3.0.0),
     osmdata,
     raybevel (>= 0.2.1),
