@@ -13,7 +13,7 @@ radiance_shade(
   samples = 128,
   sample_method = "sobol_blue",
   min_variance = 1e-07,
-  shadow = TRUE,
+  shadow = FALSE,
   light = TRUE,
   lat = NA,
   long = NA,
