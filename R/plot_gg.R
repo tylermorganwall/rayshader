@@ -23,6 +23,9 @@
 #'Automatically detected. If both `fill` and `color` aesthetics are present, then `fill` is default.
 #'@param invert Default `FALSE`. If `TRUE`, the height mapping is inverted.
 #'@param shadow_intensity Default `0.5`. The intensity of the calculated shadows.
+#'When `raytrace = "radiance"`, this uses the same scale as the default raytraced
+#'shadowing: `1` means no additional shading effect, and lower values increase the
+#'strength of the radiance overlay.
 #'@param units Default `in`. One of c("in", "cm", "mm").
 #'@param scale Default `150`. Multiplier for vertical scaling: a higher number increases the height
 #'of the 3D transformation.
@@ -48,7 +51,13 @@
 #'the luminance of the `background` color in the CIELab colorspace if not specified.
 #'@param background Default `"white"`. Background color.
 #'@param preview Default `FALSE`. If `TRUE`, the raytraced 2D ggplot will be displayed on the current device.
-#'@param raytrace Default `FALSE`. Whether to add a raytraced layer.
+#'@param raytrace Default `TRUE`. Controls the additional shading applied to the
+#'ggplot texture. Use `TRUE`/`"raytrace"` for [ray_shade()], `FALSE`/`"none"`
+#'for no extra shading, or `"radiance"` for [radiance_shade()].
+#'@param radiance_args Default `list()`. Additional arguments passed to
+#'[radiance_shade()] when `raytrace = "radiance"`. By default,
+#'`lightdirection` is derived from `sunangle` and `lightaltitude` from the
+#'midpoint of `anglebreaks`.
 #'@param sunangle Default `315` (NW). If raytracing, the angle (in degrees) around the matrix from which the light originates.
 #'@param anglebreaks Default `seq(30,40,0.1)`. The azimuth angle(s), in degrees, as measured from the horizon from which the light originates.
 #'@param lambert Default `TRUE`. If raytracing, changes the intensity of the light at each point based proportional to the
@@ -81,8 +90,14 @@
 #'@param multicore Default `FALSE`. If raytracing and `TRUE`, multiple cores will be used to compute the shadow matrix. By default, this uses all cores available, unless the user has
 #'set `options("cores")` in which the multicore option will only use that many cores.
 #'@param save_height_matrix Default `FALSE`. If `TRUE`, the function will return the height matrix used for the ggplot.
-#'@param save_shadow_matrix Default `FALSE`. If `TRUE`, the function will return the shadow matrix for use in future updates via the `shadow_cache` argument passed to [ray_shade()].
-#'@param saved_shadow_matrix Default `NULL`. A cached shadow matrix (saved by the a previous invocation of \code{\link[=plot_gg]{plot_gg()}} with `save_shadow_matrix = TRUE`) to use instead of raytracing a shadow map each time.
+#'@param save_shadow_matrix Default `FALSE`. If `TRUE`, the function will return
+#'the computed shading layer. For `raytrace = TRUE`, this is the shadow matrix
+#'from [ray_shade()]. For `raytrace = "radiance"`, this is the RGBA radiance
+#'overlay from [radiance_shade()].
+#'@param saved_shadow_matrix Default `NULL`. A cached shading layer saved by a
+#'previous invocation of [plot_gg()] with `save_shadow_matrix = TRUE`. For
+#'`raytrace = TRUE`, pass a shadow matrix from [ray_shade()]. For
+#'`raytrace = "radiance"`, pass an RGBA radiance overlay.
 #'@param monitor_gamma Default `1.8`. Undo the gamma correction applied by the png device. Ignored if `ragg` is installed or the `cairo` PNG device is available.
 #'@param plot Default `TRUE`. Whether to plot the image when `preview = TRUE`, or just return the RGBA rayimg.
 #'@param ... Additional arguments to be passed to [plot_3d()].
@@ -256,6 +271,7 @@ plot_gg = function(
 	background = "white",
 	preview = FALSE,
 	raytrace = TRUE,
+	radiance_args = list(),
 	sunangle = 315,
 	anglebreaks = seq(30, 40, 0.1),
 	multicore = FALSE,
@@ -279,6 +295,33 @@ plot_gg = function(
 	if (!(length(find.package("ggplot2", quiet = TRUE)) > 0)) {
 		stop("Must have ggplot2 installed to use plot_gg()")
 	}
+	normalize_plot_gg_raytrace_mode = function(raytrace) {
+		if (is.logical(raytrace) && length(raytrace) == 1 && !is.na(raytrace)) {
+			return(if (isTRUE(raytrace)) "raytrace" else "none")
+		}
+		if (is.character(raytrace) && length(raytrace) == 1) {
+			raytrace = tolower(raytrace[[1]])
+			if (raytrace %in% c("raytrace", "ray", "ray_shade")) {
+				return("raytrace")
+			}
+			if (raytrace %in% c("radiance", "radiance_shade")) {
+				return("radiance")
+			}
+			if (raytrace %in% c("none", "off")) {
+				return("none")
+			}
+		}
+		stop(
+			"`raytrace` must be TRUE/FALSE or one of c(\"raytrace\", \"radiance\", \"none\")."
+		)
+	}
+	if (is.null(radiance_args)) {
+		radiance_args = list()
+	}
+	if (!is.list(radiance_args)) {
+		stop("`radiance_args` must be a list.")
+	}
+	raytrace_mode = normalize_plot_gg_raytrace_mode(raytrace)
 	cache_scene_zscale(NULL)
 	cache_scene_heightmap(NULL)
 	cache_scene_extent(NULL)
@@ -1192,7 +1235,7 @@ plot_gg = function(
 		}
 	}
 	if (height_aes == "fill") {
-		for (layer in seq_along(1:length(ggplotobj2$layers))) {
+		for (layer in seq_along(ggplotobj2$layers)) {
 			if (
 				"colour" %in%
 					names(ggplotobj2$layers[[layer]]$mapping) ||
@@ -1204,7 +1247,7 @@ plot_gg = function(
 				ggplotobj2$layers[[layer]]$aes_params$size = NA
 				if (
 					any(as.logical(inherits(
-						ggplotobj2$layers[[i]]$geom,
+						ggplotobj2$layers[[layer]]$geom,
 						polygon_offset_geoms
 					))) &&
 						offset_edges
@@ -1280,7 +1323,7 @@ plot_gg = function(
 	#Offset edges for polygons/Perform point contraction
 	if (height_aes == "fill") {
 		if (length(ggplotobj2$layers) > 0) {
-			for (i in seq_along(1:length(ggplotobj2$layers))) {
+			for (i in seq_along(ggplotobj2$layers)) {
 				ggplotobj2$layers[[i]]$aes_params$size = NA
 				if (
 					any(as.logical(inherits(
@@ -1296,14 +1339,14 @@ plot_gg = function(
 		}
 	} else {
 		if (length(ggplotobj2$layers) > 0) {
-			for (i in seq_along(1:length(ggplotobj2$layers))) {
+			for (i in seq_along(ggplotobj2$layers)) {
 				ggplotobj2$layers[[i]]$aes_params$fill = "white"
 				if (inherits(ggplotobj2$layers[[i]]$geom, "GeomContour")) {
 					ggplotobj2$layers[[i]]$aes_params$alpha = 0
 				}
 			}
 			if (pointcontract != 1) {
-				for (i in 1:length(ggplotobj2$layers)) {
+				for (i in seq_along(ggplotobj2$layers)) {
 					if (!is.null(ggplotobj2$layers[[i]]$aes_params$size)) {
 						ggplotobj2$layers[[i]]$aes_params$size = ggplotobj2$layers[[
 							i
@@ -1372,7 +1415,13 @@ plot_gg = function(
 	if (old_dev > 1) {
 		grDevices::dev.set(old_dev)
 	}
-	plot_gg_transform_info = build_plot_gg_transform_info(ggplot_build_obj)
+	plot_gg_transform_info = build_plot_gg_transform_info(
+		ggplot_build_obj,
+		height_scale = ggplot_build_obj$plot$scales$get_scales(height_aes),
+		height_aes = height_aes,
+		height_is_mapped = isfill || iscolor,
+		height_inverted = invert
+	)
 	height_gg_grob = ggplot2::ggplotGrob(ggplotobj2)
 	ggplotobj2 = compose_height_grob(
 		color_grob = color_gg_grob,
@@ -1514,9 +1563,11 @@ plot_gg = function(
 		flat_distance * scale + shadowdepth,
 		shadowdepth
 	)
-	if (raytrace) {
+	shadelayer = NULL
+	map_with_shading = mapcolor
+	if (raytrace_mode == "raytrace") {
 		if (is.null(saved_shadow_matrix)) {
-			raylayer = ray_shade(
+			shadelayer = ray_shade(
 				height_matrix,
 				maxsearch = 600,
 				sunangle = sunangle,
@@ -1526,79 +1577,65 @@ plot_gg = function(
 				lambert = lambert,
 				...
 			)
-			if (!preview) {
-				mapcolor |>
-					add_shadow(raylayer, shadow_intensity) |>
-					plot_3d(
-						height_matrix,
-						zscale = 1 / scale,
-						triangulate = triangulate,
-						max_error = max_error,
-						max_tri = max_tri,
-						verbose = verbose,
-						shadow = shadow,
-						shadowdepth = shadowdepth / scale,
-						background = background,
-						shadowcolor = shadowcolor,
-						...
-					)
-			} else {
-				mapcolor |>
-					add_shadow(raylayer, shadow_intensity) -> map_with_shadow
-				if (plot) {
-					plot_map(map_with_shadow)
-				}
-				return(invisible(map_with_shadow))
-			}
 		} else {
-			raylayer = saved_shadow_matrix
-			if (!preview) {
-				mapcolor |>
-					add_shadow(raylayer, shadow_intensity) |>
-					plot_3d(
-						height_matrix,
-						zscale = 1 / scale,
-						triangulate = triangulate,
-						max_error = max_error,
-						max_tri = max_tri,
-						verbose = verbose,
-						shadow = shadow,
-						shadowdepth = shadowdepth / scale,
-						background = background,
-						shadowcolor = shadowcolor,
-						...
-					)
-			} else {
-				mapcolor |>
-					add_shadow(raylayer, shadow_intensity) -> map_with_shadow
-				if (plot) {
-					plot_map(map_with_shadow)
-				}
-				return(invisible(map_with_shadow))
-			}
+			shadelayer = saved_shadow_matrix
 		}
-	} else {
-		if (!preview) {
-			plot_3d(
-				mapcolor,
-				height_matrix,
-				zscale = 1 / scale,
-				triangulate = triangulate,
-				max_error = max_error,
-				max_tri = max_tri,
-				verbose = verbose,
-				shadow = shadow,
-				shadowdepth = shadowdepth / scale,
-				background = background,
-				shadowcolor = shadowcolor,
-				...
+		map_with_shading = add_shadow(mapcolor, shadelayer, shadow_intensity)
+	} else if (raytrace_mode == "radiance") {
+		if (is.null(saved_shadow_matrix)) {
+			finite_anglebreaks = suppressWarnings(as.numeric(anglebreaks))
+			finite_anglebreaks = finite_anglebreaks[is.finite(finite_anglebreaks)]
+			default_lightaltitude = if (length(finite_anglebreaks)) {
+				mean(range(finite_anglebreaks))
+			} else {
+				45
+			}
+			radiance_call_args = utils::modifyList(
+				list(
+					lightdirection = sunangle,
+					lightaltitude = default_lightaltitude
+				),
+				radiance_args
 			)
+			radiance_call_args = utils::modifyList(
+				radiance_call_args,
+				list(
+					heightmap = height_matrix,
+					texture = mapcolor,
+					zscale = 1 / scale,
+					plot = FALSE
+				)
+			)
+			shadelayer = do.call(radiance_shade, radiance_call_args)
 		} else {
-			if (plot) {
-				plot_map(mapcolor)
-			}
-			return(invisible(mapcolor))
+			shadelayer = saved_shadow_matrix
 		}
+		map_with_shading = add_overlay(
+			mapcolor,
+			shadelayer,
+			alphalayer = 1 - shadow_intensity
+		)
+	}
+	if (!preview) {
+		plot_3d(
+			map_with_shading,
+			height_matrix,
+			zscale = 1 / scale,
+			triangulate = triangulate,
+			max_error = max_error,
+			max_tri = max_tri,
+			verbose = verbose,
+			shadow = shadow,
+			shadowdepth = shadowdepth / scale,
+			background = background,
+			shadowcolor = shadowcolor,
+			...
+		)
+	} else {
+		if (plot) {
+			plot_map(map_with_shading)
+		}
+		return(invisible(map_with_shading))
 	}
 	cache_plot_gg_panel_info(plot_gg_panel_info)
 	cache_plot_gg_transform_info(plot_gg_transform_info)
@@ -1690,13 +1727,13 @@ plot_gg = function(
 		}
 	}
 	if (save_shadow_matrix & !save_height_matrix) {
-		return(raylayer)
+		return(shadelayer)
 	}
 	if (!save_shadow_matrix & save_height_matrix) {
 		return(height_matrix)
 	}
 	if (save_shadow_matrix & save_height_matrix) {
-		return(list(height_matrix, raylayer))
+		return(list(height_matrix, shadelayer))
 	}
 	invisible(NULL)
 }

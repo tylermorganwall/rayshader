@@ -5,6 +5,7 @@ if (!ok) {
 	quit(save = "no")
 }
 
+if(!file.exists("man/figures/monterey-circle.mp4")) {
 # Create frames into a temp dir (fast + CRAN-safe); then write a tiny GIF to man/figures.
 dir.create("man/figures", recursive = TRUE, showWarnings = FALSE)
 tmp = tempdir()
@@ -117,3 +118,4 @@ av::av_encode_video(
 	output = "man/figures/monterey-circle-follow.mp4",
 	framerate = 24
 )
+}

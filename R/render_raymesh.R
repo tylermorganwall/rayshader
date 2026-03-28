@@ -94,6 +94,18 @@ render_raymesh = function(
 		caller = "render_raymesh"
 	)
 	zaxis_args = dot_split$zaxis_args
+	zaxis_extent = resolve_scene_render_extent(
+		extent = extent,
+		heightmap = heightmap,
+		caller = NULL,
+		error_if_missing = FALSE
+	)
+	zaxis_args = normalize_scene_zaxis_args(
+		zaxis_args = zaxis_args,
+		altitude = altitude,
+		extent = zaxis_extent,
+		heightmap = heightmap
+	)
 	render_raymesh_args = dot_split$other_args
 	triangles3d_with_args = function(...) {
 		do.call(rgl::triangles3d, c(list(...), render_raymesh_args))

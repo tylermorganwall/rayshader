@@ -887,7 +887,13 @@ resolve_scene_render_extent = function(
 	NULL
 }
 
-build_plot_gg_transform_info = function(ggplot_build_obj) {
+build_plot_gg_transform_info = function(
+	ggplot_build_obj,
+	height_scale = NULL,
+	height_aes = NULL,
+	height_is_mapped = FALSE,
+	height_inverted = FALSE
+) {
 	build_layout = ggplot_build_obj$layout$layout
 	data.frame(
 		panel = as.integer(as.character(build_layout$PANEL)),
@@ -910,8 +916,141 @@ build_plot_gg_transform_info = function(ggplot_build_obj) {
 		panel_params = ggplot_build_obj$layout$panel_params,
 		panel_scales_x = ggplot_build_obj$layout$panel_scales_x,
 		panel_scales_y = ggplot_build_obj$layout$panel_scales_y,
-		layout = panel_table
+		layout = panel_table,
+		height_scale = height_scale,
+		height_aes = height_aes,
+		height_is_mapped = isTRUE(height_is_mapped),
+		height_inverted = isTRUE(height_inverted),
+		height_range = if (!is.null(height_scale$range$range)) {
+			height_scale$range$range
+		} else {
+			NULL
+		}
 	)
+}
+
+get_scene_height_transform = function(heightmap = NULL, extent = NULL) {
+	panel_info = NULL
+	if (!is.null(extent)) {
+		panel_info = attr(extent, "panel_info", exact = TRUE)
+	}
+	if (is.null(panel_info) || !is.data.frame(panel_info) || !nrow(panel_info)) {
+		return(NULL)
+	}
+	transform_info = tryCatch(
+		get_plot_gg_transform_info(heightmap = heightmap),
+		error = function(e) NULL
+	)
+	if (
+		is.null(transform_info) ||
+			!isTRUE(transform_info$height_is_mapped) ||
+			is.null(transform_info$height_scale)
+	) {
+		return(NULL)
+	}
+	height_target_range = c(0, 1)
+	if (!is.null(heightmap)) {
+		height_vals = as.numeric(heightmap)
+		height_vals = height_vals[is.finite(height_vals)]
+		if (length(height_vals) > 1) {
+			height_target_range = range(height_vals)
+			if (identical(height_target_range[1], height_target_range[2])) {
+				height_target_range = c(0, 1)
+			}
+		}
+	}
+	list(
+		height_scale = transform_info$height_scale,
+		height_aes = transform_info$height_aes,
+		height_inverted = isTRUE(transform_info$height_inverted),
+		height_range = transform_info$height_range,
+		height_target_range = height_target_range
+	)
+}
+
+map_scene_altitudes = function(
+	values,
+	height_transform,
+	reference_values = values
+) {
+	if (is.null(values) || is.null(height_transform)) {
+		return(values)
+	}
+	reference_values = suppressWarnings(as.numeric(reference_values))
+	reference_values = reference_values[is.finite(reference_values)]
+	if (length(unique(reference_values)) <= 1) {
+		return(values)
+	}
+	missing_vals = is.na(values)
+	normalized_height = scales::rescale(
+		values,
+		to = height_transform$height_target_range,
+		from = range(reference_values)
+	)
+	normalized_height[missing_vals] = NA_real_
+	as.numeric(normalized_height)
+}
+
+transform_scene_altitudes = function(
+	values,
+	extent = NULL,
+	heightmap = NULL,
+	reference_values = values
+) {
+	height_transform = get_scene_height_transform(
+		heightmap = heightmap,
+		extent = extent
+	)
+	if (is.null(height_transform)) {
+		return(values)
+	}
+	map_scene_altitudes(
+		values,
+		height_transform = height_transform,
+		reference_values = reference_values
+	)
+}
+
+normalize_scene_zaxis_args = function(
+	zaxis_args = list(),
+	altitude = NULL,
+	extent = NULL,
+	heightmap = NULL
+) {
+	if (length(zaxis_args) == 0 || is.null(altitude)) {
+		return(zaxis_args)
+	}
+	height_transform = get_scene_height_transform(
+		heightmap = heightmap,
+		extent = extent
+	)
+	if (is.null(height_transform)) {
+		return(zaxis_args)
+	}
+	altitude_vals = suppressWarnings(as.numeric(altitude))
+	altitude_vals = altitude_vals[is.finite(altitude_vals)]
+	if (length(unique(altitude_vals)) <= 1) {
+		return(zaxis_args)
+	}
+	raw_breaks = zaxis_args$zaxis_breaks
+	if (is.null(raw_breaks)) {
+		raw_breaks = pretty(range(altitude_vals), n = 4)
+		raw_breaks = raw_breaks[is.finite(raw_breaks)]
+	}
+	if (is.null(zaxis_args$zaxis_labels)) {
+		zaxis_args$zaxis_labels = format(
+			raw_breaks,
+			trim = TRUE,
+			scientific = FALSE
+		)
+	}
+	zaxis_args$zaxis_breaks = transform_scene_altitudes(
+		raw_breaks,
+		extent = extent,
+		heightmap = heightmap,
+		reference_values = altitude_vals
+	)
+	zaxis_args
 }
 
 capture_plot_gg_panel_info = function(

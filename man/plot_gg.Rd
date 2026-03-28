@@ -27,6 +27,7 @@ plot_gg(
   background = "white",
   preview = FALSE,
   raytrace = TRUE,
+  radiance_args = list(),
   sunangle = 315,
   anglebreaks = seq(30, 40, 0.1),
   multicore = FALSE,
@@ -64,7 +65,10 @@ Automatically detected. If both \code{fill} and \code{color} aesthetics are pres
 
 \item{invert}{Default \code{FALSE}. If \code{TRUE}, the height mapping is inverted.}
 
-\item{shadow_intensity}{Default \code{0.5}. The intensity of the calculated shadows.}
+\item{shadow_intensity}{Default \code{0.5}. The intensity of the calculated shadows.
+When \code{raytrace = "radiance"}, this uses the same scale as the default raytraced
+shadowing: \code{1} means no additional shading effect, and lower values increase the
+strength of the radiance overlay.}
 
 \item{units}{Default \verb{in}. One of c("in", "cm", "mm").}
 
@@ -105,7 +109,14 @@ the luminance of the \code{background} color in the CIELab colorspace if not spe
 
 \item{preview}{Default \code{FALSE}. If \code{TRUE}, the raytraced 2D ggplot will be displayed on the current device.}
 
-\item{raytrace}{Default \code{FALSE}. Whether to add a raytraced layer.}
+\item{raytrace}{Default \code{TRUE}. Controls the additional shading applied to the
+ggplot texture. Use \code{TRUE}/\code{"raytrace"} for \code{\link[=ray_shade]{ray_shade()}}, \code{FALSE}/\code{"none"}
+for no extra shading, or \code{"radiance"} for \code{\link[=radiance_shade]{radiance_shade()}}.}
+
+\item{radiance_args}{Default \code{list()}. Additional arguments passed to
+\code{\link[=radiance_shade]{radiance_shade()}} when \code{raytrace = "radiance"}. By default,
+\code{lightdirection} is derived from \code{sunangle} and \code{lightaltitude} from the
+midpoint of \code{anglebreaks}.}
 
 \item{sunangle}{Default \code{315} (NW). If raytracing, the angle (in degrees) around the matrix from which the light originates.}
 
@@ -153,9 +164,15 @@ default, this just decreases the size of height map, not the image. If you wish 
 
 \item{save_height_matrix}{Default \code{FALSE}. If \code{TRUE}, the function will return the height matrix used for the ggplot.}
 
-\item{save_shadow_matrix}{Default \code{FALSE}. If \code{TRUE}, the function will return the shadow matrix for use in future updates via the \code{shadow_cache} argument passed to \code{\link[=ray_shade]{ray_shade()}}.}
+\item{save_shadow_matrix}{Default \code{FALSE}. If \code{TRUE}, the function will return
+the computed shading layer. For \code{raytrace = TRUE}, this is the shadow matrix
+from \code{\link[=ray_shade]{ray_shade()}}. For \code{raytrace = "radiance"}, this is the RGBA radiance
+overlay from \code{\link[=radiance_shade]{radiance_shade()}}.}
 
-\item{saved_shadow_matrix}{Default \code{NULL}. A cached shadow matrix (saved by the a previous invocation of \code{\link[=plot_gg]{plot_gg()}} with \code{save_shadow_matrix = TRUE}) to use instead of raytracing a shadow map each time.}
+\item{saved_shadow_matrix}{Default \code{NULL}. A cached shading layer saved by a
+previous invocation of \code{\link[=plot_gg]{plot_gg()}} with \code{save_shadow_matrix = TRUE}. For
+\code{raytrace = TRUE}, pass a shadow matrix from \code{\link[=ray_shade]{ray_shade()}}. For
+\code{raytrace = "radiance"}, pass an RGBA radiance overlay.}
 
 \item{monitor_gamma}{Default \code{1.8}. Undo the gamma correction applied by the png device. Ignored if \code{ragg} is installed or the \code{cairo} PNG device is available.}
 

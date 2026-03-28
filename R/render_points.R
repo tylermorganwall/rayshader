@@ -122,6 +122,18 @@ render_points = function(
     heightmap,
     caller = "render_points"
   )
+  zaxis_extent = resolve_scene_render_extent(
+    extent = extent,
+    heightmap = heightmap,
+    caller = NULL,
+    error_if_missing = FALSE
+  )
+  zaxis_args = normalize_scene_zaxis_args(
+    zaxis_args = zaxis_split$zaxis_args,
+    altitude = altitude,
+    extent = zaxis_extent,
+    heightmap = heightmap
+  )
   if (rgl::cur3d() == 0) {
     stop("No rgl window currently open.")
   }
@@ -129,7 +141,7 @@ render_points = function(
     rgl::pop3d(tag = "points3d")
     if (missing(lat) || missing(long)) {
       render_zaxis_from_dots(
-        zaxis_args = zaxis_split$zaxis_args,
+        zaxis_args = zaxis_args,
         extent = extent,
         zscale = zscale,
         heightmap = heightmap
@@ -171,7 +183,7 @@ render_points = function(
     )
   }
   render_zaxis_from_dots(
-    zaxis_args = zaxis_split$zaxis_args,
+    zaxis_args = zaxis_args,
     extent = extent,
     zscale = zscale,
     heightmap = heightmap

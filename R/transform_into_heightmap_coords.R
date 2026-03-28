@@ -15,6 +15,19 @@ transform_into_heightmap_coords = function(extent, heightmap, lat = NULL, long =
     extent = extent,
     heightmap = heightmap
   )
+  if (use_altitude && !is.null(altitude)) {
+    scene_height_transform = get_scene_height_transform(
+      heightmap = heightmap,
+      extent = extent
+    )
+    if (!is.null(scene_height_transform)) {
+      altitude = map_scene_altitudes(
+        altitude,
+        height_transform = scene_height_transform,
+        reference_values = altitude
+      )
+    }
+  }
   e = get_extent(extent)
   if(is.null(lat)) {
     lat = (e["ymax"] + e["ymin"])/2 

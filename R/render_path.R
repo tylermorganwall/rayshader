@@ -177,6 +177,18 @@ render_path = function(
     heightmap,
     caller = "render_path"
   )
+  zaxis_extent = resolve_scene_render_extent(
+    extent = extent,
+    heightmap = heightmap,
+    caller = NULL,
+    error_if_missing = FALSE
+  )
+  zaxis_args = normalize_scene_zaxis_args(
+    zaxis_args = zaxis_split$zaxis_args,
+    altitude = altitude,
+    extent = zaxis_extent,
+    heightmap = heightmap
+  )
   if (rgl::cur3d() == 0 && !return_coords) {
     stop("No rgl window currently open.")
   }
@@ -184,7 +196,7 @@ render_path = function(
 		rgl::pop3d(tag = tag)
 		if (missing(lat)) {
 			render_zaxis_from_dots(
-				zaxis_args = zaxis_split$zaxis_args,
+				zaxis_args = zaxis_args,
 				extent = extent,
 				zscale = zscale,
 				heightmap = heightmap
@@ -233,12 +245,12 @@ render_path = function(
             line_antialias = antialias
 	          )
 	        }
-	        render_zaxis_from_dots(
-	        	zaxis_args = zaxis_split$zaxis_args,
-	        	extent = extent,
-	        	zscale = zscale,
-	        	heightmap = heightmap
-	        )
+		        render_zaxis_from_dots(
+		        	zaxis_args = zaxis_args,
+		        	extent = extent,
+		        	zscale = zscale,
+		        	heightmap = heightmap
+		        )
 	        return(invisible())
 	      } else {
 	        rgl::lines3d(
@@ -248,12 +260,12 @@ render_path = function(
           lwd = linewidth,
 	          line_antialias = antialias
 	        )
-	        render_zaxis_from_dots(
-	        	zaxis_args = zaxis_split$zaxis_args,
-	        	extent = extent,
-	        	zscale = zscale,
-	        	heightmap = heightmap
-	        )
+		        render_zaxis_from_dots(
+		        	zaxis_args = zaxis_args,
+		        	extent = extent,
+		        	zscale = zscale,
+		        	heightmap = heightmap
+		        )
 	        return(invisible())
 	      }
     } else {
@@ -414,12 +426,12 @@ render_path = function(
 	        line_antialias = antialias
 	      )
 	    }
-	    render_zaxis_from_dots(
-	    	zaxis_args = zaxis_split$zaxis_args,
-	    	extent = extent,
-	    	zscale = zscale,
-	    	heightmap = heightmap
-	    )
+		    render_zaxis_from_dots(
+		    	zaxis_args = zaxis_args,
+		    	extent = extent,
+		    	zscale = zscale,
+		    	heightmap = heightmap
+		    )
   } else {
 	    return(coord_list)
 	  }
