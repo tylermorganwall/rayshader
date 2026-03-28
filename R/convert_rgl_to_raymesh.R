@@ -68,8 +68,8 @@ convert_rgl_to_raymesh = function(
 				3L
 			))
 		}
-		textures = rgl.attrib(vertex_info$id[row], "texcoords")
-		normals = rgl.attrib(vertex_info$id[row], "normals")
+		textures = rgl::rgl.attrib(vertex_info$id[row], "texcoords")
+		normals = rgl::rgl.attrib(vertex_info$id[row], "normals")
 		if (obj) {
 			has_norm = get(id, envir = ray_has_norm_envir)
 			if (!has_norm || nrow(normals) == 0) {
@@ -118,6 +118,21 @@ convert_rgl_to_raymesh = function(
 			specular = c(1, 1, 1)
 		}
 
+		# Ensure color is valid
+		if (is.null(color) || is.na(color) || length(color) == 0) {
+			color <- "white"
+		}
+		# Convert color if it's a character
+		if (is.character(color)) {
+			color_vec <- tryCatch({
+				convert_color(color)
+			}, error = function(e) {
+				c(1, 1, 1)  # Default to white on error
+			})
+		} else {
+			color_vec <- color
+		}
+		
 		texture_loc = ifelse(!is.na(texture_loc), texture_loc, "")
 		return(rayvertex::construct_mesh(
 			indices = indices,
@@ -128,8 +143,8 @@ convert_rgl_to_raymesh = function(
 			norm_indices = norm_indices,
 			material = rayvertex::material_list(
 				texture_location = texture_loc,
-				diffuse = color,
-				transmittance = (1 - convert_color(color)) * water_attenuation,
+				diffuse = color_vec,
+				transmittance = (1 - convert_color(color_vec)) * water_attenuation,
 				type = type_val,
 				shininess = shininess,
 				dissolve = alpha,

@@ -308,6 +308,13 @@ render_highquality = function(
 	if (rgl::cur3d() == 0) {
 		stop("No rgl window currently open.")
 	}
+	# Ensure rgl scene is fully rendered before capturing
+	# This helps prevent race conditions where colors might not be ready
+	rgl::rgl.bringtotop()
+	Sys.sleep(0.1)
+	# Force a redraw to ensure all graphics are updated
+	rgl::par3d(skipRedraw = FALSE)
+	
 	if (samples > 256 && sample_method == "sobol_blue") {
 		warning(
 			r"{When `sample_method = "sobol_blue"`, `samples` must be less than or equal to 256. Setting `sample_method` to `"sobol"`.}"
