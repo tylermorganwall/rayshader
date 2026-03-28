@@ -165,6 +165,17 @@ generate_label_overlay = function(
 	if (!(length(find.package("car", quiet = TRUE)) > 0)) {
 		stop("{car} package required for generate_label_overlay()")
 	}
+	if (is.null(extent)) {
+		stop("`extent` must not be NULL")
+	}
+	stopifnot(!is.null(heightmap) || (!is.na(width) && !is.na(height)))
+	stopifnot(!missing(extent))
+	stopifnot(!missing(labels))
+	extent = resolve_scene_render_extent(
+		extent = extent,
+		heightmap = heightmap,
+		caller = NULL
+	)
 	if (
 		(inherits(labels, "sf") || inherits(labels, "sfc")) &&
 			(is.null(x) && is.null(y)) &&
@@ -172,6 +183,16 @@ generate_label_overlay = function(
 	) {
 		if (!(length(find.package("sf", quiet = TRUE)) > 0)) {
 			stop("{sf} package required for {sf} object support")
+		}
+		scene_labels = auto_transform_scene_sf(
+			sf_object = labels,
+			extent = extent,
+			heightmap = heightmap,
+			crs = tryCatch(sf::st_crs(labels), error = function(e) NULL)
+		)
+		labels = scene_labels$object
+		if (!is.null(scene_labels$extent)) {
+			extent = scene_labels$extent
 		}
 		geometry_list = sf::st_geometry(labels)
 		xycoords = list()
@@ -190,13 +211,19 @@ generate_label_overlay = function(
 		x = xycoords[, 1]
 		y = xycoords[, 2]
 	}
-	if (is.null(extent)) {
-		stop("`extent` must not be NULL")
+	if (!is.null(x) && !is.null(y)) {
+		scene_xy = auto_transform_scene_xy(
+			x = x,
+			y = y,
+			extent = extent,
+			heightmap = heightmap
+		)
+		x = scene_xy$x
+		y = scene_xy$y
+		if (!is.null(scene_xy$extent)) {
+			extent = scene_xy$extent
+		}
 	}
-	stopifnot(!is.null(heightmap) || (!is.na(width) && !is.na(height)))
-	stopifnot(!missing(extent))
-	stopifnot(!missing(labels))
-
 	extent = get_extent(extent)
 	if (!(length(find.package("ragg", quiet = TRUE)) > 0)) {
 		png_device = grDevices::png

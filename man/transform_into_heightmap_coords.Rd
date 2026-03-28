@@ -13,7 +13,8 @@ transform_into_heightmap_coords(
   offset = 0,
   zscale = 1,
   use_altitude = TRUE,
-  filter_bounds = FALSE
+  filter_bounds = FALSE,
+  crs = NULL
 )
 }
 \value{

@@ -6,6 +6,24 @@ transform_polygon_into_raycoords = function(polygon, heightmap = NULL, e = NULL,
   if(inherits(polygon,"SpatialPolygonsDataFrame") || inherits(polygon,"SpatialPolygons")) {
     polygon = sf::st_as_sf(polygon)
   }
+  e = resolve_scene_render_extent(
+    extent = e,
+    heightmap = heightmap,
+    caller = NULL,
+    error_if_missing = FALSE
+  )
+  if(inherits(polygon, "sf")) {
+    scene_polygon = auto_transform_scene_sf(
+      sf_object = polygon,
+      extent = e,
+      heightmap = heightmap,
+      crs = tryCatch(sf::st_crs(polygon), error = function(e) NULL)
+    )
+    polygon = scene_polygon$object
+    if(!is.null(scene_polygon$extent)) {
+      e = scene_polygon$extent
+    }
+  }
   vertex_info = get_ids_with_labels(typeval = "surface_tris")
   if(nrow(vertex_info) > 1) {
     warning("Multiple surfaces detected: only using the first surface to transform coords")

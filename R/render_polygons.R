@@ -133,6 +133,33 @@ render_polygons = function(
 	if (!(length(find.package("rayrender", quiet = TRUE)) > 0)) {
 		stop("rayrender required to use render_polygon()")
 	}
+	extent = resolve_scene_render_extent(
+		extent = extent,
+		heightmap = heightmap,
+		caller = "render_polygons"
+	)
+	if (
+		inherits(polygon, "SpatialPolygonsDataFrame") ||
+			inherits(polygon, "SpatialPolygons")
+	) {
+		polygon = sf::st_as_sf(polygon)
+	}
+	if (
+		inherits(polygon, "sf") ||
+			inherits(polygon, "sfc") ||
+			inherits(polygon, "sfg")
+	) {
+		scene_polygon = auto_transform_scene_sf(
+			sf_object = polygon,
+			extent = extent,
+			heightmap = heightmap,
+			crs = tryCatch(sf::st_crs(polygon), error = function(e) NULL)
+		)
+		polygon = scene_polygon$object
+		if (!is.null(scene_polygon$extent)) {
+			extent = scene_polygon$extent
+		}
+	}
 	if (is.na(bottom)) {
 		vertex_info = get_ids_with_labels(typeval = c("base"))
 		vertex_info2 = get_ids_with_labels(typeval = c("surface", "surface_tris"))

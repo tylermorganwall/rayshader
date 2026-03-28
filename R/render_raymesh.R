@@ -1,10 +1,10 @@
 #'@title Render Raymesh
 #'
-#'@description Adds 3D raymesh model to the current scene, using latitude/longitude or coordinates in the reference
+#'@description Adds 3D raymesh model to the current scene, using x/y coordinates in the reference
 #'system defined by the extent object. If no altitude is provided, the raymesh will be elevated a constant offset
 #'above the heightmap. If the raymesh goes off the edge, the raymesh will be filtered out.
 #'
-#'If no latitudes or longitudes are passed in, the raymesh will be plotted in the coordinate system set by the user-specified
+#'If no x/y coordinates are passed in, the raymesh will be plotted in the coordinate system set by the user-specified
 #'`extent` argument as-is. Use this alongside [save_multipolygonz_to_obj()] to plot 3D polygons imported from geospatial sources
 #'in the proper location (but for ease of use, use [render_multipolygonz()] to plot this data directly).
 #'
@@ -14,24 +14,26 @@
 #' a length-4 numeric vector specifying `c("xmin", "xmax","ymin","ymax")`, or the spatial object (from
 #' the previously aforementioned packages) which will be automatically converted to an extent object.
 #' If omitted, rayshader will use extent metadata cached by [plot_3d()] or [plot_gg()].
-#'@param long Vector of longitudes (or other coordinate in the same coordinate reference system as extent).
-#'@param lat Vector of latitudes (or other coordinate in the same coordinate reference system as extent).
+#'@param x Vector of x coordinates (or other coordinate in the same coordinate reference system as extent).
+#'@param y Vector of y coordinates (or other coordinate in the same coordinate reference system as extent).
+#'@param lat Default `NULL`. Alias for `y` for geographic workflows.
+#'@param long Default `NULL`. Alias for `x` for geographic workflows.
 #'@param altitude Default `NULL`. Elevation of each point, in units of the elevation matrix (scaled by `zscale`).
 #'If left `NULL`, this will be just the elevation value at ths surface, offset by `offset`. If a single value,
 #'the OBJ will be rendered at that altitude.
 #'@param xyz Default `NULL`, ignored. A 3 column numeric matrix, with each row specifying the x/y/z
-#'coordinates of the OBJ model(s). Overrides lat/long/altitude and ignores extent to plot the OBJ in raw rgl coordinates.
+#'coordinates of the OBJ model(s). Overrides x/y, lat/long, and altitude and ignores extent to plot the OBJ in raw rgl coordinates.
 #'@param load_normals Default `TRUE`. Whether to load normals for the 3D model.
 #'@param change_material Default `TRUE`. Whether to change the raymesh material (to customize the color).
 #'@param angle Default `c(0,0,0)`. Angle of rotation around the x, y, and z axes. If this is a matrix or list,
 #'each row (or list entry) specifies the rotation of the nth model specified (number of rows/length of list must
-#'equal the length of `lat`/`long`).
+#'equal the length of `x`/`y`).
 #'@param scale Default `c(1,1,1)`. Amount to scale the 3D model in the x, y, and z axes. If this is a matrix or list,
 #'each row (or list entry) specifies the scale of the nth model specified (number of rows/length of list must
-#'equal the length of `lat`/`long`).
+#'equal the length of `x`/`y`).
 #'@param obj_zscale Default `FALSE`. Whether to scale the size of the OBJ by zscale to have it match
 #'the size of the map. If zscale is very big, this will make the model very small.
-#'@param swap_yz Default `NULL`, defaults to `FALSE` unless plotting raw coordinates (no lat or long passed).
+#'@param swap_yz Default `NULL`, defaults to `FALSE` unless plotting raw coordinates (no x/y or lat/long passed).
 #' Whether to swap and Y and Z axes. (Y axis is vertical in
 #'rayshader coordinates, but data is often provided with Z being vertical).
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.
@@ -58,8 +60,8 @@
 render_raymesh = function(
 	raymesh,
 	extent = NULL,
-	lat = NULL,
-	long = NULL,
+	y = NULL,
+	x = NULL,
 	altitude = NULL,
 	xyz = NULL,
 	zscale = 1,
@@ -81,8 +83,25 @@ render_raymesh = function(
 	light_intensity = 1,
 	light_relative = FALSE,
 	rgl_tag = "",
+	lat = NULL,
+	long = NULL,
 	...
 ) {
+	xy_inputs = resolve_render_xy_aliases(
+		x = x,
+		y = y,
+		long = long,
+		lat = lat,
+		missing_x = missing(x),
+		missing_y = missing(y),
+		missing_long = missing(long),
+		missing_lat = missing(lat),
+		caller = "render_raymesh"
+	)
+	x = xy_inputs$x
+	y = xy_inputs$y
+	lat = y
+	long = x
 	dot_split = split_zaxis_dots(list(...))
 	zscale = resolve_scene_render_zscale(
 		zscale,
@@ -220,7 +239,7 @@ render_raymesh = function(
 		xyz = xyz[!is.na(xyz[, 2]), ]
 		if (nrow(xyz) == 0) {
 			stop(
-				"All models outside extent--check lat/long values and extent object."
+				"All models outside extent--check x/y or lat/long values and extent object."
 			)
 		}
 	}

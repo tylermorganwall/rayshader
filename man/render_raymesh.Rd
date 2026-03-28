@@ -7,8 +7,8 @@
 render_raymesh(
   raymesh,
   extent = NULL,
-  lat = NULL,
-  long = NULL,
+  y = NULL,
+  x = NULL,
   altitude = NULL,
   xyz = NULL,
   zscale = 1,
@@ -30,6 +30,8 @@ render_raymesh(
   light_intensity = 1,
   light_relative = FALSE,
   rgl_tag = "",
+  lat = NULL,
+  long = NULL,
   ...
 )
 }
@@ -42,16 +44,16 @@ a length-4 numeric vector specifying \code{c("xmin", "xmax","ymin","ymax")}, or 
 the previously aforementioned packages) which will be automatically converted to an extent object.
 If omitted, rayshader will use extent metadata cached by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}.}
 
-\item{lat}{Vector of latitudes (or other coordinate in the same coordinate reference system as extent).}
+\item{y}{Vector of y coordinates (or other coordinate in the same coordinate reference system as extent).}
 
-\item{long}{Vector of longitudes (or other coordinate in the same coordinate reference system as extent).}
+\item{x}{Vector of x coordinates (or other coordinate in the same coordinate reference system as extent).}
 
 \item{altitude}{Default \code{NULL}. Elevation of each point, in units of the elevation matrix (scaled by \code{zscale}).
 If left \code{NULL}, this will be just the elevation value at ths surface, offset by \code{offset}. If a single value,
 the OBJ will be rendered at that altitude.}
 
 \item{xyz}{Default \code{NULL}, ignored. A 3 column numeric matrix, with each row specifying the x/y/z
-coordinates of the OBJ model(s). Overrides lat/long/altitude and ignores extent to plot the OBJ in raw rgl coordinates.}
+coordinates of the OBJ model(s). Overrides x/y, lat/long, and altitude and ignores extent to plot the OBJ in raw rgl coordinates.}
 
 \item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.}
 
@@ -70,17 +72,17 @@ All points are assumed to be evenly spaced.}
 \item{obj_zscale}{Default \code{FALSE}. Whether to scale the size of the OBJ by zscale to have it match
 the size of the map. If zscale is very big, this will make the model very small.}
 
-\item{swap_yz}{Default \code{NULL}, defaults to \code{FALSE} unless plotting raw coordinates (no lat or long passed).
+\item{swap_yz}{Default \code{NULL}, defaults to \code{FALSE} unless plotting raw coordinates (no x/y or lat/long passed).
 Whether to swap and Y and Z axes. (Y axis is vertical in
 rayshader coordinates, but data is often provided with Z being vertical).}
 
 \item{angle}{Default \code{c(0,0,0)}. Angle of rotation around the x, y, and z axes. If this is a matrix or list,
 each row (or list entry) specifies the rotation of the nth model specified (number of rows/length of list must
-equal the length of \code{lat}/\code{long}).}
+equal the length of \code{x}/\code{y}).}
 
 \item{scale}{Default \code{c(1,1,1)}. Amount to scale the 3D model in the x, y, and z axes. If this is a matrix or list,
 each row (or list entry) specifies the scale of the nth model specified (number of rows/length of list must
-equal the length of \code{lat}/\code{long}).}
+equal the length of \code{x}/\code{y}).}
 
 \item{clear_previous}{Default \code{FALSE}. If \code{TRUE}, it will clear all existing points.}
 
@@ -101,14 +103,18 @@ or absolute.}
 
 \item{rgl_tag}{Default \code{""}. Tag to add to the rgl scene id, will be prefixed by \code{"objraymsh"}}
 
+\item{lat}{Default \code{NULL}. Alias for \code{y} for geographic workflows.}
+
+\item{long}{Default \code{NULL}. Alias for \code{x} for geographic workflows.}
+
 \item{...}{Additional arguments to pass to \code{rgl::triangles3d()}.}
 }
 \description{
-Adds 3D raymesh model to the current scene, using latitude/longitude or coordinates in the reference
+Adds 3D raymesh model to the current scene, using x/y coordinates in the reference
 system defined by the extent object. If no altitude is provided, the raymesh will be elevated a constant offset
 above the heightmap. If the raymesh goes off the edge, the raymesh will be filtered out.
 
-If no latitudes or longitudes are passed in, the raymesh will be plotted in the coordinate system set by the user-specified
+If no x/y coordinates are passed in, the raymesh will be plotted in the coordinate system set by the user-specified
 \code{extent} argument as-is. Use this alongside \code{\link[=save_multipolygonz_to_obj]{save_multipolygonz_to_obj()}} to plot 3D polygons imported from geospatial sources
 in the proper location (but for ease of use, use \code{\link[=render_multipolygonz]{render_multipolygonz()}} to plot this data directly).
 }

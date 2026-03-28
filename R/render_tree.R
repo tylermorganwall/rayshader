@@ -1,14 +1,16 @@
 #'@title Render Tree
 #'
 #'@description Adds a 3D representation of trees to an existing 3D scene generated with rayshader.
-#'Users can specify the trees' geographical positions using latitude and longitude or the same coordinate reference system as `extent`.
+#'Users can specify the trees' positions using x/y coordinates or the same coordinate reference system as `extent`.
 #'Different types of tree models can be used, including a basic and a cone-shaped tree. Users can also use their own custom tree model in
 #'OBJ format. The function allows customization of various aspects of the tree, including the color of the crown and the trunk,
 #'the size of the crown (the leafy part of the tree) and the trunk, the overall scale of the tree, and the rotation angle around the x, y, and z axes.
 #'Users can also specify the minimum and maximum height of the trees to be rendered.
 #'
-#'@param long Vector of longitudes (or other coordinate in the same coordinate reference system as extent).
-#'@param lat Vector of latitudes (or other coordinate in the same coordinate reference system as extent).
+#'@param x Vector of x coordinates (or other coordinate in the same coordinate reference system as extent).
+#'@param y Vector of y coordinates (or other coordinate in the same coordinate reference system as extent).
+#'@param lat Default `NULL`. Alias for `y` for geographic workflows.
+#'@param long Default `NULL`. Alias for `x` for geographic workflows.
 #'@param type Default `"basic"`. Type of tree. Other built-in option: `"cone"`.
 #'@param custom_obj_tree Default `NULL`. Instead of using the built-in types, users can also load a custom tree
 #'model in OBJ format. This function loads and manipulates the model, assuming the tree model's trunk begins
@@ -41,7 +43,7 @@
 #'above that height.
 #'@param angle Default `c(0,0,0)`. Angle of rotation around the x, y, and z axes. If this is a matrix or list,
 #'each row (or list entry) specifies the rotation of the nth tree specified (number of rows/length of list must
-#'equal the length of `lat`/`long`).
+#'equal the length of `x`/`y`).
 #'@param extent Either an object representing the spatial extent of the 3D scene
 #' (either from the `raster`, `terra`, `sf`, or `sp` packages),
 #' a length-4 numeric vector specifying `c("xmin", "xmax", "ymin", "ymax")`, or the spatial object (from
@@ -73,7 +75,7 @@
 #'
 #'render_tree(extent = attr(montereybay,"extent"), heightmap = montereybay,
 #'            tree_zscale = FALSE, tree_height = 30,  lit = TRUE,
-#'            lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), zscale=50)
+#'            y = unlist(circle_coords_lat), x = unlist(circle_coords_long), zscale=50)
 #'render_snapshot()
 #'}
 #'if(run_documentation()) {
@@ -81,7 +83,7 @@
 #'render_tree(extent = attr(montereybay,"extent"), heightmap = montereybay,
 #'            tree_zscale = FALSE, tree_height = 60, crown_width_ratio = 0.5,
 #'            clear_previous = TRUE,
-#'            lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), zscale=50)
+#'            y = unlist(circle_coords_lat), x = unlist(circle_coords_long), zscale=50)
 #'render_snapshot()
 #'}
 #'if(run_documentation()) {
@@ -89,7 +91,7 @@
 #'render_tree(extent = attr(montereybay,"extent"), heightmap = montereybay,
 #'            tree_zscale = FALSE, tree_height = 40, crown_width_ratio = 2,
 #'            clear_previous = TRUE, trunk_height_ratio=1/2, trunk_radius = 1.5,
-#'            lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), zscale=50)
+#'            y = unlist(circle_coords_lat), x = unlist(circle_coords_long), zscale=50)
 #'render_snapshot()
 #'}
 #'if(run_documentation()) {
@@ -97,7 +99,7 @@
 #'render_tree(extent = attr(montereybay,"extent"), heightmap = montereybay,
 #'            tree_zscale = FALSE, tree_height = 30,
 #'            clear_previous = TRUE, type = "cone",trunk_height_ratio = 1/6,
-#'            lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), zscale=50)
+#'            y = unlist(circle_coords_lat), x = unlist(circle_coords_long), zscale=50)
 #'render_snapshot()
 #'}
 #'if(run_documentation()) {
@@ -106,7 +108,7 @@
 #'render_tree(extent = attr(montereybay,"extent"), heightmap = montereybay,
 #'            tree_zscale = FALSE, tree_height = 30, crown_width_ratio = 0.5 + runif(20),
 #'            crown_color = rainbow(20),  clear_previous = TRUE,
-#'            lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), zscale=50)
+#'            y = unlist(circle_coords_lat), x = unlist(circle_coords_long), zscale=50)
 #'render_snapshot()
 #'}
 #'
@@ -142,8 +144,8 @@
 #'if (run_example) {
 #'#The tree locations are given as an absolute height (as opposed to relative to the surface)
 #'#so we set `absolute_height = TRUE`.
-#'render_tree(lat = tree_locations[,2],
-#'            long = tree_locations[,1],
+#'render_tree(y = tree_locations[,2],
+#'            x = tree_locations[,1],
 #'            crown_width_ratio = 0.5,
 #'            absolute_height = TRUE,
 #'            tree_height = tree_locations[,3],
@@ -166,8 +168,8 @@
 #'                   min_variance = 0)
 #'}
 render_tree = function(
-	lat = NULL,
-	long = NULL,
+	y = NULL,
+	x = NULL,
 	extent = NULL,
 	type = "basic",
 	custom_obj_tree = NULL,
@@ -190,8 +192,25 @@ render_tree = function(
 	baseshape = "rectangle",
 	angle = c(0, 0, 0),
 	clear_previous = FALSE,
+	lat = NULL,
+	long = NULL,
 	...
 	) {
+	xy_inputs = resolve_render_xy_aliases(
+		x = x,
+		y = y,
+		long = long,
+		lat = lat,
+		missing_x = missing(x),
+		missing_y = missing(y),
+		missing_long = missing(long),
+		missing_lat = missing(lat),
+		caller = "render_tree"
+	)
+	x = xy_inputs$x
+	y = xy_inputs$y
+	lat = y
+	long = x
 	dot_split = split_zaxis_dots(list(...))
 	zscale = resolve_scene_render_zscale(
 		zscale,
@@ -210,7 +229,7 @@ render_tree = function(
 	# If clear_previous is TRUE, remove previous tree object
 	if (clear_previous) {
 		rgl::pop3d(tag = "objtree")
-		if (missing(lat) || missing(long)) {
+		if (is.null(lat) || is.null(long)) {
 			render_zaxis_from_dots(
 				zaxis_args = zaxis_args,
 				extent = extent,

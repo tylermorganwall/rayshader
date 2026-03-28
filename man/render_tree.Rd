@@ -5,8 +5,8 @@
 \title{Render Tree}
 \usage{
 render_tree(
-  lat = NULL,
-  long = NULL,
+  y = NULL,
+  x = NULL,
   extent = NULL,
   type = "basic",
   custom_obj_tree = NULL,
@@ -29,13 +29,15 @@ render_tree(
   baseshape = "rectangle",
   angle = c(0, 0, 0),
   clear_previous = FALSE,
+  lat = NULL,
+  long = NULL,
   ...
 )
 }
 \arguments{
-\item{lat}{Vector of latitudes (or other coordinate in the same coordinate reference system as extent).}
+\item{y}{Vector of y coordinates (or other coordinate in the same coordinate reference system as extent).}
 
-\item{long}{Vector of longitudes (or other coordinate in the same coordinate reference system as extent).}
+\item{x}{Vector of x coordinates (or other coordinate in the same coordinate reference system as extent).}
 
 \item{extent}{Either an object representing the spatial extent of the 3D scene
 (either from the \code{raster}, \code{terra}, \code{sf}, or \code{sp} packages),
@@ -100,15 +102,19 @@ All points are assumed to be evenly spaced.}
 
 \item{angle}{Default \code{c(0,0,0)}. Angle of rotation around the x, y, and z axes. If this is a matrix or list,
 each row (or list entry) specifies the rotation of the nth tree specified (number of rows/length of list must
-equal the length of \code{lat}/\code{long}).}
+equal the length of \code{x}/\code{y}).}
 
 \item{clear_previous}{Default \code{FALSE}. If \code{TRUE}, it will clear all existing trees.}
+
+\item{lat}{Default \code{NULL}. Alias for \code{y} for geographic workflows.}
+
+\item{long}{Default \code{NULL}. Alias for \code{x} for geographic workflows.}
 
 \item{...}{Additional arguments to pass to \code{rgl::triangles3d()}.}
 }
 \description{
 Adds a 3D representation of trees to an existing 3D scene generated with rayshader.
-Users can specify the trees' geographical positions using latitude and longitude or the same coordinate reference system as \code{extent}.
+Users can specify the trees' positions using x/y coordinates or the same coordinate reference system as \code{extent}.
 Different types of tree models can be used, including a basic and a cone-shaped tree. Users can also use their own custom tree model in
 OBJ format. The function allows customization of various aspects of the tree, including the color of the crown and the trunk,
 the size of the crown (the leafy part of the tree) and the trunk, the overall scale of the tree, and the rotation angle around the x, y, and z axes.
@@ -131,7 +137,7 @@ circle_coords_long = moss_landing_coord[2] + 0.3 * cos(t)
 
 render_tree(extent = attr(montereybay,"extent"), heightmap = montereybay,
            tree_zscale = FALSE, tree_height = 30,  lit = TRUE,
-           lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), zscale=50)
+           y = unlist(circle_coords_lat), x = unlist(circle_coords_long), zscale=50)
 render_snapshot()
 }
 if(run_documentation()) {
@@ -139,7 +145,7 @@ if(run_documentation()) {
 render_tree(extent = attr(montereybay,"extent"), heightmap = montereybay,
            tree_zscale = FALSE, tree_height = 60, crown_width_ratio = 0.5,
            clear_previous = TRUE,
-           lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), zscale=50)
+           y = unlist(circle_coords_lat), x = unlist(circle_coords_long), zscale=50)
 render_snapshot()
 }
 if(run_documentation()) {
@@ -147,7 +153,7 @@ if(run_documentation()) {
 render_tree(extent = attr(montereybay,"extent"), heightmap = montereybay,
            tree_zscale = FALSE, tree_height = 40, crown_width_ratio = 2,
            clear_previous = TRUE, trunk_height_ratio=1/2, trunk_radius = 1.5,
-           lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), zscale=50)
+           y = unlist(circle_coords_lat), x = unlist(circle_coords_long), zscale=50)
 render_snapshot()
 }
 if(run_documentation()) {
@@ -155,7 +161,7 @@ if(run_documentation()) {
 render_tree(extent = attr(montereybay,"extent"), heightmap = montereybay,
            tree_zscale = FALSE, tree_height = 30,
            clear_previous = TRUE, type = "cone",trunk_height_ratio = 1/6,
-           lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), zscale=50)
+           y = unlist(circle_coords_lat), x = unlist(circle_coords_long), zscale=50)
 render_snapshot()
 }
 if(run_documentation()) {
@@ -164,7 +170,7 @@ render_camera(theta = 150,  phi = 38, zoom = 0.4, fov = 55)
 render_tree(extent = attr(montereybay,"extent"), heightmap = montereybay,
            tree_zscale = FALSE, tree_height = 30, crown_width_ratio = 0.5 + runif(20),
            crown_color = rainbow(20),  clear_previous = TRUE,
-           lat = unlist(circle_coords_lat), long = unlist(circle_coords_long), zscale=50)
+           y = unlist(circle_coords_lat), x = unlist(circle_coords_long), zscale=50)
 render_snapshot()
 }
 
@@ -200,8 +206,8 @@ render_snapshot()
 if (run_example) {
 #The tree locations are given as an absolute height (as opposed to relative to the surface)
 #so we set `absolute_height = TRUE`.
-render_tree(lat = tree_locations[,2],
-           long = tree_locations[,1],
+render_tree(y = tree_locations[,2],
+           x = tree_locations[,1],
            crown_width_ratio = 0.5,
            absolute_height = TRUE,
            tree_height = tree_locations[,3],

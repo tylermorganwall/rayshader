@@ -7,13 +7,11 @@
 render_label(
   heightmap = NULL,
   text,
-  lat,
-  long,
+  y = NULL,
+  x = NULL,
+  z = NULL,
   altitude = NULL,
   extent = NULL,
-  x = NULL,
-  y = NULL,
-  z = NULL,
   zscale = 1,
   relativez = TRUE,
   offset = 0,
@@ -30,7 +28,9 @@ render_label(
   family = "sans",
   fonttype = "standard",
   linecolor = "black",
-  textcolor = "black"
+  textcolor = "black",
+  lat = NULL,
+  long = NULL
 )
 }
 \arguments{
@@ -38,9 +38,13 @@ render_label(
 
 \item{text}{The label text.}
 
-\item{lat}{A latitude for the text. Must provide an \code{raster::extent} object to argument \code{extent} for the map.}
+\item{y}{Default \code{NULL}. Y coordinate for the label in the same coordinate reference system as \code{extent}.
+If no \code{extent} is available and the scene uses a plain matrix heightmap, this defaults to matrix dimensions.}
 
-\item{long}{A latitude for the text. Must provide an \code{raster::extent} object to argument \code{extent} for the map.}
+\item{x}{Default \code{NULL}. X coordinate for the label in the same coordinate reference system as \code{extent}.
+If no \code{extent} is available and the scene uses a plain matrix heightmap, this defaults to matrix dimensions.}
+
+\item{z}{Default \code{NULL}. Elevation of the label, in units of the elevation matrix (scaled by zscale).}
 
 \item{altitude}{Default \code{NULL}. Elevation of the label, in units of the elevation matrix (scaled by zscale). If none is passed, this will default to 10 percent above the maximum altitude in the heightmap.}
 
@@ -48,13 +52,8 @@ render_label(
 (either from the \code{raster}, \code{terra}, \code{sf}, or \code{sp} packages),
 a length-4 numeric vector specifying \code{c("xmin", "xmax","ymin","ymax")}, or the spatial object (from
 the previously aforementioned packages) which will be automatically converted to an extent object.
-If omitted, rayshader will use extent metadata cached by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}.}
-
-\item{x}{Default \code{NULL}. Directly specify the \code{x} index in the matrix to place the label.}
-
-\item{y}{Default \code{NULL}. Directly specify the \code{y} index in the matrix to place the label.}
-
-\item{z}{Default \code{NULL}. Elevation of the label, in units of the elevation matrix (scaled by zscale).}
+If omitted, rayshader will use extent metadata cached by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}. If no extent metadata
+is available for a plain matrix scene, rayshader defaults to \code{c(xmin = 1, xmax = nrow(heightmap), ymin = 1, ymax = ncol(heightmap))}.}
 
 \item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units}
 
@@ -90,6 +89,10 @@ other arguments are passed to \code{\link[=render_label]{render_label()}}, this 
 \item{linecolor}{Default \code{black}. Color of the line.}
 
 \item{textcolor}{Default \code{black}. Color of the text.}
+
+\item{lat}{Default \code{NULL}. Alias for \code{y} for geographic workflows.}
+
+\item{long}{Default \code{NULL}. Alias for \code{x} for geographic workflows.}
 }
 \description{
 Adds a marker and label to the current 3D plot
@@ -104,9 +107,9 @@ render_snapshot()
 }
 
 santa_cruz = c(36.962957, -122.021033)
-#We want to add a label to Santa Cruz, so we use the x and y matrix coordinate (x=220 and y=330)
+#We want to add a label to Santa Cruz, so we use x/y coordinates in the same extent as the map.
 if(run_documentation()) {
-render_label(montereybay,lat = santa_cruz[1], long = santa_cruz[2],
+render_label(montereybay, y = santa_cruz[1], x = santa_cruz[2],
             extent = attr(montereybay, "extent"), textsize = 2,
             altitude=12000, zscale=50, text = "Santa Cruz")
 render_snapshot()
@@ -117,7 +120,7 @@ monterey = c(36.603053, -121.892933)
 #the user to control the dash length). You can clear the existing lines by setting
 #`clear_previous = TRUE`.
 if(run_documentation()) {
-render_label(montereybay, lat = monterey[1], long = monterey[2], altitude = 10000,
+render_label(montereybay, y = monterey[1], x = monterey[2], altitude = 10000,
             extent = attr(montereybay, "extent"), textsize = 2,
             zscale = 50, text = "Monterey", textcolor = "white", linecolor="darkred",
             dashed = TRUE, clear_previous = TRUE)
@@ -128,7 +131,7 @@ canyon = c(36.621049, -122.333912)
 #By default, z specifies the altitude above that point on the elevation matrix. We can also specify
 #an absolute height by setting `relativez=FALSE`.
 if(run_documentation()) {
-render_label(montereybay,lat=canyon[1], long = canyon[2], altitude = 2000,
+render_label(montereybay, y = canyon[1], x = canyon[2], altitude = 2000,
             extent = attr(montereybay,"extent"), textsize = 2,
             zscale=50,text = "Monterey Canyon", relativez=FALSE)
 render_snapshot()
@@ -139,12 +142,12 @@ render_snapshot()
 #argument `text_angle`.
 if(run_documentation()) {
 render_camera(theta=35, phi = 35, zoom = 0.80, fov=60)
-render_label(montereybay, lat = monterey[1], long = monterey[2], altitude = 10000,
+render_label(montereybay, y = monterey[1], x = monterey[2], altitude = 10000,
             extent = attr(montereybay, "extent"), textsize = 2,
             zscale = 50, text = "Monterey", textcolor = "white", linecolor="darkred",
             dashed = TRUE, clear_previous = TRUE)
 
-render_label(montereybay,lat=canyon[1], long = canyon[2],
+render_label(montereybay, y = canyon[1], x = canyon[2],
             altitude = 2000, zscale=50, textsize = 2,
             extent = attr(montereybay,"extent"), textcolor = "white", linecolor="white",
             text = "Monterey Canyon", relativez=FALSE)

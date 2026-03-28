@@ -75,8 +75,8 @@ test_that("Checking render_snapshot(software_render = TRUE) features", {
 
 	render_path(
 		extent = attr(montereybay, "extent"),
-		lat = unlist(bird_track_lat),
-		long = unlist(bird_track_long),
+		y = unlist(bird_track_lat),
+		x = unlist(bird_track_long),
 		altitude = z_out,
 		zscale = 50,
 		color = "orange",
@@ -84,8 +84,8 @@ test_that("Checking render_snapshot(software_render = TRUE) features", {
 	)
 	render_points(
 		extent = attr(montereybay, "extent"),
-		lat = unlist(bird_track_lat) - 0.1,
-		long = unlist(bird_track_long),
+		y = unlist(bird_track_lat) - 0.1,
+		x = unlist(bird_track_long),
 		altitude = z_out,
 		zscale = 50,
 		color = "purple",
@@ -97,16 +97,16 @@ test_that("Checking render_snapshot(software_render = TRUE) features", {
 		tree_zscale = FALSE,
 		tree_height = 30,
 		crown_width_ratio = 1,
-		lat = unlist(circle_coords_lat),
-		long = unlist(circle_coords_long),
+		y = unlist(circle_coords_lat),
+		x = unlist(circle_coords_long),
 		zscale = 50
 	)
 	render_obj(
 		flag_full_obj(),
 		extent = attr(montereybay, "extent"),
 		heightmap = montereybay,
-		lat = unlist(circle_coords_lat2),
-		long = unlist(circle_coords_long2),
+		y = unlist(circle_coords_lat2),
+		x = unlist(circle_coords_long2),
 		scale = c(2, 2, 2),
 		angle = c(0, 45, 0),
 		zscale = 50,

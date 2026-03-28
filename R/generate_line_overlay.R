@@ -91,6 +91,21 @@ generate_line_overlay = function(
 	if (inherits(geometry, "sfg")) {
 		geometry = sf::st_sfc(geometry)
 	}
+	extent = resolve_scene_render_extent(
+		extent = extent,
+		heightmap = heightmap,
+		caller = NULL
+	)
+	scene_geometry = auto_transform_scene_sf(
+		sf_object = geometry,
+		extent = extent,
+		heightmap = heightmap,
+		crs = tryCatch(sf::st_crs(geometry), error = function(e) NULL)
+	)
+	geometry = scene_geometry$object
+	if (!is.null(scene_geometry$extent)) {
+		extent = scene_geometry$extent
+	}
 	# sf_lines_cropped = base::suppressMessages(base::suppressWarnings(sf::st_crop(geometry, extent)))
 
 	sf_lines_cropped = geometry

@@ -14,8 +14,8 @@ test_that("render_points() uses cached scene heightmap and zscale", {
 	))
 
 	expect_no_condition(render_points(
-		lat = 10,
-		long = 10,
+		y = 10,
+		x = 10,
 		extent = c(xmin = 0, xmax = 20, ymin = 0, ymax = 20),
 		offset = 10
 	))
@@ -100,6 +100,255 @@ test_that("render_label() uses cached scene heightmap and zscale", {
 	expect_gt(nrow(ids), 0)
 })
 
+test_that("render_label() accepts x/y names and lat/long aliases", {
+	on.exit(rgl::close3d(), add = TRUE)
+	options(rgl.useNULL = TRUE)
+
+	heightmap = matrix(0, nrow = 20, ncol = 20)
+	texture = sphere_shade(heightmap)
+	extent = c(xmin = 0, xmax = 20, ymin = 0, ymax = 20)
+	expect_no_condition(plot_3d(
+		texture,
+		heightmap,
+		zscale = 10,
+		shadow = FALSE,
+		water = FALSE,
+		windowsize = c(250, 250)
+	))
+
+	expect_no_condition(render_label(
+		text = "A",
+		y = 10,
+		x = 10,
+		z = 10,
+		extent = extent,
+		clear_previous = TRUE
+	))
+	expect_no_condition(render_label(
+		text = "A",
+		lat = 10,
+		long = 10,
+		z = 10,
+		extent = extent,
+		clear_previous = TRUE
+	))
+	expect_error(
+		render_label(
+			text = "A",
+			y = 10,
+			x = 10,
+			lat = 10,
+			z = 10,
+			extent = extent
+		),
+		"Use only one of `y` or `lat`"
+	)
+	expect_error(
+		render_label(
+			text = "A",
+			y = 10,
+			x = 10,
+			long = 10,
+			z = 10,
+			extent = extent
+		),
+		"Use only one of `x` or `long`"
+	)
+})
+
+test_that("render_label() matrix fallback extent preserves 1-based indexing", {
+	on.exit(rgl::close3d(), add = TRUE)
+	options(rgl.useNULL = TRUE)
+
+	heightmap = matrix(0, nrow = 20, ncol = 20)
+	texture = sphere_shade(heightmap)
+	expect_no_condition(plot_3d(
+		texture,
+		heightmap,
+		zscale = 10,
+		shadow = FALSE,
+		water = FALSE,
+		windowsize = c(250, 250)
+	))
+
+	expect_no_condition(render_label(
+		text = "A",
+		x = 1,
+		y = 1,
+		z = 10,
+		clear_previous = TRUE
+	))
+
+	ids = get_ids_with_labels(typeval = "textline")
+	line_id = ids$id[ids$tag == "textline"][1]
+	line_verts = rgl::rgl.attrib(line_id, "vertices")
+	expect_equal(unname(line_verts[1, 1]), -(nrow(heightmap) - 1) / 2, tolerance = 1e-6)
+	expect_equal(unname(line_verts[1, 3]), (ncol(heightmap) - 1) / 2, tolerance = 1e-6)
+})
+
+test_that("render_points() accepts x/y names and lat/long aliases", {
+	on.exit(rgl::close3d(), add = TRUE)
+	options(rgl.useNULL = TRUE)
+
+	heightmap = matrix(0, nrow = 20, ncol = 20)
+	texture = sphere_shade(heightmap)
+	expect_no_condition(plot_3d(
+		texture,
+		heightmap,
+		zscale = 10,
+		shadow = FALSE,
+		water = FALSE,
+		windowsize = c(250, 250)
+	))
+
+	expect_no_condition(render_points(
+		y = 10,
+		x = 10,
+		extent = c(xmin = 0, xmax = 20, ymin = 0, ymax = 20),
+		offset = 10,
+		clear_previous = TRUE
+	))
+	expect_no_condition(render_points(
+		lat = 10,
+		long = 10,
+		extent = c(xmin = 0, xmax = 20, ymin = 0, ymax = 20),
+		offset = 10,
+		clear_previous = TRUE
+	))
+	expect_error(
+		render_points(
+			y = 10,
+			x = 10,
+			lat = 10,
+			extent = c(xmin = 0, xmax = 20, ymin = 0, ymax = 20)
+		),
+		"Use only one of `y` or `lat`"
+	)
+	expect_error(
+		render_points(
+			y = 10,
+			x = 10,
+			long = 10,
+			extent = c(xmin = 0, xmax = 20, ymin = 0, ymax = 20)
+		),
+		"Use only one of `x` or `long`"
+	)
+})
+
+test_that("render_obj() and render_tree() accept x/y coordinates", {
+	on.exit(rgl::close3d(), add = TRUE)
+	options(rgl.useNULL = TRUE)
+
+	heightmap = matrix(0, nrow = 20, ncol = 20)
+	texture = sphere_shade(heightmap)
+	extent = c(xmin = 0, xmax = 20, ymin = 0, ymax = 20)
+	expect_no_condition(plot_3d(
+		texture,
+		heightmap,
+		zscale = 10,
+		shadow = FALSE,
+		water = FALSE,
+		windowsize = c(250, 250)
+	))
+
+	expect_no_condition(render_obj(
+		flag_pole_obj(),
+		y = 10,
+		x = 10,
+		extent = extent,
+		heightmap = heightmap,
+		scale = c(1, 1, 1),
+		clear_previous = TRUE
+	))
+	expect_true(any(get_ids_with_labels()$tag == "obj"))
+
+	expect_no_condition(render_tree(
+		y = 12,
+		x = 12,
+		extent = extent,
+		heightmap = heightmap,
+		tree_height = 5,
+		clear_previous = TRUE
+	))
+	expect_true(any(get_ids_with_labels()$tag == "objtree"))
+})
+
+test_that("render_path() and render_raymesh() accept x/y coordinates", {
+	on.exit(rgl::close3d(), add = TRUE)
+	options(rgl.useNULL = TRUE)
+	skip_if_not_installed("rayvertex")
+
+	heightmap = matrix(0, nrow = 20, ncol = 20)
+	texture = sphere_shade(heightmap)
+	extent = c(xmin = 0, xmax = 20, ymin = 0, ymax = 20)
+	expect_no_condition(plot_3d(
+		texture,
+		heightmap,
+		zscale = 10,
+		shadow = FALSE,
+		water = FALSE,
+		windowsize = c(250, 250)
+	))
+
+	expect_no_condition(render_path(
+		y = c(5, 15),
+		x = c(5, 15),
+		extent = extent,
+		heightmap = heightmap,
+		clear_previous = TRUE
+	))
+	expect_true(any(get_ids_with_labels()$tag == "path3d"))
+
+	expect_no_condition(render_path(
+		lat = c(6, 16),
+		long = c(6, 16),
+		extent = extent,
+		heightmap = heightmap,
+		clear_previous = TRUE
+	))
+	expect_error(
+		render_path(
+			y = c(5, 15),
+			x = c(5, 15),
+			lat = c(5, 15),
+			extent = extent,
+			heightmap = heightmap
+		),
+		"Use only one of `y` or `lat`"
+	)
+
+	mesh = rayvertex::sphere_mesh(radius = 1)
+	expect_no_condition(render_raymesh(
+		mesh,
+		y = 10,
+		x = 10,
+		extent = extent,
+		heightmap = heightmap,
+		clear_previous = TRUE
+	))
+	expect_true(any(get_ids_with_labels()$tag == "obj_raymesh"))
+
+	expect_no_condition(render_raymesh(
+		mesh,
+		lat = 12,
+		long = 12,
+		extent = extent,
+		heightmap = heightmap,
+		clear_previous = TRUE
+	))
+	expect_error(
+		render_raymesh(
+			mesh,
+			y = 10,
+			x = 10,
+			long = 10,
+			extent = extent,
+			heightmap = heightmap
+		),
+		"Use only one of `x` or `long`"
+	)
+})
+
 test_that("cached scene messages include cached symbol labels", {
 	on.exit(rgl::close3d(), add = TRUE)
 	options(rgl.useNULL = TRUE)
@@ -118,8 +367,8 @@ test_that("cached scene messages include cached symbol labels", {
 
 	out = capture.output(
 		render_points(
-			lat = 10,
-			long = 10,
+			y = 10,
+			x = 10,
 			extent = c(xmin = 0, xmax = 20, ymin = 0, ymax = 20),
 			offset = 10
 		)
@@ -164,8 +413,8 @@ test_that("plot_3d() accepts raster input and caches spatial metadata", {
 	expect_true(nzchar(as.character(get_scene_crs())))
 
 	expect_no_condition(render_points(
-		lat = 1400,
-		long = 200,
+		y = 1400,
+		x = 200,
 		offset = 30,
 		size = 1
 	))

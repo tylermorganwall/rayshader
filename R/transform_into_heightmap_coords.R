@@ -8,13 +8,28 @@
 transform_into_heightmap_coords = function(extent, heightmap, lat = NULL, long = NULL,
                                            altitude = NULL, offset = 0, zscale = 1,
                                            use_altitude = TRUE,
-                                           filter_bounds = FALSE) {
+                                           filter_bounds = FALSE,
+                                           crs = NULL) {
   offset = offset/zscale
   heightmap = resolve_scene_render_heightmap(heightmap)
   extent = resolve_scene_render_extent(
     extent = extent,
     heightmap = heightmap
   )
+  if (!is.null(lat) && !is.null(long)) {
+    transformed_xy = auto_transform_scene_xy(
+      x = long,
+      y = lat,
+      extent = extent,
+      heightmap = heightmap,
+      crs = crs
+    )
+    long = transformed_xy$x
+    lat = transformed_xy$y
+    if (!is.null(transformed_xy$extent)) {
+      extent = transformed_xy$extent
+    }
+  }
   if (use_altitude && !is.null(altitude)) {
     scene_height_transform = get_scene_height_transform(
       heightmap = heightmap,

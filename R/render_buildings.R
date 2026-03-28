@@ -207,7 +207,8 @@ render_buildings = function(
 			centroids[, 1],
 			altitude = NULL,
 			offset = 0,
-			zscale = 1
+			zscale = 1,
+			crs = tryCatch(sf::st_crs(polygon), error = function(e) NULL)
 		)
 		bottom = xyz[, 2] + bottom
 		bottom[is.na(bottom)] = min(xyz[, 2])

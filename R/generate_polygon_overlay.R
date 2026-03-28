@@ -95,6 +95,21 @@ generate_polygon_overlay = function(
 	if (!inherits(geometry, "sf")) {
 		stop("geometry must be {sf} object")
 	}
+	extent = resolve_scene_render_extent(
+		extent = extent,
+		heightmap = heightmap,
+		caller = NULL
+	)
+	scene_geometry = auto_transform_scene_sf(
+		sf_object = geometry,
+		extent = extent,
+		heightmap = heightmap,
+		crs = tryCatch(sf::st_crs(geometry), error = function(e) NULL)
+	)
+	geometry = scene_geometry$object
+	if (!is.null(scene_geometry$extent)) {
+		extent = scene_geometry$extent
+	}
 	if (is.numeric(extent)) {
 		extent = raster::extent(extent)
 	}

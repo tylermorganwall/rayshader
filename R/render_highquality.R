@@ -936,15 +936,11 @@ render_highquality = function(
 		temp_center = rgl.attrib(labelids[i], "centers")
 		temp_color = rgl.attrib(labelids[i], "colors")
 		for (j in seq_len(nrow(temp_label))) {
-			if (is.null(text_angle)) {
-				anglevec = c(-phi, theta, 0)
-			} else {
-				if (length(text_angle) == 1) {
-					anglevec = c(0, text_angle, 0)
-				} else {
-					anglevec = text_angle
-				}
-			}
+			anglevec = resolve_render_label_text_angle_rayrender(
+				text_angle = text_angle,
+				phi = phi,
+				theta = theta
+			)
 			labels[[counter]] = rayrender::text3d(
 				label = temp_label[j, 1],
 				x = temp_center[j, 1] - bbox_center[1] + text_offset[1],
@@ -1076,15 +1072,11 @@ render_highquality = function(
 		temp_center = rgl.attrib(scalelabelids[i], "centers")
 		temp_color = rgl.attrib(scalelabelids[i], "colors")
 		for (j in seq_len(nrow(temp_label))) {
-			if (is.null(text_angle)) {
-				anglevec = c(-phi, theta, 0)
-			} else {
-				if (length(text_angle) == 1) {
-					anglevec = c(0, text_angle, 0)
-				} else {
-					anglevec = text_angle
-				}
-			}
+			anglevec = resolve_render_label_text_angle_rayrender(
+				text_angle = text_angle,
+				phi = phi,
+				theta = theta
+			)
 			scalelabels[[counter]] = rayrender::text3d(
 				x = temp_center[j, 1] - bbox_center[1] + scale_text_offset[1],
 				y = temp_center[j, 2] - bbox_center[2] + scale_text_offset[2],

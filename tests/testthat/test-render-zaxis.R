@@ -20,8 +20,8 @@ test_that("render_points() can add a styled z-axis outside a specified corner", 
 		ymax = ncol(heightmap)
 	)
 	expect_no_condition(render_points(
-		lat = c(10, 20),
-		long = c(10, 20),
+		y = c(10, 20),
+		x = c(10, 20),
 		extent = extent,
 		heightmap = heightmap,
 		zscale = 10,
@@ -460,15 +460,14 @@ test_that("ggplot z-axis defaults to panel placement", {
 		ggplot2::geom_point(ggplot2::aes(x = wt, y = mpg))
 	expect_no_condition(suppressWarnings(plot_gg(p, windowsize = c(300, 300))))
 
-	pts = transform_ggplot_coords(x = c(2, 4), y = c(15, 30))
-	ext = attr(pts, "extent")
+	ext = rayshader:::get_ggplot_extent()
 	panel_info = attr(ext, "panel_info")
 	expect_true(is.data.frame(panel_info))
 	expect_equal(nrow(panel_info), 1)
 
 	expect_no_condition(render_points(
-		long = pts$long,
-		lat = pts$lat,
+		x = c(2, 4),
+		y = c(15, 30),
 		extent = ext,
 		altitude = 100,
 		zaxis = TRUE,
@@ -534,15 +533,14 @@ test_that("ggplot z-axis supports explicit panel corners", {
 		ggplot2::geom_point(ggplot2::aes(x = wt, y = mpg))
 	expect_no_condition(suppressWarnings(plot_gg(p, windowsize = c(300, 300))))
 
-	pts = transform_ggplot_coords(x = c(2, 4), y = c(15, 30))
-	ext = attr(pts, "extent")
+	ext = rayshader:::get_ggplot_extent()
 	panel_info = attr(ext, "panel_info")
 	expect_true(is.data.frame(panel_info))
 	expect_equal(nrow(panel_info), 1)
 
 	expect_no_condition(render_points(
-		long = pts$long,
-		lat = pts$lat,
+		x = c(2, 4),
+		y = c(15, 30),
 		extent = ext,
 		altitude = 100,
 		zaxis = TRUE,
@@ -592,11 +590,10 @@ test_that("ggplot panel inset omits zero marker", {
 		ggplot2::geom_point(ggplot2::aes(x = wt, y = mpg))
 	expect_no_condition(suppressWarnings(plot_gg(p, windowsize = c(300, 300))))
 
-	pts = transform_ggplot_coords(x = c(2, 4), y = c(15, 30))
-	ext = attr(pts, "extent")
+	ext = rayshader:::get_ggplot_extent()
 	expect_no_condition(render_points(
-		long = pts$long,
-		lat = pts$lat,
+		x = c(2, 4),
+		y = c(15, 30),
 		extent = ext,
 		altitude = 100,
 		zaxis = TRUE,
@@ -641,8 +638,8 @@ test_that("render_points() validates z-axis labels length", {
 	)
 	expect_error(
 		render_points(
-			lat = c(10, 20),
-			long = c(10, 20),
+			y = c(10, 20),
+			x = c(10, 20),
 			extent = extent,
 			heightmap = heightmap,
 			zscale = 10,

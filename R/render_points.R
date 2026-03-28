@@ -1,12 +1,14 @@
 #'@title Render Points
 #'
-#'@description Adds 3D datapoints to the current scene, using latitude/longitude or coordinates in the reference
+#'@description Adds 3D datapoints to the current scene, using x/y coordinates in the reference
 #'system defined by the extent object. If no altitude is provided, the points will be elevated a constant offset
 #'above the heightmap. If the points goes off the edge, the nearest height on the heightmap will be used (unless that
 #'value is NA, in which the point will be removed).
 #'
-#'@param lat Vector of latitudes (or other coordinate in the same coordinate reference system as extent).
-#'@param long Vector of longitudes (or other coordinate in the same coordinate reference system as extent).
+#'@param x Vector of x coordinates (or other coordinate in the same coordinate reference system as extent).
+#'@param y Vector of y coordinates (or other coordinate in the same coordinate reference system as extent).
+#'@param lat Default `NULL`. Alias for `y` for geographic workflows.
+#'@param long Default `NULL`. Alias for `x` for geographic workflows.
 #'@param altitude Default `NULL`. Elevation of each point, in units of the elevation matrix (scaled by zscale). If a single value,
 #'all data will be rendered at that altitude.
 #'@param extent Either an object representing the spatial extent of the 3D scene
@@ -18,7 +20,7 @@
 #'@param heightmap Default `NULL`. Height matrix for the current scene. If omitted, this is taken from the cached scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value.
 #'of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
 #' All points are assumed to be evenly spaced.
-#'@param size Default `3`. The point size. This can be a vector (the same length as `lat` and `long`) specifying
+#'@param size Default `3`. The point size. This can be a vector (the same length as `x` and `y`) specifying
 #'a size for each point.
 #'@param color Default `black`. Color of the point. This can also be a vector specifying the color of each point.
 #'@param offset Default `5`. Offset of the track from the surface, if `altitude = NULL`.
@@ -57,16 +59,16 @@
 #'          theta=210,  phi=22, zoom=0.20, fov=55)
 #'
 #'#Pass in the extent of the underlying raster (stored in an attribute for the montereybay
-#'#dataset) and the latitudes, longitudes, and altitudes of the track.
+#'#dataset) and the x/y coordinates and altitudes of the track.
 #'render_points(extent = attr(montereybay,"extent"),
-#'              lat = unlist(bird_track_lat), long = unlist(bird_track_long),
+#'              y = unlist(bird_track_lat), x = unlist(bird_track_long),
 #'              altitude = z_out, zscale=50,color="white")
 #'render_snapshot()
 #'}
 #'if(run_documentation()) {
 #'#We'll set the altitude to zero to give the tracks a "shadow" over the water.
 #'render_points(extent = attr(montereybay,"extent"),
-#'              lat = unlist(bird_track_lat), long = unlist(bird_track_long),
+#'              y = unlist(bird_track_lat), x = unlist(bird_track_long),
 #'              offset = 0, zscale=50, color="black")
 #'render_camera(theta=30,phi=35,zoom=0.45,fov=70)
 #'render_snapshot()
@@ -82,7 +84,7 @@
 #'circle_coords_lat = moss_landing_coord[1] + 0.3 * sin(t)
 #'circle_coords_long = moss_landing_coord[2] + 0.3 * cos(t)
 #'render_points(extent = attr(montereybay,"extent"), heightmap = montereybay,
-#'            lat = unlist(circle_coords_lat), long = unlist(circle_coords_long),
+#'            y = unlist(circle_coords_lat), x = unlist(circle_coords_long),
 #'            zscale=50, color="red", offset=100, size=5)
 #'render_camera(theta = 160, phi=33, zoom=0.4, fov=55)
 #'render_snapshot()
@@ -100,8 +102,8 @@
 #'                   point_material_args = list(gloss = 0.5, reflectance = 0.2))
 #'}
 render_points = function(
-  lat = NULL,
-  long = NULL,
+  y = NULL,
+  x = NULL,
   altitude = NULL,
   extent = NULL,
   zscale = 1,
@@ -110,8 +112,23 @@ render_points = function(
   color = "black",
   offset = 5,
   clear_previous = FALSE,
+  lat = NULL,
+  long = NULL,
   ...
 ) {
+  xy_inputs = resolve_render_xy_aliases(
+    x = x,
+    y = y,
+    long = long,
+    lat = lat,
+    missing_x = missing(x),
+    missing_y = missing(y),
+    missing_long = missing(long),
+    missing_lat = missing(lat),
+    caller = "render_points"
+  )
+  x = xy_inputs$x
+  y = xy_inputs$y
   zaxis_split = split_zaxis_dots(list(...))
   zscale = resolve_scene_render_zscale(
     zscale,
@@ -139,7 +156,7 @@ render_points = function(
   }
   if (clear_previous) {
     rgl::pop3d(tag = "points3d")
-    if (missing(lat) || missing(long)) {
+    if (is.null(y) || is.null(x)) {
       render_zaxis_from_dots(
         zaxis_args = zaxis_args,
         extent = extent,
@@ -152,8 +169,8 @@ render_points = function(
   xyz = transform_into_heightmap_coords(
     extent,
     heightmap,
-    lat,
-    long,
+    y,
+    x,
     altitude,
     offset,
     zscale

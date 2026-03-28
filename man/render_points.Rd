@@ -5,8 +5,8 @@
 \title{Render Points}
 \usage{
 render_points(
-  lat = NULL,
-  long = NULL,
+  y = NULL,
+  x = NULL,
   altitude = NULL,
   extent = NULL,
   zscale = 1,
@@ -15,13 +15,15 @@ render_points(
   color = "black",
   offset = 5,
   clear_previous = FALSE,
+  lat = NULL,
+  long = NULL,
   ...
 )
 }
 \arguments{
-\item{lat}{Vector of latitudes (or other coordinate in the same coordinate reference system as extent).}
+\item{y}{Vector of y coordinates (or other coordinate in the same coordinate reference system as extent).}
 
-\item{long}{Vector of longitudes (or other coordinate in the same coordinate reference system as extent).}
+\item{x}{Vector of x coordinates (or other coordinate in the same coordinate reference system as extent).}
 
 \item{altitude}{Default \code{NULL}. Elevation of each point, in units of the elevation matrix (scaled by zscale). If a single value,
 all data will be rendered at that altitude.}
@@ -38,7 +40,7 @@ If omitted, rayshader will use extent metadata cached by \code{\link[=plot_3d]{p
 of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
 All points are assumed to be evenly spaced.}
 
-\item{size}{Default \code{3}. The point size. This can be a vector (the same length as \code{lat} and \code{long}) specifying
+\item{size}{Default \code{3}. The point size. This can be a vector (the same length as \code{x} and \code{y}) specifying
 a size for each point.}
 
 \item{color}{Default \code{black}. Color of the point. This can also be a vector specifying the color of each point.}
@@ -47,11 +49,15 @@ a size for each point.}
 
 \item{clear_previous}{Default \code{FALSE}. If \code{TRUE}, it will clear all existing points.}
 
+\item{lat}{Default \code{NULL}. Alias for \code{y} for geographic workflows.}
+
+\item{long}{Default \code{NULL}. Alias for \code{x} for geographic workflows.}
+
 \item{...}{Optional z-axis arguments passed to \code{\link[=render_zaxis]{render_zaxis()}}, such as
 \code{zaxis = TRUE}, \code{zaxis_location}, \code{zaxis_breaks}, and \code{zaxis_labels}.}
 }
 \description{
-Adds 3D datapoints to the current scene, using latitude/longitude or coordinates in the reference
+Adds 3D datapoints to the current scene, using x/y coordinates in the reference
 system defined by the extent object. If no altitude is provided, the points will be elevated a constant offset
 above the heightmap. If the points goes off the edge, the nearest height on the heightmap will be used (unless that
 value is NA, in which the point will be removed).
@@ -87,16 +93,16 @@ montereybay |>
          theta=210,  phi=22, zoom=0.20, fov=55)
 
 #Pass in the extent of the underlying raster (stored in an attribute for the montereybay
-#dataset) and the latitudes, longitudes, and altitudes of the track.
+#dataset) and the x/y coordinates and altitudes of the track.
 render_points(extent = attr(montereybay,"extent"),
-             lat = unlist(bird_track_lat), long = unlist(bird_track_long),
+             y = unlist(bird_track_lat), x = unlist(bird_track_long),
              altitude = z_out, zscale=50,color="white")
 render_snapshot()
 }
 if(run_documentation()) {
 #We'll set the altitude to zero to give the tracks a "shadow" over the water.
 render_points(extent = attr(montereybay,"extent"),
-             lat = unlist(bird_track_lat), long = unlist(bird_track_long),
+             y = unlist(bird_track_lat), x = unlist(bird_track_long),
              offset = 0, zscale=50, color="black")
 render_camera(theta=30,phi=35,zoom=0.45,fov=70)
 render_snapshot()
@@ -112,7 +118,7 @@ t = seq(0,2*pi,length.out=100)
 circle_coords_lat = moss_landing_coord[1] + 0.3 * sin(t)
 circle_coords_long = moss_landing_coord[2] + 0.3 * cos(t)
 render_points(extent = attr(montereybay,"extent"), heightmap = montereybay,
-           lat = unlist(circle_coords_lat), long = unlist(circle_coords_long),
+           y = unlist(circle_coords_lat), x = unlist(circle_coords_long),
            zscale=50, color="red", offset=100, size=5)
 render_camera(theta = 160, phi=33, zoom=0.4, fov=55)
 render_snapshot()

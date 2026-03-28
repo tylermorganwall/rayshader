@@ -5,8 +5,8 @@
 \title{Render Path}
 \usage{
 render_path(
-  lat,
-  long = NULL,
+  y = NULL,
+  x = NULL,
   altitude = NULL,
   groups = NULL,
   extent = NULL,
@@ -26,21 +26,23 @@ render_path(
   clear_previous = FALSE,
   return_coords = FALSE,
   tag = "path3d",
+  lat = NULL,
+  long = NULL,
   ...
 )
 }
 \arguments{
-\item{lat}{Vector of latitudes (or other coordinate in the same coordinate reference system as extent).
+\item{y}{Vector of y coordinates (or other coordinate in the same coordinate reference system as extent).
 Can also be an \code{sf} or \code{SpatialLineDataFrame} object.}
 
-\item{long}{Default \code{NULL}. Vector of longitudes (or other coordinate in the same coordinate reference system as extent).
-Ignored if lat is an \code{sf} or \code{SpatialLineDataFrame} object.}
+\item{x}{Default \code{NULL}. Vector of x coordinates (or other coordinate in the same coordinate reference system as extent).
+Ignored if \code{y} is an \code{sf} or \code{SpatialLineDataFrame} object.}
 
 \item{altitude}{Default \code{NULL}. Elevation of each point, in units of the elevation matrix (scaled by zscale).
 If left \code{NULL}, this will be just the elevation value at ths surface, offset by \code{offset}. If a single value,
 all data will be rendered at that altitude.}
 
-\item{groups}{Default \code{NULL}. Integer vector specifying the grouping of each lat/long path segment, if lat/long are
+\item{groups}{Default \code{NULL}. Integer vector specifying the grouping of each x/y path segment, if x/y are
 specified as numeric vectors (as opposed to \code{sf} or \code{SpatialLineDataFrame} objects, where this information
 is built-in to the object).}
 
@@ -98,11 +100,15 @@ plotting the line.}
 
 \item{tag}{Default \code{"path3d"}. The rgl tag to use when adding the path to the scene.}
 
+\item{lat}{Default \code{NULL}. Alias for \code{y} for geographic workflows.}
+
+\item{long}{Default \code{NULL}. Alias for \code{x} for geographic workflows.}
+
 \item{...}{Optional z-axis arguments passed to \code{\link[=render_zaxis]{render_zaxis()}}, such as
 \code{zaxis = TRUE}, \code{zaxis_location}, \code{zaxis_breaks}, and \code{zaxis_labels}.}
 }
 \description{
-Adds a 3D path to the current scene, using latitude/longitude or coordinates in the reference
+Adds a 3D path to the current scene, using x/y coordinates in the reference
 system defined by the extent object. If no altitude is provided, the path will be elevated a constant offset
 above the heightmap. If the path goes off the edge, the nearest height on the heightmap will be used.
 }
@@ -137,16 +143,16 @@ montereybay |>
          theta=210,  phi=22, zoom=0.20, fov=55)
 
 #Pass in the extent of the underlying raster (stored in an attribute for the montereybay
-#dataset) and the latitudes, longitudes, and altitudes of the track.
+#dataset) and the x/y coordinates and altitudes of the track.
 render_path(extent = attr(montereybay,"extent"),
-           lat = unlist(bird_track_lat), long = unlist(bird_track_long),
+           y = unlist(bird_track_lat), x = unlist(bird_track_long),
            altitude = z_out, zscale=50,color="white", antialias=TRUE)
 render_snapshot()
 }
 if(run_documentation()) {
 #We'll set the altitude to right above the water to give the tracks a "shadow".
 render_path(extent = attr(montereybay,"extent"),
-           lat = unlist(bird_track_lat), long = unlist(bird_track_long),
+           y = unlist(bird_track_lat), x = unlist(bird_track_long),
            altitude = 10, zscale=50, color="black", antialias=TRUE)
 render_camera(theta=30,phi=35,zoom=0.45,fov=70)
 render_snapshot()
@@ -163,7 +169,7 @@ t = seq(0,2*pi,length.out=1000)
 circle_coords_lat = moss_landing_coord[1] + 0.5 * t/8 * sin(t*6)
 circle_coords_long = moss_landing_coord[2] + 0.5 * t/8 *  cos(t*6)
 render_path(extent = attr(montereybay,"extent"), heightmap = montereybay,
-           lat = unlist(circle_coords_lat), long = unlist(circle_coords_long),
+           y = unlist(circle_coords_lat), x = unlist(circle_coords_long),
            zscale=50, color="red", antialias=TRUE,offset=100, linewidth=5)
 render_camera(theta = 160, phi=33, zoom=0.4, fov=55)
 render_snapshot()
@@ -188,7 +194,7 @@ if(run_documentation()) {
 #should be rendered with an extruded path. We'll use the `attenuation` argument in
 #the `dielectric` function to specify a realistic glass color.
 render_path(extent = attr(montereybay,"extent"), heightmap = montereybay, clear_previous = TRUE,
-           lat = unlist(circle_coords_lat), long = unlist(circle_coords_long),
+           y = unlist(circle_coords_lat), x = unlist(circle_coords_long),
            zscale=50, color="white", offset=200, linewidth=5)
 render_highquality(line_radius=1, min_variance = 0, samples = 16,
                   lightsize = 2000, lightintensity = 10,

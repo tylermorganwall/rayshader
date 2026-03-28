@@ -14,7 +14,7 @@ test_that("ggplot scenes transform mapped overlay altitudes into scene units", {
 		windowsize = c(300, 300)
 	)))
 
-	gg_extent = get_ggplot_extent()
+	gg_extent = rayshader:::get_ggplot_extent()
 	scene_heightmap = get_scene_heightmap()
 	scene_zscale = get_scene_zscale()
 	altitude_vals = c(min(mtcars$disp), max(mtcars$disp))
@@ -53,7 +53,7 @@ test_that("ggplot scenes without mapped height keep raw overlay altitudes", {
 		windowsize = c(300, 300)
 	)))
 
-	gg_extent = get_ggplot_extent()
+	gg_extent = rayshader:::get_ggplot_extent()
 	scene_zscale = get_scene_zscale()
 	altitude_vals = c(100, 200)
 
@@ -84,7 +84,7 @@ test_that("ggplot z-axis breaks use mapped height positions but keep raw labels"
 		windowsize = c(300, 300)
 	)))
 
-	gg_extent = get_ggplot_extent()
+	gg_extent = rayshader:::get_ggplot_extent()
 	scene_heightmap = get_scene_heightmap()
 	scene_zscale = get_scene_zscale()
 	altitude_vals = c(min(mtcars$disp), max(mtcars$disp))
@@ -93,8 +93,8 @@ test_that("ggplot z-axis breaks use mapped height positions but keep raw labels"
 	scene_height_range = range(scene_heightmap[is.finite(scene_heightmap)])
 
 	expect_no_condition(render_points(
-		long = c(min(mtcars$wt), max(mtcars$wt)),
-		lat = c(min(mtcars$mpg), max(mtcars$mpg)),
+		x = c(min(mtcars$wt), max(mtcars$wt)),
+		y = c(min(mtcars$mpg), max(mtcars$mpg)),
 		extent = gg_extent,
 		altitude = altitude_vals,
 		color = "red",

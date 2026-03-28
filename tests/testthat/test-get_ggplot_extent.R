@@ -1,6 +1,6 @@
 library(ggplot2)
 
-test_that("get_ggplot_extent() maps a single ggplot panel into scene coordinates", {
+test_that("internal ggplot scene extent maps a single panel into scene coordinates", {
 	on.exit(rgl::close3d(), add = TRUE)
 
 	gg = ggplot(mtcars) +
@@ -15,7 +15,7 @@ test_that("get_ggplot_extent() maps a single ggplot panel into scene coordinates
 		shadow = FALSE,
 		save_height_matrix = TRUE
 	)
-	gg_extent = get_ggplot_extent()
+	gg_extent = rayshader:::get_ggplot_extent()
 	panel_info = attr(gg_extent, "panel_info")
 
 	expect_equal(names(gg_extent), c("xmin", "xmax", "ymin", "ymax"))
@@ -54,7 +54,7 @@ test_that("get_ggplot_extent() maps a single ggplot panel into scene coordinates
 	)
 })
 
-test_that("get_ggplot_extent() returns one extent per facet panel", {
+test_that("internal ggplot scene extent returns one extent per facet panel", {
 	on.exit(rgl::close3d(), add = TRUE)
 
 	gg = ggplot(mtcars) +
@@ -70,8 +70,8 @@ test_that("get_ggplot_extent() returns one extent per facet panel", {
 		shadow = FALSE
 	))
 
-	all_extents = get_ggplot_extent()
-	panel_two_extent = get_ggplot_extent(panel = 2)
+	all_extents = rayshader:::get_ggplot_extent()
+	panel_two_extent = rayshader:::get_ggplot_extent(panel = 2)
 
 	expect_type(all_extents, "list")
 	expect_named(all_extents, c("panel_1", "panel_2", "panel_3"))
@@ -80,7 +80,7 @@ test_that("get_ggplot_extent() returns one extent per facet panel", {
 	expect_equal(attr(panel_two_extent, "panel_info")$panel, 2L)
 })
 
-test_that("transform_ggplot_coords() respects ggplot scale and coord transforms", {
+test_that("internal ggplot coordinate transform respects ggplot scale and coord transforms", {
 	on.exit(rgl::close3d(), add = TRUE)
 
 	base_plot = ggplot(mtcars) +
@@ -96,7 +96,7 @@ test_that("transform_ggplot_coords() respects ggplot scale and coord transforms"
 		raytrace = FALSE,
 		shadow = FALSE
 	))
-	coords = transform_ggplot_coords(x = test_df$x, y = test_df$y)
+	coords = rayshader:::transform_ggplot_coords(x = test_df$x, y = test_df$y)
 	expect_equal(names(coords), c("long", "lat"))
 	expect_true(!is.null(attr(coords, "extent")))
 
@@ -126,7 +126,7 @@ test_that("transform_ggplot_coords() respects ggplot scale and coord transforms"
 	expect_true(all(coords$lat <= attr(coords, "extent")["ymax"]))
 })
 
-test_that("transform_ggplot_coords() handles polar coordinates", {
+test_that("internal ggplot coordinate transform handles polar coordinates", {
 	on.exit(rgl::close3d(), add = TRUE)
 
 	polar_plot = ggplot(
@@ -145,7 +145,7 @@ test_that("transform_ggplot_coords() handles polar coordinates", {
 		raytrace = FALSE,
 		shadow = FALSE
 	)))
-	coords = transform_ggplot_coords(x = test_df$x, y = test_df$y)
+	coords = rayshader:::transform_ggplot_coords(x = test_df$x, y = test_df$y)
 	expect_true(all(coords$long >= 0 & coords$long <= 1))
 	expect_true(all(coords$lat >= 0 & coords$lat <= 1))
 
@@ -171,7 +171,7 @@ test_that("transform_ggplot_coords() handles polar coordinates", {
 	expect_equal(coords$lat, expected_lat, tolerance = 1e-7)
 })
 
-test_that("transform_ggplot_coords() supports coord_sf CRS handling", {
+test_that("internal ggplot coordinate transform supports coord_sf CRS handling", {
 	skip_if_not_installed("sf")
 	on.exit(rgl::close3d(), add = TRUE)
 
@@ -190,7 +190,7 @@ test_that("transform_ggplot_coords() supports coord_sf CRS handling", {
 		raytrace = FALSE,
 		shadow = FALSE
 	))
-	coords = transform_ggplot_coords(
+	coords = rayshader:::transform_ggplot_coords(
 		x = point_df$x,
 		y = point_df$y,
 		crs = sf::st_crs(4269)
@@ -216,7 +216,7 @@ test_that("transform_ggplot_coords() supports coord_sf CRS handling", {
 	expect_equal(coords$lat, expected_lat, tolerance = 1e-7)
 })
 
-test_that("transform_ggplot_sf() matches vertexwise coordinate transforms", {
+test_that("internal ggplot sf transform matches vertexwise coordinate transforms", {
 	skip_if_not_installed("sf")
 	on.exit(rgl::close3d(), add = TRUE)
 
@@ -235,10 +235,10 @@ test_that("transform_ggplot_sf() matches vertexwise coordinate transforms", {
 		multicore = FALSE
 	))
 	poly_in = nc[1, ]
-	poly_out = transform_ggplot_sf(poly_in)
+	poly_out = rayshader:::transform_ggplot_sf(poly_in)
 	poly_coords = sf::st_coordinates(poly_out)
 	orig_coords = sf::st_coordinates(poly_in)
-	coords_out = transform_ggplot_coords(
+	coords_out = rayshader:::transform_ggplot_coords(
 		x = orig_coords[, 1],
 		y = orig_coords[, 2],
 		crs = sf::st_crs(poly_in)
@@ -254,7 +254,7 @@ test_that("transform_ggplot_sf() matches vertexwise coordinate transforms", {
 	expect_true(all(poly_coords[, 2] <= extent_out["ymax"]))
 })
 
-test_that("transform_ggplot_sf() supports segmentization and geometry class passthrough", {
+test_that("internal ggplot sf transform supports segmentization and geometry class passthrough", {
 	skip_if_not_installed("sf")
 	on.exit(rgl::close3d(), add = TRUE)
 
@@ -280,8 +280,8 @@ test_that("transform_ggplot_sf() supports segmentization and geometry class pass
 		byrow = TRUE
 	)))
 	poly_sf = sf::st_sf(geometry = sf::st_sfc(triangle))
-	plain_poly = transform_ggplot_sf(poly_sf)
-	dense_poly = transform_ggplot_sf(
+	plain_poly = rayshader:::transform_ggplot_sf(poly_sf)
+	dense_poly = rayshader:::transform_ggplot_sf(
 		poly_sf,
 		segmentize_df_max_length = 20
 	)
@@ -289,8 +289,8 @@ test_that("transform_ggplot_sf() supports segmentization and geometry class pass
 		nrow(sf::st_coordinates(dense_poly)),
 		nrow(sf::st_coordinates(plain_poly))
 	)
-	poly_sfc = transform_ggplot_sf(sf::st_geometry(poly_sf))
-	poly_sfg = transform_ggplot_sf(sf::st_geometry(poly_sf)[[1]])
+	poly_sfc = rayshader:::transform_ggplot_sf(sf::st_geometry(poly_sf))
+	poly_sfg = rayshader:::transform_ggplot_sf(sf::st_geometry(poly_sf)[[1]])
 	expect_s3_class(poly_sfc, "sfc")
 	expect_s3_class(poly_sfg, "POLYGON")
 

@@ -1,17 +1,19 @@
 #'@title Render Path
 #'
-#'@description Adds a 3D path to the current scene, using latitude/longitude or coordinates in the reference
+#'@description Adds a 3D path to the current scene, using x/y coordinates in the reference
 #'system defined by the extent object. If no altitude is provided, the path will be elevated a constant offset
 #'above the heightmap. If the path goes off the edge, the nearest height on the heightmap will be used.
 #'
-#'@param lat Vector of latitudes (or other coordinate in the same coordinate reference system as extent).
+#'@param x Default `NULL`. Vector of x coordinates (or other coordinate in the same coordinate reference system as extent).
+#'Ignored if `y` is an `sf` or `SpatialLineDataFrame` object.
+#'@param y Vector of y coordinates (or other coordinate in the same coordinate reference system as extent).
 #'Can also be an `sf` or `SpatialLineDataFrame` object.
-#'@param long Default `NULL`. Vector of longitudes (or other coordinate in the same coordinate reference system as extent).
-#'Ignored if lat is an `sf` or `SpatialLineDataFrame` object.
+#'@param lat Default `NULL`. Alias for `y` for geographic workflows.
+#'@param long Default `NULL`. Alias for `x` for geographic workflows.
 #'@param altitude Default `NULL`. Elevation of each point, in units of the elevation matrix (scaled by zscale).
 #'If left `NULL`, this will be just the elevation value at ths surface, offset by `offset`. If a single value,
 #'all data will be rendered at that altitude.
-#'@param groups Default `NULL`. Integer vector specifying the grouping of each lat/long path segment, if lat/long are
+#'@param groups Default `NULL`. Integer vector specifying the grouping of each x/y path segment, if x/y are
 #'specified as numeric vectors (as opposed to `sf` or `SpatialLineDataFrame` objects, where this information
 #'is built-in to the object).
 #'@param extent Either an object representing the spatial extent of the 3D scene
@@ -85,16 +87,16 @@
 #'          theta=210,  phi=22, zoom=0.20, fov=55)
 #'
 #'#Pass in the extent of the underlying raster (stored in an attribute for the montereybay
-#'#dataset) and the latitudes, longitudes, and altitudes of the track.
+#'#dataset) and the x/y coordinates and altitudes of the track.
 #'render_path(extent = attr(montereybay,"extent"),
-#'            lat = unlist(bird_track_lat), long = unlist(bird_track_long),
+#'            y = unlist(bird_track_lat), x = unlist(bird_track_long),
 #'            altitude = z_out, zscale=50,color="white", antialias=TRUE)
 #'render_snapshot()
 #'}
 #'if(run_documentation()) {
 #'#We'll set the altitude to right above the water to give the tracks a "shadow".
 #'render_path(extent = attr(montereybay,"extent"),
-#'            lat = unlist(bird_track_lat), long = unlist(bird_track_long),
+#'            y = unlist(bird_track_lat), x = unlist(bird_track_long),
 #'            altitude = 10, zscale=50, color="black", antialias=TRUE)
 #'render_camera(theta=30,phi=35,zoom=0.45,fov=70)
 #'render_snapshot()
@@ -111,7 +113,7 @@
 #'circle_coords_lat = moss_landing_coord[1] + 0.5 * t/8 * sin(t*6)
 #'circle_coords_long = moss_landing_coord[2] + 0.5 * t/8 *  cos(t*6)
 #'render_path(extent = attr(montereybay,"extent"), heightmap = montereybay,
-#'            lat = unlist(circle_coords_lat), long = unlist(circle_coords_long),
+#'            y = unlist(circle_coords_lat), x = unlist(circle_coords_long),
 #'            zscale=50, color="red", antialias=TRUE,offset=100, linewidth=5)
 #'render_camera(theta = 160, phi=33, zoom=0.4, fov=55)
 #'render_snapshot()
@@ -136,7 +138,7 @@
 #'#should be rendered with an extruded path. We'll use the `attenuation` argument in
 #'#the `dielectric` function to specify a realistic glass color.
 #'render_path(extent = attr(montereybay,"extent"), heightmap = montereybay, clear_previous = TRUE,
-#'            lat = unlist(circle_coords_lat), long = unlist(circle_coords_long),
+#'            y = unlist(circle_coords_lat), x = unlist(circle_coords_long),
 #'            zscale=50, color="white", offset=200, linewidth=5)
 #'render_highquality(line_radius=1, min_variance = 0, samples = 16,
 #'                   lightsize = 2000, lightintensity = 10,
@@ -144,8 +146,8 @@
 #'                   path_material_args = list(refraction = 1.5, attenuation = c(0.05,0.2,0.2)))
 #'}
 render_path = function(
-  lat,
-  long = NULL,
+  y = NULL,
+  x = NULL,
   altitude = NULL,
   groups = NULL,
   extent = NULL,
@@ -161,12 +163,29 @@ render_path = function(
   linewidth = 0.5,
   color = "black",
 	antialias = FALSE,
-	offset = 5,
-	clear_previous = FALSE,
-	return_coords = FALSE,
-	tag = "path3d",
-	...
+  offset = 5,
+  clear_previous = FALSE,
+  return_coords = FALSE,
+  tag = "path3d",
+  lat = NULL,
+  long = NULL,
+  ...
 ) {
+  xy_inputs = resolve_render_xy_aliases(
+    x = x,
+    y = y,
+    long = long,
+    lat = lat,
+    missing_x = missing(x),
+    missing_y = missing(y),
+    missing_long = missing(long),
+    missing_lat = missing(lat),
+    caller = "render_path"
+  )
+  x = xy_inputs$x
+  y = xy_inputs$y
+  lat = y
+  long = x
   zaxis_split = split_zaxis_dots(list(...))
   zscale = resolve_scene_render_zscale(
     zscale,
@@ -194,7 +213,7 @@ render_path = function(
   }
 	if (clear_previous) {
 		rgl::pop3d(tag = tag)
-		if (missing(lat)) {
+		if (is.null(lat)) {
 			render_zaxis_from_dots(
 				zaxis_args = zaxis_args,
 				extent = extent,
@@ -301,6 +320,22 @@ render_path = function(
       "LINESTRING"
     ))
   }
+  input_crs = NULL
+  if (inherits(lat, "SpatialLinesDataFrame")) {
+    input_crs = tryCatch(
+      sf::st_crs(sf::st_as_sf(lat)),
+      error = function(e) NULL
+    )
+  } else if (
+    inherits(lat, "sf") ||
+      inherits(lat, "sfc_LINESTRING") ||
+      inherits(lat, "sfc_GEOMETRY")
+  ) {
+    input_crs = tryCatch(
+      sf::st_crs(lat),
+      error = function(e) NULL
+    )
+  }
 
   if (inherits(lat, "SpatialLinesDataFrame")) {
     latlong = sf::st_coordinates(sf::st_as_sf(lat))
@@ -376,7 +411,8 @@ render_path = function(
       altitude,
       offset,
       zscale,
-      filter_bounds = FALSE
+      filter_bounds = FALSE,
+      crs = input_crs
     )
   }
   if (!return_coords) {

@@ -181,15 +181,11 @@ render_snapshot_software = function(
     temp_center = rgl.attrib(labelids[i], "centers")
     temp_color = rgl.attrib(labelids[i], "colors")
     for (j in seq_len(nrow(temp_label))) {
-      if (is.null(text_angle)) {
-        anglevec = c(rotmat[1], -theta, 0)
-      } else {
-        if (length(text_angle) == 1) {
-          anglevec = c(0, text_angle, 0)
-        } else {
-          anglevec = text_angle
-        }
-      }
+      anglevec = resolve_render_label_text_angle_rayvertex(
+        text_angle = text_angle,
+        theta = theta,
+        rotmat = rotmat
+      )
       labels = rayvertex::add_shape(
         labels,
         rayvertex::text3d_mesh(
@@ -328,15 +324,11 @@ render_snapshot_software = function(
   }
   scalelabelids = get_ids_with_labels(typeval = "text_scalebar")$id
   scalelabels = list()
-  if (is.null(text_angle)) {
-    anglevec = c(rotmat[1], -theta, 0)
-  } else {
-    if (length(text_angle) == 1) {
-      anglevec = c(0, text_angle, 0)
-    } else {
-      anglevec = text_angle
-    }
-  }
+  anglevec = resolve_render_label_text_angle_rayvertex(
+    text_angle = text_angle,
+    theta = theta,
+    rotmat = rotmat
+  )
   for (i in seq_len(length(scalelabelids))) {
     if (!has_rayimage) {
       break

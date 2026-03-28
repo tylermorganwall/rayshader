@@ -4,17 +4,18 @@
 #'
 #'@param heightmap Default `NULL`. Height matrix for the current scene. If omitted, this is taken from the cached scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value.
 #'@param text The label text.
-#'@param lat A latitude for the text. Must provide an `raster::extent` object to argument `extent` for the map.
-#'@param long A latitude for the text. Must provide an `raster::extent` object to argument `extent` for the map.
+#'@param y Default `NULL`. Y coordinate for the label in the same coordinate reference system as `extent`.
+#'If no `extent` is available and the scene uses a plain matrix heightmap, this defaults to matrix dimensions.
+#'@param x Default `NULL`. X coordinate for the label in the same coordinate reference system as `extent`.
+#'If no `extent` is available and the scene uses a plain matrix heightmap, this defaults to matrix dimensions.
+#'@param z Default `NULL`. Elevation of the label, in units of the elevation matrix (scaled by zscale).
 #'@param altitude Default `NULL`. Elevation of the label, in units of the elevation matrix (scaled by zscale). If none is passed, this will default to 10 percent above the maximum altitude in the heightmap.
 #'@param extent Either an object representing the spatial extent of the scene
 #' (either from the `raster`, `terra`, `sf`, or `sp` packages),
 #' a length-4 numeric vector specifying `c("xmin", "xmax","ymin","ymax")`, or the spatial object (from
 #' the previously aforementioned packages) which will be automatically converted to an extent object.
-#' If omitted, rayshader will use extent metadata cached by [plot_3d()] or [plot_gg()].
-#'@param x Default `NULL`. Directly specify the `x` index in the matrix to place the label.
-#'@param y Default `NULL`. Directly specify the `y` index in the matrix to place the label.
-#'@param z Default `NULL`. Elevation of the label, in units of the elevation matrix (scaled by zscale).
+#' If omitted, rayshader will use extent metadata cached by [plot_3d()] or [plot_gg()]. If no extent metadata
+#' is available for a plain matrix scene, rayshader defaults to `c(xmin = 1, xmax = nrow(heightmap), ymin = 1, ymax = ncol(heightmap))`.
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
 #'@param relativez Default `TRUE`. Whether `z` should be measured in relation to the underlying elevation at that point in the heightmap, or set absolutely (`FALSE`).
 #'@param offset Elevation above the surface (at the label point) to start drawing the line.
@@ -33,6 +34,8 @@
 #'@param fonttype Default `"standard"`. The font type. Choices are `c("standard", "bold", "italic", "bolditalic")`. NOTE: These require FreeType fonts, which may not be installed on your system. See the documentation for rgl::text3d() for more information.
 #'@param linecolor Default `black`. Color of the line.
 #'@param textcolor Default `black`. Color of the text.
+#'@param lat Default `NULL`. Alias for `y` for geographic workflows.
+#'@param long Default `NULL`. Alias for `x` for geographic workflows.
 #'@export
 #'@examples
 #'if(run_documentation()) {
@@ -44,9 +47,9 @@
 #'}
 #'
 #'santa_cruz = c(36.962957, -122.021033)
-#'#We want to add a label to Santa Cruz, so we use the x and y matrix coordinate (x=220 and y=330)
+#'#We want to add a label to Santa Cruz, so we use x/y coordinates in the same extent as the map.
 #'if(run_documentation()) {
-#'render_label(montereybay,lat = santa_cruz[1], long = santa_cruz[2],
+#'render_label(montereybay, y = santa_cruz[1], x = santa_cruz[2],
 #'             extent = attr(montereybay, "extent"), textsize = 2,
 #'             altitude=12000, zscale=50, text = "Santa Cruz")
 #'render_snapshot()
@@ -57,7 +60,7 @@
 #'#the user to control the dash length). You can clear the existing lines by setting
 #'#`clear_previous = TRUE`.
 #'if(run_documentation()) {
-#'render_label(montereybay, lat = monterey[1], long = monterey[2], altitude = 10000,
+#'render_label(montereybay, y = monterey[1], x = monterey[2], altitude = 10000,
 #'             extent = attr(montereybay, "extent"), textsize = 2,
 #'             zscale = 50, text = "Monterey", textcolor = "white", linecolor="darkred",
 #'             dashed = TRUE, clear_previous = TRUE)
@@ -68,7 +71,7 @@
 #'#By default, z specifies the altitude above that point on the elevation matrix. We can also specify
 #'#an absolute height by setting `relativez=FALSE`.
 #'if(run_documentation()) {
-#'render_label(montereybay,lat=canyon[1], long = canyon[2], altitude = 2000,
+#'render_label(montereybay, y = canyon[1], x = canyon[2], altitude = 2000,
 #'             extent = attr(montereybay,"extent"), textsize = 2,
 #'             zscale=50,text = "Monterey Canyon", relativez=FALSE)
 #'render_snapshot()
@@ -79,12 +82,12 @@
 #'#argument `text_angle`.
 #'if(run_documentation()) {
 #'render_camera(theta=35, phi = 35, zoom = 0.80, fov=60)
-#'render_label(montereybay, lat = monterey[1], long = monterey[2], altitude = 10000,
+#'render_label(montereybay, y = monterey[1], x = monterey[2], altitude = 10000,
 #'             extent = attr(montereybay, "extent"), textsize = 2,
 #'             zscale = 50, text = "Monterey", textcolor = "white", linecolor="darkred",
 #'             dashed = TRUE, clear_previous = TRUE)
 #'
-#'render_label(montereybay,lat=canyon[1], long = canyon[2],
+#'render_label(montereybay, y = canyon[1], x = canyon[2],
 #'             altitude = 2000, zscale=50, textsize = 2,
 #'             extent = attr(montereybay,"extent"), textcolor = "white", linecolor="white",
 #'             text = "Monterey Canyon", relativez=FALSE)
@@ -105,13 +108,11 @@
 render_label = function(
 	heightmap = NULL,
 	text,
-	lat,
-	long,
+	y = NULL,
+	x = NULL,
+	z = NULL,
 	altitude = NULL,
 	extent = NULL,
-	x = NULL,
-	y = NULL,
-	z = NULL,
 	zscale = 1,
 	relativez = TRUE,
 	offset = 0,
@@ -128,7 +129,9 @@ render_label = function(
 	family = "sans",
 	fonttype = "standard",
 	linecolor = "black",
-	textcolor = "black"
+	textcolor = "black",
+	lat = NULL,
+	long = NULL
 ) {
 	exit_early = FALSE
 	if (clear_previous) {
@@ -158,25 +161,46 @@ render_label = function(
 		if (is.null(z)) {
 			z = max(heightmap, na.rm = TRUE) * 1.1
 		}
-		need_xy_from_latlong = is.null(x) || is.null(y)
-		if (need_xy_from_latlong) {
-			if (
-				missing(lat) ||
-					missing(long) ||
-					is.null(lat) ||
-					is.null(long)
-			) {
-				stop("Must provide either `x`/`y` or `lat`/`long` coordinates.")
-			}
-			extent = resolve_scene_render_extent(
-				extent = extent,
-				heightmap = heightmap,
-				caller = "render_label"
+		xy_inputs = resolve_render_xy_aliases(
+			x = x,
+			y = y,
+			long = long,
+			lat = lat,
+			missing_x = missing(x),
+			missing_y = missing(y),
+			missing_long = missing(long),
+			missing_lat = missing(lat),
+			caller = "render_label"
+		)
+		x = xy_inputs$x
+		y = xy_inputs$y
+		if (is.null(x) || is.null(y)) {
+			stop("Must provide `x`/`y` coordinates.", call. = FALSE)
+		}
+		extent = resolve_scene_render_extent(
+			extent = extent,
+			heightmap = heightmap,
+			caller = "render_label",
+			error_if_missing = FALSE
+		)
+		if (is.null(extent)) {
+			extent = c(
+				xmin = 1,
+				xmax = nrow(heightmap),
+				ymin = 1,
+				ymax = ncol(heightmap)
 			)
-			e = get_extent(extent)
-			x = (long - e["xmin"]) / (e["xmax"] - e["xmin"]) * nrow(heightmap)
-			y = ncol(heightmap) -
-				(lat - e["ymin"]) / (e["ymax"] - e["ymin"]) * ncol(heightmap)
+		}
+		scene_xy = auto_transform_scene_xy(
+			x = x,
+			y = y,
+			extent = extent,
+			heightmap = heightmap
+		)
+		x = scene_xy$x
+		y = scene_xy$y
+		if (!is.null(scene_xy$extent)) {
+			extent = scene_xy$extent
 		}
 		if (rgl::cur3d() == 0) {
 			stop("No rgl window currently open.")
@@ -188,28 +212,56 @@ render_label = function(
 		}
 		fontlist = list("standard" = 1, "bold" = 2, "italic" = 3, "bolditalic" = 4)
 		fonttype = fontlist[[fonttype]]
+		e = get_extent(extent)
+		nrow_map = nrow(heightmap) - 1
+		ncol_map = ncol(heightmap) - 1
+		x_index = (x - e["xmin"]) / (e["xmax"] - e["xmin"]) * nrow_map + 1
+		y_index = 1 + ncol_map - (y - e["ymin"]) / (e["ymax"] - e["ymin"]) * ncol_map
+		x_index_clamped = x_index
+		y_index_clamped = y_index
+		x_index_clamped[floor(x_index_clamped) >= nrow(heightmap)] = nrow(heightmap)
+		y_index_clamped[floor(y_index_clamped) >= ncol(heightmap)] = ncol(heightmap)
+		x_index_clamped[floor(x_index_clamped) < 1] = 1
+		y_index_clamped[floor(y_index_clamped) < 1] = 1
 		in_bounds = TRUE
 		if (
-			x > nrow(heightmap) ||
-				x < 1 ||
-				y < 1 ||
-				y > ncol(heightmap) ||
-				is.na(heightmap[x, y])
+			x_index > nrow(heightmap) ||
+				x_index < 1 ||
+				y_index < 1 ||
+				y_index > ncol(heightmap)
 		) {
 			in_bounds = FALSE
+		} else {
+			if (!length(find.package("rayimage", quiet = TRUE)) > 0) {
+				flipped_mat = flipud(t(heightmap))
+				surface_altitude = flipped_mat[
+					floor(y_index_clamped),
+					floor(x_index_clamped)
+				]
+			} else {
+				surface_altitude = rayimage::interpolate_array(
+					t(heightmap),
+					x_index_clamped,
+					y_index_clamped
+				)
+			}
+			if (is.na(surface_altitude)) {
+				in_bounds = FALSE
+			}
+		}
+		startline = 0
+		if (!in_bounds) {
 			shadow_id = get_ids_with_labels("shadow")$id
 			if (length(shadow_id) > 0) {
 				shadow_vertices = rgl::rgl.attrib(shadow_id, "vertices")
 				startline = min(shadow_vertices[, 2], na.rm = TRUE)
-			} else {
-				offset = startline
 			}
 		}
 
 		z = z / zscale
 		offset = offset / zscale
 		if (in_bounds) {
-			startline = heightmap[x, y] / zscale
+			startline = surface_altitude / zscale
 		}
 		if (relativez && in_bounds) {
 			z = z + startline
@@ -223,8 +275,8 @@ render_label = function(
 		ignoreex = par3d()$ignoreExtent
 		ignoreex = par3d(ignoreExtent = TRUE)
 		linelist = list()
-		x = x - nrow(heightmap) / 2
-		y = y - ncol(heightmap) / 2
+		x = x_index - nrow_map / 2 - 1
+		y = y_index - ncol_map / 2 - 1
 		if (dashed) {
 			counter = 1
 			while (startline + dashlength < z) {
@@ -426,4 +478,28 @@ render_label = function(
 		)
 		par3d(ignoreExtent = ignoreex)
 	}
+}
+
+resolve_render_label_text_angle = function(text_angle = NULL, default_angle) {
+	if (is.null(text_angle)) {
+		return(default_angle)
+	}
+	if (length(text_angle) == 1) {
+		return(c(0, text_angle, 0))
+	}
+	text_angle
+}
+
+resolve_render_label_text_angle_rayrender = function(text_angle = NULL, phi, theta) {
+	resolve_render_label_text_angle(
+		text_angle = text_angle,
+		default_angle = c(-phi, theta + 180, 0)
+	)
+}
+
+resolve_render_label_text_angle_rayvertex = function(text_angle = NULL, theta, rotmat) {
+	resolve_render_label_text_angle(
+		text_angle = text_angle,
+		default_angle = c(rotmat[1], -theta, 0)
+	)
 }
