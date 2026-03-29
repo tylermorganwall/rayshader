@@ -13,7 +13,8 @@
 #'`datetime`, `sky_sun_elevation`, `sky_sun_azimuth`, `sky_altitude`, and
 #'`sky_args`), and returns an RGBA array that can be passed to [add_overlay()].
 #'The render runs in an isolated background R session with
-#'`options(rgl.useNULL = TRUE)`, and uses the standard rayshader pipeline:
+#'`RGL_USE_NULL=TRUE` in the subprocess environment, and uses the standard
+#'rayshader pipeline:
 #'`plot_3d(..., solid = TRUE, shadow = shadow)` followed by
 #'`render_highquality(plot = FALSE)`.
 #'
@@ -33,7 +34,7 @@
 #'@param sample_method Default `"sobol_blue"`, unless `samples > 256`, in which
 #'case it is switched to `"sobol"`.
 #'@param min_variance Default `1e-7`. Adaptive sampler variance threshold.
-#'@param shadow Default `FALSE`. Whether to build the temporary top-down scene
+#'@param shadow Default `TRUE`. Whether to build the temporary top-down scene
 #'with the rayshader shadow plane underneath the model. Setting this to `TRUE`
 #'can help fill very dark corners in the radiance pass.
 #'@param light Default `TRUE`. Whether to add directional lights.
@@ -89,7 +90,7 @@ radiance_shade = function(
 	samples = 128,
 	sample_method = "sobol_blue",
 	min_variance = 1e-7,
-	shadow = FALSE,
+	shadow = TRUE,
 	light = TRUE,
 	lat = NA,
 	long = NA,
@@ -190,32 +191,7 @@ radiance_shade = function(
 		result_image = tryCatch(
 			callr::r(
 				func = function(child_args, filename) {
-					options(rgl.useNULL = TRUE)
 					on.exit(try(rgl::close3d(), silent = TRUE), add = TRUE)
-
-					# Prefer loading rayshader from the caller's source tree so subprocess
-					# rendering matches the local development version.
-					package_path = child_args$package_path
-					if (
-						!is.null(package_path) &&
-							is.character(package_path) &&
-							length(package_path) > 0 &&
-							nzchar(package_path[1]) &&
-							dir.exists(package_path[1]) &&
-							file.exists(file.path(package_path[1], "DESCRIPTION")) &&
-							requireNamespace("pkgload", quietly = TRUE)
-					) {
-						try(
-							pkgload::load_all(
-								path = package_path[1],
-								quiet = TRUE,
-								export_all = FALSE,
-								helpers = FALSE,
-								attach = FALSE
-							),
-							silent = TRUE
-						)
-					}
 
 					if (!requireNamespace("rayshader", quietly = TRUE)) {
 						stop("`rayshader` package must be available in callr subprocess.")
@@ -278,7 +254,9 @@ radiance_shade = function(
 						scene_elements = child_args$scene_elements,
 						plot = FALSE
 					)
-					render_highquality_formals = names(formals(rayshader::render_highquality))
+					render_highquality_formals = names(formals(
+						rayshader::render_highquality
+					))
 					if ("ortho_dimensions" %in% render_highquality_formals) {
 						render_args$ortho_dimensions = child_args$ortho_dimensions
 					}
@@ -295,7 +273,8 @@ radiance_shade = function(
 					output_image
 				},
 				args = list(child_args = child_args, filename = filename),
-				libpath = .libPaths()
+				libpath = .libPaths(),
+				env = c(callr::rcmd_safe_env(), RGL_USE_NULL = "TRUE")
 			),
 			error = function(e) {
 				structure(
@@ -448,18 +427,6 @@ radiance_shade = function(
 	if (!("camera_interpolate" %in% names(dot_args))) {
 		dot_args$camera_interpolate = c(1, 1)
 	}
-	package_path = tryCatch(
-		getNamespaceInfo("rayshader", "path"),
-		error = function(e) NULL
-	)
-	if (
-		is.null(package_path) ||
-			!is.character(package_path) ||
-			length(package_path) == 0 ||
-			!nzchar(package_path[1])
-	) {
-		package_path = NULL
-	}
 
 	child_args = list(
 		hillshade = hillshade,
@@ -492,7 +459,6 @@ radiance_shade = function(
 		width = width,
 		height = height,
 		ortho_dimensions = ortho_dimensions_value,
-		package_path = package_path,
 		clamp_value = clamp_value,
 		scene_elements = scene_elements,
 		dot_args = dot_args

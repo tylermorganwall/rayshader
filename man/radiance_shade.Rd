@@ -13,7 +13,7 @@ radiance_shade(
   samples = 128,
   sample_method = "sobol_blue",
   min_variance = 1e-07,
-  shadow = FALSE,
+  shadow = TRUE,
   light = TRUE,
   lat = NA,
   long = NA,
@@ -67,7 +67,7 @@ case it is switched to \code{"sobol"}.}
 
 \item{min_variance}{Default \code{1e-7}. Adaptive sampler variance threshold.}
 
-\item{shadow}{Default \code{FALSE}. Whether to build the temporary top-down scene
+\item{shadow}{Default \code{TRUE}. Whether to build the temporary top-down scene
 with the rayshader shadow plane underneath the model. Setting this to \code{TRUE}
 can help fill very dark corners in the radiance pass.}
 
@@ -149,7 +149,8 @@ including directional lights and auto-sky generation (\code{lat}, \code{long},
 \code{datetime}, \code{sky_sun_elevation}, \code{sky_sun_azimuth}, \code{sky_altitude}, and
 \code{sky_args}), and returns an RGBA array that can be passed to \code{\link[=add_overlay]{add_overlay()}}.
 The render runs in an isolated background R session with
-\code{options(rgl.useNULL = TRUE)}, and uses the standard rayshader pipeline:
+\code{RGL_USE_NULL=TRUE} in the subprocess environment, and uses the standard
+rayshader pipeline:
 \code{plot_3d(..., solid = TRUE, shadow = shadow)} followed by
 \code{render_highquality(plot = FALSE)}.
 }
