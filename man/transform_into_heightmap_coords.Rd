@@ -14,7 +14,10 @@ transform_into_heightmap_coords(
   zscale = 1,
   use_altitude = TRUE,
   filter_bounds = FALSE,
-  crs = NULL
+  crs = NULL,
+  panel = NULL,
+  transform_scene = TRUE,
+  caller = NULL
 )
 }
 \value{

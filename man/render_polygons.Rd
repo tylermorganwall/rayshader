@@ -7,6 +7,7 @@
 render_polygons(
   polygon,
   extent = NULL,
+  panel = NULL,
   color = "red",
   top = 1,
   bottom = NA,
@@ -38,6 +39,10 @@ edge from the last point to the first.}
 a length-4 numeric vector specifying \code{c("xmin", "xmax", "ymin", "ymax")}, or the spatial object (from
 the previously aforementioned packages) which will be automatically converted to an extent object.
 If omitted, rayshader will use extent metadata cached by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}.}
+
+\item{panel}{Default \code{NULL}. Facet panel identifier for scenes created with \code{\link[=plot_gg]{plot_gg()}}. Required
+to disambiguate faceted ggplot scenes when panel-specific cached metadata is needed. Ignored
+for non-ggplot scenes.}
 
 \item{color}{Default \code{black}. Color of the polygon.}
 

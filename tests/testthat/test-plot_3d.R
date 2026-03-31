@@ -56,7 +56,7 @@ test_that("plot_3d plots basic options", {
 	)
 
 	run_tests(
-		"plot_3d",
+		"plot_3d_test",
 		plot_3d_args_meshing,
 		plot_prefix = "basic",
 		list(
@@ -69,7 +69,7 @@ test_that("plot_3d plots basic options", {
 		)
 	)
 	run_tests(
-		"plot_3d",
+		"plot_3d_test",
 		plot_3d_args_meshing_subset,
 		plot_prefix = "na",
 		list(
@@ -106,7 +106,7 @@ test_that("plot_3d plots color options", {
 	)
 
 	run_tests(
-		"plot_3d",
+		"plot_3d_test",
 		plot_3d_args_colors,
 		plot_prefix = "color",
 		list(
@@ -119,7 +119,7 @@ test_that("plot_3d plots color options", {
 		)
 	)
 	run_tests(
-		"plot_3d",
+		"plot_3d_test",
 		plot_3d_args_water_colors,
 		plot_prefix = "wcolor",
 		list(
@@ -146,7 +146,7 @@ test_that("plot_3d triangulation", {
 		max_tri = list(0, 100, 1000)
 	)
 	run_tests(
-		"plot_3d",
+		"plot_3d_test",
 		plot_3d_args_triangulation,
 		plot_prefix = "triangl",
 		list(
@@ -177,7 +177,7 @@ test_that("plot_3d plots line options", {
 	)
 
 	run_tests(
-		"plot_3d",
+		"plot_3d_test",
 		plot_3d_args_lines,
 		plot_prefix = "line",
 		list(
@@ -210,7 +210,7 @@ test_that("plot_3d plots soil options", {
 
 	set.seed(1)
 	run_tests(
-		"plot_3d",
+		"plot_3d_test",
 		plot_3d_args_soil,
 		plot_prefix = "soil",
 		list(
@@ -227,7 +227,7 @@ test_that("plot_3d plots soil options", {
 test_that("test raymesh conversion", {
 	volcano |>
 		sphere_shade() |>
-		plot_3d(volcano, zscale = 2)
+		plot_3d_test(volcano, zscale = 2)
 	raymesh = convert_rgl_to_raymesh()
 	rgl::close3d()
 	raymesh$material_hashes = as.character(c(1, 2, 3))

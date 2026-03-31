@@ -72,7 +72,7 @@ test_that("render_beveled_polygons() and render_buildings() work for single poly
 
 	heightmap = volcano
 	texture = sphere_shade(heightmap)
-	expect_no_condition(plot_3d(
+	expect_no_condition(plot_3d_test(
 		texture,
 		heightmap,
 		zscale = 1,

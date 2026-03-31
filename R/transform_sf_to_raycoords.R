@@ -1,15 +1,23 @@
 #'@title Transform Polygon into Raycoords
 #'
 #'@keywords internal
-transform_polygon_into_raycoords = function(polygon, heightmap = NULL, e = NULL, 
-                                            top = NULL, bottom = NULL) {
+transform_polygon_into_raycoords = function(
+  polygon,
+  heightmap = NULL,
+  e = NULL,
+  top = NULL,
+  bottom = NULL,
+  panel = NULL,
+  caller = NULL
+) {
   if(inherits(polygon,"SpatialPolygonsDataFrame") || inherits(polygon,"SpatialPolygons")) {
     polygon = sf::st_as_sf(polygon)
   }
   e = resolve_scene_render_extent(
     extent = e,
     heightmap = heightmap,
-    caller = NULL,
+    caller = caller,
+    panel = panel,
     error_if_missing = FALSE
   )
   if(inherits(polygon, "sf")) {
@@ -17,7 +25,8 @@ transform_polygon_into_raycoords = function(polygon, heightmap = NULL, e = NULL,
       sf_object = polygon,
       extent = e,
       heightmap = heightmap,
-      crs = tryCatch(sf::st_crs(polygon), error = function(e) NULL)
+      panel = panel,
+      caller = caller
     )
     polygon = scene_polygon$object
     if(!is.null(scene_polygon$extent)) {

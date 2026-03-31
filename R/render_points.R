@@ -16,6 +16,9 @@
 #' a length-4 numeric vector specifying `c("xmin", "xmax","ymin","ymax")`, or the spatial object (from
 #' the previously aforementioned packages) which will be automatically converted to an extent object.
 #' If omitted, rayshader will use extent metadata cached by [plot_3d()] or [plot_gg()].
+#'@param panel Default `NULL`. Facet panel identifier for scenes created with [plot_gg()]. Required
+#'to disambiguate faceted ggplot scenes when panel-specific cached metadata is needed. Ignored
+#'for non-ggplot scenes.
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.
 #'@param heightmap Default `NULL`. Height matrix for the current scene. If omitted, this is taken from the cached scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value.
 #'of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
@@ -106,6 +109,7 @@ render_points = function(
   x = NULL,
   altitude = NULL,
   extent = NULL,
+  panel = NULL,
   zscale = 1,
   heightmap = NULL,
   size = 0.5,
@@ -139,16 +143,29 @@ render_points = function(
     heightmap,
     caller = "render_points"
   )
-  zaxis_extent = resolve_scene_render_extent(
+  extent = resolve_scene_render_extent(
     extent = extent,
     heightmap = heightmap,
-    caller = NULL,
+    caller = "render_points",
+    panel = panel,
     error_if_missing = FALSE
   )
+  if (
+    is.null(extent) &&
+      !is.null(heightmap) &&
+      is.null(get_cached_plot_gg_transform_info(heightmap = heightmap, default = NULL))
+  ) {
+    extent = c(
+      xmin = 1,
+      xmax = nrow(heightmap),
+      ymin = 1,
+      ymax = ncol(heightmap)
+    )
+  }
   zaxis_args = normalize_scene_zaxis_args(
     zaxis_args = zaxis_split$zaxis_args,
     altitude = altitude,
-    extent = zaxis_extent,
+    extent = extent,
     heightmap = heightmap
   )
   if (rgl::cur3d() == 0) {
@@ -160,10 +177,27 @@ render_points = function(
       render_zaxis_from_dots(
         zaxis_args = zaxis_args,
         extent = extent,
+        panel = panel,
         zscale = zscale,
-        heightmap = heightmap
+        heightmap = heightmap,
+        caller = "render_points"
       )
       return(invisible())
+    }
+  }
+  if (!is.null(x) && !is.null(y)) {
+    scene_xy = auto_transform_scene_xy(
+      x = x,
+      y = y,
+      extent = extent,
+      heightmap = heightmap,
+      panel = panel,
+      caller = "render_points"
+    )
+    x = scene_xy$x
+    y = scene_xy$y
+    if (!is.null(scene_xy$extent)) {
+      extent = scene_xy$extent
     }
   }
   xyz = transform_into_heightmap_coords(
@@ -173,7 +207,10 @@ render_points = function(
     x,
     altitude,
     offset,
-    zscale
+    zscale,
+    panel = panel,
+    transform_scene = FALSE,
+    caller = "render_points"
   )
 
   if (length(unique(size)) > 1) {
@@ -202,7 +239,9 @@ render_points = function(
   render_zaxis_from_dots(
     zaxis_args = zaxis_args,
     extent = extent,
+    panel = panel,
     zscale = zscale,
-    heightmap = heightmap
+    heightmap = heightmap,
+    caller = "render_points"
   )
 }

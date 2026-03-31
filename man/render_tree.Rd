@@ -8,6 +8,7 @@ render_tree(
   y = NULL,
   x = NULL,
   extent = NULL,
+  panel = NULL,
   type = "basic",
   custom_obj_tree = NULL,
   custom_obj_crown = NULL,
@@ -44,6 +45,10 @@ render_tree(
 a length-4 numeric vector specifying \code{c("xmin", "xmax", "ymin", "ymax")}, or the spatial object (from
 the previously aforementioned packages) which will be automatically converted to an extent object.
 If omitted, rayshader will use extent metadata cached by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}.}
+
+\item{panel}{Default \code{NULL}. Facet panel identifier for scenes created with \code{\link[=plot_gg]{plot_gg()}}. Required
+to disambiguate faceted ggplot scenes when panel-specific cached metadata is needed. Ignored
+for non-ggplot scenes.}
 
 \item{type}{Default \code{"basic"}. Type of tree. Other built-in option: \code{"cone"}.}
 

@@ -21,6 +21,9 @@
 #' a length-4 numeric vector specifying `c("xmin", "xmax","ymin","ymax")`, or the spatial object (from
 #' the previously aforementioned packages) which will be automatically converted to an extent object.
 #' If omitted, rayshader will use extent metadata cached by [plot_3d()] or [plot_gg()].
+#'@param panel Default `NULL`. Facet panel identifier for scenes created with [plot_gg()]. Required
+#'to disambiguate faceted ggplot scenes when panel-specific cached metadata is needed. Ignored
+#'for non-ggplot scenes.
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.
 #'@param heightmap Default `NULL`. Height matrix for the current scene. If omitted, this is taken from the cached scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value.
 #' All points are assumed to be evenly spaced.
@@ -151,6 +154,7 @@ render_path = function(
   altitude = NULL,
   groups = NULL,
   extent = NULL,
+  panel = NULL,
   zscale = 1,
   heightmap = NULL,
   resample_evenly = FALSE,
@@ -196,16 +200,17 @@ render_path = function(
     heightmap,
     caller = "render_path"
   )
-  zaxis_extent = resolve_scene_render_extent(
+  extent = resolve_scene_render_extent(
     extent = extent,
     heightmap = heightmap,
-    caller = NULL,
+    caller = "render_path",
+    panel = panel,
     error_if_missing = FALSE
   )
   zaxis_args = normalize_scene_zaxis_args(
     zaxis_args = zaxis_split$zaxis_args,
     altitude = altitude,
-    extent = zaxis_extent,
+    extent = extent,
     heightmap = heightmap
   )
   if (rgl::cur3d() == 0 && !return_coords) {
@@ -217,8 +222,10 @@ render_path = function(
 			render_zaxis_from_dots(
 				zaxis_args = zaxis_args,
 				extent = extent,
+				panel = panel,
 				zscale = zscale,
-				heightmap = heightmap
+				heightmap = heightmap,
+				caller = "render_path"
 			)
 			return(invisible())
 		}
@@ -227,6 +234,7 @@ render_path = function(
     stopifnot(resample_n > 1)
     xyz = render_path(
       extent = extent,
+      panel = panel,
       lat = lat,
       long = long,
       altitude = altitude,
@@ -255,38 +263,42 @@ render_path = function(
             2
         }
         color_length = length(color)
-	        for (i in seq_len(nrow(xyz) - 1)) {
-	          rgl::lines3d(
+        for (i in seq_len(nrow(xyz) - 1)) {
+          rgl::lines3d(
             xyz[i:(i + 1), ],
             color = color[((i - 1) %% color_length) + 1],
             tag = tag,
             lwd = linewidth[i],
             line_antialias = antialias
-	          )
-	        }
-		        render_zaxis_from_dots(
-		        	zaxis_args = zaxis_args,
-		        	extent = extent,
-		        	zscale = zscale,
-		        	heightmap = heightmap
-		        )
-	        return(invisible())
-	      } else {
-	        rgl::lines3d(
+          )
+        }
+        render_zaxis_from_dots(
+          zaxis_args = zaxis_args,
+          extent = extent,
+          panel = panel,
+          zscale = zscale,
+          heightmap = heightmap,
+          caller = "render_path"
+        )
+        return(invisible())
+      } else {
+        rgl::lines3d(
           xyz,
           color = color,
           tag = tag,
           lwd = linewidth,
-	          line_antialias = antialias
-	        )
-		        render_zaxis_from_dots(
-		        	zaxis_args = zaxis_args,
-		        	extent = extent,
-		        	zscale = zscale,
-		        	heightmap = heightmap
-		        )
-	        return(invisible())
-	      }
+          line_antialias = antialias
+        )
+        render_zaxis_from_dots(
+          zaxis_args = zaxis_args,
+          extent = extent,
+          panel = panel,
+          zscale = zscale,
+          heightmap = heightmap,
+          caller = "render_path"
+        )
+        return(invisible())
+      }
     } else {
       return(xyz)
     }
@@ -321,28 +333,30 @@ render_path = function(
     ))
   }
   input_crs = NULL
+  geometry_transformed = FALSE
   if (inherits(lat, "SpatialLinesDataFrame")) {
-    input_crs = tryCatch(
-      sf::st_crs(sf::st_as_sf(lat)),
-      error = function(e) NULL
-    )
-  } else if (
+    lat = sf::st_as_sf(lat)
+  }
+  if (
     inherits(lat, "sf") ||
       inherits(lat, "sfc_LINESTRING") ||
       inherits(lat, "sfc_GEOMETRY")
   ) {
-    input_crs = tryCatch(
-      sf::st_crs(lat),
-      error = function(e) NULL
+    scene_path = auto_transform_scene_sf(
+      sf_object = lat,
+      extent = extent,
+      heightmap = heightmap,
+      panel = panel,
+      caller = "render_path"
     )
+    lat = scene_path$object
+    if (!is.null(scene_path$extent)) {
+      extent = scene_path$extent
+    }
+    geometry_transformed = TRUE
   }
 
-  if (inherits(lat, "SpatialLinesDataFrame")) {
-    latlong = sf::st_coordinates(sf::st_as_sf(lat))
-    long = latlong[, 1]
-    lat = latlong[, 2]
-    groups = latlong[, 3]
-  } else if (inherits(lat, "sf")) {
+  if (inherits(lat, "sf")) {
     latlong = sf::st_coordinates(lat)
     if (ncol(latlong) == 3) {
       long = latlong[, 1]
@@ -366,10 +380,10 @@ render_path = function(
     }
   } else if (inherits(lat, "sfc_GEOMETRY")) {
     geometry_list = list()
-    for (i in seq_len(lat)) {
+    for (i in seq_len(length(lat))) {
       geometry_list[[i]] = sf::st_coordinates(lat[i])
     }
-    lat = do.call(rbind, geometry_list)
+    latlong = do.call(rbind, geometry_list)
     if (ncol(latlong) == 3) {
       long = latlong[, 1]
       lat = latlong[, 2]
@@ -381,6 +395,23 @@ render_path = function(
     }
   } else if (is.null(groups)) {
     groups = rep(1, length(lat))
+  }
+  if (!geometry_transformed && !is.null(lat) && !is.null(long)) {
+    scene_xy = auto_transform_scene_xy(
+      x = long,
+      y = lat,
+      extent = extent,
+      heightmap = heightmap,
+      panel = panel,
+      crs = input_crs,
+      caller = "render_path"
+    )
+    long = scene_xy$x
+    lat = scene_xy$y
+    if (!is.null(scene_xy$extent)) {
+      extent = scene_xy$extent
+    }
+    input_crs = NULL
   }
   split_lat = split(lat, groups)
   split_long = split(long, groups)
@@ -412,7 +443,10 @@ render_path = function(
       offset,
       zscale,
       filter_bounds = FALSE,
-      crs = input_crs
+      crs = input_crs,
+      panel = panel,
+      transform_scene = FALSE,
+      caller = "render_path"
     )
   }
   if (!return_coords) {
@@ -459,16 +493,18 @@ render_path = function(
         color = color,
         tag = tag,
         lwd = linewidth,
-	        line_antialias = antialias
-	      )
-	    }
-		    render_zaxis_from_dots(
-		    	zaxis_args = zaxis_args,
-		    	extent = extent,
-		    	zscale = zscale,
-		    	heightmap = heightmap
-		    )
+        line_antialias = antialias
+      )
+    }
+    render_zaxis_from_dots(
+      zaxis_args = zaxis_args,
+      extent = extent,
+      panel = panel,
+      zscale = zscale,
+      heightmap = heightmap,
+      caller = "render_path"
+    )
   } else {
-	    return(coord_list)
-	  }
+    return(coord_list)
+  }
 }

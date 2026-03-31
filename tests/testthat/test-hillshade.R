@@ -181,7 +181,7 @@ test_that("create_texture", {
 test_that("radiance_shade requires scene or heightmap", {
 	skip_if_not_installed("rayrender")
 	on.exit(rgl::close3d(), add = TRUE)
-	options(rgl.useNULL = TRUE)
+	local_rgl_use_null()
 	rgl::close3d()
 	expect_error(
 		radiance_shade(),

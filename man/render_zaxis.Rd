@@ -6,6 +6,7 @@
 \usage{
 render_zaxis(
   extent = NULL,
+  panel = NULL,
   zscale = 1,
   heightmap = NULL,
   zaxis_location = "auto",
@@ -25,6 +26,10 @@ a length-4 numeric vector specifying \code{c("xmin", "xmax","ymin","ymax")}, or 
 the previously aforementioned packages) which will be automatically converted to an extent object.
 If omitted, rayshader will use cached extent metadata from \code{\link[=plot_gg]{plot_gg()}} or from \code{\link[=plot_3d]{plot_3d()}}
 (either from an explicitly passed \code{extent} argument, or the built-in \code{montereybay} scene metadata).}
+
+\item{panel}{Default \code{NULL}. Facet panel identifier for scenes created with \code{\link[=plot_gg]{plot_gg()}}. Required
+to disambiguate faceted ggplot scenes when panel-specific cached metadata is needed. Ignored
+for non-ggplot scenes.}
 
 \item{zscale}{Default \code{1}. The ratio between x/y spacing and z units.
 If left at \code{1} with \code{zaxis_breaks = NULL} on non-ggplot terrain scenes, rayshader

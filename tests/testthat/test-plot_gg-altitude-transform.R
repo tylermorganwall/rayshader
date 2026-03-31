@@ -2,12 +2,12 @@ library(ggplot2)
 
 test_that("ggplot scenes transform mapped overlay altitudes into scene units", {
 	on.exit(rgl::close3d(), add = TRUE)
-	options(rgl.useNULL = TRUE)
+	local_rgl_use_null()
 
 	p = ggplot(mtcars) +
 		geom_point(aes(x = wt, y = mpg, color = mpg))
 
-	expect_no_condition(suppressWarnings(plot_gg(
+	expect_no_condition(suppressWarnings(plot_gg_test(
 		p,
 		width = 2,
 		raytrace = FALSE,
@@ -41,12 +41,12 @@ test_that("ggplot scenes transform mapped overlay altitudes into scene units", {
 
 test_that("ggplot scenes without mapped height keep raw overlay altitudes", {
 	on.exit(rgl::close3d(), add = TRUE)
-	options(rgl.useNULL = TRUE)
+	local_rgl_use_null()
 
 	p = ggplot(mtcars) +
 		geom_point(aes(x = wt, y = mpg))
 
-	expect_no_condition(suppressWarnings(plot_gg(
+	expect_no_condition(suppressWarnings(plot_gg_test(
 		p,
 		width = 2,
 		raytrace = FALSE,
@@ -72,12 +72,12 @@ test_that("ggplot scenes without mapped height keep raw overlay altitudes", {
 
 test_that("ggplot z-axis breaks use mapped height positions but keep raw labels", {
 	on.exit(rgl::close3d(), add = TRUE)
-	options(rgl.useNULL = TRUE)
+	local_rgl_use_null()
 
 	p = ggplot(mtcars) +
 		geom_point(aes(x = wt, y = mpg, color = mpg))
 
-	expect_no_condition(suppressWarnings(plot_gg(
+	expect_no_condition(suppressWarnings(plot_gg_test(
 		p,
 		width = 2,
 		raytrace = FALSE,
@@ -126,11 +126,11 @@ test_that("ggplot z-axis breaks use mapped height positions but keep raw labels"
 
 test_that("plot_3d scenes keep raw altitude values in transform_into_heightmap_coords", {
 	on.exit(rgl::close3d(), add = TRUE)
-	options(rgl.useNULL = TRUE)
+	local_rgl_use_null()
 
 	heightmap = volcano
 	texture = sphere_shade(heightmap)
-	expect_no_condition(plot_3d(
+	expect_no_condition(plot_3d_test(
 		texture,
 		heightmap,
 		zscale = 10,

@@ -6,7 +6,7 @@ test_that("internal ggplot scene extent maps a single panel into scene coordinat
 	gg = ggplot(mtcars) +
 		geom_point(aes(x = wt, y = mpg, color = mpg))
 
-	height_matrix = plot_gg(
+	height_matrix = plot_gg_test(
 		gg,
 		width = 3,
 		height = 3,
@@ -61,7 +61,7 @@ test_that("internal ggplot scene extent returns one extent per facet panel", {
 		geom_point(aes(x = wt, y = mpg, color = mpg)) +
 		facet_wrap(~cyl)
 
-	expect_no_condition(plot_gg(
+	expect_no_condition(plot_gg_test(
 		gg,
 		width = 5,
 		height = 3,
@@ -88,7 +88,7 @@ test_that("internal ggplot coordinate transform respects ggplot scale and coord 
 		scale_x_log10()
 	test_df = data.frame(x = c(2, 4), y = c(15, 30))
 
-	expect_no_condition(plot_gg(
+	expect_no_condition(plot_gg_test(
 		base_plot,
 		width = 4,
 		height = 3,
@@ -137,7 +137,7 @@ test_that("internal ggplot coordinate transform handles polar coordinates", {
 		coord_polar()
 	test_df = data.frame(x = c("a", "c"), y = c(2, 3))
 
-	expect_no_condition(suppressWarnings(plot_gg(
+	expect_no_condition(suppressWarnings(plot_gg_test(
 		polar_plot,
 		width = 4,
 		height = 4,
@@ -182,7 +182,7 @@ test_that("internal ggplot coordinate transform supports coord_sf CRS handling",
 		geom_sf() +
 		coord_sf(crs = sf::st_crs(32119))
 
-	expect_no_condition(plot_gg(
+	expect_no_condition(plot_gg_test(
 		sf_plot,
 		width = 4,
 		height = 3,
@@ -225,7 +225,7 @@ test_that("internal ggplot sf transform matches vertexwise coordinate transforms
 		geom_sf() +
 		coord_sf(crs = sf::st_crs(32119))
 
-	expect_no_condition(plot_gg(
+	expect_no_condition(plot_gg_test(
 		sf_plot,
 		width = 4,
 		height = 3,
@@ -264,7 +264,7 @@ test_that("internal ggplot sf transform supports segmentization and geometry cla
 	) +
 		geom_col(width = 10) +
 		coord_polar()
-	expect_no_condition(suppressWarnings(plot_gg(
+	expect_no_condition(suppressWarnings(plot_gg_test(
 		polar_plot,
 		width = 4,
 		height = 4,
@@ -300,4 +300,356 @@ test_that("internal ggplot sf transform supports segmentization and geometry cla
 	expect_true(all(dense_coords[, 1] <= extent_out["xmax"]))
 	expect_true(all(dense_coords[, 2] >= extent_out["ymin"]))
 	expect_true(all(dense_coords[, 2] <= extent_out["ymax"]))
+})
+
+test_that("faceted ggplot cached extent resolution requires explicit panel disambiguation", {
+	on.exit(rgl::close3d(), add = TRUE)
+	local_rgl_use_null()
+
+	faceted_plot = ggplot(mtcars) +
+		geom_point(aes(wt, mpg)) +
+		facet_wrap(~cyl)
+
+	expect_no_condition(suppressWarnings(plot_gg_test(
+		faceted_plot,
+		width = 5,
+		height = 3,
+		windowsize = c(900, 700),
+		raytrace = FALSE,
+		shadow = FALSE,
+		multicore = FALSE
+	)))
+
+	expect_error(
+		rayshader:::resolve_scene_render_extent(
+			heightmap = rayshader:::get_scene_heightmap(),
+			caller = "render_path"
+		),
+		"Supply `panel = <panel>`"
+	)
+	expect_error(
+		rayshader:::resolve_scene_render_extent(
+			extent = rayshader:::get_ggplot_extent(panel = 1),
+			heightmap = rayshader:::get_scene_heightmap(),
+			panel = 2,
+			caller = "render_path"
+		),
+		"refer to different facet panels"
+	)
+})
+
+test_that("faceted ggplot transforms support explicit panel routing", {
+	on.exit(rgl::close3d(), add = TRUE)
+	local_rgl_use_null()
+
+	faceted_plot = ggplot(mtcars) +
+		geom_point(aes(wt, mpg)) +
+		facet_wrap(~cyl, scales = "free_x")
+
+	expect_no_condition(suppressWarnings(plot_gg_test(
+		faceted_plot,
+		width = 5,
+		height = 3,
+		windowsize = c(900, 700),
+		raytrace = FALSE,
+		shadow = FALSE,
+		multicore = FALSE
+	)))
+
+	panel_two_extent = rayshader:::get_ggplot_extent(panel = 2)
+	panel_two_coords = rayshader:::transform_ggplot_coords(
+		x = c(3.0, 3.2),
+		y = c(20, 19),
+		panel = 2
+	)
+
+	expect_equal(attr(panel_two_extent, "panel_info")$panel, 2L)
+	expect_equal(attr(panel_two_coords, "panel"), 2L)
+	expect_equal(as.numeric(attr(panel_two_coords, "extent")), as.numeric(panel_two_extent))
+	expect_true(all(panel_two_coords$long >= panel_two_extent["xmin"]))
+	expect_true(all(panel_two_coords$long <= panel_two_extent["xmax"]))
+	expect_true(all(panel_two_coords$lat >= panel_two_extent["ymin"]))
+	expect_true(all(panel_two_coords$lat <= panel_two_extent["ymax"]))
+})
+
+test_that("render_path() uses public panel routing for faceted ggplot scenes", {
+	on.exit(rgl::close3d(), add = TRUE)
+	local_rgl_use_null()
+
+	faceted_plot = ggplot(mtcars) +
+		geom_point(aes(wt, mpg)) +
+		facet_wrap(~cyl, scales = "free_x")
+
+	expect_no_condition(suppressWarnings(plot_gg_test(
+		faceted_plot,
+		width = 5,
+		height = 3,
+		windowsize = c(900, 700),
+		raytrace = FALSE,
+		shadow = FALSE,
+		multicore = FALSE
+	)))
+
+	expect_error(
+		render_path(
+			x = c(3.0, 3.2),
+			y = c(20, 19),
+			altitude = 0,
+			return_coords = TRUE
+		),
+		"Supply `panel = <panel>`"
+	)
+
+	coords = render_path(
+		x = c(3.0, 3.2),
+		y = c(20, 19),
+		altitude = 0,
+		panel = 2,
+		return_coords = TRUE
+	)
+	expected_scene_xy = rayshader:::transform_ggplot_coords(
+		x = c(3.0, 3.2),
+		y = c(20, 19),
+		panel = 2
+	)
+	expected_coords = rayshader:::transform_into_heightmap_coords(
+		extent = attr(expected_scene_xy, "extent"),
+		heightmap = rayshader:::get_scene_heightmap(),
+		lat = expected_scene_xy$lat,
+		long = expected_scene_xy$long,
+		altitude = c(0, 0),
+		zscale = rayshader:::get_scene_zscale(),
+		transform_scene = FALSE,
+		caller = "test"
+	)
+
+	expect_equal(length(coords), 1)
+	expect_equal(coords[[1]], expected_coords, tolerance = 1e-6)
+})
+
+test_that("render_raymesh() uses public panel routing for faceted ggplot scenes", {
+	skip_if_not_installed("rayvertex")
+	on.exit(rgl::close3d(), add = TRUE)
+	local_rgl_use_null()
+
+	faceted_plot = ggplot(mtcars) +
+		geom_point(aes(wt, mpg)) +
+		facet_wrap(~cyl, scales = "free_x")
+
+	expect_no_condition(suppressWarnings(plot_gg_test(
+		faceted_plot,
+		width = 5,
+		height = 3,
+		windowsize = c(900, 700),
+		raytrace = FALSE,
+		shadow = FALSE,
+		multicore = FALSE
+	)))
+
+	mesh = rayvertex::sphere_mesh(radius = 0.1)
+	expect_error(
+		render_raymesh(
+			mesh,
+			x = 3.1,
+			y = 20,
+			altitude = 0,
+			clear_previous = TRUE
+		),
+		"Supply `panel = <panel>`"
+	)
+
+	expect_no_condition(render_raymesh(
+		mesh,
+		x = 3.1,
+		y = 20,
+		altitude = 0,
+		panel = 2,
+		clear_previous = TRUE
+	))
+	obj_ids = get_ids_with_labels(typeval = "obj")
+	obj_id = obj_ids$id[grepl("^obj_raymesh", obj_ids$tag)][1]
+	obj_verts = rgl::rgl.attrib(obj_id, "vertices")
+	obj_center = c(
+		mean(range(obj_verts[, 1])),
+		mean(range(obj_verts[, 2])),
+		mean(range(obj_verts[, 3]))
+	)
+	expected_scene_xy = rayshader:::transform_ggplot_coords(x = 3.1, y = 20, panel = 2)
+	expected_center = rayshader:::transform_into_heightmap_coords(
+		extent = attr(expected_scene_xy, "extent"),
+		heightmap = rayshader:::get_scene_heightmap(),
+		lat = expected_scene_xy$lat,
+		long = expected_scene_xy$long,
+		altitude = 0,
+		zscale = rayshader:::get_scene_zscale(),
+		transform_scene = FALSE,
+		caller = "test"
+	)[1, ]
+
+	expect_equal(obj_center, as.numeric(expected_center), tolerance = 1e-6)
+})
+
+test_that("render_polygons() requires panel for faceted cached ggplot scenes", {
+	skip_if_not_installed("sf")
+	on.exit(rgl::close3d(), add = TRUE)
+	local_rgl_use_null()
+
+	faceted_plot = ggplot(mtcars) +
+		geom_point(aes(wt, mpg)) +
+		facet_wrap(~cyl, scales = "free_x")
+
+	expect_no_condition(suppressWarnings(plot_gg_test(
+		faceted_plot,
+		width = 5,
+		height = 3,
+		windowsize = c(900, 700),
+		raytrace = FALSE,
+		shadow = FALSE,
+		multicore = FALSE
+	)))
+
+	poly = sf::st_sf(geometry = sf::st_sfc(sf::st_polygon(list(matrix(
+		c(
+			2.8, 18.5,
+			3.2, 18.5,
+			3.2, 19.5,
+			2.8, 19.5,
+			2.8, 18.5
+		),
+		ncol = 2,
+		byrow = TRUE
+	)))))
+
+	expect_error(
+		render_polygons(poly, top = 1, bottom = 0, clear_previous = TRUE),
+		"Supply `panel = <panel>`"
+	)
+	expect_no_condition(render_polygons(
+		poly,
+		top = 1,
+		bottom = 0,
+		panel = 2,
+		clear_previous = TRUE
+	))
+	expect_true(any(get_ids_with_labels()$tag == "polygon3d"))
+})
+
+test_that("render_zaxis() requires panel for faceted cached ggplot scenes", {
+	on.exit(rgl::close3d(), add = TRUE)
+	local_rgl_use_null()
+
+	faceted_plot = ggplot(mtcars) +
+		geom_point(aes(wt, mpg)) +
+		facet_wrap(~cyl)
+
+	expect_no_condition(suppressWarnings(plot_gg_test(
+		faceted_plot,
+		width = 5,
+		height = 3,
+		windowsize = c(900, 700),
+		raytrace = FALSE,
+		shadow = FALSE,
+		multicore = FALSE
+	)))
+
+	expect_error(
+		render_zaxis(zaxis_breaks = c(0, 50, 100)),
+		"Supply `panel = <panel>`"
+	)
+	expect_no_condition(render_zaxis(
+		panel = 2,
+		zaxis_breaks = c(0, 50, 100)
+	))
+	expect_true(any(get_ids_with_labels()$tag == "zaxis_axis"))
+})
+
+test_that("coord_sf numeric inputs require explicit CRS metadata", {
+	skip_if_not_installed("sf")
+	on.exit(rgl::close3d(), add = TRUE)
+	local_rgl_use_null()
+
+	nc = sf::st_read(system.file("shape/nc.shp", package = "sf"), quiet = TRUE)
+	pt = suppressWarnings(sf::st_coordinates(sf::st_centroid(nc[1, ]))[1, ])
+	sf_plot = ggplot(nc) +
+		geom_sf() +
+		coord_sf(crs = sf::st_crs(32119))
+
+	expect_no_condition(plot_gg_test(
+		sf_plot,
+		width = 4,
+		height = 3,
+		windowsize = c(900, 700),
+		raytrace = FALSE,
+		shadow = FALSE,
+		multicore = FALSE
+	))
+
+	expect_error(
+		rayshader:::transform_ggplot_coords(x = pt[1], y = pt[2]),
+		"must include `crs`"
+	)
+})
+
+test_that("coord_sf sf inputs require CRS metadata or an explicit crs argument", {
+	skip_if_not_installed("sf")
+	on.exit(rgl::close3d(), add = TRUE)
+	local_rgl_use_null()
+
+	nc = sf::st_read(system.file("shape/nc.shp", package = "sf"), quiet = TRUE)
+	sf_plot = ggplot(nc) +
+		geom_sf() +
+		coord_sf(crs = sf::st_crs(32119))
+
+	expect_no_condition(plot_gg_test(
+		sf_plot,
+		width = 4,
+		height = 3,
+		windowsize = c(900, 700),
+		raytrace = FALSE,
+		shadow = FALSE,
+		multicore = FALSE
+	))
+
+	nc_no_crs = suppressWarnings(sf::st_set_crs(nc[1, ], NA))
+	expect_error(
+		rayshader:::transform_ggplot_sf(nc_no_crs),
+		"must carry a CRS or `crs` must be supplied"
+	)
+	expect_s3_class(
+		rayshader:::transform_ggplot_sf(nc_no_crs, crs = 4269),
+		"sf"
+	)
+})
+
+test_that("faceted reversed-scale transforms remain panel-aware", {
+	on.exit(rgl::close3d(), add = TRUE)
+	local_rgl_use_null()
+
+	reversed_plot = ggplot(mtcars) +
+		geom_point(aes(wt, mpg)) +
+		facet_wrap(~cyl, scales = "free_y") +
+		scale_y_reverse()
+
+	expect_no_condition(suppressWarnings(plot_gg_test(
+		reversed_plot,
+		width = 5,
+		height = 3,
+		windowsize = c(900, 700),
+		raytrace = FALSE,
+		shadow = FALSE,
+		multicore = FALSE
+	)))
+
+	coords = rayshader:::transform_ggplot_coords(
+		x = c(3.0, 3.2),
+		y = c(18, 20),
+		panel = 2
+	)
+	panel_two_extent = rayshader:::get_ggplot_extent(panel = 2)
+
+	expect_true(all(is.finite(as.matrix(coords))))
+	expect_true(all(coords$long >= panel_two_extent["xmin"]))
+	expect_true(all(coords$long <= panel_two_extent["xmax"]))
+	expect_true(all(coords$lat >= panel_two_extent["ymin"]))
+	expect_true(all(coords$lat <= panel_two_extent["ymax"]))
 })

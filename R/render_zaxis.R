@@ -8,6 +8,9 @@
 #' the previously aforementioned packages) which will be automatically converted to an extent object.
 #' If omitted, rayshader will use cached extent metadata from [plot_gg()] or from [plot_3d()]
 #'(either from an explicitly passed `extent` argument, or the built-in `montereybay` scene metadata).
+#'@param panel Default `NULL`. Facet panel identifier for scenes created with [plot_gg()]. Required
+#'to disambiguate faceted ggplot scenes when panel-specific cached metadata is needed. Ignored
+#'for non-ggplot scenes.
 #'@param zscale Default `1`. The ratio between x/y spacing and z units.
 #'If left at `1` with `zaxis_breaks = NULL` on non-ggplot terrain scenes, rayshader
 #'will attempt to use the cached `plot_3d()` zscale to generate more meaningful defaults.
@@ -30,6 +33,7 @@
 #'@export
 render_zaxis = function(
 	extent = NULL,
+	panel = NULL,
 	zscale = 1,
 	heightmap = NULL,
 	zaxis_location = "auto",
@@ -63,7 +67,8 @@ render_zaxis = function(
 	extent = resolve_scene_render_extent(
 		extent = extent,
 		heightmap = heightmap,
-		caller = "render_zaxis"
+		caller = "render_zaxis",
+		panel = panel
 	)
 	render_zaxis_internal(
 		zaxis = TRUE,
@@ -113,8 +118,10 @@ split_zaxis_dots = function(dots) {
 render_zaxis_from_dots = function(
 	zaxis_args = list(),
 	extent = NULL,
+	panel = NULL,
 	zscale = 1,
-	heightmap = NULL
+	heightmap = NULL,
+	caller = NULL
 ) {
 	if (length(zaxis_args) == 0) {
 		return(invisible(NULL))
@@ -124,7 +131,12 @@ render_zaxis_from_dots = function(
 		zscale_missing = isTRUE(all.equal(as.numeric(zscale)[1], 1))
 	)
 	heightmap = resolve_scene_render_heightmap(heightmap)
-	extent = resolve_scene_render_extent(extent = extent, heightmap = heightmap)
+	extent = resolve_scene_render_extent(
+		extent = extent,
+		heightmap = heightmap,
+		panel = panel,
+		caller = caller
+	)
 	if (is.null(zaxis_args$zaxis)) {
 		zaxis_args$zaxis = TRUE
 	}

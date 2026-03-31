@@ -1,10 +1,10 @@
 test_that("render_points() uses cached scene heightmap and zscale", {
 	on.exit(rgl::close3d(), add = TRUE)
-	options(rgl.useNULL = TRUE)
+	local_rgl_use_null()
 
 	heightmap = matrix(0, nrow = 20, ncol = 20)
 	texture = sphere_shade(heightmap)
-	expect_no_condition(plot_3d(
+	expect_no_condition(plot_3d_test(
 		texture,
 		heightmap,
 		zscale = 10,
@@ -28,11 +28,11 @@ test_that("render_points() uses cached scene heightmap and zscale", {
 
 test_that("render_water() uses cached scene heightmap and zscale", {
 	on.exit(rgl::close3d(), add = TRUE)
-	options(rgl.useNULL = TRUE)
+	local_rgl_use_null()
 
 	heightmap = matrix(0, nrow = 20, ncol = 20)
 	texture = sphere_shade(heightmap)
-	expect_no_condition(plot_3d(
+	expect_no_condition(plot_3d_test(
 		texture,
 		heightmap,
 		zscale = 10,
@@ -54,13 +54,13 @@ test_that("render_water() uses cached scene heightmap and zscale", {
 
 test_that("render_contours() uses cached scene heightmap", {
 	on.exit(rgl::close3d(), add = TRUE)
-	options(rgl.useNULL = TRUE)
+	local_rgl_use_null()
 	skip_if_not_installed("sf")
 	skip_if_not_installed("isoband")
 
 	heightmap = outer(1:30, 1:30, `+`)
 	texture = sphere_shade(heightmap)
-	expect_no_condition(plot_3d(
+	expect_no_condition(plot_3d_test(
 		texture,
 		heightmap,
 		zscale = 10,
@@ -76,11 +76,11 @@ test_that("render_contours() uses cached scene heightmap", {
 
 test_that("render_label() uses cached scene heightmap and zscale", {
 	on.exit(rgl::close3d(), add = TRUE)
-	options(rgl.useNULL = TRUE)
+	local_rgl_use_null()
 
 	heightmap = matrix(0, nrow = 20, ncol = 20)
 	texture = sphere_shade(heightmap)
-	expect_no_condition(plot_3d(
+	expect_no_condition(plot_3d_test(
 		texture,
 		heightmap,
 		zscale = 10,
@@ -102,12 +102,12 @@ test_that("render_label() uses cached scene heightmap and zscale", {
 
 test_that("render_label() accepts x/y names and lat/long aliases", {
 	on.exit(rgl::close3d(), add = TRUE)
-	options(rgl.useNULL = TRUE)
+	local_rgl_use_null()
 
 	heightmap = matrix(0, nrow = 20, ncol = 20)
 	texture = sphere_shade(heightmap)
 	extent = c(xmin = 0, xmax = 20, ymin = 0, ymax = 20)
-	expect_no_condition(plot_3d(
+	expect_no_condition(plot_3d_test(
 		texture,
 		heightmap,
 		zscale = 10,
@@ -158,11 +158,11 @@ test_that("render_label() accepts x/y names and lat/long aliases", {
 
 test_that("render_label() matrix fallback extent preserves 1-based indexing", {
 	on.exit(rgl::close3d(), add = TRUE)
-	options(rgl.useNULL = TRUE)
+	local_rgl_use_null()
 
 	heightmap = matrix(0, nrow = 20, ncol = 20)
 	texture = sphere_shade(heightmap)
-	expect_no_condition(plot_3d(
+	expect_no_condition(plot_3d_test(
 		texture,
 		heightmap,
 		zscale = 10,
@@ -188,11 +188,11 @@ test_that("render_label() matrix fallback extent preserves 1-based indexing", {
 
 test_that("render_points() accepts x/y names and lat/long aliases", {
 	on.exit(rgl::close3d(), add = TRUE)
-	options(rgl.useNULL = TRUE)
+	local_rgl_use_null()
 
 	heightmap = matrix(0, nrow = 20, ncol = 20)
 	texture = sphere_shade(heightmap)
-	expect_no_condition(plot_3d(
+	expect_no_condition(plot_3d_test(
 		texture,
 		heightmap,
 		zscale = 10,
@@ -237,12 +237,12 @@ test_that("render_points() accepts x/y names and lat/long aliases", {
 
 test_that("render_obj() and render_tree() accept x/y coordinates", {
 	on.exit(rgl::close3d(), add = TRUE)
-	options(rgl.useNULL = TRUE)
+	local_rgl_use_null()
 
 	heightmap = matrix(0, nrow = 20, ncol = 20)
 	texture = sphere_shade(heightmap)
 	extent = c(xmin = 0, xmax = 20, ymin = 0, ymax = 20)
-	expect_no_condition(plot_3d(
+	expect_no_condition(plot_3d_test(
 		texture,
 		heightmap,
 		zscale = 10,
@@ -275,13 +275,13 @@ test_that("render_obj() and render_tree() accept x/y coordinates", {
 
 test_that("render_path() and render_raymesh() accept x/y coordinates", {
 	on.exit(rgl::close3d(), add = TRUE)
-	options(rgl.useNULL = TRUE)
+	local_rgl_use_null()
 	skip_if_not_installed("rayvertex")
 
 	heightmap = matrix(0, nrow = 20, ncol = 20)
 	texture = sphere_shade(heightmap)
 	extent = c(xmin = 0, xmax = 20, ymin = 0, ymax = 20)
-	expect_no_condition(plot_3d(
+	expect_no_condition(plot_3d_test(
 		texture,
 		heightmap,
 		zscale = 10,
@@ -351,12 +351,12 @@ test_that("render_path() and render_raymesh() accept x/y coordinates", {
 
 test_that("cached scene messages include cached symbol labels", {
 	on.exit(rgl::close3d(), add = TRUE)
-	options(rgl.useNULL = TRUE)
+	local_rgl_use_null()
 
 	elmat = matrix(0, nrow = 20, ncol = 20)
 	zs = 10
 	texture = sphere_shade(elmat)
-	expect_no_condition(plot_3d(
+	expect_no_condition(plot_3d_test(
 		texture,
 		elmat,
 		zscale = zs,
@@ -381,7 +381,7 @@ test_that("cached scene messages include cached symbol labels", {
 
 test_that("plot_3d() accepts raster input and caches spatial metadata", {
 	on.exit(rgl::close3d(), add = TRUE)
-	options(rgl.useNULL = TRUE)
+	local_rgl_use_null()
 	skip_if_not_installed("raster")
 
 	elev_raster = raster::raster(
@@ -396,7 +396,7 @@ test_that("plot_3d() accepts raster input and caches spatial metadata", {
 	raster::values(elev_raster) = seq_len(raster::ncell(elev_raster))
 	texture = sphere_shade(raster_to_matrix(elev_raster))
 
-	expect_no_condition(plot_3d(
+	expect_no_condition(plot_3d_test(
 		texture,
 		elev_raster,
 		shadow = FALSE,
@@ -422,7 +422,7 @@ test_that("plot_3d() accepts raster input and caches spatial metadata", {
 
 test_that("transform_into_heightmap_coords() can use cached scene extent", {
 	on.exit(rgl::close3d(), add = TRUE)
-	options(rgl.useNULL = TRUE)
+	local_rgl_use_null()
 	skip_if_not_installed("raster")
 
 	elev_raster = raster::raster(
@@ -436,7 +436,7 @@ test_that("transform_into_heightmap_coords() can use cached scene extent", {
 	raster::values(elev_raster) = seq_len(raster::ncell(elev_raster))
 	texture = sphere_shade(raster_to_matrix(elev_raster))
 
-	expect_no_condition(plot_3d(
+	expect_no_condition(plot_3d_test(
 		texture,
 		elev_raster,
 		shadow = FALSE,

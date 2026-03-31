@@ -12,6 +12,9 @@
 #' a length-4 numeric vector specifying `c("xmin", "xmax", "ymin", "ymax")`, or the spatial object (from
 #' the previously aforementioned packages) which will be automatically converted to an extent object.
 #' If omitted, rayshader will use extent metadata cached by [plot_3d()] or [plot_gg()].
+#' @param panel Default `NULL`. Facet panel identifier for scenes created with [plot_gg()]. Required
+#' to disambiguate faceted ggplot scenes when panel-specific cached metadata is needed. Ignored
+#' for non-ggplot scenes.
 #' @param material Default `"grey80"`. If a color string, this will specify the color of the sides/base of the building
 #' Alternatively (for more customization), this can be a r`ayvertex::material_list()` object to specify
 #' the full color/appearance/material options for the resulting `ray_mesh` mesh.
@@ -130,6 +133,7 @@
 render_buildings = function(
 	polygon,
 	extent = NULL,
+	panel = NULL,
 	material = "grey",
 	roof_material = NA,
 	angle = 45,
@@ -177,8 +181,10 @@ render_buildings = function(
 			render_zaxis_from_dots(
 				zaxis_args = dot_split$zaxis_args,
 				extent = extent,
+				panel = panel,
 				zscale = zscale,
-				heightmap = heightmap
+				heightmap = heightmap,
+				caller = "render_buildings"
 			)
 			return(invisible())
 		}
@@ -192,7 +198,8 @@ render_buildings = function(
 	extent = resolve_scene_render_extent(
 		extent = extent,
 		heightmap = heightmap,
-		caller = "render_buildings"
+		caller = "render_buildings",
+		panel = panel
 	)
 	e = get_extent(extent)
 	if (heights_relative_to_centroid) {
@@ -208,7 +215,9 @@ render_buildings = function(
 			altitude = NULL,
 			offset = 0,
 			zscale = 1,
-			crs = tryCatch(sf::st_crs(polygon), error = function(e) NULL)
+			crs = tryCatch(sf::st_crs(polygon), error = function(e) NULL),
+			panel = panel,
+			caller = "render_buildings"
 		)
 		bottom = xyz[, 2] + bottom
 		bottom[is.na(bottom)] = min(xyz[, 2])
@@ -245,7 +254,9 @@ render_buildings = function(
 		heightmap = heightmap,
 		e = e,
 		top = top_values,
-		bottom = bottom_values
+		bottom = bottom_values,
+		panel = panel,
+		caller = "render_buildings"
 	)
 	top = polygon$top / zscale
 	bottom = polygon$bottom / zscale
@@ -324,6 +335,7 @@ render_buildings = function(
 	render_raymesh(
 		roof_mesh,
 		extent = extent,
+		panel = panel,
 		xyz = matrix(c(0, 0, 0), ncol = 3),
 		zscale = zscale,
 		heightmap = heightmap,

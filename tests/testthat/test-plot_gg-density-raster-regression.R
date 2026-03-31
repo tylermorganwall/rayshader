@@ -11,7 +11,7 @@ test_that("plot_gg() handles raster density plots with extra non-height scales",
 		scale_y_continuous(expand = c(0, 0)) +
 		scale_fill_gradient(low = "pink", high = "red")
 
-	rayimg = plot_gg(
+	rayimg = plot_gg_test(
 		mtplot_density,
 		width = 4,
 		preview = TRUE,

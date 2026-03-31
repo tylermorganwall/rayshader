@@ -49,6 +49,9 @@
 #' a length-4 numeric vector specifying `c("xmin", "xmax", "ymin", "ymax")`, or the spatial object (from
 #' the previously aforementioned packages) which will be automatically converted to an extent object.
 #' If omitted, rayshader will use extent metadata cached by [plot_3d()] or [plot_gg()].
+#'@param panel Default `NULL`. Facet panel identifier for scenes created with [plot_gg()]. Required
+#'to disambiguate faceted ggplot scenes when panel-specific cached metadata is needed. Ignored
+#'for non-ggplot scenes.
 #'@param baseshape Default `rectangle`. Shape of the base. Options are `c("rectangle","circle","hex")`.
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.
 #'@param heightmap Default `NULL`. Height matrix for the current scene. If omitted, this is taken from the cached scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value.
@@ -171,6 +174,7 @@ render_tree = function(
 	y = NULL,
 	x = NULL,
 	extent = NULL,
+	panel = NULL,
 	type = "basic",
 	custom_obj_tree = NULL,
 	custom_obj_crown = NULL,
@@ -233,8 +237,10 @@ render_tree = function(
 			render_zaxis_from_dots(
 				zaxis_args = zaxis_args,
 				extent = extent,
+				panel = panel,
 				zscale = zscale,
-				heightmap = heightmap
+				heightmap = heightmap,
+				caller = "render_tree"
 			)
 			return(invisible())
 		}
@@ -321,7 +327,9 @@ render_tree = function(
 			long = long,
 			altitude = NULL,
 			offset = 0,
-			zscale = 1
+			zscale = 1,
+			panel = panel,
+			caller = "render_tree"
 		)
 		z_tree = xyz_tree[, 2]
 		filter_nan = is.na(z_tree)
@@ -562,10 +570,11 @@ render_tree = function(
 		render_obj_tree(
 			custom_obj_crown,
 			color = crown_color,
-			lat = lat,
-			long = long,
-			extent = extent,
-			zscale = zscale,
+				lat = lat,
+				long = long,
+				extent = extent,
+				panel = panel,
+				zscale = zscale,
 			offset = trunk_height * height_zscale,
 			heightmap = heightmap,
 			angle = angle,
@@ -578,10 +587,11 @@ render_tree = function(
 		render_obj_tree(
 			custom_obj_trunk,
 			color = trunk_color,
-			lat = lat,
-			long = long,
-			extent = extent,
-			zscale = zscale,
+				lat = lat,
+				long = long,
+				extent = extent,
+				panel = panel,
+				zscale = zscale,
 			offset = 0,
 			baseshape = baseshape,
 			lit = lit,
@@ -595,10 +605,11 @@ render_tree = function(
 		render_obj_tree(
 			custom_obj_tree,
 			load_material = TRUE,
-			lat = lat,
-			long = long,
-			extent = extent,
-			zscale = zscale,
+				lat = lat,
+				long = long,
+				extent = extent,
+				panel = panel,
+				zscale = zscale,
 			offset = 0,
 			heightmap = heightmap,
 			angle = angle,
@@ -613,10 +624,11 @@ render_tree = function(
 		render_obj_tree(
 			tree_basic_center_obj(),
 			color = crown_color,
-			lat = lat,
-			long = long,
-			extent = extent,
-			zscale = zscale,
+				lat = lat,
+				long = long,
+				extent = extent,
+				panel = panel,
+				zscale = zscale,
 			offset = (trunk_height + crown_height / 3) * height_zscale,
 			heightmap = heightmap,
 			angle = angle,
@@ -629,10 +641,11 @@ render_tree = function(
 		render_obj_tree(
 			tree_trunk_obj(),
 			color = trunk_color,
-			lat = lat,
-			long = long,
-			extent = extent,
-			zscale = zscale,
+				lat = lat,
+				long = long,
+				extent = extent,
+				panel = panel,
+				zscale = zscale,
 			offset = 0,
 			baseshape = baseshape,
 			lit = lit,
@@ -646,10 +659,11 @@ render_tree = function(
 		render_obj_tree(
 			tree_cone_center_obj(),
 			color = crown_color,
-			lat = lat,
-			long = long,
-			extent = extent,
-			zscale = zscale,
+				lat = lat,
+				long = long,
+				extent = extent,
+				panel = panel,
+				zscale = zscale,
 			offset = trunk_height * height_zscale,
 			baseshape = baseshape,
 			lit = lit,
@@ -662,10 +676,11 @@ render_tree = function(
 		render_obj_tree(
 			tree_trunk_obj(),
 			color = trunk_color,
-			lat = lat,
-			long = long,
-			extent = extent,
-			zscale = zscale,
+				lat = lat,
+				long = long,
+				extent = extent,
+				panel = panel,
+				zscale = zscale,
 			offset = 0,
 			baseshape = baseshape,
 			lit = lit,
@@ -680,7 +695,9 @@ render_tree = function(
 	render_zaxis_from_dots(
 		zaxis_args = zaxis_args,
 		extent = extent,
+		panel = panel,
 		zscale = zscale,
-		heightmap = heightmap
+		heightmap = heightmap,
+		caller = "render_tree"
 	)
 }

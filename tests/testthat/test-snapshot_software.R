@@ -32,7 +32,7 @@ test_that("Checking render_snapshot(software_render = TRUE) features", {
 	#Render the 3D map
 	montereybay |>
 		sphere_shade() |>
-		plot_3d(
+		plot_3d_test(
 			montereybay,
 			zscale = 50,
 			water = TRUE,

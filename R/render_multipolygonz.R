@@ -11,6 +11,9 @@
 #' a length-4 numeric vector specifying `c("xmin", "xmax","ymin","ymax")`, or the spatial object (from
 #' the previously aforementioned packages) which will be automatically converted to an extent object.
 #' If omitted, rayshader will use extent metadata cached by [plot_3d()] or [plot_gg()].
+#'@param panel Default `NULL`. Facet panel identifier for scenes created with [plot_gg()]. Required
+#'to disambiguate faceted ggplot scenes when panel-specific cached metadata is needed. Ignored
+#'for non-ggplot scenes.
 #'@param obj_zscale Default `TRUE`. Whether to scale the size of the OBJ by zscale to have it match
 #'the size of the map. If zscale is very big, this will make the model very small.
 #'@param swap_yz Default `TRUE`. Whether to swap and Y and Z axes. (Y axis is vertical in
@@ -77,6 +80,7 @@
 render_multipolygonz = function(
   sfobj,
   extent = NULL,
+  panel = NULL,
   zscale = 1,
   heightmap = NULL,
   color = "grey50",
@@ -104,8 +108,10 @@ render_multipolygonz = function(
       render_zaxis_from_dots(
         zaxis_args = dot_split$zaxis_args,
         extent = extent,
+        panel = panel,
         zscale = zscale,
-        heightmap = heightmap
+        heightmap = heightmap,
+        caller = "render_multipolygonz"
       )
       return(invisible())
     }
@@ -115,6 +121,7 @@ render_multipolygonz = function(
   render_obj(
     filename = obj_temp,
     extent = extent,
+    panel = panel,
     obj_zscale = obj_zscale,
     clear_previous = FALSE,
     zscale = zscale,

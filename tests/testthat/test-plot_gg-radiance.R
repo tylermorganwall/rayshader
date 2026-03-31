@@ -8,7 +8,7 @@ test_that("plot_gg() accepts cached radiance overlays", {
 	cached_radiance = array(1, dim = c(16, 16, 4))
 	cached_radiance[,, 4] = 1
 
-	rayimg = plot_gg(
+	rayimg = plot_gg_test(
 		mtplot,
 		width = 2,
 		raytrace = "radiance",
@@ -30,7 +30,7 @@ test_that("plot_gg() aligns radiance shadow_intensity with raytrace semantics", 
 	cached_radiance[,, 1] = 1
 	cached_radiance[,, 4] = 1
 
-	base_img = plot_gg(
+	base_img = plot_gg_test(
 		mtplot,
 		width = 2,
 		raytrace = FALSE,
@@ -38,7 +38,7 @@ test_that("plot_gg() aligns radiance shadow_intensity with raytrace semantics", 
 		plot = FALSE
 	)
 
-	no_effect_img = plot_gg(
+	no_effect_img = plot_gg_test(
 		mtplot,
 		width = 2,
 		raytrace = "radiance",
@@ -48,7 +48,7 @@ test_that("plot_gg() aligns radiance shadow_intensity with raytrace semantics", 
 		plot = FALSE
 	)
 
-	full_effect_img = plot_gg(
+	full_effect_img = plot_gg_test(
 		mtplot,
 		width = 2,
 		raytrace = "radiance",
@@ -70,7 +70,7 @@ test_that("plot_gg() aligns radiance shadow_intensity with raytrace semantics", 
 
 test_that("plot_gg() can render ggplots with radiance shading", {
 	skip_if_not_installed("callr")
-	options(rgl.useNULL = TRUE)
+	local_rgl_use_null()
 
 	mtplot_density = ggplot(mtcars) +
 		stat_density_2d(
@@ -82,7 +82,7 @@ test_that("plot_gg() can render ggplots with radiance shading", {
 		scale_y_continuous(expand = c(0, 0)) +
 		scale_fill_gradient(low = "pink", high = "red")
 
-	rayimg = plot_gg(
+	rayimg = plot_gg_test(
 		mtplot_density,
 		width = 1,
 		raytrace = "radiance",

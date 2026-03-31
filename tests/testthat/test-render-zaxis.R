@@ -1,10 +1,10 @@
 test_that("render_points() can add a styled z-axis outside a specified corner", {
 	on.exit(rgl::close3d(), add = TRUE)
-	options(rgl.useNULL = TRUE)
+	local_rgl_use_null()
 
 	heightmap = volcano
 	texture = sphere_shade(heightmap)
-	expect_no_condition(plot_3d(
+	expect_no_condition(plot_3d_test(
 		texture,
 		heightmap,
 		zscale = 10,
@@ -85,11 +85,11 @@ test_that("render_points() can add a styled z-axis outside a specified corner", 
 
 test_that("render_zaxis() accepts fractional text offsets", {
 	on.exit(rgl::close3d(), add = TRUE)
-	options(rgl.useNULL = TRUE)
+	local_rgl_use_null()
 
 	heightmap = volcano
 	texture = sphere_shade(heightmap)
-	expect_no_condition(plot_3d(
+	expect_no_condition(plot_3d_test(
 		texture,
 		heightmap,
 		zscale = 10,
@@ -116,11 +116,11 @@ test_that("render_zaxis() accepts fractional text offsets", {
 
 test_that("render_zaxis() works as a standalone entry point", {
 	on.exit(rgl::close3d(), add = TRUE)
-	options(rgl.useNULL = TRUE)
+	local_rgl_use_null()
 
 	heightmap = volcano
 	texture = sphere_shade(heightmap)
-	expect_no_condition(plot_3d(
+	expect_no_condition(plot_3d_test(
 		texture,
 		heightmap,
 		zscale = 10,
@@ -151,12 +151,12 @@ test_that("render_zaxis() works as a standalone entry point", {
 
 test_that("render_zaxis() infers ggplot panel extent when omitted", {
 	on.exit(rgl::close3d(), add = TRUE)
-	options(rgl.useNULL = TRUE)
+	local_rgl_use_null()
 	skip_if_not_installed("ggplot2")
 
 	p = ggplot2::ggplot(mtcars) +
 		ggplot2::geom_point(ggplot2::aes(x = wt, y = mpg))
-	expect_no_condition(suppressWarnings(plot_gg(
+	expect_no_condition(suppressWarnings(plot_gg_test(
 		p,
 		windowsize = c(300, 300),
 		raytrace = FALSE,
@@ -176,11 +176,11 @@ test_that("render_zaxis() infers ggplot panel extent when omitted", {
 
 test_that("render_zaxis() uses cached user extent when omitted", {
 	on.exit(rgl::close3d(), add = TRUE)
-	options(rgl.useNULL = TRUE)
+	local_rgl_use_null()
 
 	heightmap = volcano
 	texture = sphere_shade(heightmap)
-	expect_no_condition(plot_3d(
+	expect_no_condition(plot_3d_test(
 		texture,
 		heightmap,
 		zscale = 10,
@@ -208,7 +208,7 @@ test_that("render_zaxis() uses cached user extent when omitted", {
 
 test_that("render_zaxis() uses extent cached by plot_3d()", {
 	on.exit(rgl::close3d(), add = TRUE)
-	options(rgl.useNULL = TRUE)
+	local_rgl_use_null()
 
 	heightmap = volcano
 	texture = sphere_shade(heightmap)
@@ -218,7 +218,7 @@ test_that("render_zaxis() uses extent cached by plot_3d()", {
 		ymin = 0,
 		ymax = ncol(heightmap)
 	)
-	expect_no_condition(plot_3d(
+	expect_no_condition(plot_3d_test(
 		texture,
 		heightmap,
 		extent = extent,
@@ -235,11 +235,11 @@ test_that("render_zaxis() uses extent cached by plot_3d()", {
 
 test_that("render_zaxis() errors without extent metadata on plain terrain matrices", {
 	on.exit(rgl::close3d(), add = TRUE)
-	options(rgl.useNULL = TRUE)
+	local_rgl_use_null()
 
 	heightmap = volcano
 	texture = sphere_shade(heightmap)
-	expect_no_condition(plot_3d(
+	expect_no_condition(plot_3d_test(
 		texture,
 		heightmap,
 		zscale = 10,
@@ -256,7 +256,7 @@ test_that("render_zaxis() errors without extent metadata on plain terrain matric
 
 test_that("render_zaxis() does not infer extent from heightmap attributes", {
 	on.exit(rgl::close3d(), add = TRUE)
-	options(rgl.useNULL = TRUE)
+	local_rgl_use_null()
 
 	heightmap = volcano
 	attr(heightmap, "extent") = c(
@@ -266,7 +266,7 @@ test_that("render_zaxis() does not infer extent from heightmap attributes", {
 		ymax = ncol(heightmap)
 	)
 	texture = sphere_shade(heightmap)
-	expect_no_condition(plot_3d(
+	expect_no_condition(plot_3d_test(
 		texture,
 		heightmap,
 		zscale = 10,
@@ -283,11 +283,11 @@ test_that("render_zaxis() does not infer extent from heightmap attributes", {
 
 test_that("plot_3d() and plot_gg() return invisibly by default", {
 	on.exit(rgl::close3d(), add = TRUE)
-	options(rgl.useNULL = TRUE)
+	local_rgl_use_null()
 
 	heightmap = volcano
 	texture = sphere_shade(heightmap)
-	vis_3d = withVisible(plot_3d(
+	vis_3d = withVisible(plot_3d_test(
 		texture,
 		heightmap,
 		zscale = 10,
@@ -300,7 +300,7 @@ test_that("plot_3d() and plot_gg() return invisibly by default", {
 	skip_if_not_installed("ggplot2")
 	p = ggplot2::ggplot(mtcars) +
 		ggplot2::geom_point(ggplot2::aes(x = wt, y = mpg))
-	vis_gg = withVisible(suppressWarnings(plot_gg(
+	vis_gg = withVisible(suppressWarnings(plot_gg_test(
 		p,
 		windowsize = c(300, 300),
 		raytrace = FALSE,
@@ -311,11 +311,11 @@ test_that("plot_3d() and plot_gg() return invisibly by default", {
 
 test_that("render_zaxis() infers cached terrain zscale for default breaks", {
 	on.exit(rgl::close3d(), add = TRUE)
-	options(rgl.useNULL = TRUE)
+	local_rgl_use_null()
 
 	heightmap = volcano
 	texture = sphere_shade(heightmap)
-	expect_no_condition(plot_3d(
+	expect_no_condition(plot_3d_test(
 		texture,
 		heightmap,
 		zscale = 10,
@@ -349,11 +349,11 @@ test_that("render_zaxis() infers cached terrain zscale for default breaks", {
 
 test_that("render_zaxis() default breaks span negative and positive terrain", {
 	on.exit(rgl::close3d(), add = TRUE)
-	options(rgl.useNULL = TRUE)
+	local_rgl_use_null()
 
 	heightmap = volcano - mean(range(volcano))
 	texture = sphere_shade(heightmap)
-	expect_no_condition(plot_3d(
+	expect_no_condition(plot_3d_test(
 		texture,
 		heightmap,
 		zscale = 10,
@@ -387,11 +387,11 @@ test_that("render_zaxis() default breaks span negative and positive terrain", {
 
 test_that("render_zaxis() corner offset is user-configurable", {
 	on.exit(rgl::close3d(), add = TRUE)
-	options(rgl.useNULL = TRUE)
+	local_rgl_use_null()
 
 	heightmap = volcano
 	texture = sphere_shade(heightmap)
-	expect_no_condition(plot_3d(
+	expect_no_condition(plot_3d_test(
 		texture,
 		heightmap,
 		zscale = 10,
@@ -453,12 +453,12 @@ test_that("render_zaxis() corner offset is user-configurable", {
 
 test_that("ggplot z-axis defaults to panel placement", {
 	on.exit(rgl::close3d(), add = TRUE)
-	options(rgl.useNULL = TRUE)
+	local_rgl_use_null()
 	skip_if_not_installed("ggplot2")
 
 	p = ggplot2::ggplot(mtcars) +
 		ggplot2::geom_point(ggplot2::aes(x = wt, y = mpg))
-	expect_no_condition(suppressWarnings(plot_gg(p, windowsize = c(300, 300))))
+	expect_no_condition(suppressWarnings(plot_gg_test(p, windowsize = c(300, 300))))
 
 	ext = rayshader:::get_ggplot_extent()
 	panel_info = attr(ext, "panel_info")
@@ -526,12 +526,12 @@ test_that("ggplot z-axis defaults to panel placement", {
 
 test_that("ggplot z-axis supports explicit panel corners", {
 	on.exit(rgl::close3d(), add = TRUE)
-	options(rgl.useNULL = TRUE)
+	local_rgl_use_null()
 	skip_if_not_installed("ggplot2")
 
 	p = ggplot2::ggplot(mtcars) +
 		ggplot2::geom_point(ggplot2::aes(x = wt, y = mpg))
-	expect_no_condition(suppressWarnings(plot_gg(p, windowsize = c(300, 300))))
+	expect_no_condition(suppressWarnings(plot_gg_test(p, windowsize = c(300, 300))))
 
 	ext = rayshader:::get_ggplot_extent()
 	panel_info = attr(ext, "panel_info")
@@ -583,12 +583,12 @@ test_that("ggplot z-axis supports explicit panel corners", {
 
 test_that("ggplot panel inset omits zero marker", {
 	on.exit(rgl::close3d(), add = TRUE)
-	options(rgl.useNULL = TRUE)
+	local_rgl_use_null()
 	skip_if_not_installed("ggplot2")
 
 	p = ggplot2::ggplot(mtcars) +
 		ggplot2::geom_point(ggplot2::aes(x = wt, y = mpg))
-	expect_no_condition(suppressWarnings(plot_gg(p, windowsize = c(300, 300))))
+	expect_no_condition(suppressWarnings(plot_gg_test(p, windowsize = c(300, 300))))
 
 	ext = rayshader:::get_ggplot_extent()
 	expect_no_condition(render_points(
@@ -617,11 +617,11 @@ test_that("ggplot panel inset omits zero marker", {
 
 test_that("render_points() validates z-axis labels length", {
 	on.exit(rgl::close3d(), add = TRUE)
-	options(rgl.useNULL = TRUE)
+	local_rgl_use_null()
 
 	heightmap = volcano
 	texture = sphere_shade(heightmap)
-	expect_no_condition(plot_3d(
+	expect_no_condition(plot_3d_test(
 		texture,
 		heightmap,
 		zscale = 10,
@@ -653,11 +653,11 @@ test_that("render_points() validates z-axis labels length", {
 
 test_that("render_contours() forwards z-axis options", {
 	on.exit(rgl::close3d(), add = TRUE)
-	options(rgl.useNULL = TRUE)
+	local_rgl_use_null()
 
 	heightmap = volcano
 	texture = sphere_shade(heightmap)
-	expect_no_condition(plot_3d(
+	expect_no_condition(plot_3d_test(
 		texture,
 		heightmap,
 		zscale = 10,

@@ -9,7 +9,9 @@ transform_polygon_into_raycoords(
   heightmap = NULL,
   e = NULL,
   top = NULL,
-  bottom = NULL
+  bottom = NULL,
+  panel = NULL,
+  caller = NULL
 )
 }
 \description{

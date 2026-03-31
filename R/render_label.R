@@ -16,6 +16,9 @@
 #' the previously aforementioned packages) which will be automatically converted to an extent object.
 #' If omitted, rayshader will use extent metadata cached by [plot_3d()] or [plot_gg()]. If no extent metadata
 #' is available for a plain matrix scene, rayshader defaults to `c(xmin = 1, xmax = nrow(heightmap), ymin = 1, ymax = ncol(heightmap))`.
+#'@param panel Default `NULL`. Facet panel identifier for scenes created with [plot_gg()]. Required
+#'to disambiguate faceted ggplot scenes when panel-specific cached metadata is needed. Ignored
+#'for non-ggplot scenes.
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
 #'@param relativez Default `TRUE`. Whether `z` should be measured in relation to the underlying elevation at that point in the heightmap, or set absolutely (`FALSE`).
 #'@param offset Elevation above the surface (at the label point) to start drawing the line.
@@ -113,6 +116,7 @@ render_label = function(
 	z = NULL,
 	altitude = NULL,
 	extent = NULL,
+	panel = NULL,
 	zscale = 1,
 	relativez = TRUE,
 	offset = 0,
@@ -181,6 +185,7 @@ render_label = function(
 			extent = extent,
 			heightmap = heightmap,
 			caller = "render_label",
+			panel = panel,
 			error_if_missing = FALSE
 		)
 		if (is.null(extent)) {
@@ -195,7 +200,9 @@ render_label = function(
 			x = x,
 			y = y,
 			extent = extent,
-			heightmap = heightmap
+			heightmap = heightmap,
+			panel = panel,
+			caller = "render_label"
 		)
 		x = scene_xy$x
 		y = scene_xy$y

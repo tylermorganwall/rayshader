@@ -16,13 +16,13 @@ scene_xy_to_rgl = function(long, lat, altitude, extent, zscale) {
 
 test_that("render_points() auto-transforms ggplot scene coordinates", {
 	on.exit(rgl::close3d(), add = TRUE)
-	options(rgl.useNULL = TRUE)
+	local_rgl_use_null()
 
 	p = ggplot(mtcars) +
 		geom_point(aes(wt, mpg)) +
 		scale_x_log10()
 
-	expect_no_condition(suppressWarnings(plot_gg(
+	expect_no_condition(suppressWarnings(plot_gg_test(
 		p,
 		width = 3,
 		height = 3,
@@ -58,13 +58,13 @@ test_that("render_points() auto-transforms ggplot scene coordinates", {
 
 test_that("render_label() auto-transforms ggplot scene coordinates", {
 	on.exit(rgl::close3d(), add = TRUE)
-	options(rgl.useNULL = TRUE)
+	local_rgl_use_null()
 
 	p = ggplot(mtcars) +
 		geom_point(aes(wt, mpg)) +
 		scale_x_log10()
 
-	expect_no_condition(suppressWarnings(plot_gg(
+	expect_no_condition(suppressWarnings(plot_gg_test(
 		p,
 		width = 3,
 		height = 3,
@@ -88,7 +88,7 @@ test_that("render_label() auto-transforms ggplot scene coordinates", {
 test_that("render_path() auto-transforms sf input through coord_sf()", {
 	skip_if_not_installed("sf")
 	on.exit(rgl::close3d(), add = TRUE)
-	options(rgl.useNULL = TRUE)
+	local_rgl_use_null()
 
 	nc = sf::st_read(system.file("shape/nc.shp", package = "sf"), quiet = TRUE)
 	centroids = suppressWarnings(sf::st_coordinates(sf::st_centroid(nc[1:2, ])))
@@ -103,7 +103,7 @@ test_that("render_path() auto-transforms sf input through coord_sf()", {
 		geom_sf() +
 		coord_sf(crs = sf::st_crs(32119))
 
-	expect_no_condition(suppressWarnings(plot_gg(
+	expect_no_condition(suppressWarnings(plot_gg_test(
 		p,
 		width = 3,
 		height = 3,
@@ -140,14 +140,14 @@ test_that("render_path() auto-transforms sf input through coord_sf()", {
 test_that("polygon raycoords auto-transform ggplot scene sf input", {
 	skip_if_not_installed("sf")
 	on.exit(rgl::close3d(), add = TRUE)
-	options(rgl.useNULL = TRUE)
+	local_rgl_use_null()
 
 	nc = sf::st_read(system.file("shape/nc.shp", package = "sf"), quiet = TRUE)
 	p = ggplot(nc) +
 		geom_sf() +
 		coord_sf(crs = sf::st_crs(32119))
 
-	expect_no_condition(suppressWarnings(plot_gg(
+	expect_no_condition(suppressWarnings(plot_gg_test(
 		p,
 		width = 3,
 		height = 3,

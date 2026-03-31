@@ -12,6 +12,9 @@
 #' a length-4 numeric vector specifying `c("xmin", "xmax", "ymin", "ymax")`, or the spatial object (from
 #' the previously aforementioned packages) which will be automatically converted to an extent object.
 #' If omitted, rayshader will use extent metadata cached by [plot_3d()] or [plot_gg()].
+#' @param panel Default `NULL`. Facet panel identifier for scenes created with [plot_gg()]. Required
+#' to disambiguate faceted ggplot scenes when panel-specific cached metadata is needed. Ignored
+#' for non-ggplot scenes.
 #' @param color Default `black`. Color of the polygon.
 #' @param top Default `1`. Extruded top distance. If this equals `bottom`, the polygon will not be
 #' extruded and just the one side will be rendered.
@@ -86,6 +89,7 @@
 render_polygons = function(
 	polygon,
 	extent = NULL,
+	panel = NULL,
 	color = "red",
 	top = 1,
 	bottom = NA,
@@ -124,8 +128,10 @@ render_polygons = function(
 			render_zaxis_from_dots(
 				zaxis_args = zaxis_split$zaxis_args,
 				extent = extent,
+				panel = panel,
 				zscale = zscale,
-				heightmap = heightmap
+				heightmap = heightmap,
+				caller = "render_polygons"
 			)
 			return(invisible())
 		}
@@ -136,7 +142,8 @@ render_polygons = function(
 	extent = resolve_scene_render_extent(
 		extent = extent,
 		heightmap = heightmap,
-		caller = "render_polygons"
+		caller = "render_polygons",
+		panel = panel
 	)
 	if (
 		inherits(polygon, "SpatialPolygonsDataFrame") ||
@@ -153,7 +160,8 @@ render_polygons = function(
 			sf_object = polygon,
 			extent = extent,
 			heightmap = heightmap,
-			crs = tryCatch(sf::st_crs(polygon), error = function(e) NULL)
+			panel = panel,
+			caller = "render_polygons"
 		)
 		polygon = scene_polygon$object
 		if (!is.null(scene_polygon$extent)) {
@@ -267,7 +275,8 @@ render_polygons = function(
 	extent = resolve_scene_render_extent(
 		extent = extent,
 		heightmap = heightmap,
-		caller = "render_polygons"
+		caller = "render_polygons",
+		panel = panel
 	)
 	e = get_extent(extent)
 	for (group in seq_along(vertex_list)) {
@@ -311,7 +320,9 @@ render_polygons = function(
 	render_zaxis_from_dots(
 		zaxis_args = zaxis_split$zaxis_args,
 		extent = extent,
+		panel = panel,
 		zscale = zscale,
-		heightmap = heightmap
+		heightmap = heightmap,
+		caller = "render_polygons"
 	)
 }

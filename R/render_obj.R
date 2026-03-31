@@ -14,6 +14,9 @@
 #' a length-4 numeric vector specifying `c("xmin", "xmax","ymin","ymax")`, or the spatial object (from
 #' the previously aforementioned packages) which will be automatically converted to an extent object.
 #' If omitted, rayshader will use extent metadata cached by [plot_3d()] or [plot_gg()].
+#'@param panel Default `NULL`. Facet panel identifier for scenes created with [plot_gg()]. Required
+#'to disambiguate faceted ggplot scenes when panel-specific cached metadata is needed. Ignored
+#'for non-ggplot scenes.
 #'@param x Vector of x coordinates (or other coordinate in the same coordinate reference system as extent).
 #'@param y Vector of y coordinates (or other coordinate in the same coordinate reference system as extent).
 #'@param lat Default `NULL`. Alias for `y` for geographic workflows.
@@ -102,6 +105,7 @@
 render_obj = function(
 	filename,
 	extent = NULL,
+	panel = NULL,
 	y = NULL,
 	x = NULL,
 	altitude = NULL,
@@ -157,7 +161,8 @@ render_obj = function(
 	zaxis_extent = resolve_scene_render_extent(
 		extent = extent,
 		heightmap = heightmap,
-		caller = NULL,
+		caller = "render_obj",
+		panel = panel,
 		error_if_missing = FALSE
 	)
 	zaxis_args = normalize_scene_zaxis_args(
@@ -194,7 +199,9 @@ render_obj = function(
 				long,
 				altitude,
 				offset,
-				zscale
+				zscale,
+				panel = panel,
+				caller = "render_obj"
 			)
 		} else {
 			if (is.null(swap_yz)) {
@@ -208,7 +215,9 @@ render_obj = function(
 				altitude,
 				offset,
 				zscale,
-				use_altitude = FALSE
+				use_altitude = FALSE,
+				panel = panel,
+				caller = "render_obj"
 			)
 		}
 		if (swap_yz) {
@@ -224,8 +233,10 @@ render_obj = function(
 			render_zaxis_from_dots(
 				zaxis_args = zaxis_args,
 				extent = extent,
+				panel = panel,
 				zscale = zscale,
-				heightmap = heightmap
+				heightmap = heightmap,
+				caller = "render_obj"
 			)
 			return(invisible())
 		}
@@ -313,7 +324,8 @@ render_obj = function(
 		extent = resolve_scene_render_extent(
 			extent = extent,
 			heightmap = heightmap,
-			caller = "render_obj"
+			caller = "render_obj",
+			panel = panel
 		)
 		extent = get_extent(extent)
 		minpoint_x = (extent["xmax"] + extent["xmin"]) / 2 - zscale / 2
@@ -498,7 +510,9 @@ render_obj = function(
 	render_zaxis_from_dots(
 		zaxis_args = zaxis_args,
 		extent = extent,
+		panel = panel,
 		zscale = zscale,
-		heightmap = heightmap
+		heightmap = heightmap,
+		caller = "render_obj"
 	)
 }

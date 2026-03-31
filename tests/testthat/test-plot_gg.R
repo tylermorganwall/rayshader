@@ -13,7 +13,7 @@ test_that("plot_gg() doesn't error", {
 		scale_fill_viridis_c(option = "A") +
 		scale_color_viridis_c(option = "A")
 
-	expect_no_condition(plot_gg(
+	expect_no_condition(plot_gg_test(
 		ggdiamonds,
 		multicore = TRUE,
 		width = 5,
@@ -37,7 +37,7 @@ test_that("plot_gg() doesn't error", {
 		coord_fixed()
 
 	expect_warning(
-		plot_gg(
+		plot_gg_test(
 			ggvolcano,
 			multicore = TRUE,
 			raytrace = TRUE,
@@ -65,7 +65,7 @@ test_that("plot_gg() doesn't error", {
 		coord_fixed()
 
 	expect_warning(
-		plot_gg(
+		plot_gg_test(
 			ggvolcano_surface,
 			ggobj_height = ggvolcano,
 			multicore = TRUE,
@@ -90,14 +90,14 @@ test_that("plot_gg() doesn't error", {
 
 	#Preview how the plot will look by setting `preview = TRUE`: We also adjust the angle of the light.
 
-	expect_no_condition(plot_gg(
+	expect_no_condition(plot_gg_test(
 		mtplot,
 		width = 3.5,
 		sunangle = 225,
 		preview = TRUE
 	))
 
-	plot_gg(
+	plot_gg_test(
 		mtplot,
 		width = 3.5,
 		multicore = TRUE,
@@ -120,7 +120,7 @@ test_that("plot_gg() doesn't error", {
 		scale_y_continuous(expand = c(0, 0)) +
 		scale_fill_gradient(low = "pink", high = "red")
 
-	expect_no_condition(plot_gg(
+	expect_no_condition(plot_gg_test(
 		mtplot_density,
 		width = 4,
 		zoom = 0.60,
@@ -135,9 +135,9 @@ test_that("plot_gg() doesn't error", {
 
 	#Preview this plot in 2D:
 
-	expect_no_condition(plot_gg(mtplot_density_facet, preview = TRUE))
+	expect_no_condition(plot_gg_test(mtplot_density_facet, preview = TRUE))
 
-	expect_no_condition(plot_gg(
+	expect_no_condition(plot_gg_test(
 		mtplot_density_facet,
 		windowsize = c(1400, 866),
 		zoom = 0.55,
@@ -148,11 +148,11 @@ test_that("plot_gg() doesn't error", {
 
 	#That is a little cramped. Specifying a larger width will improve the readability of this plot.
 
-	expect_no_condition(plot_gg(mtplot_density_facet, width = 6, preview = TRUE))
+	expect_no_condition(plot_gg_test(mtplot_density_facet, width = 6, preview = TRUE))
 
 	#That's better. Let's plot it in 3D, and increase the scale.
 
-	expect_no_condition(plot_gg(
+	expect_no_condition(plot_gg_test(
 		mtplot_density_facet,
 		width = 6,
 		windowsize = c(1400, 866),
@@ -164,7 +164,7 @@ test_that("plot_gg() doesn't error", {
 
 	#We can also render a flat version of the plot alongside (or above/below) the 3D version.
 
-	expect_no_condition(plot_gg(
+	expect_no_condition(plot_gg_test(
 		mtplot_density_facet,
 		width = 6,
 		windowsize = c(1400, 866),

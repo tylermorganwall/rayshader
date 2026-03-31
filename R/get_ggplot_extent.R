@@ -94,6 +94,78 @@ get_cached_plot_gg_transform_info = function(heightmap = NULL, default = NULL) {
 	)
 }
 
+format_render_caller_prefix = function(caller = NULL) {
+	if (!is.null(caller) && nzchar(caller)) {
+		return(sprintf("%s(): ", caller))
+	}
+	""
+}
+
+format_faceted_ggplot_panel_error = function(caller = NULL) {
+	paste0(
+		format_render_caller_prefix(caller),
+		"This scene was created from a faceted ggplot. Supply `panel = <panel>` or provide an `extent` corresponding to a single panel."
+	)
+}
+
+is_panel_extent_list = function(extent) {
+	is.list(extent) && !is.data.frame(extent)
+}
+
+normalize_scene_resolved_extent = function(extent, caller = NULL) {
+	if (!is_panel_extent_list(extent)) {
+		return(extent)
+	}
+	if (length(extent) == 0) {
+		return(NULL)
+	}
+	if (length(extent) == 1) {
+		return(extent[[1]])
+	}
+	stop(format_faceted_ggplot_panel_error(caller), call. = FALSE)
+}
+
+validate_scene_extent_panel = function(
+	extent = NULL,
+	heightmap = NULL,
+	panel = NULL,
+	caller = NULL
+) {
+	if (is.null(extent) || is.null(panel)) {
+		return(extent)
+	}
+	panel_info = get_cached_plot_gg_panel_info(heightmap = heightmap, default = NULL)
+	if (is.null(panel_info) || !nrow(panel_info)) {
+		return(extent)
+	}
+	extent_panel = match_plot_gg_panel_from_extent(extent, panel_info)
+	if (
+		!is.null(extent_panel) &&
+			!identical(as.character(extent_panel), as.character(panel))
+	) {
+		stop(
+			paste0(
+				format_render_caller_prefix(caller),
+				"The supplied `panel` and `extent` refer to different facet panels."
+			),
+			call. = FALSE
+		)
+	}
+	extent
+}
+
+get_cached_ggplot_extent_or_null = function(heightmap = NULL, panel = NULL) {
+	tryCatch(
+		get_ggplot_extent(heightmap = heightmap, panel = panel),
+		error = function(e) {
+			if (startsWith(conditionMessage(e), "No cached ggplot extent found.")) {
+				return(NULL)
+			}
+			stop(e)
+		}
+	)
+}
+
 match_plot_gg_panel_from_extent = function(extent, panel_info) {
 	if (is.null(extent) || is.null(panel_info) || !nrow(panel_info)) {
 		return(NULL)
@@ -176,12 +248,20 @@ get_scene_transform_context = function(
 	extent = NULL,
 	heightmap = NULL,
 	panel = NULL,
-	error_if_missing = FALSE
+	error_if_missing = FALSE,
+	caller = NULL
 ) {
 	transform_info = get_cached_plot_gg_transform_info(heightmap = heightmap, default = NULL)
 	if (is.null(transform_info)) {
 		return(NULL)
 	}
+	extent = normalize_scene_resolved_extent(extent, caller = caller)
+	extent = validate_scene_extent_panel(
+		extent = extent,
+		heightmap = heightmap,
+		panel = panel,
+		caller = caller
+	)
 	if (is.null(panel)) {
 		panel = infer_plot_gg_panel(
 			extent = extent,
@@ -191,16 +271,15 @@ get_scene_transform_context = function(
 	}
 	if (is.null(panel)) {
 		if (isTRUE(error_if_missing)) {
-			stop(
-				"Could not determine which ggplot panel to use from the cached scene metadata."
-			)
+			stop(format_faceted_ggplot_panel_error(caller), call. = FALSE)
 		}
 		return(NULL)
 	}
 	get_plot_gg_panel_transform_context(
 		transform_info = transform_info,
 		panel = panel,
-		heightmap = heightmap
+		heightmap = heightmap,
+		caller = caller
 	)
 }
 
@@ -210,13 +289,15 @@ auto_transform_scene_xy = function(
 	extent = NULL,
 	heightmap = NULL,
 	panel = NULL,
-	crs = NULL
+	crs = NULL,
+	caller = NULL
 ) {
 	transform_context = get_scene_transform_context(
 		extent = extent,
 		heightmap = heightmap,
 		panel = panel,
-		error_if_missing = FALSE
+		error_if_missing = TRUE,
+		caller = caller
 	)
 	if (is.null(transform_context)) {
 		return(list(
@@ -233,10 +314,15 @@ auto_transform_scene_xy = function(
 		transform_context = transform_context,
 		crs = crs
 	)
+	resolved_extent = if (!is.null(extent)) {
+		extent
+	} else {
+		transform_context$transformed_extent
+	}
 	list(
 		x = transformed_coords$long,
 		y = transformed_coords$lat,
-		extent = transform_context$transformed_extent,
+		extent = resolved_extent,
 		panel = transform_context$panel,
 		transformed = TRUE
 	)
@@ -248,13 +334,15 @@ auto_transform_scene_sf = function(
 	heightmap = NULL,
 	panel = NULL,
 	crs = NULL,
-	segmentize_df_max_length = NULL
+	segmentize_df_max_length = NULL,
+	caller = NULL
 ) {
 	transform_context = get_scene_transform_context(
 		extent = extent,
 		heightmap = heightmap,
 		panel = panel,
-		error_if_missing = FALSE
+		error_if_missing = TRUE,
+		caller = caller
 	)
 	if (is.null(transform_context)) {
 		return(list(
@@ -271,10 +359,15 @@ auto_transform_scene_sf = function(
 		crs = crs,
 		segmentize_df_max_length = segmentize_df_max_length
 	)
-	transformed_extent = attr(transformed_object, "extent", exact = TRUE)
+	transformed_extent = if (!is.null(extent)) {
+		extent
+	} else {
+		attr(transformed_object, "extent", exact = TRUE)
+	}
 	if (is.null(transformed_extent)) {
 		transformed_extent = transform_context$transformed_extent
 	}
+	attr(transformed_object, "extent") = transformed_extent
 	list(
 		object = transformed_object,
 		extent = transformed_extent,
@@ -353,7 +446,8 @@ transform_ggplot_coords = function(
 get_plot_gg_panel_transform_context = function(
 	transform_info,
 	panel = NULL,
-	heightmap = NULL
+	heightmap = NULL,
+	caller = NULL
 ) {
 	panel_table = transform_info$layout
 	if (!nrow(panel_table)) {
@@ -361,7 +455,7 @@ get_plot_gg_panel_transform_context = function(
 	}
 	if (is.null(panel)) {
 		if (nrow(panel_table) != 1) {
-			stop("`panel` must be supplied for faceted ggplots.")
+			stop(format_faceted_ggplot_panel_error(caller), call. = FALSE)
 		}
 		panel = panel_table$panel[1]
 	}
@@ -402,6 +496,17 @@ map_from_panel_npc = function(vals, target_range) {
 	target_range[1] + vals * diff(target_range)
 }
 
+get_coord_sf_target_crs = function(panel_params) {
+	target_crs = sf::st_crs(panel_params$crs)
+	if (is.na(target_crs)) {
+		target_crs = sf::st_crs(panel_params$default_crs)
+	}
+	if (is.na(target_crs)) {
+		stop("Could not determine target CRS for this `coord_sf()` panel.")
+	}
+	target_crs
+}
+
 transform_ggplot_xy_with_context = function(
 	x_vals,
 	y_vals,
@@ -419,24 +524,31 @@ transform_ggplot_xy_with_context = function(
 	coord_obj = transform_context$coord_obj
 
 	if (inherits(coord_obj, "CoordSf")) {
-		if (!is.null(crs)) {
-			if (!(length(find.package("sf", quiet = TRUE)) > 0)) {
-				stop("`sf` package required when using `crs` with coord_sf().")
-			}
-			target_crs = panel_params$crs
-			if (is.null(target_crs)) {
-				target_crs = panel_params$default_crs
-			}
-			point_sf = sf::st_as_sf(
-				data.frame(x = as.numeric(x_vals), y = as.numeric(y_vals)),
-				coords = c("x", "y"),
-				crs = crs
-			)
-			point_sf = sf::st_transform(point_sf, target_crs)
-			point_coords = sf::st_coordinates(point_sf)
-			x_vals = point_coords[, 1]
-			y_vals = point_coords[, 2]
+		if (!(length(find.package("sf", quiet = TRUE)) > 0)) {
+			stop("`sf` package required for coord_sf() transforms.")
 		}
+		if (is.null(crs)) {
+			stop(
+				"Bare numeric `x`/`y` inputs for `coord_sf()` scenes must include `crs`.",
+				call. = FALSE
+			)
+		}
+		input_crs = sf::st_crs(crs)
+		if (is.na(input_crs)) {
+			stop("Could not interpret `crs`.", call. = FALSE)
+		}
+		target_crs = get_coord_sf_target_crs(panel_params)
+		point_sf = sf::st_as_sf(
+			data.frame(x = as.numeric(x_vals), y = as.numeric(y_vals)),
+			coords = c("x", "y"),
+			crs = input_crs
+		)
+		if (!identical(input_crs$wkt, target_crs$wkt)) {
+			point_sf = sf::st_transform(point_sf, target_crs)
+		}
+		point_coords = sf::st_coordinates(point_sf)
+		x_vals = point_coords[, 1]
+		y_vals = point_coords[, 2]
 		coord_input = data.frame(
 			x = as.numeric(x_vals),
 			y = as.numeric(y_vals),
@@ -549,6 +661,9 @@ transform_ggplot_sf = function(
 	if (inherits(transform_context$coord_obj, "CoordSf")) {
 		if (!is.null(crs)) {
 			input_crs = sf::st_crs(crs)
+			if (is.na(input_crs)) {
+				stop("Could not interpret `crs`.", call. = FALSE)
+			}
 			existing_crs = sf::st_crs(sf_data)
 			if (!is.na(existing_crs) &&
 				!is.na(input_crs) &&
@@ -558,9 +673,13 @@ transform_ggplot_sf = function(
 			sf_data = suppressWarnings(sf::st_set_crs(sf_data, input_crs))
 		}
 		sf_crs = sf::st_crs(sf_data)
-		if (!is.na(sf_crs)) {
-			crs = sf_crs
+		if (is.na(sf_crs)) {
+			stop(
+				"`sf_object` must carry a CRS or `crs` must be supplied for `coord_sf()` scenes.",
+				call. = FALSE
+			)
 		}
+		crs = sf_crs
 	} else if (!is.null(crs)) {
 		warning("`crs` is only used when the plot uses `coord_sf()`.")
 	}
@@ -648,10 +767,7 @@ transform_ggplot_sf = function(
 	geom_transformed = lapply(sf::st_geometry(sf_data), transform_sfg)
 	output_crs = NULL
 	if (inherits(transform_context$coord_obj, "CoordSf")) {
-		output_crs = transform_context$panel_params$crs
-		if (is.null(output_crs)) {
-			output_crs = transform_context$panel_params$default_crs
-		}
+		output_crs = get_coord_sf_target_crs(transform_context$panel_params)
 	}
 	if (is.null(output_crs)) {
 		sf::st_geometry(sf_data) = sf::st_sfc(geom_transformed)
@@ -978,29 +1094,37 @@ resolve_scene_render_extent = function(
 	extent = NULL,
 	heightmap = NULL,
 	caller = NULL,
+	panel = NULL,
 	allow_ggplot_extent = TRUE,
 	allow_scene_extent = TRUE,
 	error_if_missing = TRUE
 ) {
 	if (!is.null(extent)) {
-		return(canonicalize_plot_gg_extent(
+		extent = canonicalize_plot_gg_extent(
 			extent = extent,
 			heightmap = heightmap
+		)
+		extent = normalize_scene_resolved_extent(extent, caller = caller)
+		return(validate_scene_extent_panel(
+			extent = extent,
+			heightmap = heightmap,
+			panel = panel,
+			caller = caller
 		))
 	}
 
 	if (isTRUE(allow_ggplot_extent)) {
-		gg_extent = tryCatch(
-			get_ggplot_extent(heightmap = heightmap),
-			error = function(e) NULL
+		gg_extent = get_cached_ggplot_extent_or_null(
+			heightmap = heightmap,
+			panel = panel
 		)
-		if (is.list(gg_extent) && !is.data.frame(gg_extent)) {
-			if (length(gg_extent) > 0) {
-				gg_extent = gg_extent[[1]]
-			} else {
-				gg_extent = NULL
+		if (is_panel_extent_list(gg_extent) && length(gg_extent) > 1) {
+			if (isTRUE(error_if_missing)) {
+				stop(format_faceted_ggplot_panel_error(caller), call. = FALSE)
 			}
+			gg_extent = NULL
 		}
+		gg_extent = normalize_scene_resolved_extent(gg_extent, caller = caller)
 		if (!is.null(gg_extent)) {
 			return(gg_extent)
 		}
