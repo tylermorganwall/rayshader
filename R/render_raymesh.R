@@ -17,6 +17,7 @@
 #'@param panel Default `NULL`. Facet panel identifier for scenes created with [plot_gg()]. Required
 #'to disambiguate faceted ggplot scenes when panel-specific cached metadata is needed. Ignored
 #'for non-ggplot scenes.
+#'@param crs Default `NULL`. CRS of the input numeric x/y coordinates, or CRS to assign to CRS-less spatial data before transforming it into the active scene CRS. If spatial data already carries a CRS, that CRS is used automatically.
 #'@param x Vector of x coordinates (or other coordinate in the same coordinate reference system as extent).
 #'@param y Vector of y coordinates (or other coordinate in the same coordinate reference system as extent).
 #'@param lat Default `NULL`. Alias for `y` for geographic workflows.
@@ -89,6 +90,7 @@ render_raymesh = function(
 	rgl_tag = "",
 	lat = NULL,
 	long = NULL,
+	crs = NULL,
 	...
 ) {
 	xy_inputs = resolve_render_xy_aliases(
@@ -159,6 +161,7 @@ render_raymesh = function(
 				altitude,
 				offset,
 				zscale,
+				crs = crs,
 				panel = panel,
 				caller = "render_raymesh"
 			)
@@ -175,6 +178,7 @@ render_raymesh = function(
 				offset,
 				zscale,
 				use_altitude = FALSE,
+				crs = crs,
 				panel = panel,
 				caller = "render_raymesh"
 			)

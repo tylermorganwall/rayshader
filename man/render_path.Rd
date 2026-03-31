@@ -29,6 +29,7 @@ render_path(
   tag = "path3d",
   lat = NULL,
   long = NULL,
+  crs = NULL,
   ...
 )
 }
@@ -108,6 +109,8 @@ plotting the line.}
 \item{lat}{Default \code{NULL}. Alias for \code{y} for geographic workflows.}
 
 \item{long}{Default \code{NULL}. Alias for \code{x} for geographic workflows.}
+
+\item{crs}{Default \code{NULL}. CRS of the input numeric x/y coordinates, or CRS to assign to CRS-less spatial data before transforming it into the active scene CRS. If spatial data already carries a CRS, that CRS is used automatically.}
 
 \item{...}{Optional z-axis arguments passed to \code{\link[=render_zaxis]{render_zaxis()}}, such as
 \code{zaxis = TRUE}, \code{zaxis_location}, \code{zaxis_breaks}, and \code{zaxis_labels}.}

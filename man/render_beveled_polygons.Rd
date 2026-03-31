@@ -36,6 +36,7 @@ render_beveled_polygons(
   light_intensity = 1,
   light_relative = FALSE,
   clear_previous = FALSE,
+  crs = NULL,
   ...
 )
 }
@@ -130,6 +131,8 @@ will not affect software or high quality renders.}
 or absolute.}
 
 \item{clear_previous}{Default \code{FALSE}. If \code{TRUE}, it will clear all existing polygons.}
+
+\item{crs}{Default \code{NULL}. CRS of the input numeric x/y coordinates, or CRS to assign to CRS-less spatial data before transforming it into the active scene CRS. If spatial data already carries a CRS, that CRS is used automatically.}
 
 \item{...}{Additional arguments to pass to \code{rgl::triangles3d()}.}
 }

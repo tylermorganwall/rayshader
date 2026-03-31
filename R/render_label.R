@@ -39,6 +39,7 @@
 #'@param textcolor Default `black`. Color of the text.
 #'@param lat Default `NULL`. Alias for `y` for geographic workflows.
 #'@param long Default `NULL`. Alias for `x` for geographic workflows.
+#'@param crs Default `NULL`. CRS of the input numeric x/y coordinates, or CRS to assign to CRS-less spatial data before transforming it into the active scene CRS. If spatial data already carries a CRS, that CRS is used automatically.
 #'@export
 #'@examples
 #'if(run_documentation()) {
@@ -135,7 +136,8 @@ render_label = function(
 	linecolor = "black",
 	textcolor = "black",
 	lat = NULL,
-	long = NULL
+	long = NULL,
+	crs = NULL
 ) {
 	exit_early = FALSE
 	if (clear_previous) {
@@ -202,6 +204,7 @@ render_label = function(
 			extent = extent,
 			heightmap = heightmap,
 			panel = panel,
+			crs = crs,
 			caller = "render_label"
 		)
 		x = scene_xy$x

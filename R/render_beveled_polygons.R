@@ -15,6 +15,7 @@
 #' @param panel Default `NULL`. Facet panel identifier for scenes created with [plot_gg()]. Required
 #' to disambiguate faceted ggplot scenes when panel-specific cached metadata is needed. Ignored
 #' for non-ggplot scenes.
+#' @param crs Default `NULL`. CRS of the input numeric x/y coordinates, or CRS to assign to CRS-less spatial data before transforming it into the active scene CRS. If spatial data already carries a CRS, that CRS is used automatically.
 #' @param bevel_width Default `5`. Width of the bevel.
 #' @param width_raw_units Default `FALSE`. Whether the bevel width should be measured in raw display units,
 #' or the actual units of the map.
@@ -191,6 +192,7 @@ render_beveled_polygons = function(
 	light_intensity = 1,
 	light_relative = FALSE,
 	clear_previous = FALSE,
+	crs = NULL,
 	...
 ) {
 	dot_split = split_zaxis_dots(list(...))
@@ -237,12 +239,39 @@ render_beveled_polygons = function(
 		caller = "render_beveled_polygons",
 		panel = panel
 	)
+	if (inherits(polygon, "Spatial")) {
+		polygon = sf::st_as_sf(polygon)
+	}
+	if (inherits(polygon, "sfc")) {
+		polygon = sf::st_sf(geometry = polygon)
+	}
+	if (inherits(polygon, "sfg")) {
+		polygon = sf::st_sf(geometry = sf::st_sfc(polygon))
+	}
 	e = get_extent(extent)
 	if (heights_relative_to_centroid) {
 		if (is.null(heightmap)) {
 			stop("Must pass in heightmap argument if using relative heights")
 		}
-		centroids = sf::st_coordinates(sf::st_centroid(polygon))
+		scene_target_crs = get_scene_target_crs(
+			extent = extent,
+			heightmap = heightmap,
+			panel = panel,
+			caller = "render_beveled_polygons"
+		)
+		centroid_source_crs = NULL
+		polygon_for_centroids = polygon
+		if (!is.null(scene_target_crs)) {
+			resolved_polygon = resolve_scene_sf_source_crs(
+				sf_data = polygon,
+				crs = crs,
+				target_crs = scene_target_crs,
+				caller = "render_beveled_polygons"
+			)
+			polygon_for_centroids = resolved_polygon$sf_data
+			centroid_source_crs = resolved_polygon$source_crs
+		}
+		centroids = sf::st_coordinates(sf::st_centroid(polygon_for_centroids))
 		xyz = transform_into_heightmap_coords(
 			e,
 			heightmap,
@@ -251,7 +280,7 @@ render_beveled_polygons = function(
 			altitude = NULL,
 			offset = 0,
 			zscale = 1,
-			crs = tryCatch(sf::st_crs(polygon), error = function(e) NULL),
+			crs = centroid_source_crs,
 			panel = panel,
 			caller = "render_beveled_polygons"
 		)
@@ -292,6 +321,7 @@ render_beveled_polygons = function(
 		top = top_values,
 		bottom = bottom_values,
 		panel = panel,
+		crs = crs,
 		caller = "render_beveled_polygons"
 	)
 	top = polygon$top / zscale
@@ -379,6 +409,7 @@ render_beveled_polygons = function(
 		light_intensity = light_intensity,
 		light_relative = light_relative,
 		rgl_tag = "_beveled_polygon",
+		crs = crs,
 		...
 	)
 }

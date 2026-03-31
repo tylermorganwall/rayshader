@@ -17,6 +17,7 @@ render_multipolygonz(
   clear_previous = FALSE,
   baseshape = "rectangle",
   rgl_tag = "_multipolygon",
+  crs = NULL,
   ...
 )
 }
@@ -54,6 +55,8 @@ rayshader coordinates, but data is often provided with Z being vertical).}
 \item{baseshape}{Default \code{rectangle}. Shape of the base. Options are \code{c("rectangle","circle","hex")}.}
 
 \item{rgl_tag}{Default \code{""}. Tag to add to the rgl scene id, will be prefixed by \code{"obj"}}
+
+\item{crs}{Default \code{NULL}. CRS of the input numeric x/y coordinates, or CRS to assign to CRS-less spatial data before transforming it into the active scene CRS. If spatial data already carries a CRS, that CRS is used automatically.}
 
 \item{...}{Additional arguments to pass to \code{rgl::triangles3d()}.}
 }

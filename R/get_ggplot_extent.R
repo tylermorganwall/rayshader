@@ -300,12 +300,43 @@ auto_transform_scene_xy = function(
 		caller = caller
 	)
 	if (is.null(transform_context)) {
+		if (is.null(crs)) {
+			return(list(
+				x = x,
+				y = y,
+				extent = extent,
+				panel = NULL,
+				transformed = FALSE
+			))
+		}
+		target_crs = get_scene_target_crs(
+			extent = extent,
+			heightmap = heightmap,
+			panel = panel,
+			caller = caller
+		)
+		if (is.null(target_crs)) {
+			return(list(
+				x = x,
+				y = y,
+				extent = extent,
+				panel = NULL,
+				transformed = FALSE
+			))
+		}
+		transformed_xy = transform_xy_between_crs(
+			x_vals = x,
+			y_vals = y,
+			source_crs = crs,
+			target_crs = target_crs,
+			caller = caller
+		)
 		return(list(
-			x = x,
-			y = y,
+			x = transformed_xy$x,
+			y = transformed_xy$y,
 			extent = extent,
 			panel = NULL,
-			transformed = FALSE
+			transformed = transformed_xy$transformed
 		))
 	}
 	transformed_coords = transform_ggplot_xy_with_context(
@@ -345,11 +376,31 @@ auto_transform_scene_sf = function(
 		caller = caller
 	)
 	if (is.null(transform_context)) {
+		target_crs = get_scene_target_crs(
+			extent = extent,
+			heightmap = heightmap,
+			panel = panel,
+			caller = caller
+		)
+		if (is.null(target_crs)) {
+			return(list(
+				object = sf_object,
+				extent = extent,
+				panel = NULL,
+				transformed = FALSE
+			))
+		}
+		transformed_object = transform_scene_sf_to_target_crs(
+			sf_object = sf_object,
+			target_crs = target_crs,
+			crs = crs,
+			caller = caller
+		)
 		return(list(
-			object = sf_object,
+			object = transformed_object$object,
 			extent = extent,
 			panel = NULL,
-			transformed = FALSE
+			transformed = transformed_object$transformed
 		))
 	}
 	transformed_object = transform_ggplot_sf(
@@ -507,6 +558,225 @@ get_coord_sf_target_crs = function(panel_params) {
 	target_crs
 }
 
+scene_crs_equal = function(x, y) {
+	x_crs = suppressWarnings(tryCatch(sf::st_crs(x), error = function(e) NA))
+	y_crs = suppressWarnings(tryCatch(sf::st_crs(y), error = function(e) NA))
+	if (is.na(x_crs) || is.na(y_crs)) {
+		return(FALSE)
+	}
+	identical(x_crs$wkt, y_crs$wkt)
+}
+
+parse_scene_crs = function(crs, caller = NULL, arg_name = "crs") {
+	parsed_crs = suppressWarnings(tryCatch(sf::st_crs(crs), error = function(e) NULL))
+	if (is.null(parsed_crs) || is.na(parsed_crs)) {
+		stop(
+			sprintf(
+				"%sCould not interpret `%s`.",
+				format_render_caller_prefix(caller),
+				arg_name
+			),
+			call. = FALSE
+		)
+	}
+	parsed_crs
+}
+
+transform_xy_between_crs = function(
+	x_vals,
+	y_vals,
+	source_crs,
+	target_crs,
+	caller = NULL
+) {
+	if (length(x_vals) != length(y_vals)) {
+		stop("`x_vals` and `y_vals` must have the same length.")
+	}
+	if (!(length(find.package("sf", quiet = TRUE)) > 0)) {
+		stop("`sf` package required for CRS transforms.", call. = FALSE)
+	}
+	source_crs = parse_scene_crs(source_crs, caller = caller, arg_name = "crs")
+	target_crs = parse_scene_crs(
+		target_crs,
+		caller = caller,
+		arg_name = "target CRS"
+	)
+	if (scene_crs_equal(source_crs, target_crs)) {
+		return(list(
+			x = as.numeric(x_vals),
+			y = as.numeric(y_vals),
+			transformed = FALSE
+		))
+	}
+	point_sf = sf::st_as_sf(
+		data.frame(x = as.numeric(x_vals), y = as.numeric(y_vals)),
+		coords = c("x", "y"),
+		crs = source_crs
+	)
+	point_sf = sf::st_transform(point_sf, target_crs)
+	point_coords = sf::st_coordinates(point_sf)
+	list(
+		x = point_coords[, 1],
+		y = point_coords[, 2],
+		transformed = TRUE
+	)
+}
+
+coerce_scene_sf_input = function(sf_object) {
+	input_class = if (inherits(sf_object, "sf")) {
+		"sf"
+	} else if (inherits(sf_object, "sfc")) {
+		"sfc"
+	} else if (inherits(sf_object, "sfg")) {
+		"sfg"
+	} else if (inherits(sf_object, "Spatial")) {
+		"sp"
+	} else {
+		stop(
+			"`sf_object` must be an `sf`, `sfc`, `sfg`, or `sp` spatial object.",
+			call. = FALSE
+		)
+	}
+	sf_data = if (input_class == "sf") {
+		sf_object
+	} else if (input_class == "sfc") {
+		sf::st_sf(geometry = sf_object)
+	} else if (input_class == "sfg") {
+		sf::st_sf(geometry = sf::st_sfc(sf_object))
+	} else {
+		sf::st_as_sf(sf_object)
+	}
+	list(
+		sf_data = sf_data,
+		input_class = input_class
+	)
+}
+
+rebuild_scene_sf_output = function(sf_data, input_class) {
+	if (input_class %in% c("sf", "sp")) {
+		return(sf_data)
+	}
+	if (input_class == "sfc") {
+		return(sf::st_geometry(sf_data))
+	}
+	if (input_class == "sfg") {
+		return(sf::st_geometry(sf_data)[[1]])
+	}
+	stop("Unsupported spatial input class.", call. = FALSE)
+}
+
+resolve_scene_sf_source_crs = function(
+	sf_data,
+	crs = NULL,
+	target_crs = NULL,
+	caller = NULL
+) {
+	explicit_crs = if (!is.null(crs)) {
+		parse_scene_crs(crs, caller = caller, arg_name = "crs")
+	} else {
+		NULL
+	}
+	existing_crs = suppressWarnings(sf::st_crs(sf_data))
+	has_existing_crs = !is.na(existing_crs)
+	if (!is.null(explicit_crs) &&
+		has_existing_crs &&
+		!scene_crs_equal(existing_crs, explicit_crs)) {
+		stop(
+			paste0(
+				format_render_caller_prefix(caller),
+				"Input spatial data already has a CRS that conflicts with `crs`."
+			),
+			call. = FALSE
+		)
+	}
+	if (!has_existing_crs && !is.null(explicit_crs)) {
+		sf_data = suppressWarnings(sf::st_set_crs(sf_data, explicit_crs))
+	}
+	source_crs = suppressWarnings(sf::st_crs(sf_data))
+	if (is.na(source_crs)) {
+		source_crs = NULL
+	}
+	if (!is.null(target_crs) && is.null(source_crs)) {
+		stop(
+			paste0(
+				format_render_caller_prefix(caller),
+				"Spatial inputs must carry a CRS or `crs` must be supplied before transforming into the active scene CRS."
+			),
+			call. = FALSE
+		)
+	}
+	list(
+		sf_data = sf_data,
+		source_crs = source_crs
+	)
+}
+
+transform_scene_sf_to_target_crs = function(
+	sf_object,
+	target_crs,
+	crs = NULL,
+	caller = NULL
+) {
+	coerced_input = coerce_scene_sf_input(sf_object)
+	resolved_input = resolve_scene_sf_source_crs(
+		sf_data = coerced_input$sf_data,
+		crs = crs,
+		target_crs = target_crs,
+		caller = caller
+	)
+	sf_data = resolved_input$sf_data
+	source_crs = resolved_input$source_crs
+	target_crs = parse_scene_crs(
+		target_crs,
+		caller = caller,
+		arg_name = "target CRS"
+	)
+	transformed = FALSE
+	if (!scene_crs_equal(source_crs, target_crs)) {
+		sf_data = sf::st_transform(sf_data, target_crs)
+		transformed = TRUE
+	}
+	list(
+		object = rebuild_scene_sf_output(sf_data, coerced_input$input_class),
+		source_crs = source_crs,
+		target_crs = target_crs,
+		transformed = transformed
+	)
+}
+
+get_scene_target_crs = function(
+	extent = NULL,
+	heightmap = NULL,
+	panel = NULL,
+	caller = NULL
+) {
+	transform_info = get_cached_plot_gg_transform_info(
+		heightmap = heightmap,
+		default = NULL
+	)
+	if (!is.null(transform_info)) {
+		transform_context = get_scene_transform_context(
+			extent = extent,
+			heightmap = heightmap,
+			panel = panel,
+			error_if_missing = TRUE,
+			caller = caller
+		)
+		if (is.null(transform_context)) {
+			return(NULL)
+		}
+		if (inherits(transform_context$coord_obj, "CoordSf")) {
+			return(get_coord_sf_target_crs(transform_context$panel_params))
+		}
+		return(NULL)
+	}
+	scene_crs = get_scene_crs(default = NULL)
+	if (is.null(scene_crs)) {
+		return(NULL)
+	}
+	parse_scene_crs(scene_crs, caller = caller, arg_name = "scene CRS")
+}
+
 transform_ggplot_xy_with_context = function(
 	x_vals,
 	y_vals,
@@ -533,22 +803,16 @@ transform_ggplot_xy_with_context = function(
 				call. = FALSE
 			)
 		}
-		input_crs = sf::st_crs(crs)
-		if (is.na(input_crs)) {
-			stop("Could not interpret `crs`.", call. = FALSE)
-		}
 		target_crs = get_coord_sf_target_crs(panel_params)
-		point_sf = sf::st_as_sf(
-			data.frame(x = as.numeric(x_vals), y = as.numeric(y_vals)),
-			coords = c("x", "y"),
-			crs = input_crs
+		transformed_xy = transform_xy_between_crs(
+			x_vals = x_vals,
+			y_vals = y_vals,
+			source_crs = crs,
+			target_crs = target_crs,
+			caller = NULL
 		)
-		if (!identical(input_crs$wkt, target_crs$wkt)) {
-			point_sf = sf::st_transform(point_sf, target_crs)
-		}
-		point_coords = sf::st_coordinates(point_sf)
-		x_vals = point_coords[, 1]
-		y_vals = point_coords[, 2]
+		x_vals = transformed_xy$x
+		y_vals = transformed_xy$y
 		coord_input = data.frame(
 			x = as.numeric(x_vals),
 			y = as.numeric(y_vals),
@@ -616,23 +880,9 @@ transform_ggplot_sf = function(
 	if (!(length(find.package("sf", quiet = TRUE)) > 0)) {
 		stop("`sf` package required for `transform_ggplot_sf()`.")
 	}
-	input_class = if (inherits(sf_object, "sf")) {
-		"sf"
-	} else if (inherits(sf_object, "sfc")) {
-		"sfc"
-	} else if (inherits(sf_object, "sfg")) {
-		"sfg"
-	} else {
-		stop("`sf_object` must be an `sf`, `sfc`, or `sfg` object.")
-	}
-	if (input_class == "sf") {
-		sf_data = sf_object
-	} else if (input_class == "sfc") {
-		sf_data = sf::st_sf(geometry = sf_object)
-	} else {
-		sf_data = sf::st_sf(geometry = sf::st_sfc(sf_object))
-	}
-	sf_data = suppressWarnings(sf::st_zm(sf_data, drop = TRUE, what = "ZM"))
+	coerced_input = coerce_scene_sf_input(sf_object)
+	sf_data = coerced_input$sf_data
+	input_class = coerced_input$input_class
 	if (!is.null(segmentize_df_max_length)) {
 		sf_data = tryCatch(
 			sf::st_segmentize(
@@ -659,29 +909,16 @@ transform_ggplot_sf = function(
 		heightmap = heightmap
 	)
 	if (inherits(transform_context$coord_obj, "CoordSf")) {
-		if (!is.null(crs)) {
-			input_crs = sf::st_crs(crs)
-			if (is.na(input_crs)) {
-				stop("Could not interpret `crs`.", call. = FALSE)
-			}
-			existing_crs = sf::st_crs(sf_data)
-			if (!is.na(existing_crs) &&
-				!is.na(input_crs) &&
-				!identical(existing_crs$wkt, input_crs$wkt)) {
-				warning("Replacing CRS metadata on `sf_object` with `crs`.")
-			}
-			sf_data = suppressWarnings(sf::st_set_crs(sf_data, input_crs))
-		}
-		sf_crs = sf::st_crs(sf_data)
-		if (is.na(sf_crs)) {
-			stop(
-				"`sf_object` must carry a CRS or `crs` must be supplied for `coord_sf()` scenes.",
-				call. = FALSE
-			)
-		}
-		crs = sf_crs
-	} else if (!is.null(crs)) {
-		warning("`crs` is only used when the plot uses `coord_sf()`.")
+		resolved_input = resolve_scene_sf_source_crs(
+			sf_data = sf_data,
+			crs = crs,
+			target_crs = get_coord_sf_target_crs(transform_context$panel_params),
+			caller = "transform_ggplot_sf"
+		)
+		sf_data = resolved_input$sf_data
+		crs = resolved_input$source_crs
+	} else {
+		crs = NULL
 	}
 
 	transform_matrix = function(mat) {
@@ -689,7 +926,7 @@ transform_ggplot_sf = function(
 			stop("Could not transform geometry: expected matrix coordinates.")
 		}
 		if (!nrow(mat)) {
-			return(mat[, 1:2, drop = FALSE])
+			return(mat)
 		}
 		xy = transform_ggplot_xy_with_context(
 			x_vals = mat[, 1],
@@ -697,7 +934,12 @@ transform_ggplot_sf = function(
 			transform_context = transform_context,
 			crs = crs
 		)
-		out = cbind(xy$long, xy$lat)
+		extra_dims = if (ncol(mat) > 2) {
+			mat[, -(1:2), drop = FALSE]
+		} else {
+			NULL
+		}
+		out = cbind(xy$long, xy$lat, extra_dims)
 		colnames(out) = NULL
 		out
 	}
@@ -721,14 +963,14 @@ transform_ggplot_sf = function(
 			))
 		}
 		if (geom_type == "POINT") {
-			coords = as.numeric(unclass(geom))[1:2]
+			coords = as.numeric(unclass(geom))
 			xy = transform_ggplot_xy_with_context(
 				x_vals = coords[1],
 				y_vals = coords[2],
 				transform_context = transform_context,
 				crs = crs
 			)
-			return(sf::st_point(c(xy$long[1], xy$lat[1])))
+			return(sf::st_point(c(xy$long[1], xy$lat[1], coords[-c(1, 2)])))
 		}
 		if (geom_type == "LINESTRING") {
 			return(sf::st_linestring(transform_matrix(unclass(geom))))

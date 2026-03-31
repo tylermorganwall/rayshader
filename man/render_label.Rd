@@ -31,7 +31,8 @@ render_label(
   linecolor = "black",
   textcolor = "black",
   lat = NULL,
-  long = NULL
+  long = NULL,
+  crs = NULL
 )
 }
 \arguments{
@@ -98,6 +99,8 @@ other arguments are passed to \code{\link[=render_label]{render_label()}}, this 
 \item{lat}{Default \code{NULL}. Alias for \code{y} for geographic workflows.}
 
 \item{long}{Default \code{NULL}. Alias for \code{x} for geographic workflows.}
+
+\item{crs}{Default \code{NULL}. CRS of the input numeric x/y coordinates, or CRS to assign to CRS-less spatial data before transforming it into the active scene CRS. If spatial data already carries a CRS, that CRS is used automatically.}
 }
 \description{
 Adds a marker and label to the current 3D plot

@@ -14,6 +14,7 @@
 #'@param panel Default `NULL`. Facet panel identifier for scenes created with [plot_gg()]. Required
 #'to disambiguate faceted ggplot scenes when panel-specific cached metadata is needed. Ignored
 #'for non-ggplot scenes.
+#'@param crs Default `NULL`. CRS of the input numeric x/y coordinates, or CRS to assign to CRS-less spatial data before transforming it into the active scene CRS. If spatial data already carries a CRS, that CRS is used automatically.
 #'@param obj_zscale Default `TRUE`. Whether to scale the size of the OBJ by zscale to have it match
 #'the size of the map. If zscale is very big, this will make the model very small.
 #'@param swap_yz Default `TRUE`. Whether to swap and Y and Z axes. (Y axis is vertical in
@@ -90,6 +91,7 @@ render_multipolygonz = function(
   clear_previous = FALSE,
   baseshape = "rectangle",
   rgl_tag = "_multipolygon",
+  crs = NULL,
   ...
 ) {
   dot_split = split_zaxis_dots(list(...))
@@ -116,6 +118,27 @@ render_multipolygonz = function(
       return(invisible())
     }
   }
+  if (inherits(sfobj, "Spatial")) {
+    sfobj = sf::st_as_sf(sfobj)
+  }
+  if (inherits(sfobj, "sfc")) {
+    sfobj = sf::st_sf(geometry = sfobj)
+  }
+  if (inherits(sfobj, "sfg")) {
+    sfobj = sf::st_sf(geometry = sf::st_sfc(sfobj))
+  }
+  scene_sfobj = auto_transform_scene_sf(
+    sf_object = sfobj,
+    extent = extent,
+    heightmap = heightmap,
+    panel = panel,
+    crs = crs,
+    caller = "render_multipolygonz"
+  )
+  sfobj = scene_sfobj$object
+  if (!is.null(scene_sfobj$extent)) {
+    extent = scene_sfobj$extent
+  }
   obj_temp = tempfile(fileext = ".obj")
   save_multipolygonz_to_obj(sfobj, obj_temp)
   render_obj(
@@ -131,6 +154,7 @@ render_multipolygonz = function(
     heightmap = heightmap,
     baseshape = baseshape,
     rgl_tag = rgl_tag,
+    crs = crs,
     ...
   )
 }

@@ -15,6 +15,7 @@
 #' @param panel Default `NULL`. Facet panel identifier for scenes created with [plot_gg()]. Required
 #' to disambiguate faceted ggplot scenes when panel-specific cached metadata is needed. Ignored
 #' for non-ggplot scenes.
+#' @param crs Default `NULL`. CRS of the input numeric x/y coordinates, or CRS to assign to CRS-less spatial data before transforming it into the active scene CRS. If spatial data already carries a CRS, that CRS is used automatically.
 #' @param material Default `"grey80"`. If a color string, this will specify the color of the sides/base of the building
 #' Alternatively (for more customization), this can be a r`ayvertex::material_list()` object to specify
 #' the full color/appearance/material options for the resulting `ray_mesh` mesh.
@@ -155,6 +156,7 @@ render_buildings = function(
 	light_intensity = 1,
 	light_relative = FALSE,
 	clear_previous = FALSE,
+	crs = NULL,
 	...
 ) {
 	dot_split = split_zaxis_dots(list(...))
@@ -201,12 +203,39 @@ render_buildings = function(
 		caller = "render_buildings",
 		panel = panel
 	)
+	if (inherits(polygon, "Spatial")) {
+		polygon = sf::st_as_sf(polygon)
+	}
+	if (inherits(polygon, "sfc")) {
+		polygon = sf::st_sf(geometry = polygon)
+	}
+	if (inherits(polygon, "sfg")) {
+		polygon = sf::st_sf(geometry = sf::st_sfc(polygon))
+	}
 	e = get_extent(extent)
 	if (heights_relative_to_centroid) {
 		if (is.null(heightmap)) {
 			stop("Must pass in heightmap argument if using relative heights")
 		}
-		centroids = sf::st_coordinates(sf::st_centroid(polygon))
+		scene_target_crs = get_scene_target_crs(
+			extent = extent,
+			heightmap = heightmap,
+			panel = panel,
+			caller = "render_buildings"
+		)
+		centroid_source_crs = NULL
+		polygon_for_centroids = polygon
+		if (!is.null(scene_target_crs)) {
+			resolved_polygon = resolve_scene_sf_source_crs(
+				sf_data = polygon,
+				crs = crs,
+				target_crs = scene_target_crs,
+				caller = "render_buildings"
+			)
+			polygon_for_centroids = resolved_polygon$sf_data
+			centroid_source_crs = resolved_polygon$source_crs
+		}
+		centroids = sf::st_coordinates(sf::st_centroid(polygon_for_centroids))
 		xyz = transform_into_heightmap_coords(
 			e,
 			heightmap,
@@ -215,7 +244,7 @@ render_buildings = function(
 			altitude = NULL,
 			offset = 0,
 			zscale = 1,
-			crs = tryCatch(sf::st_crs(polygon), error = function(e) NULL),
+			crs = centroid_source_crs,
 			panel = panel,
 			caller = "render_buildings"
 		)
@@ -256,6 +285,7 @@ render_buildings = function(
 		top = top_values,
 		bottom = bottom_values,
 		panel = panel,
+		crs = crs,
 		caller = "render_buildings"
 	)
 	top = polygon$top / zscale
@@ -347,6 +377,7 @@ render_buildings = function(
 		light_intensity = light_intensity,
 		light_relative = light_relative,
 		rgl_tag = "_building",
+		crs = crs,
 		...
 	)
 }

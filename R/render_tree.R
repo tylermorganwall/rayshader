@@ -52,6 +52,7 @@
 #'@param panel Default `NULL`. Facet panel identifier for scenes created with [plot_gg()]. Required
 #'to disambiguate faceted ggplot scenes when panel-specific cached metadata is needed. Ignored
 #'for non-ggplot scenes.
+#'@param crs Default `NULL`. CRS of the input numeric x/y coordinates, or CRS to assign to CRS-less spatial data before transforming it into the active scene CRS. If spatial data already carries a CRS, that CRS is used automatically.
 #'@param baseshape Default `rectangle`. Shape of the base. Options are `c("rectangle","circle","hex")`.
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.
 #'@param heightmap Default `NULL`. Height matrix for the current scene. If omitted, this is taken from the cached scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value.
@@ -198,6 +199,7 @@ render_tree = function(
 	clear_previous = FALSE,
 	lat = NULL,
 	long = NULL,
+	crs = NULL,
 	...
 	) {
 	xy_inputs = resolve_render_xy_aliases(
@@ -328,6 +330,7 @@ render_tree = function(
 			altitude = NULL,
 			offset = 0,
 			zscale = 1,
+			crs = crs,
 			panel = panel,
 			caller = "render_tree"
 		)
@@ -575,6 +578,7 @@ render_tree = function(
 				extent = extent,
 				panel = panel,
 				zscale = zscale,
+			crs = crs,
 			offset = trunk_height * height_zscale,
 			heightmap = heightmap,
 			angle = angle,
@@ -592,6 +596,7 @@ render_tree = function(
 				extent = extent,
 				panel = panel,
 				zscale = zscale,
+			crs = crs,
 			offset = 0,
 			baseshape = baseshape,
 			lit = lit,
@@ -610,6 +615,7 @@ render_tree = function(
 				extent = extent,
 				panel = panel,
 				zscale = zscale,
+			crs = crs,
 			offset = 0,
 			heightmap = heightmap,
 			angle = angle,
@@ -629,6 +635,7 @@ render_tree = function(
 				extent = extent,
 				panel = panel,
 				zscale = zscale,
+			crs = crs,
 			offset = (trunk_height + crown_height / 3) * height_zscale,
 			heightmap = heightmap,
 			angle = angle,
@@ -646,6 +653,7 @@ render_tree = function(
 				extent = extent,
 				panel = panel,
 				zscale = zscale,
+			crs = crs,
 			offset = 0,
 			baseshape = baseshape,
 			lit = lit,
@@ -664,6 +672,7 @@ render_tree = function(
 				extent = extent,
 				panel = panel,
 				zscale = zscale,
+			crs = crs,
 			offset = trunk_height * height_zscale,
 			baseshape = baseshape,
 			lit = lit,
@@ -681,6 +690,7 @@ render_tree = function(
 				extent = extent,
 				panel = panel,
 				zscale = zscale,
+			crs = crs,
 			offset = 0,
 			baseshape = baseshape,
 			lit = lit,

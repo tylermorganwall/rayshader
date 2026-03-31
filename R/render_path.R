@@ -24,6 +24,7 @@
 #'@param panel Default `NULL`. Facet panel identifier for scenes created with [plot_gg()]. Required
 #'to disambiguate faceted ggplot scenes when panel-specific cached metadata is needed. Ignored
 #'for non-ggplot scenes.
+#'@param crs Default `NULL`. CRS of the input numeric x/y coordinates, or CRS to assign to CRS-less spatial data before transforming it into the active scene CRS. If spatial data already carries a CRS, that CRS is used automatically.
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.
 #'@param heightmap Default `NULL`. Height matrix for the current scene. If omitted, this is taken from the cached scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value.
 #' All points are assumed to be evenly spaced.
@@ -173,6 +174,7 @@ render_path = function(
   tag = "path3d",
   lat = NULL,
   long = NULL,
+  crs = NULL,
   ...
 ) {
   xy_inputs = resolve_render_xy_aliases(
@@ -248,7 +250,8 @@ render_path = function(
       reorder_merge_tolerance = reorder_merge_tolerance,
       simplify_tolerance = simplify_tolerance,
       clear_previous = FALSE,
-      return_coords = TRUE
+      return_coords = TRUE,
+      crs = crs
     )
     xyz = lapply(xyz, get_interpolated_points_path, n = resample_n)
     xyz = do.call(
@@ -332,21 +335,23 @@ render_path = function(
       "LINESTRING"
     ))
   }
-  input_crs = NULL
   geometry_transformed = FALSE
-  if (inherits(lat, "SpatialLinesDataFrame")) {
+  if (inherits(lat, "SpatialLinesDataFrame") || inherits(lat, "SpatialLines")) {
     lat = sf::st_as_sf(lat)
+  }
+  if (inherits(lat, "sfg")) {
+    lat = sf::st_sfc(lat)
   }
   if (
     inherits(lat, "sf") ||
-      inherits(lat, "sfc_LINESTRING") ||
-      inherits(lat, "sfc_GEOMETRY")
+      inherits(lat, "sfc")
   ) {
     scene_path = auto_transform_scene_sf(
       sf_object = lat,
       extent = extent,
       heightmap = heightmap,
       panel = panel,
+      crs = crs,
       caller = "render_path"
     )
     lat = scene_path$object
@@ -367,23 +372,8 @@ render_path = function(
       lat = latlong[, 2]
       groups = interaction(latlong[, 3], latlong[, 4])
     }
-  } else if (inherits(lat, "sfc_LINESTRING")) {
+  } else if (inherits(lat, "sfc")) {
     latlong = sf::st_coordinates(lat)
-    if (ncol(latlong) == 3) {
-      long = latlong[, 1]
-      lat = latlong[, 2]
-      groups = latlong[, 3]
-    } else if (ncol(latlong) == 4) {
-      long = latlong[, 1]
-      lat = latlong[, 2]
-      groups = interaction(latlong[, 3], latlong[, 4])
-    }
-  } else if (inherits(lat, "sfc_GEOMETRY")) {
-    geometry_list = list()
-    for (i in seq_len(length(lat))) {
-      geometry_list[[i]] = sf::st_coordinates(lat[i])
-    }
-    latlong = do.call(rbind, geometry_list)
     if (ncol(latlong) == 3) {
       long = latlong[, 1]
       lat = latlong[, 2]
@@ -403,7 +393,7 @@ render_path = function(
       extent = extent,
       heightmap = heightmap,
       panel = panel,
-      crs = input_crs,
+      crs = crs,
       caller = "render_path"
     )
     long = scene_xy$x
@@ -411,7 +401,6 @@ render_path = function(
     if (!is.null(scene_xy$extent)) {
       extent = scene_xy$extent
     }
-    input_crs = NULL
   }
   split_lat = split(lat, groups)
   split_long = split(long, groups)
@@ -443,7 +432,7 @@ render_path = function(
       offset,
       zscale,
       filter_bounds = FALSE,
-      crs = input_crs,
+      crs = crs,
       panel = panel,
       transform_scene = FALSE,
       caller = "render_path"

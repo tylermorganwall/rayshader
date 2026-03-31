@@ -15,6 +15,7 @@
 #' @param panel Default `NULL`. Facet panel identifier for scenes created with [plot_gg()]. Required
 #' to disambiguate faceted ggplot scenes when panel-specific cached metadata is needed. Ignored
 #' for non-ggplot scenes.
+#' @param crs Default `NULL`. CRS of the input numeric x/y coordinates, or CRS to assign to CRS-less spatial data before transforming it into the active scene CRS. If spatial data already carries a CRS, that CRS is used automatically.
 #' @param color Default `black`. Color of the polygon.
 #' @param top Default `1`. Extruded top distance. If this equals `bottom`, the polygon will not be
 #' extruded and just the one side will be rendered.
@@ -107,6 +108,7 @@ render_polygons = function(
 	light_intensity = 0.3,
 	light_relative = FALSE,
 	clear_previous = FALSE,
+	crs = NULL,
 	...
 ) {
 	zaxis_split = split_zaxis_dots(list(...))
@@ -151,6 +153,12 @@ render_polygons = function(
 	) {
 		polygon = sf::st_as_sf(polygon)
 	}
+	if (inherits(polygon, "sfc")) {
+		polygon = sf::st_sf(geometry = polygon)
+	}
+	if (inherits(polygon, "sfg")) {
+		polygon = sf::st_sf(geometry = sf::st_sfc(polygon))
+	}
 	if (
 		inherits(polygon, "sf") ||
 			inherits(polygon, "sfc") ||
@@ -161,6 +169,7 @@ render_polygons = function(
 			extent = extent,
 			heightmap = heightmap,
 			panel = panel,
+			crs = crs,
 			caller = "render_polygons"
 		)
 		polygon = scene_polygon$object
