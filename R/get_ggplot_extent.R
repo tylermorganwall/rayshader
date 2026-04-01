@@ -108,6 +108,13 @@ format_faceted_ggplot_panel_error = function(caller = NULL) {
 	)
 }
 
+format_raybevel_error = function(error, caller = NULL) {
+	paste0(
+		format_render_caller_prefix(caller),
+		conditionMessage(error)
+	)
+}
+
 is_panel_extent_list = function(extent) {
 	is.list(extent) && !is.data.frame(extent)
 }

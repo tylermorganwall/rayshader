@@ -63,6 +63,8 @@ to specify the bottom of the extruded polygon.}
 of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
 All points are assumed to be evenly spaced.}
 
+\item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.}
+
 \item{scale_data}{Default \code{1}. If specifying \code{data_column_top} or \code{data_column_bottom}, how
 much to scale that value when rendering.}
 

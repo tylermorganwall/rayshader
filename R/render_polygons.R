@@ -34,6 +34,7 @@
 #' @param heightmap Default `NULL`. Height matrix for the current scene. If omitted, this is taken from the cached scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value.
 #' of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
 #'  All points are assumed to be evenly spaced.
+#' @param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.
 #' @param alpha Default `1`. Transparency of the polygons.
 #' @param lit Default `TRUE`. Whether to light the polygons.
 #' @param light_altitude Default `c(45, 60)`. Degree(s) from the horizon from which to light the polygons.
