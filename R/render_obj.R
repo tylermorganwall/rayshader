@@ -22,6 +22,7 @@
 #'@param y Vector of y coordinates (or other coordinate in the same coordinate reference system as extent).
 #'@param lat Default `NULL`. Alias for `y` for geographic workflows.
 #'@param long Default `NULL`. Alias for `x` for geographic workflows.
+#'@param location Default `NULL`. Spatial point input used to place the rendered object(s) in the scene. Accepts `sf`, `sfc`, `sfg`, or `sp` POINT or MULTIPOINT geometries. MULTIPOINT inputs are flattened to point placements internally, and vectorized arguments such as `scale`, `angle`, `color`, and `altitude` are applied against that flattened point count. If the input carries a CRS, it will be transformed automatically into the active scene CRS. If it has no CRS, supply `crs`.
 #'@param altitude Default `NULL`. Elevation of each point, in units of the elevation matrix (scaled by `zscale`).
 #'If left `NULL`, this will be just the elevation value at ths surface, offset by `offset`. If a single value,
 #'the OBJ will be rendered at that altitude.
@@ -131,25 +132,21 @@ render_obj = function(
 	rgl_tag = "",
 	lat = NULL,
 	long = NULL,
+	location = NULL,
 	crs = NULL,
 	...
 ) {
-	xy_inputs = resolve_render_xy_aliases(
-		x = x,
-		y = y,
-		long = long,
-		lat = lat,
-		missing_x = missing(x),
-		missing_y = missing(y),
-		missing_long = missing(long),
-		missing_lat = missing(lat),
-		caller = "render_obj"
-	)
-	x = xy_inputs$x
-	y = xy_inputs$y
-	lat = y
-	long = x
 	dot_split = split_zaxis_dots(list(...))
+	transform_scene_input = TRUE
+	if ("transform_scene" %in% names(dot_split$other_args)) {
+		transform_scene_input = dot_split$other_args$transform_scene
+		if (!is.logical(transform_scene_input) ||
+			length(transform_scene_input) != 1 ||
+			is.na(transform_scene_input)) {
+			stop("`transform_scene` must be a single logical value.", call. = FALSE)
+		}
+		dot_split$other_args$transform_scene = NULL
+	}
 	zscale = resolve_scene_render_zscale(
 		zscale,
 		missing(zscale),
@@ -173,6 +170,32 @@ render_obj = function(
 		extent = zaxis_extent,
 		heightmap = heightmap
 	)
+	point_input = resolve_render_location_input(
+		location = location,
+		x = x,
+		y = y,
+		long = long,
+		lat = lat,
+		missing_x = missing(x),
+		missing_y = missing(y),
+		missing_long = missing(long),
+		missing_lat = missing(lat),
+		extent = if (!is.null(zaxis_extent)) zaxis_extent else extent,
+		heightmap = heightmap,
+		panel = panel,
+		crs = crs,
+		caller = "render_obj"
+	)
+	x = point_input$x
+	y = point_input$y
+	lat = y
+	long = x
+	if (!is.null(point_input$extent)) {
+		extent = point_input$extent
+	} else if (is.null(extent) && !is.null(zaxis_extent)) {
+		extent = zaxis_extent
+	}
+	location_supplied = isTRUE(point_input$location_supplied)
 	render_obj_args = dot_split$other_args
 	triangles3d_with_args = function(...) {
 		do.call(rgl::triangles3d, c(list(...), render_obj_args))
@@ -204,6 +227,7 @@ render_obj = function(
 				zscale,
 				crs = crs,
 				panel = panel,
+				transform_scene = isTRUE(transform_scene_input) && !location_supplied,
 				caller = "render_obj"
 			)
 		} else {
@@ -221,6 +245,7 @@ render_obj = function(
 				use_altitude = FALSE,
 				crs = crs,
 				panel = panel,
+				transform_scene = isTRUE(transform_scene_input) && !location_supplied,
 				caller = "render_obj"
 			)
 		}

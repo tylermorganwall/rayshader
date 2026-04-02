@@ -39,6 +39,7 @@
 #'@param textcolor Default `black`. Color of the text.
 #'@param lat Default `NULL`. Alias for `y` for geographic workflows.
 #'@param long Default `NULL`. Alias for `x` for geographic workflows.
+#'@param location Default `NULL`. Spatial point input used to place the rendered label in the scene. Accepts `sf`, `sfc`, `sfg`, or `sp` POINT or MULTIPOINT geometries. MULTIPOINT inputs are flattened to point placements internally. `render_label()` requires `location` to resolve to exactly one point after flattening. If the input carries a CRS, it will be transformed automatically into the active scene CRS. If it has no CRS, supply `crs`.
 #'@param crs Default `NULL`. CRS of the input numeric x/y coordinates, or CRS to assign to CRS-less spatial data before transforming it into the active scene CRS. If spatial data already carries a CRS, that CRS is used automatically.
 #'@export
 #'@examples
@@ -137,6 +138,7 @@ render_label = function(
 	textcolor = "black",
 	lat = NULL,
 	long = NULL,
+	location = NULL,
 	crs = NULL
 ) {
 	exit_early = FALSE
@@ -167,7 +169,8 @@ render_label = function(
 		if (is.null(z)) {
 			z = max(heightmap, na.rm = TRUE) * 1.1
 		}
-		xy_inputs = resolve_render_xy_aliases(
+		point_input = resolve_render_location_input(
+			location = location,
 			x = x,
 			y = y,
 			long = long,
@@ -176,12 +179,28 @@ render_label = function(
 			missing_y = missing(y),
 			missing_long = missing(long),
 			missing_lat = missing(lat),
+			extent = extent,
+			heightmap = heightmap,
+			panel = panel,
+			crs = crs,
 			caller = "render_label"
 		)
-		x = xy_inputs$x
-		y = xy_inputs$y
+		x = point_input$x
+		y = point_input$y
+		if (!is.null(point_input$extent)) {
+			extent = point_input$extent
+		}
 		if (is.null(x) || is.null(y)) {
 			stop("Must provide `x`/`y` coordinates.", call. = FALSE)
+		}
+		if (point_input$location_supplied && point_input$geometry_count != 1) {
+			stop(
+				paste0(
+					format_render_caller_prefix("render_label"),
+					"`location` must resolve to exactly one point."
+				),
+				call. = FALSE
+			)
 		}
 		extent = resolve_scene_render_extent(
 			extent = extent,
@@ -198,19 +217,21 @@ render_label = function(
 				ymax = ncol(heightmap)
 			)
 		}
-		scene_xy = auto_transform_scene_xy(
-			x = x,
-			y = y,
-			extent = extent,
-			heightmap = heightmap,
-			panel = panel,
-			crs = crs,
-			caller = "render_label"
-		)
-		x = scene_xy$x
-		y = scene_xy$y
-		if (!is.null(scene_xy$extent)) {
-			extent = scene_xy$extent
+		if (!point_input$location_supplied) {
+			scene_xy = auto_transform_scene_xy(
+				x = x,
+				y = y,
+				extent = extent,
+				heightmap = heightmap,
+				panel = panel,
+				crs = crs,
+				caller = "render_label"
+			)
+			x = scene_xy$x
+			y = scene_xy$y
+			if (!is.null(scene_xy$extent)) {
+				extent = scene_xy$extent
+			}
 		}
 		if (rgl::cur3d() == 0) {
 			stop("No rgl window currently open.")

@@ -472,6 +472,198 @@ resolve_render_xy_aliases = function(
 	)
 }
 
+# Accept POINT and MULTIPOINT spatial inputs for renderer `location=` arguments.
+# MULTIPOINT features are flattened to per-point placements while preserving
+# feature order, so callers can distinguish original feature count from the
+# final number of point placements via `feature_count` and `geometry_count`.
+coerce_scene_point_input = function(location, crs = NULL, caller = NULL) {
+	if (!(length(find.package("sf", quiet = TRUE)) > 0)) {
+		stop(
+			paste0(
+				format_render_caller_prefix(caller),
+				"`sf` package required for spatial point `location` inputs."
+			),
+			call. = FALSE
+		)
+	}
+	coerced_input = coerce_scene_sf_input(location)
+	sf_data = coerced_input$sf_data
+	if (!nrow(sf_data)) {
+		stop(
+			paste0(
+				format_render_caller_prefix(caller),
+				"`location` cannot be empty."
+			),
+			call. = FALSE
+		)
+	}
+	if (any(sf::st_is_empty(sf_data))) {
+		stop(
+			paste0(
+				format_render_caller_prefix(caller),
+				"`location` cannot contain empty geometries."
+			),
+			call. = FALSE
+		)
+	}
+	geometry_types = as.character(sf::st_geometry_type(sf_data, by_geometry = TRUE))
+	if (any(!geometry_types %in% c("POINT", "MULTIPOINT"))) {
+		stop(
+			paste0(
+				format_render_caller_prefix(caller),
+				"`location` must contain only POINT or MULTIPOINT geometries."
+			),
+			call. = FALSE
+		)
+	}
+	resolved_input = resolve_scene_sf_source_crs(
+		sf_data = sf_data,
+		crs = crs,
+		caller = caller
+	)
+	sf_data = resolved_input$sf_data
+	point_sf_data = suppressWarnings(sf::st_cast(sf_data, "POINT", warn = FALSE))
+	if (!nrow(point_sf_data)) {
+		stop(
+			paste0(
+				format_render_caller_prefix(caller),
+				"`location` must resolve to at least one point."
+			),
+			call. = FALSE
+		)
+	}
+	point_coords = sf::st_coordinates(point_sf_data)
+	list(
+		sf_data = sf_data,
+		point_sf_data = point_sf_data,
+		x = point_coords[, 1],
+		y = point_coords[, 2],
+		feature_count = nrow(sf_data),
+		geometry_count = nrow(point_sf_data),
+		source_crs = resolved_input$source_crs
+	)
+}
+
+# Transform spatial point `location=` inputs into active scene coordinates.
+# The returned `x`/`y` vectors always reflect flattened point placements in the
+# scene CRS or ggplot panel coordinate space expected by the renderers.
+extract_scene_point_xy = function(
+	location,
+	extent = NULL,
+	heightmap = NULL,
+	panel = NULL,
+	crs = NULL,
+	caller = NULL
+) {
+	coerced_points = coerce_scene_point_input(
+		location = location,
+		crs = crs,
+		caller = caller
+	)
+	scene_points = auto_transform_scene_sf(
+		sf_object = coerced_points$sf_data,
+		extent = extent,
+		heightmap = heightmap,
+		panel = panel,
+		caller = caller
+	)
+	scene_point_data = coerce_scene_point_input(
+		location = scene_points$object,
+		caller = caller
+	)
+	list(
+		sf_data = scene_point_data$sf_data,
+		x = scene_point_data$x,
+		y = scene_point_data$y,
+		feature_count = coerced_points$feature_count,
+		geometry_count = coerced_points$geometry_count,
+		source_crs = coerced_points$source_crs,
+		extent = scene_points$extent,
+		panel = scene_points$panel,
+		transformed = scene_points$transformed
+	)
+}
+
+# Resolve renderer point placement inputs from either spatial `location=`
+# objects or explicit numeric x/y (and lat/long aliases). Spatial locations
+# remain centralized here so renderer-specific code can reuse the same POINT /
+# MULTIPOINT validation and scene-transform path.
+resolve_render_location_input = function(
+	location = NULL,
+	x = NULL,
+	y = NULL,
+	long = NULL,
+	lat = NULL,
+	missing_x = TRUE,
+	missing_y = TRUE,
+	missing_long = TRUE,
+	missing_lat = TRUE,
+	extent = NULL,
+	heightmap = NULL,
+	panel = NULL,
+	crs = NULL,
+	caller = NULL
+) {
+	if (!is.null(location)) {
+		conflicting_args = character()
+		if (!isTRUE(missing_x) && !is.null(x)) {
+			conflicting_args = c(conflicting_args, "x")
+		}
+		if (!isTRUE(missing_y) && !is.null(y)) {
+			conflicting_args = c(conflicting_args, "y")
+		}
+		if (!isTRUE(missing_long) && !is.null(long)) {
+			conflicting_args = c(conflicting_args, "long")
+		}
+		if (!isTRUE(missing_lat) && !is.null(lat)) {
+			conflicting_args = c(conflicting_args, "lat")
+		}
+		if (length(conflicting_args)) {
+			stop(
+				paste0(
+					format_render_caller_prefix(caller),
+					"`location` cannot be combined with `",
+					paste(conflicting_args, collapse = "`, `"),
+					"`."
+				),
+				call. = FALSE
+			)
+		}
+		point_input = extract_scene_point_xy(
+			location = location,
+			extent = extent,
+			heightmap = heightmap,
+			panel = panel,
+			crs = crs,
+			caller = caller
+		)
+		point_input$location_supplied = TRUE
+		return(point_input)
+	}
+	xy_inputs = resolve_render_xy_aliases(
+		x = x,
+		y = y,
+		long = long,
+		lat = lat,
+		missing_x = missing_x,
+		missing_y = missing_y,
+		missing_long = missing_long,
+		missing_lat = missing_lat,
+		caller = caller
+	)
+	list(
+		x = xy_inputs$x,
+		y = xy_inputs$y,
+		extent = extent,
+		panel = panel,
+		feature_count = NULL,
+		geometry_count = NULL,
+		source_crs = NULL,
+		transformed = FALSE,
+		location_supplied = FALSE
+	)
+}
+
 #'@keywords internal
 #'@noRd
 transform_ggplot_coords = function(

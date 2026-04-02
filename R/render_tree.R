@@ -11,6 +11,7 @@
 #'@param y Vector of y coordinates (or other coordinate in the same coordinate reference system as extent).
 #'@param lat Default `NULL`. Alias for `y` for geographic workflows.
 #'@param long Default `NULL`. Alias for `x` for geographic workflows.
+#'@param location Default `NULL`. Spatial point input used to place the rendered tree(s) in the scene. Accepts `sf`, `sfc`, `sfg`, or `sp` POINT or MULTIPOINT geometries. MULTIPOINT inputs are flattened to point placements internally, and vectorized arguments such as `tree_height`, `angle`, `crown_color`, and `trunk_color` are applied against that flattened point count. If the input carries a CRS, it will be transformed automatically into the active scene CRS. If it has no CRS, supply `crs`.
 #'@param type Default `"basic"`. Type of tree. Other built-in option: `"cone"`.
 #'@param custom_obj_tree Default `NULL`. Instead of using the built-in types, users can also load a custom tree
 #'model in OBJ format. This function loads and manipulates the model, assuming the tree model's trunk begins
@@ -199,24 +200,10 @@ render_tree = function(
 	clear_previous = FALSE,
 	lat = NULL,
 	long = NULL,
+	location = NULL,
 	crs = NULL,
 	...
 	) {
-	xy_inputs = resolve_render_xy_aliases(
-		x = x,
-		y = y,
-		long = long,
-		lat = lat,
-		missing_x = missing(x),
-		missing_y = missing(y),
-		missing_long = missing(long),
-		missing_lat = missing(lat),
-		caller = "render_tree"
-	)
-	x = xy_inputs$x
-	y = xy_inputs$y
-	lat = y
-	long = x
 	dot_split = split_zaxis_dots(list(...))
 	zscale = resolve_scene_render_zscale(
 		zscale,
@@ -229,6 +216,40 @@ render_tree = function(
 	)
 	zaxis_args = dot_split$zaxis_args
 	tree_args = dot_split$other_args
+	scene_extent = resolve_scene_render_extent(
+		extent = extent,
+		heightmap = heightmap,
+		caller = "render_tree",
+		panel = panel,
+		error_if_missing = FALSE
+	)
+	point_input = resolve_render_location_input(
+		location = location,
+		x = x,
+		y = y,
+		long = long,
+		lat = lat,
+		missing_x = missing(x),
+		missing_y = missing(y),
+		missing_long = missing(long),
+		missing_lat = missing(lat),
+		extent = if (!is.null(scene_extent)) scene_extent else extent,
+		heightmap = heightmap,
+		panel = panel,
+		crs = crs,
+		caller = "render_tree"
+	)
+	x = point_input$x
+	y = point_input$y
+	lat = y
+	long = x
+	if (!is.null(point_input$extent)) {
+		extent = point_input$extent
+	} else if (is.null(extent) && !is.null(scene_extent)) {
+		extent = scene_extent
+	}
+	location_supplied = isTRUE(point_input$location_supplied)
+	render_obj_crs = if (location_supplied) NULL else crs
 	render_obj_tree = function(...) {
 		do.call(render_obj, c(list(...), tree_args))
 	}
@@ -330,8 +351,9 @@ render_tree = function(
 			altitude = NULL,
 			offset = 0,
 			zscale = 1,
-			crs = crs,
+			crs = render_obj_crs,
 			panel = panel,
+			transform_scene = !location_supplied,
 			caller = "render_tree"
 		)
 		z_tree = xyz_tree[, 2]
@@ -578,13 +600,14 @@ render_tree = function(
 				extent = extent,
 				panel = panel,
 				zscale = zscale,
-			crs = crs,
+			crs = render_obj_crs,
 			offset = trunk_height * height_zscale,
 			heightmap = heightmap,
 			angle = angle,
 			scale = tree_scale,
 			baseshape = baseshape,
 			lit = lit,
+			transform_scene = !location_supplied,
 			clear_previous = FALSE,
 			rgl_tag = "tree"
 		)
@@ -596,13 +619,14 @@ render_tree = function(
 				extent = extent,
 				panel = panel,
 				zscale = zscale,
-			crs = crs,
+			crs = render_obj_crs,
 			offset = 0,
 			baseshape = baseshape,
 			lit = lit,
 			heightmap = heightmap,
 			angle = angle,
 			scale = trunk_scale,
+			transform_scene = !location_supplied,
 			rgl_tag = "tree"
 		)
 	} else if (custom_tree) {
@@ -615,12 +639,13 @@ render_tree = function(
 				extent = extent,
 				panel = panel,
 				zscale = zscale,
-			crs = crs,
+			crs = render_obj_crs,
 			offset = 0,
 			heightmap = heightmap,
 			angle = angle,
 			scale = tree_scale,
 			baseshape = baseshape,
+			transform_scene = !location_supplied,
 			clear_previous = FALSE,
 			rgl_tag = "tree",
 			lit = lit
@@ -635,13 +660,14 @@ render_tree = function(
 				extent = extent,
 				panel = panel,
 				zscale = zscale,
-			crs = crs,
+			crs = render_obj_crs,
 			offset = (trunk_height + crown_height / 3) * height_zscale,
 			heightmap = heightmap,
 			angle = angle,
 			scale = tree_scale,
 			baseshape = baseshape,
 			lit = lit,
+			transform_scene = !location_supplied,
 			clear_previous = FALSE,
 			rgl_tag = "tree"
 		)
@@ -653,13 +679,14 @@ render_tree = function(
 				extent = extent,
 				panel = panel,
 				zscale = zscale,
-			crs = crs,
+			crs = render_obj_crs,
 			offset = 0,
 			baseshape = baseshape,
 			lit = lit,
 			heightmap = heightmap,
 			angle = angle,
 			scale = trunk_scale,
+			transform_scene = !location_supplied,
 			rgl_tag = "tree"
 		)
 	} else if (type == "cone") {
@@ -672,13 +699,14 @@ render_tree = function(
 				extent = extent,
 				panel = panel,
 				zscale = zscale,
-			crs = crs,
+			crs = render_obj_crs,
 			offset = trunk_height * height_zscale,
 			baseshape = baseshape,
 			lit = lit,
 			heightmap = heightmap,
 			angle = angle,
 			scale = tree_scale,
+			transform_scene = !location_supplied,
 			clear_previous = FALSE,
 			rgl_tag = "tree"
 		)
@@ -690,13 +718,14 @@ render_tree = function(
 				extent = extent,
 				panel = panel,
 				zscale = zscale,
-			crs = crs,
+			crs = render_obj_crs,
 			offset = 0,
 			baseshape = baseshape,
 			lit = lit,
 			heightmap = heightmap,
 			angle = angle,
 			scale = trunk_scale,
+			transform_scene = !location_supplied,
 			rgl_tag = "tree"
 		)
 	} else {

@@ -2,6 +2,24 @@
 #'
 #'@param ... Additional parameters to pass to `rayvertex::rasterize_scene()`
 #'@keywords internal
+#'@noRd
+normalize_rayvertex_line_info = function(line_info) {
+  if (is.null(line_info) || !length(line_info)) {
+    return(matrix(nrow = 0, ncol = 9))
+  }
+  if (is.matrix(line_info)) {
+    return(line_info)
+  }
+  if (length(line_info) %% 9 != 0) {
+    stop("Could not normalize rayvertex line data.", call. = FALSE)
+  }
+  matrix(as.numeric(line_info), ncol = 9, byrow = TRUE)
+}
+
+#'@title Render Software Snapshot
+#'
+#'@param ... Additional parameters to pass to `rayvertex::rasterize_scene()`
+#'@keywords internal
 render_snapshot_software = function(
   filename,
   cache_scene = FALSE,
@@ -454,6 +472,9 @@ render_snapshot_software = function(
       scene$materials[[1]][[i]]$two_sided = TRUE
     }
   }
+  line_info = normalize_rayvertex_line_info(
+    rayvertex::add_lines(labelline, pathline)
+  )
   debug = rayvertex::rasterize_scene(
     scene,
     lookat = camera_lookat,
@@ -467,7 +488,7 @@ render_snapshot_software = function(
     fov = fov,
     background = background,
     light_info = lights,
-    line_info = rayvertex::add_lines(labelline, pathline),
+    line_info = line_info,
     line_offset = line_offset,
     shadow_map = rayvertex_shadow_map,
     ...

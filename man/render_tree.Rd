@@ -32,6 +32,7 @@ render_tree(
   clear_previous = FALSE,
   lat = NULL,
   long = NULL,
+  location = NULL,
   crs = NULL,
   ...
 )
@@ -115,6 +116,8 @@ equal the length of \code{x}/\code{y}).}
 \item{lat}{Default \code{NULL}. Alias for \code{y} for geographic workflows.}
 
 \item{long}{Default \code{NULL}. Alias for \code{x} for geographic workflows.}
+
+\item{location}{Default \code{NULL}. Spatial point input used to place the rendered tree(s) in the scene. Accepts \code{sf}, \code{sfc}, \code{sfg}, or \code{sp} POINT or MULTIPOINT geometries. MULTIPOINT inputs are flattened to point placements internally, and vectorized arguments such as \code{tree_height}, \code{angle}, \code{crown_color}, and \code{trunk_color} are applied against that flattened point count. If the input carries a CRS, it will be transformed automatically into the active scene CRS. If it has no CRS, supply \code{crs}.}
 
 \item{crs}{Default \code{NULL}. CRS of the input numeric x/y coordinates, or CRS to assign to CRS-less spatial data before transforming it into the active scene CRS. If spatial data already carries a CRS, that CRS is used automatically.}
 
