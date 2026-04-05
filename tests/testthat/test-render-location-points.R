@@ -10,36 +10,45 @@ flatten_point_location_coords_test = function(location) {
 	sf::st_coordinates(point_sf)[, 1:2, drop = FALSE]
 }
 
+monterey_named_locations_test = function() {
+	location_df = data.frame(
+		location_name = c("Santa Cruz", "Monterey"),
+		long = c(-122.021033, -121.892933),
+		lat = c(36.962957, 36.603053)
+	)
+	sf::st_as_sf(location_df, coords = c("long", "lat"), crs = 4326, remove = FALSE)
+}
+
 monterey_point_location_fixtures_test = function() {
-	county_points = suppressWarnings(sf::st_centroid(monterey_counties_sf[1:3, ]))
-	county_points_3857 = sf::st_transform(county_points, 3857)
+	location_points = sf::st_transform(monterey_named_locations_test(), 3857)
 	single_multipoint_sfc = sf::st_sfc(
-		sf::st_multipoint(flatten_point_location_coords_test(county_points_3857[1, ])),
-		crs = sf::st_crs(county_points_3857)
+		sf::st_multipoint(flatten_point_location_coords_test(location_points[1, ])),
+		crs = sf::st_crs(location_points)
 	)
 	multipoint_sfc = sf::st_sfc(
-		sf::st_multipoint(flatten_point_location_coords_test(county_points_3857)),
-		crs = sf::st_crs(county_points_3857)
+		sf::st_multipoint(flatten_point_location_coords_test(location_points)),
+		crs = sf::st_crs(location_points)
 	)
-	single_sfc = sf::st_geometry(county_points_3857[1, ])
+	single_sfc = sf::st_geometry(location_points[1, ])
 	list(
-		single_sf = county_points_3857[1, ],
+		single_sf = location_points[1, ],
 		single_sfc = single_sfc,
 		single_sfg = single_sfc[[1]],
 		single_sp = if (requireNamespace("sp", quietly = TRUE)) {
-			sf::as_Spatial(county_points_3857[1, ])
+			sf::as_Spatial(location_points[1, ])
 		} else {
 			NULL
 		},
 		single_multipoint_sfc = single_multipoint_sfc,
-		multi_sf = county_points_3857,
+		multi_sf = location_points,
 		multipoint_sfc = multipoint_sfc,
-		no_crs_single_sf = suppressWarnings(sf::st_set_crs(county_points_3857[1, ], NA)),
+		no_crs_single_sf = suppressWarnings(sf::st_set_crs(location_points[1, ], NA)),
 		no_crs_single_sfc = suppressWarnings(sf::st_set_crs(single_sfc, NA)),
 		no_crs_single_multipoint_sfc = suppressWarnings(
 			sf::st_set_crs(single_multipoint_sfc, NA)
 		),
-		no_crs_multipoint_sfc = suppressWarnings(sf::st_set_crs(multipoint_sfc, NA))
+		no_crs_multipoint_sfc = suppressWarnings(sf::st_set_crs(multipoint_sfc, NA)),
+		location_names = location_points$location_name
 	)
 }
 
@@ -68,7 +77,24 @@ setup_plot3d_location_scene_test = function() {
 	render_camera(theta = 220, phi = 35, zoom = 0.55, fov = 60)
 }
 
-setup_plotgg_location_scene_test = function() {
+setup_plot3d_location_snapshot_scene_test = function(label = FALSE) {
+	monterey_raster = monterey_spatial_raster_test()
+	expect_no_condition(plot_3d_test(
+		sphere_shade(montereybay),
+		monterey_raster,
+		zscale = 50,
+		shadow = FALSE,
+		water = FALSE,
+		windowsize = c(420, 420)
+	))
+	if (label) {
+		render_camera(theta = 220, phi = 60, zoom = 0.82, fov = 32)
+	} else {
+		render_camera(theta = 220, phi = 72, zoom = 0.82, fov = 24)
+	}
+}
+
+setup_plotgg_location_scene_test = function(topdown = FALSE) {
 	p = ggplot2::ggplot(monterey_counties_sf[1:6, ]) +
 		ggplot2::geom_sf(fill = "grey90", color = "grey25", linewidth = 0.2) +
 		ggplot2::coord_sf(crs = sf::st_crs(3310))
@@ -81,10 +107,14 @@ setup_plotgg_location_scene_test = function() {
 		shadow = FALSE,
 		multicore = FALSE
 	)))
-	render_camera(theta = 0, phi = 35, zoom = 0.8, fov = 60)
+	if (topdown) {
+		render_camera(theta = 0, phi = 89.9, zoom = 1, fov = 0)
+	} else {
+		render_camera(theta = 0, phi = 55, zoom = 1, fov = 35)
+	}
 }
 
-setup_plotgg_location_scene_faceted_test = function() {
+setup_plotgg_location_scene_faceted_test = function(topdown = TRUE) {
 	faceted_counties = monterey_counties_sf[1:6, ]
 	faceted_counties$facet = factor(rep(c("a", "b"), each = 3), levels = c("a", "b"))
 	p = ggplot2::ggplot(faceted_counties) +
@@ -100,7 +130,11 @@ setup_plotgg_location_scene_faceted_test = function() {
 		shadow = FALSE,
 		multicore = FALSE
 	)))
-	render_camera(theta = 0, phi = 35, zoom = 0.8, fov = 60)
+	if (topdown) {
+		render_camera(theta = 0, phi = 89.9, zoom = 1.05, fov = 0)
+	} else {
+		render_camera(theta = 0, phi = 42, zoom = 0.9, fov = 55)
+	}
 	invisible(faceted_counties)
 }
 
@@ -165,26 +199,50 @@ extract_scene_point_xy_test = function(location, crs = NULL, panel = NULL) {
 
 renderer_location_cases_test = function(fixtures, scene = c("plot3d", "plotgg")) {
 	scene = match.arg(scene)
-	mesh = rayvertex::sphere_mesh(radius = 0.08)
-	label_z = if (scene == "plot3d") 2000 else 100
-	points_altitude = if (scene == "plot3d") 500 else 10
-	obj_scale = if (scene == "plot3d") c(3, 3, 3) else c(1.5, 1.5, 1.5)
-	raymesh_scale = if (scene == "plot3d") c(6, 6, 6) else c(2.5, 2.5, 2.5)
-	tree_height = if (scene == "plot3d") 1200 else 8
+	mesh = rayvertex::cube_mesh()
+	label_text = "SC"
+	label_z = if (scene == "plot3d") 220 else 4
+	points_altitude = 0
+	points_size = if (scene == "plot3d") 7 else 10
+	obj_scale = if (scene == "plot3d") c(50, 50, 50) else c(40, 40, 40)
+	raymesh_scale = if (scene == "plot3d") c(30, 30, 30) else c(20, 20, 20)
+	tree_height = if (scene == "plot3d") 130 else 80
+	tree_crown_width_ratio = if (scene == "plot3d") 0.35 else 0.4
+	obj_color = if (scene == "plot3d") "white" else "#d62828"
 	list(
 		render_label = list(
 			location = fixtures$single_sfg,
 			crs = sf::st_crs(fixtures$single_sf),
 			render = function(location) {
 				render_label(
-					text = "A",
+					text = label_text,
 					location = location,
 					crs = sf::st_crs(fixtures$single_sf),
 					z = label_z,
 					linecolor = "firebrick",
-					textalpha = 0,
+					textalpha = 1,
 					linewidth = 4,
 					clear_previous = TRUE
+				)
+			},
+			snapshot_render = function(location) {
+				render_points(
+					location = fixtures$single_sf,
+					altitude = 0,
+					offset = 0,
+					size = if (scene == "plot3d") 4 else 6,
+					color = "#f4a261",
+					clear_previous = TRUE
+				)
+				render_label(
+					text = label_text,
+					location = location,
+					crs = sf::st_crs(fixtures$single_sf),
+					z = label_z,
+					linecolor = "firebrick",
+					textalpha = 1,
+					linewidth = 4,
+					clear_previous = FALSE
 				)
 			},
 			check = function() {
@@ -200,7 +258,7 @@ renderer_location_cases_test = function(fixtures, scene = c("plot3d", "plotgg"))
 					location = location,
 					altitude = points_altitude,
 					offset = 0,
-					size = 6,
+					size = points_size,
 					color = "orange",
 					clear_previous = TRUE
 				)
@@ -214,12 +272,12 @@ renderer_location_cases_test = function(fixtures, scene = c("plot3d", "plotgg"))
 			crs = NULL,
 			render = function(location) {
 				render_obj(
-					flag_pole_obj(),
+					flag_full_obj(),
 					location = location,
 					altitude = 0,
 					offset = 0,
 					scale = obj_scale,
-					color = "white",
+					color = obj_color,
 					clear_previous = TRUE
 				)
 			},
@@ -254,6 +312,7 @@ renderer_location_cases_test = function(fixtures, scene = c("plot3d", "plotgg"))
 					location = location,
 					tree_height = tree_height,
 					tree_zscale = FALSE,
+					crown_width_ratio = tree_crown_width_ratio,
 					crown_color = "#2d6a4f",
 					trunk_color = "#6f4e37",
 					clear_previous = TRUE
@@ -291,6 +350,14 @@ expect_location_snapshot_test = function(snapshot_name, setup_scene, render_call
 	rgl::close3d()
 }
 
+plot3d_snapshot_setup_for_case_test = function(case_name) {
+	setup_plot3d_location_snapshot_scene_test(label = identical(case_name, "render_label"))
+}
+
+plotgg_snapshot_setup_for_case_test = function(case_name) {
+	setup_plotgg_location_scene_test(topdown = !identical(case_name, "render_label"))
+}
+
 test_that("coerce_scene_point_input() accepts supported point input classes", {
 	skip_if_not_installed("sf")
 
@@ -326,7 +393,7 @@ test_that("coerce_scene_point_input() assigns explicit crs to CRS-less point inp
 
 	expect_true(rayshader:::scene_crs_equal(coerced$source_crs, sf::st_crs(3857)))
 	expect_equal(coerced$feature_count, 1)
-	expect_equal(coerced$geometry_count, 3)
+	expect_equal(coerced$geometry_count, nrow(fixtures$multi_sf))
 	expect_equal(
 		unname(cbind(coerced$x, coerced$y)),
 		unname(flatten_point_location_coords_test(fixtures$multipoint_sfc)),
@@ -395,7 +462,7 @@ test_that("MULTIPOINT locations are flattened for vectorized renderers", {
 	expected_xy = expected_plot3d_location_xy_test(fixtures$multipoint_sfc)
 	actual_xy = extract_scene_point_xy_test(fixtures$multipoint_sfc)
 	expect_equal(actual_xy, expected_xy, tolerance = 1e-6)
-	expect_equal(nrow(actual_xy), 3)
+	expect_equal(nrow(actual_xy), nrow(fixtures$multi_sf))
 
 	expect_no_condition(render_points(
 		location = fixtures$multipoint_sfc,
@@ -578,7 +645,7 @@ test_that("faceted coord_sf location snapshots match goldens", {
 	fixtures = monterey_point_location_fixtures_test()
 	expect_location_snapshot_test(
 		"plotgg_faceted_render_points_panel1.png",
-		setup_scene = setup_plotgg_location_scene_faceted_test,
+		setup_scene = function() setup_plotgg_location_scene_faceted_test(topdown = TRUE),
 		render_call = function() {
 			render_points(
 				location = fixtures$single_sf,
@@ -682,8 +749,15 @@ test_that("plot_3d location snapshots match goldens", {
 	for (case_name in names(cases)) {
 		expect_location_snapshot_test(
 			sprintf("plot3d_%s.png", case_name),
-			setup_scene = setup_plot3d_location_scene_test,
-			render_call = function() cases[[case_name]]$render(cases[[case_name]]$location)
+			setup_scene = function() plot3d_snapshot_setup_for_case_test(case_name),
+			render_call = function() {
+				render_fn = if (!is.null(cases[[case_name]]$snapshot_render)) {
+					cases[[case_name]]$snapshot_render
+				} else {
+					cases[[case_name]]$render
+				}
+				render_fn(cases[[case_name]]$location)
+			}
 		)
 	}
 })
@@ -703,8 +777,15 @@ test_that("coord_sf location snapshots match goldens", {
 	for (case_name in names(cases)) {
 		expect_location_snapshot_test(
 			sprintf("plotgg_%s.png", case_name),
-			setup_scene = setup_plotgg_location_scene_test,
-			render_call = function() cases[[case_name]]$render(cases[[case_name]]$location)
+			setup_scene = function() plotgg_snapshot_setup_for_case_test(case_name),
+			render_call = function() {
+				render_fn = if (!is.null(cases[[case_name]]$snapshot_render)) {
+					cases[[case_name]]$snapshot_render
+				} else {
+					cases[[case_name]]$render
+				}
+				render_fn(cases[[case_name]]$location)
+			}
 		)
 	}
 })

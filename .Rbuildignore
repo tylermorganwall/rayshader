@@ -22,7 +22,11 @@
 ^.+\.mp4$
 ^_pkgdown\.yml$
 ^tests/.+$
+^data-raw$
+^data-raw/.+$
 ^todo.txt$
 ^.+\.exr$
 ^pkgdown$
 ^.+\.png$
+^.+\.obj$
+^.+\.mtl$
