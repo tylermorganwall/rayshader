@@ -69,7 +69,39 @@ ray_shade = function(
   anglebreaks = NULL,
   ...
 ) {
+  heightmap_missing = missing(heightmap)
+  heightmap_cache_label = format_scene_cache_label(deparse(substitute(heightmap)))
+  zscale_cache_input_label = format_scene_cache_label(deparse(substitute(zscale)))
+  heightmap_auto_zscale = NA_real_
+  if (heightmap_missing) {
+    resolved_heightmap = resolve_hillshade_heightmap(
+      heightmap_missing = TRUE,
+      caller = "ray_shade"
+    )
+    heightmap = resolved_heightmap$heightmap
+  } else {
+    heightmap_info = coerce_plot_3d_heightmap(heightmap)
+    heightmap = heightmap_info$heightmap
+    heightmap_auto_zscale = heightmap_info$zscale
+    cache_hillshade_heightmap(heightmap, label = heightmap_cache_label)
+  }
   stopifnot(is.matrix(heightmap))
+  resolved_zscale = resolve_hillshade_zscale(
+    zscale = zscale,
+    zscale_missing = missing(zscale),
+    caller = "ray_shade",
+    auto_zscale = heightmap_auto_zscale
+  )
+  zscale = resolved_zscale$zscale
+  zscale_cache_label = switch(
+    resolved_zscale$source,
+    explicit = zscale_cache_input_label,
+    auto = format_scene_cache_label(sprintf("%s_auto_zscale", heightmap_cache_label)),
+    hillshade = resolved_zscale$label,
+    scene = resolved_zscale$label,
+    NULL
+  )
+  cache_hillshade_zscale(zscale, label = zscale_cache_label)
   originalheightmap = heightmap
   heightmap = fliplr(t(heightmap))
   if (!is.null(cache_mask)) {

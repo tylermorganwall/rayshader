@@ -43,6 +43,7 @@ add_overlay = function(
   color_epsilon = 1e-3,
   rescale_original = FALSE
 ) {
+  force(hillshade)
   if (any(alphalayer > 1 || alphalayer < 0)) {
     stop("Argument `alphalayer` must not be less than 0 or more than 1")
   }

@@ -8,7 +8,9 @@ extract_spatial_heightmap_zscale = function(heightmap) {
 	resolution = NULL
 	if (inherits(heightmap, "SpatRaster")) {
 		resolution = terra::res(heightmap)
-	} else if (inherits(heightmap, c("RasterLayer", "RasterBrick", "RasterStack"))) {
+	} else if (
+		inherits(heightmap, c("RasterLayer", "RasterBrick", "RasterStack"))
+	) {
 		resolution = raster::res(heightmap)
 	}
 	resolution = suppressWarnings(as.numeric(resolution))
@@ -277,11 +279,29 @@ plot_3d = function(
 	if (!plot_new && clear_previous) {
 		rgl::clear3d()
 	}
-	heightmap_cache_label = format_scene_cache_label(deparse(substitute(heightmap)))
-	heightmap_info = coerce_plot_3d_heightmap(heightmap)
-	heightmap = heightmap_info$heightmap
+	force(hillshade)
+	heightmap_was_missing = missing(heightmap)
 	zscale_was_missing = missing(zscale)
 	extent_was_missing = missing(extent)
+	heightmap_cache_label = NULL
+	zscale_cache_input_label = format_scene_cache_label(deparse(substitute(
+		zscale
+	)))
+	resolved_heightmap = NULL
+	if (heightmap_was_missing) {
+		resolved_heightmap = resolve_hillshade_heightmap(
+			heightmap_missing = TRUE,
+			caller = "plot_3d"
+		)
+		heightmap = resolved_heightmap$heightmap
+		heightmap_cache_label = resolved_heightmap$label
+	} else {
+		heightmap_cache_label = format_scene_cache_label(deparse(substitute(
+			heightmap
+		)))
+	}
+	heightmap_info = coerce_plot_3d_heightmap(heightmap)
+	heightmap = heightmap_info$heightmap
 	auto_extent = heightmap_info$extent
 	auto_crs = heightmap_info$crs
 	auto_zscale = heightmap_info$zscale
@@ -297,6 +317,13 @@ plot_3d = function(
 			"%s_auto_extent",
 			heightmap_cache_label
 		))
+	} else if (
+		heightmap_was_missing &&
+			!is.null(resolved_heightmap) &&
+			identical(resolved_heightmap$source, "scene")
+	) {
+		extent_cache_value = get_scene_extent(default = NULL)
+		extent_cache_label = get_scene_extent_label(default = NULL)
 	} else if (is_builtin_monterey) {
 		# Built-in montereybay keeps geospatial metadata out of the generic matrix path:
 		# auto-cache this known extent explicitly for downstream render_* helpers.
@@ -308,22 +335,24 @@ plot_3d = function(
 		)
 		extent_cache_label = "montereybay_builtin_extent"
 	}
-	zscale_from_spatial = zscale_was_missing &&
-		is.finite(auto_zscale) &&
-		auto_zscale > 0
-	if (zscale_from_spatial) {
-		zscale = auto_zscale
-	}
-	zscale_cache_label = if (zscale_from_spatial) {
-		format_scene_cache_label(sprintf(
+	resolved_zscale = resolve_hillshade_zscale(
+		zscale = zscale,
+		zscale_missing = zscale_was_missing,
+		caller = "plot_3d",
+		auto_zscale = auto_zscale
+	)
+	zscale = resolved_zscale$zscale
+	zscale_cache_label = switch(
+		resolved_zscale$source,
+		explicit = zscale_cache_input_label,
+		auto = format_scene_cache_label(sprintf(
 			"%s_auto_zscale",
 			heightmap_cache_label
-		))
-	} else if (zscale_was_missing) {
+		)),
+		hillshade = resolved_zscale$label,
+		scene = resolved_zscale$label,
 		NULL
-	} else {
-		format_scene_cache_label(deparse(substitute(zscale)))
-	}
+	)
 	crs_cache_value = NULL
 	crs_cache_label = NULL
 	if (!is.null(auto_crs)) {
@@ -332,18 +361,24 @@ plot_3d = function(
 			"%s_auto_crs",
 			heightmap_cache_label
 		))
+	} else if (
+		heightmap_was_missing &&
+			!is.null(resolved_heightmap) &&
+			identical(resolved_heightmap$source, "scene")
+	) {
+		crs_cache_value = get_scene_crs(default = NULL)
+		crs_cache_label = get_scene_crs_label(default = NULL)
 	}
-	if (!is.null(get("scene_cache", envir = ray_cache_scene_envir))) {
-		assign("scene_cache", NULL, envir = ray_cache_scene_envir)
-	}
-	cache_scene_zscale(NULL, label = NULL)
-	cache_scene_heightmap(NULL, label = NULL)
-	cache_scene_extent(NULL, label = NULL)
-	cache_scene_crs(NULL, label = NULL)
-	cache_plot_gg_panel_info(NULL)
-	cache_plot_gg_transform_info(NULL)
+	reset_scene_context(
+		clear_scene_metadata = TRUE,
+		clear_scene_cache = TRUE
+	)
 	# setting default zscale if montereybay matrix is used and zscale was omitted
-	if (is_builtin_monterey && zscale_was_missing && !zscale_from_spatial) {
+	if (
+		is_builtin_monterey &&
+			zscale_was_missing &&
+			identical(resolved_zscale$source, "default")
+	) {
 		zscale = 50
 		zscale_cache_label = "montereybay_default_zscale"
 		message(
@@ -507,6 +542,7 @@ plot_3d = function(
 			mouseMode = c("none", "polar", "fov", "zoom", "pull")
 		)
 	}
+	cache_scene_context_token()
 	rgl::view3d(zoom = zoom, phi = phi, theta = theta, fov = fov)
 	attributes(heightmap) = attributes(heightmap)["dim"]
 	tag_surface = sprintf(
@@ -641,6 +677,8 @@ plot_3d = function(
 			antialias = lineantialias
 		)
 	}
+	cache_hillshade_heightmap(heightmap, label = heightmap_cache_label)
+	cache_hillshade_zscale(zscale, label = zscale_cache_label)
 	cache_scene_heightmap(heightmap, label = heightmap_cache_label)
 	cache_scene_zscale(zscale, label = zscale_cache_label)
 	cache_scene_extent(extent_cache_value, label = extent_cache_label)

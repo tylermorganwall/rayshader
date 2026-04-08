@@ -6,11 +6,7 @@ get_ggplot_extent = function(heightmap = NULL, panel = NULL) {
 		panel_info = attr(heightmap, "ggplot_panel_info", exact = TRUE)
 	}
 	if (is.null(panel_info)) {
-		panel_info = get0(
-			"plot_gg_panel_info",
-			envir = ray_cache_scene_envir,
-			inherits = FALSE
-		)
+		panel_info = get_scene_context_value("plot_gg_panel_info", default = NULL)
 	}
 	if (is.null(panel_info) || !nrow(panel_info)) {
 		stop("No cached ggplot extent found. Call `plot_gg()` first.")
@@ -57,10 +53,9 @@ get_plot_gg_transform_info = function(heightmap = NULL) {
 		transform_info = attr(heightmap, "ggplot_transform_info", exact = TRUE)
 	}
 	if (is.null(transform_info)) {
-		transform_info = get0(
+		transform_info = get_scene_context_value(
 			"plot_gg_transform_info",
-			envir = ray_cache_scene_envir,
-			inherits = FALSE
+			default = NULL
 		)
 	}
 	if (is.null(transform_info)) {
@@ -75,11 +70,7 @@ get_cached_plot_gg_panel_info = function(heightmap = NULL, default = NULL) {
 		panel_info = attr(heightmap, "ggplot_panel_info", exact = TRUE)
 	}
 	if (is.null(panel_info)) {
-		panel_info = get0(
-			"plot_gg_panel_info",
-			envir = ray_cache_scene_envir,
-			inherits = FALSE
-		)
+		panel_info = get_scene_context_value("plot_gg_panel_info", default = NULL)
 	}
 	if (is.null(panel_info)) {
 		return(default)
@@ -1301,6 +1292,85 @@ expand_ggplot_y_extent = function(data_range, panel_range, scene_height) {
 	)
 }
 
+get_current_scene_context_token = function(default = NULL) {
+	current_scene = tryCatch(rgl::cur3d(), error = function(e) NULL)
+	if (is.null(current_scene)) {
+		return(default)
+	}
+	current_scene = suppressWarnings(as.integer(current_scene)[1])
+	if (!is.finite(current_scene) || current_scene <= 0) {
+		return(default)
+	}
+	current_scene
+}
+
+cache_scene_context_token = function(
+	token = get_current_scene_context_token(default = NULL)
+) {
+	assign("scene_context_token", token, envir = ray_cache_scene_envir)
+	invisible(NULL)
+}
+
+get_scene_context_token = function(default = NULL) {
+	scene_token = get0(
+		"scene_context_token",
+		envir = ray_cache_scene_envir,
+		inherits = FALSE
+	)
+	if (is.null(scene_token)) {
+		return(default)
+	}
+	scene_token = suppressWarnings(as.integer(scene_token)[1])
+	if (!is.finite(scene_token) || scene_token <= 0) {
+		return(default)
+	}
+	scene_token
+}
+
+is_current_scene_context = function(token = get_scene_context_token(default = NULL)) {
+	current_token = get_current_scene_context_token(default = NULL)
+	!is.null(token) && !is.null(current_token) && identical(token, current_token)
+}
+
+get_scene_context_value = function(name, default = NULL) {
+	if (!is_current_scene_context()) {
+		return(default)
+	}
+	value = get0(name, envir = ray_cache_scene_envir, inherits = FALSE)
+	if (is.null(value)) {
+		return(default)
+	}
+	value
+}
+
+cache_scene_cache = function(scene_cache = NULL) {
+	assign("scene_cache", scene_cache, envir = ray_cache_scene_envir)
+	invisible(NULL)
+}
+
+get_scene_cache = function(default = NULL) {
+	get_scene_context_value("scene_cache", default = default)
+}
+
+reset_scene_context = function(
+	clear_scene_metadata = TRUE,
+	clear_scene_cache = TRUE
+) {
+	if (isTRUE(clear_scene_cache)) {
+		cache_scene_cache(NULL)
+	}
+	if (isTRUE(clear_scene_metadata)) {
+		cache_scene_context_token(NULL)
+		cache_scene_zscale(NULL, label = NULL)
+		cache_scene_heightmap(NULL, label = NULL)
+		cache_scene_extent(NULL, label = NULL)
+		cache_scene_crs(NULL, label = NULL)
+		cache_plot_gg_panel_info(NULL)
+		cache_plot_gg_transform_info(NULL)
+	}
+	invisible(NULL)
+}
+
 cache_plot_gg_panel_info = function(panel_info = NULL) {
 	assign("plot_gg_panel_info", panel_info, envir = ray_cache_scene_envir)
 	invisible(NULL)
@@ -1322,7 +1392,7 @@ cache_scene_zscale = function(zscale = NULL, label = NULL) {
 }
 
 get_scene_zscale = function(default = NULL) {
-	scene_zscale = get0("scene_zscale", envir = ray_cache_scene_envir, inherits = FALSE)
+	scene_zscale = get_scene_context_value("scene_zscale", default = default)
 	if (is.null(scene_zscale)) {
 		return(default)
 	}
@@ -1334,10 +1404,9 @@ get_scene_zscale = function(default = NULL) {
 }
 
 get_scene_zscale_label = function(default = NULL) {
-	scene_zscale_label = get0(
+	scene_zscale_label = get_scene_context_value(
 		"scene_zscale_label",
-		envir = ray_cache_scene_envir,
-		inherits = FALSE
+		default = default
 	)
 	if (is.null(scene_zscale_label)) {
 		return(default)
@@ -1348,6 +1417,76 @@ get_scene_zscale_label = function(default = NULL) {
 cache_scene_heightmap = function(heightmap = NULL, label = NULL) {
 	assign("scene_heightmap", heightmap, envir = ray_cache_scene_envir)
 	assign("scene_heightmap_label", label, envir = ray_cache_scene_envir)
+	invisible(NULL)
+}
+
+cache_hillshade_zscale = function(zscale = NULL, label = NULL) {
+	assign("hillshade_zscale", zscale, envir = ray_cache_scene_envir)
+	assign("hillshade_zscale_label", label, envir = ray_cache_scene_envir)
+	invisible(NULL)
+}
+
+get_hillshade_zscale = function(default = NULL) {
+	hillshade_zscale = get0(
+		"hillshade_zscale",
+		envir = ray_cache_scene_envir,
+		inherits = FALSE
+	)
+	if (is.null(hillshade_zscale)) {
+		return(default)
+	}
+	hillshade_zscale = suppressWarnings(as.numeric(hillshade_zscale)[1])
+	if (!is.finite(hillshade_zscale) || hillshade_zscale <= 0) {
+		return(default)
+	}
+	hillshade_zscale
+}
+
+get_hillshade_zscale_label = function(default = NULL) {
+	hillshade_zscale_label = get0(
+		"hillshade_zscale_label",
+		envir = ray_cache_scene_envir,
+		inherits = FALSE
+	)
+	if (is.null(hillshade_zscale_label)) {
+		return(default)
+	}
+	hillshade_zscale_label
+}
+
+cache_hillshade_heightmap = function(heightmap = NULL, label = NULL) {
+	assign("hillshade_heightmap", heightmap, envir = ray_cache_scene_envir)
+	assign("hillshade_heightmap_label", label, envir = ray_cache_scene_envir)
+	invisible(NULL)
+}
+
+get_hillshade_heightmap = function(default = NULL) {
+	hillshade_heightmap = get0(
+		"hillshade_heightmap",
+		envir = ray_cache_scene_envir,
+		inherits = FALSE
+	)
+	if (is.null(hillshade_heightmap)) {
+		return(default)
+	}
+	hillshade_heightmap
+}
+
+get_hillshade_heightmap_label = function(default = NULL) {
+	hillshade_heightmap_label = get0(
+		"hillshade_heightmap_label",
+		envir = ray_cache_scene_envir,
+		inherits = FALSE
+	)
+	if (is.null(hillshade_heightmap_label)) {
+		return(default)
+	}
+	hillshade_heightmap_label
+}
+
+clear_hillshade_cache = function() {
+	cache_hillshade_heightmap(NULL, label = NULL)
+	cache_hillshade_zscale(NULL, label = NULL)
 	invisible(NULL)
 }
 
@@ -1364,11 +1503,7 @@ cache_scene_crs = function(crs = NULL, label = NULL) {
 }
 
 get_scene_extent = function(default = NULL) {
-	scene_extent = get0(
-		"scene_extent",
-		envir = ray_cache_scene_envir,
-		inherits = FALSE
-	)
+	scene_extent = get_scene_context_value("scene_extent", default = default)
 	if (is.null(scene_extent)) {
 		return(default)
 	}
@@ -1376,10 +1511,9 @@ get_scene_extent = function(default = NULL) {
 }
 
 get_scene_extent_label = function(default = NULL) {
-	scene_extent_label = get0(
+	scene_extent_label = get_scene_context_value(
 		"scene_extent_label",
-		envir = ray_cache_scene_envir,
-		inherits = FALSE
+		default = default
 	)
 	if (is.null(scene_extent_label)) {
 		return(default)
@@ -1388,11 +1522,7 @@ get_scene_extent_label = function(default = NULL) {
 }
 
 get_scene_crs = function(default = NULL) {
-	scene_crs = get0(
-		"scene_crs",
-		envir = ray_cache_scene_envir,
-		inherits = FALSE
-	)
+	scene_crs = get_scene_context_value("scene_crs", default = default)
 	if (is.null(scene_crs)) {
 		return(default)
 	}
@@ -1400,10 +1530,9 @@ get_scene_crs = function(default = NULL) {
 }
 
 get_scene_crs_label = function(default = NULL) {
-	scene_crs_label = get0(
+	scene_crs_label = get_scene_context_value(
 		"scene_crs_label",
-		envir = ray_cache_scene_envir,
-		inherits = FALSE
+		default = default
 	)
 	if (is.null(scene_crs_label)) {
 		return(default)
@@ -1412,11 +1541,7 @@ get_scene_crs_label = function(default = NULL) {
 }
 
 get_scene_heightmap = function(default = NULL) {
-	scene_heightmap = get0(
-		"scene_heightmap",
-		envir = ray_cache_scene_envir,
-		inherits = FALSE
-	)
+	scene_heightmap = get_scene_context_value("scene_heightmap", default = default)
 	if (is.null(scene_heightmap)) {
 		return(default)
 	}
@@ -1424,10 +1549,9 @@ get_scene_heightmap = function(default = NULL) {
 }
 
 get_scene_heightmap_label = function(default = NULL) {
-	scene_heightmap_label = get0(
+	scene_heightmap_label = get_scene_context_value(
 		"scene_heightmap_label",
-		envir = ray_cache_scene_envir,
-		inherits = FALSE
+		default = default
 	)
 	if (is.null(scene_heightmap_label)) {
 		return(default)
@@ -1452,22 +1576,25 @@ emit_scene_cache_message = function(caller, argument_name, cache_name, cache_lab
 	if (is.null(caller) || !nzchar(caller)) {
 		return(invisible(NULL))
 	}
+	if (!isTRUE(getOption("rayshader.verbose_scene_cache", interactive()))) {
+		return(invisible(NULL))
+	}
 	cache_label = format_scene_cache_label(cache_label)
 	if (is.null(cache_label)) {
-		cat(sprintf(
+		message(sprintf(
 			"%s(): using cached `%s` from `%s`.",
 			caller,
 			argument_name,
 			cache_name
-		), "\n")
+		))
 	} else {
-		cat(sprintf(
+		message(sprintf(
 			"%s(): using cached `%s` from `%s` (%s).",
 			caller,
 			argument_name,
 			cache_name,
 			cache_label
-		), "\n")
+		))
 	}
 	invisible(NULL)
 }
@@ -1529,6 +1656,96 @@ resolve_scene_render_heightmap = function(heightmap = NULL, caller = NULL) {
 		)
 	}
 	scene_heightmap
+}
+
+resolve_hillshade_heightmap = function(
+	heightmap = NULL,
+	heightmap_missing = FALSE,
+	caller = NULL
+) {
+	if (!isTRUE(heightmap_missing) && !is.null(heightmap)) {
+		return(list(
+			heightmap = heightmap,
+			source = "explicit",
+			label = NULL
+		))
+	}
+	hillshade_heightmap = get_hillshade_heightmap(default = NULL)
+	if (!is.null(hillshade_heightmap)) {
+		emit_scene_cache_message(
+			caller = caller,
+			argument_name = "heightmap",
+			cache_name = "hillshade_heightmap",
+			cache_label = get_hillshade_heightmap_label(default = NULL)
+		)
+		return(list(
+			heightmap = hillshade_heightmap,
+			source = "hillshade",
+			label = get_hillshade_heightmap_label(default = NULL)
+		))
+	}
+	scene_heightmap = get_scene_heightmap(default = NULL)
+	if (!is.null(scene_heightmap)) {
+		emit_scene_cache_message(
+			caller = caller,
+			argument_name = "heightmap",
+			cache_name = "scene_heightmap",
+			cache_label = get_scene_heightmap_label(default = NULL)
+		)
+		return(list(
+			heightmap = scene_heightmap,
+			source = "scene",
+			label = get_scene_heightmap_label(default = NULL)
+		))
+	}
+	stop(
+		"`heightmap` missing and no cached hillshade or scene heightmap is available.",
+		call. = FALSE
+	)
+}
+
+resolve_hillshade_zscale = function(
+	zscale = 1,
+	zscale_missing = FALSE,
+	caller = NULL,
+	auto_zscale = NA_real_
+) {
+	zscale = suppressWarnings(as.numeric(zscale)[1])
+	if (!isTRUE(zscale_missing) && is.finite(zscale) && zscale > 0) {
+		return(list(zscale = zscale, source = "explicit", label = NULL))
+	}
+	if (is.finite(auto_zscale) && auto_zscale > 0) {
+		return(list(zscale = auto_zscale, source = "auto", label = NULL))
+	}
+	hillshade_zscale = get_hillshade_zscale(default = NA_real_)
+	if (is.finite(hillshade_zscale) && hillshade_zscale > 0) {
+		emit_scene_cache_message(
+			caller = caller,
+			argument_name = "zscale",
+			cache_name = "hillshade_zscale",
+			cache_label = get_hillshade_zscale_label(default = NULL)
+		)
+		return(list(
+			zscale = hillshade_zscale,
+			source = "hillshade",
+			label = get_hillshade_zscale_label(default = NULL)
+		))
+	}
+	scene_zscale = get_scene_zscale(default = NA_real_)
+	if (is.finite(scene_zscale) && scene_zscale > 0) {
+		emit_scene_cache_message(
+			caller = caller,
+			argument_name = "zscale",
+			cache_name = "scene_zscale",
+			cache_label = get_scene_zscale_label(default = NULL)
+		)
+		return(list(
+			zscale = scene_zscale,
+			source = "scene",
+			label = get_scene_zscale_label(default = NULL)
+		))
+	}
+	list(zscale = 1, source = "default", label = NULL)
 }
 
 resolve_scene_render_extent = function(

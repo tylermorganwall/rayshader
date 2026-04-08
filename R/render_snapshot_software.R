@@ -175,10 +175,10 @@ render_snapshot_software = function(
     lookfrom = camera_location
   }
   if (cache_scene) {
-    ray_scene = get("scene_cache", envir = ray_cache_scene_envir)
+    ray_scene = get_scene_cache(default = NULL)
     if (is.null(ray_scene)) {
       ray_scene = convert_rgl_to_raymesh()
-      assign("scene_cache", ray_scene, envir = ray_cache_scene_envir)
+      cache_scene_cache(ray_scene)
     }
   } else {
     ray_scene = convert_rgl_to_raymesh()

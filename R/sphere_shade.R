@@ -51,6 +51,19 @@ sphere_shade = function(
   zscale = 1,
   progbar = interactive()
 ) {
+  heightmap_missing = missing(heightmap)
+  heightmap_cache_label = format_scene_cache_label(deparse(substitute(heightmap)))
+  if (heightmap_missing) {
+    resolved_heightmap = resolve_hillshade_heightmap(
+      heightmap_missing = TRUE,
+      caller = "sphere_shade"
+    )
+    heightmap = resolved_heightmap$heightmap
+  } else {
+    heightmap = coerce_plot_3d_heightmap(heightmap)$heightmap
+    cache_hillshade_heightmap(heightmap, label = heightmap_cache_label)
+  }
+  stopifnot(is.matrix(heightmap))
   if (missing(zscale)) {
     if (colorintensity > 0 && is.numeric(colorintensity)) {
       zscale = 1 / colorintensity

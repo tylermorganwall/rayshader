@@ -48,6 +48,7 @@ add_shadow = function(
 	max_darken = 0.7,
 	rescale_original = FALSE
 ) {
+	force(hillshade)
 	if (length(dim(shadowmap)) == 3 && length(dim(hillshade)) == 2) {
 		tempstore = hillshade
 		hillshade = shadowmap

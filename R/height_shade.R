@@ -44,6 +44,19 @@ height_shade = function(
   ),
   range = NULL
 ) {
+  heightmap_missing = missing(heightmap)
+  heightmap_cache_label = format_scene_cache_label(deparse(substitute(heightmap)))
+  if (heightmap_missing) {
+    resolved_heightmap = resolve_hillshade_heightmap(
+      heightmap_missing = TRUE,
+      caller = "height_shade"
+    )
+    heightmap = resolved_heightmap$heightmap
+  } else {
+    heightmap = coerce_plot_3d_heightmap(heightmap)$heightmap
+    cache_hillshade_heightmap(heightmap, label = heightmap_cache_label)
+  }
+  stopifnot(is.matrix(heightmap))
   if (!is.null(range)) {
     range = base::sort(range[1:2])
   } else {

@@ -26,6 +26,55 @@ test_that("render_points() uses cached scene heightmap and zscale", {
 	expect_equal(unname(point_verts[1, 2]), 1, tolerance = 1e-6)
 })
 
+test_that("scene cache is rejected after switching to a different open scene", {
+	local_rgl_use_null()
+	withr::defer({
+		while (rgl::cur3d() != 0) {
+			rgl::close3d()
+		}
+	})
+
+	heightmap1 = matrix(0, nrow = 20, ncol = 20)
+	expect_no_condition(plot_3d_test(
+		sphere_shade(heightmap1),
+		heightmap1,
+		zscale = 10,
+		shadow = FALSE,
+		water = FALSE,
+		windowsize = c(250, 250),
+		close_previous = TRUE
+	))
+	scene1 = rgl::cur3d()
+
+	heightmap2 = matrix(1, nrow = 12, ncol = 12)
+	expect_no_condition(plot_3d_test(
+		sphere_shade(heightmap2),
+		heightmap2,
+		zscale = 5,
+		shadow = FALSE,
+		water = FALSE,
+		windowsize = c(250, 250),
+		close_previous = FALSE
+	))
+	scene2 = rgl::cur3d()
+
+	expect_false(identical(scene1, scene2))
+	expect_equal(get_scene_context_token(default = NULL), unname(scene2))
+
+	rgl::set3d(scene1)
+	expect_null(get_scene_heightmap(default = NULL))
+	expect_null(get_scene_zscale(default = NULL))
+	expect_error(
+		render_water(waterdepth = 1),
+		"No heightmap found"
+	)
+
+	rgl::set3d(scene2)
+	expect_equal(get_scene_heightmap(default = NULL), heightmap2)
+	expect_equal(get_scene_zscale(default = NULL), 5)
+	expect_no_condition(render_water(waterdepth = 2, watercolor = "lightblue"))
+})
+
 test_that("render_water() uses cached scene heightmap and zscale", {
 	on.exit(rgl::close3d(), add = TRUE)
 	local_rgl_use_null()
@@ -352,6 +401,7 @@ test_that("render_path() and render_raymesh() accept x/y coordinates", {
 test_that("cached scene messages include cached symbol labels", {
 	on.exit(rgl::close3d(), add = TRUE)
 	local_rgl_use_null()
+	withr::local_options(list(rayshader.verbose_scene_cache = TRUE))
 
 	elmat = matrix(0, nrow = 20, ncol = 20)
 	zs = 10
@@ -365,14 +415,19 @@ test_that("cached scene messages include cached symbol labels", {
 		windowsize = c(250, 250)
 	))
 
-	out = capture.output(
+	out = character()
+	expect_no_error(withCallingHandlers(
 		render_points(
 			y = 10,
 			x = 10,
 			extent = c(xmin = 0, xmax = 20, ymin = 0, ymax = 20),
 			offset = 10
-		)
-	)
+		),
+		message = function(cnd) {
+			out <<- c(out, conditionMessage(cnd))
+			invokeRestart("muffleMessage")
+		}
+	))
 	expect_true(any(grepl("scene_heightmap", out, fixed = TRUE)))
 	expect_true(any(grepl("elmat", out, fixed = TRUE)))
 	expect_true(any(grepl("scene_zscale", out, fixed = TRUE)))

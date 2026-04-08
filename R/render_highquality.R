@@ -330,7 +330,10 @@ render_highquality = function(
 		sample_method = "sobol"
 	}
 	if (reset_scene_cache) {
-		assign("scene_cache", NULL, envir = ray_cache_scene_envir)
+		reset_scene_context(
+			clear_scene_metadata = FALSE,
+			clear_scene_cache = TRUE
+		)
 	}
 	if (!is.na(filename)) {
 		if (dirname(filename) != ".") {
@@ -879,7 +882,7 @@ render_highquality = function(
 		water_attenuation[water_attenuation > 1] = 1
 	}
 	if (cache_scene) {
-		ray_scene = get("scene_cache", envir = ray_cache_scene_envir)
+		ray_scene = get_scene_cache(default = NULL)
 		if (is.null(ray_scene)) {
 			ray_scene = convert_rgl_to_raymesh(
 				save_shadow = FALSE,
@@ -887,7 +890,7 @@ render_highquality = function(
 				water_surface_color = water_surface_color,
 				water_ior = water_ior
 			)
-			assign("scene_cache", ray_scene, envir = ray_cache_scene_envir)
+			cache_scene_cache(ray_scene)
 		}
 	} else {
 		ray_scene = convert_rgl_to_raymesh(

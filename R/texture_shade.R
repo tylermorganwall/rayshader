@@ -73,6 +73,19 @@ texture_shade = function(
 	dy = 1,
 	pad = 50
 ) {
+	heightmap_missing = missing(heightmap)
+	heightmap_cache_label = format_scene_cache_label(deparse(substitute(heightmap)))
+	if (heightmap_missing) {
+		resolved_heightmap = resolve_hillshade_heightmap(
+			heightmap_missing = TRUE,
+			caller = "texture_shade"
+		)
+		heightmap = resolved_heightmap$heightmap
+	} else {
+		heightmap = coerce_plot_3d_heightmap(heightmap)$heightmap
+		cache_hillshade_heightmap(heightmap, label = heightmap_cache_label)
+	}
+	stopifnot(is.matrix(heightmap))
 	heightmap = t(heightmap)
 	heightmap[is.na(heightmap)] = mean(heightmap, na.rm = TRUE)
 	if (detail < 0 || detail > 1) {

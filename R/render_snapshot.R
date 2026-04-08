@@ -152,7 +152,10 @@ render_snapshot = function(
     software_render = TRUE
   }
   if (reset_scene_cache) {
-    assign("scene_cache", NULL, envir = ray_cache_scene_envir)
+    reset_scene_context(
+      clear_scene_metadata = FALSE,
+      clear_scene_cache = TRUE
+    )
   }
   fsaa = as.integer(fsaa)
   stopifnot(fsaa >= 1)

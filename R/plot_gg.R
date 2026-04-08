@@ -322,12 +322,10 @@ plot_gg = function(
 		stop("`radiance_args` must be a list.")
 	}
 	raytrace_mode = normalize_plot_gg_raytrace_mode(raytrace)
-	cache_scene_zscale(NULL)
-	cache_scene_heightmap(NULL)
-	cache_scene_extent(NULL)
-	cache_scene_crs(NULL)
-	cache_plot_gg_panel_info(NULL)
-	cache_plot_gg_transform_info(NULL)
+	reset_scene_context(
+		clear_scene_metadata = TRUE,
+		clear_scene_cache = TRUE
+	)
 	heightmaptemp = tempfile(fileext = ".png")
 	colormaptemp = tempfile(fileext = ".png")
 	png_device = grDevices::png
