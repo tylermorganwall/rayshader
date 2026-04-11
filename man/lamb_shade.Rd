@@ -34,28 +34,28 @@ intensity is proportional to the cosine of the normal vector.
 Cache fallback messages are disabled by default. Set \code{options(rayshader.verbose_scene_cache = TRUE)} to print when cached metadata is reused.
 }
 \examples{
-if(run_documentation()) {
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Generate a basic hillshade
 montereybay |>
  lamb_shade(zscale=200) |>
  plot_map()
-}
-if(run_documentation()) {
+\dontshow{\}) # examplesIf}
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Increase the intensity by decreasing the zscale
 montereybay |>
  lamb_shade(zscale=50) |>
  plot_map()
-}
-if(run_documentation()) {
+\dontshow{\}) # examplesIf}
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Change the sun direction
 montereybay |>
  lamb_shade(zscale=200, sunangle=45) |>
  plot_map()
-}
-if(run_documentation()) {
+\dontshow{\}) # examplesIf}
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Change the sun altitude
 montereybay |>
  lamb_shade(zscale=200, sunaltitude=60) |>
  plot_map()
-}
+\dontshow{\}) # examplesIf}
 }

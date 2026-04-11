@@ -157,8 +157,8 @@ rayshader pipeline:
 \code{render_highquality(plot = FALSE)}.
 }
 \examples{
-if(run_documentation()) {
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 rad = radiance_shade(samples = 64, lightdirection = 315, lightaltitude = 45)
 plot_map(rad)
-}
+\dontshow{\}) # examplesIf}
 }

@@ -61,9 +61,7 @@
 #'@param rgl_tag Default `""`. Tag to add to the rgl scene id, will be prefixed by `"objraymsh"`
 #'@param ... Additional arguments to pass to `rgl::triangles3d()`.
 #'@export
-#'@examples
-#'if(run_documentation()) {
-#'}
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 render_raymesh = function(
 	raymesh,
 	extent = NULL,

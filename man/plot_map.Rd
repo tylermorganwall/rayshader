@@ -48,7 +48,7 @@ Displays the map in the current device.
 }
 \examples{
 #Plotting the Monterey Bay dataset with bathymetry data
-if(run_documentation()) {
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 water_palette = colorRampPalette(c("darkblue", "dodgerblue", "lightblue"))(200)
 bathy_hs = height_shade(montereybay, texture = water_palette)
 #For compass text
@@ -60,5 +60,5 @@ montereybay |>
  add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0))  |>
  add_shadow(ray_shade(montereybay,zscale=50),0.3) |>
  plot_map()
-}
+\dontshow{\}) # examplesIf}
 }

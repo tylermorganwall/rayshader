@@ -69,11 +69,7 @@ Cache fallback messages are disabled by default. Set \code{options(rayshader.ver
 You can also use \code{\link[=save_multipolygonz_to_obj]{save_multipolygonz_to_obj()}} manually to convert sf objects
 }
 \examples{
-run_examples = length(find.package("sf", quiet = TRUE)) &&
-              length(find.package("elevatr", quiet = TRUE)) &&
-              length(find.package("raster", quiet = TRUE)) &&
-              run_documentation()
-if(run_examples) {
+\dontshow{if (length(find.package("sf", quiet = TRUE)) && length(find.package("elevatr", quiet = TRUE)) && length(find.package("raster", quiet = TRUE)) && (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true"))) withAutoprint(\{ # examplesIf}
 library(sf)
 #Set location of washington monument
 washington_monument_location =  st_point(c(-77.035249, 38.889462))
@@ -100,8 +96,6 @@ dc_elevation_matrix |>
  plot_3d(dc_elevation_matrix, zscale=3.7, water = TRUE, waterdepth = 1,
          soliddepth=-50, windowsize = 800)
 render_snapshot()
-}
-if(run_examples) {
 #Zoom in on the monument
 render_camera(theta=150,  phi=35, zoom= 0.55, fov=70)
 #Render the national monument
@@ -111,9 +105,7 @@ render_multipolygonz(washington_monument_multipolygonz,
                     zscale = 4, color = "grey80",
                     heightmap = dc_elevation_matrix)
 render_snapshot()
-}
-if(run_examples) {
 #This works with `render_highquality()`
 render_highquality(min_variance = 0, samples = 16)
-}
+\dontshow{\}) # examplesIf}
 }

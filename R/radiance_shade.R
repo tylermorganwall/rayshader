@@ -77,11 +77,9 @@
 #'
 #'@return RGBA array representing the top-down radiance render.
 #'@export
-#'@examples
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'rad = radiance_shade(samples = 64, lightdirection = 315, lightaltitude = 45)
 #' plot_map(rad)
-#'}
 
 radiance_shade = function(
 	heightmap = NULL,

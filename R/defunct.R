@@ -18,13 +18,11 @@ NULL
 #'
 #' @return Reduced matrix.
 #' @export
-#' @examples
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'montbaysmall = resize_matrix(montereybay, scale=0.5)
 #'montbaysmall |>
 #'  sphere_shade() |>
 #'  plot_map()
-#'}
 reduce_matrix_size = function(...) {
 	.Defunct("resize_matrix()", package = "rayshader")
 }

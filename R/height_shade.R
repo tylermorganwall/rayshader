@@ -17,28 +17,25 @@
 #'  plot_map()
 #'
 #'#Add a shadow:
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'montereybay |>
 #'  height_shade() |>
 #'  add_shadow(ray_shade(montereybay,zscale=50),0.1) |>
 #'  plot_map()
-#'}
 #'
 #'#Change the palette:
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'montereybay |>
 #'  height_shade(texture = topo.colors(256)) |>
 #'  add_shadow(ray_shade(montereybay,zscale=50),0.1) |>
 #'  plot_map()
-#'}
 #'
 #'#Really change the palette (warning: gratuitous use of rainbow palette):
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'montereybay |>
 #'  height_shade(texture = rainbow(256)) |>
 #'  add_shadow(ray_shade(montereybay,zscale=50),0.1) |>
 #'  plot_map()
-#'}
 height_shade = function(
   heightmap,
   texture = grDevices::colorRampPalette(c("#6AA85B", "#D9CC9A", "#FFFFFF"))(

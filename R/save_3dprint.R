@@ -12,39 +12,35 @@
 #'filename_stl = tempfile()
 #'
 #'#Save the STL file into `filename_stl`
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'volcano |>
 #'  sphere_shade() |>
 #'  plot_3d(volcano,zscale=3)
 #'render_snapshot()
 #'save_3dprint(filename_stl)
-#'}
 #'
 #'#Save the STL file into `filename_stl`, setting maximum width to 100 mm
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'volcano |>
 #'  sphere_shade() |>
 #'  plot_3d(volcano,zscale=3)
 #'render_snapshot()
 #'save_3dprint(filename_stl, maxwidth = 100)
-#'}
 #'
 #'#'#Save the STL file into `filename_stl`, setting maximum width to 4 inches
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'volcano |>
 #'  sphere_shade() |>
 #'  plot_3d(volcano,zscale=3)
 #'render_snapshot()
 #'save_3dprint(filename_stl, maxwidth = 4, unit = "in")
-#'}
 #'#'#'#Save the STL file into `filename_stl`, setting maximum width (character) to 120mm
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'volcano |>
 #'  sphere_shade() |>
 #'  plot_3d(volcano,zscale=3)
 #'render_snapshot()
 #'save_3dprint(filename_stl, maxwidth = "120mm")
-#'}
 save_3dprint = function(filename, maxwidth = 125, unit = "mm", rotate = FALSE) {
 	if (substring(filename, nchar(filename) - 3, nchar(filename)) != ".stl") {
 		filename = paste0(filename, ".stl")

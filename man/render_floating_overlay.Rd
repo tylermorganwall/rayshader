@@ -53,7 +53,7 @@ Cache fallback messages are disabled by default. Set \code{options(rayshader.ver
 Note: Multiple layers with transparency can cause rendering issues in rgl.
 }
 \examples{
-if(run_documentation()) {
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Render the road network as a floating overlay layer, along with a label annotation and a floating
 #point annotation
 if(all(length(find.package("sf", quiet = TRUE)) > 0,
@@ -84,5 +84,5 @@ if(all(length(find.package("sf", quiet = TRUE)) > 0,
  render_floating_overlay(point_overlay, altitude = 100,zscale = 50)
  render_snapshot()
 }
-}
+\dontshow{\}) # examplesIf}
 }

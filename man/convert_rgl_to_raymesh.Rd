@@ -30,11 +30,11 @@ Converts the current RGL rayshader scene to a \code{ray_mesh} object (see \code{
 \examples{
 filename_obj = tempfile(fileext = ".obj")
 #Save model of volcano
-if(run_documentation()) {
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 volcano |>
  sphere_shade() |>
  plot_3d(volcano, zscale = 2)
 
 rm_obj = convert_rgl_to_raymesh()
-}
+\dontshow{\}) # examplesIf}
 }

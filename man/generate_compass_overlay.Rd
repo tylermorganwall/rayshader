@@ -88,7 +88,7 @@ This adds the compass
 Based on code from "Auxiliary Cartographic Functions in R: North Arrow, Scale Bar, and Label with a Leader Arrow"
 }
 \examples{
-if(run_documentation()) {
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Create the water palette
 water_palette = colorRampPalette(c("darkblue", "dodgerblue", "lightblue"))(200)
 bathy_hs = height_shade(montereybay, texture = water_palette)
@@ -106,58 +106,57 @@ base_map = mbay |>
 base_map |>
  add_overlay(generate_compass_overlay(heightmap = montereybay)) |>
  plot_map()
-}
-
-if(run_documentation()) {
+\dontshow{\}) # examplesIf}
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Change the position to be over the water
 base_map |>
  add_overlay(generate_compass_overlay(heightmap = montereybay, x = 0.15)) |>
  plot_map()
-}
-if(run_documentation()) {
+\dontshow{\}) # examplesIf}
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Change the type
 base_map |>
  add_overlay(generate_compass_overlay(heightmap = montereybay, x = 0.15,
                                       compass_type = "split_arrow")) |>
  plot_map()
-}
-if(run_documentation()) {
+\dontshow{\}) # examplesIf}
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Change the type
 base_map |>
  add_overlay(generate_compass_overlay(heightmap = montereybay, x = 0.15,
                                       compass_type = "split_arrow_ring")) |>
  plot_map()
-}
-if(run_documentation()) {
+\dontshow{\}) # examplesIf}
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Change the type
 base_map |>
  add_overlay(generate_compass_overlay(heightmap = montereybay, x = 0.15,
                                       compass_type = "triangle_circle")) |>
  plot_map()
-}
-if(run_documentation()) {
+\dontshow{\}) # examplesIf}
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Change the text color for visibility
 base_map |>
  add_overlay(generate_compass_overlay(heightmap = montereybay, compass_type = "split_arrow",
 x = 0.15, text_color="white")) |>
  plot_map()
-}
-if(run_documentation()) {
+\dontshow{\}) # examplesIf}
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Alternatively, add a halo color to improve contrast
 base_map |>
  add_overlay(generate_compass_overlay(heightmap = montereybay, x = 0.15, y=0.15,
              compass_type = "split_arrow", halo_color="white", halo_expand = 2)) |>
  plot_map()
-}
-if(run_documentation()) {
+\dontshow{\}) # examplesIf}
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Change the color scheme
 base_map |>
  add_overlay(generate_compass_overlay(heightmap = montereybay, x = 0.15, y=0.15,
              compass_type = "split_arrow", halo_color="white",
              halo_expand = 2, color1 = "purple", color2 = "red")) |>
  plot_map()
-}
-if(run_documentation()) {
+\dontshow{\}) # examplesIf}
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Remove the inner border
 base_map |>
  add_overlay(generate_compass_overlay(heightmap = montereybay, x = 0.15, y=0.15,
@@ -165,8 +164,8 @@ base_map |>
              halo_color="white", halo_expand = 2,
              color1 = "darkolivegreen4", color2 = "burlywood3")) |>
  plot_map()
-}
-if(run_documentation()) {
+\dontshow{\}) # examplesIf}
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Change the size of the compass and text
 base_map |>
  add_overlay(generate_compass_overlay(heightmap = montereybay, x = 0.75, y=0.75,
@@ -179,8 +178,8 @@ base_map |>
              halo_color="white", halo_expand = 2,compass_type = "split_arrow",
              size=0.075/2, text_size = 0.75)) |>
  plot_map()
-}
-if(run_documentation()) {
+\dontshow{\}) # examplesIf}
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Change the bearing of the compass
 base_map |>
  add_overlay(generate_compass_overlay(heightmap = montereybay, x = 0.15, y=0.15,
@@ -193,8 +192,8 @@ base_map |>
              halo_color="white", halo_expand = 2, bearing=-45, compass_type = "split_arrow_ring",
              size=0.075)) |>
  plot_map()
-}
-if(run_documentation()) {
+\dontshow{\}) # examplesIf}
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Create a drop shadow effect
 base_map |>
  add_overlay(generate_compass_overlay(heightmap = montereybay, x = 0.15, y=0.15,
@@ -209,5 +208,5 @@ add_overlay(generate_compass_overlay(heightmap = montereybay, x = 0.15, y=0.35,
              compass_type = "split_arrow_ring",
              halo_color="white", halo_expand = 2)) |>
  plot_map()
-}
+\dontshow{\}) # examplesIf}
 }

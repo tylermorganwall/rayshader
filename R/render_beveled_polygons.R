@@ -72,7 +72,7 @@
 #'
 #' # This function can also create fake "terrain" from polygons by visualizing the distance
 #' # to the nearest edge.
-#' if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #' #Render the county borders as polygons in Monterey Bay as terrain
 #' montereybay |>
 #'   sphere_shade(texture = "desert") |>
@@ -95,20 +95,18 @@
 #' render_snapshot()
 #' render_camera(theta=194, phi= 35,   zoom = 0.5, fov= 80)
 #' render_snapshot()
-#' }
 #'
 #' # Changing the color of the beveled top:
-#' if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #' render_beveled_polygons(mont_county_buff,  flat_shading  = TRUE, angle = 45 ,
 #'                         heightmap = montereybay, bevel_width=2000,
 #'                         material = "tan", bevel_material = "darkgreen",
 #'                         extent = attr(montereybay,"extent"), clear_previous=TRUE,
 #'                         bevel_height = 5000, base_height=0,
 #'                         zscale=200)
-#' }
 #' # We can create a nice curved surface by passing in a bevel generated with the
 #' # `raybevel::generate_bevel()` function.
-#' if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #' render_beveled_polygons(mont_county_buff, flat_shading  = TRUE, heightmap = montereybay,
 #'                         bevel = raybevel::generate_bevel("exp",bevel_end = 0.4),
 #'                         #max_height = 10, scale_all_max = TRUE, set_max_height = TRUE,
@@ -121,13 +119,12 @@
 #'                         base_height=0, clear_previous = TRUE,
 #'                         zscale=200)
 #' render_snapshot()
-#' }
 #'
 #' # While the bevels all start at the same point in the above example,
 #' # they rise to different levels due to being scaled by the maximum internal distance
 #' # in the polygon. Setting `scale_all_max = TRUE` ensures the bevels are all scaled to the
 #' # same maximum height (in this case, 3000m above the 5000m bevel start height).
-#' if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #' render_beveled_polygons(mont_county_buff, flat_shading  = TRUE, heightmap = montereybay,
 #'                  bevel = raybevel::generate_bevel("exp",bevel_end = 0.4),
 #'                  max_height = 3000, scale_all_max = TRUE, set_max_height = TRUE,
@@ -140,19 +137,17 @@
 #'                  base_height=0, clear_previous = TRUE,
 #'                  zscale=200)
 #' render_snapshot()
-#' }
 #'
 #' # Rendering the polygons with `render_highquality()`
-#' if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'   render_highquality()
-#' }
 #'
 #' # We can scale the size of the polygon to a column in the `sf` object as well:
 #' # raybevel::generate_bevel() function. We can scale this data down using the `scale_data`
 #' # argument. Note that this is applied as well as the `zscale` argument, and that you
 #' # must think carefully about your scales and values if trying to represent a meaningful
 #' # data visualization with this object.
-#' if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #' render_beveled_polygons(mont_county_buff,  flat_shading  = TRUE, angle = 45, bevel_width=1000,
 #'                  data_column_top = "ALAND", scale_data = 1e-5, heightmap = montereybay,
 #'                  #max_height = 1000, scale_all_max = TRUE, set_max_height = TRUE,
@@ -161,7 +156,6 @@
 #'                  extent = attr(montereybay,"extent"), clear_previous = TRUE,
 #'                  zscale=200)
 #' render_snapshot()
-#' }
 render_beveled_polygons = function(
 	polygon,
 	extent = NULL,

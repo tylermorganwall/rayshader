@@ -22,29 +22,29 @@ Generates a constant color layer.
 Cache fallback messages are disabled by default. Set \code{options(rayshader.verbose_scene_cache = TRUE)} to print when cached metadata is reused.
 }
 \examples{
-if(run_documentation()) {
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Shade a red map
 montereybay |>
  constant_shade("red") |>
  add_shadow(lamb_shade(montereybay),0) |>
  plot_map()
-}
-if(run_documentation()) {
+\dontshow{\}) # examplesIf}
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Shade a green map
 montereybay |>
  constant_shade("green") |>
  add_shadow(lamb_shade(montereybay),0) |>
  plot_map()
-}
-if(run_documentation()) {
+\dontshow{\}) # examplesIf}
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Add a blue tint
 montereybay |>
  height_shade() |>
  add_overlay(constant_shade(montereybay, "dodgerblue", alpha=0.25)) |>
  add_shadow(lamb_shade(montereybay,zscale=50),0) |>
  plot_map()
-}
-if(run_documentation()) {
+\dontshow{\}) # examplesIf}
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Use a blank map on which to draw other data
 montereybay |>
  constant_shade() |>
@@ -53,5 +53,5 @@ montereybay |>
                                    alphalayer=0.8)  |>
  add_water(detect_water(montereybay < 0), "dodgerblue") |>
  plot_map()
-}
+\dontshow{\}) # examplesIf}
 }

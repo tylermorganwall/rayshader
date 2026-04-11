@@ -38,7 +38,7 @@ libpng-dev libjpeg-dev libfreetype6-dev libglu1-mesa-dev libgl1-mesa-dev pandoc 
 
 <img  src="man/figures/smallfeature.png">
 
-Rayshader has seven functions related to mapping:
+Rayshader has several functions related to mapping:
 
 - `ray_shade()` uses user specified light directions to calculate a
   global shadow map for an elevation matrix. By default, this also
@@ -59,9 +59,17 @@ Rayshader has seven functions related to mapping:
   Technique for Depicting Terrain Relief.”
 - `height_shade()` calculates a color for each point on the surface
   using a direct elevation-to-color mapping.
+- `calculate_normal()` calculates the normal unit vector for every point
+  on the grid.
 - `lamb_shade()` uses a single user specified light direction to
   calculate a local shadow map based on the dot product between the
   surface normal and the light direction for an elevation matrix.
+- `constant_shade()` generates a constant color layer.
+- `cloud_shade()` renders shadows from the 3D floating cloud layer on
+  the ground, which can be added to the map with `add_shadow()`.
+- `radiance_shade()` renders a top-down radiance pass of the current 3D
+  scene or a supplied elevation matrix, returning an overlay that can be
+  added with `add_overlay()`.
 - `add_shadow()` takes two of the shadow maps above and combines them,
   scaling the second one (or, if the second is an RGB array, the matrix)
   as specified by the user.
@@ -109,7 +117,7 @@ Rayshader also has functions to add water and generate overlays:
   overlay to layer onto an existing map using a height map or a boolean
   matrix.
 
-Also included are functions to add additional effects and information to
+Also included are functions to add geometry, effects, and information to
 your 3D visualizations:
 
 - `render_highquality()` renders in the scene with a built-in
@@ -124,6 +132,11 @@ your 3D visualizations:
   the map at a specified altitude `z` (in units of the matrix). The
   altitude can either be specified relative to the elevation at that
   point (the default), or absolutely.
+- `render_contours()` adds 3D contours to the current scene, using the
+  heightmap of the 3D surface.
+- `render_floating_overlay()` renders a 2D floating overlay over the
+  map.
+- `render_clouds()` renders a 3D floating cloud layer over the map.
 - `render_water()` adds a 3D tranparent water layer to 3D maps, after
   the rgl device has already been created. This can either add to a map
   that does not already have a water layer, or replace an existing water
@@ -140,20 +153,32 @@ your 3D visualizations:
 - `render_polygons()` Adds 3D polygons to the current scene, using
   latitude/longitude or coordinates in the reference system defined by
   the extent object.
+- `render_beveled_polygons()` adds beveled polygons to the current scene
+  using the **raybevel** package.
+- `render_buildings()` adds 3D polygons with roofs to the current scene.
+- `render_multipolygonz()` adds `MULTIPOLYGON Z` geometry directly to
+  the current scene.
+- `render_obj()` adds a 3D OBJ model to the current scene, using x/y
+  coordinates in the reference system defined by the extent object.
+- `render_raymesh()` adds a 3D `ray_mesh` model to the current scene,
+  using x/y coordinates in the reference system defined by the extent
+  object.
+- `render_tree()` adds 3D representations of trees to the current scene.
 - `render_scalebar()` places a scalebar on the map in 3D.
+- `render_zaxis()` adds a standalone z-axis to the current scene.
+- `render_resize_window()` resizes the rgl window.
 
-And several helper functions for converting rasters to matrices:
+And several helper functions for working with terrain matrices:
 
 - `raster_to_matrix()` converts a `raster` objects into a matrix.
 - `resize_matrix()` resizes a matrix (preserving contents) by specifying
   the desired output dimensions or a scaling factor.
 
-And four functions to display and save your visualizations:
+And several functions to display, save, and export your visualizations:
 
 - `plot_map()` Plots the current map. Accepts either a matrix or an
   array.
-- `write_png()` Writes the current map to disk with a user-specified
-  filename.
+- `save_png()` writes an image to disk with a user-specified filename.
 - `plot_3d()` Creates a 3D map, given a texture and an elevation matrix.
   You can customize the appearance of the map, as well as add a
   user-defined water level.
@@ -164,6 +189,27 @@ And four functions to display and save your visualizations:
 - `render_movie()` Creates and saves a mp4/gif file of the camera
   rotating around the 3D scene by either using a built-in orbit or by
   using one provided by the user.
+- `convert_path_to_animation_coords()` transforms path coordinates into
+  the reference system used by `render_highquality()`, so they can be
+  passed to `animation_camera_coords`.
+- `convert_rgl_to_raymesh()` converts the current rayshader RGL scene to
+  a `ray_mesh` object.
+- `save_obj()` writes the textured 3D rayshader visualization to an OBJ
+  file.
+- `save_3dprint()` writes a stereolithography (STL) file that can be
+  used in 3D printing.
+- `save_multipolygonz_to_obj()` converts `MULTIPOLYGON Z` `sf` features
+  into a 3D OBJ file.
+
+Also included are helper objects and utilities for custom scene
+elements:
+
+- `flag_full_obj()` returns a 3D flag OBJ model for use with
+  `render_obj()`.
+- `flag_banner_obj()` returns the banner portion of the built-in flag
+  OBJ, so it can be styled separately from the pole.
+- `flag_pole_obj()` returns the pole portion of the built-in flag OBJ,
+  so it can be styled separately from the banner.
 
 Finally, rayshader has a single function to generate 3D plots using
 ggplot2 objects:
@@ -333,10 +379,6 @@ render_snapshot(clear = TRUE)
 ``` r
 rgl::rgl.clear()
 ```
-
-    ## Warning in rgl::rgl.clear(): 'rgl::rgl.clear' is deprecated.
-    ## Use 'clear3d' instead.
-    ## See help("Deprecated")
 
 These clouds can be customized:
 
@@ -508,20 +550,7 @@ down slightly to center the map.
 
 ``` r
 library(rayrender)
-```
 
-    ## 
-    ## Attaching package: 'rayrender'
-
-    ## The following object is masked from 'package:rayshader':
-    ## 
-    ##     run_documentation
-
-    ## The following object is masked from 'package:rgl':
-    ## 
-    ##     text3d
-
-``` r
 montereybay |>
     sphere_shade(zscale = 10, texture = "imhof1") |>
     plot_3d(
@@ -652,7 +681,7 @@ render_label(
 render_label(
     montereybay,
     x = 220,
-    y = 70,
+    y = 70, 
     z = 7000,
     zscale = 50,
     text = "Santa Cruz",
@@ -699,7 +728,7 @@ render_highquality(
     line_radius = 1,
     text_size = 36,
     text_offset = c(0, 12, 0),
-    clear = TRUE
+    clear = TRUE 
 )
 ```
 
@@ -810,10 +839,6 @@ render_highquality(
 )
 ```
 
-    ## Warning in mesh3d_model(mesh, x = x, y = y, z = z, override_material = TRUE, :
-    ## material set as vertex color but no texture or bump map passed--ignoring mesh3d
-    ## material.
-
 ![](man/figures/README_paths-1.png)<!-- -->
 
 You can also apply a post-processing effect to the 3D maps to render
@@ -837,8 +862,6 @@ elmat |>
 Sys.sleep(0.2)
 render_depth(focallength = 800, clear = TRUE) #THIS NEEDS FIXING
 ```
-
-    ## Focus distance: 1733.9
 
 ![](man/figures/README_three-d-depth-1.png)<!-- -->
 
@@ -934,9 +957,6 @@ gg3 = plot_gg(
 )
 ```
 
-    ## Warning: Removed 1861 rows containing missing values or values outside the scale range
-    ## (`geom_contour()`).
-
 ``` r
 # Plot in 3D
 plot_gg(
@@ -951,12 +971,6 @@ plot_gg(
     phi = 30,
     theta = 30
 )
-```
-
-    ## Warning: Removed 1861 rows containing missing values or values outside the scale range
-    ## (`geom_contour()`).
-
-``` r
 Sys.sleep(0.2)
 
 gg4 = render_snapshot(clear = TRUE, plot = FALSE)
@@ -1013,7 +1027,7 @@ b = data.frame(x = rnorm(20000, 14.5, 1.9), y = rnorm(20000, 14.5, 1.9))
 c = data.frame(x = rnorm(20000, 9.5, 1.9), y = rnorm(20000, 15.5, 1.9))
 data = rbind(a, b, c)
 
-#Lines
+#Lines 
 pp = ggplot(data, aes(x = x, y = y, fill = after_stat(count))) +
     geom_hex(bins = 20, linewidth = 0.5, color = "black") +
     scale_fill_viridis_c(option = "C") +  
@@ -1031,7 +1045,7 @@ gg7 = plot_gg(
 
 ``` r
 plot_gg(
-    pp,  
+    pp,   
     width = 5, 
     height = 4, 
     scale = 300, 
@@ -1055,7 +1069,7 @@ focus to a important areas in the figure.
 ``` r
 plot_gg(
     pp, 
-    width = 5,
+    width = 5, 
     height = 4,
     scale = 300,
     multicore = TRUE, offset_edges = 0,

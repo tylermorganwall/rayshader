@@ -104,7 +104,7 @@ use an \code{sf} object or manually specify the x/y coordinates and label.
 }
 \examples{
 #Add the included `sf` object with roads to the montereybay dataset
-if(run_documentation()) {
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Create the water palette
 water_palette = colorRampPalette(c("darkblue", "dodgerblue", "lightblue"))(200)
 bathy_hs = height_shade(montereybay, texture = water_palette)
@@ -124,8 +124,8 @@ bathy_hs |>
                                     extent= attr(montereybay,"extent"), heightmap = montereybay,
                                     seed=1))  |>
  plot_map()
-}
-if(run_documentation()) {
+\dontshow{\}) # examplesIf}
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #It's hard to read these values, so we'll add a white halo.
 bathy_hs |>
  add_shadow(lamb_shade(montereybay,zscale=50),0.3) |>
@@ -139,8 +139,8 @@ bathy_hs |>
                                     halo_color = "white", halo_expand = 3,
                                     seed=1))  |>
  plot_map()
-}
-if(run_documentation()) {
+\dontshow{\}) # examplesIf}
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Plot the actual town locations, using the manual plotting interface instead of the `sf` object
 montereybay |>
  height_shade() |>
@@ -154,8 +154,8 @@ montereybay |>
                                     halo_color = "white", halo_expand = 3,
                                     seed=1))  |>
  plot_map()
-}
-if(run_documentation()) {
+\dontshow{\}) # examplesIf}
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Adding a softer blurred halo
 montereybay |>
  height_shade() |>
@@ -169,8 +169,8 @@ montereybay |>
                                     halo_color = "white", halo_expand = 3, halo_blur=10,
                                     seed=1))  |>
  plot_map()
-}
-if(run_documentation()) {
+\dontshow{\}) # examplesIf}
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Changing the seed changes the locations of the labels
 montereybay |>
  height_shade() |>
@@ -184,5 +184,5 @@ montereybay |>
                                     halo_color = "white", halo_expand = 3, halo_blur=10,
                                     seed=2))  |>
  plot_map()
-}
+\dontshow{\}) # examplesIf}
 }

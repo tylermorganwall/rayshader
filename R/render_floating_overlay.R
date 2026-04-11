@@ -20,8 +20,7 @@
 #'@param ... Additional arguments to pass to `rgl::triangles3d()`.
 #'@return Adds a 3D floating layer to the map. No return value.
 #'@export
-#'@examples
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Render the road network as a floating overlay layer, along with a label annotation and a floating
 #'#point annotation
 #'if(all(length(find.package("sf", quiet = TRUE)) > 0,
@@ -51,7 +50,6 @@
 #'  render_floating_overlay(road_overlay, altitude = 10000,zscale = 50)
 #'  render_floating_overlay(point_overlay, altitude = 100,zscale = 50)
 #'  render_snapshot()
-#'}
 #'}
 render_floating_overlay = function(
 	overlay = NULL,

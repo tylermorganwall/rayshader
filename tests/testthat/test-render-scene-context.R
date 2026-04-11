@@ -434,6 +434,25 @@ test_that("cached scene messages include cached symbol labels", {
 	expect_true(any(grepl("zs", out, fixed = TRUE)))
 })
 
+test_that("cached scene messages stay off when the option is unset", {
+	withr::local_options(list(rayshader.verbose_scene_cache = NULL))
+
+	out = character()
+	expect_no_error(withCallingHandlers(
+		emit_scene_cache_message(
+			caller = "render_points",
+			argument_name = "heightmap",
+			cache_name = "scene_heightmap",
+			cache_label = "elmat"
+		),
+		message = function(cnd) {
+			out <<- c(out, conditionMessage(cnd))
+			invokeRestart("muffleMessage")
+		}
+	))
+	expect_length(out, 0)
+})
+
 test_that("plot_3d() accepts raster input and caches spatial metadata", {
 	on.exit(rgl::close3d(), add = TRUE)
 	local_rgl_use_null()

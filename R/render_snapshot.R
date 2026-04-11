@@ -67,19 +67,16 @@
 #'@param ... Additional parameters to pass to `rayvertex::rasterize_scene()`.
 #'@return Displays snapshot of current rgl plot (or saves to disk), as well as invisibly returns an RGBA `rayimg` array.
 #'@export
-#'@examples
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'montereybay |>
 #'  sphere_shade() |>
 #'  plot_3d(montereybay,zscale=50,zoom=0.6,theta=-90,phi=30)
-#'}
 #'
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'render_snapshot()
-#'}
 #'
 #'#Create a title
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'render_snapshot(title_text = "Monterey Bay, California", title_offset=c(0,20),
 #'                title_color = "white", title_bar_color = "black",
 #'                title_font = "Helvetica", title_position = "north")
@@ -90,22 +87,19 @@
 #'                title_color = "white", title_bar_color = "darkgreen",
 #'                vignette = TRUE, title_offset=c(0,20),
 #'                title_font = "Helvetica", title_position = "north")
-#'}
 #'#Use software rendering to render a scene with shadow mapping
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'montereybay |>
 #'  height_shade() |>
 #'  plot_3d(montereybay, shadow=FALSE, solidlinecolor = NULL)
 #'#No shadows
 #'render_snapshot(software_render = TRUE)
-#'}
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Now with shadow mapped shadows, calculated in rayvertex
 #'render_snapshot(rayvertex_lighting = TRUE,
 #'                rayvertex_lights = rayvertex::directional_light(intensity = 1.2,
 #'                                                                direction = c(-1, 1, -1)),
 #'                rayvertex_shadow_map = TRUE, software_render = TRUE)
-#'}
 render_snapshot = function(
   filename,
   clear = FALSE,

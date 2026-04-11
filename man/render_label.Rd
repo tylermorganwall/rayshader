@@ -111,49 +111,49 @@ Adds a marker and label to the current 3D plot
 Cache fallback messages are disabled by default. Set \code{options(rayshader.verbose_scene_cache = TRUE)} to print when cached metadata is reused.
 }
 \examples{
-if(run_documentation()) {
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 montereybay |>
  sphere_shade() |>
  plot_3d(montereybay,zscale=50,water=TRUE, watercolor="#233aa1",
          zoom=0.9, windowsize = 800)
 render_snapshot()
-}
 
 santa_cruz = c(36.962957, -122.021033)
 #We want to add a label to Santa Cruz, so we use x/y coordinates in the same extent as the map.
-if(run_documentation()) {
+\dontshow{\}) # examplesIf}
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 render_label(montereybay, y = santa_cruz[1], x = santa_cruz[2],
             extent = attr(montereybay, "extent"), textsize = 2,
             altitude=12000, zscale=50, text = "Santa Cruz")
 render_snapshot()
-}
 
 monterey = c(36.603053, -121.892933)
 #We can also change the linetype to dashed by setting `dashed = TRUE` (additional options allow
 #the user to control the dash length). You can clear the existing lines by setting
 #`clear_previous = TRUE`.
-if(run_documentation()) {
+\dontshow{\}) # examplesIf}
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 render_label(montereybay, y = monterey[1], x = monterey[2], altitude = 10000,
             extent = attr(montereybay, "extent"), textsize = 2,
             zscale = 50, text = "Monterey", textcolor = "white", linecolor="darkred",
             dashed = TRUE, clear_previous = TRUE)
 render_snapshot()
-}
 
 canyon = c(36.621049, -122.333912)
 #By default, z specifies the altitude above that point on the elevation matrix. We can also specify
 #an absolute height by setting `relativez=FALSE`.
-if(run_documentation()) {
+\dontshow{\}) # examplesIf}
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 render_label(montereybay, y = canyon[1], x = canyon[2], altitude = 2000,
             extent = attr(montereybay,"extent"), textsize = 2,
             zscale=50,text = "Monterey Canyon", relativez=FALSE)
 render_snapshot()
-}
 
 #We can also render labels in high quality with `render_highquality()`, specifying a custom
 #line radius. By default, the labels point towards the camera, but you can fix their angle with
 #argument `text_angle`.
-if(run_documentation()) {
+\dontshow{\}) # examplesIf}
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 render_camera(theta=35, phi = 35, zoom = 0.80, fov=60)
 render_label(montereybay, y = monterey[1], x = monterey[2], altitude = 10000,
             extent = attr(montereybay, "extent"), textsize = 2,
@@ -167,15 +167,15 @@ render_label(montereybay, y = canyon[1], x = canyon[2],
 
 render_highquality(samples = 16,text_size = 64, line_radius = 3, text_offset = c(0, 20, 0),
                   lightdirection = 180, min_variance = 0)
-}
-if(run_documentation()) {
+\dontshow{\}) # examplesIf}
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Fixed text angle
 render_highquality(samples = 16,text_size = 64, line_radius = 3, text_offset = c(0, 20, 0),
                   lightdirection = 180, text_angle = 0, min_variance = 0)
-}
 #We can remove all existing labels by calling `render_label(clear_previous = TRUE)`
-if(run_documentation()) {
+\dontshow{\}) # examplesIf}
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 render_label(clear_previous = TRUE)
 render_snapshot()
-}
+\dontshow{\}) # examplesIf}
 }

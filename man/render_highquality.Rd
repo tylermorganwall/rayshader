@@ -253,81 +253,77 @@ either \code{\link[=convert_path_to_animation_coords]{convert_path_to_animation_
 }
 \examples{
 #Render the volcano dataset using pathtracing
-if(run_documentation()) {
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 volcano \%>\%
  sphere_shade() \%>\%
  plot_3d(volcano,zscale = 2)
 render_highquality(min_variance = 0, sample_method = "sobol_blue")
-}
 
 #Change position of light
-if(run_documentation()) {
+\dontshow{\}) # examplesIf}
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 render_highquality(lightdirection = 45, min_variance = 0, sample_method = "sobol_blue")
-}
 
 #Change vertical position of light
-if(run_documentation()) {
+\dontshow{\}) # examplesIf}
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 render_highquality(lightdirection = 45, lightaltitude = 10,
                   min_variance = 0, samples = 16)
-}
 
 #Change the ground material
-if(run_documentation()) {
+\dontshow{\}) # examplesIf}
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 render_highquality(lightdirection = 45, lightaltitude=60,
                   ground_material = rayrender::diffuse(checkerperiod = 30, checkercolor="grey50"),
                   min_variance = 0, samples = 16)
-}
 
 #Add three different color lights and a title
-if(run_documentation()) {
+\dontshow{\}) # examplesIf}
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 render_highquality(lightdirection = c(0,120,240), lightaltitude=45,
                   lightcolor=c("red","green","blue"), title_text = "Red, Green, Blue",
                   title_bar_color="white", title_bar_alpha=0.8,
                   min_variance = 0, samples = 16)
-}
 
 #Change the camera:
-if(run_documentation()) {
+\dontshow{\}) # examplesIf}
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 render_camera(theta=-45,phi=60,fov=60,zoom=0.8)
 render_highquality(lightdirection = c(0),
                   title_bar_color="white", title_bar_alpha=0.8,
                   min_variance = 0, samples = 16)
-}
 #Add a shiny metal sphere
-if(run_documentation()) {
+\dontshow{\}) # examplesIf}
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 render_camera(theta=-45,phi=60,fov=60,zoom=0.8)
 render_highquality(lightdirection = c(0,120,240), lightaltitude=45,
                   lightcolor=c("red","green","blue"),
                   scene_elements = rayrender::sphere(z=-60,y=0,
                                                      radius=20,material=rayrender::metal()),
                   min_variance = 0)
-}
 
 #Add a red light to the volcano and change the ambient light to dusk
-if(run_documentation()) {
+\dontshow{\}) # examplesIf}
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 render_camera(theta=45,phi=45)
 render_highquality(lightdirection = c(240), lightaltitude=30,
                   lightcolor=c("#5555ff"),
                   scene_elements = rayrender::sphere(z=0,y=15, x=-18, radius=5,
                                    material=rayrender::light(color="red",intensity=10)),
                   min_variance = 0, samples = 16)
-}
 #Manually change the camera location and direction
-if(run_documentation()) {
+\dontshow{\}) # examplesIf}
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 render_camera(theta=45,phi=45,fov=90)
 render_highquality(lightdirection = c(240), lightaltitude=30, lightcolor=c("#5555ff"),
                   camera_location = c(50,10,10), camera_lookat = c(0,15,0),
                   scene_elements = rayrender::sphere(z=0,y=15, x=-18, radius=5,
                                    material=rayrender::light(color="red",intensity=10)),
                   min_variance = 0, samples = 16)
-}
 # Render the shadow of the Washington Monument with a realistic sky at that datetime
 # using the `skymodelr` package.
-run_examples = length(find.package("sf", quiet = TRUE)) &&
-              length(find.package("elevatr", quiet = TRUE)) &&
-              length(find.package("raster", quiet = TRUE)) &&
-              run_documentation()
-if(run_examples) {
+\dontshow{\}) # examplesIf}
+\dontshow{if (length(find.package("sf", quiet = TRUE)) && length(find.package("elevatr", quiet = TRUE)) && length(find.package("raster", quiet = TRUE)) && (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true"))) withAutoprint(\{ # examplesIf}
 library(sf)
 #Set location of washington monument
 washington_monument_location =  st_point(c(-77.035249, 38.889462))
@@ -387,5 +383,5 @@ iso = 8,
 clamp_value = 10000,
 datetime = as.POSIXct("2025-12-21 16:00:00", tz = "EST")
 )
-}
+\dontshow{\}) # examplesIf}
 }

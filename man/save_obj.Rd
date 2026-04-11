@@ -30,30 +30,24 @@ save_obj(
 Writes the textured 3D rayshader visualization to an OBJ file.
 }
 \examples{
-if(interactive()) {
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 filename_obj = tempfile(fileext = ".obj")
 
 #Save model of volcano
-if(run_documentation()) {
 volcano |>
  sphere_shade() |>
  plot_3d(volcano, zscale = 2)
 
 save_obj(filename_obj)
-}
 
 #Save model of volcano without texture
-if(run_documentation()) {
 save_obj(filename_obj, save_texture = FALSE)
-}
 
 #Make water have realistic index of refraction
-if(run_documentation()) {
 montereybay |>
  sphere_shade() |>
  plot_3d(montereybay, zscale = 50)
 
 save_obj(filename_obj, water_index_refraction = 1.5)
-}
-}
+\dontshow{\}) # examplesIf}
 }

@@ -76,7 +76,7 @@ value is NA, in which the point will be removed).
 Cache fallback messages are disabled by default. Set \code{options(rayshader.verbose_scene_cache = TRUE)} to print when cached metadata is reused.
 }
 \examples{
-if(run_documentation()) {
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Starting at Moss Landing in Monterey Bay, we are going to simulate a flight of a bird going
 #out to sea and diving for food.
 
@@ -111,16 +111,16 @@ render_points(extent = attr(montereybay,"extent"),
              y = unlist(bird_track_lat), x = unlist(bird_track_long),
              altitude = z_out, zscale=50,color="white")
 render_snapshot()
-}
-if(run_documentation()) {
+\dontshow{\}) # examplesIf}
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #We'll set the altitude to zero to give the tracks a "shadow" over the water.
 render_points(extent = attr(montereybay,"extent"),
              y = unlist(bird_track_lat), x = unlist(bird_track_long),
              offset = 0, zscale=50, color="black")
 render_camera(theta=30,phi=35,zoom=0.45,fov=70)
 render_snapshot()
-}
-if(run_documentation()) {
+\dontshow{\}) # examplesIf}
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Remove the points:
 render_points(clear_previous=TRUE)
 
@@ -135,17 +135,16 @@ render_points(extent = attr(montereybay,"extent"), heightmap = montereybay,
            zscale=50, color="red", offset=100, size=5)
 render_camera(theta = 160, phi=33, zoom=0.4, fov=55)
 render_snapshot()
-}
-if(run_documentation()) {
+\dontshow{\}) # examplesIf}
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #And all of these work with `render_highquality()`
 render_highquality(point_radius = 1, min_variance = 0, samples = 16)
-}
-
-if(run_documentation()) {
+\dontshow{\}) # examplesIf}
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #We can also change the material of the objects by setting the `point_material` and
 #`point_material_args` arguments in `render_highquality()`
 render_highquality(point_radius = 1, min_variance = 0, samples = 16,
                   point_material = rayrender::glossy,
                   point_material_args = list(gloss = 0.5, reflectance = 0.2))
-}
+\dontshow{\}) # examplesIf}
 }

@@ -22,30 +22,27 @@
 #'@export
 #'@examples
 #'#Add contours to the montereybay dataset
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'montereybay |>
 #'  height_shade() |>
 #'  add_shadow(ray_shade(montereybay,zscale=50),0.3) |>
 #'  plot_3d(montereybay, theta = -45, zscale=50, zoom=0.9, windowsize=800)
 #'render_contours(montereybay, zscale = 50, offset = 100)
 #'render_snapshot()
-#'}
 #'
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Specify the number of levels
 #'render_contours(montereybay, zscale = 50, offset = 100, nlevels = 30,
 #'                clear_previous = TRUE)
 #'render_snapshot()
-#'}
 #'
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Manually specify the breaks with levels
 #'render_contours(montereybay, linewidth = 2,  offset = 100, zscale = 50,
 #'                levels = seq(-2000, 0, 100), clear_previous = TRUE)
 #'render_snapshot()
-#'}
 #'
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Use a color palette for the contours
 #'volcano |>
 #'  constant_shade() |>
@@ -53,16 +50,14 @@
 #'palette = grDevices::colorRampPalette(c("red", "purple", "pink"))
 #'render_contours(volcano, offset = 1, palette = palette, zscale = 2, nlevels = 20)
 #'render_snapshot()
-#'}
 #'
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Render using `render_highquality()` for a neon light effect
 #'render_highquality(light = FALSE, samples = 16,
 #'                   line_radius = 0.1,
 #'                   path_material = rayrender::light, ground_size = 0,
 #'                   path_material_args = list(importance_sample = FALSE,
 #'                                             color = "purple", intensity = 2))
-#'}
 render_contours = function(
 	heightmap = NULL,
 	zscale = 1,

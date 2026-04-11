@@ -6,22 +6,19 @@
 #'@export
 #'@examples
 #'#Resize the rgl window to various sizes
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'montereybay |>
 #'  sphere_shade() |>
 #'  plot_3d(montereybay,zscale=50,zoom=0.6,theta=-90,phi=30)
 #'render_resize_window(width = 800, height = 800)
 #'render_snapshot()
-#'}
 #'
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'render_resize_window(width = 200, height = 200)
 #'render_snapshot()
-#'}
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'render_resize_window(width = 800, height = 400)
 #'render_snapshot()
-#'}
 render_resize_window = function(width = NULL, height = NULL) {
 	if (rgl::cur3d() == 0) {
 		stop("No rgl window currently open.")

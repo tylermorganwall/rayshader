@@ -62,8 +62,7 @@
 #'@param ... Optional z-axis arguments passed to [render_zaxis()], such as
 #'`zaxis = TRUE`, `zaxis_location`, `zaxis_breaks`, and `zaxis_labels`.
 #'@export
-#'@examples
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Starting at Moss Landing in Monterey Bay, we are going to simulate a flight of a bird going
 #'#out to sea and diving for food.
 #'
@@ -98,17 +97,15 @@
 #'            y = unlist(bird_track_lat), x = unlist(bird_track_long),
 #'            altitude = z_out, zscale=50,color="white", antialias=TRUE)
 #'render_snapshot()
-#'}
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#We'll set the altitude to right above the water to give the tracks a "shadow".
 #'render_path(extent = attr(montereybay,"extent"),
 #'            y = unlist(bird_track_lat), x = unlist(bird_track_long),
 #'            altitude = 10, zscale=50, color="black", antialias=TRUE)
 #'render_camera(theta=30,phi=35,zoom=0.45,fov=70)
 #'render_snapshot()
-#'}
 #'
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Remove the path:
 #'render_path(clear_previous=TRUE)
 #'
@@ -123,23 +120,20 @@
 #'            zscale=50, color="red", antialias=TRUE,offset=100, linewidth=5)
 #'render_camera(theta = 160, phi=33, zoom=0.4, fov=55)
 #'render_snapshot()
-#'}
 #'
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#And all of these work with `render_highquality()`. Here, I set `use_extruded_paths = TRUE`
 #'#to get thick continuous paths.
 #'render_highquality(line_radius=1, min_variance = 0,
 #'                   use_extruded_paths = TRUE, samples = 16)
-#'}
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#We can also change the material of the objects by setting the `point_material` and
 #'#`point_material_args` arguments in `render_highquality()`
 #'render_highquality(line_radius=1, min_variance = 0, samples = 16,
 #'                   path_material = rayrender::glossy,  use_extruded_paths = TRUE,
 #'                   path_material_args = list(gloss = 0.5, reflectance = 0.2))
-#'}
 #'
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#For transmissive materials (like `dielectric`), we should specify that the path
 #'#should be rendered with an extruded path. We'll use the `attenuation` argument in
 #'#the `dielectric` function to specify a realistic glass color.
@@ -150,7 +144,6 @@
 #'                   lightsize = 2000, lightintensity = 10,
 #'                   path_material = rayrender::dielectric, use_extruded_paths = TRUE,
 #'                   path_material_args = list(refraction = 1.5, attenuation = c(0.05,0.2,0.2)))
-#'}
 render_path = function(
   y = NULL,
   x = NULL,

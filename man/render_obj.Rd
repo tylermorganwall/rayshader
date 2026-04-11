@@ -129,7 +129,7 @@ If no x/y coordinates are passed in, the OBJ will be plotted in the coordinate s
 in the proper location (but for ease of use, use \code{\link[=render_multipolygonz]{render_multipolygonz()}} to plot this data directly).
 }
 \examples{
-if(run_documentation()) {
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Render the 3D map
 moss_landing_coord = c(36.806807, -121.793332)
 montereybay |>
@@ -148,8 +148,8 @@ render_obj(flag_full_obj(), extent = attr(montereybay,"extent"), heightmap = mon
           scale=c(2,2,2), angle=c(0,45,0),
           zscale=50, color=rainbow(100), smooth = FALSE, clear_previous = TRUE)
 render_snapshot()
-}
-if(run_documentation()) {
+\dontshow{\}) # examplesIf}
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Rotate the flag to follow the circle
 render_obj(flag_full_obj(), extent = attr(montereybay,"extent"), heightmap = montereybay,
           y = unlist(circle_coords_lat), x = unlist(circle_coords_long),
@@ -157,8 +157,8 @@ render_obj(flag_full_obj(), extent = attr(montereybay,"extent"), heightmap = mon
           angle=matrix(c(rep(0,100), seq(0,-360,length.out=101)[-1],rep(0,100)),ncol=3),
           zscale=50, color=rainbow(100), smooth = FALSE, clear_previous = TRUE)
 render_snapshot()
-}
-if(run_documentation()) {
+\dontshow{\}) # examplesIf}
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Style the pole with a different color
 render_obj(flag_pole_obj(), extent = attr(montereybay,"extent"), heightmap = montereybay,
           y = unlist(circle_coords_lat), x = unlist(circle_coords_long),
@@ -173,5 +173,5 @@ render_obj(flag_banner_obj(), extent = attr(montereybay,"extent"), heightmap = m
 
 #And all of these work with `render_highquality()`
 render_highquality(samples = 16)
-}
+\dontshow{\}) # examplesIf}
 }

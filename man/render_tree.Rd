@@ -134,7 +134,7 @@ Users can also specify the minimum and maximum height of the trees to be rendere
 Cache fallback messages are disabled by default. Set \code{options(rayshader.verbose_scene_cache = TRUE)} to print when cached metadata is reused.
 }
 \examples{
-if(run_documentation()) {
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Let's first start by drawing some trees in a circle around Monterey Bay
 #We won't scale these to a realistic size (yet)
 moss_landing_coord = c(36.806807, -121.793332)
@@ -152,32 +152,32 @@ render_tree(extent = attr(montereybay,"extent"), heightmap = montereybay,
            tree_zscale = FALSE, tree_height = 30,  lit = TRUE,
            y = unlist(circle_coords_lat), x = unlist(circle_coords_long), zscale=50)
 render_snapshot()
-}
-if(run_documentation()) {
+\dontshow{\}) # examplesIf}
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Change the crown width ratio (compared to the height)
 render_tree(extent = attr(montereybay,"extent"), heightmap = montereybay,
            tree_zscale = FALSE, tree_height = 60, crown_width_ratio = 0.5,
            clear_previous = TRUE,
            y = unlist(circle_coords_lat), x = unlist(circle_coords_long), zscale=50)
 render_snapshot()
-}
-if(run_documentation()) {
+\dontshow{\}) # examplesIf}
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Change the trunk height and width
 render_tree(extent = attr(montereybay,"extent"), heightmap = montereybay,
            tree_zscale = FALSE, tree_height = 40, crown_width_ratio = 2,
            clear_previous = TRUE, trunk_height_ratio=1/2, trunk_radius = 1.5,
            y = unlist(circle_coords_lat), x = unlist(circle_coords_long), zscale=50)
 render_snapshot()
-}
-if(run_documentation()) {
+\dontshow{\}) # examplesIf}
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Change the tree type
 render_tree(extent = attr(montereybay,"extent"), heightmap = montereybay,
            tree_zscale = FALSE, tree_height = 30,
            clear_previous = TRUE, type = "cone",trunk_height_ratio = 1/6,
            y = unlist(circle_coords_lat), x = unlist(circle_coords_long), zscale=50)
 render_snapshot()
-}
-if(run_documentation()) {
+\dontshow{\}) # examplesIf}
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Change the crown color:
 render_camera(theta = 150,  phi = 38, zoom = 0.4, fov = 55)
 render_tree(extent = attr(montereybay,"extent"), heightmap = montereybay,
@@ -185,15 +185,11 @@ render_tree(extent = attr(montereybay,"extent"), heightmap = montereybay,
            crown_color = rainbow(20),  clear_previous = TRUE,
            y = unlist(circle_coords_lat), x = unlist(circle_coords_long), zscale=50)
 render_snapshot()
-}
 
 #We will use the lidR package to generate a DEM and detect the crown tops of trees, and
 #then use rayshader to render 3D tree models scaled to those heights on the map.
-run_example = length(find.package("lidR", quiet = TRUE)) > 0 &&
-             length(find.package("sf", quiet = TRUE)) > 0 &&
-             length(find.package("terra", quiet = TRUE)) > 0 &&
-             run_documentation()
-if (run_example) {
+\dontshow{\}) # examplesIf}
+\dontshow{if (length(find.package("lidR", quiet = TRUE)) > 0 && length(find.package("sf", quiet = TRUE)) > 0 && length(find.package("terra", quiet = TRUE)) > 0 && (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true"))) withAutoprint(\{ # examplesIf}
 #Load the example data from the lidR package
 LASfile = system.file("extdata", "Topography.laz", package="lidR")
 las = lidR::readLAS(LASfile, filter = "-inside 273450 5274350 273550 5274450")
@@ -215,8 +211,6 @@ dem_matrix |>
  add_shadow(lamb_shade(dem_matrix),0) |>
  plot_3d(dem_matrix, windowsize = 800)
 render_snapshot()
-}
-if (run_example) {
 #The tree locations are given as an absolute height (as opposed to relative to the surface)
 #so we set `absolute_height = TRUE`.
 render_tree(y = tree_locations[,2],
@@ -235,11 +229,9 @@ rgl::pop3d("lights")
 rgl::light3d(phi=35,theta=90, viewpoint.rel=F, diffuse="#ffffff", specular="#000000")
 rgl::light3d(phi=-45,theta=-40, viewpoint.rel=F, diffuse="#aaaaaa", specular="#000000")
 render_snapshot()
-}
-if (run_example) {
 #Render tree also works with `render_highquality()`
 render_highquality(lightdirection=c(90,45),lightaltitude=c(90,45),
                   lightcolor=c("dodgerblue","orange"), samples = 32,
                   min_variance = 0)
-}
+\dontshow{\}) # examplesIf}
 }

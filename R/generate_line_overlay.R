@@ -26,7 +26,7 @@
 #'@export
 #'@examples
 #'#Add the included `sf` object with roads to the montereybay dataset
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'water_palette = colorRampPalette(c("darkblue", "dodgerblue", "lightblue"))(200)
 #'bathy_hs = height_shade(montereybay, texture = water_palette)
 #'montereybay |>
@@ -36,8 +36,7 @@
 #'                                    attr(montereybay,"extent"), heightmap = montereybay))  |>
 #'  add_shadow(ray_shade(montereybay,zscale=50),0.3) |>
 #'  plot_map()
-#'}
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Change the line width, color, and transparency
 #'montereybay |>
 #'  height_shade() |>
@@ -47,8 +46,7 @@
 #'                                    alphalayer=0.8)  |>
 #'  add_shadow(ray_shade(montereybay,zscale=50),0.3) |>
 #'  plot_map()
-#'}
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Manually specify the width and height to improve visual quality of the lines
 #'montereybay |>
 #'  height_shade() |>
@@ -58,7 +56,6 @@
 #'                                    attr(montereybay,"extent"), width = 1080, height = 1080),
 #'                                    alphalayer=0.8)  |>
 #'  plot_map()
-#'}
 generate_line_overlay = function(
 	geometry,
 	extent,

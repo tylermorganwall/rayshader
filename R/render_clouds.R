@@ -186,8 +186,7 @@ generate_cloud_layer = function(
 #'@param clear_clouds Default `FALSE`. Clears all existing floating layers on the visualization.
 #'@return Adds a 3D floating cloud layer to the map. No return value.
 #'@export
-#'@examples
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Render a cloud layer over Monterey Bay
 #'montereybay  |>
 #'  sphere_shade()  |>
@@ -196,8 +195,7 @@ generate_cloud_layer = function(
 #'#Render some clouds
 #'render_clouds(montereybay, zscale=50)
 #'render_snapshot()
-#'}
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Change the seed for a different set of clouds and add cloud shadows on the ground
 #'montereybay  |>
 #'  sphere_shade()  |>
@@ -206,9 +204,8 @@ generate_cloud_layer = function(
 #'render_camera(theta=-65, phi = 25, zoom = 0.45, fov = 80)
 #'render_clouds(montereybay, zscale=50, seed=2, clear_clouds = T)
 #'render_snapshot()
-#'}
 #'
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'montereybay  |>
 #'  sphere_shade()  |>
 #'  plot_3d(montereybay,background="brown",zscale=50)
@@ -216,50 +213,41 @@ generate_cloud_layer = function(
 #'#Lower the frequency for larger, smoother clouds
 #'render_clouds(montereybay, zscale=50, frequency = 0.001, clear_clouds = T)
 #'render_snapshot()
-#'}
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Increase the frequency for more broken clouds
 #'render_clouds(montereybay, zscale=50, frequency = 0.05, clear_clouds = T)
 #'render_snapshot()
-#'}
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Increase the fractal level for fluffier, bumpier clouds
 #'render_clouds(montereybay, zscale=50, fractal_levels = 32, clear_clouds = T)
 #'render_snapshot()
-#'}
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Decrease the fractal level for more smoother, continuous clouds
 #'render_clouds(montereybay, zscale=50, fractal_levels = 4, clear_clouds = T)
 #'render_snapshot()
-#'}
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Increase the cloud cover
 #'render_clouds(montereybay, zscale=50, cloud_cover=0.8, clear_clouds = T)
 #'render_snapshot()
-#'}
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Decrease the cloud cover
 #'render_clouds(montereybay, zscale=50, cloud_cover=0.2, clear_clouds = T)
 #'render_snapshot()
-#'}
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Change the altitude range of the clouds
 #'render_clouds(montereybay,zscale=50,start_altitude=2000,end_altitude = 4000, clear_clouds = T)
 #'render_snapshot()
-#'}
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Increase the number of layers
 #'render_clouds(montereybay, zscale=50,start_altitude=2000,end_altitude = 4000, layers = 20,
 #'              clear_clouds = T)
 #'render_snapshot()
-#'}
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Change the sun angle and altitude, and increase the attenuation for darker clouds
 #'render_clouds(montereybay,zscale=50,sun_angle=45, sun_altitude= 5, attenuation_coef = 5,
 #'              clear_clouds = T)
 #'render_snapshot()
-#'}
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Render the scene with a different baseshape
 #'montereybay  |>
 #'  sphere_shade()  |>
@@ -267,7 +255,6 @@ generate_cloud_layer = function(
 #'render_clouds(montereybay,zscale=50, seed=3, baseshape="hex", clear_clouds = T)
 #'render_camera(zoom=0.65)
 #'render_snapshot()
-#'}
 render_clouds = function(
 	heightmap = NULL,
 	start_altitude = 1000,
@@ -635,8 +622,7 @@ raymarch_cloud_layer = function(
 #'of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
 #'@return A 2D shadow matrix.
 #'@export
-#'@examples
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Render clouds with cloud shadows on the ground
 #'montereybay  |>
 #'  sphere_shade()  |>
@@ -645,8 +631,7 @@ raymarch_cloud_layer = function(
 #'render_camera(theta=-65, phi = 25, zoom = 0.45, fov = 80)
 #'render_clouds(montereybay, zscale=50)
 #'render_snapshot()
-#'}
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Adjust the light direction for shadows and increase the attenuation for darker clouds
 #'montereybay  |>
 #'  sphere_shade()  |>
@@ -655,7 +640,6 @@ raymarch_cloud_layer = function(
 #'render_camera(theta=-65, phi = 25, zoom = 0.45, fov = 80)
 #'render_clouds(montereybay, zscale=50)
 #'render_snapshot()
-#'}
 cloud_shade = function(
 	heightmap,
 	start_altitude = 1000,

@@ -27,12 +27,11 @@
 #'@export
 #'@examples
 #'#Plot the counties around Monterey Bay, CA
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'generate_polygon_overlay(monterey_counties_sf, palette = rainbow,
 #'                         extent = attr(montereybay,"extent"), heightmap = montereybay) |>
 #'  plot_map()
-#'}
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#These counties include the water, so we'll plot bathymetry data over the polygon
 #'#data to only include parts of the polygon that fall on land.
 #'water_palette = colorRampPalette(c("darkblue", "dodgerblue", "lightblue"))(200)
@@ -42,8 +41,7 @@
 #'                         extent = attr(montereybay,"extent"), heightmap = montereybay) |>
 #'  add_overlay(generate_altitude_overlay(bathy_hs, montereybay, start_transition = 0)) |>
 #'  plot_map()
-#'}
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Add a semi-transparent hillshade and change the palette, and remove the polygon lines
 #'montereybay |>
 #'  sphere_shade(texture = "bw") |>
@@ -54,8 +52,7 @@
 #'  add_overlay(generate_altitude_overlay(bathy_hs, montereybay, start_transition = 0)) |>
 #'  add_shadow(ray_shade(montereybay,zscale=50),0) |>
 #'  plot_map()
-#'}
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Map one of the variables in the sf object and use an explicitly defined color palette
 #'county_palette = c("087" = "red",    "053" = "blue",   "081" = "green",
 #'                   "069" = "yellow", "085" = "orange", "099" = "purple")
@@ -69,7 +66,6 @@
 #'  add_overlay(generate_altitude_overlay(bathy_hs, montereybay, start_transition = 0)) |>
 #'  add_shadow(ray_shade(montereybay,zscale=50),0.5) |>
 #'  plot_map()
-#'}
 generate_polygon_overlay = function(
 	geometry,
 	extent,

@@ -28,50 +28,49 @@ Changes the position and properties of the camera around the scene. If no
 values are entered, prints and returns the current values.
 }
 \examples{
-if(run_documentation()) {
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 montereybay |>
  sphere_shade() |>
  plot_3d(montereybay,zscale = 50, water = TRUE, waterlinecolor="white")
 render_snapshot()
-}
 
 #Shift the camera over and add a title
-if(run_documentation()) {
+\dontshow{\}) # examplesIf}
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 render_camera(theta = -45, phi = 45)
 render_snapshot(title_text = "Monterey Bay, CA",
                title_bar_color = "grey50")
-}
 
 #Shift to an overhead view (and change the text/title bar color)
-if(run_documentation()) {
+\dontshow{\}) # examplesIf}
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 render_camera(theta = 0, phi = 89.9, zoom = 0.9)
 render_snapshot(title_text = "Monterey Bay, CA",
                title_color = "white",
                title_bar_color = "darkgreen")
-}
 
 #Shift to an front view and add a vignette effect
-if(run_documentation()) {
+\dontshow{\}) # examplesIf}
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 render_camera(theta = -90, phi = 30,zoom = 0.8)
 render_snapshot(title_text = "Monterey Bay, CA",
                title_color = "white",
                title_bar_color = "blue",
                vignette = TRUE)
-}
 
 #Change the field of view (fov) and make the title bar opaque.
-if(run_documentation()) {
+\dontshow{\}) # examplesIf}
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 render_camera(theta = -90, phi = 30,zoom = 0.5,fov = 130)
 render_snapshot(title_text = "Monterey Bay, CA",
                title_color = "black",
                title_bar_alpha = 1,
                title_bar_color = "lightblue",
                vignette = TRUE)
-}
 
 #Here we render a series of frames to later stitch together into a movie.
-
-if(run_documentation()) {
+\dontshow{\}) # examplesIf}
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 phivec = 20 + 70 * 1/(1 + exp(seq(-5, 10, length.out = 180)))
 phivecfull = c(phivec, rev(phivec))
 thetavec = 270 + 45 * sin(seq(0,359,length.out = 360) * pi/180)
@@ -92,5 +91,5 @@ for(i in 1:360) {
 #Or we can use render_movie() to do this all automatically with type="custom" (uncomment to run):
 #render_movie(filename = tempfile(fileext = ".mp4"), type = "custom",
 #             theta = thetavec, phi = phivecfull, zoom = zoomvec, fov=0)
-}
+\dontshow{\}) # examplesIf}
 }

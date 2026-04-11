@@ -132,6 +132,6 @@ If no x/y coordinates are passed in, the raymesh will be plotted in the coordina
 in the proper location (but for ease of use, use \code{\link[=render_multipolygonz]{render_multipolygonz()}} to plot this data directly).
 }
 \examples{
-if(run_documentation()) {
-}
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
+\dontshow{\}) # examplesIf}
 }

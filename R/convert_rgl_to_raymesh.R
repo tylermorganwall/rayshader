@@ -12,13 +12,12 @@
 #'@examples
 #'filename_obj = tempfile(fileext = ".obj")
 #'#Save model of volcano
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'volcano |>
 #'  sphere_shade() |>
 #'  plot_3d(volcano, zscale = 2)
 #'
 #'rm_obj = convert_rgl_to_raymesh()
-#'}
 convert_rgl_to_raymesh = function(
 	save_shadow = TRUE,
 	water_attenuation = 0,

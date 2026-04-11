@@ -9,51 +9,45 @@
 #'@param fov Defaults to current value. Field of view of the camera. Maximum `180`.
 #'@param shift_vertical Default `0`. Amount to shift the viewpoint.
 #'@export
-#'@examples
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'montereybay |>
 #'  sphere_shade() |>
 #'  plot_3d(montereybay,zscale = 50, water = TRUE, waterlinecolor="white")
 #'render_snapshot()
-#'}
 #'
 #'#Shift the camera over and add a title
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'render_camera(theta = -45, phi = 45)
 #'render_snapshot(title_text = "Monterey Bay, CA",
 #'                title_bar_color = "grey50")
-#'}
 #'
 #'#Shift to an overhead view (and change the text/title bar color)
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'render_camera(theta = 0, phi = 89.9, zoom = 0.9)
 #'render_snapshot(title_text = "Monterey Bay, CA",
 #'                title_color = "white",
 #'                title_bar_color = "darkgreen")
-#'}
 #'
 #'#Shift to an front view and add a vignette effect
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'render_camera(theta = -90, phi = 30,zoom = 0.8)
 #'render_snapshot(title_text = "Monterey Bay, CA",
 #'                title_color = "white",
 #'                title_bar_color = "blue",
 #'                vignette = TRUE)
-#'}
 #'
 #'#Change the field of view (fov) and make the title bar opaque.
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'render_camera(theta = -90, phi = 30,zoom = 0.5,fov = 130)
 #'render_snapshot(title_text = "Monterey Bay, CA",
 #'                title_color = "black",
 #'                title_bar_alpha = 1,
 #'                title_bar_color = "lightblue",
 #'                vignette = TRUE)
-#'}
 #'
 #'#Here we render a series of frames to later stitch together into a movie.
 #'
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'phivec = 20 + 70 * 1/(1 + exp(seq(-5, 10, length.out = 180)))
 #'phivecfull = c(phivec, rev(phivec))
 #'thetavec = 270 + 45 * sin(seq(0,359,length.out = 360) * pi/180)
@@ -74,7 +68,6 @@
 #'#Or we can use render_movie() to do this all automatically with type="custom" (uncomment to run):
 #'#render_movie(filename = tempfile(fileext = ".mp4"), type = "custom",
 #'#             theta = thetavec, phi = phivecfull, zoom = zoomvec, fov=0)
-#'}
 render_camera = function(
 	theta = NULL,
 	phi = NULL,

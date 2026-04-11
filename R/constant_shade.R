@@ -9,30 +9,26 @@
 #'@param alpha Default `1`, the alpha transparency.
 #'@return RGB array of a single color layer.
 #'@export
-#'@examples
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Shade a red map
 #'montereybay |>
 #'  constant_shade("red") |>
 #'  add_shadow(lamb_shade(montereybay),0) |>
 #'  plot_map()
-#'}
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Shade a green map
 #'montereybay |>
 #'  constant_shade("green") |>
 #'  add_shadow(lamb_shade(montereybay),0) |>
 #'  plot_map()
-#'}
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Add a blue tint
 #'montereybay |>
 #'  height_shade() |>
 #'  add_overlay(constant_shade(montereybay, "dodgerblue", alpha=0.25)) |>
 #'  add_shadow(lamb_shade(montereybay,zscale=50),0) |>
 #'  plot_map()
-#'}
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Use a blank map on which to draw other data
 #'montereybay |>
 #'  constant_shade() |>
@@ -41,7 +37,6 @@
 #'                                    alphalayer=0.8)  |>
 #'  add_water(detect_water(montereybay < 0), "dodgerblue") |>
 #'  plot_map()
-#'}
 constant_shade = function(heightmap, color = "white", alpha = 1) {
 	heightmap_missing = missing(heightmap)
 	heightmap_cache_label = format_scene_cache_label(deparse(substitute(heightmap)))

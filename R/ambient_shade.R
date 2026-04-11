@@ -19,25 +19,22 @@
 #'@export
 #'@examples
 #'#Here we produce a ambient occlusion map of the `montereybay` elevation map.
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'plot_map(ambient_shade(heightmap = montereybay))
-#'}
 #'
 #'#We can increase the distance to look for surface intersections `maxsearch`
 #'#and the density of rays sent out around the point `sunbreaks`.
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'plot_map(ambient_shade(montereybay, sunbreaks = 24,maxsearch = 100, multicore=TRUE))
-#'}
 #'#Create the Red Relief Image Map (RRIM) technique using a custom texture and ambient_shade(),
 #'#with an addition lambertian layer added with lamb_shade() to improve topographic clarity.
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'bigmb = resize_matrix(montereybay, scale=2, method="cubic")
 #'bigmb |>
 #'  sphere_shade(zscale=3, texture = create_texture("red","red","red","red","white")) |>
 #'  add_shadow(ambient_shade(bigmb, maxsearch = 100, multicore = TRUE,zscale=1),0) |>
 #'  add_shadow(lamb_shade(bigmb),0.5) |>
 #'  plot_map()
-#'}
 ambient_shade = function(
 	heightmap,
 	anglebreaks = 90 * cospi(seq(5, 85, by = 5) / 180),

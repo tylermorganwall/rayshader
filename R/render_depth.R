@@ -74,8 +74,7 @@
 #'@param ... Additional parameters to pass to `rayvertex::rasterize_scene()`.
 #'@return 4-layer RGBA array.
 #'@export
-#'@examples
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'montereybay |>
 #'  sphere_shade() |>
 #'  plot_3d(montereybay,zscale=50, water=TRUE, waterlinecolor="white",
@@ -83,24 +82,20 @@
 #'
 #'#Preview where the focal plane lies
 #'render_depth(preview_focus=TRUE)
-#'}
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Render the depth of field effect
 #'render_depth(focallength = 300)
-#'}
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Add a chromatic aberration effect
 #'render_depth(focallength = 300, aberration = 0.3)
-#'}
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Render the depth of field effect, ignoring water and re-drawing the waterlayer
 #'render_depth(preview_focus=TRUE,
 #'             heightmap = montereybay, zscale=50, focallength=300, transparent_water=TRUE)
 #'render_depth(heightmap = montereybay, zscale=50, focallength=300, transparent_water=TRUE)
 #'render_camera(theta=45,zoom=0.15,phi=20)
-#'}
 #'
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Change the bokeh shape and intensity
 #'render_depth(focus=900, bokehshape = "circle",focallength=500,bokehintensity=30,
 #'             title_text = "Circular Bokeh", title_size = 30, title_color = "white",
@@ -108,14 +103,12 @@
 #'render_depth(focus=900, bokehshape = "hex",focallength=500,bokehintensity=30,
 #'             title_text = "Hexagonal Bokeh", title_size = 30, title_color = "white",
 #'             title_bar_color = "black")
-#'}
 #'
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Add a title and vignette effect.
 #'render_camera(theta=0,zoom=0.7,phi=30)
 #'render_depth(focallength = 250, title_text = "Monterey Bay, CA",
 #'             title_size = 20, title_color = "white", title_bar_color = "black", vignette = TRUE)
-#'}
 render_depth = function(
   focus = NULL,
   focallength = 100,

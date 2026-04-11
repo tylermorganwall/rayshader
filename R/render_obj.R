@@ -60,8 +60,7 @@
 #'@param rgl_tag Default `""`. Tag to add to the rgl scene id, will be prefixed by `"obj"`
 #'@param ... Additional arguments to pass to `rgl::triangles3d()`.
 #'@export
-#'@examples
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Render the 3D map
 #'moss_landing_coord = c(36.806807, -121.793332)
 #'montereybay |>
@@ -80,8 +79,7 @@
 #'           scale=c(2,2,2), angle=c(0,45,0),
 #'           zscale=50, color=rainbow(100), smooth = FALSE, clear_previous = TRUE)
 #'render_snapshot()
-#'}
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Rotate the flag to follow the circle
 #'render_obj(flag_full_obj(), extent = attr(montereybay,"extent"), heightmap = montereybay,
 #'           y = unlist(circle_coords_lat), x = unlist(circle_coords_long),
@@ -89,8 +87,7 @@
 #'           angle=matrix(c(rep(0,100), seq(0,-360,length.out=101)[-1],rep(0,100)),ncol=3),
 #'           zscale=50, color=rainbow(100), smooth = FALSE, clear_previous = TRUE)
 #'render_snapshot()
-#'}
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Style the pole with a different color
 #'render_obj(flag_pole_obj(), extent = attr(montereybay,"extent"), heightmap = montereybay,
 #'           y = unlist(circle_coords_lat), x = unlist(circle_coords_long),
@@ -105,7 +102,6 @@
 #'
 #'#And all of these work with `render_highquality()`
 #'render_highquality(samples = 16)
-#'}
 render_obj = function(
 	filename,
 	extent = NULL,

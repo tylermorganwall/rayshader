@@ -91,7 +91,7 @@ to calculate the distance to the coast. This distance matrix can be returned dir
 the \code{return_distance_matrix} argument to \code{TRUE}.
 }
 \examples{
-if(run_documentation()) {
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Create a flat body of water for Monterey Bay
 montbay = montereybay
 montbay[montbay < 0] = 0
@@ -104,60 +104,60 @@ basemap = montbay |>
   add_shadow(lamb_shade(montbay,zscale=50),0)
 
 plot_map(basemap)
-}
-if(run_documentation()) {
+\dontshow{\}) # examplesIf}
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Add waterlines
 basemap |>
   add_overlay(generate_waterline_overlay(montbay)) |>
   plot_map()
-}
-if(run_documentation()) {
+\dontshow{\}) # examplesIf}
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Change minimum line distance:
 basemap |>
   add_overlay(generate_waterline_overlay(montbay, min = 0.02)) |>
   plot_map()
-}
-if(run_documentation()) {
+\dontshow{\}) # examplesIf}
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Change maximum line distance
 basemap |>
   add_overlay(generate_waterline_overlay(montbay, max = 0.4)) |>
   plot_map()
-}
-if(run_documentation()) {
+\dontshow{\}) # examplesIf}
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Smooth waterlines
 basemap |>
   add_overlay(generate_waterline_overlay(montbay, max = 0.4, smooth=2)) |>
   plot_map()
-}
-if(run_documentation()) {
+\dontshow{\}) # examplesIf}
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Increase number of breaks
 basemap |>
   add_overlay(generate_waterline_overlay(montbay, breaks = 20, max=0.4)) |>
   plot_map()
-}
-if(run_documentation()) {
+\dontshow{\}) # examplesIf}
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Make lines evenly spaced:
 basemap |>
   add_overlay(generate_waterline_overlay(montbay, evenly_spaced = TRUE)) |>
   plot_map()
-}
-if(run_documentation()) {
+\dontshow{\}) # examplesIf}
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Change variable distance between each line
 basemap |>
   add_overlay(generate_waterline_overlay(montbay, falloff=1.5)) |>
   plot_map()
-}
-if(run_documentation()) {
+\dontshow{\}) # examplesIf}
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Turn off fading
 basemap |>
   add_overlay(generate_waterline_overlay(montbay, fade=FALSE)) |>
   plot_map()
-}
-if(run_documentation()) {
+\dontshow{\}) # examplesIf}
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Fill up the entire body of water with lines and make them all 50\% transparent
 basemap |>
   add_overlay(generate_waterline_overlay(montbay, fade=FALSE, max=1, alpha = 0.5, color="white",
                                          evenly_spaced = TRUE, breaks=50)) |>
   plot_map()
-}
+\dontshow{\}) # examplesIf}
 }

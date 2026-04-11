@@ -18,73 +18,71 @@
 #'@export
 #'@examples
 #'#Combining base R plotting with rayshader's spherical color mapping and raytracing:
-#'if(run_documentation()) {
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'montereybay |>
 #'   sphere_shade() |>
 #'   add_overlay(height_shade(montereybay),alphalayer = 0.6)  |>
 #'   add_shadow(ray_shade(montereybay,zscale=50)) |>
 #'   plot_map()
-#'}
 #'
-#'if(run_documentation()) {
-#'#Add contours with `generate_contour_overlay()`
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
+#'# Add contours with `generate_contour_overlay()`
 #'montereybay |>
 #'   height_shade() |>
 #'   add_overlay(generate_contour_overlay(montereybay))  |>
 #'   add_shadow(ray_shade(montereybay,zscale=50)) |>
 #'   plot_map()
-#'}
 add_overlay = function(
-  hillshade = NULL,
-  overlay = NULL,
-  alphalayer = 1,
-  alphacolor = NULL,
-  alphamethod = "max",
-  color_epsilon = 1e-3,
-  rescale_original = FALSE
+	hillshade = NULL,
+	overlay = NULL,
+	alphalayer = 1,
+	alphacolor = NULL,
+	alphamethod = "max",
+	color_epsilon = 1e-3,
+	rescale_original = FALSE
 ) {
-  force(hillshade)
-  if (any(alphalayer > 1 || alphalayer < 0)) {
-    stop("Argument `alphalayer` must not be less than 0 or more than 1")
-  }
-  overlay = rayimage::ray_read_image(overlay)
+	force(hillshade)
+	if (any(alphalayer > 1 || alphalayer < 0)) {
+		stop("Argument `alphalayer` must not be less than 0 or more than 1")
+	}
+	overlay = rayimage::ray_read_image(overlay)
 
-  if (alphalayer != 1) {
-    if (alphamethod == "max") {
-      overlay[,, 4][overlay[,, 4] > alphalayer] = alphalayer
-    } else {
-      overlay[,, 4] = alphalayer
-    }
-  }
-  eq = function(x, y) abs(x - y) < color_epsilon
-  if (!is.null(alphacolor)) {
-    colorvals = col2rgb_linear(alphacolor)
-    alphalayer1 = eq(overlay[,, 1], colorvals[1]) &
-      eq(overlay[,, 2], colorvals[2]) &
-      eq(overlay[,, 3], colorvals[3])
-    temp_over = overlay[,, 4]
-    temp_over[alphalayer1] = 0
-    overlay[,, 4] = temp_over
-  }
-  if (is.null(hillshade)) {
-    return(overlay)
-  }
-  if (is.null(overlay)) {
-    return(hillshade)
-  }
-  if (length(dim(hillshade)) == 2) {
-    rayimage::render_image_overlay(
-      fliplr(t(hillshade)),
-      overlay,
-      alpha = alphalayer,
-      rescale_original = rescale_original
-    )
-  } else {
-    rayimage::render_image_overlay(
-      hillshade,
-      overlay,
-      alpha = alphalayer,
-      rescale_original = rescale_original
-    )
-  }
+	if (alphalayer != 1) {
+		if (alphamethod == "max") {
+			overlay[,, 4][overlay[,, 4] > alphalayer] = alphalayer
+		} else {
+			overlay[,, 4] = alphalayer
+		}
+	}
+	eq = function(x, y) abs(x - y) < color_epsilon
+	if (!is.null(alphacolor)) {
+		colorvals = col2rgb_linear(alphacolor)
+		alphalayer1 = eq(overlay[,, 1], colorvals[1]) &
+			eq(overlay[,, 2], colorvals[2]) &
+			eq(overlay[,, 3], colorvals[3])
+		temp_over = overlay[,, 4]
+		temp_over[alphalayer1] = 0
+		overlay[,, 4] = temp_over
+	}
+	if (is.null(hillshade)) {
+		return(overlay)
+	}
+	if (is.null(overlay)) {
+		return(hillshade)
+	}
+	if (length(dim(hillshade)) == 2) {
+		rayimage::render_image_overlay(
+			fliplr(t(hillshade)),
+			overlay,
+			alpha = alphalayer,
+			rescale_original = rescale_original
+		)
+	} else {
+		rayimage::render_image_overlay(
+			hillshade,
+			overlay,
+			alpha = alphalayer,
+			rescale_original = rescale_original
+		)
+	}
 }

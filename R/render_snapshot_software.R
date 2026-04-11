@@ -46,7 +46,7 @@ render_snapshot_software = function(
   rayvertex_shadow_map = FALSE,
   ...
 ) {
-  if (run_documentation()) {
+  if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) {
     fsaa = 2
   }
   if (rgl::cur3d() == 0) {
