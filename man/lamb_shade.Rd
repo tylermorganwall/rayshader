@@ -30,6 +30,8 @@ Matrix of light intensities at each point.
 Calculates local shadow map for a elevation matrix by calculating the dot
 product between light direction and the surface normal vector at that point. Each point's
 intensity is proportional to the cosine of the normal vector.
+
+Cache fallback messages are disabled by default. Set \code{options(rayshader.verbose_scene_cache = TRUE)} to print when cached metadata is reused.
 }
 \examples{
 if(run_documentation()) {

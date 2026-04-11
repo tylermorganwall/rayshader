@@ -7,6 +7,8 @@
 #'the size of the crown (the leafy part of the tree) and the trunk, the overall scale of the tree, and the rotation angle around the x, y, and z axes.
 #'Users can also specify the minimum and maximum height of the trees to be rendered.
 #'
+#'Cache fallback messages are disabled by default. Set `options(rayshader.verbose_scene_cache = TRUE)` to print when cached metadata is reused.
+#'
 #'@param x Vector of x coordinates (or other coordinate in the same coordinate reference system as extent).
 #'@param y Vector of y coordinates (or other coordinate in the same coordinate reference system as extent).
 #'@param lat Default `NULL`. Alias for `y` for geographic workflows.

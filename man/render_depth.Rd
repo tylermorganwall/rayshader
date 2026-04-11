@@ -45,6 +45,7 @@ render_depth(
   cache_scene = FALSE,
   reset_scene_cache = FALSE,
   print_scene_info = FALSE,
+  verbose = FALSE,
   instant_capture = interactive(),
   clear = FALSE,
   bring_to_front = FALSE,
@@ -150,6 +151,8 @@ each time \code{\link[=render_snapshot]{render_snapshot()}} is called. If \code{
 
 \item{print_scene_info}{Default \code{FALSE}. If \code{TRUE}, it will print the position and lookat point of the camera.}
 
+\item{verbose}{Default \code{FALSE}. If \code{TRUE}, prints additional render diagnostics such as the auto-derived focus distance.}
+
 \item{instant_capture}{Default \code{TRUE} if interactive, \code{FALSE} otherwise. If \code{FALSE}, a slight delay is added
 before taking the snapshot. This can help stop prevent rendering issues when running scripts.}
 
@@ -164,6 +167,8 @@ before taking the snapshot. This can help stop prevent rendering issues when run
 }
 \description{
 Adds depth of field to the current RGL scene by simulating a synthetic aperture.
+
+Cache fallback messages are disabled by default. Set \code{options(rayshader.verbose_scene_cache = TRUE)} to print when cached metadata is reused.
 
 The size of the circle of confusion is determined by the following formula (z_depth is from the image's depth map).
 

@@ -1576,7 +1576,7 @@ emit_scene_cache_message = function(caller, argument_name, cache_name, cache_lab
 	if (is.null(caller) || !nzchar(caller)) {
 		return(invisible(NULL))
 	}
-	if (!isTRUE(getOption("rayshader.verbose_scene_cache", interactive()))) {
+	if (!isTRUE(getOption("rayshader.verbose_scene_cache", FALSE))) {
 		return(invisible(NULL))
 	}
 	cache_label = format_scene_cache_label(cache_label)

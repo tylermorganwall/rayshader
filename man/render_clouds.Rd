@@ -76,6 +76,8 @@ Adds a 3D floating cloud layer to the map. No return value.
 \description{
 Render a 3D floating cloud layer of the map.
 
+Cache fallback messages are disabled by default. Set \code{options(rayshader.verbose_scene_cache = TRUE)} to print when cached metadata is reused.
+
 Note: Underlying layers with transparency can cause rendering issues in rgl.
 }
 \examples{

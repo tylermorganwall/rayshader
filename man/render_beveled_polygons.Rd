@@ -139,6 +139,8 @@ or absolute.}
 \description{
 Adds beveled polygon to the scene using the \code{raybevel} package. See
 the \code{raybevel::generate_beveled_polygon()} function for more information.
+
+Cache fallback messages are disabled by default. Set \code{options(rayshader.verbose_scene_cache = TRUE)} to print when cached metadata is reused.
 }
 \examples{
 

@@ -44,6 +44,8 @@ Shaded texture map.
 }
 \description{
 Calculates Ambient Occlusion Shadow Map
+
+Cache fallback messages are disabled by default. Set \code{options(rayshader.verbose_scene_cache = TRUE)} to print when cached metadata is reused.
 }
 \examples{
 #Here we produce a ambient occlusion map of the `montereybay` elevation map.

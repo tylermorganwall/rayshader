@@ -3,6 +3,8 @@
 #'@description Adds MULTIPOLYGONZ will be plotted in the coordinate system set by the user-specified
 #'`extent` argument as-is.
 #'
+#'Cache fallback messages are disabled by default. Set `options(rayshader.verbose_scene_cache = TRUE)` to print when cached metadata is reused.
+#'
 #'You can also use [save_multipolygonz_to_obj()] manually to convert sf objects
 #'
 #'@param sfobj An sf object with MULTIPOLYGON Z geometry.

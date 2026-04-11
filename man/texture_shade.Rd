@@ -43,6 +43,8 @@ fourier transform. Only increase this if you encounter boundary effects.}
 \description{
 Calculates a shadow for each point on the surface using the method described by
 Leland Brown in "Texture Shading: A New Technique for Depicting Terrain Relief."
+
+Cache fallback messages are disabled by default. Set \code{options(rayshader.verbose_scene_cache = TRUE)} to print when cached metadata is reused.
 }
 \examples{
 #Create a direct mapping of elevation to color:

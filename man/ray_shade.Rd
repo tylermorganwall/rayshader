@@ -60,6 +60,8 @@ Matrix of light intensities at each point.
 \description{
 Calculates shadow map for a elevation matrix by propogating rays from each matrix point to the light source(s),
 lowering the brightness at each point for each ray that intersects the surface.
+
+Cache fallback messages are disabled by default. Set \code{options(rayshader.verbose_scene_cache = TRUE)} to print when cached metadata is reused.
 }
 \examples{
 #First we ray trace the Monterey Bay dataset.

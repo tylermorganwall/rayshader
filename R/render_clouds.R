@@ -158,6 +158,8 @@ generate_cloud_layer = function(
 #'
 #'@description Render a 3D floating cloud layer of the map.
 #'
+#'Cache fallback messages are disabled by default. Set `options(rayshader.verbose_scene_cache = TRUE)` to print when cached metadata is reused.
+#'
 #'Note: Underlying layers with transparency can cause rendering issues in rgl.
 #'
 #'@param heightmap Default `NULL`. Height matrix for the current scene. If omitted, this is taken from the cached scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value.

@@ -130,6 +130,8 @@ Different types of tree models can be used, including a basic and a cone-shaped 
 OBJ format. The function allows customization of various aspects of the tree, including the color of the crown and the trunk,
 the size of the crown (the leafy part of the tree) and the trunk, the overall scale of the tree, and the rotation angle around the x, y, and z axes.
 Users can also specify the minimum and maximum height of the trees to be rendered.
+
+Cache fallback messages are disabled by default. Set \code{options(rayshader.verbose_scene_cache = TRUE)} to print when cached metadata is reused.
 }
 \examples{
 if(run_documentation()) {

@@ -23,6 +23,8 @@ RGB array of hillshaded texture mappings.
 }
 \description{
 Calculates a color for each point on the surface using a direct elevation-to-color mapping.
+
+Cache fallback messages are disabled by default. Set \code{options(rayshader.verbose_scene_cache = TRUE)} to print when cached metadata is reused.
 }
 \examples{
 #Create a direct mapping of elevation to color:

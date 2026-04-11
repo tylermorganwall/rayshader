@@ -2,6 +2,8 @@
 #'
 #'@description Adds water layer to the scene, removing the previous water layer if desired.
 #'
+#'Cache fallback messages are disabled by default. Set `options(rayshader.verbose_scene_cache = TRUE)` to print when cached metadata is reused.
+#'
 #'@param heightmap Default `NULL`. Height matrix for the current scene. If omitted, this is taken from the cached scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value.
 #'@param waterdepth Default `0`.
 #'@param watercolor Default `lightblue`.

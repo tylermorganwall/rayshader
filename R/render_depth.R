@@ -2,6 +2,8 @@
 #'
 #'@description Adds depth of field to the current RGL scene by simulating a synthetic aperture.
 #'
+#'Cache fallback messages are disabled by default. Set `options(rayshader.verbose_scene_cache = TRUE)` to print when cached metadata is reused.
+#'
 #'The size of the circle of confusion is determined by the following formula (z_depth is from the image's depth map).
 #'
 #'\code{abs(z_depth-focus)*focal_length^2/(f_stop*z_depth*(focus - focal_length))}
@@ -68,6 +70,7 @@
 #'be derived from the rgl window.
 #'@param text_offset Default `c(0,0,0)`. Offset to be applied to all text labels.
 #'@param print_scene_info Default `FALSE`. If `TRUE`, it will print the position and lookat point of the camera.
+#'@param verbose Default `FALSE`. If `TRUE`, prints additional render diagnostics such as the auto-derived focus distance.
 #'@param ... Additional parameters to pass to `rayvertex::rasterize_scene()`.
 #'@return 4-layer RGBA array.
 #'@export
@@ -154,6 +157,7 @@ render_depth = function(
   cache_scene = FALSE,
   reset_scene_cache = FALSE,
   print_scene_info = FALSE,
+  verbose = FALSE,
   instant_capture = interactive(),
   clear = FALSE,
   bring_to_front = FALSE,
@@ -209,7 +213,9 @@ render_depth = function(
     observerz = cospi(phi / 180) * cospi(theta / 180) * observer_radius
 
     focus = sqrt(observerx^2 + observery^2 + observerz^2)
-    message(sprintf("Focus distance: %g", focus))
+    if (isTRUE(verbose)) {
+      message(sprintf("Focus distance: %g", focus))
+    }
   }
   if (rgl::rgl.useNULL()) {
     software_render = TRUE

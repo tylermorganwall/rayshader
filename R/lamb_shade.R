@@ -4,6 +4,8 @@
 #'product between light direction and the surface normal vector at that point. Each point's
 #'intensity is proportional to the cosine of the normal vector.
 #'
+#'Cache fallback messages are disabled by default. Set `options(rayshader.verbose_scene_cache = TRUE)` to print when cached metadata is reused.
+#'
 #'@param heightmap A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.
 #'@param sunaltitude Default `45`. The azimuth angle as measured from the horizon from which the light originates.
 #'@param sunangle Default `315` (NW). The angle around the matrix from which the light originates.

@@ -2,6 +2,8 @@
 #'
 #'@description Places a compass on the map to specify the North direction.
 #'
+#'Cache fallback messages are disabled by default. Set `options(rayshader.verbose_scene_cache = TRUE)` to print when cached metadata is reused.
+#'
 #
 #'@param angle Default `0`. The direction the arrow should be facing.
 #'@param position Default `SE`. A string representing a cardinal direction. Ignored if `x`, `y`, and `z`
@@ -319,4 +321,5 @@ render_compass = function(
 		tag = "background_symbol",
 		skipRedraw = FALSE
 	)
+	invisible(NULL)
 }

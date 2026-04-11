@@ -64,6 +64,8 @@ rayshader coordinates, but data is often provided with Z being vertical).}
 Adds MULTIPOLYGONZ will be plotted in the coordinate system set by the user-specified
 \code{extent} argument as-is.
 
+Cache fallback messages are disabled by default. Set \code{options(rayshader.verbose_scene_cache = TRUE)} to print when cached metadata is reused.
+
 You can also use \code{\link[=save_multipolygonz_to_obj]{save_multipolygonz_to_obj()}} manually to convert sf objects
 }
 \examples{

@@ -122,4 +122,5 @@ render_camera = function(
 	if (allmissing) {
 		return(c("theta" = theta, "phi" = phi, "zoom" = zoom, "fov" = fov))
 	}
+	invisible(NULL)
 }

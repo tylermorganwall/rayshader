@@ -5,6 +5,8 @@
 #'above the heightmap. If the points goes off the edge, the nearest height on the heightmap will be used (unless that
 #'value is NA, in which the point will be removed).
 #'
+#'Cache fallback messages are disabled by default. Set `options(rayshader.verbose_scene_cache = TRUE)` to print when cached metadata is reused.
+#'
 #'@param x Vector of x coordinates (or other coordinate in the same coordinate reference system as extent).
 #'@param y Vector of y coordinates (or other coordinate in the same coordinate reference system as extent).
 #'@param lat Default `NULL`. Alias for `y` for geographic workflows.
@@ -258,4 +260,5 @@ render_points = function(
     heightmap = heightmap,
     caller = "render_points"
   )
+  invisible(NULL)
 }

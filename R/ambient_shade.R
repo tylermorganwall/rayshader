@@ -2,6 +2,8 @@
 #'
 #'@description Calculates Ambient Occlusion Shadow Map
 #'
+#'Cache fallback messages are disabled by default. Set `options(rayshader.verbose_scene_cache = TRUE)` to print when cached metadata is reused.
+#'
 #'@param heightmap  A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.
 #'@param anglebreaks Default `90*cospi(seq(5, 85,by =5)/180)`. The angle(s), in degrees, as measured from the horizon from which the light originates.
 #'@param sunbreaks Default `24`. Number of rays to be sent out in a circle, evenly spaced, around the point being tested.

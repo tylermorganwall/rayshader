@@ -80,6 +80,8 @@ coerce_plot_3d_heightmap = function(heightmap) {
 #'
 #'@description Displays the shaded map in 3D with the `rgl` package.
 #'
+#'Cache fallback messages are disabled by default. Set `options(rayshader.verbose_scene_cache = TRUE)` to print when cached metadata is reused.
+#'
 #'Note: Calling [plot_3d()] resets the scene cache for the [render_snapshot()], [render_depth()], and [render_highquality()]
 #'
 #'@param hillshade Hillshade/image to be added to 3D surface map.

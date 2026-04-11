@@ -2,6 +2,8 @@
 #'
 #'@description Generates a constant color layer.
 #'
+#'Cache fallback messages are disabled by default. Set `options(rayshader.verbose_scene_cache = TRUE)` to print when cached metadata is reused.
+#'
 #'@param heightmap A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
 #'@param color Default `"white"`. Color for the constant layer.
 #'@param alpha Default `1`, the alpha transparency.

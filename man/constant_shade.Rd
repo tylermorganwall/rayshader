@@ -18,6 +18,8 @@ RGB array of a single color layer.
 }
 \description{
 Generates a constant color layer.
+
+Cache fallback messages are disabled by default. Set \code{options(rayshader.verbose_scene_cache = TRUE)} to print when cached metadata is reused.
 }
 \examples{
 if(run_documentation()) {

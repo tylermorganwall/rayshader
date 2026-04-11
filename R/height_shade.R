@@ -2,6 +2,8 @@
 #'
 #'@description Calculates a color for each point on the surface using a direct elevation-to-color mapping.
 #'
+#'Cache fallback messages are disabled by default. Set `options(rayshader.verbose_scene_cache = TRUE)` to print when cached metadata is reused.
+#'
 #'@param heightmap A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
 #'@param texture Default `terrain.colors(256)`. A color palette for the plot.
 #'@param range Default `NULL`, the full range of the heightmap. A length-2 vector specifying the maximum

@@ -4,6 +4,8 @@
 #' hemispherical UV mapping. This uses either a texture map provided by the user (as an RGB array),
 #' or a built-in color texture.
 #'
+#'Cache fallback messages are disabled by default. Set `options(rayshader.verbose_scene_cache = TRUE)` to print when cached metadata is reused.
+#'
 #'@param heightmap A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.
 #'@param sunangle Default `315` (NW). The direction of the main highlight color (derived from the built-in palettes or the [create_texture()] function).
 #'@param texture Default `imhof1`. Either a square matrix indicating the spherical texture mapping, or a string indicating one

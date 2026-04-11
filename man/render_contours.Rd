@@ -47,6 +47,8 @@ of \code{n} colors, or a character vector with colors that specifies each color 
 }
 \description{
 Adds 3D contours to the current scene, using the heightmap of the 3D surface.
+
+Cache fallback messages are disabled by default. Set \code{options(rayshader.verbose_scene_cache = TRUE)} to print when cached metadata is reused.
 }
 \examples{
 #Add contours to the montereybay dataset

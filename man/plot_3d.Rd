@@ -172,6 +172,8 @@ If omitted and \code{heightmap} is a spatial raster, extent is extracted automat
 \description{
 Displays the shaded map in 3D with the \code{rgl} package.
 
+Cache fallback messages are disabled by default. Set \code{options(rayshader.verbose_scene_cache = TRUE)} to print when cached metadata is reused.
+
 Note: Calling \code{\link[=plot_3d]{plot_3d()}} resets the scene cache for the \code{\link[=render_snapshot]{render_snapshot()}}, \code{\link[=render_depth]{render_depth()}}, and \code{\link[=render_highquality]{render_highquality()}}
 }
 \examples{

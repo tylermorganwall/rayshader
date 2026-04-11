@@ -3,6 +3,8 @@
 #'@description Adds 3D polygons to the current scene, using latitude/longitude or coordinates in the reference
 #'system defined by the extent object.
 #'
+#'Cache fallback messages are disabled by default. Set `options(rayshader.verbose_scene_cache = TRUE)` to print when cached metadata is reused.
+#'
 #' @param polygon `sf` object, "SpatialPolygon" `sp` object,  or xy coordinates
 #' of polygon represented in a way that can be processed by `xy.coords()`.  If
 #' xy-coordinate based polygons are open, they will be closed by adding an
@@ -335,4 +337,5 @@ render_polygons = function(
 		heightmap = heightmap,
 		caller = "render_polygons"
 	)
+	invisible(NULL)
 }

@@ -97,6 +97,8 @@ or absolute.}
 \description{
 Adds 3D polygons to the current scene, using latitude/longitude or coordinates in the reference
 system defined by the extent object.
+
+Cache fallback messages are disabled by default. Set \code{options(rayshader.verbose_scene_cache = TRUE)} to print when cached metadata is reused.
 }
 \examples{
 if(run_documentation()) {

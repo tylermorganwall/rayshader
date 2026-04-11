@@ -119,6 +119,8 @@ plotting the line.}
 Adds a 3D path to the current scene, using x/y coordinates in the reference
 system defined by the extent object. If no altitude is provided, the path will be elevated a constant offset
 above the heightmap. If the path goes off the edge, the nearest height on the heightmap will be used.
+
+Cache fallback messages are disabled by default. Set \code{options(rayshader.verbose_scene_cache = TRUE)} to print when cached metadata is reused.
 }
 \examples{
 if(run_documentation()) {

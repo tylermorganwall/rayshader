@@ -38,6 +38,8 @@ RGB array of hillshaded texture mappings.
 Calculates a color for each point on the surface using the surface normals and
 hemispherical UV mapping. This uses either a texture map provided by the user (as an RGB array),
 or a built-in color texture.
+
+Cache fallback messages are disabled by default. Set \code{options(rayshader.verbose_scene_cache = TRUE)} to print when cached metadata is reused.
 }
 \examples{
 #Basic example:

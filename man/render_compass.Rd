@@ -62,6 +62,8 @@ Adds compass to map. No return value.
 }
 \description{
 Places a compass on the map to specify the North direction.
+
+Cache fallback messages are disabled by default. Set \code{options(rayshader.verbose_scene_cache = TRUE)} to print when cached metadata is reused.
 }
 \examples{
 #Add a North arrow to the map, by default in the bottom right (SE)

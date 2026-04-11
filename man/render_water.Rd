@@ -38,6 +38,8 @@ of 1 meter and the grid values are separated by 10 meters, \code{zscale} would b
 }
 \description{
 Adds water layer to the scene, removing the previous water layer if desired.
+
+Cache fallback messages are disabled by default. Set \code{options(rayshader.verbose_scene_cache = TRUE)} to print when cached metadata is reused.
 }
 \examples{
 if(run_documentation()) {

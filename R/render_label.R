@@ -2,6 +2,8 @@
 #'
 #'@description Adds a marker and label to the current 3D plot
 #'
+#'Cache fallback messages are disabled by default. Set `options(rayshader.verbose_scene_cache = TRUE)` to print when cached metadata is reused.
+#'
 #'@param heightmap Default `NULL`. Height matrix for the current scene. If omitted, this is taken from the cached scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value.
 #'@param text The label text.
 #'@param y Default `NULL`. Y coordinate for the label in the same coordinate reference system as `extent`.
@@ -509,6 +511,7 @@ render_label = function(
 		)
 		par3d(ignoreExtent = ignoreex)
 	}
+	invisible(NULL)
 }
 
 resolve_render_label_text_angle = function(text_angle = NULL, default_angle) {

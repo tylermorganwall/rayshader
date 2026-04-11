@@ -48,6 +48,8 @@ Adds a 3D floating layer to the map. No return value.
 \description{
 Render a 2D floating overlay over the map.
 
+Cache fallback messages are disabled by default. Set \code{options(rayshader.verbose_scene_cache = TRUE)} to print when cached metadata is reused.
+
 Note: Multiple layers with transparency can cause rendering issues in rgl.
 }
 \examples{

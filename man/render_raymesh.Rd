@@ -125,6 +125,8 @@ Adds 3D raymesh model to the current scene, using x/y coordinates in the referen
 system defined by the extent object. If no altitude is provided, the raymesh will be elevated a constant offset
 above the heightmap. If the raymesh goes off the edge, the raymesh will be filtered out.
 
+Cache fallback messages are disabled by default. Set \code{options(rayshader.verbose_scene_cache = TRUE)} to print when cached metadata is reused.
+
 If no x/y coordinates are passed in, the raymesh will be plotted in the coordinate system set by the user-specified
 \code{extent} argument as-is. Use this alongside \code{\link[=save_multipolygonz_to_obj]{save_multipolygonz_to_obj()}} to plot 3D polygons imported from geospatial sources
 in the proper location (but for ease of use, use \code{\link[=render_multipolygonz]{render_multipolygonz()}} to plot this data directly).

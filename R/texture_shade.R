@@ -3,6 +3,8 @@
 #'@description Calculates a shadow for each point on the surface using the method described by
 #'Leland Brown in "Texture Shading: A New Technique for Depicting Terrain Relief."
 #'
+#'Cache fallback messages are disabled by default. Set `options(rayshader.verbose_scene_cache = TRUE)` to print when cached metadata is reused.
+#'
 #'@param heightmap A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
 #'@param detail Default `0.5`. Amount of detail in texture shading algorithm. `0` is the least detail,
 #'while `1` is the most.

@@ -4,6 +4,8 @@
 #'system defined by the extent object. If no altitude is provided, the path will be elevated a constant offset
 #'above the heightmap. If the path goes off the edge, the nearest height on the heightmap will be used.
 #'
+#'Cache fallback messages are disabled by default. Set `options(rayshader.verbose_scene_cache = TRUE)` to print when cached metadata is reused.
+#'
 #'@param x Default `NULL`. Vector of x coordinates (or other coordinate in the same coordinate reference system as extent).
 #'Ignored if `y` is an `sf` or `SpatialLineDataFrame` object.
 #'@param y Vector of y coordinates (or other coordinate in the same coordinate reference system as extent).

@@ -122,6 +122,8 @@ Adds 3D OBJ model to the current scene, using x/y coordinates in the reference
 system defined by the extent object. If no altitude is provided, the OBJ will be elevated a constant offset
 above the heightmap. If the OBJ goes off the edge, the OBJ will be filtered out.
 
+Cache fallback messages are disabled by default. Set \code{options(rayshader.verbose_scene_cache = TRUE)} to print when cached metadata is reused.
+
 If no x/y coordinates are passed in, the OBJ will be plotted in the coordinate system set by the user-specified
 \code{extent} argument as-is. Use this alongside \code{\link[=save_multipolygonz_to_obj]{save_multipolygonz_to_obj()}} to plot 3D polygons imported from geospatial sources
 in the proper location (but for ease of use, use \code{\link[=render_multipolygonz]{render_multipolygonz()}} to plot this data directly).

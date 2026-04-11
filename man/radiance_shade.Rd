@@ -139,6 +139,8 @@ RGBA array representing the top-down radiance render.
 Renders a top-down orthographic radiance pass of either the
 current 3D rayshader scene or a supplied elevation matrix.
 
+Cache fallback messages are disabled by default. Set \code{options(rayshader.verbose_scene_cache = TRUE)} to print when cached metadata is reused.
+
 When called with no \code{heightmap}, this function uses the currently displayed
 rayshader 3D scene and preserves the active surface texture from the
 hillshading chain. When a raw matrix is supplied, rayshader builds a temporary

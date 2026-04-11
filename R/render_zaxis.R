@@ -2,6 +2,8 @@
 #'
 #'@description Add a standalone z-axis to the active 3D scene.
 #'
+#'Cache fallback messages are disabled by default. Set `options(rayshader.verbose_scene_cache = TRUE)` to print when cached metadata is reused.
+#'
 #'@param extent Default `NULL`. Either an object representing the spatial extent of the scene
 #' (either from the `raster`, `terra`, `sf`, or `sp` packages),
 #' a length-4 numeric vector specifying `c("xmin", "xmax","ymin","ymax")`, or the spatial object (from

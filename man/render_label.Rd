@@ -107,6 +107,8 @@ other arguments are passed to \code{\link[=render_label]{render_label()}}, this 
 }
 \description{
 Adds a marker and label to the current 3D plot
+
+Cache fallback messages are disabled by default. Set \code{options(rayshader.verbose_scene_cache = TRUE)} to print when cached metadata is reused.
 }
 \examples{
 if(run_documentation()) {

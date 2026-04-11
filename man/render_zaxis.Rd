@@ -62,4 +62,6 @@ and \code{0.08} for non-ggplot scenes. \code{0} places the axis exactly at the c
 }
 \description{
 Add a standalone z-axis to the active 3D scene.
+
+Cache fallback messages are disabled by default. Set \code{options(rayshader.verbose_scene_cache = TRUE)} to print when cached metadata is reused.
 }

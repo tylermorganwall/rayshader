@@ -3,6 +3,8 @@
 #'@description Adds beveled polygon to the scene using the `raybevel` package. See
 #'the `raybevel::generate_beveled_polygon()` function for more information.
 #'
+#'Cache fallback messages are disabled by default. Set `options(rayshader.verbose_scene_cache = TRUE)` to print when cached metadata is reused.
+#'
 #' @param polygon `sf` object, "SpatialPolygon" `sp` object,  or xy coordinates
 #' of polygon represented in a way that can be processed by `xy.coords()`.  If
 #' xy-coordinate based polygons are open, they will be closed by adding an

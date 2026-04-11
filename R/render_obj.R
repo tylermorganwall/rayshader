@@ -4,6 +4,8 @@
 #'system defined by the extent object. If no altitude is provided, the OBJ will be elevated a constant offset
 #'above the heightmap. If the OBJ goes off the edge, the OBJ will be filtered out.
 #'
+#'Cache fallback messages are disabled by default. Set `options(rayshader.verbose_scene_cache = TRUE)` to print when cached metadata is reused.
+#'
 #'If no x/y coordinates are passed in, the OBJ will be plotted in the coordinate system set by the user-specified
 #'`extent` argument as-is. Use this alongside [save_multipolygonz_to_obj()] to plot 3D polygons imported from geospatial sources
 #'in the proper location (but for ease of use, use [render_multipolygonz()] to plot this data directly).

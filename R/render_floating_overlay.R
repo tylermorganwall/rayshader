@@ -2,6 +2,8 @@
 #'
 #'@description Render a 2D floating overlay over the map.
 #'
+#'Cache fallback messages are disabled by default. Set `options(rayshader.verbose_scene_cache = TRUE)` to print when cached metadata is reused.
+#'
 #'Note: Multiple layers with transparency can cause rendering issues in rgl.
 #'
 #'@param overlay Overlay (4D RGBA array) to be rendered on the 3D map.
