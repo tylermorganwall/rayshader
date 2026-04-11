@@ -281,3 +281,4 @@ build_gh_pages_rayshader.R
 *\.pdf
 *\.mtl
 tests/testthat/fixtures/spatial/DC_Trees.geojson
+README_cache/**/*
