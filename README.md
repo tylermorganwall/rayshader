@@ -292,6 +292,31 @@ elmat |>
 
 ![](man/figures/README_basicmapping-5.png)<!-- -->
 
+For a more physically-based top-down lighting pass, `radiance_shade()`
+renders an orthographic radiance overlay using the same pathtracing
+backend as `render_highquality()`. This returns an RGBA array, so you
+can blend it directly into an existing 2D map with `add_overlay()`, or
+use it on it’s own.
+
+``` r
+desert_water = elmat |>
+    sphere_shade(texture = "desert") |>
+    add_water(detect_water(elmat), color = "desert")
+
+radiance_shade(
+        elmat,
+        texture = desert_water,
+        zscale = 3,
+        samples = 16, 
+        lightdirection = 315,
+        lightintensity = 800,
+        lightaltitude = 50
+    ) |> 
+    plot_map()
+```
+
+![](man/figures/README_radiance-1.png)<!-- -->
+
 Rayshader also supports 3D mapping by passing a texture map (either
 external or one produced by rayshader) into the `plot_3d` function.
 
