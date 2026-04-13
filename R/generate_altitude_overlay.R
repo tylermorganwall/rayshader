@@ -3,14 +3,13 @@
 #'@description Using a hillshade and the height map, generates a semi-transparent hillshade to
 #'layer onto an existing map.
 #'
-#'@param hillshade  The hillshade to transition into.
+#'@param hillshade The hillshade to transition into.
 #'@param heightmap A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All grid points are assumed to be evenly spaced.
-#'@param start_transition Elevation above which `hillshade` is completely transparent.
-#'@param end_transition Default `NULL`. Elevation below which `hillshade` is completely opaque. By default, this is equal to `start_transition`.
-#'@param lower Default `TRUE`. This makes `hillshade` completely opaque below `start_transition`. If
-#'`FALSE`, the direction will be reversed.
-#'@return 4-layer RGB array representing the semi-transparent hillshade.
-#'@export
+#'@param start_transition Elevation threshold, or proportion of the height range if `relative = TRUE`.
+#'@param end_transition Default `NULL`. Elevation threshold, or proportion of the height range if `relative = TRUE`. By default, this is equal to `start_transition`.
+#'@param lower Default `TRUE`. If `TRUE`, the overlay is most opaque at lower elevations. If `FALSE`, the direction is reversed.
+#'@param relative Default `FALSE`. If `TRUE`, interpret `start_transition` and `end_transition` as proportions of the height range in 0..1.
+#'@return 4-layer RGB array representing the semi-transparent hillshade.#'@export
 #'@examples
 #'#Create a bathymetric hillshade
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
@@ -43,11 +42,38 @@ generate_altitude_overlay = function(
 	heightmap,
 	start_transition,
 	end_transition = NULL,
-	lower = TRUE
+	lower = TRUE,
+	relative = FALSE
 ) {
 	if (is.null(end_transition)) {
 		end_transition = start_transition
 	}
+
+	if (relative) {
+		if (
+			!is.numeric(start_transition) ||
+				length(start_transition) != 1 ||
+				start_transition < 0 ||
+				start_transition > 1
+		) {
+			stop("`start_transition` must be in [0, 1] when `relative = TRUE`.")
+		}
+		if (
+			!is.numeric(end_transition) ||
+				length(end_transition) != 1 ||
+				end_transition < 0 ||
+				end_transition > 1
+		) {
+			stop("`end_transition` must be in [0, 1] when `relative = TRUE`.")
+		}
+
+		height_rng = range(heightmap, na.rm = TRUE)
+		height_span = diff(height_rng)
+
+		start_transition = height_rng[1] + start_transition * height_span
+		end_transition = height_rng[1] + end_transition * height_span
+	}
+
 	if (length(dim(hillshade)) == 2) {
 		hillarray = array(0, dim = c(nrow(hillshade), ncol(hillshade), 4))
 		hillarray[,, 1] = hillshade
@@ -55,30 +81,36 @@ generate_altitude_overlay = function(
 		hillarray[,, 3] = hillshade
 		hillshade = hillarray
 	}
+
 	if (dim(hillshade)[3] == 3) {
 		temp_hillshade = array(1, dim = c(dim(hillshade)[1:2], 4))
 		temp_hillshade[,, 4] = 1
 		temp_hillshade[,, 1:3] = hillshade
 		hillshade = temp_hillshade
 	}
+
 	heightmap = t(heightmap)
+
 	if (any(dim(heightmap) != dim(hillshade)[1:2])) {
 		heightmap = rayimage::render_resized(heightmap, dims = dim(hillshade)[1:2])
 	}
+
 	trans_map = heightmap
+
 	if (start_transition == end_transition) {
 		if (!lower) {
-			trans_map_temp = (trans_map - start_transition)
+			trans_map_temp = trans_map - start_transition
 			trans_map[trans_map_temp < 0] = 0
 			trans_map[trans_map_temp >= 0] = 1
 		} else {
-			trans_map_temp = (trans_map - start_transition)
+			trans_map_temp = trans_map - start_transition
 			trans_map[trans_map_temp < 0] = 1
 			trans_map[trans_map_temp >= 0] = 0
 		}
 		hillshade[,, 4] = trans_map
 		return(hillshade)
 	}
+
 	if (lower) {
 		transition_region = end_transition - start_transition
 		trans_map_temp = (trans_map - start_transition) / transition_region
@@ -92,7 +124,9 @@ generate_altitude_overlay = function(
 		trans_map[trans_map_temp < 0] = 0
 		trans_map[trans_map_temp >= 1] = 1
 	}
+
 	hillshade[,, 4] = trans_map
+
 	return(rayimage::ray_read_image(
 		hillshade,
 		assume_colorspace = rayimage::CS_SRGB,

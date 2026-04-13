@@ -9,7 +9,8 @@ generate_altitude_overlay(
   heightmap,
   start_transition,
   end_transition = NULL,
-  lower = TRUE
+  lower = TRUE,
+  relative = FALSE
 )
 }
 \arguments{
@@ -17,15 +18,16 @@ generate_altitude_overlay(
 
 \item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All grid points are assumed to be evenly spaced.}
 
-\item{start_transition}{Elevation above which \code{hillshade} is completely transparent.}
+\item{start_transition}{Elevation threshold, or proportion of the height range if \code{relative = TRUE}.}
 
-\item{end_transition}{Default \code{NULL}. Elevation below which \code{hillshade} is completely opaque. By default, this is equal to \code{start_transition}.}
+\item{end_transition}{Default \code{NULL}. Elevation threshold, or proportion of the height range if \code{relative = TRUE}. By default, this is equal to \code{start_transition}.}
 
-\item{lower}{Default \code{TRUE}. This makes \code{hillshade} completely opaque below \code{start_transition}. If
-\code{FALSE}, the direction will be reversed.}
+\item{lower}{Default \code{TRUE}. If \code{TRUE}, the overlay is most opaque at lower elevations. If \code{FALSE}, the direction is reversed.}
+
+\item{relative}{Default \code{FALSE}. If \code{TRUE}, interpret \code{start_transition} and \code{end_transition} as proportions of the height range in 0..1.}
 }
 \value{
-4-layer RGB array representing the semi-transparent hillshade.
+4-layer RGB array representing the semi-transparent hillshade.#'@export
 }
 \description{
 Using a hillshade and the height map, generates a semi-transparent hillshade to
