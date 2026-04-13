@@ -4,7 +4,11 @@
 \alias{calculate_normal}
 \title{Calculate Normal}
 \usage{
-calculate_normal(heightmap, zscale = 1, progbar = FALSE)
+calculate_normal(
+  heightmap,
+  zscale = 1,
+  progbar = FALSE
+)
 }
 \arguments{
 \item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.}

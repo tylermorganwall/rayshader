@@ -18,7 +18,11 @@
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'sphere_shade(volcano,normalvectors = volcanocache) |>
 #'  plot_map()
-calculate_normal = function(heightmap, zscale = 1, progbar = FALSE) {
+calculate_normal = function(
+	heightmap,
+	zscale = 1,
+	progbar = FALSE
+) {
 	heightmap = add_padding(heightmap)
 	heightmap = heightmap / zscale
 	matrices = calculate_normal_cpp(heightmap = heightmap, progbar = progbar)

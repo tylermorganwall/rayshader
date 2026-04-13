@@ -1460,6 +1460,22 @@ cache_hillshade_heightmap = function(heightmap = NULL, label = NULL) {
 	invisible(NULL)
 }
 
+cache_hillshade_input_context = function(heightmap_info, label = NULL) {
+	cache_hillshade_heightmap(heightmap_info$heightmap, label = label)
+	if (is.finite(heightmap_info$zscale) && heightmap_info$zscale > 0) {
+		cache_hillshade_zscale(heightmap_info$zscale, label = label)
+	} else {
+		cache_hillshade_zscale(NULL, label = NULL)
+	}
+	invisible(NULL)
+}
+
+cache_hillshade_map = function(hillshade = NULL, label = NULL) {
+	assign("hillshade_map", hillshade, envir = ray_cache_scene_envir)
+	assign("hillshade_map_label", label, envir = ray_cache_scene_envir)
+	invisible(NULL)
+}
+
 get_hillshade_heightmap = function(default = NULL) {
 	hillshade_heightmap = get0(
 		"hillshade_heightmap",
@@ -1484,9 +1500,34 @@ get_hillshade_heightmap_label = function(default = NULL) {
 	hillshade_heightmap_label
 }
 
+get_hillshade_map = function(default = NULL) {
+	hillshade_map = get0(
+		"hillshade_map",
+		envir = ray_cache_scene_envir,
+		inherits = FALSE
+	)
+	if (is.null(hillshade_map)) {
+		return(default)
+	}
+	hillshade_map
+}
+
+get_hillshade_map_label = function(default = NULL) {
+	hillshade_map_label = get0(
+		"hillshade_map_label",
+		envir = ray_cache_scene_envir,
+		inherits = FALSE
+	)
+	if (is.null(hillshade_map_label)) {
+		return(default)
+	}
+	hillshade_map_label
+}
+
 clear_hillshade_cache = function() {
 	cache_hillshade_heightmap(NULL, label = NULL)
 	cache_hillshade_zscale(NULL, label = NULL)
+	cache_hillshade_map(NULL, label = NULL)
 	invisible(NULL)
 }
 
@@ -1599,6 +1640,45 @@ emit_scene_cache_message = function(caller, argument_name, cache_name, cache_lab
 	invisible(NULL)
 }
 
+resolve_visual_exaggeration = function(
+	visual_exaggeration = 1,
+	caller = NULL
+) {
+	visual_exaggeration = suppressWarnings(as.numeric(visual_exaggeration)[1])
+	if (!is.finite(visual_exaggeration) || visual_exaggeration <= 0) {
+		stop(
+			paste0(
+				format_render_caller_prefix(caller),
+				"`visual_exaggeration` must be a positive number."
+			),
+			call. = FALSE
+		)
+	}
+	visual_exaggeration
+}
+
+apply_visual_exaggeration = function(
+	zscale = 1,
+	visual_exaggeration = 1,
+	caller = NULL
+) {
+	visual_exaggeration = resolve_visual_exaggeration(
+		visual_exaggeration = visual_exaggeration,
+		caller = caller
+	)
+	zscale = suppressWarnings(as.numeric(zscale)[1])
+	if (!is.finite(zscale) || zscale <= 0) {
+		stop(
+			paste0(
+				format_render_caller_prefix(caller),
+				"`zscale` must be a positive number."
+			),
+			call. = FALSE
+		)
+	}
+	zscale / visual_exaggeration
+}
+
 resolve_scene_render_zscale = function(
 	zscale = 1,
 	zscale_missing = FALSE,
@@ -1708,7 +1788,9 @@ resolve_hillshade_zscale = function(
 	zscale = 1,
 	zscale_missing = FALSE,
 	caller = NULL,
-	auto_zscale = NA_real_
+	auto_zscale = NA_real_,
+	allow_hillshade_cache = TRUE,
+	allow_scene_cache = TRUE
 ) {
 	zscale = suppressWarnings(as.numeric(zscale)[1])
 	if (!isTRUE(zscale_missing) && is.finite(zscale) && zscale > 0) {
@@ -1717,33 +1799,37 @@ resolve_hillshade_zscale = function(
 	if (is.finite(auto_zscale) && auto_zscale > 0) {
 		return(list(zscale = auto_zscale, source = "auto", label = NULL))
 	}
-	hillshade_zscale = get_hillshade_zscale(default = NA_real_)
-	if (is.finite(hillshade_zscale) && hillshade_zscale > 0) {
-		emit_scene_cache_message(
-			caller = caller,
-			argument_name = "zscale",
-			cache_name = "hillshade_zscale",
-			cache_label = get_hillshade_zscale_label(default = NULL)
-		)
-		return(list(
-			zscale = hillshade_zscale,
-			source = "hillshade",
-			label = get_hillshade_zscale_label(default = NULL)
-		))
+	if (isTRUE(allow_hillshade_cache)) {
+		hillshade_zscale = get_hillshade_zscale(default = NA_real_)
+		if (is.finite(hillshade_zscale) && hillshade_zscale > 0) {
+			emit_scene_cache_message(
+				caller = caller,
+				argument_name = "zscale",
+				cache_name = "hillshade_zscale",
+				cache_label = get_hillshade_zscale_label(default = NULL)
+			)
+			return(list(
+				zscale = hillshade_zscale,
+				source = "hillshade",
+				label = get_hillshade_zscale_label(default = NULL)
+			))
+		}
 	}
-	scene_zscale = get_scene_zscale(default = NA_real_)
-	if (is.finite(scene_zscale) && scene_zscale > 0) {
-		emit_scene_cache_message(
-			caller = caller,
-			argument_name = "zscale",
-			cache_name = "scene_zscale",
-			cache_label = get_scene_zscale_label(default = NULL)
-		)
-		return(list(
-			zscale = scene_zscale,
-			source = "scene",
-			label = get_scene_zscale_label(default = NULL)
-		))
+	if (isTRUE(allow_scene_cache)) {
+		scene_zscale = get_scene_zscale(default = NA_real_)
+		if (is.finite(scene_zscale) && scene_zscale > 0) {
+			emit_scene_cache_message(
+				caller = caller,
+				argument_name = "zscale",
+				cache_name = "scene_zscale",
+				cache_label = get_scene_zscale_label(default = NULL)
+			)
+			return(list(
+				zscale = scene_zscale,
+				source = "scene",
+				label = get_scene_zscale_label(default = NULL)
+			))
+		}
 	}
 	list(zscale = 1, source = "default", label = NULL)
 }

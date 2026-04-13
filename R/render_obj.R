@@ -44,6 +44,7 @@
 #' Whether to swap and Y and Z axes. (Y axis is vertical in
 #'rayshader coordinates, but data is often provided with Z being vertical).
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.
+#'@param visual_exaggeration Default `1`. One-off multiplier applied to the effective visual relief for this call. Values greater than `1` increase apparent relief and values between `0` and `1` flatten it.
 #'@param heightmap Default `NULL`. Height matrix for the current scene. If omitted, this is taken from the cached scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value.
 #'of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
 #' All points are assumed to be evenly spaced.
@@ -111,6 +112,7 @@ render_obj = function(
 	altitude = NULL,
 	xyz = NULL,
 	zscale = 1,
+	visual_exaggeration = 1,
 	heightmap = NULL,
 	load_material = FALSE,
 	load_normals = TRUE,
@@ -148,6 +150,11 @@ render_obj = function(
 	zscale = resolve_scene_render_zscale(
 		zscale,
 		missing(zscale),
+		caller = "render_obj"
+	)
+	zscale = apply_visual_exaggeration(
+		zscale = zscale,
+		visual_exaggeration = visual_exaggeration,
 		caller = "render_obj"
 	)
 	heightmap = resolve_scene_render_heightmap(

@@ -28,14 +28,14 @@ Multiplies a texture array or shadow map by a shadow map.
 
 \dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 montereybay |>
- sphere_shade(colorintensity=0.5) |>
+ sphere_shade(visual_exaggeration=0.5) |>
  plot_map()
 
 #Raytrace the `montereybay` elevation map and add that shadow to the output of sphere_shade()
 \dontshow{\}) # examplesIf}
 \dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 montereybay |>
- sphere_shade(colorintensity=0.5) |>
+ sphere_shade(visual_exaggeration=0.5) |>
  add_shadow(ray_shade(montereybay,sunaltitude=20,zscale=50),max_darken=0.3) |>
  plot_map()
 
@@ -43,7 +43,7 @@ montereybay |>
 \dontshow{\}) # examplesIf}
 \dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 montereybay |>
- sphere_shade(colorintensity=0.5) |>
+ sphere_shade(visual_exaggeration=0.5) |>
  add_shadow(ray_shade(montereybay,sunaltitude=20,zscale=50),max_darken=0.1) |>
  plot_map()
 
@@ -51,7 +51,7 @@ montereybay |>
 \dontshow{\}) # examplesIf}
 \dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 montereybay |>
- sphere_shade(colorintensity=0.5) |>
+ sphere_shade(visual_exaggeration=0.5) |>
  add_shadow(ray_shade(montereybay,sunaltitude=20,zscale=50),max_darken=0.7) |>
  plot_map()
 \dontshow{\}) # examplesIf}

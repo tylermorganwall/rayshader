@@ -9,6 +9,7 @@ radiance_shade(
   texture = NULL,
   color = "grey50",
   zscale = 1,
+  visual_exaggeration = 1,
   filename = NA,
   samples = 128,
   sample_method = "sobol_blue",
@@ -44,8 +45,9 @@ radiance_shade(
 }
 \arguments{
 \item{heightmap}{Default \code{NULL}. If \code{NULL}, uses the current rayshader rgl
-scene. If a matrix (or supported raster input), renders a top-down radiance
-pass for that data directly.}
+scene when available, otherwise falls back to cached 2D hillshade metadata.
+If a matrix (or supported raster input), renders a top-down radiance pass for
+that data directly.}
 
 \item{texture}{Default \code{NULL}. Texture used only when \code{heightmap} is supplied.
 Can be a rayshader-style RGB(A) array, a built-in \code{\link[=sphere_shade]{sphere_shade()}} texture
@@ -56,6 +58,11 @@ single color name.}
 is supplied and \code{texture = NULL}.}
 
 \item{zscale}{Default \code{1}. Vertical scale when \code{heightmap} is supplied.}
+
+\item{visual_exaggeration}{Default \code{1}. One-off multiplier applied to the
+effective visual relief for this call. Values greater than \code{1} increase
+apparent relief and values between \code{0} and \code{1} flatten it. This does not
+update cached \code{zscale} metadata.}
 
 \item{filename}{Default \code{NA}. Optional output filename. If supplied, the
 render is also saved to disk.}
@@ -142,9 +149,11 @@ current 3D rayshader scene or a supplied elevation matrix.
 Cache fallback messages are disabled by default. Set \code{options(rayshader.verbose_scene_cache = TRUE)} to print when cached metadata is reused.
 
 When called with no \code{heightmap}, this function uses the currently displayed
-rayshader 3D scene and preserves the active surface texture from the
-hillshading chain. When a raw matrix is supplied, rayshader builds a temporary
-surface and applies \code{texture} (or a constant \code{color}, default \code{"grey50"}).
+rayshader 3D scene when one exists. If no scene is open, it falls back to the
+cached 2D hillshade heightmap and, when available, the cached hillshade/map
+texture from the most recent rayshader hillshading chain. When a raw matrix is
+supplied, rayshader builds a temporary surface and applies \code{texture} (or a
+constant \code{color}, default \code{"grey50"}).
 
 This function uses the same lighting controls as \code{\link[=render_highquality]{render_highquality()}},
 including directional lights and auto-sky generation (\code{lat}, \code{long},

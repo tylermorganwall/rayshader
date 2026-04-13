@@ -28,7 +28,7 @@
 #'@param alpha Default `1`. Maximum transparency for waterlines. This scales the transparency for all other levels.
 #'@param falloff Default `1.3`. Multiplicative decrease in distance between each waterline level.
 #'@param evenly_spaced Default `FALSE`. If `TRUE`, `falloff` will be ignored and the lines will be evenly spaced.
-#'@param zscale Default `1`. Arguments passed to [detect_water()]. Ignored if `boolean = TRUE`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
+#'@param zscale Default `1`. Base `zscale` used for water detection when `boolean = FALSE`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
 #'of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
 #'@param cutoff Default `0.999`. Arguments passed to [detect_water()]. Ignored if `boolean = TRUE`.The lower limit of the z-component of the unit normal vector to be classified as water.
 #'@param min_area Default `length(heightmap)/400`. Arguments passed to [detect_water()]. Ignored if `boolean = TRUE`. Minimum area (in units of the height matrix x and y spacing) to be considered a body of water.

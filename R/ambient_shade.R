@@ -11,6 +11,10 @@
 #'@param multicore Default FALSE. If TRUE, multiple cores will be used to compute the shadow matrix. By default, this uses all cores available, unless the user has
 #'set `options("cores")` in which the multicore option will only use that many cores.
 #'@param zscale Default 1. The ratio between the x and y spacing (which are assumed to be equal) and the z axis.
+#'@param visual_exaggeration Default `1`. One-off multiplier applied to the
+#'effective visual relief for this call. Values greater than `1` increase
+#'apparent relief and values between `0` and `1` flatten it. This does not
+#'update cached `zscale` metadata.
 #'@param cache_mask Default `NULL`. A matrix of 1 and 0s, indicating which points on which the raytracer will operate.
 #'@param shadow_cache Default `NULL`. The shadow matrix to be updated at the points defined by the argument `cache_mask`.
 #'@param progbar Default `TRUE` if interactive, `FALSE` otherwise. If `FALSE`, turns off progress bar.
@@ -42,6 +46,7 @@ ambient_shade = function(
 	maxsearch = 30,
 	multicore = FALSE,
 	zscale = 1,
+	visual_exaggeration = 1,
 	cache_mask = NULL,
 	shadow_cache = NULL,
 	progbar = interactive(),
@@ -80,6 +85,11 @@ ambient_shade = function(
 		NULL
 	)
 	cache_hillshade_zscale(zscale, label = zscale_cache_label)
+	zscale = apply_visual_exaggeration(
+		zscale = zscale,
+		visual_exaggeration = visual_exaggeration,
+		caller = "ambient_shade"
+	)
 	if (sunbreaks < 3) {
 		stop("sunbreaks needs to be at least 3")
 	}

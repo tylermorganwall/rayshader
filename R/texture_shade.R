@@ -78,8 +78,9 @@ texture_shade = function(
 		)
 		heightmap = resolved_heightmap$heightmap
 	} else {
-		heightmap = coerce_plot_3d_heightmap(heightmap)$heightmap
-		cache_hillshade_heightmap(heightmap, label = heightmap_cache_label)
+		heightmap_info = coerce_plot_3d_heightmap(heightmap)
+		heightmap = heightmap_info$heightmap
+		cache_hillshade_input_context(heightmap_info, label = heightmap_cache_label)
 	}
 	stopifnot(is.matrix(heightmap))
 	heightmap = t(heightmap)

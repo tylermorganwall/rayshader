@@ -11,6 +11,7 @@
 #'@param heightmap Default `NULL`. Height matrix for the current scene. If omitted, this is taken from the cached scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value.
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
 #'of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10. Adjust the zscale down to exaggerate elevation features.
+#'@param visual_exaggeration Default `1`. One-off multiplier applied to the effective visual relief for this call. Values greater than `1` increase apparent relief and values between `0` and `1` flatten it.
 #'@param alpha Default `1`. Multiplies the layer's transparency by this factor. 0 is completely transparent.
 #'@param baseshape Default `rectangle`. Shape of the overlay. Options are `c("rectangle", "circle", "hex")`.
 #'@param clear_layers Default `FALSE`. Clears all existing floating layers on the visualization.
@@ -56,6 +57,7 @@ render_floating_overlay = function(
 	altitude = NULL,
 	heightmap = NULL,
 	zscale = 1,
+	visual_exaggeration = 1,
 	alpha = 1,
 	baseshape = "rectangle",
 	remove_na = TRUE,
@@ -67,6 +69,11 @@ render_floating_overlay = function(
 	zscale = resolve_scene_render_zscale(
 		zscale,
 		missing(zscale),
+		caller = "render_floating_overlay"
+	)
+	zscale = apply_visual_exaggeration(
+		zscale = zscale,
+		visual_exaggeration = visual_exaggeration,
 		caller = "render_floating_overlay"
 	)
 	heightmap = resolve_scene_render_heightmap(

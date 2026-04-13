@@ -9,6 +9,7 @@ render_compass(
   position = "SE",
   altitude = NULL,
   zscale = 1,
+  visual_exaggeration = 1,
   x = NULL,
   y = NULL,
   z = NULL,
@@ -32,6 +33,8 @@ are manually specified.}
 
 \item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis.
 Only used in combination with \code{altitude}.}
+
+\item{visual_exaggeration}{Default \code{1}. One-off multiplier applied to the effective visual relief for this call. Values greater than \code{1} increase apparent relief and values between \code{0} and \code{1} flatten it.}
 
 \item{x}{Default \code{NULL}. X position. If not entered, automatically calculated using \code{position} argument.}
 

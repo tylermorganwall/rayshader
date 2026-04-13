@@ -15,27 +15,27 @@
 #'
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'montereybay |>
-#'  sphere_shade(colorintensity=0.5) |>
+#'  sphere_shade(visual_exaggeration=0.5) |>
 #'  plot_map()
 #'
 #'#Raytrace the `montereybay` elevation map and add that shadow to the output of sphere_shade()
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'montereybay |>
-#'  sphere_shade(colorintensity=0.5) |>
+#'  sphere_shade(visual_exaggeration=0.5) |>
 #'  add_shadow(ray_shade(montereybay,sunaltitude=20,zscale=50),max_darken=0.3) |>
 #'  plot_map()
 #'
 #'#Increase the intensity of the shadow map with the max_darken argument.
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'montereybay |>
-#'  sphere_shade(colorintensity=0.5) |>
+#'  sphere_shade(visual_exaggeration=0.5) |>
 #'  add_shadow(ray_shade(montereybay,sunaltitude=20,zscale=50),max_darken=0.1) |>
 #'  plot_map()
 #'
 #'#Decrease the intensity of the shadow map.
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'montereybay |>
-#'  sphere_shade(colorintensity=0.5) |>
+#'  sphere_shade(visual_exaggeration=0.5) |>
 #'  add_shadow(ray_shade(montereybay,sunaltitude=20,zscale=50),max_darken=0.7) |>
 #'  plot_map()
 add_shadow = function(
@@ -45,6 +45,9 @@ add_shadow = function(
 	rescale_original = FALSE
 ) {
 	force(hillshade)
+	hillshade_cache_label = get_hillshade_map_label(
+		default = format_scene_cache_label(deparse(substitute(hillshade)))
+	)
 	if (length(dim(shadowmap)) == 3 && length(dim(hillshade)) == 2) {
 		tempstore = hillshade
 		hillshade = shadowmap
@@ -59,12 +62,14 @@ add_shadow = function(
 		assume_white = "D65",
 		source_linear = TRUE
 	)
-	return(rayimage::render_image_overlay(
+	hillshade = rayimage::render_image_overlay(
 		hillshade,
 		image_overlay = rayimage::render_reorient(
 			shadow_array,
 			transpose = FALSE,
 			flipy = FALSE
 		)
-	))
+	)
+	cache_hillshade_map(hillshade, label = hillshade_cache_label)
+	return(hillshade)
 }

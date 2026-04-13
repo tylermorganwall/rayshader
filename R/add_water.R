@@ -32,6 +32,9 @@
 #'  add_water(detect_water(montbay_water),color="imhof4") |>
 #'  plot_map()
 add_water = function(hillshade, watermap, color = "imhof1") {
+	hillshade_cache_label = get_hillshade_map_label(
+		default = format_scene_cache_label(deparse(substitute(hillshade)))
+	)
 	hillshade = rayimage::ray_read_image(hillshade)
 	colorspace = attr(hillshade, "colorspace")
 	white_point = attr(hillshade, "white_current")
@@ -92,10 +95,12 @@ add_water = function(hillshade, watermap, color = "imhof1") {
 		}
 		hillshade[,, i] = tempmat
 	}
-	return(rayimage::ray_read_image(
+	hillshade = rayimage::ray_read_image(
 		hillshade,
 		assume_colorspace = colorspace,
 		assume_white = white_point,
 		source_linear = TRUE
-	))
+	)
+	cache_hillshade_map(hillshade, label = hillshade_cache_label)
+	return(hillshade)
 }

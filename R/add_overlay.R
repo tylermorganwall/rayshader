@@ -42,6 +42,9 @@ add_overlay = function(
 	rescale_original = FALSE
 ) {
 	force(hillshade)
+	hillshade_cache_label = get_hillshade_map_label(
+		default = format_scene_cache_label(deparse(substitute(hillshade)))
+	)
 	if (any(alphalayer > 1 || alphalayer < 0)) {
 		stop("Argument `alphalayer` must not be less than 0 or more than 1")
 	}
@@ -71,18 +74,20 @@ add_overlay = function(
 		return(hillshade)
 	}
 	if (length(dim(hillshade)) == 2) {
-		rayimage::render_image_overlay(
+		hillshade = rayimage::render_image_overlay(
 			fliplr(t(hillshade)),
 			overlay,
 			alpha = alphalayer,
 			rescale_original = rescale_original
 		)
 	} else {
-		rayimage::render_image_overlay(
+		hillshade = rayimage::render_image_overlay(
 			hillshade,
 			overlay,
 			alpha = alphalayer,
 			rescale_original = rescale_original
 		)
 	}
+	cache_hillshade_map(hillshade, label = hillshade_cache_label)
+	return(hillshade)
 }

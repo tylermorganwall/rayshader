@@ -9,6 +9,7 @@ render_floating_overlay(
   altitude = NULL,
   heightmap = NULL,
   zscale = 1,
+  visual_exaggeration = 1,
   alpha = 1,
   baseshape = "rectangle",
   remove_na = TRUE,
@@ -27,6 +28,8 @@ render_floating_overlay(
 
 \item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
 of 1 meter and the grid values are separated by 10 meters, \code{zscale} would be 10. Adjust the zscale down to exaggerate elevation features.}
+
+\item{visual_exaggeration}{Default \code{1}. One-off multiplier applied to the effective visual relief for this call. Values greater than \code{1} increase apparent relief and values between \code{0} and \code{1} flatten it.}
 
 \item{alpha}{Default \code{1}. Multiplies the layer's transparency by this factor. 0 is completely transparent.}
 

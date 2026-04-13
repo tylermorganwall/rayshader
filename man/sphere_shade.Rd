@@ -11,6 +11,7 @@ sphere_shade(
   normalvectors = NULL,
   colorintensity = 1,
   zscale = 1,
+  visual_exaggeration = 1,
   progbar = interactive()
 )
 }
@@ -24,10 +25,15 @@ of the built-in palettes (\code{imhof1},\code{imhof2},\code{imhof3},\code{imhof4
 
 \item{normalvectors}{Default \code{NULL}. Cache of the normal vectors (from \code{\link[=calculate_normal]{calculate_normal()}} function). Supply this to speed up texture mapping.}
 
-\item{colorintensity}{Default \code{1}. The intensity of the color mapping. Higher values will increase the intensity of the color mapping.}
+\item{colorintensity}{Deprecated alias for \code{visual_exaggeration}.}
 
-\item{zscale}{Default \code{1/colorintensity}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis.
-Ignored unless \code{colorintensity} missing.}
+\item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis.
+If supplied, this also updates the cached hillshade \code{zscale} for downstream rayshader calls.}
+
+\item{visual_exaggeration}{Default \code{1}. One-off multiplier applied to the
+effective visual relief for this call. Values greater than \code{1} increase
+apparent relief and values between \code{0} and \code{1} flatten it. This does not
+update cached \code{zscale} metadata.}
 
 \item{progbar}{Default \code{TRUE} if interactive, \code{FALSE} otherwise. If \code{FALSE}, turns off progress bar.}
 }
@@ -49,7 +55,7 @@ montereybay |>
 
 #Decrease the color intensity:
 montereybay |>
- sphere_shade(colorintensity=0.1) |>
+ sphere_shade(visual_exaggeration=0.1) |>
  plot_map()
 
 #Change to a built-in color texture:

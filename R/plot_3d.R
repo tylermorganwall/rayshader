@@ -95,6 +95,10 @@ coerce_plot_3d_heightmap = function(heightmap) {
 #'of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10. Adjust the zscale down to exaggerate elevation features.
 #'If `zscale` is not supplied and `heightmap` is a spatial raster, rayshader automatically
 #'uses the raster cell resolution (mean x/y resolution).
+#'@param visual_exaggeration Default `1`. One-off multiplier applied to the
+#'effective visual relief for this scene. Values greater than `1` increase
+#'apparent relief and values between `0` and `1` flatten it. This does not
+#'update cached hillshade `zscale` metadata.
 #'@param extent Default `NULL`. Optional extent metadata to cache with the scene for later
 #'calls (e.g., [render_zaxis()] without an explicit `extent`). Accepts any input supported
 #'by [get_extent()] (numeric xmin/xmax/ymin/ymax vector, `raster`, `terra`, `sf`, or `sp` objects).
@@ -230,6 +234,7 @@ plot_3d = function(
 	hillshade,
 	heightmap,
 	zscale = 1,
+	visual_exaggeration = 1,
 	baseshape = "rectangle",
 	solid = TRUE,
 	soliddepth = "auto",
@@ -300,6 +305,8 @@ plot_3d = function(
 	auto_extent = heightmap_info$extent
 	auto_crs = heightmap_info$crs
 	auto_zscale = heightmap_info$zscale
+	explicit_heightmap_uses_default_zscale = !heightmap_was_missing &&
+		!(is.finite(auto_zscale) && auto_zscale > 0)
 	is_builtin_monterey = isTRUE(attr(heightmap, "rayshader_data"))
 	extent_cache_value = NULL
 	extent_cache_label = NULL
@@ -334,9 +341,12 @@ plot_3d = function(
 		zscale = zscale,
 		zscale_missing = zscale_was_missing,
 		caller = "plot_3d",
-		auto_zscale = auto_zscale
+		auto_zscale = auto_zscale,
+		allow_hillshade_cache = !explicit_heightmap_uses_default_zscale,
+		allow_scene_cache = heightmap_was_missing
 	)
 	zscale = resolved_zscale$zscale
+	base_zscale = zscale
 	zscale_cache_label = switch(
 		resolved_zscale$source,
 		explicit = zscale_cache_input_label,
@@ -347,6 +357,11 @@ plot_3d = function(
 		hillshade = resolved_zscale$label,
 		scene = resolved_zscale$label,
 		NULL
+	)
+	zscale = apply_visual_exaggeration(
+		zscale = zscale,
+		visual_exaggeration = visual_exaggeration,
+		caller = "plot_3d"
 	)
 	crs_cache_value = NULL
 	crs_cache_label = NULL
@@ -673,7 +688,7 @@ plot_3d = function(
 		)
 	}
 	cache_hillshade_heightmap(heightmap, label = heightmap_cache_label)
-	cache_hillshade_zscale(zscale, label = zscale_cache_label)
+	cache_hillshade_zscale(base_zscale, label = zscale_cache_label)
 	cache_scene_heightmap(heightmap, label = heightmap_cache_label)
 	cache_scene_zscale(zscale, label = zscale_cache_label)
 	cache_scene_extent(extent_cache_value, label = extent_cache_label)

@@ -82,6 +82,7 @@ generate_contour_overlay = function(
   color = "black",
   linewidth = 1
 ) {
+  heightmap = heightmap / zscale
   if (!(length(find.package("sf", quiet = TRUE)) > 0)) {
     stop("`sf` package required for generate_contour_overlay()")
   }

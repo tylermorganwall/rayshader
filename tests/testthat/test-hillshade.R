@@ -66,6 +66,15 @@ test_that("sphere_shade", {
 		sphere_args_normals,
 		list(heightmap = volcano)
 	)
+
+	expect_warning(
+		sphere_shade(heightmap = volcano, colorintensity = 2),
+		"deprecated"
+	)
+	expect_equal(
+		suppressWarnings(sphere_shade(heightmap = volcano, colorintensity = 2)),
+		sphere_shade(heightmap = volcano, visual_exaggeration = 2)
+	)
 })
 
 test_that("height_shade", {
@@ -182,6 +191,11 @@ test_that("radiance_shade requires scene or heightmap", {
 	skip_if_not_installed("rayrender")
 	on.exit(rgl::close3d(), add = TRUE)
 	local_rgl_use_null()
+	clear_hillshade_cache()
+	reset_scene_context(
+		clear_scene_metadata = TRUE,
+		clear_scene_cache = TRUE
+	)
 	rgl::close3d()
 	expect_error(
 		radiance_shade(),

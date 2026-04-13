@@ -58,7 +58,7 @@ waterlines fade entirely, when \code{fade = TRUE}.}
 
 \item{evenly_spaced}{Default \code{FALSE}. If \code{TRUE}, \code{falloff} will be ignored and the lines will be evenly spaced.}
 
-\item{zscale}{Default \code{1}. Arguments passed to \code{\link[=detect_water]{detect_water()}}. Ignored if \code{boolean = TRUE}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
+\item{zscale}{Default \code{1}. Base \code{zscale} used for water detection when \code{boolean = FALSE}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
 of 1 meter and the grid values are separated by 10 meters, \code{zscale} would be 10.}
 
 \item{cutoff}{Default \code{0.999}. Arguments passed to \code{\link[=detect_water]{detect_water()}}. Ignored if \code{boolean = TRUE}.The lower limit of the z-component of the unit normal vector to be classified as water.}

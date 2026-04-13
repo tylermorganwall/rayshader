@@ -10,6 +10,10 @@
 #'@param sunaltitude Default `45`. The azimuth angle as measured from the horizon from which the light originates.
 #'@param sunangle Default `315` (NW). The angle around the matrix from which the light originates.
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis.
+#'@param visual_exaggeration Default `1`. One-off multiplier applied to the
+#'effective visual relief for this call. Values greater than `1` increase
+#'apparent relief and values between `0` and `1` flatten it. This does not
+#'update cached `zscale` metadata.
 #'@param zero_negative Default `TRUE`. Zeros out all values below 0 (corresponding to surfaces facing away from the light source).
 #'@return Matrix of light intensities at each point.
 #'@export
@@ -38,6 +42,7 @@ lamb_shade = function(
   sunaltitude = 45,
   sunangle = 315,
   zscale = 1,
+  visual_exaggeration = 1,
   zero_negative = TRUE
 ) {
   heightmap_missing = missing(heightmap)
@@ -73,6 +78,11 @@ lamb_shade = function(
     NULL
   )
   cache_hillshade_zscale(zscale, label = zscale_cache_label)
+  zscale = apply_visual_exaggeration(
+    zscale = zscale,
+    visual_exaggeration = visual_exaggeration,
+    caller = "lamb_shade"
+  )
   sunang_rad = sunangle * pi / 180
   rayang_rad = sunaltitude * pi / 180
   rayvector = c(

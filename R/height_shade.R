@@ -52,8 +52,14 @@ height_shade = function(
     )
     heightmap = resolved_heightmap$heightmap
   } else {
-    heightmap = coerce_plot_3d_heightmap(heightmap)$heightmap
-    cache_hillshade_heightmap(heightmap, label = heightmap_cache_label)
+    heightmap_info = coerce_plot_3d_heightmap(heightmap)
+    heightmap = heightmap_info$heightmap
+    cache_hillshade_input_context(heightmap_info, label = heightmap_cache_label)
+  }
+  hillshade_cache_label = if (heightmap_missing) {
+    resolved_heightmap$label
+  } else {
+    heightmap_cache_label
   }
   stopifnot(is.matrix(heightmap))
   if (!is.null(range)) {
@@ -106,9 +112,11 @@ height_shade = function(
     }
   }
   return_array[,, 4] = 1
-  return(rayimage::ray_read_image(
+  return_array = rayimage::ray_read_image(
     return_array,
     assume_colorspace = rayimage::CS_SRGB,
     assume_white = "D65"
-  ))
+  )
+  cache_hillshade_map(return_array, label = hillshade_cache_label)
+  return(return_array)
 }

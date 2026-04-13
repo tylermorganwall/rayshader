@@ -6,9 +6,11 @@
 #'Cache fallback messages are disabled by default. Set `options(rayshader.verbose_scene_cache = TRUE)` to print when cached metadata is reused.
 #'
 #'When called with no `heightmap`, this function uses the currently displayed
-#'rayshader 3D scene and preserves the active surface texture from the
-#'hillshading chain. When a raw matrix is supplied, rayshader builds a temporary
-#'surface and applies `texture` (or a constant `color`, default `"grey50"`).
+#'rayshader 3D scene when one exists. If no scene is open, it falls back to the
+#'cached 2D hillshade heightmap and, when available, the cached hillshade/map
+#'texture from the most recent rayshader hillshading chain. When a raw matrix is
+#'supplied, rayshader builds a temporary surface and applies `texture` (or a
+#'constant `color`, default `"grey50"`).
 #'
 #'This function uses the same lighting controls as [render_highquality()],
 #'including directional lights and auto-sky generation (`lat`, `long`,
@@ -21,8 +23,9 @@
 #'`render_highquality(plot = FALSE)`.
 #'
 #'@param heightmap Default `NULL`. If `NULL`, uses the current rayshader rgl
-#'scene. If a matrix (or supported raster input), renders a top-down radiance
-#'pass for that data directly.
+#'scene when available, otherwise falls back to cached 2D hillshade metadata.
+#'If a matrix (or supported raster input), renders a top-down radiance pass for
+#'that data directly.
 #'@param texture Default `NULL`. Texture used only when `heightmap` is supplied.
 #'Can be a rayshader-style RGB(A) array, a built-in [sphere_shade()] texture
 #'name, a color vector (passed to [height_shade()]), an image filename, or a
@@ -30,6 +33,10 @@
 #'@param color Default `"grey50"`. Fallback single-color texture when `heightmap`
 #'is supplied and `texture = NULL`.
 #'@param zscale Default `1`. Vertical scale when `heightmap` is supplied.
+#'@param visual_exaggeration Default `1`. One-off multiplier applied to the
+#'effective visual relief for this call. Values greater than `1` increase
+#'apparent relief and values between `0` and `1` flatten it. This does not
+#'update cached `zscale` metadata.
 #'@param filename Default `NA`. Optional output filename. If supplied, the
 #'render is also saved to disk.
 #'@param samples Default `128`. Maximum samples per pixel.
@@ -86,6 +93,7 @@ radiance_shade = function(
 	texture = NULL,
 	color = "grey50",
 	zscale = 1,
+	visual_exaggeration = 1,
 	filename = NA,
 	samples = 128,
 	sample_method = "sobol_blue",
@@ -328,6 +336,11 @@ radiance_shade = function(
 		if (!is.finite(zscale) || zscale <= 0) {
 			stop("`zscale` must be a positive number when `heightmap` is supplied.")
 		}
+		zscale = apply_visual_exaggeration(
+			zscale = zscale,
+			visual_exaggeration = visual_exaggeration,
+			caller = "radiance_shade"
+		)
 		hillshade = radiance_matrix_texture(
 			heightmap = heightmap,
 			texture = texture,
@@ -335,50 +348,104 @@ radiance_shade = function(
 			zscale = zscale
 		)
 	} else {
-		if (rgl::cur3d() == 0) {
-			stop(
-				"No rgl window currently open and no `heightmap` supplied. ",
-				"Call plot_3d()/plot_gg() first, or pass `heightmap`."
-			)
-		}
-		surface_id = get_ids_with_labels(typeval = c("surface", "surface_tris"))
-		if (nrow(surface_id) == 0) {
-			stop("No rayshader surface found in the current rgl scene.")
-		}
+		if (rgl::cur3d() != 0) {
+			surface_id = get_ids_with_labels(typeval = c("surface", "surface_tris"))
+			if (nrow(surface_id) == 0) {
+				stop("No rayshader surface found in the current rgl scene.")
+			}
 
-		heightmap = resolve_scene_render_heightmap(
-			heightmap = NULL,
-			caller = "radiance_shade"
-		)
-		if (is.null(heightmap) || !is.matrix(heightmap)) {
-			stop(
-				"No cached `heightmap` found for the active scene. ",
-				"Call plot_3d()/plot_gg() first, or pass `heightmap` explicitly."
+			heightmap = resolve_scene_render_heightmap(
+				heightmap = NULL,
+				caller = "radiance_shade"
 			)
-		}
-		zscale = resolve_scene_render_zscale(
-			zscale = zscale,
-			zscale_missing = zscale_missing,
-			caller = "radiance_shade"
-		)
+			if (is.null(heightmap) || !is.matrix(heightmap)) {
+				stop(
+					"No cached `heightmap` found for the active scene. ",
+					"Call plot_3d()/plot_gg() first, or pass `heightmap` explicitly."
+				)
+			}
+			zscale = resolve_scene_render_zscale(
+				zscale = zscale,
+				zscale_missing = zscale_missing,
+				caller = "radiance_shade"
+			)
+			zscale = apply_visual_exaggeration(
+				zscale = zscale,
+				visual_exaggeration = visual_exaggeration,
+				caller = "radiance_shade"
+			)
 
-		surface_texture = as.character(surface_id$texture_file[1])
-		has_surface_texture =
-			!is.na(surface_texture) &&
-			nzchar(surface_texture) &&
-			file.exists(surface_texture)
-		if (has_surface_texture) {
-			hillshade = rayimage::ray_read_image(surface_texture)
+			surface_texture = as.character(surface_id$texture_file[1])
+			has_surface_texture =
+				!is.na(surface_texture) &&
+				nzchar(surface_texture) &&
+				file.exists(surface_texture)
+			if (has_surface_texture) {
+				hillshade = rayimage::ray_read_image(surface_texture)
+			} else {
+				warning(
+					"Unable to find the active surface texture file in the current scene; using `texture`/`color` fallback."
+				)
+				hillshade = radiance_matrix_texture(
+					heightmap = heightmap,
+					texture = texture,
+					color = color,
+					zscale = zscale
+				)
+			}
 		} else {
-			warning(
-				"Unable to find the active surface texture file in the current scene; using `texture`/`color` fallback."
+			resolved_heightmap = tryCatch(
+				resolve_hillshade_heightmap(
+					heightmap_missing = TRUE,
+					caller = "radiance_shade"
+				),
+				error = function(e) NULL
 			)
-			hillshade = radiance_matrix_texture(
-				heightmap = heightmap,
-				texture = texture,
-				color = color,
-				zscale = zscale
+			if (is.null(resolved_heightmap) || !is.matrix(resolved_heightmap$heightmap)) {
+				stop(
+					"No rgl window currently open and no `heightmap` supplied. ",
+					"Build a 2D hillshade with rayshader, call plot_3d()/plot_gg() first, or pass `heightmap`."
+				)
+			}
+			heightmap = resolved_heightmap$heightmap
+			zscale = resolve_hillshade_zscale(
+				zscale = zscale,
+				zscale_missing = zscale_missing,
+				caller = "radiance_shade"
 			)
+			zscale = zscale$zscale
+			zscale = apply_visual_exaggeration(
+				zscale = zscale,
+				visual_exaggeration = visual_exaggeration,
+				caller = "radiance_shade"
+			)
+
+			if (is.null(texture)) {
+				hillshade = get_hillshade_map(default = NULL)
+				if (!is.null(hillshade)) {
+					emit_scene_cache_message(
+						caller = "radiance_shade",
+						argument_name = "texture",
+						cache_name = "hillshade_map",
+						cache_label = get_hillshade_map_label(default = NULL)
+					)
+					hillshade = rayimage::ray_read_image(hillshade)
+				} else {
+					hillshade = radiance_matrix_texture(
+						heightmap = heightmap,
+						texture = NULL,
+						color = color,
+						zscale = zscale
+					)
+				}
+			} else {
+				hillshade = radiance_matrix_texture(
+					heightmap = heightmap,
+					texture = texture,
+					color = color,
+					zscale = zscale
+				)
+			}
 		}
 	}
 
