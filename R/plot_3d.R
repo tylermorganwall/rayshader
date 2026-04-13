@@ -95,7 +95,7 @@ coerce_plot_3d_heightmap = function(heightmap) {
 #'of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10. Adjust the zscale down to exaggerate elevation features.
 #'If `zscale` is not supplied and `heightmap` is a spatial raster, rayshader automatically
 #'uses the raster cell resolution (mean x/y resolution).
-#'@param visual_exaggeration Default `1`. One-off multiplier applied to the
+#'@param vertical_exaggeration Default `1`. One-off multiplier applied to the
 #'effective visual relief for this scene. Values greater than `1` increase
 #'apparent relief and values between `0` and `1` flatten it. This does not
 #'update cached hillshade `zscale` metadata.
@@ -234,7 +234,7 @@ plot_3d = function(
 	hillshade,
 	heightmap,
 	zscale = 1,
-	visual_exaggeration = 1,
+	vertical_exaggeration = 1,
 	baseshape = "rectangle",
 	solid = TRUE,
 	soliddepth = "auto",
@@ -358,9 +358,9 @@ plot_3d = function(
 		scene = resolved_zscale$label,
 		NULL
 	)
-	zscale = apply_visual_exaggeration(
+	zscale = apply_vertical_exaggeration(
 		zscale = zscale,
-		visual_exaggeration = visual_exaggeration,
+		vertical_exaggeration = vertical_exaggeration,
 		caller = "plot_3d"
 	)
 	crs_cache_value = NULL

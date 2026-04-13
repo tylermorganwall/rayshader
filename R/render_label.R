@@ -22,7 +22,7 @@
 #'to disambiguate faceted ggplot scenes when panel-specific cached metadata is needed. Ignored
 #'for non-ggplot scenes.
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
-#'@param visual_exaggeration Default `1`. One-off multiplier applied to the effective visual relief for this call. Values greater than `1` increase apparent relief and values between `0` and `1` flatten it.
+#'@param vertical_exaggeration Default `1`. One-off multiplier applied to the effective visual relief for this call. Values greater than `1` increase apparent relief and values between `0` and `1` flatten it.
 #'@param relativez Default `TRUE`. Whether `z` should be measured in relation to the underlying elevation at that point in the heightmap, or set absolutely (`FALSE`).
 #'@param offset Elevation above the surface (at the label point) to start drawing the line.
 #'@param clear_previous Default `FALSE`. If `TRUE`, it will clear all existing text and lines rendered with [render_label()]. If no
@@ -115,7 +115,7 @@ render_label = function(
 	extent = NULL,
 	panel = NULL,
 	zscale = 1,
-	visual_exaggeration = 1,
+	vertical_exaggeration = 1,
 	relativez = TRUE,
 	offset = 0,
 	clear_previous = FALSE,
@@ -150,9 +150,9 @@ render_label = function(
 			missing(zscale),
 			caller = "render_label"
 		)
-		zscale = apply_visual_exaggeration(
+		zscale = apply_vertical_exaggeration(
 			zscale = zscale,
-			visual_exaggeration = visual_exaggeration,
+			vertical_exaggeration = vertical_exaggeration,
 			caller = "render_label"
 		)
 		heightmap = resolve_scene_render_heightmap(
@@ -248,7 +248,9 @@ render_label = function(
 		nrow_map = nrow(heightmap) - 1
 		ncol_map = ncol(heightmap) - 1
 		x_index = (x - e["xmin"]) / (e["xmax"] - e["xmin"]) * nrow_map + 1
-		y_index = 1 + ncol_map - (y - e["ymin"]) / (e["ymax"] - e["ymin"]) * ncol_map
+		y_index = 1 +
+			ncol_map -
+			(y - e["ymin"]) / (e["ymax"] - e["ymin"]) * ncol_map
 		x_index_clamped = x_index
 		y_index_clamped = y_index
 		x_index_clamped[floor(x_index_clamped) >= nrow(heightmap)] = nrow(heightmap)
@@ -523,14 +525,22 @@ resolve_render_label_text_angle = function(text_angle = NULL, default_angle) {
 	text_angle
 }
 
-resolve_render_label_text_angle_rayrender = function(text_angle = NULL, phi, theta) {
+resolve_render_label_text_angle_rayrender = function(
+	text_angle = NULL,
+	phi,
+	theta
+) {
 	resolve_render_label_text_angle(
 		text_angle = text_angle,
 		default_angle = c(-phi, theta + 180, 0)
 	)
 }
 
-resolve_render_label_text_angle_rayvertex = function(text_angle = NULL, theta, rotmat) {
+resolve_render_label_text_angle_rayvertex = function(
+	text_angle = NULL,
+	theta,
+	rotmat
+) {
 	resolve_render_label_text_angle(
 		text_angle = text_angle,
 		default_angle = c(rotmat[1], -theta, 0)

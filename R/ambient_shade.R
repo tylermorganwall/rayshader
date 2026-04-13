@@ -11,7 +11,7 @@
 #'@param multicore Default FALSE. If TRUE, multiple cores will be used to compute the shadow matrix. By default, this uses all cores available, unless the user has
 #'set `options("cores")` in which the multicore option will only use that many cores.
 #'@param zscale Default 1. The ratio between the x and y spacing (which are assumed to be equal) and the z axis.
-#'@param visual_exaggeration Default `1`. One-off multiplier applied to the
+#'@param vertical_exaggeration Default `1`. One-off multiplier applied to the
 #'effective visual relief for this call. Values greater than `1` increase
 #'apparent relief and values between `0` and `1` flatten it. This does not
 #'update cached `zscale` metadata.
@@ -46,15 +46,19 @@ ambient_shade = function(
 	maxsearch = 30,
 	multicore = FALSE,
 	zscale = 1,
-	visual_exaggeration = 1,
+	vertical_exaggeration = 1,
 	cache_mask = NULL,
 	shadow_cache = NULL,
 	progbar = interactive(),
 	...
 ) {
 	heightmap_missing = missing(heightmap)
-	heightmap_cache_label = format_scene_cache_label(deparse(substitute(heightmap)))
-	zscale_cache_input_label = format_scene_cache_label(deparse(substitute(zscale)))
+	heightmap_cache_label = format_scene_cache_label(deparse(substitute(
+		heightmap
+	)))
+	zscale_cache_input_label = format_scene_cache_label(deparse(substitute(
+		zscale
+	)))
 	heightmap_auto_zscale = NA_real_
 	if (heightmap_missing) {
 		resolved_heightmap = resolve_hillshade_heightmap(
@@ -79,15 +83,18 @@ ambient_shade = function(
 	zscale_cache_label = switch(
 		resolved_zscale$source,
 		explicit = zscale_cache_input_label,
-		auto = format_scene_cache_label(sprintf("%s_auto_zscale", heightmap_cache_label)),
+		auto = format_scene_cache_label(sprintf(
+			"%s_auto_zscale",
+			heightmap_cache_label
+		)),
 		hillshade = resolved_zscale$label,
 		scene = resolved_zscale$label,
 		NULL
 	)
 	cache_hillshade_zscale(zscale, label = zscale_cache_label)
-	zscale = apply_visual_exaggeration(
+	zscale = apply_vertical_exaggeration(
 		zscale = zscale,
-		visual_exaggeration = visual_exaggeration,
+		vertical_exaggeration = vertical_exaggeration,
 		caller = "ambient_shade"
 	)
 	if (sunbreaks < 3) {

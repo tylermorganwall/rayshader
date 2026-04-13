@@ -13,11 +13,11 @@
 #'@param normalvectors Default `NULL`. Cache of the normal vectors (from [calculate_normal()] function). Supply this to speed up texture mapping.
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis.
 #'If supplied, this also updates the cached hillshade `zscale` for downstream rayshader calls.
-#'@param visual_exaggeration Default `1`. One-off multiplier applied to the
+#'@param vertical_exaggeration Default `1`. One-off multiplier applied to the
 #'effective visual relief for this call. Values greater than `1` increase
 #'apparent relief and values between `0` and `1` flatten it. This does not
 #'update cached `zscale` metadata.
-#'@param colorintensity Deprecated alias for `visual_exaggeration`.
+#'@param colorintensity Deprecated alias for `vertical_exaggeration`.
 #'
 #'@param progbar Default `TRUE` if interactive, `FALSE` otherwise. If `FALSE`, turns off progress bar.
 #'@return RGB array of hillshaded texture mappings.
@@ -30,7 +30,7 @@
 #'
 #'#Decrease the color intensity:
 #'montereybay |>
-#'  sphere_shade(visual_exaggeration=0.1) |>
+#'  sphere_shade(vertical_exaggeration=0.1) |>
 #'  plot_map()
 #'
 #'#Change to a built-in color texture:
@@ -56,7 +56,7 @@ sphere_shade = function(
 	normalvectors = NULL,
 	colorintensity = 1,
 	zscale = 1,
-	visual_exaggeration = 1,
+	vertical_exaggeration = 1,
 	progbar = interactive()
 ) {
 	heightmap_missing = missing(heightmap)
@@ -66,16 +66,16 @@ sphere_shade = function(
 	zscale_cache_input_label = format_scene_cache_label(deparse(substitute(
 		zscale
 	)))
-	visual_exaggeration_missing = missing(visual_exaggeration)
+	vertical_exaggeration_missing = missing(vertical_exaggeration)
 	if (!missing(colorintensity)) {
 		.Deprecated(
 			msg = paste(
 				"`colorintensity` is deprecated in `sphere_shade()`.",
-				"Use `visual_exaggeration` instead."
+				"Use `vertical_exaggeration` instead."
 			)
 		)
-		if (visual_exaggeration_missing) {
-			visual_exaggeration = colorintensity
+		if (vertical_exaggeration_missing) {
+			vertical_exaggeration = colorintensity
 		}
 	}
 	if (heightmap_missing) {
@@ -104,9 +104,9 @@ sphere_shade = function(
 	} else {
 		zscale = 1
 	}
-	zscale = apply_visual_exaggeration(
+	zscale = apply_vertical_exaggeration(
 		zscale = zscale,
-		visual_exaggeration = visual_exaggeration,
+		vertical_exaggeration = vertical_exaggeration,
 		caller = "sphere_shade"
 	)
 	sunangle = sunangle / 180 * pi

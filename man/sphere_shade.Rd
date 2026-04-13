@@ -11,7 +11,7 @@ sphere_shade(
   normalvectors = NULL,
   colorintensity = 1,
   zscale = 1,
-  visual_exaggeration = 1,
+  vertical_exaggeration = 1,
   progbar = interactive()
 )
 }
@@ -25,12 +25,12 @@ of the built-in palettes (\code{imhof1},\code{imhof2},\code{imhof3},\code{imhof4
 
 \item{normalvectors}{Default \code{NULL}. Cache of the normal vectors (from \code{\link[=calculate_normal]{calculate_normal()}} function). Supply this to speed up texture mapping.}
 
-\item{colorintensity}{Deprecated alias for \code{visual_exaggeration}.}
+\item{colorintensity}{Deprecated alias for \code{vertical_exaggeration}.}
 
 \item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis.
 If supplied, this also updates the cached hillshade \code{zscale} for downstream rayshader calls.}
 
-\item{visual_exaggeration}{Default \code{1}. One-off multiplier applied to the
+\item{vertical_exaggeration}{Default \code{1}. One-off multiplier applied to the
 effective visual relief for this call. Values greater than \code{1} increase
 apparent relief and values between \code{0} and \code{1} flatten it. This does not
 update cached \code{zscale} metadata.}
@@ -55,7 +55,7 @@ montereybay |>
 
 #Decrease the color intensity:
 montereybay |>
- sphere_shade(visual_exaggeration=0.1) |>
+ sphere_shade(vertical_exaggeration=0.1) |>
  plot_map()
 
 #Change to a built-in color texture:

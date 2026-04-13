@@ -8,7 +8,7 @@ plot_3d(
   hillshade,
   heightmap,
   zscale = 1,
-  visual_exaggeration = 1,
+  vertical_exaggeration = 1,
   baseshape = "rectangle",
   solid = TRUE,
   soliddepth = "auto",
@@ -66,7 +66,7 @@ of 1 meter and the grid values are separated by 10 meters, \code{zscale} would b
 If \code{zscale} is not supplied and \code{heightmap} is a spatial raster, rayshader automatically
 uses the raster cell resolution (mean x/y resolution).}
 
-\item{visual_exaggeration}{Default \code{1}. One-off multiplier applied to the
+\item{vertical_exaggeration}{Default \code{1}. One-off multiplier applied to the
 effective visual relief for this scene. Values greater than \code{1} increase
 apparent relief and values between \code{0} and \code{1} flatten it. This does not
 update cached hillshade \code{zscale} metadata.}

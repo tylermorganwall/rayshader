@@ -12,7 +12,7 @@ render_buildings(
   roof_material = NA,
   angle = 45,
   zscale = 1,
-  visual_exaggeration = 1,
+  vertical_exaggeration = 1,
   scale_data = 1,
   relative_heights = TRUE,
   heights_relative_to_centroid = FALSE,
@@ -62,7 +62,7 @@ the full color/appearance/material options for the resulting \code{ray_mesh} mes
 
 \item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.}
 
-\item{visual_exaggeration}{Default \code{1}. One-off multiplier applied to the effective visual relief for this call. Values greater than \code{1} increase apparent relief and values between \code{0} and \code{1} flatten it.}
+\item{vertical_exaggeration}{Default \code{1}. One-off multiplier applied to the effective visual relief for this call. Values greater than \code{1} increase apparent relief and values between \code{0} and \code{1} flatten it.}
 
 \item{scale_data}{Default \code{1}. How much to scale the \code{top}/\code{bottom} value when rendering. Use
 \code{zscale} to adjust the data to account for \code{x}/\code{y} grid spacing, and this argument to scale the data

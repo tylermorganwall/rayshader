@@ -37,7 +37,7 @@
 #' of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
 #'  All points are assumed to be evenly spaced.
 #' @param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.
-#' @param visual_exaggeration Default `1`. One-off multiplier applied to the effective visual relief for this call. Values greater than `1` increase apparent relief and values between `0` and `1` flatten it.
+#' @param vertical_exaggeration Default `1`. One-off multiplier applied to the effective visual relief for this call. Values greater than `1` increase apparent relief and values between `0` and `1` flatten it.
 #' @param alpha Default `1`. Transparency of the polygons.
 #' @param lit Default `TRUE`. Whether to light the polygons.
 #' @param light_altitude Default `c(45, 60)`. Degree(s) from the horizon from which to light the polygons.
@@ -97,7 +97,7 @@ render_polygons = function(
 	data_column_bottom = NULL,
 	heightmap = NULL,
 	zscale = 1,
-	visual_exaggeration = 1,
+	vertical_exaggeration = 1,
 	scale_data = 1,
 	parallel = FALSE,
 	holes = 0,
@@ -117,9 +117,9 @@ render_polygons = function(
 		missing(zscale),
 		caller = "render_polygons"
 	)
-	zscale = apply_visual_exaggeration(
+	zscale = apply_vertical_exaggeration(
 		zscale = zscale,
-		visual_exaggeration = visual_exaggeration,
+		vertical_exaggeration = vertical_exaggeration,
 		caller = "render_polygons"
 	)
 	heightmap = resolve_scene_render_heightmap(

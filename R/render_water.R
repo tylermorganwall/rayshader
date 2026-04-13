@@ -9,7 +9,7 @@
 #'@param watercolor Default `lightblue`.
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
 #'of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
-#'@param visual_exaggeration Default `1`. One-off multiplier applied to the effective visual relief for this call. Values greater than `1` increase apparent relief and values between `0` and `1` flatten it.
+#'@param vertical_exaggeration Default `1`. One-off multiplier applied to the effective visual relief for this call. Values greater than `1` increase apparent relief and values between `0` and `1` flatten it.
 #'@param wateralpha Default `0.5`. Water transparency.
 #'@param waterlinecolor Default `NULL`. Color of the lines around the edges of the water layer.
 #'@param waterlinealpha Default `1`. Water line tranparency.
@@ -42,7 +42,7 @@ render_water = function(
 	waterdepth = 0,
 	watercolor = "lightblue",
 	zscale = 1,
-	visual_exaggeration = 1,
+	vertical_exaggeration = 1,
 	wateralpha = 0.5,
 	waterlinecolor = NULL,
 	waterlinealpha = 1,
@@ -54,9 +54,9 @@ render_water = function(
 		missing(zscale),
 		caller = "render_water"
 	)
-	zscale = apply_visual_exaggeration(
+	zscale = apply_vertical_exaggeration(
 		zscale = zscale,
-		visual_exaggeration = visual_exaggeration,
+		vertical_exaggeration = vertical_exaggeration,
 		caller = "render_water"
 	)
 	heightmap = resolve_scene_render_heightmap(

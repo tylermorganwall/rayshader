@@ -9,7 +9,7 @@ lamb_shade(
   sunaltitude = 45,
   sunangle = 315,
   zscale = 1,
-  visual_exaggeration = 1,
+  vertical_exaggeration = 1,
   zero_negative = TRUE
 )
 }
@@ -22,7 +22,7 @@ lamb_shade(
 
 \item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis.}
 
-\item{visual_exaggeration}{Default \code{1}. One-off multiplier applied to the
+\item{vertical_exaggeration}{Default \code{1}. One-off multiplier applied to the
 effective visual relief for this call. Values greater than \code{1} increase
 apparent relief and values between \code{0} and \code{1} flatten it. This does not
 update cached \code{zscale} metadata.}

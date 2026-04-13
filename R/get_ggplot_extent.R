@@ -132,7 +132,10 @@ validate_scene_extent_panel = function(
 	if (is.null(extent) || is.null(panel)) {
 		return(extent)
 	}
-	panel_info = get_cached_plot_gg_panel_info(heightmap = heightmap, default = NULL)
+	panel_info = get_cached_plot_gg_panel_info(
+		heightmap = heightmap,
+		default = NULL
+	)
 	if (is.null(panel_info) || !nrow(panel_info)) {
 		return(extent)
 	}
@@ -183,19 +186,23 @@ match_plot_gg_panel_from_extent = function(extent, panel_info) {
 	if (is.null(extent_vals)) {
 		return(NULL)
 	}
-	panel_matches = which(vapply(seq_len(nrow(panel_info)), function(i) {
-		cached_extent = c(
-			xmin = panel_info$extent_xmin[i],
-			xmax = panel_info$extent_xmax[i],
-			ymin = panel_info$extent_ymin[i],
-			ymax = panel_info$extent_ymax[i]
-		)
-		isTRUE(all.equal(
-			as.numeric(extent_vals),
-			as.numeric(cached_extent),
-			tolerance = 1e-8
-		))
-	}, logical(1)))
+	panel_matches = which(vapply(
+		seq_len(nrow(panel_info)),
+		function(i) {
+			cached_extent = c(
+				xmin = panel_info$extent_xmin[i],
+				xmax = panel_info$extent_xmax[i],
+				ymin = panel_info$extent_ymin[i],
+				ymax = panel_info$extent_ymax[i]
+			)
+			isTRUE(all.equal(
+				as.numeric(extent_vals),
+				as.numeric(cached_extent),
+				tolerance = 1e-8
+			))
+		},
+		logical(1)
+	))
 	if (length(panel_matches) == 1) {
 		return(panel_info$panel[panel_matches])
 	}
@@ -214,7 +221,10 @@ infer_plot_gg_panel = function(
 	if (is.null(transform_info)) {
 		return(NULL)
 	}
-	panel_info = get_cached_plot_gg_panel_info(heightmap = heightmap, default = NULL)
+	panel_info = get_cached_plot_gg_panel_info(
+		heightmap = heightmap,
+		default = NULL
+	)
 	panel = match_plot_gg_panel_from_extent(extent, panel_info)
 	if (!is.null(panel)) {
 		return(panel)
@@ -227,7 +237,10 @@ infer_plot_gg_panel = function(
 }
 
 canonicalize_plot_gg_extent = function(extent, heightmap = NULL) {
-	transform_info = get_cached_plot_gg_transform_info(heightmap = heightmap, default = NULL)
+	transform_info = get_cached_plot_gg_transform_info(
+		heightmap = heightmap,
+		default = NULL
+	)
 	if (is.null(transform_info)) {
 		return(extent)
 	}
@@ -249,7 +262,10 @@ get_scene_transform_context = function(
 	error_if_missing = FALSE,
 	caller = NULL
 ) {
-	transform_info = get_cached_plot_gg_transform_info(heightmap = heightmap, default = NULL)
+	transform_info = get_cached_plot_gg_transform_info(
+		heightmap = heightmap,
+		default = NULL
+	)
 	if (is.null(transform_info)) {
 		return(NULL)
 	}
@@ -497,7 +513,10 @@ coerce_scene_point_input = function(location, crs = NULL, caller = NULL) {
 			call. = FALSE
 		)
 	}
-	geometry_types = as.character(sf::st_geometry_type(sf_data, by_geometry = TRUE))
+	geometry_types = as.character(sf::st_geometry_type(
+		sf_data,
+		by_geometry = TRUE
+	))
 	if (any(!geometry_types %in% c("POINT", "MULTIPOINT"))) {
 		stop(
 			paste0(
@@ -758,7 +777,9 @@ scene_crs_equal = function(x, y) {
 }
 
 parse_scene_crs = function(crs, caller = NULL, arg_name = "crs") {
-	parsed_crs = suppressWarnings(tryCatch(sf::st_crs(crs), error = function(e) NULL))
+	parsed_crs = suppressWarnings(tryCatch(sf::st_crs(crs), error = function(e) {
+		NULL
+	}))
 	if (is.null(parsed_crs) || is.na(parsed_crs)) {
 		stop(
 			sprintf(
@@ -868,9 +889,11 @@ resolve_scene_sf_source_crs = function(
 	}
 	existing_crs = suppressWarnings(sf::st_crs(sf_data))
 	has_existing_crs = !is.na(existing_crs)
-	if (!is.null(explicit_crs) &&
-		has_existing_crs &&
-		!scene_crs_equal(existing_crs, explicit_crs)) {
+	if (
+		!is.null(explicit_crs) &&
+			has_existing_crs &&
+			!scene_crs_equal(existing_crs, explicit_crs)
+	) {
 		stop(
 			paste0(
 				format_render_caller_prefix(caller),
@@ -1327,7 +1350,9 @@ get_scene_context_token = function(default = NULL) {
 	scene_token
 }
 
-is_current_scene_context = function(token = get_scene_context_token(default = NULL)) {
+is_current_scene_context = function(
+	token = get_scene_context_token(default = NULL)
+) {
 	current_token = get_current_scene_context_token(default = NULL)
 	!is.null(token) && !is.null(current_token) && identical(token, current_token)
 }
@@ -1582,7 +1607,10 @@ get_scene_crs_label = function(default = NULL) {
 }
 
 get_scene_heightmap = function(default = NULL) {
-	scene_heightmap = get_scene_context_value("scene_heightmap", default = default)
+	scene_heightmap = get_scene_context_value(
+		"scene_heightmap",
+		default = default
+	)
 	if (is.null(scene_heightmap)) {
 		return(default)
 	}
@@ -1613,7 +1641,12 @@ format_scene_cache_label = function(label) {
 	label
 }
 
-emit_scene_cache_message = function(caller, argument_name, cache_name, cache_label = NULL) {
+emit_scene_cache_message = function(
+	caller,
+	argument_name,
+	cache_name,
+	cache_label = NULL
+) {
 	if (is.null(caller) || !nzchar(caller)) {
 		return(invisible(NULL))
 	}
@@ -1640,30 +1673,30 @@ emit_scene_cache_message = function(caller, argument_name, cache_name, cache_lab
 	invisible(NULL)
 }
 
-resolve_visual_exaggeration = function(
-	visual_exaggeration = 1,
+resolve_vertical_exaggeration = function(
+	vertical_exaggeration = 1,
 	caller = NULL
 ) {
-	visual_exaggeration = suppressWarnings(as.numeric(visual_exaggeration)[1])
-	if (!is.finite(visual_exaggeration) || visual_exaggeration <= 0) {
+	vertical_exaggeration = suppressWarnings(as.numeric(vertical_exaggeration)[1])
+	if (!is.finite(vertical_exaggeration) || vertical_exaggeration <= 0) {
 		stop(
 			paste0(
 				format_render_caller_prefix(caller),
-				"`visual_exaggeration` must be a positive number."
+				"`vertical_exaggeration` must be a positive number."
 			),
 			call. = FALSE
 		)
 	}
-	visual_exaggeration
+	vertical_exaggeration
 }
 
-apply_visual_exaggeration = function(
+apply_vertical_exaggeration = function(
 	zscale = 1,
-	visual_exaggeration = 1,
+	vertical_exaggeration = 1,
 	caller = NULL
 ) {
-	visual_exaggeration = resolve_visual_exaggeration(
-		visual_exaggeration = visual_exaggeration,
+	vertical_exaggeration = resolve_vertical_exaggeration(
+		vertical_exaggeration = vertical_exaggeration,
 		caller = caller
 	)
 	zscale = suppressWarnings(as.numeric(zscale)[1])
@@ -1676,7 +1709,7 @@ apply_visual_exaggeration = function(
 			call. = FALSE
 		)
 	}
-	zscale / visual_exaggeration
+	zscale / vertical_exaggeration
 }
 
 resolve_scene_render_zscale = function(
@@ -1685,7 +1718,11 @@ resolve_scene_render_zscale = function(
 	caller = NULL
 ) {
 	cached_scene_zscale = get_scene_zscale(default = NA_real_)
-	if (isTRUE(zscale_missing) && is.finite(cached_scene_zscale) && cached_scene_zscale > 0) {
+	if (
+		isTRUE(zscale_missing) &&
+			is.finite(cached_scene_zscale) &&
+			cached_scene_zscale > 0
+	) {
 		emit_scene_cache_message(
 			caller = caller,
 			argument_name = "zscale",

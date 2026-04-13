@@ -17,7 +17,7 @@
 #'the ray.
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation is in units
 #'of meters and the grid values are separated by 10 meters, `zscale` would be 10.
-#'@param visual_exaggeration Default `1`. One-off multiplier applied to the
+#'@param vertical_exaggeration Default `1`. One-off multiplier applied to the
 #'effective visual relief for this call. Values greater than `1` increase
 #'apparent relief and values between `0` and `1` flatten it. This does not
 #'update cached `zscale` metadata.
@@ -58,213 +58,220 @@
 #'  ray_shade(zscale=50, sunaltitude=25, sunangle=225) |>
 #'  plot_map()
 ray_shade = function(
-  heightmap,
-  sunaltitude = 45,
-  sunangle = 315,
-  maxsearch = NULL,
-  lambert = TRUE,
-  zscale = 1,
-  visual_exaggeration = 1,
-  multicore = FALSE,
-  cache_mask = NULL,
-  shadow_cache = NULL,
-  progbar = interactive(),
-  anglebreaks = NULL,
-  ...
+	heightmap,
+	sunaltitude = 45,
+	sunangle = 315,
+	maxsearch = NULL,
+	lambert = TRUE,
+	zscale = 1,
+	vertical_exaggeration = 1,
+	multicore = FALSE,
+	cache_mask = NULL,
+	shadow_cache = NULL,
+	progbar = interactive(),
+	anglebreaks = NULL,
+	...
 ) {
-  heightmap_missing = missing(heightmap)
-  heightmap_cache_label = format_scene_cache_label(deparse(substitute(heightmap)))
-  zscale_cache_input_label = format_scene_cache_label(deparse(substitute(zscale)))
-  heightmap_auto_zscale = NA_real_
-  if (heightmap_missing) {
-    resolved_heightmap = resolve_hillshade_heightmap(
-      heightmap_missing = TRUE,
-      caller = "ray_shade"
-    )
-    heightmap = resolved_heightmap$heightmap
-  } else {
-    heightmap_info = coerce_plot_3d_heightmap(heightmap)
-    heightmap = heightmap_info$heightmap
-    heightmap_auto_zscale = heightmap_info$zscale
-    cache_hillshade_heightmap(heightmap, label = heightmap_cache_label)
-  }
-  stopifnot(is.matrix(heightmap))
-  resolved_zscale = resolve_hillshade_zscale(
-    zscale = zscale,
-    zscale_missing = missing(zscale),
-    caller = "ray_shade",
-    auto_zscale = heightmap_auto_zscale
-  )
-  zscale = resolved_zscale$zscale
-  zscale_cache_label = switch(
-    resolved_zscale$source,
-    explicit = zscale_cache_input_label,
-    auto = format_scene_cache_label(sprintf("%s_auto_zscale", heightmap_cache_label)),
-    hillshade = resolved_zscale$label,
-    scene = resolved_zscale$label,
-    NULL
-  )
-  cache_hillshade_zscale(zscale, label = zscale_cache_label)
-  zscale = apply_visual_exaggeration(
-    zscale = zscale,
-    visual_exaggeration = visual_exaggeration,
-    caller = "ray_shade"
-  )
-  originalheightmap = heightmap
-  heightmap = fliplr(t(heightmap))
-  if (!is.null(cache_mask)) {
-    cache_mask = fliplr(t(cache_mask))
-  }
-  if (is.null(anglebreaks)) {
-    anglebreaks = seq(
-      max(0, sunaltitude - 0.533 / 2),
-      min(90, sunaltitude + 0.533 / 2),
-      length.out = 10
-    )
-  }
-  if (all(anglebreaks <= 0)) {
-    return(matrix(0, nrow = nrow(heightmap), ncol = ncol(heightmap)))
-  }
-  if (is.null(maxsearch)) {
-    maxsearch = (max(heightmap, na.rm = TRUE) - min(heightmap, na.rm = TRUE)) /
-      (zscale * sinpi(min(anglebreaks[anglebreaks > 0]) / 180))
-  }
-  anglebreaks = anglebreaks[order(anglebreaks)]
-  anglebreaks_rad = anglebreaks * pi / 180
-  sunangle_rad_ray = -pi / 2 - sunangle * pi / 180
-  heightmap = add_padding(heightmap)
-  if (is.null(cache_mask)) {
-    cache_mask = matrix(1, nrow = nrow(heightmap), ncol = ncol(heightmap))
-  } else {
-    padding = matrix(0, nrow(cache_mask) + 2, ncol(cache_mask) + 2)
-    padding[2:(nrow(padding) - 1), 2:(ncol(padding) - 1)] = cache_mask
-    cache_mask = padding
-  }
-  if (!multicore) {
-    shadowmatrix = fliplr(rayshade_cpp(
-      sunangle = sunangle_rad_ray,
-      anglebreaks = anglebreaks_rad,
-      heightmap = heightmap,
-      zscale = zscale,
-      maxsearch = maxsearch,
-      cache_mask = cache_mask,
-      progbar = progbar
-    ))
-    shadowmatrix = shadowmatrix[
-      c(-1, -nrow(shadowmatrix)),
-      c(-1, -ncol(shadowmatrix))
-    ]
-    cache_mask = cache_mask[c(-1, -nrow(cache_mask)), c(-1, -ncol(cache_mask))]
-    shadowmatrix[shadowmatrix < 0] = 0
-    if (lambert) {
-      shadowmatrix = shadowmatrix *
-        lamb_shade(
-          originalheightmap,
-          sunaltitude = mean(anglebreaks),
-          sunangle = sunangle,
-          zscale = zscale
-        )
-    }
-    if (!is.null(shadow_cache)) {
-      shadow_cache[cache_mask == 1] = shadowmatrix[cache_mask == 1]
-      shadowmatrix = matrix(
-        shadow_cache,
-        nrow = nrow(shadowmatrix),
-        ncol = ncol(shadowmatrix)
-      )
-    }
-    return((shadowmatrix))
-  } else {
-    if (is.null(options("cores")[[1]])) {
-      numbercores = parallel::detectCores()
-    } else {
-      numbercores = options("cores")[[1]]
-    }
-    if (is.na(numbercores) || numbercores < 1) {
-      numbercores = 1L
-    }
-    if (nrow(heightmap) < numbercores * 16) {
-      if (nrow(heightmap) < 4) {
-        chunksize = 1
-      }
-      chunksize = 4
-    } else {
-      chunksize = 16
-    }
-    if (nrow(heightmap) %% chunksize == 0) {
-      number_multicore_iterations = nrow(heightmap) / chunksize
-    } else {
-      number_multicore_iterations = floor(nrow(heightmap) / chunksize) + 1
-    }
-    itervec = rep(1, number_multicore_iterations)
-    for (i in 0:number_multicore_iterations) {
-      itervec[i + 1] = 1 + i * chunksize
-    }
-    itervec[length(itervec)] = nrow(heightmap) + 1
-    cluster_args = list(...)
-    if (is.null(cluster_args$rscript_args)) {
-      cluster_args$rscript_args = "--vanilla"
-    }
-    cl = do.call(
-      parallel::makeCluster,
-      c(list(numbercores), cluster_args)
-    )
-    doParallel::registerDoParallel(cl, cores = numbercores)
-    shadowmatrixlist = tryCatch(
-      {
-        foreach::foreach(
-          i = 1:(length(itervec) - 1),
-          .export = c("rayshade_multicore", "flipud")
-        ) %dopar%
-          {
-            rayshade_multicore(
-              sunangle = sunangle_rad_ray,
-              anglebreaks = anglebreaks_rad,
-              heightmap = heightmap,
-              zscale = zscale,
-              chunkindices = c(itervec[i], (itervec[i + 1])),
-              maxsearch = maxsearch,
-              cache_mask = cache_mask
-            )
-          }
-      },
-      finally = {
-        tryCatch(
-          {
-            parallel::stopCluster(cl)
-          },
-          error = function(e) {
-            print(e)
-          }
-        )
-      }
-    )
-    shadowmatrix = do.call(rbind, shadowmatrixlist)
-    shadowmatrix[shadowmatrix < 0] = 0
-    shadowmatrix = shadowmatrix[
-      c(-1, -nrow(shadowmatrix)),
-      c(-1, -ncol(shadowmatrix))
-    ]
-    shadowmatrix = fliplr(shadowmatrix)
-    cache_mask = cache_mask[c(-1, -nrow(cache_mask)), c(-1, -ncol(cache_mask))]
-    if (lambert) {
-      shadowmatrix = shadowmatrix *
-        lamb_shade(
-          originalheightmap,
-          sunaltitude = mean(anglebreaks),
-          sunangle = sunangle,
-          zscale = zscale
-        )
-    }
-    if (!is.null(shadow_cache)) {
-      shadow_cache[cache_mask == 1] = shadowmatrix[cache_mask == 1]
-      shadowmatrix = matrix(
-        shadow_cache,
-        nrow = nrow(shadowmatrix),
-        ncol = ncol(shadowmatrix)
-      )
-    }
-    return(shadowmatrix)
-  }
+	heightmap_missing = missing(heightmap)
+	heightmap_cache_label = format_scene_cache_label(deparse(substitute(
+		heightmap
+	)))
+	zscale_cache_input_label = format_scene_cache_label(deparse(substitute(
+		zscale
+	)))
+	heightmap_auto_zscale = NA_real_
+	if (heightmap_missing) {
+		resolved_heightmap = resolve_hillshade_heightmap(
+			heightmap_missing = TRUE,
+			caller = "ray_shade"
+		)
+		heightmap = resolved_heightmap$heightmap
+	} else {
+		heightmap_info = coerce_plot_3d_heightmap(heightmap)
+		heightmap = heightmap_info$heightmap
+		heightmap_auto_zscale = heightmap_info$zscale
+		cache_hillshade_heightmap(heightmap, label = heightmap_cache_label)
+	}
+	stopifnot(is.matrix(heightmap))
+	resolved_zscale = resolve_hillshade_zscale(
+		zscale = zscale,
+		zscale_missing = missing(zscale),
+		caller = "ray_shade",
+		auto_zscale = heightmap_auto_zscale
+	)
+	zscale = resolved_zscale$zscale
+	zscale_cache_label = switch(
+		resolved_zscale$source,
+		explicit = zscale_cache_input_label,
+		auto = format_scene_cache_label(sprintf(
+			"%s_auto_zscale",
+			heightmap_cache_label
+		)),
+		hillshade = resolved_zscale$label,
+		scene = resolved_zscale$label,
+		NULL
+	)
+	cache_hillshade_zscale(zscale, label = zscale_cache_label)
+	zscale = apply_vertical_exaggeration(
+		zscale = zscale,
+		vertical_exaggeration = vertical_exaggeration,
+		caller = "ray_shade"
+	)
+	originalheightmap = heightmap
+	heightmap = fliplr(t(heightmap))
+	if (!is.null(cache_mask)) {
+		cache_mask = fliplr(t(cache_mask))
+	}
+	if (is.null(anglebreaks)) {
+		anglebreaks = seq(
+			max(0, sunaltitude - 0.533 / 2),
+			min(90, sunaltitude + 0.533 / 2),
+			length.out = 10
+		)
+	}
+	if (all(anglebreaks <= 0)) {
+		return(matrix(0, nrow = nrow(heightmap), ncol = ncol(heightmap)))
+	}
+	if (is.null(maxsearch)) {
+		maxsearch = (max(heightmap, na.rm = TRUE) - min(heightmap, na.rm = TRUE)) /
+			(zscale * sinpi(min(anglebreaks[anglebreaks > 0]) / 180))
+	}
+	anglebreaks = anglebreaks[order(anglebreaks)]
+	anglebreaks_rad = anglebreaks * pi / 180
+	sunangle_rad_ray = -pi / 2 - sunangle * pi / 180
+	heightmap = add_padding(heightmap)
+	if (is.null(cache_mask)) {
+		cache_mask = matrix(1, nrow = nrow(heightmap), ncol = ncol(heightmap))
+	} else {
+		padding = matrix(0, nrow(cache_mask) + 2, ncol(cache_mask) + 2)
+		padding[2:(nrow(padding) - 1), 2:(ncol(padding) - 1)] = cache_mask
+		cache_mask = padding
+	}
+	if (!multicore) {
+		shadowmatrix = fliplr(rayshade_cpp(
+			sunangle = sunangle_rad_ray,
+			anglebreaks = anglebreaks_rad,
+			heightmap = heightmap,
+			zscale = zscale,
+			maxsearch = maxsearch,
+			cache_mask = cache_mask,
+			progbar = progbar
+		))
+		shadowmatrix = shadowmatrix[
+			c(-1, -nrow(shadowmatrix)),
+			c(-1, -ncol(shadowmatrix))
+		]
+		cache_mask = cache_mask[c(-1, -nrow(cache_mask)), c(-1, -ncol(cache_mask))]
+		shadowmatrix[shadowmatrix < 0] = 0
+		if (lambert) {
+			shadowmatrix = shadowmatrix *
+				lamb_shade(
+					originalheightmap,
+					sunaltitude = mean(anglebreaks),
+					sunangle = sunangle,
+					zscale = zscale
+				)
+		}
+		if (!is.null(shadow_cache)) {
+			shadow_cache[cache_mask == 1] = shadowmatrix[cache_mask == 1]
+			shadowmatrix = matrix(
+				shadow_cache,
+				nrow = nrow(shadowmatrix),
+				ncol = ncol(shadowmatrix)
+			)
+		}
+		return((shadowmatrix))
+	} else {
+		if (is.null(options("cores")[[1]])) {
+			numbercores = parallel::detectCores()
+		} else {
+			numbercores = options("cores")[[1]]
+		}
+		if (is.na(numbercores) || numbercores < 1) {
+			numbercores = 1L
+		}
+		if (nrow(heightmap) < numbercores * 16) {
+			if (nrow(heightmap) < 4) {
+				chunksize = 1
+			}
+			chunksize = 4
+		} else {
+			chunksize = 16
+		}
+		if (nrow(heightmap) %% chunksize == 0) {
+			number_multicore_iterations = nrow(heightmap) / chunksize
+		} else {
+			number_multicore_iterations = floor(nrow(heightmap) / chunksize) + 1
+		}
+		itervec = rep(1, number_multicore_iterations)
+		for (i in 0:number_multicore_iterations) {
+			itervec[i + 1] = 1 + i * chunksize
+		}
+		itervec[length(itervec)] = nrow(heightmap) + 1
+		cluster_args = list(...)
+		if (is.null(cluster_args$rscript_args)) {
+			cluster_args$rscript_args = "--vanilla"
+		}
+		cl = do.call(
+			parallel::makeCluster,
+			c(list(numbercores), cluster_args)
+		)
+		doParallel::registerDoParallel(cl, cores = numbercores)
+		shadowmatrixlist = tryCatch(
+			{
+				foreach::foreach(
+					i = 1:(length(itervec) - 1),
+					.export = c("rayshade_multicore", "flipud")
+				) %dopar%
+					{
+						rayshade_multicore(
+							sunangle = sunangle_rad_ray,
+							anglebreaks = anglebreaks_rad,
+							heightmap = heightmap,
+							zscale = zscale,
+							chunkindices = c(itervec[i], (itervec[i + 1])),
+							maxsearch = maxsearch,
+							cache_mask = cache_mask
+						)
+					}
+			},
+			finally = {
+				tryCatch(
+					{
+						parallel::stopCluster(cl)
+					},
+					error = function(e) {
+						print(e)
+					}
+				)
+			}
+		)
+		shadowmatrix = do.call(rbind, shadowmatrixlist)
+		shadowmatrix[shadowmatrix < 0] = 0
+		shadowmatrix = shadowmatrix[
+			c(-1, -nrow(shadowmatrix)),
+			c(-1, -ncol(shadowmatrix))
+		]
+		shadowmatrix = fliplr(shadowmatrix)
+		cache_mask = cache_mask[c(-1, -nrow(cache_mask)), c(-1, -ncol(cache_mask))]
+		if (lambert) {
+			shadowmatrix = shadowmatrix *
+				lamb_shade(
+					originalheightmap,
+					sunaltitude = mean(anglebreaks),
+					sunangle = sunangle,
+					zscale = zscale
+				)
+		}
+		if (!is.null(shadow_cache)) {
+			shadow_cache[cache_mask == 1] = shadowmatrix[cache_mask == 1]
+			shadowmatrix = matrix(
+				shadow_cache,
+				nrow = nrow(shadowmatrix),
+				ncol = ncol(shadowmatrix)
+			)
+		}
+		return(shadowmatrix)
+	}
 }
 utils::globalVariables('i')

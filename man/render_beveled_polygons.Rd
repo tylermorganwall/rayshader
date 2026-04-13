@@ -15,7 +15,7 @@ render_beveled_polygons(
   width_raw_units = FALSE,
   bevel = NA,
   zscale = 1,
-  visual_exaggeration = 1,
+  vertical_exaggeration = 1,
   bevel_height = 1,
   base_height = 0,
   raw_heights = FALSE,
@@ -76,7 +76,7 @@ or the actual units of the map.}
 
 \item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.}
 
-\item{visual_exaggeration}{Default \code{1}. One-off multiplier applied to the effective visual relief for this call. Values greater than \code{1} increase apparent relief and values between \code{0} and \code{1} flatten it.}
+\item{vertical_exaggeration}{Default \code{1}. One-off multiplier applied to the effective visual relief for this call. Values greater than \code{1} increase apparent relief and values between \code{0} and \code{1} flatten it.}
 
 \item{bevel_height}{Default \code{1}. Height from the base of the polygon to the start of the beveled top.}
 

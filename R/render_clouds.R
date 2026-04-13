@@ -182,7 +182,7 @@ generate_cloud_layer = function(
 #'@param seed Default `1`. Random seed used to generate clouds.
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
 #'of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
-#'@param visual_exaggeration Default `1`. One-off multiplier applied to the effective visual relief for this call. Values greater than `1` increase apparent relief and values between `0` and `1` flatten it.
+#'@param vertical_exaggeration Default `1`. One-off multiplier applied to the effective visual relief for this call. Values greater than `1` increase apparent relief and values between `0` and `1` flatten it.
 #'@param baseshape Default `rectangle`. Shape of the base. Options are `c("rectangle","circle","hex")`.
 #'@param clear_clouds Default `FALSE`. Clears all existing floating layers on the visualization.
 #'@return Adds a 3D floating cloud layer to the map. No return value.
@@ -275,7 +275,7 @@ render_clouds = function(
 	attenuation_coef = 1,
 	seed = 1,
 	zscale = 1,
-	visual_exaggeration = 1,
+	vertical_exaggeration = 1,
 	baseshape = "rectangle",
 	clear_clouds = FALSE
 ) {
@@ -306,9 +306,9 @@ render_clouds = function(
 		missing(zscale),
 		caller = "render_clouds"
 	)
-	zscale = apply_visual_exaggeration(
+	zscale = apply_vertical_exaggeration(
 		zscale = zscale,
-		visual_exaggeration = visual_exaggeration,
+		vertical_exaggeration = vertical_exaggeration,
 		caller = "render_clouds"
 	)
 	heightmap = resolve_scene_render_heightmap(
@@ -385,7 +385,7 @@ render_clouds = function(
 	attenuation_coef = 1,
 	seed = 1,
 	zscale = 1,
-	visual_exaggeration = 1,
+	vertical_exaggeration = 1,
 	baseshape = "rectangle",
 	clear_clouds = FALSE
 ) {
@@ -416,9 +416,9 @@ render_clouds = function(
 		missing(zscale),
 		caller = "render_clouds"
 	)
-	zscale = apply_visual_exaggeration(
+	zscale = apply_vertical_exaggeration(
 		zscale = zscale,
-		visual_exaggeration = visual_exaggeration,
+		vertical_exaggeration = vertical_exaggeration,
 		caller = "render_clouds"
 	)
 	heightmap = resolve_scene_render_heightmap(
@@ -732,4 +732,4 @@ cloud_shade = function(
 		freq = frequency
 	)))
 }
-#'@param visual_exaggeration Default `1`. One-off multiplier applied to the effective visual relief for this call. Values greater than `1` increase apparent relief and values between `0` and `1` flatten it.
+#'@param vertical_exaggeration Default `1`. One-off multiplier applied to the effective visual relief for this call. Values greater than `1` increase apparent relief and values between `0` and `1` flatten it.

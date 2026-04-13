@@ -33,7 +33,7 @@
 #'@param color Default `"grey50"`. Fallback single-color texture when `heightmap`
 #'is supplied and `texture = NULL`.
 #'@param zscale Default `1`. Vertical scale when `heightmap` is supplied.
-#'@param visual_exaggeration Default `1`. One-off multiplier applied to the
+#'@param vertical_exaggeration Default `1`. One-off multiplier applied to the
 #'effective visual relief for this call. Values greater than `1` increase
 #'apparent relief and values between `0` and `1` flatten it. This does not
 #'update cached `zscale` metadata.
@@ -93,7 +93,7 @@ radiance_shade = function(
 	texture = NULL,
 	color = "grey50",
 	zscale = 1,
-	visual_exaggeration = 1,
+	vertical_exaggeration = 1,
 	filename = NA,
 	samples = 128,
 	sample_method = "sobol_blue",
@@ -336,9 +336,9 @@ radiance_shade = function(
 		if (!is.finite(zscale) || zscale <= 0) {
 			stop("`zscale` must be a positive number when `heightmap` is supplied.")
 		}
-		zscale = apply_visual_exaggeration(
+		zscale = apply_vertical_exaggeration(
 			zscale = zscale,
-			visual_exaggeration = visual_exaggeration,
+			vertical_exaggeration = vertical_exaggeration,
 			caller = "radiance_shade"
 		)
 		hillshade = radiance_matrix_texture(
@@ -369,9 +369,9 @@ radiance_shade = function(
 				zscale_missing = zscale_missing,
 				caller = "radiance_shade"
 			)
-			zscale = apply_visual_exaggeration(
+			zscale = apply_vertical_exaggeration(
 				zscale = zscale,
-				visual_exaggeration = visual_exaggeration,
+				vertical_exaggeration = vertical_exaggeration,
 				caller = "radiance_shade"
 			)
 
@@ -401,7 +401,9 @@ radiance_shade = function(
 				),
 				error = function(e) NULL
 			)
-			if (is.null(resolved_heightmap) || !is.matrix(resolved_heightmap$heightmap)) {
+			if (
+				is.null(resolved_heightmap) || !is.matrix(resolved_heightmap$heightmap)
+			) {
 				stop(
 					"No rgl window currently open and no `heightmap` supplied. ",
 					"Build a 2D hillshade with rayshader, call plot_3d()/plot_gg() first, or pass `heightmap`."
@@ -414,9 +416,9 @@ radiance_shade = function(
 				caller = "radiance_shade"
 			)
 			zscale = zscale$zscale
-			zscale = apply_visual_exaggeration(
+			zscale = apply_vertical_exaggeration(
 				zscale = zscale,
-				visual_exaggeration = visual_exaggeration,
+				vertical_exaggeration = vertical_exaggeration,
 				caller = "radiance_shade"
 			)
 

@@ -11,7 +11,7 @@ test_that("hillshade functions reuse cached heightmap", {
 	clear_hillshade_test_cache()
 	withr::defer(clear_hillshade_test_cache())
 
-	sphere_shade(volcano, visual_exaggeration = 50)
+	sphere_shade(volcano, vertical_exaggeration = 50)
 
 	expect_equal(get_hillshade_heightmap(), volcano)
 	expect_null(get_hillshade_zscale(default = NULL))
@@ -33,7 +33,7 @@ test_that("hillshade map functions cache the latest map texture", {
 	clear_hillshade_test_cache()
 	withr::defer(clear_hillshade_test_cache())
 
-	sphere_map = sphere_shade(volcano, visual_exaggeration = 50)
+	sphere_map = sphere_shade(volcano, vertical_exaggeration = 50)
 	expect_equal(get_hillshade_map(), sphere_map)
 
 	height_map = height_shade(volcano)
@@ -92,19 +92,19 @@ test_that("sphere_shade explicit zscale overrides and caches hillshade zscale", 
 	sphere_shade(volcano, zscale = 12)
 	expect_equal(get_hillshade_zscale(), 12)
 
-	sphere_shade(visual_exaggeration = 5)
+	sphere_shade(vertical_exaggeration = 5)
 	expect_equal(get_hillshade_zscale(), 12)
 
 	sphere_shade(zscale = 8)
 	expect_equal(get_hillshade_zscale(), 8)
 })
 
-test_that("visual_exaggeration is one-off for cached hillshade and scene zscale", {
+test_that("vertical_exaggeration is one-off for cached hillshade and scene zscale", {
 	clear_hillshade_test_cache()
 	withr::defer(clear_hillshade_test_cache())
 
 	expect_equal(
-		sphere_shade(volcano, zscale = 12, visual_exaggeration = 2),
+		sphere_shade(volcano, zscale = 12, vertical_exaggeration = 2),
 		sphere_shade(volcano, zscale = 6)
 	)
 	expect_equal(get_hillshade_zscale(), 6)
@@ -117,7 +117,7 @@ test_that("visual_exaggeration is one-off for cached hillshade and scene zscale"
 		hillshade,
 		heightmap = volcano,
 		zscale = 50,
-		visual_exaggeration = 2,
+		vertical_exaggeration = 2,
 		shadow = FALSE,
 		water = FALSE,
 		windowsize = c(200, 200)
@@ -176,7 +176,7 @@ test_that("plot_3d uses cached hillshade heightmap and zscale", {
 	withr::defer(clear_hillshade_test_cache())
 
 	hillshade = volcano |>
-		sphere_shade(visual_exaggeration = 50) |>
+		sphere_shade(vertical_exaggeration = 50) |>
 		add_overlay(height_shade(), 0.5) |>
 		add_shadow(
 			ray_shade(zscale = 50, maxsearch = 10, sunaltitude = 25),
@@ -251,7 +251,7 @@ test_that("radiance_shade reuses cached 2D hillshade state without a scene", {
 	clear_hillshade_test_cache()
 	withr::defer(clear_hillshade_test_cache())
 
-	sphere_map = sphere_shade(volcano, visual_exaggeration = 50)
+	sphere_map = sphere_shade(volcano, vertical_exaggeration = 50)
 	rgl::close3d()
 
 	out = character()

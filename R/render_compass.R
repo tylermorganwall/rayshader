@@ -11,7 +11,7 @@
 #'@param altitude Default `NULL`. Altitude of the compass, defaults to maximum height in the map.
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis.
 #'Only used in combination with `altitude`.
-#'@param visual_exaggeration Default `1`. One-off multiplier applied to the effective visual relief for this call. Values greater than `1` increase apparent relief and values between `0` and `1` flatten it.
+#'@param vertical_exaggeration Default `1`. One-off multiplier applied to the effective visual relief for this call. Values greater than `1` increase apparent relief and values between `0` and `1` flatten it.
 #'@param x Default `NULL`. X position. If not entered, automatically calculated using `position` argument.
 #'@param y Default `NULL`. Y position. If not entered, automatically calculated using `position` argument.
 #'@param z Default `NULL`. Z position. If not entered, automatically calculated using `position` argument.
@@ -113,7 +113,7 @@ render_compass = function(
 	position = "SE",
 	altitude = NULL,
 	zscale = 1,
-	visual_exaggeration = 1,
+	vertical_exaggeration = 1,
 	x = NULL,
 	y = NULL,
 	z = NULL,
@@ -142,9 +142,9 @@ render_compass = function(
 		missing(zscale),
 		caller = "render_compass"
 	)
-	zscale = apply_visual_exaggeration(
+	zscale = apply_vertical_exaggeration(
 		zscale = zscale,
-		visual_exaggeration = visual_exaggeration,
+		vertical_exaggeration = vertical_exaggeration,
 		caller = "render_compass"
 	)
 	if (rgl::cur3d() == 0) {

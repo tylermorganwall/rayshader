@@ -25,7 +25,7 @@ render_tree(
   min_height = 0,
   max_height = Inf,
   zscale = 1,
-  visual_exaggeration = 1,
+  vertical_exaggeration = 1,
   lit = TRUE,
   heightmap = NULL,
   baseshape = "rectangle",
@@ -100,7 +100,7 @@ above that height.}
 
 \item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.}
 
-\item{visual_exaggeration}{Default \code{1}. One-off multiplier applied to the effective visual relief for this call. Values greater than \code{1} increase apparent relief and values between \code{0} and \code{1} flatten it.}
+\item{vertical_exaggeration}{Default \code{1}. One-off multiplier applied to the effective visual relief for this call. Values greater than \code{1} increase apparent relief and values between \code{0} and \code{1} flatten it.}
 
 \item{lit}{Default \code{TRUE}. Whether to apply lighting to the tree.}
 

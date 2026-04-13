@@ -73,7 +73,7 @@ test_that("sphere_shade", {
 	)
 	expect_equal(
 		suppressWarnings(sphere_shade(heightmap = volcano, colorintensity = 2)),
-		sphere_shade(heightmap = volcano, visual_exaggeration = 2)
+		sphere_shade(heightmap = volcano, vertical_exaggeration = 2)
 	)
 })
 

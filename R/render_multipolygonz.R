@@ -22,7 +22,7 @@
 #'@param swap_yz Default `TRUE`. Whether to swap and Y and Z axes. (Y axis is vertical in
 #'rayshader coordinates, but data is often provided with Z being vertical).
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.
-#'@param visual_exaggeration Default `1`. One-off multiplier applied to the effective visual relief for this call. Values greater than `1` increase apparent relief and values between `0` and `1` flatten it.
+#'@param vertical_exaggeration Default `1`. One-off multiplier applied to the effective visual relief for this call. Values greater than `1` increase apparent relief and values between `0` and `1` flatten it.
 #'@param heightmap Default `NULL`. Height matrix for the current scene. If omitted, this is taken from the cached scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value.
 #'of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
 #' All points are assumed to be evenly spaced.
@@ -72,88 +72,88 @@
 #'#This works with `render_highquality()`
 #'render_highquality(min_variance = 0, samples = 16)
 render_multipolygonz = function(
-  sfobj,
-  extent = NULL,
-  panel = NULL,
-  zscale = 1,
-  visual_exaggeration = 1,
-  heightmap = NULL,
-  color = "grey50",
-  offset = 0,
-  obj_zscale = TRUE,
-  swap_yz = TRUE,
-  clear_previous = FALSE,
-  baseshape = "rectangle",
-  rgl_tag = "_multipolygon",
-  crs = NULL,
-  ...
+	sfobj,
+	extent = NULL,
+	panel = NULL,
+	zscale = 1,
+	vertical_exaggeration = 1,
+	heightmap = NULL,
+	color = "grey50",
+	offset = 0,
+	obj_zscale = TRUE,
+	swap_yz = TRUE,
+	clear_previous = FALSE,
+	baseshape = "rectangle",
+	rgl_tag = "_multipolygon",
+	crs = NULL,
+	...
 ) {
-  dot_split = split_zaxis_dots(list(...))
-  zscale = resolve_scene_render_zscale(
-    zscale,
-    missing(zscale),
-    caller = "render_multipolygonz"
-  )
-  zscale = apply_visual_exaggeration(
-    zscale = zscale,
-    visual_exaggeration = visual_exaggeration,
-    caller = "render_multipolygonz"
-  )
-  heightmap = resolve_scene_render_heightmap(
-    heightmap,
-    caller = "render_multipolygonz"
-  )
-  if (clear_previous) {
-    rgl::pop3d(tag = sprintf("obj%s", rgl_tag))
-    if (missing(sfobj)) {
-      render_zaxis_from_dots(
-        zaxis_args = dot_split$zaxis_args,
-        extent = extent,
-        panel = panel,
-        zscale = zscale,
-        heightmap = heightmap,
-        caller = "render_multipolygonz"
-      )
-      return(invisible())
-    }
-  }
-  if (inherits(sfobj, "Spatial")) {
-    sfobj = sf::st_as_sf(sfobj)
-  }
-  if (inherits(sfobj, "sfc")) {
-    sfobj = sf::st_sf(geometry = sfobj)
-  }
-  if (inherits(sfobj, "sfg")) {
-    sfobj = sf::st_sf(geometry = sf::st_sfc(sfobj))
-  }
-  scene_sfobj = auto_transform_scene_sf(
-    sf_object = sfobj,
-    extent = extent,
-    heightmap = heightmap,
-    panel = panel,
-    crs = crs,
-    caller = "render_multipolygonz"
-  )
-  sfobj = scene_sfobj$object
-  if (!is.null(scene_sfobj$extent)) {
-    extent = scene_sfobj$extent
-  }
-  obj_temp = tempfile(fileext = ".obj")
-  save_multipolygonz_to_obj(sfobj, obj_temp)
-  render_obj(
-    filename = obj_temp,
-    extent = extent,
-    panel = panel,
-    obj_zscale = obj_zscale,
-    clear_previous = FALSE,
-    zscale = zscale,
-    color = color,
-    offset = offset,
-    swap_yz = swap_yz,
-    heightmap = heightmap,
-    baseshape = baseshape,
-    rgl_tag = rgl_tag,
-    crs = crs,
-    ...
-  )
+	dot_split = split_zaxis_dots(list(...))
+	zscale = resolve_scene_render_zscale(
+		zscale,
+		missing(zscale),
+		caller = "render_multipolygonz"
+	)
+	zscale = apply_vertical_exaggeration(
+		zscale = zscale,
+		vertical_exaggeration = vertical_exaggeration,
+		caller = "render_multipolygonz"
+	)
+	heightmap = resolve_scene_render_heightmap(
+		heightmap,
+		caller = "render_multipolygonz"
+	)
+	if (clear_previous) {
+		rgl::pop3d(tag = sprintf("obj%s", rgl_tag))
+		if (missing(sfobj)) {
+			render_zaxis_from_dots(
+				zaxis_args = dot_split$zaxis_args,
+				extent = extent,
+				panel = panel,
+				zscale = zscale,
+				heightmap = heightmap,
+				caller = "render_multipolygonz"
+			)
+			return(invisible())
+		}
+	}
+	if (inherits(sfobj, "Spatial")) {
+		sfobj = sf::st_as_sf(sfobj)
+	}
+	if (inherits(sfobj, "sfc")) {
+		sfobj = sf::st_sf(geometry = sfobj)
+	}
+	if (inherits(sfobj, "sfg")) {
+		sfobj = sf::st_sf(geometry = sf::st_sfc(sfobj))
+	}
+	scene_sfobj = auto_transform_scene_sf(
+		sf_object = sfobj,
+		extent = extent,
+		heightmap = heightmap,
+		panel = panel,
+		crs = crs,
+		caller = "render_multipolygonz"
+	)
+	sfobj = scene_sfobj$object
+	if (!is.null(scene_sfobj$extent)) {
+		extent = scene_sfobj$extent
+	}
+	obj_temp = tempfile(fileext = ".obj")
+	save_multipolygonz_to_obj(sfobj, obj_temp)
+	render_obj(
+		filename = obj_temp,
+		extent = extent,
+		panel = panel,
+		obj_zscale = obj_zscale,
+		clear_previous = FALSE,
+		zscale = zscale,
+		color = color,
+		offset = offset,
+		swap_yz = swap_yz,
+		heightmap = heightmap,
+		baseshape = baseshape,
+		rgl_tag = rgl_tag,
+		crs = crs,
+		...
+	)
 }

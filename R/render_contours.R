@@ -7,7 +7,7 @@
 #'@param heightmap Default `NULL`. Height matrix for the current scene. If omitted, this is taken from the cached scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value.
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
 #'of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
-#'@param visual_exaggeration Default `1`. One-off multiplier applied to the effective visual relief for this call. Values greater than `1` increase apparent relief and values between `0` and `1` flatten it.
+#'@param vertical_exaggeration Default `1`. One-off multiplier applied to the effective visual relief for this call. Values greater than `1` increase apparent relief and values between `0` and `1` flatten it.
 #'@param levels Default `NA`. Automatically generated with 10 levels. This argument specifies the exact height levels of each contour.
 #'@param nlevels Default `NA`. Controls the auto-generation of levels. If levels is length-2,
 #'this will automatically generate `nlevels` breaks between `levels[1]` and `levels[2]`.
@@ -62,7 +62,7 @@
 render_contours = function(
 	heightmap = NULL,
 	zscale = 1,
-	visual_exaggeration = 1,
+	vertical_exaggeration = 1,
 	levels = NA,
 	nlevels = NA,
 	linewidth = 1,
@@ -79,9 +79,9 @@ render_contours = function(
 		missing(zscale),
 		caller = "render_contours"
 	)
-	zscale = apply_visual_exaggeration(
+	zscale = apply_vertical_exaggeration(
 		zscale = zscale,
-		visual_exaggeration = visual_exaggeration,
+		vertical_exaggeration = vertical_exaggeration,
 		caller = "render_contours"
 	)
 	if (clear_previous) {
@@ -150,23 +150,26 @@ render_contours = function(
 		}
 		for (i in seq_len(length(isolineval))) {
 			contour_height = contour_heights[i] + offset
-			do.call(render_path, c(
-				list(
-				lat = isolineval[[i]]$y,
-				long = isolineval[[i]]$x,
-				groups = isolineval[[i]]$id,
-				altitude = contour_height,
-				heightmap = heightmap,
-				extent = extent_heightmap,
-				tag = "contour3d",
-				zscale = zscale,
-				linewidth = linewidth,
-				offset = offset,
-				antialias = antialias,
-				color = color[i]
-				),
-				zaxis_split$other_args
-			))
+			do.call(
+				render_path,
+				c(
+					list(
+						lat = isolineval[[i]]$y,
+						long = isolineval[[i]]$x,
+						groups = isolineval[[i]]$id,
+						altitude = contour_height,
+						heightmap = heightmap,
+						extent = extent_heightmap,
+						tag = "contour3d",
+						zscale = zscale,
+						linewidth = linewidth,
+						offset = offset,
+						antialias = antialias,
+						color = color[i]
+					),
+					zaxis_split$other_args
+				)
+			)
 		}
 	} else {
 		prev_id_max = 0
@@ -178,23 +181,26 @@ render_contours = function(
 			isoline_list[[i]] = data.frame(isolineval[[i]])
 		}
 		isolines_combined = do.call("rbind", isoline_list)
-		do.call(render_path, c(
-			list(
-			lat = isolines_combined$y,
-			long = isolines_combined$x,
-			groups = isolines_combined$id,
-			altitude = isolines_combined$altitude,
-			extent = extent_heightmap,
-			tag = "contour3d",
-			heightmap = heightmap,
-			zscale = zscale,
-			linewidth = linewidth,
-			offset = offset,
-			antialias = antialias,
-			color = color
-			),
-			zaxis_split$other_args
-		))
+		do.call(
+			render_path,
+			c(
+				list(
+					lat = isolines_combined$y,
+					long = isolines_combined$x,
+					groups = isolines_combined$id,
+					altitude = isolines_combined$altitude,
+					extent = extent_heightmap,
+					tag = "contour3d",
+					heightmap = heightmap,
+					zscale = zscale,
+					linewidth = linewidth,
+					offset = offset,
+					antialias = antialias,
+					color = color
+				),
+				zaxis_split$other_args
+			)
+		)
 	}
 	render_zaxis_from_dots(
 		zaxis_args = zaxis_split$zaxis_args,

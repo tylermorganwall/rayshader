@@ -14,7 +14,7 @@ render_label(
   extent = NULL,
   panel = NULL,
   zscale = 1,
-  visual_exaggeration = 1,
+  vertical_exaggeration = 1,
   relativez = TRUE,
   offset = 0,
   clear_previous = FALSE,
@@ -65,7 +65,7 @@ for non-ggplot scenes.}
 
 \item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units}
 
-\item{visual_exaggeration}{Default \code{1}. One-off multiplier applied to the effective visual relief for this call. Values greater than \code{1} increase apparent relief and values between \code{0} and \code{1} flatten it.}
+\item{vertical_exaggeration}{Default \code{1}. One-off multiplier applied to the effective visual relief for this call. Values greater than \code{1} increase apparent relief and values between \code{0} and \code{1} flatten it.}
 
 \item{relativez}{Default \code{TRUE}. Whether \code{z} should be measured in relation to the underlying elevation at that point in the heightmap, or set absolutely (\code{FALSE}).}
 

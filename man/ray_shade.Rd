@@ -11,7 +11,7 @@ ray_shade(
   maxsearch = NULL,
   lambert = TRUE,
   zscale = 1,
-  visual_exaggeration = 1,
+  vertical_exaggeration = 1,
   multicore = FALSE,
   cache_mask = NULL,
   shadow_cache = NULL,
@@ -39,7 +39,7 @@ the ray.}
 \item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation is in units
 of meters and the grid values are separated by 10 meters, \code{zscale} would be 10.}
 
-\item{visual_exaggeration}{Default \code{1}. One-off multiplier applied to the
+\item{vertical_exaggeration}{Default \code{1}. One-off multiplier applied to the
 effective visual relief for this call. Values greater than \code{1} increase
 apparent relief and values between \code{0} and \code{1} flatten it. This does not
 update cached \code{zscale} metadata.}

@@ -9,7 +9,7 @@ radiance_shade(
   texture = NULL,
   color = "grey50",
   zscale = 1,
-  visual_exaggeration = 1,
+  vertical_exaggeration = 1,
   filename = NA,
   samples = 128,
   sample_method = "sobol_blue",
@@ -59,7 +59,7 @@ is supplied and \code{texture = NULL}.}
 
 \item{zscale}{Default \code{1}. Vertical scale when \code{heightmap} is supplied.}
 
-\item{visual_exaggeration}{Default \code{1}. One-off multiplier applied to the
+\item{vertical_exaggeration}{Default \code{1}. One-off multiplier applied to the
 effective visual relief for this call. Values greater than \code{1} increase
 apparent relief and values between \code{0} and \code{1} flatten it. This does not
 update cached \code{zscale} metadata.}

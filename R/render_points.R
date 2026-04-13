@@ -24,7 +24,7 @@
 #'for non-ggplot scenes.
 #'@param crs Default `NULL`. CRS of the input numeric x/y coordinates, or CRS to assign to CRS-less spatial data before transforming it into the active scene CRS. If spatial data already carries a CRS, that CRS is used automatically.
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.
-#'@param visual_exaggeration Default `1`. One-off multiplier applied to the effective visual relief for this call. Values greater than `1` increase apparent relief and values between `0` and `1` flatten it.
+#'@param vertical_exaggeration Default `1`. One-off multiplier applied to the effective visual relief for this call. Values greater than `1` increase apparent relief and values between `0` and `1` flatten it.
 #'@param heightmap Default `NULL`. Height matrix for the current scene. If omitted, this is taken from the cached scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value.
 #'of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
 #' All points are assumed to be evenly spaced.
@@ -104,162 +104,165 @@
 #'                   point_material = rayrender::glossy,
 #'                   point_material_args = list(gloss = 0.5, reflectance = 0.2))
 render_points = function(
-  y = NULL,
-  x = NULL,
-  altitude = NULL,
-  extent = NULL,
-  panel = NULL,
-  zscale = 1,
-  visual_exaggeration = 1,
-  heightmap = NULL,
-  size = 0.5,
-  color = "black",
-  offset = 5,
-  clear_previous = FALSE,
-  lat = NULL,
-  long = NULL,
-  location = NULL,
-  crs = NULL,
-  ...
+	y = NULL,
+	x = NULL,
+	altitude = NULL,
+	extent = NULL,
+	panel = NULL,
+	zscale = 1,
+	vertical_exaggeration = 1,
+	heightmap = NULL,
+	size = 0.5,
+	color = "black",
+	offset = 5,
+	clear_previous = FALSE,
+	lat = NULL,
+	long = NULL,
+	location = NULL,
+	crs = NULL,
+	...
 ) {
-  zaxis_split = split_zaxis_dots(list(...))
-  zscale = resolve_scene_render_zscale(
-    zscale,
-    missing(zscale),
-    caller = "render_points"
-  )
-  zscale = apply_visual_exaggeration(
-    zscale = zscale,
-    visual_exaggeration = visual_exaggeration,
-    caller = "render_points"
-  )
-  heightmap = resolve_scene_render_heightmap(
-    heightmap,
-    caller = "render_points"
-  )
-  extent = resolve_scene_render_extent(
-    extent = extent,
-    heightmap = heightmap,
-    caller = "render_points",
-    panel = panel,
-    error_if_missing = FALSE
-  )
-  if (
-    is.null(extent) &&
-      !is.null(heightmap) &&
-      is.null(get_cached_plot_gg_transform_info(heightmap = heightmap, default = NULL))
-  ) {
-    extent = c(
-      xmin = 1,
-      xmax = nrow(heightmap),
-      ymin = 1,
-      ymax = ncol(heightmap)
-    )
-  }
-  point_input = resolve_render_location_input(
-    location = location,
-    x = x,
-    y = y,
-    long = long,
-    lat = lat,
-    missing_x = missing(x),
-    missing_y = missing(y),
-    missing_long = missing(long),
-    missing_lat = missing(lat),
-    extent = extent,
-    heightmap = heightmap,
-    panel = panel,
-    crs = crs,
-    caller = "render_points"
-  )
-  x = point_input$x
-  y = point_input$y
-  if (!is.null(point_input$extent)) {
-    extent = point_input$extent
-  }
-  zaxis_args = normalize_scene_zaxis_args(
-    zaxis_args = zaxis_split$zaxis_args,
-    altitude = altitude,
-    extent = extent,
-    heightmap = heightmap
-  )
-  if (rgl::cur3d() == 0) {
-    stop("No rgl window currently open.")
-  }
-  if (clear_previous) {
-    rgl::pop3d(tag = "points3d")
-    if (is.null(y) || is.null(x)) {
-      render_zaxis_from_dots(
-        zaxis_args = zaxis_args,
-        extent = extent,
-        panel = panel,
-        zscale = zscale,
-        heightmap = heightmap,
-        caller = "render_points"
-      )
-      return(invisible())
-    }
-  }
-  if (!point_input$location_supplied && !is.null(x) && !is.null(y)) {
-    scene_xy = auto_transform_scene_xy(
-      x = x,
-      y = y,
-      extent = extent,
-      heightmap = heightmap,
-      panel = panel,
-      crs = crs,
-      caller = "render_points"
-    )
-    x = scene_xy$x
-    y = scene_xy$y
-    if (!is.null(scene_xy$extent)) {
-      extent = scene_xy$extent
-    }
-  }
-  xyz = transform_into_heightmap_coords(
-    extent,
-    heightmap,
-    y,
-    x,
-    altitude,
-    offset,
-    zscale,
-    crs = crs,
-    panel = panel,
-    transform_scene = FALSE,
-    caller = "render_points"
-  )
+	zaxis_split = split_zaxis_dots(list(...))
+	zscale = resolve_scene_render_zscale(
+		zscale,
+		missing(zscale),
+		caller = "render_points"
+	)
+	zscale = apply_vertical_exaggeration(
+		zscale = zscale,
+		vertical_exaggeration = vertical_exaggeration,
+		caller = "render_points"
+	)
+	heightmap = resolve_scene_render_heightmap(
+		heightmap,
+		caller = "render_points"
+	)
+	extent = resolve_scene_render_extent(
+		extent = extent,
+		heightmap = heightmap,
+		caller = "render_points",
+		panel = panel,
+		error_if_missing = FALSE
+	)
+	if (
+		is.null(extent) &&
+			!is.null(heightmap) &&
+			is.null(get_cached_plot_gg_transform_info(
+				heightmap = heightmap,
+				default = NULL
+			))
+	) {
+		extent = c(
+			xmin = 1,
+			xmax = nrow(heightmap),
+			ymin = 1,
+			ymax = ncol(heightmap)
+		)
+	}
+	point_input = resolve_render_location_input(
+		location = location,
+		x = x,
+		y = y,
+		long = long,
+		lat = lat,
+		missing_x = missing(x),
+		missing_y = missing(y),
+		missing_long = missing(long),
+		missing_lat = missing(lat),
+		extent = extent,
+		heightmap = heightmap,
+		panel = panel,
+		crs = crs,
+		caller = "render_points"
+	)
+	x = point_input$x
+	y = point_input$y
+	if (!is.null(point_input$extent)) {
+		extent = point_input$extent
+	}
+	zaxis_args = normalize_scene_zaxis_args(
+		zaxis_args = zaxis_split$zaxis_args,
+		altitude = altitude,
+		extent = extent,
+		heightmap = heightmap
+	)
+	if (rgl::cur3d() == 0) {
+		stop("No rgl window currently open.")
+	}
+	if (clear_previous) {
+		rgl::pop3d(tag = "points3d")
+		if (is.null(y) || is.null(x)) {
+			render_zaxis_from_dots(
+				zaxis_args = zaxis_args,
+				extent = extent,
+				panel = panel,
+				zscale = zscale,
+				heightmap = heightmap,
+				caller = "render_points"
+			)
+			return(invisible())
+		}
+	}
+	if (!point_input$location_supplied && !is.null(x) && !is.null(y)) {
+		scene_xy = auto_transform_scene_xy(
+			x = x,
+			y = y,
+			extent = extent,
+			heightmap = heightmap,
+			panel = panel,
+			crs = crs,
+			caller = "render_points"
+		)
+		x = scene_xy$x
+		y = scene_xy$y
+		if (!is.null(scene_xy$extent)) {
+			extent = scene_xy$extent
+		}
+	}
+	xyz = transform_into_heightmap_coords(
+		extent,
+		heightmap,
+		y,
+		x,
+		altitude,
+		offset,
+		zscale,
+		crs = crs,
+		panel = panel,
+		transform_scene = FALSE,
+		caller = "render_points"
+	)
 
-  if (length(unique(size)) > 1) {
-    stopifnot(length(size) == nrow(xyz))
-    color_length = length(color)
-    for (i in seq_len(nrow(xyz))) {
-      rgl::points3d(
-        xyz[i, 1],
-        xyz[i, 2],
-        xyz[i, 3],
-        color = color[((i - 1) %% color_length) + 1],
-        tag = "points3d",
-        size = size[i]
-      )
-    }
-  } else {
-    rgl::points3d(
-      xyz[, 1],
-      xyz[, 2],
-      xyz[, 3],
-      color = color,
-      tag = "points3d",
-      size = size
-    )
-  }
-  render_zaxis_from_dots(
-    zaxis_args = zaxis_args,
-    extent = extent,
-    panel = panel,
-    zscale = zscale,
-    heightmap = heightmap,
-    caller = "render_points"
-  )
-  invisible(NULL)
+	if (length(unique(size)) > 1) {
+		stopifnot(length(size) == nrow(xyz))
+		color_length = length(color)
+		for (i in seq_len(nrow(xyz))) {
+			rgl::points3d(
+				xyz[i, 1],
+				xyz[i, 2],
+				xyz[i, 3],
+				color = color[((i - 1) %% color_length) + 1],
+				tag = "points3d",
+				size = size[i]
+			)
+		}
+	} else {
+		rgl::points3d(
+			xyz[, 1],
+			xyz[, 2],
+			xyz[, 3],
+			color = color,
+			tag = "points3d",
+			size = size
+		)
+	}
+	render_zaxis_from_dots(
+		zaxis_args = zaxis_args,
+		extent = extent,
+		panel = panel,
+		zscale = zscale,
+		heightmap = heightmap,
+		caller = "render_points"
+	)
+	invisible(NULL)
 }

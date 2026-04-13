@@ -16,7 +16,7 @@
 #'@param zscale Default `1`. The ratio between x/y spacing and z units.
 #'If left at `1` with `zaxis_breaks = NULL` on non-ggplot terrain scenes, rayshader
 #'will attempt to use the cached `plot_3d()` zscale to generate more meaningful defaults.
-#'@param visual_exaggeration Default `1`. One-off multiplier applied to the effective visual relief for this call. Values greater than `1` increase apparent relief and values between `0` and `1` flatten it.
+#'@param vertical_exaggeration Default `1`. One-off multiplier applied to the effective visual relief for this call. Values greater than `1` increase apparent relief and values between `0` and `1` flatten it.
 #'@param heightmap Default `NULL`. Height matrix for the current scene. If omitted, this is taken from the cached scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value.
 #'@param zaxis_location Default `"auto"`. Axis location. Options:
 #'`"auto"`, `"panel"`, `"panelbottomleft"`, `"panelbottomright"`,
@@ -38,7 +38,7 @@ render_zaxis = function(
 	extent = NULL,
 	panel = NULL,
 	zscale = 1,
-	visual_exaggeration = 1,
+	vertical_exaggeration = 1,
 	heightmap = NULL,
 	zaxis_location = "auto",
 	zaxis_breaks = NULL,
@@ -57,9 +57,9 @@ render_zaxis = function(
 		missing(zscale),
 		caller = "render_zaxis"
 	)
-	zscale = apply_visual_exaggeration(
+	zscale = apply_vertical_exaggeration(
 		zscale = zscale,
-		visual_exaggeration = visual_exaggeration,
+		vertical_exaggeration = vertical_exaggeration,
 		caller = "render_zaxis"
 	)
 	extent_was_missing = missing(extent)

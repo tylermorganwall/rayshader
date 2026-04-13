@@ -28,7 +28,7 @@
 #'for non-ggplot scenes.
 #'@param crs Default `NULL`. CRS of the input numeric x/y coordinates, or CRS to assign to CRS-less spatial data before transforming it into the active scene CRS. If spatial data already carries a CRS, that CRS is used automatically.
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.
-#'@param visual_exaggeration Default `1`. One-off multiplier applied to the effective visual relief for this call. Values greater than `1` increase apparent relief and values between `0` and `1` flatten it.
+#'@param vertical_exaggeration Default `1`. One-off multiplier applied to the effective visual relief for this call. Values greater than `1` increase apparent relief and values between `0` and `1` flatten it.
 #'@param heightmap Default `NULL`. Height matrix for the current scene. If omitted, this is taken from the cached scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value.
 #' All points are assumed to be evenly spaced.
 #'@param resample_evenly Default `FALSE`. If `TRUE`, this will re-sample the path evenly from beginning to end, which can help vastly
@@ -146,80 +146,80 @@
 #'                   path_material = rayrender::dielectric, use_extruded_paths = TRUE,
 #'                   path_material_args = list(refraction = 1.5, attenuation = c(0.05,0.2,0.2)))
 render_path = function(
-  y = NULL,
-  x = NULL,
-  altitude = NULL,
-  groups = NULL,
-  extent = NULL,
-  panel = NULL,
-  zscale = 1,
-  visual_exaggeration = 1,
-  heightmap = NULL,
-  resample_evenly = FALSE,
-  resample_n = 360,
-  reorder = FALSE,
-  reorder_first_index = 1,
-  reorder_duplicate_tolerance = 0.1,
-  reorder_merge_tolerance = 1,
-  simplify_tolerance = 0,
-  linewidth = 0.5,
-  color = "black",
+	y = NULL,
+	x = NULL,
+	altitude = NULL,
+	groups = NULL,
+	extent = NULL,
+	panel = NULL,
+	zscale = 1,
+	vertical_exaggeration = 1,
+	heightmap = NULL,
+	resample_evenly = FALSE,
+	resample_n = 360,
+	reorder = FALSE,
+	reorder_first_index = 1,
+	reorder_duplicate_tolerance = 0.1,
+	reorder_merge_tolerance = 1,
+	simplify_tolerance = 0,
+	linewidth = 0.5,
+	color = "black",
 	antialias = FALSE,
-  offset = 5,
-  clear_previous = FALSE,
-  return_coords = FALSE,
-  tag = "path3d",
-  lat = NULL,
-  long = NULL,
-  crs = NULL,
-  ...
+	offset = 5,
+	clear_previous = FALSE,
+	return_coords = FALSE,
+	tag = "path3d",
+	lat = NULL,
+	long = NULL,
+	crs = NULL,
+	...
 ) {
-  xy_inputs = resolve_render_xy_aliases(
-    x = x,
-    y = y,
-    long = long,
-    lat = lat,
-    missing_x = missing(x),
-    missing_y = missing(y),
-    missing_long = missing(long),
-    missing_lat = missing(lat),
-    caller = "render_path"
-  )
-  x = xy_inputs$x
-  y = xy_inputs$y
-  lat = y
-  long = x
-  zaxis_split = split_zaxis_dots(list(...))
-  zscale = resolve_scene_render_zscale(
-    zscale,
-    missing(zscale),
-    caller = "render_path"
-  )
-  zscale = apply_visual_exaggeration(
-    zscale = zscale,
-    visual_exaggeration = visual_exaggeration,
-    caller = "render_path"
-  )
-  heightmap = resolve_scene_render_heightmap(
-    heightmap,
-    caller = "render_path"
-  )
-  extent = resolve_scene_render_extent(
-    extent = extent,
-    heightmap = heightmap,
-    caller = "render_path",
-    panel = panel,
-    error_if_missing = FALSE
-  )
-  zaxis_args = normalize_scene_zaxis_args(
-    zaxis_args = zaxis_split$zaxis_args,
-    altitude = altitude,
-    extent = extent,
-    heightmap = heightmap
-  )
-  if (rgl::cur3d() == 0 && !return_coords) {
-    stop("No rgl window currently open.")
-  }
+	xy_inputs = resolve_render_xy_aliases(
+		x = x,
+		y = y,
+		long = long,
+		lat = lat,
+		missing_x = missing(x),
+		missing_y = missing(y),
+		missing_long = missing(long),
+		missing_lat = missing(lat),
+		caller = "render_path"
+	)
+	x = xy_inputs$x
+	y = xy_inputs$y
+	lat = y
+	long = x
+	zaxis_split = split_zaxis_dots(list(...))
+	zscale = resolve_scene_render_zscale(
+		zscale,
+		missing(zscale),
+		caller = "render_path"
+	)
+	zscale = apply_vertical_exaggeration(
+		zscale = zscale,
+		vertical_exaggeration = vertical_exaggeration,
+		caller = "render_path"
+	)
+	heightmap = resolve_scene_render_heightmap(
+		heightmap,
+		caller = "render_path"
+	)
+	extent = resolve_scene_render_extent(
+		extent = extent,
+		heightmap = heightmap,
+		caller = "render_path",
+		panel = panel,
+		error_if_missing = FALSE
+	)
+	zaxis_args = normalize_scene_zaxis_args(
+		zaxis_args = zaxis_split$zaxis_args,
+		altitude = altitude,
+		extent = extent,
+		heightmap = heightmap
+	)
+	if (rgl::cur3d() == 0 && !return_coords) {
+		stop("No rgl window currently open.")
+	}
 	if (clear_previous) {
 		rgl::pop3d(tag = tag)
 		if (is.null(lat)) {
@@ -234,268 +234,268 @@ render_path = function(
 			return(invisible())
 		}
 	}
-  if (resample_evenly) {
-    stopifnot(resample_n > 1)
-    xyz = render_path(
-      extent = extent,
-      panel = panel,
-      lat = lat,
-      long = long,
-      altitude = altitude,
-      zscale = zscale,
-      heightmap = heightmap,
-      offset = offset,
-      resample_evenly = FALSE,
-      reorder = reorder,
-      reorder_first_index = reorder_first_index,
-      reorder_duplicate_tolerance = reorder_duplicate_tolerance,
-      reorder_merge_tolerance = reorder_merge_tolerance,
-      simplify_tolerance = simplify_tolerance,
-      clear_previous = FALSE,
-      return_coords = TRUE,
-      crs = crs
-    )
-    xyz = lapply(xyz, get_interpolated_points_path, n = resample_n)
-    xyz = do.call(
-      "rbind",
-      lapply(xyz, \(x) rbind(x, matrix(NA, ncol = 3, nrow = 1)))
-    )
-    if (!return_coords) {
-      if (length(linewidth) > 1) {
-        if (length(linewidth) == nrow(xyz)) {
-          linewidth = (linewidth[seq_len(length(linewidth))[-1]] +
-            linewidth[seq_len(length(linewidth) - 1)]) /
-            2
-        }
-        color_length = length(color)
-        for (i in seq_len(nrow(xyz) - 1)) {
-          rgl::lines3d(
-            xyz[i:(i + 1), ],
-            color = color[((i - 1) %% color_length) + 1],
-            tag = tag,
-            lwd = linewidth[i],
-            line_antialias = antialias
-          )
-        }
-        render_zaxis_from_dots(
-          zaxis_args = zaxis_args,
-          extent = extent,
-          panel = panel,
-          zscale = zscale,
-          heightmap = heightmap,
-          caller = "render_path"
-        )
-        return(invisible())
-      } else {
-        rgl::lines3d(
-          xyz,
-          color = color,
-          tag = tag,
-          lwd = linewidth,
-          line_antialias = antialias
-        )
-        render_zaxis_from_dots(
-          zaxis_args = zaxis_args,
-          extent = extent,
-          panel = panel,
-          zscale = zscale,
-          heightmap = heightmap,
-          caller = "render_path"
-        )
-        return(invisible())
-      }
-    } else {
-      return(xyz)
-    }
-  }
+	if (resample_evenly) {
+		stopifnot(resample_n > 1)
+		xyz = render_path(
+			extent = extent,
+			panel = panel,
+			lat = lat,
+			long = long,
+			altitude = altitude,
+			zscale = zscale,
+			heightmap = heightmap,
+			offset = offset,
+			resample_evenly = FALSE,
+			reorder = reorder,
+			reorder_first_index = reorder_first_index,
+			reorder_duplicate_tolerance = reorder_duplicate_tolerance,
+			reorder_merge_tolerance = reorder_merge_tolerance,
+			simplify_tolerance = simplify_tolerance,
+			clear_previous = FALSE,
+			return_coords = TRUE,
+			crs = crs
+		)
+		xyz = lapply(xyz, get_interpolated_points_path, n = resample_n)
+		xyz = do.call(
+			"rbind",
+			lapply(xyz, \(x) rbind(x, matrix(NA, ncol = 3, nrow = 1)))
+		)
+		if (!return_coords) {
+			if (length(linewidth) > 1) {
+				if (length(linewidth) == nrow(xyz)) {
+					linewidth = (linewidth[seq_len(length(linewidth))[-1]] +
+						linewidth[seq_len(length(linewidth) - 1)]) /
+						2
+				}
+				color_length = length(color)
+				for (i in seq_len(nrow(xyz) - 1)) {
+					rgl::lines3d(
+						xyz[i:(i + 1), ],
+						color = color[((i - 1) %% color_length) + 1],
+						tag = tag,
+						lwd = linewidth[i],
+						line_antialias = antialias
+					)
+				}
+				render_zaxis_from_dots(
+					zaxis_args = zaxis_args,
+					extent = extent,
+					panel = panel,
+					zscale = zscale,
+					heightmap = heightmap,
+					caller = "render_path"
+				)
+				return(invisible())
+			} else {
+				rgl::lines3d(
+					xyz,
+					color = color,
+					tag = tag,
+					lwd = linewidth,
+					line_antialias = antialias
+				)
+				render_zaxis_from_dots(
+					zaxis_args = zaxis_args,
+					extent = extent,
+					panel = panel,
+					zscale = zscale,
+					heightmap = heightmap,
+					caller = "render_path"
+				)
+				return(invisible())
+			}
+		} else {
+			return(xyz)
+		}
+	}
 
-  #Remove empty geometries
-  if (inherits(lat, "sf")) {
-    lat = lat[!sf::st_is_empty(lat), ]
-  }
-  if (reorder && inherits(lat, "sf")) {
-    lat = ray_merge_reorder(
-      lat,
-      start_index = reorder_first_index,
-      merge_tolerance = reorder_merge_tolerance,
-      duplicate_tolerance = reorder_duplicate_tolerance
-    )
-  }
+	#Remove empty geometries
+	if (inherits(lat, "sf")) {
+		lat = lat[!sf::st_is_empty(lat), ]
+	}
+	if (reorder && inherits(lat, "sf")) {
+		lat = ray_merge_reorder(
+			lat,
+			start_index = reorder_first_index,
+			merge_tolerance = reorder_merge_tolerance,
+			duplicate_tolerance = reorder_duplicate_tolerance
+		)
+	}
 
-  if (
-    simplify_tolerance > 0 &&
-      (inherits(lat, "sf") || inherits(lat, "sfc_LINESTRING"))
-  ) {
-    lat = sf::st_sf(sf::st_simplify(
-      lat,
-      dTolerance = simplify_tolerance,
-      preserveTopology = TRUE
-    ))
-    lat = lat[!sf::st_is_empty(lat), ]
-    lat = suppressWarnings(sf::st_cast(
-      sf::st_cast(lat, "MULTILINESTRING"),
-      "LINESTRING"
-    ))
-  }
-  geometry_transformed = FALSE
-  if (inherits(lat, "SpatialLinesDataFrame") || inherits(lat, "SpatialLines")) {
-    lat = sf::st_as_sf(lat)
-  }
-  if (inherits(lat, "sfg")) {
-    lat = sf::st_sfc(lat)
-  }
-  if (
-    inherits(lat, "sf") ||
-      inherits(lat, "sfc")
-  ) {
-    scene_path = auto_transform_scene_sf(
-      sf_object = lat,
-      extent = extent,
-      heightmap = heightmap,
-      panel = panel,
-      crs = crs,
-      caller = "render_path"
-    )
-    lat = scene_path$object
-    if (!is.null(scene_path$extent)) {
-      extent = scene_path$extent
-    }
-    geometry_transformed = TRUE
-  }
+	if (
+		simplify_tolerance > 0 &&
+			(inherits(lat, "sf") || inherits(lat, "sfc_LINESTRING"))
+	) {
+		lat = sf::st_sf(sf::st_simplify(
+			lat,
+			dTolerance = simplify_tolerance,
+			preserveTopology = TRUE
+		))
+		lat = lat[!sf::st_is_empty(lat), ]
+		lat = suppressWarnings(sf::st_cast(
+			sf::st_cast(lat, "MULTILINESTRING"),
+			"LINESTRING"
+		))
+	}
+	geometry_transformed = FALSE
+	if (inherits(lat, "SpatialLinesDataFrame") || inherits(lat, "SpatialLines")) {
+		lat = sf::st_as_sf(lat)
+	}
+	if (inherits(lat, "sfg")) {
+		lat = sf::st_sfc(lat)
+	}
+	if (
+		inherits(lat, "sf") ||
+			inherits(lat, "sfc")
+	) {
+		scene_path = auto_transform_scene_sf(
+			sf_object = lat,
+			extent = extent,
+			heightmap = heightmap,
+			panel = panel,
+			crs = crs,
+			caller = "render_path"
+		)
+		lat = scene_path$object
+		if (!is.null(scene_path$extent)) {
+			extent = scene_path$extent
+		}
+		geometry_transformed = TRUE
+	}
 
-  if (inherits(lat, "sf")) {
-    latlong = sf::st_coordinates(lat)
-    if (ncol(latlong) == 3) {
-      long = latlong[, 1]
-      lat = latlong[, 2]
-      groups = latlong[, 3]
-    } else if (ncol(latlong) == 4) {
-      long = latlong[, 1]
-      lat = latlong[, 2]
-      groups = interaction(latlong[, 3], latlong[, 4])
-    }
-  } else if (inherits(lat, "sfc")) {
-    latlong = sf::st_coordinates(lat)
-    if (ncol(latlong) == 3) {
-      long = latlong[, 1]
-      lat = latlong[, 2]
-      groups = latlong[, 3]
-    } else if (ncol(latlong) == 4) {
-      long = latlong[, 1]
-      lat = latlong[, 2]
-      groups = interaction(latlong[, 3], latlong[, 4])
-    }
-  } else if (is.null(groups)) {
-    groups = rep(1, length(lat))
-  }
-  if (!geometry_transformed && !is.null(lat) && !is.null(long)) {
-    scene_xy = auto_transform_scene_xy(
-      x = long,
-      y = lat,
-      extent = extent,
-      heightmap = heightmap,
-      panel = panel,
-      crs = crs,
-      caller = "render_path"
-    )
-    long = scene_xy$x
-    lat = scene_xy$y
-    if (!is.null(scene_xy$extent)) {
-      extent = scene_xy$extent
-    }
-  }
-  split_lat = split(lat, groups)
-  split_long = split(long, groups)
+	if (inherits(lat, "sf")) {
+		latlong = sf::st_coordinates(lat)
+		if (ncol(latlong) == 3) {
+			long = latlong[, 1]
+			lat = latlong[, 2]
+			groups = latlong[, 3]
+		} else if (ncol(latlong) == 4) {
+			long = latlong[, 1]
+			lat = latlong[, 2]
+			groups = interaction(latlong[, 3], latlong[, 4])
+		}
+	} else if (inherits(lat, "sfc")) {
+		latlong = sf::st_coordinates(lat)
+		if (ncol(latlong) == 3) {
+			long = latlong[, 1]
+			lat = latlong[, 2]
+			groups = latlong[, 3]
+		} else if (ncol(latlong) == 4) {
+			long = latlong[, 1]
+			lat = latlong[, 2]
+			groups = interaction(latlong[, 3], latlong[, 4])
+		}
+	} else if (is.null(groups)) {
+		groups = rep(1, length(lat))
+	}
+	if (!geometry_transformed && !is.null(lat) && !is.null(long)) {
+		scene_xy = auto_transform_scene_xy(
+			x = long,
+			y = lat,
+			extent = extent,
+			heightmap = heightmap,
+			panel = panel,
+			crs = crs,
+			caller = "render_path"
+		)
+		long = scene_xy$x
+		lat = scene_xy$y
+		if (!is.null(scene_xy$extent)) {
+			extent = scene_xy$extent
+		}
+	}
+	split_lat = split(lat, groups)
+	split_long = split(long, groups)
 
-  if (length(altitude) == length(lat)) {
-    split_altitude = split(altitude, groups)
-    single_altitude = FALSE
-  } else {
-    single_altitude = TRUE
-  }
+	if (length(altitude) == length(lat)) {
+		split_altitude = split(altitude, groups)
+		single_altitude = FALSE
+	} else {
+		single_altitude = TRUE
+	}
 
-  if (!is.null(altitude)) {
-    offset = 0
-  }
+	if (!is.null(altitude)) {
+		offset = 0
+	}
 
-  coord_list = list()
-  for (group in seq_along(split_lat)) {
-    lat = split_lat[[group]]
-    long = split_long[[group]]
-    if (!single_altitude) {
-      altitude = split_altitude[[group]]
-    }
-    coord_list[[group]] = transform_into_heightmap_coords(
-      extent,
-      heightmap,
-      lat,
-      long,
-      altitude,
-      offset,
-      zscale,
-      filter_bounds = FALSE,
-      crs = crs,
-      panel = panel,
-      transform_scene = FALSE,
-      caller = "render_path"
-    )
-  }
-  if (!return_coords) {
-    if (length(linewidth) > 1) {
-      if (length(coord_list) == 1) {
-        xyz = do.call("rbind", coord_list)
-        if (length(linewidth) == nrow(xyz)) {
-          linewidth = (linewidth[seq_len(length(linewidth))[-1]] +
-            linewidth[seq_len(length(linewidth) - 1)]) /
-            2
-        }
-        stopifnot(length(linewidth) == (nrow(xyz) - 1))
-        color_length = length(color)
-        for (i in seq_len(nrow(xyz) - 1)) {
-          rgl::lines3d(
-            xyz[i:(i + 1), ],
-            color = color[((i - 1) %% color_length) + 1],
-            tag = tag,
-            lwd = linewidth[i],
-            line_antialias = antialias
-          )
-        }
-      } else {
-        stopifnot(length(coord_list) == length(linewidth))
-        color_length = length(color)
-        for (i in seq_len(length(coord_list))) {
-          rgl::lines3d(
-            coord_list[[i]],
-            color = color[((i - 1) %% color_length) + 1],
-            tag = tag,
-            lwd = linewidth[i],
-            line_antialias = antialias
-          )
-        }
-      }
-    } else {
-      xyz = do.call(
-        "rbind",
-        lapply(coord_list, \(x) rbind(x, matrix(NA, ncol = 3, nrow = 1)))
-      )
-      xyz = xyz[-nrow(xyz), ]
-	      rgl::lines3d(
-	        xyz,
-        color = color,
-        tag = tag,
-        lwd = linewidth,
-        line_antialias = antialias
-      )
-    }
-    render_zaxis_from_dots(
-      zaxis_args = zaxis_args,
-      extent = extent,
-      panel = panel,
-      zscale = zscale,
-      heightmap = heightmap,
-      caller = "render_path"
-    )
-  } else {
-    return(coord_list)
-  }
+	coord_list = list()
+	for (group in seq_along(split_lat)) {
+		lat = split_lat[[group]]
+		long = split_long[[group]]
+		if (!single_altitude) {
+			altitude = split_altitude[[group]]
+		}
+		coord_list[[group]] = transform_into_heightmap_coords(
+			extent,
+			heightmap,
+			lat,
+			long,
+			altitude,
+			offset,
+			zscale,
+			filter_bounds = FALSE,
+			crs = crs,
+			panel = panel,
+			transform_scene = FALSE,
+			caller = "render_path"
+		)
+	}
+	if (!return_coords) {
+		if (length(linewidth) > 1) {
+			if (length(coord_list) == 1) {
+				xyz = do.call("rbind", coord_list)
+				if (length(linewidth) == nrow(xyz)) {
+					linewidth = (linewidth[seq_len(length(linewidth))[-1]] +
+						linewidth[seq_len(length(linewidth) - 1)]) /
+						2
+				}
+				stopifnot(length(linewidth) == (nrow(xyz) - 1))
+				color_length = length(color)
+				for (i in seq_len(nrow(xyz) - 1)) {
+					rgl::lines3d(
+						xyz[i:(i + 1), ],
+						color = color[((i - 1) %% color_length) + 1],
+						tag = tag,
+						lwd = linewidth[i],
+						line_antialias = antialias
+					)
+				}
+			} else {
+				stopifnot(length(coord_list) == length(linewidth))
+				color_length = length(color)
+				for (i in seq_len(length(coord_list))) {
+					rgl::lines3d(
+						coord_list[[i]],
+						color = color[((i - 1) %% color_length) + 1],
+						tag = tag,
+						lwd = linewidth[i],
+						line_antialias = antialias
+					)
+				}
+			}
+		} else {
+			xyz = do.call(
+				"rbind",
+				lapply(coord_list, \(x) rbind(x, matrix(NA, ncol = 3, nrow = 1)))
+			)
+			xyz = xyz[-nrow(xyz), ]
+			rgl::lines3d(
+				xyz,
+				color = color,
+				tag = tag,
+				lwd = linewidth,
+				line_antialias = antialias
+			)
+		}
+		render_zaxis_from_dots(
+			zaxis_args = zaxis_args,
+			extent = extent,
+			panel = panel,
+			zscale = zscale,
+			heightmap = heightmap,
+			caller = "render_path"
+		)
+	} else {
+		return(coord_list)
+	}
 }
