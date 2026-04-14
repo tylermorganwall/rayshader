@@ -21,9 +21,8 @@
 #'@param ... Optional z-axis arguments passed to [render_zaxis()], such as
 #'`zaxis = TRUE`, `zaxis_location`, `zaxis_breaks`, and `zaxis_labels`.
 #'@export
-#'@examples
-#'#Add contours to the montereybay dataset
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
+#'#Add contours to the montereybay dataset
 #'montereybay |>
 #'  height_shade() |>
 #'  add_shadow(ray_shade(montereybay,zscale=50),0.3) |>
@@ -31,19 +30,16 @@
 #'render_contours(montereybay, zscale = 50, offset = 100)
 #'render_snapshot()
 #'
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Specify the number of levels
 #'render_contours(montereybay, zscale = 50, offset = 100, nlevels = 30,
 #'                clear_previous = TRUE)
 #'render_snapshot()
 #'
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Manually specify the breaks with levels
 #'render_contours(montereybay, linewidth = 2,  offset = 100, zscale = 50,
 #'                levels = seq(-2000, 0, 100), clear_previous = TRUE)
 #'render_snapshot()
 #'
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Use a color palette for the contours
 #'volcano |>
 #'  constant_shade() |>
@@ -52,7 +48,6 @@
 #'render_contours(volcano, offset = 1, palette = palette, zscale = 2, nlevels = 20)
 #'render_snapshot()
 #'
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Render using `render_highquality()` for a neon light effect
 #'render_highquality(light = FALSE, samples = 16,
 #'                   line_radius = 0.1,

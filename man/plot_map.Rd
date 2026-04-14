@@ -47,8 +47,8 @@ image_annotate) corner to offset the title.}
 Displays the map in the current device.
 }
 \examples{
-#Plotting the Monterey Bay dataset with bathymetry data
 \dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
+#Plotting the Monterey Bay dataset with bathymetry data
 water_palette = colorRampPalette(c("darkblue", "dodgerblue", "lightblue"))(200)
 bathy_hs = height_shade(montereybay, texture = water_palette)
 #For compass text

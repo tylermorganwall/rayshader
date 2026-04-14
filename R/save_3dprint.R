@@ -8,11 +8,10 @@
 #'@param rotate Default `TRUE`. If `FALSE`, the map will be printing on its side. This may improve resolution for some 3D printing types.
 #'@return Writes an STL file to `filename`. Regardless of the unit displayed, the output STL is in millimeters.
 #'@export
-#'@examples
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'filename_stl = tempfile()
 #'
 #'#Save the STL file into `filename_stl`
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'volcano |>
 #'  sphere_shade() |>
 #'  plot_3d(volcano,zscale=3)
@@ -20,7 +19,6 @@
 #'save_3dprint(filename_stl)
 #'
 #'#Save the STL file into `filename_stl`, setting maximum width to 100 mm
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'volcano |>
 #'  sphere_shade() |>
 #'  plot_3d(volcano,zscale=3)
@@ -28,14 +26,12 @@
 #'save_3dprint(filename_stl, maxwidth = 100)
 #'
 #'#'#Save the STL file into `filename_stl`, setting maximum width to 4 inches
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'volcano |>
 #'  sphere_shade() |>
 #'  plot_3d(volcano,zscale=3)
 #'render_snapshot()
 #'save_3dprint(filename_stl, maxwidth = 4, unit = "in")
 #'#'#'#Save the STL file into `filename_stl`, setting maximum width (character) to 120mm
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'volcano |>
 #'  sphere_shade() |>
 #'  plot_3d(volcano,zscale=3)

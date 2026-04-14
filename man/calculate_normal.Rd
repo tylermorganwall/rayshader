@@ -20,15 +20,13 @@ Matrix of light intensities at each point.
 Calculates the normal unit vector for every point on the grid.
 }
 \examples{
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Here we produce a light intensity map of the `volcano` elevation map.
 
 #Cache the normal vectors of the volcano dataset
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 volcanocache = calculate_normal(volcano)
 
 #Use the cached vectors to speed up calculation of `sphere_shade()` on a map.
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 sphere_shade(volcano,normalvectors = volcanocache) |>
  plot_map()
 \dontshow{\}) # examplesIf}

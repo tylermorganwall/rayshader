@@ -9,13 +9,12 @@
 #'(`imhof1`,`imhof2`,`imhof3`,`imhof4`, `desert`, `bw`, and `unicorn`).
 #'@importFrom grDevices col2rgb rainbow
 #'@export
-#'@examples
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Here we even out a portion of the volcano dataset to simulate water:
 #'island_volcano = volcano
 #'island_volcano[island_volcano < mean(island_volcano)] = mean(island_volcano)
 #'
 #'#Setting a minimum area avoids classifying small flat areas as water:
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'island_volcano |>
 #'  sphere_shade(texture="imhof3") |>
 #'  add_water(detect_water(island_volcano, min_area = 400),color="imhof3") |>
@@ -26,7 +25,6 @@
 #'montbay_water = montereybay
 #'montbay_water[montbay_water < 0] = 0
 #'
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'montereybay |>
 #'  sphere_shade(texture="imhof4") |>
 #'  add_water(detect_water(montbay_water),color="imhof4") |>

@@ -69,23 +69,19 @@ Places a compass on the map to specify the North direction.
 Cache fallback messages are disabled by default. Set \code{options(rayshader.verbose_scene_cache = TRUE)} to print when cached metadata is reused.
 }
 \examples{
-#Add a North arrow to the map, by default in the bottom right (SE)
 \dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
+#Add a North arrow to the map, by default in the bottom right (SE)
 montereybay |>
  sphere_shade() |>
  plot_3d(montereybay,theta=-45, water=TRUE)
 render_compass()
 render_snapshot()
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Remove the existing symbol with `clear_compass = TRUE`
 render_compass(clear_compass = TRUE)
 
 #Point the N towards the light, at 315 degrees:
 render_compass(angle = 315)
 render_snapshot()
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 render_compass(clear_compass = TRUE)
 
 #We can change the position by specifying a direction (here are three):
@@ -94,8 +90,6 @@ render_compass(position = "NW")
 render_compass(position = "E")
 render_compass(position = "S")
 render_snapshot()
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 render_compass(clear_compass = TRUE)
 
 #We can also change the distance away from the edge by setting the `scale_distance` argument.
@@ -106,8 +100,6 @@ render_compass(position = "S", scale_distance = 1.4)
 #Zoom in slightly:
 render_camera(theta=45,phi=45,zoom=0.7)
 render_snapshot()
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 render_compass(clear_compass = TRUE)
 
 #We can also specify the radius directly with `compass_radius`:
@@ -119,18 +111,12 @@ render_compass(position = "W", scale_distance = 1.2, compass_radius=10)
 render_snapshot()
 
 render_compass(clear_compass = TRUE)
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #We can also adjust the position manually, be specifying all x, y and z arguments.
 render_camera(theta=-45,phi=45,zoom=0.9)
 render_compass(x = 150, y = 50, z = 150)
 render_snapshot()
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 # Compass support is also included in render_highquality()
 render_highquality(min_variance = 0, samples = 16)
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 render_compass(clear_compass = TRUE)
 
 #We can change the colors in the compass, and also set it a constant distance away with

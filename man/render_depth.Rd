@@ -75,12 +75,11 @@ showing where the camera will be focused.}
 \item{aberration}{Default \code{0}. Adds chromatic aberration to the image. Maximum of \code{1}.}
 
 \item{transparent_water}{Default \code{FALSE}. If \code{TRUE}, depth is determined without water layer. User will have to re-render the water
-layer with \code{\link[=render_water]{render_water()}} if they want to recreate the water layer.}
+layer from the active \code{rgl} subscene while capturing the depth map, then restores it.}
 
-\item{heightmap}{Default \code{NULL}. Height matrix for the current scene. If omitted, this is taken from the cached scene set by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}. Pass explicitly to override the cached value. This allows \code{\link[=render_depth]{render_depth()}} to automatically redraw the water layer if \code{transparent_water = TRUE}.}
+\item{heightmap}{Deprecated and ignored. Retained for backward compatibility.}
 
-\item{zscale}{Default \code{NULL}. The zscale value for the heightmap. Passing this will allow \code{\link[=render_depth]{render_depth()}}
-to automatically redraw the water layer if \code{transparent_water = TRUE}.}
+\item{zscale}{Deprecated and ignored. Retained for backward compatibility.}
 
 \item{title_text}{Default \code{NULL}. Text. Adds a title to the image, using magick::image_annotate.}
 
@@ -183,23 +182,15 @@ montereybay |>
 
 #Preview where the focal plane lies
 render_depth(preview_focus=TRUE)
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Render the depth of field effect
 render_depth(focallength = 300)
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Add a chromatic aberration effect
 render_depth(focallength = 300, aberration = 0.3)
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
-#Render the depth of field effect, ignoring water and re-drawing the waterlayer
-render_depth(preview_focus=TRUE,
-            heightmap = montereybay, zscale=50, focallength=300, transparent_water=TRUE)
-render_depth(heightmap = montereybay, zscale=50, focallength=300, transparent_water=TRUE)
+#Render the depth of field effect, ignoring water in the depth pass
+render_depth(preview_focus=TRUE, focallength=300, transparent_water=TRUE)
+render_depth(focallength=300, transparent_water=TRUE)
 render_camera(theta=45,zoom=0.15,phi=20)
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
+
 #Change the bokeh shape and intensity
 render_depth(focus=900, bokehshape = "circle",focallength=500,bokehintensity=30,
             title_text = "Circular Bokeh", title_size = 30, title_color = "white",
@@ -207,8 +198,7 @@ render_depth(focus=900, bokehshape = "circle",focallength=500,bokehintensity=30,
 render_depth(focus=900, bokehshape = "hex",focallength=500,bokehintensity=30,
             title_text = "Hexagonal Bokeh", title_size = 30, title_color = "white",
             title_bar_color = "black")
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
+
 #Add a title and vignette effect.
 render_camera(theta=0,zoom=0.7,phi=30)
 render_depth(focallength = 250, title_text = "Monterey Bay, CA",

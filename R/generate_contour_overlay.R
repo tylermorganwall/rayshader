@@ -18,9 +18,8 @@
 #'@param linewidth Default `1`. Line width.
 #'@return Semi-transparent overlay with contours.
 #'@export
-#'@examples
-#'#Add contours to the montereybay dataset
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
+#'#Add contours to the montereybay dataset
 #'montereybay |>
 #'  height_shade() |>
 #'  add_overlay(generate_contour_overlay(montereybay))  |>
@@ -34,7 +33,6 @@
 #'water_breaks = breaks[breaks < 0]
 #'land_breaks = breaks[breaks > 0]
 #'
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'montereybay |>
 #'  height_shade() |>
 #'  add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0))  |>
@@ -42,7 +40,6 @@
 #'  add_overlay(generate_contour_overlay(montereybay, levels = water_breaks, color="white"))  |>
 #'  add_overlay(generate_contour_overlay(montereybay, levels = land_breaks, color="black"))  |>
 #'  plot_map()
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Increase the resolution of the contour to improve the appearance of lines
 #'montereybay |>
 #'  height_shade() |>
@@ -55,7 +52,6 @@
 #'                                       height = nrow(montereybay)*2,
 #'                                       width  = ncol(montereybay)*2))  |>
 #'  plot_map()
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Increase the number of breaks and the transparency (via add_overlay)
 #'montereybay |>
 #'  height_shade() |>
@@ -64,7 +60,6 @@
 #'                                       height = nrow(montereybay)*2, color="black",
 #'                                       width  = ncol(montereybay)*2), alphalayer=0.5) |>
 #'  plot_map()
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Manually specify the breaks with levels
 #'montereybay |>
 #'  height_shade() |>

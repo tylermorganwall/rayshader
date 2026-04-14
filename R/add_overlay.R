@@ -16,16 +16,14 @@
 #'the other way around).
 #'@return Hillshade with overlay.
 #'@export
-#'@examples
-#'#Combining base R plotting with rayshader's spherical color mapping and raytracing:
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
+#'#Combining base R plotting with rayshader's spherical color mapping and raytracing:
 #'montereybay |>
 #'   sphere_shade() |>
 #'   add_overlay(height_shade(montereybay),alphalayer = 0.6)  |>
 #'   add_shadow(ray_shade(montereybay,zscale=50)) |>
 #'   plot_map()
 #'
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'# Add contours with `generate_contour_overlay()`
 #'montereybay |>
 #'   height_shade() |>

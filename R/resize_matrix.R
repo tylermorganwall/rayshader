@@ -11,27 +11,23 @@
 #'@param method Default `bilinear`. Method of interpolation. Alteratively `cubic`, which is slightly smoother, although
 #'current implementation slightly scales the image.
 #'@export
-#'@examples
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Reduce the size of the monterey bay dataset by half
 #'
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'montbaysmall = resize_matrix(montereybay, scale=0.5)
 #'montbaysmall |>
 #'  sphere_shade() |>
 #'  plot_map()
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Reduce the size of the monterey bay dataset from 540x540 to 100x100
 #'montbaysmall = resize_matrix(montereybay, width = 100, height = 100)
 #'montbaysmall |>
 #'  sphere_shade() |>
 #'  plot_map()
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Increase the size of the volcano dataset 3x
 #'volcanobig = resize_matrix(volcano, scale=3)
 #'volcanobig |>
 #'  sphere_shade() |>
 #'  plot_map()
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Increase the size of the volcano dataset 2x, using cubic interpolation
 #'volcanobig = resize_matrix(volcano, scale=3, method="cubic")
 #'volcanobig |>

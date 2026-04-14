@@ -22,17 +22,14 @@
 #'montereybay |>
 #'  lamb_shade(zscale=200) |>
 #'  plot_map()
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Increase the intensity by decreasing the zscale
 #'montereybay |>
 #'  lamb_shade(zscale=50) |>
 #'  plot_map()
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Change the sun direction
 #'montereybay |>
 #'  lamb_shade(zscale=200, sunangle=45) |>
 #'  plot_map()
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Change the sun altitude
 #'montereybay |>
 #'  lamb_shade(zscale=200, sunaltitude=60) |>

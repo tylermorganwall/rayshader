@@ -47,33 +47,25 @@ Leland Brown in "Texture Shading: A New Technique for Depicting Terrain Relief."
 Cache fallback messages are disabled by default. Set \code{options(rayshader.verbose_scene_cache = TRUE)} to print when cached metadata is reused.
 }
 \examples{
-#Create a direct mapping of elevation to color:
 \dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
+#Create a direct mapping of elevation to color:
 
 #Plut using default values
 montereybay |>
   texture_shade() |>
   plot_map()
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Increase the level of detail
 montereybay |>
   texture_shade(detail=1) |>
   plot_map()
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Decrease the level of detail
 montereybay |>
   texture_shade(detail=0) |>
   plot_map()
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Increase the level of contrast
 montereybay |>
   texture_shade(contrast=3) |>
   plot_map()
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Increase the brightness for this level of contrast
 montereybay |>
   texture_shade(contrast=5, brightness = 2) |>
@@ -81,8 +73,6 @@ montereybay |>
 #Add a texture_shade() layer into a map
 montbay = montereybay
 montbay[montbay < 0] = 0
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 montbay |>
   height_shade() |>
   add_water(detect_water(montbay), color="dodgerblue") |>

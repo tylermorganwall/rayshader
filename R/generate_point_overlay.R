@@ -31,9 +31,8 @@
 #'specified in `linewidth`.
 #'@return Semi-transparent overlay with contours.
 #'@export
-#'@examples
-#'#Add the included `sf` object with roads to the montereybay dataset
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
+#'#Add the included `sf` object with roads to the montereybay dataset
 #'  monterey_city = sf::st_sfc(sf::st_point(c(-121.893611, 36.603056)))
 #'  montereybay |>
 #'    height_shade() |>

@@ -71,14 +71,12 @@
 #'              y = unlist(bird_track_lat), x = unlist(bird_track_long),
 #'              altitude = z_out, zscale=50,color="white")
 #'render_snapshot()
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#We'll set the altitude to zero to give the tracks a "shadow" over the water.
 #'render_points(extent = attr(montereybay,"extent"),
 #'              y = unlist(bird_track_lat), x = unlist(bird_track_long),
 #'              offset = 0, zscale=50, color="black")
 #'render_camera(theta=30,phi=35,zoom=0.45,fov=70)
 #'render_snapshot()
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Remove the points:
 #'render_points(clear_previous=TRUE)
 #'
@@ -93,11 +91,9 @@
 #'            zscale=50, color="red", offset=100, size=5)
 #'render_camera(theta = 160, phi=33, zoom=0.4, fov=55)
 #'render_snapshot()
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#And all of these work with `render_highquality()`
 #'render_highquality(point_radius = 1, min_variance = 0, samples = 16)
 #'
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#We can also change the material of the objects by setting the `point_material` and
 #'#`point_material_args` arguments in `render_highquality()`
 #'render_highquality(point_radius = 1, min_variance = 0, samples = 16,

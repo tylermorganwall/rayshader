@@ -57,8 +57,8 @@ Semi-transparent overlay with contours.
 Calculates and returns an overlay of lines for the current height map.
 }
 \examples{
-#Add the included `sf` object with roads to the montereybay dataset
 \dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
+#Add the included `sf` object with roads to the montereybay dataset
 water_palette = colorRampPalette(c("darkblue", "dodgerblue", "lightblue"))(200)
 bathy_hs = height_shade(montereybay, texture = water_palette)
 montereybay |>
@@ -68,8 +68,6 @@ montereybay |>
                                    attr(montereybay,"extent"), heightmap = montereybay))  |>
  add_shadow(ray_shade(montereybay,zscale=50),0.3) |>
  plot_map()
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Change the line width, color, and transparency
 montereybay |>
  height_shade() |>
@@ -79,8 +77,6 @@ montereybay |>
                                    alphalayer=0.8)  |>
  add_shadow(ray_shade(montereybay,zscale=50),0.3) |>
  plot_map()
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Manually specify the width and height to improve visual quality of the lines
 montereybay |>
  height_shade() |>

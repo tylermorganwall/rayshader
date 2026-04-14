@@ -20,30 +20,25 @@
 #'fourier transform. Only increase this if you encounter boundary effects.
 #'@return 2D matrix of hillshade values.
 #'@export
-#'@examples
-#' #Create a direct mapping of elevation to color:
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
+#' #Create a direct mapping of elevation to color:
 #'
 #' #Plut using default values
 #' montereybay |>
 #'   texture_shade() |>
 #'   plot_map()
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #' #Increase the level of detail
 #' montereybay |>
 #'   texture_shade(detail=1) |>
 #'   plot_map()
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #' #Decrease the level of detail
 #' montereybay |>
 #'   texture_shade(detail=0) |>
 #'   plot_map()
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #' #Increase the level of contrast
 #' montereybay |>
 #'   texture_shade(contrast=3) |>
 #'   plot_map()
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #' #Increase the brightness for this level of contrast
 #' montereybay |>
 #'   texture_shade(contrast=5, brightness = 2) |>
@@ -51,7 +46,6 @@
 #' #Add a texture_shade() layer into a map
 #' montbay = montereybay
 #' montbay[montbay < 0] = 0
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #' montbay |>
 #'   height_shade() |>
 #'   add_water(detect_water(montbay), color="dodgerblue") |>

@@ -24,32 +24,26 @@ Shaded texture map.
 Multiplies a texture array or shadow map by a shadow map.
 }
 \examples{
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #First we plot the sphere_shade() hillshade of `montereybay` with no shadows
 
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 montereybay |>
  sphere_shade(vertical_exaggeration=0.5) |>
  plot_map()
 
 #Raytrace the `montereybay` elevation map and add that shadow to the output of sphere_shade()
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 montereybay |>
  sphere_shade(vertical_exaggeration=0.5) |>
  add_shadow(ray_shade(montereybay,sunaltitude=20,zscale=50),max_darken=0.3) |>
  plot_map()
 
 #Increase the intensity of the shadow map with the max_darken argument.
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 montereybay |>
  sphere_shade(vertical_exaggeration=0.5) |>
  add_shadow(ray_shade(montereybay,sunaltitude=20,zscale=50),max_darken=0.1) |>
  plot_map()
 
 #Decrease the intensity of the shadow map.
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 montereybay |>
  sphere_shade(vertical_exaggeration=0.5) |>
  add_shadow(ray_shade(montereybay,sunaltitude=20,zscale=50),max_darken=0.7) |>

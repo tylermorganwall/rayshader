@@ -16,9 +16,8 @@
 #'@param title_just Default `left`. Justification of the title.
 #'@param ... Additional arguments to pass to the `raster::plotRGB` function that displays the map.
 #'@export
-#'@examples
-#'#Plotting the Monterey Bay dataset with bathymetry data
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
+#'#Plotting the Monterey Bay dataset with bathymetry data
 #'water_palette = colorRampPalette(c("darkblue", "dodgerblue", "lightblue"))(200)
 #'bathy_hs = height_shade(montereybay, texture = water_palette)
 #'#For compass text

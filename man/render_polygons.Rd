@@ -121,8 +121,6 @@ render_polygons(mont_county_buff,
                 extent = attr(montereybay,"extent"), top = 10,
                 parallel = FALSE)
 render_snapshot()
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #We can specify the bottom of the polygons as well. Here I float the polygons above the surface
 #by specifying the bottom argument. We clear the previous polygons with `clear_previous = TRUE`.
 render_camera(theta=-60,  phi=20, zoom = 0.85, fov=0)
@@ -130,8 +128,6 @@ render_polygons(mont_county_buff,
                 extent = attr(montereybay,"extent"), bottom = 190, top=200,
                 parallel=FALSE,clear_previous=TRUE)
 render_snapshot()
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #We can set the height of the data to a column in the sf object: we'll use the land area.
 #We'll have to scale this value because its max value is 2.6 billion:
 render_camera(theta=-60,  phi=60, zoom = 0.85, fov=30)
@@ -140,8 +136,6 @@ render_polygons(mont_county_buff,
                 scale_data = 300/(2.6E9), color = "chartreuse4",
                 clear_previous = TRUE)
 render_snapshot()
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #This function also works with `render_highquality()`
 render_highquality(samples = 16, min_variance = 0)
 \dontshow{\}) # examplesIf}

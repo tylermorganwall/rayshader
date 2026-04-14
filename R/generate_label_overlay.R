@@ -46,9 +46,8 @@
 #'@param seed Default `NA`, no seed. Random seed for ensuring the consistent placement of labels around points.
 #'@return Semi-transparent overlay with labels.
 #'@export
-#'@examples
-#'#Add the included `sf` object with roads to the montereybay dataset
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
+#'#Add the included `sf` object with roads to the montereybay dataset
 #'#Create the water palette
 #'water_palette = colorRampPalette(c("darkblue", "dodgerblue", "lightblue"))(200)
 #'bathy_hs = height_shade(montereybay, texture = water_palette)
@@ -68,7 +67,6 @@
 #'                                     extent= attr(montereybay,"extent"), heightmap = montereybay,
 #'                                     seed=1))  |>
 #'  plot_map()
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#It's hard to read these values, so we'll add a white halo.
 #'bathy_hs |>
 #'  add_shadow(lamb_shade(montereybay,zscale=50),0.3) |>
@@ -82,7 +80,6 @@
 #'                                     halo_color = "white", halo_expand = 3,
 #'                                     seed=1))  |>
 #'  plot_map()
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Plot the actual town locations, using the manual plotting interface instead of the `sf` object
 #'montereybay |>
 #'  height_shade() |>
@@ -96,7 +93,6 @@
 #'                                     halo_color = "white", halo_expand = 3,
 #'                                     seed=1))  |>
 #'  plot_map()
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Adding a softer blurred halo
 #'montereybay |>
 #'  height_shade() |>
@@ -110,7 +106,6 @@
 #'                                     halo_color = "white", halo_expand = 3, halo_blur=10,
 #'                                     seed=1))  |>
 #'  plot_map()
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Changing the seed changes the locations of the labels
 #'montereybay |>
 #'  height_shade() |>

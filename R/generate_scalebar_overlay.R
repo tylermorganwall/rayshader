@@ -80,7 +80,6 @@
 #'                                       heightmap = montereybay,
 #'                                       latlong=TRUE)) |>
 #' plot_map()
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Change the text color
 #'base_map |>
 #'  add_overlay(generate_scalebar_overlay(extent = mb_extent, length = 40000,
@@ -88,7 +87,6 @@
 #'                                        heightmap = montereybay,
 #'                                        latlong=TRUE)) |>
 #'  plot_map()
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Change the length
 #'base_map |>
 #'  add_overlay(generate_scalebar_overlay(extent = mb_extent, length = 30000,
@@ -96,7 +94,6 @@
 #'                                        heightmap = montereybay,
 #'                                        latlong=TRUE)) |>
 #'  plot_map()
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Change the thickness (default is length/20)
 #'base_map |>
 #'  add_overlay(generate_scalebar_overlay(extent = mb_extent, length = 30000,
@@ -104,7 +101,6 @@
 #'                                        heightmap = montereybay,
 #'                                        latlong=TRUE)) |>
 #'  plot_map()
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Change the text offset (given in multiples of thickness)
 #'base_map |>
 #'  add_overlay(generate_scalebar_overlay(extent = mb_extent, length = 30000,
@@ -113,7 +109,6 @@
 #'                                        heightmap = montereybay,
 #'                                        latlong=TRUE)) |>
 #'  plot_map()
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Change the primary and secondary colors, along with the border and tick color
 #'base_map |>
 #'  add_overlay(generate_scalebar_overlay(extent = mb_extent, length = 30000,
@@ -123,7 +118,6 @@
 #'                                        heightmap = montereybay,
 #'                                        latlong=TRUE)) |>
 #'  plot_map()
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Add a halo
 #'base_map |>
 #'  add_overlay(generate_scalebar_overlay(extent = mb_extent, length = 40000,
@@ -131,7 +125,6 @@
 #'                                        heightmap = montereybay, font = 2,
 #'                                        latlong=TRUE)) |>
 #'  plot_map()
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Change the orientation, position, text alignment, and flip the ticks to the other side
 #'base_map |>
 #'  add_overlay(generate_scalebar_overlay(extent = mb_extent, length = 40000, x = 0.07,
@@ -140,7 +133,6 @@
 #'                                        heightmap = montereybay, font = 2,
 #'                                        latlong=TRUE)) |>
 #'  plot_map()
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#64373.8 meters in 40 miles
 #'#Create custom labels, change font and text size, remove the border/ticks, and change the color
 #'#Here, we specify a width and height to double the resolution of the image (for sharper text)

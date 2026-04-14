@@ -54,28 +54,25 @@ Adds 3D contours to the current scene, using the heightmap of the 3D surface.
 Cache fallback messages are disabled by default. Set \code{options(rayshader.verbose_scene_cache = TRUE)} to print when cached metadata is reused.
 }
 \examples{
-#Add contours to the montereybay dataset
 \dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
+#Add contours to the montereybay dataset
 montereybay |>
  height_shade() |>
  add_shadow(ray_shade(montereybay,zscale=50),0.3) |>
  plot_3d(montereybay, theta = -45, zscale=50, zoom=0.9, windowsize=800)
 render_contours(montereybay, zscale = 50, offset = 100)
 render_snapshot()
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
+
 #Specify the number of levels
 render_contours(montereybay, zscale = 50, offset = 100, nlevels = 30,
                clear_previous = TRUE)
 render_snapshot()
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
+
 #Manually specify the breaks with levels
 render_contours(montereybay, linewidth = 2,  offset = 100, zscale = 50,
                levels = seq(-2000, 0, 100), clear_previous = TRUE)
 render_snapshot()
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
+
 #Use a color palette for the contours
 volcano |>
  constant_shade() |>
@@ -83,8 +80,7 @@ volcano |>
 palette = grDevices::colorRampPalette(c("red", "purple", "pink"))
 render_contours(volcano, offset = 1, palette = palette, zscale = 2, nlevels = 20)
 render_snapshot()
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
+
 #Render using `render_highquality()` for a neon light effect
 render_highquality(light = FALSE, samples = 16,
                   line_radius = 0.1,

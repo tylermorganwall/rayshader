@@ -84,8 +84,6 @@ montereybay  |>
 render_camera(theta=-65, phi = 25, zoom = 0.45, fov = 80)
 render_clouds(montereybay, zscale=50)
 render_snapshot()
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Adjust the light direction for shadows and increase the attenuation for darker clouds
 montereybay  |>
  sphere_shade()  |>

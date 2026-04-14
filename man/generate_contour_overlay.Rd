@@ -47,8 +47,8 @@ Semi-transparent overlay with contours.
 Calculates and returns an overlay of contour lines for the current height map.
 }
 \examples{
-#Add contours to the montereybay dataset
 \dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
+#Add contours to the montereybay dataset
 montereybay |>
  height_shade() |>
  add_overlay(generate_contour_overlay(montereybay))  |>
@@ -61,8 +61,7 @@ bathy_hs = height_shade(montereybay, texture = water_palette)
 breaks = seq(range(montereybay)[1],range(montereybay)[2],length.out=50)
 water_breaks = breaks[breaks < 0]
 land_breaks = breaks[breaks > 0]
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
+
 montereybay |>
  height_shade() |>
  add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0))  |>
@@ -70,8 +69,6 @@ montereybay |>
  add_overlay(generate_contour_overlay(montereybay, levels = water_breaks, color="white"))  |>
  add_overlay(generate_contour_overlay(montereybay, levels = land_breaks, color="black"))  |>
  plot_map()
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Increase the resolution of the contour to improve the appearance of lines
 montereybay |>
  height_shade() |>
@@ -84,8 +81,6 @@ montereybay |>
                                       height = nrow(montereybay)*2,
                                       width  = ncol(montereybay)*2))  |>
  plot_map()
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Increase the number of breaks and the transparency (via add_overlay)
 montereybay |>
  height_shade() |>
@@ -94,8 +89,6 @@ montereybay |>
                                       height = nrow(montereybay)*2, color="black",
                                       width  = ncol(montereybay)*2), alphalayer=0.5) |>
  plot_map()
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Manually specify the breaks with levels
 montereybay |>
  height_shade() |>

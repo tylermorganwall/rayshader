@@ -27,29 +27,25 @@ Calculates a color for each point on the surface using a direct elevation-to-col
 Cache fallback messages are disabled by default. Set \code{options(rayshader.verbose_scene_cache = TRUE)} to print when cached metadata is reused.
 }
 \examples{
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Create a direct mapping of elevation to color:
 montereybay |>
  height_shade() |>
  plot_map()
 
 #Add a shadow:
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 montereybay |>
  height_shade() |>
  add_shadow(ray_shade(montereybay,zscale=50),0.1) |>
  plot_map()
 
 #Change the palette:
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 montereybay |>
  height_shade(texture = topo.colors(256)) |>
  add_shadow(ray_shade(montereybay,zscale=50),0.1) |>
  plot_map()
 
 #Really change the palette (warning: gratuitous use of rainbow palette):
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 montereybay |>
  height_shade(texture = rainbow(256)) |>
  add_shadow(ray_shade(montereybay,zscale=50),0.1) |>

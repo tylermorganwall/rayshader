@@ -28,20 +28,17 @@
 #'
 #'@return Displays snapshot of current rgl plot (or saves to disk).
 #'@export
-#'@examples
-#'#Add a scale bar to the montereybay dataset, here representing about 80km
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
+#'#Add a scale bar to the montereybay dataset, here representing about 80km
 #'montereybay |>
 #'  sphere_shade() |>
 #'  plot_3d(montereybay,theta=45, water=TRUE)
 #'render_scalebar(limits=c(0, 80), label_unit = "km")
 #'render_snapshot()
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#This function works with `render_highquality()`
 #'render_highquality(lightdirection = 250, lightaltitude = 40,
 #'                   scale_text_size = 36, samples = 16)
 #'render_scalebar(clear_scalebar = TRUE)
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#We can change the position by specifying a cardinal direction to `position`, and the
 #'#color by setting `color_first` and `color_second`
 #'
@@ -49,25 +46,21 @@
 #'                color_first = "darkgreen", color_second = "lightgreen")
 #'render_snapshot()
 #'render_scalebar(clear_scalebar = TRUE)
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#And switch the orientation by setting `text_switch_side = TRUE`
 #'render_scalebar(limits=c(0,80), label_unit = "km", position = "N", text_switch_side = TRUE,
 #'                color_first = "darkgreen", color_second = "lightgreen")
 #'render_snapshot()
 #'render_scalebar(clear_scalebar = TRUE)
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#We can add additional breaks by specifying additional distances in `limits`
 #'
 #'render_scalebar(limits=c(0,40,80), label_unit = "km")
 #'render_snapshot()
 #'render_scalebar(clear_scalebar = TRUE)
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#We can also manually specify the height by setting the `y` argument:
 #'
 #'render_scalebar(limits=c(0,40,80), y=-70, label_unit = "km")
 #'render_snapshot()
 #'render_scalebar(clear_scalebar = TRUE)
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Here we change the total size by specifying a start and end point along the side,
 #'#and set the number of colored `segments`:
 #'
@@ -76,7 +69,6 @@
 #'                scale_length = c(0.25,0.75), label_unit = "km")
 #'render_snapshot()
 #'render_scalebar(clear_scalebar = TRUE)
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Change the radius of the scale bar with `radius`. Here, the autopositioning doesn't work well with
 #'#the labels, so we provide additional offsets with `text_y_offset` and `text_x_offset` to fix it.
 #'

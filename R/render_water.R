@@ -23,17 +23,14 @@
 #'render_snapshot()
 #'
 #'#We want to add a layer of water after the initial render.
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'render_water(montereybay,zscale=50)
 #'render_snapshot()
 #'
 #'#Call it again to change the water depth
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'render_water(montereybay,zscale=50,waterdepth=-1000)
 #'render_snapshot()
 #'
 #'#Add waterlines
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'render_camera(theta=-45)
 #'render_water(montereybay,zscale=50,waterlinecolor="white")
 #'render_snapshot()

@@ -7,15 +7,13 @@
 #'@param progbar Default `FALSE`. If `TRUE`, turns on progress bar.
 #'@return Matrix of light intensities at each point.
 #'@export
-#'@examples
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Here we produce a light intensity map of the `volcano` elevation map.
 #'
 #'#Cache the normal vectors of the volcano dataset
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'volcanocache = calculate_normal(volcano)
 #'
 #'#Use the cached vectors to speed up calculation of `sphere_shade()` on a map.
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'sphere_shade(volcano,normalvectors = volcanocache) |>
 #'  plot_map()
 calculate_normal = function(

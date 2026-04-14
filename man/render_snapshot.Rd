@@ -162,13 +162,10 @@ Either captures the current rgl view and displays, or saves the current view to 
 montereybay |>
  sphere_shade() |>
  plot_3d(montereybay,zscale=50,zoom=0.6,theta=-90,phi=30)
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
+
 render_snapshot()
 
 #Create a title
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 render_snapshot(title_text = "Monterey Bay, California", title_offset=c(0,20),
                title_color = "white", title_bar_color = "black",
                title_font = "Helvetica", title_position = "north")
@@ -180,15 +177,11 @@ render_snapshot(title_text = "Monterey Bay, California",
                vignette = TRUE, title_offset=c(0,20),
                title_font = "Helvetica", title_position = "north")
 #Use software rendering to render a scene with shadow mapping
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 montereybay |>
  height_shade() |>
  plot_3d(montereybay, shadow=FALSE, solidlinecolor = NULL)
 #No shadows
 render_snapshot(software_render = TRUE)
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Now with shadow mapped shadows, calculated in rayvertex
 render_snapshot(rayvertex_lighting = TRUE,
                rayvertex_lights = rayvertex::directional_light(intensity = 1.2,

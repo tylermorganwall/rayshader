@@ -198,6 +198,7 @@ custom, solid shapes. By default in ggplot2, only the first three shapes are sol
 into 3D.
 }
 \examples{
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 library(ggplot2)
 library(viridis)
 \dontshow{
@@ -211,13 +212,10 @@ ggdiamonds = ggplot(diamonds, aes(x, depth)) +
  facet_wrap(clarity~.) +
  scale_fill_viridis_c(option = "A") +
  scale_color_viridis_c(option = "A")
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 plot_gg(ggdiamonds,multicore = TRUE,width=5,height=5,scale=250,windowsize=c(1400,866),
        zoom = 0.55, phi = 30)
 render_snapshot()
 #Change the camera angle and take a snapshot:
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 render_camera(zoom=0.5,theta=-30,phi=30)
 render_snapshot()
 
@@ -233,13 +231,11 @@ ggvolcano = volcano |>
  coord_fixed() +
  theme(legend.position = "none")
 ggvolcano
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
+
 plot_gg(ggvolcano, multicore = TRUE, raytrace = TRUE, width = 7, height = 4,
        scale = 300, windowsize = c(1400, 866), zoom = 0.6, phi = 30, theta = 30)
 render_snapshot()
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
+
 #You can specify the color and height separately using the `ggobj_height()` argument.
 ggvolcano_surface = volcano |>
 reshape2::melt() |>
@@ -262,11 +258,7 @@ mtplot = ggplot(mtcars) +
  scale_color_continuous(limits=c(0,8))
 
 #Preview how the plot will look by setting `preview = TRUE`: We also adjust the angle of the light.
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 plot_gg(mtplot, width=3.5, sunangle=225, preview = TRUE)
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 plot_gg(mtplot, width=3.5, multicore = TRUE, windowsize = c(1400,866), sunangle=225,
        zoom = 0.60, phi = 30, theta = 45)
 render_snapshot()
@@ -276,20 +268,14 @@ bleedplot = ggplot(faithfuld, aes(waiting, eruptions, fill = density)) +
  geom_raster(interpolate = TRUE) +
  scale_fill_viridis_c() +
  theme_minimal()
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 plot_gg(bleedplot, width = 5, height = 4, scale = 220,
        windowsize = c(1400,866), theta = -20, phi = 35,
        guide_bar_bleed_target = "height")
 render_snapshot()
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 plot_gg(bleedplot, width = 5, height = 4, scale = 220,
        windowsize = c(1400,866), theta = -20, phi = 35,
        guide_bar_bleed_target = "texture")
 render_snapshot()
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 plot_gg(mtplot, width=3.5, multicore = TRUE, windowsize = c(1400,866), sunangle=225,
        zoom = 0.60, phi = 30, theta = 45)
 render_zaxis(zaxis_location = "panel_bottomleft")
@@ -302,8 +288,7 @@ mtplot_density = ggplot(mtcars) +
  scale_y_continuous(expand=c(0,0)) +
  scale_fill_gradient(low="pink", high="red")
 mtplot_density
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
+
 plot_gg(mtplot_density, width = 4,zoom = 0.60, theta = -45, phi = 30,
        windowsize = c(1400,866))
 render_snapshot()
@@ -311,29 +296,19 @@ render_snapshot()
 mtplot_density_facet = mtplot_density + facet_wrap(~cyl)
 
 #Preview this plot in 2D:
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 plot_gg(mtplot_density_facet, preview = TRUE)
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 plot_gg(mtplot_density_facet, windowsize=c(1400,866),
        zoom = 0.55, theta = -10, phi = 25)
 render_snapshot()
 #That is a little cramped. Specifying a larger width will improve the readability of this plot.
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 plot_gg(mtplot_density_facet, width = 6, preview = TRUE)
 
 #That's better. Let's plot it in 3D, and increase the scale.
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 plot_gg(mtplot_density_facet, width = 6, windowsize=c(1400,866),
        zoom = 0.55, theta = -10, phi = 25, scale=300)
 render_snapshot()
 
 #We can also render a flat version of the plot alongside (or above/below) the 3D version.
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 plot_gg(mtplot_density_facet, width = 6, windowsize=c(1400,866),
        zoom = 0.65, theta = -25, phi = 35, scale=300, flat_plot_render=TRUE,
        flat_direction = "x")

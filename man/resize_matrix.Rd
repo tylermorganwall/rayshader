@@ -30,29 +30,23 @@ current implementation slightly scales the image.}
 Resizes a matrix (preserving contents) by specifying the desired output dimensions or a scaling factor.
 }
 \examples{
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Reduce the size of the monterey bay dataset by half
 
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 montbaysmall = resize_matrix(montereybay, scale=0.5)
 montbaysmall |>
  sphere_shade() |>
  plot_map()
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Reduce the size of the monterey bay dataset from 540x540 to 100x100
 montbaysmall = resize_matrix(montereybay, width = 100, height = 100)
 montbaysmall |>
  sphere_shade() |>
  plot_map()
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Increase the size of the volcano dataset 3x
 volcanobig = resize_matrix(volcano, scale=3)
 volcanobig |>
  sphere_shade() |>
  plot_map()
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Increase the size of the volcano dataset 2x, using cubic interpolation
 volcanobig = resize_matrix(volcano, scale=3, method="cubic")
 volcanobig |>

@@ -28,22 +28,19 @@
 #'
 #'@return Adds compass to map. No return value.
 #'@export
-#'@examples
-#'#Add a North arrow to the map, by default in the bottom right (SE)
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
+#'#Add a North arrow to the map, by default in the bottom right (SE)
 #'montereybay |>
 #'  sphere_shade() |>
 #'  plot_3d(montereybay,theta=-45, water=TRUE)
 #'render_compass()
 #'render_snapshot()
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Remove the existing symbol with `clear_compass = TRUE`
 #'render_compass(clear_compass = TRUE)
 #'
 #'#Point the N towards the light, at 315 degrees:
 #'render_compass(angle = 315)
 #'render_snapshot()
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'render_compass(clear_compass = TRUE)
 #'
 #'#We can change the position by specifying a direction (here are three):
@@ -52,7 +49,6 @@
 #'render_compass(position = "E")
 #'render_compass(position = "S")
 #'render_snapshot()
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'render_compass(clear_compass = TRUE)
 #'
 #'#We can also change the distance away from the edge by setting the `scale_distance` argument.
@@ -63,7 +59,6 @@
 #'#Zoom in slightly:
 #'render_camera(theta=45,phi=45,zoom=0.7)
 #'render_snapshot()
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'render_compass(clear_compass = TRUE)
 #'
 #'#We can also specify the radius directly with `compass_radius`:
@@ -75,15 +70,12 @@
 #'render_snapshot()
 #'
 #'render_compass(clear_compass = TRUE)
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#We can also adjust the position manually, be specifying all x, y and z arguments.
 #'render_camera(theta=-45,phi=45,zoom=0.9)
 #'render_compass(x = 150, y = 50, z = 150)
 #'render_snapshot()
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'# Compass support is also included in render_highquality()
 #'render_highquality(min_variance = 0, samples = 16)
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'render_compass(clear_compass = TRUE)
 #'
 #'#We can change the colors in the compass, and also set it a constant distance away with

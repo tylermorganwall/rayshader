@@ -70,28 +70,22 @@ lowering the brightness at each point for each ray that intersects the surface.
 Cache fallback messages are disabled by default. Set \code{options(rayshader.verbose_scene_cache = TRUE)} to print when cached metadata is reused.
 }
 \examples{
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #First we ray trace the Monterey Bay dataset.
 #The default angle is from 40-50 degrees azimuth, from the north east.
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 montereybay |>
  ray_shade(zscale=50) |>
  plot_map()
 #Change the altitude of the sun to 25 degrees
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 montereybay |>
  ray_shade(zscale=50, sunaltitude=25) |>
  plot_map()
 #Remove the lambertian shading to just calculate shadow intensity.
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 montereybay |>
  ray_shade(zscale=50, sunaltitude=25, lambert=FALSE) |>
  plot_map()
 
 #Change the direction of the sun to the South East
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 montereybay |>
  ray_shade(zscale=50, sunaltitude=25, sunangle=225) |>
  plot_map()

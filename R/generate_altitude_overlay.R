@@ -9,15 +9,14 @@
 #'@param end_transition Default `NULL`. Elevation threshold, or proportion of the height range if `relative = TRUE`. By default, this is equal to `start_transition`.
 #'@param lower Default `TRUE`. If `TRUE`, the overlay is most opaque at lower elevations. If `FALSE`, the direction is reversed.
 #'@param relative Default `FALSE`. If `TRUE`, interpret `start_transition` and `end_transition` as proportions of the height range in 0..1.
-#'@return 4-layer RGB array representing the semi-transparent hillshade.#'@export
-#'@examples
-#'#Create a bathymetric hillshade
+#'@return 4-layer RGB array representing the semi-transparent hillshade.
+#'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
+#'#Create a bathymetric hillshade
 #'water_palette = colorRampPalette(c("darkblue", "dodgerblue", "lightblue"))(200)
 #'bathy_hs = height_shade(montereybay, texture = water_palette)
 #'plot_map(bathy_hs)
 #'
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Set everything below 0m to water palette
 #'montereybay |>
 #'  sphere_shade(zscale=10) |>
@@ -29,7 +28,6 @@
 #'snow_palette = "white"
 #'snow_hs = height_shade(montereybay, texture = snow_palette)
 #'
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Set the snow transition region from 500m to 1200m
 #'montereybay |>
 #'  sphere_shade(zscale=10, texture = "desert") |>

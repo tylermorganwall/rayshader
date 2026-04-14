@@ -166,15 +166,13 @@ coerce_plot_3d_heightmap = function(heightmap) {
 #'
 #'@import rgl
 #'@export
-#'@examples
-#'#Plotting a spherical texture map of the built-in `montereybay` dataset.
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
+#'#Plotting a spherical texture map of the built-in `montereybay` dataset.
 #'montereybay |>
 #'  sphere_shade(texture="desert") |>
 #'  plot_3d(montereybay,zscale=50)
 #'render_snapshot()
 #'
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'montereybay |>
 #'  sphere_shade(texture="desert") |>
 #'  plot_3d(montereybay,zscale=50)
@@ -182,7 +180,6 @@ coerce_plot_3d_heightmap = function(heightmap) {
 #'render_snapshot()
 #'
 #'#With a water layer
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'montereybay |>
 #'  sphere_shade(texture="imhof2") |>
 #'  plot_3d(montereybay, zscale=50, water = TRUE, watercolor="imhof2",
@@ -190,7 +187,6 @@ coerce_plot_3d_heightmap = function(heightmap) {
 #'render_snapshot()
 #'
 #'#With a soil texture to the base
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'montereybay |>
 #'  sphere_shade(texture="imhof3") |>
 #'  plot_3d(montereybay, zscale=50, water = TRUE,  watercolor="imhof4",
@@ -199,14 +195,12 @@ coerce_plot_3d_heightmap = function(heightmap) {
 #'render_snapshot()
 #'
 #'#We can also change the base by setting "baseshape" to "hex" or "circle"
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'montereybay |>
 #'  sphere_shade(texture="imhof1") |>
 #'  plot_3d(montereybay, zscale=50, water = TRUE, watercolor="imhof1", theta=-45, zoom=0.7,
 #'          waterlinecolor="white", waterlinealpha=0.5,baseshape="circle")
 #'render_snapshot()
 #'
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'montereybay |>
 #'  sphere_shade(texture="imhof1") |>
 #'  plot_3d(montereybay, zscale=50, water = TRUE, watercolor="imhof1", theta=-45, zoom=0.7,
@@ -224,7 +218,6 @@ coerce_plot_3d_heightmap = function(heightmap) {
 #'mb_water = montereybay
 #'mb_water[mb_water > -10] = NA
 #'
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'montereybay |>
 #'  sphere_shade(texture="imhof1") |>
 #'  plot_3d(mb_water, zscale=50, water = TRUE, watercolor="imhof1", theta=-45,

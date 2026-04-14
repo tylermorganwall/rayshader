@@ -54,19 +54,15 @@ Calculates Ambient Occlusion Shadow Map
 Cache fallback messages are disabled by default. Set \code{options(rayshader.verbose_scene_cache = TRUE)} to print when cached metadata is reused.
 }
 \examples{
-#Here we produce a ambient occlusion map of the `montereybay` elevation map.
 \dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
+#Here we produce a ambient occlusion map of the `montereybay` elevation map.
 plot_map(ambient_shade(heightmap = montereybay))
 
 #We can increase the distance to look for surface intersections `maxsearch`
 #and the density of rays sent out around the point `sunbreaks`.
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 plot_map(ambient_shade(montereybay, sunbreaks = 24,maxsearch = 100, multicore=TRUE))
 #Create the Red Relief Image Map (RRIM) technique using a custom texture and ambient_shade(),
 #with an addition lambertian layer added with lamb_shade() to improve topographic clarity.
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 bigmb = resize_matrix(montereybay, scale=2, method="cubic")
 bigmb |>
  sphere_shade(zscale=3, texture = create_texture("red","red","red","red","white")) |>

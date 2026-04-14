@@ -16,20 +16,17 @@
 #'render_snapshot()
 #'
 #'#Shift the camera over and add a title
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'render_camera(theta = -45, phi = 45)
 #'render_snapshot(title_text = "Monterey Bay, CA",
 #'                title_bar_color = "grey50")
 #'
 #'#Shift to an overhead view (and change the text/title bar color)
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'render_camera(theta = 0, phi = 89.9, zoom = 0.9)
 #'render_snapshot(title_text = "Monterey Bay, CA",
 #'                title_color = "white",
 #'                title_bar_color = "darkgreen")
 #'
 #'#Shift to an front view and add a vignette effect
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'render_camera(theta = -90, phi = 30,zoom = 0.8)
 #'render_snapshot(title_text = "Monterey Bay, CA",
 #'                title_color = "white",
@@ -37,7 +34,6 @@
 #'                vignette = TRUE)
 #'
 #'#Change the field of view (fov) and make the title bar opaque.
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'render_camera(theta = -90, phi = 30,zoom = 0.5,fov = 130)
 #'render_snapshot(title_text = "Monterey Bay, CA",
 #'                title_color = "black",
@@ -47,7 +43,6 @@
 #'
 #'#Here we render a series of frames to later stitch together into a movie.
 #'
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'phivec = 20 + 70 * 1/(1 + exp(seq(-5, 10, length.out = 180)))
 #'phivecfull = c(phivec, rev(phivec))
 #'thetavec = 270 + 45 * sin(seq(0,359,length.out = 360) * pi/180)

@@ -20,10 +20,9 @@
 #'@param rotation Default `0`. Number of degrees to rotate the hexagon bokeh shape.
 #'@param aberration Default `0`. Adds chromatic aberration to the image. Maximum of `1`.
 #'@param transparent_water Default `FALSE`. If `TRUE`, depth is determined without water layer. User will have to re-render the water
-#'layer with [render_water()] if they want to recreate the water layer.
-#'@param heightmap Default `NULL`. Height matrix for the current scene. If omitted, this is taken from the cached scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value. This allows [render_depth()] to automatically redraw the water layer if `transparent_water = TRUE`.
-#'@param zscale Default `NULL`. The zscale value for the heightmap. Passing this will allow [render_depth()]
-#'to automatically redraw the water layer if `transparent_water = TRUE`.
+#'layer from the active `rgl` subscene while capturing the depth map, then restores it.
+#'@param heightmap Deprecated and ignored. Retained for backward compatibility.
+#'@param zscale Deprecated and ignored. Retained for backward compatibility.
 #'@param title_text Default `NULL`. Text. Adds a title to the image, using magick::image_annotate.
 #'@param title_offset Default `c(20,20)`. Distance from the top-left (default, `gravity` direction in
 #'image_annotate) corner to offset the title.
@@ -82,20 +81,15 @@
 #'
 #'#Preview where the focal plane lies
 #'render_depth(preview_focus=TRUE)
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Render the depth of field effect
 #'render_depth(focallength = 300)
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Add a chromatic aberration effect
 #'render_depth(focallength = 300, aberration = 0.3)
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
-#'#Render the depth of field effect, ignoring water and re-drawing the waterlayer
-#'render_depth(preview_focus=TRUE,
-#'             heightmap = montereybay, zscale=50, focallength=300, transparent_water=TRUE)
-#'render_depth(heightmap = montereybay, zscale=50, focallength=300, transparent_water=TRUE)
+#'#Render the depth of field effect, ignoring water in the depth pass
+#'render_depth(preview_focus=TRUE, focallength=300, transparent_water=TRUE)
+#'render_depth(focallength=300, transparent_water=TRUE)
 #'render_camera(theta=45,zoom=0.15,phi=20)
 #'
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Change the bokeh shape and intensity
 #'render_depth(focus=900, bokehshape = "circle",focallength=500,bokehintensity=30,
 #'             title_text = "Circular Bokeh", title_size = 30, title_color = "white",
@@ -104,7 +98,6 @@
 #'             title_text = "Hexagonal Bokeh", title_size = 30, title_color = "white",
 #'             title_bar_color = "black")
 #'
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Add a title and vignette effect.
 #'render_camera(theta=0,zoom=0.7,phi=30)
 #'render_depth(focallength = 250, title_text = "Monterey Bay, CA",
@@ -159,15 +152,39 @@ render_depth = function(
   if (rgl::cur3d() == 0) {
     stop("No rgl window currently open.")
   }
-  zscale = resolve_scene_render_zscale(
-    zscale,
-    missing(zscale),
-    caller = "render_depth"
-  )
-  heightmap = resolve_scene_render_heightmap(
-    heightmap,
-    caller = "render_depth"
-  )
+  detached_water_ids = integer()
+  detached_water_subscene = NULL
+  restore_transparent_water = function() {
+    if (!length(detached_water_ids) || is.null(detached_water_subscene) || rgl::cur3d() == 0) {
+      return(invisible(NULL))
+    }
+    current_ids = tryCatch(
+      rgl::ids3d(subscene = detached_water_subscene)$id,
+      error = function(...) integer()
+    )
+    restore_ids = setdiff(detached_water_ids, current_ids)
+    if (length(restore_ids)) {
+      rgl::addToSubscene3d(ids = restore_ids, subscene = detached_water_subscene)
+    }
+    detached_water_ids <<- integer()
+    detached_water_subscene <<- NULL
+    invisible(NULL)
+  }
+  detach_transparent_water = function() {
+    if (!isTRUE(transparent_water)) {
+      return(invisible(NULL))
+    }
+    idlist = get_ids_with_labels(typeval = c("water", "waterlines"))
+    water_ids = unique(idlist$id[!is.na(idlist$id)])
+    if (!length(water_ids)) {
+      return(invisible(NULL))
+    }
+    detached_water_subscene <<- rgl::currentSubscene3d()
+    detached_water_ids <<- water_ids
+    rgl::delFromSubscene3d(ids = detached_water_ids, subscene = detached_water_subscene)
+    invisible(NULL)
+  }
+  on.exit(restore_transparent_water(), add = TRUE)
   if (!instant_capture) {
     Sys.sleep(0.5)
   }
@@ -237,46 +254,34 @@ render_depth = function(
     )
   }
 
-  if (transparent_water) {
-    idlist = get_ids_with_labels(typeval = c("water", "waterlines"))
-    waterid = idlist$id[idlist$tag == "water"][1]
-    waterdepthval = max(
-      rgl::rgl.attrib(waterid, "vertices")[1:3, 2],
-      na.rm = TRUE
+  if (transparent_water && software_render) {
+    detach_transparent_water()
+    new_depth = render_snapshot_software(
+      filename = temp,
+      cache_scene = cache_scene,
+      camera_location = camera_location,
+      camera_lookat = camera_lookat,
+      background = background,
+      debug = "linear_depth",
+      width = width,
+      height = height,
+      light_direction = c(0, 1, 0),
+      fake_shadow = TRUE,
+      text_angle = text_angle,
+      text_size = text_size,
+      text_offset = text_offset,
+      print_scene_info = print_scene_info,
+      point_radius = point_radius,
+      line_offset = -line_offset,
+      ...
     )
-    has_waterlines = FALSE
-    water_color = idlist$water_color[idlist$tag == "water"][1]
-    water_alpha = idlist$water_alpha[idlist$tag == "water"][1]
-    if ("waterlines" %in% idlist$tag) {
-      has_waterlines = TRUE
-      water_line_color = idlist$waterline_color[idlist$tag == "waterlines"][1]
-      water_line_alpha = idlist$waterline_alpha[idlist$tag == "waterlines"][1]
-    }
-    rgl::pop3d(id = idlist$id)
-    if (software_render) {
-      new_depth = render_snapshot_software(
-        filename = temp,
-        cache_scene = cache_scene,
-        camera_location = camera_location,
-        camera_lookat = camera_lookat,
-        background = background,
-        debug = "linear_depth",
-        width = width,
-        height = height,
-        light_direction = c(0, 1, 0),
-        fake_shadow = TRUE,
-        text_angle = text_angle,
-        text_size = text_size,
-        text_offset = text_offset,
-        print_scene_info = print_scene_info,
-        point_radius = point_radius,
-        line_offset = -line_offset,
-        ...
-      )
-      all_image$linear_depth = new_depth
-    }
+    all_image$linear_depth = new_depth
+    restore_transparent_water()
   }
   if (!software_render) {
+    if (transparent_water) {
+      detach_transparent_water()
+    }
     image_to_convolve = png::readPNG(temp)
     depthmap = (rgl::rgl.pixels(component = "depth"))
     depthmap = 2 * depthmap - 1
@@ -289,6 +294,7 @@ render_depth = function(
       near_clip *
       far_clip /
       (far_clip + near_clip - depthmap * (far_clip - near_clip))
+    restore_transparent_water()
   } else {
     image_to_convolve = array(0, dim = c(dim(all_image$r)[2:1], 3))
     image_to_convolve[,, 1] = flipud(t(all_image$r))
@@ -313,64 +319,13 @@ render_depth = function(
       preview_focus = TRUE,
       preview = TRUE
     )
-    if (transparent_water && !is.null(heightmap)) {
-      if (is.null(zscale)) {
-        zscale = 1
-      }
-      if (has_waterlines) {
-        render_water(
-          heightmap = heightmap,
-          waterdepth = waterdepthval,
-          waterlinealpha = water_line_alpha,
-          waterlinecolor = water_line_color,
-          watercolor = water_color,
-          wateralpha = water_alpha,
-          zscale = zscale
-        )
-      } else {
-        render_water(
-          heightmap = heightmap,
-          waterdepth = waterdepthval,
-          watercolor = water_color,
-          wateralpha = water_alpha,
-          zscale = zscale
-        )
-      }
-    }
   } else {
     temp_depth = paste0(tempfile(), ".png")
     if (nrow(depthmap) < 1) {
       message("Can't fetch depth component, stopping")
       return(NULL)
     }
-    if (transparent_water) {
-      rgl::pop3d(tag = "waterlines")
-    }
     tempmap = rayimage::ray_read_image(temp)
-    if (transparent_water && !is.null(heightmap)) {
-      if (is.null(zscale)) {
-        zscale = 1
-      }
-      if (has_waterlines) {
-        render_water(
-          heightmap = heightmap,
-          waterdepth = waterdepthval,
-          waterlinealpha = water_line_alpha,
-          waterlinecolor = water_line_color,
-          watercolor = water_color,
-          wateralpha = water_alpha,
-          zscale = zscale
-        )
-      } else {
-        render_water(
-          heightmap = heightmap,
-          waterdepth = waterdepthval,
-          watercolor = water_color,
-          wateralpha = water_alpha,
-          zscale = zscale
-        )
-      }
-    }
     if (all(dim(tempmap)[1:2] != dim(depthmap)[1:2])) {
       depthmap = rayimage::render_resized(depthmap, dims = dim(tempmap)[1:2])
     }

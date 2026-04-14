@@ -184,8 +184,7 @@ render_buildings(building_polys,  flat_shading  = TRUE,
                  zscale=10)
 render_camera(theta=220, phi=22, zoom=0.45, fov=0)
 render_snapshot()
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
+
 #Zoom in to show roof details and render with render_highquality()
 render_camera(fov=110)
 render_highquality(camera_location = c(18.22, 0.57, -50.83),

@@ -22,10 +22,10 @@ Writes an STL file to \code{filename}. Regardless of the unit displayed, the out
 Writes a stereolithography (STL) file that can be used in 3D printing.
 }
 \examples{
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 filename_stl = tempfile()
 
 #Save the STL file into `filename_stl`
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 volcano |>
  sphere_shade() |>
  plot_3d(volcano,zscale=3)
@@ -33,8 +33,6 @@ render_snapshot()
 save_3dprint(filename_stl)
 
 #Save the STL file into `filename_stl`, setting maximum width to 100 mm
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 volcano |>
  sphere_shade() |>
  plot_3d(volcano,zscale=3)
@@ -42,16 +40,12 @@ render_snapshot()
 save_3dprint(filename_stl, maxwidth = 100)
 
 #'#Save the STL file into `filename_stl`, setting maximum width to 4 inches
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 volcano |>
  sphere_shade() |>
  plot_3d(volcano,zscale=3)
 render_snapshot()
 save_3dprint(filename_stl, maxwidth = 4, unit = "in")
 #'#'#Save the STL file into `filename_stl`, setting maximum width (character) to 120mm
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 volcano |>
  sphere_shade() |>
  plot_3d(volcano,zscale=3)

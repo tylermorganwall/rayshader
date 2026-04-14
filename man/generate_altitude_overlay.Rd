@@ -27,20 +27,19 @@ generate_altitude_overlay(
 \item{relative}{Default \code{FALSE}. If \code{TRUE}, interpret \code{start_transition} and \code{end_transition} as proportions of the height range in 0..1.}
 }
 \value{
-4-layer RGB array representing the semi-transparent hillshade.#'@export
+4-layer RGB array representing the semi-transparent hillshade.
 }
 \description{
 Using a hillshade and the height map, generates a semi-transparent hillshade to
 layer onto an existing map.
 }
 \examples{
-#Create a bathymetric hillshade
 \dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
+#Create a bathymetric hillshade
 water_palette = colorRampPalette(c("darkblue", "dodgerblue", "lightblue"))(200)
 bathy_hs = height_shade(montereybay, texture = water_palette)
 plot_map(bathy_hs)
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
+
 #Set everything below 0m to water palette
 montereybay |>
  sphere_shade(zscale=10) |>
@@ -51,8 +50,7 @@ montereybay |>
 #Add snow peaks by setting `lower = FALSE`
 snow_palette = "white"
 snow_hs = height_shade(montereybay, texture = snow_palette)
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
+
 #Set the snow transition region from 500m to 1200m
 montereybay |>
  sphere_shade(zscale=10, texture = "desert") |>

@@ -5,9 +5,8 @@
 #'@param raster The input raster. Either a RasterLayer object, a terra SpatRaster object, or a filename.
 #'@param verbose Default `interactive()`. Will print dimensions of the resulting matrix.
 #'@export
-#'@examples
-#'#Save montereybay as a raster and open using the filename.
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
+#'#Save montereybay as a raster and open using the filename.
 #'temp_raster_filename = paste0(tempfile(),".tif")
 #'raster::writeRaster(raster::raster(t(montereybay)),temp_raster_filename)
 #'elmat = raster_to_matrix(temp_raster_filename)

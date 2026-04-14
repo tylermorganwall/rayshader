@@ -51,47 +51,38 @@
 #'   add_shadow(lamb_shade(montbay,zscale=50),0)
 #'
 #' plot_map(basemap)
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #' #Add waterlines
 #' basemap |>
 #'   add_overlay(generate_waterline_overlay(montbay)) |>
 #'   plot_map()
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #' #Change minimum line distance:
 #' basemap |>
 #'   add_overlay(generate_waterline_overlay(montbay, min = 0.02)) |>
 #'   plot_map()
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #' #Change maximum line distance
 #' basemap |>
 #'   add_overlay(generate_waterline_overlay(montbay, max = 0.4)) |>
 #'   plot_map()
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #' #Smooth waterlines
 #' basemap |>
 #'   add_overlay(generate_waterline_overlay(montbay, max = 0.4, smooth=2)) |>
 #'   plot_map()
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #' #Increase number of breaks
 #' basemap |>
 #'   add_overlay(generate_waterline_overlay(montbay, breaks = 20, max=0.4)) |>
 #'   plot_map()
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #' #Make lines evenly spaced:
 #' basemap |>
 #'   add_overlay(generate_waterline_overlay(montbay, evenly_spaced = TRUE)) |>
 #'   plot_map()
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #' #Change variable distance between each line
 #' basemap |>
 #'   add_overlay(generate_waterline_overlay(montbay, falloff=1.5)) |>
 #'   plot_map()
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #' #Turn off fading
 #' basemap |>
 #'   add_overlay(generate_waterline_overlay(montbay, fade=FALSE)) |>
 #'   plot_map()
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #' #Fill up the entire body of water with lines and make them all 50% transparent
 #' basemap |>
 #'   add_overlay(generate_waterline_overlay(montbay, fade=FALSE, max=1, alpha = 0.5, color="white",

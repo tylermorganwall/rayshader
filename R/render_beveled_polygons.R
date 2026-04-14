@@ -98,7 +98,6 @@
 #' render_snapshot()
 #'
 #' # Changing the color of the beveled top:
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #' render_beveled_polygons(mont_county_buff,  flat_shading  = TRUE, angle = 45 ,
 #'                         heightmap = montereybay, bevel_width=2000,
 #'                         material = "tan", bevel_material = "darkgreen",
@@ -107,7 +106,6 @@
 #'                         zscale=200)
 #' # We can create a nice curved surface by passing in a bevel generated with the
 #' # `raybevel::generate_bevel()` function.
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #' render_beveled_polygons(mont_county_buff, flat_shading  = TRUE, heightmap = montereybay,
 #'                         bevel = raybevel::generate_bevel("exp",bevel_end = 0.4),
 #'                         #max_height = 10, scale_all_max = TRUE, set_max_height = TRUE,
@@ -125,7 +123,6 @@
 #' # they rise to different levels due to being scaled by the maximum internal distance
 #' # in the polygon. Setting `scale_all_max = TRUE` ensures the bevels are all scaled to the
 #' # same maximum height (in this case, 3000m above the 5000m bevel start height).
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #' render_beveled_polygons(mont_county_buff, flat_shading  = TRUE, heightmap = montereybay,
 #'                  bevel = raybevel::generate_bevel("exp",bevel_end = 0.4),
 #'                  max_height = 3000, scale_all_max = TRUE, set_max_height = TRUE,
@@ -140,7 +137,6 @@
 #' render_snapshot()
 #'
 #' # Rendering the polygons with `render_highquality()`
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'   render_highquality()
 #'
 #' # We can scale the size of the polygon to a column in the `sf` object as well:
@@ -148,7 +144,6 @@
 #' # argument. Note that this is applied as well as the `zscale` argument, and that you
 #' # must think carefully about your scales and values if trying to represent a meaningful
 #' # data visualization with this object.
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #' render_beveled_polygons(mont_county_buff,  flat_shading  = TRUE, angle = 45, bevel_width=1000,
 #'                  data_column_top = "ALAND", scale_data = 1e-5, heightmap = montereybay,
 #'                  #max_height = 1000, scale_all_max = TRUE, set_max_height = TRUE,

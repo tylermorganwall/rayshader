@@ -10,28 +10,25 @@
 #'and minimum values to map the color palette to.
 #'@return RGB array of hillshaded texture mappings.
 #'@export
-#'@examples
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Create a direct mapping of elevation to color:
 #'montereybay |>
 #'  height_shade() |>
 #'  plot_map()
 #'
 #'#Add a shadow:
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'montereybay |>
 #'  height_shade() |>
 #'  add_shadow(ray_shade(montereybay,zscale=50),0.1) |>
 #'  plot_map()
 #'
 #'#Change the palette:
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'montereybay |>
 #'  height_shade(texture = topo.colors(256)) |>
 #'  add_shadow(ray_shade(montereybay,zscale=50),0.1) |>
 #'  plot_map()
 #'
 #'#Really change the palette (warning: gratuitous use of rainbow palette):
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'montereybay |>
 #'  height_shade(texture = rainbow(256)) |>
 #'  add_shadow(ray_shade(montereybay,zscale=50),0.1) |>

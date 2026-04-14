@@ -155,32 +155,24 @@ render_tree(extent = attr(montereybay,"extent"), heightmap = montereybay,
            tree_zscale = FALSE, tree_height = 30,  lit = TRUE,
            y = unlist(circle_coords_lat), x = unlist(circle_coords_long), zscale=50)
 render_snapshot()
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Change the crown width ratio (compared to the height)
 render_tree(extent = attr(montereybay,"extent"), heightmap = montereybay,
            tree_zscale = FALSE, tree_height = 60, crown_width_ratio = 0.5,
            clear_previous = TRUE,
            y = unlist(circle_coords_lat), x = unlist(circle_coords_long), zscale=50)
 render_snapshot()
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Change the trunk height and width
 render_tree(extent = attr(montereybay,"extent"), heightmap = montereybay,
            tree_zscale = FALSE, tree_height = 40, crown_width_ratio = 2,
            clear_previous = TRUE, trunk_height_ratio=1/2, trunk_radius = 1.5,
            y = unlist(circle_coords_lat), x = unlist(circle_coords_long), zscale=50)
 render_snapshot()
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Change the tree type
 render_tree(extent = attr(montereybay,"extent"), heightmap = montereybay,
            tree_zscale = FALSE, tree_height = 30,
            clear_previous = TRUE, type = "cone",trunk_height_ratio = 1/6,
            y = unlist(circle_coords_lat), x = unlist(circle_coords_long), zscale=50)
 render_snapshot()
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Change the crown color:
 render_camera(theta = 150,  phi = 38, zoom = 0.4, fov = 55)
 render_tree(extent = attr(montereybay,"extent"), heightmap = montereybay,

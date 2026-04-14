@@ -9,10 +9,9 @@
 #'@param water_ior Default `1`. Water index of refraction.
 #'@return A `ray_mesh` object
 #'@export
-#'@examples
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'filename_obj = tempfile(fileext = ".obj")
 #'#Save model of volcano
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'volcano |>
 #'  sphere_shade() |>
 #'  plot_3d(volcano, zscale = 2)

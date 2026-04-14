@@ -28,9 +28,9 @@ A \code{ray_mesh} object
 Converts the current RGL rayshader scene to a \code{ray_mesh} object (see \code{rayvertex} package for more information)
 }
 \examples{
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 filename_obj = tempfile(fileext = ".obj")
 #Save model of volcano
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 volcano |>
  sphere_shade() |>
  plot_3d(volcano, zscale = 2)

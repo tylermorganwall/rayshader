@@ -54,49 +54,41 @@
 #'  add_overlay(generate_compass_overlay(heightmap = montereybay)) |>
 #'  plot_map()
 #'
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Change the position to be over the water
 #'base_map |>
 #'  add_overlay(generate_compass_overlay(heightmap = montereybay, x = 0.15)) |>
 #'  plot_map()
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Change the type
 #'base_map |>
 #'  add_overlay(generate_compass_overlay(heightmap = montereybay, x = 0.15,
 #'                                       compass_type = "split_arrow")) |>
 #'  plot_map()
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Change the type
 #'base_map |>
 #'  add_overlay(generate_compass_overlay(heightmap = montereybay, x = 0.15,
 #'                                       compass_type = "split_arrow_ring")) |>
 #'  plot_map()
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Change the type
 #'base_map |>
 #'  add_overlay(generate_compass_overlay(heightmap = montereybay, x = 0.15,
 #'                                       compass_type = "triangle_circle")) |>
 #'  plot_map()
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Change the text color for visibility
 #'base_map |>
 #'  add_overlay(generate_compass_overlay(heightmap = montereybay, compass_type = "split_arrow",
 #' x = 0.15, text_color="white")) |>
 #'  plot_map()
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Alternatively, add a halo color to improve contrast
 #'base_map |>
 #'  add_overlay(generate_compass_overlay(heightmap = montereybay, x = 0.15, y=0.15,
 #'              compass_type = "split_arrow", halo_color="white", halo_expand = 2)) |>
 #'  plot_map()
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Change the color scheme
 #'base_map |>
 #'  add_overlay(generate_compass_overlay(heightmap = montereybay, x = 0.15, y=0.15,
 #'              compass_type = "split_arrow", halo_color="white",
 #'              halo_expand = 2, color1 = "purple", color2 = "red")) |>
 #'  plot_map()
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Remove the inner border
 #'base_map |>
 #'  add_overlay(generate_compass_overlay(heightmap = montereybay, x = 0.15, y=0.15,
@@ -104,7 +96,6 @@
 #'              halo_color="white", halo_expand = 2,
 #'              color1 = "darkolivegreen4", color2 = "burlywood3")) |>
 #'  plot_map()
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Change the size of the compass and text
 #'base_map |>
 #'  add_overlay(generate_compass_overlay(heightmap = montereybay, x = 0.75, y=0.75,
@@ -117,7 +108,6 @@
 #'              halo_color="white", halo_expand = 2,compass_type = "split_arrow",
 #'              size=0.075/2, text_size = 0.75)) |>
 #'  plot_map()
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Change the bearing of the compass
 #'base_map |>
 #'  add_overlay(generate_compass_overlay(heightmap = montereybay, x = 0.15, y=0.15,
@@ -130,7 +120,6 @@
 #'              halo_color="white", halo_expand = 2, bearing=-45, compass_type = "split_arrow_ring",
 #'              size=0.075)) |>
 #'  plot_map()
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Create a drop shadow effect
 #'base_map |>
 #'  add_overlay(generate_compass_overlay(heightmap = montereybay, x = 0.15, y=0.15,

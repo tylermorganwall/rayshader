@@ -45,20 +45,14 @@ Cache fallback messages are disabled by default. Set \code{options(rayshader.ver
 montereybay |>
  lamb_shade(zscale=200) |>
  plot_map()
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Increase the intensity by decreasing the zscale
 montereybay |>
  lamb_shade(zscale=50) |>
  plot_map()
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Change the sun direction
 montereybay |>
  lamb_shade(zscale=200, sunangle=45) |>
  plot_map()
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Change the sun altitude
 montereybay |>
  lamb_shade(zscale=200, sunaltitude=60) |>

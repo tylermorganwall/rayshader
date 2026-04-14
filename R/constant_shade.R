@@ -15,20 +15,17 @@
 #'  constant_shade("red") |>
 #'  add_shadow(lamb_shade(montereybay),0) |>
 #'  plot_map()
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Shade a green map
 #'montereybay |>
 #'  constant_shade("green") |>
 #'  add_shadow(lamb_shade(montereybay),0) |>
 #'  plot_map()
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Add a blue tint
 #'montereybay |>
 #'  height_shade() |>
 #'  add_overlay(constant_shade(montereybay, "dodgerblue", alpha=0.25)) |>
 #'  add_shadow(lamb_shade(montereybay,zscale=50),0) |>
 #'  plot_map()
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Use a blank map on which to draw other data
 #'montereybay |>
 #'  constant_shade() |>

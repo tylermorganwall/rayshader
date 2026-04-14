@@ -34,26 +34,22 @@
 #'@import foreach doParallel parallel progress
 #'@return Matrix of light intensities at each point.
 #'@export
-#'@examples
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#First we ray trace the Monterey Bay dataset.
 #'#The default angle is from 40-50 degrees azimuth, from the north east.
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'montereybay |>
 #'  ray_shade(zscale=50) |>
 #'  plot_map()
 #'#Change the altitude of the sun to 25 degrees
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'montereybay |>
 #'  ray_shade(zscale=50, sunaltitude=25) |>
 #'  plot_map()
 #'#Remove the lambertian shading to just calculate shadow intensity.
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'montereybay |>
 #'  ray_shade(zscale=50, sunaltitude=25, lambert=FALSE) |>
 #'  plot_map()
 #'
 #'#Change the direction of the sun to the South East
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'montereybay |>
 #'  ray_shade(zscale=50, sunaltitude=25, sunangle=225) |>
 #'  plot_map()

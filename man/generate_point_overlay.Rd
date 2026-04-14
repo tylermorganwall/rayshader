@@ -64,8 +64,8 @@ Semi-transparent overlay with contours.
 Calculates and returns an overlay of points for the current map.
 }
 \examples{
-#Add the included `sf` object with roads to the montereybay dataset
 \dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
+#Add the included `sf` object with roads to the montereybay dataset
  monterey_city = sf::st_sfc(sf::st_point(c(-121.893611, 36.603056)))
  montereybay |>
    height_shade() |>

@@ -19,12 +19,12 @@ Also includes built-in colors to match the palettes included in \code{\link[=sph
 Adds a layer of water to a map.
 }
 \examples{
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Here we even out a portion of the volcano dataset to simulate water:
 island_volcano = volcano
 island_volcano[island_volcano < mean(island_volcano)] = mean(island_volcano)
 
 #Setting a minimum area avoids classifying small flat areas as water:
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 island_volcano |>
  sphere_shade(texture="imhof3") |>
  add_water(detect_water(island_volcano, min_area = 400),color="imhof3") |>
@@ -34,8 +34,7 @@ island_volcano |>
 
 montbay_water = montereybay
 montbay_water[montbay_water < 0] = 0
-\dontshow{\}) # examplesIf}
-\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
+
 montereybay |>
  sphere_shade(texture="imhof4") |>
  add_water(detect_water(montbay_water),color="imhof4") |>

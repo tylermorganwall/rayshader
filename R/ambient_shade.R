@@ -21,18 +21,15 @@
 #'@param ... Additional arguments to pass to the `makeCluster` function when `multicore=TRUE`.
 #'@return Shaded texture map.
 #'@export
-#'@examples
-#'#Here we produce a ambient occlusion map of the `montereybay` elevation map.
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
+#'#Here we produce a ambient occlusion map of the `montereybay` elevation map.
 #'plot_map(ambient_shade(heightmap = montereybay))
 #'
 #'#We can increase the distance to look for surface intersections `maxsearch`
 #'#and the density of rays sent out around the point `sunbreaks`.
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'plot_map(ambient_shade(montereybay, sunbreaks = 24,maxsearch = 100, multicore=TRUE))
 #'#Create the Red Relief Image Map (RRIM) technique using a custom texture and ambient_shade(),
 #'#with an addition lambertian layer added with lamb_shade() to improve topographic clarity.
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'bigmb = resize_matrix(montereybay, scale=2, method="cubic")
 #'bigmb |>
 #'  sphere_shade(zscale=3, texture = create_texture("red","red","red","red","white")) |>
