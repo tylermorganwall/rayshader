@@ -66,7 +66,8 @@ test_that("hillshade map functions cache the latest map texture", {
 	expect_equal(get_hillshade_map(), water_map)
 })
 
-test_that("new explicit 2D heightmap invalidates stale cached hillshade zscale", {
+test_that("new explicit 2D heightmap invalidates stale cached hillshade metadata", {
+	skip_if_not_installed("sf")
 	clear_hillshade_test_cache()
 	withr::defer(clear_hillshade_test_cache())
 
@@ -80,9 +81,126 @@ test_that("new explicit 2D heightmap invalidates stale cached hillshade zscale",
 	expect_null(get_hillshade_zscale(default = NULL))
 
 	raster_heightmap = raster::raster(volcano)
+	raster::extent(raster_heightmap) = c(10, 20, 30, 40)
 	raster::res(raster_heightmap) = c(30, 30)
+	raster::crs(raster_heightmap) = sf::st_crs(3857)$wkt
 	sphere_shade(raster_heightmap)
 	expect_equal(get_hillshade_zscale(), 30)
+	expect_equal(
+		unname(get_extent(get_hillshade_extent())),
+		unname(get_extent(raster_heightmap))
+	)
+	expect_equal(get_hillshade_crs()$epsg, 3857)
+	expect_false(sf::st_is_longlat(get_hillshade_crs()))
+
+	height_shade(volcano)
+	expect_null(get_hillshade_zscale(default = NULL))
+	expect_null(get_hillshade_extent(default = NULL))
+	expect_null(get_hillshade_crs(default = NULL))
+})
+
+test_that("raster-backed hillshade metadata supports cached 2D spatial overlays", {
+	skip_if_not_installed("sf")
+	clear_hillshade_test_cache()
+	withr::defer(clear_hillshade_test_cache())
+
+	polygon_ll = sf::st_as_sfc(sf::st_bbox(
+		c(
+			xmin = -122.5,
+			xmax = -121.5,
+			ymin = 36.5,
+			ymax = 37.5
+		),
+		crs = sf::st_crs(4326)
+	))
+	polygon_merc = sf::st_transform(polygon_ll, 3857)
+	polygon_bbox = sf::st_bbox(polygon_merc)
+
+	raster_heightmap = raster::raster(volcano)
+	raster::extent(raster_heightmap) = c(
+		polygon_bbox["xmin"],
+		polygon_bbox["xmax"],
+		polygon_bbox["ymin"],
+		polygon_bbox["ymax"]
+	)
+	raster::crs(raster_heightmap) = sf::st_crs(3857)$wkt
+
+	base_map = height_shade(raster_heightmap)
+
+	polygon_overlay = generate_polygon_overlay(
+		geometry = sf::st_sf(id = 1, geometry = polygon_ll),
+		palette = "dodgerblue3",
+		linecolor = NA
+	)
+	line_overlay = generate_line_overlay(
+		geometry = sf::st_sf(
+			id = 1,
+			geometry = sf::st_sfc(
+				sf::st_linestring(matrix(
+					c(-122.4, 36.6, -121.6, 37.4),
+					ncol = 2,
+					byrow = TRUE
+				)),
+				crs = sf::st_crs(4326)
+			)
+		),
+		color = "grey20",
+		linewidth = 2
+	)
+
+	expect_equal(dim(polygon_overlay)[1:2], dim(base_map)[1:2])
+	expect_equal(dim(line_overlay)[1:2], dim(base_map)[1:2])
+	expect_true(any(polygon_overlay[,, 4] > 0))
+	expect_true(any(line_overlay[,, 4] > 0))
+})
+
+test_that("invalid cached hillshade CRS does not abort spatial overlays", {
+	skip_if_not_installed("sf")
+	clear_hillshade_test_cache()
+	withr::defer(clear_hillshade_test_cache())
+
+	cache_hillshade_heightmap(volcano, label = "volcano")
+	cache_hillshade_extent(raster::extent(c(0, nrow(volcano), 0, ncol(volcano))))
+	cache_hillshade_crs("not a crs")
+
+	expect_no_error(generate_polygon_overlay(
+		geometry = sf::st_sf(
+			id = 1,
+			geometry = sf::st_sfc(
+				sf::st_polygon(list(matrix(
+					c(10, 10, 20, 10, 20, 20, 10, 20, 10, 10),
+					ncol = 2,
+					byrow = TRUE
+				)))
+			)
+		),
+		palette = "dodgerblue3",
+		linecolor = NA
+	))
+})
+
+test_that("generate_polygon_overlay returns transparent overlay for empty crop", {
+	skip_if_not_installed("sf")
+
+	empty_overlay = generate_polygon_overlay(
+		geometry = sf::st_sf(
+			id = 1,
+			geometry = sf::st_sfc(
+				sf::st_polygon(list(matrix(
+					c(200, 200, 210, 200, 210, 210, 200, 210, 200, 200),
+					ncol = 2,
+					byrow = TRUE
+				)))
+			)
+		),
+		extent = c(0, nrow(volcano), 0, ncol(volcano)),
+		heightmap = volcano,
+		palette = "dodgerblue3",
+		linecolor = NA
+	)
+
+	expect_equal(dim(empty_overlay), c(ncol(volcano), nrow(volcano), 4))
+	expect_true(all(empty_overlay[,, 4] == 0))
 })
 
 test_that("sphere_shade explicit zscale overrides and caches hillshade zscale", {

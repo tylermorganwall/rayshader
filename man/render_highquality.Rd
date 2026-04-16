@@ -91,11 +91,15 @@ If this is set to zero, the adaptive sampler will be turned off and the renderer
 \item{lat}{Default \code{NA}. Latitude (degrees) for automatic sky generation.
 When \code{lat}, \code{long}, \code{datetime}, or \code{sky_args} are supplied, \code{render_highquality()} uses
 \code{skymodelr::generate_sky_latlong()} to create an EXR environment map, disables the default light,
-and sets \code{environment_light} for the render unless direct sky arguments are provided.}
+and sets \code{environment_light} for the render unless direct sky arguments are provided.
+If \code{datetime} is supplied and \code{lat}/\code{long} are omitted, rayshader will try to
+derive them from the center of the cached scene extent, transformed to WGS84.}
 
 \item{long}{Default \code{NA}. Longitude (degrees; west < 0) for automatic sky generation.}
 
-\item{datetime}{Default \code{NA}. POSIXct or character date-time used to position the sun.}
+\item{datetime}{Default \code{NA}. POSIXct or character date-time used to position the sun.
+If \code{lat}/\code{long} are omitted, rayshader will try to derive them from the cached
+scene extent center (converted to latitude/longitude) before generating the sky.}
 
 \item{sky_sun_elevation}{Default \code{NA}. If supplied, uses \code{skymodelr::generate_sky()} and
 passes this value to its \code{elevation} argument.}

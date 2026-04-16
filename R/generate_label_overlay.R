@@ -4,14 +4,17 @@
 #'use an `sf` object or manually specify the x/y coordinates and label.
 #'
 #'@param labels A character vector of labels, or an `sf` object with `POINT` geometry and a column for labels.
-#'@param extent Either an object representing the spatial extent of the scene
+#'@param extent Default `NULL`. Either an object representing the spatial extent of the scene
 #' (either from the `raster`, `terra`, `sf`, or `sp` packages),
 #' a length-4 numeric vector specifying `c("xmin", "xmax","ymin","ymax")`, or the spatial object (from
 #' the previously aforementioned packages) which will be automatically converted to an extent object.
+#'If omitted, rayshader will reuse cached extent metadata from the active scene or
+#'the most recent raster-backed hillshade call.
 #'@param x Default `NULL`. The x-coordinate, if `labels` is not an `sf` object.
 #'@param y Default `NULL`. The y-coordinate, if `labels` is not an `sf` object.
 #'@param heightmap Default `NULL`. The original height map. Pass this in to extract the dimensions of the resulting
-#'overlay automatically.
+#'overlay automatically. If omitted, rayshader will reuse the cached heightmap
+#'from the active scene or the most recent hillshade call.
 #'@param width Default `NA`. Width of the resulting overlay. Default the same dimensions as height map.
 #'@param height Default `NA`. Width of the resulting overlay. Default the same dimensions as height map.
 #'@param resolution_multiply Default `1`. If passing in `heightmap` instead of width/height, amount to
@@ -121,7 +124,7 @@
 #'  plot_map()
 generate_label_overlay = function(
 	labels,
-	extent,
+	extent = NULL,
 	x = NULL,
 	y = NULL,
 	heightmap = NULL,
@@ -155,16 +158,18 @@ generate_label_overlay = function(
 	if (!(length(find.package("car", quiet = TRUE)) > 0)) {
 		stop("{car} package required for generate_label_overlay()")
 	}
-	if (is.null(extent)) {
-		stop("`extent` must not be NULL")
-	}
-	stopifnot(!is.null(heightmap) || (!is.na(width) && !is.na(height)))
-	stopifnot(!missing(extent))
 	stopifnot(!missing(labels))
+	heightmap = resolve_overlay_heightmap(
+		heightmap = heightmap,
+		heightmap_missing = missing(heightmap),
+		width = width,
+		height = height,
+		caller = "generate_label_overlay"
+	)
 	extent = resolve_scene_render_extent(
 		extent = extent,
 		heightmap = heightmap,
-		caller = NULL
+		caller = "generate_label_overlay"
 	)
 	if (
 		(inherits(labels, "sf") || inherits(labels, "sfc")) &&
@@ -178,7 +183,8 @@ generate_label_overlay = function(
 			sf_object = labels,
 			extent = extent,
 			heightmap = heightmap,
-			crs = tryCatch(sf::st_crs(labels), error = function(e) NULL)
+			crs = tryCatch(sf::st_crs(labels), error = function(e) NULL),
+			caller = "generate_label_overlay"
 		)
 		labels = scene_labels$object
 		if (!is.null(scene_labels$extent)) {
@@ -206,7 +212,8 @@ generate_label_overlay = function(
 			x = x,
 			y = y,
 			extent = extent,
-			heightmap = heightmap
+			heightmap = heightmap,
+			caller = "generate_label_overlay"
 		)
 		x = scene_xy$x
 		y = scene_xy$y

@@ -776,10 +776,43 @@ scene_crs_equal = function(x, y) {
 	identical(x_crs$wkt, y_crs$wkt)
 }
 
+try_parse_scene_crs = function(crs) {
+	if (is.null(crs)) {
+		return(NULL)
+	}
+	crs_candidates = list()
+	add_candidate = function(candidate) {
+		if (is.null(candidate) || length(candidate) == 0) {
+			return(invisible(NULL))
+		}
+		if (is.character(candidate)) {
+			candidate = trimws(candidate[1])
+			if (!nzchar(candidate) || identical(candidate, "NA")) {
+				return(invisible(NULL))
+			}
+		}
+		crs_candidates[[length(crs_candidates) + 1]] <<- candidate
+		invisible(NULL)
+	}
+	add_candidate(crs)
+	if (inherits(crs, "CRS")) {
+		add_candidate(tryCatch(comment(crs), error = function(e) NULL))
+		add_candidate(tryCatch(slot(crs, "projargs"), error = function(e) NULL))
+		add_candidate(tryCatch(as.character(crs), error = function(e) NULL))
+	}
+	for (candidate in crs_candidates) {
+		parsed_crs = suppressWarnings(tryCatch(sf::st_crs(candidate), error = function(e) {
+			NULL
+		}))
+		if (!is.null(parsed_crs) && !is.na(parsed_crs)) {
+			return(parsed_crs)
+		}
+	}
+	NULL
+}
+
 parse_scene_crs = function(crs, caller = NULL, arg_name = "crs") {
-	parsed_crs = suppressWarnings(tryCatch(sf::st_crs(crs), error = function(e) {
-		NULL
-	}))
+	parsed_crs = try_parse_scene_crs(crs)
 	if (is.null(parsed_crs) || is.na(parsed_crs)) {
 		stop(
 			sprintf(
@@ -984,10 +1017,77 @@ get_scene_target_crs = function(
 		return(NULL)
 	}
 	scene_crs = get_scene_crs(default = NULL)
-	if (is.null(scene_crs)) {
+	scene_crs = try_parse_scene_crs(scene_crs)
+	if (!is.null(scene_crs)) {
+		return(scene_crs)
+	}
+	hillshade_crs = get_hillshade_crs(default = NULL)
+	hillshade_crs = try_parse_scene_crs(hillshade_crs)
+	if (!is.null(hillshade_crs)) {
+		return(hillshade_crs)
+	}
+	NULL
+}
+
+resolve_cached_extent_center_latlong = function(caller = NULL) {
+	if (!(length(find.package("sf", quiet = TRUE)) > 0)) {
 		return(NULL)
 	}
-	parse_scene_crs(scene_crs, caller = caller, arg_name = "scene CRS")
+	extent_candidates = list(
+		list(
+			extent = get_scene_extent(default = NULL),
+			crs = try_parse_scene_crs(get_scene_crs(default = NULL)),
+			source = "scene"
+		),
+		list(
+			extent = get_hillshade_extent(default = NULL),
+			crs = try_parse_scene_crs(get_hillshade_crs(default = NULL)),
+			source = "hillshade"
+		)
+	)
+	for (candidate in extent_candidates) {
+		if (is.null(candidate$extent) || is.null(candidate$crs)) {
+			next
+		}
+		extent_vec = tryCatch(
+			get_extent(candidate$extent),
+			error = function(e) NULL
+		)
+		if (
+			is.null(extent_vec) ||
+				any(!is.finite(extent_vec[c("xmin", "xmax", "ymin", "ymax")]))
+		) {
+			next
+		}
+		center_x = mean(extent_vec[c("xmin", "xmax")])
+		center_y = mean(extent_vec[c("ymin", "ymax")])
+		if (isTRUE(sf::st_is_longlat(candidate$crs))) {
+			return(list(
+				lat = unname(center_y),
+				long = unname(center_x),
+				source = candidate$source
+			))
+		}
+		center_ll = tryCatch(
+			transform_xy_between_crs(
+				x_vals = center_x,
+				y_vals = center_y,
+				source_crs = candidate$crs,
+				target_crs = 4326,
+				caller = caller
+			),
+			error = function(e) NULL
+		)
+		if (is.null(center_ll)) {
+			next
+		}
+		return(list(
+			lat = unname(center_ll$y[1]),
+			long = unname(center_ll$x[1]),
+			source = candidate$source
+		))
+	}
+	NULL
 }
 
 transform_ggplot_xy_with_context = function(
@@ -1485,12 +1585,34 @@ cache_hillshade_heightmap = function(heightmap = NULL, label = NULL) {
 	invisible(NULL)
 }
 
+cache_hillshade_extent = function(extent = NULL, label = NULL) {
+	assign("hillshade_extent", extent, envir = ray_cache_scene_envir)
+	assign("hillshade_extent_label", label, envir = ray_cache_scene_envir)
+	invisible(NULL)
+}
+
+cache_hillshade_crs = function(crs = NULL, label = NULL) {
+	assign("hillshade_crs", crs, envir = ray_cache_scene_envir)
+	assign("hillshade_crs_label", label, envir = ray_cache_scene_envir)
+	invisible(NULL)
+}
+
 cache_hillshade_input_context = function(heightmap_info, label = NULL) {
 	cache_hillshade_heightmap(heightmap_info$heightmap, label = label)
 	if (is.finite(heightmap_info$zscale) && heightmap_info$zscale > 0) {
 		cache_hillshade_zscale(heightmap_info$zscale, label = label)
 	} else {
 		cache_hillshade_zscale(NULL, label = NULL)
+	}
+	if (!is.null(heightmap_info$extent)) {
+		cache_hillshade_extent(heightmap_info$extent, label = label)
+	} else {
+		cache_hillshade_extent(NULL, label = NULL)
+	}
+	if (!is.null(heightmap_info$crs)) {
+		cache_hillshade_crs(heightmap_info$crs, label = label)
+	} else {
+		cache_hillshade_crs(NULL, label = NULL)
 	}
 	invisible(NULL)
 }
@@ -1525,6 +1647,54 @@ get_hillshade_heightmap_label = function(default = NULL) {
 	hillshade_heightmap_label
 }
 
+get_hillshade_extent = function(default = NULL) {
+	hillshade_extent = get0(
+		"hillshade_extent",
+		envir = ray_cache_scene_envir,
+		inherits = FALSE
+	)
+	if (is.null(hillshade_extent)) {
+		return(default)
+	}
+	hillshade_extent
+}
+
+get_hillshade_extent_label = function(default = NULL) {
+	hillshade_extent_label = get0(
+		"hillshade_extent_label",
+		envir = ray_cache_scene_envir,
+		inherits = FALSE
+	)
+	if (is.null(hillshade_extent_label)) {
+		return(default)
+	}
+	hillshade_extent_label
+}
+
+get_hillshade_crs = function(default = NULL) {
+	hillshade_crs = get0(
+		"hillshade_crs",
+		envir = ray_cache_scene_envir,
+		inherits = FALSE
+	)
+	if (is.null(hillshade_crs)) {
+		return(default)
+	}
+	hillshade_crs
+}
+
+get_hillshade_crs_label = function(default = NULL) {
+	hillshade_crs_label = get0(
+		"hillshade_crs_label",
+		envir = ray_cache_scene_envir,
+		inherits = FALSE
+	)
+	if (is.null(hillshade_crs_label)) {
+		return(default)
+	}
+	hillshade_crs_label
+}
+
 get_hillshade_map = function(default = NULL) {
 	hillshade_map = get0(
 		"hillshade_map",
@@ -1552,6 +1722,8 @@ get_hillshade_map_label = function(default = NULL) {
 clear_hillshade_cache = function() {
 	cache_hillshade_heightmap(NULL, label = NULL)
 	cache_hillshade_zscale(NULL, label = NULL)
+	cache_hillshade_extent(NULL, label = NULL)
+	cache_hillshade_crs(NULL, label = NULL)
 	cache_hillshade_map(NULL, label = NULL)
 	invisible(NULL)
 }
@@ -1821,6 +1993,26 @@ resolve_hillshade_heightmap = function(
 	)
 }
 
+resolve_overlay_heightmap = function(
+	heightmap = NULL,
+	heightmap_missing = FALSE,
+	width = NA,
+	height = NA,
+	caller = NULL
+) {
+	if (!isTRUE(heightmap_missing) && !is.null(heightmap)) {
+		return(heightmap)
+	}
+	if (!is.na(width) && !is.na(height)) {
+		return(heightmap)
+	}
+	resolve_hillshade_heightmap(
+		heightmap = heightmap,
+		heightmap_missing = TRUE,
+		caller = caller
+	)$heightmap
+}
+
 resolve_hillshade_zscale = function(
 	zscale = 1,
 	zscale_missing = FALSE,
@@ -1924,9 +2116,23 @@ resolve_scene_render_extent = function(
 		}
 	}
 
+	hillshade_extent = get_hillshade_extent(default = NULL)
+	if (!is.null(hillshade_extent)) {
+		emit_scene_cache_message(
+			caller = caller,
+			argument_name = "extent",
+			cache_name = "hillshade_extent",
+			cache_label = get_hillshade_extent_label(default = NULL)
+		)
+		return(hillshade_extent)
+	}
+
 	if (isTRUE(error_if_missing)) {
 		stop(
-			"Could not determine `extent`. Pass `extent` explicitly, or use a scene with cached extent metadata."
+			paste(
+				"Could not determine `extent`.",
+				"Pass `extent` explicitly, or use a scene or raster-backed hillshade with cached extent metadata."
+			)
 		)
 	}
 	NULL

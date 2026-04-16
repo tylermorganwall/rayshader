@@ -23,12 +23,15 @@ extract_spatial_heightmap_zscale = function(heightmap) {
 
 extract_spatial_heightmap_crs = function(heightmap) {
 	if (inherits(heightmap, "SpatRaster")) {
-		crs_text = tryCatch(
-			terra::crs(heightmap, proj = TRUE),
-			error = function(e) NA_character_
+		crs_candidates = list(
+			tryCatch(terra::crs(heightmap), error = function(e) NULL),
+			tryCatch(terra::crs(heightmap, proj = TRUE), error = function(e) NULL)
 		)
-		if (length(crs_text) > 0 && is.character(crs_text) && nzchar(crs_text[1])) {
-			return(crs_text[1])
+		for (crs_candidate in crs_candidates) {
+			parsed_crs = try_parse_scene_crs(crs_candidate)
+			if (!is.null(parsed_crs)) {
+				return(parsed_crs)
+			}
 		}
 		return(NULL)
 	}
@@ -37,11 +40,20 @@ extract_spatial_heightmap_crs = function(heightmap) {
 		if (is.null(crs_val)) {
 			return(NULL)
 		}
-		crs_text = tryCatch(as.character(crs_val), error = function(e) NULL)
-		if (!is.null(crs_text) && length(crs_text) > 0 && nzchar(crs_text[1])) {
-			return(crs_text[1])
+		crs_candidates = list(
+			tryCatch(comment(crs_val), error = function(e) NULL),
+			crs_val,
+			tryCatch(slot(crs_val, "projargs"), error = function(e) NULL),
+			tryCatch(as.character(crs_val), error = function(e) NULL),
+			tryCatch(raster::projection(heightmap), error = function(e) NULL)
+		)
+		for (crs_candidate in crs_candidates) {
+			parsed_crs = try_parse_scene_crs(crs_candidate)
+			if (!is.null(parsed_crs)) {
+				return(parsed_crs)
+			}
 		}
-		return(crs_val)
+		return(NULL)
 	}
 	NULL
 }

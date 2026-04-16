@@ -6,7 +6,7 @@
 \usage{
 generate_label_overlay(
   labels,
-  extent,
+  extent = NULL,
   x = NULL,
   y = NULL,
   heightmap = NULL,
@@ -33,17 +33,20 @@ generate_label_overlay(
 \arguments{
 \item{labels}{A character vector of labels, or an \code{sf} object with \code{POINT} geometry and a column for labels.}
 
-\item{extent}{Either an object representing the spatial extent of the scene
+\item{extent}{Default \code{NULL}. Either an object representing the spatial extent of the scene
 (either from the \code{raster}, \code{terra}, \code{sf}, or \code{sp} packages),
 a length-4 numeric vector specifying \code{c("xmin", "xmax","ymin","ymax")}, or the spatial object (from
-the previously aforementioned packages) which will be automatically converted to an extent object.}
+the previously aforementioned packages) which will be automatically converted to an extent object.
+If omitted, rayshader will reuse cached extent metadata from the active scene or
+the most recent raster-backed hillshade call.}
 
 \item{x}{Default \code{NULL}. The x-coordinate, if \code{labels} is not an \code{sf} object.}
 
 \item{y}{Default \code{NULL}. The y-coordinate, if \code{labels} is not an \code{sf} object.}
 
 \item{heightmap}{Default \code{NULL}. The original height map. Pass this in to extract the dimensions of the resulting
-overlay automatically.}
+overlay automatically. If omitted, rayshader will reuse the cached heightmap
+from the active scene or the most recent hillshade call.}
 
 \item{width}{Default \code{NA}. Width of the resulting overlay. Default the same dimensions as height map.}
 

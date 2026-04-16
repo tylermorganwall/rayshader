@@ -3,12 +3,15 @@
 #'@description Transforms an input `sf` object into an image overlay for the current height map.
 #'
 #'@param geometry An `sf` object with POLYGON geometry.
-#'@param extent Either an object representing the spatial extent of the scene
+#'@param extent Default `NULL`. Either an object representing the spatial extent of the scene
 #' (either from the `raster`, `terra`, `sf`, or `sp` packages),
 #' a length-4 numeric vector specifying `c("xmin", "xmax","ymin","ymax")`, or the spatial object (from
 #' the previously aforementioned packages) which will be automatically converted to an extent object.
+#'If omitted, rayshader will reuse cached extent metadata from the active scene or
+#'the most recent raster-backed hillshade call.
 #'@param heightmap Default `NULL`. The original height map. Pass this in to extract the dimensions of the resulting
-#'overlay automatically.
+#'overlay automatically. If omitted, rayshader will reuse the cached heightmap
+#'from the active scene or the most recent hillshade call.
 #'@param width Default `NA`. Width of the resulting overlay. Default the same dimensions as height map.
 #'@param height Default `NA`. Width of the resulting overlay. Default the same dimensions as height map.
 #'@param resolution_multiply Default `1`. If passing in `heightmap` instead of width/height, amount to
@@ -64,7 +67,7 @@
 #'  plot_map()
 generate_polygon_overlay = function(
 	geometry,
-	extent,
+	extent = NULL,
 	heightmap = NULL,
 	width = NA,
 	height = NA,
@@ -76,27 +79,30 @@ generate_polygon_overlay = function(
 	linewidth = 1
 ) {
 	if (!(length(find.package("sf", quiet = TRUE)) > 0)) {
-		stop("{sf} package required for generate_line_overlay()")
+		stop("{sf} package required for generate_polygon_overlay()")
 	}
-	if (is.null(extent)) {
-		stop("`extent` must not be NULL")
-	}
-	stopifnot(!is.null(heightmap) || (!is.na(width) && !is.na(height)))
-	stopifnot(!missing(extent))
 	stopifnot(!missing(geometry))
 	if (!inherits(geometry, "sf")) {
 		stop("geometry must be {sf} object")
 	}
+	heightmap = resolve_overlay_heightmap(
+		heightmap = heightmap,
+		heightmap_missing = missing(heightmap),
+		width = width,
+		height = height,
+		caller = "generate_polygon_overlay"
+	)
 	extent = resolve_scene_render_extent(
 		extent = extent,
 		heightmap = heightmap,
-		caller = NULL
+		caller = "generate_polygon_overlay"
 	)
 	scene_geometry = auto_transform_scene_sf(
 		sf_object = geometry,
 		extent = extent,
 		heightmap = heightmap,
-		crs = tryCatch(sf::st_crs(geometry), error = function(e) NULL)
+		crs = tryCatch(sf::st_crs(geometry), error = function(e) NULL),
+		caller = "generate_polygon_overlay"
 	)
 	geometry = scene_geometry$object
 	if (!is.null(scene_geometry$extent)) {
@@ -120,6 +126,32 @@ generate_polygon_overlay = function(
 	}
 	if (is.na(width)) {
 		width = nrow(heightmap)
+	}
+	transparent_overlay = function() {
+		overlay = array(
+			1,
+			dim = c(
+				height * resolution_multiply,
+				width * resolution_multiply,
+				4
+			)
+		)
+		overlay[,, 4] = 0
+		rayimage::ray_read_image(
+			overlay,
+			assume_colorspace = rayimage::CS_SRGB,
+			assume_white = "D65"
+		)
+	}
+	if (nrow(sf_polygons_cropped)) {
+		sf_polygons_cropped = sf_polygons_cropped[
+			!sf::st_is_empty(sf_polygons_cropped),
+			,
+			drop = FALSE
+		]
+	}
+	if (!nrow(sf_polygons_cropped)) {
+		return(transparent_overlay())
 	}
 
 	if (is.function(palette)) {

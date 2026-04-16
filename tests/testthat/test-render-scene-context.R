@@ -484,7 +484,7 @@ test_that("plot_3d() accepts raster input and caches spatial metadata", {
 		c(xmin = 100, xmax = 500, ymin = 1000, ymax = 1800)
 	)
 	expect_false(is.null(get_scene_crs(default = NULL)))
-	expect_true(nzchar(as.character(get_scene_crs())))
+	expect_false(is.na(get_scene_crs()))
 
 	expect_no_condition(render_points(
 		y = 1400,
@@ -492,6 +492,48 @@ test_that("plot_3d() accepts raster input and caches spatial metadata", {
 		offset = 30,
 		size = 1
 	))
+})
+
+test_that("cached scene extent can resolve the scene center in latlong", {
+	on.exit(rgl::close3d(), add = TRUE)
+	local_rgl_use_null()
+	skip_if_not_installed("raster")
+	skip_if_not_installed("sf")
+
+	scene_center_long = -77.035249
+	scene_center_lat = 38.889462
+	scene_center_proj = transform_xy_between_crs(
+		x_vals = scene_center_long,
+		y_vals = scene_center_lat,
+		source_crs = 4326,
+		target_crs = 3857
+	)
+	elev_raster = raster::raster(
+		nrows = 20,
+		ncols = 20,
+		xmn = scene_center_proj$x - 200,
+		xmx = scene_center_proj$x + 200,
+		ymn = scene_center_proj$y - 200,
+		ymx = scene_center_proj$y + 200,
+		crs = sf::st_crs(3857)$wkt
+	)
+	raster::values(elev_raster) = seq_len(raster::ncell(elev_raster))
+	texture = sphere_shade(raster_to_matrix(elev_raster))
+
+	expect_no_condition(plot_3d_test(
+		texture,
+		elev_raster,
+		shadow = FALSE,
+		water = FALSE,
+		windowsize = c(250, 250)
+	))
+
+	scene_center_latlong = resolve_cached_extent_center_latlong(
+		caller = "render_highquality"
+	)
+	expect_equal(scene_center_latlong$source, "scene")
+	expect_equal(scene_center_latlong$long, scene_center_long, tolerance = 1e-6)
+	expect_equal(scene_center_latlong$lat, scene_center_lat, tolerance = 1e-6)
 })
 
 test_that("transform_into_heightmap_coords() can use cached scene extent", {

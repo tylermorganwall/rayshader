@@ -22,8 +22,12 @@
 #'When `lat`, `long`, `datetime`, or `sky_args` are supplied, `render_highquality()` uses
 #'`skymodelr::generate_sky_latlong()` to create an EXR environment map, disables the default light,
 #'and sets `environment_light` for the render unless direct sky arguments are provided.
+#'If `datetime` is supplied and `lat`/`long` are omitted, rayshader will try to
+#'derive them from the center of the cached scene extent, transformed to WGS84.
 #'@param long Default `NA`. Longitude (degrees; west < 0) for automatic sky generation.
 #'@param datetime Default `NA`. POSIXct or character date-time used to position the sun.
+#'If `lat`/`long` are omitted, rayshader will try to derive them from the cached
+#'scene extent center (converted to latitude/longitude) before generating the sky.
 #'@param sky_sun_elevation Default `NA`. If supplied, uses `skymodelr::generate_sky()` and
 #'passes this value to its `elevation` argument.
 #'@param sky_sun_azimuth Default `NA`. If supplied, uses `skymodelr::generate_sky()` and
@@ -505,6 +509,48 @@ render_highquality = function(
 		) {
 			altitude_value = sky_args$altitude
 		}
+		if (
+			sky_mode == "latlong" &&
+				!is.null(datetime_value) &&
+				!is.na(datetime_value) &&
+				(
+					is.null(lat_value) ||
+						is.na(lat_value) ||
+						is.null(long_value) ||
+						is.na(long_value)
+				)
+		) {
+			auto_latlong = resolve_cached_extent_center_latlong(
+				caller = "render_highquality"
+			)
+			if (!is.null(auto_latlong)) {
+				if (is.null(lat_value) || is.na(lat_value)) {
+					lat_value = auto_latlong$lat
+				}
+				if (is.null(long_value) || is.na(long_value)) {
+					long_value = auto_latlong$long
+				}
+			}
+		}
+		if (
+			sky_mode == "latlong" &&
+				!is.null(datetime_value) &&
+				!is.na(datetime_value) &&
+				(
+					is.null(lat_value) ||
+						is.na(lat_value) ||
+						is.null(long_value) ||
+						is.na(long_value)
+				)
+		) {
+			stop(
+				paste(
+					"`datetime` requires `lat` and `long`, or cached extent and CRS metadata",
+					"so rayshader can derive the scene center in latitude/longitude."
+				),
+				call. = FALSE
+			)
+		}
 
 		lat_key = if (!is.null(lat_value) && !is.na(lat_value)) {
 			format_sky_value(lat_value)
@@ -622,14 +668,14 @@ render_highquality = function(
 			sky_call_args$filename = sky_file
 			if (sky_mode == "direct") {
 				sky_call_args[c("lat", "lon", "long", "datetime")] = NULL
-				if (!is.null(sky_sun_elevation) && !is.na(sky_sun_elevation)) {
-					sky_call_args$elevation = sky_sun_elevation
+				if (!is.null(elevation_value) && !is.na(elevation_value)) {
+					sky_call_args$elevation = elevation_value
 				}
-				if (!is.null(sky_sun_azimuth) && !is.na(sky_sun_azimuth)) {
-					sky_call_args$azimuth = sky_sun_azimuth
+				if (!is.null(azimuth_value) && !is.na(azimuth_value)) {
+					sky_call_args$azimuth = azimuth_value
 				}
-				if (!is.null(sky_altitude) && !is.na(sky_altitude)) {
-					sky_call_args$altitude = sky_altitude
+				if (!is.null(altitude_value) && !is.na(altitude_value)) {
+					sky_call_args$altitude = altitude_value
 				}
 				do.call(skymodelr::generate_sky, sky_call_args)
 			} else {
@@ -641,14 +687,14 @@ render_highquality = function(
 					sky_call_args$lon = sky_call_args$long
 				}
 				sky_call_args$long = NULL
-				if (!is.null(lat) && !is.na(lat)) {
-					sky_call_args$lat = lat
+				if (!is.null(lat_value) && !is.na(lat_value)) {
+					sky_call_args$lat = lat_value
 				}
-				if (!is.null(long) && !is.na(long)) {
-					sky_call_args$lon = long
+				if (!is.null(long_value) && !is.na(long_value)) {
+					sky_call_args$lon = long_value
 				}
-				if (!is.null(datetime) && !is.na(datetime)) {
-					sky_call_args$datetime = datetime
+				if (!is.null(datetime_value) && !is.na(datetime_value)) {
+					sky_call_args$datetime = datetime_value
 				}
 				do.call(skymodelr::generate_sky_latlong, sky_call_args)
 			}

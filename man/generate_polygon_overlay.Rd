@@ -6,7 +6,7 @@
 \usage{
 generate_polygon_overlay(
   geometry,
-  extent,
+  extent = NULL,
   heightmap = NULL,
   width = NA,
   height = NA,
@@ -21,13 +21,16 @@ generate_polygon_overlay(
 \arguments{
 \item{geometry}{An \code{sf} object with POLYGON geometry.}
 
-\item{extent}{Either an object representing the spatial extent of the scene
+\item{extent}{Default \code{NULL}. Either an object representing the spatial extent of the scene
 (either from the \code{raster}, \code{terra}, \code{sf}, or \code{sp} packages),
 a length-4 numeric vector specifying \code{c("xmin", "xmax","ymin","ymax")}, or the spatial object (from
-the previously aforementioned packages) which will be automatically converted to an extent object.}
+the previously aforementioned packages) which will be automatically converted to an extent object.
+If omitted, rayshader will reuse cached extent metadata from the active scene or
+the most recent raster-backed hillshade call.}
 
 \item{heightmap}{Default \code{NULL}. The original height map. Pass this in to extract the dimensions of the resulting
-overlay automatically.}
+overlay automatically. If omitted, rayshader will reuse the cached heightmap
+from the active scene or the most recent hillshade call.}
 
 \item{width}{Default \code{NA}. Width of the resulting overlay. Default the same dimensions as height map.}
 
