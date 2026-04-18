@@ -13,7 +13,10 @@ spatialize_image(
   toRGB = TRUE,
   flip_vertical = FALSE,
   flip_horizontal = FALSE,
-  layer_names = NULL
+  layer_names = NULL,
+  include_height = FALSE,
+  heightmap = NULL,
+  height_layer_name = "height"
 )
 }
 \arguments{
@@ -53,6 +56,20 @@ order before rasterization.}
 \item{layer_names}{Default \code{NULL}. Optional output layer names. Defaults are
 \code{"value"} for a single layer, \code{c("red", "green", "blue")} for RGB output,
 and \code{c("red", "green", "blue", "alpha")} for RGBA output.}
+
+\item{include_height}{Default \code{FALSE}. If \code{TRUE}, append a final layer with
+raw height values from \code{heightmap} or cached rayshader scene metadata. When
+the output image resolution differs from the source heightmap, heights are
+bilinearly resampled onto the output raster grid.}
+
+\item{heightmap}{Default \code{NULL}. Optional source elevation matrix or spatial
+raster used when \code{include_height = TRUE}. Explicit \code{heightmap} overrides
+cached heightmap metadata. If omitted, rayshader reuses cached hillshade or
+scene heightmap metadata when available. Faceted cached \code{plot_gg()} scenes
+require an explicit \code{heightmap} for height export.}
+
+\item{height_layer_name}{Default \code{"height"}. Name of the appended height
+layer when \code{include_height = TRUE}.}
 }
 \value{
 A \code{terra::SpatRaster}.

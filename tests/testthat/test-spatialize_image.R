@@ -36,7 +36,8 @@ test_that("spatialize_image() converts a matrix into a one-layer SpatRaster", {
 	mat = matrix(1:6, nrow = 2, byrow = TRUE)
 	rast = spatialize_image(
 		mat,
-		extent = c(xmin = 0, xmax = 3, ymin = 10, ymax = 12)
+		extent = c(xmin = 0, xmax = 3, ymin = 10, ymax = 12),
+		toRGB = FALSE
 	)
 
 	expect_s4_class(rast, "SpatRaster")
@@ -45,7 +46,12 @@ test_that("spatialize_image() converts a matrix into a one-layer SpatRaster", {
 	expect_equal(spatialize_image_extent_values(rast), c(xmin = 0, xmax = 3, ymin = 10, ymax = 12))
 	expect_equal(terra::as.matrix(rast, wide = TRUE), mat)
 	expect_error(
-		spatialize_image(mat, extent = c(0, 1, 0, 1), layer_names = c("a", "b")),
+		spatialize_image(
+			mat,
+			extent = c(0, 1, 0, 1),
+			toRGB = FALSE,
+			layer_names = c("a", "b")
+		),
 		"`layer_names` must be a character vector of length 1"
 	)
 })
@@ -58,9 +64,14 @@ test_that("spatialize_image() converts RGB and RGBA arrays into SpatRasters", {
 	rgb = array(seq_len(18), dim = c(2, 3, 3))
 	rgba = array(seq_len(24), dim = c(2, 3, 4))
 
-	rgb_rast = spatialize_image(rgb, extent = c(0, 3, 0, 2))
-	rgba_rgb_rast = spatialize_image(rgba, extent = c(0, 3, 0, 2))
-	rgba_full_rast = spatialize_image(rgba, extent = c(0, 3, 0, 2), include_alpha = TRUE)
+	rgb_rast = spatialize_image(rgb, extent = c(0, 3, 0, 2), toRGB = FALSE)
+	rgba_rgb_rast = spatialize_image(rgba, extent = c(0, 3, 0, 2), toRGB = FALSE)
+	rgba_full_rast = spatialize_image(
+		rgba,
+		extent = c(0, 3, 0, 2),
+		include_alpha = TRUE,
+		toRGB = FALSE
+	)
 
 	expect_equal(terra::nlyr(rgb_rast), 3)
 	expect_equal(names(rgb_rast), c("red", "green", "blue"))
@@ -72,6 +83,86 @@ test_that("spatialize_image() converts RGB and RGBA arrays into SpatRasters", {
 		terra::as.matrix(rgba_full_rast[[4]], wide = TRUE),
 		rgba[, , 4]
 	)
+})
+
+test_that("spatialize_image() can append an explicit height layer", {
+	skip_if_not_installed("terra")
+	clear_spatialize_image_test_cache()
+	withr::defer(clear_spatialize_image_test_cache())
+
+	image_mat = matrix(1:6, nrow = 2, byrow = TRUE)
+	height_mat = matrix(c(10, 20, 30, 40, 50, 60), nrow = 3, byrow = TRUE)
+	rast = spatialize_image(
+		image_mat,
+		extent = c(0, 3, 0, 2),
+		toRGB = FALSE,
+		include_height = TRUE,
+		heightmap = height_mat
+	)
+
+	expect_equal(terra::nlyr(rast), 2)
+	expect_equal(names(rast), c("value", "height"))
+	expect_equal(terra::as.matrix(rast[[2]], wide = TRUE), t(height_mat))
+})
+
+test_that("spatialize_image() can append a cached height layer", {
+	skip_if_not_installed("terra")
+	clear_spatialize_image_test_cache()
+	withr::defer(clear_spatialize_image_test_cache())
+
+	hillshade_img = sphere_shade(volcano)
+	rast = spatialize_image(
+		hillshade_img,
+		extent = c(0, ncol(hillshade_img), 0, nrow(hillshade_img)),
+		toRGB = FALSE,
+		include_height = TRUE
+	)
+
+	expect_equal(terra::nlyr(rast), 4)
+	expect_equal(names(rast), c("red", "green", "blue", "height"))
+	expect_equal(terra::as.matrix(rast[[4]], wide = TRUE), t(volcano))
+})
+
+test_that("spatialize_image() bilinearly resamples height onto the output grid", {
+	skip_if_not_installed("terra")
+	clear_spatialize_image_test_cache()
+	withr::defer(clear_spatialize_image_test_cache())
+
+	height_mat = matrix(c(0, 10, 20, 30, 40, 50), nrow = 3, byrow = TRUE)
+	rast = spatialize_image(
+		matrix(0, nrow = 4, ncol = 6),
+		extent = c(0, 6, 0, 4),
+		toRGB = FALSE,
+		include_height = TRUE,
+		heightmap = height_mat
+	)
+	expected = matrix(c(
+		0, 8, 16, 24, 32, 40,
+		3.3333333333, 11.3333333333, 19.3333333333, 27.3333333333, 35.3333333333, 43.3333333333,
+		6.6666666667, 14.6666666667, 22.6666666667, 30.6666666667, 38.6666666667, 46.6666666667,
+		10, 18, 26, 34, 42, 50
+	), nrow = 4, byrow = TRUE)
+
+	expect_equal(
+		terra::as.matrix(rast[[2]], wide = TRUE),
+		expected,
+		tolerance = 1e-8
+	)
+})
+
+test_that("spatialize_image() defaults to plotting-friendly RGB conversion", {
+	skip_if_not_installed("terra")
+	clear_spatialize_image_test_cache()
+	withr::defer(clear_spatialize_image_test_cache())
+
+	mat = matrix(c(0, 0.5, 0.75, 1), nrow = 2, byrow = TRUE)
+	rast = spatialize_image(mat, extent = c(0, 2, 0, 2))
+	expected = pmax(pmin(
+		rayimage::render_gamma_linear(mat, srgb_to_linear = FALSE) * 255,
+		255
+	), 0)
+
+	expect_equal(terra::as.matrix(rast, wide = TRUE), expected, tolerance = 1e-8)
 })
 
 test_that("spatialize_image() can convert image values to sRGB-scaled 0-255 output", {
@@ -287,6 +378,15 @@ test_that("spatialize_image() resolves panel-specific cached extents for faceted
 		spatialize_image(matrix(1:4, nrow = 2, byrow = TRUE)),
 		"Supply `panel = <panel>`"
 	)
+	expect_error(
+		spatialize_image(
+			matrix(1:4, nrow = 2, byrow = TRUE),
+			panel = 2,
+			include_height = TRUE,
+			heightmap = NULL
+		),
+		"Cached height export is not supported for faceted `plot_gg\\(\\)` scenes"
+	)
 })
 
 test_that("spatialize_image() preserves spatial orientation and supports flips", {
@@ -296,19 +396,29 @@ test_that("spatialize_image() preserves spatial orientation and supports flips",
 
 	mat = matrix(c(1, 2, 3, 4), nrow = 2, byrow = TRUE)
 
-	rast = spatialize_image(mat, extent = c(0, 2, 0, 2))
+	rast = spatialize_image(mat, extent = c(0, 2, 0, 2), toRGB = FALSE)
 	expect_equal(
 		spatialize_image_corner_values(rast),
 		c(top_left = 1, top_right = 2, bottom_left = 3, bottom_right = 4)
 	)
 
-	rast_flip_v = spatialize_image(mat, extent = c(0, 2, 0, 2), flip_vertical = TRUE)
+	rast_flip_v = spatialize_image(
+		mat,
+		extent = c(0, 2, 0, 2),
+		toRGB = FALSE,
+		flip_vertical = TRUE
+	)
 	expect_equal(
 		spatialize_image_corner_values(rast_flip_v),
 		c(top_left = 3, top_right = 4, bottom_left = 1, bottom_right = 2)
 	)
 
-	rast_flip_h = spatialize_image(mat, extent = c(0, 2, 0, 2), flip_horizontal = TRUE)
+	rast_flip_h = spatialize_image(
+		mat,
+		extent = c(0, 2, 0, 2),
+		toRGB = FALSE,
+		flip_horizontal = TRUE
+	)
 	expect_equal(
 		spatialize_image_corner_values(rast_flip_h),
 		c(top_left = 2, top_right = 1, bottom_left = 4, bottom_right = 3)

@@ -13,7 +13,8 @@ test_that("render_tree() transforms DC WGS84 points into the projected scene CRS
 
 	setup_dc_tree_plot3d_scene()
 
-	expect_true(grepl("zone=18", as.character(get_scene_crs()), fixed = TRUE))
+	expect_false(isTRUE(sf::st_is_longlat(get_scene_crs())))
+	expect_true(grepl("zone 18", get_scene_crs()$input, fixed = TRUE))
 	scene_extent = rayshader:::get_extent(get_scene_extent())
 	expect_gt(scene_extent["xmax"] - scene_extent["xmin"], 3500)
 	expect_gt(scene_extent["ymax"] - scene_extent["ymin"], 3500)

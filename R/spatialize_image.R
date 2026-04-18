@@ -45,6 +45,17 @@
 #' @param layer_names Default `NULL`. Optional output layer names. Defaults are
 #' `"value"` for a single layer, `c("red", "green", "blue")` for RGB output,
 #' and `c("red", "green", "blue", "alpha")` for RGBA output.
+#' @param include_height Default `FALSE`. If `TRUE`, append a final layer with
+#' raw height values from `heightmap` or cached rayshader scene metadata. When
+#' the output image resolution differs from the source heightmap, heights are
+#' bilinearly resampled onto the output raster grid.
+#' @param heightmap Default `NULL`. Optional source elevation matrix or spatial
+#' raster used when `include_height = TRUE`. Explicit `heightmap` overrides
+#' cached heightmap metadata. If omitted, rayshader reuses cached hillshade or
+#' scene heightmap metadata when available. Faceted cached `plot_gg()` scenes
+#' require an explicit `heightmap` for height export.
+#' @param height_layer_name Default `"height"`. Name of the appended height
+#' layer when `include_height = TRUE`.
 #'
 #' @returns A `terra::SpatRaster`.
 #' @export
@@ -68,7 +79,10 @@ spatialize_image = function(
 	toRGB = TRUE,
 	flip_vertical = FALSE,
 	flip_horizontal = FALSE,
-	layer_names = NULL
+	layer_names = NULL,
+	include_height = FALSE,
+	heightmap = NULL,
+	height_layer_name = "height"
 ) {
 	if (!(length(find.package("terra", quiet = TRUE)) > 0)) {
 		stop("`terra` package required for spatialize_image().", call. = FALSE)
@@ -84,6 +98,13 @@ spatialize_image = function(
 		stop("`toRGB` must be `TRUE` or `FALSE`.", call. = FALSE)
 	}
 	if (
+		!is.logical(include_height) ||
+			length(include_height) != 1 ||
+			is.na(include_height)
+	) {
+		stop("`include_height` must be `TRUE` or `FALSE`.", call. = FALSE)
+	}
+	if (
 		!is.logical(flip_vertical) ||
 			length(flip_vertical) != 1 ||
 			is.na(flip_vertical)
@@ -96,6 +117,16 @@ spatialize_image = function(
 			is.na(flip_horizontal)
 	) {
 		stop("`flip_horizontal` must be `TRUE` or `FALSE`.", call. = FALSE)
+	}
+	if (
+		!is.character(height_layer_name) ||
+			length(height_layer_name) != 1 ||
+			!nzchar(trimws(height_layer_name))
+	) {
+		stop(
+			"`height_layer_name` must be a single non-empty character string.",
+			call. = FALSE
+		)
 	}
 
 	image_info = coerce_spatialize_image_input(
@@ -147,6 +178,14 @@ spatialize_image = function(
 		nlayers = image_info$nlayers
 	)
 	names(raster) = layer_names
+	raster = append_spatialize_image_height_layer(
+		raster = raster,
+		include_height = include_height,
+		heightmap = heightmap,
+		panel = panel,
+		height_layer_name = height_layer_name,
+		caller = "spatialize_image"
+	)
 	raster
 }
 
@@ -410,4 +449,106 @@ spatialize_image_values_matrix = function(image, nlayers) {
 			as.vector(t(image[,, i, drop = TRUE]))
 		})
 	)
+}
+
+append_spatialize_image_height_layer = function(
+	raster,
+	include_height = FALSE,
+	heightmap = NULL,
+	panel = NULL,
+	height_layer_name = "height",
+	caller = NULL
+) {
+	if (!isTRUE(include_height)) {
+		return(raster)
+	}
+	height_raster = resolve_spatialize_image_height_layer(
+		template = raster[[1]],
+		heightmap = heightmap,
+		panel = panel,
+		height_layer_name = height_layer_name,
+		caller = caller
+	)
+	c(raster, height_raster)
+}
+
+resolve_spatialize_image_height_layer = function(
+	template,
+	heightmap = NULL,
+	panel = NULL,
+	height_layer_name = "height",
+	caller = NULL
+) {
+	if (is.null(heightmap)) {
+		panel_info = get_cached_plot_gg_panel_info(default = NULL)
+		if (!is.null(panel_info) && nrow(panel_info) > 1) {
+			stop(
+				paste0(
+					format_render_caller_prefix(caller),
+					"Cached height export is not supported for faceted `plot_gg()` scenes. Supply `heightmap` explicitly."
+				),
+				call. = FALSE
+			)
+		}
+		heightmap = resolve_hillshade_heightmap(
+			heightmap = NULL,
+			heightmap_missing = TRUE,
+			caller = caller
+		)$heightmap
+	}
+
+	heightmap_info = coerce_plot_3d_heightmap(heightmap)
+	heightmap_matrix = t(heightmap_info$heightmap)
+	if (!is.matrix(heightmap_matrix)) {
+		stop(
+			paste0(
+				format_render_caller_prefix(caller),
+				"`heightmap` must resolve to a two-dimensional matrix or spatial raster."
+			),
+			call. = FALSE
+		)
+	}
+
+	source_height_raster = terra::rast(
+		nrows = terra::nrow(template),
+		ncols = terra::ncol(template),
+		xmin = terra::xmin(template),
+		xmax = terra::xmax(template),
+		ymin = terra::ymin(template),
+		ymax = terra::ymax(template)
+	)
+	template_crs = tryCatch(terra::crs(template), error = function(e) "")
+	if (is.character(template_crs) && length(template_crs) && nzchar(template_crs[1])) {
+		terra::crs(source_height_raster) = template_crs
+	}
+	if (
+		terra::nrow(source_height_raster) == nrow(heightmap_matrix) &&
+			terra::ncol(source_height_raster) == ncol(heightmap_matrix)
+	) {
+		height_values = heightmap_matrix
+	} else {
+		height_values = interpolate_spatialize_image_height_matrix(
+			heightmap = heightmap_matrix,
+			nrows = terra::nrow(source_height_raster),
+			ncols = terra::ncol(source_height_raster)
+		)
+	}
+	terra::values(source_height_raster) = spatialize_image_values_matrix(
+		height_values,
+		nlayers = 1L
+	)
+
+	names(source_height_raster) = height_layer_name
+	source_height_raster
+}
+
+interpolate_spatialize_image_height_matrix = function(
+	heightmap,
+	nrows,
+	ncols
+) {
+	x_coords = rep(seq(1, ncol(heightmap), length.out = ncols), each = nrows)
+	y_coords = rep(seq(1, nrow(heightmap), length.out = nrows), times = ncols)
+	interpolated_vals = rayimage::interpolate_array(heightmap, x_coords, y_coords)
+	matrix(interpolated_vals, nrow = nrows, byrow = FALSE)
 }

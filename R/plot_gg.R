@@ -265,6 +265,23 @@ plot_gg = function(
 	if (!(length(find.package("ggplot2", quiet = TRUE)) > 0)) {
 		stop("Must have ggplot2 installed to use plot_gg()")
 	}
+	clone_plot_gg_object = function(x) {
+		cloned = unserialize(serialize(x, NULL))
+		if (inherits(x, "ggplot")) {
+			# Preserve live external-pointer-backed inputs such as terra::SpatRaster
+			# objects referenced from captured environments and layer data.
+			cloned@plot_env = x@plot_env
+			cloned@data = x@data
+			cloned@mapping = x@mapping
+			if (length(cloned@layers) == length(x@layers)) {
+				for (i in seq_along(cloned@layers)) {
+					cloned@layers[[i]]$data = x@layers[[i]]$data
+					cloned@layers[[i]]$mapping = x@layers[[i]]$mapping
+				}
+			}
+		}
+		cloned
+	}
 	normalize_plot_gg_raytrace_mode = function(raytrace) {
 		if (is.logical(raytrace) && length(raytrace) == 1 && !is.na(raytrace)) {
 			return(if (isTRUE(raytrace)) "raytrace" else "none")
@@ -312,18 +329,18 @@ plot_gg = function(
 		if (methods::is(ggobj, "list") && length(ggobj) == 2) {
 			stopifnot(inherits(ggobj[[2]], "ggplot"))
 			stopifnot(inherits(ggobj[[1]], "ggplot"))
-			ggplotobj2 = unserialize(serialize(ggobj[[2]], NULL))
-			color_gg = unserialize(serialize(ggobj[[1]], NULL))
+			ggplotobj2 = clone_plot_gg_object(ggobj[[2]])
+			color_gg = clone_plot_gg_object(ggobj[[1]])
 		} else {
 			stopifnot(inherits(ggobj, "ggplot"))
-			ggplotobj2 = unserialize(serialize(ggobj, NULL))
-			color_gg = unserialize(serialize(ggobj, NULL))
+			ggplotobj2 = clone_plot_gg_object(ggobj)
+			color_gg = clone_plot_gg_object(ggobj)
 		}
 	} else {
 		stopifnot(inherits(ggobj, "ggplot"))
 		stopifnot(inherits(ggobj_height, "ggplot"))
-		ggplotobj2 = unserialize(serialize(ggobj_height, NULL))
-		color_gg = unserialize(serialize(ggobj, NULL))
+		ggplotobj2 = clone_plot_gg_object(ggobj_height)
+		color_gg = clone_plot_gg_object(ggobj)
 	}
 	color_gg_grob = ggplot2::ggplotGrob(color_gg)
 
