@@ -5,10 +5,10 @@
 \title{Detect water}
 \usage{
 detect_water(
-  heightmap,
+  heightmap = NULL,
   zscale = 1,
   cutoff = 0.999,
-  min_area = length(heightmap)/400,
+  min_area = NULL,
   max_height = NULL,
   normalvectors = NULL,
   keep_groups = FALSE,
@@ -18,14 +18,15 @@ detect_water(
 \arguments{
 \item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
 All grid points are assumed to be evenly spaced. Alternatively, if heightmap is a logical matrix, each entry
-specifies whether that point is water or not.}
+specifies whether that point is water or not. If omitted, rayshader will use the cached hillshade/scene heightmap.}
 
 \item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
-of 1 meter and the grid values are separated by 10 meters, \code{zscale} would be 10.}
+of 1 meter and the grid values are separated by 10 meters, \code{zscale} would be 10. If omitted and a cached or raster-derived
+\code{zscale} is available, rayshader will reuse that value.}
 
 \item{cutoff}{Default \code{0.999}. The lower limit of the z-component of the unit normal vector to be classified as water.}
 
-\item{min_area}{Default length(heightmap)/400. Minimum area (in units of the height matrix x and y spacing) to be considered a body of water.}
+\item{min_area}{Default \code{length(heightmap)/400}. Minimum area (in units of the height matrix x and y spacing) to be considered a body of water.}
 
 \item{max_height}{Default \code{NULL}. If passed, this number will specify the maximum height a point can be considered to be water.}
 
@@ -40,6 +41,9 @@ Matrix indicating whether water was detected at that point. 1 indicates water, 0
 }
 \description{
 Detects bodies of water (of a user-defined minimum size) within an elevation matrix.
+}
+\details{
+Cache fallback messages are disabled by default. Set \code{options(rayshader.verbose_scene_cache = TRUE)} to print when cached metadata is reused.
 }
 \examples{
 #Here we even out a portion of the volcano dataset to simulate water:

@@ -29,6 +29,35 @@ test_that("hillshade functions reuse cached heightmap", {
 	)
 })
 
+test_that("detect_water reuses cached hillshade heightmap and zscale", {
+	clear_hillshade_test_cache()
+	withr::defer(clear_hillshade_test_cache())
+	withr::local_options(list(rayshader.verbose_scene_cache = TRUE))
+
+	volcano_water = volcano
+	volcano_water[volcano_water < mean(volcano_water)] = mean(volcano_water)
+	raster_heightmap = raster::raster(volcano_water)
+	raster::res(raster_heightmap) = c(30, 30)
+
+	sphere_shade(raster_heightmap)
+
+	out = character()
+	cached_water = withCallingHandlers(
+		detect_water(min_area = 25),
+		message = function(cnd) {
+			out <<- c(out, conditionMessage(cnd))
+			invokeRestart("muffleMessage")
+		}
+	)
+
+	expect_equal(
+		cached_water,
+		detect_water(raster_heightmap, min_area = 25)
+	)
+	expect_true(any(grepl("hillshade_heightmap", out, fixed = TRUE)))
+	expect_true(any(grepl("hillshade_zscale", out, fixed = TRUE)))
+})
+
 test_that("hillshade map functions cache the latest map texture", {
 	clear_hillshade_test_cache()
 	withr::defer(clear_hillshade_test_cache())
