@@ -13,7 +13,9 @@ plot_gg(
   invert = FALSE,
   shadow_intensity = 0.5,
   units = c("in", "cm", "mm"),
-  scale = 150,
+  scale = NULL,
+  zscale = NULL,
+  vertical_exaggeration = NULL,
   pointcontract = 0.7,
   offset_edges = FALSE,
   flat_plot_render = FALSE,
@@ -53,7 +55,10 @@ plot_gg(
 \item{ggobj}{ggplot object to projected into 3D.}
 
 \item{ggobj_height}{Default \code{NULL}. A ggplot object that can be used to specify the 3D extrusion separately from the
-\code{ggobj}.}
+\code{ggobj}. If this plot includes a \code{tidyterra::geom_spatraster()} height layer,
+rayshader preserves the mapped raster data scale when building the height map
+and uses the final rendered scene spacing as the default \code{zscale} unless
+\code{zscale} is supplied.}
 
 \item{width}{Default \code{3}. Width of ggplot, in \code{units}.}
 
@@ -72,8 +77,18 @@ strength of the radiance overlay.}
 
 \item{units}{Default \verb{in}. One of c("in", "cm", "mm").}
 
-\item{scale}{Default \code{150}. Multiplier for vertical scaling: a higher number increases the height
-of the 3D transformation.}
+\item{scale}{Deprecated. Use \code{vertical_exaggeration} instead.}
+
+\item{zscale}{Default \code{NULL}. The ratio between the x/y spacing and the z axis
+for the height surface. If omitted and \code{ggobj_height} includes a spatial raster
+height layer, rayshader derives \code{zscale} from the final rendered ggplot scene
+extent and output matrix spacing, which accounts for ggplot rasterization and
+reprojection. Otherwise, the base \code{zscale} defaults to \code{1}.}
+
+\item{vertical_exaggeration}{Default \code{NULL}. One-off multiplier applied to the
+effective relief after resolving \code{zscale}. When omitted, rayshader uses \code{1}
+for spatial raster height sources and \code{150} for non-raster ggplot height
+mappings, which preserves the legacy \code{plot_gg()} default appearance.}
 
 \item{pointcontract}{Default \code{0.7}. This multiplies the size of the points and shrinks
 them around their center in the 3D surface mapping. Decrease this to reduce color bleed on edges, and set to
@@ -212,7 +227,7 @@ ggdiamonds = ggplot(diamonds, aes(x, depth)) +
  facet_wrap(clarity~.) +
  scale_fill_viridis_c(option = "A") +
  scale_color_viridis_c(option = "A")
-plot_gg(ggdiamonds,multicore = TRUE,width=5,height=5,scale=250,windowsize=c(1400,866),
+plot_gg(ggdiamonds,multicore = TRUE,width=5,height=5,vertical_exaggeration=250,windowsize=c(1400,866),
        zoom = 0.55, phi = 30)
 render_snapshot()
 #Change the camera angle and take a snapshot:
@@ -233,7 +248,7 @@ ggvolcano = volcano |>
 ggvolcano
 
 plot_gg(ggvolcano, multicore = TRUE, raytrace = TRUE, width = 7, height = 4,
-       scale = 300, windowsize = c(1400, 866), zoom = 0.6, phi = 30, theta = 30)
+       vertical_exaggeration = 300, windowsize = c(1400, 866), zoom = 0.6, phi = 30, theta = 30)
 render_snapshot()
 
 #You can specify the color and height separately using the `ggobj_height()` argument.
@@ -249,7 +264,7 @@ reshape2::melt() |>
 
 plot_gg(ggvolcano_surface, ggobj_height = ggvolcano,
       multicore = TRUE, raytrace = TRUE, width = 7, height = 4,
-      scale = 300, windowsize = c(1400, 866), zoom = 0.6, phi = 30, theta = 30)
+      vertical_exaggeration = 300, windowsize = c(1400, 866), zoom = 0.6, phi = 30, theta = 30)
 render_snapshot()
 #Here, we will create a 3D plot of the mtcars dataset. This automatically detects
 #that the user used the `color` aesthetic instead of the `fill`.
@@ -268,11 +283,11 @@ bleedplot = ggplot(faithfuld, aes(waiting, eruptions, fill = density)) +
  geom_raster(interpolate = TRUE) +
  scale_fill_viridis_c() +
  theme_minimal()
-plot_gg(bleedplot, width = 5, height = 4, scale = 220,
+plot_gg(bleedplot, width = 5, height = 4, vertical_exaggeration = 220,
        windowsize = c(1400,866), theta = -20, phi = 35,
        guide_bar_bleed_target = "height")
 render_snapshot()
-plot_gg(bleedplot, width = 5, height = 4, scale = 220,
+plot_gg(bleedplot, width = 5, height = 4, vertical_exaggeration = 220,
        windowsize = c(1400,866), theta = -20, phi = 35,
        guide_bar_bleed_target = "texture")
 render_snapshot()
@@ -303,14 +318,14 @@ render_snapshot()
 #That is a little cramped. Specifying a larger width will improve the readability of this plot.
 plot_gg(mtplot_density_facet, width = 6, preview = TRUE)
 
-#That's better. Let's plot it in 3D, and increase the scale.
+#That's better. Let's plot it in 3D, and increase the vertical exaggeration.
 plot_gg(mtplot_density_facet, width = 6, windowsize=c(1400,866),
-       zoom = 0.55, theta = -10, phi = 25, scale=300)
+       zoom = 0.55, theta = -10, phi = 25, vertical_exaggeration=300)
 render_snapshot()
 
 #We can also render a flat version of the plot alongside (or above/below) the 3D version.
 plot_gg(mtplot_density_facet, width = 6, windowsize=c(1400,866),
-       zoom = 0.65, theta = -25, phi = 35, scale=300, flat_plot_render=TRUE,
+       zoom = 0.65, theta = -25, phi = 35, vertical_exaggeration=300, flat_plot_render=TRUE,
        flat_direction = "x")
 render_snapshot()
 \dontshow{\}) # examplesIf}

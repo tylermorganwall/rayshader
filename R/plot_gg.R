@@ -15,7 +15,10 @@
 #'
 #'@param ggobj ggplot object to projected into 3D.
 #'@param ggobj_height Default `NULL`. A ggplot object that can be used to specify the 3D extrusion separately from the
-#'`ggobj`.
+#'`ggobj`. If this plot includes a `tidyterra::geom_spatraster()` height layer,
+#'rayshader preserves the mapped raster data scale when building the height map
+#'and uses the final rendered scene spacing as the default `zscale` unless
+#'`zscale` is supplied.
 #'@param width Default `3`. Width of ggplot, in `units`.
 #'@param height Default `3`. Height of ggplot, in `units`.
 #'@param height_aes Default `NULL`. Whether the `fill` or `color` aesthetic should be used for height values,
@@ -27,8 +30,16 @@
 #'shadowing: `1` means no additional shading effect, and lower values increase the
 #'strength of the radiance overlay.
 #'@param units Default `in`. One of c("in", "cm", "mm").
-#'@param scale Default `150`. Multiplier for vertical scaling: a higher number increases the height
-#'of the 3D transformation.
+#'@param zscale Default `NULL`. The ratio between the x/y spacing and the z axis
+#'for the height surface. If omitted and `ggobj_height` includes a spatial raster
+#'height layer, rayshader derives `zscale` from the final rendered ggplot scene
+#'extent and output matrix spacing, which accounts for ggplot rasterization and
+#'reprojection. Otherwise, the base `zscale` defaults to `1`.
+#'@param vertical_exaggeration Default `NULL`. One-off multiplier applied to the
+#'effective relief after resolving `zscale`. When omitted, rayshader uses `1`
+#'for spatial raster height sources and `150` for non-raster ggplot height
+#'mappings, which preserves the legacy `plot_gg()` default appearance.
+#'@param scale Deprecated. Use `vertical_exaggeration` instead.
 #'@param pointcontract Default `0.7`. This multiplies the size of the points and shrinks
 #'them around their center in the 3D surface mapping. Decrease this to reduce color bleed on edges, and set to
 #'`1` to turn off entirely. Note: If `size` is passed as an aesthetic to the same geom
@@ -117,7 +128,7 @@
 #'  facet_wrap(clarity~.) +
 #'  scale_fill_viridis_c(option = "A") +
 #'  scale_color_viridis_c(option = "A")
-#'plot_gg(ggdiamonds,multicore = TRUE,width=5,height=5,scale=250,windowsize=c(1400,866),
+#'plot_gg(ggdiamonds,multicore = TRUE,width=5,height=5,vertical_exaggeration=250,windowsize=c(1400,866),
 #'        zoom = 0.55, phi = 30)
 #'render_snapshot()
 #'#Change the camera angle and take a snapshot:
@@ -138,7 +149,7 @@
 #'ggvolcano
 #'
 #'plot_gg(ggvolcano, multicore = TRUE, raytrace = TRUE, width = 7, height = 4,
-#'        scale = 300, windowsize = c(1400, 866), zoom = 0.6, phi = 30, theta = 30)
+#'        vertical_exaggeration = 300, windowsize = c(1400, 866), zoom = 0.6, phi = 30, theta = 30)
 #'render_snapshot()
 #'
 #'#You can specify the color and height separately using the `ggobj_height()` argument.
@@ -154,7 +165,7 @@
 #'
 #'plot_gg(ggvolcano_surface, ggobj_height = ggvolcano,
 #'       multicore = TRUE, raytrace = TRUE, width = 7, height = 4,
-#'       scale = 300, windowsize = c(1400, 866), zoom = 0.6, phi = 30, theta = 30)
+#'       vertical_exaggeration = 300, windowsize = c(1400, 866), zoom = 0.6, phi = 30, theta = 30)
 #'render_snapshot()
 #'#Here, we will create a 3D plot of the mtcars dataset. This automatically detects
 #'#that the user used the `color` aesthetic instead of the `fill`.
@@ -173,11 +184,11 @@
 #'  geom_raster(interpolate = TRUE) +
 #'  scale_fill_viridis_c() +
 #'  theme_minimal()
-#'plot_gg(bleedplot, width = 5, height = 4, scale = 220,
+#'plot_gg(bleedplot, width = 5, height = 4, vertical_exaggeration = 220,
 #'        windowsize = c(1400,866), theta = -20, phi = 35,
 #'        guide_bar_bleed_target = "height")
 #'render_snapshot()
-#'plot_gg(bleedplot, width = 5, height = 4, scale = 220,
+#'plot_gg(bleedplot, width = 5, height = 4, vertical_exaggeration = 220,
 #'        windowsize = c(1400,866), theta = -20, phi = 35,
 #'        guide_bar_bleed_target = "texture")
 #'render_snapshot()
@@ -208,14 +219,14 @@
 #'#That is a little cramped. Specifying a larger width will improve the readability of this plot.
 #'plot_gg(mtplot_density_facet, width = 6, preview = TRUE)
 #'
-#'#That's better. Let's plot it in 3D, and increase the scale.
+#'#That's better. Let's plot it in 3D, and increase the vertical exaggeration.
 #'plot_gg(mtplot_density_facet, width = 6, windowsize=c(1400,866),
-#'        zoom = 0.55, theta = -10, phi = 25, scale=300)
+#'        zoom = 0.55, theta = -10, phi = 25, vertical_exaggeration=300)
 #'render_snapshot()
 #'
 #'#We can also render a flat version of the plot alongside (or above/below) the 3D version.
 #'plot_gg(mtplot_density_facet, width = 6, windowsize=c(1400,866),
-#'        zoom = 0.65, theta = -25, phi = 35, scale=300, flat_plot_render=TRUE,
+#'        zoom = 0.65, theta = -25, phi = 35, vertical_exaggeration=300, flat_plot_render=TRUE,
 #'        flat_direction = "x")
 #'render_snapshot()
 plot_gg = function(
@@ -227,7 +238,9 @@ plot_gg = function(
 	invert = FALSE,
 	shadow_intensity = 0.5,
 	units = c("in", "cm", "mm"),
-	scale = 150,
+	scale = NULL,
+	zscale = NULL,
+	vertical_exaggeration = NULL,
 	pointcontract = 0.7,
 	offset_edges = FALSE,
 	flat_plot_render = FALSE,
@@ -265,6 +278,80 @@ plot_gg = function(
 	if (!(length(find.package("ggplot2", quiet = TRUE)) > 0)) {
 		stop("Must have ggplot2 installed to use plot_gg()")
 	}
+	resolve_plot_gg_shadowdepth = function(
+		height_matrix,
+		zscale,
+		shadowdepth,
+		dot_args = list()
+	) {
+		solid = TRUE
+		if ("solid" %in% names(dot_args) && !is.null(dot_args$solid)) {
+			solid = isTRUE(dot_args$solid[[1]])
+		}
+		soliddepth = if ("soliddepth" %in% names(dot_args)) {
+			dot_args$soliddepth
+		} else {
+			"auto"
+		}
+		min_height = min(height_matrix, na.rm = TRUE)
+		max_height = max(height_matrix, na.rm = TRUE)
+
+		if (identical(soliddepth, "auto")) {
+			if (min_height != max_height) {
+				soliddepth = min_height / zscale -
+					(max_height / zscale - min_height / zscale) / 5
+			} else {
+				max_dim = max(dim(height_matrix))
+				soliddepth = min_height / zscale - max_dim / 25
+			}
+		} else {
+			if (soliddepth > min_height) {
+				message(sprintf(
+					"`soliddepth` (set to %f) must be less than or equal to heightmap minimum value (%f). Setting to min(heightmap)",
+					soliddepth,
+					min_height
+				))
+				soliddepth = min_height / zscale
+			} else {
+				soliddepth = soliddepth / zscale
+			}
+		}
+		if (solid) {
+			min_height_shadow = min(c(min_height, soliddepth * zscale))
+		} else {
+			min_height_shadow = min_height
+		}
+		if (identical(shadowdepth, "auto")) {
+			if (min_height_shadow != max_height) {
+				if (solid) {
+					shadowdepth = soliddepth -
+						(max_height / zscale - min_height_shadow / zscale) / 5
+				} else {
+					shadowdepth = min_height_shadow / zscale -
+						(max_height / zscale - min_height_shadow / zscale) / 5
+				}
+			} else {
+				max_dim = max(dim(height_matrix))
+				if (solid) {
+					shadowdepth = soliddepth - max_dim / 25
+				} else {
+					shadowdepth = min_height - max_dim / 25
+				}
+			}
+		} else {
+			if (shadowdepth > min_height) {
+				message(sprintf(
+					"`shadowdepth` (set to %f) is greater to heightmap minimum value (%f). Shadow will appear to be intersecting 3D model.",
+					shadowdepth,
+					min_height
+				))
+			} else {
+				shadowdepth = shadowdepth / zscale
+			}
+		}
+		shadowdepth
+	}
+	dot_args = list(...)
 	clone_plot_gg_object = function(x) {
 		cloned = unserialize(serialize(x, NULL))
 		if (inherits(x, "ggplot")) {
@@ -318,6 +405,15 @@ plot_gg = function(
 	png_device = grDevices::png
 	apply_manual_correction = FALSE
 	guide_bar_bleed_target = match.arg(guide_bar_bleed_target)
+	height_plot_source = if (is.null(ggobj_height)) {
+		if (methods::is(ggobj, "list") && length(ggobj) == 2) {
+			ggobj[[2]]
+		} else {
+			ggobj
+		}
+	} else {
+		ggobj_height
+	}
 	if (requireNamespace("ragg", quietly = TRUE)) {
 		png_device = function(...) ragg::agg_png(...)
 	} else if (isTRUE(capabilities("cairo"))) {
@@ -1405,7 +1501,20 @@ plot_gg = function(
 		height_scale = ggplot_build_obj$plot$scales$get_scales(height_aes),
 		height_aes = height_aes,
 		height_is_mapped = isfill || iscolor,
-		height_inverted = invert
+		height_inverted = invert,
+		height_use_data_scale = plot_gg_has_spatraster_height_source(
+			height_plot_source
+		)
+	)
+	resolved_height_zscale = resolve_plot_gg_height_zscale(
+		zscale = zscale,
+		zscale_missing = missing(zscale),
+		scale = scale,
+		scale_missing = missing(scale),
+		vertical_exaggeration = vertical_exaggeration,
+		vertical_exaggeration_missing = missing(vertical_exaggeration),
+		height_plot_source = height_plot_source,
+		caller = "plot_gg"
 	)
 	height_gg_grob = ggplot2::ggplotGrob(ggplotobj2)
 	ggplotobj2 = compose_height_grob(
@@ -1449,12 +1558,13 @@ plot_gg = function(
 	if (old_dev > 1) {
 		grDevices::dev.set(old_dev)
 	}
+	height_resize_factor = 1
 	if (!is.null(reduce_size)) {
 		if (!(length(find.package("magick", quiet = TRUE)) > 0)) {
 			stop("magick package required to use argument reduce_size")
 		} else {
 			if (length(reduce_size) == 1 && reduce_size < 1) {
-				scale = scale * reduce_size
+				height_resize_factor = reduce_size
 				image_info = magick::image_read(heightmaptemp) |>
 					magick::image_info()
 				magick::image_read(heightmaptemp) |>
@@ -1465,7 +1575,7 @@ plot_gg = function(
 					)) |>
 					magick::image_write(heightmaptemp)
 			} else if (length(reduce_size) == 2 && all(reduce_size < 1)) {
-				scale = scale * reduce_size[1]
+				height_resize_factor = reduce_size[1]
 				image_info = magick::image_read(heightmaptemp) |>
 					magick::image_info()
 				magick::image_read(heightmaptemp) |>
@@ -1508,17 +1618,38 @@ plot_gg = function(
 		mapheight = 1 - mapheight
 	}
 	height_matrix = 1 - t(mapheight)
-	zscale = 1 / scale
-	if (shadowdepth == "auto") {
-		if (min(mapheight, na.rm = TRUE) != max(mapheight, na.rm = TRUE)) {
-			shadowdepth = -scale / 5
+	height_matrix = restore_plot_gg_height_matrix_data_scale(
+		height_matrix,
+		transform_info = plot_gg_transform_info
+	)
+	if (identical(resolved_height_zscale$source, "auto")) {
+		rendered_auto_zscale = resolve_plot_gg_rendered_zscale(
+			panel_info = plot_gg_panel_info,
+			height_matrix = height_matrix,
+			default = NA_real_
+		)
+		if (is.finite(rendered_auto_zscale) && rendered_auto_zscale > 0) {
+			resolved_height_zscale$base_zscale = rendered_auto_zscale
+			resolved_height_zscale$auto_zscale = rendered_auto_zscale
 		} else {
-			max_dim = max(dim(mapheight))
-			shadowdepth = -max_dim / 25
+			resolved_height_zscale$base_zscale =
+				resolved_height_zscale$base_zscale / height_resize_factor
 		}
 	} else {
-		shadowdepth = shadowdepth / zscale
+		resolved_height_zscale$base_zscale =
+			resolved_height_zscale$base_zscale / height_resize_factor
 	}
+	zscale = apply_vertical_exaggeration(
+		zscale = resolved_height_zscale$base_zscale,
+		vertical_exaggeration = resolved_height_zscale$vertical_exaggeration,
+		caller = "plot_gg"
+	)
+	shadowdepth = resolve_plot_gg_shadowdepth(
+		height_matrix = height_matrix,
+		zscale = zscale,
+		shadowdepth = shadowdepth,
+		dot_args = dot_args
+	)
 
 	if (flat_distance == "auto") {
 		if (
@@ -1542,10 +1673,10 @@ plot_gg = function(
 	}
 	shadow_flat = flat_plot_render &&
 		shadow &&
-		flat_distance * scale < shadowdepth
+		flat_distance / zscale < shadowdepth
 	shadowdepth = ifelse(
 		shadow_flat,
-		flat_distance * scale + shadowdepth,
+		flat_distance / zscale + shadowdepth,
 		shadowdepth
 	)
 	shadelayer = NULL
@@ -1557,7 +1688,7 @@ plot_gg = function(
 				maxsearch = 600,
 				sunangle = sunangle,
 				anglebreaks = anglebreaks,
-				zscale = 1 / scale,
+				zscale = zscale,
 				multicore = multicore,
 				lambert = lambert,
 				...
@@ -1587,7 +1718,7 @@ plot_gg = function(
 				list(
 					heightmap = height_matrix,
 					texture = mapcolor,
-					zscale = 1 / scale,
+					zscale = zscale,
 					plot = FALSE
 				)
 			)
@@ -1605,13 +1736,13 @@ plot_gg = function(
 		plot_3d(
 			map_with_shading,
 			height_matrix,
-			zscale = 1 / scale,
+			zscale = zscale,
 			triangulate = triangulate,
 			max_error = max_error,
 			max_tri = max_tri,
 			verbose = verbose,
 			shadow = shadow,
-			shadowdepth = shadowdepth / scale,
+			shadowdepth = shadowdepth * zscale,
 			background = background,
 			shadowcolor = shadowcolor,
 			...
@@ -1671,7 +1802,7 @@ plot_gg = function(
 			mapcolor,
 			altitude = flat_distance,
 			heightmap = height_matrix,
-			zscale = 1 / scale,
+			zscale = zscale,
 			horizontal_offset = horizontal_offset
 		)
 		if (shadow && flat_direction %in% c("x", "-x", "y", "-y")) {

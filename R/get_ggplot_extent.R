@@ -2143,7 +2143,8 @@ build_plot_gg_transform_info = function(
 	height_scale = NULL,
 	height_aes = NULL,
 	height_is_mapped = FALSE,
-	height_inverted = FALSE
+	height_inverted = FALSE,
+	height_use_data_scale = FALSE
 ) {
 	build_layout = ggplot_build_obj$layout$layout
 	data.frame(
@@ -2172,12 +2173,277 @@ build_plot_gg_transform_info = function(
 		height_aes = height_aes,
 		height_is_mapped = isTRUE(height_is_mapped),
 		height_inverted = isTRUE(height_inverted),
+		height_use_data_scale = isTRUE(height_use_data_scale),
 		height_range = if (!is.null(height_scale$range$range)) {
 			height_scale$range$range
 		} else {
 			NULL
 		}
 	)
+}
+
+plot_gg_has_spatraster_height_source = function(plot_obj) {
+	if (!inherits(plot_obj, "ggplot") || length(plot_obj$layers) == 0) {
+		return(FALSE)
+	}
+	any(vapply(
+		plot_obj$layers,
+		function(layer) {
+			layer_data = layer$data
+			if (
+				is.null(layer_data) ||
+					!is.data.frame(layer_data) ||
+					!("spatraster" %in% names(layer_data))
+			) {
+				return(FALSE)
+			}
+			spatraster_data = layer_data$spatraster
+			if (!length(spatraster_data)) {
+				return(FALSE)
+			}
+			any(vapply(
+				spatraster_data,
+				function(entry) {
+					if (inherits(entry, "SpatRaster")) {
+						return(TRUE)
+					}
+					if (is.list(entry) && length(entry)) {
+						return(any(vapply(
+							entry,
+							inherits,
+							logical(1),
+							what = "SpatRaster"
+						)))
+					}
+					FALSE
+				},
+				logical(1)
+			))
+		},
+		logical(1)
+	))
+}
+
+get_plot_gg_spatraster_height_source = function(plot_obj) {
+	if (!inherits(plot_obj, "ggplot") || length(plot_obj$layers) == 0) {
+		return(NULL)
+	}
+	for (layer in plot_obj$layers) {
+		layer_data = layer$data
+		if (
+			is.null(layer_data) ||
+				!is.data.frame(layer_data) ||
+				!("spatraster" %in% names(layer_data))
+		) {
+			next
+		}
+		spatraster_data = layer_data$spatraster
+		if (!length(spatraster_data)) {
+			next
+		}
+		for (entry in spatraster_data) {
+			if (inherits(entry, "SpatRaster")) {
+				return(entry)
+			}
+			if (is.list(entry) && length(entry)) {
+				for (subentry in entry) {
+					if (inherits(subentry, "SpatRaster")) {
+						return(subentry)
+					}
+				}
+			}
+		}
+	}
+	NULL
+}
+
+resolve_plot_gg_height_zscale = function(
+	zscale = NULL,
+	zscale_missing = TRUE,
+	scale = NULL,
+	scale_missing = TRUE,
+	vertical_exaggeration = NULL,
+	vertical_exaggeration_missing = TRUE,
+	height_plot_source = NULL,
+	caller = NULL
+) {
+	auto_zscale = NA_real_
+	spatraster_height_source = get_plot_gg_spatraster_height_source(height_plot_source)
+	if (!is.null(spatraster_height_source)) {
+		auto_zscale = extract_spatial_heightmap_zscale(spatraster_height_source)
+	}
+
+	if (!isTRUE(scale_missing) && !isTRUE(vertical_exaggeration_missing)) {
+		stop(
+			paste0(
+				format_render_caller_prefix(caller),
+				"`scale` is deprecated; supply only `vertical_exaggeration`."
+			),
+			call. = FALSE
+		)
+	}
+	if (!isTRUE(scale_missing)) {
+		vertical_exaggeration = scale
+		vertical_exaggeration_missing = FALSE
+	}
+	if (isTRUE(vertical_exaggeration_missing) || is.null(vertical_exaggeration)) {
+		explicit_zscale_supplied = !isTRUE(zscale_missing) && !is.null(zscale)
+		vertical_exaggeration = if (
+			explicit_zscale_supplied ||
+				(is.finite(auto_zscale) && auto_zscale > 0)
+		) {
+			1
+		} else {
+			150
+		}
+	}
+	vertical_exaggeration = resolve_vertical_exaggeration(
+		vertical_exaggeration = vertical_exaggeration,
+		caller = caller
+	)
+
+	if (!isTRUE(zscale_missing) && !is.null(zscale)) {
+		base_zscale = suppressWarnings(as.numeric(zscale)[1])
+		if (!is.finite(base_zscale) || base_zscale <= 0) {
+			stop(
+				paste0(
+					format_render_caller_prefix(caller),
+					"`zscale` must be a positive number."
+				),
+				call. = FALSE
+			)
+		}
+		source = "explicit"
+	} else if (is.finite(auto_zscale) && auto_zscale > 0) {
+		base_zscale = auto_zscale
+		source = "auto"
+	} else {
+		base_zscale = 1
+		source = "default"
+	}
+
+	list(
+		base_zscale = base_zscale,
+		auto_zscale = auto_zscale,
+		vertical_exaggeration = vertical_exaggeration,
+		source = source,
+		height_use_data_scale = is.finite(auto_zscale) && auto_zscale > 0
+	)
+}
+
+get_plot_gg_scene_extent_from_panel_info = function(panel_info = NULL) {
+	if (is.null(panel_info) || !is.data.frame(panel_info) || !nrow(panel_info)) {
+		return(NULL)
+	}
+	required_cols = c(
+		"extent_xmin",
+		"extent_xmax",
+		"extent_ymin",
+		"extent_ymax"
+	)
+	if (!all(required_cols %in% names(panel_info))) {
+		return(NULL)
+	}
+	extent_vals = c(
+		xmin = min(panel_info$extent_xmin, na.rm = TRUE),
+		xmax = max(panel_info$extent_xmax, na.rm = TRUE),
+		ymin = min(panel_info$extent_ymin, na.rm = TRUE),
+		ymax = max(panel_info$extent_ymax, na.rm = TRUE)
+	)
+	if (!all(is.finite(extent_vals))) {
+		return(NULL)
+	}
+	extent_vals
+}
+
+resolve_plot_gg_rendered_zscale = function(
+	panel_info = NULL,
+	height_matrix = NULL,
+	default = NA_real_
+) {
+	scene_extent = get_plot_gg_scene_extent_from_panel_info(panel_info)
+	if (is.null(scene_extent)) {
+		return(default)
+	}
+	if (is.null(height_matrix) || length(dim(height_matrix)) < 2) {
+		return(default)
+	}
+	if (nrow(height_matrix) < 2 || ncol(height_matrix) < 2) {
+		return(default)
+	}
+	resolution = c(
+		(scene_extent["xmax"] - scene_extent["xmin"]) / (nrow(height_matrix) - 1),
+		(scene_extent["ymax"] - scene_extent["ymin"]) / (ncol(height_matrix) - 1)
+	)
+	resolution = suppressWarnings(as.numeric(resolution))
+	resolution = abs(resolution[is.finite(resolution) & resolution > 0])
+	if (length(resolution) == 0) {
+		return(default)
+	}
+	mean(resolution)
+}
+
+get_plot_gg_height_data_range = function(transform_info = NULL) {
+	if (
+		is.null(transform_info) ||
+			!isTRUE(transform_info$height_is_mapped) ||
+			!isTRUE(transform_info$height_use_data_scale) ||
+			is.null(transform_info$height_range)
+	) {
+		return(NULL)
+	}
+	height_range = suppressWarnings(as.numeric(transform_info$height_range))
+	height_range = height_range[is.finite(height_range)]
+	if (length(height_range) != 2) {
+		return(NULL)
+	}
+	if (isTRUE(transform_info$height_inverted)) {
+		height_range = rev(height_range)
+	}
+	height_scale = transform_info$height_scale
+	if (
+		!is.null(height_scale) &&
+			is.function(height_scale$get_transformation)
+	) {
+		transformation = tryCatch(
+			height_scale$get_transformation(),
+			error = function(e) NULL
+		)
+		if (!is.null(transformation) && is.function(transformation$inverse)) {
+			height_range = tryCatch(
+				transformation$inverse(height_range),
+				error = function(e) height_range
+			)
+		}
+	}
+	height_range = suppressWarnings(as.numeric(height_range))
+	height_range = height_range[is.finite(height_range)]
+	if (length(height_range) != 2) {
+		return(NULL)
+	}
+	height_range
+}
+
+restore_plot_gg_height_matrix_data_scale = function(
+	height_matrix,
+	transform_info = NULL
+) {
+	height_range = get_plot_gg_height_data_range(transform_info = transform_info)
+	if (is.null(height_range)) {
+		return(height_matrix)
+	}
+	finite_vals = is.finite(height_matrix)
+	if (!any(finite_vals)) {
+		return(height_matrix)
+	}
+	restored = height_matrix
+	normalized_vals = pmin(pmax(restored[finite_vals], 0), 1)
+	restored[finite_vals] = scales::rescale(
+		normalized_vals,
+		to = height_range,
+		from = c(0, 1)
+	)
+	restored
 }
 
 get_scene_height_transform = function(heightmap = NULL, extent = NULL) {
