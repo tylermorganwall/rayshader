@@ -270,7 +270,9 @@ test_that("vertical_exaggeration is one-off for cached hillshade and scene zscal
 		windowsize = c(200, 200)
 	))
 	expect_equal(get_hillshade_zscale(), 50)
-	expect_equal(get_scene_zscale(), 25)
+	expect_equal(get_scene_zscale(), 50)
+	expect_equal(get_scene_vertical_exaggeration(), 2)
+	expect_equal(get_scene_effective_zscale(), 25)
 })
 
 test_that("ray based hillshade functions reuse cached zscale", {

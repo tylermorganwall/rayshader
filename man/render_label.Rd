@@ -65,7 +65,7 @@ for non-ggplot scenes.}
 
 \item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units}
 
-\item{vertical_exaggeration}{Default \code{1}. One-off multiplier applied to the effective visual relief for this call. Values greater than \code{1} increase apparent relief and values between \code{0} and \code{1} flatten it.}
+\item{vertical_exaggeration}{Default \code{1}. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}} when available; pass explicitly to override for this call.}
 
 \item{relativez}{Default \code{TRUE}. Whether \code{z} should be measured in relation to the underlying elevation at that point in the heightmap, or set absolutely (\code{FALSE}).}
 

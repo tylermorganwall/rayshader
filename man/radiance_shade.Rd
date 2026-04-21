@@ -59,10 +59,10 @@ is supplied and \code{texture = NULL}.}
 
 \item{zscale}{Default \code{1}. Vertical scale when \code{heightmap} is supplied.}
 
-\item{vertical_exaggeration}{Default \code{1}. One-off multiplier applied to the
-effective visual relief for this call. Values greater than \code{1} increase
-apparent relief and values between \code{0} and \code{1} flatten it. This does not
-update cached \code{zscale} metadata.}
+\item{vertical_exaggeration}{Default \code{1}. Multiplier applied to the effective
+visual relief. If omitted while rendering from the active scene, rayshader uses
+the cached scene value from \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}} when available; pass
+explicitly to override for this call. This does not update cached metadata.}
 
 \item{filename}{Default \code{NA}. Optional output filename. If supplied, the
 render is also saved to disk.}

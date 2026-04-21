@@ -12,6 +12,7 @@ test_that("render_points() uses cached scene heightmap and zscale", {
 		water = FALSE,
 		windowsize = c(250, 250)
 	))
+	expect_equal(get_scene_vertical_exaggeration(), 1)
 
 	expect_no_condition(render_points(
 		y = 10,
@@ -20,6 +21,50 @@ test_that("render_points() uses cached scene heightmap and zscale", {
 		offset = 10
 	))
 
+	ids = get_ids_with_labels()
+	point_id = ids$id[ids$tag == "points3d"][1]
+	point_verts = rgl::rgl.attrib(point_id, "vertices")
+	expect_equal(unname(point_verts[1, 2]), 1, tolerance = 1e-6)
+})
+
+test_that("render_points() combines cached zscale and vertical_exaggeration", {
+	on.exit(rgl::close3d(), add = TRUE)
+	local_rgl_use_null()
+
+	heightmap = matrix(0, nrow = 20, ncol = 20)
+	texture = sphere_shade(heightmap)
+	expect_no_condition(plot_3d_test(
+		texture,
+		heightmap,
+		zscale = 10,
+		vertical_exaggeration = 2,
+		shadow = FALSE,
+		water = FALSE,
+		windowsize = c(250, 250)
+	))
+	expect_equal(get_scene_zscale(), 10)
+	expect_equal(get_scene_vertical_exaggeration(), 2)
+	expect_equal(get_scene_effective_zscale(), 5)
+
+	expect_no_condition(render_points(
+		y = 10,
+		x = 10,
+		extent = c(xmin = 0, xmax = 20, ymin = 0, ymax = 20),
+		offset = 10
+	))
+	ids = get_ids_with_labels()
+	point_id = ids$id[ids$tag == "points3d"][1]
+	point_verts = rgl::rgl.attrib(point_id, "vertices")
+	expect_equal(unname(point_verts[1, 2]), 2, tolerance = 1e-6)
+
+	expect_no_condition(render_points(
+		y = 10,
+		x = 10,
+		extent = c(xmin = 0, xmax = 20, ymin = 0, ymax = 20),
+		offset = 10,
+		vertical_exaggeration = 1,
+		clear_previous = TRUE
+	))
 	ids = get_ids_with_labels()
 	point_id = ids$id[ids$tag == "points3d"][1]
 	point_verts = rgl::rgl.attrib(point_id, "vertices")
@@ -64,6 +109,7 @@ test_that("scene cache is rejected after switching to a different open scene", {
 	rgl::set3d(scene1)
 	expect_null(get_scene_heightmap(default = NULL))
 	expect_null(get_scene_zscale(default = NULL))
+	expect_null(get_scene_vertical_exaggeration(default = NULL))
 	expect_error(
 		render_water(waterdepth = 1),
 		"No heightmap found"
@@ -72,6 +118,7 @@ test_that("scene cache is rejected after switching to a different open scene", {
 	rgl::set3d(scene2)
 	expect_equal(get_scene_heightmap(default = NULL), heightmap2)
 	expect_equal(get_scene_zscale(default = NULL), 5)
+	expect_equal(get_scene_vertical_exaggeration(default = NULL), 1)
 	expect_no_condition(render_water(waterdepth = 2, watercolor = "lightblue"))
 })
 

@@ -33,10 +33,10 @@
 #'@param color Default `"grey50"`. Fallback single-color texture when `heightmap`
 #'is supplied and `texture = NULL`.
 #'@param zscale Default `1`. Vertical scale when `heightmap` is supplied.
-#'@param vertical_exaggeration Default `1`. One-off multiplier applied to the
-#'effective visual relief for this call. Values greater than `1` increase
-#'apparent relief and values between `0` and `1` flatten it. This does not
-#'update cached `zscale` metadata.
+#'@param vertical_exaggeration Default `1`. Multiplier applied to the effective
+#'visual relief. If omitted while rendering from the active scene, rayshader uses
+#'the cached scene value from [plot_3d()] or [plot_gg()] when available; pass
+#'explicitly to override for this call. This does not update cached metadata.
 #'@param filename Default `NA`. Optional output filename. If supplied, the
 #'render is also saved to disk.
 #'@param samples Default `128`. Maximum samples per pixel.
@@ -364,14 +364,11 @@ radiance_shade = function(
 					"Call plot_3d()/plot_gg() first, or pass `heightmap` explicitly."
 				)
 			}
-			zscale = resolve_scene_render_zscale(
+			zscale = resolve_scene_render_effective_zscale(
 				zscale = zscale,
 				zscale_missing = zscale_missing,
-				caller = "radiance_shade"
-			)
-			zscale = apply_vertical_exaggeration(
-				zscale = zscale,
 				vertical_exaggeration = vertical_exaggeration,
+				vertical_exaggeration_missing = missing(vertical_exaggeration),
 				caller = "radiance_shade"
 			)
 

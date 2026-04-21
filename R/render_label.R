@@ -22,7 +22,7 @@
 #'to disambiguate faceted ggplot scenes when panel-specific cached metadata is needed. Ignored
 #'for non-ggplot scenes.
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
-#'@param vertical_exaggeration Default `1`. One-off multiplier applied to the effective visual relief for this call. Values greater than `1` increase apparent relief and values between `0` and `1` flatten it.
+#'@param vertical_exaggeration Default `1`. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from [plot_3d()] or [plot_gg()] when available; pass explicitly to override for this call.
 #'@param relativez Default `TRUE`. Whether `z` should be measured in relation to the underlying elevation at that point in the heightmap, or set absolutely (`FALSE`).
 #'@param offset Elevation above the surface (at the label point) to start drawing the line.
 #'@param clear_previous Default `FALSE`. If `TRUE`, it will clear all existing text and lines rendered with [render_label()]. If no
@@ -139,14 +139,11 @@ render_label = function(
 		}
 	}
 	if (!exit_early) {
-		zscale = resolve_scene_render_zscale(
-			zscale,
-			missing(zscale),
-			caller = "render_label"
-		)
-		zscale = apply_vertical_exaggeration(
+		zscale = resolve_scene_render_effective_zscale(
 			zscale = zscale,
+			zscale_missing = missing(zscale),
 			vertical_exaggeration = vertical_exaggeration,
+			vertical_exaggeration_missing = missing(vertical_exaggeration),
 			caller = "render_label"
 		)
 		heightmap = resolve_scene_render_heightmap(
@@ -182,6 +179,7 @@ render_label = function(
 		)
 		x = point_input$x
 		y = point_input$y
+		input_crs = if (is.null(crs)) point_input$source_crs else crs
 		if (!is.null(point_input$extent)) {
 			extent = point_input$extent
 		}
@@ -219,7 +217,7 @@ render_label = function(
 				extent = extent,
 				heightmap = heightmap,
 				panel = panel,
-				crs = crs,
+				crs = input_crs,
 				caller = "render_label"
 			)
 			x = scene_xy$x

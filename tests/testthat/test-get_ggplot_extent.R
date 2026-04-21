@@ -418,7 +418,7 @@ test_that("render_path() uses public panel routing for faceted ggplot scenes", {
 		lat = expected_scene_xy$lat,
 		long = expected_scene_xy$long,
 		altitude = c(0, 0),
-		zscale = rayshader:::get_scene_zscale(),
+		zscale = rayshader:::get_scene_effective_zscale(),
 		transform_scene = FALSE,
 		caller = "test"
 	)
@@ -481,7 +481,7 @@ test_that("render_raymesh() uses public panel routing for faceted ggplot scenes"
 		lat = expected_scene_xy$lat,
 		long = expected_scene_xy$long,
 		altitude = 0,
-		zscale = rayshader:::get_scene_zscale(),
+		zscale = rayshader:::get_scene_effective_zscale(),
 		transform_scene = FALSE,
 		caller = "test"
 	)[1, ]
@@ -563,13 +563,18 @@ test_that("render_zaxis() requires panel for faceted cached ggplot scenes", {
 	expect_true(any(get_ids_with_labels()$tag == "zaxis_axis"))
 })
 
-test_that("coord_sf numeric inputs require explicit CRS metadata", {
+test_that("coord_sf numeric x/y inputs require explicit CRS metadata", {
 	skip_if_not_installed("sf")
 	on.exit(rgl::close3d(), add = TRUE)
 	local_rgl_use_null()
 
 	nc = sf::st_read(system.file("shape/nc.shp", package = "sf"), quiet = TRUE)
-	pt = suppressWarnings(sf::st_coordinates(sf::st_centroid(nc[1, ]))[1, ])
+	pt_ll = suppressWarnings(sf::st_coordinates(
+		sf::st_transform(sf::st_centroid(nc[1, ]), 4326)
+	)[1, ])
+	pt_projected = suppressWarnings(sf::st_coordinates(
+		sf::st_transform(sf::st_centroid(nc[1, ]), 32119)
+	)[1, ])
 	sf_plot = ggplot(nc) +
 		geom_sf() +
 		coord_sf(crs = sf::st_crs(32119))
@@ -585,7 +590,23 @@ test_that("coord_sf numeric inputs require explicit CRS metadata", {
 	))
 
 	expect_error(
-		rayshader:::transform_ggplot_coords(x = pt[1], y = pt[2]),
+		rayshader:::transform_ggplot_coords(
+			x = pt_ll[1],
+			y = pt_ll[2]
+		),
+		"must include `crs`"
+	)
+	expect_s3_class(rayshader:::transform_ggplot_coords(
+		x = pt_ll[1],
+		y = pt_ll[2],
+		crs = 4326
+	), "data.frame")
+
+	expect_error(
+		rayshader:::transform_ggplot_coords(
+			x = pt_projected[1],
+			y = pt_projected[2]
+		),
 		"must include `crs`"
 	)
 })

@@ -7,7 +7,7 @@
 #'@param heightmap Default `NULL`. Height matrix for the current scene. If omitted, this is taken from the cached scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value.
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
 #'of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
-#'@param vertical_exaggeration Default `1`. One-off multiplier applied to the effective visual relief for this call. Values greater than `1` increase apparent relief and values between `0` and `1` flatten it.
+#'@param vertical_exaggeration Default `1`. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from [plot_3d()] or [plot_gg()] when available; pass explicitly to override for this call.
 #'@param levels Default `NA`. Automatically generated with 10 levels. This argument specifies the exact height levels of each contour.
 #'@param nlevels Default `NA`. Controls the auto-generation of levels. If levels is length-2,
 #'this will automatically generate `nlevels` breaks between `levels[1]` and `levels[2]`.
@@ -69,14 +69,11 @@ render_contours = function(
 	...
 ) {
 	zaxis_split = split_zaxis_dots(list(...))
-	zscale = resolve_scene_render_zscale(
-		zscale,
-		missing(zscale),
-		caller = "render_contours"
-	)
-	zscale = apply_vertical_exaggeration(
+	zscale = resolve_scene_render_effective_zscale(
 		zscale = zscale,
+		zscale_missing = missing(zscale),
 		vertical_exaggeration = vertical_exaggeration,
+		vertical_exaggeration_missing = missing(vertical_exaggeration),
 		caller = "render_contours"
 	)
 	if (clear_previous) {
@@ -157,6 +154,7 @@ render_contours = function(
 						extent = extent_heightmap,
 						tag = "contour3d",
 						zscale = zscale,
+						vertical_exaggeration = 1,
 						linewidth = linewidth,
 						offset = offset,
 						antialias = antialias,
@@ -188,6 +186,7 @@ render_contours = function(
 					tag = "contour3d",
 					heightmap = heightmap,
 					zscale = zscale,
+					vertical_exaggeration = 1,
 					linewidth = linewidth,
 					offset = offset,
 					antialias = antialias,

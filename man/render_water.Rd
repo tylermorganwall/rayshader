@@ -27,7 +27,7 @@ render_water(
 \item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
 of 1 meter and the grid values are separated by 10 meters, \code{zscale} would be 10.}
 
-\item{vertical_exaggeration}{Default \code{1}. One-off multiplier applied to the effective visual relief for this call. Values greater than \code{1} increase apparent relief and values between \code{0} and \code{1} flatten it.}
+\item{vertical_exaggeration}{Default \code{1}. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}} when available; pass explicitly to override for this call.}
 
 \item{wateralpha}{Default \code{0.5}. Water transparency.}
 

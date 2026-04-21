@@ -16,7 +16,7 @@
 #'@param zscale Default `1`. The ratio between x/y spacing and z units.
 #'If left at `1` with `zaxis_breaks = NULL` on non-ggplot terrain scenes, rayshader
 #'will attempt to use the cached `plot_3d()` zscale to generate more meaningful defaults.
-#'@param vertical_exaggeration Default `1`. One-off multiplier applied to the effective visual relief for this call. Values greater than `1` increase apparent relief and values between `0` and `1` flatten it.
+#'@param vertical_exaggeration Default `1`. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from [plot_3d()] or [plot_gg()] when available; pass explicitly to override for this call.
 #'@param heightmap Default `NULL`. Height matrix for the current scene. If omitted, this is taken from the cached scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value.
 #'@param zaxis_location Default `"auto"`. Axis location. Options:
 #'`"auto"`, `"panel"`, `"panelbottomleft"`, `"panelbottomright"`,
@@ -52,14 +52,11 @@ render_zaxis = function(
 	if (rgl::cur3d() == 0) {
 		stop("No rgl window currently open.")
 	}
-	zscale = resolve_scene_render_zscale(
-		zscale,
-		missing(zscale),
-		caller = "render_zaxis"
-	)
-	zscale = apply_vertical_exaggeration(
+	zscale = resolve_scene_render_effective_zscale(
 		zscale = zscale,
+		zscale_missing = missing(zscale),
 		vertical_exaggeration = vertical_exaggeration,
+		vertical_exaggeration_missing = missing(vertical_exaggeration),
 		caller = "render_zaxis"
 	)
 	extent_was_missing = missing(extent)
@@ -135,10 +132,14 @@ render_zaxis_from_dots = function(
 	if (length(zaxis_args) == 0) {
 		return(invisible(NULL))
 	}
-	zscale = resolve_scene_render_zscale(
-		zscale,
-		zscale_missing = isTRUE(all.equal(as.numeric(zscale)[1], 1))
-	)
+	if (is.null(zscale)) {
+		zscale = get_scene_effective_zscale(default = 1)
+	} else {
+		zscale = suppressWarnings(as.numeric(zscale)[1])
+		if (!is.finite(zscale) || zscale <= 0) {
+			zscale = get_scene_effective_zscale(default = 1)
+		}
+	}
 	heightmap = resolve_scene_render_heightmap(heightmap)
 	extent = resolve_scene_render_extent(
 		extent = extent,

@@ -35,7 +35,7 @@
 #'If the input data is specified with long-lat coordinates and `sf_use_s2()` returns `TRUE`,
 #'then the value of simplify_tolerance must be specified in meters.
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.
-#'@param vertical_exaggeration Default `1`. One-off multiplier applied to the effective visual relief for this call. Values greater than `1` increase apparent relief and values between `0` and `1` flatten it.
+#'@param vertical_exaggeration Default `1`. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from [plot_3d()] or [plot_gg()] when available; pass explicitly to override for this call.
 #'@param heightmap Default `NULL`. Height matrix for the current scene. If omitted, this is taken from the cached scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value.
 #'@param type Default `cubic`. Type of transition between keyframes.
 #'Other options are `linear`, `quad`, `bezier`, `exp`, and `manual`. `manual` just returns the values
@@ -205,13 +205,11 @@ convert_path_to_animation_coords = function(
 	resample_path_evenly = TRUE,
 	...
 ) {
-	xyz = render_path(
+	render_path_args = list(
 		extent = extent,
 		lat = lat,
 		long = long,
 		altitude = altitude,
-		zscale = zscale,
-		vertical_exaggeration = vertical_exaggeration,
 		heightmap = heightmap,
 		offset = offset,
 		reorder = reorder,
@@ -222,6 +220,13 @@ convert_path_to_animation_coords = function(
 		clear_previous = FALSE,
 		return_coords = TRUE
 	)
+	if (!missing(zscale)) {
+		render_path_args$zscale = zscale
+	}
+	if (!missing(vertical_exaggeration)) {
+		render_path_args$vertical_exaggeration = vertical_exaggeration
+	}
+	xyz = do.call(render_path, render_path_args)
 
 	xyz = do.call(rbind, xyz)
 	if (rgl::cur3d() != 0) {

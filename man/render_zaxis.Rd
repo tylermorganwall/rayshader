@@ -36,7 +36,7 @@ for non-ggplot scenes.}
 If left at \code{1} with \code{zaxis_breaks = NULL} on non-ggplot terrain scenes, rayshader
 will attempt to use the cached \code{plot_3d()} zscale to generate more meaningful defaults.}
 
-\item{vertical_exaggeration}{Default \code{1}. One-off multiplier applied to the effective visual relief for this call. Values greater than \code{1} increase apparent relief and values between \code{0} and \code{1} flatten it.}
+\item{vertical_exaggeration}{Default \code{1}. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}} when available; pass explicitly to override for this call.}
 
 \item{heightmap}{Default \code{NULL}. Height matrix for the current scene. If omitted, this is taken from the cached scene set by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}. Pass explicitly to override the cached value.}
 

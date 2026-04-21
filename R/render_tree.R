@@ -58,7 +58,7 @@
 #'@param crs Default `NULL`. CRS of the input numeric x/y coordinates, or CRS to assign to CRS-less spatial data before transforming it into the active scene CRS. If spatial data already carries a CRS, that CRS is used automatically.
 #'@param baseshape Default `rectangle`. Shape of the base. Options are `c("rectangle","circle","hex")`.
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.
-#'@param vertical_exaggeration Default `1`. One-off multiplier applied to the effective visual relief for this call. Values greater than `1` increase apparent relief and values between `0` and `1` flatten it.
+#'@param vertical_exaggeration Default `1`. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from [plot_3d()] or [plot_gg()] when available; pass explicitly to override for this call.
 #'@param heightmap Default `NULL`. Height matrix for the current scene. If omitted, this is taken from the cached scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value.
 #'of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
 #' All points are assumed to be evenly spaced.
@@ -190,14 +190,11 @@ render_tree = function(
 	...
 ) {
 	dot_split = split_zaxis_dots(list(...))
-	zscale = resolve_scene_render_zscale(
-		zscale,
-		missing(zscale),
-		caller = "render_tree"
-	)
-	zscale = apply_vertical_exaggeration(
+	zscale = resolve_scene_render_effective_zscale(
 		zscale = zscale,
+		zscale_missing = missing(zscale),
 		vertical_exaggeration = vertical_exaggeration,
+		vertical_exaggeration_missing = missing(vertical_exaggeration),
 		caller = "render_tree"
 	)
 	heightmap = resolve_scene_render_heightmap(
@@ -233,15 +230,16 @@ render_tree = function(
 	y = point_input$y
 	lat = y
 	long = x
+	input_crs = if (is.null(crs)) point_input$source_crs else crs
 	if (!is.null(point_input$extent)) {
 		extent = point_input$extent
 	} else if (is.null(extent) && !is.null(scene_extent)) {
 		extent = scene_extent
 	}
 	location_supplied = isTRUE(point_input$location_supplied)
-	render_obj_crs = if (location_supplied) NULL else crs
+	render_obj_crs = if (location_supplied) NULL else input_crs
 	render_obj_tree = function(...) {
-		do.call(render_obj, c(list(...), tree_args))
+		do.call(render_obj, c(list(..., vertical_exaggeration = 1), tree_args))
 	}
 	# If clear_previous is TRUE, remove previous tree object
 	if (clear_previous) {

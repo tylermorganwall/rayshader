@@ -86,8 +86,9 @@
 #'height map, when `triangulate = TRUE`. Increase this if you encounter problems with 3D performance, want
 #'to decrease render time with [render_highquality()], or need
 #'to save a smaller 3D OBJ file to disk with [save_obj()],
-#'@param verbose Default `TRUE`, if `interactive()`. Prints information about the mesh triangulation
-#'if `triangulate = TRUE`.
+#'@param verbose Default `FALSE`. Prints the computed `zscale` and horizontal
+#'units. Also prints information about the mesh triangulation if
+#'`triangulate = TRUE`.
 #'@param emboss_text Default `0`, max `1`. Amount to emboss the text, where `1` is the tallest feature in the scene.
 #'@param emboss_grid Default `0`, max `1`. Amount to emboss the grid lines, where `1` is the tallest feature in the scene.
 #'By default, the minor grid lines will be half the size of the major lines. Pass a length-2 vector to specify them seperately (second value
@@ -1644,6 +1645,13 @@ plot_gg = function(
 		vertical_exaggeration = resolved_height_zscale$vertical_exaggeration,
 		caller = "plot_gg"
 	)
+	if (isTRUE(verbose)) {
+		emit_plot_gg_zscale_message(
+			resolved_height_zscale = resolved_height_zscale,
+			zscale = zscale,
+			transform_info = plot_gg_transform_info
+		)
+	}
 	shadowdepth = resolve_plot_gg_shadowdepth(
 		height_matrix = height_matrix,
 		zscale = zscale,
@@ -1736,7 +1744,8 @@ plot_gg = function(
 		plot_3d(
 			map_with_shading,
 			height_matrix,
-			zscale = zscale,
+			zscale = resolved_height_zscale$base_zscale,
+			vertical_exaggeration = resolved_height_zscale$vertical_exaggeration,
 			triangulate = triangulate,
 			max_error = max_error,
 			max_tri = max_tri,
@@ -1755,6 +1764,14 @@ plot_gg = function(
 	}
 	cache_plot_gg_panel_info(plot_gg_panel_info)
 	cache_plot_gg_transform_info(plot_gg_transform_info)
+	cache_scene_zscale(
+		resolved_height_zscale$base_zscale,
+		label = "plot_gg_zscale"
+	)
+	cache_scene_vertical_exaggeration(
+		resolved_height_zscale$vertical_exaggeration,
+		label = "plot_gg_vertical_exaggeration"
+	)
 	if (!preview && flat_plot_render) {
 		if (flat_transparent_bg) {
 			new_temp = tempfile(fileext = ".png")

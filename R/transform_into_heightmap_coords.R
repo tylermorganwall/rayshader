@@ -13,6 +13,7 @@ transform_into_heightmap_coords = function(extent, heightmap, lat = NULL, long =
                                            panel = NULL,
                                            transform_scene = TRUE,
                                            caller = NULL) {
+  altitude_supplied = !is.null(altitude)
   offset = offset/zscale
   heightmap = resolve_scene_render_heightmap(heightmap)
   extent = resolve_scene_render_extent(
@@ -100,15 +101,23 @@ transform_into_heightmap_coords = function(extent, heightmap, lat = NULL, long =
       altitude = rep(altitude, length(distances_x))
     }
   }
-  altitude[filter_out] = NA
+  if(!altitude_supplied) {
+    altitude[filter_out] = NA
+  }
   if(use_altitude) {
     matrix_vals = (matrix(c(distances_x-nrow_map/2-1, altitude/zscale  + offset, distances_y-ncol_map/2-1),ncol=3,nrow=length(altitude)))
   } else {
     matrix_vals = (matrix(c(distances_x-nrow_map/2-1, offset, distances_y-ncol_map/2-1),ncol=3,nrow=length(altitude)))
   }
   if(any(is.na(matrix_vals[,2]))) {
-    warning("Some coords outside of heightmap extent--the altitude of those points have been set to the heightmap minimum.")
+    if(!altitude_supplied) {
+      warning("Some coords outside of heightmap extent--the altitude of those points have been set to the heightmap minimum.")
+    }
+    replacement_height = suppressWarnings(min(matrix_vals[,2], na.rm = TRUE))
+    if(!is.finite(replacement_height)) {
+      replacement_height = min(heightmap, na.rm = TRUE) / zscale + offset
+    }
+    matrix_vals[is.na(matrix_vals[,2]),] = replacement_height
   }
-  matrix_vals[is.na(matrix_vals[,2]),] = min(matrix_vals[,2], na.rm=TRUE)
   return(matrix_vals)
 }

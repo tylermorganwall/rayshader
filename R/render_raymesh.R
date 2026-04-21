@@ -44,7 +44,7 @@
 #' Whether to swap and Y and Z axes. (Y axis is vertical in
 #'rayshader coordinates, but data is often provided with Z being vertical).
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.
-#'@param vertical_exaggeration Default `1`. One-off multiplier applied to the effective visual relief for this call. Values greater than `1` increase apparent relief and values between `0` and `1` flatten it.
+#'@param vertical_exaggeration Default `1`. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from [plot_3d()] or [plot_gg()] when available; pass explicitly to override for this call.
 #'@param heightmap Default `NULL`. Height matrix for the current scene. If omitted, this is taken from the cached scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value.
 #'of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
 #' All points are assumed to be evenly spaced.
@@ -98,14 +98,11 @@ render_raymesh = function(
 	...
 ) {
 	dot_split = split_zaxis_dots(list(...))
-	zscale = resolve_scene_render_zscale(
-		zscale,
-		missing(zscale),
-		caller = "render_raymesh"
-	)
-	zscale = apply_vertical_exaggeration(
+	zscale = resolve_scene_render_effective_zscale(
 		zscale = zscale,
+		zscale_missing = missing(zscale),
 		vertical_exaggeration = vertical_exaggeration,
+		vertical_exaggeration_missing = missing(vertical_exaggeration),
 		caller = "render_raymesh"
 	)
 	heightmap = resolve_scene_render_heightmap(
@@ -146,6 +143,7 @@ render_raymesh = function(
 	y = point_input$y
 	lat = y
 	long = x
+	input_crs = if (is.null(crs)) point_input$source_crs else crs
 	if (!is.null(point_input$extent)) {
 		extent = point_input$extent
 	} else if (is.null(extent) && !is.null(zaxis_extent)) {
@@ -181,7 +179,7 @@ render_raymesh = function(
 				altitude,
 				offset,
 				zscale,
-				crs = crs,
+				crs = input_crs,
 				panel = panel,
 				transform_scene = !location_supplied,
 				caller = "render_raymesh"
@@ -199,7 +197,7 @@ render_raymesh = function(
 				offset,
 				zscale,
 				use_altitude = FALSE,
-				crs = crs,
+				crs = input_crs,
 				panel = panel,
 				transform_scene = !location_supplied,
 				caller = "render_raymesh"

@@ -475,7 +475,8 @@ resolve_render_xy_aliases = function(
 	}
 	list(
 		x = if (has_long) long else x,
-		y = if (has_lat) lat else y
+		y = if (has_lat) lat else y,
+		source_crs = if (has_long && has_lat) 4326 else NULL
 	)
 }
 
@@ -668,7 +669,7 @@ resolve_render_location_input = function(
 		panel = panel,
 		feature_count = NULL,
 		geometry_count = NULL,
-		source_crs = NULL,
+		source_crs = xy_inputs$source_crs,
 		transformed = FALSE,
 		location_supplied = FALSE
 	)
@@ -1487,6 +1488,7 @@ reset_scene_context = function(
 	if (isTRUE(clear_scene_metadata)) {
 		cache_scene_context_token(NULL)
 		cache_scene_zscale(NULL, label = NULL)
+		cache_scene_vertical_exaggeration(NULL, label = NULL)
 		cache_scene_heightmap(NULL, label = NULL)
 		cache_scene_extent(NULL, label = NULL)
 		cache_scene_crs(NULL, label = NULL)
@@ -1537,6 +1539,64 @@ get_scene_zscale_label = function(default = NULL) {
 		return(default)
 	}
 	scene_zscale_label
+}
+
+cache_scene_vertical_exaggeration = function(
+	vertical_exaggeration = NULL,
+	label = NULL
+) {
+	assign(
+		"scene_vertical_exaggeration",
+		vertical_exaggeration,
+		envir = ray_cache_scene_envir
+	)
+	assign(
+		"scene_vertical_exaggeration_label",
+		label,
+		envir = ray_cache_scene_envir
+	)
+	invisible(NULL)
+}
+
+get_scene_vertical_exaggeration = function(default = NULL) {
+	vertical_exaggeration = get_scene_context_value(
+		"scene_vertical_exaggeration",
+		default = default
+	)
+	if (is.null(vertical_exaggeration)) {
+		return(default)
+	}
+	vertical_exaggeration = suppressWarnings(as.numeric(vertical_exaggeration)[1])
+	if (!is.finite(vertical_exaggeration) || vertical_exaggeration <= 0) {
+		return(default)
+	}
+	vertical_exaggeration
+}
+
+get_scene_vertical_exaggeration_label = function(default = NULL) {
+	vertical_exaggeration_label = get_scene_context_value(
+		"scene_vertical_exaggeration_label",
+		default = default
+	)
+	if (is.null(vertical_exaggeration_label)) {
+		return(default)
+	}
+	vertical_exaggeration_label
+}
+
+get_scene_effective_zscale = function(default = NULL) {
+	scene_zscale = get_scene_zscale(default = NA_real_)
+	if (!is.finite(scene_zscale) || scene_zscale <= 0) {
+		return(default)
+	}
+	scene_vertical_exaggeration = get_scene_vertical_exaggeration(default = 1)
+	if (
+		!is.finite(scene_vertical_exaggeration) ||
+			scene_vertical_exaggeration <= 0
+	) {
+		return(default)
+	}
+	scene_zscale / scene_vertical_exaggeration
 }
 
 cache_scene_heightmap = function(heightmap = NULL, label = NULL) {
@@ -1929,6 +1989,71 @@ resolve_scene_render_zscale = function(
 		return(1)
 	}
 	zscale
+}
+
+resolve_scene_render_vertical_exaggeration = function(
+	vertical_exaggeration = 1,
+	vertical_exaggeration_missing = FALSE,
+	caller = NULL
+) {
+	cached_scene_vertical_exaggeration =
+		get_scene_vertical_exaggeration(default = NA_real_)
+	if (
+		isTRUE(vertical_exaggeration_missing) &&
+			is.finite(cached_scene_vertical_exaggeration) &&
+			cached_scene_vertical_exaggeration > 0
+	) {
+		emit_scene_cache_message(
+			caller = caller,
+			argument_name = "vertical_exaggeration",
+			cache_name = "scene_vertical_exaggeration",
+			cache_label = get_scene_vertical_exaggeration_label(default = NULL)
+		)
+		return(cached_scene_vertical_exaggeration)
+	}
+	if (is.null(vertical_exaggeration)) {
+		if (
+			is.finite(cached_scene_vertical_exaggeration) &&
+				cached_scene_vertical_exaggeration > 0
+		) {
+			emit_scene_cache_message(
+				caller = caller,
+				argument_name = "vertical_exaggeration",
+				cache_name = "scene_vertical_exaggeration",
+				cache_label = get_scene_vertical_exaggeration_label(default = NULL)
+			)
+			return(cached_scene_vertical_exaggeration)
+		}
+		return(1)
+	}
+	resolve_vertical_exaggeration(
+		vertical_exaggeration = vertical_exaggeration,
+		caller = caller
+	)
+}
+
+resolve_scene_render_effective_zscale = function(
+	zscale = 1,
+	zscale_missing = FALSE,
+	vertical_exaggeration = 1,
+	vertical_exaggeration_missing = FALSE,
+	caller = NULL
+) {
+	zscale = resolve_scene_render_zscale(
+		zscale = zscale,
+		zscale_missing = zscale_missing,
+		caller = caller
+	)
+	vertical_exaggeration = resolve_scene_render_vertical_exaggeration(
+		vertical_exaggeration = vertical_exaggeration,
+		vertical_exaggeration_missing = vertical_exaggeration_missing,
+		caller = caller
+	)
+	apply_vertical_exaggeration(
+		zscale = zscale,
+		vertical_exaggeration = vertical_exaggeration,
+		caller = caller
+	)
 }
 
 resolve_scene_render_heightmap = function(heightmap = NULL, caller = NULL) {
@@ -2383,6 +2508,68 @@ resolve_plot_gg_rendered_zscale = function(
 	mean(resolution)
 }
 
+format_plot_gg_zscale_number = function(x) {
+	format(signif(x, 6), scientific = FALSE, trim = TRUE)
+}
+
+get_plot_gg_horizontal_units = function(transform_info = NULL) {
+	if (
+		!is.null(transform_info) &&
+			inherits(transform_info$coord, "CoordSf") &&
+			length(transform_info$panel_params) > 0 &&
+			length(find.package("sf", quiet = TRUE)) > 0
+	) {
+		target_crs = tryCatch(
+			get_coord_sf_target_crs(transform_info$panel_params[[1]]),
+			error = function(e) NULL
+		)
+		if (!is.null(target_crs)) {
+			crs_units = tryCatch(target_crs$units_gdal, error = function(e) NULL)
+			if (!is.null(crs_units) && !is.na(crs_units) && nzchar(crs_units)) {
+				return(crs_units)
+			}
+			if (isTRUE(tryCatch(sf::st_is_longlat(target_crs), error = function(e) FALSE))) {
+				return("degrees")
+			}
+		}
+	}
+	"scene units"
+}
+
+format_plot_gg_zscale_source = function(resolved_height_zscale) {
+	source = resolved_height_zscale$source
+	if (identical(source, "explicit")) {
+		return("explicit zscale")
+	}
+	if (identical(source, "auto")) {
+		return("rendered scene spacing")
+	}
+	if (identical(source, "default")) {
+		return("default zscale")
+	}
+	"resolved zscale"
+}
+
+emit_plot_gg_zscale_message = function(
+	resolved_height_zscale,
+	zscale,
+	transform_info = NULL
+) {
+	units = get_plot_gg_horizontal_units(transform_info)
+	message(sprintf(
+		paste0(
+			"plot_gg(): computed zscale = %s %s per height unit ",
+			"(base zscale = %s, vertical_exaggeration = %s, source = %s)."
+		),
+		format_plot_gg_zscale_number(zscale),
+		units,
+		format_plot_gg_zscale_number(resolved_height_zscale$base_zscale),
+		format_plot_gg_zscale_number(resolved_height_zscale$vertical_exaggeration),
+		format_plot_gg_zscale_source(resolved_height_zscale)
+	))
+	invisible(NULL)
+}
+
 get_plot_gg_height_data_range = function(transform_info = NULL) {
 	if (
 		is.null(transform_info) ||
@@ -2461,6 +2648,7 @@ get_scene_height_transform = function(heightmap = NULL, extent = NULL) {
 	if (
 		is.null(transform_info) ||
 			!isTRUE(transform_info$height_is_mapped) ||
+			isTRUE(transform_info$height_use_data_scale) ||
 			is.null(transform_info$height_scale)
 	) {
 		return(NULL)

@@ -182,7 +182,7 @@ generate_cloud_layer = function(
 #'@param seed Default `1`. Random seed used to generate clouds.
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
 #'of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
-#'@param vertical_exaggeration Default `1`. One-off multiplier applied to the effective visual relief for this call. Values greater than `1` increase apparent relief and values between `0` and `1` flatten it.
+#'@param vertical_exaggeration Default `1`. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from [plot_3d()] or [plot_gg()] when available; pass explicitly to override for this call.
 #'@param baseshape Default `rectangle`. Shape of the base. Options are `c("rectangle","circle","hex")`.
 #'@param clear_clouds Default `FALSE`. Clears all existing floating layers on the visualization.
 #'@return Adds a 3D floating cloud layer to the map. No return value.
@@ -290,14 +290,11 @@ render_clouds = function(
 			return(invisible())
 		}
 	}
-	zscale = resolve_scene_render_zscale(
-		zscale,
-		missing(zscale),
-		caller = "render_clouds"
-	)
-	zscale = apply_vertical_exaggeration(
+	zscale = resolve_scene_render_effective_zscale(
 		zscale = zscale,
+		zscale_missing = missing(zscale),
 		vertical_exaggeration = vertical_exaggeration,
+		vertical_exaggeration_missing = missing(vertical_exaggeration),
 		caller = "render_clouds"
 	)
 	heightmap = resolve_scene_render_heightmap(
@@ -351,7 +348,8 @@ render_clouds = function(
 			altitudes[i],
 			baseshape = baseshape,
 			heightmap = heightmap,
-			zscale = zscale
+			zscale = zscale,
+			vertical_exaggeration = 1
 		)
 	}
 }
@@ -400,14 +398,11 @@ render_clouds = function(
 			return(invisible())
 		}
 	}
-	zscale = resolve_scene_render_zscale(
-		zscale,
-		missing(zscale),
-		caller = "render_clouds"
-	)
-	zscale = apply_vertical_exaggeration(
+	zscale = resolve_scene_render_effective_zscale(
 		zscale = zscale,
+		zscale_missing = missing(zscale),
 		vertical_exaggeration = vertical_exaggeration,
+		vertical_exaggeration_missing = missing(vertical_exaggeration),
 		caller = "render_clouds"
 	)
 	heightmap = resolve_scene_render_heightmap(
@@ -473,7 +468,8 @@ render_clouds = function(
 			altitudes[i + 1],
 			baseshape = baseshape,
 			heightmap = heightmap,
-			zscale = zscale
+			zscale = zscale,
+			vertical_exaggeration = 1
 		)
 	}
 }
@@ -720,4 +716,4 @@ cloud_shade = function(
 		freq = frequency
 	)))
 }
-#'@param vertical_exaggeration Default `1`. One-off multiplier applied to the effective visual relief for this call. Values greater than `1` increase apparent relief and values between `0` and `1` flatten it.
+#'@param vertical_exaggeration Default `1`. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from [plot_3d()] or [plot_gg()] when available; pass explicitly to override for this call.

@@ -55,7 +55,7 @@
 #' of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
 #'  All points are assumed to be evenly spaced.
 #' @param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.
-#' @param vertical_exaggeration Default `1`. One-off multiplier applied to the effective visual relief for this call. Values greater than `1` increase apparent relief and values between `0` and `1` flatten it.
+#' @param vertical_exaggeration Default `1`. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from [plot_3d()] or [plot_gg()] when available; pass explicitly to override for this call.
 #' @param alpha Default `1`. Transparency of the polygons.
 #' @param lit Default `TRUE`. Whether to light the polygons.
 #' @param light_altitude Default `c(45, 30)`. Degree(s) from the horizon from which to light the polygons.
@@ -189,14 +189,11 @@ render_beveled_polygons = function(
 	...
 ) {
 	dot_split = split_zaxis_dots(list(...))
-	zscale = resolve_scene_render_zscale(
-		zscale,
-		missing(zscale),
-		caller = "render_beveled_polygons"
-	)
-	zscale = apply_vertical_exaggeration(
+	zscale = resolve_scene_render_effective_zscale(
 		zscale = zscale,
+		zscale_missing = missing(zscale),
 		vertical_exaggeration = vertical_exaggeration,
+		vertical_exaggeration_missing = missing(vertical_exaggeration),
 		caller = "render_beveled_polygons"
 	)
 	heightmap = resolve_scene_render_heightmap(
@@ -398,6 +395,7 @@ render_beveled_polygons = function(
 		panel = panel,
 		xyz = matrix(c(0, 0, 0), ncol = 3),
 		zscale = zscale,
+		vertical_exaggeration = 1,
 		heightmap = heightmap,
 		flat_shading = flat_shading,
 		change_material = FALSE,

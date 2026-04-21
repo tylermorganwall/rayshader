@@ -287,11 +287,17 @@ plot_3d = function(
 	force(hillshade)
 	heightmap_was_missing = missing(heightmap)
 	zscale_was_missing = missing(zscale)
+	vertical_exaggeration_was_missing = missing(vertical_exaggeration)
 	extent_was_missing = missing(extent)
 	heightmap_cache_label = NULL
 	zscale_cache_input_label = format_scene_cache_label(deparse(substitute(
 		zscale
 	)))
+	vertical_exaggeration_cache_label = if (vertical_exaggeration_was_missing) {
+		"plot_3d_default_vertical_exaggeration"
+	} else {
+		format_scene_cache_label(deparse(substitute(vertical_exaggeration)))
+	}
 	resolved_heightmap = NULL
 	if (heightmap_was_missing) {
 		resolved_heightmap = resolve_hillshade_heightmap(
@@ -363,9 +369,30 @@ plot_3d = function(
 		scene = resolved_zscale$label,
 		NULL
 	)
+	resolved_vertical_exaggeration = resolve_vertical_exaggeration(
+		vertical_exaggeration = vertical_exaggeration,
+		caller = "plot_3d"
+	)
+	cached_scene_vertical_exaggeration = resolved_vertical_exaggeration
+	if (
+		vertical_exaggeration_was_missing &&
+			identical(resolved_zscale$source, "scene")
+	) {
+		prior_scene_vertical_exaggeration =
+			get_scene_vertical_exaggeration(default = NA_real_)
+		if (
+			is.finite(prior_scene_vertical_exaggeration) &&
+				prior_scene_vertical_exaggeration > 0
+		) {
+			resolved_vertical_exaggeration = prior_scene_vertical_exaggeration
+			cached_scene_vertical_exaggeration = prior_scene_vertical_exaggeration
+			vertical_exaggeration_cache_label =
+				get_scene_vertical_exaggeration_label(default = NULL)
+		}
+	}
 	zscale = apply_vertical_exaggeration(
 		zscale = zscale,
-		vertical_exaggeration = vertical_exaggeration,
+		vertical_exaggeration = resolved_vertical_exaggeration,
 		caller = "plot_3d"
 	)
 	crs_cache_value = NULL
@@ -695,7 +722,11 @@ plot_3d = function(
 	cache_hillshade_heightmap(heightmap, label = heightmap_cache_label)
 	cache_hillshade_zscale(base_zscale, label = zscale_cache_label)
 	cache_scene_heightmap(heightmap, label = heightmap_cache_label)
-	cache_scene_zscale(zscale, label = zscale_cache_label)
+	cache_scene_zscale(base_zscale, label = zscale_cache_label)
+	cache_scene_vertical_exaggeration(
+		cached_scene_vertical_exaggeration,
+		label = vertical_exaggeration_cache_label
+	)
 	cache_scene_extent(extent_cache_value, label = extent_cache_label)
 	cache_scene_crs(crs_cache_value, label = crs_cache_label)
 	invisible(NULL)

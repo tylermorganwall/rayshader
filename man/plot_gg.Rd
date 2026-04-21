@@ -159,8 +159,9 @@ height map, when \code{triangulate = TRUE}. Increase this if you encounter probl
 to decrease render time with \code{\link[=render_highquality]{render_highquality()}}, or need
 to save a smaller 3D OBJ file to disk with \code{\link[=save_obj]{save_obj()}},}
 
-\item{verbose}{Default \code{TRUE}, if \code{interactive()}. Prints information about the mesh triangulation
-if \code{triangulate = TRUE}.}
+\item{verbose}{Default \code{FALSE}. Prints the computed \code{zscale} and horizontal
+units. Also prints information about the mesh triangulation if
+\code{triangulate = TRUE}.}
 
 \item{emboss_text}{Default \code{0}, max \code{1}. Amount to emboss the text, where \code{1} is the tallest feature in the scene.}
 

@@ -166,6 +166,129 @@ test_that("plot_gg() preserves mapped data scale for tidyterra height rasters", 
 	)
 })
 
+test_that("plot_gg() keeps raw overlay altitudes for data-scale SpatRaster heights", {
+	skip_if_not_installed("terra")
+	skip_if_not_installed("tidyterra")
+	local_rgl_use_null()
+	on.exit(rgl::close3d(), add = TRUE)
+
+	rast = terra::rast(
+		nrows = 2,
+		ncols = 3,
+		nlyrs = 4,
+		xmin = 0,
+		xmax = 30,
+		ymin = 0,
+		ymax = 20
+	)
+	terra::values(rast) = cbind(
+		red = c(255, 0, 0, 255, 255, 0),
+		green = c(0, 255, 0, 255, 0, 255),
+		blue = c(0, 0, 255, 0, 255, 255),
+		height = c(10, 20, 30, 40, 50, 60)
+	)
+	names(rast) = c("red", "green", "blue", "height")
+
+	p = ggplot() +
+		tidyterra::geom_spatraster(
+			data = rast,
+			aes(fill = height)
+		) +
+		tidyterra::geom_spatraster_rgb(
+			data = rast
+		) +
+		coord_sf()
+
+	height_matrix = suppressWarnings(plot_gg_test(
+		ggobj = p,
+		ggobj_height = p,
+		width = 2,
+		height = 2,
+		vertical_exaggeration = 10,
+		multicore = FALSE,
+		raytrace = FALSE,
+		shadow = FALSE,
+		save_height_matrix = TRUE
+	))
+
+	gg_extent = attr(height_matrix, "extent", exact = TRUE)
+	scene_zscale = get_scene_effective_zscale()
+	altitude_vals = c(1000, 2000)
+	xyz = transform_into_heightmap_coords(
+		extent = gg_extent,
+		heightmap = height_matrix,
+		lat = rep(mean(gg_extent[c("ymin", "ymax")]), 2),
+		long = rep(mean(gg_extent[c("xmin", "xmax")]), 2),
+		altitude = altitude_vals,
+		offset = 0,
+		zscale = scene_zscale,
+		transform_scene = FALSE
+	)
+
+	expect_equal(xyz[, 2], altitude_vals / scene_zscale, tolerance = 1e-6)
+})
+
+test_that("plot_gg() can report computed zscale and units", {
+	skip_if_not_installed("terra")
+	skip_if_not_installed("tidyterra")
+	local_rgl_use_null()
+	on.exit(rgl::close3d(), add = TRUE)
+
+	rast = terra::rast(
+		nrows = 2,
+		ncols = 3,
+		nlyrs = 4,
+		xmin = 0,
+		xmax = 30,
+		ymin = 0,
+		ymax = 20
+	)
+	terra::values(rast) = cbind(
+		red = c(255, 0, 0, 255, 255, 0),
+		green = c(0, 255, 0, 255, 0, 255),
+		blue = c(0, 0, 255, 0, 255, 255),
+		height = c(10, 20, 30, 40, 50, 60)
+	)
+	names(rast) = c("red", "green", "blue", "height")
+
+	p = ggplot() +
+		tidyterra::geom_spatraster(
+			data = rast,
+			aes(fill = height)
+		) +
+		tidyterra::geom_spatraster_rgb(
+			data = rast
+		) +
+		coord_sf()
+
+	out = character()
+	expect_no_condition(withCallingHandlers(
+		suppressWarnings(plot_gg_test(
+			ggobj = p,
+			ggobj_height = p,
+			width = 2,
+			height = 2,
+			vertical_exaggeration = 10,
+			verbose = TRUE,
+			multicore = FALSE,
+			raytrace = FALSE,
+			shadow = FALSE,
+			plot = FALSE
+		)),
+		message = function(cnd) {
+			out <<- c(out, conditionMessage(cnd))
+			invokeRestart("muffleMessage")
+		}
+	))
+
+	zscale_message = out[grepl("computed zscale", out, fixed = TRUE)]
+	expect_length(zscale_message, 1)
+	expect_true(grepl("plot_gg(): computed zscale =", zscale_message, fixed = TRUE))
+	expect_true(grepl("per height unit", zscale_message, fixed = TRUE))
+	expect_true(grepl("vertical_exaggeration = 10", zscale_message, fixed = TRUE))
+	expect_true(grepl("source = rendered scene spacing", zscale_message, fixed = TRUE))
+})
+
 test_that("plot_gg() recomputes auto shadowdepth from the rendered scene zscale", {
 	skip_if_not_installed("terra")
 	skip_if_not_installed("tidyterra")
@@ -283,7 +406,9 @@ test_that("plot_gg() lets zscale override and vertical_exaggeration modify SpatR
 		plot = FALSE
 	)))
 
-	expect_equal(get_scene_zscale(), 2.5, tolerance = 1e-8)
+	expect_equal(get_scene_zscale(), 5, tolerance = 1e-8)
+	expect_equal(get_scene_vertical_exaggeration(), 2)
+	expect_equal(get_scene_effective_zscale(), 2.5, tolerance = 1e-8)
 })
 
 test_that("plot_gg() uses explicit zscale directly when no exaggeration is supplied", {
@@ -382,6 +507,12 @@ test_that("plot_gg() maps deprecated scale onto vertical_exaggeration for SpatRa
 
 	expect_equal(
 		get_scene_zscale(),
+		expected_rendered_scene_zscale(height_matrix),
+		tolerance = 1e-8
+	)
+	expect_equal(get_scene_vertical_exaggeration(), 2)
+	expect_equal(
+		get_scene_effective_zscale(),
 		expected_rendered_scene_zscale(height_matrix) / 2,
 		tolerance = 1e-8
 	)

@@ -41,8 +41,7 @@ Matrix indicating whether water was detected at that point. 1 indicates water, 0
 }
 \description{
 Detects bodies of water (of a user-defined minimum size) within an elevation matrix.
-}
-\details{
+
 Cache fallback messages are disabled by default. Set \code{options(rayshader.verbose_scene_cache = TRUE)} to print when cached metadata is reused.
 }
 \examples{

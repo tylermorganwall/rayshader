@@ -41,7 +41,7 @@ render_zaxis_internal = function(
 			c("data_xmin", "data_xmax", "data_ymin", "data_ymax") %in%
 				names(panel_info)
 		)
-	cached_scene_zscale = get_scene_zscale(default = NA_real_)
+	cached_scene_zscale = get_scene_effective_zscale(default = NA_real_)
 	if (is.null(zscale)) {
 		zscale = cached_scene_zscale
 	} else {

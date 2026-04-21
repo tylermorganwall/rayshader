@@ -357,7 +357,35 @@ test_that("coord_sf scenes transform numeric renderer coordinates with explicit 
 		lat = expected_scene_xy$lat,
 		altitude = 0,
 		extent = attr(expected_scene_xy, "extent"),
-		zscale = get_scene_zscale()
+		zscale = get_scene_effective_zscale()
+	)
+	expect_equal(unname(point_verts), unname(expected_xyz), tolerance = 1e-6)
+
+	centroid_ll = suppressWarnings(sf::st_coordinates(
+		sf::st_transform(sf::st_centroid(nc[1, ]), 4326)
+	))
+	expect_no_condition(render_points(
+		long = centroid_ll[1, 1],
+		lat = centroid_ll[1, 2],
+		altitude = 0,
+		offset = 0,
+		size = 4,
+		clear_previous = TRUE
+	))
+	point_ids = get_ids_with_labels()
+	point_id = point_ids$id[point_ids$tag == "points3d"][1]
+	point_verts = rgl::rgl.attrib(point_id, "vertices")
+	expected_scene_xy = rayshader:::transform_ggplot_coords(
+		x = centroid_ll[1, 1],
+		y = centroid_ll[1, 2],
+		crs = 4326
+	)
+	expected_xyz = scene_xy_to_rgl_test(
+		long = expected_scene_xy$long,
+		lat = expected_scene_xy$lat,
+		altitude = 0,
+		extent = attr(expected_scene_xy, "extent"),
+		zscale = get_scene_effective_zscale()
 	)
 	expect_equal(unname(point_verts), unname(expected_xyz), tolerance = 1e-6)
 
@@ -433,7 +461,7 @@ test_that("coord_sf faceted scenes still require panel and reject conflicting cr
 		lat = expected_scene_xy$lat,
 		long = expected_scene_xy$long,
 		altitude = c(0, 0),
-		zscale = rayshader:::get_scene_zscale(),
+		zscale = rayshader:::get_scene_effective_zscale(),
 		transform_scene = FALSE,
 		caller = "test"
 	)

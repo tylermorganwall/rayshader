@@ -16,7 +16,7 @@ test_that("ggplot scenes transform mapped overlay altitudes into scene units", {
 
 	gg_extent = rayshader:::get_ggplot_extent()
 	scene_heightmap = get_scene_heightmap()
-	scene_zscale = get_scene_zscale()
+	scene_zscale = get_scene_effective_zscale()
 	altitude_vals = c(min(mtcars$disp), max(mtcars$disp))
 	scene_height_range = range(scene_heightmap[is.finite(scene_heightmap)])
 
@@ -54,7 +54,7 @@ test_that("ggplot scenes without mapped height keep raw overlay altitudes", {
 	)))
 
 	gg_extent = rayshader:::get_ggplot_extent()
-	scene_zscale = get_scene_zscale()
+	scene_zscale = get_scene_effective_zscale()
 	altitude_vals = c(100, 200)
 
 	xyz = transform_into_heightmap_coords(
@@ -86,7 +86,7 @@ test_that("ggplot z-axis breaks use mapped height positions but keep raw labels"
 
 	gg_extent = rayshader:::get_ggplot_extent()
 	scene_heightmap = get_scene_heightmap()
-	scene_zscale = get_scene_zscale()
+	scene_zscale = get_scene_effective_zscale()
 	altitude_vals = c(min(mtcars$disp), max(mtcars$disp))
 	breaks = altitude_vals + c(10, -10)
 	labels = c("low", "high")
@@ -157,4 +157,49 @@ test_that("plot_3d scenes keep raw altitude values in transform_into_heightmap_c
 	)
 
 	expect_equal(xyz[, 2], altitude_vals / 10, tolerance = 1e-6)
+})
+
+test_that("transform_into_heightmap_coords() does not warn about derived altitude when altitude is explicit", {
+	on.exit(rgl::close3d(), add = TRUE)
+	local_rgl_use_null()
+
+	heightmap = volcano
+	texture = sphere_shade(heightmap)
+	expect_no_condition(plot_3d_test(
+		texture,
+		heightmap,
+		zscale = 10,
+		shadow = FALSE,
+		water = FALSE,
+		windowsize = c(300, 300)
+	))
+
+	extent = c(
+		xmin = 0,
+		xmax = nrow(heightmap),
+		ymin = 0,
+		ymax = ncol(heightmap)
+	)
+	expect_warning(
+		transform_into_heightmap_coords(
+			extent = extent,
+			heightmap = heightmap,
+			lat = -100,
+			long = -100,
+			offset = 0,
+			zscale = 10,
+			filter_bounds = TRUE
+		),
+		"altitude of those points"
+	)
+	expect_no_warning(transform_into_heightmap_coords(
+		extent = extent,
+		heightmap = heightmap,
+		lat = -100,
+		long = -100,
+		altitude = 1000,
+		offset = 0,
+		zscale = 10,
+		filter_bounds = TRUE
+	))
 })

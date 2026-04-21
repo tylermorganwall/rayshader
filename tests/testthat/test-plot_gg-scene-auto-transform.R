@@ -50,7 +50,7 @@ test_that("render_points() auto-transforms ggplot scene coordinates", {
 		lat = pts$lat,
 		altitude = c(100, 200),
 		extent = attr(pts, "extent"),
-		zscale = get_scene_zscale()
+		zscale = get_scene_effective_zscale()
 	)
 
 	expect_equal(unname(point_verts), expected_xyz, tolerance = 1e-6)
@@ -130,7 +130,7 @@ test_that("render_path() auto-transforms sf input through coord_sf()", {
 		lat = pts$lat,
 		altitude = c(0, 0),
 		extent = attr(pts, "extent"),
-		zscale = get_scene_zscale()
+		zscale = get_scene_effective_zscale()
 	)
 
 	expect_equal(length(coords), 1)
