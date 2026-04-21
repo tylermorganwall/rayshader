@@ -394,11 +394,9 @@ render_highquality = function(
 	}
 	if (
 		has_direct_sky &&
-			(
-				(!is.null(lat) && !is.na(lat)) ||
-					(!is.null(long) && !is.na(long)) ||
-					(!is.null(datetime) && !is.na(datetime))
-			)
+			((!is.null(lat) && !is.na(lat)) ||
+				(!is.null(long) && !is.na(long)) ||
+				(!is.null(datetime) && !is.na(datetime)))
 	) {
 		warning(
 			"Both lat/long/datetime and direct sun inputs detected. Using `skymodelr::generate_sky()` inputs."
@@ -513,12 +511,10 @@ render_highquality = function(
 			sky_mode == "latlong" &&
 				!is.null(datetime_value) &&
 				!is.na(datetime_value) &&
-				(
-					is.null(lat_value) ||
-						is.na(lat_value) ||
-						is.null(long_value) ||
-						is.na(long_value)
-				)
+				(is.null(lat_value) ||
+					is.na(lat_value) ||
+					is.null(long_value) ||
+					is.na(long_value))
 		) {
 			auto_latlong = resolve_cached_extent_center_latlong(
 				caller = "render_highquality"
@@ -536,12 +532,10 @@ render_highquality = function(
 			sky_mode == "latlong" &&
 				!is.null(datetime_value) &&
 				!is.na(datetime_value) &&
-				(
-					is.null(lat_value) ||
-						is.na(lat_value) ||
-						is.null(long_value) ||
-						is.na(long_value)
-				)
+				(is.null(lat_value) ||
+					is.na(lat_value) ||
+					is.null(long_value) ||
+					is.na(long_value))
 		) {
 			stop(
 				paste(
@@ -681,8 +675,7 @@ render_highquality = function(
 			} else {
 				sky_call_args[c("elevation", "azimuth")] = NULL
 				if (
-					"long" %in% names(sky_call_args) &&
-						!("lon" %in% names(sky_call_args))
+					"long" %in% names(sky_call_args) && !("lon" %in% names(sky_call_args))
 				) {
 					sky_call_args$lon = sky_call_args$long
 				}
@@ -856,13 +849,17 @@ render_highquality = function(
 		ortho_dimensions = c(1, 1)
 	}
 	if (!is.null(ortho_dimensions_override)) {
-		ortho_dimensions_override = suppressWarnings(as.numeric(ortho_dimensions_override)[1:2])
+		ortho_dimensions_override = suppressWarnings(as.numeric(
+			ortho_dimensions_override
+		)[1:2])
 		if (
 			length(ortho_dimensions_override) != 2 ||
 				any(!is.finite(ortho_dimensions_override)) ||
 				any(ortho_dimensions_override <= 0)
 		) {
-			stop("`ortho_dimensions` must be a length-2 numeric vector with positive values.")
+			stop(
+				"`ortho_dimensions` must be a length-2 numeric vector with positive values."
+			)
 		}
 		ortho_dimensions = ortho_dimensions_override
 	}
@@ -1066,6 +1063,7 @@ render_highquality = function(
 		temp_verts = rgl.attrib(pointids[i], "vertices")
 		temp_color = rgl.attrib(pointids[i], "colors")
 		temp_size = material3d("size", id = pointids[i]) * point_radius
+		can_use_instances = FALSE
 		if (nrow(temp_color) == 1) {
 			temp_color = matrix(
 				temp_color[1:3],
@@ -1073,18 +1071,32 @@ render_highquality = function(
 				ncol = 3,
 				nrow = nrow(temp_verts)
 			)
+			can_use_instances = TRUE
 		}
-		for (j in seq_len(nrow(temp_verts))) {
-			point_material_args$color = temp_color[j, 1:3]
-
-			pointlist[[counter]] = rayrender::sphere(
-				x = temp_verts[j, 1] - bbox_center[1],
-				y = temp_verts[j, 2] - bbox_center[2],
-				z = temp_verts[j, 3] - bbox_center[3],
-				radius = temp_size,
-				material = do.call("point_material", args = point_material_args)
+		if (can_use_instances) {
+			point_material_args$color = temp_color[1, 1:3]
+			pointlist[[1]] = rayrender::create_instances(
+				rayrender::sphere(
+					radius = temp_size,
+					material = do.call("point_material", args = point_material_args)
+				),
+				x = temp_verts[, 1] - bbox_center[1],
+				y = temp_verts[, 2] - bbox_center[2],
+				z = temp_verts[, 3] - bbox_center[3],
 			)
-			counter = counter + 1
+		} else {
+			for (j in seq_len(nrow(temp_verts))) {
+				point_material_args$color = temp_color[j, 1:3]
+
+				pointlist[[counter]] = rayrender::sphere(
+					x = temp_verts[j, 1] - bbox_center[1],
+					y = temp_verts[j, 2] - bbox_center[2],
+					z = temp_verts[j, 3] - bbox_center[3],
+					radius = temp_size,
+					material = do.call("point_material", args = point_material_args)
+				)
+				counter = counter + 1
+			}
 		}
 	}
 	scalelabelids = get_ids_with_labels(typeval = "text_scalebar")$id
@@ -1288,7 +1300,10 @@ render_highquality = function(
 	if (!is.null(sky_file)) {
 		render_scene_args$environment_light = sky_file
 	}
-	duplicate_render_scene_args = intersect(names(render_scene_args), names(dot_args))
+	duplicate_render_scene_args = intersect(
+		names(render_scene_args),
+		names(dot_args)
+	)
 	if (length(duplicate_render_scene_args) > 0) {
 		dot_args[duplicate_render_scene_args] = NULL
 	}
