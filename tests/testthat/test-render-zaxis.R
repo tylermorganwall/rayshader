@@ -174,6 +174,36 @@ test_that("render_zaxis() infers ggplot panel extent when omitted", {
 	expect_true(any(ids$tag == "zaxis_labels"))
 })
 
+test_that("render_zaxis() uses cached coord_sf scene metadata when omitted", {
+	on.exit(rgl::close3d(), add = TRUE)
+	local_rgl_use_null()
+	skip_if_not_installed("ggplot2")
+	skip_if_not_installed("sf")
+
+	nc = sf::st_read(system.file("shape/nc.shp", package = "sf"), quiet = TRUE)
+	p = ggplot2::ggplot(nc) +
+		ggplot2::geom_sf() +
+		ggplot2::coord_sf(crs = sf::st_crs(32119))
+	expect_no_condition(suppressWarnings(plot_gg_test(
+		p,
+		width = 3,
+		height = 3,
+		windowsize = c(600, 600),
+		raytrace = FALSE,
+		shadow = FALSE,
+		multicore = FALSE
+	)))
+
+	expect_no_condition(render_zaxis(
+		zaxis_breaks = c(0, 50, 100)
+	))
+
+	ids = get_ids_with_labels()
+	expect_true(any(ids$tag == "zaxis_axis"))
+	expect_true(any(ids$tag == "zaxis_ticks"))
+	expect_true(any(ids$tag == "zaxis_labels"))
+})
+
 test_that("render_zaxis() uses cached user extent when omitted", {
 	on.exit(rgl::close3d(), add = TRUE)
 	local_rgl_use_null()

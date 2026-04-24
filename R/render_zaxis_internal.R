@@ -234,7 +234,8 @@ render_zaxis_internal = function(
 		long = anchor_long,
 		altitude = 0,
 		use_altitude = FALSE,
-		zscale = zscale
+		zscale = zscale,
+		transform_scene = FALSE
 	)[1, ]
 	center_xyz = transform_into_heightmap_coords(
 		extent = extent_vals,
@@ -243,7 +244,8 @@ render_zaxis_internal = function(
 		long = center_long,
 		altitude = 0,
 		use_altitude = FALSE,
-		zscale = zscale
+		zscale = zscale,
+		transform_scene = FALSE
 	)[1, ]
 
 	surface_vertices = NULL

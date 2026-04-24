@@ -948,7 +948,7 @@ render_highquality = function(
 		warning("`rayimage` package required for labels")
 		has_rayimage = FALSE
 	}
-	labelids = get_ids_with_labels(typeval = "raytext")$id
+	labelids = get_ids_with_labels(typeval = c("raytext", "zaxis_labels"))$id
 	labels = list()
 	counter = 1
 	for (i in seq_len(length(labelids))) {
@@ -999,7 +999,9 @@ render_highquality = function(
 			counter = counter + 1
 		}
 	}
-	pathids = get_ids_with_labels(typeval = c("path3d", "contour3d"))$id
+	pathids = get_ids_with_labels(
+		typeval = c("path3d", "contour3d", "zaxis_axis", "zaxis_ticks")
+	)$id
 	pathline = list()
 	counter = 1
 	for (i in seq_len(length(pathids))) {
