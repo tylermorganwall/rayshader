@@ -183,6 +183,43 @@ test_that("raster-backed hillshade metadata supports cached 2D spatial overlays"
 	expect_true(any(line_overlay[,, 4] > 0))
 })
 
+test_that("line overlays fill non-square raster extent instead of preserving plot aspect", {
+	skip_if_not_installed("sf")
+	skip_if_not_installed("terra")
+
+	clear_hillshade_test_cache()
+	withr::defer(clear_hillshade_test_cache())
+
+	rast = terra::rast(
+		nrows = 100,
+		ncols = 200,
+		xmin = 0,
+		xmax = 100,
+		ymin = 0,
+		ymax = 100,
+		crs = "EPSG:3857"
+	)
+	terra::values(rast) = seq_len(terra::ncell(rast))
+	invisible(height_shade(rast))
+
+	left_edge = sf::st_sf(
+		geometry = sf::st_sfc(
+			sf::st_linestring(matrix(
+				c(0, 0, 0, 100),
+				ncol = 2,
+				byrow = TRUE
+			)),
+			crs = 3857
+		)
+	)
+	overlay = generate_line_overlay(left_edge, linewidth = 2)
+	alpha = overlay[,, 4] > 0
+	cols = which(colSums(alpha) > 0)
+
+	expect_equal(dim(overlay)[1:2], c(100, 200))
+	expect_lte(min(cols), 2)
+})
+
 test_that("invalid cached hillshade CRS does not abort spatial overlays", {
 	skip_if_not_installed("sf")
 	clear_hillshade_test_cache()
