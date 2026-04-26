@@ -312,6 +312,7 @@ test_that("plot_3d spatial scenes auto-transform sf line and polygon inputs", {
 		heightmap = get_scene_heightmap(),
 		clear_previous = TRUE
 	))
+	expect_true(any(get_ids_with_labels()$tag == "obj_multipolygon"))
 })
 
 test_that("coord_sf scenes transform numeric renderer coordinates with explicit crs", {

@@ -98,6 +98,30 @@ render_raymesh = function(
 	...
 ) {
 	dot_split = split_zaxis_dots(list(...))
+	rgl_tag_prefix = "obj_raymesh"
+	swap_yz_transform = "swap"
+	if ("rgl_tag_prefix" %in% names(dot_split$other_args)) {
+		rgl_tag_prefix = dot_split$other_args$rgl_tag_prefix
+		if (
+			!is.character(rgl_tag_prefix) ||
+				length(rgl_tag_prefix) != 1 ||
+				is.na(rgl_tag_prefix)
+		) {
+			stop("`rgl_tag_prefix` must be a single string.", call. = FALSE)
+		}
+		dot_split$other_args$rgl_tag_prefix = NULL
+	}
+	if ("swap_yz_transform" %in% names(dot_split$other_args)) {
+		swap_yz_transform = dot_split$other_args$swap_yz_transform
+		if (
+			!is.character(swap_yz_transform) ||
+				length(swap_yz_transform) != 1 ||
+				!swap_yz_transform %in% c("swap", "rotate")
+		) {
+			stop("`swap_yz_transform` must be either \"swap\" or \"rotate\".", call. = FALSE)
+		}
+		dot_split$other_args$swap_yz_transform = NULL
+	}
 	zscale = resolve_scene_render_effective_zscale(
 		zscale = zscale,
 		zscale_missing = missing(zscale),
@@ -211,7 +235,7 @@ render_raymesh = function(
 	}
 
 	if (clear_previous) {
-		rgl::pop3d(tag = sprintf("obj_raymesh%s", rgl_tag))
+		rgl::pop3d(tag = sprintf("%s%s", rgl_tag_prefix, rgl_tag))
 		if (missing(raymesh)) {
 			render_zaxis_from_dots(
 				zaxis_args = zaxis_args,
@@ -322,9 +346,16 @@ render_raymesh = function(
 				scenelist[[1]] = rayvertex::translate_mesh(
 					scenelist[[1]],
 					c(-minpoint_x, -minpoint_y, 0)
-				) |>
-					rayvertex::swap_yz() |>
-					rayvertex::scale_mesh(c(scale_x, scale_y, scale_z))
+				)
+				if (identical(swap_yz_transform, "rotate")) {
+					scenelist[[1]] = rayvertex::rotate_mesh(scenelist[[1]], c(90, 0, 0))
+				} else {
+					scenelist[[1]] = rayvertex::swap_yz(scenelist[[1]])
+				}
+				scenelist[[1]] = rayvertex::scale_mesh(
+					scenelist[[1]],
+					c(scale_x, scale_y, scale_z)
+				)
 			} else {
 				scenelist[[1]] = rayvertex::translate_mesh(
 					scenelist[[1]],
@@ -456,7 +487,7 @@ render_raymesh = function(
 					shininess = shininess,
 					normals = new_norm,
 					texture = texture,
-					tag = sprintf("obj_raymesh%s", rgl_tag),
+					tag = sprintf("%s%s", rgl_tag_prefix, rgl_tag),
 					back = "filled",
 					lit = lit
 				)
@@ -470,7 +501,7 @@ render_raymesh = function(
 					shininess = shininess,
 					indices = ind_temp,
 					texture = texture,
-					tag = sprintf("obj_raymesh%s", rgl_tag),
+					tag = sprintf("%s%s", rgl_tag_prefix, rgl_tag),
 					back = "filled",
 					lit = lit
 				)
@@ -485,7 +516,7 @@ render_raymesh = function(
 					ambient = ambient_col,
 					shininess = shininess,
 					normals = new_norm,
-					tag = sprintf("obj_raymesh%s", rgl_tag),
+					tag = sprintf("%s%s", rgl_tag_prefix, rgl_tag),
 					back = "filled",
 					lit = lit
 				)
@@ -497,7 +528,7 @@ render_raymesh = function(
 					ambient = ambient_col,
 					shininess = shininess,
 					indices = ind_temp,
-					tag = sprintf("obj_raymesh%s", rgl_tag),
+					tag = sprintf("%s%s", rgl_tag_prefix, rgl_tag),
 					back = "filled",
 					lit = lit
 				)

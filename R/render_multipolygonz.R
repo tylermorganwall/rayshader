@@ -135,10 +135,9 @@ render_multipolygonz = function(
 	if (!is.null(scene_sfobj$extent)) {
 		extent = scene_sfobj$extent
 	}
-	obj_temp = tempfile(fileext = ".obj")
-	save_multipolygonz_to_obj(sfobj, obj_temp)
-	render_obj(
-		filename = obj_temp,
+	multipolygon_mesh = multipolygonz_to_raymesh(sfobj)
+	render_raymesh(
+		raymesh = multipolygon_mesh,
 		extent = extent,
 		panel = panel,
 		obj_zscale = obj_zscale,
@@ -152,6 +151,8 @@ render_multipolygonz = function(
 		baseshape = baseshape,
 		rgl_tag = rgl_tag,
 		crs = crs,
+		rgl_tag_prefix = "obj",
+		swap_yz_transform = "rotate",
 		...
 	)
 }

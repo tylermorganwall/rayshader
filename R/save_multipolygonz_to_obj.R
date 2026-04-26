@@ -19,31 +19,88 @@ save_multipolygonz_to_obj = function(sfobj, filename, swap_yz = FALSE) {
   con = file(filename, "w")
   on.exit(close(con))
   total_verts = 0
-  cat_list = list()
+  geom = multipolygonz_geometry_indices(sfobj)
+  mat_coords = geom$coords
+  geometry_list = geom$geometry
+  cat_list = vector("list", length(geometry_list) * 2)
   counter = 1
 
-  for(j in seq_len(nrow(sfobj))) {
-    mat_coords = sf::st_coordinates(sf::st_geometry(sfobj[j,]))
-    geometry_list = lapply(split(mat_coords[,1:3],mat_coords[,5]),matrix,ncol=3)
-    for(i in seq_len(length(geometry_list))) {
-      single_geom = geometry_list[[i]]
-      if(swap_yz) {
-        mat = as.matrix(single_geom)[-1,c(1,3,2)]
-      } else {
-        mat = as.matrix(single_geom)[-1,]
-      }
-      text_mat = matrix(sprintf("%0.4f", mat),ncol=ncol(mat), nrow=nrow(mat))
-      indices = sprintf("%d", seq_len(nrow(mat))+total_verts)
-      if(swap_yz) {
-        indices = rev(indices)
-      }
-      
-      cat_list[[counter]] = sprintf("v %s", apply(text_mat,1,paste0, collapse=" "))
-      counter = counter + 1
-      cat_list[[counter]] = sprintf("f %s", paste0(indices,collapse = " "))
-      counter = counter + 1
-      total_verts = total_verts + nrow(mat)
+  for (i in seq_along(geometry_list)) {
+    single_geom = mat_coords[geometry_list[[i]], 1:3, drop = FALSE]
+    if (swap_yz) {
+      mat = single_geom[-1, c(1, 3, 2), drop = FALSE]
+    } else {
+      mat = single_geom[-1, , drop = FALSE]
     }
+    indices = seq_len(nrow(mat)) + total_verts
+    if (swap_yz) {
+      indices = rev(indices)
+    }
+
+    cat_list[[counter]] = sprintf("v %.4f %.4f %.4f", mat[, 1], mat[, 2], mat[, 3])
+    counter = counter + 1
+    cat_list[[counter]] = sprintf("f %s", paste0(indices, collapse = " "))
+    counter = counter + 1
+    total_verts = total_verts + nrow(mat)
   }
-  cat(unlist(cat_list),file=con, sep="\n")
+  writeLines(unlist(cat_list, use.names = FALSE), con)
+}
+
+multipolygonz_geometry_indices = function(sfobj) {
+  mat_coords = sf::st_coordinates(sf::st_geometry(sfobj))
+  if (!all(c("X", "Y", "Z", "L2") %in% colnames(mat_coords))) {
+    stop("sfobj must contain MULTIPOLYGON Z geometry.", call. = FALSE)
+  }
+  group_cols = intersect(c("L3", "L2"), colnames(mat_coords))
+  group_id = do.call(
+    paste,
+    c(as.data.frame(mat_coords[, group_cols, drop = FALSE]), sep = "\r")
+  )
+  list(
+    coords = mat_coords,
+    geometry = split(
+      seq_len(nrow(mat_coords)),
+      factor(group_id, levels = unique(group_id))
+    )
+  )
+}
+
+multipolygonz_triangulate_face = function(mat, face) {
+  if (length(face) == 3) {
+    return(matrix(face, ncol = 3))
+  }
+  matrix(
+    c(
+      rep(face[1], length(face) - 2),
+      face[seq(2, length(face) - 1)],
+      face[seq(3, length(face))]
+    ),
+    ncol = 3
+  )
+}
+
+multipolygonz_to_raymesh = function(sfobj, swap_yz = FALSE) {
+  geom = multipolygonz_geometry_indices(sfobj)
+  verts_per_geometry = lengths(geom$geometry) - 1
+  vertex_rows = unlist(lapply(geom$geometry, function(x) x[-1]), use.names = FALSE)
+  vertices = geom$coords[vertex_rows, 1:3, drop = FALSE]
+  if (swap_yz) {
+    vertices = vertices[, c(1, 3, 2), drop = FALSE]
+  }
+  vertices = round(vertices, 4)
+  vertex_offsets = cumsum(c(0, verts_per_geometry[-length(verts_per_geometry)]))
+  indices = vector("list", length(geom$geometry))
+  for (i in seq_along(geom$geometry)) {
+    row_range = seq.int(vertex_offsets[i] + 1, vertex_offsets[i] + verts_per_geometry[i])
+    mat = vertices[row_range, , drop = FALSE]
+    face = row_range - 1
+    if (swap_yz) {
+      face = rev(face)
+    }
+    indices[[i]] = multipolygonz_triangulate_face(mat, face)
+  }
+  rayvertex::construct_mesh(
+    vertices = vertices,
+    indices = do.call(rbind, indices)
+  )
 }

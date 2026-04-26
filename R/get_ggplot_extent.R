@@ -757,6 +757,15 @@ map_from_panel_npc = function(vals, target_range) {
 	target_range[1] + vals * diff(target_range)
 }
 
+fast_scene_data_frame = function(values) {
+	structure(
+		values,
+		names = names(values),
+		row.names = .set_row_names(length(values[[1]])),
+		class = "data.frame"
+	)
+}
+
 get_coord_sf_target_crs = function(panel_params) {
 	target_crs = sf::st_crs(panel_params$crs)
 	if (is.na(target_crs)) {
@@ -1095,7 +1104,8 @@ transform_ggplot_xy_with_context = function(
 	x_vals,
 	y_vals,
 	transform_context,
-	crs = NULL
+	crs = NULL,
+	crs_already_transformed = FALSE
 ) {
 	if (length(x_vals) != length(y_vals)) {
 		stop("`x_vals` and `y_vals` must have the same length.")
@@ -1108,30 +1118,31 @@ transform_ggplot_xy_with_context = function(
 	coord_obj = transform_context$coord_obj
 
 	if (inherits(coord_obj, "CoordSf")) {
-		if (!(length(find.package("sf", quiet = TRUE)) > 0)) {
-			stop("`sf` package required for coord_sf() transforms.")
-		}
-		if (is.null(crs)) {
+		if (is.null(crs) && !isTRUE(crs_already_transformed)) {
 			stop(
 				"Bare numeric `x`/`y` inputs for `coord_sf()` scenes must include `crs`.",
 				call. = FALSE
 			)
 		}
-		target_crs = get_coord_sf_target_crs(panel_params)
-		transformed_xy = transform_xy_between_crs(
-			x_vals = x_vals,
-			y_vals = y_vals,
-			source_crs = crs,
-			target_crs = target_crs,
-			caller = NULL
-		)
-		x_vals = transformed_xy$x
-		y_vals = transformed_xy$y
-		coord_input = data.frame(
-			x = as.numeric(x_vals),
-			y = as.numeric(y_vals),
-			PANEL = panel
-		)
+		if (!isTRUE(crs_already_transformed)) {
+			target_crs = get_coord_sf_target_crs(panel_params)
+			transformed_xy = transform_xy_between_crs(
+				x_vals = x_vals,
+				y_vals = y_vals,
+				source_crs = crs,
+				target_crs = target_crs,
+				caller = NULL
+			)
+			x_vals = transformed_xy$x
+			y_vals = transformed_xy$y
+		}
+		x_vals = as.numeric(x_vals)
+		y_vals = as.numeric(y_vals)
+		coord_input = fast_scene_data_frame(list(
+			x = x_vals,
+			y = y_vals,
+			PANEL = rep.int(panel, length(x_vals))
+		))
 	} else {
 		scale_x_index = panel_table$scale_x[panel_index]
 		scale_y_index = panel_table$scale_y[panel_index]
@@ -1141,21 +1152,21 @@ transform_ggplot_xy_with_context = function(
 			x_transformed = as.numeric(x_scale$map(x_vals))
 		} else {
 			x_transformed = as.numeric(
-				x_scale$transform_df(data.frame(x = x_vals))[["x"]]
+				x_scale$transform_df(fast_scene_data_frame(list(x = x_vals)))[["x"]]
 			)
 		}
 		if (y_scale$is_discrete()) {
 			y_transformed = as.numeric(y_scale$map(y_vals))
 		} else {
 			y_transformed = as.numeric(
-				y_scale$transform_df(data.frame(y = y_vals))[["y"]]
+				y_scale$transform_df(fast_scene_data_frame(list(y = y_vals)))[["y"]]
 			)
 		}
-		coord_input = data.frame(
+		coord_input = fast_scene_data_frame(list(
 			x = x_transformed,
 			y = y_transformed,
-			PANEL = panel
-		)
+			PANEL = rep.int(panel, length(x_transformed))
+		))
 	}
 
 	transformed = coord_obj$transform(coord_input, panel_params)
@@ -1176,10 +1187,10 @@ transform_ggplot_xy_with_context = function(
 			error = function(e) c(0, 1)
 		)
 	}
-	data.frame(
+	fast_scene_data_frame(list(
 		long = map_from_panel_npc(transformed$x, x_range),
 		lat = map_from_panel_npc(transformed$y, y_range)
-	)
+	))
 }
 
 #'@keywords internal
@@ -1222,15 +1233,24 @@ transform_ggplot_sf = function(
 		panel = panel,
 		heightmap = heightmap
 	)
+	coord_sf_already_transformed = FALSE
+	output_crs = NULL
 	if (inherits(transform_context$coord_obj, "CoordSf")) {
+		target_crs = get_coord_sf_target_crs(transform_context$panel_params)
 		resolved_input = resolve_scene_sf_source_crs(
 			sf_data = sf_data,
 			crs = crs,
-			target_crs = get_coord_sf_target_crs(transform_context$panel_params),
+			target_crs = target_crs,
 			caller = "transform_ggplot_sf"
 		)
 		sf_data = resolved_input$sf_data
 		crs = resolved_input$source_crs
+		if (!scene_crs_equal(crs, target_crs)) {
+			sf_data = sf::st_transform(sf_data, target_crs)
+		}
+		crs = target_crs
+		output_crs = target_crs
+		coord_sf_already_transformed = TRUE
 	} else {
 		crs = NULL
 	}
@@ -1246,7 +1266,8 @@ transform_ggplot_sf = function(
 			x_vals = mat[, 1],
 			y_vals = mat[, 2],
 			transform_context = transform_context,
-			crs = crs
+			crs = crs,
+			crs_already_transformed = coord_sf_already_transformed
 		)
 		extra_dims = if (ncol(mat) > 2) {
 			mat[, -(1:2), drop = FALSE]
@@ -1282,7 +1303,8 @@ transform_ggplot_sf = function(
 				x_vals = coords[1],
 				y_vals = coords[2],
 				transform_context = transform_context,
-				crs = crs
+				crs = crs,
+				crs_already_transformed = coord_sf_already_transformed
 			)
 			return(sf::st_point(c(xy$long[1], xy$lat[1], coords[-c(1, 2)])))
 		}
@@ -1321,10 +1343,6 @@ transform_ggplot_sf = function(
 	}
 
 	geom_transformed = lapply(sf::st_geometry(sf_data), transform_sfg)
-	output_crs = NULL
-	if (inherits(transform_context$coord_obj, "CoordSf")) {
-		output_crs = get_coord_sf_target_crs(transform_context$panel_params)
-	}
 	if (is.null(output_crs)) {
 		sf::st_geometry(sf_data) = sf::st_sfc(geom_transformed)
 	} else {
