@@ -12,6 +12,7 @@ sphere_shade(
   colorintensity = 1,
   zscale = 1,
   vertical_exaggeration = 1,
+  na_color = NULL,
   progbar = interactive()
 )
 }
@@ -35,10 +36,15 @@ effective visual relief for this call. Values greater than \code{1} increase
 apparent relief and values between \code{0} and \code{1} flatten it. This does not
 update cached \code{zscale} metadata.}
 
+\item{na_color}{Default \code{NULL}. RGB color stored in the returned image for
+transparent \code{NA} heightmap cells. If \code{NULL}, the texture's center/up color is
+used. This does not affect transparency; \code{NA} heightmap cells are always
+returned with alpha \code{0}.}
+
 \item{progbar}{Default \code{TRUE} if interactive, \code{FALSE} otherwise. If \code{FALSE}, turns off progress bar.}
 }
 \value{
-RGB array of hillshaded texture mappings.
+RGBA array of hillshaded texture mappings.
 }
 \description{
 Calculates a color for each point on the surface using the surface normals and

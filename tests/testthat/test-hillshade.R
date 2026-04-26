@@ -77,6 +77,30 @@ test_that("sphere_shade", {
 	)
 })
 
+test_that("sphere_shade returns transparent pixels for NA heightmap cells", {
+	heightmap = matrix(1, nrow = 5, ncol = 5)
+	heightmap[3, 4] = NA
+
+	shaded = sphere_shade(heightmap, progbar = FALSE)
+
+	expect_equal(dim(shaded), c(ncol(heightmap), nrow(heightmap), 4))
+	expect_equal(sum(shaded[,, 4] == 0), 1)
+	expect_equal(sum(shaded[,, 4] == 1), length(heightmap) - 1)
+})
+
+test_that("sphere_shade uses na_color for transparent NA pixel RGB values", {
+	heightmap = matrix(1, nrow = 5, ncol = 5)
+	heightmap[3, 4] = NA
+
+	shaded = sphere_shade(heightmap, na_color = "black", progbar = FALSE)
+	na_pixel = which(shaded[,, 4] == 0, arr.ind = TRUE)
+
+	expect_equal(
+		unname(as.numeric(shaded[na_pixel[1], na_pixel[2], 1:3])),
+		c(0, 0, 0)
+	)
+})
+
 test_that("height_shade", {
 	hs_args = expand.grid(
 		texture = list(

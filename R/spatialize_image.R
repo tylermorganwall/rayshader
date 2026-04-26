@@ -443,11 +443,9 @@ spatialize_image_values_matrix = function(image, nlayers) {
 	if (nlayers == 1L) {
 		return(as.vector(t(image)))
 	}
-	do.call(
-		cbind,
-		lapply(seq_len(nlayers), function(i) {
-			as.vector(t(image[,, i, drop = TRUE]))
-		})
+	matrix(
+		aperm(image, c(2, 1, 3)),
+		ncol = nlayers
 	)
 }
 

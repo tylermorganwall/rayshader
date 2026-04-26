@@ -18,9 +18,13 @@
 #'apparent relief and values between `0` and `1` flatten it. This does not
 #'update cached `zscale` metadata.
 #'@param colorintensity Deprecated alias for `vertical_exaggeration`.
+#'@param na_color Default `NULL`. RGB color stored in the returned image for
+#'transparent `NA` heightmap cells. If `NULL`, the texture's center/up color is
+#'used. This does not affect transparency; `NA` heightmap cells are always
+#'returned with alpha `0`.
 #'
 #'@param progbar Default `TRUE` if interactive, `FALSE` otherwise. If `FALSE`, turns off progress bar.
-#'@return RGB array of hillshaded texture mappings.
+#'@return RGBA array of hillshaded texture mappings.
 #'@export
 #'@examples
 #'#Basic example:
@@ -57,6 +61,7 @@ sphere_shade = function(
 	colorintensity = 1,
 	zscale = 1,
 	vertical_exaggeration = 1,
+	na_color = NULL,
 	progbar = interactive()
 ) {
 	heightmap_missing = missing(heightmap)
@@ -176,6 +181,7 @@ sphere_shade = function(
 	}
 	center = dim(texture)[1:2] / 2
 	heightmap = flipud(t(heightmap)) / zscale
+	na_mask = !is.finite(heightmap)
 	distancemat = (1 - normalvectors[["z"]]) * center[1]
 	lengthmat = sqrt(1 - (normalvectors[["z"]])^2)
 	image_x_nocenter = ((-normalvectors[["x"]] / lengthmat * distancemat))
@@ -198,7 +204,7 @@ sphere_shade = function(
 	image_y[image_y > dim(texture)[2]] = dim(texture)[2]
 	image_x[image_x == 0] = 1
 	image_y[image_y == 0] = 1
-	returnimage = array(dim = c(nrow(heightmap), ncol(heightmap), 3))
+	returnimage = array(1, dim = c(nrow(heightmap), ncol(heightmap), 4))
 	returnimage[,, 1] = construct_matrix(
 		texture[,, 1],
 		nrow(heightmap),
@@ -220,7 +226,18 @@ sphere_shade = function(
 		image_x,
 		image_y
 	)
-	returnimageslice = array(dim = c(nrow(heightmap) - 2, ncol(heightmap) - 2, 3))
+	if (!is.null(na_color)) {
+		na_color = col2rgb_linear(na_color)
+		for (i in seq_len(3)) {
+			channel = returnimage[,, i]
+			channel[na_mask] = na_color[i]
+			returnimage[,, i] = channel
+		}
+	}
+	returnimage[,, 4][na_mask] = 0
+	returnimageslice = array(
+		dim = c(nrow(heightmap) - 2, ncol(heightmap) - 2, 4)
+	)
 	returnimageslice[,, 1] = returnimage[
 		c(-1, -nrow(heightmap)),
 		c(-1, -ncol(heightmap)),
@@ -235,6 +252,11 @@ sphere_shade = function(
 		c(-1, -nrow(heightmap)),
 		c(-1, -ncol(heightmap)),
 		3
+	]
+	returnimageslice[,, 4] = returnimage[
+		c(-1, -nrow(heightmap)),
+		c(-1, -ncol(heightmap)),
+		4
 	]
 	returnimage = rayimage::ray_read_image(
 		returnimageslice,
