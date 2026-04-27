@@ -17,6 +17,7 @@ render_tree(
   trunk_color = "#964B00",
   absolute_height = FALSE,
   tree_height = NULL,
+  tree_height_column = NULL,
   trunk_height_ratio = NULL,
   crown_width_ratio = NULL,
   crown_width = NULL,
@@ -77,6 +78,10 @@ Total tree height will be \code{crown_height + trunk_height}.}
 \item{tree_height}{Default \code{NULL}. Height of the tree, automatically set to \code{10} if not specified. If \code{absolute_height = TRUE}, then this is interpreted as
 the altitude of the top of the tree in the coordinate reference system used. If \code{absolute_height = FALSE}, then
 this is interpreted as the height of the tree relative to the underlying heightmap.}
+
+\item{tree_height_column}{Default \code{NULL}. Column name in \code{location} to use for
+\code{tree_height}. Requires \code{location} to be an \code{sf}/spatial point object with
+attribute data. Cannot be combined with an explicit \code{tree_height}.}
 
 \item{trunk_height_ratio}{Default \code{NULL}. The ratio of the height of the trunk to the total height of the tree.
 Default is 1/3rd the crown height if \code{type = "basic"}, and 1/6th the crown height if \code{type = "cone"}.}

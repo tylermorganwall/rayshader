@@ -31,6 +31,9 @@
 #'@param tree_height Default `NULL`. Height of the tree, automatically set to `10` if not specified. If `absolute_height = TRUE`, then this is interpreted as
 #'the altitude of the top of the tree in the coordinate reference system used. If `absolute_height = FALSE`, then
 #'this is interpreted as the height of the tree relative to the underlying heightmap.
+#'@param tree_height_column Default `NULL`. Column name in `location` to use for
+#'`tree_height`. Requires `location` to be an `sf`/spatial point object with
+#'attribute data. Cannot be combined with an explicit `tree_height`.
 #'@param trunk_height_ratio Default `NULL`. The ratio of the height of the trunk to the total height of the tree.
 #'Default is 1/3rd the crown height if `type = "basic"`, and 1/6th the crown height if `type = "cone"`.
 #'@param crown_width_ratio Default `NULL`. Ratio of the crown width to the crown height. A value of `1` is spherical.
@@ -169,6 +172,7 @@ render_tree = function(
 	trunk_color = "#964B00",
 	absolute_height = FALSE,
 	tree_height = NULL,
+	tree_height_column = NULL,
 	trunk_height_ratio = NULL,
 	crown_width_ratio = NULL,
 	crown_width = NULL,
@@ -189,6 +193,7 @@ render_tree = function(
 	crs = NULL,
 	...
 ) {
+	tree_height_supplied = !missing(tree_height) && !is.null(tree_height)
 	dot_split = split_zaxis_dots(list(...))
 	zscale = resolve_scene_render_effective_zscale(
 		zscale = zscale,
@@ -238,6 +243,15 @@ render_tree = function(
 	}
 	location_supplied = isTRUE(point_input$location_supplied)
 	render_obj_crs = if (location_supplied) NULL else input_crs
+	if (!is.null(tree_height_column)) {
+		tree_height = resolve_render_tree_height_column(
+			location = location,
+			tree_height_column = tree_height_column,
+			tree_height_supplied = tree_height_supplied,
+			crs = crs,
+			caller = "render_tree"
+		)
+	}
 	render_obj_tree = function(...) {
 		do.call(render_obj, c(list(..., vertical_exaggeration = 1), tree_args))
 	}
@@ -727,4 +741,82 @@ render_tree = function(
 		heightmap = heightmap,
 		caller = "render_tree"
 	)
+}
+
+resolve_render_tree_height_column = function(
+	location,
+	tree_height_column = NULL,
+	tree_height_supplied = FALSE,
+	crs = NULL,
+	caller = NULL
+) {
+	if (is.null(location)) {
+		stop(
+			paste0(
+				format_render_caller_prefix(caller),
+				"`tree_height_column` requires `location`."
+			),
+			call. = FALSE
+		)
+	}
+	if (isTRUE(tree_height_supplied)) {
+		stop(
+			paste0(
+				format_render_caller_prefix(caller),
+				"`tree_height_column` cannot be combined with `tree_height`."
+			),
+			call. = FALSE
+		)
+	}
+	if (
+		!is.character(tree_height_column) ||
+			length(tree_height_column) != 1 ||
+			!nzchar(trimws(tree_height_column))
+	) {
+		stop(
+			paste0(
+				format_render_caller_prefix(caller),
+				"`tree_height_column` must be a single non-empty column name."
+			),
+			call. = FALSE
+		)
+	}
+	point_input = coerce_scene_point_input(
+		location = location,
+		crs = crs,
+		caller = caller
+	)
+	if (!tree_height_column %in% names(point_input$point_sf_data)) {
+		stop(
+			paste0(
+				format_render_caller_prefix(caller),
+				"`tree_height_column` was not found in `location`: ",
+				tree_height_column
+			),
+			call. = FALSE
+		)
+	}
+	tree_height = point_input$point_sf_data[[tree_height_column]]
+	if (inherits(tree_height, "units")) {
+		tree_height = units::drop_units(tree_height)
+	}
+	if (!is.numeric(tree_height)) {
+		stop(
+			paste0(
+				format_render_caller_prefix(caller),
+				"`tree_height_column` must refer to a numeric column."
+			),
+			call. = FALSE
+		)
+	}
+	if (any(!is.finite(tree_height))) {
+		stop(
+			paste0(
+				format_render_caller_prefix(caller),
+				"`tree_height_column` cannot contain NA, NaN, or infinite values."
+			),
+			call. = FALSE
+		)
+	}
+	as.numeric(tree_height)
 }

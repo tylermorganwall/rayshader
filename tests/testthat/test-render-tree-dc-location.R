@@ -60,6 +60,47 @@ test_that("render_tree() transforms DC WGS84 points into the projected scene CRS
 	expect_true(any(get_ids_with_labels()$tag == "objtree"))
 })
 
+test_that("render_tree() reads tree heights from an sf point column", {
+	skip_if_not_installed("sf")
+	skip_if_not_installed("terra")
+	skip_if_not_installed("rayvertex")
+	on.exit(rgl::close3d(), add = TRUE)
+	local_rgl_use_null()
+
+	trees_sf = read_dc_tree_points_test()[1:6, ]
+	trees_sf$height_m = dc_tree_render_heights_test(trees_sf)
+
+	setup_dc_tree_plot3d_scene()
+
+	expect_equal(
+		rayshader:::resolve_render_tree_height_column(
+			location = trees_sf,
+			tree_height_column = "height_m",
+			caller = "test"
+		),
+		trees_sf$height_m
+	)
+	expect_no_condition(render_tree(
+		location = trees_sf,
+		tree_height_column = "height_m",
+		tree_zscale = TRUE,
+		zscale = get_scene_zscale(),
+		crown_width_ratio = 0.8,
+		crown_color = "#52734d",
+		trunk_color = "#714f32",
+		clear_previous = TRUE
+	))
+	expect_true(any(get_ids_with_labels()$tag == "objtree"))
+	expect_error(
+		render_tree(
+			location = trees_sf,
+			tree_height = trees_sf$height_m,
+			tree_height_column = "height_m"
+		),
+		"cannot be combined"
+	)
+})
+
 test_that("render_tree() DC tree scene software snapshot matches the golden", {
 	testthat::skip_on_cran()
 	skip_if_not_installed("sf")
