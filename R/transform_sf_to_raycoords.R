@@ -1,6 +1,7 @@
 #'@title Transform Polygon into Raycoords
 #'
 #'@param crs Default `NULL`. CRS of the input numeric x/y coordinates, or CRS to assign to CRS-less spatial data before transforming it into the active scene CRS. If spatial data already carries a CRS, that CRS is used automatically.
+#'@param transform_scene Default `TRUE`. If `FALSE`, assumes `polygon` has already been transformed into the active scene coordinate system.
 #'@keywords internal
 transform_polygon_into_raycoords = function(
   polygon,
@@ -10,7 +11,8 @@ transform_polygon_into_raycoords = function(
   bottom = NULL,
   panel = NULL,
   crs = NULL,
-  caller = NULL
+  caller = NULL,
+  transform_scene = TRUE
 ) {
   if(inherits(polygon,"SpatialPolygonsDataFrame") || inherits(polygon,"SpatialPolygons")) {
     polygon = sf::st_as_sf(polygon)
@@ -28,7 +30,7 @@ transform_polygon_into_raycoords = function(
     panel = panel,
     error_if_missing = FALSE
   )
-  if(inherits(polygon, "sf")) {
+  if(inherits(polygon, "sf") && isTRUE(transform_scene)) {
     scene_polygon = auto_transform_scene_sf(
       sf_object = polygon,
       extent = e,

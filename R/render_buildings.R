@@ -55,6 +55,7 @@
 #' @param flat_shading Default `FALSE`. Set to `TRUE` to have nicer shading on the 3D polygons. This comes
 #' with the slight penalty of increasing the memory use of the scene due to vertex duplication. This
 #' will not affect software or high quality renders.
+#' @param filter_to_extent Default `TRUE`. If `TRUE`, building footprint data outside the scene extent is omitted. Spatial polygon inputs are cropped to the extent. For scenes created with [plot_gg()], filtering uses the ggplot panel extent rather than the full rendered 3D ggplot extent.
 #' @param ... Additional arguments to pass to `rgl::triangles3d()`.
 #' @param clear_previous Default `FALSE`. If `TRUE`, it will clear all existing polygons.
 #'
@@ -157,8 +158,10 @@ render_buildings = function(
 	light_relative = FALSE,
 	clear_previous = FALSE,
 	crs = NULL,
+	filter_to_extent = TRUE,
 	...
 ) {
+	validate_filter_to_extent(filter_to_extent, caller = "render_buildings")
 	dot_split = split_zaxis_dots(list(...))
 	zscale = resolve_scene_render_effective_zscale(
 		zscale = zscale,
@@ -214,28 +217,80 @@ render_buildings = function(
 	if (inherits(polygon, "sfg")) {
 		polygon = sf::st_sf(geometry = sf::st_sfc(polygon))
 	}
+	polygon_scene_transformed = FALSE
+	if (inherits(polygon, "sf")) {
+		n_polygon_before_filter = nrow(polygon)
+		scene_polygon = auto_transform_scene_sf(
+			sf_object = polygon,
+			extent = extent,
+			heightmap = heightmap,
+			panel = panel,
+			crs = crs,
+			caller = "render_buildings"
+		)
+		polygon = scene_polygon$object
+		if (!is.null(scene_polygon$extent)) {
+			extent = scene_polygon$extent
+		}
+		polygon_scene_transformed = TRUE
+		filtered_polygon = filter_scene_sf_to_extent(
+			sf_object = polygon,
+			extent = extent,
+			heightmap = heightmap,
+			panel = panel,
+			filter_to_extent = filter_to_extent,
+			caller = "render_buildings"
+		)
+		polygon = filtered_polygon$object
+		if (!is.null(filtered_polygon$source_index)) {
+			top = subset_render_arg_by_index(
+				top,
+				filtered_polygon$source_index,
+				n_polygon_before_filter
+			)
+			bottom = subset_render_arg_by_index(
+				bottom,
+				filtered_polygon$source_index,
+				n_polygon_before_filter
+			)
+		}
+		if (is_empty_scene_sf(polygon)) {
+			render_zaxis_from_dots(
+				zaxis_args = dot_split$zaxis_args,
+				extent = extent,
+				panel = panel,
+				zscale = zscale,
+				heightmap = heightmap,
+				caller = "render_buildings"
+			)
+			return(invisible(NULL))
+		}
+	}
 	e = get_extent(extent)
 	if (heights_relative_to_centroid) {
 		if (is.null(heightmap)) {
 			stop("Must pass in heightmap argument if using relative heights")
 		}
-		scene_target_crs = get_scene_target_crs(
-			extent = extent,
-			heightmap = heightmap,
-			panel = panel,
-			caller = "render_buildings"
-		)
 		centroid_source_crs = NULL
 		polygon_for_centroids = polygon
-		if (!is.null(scene_target_crs)) {
-			resolved_polygon = resolve_scene_sf_source_crs(
-				sf_data = polygon,
-				crs = crs,
-				target_crs = scene_target_crs,
+		centroid_transform_scene = !isTRUE(polygon_scene_transformed)
+		if (!isTRUE(polygon_scene_transformed)) {
+			scene_target_crs = get_scene_target_crs(
+				extent = extent,
+				heightmap = heightmap,
+				panel = panel,
 				caller = "render_buildings"
 			)
-			polygon_for_centroids = resolved_polygon$sf_data
-			centroid_source_crs = resolved_polygon$source_crs
+			if (!is.null(scene_target_crs)) {
+				resolved_polygon = resolve_scene_sf_source_crs(
+					sf_data = polygon,
+					crs = crs,
+					target_crs = scene_target_crs,
+					caller = "render_buildings"
+				)
+				polygon_for_centroids = resolved_polygon$sf_data
+				centroid_source_crs = resolved_polygon$source_crs
+			}
 		}
 		centroids = sf::st_coordinates(sf::st_centroid(polygon_for_centroids))
 		xyz = transform_into_heightmap_coords(
@@ -248,6 +303,7 @@ render_buildings = function(
 			zscale = 1,
 			crs = centroid_source_crs,
 			panel = panel,
+			transform_scene = centroid_transform_scene,
 			caller = "render_buildings"
 		)
 		bottom = xyz[, 2] + bottom
@@ -288,7 +344,8 @@ render_buildings = function(
 		bottom = bottom_values,
 		panel = panel,
 		crs = crs,
-		caller = "render_buildings"
+		caller = "render_buildings",
+		transform_scene = !isTRUE(polygon_scene_transformed)
 	)
 	top = polygon$top / zscale
 	bottom = polygon$bottom / zscale

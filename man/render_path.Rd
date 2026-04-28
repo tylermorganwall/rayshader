@@ -31,6 +31,7 @@ render_path(
   lat = NULL,
   long = NULL,
   crs = NULL,
+  filter_to_extent = TRUE,
   ...
 )
 }
@@ -114,6 +115,8 @@ plotting the line.}
 \item{long}{Default \code{NULL}. Alias for \code{x} for geographic workflows.}
 
 \item{crs}{Default \code{NULL}. CRS of the input numeric x/y coordinates, or CRS to assign to CRS-less spatial data before transforming it into the active scene CRS. If spatial data already carries a CRS, that CRS is used automatically.}
+
+\item{filter_to_extent}{Default \code{TRUE}. If \code{TRUE}, path data outside the scene extent is omitted. Spatial line inputs are cropped to the extent. For scenes created with \code{\link[=plot_gg]{plot_gg()}}, filtering uses the ggplot panel extent rather than the full rendered 3D ggplot extent.}
 
 \item{...}{Optional z-axis arguments passed to \code{\link[=render_zaxis]{render_zaxis()}}, such as
 \code{zaxis = TRUE}, \code{zaxis_location}, \code{zaxis_breaks}, and \code{zaxis_labels}.}

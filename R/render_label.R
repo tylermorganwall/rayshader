@@ -44,6 +44,7 @@
 #'@param long Default `NULL`. Alias for `x` for geographic workflows.
 #'@param location Default `NULL`. Spatial point input used to place the rendered label in the scene. Accepts `sf`, `sfc`, `sfg`, or `sp` POINT or MULTIPOINT geometries. MULTIPOINT inputs are flattened to point placements internally. `render_label()` requires `location` to resolve to exactly one point after flattening. If the input carries a CRS, it will be transformed automatically into the active scene CRS. If it has no CRS, supply `crs`.
 #'@param crs Default `NULL`. CRS of the input numeric x/y coordinates, or CRS to assign to CRS-less spatial data before transforming it into the active scene CRS. If spatial data already carries a CRS, that CRS is used automatically.
+#'@param filter_to_extent Default `TRUE`. If `TRUE`, labels outside the scene extent are omitted. For scenes created with [plot_gg()], filtering uses the ggplot panel extent rather than the full rendered 3D ggplot extent.
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'montereybay |>
@@ -129,8 +130,10 @@ render_label = function(
 	lat = NULL,
 	long = NULL,
 	location = NULL,
-	crs = NULL
+	crs = NULL,
+	filter_to_extent = TRUE
 ) {
+	validate_filter_to_extent(filter_to_extent, caller = "render_label")
 	exit_early = FALSE
 	if (clear_previous) {
 		rgl::pop3d(tag = c("textline", "raytext"))
@@ -186,15 +189,6 @@ render_label = function(
 		if (is.null(x) || is.null(y)) {
 			stop("Must provide `x`/`y` coordinates.", call. = FALSE)
 		}
-		if (point_input$location_supplied && point_input$geometry_count != 1) {
-			stop(
-				paste0(
-					format_render_caller_prefix("render_label"),
-					"`location` must resolve to exactly one point."
-				),
-				call. = FALSE
-			)
-		}
 		extent = resolve_scene_render_extent(
 			extent = extent,
 			heightmap = heightmap,
@@ -225,6 +219,38 @@ render_label = function(
 			if (!is.null(scene_xy$extent)) {
 				extent = scene_xy$extent
 			}
+		}
+		filtered_label = filter_scene_xy_to_extent(
+			x = x,
+			y = y,
+			extent = extent,
+			heightmap = heightmap,
+			panel = panel,
+			filter_to_extent = filter_to_extent,
+			caller = "render_label"
+		)
+		x = filtered_label$x
+		y = filtered_label$y
+		if (!length(x) || !length(y)) {
+			return(invisible(NULL))
+		}
+		if (point_input$location_supplied && length(x) != 1) {
+			stop(
+				paste0(
+					format_render_caller_prefix("render_label"),
+					"`location` must resolve to exactly one point."
+				),
+				call. = FALSE
+			)
+		}
+		if (length(x) != 1 || length(y) != 1) {
+			stop(
+				paste0(
+					format_render_caller_prefix("render_label"),
+					"`x`/`y` must resolve to exactly one point."
+				),
+				call. = FALSE
+			)
 		}
 		if (rgl::cur3d() == 0) {
 			stop("No rgl window currently open.")

@@ -155,6 +155,266 @@ validate_scene_extent_panel = function(
 	extent
 }
 
+validate_filter_to_extent = function(filter_to_extent = TRUE, caller = NULL) {
+	if (
+		!is.logical(filter_to_extent) ||
+			length(filter_to_extent) != 1 ||
+			is.na(filter_to_extent)
+	) {
+		stop(
+			paste0(
+				format_render_caller_prefix(caller),
+				"`filter_to_extent` must be a single TRUE/FALSE value."
+			),
+			call. = FALSE
+		)
+	}
+	invisible(filter_to_extent)
+}
+
+get_scene_data_filter_extent = function(
+	extent = NULL,
+	heightmap = NULL,
+	panel = NULL,
+	caller = NULL
+) {
+	if (is.null(extent)) {
+		extent = resolve_scene_render_extent(
+			extent = extent,
+			heightmap = heightmap,
+			panel = panel,
+			caller = caller,
+			error_if_missing = FALSE
+		)
+	}
+	if (is.null(extent)) {
+		return(NULL)
+	}
+	extent = normalize_scene_resolved_extent(extent, caller = caller)
+	extent = validate_scene_extent_panel(
+		extent = extent,
+		heightmap = heightmap,
+		panel = panel,
+		caller = caller
+	)
+	panel_info = attr(extent, "panel_info", exact = TRUE)
+	panel_extent_cols = c("data_xmin", "data_xmax", "data_ymin", "data_ymax")
+	if (
+		is.data.frame(panel_info) &&
+			nrow(panel_info) > 0 &&
+			all(panel_extent_cols %in% names(panel_info))
+	) {
+		filter_extent = c(
+			xmin = panel_info$data_xmin[1],
+			xmax = panel_info$data_xmax[1],
+			ymin = panel_info$data_ymin[1],
+			ymax = panel_info$data_ymax[1]
+		)
+		if (all(is.finite(filter_extent))) {
+			return(filter_extent)
+		}
+	}
+	tryCatch(
+		get_extent(extent),
+		error = function(e) NULL
+	)
+}
+
+filter_scene_xy_to_extent = function(
+	x,
+	y,
+	extent = NULL,
+	heightmap = NULL,
+	panel = NULL,
+	filter_to_extent = TRUE,
+	caller = NULL
+) {
+	validate_filter_to_extent(filter_to_extent, caller = caller)
+	keep_all = rep(TRUE, length(x))
+	if (!isTRUE(filter_to_extent)) {
+		return(list(x = x, y = y, keep = keep_all, extent = NULL))
+	}
+	if (is.null(x) || is.null(y)) {
+		return(list(x = x, y = y, keep = keep_all, extent = NULL))
+	}
+	filter_extent = get_scene_data_filter_extent(
+		extent = extent,
+		heightmap = heightmap,
+		panel = panel,
+		caller = caller
+	)
+	if (is.null(filter_extent)) {
+		return(list(x = x, y = y, keep = keep_all, extent = NULL))
+	}
+	x_num = suppressWarnings(as.numeric(x))
+	y_num = suppressWarnings(as.numeric(y))
+	keep = is.finite(x_num) &
+		is.finite(y_num) &
+		x_num >= filter_extent["xmin"] &
+		x_num <= filter_extent["xmax"] &
+		y_num >= filter_extent["ymin"] &
+		y_num <= filter_extent["ymax"]
+	list(
+		x = x[keep],
+		y = y[keep],
+		keep = keep,
+		extent = filter_extent
+	)
+}
+
+subset_render_arg = function(value, keep, n_expected) {
+	if (is.null(value) || is.null(keep) || length(keep) != n_expected) {
+		return(value)
+	}
+	if (inherits(value, "matrix") || inherits(value, "data.frame")) {
+		if (nrow(value) == n_expected) {
+			return(value[keep, , drop = FALSE])
+		}
+		return(value)
+	}
+	if (is.list(value) && length(value) == n_expected) {
+		return(value[keep])
+	}
+	if (length(value) == n_expected) {
+		return(value[keep])
+	}
+	value
+}
+
+subset_render_row_arg = function(value, keep, n_expected) {
+	if (is.null(value) || is.null(keep) || length(keep) != n_expected) {
+		return(value)
+	}
+	if (inherits(value, "matrix") || inherits(value, "data.frame")) {
+		if (nrow(value) == n_expected) {
+			return(value[keep, , drop = FALSE])
+		}
+		return(value)
+	}
+	if (is.list(value) && length(value) == n_expected) {
+		return(value[keep])
+	}
+	value
+}
+
+subset_render_color_arg = function(value, keep, n_expected) {
+	if (is.numeric(value) && length(value) == 3) {
+		return(value)
+	}
+	subset_render_arg(value, keep, n_expected)
+}
+
+subset_render_arg_by_index = function(value, index, n_expected) {
+	if (is.null(value) || is.null(index)) {
+		return(value)
+	}
+	if (inherits(value, "matrix") || inherits(value, "data.frame")) {
+		if (nrow(value) == n_expected) {
+			return(value[index, , drop = FALSE])
+		}
+		return(value)
+	}
+	if (is.list(value) && length(value) == n_expected) {
+		return(value[index])
+	}
+	if (length(value) == n_expected) {
+		return(value[index])
+	}
+	value
+}
+
+is_empty_scene_sf = function(sf_object) {
+	if (inherits(sf_object, "sf")) {
+		return(nrow(sf_object) == 0)
+	}
+	if (inherits(sf_object, "sfc")) {
+		return(length(sf_object) == 0)
+	}
+	if (inherits(sf_object, "sfg")) {
+		return(FALSE)
+	}
+	FALSE
+}
+
+filter_scene_sf_to_extent = function(
+	sf_object,
+	extent = NULL,
+	heightmap = NULL,
+	panel = NULL,
+	filter_to_extent = TRUE,
+	preserve_z = FALSE,
+	caller = NULL
+) {
+	validate_filter_to_extent(filter_to_extent, caller = caller)
+	if (!isTRUE(filter_to_extent)) {
+		return(list(object = sf_object, source_index = NULL, extent = NULL))
+	}
+	filter_extent = get_scene_data_filter_extent(
+		extent = extent,
+		heightmap = heightmap,
+		panel = panel,
+		caller = caller
+	)
+	if (is.null(filter_extent)) {
+		return(list(object = sf_object, source_index = NULL, extent = NULL))
+	}
+	if (!(length(find.package("sf", quiet = TRUE)) > 0)) {
+		return(list(object = sf_object, source_index = NULL, extent = filter_extent))
+	}
+	coerced_input = coerce_scene_sf_input(sf_object)
+	sf_data = coerced_input$sf_data
+	if (!nrow(sf_data)) {
+		return(list(
+			object = rebuild_scene_sf_output(sf_data, coerced_input$input_class),
+			source_index = integer(),
+			extent = filter_extent
+		))
+	}
+	source_index_col = ".rayshader_source_index"
+	while (source_index_col %in% names(sf_data)) {
+		source_index_col = paste0(source_index_col, "_")
+	}
+	sf_data[[source_index_col]] = seq_len(nrow(sf_data))
+	crop_bbox = sf::st_bbox(
+		c(
+			xmin = unname(filter_extent["xmin"]),
+			ymin = unname(filter_extent["ymin"]),
+			xmax = unname(filter_extent["xmax"]),
+			ymax = unname(filter_extent["ymax"])
+		),
+		crs = sf::st_crs(sf_data)
+	)
+	if (isTRUE(preserve_z) && "Z" %in% colnames(sf::st_coordinates(sf_data))) {
+		bbox_sfc = sf::st_as_sfc(crop_bbox)
+		intersects_extent = lengths(sf::st_intersects(sf_data, bbox_sfc)) > 0
+		cropped = sf_data[intersects_extent, , drop = FALSE]
+	} else {
+		cropped = suppressMessages(suppressWarnings(sf::st_crop(sf_data, crop_bbox)))
+	}
+	if (nrow(cropped)) {
+		cropped = cropped[!sf::st_is_empty(cropped), , drop = FALSE]
+	}
+	source_index = if (nrow(cropped)) {
+		cropped[[source_index_col]]
+	} else {
+		integer()
+	}
+	cropped[[source_index_col]] = NULL
+	out = rebuild_scene_sf_output(cropped, coerced_input$input_class)
+	if (!is.null(extent)) {
+		attr(out, "extent") = extent
+	}
+	panel_attr = tryCatch(attr(sf_object, "panel", exact = TRUE), error = function(e) NULL)
+	if (!is.null(panel_attr)) {
+		attr(out, "panel") = panel_attr
+	}
+	list(
+		object = out,
+		source_index = source_index,
+		extent = filter_extent
+	)
+}
+
 get_cached_ggplot_extent_or_null = function(heightmap = NULL, panel = NULL) {
 	tryCatch(
 		get_ggplot_extent(heightmap = heightmap, panel = panel),

@@ -67,6 +67,7 @@
 #' All points are assumed to be evenly spaced.
 #'@param lit Default `TRUE`. Whether to apply lighting to the tree.
 #'@param clear_previous Default `FALSE`. If `TRUE`, it will clear all existing trees.
+#'@param filter_to_extent Default `TRUE`. If `TRUE`, tree placements outside the scene extent are omitted. For scenes created with [plot_gg()], filtering uses the ggplot panel extent rather than the full rendered 3D ggplot extent.
 #'@param ... Additional arguments to pass to `rgl::triangles3d()`.
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
@@ -191,8 +192,10 @@ render_tree = function(
 	long = NULL,
 	location = NULL,
 	crs = NULL,
+	filter_to_extent = TRUE,
 	...
 ) {
+	validate_filter_to_extent(filter_to_extent, caller = "render_tree")
 	tree_height_supplied = !missing(tree_height) && !is.null(tree_height)
 	dot_split = split_zaxis_dots(list(...))
 	zscale = resolve_scene_render_effective_zscale(
@@ -243,6 +246,7 @@ render_tree = function(
 	}
 	location_supplied = isTRUE(point_input$location_supplied)
 	render_obj_crs = if (location_supplied) NULL else input_crs
+	tree_coords_transformed = FALSE
 	if (!is.null(tree_height_column)) {
 		tree_height = resolve_render_tree_height_column(
 			location = location,
@@ -259,6 +263,83 @@ render_tree = function(
 	if (clear_previous) {
 		rgl::pop3d(tag = "objtree")
 		if (is.null(lat) || is.null(long)) {
+			render_zaxis_from_dots(
+				zaxis_args = zaxis_args,
+				extent = extent,
+				panel = panel,
+				zscale = zscale,
+				heightmap = heightmap,
+				caller = "render_tree"
+			)
+			return(invisible())
+		}
+	}
+	if (!is.null(lat) && !is.null(long)) {
+		if (!location_supplied) {
+			scene_xy = auto_transform_scene_xy(
+				x = long,
+				y = lat,
+				extent = extent,
+				heightmap = heightmap,
+				panel = panel,
+				crs = input_crs,
+				caller = "render_tree"
+			)
+			long = scene_xy$x
+			lat = scene_xy$y
+			if (!is.null(scene_xy$extent)) {
+				extent = scene_xy$extent
+			}
+			render_obj_crs = NULL
+			tree_coords_transformed = TRUE
+		}
+		n_tree_before_filter = length(lat)
+		filtered_tree_xy = filter_scene_xy_to_extent(
+			x = long,
+			y = lat,
+			extent = extent,
+			heightmap = heightmap,
+			panel = panel,
+			filter_to_extent = filter_to_extent,
+			caller = "render_tree"
+		)
+		long = filtered_tree_xy$x
+		lat = filtered_tree_xy$y
+		if (length(filtered_tree_xy$keep) == n_tree_before_filter) {
+			tree_height = subset_render_arg(tree_height, filtered_tree_xy$keep, n_tree_before_filter)
+			trunk_height_ratio = subset_render_arg(
+				trunk_height_ratio,
+				filtered_tree_xy$keep,
+				n_tree_before_filter
+			)
+			crown_width_ratio = subset_render_arg(
+				crown_width_ratio,
+				filtered_tree_xy$keep,
+				n_tree_before_filter
+			)
+			crown_width = subset_render_arg(
+				crown_width,
+				filtered_tree_xy$keep,
+				n_tree_before_filter
+			)
+			trunk_radius = subset_render_arg(
+				trunk_radius,
+				filtered_tree_xy$keep,
+				n_tree_before_filter
+			)
+			crown_color = subset_render_color_arg(
+				crown_color,
+				filtered_tree_xy$keep,
+				n_tree_before_filter
+			)
+			trunk_color = subset_render_color_arg(
+				trunk_color,
+				filtered_tree_xy$keep,
+				n_tree_before_filter
+			)
+			angle = subset_render_row_arg(angle, filtered_tree_xy$keep, n_tree_before_filter)
+		}
+		if (!length(lat) || !length(long)) {
 			render_zaxis_from_dots(
 				zaxis_args = zaxis_args,
 				extent = extent,
@@ -355,7 +436,7 @@ render_tree = function(
 			zscale = 1,
 			crs = render_obj_crs,
 			panel = panel,
-			transform_scene = !location_supplied,
+			transform_scene = !location_supplied && !tree_coords_transformed,
 			caller = "render_tree"
 		)
 		z_tree = xyz_tree[, 2]
@@ -609,7 +690,8 @@ render_tree = function(
 			scale = tree_scale,
 			baseshape = baseshape,
 			lit = lit,
-			transform_scene = !location_supplied,
+			transform_scene = !location_supplied && !tree_coords_transformed,
+			filter_to_extent = filter_to_extent,
 			clear_previous = FALSE,
 			rgl_tag = "tree"
 		)
@@ -628,7 +710,8 @@ render_tree = function(
 			heightmap = heightmap,
 			angle = angle,
 			scale = trunk_scale,
-			transform_scene = !location_supplied,
+			transform_scene = !location_supplied && !tree_coords_transformed,
+			filter_to_extent = filter_to_extent,
 			rgl_tag = "tree"
 		)
 	} else if (custom_tree) {
@@ -647,7 +730,8 @@ render_tree = function(
 			angle = angle,
 			scale = tree_scale,
 			baseshape = baseshape,
-			transform_scene = !location_supplied,
+			transform_scene = !location_supplied && !tree_coords_transformed,
+			filter_to_extent = filter_to_extent,
 			clear_previous = FALSE,
 			rgl_tag = "tree",
 			lit = lit
@@ -669,7 +753,8 @@ render_tree = function(
 			scale = tree_scale,
 			baseshape = baseshape,
 			lit = lit,
-			transform_scene = !location_supplied,
+			transform_scene = !location_supplied && !tree_coords_transformed,
+			filter_to_extent = filter_to_extent,
 			clear_previous = FALSE,
 			rgl_tag = "tree"
 		)
@@ -688,7 +773,8 @@ render_tree = function(
 			heightmap = heightmap,
 			angle = angle,
 			scale = trunk_scale,
-			transform_scene = !location_supplied,
+			transform_scene = !location_supplied && !tree_coords_transformed,
+			filter_to_extent = filter_to_extent,
 			rgl_tag = "tree"
 		)
 	} else if (type == "cone") {
@@ -708,7 +794,8 @@ render_tree = function(
 			heightmap = heightmap,
 			angle = angle,
 			scale = tree_scale,
-			transform_scene = !location_supplied,
+			transform_scene = !location_supplied && !tree_coords_transformed,
+			filter_to_extent = filter_to_extent,
 			clear_previous = FALSE,
 			rgl_tag = "tree"
 		)
@@ -727,7 +814,8 @@ render_tree = function(
 			heightmap = heightmap,
 			angle = angle,
 			scale = trunk_scale,
-			transform_scene = !location_supplied,
+			transform_scene = !location_supplied && !tree_coords_transformed,
+			filter_to_extent = filter_to_extent,
 			rgl_tag = "tree"
 		)
 	} else {

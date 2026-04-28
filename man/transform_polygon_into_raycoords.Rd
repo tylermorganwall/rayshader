@@ -12,11 +12,14 @@ transform_polygon_into_raycoords(
   bottom = NULL,
   panel = NULL,
   crs = NULL,
-  caller = NULL
+  caller = NULL,
+  transform_scene = TRUE
 )
 }
 \arguments{
 \item{crs}{Default \code{NULL}. CRS of the input numeric x/y coordinates, or CRS to assign to CRS-less spatial data before transforming it into the active scene CRS. If spatial data already carries a CRS, that CRS is used automatically.}
+
+\item{transform_scene}{Default \code{TRUE}. If \code{FALSE}, assumes \code{polygon} has already been transformed into the active scene coordinate system.}
 }
 \description{
 Transform Polygon into Raycoords

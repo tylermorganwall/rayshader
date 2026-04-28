@@ -34,7 +34,8 @@ render_label(
   lat = NULL,
   long = NULL,
   location = NULL,
-  crs = NULL
+  crs = NULL,
+  filter_to_extent = TRUE
 )
 }
 \arguments{
@@ -107,6 +108,8 @@ other arguments are passed to \code{\link[=render_label]{render_label()}}, this 
 \item{location}{Default \code{NULL}. Spatial point input used to place the rendered label in the scene. Accepts \code{sf}, \code{sfc}, \code{sfg}, or \code{sp} POINT or MULTIPOINT geometries. MULTIPOINT inputs are flattened to point placements internally. \code{render_label()} requires \code{location} to resolve to exactly one point after flattening. If the input carries a CRS, it will be transformed automatically into the active scene CRS. If it has no CRS, supply \code{crs}.}
 
 \item{crs}{Default \code{NULL}. CRS of the input numeric x/y coordinates, or CRS to assign to CRS-less spatial data before transforming it into the active scene CRS. If spatial data already carries a CRS, that CRS is used automatically.}
+
+\item{filter_to_extent}{Default \code{TRUE}. If \code{TRUE}, labels outside the scene extent are omitted. For scenes created with \code{\link[=plot_gg]{plot_gg()}}, filtering uses the ggplot panel extent rather than the full rendered 3D ggplot extent.}
 }
 \description{
 Adds a marker and label to the current 3D plot

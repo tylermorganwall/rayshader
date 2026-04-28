@@ -46,6 +46,7 @@
 #' @param light_relative Default `FALSE`. Whether the light direction should be taken relative to the camera,
 #' or absolute.
 #' @param clear_previous Default `FALSE`. If `TRUE`, it will clear all existing polygons.
+#' @param filter_to_extent Default `TRUE`. If `TRUE`, polygon data outside the scene extent is omitted. Spatial polygon inputs are cropped to the extent. For scenes created with [plot_gg()], filtering uses the ggplot panel extent rather than the full rendered 3D ggplot extent.
 #' @param ... Optional z-axis arguments passed to [render_zaxis()], such as
 #' `zaxis = TRUE`, `zaxis_location`, `zaxis_breaks`, and `zaxis_labels`.
 #' @export
@@ -106,8 +107,10 @@ render_polygons = function(
 	light_relative = FALSE,
 	clear_previous = FALSE,
 	crs = NULL,
+	filter_to_extent = TRUE,
 	...
 ) {
+	validate_filter_to_extent(filter_to_extent, caller = "render_polygons")
 	zaxis_split = split_zaxis_dots(list(...))
 	zscale = resolve_scene_render_effective_zscale(
 		zscale = zscale,
@@ -163,6 +166,13 @@ render_polygons = function(
 			inherits(polygon, "sfc") ||
 			inherits(polygon, "sfg")
 	) {
+		n_polygon_before_filter = if (inherits(polygon, "sf")) {
+			nrow(polygon)
+		} else if (inherits(polygon, "sfc")) {
+			length(polygon)
+		} else {
+			1
+		}
 		scene_polygon = auto_transform_scene_sf(
 			sf_object = polygon,
 			extent = extent,
@@ -174,6 +184,38 @@ render_polygons = function(
 		polygon = scene_polygon$object
 		if (!is.null(scene_polygon$extent)) {
 			extent = scene_polygon$extent
+		}
+		filtered_polygon = filter_scene_sf_to_extent(
+			sf_object = polygon,
+			extent = extent,
+			heightmap = heightmap,
+			panel = panel,
+			filter_to_extent = filter_to_extent,
+			caller = "render_polygons"
+		)
+		polygon = filtered_polygon$object
+		if (!is.null(filtered_polygon$source_index)) {
+			top = subset_render_arg_by_index(
+				top,
+				filtered_polygon$source_index,
+				n_polygon_before_filter
+			)
+			bottom = subset_render_arg_by_index(
+				bottom,
+				filtered_polygon$source_index,
+				n_polygon_before_filter
+			)
+		}
+		if (is_empty_scene_sf(polygon)) {
+			render_zaxis_from_dots(
+				zaxis_args = zaxis_split$zaxis_args,
+				extent = extent,
+				panel = panel,
+				zscale = zscale,
+				heightmap = heightmap,
+				caller = "render_polygons"
+			)
+			return(invisible(NULL))
 		}
 	}
 	if (is.na(bottom)) {

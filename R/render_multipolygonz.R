@@ -31,6 +31,7 @@
 #'@param clear_previous Default `FALSE`. If `TRUE`, it will clear all existing points.
 #'@param rgl_tag Default `""`. Tag to add to the rgl scene id, will be prefixed by `"obj"`
 #'@param baseshape Default `rectangle`. Shape of the base. Options are `c("rectangle","circle","hex")`.
+#'@param filter_to_extent Default `TRUE`. If `TRUE`, MULTIPOLYGON Z data outside the scene extent is omitted. Spatial inputs are cropped to the extent. For scenes created with [plot_gg()], filtering uses the ggplot panel extent rather than the full rendered 3D ggplot extent.
 #'@param ... Additional arguments to pass to `rgl::triangles3d()`.
 #'@export
 #'@examplesIf length(find.package("sf", quiet = TRUE)) && length(find.package("elevatr", quiet = TRUE)) && length(find.package("raster", quiet = TRUE)) && (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true"))
@@ -86,8 +87,10 @@ render_multipolygonz = function(
 	baseshape = "rectangle",
 	rgl_tag = "_multipolygon",
 	crs = NULL,
+	filter_to_extent = TRUE,
 	...
 ) {
+	validate_filter_to_extent(filter_to_extent, caller = "render_multipolygonz")
 	dot_split = split_zaxis_dots(list(...))
 	zscale = resolve_scene_render_effective_zscale(
 		zscale = zscale,
@@ -135,6 +138,28 @@ render_multipolygonz = function(
 	if (!is.null(scene_sfobj$extent)) {
 		extent = scene_sfobj$extent
 	}
+	filtered_sfobj = filter_scene_sf_to_extent(
+		sf_object = sfobj,
+		extent = extent,
+		heightmap = heightmap,
+		panel = panel,
+		filter_to_extent = filter_to_extent,
+		preserve_z = TRUE,
+		caller = "render_multipolygonz"
+	)
+	sfobj = filtered_sfobj$object
+	if (is_empty_scene_sf(sfobj)) {
+		render_zaxis_from_dots(
+			zaxis_args = dot_split$zaxis_args,
+			extent = extent,
+			panel = panel,
+			zscale = zscale,
+			heightmap = heightmap,
+			caller = "render_multipolygonz"
+		)
+		return(invisible(NULL))
+	}
+	sfobj = suppressWarnings(sf::st_cast(sfobj, "MULTIPOLYGON", warn = FALSE))
 	multipolygon_mesh = multipolygonz_to_raymesh(sfobj)
 	render_raymesh(
 		raymesh = multipolygon_mesh,
@@ -153,6 +178,7 @@ render_multipolygonz = function(
 		crs = crs,
 		rgl_tag_prefix = "obj",
 		swap_yz_transform = "rotate",
+		filter_to_extent = filter_to_extent,
 		...
 	)
 }

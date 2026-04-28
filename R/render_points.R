@@ -33,6 +33,7 @@
 #'@param color Default `black`. Color of the point. This can also be a vector specifying the color of each point.
 #'@param offset Default `5`. Offset of the track from the surface, if `altitude = NULL`.
 #'@param clear_previous Default `FALSE`. If `TRUE`, it will clear all existing points.
+#'@param filter_to_extent Default `TRUE`. If `TRUE`, points outside the scene extent are omitted. For scenes created with [plot_gg()], filtering uses the ggplot panel extent rather than the full rendered 3D ggplot extent.
 #'@param ... Optional z-axis arguments passed to [render_zaxis()], such as
 #'`zaxis = TRUE`, `zaxis_location`, `zaxis_breaks`, and `zaxis_labels`.
 #'@export
@@ -116,8 +117,10 @@ render_points = function(
 	long = NULL,
 	location = NULL,
 	crs = NULL,
+	filter_to_extent = TRUE,
 	...
 ) {
+	validate_filter_to_extent(filter_to_extent, caller = "render_points")
 	zaxis_split = split_zaxis_dots(list(...))
 	zscale = resolve_scene_render_effective_zscale(
 		zscale = zscale,
@@ -212,6 +215,34 @@ render_points = function(
 		if (!is.null(scene_xy$extent)) {
 			extent = scene_xy$extent
 		}
+	}
+	n_points_before_filter = length(x)
+	filtered_points = filter_scene_xy_to_extent(
+		x = x,
+		y = y,
+		extent = extent,
+		heightmap = heightmap,
+		panel = panel,
+		filter_to_extent = filter_to_extent,
+		caller = "render_points"
+	)
+	x = filtered_points$x
+	y = filtered_points$y
+	if (length(filtered_points$keep) == n_points_before_filter) {
+		altitude = subset_render_arg(altitude, filtered_points$keep, n_points_before_filter)
+		size = subset_render_arg(size, filtered_points$keep, n_points_before_filter)
+		color = subset_render_color_arg(color, filtered_points$keep, n_points_before_filter)
+	}
+	if (!length(x) || !length(y)) {
+		render_zaxis_from_dots(
+			zaxis_args = zaxis_args,
+			extent = extent,
+			panel = panel,
+			zscale = zscale,
+			heightmap = heightmap,
+			caller = "render_points"
+		)
+		return(invisible(NULL))
 	}
 	xyz = transform_into_heightmap_coords(
 		extent,

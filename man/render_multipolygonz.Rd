@@ -19,6 +19,7 @@ render_multipolygonz(
   baseshape = "rectangle",
   rgl_tag = "_multipolygon",
   crs = NULL,
+  filter_to_extent = TRUE,
   ...
 )
 }
@@ -60,6 +61,8 @@ rayshader coordinates, but data is often provided with Z being vertical).}
 \item{rgl_tag}{Default \code{""}. Tag to add to the rgl scene id, will be prefixed by \code{"obj"}}
 
 \item{crs}{Default \code{NULL}. CRS of the input numeric x/y coordinates, or CRS to assign to CRS-less spatial data before transforming it into the active scene CRS. If spatial data already carries a CRS, that CRS is used automatically.}
+
+\item{filter_to_extent}{Default \code{TRUE}. If \code{TRUE}, MULTIPOLYGON Z data outside the scene extent is omitted. Spatial inputs are cropped to the extent. For scenes created with \code{\link[=plot_gg]{plot_gg()}}, filtering uses the ggplot panel extent rather than the full rendered 3D ggplot extent.}
 
 \item{...}{Additional arguments to pass to \code{rgl::triangles3d()}.}
 }

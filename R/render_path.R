@@ -60,6 +60,7 @@
 #'@param return_coords Default `FALSE`. If `TRUE`, this will return the internal rayshader coordinates of the path, instead of
 #'plotting the line.
 #'@param tag Default `"path3d"`. The rgl tag to use when adding the path to the scene.
+#'@param filter_to_extent Default `TRUE`. If `TRUE`, path data outside the scene extent is omitted. Spatial line inputs are cropped to the extent. For scenes created with [plot_gg()], filtering uses the ggplot panel extent rather than the full rendered 3D ggplot extent.
 #'@param ... Optional z-axis arguments passed to [render_zaxis()], such as
 #'`zaxis = TRUE`, `zaxis_location`, `zaxis_breaks`, and `zaxis_labels`.
 #'@export
@@ -167,8 +168,10 @@ render_path = function(
 	lat = NULL,
 	long = NULL,
 	crs = NULL,
+	filter_to_extent = TRUE,
 	...
 ) {
+	validate_filter_to_extent(filter_to_extent, caller = "render_path")
 	xy_inputs = resolve_render_xy_aliases(
 		x = x,
 		y = y,
@@ -247,8 +250,23 @@ render_path = function(
 			simplify_tolerance = simplify_tolerance,
 			clear_previous = FALSE,
 			return_coords = TRUE,
-			crs = crs
+			crs = crs,
+			filter_to_extent = filter_to_extent
 		)
+		if (!length(xyz)) {
+			if (return_coords) {
+				return(list())
+			}
+			render_zaxis_from_dots(
+				zaxis_args = zaxis_args,
+				extent = extent,
+				panel = panel,
+				zscale = zscale,
+				heightmap = heightmap,
+				caller = "render_path"
+			)
+			return(invisible(NULL))
+		}
 		xyz = lapply(xyz, get_interpolated_points_path, n = resample_n)
 		xyz = do.call(
 			"rbind",
@@ -354,6 +372,29 @@ render_path = function(
 		if (!is.null(scene_path$extent)) {
 			extent = scene_path$extent
 		}
+		filtered_path = filter_scene_sf_to_extent(
+			sf_object = lat,
+			extent = extent,
+			heightmap = heightmap,
+			panel = panel,
+			filter_to_extent = filter_to_extent,
+			caller = "render_path"
+		)
+		lat = filtered_path$object
+		if (is_empty_scene_sf(lat)) {
+			if (return_coords) {
+				return(list())
+			}
+			render_zaxis_from_dots(
+				zaxis_args = zaxis_args,
+				extent = extent,
+				panel = panel,
+				zscale = zscale,
+				heightmap = heightmap,
+				caller = "render_path"
+			)
+			return(invisible(NULL))
+		}
 		geometry_transformed = TRUE
 	}
 
@@ -398,6 +439,38 @@ render_path = function(
 			extent = scene_xy$extent
 		}
 	}
+	if (!geometry_transformed && !is.null(lat) && !is.null(long)) {
+		n_path_coords_before_filter = length(lat)
+		filtered_xy = filter_scene_xy_to_extent(
+			x = long,
+			y = lat,
+			extent = extent,
+			heightmap = heightmap,
+			panel = panel,
+			filter_to_extent = filter_to_extent,
+			caller = "render_path"
+		)
+		long = filtered_xy$x
+		lat = filtered_xy$y
+		if (length(filtered_xy$keep) == n_path_coords_before_filter) {
+			groups = subset_render_arg(groups, filtered_xy$keep, n_path_coords_before_filter)
+			altitude = subset_render_arg(altitude, filtered_xy$keep, n_path_coords_before_filter)
+		}
+		if (!length(lat) || !length(long)) {
+			if (return_coords) {
+				return(list())
+			}
+			render_zaxis_from_dots(
+				zaxis_args = zaxis_args,
+				extent = extent,
+				panel = panel,
+				zscale = zscale,
+				heightmap = heightmap,
+				caller = "render_path"
+			)
+			return(invisible(NULL))
+		}
+	}
 	split_lat = split(lat, groups)
 	split_long = split(long, groups)
 
@@ -416,6 +489,9 @@ render_path = function(
 	for (group in seq_along(split_lat)) {
 		lat = split_lat[[group]]
 		long = split_long[[group]]
+		if (length(lat) < 2 || length(long) < 2) {
+			next
+		}
 		if (!single_altitude) {
 			altitude = split_altitude[[group]]
 		}
@@ -433,6 +509,21 @@ render_path = function(
 			transform_scene = FALSE,
 			caller = "render_path"
 		)
+	}
+	coord_list = coord_list[lengths(coord_list) > 0]
+	if (!length(coord_list)) {
+		if (return_coords) {
+			return(list())
+		}
+		render_zaxis_from_dots(
+			zaxis_args = zaxis_args,
+			extent = extent,
+			panel = panel,
+			zscale = zscale,
+			heightmap = heightmap,
+			caller = "render_path"
+		)
+		return(invisible(NULL))
 	}
 	if (!return_coords) {
 		if (length(linewidth) > 1) {

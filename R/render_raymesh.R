@@ -60,6 +60,7 @@
 #'@param offset Default `5`. Offset of the track from the surface, if `altitude = NULL`.
 #'@param clear_previous Default `FALSE`. If `TRUE`, it will clear all existing points.
 #'@param rgl_tag Default `""`. Tag to add to the rgl scene id, will be prefixed by `"objraymsh"`
+#'@param filter_to_extent Default `TRUE`. If `TRUE`, raymesh placements outside the scene extent are omitted. For scenes created with [plot_gg()], filtering uses the ggplot panel extent rather than the full rendered 3D ggplot extent.
 #'@param ... Additional arguments to pass to `rgl::triangles3d()`.
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
@@ -95,8 +96,10 @@ render_raymesh = function(
 	long = NULL,
 	location = NULL,
 	crs = NULL,
+	filter_to_extent = TRUE,
 	...
 ) {
+	validate_filter_to_extent(filter_to_extent, caller = "render_raymesh")
 	dot_split = split_zaxis_dots(list(...))
 	rgl_tag_prefix = "obj_raymesh"
 	swap_yz_transform = "swap"
@@ -186,6 +189,57 @@ render_raymesh = function(
 	} else {
 		single_obj = FALSE
 	}
+	if (is.null(xyz) && !single_obj && !location_supplied) {
+		scene_xy = auto_transform_scene_xy(
+			x = long,
+			y = lat,
+			extent = extent,
+			heightmap = heightmap,
+			panel = panel,
+			crs = input_crs,
+			caller = "render_raymesh"
+		)
+		long = scene_xy$x
+		lat = scene_xy$y
+		if (!is.null(scene_xy$extent)) {
+			extent = scene_xy$extent
+		}
+		input_crs = NULL
+	}
+	if (is.null(xyz) && !single_obj) {
+		n_obj_before_filter = length(lat)
+		filtered_obj_xy = filter_scene_xy_to_extent(
+			x = long,
+			y = lat,
+			extent = extent,
+			heightmap = heightmap,
+			panel = panel,
+			filter_to_extent = filter_to_extent,
+			caller = "render_raymesh"
+		)
+		long = filtered_obj_xy$x
+		lat = filtered_obj_xy$y
+		if (length(filtered_obj_xy$keep) == n_obj_before_filter) {
+			altitude = subset_render_arg(altitude, filtered_obj_xy$keep, n_obj_before_filter)
+			color = subset_render_color_arg(color, filtered_obj_xy$keep, n_obj_before_filter)
+			angle = subset_render_row_arg(angle, filtered_obj_xy$keep, n_obj_before_filter)
+			scale = subset_render_row_arg(scale, filtered_obj_xy$keep, n_obj_before_filter)
+		}
+		if (!length(lat) || !length(long)) {
+			if (clear_previous) {
+				rgl::pop3d(tag = sprintf("%s%s", rgl_tag_prefix, rgl_tag))
+			}
+			render_zaxis_from_dots(
+				zaxis_args = zaxis_args,
+				extent = extent,
+				panel = panel,
+				zscale = zscale,
+				heightmap = heightmap,
+				caller = "render_raymesh"
+			)
+			return(invisible(NULL))
+		}
+	}
 	if (!is.null(heightmap)) {
 		heightmap = generate_base_shape(heightmap, baseshape)
 	}
@@ -205,7 +259,7 @@ render_raymesh = function(
 				zscale,
 				crs = input_crs,
 				panel = panel,
-				transform_scene = !location_supplied,
+				transform_scene = FALSE,
 				caller = "render_raymesh"
 			)
 		} else {
@@ -223,7 +277,7 @@ render_raymesh = function(
 				use_altitude = FALSE,
 				crs = input_crs,
 				panel = panel,
-				transform_scene = !location_supplied,
+				transform_scene = FALSE,
 				caller = "render_raymesh"
 			)
 		}
