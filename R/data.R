@@ -1,27 +1,55 @@
-#' Monterey Bay combined topographic and bathymetric elevation matrix.
+local({
+	ns = parent.env(environment())
+	if (exists("montereybay", envir = ns, inherits = FALSE)) {
+		if (bindingIsLocked("montereybay", ns)) {
+			unlockBinding("montereybay", ns)
+		}
+		rm(list = "montereybay", envir = ns)
+	}
+	makeActiveBinding(
+		"montereybay",
+		function(value) {
+			if (!missing(value)) {
+				stop("`montereybay` is read-only package data.", call. = FALSE)
+			}
+			if (!requireNamespace("terra", quietly = TRUE)) {
+				stop(
+					"`montereybay` requires the `terra` package to be installed.",
+					call. = FALSE
+				)
+			}
+			terra::unwrap(get(".montereybay_packed", envir = ns, inherits = FALSE))
+		},
+		ns
+	)
+})
+
+#' Monterey Bay combined topographic and bathymetric elevation raster
 #'
-#' This dataset is a downsampled version of a combined topographic and bathymetric 
-#' elevation matrix representing the Monterey Bay, CA region. Original data from 
-#' from the NOAA National Map website. 
+#' This dataset is a downsampled spatial version of a combined topographic and
+#' bathymetric elevation raster representing the Monterey Bay, CA region. Original
+#' data from the NOAA National Centers for Environmental Information.
 #'
-#' @format A matrix with 540 rows and 540 columns. Elevation is in meters, and the spacing between each
-#' coordinate is 200 meters (zscale = 200). Water level is 0. Raster extent located in "extent" attribute. CRS located in "CRS" attribute.
+#' @format A one-layer `terra::SpatRaster` with 540 rows and 540 columns.
+#' Elevation values are in NAVD88 meters. The raster uses a WGS84 longitude/latitude
+#' CRS (EPSG:4326), has 0.001851852 degree cell spacing, and covers approximately
+#' -122.366806 to -121.366806 longitude and 36.179398 to 37.179398 latitude.
 #' @source https://www.ncei.noaa.gov/metadata/geoportal/rest/metadata/item/gov.noaa.ngdc.mgg.dem:3544/html
+#' @name montereybay
+#' @docType data
+#' @keywords datasets
+#' @usage montereybay
+#' @export
 #' @examples 
 #' # This is the full code (commented out) used to generate this dataset from the original NOAA data:
-#' #raster::raster("monterey_13_navd88_2012.nc")
-#' #bottom_left = c(y=-122.366765, x=36.179392)
-#' #top_right   = c(y=-121.366765, x=37.179392) 
+#' #montbay = terra::rast("~/Downloads/monterey_13_navd88_2012.nc")
+#' #bottom_left = c(y = -122.366765, x = 36.179392)
+#' #top_right   = c(y = -121.366765, x = 37.179392)
 #' #extent_latlong = sp::SpatialPoints(rbind(bottom_left, top_right), 
 #' #                 proj4string=sp::CRS("+proj=longlat +ellps=WGS84 +datum=WGS84"))
-#' #monterey_cropped = raster::crop(montbay,extent_latlong)
-#' #montbay_mat = raster_to_matrix(montbay_cropped)
-#' #montereybay = resize_matrix(montbay_mat,0.05)
-#' #attr(montereybay, "extent") = extent_latlong
-#' #attr(montereybay, "crs") = crs(monterey_cropped)
-#' #attr(montereybay, "crs") = crs(monterey_cropped)
-#' #attr(montereybay, "rayshader_data") = TRUE
-"montereybay"
+#' #monterey_cropped = terra::crop(montbay, extent_latlong)
+#' #montereybay = terra::aggregate(monterey_cropped, 20)
+NULL
 
 #' California County Data Around Monterey Bay
 #'
@@ -36,7 +64,11 @@
 #' @examples 
 #' # This is the full code (commented out) used to generate this dataset from the original data:
 #' #counties = sf::st_read("tl_2016_06_cousub.shp")
-#' #monterey_counties_sf = sf::st_crop(counties, attr(montereybay,"extent"))
+#' #monterey_bbox = sf::st_bbox(c(
+#' #  xmin = terra::xmin(montereybay), ymin = terra::ymin(montereybay),
+#' #  xmax = terra::xmax(montereybay), ymax = terra::ymax(montereybay)
+#' #), crs = sf::st_crs(terra::crs(montereybay)))
+#' #monterey_counties_sf = sf::st_crop(counties, monterey_bbox)
 "monterey_counties_sf"
 
 
@@ -52,7 +84,11 @@
 #' @examples 
 #' # This is the full code (commented out) used to generate this dataset from the original data:
 #' #counties = sf::st_read("tl_2015_06_prisecroads.shp")
-#' #monterey_roads_sf = sf::st_crop(counties, attr(montereybay,"extent"))
+#' #monterey_bbox = sf::st_bbox(c(
+#' #  xmin = terra::xmin(montereybay), ymin = terra::ymin(montereybay),
+#' #  xmax = terra::xmax(montereybay), ymax = terra::ymax(montereybay)
+#' #), crs = sf::st_crs(terra::crs(montereybay)))
+#' #monterey_roads_sf = sf::st_crop(counties, monterey_bbox)
 "monterey_roads_sf"
 
 #' Washington Monument 3D Model as Multipolygon Z Data 

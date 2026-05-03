@@ -25,7 +25,7 @@
 #'
 #'#Set everything below 0m to water palette
 #'montereybay |>
-#'  sphere_shade(zscale=10) |>
+#'  sphere_shade() |>
 #'  add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0))  |>
 #'  add_shadow(ray_shade(vertical_exaggeration = 4),0.3) |>
 #'  plot_map()

@@ -5,7 +5,7 @@
 \title{Generate Scalebar Overlay}
 \usage{
 generate_scalebar_overlay(
-  extent,
+  extent = NULL,
   length,
   x = 0.05,
   y = 0.05,
@@ -40,11 +40,12 @@ generate_scalebar_overlay(
 )
 }
 \arguments{
-\item{extent}{Either an object representing the spatial extent of the scene
+\item{extent}{Default \code{NULL}. Either an object representing the spatial extent of the scene
 (either from the \code{raster}, \code{terra}, \code{sf}, or \code{sp} packages),
 a length-4 numeric vector specifying \code{c("xmin", "xmax","ymin","ymax")}, or the spatial object (from
 the previously aforementioned packages) which will be automatically converted to an extent object. If this is in
-lat/long coordinates, be sure to set \code{latlong = TRUE}.}
+lat/long coordinates, be sure to set \code{latlong = TRUE}. If omitted, rayshader will infer the extent
+from \code{heightmap} when possible, otherwise from the active scene or cached hillshade metadata.}
 
 \item{length}{The length of the scale bar, in \code{units}. This should match the units used on the map,
 unless \code{extent} uses lat/long coordinates. In that case, the distance should be in meters.}
@@ -146,73 +147,64 @@ height_shade() |>
 add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0))  |>
 add_shadow(lamb_shade(vertical_exaggeration = 4),0.3)
 
-#For convenience, the extent of the montereybay dataset is included as an attribute
-mb_extent = attr(montereybay, "extent")
-
 #Add a scalebar
 base_map |>
-add_overlay(generate_scalebar_overlay(extent = mb_extent, length = 40000,
-                                      heightmap = montereybay,
+add_overlay(generate_scalebar_overlay(length = 40000,
                                       latlong=TRUE)) |>
 plot_map()
 #Change the text color
 base_map |>
- add_overlay(generate_scalebar_overlay(extent = mb_extent, length = 40000,
+ add_overlay(generate_scalebar_overlay(length = 40000,
                                        text_color = "white",
-                                       heightmap = montereybay,
                                        latlong=TRUE)) |>
  plot_map()
 #Change the length
 base_map |>
- add_overlay(generate_scalebar_overlay(extent = mb_extent, length = 30000,
+ add_overlay(generate_scalebar_overlay(length = 30000,
                                        text_color = "white",
-                                       heightmap = montereybay,
                                        latlong=TRUE)) |>
  plot_map()
 #Change the thickness (default is length/20)
 base_map |>
- add_overlay(generate_scalebar_overlay(extent = mb_extent, length = 30000,
+ add_overlay(generate_scalebar_overlay(length = 30000,
                                        text_color = "white", thickness = 30000/10,
-                                       heightmap = montereybay,
                                        latlong=TRUE)) |>
  plot_map()
 #Change the text offset (given in multiples of thickness)
 base_map |>
- add_overlay(generate_scalebar_overlay(extent = mb_extent, length = 30000,
+ add_overlay(generate_scalebar_overlay(length = 30000,
                                        text_color = "white", thickness = 30000/10,
                                        text_offset = 0.75,
-                                       heightmap = montereybay,
                                        latlong=TRUE)) |>
  plot_map()
 #Change the primary and secondary colors, along with the border and tick color
 base_map |>
- add_overlay(generate_scalebar_overlay(extent = mb_extent, length = 30000,
+ add_overlay(generate_scalebar_overlay(length = 30000,
                                        text_color = "white", border_color = "white",
                                        tick_color = "white",
                                        color1 = "darkolivegreen4", color2 = "burlywood3",
-                                       heightmap = montereybay,
                                        latlong=TRUE)) |>
  plot_map()
 #Add a halo
 base_map |>
- add_overlay(generate_scalebar_overlay(extent = mb_extent, length = 40000,
+ add_overlay(generate_scalebar_overlay(length = 40000,
                                        halo_color = "white", halo_expand = 1,
-                                       heightmap = montereybay, font = 2,
+                                       font = 2,
                                        latlong=TRUE)) |>
  plot_map()
 #Change the orientation, position, text alignment, and flip the ticks to the other side
 base_map |>
- add_overlay(generate_scalebar_overlay(extent = mb_extent, length = 40000, x = 0.07,
+ add_overlay(generate_scalebar_overlay(length = 40000, x = 0.07,
                                        bearing=0, adj = 0, flip_ticks = TRUE,
                                        halo_color = "white", halo_expand = 1.5,
-                                       heightmap = montereybay, font = 2,
+                                       font = 2,
                                        latlong=TRUE)) |>
  plot_map()
 #64373.8 meters in 40 miles
 #Create custom labels, change font and text size, remove the border/ticks, and change the color
 #Here, we specify a width and height to double the resolution of the image (for sharper text)
 base_map |>
- add_overlay(generate_scalebar_overlay(extent = mb_extent, length = 64373.8, x = 0.07,
+ add_overlay(generate_scalebar_overlay(length = 64373.8, x = 0.07,
                                        labels = c("0", "20", "40 miles"), thickness=2500,
                                        text_size=3, font = 2, text_offset = 0,
                                        text_color="white", color2="#bf323b", border_color=NA,

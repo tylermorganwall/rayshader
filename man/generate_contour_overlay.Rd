@@ -58,7 +58,8 @@ montereybay |>
 #Add a different contour color for above and below water, and specify levels manually
 water_palette = colorRampPalette(c("darkblue", "dodgerblue", "lightblue"))(200)
 bathy_hs = height_shade(montereybay, texture = water_palette)
-breaks = seq(range(montereybay)[1],range(montereybay)[2],length.out=50)
+monterey_range = range(raster_to_matrix(montereybay, verbose = FALSE), na.rm = TRUE)
+breaks = seq(monterey_range[1], monterey_range[2], length.out=50)
 water_breaks = breaks[breaks < 0]
 land_breaks = breaks[breaks > 0]
 

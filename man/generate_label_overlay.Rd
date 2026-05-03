@@ -37,8 +37,9 @@ generate_label_overlay(
 (either from the \code{raster}, \code{terra}, \code{sf}, or \code{sp} packages),
 a length-4 numeric vector specifying \code{c("xmin", "xmax","ymin","ymax")}, or the spatial object (from
 the previously aforementioned packages) which will be automatically converted to an extent object.
-If omitted, rayshader will reuse cached extent metadata from the active scene or
-the most recent raster-backed hillshade call.}
+If omitted, rayshader will infer the extent from \code{heightmap} when possible,
+otherwise reuse cached extent metadata from the active scene or the most recent
+raster-backed hillshade call.}
 
 \item{x}{Default \code{NULL}. The x-coordinate, if \code{labels} is not an \code{sf} object.}
 

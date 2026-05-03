@@ -155,6 +155,21 @@ validate_scene_extent_panel = function(
 	extent
 }
 
+resolve_heightmap_extent = function(heightmap = NULL) {
+	if (is.null(heightmap)) {
+		return(NULL)
+	}
+	heightmap_extent = tryCatch(get_extent(heightmap), error = function(e) NULL)
+	if (!is.null(heightmap_extent)) {
+		return(heightmap_extent)
+	}
+	heightmap_extent = attr(heightmap, "extent", exact = TRUE)
+	if (!is.null(heightmap_extent)) {
+		return(tryCatch(get_extent(heightmap_extent), error = function(e) NULL))
+	}
+	NULL
+}
+
 validate_filter_to_extent = function(filter_to_extent = TRUE, caller = NULL) {
 	if (
 		!is.logical(filter_to_extent) ||
@@ -2483,6 +2498,16 @@ resolve_scene_render_extent = function(
 		extent = normalize_scene_resolved_extent(extent, caller = caller)
 		return(validate_scene_extent_panel(
 			extent = extent,
+			heightmap = heightmap,
+			panel = panel,
+			caller = caller
+		))
+	}
+
+	heightmap_extent = resolve_heightmap_extent(heightmap)
+	if (!is.null(heightmap_extent)) {
+		return(validate_scene_extent_panel(
+			extent = heightmap_extent,
 			heightmap = heightmap,
 			panel = panel,
 			caller = caller

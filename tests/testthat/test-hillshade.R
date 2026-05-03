@@ -102,13 +102,14 @@ test_that("sphere_shade uses na_color for transparent NA pixel RGB values", {
 })
 
 test_that("height_shade", {
+	montereybay_matrix = raster_to_matrix(montereybay, verbose = FALSE)
 	hs_args = expand.grid(
 		texture = list(
 			grDevices::colorRampPalette(c("#6AA85B", "#D9CC9A", "#FFFFFF"))(256),
 			heat.colors(256),
 			terrain.colors(256)
 		),
-		range = list(NULL, range(montereybay), c(0, max(montereybay)))
+		range = list(NULL, range(montereybay_matrix), c(0, max(montereybay_matrix)))
 	)
 	run_tests_success("height_shade", hs_args, list(heightmap = montereybay))
 })

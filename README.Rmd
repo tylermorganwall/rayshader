@@ -403,7 +403,7 @@ You can also easily add a water layer by setting `water = TRUE` in `plot_3d()` (
 ```{r README_three-d-water, fig.width =  10, fig.height = 8}
 
 montereybay |>
-	sphere_shade(zscale = 10, texture = "imhof1") |>
+	sphere_shade(texture = "imhof1") |>
 	add_shadow(ray_shade(vertical_exaggeration = 4, lambert = FALSE), 0.5) |>
 	add_shadow(ambient_shade(vertical_exaggeration = 4), 0) |>
 	plot_3d(
@@ -430,7 +430,7 @@ Water is also supported in `render_highquality()`. We load the `rayrender` packa
 library(rayrender)
 
 montereybay |>
-	sphere_shade(zscale = 10, texture = "imhof1") |>
+	sphere_shade(texture = "imhof1") |>
 	plot_3d(
 		vertical_exaggeration = 4,
 		fov = 70,
@@ -467,7 +467,7 @@ Rayshader also has map shapes other than rectangular included `c("hex", "circle"
 ```{r  README_three-d-shapes, fig.width = 12, fig.height = 6, output = FALSE}
 par(mfrow = c(1, 2))
 montereybay |>
-	sphere_shade(zscale = 10, texture = "imhof1") |>
+	sphere_shade(texture = "imhof1") |>
 	add_shadow(ray_shade(vertical_exaggeration = 4, lambert = FALSE), 0.5) |>
 	add_shadow(ambient_shade(vertical_exaggeration = 4), 0) |>
 	plot_3d(
@@ -489,7 +489,7 @@ montereybay |>
 render_snapshot(clear = TRUE)
 
 montereybay |>
-	sphere_shade(zscale = 10, texture = "imhof1") |>
+	sphere_shade(texture = "imhof1") |>
 	add_shadow(ray_shade(vertical_exaggeration = 4, lambert = FALSE), 0.5) |>
 	add_shadow(ambient_shade(vertical_exaggeration = 4), 0) |>
 	plot_3d(
@@ -515,7 +515,7 @@ Adding text labels is done with the `render_label()` function, which also allows
 
 ```{r README_three-d-labels, fig.width =  10, fig.height = 8, output = FALSE, message = FALSE}
 montereybay |>
-	sphere_shade(zscale = 10, texture = "imhof1") |>
+	sphere_shade(texture = "imhof1") |>
 	add_shadow(ray_shade(vertical_exaggeration = 4, lambert = FALSE), 0.5) |>
 	add_shadow(ambient_shade(vertical_exaggeration = 4), 0) |>
 	plot_3d(
@@ -582,7 +582,7 @@ Labels are also supported in `render_highquality()`:
 
 ```{r include=FALSE}
 montereybay |>
-	sphere_shade(zscale = 10, texture = "imhof1") |>
+	sphere_shade(texture = "imhof1") |>
 	plot_3d(
 		vertical_exaggeration = 4,
 		fov = 0,

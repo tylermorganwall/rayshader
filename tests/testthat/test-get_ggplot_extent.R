@@ -1,5 +1,38 @@
 library(ggplot2)
 
+test_that("scene extent resolution infers extent from spatial heightmaps", {
+	testthat::skip_if_not_installed("terra")
+	clear_hillshade_cache()
+	reset_scene_context(
+		clear_scene_metadata = TRUE,
+		clear_scene_cache = TRUE
+	)
+	withr::defer({
+		clear_hillshade_cache()
+		reset_scene_context(
+			clear_scene_metadata = TRUE,
+			clear_scene_cache = TRUE
+		)
+	})
+
+	cache_scene_extent(c(xmin = 0, xmax = 1, ymin = 0, ymax = 1), label = "stale")
+	rast = terra::rast(
+		nrows = 2,
+		ncols = 3,
+		xmin = 10,
+		xmax = 13,
+		ymin = 20,
+		ymax = 22,
+		crs = "EPSG:4326"
+	)
+	terra::values(rast) = seq_len(terra::ncell(rast))
+
+	expect_equal(
+		resolve_scene_render_extent(heightmap = rast, caller = "test"),
+		c(xmin = 10, xmax = 13, ymin = 20, ymax = 22)
+	)
+})
+
 test_that("internal ggplot scene extent maps a single panel into scene coordinates", {
 	on.exit(rgl::close3d(), add = TRUE)
 

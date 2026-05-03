@@ -43,7 +43,7 @@ montereybay |>
 montereybay |>
  constant_shade() |>
  add_overlay(generate_line_overlay(monterey_roads_sf, linewidth=5, color="black",
-                                   attr(montereybay,"extent"), width = 1080, height = 1080),
+                                   width = 1080, height = 1080),
                                    alphalayer=0.8)  |>
  add_water(detect_water(montereybay < 0), "dodgerblue") |>
  plot_map()

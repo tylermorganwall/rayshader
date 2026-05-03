@@ -531,7 +531,7 @@ rayshader):
 
 ``` r
 montereybay |>
-    sphere_shade(zscale = 10, texture = "imhof1") |>
+    sphere_shade(texture = "imhof1") |>
     add_shadow(ray_shade(vertical_exaggeration = 4, lambert = FALSE), 0.5) |>
     add_shadow(ambient_shade(vertical_exaggeration = 4), 0) |>
     plot_3d(
@@ -563,7 +563,7 @@ down slightly to center the map.
 library(rayrender)
 
 montereybay |>
-    sphere_shade(zscale = 10, texture = "imhof1") |>
+    sphere_shade(texture = "imhof1") |>
     plot_3d(
         vertical_exaggeration = 4,
         fov = 70,
@@ -602,7 +602,7 @@ want by setting the areas you do not want to display to `NA`.
 ``` r
 par(mfrow = c(1, 2))
 montereybay |>
-    sphere_shade(zscale = 10, texture = "imhof1") |>
+    sphere_shade(texture = "imhof1") |>
     add_shadow(ray_shade(vertical_exaggeration = 4, lambert = FALSE), 0.5) |>
     add_shadow(ambient_shade(vertical_exaggeration = 4), 0) |>
     plot_3d(
@@ -628,7 +628,7 @@ render_snapshot(clear = TRUE)
 
 ``` r
 montereybay |>
-    sphere_shade(zscale = 10, texture = "imhof1") |>
+    sphere_shade(texture = "imhof1") |>
     add_shadow(ray_shade(vertical_exaggeration = 4, lambert = FALSE), 0.5) |>
     add_shadow(ambient_shade(vertical_exaggeration = 4), 0) |>
     plot_3d(
@@ -658,7 +658,7 @@ the font:
 
 ``` r
 montereybay |>
-    sphere_shade(zscale = 10, texture = "imhof1") |>
+    sphere_shade(texture = "imhof1") |>
     add_shadow(ray_shade(vertical_exaggeration = 4, lambert = FALSE), 0.5) |>
     add_shadow(ambient_shade(vertical_exaggeration = 4), 0) |>
     plot_3d(

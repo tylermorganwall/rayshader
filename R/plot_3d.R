@@ -395,7 +395,6 @@ plot_3d = function(
 	auto_zscale = heightmap_info$zscale
 	explicit_heightmap_uses_default_zscale = !heightmap_was_missing &&
 		!(is.finite(auto_zscale) && auto_zscale > 0)
-	is_builtin_monterey = isTRUE(attr(heightmap, "rayshader_data"))
 	extent_cache_value = NULL
 	extent_cache_label = NULL
 	if (!extent_was_missing && !is.null(extent)) {
@@ -421,16 +420,6 @@ plot_3d = function(
 	) {
 		extent_cache_value = get_scene_extent(default = NULL)
 		extent_cache_label = get_scene_extent_label(default = NULL)
-	} else if (is_builtin_monterey) {
-		# Built-in montereybay keeps geospatial metadata out of the generic matrix path:
-		# auto-cache this known extent explicitly for downstream render_* helpers.
-		extent_cache_value = c(
-			xmin = -122.366765,
-			xmax = -121.366765,
-			ymin = 36.179392,
-			ymax = 37.179392
-		)
-		extent_cache_label = "montereybay_builtin_extent"
 	}
 	resolved_zscale = resolve_hillshade_zscale(
 		zscale = zscale,
@@ -506,18 +495,6 @@ plot_3d = function(
 		clear_scene_metadata = TRUE,
 		clear_scene_cache = TRUE
 	)
-	# setting default zscale if montereybay matrix is used and zscale was omitted
-	if (
-		is_builtin_monterey &&
-			zscale_was_missing &&
-			identical(resolved_zscale$source, "default")
-	) {
-		zscale = 50
-		zscale_cache_label = "montereybay_default_zscale"
-		message(
-			"`montereybay` dataset used with no zscale--setting `zscale=50`. For a realistic depiction, raise `zscale` to 200."
-		)
-	}
 	if (shadowcolor == "auto") {
 		shadowcolor = convert_color(
 			darken_color(background, darken = shadow_darkness),

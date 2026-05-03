@@ -7,8 +7,9 @@
 #' (either from the `raster`, `terra`, `sf`, or `sp` packages),
 #' a length-4 numeric vector specifying `c("xmin", "xmax","ymin","ymax")`, or the spatial object (from
 #' the previously aforementioned packages) which will be automatically converted to an extent object.
-#'If omitted, rayshader will reuse cached extent metadata from the active scene or
-#'the most recent raster-backed hillshade call.
+#'If omitted, rayshader will infer the extent from `heightmap` when possible,
+#'otherwise reuse cached extent metadata from the active scene or the most recent
+#'raster-backed hillshade call.
 #'@param heightmap Default `NULL`. The original height map. Pass this in to extract the dimensions of the resulting
 #'overlay automatically. If omitted, rayshader will reuse the cached heightmap
 #'from the active scene or the most recent hillshade call.

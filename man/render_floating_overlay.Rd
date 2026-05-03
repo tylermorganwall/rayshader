@@ -65,10 +65,9 @@ if(all(length(find.package("sf", quiet = TRUE)) > 0,
  monterey_city = sf::st_sfc(sf::st_point(monterey))
 
  #Generate Overlays
- road_overlay = generate_line_overlay(monterey_roads_sf, attr(montereybay,"extent"),
-                                      heightmap = montereybay)
+ road_overlay = generate_line_overlay(monterey_roads_sf, heightmap = montereybay)
  point_overlay = generate_point_overlay(monterey_city, color="red", size=1,
-                                        attr(montereybay,"extent"), heightmap = montereybay)
+                                        heightmap = montereybay)
 
  #Create 3D plot (water transparency set to 1 because multiple transparency layers can interfere)
  montereybay |>

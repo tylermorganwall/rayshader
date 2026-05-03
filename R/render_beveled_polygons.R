@@ -80,7 +80,7 @@
 #'   sphere_shade(texture = "desert") |>
 #'   add_shadow(ray_shade(vertical_exaggeration = 4)) |>
 #'   plot_3d(water = TRUE, windowsize = 800, watercolor = "dodgerblue",
-#'           background = "pink")
+#'           background = "pink", vertical_exaggeration = 4)
 #'
 #' #We will apply a negative buffer to create space between adjacent polygons. You may
 #' #have to call `sf::sf_use_s2(FALSE)` before running this code to get it to run.
@@ -89,8 +89,7 @@
 #'
 #' render_beveled_polygons(mont_county_buff,  flat_shading  = TRUE, angle = 45 ,
 #'                         bevel_width=2000, material = "red",
-#'                         bevel_height = 5000, base_height=0,
-#'                         zscale=200)
+#'                         bevel_height = 5000, base_height=0)
 #' render_camera(theta = 0,  phi = 90, zoom = 0.65, fov = 0)
 #' render_snapshot()
 #' render_camera(theta=194, phi= 35,   zoom = 0.5, fov= 80)
@@ -100,8 +99,7 @@
 #' render_beveled_polygons(mont_county_buff,  flat_shading  = TRUE, angle = 45 ,
 #'                         bevel_width=2000, material = "tan",
 #'                         bevel_material = "darkgreen", clear_previous=TRUE,
-#'                         bevel_height = 5000, base_height=0,
-#'                         zscale=200)
+#'                         bevel_height = 5000, base_height=0)
 #' # We can create a nice curved surface by passing in a bevel generated with the
 #' # `raybevel::generate_bevel()` function.
 #' render_beveled_polygons(mont_county_buff, flat_shading  = TRUE,
@@ -113,8 +111,7 @@
 #'                                                             ambient_intensity = 0.1),
 #'                         light_intensity = 1, light_relative = FALSE,
 #'                         bevel_height = 5000,
-#'                         base_height=0, clear_previous = TRUE,
-#'                         zscale=200)
+#'                         base_height=0, clear_previous = TRUE)
 #' render_snapshot()
 #'
 #' # While the bevels all start at the same point in the above example,
@@ -130,8 +127,7 @@
 #'                                                      ambient_intensity = 0.1),
 #'                  light_intensity = 1, light_relative = FALSE,
 #'                  bevel_height = 5000,
-#'                  base_height=0, clear_previous = TRUE,
-#'                  zscale=200)
+#'                  base_height=0, clear_previous = TRUE)
 #' render_snapshot()
 #'
 #' # Rendering the polygons with `render_highquality()`
@@ -139,7 +135,7 @@
 #'
 #' # We can scale the size of the polygon to a column in the `sf` object as well:
 #' # raybevel::generate_bevel() function. We can scale this data down using the `scale_data`
-#' # argument. Note that this is applied as well as the `zscale` argument, and that you
+#' # argument. Note that this is applied in scene units, and that you
 #' # must think carefully about your scales and values if trying to represent a meaningful
 #' # data visualization with this object.
 #' render_beveled_polygons(mont_county_buff,  flat_shading  = TRUE, angle = 45, bevel_width=1000,
@@ -147,8 +143,7 @@
 #'                  #max_height = 1000, scale_all_max = TRUE, set_max_height = TRUE,
 #'                  material = rayvertex::material_list(diffuse="red"),
 #'                  light_intensity = 1, light_relative = FALSE,
-#'                  clear_previous = TRUE,
-#'                  zscale=200)
+#'                  clear_previous = TRUE)
 #' render_snapshot()
 render_beveled_polygons = function(
 	polygon,

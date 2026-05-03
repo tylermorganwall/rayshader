@@ -42,7 +42,7 @@ plot_map(bathy_hs)
 
 #Set everything below 0m to water palette
 montereybay |>
- sphere_shade(zscale=10) |>
+ sphere_shade() |>
  add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0))  |>
  add_shadow(ray_shade(vertical_exaggeration = 4),0.3) |>
  plot_map()
@@ -53,7 +53,7 @@ snow_hs = height_shade(montereybay, texture = snow_palette)
 
 #Set the snow transition region from 500m to 1200m
 montereybay |>
- sphere_shade(zscale=10, texture = "desert") |>
+ sphere_shade(texture = "desert") |>
  add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0))  |>
  add_overlay(generate_altitude_overlay(snow_hs, montereybay, 500, 1200, lower=FALSE))  |>
  add_shadow(ambient_shade(vertical_exaggeration = 4,maxsearch=100),0) |>

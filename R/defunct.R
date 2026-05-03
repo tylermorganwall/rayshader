@@ -19,7 +19,8 @@ NULL
 #' @return Reduced matrix.
 #' @export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
-#'montbaysmall = resize_matrix(montereybay, scale=0.5)
+#'montereybay_matrix = raster_to_matrix(montereybay, verbose = FALSE)
+#'montbaysmall = resize_matrix(montereybay_matrix, scale=0.5)
 #'montbaysmall |>
 #'  sphere_shade() |>
 #'  plot_map()

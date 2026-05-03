@@ -53,15 +53,11 @@ monterey_point_location_fixtures_test = function() {
 }
 
 monterey_spatial_raster_test = function() {
-	scene_extent = attr(montereybay, "extent")
-	raster::raster(
-		t(montereybay),
-		xmn = scene_extent@xmin,
-		xmx = scene_extent@xmax,
-		ymn = scene_extent@ymin,
-		ymx = scene_extent@ymax,
-		crs = attr(montereybay, "crs")
-	)
+	montereybay
+}
+
+monterey_crs_test = function() {
+	sf::st_crs(terra::crs(montereybay))
 }
 
 setup_plot3d_location_scene_test = function() {
@@ -69,7 +65,7 @@ setup_plot3d_location_scene_test = function() {
 	expect_no_condition(plot_3d_test(
 		sphere_shade(montereybay),
 		monterey_raster,
-		zscale = 50,
+		vertical_exaggeration = 4,
 		shadow = FALSE,
 		water = FALSE,
 		windowsize = c(320, 320)
@@ -82,7 +78,7 @@ setup_plot3d_location_snapshot_scene_test = function(label = FALSE) {
 	expect_no_condition(plot_3d_test(
 		sphere_shade(montereybay),
 		monterey_raster,
-		zscale = 50,
+		vertical_exaggeration = 4,
 		shadow = FALSE,
 		water = FALSE,
 		windowsize = c(420, 420)
@@ -139,7 +135,7 @@ setup_plotgg_location_scene_faceted_test = function(topdown = TRUE) {
 }
 
 expected_plot3d_location_xy_test = function(location, crs = NULL) {
-	target_crs = sf::st_crs(attr(montereybay, "crs"))
+	target_crs = monterey_crs_test()
 	scene_points = sf::st_transform(
 		rayshader:::coerce_scene_point_input(location, crs = crs, caller = "test")$sf_data,
 		target_crs
@@ -151,7 +147,7 @@ expected_plot3d_location_xy_from_explicit_crs_test = function(location, crs) {
 	sf_data = rayshader:::coerce_scene_sf_input(location)$sf_data
 	scene_points = sf::st_transform(
 		sf::st_set_crs(sf_data, crs),
-		sf::st_crs(attr(montereybay, "crs"))
+		monterey_crs_test()
 	)
 	unname(flatten_point_location_coords_test(scene_points))
 }

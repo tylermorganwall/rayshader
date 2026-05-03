@@ -7,8 +7,9 @@
 #' (either from the `raster`, `terra`, `sf`, or `sp` packages),
 #' a length-4 numeric vector specifying `c("xmin", "xmax","ymin","ymax")`, or the spatial object (from
 #' the previously aforementioned packages) which will be automatically converted to an extent object.
-#'If omitted, rayshader will reuse cached extent metadata from the active scene or
-#'the most recent raster-backed hillshade call.
+#'If omitted, rayshader will infer the extent from `heightmap` when possible,
+#'otherwise reuse cached extent metadata from the active scene or the most recent
+#'raster-backed hillshade call.
 #'@param heightmap Default `NULL`. The original height map. Pass this in to extract the dimensions of the resulting
 #'overlay automatically. If omitted, rayshader will reuse the cached heightmap
 #'from the active scene or the most recent hillshade call.
@@ -31,15 +32,14 @@
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Plot the counties around Monterey Bay, CA
 #'generate_polygon_overlay(monterey_counties_sf, palette = rainbow,
-#'                         extent = attr(montereybay,"extent"), heightmap = montereybay) |>
+#'                         heightmap = montereybay) |>
 #'  plot_map()
 #'#These counties include the water, so we'll plot bathymetry data over the polygon
 #'#data to only include parts of the polygon that fall on land.
 #'water_palette = colorRampPalette(c("darkblue", "dodgerblue", "lightblue"))(200)
 #'bathy_hs = height_shade(montereybay, texture = water_palette)
 #'
-#'generate_polygon_overlay(monterey_counties_sf, palette = rainbow,
-#'                         extent = attr(montereybay,"extent"), heightmap = montereybay) |>
+#'generate_polygon_overlay(monterey_counties_sf, palette = rainbow) |>
 #'  add_overlay(generate_altitude_overlay(bathy_hs, montereybay, start_transition = 0)) |>
 #'  plot_map()
 #'#Add a semi-transparent hillshade and change the palette, and remove the polygon lines

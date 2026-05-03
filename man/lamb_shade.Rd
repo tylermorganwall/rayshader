@@ -43,7 +43,7 @@ Cache fallback messages are disabled by default. Set \code{options(rayshader.ver
 \dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Generate a basic hillshade
 montereybay |>
- lamb_shade(zscale=200) |>
+ lamb_shade() |>
  plot_map()
 #Increase the intensity by decreasing the zscale
 montereybay |>
@@ -51,11 +51,11 @@ montereybay |>
  plot_map()
 #Change the sun direction
 montereybay |>
- lamb_shade(zscale=200, sunangle=45) |>
+ lamb_shade(sunangle=45) |>
  plot_map()
 #Change the sun altitude
 montereybay |>
- lamb_shade(zscale=200, sunaltitude=60) |>
+ lamb_shade(sunaltitude=60) |>
  plot_map()
 \dontshow{\}) # examplesIf}
 }

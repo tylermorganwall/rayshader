@@ -34,10 +34,10 @@
 #'  plot_map()
 #'#Create the Red Relief Image Map (RRIM) technique using a custom texture and ambient_shade(),
 #'#with an addition lambertian layer added with lamb_shade() to improve topographic clarity.
-#'bigmb = resize_matrix(montereybay, scale=2, method="cubic")
+#'bigmb = resize_spatial(montereybay, scale=2, method_up="cubic")
 #'bigmb |>
-#'  sphere_shade(zscale=3, texture = create_texture("red","red","red","red","white")) |>
-#'  add_shadow(ambient_shade(maxsearch = 100, multicore = TRUE,zscale=1),0) |>
+#'  sphere_shade(texture = create_texture("red","red","red","red","white")) |>
+#'  add_shadow(ambient_shade(maxsearch = 100, multicore = TRUE),0) |>
 #'  add_shadow(lamb_shade(),0.5) |>
 #'  plot_map()
 ambient_shade = function(

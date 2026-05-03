@@ -34,7 +34,7 @@ test_that("Checking render_snapshot(software_render = TRUE) features", {
 		sphere_shade() |>
 		plot_3d_test(
 			montereybay,
-			zscale = 50,
+			vertical_exaggeration = 4,
 			water = TRUE,
 			shadowcolor = "#40310a",
 			watercolor = "#233aa1",
@@ -74,42 +74,34 @@ test_that("Checking render_snapshot(software_render = TRUE) features", {
 	circle_coords_long2 = moss_landing_coord[2] + 0.1 * cos(t2)
 
 	render_path(
-		extent = attr(montereybay, "extent"),
 		y = unlist(bird_track_lat),
 		x = unlist(bird_track_long),
 		altitude = z_out,
-		zscale = 50,
 		color = "orange",
 		antialias = TRUE
 	)
 	render_points(
-		extent = attr(montereybay, "extent"),
 		y = unlist(bird_track_lat) - 0.1,
 		x = unlist(bird_track_long),
 		altitude = z_out,
-		zscale = 50,
 		color = "purple",
 		clear_previous = T
 	)
 	render_tree(
-		extent = attr(montereybay, "extent"),
 		heightmap = montereybay,
 		tree_zscale = FALSE,
 		tree_height = 30,
 		crown_width_ratio = 1,
 		y = unlist(circle_coords_lat),
-		x = unlist(circle_coords_long),
-		zscale = 50
+		x = unlist(circle_coords_long)
 	)
 	render_obj(
 		flag_full_obj(),
-		extent = attr(montereybay, "extent"),
 		heightmap = montereybay,
 		y = unlist(circle_coords_lat2),
 		x = unlist(circle_coords_long2),
 		scale = c(2, 2, 2),
 		angle = c(0, 45, 0),
-		zscale = 50,
 		color = rainbow(40),
 		smooth = FALSE,
 		clear_previous = TRUE
@@ -118,21 +110,18 @@ test_that("Checking render_snapshot(software_render = TRUE) features", {
 
 	#Can't do text: fonts different on other systems
 	# render_label(montereybay,lat = santa_cruz[1]+0.1, long = santa_cruz[2],
-	#              extent = attr(montereybay, "extent"),
-	#              altitude=2000, zscale=50, text = "Santa Cruz 2", clear_previous = T)
+	#              altitude=2000, text = "Santa Cruz 2", clear_previous = T)
 	# render_label(montereybay,lat = santa_cruz[1], long = santa_cruz[2],
-	#              extent = attr(montereybay, "extent"),
-	#              altitude=2000, zscale=50, text = "Santa Cruz")
+	#              altitude=2000, text = "Santa Cruz")
 	#
 	# render_scalebar(limits=c(0, 80), label_unit = "", position="S")
 
 	# render_polygons(monterey_counties_sf[7,],
-	#                 extent = attr(montereybay, "extent"), data_column_top = "ALAND",
+	#                 data_column_top = "ALAND",
 	#                 scale_data = 100/(2.6E9), color = "chartreuse4",
 	#                 parallel = TRUE, clear_previous = TRUE)
 	road_overlay = generate_line_overlay(
 		monterey_roads_sf,
-		attr(montereybay, "extent"),
 		heightmap = montereybay
 	)
 	render_camera(zoom = 0.35, phi = 34, theta = 220, fov = 85)

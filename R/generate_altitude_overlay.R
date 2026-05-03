@@ -19,7 +19,7 @@
 #'
 #'#Set everything below 0m to water palette
 #'montereybay |>
-#'  sphere_shade(zscale=10) |>
+#'  sphere_shade() |>
 #'  add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0))  |>
 #'  add_shadow(ray_shade(vertical_exaggeration = 4),0.3) |>
 #'  plot_map()
@@ -30,7 +30,7 @@
 #'
 #'#Set the snow transition region from 500m to 1200m
 #'montereybay |>
-#'  sphere_shade(zscale=10, texture = "desert") |>
+#'  sphere_shade(texture = "desert") |>
 #'  add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0))  |>
 #'  add_overlay(generate_altitude_overlay(snow_hs, montereybay, 500, 1200, lower=FALSE))  |>
 #'  add_shadow(ambient_shade(vertical_exaggeration = 4,maxsearch=100),0) |>
@@ -46,6 +46,7 @@ generate_altitude_overlay = function(
 	if (is.null(end_transition)) {
 		end_transition = start_transition
 	}
+	heightmap = coerce_plot_3d_heightmap(heightmap)$heightmap
 
 	if (relative) {
 		if (
