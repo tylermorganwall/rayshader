@@ -69,7 +69,7 @@ filename_movie = tempfile()
 \donttest{
 montereybay |>
  sphere_shade(texture="imhof1") |>
- plot_3d(montereybay, zscale=50, water = TRUE, watercolor="imhof1",
+ plot_3d(vertical_exaggeration = 4, water = TRUE, watercolor="imhof1",
          waterlinecolor="white", waterlinealpha=0.5)
 #Un-comment the following to run:
 #render_movie(filename = filename_movie)

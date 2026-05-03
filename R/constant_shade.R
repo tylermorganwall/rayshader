@@ -13,18 +13,18 @@
 #'#Shade a red map
 #'montereybay |>
 #'  constant_shade("red") |>
-#'  add_shadow(lamb_shade(montereybay),0) |>
+#'  add_shadow(lamb_shade(),0) |>
 #'  plot_map()
 #'#Shade a green map
 #'montereybay |>
 #'  constant_shade("green") |>
-#'  add_shadow(lamb_shade(montereybay),0) |>
+#'  add_shadow(lamb_shade(),0) |>
 #'  plot_map()
 #'#Add a blue tint
 #'montereybay |>
 #'  height_shade() |>
-#'  add_overlay(constant_shade(montereybay, "dodgerblue", alpha=0.25)) |>
-#'  add_shadow(lamb_shade(montereybay,zscale=50),0) |>
+#'  add_overlay(constant_shade(color = "dodgerblue", alpha=0.25)) |>
+#'  add_shadow(lamb_shade(vertical_exaggeration = 4),0) |>
 #'  plot_map()
 #'#Use a blank map on which to draw other data
 #'montereybay |>

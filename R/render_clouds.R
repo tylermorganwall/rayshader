@@ -191,58 +191,58 @@ generate_cloud_layer = function(
 #'#Render a cloud layer over Monterey Bay
 #'montereybay  |>
 #'  sphere_shade()  |>
-#'  plot_3d(montereybay,background="brown",zscale=50)
+#'  plot_3d(background="brown", vertical_exaggeration = 4)
 #'
 #'#Render some clouds
-#'render_clouds(montereybay, zscale=50)
+#'render_clouds()
 #'render_snapshot()
 #'#Change the seed for a different set of clouds and add cloud shadows on the ground
 #'montereybay  |>
 #'  sphere_shade()  |>
-#'  add_shadow(cloud_shade(montereybay,zscale=50, seed = 2), 0.0) |>
-#'  plot_3d(montereybay,background="brown",zscale=50)
+#'  add_shadow(cloud_shade(vertical_exaggeration = 4, seed = 2), 0.0) |>
+#'  plot_3d(background="brown", vertical_exaggeration = 4)
 #'render_camera(theta=-65, phi = 25, zoom = 0.45, fov = 80)
-#'render_clouds(montereybay, zscale=50, seed=2, clear_clouds = T)
+#'render_clouds(seed=2, clear_clouds = T)
 #'render_snapshot()
 #'
 #'montereybay  |>
 #'  sphere_shade()  |>
-#'  plot_3d(montereybay,background="brown",zscale=50)
+#'  plot_3d(background="brown", vertical_exaggeration = 4)
 #'
 #'#Lower the frequency for larger, smoother clouds
-#'render_clouds(montereybay, zscale=50, frequency = 0.001, clear_clouds = T)
+#'render_clouds(frequency = 0.001, clear_clouds = T)
 #'render_snapshot()
 #'#Increase the frequency for more broken clouds
-#'render_clouds(montereybay, zscale=50, frequency = 0.05, clear_clouds = T)
+#'render_clouds(frequency = 0.05, clear_clouds = T)
 #'render_snapshot()
 #'#Increase the fractal level for fluffier, bumpier clouds
-#'render_clouds(montereybay, zscale=50, fractal_levels = 32, clear_clouds = T)
+#'render_clouds(fractal_levels = 32, clear_clouds = T)
 #'render_snapshot()
 #'#Decrease the fractal level for more smoother, continuous clouds
-#'render_clouds(montereybay, zscale=50, fractal_levels = 4, clear_clouds = T)
+#'render_clouds(fractal_levels = 4, clear_clouds = T)
 #'render_snapshot()
 #'#Increase the cloud cover
-#'render_clouds(montereybay, zscale=50, cloud_cover=0.8, clear_clouds = T)
+#'render_clouds(cloud_cover=0.8, clear_clouds = T)
 #'render_snapshot()
 #'#Decrease the cloud cover
-#'render_clouds(montereybay, zscale=50, cloud_cover=0.2, clear_clouds = T)
+#'render_clouds(cloud_cover=0.2, clear_clouds = T)
 #'render_snapshot()
 #'#Change the altitude range of the clouds
-#'render_clouds(montereybay,zscale=50,start_altitude=2000,end_altitude = 4000, clear_clouds = T)
+#'render_clouds(start_altitude=2000,end_altitude = 4000, clear_clouds = T)
 #'render_snapshot()
 #'#Increase the number of layers
-#'render_clouds(montereybay, zscale=50,start_altitude=2000,end_altitude = 4000, layers = 20,
+#'render_clouds(start_altitude=2000,end_altitude = 4000, layers = 20,
 #'              clear_clouds = T)
 #'render_snapshot()
 #'#Change the sun angle and altitude, and increase the attenuation for darker clouds
-#'render_clouds(montereybay,zscale=50,sun_angle=45, sun_altitude= 5, attenuation_coef = 5,
+#'render_clouds(sun_angle=45, sun_altitude= 5, attenuation_coef = 5,
 #'              clear_clouds = T)
 #'render_snapshot()
 #'#Render the scene with a different baseshape
 #'montereybay  |>
 #'  sphere_shade()  |>
-#'  plot_3d(montereybay,background="darkred",zscale=50, baseshape="hex")
-#'render_clouds(montereybay,zscale=50, seed=3, baseshape="hex", clear_clouds = T)
+#'  plot_3d(background="darkred", vertical_exaggeration = 4, baseshape="hex")
+#'render_clouds(seed=3, baseshape="hex", clear_clouds = T)
 #'render_camera(zoom=0.65)
 #'render_snapshot()
 render_clouds = function(
@@ -618,24 +618,28 @@ raymarch_cloud_layer = function(
 #'@param seed Default `1`. Random seed used to generate clouds.
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
 #'of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
+#'@param vertical_exaggeration Default `1`. One-off multiplier applied to the
+#'effective visual relief for this call. Values greater than `1` increase
+#'apparent relief and values between `0` and `1` flatten it. This does not
+#'update cached `zscale` metadata.
 #'@return A 2D shadow matrix.
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Render clouds with cloud shadows on the ground
 #'montereybay  |>
 #'  sphere_shade()  |>
-#'  add_shadow(cloud_shade(montereybay,zscale=50), 0.0) |>
-#'  plot_3d(montereybay,background="darkred",zscale=50)
+#'  add_shadow(cloud_shade(vertical_exaggeration = 4), 0.0) |>
+#'  plot_3d(background="darkred", vertical_exaggeration = 4)
 #'render_camera(theta=-65, phi = 25, zoom = 0.45, fov = 80)
-#'render_clouds(montereybay, zscale=50)
+#'render_clouds()
 #'render_snapshot()
 #'#Adjust the light direction for shadows and increase the attenuation for darker clouds
 #'montereybay  |>
 #'  sphere_shade()  |>
-#'  add_shadow(cloud_shade(montereybay,zscale=50, sun_altitude=20, attenuation_coef = 3), 0.0) |>
-#'  plot_3d(montereybay,background="darkred",zscale=50)
+#'  add_shadow(cloud_shade(vertical_exaggeration = 4, sun_altitude=20, attenuation_coef = 3), 0.0) |>
+#'  plot_3d(background="darkred", vertical_exaggeration = 4)
 #'render_camera(theta=-65, phi = 25, zoom = 0.45, fov = 80)
-#'render_clouds(montereybay, zscale=50)
+#'render_clouds()
 #'render_snapshot()
 cloud_shade = function(
 	heightmap,
@@ -655,8 +659,64 @@ cloud_shade = function(
 	fractal_levels = 16,
 	attenuation_coef = 1,
 	seed = 1,
-	zscale = 1
+	zscale = 1,
+	vertical_exaggeration = 1
 ) {
+	heightmap_missing = missing(heightmap)
+	heightmap_cache_label = format_scene_cache_label(deparse(substitute(
+		heightmap
+	)))
+	zscale_cache_input_label = format_scene_cache_label(deparse(substitute(
+		zscale
+	)))
+	heightmap_auto_zscale = NA_real_
+	if (heightmap_missing) {
+		resolved_heightmap = resolve_hillshade_heightmap(
+			heightmap_missing = TRUE,
+			caller = "cloud_shade"
+		)
+		heightmap = resolved_heightmap$heightmap
+	} else {
+		heightmap_info = coerce_plot_3d_heightmap(heightmap)
+		heightmap = heightmap_info$heightmap
+		heightmap_auto_zscale = heightmap_info$zscale
+		cache_hillshade_heightmap(heightmap, label = heightmap_cache_label)
+		if (!is.null(heightmap_info$extent)) {
+			cache_hillshade_extent(heightmap_info$extent, label = heightmap_cache_label)
+		} else {
+			cache_hillshade_extent(NULL, label = NULL)
+		}
+		if (!is.null(heightmap_info$crs)) {
+			cache_hillshade_crs(heightmap_info$crs, label = heightmap_cache_label)
+		} else {
+			cache_hillshade_crs(NULL, label = NULL)
+		}
+	}
+	stopifnot(is.matrix(heightmap))
+	resolved_zscale = resolve_hillshade_zscale(
+		zscale = zscale,
+		zscale_missing = missing(zscale),
+		caller = "cloud_shade",
+		auto_zscale = heightmap_auto_zscale
+	)
+	zscale = resolved_zscale$zscale
+	zscale_cache_label = switch(
+		resolved_zscale$source,
+		explicit = zscale_cache_input_label,
+		auto = format_scene_cache_label(sprintf(
+			"%s_auto_zscale",
+			heightmap_cache_label
+		)),
+		hillshade = resolved_zscale$label,
+		scene = resolved_zscale$label,
+		NULL
+	)
+	cache_hillshade_zscale(zscale, label = zscale_cache_label)
+	zscale = apply_vertical_exaggeration(
+		zscale = zscale,
+		vertical_exaggeration = vertical_exaggeration,
+		caller = "cloud_shade"
+	)
 	time = -time
 	if (start_altitude > end_altitude) {
 		temp_alt = start_altitude

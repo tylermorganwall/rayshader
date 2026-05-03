@@ -89,20 +89,17 @@
 #'#Render the 3D map
 #'montereybay |>
 #'  sphere_shade() |>
-#'  plot_3d(montereybay,zscale=50,water=TRUE,
+#'  plot_3d(vertical_exaggeration = 4,water=TRUE,
 #'          shadowcolor="#40310a", watercolor="#233aa1", background = "tan",
 #'          theta=210,  phi=22, zoom=0.20, fov=55)
 #'
-#'#Pass in the extent of the underlying raster (stored in an attribute for the montereybay
-#'#dataset) and the x/y coordinates and altitudes of the track.
-#'render_path(extent = attr(montereybay,"extent"),
-#'            y = unlist(bird_track_lat), x = unlist(bird_track_long),
-#'            altitude = z_out, zscale=50,color="white", antialias=TRUE)
+#'#Pass in the latitude/longitude coordinates and altitudes of the track.
+#'render_path(lat = unlist(bird_track_lat), long = unlist(bird_track_long),
+#'            altitude = z_out, color="white", antialias=TRUE)
 #'render_snapshot()
 #'#We'll set the altitude to right above the water to give the tracks a "shadow".
-#'render_path(extent = attr(montereybay,"extent"),
-#'            y = unlist(bird_track_lat), x = unlist(bird_track_long),
-#'            altitude = 10, zscale=50, color="black", antialias=TRUE)
+#'render_path(lat = unlist(bird_track_lat), long = unlist(bird_track_long),
+#'            altitude = 10, color="black", antialias=TRUE)
 #'render_camera(theta=30,phi=35,zoom=0.45,fov=70)
 #'render_snapshot()
 #'
@@ -110,14 +107,13 @@
 #'render_path(clear_previous=TRUE)
 #'
 #'#Finally, we can also plot just GPS coordinates offset from the surface by leaving altitude `NULL`
-#'# Here we plot a spiral of values surrounding Moss Landing. This requires the original heightmap.
+#'# Here we plot a spiral of values surrounding Moss Landing.
 #'
 #'t = seq(0,2*pi,length.out=1000)
 #'circle_coords_lat = moss_landing_coord[1] + 0.5 * t/8 * sin(t*6)
 #'circle_coords_long = moss_landing_coord[2] + 0.5 * t/8 *  cos(t*6)
-#'render_path(extent = attr(montereybay,"extent"), heightmap = montereybay,
-#'            y = unlist(circle_coords_lat), x = unlist(circle_coords_long),
-#'            zscale=50, color="red", antialias=TRUE,offset=100, linewidth=5)
+#'render_path(lat = unlist(circle_coords_lat), long = unlist(circle_coords_long),
+#'            color="red", antialias=TRUE,offset=100, linewidth=5)
 #'render_camera(theta = 160, phi=33, zoom=0.4, fov=55)
 #'render_snapshot()
 #'
@@ -134,9 +130,9 @@
 #'#For transmissive materials (like `dielectric`), we should specify that the path
 #'#should be rendered with an extruded path. We'll use the `attenuation` argument in
 #'#the `dielectric` function to specify a realistic glass color.
-#'render_path(extent = attr(montereybay,"extent"), heightmap = montereybay, clear_previous = TRUE,
-#'            y = unlist(circle_coords_lat), x = unlist(circle_coords_long),
-#'            zscale=50, color="white", offset=200, linewidth=5)
+#'render_path(clear_previous = TRUE,
+#'            lat = unlist(circle_coords_lat), long = unlist(circle_coords_long),
+#'            color="white", offset=200, linewidth=5)
 #'render_highquality(line_radius=1, min_variance = 0, samples = 16,
 #'                   lightsize = 2000, lightintensity = 10,
 #'                   path_material = rayrender::dielectric, use_extruded_paths = TRUE,

@@ -48,7 +48,8 @@ all data will be rendered at that altitude.}
 \item{extent}{Either an object representing the spatial extent of the scene
 (either from the \code{raster}, \code{terra}, \code{sf}, or \code{sp} packages),
 a length-4 numeric vector specifying \code{c("xmin", "xmax","ymin","ymax")}, or the spatial object (from
-the previously aforementioned packages) which will be automatically converted to an extent object.}
+the previously aforementioned packages) which will be automatically converted to an extent object.
+If omitted, rayshader will use extent metadata cached by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}.}
 
 \item{frames}{Default \code{360}. Total number of animation frames.}
 
@@ -74,7 +75,7 @@ the path to the tolerance specified. This happens after the data has been merged
 If the input data is specified with long-lat coordinates and \code{sf_use_s2()} returns \code{TRUE},
 then the value of simplify_tolerance must be specified in meters.}
 
-\item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.}
+\item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap. If omitted, rayshader uses the cached scene value from \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}} when available.}
 
 \item{vertical_exaggeration}{Default \code{1}. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}} when available; pass explicitly to override for this call.}
 
@@ -150,11 +151,10 @@ circle_coords_lat = moss_landing_coord[1] + 0.25 * sin(t)
 circle_coords_long = moss_landing_coord[2] + 0.25 * cos(t)
 
 # Minimal 3D render -> frames
-extent_mb = attr(montereybay, "extent")
-sphere_shade(montereybay) |>
+montereybay |>
+sphere_shade() |>
 plot_3d(
-	montereybay,
-	zscale = 50,
+	vertical_exaggeration = 4,
 	water = TRUE,
 	shadowcolor = "#40310a",
 	background = "tan",
@@ -165,11 +165,8 @@ plot_3d(
 )
 
 render_path(
-extent = extent_mb,
-heightmap = montereybay,
 lat = circle_coords_lat,
 long = circle_coords_long,
-zscale = 50,
 color = "red",
 antialias = TRUE,
 offset = 500,
@@ -177,14 +174,11 @@ linewidth = 2
 )
 
 cam = convert_path_to_animation_coords(
-extent = extent_mb,
-heightmap = montereybay,
 lat = circle_coords_lat,
 long = circle_coords_long,
 type = "bezier",
 damp_motion = TRUE,
 fovs = 80,
-zscale = 50,
 offset = 1000,
 frames = length(t)
 )
@@ -210,14 +204,11 @@ framerate = 24
 #Now we use a "follow camera" for a third person view:
 \dontrun{
 follow_cam = convert_path_to_animation_coords(
-extent = extent_mb,
-heightmap = montereybay,
 lat = circle_coords_lat,
 long = circle_coords_long,
 type = "bezier",
 damp_motion = TRUE,
 fovs = 80,
-zscale = 50,
 follow_camera = TRUE,
 offset = 1000,
 frames = length(t)

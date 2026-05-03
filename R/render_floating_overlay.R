@@ -38,18 +38,17 @@
 #'  #Create 3D plot (water transparency set to 1 because multiple transparency layers can interfere)
 #'  montereybay |>
 #'    height_shade() |>
-#'    add_shadow(ray_shade(montereybay,zscale=50),0.3) |>
-#'    plot_3d(montereybay, water = T, wateralpha = 1, windowsize = 800, watercolor = "lightblue")
+#'    add_shadow(ray_shade(vertical_exaggeration = 4),0.3) |>
+#'    plot_3d(water = T, wateralpha = 1, windowsize = 800, watercolor = "lightblue")
 #'  render_camera(theta=-55,phi=45,zoom=0.8)
 #'
 #'  #Render label
-#'  render_label(montereybay, lat = monterey[2], long = monterey[1], altitude = 9900,
-#'               extent = attr(montereybay, "extent"),
-#'               zscale = 50, text = "Monterey", textcolor = "black", linecolor="darkred")
+#'  render_label(lat = monterey[2], long = monterey[1], altitude = 9900,
+#'               text = "Monterey", textcolor = "black", linecolor="darkred")
 #'
 #'  #Render Floating Overlays
-#'  render_floating_overlay(road_overlay, altitude = 10000,zscale = 50)
-#'  render_floating_overlay(point_overlay, altitude = 100,zscale = 50)
+#'  render_floating_overlay(road_overlay, altitude = 10000)
+#'  render_floating_overlay(point_overlay, altitude = 100)
 #'  render_snapshot()
 #'}
 render_floating_overlay = function(

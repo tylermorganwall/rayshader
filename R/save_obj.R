@@ -15,7 +15,7 @@
 #'#Save model of volcano
 #'volcano |>
 #'  sphere_shade() |>
-#'  plot_3d(volcano, zscale = 2)
+#'  plot_3d(vertical_exaggeration = 1/2)
 #'
 #'save_obj(filename_obj)
 #'
@@ -25,7 +25,7 @@
 #'#Make water have realistic index of refraction
 #'montereybay |>
 #'  sphere_shade() |>
-#'  plot_3d(montereybay, zscale = 50)
+#'  plot_3d(vertical_exaggeration = 4)
 #'
 #'save_obj(filename_obj, water_index_refraction = 1.5)
 save_obj = function(

@@ -73,7 +73,7 @@ Places a scale bar on the map in 3D.
 #Add a scale bar to the montereybay dataset, here representing about 80km
 montereybay |>
  sphere_shade() |>
- plot_3d(montereybay,theta=45, water=TRUE)
+ plot_3d(theta=45, water=TRUE)
 render_scalebar(limits=c(0, 80), label_unit = "km")
 render_snapshot()
 #This function works with `render_highquality()`

@@ -113,14 +113,14 @@
 #'                                     resolution_multiply = 50), rescale_original = TRUE) |>
 #'   plot_3d(osm_mat, water = TRUE, windowsize = 800, watercolor = "dodgerblue",
 #'           zscale = 10,
-#'           background = "pink")
+#'           background = "pink",
+#'           extent = new_e)
 #'
 #' #Render buildings
 #' render_buildings(building_polys,  flat_shading  = TRUE,
-#'                  angle = 30 , heightmap = osm_mat,
+#'                  angle = 30,
 #'                  material = "white", roof_material = "white",
-#'                  extent = new_e, roof_height = 3, base_height = 0,
-#'                  zscale=10)
+#'                  roof_height = 3, base_height = 0)
 #' render_camera(theta=220, phi=22, zoom=0.45, fov=0)
 #' render_snapshot()
 #'

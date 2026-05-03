@@ -19,20 +19,20 @@
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'montereybay |>
 #'  sphere_shade() |>
-#'  plot_3d(montereybay,zscale=50)
+#'  plot_3d(vertical_exaggeration = 4)
 #'render_snapshot()
 #'
 #'#We want to add a layer of water after the initial render.
-#'render_water(montereybay,zscale=50)
+#'render_water()
 #'render_snapshot()
 #'
 #'#Call it again to change the water depth
-#'render_water(montereybay,zscale=50,waterdepth=-1000)
+#'render_water(waterdepth=-1000)
 #'render_snapshot()
 #'
 #'#Add waterlines
 #'render_camera(theta=-45)
-#'render_water(montereybay,zscale=50,waterlinecolor="white")
+#'render_water(waterlinecolor="white")
 #'render_snapshot()
 render_water = function(
 	heightmap = NULL,

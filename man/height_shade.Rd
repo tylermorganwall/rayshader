@@ -36,19 +36,19 @@ montereybay |>
 #Add a shadow:
 montereybay |>
  height_shade() |>
- add_shadow(ray_shade(montereybay,zscale=50),0.1) |>
+ add_shadow(ray_shade(vertical_exaggeration = 4),0.1) |>
  plot_map()
 
 #Change the palette:
 montereybay |>
  height_shade(texture = topo.colors(256)) |>
- add_shadow(ray_shade(montereybay,zscale=50),0.1) |>
+ add_shadow(ray_shade(vertical_exaggeration = 4),0.1) |>
  plot_map()
 
 #Really change the palette (warning: gratuitous use of rainbow palette):
 montereybay |>
  height_shade(texture = rainbow(256)) |>
- add_shadow(ray_shade(montereybay,zscale=50),0.1) |>
+ add_shadow(ray_shade(vertical_exaggeration = 4),0.1) |>
  plot_map()
 \dontshow{\}) # examplesIf}
 }

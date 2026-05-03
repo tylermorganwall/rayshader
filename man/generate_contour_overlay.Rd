@@ -52,7 +52,7 @@ Calculates and returns an overlay of contour lines for the current height map.
 montereybay |>
  height_shade() |>
  add_overlay(generate_contour_overlay(montereybay))  |>
- add_shadow(ray_shade(montereybay,zscale=50),0.3) |>
+ add_shadow(ray_shade(vertical_exaggeration = 4),0.3) |>
  plot_map()
 
 #Add a different contour color for above and below water, and specify levels manually
@@ -65,7 +65,7 @@ land_breaks = breaks[breaks > 0]
 montereybay |>
  height_shade() |>
  add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0))  |>
- add_shadow(ray_shade(montereybay,zscale=50),0.3) |>
+ add_shadow(ray_shade(vertical_exaggeration = 4),0.3) |>
  add_overlay(generate_contour_overlay(montereybay, levels = water_breaks, color="white"))  |>
  add_overlay(generate_contour_overlay(montereybay, levels = land_breaks, color="black"))  |>
  plot_map()
@@ -73,7 +73,7 @@ montereybay |>
 montereybay |>
  height_shade() |>
  add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0))  |>
- add_shadow(ray_shade(montereybay,zscale=50),0.3) |>
+ add_shadow(ray_shade(vertical_exaggeration = 4),0.3) |>
  add_overlay(generate_contour_overlay(montereybay, levels = water_breaks, color="white",
                                       height = nrow(montereybay)*2,
                                       width  = ncol(montereybay)*2))  |>
@@ -84,7 +84,7 @@ montereybay |>
 #Increase the number of breaks and the transparency (via add_overlay)
 montereybay |>
  height_shade() |>
- add_shadow(ray_shade(montereybay,zscale=50),0.3) |>
+ add_shadow(ray_shade(vertical_exaggeration = 4),0.3) |>
  add_overlay(generate_contour_overlay(montereybay, linewidth=2, nlevels=100,
                                       height = nrow(montereybay)*2, color="black",
                                       width  = ncol(montereybay)*2), alphalayer=0.5) |>
@@ -93,7 +93,7 @@ montereybay |>
 montereybay |>
  height_shade() |>
  add_overlay(generate_contour_overlay(montereybay, linewidth=2, levels = seq(-2000,0,100))) |>
- add_shadow(ray_shade(montereybay,zscale=50),0.3) |>
+ add_shadow(ray_shade(vertical_exaggeration = 4),0.3) |>
  plot_map()
 \dontshow{\}) # examplesIf}
 }

@@ -25,27 +25,27 @@
 #'#Add contours to the montereybay dataset
 #'montereybay |>
 #'  height_shade() |>
-#'  add_shadow(ray_shade(montereybay,zscale=50),0.3) |>
-#'  plot_3d(montereybay, theta = -45, zscale=50, zoom=0.9, windowsize=800)
-#'render_contours(montereybay, zscale = 50, offset = 100)
+#'  add_shadow(ray_shade(vertical_exaggeration = 4),0.3) |>
+#'  plot_3d(theta = -45, vertical_exaggeration = 4, zoom=0.9, windowsize=800)
+#'render_contours(offset = 100)
 #'render_snapshot()
 #'
 #'#Specify the number of levels
-#'render_contours(montereybay, zscale = 50, offset = 100, nlevels = 30,
+#'render_contours(offset = 100, nlevels = 30,
 #'                clear_previous = TRUE)
 #'render_snapshot()
 #'
 #'#Manually specify the breaks with levels
-#'render_contours(montereybay, linewidth = 2,  offset = 100, zscale = 50,
+#'render_contours(linewidth = 2,  offset = 100,
 #'                levels = seq(-2000, 0, 100), clear_previous = TRUE)
 #'render_snapshot()
 #'
 #'#Use a color palette for the contours
 #'volcano |>
 #'  constant_shade() |>
-#'  plot_3d(volcano, zscale = 2, solid = FALSE, zoom = 0.8)
+#'  plot_3d(zscale = 2, solid = FALSE, zoom = 0.8)
 #'palette = grDevices::colorRampPalette(c("red", "purple", "pink"))
-#'render_contours(volcano, offset = 1, palette = palette, zscale = 2, nlevels = 20)
+#'render_contours(offset = 1, palette = palette, nlevels = 20)
 #'render_snapshot()
 #'
 #'#Render using `render_highquality()` for a neon light effect

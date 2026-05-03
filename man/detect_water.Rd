@@ -52,6 +52,6 @@ island_volcano[island_volcano < mean(island_volcano)] = mean(island_volcano)
 #Setting a minimum area avoids classifying small flat areas as water:
 island_volcano |>
  sphere_shade(texture="imhof3") |>
- add_water(detect_water(island_volcano, min_area = 400),color="imhof3") |>
+ add_water(detect_water(min_area = 400),color="imhof3") |>
  plot_map()
 }

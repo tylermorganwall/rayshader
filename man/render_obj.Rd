@@ -140,7 +140,7 @@ in the proper location (but for ease of use, use \code{\link[=render_multipolygo
 moss_landing_coord = c(36.806807, -121.793332)
 montereybay |>
  sphere_shade() |>
- plot_3d(montereybay,zscale=50,water=TRUE,
+ plot_3d(vertical_exaggeration = 4,water=TRUE,
          shadowcolor="#40310a", background = "tan",
          theta=210,  phi=22, zoom=0.20, fov=55)
 
@@ -149,29 +149,29 @@ circle_coords_lat = moss_landing_coord[1] + 0.3 * sin(t)
 circle_coords_long = moss_landing_coord[2] + 0.3 * cos(t)
 
 #Create a rainbow spectrum of flags
-render_obj(flag_full_obj(), extent = attr(montereybay,"extent"), heightmap = montereybay,
-          y = unlist(circle_coords_lat), x = unlist(circle_coords_long),
+render_obj(flag_full_obj(),
+          lat = unlist(circle_coords_lat), long = unlist(circle_coords_long),
           scale=c(2,2,2), angle=c(0,45,0),
-          zscale=50, color=rainbow(100), smooth = FALSE, clear_previous = TRUE)
+          color=rainbow(100), smooth = FALSE, clear_previous = TRUE)
 render_snapshot()
 #Rotate the flag to follow the circle
-render_obj(flag_full_obj(), extent = attr(montereybay,"extent"), heightmap = montereybay,
-          y = unlist(circle_coords_lat), x = unlist(circle_coords_long),
+render_obj(flag_full_obj(),
+          lat = unlist(circle_coords_lat), long = unlist(circle_coords_long),
           scale=c(2,2,2),
           angle=matrix(c(rep(0,100), seq(0,-360,length.out=101)[-1],rep(0,100)),ncol=3),
-          zscale=50, color=rainbow(100), smooth = FALSE, clear_previous = TRUE)
+          color=rainbow(100), smooth = FALSE, clear_previous = TRUE)
 render_snapshot()
 #Style the pole with a different color
-render_obj(flag_pole_obj(), extent = attr(montereybay,"extent"), heightmap = montereybay,
-          y = unlist(circle_coords_lat), x = unlist(circle_coords_long),
+render_obj(flag_pole_obj(),
+          lat = unlist(circle_coords_lat), long = unlist(circle_coords_long),
           scale=c(2,2,2),
           angle=matrix(c(rep(0,100), seq(0,-360,length.out=101)[-1],rep(0,100)),ncol=3),
-          zscale=50, color="grey20", smooth = FALSE, clear_previous = TRUE)
-render_obj(flag_banner_obj(), extent = attr(montereybay,"extent"), heightmap = montereybay,
-          y = unlist(circle_coords_lat), x = unlist(circle_coords_long),
+          color="grey20", smooth = FALSE, clear_previous = TRUE)
+render_obj(flag_banner_obj(),
+          lat = unlist(circle_coords_lat), long = unlist(circle_coords_long),
           scale=c(2,2,2),
           angle=matrix(c(rep(0,100), seq(0,-360,length.out=101)[-1],rep(0,100)),ncol=3),
-          zscale=50, color=rainbow(100), smooth = FALSE)
+          color=rainbow(100), smooth = FALSE)
 
 #And all of these work with `render_highquality()`
 render_highquality(samples = 16)

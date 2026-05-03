@@ -97,7 +97,7 @@ is reused.
 \dontshow{if (length(find.package("terra", quiet = TRUE)) > 0) withAutoprint(\{ # examplesIf}
 hillshade_img = elmat |>
   sphere_shade() |>
-  add_shadow(ray_shade(elmat), 0.5)
+  add_shadow(ray_shade(), 0.5)
 
 hillshade_rast = spatialize_image(
   hillshade_img,

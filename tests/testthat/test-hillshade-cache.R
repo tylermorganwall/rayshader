@@ -354,6 +354,59 @@ test_that("ray based hillshade functions reuse cached zscale", {
 	)
 })
 
+test_that("cloud_shade reuses cached heightmap and supports vertical_exaggeration", {
+	testthat::skip_if_not_installed("ambient")
+	clear_hillshade_test_cache()
+	withr::defer(clear_hillshade_test_cache())
+
+	heightmap = volcano[seq(1, nrow(volcano), by = 4), seq(1, ncol(volcano), by = 4)]
+	sphere_shade(heightmap, zscale = 12)
+
+	expect_equal(
+		cloud_shade(
+			heightmap,
+			layers = 2,
+			seed = 2
+		),
+		cloud_shade(
+			heightmap,
+			zscale = 12,
+			layers = 2,
+			seed = 2
+		)
+	)
+	expect_equal(
+		cloud_shade(
+			vertical_exaggeration = 3,
+			layers = 2,
+			seed = 2
+		),
+		cloud_shade(
+			heightmap,
+			zscale = 12,
+			vertical_exaggeration = 3,
+			layers = 2,
+			seed = 2
+		)
+	)
+	expect_equal(get_hillshade_zscale(), 12)
+	expect_equal(
+		cloud_shade(
+			heightmap,
+			zscale = 12,
+			vertical_exaggeration = 3,
+			layers = 2,
+			seed = 2
+		),
+		cloud_shade(
+			heightmap,
+			zscale = 4,
+			layers = 2,
+			seed = 2
+		)
+	)
+})
+
 test_that("plot_3d uses cached hillshade heightmap and zscale", {
 	on.exit(rgl::close3d(), add = TRUE)
 	local_rgl_use_null()

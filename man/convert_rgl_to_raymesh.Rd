@@ -33,7 +33,7 @@ filename_obj = tempfile(fileext = ".obj")
 #Save model of volcano
 volcano |>
  sphere_shade() |>
- plot_3d(volcano, zscale = 2)
+ plot_3d(zscale = 2)
 
 rm_obj = convert_rgl_to_raymesh()
 \dontshow{\}) # examplesIf}

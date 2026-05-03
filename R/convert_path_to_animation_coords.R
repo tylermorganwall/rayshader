@@ -16,6 +16,7 @@
 #' (either from the `raster`, `terra`, `sf`, or `sp` packages),
 #' a length-4 numeric vector specifying `c("xmin", "xmax","ymin","ymax")`, or the spatial object (from
 #' the previously aforementioned packages) which will be automatically converted to an extent object.
+#' If omitted, rayshader will use extent metadata cached by [plot_3d()] or [plot_gg()].
 #'@param frames Default `360`. Total number of animation frames.
 #'@param reorder Default `TRUE`. If `TRUE`, this will attempt to re-order the rows within an `sf` object with
 #'multiple paths to be one continuous, end-to-end path. This happens in two steps: merging duplicate
@@ -34,7 +35,7 @@
 #'the path to the tolerance specified. This happens after the data has been merged if `reorder = TRUE`.
 #'If the input data is specified with long-lat coordinates and `sf_use_s2()` returns `TRUE`,
 #'then the value of simplify_tolerance must be specified in meters.
-#'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.
+#'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap. If omitted, rayshader uses the cached scene value from [plot_3d()] or [plot_gg()] when available.
 #'@param vertical_exaggeration Default `1`. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from [plot_3d()] or [plot_gg()] when available; pass explicitly to override for this call.
 #'@param heightmap Default `NULL`. Height matrix for the current scene. If omitted, this is taken from the cached scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value.
 #'@param type Default `cubic`. Type of transition between keyframes.
@@ -84,11 +85,10 @@
 #'circle_coords_long = moss_landing_coord[2] + 0.25 * cos(t)
 #'
 #'# Minimal 3D render -> frames
-#'extent_mb = attr(montereybay, "extent")
-#'sphere_shade(montereybay) |>
+#'montereybay |>
+#'	sphere_shade() |>
 #'	plot_3d(
-#'		montereybay,
-#'		zscale = 50,
+#'		vertical_exaggeration = 4,
 #'		water = TRUE,
 #'		shadowcolor = "#40310a",
 #'		background = "tan",
@@ -99,11 +99,8 @@
 #'	)
 #'
 #'render_path(
-#'	extent = extent_mb,
-#'	heightmap = montereybay,
 #'	lat = circle_coords_lat,
 #'	long = circle_coords_long,
-#'	zscale = 50,
 #'	color = "red",
 #'	antialias = TRUE,
 #'	offset = 500,
@@ -111,14 +108,11 @@
 #')
 #'
 #'cam = convert_path_to_animation_coords(
-#'	extent = extent_mb,
-#'	heightmap = montereybay,
 #'	lat = circle_coords_lat,
 #'	long = circle_coords_long,
 #'	type = "bezier",
 #'	damp_motion = TRUE,
 #'	fovs = 80,
-#'	zscale = 50,
 #'	offset = 1000,
 #'	frames = length(t)
 #')
@@ -144,14 +138,11 @@
 #' #Now we use a "follow camera" for a third person view:
 #' \dontrun{
 #' follow_cam = convert_path_to_animation_coords(
-#'	extent = extent_mb,
-#'	heightmap = montereybay,
 #'	lat = circle_coords_lat,
 #'	long = circle_coords_long,
 #'	type = "bezier",
 #'	damp_motion = TRUE,
 #'	fovs = 80,
-#'	zscale = 50,
 #'	follow_camera = TRUE,
 #'	offset = 1000,
 #'	frames = length(t)

@@ -60,26 +60,20 @@
 #'#We're plotting the polygon data here for counties around Monterey Bay. We'll first
 #'#plot the county names at the polygon centroids.
 #'bathy_hs |>
-#'  add_shadow(lamb_shade(montereybay,zscale=50),0.3) |>
-#'  add_overlay(generate_polygon_overlay(monterey_counties_sf, palette = rainbow,
-#'                                       extent = attr(montereybay,"extent"),
-#'                                       heightmap = montereybay)) |>
+#'  add_shadow(lamb_shade(vertical_exaggeration = 4),0.3) |>
+#'  add_overlay(generate_polygon_overlay(monterey_counties_sf, palette = rainbow)) |>
 #'  add_overlay(generate_label_overlay(labels=monterey_counties_sf,
 #'                                     color="black", point_size = 1, text_size = 1,
 #'                                     data_label_column = "NAME",
-#'                                     extent= attr(montereybay,"extent"), heightmap = montereybay,
 #'                                     seed=1))  |>
 #'  plot_map()
 #'#It's hard to read these values, so we'll add a white halo.
 #'bathy_hs |>
-#'  add_shadow(lamb_shade(montereybay,zscale=50),0.3) |>
-#'  add_overlay(generate_polygon_overlay(monterey_counties_sf, palette = rainbow,
-#'                                       extent = attr(montereybay,"extent"),
-#'                                       heightmap = montereybay)) |>
+#'  add_shadow(lamb_shade(vertical_exaggeration = 4),0.3) |>
+#'  add_overlay(generate_polygon_overlay(monterey_counties_sf, palette = rainbow)) |>
 #'  add_overlay(generate_label_overlay(labels=monterey_counties_sf,
 #'                                     color="black", point_size = 1, text_size = 1,
 #'                                     data_label_column = "NAME",
-#'                                     extent= attr(montereybay,"extent"), heightmap = montereybay,
 #'                                     halo_color = "white", halo_expand = 3,
 #'                                     seed=1))  |>
 #'  plot_map()
@@ -87,12 +81,11 @@
 #'montereybay |>
 #'  height_shade() |>
 #'  add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0)) |>
-#'  add_shadow(lamb_shade(montereybay,zscale=50),0.3) |>
+#'  add_shadow(lamb_shade(vertical_exaggeration = 4),0.3) |>
 #'  add_overlay(generate_label_overlay(labels=as.character(monterey_counties_sf$NAME),
 #'                                     x=as.numeric(as.character(monterey_counties_sf$INTPTLON)),
 #'                                     y=as.numeric(as.character(monterey_counties_sf$INTPTLAT)),
 #'                                     color="black", point_size = 1, text_size = 1,
-#'                                     extent= attr(montereybay,"extent"), heightmap = montereybay,
 #'                                     halo_color = "white", halo_expand = 3,
 #'                                     seed=1))  |>
 #'  plot_map()
@@ -100,12 +93,11 @@
 #'montereybay |>
 #'  height_shade() |>
 #'  add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0)) |>
-#'  add_shadow(lamb_shade(montereybay,zscale=50),0.3) |>
+#'  add_shadow(lamb_shade(vertical_exaggeration = 4),0.3) |>
 #'  add_overlay(generate_label_overlay(labels=as.character(monterey_counties_sf$NAME),
 #'                                     x=as.numeric(as.character(monterey_counties_sf$INTPTLON)),
 #'                                     y=as.numeric(as.character(monterey_counties_sf$INTPTLAT)),
 #'                                     color="black", point_size = 1, text_size = 1,
-#'                                     extent= attr(montereybay,"extent"), heightmap = montereybay,
 #'                                     halo_color = "white", halo_expand = 3, halo_blur=10,
 #'                                     seed=1))  |>
 #'  plot_map()
@@ -113,12 +105,11 @@
 #'montereybay |>
 #'  height_shade() |>
 #'  add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0)) |>
-#'  add_shadow(lamb_shade(montereybay,zscale=50),0.3) |>
+#'  add_shadow(lamb_shade(vertical_exaggeration = 4),0.3) |>
 #'  add_overlay(generate_label_overlay(labels=as.character(monterey_counties_sf$NAME),
 #'                                     x=as.numeric(as.character(monterey_counties_sf$INTPTLON)),
 #'                                     y=as.numeric(as.character(monterey_counties_sf$INTPTLAT)),
 #'                                     color="black", point_size = 1, text_size = 1,
-#'                                     extent= attr(montereybay,"extent"), heightmap = montereybay,
 #'                                     halo_color = "white", halo_expand = 3, halo_blur=10,
 #'                                     seed=2))  |>
 #'  plot_map()

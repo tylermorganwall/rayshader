@@ -48,7 +48,7 @@
 #'   height_shade() |>
 #'   add_water(detect_water(montbay), color="dodgerblue") |>
 #'   add_shadow(texture_shade(montbay, detail=1/3, brightness = 15, contrast = 5),0) |>
-#'   add_shadow(lamb_shade(montbay,zscale=50),0)
+#'   add_shadow(lamb_shade(montbay, vertical_exaggeration = 4),0)
 #'
 #' plot_map(basemap)
 #' #Add waterlines

@@ -88,58 +88,58 @@ Note: Underlying layers with transparency can cause rendering issues in rgl.
 #Render a cloud layer over Monterey Bay
 montereybay  |>
  sphere_shade()  |>
- plot_3d(montereybay,background="brown",zscale=50)
+ plot_3d(background="brown", vertical_exaggeration = 4)
 
 #Render some clouds
-render_clouds(montereybay, zscale=50)
+render_clouds()
 render_snapshot()
 #Change the seed for a different set of clouds and add cloud shadows on the ground
 montereybay  |>
  sphere_shade()  |>
- add_shadow(cloud_shade(montereybay,zscale=50, seed = 2), 0.0) |>
- plot_3d(montereybay,background="brown",zscale=50)
+ add_shadow(cloud_shade(vertical_exaggeration = 4, seed = 2), 0.0) |>
+ plot_3d(background="brown", vertical_exaggeration = 4)
 render_camera(theta=-65, phi = 25, zoom = 0.45, fov = 80)
-render_clouds(montereybay, zscale=50, seed=2, clear_clouds = T)
+render_clouds(seed=2, clear_clouds = T)
 render_snapshot()
 
 montereybay  |>
  sphere_shade()  |>
- plot_3d(montereybay,background="brown",zscale=50)
+ plot_3d(background="brown", vertical_exaggeration = 4)
 
 #Lower the frequency for larger, smoother clouds
-render_clouds(montereybay, zscale=50, frequency = 0.001, clear_clouds = T)
+render_clouds(frequency = 0.001, clear_clouds = T)
 render_snapshot()
 #Increase the frequency for more broken clouds
-render_clouds(montereybay, zscale=50, frequency = 0.05, clear_clouds = T)
+render_clouds(frequency = 0.05, clear_clouds = T)
 render_snapshot()
 #Increase the fractal level for fluffier, bumpier clouds
-render_clouds(montereybay, zscale=50, fractal_levels = 32, clear_clouds = T)
+render_clouds(fractal_levels = 32, clear_clouds = T)
 render_snapshot()
 #Decrease the fractal level for more smoother, continuous clouds
-render_clouds(montereybay, zscale=50, fractal_levels = 4, clear_clouds = T)
+render_clouds(fractal_levels = 4, clear_clouds = T)
 render_snapshot()
 #Increase the cloud cover
-render_clouds(montereybay, zscale=50, cloud_cover=0.8, clear_clouds = T)
+render_clouds(cloud_cover=0.8, clear_clouds = T)
 render_snapshot()
 #Decrease the cloud cover
-render_clouds(montereybay, zscale=50, cloud_cover=0.2, clear_clouds = T)
+render_clouds(cloud_cover=0.2, clear_clouds = T)
 render_snapshot()
 #Change the altitude range of the clouds
-render_clouds(montereybay,zscale=50,start_altitude=2000,end_altitude = 4000, clear_clouds = T)
+render_clouds(start_altitude=2000,end_altitude = 4000, clear_clouds = T)
 render_snapshot()
 #Increase the number of layers
-render_clouds(montereybay, zscale=50,start_altitude=2000,end_altitude = 4000, layers = 20,
+render_clouds(start_altitude=2000,end_altitude = 4000, layers = 20,
              clear_clouds = T)
 render_snapshot()
 #Change the sun angle and altitude, and increase the attenuation for darker clouds
-render_clouds(montereybay,zscale=50,sun_angle=45, sun_altitude= 5, attenuation_coef = 5,
+render_clouds(sun_angle=45, sun_altitude= 5, attenuation_coef = 5,
              clear_clouds = T)
 render_snapshot()
 #Render the scene with a different baseshape
 montereybay  |>
  sphere_shade()  |>
- plot_3d(montereybay,background="darkred",zscale=50, baseshape="hex")
-render_clouds(montereybay,zscale=50, seed=3, baseshape="hex", clear_clouds = T)
+ plot_3d(background="darkred", vertical_exaggeration = 4, baseshape="hex")
+render_clouds(seed=3, baseshape="hex", clear_clouds = T)
 render_camera(zoom=0.65)
 render_snapshot()
 \dontshow{\}) # examplesIf}

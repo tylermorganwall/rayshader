@@ -74,20 +74,20 @@ Cache fallback messages are disabled by default. Set \code{options(rayshader.ver
 #First we ray trace the Monterey Bay dataset.
 #The default angle is from 40-50 degrees azimuth, from the north east.
 montereybay |>
- ray_shade(zscale=50) |>
+ ray_shade(vertical_exaggeration = 4) |>
  plot_map()
 #Change the altitude of the sun to 25 degrees
 montereybay |>
- ray_shade(zscale=50, sunaltitude=25) |>
+ ray_shade(vertical_exaggeration = 4, sunaltitude=25) |>
  plot_map()
 #Remove the lambertian shading to just calculate shadow intensity.
 montereybay |>
- ray_shade(zscale=50, sunaltitude=25, lambert=FALSE) |>
+ ray_shade(vertical_exaggeration = 4, sunaltitude=25, lambert=FALSE) |>
  plot_map()
 
 #Change the direction of the sun to the South East
 montereybay |>
- ray_shade(zscale=50, sunaltitude=25, sunangle=225) |>
+ ray_shade(vertical_exaggeration = 4, sunaltitude=25, sunangle=225) |>
  plot_map()
 \dontshow{\}) # examplesIf}
 }

@@ -24,7 +24,7 @@
 #'  plot_map()
 #'#Increase the intensity by decreasing the zscale
 #'montereybay |>
-#'  lamb_shade(zscale=50) |>
+#'  lamb_shade(vertical_exaggeration = 4) |>
 #'  plot_map()
 #'#Change the sun direction
 #'montereybay |>

@@ -69,7 +69,7 @@
 #'base_map = mbay |>
 #' height_shade() |>
 #' add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0))  |>
-#' add_shadow(lamb_shade(montereybay,zscale=50),0.3)
+#' add_shadow(lamb_shade(vertical_exaggeration = 4),0.3)
 #'
 #'#For convenience, the extent of the montereybay dataset is included as an attribute
 #'mb_extent = attr(montereybay, "extent")

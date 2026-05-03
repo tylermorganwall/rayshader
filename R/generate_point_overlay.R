@@ -39,9 +39,8 @@
 #'  monterey_city = sf::st_sfc(sf::st_point(c(-121.893611, 36.603056)))
 #'  montereybay |>
 #'    height_shade() |>
-#'    add_overlay(generate_point_overlay(monterey_city, color="red", size=2,
-#'                                    attr(montereybay,"extent"), heightmap = montereybay))  |>
-#'    add_shadow(ray_shade(montereybay,zscale=50),0.3) |>
+#'    add_overlay(generate_point_overlay(monterey_city, color="red", size=2))  |>
+#'    add_shadow(ray_shade(vertical_exaggeration = 4),0.3) |>
 #'    plot_map()
 generate_point_overlay = function(
 	geometry,

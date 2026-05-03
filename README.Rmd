@@ -77,14 +77,14 @@ Also included are functions to add geometry, effects, and information to your 3D
 - `render_clouds()` renders a 3D floating cloud layer over the map.
 - `render_water()` adds a 3D tranparent water layer to 3D maps, after the rgl device has already been created. This can either add to a map that does not already have a water layer, or replace an existing water layer on the map.
 - `render_compass()` places a compass on the map in 3D.
-- `render_path()` adds a 3D path to the current scene, using latitude/longitude or coordinates in the reference system defined by the extent object. If no altitude is provided, the path will be elevated a constant offset above the heightmap. 
-- `render_points()` Adds 3D points to the current scene, using latitude/longitude or coordinates in the reference system defined by the extent object. If no altitude is provided, the points will be elevated a constant offset above the heightmap.
-- `render_polygons()` Adds 3D polygons to the current scene, using latitude/longitude or coordinates in the reference system defined by the extent object.
+- `render_path()` adds a 3D path to the current scene, using latitude/longitude or coordinates in the cached scene CRS/extent. If no altitude is provided, the path will be elevated a constant offset above the heightmap.
+- `render_points()` Adds 3D points to the current scene, using latitude/longitude or coordinates in the cached scene CRS/extent. If no altitude is provided, the points will be elevated a constant offset above the heightmap.
+- `render_polygons()` Adds 3D polygons to the current scene, using latitude/longitude or coordinates in the cached scene CRS/extent.
 - `render_beveled_polygons()` adds beveled polygons to the current scene using the **raybevel** package.
 - `render_buildings()` adds 3D polygons with roofs to the current scene.
 - `render_multipolygonz()` adds `MULTIPOLYGON Z` geometry directly to the current scene.
-- `render_obj()` adds a 3D OBJ model to the current scene, using x/y coordinates in the reference system defined by the extent object.
-- `render_raymesh()` adds a 3D `ray_mesh` model to the current scene, using x/y coordinates in the reference system defined by the extent object.
+- `render_obj()` adds a 3D OBJ model to the current scene, using x/y coordinates in the cached scene CRS/extent.
+- `render_raymesh()` adds a 3D `ray_mesh` model to the current scene, using x/y coordinates in the cached scene CRS/extent.
 - `render_tree()` adds 3D representations of trees to the current scene.
 - `render_scalebar()` places a scalebar on the map in 3D.
 - `render_zaxis()` adds a standalone z-axis to the current scene.
@@ -99,7 +99,7 @@ And several functions to display, save, and export your visualizations:
 
 - `plot_map()` Plots the current map. Accepts either a matrix or an array.
 - `save_png()` writes an image to disk with a user-specified filename.
-- `plot_3d()` Creates a 3D map, given a texture and an elevation matrix. You can customize the appearance of the map, as well as add a user-defined water level.
+- `plot_3d()` Creates a 3D map, given a texture and elevation matrix, or a cached heightmap from a rayshader pipe. You can customize the appearance of the map, as well as add a user-defined water level.
 - `render_camera()` Changes the camera orientation.
 - `render_snapshot()` Saves an image of the current 3D view to disk (if given a filename), or plots the 3D view to the current device (useful for including images in R Markdown files).
 - `render_movie()` Creates and saves a mp4/gif file of the camera rotating around the 3D scene by either using a built-in orbit or by using one provided by the user.
@@ -145,11 +145,8 @@ library(rayshader)
 #Here, I load a map with the raster package.
 loadzip = tempfile()
 download.file("https://tylermw.com/data/dem_01.tif.zip", loadzip)
-localtif = raster::raster(unzip(loadzip, "dem_01.tif"))
+elmat = raster::raster(unzip(loadzip, "dem_01.tif"))
 unlink(loadzip)
-
-#And convert it to a matrix:
-elmat = raster_to_matrix(localtif)
 
 #We use another one of rayshader's built-in textures:
 elmat |>
@@ -164,14 +161,14 @@ elmat |>
 #detect_water and add_water adds a water layer to the map:
 elmat |>
 	sphere_shade(texture = "desert") |>
-	add_water(detect_water(elmat), color = "desert") |>
+	add_water(detect_water(), color = "desert") |>
 	plot_map()
 
 #And we can add a raytraced layer from that sun direction as well:
 elmat |>
 	sphere_shade(texture = "desert") |>
-	add_water(detect_water(elmat), color = "desert") |>
-	add_shadow(ray_shade(elmat), 0.5) |>
+	add_water(detect_water(), color = "desert") |>
+	add_shadow(ray_shade(), 0.5) |>
 	plot_map()
 
 #And here we add an ambient occlusion shadow layer, which models
@@ -179,11 +176,10 @@ elmat |>
 
 elmat |>
 	sphere_shade(texture = "desert") |>
-	add_water(detect_water(elmat), color = "desert") |>
-	add_shadow(ray_shade(elmat), 0.5) |>
-	add_shadow(ambient_shade(elmat, maxsearch = 30), 0) |>
+	add_water(detect_water(), color = "desert") |>
+	add_shadow(ray_shade(), 0.5) |>
+	add_shadow(ambient_shade(maxsearch = 30), 0) |>
 	plot_map()
-
 ```
 
 For a more physically-based top-down lighting pass, `radiance_shade()` renders an orthographic radiance overlay using the same pathtracing backend as `render_highquality()`. This returns an RGBA array, so you can blend it directly into an existing 2D map with `add_overlay()`, or use it on it's own.
@@ -191,10 +187,9 @@ For a more physically-based top-down lighting pass, `radiance_shade()` renders a
 ```{r README_radiance}
 desert_water = elmat |>
 	sphere_shade(texture = "desert") |>
-	add_water(detect_water(elmat), color = "desert")
+	add_water(detect_water(), color = "desert")
 
 radiance_shade(
-		elmat,
 		texture = desert_water,
 		zscale = 3,
 		samples = 16, 
@@ -211,11 +206,10 @@ Rayshader also supports 3D mapping by passing a texture map (either external or 
 
 elmat |>
 	sphere_shade(texture = "desert") |>
-	add_water(detect_water(elmat), color = "desert") |>
-	add_shadow(ray_shade(elmat, zscale = 3), 0.3) |>
-	add_shadow(ambient_shade(elmat), 0) |>
+	add_water(detect_water(), color = "desert") |>
+	add_shadow(ray_shade(zscale = 3), 0.3) |>
+	add_shadow(ambient_shade(), 0) |>
 	plot_3d(
-		elmat,
 		zscale = 10,
 		fov = 0,
 		theta = 135,
@@ -250,7 +244,7 @@ Rayshader also includes the option to add a procedurally-generated cloud layer (
 
 elmat |>
 	sphere_shade(texture = "desert") |>
-	add_water(detect_water(elmat), color = "lightblue") |>
+	add_water(detect_water(), color = "lightblue") |>
 	add_shadow(
 		cloud_shade(
 			elmat,
@@ -261,7 +255,6 @@ elmat |>
 		0
 	) |>
 	plot_3d(
-		elmat,
 		zscale = 10,
 		fov = 0,
 		theta = 135,
@@ -273,8 +266,6 @@ elmat |>
 render_camera(theta = 20, phi = 40, zoom = 0.64, fov = 56)
 
 render_clouds(
-	elmat,
-	zscale = 10,
 	start_altitude = 800,
 	end_altitude = 1000,
 	attenuation_coef = 5,
@@ -292,7 +283,7 @@ These clouds can be customized:
 
 elmat |>
 	sphere_shade(texture = "desert") |>
-	add_water(detect_water(elmat), color = "lightblue") |>
+	add_water(detect_water(), color = "lightblue") |>
 	add_shadow(
 		cloud_shade(
 			elmat,
@@ -310,7 +301,6 @@ elmat |>
 		0
 	) |>
 	plot_3d(
-		elmat,
 		zscale = 10,
 		fov = 0,
 		theta = 135,
@@ -322,8 +312,6 @@ elmat |>
 render_camera(theta = 125, phi = 22, zoom = 0.47, fov = 60)
 
 render_clouds(
-	elmat,
-	zscale = 10,
 	start_altitude = 500,
 	end_altitude = 700,
 	sun_altitude = 45,
@@ -349,9 +337,8 @@ You can also render using the built-in pathtracer, powered by [rayrender](https:
 
 elmat |> 
 	sphere_shade(texture = "desert") |>
-	add_water(detect_water(elmat), color = "desert") |>
+	add_water(detect_water(), color = "desert") |>
 	plot_3d(
-		elmat,
 		zscale = 10,
 		fov = 0,
 		theta = 72,
@@ -415,15 +402,12 @@ You can also easily add a water layer by setting `water = TRUE` in `plot_3d()` (
 
 ```{r README_three-d-water, fig.width =  10, fig.height = 8}
 
-montshadow = ray_shade(montereybay, zscale = 50, lambert = FALSE)
-montamb = ambient_shade(montereybay, zscale = 50)
 montereybay |>
 	sphere_shade(zscale = 10, texture = "imhof1") |>
-	add_shadow(montshadow, 0.5) |>
-	add_shadow(montamb, 0) |>
+	add_shadow(ray_shade(vertical_exaggeration = 4, lambert = FALSE), 0.5) |>
+	add_shadow(ambient_shade(vertical_exaggeration = 4), 0) |>
 	plot_3d(
-		montereybay,
-		zscale = 50,
+		vertical_exaggeration = 4,
 		fov = 0,
 		theta = -45,
 		phi = 45,
@@ -448,8 +432,7 @@ library(rayrender)
 montereybay |>
 	sphere_shade(zscale = 10, texture = "imhof1") |>
 	plot_3d(
-		montereybay,
-		zscale = 50,
+		vertical_exaggeration = 4,
 		fov = 70,
 		theta = 270,
 		phi = 30,
@@ -485,11 +468,10 @@ Rayshader also has map shapes other than rectangular included `c("hex", "circle"
 par(mfrow = c(1, 2))
 montereybay |>
 	sphere_shade(zscale = 10, texture = "imhof1") |>
-	add_shadow(montshadow, 0.5) |>
-	add_shadow(montamb, 0) |>
+	add_shadow(ray_shade(vertical_exaggeration = 4, lambert = FALSE), 0.5) |>
+	add_shadow(ambient_shade(vertical_exaggeration = 4), 0) |>
 	plot_3d(
-		montereybay,
-		zscale = 50,
+		vertical_exaggeration = 4,
 		fov = 0,
 		theta = -45,
 		phi = 45,
@@ -508,11 +490,10 @@ render_snapshot(clear = TRUE)
 
 montereybay |>
 	sphere_shade(zscale = 10, texture = "imhof1") |>
-	add_shadow(montshadow, 0.5) |>
-	add_shadow(montamb, 0) |>
+	add_shadow(ray_shade(vertical_exaggeration = 4, lambert = FALSE), 0.5) |>
+	add_shadow(ambient_shade(vertical_exaggeration = 4), 0) |>
 	plot_3d(
-		montereybay,
-		zscale = 50,
+		vertical_exaggeration = 4,
 		fov = 0,
 		theta = -45,
 		phi = 45,
@@ -535,11 +516,10 @@ Adding text labels is done with the `render_label()` function, which also allows
 ```{r README_three-d-labels, fig.width =  10, fig.height = 8, output = FALSE, message = FALSE}
 montereybay |>
 	sphere_shade(zscale = 10, texture = "imhof1") |>
-	add_shadow(montshadow, 0.5) |>
-	add_shadow(montamb, 0) |>
+	add_shadow(ray_shade(vertical_exaggeration = 4, lambert = FALSE), 0.5) |>
+	add_shadow(ambient_shade(vertical_exaggeration = 4), 0) |>
 	plot_3d(
-		montereybay,
-		zscale = 50,
+		vertical_exaggeration = 4,
 		fov = 0,
 		theta = -100,
 		phi = 30,
@@ -552,22 +532,22 @@ montereybay |>
 		wateralpha = 0.5,
 		watercolor = "lightblue"
 	)
+moss_landing_coord = c(36.806807, -121.793332)
+santa_cruz = c(36.962957, -122.021033)
+monterey = c(36.603053, -121.892933)
+canyon = c(36.621049, -122.333912)
 render_label(
-	montereybay,
-	x = 350,
-	y = 160,
-	z = 1000,
-	zscale = 50,
+	lat = moss_landing_coord[1],
+	long = moss_landing_coord[2],
+	altitude = 1000,
 	text = "Moss Landing",
 	textsize = 2,
 	linewidth = 5
 )
 render_label(
-	montereybay,
-	x = 220,
-	y = 70, 
-	z = 7000,
-	zscale = 50,
+	lat = santa_cruz[1],
+	long = santa_cruz[2],
+	altitude = 7000,
 	text = "Santa Cruz",
 	textcolor = "darkred",
 	linecolor = "darkred",
@@ -575,22 +555,18 @@ render_label(
 	linewidth = 5
 )
 render_label(
-	montereybay,
-	x = 300,
-	y = 270,
-	z = 4000,
-	zscale = 50,
+	lat = monterey[1],
+	long = monterey[2],
+	altitude = 4000,
 	text = "Monterey",
 	dashed = TRUE,
 	textsize = 2,
 	linewidth = 5
 )
 render_label(
-	montereybay,
-	x = 50,
-	y = 270,
-	z = 1000,
-	zscale = 50,
+	lat = canyon[1],
+	long = canyon[2],
+	altitude = 1000,
 	textcolor = "white",
 	linecolor = "white",
 	text = "Monterey Canyon",
@@ -608,8 +584,7 @@ Labels are also supported in `render_highquality()`:
 montereybay |>
 	sphere_shade(zscale = 10, texture = "imhof1") |>
 	plot_3d(
-		montereybay,
-		zscale = 50,
+		vertical_exaggeration = 4,
 		fov = 0,
 		theta = -100,
 		phi = 30,
@@ -623,21 +598,17 @@ montereybay |>
 		watercolor = "#233aa1"
 	)
 render_label(
-	montereybay,
-	x = 350,
-	y = 160,
-	z = 1000,
-	zscale = 50,
+	lat = moss_landing_coord[1],
+	long = moss_landing_coord[2],
+	altitude = 1000,
 	text = "Moss Landing",
 	textsize = 2,
 	linewidth = 5
 )
 render_label(
-	montereybay,
-	x = 220,
-	y = 70,
-	z = 7000,
-	zscale = 50,
+	lat = santa_cruz[1],
+	long = santa_cruz[2],
+	altitude = 7000,
 	text = "Santa Cruz",
 	textcolor = "darkred",
 	linecolor = "darkred",
@@ -645,22 +616,18 @@ render_label(
 	linewidth = 5
 )
 render_label(
-	montereybay,
-	x = 300,
-	y = 270, 
-	z = 4000,
-	zscale = 50,
+	lat = monterey[1],
+	long = monterey[2],
+	altitude = 4000,
 	text = "Monterey",
 	dashed = TRUE,
 	textsize = 2,
 	linewidth = 5
 )
 render_label(
-	montereybay,
-	x = 50,
-	y = 270,
-	z = 1000,
-	zscale = 50,
+	lat = canyon[1],
+	long = canyon[2],
+	altitude = 1000,
 	textcolor = "white",
 	linecolor = "white",
 	text = "Monterey Canyon",
@@ -691,9 +658,8 @@ Polygons:
 
 montereybay |>
 	sphere_shade(texture = "desert") |>
-	add_shadow(ray_shade(montereybay, zscale = 50)) |>
+	add_shadow(ray_shade(vertical_exaggeration = 4)) |>
 	plot_3d(
-		montereybay,
 		water = TRUE,
 		windowsize = c(1000, 800),
 		watercolor = "dodgerblue"
@@ -709,7 +675,6 @@ mont_county_buff = sf::st_simplify(
 
 render_polygons(
 	mont_county_buff,
-	extent = attr(montereybay, "extent"),
 	data_column_top = "ALAND",
 	scale_data = 300 / (2.6E9),
 	color = "chartreuse4",
@@ -747,11 +712,9 @@ for (i in 2:300) {
 }
 
 render_points(
-	extent = attr(montereybay, "extent"),
 	lat = unlist(bird_track_lat),
 	long = unlist(bird_track_long),
 	altitude = z_out,
-	zscale = 50,
 	size = 3,
 	color = "red",
 	clear_previous = TRUE
@@ -765,11 +728,9 @@ Paths:
 ```{r README_paths, fig.width =  10, fig.height = 8, output = FALSE}
 
 render_path(
-	extent = attr(montereybay, "extent"),
 	lat = unlist(bird_track_lat),
 	long = unlist(bird_track_long),
 	altitude = z_out,
-	zscale = 50,
 	linewidth = 3,
 	color = "white",
 	antialias = TRUE
@@ -789,11 +750,10 @@ You can also apply a post-processing effect to the 3D maps to render maps with d
 
 elmat |>
 	sphere_shade(texture = "desert") |>
-	add_water(detect_water(elmat), color = "desert") |>
-	add_shadow(ray_shade(elmat, zscale = 3), 0.5) |>
-	add_shadow(ambient_shade(elmat), 0) |>
+	add_water(detect_water(), color = "desert") |>
+	add_shadow(ray_shade(zscale = 3), 0.5) |>
+	add_shadow(ambient_shade(), 0) |>
 	plot_3d(
-		elmat,
 		zscale = 10,
 		fov = 30,
 		theta = -225,

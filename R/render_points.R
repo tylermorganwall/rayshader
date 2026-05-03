@@ -62,34 +62,30 @@
 #'#Render the 3D map
 #'montereybay |>
 #'  sphere_shade() |>
-#'  plot_3d(montereybay,zscale=50,water=TRUE,
+#'  plot_3d(vertical_exaggeration = 4,water=TRUE,
 #'          shadowcolor="#40310a", background = "tan",
 #'          theta=210,  phi=22, zoom=0.20, fov=55)
 #'
-#'#Pass in the extent of the underlying raster (stored in an attribute for the montereybay
-#'#dataset) and the x/y coordinates and altitudes of the track.
-#'render_points(extent = attr(montereybay,"extent"),
-#'              y = unlist(bird_track_lat), x = unlist(bird_track_long),
-#'              altitude = z_out, zscale=50,color="white")
+#'#Pass in the latitude/longitude coordinates and altitudes of the track.
+#'render_points(lat = unlist(bird_track_lat), long = unlist(bird_track_long),
+#'              altitude = z_out, color="white")
 #'render_snapshot()
 #'#We'll set the altitude to zero to give the tracks a "shadow" over the water.
-#'render_points(extent = attr(montereybay,"extent"),
-#'              y = unlist(bird_track_lat), x = unlist(bird_track_long),
-#'              offset = 0, zscale=50, color="black")
+#'render_points(lat = unlist(bird_track_lat), long = unlist(bird_track_long),
+#'              offset = 0, color="black")
 #'render_camera(theta=30,phi=35,zoom=0.45,fov=70)
 #'render_snapshot()
 #'#Remove the points:
 #'render_points(clear_previous=TRUE)
 #'
 #'# Finally, we can also plot just GPS coordinates offset from the surface by leaving altitude `NULL`
-#'# Here we plot a circle of values surrounding Moss Landing. This requires the original heightmap.
+#'# Here we plot a circle of values surrounding Moss Landing.
 #'
 #'t = seq(0,2*pi,length.out=100)
 #'circle_coords_lat = moss_landing_coord[1] + 0.3 * sin(t)
 #'circle_coords_long = moss_landing_coord[2] + 0.3 * cos(t)
-#'render_points(extent = attr(montereybay,"extent"), heightmap = montereybay,
-#'            y = unlist(circle_coords_lat), x = unlist(circle_coords_long),
-#'            zscale=50, color="red", offset=100, size=5)
+#'render_points(lat = unlist(circle_coords_lat), long = unlist(circle_coords_long),
+#'            color="red", offset=100, size=5)
 #'render_camera(theta = 160, phi=33, zoom=0.4, fov=55)
 #'render_snapshot()
 #'#And all of these work with `render_highquality()`

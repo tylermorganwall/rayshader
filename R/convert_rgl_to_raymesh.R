@@ -14,7 +14,7 @@
 #'#Save model of volcano
 #'volcano |>
 #'  sphere_shade() |>
-#'  plot_3d(volcano, zscale = 2)
+#'  plot_3d(zscale = 2)
 #'
 #'rm_obj = convert_rgl_to_raymesh()
 convert_rgl_to_raymesh = function(

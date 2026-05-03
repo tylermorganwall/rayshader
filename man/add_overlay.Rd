@@ -45,15 +45,15 @@ Overlays an image (with a transparency layer) on the current map.
 #Combining base R plotting with rayshader's spherical color mapping and raytracing:
 montereybay |>
   sphere_shade() |>
-  add_overlay(height_shade(montereybay),alphalayer = 0.6)  |>
-  add_shadow(ray_shade(montereybay,zscale=50)) |>
+  add_overlay(height_shade(),alphalayer = 0.6)  |>
+  add_shadow(ray_shade(vertical_exaggeration = 4)) |>
   plot_map()
 
 # Add contours with `generate_contour_overlay()`
 montereybay |>
   height_shade() |>
   add_overlay(generate_contour_overlay(montereybay))  |>
-  add_shadow(ray_shade(montereybay,zscale=50)) |>
+  add_shadow(ray_shade(vertical_exaggeration = 4)) |>
   plot_map()
 \dontshow{\}) # examplesIf}
 }

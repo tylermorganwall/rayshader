@@ -98,18 +98,17 @@ dc_elevation_matrix[dc_elevation_matrix < 0] = 0
 #Plot a 3D map of the national mall
 dc_elevation_matrix |>
  height_shade() |>
- add_shadow(lamb_shade(dc_elevation_matrix), 0) |>
- plot_3d(dc_elevation_matrix, zscale=3.7, water = TRUE, waterdepth = 1,
-         soliddepth=-50, windowsize = 800)
+ add_shadow(lamb_shade(), 0) |>
+ plot_3d(zscale=3.7, water = TRUE, waterdepth = 1,
+         soliddepth=-50, windowsize = 800,
+         extent = raster::extent(cropped_data))
 render_snapshot()
 #Zoom in on the monument
 render_camera(theta=150,  phi=35, zoom= 0.55, fov=70)
 #Render the national monument
 rgl::par3d(ignoreExtent = TRUE)
 render_multipolygonz(washington_monument_multipolygonz,
-                    extent = raster::extent(cropped_data),
-                    zscale = 4, color = "grey80",
-                    heightmap = dc_elevation_matrix)
+                    zscale = 4, color = "grey80")
 render_snapshot()
 #This works with `render_highquality()`
 render_highquality(min_variance = 0, samples = 16)

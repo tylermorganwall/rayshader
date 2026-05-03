@@ -32,7 +32,7 @@
 #'#Add a North arrow to the map, by default in the bottom right (SE)
 #'montereybay |>
 #'  sphere_shade() |>
-#'  plot_3d(montereybay,theta=-45, water=TRUE)
+#'  plot_3d(theta=-45, water=TRUE)
 #'render_compass()
 #'render_snapshot()
 #'#Remove the existing symbol with `clear_compass = TRUE`

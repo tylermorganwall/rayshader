@@ -76,7 +76,7 @@
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'montereybay |>
 #'  sphere_shade() |>
-#'  plot_3d(montereybay,zscale=50, water=TRUE, waterlinecolor="white",
+#'  plot_3d(vertical_exaggeration = 4, water=TRUE, waterlinecolor="white",
 #'          zoom=0.3,theta=-135,fov=70, phi=20)
 #'
 #'#Preview where the focal plane lies

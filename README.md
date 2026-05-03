@@ -143,26 +143,24 @@ your 3D visualizations:
   layer on the map.
 - `render_compass()` places a compass on the map in 3D.
 - `render_path()` adds a 3D path to the current scene, using
-  latitude/longitude or coordinates in the reference system defined by
-  the extent object. If no altitude is provided, the path will be
+  latitude/longitude or coordinates in the cached scene CRS/extent. If
+  no altitude is provided, the path will be
   elevated a constant offset above the heightmap.
 - `render_points()` Adds 3D points to the current scene, using
-  latitude/longitude or coordinates in the reference system defined by
-  the extent object. If no altitude is provided, the points will be
+  latitude/longitude or coordinates in the cached scene CRS/extent. If
+  no altitude is provided, the points will be
   elevated a constant offset above the heightmap.
 - `render_polygons()` Adds 3D polygons to the current scene, using
-  latitude/longitude or coordinates in the reference system defined by
-  the extent object.
+  latitude/longitude or coordinates in the cached scene CRS/extent.
 - `render_beveled_polygons()` adds beveled polygons to the current scene
   using the **raybevel** package.
 - `render_buildings()` adds 3D polygons with roofs to the current scene.
 - `render_multipolygonz()` adds `MULTIPOLYGON Z` geometry directly to
   the current scene.
 - `render_obj()` adds a 3D OBJ model to the current scene, using x/y
-  coordinates in the reference system defined by the extent object.
+  coordinates in the cached scene CRS/extent.
 - `render_raymesh()` adds a 3D `ray_mesh` model to the current scene,
-  using x/y coordinates in the reference system defined by the extent
-  object.
+  using x/y coordinates in the cached scene CRS/extent.
 - `render_tree()` adds 3D representations of trees to the current scene.
 - `render_scalebar()` places a scalebar on the map in 3D.
 - `render_zaxis()` adds a standalone z-axis to the current scene.
@@ -179,9 +177,9 @@ And several functions to display, save, and export your visualizations:
 - `plot_map()` Plots the current map. Accepts either a matrix or an
   array.
 - `save_png()` writes an image to disk with a user-specified filename.
-- `plot_3d()` Creates a 3D map, given a texture and an elevation matrix.
-  You can customize the appearance of the map, as well as add a
-  user-defined water level.
+- `plot_3d()` Creates a 3D map, given a texture and elevation matrix,
+  or a cached heightmap from a rayshader pipe. You can customize the
+  appearance of the map, as well as add a user-defined water level.
 - `render_camera()` Changes the camera orientation.
 - `render_snapshot()` Saves an image of the current 3D view to disk (if
   given a filename), or plots the 3D view to the current device (useful
@@ -261,7 +259,7 @@ elmat |>
 #detect_water and add_water adds a water layer to the map:
 elmat |>
     sphere_shade(texture = "desert") |>
-    add_water(detect_water(elmat), color = "desert") |>
+    add_water(detect_water(), color = "desert") |>
     plot_map()
 ```
 
@@ -271,8 +269,8 @@ elmat |>
 #And we can add a raytraced layer from that sun direction as well:
 elmat |>
     sphere_shade(texture = "desert") |>
-    add_water(detect_water(elmat), color = "desert") |>
-    add_shadow(ray_shade(elmat), 0.5) |>
+    add_water(detect_water(), color = "desert") |>
+    add_shadow(ray_shade(), 0.5) |>
     plot_map()
 ```
 
@@ -284,9 +282,9 @@ elmat |>
 
 elmat |>
     sphere_shade(texture = "desert") |>
-    add_water(detect_water(elmat), color = "desert") |>
-    add_shadow(ray_shade(elmat), 0.5) |>
-    add_shadow(ambient_shade(elmat, maxsearch = 30), 0) |>
+    add_water(detect_water(), color = "desert") |>
+    add_shadow(ray_shade(), 0.5) |>
+    add_shadow(ambient_shade(maxsearch = 30), 0) |>
     plot_map()
 ```
 
@@ -301,10 +299,9 @@ use it on it’s own.
 ``` r
 desert_water = elmat |>
     sphere_shade(texture = "desert") |>
-    add_water(detect_water(elmat), color = "desert")
+    add_water(detect_water(), color = "desert")
 
 radiance_shade(
-        elmat,
         texture = desert_water,
         zscale = 3,
         samples = 16, 
@@ -323,11 +320,10 @@ external or one produced by rayshader) into the `plot_3d` function.
 ``` r
 elmat |>
     sphere_shade(texture = "desert") |>
-    add_water(detect_water(elmat), color = "desert") |>
-    add_shadow(ray_shade(elmat, zscale = 3), 0.3) |>
-    add_shadow(ambient_shade(elmat), 0) |>
+    add_water(detect_water(), color = "desert") |>
+    add_shadow(ray_shade(zscale = 3), 0.3) |>
+    add_shadow(ambient_shade(), 0) |>
     plot_3d(
-        elmat,
         zscale = 10,
         fov = 0,
         theta = 135,
@@ -365,7 +361,7 @@ layer (and optionally, shadows):
 ``` r
 elmat |>
     sphere_shade(texture = "desert") |>
-    add_water(detect_water(elmat), color = "lightblue") |>
+    add_water(detect_water(), color = "lightblue") |>
     add_shadow(
         cloud_shade(
             elmat,
@@ -376,7 +372,6 @@ elmat |>
         0
     ) |>
     plot_3d(
-        elmat,
         zscale = 10,
         fov = 0,
         theta = 135,
@@ -388,8 +383,6 @@ elmat |>
 render_camera(theta = 20, phi = 40, zoom = 0.64, fov = 56)
 
 render_clouds(
-    elmat,
-    zscale = 10,
     start_altitude = 800,
     end_altitude = 1000,
     attenuation_coef = 5,
@@ -410,7 +403,7 @@ These clouds can be customized:
 ``` r
 elmat |>
     sphere_shade(texture = "desert") |>
-    add_water(detect_water(elmat), color = "lightblue") |>
+    add_water(detect_water(), color = "lightblue") |>
     add_shadow(
         cloud_shade(
             elmat,
@@ -428,7 +421,6 @@ elmat |>
         0
     ) |>
     plot_3d(
-        elmat,
         zscale = 10,
         fov = 0,
         theta = 135,
@@ -440,8 +432,6 @@ elmat |>
 render_camera(theta = 125, phi = 22, zoom = 0.47, fov = 60)
 
 render_clouds(
-    elmat,
-    zscale = 10,
     start_altitude = 500,
     end_altitude = 700,
     sun_altitude = 45,
@@ -467,9 +457,8 @@ shadows with any of the `_shade()` functions, so we remove those:
 ``` r
 elmat |> 
     sphere_shade(texture = "desert") |>
-    add_water(detect_water(elmat), color = "desert") |>
+    add_water(detect_water(), color = "desert") |>
     plot_3d(
-        elmat,
         zscale = 10,
         fov = 0,
         theta = 72,
@@ -541,15 +530,12 @@ bathymetric/topographic data of Monterey Bay, CA (included with
 rayshader):
 
 ``` r
-montshadow = ray_shade(montereybay, zscale = 50, lambert = FALSE)
-montamb = ambient_shade(montereybay, zscale = 50)
 montereybay |>
     sphere_shade(zscale = 10, texture = "imhof1") |>
-    add_shadow(montshadow, 0.5) |>
-    add_shadow(montamb, 0) |>
+    add_shadow(ray_shade(vertical_exaggeration = 4, lambert = FALSE), 0.5) |>
+    add_shadow(ambient_shade(vertical_exaggeration = 4), 0) |>
     plot_3d(
-        montereybay,
-        zscale = 50,
+        vertical_exaggeration = 4,
         fov = 0,
         theta = -45,
         phi = 45,
@@ -579,8 +565,7 @@ library(rayrender)
 montereybay |>
     sphere_shade(zscale = 10, texture = "imhof1") |>
     plot_3d(
-        montereybay,
-        zscale = 50,
+        vertical_exaggeration = 4,
         fov = 70,
         theta = 270,
         phi = 30,
@@ -618,11 +603,10 @@ want by setting the areas you do not want to display to `NA`.
 par(mfrow = c(1, 2))
 montereybay |>
     sphere_shade(zscale = 10, texture = "imhof1") |>
-    add_shadow(montshadow, 0.5) |>
-    add_shadow(montamb, 0) |>
+    add_shadow(ray_shade(vertical_exaggeration = 4, lambert = FALSE), 0.5) |>
+    add_shadow(ambient_shade(vertical_exaggeration = 4), 0) |>
     plot_3d(
-        montereybay,
-        zscale = 50,
+        vertical_exaggeration = 4,
         fov = 0,
         theta = -45,
         phi = 45,
@@ -645,11 +629,10 @@ render_snapshot(clear = TRUE)
 ``` r
 montereybay |>
     sphere_shade(zscale = 10, texture = "imhof1") |>
-    add_shadow(montshadow, 0.5) |>
-    add_shadow(montamb, 0) |>
+    add_shadow(ray_shade(vertical_exaggeration = 4, lambert = FALSE), 0.5) |>
+    add_shadow(ambient_shade(vertical_exaggeration = 4), 0) |>
     plot_3d(
-        montereybay,
-        zscale = 50,
+        vertical_exaggeration = 4,
         fov = 0,
         theta = -45,
         phi = 45,
@@ -676,11 +659,10 @@ the font:
 ``` r
 montereybay |>
     sphere_shade(zscale = 10, texture = "imhof1") |>
-    add_shadow(montshadow, 0.5) |>
-    add_shadow(montamb, 0) |>
+    add_shadow(ray_shade(vertical_exaggeration = 4, lambert = FALSE), 0.5) |>
+    add_shadow(ambient_shade(vertical_exaggeration = 4), 0) |>
     plot_3d(
-        montereybay,
-        zscale = 50,
+        vertical_exaggeration = 4,
         fov = 0,
         theta = -100,
         phi = 30,
@@ -693,22 +675,22 @@ montereybay |>
         wateralpha = 0.5,
         watercolor = "lightblue"
     )
+moss_landing_coord = c(36.806807, -121.793332)
+santa_cruz = c(36.962957, -122.021033)
+monterey = c(36.603053, -121.892933)
+canyon = c(36.621049, -122.333912)
 render_label(
-    montereybay,
-    x = 350,
-    y = 160,
-    z = 1000,
-    zscale = 50,
+    lat = moss_landing_coord[1],
+    long = moss_landing_coord[2],
+    altitude = 1000,
     text = "Moss Landing",
     textsize = 2,
     linewidth = 5
 )
 render_label(
-    montereybay,
-    x = 220,
-    y = 70, 
-    z = 7000,
-    zscale = 50,
+    lat = santa_cruz[1],
+    long = santa_cruz[2],
+    altitude = 7000,
     text = "Santa Cruz",
     textcolor = "darkred",
     linecolor = "darkred",
@@ -716,22 +698,18 @@ render_label(
     linewidth = 5
 )
 render_label(
-    montereybay,
-    x = 300,
-    y = 270,
-    z = 4000,
-    zscale = 50,
+    lat = monterey[1],
+    long = monterey[2],
+    altitude = 4000,
     text = "Monterey",
     dashed = TRUE,
     textsize = 2,
     linewidth = 5
 )
 render_label(
-    montereybay,
-    x = 50,
-    y = 270,
-    z = 1000,
-    zscale = 50,
+    lat = canyon[1],
+    long = canyon[2],
+    altitude = 1000,
     textcolor = "white",
     linecolor = "white",
     text = "Monterey Canyon",
@@ -767,9 +745,8 @@ Polygons:
 ``` r
 montereybay |>
     sphere_shade(texture = "desert") |>
-    add_shadow(ray_shade(montereybay, zscale = 50)) |>
+    add_shadow(ray_shade(vertical_exaggeration = 4)) |>
     plot_3d(
-        montereybay,
         water = TRUE,
         windowsize = c(1000, 800),
         watercolor = "dodgerblue"
@@ -785,7 +762,6 @@ mont_county_buff = sf::st_simplify(
 
 render_polygons(
     mont_county_buff,
-    extent = attr(montereybay, "extent"),
     data_column_top = "ALAND",
     scale_data = 300 / (2.6E9),
     color = "chartreuse4",
@@ -825,11 +801,9 @@ for (i in 2:300) {
 }
 
 render_points(
-    extent = attr(montereybay, "extent"),
     lat = unlist(bird_track_lat),
     long = unlist(bird_track_long),
     altitude = z_out,
-    zscale = 50,
     size = 3,
     color = "red",
     clear_previous = TRUE
@@ -847,11 +821,9 @@ Paths:
 
 ``` r
 render_path(
-    extent = attr(montereybay, "extent"),
     lat = unlist(bird_track_lat),
     long = unlist(bird_track_long),
     altitude = z_out,
-    zscale = 50,
     linewidth = 3,
     color = "white",
     antialias = TRUE
@@ -872,11 +844,10 @@ maps with depth of field with the `render_depth()` function:
 ``` r
 elmat |>
     sphere_shade(texture = "desert") |>
-    add_water(detect_water(elmat), color = "desert") |>
-    add_shadow(ray_shade(elmat, zscale = 3), 0.5) |>
-    add_shadow(ambient_shade(elmat), 0) |>
+    add_water(detect_water(), color = "desert") |>
+    add_shadow(ray_shade(zscale = 3), 0.5) |>
+    add_shadow(ambient_shade(), 0) |>
     plot_3d(
-        elmat,
         zscale = 10,
         fov = 30,
         theta = -225,

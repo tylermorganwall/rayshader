@@ -161,7 +161,7 @@ Either captures the current rgl view and displays, or saves the current view to 
 \dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 montereybay |>
  sphere_shade() |>
- plot_3d(montereybay,zscale=50,zoom=0.6,theta=-90,phi=30)
+ plot_3d(vertical_exaggeration = 4,zoom=0.6,theta=-90,phi=30)
 
 render_snapshot()
 
@@ -179,7 +179,7 @@ render_snapshot(title_text = "Monterey Bay, California",
 #Use software rendering to render a scene with shadow mapping
 montereybay |>
  height_shade() |>
- plot_3d(montereybay, shadow=FALSE, solidlinecolor = NULL)
+ plot_3d(shadow=FALSE, solidlinecolor = NULL)
 #No shadows
 render_snapshot(software_render = TRUE)
 #Now with shadow mapped shadows, calculated in rayvertex

@@ -58,7 +58,7 @@ par(family = "Arial")
 montereybay |>
  sphere_shade(zscale=10) |>
  add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0))  |>
- add_shadow(ray_shade(montereybay,zscale=50),0.3) |>
+ add_shadow(ray_shade(vertical_exaggeration = 4),0.3) |>
  plot_map()
 \dontshow{\}) # examplesIf}
 }

@@ -260,7 +260,7 @@ either \code{\link[=convert_path_to_animation_coords]{convert_path_to_animation_
 #Render the volcano dataset using pathtracing
 volcano \%>\%
  sphere_shade() \%>\%
- plot_3d(volcano,zscale = 2)
+ plot_3d(vertical_exaggeration = 1/2)
 render_highquality(min_variance = 0, sample_method = "sobol_blue")
 
 #Change position of light
@@ -326,26 +326,18 @@ elevation_data = elevatr::get_elev_raster(locations = wm_point, z = 14)
 scene_bbox = st_bbox(st_buffer(wm_point,300))
 cropped_data = raster::crop(elevation_data, scene_bbox)
 
-#Use rayshader to convert that raster data to a matrix
-dc_elevation_matrix = raster_to_matrix(cropped_data)
-
-#Remove negative elevation data
-dc_elevation_matrix[dc_elevation_matrix < 0] = 0
-
 #Plot a 3D map of the national mall
-dc_elevation_matrix |>
+cropped_data |>
  height_shade() |>
- add_shadow(lamb_shade(dc_elevation_matrix), 0) |>
- plot_3d(dc_elevation_matrix, zscale=3.7, water = TRUE, waterdepth = 1,
+ add_shadow(lamb_shade(), 0) |>
+ plot_3d(zscale=3.7, water = TRUE, waterdepth = 1,
          soliddepth=-50, windowsize = 800)
 #Zoom in on the monument
 render_camera(theta=45,  phi=0, zoom= 0.03, fov=130)
 #Render the national monument at solar noon on the solstice
 rgl::par3d(ignoreExtent = TRUE)
 render_multipolygonz(washington_monument_multipolygonz,
-                    extent = raster::extent(cropped_data),
-                    zscale = 4, color = "grey80",
-                    heightmap = dc_elevation_matrix)
+                    zscale = 4, color = "grey80")
 #Render using the built-in (but less accurate) Hosek model.
 # Here's it's more yellow than it should be, but it's accurate enough for most renders.
 render_highquality(

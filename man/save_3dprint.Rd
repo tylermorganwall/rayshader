@@ -28,27 +28,27 @@ filename_stl = tempfile()
 #Save the STL file into `filename_stl`
 volcano |>
  sphere_shade() |>
- plot_3d(volcano,zscale=3)
+ plot_3d(vertical_exaggeration = 1/3)
 render_snapshot()
 save_3dprint(filename_stl)
 
 #Save the STL file into `filename_stl`, setting maximum width to 100 mm
 volcano |>
  sphere_shade() |>
- plot_3d(volcano,zscale=3)
+ plot_3d(vertical_exaggeration = 1/3)
 render_snapshot()
 save_3dprint(filename_stl, maxwidth = 100)
 
 #'#Save the STL file into `filename_stl`, setting maximum width to 4 inches
 volcano |>
  sphere_shade() |>
- plot_3d(volcano,zscale=3)
+ plot_3d(vertical_exaggeration = 1/3)
 render_snapshot()
 save_3dprint(filename_stl, maxwidth = 4, unit = "in")
 #'#'#Save the STL file into `filename_stl`, setting maximum width (character) to 120mm
 volcano |>
  sphere_shade() |>
- plot_3d(volcano,zscale=3)
+ plot_3d(vertical_exaggeration = 1/3)
 render_snapshot()
 save_3dprint(filename_stl, maxwidth = "120mm")
 \dontshow{\}) # examplesIf}

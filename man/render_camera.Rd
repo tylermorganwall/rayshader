@@ -31,7 +31,7 @@ values are entered, prints and returns the current values.
 \dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 montereybay |>
  sphere_shade() |>
- plot_3d(montereybay,zscale = 50, water = TRUE, waterlinecolor="white")
+ plot_3d(vertical_exaggeration = 4, water = TRUE, waterlinecolor="white")
 render_snapshot()
 
 #Shift the camera over and add a title

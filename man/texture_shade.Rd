@@ -78,7 +78,7 @@ montbay |>
   add_water(detect_water(montbay), color="dodgerblue") |>
   add_shadow(texture_shade(montbay, detail=1/6, contrast = 4,
                            brightness = 3),0.1) |>
-  add_shadow(lamb_shade(montbay,zscale=50),0) |>
+  add_shadow(lamb_shade(montbay, vertical_exaggeration = 4),0) |>
   plot_map()
 \dontshow{\}) # examplesIf}
 }

@@ -34,19 +34,19 @@ montereybay |>
 #Raytrace the `montereybay` elevation map and add that shadow to the output of sphere_shade()
 montereybay |>
  sphere_shade(vertical_exaggeration=0.5) |>
- add_shadow(ray_shade(montereybay,sunaltitude=20,zscale=50),max_darken=0.3) |>
+ add_shadow(ray_shade(sunaltitude=20, vertical_exaggeration = 4),max_darken=0.3) |>
  plot_map()
 
 #Increase the intensity of the shadow map with the max_darken argument.
 montereybay |>
  sphere_shade(vertical_exaggeration=0.5) |>
- add_shadow(ray_shade(montereybay,sunaltitude=20,zscale=50),max_darken=0.1) |>
+ add_shadow(ray_shade(sunaltitude=20, vertical_exaggeration = 4),max_darken=0.1) |>
  plot_map()
 
 #Decrease the intensity of the shadow map.
 montereybay |>
  sphere_shade(vertical_exaggeration=0.5) |>
- add_shadow(ray_shade(montereybay,sunaltitude=20,zscale=50),max_darken=0.7) |>
+ add_shadow(ray_shade(sunaltitude=20, vertical_exaggeration = 4),max_darken=0.7) |>
  plot_map()
 \dontshow{\}) # examplesIf}
 }
