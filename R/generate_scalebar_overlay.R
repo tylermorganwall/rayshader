@@ -10,14 +10,15 @@
 #' (either from the `raster`, `terra`, `sf`, or `sp` packages),
 #' a length-4 numeric vector specifying `c("xmin", "xmax","ymin","ymax")`, or the spatial object (from
 #' the previously aforementioned packages) which will be automatically converted to an extent object. If this is in
-#' lat/long coordinates, be sure to set `latlong = TRUE`. If omitted, rayshader will infer the extent
+#' lat/long coordinates, rayshader will infer that from the spatial metadata when possible. If omitted, rayshader will infer the extent
 #' from `heightmap` when possible, otherwise from the active scene or cached hillshade metadata.
 #'@param length The length of the scale bar, in `units`. This should match the units used on the map,
 #'unless `extent` uses lat/long coordinates. In that case, the distance should be in meters.
 #'@param x Default `0.05`. The x-coordinate of the bottom-left corner of the scale bar, as a proportion of the full map width.
 #'@param y Default `0.05`. The y-coordinate of the bottom-left corner of the scale bar, as a proportion of the full map height.
-#'@param latlong Default `FALSE`. Set to `TRUE` if the map is in lat/long coordinates to get an accurate
-#'scale bar (using distance calculated with the `geosphere` package).
+#'@param latlong Default `NA`. If `NA`, rayshader infers whether the map is in lat/long coordinates from
+#'spatial metadata on `extent`, `heightmap`, the active scene, or cached hillshade data. Explicit values are only
+#'used as a fallback for matrix heightmaps without cached spatial metadata.
 #'@param thickness Default `NA`, automatically computed as 1/20th the length of the scale bar. Width of the scale bar.
 #'@param bearing Default `90`, horizontal. Direction (measured from north) of the scale bar.
 #'@param unit Default `m`. Displayed unit on the scale bar.
@@ -145,7 +146,7 @@ generate_scalebar_overlay = function(
 	length,
 	x = 0.05,
 	y = 0.05,
-	latlong = FALSE,
+	latlong = NA,
 	thickness = NA,
 	bearing = 90,
 	unit = "m",
@@ -180,6 +181,12 @@ generate_scalebar_overlay = function(
 		heightmap_missing = missing(heightmap),
 		width = width,
 		height = height,
+		caller = "generate_scalebar_overlay"
+	)
+	latlong = resolve_scalebar_overlay_latlong(
+		latlong = latlong,
+		extent = extent,
+		heightmap = heightmap,
 		caller = "generate_scalebar_overlay"
 	)
 	extent = resolve_scene_render_extent(
@@ -586,4 +593,132 @@ generate_scalebar_overlay = function(
 		)
 	}
 	return(overlay_temp)
+}
+
+resolve_scalebar_overlay_latlong = function(
+	latlong = NA,
+	extent = NULL,
+	heightmap = NULL,
+	caller = NULL
+) {
+	latlong = validate_scalebar_latlong(latlong, caller = caller)
+	inferred_latlong = infer_scalebar_spatial_latlong(
+		extent = extent,
+		heightmap = heightmap,
+		caller = caller
+	)
+	if (!is.na(inferred_latlong)) {
+		return(inferred_latlong)
+	}
+	if (is.matrix(heightmap)) {
+		return(isTRUE(latlong))
+	}
+	FALSE
+}
+
+validate_scalebar_latlong = function(latlong = NA, caller = NULL) {
+	if (
+		length(latlong) != 1 ||
+			!(is.logical(latlong) || is.numeric(latlong))
+	) {
+		stop(
+			paste0(
+				format_render_caller_prefix(caller),
+				"`latlong` must be TRUE, FALSE, or NA."
+			),
+			call. = FALSE
+		)
+	}
+	as.logical(latlong)
+}
+
+infer_scalebar_spatial_latlong = function(
+	extent = NULL,
+	heightmap = NULL,
+	caller = NULL
+) {
+	candidates = list(
+		infer_scalebar_input_latlong(extent),
+		infer_scalebar_input_latlong(heightmap),
+		infer_scalebar_crs_latlong(tryCatch(
+			get_scene_target_crs(
+				extent = extent,
+				heightmap = heightmap,
+				caller = caller
+			),
+			error = function(e) NULL
+		)),
+		infer_scalebar_crs_latlong(get_scene_crs(default = NULL)),
+		infer_scalebar_crs_latlong(get_hillshade_crs(default = NULL))
+	)
+	for (candidate in candidates) {
+		if (!is.na(candidate)) {
+			return(candidate)
+		}
+	}
+	NA
+}
+
+infer_scalebar_input_latlong = function(x) {
+	if (is.null(x)) {
+		return(NA)
+	}
+	if (inherits(x, "SpatRaster")) {
+		is_lonlat = tryCatch(terra::is.lonlat(x), error = function(e) NA)
+		if (isTRUE(is_lonlat)) {
+			return(TRUE)
+		}
+		crs_value = tryCatch(terra::crs(x), error = function(e) NULL)
+		if (!is.null(crs_value) && nzchar(trimws(as.character(crs_value)[1]))) {
+			return(FALSE)
+		}
+		return(NA)
+	}
+	if (inherits(x, c("RasterLayer", "RasterBrick", "RasterStack"))) {
+		is_lonlat = tryCatch(raster::isLonLat(x), error = function(e) NA)
+		if (isTRUE(is_lonlat)) {
+			return(TRUE)
+		}
+		crs_value = tryCatch(raster::projection(x), error = function(e) NULL)
+		if (!is.null(crs_value) && nzchar(trimws(as.character(crs_value)[1]))) {
+			return(FALSE)
+		}
+		return(NA)
+	}
+	if (
+		inherits(x, c(
+			"sf", "sfc", "sfg", "Spatial", "bbox",
+			"SpatialPolygonsDataFrame", "SpatialPoints", "SpatialPointsDataFrame",
+			"SpatialMultiPoints", "SpatialMultiPointsDataFrame", "SpatialPixels",
+			"SpatialPixelsDataFrame", "SpatialGrid", "SpatialGridDataFrame",
+			"SpatialLines", "SpatialLinesDataFrame", "SpatialPolygons"
+		))
+	) {
+		return(infer_scalebar_crs_latlong(tryCatch(
+			sf::st_crs(x),
+			error = function(e) NULL
+		)))
+	}
+	infer_scalebar_crs_latlong(tryCatch(
+		attr(x, "crs", exact = TRUE),
+		error = function(e) NULL
+	))
+}
+
+infer_scalebar_crs_latlong = function(crs) {
+	if (is.null(crs) || !(length(find.package("sf", quiet = TRUE)) > 0)) {
+		return(NA)
+	}
+	parsed_crs = try_parse_scene_crs(crs)
+	if (is.null(parsed_crs)) {
+		return(NA)
+	}
+	is_lonlat = tryCatch(sf::st_is_longlat(parsed_crs), error = function(e) NA)
+	if (isTRUE(is_lonlat)) {
+		return(TRUE)
+	}
+	if (identical(is_lonlat, FALSE)) {
+		return(FALSE)
+	}
+	NA
 }

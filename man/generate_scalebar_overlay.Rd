@@ -9,7 +9,7 @@ generate_scalebar_overlay(
   length,
   x = 0.05,
   y = 0.05,
-  latlong = FALSE,
+  latlong = NA,
   thickness = NA,
   bearing = 90,
   unit = "m",
@@ -44,7 +44,7 @@ generate_scalebar_overlay(
 (either from the \code{raster}, \code{terra}, \code{sf}, or \code{sp} packages),
 a length-4 numeric vector specifying \code{c("xmin", "xmax","ymin","ymax")}, or the spatial object (from
 the previously aforementioned packages) which will be automatically converted to an extent object. If this is in
-lat/long coordinates, be sure to set \code{latlong = TRUE}. If omitted, rayshader will infer the extent
+lat/long coordinates, rayshader will infer that from the spatial metadata when possible. If omitted, rayshader will infer the extent
 from \code{heightmap} when possible, otherwise from the active scene or cached hillshade metadata.}
 
 \item{length}{The length of the scale bar, in \code{units}. This should match the units used on the map,
@@ -54,8 +54,9 @@ unless \code{extent} uses lat/long coordinates. In that case, the distance shoul
 
 \item{y}{Default \code{0.05}. The y-coordinate of the bottom-left corner of the scale bar, as a proportion of the full map height.}
 
-\item{latlong}{Default \code{FALSE}. Set to \code{TRUE} if the map is in lat/long coordinates to get an accurate
-scale bar (using distance calculated with the \code{geosphere} package).}
+\item{latlong}{Default \code{NA}. If \code{NA}, rayshader infers whether the map is in lat/long coordinates from
+spatial metadata on \code{extent}, \code{heightmap}, the active scene, or cached hillshade data. Explicit values are only
+used as a fallback for matrix heightmaps without cached spatial metadata.}
 
 \item{thickness}{Default \code{NA}, automatically computed as 1/20th the length of the scale bar. Width of the scale bar.}
 
