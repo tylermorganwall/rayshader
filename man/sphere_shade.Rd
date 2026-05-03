@@ -29,6 +29,9 @@ of the built-in palettes (\code{imhof1},\code{imhof2},\code{imhof3},\code{imhof4
 \item{colorintensity}{Deprecated alias for \code{vertical_exaggeration}.}
 
 \item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis.
+If omitted and \code{heightmap} is a spatial raster, rayshader automatically uses
+the raster cell resolution. Geographic longitude/latitude rasters are converted
+to an approximate meter-per-cell value at the raster center.
 If supplied, this also updates the cached hillshade \code{zscale} for downstream rayshader calls.}
 
 \item{vertical_exaggeration}{Default \code{1}. One-off multiplier applied to the

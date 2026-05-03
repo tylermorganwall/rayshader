@@ -12,6 +12,9 @@
 #'of the built-in palettes (`imhof1`,`imhof2`,`imhof3`,`imhof4`,`desert`, `bw`, and `unicorn`).
 #'@param normalvectors Default `NULL`. Cache of the normal vectors (from [calculate_normal()] function). Supply this to speed up texture mapping.
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis.
+#'If omitted and `heightmap` is a spatial raster, rayshader automatically uses
+#'the raster cell resolution. Geographic longitude/latitude rasters are converted
+#'to an approximate meter-per-cell value at the raster center.
 #'If supplied, this also updates the cached hillshade `zscale` for downstream rayshader calls.
 #'@param vertical_exaggeration Default `1`. One-off multiplier applied to the
 #'effective visual relief for this call. Values greater than `1` increase
@@ -89,9 +92,11 @@ sphere_shade = function(
 			caller = "sphere_shade"
 		)
 		heightmap = resolved_heightmap$heightmap
+		heightmap_auto_zscale = NA_real_
 	} else {
 		heightmap_info = coerce_plot_3d_heightmap(heightmap)
 		heightmap = heightmap_info$heightmap
+		heightmap_auto_zscale = heightmap_info$zscale
 		cache_hillshade_input_context(heightmap_info, label = heightmap_cache_label)
 	}
 	hillshade_cache_label = if (heightmap_missing) {
@@ -100,14 +105,26 @@ sphere_shade = function(
 		heightmap_cache_label
 	}
 	stopifnot(is.matrix(heightmap))
-	if (!missing(zscale)) {
-		zscale = suppressWarnings(as.numeric(zscale)[1])
-		if (!is.finite(zscale) || zscale <= 0) {
-			stop("`zscale` should be a positive number.")
-		}
-		cache_hillshade_zscale(zscale, label = zscale_cache_input_label)
-	} else {
-		zscale = 1
+	resolved_zscale = resolve_hillshade_zscale(
+		zscale = zscale,
+		zscale_missing = missing(zscale),
+		caller = "sphere_shade",
+		auto_zscale = heightmap_auto_zscale
+	)
+	zscale = resolved_zscale$zscale
+	zscale_cache_label = switch(
+		resolved_zscale$source,
+		explicit = zscale_cache_input_label,
+		auto = format_scene_cache_label(sprintf(
+			"%s_auto_zscale",
+			hillshade_cache_label
+		)),
+		hillshade = resolved_zscale$label,
+		scene = resolved_zscale$label,
+		NULL
+	)
+	if (!identical(resolved_zscale$source, "default")) {
+		cache_hillshade_zscale(zscale, label = zscale_cache_label)
 	}
 	zscale = apply_vertical_exaggeration(
 		zscale = zscale,

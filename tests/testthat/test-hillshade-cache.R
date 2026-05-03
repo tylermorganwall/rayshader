@@ -128,6 +128,52 @@ test_that("new explicit 2D heightmap invalidates stale cached hillshade metadata
 	expect_null(get_hillshade_crs(default = NULL))
 })
 
+test_that("lonlat SpatRaster hillshade caches meter zscale for plot_3d", {
+	skip_if_not_installed("terra")
+	clear_hillshade_test_cache()
+	withr::defer(clear_hillshade_test_cache())
+	local_rgl_use_null()
+	on.exit(rgl::close3d(), add = TRUE)
+
+	rast = terra::rast(
+		nrows = 6,
+		ncols = 6,
+		xmin = -122.366765,
+		xmax = -121.366765,
+		ymin = 36.179392,
+		ymax = 37.179392,
+		crs = "EPSG:4326"
+	)
+	terra::values(rast) = seq_len(terra::ncell(rast))
+
+	auto_zscale = extract_spatial_heightmap_zscale(rast)
+	expect_gt(auto_zscale, 10000)
+	expect_lt(auto_zscale, 25000)
+
+	hillshade = sphere_shade(rast)
+	expect_equal(get_hillshade_zscale(), auto_zscale, tolerance = 1e-8)
+	expect_equal(
+		hillshade,
+		sphere_shade(raster_to_matrix(rast, verbose = FALSE), zscale = auto_zscale)
+	)
+
+	hillshade = sphere_shade(rast)
+	expect_no_condition(plot_3d_test(
+		hillshade,
+		shadow = FALSE,
+		solid = FALSE,
+		windowsize = c(100, 100)
+	))
+	expect_equal(get_scene_zscale(), auto_zscale, tolerance = 1e-8)
+	expect_equal(
+		unname(get_extent(get_scene_extent())),
+		unname(get_extent(rast))
+	)
+	if (requireNamespace("sf", quietly = TRUE)) {
+		expect_true(sf::st_is_longlat(get_scene_crs()))
+	}
+})
+
 test_that("raster-backed hillshade metadata supports cached 2D spatial overlays", {
 	skip_if_not_installed("sf")
 	clear_hillshade_test_cache()

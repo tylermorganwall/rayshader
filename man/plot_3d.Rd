@@ -64,7 +64,8 @@ For spatial raster inputs, rayshader also caches the raster extent and CRS for d
 \item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
 of 1 meter and the grid values are separated by 10 meters, \code{zscale} would be 10. Adjust the zscale down to exaggerate elevation features.
 If \code{zscale} is not supplied and \code{heightmap} is a spatial raster, rayshader automatically
-uses the raster cell resolution (mean x/y resolution).}
+uses the raster cell resolution (mean x/y resolution). Geographic longitude/latitude
+rasters are converted to an approximate meter-per-cell value at the raster center.}
 
 \item{vertical_exaggeration}{Default \code{1}. One-off multiplier applied to the
 effective visual relief for this scene. Values greater than \code{1} increase

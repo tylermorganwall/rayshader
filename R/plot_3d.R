@@ -4,6 +4,76 @@ is_spatial_heightmap_input = function(x) {
 		inherits(x, c("RasterLayer", "RasterBrick", "RasterStack"))
 }
 
+is_spatial_heightmap_longlat = function(heightmap) {
+	if (inherits(heightmap, "SpatRaster")) {
+		return(isTRUE(tryCatch(terra::is.lonlat(heightmap), error = function(e) {
+			FALSE
+		})))
+	}
+	if (inherits(heightmap, c("RasterLayer", "RasterBrick", "RasterStack"))) {
+		return(isTRUE(tryCatch(raster::isLonLat(heightmap), error = function(e) {
+			FALSE
+		})))
+	}
+	FALSE
+}
+
+extract_longlat_heightmap_zscale = function(heightmap, resolution) {
+	if (length(resolution) < 2 || any(!is.finite(resolution[1:2]))) {
+		return(NA_real_)
+	}
+	resolution = abs(resolution[1:2])
+	if (any(resolution <= 0)) {
+		return(NA_real_)
+	}
+	extent = tryCatch(get_extent(heightmap), error = function(e) NULL)
+	if (is.null(extent)) {
+		return(NA_real_)
+	}
+	center_lon = mean(extent[c("xmin", "xmax")])
+	center_lat = mean(extent[c("ymin", "ymax")])
+	if (!is.finite(center_lon) || !is.finite(center_lat)) {
+		return(NA_real_)
+	}
+	lat_min = max(-90, center_lat - resolution[2] / 2)
+	lat_max = min(90, center_lat + resolution[2] / 2)
+	x_points = rbind(
+		c(center_lon - resolution[1] / 2, center_lat),
+		c(center_lon + resolution[1] / 2, center_lat)
+	)
+	y_points = rbind(
+		c(center_lon, lat_min),
+		c(center_lon, lat_max)
+	)
+	distances = tryCatch({
+		if (inherits(heightmap, "SpatRaster")) {
+			crs_value = terra::crs(heightmap)
+			c(
+				as.numeric(terra::distance(terra::vect(x_points, crs = crs_value))),
+				as.numeric(terra::distance(terra::vect(y_points, crs = crs_value)))
+			)
+		} else {
+			c(
+				raster::pointDistance(
+					x_points[1, , drop = FALSE],
+					x_points[2, , drop = FALSE],
+					lonlat = TRUE
+				),
+				raster::pointDistance(
+					y_points[1, , drop = FALSE],
+					y_points[2, , drop = FALSE],
+					lonlat = TRUE
+				)
+			)
+		}
+	}, error = function(e) NA_real_)
+	distances = distances[is.finite(distances) & distances > 0]
+	if (length(distances) == 0) {
+		return(NA_real_)
+	}
+	mean(distances)
+}
+
 extract_spatial_heightmap_zscale = function(heightmap) {
 	resolution = NULL
 	if (inherits(heightmap, "SpatRaster")) {
@@ -14,11 +84,17 @@ extract_spatial_heightmap_zscale = function(heightmap) {
 		resolution = raster::res(heightmap)
 	}
 	resolution = suppressWarnings(as.numeric(resolution))
-	resolution = abs(resolution[is.finite(resolution) & resolution > 0])
-	if (length(resolution) == 0) {
+	if (is_spatial_heightmap_longlat(heightmap)) {
+		longlat_zscale = extract_longlat_heightmap_zscale(heightmap, resolution)
+		if (is.finite(longlat_zscale) && longlat_zscale > 0) {
+			return(longlat_zscale)
+		}
+	}
+	positive_resolution = abs(resolution[is.finite(resolution) & resolution > 0])
+	if (length(positive_resolution) == 0) {
 		return(NA_real_)
 	}
-	mean(resolution)
+	mean(positive_resolution)
 }
 
 extract_spatial_heightmap_crs = function(heightmap) {
@@ -106,7 +182,8 @@ coerce_plot_3d_heightmap = function(heightmap) {
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
 #'of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10. Adjust the zscale down to exaggerate elevation features.
 #'If `zscale` is not supplied and `heightmap` is a spatial raster, rayshader automatically
-#'uses the raster cell resolution (mean x/y resolution).
+#'uses the raster cell resolution (mean x/y resolution). Geographic longitude/latitude
+#'rasters are converted to an approximate meter-per-cell value at the raster center.
 #'@param vertical_exaggeration Default `1`. One-off multiplier applied to the
 #'effective visual relief for this scene. Values greater than `1` increase
 #'apparent relief and values between `0` and `1` flatten it. This does not
@@ -333,6 +410,13 @@ plot_3d = function(
 	} else if (
 		heightmap_was_missing &&
 			!is.null(resolved_heightmap) &&
+			identical(resolved_heightmap$source, "hillshade")
+	) {
+		extent_cache_value = get_hillshade_extent(default = NULL)
+		extent_cache_label = get_hillshade_extent_label(default = NULL)
+	} else if (
+		heightmap_was_missing &&
+			!is.null(resolved_heightmap) &&
 			identical(resolved_heightmap$source, "scene")
 	) {
 		extent_cache_value = get_scene_extent(default = NULL)
@@ -403,6 +487,13 @@ plot_3d = function(
 			"%s_auto_crs",
 			heightmap_cache_label
 		))
+	} else if (
+		heightmap_was_missing &&
+			!is.null(resolved_heightmap) &&
+			identical(resolved_heightmap$source, "hillshade")
+	) {
+		crs_cache_value = get_hillshade_crs(default = NULL)
+		crs_cache_label = get_hillshade_crs_label(default = NULL)
 	} else if (
 		heightmap_was_missing &&
 			!is.null(resolved_heightmap) &&
