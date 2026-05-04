@@ -34,7 +34,7 @@
 #' to specify the bottom of the extruded polygon.
 #' @param scale_data Default `1`. How much to scale the `top`/`bottom` value when rendering. Use
 #' `zscale` to adjust the data to account for `x`/`y` grid spacing, and this argument to scale the data
-#' for visualization.
+#' for visualization. If used with `vertical_exaggeration`, both are applied.
 #' @param holes Default `0`. If passing in a polygon directly, this specifies which index represents
 #' the holes in the polygon. See the `earcut` function in the `decido` package for more information.
 #' @param heightmap Default `NULL`. Height matrix for the current scene. If omitted, this is taken from the cached scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value.
@@ -162,6 +162,11 @@ render_buildings = function(
 	...
 ) {
 	validate_filter_to_extent(filter_to_extent, caller = "render_buildings")
+	warn_scale_data_with_vertical_exaggeration(
+		scale_data_missing = missing(scale_data),
+		vertical_exaggeration_missing = missing(vertical_exaggeration),
+		caller = "render_buildings"
+	)
 	dot_split = split_zaxis_dots(list(...))
 	zscale = resolve_scene_render_effective_zscale(
 		zscale = zscale,

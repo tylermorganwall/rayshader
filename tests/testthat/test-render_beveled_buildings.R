@@ -121,3 +121,103 @@ test_that("render_beveled_polygons() and render_buildings() work for single poly
 		clear_previous = TRUE
 	))
 })
+
+test_that("render_polygons() warns and combines scale_data with vertical_exaggeration", {
+	skip_if_not_installed("sf")
+	skip_if_not_installed("rayrender")
+	on.exit(rgl::close3d(), add = TRUE)
+	local_rgl_use_null()
+
+	heightmap = matrix(0, nrow = 10, ncol = 10)
+	expect_no_condition(plot_3d_test(
+		sphere_shade(heightmap),
+		heightmap,
+		zscale = 1,
+		shadow = FALSE,
+		water = FALSE,
+		windowsize = c(100, 100)
+	))
+	polygon = sf::st_sf(
+		value = 10,
+		geometry = sf::st_sfc(sf::st_polygon(list(matrix(
+			c(2, 2, 4, 2, 4, 4, 2, 4, 2, 2),
+			ncol = 2,
+			byrow = TRUE
+		))))
+	)
+
+	expect_warning(
+		render_polygons(
+			polygon = polygon,
+			extent = c(xmin = 0, xmax = 10, ymin = 0, ymax = 10),
+			data_column_top = "value",
+			bottom = 0,
+			zscale = 10,
+			vertical_exaggeration = 2,
+			scale_data = 3,
+			clear_previous = TRUE
+		),
+		"both scale vertical data values"
+	)
+
+	polygon_ids = get_ids_with_labels()$id[get_ids_with_labels()$tag == "polygon3d"]
+	polygon_vertices = rgl::rgl.attrib(polygon_ids[length(polygon_ids)], "vertices")
+	expect_equal(range(polygon_vertices[, 2]), c(0, 6), tolerance = 1e-8)
+})
+
+test_that("raybevel polygon renderers warn when scale_data and vertical_exaggeration are both supplied", {
+	skip_if_not_installed("sf")
+	skip_if_not_installed("raybevel")
+	skip_if_not(raybevel_backend_available())
+	on.exit(rgl::close3d(), add = TRUE)
+	local_rgl_use_null()
+
+	heightmap = matrix(0, nrow = 10, ncol = 10)
+	expect_no_condition(plot_3d_test(
+		sphere_shade(heightmap),
+		heightmap,
+		zscale = 1,
+		shadow = FALSE,
+		water = FALSE,
+		windowsize = c(100, 100)
+	))
+	polygon = sf::st_sf(
+		value = 10,
+		geometry = sf::st_sfc(sf::st_polygon(list(matrix(
+			c(2, 2, 4, 2, 4, 4, 2, 4, 2, 2),
+			ncol = 2,
+			byrow = TRUE
+		))))
+	)
+
+	expect_warning(
+		render_buildings(
+			polygon = polygon,
+			extent = c(xmin = 0, xmax = 10, ymin = 0, ymax = 10),
+			data_column_top = "value",
+			base_height = 0,
+			zscale = 10,
+			vertical_exaggeration = 2,
+			scale_data = 3,
+			heights_relative_to_centroid = FALSE,
+			clear_previous = TRUE
+		),
+		"both scale vertical data values"
+	)
+	expect_warning(
+		render_beveled_polygons(
+			polygon = polygon,
+			extent = c(xmin = 0, xmax = 10, ymin = 0, ymax = 10),
+			data_column_top = "value",
+			base_height = 0,
+			bevel_width = 0.2,
+			width_raw_units = TRUE,
+			zscale = 10,
+			vertical_exaggeration = 2,
+			scale_data = 3,
+			heights_relative_to_centroid = FALSE,
+			clear_previous = TRUE
+		),
+		"both scale vertical data values"
+	)
+})

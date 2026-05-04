@@ -2349,6 +2349,24 @@ resolve_scene_render_effective_zscale = function(
 	)
 }
 
+warn_scale_data_with_vertical_exaggeration = function(
+	scale_data_missing = TRUE,
+	vertical_exaggeration_missing = TRUE,
+	caller = NULL
+) {
+	if (isTRUE(scale_data_missing) || isTRUE(vertical_exaggeration_missing)) {
+		return(invisible(NULL))
+	}
+	warning(
+		paste0(
+			format_render_caller_prefix(caller),
+			"`scale_data` and `vertical_exaggeration` both scale vertical data values; both will be applied."
+		),
+		call. = FALSE
+	)
+	invisible(NULL)
+}
+
 resolve_scene_render_heightmap = function(heightmap = NULL, caller = NULL) {
 	if (!is.null(heightmap)) {
 		if (is_spatial_heightmap_input(heightmap)) {

@@ -112,7 +112,7 @@ of matrix extent isn't working. A two-dimensional matrix, where each entry in th
 All points are assumed to be evenly spaced.}
 
 \item{scale_data}{Default \code{1}. If specifying \code{data_column_top} or \code{data_column_bottom}, how
-much to scale that value when rendering.}
+much to scale that value when rendering. If used with \code{vertical_exaggeration}, both are applied.}
 
 \item{holes}{Default \code{0}. If passing in a polygon directly, this specifies which index represents
 the holes in the polygon. See the \code{earcut} function in the \code{decido} package for more information.}

@@ -28,7 +28,7 @@
 #' @param data_column_bottom Default `NULL`. A string indicating the column in the `sf` object to use
 #' to specify the bottom of the extruded polygon.
 #' @param scale_data Default `1`. If specifying `data_column_top` or `data_column_bottom`, how
-#' much to scale that value when rendering.
+#' much to scale that value when rendering. If used with `vertical_exaggeration`, both are applied.
 #' @param parallel Default `FALSE`. If `TRUE`, polygons will be extruded in parallel, which
 #' may be faster (depending on how many geometries are in `polygon`).
 #' @param holes Default `0`. If passing in a polygon directly, this specifies which index represents
@@ -108,6 +108,11 @@ render_polygons = function(
 	...
 ) {
 	validate_filter_to_extent(filter_to_extent, caller = "render_polygons")
+	warn_scale_data_with_vertical_exaggeration(
+		scale_data_missing = missing(scale_data),
+		vertical_exaggeration_missing = missing(vertical_exaggeration),
+		caller = "render_polygons"
+	)
 	zaxis_split = split_zaxis_dots(list(...))
 	zscale = resolve_scene_render_effective_zscale(
 		zscale = zscale,
@@ -336,7 +341,7 @@ render_polygons = function(
 			single_poly$vb[3, ] = ncol_map /
 				2 -
 				(single_poly$vb[3, ] - e["ymin"]) / (e["ymax"] - e["ymin"]) * ncol_map
-			single_poly$vb[2, ] = single_poly$vb[2, ]
+			single_poly$vb[2, ] = single_poly$vb[2, ] / zscale
 
 			rgl::shade3d(
 				single_poly,

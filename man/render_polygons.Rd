@@ -70,7 +70,7 @@ All points are assumed to be evenly spaced.}
 \item{vertical_exaggeration}{Default \code{1}. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}} when available; pass explicitly to override for this call.}
 
 \item{scale_data}{Default \code{1}. If specifying \code{data_column_top} or \code{data_column_bottom}, how
-much to scale that value when rendering.}
+much to scale that value when rendering. If used with \code{vertical_exaggeration}, both are applied.}
 
 \item{parallel}{Default \code{FALSE}. If \code{TRUE}, polygons will be extruded in parallel, which
 may be faster (depending on how many geometries are in \code{polygon}).}
