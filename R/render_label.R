@@ -168,6 +168,28 @@ render_label = function(
 		if (!is.null(altitude)) {
 			z = altitude
 		}
+		extent = resolve_scene_render_extent(
+			extent = extent,
+			heightmap = heightmap,
+			caller = "render_label",
+			panel = panel,
+			error_if_missing = FALSE
+		)
+		if (
+			is.null(extent) &&
+				!is.null(heightmap) &&
+				is.null(get_cached_plot_gg_transform_info(
+					heightmap = heightmap,
+					default = NULL
+				))
+		) {
+			extent = c(
+				xmin = 1,
+				xmax = nrow(heightmap),
+				ymin = 1,
+				ymax = ncol(heightmap)
+			)
+		}
 		point_input = resolve_render_location_input(
 			location = location,
 			x = x,
@@ -207,21 +229,6 @@ render_label = function(
 		}
 		if (is.null(x) || is.null(y)) {
 			stop("Must provide `x`/`y` coordinates.", call. = FALSE)
-		}
-		extent = resolve_scene_render_extent(
-			extent = extent,
-			heightmap = heightmap,
-			caller = "render_label",
-			panel = panel,
-			error_if_missing = FALSE
-		)
-		if (is.null(extent)) {
-			extent = c(
-				xmin = 1,
-				xmax = nrow(heightmap),
-				ymin = 1,
-				ymax = ncol(heightmap)
-			)
 		}
 		if (!point_input$location_supplied) {
 			scene_xy = auto_transform_scene_xy(
