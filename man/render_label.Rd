@@ -11,6 +11,8 @@ render_label(
   x = NULL,
   z = NULL,
   altitude = NULL,
+  data_column_z = NULL,
+  scale_data = 1,
   extent = NULL,
   panel = NULL,
   zscale = 1,
@@ -52,6 +54,10 @@ If no \code{extent} is available and the scene uses a plain matrix heightmap, th
 \item{z}{Default \code{NULL}. Elevation of the label, in units of the elevation matrix (scaled by zscale).}
 
 \item{altitude}{Default \code{NULL}. Elevation of the label, in units of the elevation matrix (scaled by zscale). If none is passed, this will default to 10 percent above the maximum altitude in the heightmap.}
+
+\item{data_column_z}{Default \code{NULL}. Column name in \code{location} to use for \code{z}. Requires \code{location} to be an \code{sf}/spatial point object with a numeric column. Values are applied after POINT/MULTIPOINT flattening and are multiplied by \code{scale_data}.}
+
+\item{scale_data}{Default \code{1}. If specifying \code{data_column_z}, how much to scale that value when rendering. If used with \code{vertical_exaggeration}, both are applied.}
 
 \item{extent}{Either an object representing the spatial extent of the scene
 (either from the \code{raster}, \code{terra}, \code{sf}, or \code{sp} packages),
@@ -105,7 +111,7 @@ other arguments are passed to \code{\link[=render_label]{render_label()}}, this 
 
 \item{long}{Default \code{NULL}. Alias for \code{x} for geographic workflows.}
 
-\item{location}{Default \code{NULL}. Spatial point input used to place the rendered label in the scene. Accepts \code{sf}, \code{sfc}, \code{sfg}, or \code{sp} POINT or MULTIPOINT geometries. MULTIPOINT inputs are flattened to point placements internally. \code{render_label()} requires \code{location} to resolve to exactly one point after flattening. If the input carries a CRS, it will be transformed automatically into the active scene CRS. If it has no CRS, supply \code{crs}.}
+\item{location}{Default \code{NULL}. Spatial point input used to place the rendered label(s) in the scene. Accepts \code{sf}, \code{sfc}, \code{sfg}, or \code{sp} POINT or MULTIPOINT geometries. MULTIPOINT inputs are flattened to point placements internally, and vectorized arguments such as \code{text}, \code{z}, \code{altitude}, and \code{data_column_z} values are applied against that flattened point count. If the input carries a CRS, it will be transformed automatically into the active scene CRS. If it has no CRS, supply \code{crs}.}
 
 \item{crs}{Default \code{NULL}. CRS of the input numeric x/y coordinates, or CRS to assign to CRS-less spatial data before transforming it into the active scene CRS. If spatial data already carries a CRS, that CRS is used automatically.}
 

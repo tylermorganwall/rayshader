@@ -120,7 +120,9 @@ the luminance of the \code{background} color in the CIELab colorspace if not spe
 
 \item{shadow_darkness}{Default \code{0.5}. Darkness of the shadow, if \code{shadowcolor = "auto"}.}
 
-\item{background}{Default \code{"white"}. Background color.}
+\item{background}{Default \code{"white"}. Background color for the 3D scene.
+This is independent of the ggplot \code{plot.background} fill used for the
+captured texture.}
 
 \item{preview}{Default \code{FALSE}. If \code{TRUE}, the raytraced 2D ggplot will be displayed on the current device.}
 

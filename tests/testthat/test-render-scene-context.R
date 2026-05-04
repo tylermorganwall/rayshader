@@ -252,6 +252,63 @@ test_that("render_label() accepts x/y names and lat/long aliases", {
 	)
 })
 
+test_that("render_label() reads label z values from an sf point column", {
+	skip_if_not_installed("sf")
+	on.exit(rgl::close3d(), add = TRUE)
+	local_rgl_use_null()
+
+	heightmap = matrix(0, nrow = 20, ncol = 20)
+	texture = sphere_shade(heightmap)
+	extent = c(xmin = 0, xmax = 20, ymin = 0, ymax = 20)
+	labels_sf = sf::st_as_sf(
+		data.frame(
+			text = c("A", "B"),
+			x = c(5, 15),
+			y = c(5, 15),
+			height_m = c(200, 400)
+		),
+		coords = c("x", "y"),
+		crs = NA,
+		remove = FALSE
+	)
+	expect_no_condition(plot_3d_test(
+		texture,
+		heightmap,
+		zscale = 10,
+		shadow = FALSE,
+		water = FALSE,
+		windowsize = c(250, 250),
+		extent = extent
+	))
+
+	expect_no_condition(render_label(
+		location = labels_sf,
+		text = labels_sf$text,
+		data_column_z = "height_m",
+		scale_data = 0.5,
+		relativez = FALSE,
+		offset = 0,
+		freetype = FALSE,
+		clear_previous = TRUE
+	))
+
+	ids = get_ids_with_labels(typeval = "textline")
+	line_ids = ids$id[ids$tag == "textline"]
+	line_tops = vapply(line_ids, function(id) {
+		max(rgl::rgl.attrib(id, "vertices")[, 2])
+	}, numeric(1))
+	expect_equal(sort(unname(line_tops)), c(10, 20), tolerance = 1e-6)
+	expect_error(
+		render_label(
+			location = labels_sf,
+			text = labels_sf$text,
+			data_column_z = "height_m",
+			z = labels_sf$height_m
+		),
+		"cannot be combined"
+	)
+})
+
 test_that("render_label() matrix fallback extent preserves 1-based indexing", {
 	on.exit(rgl::close3d(), add = TRUE)
 	local_rgl_use_null()

@@ -472,7 +472,7 @@ test_that("MULTIPOINT locations are flattened for vectorized renderers", {
 	expect_equal(nrow(rgl::rgl.attrib(point_id, "vertices")), nrow(expected_xy))
 })
 
-test_that("render_label() requires exactly one point after MULTIPOINT flattening", {
+test_that("render_label() flattens MULTIPOINT locations for vectorized labels", {
 	skip_if_not_installed("sf")
 	skip_if_not_installed("raster")
 	on.exit(rgl::close3d(), add = TRUE)
@@ -490,15 +490,14 @@ test_that("render_label() requires exactly one point after MULTIPOINT flattening
 	ids = get_ids_with_labels(typeval = c("raytext", "textline"))
 	expect_true(any(ids$tag == "textline"))
 
-	expect_error(
-		render_label(
-			text = "A",
-			location = fixtures$multipoint_sfc,
-			z = 1500,
-			clear_previous = TRUE
-		),
-		"exactly one point"
-	)
+	expect_no_condition(render_label(
+		text = fixtures$location_names,
+		location = fixtures$multipoint_sfc,
+		z = c(1500, 1800),
+		clear_previous = TRUE
+	))
+	ids = get_ids_with_labels(typeval = c("raytext", "textline"))
+	expect_equal(sum(ids$tag == "textline"), 2)
 })
 
 test_that("plot_3d scenes transform spatial point locations for point-anchored renderers", {
@@ -711,12 +710,12 @@ test_that("point-anchored renderers validate location inputs", {
 	)
 	expect_error(
 		render_label(
-			text = "A",
+			text = c("A", "B", "C"),
 			location = fixtures$multipoint_sfc,
 			z = 1000,
 			clear_previous = TRUE
 		),
-		"exactly one point"
+		"must have length 1 or match the number of labels"
 	)
 	expect_error(
 		render_points(

@@ -1,3 +1,57 @@
+get_plot_gg_grob_background = function(grob, default = "white") {
+	background_index = which(grob$layout$name == "background")
+	if (!length(background_index)) {
+		return(default)
+	}
+	background_grob = grob$grobs[[background_index[[1]]]]
+	fill = background_grob$gp$fill
+	if (is.null(fill) || !length(fill)) {
+		return(default)
+	}
+	fill = fill[[1]]
+	if (is.na(fill) || !nzchar(fill) || tolower(fill) == "transparent") {
+		return(default)
+	}
+	fill_rgba = tryCatch(
+		grDevices::col2rgb(fill, alpha = TRUE) / 255,
+		error = function(e) NULL
+	)
+	default_rgb = tryCatch(
+		grDevices::col2rgb(default) / 255,
+		error = function(e) grDevices::col2rgb("white") / 255
+	)
+	if (is.null(fill_rgba)) {
+		return(default)
+	}
+	fill_alpha = fill_rgba[4, 1]
+	grob_alpha = background_grob$gp$alpha
+	if (!is.null(grob_alpha) && length(grob_alpha) && !is.na(grob_alpha[[1]])) {
+		fill_alpha = fill_alpha * grob_alpha[[1]]
+	}
+	if (!is.finite(fill_alpha) || fill_alpha <= 0) {
+		return(default)
+	}
+	fill_rgb = fill_rgba[1:3, 1] * fill_alpha +
+		default_rgb[1:3, 1] * (1 - fill_alpha)
+	grDevices::rgb(fill_rgb[[1]], fill_rgb[[2]], fill_rgb[[3]])
+}
+
+remove_plot_gg_grob_background_line = function(grob) {
+	background_index = which(grob$layout$name == "background")
+	if (!length(background_index)) {
+		return(grob)
+	}
+	for (index in background_index) {
+		if (is.null(grob$grobs[[index]]$gp)) {
+			grob$grobs[[index]]$gp = grid::gpar()
+		}
+		grob$grobs[[index]]$gp$col = NA
+		grob$grobs[[index]]$gp$lwd = 0
+		class(grob$grobs[[index]]$gp) = "gpar"
+	}
+	grob
+}
+
 #'@title Transform ggplot2 objects into 3D
 #'
 #'@description Plots a ggplot2 object in 3D by mapping the color or fill aesthetic to elevation.
@@ -60,7 +114,9 @@
 #'@param shadow_darkness Default `0.5`. Darkness of the shadow, if `shadowcolor = "auto"`.
 #'@param shadowcolor Default `auto`. Color of the shadow, automatically computed as `shadow_darkness`
 #'the luminance of the `background` color in the CIELab colorspace if not specified.
-#'@param background Default `"white"`. Background color.
+#'@param background Default `"white"`. Background color for the 3D scene.
+#'This is independent of the ggplot `plot.background` fill used for the
+#'captured texture.
 #'@param preview Default `FALSE`. If `TRUE`, the raytraced 2D ggplot will be displayed on the current device.
 #'@param raytrace Default `TRUE`. Controls the additional shading applied to the
 #'ggplot texture. Use `TRUE`/`"raytrace"` for [ray_shade()], `FALSE`/`"none"`
@@ -440,6 +496,8 @@ plot_gg = function(
 		color_gg = clone_plot_gg_object(ggobj)
 	}
 	color_gg_grob = ggplot2::ggplotGrob(color_gg)
+	plot_background = get_plot_gg_grob_background(color_gg_grob)
+	color_gg_grob = remove_plot_gg_grob_background_line(color_gg_grob)
 
 	grob_name = function(grob) {
 		if (!is.null(grob$name)) {
@@ -1490,7 +1548,8 @@ plot_gg = function(
 		width = width,
 		height = height,
 		units = "in",
-		res = 300
+		res = 300,
+		bg = plot_background
 	)
 	grid::grid.draw(color_gg_grob)
 	grDevices::dev.off()

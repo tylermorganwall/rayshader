@@ -859,6 +859,7 @@ extract_scene_point_xy = function(
 	)
 	list(
 		sf_data = scene_point_data$sf_data,
+		point_sf_data = scene_point_data$point_sf_data,
 		x = scene_point_data$x,
 		y = scene_point_data$y,
 		feature_count = coerced_points$feature_count,
