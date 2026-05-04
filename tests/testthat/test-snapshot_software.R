@@ -31,7 +31,7 @@ test_that("Checking render_snapshot(software_render = TRUE) features", {
 	testthat::skip_on_cran()
 	#Render the 3D map
 	montereybay |>
-		sphere_shade() |>
+		sphere_shade(vertical_exaggeration = 10) |>
 		plot_3d_test(
 			montereybay,
 			vertical_exaggeration = 4,

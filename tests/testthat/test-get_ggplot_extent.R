@@ -33,6 +33,33 @@ test_that("scene extent resolution infers extent from spatial heightmaps", {
 	)
 })
 
+test_that("scene render heightmap resolution coerces spatial heightmaps", {
+	testthat::skip_if_not_installed("terra")
+
+	rast = terra::rast(
+		nrows = 2,
+		ncols = 3,
+		xmin = 10,
+		xmax = 13,
+		ymin = 20,
+		ymax = 22,
+		crs = "EPSG:4326"
+	)
+	terra::values(rast) = seq_len(terra::ncell(rast))
+
+	heightmap = rayshader:::resolve_scene_render_heightmap(
+		rast,
+		caller = "test"
+	)
+
+	expect_true(is.matrix(heightmap))
+	expect_equal(
+		attr(heightmap, "extent", exact = TRUE),
+		c(xmin = 10, xmax = 13, ymin = 20, ymax = 22)
+	)
+	expect_false(is.null(attr(heightmap, "crs", exact = TRUE)))
+})
+
 test_that("internal ggplot scene extent maps a single panel into scene coordinates", {
 	on.exit(rgl::close3d(), add = TRUE)
 

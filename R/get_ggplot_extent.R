@@ -2351,6 +2351,16 @@ resolve_scene_render_effective_zscale = function(
 
 resolve_scene_render_heightmap = function(heightmap = NULL, caller = NULL) {
 	if (!is.null(heightmap)) {
+		if (is_spatial_heightmap_input(heightmap)) {
+			heightmap_info = coerce_plot_3d_heightmap(heightmap)
+			if (!is.null(heightmap_info$extent)) {
+				attr(heightmap_info$heightmap, "extent") = heightmap_info$extent
+			}
+			if (!is.null(heightmap_info$crs)) {
+				attr(heightmap_info$heightmap, "crs") = heightmap_info$crs
+			}
+			return(heightmap_info$heightmap)
+		}
 		return(heightmap)
 	}
 	scene_heightmap = get_scene_heightmap(default = NULL)

@@ -20,12 +20,12 @@ test_that("generate_scalebar_overlay() infers latlong from spatial heightmaps", 
 		crs = "EPSG:3857"
 	)
 
-	expect_true(resolve_scalebar_overlay_latlong(
+	expect_true(rayshader:::resolve_scalebar_overlay_latlong(
 		latlong = FALSE,
 		heightmap = lonlat_rast,
 		caller = "generate_scalebar_overlay"
 	))
-	expect_false(resolve_scalebar_overlay_latlong(
+	expect_false(rayshader:::resolve_scalebar_overlay_latlong(
 		latlong = TRUE,
 		heightmap = projected_rast,
 		caller = "generate_scalebar_overlay"
@@ -47,13 +47,13 @@ test_that("generate_scalebar_overlay() infers latlong from explicit spatial exte
 		class = "bbox"
 	)
 
-	expect_true(resolve_scalebar_overlay_latlong(
+	expect_true(rayshader:::resolve_scalebar_overlay_latlong(
 		latlong = FALSE,
 		extent = lonlat_extent,
 		heightmap = heightmap,
 		caller = "generate_scalebar_overlay"
 	))
-	expect_false(resolve_scalebar_overlay_latlong(
+	expect_false(rayshader:::resolve_scalebar_overlay_latlong(
 		latlong = TRUE,
 		extent = projected_extent,
 		heightmap = heightmap,
@@ -63,14 +63,14 @@ test_that("generate_scalebar_overlay() infers latlong from explicit spatial exte
 
 test_that("generate_scalebar_overlay() uses cached spatial metadata before latlong", {
 	testthat::skip_if_not_installed("sf")
-	clear_hillshade_cache()
-	reset_scene_context(
+	rayshader:::clear_hillshade_cache()
+	rayshader:::reset_scene_context(
 		clear_scene_metadata = TRUE,
 		clear_scene_cache = TRUE
 	)
 	withr::defer({
-		clear_hillshade_cache()
-		reset_scene_context(
+		rayshader:::clear_hillshade_cache()
+		rayshader:::reset_scene_context(
 			clear_scene_metadata = TRUE,
 			clear_scene_cache = TRUE
 		)
@@ -78,15 +78,15 @@ test_that("generate_scalebar_overlay() uses cached spatial metadata before latlo
 
 	heightmap = matrix(1, nrow = 2, ncol = 2)
 
-	cache_hillshade_crs(sf::st_crs(4326), label = "test")
-	expect_true(resolve_scalebar_overlay_latlong(
+	rayshader:::cache_hillshade_crs(sf::st_crs(4326), label = "test")
+	expect_true(rayshader:::resolve_scalebar_overlay_latlong(
 		latlong = FALSE,
 		heightmap = heightmap,
 		caller = "generate_scalebar_overlay"
 	))
 
-	cache_hillshade_crs(sf::st_crs(3857), label = "test")
-	expect_false(resolve_scalebar_overlay_latlong(
+	rayshader:::cache_hillshade_crs(sf::st_crs(3857), label = "test")
+	expect_false(rayshader:::resolve_scalebar_overlay_latlong(
 		latlong = TRUE,
 		heightmap = heightmap,
 		caller = "generate_scalebar_overlay"
@@ -94,31 +94,31 @@ test_that("generate_scalebar_overlay() uses cached spatial metadata before latlo
 })
 
 test_that("generate_scalebar_overlay() only falls back to latlong without spatial metadata", {
-	clear_hillshade_cache()
-	reset_scene_context(
+	rayshader:::clear_hillshade_cache()
+	rayshader:::reset_scene_context(
 		clear_scene_metadata = TRUE,
 		clear_scene_cache = TRUE
 	)
 	withr::defer({
-		clear_hillshade_cache()
-		reset_scene_context(
+		rayshader:::clear_hillshade_cache()
+		rayshader:::reset_scene_context(
 			clear_scene_metadata = TRUE,
 			clear_scene_cache = TRUE
 		)
 	})
 
 	heightmap = matrix(1, nrow = 2, ncol = 2)
-	expect_true(resolve_scalebar_overlay_latlong(
+	expect_true(rayshader:::resolve_scalebar_overlay_latlong(
 		latlong = TRUE,
 		heightmap = heightmap,
 		caller = "generate_scalebar_overlay"
 	))
-	expect_false(resolve_scalebar_overlay_latlong(
+	expect_false(rayshader:::resolve_scalebar_overlay_latlong(
 		latlong = NA,
 		heightmap = heightmap,
 		caller = "generate_scalebar_overlay"
 	))
-	expect_false(resolve_scalebar_overlay_latlong(
+	expect_false(rayshader:::resolve_scalebar_overlay_latlong(
 		latlong = TRUE,
 		heightmap = NULL,
 		caller = "generate_scalebar_overlay"

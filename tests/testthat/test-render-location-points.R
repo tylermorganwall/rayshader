@@ -63,7 +63,7 @@ monterey_crs_test = function() {
 setup_plot3d_location_scene_test = function() {
 	monterey_raster = monterey_spatial_raster_test()
 	expect_no_condition(plot_3d_test(
-		sphere_shade(montereybay),
+		sphere_shade(montereybay, vertical_exaggeration = 10),
 		monterey_raster,
 		vertical_exaggeration = 4,
 		shadow = FALSE,
@@ -76,7 +76,7 @@ setup_plot3d_location_scene_test = function() {
 setup_plot3d_location_snapshot_scene_test = function(label = FALSE) {
 	monterey_raster = monterey_spatial_raster_test()
 	expect_no_condition(plot_3d_test(
-		sphere_shade(montereybay),
+		sphere_shade(montereybay, vertical_exaggeration = 10),
 		monterey_raster,
 		vertical_exaggeration = 4,
 		shadow = FALSE,
