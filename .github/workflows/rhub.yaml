@@ -90,6 +90,11 @@ jobs:
         with:
           token: ${{ secrets.RHUB_TOKEN }}
           job-config: ${{ matrix.config.job-config }}
+      - name: Show R repositories
+        run: |
+          options(width = 1000)
+          print(getOption("repos"))
+        shell: Rscript {0}
       - uses: r-hub/actions/setup-deps@v1
         with:
           job-config: ${{ matrix.config.job-config }}
