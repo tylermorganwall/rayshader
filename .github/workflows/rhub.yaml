@@ -65,10 +65,10 @@ jobs:
         shell: Rscript {0}
       - uses: r-hub/actions/setup-deps@v1
         with:
-          job-config: ${{ matrix.config.job-config }}
           token: ${{ secrets.RHUB_TOKEN }}
+          job-config: ${{ matrix.config.job-config }}
           pak-version: stable
-          extra-packages: any::rcmdcheck, rlas=?ignore, lidR=?ignore
+          extra-packages: any::rcmdcheck, cran::pillar, rlas=?ignore, lidR=?ignore
       - uses: r-hub/actions/run-check@v1
         with:
           token: ${{ secrets.RHUB_TOKEN }}
@@ -103,10 +103,10 @@ jobs:
         shell: Rscript {0}
       - uses: r-hub/actions/setup-deps@v1
         with:
-          job-config: ${{ matrix.config.job-config }}
           token: ${{ secrets.RHUB_TOKEN }}
+          job-config: ${{ matrix.config.job-config }}
           pak-version: stable
-          extra-packages: any::rcmdcheck, rlas=?ignore, lidR=?ignore
+          extra-packages: any::rcmdcheck, cran::pillar, rlas=?ignore, lidR=?ignore
       - uses: r-hub/actions/run-check@v1
         with:
           job-config: ${{ matrix.config.job-config }}
