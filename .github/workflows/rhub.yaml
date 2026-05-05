@@ -94,7 +94,8 @@ jobs:
         with:
           job-config: ${{ matrix.config.job-config }}
           token: ${{ secrets.RHUB_TOKEN }}
-          extra-packages: rlas=?ignore, lidR=?ignore
+          pak-version: stable
+          extra-packages: any::rcmdcheck, rlas=?ignore, lidR=?ignore
       - uses: r-hub/actions/run-check@v1
         with:
           job-config: ${{ matrix.config.job-config }}

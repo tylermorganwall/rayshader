@@ -1083,7 +1083,9 @@ try_parse_scene_crs = function(crs) {
 	add_candidate(crs)
 	if (inherits(crs, "CRS")) {
 		add_candidate(tryCatch(comment(crs), error = function(e) NULL))
-		add_candidate(tryCatch(slot(crs, "projargs"), error = function(e) NULL))
+		add_candidate(tryCatch(methods::slot(crs, "projargs"), error = function(e) {
+			NULL
+		}))
 		add_candidate(tryCatch(as.character(crs), error = function(e) NULL))
 	}
 	for (candidate in crs_candidates) {

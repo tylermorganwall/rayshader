@@ -95,7 +95,7 @@ is reused.
 }
 \examples{
 \dontshow{if (length(find.package("terra", quiet = TRUE)) > 0) withAutoprint(\{ # examplesIf}
-hillshade_img = elmat |>
+hillshade_img = montereybay |>
   sphere_shade() |>
   add_shadow(ray_shade(), 0.5)
 

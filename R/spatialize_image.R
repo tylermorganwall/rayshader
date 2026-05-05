@@ -61,7 +61,7 @@
 #' @export
 #'
 #' @examplesIf length(find.package("terra", quiet = TRUE)) > 0
-#' hillshade_img = elmat |>
+#' hillshade_img = montereybay |>
 #'   sphere_shade() |>
 #'   add_shadow(ray_shade(), 0.5)
 #'
@@ -359,7 +359,7 @@ infer_spatialize_image_extent_crs = function(extent) {
 		return(parse_candidates(list(
 			raster_crs,
 			tryCatch(comment(raster_crs), error = function(e) NULL),
-			tryCatch(slot(raster_crs, "projargs"), error = function(e) NULL),
+			tryCatch(methods::slot(raster_crs, "projargs"), error = function(e) NULL),
 			tryCatch(as.character(raster_crs), error = function(e) NULL),
 			tryCatch(raster::projection(extent), error = function(e) NULL)
 		)))

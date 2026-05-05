@@ -185,7 +185,8 @@ remove_plot_gg_grob_background_line = function(grob) {
 #'  facet_wrap(clarity~.) +
 #'  scale_fill_viridis_c(option = "A") +
 #'  scale_color_viridis_c(option = "A")
-#'plot_gg(ggdiamonds,multicore = TRUE,width=5,height=5,vertical_exaggeration=250,windowsize=c(1400,866),
+#'plot_gg(ggdiamonds,multicore = TRUE,width=5,height=5,
+#'        vertical_exaggeration=250,windowsize=c(1400,866),
 #'        zoom = 0.55, phi = 30)
 #'render_snapshot()
 #'#Change the camera angle and take a snapshot:

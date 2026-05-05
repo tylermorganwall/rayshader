@@ -119,7 +119,7 @@ extract_spatial_heightmap_crs = function(heightmap) {
 		crs_candidates = list(
 			tryCatch(comment(crs_val), error = function(e) NULL),
 			crs_val,
-			tryCatch(slot(crs_val, "projargs"), error = function(e) NULL),
+			tryCatch(methods::slot(crs_val, "projargs"), error = function(e) NULL),
 			tryCatch(as.character(crs_val), error = function(e) NULL),
 			tryCatch(raster::projection(heightmap), error = function(e) NULL)
 		)
