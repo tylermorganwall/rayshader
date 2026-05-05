@@ -1,29 +1,3 @@
-local({
-	ns = parent.env(environment())
-	if (exists("montereybay", envir = ns, inherits = FALSE)) {
-		if (bindingIsLocked("montereybay", ns)) {
-			unlockBinding("montereybay", ns)
-		}
-		rm(list = "montereybay", envir = ns)
-	}
-	makeActiveBinding(
-		"montereybay",
-		function(value) {
-			if (!missing(value)) {
-				stop("`montereybay` is read-only package data.", call. = FALSE)
-			}
-			if (!requireNamespace("terra", quietly = TRUE)) {
-				stop(
-					"`montereybay` requires the `terra` package to be installed.",
-					call. = FALSE
-				)
-			}
-			terra::unwrap(get(".montereybay_packed", envir = ns, inherits = FALSE))
-		},
-		ns
-	)
-})
-
 #' Monterey Bay combined topographic and bathymetric elevation raster
 #'
 #' This dataset is a downsampled spatial version of a combined topographic and
