@@ -62,10 +62,7 @@ render_highquality(
   clamp_value = NA,
   calculate_consistent_normals = FALSE,
   load_normals = TRUE,
-  point_material = rayrender::diffuse,
-  point_material_args = list(),
-  path_material = rayrender::diffuse,
-  path_material_args = list(),
+  rgl_materials = list(),
   animation_camera_coords = NULL,
   plot = is.na(filename),
   ...
@@ -226,19 +223,11 @@ loss at edges.}
 
 \item{load_normals}{Default \code{TRUE}. Whether to load the vertex normals if they exist in the OBJ file.}
 
-\item{point_material}{Default \code{rayrender::diffuse}. The rayrender material function to be applied
-to point data.}
-
-\item{point_material_args}{Default empty \code{list()}. The function arguments to \code{point_material}.
-The argument \code{color} will be automatically extracted from the rgl scene, but all other arguments
-can be specified here.}
-
-\item{path_material}{Default \code{rayrender::diffuse}. The rayrender material function to be applied
-to path data.}
-
-\item{path_material_args}{Default empty \code{list()}. The function arguments to \code{path_material}.
-The argument \code{color} will be automatically extracted from the rgl scene, but all other arguments
-can be specified here.}
+\item{rgl_materials}{Default empty \code{list()}. Named list of material overrides for rgl objects.
+Names must be rgl tags or rgl ids. Values can be evaluated
+rayrender materials, rayrender material functions, or lists with a \code{material} entry and optional
+\code{args}/\code{material_args} entry. When a material function is supplied, the rgl object color is passed
+to its \code{color} argument unless \code{color} is already supplied in \code{args}.}
 
 \item{animation_camera_coords}{Default \code{NULL}. Expects camera animation output from either \code{\link[=convert_path_to_animation_coords]{convert_path_to_animation_coords()}}
 or \code{rayrender::generate_camera_motion()} functions.}

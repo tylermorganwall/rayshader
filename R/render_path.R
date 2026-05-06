@@ -121,11 +121,14 @@
 #'#to get thick continuous paths.
 #'render_highquality(line_radius=1, min_variance = 0,
 #'                   use_extruded_paths = TRUE, samples = 16)
-#'#We can also change the material of the objects by setting the `point_material` and
-#'#`point_material_args` arguments in `render_highquality()`
+#'#We can also change the material of the objects by setting the `rgl_materials`
+#'#argument in `render_highquality()`
 #'render_highquality(line_radius=1, min_variance = 0, samples = 16,
-#'                   path_material = rayrender::glossy,  use_extruded_paths = TRUE,
-#'                   path_material_args = list(gloss = 0.5, reflectance = 0.2))
+#'                   use_extruded_paths = TRUE,
+#'                   rgl_materials = list(path3d = list(
+#'                     material = rayrender::glossy,
+#'                     args = list(gloss = 0.5, reflectance = 0.2)
+#'                   )))
 #'
 #'#For transmissive materials (like `dielectric`), we should specify that the path
 #'#should be rendered with an extruded path. We'll use the `attenuation` argument in
@@ -135,8 +138,11 @@
 #'            color="white", offset=200, linewidth=5)
 #'render_highquality(line_radius=1, min_variance = 0, samples = 16,
 #'                   lightsize = 2000, lightintensity = 10,
-#'                   path_material = rayrender::dielectric, use_extruded_paths = TRUE,
-#'                   path_material_args = list(refraction = 1.5, attenuation = c(0.05,0.2,0.2)))
+#'                   use_extruded_paths = TRUE,
+#'                   rgl_materials = list(path3d = list(
+#'                     material = rayrender::dielectric,
+#'                     args = list(refraction = 1.5, attenuation = c(0.05,0.2,0.2))
+#'                   )))
 render_path = function(
 	y = NULL,
 	x = NULL,

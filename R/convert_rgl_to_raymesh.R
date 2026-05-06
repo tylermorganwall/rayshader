@@ -7,6 +7,8 @@
 #'@param water_surface_color Default `TRUE`. Whether the water should have a colored surface or not. This is in contrast to
 #' setting a non-zero water attenuation, where the color comes from the attenuation of light in the water itself.
 #'@param water_ior Default `1`. Water index of refraction.
+#'@param include_ids Default `NULL`. Internal use. Optional rgl ids to include when converting.
+#'@param exclude_ids Default `NULL`. Internal use. Optional rgl ids to exclude when converting.
 #'@return A `ray_mesh` object
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
@@ -21,7 +23,9 @@ convert_rgl_to_raymesh = function(
 	save_shadow = TRUE,
 	water_attenuation = 0,
 	water_surface_color = TRUE,
-	water_ior = 1
+	water_ior = 1,
+	include_ids = NULL,
+	exclude_ids = NULL
 ) {
 	if (rgl::cur3d() == 0) {
 		stop("No rgl window currently open.")
@@ -30,6 +34,20 @@ convert_rgl_to_raymesh = function(
 	num_elems = 1
 
 	vertex_info = get_ids_with_labels()
+	if (!is.null(include_ids)) {
+		vertex_info = vertex_info[
+			vertex_info$id %in% as.integer(include_ids),
+			,
+			drop = FALSE
+		]
+	}
+	if (!is.null(exclude_ids)) {
+		vertex_info = vertex_info[
+			!(vertex_info$id %in% as.integer(exclude_ids)),
+			,
+			drop = FALSE
+		]
+	}
 	basic_load_mesh = function(
 		row,
 		texture_loc,

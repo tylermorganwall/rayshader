@@ -51,9 +51,12 @@
 #'#Render using `render_highquality()` for a neon light effect
 #'render_highquality(light = FALSE, samples = 16,
 #'                   line_radius = 0.1,
-#'                   path_material = rayrender::light, ground_size = 0,
-#'                   path_material_args = list(importance_sample = FALSE,
-#'                                             color = "purple", intensity = 2))
+#'                   ground_size = 0,
+#'                   rgl_materials = list(contour3d = list(
+#'                     material = rayrender::light,
+#'                     args = list(importance_sample = FALSE,
+#'                                 color = "purple", intensity = 2)
+#'                   )))
 render_contours = function(
 	heightmap = NULL,
 	zscale = 1,

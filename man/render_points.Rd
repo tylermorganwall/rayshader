@@ -136,10 +136,12 @@ render_snapshot()
 #And all of these work with `render_highquality()`
 render_highquality(point_radius = 1, min_variance = 0, samples = 16)
 
-#We can also change the material of the objects by setting the `point_material` and
-#`point_material_args` arguments in `render_highquality()`
+#We can also change the material of the objects by setting the `rgl_materials`
+#argument in `render_highquality()`
 render_highquality(point_radius = 1, min_variance = 0, samples = 16,
-                  point_material = rayrender::glossy,
-                  point_material_args = list(gloss = 0.5, reflectance = 0.2))
+                  rgl_materials = list(points3d = list(
+                    material = rayrender::glossy,
+                    args = list(gloss = 0.5, reflectance = 0.2)
+                  )))
 \dontshow{\}) # examplesIf}
 }

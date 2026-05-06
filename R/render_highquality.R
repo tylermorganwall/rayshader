@@ -104,16 +104,11 @@
 #'@param load_normals Default `TRUE`. Whether to load the vertex normals if they exist in the OBJ file.
 #'@param calculate_consistent_normals Default `FALSE`. Whether to calculate consistent vertex normals to prevent energy
 #'loss at edges.
-#'@param point_material Default `rayrender::diffuse`. The rayrender material function to be applied
-#'to point data.
-#'@param point_material_args Default empty `list()`. The function arguments to `point_material`.
-#'The argument `color` will be automatically extracted from the rgl scene, but all other arguments
-#'can be specified here.
-#'@param path_material Default `rayrender::diffuse`. The rayrender material function to be applied
-#'to path data.
-#'@param path_material_args Default empty `list()`. The function arguments to `path_material`.
-#'The argument `color` will be automatically extracted from the rgl scene, but all other arguments
-#'can be specified here.
+#'@param rgl_materials Default empty `list()`. Named list of material overrides for rgl objects.
+#'Names must be rgl tags or rgl ids. Values can be evaluated
+#'rayrender materials, rayrender material functions, or lists with a `material` entry and optional
+#'`args`/`material_args` entry. When a material function is supplied, the rgl object color is passed
+#'to its `color` argument unless `color` is already supplied in `args`.
 #'@param animation_camera_coords Default `NULL`. Expects camera animation output from either [convert_path_to_animation_coords()]
 #'or `rayrender::generate_camera_motion()` functions.
 #'@param plot Default `is.na(filename)`. Whether to plot the scene, or just return the RGBA array.
@@ -284,10 +279,7 @@ render_highquality = function(
 	clamp_value = NA,
 	calculate_consistent_normals = FALSE,
 	load_normals = TRUE,
-	point_material = rayrender::diffuse,
-	point_material_args = list(),
-	path_material = rayrender::diffuse,
-	path_material_args = list(),
+	rgl_materials = list(),
 	animation_camera_coords = NULL,
 	plot = is.na(filename),
 	...
@@ -326,6 +318,25 @@ render_highquality = function(
 	}
 
 	dot_args = list(...)
+	removed_material_args = intersect(
+		names(dot_args),
+		c(
+			"point_material",
+			"point_material_args",
+			"path_material",
+			"path_material_args"
+		)
+	)
+	if (length(removed_material_args) > 0) {
+		stop(
+			sprintf(
+				"`%s` %s not a render_highquality() argument. Use `rgl_materials` instead.",
+				paste(removed_material_args, collapse = "`, `"),
+				ifelse(length(removed_material_args) == 1, "is", "are")
+			),
+			call. = FALSE
+		)
+	}
 	if (is.null(sky_args)) {
 		sky_args = list()
 	}
@@ -688,56 +699,7 @@ render_highquality = function(
 		light = FALSE
 	}
 
-	#Check path/point material arguments
-	if (!inherits(path_material, "function")) {
-		stop(
-			"`path_material` is not a function: did you forget to remove the `()` at the end?"
-		)
-	}
-	arg_names = names(formals(path_material))
-	not_matching = !(names(path_material_args) %in% arg_names)
-	if (any(not_matching)) {
-		arg_names = arg_names[arg_names != "color"]
-		all_arg_names = paste(arg_names, collapse = ", ")
-		all_not_matching = paste(
-			names(path_material_args)[not_matching],
-			collapse = ", "
-		)
-		stop(sprintf(
-			"Path material arguments `%s` not valid for the material. Valid argument names are: \n%s",
-			all_not_matching,
-			all_arg_names
-		))
-	}
-	if (!inherits(point_material, "function")) {
-		stop(
-			"`point_material` is not a function: did you forget to remove the `()` at the end?"
-		)
-	}
-	arg_names = names(formals(point_material))
-	not_matching = !(names(point_material_args) %in% arg_names)
-	if (any(not_matching)) {
-		arg_names = arg_names[arg_names != "color"]
-		all_arg_names = paste(arg_names, collapse = ", ")
-		all_not_matching = paste(
-			names(point_material_args)[not_matching],
-			collapse = ", "
-		)
-		stop(sprintf(
-			"Point material arguments `%s` not valid for the material. Valid argument names are: \n%s",
-			all_not_matching,
-			all_arg_names
-		))
-	}
-	#Set use_extruded_path to TRUE if path_material is dielectric
-	path_material_raw = path_material()
-	path_material_df = path_material_raw[[1]]
-	if (path_material_df$type == "dielectric" && !use_extruded_paths) {
-		message(
-			"dielectric material for paths selected--setting `use_extruded_paths = TRUE` for accurate rendering of material"
-		)
-		use_extruded_paths = TRUE
-	}
+	rgl_materials = validate_render_highquality_rgl_materials(rgl_materials)
 
 	#Get scene info
 	windowrect = rgl::par3d()$windowRect
@@ -861,6 +823,23 @@ render_highquality = function(
 		mean(lookvals[5:6])
 	) -
 		movevec
+	rgl_material_info = get_render_highquality_rgl_material_info(rgl_materials)
+	raymesh_material_info = get_render_highquality_raymesh_material_info(
+		rgl_material_info
+	)
+	raymesh_material_ids = unique(raymesh_material_info$id)
+	if (
+		!use_extruded_paths &&
+			has_render_highquality_dielectric_path_override(
+				rgl_materials,
+				rgl_material_info
+			)
+	) {
+		message(
+			"dielectric material for paths selected--setting `use_extruded_paths = TRUE` for accurate rendering of material"
+		)
+		use_extruded_paths = TRUE
+	}
 	theta = theta + 180
 	observery = sinpi(phi / 180) * observer_radius
 	observerx = cospi(phi / 180) * sinpi(theta / 180) * observer_radius
@@ -893,7 +872,7 @@ render_highquality = function(
 		)
 		water_attenuation[water_attenuation > 1] = 1
 	}
-	if (cache_scene) {
+	if (cache_scene && length(raymesh_material_ids) == 0) {
 		ray_scene = get_scene_cache(default = NULL)
 		if (is.null(ray_scene)) {
 			ray_scene = convert_rgl_to_raymesh(
@@ -909,11 +888,14 @@ render_highquality = function(
 			save_shadow = FALSE,
 			water_attenuation = water_attenuation,
 			water_surface_color = water_surface_color,
-			water_ior = water_ior
+			water_ior = water_ior,
+			exclude_ids = raymesh_material_ids
 		)
 	}
 
-	if (!override_material) {
+	if (is_empty_raymesh_scene(ray_scene)) {
+		scene = NULL
+	} else if (!override_material) {
 		scene = rayrender::raymesh_model(
 			ray_scene,
 			x = -bbox_center[1],
@@ -934,6 +916,43 @@ render_highquality = function(
 			flip_transmittance = FALSE,
 			calculate_consistent_normals = calculate_consistent_normals
 		)
+	}
+	if (nrow(raymesh_material_info) > 0) {
+		for (material_row in seq_len(nrow(raymesh_material_info))) {
+			temp_ray_scene = convert_rgl_to_raymesh(
+				save_shadow = FALSE,
+				water_attenuation = water_attenuation,
+				water_surface_color = water_surface_color,
+				water_ior = water_ior,
+				include_ids = raymesh_material_info$id[[material_row]]
+			)
+			if (is_empty_raymesh_scene(temp_ray_scene)) {
+				next
+			}
+			temp_material = resolve_render_highquality_rgl_material(
+				rgl_materials = rgl_materials,
+				id = raymesh_material_info$id[[material_row]],
+				tag = raymesh_material_info$tag[[material_row]],
+				color = get_render_highquality_rgl_material_color(
+					raymesh_material_info$id[[material_row]]
+				)
+			)
+			temp_model = rayrender::raymesh_model(
+				temp_ray_scene,
+				x = -bbox_center[1],
+				y = -bbox_center[2],
+				z = -bbox_center[3],
+				material = temp_material,
+				override_material = TRUE,
+				flip_transmittance = FALSE,
+				calculate_consistent_normals = calculate_consistent_normals
+			)
+			if (is.null(scene)) {
+				scene = temp_model
+			} else {
+				scene = rayrender::add_object(scene, temp_model)
+			}
+		}
 	}
 	has_rayimage = TRUE
 	if (!(length(find.package("rayimage", quiet = TRUE)) > 0)) {
@@ -972,7 +991,8 @@ render_highquality = function(
 		all_labels = do.call(rbind, labels)
 		scene = rayrender::add_object(scene, all_labels)
 	}
-	labellineids = get_ids_with_labels(typeval = "textline")$id
+	labellineinfo = get_ids_with_labels(typeval = "textline")
+	labellineids = labellineinfo$id
 	labelline = list()
 	counter = 1
 	for (i in seq_len(length(labellineids))) {
@@ -982,18 +1002,28 @@ render_highquality = function(
 		temp_verts = rgl.attrib(labellineids[i], "vertices")
 		temp_color = rgl.attrib(labellineids[i], "colors")
 		for (j in seq_len(nrow(temp_verts) / 2)) {
+			temp_material = resolve_render_highquality_rgl_material(
+				rgl_materials = rgl_materials,
+				id = labellineids[i],
+				tag = labellineinfo$tag[i],
+				color = temp_color[j, 1:3]
+			)
+			if (is.null(temp_material)) {
+				temp_material = rayrender::diffuse(color = temp_color[j, 1:3])
+			}
 			labelline[[counter]] = rayrender::segment(
 				start = temp_verts[2 * j - 1, ] - bbox_center,
 				end = temp_verts[2 * j, ] - bbox_center,
 				radius = line_radius,
-				material = rayrender::diffuse(color = temp_color[j, 1:3])
+				material = temp_material
 			)
 			counter = counter + 1
 		}
 	}
-	pathids = get_ids_with_labels(
+	pathinfo = get_ids_with_labels(
 		typeval = c("path3d", "contour3d", "zaxis_axis", "zaxis_ticks")
-	)$id
+	)
+	pathids = pathinfo$id
 	pathline = list()
 	counter = 1
 	for (i in seq_len(length(pathids))) {
@@ -1023,7 +1053,15 @@ render_highquality = function(
 				ncol = 3,
 				nrow = nrow(temp_verts_single)
 			)
-			path_material_args$color = temp_color[1, 1:3]
+			temp_material = resolve_render_highquality_rgl_material(
+				rgl_materials = rgl_materials,
+				id = pathids[i],
+				tag = pathinfo$tag[i],
+				color = temp_color[1, 1:3]
+			)
+			if (is.null(temp_material)) {
+				temp_material = rayrender::diffuse(color = temp_color[1, 1:3])
+			}
 
 			if (use_extruded_paths) {
 				pathline[[counter]] = rayrender::extruded_path(
@@ -1031,26 +1069,21 @@ render_highquality = function(
 					width = temp_lwd * 2,
 					smooth_normals = TRUE,
 					straight = !smooth_line,
-					material = do.call(
-						"path_material",
-						args = path_material_args
-					)
+					material = temp_material
 				)
 			} else {
 				pathline[[counter]] = rayrender::path(
 					points = temp_verts_single - matrix_center,
 					width = temp_lwd * 2,
 					straight = !smooth_line,
-					material = do.call(
-						"path_material",
-						args = path_material_args
-					)
+					material = temp_material
 				)
 			}
 			counter = counter + 1
 		}
 	}
-	pointids = get_ids_with_labels(typeval = "points3d")$id
+	pointinfo = get_ids_with_labels(typeval = "points3d")
+	pointids = pointinfo$id
 	pointlist = list()
 	counter = 1
 	for (i in seq_len(length(pointids))) {
@@ -1068,26 +1101,43 @@ render_highquality = function(
 			can_use_instances = TRUE
 		}
 		if (can_use_instances) {
-			point_material_args$color = temp_color[1, 1:3]
-			pointlist[[1]] = rayrender::create_instances(
+			temp_material = resolve_render_highquality_rgl_material(
+				rgl_materials = rgl_materials,
+				id = pointids[i],
+				tag = pointinfo$tag[i],
+				color = temp_color[1, 1:3]
+			)
+			if (is.null(temp_material)) {
+				temp_material = rayrender::diffuse(color = temp_color[1, 1:3])
+			}
+			pointlist[[counter]] = rayrender::create_instances(
 				rayrender::sphere(
 					radius = temp_size,
-					material = do.call("point_material", args = point_material_args)
+					material = temp_material
 				),
 				x = temp_verts[, 1] - bbox_center[1],
 				y = temp_verts[, 2] - bbox_center[2],
 				z = temp_verts[, 3] - bbox_center[3],
 			)
+			counter = counter + 1
 		} else {
 			for (j in seq_len(nrow(temp_verts))) {
-				point_material_args$color = temp_color[j, 1:3]
+				temp_material = resolve_render_highquality_rgl_material(
+					rgl_materials = rgl_materials,
+					id = pointids[i],
+					tag = pointinfo$tag[i],
+					color = temp_color[j, 1:3]
+				)
+				if (is.null(temp_material)) {
+					temp_material = rayrender::diffuse(color = temp_color[j, 1:3])
+				}
 
 				pointlist[[counter]] = rayrender::sphere(
 					x = temp_verts[j, 1] - bbox_center[1],
 					y = temp_verts[j, 2] - bbox_center[2],
 					z = temp_verts[j, 3] - bbox_center[3],
 					radius = temp_size,
-					material = do.call("point_material", args = point_material_args)
+					material = temp_material
 				)
 				counter = counter + 1
 			}
@@ -1351,4 +1401,250 @@ render_highquality = function(
 		rgl::clear3d()
 	}
 	return(invisible(debug_return))
+}
+
+validate_render_highquality_rgl_materials = function(rgl_materials) {
+	if (is.null(rgl_materials)) {
+		return(list())
+	}
+	if (!is.list(rgl_materials)) {
+		stop("`rgl_materials` must be a named list.", call. = FALSE)
+	}
+	if (length(rgl_materials) == 0) {
+		return(rgl_materials)
+	}
+	material_names = names(rgl_materials)
+	if (
+		is.null(material_names) ||
+			any(is.na(material_names)) ||
+			any(!nzchar(material_names))
+	) {
+		stop("`rgl_materials` must be a named list with non-empty names.", call. = FALSE)
+	}
+	for (material_index in seq_along(rgl_materials)) {
+		validate_render_highquality_rgl_material_spec(
+			rgl_materials[[material_index]],
+			material_names[[material_index]]
+		)
+	}
+	rgl_materials
+}
+
+validate_render_highquality_rgl_material_spec = function(material_spec, name) {
+	if (is_rayrender_material(material_spec) || inherits(material_spec, "function")) {
+		return(invisible(TRUE))
+	}
+	if (is.list(material_spec) && !is.null(material_spec$material)) {
+		if (
+			!is_rayrender_material(material_spec$material) &&
+				!inherits(material_spec$material, "function")
+		) {
+			stop(
+				sprintf(
+					"`rgl_materials[[\"%s\"]]$material` must be a rayrender material or material function.",
+					name
+				),
+				call. = FALSE
+			)
+		}
+		material_args = material_spec$args
+		if (is.null(material_args)) {
+			material_args = material_spec$material_args
+		}
+		if (!is.null(material_args) && !is.list(material_args)) {
+			stop(
+				sprintf(
+					"`rgl_materials[[\"%s\"]]$args` must be a list.",
+					name
+				),
+				call. = FALSE
+			)
+		}
+		return(invisible(TRUE))
+	}
+	stop(
+		sprintf(
+			"`rgl_materials[[\"%s\"]]` must be a rayrender material, material function, or list with a `material` entry.",
+			name
+		),
+		call. = FALSE
+	)
+}
+
+resolve_render_highquality_rgl_material = function(
+	rgl_materials,
+	id,
+	tag,
+	color = NULL
+) {
+	if (length(rgl_materials) == 0) {
+		return(NULL)
+	}
+	material_names = names(rgl_materials)
+	id_name = as.character(id)
+	material_index = match(id_name, material_names, nomatch = 0)
+	if (material_index == 0) {
+		material_index = match(tag, material_names, nomatch = 0)
+	}
+	if (material_index == 0) {
+		return(NULL)
+	}
+	make_render_highquality_rgl_material(
+		material_spec = rgl_materials[[material_index]],
+		color = color,
+		name = material_names[[material_index]]
+	)
+}
+
+get_render_highquality_rgl_material_info = function(rgl_materials) {
+	if (length(rgl_materials) == 0) {
+		return(data.frame(id = integer(), tag = character()))
+	}
+	id_info = get_ids_with_labels()
+	material_names = names(rgl_materials)
+	matches = rep(FALSE, nrow(id_info))
+	for (material_name in material_names) {
+		matches = matches |
+			as.character(id_info$id) == material_name |
+			id_info$tag == material_name
+	}
+	id_info[matches, c("id", "tag"), drop = FALSE]
+}
+
+get_render_highquality_raymesh_material_info = function(rgl_material_info) {
+	if (nrow(rgl_material_info) == 0) {
+		return(rgl_material_info)
+	}
+	raymesh_index = vapply(
+		rgl_material_info$tag,
+		is_render_highquality_raymesh_tag,
+		logical(1)
+	)
+	rgl_material_info[raymesh_index, , drop = FALSE]
+}
+
+has_render_highquality_dielectric_path_override = function(
+	rgl_materials,
+	rgl_material_info
+) {
+	if (nrow(rgl_material_info) == 0) {
+		return(FALSE)
+	}
+	path_override_info = rgl_material_info[
+		vapply(
+			rgl_material_info$tag,
+			is_render_highquality_path_tag,
+			logical(1)
+		),
+		,
+		drop = FALSE
+	]
+	if (nrow(path_override_info) == 0) {
+		return(FALSE)
+	}
+	for (material_row in seq_len(nrow(path_override_info))) {
+		material = resolve_render_highquality_rgl_material(
+			rgl_materials = rgl_materials,
+			id = path_override_info$id[[material_row]],
+			tag = path_override_info$tag[[material_row]],
+			color = c(1, 1, 1)
+		)
+		if (!is.null(material) && material[[1]]$type == rayrender::dielectric()[[1]]$type) {
+			return(TRUE)
+		}
+	}
+	FALSE
+}
+
+is_render_highquality_path_tag = function(tag) {
+	tag %in% c("path3d", "contour3d", "zaxis_axis", "zaxis_ticks")
+}
+
+is_render_highquality_raymesh_tag = function(tag) {
+	grepl("^surface", tag) ||
+		grepl("obj", tag, fixed = TRUE) ||
+		tag %in% c(
+			"base",
+			"basebottom",
+			"water",
+			"north_symbol",
+			"arrow_symbol",
+			"bevel_symbol",
+			"background_symbol",
+			"scalebar_col1",
+			"scalebar_col2",
+			"polygon3d",
+			"floating_overlay",
+			"floating_overlay_tris",
+			"base_soil1",
+			"base_soil2"
+		)
+}
+
+get_render_highquality_rgl_material_color = function(id) {
+	material = rgl::material3d(id = id)
+	color = material$color
+	if (is.null(color) || length(color) == 0 || any(is.na(color))) {
+		return(NULL)
+	}
+	color
+}
+
+make_render_highquality_rgl_material = function(
+	material_spec,
+	color = NULL,
+	name = NULL
+) {
+	if (is_rayrender_material(material_spec)) {
+		return(material_spec)
+	}
+	material = material_spec
+	material_args = list()
+	if (is.list(material_spec) && !is.null(material_spec$material)) {
+		material = material_spec$material
+		material_args = material_spec$args
+		if (is.null(material_args)) {
+			material_args = material_spec$material_args
+		}
+		if (is.null(material_args)) {
+			material_args = list()
+		}
+	}
+	if (is_rayrender_material(material)) {
+		return(material)
+	}
+	if (!inherits(material, "function")) {
+		stop(
+			sprintf(
+				"`rgl_materials[[\"%s\"]]` must resolve to a rayrender material or material function.",
+				name
+			),
+			call. = FALSE
+		)
+	}
+	if (!is.null(color)) {
+		material_formals = names(formals(material))
+		if ("color" %in% material_formals && !("color" %in% names(material_args))) {
+			material_args$color = color
+		}
+	}
+	material_value = do.call(material, material_args)
+	if (!is_rayrender_material(material_value)) {
+		stop(
+			sprintf(
+				"`rgl_materials[[\"%s\"]]` did not return a rayrender material.",
+				name
+			),
+			call. = FALSE
+		)
+	}
+	material_value
+}
+
+is_rayrender_material = function(x) {
+	inherits(x, c("ray_material", "ray_mat"))
+}
+
+is_empty_raymesh_scene = function(ray_scene) {
+	is.null(ray_scene$shapes) || length(ray_scene$shapes) == 0
 }
