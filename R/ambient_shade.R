@@ -22,22 +22,26 @@
 #'@return Shaded texture map.
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
-#'#Here we produce a ambient occlusion map of the `montereybay` elevation map.
+#'# Here we produce a ambient occlusion map of the `montereybay` elevation map.
+#'# Increasing vertical exaggeration helps bring out details for landscapes
+#'# that are flat (due to large zscales).
 #'montereybay |>
-#'  ambient_shade() |>
+#'  ambient_shade(vertical_exaggeration = 20) |>
 #'  plot_map()
 #'
 #'#We can increase the distance to look for surface intersections `maxsearch`
 #'#and the density of rays sent out around the point `sunbreaks`.
 #'montereybay |>
-#'  ambient_shade(sunbreaks = 24,maxsearch = 100, multicore=TRUE) |>
+#'  ambient_shade(sunbreaks = 24,maxsearch = 100, multicore = TRUE,
+#'                vertical_exaggeration = 20) |>
 #'  plot_map()
 #'#Create the Red Relief Image Map (RRIM) technique using a custom texture and ambient_shade(),
 #'#with an addition lambertian layer added with lamb_shade() to improve topographic clarity.
 #'bigmb = resize_spatial(montereybay, scale=2, method_up="cubic")
 #'bigmb |>
 #'  sphere_shade(texture = create_texture("red","red","red","red","white")) |>
-#'  add_shadow(ambient_shade(maxsearch = 100, multicore = TRUE),0) |>
+#'  add_shadow(ambient_shade(maxsearch = 100, multicore = TRUE,
+#'                           vertical_exaggeration = 20),0) |>
 #'  add_shadow(lamb_shade(),0.5) |>
 #'  plot_map()
 ambient_shade = function(
@@ -125,6 +129,17 @@ ambient_shade = function(
 			numbercores = options("cores")[[1]]
 		}
 		cl = parallel::makeCluster(numbercores, ...)
+		if (is.na(numbercores) || numbercores < 1) {
+			numbercores = 1L
+		}
+		cluster_args = list(...)
+		if (is.null(cluster_args$rscript_args)) {
+			cluster_args$rscript_args = "--vanilla"
+		}
+		cl = do.call(
+			parallel::makeCluster,
+			c(list(numbercores), cluster_args)
+		)		
 		doParallel::registerDoParallel(cl, cores = numbercores)
 		shademat = tryCatch(
 			{

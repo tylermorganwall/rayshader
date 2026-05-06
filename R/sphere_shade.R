@@ -35,26 +35,27 @@
 #'  sphere_shade() |>
 #'  plot_map()
 #'
-#'#Decrease the color intensity:
+#'#Increase the color intensity:
 #'montereybay |>
-#'  sphere_shade(vertical_exaggeration=0.1) |>
+#'  sphere_shade(vertical_exaggeration=10) |>
 #'  plot_map()
 #'
 #'#Change to a built-in color texture:
 #'montereybay |>
-#'  sphere_shade(texture="desert") |>
+#'  sphere_shade(texture="desert", vertical_exaggeration=10) |>
 #'  plot_map()
 #'
 #'#Change the highlight angle:
 #'montereybay |>
-#'  sphere_shade(texture="desert", sunangle = 45) |>
+#'  sphere_shade(texture="desert", sunangle = 45, vertical_exaggeration=10) |>
 #'  plot_map()
 #'
 #'#Create our own texture using the `create_texture` function:
 #'montereybay |>
 #'  sphere_shade(texture=create_texture("#E9C68D","#AF7F38",
 #'                                      "#674F30","#494D30",
-#'                                      "#B3BEA3")) |>
+#'                                      "#B3BEA3"),
+#'               vertical_exaggeration=10) |>
 #'  plot_map()
 sphere_shade = function(
 	heightmap,
