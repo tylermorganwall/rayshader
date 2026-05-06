@@ -196,6 +196,36 @@ test_that("render_label() uses cached scene heightmap and zscale", {
 	expect_gt(nrow(ids), 0)
 })
 
+test_that("render_label() can render text without label lines", {
+	on.exit(rgl::close3d(), add = TRUE)
+	local_rgl_use_null()
+
+	heightmap = matrix(0, nrow = 20, ncol = 20)
+	texture = sphere_shade(heightmap)
+	expect_no_condition(plot_3d_test(
+		texture,
+		heightmap,
+		zscale = 10,
+		shadow = FALSE,
+		water = FALSE,
+		windowsize = c(250, 250)
+	))
+
+	expect_no_condition(render_label(
+		text = "A",
+		x = 10,
+		y = 10,
+		z = 10,
+		line = FALSE,
+		freetype = FALSE,
+		clear_previous = TRUE
+	))
+
+	ids = get_ids_with_labels(typeval = c("raytext", "textline"))
+	expect_true(any(ids$tag == "raytext"))
+	expect_false(any(ids$tag == "textline"))
+})
+
 test_that("render_label() accepts x/y names and lat/long aliases", {
 	on.exit(rgl::close3d(), add = TRUE)
 	local_rgl_use_null()
@@ -304,6 +334,65 @@ test_that("render_label() reads label z values from an sf point column", {
 			text = labels_sf$text,
 			data_column_z = "height_m",
 			z = labels_sf$height_m
+		),
+		"cannot be combined"
+	)
+})
+
+test_that("render_label() reads text from sf columns and labels polygon centroids", {
+	skip_if_not_installed("sf")
+	on.exit(rgl::close3d(), add = TRUE)
+	local_rgl_use_null()
+
+	heightmap = matrix(0, nrow = 20, ncol = 20)
+	texture = sphere_shade(heightmap)
+	extent = c(xmin = 0, xmax = 20, ymin = 0, ymax = 20)
+	labels_sf = sf::st_sf(
+		label = c("A", "B"),
+		height_m = c(200, 400),
+		geometry = sf::st_sfc(
+			sf::st_polygon(list(matrix(
+				c(4, 4, 6, 4, 6, 6, 4, 6, 4, 4),
+				ncol = 2,
+				byrow = TRUE
+			))),
+			sf::st_polygon(list(matrix(
+				c(14, 14, 16, 14, 16, 16, 14, 16, 14, 14),
+				ncol = 2,
+				byrow = TRUE
+			)))
+		)
+	)
+	expect_no_condition(plot_3d_test(
+		texture,
+		heightmap,
+		zscale = 10,
+		shadow = FALSE,
+		water = FALSE,
+		windowsize = c(250, 250),
+		extent = extent
+	))
+
+	expect_no_condition(render_label(
+		labels_sf,
+		data_column_text = "label",
+		data_column_z = "height_m",
+		scale_data = 0.5,
+		relativez = FALSE,
+		line = FALSE,
+		freetype = FALSE,
+		clear_previous = TRUE
+	))
+
+	ids = get_ids_with_labels(typeval = c("raytext", "textline"))
+	expect_equal(sum(ids$tag == "raytext"), 2)
+	expect_false(any(ids$tag == "textline"))
+	expect_error(
+		render_label(
+			labels_sf,
+			text = labels_sf$label,
+			data_column_text = "label",
+			data_column_z = "height_m"
 		),
 		"cannot be combined"
 	)

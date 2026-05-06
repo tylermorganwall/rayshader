@@ -4,15 +4,16 @@
 #'
 #'Cache fallback messages are disabled by default. Set `options(rayshader.verbose_scene_cache = TRUE)` to print when cached metadata is reused.
 #'
-#'@param heightmap Default `NULL`. Height matrix for the current scene. If omitted, this is taken from the cached scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value.
-#'@param text The label text.
+#'@param location Default `NULL`. Spatial input used to place the rendered label(s) in the scene. Accepts `sf`, `sfc`, `sfg`, or `sp` POINT, MULTIPOINT, POLYGON, or MULTIPOLYGON geometries. POLYGON and MULTIPOLYGON inputs are converted to label points with `sf::st_centroid()`. MULTIPOINT inputs are flattened to point placements internally, and vectorized arguments such as `text`, `z`, `altitude`, `data_column_text`, and `data_column_z` values are applied against that flattened point count. If the input carries a CRS, it will be transformed automatically into the active scene CRS. If it has no CRS, supply `crs`.
+#'@param text Default `NULL`. The label text. If omitted, use `data_column_text` to read label text from `location`.
 #'@param y Default `NULL`. Y coordinate for the label in the same coordinate reference system as `extent`.
 #'If no `extent` is available and the scene uses a plain matrix heightmap, this defaults to matrix dimensions.
 #'@param x Default `NULL`. X coordinate for the label in the same coordinate reference system as `extent`.
 #'If no `extent` is available and the scene uses a plain matrix heightmap, this defaults to matrix dimensions.
 #'@param z Default `NULL`. Elevation of the label, in units of the elevation matrix (scaled by zscale).
 #'@param altitude Default `NULL`. Elevation of the label, in units of the elevation matrix (scaled by zscale). If none is passed, this will default to 10 percent above the maximum altitude in the heightmap.
-#'@param data_column_z Default `NULL`. Column name in `location` to use for `z`. Requires `location` to be an `sf`/spatial point object with a numeric column. Values are applied after POINT/MULTIPOINT flattening and are multiplied by `scale_data`.
+#'@param data_column_z Default `NULL`. Column name in `location` to use for `z`. Requires `location` to be an `sf`/spatial object with a numeric column. Values are applied after polygon centroid conversion and POINT/MULTIPOINT flattening and are multiplied by `scale_data`.
+#'@param data_column_text Default `NULL`. Column name in `location` to use for `text`. Requires `location` to be an `sf`/spatial object with the named column. Values are applied after polygon centroid conversion and POINT/MULTIPOINT flattening.
 #'@param scale_data Default `1`. If specifying `data_column_z`, how much to scale that value when rendering. If used with `vertical_exaggeration`, both are applied.
 #'@param extent Either an object representing the spatial extent of the scene
 #' (either from the `raster`, `terra`, `sf`, or `sp` packages),
@@ -30,6 +31,7 @@
 #'@param clear_previous Default `FALSE`. If `TRUE`, it will clear all existing text and lines rendered with [render_label()]. If no
 #'other arguments are passed to [render_label()], this will just remove all existing lines.
 #'@param textsize Default `1`. A numeric character expansion value.
+#'@param line Default `TRUE`. If `FALSE`, the vertical line connecting the label to the surface is not drawn.
 #'@param dashed Default `FALSE`. If `TRUE`, the label line is dashed.
 #'@param dashlength Default `auto`. Length, in units of the elevation matrix (scaled by `zscale`) of the dashes if `dashed = TRUE`.
 #'@param linewidth Default `3`. The line width.
@@ -44,9 +46,9 @@
 #'@param textcolor Default `black`. Color of the text.
 #'@param lat Default `NULL`. Alias for `y` for geographic workflows.
 #'@param long Default `NULL`. Alias for `x` for geographic workflows.
-#'@param location Default `NULL`. Spatial point input used to place the rendered label(s) in the scene. Accepts `sf`, `sfc`, `sfg`, or `sp` POINT or MULTIPOINT geometries. MULTIPOINT inputs are flattened to point placements internally, and vectorized arguments such as `text`, `z`, `altitude`, and `data_column_z` values are applied against that flattened point count. If the input carries a CRS, it will be transformed automatically into the active scene CRS. If it has no CRS, supply `crs`.
 #'@param crs Default `NULL`. CRS of the input numeric x/y coordinates, or CRS to assign to CRS-less spatial data before transforming it into the active scene CRS. If spatial data already carries a CRS, that CRS is used automatically.
 #'@param filter_to_extent Default `TRUE`. If `TRUE`, labels outside the scene extent are omitted. For scenes created with [plot_gg()], filtering uses the ggplot panel extent rather than the full rendered 3D ggplot extent.
+#'@param heightmap Default `NULL`. Height matrix for the current scene. If omitted, this is taken from the cached scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value.
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'montereybay |>
@@ -99,13 +101,14 @@
 #'render_label(clear_previous = TRUE)
 #'render_snapshot()
 render_label = function(
-	heightmap = NULL,
-	text,
+	location = NULL,
+	text = NULL,
 	y = NULL,
 	x = NULL,
 	z = NULL,
 	altitude = NULL,
 	data_column_z = NULL,
+	data_column_text = NULL,
 	scale_data = 1,
 	extent = NULL,
 	panel = NULL,
@@ -115,6 +118,7 @@ render_label = function(
 	offset = 0,
 	clear_previous = FALSE,
 	textsize = 1,
+	line = TRUE,
 	dashed = FALSE,
 	dashlength = "auto",
 	linewidth = 3,
@@ -129,9 +133,9 @@ render_label = function(
 	textcolor = "black",
 	lat = NULL,
 	long = NULL,
-	location = NULL,
 	crs = NULL,
-	filter_to_extent = TRUE
+	filter_to_extent = TRUE,
+	heightmap = NULL
 ) {
 	validate_filter_to_extent(filter_to_extent, caller = "render_label")
 	warn_scale_data_with_vertical_exaggeration(
@@ -142,7 +146,7 @@ render_label = function(
 	exit_early = FALSE
 	if (clear_previous) {
 		rgl::pop3d(tag = c("textline", "raytext"))
-		if (missing(text)) {
+		if (missing(text) && is.null(data_column_text)) {
 			exit_early = TRUE
 		}
 	}
@@ -165,6 +169,7 @@ render_label = function(
 		}
 		z_supplied = !missing(z) && !is.null(z)
 		altitude_supplied = !missing(altitude) && !is.null(altitude)
+		text_supplied = !missing(text) && !is.null(text)
 		if (!is.null(altitude)) {
 			z = altitude
 		}
@@ -190,8 +195,12 @@ render_label = function(
 				ymax = ncol(heightmap)
 			)
 		}
-		point_input = resolve_render_location_input(
+		label_location = prepare_render_label_location(
 			location = location,
+			caller = "render_label"
+		)
+		point_input = resolve_render_location_input(
+			location = label_location,
 			x = x,
 			y = y,
 			long = long,
@@ -214,7 +223,7 @@ render_label = function(
 		}
 		if (!is.null(data_column_z)) {
 			z = resolve_render_label_z_column(
-				location = location,
+				location = label_location,
 				point_input = point_input,
 				data_column_z = data_column_z,
 				z_supplied = z_supplied,
@@ -224,8 +233,27 @@ render_label = function(
 				caller = "render_label"
 			)
 		}
+		if (!is.null(data_column_text)) {
+			text = resolve_render_label_text_column(
+				location = label_location,
+				point_input = point_input,
+				data_column_text = data_column_text,
+				text_supplied = text_supplied,
+				crs = crs,
+				caller = "render_label"
+			)
+		}
 		if (is.null(z)) {
 			z = max(heightmap, na.rm = TRUE) * 1.1
+		}
+		if (is.null(text)) {
+			stop(
+				paste0(
+					format_render_caller_prefix("render_label"),
+					"Must provide `text` or `data_column_text`."
+				),
+				call. = FALSE
+			)
 		}
 		if (is.null(x) || is.null(y)) {
 			stop("Must provide `x`/`y` coordinates.", call. = FALSE)
@@ -263,6 +291,7 @@ render_label = function(
 			text = subset_render_arg(text, filtered_label$keep, n_label_before_filter)
 			offset = subset_render_arg(offset, filtered_label$keep, n_label_before_filter)
 			textsize = subset_render_arg(textsize, filtered_label$keep, n_label_before_filter)
+			line = subset_render_arg(line, filtered_label$keep, n_label_before_filter)
 			dashed = subset_render_arg(dashed, filtered_label$keep, n_label_before_filter)
 			dashlength = subset_render_arg(dashlength, filtered_label$keep, n_label_before_filter)
 			linewidth = subset_render_arg(linewidth, filtered_label$keep, n_label_before_filter)
@@ -288,6 +317,7 @@ render_label = function(
 		validate_render_label_vector_arg(z, "z", n_label)
 		validate_render_label_vector_arg(offset, "offset", n_label)
 		validate_render_label_vector_arg(textsize, "textsize", n_label)
+		validate_render_label_vector_arg(line, "line", n_label)
 		validate_render_label_vector_arg(dashed, "dashed", n_label)
 		validate_render_label_vector_arg(dashlength, "dashlength", n_label)
 		validate_render_label_vector_arg(linewidth, "linewidth", n_label)
@@ -467,6 +497,7 @@ render_label = function(
 				z = z,
 				text = text,
 				offset = offset,
+				line = line,
 				heightmap = heightmap,
 				extent = e,
 				nrow_map = nrow_map,
@@ -490,6 +521,75 @@ render_label = function(
 		}
 	}
 	invisible(NULL)
+}
+
+prepare_render_label_location = function(location = NULL, caller = NULL) {
+	if (is.null(location)) {
+		return(NULL)
+	}
+	if (!inherits(location, c("sf", "sfc", "sfg", "Spatial"))) {
+		return(location)
+	}
+	if (!(length(find.package("sf", quiet = TRUE)) > 0)) {
+		stop(
+			paste0(
+				format_render_caller_prefix(caller),
+				"`sf` package required for spatial `location` inputs."
+			),
+			call. = FALSE
+		)
+	}
+	coerced_input = coerce_scene_sf_input(location)
+	sf_data = coerced_input$sf_data
+	if (!nrow(sf_data)) {
+		stop(
+			paste0(
+				format_render_caller_prefix(caller),
+				"`location` cannot be empty."
+			),
+			call. = FALSE
+		)
+	}
+	if (any(sf::st_is_empty(sf_data))) {
+		stop(
+			paste0(
+				format_render_caller_prefix(caller),
+				"`location` cannot contain empty geometries."
+			),
+			call. = FALSE
+		)
+	}
+	geometry_types = as.character(sf::st_geometry_type(
+		sf_data,
+		by_geometry = TRUE
+	))
+	allowed_types = c("POINT", "MULTIPOINT", "POLYGON", "MULTIPOLYGON")
+	if (any(!geometry_types %in% allowed_types)) {
+		stop(
+			paste0(
+				format_render_caller_prefix(caller),
+				"`location` must contain only POINT, MULTIPOINT, POLYGON, or MULTIPOLYGON geometries."
+			),
+			call. = FALSE
+		)
+	}
+	polygon_index = geometry_types %in% c("POLYGON", "MULTIPOLYGON")
+	if (!any(polygon_index)) {
+		return(location)
+	}
+	geometry = sf::st_geometry(sf_data)
+	centroid_geometry = suppressWarnings(sf::st_geometry(sf::st_centroid(
+		sf_data[polygon_index, , drop = FALSE]
+	)))
+	polygon_positions = which(polygon_index)
+	for (centroid_index in seq_along(polygon_positions)) {
+		geometry[[polygon_positions[[centroid_index]]]] = centroid_geometry[[centroid_index]]
+	}
+	sf::st_geometry(sf_data) = sf::st_sfc(
+		as.list(geometry),
+		crs = sf::st_crs(sf_data)
+	)
+	rebuild_scene_sf_output(sf_data, coerced_input$input_class)
 }
 
 	resolve_render_label_z_column = function(
@@ -576,6 +676,86 @@ render_label = function(
 		as.numeric(z) * scale_data
 	}
 
+	resolve_render_label_text_column = function(
+		location,
+		point_input = NULL,
+		data_column_text = NULL,
+		text_supplied = FALSE,
+		crs = NULL,
+		caller = NULL
+	) {
+		if (is.null(location)) {
+			stop(
+				paste0(
+					format_render_caller_prefix(caller),
+					"`data_column_text` requires `location`."
+				),
+				call. = FALSE
+			)
+		}
+		if (isTRUE(text_supplied)) {
+			stop(
+				paste0(
+					format_render_caller_prefix(caller),
+					"`data_column_text` cannot be combined with `text`."
+				),
+				call. = FALSE
+			)
+		}
+		if (
+			!is.character(data_column_text) ||
+				length(data_column_text) != 1 ||
+				!nzchar(trimws(data_column_text))
+		) {
+			stop(
+				paste0(
+					format_render_caller_prefix(caller),
+					"`data_column_text` must be a single non-empty column name."
+				),
+				call. = FALSE
+			)
+		}
+		point_sf_data = point_input$point_sf_data
+		if (is.null(point_sf_data)) {
+			point_sf_data = coerce_scene_point_input(
+				location = location,
+				crs = crs,
+				caller = caller
+			)$point_sf_data
+		}
+		if (!data_column_text %in% names(point_sf_data)) {
+			stop(
+				paste0(
+					format_render_caller_prefix(caller),
+					"`data_column_text` was not found in `location`: ",
+					data_column_text
+				),
+				call. = FALSE
+			)
+		}
+		text = point_sf_data[[data_column_text]]
+		if (inherits(text, "matrix") || inherits(text, "data.frame") || is.list(text)) {
+			stop(
+				paste0(
+					format_render_caller_prefix(caller),
+					"`data_column_text` must refer to a vector column."
+				),
+				call. = FALSE
+			)
+		}
+		text = as.character(text)
+		if (any(is.na(text))) {
+			stop(
+				paste0(
+					format_render_caller_prefix(caller),
+					"`data_column_text` cannot contain NA values."
+				),
+				call. = FALSE
+			)
+		}
+		text
+	}
+
 	validate_render_label_vector_arg = function(
 		value,
 		name,
@@ -620,6 +800,7 @@ render_label = function(
 		z,
 		text,
 		offset,
+		line,
 		heightmap,
 		extent,
 		nrow_map,
@@ -646,6 +827,7 @@ render_label = function(
 		z = render_label_arg_value(z, label_index, n_label)
 		text = render_label_arg_value(text, label_index, n_label)
 		offset = render_label_arg_value(offset, label_index, n_label)
+		line = render_label_arg_value(line, label_index, n_label)
 		dashed = render_label_arg_value(dashed, label_index, n_label)
 		dashlength = render_label_arg_value(dashlength, label_index, n_label)
 		linewidth = render_label_arg_value(linewidth, label_index, n_label)
@@ -708,48 +890,50 @@ render_label = function(
 		if (relativez && in_bounds) {
 			z = z + startline
 		}
-		if (dashlength == "auto") {
-			dashlength = (z - startline + offset) / 20
-		} else {
-			dashlength = as.numeric(dashlength)
-		}
-		linelist = list()
 		x = x_index - nrow_map / 2 - 1
 		y = y_index - ncol_map / 2 - 1
-		if (isTRUE(dashed)) {
-			counter = 1
-			while (startline + dashlength < z) {
+		if (isTRUE(line)) {
+			if (dashlength == "auto") {
+				dashlength = (z - startline + offset) / 20
+			} else {
+				dashlength = as.numeric(dashlength)
+			}
+			linelist = list()
+			if (isTRUE(dashed)) {
+				counter = 1
+				while (startline + dashlength < z) {
+					linelist[[counter]] = matrix(
+						c(x, x, startline + dashlength + offset, startline + offset, y, y),
+						2,
+						3
+					)
+					startline = startline + dashlength * 2
+					counter = counter + 1
+				}
 				linelist[[counter]] = matrix(
-					c(x, x, startline + dashlength + offset, startline + offset, y, y),
+					c(x, x, z + offset, startline + offset, y, y),
 					2,
 					3
 				)
-				startline = startline + dashlength * 2
-				counter = counter + 1
+			} else {
+				linelist[[1]] = matrix(
+					c(x, x, z + offset, startline + offset, y, y),
+					2,
+					3
+				)
 			}
-			linelist[[counter]] = matrix(
-				c(x, x, z + offset, startline + offset, y, y),
-				2,
-				3
-			)
-		} else {
-			linelist[[1]] = matrix(
-				c(x, x, z + offset, startline + offset, y, y),
-				2,
-				3
-			)
-		}
-		for (i in seq_along(linelist)) {
-			rgl::lines3d(
-				linelist[[i]],
-				color = linecolor,
-				lwd = linewidth,
-				lit = FALSE,
-				line_antialias = antialias,
-				depth_test = "less",
-				alpha = alpha,
-				tag = "textline"
-			)
+			for (i in seq_along(linelist)) {
+				rgl::lines3d(
+					linelist[[i]],
+					color = linecolor,
+					lwd = linewidth,
+					lit = FALSE,
+					line_antialias = antialias,
+					depth_test = "less",
+					alpha = alpha,
+					tag = "textline"
+				)
+			}
 		}
 		text3d(
 			x,
