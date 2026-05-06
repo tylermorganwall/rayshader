@@ -258,26 +258,26 @@ coerce_plot_3d_heightmap = function(heightmap) {
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Plotting a spherical texture map of the built-in `montereybay` dataset.
 #'montereybay |>
-#'  sphere_shade(texture="desert") |>
+#'  sphere_shade(texture="desert", vertical_exaggeration = 10) |>
 #'  plot_3d(vertical_exaggeration = 4)
 #'render_snapshot()
 #'
 #'montereybay |>
-#'  sphere_shade(texture="desert") |>
+#'  sphere_shade(texture="desert", vertical_exaggeration = 10) |>
 #'  plot_3d(vertical_exaggeration = 4)
 #'render_zaxis(zaxis_location = "bottomleft")
 #'render_snapshot()
 #'
 #'#With a water layer
 #'montereybay |>
-#'  sphere_shade(texture="imhof2") |>
+#'  sphere_shade(texture="imhof2", vertical_exaggeration = 10) |>
 #'  plot_3d(vertical_exaggeration = 4, water = TRUE, watercolor="imhof2",
 #'          waterlinecolor="white", waterlinealpha=0.5)
 #'render_snapshot()
 #'
 #'#With a soil texture to the base
 #'montereybay |>
-#'  sphere_shade(texture="imhof3") |>
+#'  sphere_shade(texture="imhof3", vertical_exaggeration = 10) |>
 #'  plot_3d(vertical_exaggeration = 4, water = TRUE,  watercolor="imhof4",
 #'          waterlinecolor="white", waterlinealpha=0.5, soil=TRUE)
 #'render_camera(theta=225, phi=7, zoom=0.5, fov=67)
@@ -285,13 +285,13 @@ coerce_plot_3d_heightmap = function(heightmap) {
 #'
 #'#We can also change the base by setting "baseshape" to "hex" or "circle"
 #'montereybay |>
-#'  sphere_shade(texture="imhof1") |>
+#'  sphere_shade(texture="imhof1", vertical_exaggeration = 10) |>
 #'  plot_3d(vertical_exaggeration = 4, water = TRUE, watercolor="imhof1", theta=-45, zoom=0.7,
 #'          waterlinecolor="white", waterlinealpha=0.5,baseshape="circle")
 #'render_snapshot()
 #'
 #'montereybay |>
-#'  sphere_shade(texture="imhof1") |>
+#'  sphere_shade(texture="imhof1", vertical_exaggeration = 10) |>
 #'  plot_3d(vertical_exaggeration = 4, water = TRUE, watercolor="imhof1", theta=-45, zoom=0.7,
 #'          waterlinecolor="white", waterlinealpha=0.5,baseshape="hex")
 #'render_snapshot()
@@ -308,7 +308,7 @@ coerce_plot_3d_heightmap = function(heightmap) {
 #'mb_water[mb_water > -10] = NA
 #'
 #'montereybay |>
-#'  sphere_shade(texture="imhof1") |>
+#'  sphere_shade(texture="imhof1", vertical_exaggeration = 10) |>
 #'  plot_3d(mb_water, vertical_exaggeration = 4, water = TRUE, watercolor="imhof1", theta=-45,
 #'          waterlinecolor="white", waterlinealpha=0.5)
 #'render_snapshot()

@@ -66,7 +66,7 @@
 #'#Render the 3D map
 #'moss_landing_coord = c(36.806807, -121.793332)
 #'montereybay |>
-#'  sphere_shade() |>
+#'  sphere_shade(vertical_exaggeration = 10) |>
 #'  plot_3d(vertical_exaggeration = 4,water=TRUE,
 #'          shadowcolor="#40310a", background = "tan",
 #'          theta=210,  phi=22, zoom=0.20, fov=55)

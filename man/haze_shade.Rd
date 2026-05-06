@@ -42,3 +42,33 @@ haze_shade(
 Generates a semi-transparent constant-color overlay whose
 opacity follows an exponential atmospheric column model.
 }
+\examples{
+montereybay |>
+raster_to_matrix() |>
+	(\(x) {
+		x[x < 0] = 0
+		x[1:270 + 270, 1:270 + 270]
+	})() -> mb_mountains
+
+# Add haze
+mb_mountains |>
+	sphere_shade(texture = "imhof2", zscale = 20) |>
+	add_shadow(lamb_shade(), 0) |>
+	add_overlay(haze_shade(optical_depth = 0.3)) |>
+	plot_map()
+
+# Add thicker haze
+mb_mountains |>
+	sphere_shade(texture = "imhof2", zscale = 20) |>
+	add_shadow(lamb_shade(), 0) |>
+	add_overlay(haze_shade(optical_depth = 0.6)) |>
+	plot_map()
+
+# Add bluish haze
+mb_mountains |>
+	sphere_shade(texture = "imhof2", zscale = 20) |>
+	add_shadow(lamb_shade(), 0) |>
+	add_overlay(haze_shade(optical_depth = 0.3, color = "skyblue")) |>
+	plot_map()
+
+}

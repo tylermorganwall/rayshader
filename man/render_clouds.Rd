@@ -87,7 +87,7 @@ Note: Underlying layers with transparency can cause rendering issues in rgl.
 \dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Render a cloud layer over Monterey Bay
 montereybay  |>
- sphere_shade()  |>
+ sphere_shade(vertical_exaggeration = 10)  |>
  plot_3d(background="brown", vertical_exaggeration = 4)
 
 #Render some clouds
@@ -95,7 +95,7 @@ render_clouds()
 render_snapshot()
 #Change the seed for a different set of clouds and add cloud shadows on the ground
 montereybay  |>
- sphere_shade()  |>
+ sphere_shade(vertical_exaggeration = 10)  |>
  add_shadow(cloud_shade(vertical_exaggeration = 4, seed = 2), 0.0) |>
  plot_3d(background="brown", vertical_exaggeration = 4)
 render_camera(theta=-65, phi = 25, zoom = 0.45, fov = 80)
@@ -103,7 +103,7 @@ render_clouds(seed=2, clear_clouds = T)
 render_snapshot()
 
 montereybay  |>
- sphere_shade()  |>
+ sphere_shade(vertical_exaggeration = 10)  |>
  plot_3d(background="brown", vertical_exaggeration = 4)
 
 #Lower the frequency for larger, smoother clouds
@@ -137,7 +137,7 @@ render_clouds(sun_angle=45, sun_altitude= 5, attenuation_coef = 5,
 render_snapshot()
 #Render the scene with a different baseshape
 montereybay  |>
- sphere_shade()  |>
+ sphere_shade(vertical_exaggeration = 10)  |>
  plot_3d(background="darkred", vertical_exaggeration = 4, baseshape="hex")
 render_clouds(seed=3, baseshape="hex", clear_clouds = T)
 render_camera(zoom=0.65)

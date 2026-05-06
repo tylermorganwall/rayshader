@@ -28,6 +28,7 @@
 #'       length(find.package("magick", quiet = TRUE)) > 0)) {
 #'  monterey = c(-121.892933,36.603053)
 #'  monterey_city = sf::st_sfc(sf::st_point(monterey))
+#'  sf::st_crs(monterey_city) = sf::st_crs(montereybay)
 #'
 #'  #Generate Overlays
 #'  road_overlay = generate_line_overlay(monterey_roads_sf, heightmap = montereybay)

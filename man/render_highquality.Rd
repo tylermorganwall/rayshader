@@ -247,9 +247,9 @@ either \code{\link[=convert_path_to_animation_coords]{convert_path_to_animation_
 \examples{
 \dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Render the volcano dataset using pathtracing
-volcano \%>\%
- sphere_shade() \%>\%
- plot_3d(vertical_exaggeration = 1/2)
+volcano |>
+ sphere_shade(vertical_exaggeration = 30) |>
+ plot_3d(vertical_exaggeration = 10)
 render_highquality(min_variance = 0, sample_method = "sobol_blue")
 
 #Change position of light

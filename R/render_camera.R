@@ -11,7 +11,7 @@
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'montereybay |>
-#'  sphere_shade() |>
+#'  sphere_shade(vertical_exaggeration = 10) |>
 #'  plot_3d(vertical_exaggeration = 4, water = TRUE, waterlinecolor="white")
 #'render_snapshot()
 #'

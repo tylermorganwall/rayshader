@@ -71,13 +71,13 @@ montereybay |>
   texture_shade(contrast=5, brightness = 2) |>
   plot_map()
 #Add a texture_shade() layer into a map
-montbay = montereybay
+montbay = raster_to_matrix(montereybay)
 montbay[montbay < 0] = 0
 montbay |>
   height_shade() |>
   add_water(detect_water(montbay), color="dodgerblue") |>
-  add_shadow(texture_shade(montbay, detail=1/6, contrast = 4,
-                           brightness = 3),0.1) |>
+  add_shadow(texture_shade(montbay, detail=1/2, contrast = 5,
+                           brightness = 4),0) |>
   add_shadow(lamb_shade(montbay, vertical_exaggeration = 4),0) |>
   plot_map()
 \dontshow{\}) # examplesIf}

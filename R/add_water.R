@@ -22,7 +22,7 @@
 #'
 #'#We'll do the same thing with the Monterey Bay dataset to fill in the ocean:
 #'
-#'montbay_water = montereybay
+#'montbay_water = raster_to_matrix(montereybay)
 #'montbay_water[montbay_water < 0] = 0
 #'
 #'montereybay |>

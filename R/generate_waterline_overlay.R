@@ -40,7 +40,7 @@
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #' #Create a flat body of water for Monterey Bay
-#' montbay = montereybay
+#' montbay = raster_to_matrix(montereybay)
 #' montbay[montbay < 0] = 0
 #'
 #' #Generate base map with no lines

@@ -243,11 +243,11 @@ remove_plot_gg_grob_background_line = function(grob) {
 #'  scale_fill_viridis_c() +
 #'  theme_minimal()
 #'plot_gg(bleedplot, width = 5, height = 4, vertical_exaggeration = 220,
-#'        windowsize = c(1400,866), theta = -20, phi = 35,
+#'        windowsize = c(1400,866), theta = -20, phi = 35, zoom = 0.60,
 #'        guide_bar_bleed_target = "height")
 #'render_snapshot()
 #'plot_gg(bleedplot, width = 5, height = 4, vertical_exaggeration = 220,
-#'        windowsize = c(1400,866), theta = -20, phi = 35,
+#'        windowsize = c(1400,866), theta = -20, phi = 35, zoom = 0.60,
 #'        guide_bar_bleed_target = "texture")
 #'render_snapshot()
 #'plot_gg(mtplot, width=3.5, multicore = TRUE, windowsize = c(1400,866), sunangle=225,
@@ -1014,8 +1014,11 @@ plot_gg = function(
 	) {
 		out = color_grob
 		layout_names = out$layout$name
-		panel_indices = which(layout_names == "panel")
-		height_panel_indices = which(height_grob$layout$name == "panel")
+		panel_indices = which(grepl("^panel($|-)", layout_names))
+		height_panel_indices = which(grepl(
+			"^panel($|-)",
+			height_grob$layout$name
+		))
 		n_panels = min(length(panel_indices), length(height_panel_indices))
 		if (n_panels > 0) {
 			for (j in seq_len(n_panels)) {

@@ -31,7 +31,7 @@
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Add a North arrow to the map, by default in the bottom right (SE)
 #'montereybay |>
-#'  sphere_shade() |>
+#'  sphere_shade(vertical_exaggeration = 10) |>
 #'  plot_3d(theta=-45, water=TRUE)
 #'render_compass()
 #'render_snapshot()

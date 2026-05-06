@@ -30,7 +30,7 @@ values are entered, prints and returns the current values.
 \examples{
 \dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 montereybay |>
- sphere_shade() |>
+ sphere_shade(vertical_exaggeration = 10) |>
  plot_3d(vertical_exaggeration = 4, water = TRUE, waterlinecolor="white")
 render_snapshot()
 

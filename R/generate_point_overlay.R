@@ -37,8 +37,9 @@
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Add the included `sf` object with roads to the montereybay dataset
-#'  monterey_city = sf::st_sfc(sf::st_point(c(-121.893611, 36.603056)))
-#'  montereybay |>
+#' monterey_city = sf::st_sfc(sf::st_point(c(-121.893611, 36.603056)))
+#' sf::st_crs(monterey_city) = sf::st_crs(montereybay)
+#' montereybay |>
 #'    height_shade() |>
 #'    add_overlay(generate_point_overlay(monterey_city, color="red", size=2))  |>
 #'    add_shadow(ray_shade(vertical_exaggeration = 4),0.3) |>

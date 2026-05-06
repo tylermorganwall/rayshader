@@ -167,7 +167,15 @@ rayshader pipeline:
 }
 \examples{
 \dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
-rad = radiance_shade(samples = 64, lightdirection = 315, lightaltitude = 45)
-plot_map(rad)
+montereybay |>
+height_shade(texture = topo.colors(256)) |>
+add_overlay(radiance_shade(vertical_exaggeration = 10), 1) |>
+plot_map()
+#Plot using sky args
+montereybay |>
+height_shade(texture = topo.colors(256)) |>
+add_overlay(radiance_shade(vertical_exaggeration = 10, 
+                            sky_sun_elevation = 5, sky_sun_azimuth = 315), 1) |>
+plot_map()
 \dontshow{\}) # examplesIf}
 }

@@ -58,8 +58,8 @@ Cache fallback messages are disabled by default. Set \code{options(rayshader.ver
 #Add contours to the montereybay dataset
 montereybay |>
  height_shade() |>
- add_shadow(ray_shade(vertical_exaggeration = 4),0.3) |>
- plot_3d(theta = -45, vertical_exaggeration = 4, zoom=0.9, windowsize=800)
+ add_shadow(ray_shade(),0.3) |>
+ plot_3d(theta = -45,  zoom=0.9, windowsize=800)
 render_contours(offset = 100)
 render_snapshot()
 

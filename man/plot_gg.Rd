@@ -288,11 +288,11 @@ bleedplot = ggplot(faithfuld, aes(waiting, eruptions, fill = density)) +
  scale_fill_viridis_c() +
  theme_minimal()
 plot_gg(bleedplot, width = 5, height = 4, vertical_exaggeration = 220,
-       windowsize = c(1400,866), theta = -20, phi = 35,
+       windowsize = c(1400,866), theta = -20, phi = 35, zoom = 0.60,
        guide_bar_bleed_target = "height")
 render_snapshot()
 plot_gg(bleedplot, width = 5, height = 4, vertical_exaggeration = 220,
-       windowsize = c(1400,866), theta = -20, phi = 35,
+       windowsize = c(1400,866), theta = -20, phi = 35, zoom = 0.60,
        guide_bar_bleed_target = "texture")
 render_snapshot()
 plot_gg(mtplot, width=3.5, multicore = TRUE, windowsize = c(1400,866), sunangle=225,
