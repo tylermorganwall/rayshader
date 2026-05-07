@@ -145,13 +145,30 @@ plot_gg(
  width = 6,
  windowsize = c(1400, 866),
  zoom = 0.55,
- theta = -10,
+ theta = 45,
  phi = 25,
  vertical_exaggeration = 300
 )
+#Offset the title slightly so it doesn't overlap with the labels
 render_zaxis(
  panel = 1,
- zaxis_location = "panel_bottomleft"
+ zaxis_location = "panel_bottomleft",
+ zaxis_title_offset = 6
+)
+render_snapshot()
+#Move to the second panel, top left
+render_camera(theta=-20, phi=20)
+render_zaxis(
+ panel = 2,
+ zaxis_location = "panel_topleft",
+ zaxis_title_offset = 10
+)
+render_snapshot()
+#Move to corner of the plot
+render_camera(theta=-20, phi=20)
+render_zaxis(
+ zaxis_location = "topleft",
+ zaxis_title_offset = 10
 )
 render_snapshot()
 \dontshow{\}) # examplesIf}

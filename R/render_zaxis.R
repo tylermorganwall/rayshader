@@ -104,13 +104,30 @@
 #'  width = 6,
 #'  windowsize = c(1400, 866),
 #'  zoom = 0.55,
-#'  theta = -10,
+#'  theta = 45,
 #'  phi = 25,
 #'  vertical_exaggeration = 300
 #')
+#'#Offset the title slightly so it doesn't overlap with the labels
 #'render_zaxis(
 #'  panel = 1,
-#'  zaxis_location = "panel_bottomleft"
+#'  zaxis_location = "panel_bottomleft",
+#'  zaxis_title_offset = 6
+#')
+#'render_snapshot()
+#' #Move to the second panel, top left
+#'render_camera(theta=-20, phi=20)
+#'render_zaxis(
+#'  panel = 2,
+#'  zaxis_location = "panel_topleft",
+#'  zaxis_title_offset = 10
+#')
+#'render_snapshot()
+#' #Move to corner of the plot
+#'render_camera(theta=-20, phi=20)
+#'render_zaxis(
+#'  zaxis_location = "topleft",
+#'  zaxis_title_offset = 10
 #')
 #'render_snapshot()
 render_zaxis = function(
@@ -152,11 +169,16 @@ render_zaxis = function(
 		heightmap,
 		caller = "render_zaxis"
 	)
+	use_ggplot_panel_extent = zaxis_location_uses_panel_extent(zaxis_location)
+	if (!use_ggplot_panel_extent && is.null(extent)) {
+		extent = get_cached_plot_gg_scene_extent_for_zaxis(heightmap = heightmap)
+	}
 	extent = resolve_scene_render_extent(
 		extent = extent,
 		heightmap = heightmap,
 		caller = "render_zaxis",
-		panel = panel
+		panel = panel,
+		allow_ggplot_extent = use_ggplot_panel_extent
 	)
 	render_zaxis_internal(
 		zaxis = TRUE,
@@ -174,6 +196,56 @@ render_zaxis = function(
 		zaxis_text_offset = zaxis_text_offset,
 		zaxis_corner_offset = zaxis_corner_offset,
 		zaxis_tick_size = zaxis_tick_size
+	)
+}
+
+get_cached_plot_gg_scene_extent_for_zaxis = function(heightmap = NULL) {
+	panel_info = get_cached_plot_gg_panel_info(
+		heightmap = heightmap,
+		default = NULL
+	)
+	if (
+		is.null(panel_info) ||
+			!is.data.frame(panel_info) ||
+			!nrow(panel_info) ||
+			!all(c(
+				"extent_xmin",
+				"extent_xmax",
+				"extent_ymin",
+				"extent_ymax"
+			) %in% names(panel_info))
+	) {
+		return(NULL)
+	}
+	extent_vals = c(
+		xmin = min(panel_info$extent_xmin, na.rm = TRUE),
+		xmax = max(panel_info$extent_xmax, na.rm = TRUE),
+		ymin = min(panel_info$extent_ymin, na.rm = TRUE),
+		ymax = max(panel_info$extent_ymax, na.rm = TRUE)
+	)
+	if (any(!is.finite(extent_vals))) {
+		return(NULL)
+	}
+	attr(extent_vals, "panel_info") = panel_info
+	extent_vals
+}
+
+zaxis_location_uses_panel_extent = function(zaxis_location = "auto") {
+	if (is.null(zaxis_location) || !length(zaxis_location)) {
+		return(TRUE)
+	}
+	location_key = tolower(as.character(zaxis_location)[1])
+	location_key = gsub("[-_[:space:]]", "", location_key)
+	location_key == "auto" || location_key %in% c(
+		"panel",
+		"panelbottomleft",
+		"panelbl",
+		"panelbottomright",
+		"panelbr",
+		"paneltopleft",
+		"paneltl",
+		"paneltopright",
+		"paneltr"
 	)
 }
 
@@ -229,11 +301,18 @@ render_zaxis_from_dots = function(
 		}
 	}
 	heightmap = resolve_scene_render_heightmap(heightmap)
+	use_ggplot_panel_extent = zaxis_location_uses_panel_extent(
+		zaxis_args$zaxis_location
+	)
+	if (!use_ggplot_panel_extent && is.null(extent)) {
+		extent = get_cached_plot_gg_scene_extent_for_zaxis(heightmap = heightmap)
+	}
 	extent = resolve_scene_render_extent(
 		extent = extent,
 		heightmap = heightmap,
 		panel = panel,
-		caller = caller
+		caller = caller,
+		allow_ggplot_extent = use_ggplot_panel_extent
 	)
 	if (is.null(zaxis_args$zaxis)) {
 		zaxis_args$zaxis = TRUE

@@ -616,6 +616,20 @@ test_that("render_zaxis() requires panel for faceted cached ggplot scenes", {
 		render_zaxis(zaxis_breaks = c(0, 50, 100)),
 		"Supply `panel = <panel>`"
 	)
+	expect_error(
+		render_zaxis(
+			zaxis_location = "panel_bottomleft",
+			zaxis_breaks = c(0, 50, 100)
+		),
+		"Supply `panel = <panel>`"
+	)
+	expect_no_condition(render_zaxis(
+		zaxis_location = "topleft",
+		zaxis_breaks = c(0, 50, 100),
+		zaxis_title_offset = 6
+	))
+	expect_true(any(get_ids_with_labels()$tag == "zaxis_axis"))
+
 	expect_no_condition(render_zaxis(
 		panel = 2,
 		zaxis_breaks = c(0, 50, 100)
