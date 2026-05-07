@@ -37,6 +37,9 @@ test_that("side-effect render helpers return invisibly", {
 	compass_vis = withVisible(render_compass())
 	expect_false(compass_vis$visible)
 
+	water_vis = withVisible(render_water(waterdepth = 1, waterlinecolor = "white"))
+	expect_false(water_vis$visible)
+
 	skip_if_not_installed("sf")
 	skip_if_not_installed("rayrender")
 	polygon = sf::st_sf(geometry = sf::st_sfc(

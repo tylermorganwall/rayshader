@@ -95,4 +95,5 @@ render_water = function(
 			linewidth = linewidth
 		)
 	}
+	invisible(NULL)
 }

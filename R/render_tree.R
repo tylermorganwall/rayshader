@@ -75,7 +75,7 @@
 #'#We won't scale these to a realistic size (yet)
 #'moss_landing_coord = c(36.806807, -121.793332)
 #'montereybay |>
-#'  sphere_shade() |>
+#'  sphere_shade(vertical_exaggeration = 20) |>
 #'  plot_3d(vertical_exaggeration = 4,water=TRUE,
 #'          shadowcolor="#40310a", background = "tan",
 #'          theta=210,  phi=22, zoom=0.20, fov=55)
@@ -121,15 +121,12 @@
 #'tree_top_data = lidR::locate_trees(las, lidR::lmf(ws = 5))
 #'tree_locations = sf::st_coordinates(tree_top_data)
 #'
-#'#Convert DEM to a matrix
-#'dem_matrix = raster_to_matrix(dem)
-#'
 #'#Plot the ground
-#'dem_matrix |>
+#'dem |>
 #'  height_shade() |>
-#'  add_shadow(texture_shade(),0.2) |>
+#'  add_shadow(texture_shade(),0) |>
 #'  add_shadow(lamb_shade(),0) |>
-#'  plot_3d(windowsize = 800)
+#'  plot_3d(windowsize = 800, shadowdepth=min(raster_to_matrix(dem),na.rm=TRUE))
 #'render_snapshot()
 #'#The tree locations are given as an absolute height (as opposed to relative to the surface)
 #'#so we set `absolute_height = TRUE`.
@@ -139,19 +136,17 @@
 #'            absolute_height = TRUE,
 #'            tree_height = tree_locations[,3],
 #'            trunk_height_ratio = 0.2 + 0.1*runif(nrow(tree_locations)),
-#'            crown_color = "#00aa00",
+#'            crown_color = "#007700",
 #'            clear_previous = TRUE)
-#'
+#'render_camera(zoom=0.85)
 #'#Remove existing lights and add our own with rgl
 #'rgl::pop3d("lights")
 #'rgl::light3d(phi=35,theta=90, viewpoint.rel=F, diffuse="#ffffff", specular="#000000")
 #'rgl::light3d(phi=-45,theta=-40, viewpoint.rel=F, diffuse="#aaaaaa", specular="#000000")
 #'render_snapshot()
 #'#Render tree also works with `render_highquality()`
-#'render_highquality(lightdirection=c(90,45),lightaltitude=c(90,45),
-#'                   lightcolor=c("dodgerblue","orange"), samples = 32,
-#'                   min_variance = 0)
-render_tree = function(
+#'render_highquality(sky_sun_elevation = 30, sky_sun_azimuth=225, iso=3)
+3render_tree = function(
 	y = NULL,
 	x = NULL,
 	extent = NULL,
