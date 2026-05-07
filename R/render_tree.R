@@ -146,7 +146,7 @@
 #'render_snapshot()
 #'#Render tree also works with `render_highquality()`
 #'render_highquality(sky_sun_elevation = 30, sky_sun_azimuth=225, iso=3)
-3render_tree = function(
+render_tree = function(
 	y = NULL,
 	x = NULL,
 	extent = NULL,
