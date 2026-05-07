@@ -1522,6 +1522,12 @@ plot_gg = function(
 			"color",
 			height_aes
 		)]]),
+		label_to_string(ggplot_build_obj$plot$labels[[height_aes]]),
+		label_to_string(ggplot_build_obj$plot$labels[[ifelse(
+			height_aes == "colour",
+			"color",
+			height_aes
+		)]]),
 		label_to_string(ggplotobj2$scales$get_scales(height_aes)$name)
 	)
 	height_guide_title = normalize_guide_text(height_guide_title[
@@ -1564,6 +1570,7 @@ plot_gg = function(
 		ggplot_build_obj,
 		height_scale = ggplot_build_obj$plot$scales$get_scales(height_aes),
 		height_aes = height_aes,
+		height_label = height_guide_title,
 		height_is_mapped = isfill || iscolor,
 		height_inverted = invert,
 		height_use_data_scale = plot_gg_has_spatraster_height_source(

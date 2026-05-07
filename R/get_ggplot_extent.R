@@ -2601,6 +2601,7 @@ build_plot_gg_transform_info = function(
 	ggplot_build_obj,
 	height_scale = NULL,
 	height_aes = NULL,
+	height_label = NULL,
 	height_is_mapped = FALSE,
 	height_inverted = FALSE,
 	height_use_data_scale = FALSE
@@ -2630,6 +2631,7 @@ build_plot_gg_transform_info = function(
 		layout = panel_table,
 		height_scale = height_scale,
 		height_aes = height_aes,
+		height_label = height_label,
 		height_is_mapped = isTRUE(height_is_mapped),
 		height_inverted = isTRUE(height_inverted),
 		height_use_data_scale = isTRUE(height_use_data_scale),

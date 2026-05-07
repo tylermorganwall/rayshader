@@ -75,7 +75,8 @@ test_that("ggplot z-axis breaks use mapped height positions but keep raw labels"
 	local_rgl_use_null()
 
 	p = ggplot(mtcars) +
-		geom_point(aes(x = wt, y = mpg, color = mpg))
+		geom_point(aes(x = wt, y = mpg, color = mpg)) +
+		labs(color = "Miles per gallon")
 
 	expect_no_condition(suppressWarnings(plot_gg_test(
 		p,
@@ -129,7 +130,8 @@ test_that("standalone ggplot z-axis defaults use mapped height scale labels", {
 	local_rgl_use_null()
 
 	p = ggplot(mtcars) +
-		geom_point(aes(x = wt, y = mpg, color = mpg))
+		geom_point(aes(x = wt, y = mpg, color = mpg)) +
+		labs(color = "Miles per gallon")
 
 	expect_no_condition(suppressWarnings(plot_gg_test(
 		p,
@@ -171,10 +173,40 @@ test_that("standalone ggplot z-axis defaults use mapped height scale labels", {
 		label_ids,
 		function(id) trimws(as.character(rgl::rgl.attrib(id, "texts")))
 	))
+	title_id = ids$id[ids$tag == "zaxis_title"][1]
+	title_text = trimws(as.character(rgl::rgl.attrib(title_id, "texts")))
 
 	expect_equal(sort(tick_verts[, 2]), expected_y, tolerance = 1e-6)
 	expect_true(all(expected_labels %in% label_texts))
 	expect_gt(max(suppressWarnings(as.numeric(label_texts)), na.rm = TRUE), 1)
+	expect_equal(title_text, "Miles per gallon")
+})
+
+test_that("standalone ggplot z-axis auto-title uses implicit mapped height label", {
+	on.exit(rgl::close3d(), add = TRUE)
+	local_rgl_use_null()
+
+	p = ggplot(mtcars) +
+		geom_point(aes(x = mpg, y = disp, color = cyl)) +
+		scale_color_continuous(limits = c(0, 8))
+
+	expect_no_condition(suppressWarnings(plot_gg_test(
+		p,
+		width = 2,
+		raytrace = FALSE,
+		windowsize = c(300, 300)
+	)))
+
+	transform_info = get_cached_plot_gg_transform_info(default = NULL)
+	expect_equal(transform_info$height_label, "cyl")
+
+	expect_no_condition(render_zaxis(zaxis_location = "panel_bottomleft"))
+
+	ids = get_ids_with_labels()
+	title_id = ids$id[ids$tag == "zaxis_title"][1]
+	title_text = trimws(as.character(rgl::rgl.attrib(title_id, "texts")))
+
+	expect_equal(title_text, "cyl")
 })
 
 test_that("plot_3d scenes keep raw altitude values in transform_into_heightmap_coords", {

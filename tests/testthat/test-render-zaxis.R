@@ -114,6 +114,72 @@ test_that("render_zaxis() accepts fractional text offsets", {
 	))
 })
 
+test_that("render_zaxis() adds side and top titles", {
+	on.exit(rgl::close3d(), add = TRUE)
+	local_rgl_use_null()
+
+	heightmap = volcano
+	texture = sphere_shade(heightmap)
+	expect_no_condition(plot_3d_test(
+		texture,
+		heightmap,
+		zscale = 10,
+		shadow = FALSE,
+		water = FALSE,
+		windowsize = c(300, 300)
+	))
+
+	extent = c(
+		xmin = 0,
+		xmax = nrow(heightmap),
+		ymin = 0,
+		ymax = ncol(heightmap)
+	)
+	expect_no_condition(render_zaxis(
+		extent = extent,
+		zscale = 10,
+		heightmap = heightmap,
+		zaxis_location = "bottomleft",
+		zaxis_breaks = c(0, 50, 100),
+		zaxis_title = "Elevation (m)",
+		zaxis_title_location = "side",
+		zaxis_color = "blue"
+	))
+
+	ids = get_ids_with_labels()
+	expect_true(any(ids$tag == "zaxis_title"))
+	title_id = ids$id[ids$tag == "zaxis_title"][1]
+	axis_id = ids$id[ids$tag == "zaxis_axis"][1]
+	title_text = trimws(as.character(rgl::rgl.attrib(title_id, "texts")))
+	title_verts = rgl::rgl.attrib(title_id, "vertices")
+	axis_verts = rgl::rgl.attrib(axis_id, "vertices")
+	title_material = rgl::material3d(id = title_id)
+
+	expect_equal(title_text, "Elevation (m)")
+	expect_equal(title_material$color, "#0000FF")
+	expect_equal(unname(title_verts[1, 2]), mean(axis_verts[, 2]), tolerance = 1e-6)
+	expect_gt(abs(unname(title_verts[1, 1] - axis_verts[1, 1])) +
+		abs(unname(title_verts[1, 3] - axis_verts[1, 3])), 0)
+
+	expect_no_condition(render_zaxis(
+		extent = extent,
+		zscale = 10,
+		heightmap = heightmap,
+		zaxis_location = "bottomleft",
+		zaxis_breaks = c(0, 50, 100),
+		zaxis_title = "Elevation (m)",
+		zaxis_title_location = "top"
+	))
+
+	ids = get_ids_with_labels()
+	title_id = ids$id[ids$tag == "zaxis_title"][1]
+	axis_id = ids$id[ids$tag == "zaxis_axis"][1]
+	title_verts = rgl::rgl.attrib(title_id, "vertices")
+	axis_verts = rgl::rgl.attrib(axis_id, "vertices")
+
+	expect_gt(unname(title_verts[1, 2]), max(axis_verts[, 2]))
+})
+
 test_that("render_zaxis() works as a standalone entry point", {
 	on.exit(rgl::close3d(), add = TRUE)
 	local_rgl_use_null()
@@ -703,11 +769,14 @@ test_that("render_contours() forwards z-axis options", {
 		zaxis = TRUE,
 		zaxis_location = "topright",
 		zaxis_breaks = c(0, 50, 100),
-		zaxis_labels = c("sea", "mid", "high")
+		zaxis_labels = c("sea", "mid", "high"),
+		zaxis_title = "Elevation",
+		zaxis_title_location = "top"
 	))
 
 	ids = get_ids_with_labels()
 	expect_true(any(ids$tag == "zaxis_axis"))
 	expect_true(any(ids$tag == "zaxis_ticks"))
 	expect_true(any(ids$tag == "zaxis_labels"))
+	expect_true(any(ids$tag == "zaxis_title"))
 })

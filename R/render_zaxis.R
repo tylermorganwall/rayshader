@@ -25,6 +25,14 @@
 #'@param zaxis_breaks Default `NULL`. Numeric breaks (in altitude units). If `NULL`,
 #'breaks are generated from the full scene height range (minimum to maximum elevation).
 #'@param zaxis_labels Default `NULL`. Labels for `zaxis_breaks`.
+#'@param zaxis_title Default `"auto"`. Title for the z-axis. If `"auto"`, rayshader
+#'uses the cached height aesthetic label from [plot_gg()] scenes when available.
+#'Set to `NULL` to omit the title, or pass a character string to override it.
+#'@param zaxis_title_location Default `"side"`. Title location. Options are
+#'`"side"` and `"top"`.
+#'@param zaxis_title_offset Default `2.5`. Title offset multiplier. For
+#'`zaxis_title_location = "side"`, this moves the title outward from the axis.
+#'For `"top"`, this moves the title above the top of the axis.
 #'@param zaxis_color Default `"black"`. Axis/tick/label color.
 #'@param zaxis_linewidth Default `2`. Axis line width.
 #'@param zaxis_text_offset Default `0`. Label offset multiplier from the axis,
@@ -56,6 +64,8 @@
 #' #Change the location
 #'render_zaxis(
 #'  zaxis_location = "topright",
+#'  zaxis_title = "Elevation (m)",
+#'  zaxis_title_location = "top",
 #'  zaxis_color = "red",
 #'  zaxis_corner_offset = 0.3,
 #'  zaxis_tick_size = 3
@@ -100,9 +110,7 @@
 #')
 #'render_zaxis(
 #'  panel = 1,
-#'  zaxis_location = "panel_bottomleft",
-#'  zaxis_breaks = c(0, 0.5, 1),
-#'  zaxis_labels = c("low", "mid", "high")
+#'  zaxis_location = "panel_bottomleft"
 #')
 #'render_snapshot()
 render_zaxis = function(
@@ -114,6 +122,9 @@ render_zaxis = function(
 	zaxis_location = "auto",
 	zaxis_breaks = NULL,
 	zaxis_labels = NULL,
+	zaxis_title = "auto",
+	zaxis_title_location = "side",
+	zaxis_title_offset = 2.5,
 	zaxis_color = "black",
 	zaxis_linewidth = 2,
 	zaxis_text_offset = 0,
@@ -155,6 +166,9 @@ render_zaxis = function(
 		zaxis_location = zaxis_location,
 		zaxis_breaks = zaxis_breaks,
 		zaxis_labels = zaxis_labels,
+		zaxis_title = zaxis_title,
+		zaxis_title_location = zaxis_title_location,
+		zaxis_title_offset = zaxis_title_offset,
 		zaxis_color = zaxis_color,
 		zaxis_linewidth = zaxis_linewidth,
 		zaxis_text_offset = zaxis_text_offset,
@@ -169,6 +183,9 @@ zaxis_dot_names = function() {
 		"zaxis_location",
 		"zaxis_breaks",
 		"zaxis_labels",
+		"zaxis_title",
+		"zaxis_title_location",
+		"zaxis_title_offset",
 		"zaxis_color",
 		"zaxis_linewidth",
 		"zaxis_text_offset",

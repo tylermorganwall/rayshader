@@ -9,6 +9,9 @@ render_zaxis_internal = function(
 	zaxis_location = "auto",
 	zaxis_breaks = NULL,
 	zaxis_labels = NULL,
+	zaxis_title = "auto",
+	zaxis_title_location = "side",
+	zaxis_title_offset = 2.5,
 	zaxis_color = "black",
 	zaxis_linewidth = 2,
 	zaxis_text_offset = 1.5,
@@ -121,6 +124,18 @@ render_zaxis_internal = function(
 	if (is.na(zaxis_text_offset) || zaxis_text_offset < 0) {
 		stop("`zaxis_text_offset` must be a non-negative number.")
 	}
+	if (is.null(zaxis_title_location)) {
+		zaxis_title_location = "side"
+	}
+	zaxis_title_location = tolower(as.character(zaxis_title_location)[1])
+	zaxis_title_location = gsub("[-_[:space:]]", "", zaxis_title_location)
+	if (!zaxis_title_location %in% c("side", "top")) {
+		stop("`zaxis_title_location` must be either \"side\" or \"top\".")
+	}
+	zaxis_title_offset = as.numeric(zaxis_title_offset)[1]
+	if (is.na(zaxis_title_offset) || zaxis_title_offset < 0) {
+		stop("`zaxis_title_offset` must be a non-negative number.")
+	}
 	if (is.null(zaxis_corner_offset)) {
 		zaxis_corner_offset = if (has_panel_info) 0 else 0.08
 	} else {
@@ -136,7 +151,7 @@ render_zaxis_internal = function(
 		}
 	}
 	# Clear previous z-axis objects before deriving scene-based defaults.
-	for (tag in c("zaxis_axis", "zaxis_ticks", "zaxis_labels")) {
+	for (tag in c("zaxis_axis", "zaxis_ticks", "zaxis_labels", "zaxis_title")) {
 		try(rgl::pop3d(tag = tag), silent = TRUE)
 	}
 
@@ -353,6 +368,38 @@ render_zaxis_internal = function(
 		}
 		zaxis_labels = as.character(zaxis_labels)
 	}
+	if (identical(zaxis_title, FALSE)) {
+		zaxis_title = NULL
+	} else if (is.null(zaxis_title)) {
+		zaxis_title = NULL
+	} else if ({
+		zaxis_title_value = as.character(zaxis_title)
+		length(zaxis_title_value) == 1 &&
+			!is.na(zaxis_title_value) &&
+			tolower(zaxis_title_value) == "auto"
+	}) {
+		transform_info = get_cached_plot_gg_transform_info(
+			heightmap = heightmap,
+			default = NULL
+		)
+		zaxis_title = if (
+			!is.null(transform_info) &&
+				isTRUE(transform_info$height_is_mapped) &&
+				!is.null(transform_info$height_label)
+		) {
+			transform_info$height_label
+		} else {
+			NULL
+		}
+	} else {
+		zaxis_title = paste(as.character(zaxis_title), collapse = " ")
+	}
+	if (!is.null(zaxis_title)) {
+		zaxis_title = gsub("[[:space:]]+", " ", trimws(as.character(zaxis_title)))
+		if (!nzchar(zaxis_title) || is.na(zaxis_title)) {
+			zaxis_title = NULL
+		}
+	}
 
 	y_vals = zaxis_breaks / zscale
 	y_min = min(y_vals)
@@ -420,11 +467,40 @@ render_zaxis_internal = function(
 		)
 	}
 
+	if (!is.null(zaxis_title)) {
+		if (zaxis_title_location == "side") {
+			title_offset = max(zaxis_title_offset, zaxis_text_offset + 1)
+			title_x = anchor_xyz[1] + outside_unit[1] * tick_len * title_offset
+			title_y = mean(c(y_min, y_max))
+			title_z = anchor_xyz[3] + outside_unit[2] * tick_len * title_offset
+			title_adj = c(text_adj_x, 0.5)
+		} else {
+			title_side_offset = max(0.5, zaxis_text_offset)
+			y_span = max(abs(y_max - y_min), 1 / zscale)
+			title_x = anchor_xyz[1] + outside_unit[1] * tick_len * title_side_offset
+			title_y = y_max + 0.08 * y_span * zaxis_title_offset
+			title_z = anchor_xyz[3] + outside_unit[2] * tick_len * title_side_offset
+			title_adj = c(text_adj_x, 0)
+		}
+		rgl::texts3d(
+			x = title_x,
+			y = title_y,
+			z = title_z,
+			texts = zaxis_title,
+			color = zaxis_color,
+			adj = title_adj,
+			cex = 1,
+			tag = "zaxis_title"
+		)
+	}
+
 	invisible(
 		list(
 			location = zaxis_location,
 			breaks = zaxis_breaks,
-			labels = zaxis_labels
+			labels = zaxis_labels,
+			title = zaxis_title,
+			title_location = zaxis_title_location
 		)
 	)
 }
