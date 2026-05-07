@@ -129,6 +129,16 @@
 #'                     material = rayrender::glossy,
 #'                     args = list(gloss = 0.5, reflectance = 0.2)
 #'                   )))
+#'#Render the path with a neon light material
+#'render_highquality(light = FALSE, samples = 16,
+#'                   line_radius = 0.1,
+#'                   ground_size = 0,
+#'                   use_extruded_paths = TRUE,
+#'                   rgl_materials = list(path3d = list(
+#'                     material = rayrender::light,
+#'                     args = list(importance_sample = FALSE,
+#'                                 color = "purple", intensity = 2)
+#'                   )))
 #'
 #'#For transmissive materials (like `dielectric`), we should specify that the path
 #'#should be rendered with an extruded path. We'll use the `attenuation` argument in

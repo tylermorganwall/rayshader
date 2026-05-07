@@ -124,6 +124,59 @@ test_that("ggplot z-axis breaks use mapped height positions but keep raw labels"
 	expect_true(all(labels %in% label_texts))
 })
 
+test_that("standalone ggplot z-axis defaults use mapped height scale labels", {
+	on.exit(rgl::close3d(), add = TRUE)
+	local_rgl_use_null()
+
+	p = ggplot(mtcars) +
+		geom_point(aes(x = wt, y = mpg, color = mpg))
+
+	expect_no_condition(suppressWarnings(plot_gg_test(
+		p,
+		width = 2,
+		raytrace = FALSE,
+		windowsize = c(300, 300)
+	)))
+
+	gg_extent = get_ggplot_extent()
+	scene_heightmap = get_scene_heightmap()
+	scene_zscale = get_scene_effective_zscale()
+	height_transform = get_scene_height_transform(
+		heightmap = scene_heightmap,
+		extent = gg_extent
+	)
+	raw_range = range(as.numeric(height_transform$height_range))
+	raw_breaks = pretty(raw_range, n = 4)
+	raw_breaks = raw_breaks[is.finite(raw_breaks)]
+	scene_breaks = map_scene_altitudes(
+		raw_breaks,
+		height_transform = height_transform,
+		reference_values = raw_range
+	)
+	draw_idx = abs(scene_breaks) > .Machine$double.eps^0.5
+	expected_y = sort(scene_breaks[draw_idx] / scene_zscale)
+	expected_labels = format(
+		raw_breaks,
+		trim = TRUE,
+		scientific = FALSE
+	)[draw_idx]
+
+	expect_no_condition(render_zaxis(zaxis_location = "panel_bottomleft"))
+
+	ids = get_ids_with_labels()
+	tick_id = ids$id[ids$tag == "zaxis_ticks"][1]
+	tick_verts = rgl::rgl.attrib(tick_id, "vertices")
+	label_ids = ids$id[ids$tag == "zaxis_labels"]
+	label_texts = unlist(lapply(
+		label_ids,
+		function(id) trimws(as.character(rgl::rgl.attrib(id, "texts")))
+	))
+
+	expect_equal(sort(tick_verts[, 2]), expected_y, tolerance = 1e-6)
+	expect_true(all(expected_labels %in% label_texts))
+	expect_gt(max(suppressWarnings(as.numeric(label_texts)), na.rm = TRUE), 1)
+})
+
 test_that("plot_3d scenes keep raw altitude values in transform_into_heightmap_coords", {
 	on.exit(rgl::close3d(), add = TRUE)
 	local_rgl_use_null()

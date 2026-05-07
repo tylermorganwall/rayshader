@@ -279,6 +279,37 @@ render_zaxis_internal = function(
 	anchor_xyz[1] = anchor_xyz[1] + outside_unit_2d[1] * axis_offset
 	anchor_xyz[3] = anchor_xyz[3] + outside_unit_2d[2] * axis_offset
 
+	default_zaxis_labels = NULL
+	if (is.null(zaxis_breaks)) {
+		height_transform = get_scene_height_transform(
+			heightmap = heightmap,
+			extent = extent
+		)
+		if (!is.null(height_transform)) {
+			height_range = suppressWarnings(as.numeric(height_transform$height_range))
+			height_range = height_range[is.finite(height_range)]
+			if (length(height_range) > 0) {
+				height_range = range(height_range)
+			}
+			if (length(unique(height_range)) > 1) {
+				raw_zaxis_breaks = pretty(height_range, n = 4)
+				raw_zaxis_breaks = raw_zaxis_breaks[is.finite(raw_zaxis_breaks)]
+				if (length(raw_zaxis_breaks) < 2) {
+					raw_zaxis_breaks = height_range
+				}
+				default_zaxis_labels = format(
+					raw_zaxis_breaks,
+					trim = TRUE,
+					scientific = FALSE
+				)
+				zaxis_breaks = map_scene_altitudes(
+					raw_zaxis_breaks,
+					height_transform = height_transform,
+					reference_values = height_range
+				)
+			}
+		}
+	}
 	if (is.null(zaxis_breaks)) {
 		altitude_range = c(NA_real_, NA_real_)
 		if (!is.null(heightmap)) {
@@ -311,7 +342,11 @@ render_zaxis_internal = function(
 	}
 
 	if (is.null(zaxis_labels)) {
-		zaxis_labels = format(zaxis_breaks, trim = TRUE, scientific = FALSE)
+		if (is.null(default_zaxis_labels)) {
+			zaxis_labels = format(zaxis_breaks, trim = TRUE, scientific = FALSE)
+		} else {
+			zaxis_labels = default_zaxis_labels
+		}
 	} else {
 		if (length(zaxis_labels) != length(zaxis_breaks)) {
 			stop("`zaxis_labels` must be the same length as `zaxis_breaks`.")

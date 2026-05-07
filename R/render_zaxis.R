@@ -34,6 +34,77 @@
 #'and `0.08` for non-ggplot scenes. `0` places the axis exactly at the corner.
 #'@param zaxis_tick_size Default `NULL`. Tick marker size. If `NULL`, auto-sized from line width.
 #'@export
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
+#'# Add a z-axis to a Monterey Bay terrain scene. The spatial extent and zscale
+#'# are cached by sphere_shade()/plot_3d(), so render_zaxis() can infer them.
+#'montereybay |>
+#'  sphere_shade(texture = "imhof1", vertical_exaggeration = 20) |>
+#'  plot_3d(
+#'    vertical_exaggeration = 4,
+#'    water = TRUE,
+#'    theta = 245,
+#'    phi = 20,
+#'    zoom = 1
+#'  )
+#'render_zaxis(
+#'  zaxis_location = "bottomleft",
+#'  zaxis_color = "black",
+#'  zaxis_corner_offset = 0.2
+#')
+#'render_snapshot()
+#'
+#' #Change the location
+#'render_zaxis(
+#'  zaxis_location = "topright",
+#'  zaxis_color = "red",
+#'  zaxis_corner_offset = 0.3,
+#'  zaxis_tick_size = 3
+#')
+#'render_snapshot()
+#'# Add a z-axis to a ggplot scene.
+#'library(ggplot2)
+#'mtplot = ggplot(mtcars) +
+#'  geom_point(aes(x = mpg, y = disp, color = cyl)) +
+#'  scale_color_continuous(limits = c(0, 8))
+#'plot_gg(
+#'  mtplot,
+#'  width = 3.5,
+#'  windowsize = c(1400, 866),
+#'  sunangle = 225,
+#'  zoom = 0.60,
+#'  phi = 30,
+#'  theta = 45
+#')
+#'render_zaxis(zaxis_location = "panel_bottomleft")
+#'render_snapshot()
+#'
+#'# For faceted ggplot scenes, specify the panel whose corner should anchor the axis.
+#'density_plot = ggplot(mtcars) +
+#'  stat_density_2d(
+#'    aes(x = mpg, y = disp, fill = after_stat(density)),
+#'    geom = "raster",
+#'    contour = FALSE
+#'  ) +
+#'  facet_wrap(~cyl) +
+#'  scale_x_continuous(expand = c(0, 0)) +
+#'  scale_y_continuous(expand = c(0, 0)) +
+#'  scale_fill_gradient(low = "pink", high = "red")
+#'plot_gg(
+#'  density_plot,
+#'  width = 6,
+#'  windowsize = c(1400, 866),
+#'  zoom = 0.55,
+#'  theta = -10,
+#'  phi = 25,
+#'  vertical_exaggeration = 300
+#')
+#'render_zaxis(
+#'  panel = 1,
+#'  zaxis_location = "panel_bottomleft",
+#'  zaxis_breaks = c(0, 0.5, 1),
+#'  zaxis_labels = c("low", "mid", "high")
+#')
+#'render_snapshot()
 render_zaxis = function(
 	extent = NULL,
 	panel = NULL,
