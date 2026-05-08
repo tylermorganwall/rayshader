@@ -94,7 +94,7 @@ test_that("plot_gg() doesn't error", {
 		mtplot,
 		width = 3.5,
 		sunangle = 225,
-		preview = TRUE
+		preview = FALSE
 	))
 
 	plot_gg_test(
@@ -135,7 +135,7 @@ test_that("plot_gg() doesn't error", {
 
 	#Preview this plot in 2D:
 
-	expect_no_condition(plot_gg_test(mtplot_density_facet, preview = TRUE))
+	expect_no_condition(plot_gg_test(mtplot_density_facet, preview = FALSE))
 
 	expect_no_condition(plot_gg_test(
 		mtplot_density_facet,
@@ -148,7 +148,11 @@ test_that("plot_gg() doesn't error", {
 
 	#That is a little cramped. Specifying a larger width will improve the readability of this plot.
 
-	expect_no_condition(plot_gg_test(mtplot_density_facet, width = 6, preview = TRUE))
+	expect_no_condition(plot_gg_test(
+		mtplot_density_facet,
+		width = 6,
+		preview = FALSE
+	))
 
 	#That's better. Let's plot it in 3D, and increase the scale.
 

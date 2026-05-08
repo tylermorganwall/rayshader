@@ -7,7 +7,7 @@
 #'@param swap_yz Default `TRUE`., Whether to swap and Y and Z axes. (Y axis is vertical in 
 #'rayshader coordinates, but data is often provided with Z being vertical).
 #'@export
-#'@examples
+#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Convert the built-in Washington Monument MULTIPOLYGON Z data to an OBJ file
 #'obj_temp = tempfile(fileext=".obj")
 #'save_multipolygonz_to_obj(washington_monument_multipolygonz, obj_temp, swap_yz=TRUE)
@@ -16,6 +16,9 @@
 #'render_obj(filename=obj_temp, xyz=matrix(c(0,0,0),ncol=3), color="red")
 #'render_camera(theta=30,phi=40)
 save_multipolygonz_to_obj = function(sfobj, filename, swap_yz = FALSE) {
+	if (!(length(find.package("sf", quiet = TRUE)) > 0)) {
+		stop("`sf` package required for save_multipolygonz_to_obj()")
+	}
   con = file(filename, "w")
   on.exit(close(con))
   total_verts = 0

@@ -18,6 +18,7 @@ rayshader coordinates, but data is often provided with Z being vertical).}
 Converts MULTIPOLYGON Z features into a 3D OBJ model
 }
 \examples{
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Convert the built-in Washington Monument MULTIPOLYGON Z data to an OBJ file
 obj_temp = tempfile(fileext=".obj")
 save_multipolygonz_to_obj(washington_monument_multipolygonz, obj_temp, swap_yz=TRUE)
@@ -25,4 +26,5 @@ save_multipolygonz_to_obj(washington_monument_multipolygonz, obj_temp, swap_yz=T
 rgl::open3d()
 render_obj(filename=obj_temp, xyz=matrix(c(0,0,0),ncol=3), color="red")
 render_camera(theta=30,phi=40)
+\dontshow{\}) # examplesIf}
 }

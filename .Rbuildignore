@@ -30,3 +30,4 @@
 ^.+\.png$
 ^.+\.obj$
 ^.+\.mtl$
+^Rplots\\.pdf$

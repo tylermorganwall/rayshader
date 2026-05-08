@@ -53,7 +53,6 @@ Suggests:
 	skymodelr
 LinkingTo: Rcpp, progress, RcppArmadillo
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.3
 Encoding: UTF-8
 URL: https://www.rayshader.com,
      https://github.com/tylermorganwall/rayshader
@@ -64,3 +63,4 @@ Remotes: tylermorganwall/raybevel,
     tylermorganwall/rayrender, 
     dmurdoch/rgl,
 	tylermorganwall/skymodelr
+Config/roxygen2/version: 8.0.0

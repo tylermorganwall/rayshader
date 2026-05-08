@@ -25,7 +25,7 @@
 #'
 #'#Setting a minimum area avoids classifying small flat areas as water:
 #'island_volcano |>
-#'  sphere_shade(texture="imhof3") |>
+#'  sphere_shade(texture="imhof3", vertical_exaggeration = 20) |>
 #'  add_water(detect_water(min_area = 400),color="imhof3") |>
 #'  plot_map()
 detect_water = function(
