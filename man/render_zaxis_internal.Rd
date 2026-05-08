@@ -9,6 +9,7 @@ render_zaxis_internal(
   extent = NULL,
   zscale = 1,
   heightmap = NULL,
+  zaxis_data = "auto",
   zaxis_location = "auto",
   zaxis_breaks = NULL,
   zaxis_labels = NULL,

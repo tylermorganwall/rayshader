@@ -279,6 +279,10 @@ render_points = function(
 			size = size
 		)
 	}
+	cache_point_zaxis_data(
+		altitude = altitude,
+		scene_altitude = xyz[, 2] * zscale
+	)
 	render_zaxis_from_dots(
 		zaxis_args = zaxis_args,
 		extent = extent,

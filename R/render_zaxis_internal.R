@@ -6,6 +6,7 @@ render_zaxis_internal = function(
 	extent = NULL,
 	zscale = 1,
 	heightmap = NULL,
+	zaxis_data = "auto",
 	zaxis_location = "auto",
 	zaxis_breaks = NULL,
 	zaxis_labels = NULL,
@@ -27,6 +28,20 @@ render_zaxis_internal = function(
 
 	extent_vals = get_extent(extent)
 	heightmap = resolve_scene_render_heightmap(heightmap)
+	zaxis_data_source = canonicalize_zaxis_data_source(zaxis_data)
+	zaxis_data_info = get_scene_zaxis_data(zaxis_data_source, default = NULL)
+	if (
+		!zaxis_data_source %in% c("auto", "topographic") &&
+			is.null(zaxis_data_info)
+	) {
+		stop(
+			sprintf(
+				"No cached z-axis data found for `%s`. Call the matching render function first.",
+				zaxis_data_source
+			),
+			call. = FALSE
+		)
+	}
 	panel_info = attr(extent, "panel_info", exact = TRUE)
 	if (is.null(panel_info)) {
 		panel_info = get0(
@@ -295,6 +310,30 @@ render_zaxis_internal = function(
 	anchor_xyz[3] = anchor_xyz[3] + outside_unit_2d[2] * axis_offset
 
 	default_zaxis_labels = NULL
+	if (!is.null(zaxis_data_info)) {
+		if (is.null(zaxis_breaks)) {
+			raw_zaxis_breaks = pretty(zaxis_data_info$raw_range, n = 4)
+			raw_zaxis_breaks = raw_zaxis_breaks[is.finite(raw_zaxis_breaks)]
+			if (length(raw_zaxis_breaks) < 2) {
+				raw_zaxis_breaks = zaxis_data_info$raw_range
+			}
+		} else {
+			raw_zaxis_breaks = as.numeric(zaxis_breaks)
+			if (any(is.na(raw_zaxis_breaks))) {
+				stop("`zaxis_breaks` must be numeric.")
+			}
+			raw_zaxis_breaks = sort(unique(raw_zaxis_breaks))
+		}
+		default_zaxis_labels = format(
+			raw_zaxis_breaks,
+			trim = TRUE,
+			scientific = FALSE
+		)
+		zaxis_breaks = map_zaxis_data_breaks(
+			raw_zaxis_breaks,
+			zaxis_data = zaxis_data_info
+		)
+	}
 	if (is.null(zaxis_breaks)) {
 		height_transform = get_scene_height_transform(
 			heightmap = heightmap,
@@ -348,7 +387,7 @@ render_zaxis_internal = function(
 		if (length(zaxis_breaks) < 2) {
 			zaxis_breaks = altitude_range
 		}
-	} else {
+	} else if (is.null(zaxis_data_info)) {
 		zaxis_breaks = as.numeric(zaxis_breaks)
 		if (any(is.na(zaxis_breaks))) {
 			stop("`zaxis_breaks` must be numeric.")
@@ -388,6 +427,10 @@ render_zaxis_internal = function(
 				!is.null(transform_info$height_label)
 		) {
 			transform_info$height_label
+		} else if (!is.null(zaxis_data_info) && !is.null(zaxis_data_info$label)) {
+			zaxis_data_info$label
+		} else if (zaxis_data_source == "topographic") {
+			"Elevation"
 		} else {
 			NULL
 		}
@@ -500,7 +543,8 @@ render_zaxis_internal = function(
 			breaks = zaxis_breaks,
 			labels = zaxis_labels,
 			title = zaxis_title,
-			title_location = zaxis_title_location
+			title_location = zaxis_title_location,
+			data = zaxis_data_source
 		)
 	)
 }

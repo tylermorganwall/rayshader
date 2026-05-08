@@ -483,6 +483,8 @@ render_path = function(
 			return(invisible(NULL))
 		}
 	}
+	path_altitude_values = altitude
+	path_coord_count = length(lat)
 	split_lat = split(lat, groups)
 	split_long = split(long, groups)
 
@@ -537,6 +539,20 @@ render_path = function(
 		)
 		return(invisible(NULL))
 	}
+	path_scene_altitude = unlist(lapply(coord_list, function(coord) coord[, 2] * zscale))
+	if (
+		!is.null(path_altitude_values) &&
+			length(path_altitude_values) != 1 &&
+			length(path_altitude_values) != path_coord_count
+	) {
+		path_altitude_values = path_scene_altitude
+	}
+	cache_altitude_zaxis_data(
+		source = "path",
+		altitude = path_altitude_values,
+		scene_altitude = path_scene_altitude,
+		label = "path"
+	)
 	if (!return_coords) {
 		if (length(linewidth) > 1) {
 			if (length(coord_list) == 1) {

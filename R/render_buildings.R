@@ -341,6 +341,16 @@ render_buildings = function(
 		default_value = bottom
 	)
 
+	cache_polygon_like_zaxis_data(
+		source = "building",
+		polygon = polygon,
+		top = top,
+		bottom = bottom,
+		data_column_top = data_column_top,
+		data_column_bottom = data_column_bottom,
+		scale_data = scale_data
+	)
+
 	polygon = transform_polygon_into_raycoords(
 		polygon,
 		heightmap = heightmap,

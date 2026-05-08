@@ -10,6 +10,7 @@ render_zaxis(
   zscale = 1,
   vertical_exaggeration = 1,
   heightmap = NULL,
+  zaxis_data = "auto",
   zaxis_location = "auto",
   zaxis_breaks = NULL,
   zaxis_labels = NULL,
@@ -42,6 +43,16 @@ will attempt to use the cached \code{plot_3d()} zscale to generate more meaningf
 \item{vertical_exaggeration}{Default \code{1}. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}} when available; pass explicitly to override for this call.}
 
 \item{heightmap}{Default \code{NULL}. Height matrix for the current scene. If omitted, this is taken from the cached scene set by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}. Pass explicitly to override the cached value.}
+
+\item{zaxis_data}{Default \code{"auto"}. Data source used to generate z-axis
+breaks and labels. Options are \code{"auto"}, \code{"topographic"}, \code{"polygon"},
+\code{"point"}, \code{"path"}, \code{"obj"}, \code{"raymesh"}, \code{"tree"}, \code{"label"},
+\code{"building"}, and \code{"cloud"}. Use \code{"polygon"} after \code{\link[=render_polygons]{render_polygons()}} or
+\code{\link[=render_beveled_polygons]{render_beveled_polygons()}} to label breaks with cached polygon data values
+(for example \code{data_column_top}) while placing ticks at the rendered scaled
+heights. Use \code{"building"} after \code{\link[=render_buildings]{render_buildings()}} to refer to building
+height data, or the matching render type after point/path/object/tree/label
+and cloud calls to use those cached altitude values.}
 
 \item{zaxis_location}{Default \code{"auto"}. Axis location. Options:
 \code{"auto"}, \code{"panel"}, \code{"panelbottomleft"}, \code{"panelbottomright"},

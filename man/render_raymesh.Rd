@@ -139,5 +139,42 @@ in the proper location (but for ease of use, use \code{\link[=render_multipolygo
 }
 \examples{
 \dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
+# Load the built-in R logo OBJ from rayvertex as a raymesh.
+r_logo_mesh = rayvertex::obj_mesh(rayvertex::r_obj(), center = TRUE, angle=c(0,180,0))
+
+# Render the 3D map.
+montereybay |>
+ sphere_shade(vertical_exaggeration = 10) |>
+ plot_3d(
+   vertical_exaggeration = 4,
+   water = TRUE,
+   shadowcolor = "#40310a",
+   background = "tan",
+   theta = 210,
+   phi = 22,
+   zoom = 0.20,
+   fov = 55
+ )
+
+# Place the R logo mesh at point locations, similar to render_points().
+moss_landing_coord = c(36.806807, -121.793332)
+t = seq(0, 2 * pi, length.out = 30)
+circle_coords_lat = moss_landing_coord[1] + 0.3 * sin(t)
+circle_coords_long = moss_landing_coord[2] + 0.3 * cos(t)
+
+#Pass in custom angles for each model
+render_raymesh(
+ raymesh = r_logo_mesh,
+ lat = circle_coords_lat,
+ long = circle_coords_long,
+ offset = 600,
+ scale = c(32, 32, 32),
+ angle = matrix(c(rep(0,30),-seq(0,360-12,by=12)-90-180,rep(0,30)),ncol=3),
+ change_material = FALSE, clear_previous=TRUE
+)
+render_camera(theta = 160, phi = 33, zoom = 0.4, fov = 55)
+render_snapshot()
+#And high quality, with a realistic atmosphere
+render_highquality(sky_sun_azimuth=10, sky_sun_elevation=10,iso=5)
 \dontshow{\}) # examplesIf}
 }

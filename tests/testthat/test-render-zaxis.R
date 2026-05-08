@@ -180,6 +180,228 @@ test_that("render_zaxis() adds side and top titles", {
 	expect_gt(unname(title_verts[1, 2]), max(axis_verts[, 2]))
 })
 
+test_that("render_zaxis() can use cached point altitude data", {
+	on.exit(rgl::close3d(), add = TRUE)
+	local_rgl_use_null()
+
+	heightmap = matrix(0, nrow = 20, ncol = 20)
+	texture = sphere_shade(heightmap)
+	extent = c(xmin = 0, xmax = 20, ymin = 0, ymax = 20)
+	expect_no_condition(plot_3d_test(
+		texture,
+		heightmap,
+		zscale = 10,
+		shadow = FALSE,
+		water = FALSE,
+		windowsize = c(300, 300)
+	))
+	expect_no_condition(render_points(
+		x = c(5, 15),
+		y = c(5, 15),
+		extent = extent,
+		heightmap = heightmap,
+		zscale = 10,
+		altitude = c(100, 200),
+		offset = 0
+	))
+
+	out = render_zaxis(
+		extent = extent,
+		heightmap = heightmap,
+		zscale = 10,
+		zaxis_data = "point",
+		zaxis_breaks = c(100, 200),
+		zaxis_title = NULL
+	)
+
+	ids = get_ids_with_labels()
+	tick_id = ids$id[ids$tag == "zaxis_ticks"][1]
+	tick_verts = rgl::rgl.attrib(tick_id, "vertices")
+	label_ids = ids$id[ids$tag == "zaxis_labels"]
+	label_texts = unlist(lapply(
+		label_ids,
+		function(id) trimws(as.character(rgl::rgl.attrib(id, "texts")))
+	))
+
+	expect_equal(out$data, "point")
+	expect_equal(out$labels, c("100", "200"))
+	expect_equal(sort(tick_verts[, 2]), c(10, 20), tolerance = 1e-6)
+	expect_true(all(c("100", "200") %in% label_texts))
+})
+
+test_that("render_zaxis() can use cached path and label altitude data", {
+	on.exit(rgl::close3d(), add = TRUE)
+	local_rgl_use_null()
+
+	heightmap = matrix(0, nrow = 20, ncol = 20)
+	texture = sphere_shade(heightmap)
+	extent = c(xmin = 0, xmax = 20, ymin = 0, ymax = 20)
+	expect_no_condition(plot_3d_test(
+		texture,
+		heightmap,
+		zscale = 10,
+		shadow = FALSE,
+		water = FALSE,
+		windowsize = c(300, 300)
+	))
+	expect_no_condition(render_path(
+		x = c(5, 15),
+		y = c(5, 15),
+		extent = extent,
+		heightmap = heightmap,
+		zscale = 10,
+		altitude = c(100, 200),
+		offset = 0
+	))
+
+	out = render_zaxis(
+		extent = extent,
+		heightmap = heightmap,
+		zscale = 10,
+		zaxis_data = "path",
+		zaxis_breaks = c(100, 200),
+		zaxis_title = NULL
+	)
+
+	ids = get_ids_with_labels()
+	tick_id = ids$id[ids$tag == "zaxis_ticks"][1]
+	tick_verts = rgl::rgl.attrib(tick_id, "vertices")
+	expect_equal(out$data, "path")
+	expect_equal(out$labels, c("100", "200"))
+	expect_equal(sort(tick_verts[, 2]), c(10, 20), tolerance = 1e-6)
+
+	expect_no_condition(render_label(
+		x = c(5, 15),
+		y = c(5, 15),
+		extent = extent,
+		heightmap = heightmap,
+		zscale = 10,
+		z = c(300, 400),
+		text = c("a", "b"),
+		relativez = FALSE
+	))
+
+	out = render_zaxis(
+		extent = extent,
+		heightmap = heightmap,
+		zscale = 10,
+		zaxis_data = "label",
+		zaxis_breaks = c(300, 400),
+		zaxis_title = NULL
+	)
+
+	ids = get_ids_with_labels()
+	tick_id = ids$id[ids$tag == "zaxis_ticks"][1]
+	tick_verts = rgl::rgl.attrib(tick_id, "vertices")
+	expect_equal(out$data, "label")
+	expect_equal(out$labels, c("300", "400"))
+	expect_equal(sort(tick_verts[, 2]), c(30, 40), tolerance = 1e-6)
+})
+
+test_that("render_zaxis() accepts cached render-type data sources", {
+	on.exit(rgl::close3d(), add = TRUE)
+	local_rgl_use_null()
+
+	heightmap = matrix(0, nrow = 20, ncol = 20)
+	texture = sphere_shade(heightmap)
+	extent = c(xmin = 0, xmax = 20, ymin = 0, ymax = 20)
+	expect_no_condition(plot_3d_test(
+		texture,
+		heightmap,
+		zscale = 10,
+		shadow = FALSE,
+		water = FALSE,
+		windowsize = c(300, 300)
+	))
+
+	for (source in c("obj", "raymesh", "tree", "building", "cloud")) {
+		cache_scene_zaxis_data(
+			source = source,
+			raw_values = c(10, 20),
+			scene_values = c(100, 200),
+			label = source
+		)
+		out = render_zaxis(
+			extent = extent,
+			heightmap = heightmap,
+			zscale = 10,
+			zaxis_data = source,
+			zaxis_breaks = c(10, 20)
+		)
+		expect_equal(out$data, source)
+		expect_equal(out$breaks, c(100, 200), tolerance = 1e-6)
+		expect_equal(out$title, source)
+	}
+})
+
+test_that("render_zaxis() can use cached polygon data-column values", {
+	skip_if_not_installed("sf")
+	skip_if_not_installed("rayrender")
+	on.exit(rgl::close3d(), add = TRUE)
+	local_rgl_use_null()
+
+	heightmap = matrix(0, nrow = 20, ncol = 20)
+	texture = sphere_shade(heightmap)
+	extent = c(xmin = 0, xmax = 20, ymin = 0, ymax = 20)
+	polygon = sf::st_sf(
+		ALAND = c(10, 20),
+		geometry = sf::st_sfc(
+			sf::st_polygon(list(matrix(
+				c(2, 2, 8, 2, 8, 8, 2, 8, 2, 2),
+				ncol = 2,
+				byrow = TRUE
+			))),
+			sf::st_polygon(list(matrix(
+				c(12, 12, 18, 12, 18, 18, 12, 18, 12, 12),
+				ncol = 2,
+				byrow = TRUE
+			)))
+		)
+	)
+	expect_no_condition(plot_3d_test(
+		texture,
+		heightmap,
+		zscale = 10,
+		shadow = FALSE,
+		water = FALSE,
+		windowsize = c(300, 300)
+	))
+	expect_no_condition(render_polygons(
+		polygon,
+		extent = extent,
+		heightmap = heightmap,
+		zscale = 10,
+		bottom = 0,
+		data_column_top = "ALAND",
+		scale_data = 2,
+		parallel = FALSE,
+		zaxis = TRUE,
+		zaxis_data = "polygon",
+		zaxis_breaks = c(10, 20)
+	))
+	expect_true(any(get_ids_with_labels()$tag == "zaxis_axis"))
+
+	out = render_zaxis(
+		extent = extent,
+		heightmap = heightmap,
+		zscale = 10,
+		zaxis_data = "polygon",
+		zaxis_breaks = c(10, 20)
+	)
+
+	ids = get_ids_with_labels()
+	tick_id = ids$id[ids$tag == "zaxis_ticks"][1]
+	tick_verts = rgl::rgl.attrib(tick_id, "vertices")
+	title_id = ids$id[ids$tag == "zaxis_title"][1]
+	title_text = trimws(as.character(rgl::rgl.attrib(title_id, "texts")))
+
+	expect_equal(out$data, "polygon")
+	expect_equal(out$breaks, c(20, 40), tolerance = 1e-6)
+	expect_equal(out$labels, c("10", "20"))
+	expect_equal(sort(tick_verts[, 2]), c(2, 4), tolerance = 1e-6)
+	expect_equal(title_text, "ALAND")
+})
+
 test_that("render_zaxis() works as a standalone entry point", {
 	on.exit(rgl::close3d(), add = TRUE)
 	local_rgl_use_null()

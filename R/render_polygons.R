@@ -53,7 +53,7 @@
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #' #Render the county borders as polygons in Monterey Bay
 #' montereybay |>
-#'   sphere_shade(texture = "desert") |>
+#'   sphere_shade(texture = "desert", vertical_exaggeration = 20) |>
 #'   add_shadow(ray_shade(vertical_exaggeration = 4)) |>
 #'   plot_3d(water = TRUE, windowsize = 800, watercolor = "dodgerblue")
 #' render_camera(theta = 140,  phi = 55, zoom = 0.85, fov = 30)
@@ -63,7 +63,7 @@
 #' sf::sf_use_s2(FALSE)
 #' mont_county_buff = sf::st_simplify(sf::st_buffer(monterey_counties_sf,-0.003), dTolerance=0.001)
 #'
-#' render_polygons(mont_county_buff, top = 10,
+#' render_polygons(mont_county_buff, top = 1000,
 #'                 parallel = FALSE)
 #' render_snapshot()
 #' #We can specify the bottom of the polygons as well. Here I float the polygons above the surface
@@ -369,6 +369,14 @@ render_polygons = function(
 			)
 		}
 	}
+	cache_polygon_zaxis_data(
+		polygon = polygon,
+		top = top,
+		bottom = bottom,
+		data_column_top = data_column_top,
+		data_column_bottom = data_column_bottom,
+		scale_data = scale_data
+	)
 	render_zaxis_from_dots(
 		zaxis_args = zaxis_split$zaxis_args,
 		extent = extent,

@@ -378,17 +378,28 @@ render_obj = function(
 			scale = matrix(scale, ncol = 3, nrow = 1, byrow = T)
 		}
 	}
+	obj_cache_altitude = altitude
 	if (!is.null(lat) && !is.null(long) && any(is.na(xyz[, 2]))) {
-		scale = scale[!is.na(xyz[, 2]), ]
-		angle = angle[!is.na(xyz[, 2]), ]
-		color = color[!is.na(xyz[, 2])]
-		xyz = xyz[!is.na(xyz[, 2]), ]
+		valid_xyz = !is.na(xyz[, 2])
+		if (length(obj_cache_altitude) == length(valid_xyz)) {
+			obj_cache_altitude = obj_cache_altitude[valid_xyz]
+		}
+		scale = scale[valid_xyz, ]
+		angle = angle[valid_xyz, ]
+		color = color[valid_xyz]
+		xyz = xyz[valid_xyz, ]
 		if (nrow(xyz) == 0) {
 			stop(
 				"All models outside extent--check x/y or lat/long values and extent object."
 			)
 		}
 	}
+	cache_altitude_zaxis_data(
+		source = "obj",
+		altitude = obj_cache_altitude,
+		scene_altitude = xyz[, 2] * zscale,
+		label = "obj"
+	)
 	scenelist = list()
 	for (k in seq_len(nrow(xyz))) {
 		tempobj = obj

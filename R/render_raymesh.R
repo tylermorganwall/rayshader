@@ -64,6 +64,43 @@
 #'@param ... Additional arguments to pass to `rgl::triangles3d()`.
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
+#'# Load the built-in R logo OBJ from rayvertex as a raymesh.
+#'r_logo_mesh = rayvertex::obj_mesh(rayvertex::r_obj(), center = TRUE, angle=c(0,180,0))
+#'
+#'# Render the 3D map.
+#'montereybay |>
+#'  sphere_shade(vertical_exaggeration = 10) |>
+#'  plot_3d(
+#'    vertical_exaggeration = 4,
+#'    water = TRUE,
+#'    shadowcolor = "#40310a",
+#'    background = "tan",
+#'    theta = 210,
+#'    phi = 22,
+#'    zoom = 0.20,
+#'    fov = 55
+#'  )
+#'
+#'# Place the R logo mesh at point locations, similar to render_points().
+#'moss_landing_coord = c(36.806807, -121.793332)
+#'t = seq(0, 2 * pi, length.out = 30)
+#'circle_coords_lat = moss_landing_coord[1] + 0.3 * sin(t)
+#'circle_coords_long = moss_landing_coord[2] + 0.3 * cos(t)
+#'
+#' #Pass in custom angles for each model
+#'render_raymesh(
+#'  raymesh = r_logo_mesh,
+#'  lat = circle_coords_lat,
+#'  long = circle_coords_long,
+#'  offset = 600,
+#'  scale = c(32, 32, 32),
+#'  angle = matrix(c(rep(0,30),-seq(0,360-12,by=12)-90-180,rep(0,30)),ncol=3),
+#'  change_material = FALSE, clear_previous=TRUE
+#')
+#'render_camera(theta = 160, phi = 33, zoom = 0.4, fov = 55)
+#'render_snapshot()
+#' #And high quality, with a realistic atmosphere
+#'render_highquality(sky_sun_azimuth=10, sky_sun_elevation=10,iso=5)
 render_raymesh = function(
 	raymesh,
 	extent = NULL,
@@ -345,17 +382,28 @@ render_raymesh = function(
 			scale = matrix(scale, ncol = 3, nrow = 1, byrow = T)
 		}
 	}
+	raymesh_cache_altitude = altitude
 	if (!is.null(lat) && !is.null(long) && any(is.na(xyz[, 2]))) {
-		scale = scale[!is.na(xyz[, 2]), ]
-		angle = angle[!is.na(xyz[, 2]), ]
-		color = color[!is.na(xyz[, 2])]
-		xyz = xyz[!is.na(xyz[, 2]), ]
+		valid_xyz = !is.na(xyz[, 2])
+		if (length(raymesh_cache_altitude) == length(valid_xyz)) {
+			raymesh_cache_altitude = raymesh_cache_altitude[valid_xyz]
+		}
+		scale = scale[valid_xyz, ]
+		angle = angle[valid_xyz, ]
+		color = color[valid_xyz]
+		xyz = xyz[valid_xyz, ]
 		if (nrow(xyz) == 0) {
 			stop(
 				"All models outside extent--check x/y or lat/long values and extent object."
 			)
 		}
 	}
+	cache_altitude_zaxis_data(
+		source = "raymesh",
+		altitude = raymesh_cache_altitude,
+		scene_altitude = xyz[, 2] * zscale,
+		label = "raymesh"
+	)
 	scenelist = list()
 	for (k in seq_len(nrow(xyz))) {
 		tempobj = obj

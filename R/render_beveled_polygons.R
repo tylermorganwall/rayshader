@@ -362,6 +362,15 @@ render_beveled_polygons = function(
 		default_value = bottom
 	)
 
+	cache_polygon_zaxis_data(
+		polygon = polygon,
+		top = top,
+		bottom = bottom,
+		data_column_top = data_column_top,
+		data_column_bottom = data_column_bottom,
+		scale_data = scale_data
+	)
+
 	polygon = transform_polygon_into_raycoords(
 		polygon,
 		heightmap = heightmap,

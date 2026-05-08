@@ -18,6 +18,15 @@
 #'will attempt to use the cached `plot_3d()` zscale to generate more meaningful defaults.
 #'@param vertical_exaggeration Default `1`. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from [plot_3d()] or [plot_gg()] when available; pass explicitly to override for this call.
 #'@param heightmap Default `NULL`. Height matrix for the current scene. If omitted, this is taken from the cached scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value.
+#'@param zaxis_data Default `"auto"`. Data source used to generate z-axis
+#'breaks and labels. Options are `"auto"`, `"topographic"`, `"polygon"`,
+#'`"point"`, `"path"`, `"obj"`, `"raymesh"`, `"tree"`, `"label"`,
+#'`"building"`, and `"cloud"`. Use `"polygon"` after [render_polygons()] or
+#'[render_beveled_polygons()] to label breaks with cached polygon data values
+#'(for example `data_column_top`) while placing ticks at the rendered scaled
+#'heights. Use `"building"` after [render_buildings()] to refer to building
+#'height data, or the matching render type after point/path/object/tree/label
+#'and cloud calls to use those cached altitude values.
 #'@param zaxis_location Default `"auto"`. Axis location. Options:
 #'`"auto"`, `"panel"`, `"panelbottomleft"`, `"panelbottomright"`,
 #'`"paneltopleft"`, `"paneltopright"`, `"bottomleft"`, `"bottomright"`,
@@ -136,6 +145,7 @@ render_zaxis = function(
 	zscale = 1,
 	vertical_exaggeration = 1,
 	heightmap = NULL,
+	zaxis_data = "auto",
 	zaxis_location = "auto",
 	zaxis_breaks = NULL,
 	zaxis_labels = NULL,
@@ -185,6 +195,7 @@ render_zaxis = function(
 		extent = extent,
 		zscale = zscale,
 		heightmap = heightmap,
+		zaxis_data = zaxis_data,
 		zaxis_location = zaxis_location,
 		zaxis_breaks = zaxis_breaks,
 		zaxis_labels = zaxis_labels,
@@ -252,6 +263,7 @@ zaxis_location_uses_panel_extent = function(zaxis_location = "auto") {
 zaxis_dot_names = function() {
 	c(
 		"zaxis",
+		"zaxis_data",
 		"zaxis_location",
 		"zaxis_breaks",
 		"zaxis_labels",

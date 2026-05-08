@@ -69,7 +69,7 @@
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'montereybay |>
-#'  sphere_shade() |>
+#'  sphere_shade(vertical_exaggeration = 20) |>
 #'  plot_3d(vertical_exaggeration = 4,zoom=0.6,theta=-90,phi=30)
 #'
 #'render_snapshot()

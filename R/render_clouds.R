@@ -427,6 +427,12 @@ render_clouds = function(
 
 	# Use layer boundaries; render at the UPPER boundary so the final quad is at end_altitude
 	altitudes = seq(start_altitude, end_altitude, length.out = layers + 1)
+	cache_altitude_zaxis_data(
+		source = "cloud",
+		altitude = altitudes,
+		scene_altitude = altitudes,
+		label = "cloud"
+	)
 	attenuation_coef = attenuation_coef / layers
 
 	if (sun_altitude != 90) {

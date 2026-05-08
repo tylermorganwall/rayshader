@@ -1790,6 +1790,7 @@ reset_scene_context = function(
 		cache_scene_crs(NULL, label = NULL)
 		cache_plot_gg_panel_info(NULL)
 		cache_plot_gg_transform_info(NULL)
+		clear_scene_zaxis_data()
 	}
 	invisible(NULL)
 }

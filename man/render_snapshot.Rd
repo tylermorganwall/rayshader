@@ -160,7 +160,7 @@ Either captures the current rgl view and displays, or saves the current view to 
 \examples{
 \dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 montereybay |>
- sphere_shade() |>
+ sphere_shade(vertical_exaggeration = 20) |>
  plot_3d(vertical_exaggeration = 4,zoom=0.6,theta=-90,phi=30)
 
 render_snapshot()

@@ -246,6 +246,12 @@ render_label = function(
 		if (is.null(z)) {
 			z = max(heightmap, na.rm = TRUE) * 1.1
 		}
+		label_zaxis_raw = if (!is.null(data_column_z) && !identical(scale_data, 0)) {
+			z / scale_data
+		} else {
+			z
+		}
+		label_zaxis_label = if (!is.null(data_column_z)) data_column_z else "label"
 		if (is.null(text)) {
 			stop(
 				paste0(
@@ -288,6 +294,11 @@ render_label = function(
 		y = filtered_label$y
 		if (length(filtered_label$keep) == n_label_before_filter) {
 			z = subset_render_arg(z, filtered_label$keep, n_label_before_filter)
+			label_zaxis_raw = subset_render_arg(
+				label_zaxis_raw,
+				filtered_label$keep,
+				n_label_before_filter
+			)
 			text = subset_render_arg(text, filtered_label$keep, n_label_before_filter)
 			offset = subset_render_arg(offset, filtered_label$keep, n_label_before_filter)
 			textsize = subset_render_arg(textsize, filtered_label$keep, n_label_before_filter)
@@ -338,6 +349,35 @@ render_label = function(
 		e = get_extent(extent)
 		nrow_map = nrow(heightmap) - 1
 		ncol_map = ncol(heightmap) - 1
+		label_scene_altitude = z
+		if (isTRUE(relativez)) {
+			label_surface_altitude = tryCatch(
+				transform_into_heightmap_coords(
+					extent = extent,
+					heightmap = heightmap,
+					lat = y,
+					long = x,
+					altitude = NULL,
+					offset = 0,
+					zscale = 1,
+					panel = panel,
+					transform_scene = FALSE,
+					caller = "render_label"
+				)[, 2],
+				error = function(e) rep(NA_real_, length(z))
+			)
+			label_scene_altitude = z + ifelse(
+				is.finite(label_surface_altitude),
+				label_surface_altitude,
+				0
+			)
+		}
+		cache_altitude_zaxis_data(
+			source = "label",
+			altitude = label_zaxis_raw,
+			scene_altitude = label_scene_altitude,
+			label = label_zaxis_label
+		)
 		ignoreex = par3d()$ignoreExtent
 		par3d(ignoreExtent = TRUE)
 		on.exit(par3d(ignoreExtent = ignoreex), add = TRUE)

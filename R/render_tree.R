@@ -374,6 +374,9 @@ render_tree = function(
 	if (is.null(tree_height)) {
 		tree_height = 10
 	}
+	tree_zaxis_raw = tree_height
+	tree_zaxis_scene = tree_height
+	tree_zaxis_label = if (!is.null(tree_height_column)) tree_height_column else "tree"
 	if (is.null(trunk_height_ratio)) {
 		use_default_crown_height = TRUE
 		use_default_trunk_height = TRUE
@@ -436,6 +439,10 @@ render_tree = function(
 		if (length(tree_height) == nrow(xyz_tree)) {
 			tree_height = tree_height[!filter_nan]
 		}
+		if (length(tree_zaxis_raw) == nrow(xyz_tree)) {
+			tree_zaxis_raw = tree_zaxis_raw[!filter_nan]
+			tree_zaxis_scene = tree_zaxis_scene[!filter_nan]
+		}
 		if (length(trunk_height_ratio) == nrow(xyz_tree)) {
 			trunk_height_ratio = trunk_height_ratio[!filter_nan]
 		}
@@ -487,6 +494,10 @@ render_tree = function(
 
 			if (length(tree_height) > 1) {
 				tree_height = tree_height[!filter_height]
+			}
+			if (length(tree_zaxis_raw) > 1) {
+				tree_zaxis_raw = tree_zaxis_raw[!filter_height]
+				tree_zaxis_scene = tree_zaxis_scene[!filter_height]
 			}
 		}
 		crown_height = (1 - trunk_height_ratio) * tree_height
@@ -807,6 +818,15 @@ render_tree = function(
 	} else {
 		stop(sprintf("%s not recognized as built-in type of tree", type))
 	}
+	if (!isTRUE(absolute_height)) {
+		tree_zaxis_scene = tree_height
+	}
+	cache_altitude_zaxis_data(
+		source = "tree",
+		altitude = tree_zaxis_raw,
+		scene_altitude = tree_zaxis_scene,
+		label = tree_zaxis_label
+	)
 	render_zaxis_from_dots(
 		zaxis_args = zaxis_args,
 		extent = extent,
