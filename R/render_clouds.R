@@ -633,7 +633,7 @@ raymarch_cloud_layer = function(
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Render clouds with cloud shadows on the ground
 #'montereybay  |>
-#'  sphere_shade()  |>
+#'  sphere_shade(vertical_exaggeration = 20)  |>
 #'  add_shadow(cloud_shade(vertical_exaggeration = 4), 0.0) |>
 #'  plot_3d(background="darkred", vertical_exaggeration = 4)
 #'render_camera(theta=-65, phi = 25, zoom = 0.45, fov = 80)
@@ -641,7 +641,7 @@ raymarch_cloud_layer = function(
 #'render_snapshot()
 #'#Adjust the light direction for shadows and increase the attenuation for darker clouds
 #'montereybay  |>
-#'  sphere_shade()  |>
+#'  sphere_shade(vertical_exaggeration = 20)  |>
 #'  add_shadow(cloud_shade(vertical_exaggeration = 4, sun_altitude=20, attenuation_coef = 3), 0.0) |>
 #'  plot_3d(background="darkred", vertical_exaggeration = 4)
 #'render_camera(theta=-65, phi = 25, zoom = 0.45, fov = 80)

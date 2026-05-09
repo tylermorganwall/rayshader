@@ -1902,7 +1902,31 @@ cache_scene_heightmap = function(heightmap = NULL, label = NULL) {
 	invisible(NULL)
 }
 
+with_suppressed_hillshade_zscale_cache = function(expr) {
+	old = isTRUE(get0(
+		"suppress_hillshade_zscale_cache",
+		envir = ray_cache_scene_envir,
+		inherits = FALSE,
+		ifnotfound = FALSE
+	))
+	assign("suppress_hillshade_zscale_cache", TRUE, envir = ray_cache_scene_envir)
+	on.exit(
+		assign("suppress_hillshade_zscale_cache", old, envir = ray_cache_scene_envir),
+		add = TRUE
+	)
+	force(expr)
+}
+
 cache_hillshade_zscale = function(zscale = NULL, label = NULL) {
+	suppress_cache = isTRUE(get0(
+		"suppress_hillshade_zscale_cache",
+		envir = ray_cache_scene_envir,
+		inherits = FALSE,
+		ifnotfound = FALSE
+	))
+	if (suppress_cache && !is.null(zscale)) {
+		return(invisible(NULL))
+	}
 	assign("hillshade_zscale", zscale, envir = ray_cache_scene_envir)
 	assign("hillshade_zscale_label", label, envir = ray_cache_scene_envir)
 	invisible(NULL)

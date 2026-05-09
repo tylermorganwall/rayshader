@@ -161,11 +161,13 @@ ray_shade = function(
 		shadowmatrix[shadowmatrix < 0] = 0
 		if (lambert) {
 			shadowmatrix = shadowmatrix *
-				lamb_shade(
-					originalheightmap,
-					sunaltitude = mean(anglebreaks),
-					sunangle = sunangle,
-					zscale = zscale
+				with_suppressed_hillshade_zscale_cache(
+					lamb_shade(
+						originalheightmap,
+						sunaltitude = mean(anglebreaks),
+						sunangle = sunangle,
+						zscale = zscale
+					)
 				)
 		}
 		if (!is.null(shadow_cache)) {
@@ -252,11 +254,13 @@ ray_shade = function(
 		cache_mask = cache_mask[c(-1, -nrow(cache_mask)), c(-1, -ncol(cache_mask))]
 		if (lambert) {
 			shadowmatrix = shadowmatrix *
-				lamb_shade(
-					originalheightmap,
-					sunaltitude = mean(anglebreaks),
-					sunangle = sunangle,
-					zscale = zscale
+				with_suppressed_hillshade_zscale_cache(
+					lamb_shade(
+						originalheightmap,
+						sunaltitude = mean(anglebreaks),
+						sunangle = sunangle,
+						zscale = zscale
+					)
 				)
 		}
 		if (!is.null(shadow_cache)) {

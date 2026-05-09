@@ -3,54 +3,159 @@
 #' @description Generates a semi-transparent constant-color overlay whose
 #' opacity follows an exponential atmospheric column model.
 #'
-#' @param heightmap Default `missing`. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
-#' @param color Default `"white"`. Color of the airlight term.
-#' @param optical_depth Default `0.5`. Near-surface optical depth of the haze layer.
-#' @param scale_height Default `NULL`. Atmospheric scale height in the same units as `heightmap`, or a proportion in `(0, 1]` if `relative = TRUE`.
-#' @param relative Default `FALSE`. If `TRUE`, interpret `scale_height` as a proportion of the height range.
-#' @param reference_height Default `NULL`. Reference elevation for zero relative height. If `NULL`, uses `min(heightmap)`.
-#' @param view_cos Default `1`. Cosine of the view zenith angle.
-#' @param alpha Default `1`. Multiplier applied to the final haze alpha.
-#' @param blur Default `0`. Smoothing applied to the haze alpha map. Set to `0` to disable.
-#' @return 4-layer RGB array representing the haze overlay.
+#' @details
+#' `haze_shade()` creates a haze overlay whose alpha channel is largest near
+#' `reference_height` and decreases exponentially with elevation above that
+#' height.
+#'
+#' The haze opacity is computed as:
+#'
+#' ```
+#' height_rel = heightmap - reference_height
+#' tau = optical_depth * exp(-height_rel / scale_height)
+#' haze_alpha = 1 - exp(-tau)
+#' ```
+#'
+#' `optical_depth` controls the haze strength at `reference_height`.
+#' `scale_height` controls how quickly haze decreases with elevation. After
+#' increasing elevation by one `scale_height`, optical depth is multiplied by
+#' `exp(-1)`.
+#'
+#' The final alpha channel is multiplied by `alpha` and clamped to `[0, 1]`.
+#'
+#' @param heightmap A two-dimensional matrix, where each entry in the matrix is
+#' the elevation at that point. If omitted, the function attempts to use the
+#' cached heightmap from the current rayshader context.
+#' @param color Default `"white"`. Color of the haze overlay.
+#' @param optical_depth Default `0.5`. Optical depth of the haze layer at
+#' `reference_height`. Larger values make haze more opaque at all elevations.
+#' @param scale_height Default `NULL`. Vertical distance over which haze optical
+#' depth decreases by a factor of `exp(-1)`. If `scale_height_relative = FALSE`,
+#' this is in the same elevation units as `heightmap`. If
+#' `scale_height_relative = TRUE`, this is a proportion of the heightmap
+#' elevation range and must be in `(0, 1]`. If `NULL`, defaults to `0.2` of the
+#' elevation range, or `1` for a flat heightmap.
+#' @param scale_height_relative Default `FALSE`. If `TRUE`, interpret
+#' `scale_height` as a fraction of the heightmap elevation range rather than as
+#' an absolute elevation distance.
+#' @param reference_height Default `NULL`. Elevation where haze optical depth is
+#' equal to `optical_depth`. Elevations above this height have less haze;
+#' elevations below this height have more haze. If `NULL`, uses the minimum
+#' finite elevation in `heightmap`.
+#' @param alpha Default `1`. Multiplier applied to the final haze alpha. Must be
+#' in `[0, 1]`.
+#' @param blur Default `0`. Smoothing applied to the haze alpha map. Set to `0`
+#' to disable.
+#'
+#' @return A 4-layer RGBA array representing the haze overlay.
 #' @export
+#'
 #' @examples
-#' montereybay |>
-#'	raster_to_matrix() |>
-#'		(\(x) {
-#'			x[x < 0] = 0
-#'			x[1:270 + 270, 1:270 + 270]
-#'		})() -> mb_mountains
+#' # Prepare a mountain heightmap.
+#' mb_mountains = raster_to_matrix(montereybay)
+#' mb_mountains[mb_mountains < 0] = 0
+#' mb_mountains = mb_mountains[271:540, 271:540]
 #'
-#'	# Add haze
-#'	mb_mountains |>
-#'		sphere_shade(texture = "imhof2", zscale = 20) |>
-#'		add_shadow(lamb_shade(), 0) |>
-#'		add_overlay(haze_shade(optical_depth = 0.3)) |>
-#'		plot_map()
+#' # Render terrain without haze.
+#' no_haze = mb_mountains |>
+#'   sphere_shade(
+#'     texture = "imhof2",
+#'     zscale = 200,
+#'     vertical_exaggeration = 4
+#'   ) |>
+#'   add_shadow(
+#'     lamb_shade(
+#'       mb_mountains,
+#'       vertical_exaggeration = 4
+#'     ),
+#'     0
+#'   ) |>
+#'   add_water(
+#'     detect_water(mb_mountains, cutoff = 0.9999999),
+#'     "dodgerblue4"
+#'   )
 #'
-#'	# Add thicker haze
-#'	mb_mountains |>
-#'		sphere_shade(texture = "imhof2", zscale = 20) |>
-#'		add_shadow(lamb_shade(), 0) |>
-#'		add_overlay(haze_shade(optical_depth = 0.6)) |>
-#'		plot_map()
+#' plot_map(no_haze)
 #'
-#'	# Add bluish haze
-#'	mb_mountains |>
-#'		sphere_shade(texture = "imhof2", zscale = 20) |>
-#'		add_shadow(lamb_shade(), 0) |>
-#'		add_overlay(haze_shade(optical_depth = 0.3, color = "skyblue")) |>
-#'		plot_map()
-#' 
+#' # Add default white haze.
+#' no_haze |>
+#'   add_overlay(
+#'     haze_shade(mb_mountains)
+#'   ) |>
+#'   plot_map()
+#'
+#' # Increase optical depth to make the haze denser everywhere.
+#' no_haze |>
+#'   add_overlay(
+#'     haze_shade(
+#'       mb_mountains,
+#'       optical_depth = 1
+#'     )
+#'   ) |>
+#'   plot_map()
+#'
+#' # Use a smaller scale height (150 meters) to keep haze concentrated in valleys.
+#' no_haze |>
+#'   add_overlay(
+#'     haze_shade(
+#'       mb_mountains,
+#'       optical_depth = 0.7,
+#'       scale_height = 150
+#'     )
+#'   ) |>
+#'   plot_map()
+#'
+#' # Express scale height as a fraction of the elevation range.
+#' no_haze |>
+#'   add_overlay(
+#'     haze_shade(
+#'       mb_mountains,
+#'       optical_depth = 0.7,
+#'       scale_height = 0.02,
+#'       scale_height_relative = TRUE
+#'     )
+#'   ) |>
+#'   plot_map()
+#'
+#' # Raise the haze layer by setting the reference height.
+#' no_haze |>
+#'   add_overlay(
+#'     haze_shade(
+#'       mb_mountains,
+#'       optical_depth = 0.6,
+#'       reference_height = as.numeric(quantile(mb_mountains, 0.25))
+#'     )
+#'   ) |>
+#'   plot_map()
+#'
+#' # Add bluish atmospheric haze.
+#' no_haze |>
+#'   add_overlay(
+#'     haze_shade(
+#'       mb_mountains,
+#'       color = "#abbbca",
+#'       optical_depth = 1
+#'     )
+#'   ) |>
+#'   plot_map()
+#'
+#' # Blur the haze alpha map to soften transitions.
+#' no_haze |>
+#'   add_overlay(
+#'     haze_shade(
+#'       mb_mountains,
+#'       optical_depth = 1,
+#'       blur = 2
+#'     )
+#'   ) |>
+#'   plot_map()
 haze_shade = function(
 	heightmap,
 	color = "white",
 	optical_depth = 0.5,
 	scale_height = NULL,
-	relative = FALSE,
+	scale_height_relative = FALSE,
 	reference_height = NULL,
-	view_cos = 1,
 	alpha = 1,
 	blur = 0
 ) {
@@ -77,74 +182,131 @@ haze_shade = function(
 		heightmap_cache_label
 	}
 
-	stopifnot(is.matrix(heightmap))
+	if (!is.matrix(heightmap)) {
+		stop("`heightmap` must be a matrix.", call. = FALSE)
+	}
+
+	finite_height = heightmap[is.finite(heightmap)]
+
+	if (length(finite_height) == 0) {
+		stop(
+			"`heightmap` must contain at least one finite elevation.",
+			call. = FALSE
+		)
+	}
 
 	if (
 		!is.numeric(optical_depth) ||
 			length(optical_depth) != 1 ||
+			!is.finite(optical_depth) ||
 			optical_depth < 0
 	) {
-		stop("`optical_depth` must be a single number greater than or equal to 0.")
-	}
-	if (!is.logical(relative) || length(relative) != 1) {
-		stop("`relative` must be a single `TRUE` or `FALSE`.")
-	}
-	if (
-		!is.numeric(view_cos) ||
-			length(view_cos) != 1 ||
-			view_cos <= 0 ||
-			view_cos > 1
-	) {
-		stop("`view_cos` must be a single number in (0, 1].")
-	}
-	if (!is.numeric(alpha) || length(alpha) != 1 || alpha < 0 || alpha > 1) {
-		stop("`alpha` must be a single number between 0 and 1.")
-	}
-	if (!is.numeric(blur) || length(blur) != 1 || blur < 0) {
-		stop("`blur` must be a single number greater than or equal to 0.")
+		stop(
+			"`optical_depth` must be a single finite number greater than or equal to 0.",
+			call. = FALSE
+		)
 	}
 
-	elev_range = range(heightmap, na.rm = TRUE)
+	if (
+		!is.logical(scale_height_relative) ||
+			length(scale_height_relative) != 1 ||
+			is.na(scale_height_relative)
+	) {
+		stop(
+			"`scale_height_relative` must be a single `TRUE` or `FALSE`.",
+			call. = FALSE
+		)
+	}
+
+	if (
+		!is.numeric(alpha) ||
+			length(alpha) != 1 ||
+			!is.finite(alpha) ||
+			alpha < 0 ||
+			alpha > 1
+	) {
+		stop("`alpha` must be a single finite number in [0, 1].", call. = FALSE)
+	}
+
+	if (
+		!is.numeric(blur) ||
+			length(blur) != 1 ||
+			!is.finite(blur) ||
+			blur < 0
+	) {
+		stop(
+			"`blur` must be a single finite number greater than or equal to 0.",
+			call. = FALSE
+		)
+	}
+
+	elev_range = range(finite_height)
 	elev_span = diff(elev_range)
 
 	if (is.null(reference_height)) {
 		reference_height = elev_range[1]
 	}
-	if (!is.numeric(reference_height) || length(reference_height) != 1) {
-		stop("`reference_height` must be a single numeric value.")
+
+	if (
+		!is.numeric(reference_height) ||
+			length(reference_height) != 1 ||
+			!is.finite(reference_height)
+	) {
+		stop(
+			"`reference_height` must be a single finite numeric value.",
+			call. = FALSE
+		)
 	}
 
-	if (relative) {
+	if (scale_height_relative) {
 		if (is.null(scale_height)) {
 			scale_height = 0.2
 		}
+
 		if (
 			!is.numeric(scale_height) ||
 				length(scale_height) != 1 ||
+				!is.finite(scale_height) ||
 				scale_height <= 0 ||
 				scale_height > 1
 		) {
 			stop(
-				"`scale_height` must be a single number in (0, 1] when `relative = TRUE`."
+				"`scale_height` must be a single finite number in (0, 1] when `scale_height_relative = TRUE`.",
+				call. = FALSE
 			)
 		}
-		scale_height = if (elev_span > 0) scale_height * elev_span else 1
+
+		scale_height = if (elev_span > 0) {
+			scale_height * elev_span
+		} else {
+			1
+		}
 	} else {
 		if (is.null(scale_height)) {
-			scale_height = if (elev_span > 0) 0.2 * elev_span else 1
+			scale_height = if (elev_span > 0) {
+				0.2 * elev_span
+			} else {
+				1
+			}
 		}
+
 		if (
 			!is.numeric(scale_height) ||
 				length(scale_height) != 1 ||
+				!is.finite(scale_height) ||
 				scale_height <= 0
 		) {
-			stop("`scale_height` must be a single number greater than 0.")
+			stop(
+				"`scale_height` must be a single finite number greater than 0.",
+				call. = FALSE
+			)
 		}
 	}
 
 	haze = constant_shade(heightmap, color = color, alpha = 1)
 
 	heightmap_img = t(heightmap)
+
 	if (any(dim(heightmap_img) != dim(haze)[1:2])) {
 		heightmap_img = rayimage::render_resized(
 			heightmap_img,
@@ -155,7 +317,7 @@ haze_shade = function(
 	height_rel = heightmap_img - reference_height
 
 	tau_map = optical_depth * exp(-height_rel / scale_height)
-	alpha_map = 1 - exp(-tau_map / view_cos)
+	alpha_map = 1 - exp(-tau_map)
 	alpha_map = pmin(pmax(alpha_map, 0), 1)
 
 	if (blur > 0) {
@@ -176,5 +338,6 @@ haze_shade = function(
 	)
 
 	cache_hillshade_map(haze, label = hillshade_cache_label)
+
 	return(haze)
 }

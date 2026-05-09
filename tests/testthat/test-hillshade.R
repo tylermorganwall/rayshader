@@ -186,6 +186,34 @@ test_that("ambient_shade", {
 	)
 })
 
+test_that("ambient_shade multicore does not print NULL progress output", {
+	testthat::skip_on_cran()
+	cluster_available = FALSE
+	test_cluster = tryCatch(
+		parallel::makeCluster(1, rscript_args = "--vanilla"),
+		error = function(e) NULL
+	)
+	if (!is.null(test_cluster)) {
+		cluster_available = TRUE
+		parallel::stopCluster(test_cluster)
+	}
+	testthat::skip_if_not(cluster_available, "PSOCK clusters are unavailable")
+	withr::local_options(list(cores = 2))
+
+	heightmap = volcano[seq(1, nrow(volcano), by = 8), seq(1, ncol(volcano), by = 8)]
+	output = capture.output(
+		ambient_shade(
+			heightmap,
+			sunbreaks = 3,
+			maxsearch = 2,
+			multicore = TRUE,
+			progbar = TRUE
+		)
+	)
+
+	expect_false(any(trimws(output) == "NULL"))
+})
+
 test_that("constant_shade", {
 	cs_args = expand.grid(
 		color = list("white", "red", "black"),
@@ -226,4 +254,9 @@ test_that("radiance_shade requires scene or heightmap", {
 		radiance_shade(),
 		"No rgl window currently open and no `heightmap` supplied"
 	)
+})
+
+test_that("radiance_shade exposes rayrender auto exposure control", {
+	expect_true("auto_exposure" %in% names(formals(radiance_shade)))
+	expect_identical(formals(radiance_shade)$auto_exposure, TRUE)
 })

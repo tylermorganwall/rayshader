@@ -26,7 +26,7 @@
 #'montbay_water[montbay_water < 0] = 0
 #'
 #'montereybay |>
-#'  sphere_shade(texture="imhof4") |>
+#'  sphere_shade(texture="imhof4",vertical_exaggeration=20) |>
 #'  add_water(detect_water(montbay_water),color="imhof4") |>
 #'  plot_map()
 add_water = function(hillshade, watermap, color = "imhof1") {

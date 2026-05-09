@@ -38,6 +38,7 @@ radiance_shade(
   width = NULL,
   height = NULL,
   clamp_value = NA,
+  auto_exposure = TRUE,
   scene_elements = NULL,
   plot = FALSE,
   ...
@@ -132,6 +133,11 @@ the underlying surface dimensions.}
 
 \item{clamp_value}{Default \code{NA}. Radiance clamp value. Matches
 \code{\link[=render_highquality]{render_highquality()}} default behavior.}
+
+\item{auto_exposure}{Default \code{TRUE}. Whether to use rayrender's automatic
+exposure adjustment in the radiance pass. Forwarded to
+\code{rayrender::render_scene()} via \code{\link[=render_highquality]{render_highquality()}} when supported by the
+installed rayrender version.}
 
 \item{scene_elements}{Default \code{NULL}. Extra rayrender objects to add.}
 

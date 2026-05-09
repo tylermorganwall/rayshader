@@ -9,66 +9,167 @@ haze_shade(
   color = "white",
   optical_depth = 0.5,
   scale_height = NULL,
-  relative = FALSE,
+  scale_height_relative = FALSE,
   reference_height = NULL,
-  view_cos = 1,
   alpha = 1,
   blur = 0
 )
 }
 \arguments{
-\item{heightmap}{Default \code{missing}. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.}
+\item{heightmap}{A two-dimensional matrix, where each entry in the matrix is
+the elevation at that point. If omitted, the function attempts to use the
+cached heightmap from the current rayshader context.}
 
-\item{color}{Default \code{"white"}. Color of the airlight term.}
+\item{color}{Default \code{"white"}. Color of the haze overlay.}
 
-\item{optical_depth}{Default \code{0.5}. Near-surface optical depth of the haze layer.}
+\item{optical_depth}{Default \code{0.5}. Optical depth of the haze layer at
+\code{reference_height}. Larger values make haze more opaque at all elevations.}
 
-\item{scale_height}{Default \code{NULL}. Atmospheric scale height in the same units as \code{heightmap}, or a proportion in \verb{(0, 1]} if \code{relative = TRUE}.}
+\item{scale_height}{Default \code{NULL}. Vertical distance over which haze optical
+depth decreases by a factor of \code{exp(-1)}. If \code{scale_height_relative = FALSE},
+this is in the same elevation units as \code{heightmap}. If
+\code{scale_height_relative = TRUE}, this is a proportion of the heightmap
+elevation range and must be in \verb{(0, 1]}. If \code{NULL}, defaults to \code{0.2} of the
+elevation range, or \code{1} for a flat heightmap.}
 
-\item{relative}{Default \code{FALSE}. If \code{TRUE}, interpret \code{scale_height} as a proportion of the height range.}
+\item{scale_height_relative}{Default \code{FALSE}. If \code{TRUE}, interpret
+\code{scale_height} as a fraction of the heightmap elevation range rather than as
+an absolute elevation distance.}
 
-\item{reference_height}{Default \code{NULL}. Reference elevation for zero relative height. If \code{NULL}, uses \code{min(heightmap)}.}
+\item{reference_height}{Default \code{NULL}. Elevation where haze optical depth is
+equal to \code{optical_depth}. Elevations above this height have less haze;
+elevations below this height have more haze. If \code{NULL}, uses the minimum
+finite elevation in \code{heightmap}.}
 
-\item{view_cos}{Default \code{1}. Cosine of the view zenith angle.}
+\item{alpha}{Default \code{1}. Multiplier applied to the final haze alpha. Must be
+in \verb{[0, 1]}.}
 
-\item{alpha}{Default \code{1}. Multiplier applied to the final haze alpha.}
-
-\item{blur}{Default \code{0}. Smoothing applied to the haze alpha map. Set to \code{0} to disable.}
+\item{blur}{Default \code{0}. Smoothing applied to the haze alpha map. Set to \code{0}
+to disable.}
 }
 \value{
-4-layer RGB array representing the haze overlay.
+A 4-layer RGBA array representing the haze overlay.
 }
 \description{
 Generates a semi-transparent constant-color overlay whose
 opacity follows an exponential atmospheric column model.
 }
+\details{
+\code{haze_shade()} creates a haze overlay whose alpha channel is largest near
+\code{reference_height} and decreases exponentially with elevation above that
+height.
+
+The haze opacity is computed as:
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{height_rel = heightmap - reference_height
+tau = optical_depth * exp(-height_rel / scale_height)
+haze_alpha = 1 - exp(-tau)
+}\if{html}{\out{</div>}}
+
+\code{optical_depth} controls the haze strength at \code{reference_height}.
+\code{scale_height} controls how quickly haze decreases with elevation. After
+increasing elevation by one \code{scale_height}, optical depth is multiplied by
+\code{exp(-1)}.
+
+The final alpha channel is multiplied by \code{alpha} and clamped to \verb{[0, 1]}.
+}
 \examples{
-montereybay |>
-raster_to_matrix() |>
-	(\(x) {
-		x[x < 0] = 0
-		x[1:270 + 270, 1:270 + 270]
-	})() -> mb_mountains
+# Prepare a mountain heightmap.
+mb_mountains = raster_to_matrix(montereybay)
+mb_mountains[mb_mountains < 0] = 0
+mb_mountains = mb_mountains[271:540, 271:540]
 
-# Add haze
-mb_mountains |>
-	sphere_shade(texture = "imhof2", zscale = 20) |>
-	add_shadow(lamb_shade(), 0) |>
-	add_overlay(haze_shade(optical_depth = 0.3)) |>
-	plot_map()
+# Render terrain without haze.
+no_haze = mb_mountains |>
+  sphere_shade(
+    texture = "imhof2",
+    zscale = 200,
+    vertical_exaggeration = 4
+  ) |>
+  add_shadow(
+    lamb_shade(
+      mb_mountains,
+      vertical_exaggeration = 4
+    ),
+    0
+  ) |>
+  add_water(
+    detect_water(mb_mountains, cutoff = 0.9999999),
+    "dodgerblue4"
+  )
 
-# Add thicker haze
-mb_mountains |>
-	sphere_shade(texture = "imhof2", zscale = 20) |>
-	add_shadow(lamb_shade(), 0) |>
-	add_overlay(haze_shade(optical_depth = 0.6)) |>
-	plot_map()
+plot_map(no_haze)
 
-# Add bluish haze
-mb_mountains |>
-	sphere_shade(texture = "imhof2", zscale = 20) |>
-	add_shadow(lamb_shade(), 0) |>
-	add_overlay(haze_shade(optical_depth = 0.3, color = "skyblue")) |>
-	plot_map()
+# Add default white haze.
+no_haze |>
+  add_overlay(
+    haze_shade(mb_mountains)
+  ) |>
+  plot_map()
 
+# Increase optical depth to make the haze denser everywhere.
+no_haze |>
+  add_overlay(
+    haze_shade(
+      mb_mountains,
+      optical_depth = 1
+    )
+  ) |>
+  plot_map()
+
+# Use a smaller scale height (150 meters) to keep haze concentrated in valleys.
+no_haze |>
+  add_overlay(
+    haze_shade(
+      mb_mountains,
+      optical_depth = 0.7,
+      scale_height = 150
+    )
+  ) |>
+  plot_map()
+
+# Express scale height as a fraction of the elevation range.
+no_haze |>
+  add_overlay(
+    haze_shade(
+      mb_mountains,
+      optical_depth = 0.7,
+      scale_height = 0.02,
+      scale_height_relative = TRUE
+    )
+  ) |>
+  plot_map()
+
+# Raise the haze layer by setting the reference height.
+no_haze |>
+  add_overlay(
+    haze_shade(
+      mb_mountains,
+      optical_depth = 0.6,
+      reference_height = as.numeric(quantile(mb_mountains, 0.25))
+    )
+  ) |>
+  plot_map()
+
+# Add bluish atmospheric haze.
+no_haze |>
+  add_overlay(
+    haze_shade(
+      mb_mountains,
+      color = "#abbbca",
+      optical_depth = 1
+    )
+  ) |>
+  plot_map()
+
+# Blur the haze alpha map to soften transitions.
+no_haze |>
+  add_overlay(
+    haze_shade(
+      mb_mountains,
+      optical_depth = 1,
+      blur = 2
+    )
+  ) |>
+  plot_map()
 }

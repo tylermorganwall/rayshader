@@ -78,6 +78,10 @@
 #'the underlying surface dimensions.
 #'@param clamp_value Default `NA`. Radiance clamp value. Matches
 #'[render_highquality()] default behavior.
+#'@param auto_exposure Default `TRUE`. Whether to use rayrender's automatic
+#'exposure adjustment in the radiance pass. Forwarded to
+#'`rayrender::render_scene()` via [render_highquality()] when supported by the
+#'installed rayrender version.
 #'@param scene_elements Default `NULL`. Extra rayrender objects to add.
 #'@param plot Default `FALSE`. Whether to preview the rendered image.
 #'@param ... Additional parameters passed to [render_highquality()].
@@ -129,6 +133,7 @@ radiance_shade = function(
 	width = NULL,
 	height = NULL,
 	clamp_value = NA,
+	auto_exposure = TRUE,
 	scene_elements = NULL,
 	plot = FALSE,
 	...
@@ -269,6 +274,12 @@ radiance_shade = function(
 						scene_elements = child_args$scene_elements,
 						plot = FALSE
 					)
+					if (
+						"auto_exposure" %in%
+							names(formals(rayrender::render_scene))
+					) {
+						render_args$auto_exposure = child_args$auto_exposure
+					}
 					render_highquality_formals = names(formals(
 						rayshader::render_highquality
 					))
@@ -533,6 +544,7 @@ radiance_shade = function(
 		height = height,
 		ortho_dimensions = ortho_dimensions_value,
 		clamp_value = clamp_value,
+		auto_exposure = auto_exposure,
 		scene_elements = scene_elements,
 		dot_args = dot_args
 	)

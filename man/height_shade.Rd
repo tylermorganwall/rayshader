@@ -33,22 +33,22 @@ montereybay |>
  height_shade() |>
  plot_map()
 
-#Add a shadow:
+# Add lambertian shadows:
 montereybay |>
  height_shade() |>
- add_shadow(ray_shade(vertical_exaggeration = 4),0.1) |>
+ add_shadow(lamb_shade(vertical_exaggeration = 6),0) |>
  plot_map()
 
-#Change the palette:
+# Change the palette:
 montereybay |>
  height_shade(texture = topo.colors(256)) |>
- add_shadow(ray_shade(vertical_exaggeration = 4),0.1) |>
+ add_shadow(lamb_shade(vertical_exaggeration = 6),0) |>
  plot_map()
 
-#Really change the palette (warning: gratuitous use of rainbow palette):
+#Really change the palette (shield your eyes: gratuitous use of `rainbow()`):
 montereybay |>
- height_shade(texture = rainbow(256)) |>
- add_shadow(ray_shade(vertical_exaggeration = 4),0.1) |>
+ height_shade(texture = rev(rainbow(256))) |>
+ add_shadow(lamb_shade(vertical_exaggeration = 6),0) |>
  plot_map()
 \dontshow{\}) # examplesIf}
 }

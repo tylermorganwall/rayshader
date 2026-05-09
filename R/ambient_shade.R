@@ -110,16 +110,18 @@ ambient_shade = function(
 	if (!multicore) {
 		for (angle in seq(0, 360, length.out = sunbreaks + 1)[-(sunbreaks + 1)]) {
 			shademat = shademat +
-				ray_shade(
-					heightmap,
-					anglebreaks = anglebreaks,
-					sunangle = angle,
-					maxsearch = maxsearch,
-					zscale = zscale,
-					lambert = FALSE,
-					cache_mask = cache_mask,
-					progbar = progbar,
-					...
+				with_suppressed_hillshade_zscale_cache(
+					ray_shade(
+						heightmap,
+						anglebreaks = anglebreaks,
+						sunangle = angle,
+						maxsearch = maxsearch,
+						zscale = zscale,
+						lambert = FALSE,
+						cache_mask = cache_mask,
+						progbar = progbar,
+						...
+					)
 				)
 		}
 	} else {
@@ -128,7 +130,6 @@ ambient_shade = function(
 		} else {
 			numbercores = options("cores")[[1]]
 		}
-		cl = parallel::makeCluster(numbercores, ...)
 		if (is.na(numbercores) || numbercores < 1) {
 			numbercores = 1L
 		}
@@ -139,27 +140,29 @@ ambient_shade = function(
 		cl = do.call(
 			parallel::makeCluster,
 			c(list(numbercores), cluster_args)
-		)		
+		)
 		doParallel::registerDoParallel(cl, cores = numbercores)
 		shademat = tryCatch(
 			{
 				foreach::foreach(
 					angle = seq(0, 360, length.out = sunbreaks + 1)[-(sunbreaks + 1)],
-					.export = c("ray_shade"),
+					.export = c("ray_shade", "with_suppressed_hillshade_zscale_cache"),
 					.combine = "+",
 					.packages = "rayshader"
 				) %dopar%
 					{
-						ray_shade(
-							heightmap,
-							anglebreaks = anglebreaks,
-							sunangle = angle,
-							maxsearch = maxsearch,
-							zscale = zscale,
-							lambert = FALSE,
-							cache_mask = cache_mask,
-							progbar = progbar,
-							...
+						with_suppressed_hillshade_zscale_cache(
+							ray_shade(
+								heightmap,
+								anglebreaks = anglebreaks,
+								sunangle = angle,
+								maxsearch = maxsearch,
+								zscale = zscale,
+								lambert = FALSE,
+								cache_mask = cache_mask,
+								progbar = FALSE,
+								...
+							)
 						)
 					}
 			},

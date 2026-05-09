@@ -46,9 +46,9 @@
 #' #Generate base map with no lines
 #' basemap = montbay |>
 #'   height_shade() |>
-#'   add_water(detect_water(montbay), color="dodgerblue") |>
+#'   add_water(detect_water(montbay, zscale=200), color="dodgerblue4") |>
 #'   add_shadow(texture_shade(montbay, detail=1/3, brightness = 15, contrast = 5),0) |>
-#'   add_shadow(lamb_shade(montbay, vertical_exaggeration = 4),0)
+#'   add_shadow(lamb_shade(montbay, zscale=200, vertical_exaggeration = 4),0)
 #'
 #' plot_map(basemap)
 #' #Add waterlines
@@ -103,7 +103,7 @@ generate_waterline_overlay = function(
 	falloff = 1.3,
 	evenly_spaced = FALSE,
 	zscale = 1,
-	cutoff = 0.999,
+	cutoff = 0.9999999,
 	width = NA,
 	height = NA,
 	resolution_multiply = 1,
@@ -144,7 +144,8 @@ generate_waterline_overlay = function(
 			kernel_dim = 21
 		)
 		water_dist_bool[!is_water] = 0
-		water_dist_bool = scales::rescale(water_dist_bool, to = c(0, 1))
+		water_dist_bool = scales::rescale(unclass(water_dist_bool), to = c(0, 1))
+	  class(water_dist_bool) = c('rayimg', 'matrix', 'array')
 	}
 	water_dist_bool = flipud(water_dist_bool)
 	if (!evenly_spaced) {

@@ -333,11 +333,12 @@ test_that("vertical_exaggeration is one-off for cached hillshade and scene zscal
 	clear_hillshade_test_cache()
 	withr::defer(clear_hillshade_test_cache())
 
+	exaggerated_shade = sphere_shade(volcano, zscale = 12, vertical_exaggeration = 2)
+	expect_equal(get_hillshade_zscale(), 12)
 	expect_equal(
-		sphere_shade(volcano, zscale = 12, vertical_exaggeration = 2),
+		exaggerated_shade,
 		sphere_shade(volcano, zscale = 6)
 	)
-	expect_equal(get_hillshade_zscale(), 6)
 
 	clear_hillshade_test_cache()
 	on.exit(rgl::close3d(), add = TRUE)
@@ -356,6 +357,32 @@ test_that("vertical_exaggeration is one-off for cached hillshade and scene zscal
 	expect_equal(get_scene_zscale(), 50)
 	expect_equal(get_scene_vertical_exaggeration(), 2)
 	expect_equal(get_scene_effective_zscale(), 25)
+})
+
+test_that("plot_3d vertical_exaggeration is independent of hillshade exaggeration", {
+	clear_hillshade_test_cache()
+	withr::defer(clear_hillshade_test_cache())
+	on.exit(rgl::close3d(), add = TRUE)
+	local_rgl_use_null()
+
+	hillshade = volcano |>
+		sphere_shade(zscale = 20, vertical_exaggeration = 20) |>
+		add_shadow(
+			ray_shade(vertical_exaggeration = 4, maxsearch = 10),
+			0.5
+		)
+	expect_equal(get_hillshade_zscale(), 20)
+
+	expect_no_condition(plot_3d_test(
+		hillshade,
+		vertical_exaggeration = 1,
+		shadow = FALSE,
+		water = FALSE,
+		windowsize = c(200, 200)
+	))
+	expect_equal(get_scene_zscale(), 20)
+	expect_equal(get_scene_vertical_exaggeration(), 1)
+	expect_equal(get_scene_effective_zscale(), 20)
 })
 
 test_that("ray based hillshade functions reuse cached zscale", {

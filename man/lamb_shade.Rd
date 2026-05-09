@@ -45,17 +45,25 @@ Cache fallback messages are disabled by default. Set \code{options(rayshader.ver
 montereybay |>
  lamb_shade() |>
  plot_map()
-#Increase the intensity by decreasing the zscale
+
+#Increase the intensity by decreasing the vertical exaggeration
 montereybay |>
  lamb_shade(vertical_exaggeration = 4) |>
  plot_map()
+
 #Change the sun direction
 montereybay |>
- lamb_shade(sunangle=45) |>
+ lamb_shade(sunangle=45, vertical_exaggeration = 4) |>
  plot_map()
+
 #Change the sun altitude
 montereybay |>
- lamb_shade(sunaltitude=60) |>
+ lamb_shade(sunaltitude=60, vertical_exaggeration = 4) |>
+ plot_map()
+
+#Change the sun to directly overhead, the shading here represents the slope angle
+montereybay |>
+ lamb_shade(sunaltitude=90, vertical_exaggeration = 8) |>
  plot_map()
 \dontshow{\}) # examplesIf}
 }

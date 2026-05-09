@@ -7,7 +7,7 @@
 detect_water(
   heightmap = NULL,
   zscale = 1,
-  cutoff = 0.999,
+  cutoff = 0.9999999,
   min_area = NULL,
   max_height = NULL,
   normalvectors = NULL,
@@ -24,7 +24,7 @@ specifies whether that point is water or not. If omitted, rayshader will use the
 of 1 meter and the grid values are separated by 10 meters, \code{zscale} would be 10. If omitted and a cached or raster-derived
 \code{zscale} is available, rayshader will reuse that value.}
 
-\item{cutoff}{Default \code{0.999}. The lower limit of the z-component of the unit normal vector to be classified as water.}
+\item{cutoff}{Default \code{1-1e-7}. The lower limit of the z-component of the unit normal vector to be classified as water.}
 
 \item{min_area}{Default \code{length(heightmap)/400}. Minimum area (in units of the height matrix x and y spacing) to be considered a body of water.}
 
