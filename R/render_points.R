@@ -61,7 +61,7 @@
 #'
 #'#Render the 3D map
 #'montereybay |>
-#'  sphere_shade(vertical_exaggeration = 10) |>
+#'  sphere_shade(vertical_exaggeration = 20) |>
 #'  plot_3d(vertical_exaggeration = 4,water=TRUE,
 #'          shadowcolor="#40310a", background = "tan",
 #'          theta=210,  phi=22, zoom=0.20, fov=55)
@@ -98,6 +98,21 @@
 #'                     material = rayrender::glossy,
 #'                     args = list(gloss = 0.5, reflectance = 0.2)
 #'                   )))
+#' #Render the points with a neon light material
+#' render_highquality(
+#' 	light = FALSE,
+#' 	samples = 32,
+#' 	point_radius = 0.5,
+#' 	ground_size = 0,
+#'  min_variance = 0, min_adaptive_size = 1,
+#' 	use_extruded_paths = TRUE,
+#' 	rgl_materials = list(
+#' 		points3d = list(
+#' 			material = rayrender::light,
+#' 			args = list(importance_sample = FALSE, color = "purple", intensity = 100)
+#' 		)
+#' 	)
+#')
 render_points = function(
 	y = NULL,
 	x = NULL,

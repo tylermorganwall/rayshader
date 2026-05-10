@@ -19,7 +19,7 @@ generate_waterline_overlay(
   falloff = 1.3,
   evenly_spaced = FALSE,
   zscale = 1,
-  cutoff = 0.999,
+  cutoff = 0.9999999,
   width = NA,
   height = NA,
   resolution_multiply = 1,
@@ -99,9 +99,9 @@ montbay[montbay < 0] = 0
 #Generate base map with no lines
 basemap = montbay |>
   height_shade() |>
-  add_water(detect_water(montbay), color="dodgerblue") |>
+  add_water(detect_water(montbay, zscale=200), color="dodgerblue4") |>
   add_shadow(texture_shade(montbay, detail=1/3, brightness = 15, contrast = 5),0) |>
-  add_shadow(lamb_shade(montbay, vertical_exaggeration = 4),0)
+  add_shadow(lamb_shade(montbay, zscale=200, vertical_exaggeration = 4),0)
 
 plot_map(basemap)
 #Add waterlines

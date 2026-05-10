@@ -39,7 +39,8 @@
 #'#with an addition lambertian layer added with lamb_shade() to improve topographic clarity.
 #'bigmb = resize_spatial(montereybay, scale=2, method_up="cubic")
 #'bigmb |>
-#'  sphere_shade(texture = create_texture("red","red","red","red","white")) |>
+#'  sphere_shade(texture = create_texture("red","red","red","red","white"),
+#'               vertical_exaggeration = 20) |>
 #'  add_shadow(ambient_shade(maxsearch = 100, multicore = TRUE,
 #'                           vertical_exaggeration = 20),0) |>
 #'  add_shadow(lamb_shade(),0.5) |>

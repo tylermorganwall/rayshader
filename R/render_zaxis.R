@@ -37,7 +37,7 @@
 #'@param zaxis_title Default `"auto"`. Title for the z-axis. If `"auto"`, rayshader
 #'uses the cached height aesthetic label from [plot_gg()] scenes when available.
 #'Set to `NULL` to omit the title, or pass a character string to override it.
-#'@param zaxis_title_location Default `"side"`. Title location. Options are
+#'@param zaxis_title_location Default `"top"`. Title location. Options are
 #'`"side"` and `"top"`.
 #'@param zaxis_title_offset Default `2.5`. Title offset multiplier. For
 #'`zaxis_title_location = "side"`, this moves the title outward from the axis.
@@ -150,7 +150,7 @@ render_zaxis = function(
 	zaxis_breaks = NULL,
 	zaxis_labels = NULL,
 	zaxis_title = "auto",
-	zaxis_title_location = "side",
+	zaxis_title_location = "top",
 	zaxis_title_offset = 2.5,
 	zaxis_color = "black",
 	zaxis_linewidth = 2,

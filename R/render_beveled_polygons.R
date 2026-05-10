@@ -77,7 +77,7 @@
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #' #Render the county borders as polygons in Monterey Bay as terrain
 #' montereybay |>
-#'   sphere_shade(texture = "desert") |>
+#'   sphere_shade(texture = "desert",vertical_exaggeration = 20) |>
 #'   add_shadow(ray_shade(vertical_exaggeration = 4)) |>
 #'   plot_3d(water = TRUE, windowsize = 800, watercolor = "dodgerblue",
 #'           background = "pink", vertical_exaggeration = 4)
@@ -88,63 +88,64 @@
 #' mont_county_buff = sf::st_simplify(sf::st_buffer(monterey_counties_sf,-0.003), dTolerance=0.001)
 #'
 #' render_beveled_polygons(mont_county_buff,  flat_shading  = TRUE, angle = 45 ,
-#'                         bevel_width=2000, material = "red",
-#'                         bevel_height = 5000, base_height=0)
+#'                         bevel_width=300, material = "red", clear_previous = T,
+#'                         bevel_height = 800, base_height=0)
 #' render_camera(theta = 0,  phi = 90, zoom = 0.65, fov = 0)
 #' render_snapshot()
 #' render_camera(theta=194, phi= 35,   zoom = 0.5, fov= 80)
 #' render_snapshot()
 #'
-#' # Changing the color of the beveled top:
-#' render_beveled_polygons(mont_county_buff,  flat_shading  = TRUE, angle = 45 ,
-#'                         bevel_width=2000, material = "tan",
+#' # Changing the color of the beveled top and reduce the angle
+#' render_beveled_polygons(mont_county_buff,  flat_shading  = TRUE, angle = 15 ,
+#'                         bevel_width=300, material = "tan",
 #'                         bevel_material = "darkgreen", clear_previous=TRUE,
-#'                         bevel_height = 5000, base_height=0)
+#'                         bevel_height = 1000, base_height=0)
+#' render_snapshot()
 #' # We can create a nice curved surface by passing in a bevel generated with the
 #' # `raybevel::generate_bevel()` function.
 #' render_beveled_polygons(mont_county_buff, flat_shading  = TRUE,
 #'                         bevel = raybevel::generate_bevel("exp",bevel_end = 0.4),
-#'                         #max_height = 10, scale_all_max = TRUE, set_max_height = TRUE,
 #'                         material = rayvertex::material_list(diffuse="red",
 #'                                                             ambient = "darkred",
 #'                                                             diffuse_intensity = 0.2,
 #'                                                             ambient_intensity = 0.1),
 #'                         light_intensity = 1, light_relative = FALSE,
-#'                         bevel_height = 5000,
+#'                         bevel_height = 1000,
 #'                         base_height=0, clear_previous = TRUE)
 #' render_snapshot()
 #'
 #' # While the bevels all start at the same point in the above example,
 #' # they rise to different levels due to being scaled by the maximum internal distance
 #' # in the polygon. Setting `scale_all_max = TRUE` ensures the bevels are all scaled to the
-#' # same maximum height (in this case, 3000m above the 5000m bevel start height).
+#' # same maximum height (in this case, 1500m above the 1000m bevel start height).
 #' render_beveled_polygons(mont_county_buff, flat_shading  = TRUE,
 #'                  bevel = raybevel::generate_bevel("exp",bevel_end = 0.4),
-#'                  max_height = 3000, scale_all_max = TRUE, set_max_height = TRUE,
+#'                  max_height = 1500, scale_all_max = TRUE, set_max_height = TRUE,
 #'                  material = rayvertex::material_list(diffuse="red",
 #'                                                      ambient = "darkred",
 #'                                                      diffuse_intensity = 0.2,
 #'                                                      ambient_intensity = 0.1),
 #'                  light_intensity = 1, light_relative = FALSE,
-#'                  bevel_height = 5000,
+#'                  bevel_height = 500,
 #'                  base_height=0, clear_previous = TRUE)
 #' render_snapshot()
 #'
 #' # Rendering the polygons with `render_highquality()`
-#'   render_highquality()
+#' render_highquality(rgl_materials = list("obj_raymesh_beveled_polygon" = rayrender::glossy(color = "#900",gloss=0.4)))
 #'
 #' # We can scale the size of the polygon to a column in the `sf` object as well:
 #' # raybevel::generate_bevel() function. We can scale this data down using the `scale_data`
 #' # argument. Note that this is applied in scene units, and that you
 #' # must think carefully about your scales and values if trying to represent a meaningful
 #' # data visualization with this object.
-#' render_beveled_polygons(mont_county_buff,  flat_shading  = TRUE, angle = 45, bevel_width=1000,
-#'                  data_column_top = "ALAND", scale_data = 1e-5,
-#'                  #max_height = 1000, scale_all_max = TRUE, set_max_height = TRUE,
+#' render_beveled_polygons(mont_county_buff,  flat_shading  = TRUE, angle = 45, bevel_width=100,
+#'                  data_column_top = "ALAND", scale_data = 2e-6,
 #'                  material = rayvertex::material_list(diffuse="red"),
-#'                  light_intensity = 1, light_relative = FALSE,
+#'                  light_intensity = 1, light_relative = FALSE, 
 #'                  clear_previous = TRUE)
-#' render_snapshot()
+#' render_zaxis(zaxis_data = "beveled_polygon")
+#' render_highquality(rgl_materials = list("obj_raymesh_beveled_polygon" = rayrender::glossy(color = "#900",gloss=0.4)))
+
 render_beveled_polygons = function(
 	polygon,
 	extent = NULL,

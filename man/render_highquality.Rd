@@ -248,12 +248,13 @@ either \code{\link[=convert_path_to_animation_coords]{convert_path_to_animation_
 \dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Render the volcano dataset using pathtracing
 volcano |>
- sphere_shade(vertical_exaggeration = 30) |>
- plot_3d(vertical_exaggeration = 10)
-render_highquality(min_variance = 0, sample_method = "sobol_blue")
+ sphere_shade(vertical_exaggeration = 2) |>
+ plot_3d(vertical_exaggeration = 1/2, shadowdepth=min(volcano)*0.8)
+render_highquality(min_variance = 0, sample_method = "sobol_blue", samples = 16)
 
 #Change position of light
-render_highquality(lightdirection = 45, min_variance = 0, sample_method = "sobol_blue")
+render_highquality(lightdirection = 45, min_variance = 0,
+                  sample_method = "sobol_blue", samples = 16)
 
 #Change vertical position of light
 render_highquality(lightdirection = 45, lightaltitude = 10,
@@ -281,19 +282,19 @@ render_highquality(lightdirection = c(0,120,240), lightaltitude=45,
                   lightcolor=c("red","green","blue"),
                   scene_elements = rayrender::sphere(z=-60,y=0,
                                                      radius=20,material=rayrender::metal()),
-                  min_variance = 0)
+                  min_variance = 0, samples = 16)
 
 #Add a red light to the volcano and change the ambient light to dusk
 render_camera(theta=45,phi=45)
 render_highquality(lightdirection = c(240), lightaltitude=30,
                   lightcolor=c("#5555ff"),
-                  scene_elements = rayrender::sphere(z=0,y=15, x=-18, radius=5,
-                                   material=rayrender::light(color="red",intensity=10)),
+                  scene_elements = rayrender::sphere(z=0,y=6, x=-18, radius=5,
+                                   material=rayrender::light(color="red",intensity=100)),
                   min_variance = 0, samples = 16)
 #Manually change the camera location and direction
-render_camera(theta=45,phi=45,fov=90)
+render_camera(fov=111)
 render_highquality(lightdirection = c(240), lightaltitude=30, lightcolor=c("#5555ff"),
-                  camera_location = c(50,10,10), camera_lookat = c(0,15,0),
+                  camera_location = c(-8.91, 24.36, 6.96), camera_lookat = c(4.25, 20.86, 2.18),
                   scene_elements = rayrender::sphere(z=0,y=15, x=-18, radius=5,
                                    material=rayrender::light(color="red",intensity=10)),
                   min_variance = 0, samples = 16)
@@ -304,53 +305,56 @@ render_highquality(lightdirection = c(240), lightaltitude=30, lightcolor=c("#555
 library(sf)
 #Set location of washington monument
 washington_monument_location =  st_point(c(-77.035249, 38.889462))
-wm_point = washington_monument_location |>
- st_point() |>
+wm_point = washington_monument_location |> 
  st_buffer(0.01) |>
  st_sfc(crs = 4326) |>
  st_transform(st_crs(washington_monument_multipolygonz))
 
 elevation_data = elevatr::get_elev_raster(locations = wm_point, z = 14)
 
-scene_bbox = st_bbox(st_buffer(wm_point,300))
+wash_point = washington_monument_location |> 
+ st_sfc(crs = 4326) |>
+ st_transform(st_crs(washington_monument_multipolygonz))
+scene_bbox = st_bbox(st_buffer(wash_point,500))
 cropped_data = raster::crop(elevation_data, scene_bbox)
 
 #Plot a 3D map of the national mall
 cropped_data |>
- height_shade() |>
- add_shadow(lamb_shade(), 0) |>
- plot_3d(zscale=3.7, water = TRUE, waterdepth = 1,
+ sphere_shade(vertical_exaggeration = 30) |>
+ plot_3d(water = TRUE, waterdepth = 1.5,
          soliddepth=-50, windowsize = 800)
 #Zoom in on the monument
-render_camera(theta=45,  phi=0, zoom= 0.03, fov=130)
+render_camera(theta=115,  phi=25, zoom= 0.25, fov=40)
 #Render the national monument at solar noon on the solstice
 rgl::par3d(ignoreExtent = TRUE)
 render_multipolygonz(washington_monument_multipolygonz,
                     zscale = 4, color = "grey80")
 #Render using the built-in (but less accurate) Hosek model.
 # Here's it's more yellow than it should be, but it's accurate enough for most renders.
+# We manually set the exposure (via iso) down to capture the softer morning light.
 render_highquality(
 min_variance = 0,
 samples = 16,
 long = -77.035249,
-lat = 38.889462,
+lat = 38.889462, 
 iso = 8,
 clamp_value = 10000,
-datetime = as.POSIXct("2025-12-21 16:00:00", tz = "EST")
+datetime = as.POSIXct("2025-12-21 08:00:00", tz = "EST")
 )
 
-# Render the more-accurate Praguq model (that requires
+# Render the more-accurate Prague model (that requires
 # supplemental data that will be downloaded on the first call) and
 # specify a higher resolution environment map via `sky_args`
+# We use auto_exposure to account for the high mid-day radiance.
 render_highquality(
 min_variance = 0,
 samples = 16,
 long = -77.035249,
 lat = 38.889462,
 sky_args = list(hosek = FALSE,resolution=4000),
-iso = 8,
+auto_exposure = TRUE,
 clamp_value = 10000,
-datetime = as.POSIXct("2025-12-21 16:00:00", tz = "EST")
+datetime = as.POSIXct("2025-12-21 11:00:00", tz = "EST")
 )
 \dontshow{\}) # examplesIf}
 }

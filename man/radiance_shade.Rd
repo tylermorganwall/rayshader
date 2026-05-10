@@ -39,14 +39,15 @@ radiance_shade(
   height = NULL,
   clamp_value = NA,
   auto_exposure = TRUE,
+  capture_scene = FALSE,
   scene_elements = NULL,
   plot = FALSE,
   ...
 )
 }
 \arguments{
-\item{heightmap}{Default \code{NULL}. If \code{NULL}, uses the current rayshader rgl
-scene when available, otherwise falls back to cached 2D hillshade metadata.
+\item{heightmap}{Default \code{NULL}. If \code{NULL}, uses cached 2D hillshade metadata
+by default. Set \code{capture_scene = TRUE} to use the current rayshader rgl scene.
 If a matrix (or supported raster input), renders a top-down radiance pass for
 that data directly.}
 
@@ -139,6 +140,10 @@ exposure adjustment in the radiance pass. Forwarded to
 \code{rayrender::render_scene()} via \code{\link[=render_highquality]{render_highquality()}} when supported by the
 installed rayrender version.}
 
+\item{capture_scene}{Default \code{FALSE}. If \code{TRUE} and \code{heightmap = NULL},
+renders the currently displayed rayshader rgl scene instead of the cached 2D
+hillshade context.}
+
 \item{scene_elements}{Default \code{NULL}. Extra rayrender objects to add.}
 
 \item{plot}{Default \code{FALSE}. Whether to preview the rendered image.}
@@ -150,14 +155,15 @@ RGBA array representing the top-down radiance render.
 }
 \description{
 Renders a top-down orthographic radiance pass of either the
-current 3D rayshader scene or a supplied elevation matrix.
+current hillshade cache, the current 3D rayshader scene, or a supplied
+elevation matrix.
 
 Cache fallback messages are disabled by default. Set \code{options(rayshader.verbose_scene_cache = TRUE)} to print when cached metadata is reused.
 
-When called with no \code{heightmap}, this function uses the currently displayed
-rayshader 3D scene when one exists. If no scene is open, it falls back to the
-cached 2D hillshade heightmap and, when available, the cached hillshade/map
-texture from the most recent rayshader hillshading chain. When a raw matrix is
+When called with no \code{heightmap}, this function uses the cached 2D hillshade
+heightmap and, when available, the cached hillshade/map texture from the most
+recent rayshader hillshading chain. Set \code{capture_scene = TRUE} to instead
+render the currently displayed rayshader 3D scene. When a raw matrix is
 supplied, rayshader builds a temporary surface and applies \code{texture} (or a
 constant \code{color}, default \code{"grey50"}).
 
@@ -180,7 +186,7 @@ plot_map()
 #Plot using sky args
 montereybay |>
 height_shade(texture = topo.colors(256)) |>
-add_overlay(radiance_shade(vertical_exaggeration = 10, 
+add_overlay(radiance_shade(vertical_exaggeration = 20,
                             sky_sun_elevation = 5, sky_sun_azimuth = 315), 1) |>
 plot_map()
 \dontshow{\}) # examplesIf}

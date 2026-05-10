@@ -15,7 +15,7 @@ render_zaxis(
   zaxis_breaks = NULL,
   zaxis_labels = NULL,
   zaxis_title = "auto",
-  zaxis_title_location = "side",
+  zaxis_title_location = "top",
   zaxis_title_offset = 2.5,
   zaxis_color = "black",
   zaxis_linewidth = 2,
@@ -68,7 +68,7 @@ breaks are generated from the full scene height range (minimum to maximum elevat
 uses the cached height aesthetic label from \code{\link[=plot_gg]{plot_gg()}} scenes when available.
 Set to \code{NULL} to omit the title, or pass a character string to override it.}
 
-\item{zaxis_title_location}{Default \code{"side"}. Title location. Options are
+\item{zaxis_title_location}{Default \code{"top"}. Title location. Options are
 \code{"side"} and \code{"top"}.}
 
 \item{zaxis_title_offset}{Default \code{2.5}. Title offset multiplier. For

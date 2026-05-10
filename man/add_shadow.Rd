@@ -28,24 +28,24 @@ Multiplies a texture array or shadow map by a shadow map.
 #First we plot the sphere_shade() hillshade of `montereybay` with no shadows
 
 montereybay |>
- sphere_shade(vertical_exaggeration=0.5) |>
+ sphere_shade(vertical_exaggeration=20) |>
  plot_map()
 
 #Raytrace the `montereybay` elevation map and add that shadow to the output of sphere_shade()
 montereybay |>
- sphere_shade(vertical_exaggeration=0.5) |>
+ sphere_shade(vertical_exaggeration=20) |>
  add_shadow(ray_shade(sunaltitude=20, vertical_exaggeration = 4),max_darken=0.3) |>
  plot_map()
 
 #Increase the intensity of the shadow map with the max_darken argument.
 montereybay |>
- sphere_shade(vertical_exaggeration=0.5) |>
+ sphere_shade(vertical_exaggeration=20) |>
  add_shadow(ray_shade(sunaltitude=20, vertical_exaggeration = 4),max_darken=0.1) |>
  plot_map()
 
 #Decrease the intensity of the shadow map.
 montereybay |>
- sphere_shade(vertical_exaggeration=0.5) |>
+ sphere_shade(vertical_exaggeration=20) |>
  add_shadow(ray_shade(sunaltitude=20, vertical_exaggeration = 4),max_darken=0.7) |>
  plot_map()
 \dontshow{\}) # examplesIf}
