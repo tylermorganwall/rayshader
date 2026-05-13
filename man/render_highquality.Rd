@@ -35,7 +35,9 @@ render_highquality(
   text_angle = NULL,
   text_size = 12,
   text_offset = c(0, text_size/2, 0),
+  text_render = c("screen", "world"),
   line_radius = 0.5,
+  line_render = c("auto", "screen", "world"),
   point_radius = 0.5,
   smooth_line = FALSE,
   use_extruded_paths = FALSE,
@@ -159,7 +161,15 @@ will specify the absolute angle all the labels are facing. If three angles, this
 
 \item{text_offset}{Default \code{c(0,0,0)}. Offset to be applied to all text labels.}
 
+\item{text_render}{Default \code{"screen"}. Whether labels and z-axis text are rendered as screen-space
+annotations (\code{"screen"}) or as 3D text geometry (\code{"world"}).}
+
 \item{line_radius}{Default \code{0.5}. Radius of line/path segments.}
+
+\item{line_render}{Default \code{"auto"}. Whether rgl line objects are rendered as screen-space annotations
+or 3D geometry. \code{"auto"} renders z-axis lines/ticks and \code{\link[=render_label]{render_label()}} connector lines in screen
+space while keeping paths and contours as 3D geometry. Use \code{"screen"} for all line/path objects or
+\code{"world"} for the previous 3D behavior.}
 
 \item{point_radius}{Default \code{1}. Radius of 3D points (rendered with \code{\link[=render_points]{render_points()}}). This scales the existing
 value of size specified in \code{\link[=render_points]{render_points()}}.}

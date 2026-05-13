@@ -63,21 +63,22 @@
 #' sf::sf_use_s2(FALSE)
 #' mont_county_buff = sf::st_simplify(sf::st_buffer(monterey_counties_sf,-0.003), dTolerance=0.001)
 #'
-#' render_polygons(mont_county_buff, top = 1000,
+#' render_polygons(mont_county_buff, top = 2000,
 #'                 parallel = FALSE)
 #' render_snapshot()
 #' #We can specify the bottom of the polygons as well. Here I float the polygons above the surface
 #' #by specifying the bottom argument. We clear the previous polygons with `clear_previous = TRUE`.
 #' render_camera(theta=-60,  phi=20, zoom = 0.85, fov=0)
-#' render_polygons(mont_county_buff, bottom = 190, top=200,
+#' render_polygons(mont_county_buff, bottom = 24000, top=25000,
 #'                 parallel=FALSE,clear_previous=TRUE)
 #' render_snapshot()
 #' #We can set the height of the data to a column in the sf object: we'll use the land area.
 #' #We'll have to scale this value because its max value is 2.6 billion:
-#' render_camera(theta=-60,  phi=60, zoom = 0.85, fov=30)
+#' render_camera(theta=-60,  phi=40, zoom = 0.85, fov=30)
 #' render_polygons(mont_county_buff, data_column_top = "ALAND",
-#'                 scale_data = 300/(2.6E9), color = "chartreuse4",
+#'                 scale_data = 300/(2.6E7), color = "chartreuse4",
 #'                 clear_previous = TRUE)
+#' render_zaxis(zaxis_data = "polygon", zaxis_location = "topright")
 #' render_snapshot()
 #' #This function also works with `render_highquality()`
 #' render_highquality(samples = 16, min_variance = 0)
