@@ -123,7 +123,22 @@ test_that("render_highquality() defaults label and z-axis overlays to screen spa
     zaxis_title = "Z"
   )
 
-  scene = render_highquality(return_scene = TRUE, light = FALSE)
+  scene = render_highquality(
+    return_scene = TRUE,
+    light = FALSE,
+    text_occlusion_tolerance = 0.02,
+    line_occlusion_tolerance = 0.03,
+    screen_text_args = list(
+      background_color = "yellow",
+      background_alpha = 0.25,
+      halo_color = "white",
+      halo_expand = 2
+    ),
+    screen_line_args = list(
+      lineend = "butt",
+      clip = FALSE
+    )
+  )
   screen_text = attr(scene, "screen_text")
   screen_line = attr(scene, "screen_line")
 
@@ -132,6 +147,37 @@ test_that("render_highquality() defaults label and z-axis overlays to screen spa
   expect_true("A" %in% screen_text$label)
   expect_true("Z" %in% screen_text$label)
   expect_gte(nrow(screen_line), 3)
+  screen_text_labels = trimws(as.character(screen_text$label))
+  zaxis_label_rows = screen_text_labels %in% c("0", "10")
+  zaxis_title_row = screen_text_labels == "Z"
+  zaxis_tick_rows = abs(screen_line$x - screen_line$xend) < 1e-8 &
+    abs(screen_line$y - screen_line$yend) < 1e-8 &
+    abs(screen_line$z - screen_line$zend) < 1e-8
+  zaxis_tick_y = sort(screen_line$y[zaxis_tick_rows])
+  expect_equal(
+    sort(screen_text$y[zaxis_label_rows]),
+    zaxis_tick_y,
+    tolerance = 1e-6
+  )
+  expect_equal(unique(screen_text$size[zaxis_label_rows]), 16 * 0.8)
+  expect_equal(screen_text$size[zaxis_title_row], 16)
+  expect_equal(
+    screen_text$y[zaxis_title_row],
+    mean(zaxis_tick_y),
+    tolerance = 1e-6
+  )
+  expect_true(all(screen_text$occlusion))
+  expect_equal(unique(screen_text$occlusion_mode), "label")
+  expect_equal(unique(screen_text$occlusion_tolerance), 0.02)
+  expect_equal(unique(screen_text$background_color), "yellow")
+  expect_equal(unique(screen_text$background_alpha), 0.25)
+  expect_equal(unique(screen_text$halo_color), "white")
+  expect_equal(unique(screen_text$halo_expand), 2)
+  expect_true(all(screen_line$occlusion))
+  expect_equal(unique(screen_line$occlusion_mode), "line")
+  expect_equal(unique(screen_line$occlusion_tolerance), 0.03)
+  expect_equal(unique(screen_line$lineend), "butt")
+  expect_false(any(screen_line$clip))
 
   world_scene = render_highquality(
     return_scene = TRUE,
@@ -141,6 +187,38 @@ test_that("render_highquality() defaults label and z-axis overlays to screen spa
   )
   expect_null(attr(world_scene, "screen_text"))
   expect_null(attr(world_scene, "screen_line"))
+  expect_error(
+    render_highquality(
+      return_scene = TRUE,
+      light = FALSE,
+      text_occlusion_mode = "line"
+    ),
+    "`text_occlusion_mode` must be one of"
+  )
+  expect_error(
+    render_highquality(
+      return_scene = TRUE,
+      light = FALSE,
+      line_occlusion_mode = "label"
+    ),
+    "`line_occlusion_mode` must be one of"
+  )
+  expect_error(
+    render_highquality(
+      return_scene = TRUE,
+      light = FALSE,
+      screen_text_args = "not a list"
+    ),
+    "`screen_text_args` must be a named list"
+  )
+  expect_error(
+    render_highquality(
+      return_scene = TRUE,
+      light = FALSE,
+      screen_line_args = list(not_a_screen_line_arg = TRUE)
+    ),
+    "`screen_line_args` contains unsupported argument"
+  )
 })
 
 test_that("render_highquality() can render paths as screen-space lines", {

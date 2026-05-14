@@ -21,7 +21,7 @@ render_zaxis_internal = function(
   zaxis_labels = NULL,
   zaxis_title = "auto",
   zaxis_title_location = "side",
-  zaxis_title_offset = 2.5,
+  zaxis_title_offset = 5,
   zaxis_color = "black",
   zaxis_linewidth = 2,
   zaxis_text_offset = 1.5,
@@ -524,11 +524,12 @@ render_zaxis_internal = function(
 
   if (!is.null(zaxis_title)) {
     if (zaxis_title_location == "side") {
+      title_unit = -outside_unit
       title_offset = max(zaxis_title_offset, zaxis_text_offset + 1)
-      title_x = anchor_xyz[1] + outside_unit[1] * tick_len * title_offset
+      title_x = anchor_xyz[1] + title_unit[1] * tick_len * title_offset
       title_y = mean(c(y_min, y_max))
-      title_z = anchor_xyz[3] + outside_unit[2] * tick_len * title_offset
-      title_adj = c(text_adj_x, 0.5)
+      title_z = anchor_xyz[3] + title_unit[2] * tick_len * title_offset
+      title_adj = c(1 - text_adj_x, 0.5)
     } else {
       title_side_offset = max(0.5, zaxis_text_offset)
       y_span = max(abs(y_max - y_min), 1 / zscale)

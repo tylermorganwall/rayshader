@@ -37,10 +37,12 @@
 #'@param zaxis_title Default `"auto"`. Title for the z-axis. If `"auto"`, rayshader
 #'uses the cached height aesthetic label from [plot_gg()] scenes when available.
 #'Set to `NULL` to omit the title, or pass a character string to override it.
-#'@param zaxis_title_location Default `"top"`. Title location. Options are
-#'`"side"` and `"top"`.
-#'@param zaxis_title_offset Default `2.5`. Title offset multiplier. For
-#'`zaxis_title_location = "side"`, this moves the title outward from the axis.
+#'@param zaxis_title_location Default `"side"`. Title location. Options are
+#'`"side"` and `"top"`. `"side"` places the title opposite the tick labels and
+#'centered on the axis.
+#'@param zaxis_title_offset Default `5`. Title offset multiplier. For
+#'`zaxis_title_location = "side"`, this moves the title away from the axis on
+#'the side opposite the tick labels.
 #'For `"top"`, this moves the title above the top of the axis.
 #'@param zaxis_color Default `"black"`. Axis/tick/label color.
 #'@param zaxis_linewidth Default `2`. Axis line width.
@@ -140,204 +142,209 @@
 #')
 #'render_snapshot()
 render_zaxis = function(
-	extent = NULL,
-	panel = NULL,
-	zscale = 1,
-	vertical_exaggeration = 1,
-	heightmap = NULL,
-	zaxis_data = "auto",
-	zaxis_location = "auto",
-	zaxis_breaks = NULL,
-	zaxis_labels = NULL,
-	zaxis_title = "auto",
-	zaxis_title_location = "top",
-	zaxis_title_offset = 2.5,
-	zaxis_color = "black",
-	zaxis_linewidth = 2,
-	zaxis_text_offset = 0,
-	zaxis_corner_offset = NULL,
-	zaxis_tick_size = NULL
+  extent = NULL,
+  panel = NULL,
+  zscale = 1,
+  vertical_exaggeration = 1,
+  heightmap = NULL,
+  zaxis_data = "auto",
+  zaxis_location = "auto",
+  zaxis_breaks = NULL,
+  zaxis_labels = NULL,
+  zaxis_title = "auto",
+  zaxis_title_location = "side",
+  zaxis_title_offset = 5,
+  zaxis_color = "black",
+  zaxis_linewidth = 2,
+  zaxis_text_offset = 0,
+  zaxis_corner_offset = NULL,
+  zaxis_tick_size = NULL
 ) {
-	if (rgl::cur3d() == 0) {
-		stop("No rgl window currently open.")
-	}
-	zscale = resolve_scene_render_effective_zscale(
-		zscale = zscale,
-		zscale_missing = missing(zscale),
-		vertical_exaggeration = vertical_exaggeration,
-		vertical_exaggeration_missing = missing(vertical_exaggeration),
-		caller = "render_zaxis"
-	)
-	extent_was_missing = missing(extent)
-	if (!extent_was_missing && !is.null(extent)) {
-		cache_scene_extent(
-			extent,
-			label = format_scene_cache_label(deparse(substitute(extent)))
-		)
-	}
-	heightmap = resolve_scene_render_heightmap(
-		heightmap,
-		caller = "render_zaxis"
-	)
-	use_ggplot_panel_extent = zaxis_location_uses_panel_extent(zaxis_location)
-	if (!use_ggplot_panel_extent && is.null(extent)) {
-		extent = get_cached_plot_gg_scene_extent_for_zaxis(heightmap = heightmap)
-	}
-	extent = resolve_scene_render_extent(
-		extent = extent,
-		heightmap = heightmap,
-		caller = "render_zaxis",
-		panel = panel,
-		allow_ggplot_extent = use_ggplot_panel_extent
-	)
-	render_zaxis_internal(
-		zaxis = TRUE,
-		extent = extent,
-		zscale = zscale,
-		heightmap = heightmap,
-		zaxis_data = zaxis_data,
-		zaxis_location = zaxis_location,
-		zaxis_breaks = zaxis_breaks,
-		zaxis_labels = zaxis_labels,
-		zaxis_title = zaxis_title,
-		zaxis_title_location = zaxis_title_location,
-		zaxis_title_offset = zaxis_title_offset,
-		zaxis_color = zaxis_color,
-		zaxis_linewidth = zaxis_linewidth,
-		zaxis_text_offset = zaxis_text_offset,
-		zaxis_corner_offset = zaxis_corner_offset,
-		zaxis_tick_size = zaxis_tick_size
-	)
+  if (rgl::cur3d() == 0) {
+    stop("No rgl window currently open.")
+  }
+  zscale = resolve_scene_render_effective_zscale(
+    zscale = zscale,
+    zscale_missing = missing(zscale),
+    vertical_exaggeration = vertical_exaggeration,
+    vertical_exaggeration_missing = missing(vertical_exaggeration),
+    caller = "render_zaxis"
+  )
+  extent_was_missing = missing(extent)
+  if (!extent_was_missing && !is.null(extent)) {
+    cache_scene_extent(
+      extent,
+      label = format_scene_cache_label(deparse(substitute(extent)))
+    )
+  }
+  heightmap = resolve_scene_render_heightmap(
+    heightmap,
+    caller = "render_zaxis"
+  )
+  use_ggplot_panel_extent = zaxis_location_uses_panel_extent(zaxis_location)
+  if (!use_ggplot_panel_extent && is.null(extent)) {
+    extent = get_cached_plot_gg_scene_extent_for_zaxis(heightmap = heightmap)
+  }
+  extent = resolve_scene_render_extent(
+    extent = extent,
+    heightmap = heightmap,
+    caller = "render_zaxis",
+    panel = panel,
+    allow_ggplot_extent = use_ggplot_panel_extent
+  )
+  render_zaxis_internal(
+    zaxis = TRUE,
+    extent = extent,
+    zscale = zscale,
+    heightmap = heightmap,
+    zaxis_data = zaxis_data,
+    zaxis_location = zaxis_location,
+    zaxis_breaks = zaxis_breaks,
+    zaxis_labels = zaxis_labels,
+    zaxis_title = zaxis_title,
+    zaxis_title_location = zaxis_title_location,
+    zaxis_title_offset = zaxis_title_offset,
+    zaxis_color = zaxis_color,
+    zaxis_linewidth = zaxis_linewidth,
+    zaxis_text_offset = zaxis_text_offset,
+    zaxis_corner_offset = zaxis_corner_offset,
+    zaxis_tick_size = zaxis_tick_size
+  )
 }
 
 get_cached_plot_gg_scene_extent_for_zaxis = function(heightmap = NULL) {
-	panel_info = get_cached_plot_gg_panel_info(
-		heightmap = heightmap,
-		default = NULL
-	)
-	if (
-		is.null(panel_info) ||
-			!is.data.frame(panel_info) ||
-			!nrow(panel_info) ||
-			!all(c(
-				"extent_xmin",
-				"extent_xmax",
-				"extent_ymin",
-				"extent_ymax"
-			) %in% names(panel_info))
-	) {
-		return(NULL)
-	}
-	extent_vals = c(
-		xmin = min(panel_info$extent_xmin, na.rm = TRUE),
-		xmax = max(panel_info$extent_xmax, na.rm = TRUE),
-		ymin = min(panel_info$extent_ymin, na.rm = TRUE),
-		ymax = max(panel_info$extent_ymax, na.rm = TRUE)
-	)
-	if (any(!is.finite(extent_vals))) {
-		return(NULL)
-	}
-	attr(extent_vals, "panel_info") = panel_info
-	extent_vals
+  panel_info = get_cached_plot_gg_panel_info(
+    heightmap = heightmap,
+    default = NULL
+  )
+  if (
+    is.null(panel_info) ||
+      !is.data.frame(panel_info) ||
+      !nrow(panel_info) ||
+      !all(
+        c(
+          "extent_xmin",
+          "extent_xmax",
+          "extent_ymin",
+          "extent_ymax"
+        ) %in%
+          names(panel_info)
+      )
+  ) {
+    return(NULL)
+  }
+  extent_vals = c(
+    xmin = min(panel_info$extent_xmin, na.rm = TRUE),
+    xmax = max(panel_info$extent_xmax, na.rm = TRUE),
+    ymin = min(panel_info$extent_ymin, na.rm = TRUE),
+    ymax = max(panel_info$extent_ymax, na.rm = TRUE)
+  )
+  if (any(!is.finite(extent_vals))) {
+    return(NULL)
+  }
+  attr(extent_vals, "panel_info") = panel_info
+  extent_vals
 }
 
 zaxis_location_uses_panel_extent = function(zaxis_location = "auto") {
-	if (is.null(zaxis_location) || !length(zaxis_location)) {
-		return(TRUE)
-	}
-	location_key = tolower(as.character(zaxis_location)[1])
-	location_key = gsub("[-_[:space:]]", "", location_key)
-	location_key == "auto" || location_key %in% c(
-		"panel",
-		"panelbottomleft",
-		"panelbl",
-		"panelbottomright",
-		"panelbr",
-		"paneltopleft",
-		"paneltl",
-		"paneltopright",
-		"paneltr"
-	)
+  if (is.null(zaxis_location) || !length(zaxis_location)) {
+    return(TRUE)
+  }
+  location_key = tolower(as.character(zaxis_location)[1])
+  location_key = gsub("[-_[:space:]]", "", location_key)
+  location_key == "auto" ||
+    location_key %in%
+      c(
+        "panel",
+        "panelbottomleft",
+        "panelbl",
+        "panelbottomright",
+        "panelbr",
+        "paneltopleft",
+        "paneltl",
+        "paneltopright",
+        "paneltr"
+      )
 }
 
 zaxis_dot_names = function() {
-	c(
-		"zaxis",
-		"zaxis_data",
-		"zaxis_location",
-		"zaxis_breaks",
-		"zaxis_labels",
-		"zaxis_title",
-		"zaxis_title_location",
-		"zaxis_title_offset",
-		"zaxis_color",
-		"zaxis_linewidth",
-		"zaxis_text_offset",
-		"zaxis_corner_offset",
-		"zaxis_tick_size"
-	)
+  c(
+    "zaxis",
+    "zaxis_data",
+    "zaxis_location",
+    "zaxis_breaks",
+    "zaxis_labels",
+    "zaxis_title",
+    "zaxis_title_location",
+    "zaxis_title_offset",
+    "zaxis_color",
+    "zaxis_linewidth",
+    "zaxis_text_offset",
+    "zaxis_corner_offset",
+    "zaxis_tick_size"
+  )
 }
 
 split_zaxis_dots = function(dots) {
-	if (is.null(dots)) {
-		dots = list()
-	}
-	dot_names = names(dots)
-	is_zaxis = rep(FALSE, length(dots))
-	if (length(dots) > 0 && !is.null(dot_names)) {
-		is_zaxis = nzchar(dot_names) & dot_names %in% zaxis_dot_names()
-	}
-	list(
-		zaxis_args = dots[is_zaxis],
-		other_args = dots[!is_zaxis]
-	)
+  if (is.null(dots)) {
+    dots = list()
+  }
+  dot_names = names(dots)
+  is_zaxis = rep(FALSE, length(dots))
+  if (length(dots) > 0 && !is.null(dot_names)) {
+    is_zaxis = nzchar(dot_names) & dot_names %in% zaxis_dot_names()
+  }
+  list(
+    zaxis_args = dots[is_zaxis],
+    other_args = dots[!is_zaxis]
+  )
 }
 
 render_zaxis_from_dots = function(
-	zaxis_args = list(),
-	extent = NULL,
-	panel = NULL,
-	zscale = 1,
-	heightmap = NULL,
-	caller = NULL
+  zaxis_args = list(),
+  extent = NULL,
+  panel = NULL,
+  zscale = 1,
+  heightmap = NULL,
+  caller = NULL
 ) {
-	if (length(zaxis_args) == 0) {
-		return(invisible(NULL))
-	}
-	if (is.null(zscale)) {
-		zscale = get_scene_effective_zscale(default = 1)
-	} else {
-		zscale = suppressWarnings(as.numeric(zscale)[1])
-		if (!is.finite(zscale) || zscale <= 0) {
-			zscale = get_scene_effective_zscale(default = 1)
-		}
-	}
-	heightmap = resolve_scene_render_heightmap(heightmap)
-	use_ggplot_panel_extent = zaxis_location_uses_panel_extent(
-		zaxis_args$zaxis_location
-	)
-	if (!use_ggplot_panel_extent && is.null(extent)) {
-		extent = get_cached_plot_gg_scene_extent_for_zaxis(heightmap = heightmap)
-	}
-	extent = resolve_scene_render_extent(
-		extent = extent,
-		heightmap = heightmap,
-		panel = panel,
-		caller = caller,
-		allow_ggplot_extent = use_ggplot_panel_extent
-	)
-	if (is.null(zaxis_args$zaxis)) {
-		zaxis_args$zaxis = TRUE
-	}
-	do.call(
-		render_zaxis_internal,
-		c(
-			zaxis_args,
-			list(
-				extent = extent,
-				zscale = zscale,
-				heightmap = heightmap
-			)
-		)
-	)
+  if (length(zaxis_args) == 0) {
+    return(invisible(NULL))
+  }
+  if (is.null(zscale)) {
+    zscale = get_scene_effective_zscale(default = 1)
+  } else {
+    zscale = suppressWarnings(as.numeric(zscale)[1])
+    if (!is.finite(zscale) || zscale <= 0) {
+      zscale = get_scene_effective_zscale(default = 1)
+    }
+  }
+  heightmap = resolve_scene_render_heightmap(heightmap)
+  use_ggplot_panel_extent = zaxis_location_uses_panel_extent(
+    zaxis_args$zaxis_location
+  )
+  if (!use_ggplot_panel_extent && is.null(extent)) {
+    extent = get_cached_plot_gg_scene_extent_for_zaxis(heightmap = heightmap)
+  }
+  extent = resolve_scene_render_extent(
+    extent = extent,
+    heightmap = heightmap,
+    panel = panel,
+    caller = caller,
+    allow_ggplot_extent = use_ggplot_panel_extent
+  )
+  if (is.null(zaxis_args$zaxis)) {
+    zaxis_args$zaxis = TRUE
+  }
+  do.call(
+    render_zaxis_internal,
+    c(
+      zaxis_args,
+      list(
+        extent = extent,
+        zscale = zscale,
+        heightmap = heightmap
+      )
+    )
+  )
 }

@@ -15,8 +15,8 @@ render_zaxis(
   zaxis_breaks = NULL,
   zaxis_labels = NULL,
   zaxis_title = "auto",
-  zaxis_title_location = "top",
-  zaxis_title_offset = 2.5,
+  zaxis_title_location = "side",
+  zaxis_title_offset = 5,
   zaxis_color = "black",
   zaxis_linewidth = 2,
   zaxis_text_offset = 0,
@@ -68,11 +68,13 @@ breaks are generated from the full scene height range (minimum to maximum elevat
 uses the cached height aesthetic label from \code{\link[=plot_gg]{plot_gg()}} scenes when available.
 Set to \code{NULL} to omit the title, or pass a character string to override it.}
 
-\item{zaxis_title_location}{Default \code{"top"}. Title location. Options are
-\code{"side"} and \code{"top"}.}
+\item{zaxis_title_location}{Default \code{"side"}. Title location. Options are
+\code{"side"} and \code{"top"}. \code{"side"} places the title opposite the tick labels and
+centered on the axis.}
 
-\item{zaxis_title_offset}{Default \code{2.5}. Title offset multiplier. For
-\code{zaxis_title_location = "side"}, this moves the title outward from the axis.
+\item{zaxis_title_offset}{Default \code{5}. Title offset multiplier. For
+\code{zaxis_title_location = "side"}, this moves the title away from the axis on
+the side opposite the tick labels.
 For \code{"top"}, this moves the title above the top of the axis.}
 
 \item{zaxis_color}{Default \code{"black"}. Axis/tick/label color.}

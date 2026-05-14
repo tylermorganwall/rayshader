@@ -50,12 +50,12 @@
 #' @param ... Optional z-axis arguments passed to [render_zaxis()], such as
 #' `zaxis = TRUE`, `zaxis_location`, `zaxis_breaks`, and `zaxis_labels`.
 #' @export
-#'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
+#' @examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #' #Render the county borders as polygons in Monterey Bay
 #' montereybay |>
 #'   sphere_shade(texture = "desert", vertical_exaggeration = 20) |>
 #'   add_shadow(ray_shade(vertical_exaggeration = 4)) |>
-#'   plot_3d(water = TRUE, windowsize = 800, watercolor = "dodgerblue")
+#'   plot_3d(water = TRUE, vertical_exaggeration = 4, windowsize = 800, watercolor = "dodgerblue")
 #' render_camera(theta = 140,  phi = 55, zoom = 0.85, fov = 30)
 #'
 #' #We will apply a negative buffer to create space between adjacent polygons. You may
@@ -76,7 +76,7 @@
 #' #We'll have to scale this value because its max value is 2.6 billion:
 #' render_camera(theta=-60,  phi=40, zoom = 0.85, fov=30)
 #' render_polygons(mont_county_buff, data_column_top = "ALAND",
-#'                 scale_data = 300/(2.6E7), color = "chartreuse4",
+#'                 scale_data = 300/(5E7), color = "chartreuse4",
 #'                 clear_previous = TRUE)
 #' render_zaxis(zaxis_data = "polygon", zaxis_location = "topright")
 #' render_snapshot()

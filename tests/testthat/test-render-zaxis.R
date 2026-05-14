@@ -195,6 +195,67 @@ test_that("render_zaxis() adds side and top titles", {
   expect_gt(unname(title_verts[1, 2]), max(axis_verts[, 2]))
 })
 
+test_that("render_zaxis() defaults title to opposite side of tick labels", {
+  on.exit(rgl::close3d(), add = TRUE)
+  local_rgl_use_null()
+
+  heightmap = volcano
+  texture = sphere_shade(heightmap)
+  expect_no_condition(plot_3d_test(
+    texture,
+    heightmap,
+    zscale = 10,
+    shadow = FALSE,
+    water = FALSE,
+    windowsize = c(300, 300)
+  ))
+
+  extent = c(
+    xmin = 0,
+    xmax = nrow(heightmap),
+    ymin = 0,
+    ymax = ncol(heightmap)
+  )
+  out = render_zaxis(
+    extent = extent,
+    zscale = 10,
+    heightmap = heightmap,
+    zaxis_location = "bottomleft",
+    zaxis_breaks = c(0, 50, 100),
+    zaxis_title = "Elevation (m)",
+    zaxis_text_offset = 1
+  )
+
+  ids = get_ids_with_labels()
+  title_id = ids$id[ids$tag == "zaxis_title"][1]
+  axis_id = ids$id[ids$tag == "zaxis_axis"][1]
+  label_id = ids$id[ids$tag == "zaxis_labels"][1]
+  title_verts = rgl::rgl.attrib(title_id, "vertices")
+  axis_verts = rgl::rgl.attrib(axis_id, "vertices")
+  label_verts = rgl::rgl.attrib(label_id, "vertices")
+  title_vec = c(
+    title_verts[1, 1] - axis_verts[1, 1],
+    title_verts[1, 3] - axis_verts[1, 3]
+  )
+  label_vec = c(
+    label_verts[1, 1] - axis_verts[1, 1],
+    label_verts[1, 3] - axis_verts[1, 3]
+  )
+
+  expect_equal(out$title_location, "side")
+  expect_equal(
+    unname(title_verts[1, 2]),
+    mean(axis_verts[, 2]),
+    tolerance = 1e-6
+  )
+  expect_lt(sum(title_vec * label_vec), 0)
+  expect_equal(
+    sqrt(sum(title_vec^2)) / sqrt(sum(label_vec^2)),
+    5,
+    tolerance = 1e-6
+  )
+})
+
 test_that("render_zaxis() can use cached point altitude data", {
   on.exit(rgl::close3d(), add = TRUE)
   local_rgl_use_null()
