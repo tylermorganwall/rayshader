@@ -216,9 +216,9 @@ render_tree(y = tree_locations[,2],
            clear_previous = TRUE)
 render_camera(zoom=0.85)
 #Remove existing lights and add our own with rgl
-rgl::pop3d("lights")
-rgl::light3d(phi=35,theta=90, viewpoint.rel=F, diffuse="#ffffff", specular="#000000")
-rgl::light3d(phi=-45,theta=-40, viewpoint.rel=F, diffuse="#aaaaaa", specular="#000000")
+invisible(rgl::pop3d("lights"))
+invisible(rgl::light3d(phi=35,theta=90, viewpoint.rel=F, diffuse="#ffffff", specular="#000000"))
+invisible(rgl::light3d(phi=-45,theta=-40, viewpoint.rel=F, diffuse="#aaaaaa", specular="#000000"))
 render_snapshot()
 #Render tree also works with `render_highquality()`
 render_highquality(sky_sun_elevation = 30, sky_sun_azimuth=225, iso=3)

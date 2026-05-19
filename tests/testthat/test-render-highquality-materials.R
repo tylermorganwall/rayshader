@@ -30,6 +30,137 @@ test_that("render_highquality() resolves rgl material overrides", {
   ))
 })
 
+test_that("render_highquality() resolves spatial camera inputs", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("raster")
+  skip_if_not_installed("rayrender")
+  on.exit(rgl::close3d(), add = TRUE)
+  local_rgl_use_null()
+
+  elev_raster = suppressWarnings(raster::raster(
+    nrows = 20,
+    ncols = 20,
+    xmn = 0,
+    xmx = 1000,
+    ymn = 0,
+    ymx = 1000,
+    crs = "EPSG:3857"
+  ))
+  raster::values(elev_raster) = 0
+  texture = sphere_shade(raster_to_matrix(elev_raster))
+  expect_no_condition(plot_3d_test(
+    texture,
+    elev_raster,
+    zscale = 10,
+    vertical_exaggeration = 2,
+    shadow = FALSE,
+    water = FALSE,
+    windowsize = c(250, 250)
+  ))
+  expect_equal(get_scene_effective_zscale(), 5)
+
+  input_long = 0.0045
+  input_lat = 0.0060
+  input_altitude = 50
+  point_sf = sf::st_as_sf(
+    data.frame(long = input_long, lat = input_lat),
+    coords = c("long", "lat"),
+    crs = 4326
+  )
+  scene_xy = sf::st_coordinates(sf::st_transform(point_sf, get_scene_crs()))
+  expected_camera = transform_into_heightmap_coords(
+    extent = get_scene_extent(),
+    heightmap = get_scene_heightmap(),
+    lat = scene_xy[1, 2],
+    long = scene_xy[1, 1],
+    altitude = input_altitude,
+    zscale = get_scene_effective_zscale(),
+    transform_scene = FALSE,
+    caller = "test"
+  )[1, ]
+  expected_camera_with_offset = expected_camera
+  expected_camera_with_offset[2] = expected_camera_with_offset[2] - 3
+
+  expect_equal(
+    rayshader:::resolve_render_highquality_camera_point(
+      c(long = input_long, lat = input_lat, altitude = input_altitude),
+      arg_name = "camera_location",
+      bbox_center = c(0, 3, 0),
+      caller = "test"
+    ),
+    as.numeric(expected_camera_with_offset),
+    tolerance = 1e-6
+  )
+  expect_equal(
+    unname(expected_camera[2]),
+    input_altitude / get_scene_effective_zscale(),
+    tolerance = 1e-8
+  )
+
+  camera_point = sf::st_sfc(
+    sf::st_point(c(input_long, input_lat)),
+    crs = 4326
+  )
+  expect_equal(
+    rayshader:::resolve_render_highquality_camera_point(
+      list(location = camera_point, altitude = input_altitude),
+      arg_name = "camera_location",
+      bbox_center = c(0, 3, 0),
+      caller = "test"
+    ),
+    as.numeric(expected_camera_with_offset),
+    tolerance = 1e-6
+  )
+
+  expect_equal(
+    rayshader:::resolve_render_highquality_camera_point(
+      list(
+        location = sf::st_point(c(input_long, input_lat)),
+        altitude = input_altitude,
+        crs = 4326
+      ),
+      arg_name = "camera_location",
+      bbox_center = c(0, 3, 0),
+      caller = "test"
+    ),
+    as.numeric(expected_camera_with_offset),
+    tolerance = 1e-6
+  )
+
+  camera_point_z = sf::st_sfc(
+    sf::st_point(c(input_long, input_lat, input_altitude)),
+    crs = 4326
+  )
+  expect_equal(
+    rayshader:::resolve_render_highquality_camera_point(
+      camera_point_z,
+      arg_name = "camera_lookat",
+      bbox_center = c(0, 3, 0),
+      caller = "test"
+    ),
+    as.numeric(expected_camera_with_offset),
+    tolerance = 1e-6
+  )
+
+  expect_equal(
+    rayshader:::resolve_render_highquality_camera_point(
+      c(1, 2, 3),
+      arg_name = "camera_location",
+      bbox_center = c(0, 3, 0),
+      caller = "test"
+    ),
+    c(1, 2, 3)
+  )
+
+  expect_no_condition(capture.output(invisible(render_highquality(
+    return_scene = TRUE,
+    light = FALSE,
+    camera_location = list(location = camera_point, altitude = input_altitude),
+    camera_lookat = c(long = input_long, lat = input_lat, altitude = 0),
+    print_scene_info = TRUE
+  ))))
+})
+
 test_that("render_highquality() applies rgl material overrides by tag and id", {
   skip_if_not_installed("rayrender")
   skip_if_not_installed("rayvertex")
@@ -132,11 +263,13 @@ test_that("render_highquality() defaults label and z-axis overlays to screen spa
       background_color = "yellow",
       background_alpha = 0.25,
       halo_color = "white",
-      halo_expand = 2
+      halo_expand = 2,
+      vjust = 1.25
     ),
     screen_line_args = list(
       lineend = "butt",
-      clip = FALSE
+      clip = FALSE,
+      width = 7
     )
   )
   screen_text = attr(scene, "screen_text")
@@ -160,7 +293,7 @@ test_that("render_highquality() defaults label and z-axis overlays to screen spa
     tolerance = 1e-6
   )
   expect_equal(unique(screen_text$size[zaxis_label_rows]), 16 * 0.8)
-  expect_equal(screen_text$size[zaxis_title_row], 16)
+  expect_equal(screen_text$size[zaxis_title_row], 16 * 0.8)
   expect_equal(
     screen_text$y[zaxis_title_row],
     mean(zaxis_tick_y),
@@ -173,11 +306,13 @@ test_that("render_highquality() defaults label and z-axis overlays to screen spa
   expect_equal(unique(screen_text$background_alpha), 0.25)
   expect_equal(unique(screen_text$halo_color), "white")
   expect_equal(unique(screen_text$halo_expand), 2)
+  expect_equal(unique(screen_text$vjust), 1.25)
   expect_true(all(screen_line$occlusion))
   expect_equal(unique(screen_line$occlusion_mode), "line")
   expect_equal(unique(screen_line$occlusion_tolerance), 0.03)
   expect_equal(unique(screen_line$lineend), "butt")
   expect_false(any(screen_line$clip))
+  expect_equal(unique(screen_line$width), 7)
 
   world_scene = render_highquality(
     return_scene = TRUE,
@@ -219,6 +354,40 @@ test_that("render_highquality() defaults label and z-axis overlays to screen spa
     ),
     "`screen_line_args` contains unsupported argument"
   )
+})
+
+test_that("render_highquality() maps unclamped rgl text justification", {
+  skip_if_not_installed("rayrender")
+  skip_if_not_installed("rayvertex")
+  on.exit(rgl::close3d(), add = TRUE)
+  local_rgl_use_null()
+
+  heightmap = matrix(0, nrow = 20, ncol = 20)
+  extent = c(xmin = 0, xmax = 20, ymin = 0, ymax = 20)
+  sphere_shade(heightmap) |>
+    plot_3d(
+      zscale = 10,
+      shadow = FALSE,
+      water = FALSE,
+      windowsize = c(300, 300)
+    )
+  render_label(
+    x = 10,
+    y = 10,
+    text = "A",
+    heightmap = heightmap,
+    extent = extent,
+    zscale = 10,
+    altitude = 10,
+    adjustvec = c(1.2, -0.5)
+  )
+
+  scene = render_highquality(return_scene = TRUE, light = FALSE)
+  screen_text = attr(scene, "screen_text")
+  label_row = which(screen_text$label == "A")[1]
+
+  expect_equal(screen_text$hjust[label_row], 1.2)
+  expect_equal(screen_text$vjust[label_row], 1)
 })
 
 test_that("render_highquality() can render paths as screen-space lines", {

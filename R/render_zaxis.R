@@ -38,16 +38,24 @@
 #'uses the cached height aesthetic label from [plot_gg()] scenes when available.
 #'Set to `NULL` to omit the title, or pass a character string to override it.
 #'@param zaxis_title_location Default `"side"`. Title location. Options are
-#'`"side"` and `"top"`. `"side"` places the title opposite the tick labels and
-#'centered on the axis.
+#'`"side"` and `"top"`. `"side"` places the title vertically on the tick-label
+#'side and centered on the axis.
 #'@param zaxis_title_offset Default `5`. Title offset multiplier. For
 #'`zaxis_title_location = "side"`, this moves the title away from the axis on
-#'the side opposite the tick labels.
+#'the tick-label side.
 #'For `"top"`, this moves the title above the top of the axis.
+#'@param zaxis_title_size Default `NULL`, which matches `zaxis_label_size`. Title text size passed to `rgl::texts3d()` as `cex`.
 #'@param zaxis_color Default `"black"`. Axis/tick/label color.
 #'@param zaxis_linewidth Default `2`. Axis line width.
 #'@param zaxis_text_offset Default `0`. Label offset multiplier from the axis,
 #'applied in the outward corner direction (diagonal for corner placements).
+#'@param zaxis_label_size Default `0.8`. Tick label text size passed to `rgl::texts3d()` as `cex`.
+#'@param zaxis_label_side Default `"auto"`. Side of the axis where tick labels
+#'are placed from the current camera perspective. Options are `"auto"`,
+#'`"left"`, and `"right"`. `"auto"` keeps the inferred outside-corner side.
+#'@param zaxis_title_side Default `"auto"`. Side of the axis where the title is
+#'placed from the current camera perspective. Options are `"auto"`, `"left"`,
+#'and `"right"`. `"auto"` places the title on the tick-label side.
 #'@param zaxis_corner_offset Default `NULL`. Corner offset as a proportion of the
 #'center-to-corner planar distance. If `NULL`, this defaults to `0` for ggplot scenes
 #'and `0.08` for non-ggplot scenes. `0` places the axis exactly at the corner.
@@ -119,26 +127,22 @@
 #'  phi = 25,
 #'  vertical_exaggeration = 300
 #')
-#'#Offset the title slightly so it doesn't overlap with the labels
 #'render_zaxis(
 #'  panel = 1,
-#'  zaxis_location = "panel_bottomleft",
-#'  zaxis_title_offset = 6
+#'  zaxis_location = "panel_bottomleft"
 #')
 #'render_snapshot()
 #' #Move to the second panel, top left
 #'render_camera(theta=-20, phi=20)
 #'render_zaxis(
 #'  panel = 2,
-#'  zaxis_location = "panel_topleft",
-#'  zaxis_title_offset = 10
+#'  zaxis_location = "panel_topleft"
 #')
 #'render_snapshot()
 #' #Move to corner of the plot
 #'render_camera(theta=-20, phi=20)
 #'render_zaxis(
-#'  zaxis_location = "topleft",
-#'  zaxis_title_offset = 10
+#'  zaxis_location = "topleft"
 #')
 #'render_snapshot()
 render_zaxis = function(
@@ -154,9 +158,13 @@ render_zaxis = function(
   zaxis_title = "auto",
   zaxis_title_location = "side",
   zaxis_title_offset = 5,
+  zaxis_title_size = NULL,
   zaxis_color = "black",
   zaxis_linewidth = 2,
   zaxis_text_offset = 0,
+  zaxis_label_size = 0.8,
+  zaxis_label_side = "auto",
+  zaxis_title_side = "auto",
   zaxis_corner_offset = NULL,
   zaxis_tick_size = NULL
 ) {
@@ -204,9 +212,13 @@ render_zaxis = function(
     zaxis_title = zaxis_title,
     zaxis_title_location = zaxis_title_location,
     zaxis_title_offset = zaxis_title_offset,
+    zaxis_title_size = zaxis_title_size,
     zaxis_color = zaxis_color,
     zaxis_linewidth = zaxis_linewidth,
     zaxis_text_offset = zaxis_text_offset,
+    zaxis_label_size = zaxis_label_size,
+    zaxis_label_side = zaxis_label_side,
+    zaxis_title_side = zaxis_title_side,
     zaxis_corner_offset = zaxis_corner_offset,
     zaxis_tick_size = zaxis_tick_size
   )
@@ -277,9 +289,13 @@ zaxis_dot_names = function() {
     "zaxis_title",
     "zaxis_title_location",
     "zaxis_title_offset",
+    "zaxis_title_size",
     "zaxis_color",
     "zaxis_linewidth",
     "zaxis_text_offset",
+    "zaxis_label_size",
+    "zaxis_label_side",
+    "zaxis_title_side",
     "zaxis_corner_offset",
     "zaxis_tick_size"
   )

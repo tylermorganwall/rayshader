@@ -17,9 +17,13 @@ render_zaxis(
   zaxis_title = "auto",
   zaxis_title_location = "side",
   zaxis_title_offset = 5,
+  zaxis_title_size = NULL,
   zaxis_color = "black",
   zaxis_linewidth = 2,
   zaxis_text_offset = 0,
+  zaxis_label_size = 0.8,
+  zaxis_label_side = "auto",
+  zaxis_title_side = "auto",
   zaxis_corner_offset = NULL,
   zaxis_tick_size = NULL
 )
@@ -69,13 +73,15 @@ uses the cached height aesthetic label from \code{\link[=plot_gg]{plot_gg()}} sc
 Set to \code{NULL} to omit the title, or pass a character string to override it.}
 
 \item{zaxis_title_location}{Default \code{"side"}. Title location. Options are
-\code{"side"} and \code{"top"}. \code{"side"} places the title opposite the tick labels and
-centered on the axis.}
+\code{"side"} and \code{"top"}. \code{"side"} places the title vertically on the tick-label
+side and centered on the axis.}
 
 \item{zaxis_title_offset}{Default \code{5}. Title offset multiplier. For
 \code{zaxis_title_location = "side"}, this moves the title away from the axis on
-the side opposite the tick labels.
+the tick-label side.
 For \code{"top"}, this moves the title above the top of the axis.}
+
+\item{zaxis_title_size}{Default \code{NULL}, which matches \code{zaxis_label_size}. Title text size passed to \code{rgl::texts3d()} as \code{cex}.}
 
 \item{zaxis_color}{Default \code{"black"}. Axis/tick/label color.}
 
@@ -83,6 +89,16 @@ For \code{"top"}, this moves the title above the top of the axis.}
 
 \item{zaxis_text_offset}{Default \code{0}. Label offset multiplier from the axis,
 applied in the outward corner direction (diagonal for corner placements).}
+
+\item{zaxis_label_size}{Default \code{0.8}. Tick label text size passed to \code{rgl::texts3d()} as \code{cex}.}
+
+\item{zaxis_label_side}{Default \code{"auto"}. Side of the axis where tick labels
+are placed from the current camera perspective. Options are \code{"auto"},
+\code{"left"}, and \code{"right"}. \code{"auto"} keeps the inferred outside-corner side.}
+
+\item{zaxis_title_side}{Default \code{"auto"}. Side of the axis where the title is
+placed from the current camera perspective. Options are \code{"auto"}, \code{"left"},
+and \code{"right"}. \code{"auto"} places the title on the tick-label side.}
 
 \item{zaxis_corner_offset}{Default \code{NULL}. Corner offset as a proportion of the
 center-to-corner planar distance. If \code{NULL}, this defaults to \code{0} for ggplot scenes
@@ -162,26 +178,22 @@ plot_gg(
  phi = 25,
  vertical_exaggeration = 300
 )
-#Offset the title slightly so it doesn't overlap with the labels
 render_zaxis(
  panel = 1,
- zaxis_location = "panel_bottomleft",
- zaxis_title_offset = 6
+ zaxis_location = "panel_bottomleft"
 )
 render_snapshot()
 #Move to the second panel, top left
 render_camera(theta=-20, phi=20)
 render_zaxis(
  panel = 2,
- zaxis_location = "panel_topleft",
- zaxis_title_offset = 10
+ zaxis_location = "panel_topleft"
 )
 render_snapshot()
 #Move to corner of the plot
 render_camera(theta=-20, phi=20)
 render_zaxis(
- zaxis_location = "topleft",
- zaxis_title_offset = 10
+ zaxis_location = "topleft"
 )
 render_snapshot()
 \dontshow{\}) # examplesIf}

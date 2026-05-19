@@ -47,7 +47,7 @@ Cache fallback messages are disabled by default. Set \code{options(rayshader.ver
 \examples{
 \dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 montereybay |>
- sphere_shade() |>
+ sphere_shade(vertical_exaggeration = 20) |>
  plot_3d(vertical_exaggeration = 4)
 render_snapshot()
 
@@ -56,12 +56,12 @@ render_water()
 render_snapshot()
 
 #Call it again to change the water depth
-render_water(waterdepth=-1000)
+render_water(waterdepth=-1000, watercolor = "dodgerblue3")
 render_snapshot()
 
 #Add waterlines
 render_camera(theta=-45)
-render_water(waterlinecolor="white")
+render_water(waterlinecolor="white", watercolor = "dodgerblue4")
 render_snapshot()
 \dontshow{\}) # examplesIf}
 }

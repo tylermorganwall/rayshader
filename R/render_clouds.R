@@ -6,52 +6,52 @@
 #' @examples
 #' #Fake example
 gen_fractal_perlin = function(
-	ray_d,
-	xyz,
-	altitude,
-	nrow = NULL,
-	ncol = NULL,
-	t_mat = NULL,
-	levels = 8,
-	inc = 100,
-	freq = 0.01 / 2,
-	seed = 1,
-	time = 0,
-	scale_x = 1,
-	scale_y = 1,
-	scale_z = 1
+  ray_d,
+  xyz,
+  altitude,
+  nrow = NULL,
+  ncol = NULL,
+  t_mat = NULL,
+  levels = 8,
+  inc = 100,
+  freq = 0.01 / 2,
+  seed = 1,
+  time = 0,
+  scale_x = 1,
+  scale_y = 1,
+  scale_z = 1
 ) {
-	fract_perlin = ambient::gen_perlin(
-		x = (xyz[, 1] + ray_d[1] * inc) / scale_x,
-		y = (altitude + ray_d[2] * inc) / scale_z + time,
-		z = (xyz[, 3] - ray_d[3] * inc) / scale_y,
-		frequency = freq / 2,
-		seed = seed
-	)
-	if (levels > 1) {
-		for (i in seq_len(levels)) {
-			temp_fract = 1 /
-				i *
-				ambient::gen_perlin(
-					x = (xyz[, 1] + ray_d[1] * inc) / scale_x,
-					y = (altitude + ray_d[2] * inc) / scale_z + time,
-					z = (xyz[, 3] - ray_d[3] * inc) / scale_y,
-					frequency = freq * i,
-					seed = seed + i
-				)
-			fract_perlin = fract_perlin + temp_fract
-		}
-	}
-	shadow = !is.null(t_mat)
-	if (shadow) {
-		ncol = ncol(t_mat)
-		nrow = nrow(t_mat)
-	}
-	if (shadow) {
-		# Only mask below the local start plane, t == 0 should count
-		fract_perlin[t_mat < 0] = NA
-	}
-	return(matrix(fract_perlin, nrow, ncol))
+  fract_perlin = ambient::gen_perlin(
+    x = (xyz[, 1] + ray_d[1] * inc) / scale_x,
+    y = (altitude + ray_d[2] * inc) / scale_z + time,
+    z = (xyz[, 3] - ray_d[3] * inc) / scale_y,
+    frequency = freq / 2,
+    seed = seed
+  )
+  if (levels > 1) {
+    for (i in seq_len(levels)) {
+      temp_fract = 1 /
+        i *
+        ambient::gen_perlin(
+          x = (xyz[, 1] + ray_d[1] * inc) / scale_x,
+          y = (altitude + ray_d[2] * inc) / scale_z + time,
+          z = (xyz[, 3] - ray_d[3] * inc) / scale_y,
+          frequency = freq * i,
+          seed = seed + i
+        )
+      fract_perlin = fract_perlin + temp_fract
+    }
+  }
+  shadow = !is.null(t_mat)
+  if (shadow) {
+    ncol = ncol(t_mat)
+    nrow = nrow(t_mat)
+  }
+  if (shadow) {
+    # Only mask below the local start plane, t == 0 should count
+    fract_perlin[t_mat < 0] = NA
+  }
+  return(matrix(fract_perlin, nrow, ncol))
 }
 
 #' Calculate a single raymarched cloud layer
@@ -62,96 +62,96 @@ gen_fractal_perlin = function(
 #' @examples
 #' #Fake example
 generate_cloud_layer = function(
-	heightmap,
-	sun_altitude = 90,
-	sun_angle = 315,
-	levels = 8,
-	offset_x = 0,
-	offset_y = 0,
-	time = 0,
-	start_altitude = 1000,
-	end_altitude = 2500,
-	alpha_coef = 0.8,
-	scale_x = 1,
-	scale_y = 1,
-	scale_z = 1,
-	freq = 0.01 / 2,
-	coef = 0.05,
-	seed = 1
+  heightmap,
+  sun_altitude = 90,
+  sun_angle = 315,
+  levels = 8,
+  offset_x = 0,
+  offset_y = 0,
+  time = 0,
+  start_altitude = 1000,
+  end_altitude = 2500,
+  alpha_coef = 0.8,
+  scale_x = 1,
+  scale_y = 1,
+  scale_z = 1,
+  freq = 0.01 / 2,
+  coef = 0.05,
+  seed = 1
 ) {
-	nrow = nrow(heightmap)
-	ncol = ncol(heightmap)
-	ray_d = c(
-		cospi(sun_altitude / 180) * cospi(sun_angle / 180),
-		sinpi(sun_altitude / 180),
-		cospi(sun_altitude / 180) * sinpi(sun_angle / 180)
-	)
-	xyz = as.matrix(expand.grid(
-		x = 1:nrow - offset_x,
-		y = 0,
-		z = 1:ncol + offset_y
-	))
-	alpha_layer = scales::rescale(
-		gen_fractal_perlin(
-			ray_d = ray_d,
-			xyz = xyz,
-			nrow = nrow,
-			ncol = ncol,
-			time = time,
-			altitude = start_altitude,
-			levels = levels,
-			inc = 0,
-			seed = seed,
-			freq = freq,
-			scale_x = scale_x,
-			scale_y = scale_y,
-			scale_z = scale_z
-		),
-		to = c(alpha_coef, 1.0)
-	)
-	alpha_layer[alpha_layer < 0] = 0
+  nrow = nrow(heightmap)
+  ncol = ncol(heightmap)
+  ray_d = c(
+    cospi(sun_altitude / 180) * cospi(sun_angle / 180),
+    sinpi(sun_altitude / 180),
+    cospi(sun_altitude / 180) * sinpi(sun_angle / 180)
+  )
+  xyz = as.matrix(expand.grid(
+    x = 1:nrow - offset_x,
+    y = 0,
+    z = 1:ncol + offset_y
+  ))
+  alpha_layer = scales::rescale(
+    gen_fractal_perlin(
+      ray_d = ray_d,
+      xyz = xyz,
+      nrow = nrow,
+      ncol = ncol,
+      time = time,
+      altitude = start_altitude,
+      levels = levels,
+      inc = 0,
+      seed = seed,
+      freq = freq,
+      scale_x = scale_x,
+      scale_y = scale_y,
+      scale_z = scale_z
+    ),
+    to = c(alpha_coef, 1.0)
+  )
+  alpha_layer[alpha_layer < 0] = 0
 
-	if (ray_d[2] > 0) {
-		step = 1 / ray_d[2]
-	} else {
-		stop("Zero/negative sun altitudes are not valid")
-	}
+  if (ray_d[2] > 0) {
+    step = 1 / ray_d[2]
+  } else {
+    stop("Zero/negative sun altitudes are not valid")
+  }
 
-	atten = matrix(1, nrow, ncol)
-	altitude = start_altitude
-	inc = 1
+  atten = matrix(1, nrow, ncol)
+  altitude = start_altitude
+  inc = 1
 
-	while (altitude < end_altitude) {
-		trans_mat = scales::rescale(
-			gen_fractal_perlin(
-				ray_d = ray_d,
-				xyz = xyz,
-				nrow = nrow,
-				ncol = ncol,
-				time = time,
-				altitude = start_altitude,
-				levels = levels,
-				inc = inc,
-				seed = seed,
-				freq = freq,
-				scale_x = scale_x,
-				scale_y = scale_y,
-				scale_z = scale_z
-			),
-			to = c(alpha_coef, 1.0)
-		)
-		trans_mat[trans_mat < 0] = 0
-		atten = atten * (1 - coef * trans_mat)
-		altitude = start_altitude + inc
-		inc = inc + 1
-	}
-	atten[atten < 0] = 0
-	full_layer = array(1, dim = c(nrow, ncol, 4))
-	full_layer[,, 1] = atten
-	full_layer[,, 2] = atten
-	full_layer[,, 3] = atten
-	full_layer[,, 4] = alpha_layer
-	return(aperm(full_layer, c(2, 1, 3)))
+  while (altitude < end_altitude) {
+    trans_mat = scales::rescale(
+      gen_fractal_perlin(
+        ray_d = ray_d,
+        xyz = xyz,
+        nrow = nrow,
+        ncol = ncol,
+        time = time,
+        altitude = start_altitude,
+        levels = levels,
+        inc = inc,
+        seed = seed,
+        freq = freq,
+        scale_x = scale_x,
+        scale_y = scale_y,
+        scale_z = scale_z
+      ),
+      to = c(alpha_coef, 1.0)
+    )
+    trans_mat[trans_mat < 0] = 0
+    atten = atten * (1 - coef * trans_mat)
+    altitude = start_altitude + inc
+    inc = inc + 1
+  }
+  atten[atten < 0] = 0
+  full_layer = array(1, dim = c(nrow, ncol, 4))
+  full_layer[,, 1] = atten
+  full_layer[,, 2] = atten
+  full_layer[,, 3] = atten
+  full_layer[,, 4] = alpha_layer
+  return(aperm(full_layer, c(2, 1, 3)))
 }
 
 #'@title Render Clouds
@@ -246,238 +246,238 @@ generate_cloud_layer = function(
 #'render_camera(zoom=0.65)
 #'render_snapshot()
 render_clouds = function(
-	heightmap = NULL,
-	start_altitude = 1000,
-	end_altitude = 2000,
-	sun_altitude = 10,
-	sun_angle = 315,
-	time = 0,
-	cloud_cover = 0.5,
-	layers = 10,
-	offset_x = 0,
-	offset_y = 0,
-	scale_x = 1,
-	scale_y = 1,
-	scale_z = 1,
-	frequency = 0.005,
-	fractal_levels = 16,
-	attenuation_coef = 1,
-	seed = 1,
-	zscale = 1,
-	vertical_exaggeration = 1,
-	baseshape = "rectangle",
-	clear_clouds = FALSE
+  heightmap = NULL,
+  start_altitude = 1000,
+  end_altitude = 2000,
+  sun_altitude = 10,
+  sun_angle = 315,
+  time = 0,
+  cloud_cover = 0.5,
+  layers = 10,
+  offset_x = 0,
+  offset_y = 0,
+  scale_x = 1,
+  scale_y = 1,
+  scale_z = 1,
+  frequency = 0.005,
+  fractal_levels = 16,
+  attenuation_coef = 1,
+  seed = 1,
+  zscale = 1,
+  vertical_exaggeration = 1,
+  baseshape = "rectangle",
+  clear_clouds = FALSE
 ) {
-	if (all(length(find.package("ambient", quiet = TRUE)) == 0)) {
-		stop("`render_clouds()` requires the `ambient` package to be installed")
-	}
-	time = -time
-	if (start_altitude > end_altitude) {
-		temp_alt = start_altitude
-		start_altitude = end_altitude
-		end_altitude = temp_alt
-	}
-	if (end_altitude != start_altitude) {
-		scale_layers = layers / (end_altitude - start_altitude)
-	} else {
-		scale_layers = 1
-		layers = 1
-	}
-	sun_angle = sun_angle + 180
-	if (clear_clouds) {
-		rgl::pop3d(tag = c("floating_overlay", "floating_overlay_tris"))
-		if (missing(heightmap) && is.null(get_scene_heightmap(default = NULL))) {
-			return(invisible())
-		}
-	}
-	zscale = resolve_scene_render_effective_zscale(
-		zscale = zscale,
-		zscale_missing = missing(zscale),
-		vertical_exaggeration = vertical_exaggeration,
-		vertical_exaggeration_missing = missing(vertical_exaggeration),
-		caller = "render_clouds"
-	)
-	heightmap = resolve_scene_render_heightmap(
-		heightmap,
-		caller = "render_clouds"
-	)
-	if (is.null(heightmap)) {
-		stop(
-			"No heightmap found. Call `plot_3d()` or `plot_gg()` first, or pass `heightmap` explicitly."
-		)
-	}
-	if (cloud_cover < 0 || cloud_cover > 1) {
-		stop("`cloud_cover` must be between zero and one.")
-	}
-	alpha_coef = 1 - 1 / cloud_cover
-	layers = layers[1]
-	altitudes = seq(start_altitude, end_altitude, length.out = layers)
-	stopifnot(start_altitude < end_altitude)
-	stopifnot(layers > 0)
-	stopifnot(sun_altitude > 0 && sun_altitude <= 90)
+  if (all(length(find.package("ambient", quiet = TRUE)) == 0)) {
+    stop("`render_clouds()` requires the `ambient` package to be installed")
+  }
+  time = -time
+  if (start_altitude > end_altitude) {
+    temp_alt = start_altitude
+    start_altitude = end_altitude
+    end_altitude = temp_alt
+  }
+  if (end_altitude != start_altitude) {
+    scale_layers = layers / (end_altitude - start_altitude)
+  } else {
+    scale_layers = 1
+    layers = 1
+  }
+  sun_angle = sun_angle + 180
+  if (clear_clouds) {
+    rgl::pop3d(tag = c("floating_overlay", "floating_overlay_tris"))
+    if (missing(heightmap) && is.null(get_scene_heightmap(default = NULL))) {
+      return(invisible())
+    }
+  }
+  zscale = resolve_scene_render_effective_zscale(
+    zscale = zscale,
+    zscale_missing = missing(zscale),
+    vertical_exaggeration = vertical_exaggeration,
+    vertical_exaggeration_missing = missing(vertical_exaggeration),
+    caller = "render_clouds"
+  )
+  heightmap = resolve_scene_render_heightmap(
+    heightmap,
+    caller = "render_clouds"
+  )
+  if (is.null(heightmap)) {
+    stop(
+      "No heightmap found. Call `plot_3d()` or `plot_gg()` first, or pass `heightmap` explicitly."
+    )
+  }
+  if (cloud_cover < 0 || cloud_cover > 1) {
+    stop("`cloud_cover` must be between zero and one.")
+  }
+  alpha_coef = 1 - 1 / cloud_cover
+  layers = layers[1]
+  altitudes = seq(start_altitude, end_altitude, length.out = layers)
+  stopifnot(start_altitude < end_altitude)
+  stopifnot(layers > 0)
+  stopifnot(sun_altitude > 0 && sun_altitude <= 90)
 
-	altitudes = seq(start_altitude, end_altitude, length.out = layers + 1)
-	attenuation_coef = attenuation_coef / layers
+  altitudes = seq(start_altitude, end_altitude, length.out = layers + 1)
+  attenuation_coef = attenuation_coef / layers
 
-	if (sun_altitude != 90) {
-		scaled_angle = zscale * tanpi(sun_altitude / 180)
-		sun_altitude = atan(scaled_angle) * 180 / pi
-	}
+  if (sun_altitude != 90) {
+    scaled_angle = zscale * tanpi(sun_altitude / 180)
+    sun_altitude = atan(scaled_angle) * 180 / pi
+  }
 
-	#Generate single slices, ranging from 0 to n_layers
-	for (i in seq_len(layers)) {
-		render_floating_overlay(
-			generate_cloud_layer(
-				heightmap,
-				coef = attenuation_coef,
-				start_altitude = (altitudes[i] - start_altitude) * scale_layers,
-				end_altitude = (end_altitude - start_altitude) * scale_layers,
-				time = time,
-				sun_altitude = sun_altitude,
-				alpha_coef = alpha_coef,
-				sun_angle = sun_angle,
-				levels = fractal_levels,
-				offset_x = offset_x,
-				offset_y = offset_y,
-				scale_x = scale_x,
-				scale_y = scale_y,
-				scale_z = scale_z,
-				seed = seed,
-				freq = frequency
-			),
-			altitudes[i],
-			baseshape = baseshape,
-			heightmap = heightmap,
-			zscale = zscale,
-			vertical_exaggeration = 1
-		)
-	}
+  #Generate single slices, ranging from 0 to n_layers
+  for (i in seq_len(layers)) {
+    render_floating_overlay(
+      generate_cloud_layer(
+        heightmap,
+        coef = attenuation_coef,
+        start_altitude = (altitudes[i] - start_altitude) * scale_layers,
+        end_altitude = (end_altitude - start_altitude) * scale_layers,
+        time = time,
+        sun_altitude = sun_altitude,
+        alpha_coef = alpha_coef,
+        sun_angle = sun_angle,
+        levels = fractal_levels,
+        offset_x = offset_x,
+        offset_y = offset_y,
+        scale_x = scale_x,
+        scale_y = scale_y,
+        scale_z = scale_z,
+        seed = seed,
+        freq = frequency
+      ),
+      altitudes[i],
+      baseshape = baseshape,
+      heightmap = heightmap,
+      zscale = zscale,
+      vertical_exaggeration = 1
+    )
+  }
 }
 render_clouds = function(
-	heightmap = NULL,
-	start_altitude = 1000,
-	end_altitude = 2000,
-	sun_altitude = 10,
-	sun_angle = 315,
-	time = 0,
-	cloud_cover = 0.5,
-	layers = 10,
-	offset_x = 0,
-	offset_y = 0,
-	scale_x = 1,
-	scale_y = 1,
-	scale_z = 1,
-	frequency = 0.005,
-	fractal_levels = 16,
-	attenuation_coef = 1,
-	seed = 1,
-	zscale = 1,
-	vertical_exaggeration = 1,
-	baseshape = "rectangle",
-	clear_clouds = FALSE
+  heightmap = NULL,
+  start_altitude = 1000,
+  end_altitude = 2000,
+  sun_altitude = 10,
+  sun_angle = 315,
+  time = 0,
+  cloud_cover = 0.5,
+  layers = 10,
+  offset_x = 0,
+  offset_y = 0,
+  scale_x = 1,
+  scale_y = 1,
+  scale_z = 1,
+  frequency = 0.005,
+  fractal_levels = 16,
+  attenuation_coef = 1,
+  seed = 1,
+  zscale = 1,
+  vertical_exaggeration = 1,
+  baseshape = "rectangle",
+  clear_clouds = FALSE
 ) {
-	if (all(length(find.package("ambient", quiet = TRUE)) == 0)) {
-		stop("`render_clouds()` requires the `ambient` package to be installed")
-	}
-	time = -time
-	if (start_altitude > end_altitude) {
-		temp_alt = start_altitude
-		start_altitude = end_altitude
-		end_altitude = temp_alt
-	}
-	if (end_altitude != start_altitude) {
-		scale_layers = layers / (end_altitude - start_altitude)
-	} else {
-		scale_layers = 1
-		layers = 1
-	}
-	sun_angle = sun_angle + 180
-	if (clear_clouds) {
-		rgl::pop3d(tag = c("floating_overlay", "floating_overlay_tris"))
-		if (missing(heightmap) && is.null(get_scene_heightmap(default = NULL))) {
-			return(invisible())
-		}
-	}
-	zscale = resolve_scene_render_effective_zscale(
-		zscale = zscale,
-		zscale_missing = missing(zscale),
-		vertical_exaggeration = vertical_exaggeration,
-		vertical_exaggeration_missing = missing(vertical_exaggeration),
-		caller = "render_clouds"
-	)
-	heightmap = resolve_scene_render_heightmap(
-		heightmap,
-		caller = "render_clouds"
-	)
-	if (is.null(heightmap)) {
-		stop(
-			"No heightmap found. Call `plot_3d()` or `plot_gg()` first, or pass `heightmap` explicitly."
-		)
-	}
-	if (cloud_cover < 0 || cloud_cover > 1) {
-		stop("`cloud_cover` must be between zero and one.")
-	}
-	alpha_coef = 1 - 1 / cloud_cover
-	layers = layers[1]
-	stopifnot(
-		start_altitude < end_altitude,
-		layers > 0,
-		sun_altitude > 0 && sun_altitude <= 90
-	)
+  if (all(length(find.package("ambient", quiet = TRUE)) == 0)) {
+    stop("`render_clouds()` requires the `ambient` package to be installed")
+  }
+  time = -time
+  if (start_altitude > end_altitude) {
+    temp_alt = start_altitude
+    start_altitude = end_altitude
+    end_altitude = temp_alt
+  }
+  if (end_altitude != start_altitude) {
+    scale_layers = layers / (end_altitude - start_altitude)
+  } else {
+    scale_layers = 1
+    layers = 1
+  }
+  sun_angle = sun_angle + 180
+  if (clear_clouds) {
+    rgl::pop3d(tag = c("floating_overlay", "floating_overlay_tris"))
+    if (missing(heightmap) && is.null(get_scene_heightmap(default = NULL))) {
+      return(invisible())
+    }
+  }
+  zscale = resolve_scene_render_effective_zscale(
+    zscale = zscale,
+    zscale_missing = missing(zscale),
+    vertical_exaggeration = vertical_exaggeration,
+    vertical_exaggeration_missing = missing(vertical_exaggeration),
+    caller = "render_clouds"
+  )
+  heightmap = resolve_scene_render_heightmap(
+    heightmap,
+    caller = "render_clouds"
+  )
+  if (is.null(heightmap)) {
+    stop(
+      "No heightmap found. Call `plot_3d()` or `plot_gg()` first, or pass `heightmap` explicitly."
+    )
+  }
+  if (cloud_cover < 0 || cloud_cover > 1) {
+    stop("`cloud_cover` must be between zero and one.")
+  }
+  alpha_coef = 1 - 1 / cloud_cover
+  layers = layers[1]
+  stopifnot(
+    start_altitude < end_altitude,
+    layers > 0,
+    sun_altitude > 0 && sun_altitude <= 90
+  )
 
-	# Use layer boundaries; render at the UPPER boundary so the final quad is at end_altitude
-	altitudes = seq(start_altitude, end_altitude, length.out = layers + 1)
-	cache_altitude_zaxis_data(
-		source = "cloud",
-		altitude = altitudes,
-		scene_altitude = altitudes,
-		label = "cloud"
-	)
-	attenuation_coef = attenuation_coef / layers
+  # Use layer boundaries; render at the UPPER boundary so the final quad is at end_altitude
+  altitudes = seq(start_altitude, end_altitude, length.out = layers + 1)
+  cache_altitude_zaxis_data(
+    source = "cloud",
+    altitude = altitudes,
+    scene_altitude = altitudes,
+    label = "cloud"
+  )
+  attenuation_coef = attenuation_coef / layers
 
-	if (sun_altitude != 90) {
-		scaled_angle = zscale * tanpi(sun_altitude / 180)
-		sun_altitude = atan(scaled_angle) * 180 / pi
-	}
+  if (sun_altitude != 90) {
+    scaled_angle = zscale * tanpi(sun_altitude / 180)
+    sun_altitude = atan(scaled_angle) * 180 / pi
+  }
 
-	for (i in seq_len(layers)) {
-		local_start = (altitudes[i] - start_altitude) * scale_layers
-		# For the top slice: no shading above → end == start and coef == 0
-		is_top = (i == layers)
-		local_end = if (is_top) {
-			local_start
-		} else {
-			(end_altitude - start_altitude) * scale_layers
-		}
-		local_coef = if (is_top) 0 else attenuation_coef
+  for (i in seq_len(layers)) {
+    local_start = (altitudes[i] - start_altitude) * scale_layers
+    # For the top slice: no shading above → end == start and coef == 0
+    is_top = (i == layers)
+    local_end = if (is_top) {
+      local_start
+    } else {
+      (end_altitude - start_altitude) * scale_layers
+    }
+    local_coef = if (is_top) 0 else attenuation_coef
 
-		render_floating_overlay(
-			generate_cloud_layer(
-				heightmap,
-				coef = local_coef,
-				start_altitude = local_start,
-				end_altitude = local_end,
-				time = time,
-				sun_altitude = sun_altitude,
-				alpha_coef = alpha_coef,
-				sun_angle = sun_angle,
-				levels = fractal_levels,
-				offset_x = offset_x,
-				offset_y = offset_y,
-				scale_x = scale_x,
-				scale_y = scale_y,
-				scale_z = scale_z,
-				seed = seed,
-				freq = frequency
-			),
-			# Render at the upper boundary so the last slice sits at the true top
-			altitudes[i + 1],
-			baseshape = baseshape,
-			heightmap = heightmap,
-			zscale = zscale,
-			vertical_exaggeration = 1
-		)
-	}
+    render_floating_overlay(
+      generate_cloud_layer(
+        heightmap,
+        coef = local_coef,
+        start_altitude = local_start,
+        end_altitude = local_end,
+        time = time,
+        sun_altitude = sun_altitude,
+        alpha_coef = alpha_coef,
+        sun_angle = sun_angle,
+        levels = fractal_levels,
+        offset_x = offset_x,
+        offset_y = offset_y,
+        scale_x = scale_x,
+        scale_y = scale_y,
+        scale_z = scale_z,
+        seed = seed,
+        freq = frequency
+      ),
+      # Render at the upper boundary so the last slice sits at the true top
+      altitudes[i + 1],
+      baseshape = baseshape,
+      heightmap = heightmap,
+      zscale = zscale,
+      vertical_exaggeration = 1
+    )
+  }
 }
 
 
@@ -486,113 +486,113 @@ render_clouds = function(
 #' @return image array
 #' @keywords internal
 raymarch_cloud_layer = function(
-	heightmap,
-	sun_altitude = 90,
-	sun_angle = 315,
-	levels = 8,
-	start_noise = 0,
-	end_noise = 10,
-	start_altitude_real = 0,
-	end_altitude_real = 0,
-	time = 0,
-	alpha_coef = 0.8,
-	layers = 10,
-	offset_x = 0,
-	offset_y = 0,
-	scale_x = 1,
-	scale_y = 1,
-	scale_z = 1,
-	step = 100,
-	freq = 0.01 / 2,
-	coef = 0.05,
-	seed = 1
+  heightmap,
+  sun_altitude = 90,
+  sun_angle = 315,
+  levels = 8,
+  start_noise = 0,
+  end_noise = 10,
+  start_altitude_real = 0,
+  end_altitude_real = 0,
+  time = 0,
+  alpha_coef = 0.8,
+  layers = 10,
+  offset_x = 0,
+  offset_y = 0,
+  scale_x = 1,
+  scale_y = 1,
+  scale_z = 1,
+  step = 100,
+  freq = 0.01 / 2,
+  coef = 0.05,
+  seed = 1
 ) {
-	ray_d = c(
-		cospi(sun_altitude / 180) * cospi(sun_angle / 180),
-		sinpi(sun_altitude / 180),
-		cospi(sun_altitude / 180) * sinpi(sun_angle / 180)
-	)
-	nrow = nrow(heightmap)
-	ncol = ncol(heightmap)
-	xyz = as.matrix(expand.grid(
-		x = 1:nrow - offset_x,
-		y = 0,
-		z = 1:ncol + offset_y
-	))
+  ray_d = c(
+    cospi(sun_altitude / 180) * cospi(sun_angle / 180),
+    sinpi(sun_altitude / 180),
+    cospi(sun_altitude / 180) * sinpi(sun_angle / 180)
+  )
+  nrow = nrow(heightmap)
+  ncol = ncol(heightmap)
+  xyz = as.matrix(expand.grid(
+    x = 1:nrow - offset_x,
+    y = 0,
+    z = 1:ncol + offset_y
+  ))
 
-	if (ray_d[2] <= 0) {
-		stop("Zero/negative sun altitudes are not valid")
-	}
-	real_step = 1 / ray_d[2]
+  if (ray_d[2] <= 0) {
+    stop("Zero/negative sun altitudes are not valid")
+  }
+  real_step = 1 / ray_d[2]
 
-	# Per-pixel entry altitude into the cloud column (clamped into [base, top])
-	local_start = pmin(pmax(start_altitude_real, heightmap), end_altitude_real)
+  # Per-pixel entry altitude into the cloud column (clamped into [base, top])
+  local_start = pmin(pmax(start_altitude_real, heightmap), end_altitude_real)
 
-	# Map physical thickness (above local_start) to discrete noise steps.
-	# Use floor() to match the render loop's exclusive upper bound, and clamp to global budget.
-	total_budget_global = max(0L, as.integer(round(end_noise - start_noise)))
-	denom = (end_altitude_real - start_altitude_real)
-	scale_layers_local = if (denom > 0) (end_noise - start_noise) / denom else 1
+  # Map physical thickness (above local_start) to discrete noise steps.
+  # Use floor() to match the render loop's exclusive upper bound, and clamp to global budget.
+  total_budget_global = max(0L, as.integer(round(end_noise - start_noise)))
+  denom = (end_altitude_real - start_altitude_real)
+  scale_layers_local = if (denom > 0) (end_noise - start_noise) / denom else 1
 
-	thickness = pmax(end_altitude_real - local_start, 0)
-	thickness_steps = thickness * scale_layers_local
+  thickness = pmax(end_altitude_real - local_start, 0)
+  thickness_steps = thickness * scale_layers_local
 
-	# Critical: floor() (not ceiling) + clamp to the global budget
-	max_steps_mat = pmin(
-		total_budget_global,
-		pmax(0L, as.integer(floor(thickness_steps + 1e-12)))
-	)
+  # Critical: floor() (not ceiling) + clamp to the global budget
+  max_steps_mat = pmin(
+    total_budget_global,
+    pmax(0L, as.integer(floor(thickness_steps + 1e-12)))
+  )
 
-	# Marching parameter to lift positions up to local_start along the ray
-	t_mat = (local_start - heightmap) / ray_d[2]
+  # Marching parameter to lift positions up to local_start along the ray
+  t_mat = (local_start - heightmap) / ray_d[2]
 
-	# Offset x/z to the local start plane
-	xyz[, 1] = xyz[, 1] + ray_d[1] * t_mat
-	xyz[, 2] = 0
-	xyz[, 3] = xyz[, 3] - ray_d[3] * t_mat
+  # Offset x/z to the local start plane
+  xyz[, 1] = xyz[, 1] + ray_d[1] * t_mat
+  xyz[, 2] = 0
+  xyz[, 3] = xyz[, 3] - ray_d[3] * t_mat
 
-	atten = matrix(1, nrow, ncol)
-	noise_height = start_noise
-	inc = 0
+  atten = matrix(1, nrow, ncol)
+  noise_height = start_noise
+  inc = 0
 
-	while (noise_height < end_noise) {
-		active_mask = (inc < max_steps_mat)
-		if (!any(active_mask)) {
-			break
-		}
+  while (noise_height < end_noise) {
+    active_mask = (inc < max_steps_mat)
+    if (!any(active_mask)) {
+      break
+    }
 
-		trans_mat = scales::rescale(
-			gen_fractal_perlin(
-				ray_d = ray_d,
-				xyz = xyz,
-				t_mat = t_mat,
-				altitude = noise_height,
-				levels = levels,
-				inc = inc,
-				seed = seed,
-				freq = freq,
-				time = time,
-				scale_x = scale_x,
-				scale_y = scale_y,
-				scale_z = scale_z
-			),
-			to = c(alpha_coef, 1.0)
-		)
+    trans_mat = scales::rescale(
+      gen_fractal_perlin(
+        ray_d = ray_d,
+        xyz = xyz,
+        t_mat = t_mat,
+        altitude = noise_height,
+        levels = levels,
+        inc = inc,
+        seed = seed,
+        freq = freq,
+        time = time,
+        scale_x = scale_x,
+        scale_y = scale_y,
+        scale_z = scale_z
+      ),
+      to = c(alpha_coef, 1.0)
+    )
 
-		trans_mat[!active_mask] = 0
-		trans_mat[is.na(trans_mat)] = 0
-		trans_mat[trans_mat < 0] = 0
+    trans_mat[!active_mask] = 0
+    trans_mat[is.na(trans_mat)] = 0
+    trans_mat[trans_mat < 0] = 0
 
-		atten = atten * (1 - coef * trans_mat)
+    atten = atten * (1 - coef * trans_mat)
 
-		noise_height = noise_height + 1
-		t_mat = t_mat + real_step
-		inc = inc + 1
-		if (step == 0) break
-	}
+    noise_height = noise_height + 1
+    t_mat = t_mat + real_step
+    inc = inc + 1
+    if (step == 0) break
+  }
 
-	atten[atten < 0] = 0
-	return(atten)
+  atten[atten < 0] = 0
+  return(atten)
 }
 
 
@@ -648,138 +648,145 @@ raymarch_cloud_layer = function(
 #'render_clouds()
 #'render_snapshot()
 cloud_shade = function(
-	heightmap,
-	start_altitude = 1000,
-	end_altitude = 2000,
-	sun_altitude = 90,
-	sun_angle = 315,
-	time = 0,
-	cloud_cover = 0.5,
-	layers = 10,
-	offset_x = 0,
-	offset_y = 0,
-	scale_x = 1,
-	scale_y = 1,
-	scale_z = 1,
-	frequency = 0.005,
-	fractal_levels = 16,
-	attenuation_coef = 1,
-	seed = 1,
-	zscale = 1,
-	vertical_exaggeration = 1
+  heightmap,
+  start_altitude = 1000,
+  end_altitude = 2000,
+  sun_altitude = 90,
+  sun_angle = 315,
+  time = 0,
+  cloud_cover = 0.5,
+  layers = 10,
+  offset_x = 0,
+  offset_y = 0,
+  scale_x = 1,
+  scale_y = 1,
+  scale_z = 1,
+  frequency = 0.005,
+  fractal_levels = 16,
+  attenuation_coef = 1,
+  seed = 1,
+  zscale = 1,
+  vertical_exaggeration = 1
 ) {
-	heightmap_missing = missing(heightmap)
-	heightmap_cache_label = format_scene_cache_label(deparse(substitute(
-		heightmap
-	)))
-	zscale_cache_input_label = format_scene_cache_label(deparse(substitute(
-		zscale
-	)))
-	heightmap_auto_zscale = NA_real_
-	if (heightmap_missing) {
-		resolved_heightmap = resolve_hillshade_heightmap(
-			heightmap_missing = TRUE,
-			caller = "cloud_shade"
-		)
-		heightmap = resolved_heightmap$heightmap
-	} else {
-		heightmap_info = coerce_plot_3d_heightmap(heightmap)
-		heightmap = heightmap_info$heightmap
-		heightmap_auto_zscale = heightmap_info$zscale
-		cache_hillshade_heightmap(heightmap, label = heightmap_cache_label)
-		if (!is.null(heightmap_info$extent)) {
-			cache_hillshade_extent(heightmap_info$extent, label = heightmap_cache_label)
-		} else {
-			cache_hillshade_extent(NULL, label = NULL)
-		}
-		if (!is.null(heightmap_info$crs)) {
-			cache_hillshade_crs(heightmap_info$crs, label = heightmap_cache_label)
-		} else {
-			cache_hillshade_crs(NULL, label = NULL)
-		}
-	}
-	stopifnot(is.matrix(heightmap))
-	resolved_zscale = resolve_hillshade_zscale(
-		zscale = zscale,
-		zscale_missing = missing(zscale),
-		caller = "cloud_shade",
-		auto_zscale = heightmap_auto_zscale
-	)
-	zscale = resolved_zscale$zscale
-	zscale_cache_label = switch(
-		resolved_zscale$source,
-		explicit = zscale_cache_input_label,
-		auto = format_scene_cache_label(sprintf(
-			"%s_auto_zscale",
-			heightmap_cache_label
-		)),
-		hillshade = resolved_zscale$label,
-		scene = resolved_zscale$label,
-		NULL
-	)
-	cache_hillshade_zscale(zscale, label = zscale_cache_label)
-	zscale = apply_vertical_exaggeration(
-		zscale = zscale,
-		vertical_exaggeration = vertical_exaggeration,
-		caller = "cloud_shade"
-	)
-	time = -time
-	if (start_altitude > end_altitude) {
-		temp_alt = start_altitude
-		start_altitude = end_altitude
-		end_altitude = temp_alt
-	}
-	if (end_altitude != start_altitude) {
-		scale_layers = layers / (end_altitude - start_altitude)
-	} else {
-		scale_layers = 1
-		layers = 1
-	}
-	if (all(length(find.package("ambient", quiet = TRUE)) == 0)) {
-		stop("`render_clouds()` requires the `ambient` package to be installed")
-	}
-	if (cloud_cover < 0 || cloud_cover > 1) {
-		stop("`cloud_cover` must be between zero and one.")
-	}
-	sun_angle = sun_angle + 180
-	alpha_coef = 1 - 1 / cloud_cover
-	layers = layers[1]
-	stopifnot(start_altitude < end_altitude)
-	stopifnot(layers > 0)
+  heightmap_missing = missing(heightmap)
+  heightmap_cache_label = format_scene_cache_label(deparse(substitute(
+    heightmap
+  )))
+  zscale_cache_input_label = format_scene_cache_label(deparse(substitute(
+    zscale
+  )))
+  heightmap_auto_zscale = NA_real_
+  if (heightmap_missing) {
+    resolved_heightmap = resolve_hillshade_heightmap(
+      heightmap_missing = TRUE,
+      caller = "cloud_shade"
+    )
+    heightmap = resolved_heightmap$heightmap
+    allow_scene_zscale_cache = identical(resolved_heightmap$source, "scene")
+  } else {
+    heightmap_info = coerce_plot_3d_heightmap(heightmap)
+    heightmap = heightmap_info$heightmap
+    heightmap_auto_zscale = heightmap_info$zscale
+    cache_hillshade_heightmap(heightmap, label = heightmap_cache_label)
+    if (!is.null(heightmap_info$extent)) {
+      cache_hillshade_extent(
+        heightmap_info$extent,
+        label = heightmap_cache_label
+      )
+    } else {
+      cache_hillshade_extent(NULL, label = NULL)
+    }
+    if (!is.null(heightmap_info$crs)) {
+      cache_hillshade_crs(heightmap_info$crs, label = heightmap_cache_label)
+    } else {
+      cache_hillshade_crs(NULL, label = NULL)
+    }
+    allow_scene_zscale_cache = FALSE
+  }
+  stopifnot(is.matrix(heightmap))
+  resolved_zscale = resolve_hillshade_zscale(
+    zscale = zscale,
+    zscale_missing = missing(zscale),
+    caller = "cloud_shade",
+    auto_zscale = heightmap_auto_zscale,
+    allow_hillshade_cache = heightmap_missing,
+    allow_scene_cache = allow_scene_zscale_cache
+  )
+  zscale = resolved_zscale$zscale
+  zscale_cache_label = switch(
+    resolved_zscale$source,
+    explicit = zscale_cache_input_label,
+    auto = format_scene_cache_label(sprintf(
+      "%s_auto_zscale",
+      heightmap_cache_label
+    )),
+    hillshade = resolved_zscale$label,
+    scene = resolved_zscale$label,
+    NULL
+  )
+  cache_hillshade_zscale(zscale, label = zscale_cache_label)
+  zscale = apply_vertical_exaggeration(
+    zscale = zscale,
+    vertical_exaggeration = vertical_exaggeration,
+    caller = "cloud_shade"
+  )
+  time = -time
+  if (start_altitude > end_altitude) {
+    temp_alt = start_altitude
+    start_altitude = end_altitude
+    end_altitude = temp_alt
+  }
+  if (end_altitude != start_altitude) {
+    scale_layers = layers / (end_altitude - start_altitude)
+  } else {
+    scale_layers = 1
+    layers = 1
+  }
+  if (all(length(find.package("ambient", quiet = TRUE)) == 0)) {
+    stop("`render_clouds()` requires the `ambient` package to be installed")
+  }
+  if (cloud_cover < 0 || cloud_cover > 1) {
+    stop("`cloud_cover` must be between zero and one.")
+  }
+  sun_angle = sun_angle + 180
+  alpha_coef = 1 - 1 / cloud_cover
+  layers = layers[1]
+  stopifnot(start_altitude < end_altitude)
+  stopifnot(layers > 0)
 
-	attenuation_coef = attenuation_coef / layers
-	if (layers == 1) {
-		end_altitude = start_altitude
-	}
-	if (sun_altitude != 90) {
-		scaled_angle = zscale * tanpi(sun_altitude / 180)
-		sun_altitude = atan(scaled_angle) * 180 / pi
-	}
+  attenuation_coef = attenuation_coef / layers
+  if (layers == 1) {
+    end_altitude = start_altitude
+  }
+  if (sun_altitude != 90) {
+    scaled_angle = zscale * tanpi(sun_altitude / 180)
+    sun_altitude = atan(scaled_angle) * 180 / pi
+  }
 
-	# IMPORTANT: keep units consistent with heightmap/zscale
-	start_altitude_scaled = start_altitude / zscale
-	end_altitude_scaled = end_altitude / zscale
+  # IMPORTANT: keep units consistent with heightmap/zscale
+  start_altitude_scaled = start_altitude / zscale
+  end_altitude_scaled = end_altitude / zscale
 
-	return(t(raymarch_cloud_layer(
-		heightmap = heightmap / zscale,
-		coef = attenuation_coef,
-		start_noise = 0,
-		end_noise = (end_altitude - start_altitude) * scale_layers,
-		start_altitude_real = start_altitude_scaled,
-		end_altitude_real = end_altitude_scaled,
-		time = time,
-		sun_altitude = sun_altitude,
-		alpha_coef = alpha_coef,
-		sun_angle = sun_angle,
-		levels = fractal_levels,
-		layers = layers,
-		offset_x = offset_x,
-		offset_y = offset_y,
-		scale_x = scale_x,
-		scale_y = scale_y,
-		scale_z = scale_z,
-		seed = seed,
-		freq = frequency
-	)))
+  return(t(raymarch_cloud_layer(
+    heightmap = heightmap / zscale,
+    coef = attenuation_coef,
+    start_noise = 0,
+    end_noise = (end_altitude - start_altitude) * scale_layers,
+    start_altitude_real = start_altitude_scaled,
+    end_altitude_real = end_altitude_scaled,
+    time = time,
+    sun_altitude = sun_altitude,
+    alpha_coef = alpha_coef,
+    sun_angle = sun_angle,
+    levels = fractal_levels,
+    layers = layers,
+    offset_x = offset_x,
+    offset_y = offset_y,
+    scale_x = scale_x,
+    scale_y = scale_y,
+    scale_z = scale_z,
+    seed = seed,
+    freq = frequency
+  )))
 }
 #'@param vertical_exaggeration Default `1`. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from [plot_3d()] or [plot_gg()] when available; pass explicitly to override for this call.

@@ -58,230 +58,234 @@
 #'               vertical_exaggeration=10) |>
 #'  plot_map()
 sphere_shade = function(
-	heightmap,
-	sunangle = 315,
-	texture = "imhof1",
-	normalvectors = NULL,
-	colorintensity = 1,
-	zscale = 1,
-	vertical_exaggeration = 1,
-	na_color = NULL,
-	progbar = interactive()
+  heightmap,
+  sunangle = 315,
+  texture = "imhof1",
+  normalvectors = NULL,
+  colorintensity = 1,
+  zscale = 1,
+  vertical_exaggeration = 1,
+  na_color = NULL,
+  progbar = interactive()
 ) {
-	heightmap_missing = missing(heightmap)
-	heightmap_cache_label = format_scene_cache_label(deparse(substitute(
-		heightmap
-	)))
-	zscale_cache_input_label = format_scene_cache_label(deparse(substitute(
-		zscale
-	)))
-	vertical_exaggeration_missing = missing(vertical_exaggeration)
-	if (!missing(colorintensity)) {
-		.Deprecated(
-			msg = paste(
-				"`colorintensity` is deprecated in `sphere_shade()`.",
-				"Use `vertical_exaggeration` instead."
-			)
-		)
-		if (vertical_exaggeration_missing) {
-			vertical_exaggeration = colorintensity
-		}
-	}
-	if (heightmap_missing) {
-		resolved_heightmap = resolve_hillshade_heightmap(
-			heightmap_missing = TRUE,
-			caller = "sphere_shade"
-		)
-		heightmap = resolved_heightmap$heightmap
-		heightmap_auto_zscale = NA_real_
-	} else {
-		heightmap_info = coerce_plot_3d_heightmap(heightmap)
-		heightmap = heightmap_info$heightmap
-		heightmap_auto_zscale = heightmap_info$zscale
-		cache_hillshade_input_context(heightmap_info, label = heightmap_cache_label)
-	}
-	hillshade_cache_label = if (heightmap_missing) {
-		resolved_heightmap$label
-	} else {
-		heightmap_cache_label
-	}
-	stopifnot(is.matrix(heightmap))
-	resolved_zscale = resolve_hillshade_zscale(
-		zscale = zscale,
-		zscale_missing = missing(zscale),
-		caller = "sphere_shade",
-		auto_zscale = heightmap_auto_zscale
-	)
-	zscale = resolved_zscale$zscale
-	zscale_cache_label = switch(
-		resolved_zscale$source,
-		explicit = zscale_cache_input_label,
-		auto = format_scene_cache_label(sprintf(
-			"%s_auto_zscale",
-			hillshade_cache_label
-		)),
-		hillshade = resolved_zscale$label,
-		scene = resolved_zscale$label,
-		NULL
-	)
-	if (!identical(resolved_zscale$source, "default")) {
-		cache_hillshade_zscale(zscale, label = zscale_cache_label)
-	}
-	zscale = apply_vertical_exaggeration(
-		zscale = zscale,
-		vertical_exaggeration = vertical_exaggeration,
-		caller = "sphere_shade"
-	)
-	sunangle = sunangle / 180 * pi
-	if (is.null(normalvectors)) {
-		normalvectors = calculate_normal(
-			heightmap = heightmap,
-			zscale = zscale,
-			progbar = progbar
-		)
-	}
-	heightmap = add_padding(heightmap)
-	if (methods::is(texture, "character")) {
-		if (
-			texture %in%
-				c("imhof1", "imhof2", "imhof3", "imhof4", "desert", "bw", "unicorn")
-		) {
-			if (texture == "imhof1") {
-				texture = create_texture(
-					"#fff673",
-					"#55967a",
-					"#8fb28a",
-					"#55967a",
-					"#cfe0a9"
-				)
-			} else if (texture == "imhof2") {
-				texture = create_texture(
-					"#f5dfca",
-					"#63372c",
-					"#dfa283",
-					"#195f67",
-					"#83a6a0"
-				)
-			} else if (texture == "imhof3") {
-				texture = create_texture(
-					"#e9e671",
-					"#7f3231",
-					"#cbb387",
-					"#607080",
-					"#7c9695"
-				)
-			} else if (texture == "imhof4") {
-				texture = create_texture(
-					"#ffe3b3",
-					"#66615e",
-					"#f1c3a9",
-					"#ac9988",
-					"#abaf98"
-				)
-			} else if (texture == "bw") {
-				texture = create_texture("white", "black", "grey75", "grey25", "grey50")
-			} else if (texture == "desert") {
-				texture = create_texture(
-					"#ffe3b3",
-					"#6a463a",
-					"#dbaf70",
-					"#9c9988",
-					"#c09c7c"
-				)
-			} else if (texture == "unicorn") {
-				texture = create_texture("red", "green", "blue", "yellow", "white")
-			}
-		} else {
-			stop(
-				"Built-in texture palette not recognized: possible choices are `imhof1`,`imhof2`,`imhof3`,`imhof4`,`bw`,`desert`, and `unicorn`"
-			)
-		}
-	}
-	center = dim(texture)[1:2] / 2
-	heightmap = flipud(t(heightmap)) / zscale
-	na_mask = !is.finite(heightmap)
-	distancemat = (1 - normalvectors[["z"]]) * center[1]
-	lengthmat = sqrt(1 - (normalvectors[["z"]])^2)
-	image_x_nocenter = ((-normalvectors[["x"]] / lengthmat * distancemat))
-	image_y_nocenter = ((normalvectors[["y"]] / lengthmat * distancemat))
-	image_x = floor(
-		cos(sunangle) * image_x_nocenter - sin(sunangle) * image_y_nocenter
-	) +
-		center[1]
-	image_y = floor(
-		sin(sunangle) * image_x_nocenter + cos(sunangle) * image_y_nocenter
-	) +
-		center[2]
-	image_x[is.na(image_x)] = center[1]
-	image_y[is.na(image_y)] = center[2]
-	image_x[is.nan(image_x)] = center[1]
-	image_y[is.nan(image_y)] = center[2]
-	image_x[is.infinite(image_x)] = center[1]
-	image_y[is.infinite(image_y)] = center[2]
-	image_x[image_x > dim(texture)[1]] = dim(texture)[1]
-	image_y[image_y > dim(texture)[2]] = dim(texture)[2]
-	image_x[image_x == 0] = 1
-	image_y[image_y == 0] = 1
-	returnimage = array(1, dim = c(nrow(heightmap), ncol(heightmap), 4))
-	returnimage[,, 1] = construct_matrix(
-		texture[,, 1],
-		nrow(heightmap),
-		ncol(heightmap),
-		image_x,
-		image_y
-	)
-	returnimage[,, 2] = construct_matrix(
-		texture[,, 2],
-		nrow(heightmap),
-		ncol(heightmap),
-		image_x,
-		image_y
-	)
-	returnimage[,, 3] = construct_matrix(
-		texture[,, 3],
-		nrow(heightmap),
-		ncol(heightmap),
-		image_x,
-		image_y
-	)
-	if (!is.null(na_color)) {
-		na_color = col2rgb_linear(na_color)
-		for (i in seq_len(3)) {
-			channel = returnimage[,, i]
-			channel[na_mask] = na_color[i]
-			returnimage[,, i] = channel
-		}
-	}
-	returnimage[,, 4][na_mask] = 0
-	returnimageslice = array(
-		dim = c(nrow(heightmap) - 2, ncol(heightmap) - 2, 4)
-	)
-	returnimageslice[,, 1] = returnimage[
-		c(-1, -nrow(heightmap)),
-		c(-1, -ncol(heightmap)),
-		1
-	]
-	returnimageslice[,, 2] = returnimage[
-		c(-1, -nrow(heightmap)),
-		c(-1, -ncol(heightmap)),
-		2
-	]
-	returnimageslice[,, 3] = returnimage[
-		c(-1, -nrow(heightmap)),
-		c(-1, -ncol(heightmap)),
-		3
-	]
-	returnimageslice[,, 4] = returnimage[
-		c(-1, -nrow(heightmap)),
-		c(-1, -ncol(heightmap)),
-		4
-	]
-	returnimage = rayimage::ray_read_image(
-		returnimageslice,
-		source_linear = TRUE,
-		assume_colorspace = rayimage::CS_SRGB,
-		assume_white = "D65"
-	)
-	cache_hillshade_map(returnimage, label = hillshade_cache_label)
-	return(returnimage)
+  heightmap_missing = missing(heightmap)
+  heightmap_cache_label = format_scene_cache_label(deparse(substitute(
+    heightmap
+  )))
+  zscale_cache_input_label = format_scene_cache_label(deparse(substitute(
+    zscale
+  )))
+  vertical_exaggeration_missing = missing(vertical_exaggeration)
+  if (!missing(colorintensity)) {
+    .Deprecated(
+      msg = paste(
+        "`colorintensity` is deprecated in `sphere_shade()`.",
+        "Use `vertical_exaggeration` instead."
+      )
+    )
+    if (vertical_exaggeration_missing) {
+      vertical_exaggeration = colorintensity
+    }
+  }
+  if (heightmap_missing) {
+    resolved_heightmap = resolve_hillshade_heightmap(
+      heightmap_missing = TRUE,
+      caller = "sphere_shade"
+    )
+    heightmap = resolved_heightmap$heightmap
+    heightmap_auto_zscale = NA_real_
+    allow_scene_zscale_cache = identical(resolved_heightmap$source, "scene")
+  } else {
+    heightmap_info = coerce_plot_3d_heightmap(heightmap)
+    heightmap = heightmap_info$heightmap
+    heightmap_auto_zscale = heightmap_info$zscale
+    cache_hillshade_input_context(heightmap_info, label = heightmap_cache_label)
+    allow_scene_zscale_cache = FALSE
+  }
+  hillshade_cache_label = if (heightmap_missing) {
+    resolved_heightmap$label
+  } else {
+    heightmap_cache_label
+  }
+  stopifnot(is.matrix(heightmap))
+  resolved_zscale = resolve_hillshade_zscale(
+    zscale = zscale,
+    zscale_missing = missing(zscale),
+    caller = "sphere_shade",
+    auto_zscale = heightmap_auto_zscale,
+    allow_hillshade_cache = heightmap_missing,
+    allow_scene_cache = allow_scene_zscale_cache
+  )
+  zscale = resolved_zscale$zscale
+  zscale_cache_label = switch(
+    resolved_zscale$source,
+    explicit = zscale_cache_input_label,
+    auto = format_scene_cache_label(sprintf(
+      "%s_auto_zscale",
+      hillshade_cache_label
+    )),
+    hillshade = resolved_zscale$label,
+    scene = resolved_zscale$label,
+    NULL
+  )
+  if (!identical(resolved_zscale$source, "default")) {
+    cache_hillshade_zscale(zscale, label = zscale_cache_label)
+  }
+  zscale = apply_vertical_exaggeration(
+    zscale = zscale,
+    vertical_exaggeration = vertical_exaggeration,
+    caller = "sphere_shade"
+  )
+  sunangle = sunangle / 180 * pi
+  if (is.null(normalvectors)) {
+    normalvectors = calculate_normal(
+      heightmap = heightmap,
+      zscale = zscale,
+      progbar = progbar
+    )
+  }
+  heightmap = add_padding(heightmap)
+  if (methods::is(texture, "character")) {
+    if (
+      texture %in%
+        c("imhof1", "imhof2", "imhof3", "imhof4", "desert", "bw", "unicorn")
+    ) {
+      if (texture == "imhof1") {
+        texture = create_texture(
+          "#fff673",
+          "#55967a",
+          "#8fb28a",
+          "#55967a",
+          "#cfe0a9"
+        )
+      } else if (texture == "imhof2") {
+        texture = create_texture(
+          "#f5dfca",
+          "#63372c",
+          "#dfa283",
+          "#195f67",
+          "#83a6a0"
+        )
+      } else if (texture == "imhof3") {
+        texture = create_texture(
+          "#e9e671",
+          "#7f3231",
+          "#cbb387",
+          "#607080",
+          "#7c9695"
+        )
+      } else if (texture == "imhof4") {
+        texture = create_texture(
+          "#ffe3b3",
+          "#66615e",
+          "#f1c3a9",
+          "#ac9988",
+          "#abaf98"
+        )
+      } else if (texture == "bw") {
+        texture = create_texture("white", "black", "grey75", "grey25", "grey50")
+      } else if (texture == "desert") {
+        texture = create_texture(
+          "#ffe3b3",
+          "#6a463a",
+          "#dbaf70",
+          "#9c9988",
+          "#c09c7c"
+        )
+      } else if (texture == "unicorn") {
+        texture = create_texture("red", "green", "blue", "yellow", "white")
+      }
+    } else {
+      stop(
+        "Built-in texture palette not recognized: possible choices are `imhof1`,`imhof2`,`imhof3`,`imhof4`,`bw`,`desert`, and `unicorn`"
+      )
+    }
+  }
+  center = dim(texture)[1:2] / 2
+  heightmap = flipud(t(heightmap)) / zscale
+  na_mask = !is.finite(heightmap)
+  distancemat = (1 - normalvectors[["z"]]) * center[1]
+  lengthmat = sqrt(1 - (normalvectors[["z"]])^2)
+  image_x_nocenter = ((-normalvectors[["x"]] / lengthmat * distancemat))
+  image_y_nocenter = ((normalvectors[["y"]] / lengthmat * distancemat))
+  image_x = floor(
+    cos(sunangle) * image_x_nocenter - sin(sunangle) * image_y_nocenter
+  ) +
+    center[1]
+  image_y = floor(
+    sin(sunangle) * image_x_nocenter + cos(sunangle) * image_y_nocenter
+  ) +
+    center[2]
+  image_x[is.na(image_x)] = center[1]
+  image_y[is.na(image_y)] = center[2]
+  image_x[is.nan(image_x)] = center[1]
+  image_y[is.nan(image_y)] = center[2]
+  image_x[is.infinite(image_x)] = center[1]
+  image_y[is.infinite(image_y)] = center[2]
+  image_x[image_x > dim(texture)[1]] = dim(texture)[1]
+  image_y[image_y > dim(texture)[2]] = dim(texture)[2]
+  image_x[image_x == 0] = 1
+  image_y[image_y == 0] = 1
+  returnimage = array(1, dim = c(nrow(heightmap), ncol(heightmap), 4))
+  returnimage[,, 1] = construct_matrix(
+    texture[,, 1],
+    nrow(heightmap),
+    ncol(heightmap),
+    image_x,
+    image_y
+  )
+  returnimage[,, 2] = construct_matrix(
+    texture[,, 2],
+    nrow(heightmap),
+    ncol(heightmap),
+    image_x,
+    image_y
+  )
+  returnimage[,, 3] = construct_matrix(
+    texture[,, 3],
+    nrow(heightmap),
+    ncol(heightmap),
+    image_x,
+    image_y
+  )
+  if (!is.null(na_color)) {
+    na_color = col2rgb_linear(na_color)
+    for (i in seq_len(3)) {
+      channel = returnimage[,, i]
+      channel[na_mask] = na_color[i]
+      returnimage[,, i] = channel
+    }
+  }
+  returnimage[,, 4][na_mask] = 0
+  returnimageslice = array(
+    dim = c(nrow(heightmap) - 2, ncol(heightmap) - 2, 4)
+  )
+  returnimageslice[,, 1] = returnimage[
+    c(-1, -nrow(heightmap)),
+    c(-1, -ncol(heightmap)),
+    1
+  ]
+  returnimageslice[,, 2] = returnimage[
+    c(-1, -nrow(heightmap)),
+    c(-1, -ncol(heightmap)),
+    2
+  ]
+  returnimageslice[,, 3] = returnimage[
+    c(-1, -nrow(heightmap)),
+    c(-1, -ncol(heightmap)),
+    3
+  ]
+  returnimageslice[,, 4] = returnimage[
+    c(-1, -nrow(heightmap)),
+    c(-1, -ncol(heightmap)),
+    4
+  ]
+  returnimage = rayimage::ray_read_image(
+    returnimageslice,
+    source_linear = TRUE,
+    assume_colorspace = rayimage::CS_SRGB,
+    assume_white = "D65"
+  )
+  cache_hillshade_map(returnimage, label = hillshade_cache_label)
+  return(returnimage)
 }

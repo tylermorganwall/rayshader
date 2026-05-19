@@ -77,8 +77,7 @@ montereybay |>
 render_scalebar(limits=c(0, 80), label_unit = "km")
 render_snapshot()
 #This function works with `render_highquality()`
-render_highquality(lightdirection = 250, lightaltitude = 40,
-                  scale_text_size = 36, samples = 16)
+render_highquality(lightdirection = 250, lightaltitude = 40, samples = 16)
 render_scalebar(clear_scalebar = TRUE)
 #We can change the position by specifying a cardinal direction to `position`, and the
 #color by setting `color_first` and `color_second`

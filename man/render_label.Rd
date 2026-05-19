@@ -163,19 +163,15 @@ render_snapshot()
 #argument `text_angle`.
 render_camera(theta=35, phi = 35, zoom = 0.80, fov=60)
 render_label(lat = monterey[1], long = monterey[2], altitude = 10000,
-            textsize = 2, text = "Monterey", textcolor = "white", linecolor="darkred",
+            textsize = 2, text = "Monterey", textcolor = "black", linecolor="darkred",
             dashed = TRUE, clear_previous = TRUE)
 
 render_label(lat = canyon[1], long = canyon[2],
             altitude = 2000, textsize = 2,
-            textcolor = "white", linecolor="white",
+            textcolor = "black", linecolor="black",
             text = "Monterey Canyon", relativez=FALSE)
 
-render_highquality(samples = 16,text_size = 64, line_radius = 3, text_offset = c(0, 20, 0),
-                  lightdirection = 180, min_variance = 0)
-#Fixed text angle
-render_highquality(samples = 16,text_size = 64, line_radius = 3, text_offset = c(0, 20, 0),
-                  lightdirection = 180, text_angle = 0, min_variance = 0)
+render_highquality(samples = 16)
 #We can remove all existing labels by calling `render_label(clear_previous = TRUE)`
 render_label(clear_previous = TRUE)
 render_snapshot()

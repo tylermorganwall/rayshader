@@ -140,777 +140,786 @@
 #'            clear_previous = TRUE)
 #'render_camera(zoom=0.85)
 #'#Remove existing lights and add our own with rgl
-#'rgl::pop3d("lights")
-#'rgl::light3d(phi=35,theta=90, viewpoint.rel=F, diffuse="#ffffff", specular="#000000")
-#'rgl::light3d(phi=-45,theta=-40, viewpoint.rel=F, diffuse="#aaaaaa", specular="#000000")
+#'invisible(rgl::pop3d("lights"))
+#'invisible(rgl::light3d(phi=35,theta=90, viewpoint.rel=F, diffuse="#ffffff", specular="#000000"))
+#'invisible(rgl::light3d(phi=-45,theta=-40, viewpoint.rel=F, diffuse="#aaaaaa", specular="#000000"))
 #'render_snapshot()
 #'#Render tree also works with `render_highquality()`
 #'render_highquality(sky_sun_elevation = 30, sky_sun_azimuth=225, iso=3)
 render_tree = function(
-	y = NULL,
-	x = NULL,
-	extent = NULL,
-	panel = NULL,
-	type = "basic",
-	custom_obj_tree = NULL,
-	custom_obj_crown = NULL,
-	custom_obj_trunk = NULL,
-	crown_color = "#22aa22",
-	trunk_color = "#964B00",
-	absolute_height = FALSE,
-	tree_height = NULL,
-	tree_height_column = NULL,
-	trunk_height_ratio = NULL,
-	crown_width_ratio = NULL,
-	crown_width = NULL,
-	trunk_radius = NULL,
-	tree_zscale = TRUE,
-	min_height = 0,
-	max_height = Inf,
-	zscale = 1,
-	vertical_exaggeration = 1,
-	lit = TRUE,
-	heightmap = NULL,
-	baseshape = "rectangle",
-	angle = c(0, 0, 0),
-	clear_previous = FALSE,
-	lat = NULL,
-	long = NULL,
-	location = NULL,
-	crs = NULL,
-	filter_to_extent = TRUE,
-	...
+  y = NULL,
+  x = NULL,
+  extent = NULL,
+  panel = NULL,
+  type = "basic",
+  custom_obj_tree = NULL,
+  custom_obj_crown = NULL,
+  custom_obj_trunk = NULL,
+  crown_color = "#22aa22",
+  trunk_color = "#964B00",
+  absolute_height = FALSE,
+  tree_height = NULL,
+  tree_height_column = NULL,
+  trunk_height_ratio = NULL,
+  crown_width_ratio = NULL,
+  crown_width = NULL,
+  trunk_radius = NULL,
+  tree_zscale = TRUE,
+  min_height = 0,
+  max_height = Inf,
+  zscale = 1,
+  vertical_exaggeration = 1,
+  lit = TRUE,
+  heightmap = NULL,
+  baseshape = "rectangle",
+  angle = c(0, 0, 0),
+  clear_previous = FALSE,
+  lat = NULL,
+  long = NULL,
+  location = NULL,
+  crs = NULL,
+  filter_to_extent = TRUE,
+  ...
 ) {
-	validate_filter_to_extent(filter_to_extent, caller = "render_tree")
-	tree_height_supplied = !missing(tree_height) && !is.null(tree_height)
-	dot_split = split_zaxis_dots(list(...))
-	zscale = resolve_scene_render_effective_zscale(
-		zscale = zscale,
-		zscale_missing = missing(zscale),
-		vertical_exaggeration = vertical_exaggeration,
-		vertical_exaggeration_missing = missing(vertical_exaggeration),
-		caller = "render_tree"
-	)
-	heightmap = resolve_scene_render_heightmap(
-		heightmap,
-		caller = "render_tree"
-	)
-	zaxis_args = dot_split$zaxis_args
-	tree_args = dot_split$other_args
-	scene_extent = resolve_scene_render_extent(
-		extent = extent,
-		heightmap = heightmap,
-		caller = "render_tree",
-		panel = panel,
-		error_if_missing = FALSE
-	)
-	point_input = resolve_render_location_input(
-		location = location,
-		x = x,
-		y = y,
-		long = long,
-		lat = lat,
-		missing_x = missing(x),
-		missing_y = missing(y),
-		missing_long = missing(long),
-		missing_lat = missing(lat),
-		extent = if (!is.null(scene_extent)) scene_extent else extent,
-		heightmap = heightmap,
-		panel = panel,
-		crs = crs,
-		caller = "render_tree"
-	)
-	x = point_input$x
-	y = point_input$y
-	lat = y
-	long = x
-	input_crs = if (is.null(crs)) point_input$source_crs else crs
-	if (!is.null(point_input$extent)) {
-		extent = point_input$extent
-	} else if (is.null(extent) && !is.null(scene_extent)) {
-		extent = scene_extent
-	}
-	location_supplied = isTRUE(point_input$location_supplied)
-	render_obj_crs = if (location_supplied) NULL else input_crs
-	tree_coords_transformed = FALSE
-	if (!is.null(tree_height_column)) {
-		tree_height = resolve_render_tree_height_column(
-			location = location,
-			tree_height_column = tree_height_column,
-			tree_height_supplied = tree_height_supplied,
-			crs = crs,
-			caller = "render_tree"
-		)
-	}
-	render_obj_tree = function(...) {
-		do.call(render_obj, c(list(..., vertical_exaggeration = 1), tree_args))
-	}
-	# If clear_previous is TRUE, remove previous tree object
-	if (clear_previous) {
-		rgl::pop3d(tag = "objtree")
-		if (is.null(lat) || is.null(long)) {
-			render_zaxis_from_dots(
-				zaxis_args = zaxis_args,
-				extent = extent,
-				panel = panel,
-				zscale = zscale,
-				heightmap = heightmap,
-				caller = "render_tree"
-			)
-			return(invisible())
-		}
-	}
-	if (!is.null(lat) && !is.null(long)) {
-		if (!location_supplied) {
-			scene_xy = auto_transform_scene_xy(
-				x = long,
-				y = lat,
-				extent = extent,
-				heightmap = heightmap,
-				panel = panel,
-				crs = input_crs,
-				caller = "render_tree"
-			)
-			long = scene_xy$x
-			lat = scene_xy$y
-			if (!is.null(scene_xy$extent)) {
-				extent = scene_xy$extent
-			}
-			render_obj_crs = NULL
-			tree_coords_transformed = TRUE
-		}
-		n_tree_before_filter = length(lat)
-		filtered_tree_xy = filter_scene_xy_to_extent(
-			x = long,
-			y = lat,
-			extent = extent,
-			heightmap = heightmap,
-			panel = panel,
-			filter_to_extent = filter_to_extent,
-			caller = "render_tree"
-		)
-		long = filtered_tree_xy$x
-		lat = filtered_tree_xy$y
-		if (length(filtered_tree_xy$keep) == n_tree_before_filter) {
-			tree_height = subset_render_arg(tree_height, filtered_tree_xy$keep, n_tree_before_filter)
-			trunk_height_ratio = subset_render_arg(
-				trunk_height_ratio,
-				filtered_tree_xy$keep,
-				n_tree_before_filter
-			)
-			crown_width_ratio = subset_render_arg(
-				crown_width_ratio,
-				filtered_tree_xy$keep,
-				n_tree_before_filter
-			)
-			crown_width = subset_render_arg(
-				crown_width,
-				filtered_tree_xy$keep,
-				n_tree_before_filter
-			)
-			trunk_radius = subset_render_arg(
-				trunk_radius,
-				filtered_tree_xy$keep,
-				n_tree_before_filter
-			)
-			crown_color = subset_render_color_arg(
-				crown_color,
-				filtered_tree_xy$keep,
-				n_tree_before_filter
-			)
-			trunk_color = subset_render_color_arg(
-				trunk_color,
-				filtered_tree_xy$keep,
-				n_tree_before_filter
-			)
-			angle = subset_render_row_arg(angle, filtered_tree_xy$keep, n_tree_before_filter)
-		}
-		if (!length(lat) || !length(long)) {
-			render_zaxis_from_dots(
-				zaxis_args = zaxis_args,
-				extent = extent,
-				panel = panel,
-				zscale = zscale,
-				heightmap = heightmap,
-				caller = "render_tree"
-			)
-			return(invisible())
-		}
-	}
-	# Check if custom tree models exist
-	has_custom_tree = !is.null(custom_obj_tree) && file.exists(custom_obj_tree)
-	has_custom_crown = !is.null(custom_obj_crown) && file.exists(custom_obj_crown)
-	has_custom_trunk = !is.null(custom_obj_trunk) && file.exists(custom_obj_trunk)
+  validate_filter_to_extent(filter_to_extent, caller = "render_tree")
+  tree_height_supplied = !missing(tree_height) && !is.null(tree_height)
+  dot_split = split_zaxis_dots(list(...))
+  zscale = resolve_scene_render_effective_zscale(
+    zscale = zscale,
+    zscale_missing = missing(zscale),
+    vertical_exaggeration = vertical_exaggeration,
+    vertical_exaggeration_missing = missing(vertical_exaggeration),
+    caller = "render_tree"
+  )
+  heightmap = resolve_scene_render_heightmap(
+    heightmap,
+    caller = "render_tree"
+  )
+  zaxis_args = dot_split$zaxis_args
+  tree_args = dot_split$other_args
+  scene_extent = resolve_scene_render_extent(
+    extent = extent,
+    heightmap = heightmap,
+    caller = "render_tree",
+    panel = panel,
+    error_if_missing = FALSE
+  )
+  point_input = resolve_render_location_input(
+    location = location,
+    x = x,
+    y = y,
+    long = long,
+    lat = lat,
+    missing_x = missing(x),
+    missing_y = missing(y),
+    missing_long = missing(long),
+    missing_lat = missing(lat),
+    extent = if (!is.null(scene_extent)) scene_extent else extent,
+    heightmap = heightmap,
+    panel = panel,
+    crs = crs,
+    caller = "render_tree"
+  )
+  x = point_input$x
+  y = point_input$y
+  lat = y
+  long = x
+  input_crs = if (is.null(crs)) point_input$source_crs else crs
+  if (!is.null(point_input$extent)) {
+    extent = point_input$extent
+  } else if (is.null(extent) && !is.null(scene_extent)) {
+    extent = scene_extent
+  }
+  location_supplied = isTRUE(point_input$location_supplied)
+  render_obj_crs = if (location_supplied) NULL else input_crs
+  tree_coords_transformed = FALSE
+  if (!is.null(tree_height_column)) {
+    tree_height = resolve_render_tree_height_column(
+      location = location,
+      tree_height_column = tree_height_column,
+      tree_height_supplied = tree_height_supplied,
+      crs = crs,
+      caller = "render_tree"
+    )
+  }
+  render_obj_tree = function(...) {
+    do.call(render_obj, c(list(..., vertical_exaggeration = 1), tree_args))
+  }
+  # If clear_previous is TRUE, remove previous tree object
+  if (clear_previous) {
+    rgl::pop3d(tag = "objtree")
+    if (is.null(lat) || is.null(long)) {
+      render_zaxis_from_dots(
+        zaxis_args = zaxis_args,
+        extent = extent,
+        panel = panel,
+        zscale = zscale,
+        heightmap = heightmap,
+        caller = "render_tree"
+      )
+      return(invisible())
+    }
+  }
+  if (!is.null(lat) && !is.null(long)) {
+    if (!location_supplied) {
+      scene_xy = auto_transform_scene_xy(
+        x = long,
+        y = lat,
+        extent = extent,
+        heightmap = heightmap,
+        panel = panel,
+        crs = input_crs,
+        caller = "render_tree"
+      )
+      long = scene_xy$x
+      lat = scene_xy$y
+      if (!is.null(scene_xy$extent)) {
+        extent = scene_xy$extent
+      }
+      render_obj_crs = NULL
+      tree_coords_transformed = TRUE
+    }
+    n_tree_before_filter = length(lat)
+    filtered_tree_xy = filter_scene_xy_to_extent(
+      x = long,
+      y = lat,
+      extent = extent,
+      heightmap = heightmap,
+      panel = panel,
+      filter_to_extent = filter_to_extent,
+      caller = "render_tree"
+    )
+    long = filtered_tree_xy$x
+    lat = filtered_tree_xy$y
+    if (length(filtered_tree_xy$keep) == n_tree_before_filter) {
+      tree_height = subset_render_arg(
+        tree_height,
+        filtered_tree_xy$keep,
+        n_tree_before_filter
+      )
+      trunk_height_ratio = subset_render_arg(
+        trunk_height_ratio,
+        filtered_tree_xy$keep,
+        n_tree_before_filter
+      )
+      crown_width_ratio = subset_render_arg(
+        crown_width_ratio,
+        filtered_tree_xy$keep,
+        n_tree_before_filter
+      )
+      crown_width = subset_render_arg(
+        crown_width,
+        filtered_tree_xy$keep,
+        n_tree_before_filter
+      )
+      trunk_radius = subset_render_arg(
+        trunk_radius,
+        filtered_tree_xy$keep,
+        n_tree_before_filter
+      )
+      crown_color = subset_render_color_arg(
+        crown_color,
+        filtered_tree_xy$keep,
+        n_tree_before_filter
+      )
+      trunk_color = subset_render_color_arg(
+        trunk_color,
+        filtered_tree_xy$keep,
+        n_tree_before_filter
+      )
+      angle = subset_render_row_arg(
+        angle,
+        filtered_tree_xy$keep,
+        n_tree_before_filter
+      )
+    }
+    if (!length(lat) || !length(long)) {
+      render_zaxis_from_dots(
+        zaxis_args = zaxis_args,
+        extent = extent,
+        panel = panel,
+        zscale = zscale,
+        heightmap = heightmap,
+        caller = "render_tree"
+      )
+      return(invisible())
+    }
+  }
+  # Check if custom tree models exist
+  has_custom_tree = !is.null(custom_obj_tree) && file.exists(custom_obj_tree)
+  has_custom_crown = !is.null(custom_obj_crown) && file.exists(custom_obj_crown)
+  has_custom_trunk = !is.null(custom_obj_trunk) && file.exists(custom_obj_trunk)
 
-	if (
-		(has_custom_trunk && !has_custom_crown) ||
-			(!has_custom_trunk && has_custom_crown)
-	) {
-		stop(
-			"If specifying either one of `custom_obj_crown` or `custom_obj_trunk`, both must be specified."
-		)
-	}
+  if (
+    (has_custom_trunk && !has_custom_crown) ||
+      (!has_custom_trunk && has_custom_crown)
+  ) {
+    stop(
+      "If specifying either one of `custom_obj_crown` or `custom_obj_trunk`, both must be specified."
+    )
+  }
 
-	# Check if the tree is fully custom or partially custom
-	fully_custom_tree = has_custom_trunk && has_custom_crown
-	custom_tree = any(c(has_custom_tree, has_custom_crown, has_custom_trunk))
+  # Check if the tree is fully custom or partially custom
+  fully_custom_tree = has_custom_trunk && has_custom_crown
+  custom_tree = any(c(has_custom_tree, has_custom_crown, has_custom_trunk))
 
-	# Handling case where both full tree and parts are specified
-	if (
-		custom_tree && has_custom_tree && (has_custom_crown || has_custom_trunk)
-	) {
-		warning(
-			"Using `custom_obj_tree` over models specied in `custom_obj_crown` and `custom_obj_trunk`"
-		)
-		has_custom_crown = FALSE
-		has_custom_trunk = FALSE
-	}
+  # Handling case where both full tree and parts are specified
+  if (
+    custom_tree && has_custom_tree && (has_custom_crown || has_custom_trunk)
+  ) {
+    warning(
+      "Using `custom_obj_tree` over models specied in `custom_obj_crown` and `custom_obj_trunk`"
+    )
+    has_custom_crown = FALSE
+    has_custom_trunk = FALSE
+  }
 
-	use_default_crown_height = FALSE
-	use_default_trunk_height = FALSE
-	use_default_trunk_radius = FALSE
-	use_absolute_widths = FALSE
+  use_default_crown_height = FALSE
+  use_default_trunk_height = FALSE
+  use_default_trunk_radius = FALSE
+  use_absolute_widths = FALSE
 
-	if (is.null(tree_height)) {
-		tree_height = 10
-	}
-	tree_zaxis_raw = tree_height
-	tree_zaxis_scene = tree_height
-	tree_zaxis_label = if (!is.null(tree_height_column)) tree_height_column else "tree"
-	if (is.null(trunk_height_ratio)) {
-		use_default_crown_height = TRUE
-		use_default_trunk_height = TRUE
-		if (!custom_tree) {
-			if (type == "cone") {
-				trunk_height_ratio = 1 / 6
-			}
-			if (type == "basic") {
-				trunk_height_ratio = 1 / 3
-			}
-		} else {
-			trunk_height_ratio = 1 / 3
-		}
-	} else {
-		stopifnot(all(trunk_height_ratio < 1 & trunk_height_ratio >= 0))
-	}
-	if (!absolute_height) {
-		crown_height = (1 - trunk_height_ratio) * tree_height
-		trunk_height = (trunk_height_ratio) * tree_height
-	}
-	if (is.null(crown_width_ratio)) {
-		if (type == "cone") {
-			crown_width_ratio = 1 / 2
-		}
-		if (type == "basic") {
-			crown_width_ratio = 1
-		}
-	}
+  if (is.null(tree_height)) {
+    tree_height = 10
+  }
+  tree_zaxis_raw = tree_height
+  tree_zaxis_scene = tree_height
+  tree_zaxis_label = if (!is.null(tree_height_column)) tree_height_column else
+    "tree"
+  if (is.null(trunk_height_ratio)) {
+    use_default_crown_height = TRUE
+    use_default_trunk_height = TRUE
+    if (!custom_tree) {
+      if (type == "cone") {
+        trunk_height_ratio = 1 / 6
+      }
+      if (type == "basic") {
+        trunk_height_ratio = 1 / 3
+      }
+    } else {
+      trunk_height_ratio = 1 / 3
+    }
+  } else {
+    stopifnot(all(trunk_height_ratio < 1 & trunk_height_ratio >= 0))
+  }
+  if (!absolute_height) {
+    crown_height = (1 - trunk_height_ratio) * tree_height
+    trunk_height = (trunk_height_ratio) * tree_height
+  }
+  if (is.null(crown_width_ratio)) {
+    if (type == "cone") {
+      crown_width_ratio = 1 / 2
+    }
+    if (type == "basic") {
+      crown_width_ratio = 1
+    }
+  }
 
-	if (is.null(trunk_radius)) {
-		use_default_trunk_radius = TRUE
-	}
-	if (!is.null(crown_width)) {
-		use_absolute_widths = TRUE
-	}
+  if (is.null(trunk_radius)) {
+    use_default_trunk_radius = TRUE
+  }
+  if (!is.null(crown_width)) {
+    use_absolute_widths = TRUE
+  }
 
-	# If absolute height is specified, calculate offset in heightmap coordinates
-	if (absolute_height && length(tree_height) == length(lat)) {
-		xyz_tree = transform_into_heightmap_coords(
-			extent = extent,
-			heightmap = heightmap,
-			lat = lat,
-			long = long,
-			altitude = NULL,
-			offset = 0,
-			zscale = 1,
-			crs = render_obj_crs,
-			panel = panel,
-			transform_scene = !location_supplied && !tree_coords_transformed,
-			caller = "render_tree"
-		)
-		z_tree = xyz_tree[, 2]
-		filter_nan = is.na(z_tree)
-		if (all(filter_nan)) {
-			return(invisible())
-		}
-		z_tree = z_tree[!filter_nan]
-		lat = lat[!filter_nan]
-		long = long[!filter_nan]
-		if (length(tree_height) == nrow(xyz_tree)) {
-			tree_height = tree_height[!filter_nan]
-		}
-		if (length(tree_zaxis_raw) == nrow(xyz_tree)) {
-			tree_zaxis_raw = tree_zaxis_raw[!filter_nan]
-			tree_zaxis_scene = tree_zaxis_scene[!filter_nan]
-		}
-		if (length(trunk_height_ratio) == nrow(xyz_tree)) {
-			trunk_height_ratio = trunk_height_ratio[!filter_nan]
-		}
-		if (length(trunk_color) == nrow(xyz_tree)) {
-			trunk_color = trunk_color[!filter_nan]
-		}
-		if (length(trunk_radius) == nrow(xyz_tree)) {
-			trunk_radius = trunk_radius[!filter_nan]
-		}
-		if (length(crown_width_ratio) == nrow(xyz_tree)) {
-			crown_width_ratio = crown_width_ratio[!filter_nan]
-		}
-		if (use_absolute_widths && length(crown_width) == nrow(xyz_tree)) {
-			crown_width = crown_width[!filter_nan]
-		}
-		tree_height = tree_height - z_tree
-		if (!is.infinite(max_height) || min_height > 0) {
-			filter_height = tree_height >= max_height | tree_height <= min_height
+  # If absolute height is specified, calculate offset in heightmap coordinates
+  if (absolute_height && length(tree_height) == length(lat)) {
+    xyz_tree = transform_into_heightmap_coords(
+      extent = extent,
+      heightmap = heightmap,
+      lat = lat,
+      long = long,
+      altitude = NULL,
+      offset = 0,
+      zscale = 1,
+      crs = render_obj_crs,
+      panel = panel,
+      transform_scene = !location_supplied && !tree_coords_transformed,
+      caller = "render_tree"
+    )
+    z_tree = xyz_tree[, 2]
+    filter_nan = is.na(z_tree)
+    if (all(filter_nan)) {
+      return(invisible())
+    }
+    z_tree = z_tree[!filter_nan]
+    lat = lat[!filter_nan]
+    long = long[!filter_nan]
+    if (length(tree_height) == nrow(xyz_tree)) {
+      tree_height = tree_height[!filter_nan]
+    }
+    if (length(tree_zaxis_raw) == nrow(xyz_tree)) {
+      tree_zaxis_raw = tree_zaxis_raw[!filter_nan]
+      tree_zaxis_scene = tree_zaxis_scene[!filter_nan]
+    }
+    if (length(trunk_height_ratio) == nrow(xyz_tree)) {
+      trunk_height_ratio = trunk_height_ratio[!filter_nan]
+    }
+    if (length(trunk_color) == nrow(xyz_tree)) {
+      trunk_color = trunk_color[!filter_nan]
+    }
+    if (length(trunk_radius) == nrow(xyz_tree)) {
+      trunk_radius = trunk_radius[!filter_nan]
+    }
+    if (length(crown_width_ratio) == nrow(xyz_tree)) {
+      crown_width_ratio = crown_width_ratio[!filter_nan]
+    }
+    if (use_absolute_widths && length(crown_width) == nrow(xyz_tree)) {
+      crown_width = crown_width[!filter_nan]
+    }
+    tree_height = tree_height - z_tree
+    if (!is.infinite(max_height) || min_height > 0) {
+      filter_height = tree_height >= max_height | tree_height <= min_height
 
-			if (length(long) > 1) {
-				long = long[!filter_height]
-			}
+      if (length(long) > 1) {
+        long = long[!filter_height]
+      }
 
-			if (length(lat) > 1) {
-				lat = lat[!filter_height]
-			}
+      if (length(lat) > 1) {
+        lat = lat[!filter_height]
+      }
 
-			if (length(trunk_color) > 1) {
-				trunk_color = trunk_color[!filter_height]
-			}
+      if (length(trunk_color) > 1) {
+        trunk_color = trunk_color[!filter_height]
+      }
 
-			if (length(trunk_height_ratio) > 1) {
-				trunk_height_ratio = trunk_height_ratio[!filter_height]
-			}
+      if (length(trunk_height_ratio) > 1) {
+        trunk_height_ratio = trunk_height_ratio[!filter_height]
+      }
 
-			if (length(trunk_radius) > 1) {
-				trunk_radius = trunk_radius[!filter_height]
-			}
+      if (length(trunk_radius) > 1) {
+        trunk_radius = trunk_radius[!filter_height]
+      }
 
-			if (length(crown_width_ratio) > 1) {
-				crown_width_ratio = crown_width_ratio[!filter_height]
-			}
+      if (length(crown_width_ratio) > 1) {
+        crown_width_ratio = crown_width_ratio[!filter_height]
+      }
 
-			if (use_absolute_widths) {
-				if (length(crown_width) > 1) {
-					crown_width = crown_width[!filter_height]
-				}
-			}
+      if (use_absolute_widths) {
+        if (length(crown_width) > 1) {
+          crown_width = crown_width[!filter_height]
+        }
+      }
 
-			if (length(tree_height) > 1) {
-				tree_height = tree_height[!filter_height]
-			}
-			if (length(tree_zaxis_raw) > 1) {
-				tree_zaxis_raw = tree_zaxis_raw[!filter_height]
-				tree_zaxis_scene = tree_zaxis_scene[!filter_height]
-			}
-		}
-		crown_height = (1 - trunk_height_ratio) * tree_height
-		trunk_height = trunk_height_ratio * tree_height
-		if (length(long) == 0) {
-			return(invisible())
-		}
-	}
-	# Determine default trunk height and radius based on tree type
-	# The basic trunk included has a radius of 0.6 units and a height of 1.0 units,
-	# with the bottom of the trunk located at 0.0 (midpoint at 0.5).
-	# The basic spherical crown is centered at zero with a radius of 5.0 units
-	# The basic conical crown has a radius of 5.0 units and a height of 10 units, with the base at 0.0
-	if (!custom_tree) {
-		# Calculate crown radius
-		crown_radius = crown_height * crown_width_ratio / 2
-		if (is.null(crown_radius)) {
-			crown_radius = crown_height / 4
-		}
-		# Scaling tree dimensions if tree_zscale is TRUE
-		if (tree_zscale) {
-			crown_radius = crown_radius / zscale
-			trunk_radius = trunk_radius / zscale
-		}
-		#This just ensures the aspect ratio is correct
-		if (type == "cone") {
-			crown_radius = crown_radius * 2
-		}
-		crown_width = crown_radius
-	} else {
-		if (!fully_custom_tree) {
-			if (is.null(crown_height)) {
-				crown_height = 1
-			}
-			if (!is.null(trunk_height) || !is.null(trunk_radius)) {
-				warning(
-					"When specifying single `crown_obj_tree` file (instead of separate ",
-					"crown and trunk OBJs), `crown_height` controls the overall scale of ",
-					"the tree and trunk settings cannot be changed."
-				)
-				trunk_height = 1
-				trunk_radius = 1
-			}
-			if (!is.null(crown_width_ratio)) {
-				crown_radius = crown_height * crown_width_ratio / 2
-			} else {
-				crown_radius = 1
-			}
-		} else {
-			if (is.null(trunk_height)) {
-				trunk_height = 1
-			}
-			if (!use_absolute_widths) {
-				if (!is.null(crown_width_ratio)) {
-					crown_width = crown_height * crown_width_ratio
-				} else {
-					crown_width = crown_height
-				}
-			}
-			# Scaling tree dimensions if tree_zscale is TRUE
-			if (tree_zscale) {
-				crown_width = crown_width / zscale
-				trunk_radius = trunk_radius / zscale
-			}
-		}
-	}
-	if (use_default_trunk_radius) {
-		trunk_radius = crown_width / 6
-		if (type == "cone") {
-			trunk_radius = trunk_radius / 2
-		}
-	}
-	stopifnot(length(lat) == length(long))
-	height_zscale = 1
+      if (length(tree_height) > 1) {
+        tree_height = tree_height[!filter_height]
+      }
+      if (length(tree_zaxis_raw) > 1) {
+        tree_zaxis_raw = tree_zaxis_raw[!filter_height]
+        tree_zaxis_scene = tree_zaxis_scene[!filter_height]
+      }
+    }
+    crown_height = (1 - trunk_height_ratio) * tree_height
+    trunk_height = trunk_height_ratio * tree_height
+    if (length(long) == 0) {
+      return(invisible())
+    }
+  }
+  # Determine default trunk height and radius based on tree type
+  # The basic trunk included has a radius of 0.6 units and a height of 1.0 units,
+  # with the bottom of the trunk located at 0.0 (midpoint at 0.5).
+  # The basic spherical crown is centered at zero with a radius of 5.0 units
+  # The basic conical crown has a radius of 5.0 units and a height of 10 units, with the base at 0.0
+  if (!custom_tree) {
+    # Calculate crown radius
+    crown_radius = crown_height * crown_width_ratio / 2
+    if (is.null(crown_radius)) {
+      crown_radius = crown_height / 4
+    }
+    # Scaling tree dimensions if tree_zscale is TRUE
+    if (tree_zscale) {
+      crown_radius = crown_radius / zscale
+      trunk_radius = trunk_radius / zscale
+    }
+    #This just ensures the aspect ratio is correct
+    if (type == "cone") {
+      crown_radius = crown_radius * 2
+    }
+    crown_width = crown_radius
+  } else {
+    if (!fully_custom_tree) {
+      if (is.null(crown_height)) {
+        crown_height = 1
+      }
+      if (!is.null(trunk_height) || !is.null(trunk_radius)) {
+        warning(
+          "When specifying single `crown_obj_tree` file (instead of separate ",
+          "crown and trunk OBJs), `crown_height` controls the overall scale of ",
+          "the tree and trunk settings cannot be changed."
+        )
+        trunk_height = 1
+        trunk_radius = 1
+      }
+      if (!is.null(crown_width_ratio)) {
+        crown_radius = crown_height * crown_width_ratio / 2
+      } else {
+        crown_radius = 1
+      }
+    } else {
+      if (is.null(trunk_height)) {
+        trunk_height = 1
+      }
+      if (!use_absolute_widths) {
+        if (!is.null(crown_width_ratio)) {
+          crown_width = crown_height * crown_width_ratio
+        } else {
+          crown_width = crown_height
+        }
+      }
+      # Scaling tree dimensions if tree_zscale is TRUE
+      if (tree_zscale) {
+        crown_width = crown_width / zscale
+        trunk_radius = trunk_radius / zscale
+      }
+    }
+  }
+  if (use_default_trunk_radius) {
+    trunk_radius = crown_width / 6
+    if (type == "cone") {
+      trunk_radius = trunk_radius / 2
+    }
+  }
+  stopifnot(length(lat) == length(long))
+  height_zscale = 1
 
-	# Expand scalar dimensions to vectors if needed
-	if (length(crown_height) == 1) {
-		crown_height = rep(crown_height, length(lat))
-	}
-	if (length(crown_width) == 1) {
-		crown_width = rep(crown_width, length(lat))
-	}
-	if (length(trunk_radius) == 1) {
-		trunk_radius = rep(trunk_radius, length(lat))
-	}
-	if (length(trunk_height) == 1) {
-		trunk_height = rep(trunk_height, length(lat))
-	}
-	if (!custom_tree) {
-		if (tree_zscale) {
-			tree_scale = matrix(
-				c(crown_width / 5, crown_height / 10 / zscale, crown_width / 5),
-				ncol = 3,
-				nrow = length(lat)
-			)
-			trunk_scale = matrix(
-				c(
-					trunk_radius / 0.3,
-					(trunk_height + crown_height / 3) / zscale,
-					trunk_radius / 0.3
-				),
-				ncol = 3,
-				nrow = length(lat)
-			)
-		} else {
-			tree_scale = matrix(
-				c(crown_width / 5, crown_height / 10, crown_width / 5),
-				ncol = 3,
-				nrow = length(lat)
-			)
-			trunk_scale = matrix(
-				c(
-					trunk_radius / 0.3,
-					(trunk_height + crown_height / 3),
-					trunk_radius / 0.3
-				),
-				ncol = 3,
-				nrow = length(lat)
-			)
-			height_zscale = zscale
-		}
-	} else {
-		#Scale the custom trees
-		if (fully_custom_tree) {
-			# For this version, we can control all proportions.
-			# This assumes the tree trunk/crown has a radius of 1 and a height of 1.
-			if (tree_zscale) {
-				tree_scale = matrix(
-					c(crown_width, crown_height / zscale, crown_width),
-					ncol = 3,
-					nrow = length(lat)
-				)
-				trunk_scale = matrix(
-					c(trunk_radius, trunk_height / zscale, trunk_radius),
-					ncol = 3,
-					nrow = length(lat)
-				)
-			} else {
-				tree_scale = matrix(
-					c(crown_width, crown_height, crown_width),
-					ncol = 3,
-					nrow = length(lat)
-				)
-				trunk_scale = matrix(
-					c(trunk_radius, trunk_height, trunk_radius),
-					ncol = 3,
-					nrow = length(lat)
-				)
-				height_zscale = zscale
-			}
-		} else {
-			if (tree_zscale) {
-				tree_scale = matrix(
-					c(crown_width, crown_height / zscale, crown_width),
-					ncol = 3,
-					nrow = length(lat)
-				)
-				trunk_scale = matrix(
-					c(trunk_radius, trunk_height / zscale, trunk_radius),
-					ncol = 3,
-					nrow = length(lat)
-				)
-			} else {
-				tree_scale = matrix(
-					c(crown_width, crown_height, crown_width),
-					ncol = 3,
-					nrow = length(lat)
-				)
-				height_zscale = zscale
-			}
-		}
-	}
-	if (fully_custom_tree) {
-		# If a fully custom tree is specified, render the custom crown and trunk
-		render_obj_tree(
-			custom_obj_crown,
-			color = crown_color,
-			lat = lat,
-			long = long,
-			extent = extent,
-			panel = panel,
-			zscale = zscale,
-			crs = render_obj_crs,
-			offset = trunk_height * height_zscale,
-			heightmap = heightmap,
-			angle = angle,
-			scale = tree_scale,
-			baseshape = baseshape,
-			lit = lit,
-			transform_scene = !location_supplied && !tree_coords_transformed,
-			filter_to_extent = filter_to_extent,
-			clear_previous = FALSE,
-			rgl_tag = "tree"
-		)
-		render_obj_tree(
-			custom_obj_trunk,
-			color = trunk_color,
-			lat = lat,
-			long = long,
-			extent = extent,
-			panel = panel,
-			zscale = zscale,
-			crs = render_obj_crs,
-			offset = 0,
-			baseshape = baseshape,
-			lit = lit,
-			heightmap = heightmap,
-			angle = angle,
-			scale = trunk_scale,
-			transform_scene = !location_supplied && !tree_coords_transformed,
-			filter_to_extent = filter_to_extent,
-			rgl_tag = "tree"
-		)
-	} else if (custom_tree) {
-		# If a custom tree is specified (but not fully custom), render the custom tree
-		render_obj_tree(
-			custom_obj_tree,
-			load_material = TRUE,
-			lat = lat,
-			long = long,
-			extent = extent,
-			panel = panel,
-			zscale = zscale,
-			crs = render_obj_crs,
-			offset = 0,
-			heightmap = heightmap,
-			angle = angle,
-			scale = tree_scale,
-			baseshape = baseshape,
-			transform_scene = !location_supplied && !tree_coords_transformed,
-			filter_to_extent = filter_to_extent,
-			clear_previous = FALSE,
-			rgl_tag = "tree",
-			lit = lit
-		)
-	} else if (type == "basic") {
-		# If a basic type is specified, render the basic tree's crown and trunk
-		render_obj_tree(
-			tree_basic_center_obj(),
-			color = crown_color,
-			lat = lat,
-			long = long,
-			extent = extent,
-			panel = panel,
-			zscale = zscale,
-			crs = render_obj_crs,
-			offset = (trunk_height + crown_height / 3) * height_zscale,
-			heightmap = heightmap,
-			angle = angle,
-			scale = tree_scale,
-			baseshape = baseshape,
-			lit = lit,
-			transform_scene = !location_supplied && !tree_coords_transformed,
-			filter_to_extent = filter_to_extent,
-			clear_previous = FALSE,
-			rgl_tag = "tree"
-		)
-		render_obj_tree(
-			tree_trunk_obj(),
-			color = trunk_color,
-			lat = lat,
-			long = long,
-			extent = extent,
-			panel = panel,
-			zscale = zscale,
-			crs = render_obj_crs,
-			offset = 0,
-			baseshape = baseshape,
-			lit = lit,
-			heightmap = heightmap,
-			angle = angle,
-			scale = trunk_scale,
-			transform_scene = !location_supplied && !tree_coords_transformed,
-			filter_to_extent = filter_to_extent,
-			rgl_tag = "tree"
-		)
-	} else if (type == "cone") {
-		# If a cone type is specified, render the cone tree's crown and trunk
-		render_obj_tree(
-			tree_cone_center_obj(),
-			color = crown_color,
-			lat = lat,
-			long = long,
-			extent = extent,
-			panel = panel,
-			zscale = zscale,
-			crs = render_obj_crs,
-			offset = trunk_height * height_zscale,
-			baseshape = baseshape,
-			lit = lit,
-			heightmap = heightmap,
-			angle = angle,
-			scale = tree_scale,
-			transform_scene = !location_supplied && !tree_coords_transformed,
-			filter_to_extent = filter_to_extent,
-			clear_previous = FALSE,
-			rgl_tag = "tree"
-		)
-		render_obj_tree(
-			tree_trunk_obj(),
-			color = trunk_color,
-			lat = lat,
-			long = long,
-			extent = extent,
-			panel = panel,
-			zscale = zscale,
-			crs = render_obj_crs,
-			offset = 0,
-			baseshape = baseshape,
-			lit = lit,
-			heightmap = heightmap,
-			angle = angle,
-			scale = trunk_scale,
-			transform_scene = !location_supplied && !tree_coords_transformed,
-			filter_to_extent = filter_to_extent,
-			rgl_tag = "tree"
-		)
-	} else {
-		stop(sprintf("%s not recognized as built-in type of tree", type))
-	}
-	if (!isTRUE(absolute_height)) {
-		tree_zaxis_scene = tree_height
-	}
-	cache_altitude_zaxis_data(
-		source = "tree",
-		altitude = tree_zaxis_raw,
-		scene_altitude = tree_zaxis_scene,
-		label = tree_zaxis_label
-	)
-	render_zaxis_from_dots(
-		zaxis_args = zaxis_args,
-		extent = extent,
-		panel = panel,
-		zscale = zscale,
-		heightmap = heightmap,
-		caller = "render_tree"
-	)
+  # Expand scalar dimensions to vectors if needed
+  if (length(crown_height) == 1) {
+    crown_height = rep(crown_height, length(lat))
+  }
+  if (length(crown_width) == 1) {
+    crown_width = rep(crown_width, length(lat))
+  }
+  if (length(trunk_radius) == 1) {
+    trunk_radius = rep(trunk_radius, length(lat))
+  }
+  if (length(trunk_height) == 1) {
+    trunk_height = rep(trunk_height, length(lat))
+  }
+  if (!custom_tree) {
+    if (tree_zscale) {
+      tree_scale = matrix(
+        c(crown_width / 5, crown_height / 10 / zscale, crown_width / 5),
+        ncol = 3,
+        nrow = length(lat)
+      )
+      trunk_scale = matrix(
+        c(
+          trunk_radius / 0.3,
+          (trunk_height + crown_height / 3) / zscale,
+          trunk_radius / 0.3
+        ),
+        ncol = 3,
+        nrow = length(lat)
+      )
+    } else {
+      tree_scale = matrix(
+        c(crown_width / 5, crown_height / 10, crown_width / 5),
+        ncol = 3,
+        nrow = length(lat)
+      )
+      trunk_scale = matrix(
+        c(
+          trunk_radius / 0.3,
+          (trunk_height + crown_height / 3),
+          trunk_radius / 0.3
+        ),
+        ncol = 3,
+        nrow = length(lat)
+      )
+      height_zscale = zscale
+    }
+  } else {
+    #Scale the custom trees
+    if (fully_custom_tree) {
+      # For this version, we can control all proportions.
+      # This assumes the tree trunk/crown has a radius of 1 and a height of 1.
+      if (tree_zscale) {
+        tree_scale = matrix(
+          c(crown_width, crown_height / zscale, crown_width),
+          ncol = 3,
+          nrow = length(lat)
+        )
+        trunk_scale = matrix(
+          c(trunk_radius, trunk_height / zscale, trunk_radius),
+          ncol = 3,
+          nrow = length(lat)
+        )
+      } else {
+        tree_scale = matrix(
+          c(crown_width, crown_height, crown_width),
+          ncol = 3,
+          nrow = length(lat)
+        )
+        trunk_scale = matrix(
+          c(trunk_radius, trunk_height, trunk_radius),
+          ncol = 3,
+          nrow = length(lat)
+        )
+        height_zscale = zscale
+      }
+    } else {
+      if (tree_zscale) {
+        tree_scale = matrix(
+          c(crown_width, crown_height / zscale, crown_width),
+          ncol = 3,
+          nrow = length(lat)
+        )
+        trunk_scale = matrix(
+          c(trunk_radius, trunk_height / zscale, trunk_radius),
+          ncol = 3,
+          nrow = length(lat)
+        )
+      } else {
+        tree_scale = matrix(
+          c(crown_width, crown_height, crown_width),
+          ncol = 3,
+          nrow = length(lat)
+        )
+        height_zscale = zscale
+      }
+    }
+  }
+  if (fully_custom_tree) {
+    # If a fully custom tree is specified, render the custom crown and trunk
+    render_obj_tree(
+      custom_obj_crown,
+      color = crown_color,
+      lat = lat,
+      long = long,
+      extent = extent,
+      panel = panel,
+      zscale = zscale,
+      crs = render_obj_crs,
+      offset = trunk_height * height_zscale,
+      heightmap = heightmap,
+      angle = angle,
+      scale = tree_scale,
+      baseshape = baseshape,
+      lit = lit,
+      transform_scene = !location_supplied && !tree_coords_transformed,
+      filter_to_extent = filter_to_extent,
+      clear_previous = FALSE,
+      rgl_tag = "tree"
+    )
+    render_obj_tree(
+      custom_obj_trunk,
+      color = trunk_color,
+      lat = lat,
+      long = long,
+      extent = extent,
+      panel = panel,
+      zscale = zscale,
+      crs = render_obj_crs,
+      offset = 0,
+      baseshape = baseshape,
+      lit = lit,
+      heightmap = heightmap,
+      angle = angle,
+      scale = trunk_scale,
+      transform_scene = !location_supplied && !tree_coords_transformed,
+      filter_to_extent = filter_to_extent,
+      rgl_tag = "tree"
+    )
+  } else if (custom_tree) {
+    # If a custom tree is specified (but not fully custom), render the custom tree
+    render_obj_tree(
+      custom_obj_tree,
+      load_material = TRUE,
+      lat = lat,
+      long = long,
+      extent = extent,
+      panel = panel,
+      zscale = zscale,
+      crs = render_obj_crs,
+      offset = 0,
+      heightmap = heightmap,
+      angle = angle,
+      scale = tree_scale,
+      baseshape = baseshape,
+      transform_scene = !location_supplied && !tree_coords_transformed,
+      filter_to_extent = filter_to_extent,
+      clear_previous = FALSE,
+      rgl_tag = "tree",
+      lit = lit
+    )
+  } else if (type == "basic") {
+    # If a basic type is specified, render the basic tree's crown and trunk
+    render_obj_tree(
+      tree_basic_center_obj(),
+      color = crown_color,
+      lat = lat,
+      long = long,
+      extent = extent,
+      panel = panel,
+      zscale = zscale,
+      crs = render_obj_crs,
+      offset = (trunk_height + crown_height / 3) * height_zscale,
+      heightmap = heightmap,
+      angle = angle,
+      scale = tree_scale,
+      baseshape = baseshape,
+      lit = lit,
+      transform_scene = !location_supplied && !tree_coords_transformed,
+      filter_to_extent = filter_to_extent,
+      clear_previous = FALSE,
+      rgl_tag = "tree"
+    )
+    render_obj_tree(
+      tree_trunk_obj(),
+      color = trunk_color,
+      lat = lat,
+      long = long,
+      extent = extent,
+      panel = panel,
+      zscale = zscale,
+      crs = render_obj_crs,
+      offset = 0,
+      baseshape = baseshape,
+      lit = lit,
+      heightmap = heightmap,
+      angle = angle,
+      scale = trunk_scale,
+      transform_scene = !location_supplied && !tree_coords_transformed,
+      filter_to_extent = filter_to_extent,
+      rgl_tag = "tree"
+    )
+  } else if (type == "cone") {
+    # If a cone type is specified, render the cone tree's crown and trunk
+    render_obj_tree(
+      tree_cone_center_obj(),
+      color = crown_color,
+      lat = lat,
+      long = long,
+      extent = extent,
+      panel = panel,
+      zscale = zscale,
+      crs = render_obj_crs,
+      offset = trunk_height * height_zscale,
+      baseshape = baseshape,
+      lit = lit,
+      heightmap = heightmap,
+      angle = angle,
+      scale = tree_scale,
+      transform_scene = !location_supplied && !tree_coords_transformed,
+      filter_to_extent = filter_to_extent,
+      clear_previous = FALSE,
+      rgl_tag = "tree"
+    )
+    render_obj_tree(
+      tree_trunk_obj(),
+      color = trunk_color,
+      lat = lat,
+      long = long,
+      extent = extent,
+      panel = panel,
+      zscale = zscale,
+      crs = render_obj_crs,
+      offset = 0,
+      baseshape = baseshape,
+      lit = lit,
+      heightmap = heightmap,
+      angle = angle,
+      scale = trunk_scale,
+      transform_scene = !location_supplied && !tree_coords_transformed,
+      filter_to_extent = filter_to_extent,
+      rgl_tag = "tree"
+    )
+  } else {
+    stop(sprintf("%s not recognized as built-in type of tree", type))
+  }
+  if (!isTRUE(absolute_height)) {
+    tree_zaxis_scene = tree_height
+  }
+  cache_altitude_zaxis_data(
+    source = "tree",
+    altitude = tree_zaxis_raw,
+    scene_altitude = tree_zaxis_scene,
+    label = tree_zaxis_label
+  )
+  render_zaxis_from_dots(
+    zaxis_args = zaxis_args,
+    extent = extent,
+    panel = panel,
+    zscale = zscale,
+    heightmap = heightmap,
+    caller = "render_tree"
+  )
 }
 
 resolve_render_tree_height_column = function(
-	location,
-	tree_height_column = NULL,
-	tree_height_supplied = FALSE,
-	crs = NULL,
-	caller = NULL
+  location,
+  tree_height_column = NULL,
+  tree_height_supplied = FALSE,
+  crs = NULL,
+  caller = NULL
 ) {
-	if (is.null(location)) {
-		stop(
-			paste0(
-				format_render_caller_prefix(caller),
-				"`tree_height_column` requires `location`."
-			),
-			call. = FALSE
-		)
-	}
-	if (isTRUE(tree_height_supplied)) {
-		stop(
-			paste0(
-				format_render_caller_prefix(caller),
-				"`tree_height_column` cannot be combined with `tree_height`."
-			),
-			call. = FALSE
-		)
-	}
-	if (
-		!is.character(tree_height_column) ||
-			length(tree_height_column) != 1 ||
-			!nzchar(trimws(tree_height_column))
-	) {
-		stop(
-			paste0(
-				format_render_caller_prefix(caller),
-				"`tree_height_column` must be a single non-empty column name."
-			),
-			call. = FALSE
-		)
-	}
-	point_input = coerce_scene_point_input(
-		location = location,
-		crs = crs,
-		caller = caller
-	)
-	if (!tree_height_column %in% names(point_input$point_sf_data)) {
-		stop(
-			paste0(
-				format_render_caller_prefix(caller),
-				"`tree_height_column` was not found in `location`: ",
-				tree_height_column
-			),
-			call. = FALSE
-		)
-	}
-	tree_height = point_input$point_sf_data[[tree_height_column]]
-	if (inherits(tree_height, "units")) {
-		tree_height = units::drop_units(tree_height)
-	}
-	if (!is.numeric(tree_height)) {
-		stop(
-			paste0(
-				format_render_caller_prefix(caller),
-				"`tree_height_column` must refer to a numeric column."
-			),
-			call. = FALSE
-		)
-	}
-	if (any(!is.finite(tree_height))) {
-		stop(
-			paste0(
-				format_render_caller_prefix(caller),
-				"`tree_height_column` cannot contain NA, NaN, or infinite values."
-			),
-			call. = FALSE
-		)
-	}
-	as.numeric(tree_height)
+  if (is.null(location)) {
+    stop(
+      paste0(
+        format_render_caller_prefix(caller),
+        "`tree_height_column` requires `location`."
+      ),
+      call. = FALSE
+    )
+  }
+  if (isTRUE(tree_height_supplied)) {
+    stop(
+      paste0(
+        format_render_caller_prefix(caller),
+        "`tree_height_column` cannot be combined with `tree_height`."
+      ),
+      call. = FALSE
+    )
+  }
+  if (
+    !is.character(tree_height_column) ||
+      length(tree_height_column) != 1 ||
+      !nzchar(trimws(tree_height_column))
+  ) {
+    stop(
+      paste0(
+        format_render_caller_prefix(caller),
+        "`tree_height_column` must be a single non-empty column name."
+      ),
+      call. = FALSE
+    )
+  }
+  point_input = coerce_scene_point_input(
+    location = location,
+    crs = crs,
+    caller = caller
+  )
+  if (!tree_height_column %in% names(point_input$point_sf_data)) {
+    stop(
+      paste0(
+        format_render_caller_prefix(caller),
+        "`tree_height_column` was not found in `location`: ",
+        tree_height_column
+      ),
+      call. = FALSE
+    )
+  }
+  tree_height = point_input$point_sf_data[[tree_height_column]]
+  if (inherits(tree_height, "units")) {
+    tree_height = units::drop_units(tree_height)
+  }
+  if (!is.numeric(tree_height)) {
+    stop(
+      paste0(
+        format_render_caller_prefix(caller),
+        "`tree_height_column` must refer to a numeric column."
+      ),
+      call. = FALSE
+    )
+  }
+  if (any(!is.finite(tree_height))) {
+    stop(
+      paste0(
+        format_render_caller_prefix(caller),
+        "`tree_height_column` cannot contain NA, NaN, or infinite values."
+      ),
+      call. = FALSE
+    )
+  }
+  as.numeric(tree_height)
 }

@@ -10,6 +10,197 @@ format_zaxis_labels = function(values) {
   )
 }
 
+align_zaxis_nonnegative_labels = function(labels, breaks) {
+  if (length(labels) != length(breaks)) {
+    return(labels)
+  }
+  breaks = suppressWarnings(as.numeric(breaks))
+  valid_breaks = is.finite(breaks)
+  if (
+    !any(valid_breaks) ||
+      !any(breaks[valid_breaks] < 0) ||
+      !any(breaks[valid_breaks] >= 0)
+  ) {
+    return(labels)
+  }
+  nonnegative_labels = valid_breaks & breaks >= 0
+  labels[nonnegative_labels] = paste0(" ", labels[nonnegative_labels])
+  labels
+}
+
+normalize_zaxis_text_side = function(side = "auto", arg_name = "zaxis_side") {
+  if (is.null(side) || !length(side)) {
+    return("auto")
+  }
+  side = tolower(as.character(side)[1])
+  side = gsub("[-_[:space:]]", "", side)
+  if (side %in% c("auto", "default")) {
+    return("auto")
+  }
+  if (side %in% c("left", "l")) {
+    return("left")
+  }
+  if (side %in% c("right", "r")) {
+    return("right")
+  }
+  stop(
+    sprintf("`%s` must be one of: auto, left, right.", arg_name),
+    call. = FALSE
+  )
+}
+
+resolve_zaxis_text_side_unit = function(
+  side = "auto",
+  auto_unit = c(1, 0),
+  anchor_xyz = c(0, 0, 0),
+  reference_y = 0,
+  scale = 1
+) {
+  if (identical(side, "auto")) {
+    return(auto_unit)
+  }
+  screen_right_unit = get_zaxis_screen_right_unit(
+    anchor_xyz = anchor_xyz,
+    reference_y = reference_y,
+    scale = scale
+  )
+  if (is.null(screen_right_unit)) {
+    current_side = get_zaxis_screen_side(
+      unit = auto_unit,
+      anchor_xyz = anchor_xyz,
+      reference_y = reference_y,
+      scale = scale
+    )
+    if (is.null(current_side) || identical(current_side, side)) {
+      return(auto_unit)
+    }
+    return(-auto_unit)
+  }
+  if (identical(side, "left")) {
+    return(-screen_right_unit)
+  }
+  screen_right_unit
+}
+
+resolve_zaxis_text_side_name = function(
+  side = "auto",
+  unit = c(1, 0),
+  anchor_xyz = c(0, 0, 0),
+  reference_y = 0,
+  scale = 1,
+  fallback_unit = unit
+) {
+  if (!identical(side, "auto")) {
+    return(side)
+  }
+  screen_side = get_zaxis_screen_side(
+    unit = unit,
+    anchor_xyz = anchor_xyz,
+    reference_y = reference_y,
+    scale = scale
+  )
+  if (!is.null(screen_side)) {
+    return(screen_side)
+  }
+  if (fallback_unit[1] >= 0) "right" else "left"
+}
+
+get_zaxis_screen_right_unit = function(
+  anchor_xyz = c(0, 0, 0),
+  reference_y = 0,
+  scale = 1
+) {
+  x_delta = get_zaxis_screen_x_delta(
+    unit = c(1, 0),
+    anchor_xyz = anchor_xyz,
+    reference_y = reference_y,
+    scale = scale
+  )
+  z_delta = get_zaxis_screen_x_delta(
+    unit = c(0, 1),
+    anchor_xyz = anchor_xyz,
+    reference_y = reference_y,
+    scale = scale
+  )
+  gradient = c(x_delta, z_delta)
+  if (any(!is.finite(gradient))) {
+    return(NULL)
+  }
+  gradient_norm = sqrt(sum(gradient^2))
+  if (!is.finite(gradient_norm) || gradient_norm <= 1e-12) {
+    return(NULL)
+  }
+  gradient / gradient_norm
+}
+
+get_zaxis_screen_side = function(
+  unit = c(1, 0),
+  anchor_xyz = c(0, 0, 0),
+  reference_y = 0,
+  scale = 1
+) {
+  screen_delta = get_zaxis_screen_x_delta(
+    unit = unit,
+    anchor_xyz = anchor_xyz,
+    reference_y = reference_y,
+    scale = scale
+  )
+  if (!is.finite(screen_delta) || abs(screen_delta) <= 1e-12) {
+    return(NULL)
+  }
+  if (screen_delta > 0) "right" else "left"
+}
+
+get_zaxis_screen_x_delta = function(
+  unit = c(1, 0),
+  anchor_xyz = c(0, 0, 0),
+  reference_y = 0,
+  scale = 1
+) {
+  scale = suppressWarnings(as.numeric(scale)[1])
+  if (!is.finite(scale) || scale <= 0) {
+    scale = 1
+  }
+  anchor_point = c(anchor_xyz[1], reference_y, anchor_xyz[3])
+  offset_point = c(
+    anchor_xyz[1] + unit[1] * scale,
+    reference_y,
+    anchor_xyz[3] + unit[2] * scale
+  )
+  anchor_screen_x = project_zaxis_point_screen_x(anchor_point)
+  offset_screen_x = project_zaxis_point_screen_x(offset_point)
+  if (!is.finite(anchor_screen_x) || !is.finite(offset_screen_x)) {
+    return(NA_real_)
+  }
+  offset_screen_x - anchor_screen_x
+}
+
+project_zaxis_point_screen_x = function(point) {
+  projection = tryCatch(rgl::rgl.projection(), error = function(e) NULL)
+  if (
+    is.null(projection) ||
+      is.null(projection$model) ||
+      is.null(projection$proj)
+  ) {
+    return(NA_real_)
+  }
+  point = suppressWarnings(as.numeric(point))[1:3]
+  if (length(point) != 3 || any(!is.finite(point))) {
+    return(NA_real_)
+  }
+  clip = tryCatch(
+    projection$proj %*% projection$model %*% c(point, 1),
+    error = function(e) NULL
+  )
+  if (is.null(clip) || length(clip) < 4 || !is.finite(clip[4])) {
+    return(NA_real_)
+  }
+  if (abs(clip[4]) <= .Machine$double.eps) {
+    return(NA_real_)
+  }
+  as.numeric(clip[1] / clip[4])
+}
+
 render_zaxis_internal = function(
   zaxis = FALSE,
   extent = NULL,
@@ -22,9 +213,13 @@ render_zaxis_internal = function(
   zaxis_title = "auto",
   zaxis_title_location = "side",
   zaxis_title_offset = 5,
+  zaxis_title_size = NULL,
   zaxis_color = "black",
   zaxis_linewidth = 2,
   zaxis_text_offset = 1.5,
+  zaxis_label_size = 0.8,
+  zaxis_label_side = "auto",
+  zaxis_title_side = "auto",
   zaxis_corner_offset = NULL,
   zaxis_tick_size = NULL
 ) {
@@ -148,6 +343,21 @@ render_zaxis_internal = function(
   if (is.na(zaxis_text_offset) || zaxis_text_offset < 0) {
     stop("`zaxis_text_offset` must be a non-negative number.")
   }
+  zaxis_label_size = as.numeric(zaxis_label_size)[1]
+  if (is.na(zaxis_label_size) || zaxis_label_size <= 0) {
+    stop("`zaxis_label_size` must be a positive number.")
+  }
+  if (is.null(zaxis_title_size)) {
+    zaxis_title_size = zaxis_label_size
+  }
+  zaxis_label_side = normalize_zaxis_text_side(
+    zaxis_label_side,
+    arg_name = "zaxis_label_side"
+  )
+  zaxis_title_side = normalize_zaxis_text_side(
+    zaxis_title_side,
+    arg_name = "zaxis_title_side"
+  )
   if (is.null(zaxis_title_location)) {
     zaxis_title_location = "side"
   }
@@ -159,6 +369,10 @@ render_zaxis_internal = function(
   zaxis_title_offset = as.numeric(zaxis_title_offset)[1]
   if (is.na(zaxis_title_offset) || zaxis_title_offset < 0) {
     stop("`zaxis_title_offset` must be a non-negative number.")
+  }
+  zaxis_title_size = as.numeric(zaxis_title_size)[1]
+  if (is.na(zaxis_title_size) || zaxis_title_size <= 0) {
+    stop("`zaxis_title_size` must be a positive number.")
   }
   if (is.null(zaxis_corner_offset)) {
     zaxis_corner_offset = if (has_panel_info) 0 else 0.08
@@ -325,6 +539,7 @@ render_zaxis_internal = function(
   anchor_xyz[3] = anchor_xyz[3] + outside_unit_2d[2] * axis_offset
 
   default_zaxis_labels = NULL
+  zaxis_label_breaks = NULL
   if (!is.null(zaxis_data_info)) {
     if (is.null(zaxis_breaks)) {
       raw_zaxis_breaks = pretty(zaxis_data_info$raw_range, n = 4)
@@ -340,6 +555,7 @@ render_zaxis_internal = function(
       raw_zaxis_breaks = sort(unique(raw_zaxis_breaks))
     }
     default_zaxis_labels = format_zaxis_labels(raw_zaxis_breaks)
+    zaxis_label_breaks = raw_zaxis_breaks
     zaxis_breaks = map_zaxis_data_breaks(
       raw_zaxis_breaks,
       zaxis_data = zaxis_data_info
@@ -363,6 +579,7 @@ render_zaxis_internal = function(
           raw_zaxis_breaks = height_range
         }
         default_zaxis_labels = format_zaxis_labels(raw_zaxis_breaks)
+        zaxis_label_breaks = raw_zaxis_breaks
         zaxis_breaks = map_scene_altitudes(
           raw_zaxis_breaks,
           height_transform = height_transform,
@@ -404,6 +621,9 @@ render_zaxis_internal = function(
     }
     zaxis_breaks = sort(unique(zaxis_breaks))
   }
+  if (is.null(zaxis_label_breaks)) {
+    zaxis_label_breaks = zaxis_breaks
+  }
 
   if (is.null(zaxis_labels)) {
     if (is.null(default_zaxis_labels)) {
@@ -417,6 +637,10 @@ render_zaxis_internal = function(
     }
     zaxis_labels = as.character(zaxis_labels)
   }
+  zaxis_labels = align_zaxis_nonnegative_labels(
+    zaxis_labels,
+    zaxis_label_breaks
+  )
   if (identical(zaxis_title, FALSE)) {
     zaxis_title = NULL
   } else if (is.null(zaxis_title)) {
@@ -475,10 +699,23 @@ render_zaxis_internal = function(
   } else {
     zaxis_tick_size
   }
-  outside_unit = outside_unit_2d
-  side_sign = if (outside_unit[1] >= 0) 1 else -1
+  label_unit = resolve_zaxis_text_side_unit(
+    side = zaxis_label_side,
+    auto_unit = outside_unit_2d,
+    anchor_xyz = anchor_xyz,
+    reference_y = mean(c(y_min, y_max)),
+    scale = tick_len
+  )
+  label_screen_side = resolve_zaxis_text_side_name(
+    side = zaxis_label_side,
+    unit = label_unit,
+    anchor_xyz = anchor_xyz,
+    reference_y = mean(c(y_min, y_max)),
+    scale = tick_len,
+    fallback_unit = outside_unit_2d
+  )
   # Keep text extending away from the axis side instead of centered on the anchor point.
-  text_adj_x = if (side_sign > 0) 0 else 1
+  text_adj_x = if (identical(label_screen_side, "right")) 0 else 1
   # Extra whitespace gives a reliable visual gap from the axis in billboarded text mode.
   space_pad = "  "
   text_labels = if (text_adj_x == 1) {
@@ -508,8 +745,8 @@ render_zaxis_internal = function(
   }
 
   for (i in which(draw_idx)) {
-    text_x = anchor_xyz[1] + outside_unit[1] * tick_len * zaxis_text_offset
-    text_z = anchor_xyz[3] + outside_unit[2] * tick_len * zaxis_text_offset
+    text_x = anchor_xyz[1] + label_unit[1] * tick_len * zaxis_text_offset
+    text_z = anchor_xyz[3] + label_unit[2] * tick_len * zaxis_text_offset
     rgl::texts3d(
       x = text_x,
       y = y_vals[i],
@@ -517,37 +754,78 @@ render_zaxis_internal = function(
       texts = text_labels[i],
       color = zaxis_color,
       adj = c(text_adj_x, 0.5),
-      cex = 0.8,
+      cex = zaxis_label_size,
       tag = "zaxis_labels"
     )
   }
 
   if (!is.null(zaxis_title)) {
+    if (identical(zaxis_title_side, "auto")) {
+      title_unit = label_unit
+      title_screen_side = resolve_zaxis_text_side_name(
+        side = "auto",
+        unit = title_unit,
+        anchor_xyz = anchor_xyz,
+        reference_y = mean(c(y_min, y_max)),
+        scale = tick_len,
+        fallback_unit = title_unit
+      )
+    } else {
+      title_unit = resolve_zaxis_text_side_unit(
+        side = zaxis_title_side,
+        auto_unit = label_unit,
+        anchor_xyz = anchor_xyz,
+        reference_y = mean(c(y_min, y_max)),
+        scale = tick_len
+      )
+      title_screen_side = zaxis_title_side
+    }
+    title_text_adj_x = if (identical(title_screen_side, "right")) 0 else 1
     if (zaxis_title_location == "side") {
-      title_unit = -outside_unit
       title_offset = max(zaxis_title_offset, zaxis_text_offset + 1)
       title_x = anchor_xyz[1] + title_unit[1] * tick_len * title_offset
-      title_y = mean(c(y_min, y_max))
       title_z = anchor_xyz[3] + title_unit[2] * tick_len * title_offset
-      title_adj = c(1 - text_adj_x, 0.5)
+      title_adj = c(title_text_adj_x, 0.5)
+      title_chars = strsplit(zaxis_title, "", fixed = TRUE)[[1]]
+      title_length = length(title_chars)
+      title_y_center = mean(c(y_min, y_max))
+      title_y = title_y_center
+      if (title_length > 1) {
+        title_span = max(abs(y_max - y_min), 1 / zscale)
+        title_y = seq(
+          title_y_center + title_span * 0.425,
+          title_y_center - title_span * 0.425,
+          length.out = title_length
+        )
+      }
+      rgl::texts3d(
+        x = rep(title_x, title_length),
+        y = title_y,
+        z = rep(title_z, title_length),
+        texts = title_chars,
+        color = zaxis_color,
+        adj = title_adj,
+        cex = zaxis_title_size,
+        tag = "zaxis_title"
+      )
     } else {
       title_side_offset = max(0.5, zaxis_text_offset)
       y_span = max(abs(y_max - y_min), 1 / zscale)
-      title_x = anchor_xyz[1] + outside_unit[1] * tick_len * title_side_offset
+      title_x = anchor_xyz[1] + title_unit[1] * tick_len * title_side_offset
       title_y = y_max + 0.08 * y_span * zaxis_title_offset
-      title_z = anchor_xyz[3] + outside_unit[2] * tick_len * title_side_offset
-      title_adj = c(text_adj_x, 0)
+      title_z = anchor_xyz[3] + title_unit[2] * tick_len * title_side_offset
+      title_adj = c(title_text_adj_x, 0)
+      rgl::texts3d(
+        x = title_x,
+        y = title_y,
+        z = title_z,
+        texts = zaxis_title,
+        color = zaxis_color,
+        adj = title_adj,
+        cex = zaxis_title_size,
+        tag = "zaxis_title"
+      )
     }
-    rgl::texts3d(
-      x = title_x,
-      y = title_y,
-      z = title_z,
-      texts = zaxis_title,
-      color = zaxis_color,
-      adj = title_adj,
-      cex = 1,
-      tag = "zaxis_title"
-    )
   }
 
   invisible(
@@ -557,6 +835,8 @@ render_zaxis_internal = function(
       labels = zaxis_labels,
       title = zaxis_title,
       title_location = zaxis_title_location,
+      label_side = label_screen_side,
+      title_side = if (!is.null(zaxis_title)) title_screen_side else NULL,
       data = zaxis_data_source
     )
   )

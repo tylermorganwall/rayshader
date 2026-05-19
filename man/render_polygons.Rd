@@ -133,7 +133,7 @@ render_snapshot()
 #We'll have to scale this value because its max value is 2.6 billion:
 render_camera(theta=-60,  phi=40, zoom = 0.85, fov=30)
 render_polygons(mont_county_buff, data_column_top = "ALAND",
-                scale_data = 300/(2.6E7), color = "chartreuse4",
+                scale_data = 300/(5E7), color = "chartreuse4",
                 clear_previous = TRUE)
 render_zaxis(zaxis_data = "polygon", zaxis_location = "topright")
 render_snapshot()

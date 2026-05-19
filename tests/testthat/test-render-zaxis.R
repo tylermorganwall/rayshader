@@ -151,6 +151,11 @@ test_that("render_zaxis() adds side and top titles", {
     zaxis_breaks = c(0, 50, 100),
     zaxis_title = "Elevation (m)",
     zaxis_title_location = "side",
+    zaxis_title_size = 1.4,
+    zaxis_label_size = 1.2,
+    zaxis_label_side = "right",
+    zaxis_title_side = "left",
+    zaxis_text_offset = 1,
     zaxis_color = "blue"
   ))
 
@@ -158,15 +163,36 @@ test_that("render_zaxis() adds side and top titles", {
   expect_true(any(ids$tag == "zaxis_title"))
   title_id = ids$id[ids$tag == "zaxis_title"][1]
   axis_id = ids$id[ids$tag == "zaxis_axis"][1]
-  title_text = trimws(as.character(rgl::rgl.attrib(title_id, "texts")))
+  title_text = paste0(
+    as.character(rgl::rgl.attrib(title_id, "texts")),
+    collapse = ""
+  )
   title_verts = rgl::rgl.attrib(title_id, "vertices")
   axis_verts = rgl::rgl.attrib(axis_id, "vertices")
   title_material = rgl::material3d(id = title_id)
+  label_id = ids$id[ids$tag == "zaxis_labels"][1]
 
   expect_equal(title_text, "Elevation (m)")
   expect_equal(title_material$color, "#0000FF")
+  expect_equal(unname(rgl::rgl.attrib(title_id, "cex")[1]), 1.4)
+  expect_equal(unname(rgl::rgl.attrib(label_id, "cex")[1]), 1.2)
+  expect_equal(nrow(title_verts), nchar("Elevation (m)"))
+  expect_gt(length(unique(round(title_verts[, 2], 6))), 1)
+  label_verts = rgl::rgl.attrib(label_id, "vertices")
+  axis_label_point = c(axis_verts[1, 1], label_verts[1, 2], axis_verts[1, 3])
+  axis_title_point = c(axis_verts[1, 1], title_verts[1, 2], axis_verts[1, 3])
+  expect_gt(
+    rayshader:::project_zaxis_point_screen_x(label_verts[1, ]) -
+      rayshader:::project_zaxis_point_screen_x(axis_label_point),
+    0
+  )
+  expect_lt(
+    rayshader:::project_zaxis_point_screen_x(title_verts[1, ]) -
+      rayshader:::project_zaxis_point_screen_x(axis_title_point),
+    0
+  )
   expect_equal(
-    unname(title_verts[1, 2]),
+    unname(mean(title_verts[, 2])),
     mean(axis_verts[, 2]),
     tolerance = 1e-6
   )
@@ -195,7 +221,7 @@ test_that("render_zaxis() adds side and top titles", {
   expect_gt(unname(title_verts[1, 2]), max(axis_verts[, 2]))
 })
 
-test_that("render_zaxis() defaults title to opposite side of tick labels", {
+test_that("render_zaxis() defaults side title to the label side vertically", {
   on.exit(rgl::close3d(), add = TRUE)
   local_rgl_use_null()
 
@@ -230,6 +256,10 @@ test_that("render_zaxis() defaults title to opposite side of tick labels", {
   title_id = ids$id[ids$tag == "zaxis_title"][1]
   axis_id = ids$id[ids$tag == "zaxis_axis"][1]
   label_id = ids$id[ids$tag == "zaxis_labels"][1]
+  title_text = paste0(
+    as.character(rgl::rgl.attrib(title_id, "texts")),
+    collapse = ""
+  )
   title_verts = rgl::rgl.attrib(title_id, "vertices")
   axis_verts = rgl::rgl.attrib(axis_id, "vertices")
   label_verts = rgl::rgl.attrib(label_id, "vertices")
@@ -243,12 +273,19 @@ test_that("render_zaxis() defaults title to opposite side of tick labels", {
   )
 
   expect_equal(out$title_location, "side")
+  expect_equal(title_text, "Elevation (m)")
+  expect_equal(nrow(title_verts), nchar("Elevation (m)"))
   expect_equal(
-    unname(title_verts[1, 2]),
+    unname(rgl::rgl.attrib(title_id, "cex")[1]),
+    unname(rgl::rgl.attrib(label_id, "cex")[1])
+  )
+  expect_gt(length(unique(round(title_verts[, 2], 6))), 1)
+  expect_equal(
+    unname(mean(title_verts[, 2])),
     mean(axis_verts[, 2]),
     tolerance = 1e-6
   )
-  expect_lt(sum(title_vec * label_vec), 0)
+  expect_gt(sum(title_vec * label_vec), 0)
   expect_equal(
     sqrt(sum(title_vec^2)) / sqrt(sum(label_vec^2)),
     5,
@@ -503,7 +540,10 @@ test_that("render_zaxis() can use cached polygon data-column values", {
   tick_id = ids$id[ids$tag == "zaxis_ticks"][1]
   tick_verts = rgl::rgl.attrib(tick_id, "vertices")
   title_id = ids$id[ids$tag == "zaxis_title"][1]
-  title_text = trimws(as.character(rgl::rgl.attrib(title_id, "texts")))
+  title_text = paste0(
+    as.character(rgl::rgl.attrib(title_id, "texts")),
+    collapse = ""
+  )
 
   expect_equal(out$data, "polygon")
   expect_equal(out$breaks, c(20, 40), tolerance = 1e-6)
@@ -798,19 +838,26 @@ test_that("render_zaxis() default breaks span negative and positive terrain", {
   )
   expect_no_condition(render_zaxis(
     extent = extent,
-    zaxis_location = "bottomleft"
+    zaxis_location = "bottomleft",
+    zaxis_label_side = "left"
   ))
 
   ids = get_ids_with_labels()
   label_ids = ids$id[ids$tag == "zaxis_labels"]
-  label_texts = unlist(lapply(label_ids, function(id) {
-    trimws(as.character(rgl::rgl.attrib(id, "texts")))
+  raw_label_texts = unlist(lapply(label_ids, function(id) {
+    as.character(rgl::rgl.attrib(id, "texts"))
   }))
-  label_vals = suppressWarnings(as.numeric(label_texts))
-  label_vals = label_vals[is.finite(label_vals)]
+  label_texts = sub("\\s+$", "", raw_label_texts)
+  label_vals = suppressWarnings(as.numeric(trimws(label_texts)))
+  finite_label_vals = is.finite(label_vals)
 
-  expect_true(any(label_vals < 0))
-  expect_true(any(label_vals > 0))
+  expect_true(any(label_vals[finite_label_vals] < 0))
+  expect_true(any(label_vals[finite_label_vals] > 0))
+  expect_true(all(grepl(
+    "^\\s",
+    label_texts[finite_label_vals & label_vals >= 0]
+  )))
+  expect_true(all(grepl("^-", label_texts[finite_label_vals & label_vals < 0])))
 })
 
 test_that("render_zaxis() corner offset is user-configurable", {
