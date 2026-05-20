@@ -61,398 +61,526 @@
 #'
 #' @export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
-#' # Load and visualize building footprints from Open Street Map
-#' library(osmdata)
+#' # Load and visualize building footprints from Overture Maps
+#' library(DBI)
+#' library(duckdb)
 #' library(sf)
-#' library(raster)
+#' library(jsonlite)
 #'
-#' osm_bbox = c(-121.9472, 36.6019, -121.9179, 36.6385)
+#' # Define the WGS84 bounding box for the scene in St. John's, Newfoundland.
+#' overture_bbox = c(-52.718925, 47.552085, -52.666397, 47.586194)
+#' scene_bbox = c(
+#'   xmin = overture_bbox[1],
+#'   ymin = overture_bbox[2],
+#'   xmax = overture_bbox[3],
+#'   ymax = overture_bbox[4]
+#' )
 #'
-#' #Get buildings from OpenStreetMap
-#' opq(osm_bbox) |>
-#'   add_osm_feature("building") |>
-#'   osmdata_sf() ->
-#' osm_data
+#' # Query a slightly padded area so roads and buildings that cross the scene
+#' # boundary are included before rayshader crops them to the rendered extent.
+#' query_padding = 0.001
 #'
-#' #Get roads from OpenStreetMap
-#' opq(osm_bbox) |>
-#'   add_osm_feature("highway") |>
-#'   osmdata_sf() ->
-#' osm_road
+#' query_bbox = c(
+#'   xmin = scene_bbox[["xmin"]] - query_padding,
+#'   ymin = scene_bbox[["ymin"]] - query_padding,
+#'   xmax = scene_bbox[["xmax"]] + query_padding,
+#'   ymax = scene_bbox[["ymax"]] + query_padding
+#' )
 #'
-#' #Get extent
-#' building_polys = osm_data$osm_polygons
-#' osm_dem = elevatr::get_elev_raster(building_polys, z = 11, clip = "bbox")
-#' e = extent(building_polys)
+#' # Keep an sf polygon for DEM retrieval and for documenting the exact render area.
+#' scene_area = sf::st_sf(
+#'   geometry = sf::st_as_sfc(sf::st_bbox(scene_bbox, crs = sf::st_crs(4326)))
+#' )
 #'
-#' # Crop DEM, but note that the cropped DEM will have an extent slightly different than what's
-#' # specified in `e`. Save that new extent to `new_e`.
-#' osm_dem |>
-#'   crop(e) |>
-#'   extent() ->
-#' new_e
+#' # Discover the current Overture release and build Parquet paths for the
+#' # building and transportation layers.
+#' overture_release = jsonlite::fromJSON(
+#'   "https://stac.overturemaps.org/catalog.json"
+#' )$latest
 #'
-#' osm_dem |>
-#'   crop(e) |>
-#'   raster_to_matrix() ->
-#' osm_mat
+#' building_uri = sprintf(
+#'   "az://overturemapswestus2.blob.core.windows.net/release/%s/theme=buildings/type=building/*.parquet",
+#'   overture_release
+#' )
 #'
-#' #Visualize areas less than one meter as water (approximate tidal range)
-#' osm_mat[osm_mat <= 1] = -2
+#' road_uri = sprintf(
+#'   "az://overturemapswestus2.blob.core.windows.net/release/%s/theme=transportation/type=segment/*.parquet",
+#'   overture_release
+#' )
 #'
-#' osm_mat |>
-#'   rayimage::render_resized(mag=4) |>
-#'   sphere_shade(texture = "desert") |>
-#'   add_overlay(generate_polygon_overlay(building_polys, extent = new_e,
-#'                                        heightmap = osm_mat,
-#'                                        linewidth = 6,
-#'                                        resolution_multiply = 50), rescale_original = TRUE) |>
-#'   add_overlay(generate_line_overlay(osm_road$osm_lines, extent = new_e,
-#'                                     heightmap = osm_mat,
-#'                                     linewidth = 6,
-#'                                     resolution_multiply = 50), rescale_original = TRUE) |>
-#'   plot_3d(osm_mat, water = TRUE, windowsize = 800, watercolor = "dodgerblue",
-#'           zscale = 10,
-#'           background = "pink",
-#'           extent = new_e)
+#' # Query the remote Parquet files in memory. The Overture geometry column is
+#' # returned as WKB so sf can reconstruct the features locally.
+#' con = DBI::dbConnect(duckdb::duckdb(), dbdir = ":memory:")
+#' on.exit(DBI::dbDisconnect(con, shutdown = TRUE), add = TRUE)
 #'
-#' #Render buildings
-#' render_buildings(building_polys,  flat_shading  = TRUE,
-#'                  angle = 30,
-#'                  material = "white", roof_material = "white",
-#'                  roof_height = 3, base_height = 0)
-#' render_camera(theta=220, phi=22, zoom=0.45, fov=0)
+#' # Select buildings whose feature bounding boxes start inside the padded
+#' # query area.
+#' building_query = sprintf(
+#'   "
+#' SELECT
+#'   id,
+#'   height,
+#'   num_floors,
+#'   ST_AsWKB(geometry)::BLOB AS geometry
+#' FROM read_parquet('%s', filename = false, hive_partitioning = 1)
+#' WHERE
+#'   bbox.xmin BETWEEN %.10f AND %.10f
+#'   AND bbox.ymin BETWEEN %.10f AND %.10f
+#' ",
+#'   building_uri,
+#'   query_bbox[["xmin"]],
+#'   query_bbox[["xmax"]],
+#'   query_bbox[["ymin"]],
+#'   query_bbox[["ymax"]]
+#' )
+#'
+#' building_df = DBI::dbGetQuery(con, building_query)
+#'
+#' building_geom = sf::st_as_sfc(
+#'   structure(building_df$geometry, class = "WKB"),
+#'   crs = 4326
+#' )
+#'
+#' building_df$geometry = NULL
+#'
+#' building_polys = sf::st_sf(
+#'   building_df,
+#'   geometry = building_geom,
+#'   crs = 4326
+#' )
+#'
+#' # Select road segments that overlap the padded query area.
+#' road_query = sprintf(
+#'   "
+#' SELECT
+#'   id,
+#'   names.primary AS name,
+#'   class AS road_class,
+#'   subclass AS road_subclass,
+#'   ST_AsWKB(geometry)::BLOB AS geometry
+#' FROM read_parquet('%s', filename = false, hive_partitioning = 1)
+#' WHERE
+#'   subtype = 'road'
+#'   AND bbox.xmin < %.10f
+#'   AND bbox.xmax > %.10f
+#'   AND bbox.ymin < %.10f
+#'   AND bbox.ymax > %.10f
+#' ",
+#'   road_uri,
+#'   query_bbox[["xmax"]],
+#'   query_bbox[["xmin"]],
+#'   query_bbox[["ymax"]],
+#'   query_bbox[["ymin"]]
+#' )
+#'
+#' road_df = DBI::dbGetQuery(con, road_query)
+#'
+#' road_geom = sf::st_as_sfc(
+#'   structure(road_df$geometry, class = "WKB"),
+#'   crs = 4326
+#' )
+#'
+#' road_df$geometry = NULL
+#'
+#' road_lines = sf::st_sf(
+#'   road_df,
+#'   geometry = road_geom,
+#'   crs = 4326
+#' )
+#'
+#' # Fetch elevation for the render area. rayshader caches the spatial extent
+#' # from this DEM object, so overlay and render calls can omit extent/heightmap.
+#' scene_dem = elevatr::get_elev_raster(scene_area, z = 11, clip = "bbox")
+#'
+#' # Create a shaded terrain image, then draw building footprints and roads over
+#' # it before opening the 3D scene.
+#' scene_dem |>
+#'   sphere_shade(texture = "imhof4", vertical_exaggeration = 20) |>
+#'   add_overlay(
+#'     generate_polygon_overlay(
+#'       building_polys,
+#'       linewidth = 6,
+#'       resolution_multiply = 50
+#'     ),
+#'     rescale_original = TRUE
+#'   ) |>
+#'   add_overlay(
+#'     generate_line_overlay(
+#'       road_lines,
+#'       linewidth = 6,
+#'       resolution_multiply = 50
+#'     ),
+#'     rescale_original = TRUE
+#'   ) |>
+#'   plot_3d(
+#'     water = TRUE,
+#'     waterdepth = 0.5,
+#'     windowsize = 800,
+#'     watercolor = "dodgerblue",
+#'     background = "pink"
+#'   )
+#'
+#' # Overture building heights are sometimes missing. Fill those gaps before
+#' # using the height column to drive roof elevation.
+#' building_polys |>
+#'   dplyr::mutate(height = dplyr::if_else(is.na(height), mean(height, na.rm = TRUE), height)) ->
+#' building_poly_fixed
+#'
+#' # Render buildings
+#' render_buildings(
+#'   building_poly_fixed,
+#'   flat_shading = TRUE,
+#'   lit = FALSE,
+#'   angle = 30,
+#'   material = "white",
+#'   roof_material = "white",
+#'   roof_height = 3,
+#'   base_height = 0,
+#'   data_column_top = "height",
+#'   relative_heights = TRUE
+#' )
+#'
+#' render_camera(theta = 220, phi = 45, zoom = 0.55, fov = 0)
 #' render_snapshot()
 #'
-#' #Zoom in to show roof details and render with render_highquality()
-#' render_camera(fov=110)
-#' render_highquality(camera_location = c(18.22, 0.57, -50.83),
-#'                    camera_lookat = c(20.88, -2.83, -38.87),
-#'                    focal_distance = 13, samples = 16,
-#'                    lightdirection = 45)
+#' # Zoom in to show roof details and render with render_highquality()
+#' render_camera(fov = 120)
+#'
+#' # Generate an evening sky in the winter. The camera location and direction
+#' # were determined using an interactive render_highquality() session by 
+#' # hitting the P key with the camera in the desired position.
+#' render_highquality(
+#'   camera_location = c(-9.49, 4.66, 11.85),
+#'   camera_lookat = c(0.65, -1.85, 2.82),
+#'   focal_distance = 15.056,
+#'   samples = 100,
+#'   iso = 100 / 16,
+#'   datetime = as.POSIXct("2025-01-01 15:00:00", tz = "America/St_Johns"),
+#'   sky_args = list(hosek = FALSE)
+#' )
 #'
 render_buildings = function(
-	polygon,
-	extent = NULL,
-	panel = NULL,
-	material = "grey",
-	roof_material = NA,
-	angle = 45,
-	zscale = 1,
-	vertical_exaggeration = 1,
-	scale_data = 1,
-	relative_heights = TRUE,
-	heights_relative_to_centroid = FALSE,
-	roof_height = 1,
-	base_height = 0,
-	data_column_top = NULL,
-	data_column_bottom = NULL,
-	heightmap = NULL,
-	holes = 0,
-	alpha = 1,
-	lit = TRUE,
-	flat_shading = FALSE,
-	light_altitude = c(45, 30),
-	light_direction = c(315, 225),
-	light_intensity = 1,
-	light_relative = FALSE,
-	clear_previous = FALSE,
-	crs = NULL,
-	filter_to_extent = TRUE,
-	...
+  polygon,
+  extent = NULL,
+  panel = NULL,
+  material = "grey",
+  roof_material = NA,
+  angle = 45,
+  zscale = 1,
+  vertical_exaggeration = 1,
+  scale_data = 1,
+  relative_heights = TRUE,
+  heights_relative_to_centroid = FALSE,
+  roof_height = 1,
+  base_height = 0,
+  data_column_top = NULL,
+  data_column_bottom = NULL,
+  heightmap = NULL,
+  holes = 0,
+  alpha = 1,
+  lit = TRUE,
+  flat_shading = FALSE,
+  light_altitude = c(45, 30),
+  light_direction = c(315, 225),
+  light_intensity = 1,
+  light_relative = FALSE,
+  clear_previous = FALSE,
+  crs = NULL,
+  filter_to_extent = TRUE,
+  ...
 ) {
-	validate_filter_to_extent(filter_to_extent, caller = "render_buildings")
-	warn_scale_data_with_vertical_exaggeration(
-		scale_data_missing = missing(scale_data),
-		vertical_exaggeration_missing = missing(vertical_exaggeration),
-		caller = "render_buildings"
-	)
-	dot_split = split_zaxis_dots(list(...))
-	zscale = resolve_scene_render_effective_zscale(
-		zscale = zscale,
-		zscale_missing = missing(zscale),
-		vertical_exaggeration = vertical_exaggeration,
-		vertical_exaggeration_missing = missing(vertical_exaggeration),
-		caller = "render_buildings"
-	)
-	heightmap = resolve_scene_render_heightmap(
-		heightmap,
-		caller = "render_buildings"
-	)
-	top = roof_height
-	bottom = base_height
-	if (rgl::cur3d() == 0) {
-		stop("No rgl window currently open.")
-	}
-	if (!(length(find.package("raybevel", quiet = TRUE)) > 0)) {
-		stop("raybevel required to use render_roofs()")
-	}
-	if (clear_previous) {
-		rgl::pop3d(tag = "obj_raymesh_building")
-		if (missing(polygon)) {
-			render_zaxis_from_dots(
-				zaxis_args = dot_split$zaxis_args,
-				extent = extent,
-				panel = panel,
-				zscale = zscale,
-				heightmap = heightmap,
-				caller = "render_buildings"
-			)
-			return(invisible())
-		}
-	}
-	if (is.character(material)) {
-		material = rayvertex::material_list(diffuse = material)
-	}
-	if (is.character(roof_material)) {
-		roof_material = rayvertex::material_list(diffuse = roof_material)
-	}
-	extent = resolve_scene_render_extent(
-		extent = extent,
-		heightmap = heightmap,
-		caller = "render_buildings",
-		panel = panel
-	)
-	if (inherits(polygon, "Spatial")) {
-		polygon = sf::st_as_sf(polygon)
-	}
-	if (inherits(polygon, "sfc")) {
-		polygon = sf::st_sf(geometry = polygon)
-	}
-	if (inherits(polygon, "sfg")) {
-		polygon = sf::st_sf(geometry = sf::st_sfc(polygon))
-	}
-	polygon_scene_transformed = FALSE
-	if (inherits(polygon, "sf")) {
-		n_polygon_before_filter = nrow(polygon)
-		scene_polygon = auto_transform_scene_sf(
-			sf_object = polygon,
-			extent = extent,
-			heightmap = heightmap,
-			panel = panel,
-			crs = crs,
-			caller = "render_buildings"
-		)
-		polygon = scene_polygon$object
-		if (!is.null(scene_polygon$extent)) {
-			extent = scene_polygon$extent
-		}
-		polygon_scene_transformed = TRUE
-		filtered_polygon = filter_scene_sf_to_extent(
-			sf_object = polygon,
-			extent = extent,
-			heightmap = heightmap,
-			panel = panel,
-			filter_to_extent = filter_to_extent,
-			caller = "render_buildings"
-		)
-		polygon = filtered_polygon$object
-		if (!is.null(filtered_polygon$source_index)) {
-			top = subset_render_arg_by_index(
-				top,
-				filtered_polygon$source_index,
-				n_polygon_before_filter
-			)
-			bottom = subset_render_arg_by_index(
-				bottom,
-				filtered_polygon$source_index,
-				n_polygon_before_filter
-			)
-		}
-		if (is_empty_scene_sf(polygon)) {
-			render_zaxis_from_dots(
-				zaxis_args = dot_split$zaxis_args,
-				extent = extent,
-				panel = panel,
-				zscale = zscale,
-				heightmap = heightmap,
-				caller = "render_buildings"
-			)
-			return(invisible(NULL))
-		}
-	}
-	e = get_extent(extent)
-	if (heights_relative_to_centroid) {
-		if (is.null(heightmap)) {
-			stop("Must pass in heightmap argument if using relative heights")
-		}
-		centroid_source_crs = NULL
-		polygon_for_centroids = polygon
-		centroid_transform_scene = !isTRUE(polygon_scene_transformed)
-		if (!isTRUE(polygon_scene_transformed)) {
-			scene_target_crs = get_scene_target_crs(
-				extent = extent,
-				heightmap = heightmap,
-				panel = panel,
-				caller = "render_buildings"
-			)
-			if (!is.null(scene_target_crs)) {
-				resolved_polygon = resolve_scene_sf_source_crs(
-					sf_data = polygon,
-					crs = crs,
-					target_crs = scene_target_crs,
-					caller = "render_buildings"
-				)
-				polygon_for_centroids = resolved_polygon$sf_data
-				centroid_source_crs = resolved_polygon$source_crs
-			}
-		}
-		centroids = sf::st_coordinates(sf::st_centroid(polygon_for_centroids))
-		xyz = transform_into_heightmap_coords(
-			e,
-			heightmap,
-			centroids[, 2],
-			centroids[, 1],
-			altitude = NULL,
-			offset = 0,
-			zscale = 1,
-			crs = centroid_source_crs,
-			panel = panel,
-			transform_scene = centroid_transform_scene,
-			caller = "render_buildings"
-		)
-		bottom = xyz[, 2] + bottom
-		bottom[is.na(bottom)] = min(xyz[, 2])
-	}
-	if (length(top) != 1) {
-		stopifnot(length(top) == nrow(polygon))
-	}
-	if (!is.null(data_column_top)) {
-		stopifnot(data_column_top %in% colnames(polygon))
-	}
-	if (length(bottom) != 1) {
-		stopifnot(length(bottom) == nrow(polygon))
-	}
-	if (!is.null(data_column_bottom)) {
-		stopifnot(data_column_bottom %in% colnames(polygon))
-	}
+  validate_filter_to_extent(filter_to_extent, caller = "render_buildings")
+  warn_scale_data_with_vertical_exaggeration(
+    scale_data_missing = missing(scale_data),
+    vertical_exaggeration_missing = missing(vertical_exaggeration),
+    caller = "render_buildings"
+  )
+  dot_split = split_zaxis_dots(list(...))
+  zscale = resolve_scene_render_effective_zscale(
+    zscale = zscale,
+    zscale_missing = missing(zscale),
+    vertical_exaggeration = vertical_exaggeration,
+    vertical_exaggeration_missing = missing(vertical_exaggeration),
+    caller = "render_buildings"
+  )
+  heightmap = resolve_scene_render_heightmap(
+    heightmap,
+    caller = "render_buildings"
+  )
+  top = roof_height
+  bottom = base_height
+  if (rgl::cur3d() == 0) {
+    stop("No rgl window currently open.")
+  }
+  if (!(length(find.package("raybevel", quiet = TRUE)) > 0)) {
+    stop("raybevel required to use render_roofs()")
+  }
+  if (clear_previous) {
+    rgl::pop3d(tag = "obj_raymesh_building")
+    if (missing(polygon)) {
+      render_zaxis_from_dots(
+        zaxis_args = dot_split$zaxis_args,
+        extent = extent,
+        panel = panel,
+        zscale = zscale,
+        heightmap = heightmap,
+        caller = "render_buildings"
+      )
+      return(invisible())
+    }
+  }
+  if (is.character(material)) {
+    material = rayvertex::material_list(diffuse = material)
+  }
+  if (is.character(roof_material)) {
+    roof_material = rayvertex::material_list(diffuse = roof_material)
+  }
+  extent = resolve_scene_render_extent(
+    extent = extent,
+    heightmap = heightmap,
+    caller = "render_buildings",
+    panel = panel
+  )
+  if (inherits(polygon, "Spatial")) {
+    polygon = sf::st_as_sf(polygon)
+  }
+  if (inherits(polygon, "sfc")) {
+    polygon = sf::st_sf(geometry = polygon)
+  }
+  if (inherits(polygon, "sfg")) {
+    polygon = sf::st_sf(geometry = sf::st_sfc(polygon))
+  }
+  polygon_scene_transformed = FALSE
+  if (inherits(polygon, "sf")) {
+    n_polygon_before_filter = nrow(polygon)
+    scene_polygon = auto_transform_scene_sf(
+      sf_object = polygon,
+      extent = extent,
+      heightmap = heightmap,
+      panel = panel,
+      crs = crs,
+      caller = "render_buildings"
+    )
+    polygon = scene_polygon$object
+    if (!is.null(scene_polygon$extent)) {
+      extent = scene_polygon$extent
+    }
+    polygon_scene_transformed = TRUE
+    filtered_polygon = filter_scene_sf_to_extent(
+      sf_object = polygon,
+      extent = extent,
+      heightmap = heightmap,
+      panel = panel,
+      filter_to_extent = filter_to_extent,
+      caller = "render_buildings"
+    )
+    polygon = filtered_polygon$object
+    if (!is.null(filtered_polygon$source_index)) {
+      top = subset_render_arg_by_index(
+        top,
+        filtered_polygon$source_index,
+        n_polygon_before_filter
+      )
+      bottom = subset_render_arg_by_index(
+        bottom,
+        filtered_polygon$source_index,
+        n_polygon_before_filter
+      )
+    }
+    if (is_empty_scene_sf(polygon)) {
+      render_zaxis_from_dots(
+        zaxis_args = dot_split$zaxis_args,
+        extent = extent,
+        panel = panel,
+        zscale = zscale,
+        heightmap = heightmap,
+        caller = "render_buildings"
+      )
+      return(invisible(NULL))
+    }
+  }
+  e = get_extent(extent)
+  if (heights_relative_to_centroid) {
+    if (is.null(heightmap)) {
+      stop("Must pass in heightmap argument if using relative heights")
+    }
+    centroid_source_crs = NULL
+    polygon_for_centroids = polygon
+    centroid_transform_scene = !isTRUE(polygon_scene_transformed)
+    if (!isTRUE(polygon_scene_transformed)) {
+      scene_target_crs = get_scene_target_crs(
+        extent = extent,
+        heightmap = heightmap,
+        panel = panel,
+        caller = "render_buildings"
+      )
+      if (!is.null(scene_target_crs)) {
+        resolved_polygon = resolve_scene_sf_source_crs(
+          sf_data = polygon,
+          crs = crs,
+          target_crs = scene_target_crs,
+          caller = "render_buildings"
+        )
+        polygon_for_centroids = resolved_polygon$sf_data
+        centroid_source_crs = resolved_polygon$source_crs
+      }
+    }
+    centroids = sf::st_coordinates(sf::st_centroid(polygon_for_centroids))
+    xyz = transform_into_heightmap_coords(
+      e,
+      heightmap,
+      centroids[, 2],
+      centroids[, 1],
+      altitude = NULL,
+      offset = 0,
+      zscale = 1,
+      crs = centroid_source_crs,
+      panel = panel,
+      transform_scene = centroid_transform_scene,
+      caller = "render_buildings"
+    )
+    bottom = xyz[, 2] + bottom
+    bottom[is.na(bottom)] = min(xyz[, 2])
+  }
+  if (length(top) != 1) {
+    stopifnot(length(top) == nrow(polygon))
+  }
+  if (!is.null(data_column_top)) {
+    stopifnot(data_column_top %in% colnames(polygon))
+  }
+  if (length(bottom) != 1) {
+    stopifnot(length(bottom) == nrow(polygon))
+  }
+  if (!is.null(data_column_bottom)) {
+    stopifnot(data_column_bottom %in% colnames(polygon))
+  }
 
-	top_values = get_polygon_data_value(
-		polygon,
-		data_column_name = data_column_top,
-		scale_data = scale_data,
-		default_value = top
-	)
+  top_values = get_polygon_data_value(
+    polygon,
+    data_column_name = data_column_top,
+    scale_data = scale_data,
+    default_value = top
+  )
 
-	bottom_values = get_polygon_data_value(
-		polygon,
-		data_column_name = data_column_bottom,
-		scale_data = scale_data,
-		default_value = bottom
-	)
+  bottom_values = get_polygon_data_value(
+    polygon,
+    data_column_name = data_column_bottom,
+    scale_data = scale_data,
+    default_value = bottom
+  )
 
-	cache_polygon_like_zaxis_data(
-		source = "building",
-		polygon = polygon,
-		top = top,
-		bottom = bottom,
-		data_column_top = data_column_top,
-		data_column_bottom = data_column_bottom,
-		scale_data = scale_data
-	)
+  cache_polygon_like_zaxis_data(
+    source = "building",
+    polygon = polygon,
+    top = top,
+    bottom = bottom,
+    data_column_top = data_column_top,
+    data_column_bottom = data_column_bottom,
+    scale_data = scale_data
+  )
 
-	polygon = transform_polygon_into_raycoords(
-		polygon,
-		heightmap = heightmap,
-		e = e,
-		top = top_values,
-		bottom = bottom_values,
-		panel = panel,
-		crs = crs,
-		caller = "render_buildings",
-		transform_scene = !isTRUE(polygon_scene_transformed)
-	)
-	top = polygon$top / zscale
-	bottom = polygon$bottom / zscale
-	skeletons = raybevel::skeletonize(polygon)
-	idx_sans_missing_geometry = get_skeleton_source_indices(skeletons)
-	if (!length(idx_sans_missing_geometry)) {
-		idx_sans_missing_geometry = seq_len(length(top))
-	}
-	top = top[idx_sans_missing_geometry]
-	bottom = bottom[idx_sans_missing_geometry]
+  polygon = transform_polygon_into_raycoords(
+    polygon,
+    heightmap = heightmap,
+    e = e,
+    top = top_values,
+    bottom = bottom_values,
+    panel = panel,
+    crs = crs,
+    caller = "render_buildings",
+    transform_scene = !isTRUE(polygon_scene_transformed)
+  )
+  top = polygon$top / zscale
+  bottom = polygon$bottom / zscale
+  skeletons = raybevel::skeletonize(polygon)
+  idx_sans_missing_geometry = get_skeleton_source_indices(skeletons)
+  if (!length(idx_sans_missing_geometry)) {
+    idx_sans_missing_geometry = seq_len(length(top))
+  }
+  top = top[idx_sans_missing_geometry]
+  bottom = bottom[idx_sans_missing_geometry]
 
-	if (!heights_relative_to_centroid) {
-		roof_mesh = tryCatch(
-			raybevel::generate_roof(
-				skeletons,
-				vertical_offset = top,
-				base_height = 0,
-				angle = angle,
-				material = material,
-				roof_material = roof_material,
-				base = TRUE,
-				sides = TRUE
-			),
-			error = function(e) {
-				stop(format_raybevel_error(e, "render_buildings"), call. = FALSE)
-			}
-		)
-	} else {
-		roof_mesh = tryCatch(
-			raybevel::generate_roof(
-				skeletons,
-				vertical_offset = top,
-				base_height = bottom,
-				angle = angle,
-				material = material,
-				roof_material = roof_material,
-				base = TRUE,
-				sides = TRUE
-			),
-			error = function(e) {
-				stop(format_raybevel_error(e, "render_buildings"), call. = FALSE)
-			}
-		)
-	}
-	if (relative_heights && !heights_relative_to_centroid) {
-		if (is.null(heightmap)) {
-			stop("Must pass in heightmap argument if using relative heights")
-		}
-		offset_building_heightmap = function(verts, bottom_value) {
-			tmpval = verts
-			tmpval[, 1] = tmpval[, 1] + nrow(heightmap) / 2 + 0.5
-			tmpval[, 3] = tmpval[, 3] + ncol(heightmap) / 2 + 0.5
-			tmpval[tmpval[, 1] < 1, 1] = 1
-			tmpval[tmpval[, 1] > nrow(heightmap), 1] = nrow(heightmap)
-			tmpval[tmpval[, 3] < 1, 3] = 1
-			tmpval[tmpval[, 3] > ncol(heightmap), 3] = ncol(heightmap)
-			new_heights = rayimage::interpolate_array(
-				t(heightmap),
-				tmpval[, 1],
-				tmpval[, 3]
-			) /
-				zscale
-			base_verts = tmpval[, 2] == 0
-			verts[, 2] = verts[, 2] + new_heights
-			verts[base_verts, 2] = (new_heights[base_verts] + bottom_value)
-			return(verts)
-		}
-		for (i in seq_len(length(roof_mesh$vertices))) {
-			roof_mesh$vertices[[i]] = offset_building_heightmap(
-				roof_mesh$vertices[[i]],
-				bottom[i]
-			)
-		}
-	}
+  if (!heights_relative_to_centroid) {
+    roof_mesh = tryCatch(
+      raybevel::generate_roof(
+        skeletons,
+        vertical_offset = top,
+        base_height = 0,
+        angle = angle,
+        material = material,
+        roof_material = roof_material,
+        base = TRUE,
+        sides = TRUE
+      ),
+      error = function(e) {
+        stop(format_raybevel_error(e, "render_buildings"), call. = FALSE)
+      }
+    )
+  } else {
+    roof_mesh = tryCatch(
+      raybevel::generate_roof(
+        skeletons,
+        vertical_offset = top,
+        base_height = bottom,
+        angle = angle,
+        material = material,
+        roof_material = roof_material,
+        base = TRUE,
+        sides = TRUE
+      ),
+      error = function(e) {
+        stop(format_raybevel_error(e, "render_buildings"), call. = FALSE)
+      }
+    )
+  }
+  if (relative_heights && !heights_relative_to_centroid) {
+    if (is.null(heightmap)) {
+      stop("Must pass in heightmap argument if using relative heights")
+    }
+    offset_building_heightmap = function(verts, bottom_value) {
+      tmpval = verts
+      tmpval[, 1] = tmpval[, 1] + nrow(heightmap) / 2 + 0.5
+      tmpval[, 3] = tmpval[, 3] + ncol(heightmap) / 2 + 0.5
+      tmpval[tmpval[, 1] < 1, 1] = 1
+      tmpval[tmpval[, 1] > nrow(heightmap), 1] = nrow(heightmap)
+      tmpval[tmpval[, 3] < 1, 3] = 1
+      tmpval[tmpval[, 3] > ncol(heightmap), 3] = ncol(heightmap)
+      new_heights = rayimage::interpolate_array(
+        t(heightmap),
+        tmpval[, 1],
+        tmpval[, 3]
+      ) /
+        zscale
+      base_verts = tmpval[, 2] == 0
+      verts[, 2] = verts[, 2] + new_heights
+      verts[base_verts, 2] = (new_heights[base_verts] + bottom_value)
+      return(verts)
+    }
+    for (i in seq_len(length(roof_mesh$vertices))) {
+      roof_mesh$vertices[[i]] = offset_building_heightmap(
+        roof_mesh$vertices[[i]],
+        bottom[i]
+      )
+    }
+  }
 
-	render_raymesh(
-		roof_mesh,
-		extent = extent,
-		panel = panel,
-		xyz = matrix(c(0, 0, 0), ncol = 3),
-		zscale = zscale,
-		vertical_exaggeration = 1,
-		heightmap = heightmap,
-		flat_shading = flat_shading,
-		change_material = FALSE,
-		lit = lit,
-		light_altitude = light_altitude,
-		light_direction = light_direction,
-		light_intensity = light_intensity,
-		light_relative = light_relative,
-		rgl_tag = "_building",
-		crs = crs,
-		...
-	)
+  render_raymesh(
+    roof_mesh,
+    extent = extent,
+    panel = panel,
+    xyz = matrix(c(0, 0, 0), ncol = 3),
+    zscale = zscale,
+    vertical_exaggeration = 1,
+    heightmap = heightmap,
+    flat_shading = flat_shading,
+    change_material = FALSE,
+    lit = lit,
+    light_altitude = light_altitude,
+    light_direction = light_direction,
+    light_intensity = light_intensity,
+    light_relative = light_relative,
+    rgl_tag = "_building",
+    crs = crs,
+    ...
+  )
 }

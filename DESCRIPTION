@@ -30,6 +30,9 @@ Imports: doParallel,
          rayvertex (>= 0.13.1),
          rayrender (>= 0.40.0)
 Suggests: 
+    DBI,
+    duckdb,
+    dplyr,
     reshape2,
     viridis,
     av,
@@ -44,6 +47,7 @@ Suggests:
     raster,
     lidR,
     elevatr,
+    jsonlite,
     gridExtra,
     callr,
     testthat (>= 3.0.0),

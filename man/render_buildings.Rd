@@ -125,74 +125,202 @@ Cache fallback messages are disabled by default. Set \code{options(rayshader.ver
 }
 \examples{
 \dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
-# Load and visualize building footprints from Open Street Map
-library(osmdata)
+# Load and visualize building footprints from Overture Maps
+library(DBI)
+library(duckdb)
 library(sf)
-library(raster)
+library(jsonlite)
 
-osm_bbox = c(-121.9472, 36.6019, -121.9179, 36.6385)
+# Define the WGS84 bounding box for the scene in St. John's, Newfoundland.
+overture_bbox = c(-52.718925, 47.552085, -52.666397, 47.586194)
+scene_bbox = c(
+  xmin = overture_bbox[1],
+  ymin = overture_bbox[2],
+  xmax = overture_bbox[3],
+  ymax = overture_bbox[4]
+)
 
-#Get buildings from OpenStreetMap
-opq(osm_bbox) |>
-  add_osm_feature("building") |>
-  osmdata_sf() ->
-osm_data
+# Query a slightly padded area so roads and buildings that cross the scene
+# boundary are included before rayshader crops them to the rendered extent.
+query_padding = 0.001
 
-#Get roads from OpenStreetMap
-opq(osm_bbox) |>
-  add_osm_feature("highway") |>
-  osmdata_sf() ->
-osm_road
+query_bbox = c(
+  xmin = scene_bbox[["xmin"]] - query_padding,
+  ymin = scene_bbox[["ymin"]] - query_padding,
+  xmax = scene_bbox[["xmax"]] + query_padding,
+  ymax = scene_bbox[["ymax"]] + query_padding
+)
 
-#Get extent
-building_polys = osm_data$osm_polygons
-osm_dem = elevatr::get_elev_raster(building_polys, z = 11, clip = "bbox")
-e = extent(building_polys)
+# Keep an sf polygon for DEM retrieval and for documenting the exact render area.
+scene_area = sf::st_sf(
+  geometry = sf::st_as_sfc(sf::st_bbox(scene_bbox, crs = sf::st_crs(4326)))
+)
 
-# Crop DEM, but note that the cropped DEM will have an extent slightly different than what's
-# specified in `e`. Save that new extent to `new_e`.
-osm_dem |>
-  crop(e) |>
-  extent() ->
-new_e
+# Discover the current Overture release and build Parquet paths for the
+# building and transportation layers.
+overture_release = jsonlite::fromJSON(
+  "https://stac.overturemaps.org/catalog.json"
+)$latest
 
-osm_dem |>
-  crop(e) |>
-  raster_to_matrix() ->
-osm_mat
+building_uri = sprintf(
+  "az://overturemapswestus2.blob.core.windows.net/release/\%s/theme=buildings/type=building/*.parquet",
+  overture_release
+)
 
-#Visualize areas less than one meter as water (approximate tidal range)
-osm_mat[osm_mat <= 1] = -2
+road_uri = sprintf(
+  "az://overturemapswestus2.blob.core.windows.net/release/\%s/theme=transportation/type=segment/*.parquet",
+  overture_release
+)
 
-osm_mat |>
-  rayimage::render_resized(mag=4) |>
-  sphere_shade(texture = "desert") |>
-  add_overlay(generate_polygon_overlay(building_polys, extent = new_e,
-                                       heightmap = osm_mat,
-                                       linewidth = 6,
-                                       resolution_multiply = 50), rescale_original = TRUE) |>
-  add_overlay(generate_line_overlay(osm_road$osm_lines, extent = new_e,
-                                    heightmap = osm_mat,
-                                    linewidth = 6,
-                                    resolution_multiply = 50), rescale_original = TRUE) |>
-  plot_3d(osm_mat, water = TRUE, windowsize = 800, watercolor = "dodgerblue",
-          zscale = 10,
-          background = "pink",
-          extent = new_e)
+# Query the remote Parquet files in memory. The Overture geometry column is
+# returned as WKB so sf can reconstruct the features locally.
+con = DBI::dbConnect(duckdb::duckdb(), dbdir = ":memory:")
+on.exit(DBI::dbDisconnect(con, shutdown = TRUE), add = TRUE)
 
-#Render buildings
-render_buildings(building_polys,  flat_shading  = TRUE,
-                 angle = 30,
-                 material = "white", roof_material = "white",
-                 roof_height = 3, base_height = 0)
-render_camera(theta=220, phi=22, zoom=0.45, fov=0)
+# Select buildings whose feature bounding boxes start inside the padded
+# query area.
+building_query = sprintf(
+  "
+SELECT
+  id,
+  height,
+  num_floors,
+  ST_AsWKB(geometry)::BLOB AS geometry
+FROM read_parquet('\%s', filename = false, hive_partitioning = 1)
+WHERE
+  bbox.xmin BETWEEN \%.10f AND \%.10f
+  AND bbox.ymin BETWEEN \%.10f AND \%.10f
+",
+  building_uri,
+  query_bbox[["xmin"]],
+  query_bbox[["xmax"]],
+  query_bbox[["ymin"]],
+  query_bbox[["ymax"]]
+)
+
+building_df = DBI::dbGetQuery(con, building_query)
+
+building_geom = sf::st_as_sfc(
+  structure(building_df$geometry, class = "WKB"),
+  crs = 4326
+)
+
+building_df$geometry = NULL
+
+building_polys = sf::st_sf(
+  building_df,
+  geometry = building_geom,
+  crs = 4326
+)
+
+# Select road segments that overlap the padded query area.
+road_query = sprintf(
+  "
+SELECT
+  id,
+  names.primary AS name,
+  class AS road_class,
+  subclass AS road_subclass,
+  ST_AsWKB(geometry)::BLOB AS geometry
+FROM read_parquet('\%s', filename = false, hive_partitioning = 1)
+WHERE
+  subtype = 'road'
+  AND bbox.xmin < \%.10f
+  AND bbox.xmax > \%.10f
+  AND bbox.ymin < \%.10f
+  AND bbox.ymax > \%.10f
+",
+  road_uri,
+  query_bbox[["xmax"]],
+  query_bbox[["xmin"]],
+  query_bbox[["ymax"]],
+  query_bbox[["ymin"]]
+)
+
+road_df = DBI::dbGetQuery(con, road_query)
+
+road_geom = sf::st_as_sfc(
+  structure(road_df$geometry, class = "WKB"),
+  crs = 4326
+)
+
+road_df$geometry = NULL
+
+road_lines = sf::st_sf(
+  road_df,
+  geometry = road_geom,
+  crs = 4326
+)
+
+# Fetch elevation for the render area. rayshader caches the spatial extent
+# from this DEM object, so overlay and render calls can omit extent/heightmap.
+scene_dem = elevatr::get_elev_raster(scene_area, z = 11, clip = "bbox")
+
+# Create a shaded terrain image, then draw building footprints and roads over
+# it before opening the 3D scene.
+scene_dem |>
+  sphere_shade(texture = "imhof4", vertical_exaggeration = 20) |>
+  add_overlay(
+    generate_polygon_overlay(
+      building_polys,
+      linewidth = 6,
+      resolution_multiply = 50
+    ),
+    rescale_original = TRUE
+  ) |>
+  add_overlay(
+    generate_line_overlay(
+      road_lines,
+      linewidth = 6,
+      resolution_multiply = 50
+    ),
+    rescale_original = TRUE
+  ) |>
+  plot_3d(
+    water = TRUE,
+    waterdepth = 0.5,
+    windowsize = 800,
+    watercolor = "dodgerblue",
+    background = "pink"
+  )
+
+# Overture building heights are sometimes missing. Fill those gaps before
+# using the height column to drive roof elevation.
+building_polys |>
+  dplyr::mutate(height = dplyr::if_else(is.na(height), mean(height, na.rm = TRUE), height)) ->
+building_poly_fixed
+
+# Render buildings
+render_buildings(
+  building_poly_fixed,
+  flat_shading = TRUE,
+  lit = FALSE,
+  angle = 30,
+  material = "white",
+  roof_material = "white",
+  roof_height = 3,
+  base_height = 0,
+  data_column_top = "height",
+  relative_heights = TRUE
+)
+
+render_camera(theta = 220, phi = 45, zoom = 0.55, fov = 0)
 render_snapshot()
 
-#Zoom in to show roof details and render with render_highquality()
-render_camera(fov=110)
-render_highquality(camera_location = c(18.22, 0.57, -50.83),
-                   camera_lookat = c(20.88, -2.83, -38.87),
-                   focal_distance = 13, samples = 16,
-                   lightdirection = 45)
+# Zoom in to show roof details and render with render_highquality()
+render_camera(fov = 120)
+
+# Generate an evening sky in the winter. The camera location and direction
+# were determined using an interactive render_highquality() session by 
+# hitting the P key with the camera in the desired position.
+render_highquality(
+  camera_location = c(-9.49, 4.66, 11.85),
+  camera_lookat = c(0.65, -1.85, 2.82),
+  focal_distance = 15.056,
+  samples = 100,
+  iso = 100 / 16,
+  datetime = as.POSIXct("2025-01-01 15:00:00", tz = "America/St_Johns"),
+  sky_args = list(hosek = FALSE)
+)
 \dontshow{\}) # examplesIf}
 }
