@@ -784,25 +784,14 @@ render_zaxis_internal = function(
     if (zaxis_title_location == "side") {
       title_offset = max(zaxis_title_offset, zaxis_text_offset + 1)
       title_x = anchor_xyz[1] + title_unit[1] * tick_len * title_offset
+      title_y = mean(c(y_min, y_max))
       title_z = anchor_xyz[3] + title_unit[2] * tick_len * title_offset
       title_adj = c(title_text_adj_x, 0.5)
-      title_chars = strsplit(zaxis_title, "", fixed = TRUE)[[1]]
-      title_length = length(title_chars)
-      title_y_center = mean(c(y_min, y_max))
-      title_y = title_y_center
-      if (title_length > 1) {
-        title_span = max(abs(y_max - y_min), 1 / zscale)
-        title_y = seq(
-          title_y_center + title_span * 0.425,
-          title_y_center - title_span * 0.425,
-          length.out = title_length
-        )
-      }
       rgl::texts3d(
-        x = rep(title_x, title_length),
+        x = title_x,
         y = title_y,
-        z = rep(title_z, title_length),
-        texts = title_chars,
+        z = title_z,
+        texts = zaxis_title,
         color = zaxis_color,
         adj = title_adj,
         cex = zaxis_title_size,

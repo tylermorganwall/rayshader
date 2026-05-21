@@ -176,8 +176,7 @@ test_that("render_zaxis() adds side and top titles", {
   expect_equal(title_material$color, "#0000FF")
   expect_equal(unname(rgl::rgl.attrib(title_id, "cex")[1]), 1.4)
   expect_equal(unname(rgl::rgl.attrib(label_id, "cex")[1]), 1.2)
-  expect_equal(nrow(title_verts), nchar("Elevation (m)"))
-  expect_gt(length(unique(round(title_verts[, 2], 6))), 1)
+  expect_equal(nrow(title_verts), 1)
   label_verts = rgl::rgl.attrib(label_id, "vertices")
   axis_label_point = c(axis_verts[1, 1], label_verts[1, 2], axis_verts[1, 3])
   axis_title_point = c(axis_verts[1, 1], title_verts[1, 2], axis_verts[1, 3])
@@ -221,7 +220,7 @@ test_that("render_zaxis() adds side and top titles", {
   expect_gt(unname(title_verts[1, 2]), max(axis_verts[, 2]))
 })
 
-test_that("render_zaxis() defaults side title to the label side vertically", {
+test_that("render_zaxis() defaults side title to the label side horizontally", {
   on.exit(rgl::close3d(), add = TRUE)
   local_rgl_use_null()
 
@@ -274,12 +273,11 @@ test_that("render_zaxis() defaults side title to the label side vertically", {
 
   expect_equal(out$title_location, "side")
   expect_equal(title_text, "Elevation (m)")
-  expect_equal(nrow(title_verts), nchar("Elevation (m)"))
+  expect_equal(nrow(title_verts), 1)
   expect_equal(
     unname(rgl::rgl.attrib(title_id, "cex")[1]),
     unname(rgl::rgl.attrib(label_id, "cex")[1])
   )
-  expect_gt(length(unique(round(title_verts[, 2], 6))), 1)
   expect_equal(
     unname(mean(title_verts[, 2])),
     mean(axis_verts[, 2]),

@@ -73,7 +73,7 @@ uses the cached height aesthetic label from \code{\link[=plot_gg]{plot_gg()}} sc
 Set to \code{NULL} to omit the title, or pass a character string to override it.}
 
 \item{zaxis_title_location}{Default \code{"side"}. Title location. Options are
-\code{"side"} and \code{"top"}. \code{"side"} places the title vertically on the tick-label
+\code{"side"} and \code{"top"}. \code{"side"} places the title horizontally on the tick-label
 side and centered on the axis.}
 
 \item{zaxis_title_offset}{Default \code{5}. Title offset multiplier. For

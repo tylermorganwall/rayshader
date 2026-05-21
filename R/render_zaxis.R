@@ -38,7 +38,7 @@
 #'uses the cached height aesthetic label from [plot_gg()] scenes when available.
 #'Set to `NULL` to omit the title, or pass a character string to override it.
 #'@param zaxis_title_location Default `"side"`. Title location. Options are
-#'`"side"` and `"top"`. `"side"` places the title vertically on the tick-label
+#'`"side"` and `"top"`. `"side"` places the title horizontally on the tick-label
 #'side and centered on the axis.
 #'@param zaxis_title_offset Default `5`. Title offset multiplier. For
 #'`zaxis_title_location = "side"`, this moves the title away from the axis on

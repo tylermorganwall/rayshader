@@ -175,7 +175,6 @@ road_uri = sprintf(
 # Query the remote Parquet files in memory. The Overture geometry column is
 # returned as WKB so sf can reconstruct the features locally.
 con = DBI::dbConnect(duckdb::duckdb(), dbdir = ":memory:")
-on.exit(DBI::dbDisconnect(con, shutdown = TRUE), add = TRUE)
 
 # Select buildings whose feature bounding boxes start inside the padded
 # query area.
@@ -252,6 +251,9 @@ road_lines = sf::st_sf(
   crs = 4326
 )
 
+# Close the in-memory DuckDB connection after all remote data is loaded.
+DBI::dbDisconnect(con, shutdown = TRUE)
+
 # Fetch elevation for the render area. rayshader caches the spatial extent
 # from this DEM object, so overlay and render calls can omit extent/heightmap.
 scene_dem = elevatr::get_elev_raster(scene_area, z = 11, clip = "bbox")
@@ -311,7 +313,7 @@ render_snapshot()
 render_camera(fov = 120)
 
 # Generate an evening sky in the winter. The camera location and direction
-# were determined using an interactive render_highquality() session by 
+# were determined using an interactive render_highquality() session by
 # hitting the P key with the camera in the desired position.
 render_highquality(
   camera_location = c(-9.49, 4.66, 11.85),
