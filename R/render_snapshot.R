@@ -269,6 +269,7 @@ render_snapshot = function(
     rayimage::ray_write_image(tempmap, filename)
   }
   if (clear) {
+    clear_plot_3d_surface_textures()
     rgl::clear3d()
   }
   return(invisible(tempmap))

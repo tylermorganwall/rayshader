@@ -167,11 +167,167 @@ coerce_plot_3d_heightmap = function(heightmap) {
   info
 }
 
+get_plot_3d_max_texture_size = function() {
+  max_texture_size = getOption("rayshader.max_texture_size", 4096)
+  if (is.null(max_texture_size) || isFALSE(max_texture_size)) {
+    return(Inf)
+  }
+  if (
+    !is.numeric(max_texture_size) ||
+      length(max_texture_size) != 1 ||
+      is.na(max_texture_size) ||
+      max_texture_size <= 0
+  ) {
+    warning(
+      "`options(rayshader.max_texture_size)` must be a single positive number, `Inf`, or `FALSE`; ignoring.",
+      call. = FALSE
+    )
+    return(Inf)
+  }
+  max_texture_size
+}
+
+resize_plot_3d_texture = function(texture) {
+  texture_dim = dim(texture)
+  if (length(texture_dim) < 2) {
+    return(texture)
+  }
+  texture_dim = texture_dim[1:2]
+  max_texture_size = get_plot_3d_max_texture_size()
+  if (!is.finite(max_texture_size)) {
+    return(texture)
+  }
+  largest_texture_dim = max(texture_dim)
+  if (largest_texture_dim <= max_texture_size) {
+    return(texture)
+  }
+  scale_factor = max_texture_size / largest_texture_dim
+  resized_dim = pmax(1, floor(texture_dim * scale_factor))
+  rayimage::render_resized(
+    texture,
+    dims = resized_dim
+  )
+}
+
+check_plot_3d_texture_size = function(texture) {
+  resized_texture = resize_plot_3d_texture(texture)
+  if (!identical(dim(resized_texture), dim(texture))) {
+    message(
+      sprintf(
+        "Resized plot_3d() texture from %s x %s to %s x %s to respect `options(rayshader.max_texture_size = %s)`.",
+        dim(texture)[1],
+        dim(texture)[2],
+        dim(resized_texture)[1],
+        dim(resized_texture)[2],
+        get_plot_3d_max_texture_size()
+      )
+    )
+  }
+  resized_texture
+}
+
+plot_3d_surface_texture_key = function(id, device = rgl::cur3d()) {
+  paste(device, id, sep = ":")
+}
+
+normalize_plot_3d_texture_path = function(path) {
+  if (is.null(path) || is.na(path)) {
+    return(path)
+  }
+  normalizePath(path, winslash = "/", mustWork = FALSE)
+}
+
+clear_plot_3d_surface_textures = function(id = NULL, device = rgl::cur3d()) {
+  if (is.null(id)) {
+    texture_keys = ls(envir = ray_surface_texture_envir, all.names = TRUE)
+    if (!isTRUE(device == 0)) {
+      device_prefix = paste0(device, ":")
+      texture_keys = texture_keys[startsWith(texture_keys, device_prefix)]
+    }
+  } else {
+    texture_keys = plot_3d_surface_texture_key(id, device = device)
+  }
+  if (length(texture_keys)) {
+    rm(list = texture_keys, envir = ray_surface_texture_envir)
+  }
+  invisible(NULL)
+}
+
+prune_plot_3d_surface_textures = function(device = rgl::cur3d()) {
+  if (isTRUE(device == 0)) {
+    clear_plot_3d_surface_textures(device = device)
+    return(invisible(NULL))
+  }
+  texture_keys = ls(envir = ray_surface_texture_envir, all.names = TRUE)
+  device_prefix = paste0(device, ":")
+  texture_keys = texture_keys[startsWith(texture_keys, device_prefix)]
+  if (!length(texture_keys)) {
+    return(invisible(NULL))
+  }
+
+  idvals = tryCatch(rgl::ids3d(), error = function(e) NULL)
+  current_keys = plot_3d_surface_texture_key(idvals$id, device = device)
+  stale_keys = setdiff(texture_keys, current_keys)
+  if (length(stale_keys)) {
+    rm(list = stale_keys, envir = ray_surface_texture_envir)
+  }
+  invisible(NULL)
+}
+
+register_plot_3d_surface_texture = function(
+  id,
+  texture_file,
+  rgl_texture_file
+) {
+  prune_plot_3d_surface_textures()
+  for (id_single in id) {
+    assign(
+      plot_3d_surface_texture_key(id_single),
+      list(
+        texture_file = normalize_plot_3d_texture_path(texture_file),
+        rgl_texture_file = normalize_plot_3d_texture_path(rgl_texture_file)
+      ),
+      envir = ray_surface_texture_envir
+    )
+  }
+  invisible(id)
+}
+
+get_plot_3d_surface_texture = function(id, rgl_texture_file) {
+  texture_key = plot_3d_surface_texture_key(id)
+  surface_texture = get0(
+    texture_key,
+    envir = ray_surface_texture_envir,
+    inherits = FALSE
+  )
+  if (is.null(surface_texture)) {
+    return(NULL)
+  }
+  if (
+    !is.list(surface_texture) ||
+      !identical(
+        surface_texture$rgl_texture_file,
+        normalize_plot_3d_texture_path(rgl_texture_file)
+      ) ||
+      !file.exists(surface_texture$texture_file)
+  ) {
+    rm(list = texture_key, envir = ray_surface_texture_envir)
+    return(NULL)
+  }
+  surface_texture$texture_file
+}
+
 #'@title Plot 3D
 #'
 #'@description Displays the shaded map in 3D with the `rgl` package.
 #'
 #'Cache fallback messages are disabled by default. Set `options(rayshader.verbose_scene_cache = TRUE)` to print when cached metadata is reused.
+#'
+#'`plot_3d()` checks the map texture dimensions against `options(rayshader.max_texture_size = 4096)`
+#'and downsamples the temporary `rgl` texture with [rayimage::render_resized()] if either dimension exceeds
+#'that value. The full-resolution source texture is preserved for [render_highquality()] and other rayrender
+#'conversion paths. This is a conservative OpenGL texture-size guard; set the option to a larger value if
+#'your system supports larger textures, or to `Inf`/`FALSE` to disable the check.
 #'
 #'Note: Calling [plot_3d()] resets the scene cache for the [render_snapshot()], [render_depth()], and [render_highquality()]
 #'
@@ -362,6 +518,7 @@ plot_3d = function(
   extent = NULL
 ) {
   if (!plot_new && clear_previous) {
+    clear_plot_3d_surface_textures()
     rgl::clear3d()
   }
   force(hillshade)
@@ -533,6 +690,7 @@ plot_3d = function(
   }
   heightmap = generate_base_shape(heightmap, baseshape)
   hillshade = rayimage::render_clamp(hillshade)
+  rgl_hillshade = check_plot_3d_texture_size(hillshade)
 
   if (is.null(heightmap)) {
     stop(
@@ -633,8 +791,14 @@ plot_3d = function(
       waterlinecolor = "#ffd1fb"
     }
   }
-  tempmap = tempfile(fileext = ".png")
-  rayimage::ray_write_image(hillshade, tempmap)
+  full_texture_map = tempfile(fileext = ".png")
+  rayimage::ray_write_image(hillshade, full_texture_map)
+  if (identical(dim(rgl_hillshade), dim(hillshade))) {
+    tempmap = full_texture_map
+  } else {
+    tempmap = tempfile(fileext = ".png")
+    rayimage::ray_write_image(rgl_hillshade, tempmap)
+  }
   precomputed = FALSE
   if (is.list(precomputed_normals)) {
     normals = precomputed_normals
@@ -650,6 +814,7 @@ plot_3d = function(
   }
 
   if (close_previous && rgl::cur3d() != 0) {
+    clear_plot_3d_surface_textures()
     rgl::close3d()
   }
   if (plot_new || rgl::cur3d() == 0) {
@@ -680,7 +845,7 @@ plot_3d = function(
     normalsz[replace_na_vals] = 0
 
     ray_surface = generate_surface(heightmap, zscale = zscale)
-    rgl::triangles3d(
+    surface_id = rgl::triangles3d(
       x = ray_surface$verts,
       indices = ray_surface$inds,
       texcoords = ray_surface$texcoords,
@@ -720,7 +885,7 @@ plot_3d = function(
     tris[, 3] = tris[, 3] - (nc - 1) / 2
     tris[, 3] = -tris[, 3]
 
-    rgl::triangles3d(
+    surface_id = rgl::triangles3d(
       tris,
       texcoords = texcoords,
       indices = index_vals,
@@ -732,6 +897,7 @@ plot_3d = function(
       tag = tag_surface
     )
   }
+  register_plot_3d_surface_texture(surface_id, full_texture_map, tempmap)
   rgl::bg3d(color = background, texture = NULL)
   if (solid && !triangulate) {
     make_base(

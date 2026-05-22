@@ -1690,6 +1690,7 @@ render_highquality = function(
     }
   }
   if (clear) {
+    clear_plot_3d_surface_textures()
     rgl::clear3d()
   }
   return(invisible(debug_return))

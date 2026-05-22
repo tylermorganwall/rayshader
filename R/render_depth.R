@@ -155,7 +155,11 @@ render_depth = function(
   detached_water_ids = integer()
   detached_water_subscene = NULL
   restore_transparent_water = function() {
-    if (!length(detached_water_ids) || is.null(detached_water_subscene) || rgl::cur3d() == 0) {
+    if (
+      !length(detached_water_ids) ||
+        is.null(detached_water_subscene) ||
+        rgl::cur3d() == 0
+    ) {
       return(invisible(NULL))
     }
     current_ids = tryCatch(
@@ -164,7 +168,10 @@ render_depth = function(
     )
     restore_ids = setdiff(detached_water_ids, current_ids)
     if (length(restore_ids)) {
-      rgl::addToSubscene3d(ids = restore_ids, subscene = detached_water_subscene)
+      rgl::addToSubscene3d(
+        ids = restore_ids,
+        subscene = detached_water_subscene
+      )
     }
     detached_water_ids <<- integer()
     detached_water_subscene <<- NULL
@@ -181,7 +188,10 @@ render_depth = function(
     }
     detached_water_subscene <<- rgl::currentSubscene3d()
     detached_water_ids <<- water_ids
-    rgl::delFromSubscene3d(ids = detached_water_ids, subscene = detached_water_subscene)
+    rgl::delFromSubscene3d(
+      ids = detached_water_ids,
+      subscene = detached_water_subscene
+    )
     invisible(NULL)
   }
   on.exit(restore_transparent_water(), add = TRUE)
@@ -397,6 +407,7 @@ render_depth = function(
       rayimage::ray_write_image(tempmap2, filename)
     }
     if (clear) {
+      clear_plot_3d_surface_textures()
       rgl::clear3d()
     }
   }

@@ -112,8 +112,8 @@
 #' # returned as WKB so sf can reconstruct the features locally.
 #' con = DBI::dbConnect(duckdb::duckdb(), dbdir = ":memory:")
 #'
-#' # Select buildings whose feature bounding boxes start inside the padded
-#' # query area.
+#' # Select buildings whose feature bounding boxes intersect the padded
+#' # query area, including buildings that cross the boundary.
 #' building_query = sprintf(
 #'   "
 #' SELECT
@@ -123,14 +123,16 @@
 #'   ST_AsWKB(geometry)::BLOB AS geometry
 #' FROM read_parquet('%s', filename = false, hive_partitioning = 1)
 #' WHERE
-#'   bbox.xmin BETWEEN %.10f AND %.10f
-#'   AND bbox.ymin BETWEEN %.10f AND %.10f
+#'   bbox.xmin <= %.10f
+#'   AND bbox.xmax >= %.10f
+#'   AND bbox.ymin <= %.10f
+#'   AND bbox.ymax >= %.10f
 #' ",
 #'   building_uri,
-#'   query_bbox[["xmin"]],
 #'   query_bbox[["xmax"]],
-#'   query_bbox[["ymin"]],
-#'   query_bbox[["ymax"]]
+#'   query_bbox[["xmin"]],
+#'   query_bbox[["ymax"]],
+#'   query_bbox[["ymin"]]
 #' )
 #'
 #' building_df = DBI::dbGetQuery(con, building_query)
@@ -148,7 +150,8 @@
 #'   crs = 4326
 #' )
 #'
-#' # Select road segments that overlap the padded query area.
+#' # Select road segments whose feature bounding boxes intersect the padded
+#' # query area, including roads that cross the boundary.
 #' road_query = sprintf(
 #'   "
 #' SELECT
@@ -160,10 +163,10 @@
 #' FROM read_parquet('%s', filename = false, hive_partitioning = 1)
 #' WHERE
 #'   subtype = 'road'
-#'   AND bbox.xmin < %.10f
-#'   AND bbox.xmax > %.10f
-#'   AND bbox.ymin < %.10f
-#'   AND bbox.ymax > %.10f
+#'   AND bbox.xmin <= %.10f
+#'   AND bbox.xmax >= %.10f
+#'   AND bbox.ymin <= %.10f
+#'   AND bbox.ymax >= %.10f
 #' ",
 #'   road_uri,
 #'   query_bbox[["xmax"]],
@@ -190,13 +193,24 @@
 #' # Close the in-memory DuckDB connection after all remote data is loaded.
 #' DBI::dbDisconnect(con, shutdown = TRUE)
 #'
-#' # Fetch elevation for the render area. rayshader caches the spatial extent
-#' # from this DEM object, so overlay and render calls can omit extent/heightmap.
+#' # Fetch elevation for the render area, then crop it to the building footprint
+#' # extent. rayshader caches the cropped DEM extent so overlay and render calls
+#' # can omit extent/heightmap.
 #' scene_dem = elevatr::get_elev_raster(scene_area, z = 11, clip = "bbox")
+#' building_extent = sf::st_bbox(building_polys)
+#' terrain_dem = terra::crop(
+#'   terra::rast(scene_dem),
+#'   terra::ext(
+#'     building_extent[["xmin"]],
+#'     building_extent[["xmax"]],
+#'     building_extent[["ymin"]],
+#'     building_extent[["ymax"]]
+#'   )
+#' )
 #'
 #' # Create a shaded terrain image, then draw building footprints and roads over
 #' # it before opening the 3D scene.
-#' scene_dem |>
+#' terrain_dem |>
 #'   sphere_shade(texture = "imhof4", vertical_exaggeration = 20) |>
 #'   add_overlay(
 #'     generate_polygon_overlay(
@@ -252,9 +266,9 @@
 #' # were determined using an interactive render_highquality() session by
 #' # hitting the P key with the camera in the desired position.
 #' render_highquality(
-#'   camera_location = c(-9.49, 4.66, 11.85),
-#'   camera_lookat = c(0.65, -1.85, 2.82),
-#'   focal_distance = 15.056,
+#'   camera_location = c(-14.13, 4.86, 11.86),
+#'   camera_lookat = c(-1.07, -2.25, 1.58),
+#'   focal_distance = 8.000,
 #'   samples = 100,
 #'   iso = 100 / 16,
 #'   datetime = as.POSIXct("2025-01-01 15:00:00", tz = "America/St_Johns"),

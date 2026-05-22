@@ -181,6 +181,12 @@ Displays the shaded map in 3D with the \code{rgl} package.
 
 Cache fallback messages are disabled by default. Set \code{options(rayshader.verbose_scene_cache = TRUE)} to print when cached metadata is reused.
 
+\code{plot_3d()} checks the map texture dimensions against \code{options(rayshader.max_texture_size = 4096)}
+and downsamples the temporary \code{rgl} texture with \code{\link[rayimage:render_resized]{rayimage::render_resized()}} if either dimension exceeds
+that value. The full-resolution source texture is preserved for \code{\link[=render_highquality]{render_highquality()}} and other rayrender
+conversion paths. This is a conservative OpenGL texture-size guard; set the option to a larger value if
+your system supports larger textures, or to \code{Inf}/\code{FALSE} to disable the check.
+
 Note: Calling \code{\link[=plot_3d]{plot_3d()}} resets the scene cache for the \code{\link[=render_snapshot]{render_snapshot()}}, \code{\link[=render_depth]{render_depth()}}, and \code{\link[=render_highquality]{render_highquality()}}
 }
 \examples{
