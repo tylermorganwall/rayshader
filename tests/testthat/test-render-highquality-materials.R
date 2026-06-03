@@ -264,6 +264,8 @@ test_that("render_highquality() defaults label and z-axis overlays to screen spa
       background_alpha = 0.25,
       halo_color = "white",
       halo_expand = 2,
+      halo_gap_fill = 3,
+      halo_gap_fill_alpha_threshold = 0.4,
       vjust = 1.25
     ),
     screen_line_args = list(
@@ -306,6 +308,8 @@ test_that("render_highquality() defaults label and z-axis overlays to screen spa
   expect_equal(unique(screen_text$background_alpha), 0.25)
   expect_equal(unique(screen_text$halo_color), "white")
   expect_equal(unique(screen_text$halo_expand), 2)
+  expect_equal(unique(screen_text$halo_gap_fill), 3)
+  expect_equal(unique(screen_text$halo_gap_fill_alpha_threshold), 0.4)
   expect_equal(unique(screen_text$vjust), 1.25)
   expect_true(all(screen_line$occlusion))
   expect_equal(unique(screen_line$occlusion_mode), "line")

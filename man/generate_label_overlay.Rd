@@ -27,6 +27,8 @@ generate_label_overlay(
   halo_offset = c(0, 0),
   halo_blur = 0,
   halo_edge_softness = 0.1,
+  halo_gap_fill = 2,
+  halo_gap_fill_alpha_threshold = 0.25,
   seed = NA
 )
 }
@@ -96,6 +98,10 @@ of this color.}
 \item{halo_blur}{Default \code{0}. Amount of blur to apply to the halo. Values greater than \code{30} won't result in further blurring.}
 
 \item{halo_edge_softness}{Default \code{0.1}. Width of the softened halo edge transition, in pixels.}
+
+\item{halo_gap_fill}{Default \code{2}. Maximum alpha gap width, in pixels, to bridge in the halo outline.}
+
+\item{halo_gap_fill_alpha_threshold}{Default \code{0.25}. Alpha threshold used to protect enclosed interior halo gaps from \code{halo_gap_fill}.}
 
 \item{seed}{Default \code{NA}, no seed. Random seed for ensuring the consistent placement of labels around points.}
 }

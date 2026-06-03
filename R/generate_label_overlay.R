@@ -47,6 +47,8 @@
 #'@param halo_offset Default `c(0,0)`. Horizontal and vertical offset to apply to the halo, in units of `geometry`.
 #'@param halo_blur Default `0`. Amount of blur to apply to the halo. Values greater than `30` won't result in further blurring.
 #'@param halo_edge_softness Default `0.1`. Width of the softened halo edge transition, in pixels.
+#'@param halo_gap_fill Default `2`. Maximum alpha gap width, in pixels, to bridge in the halo outline.
+#'@param halo_gap_fill_alpha_threshold Default `0.25`. Alpha threshold used to protect enclosed interior halo gaps from `halo_gap_fill`.
 #'@param seed Default `NA`, no seed. Random seed for ensuring the consistent placement of labels around points.
 #'@return Semi-transparent overlay with labels.
 #'@export
@@ -137,6 +139,8 @@ generate_label_overlay = function(
 	halo_offset = c(0, 0),
 	halo_blur = 0,
 	halo_edge_softness = 0.1,
+	halo_gap_fill = 2,
+	halo_gap_fill_alpha_threshold = 0.25,
 	seed = NA
 ) {
 	if (!is.na(seed)) {
@@ -318,7 +322,9 @@ generate_label_overlay = function(
 			halo_color,
 			halo_alpha,
 			halo_blur,
-			halo_edge_softness
+			halo_edge_softness,
+			halo_gap_fill,
+			halo_gap_fill_alpha_threshold
 		)
 		overlay_temp = rayimage::render_image_overlay(
 			overlay_temp_under,
