@@ -26,7 +26,7 @@ Imports: doParallel,
 		 units,
          methods,
          terrainmeshr,
-         rayimage (>= 0.24.1),
+         rayimage (>= 0.26.0),
          rayvertex (>= 0.13.1),
          rayrender (>= 0.40.0)
 Suggests: 
