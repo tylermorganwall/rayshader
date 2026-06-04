@@ -857,7 +857,7 @@ elmat |>
         zoom = 0.3
     )
 Sys.sleep(0.2)
-render_depth(focallength = 800, clear = TRUE) #THIS NEEDS FIXING
+render_depth(focallength = 800, clear = TRUE)
 ```
 
 ![](man/figures/README_three-d-depth-1.png)<!-- -->
