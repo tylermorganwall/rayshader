@@ -74,7 +74,7 @@ if(all(length(find.package("sf", quiet = TRUE)) > 0,
  montereybay |>
    height_shade() |>
    add_shadow(ray_shade(vertical_exaggeration = 4),0.3) |>
-   plot_3d(water = T, wateralpha = 1, windowsize = 800, watercolor = "lightblue")
+   plot_3d(water = T, wateralpha = 1, windowsize = 800, watercolor = "lightblue", vertical_exaggeration = 4)
  render_camera(theta=-55,phi=45,zoom=0.8)
 
  #Render label

@@ -75,10 +75,11 @@
 #' #We can set the height of the data to a column in the sf object: we'll use the land area.
 #' #We'll have to scale this value because its max value is 2.6 billion:
 #' render_camera(theta=-60,  phi=40, zoom = 0.85, fov=30)
-#' render_polygons(mont_county_buff, data_column_top = "ALAND",
+#' render_polygons(mont_county_buff, data_column_top = "ALAND", 
 #'                 scale_data = 300/(5E7), color = "chartreuse4",
 #'                 clear_previous = TRUE)
-#' render_zaxis(zaxis_data = "polygon", zaxis_location = "topright")
+#' render_zaxis(zaxis_data = "polygon", zaxis_location = "topright",
+#'              zaxis_title_location = "top")
 #' render_snapshot()
 #' #This function also works with `render_highquality()`
 #' render_highquality(samples = 16, min_variance = 0)

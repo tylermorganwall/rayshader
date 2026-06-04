@@ -747,6 +747,7 @@ montereybay |>
     sphere_shade(texture = "desert") |>
     add_shadow(ray_shade(vertical_exaggeration = 4)) |>
     plot_3d(
+        vertical_exaggeration = 4,
         water = TRUE,
         windowsize = c(1000, 800),
         watercolor = "dodgerblue"

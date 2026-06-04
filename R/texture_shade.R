@@ -48,10 +48,10 @@
 #' montbay[montbay < 0] = 0
 #' montbay |>
 #'   height_shade() |>
-#'   add_water(detect_water(montbay), color="dodgerblue") |>
-#'   add_shadow(texture_shade(montbay, detail=1/2, contrast = 5,
-#'                            brightness = 4),0) |>
-#'   add_shadow(lamb_shade(montbay, vertical_exaggeration = 4),0) |>
+#'   add_water(detect_water(montbay), color="dodgerblue3") |>
+#'   add_shadow(texture_shade(montereybay, detail=2/3, contrast = 5,
+#'                           brightness = 2),0) |>
+#'   add_shadow(lamb_shade(montereybay, vertical_exaggeration = 4),0) |>
 #'   plot_map()
 texture_shade = function(
 	heightmap,

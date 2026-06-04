@@ -88,7 +88,7 @@
 #'#Use software rendering to render a scene with shadow mapping
 #'montereybay |>
 #'  height_shade() |>
-#'  plot_3d(shadow=FALSE, solidlinecolor = NULL)
+#'  plot_3d(shadow=FALSE, solidlinecolor = NULL, vertical_exaggeration = 4)
 #'#No shadows
 #'render_snapshot(software_render = TRUE)
 #'#Now with shadow mapped shadows, calculated in rayvertex

@@ -212,7 +212,7 @@ render_zaxis_internal = function(
   zaxis_labels = NULL,
   zaxis_title = "auto",
   zaxis_title_location = "side",
-  zaxis_title_offset = 5,
+  zaxis_title_offset = 1.25,
   zaxis_title_size = NULL,
   zaxis_color = "black",
   zaxis_linewidth = 2,
@@ -761,7 +761,11 @@ render_zaxis_internal = function(
 
   if (!is.null(zaxis_title)) {
     if (identical(zaxis_title_side, "auto")) {
-      title_unit = label_unit
+      title_unit = if (identical(zaxis_title_location, "side")) {
+        -label_unit
+      } else {
+        label_unit
+      }
       title_screen_side = resolve_zaxis_text_side_name(
         side = "auto",
         unit = title_unit,
@@ -799,9 +803,8 @@ render_zaxis_internal = function(
       )
     } else {
       title_side_offset = max(0.5, zaxis_text_offset)
-      y_span = max(abs(y_max - y_min), 1 / zscale)
       title_x = anchor_xyz[1] + title_unit[1] * tick_len * title_side_offset
-      title_y = y_max + 0.08 * y_span * zaxis_title_offset
+      title_y = y_max + tick_len * zaxis_title_offset
       title_z = anchor_xyz[3] + title_unit[2] * tick_len * title_side_offset
       title_adj = c(title_text_adj_x, 0)
       rgl::texts3d(

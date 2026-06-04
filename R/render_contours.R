@@ -26,7 +26,7 @@
 #'montereybay |>
 #'  height_shade() |>
 #'  add_shadow(ray_shade(),0.3) |>
-#'  plot_3d(theta = -45,  zoom=0.9, windowsize=800)
+#'  plot_3d(theta = -45,  zoom=0.9, windowsize=800, vertical_exaggeration = 4)
 #'render_contours(offset = 100)
 #'render_snapshot()
 #'
@@ -58,151 +58,151 @@
 #'                                 color = "purple", intensity = 2)
 #'                   )))
 render_contours = function(
-	heightmap = NULL,
-	zscale = 1,
-	vertical_exaggeration = 1,
-	levels = NA,
-	nlevels = NA,
-	linewidth = 1,
-	color = "black",
-	palette = NULL,
-	antialias = FALSE,
-	offset = 0,
-	clear_previous = FALSE,
-	...
+  heightmap = NULL,
+  zscale = 1,
+  vertical_exaggeration = 1,
+  levels = NA,
+  nlevels = NA,
+  linewidth = 1,
+  color = "black",
+  palette = NULL,
+  antialias = FALSE,
+  offset = 0,
+  clear_previous = FALSE,
+  ...
 ) {
-	zaxis_split = split_zaxis_dots(list(...))
-	zscale = resolve_scene_render_effective_zscale(
-		zscale = zscale,
-		zscale_missing = missing(zscale),
-		vertical_exaggeration = vertical_exaggeration,
-		vertical_exaggeration_missing = missing(vertical_exaggeration),
-		caller = "render_contours"
-	)
-	if (clear_previous) {
-		rgl::pop3d(tag = "contour3d")
-		if (missing(heightmap) && is.null(get_scene_heightmap(default = NULL))) {
-			return(invisible())
-		}
-	}
-	heightmap = resolve_scene_render_heightmap(
-		heightmap,
-		caller = "render_contours"
-	)
-	if (is.null(heightmap)) {
-		stop(
-			"No heightmap found. Call `plot_3d()` or `plot_gg()` first, or pass `heightmap` explicitly."
-		)
-	}
-	if (!(length(find.package("sf", quiet = TRUE)) > 0)) {
-		stop("`sf` package required for generate_contour_overlay()")
-	}
-	if (!(length(find.package("isoband", quiet = TRUE)) > 0)) {
-		stop("`isoband` package required for generate_contour_overlay()")
-	}
-	if (is.na(levels[1])) {
-		if (is.na(nlevels[1])) {
-			nlevels = 10
-		}
-		rangelevels = range(heightmap, na.rm = TRUE)
-		levels = seq(rangelevels[1], rangelevels[2], length.out = nlevels + 2)
-	} else if (length(levels) == 2 && !is.na(nlevels)) {
-		rangelevels = range(levels, na.rm = TRUE)
-		levels = seq(rangelevels[1], rangelevels[2], length.out = nlevels + 2)
-	}
-	levels = sort(unique(levels))
-	extent_heightmap = c(1, nrow(heightmap), 1, ncol(heightmap))
-	if (
-		all(levels > max(heightmap, na.rm = TRUE)) ||
-			all(levels < min(heightmap, na.rm = TRUE))
-	) {
-		warning(sprintf(
-			"Contour levels [range %f-%f] do not fall between min [%f] and max [%f] of DEM: no contours drawn.",
-			min(levels),
-			max(levels),
-			min(heightmap, na.rm = TRUE),
-			max(heightmap, na.rm = TRUE)
-		))
-		return(invisible())
-	}
-	levels = levels[levels > min(heightmap, na.rm = TRUE)]
-	levels = levels[levels < max(heightmap, na.rm = TRUE)]
-	heightmap2 = flipud(t(heightmap))
-	isolineval = isoband::isolines(
-		x = seq_len(ncol(heightmap2)),
-		y = seq_len(nrow(heightmap2)),
-		z = heightmap2,
-		levels = levels
-	)
-	contour_heights = as.numeric(names(isolineval))
-	if (!is.null(palette)) {
-		if (is.function(palette)) {
-			color = palette(length(isolineval))
-		} else {
-			if (length(palette) == length(isolineval) && is.character(palette)) {
-				color = palette
-			}
-		}
-		for (i in seq_len(length(isolineval))) {
-			contour_height = contour_heights[i] + offset
-			do.call(
-				render_path,
-				c(
-					list(
-						lat = isolineval[[i]]$y,
-						long = isolineval[[i]]$x,
-						groups = isolineval[[i]]$id,
-						altitude = contour_height,
-						heightmap = heightmap,
-						extent = extent_heightmap,
-						tag = "contour3d",
-						zscale = zscale,
-						vertical_exaggeration = 1,
-						linewidth = linewidth,
-						offset = offset,
-						antialias = antialias,
-						color = color[i]
-					),
-					zaxis_split$other_args
-				)
-			)
-		}
-	} else {
-		prev_id_max = 0
-		isoline_list = vector("list", length = length(isolineval))
-		for (i in seq_len(length(isolineval))) {
-			isolineval[[i]]$id = isolineval[[i]]$id + prev_id_max
-			isolineval[[i]]$altitude = contour_heights[i] + offset
-			prev_id_max = max(isolineval[[i]]$id)
-			isoline_list[[i]] = data.frame(isolineval[[i]])
-		}
-		isolines_combined = do.call("rbind", isoline_list)
-		do.call(
-			render_path,
-			c(
-				list(
-					lat = isolines_combined$y,
-					long = isolines_combined$x,
-					groups = isolines_combined$id,
-					altitude = isolines_combined$altitude,
-					extent = extent_heightmap,
-					tag = "contour3d",
-					heightmap = heightmap,
-					zscale = zscale,
-					vertical_exaggeration = 1,
-					linewidth = linewidth,
-					offset = offset,
-					antialias = antialias,
-					color = color
-				),
-				zaxis_split$other_args
-			)
-		)
-	}
-	render_zaxis_from_dots(
-		zaxis_args = zaxis_split$zaxis_args,
-		extent = extent_heightmap,
-		zscale = zscale,
-		heightmap = heightmap
-	)
+  zaxis_split = split_zaxis_dots(list(...))
+  zscale = resolve_scene_render_effective_zscale(
+    zscale = zscale,
+    zscale_missing = missing(zscale),
+    vertical_exaggeration = vertical_exaggeration,
+    vertical_exaggeration_missing = missing(vertical_exaggeration),
+    caller = "render_contours"
+  )
+  if (clear_previous) {
+    rgl::pop3d(tag = "contour3d")
+    if (missing(heightmap) && is.null(get_scene_heightmap(default = NULL))) {
+      return(invisible())
+    }
+  }
+  heightmap = resolve_scene_render_heightmap(
+    heightmap,
+    caller = "render_contours"
+  )
+  if (is.null(heightmap)) {
+    stop(
+      "No heightmap found. Call `plot_3d()` or `plot_gg()` first, or pass `heightmap` explicitly."
+    )
+  }
+  if (!(length(find.package("sf", quiet = TRUE)) > 0)) {
+    stop("`sf` package required for generate_contour_overlay()")
+  }
+  if (!(length(find.package("isoband", quiet = TRUE)) > 0)) {
+    stop("`isoband` package required for generate_contour_overlay()")
+  }
+  if (is.na(levels[1])) {
+    if (is.na(nlevels[1])) {
+      nlevels = 10
+    }
+    rangelevels = range(heightmap, na.rm = TRUE)
+    levels = seq(rangelevels[1], rangelevels[2], length.out = nlevels + 2)
+  } else if (length(levels) == 2 && !is.na(nlevels)) {
+    rangelevels = range(levels, na.rm = TRUE)
+    levels = seq(rangelevels[1], rangelevels[2], length.out = nlevels + 2)
+  }
+  levels = sort(unique(levels))
+  extent_heightmap = c(1, nrow(heightmap), 1, ncol(heightmap))
+  if (
+    all(levels > max(heightmap, na.rm = TRUE)) ||
+      all(levels < min(heightmap, na.rm = TRUE))
+  ) {
+    warning(sprintf(
+      "Contour levels [range %f-%f] do not fall between min [%f] and max [%f] of DEM: no contours drawn.",
+      min(levels),
+      max(levels),
+      min(heightmap, na.rm = TRUE),
+      max(heightmap, na.rm = TRUE)
+    ))
+    return(invisible())
+  }
+  levels = levels[levels > min(heightmap, na.rm = TRUE)]
+  levels = levels[levels < max(heightmap, na.rm = TRUE)]
+  heightmap2 = flipud(t(heightmap))
+  isolineval = isoband::isolines(
+    x = seq_len(ncol(heightmap2)),
+    y = seq_len(nrow(heightmap2)),
+    z = heightmap2,
+    levels = levels
+  )
+  contour_heights = as.numeric(names(isolineval))
+  if (!is.null(palette)) {
+    if (is.function(palette)) {
+      color = palette(length(isolineval))
+    } else {
+      if (length(palette) == length(isolineval) && is.character(palette)) {
+        color = palette
+      }
+    }
+    for (i in seq_len(length(isolineval))) {
+      contour_height = contour_heights[i] + offset
+      do.call(
+        render_path,
+        c(
+          list(
+            lat = isolineval[[i]]$y,
+            long = isolineval[[i]]$x,
+            groups = isolineval[[i]]$id,
+            altitude = contour_height,
+            heightmap = heightmap,
+            extent = extent_heightmap,
+            tag = "contour3d",
+            zscale = zscale,
+            vertical_exaggeration = 1,
+            linewidth = linewidth,
+            offset = offset,
+            antialias = antialias,
+            color = color[i]
+          ),
+          zaxis_split$other_args
+        )
+      )
+    }
+  } else {
+    prev_id_max = 0
+    isoline_list = vector("list", length = length(isolineval))
+    for (i in seq_len(length(isolineval))) {
+      isolineval[[i]]$id = isolineval[[i]]$id + prev_id_max
+      isolineval[[i]]$altitude = contour_heights[i] + offset
+      prev_id_max = max(isolineval[[i]]$id)
+      isoline_list[[i]] = data.frame(isolineval[[i]])
+    }
+    isolines_combined = do.call("rbind", isoline_list)
+    do.call(
+      render_path,
+      c(
+        list(
+          lat = isolines_combined$y,
+          long = isolines_combined$x,
+          groups = isolines_combined$id,
+          altitude = isolines_combined$altitude,
+          extent = extent_heightmap,
+          tag = "contour3d",
+          heightmap = heightmap,
+          zscale = zscale,
+          vertical_exaggeration = 1,
+          linewidth = linewidth,
+          offset = offset,
+          antialias = antialias,
+          color = color
+        ),
+        zaxis_split$other_args
+      )
+    )
+  }
+  render_zaxis_from_dots(
+    zaxis_args = zaxis_split$zaxis_args,
+    extent = extent_heightmap,
+    zscale = zscale,
+    heightmap = heightmap
+  )
 }

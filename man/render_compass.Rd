@@ -73,7 +73,7 @@ Cache fallback messages are disabled by default. Set \code{options(rayshader.ver
 #Add a North arrow to the map, by default in the bottom right (SE)
 montereybay |>
  sphere_shade(vertical_exaggeration = 10) |>
- plot_3d(theta=-45, water=TRUE)
+ plot_3d(theta=-45, water=TRUE, vertical_exaggeration = 4)
 render_compass()
 render_snapshot()
 #Remove the existing symbol with `clear_compass = TRUE`

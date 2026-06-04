@@ -210,13 +210,22 @@ test_that("standalone ggplot z-axis auto-title uses implicit mapped height label
   expect_no_condition(render_zaxis(zaxis_location = "panel_bottomleft"))
 
   ids = get_ids_with_labels()
+  axis_id = ids$id[ids$tag == "zaxis_axis"][1]
   title_id = ids$id[ids$tag == "zaxis_title"][1]
+  axis_verts = rgl::rgl.attrib(axis_id, "vertices")
+  title_verts = rgl::rgl.attrib(title_id, "vertices")
   title_text = paste0(
     as.character(rgl::rgl.attrib(title_id, "texts")),
     collapse = ""
   )
+  title_gap = sqrt(
+    (title_verts[1, 1] - axis_verts[1, 1])^2 +
+      (title_verts[1, 3] - axis_verts[1, 3])^2
+  )
+  axis_span = diff(range(axis_verts[, 2]))
 
   expect_equal(title_text, "cyl")
+  expect_lt(title_gap / axis_span, 0.15)
 })
 
 test_that("plot_3d scenes keep raw altitude values in transform_into_heightmap_coords", {

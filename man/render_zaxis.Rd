@@ -16,7 +16,7 @@ render_zaxis(
   zaxis_labels = NULL,
   zaxis_title = "auto",
   zaxis_title_location = "side",
-  zaxis_title_offset = 5,
+  zaxis_title_offset = 1.25,
   zaxis_title_size = NULL,
   zaxis_color = "black",
   zaxis_linewidth = 2,
@@ -73,13 +73,16 @@ uses the cached height aesthetic label from \code{\link[=plot_gg]{plot_gg()}} sc
 Set to \code{NULL} to omit the title, or pass a character string to override it.}
 
 \item{zaxis_title_location}{Default \code{"side"}. Title location. Options are
-\code{"side"} and \code{"top"}. \code{"side"} places the title horizontally on the tick-label
-side and centered on the axis.}
+\code{"side"} and \code{"top"}. \code{"side"} places the title horizontally opposite the
+tick-label side by default and centered on the axis.}
 
-\item{zaxis_title_offset}{Default \code{5}. Title offset multiplier. For
-\code{zaxis_title_location = "side"}, this moves the title away from the axis on
-the tick-label side.
-For \code{"top"}, this moves the title above the top of the axis.}
+\item{zaxis_title_offset}{Default \code{1.25}. Title offset multiplier in tick
+lengths. For
+\code{zaxis_title_location = "side"}, this moves the title away from the axis on the
+chosen title side, but never closer than one tick length beyond the tick label
+offset.
+For \code{"top"}, this moves the title above the top of the axis using
+tick-length-scaled spacing.}
 
 \item{zaxis_title_size}{Default \code{NULL}, which matches \code{zaxis_label_size}. Title text size passed to \code{rgl::texts3d()} as \code{cex}.}
 
@@ -98,7 +101,8 @@ are placed from the current camera perspective. Options are \code{"auto"},
 
 \item{zaxis_title_side}{Default \code{"auto"}. Side of the axis where the title is
 placed from the current camera perspective. Options are \code{"auto"}, \code{"left"},
-and \code{"right"}. \code{"auto"} places the title on the tick-label side.}
+and \code{"right"}. \code{"auto"} places side titles opposite the tick-label side and top
+titles on the tick-label side.}
 
 \item{zaxis_corner_offset}{Default \code{NULL}. Corner offset as a proportion of the
 center-to-corner planar distance. If \code{NULL}, this defaults to \code{0} for ggplot scenes

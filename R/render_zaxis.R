@@ -38,12 +38,15 @@
 #'uses the cached height aesthetic label from [plot_gg()] scenes when available.
 #'Set to `NULL` to omit the title, or pass a character string to override it.
 #'@param zaxis_title_location Default `"side"`. Title location. Options are
-#'`"side"` and `"top"`. `"side"` places the title horizontally on the tick-label
-#'side and centered on the axis.
-#'@param zaxis_title_offset Default `5`. Title offset multiplier. For
-#'`zaxis_title_location = "side"`, this moves the title away from the axis on
-#'the tick-label side.
-#'For `"top"`, this moves the title above the top of the axis.
+#'`"side"` and `"top"`. `"side"` places the title horizontally opposite the
+#'tick-label side by default and centered on the axis.
+#'@param zaxis_title_offset Default `1.25`. Title offset multiplier in tick
+#'lengths. For
+#'`zaxis_title_location = "side"`, this moves the title away from the axis on the
+#'chosen title side, but never closer than one tick length beyond the tick label
+#'offset.
+#'For `"top"`, this moves the title above the top of the axis using
+#'tick-length-scaled spacing.
 #'@param zaxis_title_size Default `NULL`, which matches `zaxis_label_size`. Title text size passed to `rgl::texts3d()` as `cex`.
 #'@param zaxis_color Default `"black"`. Axis/tick/label color.
 #'@param zaxis_linewidth Default `2`. Axis line width.
@@ -55,7 +58,8 @@
 #'`"left"`, and `"right"`. `"auto"` keeps the inferred outside-corner side.
 #'@param zaxis_title_side Default `"auto"`. Side of the axis where the title is
 #'placed from the current camera perspective. Options are `"auto"`, `"left"`,
-#'and `"right"`. `"auto"` places the title on the tick-label side.
+#'and `"right"`. `"auto"` places side titles opposite the tick-label side and top
+#'titles on the tick-label side.
 #'@param zaxis_corner_offset Default `NULL`. Corner offset as a proportion of the
 #'center-to-corner planar distance. If `NULL`, this defaults to `0` for ggplot scenes
 #'and `0.08` for non-ggplot scenes. `0` places the axis exactly at the corner.
@@ -100,11 +104,12 @@
 #'  width = 3.5,
 #'  windowsize = c(1400, 866),
 #'  sunangle = 225,
-#'  zoom = 0.60,
-#'  phi = 30,
+#'  zoom = 0.50,
+#'  phi = 20,
 #'  theta = 45
 #')
-#'render_zaxis(zaxis_location = "panel_bottomleft")
+#'render_zaxis(zaxis_location = "panel_bottomleft", zaxis_color = "red",
+#'             zaxis_label_size = 1.5)
 #'render_snapshot()
 #'
 #'# For faceted ggplot scenes, specify the panel whose corner should anchor the axis.
@@ -140,7 +145,7 @@
 #')
 #'render_snapshot()
 #' #Move to corner of the plot
-#'render_camera(theta=-20, phi=20)
+#'render_camera(theta=-20, phi=20,zoom=0.6)
 #'render_zaxis(
 #'  zaxis_location = "topleft"
 #')
@@ -157,7 +162,7 @@ render_zaxis = function(
   zaxis_labels = NULL,
   zaxis_title = "auto",
   zaxis_title_location = "side",
-  zaxis_title_offset = 5,
+  zaxis_title_offset = 1.25,
   zaxis_title_size = NULL,
   zaxis_color = "black",
   zaxis_linewidth = 2,

@@ -220,7 +220,7 @@ test_that("render_zaxis() adds side and top titles", {
   expect_gt(unname(title_verts[1, 2]), max(axis_verts[, 2]))
 })
 
-test_that("render_zaxis() defaults side title to the label side horizontally", {
+test_that("render_zaxis() defaults side title opposite the label side horizontally", {
   on.exit(rgl::close3d(), add = TRUE)
   local_rgl_use_null()
 
@@ -283,10 +283,10 @@ test_that("render_zaxis() defaults side title to the label side horizontally", {
     mean(axis_verts[, 2]),
     tolerance = 1e-6
   )
-  expect_gt(sum(title_vec * label_vec), 0)
+  expect_lt(sum(title_vec * label_vec), 0)
   expect_equal(
     sqrt(sum(title_vec^2)) / sqrt(sum(label_vec^2)),
-    5,
+    2,
     tolerance = 1e-6
   )
 })
@@ -479,6 +479,54 @@ test_that("render_zaxis() formats large automatic data labels with digit groupin
   expect_true("3,000,000,000" %in% out$labels)
 })
 
+test_that("render_zaxis() keeps top titles close to tall data axes", {
+  on.exit(rgl::close3d(), add = TRUE)
+  local_rgl_use_null()
+
+  heightmap = matrix(0, nrow = 20, ncol = 20)
+  texture = sphere_shade(heightmap)
+  extent = c(xmin = 0, xmax = 20, ymin = 0, ymax = 20)
+  expect_no_condition(plot_3d_test(
+    texture,
+    heightmap,
+    zscale = 1,
+    shadow = FALSE,
+    water = FALSE,
+    windowsize = c(300, 300)
+  ))
+  cache_scene_zaxis_data(
+    source = "polygon",
+    raw_values = c(0, 2600000000),
+    scene_values = c(0, 15600),
+    label = "ALAND"
+  )
+
+  expect_no_condition(render_zaxis(
+    extent = extent,
+    heightmap = heightmap,
+    zscale = 1,
+    zaxis_data = "polygon",
+    zaxis_location = "topright",
+    zaxis_title_location = "top"
+  ))
+
+  ids = get_ids_with_labels()
+  axis_id = ids$id[ids$tag == "zaxis_axis"][1]
+  title_id = ids$id[ids$tag == "zaxis_title"][1]
+  axis_verts = rgl::rgl.attrib(axis_id, "vertices")
+  title_verts = rgl::rgl.attrib(title_id, "vertices")
+  title_text = paste0(
+    as.character(rgl::rgl.attrib(title_id, "texts")),
+    collapse = ""
+  )
+  title_gap = unname(title_verts[1, 2] - max(axis_verts[, 2]))
+  axis_span = diff(range(axis_verts[, 2]))
+
+  expect_equal(title_text, "ALAND")
+  expect_gt(title_gap, 0)
+  expect_lt(title_gap / axis_span, 0.05)
+})
+
 test_that("render_zaxis() can use cached polygon data-column values", {
   skip_if_not_installed("sf")
   skip_if_not_installed("rayrender")
@@ -548,6 +596,7 @@ test_that("render_zaxis() can use cached polygon data-column values", {
   expect_equal(out$labels, c("10", "20"))
   expect_equal(sort(tick_verts[, 2]), c(2, 4), tolerance = 1e-6)
   expect_equal(title_text, "ALAND")
+  expect_false(identical(out$title_side, out$label_side))
 })
 
 test_that("render_zaxis() works as a standalone entry point", {
