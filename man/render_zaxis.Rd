@@ -155,11 +155,12 @@ plot_gg(
  width = 3.5,
  windowsize = c(1400, 866),
  sunangle = 225,
- zoom = 0.60,
- phi = 30,
+ zoom = 0.50,
+ phi = 20,
  theta = 45
 )
-render_zaxis(zaxis_location = "panel_bottomleft")
+render_zaxis(zaxis_location = "panel_bottomleft", zaxis_color = "red",
+            zaxis_label_size = 1.5)
 render_snapshot()
 
 # For faceted ggplot scenes, specify the panel whose corner should anchor the axis.
@@ -195,7 +196,7 @@ render_zaxis(
 )
 render_snapshot()
 #Move to corner of the plot
-render_camera(theta=-20, phi=20)
+render_camera(theta=-20, phi=20,zoom=0.6)
 render_zaxis(
  zaxis_location = "topleft"
 )
