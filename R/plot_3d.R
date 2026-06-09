@@ -363,13 +363,14 @@ get_plot_3d_surface_texture = function(id, rgl_texture_file) {
 #'@param shadow_darkness Default `0.5`. Darkness of the shadow, if `shadowcolor = "auto"`.
 #'@param shadowwidth Default `auto`, which sizes it to 1/10th the smallest dimension of `heightmap`. Width of the shadow in units of the matrix.
 #'@param water Default `FALSE`. If `TRUE`, a water layer is rendered.
-#'@param waterdepth Default `0`. Water level.
+#'@param waterdepth Default `0`. Water level. Either a scalar or a matrix with the same dimensions as `heightmap`.
 #'@param watercolor Default `lightblue`. Color of the water.
 #'@param wateralpha Default `0.5`. Water transparency.
 #'@param waterlinecolor Default `NULL`. Color of the lines around the edges of the water layer.
 #'@param waterlinealpha Default `1`. Water line tranparency.
 #'@param linewidth Default `2`. Width of the edge lines in the scene.
 #'@param lineantialias Default `FALSE`. Whether to anti-alias the lines in the scene.
+#'@param water_render_method Default `"contour"`. Water meshing method. `"contour"` clips the water mesh to the flooded region; `"legacy"` uses the previous box/grid renderer.
 #'@param soil Default `FALSE`. Whether to draw the solid base with a textured soil layer.
 #'@param soil_freq Default `0.1`. Frequency of soil clumps. Higher frequency values give smaller soil clumps.
 #'@param soil_levels Default `16`. Fractal level of the soil.
@@ -494,6 +495,7 @@ plot_3d = function(
   waterlinealpha = 1,
   linewidth = 2,
   lineantialias = FALSE,
+  water_render_method = c("contour", "legacy"),
   soil = FALSE,
   soil_freq = 0.1,
   soil_levels = 16,
@@ -517,6 +519,7 @@ plot_3d = function(
   clear_previous = TRUE,
   extent = NULL
 ) {
+  water_render_method = match.arg(water_render_method)
   if (!plot_new && clear_previous) {
     clear_plot_3d_surface_textures()
     rgl::clear3d()
@@ -928,36 +931,48 @@ plot_3d = function(
   if (shadow) {
     make_shadow(heightmap, shadowdepth, shadowwidth, background, shadowcolor)
   }
+  water_mesh = NULL
   if (water) {
-    make_water(
+    water_mesh = make_water(
       heightmap,
       waterheight = waterdepth,
       wateralpha = wateralpha,
       watercolor = watercolor,
-      zscale = zscale
+      zscale = zscale,
+      water_render_method = water_render_method
     )
   }
   if (!is.null(waterlinecolor) && water) {
-    if (all(!is.na(heightmap))) {
-      make_lines(
-        fliplr(heightmap),
-        basedepth = waterdepth,
+    if (identical(water_render_method, "contour")) {
+      make_waterlines_from_mesh(
+        water_mesh,
+        linecolor = waterlinecolor,
+        alpha = waterlinealpha,
+        linewidth = linewidth,
+        antialias = lineantialias
+      )
+    } else {
+      if (all(!is.na(heightmap))) {
+        make_lines(
+          fliplr(heightmap),
+          basedepth = waterdepth,
+          linecolor = waterlinecolor,
+          zscale = zscale,
+          linewidth = linewidth,
+          alpha = waterlinealpha,
+          solid = FALSE
+        )
+      }
+      make_waterlines(
+        heightmap,
+        waterdepth = waterdepth,
         linecolor = waterlinecolor,
         zscale = zscale,
-        linewidth = linewidth,
         alpha = waterlinealpha,
-        solid = FALSE
+        linewidth = linewidth,
+        antialias = lineantialias
       )
     }
-    make_waterlines(
-      heightmap,
-      waterdepth = waterdepth,
-      linecolor = waterlinecolor,
-      zscale = zscale,
-      alpha = waterlinealpha,
-      linewidth = linewidth,
-      antialias = lineantialias
-    )
   }
   cache_hillshade_heightmap(heightmap, label = heightmap_cache_label)
   cache_hillshade_zscale(base_zscale, label = zscale_cache_label)

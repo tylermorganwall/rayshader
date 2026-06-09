@@ -14,13 +14,14 @@ render_water(
   waterlinecolor = NULL,
   waterlinealpha = 1,
   linewidth = 2,
+  water_render_method = c("contour", "legacy"),
   remove_water = TRUE
 )
 }
 \arguments{
 \item{heightmap}{Default \code{NULL}. Height matrix for the current scene. If omitted, this is taken from the cached scene set by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}. Pass explicitly to override the cached value.}
 
-\item{waterdepth}{Default \code{0}.}
+\item{waterdepth}{Default \code{0}. Water level. Either a scalar or a matrix with the same dimensions as \code{heightmap}.}
 
 \item{watercolor}{Default \code{lightblue}.}
 
@@ -36,6 +37,8 @@ of 1 meter and the grid values are separated by 10 meters, \code{zscale} would b
 \item{waterlinealpha}{Default \code{1}. Water line tranparency.}
 
 \item{linewidth}{Default \code{2}. Width of the edge lines in the scene.}
+
+\item{water_render_method}{Default \code{"contour"}. Water meshing method. \code{"contour"} clips the water mesh to the flooded region; \code{"legacy"} uses the previous box/grid renderer.}
 
 \item{remove_water}{Default \code{TRUE}. If \code{TRUE}, will remove existing water layer and replace it with new layer.}
 }
@@ -57,6 +60,26 @@ render_snapshot()
 
 #Call it again to change the water depth
 render_water(waterdepth=-1000, watercolor = "dodgerblue3")
+render_snapshot()
+
+#Use a matrix to set separated regions to different water levels
+water_levels = matrix(
+ 0,
+ nrow = nrow(montereybay),
+ ncol = ncol(montereybay)
+)
+water_levels[col(water_levels) > ncol(water_levels) / 2 + 20 |
+col(water_levels) < ncol(water_levels) / 2-20] = -8000
+render_water(waterdepth = water_levels, watercolor = "dodgerblue4")
+render_snapshot()
+
+#Use a matrix to vary the water level across the scene
+water_ramp = matrix(
+ seq(-1200, -300, length.out = length(montereybay)),
+ nrow = nrow(montereybay),
+ ncol = ncol(montereybay)
+)
+render_water(waterdepth = water_ramp, watercolor = "dodgerblue3")
 render_snapshot()
 
 #Add waterlines

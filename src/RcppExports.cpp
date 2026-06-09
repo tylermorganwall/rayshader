@@ -139,6 +139,18 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// make_water_mesh_cpp
+List make_water_mesh_cpp(NumericMatrix& heightmap, NumericMatrix& waterheight);
+RcppExport SEXP _rayshader_make_water_mesh_cpp(SEXP heightmapSEXP, SEXP waterheightSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix& >::type heightmap(heightmapSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix& >::type waterheight(waterheightSEXP);
+    rcpp_result_gen = Rcpp::wrap(make_water_mesh_cpp(heightmap, waterheight));
+    return rcpp_result_gen;
+END_RCPP
+}
 // make_waterlines_cpp
 List make_waterlines_cpp(NumericMatrix& heightmap, LogicalMatrix& na_matrix, double waterdepth);
 RcppExport SEXP _rayshader_make_waterlines_cpp(SEXP heightmapSEXP, SEXP na_matrixSEXP, SEXP waterdepthSEXP) {
@@ -336,6 +348,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_rayshader_make_surface_cpp", (DL_FUNC) &_rayshader_make_surface_cpp, 6},
     {"_rayshader_make_base_cpp", (DL_FUNC) &_rayshader_make_base_cpp, 3},
     {"_rayshader_make_water_cpp", (DL_FUNC) &_rayshader_make_water_cpp, 3},
+    {"_rayshader_make_water_mesh_cpp", (DL_FUNC) &_rayshader_make_water_mesh_cpp, 2},
     {"_rayshader_make_waterlines_cpp", (DL_FUNC) &_rayshader_make_waterlines_cpp, 3},
     {"_rayshader_make_baselines_cpp", (DL_FUNC) &_rayshader_make_baselines_cpp, 3},
     {"_rayshader_cubic_interpolate", (DL_FUNC) &_rayshader_cubic_interpolate, 5},

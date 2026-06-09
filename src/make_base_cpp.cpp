@@ -1,4 +1,7 @@
 #include <Rcpp.h>
+#include <algorithm>
+#include <cmath>
+#include <vector>
 using namespace Rcpp;
 
 template <int RTYPE>
@@ -322,6 +325,551 @@ List make_water_cpp(NumericMatrix& heightmap,
   }
   List vectorlist = wrap(vertices);
   return(vectorlist);
+}
+
+struct WaterMeshVertex {
+  double row;
+  double col;
+  double terrain_height;
+  double water_height;
+  int edge_mask;
+
+  WaterMeshVertex() :
+    row(0),
+    col(0),
+    terrain_height(0),
+    water_height(0),
+    edge_mask(0) {}
+
+  WaterMeshVertex(double row_value,
+                  double col_value,
+                  double terrain_height_value,
+                  double water_height_value,
+                  int edge_mask_value) :
+    row(row_value),
+    col(col_value),
+    terrain_height(terrain_height_value),
+    water_height(water_height_value),
+    edge_mask(edge_mask_value) {}
+};
+
+struct WaterMeshPiece {
+  std::vector<WaterMeshVertex> polygon;
+  std::vector<WaterMeshVertex> top_triangles;
+  std::vector<size_t> edge_keys;
+  int cell_row;
+  int cell_col;
+  int component;
+
+  WaterMeshPiece() :
+    cell_row(0),
+    cell_col(0),
+    component(0) {}
+};
+
+struct WaterMeshDisjointSet {
+  std::vector<int> parent;
+  std::vector<int> rank;
+
+  explicit WaterMeshDisjointSet(int n) : parent(n), rank(n, 0) {
+    for(int i = 0; i < n; i++) {
+      parent[i] = i;
+    }
+  }
+
+  int find(int x) {
+    if(parent[x] != x) {
+      parent[x] = find(parent[x]);
+    }
+    return(parent[x]);
+  }
+
+  void unite(int a, int b) {
+    int root_a = find(a);
+    int root_b = find(b);
+    if(root_a == root_b) {
+      return;
+    }
+    if(rank[root_a] < rank[root_b]) {
+      std::swap(root_a, root_b);
+    }
+    parent[root_b] = root_a;
+    if(rank[root_a] == rank[root_b]) {
+      rank[root_a]++;
+    }
+  }
+};
+
+static const double WATER_MESH_EPS = 1e-12;
+
+bool water_mesh_finite(double value) {
+  return(std::isfinite(value));
+}
+
+bool water_mesh_same_point(const WaterMeshVertex& a, const WaterMeshVertex& b) {
+  return(std::fabs(a.row - b.row) < WATER_MESH_EPS &&
+         std::fabs(a.col - b.col) < WATER_MESH_EPS);
+}
+
+double water_mesh_triangle_area2(const WaterMeshVertex& a,
+                                 const WaterMeshVertex& b,
+                                 const WaterMeshVertex& c) {
+  return((b.row - a.row) * (c.col - a.col) -
+         (b.col - a.col) * (c.row - a.row));
+}
+
+size_t water_mesh_edge_key(int edge, int cell_row, int cell_col, int rows, int cols) {
+  int orientation = 0;
+  int row = cell_row;
+  int col = cell_col;
+  if(edge == 0) {
+    orientation = 0;
+    row = cell_row;
+    col = cell_col;
+  } else if(edge == 1) {
+    orientation = 1;
+    row = cell_row;
+    col = cell_col + 1;
+  } else if(edge == 2) {
+    orientation = 0;
+    row = cell_row + 1;
+    col = cell_col;
+  } else {
+    orientation = 1;
+    row = cell_row;
+    col = cell_col;
+  }
+  return((static_cast<size_t>(orientation) * static_cast<size_t>(rows + 1) +
+          static_cast<size_t>(row)) *
+         static_cast<size_t>(cols + 1) +
+         static_cast<size_t>(col));
+}
+
+bool water_mesh_neighbor_valid(const std::vector<std::vector<int> >& valid_cells,
+                               int edge,
+                               int cell_row,
+                               int cell_col,
+                               int cell_rows,
+                               int cell_cols) {
+  int neighbor_row = cell_row;
+  int neighbor_col = cell_col;
+  if(edge == 0) {
+    neighbor_row = cell_row - 1;
+  } else if(edge == 1) {
+    neighbor_col = cell_col + 1;
+  } else if(edge == 2) {
+    neighbor_row = cell_row + 1;
+  } else {
+    neighbor_col = cell_col - 1;
+  }
+  if(neighbor_row < 0 || neighbor_col < 0 ||
+     neighbor_row >= cell_rows || neighbor_col >= cell_cols) {
+    return(false);
+  }
+  return(valid_cells[neighbor_row][neighbor_col] != 0);
+}
+
+WaterMeshVertex water_mesh_interpolate_vertex(const WaterMeshVertex& a,
+                                              const WaterMeshVertex& b,
+                                              double diff_a,
+                                              double diff_b,
+                                              int edge) {
+  double denom = diff_b - diff_a;
+  double t = 0.5;
+  if(std::fabs(denom) > WATER_MESH_EPS && water_mesh_finite(denom)) {
+    t = -diff_a / denom;
+  }
+  if(t < 0) {
+    t = 0;
+  } else if(t > 1) {
+    t = 1;
+  }
+  WaterMeshVertex vertex;
+  vertex.row = a.row + t * (b.row - a.row);
+  vertex.col = a.col + t * (b.col - a.col);
+  vertex.terrain_height = a.terrain_height +
+    t * (b.terrain_height - a.terrain_height);
+  vertex.water_height = a.water_height + t * (b.water_height - a.water_height);
+  vertex.edge_mask = 1 << edge;
+  return(vertex);
+}
+
+void water_mesh_clean_polygon(std::vector<WaterMeshVertex>& polygon) {
+  std::vector<WaterMeshVertex> cleaned;
+  for(size_t i = 0; i < polygon.size(); i++) {
+    if(cleaned.empty() || !water_mesh_same_point(cleaned.back(), polygon[i])) {
+      cleaned.push_back(polygon[i]);
+    } else {
+      cleaned.back().edge_mask |= polygon[i].edge_mask;
+    }
+  }
+  if(cleaned.size() > 1 && water_mesh_same_point(cleaned.front(), cleaned.back())) {
+    cleaned.front().edge_mask |= cleaned.back().edge_mask;
+    cleaned.pop_back();
+  }
+  polygon = cleaned;
+}
+
+bool water_mesh_add_unique_edge(std::vector<size_t>& edge_keys, size_t edge_key) {
+  if(std::find(edge_keys.begin(), edge_keys.end(), edge_key) == edge_keys.end()) {
+    edge_keys.push_back(edge_key);
+    return(true);
+  }
+  return(false);
+}
+
+std::vector<WaterMeshVertex> water_mesh_polygon3(const WaterMeshVertex& a,
+                                                 const WaterMeshVertex& b,
+                                                 const WaterMeshVertex& c) {
+  std::vector<WaterMeshVertex> polygon;
+  polygon.reserve(3);
+  polygon.push_back(a);
+  polygon.push_back(b);
+  polygon.push_back(c);
+  return(polygon);
+}
+
+void water_mesh_append_top_triangle(WaterMeshPiece& piece,
+                                    WaterMeshVertex a,
+                                    WaterMeshVertex b,
+                                    WaterMeshVertex c) {
+  double area2 = water_mesh_triangle_area2(a, b, c);
+  if(std::fabs(area2) < WATER_MESH_EPS) {
+    return;
+  }
+  if(area2 > 0) {
+    std::swap(b, c);
+  }
+  piece.top_triangles.push_back(a);
+  piece.top_triangles.push_back(b);
+  piece.top_triangles.push_back(c);
+}
+
+void water_mesh_append_piece(std::vector<WaterMeshPiece>& pieces,
+                             std::vector<std::vector<int> >& edge_piece_indices,
+                             std::vector<WaterMeshVertex> polygon,
+                             int cell_row,
+                             int cell_col,
+                             int rows,
+                             int cols) {
+  water_mesh_clean_polygon(polygon);
+  if(polygon.size() < 3) {
+    return;
+  }
+  WaterMeshPiece piece;
+  piece.polygon = polygon;
+  piece.cell_row = cell_row;
+  piece.cell_col = cell_col;
+  for(size_t i = 1; i + 1 < polygon.size(); i++) {
+    water_mesh_append_top_triangle(piece, polygon[0], polygon[i], polygon[i + 1]);
+  }
+  if(piece.top_triangles.empty()) {
+    return;
+  }
+  int piece_index = pieces.size();
+  for(size_t i = 0; i < polygon.size(); i++) {
+    size_t next_index = (i + 1) % polygon.size();
+    int common_edges = polygon[i].edge_mask & polygon[next_index].edge_mask;
+    for(int edge = 0; edge < 4; edge++) {
+      if(common_edges & (1 << edge)) {
+        size_t edge_key = water_mesh_edge_key(edge, cell_row, cell_col, rows, cols);
+        if(water_mesh_add_unique_edge(piece.edge_keys, edge_key)) {
+          edge_piece_indices[edge_key].push_back(piece_index);
+        }
+        break;
+      }
+    }
+  }
+  pieces.push_back(piece);
+}
+
+void water_mesh_append_vertex_values(std::vector<double>& values,
+                                     const WaterMeshVertex& vertex,
+                                     bool bottom,
+                                     double row_center,
+                                     double col_center) {
+  values.push_back(vertex.row - row_center);
+  values.push_back(bottom ? vertex.terrain_height : vertex.water_height);
+  values.push_back(vertex.col - col_center);
+}
+
+NumericMatrix water_mesh_values_to_matrix(const std::vector<double>& values) {
+  int vertex_count = values.size() / 3;
+  NumericMatrix matrix(vertex_count, 3);
+  for(int i = 0; i < vertex_count; i++) {
+    matrix(i, 0) = values[3 * i];
+    matrix(i, 1) = values[3 * i + 1];
+    matrix(i, 2) = values[3 * i + 2];
+  }
+  return(matrix);
+}
+
+// [[Rcpp::export]]
+List make_water_mesh_cpp(NumericMatrix& heightmap,
+                         NumericMatrix& waterheight) {
+  int rows = heightmap.nrow();
+  int cols = heightmap.ncol();
+  if(waterheight.nrow() != rows || waterheight.ncol() != cols) {
+    stop("`waterheight` must have the same dimensions as `heightmap`.");
+  }
+  if(rows < 2 || cols < 2) {
+    return(List::create(_["vertices"] = List::create(),
+                        _["lines"] = NumericMatrix(0, 3)));
+  }
+
+  int cell_rows = rows - 1;
+  int cell_cols = cols - 1;
+  size_t edge_key_count = 2 * static_cast<size_t>(rows + 1) *
+    static_cast<size_t>(cols + 1);
+  std::vector<std::vector<int> > valid_cells(cell_rows, std::vector<int>(cell_cols, 0));
+  std::vector<std::vector<int> > edge_piece_indices(edge_key_count);
+  std::vector<WaterMeshPiece> pieces;
+
+  for(int row = 0; row < cell_rows; row++) {
+    for(int col = 0; col < cell_cols; col++) {
+      valid_cells[row][col] =
+        water_mesh_finite(heightmap(row, col)) &&
+        water_mesh_finite(heightmap(row, col + 1)) &&
+        water_mesh_finite(heightmap(row + 1, col + 1)) &&
+        water_mesh_finite(heightmap(row + 1, col)) &&
+        water_mesh_finite(waterheight(row, col)) &&
+        water_mesh_finite(waterheight(row, col + 1)) &&
+        water_mesh_finite(waterheight(row + 1, col + 1)) &&
+        water_mesh_finite(waterheight(row + 1, col));
+    }
+  }
+
+  for(int row = 0; row < cell_rows; row++) {
+    for(int col = 0; col < cell_cols; col++) {
+      if(!valid_cells[row][col]) {
+        continue;
+      }
+      WaterMeshVertex corners[4];
+      corners[0] = WaterMeshVertex(
+        static_cast<double>(row),
+        static_cast<double>(col),
+        heightmap(row, col),
+        waterheight(row, col),
+        (1 << 3) | (1 << 0)
+      );
+      corners[1] = WaterMeshVertex(
+        static_cast<double>(row),
+        static_cast<double>(col + 1),
+        heightmap(row, col + 1),
+        waterheight(row, col + 1),
+        (1 << 0) | (1 << 1)
+      );
+      corners[2] = WaterMeshVertex(
+        static_cast<double>(row + 1),
+        static_cast<double>(col + 1),
+        heightmap(row + 1, col + 1),
+        waterheight(row + 1, col + 1),
+        (1 << 1) | (1 << 2)
+      );
+      corners[3] = WaterMeshVertex(
+        static_cast<double>(row + 1),
+        static_cast<double>(col),
+        heightmap(row + 1, col),
+        waterheight(row + 1, col),
+        (1 << 2) | (1 << 3)
+      );
+
+      double diff[4];
+      bool wet[4];
+      int wet_count = 0;
+      for(int i = 0; i < 4; i++) {
+        diff[i] = corners[i].terrain_height - corners[i].water_height;
+        wet[i] = diff[i] < 0;
+        if(wet[i]) {
+          wet_count++;
+        }
+      }
+      if(wet_count == 0) {
+        continue;
+      }
+      WaterMeshVertex intersections[4];
+      for(int edge = 0; edge < 4; edge++) {
+        int next = (edge + 1) % 4;
+        intersections[edge] = water_mesh_interpolate_vertex(
+          corners[edge],
+          corners[next],
+          diff[edge],
+          diff[next],
+          edge
+        );
+      }
+
+      if(wet_count == 2 && wet[0] && wet[2] && !wet[1] && !wet[3]) {
+        water_mesh_append_piece(
+          pieces,
+          edge_piece_indices,
+          water_mesh_polygon3(corners[0], intersections[0], intersections[3]),
+          row,
+          col,
+          rows,
+          cols
+        );
+        water_mesh_append_piece(
+          pieces,
+          edge_piece_indices,
+          water_mesh_polygon3(corners[2], intersections[2], intersections[1]),
+          row,
+          col,
+          rows,
+          cols
+        );
+        continue;
+      }
+      if(wet_count == 2 && wet[1] && wet[3] && !wet[0] && !wet[2]) {
+        water_mesh_append_piece(
+          pieces,
+          edge_piece_indices,
+          water_mesh_polygon3(corners[1], intersections[1], intersections[0]),
+          row,
+          col,
+          rows,
+          cols
+        );
+        water_mesh_append_piece(
+          pieces,
+          edge_piece_indices,
+          water_mesh_polygon3(corners[3], intersections[3], intersections[2]),
+          row,
+          col,
+          rows,
+          cols
+        );
+        continue;
+      }
+
+      std::vector<WaterMeshVertex> polygon;
+      for(int i = 0; i < 4; i++) {
+        int next = (i + 1) % 4;
+        if(wet[i]) {
+          polygon.push_back(corners[i]);
+        }
+        if(wet[i] != wet[next]) {
+          polygon.push_back(intersections[i]);
+        }
+      }
+      water_mesh_append_piece(pieces, edge_piece_indices, polygon, row, col, rows, cols);
+    }
+  }
+
+  if(pieces.empty()) {
+    return(List::create(_["vertices"] = List::create(),
+                        _["lines"] = NumericMatrix(0, 3)));
+  }
+
+  WaterMeshDisjointSet disjoint_set(pieces.size());
+  for(size_t key = 0; key < edge_piece_indices.size(); key++) {
+    if(edge_piece_indices[key].size() < 2) {
+      continue;
+    }
+    int first_piece = edge_piece_indices[key][0];
+    for(size_t i = 1; i < edge_piece_indices[key].size(); i++) {
+      disjoint_set.unite(first_piece, edge_piece_indices[key][i]);
+    }
+  }
+
+  std::vector<int> roots(pieces.size());
+  std::vector<int> component_roots;
+  for(size_t i = 0; i < pieces.size(); i++) {
+    roots[i] = disjoint_set.find(i);
+    std::vector<int>::iterator root_it = std::find(
+      component_roots.begin(),
+      component_roots.end(),
+      roots[i]
+    );
+    if(root_it == component_roots.end()) {
+      component_roots.push_back(roots[i]);
+      pieces[i].component = component_roots.size() - 1;
+    } else {
+      pieces[i].component = root_it - component_roots.begin();
+    }
+  }
+  for(size_t i = 0; i < pieces.size(); i++) {
+    std::vector<int>::iterator root_it = std::find(
+      component_roots.begin(),
+      component_roots.end(),
+      roots[i]
+    );
+    pieces[i].component = root_it - component_roots.begin();
+  }
+
+  std::vector<std::vector<double> > component_values(component_roots.size());
+  std::vector<double> line_values;
+  double row_center = (rows - 1) / 2.0;
+  double col_center = (cols - 1) / 2.0;
+
+  for(size_t piece_index = 0; piece_index < pieces.size(); piece_index++) {
+    WaterMeshPiece& piece = pieces[piece_index];
+    std::vector<double>& values = component_values[piece.component];
+    for(size_t i = 0; i < piece.top_triangles.size(); i++) {
+      water_mesh_append_vertex_values(
+        values,
+        piece.top_triangles[i],
+        false,
+        row_center,
+        col_center
+      );
+    }
+
+    int cell_row = piece.cell_row;
+    int cell_col = piece.cell_col;
+
+    for(size_t vertex_index = 0; vertex_index < piece.polygon.size(); vertex_index++) {
+      size_t next_index = (vertex_index + 1) % piece.polygon.size();
+      WaterMeshVertex first = piece.polygon[vertex_index];
+      WaterMeshVertex second = piece.polygon[next_index];
+      if(water_mesh_same_point(first, second)) {
+        continue;
+      }
+      int common_edges = first.edge_mask & second.edge_mask;
+      bool shared_grid_edge = false;
+      bool internal_edge = false;
+      bool neighbor_valid = false;
+      for(int edge = 0; edge < 4; edge++) {
+        if(common_edges & (1 << edge)) {
+          size_t edge_key = water_mesh_edge_key(edge, cell_row, cell_col, rows, cols);
+          shared_grid_edge = true;
+          internal_edge = edge_piece_indices[edge_key].size() > 1;
+          neighbor_valid = water_mesh_neighbor_valid(
+            valid_cells,
+            edge,
+            cell_row,
+            cell_col,
+            cell_rows,
+            cell_cols
+          );
+          break;
+        }
+      }
+      if(internal_edge) {
+        continue;
+      }
+      water_mesh_append_vertex_values(line_values, first, false, row_center, col_center);
+      water_mesh_append_vertex_values(line_values, second, false, row_center, col_center);
+      if(shared_grid_edge && !neighbor_valid) {
+        WaterMeshVertex first_bottom = first;
+        WaterMeshVertex second_bottom = second;
+        water_mesh_append_vertex_values(values, first, false, row_center, col_center);
+        water_mesh_append_vertex_values(values, first_bottom, true, row_center, col_center);
+        water_mesh_append_vertex_values(values, second, false, row_center, col_center);
+        water_mesh_append_vertex_values(values, second, false, row_center, col_center);
+        water_mesh_append_vertex_values(values, first_bottom, true, row_center, col_center);
+        water_mesh_append_vertex_values(values, second_bottom, true, row_center, col_center);
+      }
+    }
+  }
+
+  List component_list(component_values.size());
+  for(size_t i = 0; i < component_values.size(); i++) {
+    component_list[i] = water_mesh_values_to_matrix(component_values[i]);
+  }
+
+  return(List::create(_["vertices"] = component_list,
+                      _["lines"] = water_mesh_values_to_matrix(line_values)));
 }
 
 // [[Rcpp::export]]

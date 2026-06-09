@@ -9,13 +9,14 @@ make_water(
   waterheight = mean(heightmap),
   watercolor = "lightblue",
   zscale = 1,
-  wateralpha = 0.5
+  wateralpha = 0.5,
+  water_render_method = c("contour", "legacy")
 )
 }
 \arguments{
 \item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.}
 
-\item{waterheight}{Default \code{0}.}
+\item{waterheight}{Default \code{0}. Water level. Either a scalar or a matrix with the same dimensions as \code{heightmap}.}
 
 \item{watercolor}{Default \code{blue}.}
 
@@ -23,6 +24,8 @@ make_water(
 of 1 meter and the grid values are separated by 10 meters, \code{zscale} would be 10.}
 
 \item{wateralpha}{Default \code{0.5}. Water transparency.}
+
+\item{water_render_method}{Default \code{"contour"}. Water meshing method. \code{"contour"} clips the water mesh to the flooded region; \code{"legacy"} uses the previous box/grid renderer.}
 }
 \description{
 Makes the water in the 3D elevation map.

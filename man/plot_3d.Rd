@@ -27,6 +27,7 @@ plot_3d(
   waterlinealpha = 1,
   linewidth = 2,
   lineantialias = FALSE,
+  water_render_method = c("contour", "legacy"),
   soil = FALSE,
   soil_freq = 0.1,
   soil_levels = 16,
@@ -95,7 +96,7 @@ the luminance of the \code{background} color in the CIELuv colorspace if not spe
 
 \item{water}{Default \code{FALSE}. If \code{TRUE}, a water layer is rendered.}
 
-\item{waterdepth}{Default \code{0}. Water level.}
+\item{waterdepth}{Default \code{0}. Water level. Either a scalar or a matrix with the same dimensions as \code{heightmap}.}
 
 \item{watercolor}{Default \code{lightblue}. Color of the water.}
 
@@ -108,6 +109,8 @@ the luminance of the \code{background} color in the CIELuv colorspace if not spe
 \item{linewidth}{Default \code{2}. Width of the edge lines in the scene.}
 
 \item{lineantialias}{Default \code{FALSE}. Whether to anti-alias the lines in the scene.}
+
+\item{water_render_method}{Default \code{"contour"}. Water meshing method. \code{"contour"} clips the water mesh to the flooded region; \code{"legacy"} uses the previous box/grid renderer.}
 
 \item{soil}{Default \code{FALSE}. Whether to draw the solid base with a textured soil layer.}
 

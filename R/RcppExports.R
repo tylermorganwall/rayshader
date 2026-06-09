@@ -41,6 +41,10 @@ make_water_cpp <- function(heightmap, na_matrix, waterheight) {
     .Call(`_rayshader_make_water_cpp`, heightmap, na_matrix, waterheight)
 }
 
+make_water_mesh_cpp <- function(heightmap, waterheight) {
+    .Call(`_rayshader_make_water_mesh_cpp`, heightmap, waterheight)
+}
+
 make_waterlines_cpp <- function(heightmap, na_matrix, waterdepth) {
     .Call(`_rayshader_make_waterlines_cpp`, heightmap, na_matrix, waterdepth)
 }

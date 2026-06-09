@@ -319,24 +319,30 @@ render_buildings(
   data_column_top = "height",
   relative_heights = TRUE
 )
+#Render a label
+render_label(long = c(building_extent[1]+building_extent[3])/2,
+             lat =  c(building_extent[2]+building_extent[4])/2,  
+             text = "St. Johns, Newfoundland",
+             textcolor = "white",
+             altitude = 100
+)
 
 render_camera(theta = 220, phi = 45, zoom = 0.55, fov = 0)
 render_snapshot()
 
 # Zoom in to show roof details and render with render_highquality()
-render_camera(fov = 120)
+render_camera(fov = 120,zoom=0.7)
 
 # Generate an evening sky in the winter. The camera location and direction
 # were determined using an interactive render_highquality() session by
 # hitting the P key with the camera in the desired position.
 render_highquality(
-  camera_location = c(-14.13, 4.86, 11.86),
-  camera_lookat = c(-1.07, -2.25, 1.58),
-  focal_distance = 8.000,
-  samples = 100,
-  iso = 100 / 16,
-  datetime = as.POSIXct("2025-01-01 15:00:00", tz = "America/St_Johns"),
-  sky_args = list(hosek = FALSE)
+camera_location = c(-8.17, 7.70, 15.09),
+camera_lookat = c(-1.09, -2.25, -3.63),
+samples = 100,
+iso = 100 / 30,
+datetime = as.POSIXct("2025-01-01 14:00:00", tz = "America/St_Johns"),
+sky_args = list(hosek = FALSE)
 )
 \dontshow{\}) # examplesIf}
 }
