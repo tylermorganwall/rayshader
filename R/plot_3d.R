@@ -363,7 +363,7 @@ get_plot_3d_surface_texture = function(id, rgl_texture_file) {
 #'@param shadow_darkness Default `0.5`. Darkness of the shadow, if `shadowcolor = "auto"`.
 #'@param shadowwidth Default `auto`, which sizes it to 1/10th the smallest dimension of `heightmap`. Width of the shadow in units of the matrix.
 #'@param water Default `FALSE`. If `TRUE`, a water layer is rendered.
-#'@param waterdepth Default `0`. Water level. Either a scalar or a matrix with the same dimensions as `heightmap`.
+#'@param waterdepth Default `0`. Water level. Either a scalar, a matrix with the same dimensions as `heightmap`, or a spatial raster that can be projected/resampled to the heightmap grid.
 #'@param watercolor Default `lightblue`. Color of the water.
 #'@param wateralpha Default `0.5`. Water transparency.
 #'@param waterlinecolor Default `NULL`. Color of the lines around the edges of the water layer.
@@ -939,7 +939,9 @@ plot_3d = function(
       wateralpha = wateralpha,
       watercolor = watercolor,
       zscale = zscale,
-      water_render_method = water_render_method
+      water_render_method = water_render_method,
+      heightmap_extent = extent_cache_value,
+      heightmap_crs = crs_cache_value
     )
   }
   if (!is.null(waterlinecolor) && water) {

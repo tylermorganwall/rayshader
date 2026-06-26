@@ -21,7 +21,7 @@ render_water(
 \arguments{
 \item{heightmap}{Default \code{NULL}. Height matrix for the current scene. If omitted, this is taken from the cached scene set by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}. Pass explicitly to override the cached value.}
 
-\item{waterdepth}{Default \code{0}. Water level. Either a scalar or a matrix with the same dimensions as \code{heightmap}.}
+\item{waterdepth}{Default \code{0}. Water level. Either a scalar, a matrix with the same dimensions as \code{heightmap}, or a spatial raster that can be projected/resampled to the heightmap grid.}
 
 \item{watercolor}{Default \code{lightblue}.}
 

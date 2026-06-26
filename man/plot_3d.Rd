@@ -96,7 +96,7 @@ the luminance of the \code{background} color in the CIELuv colorspace if not spe
 
 \item{water}{Default \code{FALSE}. If \code{TRUE}, a water layer is rendered.}
 
-\item{waterdepth}{Default \code{0}. Water level. Either a scalar or a matrix with the same dimensions as \code{heightmap}.}
+\item{waterdepth}{Default \code{0}. Water level. Either a scalar, a matrix with the same dimensions as \code{heightmap}, or a spatial raster that can be projected/resampled to the heightmap grid.}
 
 \item{watercolor}{Default \code{lightblue}. Color of the water.}
 

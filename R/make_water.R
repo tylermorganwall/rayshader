@@ -3,12 +3,14 @@
 #'@description Makes the water in the 3D elevation map.
 #'
 #'@param heightmap A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.
-#'@param waterheight Default `0`. Water level. Either a scalar or a matrix with the same dimensions as `heightmap`.
+#'@param waterheight Default `0`. Water level. Either a scalar, a matrix with the same dimensions as `heightmap`, or a spatial raster that can be projected/resampled to the heightmap grid.
 #'@param watercolor Default `blue`.
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
 #'of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
 #'@param wateralpha Default `0.5`. Water transparency.
 #'@param water_render_method Default `"contour"`. Water meshing method. `"contour"` clips the water mesh to the flooded region; `"legacy"` uses the previous box/grid renderer.
+#'@param heightmap_extent Default `NULL`. Active scene extent for spatial `waterheight` inputs.
+#'@param heightmap_crs Default `NULL`. Active scene CRS for spatial `waterheight` inputs.
 #'@keywords internal
 make_water = function(
   heightmap,
@@ -16,7 +18,9 @@ make_water = function(
   watercolor = "lightblue",
   zscale = 1,
   wateralpha = 0.5,
-  water_render_method = c("contour", "legacy")
+  water_render_method = c("contour", "legacy"),
+  heightmap_extent = NULL,
+  heightmap_crs = NULL
 ) {
   water_render_method = match.arg(water_render_method)
   if (identical(water_render_method, "legacy")) {
@@ -33,7 +37,9 @@ make_water = function(
     waterheight = waterheight,
     watercolor = watercolor,
     zscale = zscale,
-    wateralpha = wateralpha
+    wateralpha = wateralpha,
+    heightmap_extent = heightmap_extent,
+    heightmap_crs = heightmap_crs
   )
 }
 
@@ -43,7 +49,9 @@ make_water_contour = function(
   waterheight = mean(heightmap),
   watercolor = "lightblue",
   zscale = 1,
-  wateralpha = 0.5
+  wateralpha = 0.5,
+  heightmap_extent = NULL,
+  heightmap_crs = NULL
 ) {
   heightmap = heightmap / zscale
   nr = nrow(heightmap)
@@ -53,7 +61,9 @@ make_water_contour = function(
     nr = nr,
     nc = nc,
     zscale = zscale,
-    caller = "make_water"
+    caller = "make_water",
+    heightmap_extent = heightmap_extent,
+    heightmap_crs = heightmap_crs
   )
   valid_water = is.finite(heightmap) & is.finite(waterheight)
   if (!any(valid_water)) {
@@ -104,7 +114,11 @@ make_water_legacy = function(
   zscale = 1,
   wateralpha = 0.5
 ) {
-  if (is.matrix(waterheight) || length(waterheight) != 1) {
+  if (
+    is.matrix(waterheight) ||
+      is_spatial_heightmap_input(waterheight) ||
+      length(waterheight) != 1
+  ) {
     stop(
       "`water_render_method = \"legacy\"` only supports a scalar `waterdepth`.",
       call. = FALSE
@@ -237,12 +251,20 @@ make_water_legacy = function(
 }
 
 #'@keywords internal
-normalize_waterheight_matrix = function(waterheight, nr, nc, zscale, caller) {
+normalize_waterheight_matrix = function(
+  waterheight,
+  nr,
+  nc,
+  zscale,
+  caller,
+  heightmap_extent = NULL,
+  heightmap_crs = NULL
+) {
   if (is.matrix(waterheight)) {
     if (!is.numeric(waterheight)) {
       stop("`waterdepth` must be numeric.", call. = FALSE)
     }
-    if (!identical(dim(waterheight), c(nr, nc))) {
+    if (!all(dim(waterheight) == c(nr, nc))) {
       stop(
         sprintf(
           "`waterdepth` matrix must have dimensions %i x %i to match `heightmap`.",
@@ -254,15 +276,193 @@ normalize_waterheight_matrix = function(waterheight, nr, nc, zscale, caller) {
     }
     return(waterheight / zscale)
   }
+  if (is_spatial_heightmap_input(waterheight)) {
+    waterheight = resolve_spatial_waterheight_matrix(
+      waterheight = waterheight,
+      nr = nr,
+      nc = nc,
+      heightmap_extent = heightmap_extent,
+      heightmap_crs = heightmap_crs,
+      caller = caller
+    )
+    return(waterheight / zscale)
+  }
   if (
     !is.numeric(waterheight) || length(waterheight) != 1 || is.na(waterheight)
   ) {
     stop(
-      sprintf("`waterdepth` must be a scalar or a matrix for %s().", caller),
+      sprintf(
+        "`waterdepth` must be a scalar, a matrix, or a spatial raster for %s().",
+        caller
+      ),
       call. = FALSE
     )
   }
   matrix(waterheight / zscale, nrow = nr, ncol = nc)
+}
+
+#'@keywords internal
+resolve_spatial_waterheight_matrix = function(
+  waterheight,
+  nr,
+  nc,
+  heightmap_extent = NULL,
+  heightmap_crs = NULL,
+  caller = NULL
+) {
+  water_raster = coerce_spatial_waterheight_raster(waterheight)
+  target_template = build_waterheight_template(
+    nr = nr,
+    nc = nc,
+    heightmap_extent = heightmap_extent,
+    heightmap_crs = heightmap_crs,
+    caller = caller
+  )
+  source_crs = tryCatch(terra::crs(water_raster), error = function(e) "")
+  target_crs = tryCatch(terra::crs(target_template), error = function(e) "")
+  source_has_crs = is.character(source_crs) &&
+    length(source_crs) &&
+    nzchar(source_crs[1])
+  target_has_crs = is.character(target_crs) &&
+    length(target_crs) &&
+    nzchar(target_crs[1])
+
+  if (target_has_crs && !source_has_crs) {
+    stop(
+      paste0(
+        format_render_caller_prefix(caller),
+        "Spatial `waterdepth` inputs must have a CRS when the active heightmap has a CRS."
+      ),
+      call. = FALSE
+    )
+  }
+
+  aligned_raster = tryCatch(
+    {
+      if (target_has_crs) {
+        same_crs = isTRUE(tryCatch(
+          scene_crs_equal(source_crs, target_crs),
+          error = function(e) FALSE
+        ))
+        if (same_crs) {
+          terra::resample(water_raster, target_template, method = "bilinear")
+        } else {
+          terra::project(water_raster, target_template, method = "bilinear")
+        }
+      } else {
+        terra::resample(water_raster, target_template, method = "bilinear")
+      }
+    },
+    error = function(e) {
+      stop(
+        paste0(
+          format_render_caller_prefix(caller),
+          "Could not project/resample spatial `waterdepth` to the active heightmap grid: ",
+          conditionMessage(e)
+        ),
+        call. = FALSE
+      )
+    }
+  )
+  waterheight_matrix = raster_to_matrix(aligned_raster, verbose = FALSE)
+  if (!all(dim(waterheight_matrix) == c(nr, nc))) {
+    stop(
+      paste0(
+        format_render_caller_prefix(caller),
+        "Spatial `waterdepth` could not be aligned to the active heightmap grid."
+      ),
+      call. = FALSE
+    )
+  }
+  waterheight_matrix
+}
+
+#'@keywords internal
+coerce_spatial_waterheight_raster = function(waterheight) {
+  if (is.character(waterheight)) {
+    waterheight = terra::rast(waterheight)
+  } else if (
+    inherits(waterheight, c("RasterLayer", "RasterBrick", "RasterStack"))
+  ) {
+    waterheight = terra::rast(waterheight)
+  }
+  if (!inherits(waterheight, "SpatRaster")) {
+    stop("`waterdepth` must resolve to a spatial raster.", call. = FALSE)
+  }
+  if (terra::nlyr(waterheight) > 1) {
+    warning("`waterdepth` has multiple layers; using the first layer.")
+    waterheight = waterheight[[1]]
+  }
+  waterheight
+}
+
+#'@keywords internal
+build_waterheight_template = function(
+  nr,
+  nc,
+  heightmap_extent = NULL,
+  heightmap_crs = NULL,
+  caller = NULL
+) {
+  if (is.null(heightmap_extent)) {
+    heightmap_extent = get_scene_extent(default = NULL)
+  }
+  if (is.null(heightmap_extent)) {
+    heightmap_extent = get_hillshade_extent(default = NULL)
+  }
+  if (is.null(heightmap_extent)) {
+    stop(
+      paste0(
+        format_render_caller_prefix(caller),
+        "Spatial `waterdepth` inputs require an active heightmap extent."
+      ),
+      call. = FALSE
+    )
+  }
+  heightmap_extent = tryCatch(
+    get_extent(heightmap_extent),
+    error = function(e) {
+      stop(
+        paste0(
+          format_render_caller_prefix(caller),
+          "Could not interpret the active heightmap extent for spatial `waterdepth`: ",
+          conditionMessage(e)
+        ),
+        call. = FALSE
+      )
+    }
+  )
+  target_template = terra::rast(
+    nrows = nc,
+    ncols = nr,
+    xmin = heightmap_extent["xmin"],
+    xmax = heightmap_extent["xmax"],
+    ymin = heightmap_extent["ymin"],
+    ymax = heightmap_extent["ymax"]
+  )
+  if (is.null(heightmap_crs)) {
+    heightmap_crs = get_scene_target_crs(
+      extent = heightmap_extent,
+      caller = caller
+    )
+  }
+  heightmap_crs = waterheight_terra_crs(heightmap_crs)
+  if (!is.null(heightmap_crs)) {
+    terra::crs(target_template) = heightmap_crs
+  }
+  target_template
+}
+
+#'@keywords internal
+waterheight_terra_crs = function(crs) {
+  parsed_crs = try_parse_scene_crs(crs)
+  if (!is.null(parsed_crs) && !is.na(parsed_crs)) {
+    return(parsed_crs$wkt)
+  }
+  if (is.character(crs) && length(crs) && nzchar(trimws(crs[1]))) {
+    return(crs[1])
+  }
+  NULL
 }
 
 #'@keywords internal

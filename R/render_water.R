@@ -5,7 +5,7 @@
 #'Cache fallback messages are disabled by default. Set `options(rayshader.verbose_scene_cache = TRUE)` to print when cached metadata is reused.
 #'
 #'@param heightmap Default `NULL`. Height matrix for the current scene. If omitted, this is taken from the cached scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value.
-#'@param waterdepth Default `0`. Water level. Either a scalar or a matrix with the same dimensions as `heightmap`.
+#'@param waterdepth Default `0`. Water level. Either a scalar, a matrix with the same dimensions as `heightmap`, or a spatial raster that can be projected/resampled to the heightmap grid.
 #'@param watercolor Default `lightblue`.
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
 #'of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
@@ -88,6 +88,26 @@ render_water = function(
   if (rgl::cur3d() == 0) {
     stop("No rgl window currently open.")
   }
+  heightmap_extent = NULL
+  heightmap_crs = NULL
+  if (is_spatial_heightmap_input(waterdepth)) {
+    heightmap_extent = resolve_scene_render_extent(
+      heightmap = heightmap,
+      caller = "render_water",
+      error_if_missing = FALSE
+    )
+    heightmap_crs = attr(heightmap, "crs", exact = TRUE)
+    if (is.null(heightmap_crs)) {
+      heightmap_crs = tryCatch(
+        get_scene_target_crs(
+          extent = heightmap_extent,
+          heightmap = heightmap,
+          caller = "render_water"
+        ),
+        error = function(e) NULL
+      )
+    }
+  }
   if (remove_water) {
     rgl::pop3d(tag = c("waterlines", "water"))
   }
@@ -97,7 +117,9 @@ render_water = function(
     wateralpha = wateralpha,
     watercolor = watercolor,
     zscale = zscale,
-    water_render_method = water_render_method
+    water_render_method = water_render_method,
+    heightmap_extent = heightmap_extent,
+    heightmap_crs = heightmap_crs
   )
   if (!is.null(waterlinecolor)) {
     if (identical(water_render_method, "contour")) {

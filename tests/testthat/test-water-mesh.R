@@ -76,6 +76,68 @@ test_that("make_water_mesh_cpp handles NA holes and variable water levels", {
   expect_true(any(abs(vertices[, 2] - 0.5) < 1e-8))
 })
 
+test_that("spatial waterdepth inputs align to the heightmap grid", {
+  skip_if_not_installed("terra")
+
+  water_raster = terra::rast(
+    nrows = 8,
+    ncols = 8,
+    xmin = -2,
+    xmax = 6,
+    ymin = 0,
+    ymax = 4,
+    crs = "EPSG:3857"
+  )
+  xy = terra::xyFromCell(water_raster, seq_len(terra::ncell(water_raster)))
+  terra::values(water_raster) = ifelse(
+    xy[, 1] >= 1 & xy[, 1] <= 3,
+    2,
+    -2
+  )
+
+  waterheight = normalize_waterheight_matrix(
+    water_raster,
+    nr = 4,
+    nc = 4,
+    zscale = 1,
+    caller = "test",
+    heightmap_extent = c(xmin = 0, xmax = 4, ymin = 0, ymax = 4),
+    heightmap_crs = "EPSG:3857"
+  )
+
+  expect_equal(dim(waterheight), c(4, 4))
+  expect_true(any(waterheight > 1, na.rm = TRUE))
+  expect_true(any(waterheight < -1, na.rm = TRUE))
+})
+
+test_that("spatial waterdepth inputs project to the heightmap CRS", {
+  skip_if_not_installed("terra")
+
+  water_raster = terra::rast(
+    nrows = 4,
+    ncols = 4,
+    xmin = 0,
+    xmax = 0.01,
+    ymin = 0,
+    ymax = 0.01,
+    crs = "EPSG:4326"
+  )
+  terra::values(water_raster) = 5
+
+  waterheight = normalize_waterheight_matrix(
+    water_raster,
+    nr = 5,
+    nc = 5,
+    zscale = 1,
+    caller = "test",
+    heightmap_extent = c(xmin = 0, xmax = 1000, ymin = 0, ymax = 1000),
+    heightmap_crs = "EPSG:3857"
+  )
+
+  expect_equal(dim(waterheight), c(5, 5))
+  expect_true(any(abs(waterheight - 5) < 1e-8, na.rm = TRUE))
+})
+
 test_that("make_water_mesh_cpp emits outward map-edge sidewall normals", {
   heightmap = matrix(0, nrow = 3, ncol = 3)
   waterheight = matrix(1, nrow = 3, ncol = 3)
@@ -115,6 +177,30 @@ test_that("water rendering API validates method and matrix inputs", {
   )
 })
 
+test_that("legacy water rendering rejects spatial waterdepth inputs", {
+  skip_if_not_installed("terra")
+
+  heightmap = matrix(0, nrow = 3, ncol = 3)
+  waterheight = terra::rast(
+    nrows = 3,
+    ncols = 3,
+    xmin = 0,
+    xmax = 3,
+    ymin = 0,
+    ymax = 3
+  )
+  terra::values(waterheight) = 1
+
+  expect_error(
+    make_water(
+      heightmap,
+      waterheight = waterheight,
+      water_render_method = "legacy"
+    ),
+    "only supports a scalar"
+  )
+})
+
 test_that("plot_3d creates separate water ids for disconnected contour water", {
   on.exit(rgl::close3d(), add = TRUE)
   local_rgl_use_null()
@@ -136,6 +222,48 @@ test_that("plot_3d creates separate water ids for disconnected contour water", {
 
   water_ids = get_ids_with_labels(typeval = "water")
   expect_equal(nrow(water_ids), 2)
+})
+
+test_that("plot_3d and render_water accept spatial waterdepth rasters", {
+  skip_if_not_installed("terra")
+  on.exit(rgl::close3d(), add = TRUE)
+  local_rgl_use_null()
+
+  height_raster = terra::rast(
+    nrows = 4,
+    ncols = 4,
+    xmin = 0,
+    xmax = 4,
+    ymin = 0,
+    ymax = 4,
+    crs = "EPSG:3857"
+  )
+  terra::values(height_raster) = 0
+  water_raster = terra::rast(
+    nrows = 2,
+    ncols = 2,
+    xmin = 0,
+    xmax = 4,
+    ymin = 0,
+    ymax = 4,
+    crs = "EPSG:3857"
+  )
+  terra::values(water_raster) = 1
+  texture = constant_shade(height_raster)
+
+  expect_no_condition(plot_3d_test(
+    texture,
+    height_raster,
+    solid = FALSE,
+    shadow = FALSE,
+    water = TRUE,
+    waterdepth = water_raster,
+    windowsize = c(200, 200)
+  ))
+  expect_gt(nrow(get_ids_with_labels(typeval = "water")), 0)
+
+  expect_no_condition(render_water(waterdepth = water_raster))
+  expect_gt(nrow(get_ids_with_labels(typeval = "water")), 0)
 })
 
 test_that("convert_rgl_to_raymesh handles contour water ids", {
