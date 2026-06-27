@@ -26,6 +26,8 @@ render_highquality(
   water_attenuation = 0,
   water_surface_color = TRUE,
   water_ior = 1,
+  water_material = c("default", "microfacet"),
+  water_roughness = 0.1,
   override_material = FALSE,
   cache_scene = FALSE,
   reset_scene_cache = FALSE,
@@ -145,6 +147,13 @@ calculates 1-color}
 setting a non-zero water attenuation, where the color comes from the attenuation of light in the water itself.}
 
 \item{water_ior}{Default \code{1}. Water index of refraction.}
+
+\item{water_material}{Default \code{"default"}. Water material used in
+\code{render_highquality()}. \code{"default"} uses the standard converted rgl water
+material; \code{"microfacet"} renders water with
+\code{rayrender::microfacet(transmission = TRUE)}.}
+
+\item{water_roughness}{Default \code{0.1}. Roughness used when \code{water_material = "microfacet"}.}
 
 \item{override_material}{Default \code{FALSE}. Whether to override the default diffuse material with that in argument \code{material}.}
 

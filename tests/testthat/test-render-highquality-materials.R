@@ -30,6 +30,84 @@ test_that("render_highquality() resolves rgl material overrides", {
   ))
 })
 
+test_that("render_highquality() can render water with a microfacet material", {
+  skip_if_not_installed("rayrender")
+  skip_if_not_installed("rayvertex")
+  on.exit(rgl::close3d(), add = TRUE)
+  local_rgl_use_null()
+
+  heightmap = matrix(2, nrow = 8, ncol = 8)
+  heightmap[2:3, 2:3] = 0
+  heightmap[6:7, 6:7] = 0
+  texture = constant_shade(heightmap)
+
+  expect_no_condition(plot_3d_test(
+    texture,
+    heightmap,
+    solid = FALSE,
+    shadow = FALSE,
+    water = TRUE,
+    waterdepth = 1,
+    watercolor = "dodgerblue",
+    windowsize = c(200, 200)
+  ))
+  water_ids = get_ids_with_labels(typeval = "water")
+  expect_equal(nrow(water_ids), 2)
+
+  rgl_material_info = get_render_highquality_rgl_material_info(list())
+  raymesh_material_info = get_render_highquality_raymesh_material_info(
+    rgl_material_info
+  )
+  raymesh_material_info = add_render_highquality_water_material_info(
+    raymesh_material_info = raymesh_material_info,
+    water_material = "microfacet",
+    rgl_material_info = rgl_material_info
+  )
+  expect_equal(sort(raymesh_material_info$id), sort(water_ids$id))
+
+  explicit_info = get_render_highquality_rgl_material_info(
+    list(water = rayrender::diffuse())
+  )
+  explicit_raymesh_info = get_render_highquality_raymesh_material_info(
+    explicit_info
+  )
+  expect_equal(
+    add_render_highquality_water_material_info(
+      raymesh_material_info = explicit_raymesh_info,
+      water_material = "microfacet",
+      rgl_material_info = explicit_info
+    ),
+    explicit_raymesh_info
+  )
+
+  scene = render_highquality(
+    return_scene = TRUE,
+    light = FALSE,
+    water_material = "microfacet",
+    water_roughness = 0.35,
+    water_attenuation = 0.25,
+    water_ior = 1.33
+  )
+  mesh_materials = scene$material[scene$shape == "raymesh"]
+  microfacet_type = rayrender::microfacet(transmission = TRUE)[[1]]$type
+  microfacet_index = vapply(
+    mesh_materials,
+    function(material) material$type == microfacet_type,
+    logical(1)
+  )
+  expect_true(any(microfacet_index))
+
+  microfacet_material = mesh_materials[[which(microfacet_index)[[1]]]]
+  microfacet_info = microfacet_material$glossyinfo[[1]]
+  expect_equal(microfacet_info[2:3], rep(0.35^2, 2))
+  expect_equal(microfacet_info[4:6], rep(1.33, 3))
+  expect_equal(microfacet_info[7:9], rep(0.25, 3))
+  expect_error(
+    validate_render_highquality_water_roughness(-1),
+    "`water_roughness` must be a single non-negative number."
+  )
+})
+
 test_that("render_highquality() resolves spatial camera inputs", {
   skip_if_not_installed("sf")
   skip_if_not_installed("raster")

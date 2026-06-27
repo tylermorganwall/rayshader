@@ -52,6 +52,10 @@
 #'@param water_surface_color Default `TRUE`. Whether the water should have a colored surface or not. This is in contrast to
 #' setting a non-zero water attenuation, where the color comes from the attenuation of light in the water itself.
 #'@param water_ior Default `1`. Water index of refraction.
+#'@param water_material Default `"default"`. Water material used in `render_highquality()`.
+#'`"default"` uses the standard converted rgl water material; `"microfacet"` renders water
+#'with `rayrender::microfacet(transmission = TRUE)`.
+#'@param water_roughness Default `0.1`. Roughness used when `water_material = "microfacet"`.
 #'@param material Default `rayrender::diffuse()`. The material properties of the object file. Only used if `override_material = TRUE`
 #'@param override_material Default `FALSE`. Whether to override the default diffuse material with that in argument `material`.
 #'@param cache_scene Default `FALSE`. Whether to cache the current scene to memory so it does not have to be converted to a `raymesh` object
@@ -275,6 +279,8 @@ render_highquality = function(
   water_attenuation = 0,
   water_surface_color = TRUE,
   water_ior = 1,
+  water_material = c("default", "microfacet"),
+  water_roughness = 0.1,
   override_material = FALSE,
   cache_scene = FALSE,
   reset_scene_cache = FALSE,
@@ -328,6 +334,10 @@ render_highquality = function(
 ) {
   text_offset_missing = missing(text_offset)
   scale_text_offset_missing = missing(scale_text_offset)
+  water_material = match.arg(water_material)
+  water_roughness = validate_render_highquality_water_roughness(
+    water_roughness
+  )
   text_render = match.arg(text_render)
   line_render = match.arg(line_render)
   text_occlusion = suppressWarnings(as.logical(text_occlusion))
@@ -935,6 +945,11 @@ render_highquality = function(
   raymesh_material_info = get_render_highquality_raymesh_material_info(
     rgl_material_info
   )
+  raymesh_material_info = add_render_highquality_water_material_info(
+    raymesh_material_info = raymesh_material_info,
+    water_material = water_material,
+    rgl_material_info = rgl_material_info
+  )
   raymesh_material_ids = unique(raymesh_material_info$id)
   if (
     !use_extruded_paths &&
@@ -1045,6 +1060,24 @@ render_highquality = function(
           raymesh_material_info$id[[material_row]]
         )
       )
+      if (
+        is.null(temp_material) &&
+          identical(water_material, "microfacet") &&
+          identical(raymesh_material_info$tag[[material_row]], "water")
+      ) {
+        temp_material = make_render_highquality_water_microfacet_material(
+          color = get_render_highquality_rgl_material_color(
+            raymesh_material_info$id[[material_row]]
+          ),
+          water_roughness = water_roughness,
+          water_ior = water_ior,
+          water_attenuation = water_attenuation,
+          water_surface_color = water_surface_color
+        )
+      }
+      if (is.null(temp_material)) {
+        next
+      }
       temp_model = rayrender::raymesh_model(
         temp_ray_scene,
         x = -bbox_center[1],
@@ -2280,6 +2313,21 @@ resolve_render_highquality_rgl_material = function(
   )
 }
 
+validate_render_highquality_water_roughness = function(water_roughness) {
+  water_roughness = suppressWarnings(as.numeric(water_roughness))
+  if (
+    length(water_roughness) != 1 ||
+      !is.finite(water_roughness) ||
+      water_roughness < 0
+  ) {
+    stop(
+      "`water_roughness` must be a single non-negative number.",
+      call. = FALSE
+    )
+  }
+  water_roughness
+}
+
 get_render_highquality_rgl_material_info = function(rgl_materials) {
   if (length(rgl_materials) == 0) {
     return(data.frame(id = integer(), tag = character()))
@@ -2305,6 +2353,38 @@ get_render_highquality_raymesh_material_info = function(rgl_material_info) {
     logical(1)
   )
   rgl_material_info[raymesh_index, , drop = FALSE]
+}
+
+add_render_highquality_water_material_info = function(
+  raymesh_material_info,
+  water_material,
+  rgl_material_info
+) {
+  if (!identical(water_material, "microfacet")) {
+    return(raymesh_material_info)
+  }
+  water_info = get_ids_with_labels(typeval = "water")
+  if (nrow(water_info) == 0) {
+    return(raymesh_material_info)
+  }
+  water_info = water_info[, c("id", "tag"), drop = FALSE]
+  if (nrow(rgl_material_info) > 0) {
+    water_info = water_info[
+      !(water_info$id %in% rgl_material_info$id),
+      ,
+      drop = FALSE
+    ]
+  }
+  if (nrow(water_info) == 0) {
+    return(raymesh_material_info)
+  }
+  if (nrow(raymesh_material_info) == 0) {
+    row.names(water_info) = NULL
+    return(water_info)
+  }
+  raymesh_material_info = unique(rbind(raymesh_material_info, water_info))
+  row.names(raymesh_material_info) = NULL
+  raymesh_material_info
 }
 
 has_render_highquality_dielectric_path_override = function(
@@ -2570,6 +2650,28 @@ get_render_highquality_rgl_material_color = function(id) {
     return(NULL)
   }
   color
+}
+
+make_render_highquality_water_microfacet_material = function(
+  color,
+  water_roughness,
+  water_ior,
+  water_attenuation,
+  water_surface_color
+) {
+  if (!water_surface_color || is.null(color) || length(color) == 0) {
+    color = "white"
+  }
+  if (is.character(color)) {
+    color = color[[1]]
+  }
+  rayrender::microfacet(
+    color = color,
+    roughness = water_roughness,
+    transmission = TRUE,
+    eta = water_ior,
+    kappa = water_attenuation
+  )
 }
 
 make_render_highquality_rgl_material = function(

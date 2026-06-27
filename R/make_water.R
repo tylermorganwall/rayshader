@@ -237,6 +237,31 @@ make_spatial_water_cell_surface = function(
     )]
   top_edge[interior_top] =
     !water_mask[cbind(row_index[interior_top], col_index[interior_top] + 1L)]
+  eps = sqrt(.Machine$double.eps)
+  left_side = left_edge
+  right_side = right_edge
+  bottom_side = bottom_edge
+  top_side = top_edge
+  left_side[interior_left] = left_edge[interior_left] |
+    water_surface[
+      cbind(row_index[interior_left] - 1L, col_index[interior_left])
+    ] <
+      water_height[interior_left] - eps
+  right_side[interior_right] = right_edge[interior_right] |
+    water_surface[
+      cbind(row_index[interior_right] + 1L, col_index[interior_right])
+    ] <
+      water_height[interior_right] - eps
+  bottom_side[interior_bottom] = bottom_edge[interior_bottom] |
+    water_surface[
+      cbind(row_index[interior_bottom], col_index[interior_bottom] - 1L)
+    ] <
+      water_height[interior_bottom] - eps
+  top_side[interior_top] = top_edge[interior_top] |
+    water_surface[
+      cbind(row_index[interior_top], col_index[interior_top] + 1L)
+    ] <
+      water_height[interior_top] - eps
 
   x0 = pmax(
     x_center - 0.5 - ifelse(left_edge, water_edge_extension, 0),
@@ -270,6 +295,10 @@ make_spatial_water_cell_surface = function(
   right_edge = right_edge[renderable]
   bottom_edge = bottom_edge[renderable]
   top_edge = top_edge[renderable]
+  left_side = left_side[renderable]
+  right_side = right_side[renderable]
+  bottom_side = bottom_side[renderable]
+  top_side = top_side[renderable]
 
   n_cells = length(water_height)
   top_vertices = matrix(NA_real_, nrow = n_cells * 6L, ncol = 3L)
@@ -288,10 +317,10 @@ make_spatial_water_cell_surface = function(
     x1 = x1,
     z0 = z0,
     z1 = z1,
-    left_edge = left_edge,
-    right_edge = right_edge,
-    bottom_edge = bottom_edge,
-    top_edge = top_edge,
+    left_edge = left_side,
+    right_edge = right_side,
+    bottom_edge = bottom_side,
+    top_edge = top_side,
     row_index = row_index,
     col_index = col_index,
     nr = nr,
@@ -338,7 +367,8 @@ make_spatial_water_edge_sides = function(
       all_x0 = x0,
       all_x1 = x1,
       all_z0 = z0,
-      all_z1 = z1
+      all_z1 = z1,
+      all_water_height = water_height
     ),
     make_spatial_water_side_vertices(
       side = "right",
@@ -355,7 +385,8 @@ make_spatial_water_edge_sides = function(
       all_x0 = x0,
       all_x1 = x1,
       all_z0 = z0,
-      all_z1 = z1
+      all_z1 = z1,
+      all_water_height = water_height
     ),
     make_spatial_water_side_vertices(
       side = "bottom",
@@ -372,7 +403,8 @@ make_spatial_water_edge_sides = function(
       all_x0 = x0,
       all_x1 = x1,
       all_z0 = z0,
-      all_z1 = z1
+      all_z1 = z1,
+      all_water_height = water_height
     ),
     make_spatial_water_side_vertices(
       side = "top",
@@ -389,7 +421,8 @@ make_spatial_water_edge_sides = function(
       all_x0 = x0,
       all_x1 = x1,
       all_z0 = z0,
-      all_z1 = z1
+      all_z1 = z1,
+      all_water_height = water_height
     )
   )
 }
@@ -410,7 +443,8 @@ make_spatial_water_side_vertices = function(
   all_x0,
   all_x1,
   all_z0,
-  all_z1
+  all_z1,
+  all_water_height
 ) {
   if (!any(edge_mask)) {
     return(matrix(nrow = 0, ncol = 3))
@@ -430,7 +464,8 @@ make_spatial_water_side_vertices = function(
     all_x0 = all_x0,
     all_x1 = all_x1,
     all_z0 = all_z0,
-    all_z1 = all_z1
+    all_z1 = all_z1,
+    all_water_height = all_water_height
   )
   if (!length(clipped_edges$water_height)) {
     return(matrix(nrow = 0, ncol = 3))
@@ -485,7 +520,8 @@ clip_spatial_water_side_segments = function(
   all_x0,
   all_x1,
   all_z0,
-  all_z1
+  all_z1,
+  all_water_height
 ) {
   segment_x_start = numeric()
   segment_z_start = numeric()
@@ -504,6 +540,7 @@ clip_spatial_water_side_segments = function(
       side = side,
       edge = edge,
       covering_cells = covering_cells,
+      edge_water_height = water_height[edge],
       x_start = x_start,
       z_start = z_start,
       x_end = x_end,
@@ -511,7 +548,8 @@ clip_spatial_water_side_segments = function(
       all_x0 = all_x0,
       all_x1 = all_x1,
       all_z0 = all_z0,
-      all_z1 = all_z1
+      all_z1 = all_z1,
+      all_water_height = all_water_height
     )
     if (identical(side, "left") || identical(side, "right")) {
       uncovered = subtract_spatial_water_coverage(
@@ -588,6 +626,7 @@ get_spatial_water_side_coverage = function(
   side,
   edge,
   covering_cells,
+  edge_water_height,
   x_start,
   z_start,
   x_end,
@@ -595,7 +634,8 @@ get_spatial_water_side_coverage = function(
   all_x0,
   all_x1,
   all_z0,
-  all_z1
+  all_z1,
+  all_water_height
 ) {
   if (!length(covering_cells)) {
     return(matrix(nrow = 0, ncol = 2))
@@ -630,7 +670,11 @@ get_spatial_water_side_coverage = function(
       pmin(all_x1[covering_cells], edge_range[2])
     )
   }
-  coverage = coverage[spans_edge, , drop = FALSE]
+  coverage = coverage[
+    spans_edge & all_water_height[covering_cells] >= edge_water_height - eps,
+    ,
+    drop = FALSE
+  ]
   coverage[coverage[, 2] > coverage[, 1] + eps, , drop = FALSE]
 }
 

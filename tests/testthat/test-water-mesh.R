@@ -516,6 +516,61 @@ test_that("spatial waterdepth edge sides follow local terrain heights", {
   expect_equal(max(vertices[, 2]), 10, tolerance = 1e-8)
 })
 
+test_that("spatial water sidewalls are drawn when adjacent water is lower", {
+  local_rgl_use_null()
+
+  water_surface = matrix(NA_real_, nrow = 3, ncol = 3)
+  water_surface[2, 2] = 10
+  water_surface[3, 2] = 5
+  heightmap = matrix(0, nrow = 3, ncol = 3)
+  water_mesh = make_spatial_water_surface(
+    waterheight = water_surface,
+    heightmap = heightmap,
+    valid_water = is.finite(water_surface),
+    water_edge_extension = 0
+  )
+  vertices = water_mesh_vertices(water_mesh)
+  triangle_info = water_mesh_triangle_normals(vertices)
+  sidewalls = abs(triangle_info$normals[, 2]) < 1e-8
+  internal_sidewalls = which(
+    sidewalls &
+      abs(triangle_info$centers[, 1] - 0.5) < 1e-8 &
+      abs(triangle_info$centers[, 3]) < 0.5
+  )
+  reaches_ground = vapply(
+    internal_sidewalls,
+    function(triangle_index) {
+      triangle = vertices[
+        seq.int(3L * triangle_index - 2L, 3L * triangle_index),
+        ,
+        drop = FALSE
+      ]
+      any(abs(triangle[, 2]) < 1e-8) &&
+        any(abs(triangle[, 2] - 10) < 1e-8)
+    },
+    logical(1)
+  )
+
+  expect_true(any(reaches_ground))
+
+  water_surface[3, 2] = 10
+  equal_level_mesh = make_spatial_water_surface(
+    waterheight = water_surface,
+    heightmap = heightmap,
+    valid_water = is.finite(water_surface),
+    water_edge_extension = 0
+  )
+  equal_level_vertices = water_mesh_vertices(equal_level_mesh)
+  equal_level_info = water_mesh_triangle_normals(equal_level_vertices)
+  equal_level_sidewalls = abs(equal_level_info$normals[, 2]) < 1e-8
+
+  expect_false(any(
+    equal_level_sidewalls &
+      abs(equal_level_info$centers[, 1] - 0.5) < 1e-8 &
+      abs(equal_level_info$centers[, 3]) < 0.5
+  ))
+})
+
 test_that("plot_3d renders explicit spatial waterdepth and applies cached zscale", {
   skip_if_not_installed("terra")
   on.exit(rgl::close3d(), add = TRUE)
