@@ -362,8 +362,10 @@ get_plot_3d_surface_texture = function(id, rgl_texture_file) {
 #'the luminance of the `background` color in the CIELuv colorspace if not specified.
 #'@param shadow_darkness Default `0.5`. Darkness of the shadow, if `shadowcolor = "auto"`.
 #'@param shadowwidth Default `auto`, which sizes it to 1/10th the smallest dimension of `heightmap`. Width of the shadow in units of the matrix.
-#'@param water Default `FALSE`. If `TRUE`, a water layer is rendered.
-#'@param waterdepth Default `0`. Water level. Either a scalar, a matrix with the same dimensions as `heightmap`, or a spatial raster that can be projected/resampled to the heightmap grid.
+#'@param shadow_texture_size Default `getOption("rayshader.max_shadow_texture_size", 1024)`. Maximum width or height, in pixels, of the blurred shadow texture. Set to `Inf` or `FALSE` to render the shadow texture at full heightmap resolution.
+#'@param water Default `FALSE`. If `TRUE`, a water layer is rendered. If `water`
+#'is omitted and `waterdepth` is explicitly supplied, a water layer is rendered.
+#'@param waterdepth Default `0`. Water level. Either a scalar, a matrix with the same dimensions as `heightmap`, or a spatial raster that can be projected/resampled to the heightmap grid. For spatial rasters, finite cells define the water footprint.
 #'@param watercolor Default `lightblue`. Color of the water.
 #'@param wateralpha Default `0.5`. Water transparency.
 #'@param waterlinecolor Default `NULL`. Color of the lines around the edges of the water layer.
@@ -371,6 +373,7 @@ get_plot_3d_surface_texture = function(id, rgl_texture_file) {
 #'@param linewidth Default `2`. Width of the edge lines in the scene.
 #'@param lineantialias Default `FALSE`. Whether to anti-alias the lines in the scene.
 #'@param water_render_method Default `"contour"`. Water meshing method. `"contour"` clips the water mesh to the flooded region; `"legacy"` uses the previous box/grid renderer.
+#'@param water_edge_extension Default `0.5`. For spatial `waterdepth` inputs, amount in grid cells to expand finite water cells at boundary edges, up to a maximum of half a cell.
 #'@param soil Default `FALSE`. Whether to draw the solid base with a textured soil layer.
 #'@param soil_freq Default `0.1`. Frequency of soil clumps. Higher frequency values give smaller soil clumps.
 #'@param soil_levels Default `16`. Fractal level of the soil.
@@ -487,6 +490,7 @@ plot_3d = function(
   shadowcolor = "auto",
   shadow_darkness = 0.5,
   shadowwidth = "auto",
+  shadow_texture_size = getOption("rayshader.max_shadow_texture_size", 1024),
   water = FALSE,
   waterdepth = 0,
   watercolor = "dodgerblue",
@@ -496,6 +500,7 @@ plot_3d = function(
   linewidth = 2,
   lineantialias = FALSE,
   water_render_method = c("contour", "legacy"),
+  water_edge_extension = 0.5,
   soil = FALSE,
   soil_freq = 0.1,
   soil_levels = 16,
@@ -519,7 +524,12 @@ plot_3d = function(
   clear_previous = TRUE,
   extent = NULL
 ) {
+  water_was_missing = missing(water)
+  waterdepth_was_missing = missing(waterdepth)
   water_render_method = match.arg(water_render_method)
+  if (water_was_missing && !waterdepth_was_missing) {
+    water = TRUE
+  }
   if (!plot_new && clear_previous) {
     clear_plot_3d_surface_textures()
     rgl::clear3d()
@@ -777,8 +787,7 @@ plot_3d = function(
     } else if (watercolor == "unicorn") {
       watercolor = "#ff00ff"
     }
-    if (is.null(waterlinecolor)) {
-    } else if (waterlinecolor == "imhof1") {
+    if (is.null(waterlinecolor)) {} else if (waterlinecolor == "imhof1") {
       waterlinecolor = "#f9fffb"
     } else if (waterlinecolor == "imhof2") {
       waterlinecolor = "#8accc4"
@@ -929,7 +938,14 @@ plot_3d = function(
     )
   }
   if (shadow) {
-    make_shadow(heightmap, shadowdepth, shadowwidth, background, shadowcolor)
+    make_shadow(
+      heightmap,
+      shadowdepth,
+      shadowwidth,
+      background,
+      shadowcolor,
+      shadow_texture_size = shadow_texture_size
+    )
   }
   water_mesh = NULL
   if (water) {
@@ -940,6 +956,7 @@ plot_3d = function(
       watercolor = watercolor,
       zscale = zscale,
       water_render_method = water_render_method,
+      water_edge_extension = water_edge_extension,
       heightmap_extent = extent_cache_value,
       heightmap_crs = crs_cache_value
     )

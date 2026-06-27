@@ -19,6 +19,7 @@ plot_3d(
   shadowcolor = "auto",
   shadow_darkness = 0.5,
   shadowwidth = "auto",
+  shadow_texture_size = getOption("rayshader.max_shadow_texture_size", 1024),
   water = FALSE,
   waterdepth = 0,
   watercolor = "dodgerblue",
@@ -28,6 +29,7 @@ plot_3d(
   linewidth = 2,
   lineantialias = FALSE,
   water_render_method = c("contour", "legacy"),
+  water_edge_extension = 0.5,
   soil = FALSE,
   soil_freq = 0.1,
   soil_levels = 16,
@@ -94,9 +96,12 @@ the luminance of the \code{background} color in the CIELuv colorspace if not spe
 
 \item{shadowwidth}{Default \code{auto}, which sizes it to 1/10th the smallest dimension of \code{heightmap}. Width of the shadow in units of the matrix.}
 
-\item{water}{Default \code{FALSE}. If \code{TRUE}, a water layer is rendered.}
+\item{shadow_texture_size}{Default \code{getOption("rayshader.max_shadow_texture_size", 1024)}. Maximum width or height, in pixels, of the blurred shadow texture. Set to \code{Inf} or \code{FALSE} to render the shadow texture at full heightmap resolution.}
 
-\item{waterdepth}{Default \code{0}. Water level. Either a scalar, a matrix with the same dimensions as \code{heightmap}, or a spatial raster that can be projected/resampled to the heightmap grid.}
+\item{water}{Default \code{FALSE}. If \code{TRUE}, a water layer is rendered. If \code{water}
+is omitted and \code{waterdepth} is explicitly supplied, a water layer is rendered.}
+
+\item{waterdepth}{Default \code{0}. Water level. Either a scalar, a matrix with the same dimensions as \code{heightmap}, or a spatial raster that can be projected/resampled to the heightmap grid. For spatial rasters, finite cells define the water footprint.}
 
 \item{watercolor}{Default \code{lightblue}. Color of the water.}
 
@@ -111,6 +116,8 @@ the luminance of the \code{background} color in the CIELuv colorspace if not spe
 \item{lineantialias}{Default \code{FALSE}. Whether to anti-alias the lines in the scene.}
 
 \item{water_render_method}{Default \code{"contour"}. Water meshing method. \code{"contour"} clips the water mesh to the flooded region; \code{"legacy"} uses the previous box/grid renderer.}
+
+\item{water_edge_extension}{Default \code{0.5}. For spatial \code{waterdepth} inputs, amount in grid cells to expand finite water cells at boundary edges, up to a maximum of half a cell.}
 
 \item{soil}{Default \code{FALSE}. Whether to draw the solid base with a textured soil layer.}
 

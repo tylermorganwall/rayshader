@@ -8,183 +8,334 @@
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
 #'of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
 #'@keywords internal
-make_base = function(heightmap,basedepth=0,basecolor="grey20",zscale=1, soil = FALSE,
-                     soil_freq = 0.1, soil_levels = 8, soil_color1 = "black", soil_color2 = "black",
-                     soil_gradient = 0, gradient_darken = 1) {
-  heightmap = heightmap/zscale
+make_base = function(
+  heightmap,
+  basedepth = 0,
+  basecolor = "grey20",
+  zscale = 1,
+  soil = FALSE,
+  soil_freq = 0.1,
+  soil_levels = 8,
+  soil_color1 = "black",
+  soil_color2 = "black",
+  soil_gradient = 0,
+  gradient_darken = 1
+) {
+  heightmap = heightmap / zscale
   nc = ncol(heightmap)
   nr = nrow(heightmap)
-  edge_vals = unique(c(heightmap[1,], heightmap[,1],heightmap[nr,],heightmap[,nc]))
-  if(length(edge_vals) == 1 && all(!is.na(edge_vals))) {
+  edge_vals = unique(c(
+    heightmap[1, ],
+    heightmap[, 1],
+    heightmap[nr, ],
+    heightmap[, nc]
+  ))
+  if (
+    all(!is.na(heightmap)) && length(edge_vals) == 1 && all(!is.na(edge_vals))
+  ) {
     heightlist = list()
-    heightlist[[1]] = matrix(c(1, nr, nr, basedepth, basedepth, basedepth, 1,  nc, 1),3,3)
-    heightlist[[2]] = matrix(c(1, nr,  1, basedepth, basedepth, basedepth, nc, nc, 1),3,3)
-    heightlist[[3]] = matrix(c(1, nr,1, basedepth,basedepth,edge_vals,1,1,1),3,3)
-    heightlist[[4]] = matrix(c( nr, nr,1,basedepth,edge_vals,edge_vals,1,1,1),3,3)
-    heightlist[[5]] = matrix(c(1, nr, 1, edge_vals,basedepth,basedepth, nc, nc, nc),3,3)
-    heightlist[[6]] = matrix(c( 1, nr, nr,edge_vals,edge_vals,basedepth, nc, nc, nc),3,3)
-    heightlist[[7]] = matrix(c(nr, nr, nr, basedepth,basedepth,edge_vals,1, nc,1),3,3)
-    heightlist[[8]] = matrix(c(nr, nr, nr,basedepth,edge_vals,edge_vals, nc, nc,1),3,3)
-    heightlist[[9]] = matrix( c(1,1,1, edge_vals,basedepth,basedepth, 1, nc, 1),3,3)
-    heightlist[[10]] = matrix(c(1,1,1, edge_vals,edge_vals,basedepth, 1, nc, nc),3,3)
-    fullsides = do.call(rbind,heightlist)
-    fullsides = fullsides[rev(seq_len(nrow(fullsides))),]
-    fullsides[,1] = fullsides[,1] - 1
-    fullsides[,3] = fullsides[,3] - 1
-    fullsides[,1] = fullsides[,1] - (nr-1)/2
-    fullsides[,3] = fullsides[,3] - (nc-1)/2
-    rgl::triangles3d(fullsides, 
-                     texture = NULL,
-                     lit=FALSE,color=basecolor,front="filled",back="cull",tag = "base")
-  } else if(all(!is.na(heightmap))) {
+    heightlist[[1]] = matrix(
+      c(1, nr, nr, basedepth, basedepth, basedepth, 1, nc, 1),
+      3,
+      3
+    )
+    heightlist[[2]] = matrix(
+      c(1, nr, 1, basedepth, basedepth, basedepth, nc, nc, 1),
+      3,
+      3
+    )
+    heightlist[[3]] = matrix(
+      c(1, nr, 1, basedepth, basedepth, edge_vals, 1, 1, 1),
+      3,
+      3
+    )
+    heightlist[[4]] = matrix(
+      c(nr, nr, 1, basedepth, edge_vals, edge_vals, 1, 1, 1),
+      3,
+      3
+    )
+    heightlist[[5]] = matrix(
+      c(1, nr, 1, edge_vals, basedepth, basedepth, nc, nc, nc),
+      3,
+      3
+    )
+    heightlist[[6]] = matrix(
+      c(1, nr, nr, edge_vals, edge_vals, basedepth, nc, nc, nc),
+      3,
+      3
+    )
+    heightlist[[7]] = matrix(
+      c(nr, nr, nr, basedepth, basedepth, edge_vals, 1, nc, 1),
+      3,
+      3
+    )
+    heightlist[[8]] = matrix(
+      c(nr, nr, nr, basedepth, edge_vals, edge_vals, nc, nc, 1),
+      3,
+      3
+    )
+    heightlist[[9]] = matrix(
+      c(1, 1, 1, edge_vals, basedepth, basedepth, 1, nc, 1),
+      3,
+      3
+    )
+    heightlist[[10]] = matrix(
+      c(1, 1, 1, edge_vals, edge_vals, basedepth, 1, nc, nc),
+      3,
+      3
+    )
+    fullsides = do.call(rbind, heightlist)
+    fullsides = fullsides[rev(seq_len(nrow(fullsides))), ]
+    fullsides[, 1] = fullsides[, 1] - 1
+    fullsides[, 3] = fullsides[, 3] - 1
+    fullsides[, 1] = fullsides[, 1] - (nr - 1) / 2
+    fullsides[, 3] = fullsides[, 3] - (nc - 1) / 2
+    rgl::triangles3d(
+      fullsides,
+      texture = NULL,
+      lit = FALSE,
+      color = basecolor,
+      front = "filled",
+      back = "cull",
+      tag = "base"
+    )
+  } else if (all(!is.na(heightmap))) {
     na_matrix = is.na(heightmap)
     baselist = make_base_cpp(heightmap, na_matrix, basedepth)
     heightlist = baselist$vertices
-    edge_heights = as.vector(t(cbind(baselist$edge_heights,baselist$edge_heights,baselist$edge_heights)))
-    direction_vec = as.vector(t(cbind(baselist$is_horizontal,baselist$is_horizontal,baselist$is_horizontal)))
-    
-    heightlist[[length(heightlist)+1]] = matrix(c(1,nr,nr, basedepth,basedepth,basedepth,-1,-nc,-1),3,3)
-    heightlist[[length(heightlist)+1]] = matrix(c(1,nr,1,basedepth,basedepth,basedepth,-nc,-nc,-1),3,3)
-    direction_vec = c(direction_vec, rep(FALSE,6))
+    edge_heights = as.vector(t(cbind(
+      baselist$edge_heights,
+      baselist$edge_heights,
+      baselist$edge_heights
+    )))
+    direction_vec = as.vector(t(cbind(
+      baselist$is_horizontal,
+      baselist$is_horizontal,
+      baselist$is_horizontal
+    )))
+
+    heightlist[[length(heightlist) + 1]] = matrix(
+      c(1, nr, nr, basedepth, basedepth, basedepth, -1, -nc, -1),
+      3,
+      3
+    )
+    heightlist[[length(heightlist) + 1]] = matrix(
+      c(1, nr, 1, basedepth, basedepth, basedepth, -nc, -nc, -1),
+      3,
+      3
+    )
+    direction_vec = c(direction_vec, rep(FALSE, 6))
     direction_vec = rev(direction_vec)
 
-    edge_heights = c(edge_heights,rep(0,6))
+    edge_heights = c(edge_heights, rep(0, 6))
     edge_heights = rev(edge_heights)
 
-    fullsides = do.call(rbind,heightlist)
-    fullsides[,3] = -fullsides[,3]
-    fullsides[,1] = fullsides[,1] - 1
-    fullsides[,3] = fullsides[,3] - 1
-    fullsides[,1] = fullsides[,1] - (nr-1)/2
-    fullsides[,3] = fullsides[,3] - (nc-1)/2
-    fullsides = fullsides[rev(seq_len(nrow(fullsides))),]
+    fullsides = do.call(rbind, heightlist)
+    fullsides[, 3] = -fullsides[, 3]
+    fullsides[, 1] = fullsides[, 1] - 1
+    fullsides[, 3] = fullsides[, 3] - 1
+    fullsides[, 1] = fullsides[, 1] - (nr - 1) / 2
+    fullsides[, 3] = fullsides[, 3] - (nc - 1) / 2
+    fullsides = fullsides[rev(seq_len(nrow(fullsides))), ]
 
-    if(soil) {
-      horizontal_sides = fullsides[!direction_vec,]
+    if (soil) {
+      horizontal_sides = fullsides[!direction_vec, ]
       horizontal_heights = edge_heights[!direction_vec]
 
-      vertical_sides = fullsides[direction_vec,]
+      vertical_sides = fullsides[direction_vec, ]
       vertical_heights = edge_heights[direction_vec]
-      
-      textures = generate_soil_textures(heightmap, base_depth = max(fullsides[,2],na.rm=TRUE) - basedepth, zscale=zscale,
-                                        freq=soil_freq, levels = soil_levels,  color1= soil_color1, color2= soil_color2,
-                                        soil_gradient = soil_gradient, gradient_darken = gradient_darken)
-      
-      min_hside_y = min(horizontal_sides[,2],na.rm=TRUE)
-      max_hside_y = max(horizontal_sides[,2],na.rm=TRUE)
-      
-      horizontal_texcoords_x = (horizontal_sides[,1] + nr/2-1)/(nr-1)
+
+      textures = generate_soil_textures(
+        heightmap,
+        base_depth = max(fullsides[, 2], na.rm = TRUE) - basedepth,
+        zscale = zscale,
+        freq = soil_freq,
+        levels = soil_levels,
+        color1 = soil_color1,
+        color2 = soil_color2,
+        soil_gradient = soil_gradient,
+        gradient_darken = gradient_darken
+      )
+
+      min_hside_y = min(horizontal_sides[, 2], na.rm = TRUE)
+      max_hside_y = max(horizontal_sides[, 2], na.rm = TRUE)
+
+      horizontal_texcoords_x = (horizontal_sides[, 1] + nr / 2 - 1) / (nr - 1)
       # horizontal_texcoords_y = (horizontal_sides[,2]-min_hside_y)/(max_hside_y-min_hside_y)
-      
-      horizontal_texcoords_y = rep(0,length(horizontal_sides[,2]))
+
+      horizontal_texcoords_y = rep(0, length(horizontal_sides[, 2]))
       # horizontal_texcoords_y[horizontal_sides[,2] == basedepth] = horizontal_heights[horizontal_sides[,2] == basedepth]/(max_hside_y-min_hside_y)
-      horizontal_texcoords_y[horizontal_sides[,2] == basedepth] = 1
+      horizontal_texcoords_y[horizontal_sides[, 2] == basedepth] = 1
 
       #Set bottom texcoords
       horizontal_texcoords_x[1:6] = 0.99
       horizontal_texcoords_y[1:6] = 0.99
-      
-      min_vside_y = min(vertical_sides[,2],na.rm=TRUE)
-      max_vside_y = max(vertical_sides[,2],na.rm=TRUE)
-      
-      vertical_texcoords_x = (vertical_sides[,3] + nc/2-1)/(nc-1)
+
+      min_vside_y = min(vertical_sides[, 2], na.rm = TRUE)
+      max_vside_y = max(vertical_sides[, 2], na.rm = TRUE)
+
+      vertical_texcoords_x = (vertical_sides[, 3] + nc / 2 - 1) / (nc - 1)
       # vertical_texcoords_y = (vertical_sides[,2]-min_vside_y)/(max_vside_y-min_vside_y)
-      vertical_texcoords_y = rep(0,length(vertical_sides[,2]))
+      vertical_texcoords_y = rep(0, length(vertical_sides[, 2]))
       # vertical_texcoords_y[vertical_sides[,2] == basedepth] = vertical_heights[vertical_sides[,2] == basedepth]/(max_vside_y-min_vside_y)
-      vertical_texcoords_y[vertical_sides[,2] == basedepth] = 1
-      
-      rgl::triangles3d(horizontal_sides, color="white",
-                       texture = textures[1], texcoords = cbind(horizontal_texcoords_x,horizontal_texcoords_y),
-                       lit=FALSE,front="filled",back="cull",tag = "base_soil1")
-      
-      rgl::triangles3d(vertical_sides,  color="white",
-                       texture = textures[2],texcoords = cbind(vertical_texcoords_x,vertical_texcoords_y),
-                       lit=FALSE,front="filled",back="cull",tag = "base_soil2")
-      
+      vertical_texcoords_y[vertical_sides[, 2] == basedepth] = 1
+
+      rgl::triangles3d(
+        horizontal_sides,
+        color = "white",
+        texture = textures[1],
+        texcoords = cbind(horizontal_texcoords_x, horizontal_texcoords_y),
+        lit = FALSE,
+        front = "filled",
+        back = "cull",
+        tag = "base_soil1"
+      )
+
+      rgl::triangles3d(
+        vertical_sides,
+        color = "white",
+        texture = textures[2],
+        texcoords = cbind(vertical_texcoords_x, vertical_texcoords_y),
+        lit = FALSE,
+        front = "filled",
+        back = "cull",
+        tag = "base_soil2"
+      )
     } else {
-      rgl::triangles3d(fullsides, 
-                       lit=FALSE,color=basecolor,front="filled",back="cull",tag = "base")
+      rgl::triangles3d(
+        fullsides,
+        lit = FALSE,
+        color = basecolor,
+        front = "filled",
+        back = "cull",
+        tag = "base"
+      )
     }
   } else {
     na_matrix = is.na(heightmap)
     baselist = make_base_cpp(heightmap, na_matrix, basedepth)
     heightlist = baselist$vertices
-    edge_heights = rev(as.vector(t(cbind(baselist$edge_heights,baselist$edge_heights,baselist$edge_heights))))
-    
-    direction_vec = rev(as.vector(t(cbind(baselist$is_horizontal,baselist$is_horizontal,baselist$is_horizontal))))
-    
-    fullsides = do.call(rbind,heightlist)
-    fullsides[,3] = -fullsides[,3]
-    fullsides[,1] = fullsides[,1] - 1
-    fullsides[,3] = fullsides[,3] - 1
-    fullsides[,1] = fullsides[,1] - (nr-1)/2
-    fullsides[,3] = fullsides[,3] - (nc-1)/2
-    fullsides = fullsides[rev(seq_len(nrow(fullsides))),]
-    
-    basemat = matrix(basedepth,nr,nc)
+    edge_heights = rev(as.vector(t(cbind(
+      baselist$edge_heights,
+      baselist$edge_heights,
+      baselist$edge_heights
+    ))))
+
+    direction_vec = rev(as.vector(t(cbind(
+      baselist$is_horizontal,
+      baselist$is_horizontal,
+      baselist$is_horizontal
+    ))))
+
+    fullsides = do.call(rbind, heightlist)
+    fullsides[, 3] = -fullsides[, 3]
+    fullsides[, 1] = fullsides[, 1] - 1
+    fullsides[, 3] = fullsides[, 3] - 1
+    fullsides[, 1] = fullsides[, 1] - (nr - 1) / 2
+    fullsides[, 3] = fullsides[, 3] - (nc - 1) / 2
+    fullsides = fullsides[rev(seq_len(nrow(fullsides))), ]
+
+    basemat = matrix(basedepth, nr, nc)
     basemat[is.na(heightmap)] = NA
-    normalmat = matrix(0,nr,nc)
+    normalmat = matrix(0, nr, nc)
     xznormals = fliplr(heightmap)
     ynormals = fliplr(heightmap)
     xznormals[!is.na(xznormals)] = 0
     ynormals[!is.na(ynormals)] = -1
-    
-    if(soil) {
-      horizontal_sides = fullsides[!direction_vec,]
+
+    if (soil) {
+      horizontal_sides = fullsides[!direction_vec, ]
       horizontal_heights = edge_heights[!direction_vec]
 
-      vertical_sides = fullsides[direction_vec,]
+      vertical_sides = fullsides[direction_vec, ]
       vertical_heights = edge_heights[direction_vec]
 
-      textures = generate_soil_textures(heightmap, base_depth = max(fullsides[,2],na.rm=TRUE) - basedepth, zscale=zscale,
-                                        freq=soil_freq, levels = soil_levels,  color1= soil_color1, color2= soil_color2,
-                                        soil_gradient = soil_gradient, gradient_darken = gradient_darken)
-      
-      min_hside_y = min(horizontal_sides[,2],na.rm=TRUE)
-      max_hside_y = max(horizontal_sides[,2],na.rm=TRUE)
-      
-      horizontal_texcoords_x = (horizontal_sides[,1] + nr/2-1)/(nr-1)
+      textures = generate_soil_textures(
+        heightmap,
+        base_depth = max(fullsides[, 2], na.rm = TRUE) - basedepth,
+        zscale = zscale,
+        freq = soil_freq,
+        levels = soil_levels,
+        color1 = soil_color1,
+        color2 = soil_color2,
+        soil_gradient = soil_gradient,
+        gradient_darken = gradient_darken
+      )
+
+      min_hside_y = min(horizontal_sides[, 2], na.rm = TRUE)
+      max_hside_y = max(horizontal_sides[, 2], na.rm = TRUE)
+
+      horizontal_texcoords_x = (horizontal_sides[, 1] + nr / 2 - 1) / (nr - 1)
       # horizontal_texcoords_y = (horizontal_sides[,2]-min_hside_y)/(max_hside_y-min_hside_y)
-      
-      horizontal_texcoords_y = rep(0,length(horizontal_sides[,2]))
-      horizontal_texcoords_y[horizontal_sides[,2] == basedepth] = horizontal_heights[horizontal_sides[,2] == basedepth]/(max_hside_y-min_hside_y)
-      
+
+      horizontal_texcoords_y = rep(0, length(horizontal_sides[, 2]))
+      horizontal_texcoords_y[
+        horizontal_sides[, 2] == basedepth
+      ] = horizontal_heights[horizontal_sides[, 2] == basedepth] /
+        (max_hside_y - min_hside_y)
+
       #Set bottom texcoords
       horizontal_texcoords_x[1:6] = 0.99
       horizontal_texcoords_y[1:6] = 0.99
-      
-      min_vside_y = min(vertical_sides[,2],na.rm=TRUE)
-      max_vside_y = max(vertical_sides[,2],na.rm=TRUE)
-      
-      vertical_texcoords_x = (vertical_sides[,3] + nc/2-1)/(nc-1)
+
+      min_vside_y = min(vertical_sides[, 2], na.rm = TRUE)
+      max_vside_y = max(vertical_sides[, 2], na.rm = TRUE)
+
+      vertical_texcoords_x = (vertical_sides[, 3] + nc / 2 - 1) / (nc - 1)
       # vertical_texcoords_y = (vertical_sides[,2]-min_vside_y)/(max_vside_y-min_vside_y)
-      vertical_texcoords_y = rep(0,length(vertical_sides[,2]))
-      vertical_texcoords_y[vertical_sides[,2] == basedepth] = vertical_heights[vertical_sides[,2] == basedepth]/(max_vside_y-min_vside_y)
-      
-      rgl::triangles3d(horizontal_sides, 
-                       texture = textures[1], texcoords = cbind(horizontal_texcoords_x,horizontal_texcoords_y),
-                       lit=FALSE,front="filled",back="cull",tag = "base_soil1",
-                       color = "white")
-      
-      rgl::triangles3d(vertical_sides, 
-                       texture = textures[2],texcoords = cbind(vertical_texcoords_x,vertical_texcoords_y),
-                       lit=FALSE,front="filled",back="cull",tag = "base_soil2",
-                       color = "white")
+      vertical_texcoords_y = rep(0, length(vertical_sides[, 2]))
+      vertical_texcoords_y[vertical_sides[, 2] == basedepth] = vertical_heights[
+        vertical_sides[, 2] == basedepth
+      ] /
+        (max_vside_y - min_vside_y)
+
+      rgl::triangles3d(
+        horizontal_sides,
+        texture = textures[1],
+        texcoords = cbind(horizontal_texcoords_x, horizontal_texcoords_y),
+        lit = FALSE,
+        front = "filled",
+        back = "cull",
+        tag = "base_soil1",
+        color = "white"
+      )
+
+      rgl::triangles3d(
+        vertical_sides,
+        texture = textures[2],
+        texcoords = cbind(vertical_texcoords_x, vertical_texcoords_y),
+        lit = FALSE,
+        front = "filled",
+        back = "cull",
+        tag = "base_soil2",
+        color = "white"
+      )
     } else {
-      rgl::triangles3d(fullsides,
-                       texture = NULL,
-                       lit=FALSE,color=basecolor,front="filled",back="cull",tag = "base")
+      rgl::triangles3d(
+        fullsides,
+        texture = NULL,
+        lit = FALSE,
+        color = basecolor,
+        front = "filled",
+        back = "cull",
+        tag = "base"
+      )
     }
-    basemat = matrix(basedepth,nr,nc)
+    basemat = matrix(basedepth, nr, nc)
     basemat[is.na(heightmap)] = NA
     ray_base = generate_surface(basemat, zscale = 1)
-    ray_base$inds = ray_base$inds[3:1,]
-    
-    rgl::triangles3d(x = ray_base$verts, 
-                     indices = ray_base$inds, 
-                     texcoords = ray_base$texcoords, 
-                     color=basecolor,back="cull", front="filled",
-                     lit=FALSE,texture=NULL,tag = "basebottom")
-    
+    ray_base$inds = ray_base$inds[3:1, ]
+
+    rgl::triangles3d(
+      x = ray_base$verts,
+      indices = ray_base$inds,
+      texcoords = ray_base$texcoords,
+      color = basecolor,
+      back = "cull",
+      front = "filled",
+      lit = FALSE,
+      texture = NULL,
+      tag = "basebottom"
+    )
   }
 }

@@ -264,6 +264,299 @@ test_that("plot_3d and render_water accept spatial waterdepth rasters", {
 
   expect_no_condition(render_water(waterdepth = water_raster))
   expect_gt(nrow(get_ids_with_labels(typeval = "water")), 0)
+
+  expect_no_condition(render_water(heightmap = height_raster, waterdepth = 1))
+  expect_gt(nrow(get_ids_with_labels(typeval = "water")), 0)
+})
+
+test_that("render_water resolves zscale from explicit spatial heightmaps", {
+  skip_if_not_installed("terra")
+
+  height_raster = terra::rast(
+    nrows = 4,
+    ncols = 4,
+    xmin = 0,
+    xmax = 40,
+    ymin = 0,
+    ymax = 40,
+    crs = "EPSG:3857"
+  )
+  terra::values(height_raster) = 0
+
+  heightmap = resolve_render_water_heightmap(
+    height_raster,
+    heightmap_missing = FALSE,
+    caller = "test"
+  )
+
+  expect_equal(attr(heightmap, "zscale", exact = TRUE), 10)
+  expect_equal(
+    resolve_render_water_effective_zscale(
+      zscale = 1,
+      zscale_missing = TRUE,
+      vertical_exaggeration = 1,
+      vertical_exaggeration_missing = FALSE,
+      heightmap = heightmap,
+      caller = "test"
+    ),
+    10
+  )
+  expect_equal(
+    resolve_render_water_effective_zscale(
+      zscale = 5,
+      zscale_missing = FALSE,
+      vertical_exaggeration = 1,
+      vertical_exaggeration_missing = FALSE,
+      heightmap = heightmap,
+      caller = "test"
+    ),
+    5
+  )
+})
+
+test_that("render_water scales spatial waterdepth rasters by zscale and vertical_exaggeration", {
+  skip_if_not_installed("terra")
+  on.exit(rgl::close3d(), add = TRUE)
+  local_rgl_use_null()
+
+  height_raster = terra::rast(
+    nrows = 4,
+    ncols = 4,
+    xmin = 0,
+    xmax = 4,
+    ymin = 0,
+    ymax = 4,
+    crs = "EPSG:3857"
+  )
+  terra::values(height_raster) = 0
+
+  water_level_rast = terra::rast(
+    nrows = 2,
+    ncols = 2,
+    xmin = 0,
+    xmax = 4,
+    ymin = 0,
+    ymax = 4,
+    crs = "EPSG:3857"
+  )
+  terra::values(water_level_rast) = 100
+
+  expect_no_condition(plot_3d_test(
+    constant_shade(height_raster),
+    height_raster,
+    zscale = 10,
+    vertical_exaggeration = 2,
+    solid = FALSE,
+    shadow = FALSE,
+    water = FALSE,
+    windowsize = c(200, 200)
+  ))
+
+  expect_no_condition(render_water(waterdepth = water_level_rast))
+  water_ids = get_ids_with_labels(typeval = "water")
+  water_verts = rgl::rgl.attrib(water_ids$id[1], "vertices")
+  expect_equal(max(water_verts[, 2], na.rm = TRUE), 20, tolerance = 1e-6)
+
+  expect_no_condition(render_water(
+    waterdepth = water_level_rast,
+    zscale = 20,
+    vertical_exaggeration = 2
+  ))
+  water_ids = get_ids_with_labels(typeval = "water")
+  water_verts = rgl::rgl.attrib(water_ids$id[1], "vertices")
+  expect_equal(max(water_verts[, 2], na.rm = TRUE), 10, tolerance = 1e-6)
+})
+
+test_that("spatial waterdepth rasters render finite cells at equal terrain height", {
+  skip_if_not_installed("terra")
+  on.exit(rgl::close3d(), add = TRUE)
+  local_rgl_use_null()
+
+  height_raster = terra::rast(
+    nrows = 4,
+    ncols = 4,
+    xmin = 0,
+    xmax = 4,
+    ymin = 0,
+    ymax = 4,
+    crs = "EPSG:3857"
+  )
+  terra::values(height_raster) = 100
+  water_level_rast = height_raster
+
+  expect_no_condition(plot_3d_test(
+    constant_shade(height_raster),
+    height_raster,
+    zscale = 10,
+    solid = FALSE,
+    shadow = FALSE,
+    water = TRUE,
+    waterdepth = water_level_rast,
+    windowsize = c(200, 200)
+  ))
+
+  water_ids = get_ids_with_labels(typeval = "water")
+  expect_gt(nrow(water_ids), 0)
+  water_verts = rgl::rgl.attrib(water_ids$id[1], "vertices")
+  expect_equal(max(water_verts[, 2], na.rm = TRUE), 10, tolerance = 1e-6)
+  expect_equal(
+    rgl::material3d("polygon_offset", id = water_ids$id[1]),
+    c(-1, -1)
+  )
+})
+
+test_that("spatial waterdepth rasters render cell footprints instead of inset vertices", {
+  local_rgl_use_null()
+
+  water_surface = matrix(NA_real_, nrow = 4, ncol = 4)
+  water_surface[2:3, 2:3] = 10
+  water_mesh = make_spatial_water_surface(
+    waterheight = water_surface,
+    heightmap = matrix(0, nrow = 4, ncol = 4),
+    valid_water = is.finite(water_surface)
+  )
+  vertices = water_mesh_vertices(water_mesh)
+
+  expect_equal(nrow(vertices), 72)
+  expect_equal(range(vertices[, 1]), c(-1.5, 1.5), tolerance = 1e-8)
+  expect_equal(range(vertices[, 3]), c(-1.5, 1.5), tolerance = 1e-8)
+  expect_equal(range(vertices[, 2]), c(0, 10), tolerance = 1e-8)
+})
+
+test_that("spatial waterdepth rasters can render isolated finite cells", {
+  local_rgl_use_null()
+
+  water_surface = matrix(NA_real_, nrow = 4, ncol = 4)
+  water_surface[2, 2] = 10
+  water_mesh = make_spatial_water_surface(
+    waterheight = water_surface,
+    heightmap = matrix(0, nrow = 4, ncol = 4),
+    valid_water = is.finite(water_surface)
+  )
+  vertices = water_mesh_vertices(water_mesh)
+
+  expect_equal(nrow(vertices), 30)
+  expect_equal(range(vertices[, 1]), c(-1.5, 0.5), tolerance = 1e-8)
+  expect_equal(range(vertices[, 3]), c(-1.5, 0.5), tolerance = 1e-8)
+  expect_equal(range(vertices[, 2]), c(0, 10), tolerance = 1e-8)
+})
+
+test_that("spatial waterdepth edge extension can be disabled", {
+  local_rgl_use_null()
+
+  water_surface = matrix(NA_real_, nrow = 4, ncol = 4)
+  water_surface[2:3, 2:3] = 10
+  water_mesh = make_spatial_water_surface(
+    waterheight = water_surface,
+    heightmap = matrix(0, nrow = 4, ncol = 4),
+    valid_water = is.finite(water_surface),
+    water_edge_extension = 0
+  )
+  vertices = water_mesh_vertices(water_mesh)
+
+  expect_equal(nrow(vertices), 72)
+  expect_equal(range(vertices[, 1]), c(-1, 1), tolerance = 1e-8)
+  expect_equal(range(vertices[, 3]), c(-1, 1), tolerance = 1e-8)
+})
+
+test_that("spatial water sidewalls are clipped to the expanded water footprint", {
+  local_rgl_use_null()
+
+  water_surface = matrix(NA_real_, nrow = 5, ncol = 5)
+  water_surface[2:4, 2:4] = 10
+  water_surface[3, 3] = NA_real_
+
+  water_mesh = make_spatial_water_surface(
+    waterheight = water_surface,
+    heightmap = matrix(0, nrow = 5, ncol = 5),
+    valid_water = is.finite(water_surface)
+  )
+  vertices = water_mesh_vertices(water_mesh)
+  triangle_info = water_mesh_triangle_normals(vertices)
+  sidewalls = abs(triangle_info$normals[, 2]) < 1e-8
+  sidewall_centers = triangle_info$centers[sidewalls, , drop = FALSE]
+
+  expect_equal(nrow(vertices), 120)
+  expect_false(any(
+    abs(sidewall_centers[, 1]) < 1e-8 &
+      abs(sidewall_centers[, 3]) < 0.5
+  ))
+  expect_false(any(
+    abs(sidewall_centers[, 3]) < 1e-8 &
+      abs(sidewall_centers[, 1]) < 0.5
+  ))
+
+  water_mesh_no_extension = make_spatial_water_surface(
+    waterheight = water_surface,
+    heightmap = matrix(0, nrow = 5, ncol = 5),
+    valid_water = is.finite(water_surface),
+    water_edge_extension = 0
+  )
+  vertices_no_extension = water_mesh_vertices(water_mesh_no_extension)
+
+  expect_equal(nrow(vertices_no_extension), 144)
+})
+
+test_that("spatial waterdepth edge sides follow local terrain heights", {
+  local_rgl_use_null()
+
+  water_surface = matrix(NA_real_, nrow = 4, ncol = 4)
+  water_surface[2, 2] = 10
+  heightmap = matrix(0, nrow = 4, ncol = 4)
+  heightmap[1:2, 1:2] = 4
+  water_mesh = make_spatial_water_surface(
+    waterheight = water_surface,
+    heightmap = heightmap,
+    valid_water = is.finite(water_surface),
+    water_edge_extension = 0
+  )
+  vertices = water_mesh_vertices(water_mesh)
+
+  expect_true(any(abs(vertices[, 2] - 4) < 1e-8))
+  expect_equal(max(vertices[, 2]), 10, tolerance = 1e-8)
+})
+
+test_that("plot_3d renders explicit spatial waterdepth and applies cached zscale", {
+  skip_if_not_installed("terra")
+  on.exit(rgl::close3d(), add = TRUE)
+  local_rgl_use_null()
+
+  height_raster = terra::rast(
+    nrows = 4,
+    ncols = 4,
+    xmin = 0,
+    xmax = 40,
+    ymin = 0,
+    ymax = 40,
+    crs = "EPSG:3857"
+  )
+  terra::values(height_raster) = 0
+
+  water_level_rast = terra::rast(
+    nrows = 2,
+    ncols = 2,
+    xmin = 0,
+    xmax = 40,
+    ymin = 0,
+    ymax = 40,
+    crs = "EPSG:3857"
+  )
+  terra::values(water_level_rast) = 100
+
+  hillshade = sphere_shade(height_raster, vertical_exaggeration = 2)
+  expect_no_condition(plot_3d_test(
+    hillshade,
+    vertical_exaggeration = 2,
+    waterdepth = water_level_rast,
+    solid = FALSE,
+    shadow = FALSE,
+    windowsize = c(200, 200)
+  ))
+
+  water_ids = get_ids_with_labels(typeval = "water")
+  expect_gt(nrow(water_ids), 0)
+  water_verts = rgl::rgl.attrib(water_ids$id[1], "vertices")
+  expect_equal(max(water_verts[, 2], na.rm = TRUE), 20, tolerance = 1e-6)
 })
 
 test_that("convert_rgl_to_raymesh handles contour water ids", {

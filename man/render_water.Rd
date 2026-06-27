@@ -15,18 +15,20 @@ render_water(
   waterlinealpha = 1,
   linewidth = 2,
   water_render_method = c("contour", "legacy"),
+  water_edge_extension = 0.5,
   remove_water = TRUE
 )
 }
 \arguments{
-\item{heightmap}{Default \code{NULL}. Height matrix for the current scene. If omitted, this is taken from the cached scene set by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}. Pass explicitly to override the cached value.}
+\item{heightmap}{Default \code{NULL}. Height matrix or spatial raster for the current scene. If omitted, this is taken from the cached scene set by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}. Pass explicitly to override the cached value.}
 
-\item{waterdepth}{Default \code{0}. Water level. Either a scalar, a matrix with the same dimensions as \code{heightmap}, or a spatial raster that can be projected/resampled to the heightmap grid.}
+\item{waterdepth}{Default \code{0}. Water level. Either a scalar, a matrix with the same dimensions as \code{heightmap}, or a spatial raster that can be projected/resampled to the heightmap grid. For spatial rasters, finite cells define the water footprint.}
 
 \item{watercolor}{Default \code{lightblue}.}
 
 \item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
-of 1 meter and the grid values are separated by 10 meters, \code{zscale} would be 10.}
+of 1 meter and the grid values are separated by 10 meters, \code{zscale} would be 10.
+If \code{zscale} is omitted and \code{heightmap} is a spatial raster, rayshader uses the raster cell resolution.}
 
 \item{vertical_exaggeration}{Default \code{1}. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}} when available; pass explicitly to override for this call.}
 
@@ -39,6 +41,8 @@ of 1 meter and the grid values are separated by 10 meters, \code{zscale} would b
 \item{linewidth}{Default \code{2}. Width of the edge lines in the scene.}
 
 \item{water_render_method}{Default \code{"contour"}. Water meshing method. \code{"contour"} clips the water mesh to the flooded region; \code{"legacy"} uses the previous box/grid renderer.}
+
+\item{water_edge_extension}{Default \code{0.5}. For spatial \code{waterdepth} inputs, amount in grid cells to expand finite water cells at boundary edges, up to a maximum of half a cell.}
 
 \item{remove_water}{Default \code{TRUE}. If \code{TRUE}, will remove existing water layer and replace it with new layer.}
 }
@@ -62,7 +66,7 @@ render_snapshot()
 render_water(waterdepth=-1000, watercolor = "dodgerblue3")
 render_snapshot()
 
-#Use a matrix to set separated regions to different water levels
+#Slice the water out to the edge
 water_levels = matrix(
  0,
  nrow = nrow(montereybay),
@@ -80,7 +84,7 @@ water_ramp = matrix(
  ncol = ncol(montereybay)
 )
 render_water(waterdepth = water_ramp, watercolor = "dodgerblue3")
-render_snapshot()
+render_highquality()
 
 #Add waterlines
 render_camera(theta=-45)

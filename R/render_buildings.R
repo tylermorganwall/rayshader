@@ -98,13 +98,17 @@
 #'   "https://stac.overturemaps.org/catalog.json"
 #' )$latest
 #'
+#' base_string = "az://overturemapswestus2.blob.core.windows.net/release"
+#'
 #' building_uri = sprintf(
-#'   "az://overturemapswestus2.blob.core.windows.net/release/%s/theme=buildings/type=building/*.parquet",
+#'   "%s/%s/theme=buildings/type=building/*.parquet",
+#'   base_string,
 #'   overture_release
 #' )
 #'
 #' road_uri = sprintf(
-#'   "az://overturemapswestus2.blob.core.windows.net/release/%s/theme=transportation/type=segment/*.parquet",
+#'   "%s/%s/theme=transportation/type=segment/*.parquet",
+#'   base_string,
 #'   overture_release
 #' )
 #'
@@ -257,12 +261,12 @@
 #' )
 #' #Render a label
 #' render_label(long = c(building_extent[1]+building_extent[3])/2,
-#'              lat =  c(building_extent[2]+building_extent[4])/2,  
+#'              lat =  c(building_extent[2]+building_extent[4])/2,
 #'              text = "St. Johns, Newfoundland",
 #'              textcolor = "white",
 #'              altitude = 100
 #' )
-#' 
+#'
 #' render_camera(theta = 220, phi = 45, zoom = 0.55, fov = 0)
 #' render_snapshot()
 #'

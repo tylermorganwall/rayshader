@@ -10,15 +10,24 @@ make_shadow(
   shadowwidth,
   color,
   shadowcolor,
-  offset = c(0, 0)
+  offset = c(0, 0),
+  shadow_texture_size = getOption("rayshader.max_shadow_texture_size", 1024)
 )
 }
 \arguments{
 \item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.}
 
-\item{basedepth}{Default \code{grey20}.}
+\item{basedepth}{Depth of the shadow layer.}
 
-\item{shadowwidth}{Default \code{50}. Shadow width.}
+\item{shadowwidth}{Width of the shadow in matrix units.}
+
+\item{color}{Background color.}
+
+\item{shadowcolor}{Shadow color.}
+
+\item{offset}{Default \code{c(0, 0)}. Shadow plane offset.}
+
+\item{shadow_texture_size}{Default \code{getOption("rayshader.max_shadow_texture_size", 1024)}. Maximum width or height, in pixels, of the blurred shadow texture.}
 }
 \description{
 Makes the base below the 3D elevation map.

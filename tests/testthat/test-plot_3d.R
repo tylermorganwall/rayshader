@@ -78,6 +78,56 @@ test_that("plot_3d preserves full texture for rayrender conversion", {
   expect_equal(length(ls(texture_env)), 0)
 })
 
+test_that("plot_3d caps shadow texture resolution without changing shadow extent", {
+  on.exit(rgl::close3d(), add = TRUE)
+  local_rgl_use_null()
+
+  heightmap = matrix(0, nrow = 80, ncol = 120)
+  texture = constant_shade(heightmap)
+
+  expect_no_condition(plot_3d_test(
+    texture,
+    heightmap,
+    solid = FALSE,
+    shadow = TRUE,
+    shadowwidth = 12,
+    shadow_texture_size = 40,
+    windowsize = c(100, 100)
+  ))
+
+  shadow = get_ids_with_labels(typeval = "shadow")
+  shadow_texture = rgl::material3d(id = shadow$id[1])$texture
+  shadow_image = png::readPNG(shadow_texture)
+  shadow_vertices = rgl::rgl.attrib(shadow$id[1], "vertices")
+
+  expect_lte(max(dim(shadow_image)[1:2]), 40)
+  expect_equal(range(shadow_vertices[, 1]), c(-51, 52), tolerance = 1e-8)
+  expect_equal(range(shadow_vertices[, 3]), c(-71, 72), tolerance = 1e-8)
+})
+
+test_that("full resolution shadow textures can be requested", {
+  on.exit(rgl::close3d(), add = TRUE)
+  local_rgl_use_null()
+  rgl::open3d(useNULL = TRUE)
+
+  make_shadow(
+    matrix(0, nrow = 20, ncol = 30),
+    basedepth = -1,
+    shadowwidth = 5,
+    color = "white",
+    shadowcolor = "grey50",
+    shadow_texture_size = Inf
+  )
+
+  shadow = get_ids_with_labels(typeval = "shadow")
+  shadow_texture = rgl::material3d(id = shadow$id[1])$texture
+  shadow_image = png::readPNG(shadow_texture)
+
+  expect_equal(dim(shadow_image)[1:2], c(40, 30))
+  expect_identical(validate_shadow_texture_size(FALSE), Inf)
+  expect_error(validate_shadow_texture_size(15), ">= 16")
+})
+
 test_that("plot_3d plots basic options", {
   skip_if(
     rgl::rgl.useNULL(),

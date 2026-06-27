@@ -166,7 +166,7 @@ sf::sf_use_s2(FALSE)
 mont_county_buff = sf::st_simplify(sf::st_buffer(monterey_counties_sf,-0.003), dTolerance=0.001)
 
 render_beveled_polygons(mont_county_buff,  flat_shading  = TRUE, angle = 45 ,
-                        bevel_width=300, material = "red", clear_previous = T,
+                        bevel_width=300, material = "red", clear_previous = TRUE,
                         bevel_height = 800, base_height=0)
 render_camera(theta = 0,  phi = 90, zoom = 0.65, fov = 0)
 render_snapshot()
@@ -209,7 +209,8 @@ render_beveled_polygons(mont_county_buff, flat_shading  = TRUE,
 render_snapshot()
 
 # Rendering the polygons with `render_highquality()`
-render_highquality(rgl_materials = list("obj_raymesh_beveled_polygon" = rayrender::glossy(color = "#900",gloss=0.4)))
+poly_material = rayrender::glossy(color = "#900",gloss=0.4)
+render_highquality(rgl_materials =  list("obj_raymesh_beveled_polygon" = poly_material))
 
 # We can scale the size of the polygon to a column in the `sf` object as well:
 # raybevel::generate_bevel() function. We can scale this data down using the `scale_data`
@@ -219,10 +220,10 @@ render_highquality(rgl_materials = list("obj_raymesh_beveled_polygon" = rayrende
 render_beveled_polygons(mont_county_buff,  flat_shading  = TRUE, angle = 45, bevel_width=100,
                  data_column_top = "ALAND", scale_data = 2e-6,
                  material = rayvertex::material_list(diffuse="red"),
-                 light_intensity = 1, light_relative = FALSE, 
+                 light_intensity = 1, light_relative = FALSE,
                  clear_previous = TRUE)
 render_zaxis(zaxis_data = "beveled_polygon")
 render_camera(theta=194, phi= 35,   zoom = 0.7, fov= 80)
-render_highquality(rgl_materials = list("obj_raymesh_beveled_polygon" = rayrender::glossy(color = "#900",gloss=0.4)))
+render_highquality(rgl_materials = list("obj_raymesh_beveled_polygon" = poly_material))
 \dontshow{\}) # examplesIf}
 }

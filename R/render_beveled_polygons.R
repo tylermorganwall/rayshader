@@ -88,7 +88,7 @@
 #' mont_county_buff = sf::st_simplify(sf::st_buffer(monterey_counties_sf,-0.003), dTolerance=0.001)
 #'
 #' render_beveled_polygons(mont_county_buff,  flat_shading  = TRUE, angle = 45 ,
-#'                         bevel_width=300, material = "red", clear_previous = T,
+#'                         bevel_width=300, material = "red", clear_previous = TRUE,
 #'                         bevel_height = 800, base_height=0)
 #' render_camera(theta = 0,  phi = 90, zoom = 0.65, fov = 0)
 #' render_snapshot()
@@ -131,7 +131,8 @@
 #' render_snapshot()
 #'
 #' # Rendering the polygons with `render_highquality()`
-#' render_highquality(rgl_materials = list("obj_raymesh_beveled_polygon" = rayrender::glossy(color = "#900",gloss=0.4)))
+#' poly_material = rayrender::glossy(color = "#900",gloss=0.4)
+#' render_highquality(rgl_materials =  list("obj_raymesh_beveled_polygon" = poly_material))
 #'
 #' # We can scale the size of the polygon to a column in the `sf` object as well:
 #' # raybevel::generate_bevel() function. We can scale this data down using the `scale_data`
@@ -141,335 +142,338 @@
 #' render_beveled_polygons(mont_county_buff,  flat_shading  = TRUE, angle = 45, bevel_width=100,
 #'                  data_column_top = "ALAND", scale_data = 2e-6,
 #'                  material = rayvertex::material_list(diffuse="red"),
-#'                  light_intensity = 1, light_relative = FALSE, 
+#'                  light_intensity = 1, light_relative = FALSE,
 #'                  clear_previous = TRUE)
 #' render_zaxis(zaxis_data = "beveled_polygon")
 #' render_camera(theta=194, phi= 35,   zoom = 0.7, fov= 80)
-#' render_highquality(rgl_materials = list("obj_raymesh_beveled_polygon" = rayrender::glossy(color = "#900",gloss=0.4)))
+#' render_highquality(rgl_materials = list("obj_raymesh_beveled_polygon" = poly_material))
 render_beveled_polygons = function(
-	polygon,
-	extent = NULL,
-	panel = NULL,
-	material = "grey",
-	bevel_material = NA,
-	angle = 45,
-	bevel_width = 5,
-	width_raw_units = FALSE,
-	bevel = NA,
-	zscale = 1,
-	vertical_exaggeration = 1,
-	bevel_height = 1,
-	base_height = 0,
-	raw_heights = FALSE,
-	raw_offsets = FALSE,
-	heights_relative_to_centroid = TRUE,
-	set_max_height = FALSE,
-	max_height = 10,
-	scale_all_max = TRUE,
-	data_column_top = NULL,
-	data_column_bottom = NULL,
-	heightmap = NULL,
-	scale_data = 1,
-	holes = 0,
-	alpha = 1,
-	lit = TRUE,
-	flat_shading = FALSE,
-	light_altitude = c(45, 30),
-	light_direction = c(315, 225),
-	light_intensity = 1,
-	light_relative = FALSE,
-	clear_previous = FALSE,
-	crs = NULL,
-	filter_to_extent = TRUE,
-	...
+  polygon,
+  extent = NULL,
+  panel = NULL,
+  material = "grey",
+  bevel_material = NA,
+  angle = 45,
+  bevel_width = 5,
+  width_raw_units = FALSE,
+  bevel = NA,
+  zscale = 1,
+  vertical_exaggeration = 1,
+  bevel_height = 1,
+  base_height = 0,
+  raw_heights = FALSE,
+  raw_offsets = FALSE,
+  heights_relative_to_centroid = TRUE,
+  set_max_height = FALSE,
+  max_height = 10,
+  scale_all_max = TRUE,
+  data_column_top = NULL,
+  data_column_bottom = NULL,
+  heightmap = NULL,
+  scale_data = 1,
+  holes = 0,
+  alpha = 1,
+  lit = TRUE,
+  flat_shading = FALSE,
+  light_altitude = c(45, 30),
+  light_direction = c(315, 225),
+  light_intensity = 1,
+  light_relative = FALSE,
+  clear_previous = FALSE,
+  crs = NULL,
+  filter_to_extent = TRUE,
+  ...
 ) {
-	validate_filter_to_extent(filter_to_extent, caller = "render_beveled_polygons")
-	warn_scale_data_with_vertical_exaggeration(
-		scale_data_missing = missing(scale_data),
-		vertical_exaggeration_missing = missing(vertical_exaggeration),
-		caller = "render_beveled_polygons"
-	)
-	dot_split = split_zaxis_dots(list(...))
-	zscale = resolve_scene_render_effective_zscale(
-		zscale = zscale,
-		zscale_missing = missing(zscale),
-		vertical_exaggeration = vertical_exaggeration,
-		vertical_exaggeration_missing = missing(vertical_exaggeration),
-		caller = "render_beveled_polygons"
-	)
-	heightmap = resolve_scene_render_heightmap(
-		heightmap,
-		caller = "render_beveled_polygons"
-	)
-	top = bevel_height
-	bottom = base_height
-	if (rgl::cur3d() == 0) {
-		stop("No rgl window currently open.")
-	}
-	if (!(length(find.package("raybevel", quiet = TRUE)) > 0)) {
-		stop("raybevel required to use render_roofs()")
-	}
-	if (clear_previous) {
-		rgl::pop3d(tag = "obj_raymesh_beveled_polygon")
-		if (missing(polygon)) {
-			render_zaxis_from_dots(
-				zaxis_args = dot_split$zaxis_args,
-				extent = extent,
-				panel = panel,
-				zscale = zscale,
-				heightmap = heightmap,
-				caller = "render_beveled_polygons"
-			)
-			return(invisible())
-		}
-	}
-	if (is.character(material)) {
-		material = rayvertex::material_list(diffuse = material)
-	}
-	if (is.character(bevel_material)) {
-		bevel_material = rayvertex::material_list(diffuse = bevel_material)
-	}
-	extent = resolve_scene_render_extent(
-		extent = extent,
-		heightmap = heightmap,
-		caller = "render_beveled_polygons",
-		panel = panel
-	)
-	if (inherits(polygon, "Spatial")) {
-		polygon = sf::st_as_sf(polygon)
-	}
-	if (inherits(polygon, "sfc")) {
-		polygon = sf::st_sf(geometry = polygon)
-	}
-	if (inherits(polygon, "sfg")) {
-		polygon = sf::st_sf(geometry = sf::st_sfc(polygon))
-	}
-	polygon_scene_transformed = FALSE
-	if (inherits(polygon, "sf")) {
-		n_polygon_before_filter = nrow(polygon)
-		scene_polygon = auto_transform_scene_sf(
-			sf_object = polygon,
-			extent = extent,
-			heightmap = heightmap,
-			panel = panel,
-			crs = crs,
-			caller = "render_beveled_polygons"
-		)
-		polygon = scene_polygon$object
-		if (!is.null(scene_polygon$extent)) {
-			extent = scene_polygon$extent
-		}
-		polygon_scene_transformed = TRUE
-		filtered_polygon = filter_scene_sf_to_extent(
-			sf_object = polygon,
-			extent = extent,
-			heightmap = heightmap,
-			panel = panel,
-			filter_to_extent = filter_to_extent,
-			caller = "render_beveled_polygons"
-		)
-		polygon = filtered_polygon$object
-		if (!is.null(filtered_polygon$source_index)) {
-			top = subset_render_arg_by_index(
-				top,
-				filtered_polygon$source_index,
-				n_polygon_before_filter
-			)
-			bottom = subset_render_arg_by_index(
-				bottom,
-				filtered_polygon$source_index,
-				n_polygon_before_filter
-			)
-		}
-		if (is_empty_scene_sf(polygon)) {
-			render_zaxis_from_dots(
-				zaxis_args = dot_split$zaxis_args,
-				extent = extent,
-				panel = panel,
-				zscale = zscale,
-				heightmap = heightmap,
-				caller = "render_beveled_polygons"
-			)
-			return(invisible(NULL))
-		}
-	}
-	e = get_extent(extent)
-	if (heights_relative_to_centroid) {
-		if (is.null(heightmap)) {
-			stop("Must pass in heightmap argument if using relative heights")
-		}
-		centroid_source_crs = NULL
-		polygon_for_centroids = polygon
-		centroid_transform_scene = !isTRUE(polygon_scene_transformed)
-		if (!isTRUE(polygon_scene_transformed)) {
-			scene_target_crs = get_scene_target_crs(
-				extent = extent,
-				heightmap = heightmap,
-				panel = panel,
-				caller = "render_beveled_polygons"
-			)
-			if (!is.null(scene_target_crs)) {
-				resolved_polygon = resolve_scene_sf_source_crs(
-					sf_data = polygon,
-					crs = crs,
-					target_crs = scene_target_crs,
-					caller = "render_beveled_polygons"
-				)
-				polygon_for_centroids = resolved_polygon$sf_data
-				centroid_source_crs = resolved_polygon$source_crs
-			}
-		}
-		centroids = sf::st_coordinates(sf::st_centroid(polygon_for_centroids))
-		xyz = transform_into_heightmap_coords(
-			e,
-			heightmap,
-			centroids[, 2],
-			centroids[, 1],
-			altitude = NULL,
-			offset = 0,
-			zscale = 1,
-			crs = centroid_source_crs,
-			panel = panel,
-			transform_scene = centroid_transform_scene,
-			caller = "render_beveled_polygons"
-		)
-		bottom = xyz[, 2] + bottom
-		bottom[is.na(bottom)] = min(xyz[, 2])
-	}
-	if (length(top) != 1) {
-		stopifnot(length(top) == nrow(polygon))
-	}
-	if (!is.null(data_column_top)) {
-		stopifnot(data_column_top %in% colnames(polygon))
-	}
-	if (length(bottom) != 1) {
-		stopifnot(length(bottom) == nrow(polygon))
-	}
-	if (!is.null(data_column_bottom)) {
-		stopifnot(data_column_bottom %in% colnames(polygon))
-	}
+  validate_filter_to_extent(
+    filter_to_extent,
+    caller = "render_beveled_polygons"
+  )
+  warn_scale_data_with_vertical_exaggeration(
+    scale_data_missing = missing(scale_data),
+    vertical_exaggeration_missing = missing(vertical_exaggeration),
+    caller = "render_beveled_polygons"
+  )
+  dot_split = split_zaxis_dots(list(...))
+  zscale = resolve_scene_render_effective_zscale(
+    zscale = zscale,
+    zscale_missing = missing(zscale),
+    vertical_exaggeration = vertical_exaggeration,
+    vertical_exaggeration_missing = missing(vertical_exaggeration),
+    caller = "render_beveled_polygons"
+  )
+  heightmap = resolve_scene_render_heightmap(
+    heightmap,
+    caller = "render_beveled_polygons"
+  )
+  top = bevel_height
+  bottom = base_height
+  if (rgl::cur3d() == 0) {
+    stop("No rgl window currently open.")
+  }
+  if (!(length(find.package("raybevel", quiet = TRUE)) > 0)) {
+    stop("raybevel required to use render_roofs()")
+  }
+  if (clear_previous) {
+    rgl::pop3d(tag = "obj_raymesh_beveled_polygon")
+    if (missing(polygon)) {
+      render_zaxis_from_dots(
+        zaxis_args = dot_split$zaxis_args,
+        extent = extent,
+        panel = panel,
+        zscale = zscale,
+        heightmap = heightmap,
+        caller = "render_beveled_polygons"
+      )
+      return(invisible())
+    }
+  }
+  if (is.character(material)) {
+    material = rayvertex::material_list(diffuse = material)
+  }
+  if (is.character(bevel_material)) {
+    bevel_material = rayvertex::material_list(diffuse = bevel_material)
+  }
+  extent = resolve_scene_render_extent(
+    extent = extent,
+    heightmap = heightmap,
+    caller = "render_beveled_polygons",
+    panel = panel
+  )
+  if (inherits(polygon, "Spatial")) {
+    polygon = sf::st_as_sf(polygon)
+  }
+  if (inherits(polygon, "sfc")) {
+    polygon = sf::st_sf(geometry = polygon)
+  }
+  if (inherits(polygon, "sfg")) {
+    polygon = sf::st_sf(geometry = sf::st_sfc(polygon))
+  }
+  polygon_scene_transformed = FALSE
+  if (inherits(polygon, "sf")) {
+    n_polygon_before_filter = nrow(polygon)
+    scene_polygon = auto_transform_scene_sf(
+      sf_object = polygon,
+      extent = extent,
+      heightmap = heightmap,
+      panel = panel,
+      crs = crs,
+      caller = "render_beveled_polygons"
+    )
+    polygon = scene_polygon$object
+    if (!is.null(scene_polygon$extent)) {
+      extent = scene_polygon$extent
+    }
+    polygon_scene_transformed = TRUE
+    filtered_polygon = filter_scene_sf_to_extent(
+      sf_object = polygon,
+      extent = extent,
+      heightmap = heightmap,
+      panel = panel,
+      filter_to_extent = filter_to_extent,
+      caller = "render_beveled_polygons"
+    )
+    polygon = filtered_polygon$object
+    if (!is.null(filtered_polygon$source_index)) {
+      top = subset_render_arg_by_index(
+        top,
+        filtered_polygon$source_index,
+        n_polygon_before_filter
+      )
+      bottom = subset_render_arg_by_index(
+        bottom,
+        filtered_polygon$source_index,
+        n_polygon_before_filter
+      )
+    }
+    if (is_empty_scene_sf(polygon)) {
+      render_zaxis_from_dots(
+        zaxis_args = dot_split$zaxis_args,
+        extent = extent,
+        panel = panel,
+        zscale = zscale,
+        heightmap = heightmap,
+        caller = "render_beveled_polygons"
+      )
+      return(invisible(NULL))
+    }
+  }
+  e = get_extent(extent)
+  if (heights_relative_to_centroid) {
+    if (is.null(heightmap)) {
+      stop("Must pass in heightmap argument if using relative heights")
+    }
+    centroid_source_crs = NULL
+    polygon_for_centroids = polygon
+    centroid_transform_scene = !isTRUE(polygon_scene_transformed)
+    if (!isTRUE(polygon_scene_transformed)) {
+      scene_target_crs = get_scene_target_crs(
+        extent = extent,
+        heightmap = heightmap,
+        panel = panel,
+        caller = "render_beveled_polygons"
+      )
+      if (!is.null(scene_target_crs)) {
+        resolved_polygon = resolve_scene_sf_source_crs(
+          sf_data = polygon,
+          crs = crs,
+          target_crs = scene_target_crs,
+          caller = "render_beveled_polygons"
+        )
+        polygon_for_centroids = resolved_polygon$sf_data
+        centroid_source_crs = resolved_polygon$source_crs
+      }
+    }
+    centroids = sf::st_coordinates(sf::st_centroid(polygon_for_centroids))
+    xyz = transform_into_heightmap_coords(
+      e,
+      heightmap,
+      centroids[, 2],
+      centroids[, 1],
+      altitude = NULL,
+      offset = 0,
+      zscale = 1,
+      crs = centroid_source_crs,
+      panel = panel,
+      transform_scene = centroid_transform_scene,
+      caller = "render_beveled_polygons"
+    )
+    bottom = xyz[, 2] + bottom
+    bottom[is.na(bottom)] = min(xyz[, 2])
+  }
+  if (length(top) != 1) {
+    stopifnot(length(top) == nrow(polygon))
+  }
+  if (!is.null(data_column_top)) {
+    stopifnot(data_column_top %in% colnames(polygon))
+  }
+  if (length(bottom) != 1) {
+    stopifnot(length(bottom) == nrow(polygon))
+  }
+  if (!is.null(data_column_bottom)) {
+    stopifnot(data_column_bottom %in% colnames(polygon))
+  }
 
-	top_values = get_polygon_data_value(
-		polygon,
-		data_column_name = data_column_top,
-		scale_data = scale_data,
-		default_value = top
-	)
+  top_values = get_polygon_data_value(
+    polygon,
+    data_column_name = data_column_top,
+    scale_data = scale_data,
+    default_value = top
+  )
 
-	bottom_values = get_polygon_data_value(
-		polygon,
-		data_column_name = data_column_bottom,
-		scale_data = scale_data,
-		default_value = bottom
-	)
+  bottom_values = get_polygon_data_value(
+    polygon,
+    data_column_name = data_column_bottom,
+    scale_data = scale_data,
+    default_value = bottom
+  )
 
-	cache_polygon_zaxis_data(
-		polygon = polygon,
-		top = top,
-		bottom = bottom,
-		data_column_top = data_column_top,
-		data_column_bottom = data_column_bottom,
-		scale_data = scale_data
-	)
+  cache_polygon_zaxis_data(
+    polygon = polygon,
+    top = top,
+    bottom = bottom,
+    data_column_top = data_column_top,
+    data_column_bottom = data_column_bottom,
+    scale_data = scale_data
+  )
 
-	polygon = transform_polygon_into_raycoords(
-		polygon,
-		heightmap = heightmap,
-		e = e,
-		top = top_values,
-		bottom = bottom_values,
-		panel = panel,
-		crs = crs,
-		caller = "render_beveled_polygons",
-		transform_scene = !isTRUE(polygon_scene_transformed)
-	)
-	top = polygon$top / zscale
-	bottom = polygon$bottom / zscale
-	skeletons = raybevel::skeletonize(polygon)
-	idx_sans_missing_geometry = get_skeleton_source_indices(skeletons)
-	if (!length(idx_sans_missing_geometry)) {
-		idx_sans_missing_geometry = seq_len(length(top))
-	}
-	top = top[idx_sans_missing_geometry]
-	bottom = bottom[idx_sans_missing_geometry]
+  polygon = transform_polygon_into_raycoords(
+    polygon,
+    heightmap = heightmap,
+    e = e,
+    top = top_values,
+    bottom = bottom_values,
+    panel = panel,
+    crs = crs,
+    caller = "render_beveled_polygons",
+    transform_scene = !isTRUE(polygon_scene_transformed)
+  )
+  top = polygon$top / zscale
+  bottom = polygon$bottom / zscale
+  skeletons = raybevel::skeletonize(polygon)
+  idx_sans_missing_geometry = get_skeleton_source_indices(skeletons)
+  if (!length(idx_sans_missing_geometry)) {
+    idx_sans_missing_geometry = seq_len(length(top))
+  }
+  top = top[idx_sans_missing_geometry]
+  bottom = bottom[idx_sans_missing_geometry]
 
-	if (!is.list(bevel)) {
-		stopifnot(angle > 0 && angle < 90)
-		angle_slope = tanpi(angle / 180)
-		# Setting width_raw_units to TRUE makes it easier to generate visually nice bevels but
-		# don't necessarily corrspond to any meaningful real world distance
-		if (!width_raw_units) {
-			bevel_width = bevel_width / zscale
-		}
-		max_height = bevel_width * angle_slope
-		bevel = list(x = c(0, bevel_width), y = c(0, max_height))
-		raw_heights = TRUE
-		raw_offsets = TRUE
-	} else {
-		max_height = max_height / zscale
-	}
+  if (!is.list(bevel)) {
+    stopifnot(angle > 0 && angle < 90)
+    angle_slope = tanpi(angle / 180)
+    # Setting width_raw_units to TRUE makes it easier to generate visually nice bevels but
+    # don't necessarily corrspond to any meaningful real world distance
+    if (!width_raw_units) {
+      bevel_width = bevel_width / zscale
+    }
+    max_height = bevel_width * angle_slope
+    bevel = list(x = c(0, bevel_width), y = c(0, max_height))
+    raw_heights = TRUE
+    raw_offsets = TRUE
+  } else {
+    max_height = max_height / zscale
+  }
 
-	if (!heights_relative_to_centroid) {
-		poly_mesh = tryCatch(
-			raybevel::generate_beveled_polygon(
-				skeletons,
-				bevel_offsets = bevel,
-				vertical_offset = top,
-				raw_heights = raw_heights,
-				raw_offsets = raw_offsets,
-				base_height = 0,
-				set_max_height = set_max_height,
-				max_height = max_height,
-				material = material,
-				bevel_material = bevel_material,
-				scale_all_max = scale_all_max,
-				sides = TRUE,
-				base = TRUE
-			),
-			error = function(e) {
-				stop(format_raybevel_error(e, "render_beveled_polygons"), call. = FALSE)
-			}
-		)
-	} else {
-		poly_mesh = tryCatch(
-			raybevel::generate_beveled_polygon(
-				skeletons,
-				bevel_offsets = bevel,
-				vertical_offset = top,
-				raw_heights = raw_heights,
-				raw_offsets = raw_offsets,
-				base_height = bottom,
-				set_max_height = set_max_height,
-				max_height = max_height,
-				material = material,
-				bevel_material = bevel_material,
-				scale_all_max = scale_all_max,
-				sides = TRUE,
-				base = TRUE
-			),
-			error = function(e) {
-				stop(format_raybevel_error(e, "render_beveled_polygons"), call. = FALSE)
-			}
-		)
-	}
+  if (!heights_relative_to_centroid) {
+    poly_mesh = tryCatch(
+      raybevel::generate_beveled_polygon(
+        skeletons,
+        bevel_offsets = bevel,
+        vertical_offset = top,
+        raw_heights = raw_heights,
+        raw_offsets = raw_offsets,
+        base_height = 0,
+        set_max_height = set_max_height,
+        max_height = max_height,
+        material = material,
+        bevel_material = bevel_material,
+        scale_all_max = scale_all_max,
+        sides = TRUE,
+        base = TRUE
+      ),
+      error = function(e) {
+        stop(format_raybevel_error(e, "render_beveled_polygons"), call. = FALSE)
+      }
+    )
+  } else {
+    poly_mesh = tryCatch(
+      raybevel::generate_beveled_polygon(
+        skeletons,
+        bevel_offsets = bevel,
+        vertical_offset = top,
+        raw_heights = raw_heights,
+        raw_offsets = raw_offsets,
+        base_height = bottom,
+        set_max_height = set_max_height,
+        max_height = max_height,
+        material = material,
+        bevel_material = bevel_material,
+        scale_all_max = scale_all_max,
+        sides = TRUE,
+        base = TRUE
+      ),
+      error = function(e) {
+        stop(format_raybevel_error(e, "render_beveled_polygons"), call. = FALSE)
+      }
+    )
+  }
 
-	render_raymesh(
-		poly_mesh,
-		extent = extent,
-		panel = panel,
-		xyz = matrix(c(0, 0, 0), ncol = 3),
-		zscale = zscale,
-		vertical_exaggeration = 1,
-		heightmap = heightmap,
-		flat_shading = flat_shading,
-		change_material = FALSE,
-		lit = lit,
-		light_altitude = light_altitude,
-		light_direction = light_direction,
-		light_intensity = light_intensity,
-		light_relative = light_relative,
-		rgl_tag = "_beveled_polygon",
-		crs = crs,
-		...
-	)
+  render_raymesh(
+    poly_mesh,
+    extent = extent,
+    panel = panel,
+    xyz = matrix(c(0, 0, 0), ncol = 3),
+    zscale = zscale,
+    vertical_exaggeration = 1,
+    heightmap = heightmap,
+    flat_shading = flat_shading,
+    change_material = FALSE,
+    lit = lit,
+    light_altitude = light_altitude,
+    light_direction = light_direction,
+    light_intensity = light_intensity,
+    light_relative = light_relative,
+    rgl_tag = "_beveled_polygon",
+    crs = crs,
+    ...
+  )
 }

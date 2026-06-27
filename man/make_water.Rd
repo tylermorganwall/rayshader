@@ -11,6 +11,7 @@ make_water(
   zscale = 1,
   wateralpha = 0.5,
   water_render_method = c("contour", "legacy"),
+  water_edge_extension = 0.5,
   heightmap_extent = NULL,
   heightmap_crs = NULL
 )
@@ -28,6 +29,8 @@ of 1 meter and the grid values are separated by 10 meters, \code{zscale} would b
 \item{wateralpha}{Default \code{0.5}. Water transparency.}
 
 \item{water_render_method}{Default \code{"contour"}. Water meshing method. \code{"contour"} clips the water mesh to the flooded region; \code{"legacy"} uses the previous box/grid renderer.}
+
+\item{water_edge_extension}{Default \code{0.5}. For spatial \code{waterheight} inputs, amount in grid cells to expand finite water cells at boundary edges, up to a maximum of half a cell.}
 
 \item{heightmap_extent}{Default \code{NULL}. Active scene extent for spatial \code{waterheight} inputs.}
 
