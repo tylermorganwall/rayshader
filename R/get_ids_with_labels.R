@@ -27,6 +27,7 @@ get_ids_with_labels = function(typeval = NULL) {
     "surface_tris",
     "path3d",
     "contour3d",
+    "water_path",
     "points3d",
     "polygon3d",
     "floating_overlay",
@@ -102,7 +103,14 @@ get_ids_with_labels = function(typeval = NULL) {
       }
       if (
         material_type[i] %in%
-          c("lines", "path3d", "contour3d", "zaxis_ticks", "zaxis_axis")
+          c(
+            "lines",
+            "path3d",
+            "contour3d",
+            "water_path",
+            "zaxis_ticks",
+            "zaxis_axis"
+          )
       ) {
         material_properties[[i]]$line_color = material_type_single$color
       }

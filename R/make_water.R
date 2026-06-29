@@ -707,16 +707,41 @@ subtract_spatial_water_coverage = function(edge_range, coverage) {
   uncovered
 }
 
+#' Convert spatial water scene coordinates to heightmap row/column coordinates
+#'
+#' @param heightmap Heightmap matrix.
+#' @param x X scene coordinate.
+#' @param z Z scene coordinate.
+#' @param clamp Default `TRUE`. Whether to clamp coordinates to the heightmap.
+#'
+#' @return List with `row` and `col` coordinates.
+#' @keywords internal
+spatial_water_row_col = function(heightmap, x, z, clamp = TRUE) {
+  nr = nrow(heightmap)
+  nc = ncol(heightmap)
+  row = x + (nr - 1) / 2 + 1
+  col = z + (nc - 1) / 2 + 1
+  if (isTRUE(clamp)) {
+    row = pmin(pmax(row, 1), nr)
+    col = pmin(pmax(col, 1), nc)
+  }
+  list(row = row, col = col)
+}
+
 #'@keywords internal
 interpolate_spatial_water_height = function(heightmap, x, z) {
   nr = nrow(heightmap)
   nc = ncol(heightmap)
-  row = pmin(pmax(x + (nr - 1) / 2 + 1, 1), nr)
-  col = pmin(pmax(z + (nc - 1) / 2 + 1, 1), nc)
-  row0 = floor(row)
-  row1 = ceiling(row)
-  col0 = floor(col)
-  col1 = ceiling(col)
+  if (nr < 2 || nc < 2) {
+    return(rep(heightmap[1, 1], length(x)))
+  }
+  row_col = spatial_water_row_col(heightmap, x, z)
+  row = row_col$row
+  col = row_col$col
+  row0 = pmin(pmax(floor(row), 1), nr - 1)
+  row1 = row0 + 1L
+  col0 = pmin(pmax(floor(col), 1), nc - 1)
+  col1 = col0 + 1L
   row_weight = row - row0
   col_weight = col - col0
 
@@ -724,13 +749,18 @@ interpolate_spatial_water_height = function(heightmap, x, z) {
   height10 = heightmap[cbind(row1, col0)]
   height01 = heightmap[cbind(row0, col1)]
   height11 = heightmap[cbind(row1, col1)]
-  interpolated =
-    (1 - row_weight) *
-    (1 - col_weight) *
-    height00 +
-    row_weight * (1 - col_weight) * height10 +
-    (1 - row_weight) * col_weight * height01 +
-    row_weight * col_weight * height11
+  top_triangle = row_weight + col_weight <= 1
+  interpolated = numeric(length(row))
+  interpolated[top_triangle] = height00[top_triangle] +
+    row_weight[top_triangle] *
+      (height10[top_triangle] - height00[top_triangle]) +
+    col_weight[top_triangle] *
+      (height01[top_triangle] - height00[top_triangle])
+  interpolated[!top_triangle] = height11[!top_triangle] +
+    (1 - col_weight[!top_triangle]) *
+      (height10[!top_triangle] - height11[!top_triangle]) +
+    (1 - row_weight[!top_triangle]) *
+      (height01[!top_triangle] - height11[!top_triangle])
 
   nearest_row = as.integer(round(row))
   nearest_col = as.integer(round(col))

@@ -1230,30 +1230,42 @@ render_highquality = function(
     }
   }
   pathinfo = get_ids_with_labels(
-    typeval = c("path3d", "contour3d", "zaxis_axis", "zaxis_ticks")
+    typeval = c(
+      "path3d",
+      "contour3d",
+      "water_path",
+      "zaxis_axis",
+      "zaxis_ticks"
+    )
   )
   pathids = pathinfo$id
   pathline = list()
   pathline_screen = list()
   counter = 1
   screen_counter = 1
+  water_path_surface = resolve_render_highquality_water_path_surface()
+  water_path_tasks = list()
   for (i in seq_len(length(pathids))) {
     temp_verts = rgl.attrib(pathids[i], "vertices")
-    temp_verts_split = split(
-      as.data.frame(temp_verts),
-      cumsum(apply(temp_verts, 1, \(x) any(is.na(x))))
-    )
-    for (j in seq_along(temp_verts_split)[-1]) {
-      temp_verts_split[[j]] = temp_verts_split[[j]][-1, ]
-    }
+    temp_verts_split = split_render_highquality_path_vertices(temp_verts)
     temp_color = rgl.attrib(pathids[i], "colors")
-    temp_lwd = material3d("lwd", id = pathids[i]) * line_radius
+    temp_lwd_raw = material3d("lwd", id = pathids[i])
+    temp_lwd = temp_lwd_raw * line_radius
+    is_water_path = identical(pathinfo$tag[i], "water_path")
     use_screen_line = should_render_highquality_screen_line(
       line_render = line_render,
       tag = pathinfo$tag[i]
     )
     for (j in seq_along(temp_verts_split)) {
       temp_verts_single = as.matrix(temp_verts_split[[j]])
+      if (is_water_path) {
+        temp_verts_single = collapse_render_highquality_path_vertices(
+          temp_verts_single
+        )
+      }
+      if (nrow(temp_verts_single) < 2) {
+        next
+      }
       if (nrow(temp_color) == 1) {
         temp_color = matrix(
           temp_color[1:3],
@@ -1324,10 +1336,31 @@ render_highquality = function(
         color = temp_color_single[1:3]
       )
       if (is.null(temp_material)) {
-        temp_material = rayrender::diffuse(color = temp_color_single[1:3])
+        if (is_water_path) {
+          temp_material = make_render_highquality_water_path_material(
+            color = temp_color_single[1:3],
+            water_material = water_material,
+            water_roughness = water_roughness,
+            water_ior = water_ior,
+            water_attenuation = water_attenuation,
+            water_surface_color = water_surface_color
+          )
+        } else {
+          temp_material = rayrender::diffuse(color = temp_color_single[1:3])
+        }
       }
 
-      if (use_extruded_paths) {
+      if (is_water_path) {
+        water_path_tasks[[length(water_path_tasks) + 1L]] = list(
+          points = temp_verts_single,
+          bbox_center = bbox_center,
+          width = temp_lwd_raw,
+          heightmap = water_path_surface$heightmap,
+          zscale = water_path_surface$zscale,
+          material = temp_material
+        )
+        next
+      } else if (use_extruded_paths) {
         pathline[[counter]] = rayrender::extruded_path(
           points = temp_verts_single - matrix_center,
           width = temp_lwd * 2,
@@ -1345,6 +1378,12 @@ render_highquality = function(
       }
       counter = counter + 1
     }
+  }
+  water_path_meshes = make_render_highquality_water_path_meshes(
+    water_path_tasks
+  )
+  if (length(water_path_meshes) > 0) {
+    pathline = c(pathline, water_path_meshes)
   }
   pointinfo = get_ids_with_labels(typeval = "points3d")
   pointids = pointinfo$id
@@ -2424,10 +2463,13 @@ has_render_highquality_dielectric_path_override = function(
 }
 
 is_render_highquality_path_tag = function(tag) {
-  tag %in% c("path3d", "contour3d", "zaxis_axis", "zaxis_ticks")
+  tag %in% c("path3d", "contour3d", "water_path", "zaxis_axis", "zaxis_ticks")
 }
 
 should_render_highquality_screen_line = function(line_render, tag) {
+  if (identical(tag, "water_path")) {
+    return(FALSE)
+  }
   if (identical(line_render, "screen")) {
     return(TRUE)
   }
@@ -2435,6 +2477,649 @@ should_render_highquality_screen_line = function(line_render, tag) {
     return(FALSE)
   }
   tag %in% c("textline", "zaxis_axis", "zaxis_ticks")
+}
+
+#' Split render_highquality path vertices
+#'
+#' @param vertices Path vertex matrix, optionally separated by `NA` rows.
+#'
+#' @return List of path vertex matrices.
+#' @keywords internal
+split_render_highquality_path_vertices = function(vertices) {
+  vertices = as.matrix(vertices)
+  if (nrow(vertices) == 0) {
+    return(list())
+  }
+  na_rows = rowSums(is.na(vertices)) > 0
+  groups = cumsum(na_rows)
+  vertex_indices = split(seq_len(nrow(vertices)), groups)
+  out = vector("list", length(vertex_indices))
+  for (index in seq_along(vertex_indices)) {
+    path_vertices = vertices[vertex_indices[[index]], , drop = FALSE]
+    if (index > 1L && nrow(path_vertices) > 0) {
+      path_vertices = path_vertices[-1L, , drop = FALSE]
+    }
+    out[[index]] = path_vertices
+  }
+  out[vapply(out, nrow, integer(1)) > 0L]
+}
+
+#' Collapse duplicated path vertices
+#'
+#' @param vertices Path vertex matrix.
+#'
+#' @return Path vertex matrix with consecutive duplicated vertices removed.
+#' @keywords internal
+collapse_render_highquality_path_vertices = function(vertices) {
+  vertices = as.matrix(vertices)
+  if (nrow(vertices) < 2) {
+    return(vertices)
+  }
+  finite_rows = stats::complete.cases(vertices)
+  vertices = vertices[finite_rows, , drop = FALSE]
+  if (nrow(vertices) < 2) {
+    return(vertices)
+  }
+  step_distance = sqrt(rowSums(
+    (vertices[-1, , drop = FALSE] -
+      vertices[-nrow(vertices), , drop = FALSE])^2
+  ))
+  keep = c(TRUE, step_distance > sqrt(.Machine$double.eps))
+  vertices[keep, , drop = FALSE]
+}
+
+#' Make water path extrusion profile
+#'
+#' @return Two-column matrix defining a shallow rectangular extrusion profile.
+#' @keywords internal
+make_render_highquality_water_path_polygon = function() {
+  height_ratio = waterpath_profile_height_ratio()
+  matrix(
+    c(
+      -0.5,
+      -height_ratio / 2,
+      0.5,
+      -height_ratio / 2,
+      0.5,
+      height_ratio / 2,
+      -0.5,
+      height_ratio / 2
+    ),
+    ncol = 2,
+    byrow = TRUE
+  )
+}
+
+#' Resolve render_highquality water path surface
+#'
+#' @return List containing the cached heightmap in scene units and effective zscale.
+#' @keywords internal
+resolve_render_highquality_water_path_surface = function() {
+  heightmap = tryCatch(
+    resolve_scene_render_heightmap(caller = "render_highquality"),
+    error = function(e) NULL
+  )
+  if (!is.matrix(heightmap)) {
+    heightmap = NULL
+  }
+  zscale = tryCatch(
+    resolve_render_highquality_camera_zscale(),
+    error = function(e) 1
+  )
+  scale_render_highquality_water_path_heightmap(
+    heightmap = heightmap,
+    zscale = zscale
+  )
+}
+
+#' Scale water path heightmap to scene units
+#'
+#' @param heightmap Default `NULL`. Cached heightmap matrix.
+#' @param zscale Effective zscale.
+#'
+#' @return List containing heightmap in scene units and zscale.
+#' @keywords internal
+scale_render_highquality_water_path_heightmap = function(
+  heightmap = NULL,
+  zscale = 1
+) {
+  zscale = suppressWarnings(as.numeric(zscale[1]))
+  if (!is.finite(zscale) || zscale <= 0) {
+    zscale = 1
+  }
+  if (is.null(heightmap) || !is.matrix(heightmap)) {
+    return(list(heightmap = NULL, zscale = zscale))
+  }
+  if (abs(zscale - 1) <= sqrt(.Machine$double.eps)) {
+    return(list(heightmap = heightmap, zscale = 1))
+  }
+  list(heightmap = heightmap / zscale, zscale = 1)
+}
+
+#' Make render_highquality water path meshes
+#'
+#' @param tasks Water path mesh task list.
+#'
+#' @return List of rayrender mesh objects.
+#' @keywords internal
+make_render_highquality_water_path_meshes = function(tasks) {
+  if (!length(tasks)) {
+    return(list())
+  }
+  meshes = vector("list", length(tasks))
+  for (index in seq_along(tasks)) {
+    meshes[[index]] = do.call(
+      make_render_highquality_water_path_mesh,
+      tasks[[index]]
+    )
+  }
+  Filter(Negate(is.null), meshes)
+}
+
+#' Make water path edge centers
+#'
+#' @param points Path center points.
+#' @param side_vectors Unit side vectors.
+#' @param half_width Half stream width.
+#' @param heightmap Default `NULL`. Cached heightmap matrix.
+#' @param zscale Effective zscale.
+#'
+#' @return List with left and right edge center matrices.
+#' @keywords internal
+make_render_highquality_water_path_edge_centers = function(
+  points,
+  side_vectors,
+  half_width,
+  heightmap = NULL,
+  zscale = 1
+) {
+  left_center = points + side_vectors * half_width
+  right_center = points - side_vectors * half_width
+  heightmap_scene = scale_render_highquality_water_path_heightmap(
+    heightmap = heightmap,
+    zscale = zscale
+  )$heightmap
+  if (is.null(heightmap_scene) || !is.matrix(heightmap_scene)) {
+    return(list(left = left_center, right = right_center))
+  }
+  center_height = interpolate_spatial_water_height(
+    heightmap_scene,
+    points[, 1],
+    points[, 3]
+  )
+  center_offset = points[, 2] - center_height
+  left_center[, 2] = interpolate_spatial_water_height(
+    heightmap_scene,
+    left_center[, 1],
+    left_center[, 3]
+  ) +
+    center_offset
+  right_center[, 2] = interpolate_spatial_water_height(
+    heightmap_scene,
+    right_center[, 1],
+    right_center[, 3]
+  ) +
+    center_offset
+  list(left = left_center, right = right_center)
+}
+
+#' Densify render_highquality water path points at terrain triangle edges
+#'
+#' @param points Path center points in rgl scene coordinates.
+#' @param width Stream width.
+#' @param heightmap Default `NULL`. Cached heightmap matrix.
+#' @param zscale Effective zscale.
+#'
+#' @return Path center points with additional terrain triangle edge samples.
+#' @keywords internal
+densify_render_highquality_water_path_points = function(
+  points,
+  width,
+  heightmap = NULL,
+  zscale = 1
+) {
+  points = as.matrix(points)
+  if (nrow(points) < 2 || is.null(heightmap) || !is.matrix(heightmap)) {
+    return(points)
+  }
+  heightmap_scene = scale_render_highquality_water_path_heightmap(
+    heightmap = heightmap,
+    zscale = zscale
+  )$heightmap
+  if (is.null(heightmap_scene) || !is.matrix(heightmap_scene)) {
+    return(points)
+  }
+  center_height = interpolate_spatial_water_height(
+    heightmap_scene,
+    points[, 1],
+    points[, 3]
+  )
+  center_offset = points[, 2] - center_height
+  normals = interpolate_render_highquality_water_path_normals(
+    points = points,
+    heightmap = heightmap_scene,
+    zscale = 1
+  )
+  tangents = calculate_render_highquality_water_path_tangents(
+    points = points,
+    normals = normals
+  )
+  side_vectors = normalize_render_highquality_rows(row_cross(tangents, normals))
+  side_vectors = replace_invalid_render_highquality_vectors(
+    side_vectors,
+    fallback = c(0, 0, 1)
+  )
+  edge_centers = make_render_highquality_water_path_edge_centers(
+    points = points,
+    side_vectors = side_vectors,
+    half_width = width / 2,
+    heightmap = heightmap_scene,
+    zscale = 1
+  )
+  segment_count = nrow(points) - 1L
+  segment_t_values = vector("list", segment_count)
+  point_counts = integer(segment_count)
+  for (index in seq_len(segment_count)) {
+    segment_t = unique_water_path_t(c(
+      calculate_water_path_triangle_boundary_t(
+        heightmap = heightmap_scene,
+        segment_start = points[index, c(1, 3)],
+        segment_end = points[index + 1L, c(1, 3)]
+      ),
+      calculate_water_path_triangle_boundary_t(
+        heightmap = heightmap_scene,
+        segment_start = edge_centers$left[index, c(1, 3)],
+        segment_end = edge_centers$left[index + 1L, c(1, 3)]
+      ),
+      calculate_water_path_triangle_boundary_t(
+        heightmap = heightmap_scene,
+        segment_start = edge_centers$right[index, c(1, 3)],
+        segment_end = edge_centers$right[index + 1L, c(1, 3)]
+      )
+    ))
+    if (index > 1L) {
+      segment_t = segment_t[-1L]
+    }
+    segment_t_values[[index]] = segment_t
+    point_counts[[index]] = length(segment_t)
+  }
+  x_vals = numeric(sum(point_counts))
+  z_vals = numeric(sum(point_counts))
+  offset_vals = numeric(sum(point_counts))
+  position = 1L
+  for (index in seq_len(segment_count)) {
+    segment_t = segment_t_values[[index]]
+    next_position = position + length(segment_t) - 1L
+    fill_indices = seq.int(position, next_position)
+    x_vals[fill_indices] = points[index, 1] +
+      (points[index + 1L, 1] - points[index, 1]) * segment_t
+    z_vals[fill_indices] = points[index, 3] +
+      (points[index + 1L, 3] - points[index, 3]) * segment_t
+    offset_vals[fill_indices] = center_offset[[index]] +
+      (center_offset[[index + 1L]] - center_offset[[index]]) * segment_t
+    position = next_position + 1L
+  }
+  y_vals = interpolate_spatial_water_height(heightmap_scene, x_vals, z_vals)
+  cbind(x_vals, y_vals + offset_vals, z_vals)
+}
+
+#' Make render_highquality water path mesh
+#'
+#' @param points Path points in rgl scene coordinates.
+#' @param bbox_center Scene bounding box center.
+#' @param width Stream width.
+#' @param heightmap Default `NULL`. Cached heightmap matrix.
+#' @param zscale Effective zscale.
+#' @param material Rayrender material.
+#' @param segment_start Default `1`. First segment index to emit.
+#' @param segment_end Default `NULL`. Last segment index to emit.
+#' @param cap_start Default `TRUE`. Whether to cap the first emitted segment.
+#' @param cap_end Default `TRUE`. Whether to cap the last emitted segment.
+#'
+#' @return Rayrender mesh object.
+#' @keywords internal
+make_render_highquality_water_path_mesh = function(
+  points,
+  bbox_center,
+  width,
+  heightmap = NULL,
+  zscale = 1,
+  material,
+  segment_start = 1L,
+  segment_end = NULL,
+  cap_start = TRUE,
+  cap_end = TRUE
+) {
+  points = as.matrix(points)
+  if (is.null(segment_end)) {
+    points = points[stats::complete.cases(points), , drop = FALSE]
+  } else if (any(!stats::complete.cases(points))) {
+    return(NULL)
+  }
+  if (nrow(points) < 2) {
+    return(NULL)
+  }
+  if (is.null(segment_end)) {
+    points = densify_render_highquality_water_path_points(
+      points = points,
+      width = width,
+      heightmap = heightmap,
+      zscale = zscale
+    )
+    if (nrow(points) < 2) {
+      return(NULL)
+    }
+  }
+  if (is.null(segment_end)) {
+    segment_end = nrow(points) - 1L
+  }
+  segment_start = suppressWarnings(as.integer(segment_start[1]))
+  segment_end = suppressWarnings(as.integer(segment_end[1]))
+  if (
+    !is.finite(segment_start) ||
+      !is.finite(segment_end) ||
+      segment_start < 1L ||
+      segment_end < segment_start
+  ) {
+    return(NULL)
+  }
+  segment_end = min(segment_end, nrow(points) - 1L)
+  if (segment_end < segment_start) {
+    return(NULL)
+  }
+  height_ratio = diff(range(make_render_highquality_water_path_polygon()[, 2]))
+  half_width = width / 2
+  half_thickness = width * height_ratio / 2
+  normals = interpolate_render_highquality_water_path_normals(
+    points = points,
+    heightmap = heightmap,
+    zscale = zscale
+  )
+  tangents = calculate_render_highquality_water_path_tangents(
+    points = points,
+    normals = normals
+  )
+  side_vectors = normalize_render_highquality_rows(row_cross(tangents, normals))
+  side_vectors = replace_invalid_render_highquality_vectors(
+    side_vectors,
+    fallback = c(0, 0, 1)
+  )
+
+  edge_centers = make_render_highquality_water_path_edge_centers(
+    points = points,
+    side_vectors = side_vectors,
+    half_width = half_width,
+    heightmap = heightmap,
+    zscale = zscale
+  )
+  left_center = edge_centers$left
+  right_center = edge_centers$right
+  left_normals = interpolate_render_highquality_water_path_normals(
+    points = left_center,
+    heightmap = heightmap,
+    zscale = zscale
+  )
+  right_normals = interpolate_render_highquality_water_path_normals(
+    points = right_center,
+    heightmap = heightmap,
+    zscale = zscale
+  )
+
+  left_top = left_center + left_normals * half_thickness
+  right_top = right_center + right_normals * half_thickness
+  left_bottom = left_center - left_normals * half_thickness
+  right_bottom = right_center - right_normals * half_thickness
+
+  segment_indices = seq.int(segment_start, segment_end)
+  next_indices = segment_indices + 1L
+  vertices = rbind(
+    make_render_highquality_water_path_quad_rows(
+      left_top[segment_indices, , drop = FALSE],
+      left_top[next_indices, , drop = FALSE],
+      right_top[next_indices, , drop = FALSE],
+      right_top[segment_indices, , drop = FALSE]
+    ),
+    make_render_highquality_water_path_quad_rows(
+      left_bottom[segment_indices, , drop = FALSE],
+      right_bottom[segment_indices, , drop = FALSE],
+      right_bottom[next_indices, , drop = FALSE],
+      left_bottom[next_indices, , drop = FALSE]
+    ),
+    make_render_highquality_water_path_quad_rows(
+      left_bottom[segment_indices, , drop = FALSE],
+      left_bottom[next_indices, , drop = FALSE],
+      left_top[next_indices, , drop = FALSE],
+      left_top[segment_indices, , drop = FALSE]
+    ),
+    make_render_highquality_water_path_quad_rows(
+      right_bottom[segment_indices, , drop = FALSE],
+      right_top[segment_indices, , drop = FALSE],
+      right_top[next_indices, , drop = FALSE],
+      right_bottom[next_indices, , drop = FALSE]
+    )
+  )
+  vertex_normals = rbind(
+    make_render_highquality_water_path_quad_rows(
+      left_normals[segment_indices, , drop = FALSE],
+      left_normals[next_indices, , drop = FALSE],
+      right_normals[next_indices, , drop = FALSE],
+      right_normals[segment_indices, , drop = FALSE]
+    ),
+    make_render_highquality_water_path_quad_rows(
+      -left_normals[segment_indices, , drop = FALSE],
+      -right_normals[segment_indices, , drop = FALSE],
+      -right_normals[next_indices, , drop = FALSE],
+      -left_normals[next_indices, , drop = FALSE]
+    ),
+    make_render_highquality_water_path_quad_rows(
+      side_vectors[segment_indices, , drop = FALSE],
+      side_vectors[next_indices, , drop = FALSE],
+      side_vectors[next_indices, , drop = FALSE],
+      side_vectors[segment_indices, , drop = FALSE]
+    ),
+    make_render_highquality_water_path_quad_rows(
+      -side_vectors[segment_indices, , drop = FALSE],
+      -side_vectors[segment_indices, , drop = FALSE],
+      -side_vectors[next_indices, , drop = FALSE],
+      -side_vectors[next_indices, , drop = FALSE]
+    )
+  )
+  if (isTRUE(cap_start)) {
+    vertices = rbind(
+      vertices,
+      make_render_highquality_water_path_quad_rows(
+        matrix(left_bottom[segment_start, ], nrow = 1L),
+        matrix(left_top[segment_start, ], nrow = 1L),
+        matrix(right_top[segment_start, ], nrow = 1L),
+        matrix(right_bottom[segment_start, ], nrow = 1L)
+      )
+    )
+    vertex_normals = rbind(
+      vertex_normals,
+      make_render_highquality_water_path_quad_rows(
+        matrix(-tangents[segment_start, ], nrow = 1L),
+        matrix(-tangents[segment_start, ], nrow = 1L),
+        matrix(-tangents[segment_start, ], nrow = 1L),
+        matrix(-tangents[segment_start, ], nrow = 1L)
+      )
+    )
+  }
+  if (isTRUE(cap_end)) {
+    end_index = segment_end + 1L
+    vertices = rbind(
+      vertices,
+      make_render_highquality_water_path_quad_rows(
+        matrix(left_bottom[end_index, ], nrow = 1L),
+        matrix(right_bottom[end_index, ], nrow = 1L),
+        matrix(right_top[end_index, ], nrow = 1L),
+        matrix(left_top[end_index, ], nrow = 1L)
+      )
+    )
+    vertex_normals = rbind(
+      vertex_normals,
+      make_render_highquality_water_path_quad_rows(
+        matrix(tangents[end_index, ], nrow = 1L),
+        matrix(tangents[end_index, ], nrow = 1L),
+        matrix(tangents[end_index, ], nrow = 1L),
+        matrix(tangents[end_index, ], nrow = 1L)
+      )
+    )
+  }
+
+  quad_starts = seq(1L, nrow(vertices), by = 4L)
+  indices = rbind(
+    cbind(quad_starts, quad_starts + 1L, quad_starts + 2L),
+    cbind(quad_starts, quad_starts + 2L, quad_starts + 3L)
+  )
+  vertices = sweep(vertices, 2, bbox_center, FUN = "-")
+  mesh = list(
+    vb = t(cbind(vertices, 1)),
+    it = t(indices),
+    normals = t(vertex_normals)
+  )
+  class(mesh) = "mesh3d"
+  rayrender::mesh3d_model(
+    mesh,
+    override_material = TRUE,
+    material = material
+  )
+}
+
+#' Make water path quad rows
+#'
+#' @param v1 First vertex.
+#' @param v2 Second vertex.
+#' @param v3 Third vertex.
+#' @param v4 Fourth vertex.
+#'
+#' @return Matrix of interleaved quad rows.
+#' @keywords internal
+make_render_highquality_water_path_quad_rows = function(
+  v1,
+  v2,
+  v3,
+  v4
+) {
+  out = matrix(NA_real_, nrow = nrow(v1) * 4L, ncol = ncol(v1))
+  out[seq(1L, nrow(out), by = 4L), ] = v1
+  out[seq(2L, nrow(out), by = 4L), ] = v2
+  out[seq(3L, nrow(out), by = 4L), ] = v3
+  out[seq(4L, nrow(out), by = 4L), ] = v4
+  out
+}
+
+#' Interpolate water path normals
+#'
+#' @param points Path points in rgl scene coordinates.
+#' @param heightmap Default `NULL`. Cached heightmap matrix.
+#' @param zscale Effective zscale.
+#'
+#' @return Matrix of normal vectors.
+#' @keywords internal
+interpolate_render_highquality_water_path_normals = function(
+  points,
+  heightmap = NULL,
+  zscale = 1
+) {
+  fallback = matrix(
+    c(0, 1, 0),
+    nrow = nrow(points),
+    ncol = 3,
+    byrow = TRUE
+  )
+  if (is.null(heightmap) || !is.matrix(heightmap)) {
+    return(fallback)
+  }
+  zscale = suppressWarnings(as.numeric(zscale[1]))
+  if (!is.finite(zscale) || zscale <= 0) {
+    zscale = 1
+  }
+  heightmap_scene = if (abs(zscale - 1) <= sqrt(.Machine$double.eps)) {
+    heightmap
+  } else {
+    heightmap / zscale
+  }
+  x = points[, 1]
+  z = points[, 3]
+  dx = (interpolate_spatial_water_height(heightmap_scene, x + 1, z) -
+    interpolate_spatial_water_height(heightmap_scene, x - 1, z)) /
+    2
+  dz = (interpolate_spatial_water_height(heightmap_scene, x, z + 1) -
+    interpolate_spatial_water_height(heightmap_scene, x, z - 1)) /
+    2
+  normals = cbind(-dx, 1, -dz)
+  normals = normalize_render_highquality_rows(normals)
+  replace_invalid_render_highquality_vectors(normals, fallback = c(0, 1, 0))
+}
+
+#' Calculate water path tangents
+#'
+#' @param points Path points.
+#' @param normals Path normals.
+#'
+#' @return Matrix of tangent vectors.
+#' @keywords internal
+calculate_render_highquality_water_path_tangents = function(points, normals) {
+  tangents = matrix(0, nrow = nrow(points), ncol = 3)
+  tangents[1L, ] = points[2L, ] - points[1L, ]
+  tangents[nrow(points), ] = points[nrow(points), ] -
+    points[nrow(points) - 1L, ]
+  if (nrow(points) > 2) {
+    for (index in seq(2L, nrow(points) - 1L)) {
+      tangents[index, ] = points[index + 1L, ] - points[index - 1L, ]
+    }
+  }
+  tangents = tangents - normals * rowSums(tangents * normals)
+  tangents = normalize_render_highquality_rows(tangents)
+  replace_invalid_render_highquality_vectors(tangents, fallback = c(1, 0, 0))
+}
+
+#' Normalize matrix rows
+#'
+#' @param values Numeric matrix.
+#'
+#' @return Matrix with unit-length rows.
+#' @keywords internal
+normalize_render_highquality_rows = function(values) {
+  values = as.matrix(values)
+  lengths = sqrt(rowSums(values^2))
+  values / lengths
+}
+
+#' Replace invalid vectors
+#'
+#' @param values Numeric matrix.
+#' @param fallback Fallback vector.
+#'
+#' @return Numeric matrix.
+#' @keywords internal
+replace_invalid_render_highquality_vectors = function(values, fallback) {
+  invalid = !stats::complete.cases(values) |
+    sqrt(rowSums(values^2)) < sqrt(.Machine$double.eps)
+  if (any(invalid)) {
+    values[invalid, ] = matrix(
+      fallback,
+      nrow = sum(invalid),
+      ncol = length(fallback),
+      byrow = TRUE
+    )
+  }
+  values
+}
+
+#' Calculate row-wise cross products
+#'
+#' @param x First matrix.
+#' @param y Second matrix.
+#'
+#' @return Matrix of row-wise cross products.
+#' @keywords internal
+row_cross = function(x, y) {
+  cbind(
+    x[, 2] * y[, 3] - x[, 3] * y[, 2],
+    x[, 3] * y[, 1] - x[, 1] * y[, 3],
+    x[, 1] * y[, 2] - x[, 2] * y[, 1]
+  )
 }
 
 transform_render_highquality_screen_points = function(points, bbox_center) {
@@ -2671,6 +3356,39 @@ make_render_highquality_water_microfacet_material = function(
     transmission = TRUE,
     eta = water_ior,
     kappa = water_attenuation
+  )
+}
+
+make_render_highquality_water_path_material = function(
+  color,
+  water_material,
+  water_roughness,
+  water_ior,
+  water_attenuation,
+  water_surface_color
+) {
+  if (is.null(color) || length(color) == 0) {
+    color = "white"
+  }
+  surface_color = if (water_surface_color) {
+    convert_color(color, as_hex = TRUE)
+  } else {
+    "white"
+  }
+  if (identical(water_material, "microfacet")) {
+    return(rayrender::microfacet(
+      color = surface_color,
+      roughness = water_roughness,
+      transmission = TRUE,
+      eta = water_ior,
+      kappa = water_attenuation
+    ))
+  }
+  attenuation = (1 - convert_color(color)) * water_attenuation
+  rayrender::dielectric(
+    color = surface_color,
+    refraction = water_ior,
+    attenuation = attenuation
   )
 }
 

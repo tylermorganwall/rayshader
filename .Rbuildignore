@@ -30,4 +30,7 @@
 ^.+\.png$
 ^.+\.obj$
 ^.+\.mtl$
-^Rplots\\.pdf$
+^Rplots[.]pdf$
+^[.]vscode$
+^air[.]toml$
+^dem_01[.]tif$

@@ -269,6 +269,452 @@ test_that("plot_3d and render_water accept spatial waterdepth rasters", {
   expect_gt(nrow(get_ids_with_labels(typeval = "water")), 0)
 })
 
+test_that("render_water draws spatial stream paths as water paths", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("terra")
+  skip_if_not_installed("rayrender")
+  skip_if_not_installed("rayvertex")
+  on.exit(rgl::close3d(), add = TRUE)
+  local_rgl_use_null()
+
+  height_raster = terra::rast(
+    nrows = 5,
+    ncols = 5,
+    xmin = 0,
+    xmax = 5,
+    ymin = 0,
+    ymax = 5,
+    crs = "EPSG:3857"
+  )
+  terra::values(height_raster) = 0
+  stream = sf::st_sf(
+    id = 1:2,
+    geometry = sf::st_sfc(
+      sf::st_geometrycollection(list(
+        sf::st_linestring(matrix(c(1, 1, 2, 2), ncol = 2, byrow = TRUE))
+      )),
+      sf::st_linestring(matrix(c(2, 2, 4, 4), ncol = 2, byrow = TRUE)),
+      crs = 3857
+    )
+  )
+  expect_s3_class(sf::st_geometry(stream), "sfc_GEOMETRY")
+
+  expect_no_condition(plot_3d_test(
+    constant_shade(height_raster),
+    height_raster,
+    solid = FALSE,
+    shadow = FALSE,
+    water = FALSE,
+    windowsize = c(200, 200)
+  ))
+  expect_no_condition(render_water(
+    heightmap = height_raster,
+    waterpaths = stream,
+    watercolor = "dodgerblue",
+    waterpath_width = 0.5,
+    waterpath_step = 0.25
+  ))
+
+  expect_equal(nrow(get_ids_with_labels(typeval = "water")), 0)
+  water_path_ids = get_ids_with_labels(typeval = "water_path")
+  expect_equal(nrow(water_path_ids), 1)
+
+  water_path_vertices = rgl::rgl.attrib(water_path_ids$id[[1]], "vertices")
+  expect_gt(nrow(water_path_vertices), 2)
+  segmented_vertices = matrix(
+    c(
+      0,
+      0,
+      0,
+      1,
+      0,
+      0,
+      1,
+      0,
+      0,
+      2,
+      0,
+      0,
+      2,
+      0,
+      0,
+      3,
+      0,
+      0
+    ),
+    ncol = 3,
+    byrow = TRUE
+  )
+  separated_vertices = rbind(
+    segmented_vertices[1:2, , drop = FALSE],
+    c(NA, NA, NA),
+    segmented_vertices[3:4, , drop = FALSE]
+  )
+  separated_vertices_split = split_render_highquality_path_vertices(
+    separated_vertices
+  )
+  expect_length(separated_vertices_split, 2)
+  expect_equal(separated_vertices_split[[1]], segmented_vertices[1:2, ])
+  expect_equal(separated_vertices_split[[2]], segmented_vertices[3:4, ])
+  expect_equal(
+    collapse_render_highquality_path_vertices(segmented_vertices),
+    matrix(
+      c(
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        2,
+        0,
+        0,
+        3,
+        0,
+        0
+      ),
+      ncol = 3,
+      byrow = TRUE
+    )
+  )
+  expect_equal(
+    make_render_highquality_water_path_polygon(),
+    matrix(
+      c(
+        -0.5,
+        -0.1,
+        0.5,
+        -0.1,
+        0.5,
+        0.1,
+        -0.5,
+        0.1
+      ),
+      ncol = 2,
+      byrow = TRUE
+    )
+  )
+  sparse_stream_coords = matrix(
+    c(
+      -2,
+      0,
+      0,
+      2,
+      0,
+      0
+    ),
+    ncol = 3,
+    byrow = TRUE
+  )
+  undensified_stream_coords = offset_water_path_coords(
+    list(sparse_stream_coords),
+    offset = 2
+  )[[1]]
+  densified_stream_coords = densify_water_path_coords(
+    coord_list = list(sparse_stream_coords),
+    heightmap = matrix(0, nrow = 5, ncol = 5),
+    zscale = 1,
+    offset = 2,
+    max_step = 1
+  )[[1]]
+  expect_equal(nrow(undensified_stream_coords), 2)
+  expect_equal(undensified_stream_coords[, 2], c(2, 2))
+  expect_gt(nrow(densified_stream_coords), nrow(sparse_stream_coords))
+  expect_equal(unique(densified_stream_coords[, 2]), 2)
+  expect_false(validate_waterpath_logical(FALSE, "waterpath_densify"))
+  expect_error(
+    validate_waterpath_logical(NA, "waterpath_densify"),
+    "`waterpath_densify` must be TRUE or FALSE.",
+    fixed = TRUE
+  )
+  water_path_mesh = make_render_highquality_water_path_mesh(
+    points = matrix(
+      c(
+        0,
+        0,
+        0,
+        1,
+        0,
+        0
+      ),
+      ncol = 3,
+      byrow = TRUE
+    ),
+    bbox_center = c(0, 0, 0),
+    width = 1,
+    heightmap = matrix(0, nrow = 3, ncol = 3),
+    zscale = 1,
+    material = rayrender::dielectric()
+  )
+  water_path_mesh_vertices =
+    water_path_mesh$shape_info[[1]]$mesh_info[[1]]$vertices
+  water_path_meshes = make_render_highquality_water_path_meshes(
+    list(
+      list(
+        points = matrix(
+          c(
+            0,
+            0,
+            0,
+            1,
+            0,
+            0
+          ),
+          ncol = 3,
+          byrow = TRUE
+        ),
+        bbox_center = c(0, 0, 0),
+        width = 1,
+        heightmap = matrix(0, nrow = 3, ncol = 3),
+        zscale = 1,
+        material = rayrender::dielectric()
+      ),
+      list(
+        points = matrix(c(0, 0, 0), ncol = 3),
+        bbox_center = c(0, 0, 0),
+        width = 1,
+        heightmap = matrix(0, nrow = 3, ncol = 3),
+        zscale = 1,
+        material = rayrender::dielectric()
+      )
+    )
+  )
+  expect_length(water_path_meshes, 1)
+  expect_equal(
+    range(water_path_mesh_vertices[, 2]),
+    c(-0.1, 0.1),
+    tolerance = 1e-8
+  )
+  expect_equal(
+    range(water_path_mesh_vertices[, 3]),
+    c(-0.5, 0.5),
+    tolerance = 1e-8
+  )
+  sloped_heightmap = matrix(
+    rep(seq_len(5), times = 5),
+    nrow = 5,
+    ncol = 5
+  )
+  scaled_water_path_heightmap =
+    scale_render_highquality_water_path_heightmap(
+      heightmap = sloped_heightmap,
+      zscale = 2
+    )
+  expect_equal(scaled_water_path_heightmap$heightmap, sloped_heightmap / 2)
+  expect_equal(scaled_water_path_heightmap$zscale, 1)
+  expect_equal(
+    scale_render_highquality_water_path_heightmap(
+      heightmap = sloped_heightmap,
+      zscale = 1
+    )$heightmap,
+    sloped_heightmap
+  )
+  expected_normal = c(-1, 1, 0) / sqrt(2)
+  expect_equal(
+    interpolate_render_highquality_water_path_normals(
+      points = matrix(c(0, 0, 0), ncol = 3),
+      heightmap = sloped_heightmap,
+      zscale = 1
+    )[1, ],
+    expected_normal,
+    tolerance = 1e-8
+  )
+  expect_equal(
+    interpolate_render_highquality_water_path_normals(
+      points = matrix(c(0, 0, 0), ncol = 3),
+      heightmap = sloped_heightmap,
+      zscale = 2
+    )[1, ],
+    interpolate_render_highquality_water_path_normals(
+      points = matrix(c(0, 0, 0), ncol = 3),
+      heightmap = scaled_water_path_heightmap$heightmap,
+      zscale = scaled_water_path_heightmap$zscale
+    )[1, ],
+    tolerance = 1e-8
+  )
+  z_sloped_heightmap = matrix(
+    rep(seq_len(5), each = 5),
+    nrow = 5,
+    ncol = 5
+  )
+  sloped_points = cbind(
+    c(0, 1),
+    interpolate_spatial_water_height(z_sloped_heightmap, c(0, 1), c(0, 0)),
+    c(0, 0)
+  )
+  sloped_normals = interpolate_render_highquality_water_path_normals(
+    points = sloped_points,
+    heightmap = z_sloped_heightmap,
+    zscale = 1
+  )
+  sloped_tangents = calculate_render_highquality_water_path_tangents(
+    points = sloped_points,
+    normals = sloped_normals
+  )
+  sloped_side_vectors = normalize_render_highquality_rows(row_cross(
+    sloped_tangents,
+    sloped_normals
+  ))
+  sloped_edge_centers = make_render_highquality_water_path_edge_centers(
+    points = sloped_points,
+    side_vectors = sloped_side_vectors,
+    half_width = 0.5,
+    heightmap = z_sloped_heightmap,
+    zscale = 1
+  )
+  expect_equal(
+    sloped_edge_centers$left[, 2],
+    interpolate_spatial_water_height(
+      z_sloped_heightmap,
+      sloped_edge_centers$left[, 1],
+      sloped_edge_centers$left[, 3]
+    ),
+    tolerance = 1e-8
+  )
+  expect_equal(
+    sloped_edge_centers$right[, 2],
+    interpolate_spatial_water_height(
+      z_sloped_heightmap,
+      sloped_edge_centers$right[, 1],
+      sloped_edge_centers$right[, 3]
+    ),
+    tolerance = 1e-8
+  )
+  highquality_densified_points = densify_render_highquality_water_path_points(
+    points = matrix(c(-1.25, 0, 0, 1.25, 0, 0), ncol = 3, byrow = TRUE),
+    width = 0.5,
+    heightmap = matrix(0, nrow = 5, ncol = 5),
+    zscale = 1
+  )
+  expect_true(all(
+    c(-1, 0, 1) %in%
+      round(
+        highquality_densified_points[, 1],
+        8
+      )
+  ))
+  expect_true(all(
+    abs(range(as.numeric(water_path_vertices[, 2]))) < 1e-8
+  ))
+  expect_equal(
+    resolve_waterpath_offset(NULL, waterpath_width = 0.5, zscale = 1),
+    0
+  )
+  expect_equal(
+    resolve_waterpath_offset(0, waterpath_width = 0.5, zscale = 1),
+    0
+  )
+  expect_equal(
+    rgl::material3d("lwd", id = water_path_ids$id[[1]]),
+    0.5
+  )
+
+  scene = render_highquality(
+    return_scene = TRUE,
+    light = FALSE,
+    water_ior = 1.25,
+    water_attenuation = 0.2
+  )
+  expect_false(any(vapply(
+    scene$material,
+    function(material) {
+      identical(material$image, NA_character_) ||
+        identical(material$bump_texture, NA_character_)
+    },
+    logical(1)
+  )))
+  expect_no_condition(rayrender:::process_scene(scene))
+  material_types = vapply(
+    scene$material,
+    function(material) {
+      material$type
+    },
+    integer(1)
+  )
+  expect_true(rayrender::dielectric()[[1]]$type %in% material_types)
+})
+
+test_that("water path densification samples terrain triangle boundaries", {
+  heightmap = matrix(0, nrow = 5, ncol = 5)
+
+  boundary_t = calculate_water_path_triangle_boundary_t(
+    heightmap = heightmap,
+    segment_start = c(-1.25, 0),
+    segment_end = c(1.25, 0)
+  )
+  expect_true(all(c(0.1, 0.5, 0.9) %in% round(boundary_t, 8)))
+
+  diagonal_t = calculate_water_path_triangle_boundary_t(
+    heightmap = heightmap,
+    segment_start = c(-0.9, -0.9),
+    segment_end = c(-0.6, -0.2)
+  )
+  expect_true(any(abs(diagonal_t - 0.8) < 1e-8))
+
+  densified = densify_single_water_path_coord(
+    coords = matrix(c(-1.25, 0, 0, 1.25, 0, 0), ncol = 3, byrow = TRUE),
+    heightmap = heightmap,
+    offset = 0,
+    max_step = 10
+  )
+  expect_true(all(c(-1, 0, 1) %in% round(densified[, 1], 8)))
+})
+
+test_that("spatial water height interpolation matches terrain triangles", {
+  saddle_heightmap = matrix(c(0, 0, 0, 10), nrow = 2, ncol = 2)
+
+  expect_equal(
+    interpolate_spatial_water_height(
+      saddle_heightmap,
+      x = -0.25,
+      z = -0.25
+    ),
+    0
+  )
+  expect_equal(
+    interpolate_spatial_water_height(
+      saddle_heightmap,
+      x = 0.25,
+      z = 0.25
+    ),
+    5
+  )
+})
+
+test_that("water path simplification defaults to DEM grid spacing", {
+  heightmap = matrix(0, nrow = 5, ncol = 10)
+  extent = c(xmin = 0, xmax = 50, ymin = 0, ymax = 200)
+
+  expect_equal(
+    calculate_heightmap_grid_spacing(heightmap, extent = extent),
+    15
+  )
+  expect_equal(
+    resolve_waterpath_simplify_tolerance(
+      NULL,
+      heightmap = heightmap,
+      extent = extent
+    ),
+    15
+  )
+  expect_equal(
+    resolve_waterpath_simplify_tolerance(
+      0,
+      heightmap = heightmap,
+      extent = extent
+    ),
+    0
+  )
+  expect_equal(
+    resolve_waterpath_simplify_tolerance(
+      2,
+      heightmap = heightmap,
+      extent = extent
+    ),
+    2
+  )
+})
+
 test_that("render_water resolves zscale from explicit spatial heightmaps", {
   skip_if_not_installed("terra")
 
