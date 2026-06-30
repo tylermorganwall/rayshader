@@ -269,7 +269,7 @@ test_that("plot_3d and render_water accept spatial waterdepth rasters", {
   expect_gt(nrow(get_ids_with_labels(typeval = "water")), 0)
 })
 
-test_that("render_water draws spatial stream paths as water paths", {
+test_that("render_streams draws spatial stream paths as water paths", {
   skip_if_not_installed("sf")
   skip_if_not_installed("terra")
   skip_if_not_installed("rayrender")
@@ -307,12 +307,11 @@ test_that("render_water draws spatial stream paths as water paths", {
     water = FALSE,
     windowsize = c(200, 200)
   ))
-  expect_no_condition(render_water(
+  expect_no_condition(render_streams(
+    stream,
     heightmap = height_raster,
-    waterpaths = stream,
     watercolor = "dodgerblue",
-    waterpath_width = 0.5,
-    waterpath_step = 0.25
+    width = 0.5
   ))
 
   expect_equal(nrow(get_ids_with_labels(typeval = "water")), 0)
@@ -414,8 +413,7 @@ test_that("render_water draws spatial stream paths as water paths", {
     coord_list = list(sparse_stream_coords),
     heightmap = matrix(0, nrow = 5, ncol = 5),
     zscale = 1,
-    offset = 2,
-    max_step = 1
+    offset = 2
   )[[1]]
   expect_equal(nrow(undensified_stream_coords), 2)
   expect_equal(undensified_stream_coords[, 2], c(2, 2))
@@ -597,11 +595,11 @@ test_that("render_water draws spatial stream paths as water paths", {
     abs(range(as.numeric(water_path_vertices[, 2]))) < 1e-8
   ))
   expect_equal(
-    resolve_waterpath_offset(NULL, waterpath_width = 0.5, zscale = 1),
+    resolve_waterpath_offset(NULL),
     0
   )
   expect_equal(
-    resolve_waterpath_offset(0, waterpath_width = 0.5, zscale = 1),
+    resolve_waterpath_offset(0),
     0
   )
   expect_equal(
@@ -654,8 +652,7 @@ test_that("water path densification samples terrain triangle boundaries", {
   densified = densify_single_water_path_coord(
     coords = matrix(c(-1.25, 0, 0, 1.25, 0, 0), ncol = 3, byrow = TRUE),
     heightmap = heightmap,
-    offset = 0,
-    max_step = 10
+    offset = 0
   )
   expect_true(all(c(-1, 0, 1) %in% round(densified[, 1], 8)))
 })
@@ -678,40 +675,6 @@ test_that("spatial water height interpolation matches terrain triangles", {
       z = 0.25
     ),
     5
-  )
-})
-
-test_that("water path simplification defaults to DEM grid spacing", {
-  heightmap = matrix(0, nrow = 5, ncol = 10)
-  extent = c(xmin = 0, xmax = 50, ymin = 0, ymax = 200)
-
-  expect_equal(
-    calculate_heightmap_grid_spacing(heightmap, extent = extent),
-    15
-  )
-  expect_equal(
-    resolve_waterpath_simplify_tolerance(
-      NULL,
-      heightmap = heightmap,
-      extent = extent
-    ),
-    15
-  )
-  expect_equal(
-    resolve_waterpath_simplify_tolerance(
-      0,
-      heightmap = heightmap,
-      extent = extent
-    ),
-    0
-  )
-  expect_equal(
-    resolve_waterpath_simplify_tolerance(
-      2,
-      heightmap = heightmap,
-      extent = extent
-    ),
-    2
   )
 })
 

@@ -16,15 +16,7 @@ render_water(
   linewidth = 2,
   water_render_method = c("contour", "legacy"),
   water_edge_extension = 0.5,
-  waterpaths = NULL,
-  waterpath_width = 1,
-  waterpath_step = 0.5,
-  waterpath_densify = TRUE,
-  waterpath_offset = NULL,
-  waterpath_simplify_tolerance = NULL,
-  waterpath_merge = TRUE,
-  waterpath_reorder = FALSE,
-  remove_water = TRUE
+  clear_previous = TRUE
 )
 }
 \arguments{
@@ -52,41 +44,7 @@ If \code{zscale} is omitted and \code{heightmap} is a spatial raster, rayshader 
 
 \item{water_edge_extension}{Default \code{0.5}. For spatial \code{waterdepth} inputs, amount in grid cells to expand finite water cells at boundary edges, up to a maximum of half a cell.}
 
-\item{waterpaths}{Default \code{NULL}. Spatial line data used to draw stream
-paths. Supports \code{sf}, \code{sfc}, \code{sfg}, \code{SpatialLines}, and
-\code{SpatialLinesDataFrame} line inputs.}
-
-\item{waterpath_width}{Default \code{1}. Stream width in scene grid-cell units
-for \code{\link[=render_highquality]{render_highquality()}}. The rgl preview
-uses the same value as line width.}
-
-\item{waterpath_step}{Default \code{0.5}. Maximum spacing, in scene grid-cell
-units, between stream vertices after densifying to hug the terrain.}
-
-\item{waterpath_densify}{Default \code{TRUE}. Whether to densify stream paths
-and resample them along the terrain before
-\code{\link[=render_highquality]{render_highquality()}} meshing. Set to
-\code{FALSE} to use the vertices returned by \code{\link[=render_path]{render_path()}}
-directly.}
-
-\item{waterpath_offset}{Default \code{NULL}. Vertical stream centerline offset in
-elevation units. When \code{NULL}, the stream centerline is placed on the
-sampled surface so the high-quality rectangular stream profile is rendered
-halfway through the terrain.}
-
-\item{waterpath_simplify_tolerance}{Default \code{NULL}. Simplification
-tolerance passed to \code{\link[=render_path]{render_path()}} for spatial
-stream paths. When \code{NULL}, this defaults to the grid cell spacing of the
-active DEM. Set to \code{0} to disable stream simplification.}
-
-\item{waterpath_merge}{Default \code{TRUE}. Whether to merge connected stream
-linework before rendering. This reduces visible caps between adjacent line
-features in \code{\link[=render_highquality]{render_highquality()}}.}
-
-\item{waterpath_reorder}{Default \code{FALSE}. Whether to reorder spatial stream
-paths using \code{\link[=render_path]{render_path()}} before rendering.}
-
-\item{remove_water}{Default \code{TRUE}. If \code{TRUE}, will remove existing water layer and replace it with new layer.}
+\item{clear_previous}{Default \code{TRUE}. If \code{TRUE}, will remove existing water layer and replace it with new layer.}
 }
 \description{
 Adds water layer to the scene, removing the previous water layer if desired.
