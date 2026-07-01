@@ -595,6 +595,164 @@ render_highquality(
 
 ![](man/figures/hq-1.png)<!-- -->
 
+For a real hydrology scene, we can combine polygon water bodies, stream
+linework, and a DEM from public data sources. Here, `tigris` downloads
+TIGER/Line water features for Mono County, California, and `elevatr`
+downloads an AWS terrain raster for the Mammoth Lakes, June Lake, and
+Crowley Lake region. We transform everything to UTM zone 11N
+(`EPSG:32611`) so that areas, lengths, and stream widths are in
+meter-like projected units before cropping to the scene.
+
+The polygon water features are filtered to lakes and reservoirs, then
+each water body is assigned a representative elevation from the DEM.
+Rasterizing those elevations gives `render_water()` a spatially varying
+water surface, while `render_streams()` draws the TIGER/Line stream
+network on the terrain. For the final path trace,
+`joined_stream_mesh = TRUE` renders connected stream branches as joined
+water meshes instead of separate capped line segments.
+
+``` r
+library(sf)
+library(terra)
+library(dplyr)
+library(tigris)
+library(elevatr)
+library(rayshader)
+
+options(tigris_use_cache = TRUE)
+
+target_crs = "EPSG:32611"
+dem_z = 12
+min_water_area_m2 = 5000
+min_stream_length_m = 1
+
+scene_ll = sf::st_as_sfc(
+    sf::st_bbox(
+        c(
+            xmin = -119.12,
+            ymin = 37.52,
+            xmax = -118.68,
+            ymax = 37.86
+        ),
+        crs = sf::st_crs(4326)
+    )
+) |>
+    sf::st_as_sf()
+
+scene = sf::st_transform(scene_ll, target_crs)
+
+water_raw = tigris::area_water(
+    state = "CA",
+    county = "Mono",
+    year = 2024,
+    class = "sf"
+)
+
+water = water_raw |>
+    sf::st_make_valid() |>
+    sf::st_transform(target_crs) |>
+    sf::st_crop(scene) |>
+    dplyr::filter(MTFCC %in% c("H2030", "H2040")) |>
+    dplyr::mutate(area_m2 = as.numeric(sf::st_area(geometry))) |>
+    dplyr::filter(area_m2 >= min_water_area_m2)
+
+water = water[!sf::st_is_empty(water), ]
+
+dem_raw = elevatr::get_elev_raster(
+    locations = scene,
+    z = dem_z,
+    src = "aws",
+    clip = "bbox",
+    tmp_dir = tempdir()
+)
+
+dem = terra::rast(dem_raw) |>
+    terra::aggregate(4)
+names(dem) = "elevation_m"
+
+water = sf::st_transform(water, terra::crs(dem))
+
+water_level = terra::extract(
+    dem,
+    terra::vect(water),
+    fun = median,
+    na.rm = TRUE,
+    touches = TRUE
+)
+
+water$water_level_m = round(water_level$elevation_m, 1)
+water = water[is.finite(water$water_level_m), ]
+
+streams_raw = tigris::linear_water(
+    state = "CA",
+    county = "Mono",
+    year = 2024,
+    class = "sf"
+)
+
+streams = streams_raw |>
+    sf::st_make_valid() |>
+    sf::st_transform(target_crs) |>
+    sf::st_crop(scene) |>
+    sf::st_collection_extract("LINESTRING", warn = FALSE)
+
+streams = streams[!sf::st_is_empty(streams), ]
+
+streams = streams |>
+    dplyr::mutate(length_m = as.numeric(sf::st_length(geometry))) |>
+    dplyr::filter(length_m >= min_stream_length_m)
+
+streams = sf::st_transform(streams, terra::crs(dem))
+
+water_level_rast = terra::rasterize(
+    terra::vect(water),
+    dem,
+    field = "water_level_m",
+    touches = TRUE
+)
+
+new_dem = dem |>
+    indent_surface(water, 10, direction = "down")
+
+new_dem |>
+    height_shade() |>
+    plot_3d(
+        phi = 10,
+        zoom = 0.15,
+        fov = 120
+    )
+
+render_water(
+    waterdepth = water_level_rast,
+    water_edge_extension = 0.25,
+    watercolor = "dodgerblue"
+)
+
+render_streams(
+    streams = streams,
+    watercolor = "dodgerblue",
+    width = 0.35,
+    clear_previous = TRUE
+)
+
+render_highquality(
+    joined_stream_mesh = TRUE,
+    use_extruded_paths = TRUE,
+    sky_sun_elevation = 30,
+    width = 800,
+    height = 800,
+    sky_sun_azimuth = -113,
+    sky_args = list(hosek = FALSE),
+    camera_lookat = c(-183.38, -1.20, -232.91),
+    camera_location = c(-279.37, 49.51, -177.42),
+    water_ior = 1.2,
+    water_material = "microfacet",
+    iso = 100 / 2^5
+)
+```
+
+<img src="man/figures/README_streams-mammoth-1.png" width="800" />
+
 Rayshader also has map shapes other than rectangular included
 `c("hex", "circle")`, and you can customize the map into any shape you
 want by setting the areas you do not want to display to `NA`.

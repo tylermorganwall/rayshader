@@ -102,6 +102,9 @@
 #'than straight segments.
 #'@param use_extruded_paths Default `TRUE`. If `FALSE`, paths will be generated with the `rayrender::path()` object, instead
 #'of `rayrender::extruded_path()`.
+#' @param joined_stream_mesh Default `FALSE`. If `TRUE`, stream paths from
+#'[render_streams()] are rendered as joined terrain-clipped water meshes in
+#'[render_highquality()] instead of one rectangular extrusion per line.
 #'@param point_radius Default `1`. Radius of 3D points (rendered with [render_points()]). This scales the existing
 #'value of size specified in [render_points()].
 #'@param scale_text_angle Default `NULL`. Same as `text_angle`, but for the scale bar.
@@ -304,6 +307,7 @@ render_highquality = function(
   point_radius = 0.5,
   smooth_line = FALSE,
   use_extruded_paths = FALSE,
+  joined_stream_mesh = FALSE,
   scale_text_angle = NULL,
   scale_text_size = 16,
   scale_text_offset = c(0, scale_text_size / 2, 0),
@@ -340,8 +344,13 @@ render_highquality = function(
   )
   text_render = match.arg(text_render)
   line_render = match.arg(line_render)
+  joined_stream_mesh = suppressWarnings(as.logical(joined_stream_mesh))
   text_occlusion = suppressWarnings(as.logical(text_occlusion))
   line_occlusion = suppressWarnings(as.logical(line_occlusion))
+  if (!length(joined_stream_mesh) || is.na(joined_stream_mesh[1])) {
+    stop("`joined_stream_mesh` must be TRUE or FALSE.")
+  }
+  joined_stream_mesh = joined_stream_mesh[1]
   if (!length(text_occlusion) || is.na(text_occlusion[1])) {
     stop("`text_occlusion` must be TRUE or FALSE.")
   }
@@ -1379,9 +1388,11 @@ render_highquality = function(
       counter = counter + 1
     }
   }
-  water_path_meshes = make_render_highquality_water_path_meshes(
-    water_path_tasks
-  )
+  water_path_meshes = if (isTRUE(joined_stream_mesh)) {
+    make_render_highquality_joined_water_path_meshes(water_path_tasks)
+  } else {
+    make_render_highquality_water_path_meshes(water_path_tasks)
+  }
   if (length(water_path_meshes) > 0) {
     pathline = c(pathline, water_path_meshes)
   }

@@ -632,6 +632,66 @@ test_that("render_streams draws spatial stream paths as water paths", {
   expect_true(rayrender::dielectric()[[1]]$type %in% material_types)
 })
 
+test_that("render_streams reads widths from an sf column", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("terra")
+  on.exit(rgl::close3d(), add = TRUE)
+  local_rgl_use_null()
+
+  height_raster = terra::rast(
+    nrows = 5,
+    ncols = 5,
+    xmin = 0,
+    xmax = 5,
+    ymin = 0,
+    ymax = 5,
+    crs = "EPSG:3857"
+  )
+  terra::values(height_raster) = 0
+  streams = sf::st_sf(
+    stream_width = c(0.25, 0.75),
+    geometry = sf::st_sfc(
+      sf::st_linestring(matrix(c(1, 1, 2, 2), ncol = 2, byrow = TRUE)),
+      sf::st_linestring(matrix(c(2, 2, 4, 4), ncol = 2, byrow = TRUE)),
+      crs = 3857
+    )
+  )
+
+  expect_no_condition(plot_3d_test(
+    constant_shade(height_raster),
+    height_raster,
+    solid = FALSE,
+    shadow = FALSE,
+    water = FALSE,
+    windowsize = c(200, 200)
+  ))
+  expect_no_condition(render_streams(
+    streams,
+    heightmap = height_raster,
+    watercolor = "dodgerblue",
+    width_column = "stream_width",
+    merge = TRUE
+  ))
+
+  water_path_ids = get_ids_with_labels(typeval = "water_path")
+  expect_equal(nrow(water_path_ids), 2)
+  water_path_widths = vapply(
+    water_path_ids$id,
+    function(id) rgl::material3d("lwd", id = id),
+    numeric(1)
+  )
+  expect_equal(sort(water_path_widths), c(0.25, 0.75))
+  expect_error(
+    render_streams(
+      streams,
+      heightmap = height_raster,
+      width_column = "missing_width"
+    ),
+    "`width_column` must name a column in `streams`: missing_width",
+    fixed = TRUE
+  )
+})
+
 test_that("water path densification samples terrain triangle boundaries", {
   heightmap = matrix(0, nrow = 5, ncol = 5)
 
@@ -655,6 +715,187 @@ test_that("water path densification samples terrain triangle boundaries", {
     offset = 0
   )
   expect_true(all(c(-1, 0, 1) %in% round(densified[, 1], 8)))
+})
+
+test_that("joined stream endpoint clamping snaps nearby branch endpoints", {
+  main_line = matrix(c(-1, 0, 1, 0), ncol = 2, byrow = TRUE)
+  branch_line = matrix(c(0.25, 0.75, 0.25, 0.2), ncol = 2, byrow = TRUE)
+
+  clamped = clamp_render_highquality_water_path_endpoints(
+    list(main_line, branch_line),
+    width = 0.25
+  )
+  expect_equal(clamped[[2]][2, ], c(0.25, 0), tolerance = 1e-8)
+
+  unclamped = clamp_render_highquality_water_path_endpoints(
+    list(main_line, branch_line),
+    width = 0.1
+  )
+  expect_equal(unclamped[[2]][2, ], c(0.25, 0.2), tolerance = 1e-8)
+
+  collapsing_branch = matrix(c(0, 0.2, 0, -0.2), ncol = 2, byrow = TRUE)
+  collapsed = clamp_render_highquality_water_path_endpoints(
+    list(main_line, collapsing_branch),
+    width = 0.25
+  )
+  expect_length(collapsed, 1)
+  expect_equal(collapsed[[1]], main_line)
+})
+
+test_that("joined stream buffers dissolve junction footprints", {
+  skip_if_not_installed("sf")
+
+  collinear = make_render_highquality_water_path_buffer_footprint(
+    lines = list(
+      matrix(c(-1, 0, 0.5, 0), ncol = 2, byrow = TRUE),
+      matrix(c(0, 0, 1, 0), ncol = 2, byrow = TRUE)
+    ),
+    width = 0.2
+  )
+  expect_equal(as.numeric(sf::st_area(collinear)), 0.4, tolerance = 1e-8)
+
+  t_junction = make_render_highquality_water_path_buffer_footprint(
+    lines = list(
+      matrix(c(-1, 0, 1, 0), ncol = 2, byrow = TRUE),
+      matrix(c(0, -1, 0, 0), ncol = 2, byrow = TRUE)
+    ),
+    width = 0.2
+  )
+  expect_equal(
+    length(suppressWarnings(sf::st_cast(t_junction, "POLYGON"))),
+    1
+  )
+
+  x_junction = make_render_highquality_water_path_buffer_footprint(
+    lines = list(
+      matrix(c(-1, -1, 1, 1), ncol = 2, byrow = TRUE),
+      matrix(c(-1, 1, 1, -1), ncol = 2, byrow = TRUE)
+    ),
+    width = 0.2
+  )
+  expect_equal(
+    length(suppressWarnings(sf::st_cast(x_junction, "POLYGON"))),
+    1
+  )
+
+  acute = make_render_highquality_water_path_buffer_footprint(
+    lines = list(
+      matrix(c(0, 0, 1, 0.05), ncol = 2, byrow = TRUE),
+      matrix(c(0, 0, 1, -0.05), ncol = 2, byrow = TRUE)
+    ),
+    width = 0.1
+  )
+  expect_lt(as.numeric(sf::st_bbox(acute)[["xmax"]]), 1.2)
+})
+
+test_that("joined stream terrain overlay clips invalid cells and closes meshes", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("rayrender")
+
+  heightmap_with_hole = matrix(0, nrow = 5, ncol = 5)
+  heightmap_with_hole[3, 3] = NA
+  terrain_triangles = make_render_highquality_water_path_valid_terrain_triangles(
+    heightmap_with_hole
+  )
+  expect_equal(nrow(terrain_triangles), 24)
+
+  flat_task = list(
+    list(
+      points = matrix(c(-1, 0, 0, 1, 0, 0), ncol = 3, byrow = TRUE),
+      bbox_center = c(0, 0, 0),
+      width = 1,
+      heightmap = matrix(0, nrow = 5, ncol = 5),
+      zscale = 1,
+      material = rayrender::dielectric()
+    )
+  )
+  flat_mesh = make_render_highquality_joined_water_path_mesh(flat_task)
+  flat_info = flat_mesh$shape_info[[1]]$mesh_info[[1]]
+  expect_equal(max(flat_info$vertices[, 2]), 0.2, tolerance = 1e-8)
+  expect_lt(min(flat_info$vertices[, 2]), 0)
+  expect_true(all(
+    validate_render_highquality_water_path_edge_counts(flat_info$indices) == 2
+  ))
+
+  sloped_heightmap = matrix(rep(seq_len(5), times = 5), nrow = 5, ncol = 5)
+  sloped_task = flat_task
+  sloped_task[[1]]$heightmap = sloped_heightmap
+  sloped_task[[1]]$points[, 2] = interpolate_spatial_water_height(
+    sloped_heightmap,
+    sloped_task[[1]]$points[, 1],
+    sloped_task[[1]]$points[, 3]
+  )
+  sloped_mesh = make_render_highquality_joined_water_path_mesh(sloped_task)
+  sloped_info = sloped_mesh$shape_info[[1]]$mesh_info[[1]]
+  terrain_y = interpolate_spatial_water_height(
+    sloped_heightmap,
+    sloped_info$vertices[, 1],
+    sloped_info$vertices[, 3]
+  )
+  y_delta = sloped_info$vertices[, 2] - terrain_y
+  expect_true(all(
+    abs(y_delta - 0.2) < 1e-8 |
+      abs(y_delta + 1e-5) < 1e-8
+  ))
+})
+
+test_that("render_highquality can render joined stream paths", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("terra")
+  skip_if_not_installed("rayrender")
+  skip_if_not_installed("rayvertex")
+  on.exit(rgl::close3d(), add = TRUE)
+  local_rgl_use_null()
+
+  height_raster = terra::rast(
+    nrows = 5,
+    ncols = 5,
+    xmin = 0,
+    xmax = 5,
+    ymin = 0,
+    ymax = 5,
+    crs = "EPSG:3857"
+  )
+  terra::values(height_raster) = 0
+  streams = sf::st_sf(
+    id = 1:2,
+    geometry = sf::st_sfc(
+      sf::st_linestring(matrix(c(1, 2.5, 4, 2.5), ncol = 2, byrow = TRUE)),
+      sf::st_linestring(matrix(c(2.5, 1, 2.5, 2.45), ncol = 2, byrow = TRUE)),
+      crs = 3857
+    )
+  )
+
+  expect_no_condition(plot_3d_test(
+    constant_shade(height_raster),
+    height_raster,
+    solid = FALSE,
+    shadow = FALSE,
+    water = FALSE,
+    windowsize = c(200, 200)
+  ))
+  expect_no_condition(render_streams(
+    streams,
+    heightmap = height_raster,
+    watercolor = "dodgerblue",
+    width = 0.5,
+    merge = FALSE
+  ))
+  scene = render_highquality(
+    return_scene = TRUE,
+    light = FALSE,
+    joined_stream_mesh = TRUE
+  )
+  expect_no_condition(rayrender:::process_scene(scene))
+})
+
+test_that("render_highquality validates joined stream mesh option", {
+  expect_true("joined_stream_mesh" %in% names(formals(render_highquality)))
+  expect_error(
+    render_highquality(joined_stream_mesh = NA),
+    "`joined_stream_mesh` must be TRUE or FALSE.",
+    fixed = TRUE
+  )
 })
 
 test_that("spatial water height interpolation matches terrain triangles", {

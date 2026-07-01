@@ -51,6 +51,7 @@ render_highquality(
   point_radius = 0.5,
   smooth_line = FALSE,
   use_extruded_paths = FALSE,
+  joined_stream_mesh = FALSE,
   scale_text_angle = NULL,
   scale_text_size = 16,
   scale_text_offset = c(0, scale_text_size/2, 0),
@@ -223,6 +224,10 @@ than straight segments.}
 
 \item{use_extruded_paths}{Default \code{TRUE}. If \code{FALSE}, paths will be generated with the \code{rayrender::path()} object, instead
 of \code{rayrender::extruded_path()}.}
+
+\item{joined_stream_mesh}{Default \code{FALSE}. If \code{TRUE}, stream paths from
+\code{\link[=render_streams]{render_streams()}} are rendered as joined terrain-clipped water meshes in
+\code{\link[=render_highquality]{render_highquality()}} instead of one rectangular extrusion per line.}
 
 \item{scale_text_angle}{Default \code{NULL}. Same as \code{text_angle}, but for the scale bar.}
 
