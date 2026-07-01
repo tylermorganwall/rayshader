@@ -2149,7 +2149,7 @@ orient_render_highquality_water_path_top_indices = function(vertices, indices) {
     )
     if (!all(is.finite(normal)) || sqrt(sum(normal^2)) <= .Machine$double.eps) {
       keep[[index]] = FALSE
-      next_val
+      next
     }
     if (normal[[2]] < 0) {
       oriented[index, c(2L, 3L)] = oriented[index, c(3L, 2L)]
