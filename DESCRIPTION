@@ -54,7 +54,8 @@ Suggests:
     osmdata,
     raybevel (>= 0.2.1),
 	ragg,
-	skymodelr
+	skymodelr,
+	tigris
 LinkingTo: Rcpp, progress, RcppArmadillo
 Roxygen: list(markdown = TRUE)
 Encoding: UTF-8
