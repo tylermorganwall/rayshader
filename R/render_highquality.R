@@ -1667,6 +1667,9 @@ render_highquality = function(
   if (return_scene) {
     attr(scene, "screen_text") = screen_text_objects
     attr(scene, "screen_line") = screen_line_objects
+    if (!is.null(sky_file)) {
+      attr(scene, "environment_light") = sky_file
+    }
     return(scene)
   }
 
