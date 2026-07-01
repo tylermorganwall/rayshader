@@ -11,6 +11,7 @@ render_water_paths(
   zscale,
   watercolor,
   waterpath_width = 1,
+  waterpath_width_column = NULL,
   waterpath_densify = TRUE,
   waterpath_offset = NULL,
   waterpath_merge = TRUE
@@ -28,6 +29,8 @@ render_water_paths(
 \item{watercolor}{Water color.}
 
 \item{waterpath_width}{Stream width.}
+
+\item{waterpath_width_column}{Column name containing stream widths.}
 
 \item{waterpath_densify}{Whether to densify paths.}
 
