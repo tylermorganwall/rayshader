@@ -277,7 +277,7 @@ and \code{camera_lookat} vectors.}
 \item{print_scene_info}{Default \code{FALSE}. If \code{TRUE}, it will print the position and lookat point of the camera.}
 
 \item{clamp_value}{Default \code{NA}. If \code{NA}, uses \code{100} when the OIDN denoiser is unavailable
-and \code{10000} when it is available (via \code{rayrender::has_denoiser()}).}
+and \code{1000} when it is available (via \code{rayrender::has_denoiser()}).}
 
 \item{calculate_consistent_normals}{Default \code{FALSE}. Whether to calculate consistent vertex normals to prevent energy
 loss at edges.}
@@ -399,7 +399,7 @@ samples = 16,
 long = -77.035249,
 lat = 38.889462,
 iso = 8,
-clamp_value = 10000,
+clamp_value = 1000,
 datetime = as.POSIXct("2025-12-21 08:00:00", tz = "EST")
 )
 
@@ -414,7 +414,7 @@ long = -77.035249,
 lat = 38.889462,
 sky_args = list(hosek = FALSE,resolution=4000),
 auto_exposure = TRUE,
-clamp_value = 10000,
+clamp_value = 1000,
 datetime = as.POSIXct("2025-12-21 11:00:00", tz = "EST")
 )
 \dontshow{\}) # examplesIf}
