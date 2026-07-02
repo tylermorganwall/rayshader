@@ -147,11 +147,14 @@ calculates 1-color}
 \item{water_surface_color}{Default \code{TRUE}. Whether the water should have a colored surface or not. This is in contrast to
 setting a non-zero water attenuation, where the color comes from the attenuation of light in the water itself.}
 
-\item{water_ior}{Default \code{1}. Water index of refraction.}
+\item{water_ior}{Default \code{1}, or \code{1.5} when omitted and the OIDN denoiser
+is enabled and available. Water index of refraction.}
 
-\item{water_material}{Default \code{"default"}. Water material used in \code{render_highquality()}.
-\code{"default"} uses the standard converted rgl water material; \code{"microfacet"} renders water
-with \code{rayrender::microfacet(transmission = TRUE)}.}
+\item{water_material}{Default \code{"default"}, or \code{"microfacet"} when omitted
+and the OIDN denoiser is enabled and available. Water material used in
+\code{render_highquality()}. \code{"default"} uses the standard converted rgl water
+material; \code{"microfacet"} renders water with
+\code{rayrender::microfacet(transmission = TRUE)}.}
 
 \item{water_roughness}{Default \code{0.1}. Roughness used when \code{water_material = "microfacet"}.}
 
