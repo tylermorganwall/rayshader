@@ -295,7 +295,7 @@ test_that("render_label() reads label z values from an sf point column", {
       text = c("A", "B"),
       x = c(5, 15),
       y = c(5, 15),
-      height_m = c(200, 400)
+      height_m = c("200", "400")
     ),
     coords = c("x", "y"),
     crs = NA,
@@ -341,6 +341,27 @@ test_that("render_label() reads label z values from an sf point column", {
     ),
     "cannot be combined"
   )
+  labels_sf$height_m[2] = "invalid"
+  expect_no_condition(render_label(
+    location = labels_sf,
+    text = labels_sf$text,
+    data_column_z = "height_m",
+    scale_data = 0.5,
+    relativez = FALSE,
+    offset = 0,
+    freetype = FALSE,
+    clear_previous = TRUE
+  ))
+  ids = get_ids_with_labels(typeval = "textline")
+  line_ids = ids$id[ids$tag == "textline"]
+  line_tops = vapply(
+    line_ids,
+    function(id) {
+      max(rgl::rgl.attrib(id, "vertices")[, 2])
+    },
+    numeric(1)
+  )
+  expect_equal(sort(unname(line_tops)), 10, tolerance = 1e-6)
 })
 
 test_that("render_label() reads text from sf columns and labels polygon centroids", {

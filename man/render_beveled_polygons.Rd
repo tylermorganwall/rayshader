@@ -102,10 +102,10 @@ terms, or relative to the centroid of the polygon.}
 max height, or whether to scale each max height to the maximum internal distance in the polygon.}
 
 \item{data_column_top}{Default \code{NULL}. A string indicating the column in the \code{sf} object to use
-to specify the top of the beveled polygon.}
+to specify the top of the beveled polygon. Values are coerced to numeric, and rows with missing or non-finite values after coercion are omitted.}
 
 \item{data_column_bottom}{Default \code{NULL}. A string indicating the column in the \code{sf} object to use
-to specify the bottom of the beveled polygon.}
+to specify the bottom of the beveled polygon. Values are coerced to numeric, and rows with missing or non-finite values after coercion are omitted.}
 
 \item{heightmap}{Default \code{NULL}. Height matrix for the current scene. If omitted, this is taken from the cached scene set by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}. Pass explicitly to override the cached value.
 of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.

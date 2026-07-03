@@ -57,7 +57,7 @@ If no \code{extent} is available and the scene uses a plain matrix heightmap, th
 
 \item{altitude}{Default \code{NULL}. Elevation of the label, in units of the elevation matrix (scaled by zscale). If none is passed, this will default to 10 percent above the maximum altitude in the heightmap.}
 
-\item{data_column_z}{Default \code{NULL}. Column name in \code{location} to use for \code{z}. Requires \code{location} to be an \code{sf}/spatial object with a numeric column. Values are applied after polygon centroid conversion and POINT/MULTIPOINT flattening and are multiplied by \code{scale_data}.}
+\item{data_column_z}{Default \code{NULL}. Column name in \code{location} to use for \code{z}. Requires \code{location} to be an \code{sf}/spatial object with values coercible to numeric. Values are applied after polygon centroid conversion and POINT/MULTIPOINT flattening, rows with missing or non-finite values after coercion are omitted, and retained values are multiplied by \code{scale_data}.}
 
 \item{data_column_text}{Default \code{NULL}. Column name in \code{location} to use for \code{text}. Requires \code{location} to be an \code{sf}/spatial object with the named column. Values are applied after polygon centroid conversion and POINT/MULTIPOINT flattening.}
 

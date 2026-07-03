@@ -29,9 +29,9 @@
 #' @param heights_relative_to_centroid Default `FALSE`. Whether the heights should be measured in absolute
 #' terms, or relative to the centroid of the polygon.
 #' @param data_column_top Default `NULL`. A string indicating the column in the `sf` object to use
-#' to specify the top of the extruded polygon.
+#' to specify the top of the extruded polygon. Values are coerced to numeric, and rows with missing or non-finite values after coercion are omitted.
 #' @param data_column_bottom Default `NULL`. A string indicating the column in the `sf` object to use
-#' to specify the bottom of the extruded polygon.
+#' to specify the bottom of the extruded polygon. Values are coerced to numeric, and rows with missing or non-finite values after coercion are omitted.
 #' @param scale_data Default `1`. How much to scale the `top`/`bottom` value when rendering. Use
 #' `zscale` to adjust the data to account for `x`/`y` grid spacing, and this argument to scale the data
 #' for visualization. If used with `vertical_exaggeration`, both are applied.
@@ -471,28 +471,57 @@ render_buildings = function(
   if (length(top) != 1) {
     stopifnot(length(top) == nrow(polygon))
   }
-  if (!is.null(data_column_top)) {
-    stopifnot(data_column_top %in% colnames(polygon))
-  }
   if (length(bottom) != 1) {
     stopifnot(length(bottom) == nrow(polygon))
   }
-  if (!is.null(data_column_bottom)) {
-    stopifnot(data_column_bottom %in% colnames(polygon))
+  if (!is.null(data_column_top) || !is.null(data_column_bottom)) {
+    n_polygon_before_data_drop = nrow(polygon)
+    coerced_polygon = coerce_polygon_data_columns(
+      polygon = polygon,
+      data_column_top = data_column_top,
+      data_column_bottom = data_column_bottom,
+      caller = "render_buildings"
+    )
+    polygon = coerced_polygon$polygon
+    top = subset_render_arg(
+      top,
+      coerced_polygon$keep,
+      n_polygon_before_data_drop
+    )
+    bottom = subset_render_arg(
+      bottom,
+      coerced_polygon$keep,
+      n_polygon_before_data_drop
+    )
+    if (!nrow(polygon)) {
+      render_zaxis_from_dots(
+        zaxis_args = dot_split$zaxis_args,
+        extent = extent,
+        panel = panel,
+        zscale = zscale,
+        heightmap = heightmap,
+        caller = "render_buildings"
+      )
+      return(invisible(NULL))
+    }
   }
 
   top_values = get_polygon_data_value(
     polygon,
     data_column_name = data_column_top,
     scale_data = scale_data,
-    default_value = top
+    default_value = top,
+    data_column_arg = "data_column_top",
+    caller = "render_buildings"
   )
 
   bottom_values = get_polygon_data_value(
     polygon,
     data_column_name = data_column_bottom,
     scale_data = scale_data,
-    default_value = bottom
+    default_value = bottom,
+    data_column_arg = "data_column_bottom",
+    caller = "render_buildings"
   )
 
   cache_polygon_like_zaxis_data(

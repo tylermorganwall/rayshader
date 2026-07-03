@@ -56,10 +56,10 @@ extruded and just the one side will be rendered.}
 extruded and just the one side will be rendered.}
 
 \item{data_column_top}{Default \code{NULL}. A string indicating the column in the \code{sf} object to use
-to specify the top of the extruded polygon.}
+to specify the top of the extruded polygon. Values are coerced to numeric, and rows with missing or non-finite values after coercion are omitted.}
 
 \item{data_column_bottom}{Default \code{NULL}. A string indicating the column in the \code{sf} object to use
-to specify the bottom of the extruded polygon.}
+to specify the bottom of the extruded polygon. Values are coerced to numeric, and rows with missing or non-finite values after coercion are omitted.}
 
 \item{heightmap}{Default \code{NULL}. Height matrix for the current scene. If omitted, this is taken from the cached scene set by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}. Pass explicitly to override the cached value.
 of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
@@ -132,7 +132,7 @@ render_snapshot()
 #We can set the height of the data to a column in the sf object: we'll use the land area.
 #We'll have to scale this value because its max value is 2.6 billion:
 render_camera(theta=-60,  phi=40, zoom = 0.85, fov=30)
-render_polygons(mont_county_buff, data_column_top = "ALAND", 
+render_polygons(mont_county_buff, data_column_top = "ALAND",
                 scale_data = 300/(5E7), color = "chartreuse4",
                 clear_previous = TRUE)
 render_zaxis(zaxis_data = "polygon", zaxis_location = "topright",
