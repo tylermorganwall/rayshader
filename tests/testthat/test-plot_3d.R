@@ -128,6 +128,32 @@ test_that("full resolution shadow textures can be requested", {
   expect_error(validate_shadow_texture_size(15), ">= 16")
 })
 
+test_that("shadow texture background matches scene background", {
+  on.exit(rgl::close3d(), add = TRUE)
+  local_rgl_use_null()
+  rgl::open3d(useNULL = TRUE)
+
+  background = "grey50"
+  make_shadow(
+    matrix(0, nrow = 20, ncol = 30),
+    basedepth = -1,
+    shadowwidth = 5,
+    color = background,
+    shadowcolor = "grey25",
+    shadow_texture_size = Inf
+  )
+
+  shadow = get_ids_with_labels(typeval = "shadow")
+  shadow_texture = rgl::material3d(id = shadow$id[1])$texture
+  shadow_image = png::readPNG(shadow_texture)
+
+  expect_equal(
+    unname(shadow_image[1, 1, ]),
+    as.vector(col2rgb(background)) / 255,
+    tolerance = 1 / 255
+  )
+})
+
 test_that("plot_3d plots basic options", {
   skip_if(
     rgl::rgl.useNULL(),
