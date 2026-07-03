@@ -13,7 +13,7 @@
 #'this will automatically generate `nlevels` breaks between `levels[1]` and `levels[2]`.
 #'@param linewidth Default `3`. The line width.
 #'@param antialias Default `FALSE`. If `TRUE`, the line with be have anti-aliasing applied. NOTE: anti-aliasing can cause some unpredictable behavior with transparent surfaces.
-#'@param color Default `black`. Color of the line.
+#'@param color Default `black`. Color of the line. Use `"height"` to color contours by the cached [plot_gg()] height aesthetic palette.
 #'@param palette Default `NULL`. Overrides `color`. Either a function that returns a color palette
 #'of `n` colors, or a character vector with colors that specifies each color manually.
 #'@param offset Default `5`. Offset of the track from the surface, if `altitude = NULL`.

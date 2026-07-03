@@ -71,6 +71,128 @@ test_that("ggplot scenes without mapped height keep raw overlay altitudes", {
   expect_equal(xyz[, 2], altitude_vals / scene_zscale, tolerance = 1e-6)
 })
 
+test_that("flat substrate ggplot scenes keep panels flat but map overlay altitudes", {
+  on.exit(rgl::close3d(), add = TRUE)
+  local_rgl_use_null()
+
+  p = ggplot(mtcars) +
+    geom_point(aes(x = wt, y = mpg, color = mpg))
+
+  height_matrix = suppressWarnings(plot_gg_test(
+    p,
+    width = 2,
+    raytrace = FALSE,
+    flat_substrate = TRUE,
+    save_height_matrix = TRUE,
+    windowsize = c(300, 300)
+  ))
+
+  panel_info = attr(height_matrix, "ggplot_panel_info", exact = TRUE)
+  panel_mask = matrix(FALSE, nrow(height_matrix), ncol(height_matrix))
+  for (i in seq_len(nrow(panel_info))) {
+    panel_rows = floor(panel_info$panel_xmin[i]):ceiling(panel_info$panel_xmax[
+      i
+    ])
+    panel_cols = floor(panel_info$panel_ymin[i]):ceiling(panel_info$panel_ymax[
+      i
+    ])
+    panel_rows = pmax(1, pmin(nrow(height_matrix), panel_rows))
+    panel_cols = pmax(1, pmin(ncol(height_matrix), panel_cols))
+    panel_mask[panel_rows, panel_cols] = TRUE
+  }
+
+  expect_equal(range(height_matrix[panel_mask]), c(0, 0), tolerance = 1e-12)
+  expect_gt(max(height_matrix[!panel_mask], na.rm = TRUE), 0)
+  surface_id = get_ids_with_labels(typeval = "surface_tris")$id[1]
+  surface_vertices = rgl::rgl.attrib(surface_id, "vertices")
+  expect_equal(min(surface_vertices[, 2]), 0, tolerance = 1e-12)
+  expect_gt(max(surface_vertices[, 2]), 0)
+  expect_gt(nrow(get_ids_with_labels(typeval = "base")), 0)
+  transform_info = get_cached_plot_gg_transform_info(default = NULL)
+  expect_true(transform_info$height_is_mapped)
+
+  gg_extent = rayshader:::get_ggplot_extent()
+  scene_height_range = range(height_matrix[is.finite(height_matrix)])
+  scene_zscale = get_scene_effective_zscale()
+  altitude_vals = c(100, 200)
+
+  xyz = transform_into_heightmap_coords(
+    extent = gg_extent,
+    heightmap = get_scene_heightmap(),
+    lat = c(15, 30),
+    long = c(2, 4),
+    altitude = altitude_vals,
+    offset = 0,
+    zscale = scene_zscale
+  )
+
+  expected_y = scales::rescale(
+    altitude_vals,
+    to = scene_height_range,
+    from = range(altitude_vals)
+  ) /
+    scene_zscale
+
+  expect_equal(xyz[, 2], expected_y, tolerance = 1e-6)
+})
+
+test_that("render point colors can use cached ggplot height palette", {
+  on.exit(rgl::close3d(), add = TRUE)
+  local_rgl_use_null()
+
+  p = ggplot(mtcars) +
+    geom_point(aes(x = wt, y = mpg, color = mpg)) +
+    scale_color_gradient(
+      limits = c(10, 35),
+      low = "#0000FF",
+      high = "#FF0000"
+    )
+
+  suppressWarnings(plot_gg_test(
+    p,
+    width = 2,
+    height_aes = "color",
+    raytrace = FALSE,
+    flat_substrate = TRUE,
+    windowsize = c(300, 300)
+  ))
+  expect_true(
+    rayshader:::get_cached_plot_gg_transform_info(
+      default = NULL
+    )$height_is_mapped
+  )
+
+  altitude_vals = c(10, 20, 35)
+  mapped_colors = rayshader:::map_plot_gg_height_palette(
+    altitude_vals,
+    caller = "render_points"
+  )
+  expect_equal(mapped_colors[c(1, 3)], c("#0000FF", "#FF0000"))
+
+  expect_no_condition(render_points(
+    x = c(2, 3, 4),
+    y = c(15, 20, 25),
+    altitude = altitude_vals,
+    color = "height",
+    size = 5
+  ))
+
+  rgl_ids = rgl::ids3d(tags = TRUE)
+  point_id = rgl_ids$id[rgl_ids$tag == "points3d"][1]
+  actual_colors = rgl::rgl.attrib(point_id, "colors")
+  point_vertices = rgl::rgl.attrib(point_id, "vertices")
+  expected_colors = t(grDevices::col2rgb(mapped_colors, alpha = TRUE) / 255)
+  expected_y = scales::rescale(
+    altitude_vals,
+    to = range(get_scene_heightmap()[is.finite(get_scene_heightmap())]),
+    from = range(altitude_vals)
+  ) /
+    get_scene_effective_zscale()
+
+  expect_equal(unname(actual_colors), unname(expected_colors), tolerance = 1e-6)
+  expect_equal(point_vertices[, 2], expected_y, tolerance = 1e-6)
+})
+
 test_that("ggplot z-axis breaks use mapped height positions but keep raw labels", {
   on.exit(rgl::close3d(), add = TRUE)
   local_rgl_use_null()

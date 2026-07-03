@@ -47,7 +47,7 @@ If omitted, rayshader will use extent metadata cached by \code{\link[=plot_3d]{p
 to disambiguate faceted ggplot scenes when panel-specific cached metadata is needed. Ignored
 for non-ggplot scenes.}
 
-\item{color}{Default \code{black}. Color of the polygon.}
+\item{color}{Default \code{black}. Color of the polygon. Use \code{"height"} to color polygons by the cached \code{\link[=plot_gg]{plot_gg()}} height aesthetic palette using \code{data_column_top}, \code{data_column_bottom}, or \code{top}.}
 
 \item{top}{Default \code{1}. Extruded top distance. If this equals \code{bottom}, the polygon will not be
 extruded and just the one side will be rendered.}

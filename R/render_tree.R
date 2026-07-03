@@ -23,8 +23,8 @@
 #'model in OBJ format. This function loads a crown model and allows you to control the crown and trunk proportions separately.
 #'@param custom_obj_trunk Default `NULL`.  Instead of using the built-in types, users can also load a custom trunk
 #'model in OBJ format. This function loads a trunk model and allows you to control the crown and trunk proportions separately.
-#'@param crown_color Default `"darkgreen"`. Color(s) of the crown.
-#'@param trunk_color Default `"#964B00"` (brown). Color(s) of the trunk,
+#'@param crown_color Default `"darkgreen"`. Color(s) of the crown. Use `"height"` to color crowns by the cached [plot_gg()] height aesthetic palette using `tree_height`.
+#'@param trunk_color Default `"#964B00"` (brown). Color(s) of the trunk. Use `"height"` to color trunks by the cached [plot_gg()] height aesthetic palette using `tree_height`.
 #'@param absolute_height Default `FALSE`. Default is specifying the tree height directly, relative to the
 #'underlying height map. If `TRUE`, `crown_height` will specified by the actual altitude of the top of the tree.
 #'Total tree height will be `crown_height + trunk_height`.
@@ -384,8 +384,11 @@ render_tree = function(
   }
   tree_zaxis_raw = tree_height
   tree_zaxis_scene = tree_height
-  tree_zaxis_label = if (!is.null(tree_height_column)) tree_height_column else
+  tree_zaxis_label = if (!is.null(tree_height_column)) {
+    tree_height_column
+  } else {
     "tree"
+  }
   if (is.null(trunk_height_ratio)) {
     use_default_crown_height = TRUE
     use_default_trunk_height = TRUE
@@ -595,6 +598,20 @@ render_tree = function(
   if (length(trunk_height) == 1) {
     trunk_height = rep(trunk_height, length(lat))
   }
+  crown_color = resolve_ggplot_height_palette_color(
+    color = crown_color,
+    values = tree_zaxis_raw,
+    heightmap = heightmap,
+    caller = "render_tree",
+    arg_name = "crown_color"
+  )
+  trunk_color = resolve_ggplot_height_palette_color(
+    color = trunk_color,
+    values = tree_zaxis_raw,
+    heightmap = heightmap,
+    caller = "render_tree",
+    arg_name = "trunk_color"
+  )
   if (!custom_tree) {
     if (tree_zscale) {
       tree_scale = matrix(

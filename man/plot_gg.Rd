@@ -18,6 +18,7 @@ plot_gg(
   vertical_exaggeration = NULL,
   pointcontract = 0.7,
   offset_edges = FALSE,
+  flat_substrate = FALSE,
   flat_plot_render = FALSE,
   flat_distance = "auto",
   flat_transparent_bg = FALSE,
@@ -101,6 +102,8 @@ variable is ignored when performing the 3D projection).}
 \item{offset_edges}{Default \code{FALSE}. If \code{TRUE}, inserts a small amount of space between polygons for "geom_sf", "geom_tile", "geom_hex", and "geom_polygon" layers.
 If you pass in a number, the space between polygons will be a line of that width. You can also specify a number to control the thickness of the offset.
 Note: this feature may end up removing thin polygons from the plot entirely--use with care.}
+
+\item{flat_substrate}{Default \code{FALSE}. If \code{TRUE}, render the captured ggplot texture on flat solid plot panels instead of using the panel aesthetics as the surface height. Guides and legends retain their rendered height mapping, and the resulting scene can be used as a base for later \verb{render_*()} calls.}
 
 \item{flat_plot_render}{Default \code{FALSE}. Whether to render a flat version of the ggplot above (or alongside) the 3D version.}
 

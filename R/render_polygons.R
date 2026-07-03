@@ -18,7 +18,7 @@
 #' to disambiguate faceted ggplot scenes when panel-specific cached metadata is needed. Ignored
 #' for non-ggplot scenes.
 #' @param crs Default `NULL`. CRS of the input numeric x/y coordinates, or CRS to assign to CRS-less spatial data before transforming it into the active scene CRS. If spatial data already carries a CRS, that CRS is used automatically.
-#' @param color Default `black`. Color of the polygon.
+#' @param color Default `black`. Color of the polygon. Use `"height"` to color polygons by the cached [plot_gg()] height aesthetic palette using `data_column_top`, `data_column_bottom`, or `top`.
 #' @param top Default `1`. Extruded top distance. If this equals `bottom`, the polygon will not be
 #' extruded and just the one side will be rendered.
 #' @param bottom Default `0`. Extruded bottom distance. If this equals `top`, the polygon will not be
@@ -267,6 +267,19 @@ render_polygons = function(
     )
     bottom = (bottom1 + bottom2) / 2
   }
+  polygon_color_values = if (!is.null(data_column_top)) {
+    polygon[[data_column_top]]
+  } else if (!is.null(data_column_bottom)) {
+    polygon[[data_column_bottom]]
+  } else {
+    top
+  }
+  color = resolve_ggplot_height_palette_color(
+    color = color,
+    values = polygon_color_values,
+    heightmap = heightmap,
+    caller = "render_polygons"
+  )
   shape_to_vertex = function(poly_list) {
     matrix(poly_list[4:12], ncol = 3, nrow = 3, byrow = TRUE)
   }
@@ -367,6 +380,7 @@ render_polygons = function(
   for (group in seq_along(vertex_list)) {
     if (!is.null(vertex_list[[group]])) {
       single_poly = vertex_list[[group]]
+      single_color = color[((group - 1) %% length(color)) + 1]
       single_poly$vb[1, ] = (-single_poly$vb[1, ] - e["xmin"]) /
         (e["xmax"] - e["xmin"]) *
         nrow_map -
@@ -378,7 +392,7 @@ render_polygons = function(
 
       rgl::shade3d(
         single_poly,
-        color = color,
+        color = single_color,
         tag = "polygon3d",
         lit = lit,
         alpha = alpha

@@ -97,7 +97,7 @@ then the value of simplify_tolerance must be specified in meters.}
 
 \item{linewidth}{Default \code{3}. The line width.}
 
-\item{color}{Default \code{black}. Color of the line.}
+\item{color}{Default \code{black}. Color of the line. Use \code{"height"} to color the path by the cached \code{\link[=plot_gg]{plot_gg()}} height aesthetic palette.}
 
 \item{antialias}{Default \code{FALSE}. If \code{TRUE}, the line with be have anti-aliasing applied. NOTE: anti-aliasing can cause some unpredictable behavior with transparent surfaces.}
 

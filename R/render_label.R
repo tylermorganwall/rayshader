@@ -42,8 +42,8 @@
 #'@param adjustvec Default `c(0.5,-0.5)`. The horizontal and vertical offset for the text. If `freetype = FALSE` and on macOS/Linux, this is adjusted to `c(0.33,-0.5)` to keep the type centered.
 #'@param family Default `"sans"`. Font family. Choices are `c("serif", "sans", "mono", "symbol")`.
 #'@param fonttype Default `"standard"`. The font type. Choices are `c("standard", "bold", "italic", "bolditalic")`. NOTE: These require FreeType fonts, which may not be installed on your system. See the documentation for rgl::text3d() for more information.
-#'@param linecolor Default `black`. Color of the line.
-#'@param textcolor Default `black`. Color of the text.
+#'@param linecolor Default `black`. Color of the line. Use `"height"` to color label lines by the cached [plot_gg()] height aesthetic palette.
+#'@param textcolor Default `black`. Color of the text. Use `"height"` to color label text by the cached [plot_gg()] height aesthetic palette.
 #'@param lat Default `NULL`. Alias for `y` for geographic workflows.
 #'@param long Default `NULL`. Alias for `x` for geographic workflows.
 #'@param crs Default `NULL`. CRS of the input numeric x/y coordinates, or CRS to assign to CRS-less spatial data before transforming it into the active scene CRS. If spatial data already carries a CRS, that CRS is used automatically.
@@ -428,6 +428,20 @@ render_label = function(
         call. = FALSE
       )
     }
+    linecolor = resolve_ggplot_height_palette_color(
+      color = linecolor,
+      values = label_zaxis_raw,
+      heightmap = heightmap,
+      caller = "render_label",
+      arg_name = "linecolor"
+    )
+    textcolor = resolve_ggplot_height_palette_color(
+      color = textcolor,
+      values = label_zaxis_raw,
+      heightmap = heightmap,
+      caller = "render_label",
+      arg_name = "textcolor"
+    )
     n_label = length(x)
     validate_render_label_vector_arg(text, "text", n_label)
     validate_render_label_vector_arg(z, "z", n_label)

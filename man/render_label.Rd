@@ -109,9 +109,9 @@ other arguments are passed to \code{\link[=render_label]{render_label()}}, this 
 
 \item{fonttype}{Default \code{"standard"}. The font type. Choices are \code{c("standard", "bold", "italic", "bolditalic")}. NOTE: These require FreeType fonts, which may not be installed on your system. See the documentation for rgl::text3d() for more information.}
 
-\item{linecolor}{Default \code{black}. Color of the line.}
+\item{linecolor}{Default \code{black}. Color of the line. Use \code{"height"} to color label lines by the cached \code{\link[=plot_gg]{plot_gg()}} height aesthetic palette.}
 
-\item{textcolor}{Default \code{black}. Color of the text.}
+\item{textcolor}{Default \code{black}. Color of the text. Use \code{"height"} to color label text by the cached \code{\link[=plot_gg]{plot_gg()}} height aesthetic palette.}
 
 \item{lat}{Default \code{NULL}. Alias for \code{y} for geographic workflows.}
 

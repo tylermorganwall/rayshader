@@ -68,9 +68,9 @@ model in OBJ format. This function loads a crown model and allows you to control
 \item{custom_obj_trunk}{Default \code{NULL}.  Instead of using the built-in types, users can also load a custom trunk
 model in OBJ format. This function loads a trunk model and allows you to control the crown and trunk proportions separately.}
 
-\item{crown_color}{Default \code{"darkgreen"}. Color(s) of the crown.}
+\item{crown_color}{Default \code{"darkgreen"}. Color(s) of the crown. Use \code{"height"} to color crowns by the cached \code{\link[=plot_gg]{plot_gg()}} height aesthetic palette using \code{tree_height}.}
 
-\item{trunk_color}{Default \code{"#964B00"} (brown). Color(s) of the trunk,}
+\item{trunk_color}{Default \code{"#964B00"} (brown). Color(s) of the trunk. Use \code{"height"} to color trunks by the cached \code{\link[=plot_gg]{plot_gg()}} height aesthetic palette using \code{tree_height}.}
 
 \item{absolute_height}{Default \code{FALSE}. Default is specifying the tree height directly, relative to the
 underlying height map. If \code{TRUE}, \code{crown_height} will specified by the actual altitude of the top of the tree.

@@ -75,7 +75,7 @@ All points are assumed to be evenly spaced.}
 
 \item{load_normals}{Default \code{TRUE}. Whether to load normals for the 3D model.}
 
-\item{color}{Default \code{black}. Color of the 3D model, if \code{load_material = FALSE}.}
+\item{color}{Default \code{black}. Color of the 3D model, if \code{load_material = FALSE}. Use \code{"height"} to color placed models by the cached \code{\link[=plot_gg]{plot_gg()}} height aesthetic palette.}
 
 \item{offset}{Default \code{5}. Offset of the model from the surface, if \code{altitude = NULL}.}
 

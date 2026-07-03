@@ -34,7 +34,7 @@ this will automatically generate \code{nlevels} breaks between \code{levels[1]} 
 
 \item{linewidth}{Default \code{3}. The line width.}
 
-\item{color}{Default \code{black}. Color of the line.}
+\item{color}{Default \code{black}. Color of the line. Use \code{"height"} to color contours by the cached \code{\link[=plot_gg]{plot_gg()}} height aesthetic palette.}
 
 \item{palette}{Default \code{NULL}. Overrides \code{color}. Either a function that returns a color palette
 of \code{n} colors, or a character vector with colors that specifies each color manually.}

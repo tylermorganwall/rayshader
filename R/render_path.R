@@ -37,7 +37,7 @@
 #'@param resample_n Default `360`. Number of breaks in which to evenly resample the line if `resample_evenly = TRUE`.
 #'@param linewidth Default `3`. The line width.
 #'@param antialias Default `FALSE`. If `TRUE`, the line with be have anti-aliasing applied. NOTE: anti-aliasing can cause some unpredictable behavior with transparent surfaces.
-#'@param color Default `black`. Color of the line.
+#'@param color Default `black`. Color of the line. Use `"height"` to color the path by the cached [plot_gg()] height aesthetic palette.
 #'@param offset Default `5`. Offset of the track from the surface, if `altitude = NULL`.
 #'@param reorder Default `FALSE`. If `TRUE`, this will attempt to re-order the rows within an `sf` object with
 #'multiple paths to be one continuous, end-to-end path. This happens in two steps: merging duplicate
@@ -285,6 +285,12 @@ render_path = function(
       lapply(xyz, \(x) rbind(x, matrix(NA, ncol = 3, nrow = 1)))
     )
     if (!return_coords) {
+      color = resolve_ggplot_height_palette_color(
+        color = color,
+        values = xyz[, 2] * zscale,
+        heightmap = heightmap,
+        caller = "render_path"
+      )
       if (length(linewidth) > 1) {
         if (length(linewidth) == nrow(xyz)) {
           linewidth = (linewidth[seq_len(length(linewidth))[-1]] +
@@ -559,6 +565,23 @@ render_path = function(
   ) {
     path_altitude_values = path_scene_altitude
   }
+  path_color_values = if (!is.null(path_altitude_values)) {
+    path_altitude_values
+  } else {
+    path_scene_altitude
+  }
+  if (
+    length(path_color_values) != 1 &&
+      length(path_color_values) != length(path_scene_altitude)
+  ) {
+    path_color_values = path_scene_altitude
+  }
+  color = resolve_ggplot_height_palette_color(
+    color = color,
+    values = path_color_values,
+    heightmap = heightmap,
+    caller = "render_path"
+  )
   cache_altitude_zaxis_data(
     source = "path",
     altitude = path_altitude_values,

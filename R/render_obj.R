@@ -49,7 +49,7 @@
 #'of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
 #' All points are assumed to be evenly spaced.
 #'@param baseshape Default `rectangle`. Shape of the base. Options are `c("rectangle","circle","hex")`.
-#'@param color Default `black`. Color of the 3D model, if `load_material = FALSE`.
+#'@param color Default `black`. Color of the 3D model, if `load_material = FALSE`. Use `"height"` to color placed models by the cached [plot_gg()] height aesthetic palette.
 #'@param lit Default `TRUE`. Whether to light the polygons.
 #'@param light_altitude Default `c(45, 60)`. Degree(s) from the horizon from which to light the polygons.
 #'@param light_direction Default `c(45, 60)`. Degree(s) from north from which to light the polygons.
@@ -103,514 +103,546 @@
 #'#And all of these work with `render_highquality()`
 #'render_highquality(samples = 16)
 render_obj = function(
-	filename,
-	extent = NULL,
-	panel = NULL,
-	y = NULL,
-	x = NULL,
-	altitude = NULL,
-	xyz = NULL,
-	zscale = 1,
-	vertical_exaggeration = 1,
-	heightmap = NULL,
-	load_material = FALSE,
-	load_normals = TRUE,
-	color = "grey50",
-	offset = 0,
-	obj_zscale = FALSE,
-	swap_yz = NULL,
-	angle = c(0, 0, 0),
-	scale = c(1, 1, 1),
-	clear_previous = FALSE,
-	baseshape = "rectangle",
-	lit = FALSE,
-	light_altitude = c(45, 30),
-	light_direction = c(315, 135),
-	light_intensity = 0.3,
-	light_relative = FALSE,
-	rgl_tag = "",
-	lat = NULL,
-	long = NULL,
-	location = NULL,
-	crs = NULL,
-	filter_to_extent = TRUE,
-	...
+  filename,
+  extent = NULL,
+  panel = NULL,
+  y = NULL,
+  x = NULL,
+  altitude = NULL,
+  xyz = NULL,
+  zscale = 1,
+  vertical_exaggeration = 1,
+  heightmap = NULL,
+  load_material = FALSE,
+  load_normals = TRUE,
+  color = "grey50",
+  offset = 0,
+  obj_zscale = FALSE,
+  swap_yz = NULL,
+  angle = c(0, 0, 0),
+  scale = c(1, 1, 1),
+  clear_previous = FALSE,
+  baseshape = "rectangle",
+  lit = FALSE,
+  light_altitude = c(45, 30),
+  light_direction = c(315, 135),
+  light_intensity = 0.3,
+  light_relative = FALSE,
+  rgl_tag = "",
+  lat = NULL,
+  long = NULL,
+  location = NULL,
+  crs = NULL,
+  filter_to_extent = TRUE,
+  ...
 ) {
-	validate_filter_to_extent(filter_to_extent, caller = "render_obj")
-	dot_split = split_zaxis_dots(list(...))
-	transform_scene_input = TRUE
-	if ("transform_scene" %in% names(dot_split$other_args)) {
-		transform_scene_input = dot_split$other_args$transform_scene
-		if (
-			!is.logical(transform_scene_input) ||
-				length(transform_scene_input) != 1 ||
-				is.na(transform_scene_input)
-		) {
-			stop("`transform_scene` must be a single logical value.", call. = FALSE)
-		}
-		dot_split$other_args$transform_scene = NULL
-	}
-	zscale = resolve_scene_render_effective_zscale(
-		zscale = zscale,
-		zscale_missing = missing(zscale),
-		vertical_exaggeration = vertical_exaggeration,
-		vertical_exaggeration_missing = missing(vertical_exaggeration),
-		caller = "render_obj"
-	)
-	heightmap = resolve_scene_render_heightmap(
-		heightmap,
-		caller = "render_obj"
-	)
-	zaxis_args = dot_split$zaxis_args
-	zaxis_extent = resolve_scene_render_extent(
-		extent = extent,
-		heightmap = heightmap,
-		caller = "render_obj",
-		panel = panel,
-		error_if_missing = FALSE
-	)
-	zaxis_args = normalize_scene_zaxis_args(
-		zaxis_args = zaxis_args,
-		altitude = altitude,
-		extent = zaxis_extent,
-		heightmap = heightmap
-	)
-	point_input = resolve_render_location_input(
-		location = location,
-		x = x,
-		y = y,
-		long = long,
-		lat = lat,
-		missing_x = missing(x),
-		missing_y = missing(y),
-		missing_long = missing(long),
-		missing_lat = missing(lat),
-		extent = if (!is.null(zaxis_extent)) zaxis_extent else extent,
-		heightmap = heightmap,
-		panel = panel,
-		crs = crs,
-		caller = "render_obj"
-	)
-	x = point_input$x
-	y = point_input$y
-	lat = y
-	long = x
-	input_crs = if (is.null(crs)) point_input$source_crs else crs
-	if (!is.null(point_input$extent)) {
-		extent = point_input$extent
-	} else if (is.null(extent) && !is.null(zaxis_extent)) {
-		extent = zaxis_extent
-	}
-	location_supplied = isTRUE(point_input$location_supplied)
-	render_obj_args = dot_split$other_args
-	triangles3d_with_args = function(...) {
-		do.call(rgl::triangles3d, c(list(...), render_obj_args))
-	}
-	if (rgl::cur3d() == 0) {
-		stop("No rgl window currently open.")
-	}
-	if (is.null(lat) || is.null(long)) {
-		single_obj = TRUE
-	} else {
-		single_obj = FALSE
-	}
-	if (is.null(xyz) && !single_obj && isTRUE(transform_scene_input) && !location_supplied) {
-		scene_xy = auto_transform_scene_xy(
-			x = long,
-			y = lat,
-			extent = extent,
-			heightmap = heightmap,
-			panel = panel,
-			crs = input_crs,
-			caller = "render_obj"
-		)
-		long = scene_xy$x
-		lat = scene_xy$y
-		if (!is.null(scene_xy$extent)) {
-			extent = scene_xy$extent
-		}
-		transform_scene_input = FALSE
-		input_crs = NULL
-	}
-	if (is.null(xyz) && !single_obj) {
-		n_obj_before_filter = length(lat)
-		filtered_obj_xy = filter_scene_xy_to_extent(
-			x = long,
-			y = lat,
-			extent = extent,
-			heightmap = heightmap,
-			panel = panel,
-			filter_to_extent = filter_to_extent,
-			caller = "render_obj"
-		)
-		long = filtered_obj_xy$x
-		lat = filtered_obj_xy$y
-		if (length(filtered_obj_xy$keep) == n_obj_before_filter) {
-			altitude = subset_render_arg(altitude, filtered_obj_xy$keep, n_obj_before_filter)
-			color = subset_render_color_arg(color, filtered_obj_xy$keep, n_obj_before_filter)
-			angle = subset_render_row_arg(angle, filtered_obj_xy$keep, n_obj_before_filter)
-			scale = subset_render_row_arg(scale, filtered_obj_xy$keep, n_obj_before_filter)
-		}
-		if (!length(lat) || !length(long)) {
-			if (clear_previous) {
-				rgl::pop3d(tag = sprintf("obj%s", rgl_tag))
-			}
-			render_zaxis_from_dots(
-				zaxis_args = zaxis_args,
-				extent = extent,
-				panel = panel,
-				zscale = zscale,
-				heightmap = heightmap,
-				caller = "render_obj"
-			)
-			return(invisible(NULL))
-		}
-	}
-	if (!is.null(heightmap)) {
-		heightmap = generate_base_shape(heightmap, baseshape)
-	}
-	if (is.null(xyz)) {
-		raw_coords = FALSE
-		if (!single_obj) {
-			if (is.null(swap_yz)) {
-				swap_yz = FALSE
-			}
-			xyz = transform_into_heightmap_coords(
-				extent,
-				heightmap,
-				lat,
-				long,
-				altitude,
-				offset,
-				zscale,
-				crs = input_crs,
-				panel = panel,
-				transform_scene = isTRUE(transform_scene_input) && !location_supplied,
-				caller = "render_obj"
-			)
-		} else {
-			if (is.null(swap_yz)) {
-				swap_yz = TRUE
-			}
-			xyz = transform_into_heightmap_coords(
-				extent,
-				heightmap,
-				lat,
-				long,
-				altitude,
-				offset,
-				zscale,
-				use_altitude = FALSE,
-				crs = input_crs,
-				panel = panel,
-				transform_scene = isTRUE(transform_scene_input) && !location_supplied,
-				caller = "render_obj"
-			)
-		}
-		if (swap_yz) {
-			xyz = xyz[, c(1, 3, 2), drop = FALSE]
-		}
-	} else {
-		raw_coords = TRUE
-	}
+  validate_filter_to_extent(filter_to_extent, caller = "render_obj")
+  dot_split = split_zaxis_dots(list(...))
+  transform_scene_input = TRUE
+  if ("transform_scene" %in% names(dot_split$other_args)) {
+    transform_scene_input = dot_split$other_args$transform_scene
+    if (
+      !is.logical(transform_scene_input) ||
+        length(transform_scene_input) != 1 ||
+        is.na(transform_scene_input)
+    ) {
+      stop("`transform_scene` must be a single logical value.", call. = FALSE)
+    }
+    dot_split$other_args$transform_scene = NULL
+  }
+  zscale = resolve_scene_render_effective_zscale(
+    zscale = zscale,
+    zscale_missing = missing(zscale),
+    vertical_exaggeration = vertical_exaggeration,
+    vertical_exaggeration_missing = missing(vertical_exaggeration),
+    caller = "render_obj"
+  )
+  heightmap = resolve_scene_render_heightmap(
+    heightmap,
+    caller = "render_obj"
+  )
+  zaxis_args = dot_split$zaxis_args
+  zaxis_extent = resolve_scene_render_extent(
+    extent = extent,
+    heightmap = heightmap,
+    caller = "render_obj",
+    panel = panel,
+    error_if_missing = FALSE
+  )
+  zaxis_args = normalize_scene_zaxis_args(
+    zaxis_args = zaxis_args,
+    altitude = altitude,
+    extent = zaxis_extent,
+    heightmap = heightmap
+  )
+  point_input = resolve_render_location_input(
+    location = location,
+    x = x,
+    y = y,
+    long = long,
+    lat = lat,
+    missing_x = missing(x),
+    missing_y = missing(y),
+    missing_long = missing(long),
+    missing_lat = missing(lat),
+    extent = if (!is.null(zaxis_extent)) zaxis_extent else extent,
+    heightmap = heightmap,
+    panel = panel,
+    crs = crs,
+    caller = "render_obj"
+  )
+  x = point_input$x
+  y = point_input$y
+  lat = y
+  long = x
+  input_crs = if (is.null(crs)) point_input$source_crs else crs
+  if (!is.null(point_input$extent)) {
+    extent = point_input$extent
+  } else if (is.null(extent) && !is.null(zaxis_extent)) {
+    extent = zaxis_extent
+  }
+  location_supplied = isTRUE(point_input$location_supplied)
+  render_obj_args = dot_split$other_args
+  triangles3d_with_args = function(...) {
+    do.call(rgl::triangles3d, c(list(...), render_obj_args))
+  }
+  if (rgl::cur3d() == 0) {
+    stop("No rgl window currently open.")
+  }
+  if (is.null(lat) || is.null(long)) {
+    single_obj = TRUE
+  } else {
+    single_obj = FALSE
+  }
+  if (
+    is.null(xyz) &&
+      !single_obj &&
+      isTRUE(transform_scene_input) &&
+      !location_supplied
+  ) {
+    scene_xy = auto_transform_scene_xy(
+      x = long,
+      y = lat,
+      extent = extent,
+      heightmap = heightmap,
+      panel = panel,
+      crs = input_crs,
+      caller = "render_obj"
+    )
+    long = scene_xy$x
+    lat = scene_xy$y
+    if (!is.null(scene_xy$extent)) {
+      extent = scene_xy$extent
+    }
+    transform_scene_input = FALSE
+    input_crs = NULL
+  }
+  if (is.null(xyz) && !single_obj) {
+    n_obj_before_filter = length(lat)
+    filtered_obj_xy = filter_scene_xy_to_extent(
+      x = long,
+      y = lat,
+      extent = extent,
+      heightmap = heightmap,
+      panel = panel,
+      filter_to_extent = filter_to_extent,
+      caller = "render_obj"
+    )
+    long = filtered_obj_xy$x
+    lat = filtered_obj_xy$y
+    if (length(filtered_obj_xy$keep) == n_obj_before_filter) {
+      altitude = subset_render_arg(
+        altitude,
+        filtered_obj_xy$keep,
+        n_obj_before_filter
+      )
+      color = subset_render_color_arg(
+        color,
+        filtered_obj_xy$keep,
+        n_obj_before_filter
+      )
+      angle = subset_render_row_arg(
+        angle,
+        filtered_obj_xy$keep,
+        n_obj_before_filter
+      )
+      scale = subset_render_row_arg(
+        scale,
+        filtered_obj_xy$keep,
+        n_obj_before_filter
+      )
+    }
+    if (!length(lat) || !length(long)) {
+      if (clear_previous) {
+        rgl::pop3d(tag = sprintf("obj%s", rgl_tag))
+      }
+      render_zaxis_from_dots(
+        zaxis_args = zaxis_args,
+        extent = extent,
+        panel = panel,
+        zscale = zscale,
+        heightmap = heightmap,
+        caller = "render_obj"
+      )
+      return(invisible(NULL))
+    }
+  }
+  if (!is.null(heightmap)) {
+    heightmap = generate_base_shape(heightmap, baseshape)
+  }
+  if (is.null(xyz)) {
+    raw_coords = FALSE
+    if (!single_obj) {
+      if (is.null(swap_yz)) {
+        swap_yz = FALSE
+      }
+      xyz = transform_into_heightmap_coords(
+        extent,
+        heightmap,
+        lat,
+        long,
+        altitude,
+        offset,
+        zscale,
+        crs = input_crs,
+        panel = panel,
+        transform_scene = isTRUE(transform_scene_input) && !location_supplied,
+        caller = "render_obj"
+      )
+    } else {
+      if (is.null(swap_yz)) {
+        swap_yz = TRUE
+      }
+      xyz = transform_into_heightmap_coords(
+        extent,
+        heightmap,
+        lat,
+        long,
+        altitude,
+        offset,
+        zscale,
+        use_altitude = FALSE,
+        crs = input_crs,
+        panel = panel,
+        transform_scene = isTRUE(transform_scene_input) && !location_supplied,
+        caller = "render_obj"
+      )
+    }
+    if (swap_yz) {
+      xyz = xyz[, c(1, 3, 2), drop = FALSE]
+    }
+  } else {
+    raw_coords = TRUE
+  }
 
-	if (clear_previous) {
-		rgl::pop3d(tag = sprintf("obj%s", rgl_tag))
-		if (missing(filename)) {
-			render_zaxis_from_dots(
-				zaxis_args = zaxis_args,
-				extent = extent,
-				panel = panel,
-				zscale = zscale,
-				heightmap = heightmap,
-				caller = "render_obj"
-			)
-			return(invisible())
-		}
-	}
-	if (is.numeric(color) && length(color) == 3) {
-		color = convert_color(color, as_hex = TRUE)
-	}
-	if (length(color) == 1 && nrow(xyz) > 0) {
-		color = rep(color, nrow(xyz))
-	} else {
-		if (length(color) != nrow(xyz) && nrow(xyz) > 0) {
-			stop(
-				"If passing individual colors for each object, the number of colors must match the number of objects"
-			)
-		}
-	}
-	if (load_material) {
-		obj = rayvertex::read_obj(
-			path.expand(filename),
-			materialspath = dirname(filename)
-		)
-	} else {
-		obj = rayvertex::read_obj(path.expand(filename))
-	}
-	if (inherits(angle, "matrix")) {
-		stopifnot(is.numeric(angle))
-		stopifnot(ncol(angle) == 3)
-	} else if (inherits(angle, "list")) {
-		angle = do.call(rbind, angle)
-		stopifnot(is.numeric(angle))
-		stopifnot(ncol(angle) == 3)
-	} else {
-		stopifnot(length(angle) == 3)
-		if (nrow(xyz) > 0) {
-			angle = matrix(angle, ncol = 3, nrow = nrow(xyz), byrow = TRUE)
-		} else {
-			angle = matrix(angle, ncol = 3, nrow = 1, byrow = TRUE)
-		}
-	}
-	if (inherits(scale, "matrix")) {
-		stopifnot(is.numeric(scale))
-		stopifnot(ncol(scale) == 3)
-	} else if (inherits(scale, "list")) {
-		scale = do.call(rbind, scale)
-		stopifnot(is.numeric(scale))
-		stopifnot(ncol(scale) == 3)
-	} else {
-		stopifnot(length(scale) == 3)
-		if (nrow(xyz) > 0) {
-			scale = matrix(scale, ncol = 3, nrow = nrow(xyz), byrow = T)
-		} else {
-			scale = matrix(scale, ncol = 3, nrow = 1, byrow = T)
-		}
-	}
-	obj_cache_altitude = altitude
-	if (!is.null(lat) && !is.null(long) && any(is.na(xyz[, 2]))) {
-		valid_xyz = !is.na(xyz[, 2])
-		if (length(obj_cache_altitude) == length(valid_xyz)) {
-			obj_cache_altitude = obj_cache_altitude[valid_xyz]
-		}
-		scale = scale[valid_xyz, ]
-		angle = angle[valid_xyz, ]
-		color = color[valid_xyz]
-		xyz = xyz[valid_xyz, ]
-		if (nrow(xyz) == 0) {
-			stop(
-				"All models outside extent--check x/y or lat/long values and extent object."
-			)
-		}
-	}
-	cache_altitude_zaxis_data(
-		source = "obj",
-		altitude = obj_cache_altitude,
-		scene_altitude = xyz[, 2] * zscale,
-		label = "obj"
-	)
-	scenelist = list()
-	for (k in seq_len(nrow(xyz))) {
-		tempobj = obj
-		if (any(angle != 0)) {
-			tempobj = rayvertex::rotate_mesh(tempobj, as.numeric(angle[k, ]))
-		}
-		if (any(scale[k, ] != 1)) {
-			tempobj = rayvertex::scale_mesh(tempobj, as.numeric(scale[k, ]))
-		}
-		if (!load_material) {
-			tempobj = rayvertex::set_material(tempobj, diffuse = color[k])
-		}
-		scenelist[[k]] = rayvertex::translate_mesh(tempobj, as.numeric(xyz[k, ]))
-	}
-	if (!raw_coords) {
-		stopifnot(!is.null(heightmap))
-		nrow_map = nrow(heightmap)
-		ncol_map = ncol(heightmap)
+  if (clear_previous) {
+    rgl::pop3d(tag = sprintf("obj%s", rgl_tag))
+    if (missing(filename)) {
+      render_zaxis_from_dots(
+        zaxis_args = zaxis_args,
+        extent = extent,
+        panel = panel,
+        zscale = zscale,
+        heightmap = heightmap,
+        caller = "render_obj"
+      )
+      return(invisible())
+    }
+  }
+  obj_color_values = if (!is.null(altitude)) {
+    altitude
+  } else {
+    xyz[, 2] * zscale
+  }
+  color = resolve_ggplot_height_palette_color(
+    color = color,
+    values = obj_color_values,
+    heightmap = heightmap,
+    caller = "render_obj"
+  )
+  if (is.numeric(color) && length(color) == 3) {
+    color = convert_color(color, as_hex = TRUE)
+  }
+  if (length(color) == 1 && nrow(xyz) > 0) {
+    color = rep(color, nrow(xyz))
+  } else {
+    if (length(color) != nrow(xyz) && nrow(xyz) > 0) {
+      stop(
+        "If passing individual colors for each object, the number of colors must match the number of objects"
+      )
+    }
+  }
+  if (load_material) {
+    obj = rayvertex::read_obj(
+      path.expand(filename),
+      materialspath = dirname(filename)
+    )
+  } else {
+    obj = rayvertex::read_obj(path.expand(filename))
+  }
+  if (inherits(angle, "matrix")) {
+    stopifnot(is.numeric(angle))
+    stopifnot(ncol(angle) == 3)
+  } else if (inherits(angle, "list")) {
+    angle = do.call(rbind, angle)
+    stopifnot(is.numeric(angle))
+    stopifnot(ncol(angle) == 3)
+  } else {
+    stopifnot(length(angle) == 3)
+    if (nrow(xyz) > 0) {
+      angle = matrix(angle, ncol = 3, nrow = nrow(xyz), byrow = TRUE)
+    } else {
+      angle = matrix(angle, ncol = 3, nrow = 1, byrow = TRUE)
+    }
+  }
+  if (inherits(scale, "matrix")) {
+    stopifnot(is.numeric(scale))
+    stopifnot(ncol(scale) == 3)
+  } else if (inherits(scale, "list")) {
+    scale = do.call(rbind, scale)
+    stopifnot(is.numeric(scale))
+    stopifnot(ncol(scale) == 3)
+  } else {
+    stopifnot(length(scale) == 3)
+    if (nrow(xyz) > 0) {
+      scale = matrix(scale, ncol = 3, nrow = nrow(xyz), byrow = T)
+    } else {
+      scale = matrix(scale, ncol = 3, nrow = 1, byrow = T)
+    }
+  }
+  obj_cache_altitude = altitude
+  if (!is.null(lat) && !is.null(long) && any(is.na(xyz[, 2]))) {
+    valid_xyz = !is.na(xyz[, 2])
+    if (length(obj_cache_altitude) == length(valid_xyz)) {
+      obj_cache_altitude = obj_cache_altitude[valid_xyz]
+    }
+    scale = scale[valid_xyz, ]
+    angle = angle[valid_xyz, ]
+    color = color[valid_xyz]
+    xyz = xyz[valid_xyz, ]
+    if (nrow(xyz) == 0) {
+      stop(
+        "All models outside extent--check x/y or lat/long values and extent object."
+      )
+    }
+  }
+  cache_altitude_zaxis_data(
+    source = "obj",
+    altitude = obj_cache_altitude,
+    scene_altitude = xyz[, 2] * zscale,
+    label = "obj"
+  )
+  scenelist = list()
+  for (k in seq_len(nrow(xyz))) {
+    tempobj = obj
+    if (any(angle != 0)) {
+      tempobj = rayvertex::rotate_mesh(tempobj, as.numeric(angle[k, ]))
+    }
+    if (any(scale[k, ] != 1)) {
+      tempobj = rayvertex::scale_mesh(tempobj, as.numeric(scale[k, ]))
+    }
+    if (!load_material) {
+      tempobj = rayvertex::set_material(tempobj, diffuse = color[k])
+    }
+    scenelist[[k]] = rayvertex::translate_mesh(tempobj, as.numeric(xyz[k, ]))
+  }
+  if (!raw_coords) {
+    stopifnot(!is.null(heightmap))
+    nrow_map = nrow(heightmap)
+    ncol_map = ncol(heightmap)
 
-		extent = resolve_scene_render_extent(
-			extent = extent,
-			heightmap = heightmap,
-			caller = "render_obj",
-			panel = panel
-		)
-		extent = get_extent(extent)
-		minpoint_x = (extent["xmax"] + extent["xmin"]) / 2 - zscale / 2
-		minpoint_y = (extent["ymax"] + extent["ymin"]) / 2 + zscale / 2
-		scale_x = (nrow_map - 1) / (extent["xmax"] - extent["xmin"])
-		scale_z = (ncol_map - 1) / (extent["ymax"] - extent["ymin"])
-		scale_y = 1 / zscale
-		if (single_obj) {
-			obj_zscale = FALSE
-			idvals = rgl::ids3d(tags = TRUE)
-			if (any(substr(idvals$tag, 1, 7) == "surface")) {
-				id = idvals$id[substr(idvals$tag, 1, 7) == "surface"]
-				id = id[1]
-				yvals = rgl::rgl.attrib(id, "vertices")[, 2]
-				base_offset = (max(yvals, na.rm = TRUE) - min(yvals, na.rm = TRUE)) / 2
-			} else {
-				base_offset = 0
-			}
+    extent = resolve_scene_render_extent(
+      extent = extent,
+      heightmap = heightmap,
+      caller = "render_obj",
+      panel = panel
+    )
+    extent = get_extent(extent)
+    minpoint_x = (extent["xmax"] + extent["xmin"]) / 2 - zscale / 2
+    minpoint_y = (extent["ymax"] + extent["ymin"]) / 2 + zscale / 2
+    scale_x = (nrow_map - 1) / (extent["xmax"] - extent["xmin"])
+    scale_z = (ncol_map - 1) / (extent["ymax"] - extent["ymin"])
+    scale_y = 1 / zscale
+    if (single_obj) {
+      obj_zscale = FALSE
+      idvals = rgl::ids3d(tags = TRUE)
+      if (any(substr(idvals$tag, 1, 7) == "surface")) {
+        id = idvals$id[substr(idvals$tag, 1, 7) == "surface"]
+        id = id[1]
+        yvals = rgl::rgl.attrib(id, "vertices")[, 2]
+        base_offset = (max(yvals, na.rm = TRUE) - min(yvals, na.rm = TRUE)) / 2
+      } else {
+        base_offset = 0
+      }
 
-			if (swap_yz) {
-				scenelist[[1]] = rayvertex::translate_mesh(
-					scenelist[[1]],
-					c(-minpoint_x, -minpoint_y, 0)
-				) |>
-					rayvertex::rotate_mesh(c(90, 0, 0)) |>
-					rayvertex::scale_mesh(c(scale_x, scale_y, scale_z))
-			} else {
-				scenelist[[1]] = rayvertex::translate_mesh(
-					scenelist[[1]],
-					c(-minpoint_x, 0, -minpoint_y)
-				) |>
-					rayvertex::scale_mesh(c(scale_x, scale_y, scale_z))
-			}
-		}
-	}
-	if (nrow(xyz) == 0) {
-		scenelist[[1]] = obj
-	}
-	obj = rayvertex::scene_from_list(scenelist)
-	if (obj_zscale) {
-		obj = rayvertex::scale_mesh(obj, c(1, 1, 1) / zscale)
-	}
-	if (length(obj$materials[[1]]) == 0) {
-		obj = rayvertex::set_material(
-			obj,
-			rayvertex::material_list(diffuse = color)
-		)
-	}
-	obj = rayvertex:::merge_scene(obj, flatten_materials = TRUE)
-	obj = rayvertex:::remove_duplicate_materials(obj)
+      if (swap_yz) {
+        scenelist[[1]] = rayvertex::translate_mesh(
+          scenelist[[1]],
+          c(-minpoint_x, -minpoint_y, 0)
+        ) |>
+          rayvertex::rotate_mesh(c(90, 0, 0)) |>
+          rayvertex::scale_mesh(c(scale_x, scale_y, scale_z))
+      } else {
+        scenelist[[1]] = rayvertex::translate_mesh(
+          scenelist[[1]],
+          c(-minpoint_x, 0, -minpoint_y)
+        ) |>
+          rayvertex::scale_mesh(c(scale_x, scale_y, scale_z))
+      }
+    }
+  }
+  if (nrow(xyz) == 0) {
+    scenelist[[1]] = obj
+  }
+  obj = rayvertex::scene_from_list(scenelist)
+  if (obj_zscale) {
+    obj = rayvertex::scale_mesh(obj, c(1, 1, 1) / zscale)
+  }
+  if (length(obj$materials[[1]]) == 0) {
+    obj = rayvertex::set_material(
+      obj,
+      rayvertex::material_list(diffuse = color)
+    )
+  }
+  obj = rayvertex:::merge_scene(obj, flatten_materials = TRUE)
+  obj = rayvertex:::remove_duplicate_materials(obj)
 
-	number_shapes = length(obj$shapes)
-	number_materials = length(obj$materials)
+  number_shapes = length(obj$shapes)
+  number_materials = length(obj$materials)
 
-	inds_by_material = vector(mode = "list", length = number_materials)
-	tex_by_material = vector(mode = "list", length = number_materials)
-	norm_by_material = vector(mode = "list", length = number_materials)
+  inds_by_material = vector(mode = "list", length = number_materials)
+  tex_by_material = vector(mode = "list", length = number_materials)
+  norm_by_material = vector(mode = "list", length = number_materials)
 
-	for (i in seq_len(number_shapes)) {
-		for (j in seq_len(number_materials)) {
-			select_material = obj$shapes[[i]]$material_ids == (j - 1)
-			inds_by_material[[j]] = rbind(
-				inds_by_material[[j]],
-				obj$shapes[[i]]$indices[select_material, ]
-			)
-			tex_by_material[[j]] = rbind(
-				tex_by_material[[j]],
-				obj$shapes[[i]]$tex_indices[select_material, ]
-			)
-			norm_by_material[[j]] = rbind(
-				norm_by_material[[j]],
-				obj$shapes[[i]]$norm_indices[select_material, ]
-			)
-		}
-	}
+  for (i in seq_len(number_shapes)) {
+    for (j in seq_len(number_materials)) {
+      select_material = obj$shapes[[i]]$material_ids == (j - 1)
+      inds_by_material[[j]] = rbind(
+        inds_by_material[[j]],
+        obj$shapes[[i]]$indices[select_material, ]
+      )
+      tex_by_material[[j]] = rbind(
+        tex_by_material[[j]],
+        obj$shapes[[i]]$tex_indices[select_material, ]
+      )
+      norm_by_material[[j]] = rbind(
+        norm_by_material[[j]],
+        obj$shapes[[i]]$norm_indices[select_material, ]
+      )
+    }
+  }
 
-	for (j in seq_len(number_materials)) {
-		new_tex = matrix(0, nrow = nrow(obj$vertices), ncol = 2)
-		new_norm = matrix(0, nrow = nrow(obj$vertices), ncol = 3)
+  for (j in seq_len(number_materials)) {
+    new_tex = matrix(0, nrow = nrow(obj$vertices), ncol = 2)
+    new_norm = matrix(0, nrow = nrow(obj$vertices), ncol = 3)
 
-		ind_temp = c(t(inds_by_material[[j]] + 1))
-		tex_vec = c(t(tex_by_material[[j]] + 1))
-		norm_vec = c(t(norm_by_material[[j]] + 1))
+    ind_temp = c(t(inds_by_material[[j]] + 1))
+    tex_vec = c(t(tex_by_material[[j]] + 1))
+    norm_vec = c(t(norm_by_material[[j]] + 1))
 
-		for (k in seq_len(length(ind_temp))) {
-			if (tex_vec[k] != 0) {
-				new_tex[ind_temp[k], ] = obj$texcoords[tex_vec[k], ]
-			}
-			if (norm_vec[k] != 0) {
-				new_norm[ind_temp[k], ] = obj$normals[norm_vec[k], ]
-			}
-		}
-		texture = obj$materials[[j]]$diffuse_texname
-		diffuse_col = "white"
-		specular_col = "black"
-		ambient_col = "black"
-		has_texture = TRUE
-		if (nchar(texture) == 0) {
-			texture = NULL
-			has_texture = FALSE
-			diffuse_col = convert_color(obj$materials[[j]]$diffuse, as_hex = TRUE)
-			specular_col = convert_color(obj$materials[[j]]$specular, as_hex = TRUE)
-			ambient_col = convert_color(obj$materials[[j]]$ambient, as_hex = TRUE)
-		}
-		has_vertex_normals = length(norm_vec) > 0 && any(norm_vec != 0)
-		mat_has_norm = has_vertex_normals && load_normals
-		if (has_texture) {
-			if (mat_has_norm) {
-				id = triangles3d_with_args(
-					x = obj$vertices,
-					texcoords = new_tex,
-					indices = ind_temp,
-					textype = "rgba",
-					specular = "black",
-					color = "white",
-					normals = new_norm,
-					texture = texture,
-					tag = sprintf("obj%s", rgl_tag),
-					back = "filled",
-					lit = lit
-				)
-			} else {
-				id = triangles3d_with_args(
-					x = obj$vertices,
-					texcoords = new_tex,
-					textype = "rgba",
-					specular = "black",
-					color = "white",
-					indices = ind_temp,
-					texture = texture,
-					tag = sprintf("obj%s", rgl_tag),
-					back = "filled",
-					lit = lit
-				)
-			}
-		} else {
-			if (mat_has_norm) {
-				id = triangles3d_with_args(
-					x = obj$vertices,
-					indices = ind_temp,
-					specular = specular_col,
-					color = diffuse_col,
-					ambient = ambient_col,
-					normals = new_norm,
-					tag = sprintf("obj%s", rgl_tag),
-					back = "filled",
-					lit = lit
-				)
-			} else {
-				id = triangles3d_with_args(
-					x = obj$vertices,
-					specular = specular_col,
-					color = diffuse_col,
-					ambient = ambient_col,
-					indices = ind_temp,
-					tag = sprintf("obj%s", rgl_tag),
-					back = "filled",
-					lit = lit
-				)
-			}
-		}
-		assign(as.character(id), mat_has_norm, envir = ray_has_norm_envir)
-		assign(as.character(id), has_texture, envir = ray_has_tex_envir)
-	}
-	if (lit) {
-		existing_lights = rgl::ids3d(type = "lights")
-		for (i in seq_len(nrow(existing_lights))) {
-			rgl::pop3d(type = "lights")
-		}
-		if (length(light_altitude) < length(light_direction)) {
-			stop("light_altitude and light_direction must be same length")
-		}
-		for (i in seq_len(length(light_direction))) {
-			rgl::light3d(
-				theta = -light_direction[i] + 180,
-				phi = light_altitude[i],
-				specular = convert_color(rep(light_intensity, 3), as_hex = TRUE),
-				viewpoint.rel = light_relative
-			)
-		}
-	}
-	render_zaxis_from_dots(
-		zaxis_args = zaxis_args,
-		extent = extent,
-		panel = panel,
-		zscale = zscale,
-		heightmap = heightmap,
-		caller = "render_obj"
-	)
+    for (k in seq_len(length(ind_temp))) {
+      if (tex_vec[k] != 0) {
+        new_tex[ind_temp[k], ] = obj$texcoords[tex_vec[k], ]
+      }
+      if (norm_vec[k] != 0) {
+        new_norm[ind_temp[k], ] = obj$normals[norm_vec[k], ]
+      }
+    }
+    texture = obj$materials[[j]]$diffuse_texname
+    diffuse_col = "white"
+    specular_col = "black"
+    ambient_col = "black"
+    has_texture = TRUE
+    if (nchar(texture) == 0) {
+      texture = NULL
+      has_texture = FALSE
+      diffuse_col = convert_color(obj$materials[[j]]$diffuse, as_hex = TRUE)
+      specular_col = convert_color(obj$materials[[j]]$specular, as_hex = TRUE)
+      ambient_col = convert_color(obj$materials[[j]]$ambient, as_hex = TRUE)
+    }
+    has_vertex_normals = length(norm_vec) > 0 && any(norm_vec != 0)
+    mat_has_norm = has_vertex_normals && load_normals
+    if (has_texture) {
+      if (mat_has_norm) {
+        id = triangles3d_with_args(
+          x = obj$vertices,
+          texcoords = new_tex,
+          indices = ind_temp,
+          textype = "rgba",
+          specular = "black",
+          color = "white",
+          normals = new_norm,
+          texture = texture,
+          tag = sprintf("obj%s", rgl_tag),
+          back = "filled",
+          lit = lit
+        )
+      } else {
+        id = triangles3d_with_args(
+          x = obj$vertices,
+          texcoords = new_tex,
+          textype = "rgba",
+          specular = "black",
+          color = "white",
+          indices = ind_temp,
+          texture = texture,
+          tag = sprintf("obj%s", rgl_tag),
+          back = "filled",
+          lit = lit
+        )
+      }
+    } else {
+      if (mat_has_norm) {
+        id = triangles3d_with_args(
+          x = obj$vertices,
+          indices = ind_temp,
+          specular = specular_col,
+          color = diffuse_col,
+          ambient = ambient_col,
+          normals = new_norm,
+          tag = sprintf("obj%s", rgl_tag),
+          back = "filled",
+          lit = lit
+        )
+      } else {
+        id = triangles3d_with_args(
+          x = obj$vertices,
+          specular = specular_col,
+          color = diffuse_col,
+          ambient = ambient_col,
+          indices = ind_temp,
+          tag = sprintf("obj%s", rgl_tag),
+          back = "filled",
+          lit = lit
+        )
+      }
+    }
+    assign(as.character(id), mat_has_norm, envir = ray_has_norm_envir)
+    assign(as.character(id), has_texture, envir = ray_has_tex_envir)
+  }
+  if (lit) {
+    existing_lights = rgl::ids3d(type = "lights")
+    for (i in seq_len(nrow(existing_lights))) {
+      rgl::pop3d(type = "lights")
+    }
+    if (length(light_altitude) < length(light_direction)) {
+      stop("light_altitude and light_direction must be same length")
+    }
+    for (i in seq_len(length(light_direction))) {
+      rgl::light3d(
+        theta = -light_direction[i] + 180,
+        phi = light_altitude[i],
+        specular = convert_color(rep(light_intensity, 3), as_hex = TRUE),
+        viewpoint.rel = light_relative
+      )
+    }
+  }
+  render_zaxis_from_dots(
+    zaxis_args = zaxis_args,
+    extent = extent,
+    panel = panel,
+    zscale = zscale,
+    heightmap = heightmap,
+    caller = "render_obj"
+  )
 }

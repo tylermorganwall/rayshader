@@ -54,7 +54,7 @@ All points are assumed to be evenly spaced.}
 \item{size}{Default \code{3}. The point size. This can be a vector (the same length as \code{x} and \code{y}) specifying
 a size for each point.}
 
-\item{color}{Default \code{black}. Color of the point. This can also be a vector specifying the color of each point.}
+\item{color}{Default \code{black}. Color of the point. This can also be a vector specifying the color of each point. Use \code{"height"} to color points by the cached \code{\link[=plot_gg]{plot_gg()}} height aesthetic palette.}
 
 \item{offset}{Default \code{5}. Offset of the track from the surface, if \code{altitude = NULL}.}
 
