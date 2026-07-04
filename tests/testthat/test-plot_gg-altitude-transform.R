@@ -193,6 +193,57 @@ test_that("render point colors can use cached ggplot height palette", {
   expect_equal(point_vertices[, 2], expected_y, tolerance = 1e-6)
 })
 
+test_that("render_label() uses cached plot_gg height scale and vertical exaggeration", {
+  on.exit(rgl::close3d(), add = TRUE)
+  local_rgl_use_null()
+
+  p = ggplot(mtcars) +
+    geom_point(aes(x = mpg, y = wt, color = hp))
+
+  suppressWarnings(plot_gg_test(
+    p,
+    width = 2,
+    height_aes = "color",
+    raytrace = FALSE,
+    flat_substrate = TRUE,
+    vertical_exaggeration = 600,
+    windowsize = c(300, 300)
+  ))
+
+  expect_no_condition(render_points(
+    x = mtcars$mpg,
+    y = mtcars$wt,
+    altitude = mtcars$hp,
+    size = 5,
+    color = "black"
+  ))
+  label_index = order(mtcars$hp, decreasing = TRUE)[1]
+  ids = get_ids_with_labels()
+  point_id = ids$id[ids$tag == "points3d"][1]
+  point_vertices = rgl::rgl.attrib(point_id, "vertices")
+
+  expect_no_condition(render_label(
+    x = mtcars$mpg[label_index],
+    y = mtcars$wt[label_index],
+    altitude = mtcars$hp[label_index],
+    relativez = TRUE,
+    line = FALSE,
+    text = rownames(mtcars)[label_index],
+    freetype = FALSE,
+    clear_previous = TRUE
+  ))
+
+  ids = get_ids_with_labels()
+  label_id = ids$id[ids$tag == "raytext"][1]
+  label_vertices = rgl::rgl.attrib(label_id, "vertices")
+
+  expect_equal(
+    unname(label_vertices[1, 2]),
+    unname(point_vertices[label_index, 2]),
+    tolerance = 1e-6
+  )
+})
+
 test_that("ggplot z-axis breaks use mapped height positions but keep raw labels", {
   on.exit(rgl::close3d(), add = TRUE)
   local_rgl_use_null()
