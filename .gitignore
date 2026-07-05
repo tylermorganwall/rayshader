@@ -273,6 +273,7 @@ README_cache/gfm/skymnodelr2_dca448c9c0bbde34a93f5aa7da93f9fe.rdx
 build_gh_pages_rayshader.R
 build_gh_pages_rayshader.R
 *\.png
+!man/figures/README_streams-mammoth-1.png
 !tests/testthat/_snaps/
 !tests/testthat/_snaps/**/*.png
 *\.mp4
