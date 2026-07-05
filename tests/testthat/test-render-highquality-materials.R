@@ -92,6 +92,86 @@ test_that("render_highquality() resolves denoiser-aware water defaults", {
   expect_equal(explicit_values$water_ior, 1.25)
 })
 
+test_that("render_highquality() marks generated skies for white baking", {
+  skip_if_not_installed("rayrender")
+  skip_if_not_installed("skymodelr")
+  on.exit(rgl::close3d(), add = TRUE)
+  local_rgl_use_null()
+  unlink(list.files(
+    tempdir(),
+    pattern = paste0(
+      "^rayshader_sky_mode__direct__elevation__45__azimuth__180__",
+      "altitude__default__resolution-16_.*\\.exr$"
+    ),
+    full.names = TRUE
+  ))
+
+  generated_sky_args = NULL
+  render_scene_args = NULL
+  testthat::local_mocked_bindings(
+    generate_sky = function(...) {
+      generated_sky_args <<- list(...)
+      file.create(generated_sky_args$filename)
+      invisible(generated_sky_args$filename)
+    },
+    .package = "skymodelr"
+  )
+  testthat::local_mocked_bindings(
+    render_scene = function(
+      environment_light = NULL,
+      environment_light_bake_white = NULL,
+      ...
+    ) {
+      render_scene_args <<- c(
+        list(
+          environment_light = environment_light,
+          environment_light_bake_white = environment_light_bake_white
+        ),
+        list(...)
+      )
+      "render-result"
+    },
+    .package = "rayrender"
+  )
+
+  heightmap = matrix(1, nrow = 4, ncol = 4)
+  texture = constant_shade(heightmap)
+  expect_no_condition(plot_3d_test(
+    texture,
+    heightmap,
+    solid = FALSE,
+    shadow = FALSE,
+    windowsize = c(100, 100)
+  ))
+
+  scene = render_highquality(
+    return_scene = TRUE,
+    sky_sun_elevation = 45,
+    sky_sun_azimuth = 180,
+    sky_args = list(resolution = 16)
+  )
+
+  expect_identical(
+    attr(scene, "environment_light", exact = TRUE),
+    generated_sky_args$filename
+  )
+  expect_true(attr(scene, "environment_light_bake_white", exact = TRUE))
+
+  value = render_highquality(
+    plot = FALSE,
+    sky_sun_elevation = 45,
+    sky_sun_azimuth = 180,
+    sky_args = list(resolution = 16)
+  )
+
+  expect_identical(value, "render-result")
+  expect_identical(
+    render_scene_args$environment_light,
+    generated_sky_args$filename
+  )
+  expect_true(render_scene_args$environment_light_bake_white)
+})
+
 test_that("render_highquality() can render water with a microfacet material", {
   skip_if_not_installed("rayrender")
   skip_if_not_installed("rayvertex")

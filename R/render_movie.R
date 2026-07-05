@@ -215,6 +215,7 @@ render_movie_hq = function(
     stop("`render_highquality_args` must be a list.")
   }
   dot_args = list(...)
+  render_animation_formals = formals(rayrender::render_animation)
   keyframes = rayrender::get_saved_keyframes()
   if (is.null(keyframes) || NROW(keyframes) == 0) {
     stop(
@@ -248,6 +249,24 @@ render_movie_hq = function(
       dot_args$environment_light = NULL
     }
     animation_args$environment_light = environment_light
+    environment_light_bake_white = attr(
+      scene,
+      "environment_light_bake_white",
+      exact = TRUE
+    )
+    if (
+      isTRUE(environment_light_bake_white) &&
+        "environment_light_bake_white" %in% names(render_animation_formals)
+    ) {
+      if ("environment_light_bake_white" %in% names(dot_args)) {
+        warning(
+          "`environment_light_bake_white` supplied in `...` ignored because ",
+          "`render_highquality_args` generated an environment map."
+        )
+        dot_args$environment_light_bake_white = NULL
+      }
+      animation_args$environment_light_bake_white = TRUE
+    }
   }
   result = do.call(rayrender::render_animation, c(animation_args, dot_args))
   invisible(result)

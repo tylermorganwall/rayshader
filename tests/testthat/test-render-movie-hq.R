@@ -14,6 +14,7 @@ test_that("render_movie_hq generates motion from saved keyframes", {
       scene_args <<- list(...)
       scene = list(label = "rendered-scene")
       attr(scene, "environment_light") = "sky.exr"
+      attr(scene, "environment_light_bake_white") = TRUE
       scene
     },
     .package = "rayshader"
@@ -36,9 +37,18 @@ test_that("render_movie_hq generates motion from saved keyframes", {
       )
       camera_motion
     },
-    render_animation = function(scene, camera_motion, ...) {
+    render_animation = function(
+      scene,
+      camera_motion,
+      environment_light_bake_white = NULL,
+      ...
+    ) {
       animation_args <<- c(
-        list(scene = scene, camera_motion = camera_motion),
+        list(
+          scene = scene,
+          camera_motion = camera_motion,
+          environment_light_bake_white = environment_light_bake_white
+        ),
         list(...)
       )
       "animation-result"
@@ -65,6 +75,7 @@ test_that("render_movie_hq generates motion from saved keyframes", {
   expect_identical(animation_args$scene$label, "rendered-scene")
   expect_identical(animation_args$camera_motion, camera_motion)
   expect_identical(animation_args$environment_light, "sky.exr")
+  expect_true(animation_args$environment_light_bake_white)
   expect_identical(animation_args$filename, "movie.mp4")
   expect_identical(animation_args$samples, 4)
   expect_false(animation_args$progress)

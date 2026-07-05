@@ -434,6 +434,9 @@ render_highquality = function(
     arg_name = "screen_line_args"
   )
   dot_args = list(...)
+  render_scene_formals = formals(rayrender::render_scene)
+  render_scene_supports_environment_light_bake_white =
+    "environment_light_bake_white" %in% names(render_scene_formals)
   denoiser_available = rayrender::has_denoiser()
   water_defaults = resolve_render_highquality_water_defaults(
     water_material = water_material,
@@ -442,7 +445,7 @@ render_highquality = function(
     water_ior_missing = water_ior_missing,
     dot_args = dot_args,
     denoiser_available = denoiser_available,
-    render_scene_formals = formals(rayrender::render_scene)
+    render_scene_formals = render_scene_formals
   )
   water_material = water_defaults$water_material
   water_ior = water_defaults$water_ior
@@ -540,6 +543,7 @@ render_highquality = function(
   sky_mode = ifelse(has_direct_sky, "direct", "latlong")
 
   sky_file = NULL
+  sky_environment_light_bake_white = FALSE
   if (use_sky) {
     if (!requireNamespace("skymodelr", quietly = TRUE)) {
       stop(
@@ -554,6 +558,14 @@ render_highquality = function(
         "`sky_altitude`, or `sky_args` are set."
       )
       dot_args$environment_light = NULL
+    }
+    if ("environment_light_bake_white" %in% names(dot_args)) {
+      warning(
+        "`environment_light_bake_white` supplied in `...` ignored because ",
+        "`lat`, `long`, `datetime`, `sky_sun_elevation`, `sky_sun_azimuth`, ",
+        "`sky_altitude`, or `sky_args` generated an environment map."
+      )
+      dot_args$environment_light_bake_white = NULL
     }
     if ("filename" %in% names(sky_args)) {
       warning(
@@ -829,6 +841,7 @@ render_highquality = function(
     }
 
     light = FALSE
+    sky_environment_light_bake_white = TRUE
   }
 
   rgl_materials = validate_render_highquality_rgl_materials(rgl_materials)
@@ -1686,6 +1699,8 @@ render_highquality = function(
     attr(scene, "screen_line") = screen_line_objects
     if (!is.null(sky_file)) {
       attr(scene, "environment_light") = sky_file
+      attr(scene, "environment_light_bake_white") =
+        sky_environment_light_bake_white
     }
     return(scene)
   }
@@ -1711,6 +1726,13 @@ render_highquality = function(
     }
     if (!is.null(sky_file)) {
       animation_args$environment_light = sky_file
+      if (
+        sky_environment_light_bake_white &&
+          "environment_light_bake_white" %in%
+            names(formals(rayrender::render_animation))
+      ) {
+        animation_args$environment_light_bake_white = TRUE
+      }
     }
     do.call(rayrender::render_animation, c(animation_args, dot_args))
     return()
@@ -1738,6 +1760,12 @@ render_highquality = function(
   }
   if (!is.null(sky_file)) {
     render_scene_args$environment_light = sky_file
+    if (
+      sky_environment_light_bake_white &&
+        render_scene_supports_environment_light_bake_white
+    ) {
+      render_scene_args$environment_light_bake_white = TRUE
+    }
   }
   duplicate_render_scene_args = intersect(
     names(render_scene_args),
