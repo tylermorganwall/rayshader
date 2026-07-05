@@ -99,7 +99,8 @@
            backgroundColour = "rgba(0,0,0,0)",
            canvas = this.textureCanvas,
            ctx = canvas.getContext("2d"),
-           i, textHeight = 0, textHeights = [], width, widths = [], 
+           i, textHeight = 0, textHeights = [], measure, 
+           width, widths = [], outdents = [],
            offsetx, offsety = 0, line, lines = [], offsetsx = [],
            offsetsy = [], lineoffsetsy = [], fontStrings = [],
            maxTexSize = this.getMaxTexSize(),
@@ -128,7 +129,10 @@
        offsetx = maxTexSize;
        for (i = 0; i < text.length; i++)  {
          ctx.font = fontStrings[i] = getFontString(i);
-         width = widths[i] = ctx.measureText(text[i]).width;
+         measure = ctx.measureText(text[i]);
+         width = widths[i] = measure.actualBoundingBoxLeft +
+                              measure.actualBoundingBoxRight;
+         outdents[i] = measure.actualBoundingBoxLeft;
          if (offsetx + width > maxTexSize) {
            offsety = offsety + 2*textHeight;
            if (line >= 0)
@@ -164,10 +168,11 @@
          ctx.font = fontStrings[i];
          ctx.fillStyle = textColour;
          ctx.textAlign = "left";
-         ctx.fillText(text[i], offsetsx[i],  offsetsy[i]);
+         ctx.fillText(text[i], offsetsx[i] + outdents[i],  offsetsy[i]);
        }
        return {canvasX:canvasX, canvasY:canvasY,
-               widths:widths, textHeights:textHeights,
+               widths:widths, 
+               textHeights:textHeights,
                offsetsx:offsetsx, offsetsy:offsetsy};
      };
 
