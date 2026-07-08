@@ -973,6 +973,67 @@ test_that("render_zaxis() corner offset is user-configurable", {
   expect_gt(dist_far, dist_near)
 })
 
+test_that("render_zaxis() sizes text offsets in scene units for spatial extents", {
+  on.exit(rgl::close3d(), add = TRUE)
+  local_rgl_use_null()
+
+  heightmap = matrix(seq_len(20 * 30), nrow = 20, ncol = 30)
+  texture = sphere_shade(heightmap)
+  extent = c(
+    xmin = 500000,
+    xmax = 506000,
+    ymin = 4160000,
+    ymax = 4164000
+  )
+  expect_no_condition(plot_3d_test(
+    texture,
+    heightmap,
+    extent = extent,
+    zscale = 100,
+    shadow = FALSE,
+    water = FALSE,
+    windowsize = c(300, 300)
+  ))
+
+  expect_no_condition(render_zaxis(
+    zaxis_location = "bottomleft",
+    zaxis_breaks = c(0, 500, 1000),
+    zaxis_title = "Elevation (m)",
+    zaxis_text_offset = 1
+  ))
+
+  ids = get_ids_with_labels()
+  axis_id = ids$id[ids$tag == "zaxis_axis"][1]
+  title_id = ids$id[ids$tag == "zaxis_title"][1]
+  label_id = ids$id[ids$tag == "zaxis_labels"][1]
+  surface_ids = get_ids_with_labels(c("surface", "surface_tris"))$id
+  surface_verts = do.call(
+    "rbind",
+    lapply(surface_ids, function(id) rgl::rgl.attrib(id, "vertices"))
+  )
+  scene_span = max(
+    diff(range(surface_verts[, 1])),
+    diff(range(surface_verts[, 3]))
+  )
+
+  axis_verts = rgl::rgl.attrib(axis_id, "vertices")
+  title_verts = rgl::rgl.attrib(title_id, "vertices")
+  label_verts = rgl::rgl.attrib(label_id, "vertices")
+  title_distance = sqrt(
+    (title_verts[1, 1] - axis_verts[1, 1])^2 +
+      (title_verts[1, 3] - axis_verts[1, 3])^2
+  )
+  label_distance = sqrt(
+    (label_verts[1, 1] - axis_verts[1, 1])^2 +
+      (label_verts[1, 3] - axis_verts[1, 3])^2
+  )
+
+  expect_gt(title_distance, 0)
+  expect_gt(label_distance, 0)
+  expect_lt(title_distance / scene_span, 0.1)
+  expect_lt(label_distance / scene_span, 0.1)
+})
+
 test_that("ggplot z-axis defaults to panel placement", {
   on.exit(rgl::close3d(), add = TRUE)
   local_rgl_use_null()

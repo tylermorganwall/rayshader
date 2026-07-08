@@ -397,8 +397,8 @@ render_zaxis_internal = function(
   xmax = extent_vals["xmax"]
   ymin = extent_vals["ymin"]
   ymax = extent_vals["ymax"]
-  xrange = max(1e-8, xmax - xmin)
-  yrange = max(1e-8, ymax - ymin)
+  range_long = c(xmin, xmax)
+  range_lat = c(ymin, ymax)
   center_long = mean(c(xmin, xmax))
   center_lat = mean(c(ymin, ymax))
 
@@ -464,8 +464,8 @@ render_zaxis_internal = function(
     }
     center_long = mean(c(pxmin, pxmax))
     center_lat = mean(c(pymin, pymax))
-    xrange = max(1e-8, pxmax - pxmin)
-    yrange = max(1e-8, pymax - pymin)
+    range_long = c(pxmin, pxmax)
+    range_lat = c(pymin, pymax)
   } else if (zaxis_location == "bottomleft") {
     anchor_long = xmin
     anchor_lat = ymin
@@ -500,6 +500,27 @@ render_zaxis_internal = function(
     zscale = zscale,
     transform_scene = FALSE
   )[1, ]
+  range_lat_vals = c(range_lat[1], range_lat[1], range_lat[2], range_lat[2])
+  range_long_vals = c(
+    range_long[1],
+    range_long[2],
+    range_long[1],
+    range_long[2]
+  )
+  range_xyz = transform_into_heightmap_coords(
+    extent = extent_vals,
+    heightmap = matrix(0, nrow = 2, ncol = 2),
+    lat = range_lat_vals,
+    long = range_long_vals,
+    altitude = 0,
+    offset = rep(0, length(range_lat_vals)),
+    use_altitude = FALSE,
+    zscale = zscale,
+    transform_scene = FALSE
+  )
+  range_x = range(range_xyz[, 1], finite = TRUE)
+  range_z = range(range_xyz[, 3], finite = TRUE)
+  scene_planar_span = max(c(diff(range_x), diff(range_z)), na.rm = TRUE)
 
   surface_vertices = NULL
   surface_ids = get_ids_with_labels(c("surface", "surface_tris"))$id
@@ -533,6 +554,9 @@ render_zaxis_internal = function(
     outside_unit_2d = anchor_vec_2d / anchor_vec_norm
   } else {
     outside_unit_2d = c(1, 0)
+  }
+  if (!is.finite(scene_planar_span) || scene_planar_span <= 0) {
+    scene_planar_span = max(1e-8, anchor_vec_norm * 2)
   }
   axis_offset = anchor_vec_norm * zaxis_corner_offset
   anchor_xyz[1] = anchor_xyz[1] + outside_unit_2d[1] * axis_offset
@@ -693,7 +717,7 @@ render_zaxis_internal = function(
   show_zero = !grepl("^panel", zaxis_location)
   draw_idx = nonzero_idx | show_zero
 
-  tick_len = 0.03 * max(xrange, yrange)
+  tick_len = 0.03 * scene_planar_span
   tick_marker_size = if (is.null(zaxis_tick_size)) {
     max(4, zaxis_linewidth * 1.25)
   } else {
