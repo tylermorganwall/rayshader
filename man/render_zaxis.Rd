@@ -72,7 +72,7 @@ breaks are generated from the full scene height range (minimum to maximum elevat
 uses the cached height aesthetic label from \code{\link[=plot_gg]{plot_gg()}} scenes when available.
 Set to \code{NULL} to omit the title, or pass a character string to override it.}
 
-\item{zaxis_title_location}{Default \code{"side"}. Title location. Options are
+\item{zaxis_title_location}{Default \code{"top"}. Title location. Options are
 \code{"side"} and \code{"top"}. \code{"side"} places the title horizontally opposite the
 tick-label side by default and centered on the axis.}
 
