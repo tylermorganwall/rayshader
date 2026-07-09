@@ -81,6 +81,66 @@ test_that("render_movie_hq generates motion from saved keyframes", {
   expect_false(animation_args$progress)
 })
 
+test_that("render_movie_hq routes direct scene arguments to render_highquality", {
+  keyframes = data.frame(
+    x = c(0, 1),
+    y = c(2, 3),
+    z = c(4, 5)
+  )
+  camera_motion = as.data.frame(matrix(0, nrow = 6, ncol = 14))
+  scene_args = NULL
+  animation_args = NULL
+  rgl_materials = list("obj_raymesh_path_1" = "path-material")
+
+  testthat::local_mocked_bindings(
+    render_highquality = function(...) {
+      scene_args <<- list(...)
+      list(label = "rendered-scene")
+    },
+    .package = "rayshader"
+  )
+  testthat::local_mocked_bindings(
+    get_saved_keyframes = function() keyframes,
+    generate_camera_motion = function(...) camera_motion,
+    render_animation = function(scene, camera_motion, ...) {
+      animation_args <<- c(
+        list(
+          scene = scene,
+          camera_motion = camera_motion
+        ),
+        list(...)
+      )
+      "animation-result"
+    },
+    .package = "rayrender"
+  )
+
+  render_movie_hq(
+    frames = 6,
+    filename = "movie.mp4",
+    samples = 4,
+    progress = FALSE,
+    light = FALSE,
+    line_radius = 2,
+    joined_stream_mesh = TRUE,
+    rgl_materials = rgl_materials,
+    render_highquality_args = list(light = TRUE, return_scene = FALSE)
+  )
+
+  expect_identical(scene_args$light, FALSE)
+  expect_identical(scene_args$line_radius, 2)
+  expect_true(scene_args$joined_stream_mesh)
+  expect_identical(scene_args$rgl_materials, rgl_materials)
+  expect_true(scene_args$return_scene)
+  expect_false("light" %in% names(animation_args))
+  expect_false("line_radius" %in% names(animation_args))
+  expect_false("joined_stream_mesh" %in% names(animation_args))
+  expect_false("rgl_materials" %in% names(animation_args))
+  expect_identical(animation_args$filename, "movie.mp4")
+  expect_identical(animation_args$samples, 4)
+  expect_false(animation_args$progress)
+})
+
 test_that("render_movie_hq validates scene extraction arguments", {
   expect_error(
     render_movie_hq(render_highquality_args = "light = FALSE"),

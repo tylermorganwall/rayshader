@@ -177,6 +177,14 @@ render_movie = function(
   }
 }
 
+render_movie_hq_scene_arg_names = setdiff(
+  names(formals(render_highquality)),
+  "..."
+)
+render_movie_hq_animation_arg_names = names(formals(
+  rayrender::render_animation
+))
+
 #'@title Render High Quality Movie
 #'
 #'@description Renders a high quality movie by extracting the current rayshader
@@ -192,9 +200,14 @@ render_movie = function(
 #'the first saved keyframe.
 #'@param damp_motion Default `TRUE`. Whether to damp quick camera movements.
 #'@param render_highquality_args Default `list()`. Additional arguments passed
-#'to [render_highquality()] when extracting the scene. `return_scene = TRUE` is
-#'always applied.
+#'to [render_highquality()] when extracting the scene. Named arguments in `...`
+#'that are only [render_highquality()] arguments are also passed to scene
+#'extraction. `return_scene = TRUE` is always applied.
 #'@param ... Additional parameters to pass to `rayrender::render_animation()`.
+#'Named arguments that are only [render_highquality()] arguments are passed to
+#'scene extraction. If a name exists in both [render_highquality()] and
+#'`rayrender::render_animation()`, it is passed to animation; use
+#'`render_highquality_args` to pass overlapping names to scene extraction.
 #'@return Invisibly returns the value from `rayrender::render_animation()`.
 #'@export
 render_movie_hq = function(
@@ -216,6 +229,28 @@ render_movie_hq = function(
   }
   dot_args = list(...)
   render_animation_formals = formals(rayrender::render_animation)
+  render_animation_arg_names = union(
+    render_movie_hq_animation_arg_names,
+    names(render_animation_formals)
+  )
+  render_highquality_direct_names = setdiff(
+    render_movie_hq_scene_arg_names,
+    render_animation_arg_names
+  )
+  dot_arg_names = names(dot_args)
+  if (is.null(dot_arg_names)) {
+    dot_arg_names = rep("", length(dot_args))
+  }
+  scene_dot_indices = which(
+    nzchar(dot_arg_names) &
+      dot_arg_names %in% render_highquality_direct_names
+  )
+  if (length(scene_dot_indices) > 0) {
+    scene_dot_args = dot_args[scene_dot_indices]
+    dot_args = dot_args[-scene_dot_indices]
+    render_highquality_args[names(scene_dot_args)] = NULL
+    render_highquality_args = c(render_highquality_args, scene_dot_args)
+  }
   keyframes = rayrender::get_saved_keyframes()
   if (is.null(keyframes) || NROW(keyframes) == 0) {
     stop(
