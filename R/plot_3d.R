@@ -374,7 +374,6 @@ get_plot_3d_surface_texture = function(id, rgl_texture_file) {
 #'@param lineantialias Default `FALSE`. Whether to anti-alias the lines in the scene.
 #'@param water_render_method Default `"contour"`. Water meshing method. `"contour"` clips scalar/matrix water meshes and uses the raster-cell renderer for spatial water rasters; `"raster"` explicitly uses spatial water raster cells; `"polygon"` fits each spatial water component to a DEM contour by matching contour area to raster footprint area, initialized from covered DEM values; `"legacy"` uses the previous box/grid renderer.
 #'@param water_edge_extension Default `0.5`. For spatial `waterdepth` inputs, amount in grid cells to expand finite water cells at boundary edges, up to a maximum of half a cell.
-#'@param water_parallel Default `FALSE`. If `TRUE`, spatial polygon water components are fit in parallel using `mirai`. A positive numeric value sets the worker count.
 #'@param soil Default `FALSE`. Whether to draw the solid base with a textured soil layer.
 #'@param soil_freq Default `0.1`. Frequency of soil clumps. Higher frequency values give smaller soil clumps.
 #'@param soil_levels Default `16`. Fractal level of the soil.
@@ -502,7 +501,6 @@ plot_3d = function(
   lineantialias = FALSE,
   water_render_method = c("contour", "raster", "polygon", "legacy"),
   water_edge_extension = 0.5,
-  water_parallel = FALSE,
   soil = FALSE,
   soil_freq = 0.1,
   soil_levels = 16,
@@ -965,7 +963,6 @@ plot_3d = function(
       zscale = zscale,
       water_render_method = water_render_method_current,
       water_edge_extension = water_edge_extension,
-      parallel = water_parallel,
       heightmap_extent = extent_cache_value,
       heightmap_crs = crs_cache_value
     )

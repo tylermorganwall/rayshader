@@ -11,7 +11,6 @@
 #'@param water_render_method Default `"contour"`. Water meshing method. `"contour"` clips scalar/matrix water meshes and uses the raster-cell renderer for spatial water rasters; `"raster"` explicitly uses spatial water raster cells; `"polygon"` fits each spatial water component to a DEM contour by matching contour area to raster footprint area, initialized from covered DEM values; `"legacy"` uses the previous box/grid renderer.
 #'@param water_edge_extension Default `0.5`. For spatial `waterheight` inputs, amount in grid cells to expand finite water cells at boundary edges, up to a maximum of half a cell.
 #'@param water_edge_clamp Default `FALSE`. For spatial `waterheight` inputs, if `TRUE`, resolves each connected water footprint to a single level, then lowers it by the largest finite exterior sidewall height after edge expansion. Heightmap-boundary and NA-slice edges are ignored when computing the lowering amount.
-#'@param parallel Default `FALSE`. If `TRUE`, spatial polygon water components are fit in parallel using `mirai`. A positive numeric value sets the worker count.
 #'@param heightmap_extent Default `NULL`. Active scene extent for spatial `waterheight` inputs.
 #'@param heightmap_crs Default `NULL`. Active scene CRS for spatial `waterheight` inputs.
 #'@keywords internal
@@ -24,7 +23,6 @@ make_water = function(
   water_render_method = c("contour", "raster", "polygon", "legacy"),
   water_edge_extension = 0.5,
   water_edge_clamp = FALSE,
-  parallel = FALSE,
   heightmap_extent = NULL,
   heightmap_crs = NULL
 ) {
@@ -47,7 +45,6 @@ make_water = function(
     water_render_method = water_render_method,
     water_edge_extension = water_edge_extension,
     water_edge_clamp = water_edge_clamp,
-    parallel = parallel,
     heightmap_extent = heightmap_extent,
     heightmap_crs = heightmap_crs
   )
@@ -63,7 +60,6 @@ make_water_contour = function(
   water_render_method = c("contour", "raster", "polygon"),
   water_edge_extension = 0.5,
   water_edge_clamp = FALSE,
-  parallel = FALSE,
   heightmap_extent = NULL,
   heightmap_crs = NULL
 ) {
@@ -91,8 +87,7 @@ make_water_contour = function(
       wateralpha = wateralpha,
       water_render_method = water_render_method,
       water_edge_extension = water_edge_extension,
-      water_edge_clamp = water_edge_clamp,
-      parallel = parallel
+      water_edge_clamp = water_edge_clamp
     ))
   }
   if (!any(valid_water)) {
@@ -144,8 +139,7 @@ make_spatial_water_surface = function(
   wateralpha = 0.5,
   water_render_method = c("contour", "raster", "polygon"),
   water_edge_extension = 0.5,
-  water_edge_clamp = FALSE,
-  parallel = FALSE
+  water_edge_clamp = FALSE
 ) {
   water_render_method = match.arg(water_render_method)
   water_edge_extension = validate_water_edge_extension(water_edge_extension)
@@ -171,8 +165,7 @@ make_spatial_water_surface = function(
   if (identical(water_render_method, "polygon")) {
     water_mesh = make_spatial_water_polygon_surface(
       water_surface = water_surface,
-      heightmap = heightmap,
-      parallel = parallel
+      heightmap = heightmap
     )
     triangle_vertices = water_mesh$vertices
     line_vertices = water_mesh$lines
@@ -457,8 +450,7 @@ make_spatial_water_cell_surface = function(
 #'@keywords internal
 make_spatial_water_polygon_surface = function(
   water_surface,
-  heightmap = NULL,
-  parallel = FALSE
+  heightmap = NULL
 ) {
   if (is.null(heightmap) || !is.matrix(heightmap)) {
     stop(
@@ -487,8 +479,7 @@ make_spatial_water_polygon_surface = function(
   component_meshes = make_spatial_water_polygon_components(
     component_tasks = component_tasks,
     heightmap = heightmap,
-    terrain_mesh = terrain_mesh,
-    parallel = parallel
+    terrain_mesh = terrain_mesh
   )
   component_meshes = Filter(
     function(mesh) {
@@ -527,81 +518,16 @@ require_spatial_water_polygon_packages = function() {
 }
 
 #'@keywords internal
-validate_spatial_water_parallel = function(parallel = FALSE) {
-  if (
-    is.logical(parallel) &&
-      length(parallel) == 1L &&
-      !is.na(parallel)
-  ) {
-    return(parallel)
-  }
-  if (
-    is.numeric(parallel) &&
-      length(parallel) == 1L &&
-      is.finite(parallel) &&
-      parallel >= 1
-  ) {
-    return(floor(parallel))
-  }
-  stop(
-    "`parallel` must be `TRUE`, `FALSE`, or a positive worker count.",
-    call. = FALSE
-  )
-}
-
-#'@keywords internal
-spatial_water_parallel_worker_count = function(parallel, component_count) {
-  parallel = validate_spatial_water_parallel(parallel)
-  if (isFALSE(parallel) || component_count <= 1L) {
-    return(1L)
-  }
-  requested_workers = if (isTRUE(parallel)) {
-    option_cores = getOption("cores")
-    if (
-      is.numeric(option_cores) &&
-        length(option_cores) == 1L &&
-        is.finite(option_cores) &&
-        option_cores >= 1
-    ) {
-      floor(option_cores)
-    } else {
-      detected_cores = parallel::detectCores()
-      if (is.finite(detected_cores) && detected_cores >= 1) {
-        detected_cores
-      } else {
-        1L
-      }
-    }
-  } else {
-    parallel
-  }
-  max(1L, min(component_count, floor(requested_workers)))
-}
-
-#'@keywords internal
 make_spatial_water_polygon_components = function(
   component_tasks,
   heightmap,
-  terrain_mesh = make_spatial_water_fixed_grid_terrain_mesh(heightmap),
-  parallel = FALSE
+  terrain_mesh = make_spatial_water_fixed_grid_terrain_mesh(heightmap)
 ) {
-  worker_count = spatial_water_parallel_worker_count(
-    parallel = parallel,
-    component_count = length(component_tasks)
-  )
-  if (worker_count <= 1L) {
-    return(lapply(
-      component_tasks,
-      make_spatial_water_polygon_component_from_task,
-      heightmap = heightmap,
-      terrain_mesh = terrain_mesh
-    ))
-  }
-  make_spatial_water_polygon_components_parallel(
-    component_tasks = component_tasks,
+  lapply(
+    component_tasks,
+    make_spatial_water_polygon_component_from_task,
     heightmap = heightmap,
-    terrain_mesh = terrain_mesh,
-    worker_count = worker_count
+    terrain_mesh = terrain_mesh
   )
 }
 
@@ -617,315 +543,6 @@ make_spatial_water_polygon_component_from_task = function(
     terrain_mesh = terrain_mesh,
     fallback_level = task$fallback_level
   )
-}
-
-#'@keywords internal
-make_spatial_water_polygon_components_parallel = function(
-  component_tasks,
-  heightmap,
-  terrain_mesh,
-  worker_count
-) {
-  if (!requireNamespace("mirai", quietly = TRUE)) {
-    stop(
-      "`parallel = TRUE` for `water_render_method = \"polygon\"` requires the mirai package.",
-      call. = FALSE
-    )
-  }
-  compute_profile = spatial_water_mirai_compute_profile()
-  helper_functions = spatial_water_parallel_helper_functions()
-  native_dll_path = spatial_water_native_dll_path()
-  tryCatch(
-    mirai::daemons(worker_count, .compute = compute_profile),
-    error = function(e) {
-      stop(
-        "Could not start mirai daemons for parallel spatial polygon water fitting: ",
-        conditionMessage(e),
-        call. = FALSE
-      )
-    }
-  )
-  on.exit(mirai::daemons(0, .compute = compute_profile), add = TRUE)
-  component_meshes = mirai::mirai_map(
-    component_tasks,
-    function(task, heightmap, terrain_mesh, helper_functions, native_dll_path) {
-      worker_env = new.env(parent = .GlobalEnv)
-      if (
-        !is.null(native_dll_path) &&
-          is.character(native_dll_path) &&
-          length(native_dll_path) == 1L &&
-          file.exists(native_dll_path)
-      ) {
-        try(dyn.load(native_dll_path), silent = TRUE)
-      }
-      for (helper_name in names(helper_functions)) {
-        helper_function = helper_functions[[helper_name]]
-        if (
-          is.function(helper_function) &&
-            typeof(helper_function) == "closure" &&
-            !grepl("_cpp$", helper_name)
-        ) {
-          environment(helper_function) = worker_env
-        }
-        assign(helper_name, helper_function, envir = worker_env)
-      }
-      worker_env$assign_spatial_water_cpp_worker_helpers(worker_env)
-      worker_env$make_spatial_water_polygon_component_from_task(
-        task = task,
-        heightmap = heightmap,
-        terrain_mesh = terrain_mesh
-      )
-    },
-    .args = list(
-      heightmap = heightmap,
-      terrain_mesh = terrain_mesh,
-      helper_functions = helper_functions,
-      native_dll_path = native_dll_path
-    ),
-    .compute = compute_profile
-  )[]
-  component_errors = vapply(
-    component_meshes,
-    spatial_water_mirai_result_is_error,
-    logical(1)
-  )
-  if (any(component_errors)) {
-    stop(
-      "Parallel spatial polygon water fitting failed: ",
-      spatial_water_mirai_error_message(component_meshes[[which(
-        component_errors
-      )[1L]]]),
-      call. = FALSE
-    )
-  }
-  component_meshes
-}
-
-#'@keywords internal
-spatial_water_native_dll_path = function() {
-  dlls = getLoadedDLLs()
-  if (!"rayshader" %in% names(dlls)) {
-    return(NULL)
-  }
-  dll_path = dlls[["rayshader"]][["path"]]
-  if (is.null(dll_path) || !nzchar(dll_path)) {
-    return(NULL)
-  }
-  dll_path
-}
-
-#'@keywords internal
-assign_spatial_water_cpp_worker_helpers = function(worker_env) {
-  worker_env$make_spatial_water_fixed_grid_terrain_mesh_cpp = function(
-    heightmap
-  ) {
-    .Call(
-      "_rayshader_make_spatial_water_fixed_grid_terrain_mesh_cpp",
-      heightmap,
-      PACKAGE = "rayshader"
-    )
-  }
-  worker_env$spatial_water_face_sublevel_area_cpp = function(
-    terrain_mesh,
-    face_ids,
-    water_level,
-    height_tol
-  ) {
-    .Call(
-      "_rayshader_spatial_water_face_sublevel_area_cpp",
-      terrain_mesh,
-      face_ids,
-      water_level,
-      height_tol,
-      PACKAGE = "rayshader"
-    )
-  }
-  worker_env$spatial_water_traverse_seeded_clipped_faces_cpp = function(
-    terrain_mesh,
-    component_seed,
-    water_level,
-    target_area_limit,
-    height_tol,
-    length_tol,
-    area_tol,
-    return_face_ids = FALSE
-  ) {
-    .Call(
-      "_rayshader_spatial_water_traverse_seeded_clipped_faces_cpp",
-      terrain_mesh,
-      component_seed,
-      water_level,
-      target_area_limit,
-      height_tol,
-      length_tol,
-      area_tol,
-      return_face_ids,
-      PACKAGE = "rayshader"
-    )
-  }
-  worker_env$build_spatial_water_full_terrain_geometry_cpp = function(
-    terrain_mesh,
-    water_level,
-    surface_area_tol
-  ) {
-    .Call(
-      "_rayshader_build_spatial_water_full_terrain_geometry_cpp",
-      terrain_mesh,
-      water_level,
-      surface_area_tol,
-      PACKAGE = "rayshader"
-    )
-  }
-  worker_env$build_spatial_water_triangle_clipped_geometry_cpp = function(
-    terrain_mesh,
-    selected_face_ids,
-    water_level,
-    height_tol,
-    t_tol,
-    length_tol,
-    area_tol,
-    surface_area_tol
-  ) {
-    .Call(
-      "_rayshader_build_spatial_water_triangle_clipped_geometry_cpp",
-      terrain_mesh,
-      selected_face_ids,
-      water_level,
-      height_tol,
-      t_tol,
-      length_tol,
-      area_tol,
-      surface_area_tol,
-      PACKAGE = "rayshader"
-    )
-  }
-  invisible(worker_env)
-}
-
-#'@keywords internal
-spatial_water_parallel_helper_functions = function() {
-  helper_names = c(
-    "make_spatial_water_polygon_component_from_task",
-    "make_spatial_water_polygon_component",
-    "empty_spatial_water_polygon_mesh",
-    "assign_spatial_water_cpp_worker_helpers",
-    "make_spatial_water_fixed_grid_terrain_mesh_cpp",
-    "make_spatial_water_fixed_grid_terrain_mesh",
-    "make_spatial_water_fixed_grid_terrain_mesh_r",
-    "spatial_water_fixed_grid_edge_key",
-    "spatial_water_original_vertices_edge_id",
-    "spatial_water_component_mask_metrics",
-    "make_spatial_water_component_seed",
-    "spatial_water_component_seed_perimeter",
-    "make_spatial_water_triangle_clipped_component",
-    "evaluate_spatial_water_triangle_clipped_component",
-    "spatial_water_empty_triangle_clip_evaluation",
-    "spatial_water_level_tolerance",
-    "spatial_water_triangle_clip_tolerances",
-    "spatial_water_face_sublevel_area_cpp",
-    "spatial_water_face_sublevel_area",
-    "spatial_water_face_sublevel_area_r",
-    "spatial_water_face_sublevel_area_scalar",
-    "spatial_water_evaluate_full_scene_component",
-    "spatial_water_traverse_seeded_clipped_faces_cpp",
-    "spatial_water_traverse_seeded_clipped_faces",
-    "spatial_water_traverse_seeded_clipped_faces_r",
-    "spatial_water_seed_face_has_positive_overlap",
-    "spatial_water_seed_cell_bounds",
-    "spatial_water_face_clipped_xz_polygon",
-    "spatial_water_clean_xz_polygon",
-    "spatial_water_edge_intersections",
-    "clip_spatial_water_terrain_face_to_level",
-    "spatial_water_original_vertex_records",
-    "spatial_water_edge_plane_intersection_record",
-    "clean_spatial_water_clipped_records",
-    "spatial_water_projected_records_area",
-    "spatial_water_projected_polygon_area",
-    "spatial_water_records_overlap_component_seed",
-    "spatial_water_records_original_edge_segments",
-    "spatial_water_records_shared_original_edge_id",
-    "spatial_water_record_edge_t",
-    "spatial_water_terrain_edge_projected_length",
-    "spatial_water_selected_clipped_faces",
-    "build_spatial_water_triangle_clipped_geometry_cpp",
-    "build_spatial_water_triangle_clipped_geometry",
-    "build_spatial_water_triangle_clipped_geometry_r",
-    "build_spatial_water_full_terrain_geometry_cpp",
-    "build_spatial_water_full_terrain_geometry",
-    "build_spatial_water_full_terrain_geometry_r",
-    "spatial_water_triangle_normal_y",
-    "spatial_water_register_clipped_boundary_edges",
-    "spatial_water_triangle_clipped_boundary_geometry",
-    "make_spatial_water_triangle_clipped_sidewall",
-    "spatial_water_triangle_area3d",
-    "make_spatial_water_component_footprint",
-    "fit_spatial_water_component_polygon",
-    "spatial_water_component_area_fit_at_level",
-    "spatial_water_polygon_area",
-    "spatial_water_polygon_perimeter",
-    "make_spatial_water_level_polygon",
-    "select_spatial_water_component_polygons",
-    "extract_spatial_water_polygon_sfc",
-    "spatial_water_sfc_is_empty",
-    "triangulate_spatial_water_polygon_sfc",
-    "make_spatial_water_polygon_sidewalls",
-    "make_spatial_water_polygon_lines",
-    "spatial_water_sfg_polygons",
-    "clean_spatial_water_polygon_ring",
-    "close_spatial_water_polygon_ring",
-    "clip_spatial_water_polygon_to_bounds",
-    "clip_spatial_water_polygon_to_axis",
-    "spatial_water_axis_intersection_point",
-    "clean_spatial_water_polygon",
-    "spatial_water_polygon_sidewall_segment",
-    "spatial_water_point_inside_polygon",
-    "spatial_water_point_has_finite_heightmap_cell",
-    "make_spatial_water_polygon_sidewall_vertices",
-    "spatial_water_side_segment_breakpoints",
-    "spatial_water_axis_breakpoints",
-    "clean_spatial_water_breakpoints",
-    "interpolate_spatial_water_height",
-    "spatial_water_row_col",
-    "simplify_spatial_water_sidewall_points"
-  )
-  mget(
-    helper_names,
-    envir = environment(spatial_water_parallel_helper_functions),
-    inherits = FALSE
-  )
-}
-
-#'@keywords internal
-spatial_water_mirai_compute_profile = function() {
-  gsub(
-    "[^A-Za-z0-9_]",
-    "_",
-    basename(tempfile("rayshader_water_"))
-  )
-}
-
-#'@keywords internal
-spatial_water_mirai_result_is_error = function(result) {
-  inherits(result, c("error", "miraiError", "errorValue")) ||
-    isTRUE(tryCatch(mirai::is_mirai_error(result), error = function(e) {
-      FALSE
-    })) ||
-    isTRUE(tryCatch(mirai::is_error_value(result), error = function(e) FALSE))
-}
-
-#'@keywords internal
-spatial_water_mirai_error_message = function(result) {
-  if (inherits(result, "condition")) {
-    return(conditionMessage(result))
-  }
-  result_text = tryCatch(
-    paste(capture.output(print(result)), collapse = "\n"),
-    error = function(e) ""
-  )
-  if (!nzchar(result_text)) {
-    result_text = "unknown worker error"
-  }
-  result_text
 }
 
 #'@keywords internal

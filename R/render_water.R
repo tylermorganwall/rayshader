@@ -18,7 +18,6 @@
 #'@param water_render_method Default `"contour"`. Water meshing method. `"contour"` clips scalar/matrix water meshes and uses the raster-cell renderer for spatial water rasters; `"raster"` explicitly uses spatial water raster cells; `"polygon"` fits each spatial water component to a DEM contour by matching contour area to raster footprint area, initialized from covered DEM values; `"legacy"` uses the previous box/grid renderer.
 #'@param water_edge_extension Default `0.5`. For spatial `waterdepth` inputs, amount in grid cells to expand finite water cells at boundary edges, up to a maximum of half a cell.
 #'@param water_edge_clamp Default `FALSE`. For spatial `waterdepth` inputs, if `TRUE`, resolves each connected water footprint to a single level, then lowers it by the largest finite exterior sidewall height after edge expansion. Heightmap-boundary and NA-slice edges are ignored when computing the lowering amount.
-#'@param parallel Default `FALSE`. If `TRUE`, spatial polygon water components are fit in parallel using `mirai`. A positive numeric value sets the worker count.
 #'@param clear_previous Default `TRUE`. If `TRUE`, will remove existing water layer and replace it with new layer.
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
@@ -72,7 +71,6 @@ render_water = function(
   water_render_method = c("contour", "raster", "polygon", "legacy"),
   water_edge_extension = 0.5,
   water_edge_clamp = FALSE,
-  parallel = FALSE,
   clear_previous = TRUE
 ) {
   water_render_method = match.arg(water_render_method)
@@ -139,7 +137,6 @@ render_water = function(
       water_render_method = water_render_method_current,
       water_edge_extension = water_edge_extension,
       water_edge_clamp = water_edge_clamp,
-      parallel = parallel,
       heightmap_extent = heightmap_extent,
       heightmap_crs = heightmap_crs
     )

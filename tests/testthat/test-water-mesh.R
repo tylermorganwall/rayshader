@@ -1705,26 +1705,11 @@ test_that("spatial polygon water samples levels across DEM range", {
   expect_gte(fit$level, min(heightmap) - 1e-8)
 })
 
-test_that("spatial polygon water can fit components with mirai", {
+test_that("spatial polygon water meshes disconnected components serially", {
   skip_if_not_installed("sf")
   skip_if_not_installed("isoband")
   skip_if_not_installed("decido")
-  skip_if_not_installed("mirai")
   local_rgl_use_null()
-  compute_profile = spatial_water_mirai_compute_profile()
-  can_start_daemons = tryCatch(
-    {
-      mirai::daemons(1, .compute = compute_profile)
-      TRUE
-    },
-    error = function(e) FALSE,
-    finally = {
-      try(mirai::daemons(0, .compute = compute_profile), silent = TRUE)
-    }
-  )
-  if (!can_start_daemons) {
-    skip("mirai daemons are unavailable in this environment")
-  }
 
   heightmap = matrix(10, nrow = 12, ncol = 12)
   heightmap[3:4, 3:4] = 0
@@ -1733,19 +1718,13 @@ test_that("spatial polygon water can fit components with mirai", {
   water_surface[3:4, 3:4] = 100
   water_surface[9:10, 9:10] = 100
 
-  serial_mesh = make_spatial_water_polygon_surface(
+  water_mesh = make_spatial_water_polygon_surface(
     water_surface = water_surface,
-    heightmap = heightmap,
-    parallel = FALSE
-  )
-  parallel_mesh = make_spatial_water_polygon_surface(
-    water_surface = water_surface,
-    heightmap = heightmap,
-    parallel = 2
+    heightmap = heightmap
   )
 
-  expect_equal(parallel_mesh$vertices, serial_mesh$vertices, tolerance = 1e-8)
-  expect_equal(parallel_mesh$lines, serial_mesh$lines, tolerance = 1e-8)
+  expect_gt(nrow(water_mesh$vertices), 0)
+  expect_gt(nrow(water_mesh$lines), 0)
 })
 
 test_that("spatial polygon water selects only intersecting contour islands", {

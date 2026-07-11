@@ -56,8 +56,7 @@ water_polygon_benchmark_case = function(n, name, mask) {
   timing = system.time({
     mesh = rayshader:::make_spatial_water_polygon_surface(
       water_surface = water_surface,
-      heightmap = heightmap,
-      parallel = FALSE
+      heightmap = heightmap
     )
   })
   Rprofmem(NULL)
