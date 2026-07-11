@@ -2072,6 +2072,122 @@ test_that("spatial polygon water point-only footprint contact does not seed", {
   expect_equal(evaluation$diagnostics$seed_face_count, 0)
 })
 
+test_that("spatial polygon water Rcpp topology and traversal match R reference", {
+  set.seed(7)
+  heightmap = matrix(stats::runif(36), nrow = 6, ncol = 6)
+  heightmap[2, 4] = NA_real_
+  cpp_mesh = make_spatial_water_fixed_grid_terrain_mesh(heightmap)
+  r_mesh = make_spatial_water_fixed_grid_terrain_mesh_r(heightmap)
+
+  expect_identical(cpp_mesh$faces, r_mesh$faces)
+  expect_identical(cpp_mesh$face_edges, r_mesh$face_edges)
+  expect_identical(cpp_mesh$face_neighbors, r_mesh$face_neighbors)
+  expect_identical(cpp_mesh$cell_face_id, r_mesh$cell_face_id)
+
+  component_mask = matrix(FALSE, nrow = 6, ncol = 6)
+  component_mask[2:5, 2:4] = TRUE
+  cpp_seed = make_spatial_water_component_seed(component_mask, cpp_mesh)
+  r_seed = make_spatial_water_component_seed(component_mask, r_mesh)
+  tolerances = spatial_water_triangle_clip_tolerances(
+    water_level = 0.45,
+    heights = cpp_mesh$vertices[, "h"],
+    target_area = 10
+  )
+  cpp_eval = spatial_water_traverse_seeded_clipped_faces(
+    terrain_mesh = cpp_mesh,
+    component_seed = cpp_seed,
+    water_level = 0.45,
+    target_area_limit = Inf,
+    tolerances = tolerances,
+    return_face_ids = TRUE
+  )
+  r_eval = spatial_water_traverse_seeded_clipped_faces_r(
+    terrain_mesh = r_mesh,
+    component_seed = r_seed,
+    water_level = 0.45,
+    target_area_limit = Inf,
+    tolerances = tolerances,
+    return_face_ids = TRUE
+  )
+
+  expect_equal(cpp_eval$area, r_eval$area, tolerance = 1e-12)
+  expect_identical(sort(cpp_eval$face_ids), sort(r_eval$face_ids))
+  expect_identical(cpp_eval$diagnostics, r_eval$diagnostics)
+})
+
+test_that("spatial polygon water Rcpp geometry matches R reference", {
+  heightmap = matrix(c(0, 2, 0, 2, 0, 2, 0, 2, 0), nrow = 3)
+  terrain_mesh = make_spatial_water_fixed_grid_terrain_mesh(heightmap)
+  component_seed = make_spatial_water_component_seed(
+    matrix(TRUE, nrow = 3, ncol = 3),
+    terrain_mesh = terrain_mesh
+  )
+  tolerances = spatial_water_triangle_clip_tolerances(
+    water_level = 1,
+    heights = terrain_mesh$vertices[, "h"]
+  )
+  selected = spatial_water_traverse_seeded_clipped_faces(
+    terrain_mesh = terrain_mesh,
+    component_seed = component_seed,
+    water_level = 1,
+    target_area_limit = Inf,
+    tolerances = tolerances,
+    return_face_ids = TRUE
+  )$face_ids
+  cpp_geometry = build_spatial_water_triangle_clipped_geometry(
+    terrain_mesh = terrain_mesh,
+    water_level = 1,
+    tolerances = tolerances,
+    selected_face_ids = selected
+  )
+  r_geometry = build_spatial_water_triangle_clipped_geometry_r(
+    terrain_mesh = terrain_mesh,
+    water_level = 1,
+    tolerances = tolerances,
+    selected_face_ids = selected
+  )
+
+  expect_equal(nrow(cpp_geometry$top_vertices), nrow(r_geometry$top_vertices))
+  expect_equal(nrow(cpp_geometry$side_vertices), nrow(r_geometry$side_vertices))
+  expect_equal(nrow(cpp_geometry$lines), nrow(r_geometry$lines))
+  expect_equal(
+    sort(cpp_geometry$boundary_edges$kind),
+    sort(r_geometry$boundary_edges$kind)
+  )
+  expect_equal(
+    sum(cpp_geometry$boundary_edges$wall),
+    sum(r_geometry$boundary_edges$wall)
+  )
+
+  full_heightmap = matrix(0, nrow = 4, ncol = 4)
+  full_mesh = make_spatial_water_fixed_grid_terrain_mesh(full_heightmap)
+  full_tolerances = spatial_water_triangle_clip_tolerances(
+    water_level = 1,
+    heights = full_mesh$vertices[, "h"]
+  )
+  cpp_full = build_spatial_water_full_terrain_geometry(
+    terrain_mesh = full_mesh,
+    water_level = 1,
+    tolerances = full_tolerances
+  )
+  r_full = build_spatial_water_full_terrain_geometry_r(
+    terrain_mesh = full_mesh,
+    water_level = 1,
+    tolerances = full_tolerances
+  )
+
+  expect_equal(
+    unname(cpp_full$top_vertices),
+    unname(r_full$top_vertices),
+    tolerance = 1e-12
+  )
+  expect_equal(nrow(cpp_full$side_vertices), nrow(r_full$side_vertices))
+  expect_equal(
+    sum(cpp_full$boundary_edges$wall),
+    sum(r_full$boundary_edges$wall)
+  )
+})
+
 test_that("spatial polygon water candidate evaluation does not clip geometry", {
   heightmap = matrix(c(0, 2, 2, 0), nrow = 2)
   terrain_mesh = make_spatial_water_fixed_grid_terrain_mesh(heightmap)

@@ -336,6 +336,80 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// make_spatial_water_fixed_grid_terrain_mesh_cpp
+List make_spatial_water_fixed_grid_terrain_mesh_cpp(const NumericMatrix& heightmap);
+RcppExport SEXP _rayshader_make_spatial_water_fixed_grid_terrain_mesh_cpp(SEXP heightmapSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const NumericMatrix& >::type heightmap(heightmapSEXP);
+    rcpp_result_gen = Rcpp::wrap(make_spatial_water_fixed_grid_terrain_mesh_cpp(heightmap));
+    return rcpp_result_gen;
+END_RCPP
+}
+// spatial_water_face_sublevel_area_cpp
+NumericVector spatial_water_face_sublevel_area_cpp(List terrain_mesh, IntegerVector face_ids, double water_level, double height_tol);
+RcppExport SEXP _rayshader_spatial_water_face_sublevel_area_cpp(SEXP terrain_meshSEXP, SEXP face_idsSEXP, SEXP water_levelSEXP, SEXP height_tolSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< List >::type terrain_mesh(terrain_meshSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type face_ids(face_idsSEXP);
+    Rcpp::traits::input_parameter< double >::type water_level(water_levelSEXP);
+    Rcpp::traits::input_parameter< double >::type height_tol(height_tolSEXP);
+    rcpp_result_gen = Rcpp::wrap(spatial_water_face_sublevel_area_cpp(terrain_mesh, face_ids, water_level, height_tol));
+    return rcpp_result_gen;
+END_RCPP
+}
+// spatial_water_traverse_seeded_clipped_faces_cpp
+List spatial_water_traverse_seeded_clipped_faces_cpp(List terrain_mesh, List component_seed, double water_level, double target_area_limit, double height_tol, double length_tol, double area_tol, bool return_face_ids);
+RcppExport SEXP _rayshader_spatial_water_traverse_seeded_clipped_faces_cpp(SEXP terrain_meshSEXP, SEXP component_seedSEXP, SEXP water_levelSEXP, SEXP target_area_limitSEXP, SEXP height_tolSEXP, SEXP length_tolSEXP, SEXP area_tolSEXP, SEXP return_face_idsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< List >::type terrain_mesh(terrain_meshSEXP);
+    Rcpp::traits::input_parameter< List >::type component_seed(component_seedSEXP);
+    Rcpp::traits::input_parameter< double >::type water_level(water_levelSEXP);
+    Rcpp::traits::input_parameter< double >::type target_area_limit(target_area_limitSEXP);
+    Rcpp::traits::input_parameter< double >::type height_tol(height_tolSEXP);
+    Rcpp::traits::input_parameter< double >::type length_tol(length_tolSEXP);
+    Rcpp::traits::input_parameter< double >::type area_tol(area_tolSEXP);
+    Rcpp::traits::input_parameter< bool >::type return_face_ids(return_face_idsSEXP);
+    rcpp_result_gen = Rcpp::wrap(spatial_water_traverse_seeded_clipped_faces_cpp(terrain_mesh, component_seed, water_level, target_area_limit, height_tol, length_tol, area_tol, return_face_ids));
+    return rcpp_result_gen;
+END_RCPP
+}
+// build_spatial_water_full_terrain_geometry_cpp
+List build_spatial_water_full_terrain_geometry_cpp(List terrain_mesh, double water_level, double surface_area_tol);
+RcppExport SEXP _rayshader_build_spatial_water_full_terrain_geometry_cpp(SEXP terrain_meshSEXP, SEXP water_levelSEXP, SEXP surface_area_tolSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< List >::type terrain_mesh(terrain_meshSEXP);
+    Rcpp::traits::input_parameter< double >::type water_level(water_levelSEXP);
+    Rcpp::traits::input_parameter< double >::type surface_area_tol(surface_area_tolSEXP);
+    rcpp_result_gen = Rcpp::wrap(build_spatial_water_full_terrain_geometry_cpp(terrain_mesh, water_level, surface_area_tol));
+    return rcpp_result_gen;
+END_RCPP
+}
+// build_spatial_water_triangle_clipped_geometry_cpp
+List build_spatial_water_triangle_clipped_geometry_cpp(List terrain_mesh, IntegerVector selected_face_ids, double water_level, double height_tol, double t_tol, double length_tol, double area_tol, double surface_area_tol);
+RcppExport SEXP _rayshader_build_spatial_water_triangle_clipped_geometry_cpp(SEXP terrain_meshSEXP, SEXP selected_face_idsSEXP, SEXP water_levelSEXP, SEXP height_tolSEXP, SEXP t_tolSEXP, SEXP length_tolSEXP, SEXP area_tolSEXP, SEXP surface_area_tolSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< List >::type terrain_mesh(terrain_meshSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type selected_face_ids(selected_face_idsSEXP);
+    Rcpp::traits::input_parameter< double >::type water_level(water_levelSEXP);
+    Rcpp::traits::input_parameter< double >::type height_tol(height_tolSEXP);
+    Rcpp::traits::input_parameter< double >::type t_tol(t_tolSEXP);
+    Rcpp::traits::input_parameter< double >::type length_tol(length_tolSEXP);
+    Rcpp::traits::input_parameter< double >::type area_tol(area_tolSEXP);
+    Rcpp::traits::input_parameter< double >::type surface_area_tol(surface_area_tolSEXP);
+    rcpp_result_gen = Rcpp::wrap(build_spatial_water_triangle_clipped_geometry_cpp(terrain_mesh, selected_face_ids, water_level, height_tol, t_tol, length_tol, area_tol, surface_area_tol));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_rayshader_bilineargrid", (DL_FUNC) &_rayshader_bilineargrid, 1},
@@ -362,6 +436,11 @@ static const R_CallMethodDef CallEntries[] = {
     {"_rayshader_psf", (DL_FUNC) &_rayshader_psf, 11},
     {"_rayshader_rayshade_cpp", (DL_FUNC) &_rayshader_rayshade_cpp, 7},
     {"_rayshader_rayshade_multicore", (DL_FUNC) &_rayshader_rayshade_multicore, 7},
+    {"_rayshader_make_spatial_water_fixed_grid_terrain_mesh_cpp", (DL_FUNC) &_rayshader_make_spatial_water_fixed_grid_terrain_mesh_cpp, 1},
+    {"_rayshader_spatial_water_face_sublevel_area_cpp", (DL_FUNC) &_rayshader_spatial_water_face_sublevel_area_cpp, 4},
+    {"_rayshader_spatial_water_traverse_seeded_clipped_faces_cpp", (DL_FUNC) &_rayshader_spatial_water_traverse_seeded_clipped_faces_cpp, 8},
+    {"_rayshader_build_spatial_water_full_terrain_geometry_cpp", (DL_FUNC) &_rayshader_build_spatial_water_full_terrain_geometry_cpp, 3},
+    {"_rayshader_build_spatial_water_triangle_clipped_geometry_cpp", (DL_FUNC) &_rayshader_build_spatial_water_triangle_clipped_geometry_cpp, 8},
     {NULL, NULL, 0}
 };
 

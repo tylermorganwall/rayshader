@@ -634,6 +634,7 @@ make_spatial_water_polygon_components_parallel = function(
   }
   compute_profile = spatial_water_mirai_compute_profile()
   helper_functions = spatial_water_parallel_helper_functions()
+  native_dll_path = spatial_water_native_dll_path()
   tryCatch(
     mirai::daemons(worker_count, .compute = compute_profile),
     error = function(e) {
@@ -647,17 +648,28 @@ make_spatial_water_polygon_components_parallel = function(
   on.exit(mirai::daemons(0, .compute = compute_profile), add = TRUE)
   component_meshes = mirai::mirai_map(
     component_tasks,
-    function(task, heightmap, terrain_mesh, helper_functions) {
+    function(task, heightmap, terrain_mesh, helper_functions, native_dll_path) {
       worker_env = new.env(parent = .GlobalEnv)
+      if (
+        !is.null(native_dll_path) &&
+          is.character(native_dll_path) &&
+          length(native_dll_path) == 1L &&
+          file.exists(native_dll_path)
+      ) {
+        try(dyn.load(native_dll_path), silent = TRUE)
+      }
       for (helper_name in names(helper_functions)) {
         helper_function = helper_functions[[helper_name]]
         if (
-          is.function(helper_function) && typeof(helper_function) == "closure"
+          is.function(helper_function) &&
+            typeof(helper_function) == "closure" &&
+            !grepl("_cpp$", helper_name)
         ) {
           environment(helper_function) = worker_env
         }
         assign(helper_name, helper_function, envir = worker_env)
       }
+      worker_env$assign_spatial_water_cpp_worker_helpers(worker_env)
       worker_env$make_spatial_water_polygon_component_from_task(
         task = task,
         heightmap = heightmap,
@@ -667,7 +679,8 @@ make_spatial_water_polygon_components_parallel = function(
     .args = list(
       heightmap = heightmap,
       terrain_mesh = terrain_mesh,
-      helper_functions = helper_functions
+      helper_functions = helper_functions,
+      native_dll_path = native_dll_path
     ),
     .compute = compute_profile
   )[]
@@ -689,12 +702,116 @@ make_spatial_water_polygon_components_parallel = function(
 }
 
 #'@keywords internal
+spatial_water_native_dll_path = function() {
+  dlls = getLoadedDLLs()
+  if (!"rayshader" %in% names(dlls)) {
+    return(NULL)
+  }
+  dll_path = dlls[["rayshader"]][["path"]]
+  if (is.null(dll_path) || !nzchar(dll_path)) {
+    return(NULL)
+  }
+  dll_path
+}
+
+#'@keywords internal
+assign_spatial_water_cpp_worker_helpers = function(worker_env) {
+  worker_env$make_spatial_water_fixed_grid_terrain_mesh_cpp = function(
+    heightmap
+  ) {
+    .Call(
+      "_rayshader_make_spatial_water_fixed_grid_terrain_mesh_cpp",
+      heightmap,
+      PACKAGE = "rayshader"
+    )
+  }
+  worker_env$spatial_water_face_sublevel_area_cpp = function(
+    terrain_mesh,
+    face_ids,
+    water_level,
+    height_tol
+  ) {
+    .Call(
+      "_rayshader_spatial_water_face_sublevel_area_cpp",
+      terrain_mesh,
+      face_ids,
+      water_level,
+      height_tol,
+      PACKAGE = "rayshader"
+    )
+  }
+  worker_env$spatial_water_traverse_seeded_clipped_faces_cpp = function(
+    terrain_mesh,
+    component_seed,
+    water_level,
+    target_area_limit,
+    height_tol,
+    length_tol,
+    area_tol,
+    return_face_ids = FALSE
+  ) {
+    .Call(
+      "_rayshader_spatial_water_traverse_seeded_clipped_faces_cpp",
+      terrain_mesh,
+      component_seed,
+      water_level,
+      target_area_limit,
+      height_tol,
+      length_tol,
+      area_tol,
+      return_face_ids,
+      PACKAGE = "rayshader"
+    )
+  }
+  worker_env$build_spatial_water_full_terrain_geometry_cpp = function(
+    terrain_mesh,
+    water_level,
+    surface_area_tol
+  ) {
+    .Call(
+      "_rayshader_build_spatial_water_full_terrain_geometry_cpp",
+      terrain_mesh,
+      water_level,
+      surface_area_tol,
+      PACKAGE = "rayshader"
+    )
+  }
+  worker_env$build_spatial_water_triangle_clipped_geometry_cpp = function(
+    terrain_mesh,
+    selected_face_ids,
+    water_level,
+    height_tol,
+    t_tol,
+    length_tol,
+    area_tol,
+    surface_area_tol
+  ) {
+    .Call(
+      "_rayshader_build_spatial_water_triangle_clipped_geometry_cpp",
+      terrain_mesh,
+      selected_face_ids,
+      water_level,
+      height_tol,
+      t_tol,
+      length_tol,
+      area_tol,
+      surface_area_tol,
+      PACKAGE = "rayshader"
+    )
+  }
+  invisible(worker_env)
+}
+
+#'@keywords internal
 spatial_water_parallel_helper_functions = function() {
   helper_names = c(
     "make_spatial_water_polygon_component_from_task",
     "make_spatial_water_polygon_component",
     "empty_spatial_water_polygon_mesh",
+    "assign_spatial_water_cpp_worker_helpers",
+    "make_spatial_water_fixed_grid_terrain_mesh_cpp",
     "make_spatial_water_fixed_grid_terrain_mesh",
+    "make_spatial_water_fixed_grid_terrain_mesh_r",
     "spatial_water_fixed_grid_edge_key",
     "spatial_water_original_vertices_edge_id",
     "spatial_water_component_mask_metrics",
@@ -705,10 +822,14 @@ spatial_water_parallel_helper_functions = function() {
     "spatial_water_empty_triangle_clip_evaluation",
     "spatial_water_level_tolerance",
     "spatial_water_triangle_clip_tolerances",
+    "spatial_water_face_sublevel_area_cpp",
     "spatial_water_face_sublevel_area",
+    "spatial_water_face_sublevel_area_r",
     "spatial_water_face_sublevel_area_scalar",
     "spatial_water_evaluate_full_scene_component",
+    "spatial_water_traverse_seeded_clipped_faces_cpp",
     "spatial_water_traverse_seeded_clipped_faces",
+    "spatial_water_traverse_seeded_clipped_faces_r",
     "spatial_water_seed_face_has_positive_overlap",
     "spatial_water_seed_cell_bounds",
     "spatial_water_face_clipped_xz_polygon",
@@ -726,8 +847,12 @@ spatial_water_parallel_helper_functions = function() {
     "spatial_water_record_edge_t",
     "spatial_water_terrain_edge_projected_length",
     "spatial_water_selected_clipped_faces",
+    "build_spatial_water_triangle_clipped_geometry_cpp",
     "build_spatial_water_triangle_clipped_geometry",
+    "build_spatial_water_triangle_clipped_geometry_r",
+    "build_spatial_water_full_terrain_geometry_cpp",
     "build_spatial_water_full_terrain_geometry",
+    "build_spatial_water_full_terrain_geometry_r",
     "spatial_water_triangle_normal_y",
     "spatial_water_register_clipped_boundary_edges",
     "spatial_water_triangle_clipped_boundary_geometry",
@@ -813,6 +938,11 @@ empty_spatial_water_polygon_mesh = function() {
 
 #'@keywords internal
 make_spatial_water_fixed_grid_terrain_mesh = function(heightmap) {
+  make_spatial_water_fixed_grid_terrain_mesh_cpp(heightmap)
+}
+
+#'@keywords internal
+make_spatial_water_fixed_grid_terrain_mesh_r = function(heightmap) {
   nr = nrow(heightmap)
   nc = ncol(heightmap)
   if (nr < 2L || nc < 2L) {
@@ -1369,6 +1499,21 @@ spatial_water_face_sublevel_area = function(
   water_level,
   tolerances
 ) {
+  spatial_water_face_sublevel_area_cpp(
+    terrain_mesh = terrain_mesh,
+    face_ids = face_ids,
+    water_level = water_level,
+    height_tol = tolerances$height_tol
+  )
+}
+
+#'@keywords internal
+spatial_water_face_sublevel_area_r = function(
+  terrain_mesh,
+  face_ids,
+  water_level,
+  tolerances
+) {
   if (!length(face_ids)) {
     return(numeric())
   }
@@ -1521,6 +1666,27 @@ spatial_water_evaluate_full_scene_component = function(
 
 #'@keywords internal
 spatial_water_traverse_seeded_clipped_faces = function(
+  terrain_mesh,
+  component_seed,
+  water_level,
+  target_area_limit,
+  tolerances,
+  return_face_ids = FALSE
+) {
+  spatial_water_traverse_seeded_clipped_faces_cpp(
+    terrain_mesh = terrain_mesh,
+    component_seed = component_seed,
+    water_level = water_level,
+    target_area_limit = target_area_limit,
+    height_tol = tolerances$height_tol,
+    length_tol = tolerances$length_tol,
+    area_tol = tolerances$area_tol,
+    return_face_ids = isTRUE(return_face_ids)
+  )
+}
+
+#'@keywords internal
+spatial_water_traverse_seeded_clipped_faces_r = function(
   terrain_mesh,
   component_seed,
   water_level,
@@ -2259,6 +2425,39 @@ build_spatial_water_triangle_clipped_geometry = function(
   tolerances,
   selected_face_ids
 ) {
+  if (
+    length(selected_face_ids) == nrow(terrain_mesh$faces) &&
+      water_level >= max(terrain_mesh$face_heights) - tolerances$height_tol
+  ) {
+    selected_flags = rep(FALSE, nrow(terrain_mesh$faces))
+    selected_flags[selected_face_ids] = TRUE
+    if (all(selected_flags)) {
+      return(build_spatial_water_full_terrain_geometry(
+        terrain_mesh = terrain_mesh,
+        water_level = water_level,
+        tolerances = tolerances
+      ))
+    }
+  }
+  build_spatial_water_triangle_clipped_geometry_cpp(
+    terrain_mesh = terrain_mesh,
+    selected_face_ids = selected_face_ids,
+    water_level = water_level,
+    height_tol = tolerances$height_tol,
+    t_tol = tolerances$t_tol,
+    length_tol = tolerances$length_tol,
+    area_tol = tolerances$area_tol,
+    surface_area_tol = tolerances$surface_area_tol
+  )
+}
+
+#'@keywords internal
+build_spatial_water_triangle_clipped_geometry_r = function(
+  terrain_mesh,
+  water_level,
+  tolerances,
+  selected_face_ids
+) {
   if (!length(selected_face_ids)) {
     return(spatial_water_empty_triangle_clip_evaluation(TRUE)[
       c(
@@ -2412,6 +2611,19 @@ build_spatial_water_triangle_clipped_geometry = function(
 
 #'@keywords internal
 build_spatial_water_full_terrain_geometry = function(
+  terrain_mesh,
+  water_level,
+  tolerances
+) {
+  build_spatial_water_full_terrain_geometry_cpp(
+    terrain_mesh = terrain_mesh,
+    water_level = water_level,
+    surface_area_tol = tolerances$surface_area_tol
+  )
+}
+
+#'@keywords internal
+build_spatial_water_full_terrain_geometry_r = function(
   terrain_mesh,
   water_level,
   tolerances

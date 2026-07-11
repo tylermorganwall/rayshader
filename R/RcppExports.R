@@ -97,3 +97,23 @@ rayshade_multicore <- function(sunangle, anglebreaks, heightmap, zscale, chunkin
     .Call(`_rayshader_rayshade_multicore`, sunangle, anglebreaks, heightmap, zscale, chunkindices, maxsearch, cache_mask)
 }
 
+make_spatial_water_fixed_grid_terrain_mesh_cpp <- function(heightmap) {
+    .Call(`_rayshader_make_spatial_water_fixed_grid_terrain_mesh_cpp`, heightmap)
+}
+
+spatial_water_face_sublevel_area_cpp <- function(terrain_mesh, face_ids, water_level, height_tol) {
+    .Call(`_rayshader_spatial_water_face_sublevel_area_cpp`, terrain_mesh, face_ids, water_level, height_tol)
+}
+
+spatial_water_traverse_seeded_clipped_faces_cpp <- function(terrain_mesh, component_seed, water_level, target_area_limit, height_tol, length_tol, area_tol, return_face_ids = FALSE) {
+    .Call(`_rayshader_spatial_water_traverse_seeded_clipped_faces_cpp`, terrain_mesh, component_seed, water_level, target_area_limit, height_tol, length_tol, area_tol, return_face_ids)
+}
+
+build_spatial_water_full_terrain_geometry_cpp <- function(terrain_mesh, water_level, surface_area_tol) {
+    .Call(`_rayshader_build_spatial_water_full_terrain_geometry_cpp`, terrain_mesh, water_level, surface_area_tol)
+}
+
+build_spatial_water_triangle_clipped_geometry_cpp <- function(terrain_mesh, selected_face_ids, water_level, height_tol, t_tol, length_tol, area_tol, surface_area_tol) {
+    .Call(`_rayshader_build_spatial_water_triangle_clipped_geometry_cpp`, terrain_mesh, selected_face_ids, water_level, height_tol, t_tol, length_tol, area_tol, surface_area_tol)
+}
+
