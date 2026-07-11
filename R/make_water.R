@@ -8,9 +8,10 @@
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
 #'of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
 #'@param wateralpha Default `0.5`. Water transparency.
-#'@param water_render_method Default `"contour"`. Water meshing method. `"contour"` clips the water mesh to the flooded region; `"legacy"` uses the previous box/grid renderer.
+#'@param water_render_method Default `"contour"`. Water meshing method. `"contour"` clips scalar/matrix water meshes and uses the raster-cell renderer for spatial water rasters; `"raster"` explicitly uses spatial water raster cells; `"polygon"` fits each spatial water component to a DEM contour by matching contour area to raster footprint area, initialized from covered DEM values; `"legacy"` uses the previous box/grid renderer.
 #'@param water_edge_extension Default `0.5`. For spatial `waterheight` inputs, amount in grid cells to expand finite water cells at boundary edges, up to a maximum of half a cell.
 #'@param water_edge_clamp Default `FALSE`. For spatial `waterheight` inputs, if `TRUE`, resolves each connected water footprint to a single level, then lowers it by the largest finite exterior sidewall height after edge expansion. Heightmap-boundary and NA-slice edges are ignored when computing the lowering amount.
+#'@param parallel Default `FALSE`. If `TRUE`, spatial polygon water components are fit in parallel using `mirai`. A positive numeric value sets the worker count.
 #'@param heightmap_extent Default `NULL`. Active scene extent for spatial `waterheight` inputs.
 #'@param heightmap_crs Default `NULL`. Active scene CRS for spatial `waterheight` inputs.
 #'@keywords internal
@@ -20,9 +21,10 @@ make_water = function(
   watercolor = "lightblue",
   zscale = 1,
   wateralpha = 0.5,
-  water_render_method = c("contour", "legacy"),
+  water_render_method = c("contour", "raster", "polygon", "legacy"),
   water_edge_extension = 0.5,
   water_edge_clamp = FALSE,
+  parallel = FALSE,
   heightmap_extent = NULL,
   heightmap_crs = NULL
 ) {
@@ -42,8 +44,10 @@ make_water = function(
     watercolor = watercolor,
     zscale = zscale,
     wateralpha = wateralpha,
+    water_render_method = water_render_method,
     water_edge_extension = water_edge_extension,
     water_edge_clamp = water_edge_clamp,
+    parallel = parallel,
     heightmap_extent = heightmap_extent,
     heightmap_crs = heightmap_crs
   )
@@ -56,11 +60,14 @@ make_water_contour = function(
   watercolor = "lightblue",
   zscale = 1,
   wateralpha = 0.5,
+  water_render_method = c("contour", "raster", "polygon"),
   water_edge_extension = 0.5,
   water_edge_clamp = FALSE,
+  parallel = FALSE,
   heightmap_extent = NULL,
   heightmap_crs = NULL
 ) {
+  water_render_method = match.arg(water_render_method)
   heightmap = heightmap / zscale
   nr = nrow(heightmap)
   nc = ncol(heightmap)
@@ -82,8 +89,10 @@ make_water_contour = function(
       valid_water = valid_water,
       watercolor = watercolor,
       wateralpha = wateralpha,
+      water_render_method = water_render_method,
       water_edge_extension = water_edge_extension,
-      water_edge_clamp = water_edge_clamp
+      water_edge_clamp = water_edge_clamp,
+      parallel = parallel
     ))
   }
   if (!any(valid_water)) {
@@ -133,9 +142,12 @@ make_spatial_water_surface = function(
   valid_water,
   watercolor = "lightblue",
   wateralpha = 0.5,
+  water_render_method = c("contour", "raster", "polygon"),
   water_edge_extension = 0.5,
-  water_edge_clamp = FALSE
+  water_edge_clamp = FALSE,
+  parallel = FALSE
 ) {
+  water_render_method = match.arg(water_render_method)
   water_edge_extension = validate_water_edge_extension(water_edge_extension)
   water_edge_clamp = validate_water_edge_clamp(water_edge_clamp)
   water_surface = waterheight
@@ -156,11 +168,22 @@ make_spatial_water_surface = function(
       water_edge_extension = water_edge_extension
     )
   }
-  triangle_vertices = make_spatial_water_cell_surface(
-    water_surface = water_surface,
-    heightmap = heightmap,
-    water_edge_extension = water_edge_extension
-  )
+  if (identical(water_render_method, "polygon")) {
+    water_mesh = make_spatial_water_polygon_surface(
+      water_surface = water_surface,
+      heightmap = heightmap,
+      parallel = parallel
+    )
+    triangle_vertices = water_mesh$vertices
+    line_vertices = water_mesh$lines
+  } else {
+    triangle_vertices = make_spatial_water_cell_surface(
+      water_surface = water_surface,
+      heightmap = heightmap,
+      water_edge_extension = water_edge_extension
+    )
+    line_vertices = matrix(nrow = 0, ncol = 3)
+  }
   if (!nrow(triangle_vertices)) {
     warning(
       "No water rendered--spatial `waterdepth` does not cover any renderable heightmap cells."
@@ -184,7 +207,7 @@ make_spatial_water_surface = function(
   )
   invisible(list(
     vertices = list(triangle_vertices),
-    lines = matrix(nrow = 0, ncol = 3)
+    lines = line_vertices
   ))
 }
 
@@ -409,6 +432,1039 @@ make_spatial_water_cell_surface = function(
     nc = geometry$nc
   )
   rbind(top_vertices, side_vertices)
+}
+
+#'@keywords internal
+make_spatial_water_polygon_surface = function(
+  water_surface,
+  heightmap = NULL,
+  parallel = FALSE
+) {
+  require_spatial_water_polygon_packages()
+  if (is.null(heightmap) || !is.matrix(heightmap)) {
+    stop(
+      "`water_render_method = \"polygon\"` requires a matrix heightmap.",
+      call. = FALSE
+    )
+  }
+  component_labels = label_spatial_water_components(is.finite(water_surface))
+  component_count = max(component_labels)
+  if (!component_count) {
+    return(empty_spatial_water_polygon_mesh())
+  }
+
+  component_tasks = vector("list", component_count)
+  for (component_id in seq_len(component_count)) {
+    component_mask = component_labels == component_id
+    component_tasks[[component_id]] = list(
+      component_mask = component_mask,
+      fallback_level = max(water_surface[component_mask], na.rm = TRUE)
+    )
+  }
+  component_meshes = make_spatial_water_polygon_components(
+    component_tasks = component_tasks,
+    heightmap = heightmap,
+    parallel = parallel
+  )
+  component_meshes = Filter(
+    function(mesh) {
+      !is.null(mesh) && nrow(mesh$vertices) > 0
+    },
+    component_meshes
+  )
+  if (!length(component_meshes)) {
+    return(empty_spatial_water_polygon_mesh())
+  }
+  list(
+    vertices = do.call(rbind, lapply(component_meshes, `[[`, "vertices")),
+    lines = do.call(rbind, lapply(component_meshes, `[[`, "lines"))
+  )
+}
+
+#'@keywords internal
+require_spatial_water_polygon_packages = function() {
+  missing_packages = c(
+    if (!requireNamespace("sf", quietly = TRUE)) "sf",
+    if (!requireNamespace("isoband", quietly = TRUE)) "isoband",
+    if (!requireNamespace("decido", quietly = TRUE)) "decido"
+  )
+  if (length(missing_packages)) {
+    stop(
+      paste0(
+        "`water_render_method = \"polygon\"` requires the ",
+        paste(missing_packages, collapse = ", "),
+        " package",
+        if (length(missing_packages) == 1) "." else "s."
+      ),
+      call. = FALSE
+    )
+  }
+  invisible(TRUE)
+}
+
+#'@keywords internal
+validate_spatial_water_parallel = function(parallel = FALSE) {
+  if (
+    is.logical(parallel) &&
+      length(parallel) == 1L &&
+      !is.na(parallel)
+  ) {
+    return(parallel)
+  }
+  if (
+    is.numeric(parallel) &&
+      length(parallel) == 1L &&
+      is.finite(parallel) &&
+      parallel >= 1
+  ) {
+    return(floor(parallel))
+  }
+  stop(
+    "`parallel` must be `TRUE`, `FALSE`, or a positive worker count.",
+    call. = FALSE
+  )
+}
+
+#'@keywords internal
+spatial_water_parallel_worker_count = function(parallel, component_count) {
+  parallel = validate_spatial_water_parallel(parallel)
+  if (isFALSE(parallel) || component_count <= 1L) {
+    return(1L)
+  }
+  requested_workers = if (isTRUE(parallel)) {
+    option_cores = getOption("cores")
+    if (
+      is.numeric(option_cores) &&
+        length(option_cores) == 1L &&
+        is.finite(option_cores) &&
+        option_cores >= 1
+    ) {
+      floor(option_cores)
+    } else {
+      detected_cores = parallel::detectCores()
+      if (is.finite(detected_cores) && detected_cores >= 1) {
+        detected_cores
+      } else {
+        1L
+      }
+    }
+  } else {
+    parallel
+  }
+  max(1L, min(component_count, floor(requested_workers)))
+}
+
+#'@keywords internal
+make_spatial_water_polygon_components = function(
+  component_tasks,
+  heightmap,
+  parallel = FALSE
+) {
+  worker_count = spatial_water_parallel_worker_count(
+    parallel = parallel,
+    component_count = length(component_tasks)
+  )
+  if (worker_count <= 1L) {
+    return(lapply(
+      component_tasks,
+      make_spatial_water_polygon_component_from_task,
+      heightmap = heightmap
+    ))
+  }
+  make_spatial_water_polygon_components_parallel(
+    component_tasks = component_tasks,
+    heightmap = heightmap,
+    worker_count = worker_count
+  )
+}
+
+#'@keywords internal
+make_spatial_water_polygon_component_from_task = function(task, heightmap) {
+  make_spatial_water_polygon_component(
+    component_mask = task$component_mask,
+    heightmap = heightmap,
+    fallback_level = task$fallback_level
+  )
+}
+
+#'@keywords internal
+make_spatial_water_polygon_components_parallel = function(
+  component_tasks,
+  heightmap,
+  worker_count
+) {
+  if (!requireNamespace("mirai", quietly = TRUE)) {
+    stop(
+      "`parallel = TRUE` for `water_render_method = \"polygon\"` requires the mirai package.",
+      call. = FALSE
+    )
+  }
+  compute_profile = spatial_water_mirai_compute_profile()
+  helper_functions = spatial_water_parallel_helper_functions()
+  tryCatch(
+    mirai::daemons(worker_count, .compute = compute_profile),
+    error = function(e) {
+      stop(
+        "Could not start mirai daemons for parallel spatial polygon water fitting: ",
+        conditionMessage(e),
+        call. = FALSE
+      )
+    }
+  )
+  on.exit(mirai::daemons(0, .compute = compute_profile), add = TRUE)
+  component_meshes = mirai::mirai_map(
+    component_tasks,
+    function(task, heightmap, helper_functions) {
+      worker_env = new.env(parent = .GlobalEnv)
+      for (helper_name in names(helper_functions)) {
+        helper_function = helper_functions[[helper_name]]
+        if (
+          is.function(helper_function) && typeof(helper_function) == "closure"
+        ) {
+          environment(helper_function) = worker_env
+        }
+        assign(helper_name, helper_function, envir = worker_env)
+      }
+      worker_env$make_spatial_water_polygon_component_from_task(
+        task = task,
+        heightmap = heightmap
+      )
+    },
+    .args = list(
+      heightmap = heightmap,
+      helper_functions = helper_functions
+    ),
+    .compute = compute_profile
+  )[]
+  component_errors = vapply(
+    component_meshes,
+    spatial_water_mirai_result_is_error,
+    logical(1)
+  )
+  if (any(component_errors)) {
+    stop(
+      "Parallel spatial polygon water fitting failed: ",
+      spatial_water_mirai_error_message(component_meshes[[which(
+        component_errors
+      )[1L]]]),
+      call. = FALSE
+    )
+  }
+  component_meshes
+}
+
+#'@keywords internal
+spatial_water_parallel_helper_functions = function() {
+  helper_names = c(
+    "make_spatial_water_polygon_component_from_task",
+    "make_spatial_water_polygon_component",
+    "empty_spatial_water_polygon_mesh",
+    "make_spatial_water_component_footprint",
+    "fit_spatial_water_component_polygon",
+    "spatial_water_component_area_fit_at_level",
+    "spatial_water_polygon_area",
+    "spatial_water_polygon_perimeter",
+    "make_spatial_water_level_polygon",
+    "select_spatial_water_component_polygons",
+    "extract_spatial_water_polygon_sfc",
+    "spatial_water_sfc_is_empty",
+    "triangulate_spatial_water_polygon_sfc",
+    "make_spatial_water_polygon_sidewalls",
+    "make_spatial_water_polygon_lines",
+    "spatial_water_sfg_polygons",
+    "clean_spatial_water_polygon_ring",
+    "close_spatial_water_polygon_ring",
+    "spatial_water_polygon_sidewall_segment",
+    "spatial_water_point_inside_polygon",
+    "spatial_water_point_has_finite_heightmap_cell",
+    "make_spatial_water_polygon_sidewall_vertices",
+    "spatial_water_side_segment_breakpoints",
+    "spatial_water_axis_breakpoints",
+    "clean_spatial_water_breakpoints",
+    "interpolate_spatial_water_height",
+    "spatial_water_row_col",
+    "simplify_spatial_water_sidewall_points"
+  )
+  mget(
+    helper_names,
+    envir = environment(spatial_water_parallel_helper_functions),
+    inherits = FALSE
+  )
+}
+
+#'@keywords internal
+spatial_water_mirai_compute_profile = function() {
+  gsub(
+    "[^A-Za-z0-9_]",
+    "_",
+    basename(tempfile("rayshader_water_"))
+  )
+}
+
+#'@keywords internal
+spatial_water_mirai_result_is_error = function(result) {
+  inherits(result, c("error", "miraiError", "errorValue")) ||
+    isTRUE(tryCatch(mirai::is_mirai_error(result), error = function(e) {
+      FALSE
+    })) ||
+    isTRUE(tryCatch(mirai::is_error_value(result), error = function(e) FALSE))
+}
+
+#'@keywords internal
+spatial_water_mirai_error_message = function(result) {
+  if (inherits(result, "condition")) {
+    return(conditionMessage(result))
+  }
+  result_text = tryCatch(
+    paste(capture.output(print(result)), collapse = "\n"),
+    error = function(e) ""
+  )
+  if (!nzchar(result_text)) {
+    result_text = "unknown worker error"
+  }
+  result_text
+}
+
+#'@keywords internal
+empty_spatial_water_polygon_mesh = function() {
+  list(
+    vertices = matrix(nrow = 0, ncol = 3),
+    lines = matrix(nrow = 0, ncol = 3)
+  )
+}
+
+#'@keywords internal
+make_spatial_water_polygon_component = function(
+  component_mask,
+  heightmap,
+  fallback_level
+) {
+  if (!is.finite(fallback_level)) {
+    return(empty_spatial_water_polygon_mesh())
+  }
+
+  component_footprint = make_spatial_water_component_footprint(component_mask)
+  if (spatial_water_sfc_is_empty(component_footprint)) {
+    return(empty_spatial_water_polygon_mesh())
+  }
+  fit = fit_spatial_water_component_polygon(
+    component_mask = component_mask,
+    heightmap = heightmap,
+    component_footprint = component_footprint,
+    fallback_level = fallback_level
+  )
+  if (is.null(fit) || spatial_water_sfc_is_empty(fit$polygon)) {
+    return(empty_spatial_water_polygon_mesh())
+  }
+  water_level = fit$level
+  water_polygon = fit$polygon
+
+  top_vertices = triangulate_spatial_water_polygon_sfc(
+    water_polygon = water_polygon,
+    water_level = water_level
+  )
+  side_vertices = make_spatial_water_polygon_sidewalls(
+    water_polygon = water_polygon,
+    heightmap = heightmap,
+    water_level = water_level
+  )
+  list(
+    vertices = rbind(top_vertices, side_vertices),
+    lines = make_spatial_water_polygon_lines(
+      water_polygon = water_polygon,
+      water_level = water_level
+    )
+  )
+}
+
+#'@keywords internal
+fit_spatial_water_component_polygon = function(
+  component_mask,
+  heightmap,
+  component_footprint,
+  fallback_level
+) {
+  target_area = spatial_water_polygon_area(component_footprint)
+  if (!is.finite(target_area) || target_area <= sqrt(.Machine$double.eps)) {
+    return(NULL)
+  }
+  target_perimeter = spatial_water_polygon_perimeter(component_footprint)
+  target_area_limit = target_area + target_perimeter
+
+  component_heights = heightmap[component_mask & is.finite(heightmap)]
+  start_level = if (length(component_heights)) {
+    stats::median(component_heights)
+  } else {
+    fallback_level
+  }
+  if (!is.finite(start_level)) {
+    start_level = fallback_level
+  }
+
+  finite_height = heightmap[is.finite(heightmap)]
+  if (!length(finite_height)) {
+    return(NULL)
+  }
+  level_min = min(finite_height, na.rm = TRUE)
+  level_max = max(finite_height, na.rm = TRUE)
+  if (!is.finite(level_min) || !is.finite(level_max)) {
+    return(NULL)
+  }
+  start_level = min(max(start_level, level_min), level_max)
+
+  evaluation_cache = new.env(parent = emptyenv())
+  evaluate_level = function(level) {
+    spatial_water_component_area_fit_at_level(
+      heightmap = heightmap,
+      component_footprint = component_footprint,
+      level = level,
+      target_area = target_area,
+      target_area_limit = target_area_limit,
+      cache = evaluation_cache
+    )
+  }
+
+  best = NULL
+  update_best = function(candidate) {
+    if (spatial_water_sfc_is_empty(candidate$polygon)) {
+      return(best)
+    }
+    if (
+      is.null(best) ||
+        candidate$difference < best$difference - sqrt(.Machine$double.eps)
+    ) {
+      return(candidate)
+    }
+    best
+  }
+
+  start_result = evaluate_level(start_level)
+  best = update_best(start_result)
+
+  candidate_levels = c(
+    start_level,
+    if (
+      is.finite(fallback_level) &&
+        fallback_level >= level_min &&
+        fallback_level <= level_max
+    ) {
+      fallback_level
+    },
+    seq(level_min, level_max, length.out = 65)
+  )
+  candidate_levels = sort(unique(candidate_levels[is.finite(candidate_levels)]))
+  candidate_levels = candidate_levels[
+    candidate_levels >= level_min & candidate_levels <= level_max
+  ]
+
+  for (candidate_level in candidate_levels) {
+    best = update_best(evaluate_level(candidate_level))
+  }
+
+  if (!is.null(best) && length(candidate_levels) > 1L) {
+    best_index = which.min(abs(candidate_levels - best$level))
+    lower = candidate_levels[max(1L, best_index - 1L)]
+    upper = candidate_levels[min(length(candidate_levels), best_index + 1L)]
+    if (is.finite(lower) && is.finite(upper) && upper > lower) {
+      optimum = tryCatch(
+        stats::optimize(
+          f = function(level) evaluate_level(level)$difference,
+          interval = c(lower, upper)
+        ),
+        error = function(e) NULL
+      )
+      if (!is.null(optimum)) {
+        best = update_best(evaluate_level(optimum$minimum))
+      }
+    }
+  }
+  best
+}
+
+#'@keywords internal
+spatial_water_component_area_fit_at_level = function(
+  heightmap,
+  component_footprint,
+  level,
+  target_area,
+  target_area_limit,
+  cache
+) {
+  cache_key = format(level, digits = 17)
+  if (exists(cache_key, envir = cache, inherits = FALSE)) {
+    return(get(cache_key, envir = cache, inherits = FALSE))
+  }
+
+  terrain_band = make_spatial_water_level_polygon(
+    heightmap = heightmap,
+    water_level = level
+  )
+  water_polygon = if (spatial_water_sfc_is_empty(terrain_band)) {
+    sf::st_sfc()
+  } else {
+    select_spatial_water_component_polygons(
+      terrain_band = terrain_band,
+      component_footprint = component_footprint
+    )
+  }
+  polygon_area = spatial_water_polygon_area(water_polygon)
+  if (
+    is.finite(target_area_limit) &&
+      polygon_area > target_area_limit + sqrt(.Machine$double.eps)
+  ) {
+    result = list(
+      level = level,
+      polygon = sf::st_sfc(),
+      area = polygon_area,
+      difference = Inf,
+      rejected = TRUE
+    )
+    assign(cache_key, result, envir = cache)
+    return(result)
+  }
+  result = list(
+    level = level,
+    polygon = water_polygon,
+    area = polygon_area,
+    difference = abs(polygon_area - target_area),
+    rejected = FALSE
+  )
+  assign(cache_key, result, envir = cache)
+  result
+}
+
+#'@keywords internal
+spatial_water_polygon_area = function(geometry) {
+  if (spatial_water_sfc_is_empty(geometry)) {
+    return(0)
+  }
+  polygon_area = suppressWarnings(as.numeric(sf::st_area(geometry)))
+  polygon_area = polygon_area[is.finite(polygon_area)]
+  if (!length(polygon_area)) {
+    return(0)
+  }
+  sum(polygon_area)
+}
+
+#'@keywords internal
+spatial_water_polygon_perimeter = function(geometry) {
+  if (spatial_water_sfc_is_empty(geometry)) {
+    return(0)
+  }
+  polygon_perimeter = suppressWarnings(
+    as.numeric(sf::st_length(sf::st_boundary(geometry)))
+  )
+  polygon_perimeter = polygon_perimeter[is.finite(polygon_perimeter)]
+  if (!length(polygon_perimeter)) {
+    return(0)
+  }
+  sum(polygon_perimeter)
+}
+
+#'@keywords internal
+spatial_water_component_edge_heights = function(component_mask, heightmap) {
+  component_cells = which(component_mask, arr.ind = TRUE)
+  if (!nrow(component_cells)) {
+    return(numeric())
+  }
+
+  nr = nrow(component_mask)
+  nc = ncol(component_mask)
+  edge_sample = rep(FALSE, nrow(component_cells))
+  row_offset = c(-1L, 1L, 0L, 0L)
+  col_offset = c(0L, 0L, -1L, 1L)
+  for (cell_index in seq_len(nrow(component_cells))) {
+    row_index = component_cells[cell_index, 1L]
+    col_index = component_cells[cell_index, 2L]
+    for (neighbor_index in seq_along(row_offset)) {
+      neighbor_row = row_index + row_offset[neighbor_index]
+      neighbor_col = col_index + col_offset[neighbor_index]
+      if (
+        neighbor_row < 1L ||
+          neighbor_row > nr ||
+          neighbor_col < 1L ||
+          neighbor_col > nc
+      ) {
+        next
+      }
+      if (!is.finite(heightmap[neighbor_row, neighbor_col])) {
+        next
+      }
+      if (!component_mask[neighbor_row, neighbor_col]) {
+        edge_sample[cell_index] = TRUE
+        break
+      }
+    }
+  }
+  if (!any(edge_sample)) {
+    return(numeric())
+  }
+
+  edge_cells = component_cells[edge_sample, , drop = FALSE]
+  edge_height = heightmap[edge_cells]
+  edge_height = edge_height[is.finite(edge_height)]
+  if (!length(edge_height)) {
+    return(numeric())
+  }
+  edge_height
+}
+
+#'@keywords internal
+mean_spatial_water_component_edge_height = function(component_mask, heightmap) {
+  edge_height = spatial_water_component_edge_heights(
+    component_mask = component_mask,
+    heightmap = heightmap
+  )
+  if (!length(edge_height)) {
+    return(NA_real_)
+  }
+  mean(edge_height)
+}
+
+#'@keywords internal
+make_spatial_water_component_footprint = function(component_mask) {
+  component_cells = which(component_mask, arr.ind = TRUE)
+  if (!nrow(component_cells)) {
+    return(sf::st_sfc())
+  }
+
+  nr = nrow(component_mask)
+  nc = ncol(component_mask)
+  row_index = component_cells[, 1L]
+  col_index = component_cells[, 2L]
+  x_scene_min = -(nr - 1) / 2
+  x_scene_max = (nr - 1) / 2
+  z_scene_min = -(nc - 1) / 2
+  z_scene_max = (nc - 1) / 2
+  x_center = row_index - 1 - (nr - 1) / 2
+  z_center = col_index - 1 - (nc - 1) / 2
+  x0 = pmax(x_center - 0.5, x_scene_min)
+  x1 = pmin(x_center + 0.5, x_scene_max)
+  z0 = pmax(z_center - 0.5, z_scene_min)
+  z1 = pmin(z_center + 0.5, z_scene_max)
+
+  renderable = x1 > x0 & z1 > z0
+  if (!any(renderable)) {
+    return(sf::st_sfc())
+  }
+  x0 = x0[renderable]
+  x1 = x1[renderable]
+  z0 = z0[renderable]
+  z1 = z1[renderable]
+
+  rectangles = vector("list", length(x0))
+  for (cell_index in seq_along(x0)) {
+    rectangles[[cell_index]] = sf::st_polygon(list(rbind(
+      c(x0[cell_index], z0[cell_index]),
+      c(x1[cell_index], z0[cell_index]),
+      c(x1[cell_index], z1[cell_index]),
+      c(x0[cell_index], z1[cell_index]),
+      c(x0[cell_index], z0[cell_index])
+    )))
+  }
+  footprint = suppressWarnings(sf::st_union(sf::st_sfc(rectangles)))
+  extract_spatial_water_polygon_sfc(footprint)
+}
+
+#'@keywords internal
+select_spatial_water_component_polygons = function(
+  terrain_band,
+  component_footprint
+) {
+  terrain_sf = sf::st_sf(geometry = terrain_band)
+  footprint_sf = sf::st_sf(geometry = component_footprint)
+  intersects = lengths(
+    suppressWarnings(sf::st_intersects(terrain_sf, footprint_sf))
+  ) >
+    0
+  if (!any(intersects)) {
+    return(sf::st_sfc())
+  }
+  extract_spatial_water_polygon_sfc(terrain_band[intersects])
+}
+
+#'@keywords internal
+make_spatial_water_level_polygon = function(heightmap, water_level) {
+  if (!any(is.finite(heightmap) & heightmap <= water_level)) {
+    return(sf::st_sfc())
+  }
+  finite_height = heightmap[is.finite(heightmap)]
+  max_height = max(finite_height, na.rm = TRUE)
+  max_height_eps = sqrt(.Machine$double.eps) * max(1, abs(max_height))
+  if (water_level >= max_height - max_height_eps) {
+    return(make_spatial_water_component_footprint(is.finite(heightmap)))
+  }
+  nr = nrow(heightmap)
+  nc = ncol(heightmap)
+  x = seq(-(nr - 1) / 2, (nr - 1) / 2, length.out = nr)
+  z = seq(-(nc - 1) / 2, (nc - 1) / 2, length.out = nc)
+  bands = isoband::isobands(
+    x = x,
+    y = z,
+    z = t(heightmap),
+    levels_low = -Inf,
+    levels_high = water_level
+  )
+  polygon_sfg = isoband::iso_to_sfg(bands)[[1]]
+  extract_spatial_water_polygon_sfc(sf::st_sfc(polygon_sfg))
+}
+
+#'@keywords internal
+extract_spatial_water_polygon_sfc = function(geometry) {
+  if (!length(geometry)) {
+    return(sf::st_sfc())
+  }
+  polygon_geometry = suppressWarnings(
+    sf::st_collection_extract(geometry, "POLYGON")
+  )
+  if (!length(polygon_geometry)) {
+    return(sf::st_sfc())
+  }
+  polygon_geometry = suppressWarnings(sf::st_cast(polygon_geometry, "POLYGON"))
+  if (!length(polygon_geometry)) {
+    return(sf::st_sfc())
+  }
+  polygon_geometry = polygon_geometry[!sf::st_is_empty(polygon_geometry)]
+  if (!length(polygon_geometry)) {
+    return(sf::st_sfc())
+  }
+  polygon_area = suppressWarnings(as.numeric(sf::st_area(polygon_geometry)))
+  polygon_geometry = polygon_geometry[
+    is.finite(polygon_area) & polygon_area > sqrt(.Machine$double.eps)
+  ]
+  if (!length(polygon_geometry)) {
+    return(sf::st_sfc())
+  }
+  polygon_geometry
+}
+
+#'@keywords internal
+spatial_water_sfc_is_empty = function(geometry) {
+  !length(geometry) || all(sf::st_is_empty(geometry))
+}
+
+#'@keywords internal
+triangulate_spatial_water_polygon_sfc = function(water_polygon, water_level) {
+  polygon_vertices = list()
+  vertex_index = 0L
+  for (geometry_index in seq_along(water_polygon)) {
+    polygons = spatial_water_sfg_polygons(water_polygon[[geometry_index]])
+    for (polygon in polygons) {
+      rings = lapply(polygon, clean_spatial_water_polygon_ring)
+      ring_lengths = vapply(rings, nrow, integer(1))
+      rings = rings[ring_lengths >= 3L]
+      if (!length(rings)) {
+        next
+      }
+      ring_lengths = vapply(rings, nrow, integer(1))
+      xy = do.call(rbind, rings)
+      holes = if (length(rings) > 1L) {
+        cumsum(ring_lengths)[-length(ring_lengths)] + 1L
+      } else {
+        0
+      }
+      indices = tryCatch(
+        decido::earcut(xy, holes = holes),
+        error = function(e) integer()
+      )
+      if (length(indices) < 3L) {
+        next
+      }
+      triangle_xy = xy[as.integer(indices), , drop = FALSE]
+      vertex_index = vertex_index + 1L
+      polygon_vertices[[vertex_index]] = cbind(
+        triangle_xy[, 1],
+        water_level,
+        triangle_xy[, 2]
+      )
+    }
+  }
+  if (!length(polygon_vertices)) {
+    return(matrix(nrow = 0, ncol = 3))
+  }
+  do.call(rbind, polygon_vertices)
+}
+
+#'@keywords internal
+make_spatial_water_polygon_lines = function(water_polygon, water_level) {
+  line_vertices = list()
+  line_index = 0L
+  for (geometry_index in seq_along(water_polygon)) {
+    polygons = spatial_water_sfg_polygons(water_polygon[[geometry_index]])
+    for (polygon in polygons) {
+      for (ring in polygon) {
+        ring = close_spatial_water_polygon_ring(ring)
+        if (nrow(ring) < 2L) {
+          next
+        }
+        segment_start = seq_len(nrow(ring) - 1L)
+        segment_end = segment_start + 1L
+        line_index = line_index + 1L
+        line_vertices[[line_index]] = rbind(
+          cbind(ring[segment_start, 1], water_level, ring[segment_start, 2]),
+          cbind(ring[segment_end, 1], water_level, ring[segment_end, 2])
+        )[
+          as.vector(rbind(
+            seq_along(segment_start),
+            seq_along(segment_end) +
+              length(segment_start)
+          )),
+          ,
+          drop = FALSE
+        ]
+      }
+    }
+  }
+  if (!length(line_vertices)) {
+    return(matrix(nrow = 0, ncol = 3))
+  }
+  do.call(rbind, line_vertices)
+}
+
+#'@keywords internal
+make_spatial_water_polygon_sidewalls = function(
+  water_polygon,
+  heightmap,
+  water_level
+) {
+  polygon_union = sf::st_sf(
+    geometry = suppressWarnings(sf::st_union(
+      water_polygon
+    ))
+  )
+  side_vertices = list()
+  side_index = 0L
+  eps = 1e-6
+  for (geometry_index in seq_along(water_polygon)) {
+    polygons = spatial_water_sfg_polygons(water_polygon[[geometry_index]])
+    for (polygon in polygons) {
+      for (ring in polygon) {
+        ring = close_spatial_water_polygon_ring(ring)
+        if (nrow(ring) < 2L) {
+          next
+        }
+        for (point_index in seq_len(nrow(ring) - 1L)) {
+          segment = spatial_water_polygon_sidewall_segment(
+            x_start = ring[point_index, 1],
+            z_start = ring[point_index, 2],
+            x_end = ring[point_index + 1L, 1],
+            z_end = ring[point_index + 1L, 2],
+            water_polygon = polygon_union,
+            heightmap = heightmap,
+            water_level = water_level,
+            eps = eps
+          )
+          if (!nrow(segment)) {
+            next
+          }
+          side_index = side_index + 1L
+          side_vertices[[side_index]] = segment
+        }
+      }
+    }
+  }
+  if (!length(side_vertices)) {
+    return(matrix(nrow = 0, ncol = 3))
+  }
+  do.call(rbind, side_vertices)
+}
+
+#'@keywords internal
+spatial_water_polygon_sidewall_segment = function(
+  x_start,
+  z_start,
+  x_end,
+  z_end,
+  water_polygon,
+  heightmap,
+  water_level,
+  eps = 1e-6
+) {
+  delta_x = x_end - x_start
+  delta_z = z_end - z_start
+  segment_length = sqrt(delta_x^2 + delta_z^2)
+  if (
+    !is.finite(segment_length) || segment_length <= sqrt(.Machine$double.eps)
+  ) {
+    return(matrix(nrow = 0, ncol = 3))
+  }
+  normal_one = c(-delta_z, delta_x) / segment_length
+  normal_two = -normal_one
+  midpoint_x = (x_start + x_end) / 2
+  midpoint_z = (z_start + z_end) / 2
+  inside_one = spatial_water_point_inside_polygon(
+    x = midpoint_x + normal_one[1] * eps,
+    z = midpoint_z + normal_one[2] * eps,
+    water_polygon = water_polygon
+  )
+  inside_two = spatial_water_point_inside_polygon(
+    x = midpoint_x + normal_two[1] * eps,
+    z = midpoint_z + normal_two[2] * eps,
+    water_polygon = water_polygon
+  )
+  if (isTRUE(inside_one) && !isTRUE(inside_two)) {
+    inward_normal = normal_one
+    outward_normal = normal_two
+  } else if (isTRUE(inside_two) && !isTRUE(inside_one)) {
+    inward_normal = normal_two
+    outward_normal = normal_one
+  } else {
+    return(matrix(nrow = 0, ncol = 3))
+  }
+
+  outside_supported = spatial_water_point_has_finite_heightmap_cell(
+    heightmap = heightmap,
+    x = midpoint_x + outward_normal[1] * eps,
+    z = midpoint_z + outward_normal[2] * eps
+  )
+  if (isTRUE(outside_supported)) {
+    return(matrix(nrow = 0, ncol = 3))
+  }
+  make_spatial_water_polygon_sidewall_vertices(
+    heightmap = heightmap,
+    x_start = x_start,
+    z_start = z_start,
+    x_end = x_end,
+    z_end = z_end,
+    water_level = water_level,
+    inward_normal = inward_normal,
+    eps = eps
+  )
+}
+
+#'@keywords internal
+spatial_water_point_inside_polygon = function(x, z, water_polygon) {
+  point = sf::st_sfc(sf::st_point(c(x, z)))
+  any(sf::st_intersects(point, water_polygon, sparse = FALSE))
+}
+
+#'@keywords internal
+make_spatial_water_polygon_sidewall_vertices = function(
+  heightmap,
+  x_start,
+  z_start,
+  x_end,
+  z_end,
+  water_level,
+  inward_normal,
+  eps = 1e-6
+) {
+  breakpoints = spatial_water_side_segment_breakpoints(
+    heightmap = heightmap,
+    x_start = x_start,
+    z_start = z_start,
+    x_end = x_end,
+    z_end = z_end
+  )
+  segment_x = x_start + (x_end - x_start) * breakpoints
+  segment_z = z_start + (z_end - z_start) * breakpoints
+  segment_terrain = interpolate_spatial_water_height(
+    heightmap = heightmap,
+    x = segment_x + inward_normal[1] * eps,
+    z = segment_z + inward_normal[2] * eps
+  )
+  segment_bottom = pmin(segment_terrain, water_level)
+  keep_points = simplify_spatial_water_sidewall_points(
+    segment_x,
+    segment_z,
+    segment_bottom
+  )
+  segment_x = segment_x[keep_points]
+  segment_z = segment_z[keep_points]
+  segment_bottom = segment_bottom[keep_points]
+  renderable = is.finite(segment_bottom[-length(segment_bottom)]) &
+    is.finite(segment_bottom[-1]) &
+    (water_level > segment_bottom[-length(segment_bottom)] |
+      water_level > segment_bottom[-1])
+  if (!any(renderable)) {
+    return(matrix(nrow = 0, ncol = 3))
+  }
+
+  start_index = which(renderable)
+  end_index = start_index + 1L
+  n_edges = length(start_index)
+  vertices = matrix(NA_real_, nrow = n_edges * 6L, ncol = 3L)
+  first_vertex = seq.int(1L, nrow(vertices), by = 6L)
+  vertices[first_vertex, ] = cbind(
+    segment_x[start_index],
+    water_level,
+    segment_z[start_index]
+  )
+  vertices[first_vertex + 1L, ] = cbind(
+    segment_x[end_index],
+    water_level,
+    segment_z[end_index]
+  )
+  vertices[first_vertex + 2L, ] = cbind(
+    segment_x[start_index],
+    segment_bottom[start_index],
+    segment_z[start_index]
+  )
+  vertices[first_vertex + 3L, ] = cbind(
+    segment_x[end_index],
+    water_level,
+    segment_z[end_index]
+  )
+  vertices[first_vertex + 4L, ] = cbind(
+    segment_x[end_index],
+    segment_bottom[end_index],
+    segment_z[end_index]
+  )
+  vertices[first_vertex + 5L, ] = cbind(
+    segment_x[start_index],
+    segment_bottom[start_index],
+    segment_z[start_index]
+  )
+  vertices
+}
+
+#'@keywords internal
+spatial_water_sfg_polygons = function(geometry) {
+  if (inherits(geometry, "POLYGON")) {
+    return(list(lapply(seq_along(geometry), function(index) geometry[[index]])))
+  }
+  if (inherits(geometry, "MULTIPOLYGON")) {
+    return(lapply(geometry, function(polygon) {
+      lapply(seq_along(polygon), function(index) polygon[[index]])
+    }))
+  }
+  list()
+}
+
+#'@keywords internal
+clean_spatial_water_polygon_ring = function(ring) {
+  ring = as.matrix(ring[, 1:2, drop = FALSE])
+  ring = ring[is.finite(ring[, 1]) & is.finite(ring[, 2]), , drop = FALSE]
+  if (nrow(ring) < 2L) {
+    return(matrix(nrow = 0, ncol = 2))
+  }
+  duplicate_previous = c(
+    FALSE,
+    rowSums(abs(diff(ring))) <=
+      sqrt(
+        .Machine$double.eps
+      )
+  )
+  ring = ring[!duplicate_previous, , drop = FALSE]
+  if (
+    nrow(ring) > 1L &&
+      all(abs(ring[1L, ] - ring[nrow(ring), ]) <= sqrt(.Machine$double.eps))
+  ) {
+    ring = ring[-nrow(ring), , drop = FALSE]
+  }
+  if (nrow(ring) < 3L) {
+    return(matrix(nrow = 0, ncol = 2))
+  }
+  ring
+}
+
+#'@keywords internal
+close_spatial_water_polygon_ring = function(ring) {
+  ring = clean_spatial_water_polygon_ring(ring)
+  if (!nrow(ring)) {
+    return(ring)
+  }
+  rbind(ring, ring[1L, , drop = FALSE])
 }
 
 #'@keywords internal
@@ -2040,6 +3096,29 @@ spatial_water_row_col = function(heightmap, x, z, clamp = TRUE) {
     col = pmin(pmax(col, 1), nc)
   }
   list(row = row, col = col)
+}
+
+#'@keywords internal
+spatial_water_point_has_finite_heightmap_cell = function(heightmap, x, z) {
+  row_col = spatial_water_row_col(heightmap, x, z, clamp = FALSE)
+  row = row_col$row
+  col = row_col$col
+  row_index = floor(row + 0.5)
+  col_index = floor(col + 0.5)
+  in_bounds = row >= 1 &
+    row <= nrow(heightmap) &
+    col >= 1 &
+    col <= ncol(heightmap) &
+    row_index >= 1L &
+    row_index <= nrow(heightmap) &
+    col_index >= 1L &
+    col_index <= ncol(heightmap)
+  supported = rep(FALSE, length(row))
+  supported[in_bounds] = is.finite(heightmap[cbind(
+    row_index[in_bounds],
+    col_index[in_bounds]
+  )])
+  supported
 }
 
 #'@keywords internal

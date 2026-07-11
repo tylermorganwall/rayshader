@@ -768,6 +768,10 @@ indent_surface_transition_factor = function(feature_mask, transition) {
     byrow = TRUE
   )
   edge_matrix = indent_surface_edge_cells(inside_matrix)
+  if (!any(edge_matrix)) {
+    transition_factor[inside] = 1
+    return(transition_factor)
+  }
   edge_raster = terra::rast(feature_mask)
   if (!nzchar(terra::crs(edge_raster))) {
     terra::crs(edge_raster) = "EPSG:3857"
@@ -793,7 +797,7 @@ indent_surface_transition_factor = function(feature_mask, transition) {
 indent_surface_edge_cells = function(inside_matrix) {
   nr = nrow(inside_matrix)
   nc = ncol(inside_matrix)
-  padded = matrix(FALSE, nrow = nr + 2L, ncol = nc + 2L)
+  padded = matrix(TRUE, nrow = nr + 2L, ncol = nc + 2L)
   padded[seq_len(nr) + 1L, seq_len(nc) + 1L] = inside_matrix
   interior = inside_matrix
   for (row_offset in -1:1) {

@@ -10,9 +10,10 @@ make_water(
   watercolor = "lightblue",
   zscale = 1,
   wateralpha = 0.5,
-  water_render_method = c("contour", "legacy"),
+  water_render_method = c("contour", "raster", "polygon", "legacy"),
   water_edge_extension = 0.5,
   water_edge_clamp = FALSE,
+  parallel = FALSE,
   heightmap_extent = NULL,
   heightmap_crs = NULL
 )
@@ -29,11 +30,13 @@ of 1 meter and the grid values are separated by 10 meters, \code{zscale} would b
 
 \item{wateralpha}{Default \code{0.5}. Water transparency.}
 
-\item{water_render_method}{Default \code{"contour"}. Water meshing method. \code{"contour"} clips the water mesh to the flooded region; \code{"legacy"} uses the previous box/grid renderer.}
+\item{water_render_method}{Default \code{"contour"}. Water meshing method. \code{"contour"} clips scalar/matrix water meshes and uses the raster-cell renderer for spatial water rasters; \code{"raster"} explicitly uses spatial water raster cells; \code{"polygon"} fits each spatial water component to a DEM contour by matching contour area to raster footprint area, initialized from covered DEM values; \code{"legacy"} uses the previous box/grid renderer.}
 
 \item{water_edge_extension}{Default \code{0.5}. For spatial \code{waterheight} inputs, amount in grid cells to expand finite water cells at boundary edges, up to a maximum of half a cell.}
 
 \item{water_edge_clamp}{Default \code{FALSE}. For spatial \code{waterheight} inputs, if \code{TRUE}, resolves each connected water footprint to a single level, then lowers it by the largest finite exterior sidewall height after edge expansion. Heightmap-boundary and NA-slice edges are ignored when computing the lowering amount.}
+
+\item{parallel}{Default \code{FALSE}. If \code{TRUE}, spatial polygon water components are fit in parallel using \code{mirai}. A positive numeric value sets the worker count.}
 
 \item{heightmap_extent}{Default \code{NULL}. Active scene extent for spatial \code{waterheight} inputs.}
 

@@ -131,6 +131,39 @@ test_that("indent_surface handles transition equal to depth", {
   expect_equal(sum(depth == 4), 4)
 })
 
+test_that("indent_surface transition ignores raster boundaries as edges", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("terra")
+
+  inside = matrix(TRUE, nrow = 4, ncol = 4)
+  expect_false(any(rayshader:::indent_surface_edge_cells(inside)))
+
+  inside[, 4] = FALSE
+  expected = matrix(FALSE, nrow = 4, ncol = 4)
+  expected[, 3] = TRUE
+  expect_equal(rayshader:::indent_surface_edge_cells(inside), expected)
+
+  heightmap = matrix(10, nrow = 6, ncol = 6)
+  water = sf::st_sfc(sf::st_polygon(list(rbind(
+    c(0, 0),
+    c(6, 0),
+    c(6, 6),
+    c(0, 6),
+    c(0, 0)
+  ))))
+
+  lowered = indent_surface(
+    heightmap,
+    water,
+    amount = 4,
+    transition = 2,
+    extent = c(0, 6, 0, 6),
+    touches = FALSE
+  )
+
+  expect_equal(unique(as.vector(heightmap - lowered)), 4)
+})
+
 test_that("indent_surface transition uses max amount for overlaps", {
   skip_if_not_installed("sf")
   skip_if_not_installed("terra")

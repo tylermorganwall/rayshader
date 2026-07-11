@@ -28,8 +28,9 @@ plot_3d(
   waterlinealpha = 1,
   linewidth = 2,
   lineantialias = FALSE,
-  water_render_method = c("contour", "legacy"),
+  water_render_method = c("contour", "raster", "polygon", "legacy"),
   water_edge_extension = 0.5,
+  water_parallel = FALSE,
   soil = FALSE,
   soil_freq = 0.1,
   soil_levels = 16,
@@ -115,9 +116,11 @@ is omitted and \code{waterdepth} is explicitly supplied, a water layer is render
 
 \item{lineantialias}{Default \code{FALSE}. Whether to anti-alias the lines in the scene.}
 
-\item{water_render_method}{Default \code{"contour"}. Water meshing method. \code{"contour"} clips the water mesh to the flooded region; \code{"legacy"} uses the previous box/grid renderer.}
+\item{water_render_method}{Default \code{"contour"}. Water meshing method. \code{"contour"} clips scalar/matrix water meshes and uses the raster-cell renderer for spatial water rasters; \code{"raster"} explicitly uses spatial water raster cells; \code{"polygon"} fits each spatial water component to a DEM contour by matching contour area to raster footprint area, initialized from covered DEM values; \code{"legacy"} uses the previous box/grid renderer.}
 
 \item{water_edge_extension}{Default \code{0.5}. For spatial \code{waterdepth} inputs, amount in grid cells to expand finite water cells at boundary edges, up to a maximum of half a cell.}
+
+\item{water_parallel}{Default \code{FALSE}. If \code{TRUE}, spatial polygon water components are fit in parallel using \code{mirai}. A positive numeric value sets the worker count.}
 
 \item{soil}{Default \code{FALSE}. Whether to draw the solid base with a textured soil layer.}
 

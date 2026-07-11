@@ -1583,6 +1583,321 @@ test_that("spatial water edge clamp keeps sidewalls at void cuts", {
   ))
 })
 
+test_that("spatial polygon water fits full raster coverage", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("isoband")
+  skip_if_not_installed("decido")
+  local_rgl_use_null()
+
+  heightmap = matrix(10, nrow = 7, ncol = 7)
+  heightmap[3:5, 3:5] = 0
+  water_surface = matrix(5, nrow = 7, ncol = 7)
+
+  water_mesh = make_spatial_water_surface(
+    waterheight = water_surface,
+    heightmap = heightmap,
+    valid_water = is.finite(water_surface),
+    water_render_method = "polygon",
+    water_edge_extension = 0
+  )
+  vertices = water_mesh_vertices(water_mesh)
+  triangle_info = water_mesh_triangle_normals(vertices)
+  sidewalls = abs(triangle_info$normals[, 2]) < 1e-8
+
+  expect_gt(nrow(vertices), 0)
+  expect_equal(range(vertices[, 2]), c(10, 10), tolerance = 1e-8)
+  expect_false(any(sidewalls))
+  expect_equal(range(vertices[, 1]), c(-3, 3), tolerance = 1e-8)
+  expect_equal(range(vertices[, 3]), c(-3, 3), tolerance = 1e-8)
+})
+
+test_that("spatial polygon water fits contour area to raster coverage", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("isoband")
+  skip_if_not_installed("decido")
+  local_rgl_use_null()
+
+  coord = seq(-3, 3)
+  heightmap = outer(coord, coord, function(x, z) sqrt(x^2 + z^2))
+  water_surface = matrix(NA_real_, nrow = 7, ncol = 7)
+  water_surface[3:5, 3:5] = 100
+  component_mask = is.finite(water_surface)
+  component_footprint = make_spatial_water_component_footprint(component_mask)
+  target_area = spatial_water_polygon_area(component_footprint)
+  fit = fit_spatial_water_component_polygon(
+    component_mask = component_mask,
+    heightmap = heightmap,
+    component_footprint = component_footprint,
+    fallback_level = 100
+  )
+
+  water_mesh = make_spatial_water_surface(
+    waterheight = water_surface,
+    heightmap = heightmap,
+    valid_water = is.finite(water_surface),
+    water_render_method = "polygon",
+    water_edge_extension = 0.5
+  )
+  vertices = water_mesh_vertices(water_mesh)
+  triangle_info = water_mesh_triangle_normals(vertices)
+  sidewalls = abs(triangle_info$normals[, 2]) < 1e-8
+
+  expect_equal(fit$area, target_area, tolerance = 1e-3)
+  expect_lt(fit$level, 100)
+  expect_equal(max(vertices[, 2]), fit$level, tolerance = 1e-8)
+  expect_false(any(sidewalls))
+  expect_lt(max(abs(vertices[, 1])), 2)
+  expect_lt(max(abs(vertices[, 3])), 2)
+})
+
+test_that("spatial polygon water rejects open contour floods", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("isoband")
+  skip_if_not_installed("decido")
+  local_rgl_use_null()
+
+  heightmap = matrix(rep(seq(0, 10, length.out = 50), each = 50), 50, 50)
+  water_surface = matrix(NA_real_, nrow = 50, ncol = 50)
+  water_surface[20:30, 20:30] = 100
+  component_mask = is.finite(water_surface)
+  component_footprint = make_spatial_water_component_footprint(component_mask)
+  target_area = spatial_water_polygon_area(component_footprint)
+  target_area_limit = target_area +
+    spatial_water_polygon_perimeter(component_footprint)
+  candidate = spatial_water_component_area_fit_at_level(
+    heightmap = heightmap,
+    component_footprint = component_footprint,
+    level = stats::median(heightmap[component_mask]),
+    target_area = target_area,
+    target_area_limit = target_area_limit,
+    cache = new.env(parent = emptyenv())
+  )
+  fit = fit_spatial_water_component_polygon(
+    component_mask = component_mask,
+    heightmap = heightmap,
+    component_footprint = component_footprint,
+    fallback_level = 100
+  )
+
+  expect_gt(candidate$area, target_area_limit)
+  expect_true(candidate$rejected)
+  expect_null(fit)
+})
+
+test_that("spatial polygon water samples levels across DEM range", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("isoband")
+  skip_if_not_installed("decido")
+  local_rgl_use_null()
+
+  heightmap = matrix(seq(0, 1, length.out = 25), nrow = 5, ncol = 5)
+  water_surface = matrix(1000, nrow = 5, ncol = 5)
+  component_mask = is.finite(water_surface)
+  component_footprint = make_spatial_water_component_footprint(component_mask)
+  fit = fit_spatial_water_component_polygon(
+    component_mask = component_mask,
+    heightmap = heightmap,
+    component_footprint = component_footprint,
+    fallback_level = max(water_surface)
+  )
+
+  expect_lte(fit$level, max(heightmap) + 1e-8)
+  expect_gte(fit$level, min(heightmap) - 1e-8)
+})
+
+test_that("spatial polygon water can fit components with mirai", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("isoband")
+  skip_if_not_installed("decido")
+  skip_if_not_installed("mirai")
+  local_rgl_use_null()
+  compute_profile = spatial_water_mirai_compute_profile()
+  can_start_daemons = tryCatch(
+    {
+      mirai::daemons(1, .compute = compute_profile)
+      TRUE
+    },
+    error = function(e) FALSE,
+    finally = {
+      try(mirai::daemons(0, .compute = compute_profile), silent = TRUE)
+    }
+  )
+  if (!can_start_daemons) {
+    skip("mirai daemons are unavailable in this environment")
+  }
+
+  heightmap = matrix(10, nrow = 12, ncol = 12)
+  heightmap[3:4, 3:4] = 0
+  heightmap[9:10, 9:10] = 0
+  water_surface = matrix(NA_real_, nrow = 12, ncol = 12)
+  water_surface[3:4, 3:4] = 100
+  water_surface[9:10, 9:10] = 100
+
+  serial_mesh = make_spatial_water_polygon_surface(
+    water_surface = water_surface,
+    heightmap = heightmap,
+    parallel = FALSE
+  )
+  parallel_mesh = make_spatial_water_polygon_surface(
+    water_surface = water_surface,
+    heightmap = heightmap,
+    parallel = 2
+  )
+
+  expect_equal(parallel_mesh$vertices, serial_mesh$vertices, tolerance = 1e-8)
+  expect_equal(parallel_mesh$lines, serial_mesh$lines, tolerance = 1e-8)
+})
+
+test_that("spatial polygon water selects only intersecting contour islands", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("isoband")
+  skip_if_not_installed("decido")
+  local_rgl_use_null()
+
+  heightmap = matrix(10, nrow = 9, ncol = 9)
+  heightmap[2:3, 2:3] = 0
+  heightmap[7:8, 7:8] = 0
+  water_surface = matrix(NA_real_, nrow = 9, ncol = 9)
+  water_surface[2:3, 2:3] = 100
+
+  terrain_band = make_spatial_water_level_polygon(heightmap, 5)
+  component_footprint = make_spatial_water_component_footprint(
+    is.finite(water_surface)
+  )
+  selected_band = select_spatial_water_component_polygons(
+    terrain_band = terrain_band,
+    component_footprint = component_footprint
+  )
+  water_mesh = make_spatial_water_surface(
+    waterheight = water_surface,
+    heightmap = heightmap,
+    valid_water = is.finite(water_surface),
+    water_render_method = "polygon"
+  )
+  vertices = water_mesh_vertices(water_mesh)
+
+  expect_equal(length(terrain_band), 2)
+  expect_equal(length(selected_band), 1)
+  expect_equal(spatial_water_polygon_area(selected_band), 3.5)
+  expect_lt(max(vertices[, 1]), 0)
+  expect_lt(max(vertices[, 3]), 0)
+})
+
+test_that("spatial polygon water edge level ignores scene and void edges", {
+  heightmap = matrix(0, nrow = 5, ncol = 5)
+  heightmap[1, ] = 100
+  heightmap[3, ] = 2
+  component_mask = matrix(FALSE, nrow = 5, ncol = 5)
+  component_mask[1:3, ] = TRUE
+
+  expect_equal(
+    mean_spatial_water_component_edge_height(component_mask, heightmap),
+    2
+  )
+
+  heightmap[4, ] = NA_real_
+  expect_false(is.finite(mean_spatial_water_component_edge_height(
+    component_mask,
+    heightmap
+  )))
+})
+
+test_that("spatial polygon water keeps sidewalls at scene and NA cuts", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("isoband")
+  skip_if_not_installed("decido")
+  local_rgl_use_null()
+
+  heightmap = matrix(0, nrow = 5, ncol = 5)
+  heightmap[1, 1] = 5
+  heightmap[3, 3] = NA_real_
+  water_surface = matrix(5, nrow = 5, ncol = 5)
+
+  water_mesh = make_spatial_water_surface(
+    waterheight = water_surface,
+    heightmap = heightmap,
+    valid_water = is.finite(heightmap) & is.finite(water_surface),
+    water_render_method = "polygon",
+    water_edge_extension = 0
+  )
+  vertices = water_mesh_vertices(water_mesh)
+  triangle_info = water_mesh_triangle_normals(vertices)
+  sidewalls = abs(triangle_info$normals[, 2]) < 1e-8
+  sidewall_centers = triangle_info$centers[sidewalls, , drop = FALSE]
+  scene_edge = abs(sidewall_centers[, 1]) >= 2 - 1e-8 |
+    abs(sidewall_centers[, 3]) >= 2 - 1e-8
+
+  expect_true(any(sidewalls))
+  expect_true(any(scene_edge))
+  expect_true(any(!scene_edge))
+  expect_true(all(abs(sidewall_centers[!scene_edge, 1]) <= 1 + 1e-8))
+  expect_true(all(abs(sidewall_centers[!scene_edge, 3]) <= 1 + 1e-8))
+})
+
+test_that("spatial polygon water supports non-square heightmaps", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("isoband")
+  skip_if_not_installed("decido")
+  local_rgl_use_null()
+
+  heightmap = matrix(0, nrow = 4, ncol = 6)
+  heightmap[1, 1] = 5
+  water_surface = matrix(5, nrow = 4, ncol = 6)
+
+  water_mesh = make_spatial_water_surface(
+    waterheight = water_surface,
+    heightmap = heightmap,
+    valid_water = is.finite(water_surface),
+    water_render_method = "polygon",
+    water_edge_extension = 0
+  )
+  vertices = water_mesh_vertices(water_mesh)
+
+  expect_gt(nrow(vertices), 0)
+  expect_equal(range(vertices[, 1]), c(-1.5, 1.5), tolerance = 1e-8)
+  expect_equal(range(vertices[, 3]), c(-2.5, 2.5), tolerance = 1e-8)
+  expect_equal(max(vertices[, 2]), 5, tolerance = 1e-8)
+})
+
+test_that("render_water accepts spatial polygon water method", {
+  skip_if_not_installed("terra")
+  skip_if_not_installed("sf")
+  skip_if_not_installed("isoband")
+  skip_if_not_installed("decido")
+  on.exit(rgl::close3d(), add = TRUE)
+  local_rgl_use_null()
+
+  height_raster = terra::rast(
+    nrows = 4,
+    ncols = 6,
+    xmin = 0,
+    xmax = 6,
+    ymin = 0,
+    ymax = 4,
+    crs = "EPSG:3857"
+  )
+  terra::values(height_raster) = 0
+  water_level_rast = height_raster
+  terra::values(water_level_rast) = 50
+
+  expect_no_condition(plot_3d_test(
+    constant_shade(height_raster),
+    height_raster,
+    zscale = 10,
+    solid = FALSE,
+    shadow = FALSE,
+    water = FALSE,
+    windowsize = c(200, 200)
+  ))
+  expect_no_condition(render_water(
+    waterdepth = water_level_rast,
+    water_render_method = "polygon"
+  ))
+  water_ids = get_ids_with_labels(typeval = "water")
+  water_verts = rgl::rgl.attrib(water_ids$id[1], "vertices")
+  expect_equal(max(water_verts[, 2], na.rm = TRUE), 0, tolerance = 1e-6)
+})
+
 test_that("spatial water top is clipped against interior terrain peaks", {
   local_rgl_use_null()
 
