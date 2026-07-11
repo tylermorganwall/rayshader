@@ -28,7 +28,7 @@ plot_3d(
   waterlinealpha = 1,
   linewidth = 2,
   lineantialias = FALSE,
-  water_render_method = c("contour", "raster", "polygon", "legacy"),
+  water_render_method = c("raster", "polygon", "legacy"),
   water_edge_extension = 0.5,
   soil = FALSE,
   soil_freq = 0.1,
@@ -115,7 +115,7 @@ is omitted and \code{waterdepth} is explicitly supplied, a water layer is render
 
 \item{lineantialias}{Default \code{FALSE}. Whether to anti-alias the lines in the scene.}
 
-\item{water_render_method}{Default \code{"contour"}. Water meshing method. \code{"contour"} clips scalar/matrix water meshes and uses the raster-cell renderer for spatial water rasters; \code{"raster"} explicitly uses spatial water raster cells; \code{"polygon"} fits each spatial water component to a DEM contour by matching contour area to raster footprint area, initialized from covered DEM values; \code{"legacy"} uses the previous box/grid renderer.}
+\item{water_render_method}{Default \code{"raster"}. Water meshing method. \code{"raster"} renders water at the supplied elevation and emits sidewalls down to the terrain wherever exposed water floats above the surface; \code{"polygon"} fits each spatial water component by matching flooded terrain-triangle area to raster footprint area, then clips the fixed-grid terrain triangles; \code{"legacy"} uses the previous box/grid renderer.}
 
 \item{water_edge_extension}{Default \code{0.5}. For spatial \code{waterdepth} inputs, amount in grid cells to expand finite water cells at boundary edges, up to a maximum of half a cell.}
 

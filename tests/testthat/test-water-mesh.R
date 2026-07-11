@@ -175,6 +175,10 @@ test_that("water rendering API validates method and matrix inputs", {
     make_water(heightmap, waterheight = 1, water_render_method = "bad"),
     "'arg' should be one of"
   )
+  expect_error(
+    make_water(heightmap, waterheight = 1, water_render_method = "contour"),
+    "'arg' should be one of"
+  )
 })
 
 test_that("legacy water rendering rejects spatial waterdepth inputs", {
@@ -201,7 +205,7 @@ test_that("legacy water rendering rejects spatial waterdepth inputs", {
   )
 })
 
-test_that("plot_3d creates separate water ids for disconnected contour water", {
+test_that("plot_3d creates separate water ids for disconnected raster water", {
   on.exit(rgl::close3d(), add = TRUE)
   local_rgl_use_null()
 
@@ -1611,7 +1615,7 @@ test_that("spatial polygon water fits full raster coverage", {
   expect_equal(range(vertices[, 3]), c(-3, 3), tolerance = 1e-8)
 })
 
-test_that("spatial polygon water fits contour area to raster coverage", {
+test_that("spatial polygon water fits flooded area to raster coverage", {
   skip_if_not_installed("sf")
   skip_if_not_installed("isoband")
   skip_if_not_installed("decido")
@@ -1650,7 +1654,7 @@ test_that("spatial polygon water fits contour area to raster coverage", {
   expect_lt(max(abs(vertices[, 3])), 2)
 })
 
-test_that("spatial polygon water rejects open contour floods", {
+test_that("spatial polygon water rejects open terrain floods", {
   skip_if_not_installed("sf")
   skip_if_not_installed("isoband")
   skip_if_not_installed("decido")
@@ -1727,7 +1731,7 @@ test_that("spatial polygon water meshes disconnected components serially", {
   expect_gt(nrow(water_mesh$lines), 0)
 })
 
-test_that("spatial polygon water selects only intersecting contour islands", {
+test_that("spatial polygon water selects only intersecting terrain islands", {
   skip_if_not_installed("sf")
   skip_if_not_installed("isoband")
   skip_if_not_installed("decido")
@@ -1920,7 +1924,7 @@ test_that("spatial polygon water omits NA terrain cells and walls the cut", {
   expect_true(any(interior_wall))
 })
 
-test_that("spatial polygon water walls scene cuts but not shoreline contours", {
+test_that("spatial polygon water walls scene cuts but not terrain shorelines", {
   heightmap = matrix(c(0, 2, 2, 0), nrow = 2)
   terrain_mesh = make_spatial_water_fixed_grid_terrain_mesh(heightmap)
   component_mask = matrix(TRUE, nrow = 2, ncol = 2)
@@ -2496,7 +2500,7 @@ test_that("plot_3d renders explicit spatial waterdepth and applies cached zscale
   expect_equal(max(water_verts[, 2], na.rm = TRUE), 20, tolerance = 1e-6)
 })
 
-test_that("convert_rgl_to_raymesh handles contour water ids", {
+test_that("convert_rgl_to_raymesh handles raster water ids", {
   on.exit(rgl::close3d(), add = TRUE)
   local_rgl_use_null()
 

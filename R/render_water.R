@@ -15,7 +15,7 @@
 #'@param waterlinecolor Default `NULL`. Color of the lines around the edges of the water layer.
 #'@param waterlinealpha Default `1`. Water line tranparency.
 #'@param linewidth Default `2`. Width of the edge lines in the scene.
-#'@param water_render_method Default `"contour"`. Water meshing method. `"contour"` clips scalar/matrix water meshes and uses the raster-cell renderer for spatial water rasters; `"raster"` explicitly uses spatial water raster cells; `"polygon"` fits each spatial water component to a DEM contour by matching contour area to raster footprint area, initialized from covered DEM values; `"legacy"` uses the previous box/grid renderer.
+#'@param water_render_method Default `"raster"`. Water meshing method. `"raster"` renders water at the supplied elevation and emits sidewalls down to the terrain wherever exposed water floats above the surface; `"polygon"` fits each spatial water component by matching flooded terrain-triangle area to raster footprint area, then clips the fixed-grid terrain triangles; `"legacy"` uses the previous box/grid renderer.
 #'@param water_edge_extension Default `0.5`. For spatial `waterdepth` inputs, amount in grid cells to expand finite water cells at boundary edges, up to a maximum of half a cell.
 #'@param water_edge_clamp Default `FALSE`. For spatial `waterdepth` inputs, if `TRUE`, resolves each connected water footprint to a single level, then lowers it by the largest finite exterior sidewall height after edge expansion. Heightmap-boundary and NA-slice edges are ignored when computing the lowering amount.
 #'@param clear_previous Default `TRUE`. If `TRUE`, will remove existing water layer and replace it with new layer.
@@ -68,7 +68,7 @@ render_water = function(
   waterlinecolor = NULL,
   waterlinealpha = 1,
   linewidth = 2,
-  water_render_method = c("contour", "raster", "polygon", "legacy"),
+  water_render_method = c("raster", "polygon", "legacy"),
   water_edge_extension = 0.5,
   water_edge_clamp = FALSE,
   clear_previous = TRUE

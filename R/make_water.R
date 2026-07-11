@@ -8,7 +8,7 @@
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
 #'of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
 #'@param wateralpha Default `0.5`. Water transparency.
-#'@param water_render_method Default `"contour"`. Water meshing method. `"contour"` clips scalar/matrix water meshes and uses the raster-cell renderer for spatial water rasters; `"raster"` explicitly uses spatial water raster cells; `"polygon"` fits each spatial water component to a DEM contour by matching contour area to raster footprint area, initialized from covered DEM values; `"legacy"` uses the previous box/grid renderer.
+#'@param water_render_method Default `"raster"`. Water meshing method. `"raster"` renders water at the supplied elevation and emits sidewalls down to the terrain wherever exposed water floats above the surface; `"polygon"` fits each spatial water component by matching flooded terrain-triangle area to raster footprint area, then clips the fixed-grid terrain triangles; `"legacy"` uses the previous box/grid renderer.
 #'@param water_edge_extension Default `0.5`. For spatial `waterheight` inputs, amount in grid cells to expand finite water cells at boundary edges, up to a maximum of half a cell.
 #'@param water_edge_clamp Default `FALSE`. For spatial `waterheight` inputs, if `TRUE`, resolves each connected water footprint to a single level, then lowers it by the largest finite exterior sidewall height after edge expansion. Heightmap-boundary and NA-slice edges are ignored when computing the lowering amount.
 #'@param heightmap_extent Default `NULL`. Active scene extent for spatial `waterheight` inputs.
@@ -20,7 +20,7 @@ make_water = function(
   watercolor = "lightblue",
   zscale = 1,
   wateralpha = 0.5,
-  water_render_method = c("contour", "raster", "polygon", "legacy"),
+  water_render_method = c("raster", "polygon", "legacy"),
   water_edge_extension = 0.5,
   water_edge_clamp = FALSE,
   heightmap_extent = NULL,
@@ -36,7 +36,7 @@ make_water = function(
       wateralpha = wateralpha
     ))
   }
-  make_water_contour(
+  make_water_raster(
     heightmap = heightmap,
     waterheight = waterheight,
     watercolor = watercolor,
@@ -51,13 +51,13 @@ make_water = function(
 }
 
 #'@keywords internal
-make_water_contour = function(
+make_water_raster = function(
   heightmap,
   waterheight = mean(heightmap),
   watercolor = "lightblue",
   zscale = 1,
   wateralpha = 0.5,
-  water_render_method = c("contour", "raster", "polygon"),
+  water_render_method = c("raster", "polygon"),
   water_edge_extension = 0.5,
   water_edge_clamp = FALSE,
   heightmap_extent = NULL,
@@ -137,7 +137,7 @@ make_spatial_water_surface = function(
   valid_water,
   watercolor = "lightblue",
   wateralpha = 0.5,
-  water_render_method = c("contour", "raster", "polygon"),
+  water_render_method = c("raster", "polygon"),
   water_edge_extension = 0.5,
   water_edge_clamp = FALSE
 ) {
