@@ -950,14 +950,20 @@ plot_3d = function(
     )
   }
   water_mesh = NULL
+  water_render_method_current = water_render_method
   if (water) {
+    water_render_method_current = resolve_polygon_water_render_method_for_terrain(
+      water_render_method = water_render_method,
+      triangulate = triangulate,
+      caller = "plot_3d"
+    )
     water_mesh = make_water(
       heightmap,
       waterheight = waterdepth,
       wateralpha = wateralpha,
       watercolor = watercolor,
       zscale = zscale,
-      water_render_method = water_render_method,
+      water_render_method = water_render_method_current,
       water_edge_extension = water_edge_extension,
       parallel = water_parallel,
       heightmap_extent = extent_cache_value,
@@ -965,7 +971,7 @@ plot_3d = function(
     )
   }
   if (!is.null(waterlinecolor) && water) {
-    if (!identical(water_render_method, "legacy")) {
+    if (!identical(water_render_method_current, "legacy")) {
       make_waterlines_from_mesh(
         water_mesh,
         linecolor = waterlinecolor,
@@ -1004,6 +1010,7 @@ plot_3d = function(
     cached_scene_vertical_exaggeration,
     label = vertical_exaggeration_cache_label
   )
+  cache_scene_triangulate(triangulate)
   cache_scene_extent(extent_cache_value, label = extent_cache_label)
   cache_scene_crs(crs_cache_value, label = crs_cache_label)
   invisible(NULL)

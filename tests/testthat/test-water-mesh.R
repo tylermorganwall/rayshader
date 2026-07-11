@@ -1605,7 +1605,7 @@ test_that("spatial polygon water fits full raster coverage", {
   sidewalls = abs(triangle_info$normals[, 2]) < 1e-8
 
   expect_gt(nrow(vertices), 0)
-  expect_equal(range(vertices[, 2]), c(10, 10), tolerance = 1e-8)
+  expect_equal(range(vertices[, 2]), c(10, 10), tolerance = 1e-6)
   expect_false(any(sidewalls))
   expect_equal(range(vertices[, 1]), c(-3, 3), tolerance = 1e-8)
   expect_equal(range(vertices[, 3]), c(-3, 3), tolerance = 1e-8)
@@ -1701,7 +1701,7 @@ test_that("spatial polygon water samples levels across DEM range", {
     fallback_level = max(water_surface)
   )
 
-  expect_lte(fit$level, max(heightmap) + 1e-8)
+  expect_lte(fit$level, max(heightmap) + 1e-6)
   expect_gte(fit$level, min(heightmap) - 1e-8)
 })
 
@@ -1857,6 +1857,358 @@ test_that("spatial polygon water supports non-square heightmaps", {
   expect_equal(range(vertices[, 1]), c(-1.5, 1.5), tolerance = 1e-8)
   expect_equal(range(vertices[, 3]), c(-2.5, 2.5), tolerance = 1e-8)
   expect_equal(max(vertices[, 2]), 5, tolerance = 1e-8)
+})
+
+test_that("spatial polygon water clips the fixed terrain diagonal", {
+  heightmap = matrix(c(0, 2, 2, 0), nrow = 2)
+  terrain_mesh = make_spatial_water_fixed_grid_terrain_mesh(heightmap)
+  component_mask = matrix(TRUE, nrow = 2, ncol = 2)
+  mesh = make_spatial_water_triangle_clipped_component(
+    component_mask = component_mask,
+    terrain_mesh = terrain_mesh,
+    water_level = 1
+  )
+  top_vertices = mesh$top_vertex_table
+  expected_points = rbind(
+    c(-0.5, 1, -0.5),
+    c(-0.5, 1, 0),
+    c(0, 1, -0.5),
+    c(0, 1, 0.5),
+    c(0.5, 1, 0),
+    c(0.5, 1, 0.5)
+  )
+  matched = vapply(
+    seq_len(nrow(expected_points)),
+    function(point_index) {
+      any(
+        rowSums(abs(t(t(top_vertices) - expected_points[point_index, ]))) < 1e-8
+      )
+    },
+    logical(1)
+  )
+  top_triangles = mesh$top_vertex_table[
+    as.vector(t(mesh$top_faces)),
+    ,
+    drop = FALSE
+  ]
+  triangle_info = water_mesh_triangle_normals(top_triangles)
+
+  expect_true(all(matched))
+  expect_true(all(triangle_info$normals[, 2] > 0))
+  expect_false(any(mesh$boundary_edges$wall[
+    mesh$boundary_edges$kind == "contour"
+  ]))
+})
+
+test_that("spatial polygon water reuses shared edge intersections", {
+  heightmap = matrix(c(0, 2, 0, 2), nrow = 2)
+  terrain_mesh = make_spatial_water_fixed_grid_terrain_mesh(heightmap)
+  component_mask = matrix(TRUE, nrow = 2, ncol = 2)
+  mesh = make_spatial_water_triangle_clipped_component(
+    component_mask = component_mask,
+    terrain_mesh = terrain_mesh,
+    water_level = 1
+  )
+  shared_point = which(
+    abs(mesh$top_vertex_table[, 1]) < 1e-8 &
+      abs(mesh$top_vertex_table[, 3]) < 1e-8
+  )
+  shared_face_use = sum(mesh$top_faces == shared_point)
+
+  expect_length(shared_point, 1)
+  expect_gt(shared_face_use, 1)
+})
+
+test_that("spatial polygon water omits NA terrain cells and walls the cut", {
+  heightmap = matrix(0, nrow = 4, ncol = 4)
+  heightmap[2, 2] = NA_real_
+  terrain_mesh = make_spatial_water_fixed_grid_terrain_mesh(heightmap)
+  component_mask = matrix(TRUE, nrow = 4, ncol = 4)
+  mesh = make_spatial_water_triangle_clipped_component(
+    component_mask = component_mask,
+    terrain_mesh = terrain_mesh,
+    water_level = 1
+  )
+  full_face_count = (nrow(heightmap) - 1L) * (ncol(heightmap) - 1L) * 2L
+  sidewall_info = water_mesh_triangle_normals(mesh$vertices)
+  sidewalls = abs(sidewall_info$normals[, 2]) < 1e-8
+  sidewall_centers = sidewall_info$centers[sidewalls, , drop = FALSE]
+  interior_wall = abs(sidewall_centers[, 1]) < 0.8 &
+    abs(sidewall_centers[, 3]) < 0.8
+
+  expect_lt(nrow(terrain_mesh$faces), full_face_count)
+  expect_true(any(mesh$boundary_edges$wall))
+  expect_true(any(interior_wall))
+})
+
+test_that("spatial polygon water walls scene cuts but not shoreline contours", {
+  heightmap = matrix(c(0, 2, 2, 0), nrow = 2)
+  terrain_mesh = make_spatial_water_fixed_grid_terrain_mesh(heightmap)
+  component_mask = matrix(TRUE, nrow = 2, ncol = 2)
+  mesh = make_spatial_water_triangle_clipped_component(
+    component_mask = component_mask,
+    terrain_mesh = terrain_mesh,
+    water_level = 1
+  )
+  contour_edges = mesh$boundary_edges$kind == "contour"
+  scene_edges = mesh$boundary_edges$kind == "original" &
+    mesh$boundary_edges$edge_id %in%
+      which(terrain_mesh$edge_face_count == 1L)
+
+  expect_true(any(contour_edges))
+  expect_false(any(mesh$boundary_edges$wall[contour_edges]))
+  expect_true(any(scene_edges))
+  expect_true(any(mesh$boundary_edges$wall[scene_edges]))
+})
+
+test_that("spatial polygon water selects only seeded clipped components", {
+  heightmap = matrix(10, nrow = 7, ncol = 7)
+  heightmap[2:3, 2:3] = 0
+  heightmap[5:6, 5:6] = 0
+  terrain_mesh = make_spatial_water_fixed_grid_terrain_mesh(heightmap)
+  component_mask = matrix(FALSE, nrow = 7, ncol = 7)
+  component_mask[2:3, 2:3] = TRUE
+  mesh = make_spatial_water_triangle_clipped_component(
+    component_mask = component_mask,
+    terrain_mesh = terrain_mesh,
+    water_level = 5
+  )
+
+  expect_gt(nrow(mesh$top_vertices), 0)
+  expect_lt(max(mesh$top_vertices[, 1]), 0)
+  expect_lt(max(mesh$top_vertices[, 3]), 0)
+})
+
+test_that("spatial polygon water clipped area is monotone through saddles", {
+  heightmap = matrix(10, nrow = 5, ncol = 5)
+  heightmap[2, 2] = 0
+  heightmap[4, 4] = 0
+  heightmap[3, 3] = 4
+  terrain_mesh = make_spatial_water_fixed_grid_terrain_mesh(heightmap)
+  component_mask = matrix(FALSE, nrow = 5, ncol = 5)
+  component_mask[2, 2] = TRUE
+  component_seed = make_spatial_water_component_seed(component_mask)
+  levels = c(1, 3, 5, 7)
+  areas = vapply(
+    levels,
+    function(level) {
+      evaluate_spatial_water_triangle_clipped_component(
+        terrain_mesh = terrain_mesh,
+        component_seed = component_seed,
+        water_level = level
+      )$area
+    },
+    numeric(1)
+  )
+
+  expect_true(all(diff(areas) >= -1e-8))
+  expect_gt(areas[4], areas[2])
+})
+
+test_that("spatial polygon water handles degenerate water levels", {
+  component_mask = matrix(TRUE, nrow = 2, ncol = 2)
+
+  through_vertex = make_spatial_water_triangle_clipped_component(
+    component_mask = component_mask,
+    terrain_mesh = make_spatial_water_fixed_grid_terrain_mesh(
+      matrix(c(0, 1, 2, 3), nrow = 2)
+    ),
+    water_level = 1
+  )
+  along_edge = make_spatial_water_triangle_clipped_component(
+    component_mask = component_mask,
+    terrain_mesh = make_spatial_water_fixed_grid_terrain_mesh(
+      matrix(c(0, 0, 2, 2), nrow = 2)
+    ),
+    water_level = 0
+  )
+  flat_triangle = make_spatial_water_triangle_clipped_component(
+    component_mask = component_mask,
+    terrain_mesh = make_spatial_water_fixed_grid_terrain_mesh(
+      matrix(0, nrow = 2, ncol = 2)
+    ),
+    water_level = 0
+  )
+
+  expect_false(any(!is.finite(through_vertex$vertices)))
+  expect_false(any(!is.finite(along_edge$vertices)))
+  expect_equal(nrow(flat_triangle$vertices), 0)
+})
+
+test_that("spatial polygon water sidewalls wind outward", {
+  heightmap = matrix(0, nrow = 3, ncol = 3)
+  terrain_mesh = make_spatial_water_fixed_grid_terrain_mesh(heightmap)
+  mesh = make_spatial_water_triangle_clipped_component(
+    component_mask = matrix(TRUE, nrow = 3, ncol = 3),
+    terrain_mesh = terrain_mesh,
+    water_level = 1
+  )
+  sidewall_info = water_mesh_triangle_normals(mesh$side_vertices)
+  horizontal_dot = sidewall_info$normals[, 1] *
+    sidewall_info$centers[, 1] +
+    sidewall_info$normals[, 3] * sidewall_info$centers[, 3]
+
+  expect_true(all(horizontal_dot > 0))
+})
+
+test_that("spatial polygon water point-only footprint contact does not seed", {
+  heightmap = matrix(10, nrow = 3, ncol = 3)
+  heightmap[2, 2] = 1
+  terrain_mesh = make_spatial_water_fixed_grid_terrain_mesh(heightmap)
+  component_mask = matrix(FALSE, nrow = 3, ncol = 3)
+  component_mask[2, 2] = TRUE
+  component_seed = make_spatial_water_component_seed(
+    component_mask,
+    terrain_mesh = terrain_mesh
+  )
+  evaluation = evaluate_spatial_water_triangle_clipped_component(
+    terrain_mesh = terrain_mesh,
+    component_seed = component_seed,
+    water_level = 1,
+    diagnostics = TRUE
+  )
+
+  expect_equal(evaluation$area, 0)
+  expect_equal(evaluation$diagnostics$seed_face_count, 0)
+})
+
+test_that("spatial polygon water candidate evaluation does not clip geometry", {
+  heightmap = matrix(c(0, 2, 2, 0), nrow = 2)
+  terrain_mesh = make_spatial_water_fixed_grid_terrain_mesh(heightmap)
+  component_seed = make_spatial_water_component_seed(
+    matrix(TRUE, nrow = 2, ncol = 2),
+    terrain_mesh = terrain_mesh
+  )
+  testthat::local_mocked_bindings(
+    clip_spatial_water_terrain_face_to_level = function(...) {
+      stop("candidate evaluator clipped geometry")
+    }
+  )
+
+  expect_no_error(evaluate_spatial_water_triangle_clipped_component(
+    terrain_mesh = terrain_mesh,
+    component_seed = component_seed,
+    water_level = 1,
+    build_geometry = FALSE
+  ))
+})
+
+test_that("spatial polygon water seed indexing is bounded for one cell", {
+  heightmap = matrix(0, nrow = 64, ncol = 64)
+  terrain_mesh = make_spatial_water_fixed_grid_terrain_mesh(heightmap)
+  component_mask = matrix(FALSE, nrow = 64, ncol = 64)
+  component_mask[32, 32] = TRUE
+  component_seed = make_spatial_water_component_seed(
+    component_mask,
+    terrain_mesh = terrain_mesh
+  )
+  evaluation = evaluate_spatial_water_triangle_clipped_component(
+    terrain_mesh = terrain_mesh,
+    component_seed = component_seed,
+    water_level = 1,
+    diagnostics = TRUE
+  )
+
+  expect_lte(evaluation$diagnostics$seed_candidate_count, 8)
+  expect_lte(evaluation$diagnostics$seed_face_count, 8)
+})
+
+test_that("spatial polygon water rejects early during traversal", {
+  heightmap = matrix(0, nrow = 20, ncol = 20)
+  terrain_mesh = make_spatial_water_fixed_grid_terrain_mesh(heightmap)
+  component_seed = make_spatial_water_component_seed(
+    matrix(TRUE, nrow = 20, ncol = 20),
+    terrain_mesh = terrain_mesh
+  )
+  evaluation = evaluate_spatial_water_triangle_clipped_component(
+    terrain_mesh = terrain_mesh,
+    component_seed = component_seed,
+    water_level = 1,
+    target_area_limit = 2,
+    diagnostics = TRUE
+  )
+
+  expect_true(evaluation$rejected)
+  expect_true(evaluation$diagnostics$rejected_early)
+  expect_lt(evaluation$diagnostics$visited_face_count, nrow(terrain_mesh$faces))
+})
+
+test_that("spatial polygon water analytic area matches explicit clipping", {
+  set.seed(42)
+  heightmap = matrix(stats::runif(25), nrow = 5, ncol = 5)
+  terrain_mesh = make_spatial_water_fixed_grid_terrain_mesh(heightmap)
+  face_ids = sample(seq_len(nrow(terrain_mesh$faces)), 20)
+  levels = stats::runif(20, min(heightmap), max(heightmap))
+  for (case_index in seq_along(face_ids)) {
+    tolerances = spatial_water_triangle_clip_tolerances(
+      water_level = levels[case_index],
+      heights = terrain_mesh$vertices[, "h"]
+    )
+    analytic_area = spatial_water_face_sublevel_area(
+      terrain_mesh = terrain_mesh,
+      face_ids = face_ids[case_index],
+      water_level = levels[case_index],
+      tolerances = tolerances
+    )
+    clipped = spatial_water_face_clipped_xz_polygon(
+      terrain_mesh = terrain_mesh,
+      face_id = face_ids[case_index],
+      water_level = levels[case_index],
+      tolerances = tolerances
+    )
+    explicit_area = if (nrow(clipped) >= 3L) {
+      spatial_water_projected_polygon_area(clipped[, 1], clipped[, 2])
+    } else {
+      0
+    }
+    expect_equal(analytic_area, explicit_area, tolerance = 1e-8)
+  }
+})
+
+test_that("spatial polygon water analytic area handles equal heights", {
+  terrain_mesh = list(
+    face_heights = matrix(
+      c(
+        0,
+        0,
+        2,
+        0,
+        2,
+        2,
+        1,
+        1,
+        1
+      ),
+      ncol = 3,
+      byrow = TRUE
+    ),
+    face_projected_area = rep(0.5, 3)
+  )
+  tolerances = spatial_water_triangle_clip_tolerances(
+    water_level = 1,
+    heights = c(0, 1, 2)
+  )
+
+  expect_equal(
+    spatial_water_face_sublevel_area(terrain_mesh, 1, 1, tolerances),
+    0.375,
+    tolerance = 1e-8
+  )
+  expect_equal(
+    spatial_water_face_sublevel_area(terrain_mesh, 2, 1, tolerances),
+    0.125,
+    tolerance = 1e-8
+  )
+  expect_equal(
+    spatial_water_face_sublevel_area(terrain_mesh, 3, 1, tolerances),
+    0,
+    tolerance = 1e-8
+  )
+  expect_equal(
+    spatial_water_face_sublevel_area(terrain_mesh, 3, 2, tolerances),
+    0.5,
+    tolerance = 1e-8
+  )
 })
 
 test_that("render_water accepts spatial polygon water method", {

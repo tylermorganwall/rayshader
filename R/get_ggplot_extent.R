@@ -1798,6 +1798,7 @@ reset_scene_context = function(
     cache_scene_context_token(NULL)
     cache_scene_zscale(NULL, label = NULL)
     cache_scene_vertical_exaggeration(NULL, label = NULL)
+    cache_scene_triangulate(NULL)
     cache_scene_heightmap(NULL, label = NULL)
     cache_scene_extent(NULL, label = NULL)
     cache_scene_crs(NULL, label = NULL)
@@ -1907,6 +1908,19 @@ get_scene_effective_zscale = function(default = NULL) {
     return(default)
   }
   scene_zscale / scene_vertical_exaggeration
+}
+
+cache_scene_triangulate = function(triangulate = NULL) {
+  assign("scene_triangulate", triangulate, envir = ray_cache_scene_envir)
+  invisible(NULL)
+}
+
+get_scene_triangulate = function(default = FALSE) {
+  triangulate = get_scene_context_value("scene_triangulate", default = default)
+  if (is.null(triangulate)) {
+    return(default)
+  }
+  isTRUE(triangulate)
 }
 
 cache_scene_heightmap = function(heightmap = NULL, label = NULL) {

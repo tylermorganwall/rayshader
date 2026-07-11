@@ -94,6 +94,11 @@ render_water = function(
     heightmap = heightmap,
     caller = "render_water"
   )
+  water_render_method_current = resolve_polygon_water_render_method_for_terrain(
+    water_render_method = water_render_method,
+    triangulate = get_scene_triangulate(default = FALSE),
+    caller = "render_water"
+  )
   if (rgl::cur3d() == 0) {
     stop("No rgl window currently open.")
   }
@@ -131,7 +136,7 @@ render_water = function(
       wateralpha = wateralpha,
       watercolor = watercolor,
       zscale = zscale,
-      water_render_method = water_render_method,
+      water_render_method = water_render_method_current,
       water_edge_extension = water_edge_extension,
       water_edge_clamp = water_edge_clamp,
       parallel = parallel,
@@ -140,7 +145,7 @@ render_water = function(
     )
   }
   if (!is.null(waterlinecolor)) {
-    if (!identical(water_render_method, "legacy")) {
+    if (!identical(water_render_method_current, "legacy")) {
       make_waterlines_from_mesh(
         water_mesh,
         linecolor = waterlinecolor,

@@ -241,6 +241,26 @@ validate_water_edge_clamp = function(water_edge_clamp = FALSE) {
 }
 
 #'@keywords internal
+resolve_polygon_water_render_method_for_terrain = function(
+  water_render_method,
+  triangulate = FALSE,
+  caller = "render_water"
+) {
+  if (isTRUE(triangulate) && identical(water_render_method, "polygon")) {
+    warning(
+      "`water_render_method = \"polygon\"` clips the fixed grid terrain mesh ",
+      "and cannot exactly conform to `triangulate = TRUE` terrain; falling back ",
+      "to `water_render_method = \"raster\"` for this ",
+      caller,
+      "() call.",
+      call. = FALSE
+    )
+    return("raster")
+  }
+  water_render_method
+}
+
+#'@keywords internal
 make_spatial_water_cell_geometry = function(
   water_surface,
   heightmap = NULL,
@@ -440,7 +460,6 @@ make_spatial_water_polygon_surface = function(
   heightmap = NULL,
   parallel = FALSE
 ) {
-  require_spatial_water_polygon_packages()
   if (is.null(heightmap) || !is.matrix(heightmap)) {
     stop(
       "`water_render_method = \"polygon\"` requires a matrix heightmap.",
@@ -450,6 +469,10 @@ make_spatial_water_polygon_surface = function(
   component_labels = label_spatial_water_components(is.finite(water_surface))
   component_count = max(component_labels)
   if (!component_count) {
+    return(empty_spatial_water_polygon_mesh())
+  }
+  terrain_mesh = make_spatial_water_fixed_grid_terrain_mesh(heightmap)
+  if (!nrow(terrain_mesh$faces)) {
     return(empty_spatial_water_polygon_mesh())
   }
 
@@ -464,6 +487,7 @@ make_spatial_water_polygon_surface = function(
   component_meshes = make_spatial_water_polygon_components(
     component_tasks = component_tasks,
     heightmap = heightmap,
+    terrain_mesh = terrain_mesh,
     parallel = parallel
   )
   component_meshes = Filter(
@@ -558,6 +582,7 @@ spatial_water_parallel_worker_count = function(parallel, component_count) {
 make_spatial_water_polygon_components = function(
   component_tasks,
   heightmap,
+  terrain_mesh = make_spatial_water_fixed_grid_terrain_mesh(heightmap),
   parallel = FALSE
 ) {
   worker_count = spatial_water_parallel_worker_count(
@@ -568,21 +593,28 @@ make_spatial_water_polygon_components = function(
     return(lapply(
       component_tasks,
       make_spatial_water_polygon_component_from_task,
-      heightmap = heightmap
+      heightmap = heightmap,
+      terrain_mesh = terrain_mesh
     ))
   }
   make_spatial_water_polygon_components_parallel(
     component_tasks = component_tasks,
     heightmap = heightmap,
+    terrain_mesh = terrain_mesh,
     worker_count = worker_count
   )
 }
 
 #'@keywords internal
-make_spatial_water_polygon_component_from_task = function(task, heightmap) {
+make_spatial_water_polygon_component_from_task = function(
+  task,
+  heightmap,
+  terrain_mesh = make_spatial_water_fixed_grid_terrain_mesh(heightmap)
+) {
   make_spatial_water_polygon_component(
     component_mask = task$component_mask,
     heightmap = heightmap,
+    terrain_mesh = terrain_mesh,
     fallback_level = task$fallback_level
   )
 }
@@ -591,6 +623,7 @@ make_spatial_water_polygon_component_from_task = function(task, heightmap) {
 make_spatial_water_polygon_components_parallel = function(
   component_tasks,
   heightmap,
+  terrain_mesh,
   worker_count
 ) {
   if (!requireNamespace("mirai", quietly = TRUE)) {
@@ -614,7 +647,7 @@ make_spatial_water_polygon_components_parallel = function(
   on.exit(mirai::daemons(0, .compute = compute_profile), add = TRUE)
   component_meshes = mirai::mirai_map(
     component_tasks,
-    function(task, heightmap, helper_functions) {
+    function(task, heightmap, terrain_mesh, helper_functions) {
       worker_env = new.env(parent = .GlobalEnv)
       for (helper_name in names(helper_functions)) {
         helper_function = helper_functions[[helper_name]]
@@ -627,11 +660,13 @@ make_spatial_water_polygon_components_parallel = function(
       }
       worker_env$make_spatial_water_polygon_component_from_task(
         task = task,
-        heightmap = heightmap
+        heightmap = heightmap,
+        terrain_mesh = terrain_mesh
       )
     },
     .args = list(
       heightmap = heightmap,
+      terrain_mesh = terrain_mesh,
       helper_functions = helper_functions
     ),
     .compute = compute_profile
@@ -659,6 +694,45 @@ spatial_water_parallel_helper_functions = function() {
     "make_spatial_water_polygon_component_from_task",
     "make_spatial_water_polygon_component",
     "empty_spatial_water_polygon_mesh",
+    "make_spatial_water_fixed_grid_terrain_mesh",
+    "spatial_water_fixed_grid_edge_key",
+    "spatial_water_original_vertices_edge_id",
+    "spatial_water_component_mask_metrics",
+    "make_spatial_water_component_seed",
+    "spatial_water_component_seed_perimeter",
+    "make_spatial_water_triangle_clipped_component",
+    "evaluate_spatial_water_triangle_clipped_component",
+    "spatial_water_empty_triangle_clip_evaluation",
+    "spatial_water_level_tolerance",
+    "spatial_water_triangle_clip_tolerances",
+    "spatial_water_face_sublevel_area",
+    "spatial_water_face_sublevel_area_scalar",
+    "spatial_water_evaluate_full_scene_component",
+    "spatial_water_traverse_seeded_clipped_faces",
+    "spatial_water_seed_face_has_positive_overlap",
+    "spatial_water_seed_cell_bounds",
+    "spatial_water_face_clipped_xz_polygon",
+    "spatial_water_clean_xz_polygon",
+    "spatial_water_edge_intersections",
+    "clip_spatial_water_terrain_face_to_level",
+    "spatial_water_original_vertex_records",
+    "spatial_water_edge_plane_intersection_record",
+    "clean_spatial_water_clipped_records",
+    "spatial_water_projected_records_area",
+    "spatial_water_projected_polygon_area",
+    "spatial_water_records_overlap_component_seed",
+    "spatial_water_records_original_edge_segments",
+    "spatial_water_records_shared_original_edge_id",
+    "spatial_water_record_edge_t",
+    "spatial_water_terrain_edge_projected_length",
+    "spatial_water_selected_clipped_faces",
+    "build_spatial_water_triangle_clipped_geometry",
+    "build_spatial_water_full_terrain_geometry",
+    "spatial_water_triangle_normal_y",
+    "spatial_water_register_clipped_boundary_edges",
+    "spatial_water_triangle_clipped_boundary_geometry",
+    "make_spatial_water_triangle_clipped_sidewall",
+    "spatial_water_triangle_area3d",
     "make_spatial_water_component_footprint",
     "fit_spatial_water_component_polygon",
     "spatial_water_component_area_fit_at_level",
@@ -674,6 +748,10 @@ spatial_water_parallel_helper_functions = function() {
     "spatial_water_sfg_polygons",
     "clean_spatial_water_polygon_ring",
     "close_spatial_water_polygon_ring",
+    "clip_spatial_water_polygon_to_bounds",
+    "clip_spatial_water_polygon_to_axis",
+    "spatial_water_axis_intersection_point",
+    "clean_spatial_water_polygon",
     "spatial_water_polygon_sidewall_segment",
     "spatial_water_point_inside_polygon",
     "spatial_water_point_has_finite_heightmap_cell",
@@ -734,46 +812,1888 @@ empty_spatial_water_polygon_mesh = function() {
 }
 
 #'@keywords internal
+make_spatial_water_fixed_grid_terrain_mesh = function(heightmap) {
+  nr = nrow(heightmap)
+  nc = ncol(heightmap)
+  if (nr < 2L || nc < 2L) {
+    vertices = cbind(
+      x = numeric(),
+      h = numeric(),
+      z = numeric()
+    )
+    return(list(
+      vertices = vertices,
+      faces = matrix(nrow = 0, ncol = 3L),
+      face_edges = matrix(nrow = 0, ncol = 3L),
+      face_neighbors = matrix(nrow = 0, ncol = 3L),
+      face_cells = matrix(nrow = 0, ncol = 2L),
+      face_cell_row = integer(),
+      face_cell_col = integer(),
+      face_cell_id = integer(),
+      face_type = integer(),
+      face_heights = matrix(nrow = 0, ncol = 3L),
+      face_projected_area = numeric(),
+      cell_face_id = matrix(nrow = 0, ncol = 2L),
+      edge_vertices = matrix(nrow = 0, ncol = 2L),
+      edge_face_count = integer(),
+      edge_first_face = integer(),
+      edge_first_face_edge = integer(),
+      edge_min_height = numeric(),
+      nr = nr,
+      nc = nc,
+      x_edge_count = 0L,
+      z_edge_count = 0L,
+      diag_edge_count = 0L
+    ))
+  }
+  vertex_id = matrix(seq_len(nr * nc), nrow = nr, ncol = nc)
+  vertex_x = matrix(seq_len(nr) - 1, nrow = nr, ncol = nc) - (nr - 1) / 2
+  vertex_z = matrix(
+    seq_len(nc) - 1,
+    nrow = nr,
+    ncol = nc,
+    byrow = TRUE
+  ) -
+    (nc - 1) / 2
+  vertices = cbind(
+    x = c(vertex_x),
+    h = c(heightmap),
+    z = c(vertex_z)
+  )
+
+  # Match generate_surface(): each finite 2x2 heightmap cell emits both
+  # fixed-diagonal triangles below, and any cell with an NA corner emits neither.
+  cell_row = rep(seq_len(nr - 1L), times = nc - 1L)
+  cell_col = rep(seq_len(nc - 1L), each = nr - 1L)
+  cell_id = seq_along(cell_row)
+  v00 = cell_row + (cell_col - 1L) * nr
+  v01 = v00 + nr
+  v10 = v00 + 1L
+  v11 = v01 + 1L
+  finite_cell = is.finite(vertices[v00, "h"]) &
+    is.finite(vertices[v01, "h"]) &
+    is.finite(vertices[v10, "h"]) &
+    is.finite(vertices[v11, "h"])
+  render_cell = which(finite_cell)
+  face_count = length(render_cell) * 2L
+
+  x_edge_count = (nr - 1L) * nc
+  z_edge_count = nr * (nc - 1L)
+  diag_edge_count = length(cell_id)
+  edge_count = x_edge_count + z_edge_count + diag_edge_count
+
+  x_edge_row = rep(seq_len(nr - 1L), times = nc)
+  x_edge_col = rep(seq_len(nc), each = nr - 1L)
+  x_edge_v0 = x_edge_row + (x_edge_col - 1L) * nr
+  z_edge_row = rep(seq_len(nr), times = nc - 1L)
+  z_edge_col = rep(seq_len(nc - 1L), each = nr)
+  z_edge_v0 = z_edge_row + (z_edge_col - 1L) * nr
+  edge_vertices = rbind(
+    cbind(x_edge_v0, x_edge_v0 + 1L),
+    cbind(z_edge_v0, z_edge_v0 + nr),
+    cbind(v10, v01)
+  )
+
+  if (face_count) {
+    top_slots = 2L * render_cell - 1L
+    bottom_slots = 2L * render_cell
+    face_slots = as.vector(t(cbind(top_slots, bottom_slots)))
+    slot_to_face = integer(length(cell_id) * 2L)
+    slot_to_face[face_slots] = seq_len(face_count)
+    face_cell_id = rep(render_cell, each = 2L)
+    face_type = rep(c(1L, 2L), length(render_cell))
+    face_cell_row = cell_row[face_cell_id]
+    face_cell_col = cell_col[face_cell_id]
+
+    faces = matrix(NA_integer_, nrow = face_count, ncol = 3L)
+    top_face = seq.int(1L, face_count, by = 2L)
+    bottom_face = seq.int(2L, face_count, by = 2L)
+    faces[top_face, ] = cbind(
+      v00[render_cell],
+      v01[render_cell],
+      v10[render_cell]
+    )
+    faces[bottom_face, ] = cbind(
+      v10[render_cell],
+      v01[render_cell],
+      v11[render_cell]
+    )
+
+    x_edge_id = function(row_index, col_index) {
+      (col_index - 1L) * (nr - 1L) + row_index
+    }
+    z_edge_id = function(row_index, col_index) {
+      x_edge_count + (col_index - 1L) * nr + row_index
+    }
+    diag_edge_id = function(cell_index) {
+      x_edge_count + z_edge_count + cell_index
+    }
+
+    face_edges = matrix(NA_integer_, nrow = face_count, ncol = 3L)
+    face_edges[top_face, ] = cbind(
+      z_edge_id(cell_row[render_cell], cell_col[render_cell]),
+      diag_edge_id(render_cell),
+      x_edge_id(cell_row[render_cell], cell_col[render_cell])
+    )
+    face_edges[bottom_face, ] = cbind(
+      diag_edge_id(render_cell),
+      x_edge_id(cell_row[render_cell], cell_col[render_cell] + 1L),
+      z_edge_id(cell_row[render_cell] + 1L, cell_col[render_cell])
+    )
+
+    slot_neighbor = function(slots) {
+      out = integer(length(slots))
+      keep = slots > 0L
+      out[keep] = slot_to_face[slots[keep]]
+      out
+    }
+    top_neighbor_1 = ifelse(
+      cell_row[render_cell] > 1L,
+      2L * (render_cell - 1L),
+      0L
+    )
+    top_neighbor_2 = bottom_slots
+    top_neighbor_3 = ifelse(
+      cell_col[render_cell] > 1L,
+      2L * (render_cell - (nr - 1L)),
+      0L
+    )
+    bottom_neighbor_1 = top_slots
+    bottom_neighbor_2 = ifelse(
+      cell_col[render_cell] < nc - 1L,
+      2L * (render_cell + (nr - 1L)) - 1L,
+      0L
+    )
+    bottom_neighbor_3 = ifelse(
+      cell_row[render_cell] < nr - 1L,
+      2L * (render_cell + 1L) - 1L,
+      0L
+    )
+    face_neighbors = matrix(0L, nrow = face_count, ncol = 3L)
+    face_neighbors[top_face, ] = cbind(
+      slot_neighbor(top_neighbor_1),
+      slot_neighbor(top_neighbor_2),
+      slot_neighbor(top_neighbor_3)
+    )
+    face_neighbors[bottom_face, ] = cbind(
+      slot_neighbor(bottom_neighbor_1),
+      slot_neighbor(bottom_neighbor_2),
+      slot_neighbor(bottom_neighbor_3)
+    )
+    face_cells = cbind(face_cell_row, face_cell_col)
+    face_heights = matrix(vertices[as.vector(faces), "h"], ncol = 3L)
+    face_projected_area = rep(0.5, face_count)
+    cell_face_id = matrix(0L, nrow = length(cell_id), ncol = 2L)
+    cell_face_id[render_cell, ] = cbind(top_face, bottom_face)
+  } else {
+    faces = matrix(nrow = 0, ncol = 3L)
+    face_edges = matrix(nrow = 0, ncol = 3L)
+    face_neighbors = matrix(nrow = 0, ncol = 3L)
+    face_cells = matrix(nrow = 0, ncol = 2L)
+    face_cell_row = integer()
+    face_cell_col = integer()
+    face_cell_id = integer()
+    face_type = integer()
+    face_heights = matrix(nrow = 0, ncol = 3L)
+    face_projected_area = numeric()
+    cell_face_id = matrix(0L, nrow = length(cell_id), ncol = 2L)
+  }
+
+  edge_face_count = if (edge_count) {
+    tabulate(as.integer(c(face_edges)), nbins = edge_count)
+  } else {
+    integer()
+  }
+  edge_first_face = integer(edge_count)
+  edge_first_face_edge = integer(edge_count)
+  if (face_count && edge_count) {
+    edge_first_face[as.integer(c(t(face_edges)))] =
+      rep(seq_len(face_count), each = 3L)
+    edge_first_face_edge[as.integer(c(t(face_edges)))] =
+      rep(seq_len(3L), times = face_count)
+  }
+
+  list(
+    vertices = vertices,
+    faces = faces,
+    face_edges = face_edges,
+    face_neighbors = face_neighbors,
+    face_cells = face_cells,
+    face_cell_row = face_cell_row,
+    face_cell_col = face_cell_col,
+    face_cell_id = face_cell_id,
+    face_type = face_type,
+    face_heights = face_heights,
+    face_projected_area = face_projected_area,
+    cell_face_id = cell_face_id,
+    edge_vertices = edge_vertices,
+    edge_face_count = edge_face_count,
+    edge_first_face = edge_first_face,
+    edge_first_face_edge = edge_first_face_edge,
+    edge_min_height = if (edge_count) {
+      pmin(
+        vertices[edge_vertices[, 1L], "h"],
+        vertices[edge_vertices[, 2L], "h"]
+      )
+    } else {
+      numeric()
+    },
+    nr = nr,
+    nc = nc,
+    x_edge_count = x_edge_count,
+    z_edge_count = z_edge_count,
+    diag_edge_count = diag_edge_count
+  )
+}
+
+#'@keywords internal
+spatial_water_fixed_grid_edge_key = function(vertex_a, vertex_b) {
+  if (vertex_a < vertex_b) {
+    paste0(vertex_a, ":", vertex_b)
+  } else {
+    paste0(vertex_b, ":", vertex_a)
+  }
+}
+
+#'@keywords internal
+spatial_water_original_vertices_edge_id = function(
+  terrain_mesh,
+  vertex_a,
+  vertex_b
+) {
+  if (!is.finite(vertex_a) || !is.finite(vertex_b) || vertex_a == vertex_b) {
+    return(NA_integer_)
+  }
+  nr = terrain_mesh$nr
+  row_a = (vertex_a - 1L) %% nr + 1L
+  row_b = (vertex_b - 1L) %% nr + 1L
+  col_a = (vertex_a - 1L) %/% nr + 1L
+  col_b = (vertex_b - 1L) %/% nr + 1L
+  if (col_a == col_b && abs(row_a - row_b) == 1L) {
+    return((col_a - 1L) * (nr - 1L) + min(row_a, row_b))
+  }
+  if (row_a == row_b && abs(col_a - col_b) == 1L) {
+    return(
+      terrain_mesh$x_edge_count +
+        (min(col_a, col_b) - 1L) * nr +
+        row_a
+    )
+  }
+  if (abs(row_a - row_b) == 1L && abs(col_a - col_b) == 1L) {
+    left_row = if (col_a < col_b) row_a else row_b
+    right_row = if (col_a < col_b) row_b else row_a
+    if (left_row > right_row) {
+      cell_row = right_row
+      cell_col = min(col_a, col_b)
+      return(
+        terrain_mesh$x_edge_count +
+          terrain_mesh$z_edge_count +
+          cell_row +
+          (cell_col - 1L) * (nr - 1L)
+      )
+    }
+  }
+  NA_integer_
+}
+
+#'@keywords internal
+spatial_water_component_mask_metrics = function(component_mask) {
+  seed = make_spatial_water_component_seed(component_mask)
+  area = sum((seed$x1 - seed$x0) * (seed$z1 - seed$z0))
+  perimeter = spatial_water_component_seed_perimeter(
+    component_mask = component_mask,
+    seed = seed
+  )
+  list(area = area, perimeter = perimeter)
+}
+
+#'@keywords internal
+make_spatial_water_component_seed = function(
+  component_mask,
+  terrain_mesh = NULL
+) {
+  component_cells = which(component_mask, arr.ind = TRUE)
+  if (!nrow(component_cells)) {
+    seed = list(
+      row = integer(),
+      col = integer(),
+      x0 = numeric(),
+      x1 = numeric(),
+      z0 = numeric(),
+      z1 = numeric(),
+      mask = component_mask,
+      seed_face_ids = integer(),
+      seed_candidate_count = 0L,
+      full_scene = FALSE,
+      state = new.env(parent = emptyenv())
+    )
+    return(seed)
+  }
+  nr = nrow(component_mask)
+  nc = ncol(component_mask)
+  row_index = component_cells[, 1L]
+  col_index = component_cells[, 2L]
+  x_center = row_index - 1 - (nr - 1) / 2
+  z_center = col_index - 1 - (nc - 1) / 2
+  x0 = pmax(x_center - 0.5, -(nr - 1) / 2)
+  x1 = pmin(x_center + 0.5, (nr - 1) / 2)
+  z0 = pmax(z_center - 0.5, -(nc - 1) / 2)
+  z1 = pmin(z_center + 0.5, (nc - 1) / 2)
+  keep = x1 > x0 & z1 > z0
+  seed_face_ids = integer()
+  seed_candidate_count = 0L
+  state = new.env(parent = emptyenv())
+  if (!is.null(terrain_mesh) && length(row_index)) {
+    candidate_row = c(row_index - 1L, row_index - 1L, row_index, row_index)
+    candidate_col = c(col_index - 1L, col_index, col_index - 1L, col_index)
+    valid_candidate = candidate_row >= 1L &
+      candidate_row < nr &
+      candidate_col >= 1L &
+      candidate_col < nc
+    if (any(valid_candidate)) {
+      candidate_cell_id = candidate_row[valid_candidate] +
+        (candidate_col[valid_candidate] - 1L) * (nr - 1L)
+      candidate_cell_id = unique(candidate_cell_id)
+      candidate_faces = as.integer(terrain_mesh$cell_face_id[
+        candidate_cell_id,
+        ,
+        drop = FALSE
+      ])
+      seed_face_ids = sort(unique(candidate_faces[candidate_faces > 0L]))
+    }
+    seed_candidate_count = length(seed_face_ids)
+    state$visited_generation = integer(nrow(terrain_mesh$faces))
+    state$generation = 0L
+    state$queue = integer(nrow(terrain_mesh$faces))
+  }
+  list(
+    row = row_index[keep],
+    col = col_index[keep],
+    x0 = x0[keep],
+    x1 = x1[keep],
+    z0 = z0[keep],
+    z1 = z1[keep],
+    mask = component_mask,
+    seed_face_ids = seed_face_ids,
+    seed_candidate_count = seed_candidate_count,
+    full_scene = all(component_mask),
+    state = state
+  )
+}
+
+#'@keywords internal
+spatial_water_component_seed_perimeter = function(component_mask, seed) {
+  if (!length(seed$row)) {
+    return(0)
+  }
+  perimeter = 0
+  for (cell_index in seq_along(seed$row)) {
+    row_index = seed$row[cell_index]
+    col_index = seed$col[cell_index]
+    side_height = seed$z1[cell_index] - seed$z0[cell_index]
+    side_width = seed$x1[cell_index] - seed$x0[cell_index]
+    if (row_index == 1L || !component_mask[row_index - 1L, col_index]) {
+      perimeter = perimeter + side_height
+    }
+    if (
+      row_index == nrow(component_mask) ||
+        !component_mask[row_index + 1L, col_index]
+    ) {
+      perimeter = perimeter + side_height
+    }
+    if (col_index == 1L || !component_mask[row_index, col_index - 1L]) {
+      perimeter = perimeter + side_width
+    }
+    if (
+      col_index == ncol(component_mask) ||
+        !component_mask[row_index, col_index + 1L]
+    ) {
+      perimeter = perimeter + side_width
+    }
+  }
+  perimeter
+}
+
+#'@keywords internal
+make_spatial_water_triangle_clipped_component = function(
+  component_mask,
+  terrain_mesh,
+  water_level
+) {
+  component_seed = make_spatial_water_component_seed(
+    component_mask,
+    terrain_mesh = terrain_mesh
+  )
+  clipped = evaluate_spatial_water_triangle_clipped_component(
+    terrain_mesh = terrain_mesh,
+    component_seed = component_seed,
+    water_level = water_level,
+    target_area_limit = Inf,
+    build_geometry = TRUE
+  )
+  if (!isTRUE(clipped$has_geometry)) {
+    return(empty_spatial_water_polygon_mesh())
+  }
+  list(
+    vertices = rbind(clipped$top_vertices, clipped$side_vertices),
+    lines = clipped$lines,
+    top_vertices = clipped$top_vertices,
+    side_vertices = clipped$side_vertices,
+    top_vertex_table = clipped$top_vertex_table,
+    top_faces = clipped$top_faces,
+    boundary_edges = clipped$boundary_edges
+  )
+}
+
+#'@keywords internal
+evaluate_spatial_water_triangle_clipped_component = function(
+  terrain_mesh,
+  component_seed,
+  water_level,
+  target_area_limit = Inf,
+  build_geometry = FALSE,
+  return_face_ids = FALSE,
+  diagnostics = FALSE
+) {
+  face_count = nrow(terrain_mesh$faces)
+  if (!face_count || !length(component_seed$row)) {
+    return(spatial_water_empty_triangle_clip_evaluation(build_geometry))
+  }
+  if (
+    !length(component_seed$seed_face_ids) &&
+      !is.null(component_seed$mask)
+  ) {
+    component_seed = make_spatial_water_component_seed(
+      component_seed$mask,
+      terrain_mesh = terrain_mesh
+    )
+  }
+  tolerances = spatial_water_triangle_clip_tolerances(
+    water_level = water_level,
+    heights = terrain_mesh$vertices[, "h"],
+    target_area = target_area_limit
+  )
+  traversal = spatial_water_traverse_seeded_clipped_faces(
+    terrain_mesh = terrain_mesh,
+    component_seed = component_seed,
+    water_level = water_level,
+    target_area_limit = target_area_limit,
+    tolerances = tolerances,
+    return_face_ids = isTRUE(build_geometry) || isTRUE(return_face_ids)
+  )
+  result = list(
+    area = traversal$area,
+    rejected = isTRUE(traversal$rejected),
+    has_geometry = FALSE
+  )
+  if (isTRUE(return_face_ids)) {
+    result$face_ids = traversal$face_ids
+  }
+  if (isTRUE(diagnostics)) {
+    result$diagnostics = traversal$diagnostics
+  }
+  if (!isTRUE(build_geometry)) {
+    return(result)
+  }
+  geometry = build_spatial_water_triangle_clipped_geometry(
+    terrain_mesh = terrain_mesh,
+    selected_face_ids = traversal$face_ids,
+    water_level = water_level,
+    tolerances = tolerances
+  )
+  result$has_geometry = nrow(geometry$top_vertices) > 0
+  c(result, geometry)
+}
+
+#'@keywords internal
+spatial_water_empty_triangle_clip_evaluation = function(
+  build_geometry = FALSE
+) {
+  result = list(area = 0, rejected = FALSE, has_geometry = FALSE)
+  if (isTRUE(build_geometry)) {
+    result = c(
+      result,
+      list(
+        top_vertices = matrix(nrow = 0, ncol = 3),
+        side_vertices = matrix(nrow = 0, ncol = 3),
+        lines = matrix(nrow = 0, ncol = 3),
+        top_vertex_table = matrix(nrow = 0, ncol = 3),
+        top_faces = matrix(nrow = 0, ncol = 3),
+        boundary_edges = data.frame()
+      )
+    )
+  }
+  result
+}
+
+#'@keywords internal
+spatial_water_level_tolerance = function(water_level, heights) {
+  finite_values = c(water_level, heights[is.finite(heights)])
+  sqrt(.Machine$double.eps) * max(1, abs(finite_values), na.rm = TRUE)
+}
+
+#'@keywords internal
+spatial_water_triangle_clip_tolerances = function(
+  water_level,
+  heights,
+  target_area = 1
+) {
+  height_tol = spatial_water_level_tolerance(
+    water_level = water_level,
+    heights = heights
+  )
+  finite_target_area = target_area[is.finite(target_area)]
+  area_scale = if (length(finite_target_area)) {
+    max(1, finite_target_area, na.rm = TRUE)
+  } else {
+    1
+  }
+  list(
+    height_tol = height_tol,
+    t_tol = sqrt(.Machine$double.eps),
+    length_tol = sqrt(.Machine$double.eps),
+    area_tol = sqrt(.Machine$double.eps) * area_scale,
+    surface_area_tol = sqrt(.Machine$double.eps) *
+      max(
+        1,
+        abs(c(water_level, heights[is.finite(heights)])),
+        na.rm = TRUE
+      )
+  )
+}
+
+#'@keywords internal
+spatial_water_face_sublevel_area = function(
+  terrain_mesh,
+  face_ids,
+  water_level,
+  tolerances
+) {
+  if (!length(face_ids)) {
+    return(numeric())
+  }
+  heights = terrain_mesh$face_heights[face_ids, , drop = FALSE]
+  h0 = pmin(heights[, 1L], heights[, 2L], heights[, 3L])
+  h2 = pmax(heights[, 1L], heights[, 2L], heights[, 3L])
+  h1 = rowSums(heights) - h0 - h2
+  area = terrain_mesh$face_projected_area[face_ids]
+  fraction = numeric(length(face_ids))
+  height_tol = tolerances$height_tol
+
+  flat = abs(h2 - h0) <= height_tol
+  fraction[flat & water_level > h0 + height_tol] = 1
+
+  nonflat = !flat
+  below_all = nonflat & water_level >= h2 - height_tol
+  above_all = nonflat & water_level <= h0 + height_tol
+  fraction[below_all] = 1
+
+  partial = nonflat & !below_all & !above_all
+  if (any(partial)) {
+    lower_flat = abs(h1 - h0) <= height_tol
+    upper_flat = abs(h2 - h1) <= height_tol
+
+    first_band = partial & water_level < h1 & !lower_flat
+    if (any(first_band)) {
+      fraction[first_band] =
+        ((water_level - h0[first_band]) / (h1[first_band] - h0[first_band])) *
+        ((water_level - h0[first_band]) / (h2[first_band] - h0[first_band]))
+    }
+
+    lower_flat_band = partial & water_level < h1 & lower_flat
+    if (any(lower_flat_band)) {
+      fraction[lower_flat_band] = 1 -
+        ((h2[lower_flat_band] - water_level) /
+          (h2[lower_flat_band] - h0[lower_flat_band]))^2
+    }
+
+    second_band = partial & water_level >= h1 & !upper_flat
+    if (any(second_band)) {
+      fraction[second_band] = 1 -
+        ((h2[second_band] - water_level) /
+          (h2[second_band] - h0[second_band])) *
+          ((h2[second_band] - water_level) /
+            (h2[second_band] - h1[second_band]))
+    }
+
+    upper_flat_band = partial & water_level >= h1 & upper_flat
+    if (any(upper_flat_band)) {
+      fraction[upper_flat_band] =
+        ((water_level - h0[upper_flat_band]) /
+          (h2[upper_flat_band] - h0[upper_flat_band]))^2
+    }
+  }
+
+  pmax(0, pmin(1, fraction)) * area
+}
+
+#'@keywords internal
+spatial_water_face_sublevel_area_scalar = function(
+  terrain_mesh,
+  face_id,
+  water_level,
+  tolerances
+) {
+  heights = terrain_mesh$face_heights[face_id, ]
+  h0 = min(heights)
+  h2 = max(heights)
+  h1 = sum(heights) - h0 - h2
+  face_area = terrain_mesh$face_projected_area[face_id]
+  height_tol = tolerances$height_tol
+
+  if (abs(h2 - h0) <= height_tol) {
+    return(if (water_level > h0 + height_tol) face_area else 0)
+  }
+  if (water_level <= h0 + height_tol) {
+    return(0)
+  }
+  if (water_level >= h2 - height_tol) {
+    return(face_area)
+  }
+  if (water_level < h1) {
+    if (abs(h1 - h0) <= height_tol) {
+      fraction = 1 - ((h2 - water_level) / (h2 - h0))^2
+    } else {
+      fraction = ((water_level - h0) / (h1 - h0)) *
+        ((water_level - h0) / (h2 - h0))
+    }
+  } else if (abs(h2 - h1) <= height_tol) {
+    fraction = ((water_level - h0) / (h2 - h0))^2
+  } else {
+    fraction = 1 -
+      ((h2 - water_level) / (h2 - h0)) *
+        ((h2 - water_level) / (h2 - h1))
+  }
+  max(0, min(1, fraction)) * face_area
+}
+
+#'@keywords internal
+spatial_water_evaluate_full_scene_component = function(
+  terrain_mesh,
+  water_level,
+  target_area_limit,
+  tolerances,
+  return_face_ids = FALSE
+) {
+  face_ids = seq_len(nrow(terrain_mesh$faces))
+  face_area = spatial_water_face_sublevel_area(
+    terrain_mesh = terrain_mesh,
+    face_ids = face_ids,
+    water_level = water_level,
+    tolerances = tolerances
+  )
+  flooded = face_area > tolerances$area_tol
+  flooded_area = face_area[flooded]
+  diagnostics = list(
+    seed_candidate_count = length(face_ids),
+    seed_face_count = sum(flooded),
+    visited_face_count = sum(flooded),
+    rejected_early = FALSE,
+    geometry_face_count = if (isTRUE(return_face_ids)) sum(flooded) else 0L
+  )
+  if (is.finite(target_area_limit)) {
+    cumulative_area = cumsum(flooded_area)
+    rejected_at = which(
+      cumulative_area > target_area_limit + tolerances$area_tol
+    )
+    if (length(rejected_at)) {
+      diagnostics$visited_face_count = rejected_at[1L]
+      diagnostics$rejected_early = TRUE
+      return(list(
+        area = cumulative_area[rejected_at[1L]],
+        rejected = TRUE,
+        face_ids = if (isTRUE(return_face_ids)) {
+          face_ids[flooded][seq_len(rejected_at[1L])]
+        } else {
+          integer()
+        },
+        diagnostics = diagnostics
+      ))
+    }
+  }
+  list(
+    area = sum(flooded_area),
+    rejected = FALSE,
+    face_ids = if (isTRUE(return_face_ids)) face_ids[flooded] else integer(),
+    diagnostics = diagnostics
+  )
+}
+
+#'@keywords internal
+spatial_water_traverse_seeded_clipped_faces = function(
+  terrain_mesh,
+  component_seed,
+  water_level,
+  target_area_limit,
+  tolerances,
+  return_face_ids = FALSE
+) {
+  face_count = nrow(terrain_mesh$faces)
+  diagnostics = list(
+    seed_candidate_count = length(component_seed$seed_face_ids),
+    seed_face_count = 0L,
+    visited_face_count = 0L,
+    rejected_early = FALSE,
+    geometry_face_count = 0L
+  )
+  if (!face_count || !length(component_seed$seed_face_ids)) {
+    return(list(
+      area = 0,
+      rejected = FALSE,
+      face_ids = integer(),
+      diagnostics = diagnostics
+    ))
+  }
+  if (isTRUE(component_seed$full_scene)) {
+    return(spatial_water_evaluate_full_scene_component(
+      terrain_mesh = terrain_mesh,
+      water_level = water_level,
+      target_area_limit = target_area_limit,
+      tolerances = tolerances,
+      return_face_ids = return_face_ids
+    ))
+  }
+
+  state = component_seed$state
+  if (
+    is.null(state$visited_generation) ||
+      length(state$visited_generation) != face_count
+  ) {
+    state$visited_generation = integer(face_count)
+    state$generation = 0L
+    state$queue = integer(face_count)
+  }
+  generation = state$generation + 1L
+  if (!is.finite(generation) || generation <= 0L) {
+    state$visited_generation[] = 0L
+    generation = 1L
+  }
+  state$generation = generation
+  visited_generation = state$visited_generation
+  queue = state$queue
+  queue_head = 1L
+  queue_tail = 0L
+
+  seed_ids = component_seed$seed_face_ids
+  seed_area = spatial_water_face_sublevel_area(
+    terrain_mesh = terrain_mesh,
+    face_ids = seed_ids,
+    water_level = water_level,
+    tolerances = tolerances
+  )
+  seed_ids = seed_ids[seed_area > tolerances$area_tol]
+  if (length(seed_ids)) {
+    for (face_id in seed_ids) {
+      if (
+        visited_generation[face_id] != generation &&
+          spatial_water_seed_face_has_positive_overlap(
+            terrain_mesh = terrain_mesh,
+            component_seed = component_seed,
+            face_id = face_id,
+            water_level = water_level,
+            tolerances = tolerances
+          )
+      ) {
+        queue_tail = queue_tail + 1L
+        queue[queue_tail] = face_id
+        visited_generation[face_id] = generation
+      }
+    }
+  }
+  diagnostics$seed_face_count = queue_tail
+  if (!queue_tail) {
+    state$visited_generation = visited_generation
+    state$queue = queue
+    return(list(
+      area = 0,
+      rejected = FALSE,
+      face_ids = integer(),
+      diagnostics = diagnostics
+    ))
+  }
+
+  accumulated_area = 0
+  while (queue_head <= queue_tail) {
+    face_id = queue[queue_head]
+    queue_head = queue_head + 1L
+    accumulated_area = accumulated_area +
+      spatial_water_face_sublevel_area_scalar(
+        terrain_mesh = terrain_mesh,
+        face_id = face_id,
+        water_level = water_level,
+        tolerances = tolerances
+      )
+    if (
+      is.finite(target_area_limit) &&
+        accumulated_area > target_area_limit + tolerances$area_tol
+    ) {
+      diagnostics$visited_face_count = queue_head - 1L
+      diagnostics$rejected_early = TRUE
+      state$visited_generation = visited_generation
+      state$queue = queue
+      return(list(
+        area = accumulated_area,
+        rejected = TRUE,
+        face_ids = if (isTRUE(return_face_ids)) {
+          queue[seq_len(queue_tail)]
+        } else {
+          integer()
+        },
+        diagnostics = diagnostics
+      ))
+    }
+
+    for (edge_index in seq_len(3L)) {
+      neighbor = terrain_mesh$face_neighbors[face_id, edge_index]
+      if (!neighbor || visited_generation[neighbor] == generation) {
+        next
+      }
+      edge_id = terrain_mesh$face_edges[face_id, edge_index]
+      if (
+        terrain_mesh$edge_min_height[edge_id] <
+          water_level - tolerances$height_tol
+      ) {
+        queue_tail = queue_tail + 1L
+        queue[queue_tail] = neighbor
+        visited_generation[neighbor] = generation
+      }
+    }
+  }
+
+  diagnostics$visited_face_count = queue_tail
+  diagnostics$geometry_face_count = if (isTRUE(return_face_ids)) {
+    queue_tail
+  } else {
+    0L
+  }
+  state$visited_generation = visited_generation
+  state$queue = queue
+  list(
+    area = accumulated_area,
+    rejected = FALSE,
+    face_ids = if (isTRUE(return_face_ids)) {
+      queue[seq_len(queue_tail)]
+    } else {
+      integer()
+    },
+    diagnostics = diagnostics
+  )
+}
+
+#'@keywords internal
+spatial_water_seed_face_has_positive_overlap = function(
+  terrain_mesh,
+  component_seed,
+  face_id,
+  water_level,
+  tolerances
+) {
+  if (isTRUE(component_seed$full_scene)) {
+    return(TRUE)
+  }
+  face_vertices = terrain_mesh$faces[face_id, ]
+  face_rows = (face_vertices - 1L) %% terrain_mesh$nr + 1L
+  face_cols = (face_vertices - 1L) %/% terrain_mesh$nr + 1L
+  masked_vertices = component_seed$mask[cbind(face_rows, face_cols)]
+  if (
+    any(
+      masked_vertices &
+        terrain_mesh$vertices[face_vertices, "h"] <
+          water_level - tolerances$height_tol
+    )
+  ) {
+    return(TRUE)
+  }
+  polygon = spatial_water_face_clipped_xz_polygon(
+    terrain_mesh = terrain_mesh,
+    face_id = face_id,
+    water_level = water_level,
+    tolerances = tolerances
+  )
+  if (nrow(polygon) < 3L) {
+    return(FALSE)
+  }
+  row_index = terrain_mesh$face_cell_row[face_id]
+  col_index = terrain_mesh$face_cell_col[face_id]
+  candidate_rows = c(row_index, row_index + 1L, row_index, row_index + 1L)
+  candidate_cols = c(col_index, col_index, col_index + 1L, col_index + 1L)
+  for (candidate_index in seq_along(candidate_rows)) {
+    mask_row = candidate_rows[candidate_index]
+    mask_col = candidate_cols[candidate_index]
+    if (!component_seed$mask[mask_row, mask_col]) {
+      next
+    }
+    bounds = spatial_water_seed_cell_bounds(
+      row_index = mask_row,
+      col_index = mask_col,
+      nr = terrain_mesh$nr,
+      nc = terrain_mesh$nc
+    )
+    clipped = clip_spatial_water_polygon_to_bounds(
+      polygon = cbind(polygon[, 1L], 0, polygon[, 2L]),
+      x0 = bounds$x0,
+      x1 = bounds$x1,
+      z0 = bounds$z0,
+      z1 = bounds$z1
+    )
+    if (
+      nrow(clipped) >= 3L &&
+        spatial_water_projected_polygon_area(clipped[, 1L], clipped[, 3L]) >
+          tolerances$area_tol
+    ) {
+      return(TRUE)
+    }
+  }
+  FALSE
+}
+
+#'@keywords internal
+spatial_water_seed_cell_bounds = function(row_index, col_index, nr, nc) {
+  x_center = row_index - 1 - (nr - 1) / 2
+  z_center = col_index - 1 - (nc - 1) / 2
+  list(
+    x0 = max(x_center - 0.5, -(nr - 1) / 2),
+    x1 = min(x_center + 0.5, (nr - 1) / 2),
+    z0 = max(z_center - 0.5, -(nc - 1) / 2),
+    z1 = min(z_center + 0.5, (nc - 1) / 2)
+  )
+}
+
+#'@keywords internal
+spatial_water_face_clipped_xz_polygon = function(
+  terrain_mesh,
+  face_id,
+  water_level,
+  tolerances
+) {
+  vertices = terrain_mesh$faces[face_id, ]
+  points = terrain_mesh$vertices[vertices, , drop = FALSE]
+  heights = points[, "h"]
+  below = heights < water_level - tolerances$height_tol
+  on_plane = abs(heights - water_level) <= tolerances$height_tol
+  inside = below | on_plane
+  if (!any(below) || all(on_plane)) {
+    return(matrix(nrow = 0, ncol = 2L))
+  }
+  records = cbind(points[, "x"], points[, "z"], heights)
+  if (all(inside)) {
+    return(records[, 1:2, drop = FALSE])
+  }
+  clipped = matrix(NA_real_, nrow = 4L, ncol = 2L)
+  clipped_count = 0L
+  for (point_index in seq_len(3L)) {
+    next_index = if (point_index == 3L) 1L else point_index + 1L
+    current_inside = inside[point_index]
+    next_inside = inside[next_index]
+    if (current_inside && next_inside) {
+      clipped_count = clipped_count + 1L
+      clipped[clipped_count, ] = records[next_index, 1:2]
+    } else if (current_inside != next_inside) {
+      delta = heights[next_index] - heights[point_index]
+      if (abs(delta) <= tolerances$height_tol) {
+        t = 0
+      } else {
+        t = (water_level - heights[point_index]) / delta
+      }
+      t = min(1, max(0, t))
+      clipped_count = clipped_count + 1L
+      clipped[clipped_count, ] =
+        (1 - t) * records[point_index, 1:2] + t * records[next_index, 1:2]
+      if (!current_inside && next_inside) {
+        clipped_count = clipped_count + 1L
+        clipped[clipped_count, ] = records[next_index, 1:2]
+      }
+    }
+  }
+  if (!clipped_count) {
+    return(matrix(nrow = 0, ncol = 2L))
+  }
+  spatial_water_clean_xz_polygon(
+    clipped[seq_len(clipped_count), , drop = FALSE],
+    tolerances = tolerances
+  )
+}
+
+#'@keywords internal
+spatial_water_clean_xz_polygon = function(polygon, tolerances) {
+  if (!nrow(polygon)) {
+    return(polygon)
+  }
+  keep = rep(TRUE, nrow(polygon))
+  for (point_index in seq_len(nrow(polygon))) {
+    previous_index = if (point_index == 1L) nrow(polygon) else point_index - 1L
+    keep[point_index] = sqrt(sum(
+      (polygon[point_index, ] - polygon[previous_index, ])^2
+    )) >
+      tolerances$length_tol
+  }
+  polygon[keep, , drop = FALSE]
+}
+
+#'@keywords internal
+spatial_water_edge_intersections = function(
+  terrain_mesh,
+  water_level,
+  tolerances
+) {
+  edge_count = nrow(terrain_mesh$edge_vertices)
+  if (!edge_count) {
+    return(list(
+      has = logical(),
+      t = numeric(),
+      x = numeric(),
+      z = numeric()
+    ))
+  }
+  edge_vertices = terrain_mesh$edge_vertices
+  h0 = terrain_mesh$vertices[edge_vertices[, 1L], "h"]
+  h1 = terrain_mesh$vertices[edge_vertices[, 2L], "h"]
+  delta = h1 - h0
+  finite_edge = is.finite(h0) & is.finite(h1)
+  crosses = finite_edge &
+    abs(delta) > tolerances$height_tol &
+    pmin(h0, h1) < water_level - tolerances$height_tol &
+    pmax(h0, h1) > water_level + tolerances$height_tol
+  t = numeric(edge_count)
+  t[crosses] = (water_level - h0[crosses]) / delta[crosses]
+  t = pmax(0, pmin(1, t))
+  p0 = terrain_mesh$vertices[edge_vertices[, 1L], , drop = FALSE]
+  p1 = terrain_mesh$vertices[edge_vertices[, 2L], , drop = FALSE]
+  list(
+    has = crosses,
+    t = t,
+    x = (1 - t) * p0[, "x"] + t * p1[, "x"],
+    z = (1 - t) * p0[, "z"] + t * p1[, "z"]
+  )
+}
+
+#'@keywords internal
+clip_spatial_water_terrain_face_to_level = function(
+  terrain_mesh,
+  face_index,
+  water_level,
+  tolerances,
+  edge_intersections
+) {
+  face_vertices = terrain_mesh$faces[face_index, ]
+  heights = terrain_mesh$vertices[face_vertices, "h"]
+  below = heights < water_level - tolerances$height_tol
+  on_plane = abs(heights - water_level) <= tolerances$height_tol
+  inside = below | on_plane
+  if (!any(below) || all(on_plane)) {
+    return(NULL)
+  }
+
+  records = spatial_water_original_vertex_records(
+    terrain_mesh = terrain_mesh,
+    vertex_ids = face_vertices
+  )
+  if (all(inside)) {
+    return(clean_spatial_water_clipped_records(
+      records,
+      tolerances = tolerances
+    ))
+  }
+
+  clipped = records[FALSE, , drop = FALSE]
+  face_edges = terrain_mesh$face_edges[face_index, ]
+  for (point_index in seq_len(3L)) {
+    next_index = if (point_index == 3L) 1L else point_index + 1L
+    current_inside = inside[point_index]
+    next_inside = inside[next_index]
+    if (current_inside && next_inside) {
+      clipped = rbind(clipped, records[next_index, , drop = FALSE])
+    } else if (current_inside && !next_inside) {
+      clipped = rbind(
+        clipped,
+        spatial_water_edge_plane_intersection_record(
+          terrain_mesh = terrain_mesh,
+          edge_id = face_edges[point_index],
+          vertex_a = face_vertices[point_index],
+          vertex_b = face_vertices[next_index],
+          water_level = water_level,
+          tolerances = tolerances,
+          edge_intersections = edge_intersections
+        )
+      )
+    } else if (!current_inside && next_inside) {
+      clipped = rbind(
+        clipped,
+        spatial_water_edge_plane_intersection_record(
+          terrain_mesh = terrain_mesh,
+          edge_id = face_edges[point_index],
+          vertex_a = face_vertices[point_index],
+          vertex_b = face_vertices[next_index],
+          water_level = water_level,
+          tolerances = tolerances,
+          edge_intersections = edge_intersections
+        ),
+        records[next_index, , drop = FALSE]
+      )
+    }
+  }
+  clipped = clean_spatial_water_clipped_records(
+    clipped,
+    tolerances = tolerances
+  )
+  if (nrow(clipped) < 3L) {
+    return(NULL)
+  }
+  clipped
+}
+
+#'@keywords internal
+spatial_water_original_vertex_records = function(terrain_mesh, vertex_ids) {
+  vertex_ids = as.integer(vertex_ids)
+  vertex_data = terrain_mesh$vertices[vertex_ids, , drop = FALSE]
+  data.frame(
+    key = vertex_ids,
+    kind = "vertex",
+    id = vertex_ids,
+    x = vertex_data[, "x"],
+    h = vertex_data[, "h"],
+    z = vertex_data[, "z"],
+    edge_id = NA_integer_,
+    t = NA_real_
+  )
+}
+
+#'@keywords internal
+spatial_water_edge_plane_intersection_record = function(
+  terrain_mesh,
+  edge_id,
+  vertex_a,
+  vertex_b,
+  water_level,
+  tolerances,
+  edge_intersections
+) {
+  height_a = terrain_mesh$vertices[vertex_a, "h"]
+  height_b = terrain_mesh$vertices[vertex_b, "h"]
+  delta = height_b - height_a
+  t_ab = if (abs(delta) <= tolerances$height_tol) {
+    0
+  } else {
+    (water_level - height_a) / delta
+  }
+  if (t_ab <= tolerances$t_tol) {
+    return(spatial_water_original_vertex_records(terrain_mesh, vertex_a))
+  }
+  if (t_ab >= 1 - tolerances$t_tol) {
+    return(spatial_water_original_vertex_records(terrain_mesh, vertex_b))
+  }
+
+  if (edge_intersections$has[edge_id]) {
+    t = edge_intersections$t[edge_id]
+    x = edge_intersections$x[edge_id]
+    z = edge_intersections$z[edge_id]
+  } else {
+    edge_vertices = terrain_mesh$edge_vertices[edge_id, ]
+    height_0 = terrain_mesh$vertices[edge_vertices[1L], "h"]
+    height_1 = terrain_mesh$vertices[edge_vertices[2L], "h"]
+    edge_delta = height_1 - height_0
+    t = if (abs(edge_delta) <= tolerances$height_tol) {
+      0.5
+    } else {
+      (water_level - height_0) / edge_delta
+    }
+    point_0 = terrain_mesh$vertices[edge_vertices[1L], , drop = FALSE]
+    point_1 = terrain_mesh$vertices[edge_vertices[2L], , drop = FALSE]
+    point = (1 - t) * point_0 + t * point_1
+    x = point[, "x"]
+    z = point[, "z"]
+  }
+  data.frame(
+    key = nrow(terrain_mesh$vertices) + edge_id,
+    kind = "edge",
+    id = edge_id,
+    x = x,
+    h = water_level,
+    z = z,
+    edge_id = edge_id,
+    t = t
+  )
+}
+
+#'@keywords internal
+clean_spatial_water_clipped_records = function(records, tolerances) {
+  if (!nrow(records)) {
+    return(records)
+  }
+  keep = rep(TRUE, nrow(records))
+  for (point_index in seq_len(nrow(records))) {
+    previous_index = if (point_index == 1L) nrow(records) else point_index - 1L
+    same_key = records$key[point_index] == records$key[previous_index]
+    same_point =
+      sqrt(
+        (records$x[point_index] - records$x[previous_index])^2 +
+          (records$z[point_index] - records$z[previous_index])^2
+      ) <=
+        tolerances$length_tol &&
+      abs(records$h[point_index] - records$h[previous_index]) <=
+        tolerances$height_tol
+    keep[point_index] = !(same_key || same_point)
+  }
+  records[keep, , drop = FALSE]
+}
+
+#'@keywords internal
+spatial_water_projected_records_area = function(records) {
+  spatial_water_projected_polygon_area(records$x, records$z)
+}
+
+#'@keywords internal
+spatial_water_projected_polygon_area = function(x, z) {
+  if (length(x) < 3L) {
+    return(0)
+  }
+  next_index = c(seq.int(2L, length(x)), 1L)
+  abs(sum(x * z[next_index] - z * x[next_index])) / 2
+}
+
+#'@keywords internal
+spatial_water_records_overlap_component_seed = function(
+  records,
+  component_seed,
+  tol
+) {
+  if (!length(component_seed$row)) {
+    return(FALSE)
+  }
+  x_min = min(records$x)
+  x_max = max(records$x)
+  z_min = min(records$z)
+  z_max = max(records$z)
+  candidates = which(
+    component_seed$x1 > x_min + tol &
+      component_seed$x0 < x_max - tol &
+      component_seed$z1 > z_min + tol &
+      component_seed$z0 < z_max - tol
+  )
+  if (!length(candidates)) {
+    return(FALSE)
+  }
+  polygon = cbind(records$x, 0, records$z)
+  for (candidate in candidates) {
+    clipped = clip_spatial_water_polygon_to_bounds(
+      polygon = polygon,
+      x0 = component_seed$x0[candidate],
+      x1 = component_seed$x1[candidate],
+      z0 = component_seed$z0[candidate],
+      z1 = component_seed$z1[candidate]
+    )
+    if (
+      nrow(clipped) >= 3L &&
+        spatial_water_projected_polygon_area(clipped[, 1], clipped[, 3]) > tol
+    ) {
+      return(TRUE)
+    }
+  }
+  FALSE
+}
+
+#'@keywords internal
+spatial_water_records_original_edge_segments = function(
+  records,
+  terrain_mesh,
+  tolerances
+) {
+  if (nrow(records) < 2L) {
+    return(data.frame(edge_id = integer(), t0 = numeric(), t1 = numeric()))
+  }
+  segments = vector("list", nrow(records))
+  segment_count = 0L
+  for (point_index in seq_len(nrow(records))) {
+    next_index = if (point_index == nrow(records)) 1L else point_index + 1L
+    edge_id = spatial_water_records_shared_original_edge_id(
+      records[point_index, , drop = FALSE],
+      records[next_index, , drop = FALSE],
+      terrain_mesh = terrain_mesh
+    )
+    if (!is.finite(edge_id)) {
+      next
+    }
+    t0 = spatial_water_record_edge_t(
+      records[point_index, , drop = FALSE],
+      edge_id = edge_id,
+      terrain_mesh = terrain_mesh
+    )
+    t1 = spatial_water_record_edge_t(
+      records[next_index, , drop = FALSE],
+      edge_id = edge_id,
+      terrain_mesh = terrain_mesh
+    )
+    edge_length = spatial_water_terrain_edge_projected_length(
+      terrain_mesh = terrain_mesh,
+      edge_id = edge_id
+    )
+    if (
+      !is.finite(t0) ||
+        !is.finite(t1) ||
+        abs(t1 - t0) * edge_length <= tolerances$length_tol
+    ) {
+      next
+    }
+    segment_count = segment_count + 1L
+    segments[[segment_count]] = data.frame(
+      edge_id = edge_id,
+      t0 = t0,
+      t1 = t1
+    )
+  }
+  if (!segment_count) {
+    return(data.frame(edge_id = integer(), t0 = numeric(), t1 = numeric()))
+  }
+  do.call(rbind, segments[seq_len(segment_count)])
+}
+
+#'@keywords internal
+spatial_water_records_shared_original_edge_id = function(
+  record_a,
+  record_b,
+  terrain_mesh
+) {
+  kind_a = record_a$kind[1L]
+  kind_b = record_b$kind[1L]
+  if (identical(kind_a, "edge") && identical(kind_b, "edge")) {
+    if (record_a$edge_id[1L] == record_b$edge_id[1L]) {
+      return(record_a$edge_id[1L])
+    }
+    return(NA_integer_)
+  }
+  if (identical(kind_a, "vertex") && identical(kind_b, "vertex")) {
+    return(
+      spatial_water_original_vertices_edge_id(
+        terrain_mesh = terrain_mesh,
+        vertex_a = record_a$id[1L],
+        vertex_b = record_b$id[1L]
+      )
+    )
+  }
+  vertex_record = if (identical(kind_a, "vertex")) record_a else record_b
+  edge_record = if (identical(kind_a, "edge")) record_a else record_b
+  edge_vertices = terrain_mesh$edge_vertices[edge_record$edge_id[1L], ]
+  if (vertex_record$id[1L] %in% edge_vertices) {
+    return(edge_record$edge_id[1L])
+  }
+  NA_integer_
+}
+
+#'@keywords internal
+spatial_water_record_edge_t = function(record, edge_id, terrain_mesh) {
+  if (identical(record$kind[1L], "edge")) {
+    if (record$edge_id[1L] == edge_id) {
+      return(record$t[1L])
+    }
+    return(NA_real_)
+  }
+  edge_vertices = terrain_mesh$edge_vertices[edge_id, ]
+  if (record$id[1L] == edge_vertices[1L]) {
+    return(0)
+  }
+  if (record$id[1L] == edge_vertices[2L]) {
+    return(1)
+  }
+  NA_real_
+}
+
+#'@keywords internal
+spatial_water_terrain_edge_projected_length = function(terrain_mesh, edge_id) {
+  edge_vertices = terrain_mesh$edge_vertices[edge_id, ]
+  points = terrain_mesh$vertices[edge_vertices, , drop = FALSE]
+  sqrt(diff(points[, "x"])^2 + diff(points[, "z"])^2)
+}
+
+#'@keywords internal
+spatial_water_selected_clipped_faces = function(
+  edge_segments,
+  edge_face_count,
+  clip_seed,
+  clip_count
+) {
+  if (!clip_count || !any(clip_seed)) {
+    return(rep(FALSE, clip_count))
+  }
+  parent = seq_len(clip_count)
+  find_root = function(index) {
+    while (parent[index] != index) {
+      parent[index] <<- parent[parent[index]]
+      index = parent[index]
+    }
+    index
+  }
+  union_roots = function(a, b) {
+    root_a = find_root(a)
+    root_b = find_root(b)
+    if (root_a != root_b) {
+      parent[root_b] <<- root_a
+    }
+  }
+  if (nrow(edge_segments)) {
+    edge_groups = split(edge_segments$clip_id, edge_segments$edge_id)
+    for (edge_name in names(edge_groups)) {
+      edge_id = as.integer(edge_name)
+      if (
+        !is.na(edge_id) &&
+          edge_id <= length(edge_face_count) &&
+          edge_face_count[edge_id] >= 2L
+      ) {
+        clip_ids = unique(edge_groups[[edge_name]])
+        if (length(clip_ids) > 1L) {
+          for (clip_id in clip_ids[-1L]) {
+            union_roots(clip_ids[1L], clip_id)
+          }
+        }
+      }
+    }
+  }
+  roots = vapply(seq_len(clip_count), find_root, integer(1))
+  seed_roots = unique(roots[clip_seed])
+  roots %in% seed_roots
+}
+
+#'@keywords internal
+build_spatial_water_triangle_clipped_geometry = function(
+  terrain_mesh,
+  water_level,
+  tolerances,
+  selected_face_ids
+) {
+  if (!length(selected_face_ids)) {
+    return(spatial_water_empty_triangle_clip_evaluation(TRUE)[
+      c(
+        "top_vertices",
+        "side_vertices",
+        "lines",
+        "top_vertex_table",
+        "top_faces",
+        "boundary_edges"
+      )
+    ])
+  }
+  if (
+    length(selected_face_ids) == nrow(terrain_mesh$faces) &&
+      water_level >= max(terrain_mesh$face_heights) - tolerances$height_tol
+  ) {
+    selected_flags = rep(FALSE, nrow(terrain_mesh$faces))
+    selected_flags[selected_face_ids] = TRUE
+    if (all(selected_flags)) {
+      return(build_spatial_water_full_terrain_geometry(
+        terrain_mesh = terrain_mesh,
+        water_level = water_level,
+        tolerances = tolerances
+      ))
+    }
+  }
+  edge_intersections = spatial_water_edge_intersections(
+    terrain_mesh = terrain_mesh,
+    water_level = water_level,
+    tolerances = tolerances
+  )
+  clip_records = vector("list", length(selected_face_ids))
+  clip_count = 0L
+  for (face_id in selected_face_ids) {
+    records = clip_spatial_water_terrain_face_to_level(
+      terrain_mesh = terrain_mesh,
+      face_index = face_id,
+      water_level = water_level,
+      tolerances = tolerances,
+      edge_intersections = edge_intersections
+    )
+    if (is.null(records)) {
+      next
+    }
+    if (spatial_water_projected_records_area(records) <= tolerances$area_tol) {
+      next
+    }
+    clip_count = clip_count + 1L
+    clip_records[[clip_count]] = records
+  }
+  if (!clip_count) {
+    return(spatial_water_empty_triangle_clip_evaluation(TRUE)[
+      c(
+        "top_vertices",
+        "side_vertices",
+        "lines",
+        "top_vertex_table",
+        "top_faces",
+        "boundary_edges"
+      )
+    ])
+  }
+  clip_records = clip_records[seq_len(clip_count)]
+  max_key = nrow(terrain_mesh$vertices) + nrow(terrain_mesh$edge_vertices)
+  top_index = integer(max_key)
+  top_vertex_table = matrix(NA_real_, nrow = max_key, ncol = 3L)
+  top_vertex_count = 0L
+  top_faces = vector("list", length(clip_records) * 2L)
+  top_face_count = 0L
+  boundary_env = new.env(parent = emptyenv())
+
+  add_top_vertex = function(record) {
+    key = record$key[1L]
+    if (!top_index[key]) {
+      top_vertex_count <<- top_vertex_count + 1L
+      top_index[key] <<- top_vertex_count
+      top_vertex_table[top_vertex_count, ] <<- c(
+        record$x[1L],
+        water_level,
+        record$z[1L]
+      )
+    }
+    top_index[key]
+  }
+
+  for (clip_id in seq_along(clip_records)) {
+    records = clip_records[[clip_id]]
+    vertex_indices = integer(nrow(records))
+    for (record_index in seq_len(nrow(records))) {
+      vertex_indices[record_index] =
+        add_top_vertex(records[record_index, , drop = FALSE])
+    }
+    if (length(vertex_indices) >= 3L) {
+      for (triangle_index in seq_len(length(vertex_indices) - 2L)) {
+        face = c(
+          vertex_indices[1L],
+          vertex_indices[triangle_index + 1L],
+          vertex_indices[triangle_index + 2L]
+        )
+        face_points = top_vertex_table[face, , drop = FALSE]
+        normal_y = spatial_water_triangle_normal_y(face_points)
+        if (abs(normal_y) <= tolerances$area_tol) {
+          next
+        }
+        if (normal_y < 0) {
+          face = face[c(1L, 3L, 2L)]
+        }
+        top_face_count = top_face_count + 1L
+        top_faces[[top_face_count]] = face
+      }
+    }
+    spatial_water_register_clipped_boundary_edges(
+      records = records,
+      terrain_mesh = terrain_mesh,
+      boundary_env = boundary_env
+    )
+  }
+
+  if (!top_vertex_count || !top_face_count) {
+    return(spatial_water_empty_triangle_clip_evaluation(TRUE)[
+      c(
+        "top_vertices",
+        "side_vertices",
+        "lines",
+        "top_vertex_table",
+        "top_faces",
+        "boundary_edges"
+      )
+    ])
+  }
+  top_vertex_table = top_vertex_table[seq_len(top_vertex_count), , drop = FALSE]
+  top_faces = do.call(rbind, top_faces[seq_len(top_face_count)])
+  top_vertices = top_vertex_table[as.vector(t(top_faces)), , drop = FALSE]
+  boundary = spatial_water_triangle_clipped_boundary_geometry(
+    terrain_mesh = terrain_mesh,
+    boundary_env = boundary_env,
+    top_index = top_index,
+    top_vertex_table = top_vertex_table,
+    water_level = water_level,
+    tolerances = tolerances
+  )
+  list(
+    top_vertices = top_vertices,
+    side_vertices = boundary$side_vertices,
+    lines = boundary$lines,
+    top_vertex_table = top_vertex_table,
+    top_faces = top_faces,
+    boundary_edges = boundary$boundary_edges
+  )
+}
+
+#'@keywords internal
+build_spatial_water_full_terrain_geometry = function(
+  terrain_mesh,
+  water_level,
+  tolerances
+) {
+  top_vertex_table = cbind(
+    terrain_mesh$vertices[, "x"],
+    water_level,
+    terrain_mesh$vertices[, "z"]
+  )
+  top_faces = terrain_mesh$faces
+  top_vertices = top_vertex_table[as.vector(t(top_faces)), , drop = FALSE]
+  boundary_edge_ids = which(terrain_mesh$edge_face_count == 1L)
+  if (!length(boundary_edge_ids)) {
+    return(list(
+      top_vertices = top_vertices,
+      side_vertices = matrix(nrow = 0, ncol = 3),
+      lines = matrix(nrow = 0, ncol = 3),
+      top_vertex_table = top_vertex_table,
+      top_faces = top_faces,
+      boundary_edges = data.frame(
+        v1 = integer(),
+        v2 = integer(),
+        kind = character(),
+        edge_id = integer(),
+        wall = logical()
+      )
+    ))
+  }
+
+  line_indices = as.vector(t(terrain_mesh$edge_vertices[boundary_edge_ids, ]))
+  lines = top_vertex_table[line_indices, , drop = FALSE]
+  side_vertices = vector("list", length(boundary_edge_ids))
+  boundary_edges = vector("list", length(boundary_edge_ids))
+  side_count = 0L
+
+  for (edge_index in seq_along(boundary_edge_ids)) {
+    edge_id = boundary_edge_ids[edge_index]
+    face_id = terrain_mesh$edge_first_face[edge_id]
+    face_edge = terrain_mesh$edge_first_face_edge[edge_id]
+    face_vertices = terrain_mesh$faces[face_id, ]
+    next_edge = if (face_edge == 3L) 1L else face_edge + 1L
+    vertex_a = face_vertices[face_edge]
+    vertex_b = face_vertices[next_edge]
+    record_a = spatial_water_original_vertex_records(terrain_mesh, vertex_a)
+    record_b = spatial_water_original_vertex_records(terrain_mesh, vertex_b)
+    wall = make_spatial_water_triangle_clipped_sidewall(
+      record_a = record_a,
+      record_b = record_b,
+      water_level = water_level,
+      tolerances = tolerances
+    )
+    has_wall = nrow(wall) > 0
+    if (has_wall) {
+      side_count = side_count + 1L
+      side_vertices[[side_count]] = wall
+    }
+    boundary_edges[[edge_index]] = data.frame(
+      v1 = vertex_a,
+      v2 = vertex_b,
+      kind = "original",
+      edge_id = edge_id,
+      wall = has_wall
+    )
+  }
+
+  list(
+    top_vertices = top_vertices,
+    side_vertices = if (side_count) {
+      do.call(rbind, side_vertices[seq_len(side_count)])
+    } else {
+      matrix(nrow = 0, ncol = 3)
+    },
+    lines = lines,
+    top_vertex_table = top_vertex_table,
+    top_faces = top_faces,
+    boundary_edges = do.call(rbind, boundary_edges)
+  )
+}
+
+#'@keywords internal
+spatial_water_triangle_normal_y = function(triangle) {
+  first_edge = triangle[2L, ] - triangle[1L, ]
+  second_edge = triangle[3L, ] - triangle[1L, ]
+  first_edge[3L] * second_edge[1L] - first_edge[1L] * second_edge[3L]
+}
+
+#'@keywords internal
+spatial_water_register_clipped_boundary_edges = function(
+  records,
+  terrain_mesh,
+  boundary_env
+) {
+  if (nrow(records) < 2L) {
+    return(invisible(NULL))
+  }
+  for (point_index in seq_len(nrow(records))) {
+    next_index = if (point_index == nrow(records)) 1L else point_index + 1L
+    record_a = records[point_index, , drop = FALSE]
+    record_b = records[next_index, , drop = FALSE]
+    if (record_a$key[1L] == record_b$key[1L]) {
+      next
+    }
+    edge_key = spatial_water_fixed_grid_edge_key(
+      record_a$key[1L],
+      record_b$key[1L]
+    )
+    entry = get0(edge_key, envir = boundary_env, inherits = FALSE)
+    original_edge_id = spatial_water_records_shared_original_edge_id(
+      record_a,
+      record_b,
+      terrain_mesh = terrain_mesh
+    )
+    if (is.null(entry)) {
+      entry = list(
+        count = 0L,
+        record_a = record_a,
+        record_b = record_b,
+        kind = if (is.finite(original_edge_id)) "original" else "contour",
+        edge_id = original_edge_id
+      )
+    }
+    entry$count = entry$count + 1L
+    assign(edge_key, entry, envir = boundary_env)
+  }
+  invisible(NULL)
+}
+
+#'@keywords internal
+spatial_water_triangle_clipped_boundary_geometry = function(
+  terrain_mesh,
+  boundary_env,
+  top_index,
+  top_vertex_table,
+  water_level,
+  tolerances
+) {
+  edge_names = ls(boundary_env)
+  line_vertices = vector("list", length(edge_names))
+  side_vertices = vector("list", length(edge_names))
+  boundary_edges = vector("list", length(edge_names))
+  line_count = 0L
+  side_count = 0L
+  boundary_count = 0L
+  for (edge_name in edge_names) {
+    entry = get(edge_name, envir = boundary_env, inherits = FALSE)
+    if (entry$count != 1L) {
+      next
+    }
+    record_a = entry$record_a
+    record_b = entry$record_b
+    index_a = top_index[record_a$key[1L]]
+    index_b = top_index[record_b$key[1L]]
+    if (!index_a || !index_b) {
+      next
+    }
+    line_count = line_count + 1L
+    line_vertices[[line_count]] = rbind(
+      top_vertex_table[index_a, ],
+      top_vertex_table[index_b, ]
+    )
+    boundary_count = boundary_count + 1L
+    boundary_edges[[boundary_count]] = data.frame(
+      v1 = index_a,
+      v2 = index_b,
+      kind = entry$kind,
+      edge_id = ifelse(is.finite(entry$edge_id), entry$edge_id, NA_integer_),
+      wall = FALSE
+    )
+    if (
+      identical(entry$kind, "original") &&
+        is.finite(entry$edge_id) &&
+        terrain_mesh$edge_face_count[entry$edge_id] == 1L
+    ) {
+      wall = make_spatial_water_triangle_clipped_sidewall(
+        record_a = record_a,
+        record_b = record_b,
+        water_level = water_level,
+        tolerances = tolerances
+      )
+      if (nrow(wall)) {
+        side_count = side_count + 1L
+        side_vertices[[side_count]] = wall
+        boundary_edges[[boundary_count]]$wall = TRUE
+      }
+    }
+  }
+  list(
+    lines = if (line_count) {
+      do.call(rbind, line_vertices[seq_len(line_count)])
+    } else {
+      matrix(nrow = 0, ncol = 3)
+    },
+    side_vertices = if (side_count) {
+      do.call(rbind, side_vertices[seq_len(side_count)])
+    } else {
+      matrix(nrow = 0, ncol = 3)
+    },
+    boundary_edges = if (boundary_count) {
+      do.call(rbind, boundary_edges[seq_len(boundary_count)])
+    } else {
+      data.frame(
+        v1 = integer(),
+        v2 = integer(),
+        kind = character(),
+        edge_id = integer(),
+        wall = logical()
+      )
+    }
+  )
+}
+
+#'@keywords internal
+make_spatial_water_triangle_clipped_sidewall = function(
+  record_a,
+  record_b,
+  water_level,
+  tolerances
+) {
+  top_a = c(record_a$x[1L], water_level, record_a$z[1L])
+  top_b = c(record_b$x[1L], water_level, record_b$z[1L])
+  bot_a = c(record_a$x[1L], record_a$h[1L], record_a$z[1L])
+  bot_b = c(record_b$x[1L], record_b$h[1L], record_b$z[1L])
+  candidates = list(
+    rbind(top_a, bot_a, top_b),
+    rbind(top_b, bot_a, bot_b)
+  )
+  keep = vapply(
+    candidates,
+    function(triangle) {
+      spatial_water_triangle_area3d(triangle) > tolerances$surface_area_tol
+    },
+    logical(1)
+  )
+  if (!any(keep)) {
+    return(matrix(nrow = 0, ncol = 3))
+  }
+  do.call(rbind, candidates[keep])
+}
+
+#'@keywords internal
+spatial_water_triangle_area3d = function(triangle) {
+  first_edge = triangle[2L, ] - triangle[1L, ]
+  second_edge = triangle[3L, ] - triangle[1L, ]
+  cross_product = c(
+    first_edge[2L] * second_edge[3L] - first_edge[3L] * second_edge[2L],
+    first_edge[3L] * second_edge[1L] - first_edge[1L] * second_edge[3L],
+    first_edge[1L] * second_edge[2L] - first_edge[2L] * second_edge[1L]
+  )
+  sqrt(sum(cross_product^2)) / 2
+}
+
+#'@keywords internal
 make_spatial_water_polygon_component = function(
   component_mask,
   heightmap,
+  terrain_mesh = make_spatial_water_fixed_grid_terrain_mesh(heightmap),
   fallback_level
 ) {
   if (!is.finite(fallback_level)) {
     return(empty_spatial_water_polygon_mesh())
   }
-
-  component_footprint = make_spatial_water_component_footprint(component_mask)
-  if (spatial_water_sfc_is_empty(component_footprint)) {
+  component_metrics = spatial_water_component_mask_metrics(component_mask)
+  if (
+    !is.finite(component_metrics$area) ||
+      component_metrics$area <= sqrt(.Machine$double.eps)
+  ) {
     return(empty_spatial_water_polygon_mesh())
   }
   fit = fit_spatial_water_component_polygon(
     component_mask = component_mask,
     heightmap = heightmap,
-    component_footprint = component_footprint,
+    terrain_mesh = terrain_mesh,
+    component_metrics = component_metrics,
     fallback_level = fallback_level
   )
-  if (is.null(fit) || spatial_water_sfc_is_empty(fit$polygon)) {
+  if (is.null(fit) || !is.finite(fit$area) || fit$area <= 0) {
     return(empty_spatial_water_polygon_mesh())
   }
-  water_level = fit$level
-  water_polygon = fit$polygon
-
-  top_vertices = triangulate_spatial_water_polygon_sfc(
-    water_polygon = water_polygon,
-    water_level = water_level
-  )
-  side_vertices = make_spatial_water_polygon_sidewalls(
-    water_polygon = water_polygon,
-    heightmap = heightmap,
-    water_level = water_level
-  )
-  list(
-    vertices = rbind(top_vertices, side_vertices),
-    lines = make_spatial_water_polygon_lines(
-      water_polygon = water_polygon,
-      water_level = water_level
-    )
+  make_spatial_water_triangle_clipped_component(
+    component_mask = component_mask,
+    terrain_mesh = terrain_mesh,
+    water_level = fit$level
   )
 }
 
@@ -781,15 +2701,21 @@ make_spatial_water_polygon_component = function(
 fit_spatial_water_component_polygon = function(
   component_mask,
   heightmap,
-  component_footprint,
+  component_footprint = NULL,
+  terrain_mesh = make_spatial_water_fixed_grid_terrain_mesh(heightmap),
+  component_metrics = spatial_water_component_mask_metrics(component_mask),
   fallback_level
 ) {
-  target_area = spatial_water_polygon_area(component_footprint)
+  target_area = component_metrics$area
   if (!is.finite(target_area) || target_area <= sqrt(.Machine$double.eps)) {
     return(NULL)
   }
-  target_perimeter = spatial_water_polygon_perimeter(component_footprint)
+  target_perimeter = component_metrics$perimeter
   target_area_limit = target_area + target_perimeter
+  component_seed = make_spatial_water_component_seed(
+    component_mask,
+    terrain_mesh = terrain_mesh
+  )
 
   component_heights = heightmap[component_mask & is.finite(heightmap)]
   start_level = if (length(component_heights)) {
@@ -810,12 +2736,20 @@ fit_spatial_water_component_polygon = function(
   if (!is.finite(level_min) || !is.finite(level_max)) {
     return(NULL)
   }
-  start_level = min(max(start_level, level_min), level_max)
+  level_eps = spatial_water_level_tolerance(
+    water_level = level_max,
+    heights = finite_height
+  )
+  level_upper = level_max + 2 * level_eps
+  start_level = min(max(start_level, level_min), level_upper)
 
   evaluation_cache = new.env(parent = emptyenv())
   evaluate_level = function(level) {
     spatial_water_component_area_fit_at_level(
       heightmap = heightmap,
+      terrain_mesh = terrain_mesh,
+      component_mask = component_mask,
+      component_seed = component_seed,
       component_footprint = component_footprint,
       level = level,
       target_area = target_area,
@@ -826,7 +2760,12 @@ fit_spatial_water_component_polygon = function(
 
   best = NULL
   update_best = function(candidate) {
-    if (spatial_water_sfc_is_empty(candidate$polygon)) {
+    if (
+      is.null(candidate) ||
+        !is.finite(candidate$area) ||
+        candidate$area <= sqrt(.Machine$double.eps) ||
+        isTRUE(candidate$rejected)
+    ) {
       return(best)
     }
     if (
@@ -841,50 +2780,85 @@ fit_spatial_water_component_polygon = function(
   start_result = evaluate_level(start_level)
   best = update_best(start_result)
 
-  candidate_levels = c(
+  seed_levels = c(
+    level_min,
     start_level,
-    if (
-      is.finite(fallback_level) &&
-        fallback_level >= level_min &&
-        fallback_level <= level_max
-    ) {
-      fallback_level
-    },
-    seq(level_min, level_max, length.out = 65)
+    level_upper,
+    fallback_level
   )
-  candidate_levels = sort(unique(candidate_levels[is.finite(candidate_levels)]))
-  candidate_levels = candidate_levels[
-    candidate_levels >= level_min & candidate_levels <= level_max
-  ]
-
-  for (candidate_level in candidate_levels) {
+  seed_levels = sort(unique(seed_levels[
+    is.finite(seed_levels) &
+      seed_levels >= level_min &
+      seed_levels <= level_upper
+  ]))
+  for (candidate_level in seed_levels) {
     best = update_best(evaluate_level(candidate_level))
   }
 
-  if (!is.null(best) && length(candidate_levels) > 1L) {
-    best_index = which.min(abs(candidate_levels - best$level))
-    lower = candidate_levels[max(1L, best_index - 1L)]
-    upper = candidate_levels[min(length(candidate_levels), best_index + 1L)]
-    if (is.finite(lower) && is.finite(upper) && upper > lower) {
-      optimum = tryCatch(
-        stats::optimize(
-          f = function(level) evaluate_level(level)$difference,
-          interval = c(lower, upper)
-        ),
-        error = function(e) NULL
-      )
-      if (!is.null(optimum)) {
-        best = update_best(evaluate_level(optimum$minimum))
-      }
+  lower = level_min
+  upper = level_upper
+  lower_result = evaluate_level(lower)
+  upper_result = evaluate_level(upper)
+  best = update_best(lower_result)
+  best = update_best(upper_result)
+
+  level_tol = spatial_water_level_tolerance(
+    water_level = max(abs(c(level_min, level_max)), na.rm = TRUE),
+    heights = c(level_min, level_max)
+  )
+  area_tol = sqrt(.Machine$double.eps) * max(1, target_area)
+  max_iterations = if (
+    is.finite(upper - lower) &&
+      upper > lower &&
+      is.finite(level_tol) &&
+      level_tol > 0
+  ) {
+    max(1L, ceiling(log2((upper - lower) / level_tol)))
+  } else {
+    1L
+  }
+  max_iterations = min(64L, max_iterations)
+  for (iteration in seq_len(max_iterations)) {
+    if (!is.finite(lower) || !is.finite(upper) || upper - lower <= level_tol) {
+      break
+    }
+    if (!is.null(best) && best$difference <= area_tol) {
+      break
+    }
+    if (abs(upper_result$area - lower_result$area) <= area_tol) {
+      best = update_best(lower_result)
+      best = update_best(upper_result)
+      break
+    }
+    mid = (lower + upper) / 2
+    if (mid <= lower || mid >= upper) {
+      break
+    }
+    mid_result = evaluate_level(mid)
+    best = update_best(mid_result)
+    if (
+      isTRUE(mid_result$rejected) ||
+        mid_result$area >= target_area - area_tol
+    ) {
+      upper = mid
+      upper_result = mid_result
+    } else {
+      lower = mid
+      lower_result = mid_result
     }
   }
+  best = update_best(lower_result)
+  best = update_best(upper_result)
   best
 }
 
 #'@keywords internal
 spatial_water_component_area_fit_at_level = function(
   heightmap,
-  component_footprint,
+  component_footprint = NULL,
+  terrain_mesh = NULL,
+  component_mask = NULL,
+  component_seed = NULL,
   level,
   target_area,
   target_area_limit,
@@ -893,6 +2867,33 @@ spatial_water_component_area_fit_at_level = function(
   cache_key = format(level, digits = 17)
   if (exists(cache_key, envir = cache, inherits = FALSE)) {
     return(get(cache_key, envir = cache, inherits = FALSE))
+  }
+
+  if (!is.null(component_mask)) {
+    if (is.null(terrain_mesh)) {
+      terrain_mesh = make_spatial_water_fixed_grid_terrain_mesh(heightmap)
+    }
+    if (is.null(component_seed)) {
+      component_seed = make_spatial_water_component_seed(
+        component_mask,
+        terrain_mesh = terrain_mesh
+      )
+    }
+    evaluation = evaluate_spatial_water_triangle_clipped_component(
+      terrain_mesh = terrain_mesh,
+      component_seed = component_seed,
+      water_level = level,
+      target_area_limit = target_area_limit
+    )
+    result = list(
+      level = level,
+      polygon = NULL,
+      area = evaluation$area,
+      difference = abs(evaluation$area - target_area),
+      rejected = evaluation$area > target_area_limit + sqrt(.Machine$double.eps)
+    )
+    assign(cache_key, result, envir = cache)
+    return(result)
   }
 
   terrain_band = make_spatial_water_level_polygon(
