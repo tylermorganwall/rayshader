@@ -9,6 +9,7 @@ rasterize_indent_surface_amount(
   template,
   touches = TRUE,
   fun = "max",
+  transition = 0,
   caller = NULL
 )
 }
@@ -20,6 +21,8 @@ rasterize_indent_surface_amount(
 \item{touches}{Default \code{TRUE}. Whether touched cells should be included.}
 
 \item{fun}{Default \code{"max"}. Rasterization reducer.}
+
+\item{transition}{Default \code{0}. Transition distance in map units.}
 
 \item{caller}{Default \code{NULL}. Calling function.}
 }

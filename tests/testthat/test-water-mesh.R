@@ -1029,6 +1029,45 @@ test_that("render_water scales spatial waterdepth rasters by zscale and vertical
   expect_equal(max(water_verts[, 2], na.rm = TRUE), 10, tolerance = 1e-6)
 })
 
+test_that("render_water clamps spatial waterdepth edges to terrain", {
+  skip_if_not_installed("terra")
+  on.exit(rgl::close3d(), add = TRUE)
+  local_rgl_use_null()
+
+  height_raster = terra::rast(
+    nrows = 6,
+    ncols = 6,
+    xmin = 0,
+    xmax = 6,
+    ymin = 0,
+    ymax = 6,
+    crs = "EPSG:3857"
+  )
+  terra::values(height_raster) = 80
+  water_level_rast = height_raster
+  water_values = rep(NA_real_, terra::ncell(water_level_rast))
+  water_values[c(15, 16, 21, 22)] = 100
+  terra::values(water_level_rast) = water_values
+
+  expect_no_condition(plot_3d_test(
+    constant_shade(height_raster),
+    height_raster,
+    zscale = 10,
+    solid = FALSE,
+    shadow = FALSE,
+    water = FALSE,
+    windowsize = c(200, 200)
+  ))
+
+  expect_no_condition(render_water(
+    waterdepth = water_level_rast,
+    water_edge_clamp = TRUE
+  ))
+  water_ids = get_ids_with_labels(typeval = "water")
+  water_verts = rgl::rgl.attrib(water_ids$id[1], "vertices")
+  expect_equal(max(water_verts[, 2], na.rm = TRUE), 8, tolerance = 1e-6)
+})
+
 test_that("spatial waterdepth rasters render finite cells at equal terrain height", {
   skip_if_not_installed("terra")
   on.exit(rgl::close3d(), add = TRUE)
@@ -1121,6 +1160,134 @@ test_that("spatial waterdepth edge extension can be disabled", {
   expect_equal(range(vertices[, 3]), c(-1, 1), tolerance = 1e-8)
 })
 
+test_that("spatial waterdepth edge extension stops at terrain contact", {
+  local_rgl_use_null()
+
+  water_surface = matrix(NA_real_, nrow = 4, ncol = 4)
+  water_surface[2:3, 2:3] = 10
+
+  flat_bank = matrix(10, nrow = 4, ncol = 4)
+  flat_bank[2:3, 2:3] = 0
+  flat_bank_mesh = make_spatial_water_surface(
+    waterheight = water_surface,
+    heightmap = flat_bank,
+    valid_water = is.finite(water_surface),
+    water_edge_extension = 0.5
+  )
+  flat_bank_vertices = water_mesh_vertices(flat_bank_mesh)
+  flat_bank_terrain = interpolate_spatial_water_surface_height(
+    flat_bank,
+    flat_bank_vertices[, 1],
+    flat_bank_vertices[, 3]
+  )
+
+  expect_equal(range(flat_bank_vertices[, 1]), c(-1.5, 1.5), tolerance = 1e-8)
+  expect_equal(range(flat_bank_vertices[, 3]), c(-1.5, 1.5), tolerance = 1e-8)
+  expect_false(any(flat_bank_vertices[, 2] < flat_bank_terrain - 1e-6))
+
+  rising_bank = matrix(12, nrow = 4, ncol = 4)
+  rising_bank[2:3, 2:3] = 0
+  rising_bank_mesh = make_spatial_water_surface(
+    waterheight = water_surface,
+    heightmap = rising_bank,
+    valid_water = is.finite(water_surface),
+    water_edge_extension = 0.5
+  )
+  rising_bank_vertices = water_mesh_vertices(rising_bank_mesh)
+  rising_bank_terrain = interpolate_spatial_water_surface_height(
+    rising_bank,
+    rising_bank_vertices[, 1],
+    rising_bank_vertices[, 3]
+  )
+
+  expect_equal(
+    range(rising_bank_vertices[, 1]),
+    c(-4 / 3, 4 / 3),
+    tolerance = 1e-5
+  )
+  expect_equal(
+    range(rising_bank_vertices[, 3]),
+    c(-4 / 3, 4 / 3),
+    tolerance = 1e-5
+  )
+  expect_false(any(rising_bank_vertices[, 2] < rising_bank_terrain - 1e-6))
+})
+
+test_that("spatial waterdepth edge extension does not expand into high banks", {
+  local_rgl_use_null()
+
+  water_surface = matrix(NA_real_, nrow = 4, ncol = 4)
+  water_surface[2:3, 2:3] = 10
+  heightmap = matrix(20, nrow = 4, ncol = 4)
+  heightmap[2:3, 2:3] = 0
+
+  water_mesh = make_spatial_water_surface(
+    waterheight = water_surface,
+    heightmap = heightmap,
+    valid_water = is.finite(water_surface),
+    water_edge_extension = 0.5
+  )
+  vertices = water_mesh_vertices(water_mesh)
+  terrain = interpolate_spatial_water_surface_height(
+    heightmap,
+    vertices[, 1],
+    vertices[, 3]
+  )
+
+  expect_equal(range(vertices[, 1]), c(-1, 1), tolerance = 1e-8)
+  expect_equal(range(vertices[, 3]), c(-1, 1), tolerance = 1e-8)
+  expect_false(any(vertices[, 2] < terrain - 1e-6))
+})
+
+test_that("spatial waterdepth edge extension stops at NA terrain cuts", {
+  local_rgl_use_null()
+
+  heightmap = matrix(0, nrow = 5, ncol = 5)
+  heightmap[1, ] = NA_real_
+  heightmap[, 5] = NA_real_
+
+  water_surface = matrix(NA_real_, nrow = 5, ncol = 5)
+  water_surface[2:4, 2:4] = 10
+  water_mesh = make_spatial_water_surface(
+    waterheight = water_surface,
+    heightmap = heightmap,
+    valid_water = is.finite(heightmap) & is.finite(water_surface),
+    water_edge_extension = 0.5
+  )
+  vertices = water_mesh_vertices(water_mesh)
+  terrain = interpolate_spatial_water_surface_height(
+    heightmap,
+    vertices[, 1],
+    vertices[, 3]
+  )
+
+  expect_equal(range(vertices[, 1]), c(-1, 2), tolerance = 1e-5)
+  expect_equal(range(vertices[, 3]), c(-2, 1), tolerance = 1e-5)
+  expect_true(all(is.finite(terrain)))
+  expect_false(any(vertices[, 2] < terrain - 1e-6))
+
+  heightmap = matrix(0, nrow = 5, ncol = 5)
+  heightmap[, 3] = NA_real_
+  water_surface = matrix(NA_real_, nrow = 5, ncol = 5)
+  water_surface[2:4, ] = 10
+  strip_mesh = make_spatial_water_surface(
+    waterheight = water_surface,
+    heightmap = heightmap,
+    valid_water = is.finite(heightmap) & is.finite(water_surface),
+    water_edge_extension = 0.5
+  )
+  strip_vertices = water_mesh_vertices(strip_mesh)
+  strip_terrain = interpolate_spatial_water_surface_height(
+    heightmap,
+    strip_vertices[, 1],
+    strip_vertices[, 3]
+  )
+
+  expect_true(all(abs(strip_vertices[, 3]) >= 1 - 1e-8))
+  expect_true(all(is.finite(strip_terrain)))
+  expect_false(any(strip_vertices[, 2] < strip_terrain - 1e-6))
+})
+
 test_that("spatial water sidewalls are clipped to the expanded water footprint", {
   local_rgl_use_null()
 
@@ -1176,6 +1343,297 @@ test_that("spatial waterdepth edge sides follow local terrain heights", {
 
   expect_true(any(abs(vertices[, 2] - 4) < 1e-8))
   expect_equal(max(vertices[, 2]), 10, tolerance = 1e-8)
+})
+
+test_that("spatial water edge clamp lowers surfaces to exterior sidewall terrain", {
+  local_rgl_use_null()
+
+  water_surface = matrix(NA_real_, nrow = 6, ncol = 6)
+  water_surface[3:4, 3:4] = 10
+  heightmap = matrix(8, nrow = 6, ncol = 6)
+
+  unclamped_mesh = make_spatial_water_surface(
+    waterheight = water_surface,
+    heightmap = heightmap,
+    valid_water = is.finite(water_surface),
+    water_edge_extension = 0.5
+  )
+  clamped_mesh = make_spatial_water_surface(
+    waterheight = water_surface,
+    heightmap = heightmap,
+    valid_water = is.finite(water_surface),
+    water_edge_extension = 0.5,
+    water_edge_clamp = TRUE
+  )
+  unclamped_vertices = water_mesh_vertices(unclamped_mesh)
+  clamped_vertices = water_mesh_vertices(clamped_mesh)
+  clamped_info = water_mesh_triangle_normals(clamped_vertices)
+  clamped_sidewalls = abs(clamped_info$normals[, 2]) < 1e-8
+
+  expect_equal(max(unclamped_vertices[, 2]), 10, tolerance = 1e-8)
+  expect_equal(range(clamped_vertices[, 2]), c(8, 8), tolerance = 1e-8)
+  expect_false(any(clamped_sidewalls))
+})
+
+test_that("spatial water edge clamp uses largest eligible sidewall height", {
+  local_rgl_use_null()
+
+  water_surface = matrix(NA_real_, nrow = 7, ncol = 7)
+  water_surface[3:5, 3:5] = 10
+  heightmap = matrix(5, nrow = 7, ncol = 7)
+  heightmap[3:5, 3:5] = 0
+  heightmap[2, ] = 8
+  heightmap[, 2] = 8
+
+  adjusted = adjust_spatial_water_surface_to_edge_terrain(
+    water_surface = water_surface,
+    heightmap = heightmap,
+    water_edge_extension = 0.5
+  )
+
+  expect_equal(adjusted[3, 3], 5, tolerance = 1e-8)
+  expect_equal(adjusted[5, 5], 5, tolerance = 1e-8)
+
+  clamped_mesh = make_spatial_water_surface(
+    waterheight = water_surface,
+    heightmap = heightmap,
+    valid_water = is.finite(water_surface),
+    water_edge_extension = 0.5,
+    water_edge_clamp = TRUE
+  )
+  clamped_vertices = water_mesh_vertices(clamped_mesh)
+  clamped_info = water_mesh_triangle_normals(clamped_vertices)
+  clamped_sidewalls = abs(clamped_info$normals[, 2]) < 1e-8
+
+  expect_false(any(clamped_sidewalls))
+})
+
+test_that("spatial water edge clamp flattens connected footprint levels", {
+  local_rgl_use_null()
+
+  water_surface = matrix(NA_real_, nrow = 5, ncol = 5)
+  water_surface[2:4, 2:4] = 10
+  water_surface[2, 2] = 5
+  water_surface[4, 4] = 6
+  heightmap = matrix(10, nrow = 5, ncol = 5)
+  heightmap[is.finite(water_surface)] = 0
+
+  adjusted = adjust_spatial_water_surface_to_edge_terrain(
+    water_surface = water_surface,
+    heightmap = heightmap,
+    water_edge_extension = 0.5
+  )
+  clamped_mesh = make_spatial_water_surface(
+    waterheight = water_surface,
+    heightmap = heightmap,
+    valid_water = is.finite(water_surface),
+    water_edge_extension = 0.5,
+    water_edge_clamp = TRUE
+  )
+  clamped_vertices = water_mesh_vertices(clamped_mesh)
+  clamped_info = water_mesh_triangle_normals(clamped_vertices)
+  clamped_sidewalls = abs(clamped_info$normals[, 2]) < 1e-8
+
+  expect_equal(unique(na.omit(as.vector(adjusted))), 10, tolerance = 1e-8)
+  expect_equal(range(clamped_vertices[, 2]), c(10, 10), tolerance = 1e-8)
+  expect_false(any(clamped_sidewalls))
+})
+
+test_that("spatial water edge clamp is applied per connected footprint", {
+  water_surface = matrix(NA_real_, nrow = 6, ncol = 6)
+  water_surface[2, 2] = 10
+  water_surface[5, 5] = 10
+  heightmap = matrix(8, nrow = 6, ncol = 6)
+  heightmap[4:6, 4:6] = 6
+
+  adjusted = adjust_spatial_water_surface_to_edge_terrain(
+    water_surface = water_surface,
+    heightmap = heightmap,
+    water_edge_extension = 0
+  )
+
+  expect_equal(adjusted[2, 2], 8, tolerance = 1e-8)
+  expect_equal(adjusted[5, 5], 6, tolerance = 1e-8)
+})
+
+test_that("spatial water edge clamp ignores heightmap boundary edges", {
+  water_surface = matrix(NA_real_, nrow = 4, ncol = 4)
+  water_surface[1:2, 1:2] = 10
+  heightmap = matrix(10, nrow = 4, ncol = 4)
+  heightmap[1, 1] = 8
+
+  adjusted = adjust_spatial_water_surface_to_edge_terrain(
+    water_surface = water_surface,
+    heightmap = heightmap,
+    water_edge_extension = 0
+  )
+
+  expect_equal(adjusted[1, 1], 10, tolerance = 1e-8)
+  expect_equal(adjusted[2, 2], 10, tolerance = 1e-8)
+})
+
+test_that("spatial water edge clamp ignores expanded heightmap boundary edges", {
+  local_rgl_use_null()
+
+  water_surface = matrix(NA_real_, nrow = 5, ncol = 5)
+  water_surface[2:4, 2:4] = 10
+  heightmap = matrix(10, nrow = 5, ncol = 5)
+  heightmap[2:4, 2:4] = 0
+  heightmap[1, ] = 5
+
+  adjusted = adjust_spatial_water_surface_to_edge_terrain(
+    water_surface = water_surface,
+    heightmap = heightmap,
+    water_edge_extension = 0.5
+  )
+  clamped_mesh = make_spatial_water_surface(
+    waterheight = water_surface,
+    heightmap = heightmap,
+    valid_water = is.finite(water_surface),
+    water_edge_extension = 0.5,
+    water_edge_clamp = TRUE
+  )
+  clamped_vertices = water_mesh_vertices(clamped_mesh)
+  clamped_info = water_mesh_triangle_normals(clamped_vertices)
+  clamped_sidewalls = abs(clamped_info$normals[, 2]) < 1e-8
+  sidewall_centers = clamped_info$centers[clamped_sidewalls, , drop = FALSE]
+  sidewall_on_scene_edge = abs(sidewall_centers[, 1] + 2) < 1e-8 |
+    abs(sidewall_centers[, 1] - 2) < 1e-8 |
+    abs(sidewall_centers[, 3] + 2) < 1e-8 |
+    abs(sidewall_centers[, 3] - 2) < 1e-8
+
+  expect_equal(unique(na.omit(as.vector(adjusted))), 10, tolerance = 1e-8)
+  expect_equal(max(clamped_vertices[, 2]), 10, tolerance = 1e-8)
+  expect_true(any(clamped_sidewalls))
+  expect_true(all(sidewall_on_scene_edge))
+})
+
+test_that("spatial water edge clamp restores low edge cells on open cuts", {
+  local_rgl_use_null()
+
+  water_surface = matrix(NA_real_, nrow = 5, ncol = 5)
+  water_surface[1:3, 2:4] = 10
+  water_surface[1, 2:4] = 5
+  heightmap = matrix(10, nrow = 5, ncol = 5)
+  heightmap[is.finite(water_surface)] = 0
+
+  adjusted = adjust_spatial_water_surface_to_edge_terrain(
+    water_surface = water_surface,
+    heightmap = heightmap,
+    water_edge_extension = 0.5
+  )
+  clamped_mesh = make_spatial_water_surface(
+    waterheight = water_surface,
+    heightmap = heightmap,
+    valid_water = is.finite(water_surface),
+    water_edge_extension = 0.5,
+    water_edge_clamp = TRUE
+  )
+  clamped_vertices = water_mesh_vertices(clamped_mesh)
+  clamped_info = water_mesh_triangle_normals(clamped_vertices)
+  clamped_sidewalls = abs(clamped_info$normals[, 2]) < 1e-8
+  sidewall_centers = clamped_info$centers[clamped_sidewalls, , drop = FALSE]
+
+  expect_equal(adjusted[1, 2], 10, tolerance = 1e-8)
+  expect_equal(max(clamped_vertices[, 2]), 10, tolerance = 1e-8)
+  expect_true(any(clamped_sidewalls))
+  expect_true(all(abs(sidewall_centers[, 1] + 2) < 1e-8))
+})
+
+test_that("spatial water edge clamp ignores NA slice edges", {
+  water_surface = matrix(10, nrow = 5, ncol = 5)
+  water_surface[3, 3] = NA_real_
+  heightmap = matrix(8, nrow = 5, ncol = 5)
+  heightmap[3, 3] = NA_real_
+
+  adjusted = adjust_spatial_water_surface_to_edge_terrain(
+    water_surface = water_surface,
+    heightmap = heightmap,
+    water_edge_extension = 0
+  )
+
+  expect_equal(adjusted[1, 1], 10, tolerance = 1e-8)
+  expect_equal(adjusted[3, 2], 10, tolerance = 1e-8)
+  expect_true(is.na(adjusted[3, 3]))
+})
+
+test_that("spatial water edge clamp keeps sidewalls at void cuts", {
+  local_rgl_use_null()
+
+  water_surface = matrix(10, nrow = 5, ncol = 5)
+  water_surface[3, 3] = NA_real_
+  heightmap = matrix(8, nrow = 5, ncol = 5)
+  heightmap[3, 3] = NA_real_
+  water_mesh = make_spatial_water_surface(
+    waterheight = water_surface,
+    heightmap = heightmap,
+    valid_water = is.finite(heightmap) & is.finite(water_surface),
+    water_edge_extension = 0,
+    water_edge_clamp = TRUE
+  )
+  vertices = water_mesh_vertices(water_mesh)
+  triangle_info = water_mesh_triangle_normals(vertices)
+  sidewalls = abs(triangle_info$normals[, 2]) < 1e-8
+
+  expect_true(any(sidewalls))
+  expect_true(any(
+    sidewalls &
+      abs(triangle_info$centers[, 1]) < 0.6 &
+      abs(triangle_info$centers[, 3]) < 0.6
+  ))
+})
+
+test_that("spatial water top is clipped against interior terrain peaks", {
+  local_rgl_use_null()
+
+  water_surface = matrix(NA_real_, nrow = 3, ncol = 3)
+  water_surface[2, 2] = 10
+  heightmap = matrix(0, nrow = 3, ncol = 3)
+  heightmap[2, 2] = 20
+  water_mesh = make_spatial_water_surface(
+    waterheight = water_surface,
+    heightmap = heightmap,
+    valid_water = is.finite(water_surface),
+    water_edge_extension = 0
+  )
+  vertices = water_mesh_vertices(water_mesh)
+  triangle_info = water_mesh_triangle_normals(vertices)
+  top_triangles = abs(triangle_info$normals[, 2]) > 1e-8
+  top_centers = triangle_info$centers[top_triangles, , drop = FALSE]
+  center_terrain = interpolate_spatial_water_surface_height(
+    heightmap,
+    top_centers[, 1],
+    top_centers[, 3]
+  )
+
+  expect_true(all(top_centers[, 2] >= center_terrain - 1e-6))
+  expect_false(any(
+    abs(top_centers[, 1]) < 0.1 &
+      abs(top_centers[, 3]) < 0.1
+  ))
+})
+
+test_that("spatial water sidewall bottoms follow terrain breakpoints", {
+  heightmap = matrix(rep(c(0, 4, 1, 6, 2), each = 5), nrow = 5)
+
+  vertices = make_spatial_water_sidewall_vertices(
+    heightmap = heightmap,
+    x_start = -1.5,
+    z_start = -1.5,
+    x_end = -1.5,
+    z_end = 1.5,
+    water_height = 20
+  )
+  bottom_vertices = vertices[vertices[, 2] < 20 - 1e-8, , drop = FALSE]
+  terrain = interpolate_spatial_water_surface_height(
+    heightmap,
+    bottom_vertices[, 1],
+    bottom_vertices[, 3]
+  )
+
+  expect_gt(nrow(vertices), 6)
+  expect_gt(length(unique(round(bottom_vertices[, 3], 8))), 2)
+  expect_equal(bottom_vertices[, 2], terrain, tolerance = 1e-8)
 })
 
 test_that("spatial water sidewalls are drawn when adjacent water is lower", {

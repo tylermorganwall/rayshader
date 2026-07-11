@@ -72,6 +72,105 @@ test_that("indent_surface uses per-feature amount columns", {
   expect_equal(sum(lowered == 5), 8)
 })
 
+test_that("indent_surface transitions amount from polygon edges", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("terra")
+
+  heightmap = matrix(10, nrow = 8, ncol = 8)
+  water = sf::st_sfc(sf::st_polygon(list(rbind(
+    c(1, 1),
+    c(7, 1),
+    c(7, 7),
+    c(1, 7),
+    c(1, 1)
+  ))))
+
+  lowered = indent_surface(
+    heightmap,
+    water,
+    amount = 4,
+    transition = 2,
+    extent = c(0, 8, 0, 8),
+    touches = FALSE
+  )
+
+  expect_equal(sum(lowered == 9), 20)
+  expect_equal(sum(lowered == 7), 12)
+  expect_equal(sum(lowered == 6), 4)
+  expect_equal(sum(lowered == 10), 28)
+})
+
+test_that("indent_surface handles transition equal to depth", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("terra")
+
+  heightmap = matrix(10, nrow = 12, ncol = 12)
+  water = sf::st_sfc(sf::st_polygon(list(rbind(
+    c(1, 1),
+    c(11, 1),
+    c(11, 11),
+    c(1, 11),
+    c(1, 1)
+  ))))
+
+  lowered = indent_surface(
+    heightmap,
+    water,
+    amount = 4,
+    transition = 4,
+    extent = c(0, 12, 0, 12),
+    touches = FALSE
+  )
+  depth = as.vector(heightmap - lowered)
+
+  expect_equal(sort(unique(depth)), c(0, 0.5, 1.5, 2.5, 3.5, 4))
+  expect_equal(sum(depth == 0.5), 36)
+  expect_equal(sum(depth == 1.5), 28)
+  expect_equal(sum(depth == 2.5), 20)
+  expect_equal(sum(depth == 3.5), 12)
+  expect_equal(sum(depth == 4), 4)
+})
+
+test_that("indent_surface transition uses max amount for overlaps", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("terra")
+
+  heightmap = matrix(10, nrow = 8, ncol = 8)
+  water = sf::st_sf(
+    depth = c(2, 4),
+    geometry = sf::st_sfc(
+      sf::st_polygon(list(rbind(
+        c(1, 1),
+        c(7, 1),
+        c(7, 7),
+        c(1, 7),
+        c(1, 1)
+      ))),
+      sf::st_polygon(list(rbind(
+        c(1, 1),
+        c(7, 1),
+        c(7, 7),
+        c(1, 7),
+        c(1, 1)
+      )))
+    )
+  )
+
+  lowered = indent_surface(
+    heightmap,
+    water,
+    amount = "depth",
+    transition = 2,
+    extent = c(0, 8, 0, 8),
+    touches = FALSE
+  )
+
+  expect_equal(sum(lowered == 9), 20)
+  expect_equal(sum(lowered == 7), 12)
+  expect_equal(sum(lowered == 6), 4)
+  expect_false(any(lowered == 9.5))
+})
+
 test_that("indent_surface returns spatial rasters for spatial raster inputs", {
   skip_if_not_installed("sf")
   skip_if_not_installed("terra")

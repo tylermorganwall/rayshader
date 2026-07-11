@@ -19,6 +19,9 @@
 #' `geometry`.
 #' @param direction Default `"down"`. Direction to apply `amount`. `"down"`
 #' subtracts from `heightmap`; `"up"` adds to `heightmap`.
+#' @param transition Default `0`. Distance in map units over which the
+#' indentation amount transitions from the polygon edge to the full amount.
+#' `0` applies the full amount abruptly to all selected cells.
 #' @param extent Default `NULL`. Spatial extent for matrix `heightmap` inputs.
 #' Ignored for spatial raster inputs.
 #' @param crs Default `NULL`. CRS for matrix `heightmap` inputs or CRS-less
@@ -49,6 +52,7 @@ indent_surface = function(
   geometry,
   amount = 1,
   direction = c("down", "up"),
+  transition = 0,
   extent = NULL,
   crs = NULL,
   touches = TRUE,
@@ -61,6 +65,7 @@ indent_surface = function(
   stopifnot(!missing(geometry))
 
   direction = match.arg(direction)
+  transition = validate_indent_surface_transition(transition)
   touches = validate_indent_surface_touches(touches)
   fun = validate_indent_surface_fun(fun)
   surface = prepare_indent_surface_heightmap(
@@ -91,6 +96,7 @@ indent_surface = function(
     template = surface$template,
     touches = touches,
     fun = fun,
+    transition = transition,
     caller = "indent_surface"
   )
   apply_indent_surface_amount(
@@ -98,6 +104,28 @@ indent_surface = function(
     amount_raster = amount_raster,
     direction = direction
   )
+}
+
+#' Validate indent surface transition
+#'
+#' @param transition Default `0`. Transition distance in map units.
+#'
+#' @return A single non-negative number.
+#' @keywords internal
+validate_indent_surface_transition = function(transition = 0) {
+  if (
+    !is.numeric(transition) ||
+      length(transition) != 1 ||
+      is.na(transition) ||
+      !is.finite(transition) ||
+      transition < 0
+  ) {
+    stop(
+      "`transition` must be a single non-negative finite number.",
+      call. = FALSE
+    )
+  }
+  transition
 }
 
 #' Validate indent surface touches
@@ -559,6 +587,7 @@ align_indent_surface_geometry = function(
 #' @param template A `terra::SpatRaster`.
 #' @param touches Default `TRUE`. Whether touched cells should be included.
 #' @param fun Default `"max"`. Rasterization reducer.
+#' @param transition Default `0`. Transition distance in map units.
 #' @param caller Default `NULL`. Calling function.
 #'
 #' @return A `terra::SpatRaster`.
@@ -568,8 +597,19 @@ rasterize_indent_surface_amount = function(
   template,
   touches = TRUE,
   fun = "max",
+  transition = 0,
   caller = NULL
 ) {
+  if (transition > 0) {
+    return(rasterize_indent_surface_transition_amount(
+      geometry = geometry,
+      template = template,
+      touches = touches,
+      fun = fun,
+      transition = transition,
+      caller = caller
+    ))
+  }
   tryCatch(
     terra::rasterize(
       geometry,
@@ -590,6 +630,186 @@ rasterize_indent_surface_amount = function(
       )
     }
   )
+}
+
+#' Rasterize transitioned surface indentation amount
+#'
+#' @param geometry A `terra::SpatVector`.
+#' @param template A `terra::SpatRaster`.
+#' @param touches Default `TRUE`. Whether touched cells should be included.
+#' @param fun Default `"max"`. Rasterization reducer.
+#' @param transition Transition distance in map units.
+#' @param caller Default `NULL`. Calling function.
+#'
+#' @return A `terra::SpatRaster`.
+#' @keywords internal
+rasterize_indent_surface_transition_amount = function(
+  geometry,
+  template,
+  touches = TRUE,
+  fun = "max",
+  transition,
+  caller = NULL
+) {
+  amount_values = as.data.frame(geometry)[["rayshader_surface_amount"]]
+  point_values = vector("list", nrow(geometry))
+  for (feature_index in seq_len(nrow(geometry))) {
+    amount_value = amount_values[feature_index]
+    if (!is.finite(amount_value)) {
+      next
+    }
+    feature_mask = rasterize_indent_surface_feature_mask(
+      geometry = geometry[feature_index, ],
+      template = template,
+      touches = touches,
+      caller = caller
+    )
+    covered_cells = which(is.finite(terra::values(feature_mask)))
+    if (!length(covered_cells)) {
+      next
+    }
+    transition_factor = indent_surface_transition_factor(
+      feature_mask = feature_mask,
+      transition = transition
+    )
+    feature_points = terra::xyFromCell(template, covered_cells)
+    point_values[[feature_index]] = data.frame(
+      x = feature_points[, 1],
+      y = feature_points[, 2],
+      rayshader_surface_amount = amount_value * transition_factor[covered_cells]
+    )
+  }
+  point_values = point_values[lengths(point_values) > 0]
+  if (!length(point_values)) {
+    empty_raster = terra::rast(template)
+    terra::values(empty_raster) = NA_real_
+    return(empty_raster)
+  }
+  point_values = do.call(rbind, point_values)
+  point_geometry = terra::vect(
+    point_values,
+    geom = c("x", "y"),
+    crs = terra::crs(template)
+  )
+  tryCatch(
+    terra::rasterize(
+      point_geometry,
+      template,
+      field = "rayshader_surface_amount",
+      fun = fun,
+      background = NA_real_
+    ),
+    error = function(e) {
+      stop(
+        paste0(
+          format_render_caller_prefix(caller),
+          "Could not rasterize transitioned `geometry`: ",
+          conditionMessage(e)
+        ),
+        call. = FALSE
+      )
+    }
+  )
+}
+
+#' Rasterize one indentation feature mask
+#'
+#' @param geometry A single-feature `terra::SpatVector`.
+#' @param template A `terra::SpatRaster`.
+#' @param touches Default `TRUE`. Whether touched cells should be included.
+#' @param caller Default `NULL`. Calling function.
+#'
+#' @return A `terra::SpatRaster`.
+#' @keywords internal
+rasterize_indent_surface_feature_mask = function(
+  geometry,
+  template,
+  touches = TRUE,
+  caller = NULL
+) {
+  tryCatch(
+    terra::rasterize(
+      geometry,
+      template,
+      field = 1,
+      background = NA_real_,
+      touches = touches
+    ),
+    error = function(e) {
+      stop(
+        paste0(
+          format_render_caller_prefix(caller),
+          "Could not rasterize `geometry`: ",
+          conditionMessage(e)
+        ),
+        call. = FALSE
+      )
+    }
+  )
+}
+
+#' Calculate indentation transition factor
+#'
+#' @param feature_mask Rasterized single-feature mask.
+#' @param transition Transition distance in map units.
+#'
+#' @return Numeric vector of scale factors matching raster cell order.
+#' @keywords internal
+indent_surface_transition_factor = function(feature_mask, transition) {
+  inside = is.finite(terra::values(feature_mask))
+  transition_factor = rep(NA_real_, length(inside))
+  if (!any(inside)) {
+    return(transition_factor)
+  }
+  inside_matrix = matrix(
+    inside,
+    nrow = terra::nrow(feature_mask),
+    ncol = terra::ncol(feature_mask),
+    byrow = TRUE
+  )
+  edge_matrix = indent_surface_edge_cells(inside_matrix)
+  edge_raster = terra::rast(feature_mask)
+  if (!nzchar(terra::crs(edge_raster))) {
+    terra::crs(edge_raster) = "EPSG:3857"
+  }
+  edge_values = rep(NA_real_, length(inside))
+  edge_values[as.vector(t(edge_matrix))] = 1
+  terra::values(edge_raster) = edge_values
+  cell_distance = terra::values(terra::distance(edge_raster))
+  edge_cell_inset = min(terra::res(feature_mask)) / 2
+  transition_factor[inside] = pmin(
+    (cell_distance[inside] + edge_cell_inset) / transition,
+    1
+  )
+  transition_factor
+}
+
+#' Locate rasterized indentation edge cells
+#'
+#' @param inside_matrix Logical matrix indicating feature-covered cells.
+#'
+#' @return Logical matrix indicating edge cells.
+#' @keywords internal
+indent_surface_edge_cells = function(inside_matrix) {
+  nr = nrow(inside_matrix)
+  nc = ncol(inside_matrix)
+  padded = matrix(FALSE, nrow = nr + 2L, ncol = nc + 2L)
+  padded[seq_len(nr) + 1L, seq_len(nc) + 1L] = inside_matrix
+  interior = inside_matrix
+  for (row_offset in -1:1) {
+    for (col_offset in -1:1) {
+      if (row_offset == 0 && col_offset == 0) {
+        next
+      }
+      neighbor = padded[
+        seq_len(nr) + 1L + row_offset,
+        seq_len(nc) + 1L + col_offset,
+        drop = FALSE
+      ]
+      interior = interior & neighbor
+    }
+  }
+  inside_matrix & !interior
 }
 
 #' Apply indentation amount to surface

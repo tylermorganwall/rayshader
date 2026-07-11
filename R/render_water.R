@@ -17,6 +17,7 @@
 #'@param linewidth Default `2`. Width of the edge lines in the scene.
 #'@param water_render_method Default `"contour"`. Water meshing method. `"contour"` clips the water mesh to the flooded region; `"legacy"` uses the previous box/grid renderer.
 #'@param water_edge_extension Default `0.5`. For spatial `waterdepth` inputs, amount in grid cells to expand finite water cells at boundary edges, up to a maximum of half a cell.
+#'@param water_edge_clamp Default `FALSE`. For spatial `waterdepth` inputs, if `TRUE`, resolves each connected water footprint to a single level, then lowers it by the largest finite exterior sidewall height after edge expansion. Heightmap-boundary and NA-slice edges are ignored when computing the lowering amount.
 #'@param clear_previous Default `TRUE`. If `TRUE`, will remove existing water layer and replace it with new layer.
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
@@ -69,6 +70,7 @@ render_water = function(
   linewidth = 2,
   water_render_method = c("contour", "legacy"),
   water_edge_extension = 0.5,
+  water_edge_clamp = FALSE,
   clear_previous = TRUE
 ) {
   water_render_method = match.arg(water_render_method)
@@ -129,6 +131,7 @@ render_water = function(
       zscale = zscale,
       water_render_method = water_render_method,
       water_edge_extension = water_edge_extension,
+      water_edge_clamp = water_edge_clamp,
       heightmap_extent = heightmap_extent,
       heightmap_crs = heightmap_crs
     )

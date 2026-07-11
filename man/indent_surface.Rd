@@ -9,6 +9,7 @@ indent_surface(
   geometry,
   amount = 1,
   direction = c("down", "up"),
+  transition = 0,
   extent = NULL,
   crs = NULL,
   touches = TRUE,
@@ -29,6 +30,10 @@ value per feature, or a single character string naming a numeric column in
 
 \item{direction}{Default \code{"down"}. Direction to apply \code{amount}. \code{"down"}
 subtracts from \code{heightmap}; \code{"up"} adds to \code{heightmap}.}
+
+\item{transition}{Default \code{0}. Distance in map units over which the
+indentation amount transitions from the polygon edge to the full amount.
+\code{0} applies the full amount abruptly to all selected cells.}
 
 \item{extent}{Default \code{NULL}. Spatial extent for matrix \code{heightmap} inputs.
 Ignored for spatial raster inputs.}
