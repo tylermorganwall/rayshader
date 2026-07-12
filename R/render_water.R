@@ -18,6 +18,7 @@
 #'@param water_render_method Default `"raster"`. Water meshing method. `"raster"` renders water at the supplied elevation and emits sidewalls down to the terrain wherever exposed water floats above the surface; `"polygon"` fits each spatial water component by matching flooded terrain-triangle area to raster footprint area, then clips the fixed-grid terrain triangles; `"legacy"` uses the previous box/grid renderer.
 #'@param water_edge_extension Default `0.5`. For spatial `waterdepth` inputs, amount in grid cells to expand finite water cells at boundary edges, up to a maximum of half a cell.
 #'@param water_edge_clamp Default `FALSE`. For spatial `waterdepth` inputs, if `TRUE`, resolves each connected water footprint to a single level, then lowers it by the largest finite exterior sidewall height after edge expansion. Heightmap-boundary and NA-slice edges are ignored when computing the lowering amount.
+#'@param water_polygon_failure Default `"raster"`. Behavior for spatial polygon water components that cannot be fit to an admissible terrain-triangle flood. `"raster"` renders the failed component with the raster method; `"remove"` omits it.
 #'@param clear_previous Default `TRUE`. If `TRUE`, will remove existing water layer and replace it with new layer.
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
@@ -71,9 +72,11 @@ render_water = function(
   water_render_method = c("raster", "polygon", "legacy"),
   water_edge_extension = 0.5,
   water_edge_clamp = FALSE,
+  water_polygon_failure = c("raster", "remove"),
   clear_previous = TRUE
 ) {
   water_render_method = match.arg(water_render_method)
+  water_polygon_failure = match.arg(water_polygon_failure)
   heightmap = resolve_render_water_heightmap(
     heightmap,
     heightmap_missing = missing(heightmap),
@@ -137,6 +140,7 @@ render_water = function(
       water_render_method = water_render_method_current,
       water_edge_extension = water_edge_extension,
       water_edge_clamp = water_edge_clamp,
+      water_polygon_failure = water_polygon_failure,
       heightmap_extent = heightmap_extent,
       heightmap_crs = heightmap_crs
     )

@@ -1688,6 +1688,35 @@ test_that("spatial polygon water rejects open terrain floods", {
   expect_null(fit)
 })
 
+test_that("spatial polygon water falls back to raster for failed fits", {
+  heightmap = matrix(rep(seq(0, 10, length.out = 50), each = 50), 50, 50)
+  water_surface = matrix(NA_real_, nrow = 50, ncol = 50)
+  water_surface[20:30, 20:30] = 100
+
+  raster_vertices = make_spatial_water_cell_surface(
+    water_surface = water_surface,
+    heightmap = heightmap,
+    water_edge_extension = 0
+  )
+  default_mesh = make_spatial_water_polygon_surface(
+    water_surface = water_surface,
+    heightmap = heightmap,
+    water_edge_extension = 0
+  )
+  removed_mesh = make_spatial_water_polygon_surface(
+    water_surface = water_surface,
+    heightmap = heightmap,
+    water_edge_extension = 0,
+    water_polygon_failure = "remove"
+  )
+
+  expect_gt(nrow(raster_vertices), 0)
+  expect_equal(default_mesh$vertices, raster_vertices, tolerance = 1e-8)
+  expect_equal(nrow(default_mesh$lines), 0)
+  expect_equal(nrow(removed_mesh$vertices), 0)
+  expect_equal(nrow(removed_mesh$lines), 0)
+})
+
 test_that("spatial polygon water samples levels across DEM range", {
   skip_if_not_installed("sf")
   skip_if_not_installed("isoband")

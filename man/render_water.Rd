@@ -17,6 +17,7 @@ render_water(
   water_render_method = c("raster", "polygon", "legacy"),
   water_edge_extension = 0.5,
   water_edge_clamp = FALSE,
+  water_polygon_failure = c("raster", "remove"),
   clear_previous = TRUE
 )
 }
@@ -46,6 +47,8 @@ If \code{zscale} is omitted and \code{heightmap} is a spatial raster, rayshader 
 \item{water_edge_extension}{Default \code{0.5}. For spatial \code{waterdepth} inputs, amount in grid cells to expand finite water cells at boundary edges, up to a maximum of half a cell.}
 
 \item{water_edge_clamp}{Default \code{FALSE}. For spatial \code{waterdepth} inputs, if \code{TRUE}, resolves each connected water footprint to a single level, then lowers it by the largest finite exterior sidewall height after edge expansion. Heightmap-boundary and NA-slice edges are ignored when computing the lowering amount.}
+
+\item{water_polygon_failure}{Default \code{"raster"}. Behavior for spatial polygon water components that cannot be fit to an admissible terrain-triangle flood. \code{"raster"} renders the failed component with the raster method; \code{"remove"} omits it.}
 
 \item{clear_previous}{Default \code{TRUE}. If \code{TRUE}, will remove existing water layer and replace it with new layer.}
 }

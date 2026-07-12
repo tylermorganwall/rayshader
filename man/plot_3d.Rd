@@ -30,6 +30,7 @@ plot_3d(
   lineantialias = FALSE,
   water_render_method = c("raster", "polygon", "legacy"),
   water_edge_extension = 0.5,
+  water_polygon_failure = c("raster", "remove"),
   soil = FALSE,
   soil_freq = 0.1,
   soil_levels = 16,
@@ -118,6 +119,8 @@ is omitted and \code{waterdepth} is explicitly supplied, a water layer is render
 \item{water_render_method}{Default \code{"raster"}. Water meshing method. \code{"raster"} renders water at the supplied elevation and emits sidewalls down to the terrain wherever exposed water floats above the surface; \code{"polygon"} fits each spatial water component by matching flooded terrain-triangle area to raster footprint area, then clips the fixed-grid terrain triangles; \code{"legacy"} uses the previous box/grid renderer.}
 
 \item{water_edge_extension}{Default \code{0.5}. For spatial \code{waterdepth} inputs, amount in grid cells to expand finite water cells at boundary edges, up to a maximum of half a cell.}
+
+\item{water_polygon_failure}{Default \code{"raster"}. Behavior for spatial polygon water components that cannot be fit to an admissible terrain-triangle flood. \code{"raster"} renders the failed component with the raster method; \code{"remove"} omits it.}
 
 \item{soil}{Default \code{FALSE}. Whether to draw the solid base with a textured soil layer.}
 

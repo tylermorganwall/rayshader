@@ -13,6 +13,7 @@ make_water(
   water_render_method = c("raster", "polygon", "legacy"),
   water_edge_extension = 0.5,
   water_edge_clamp = FALSE,
+  water_polygon_failure = c("raster", "remove"),
   heightmap_extent = NULL,
   heightmap_crs = NULL
 )
@@ -34,6 +35,8 @@ of 1 meter and the grid values are separated by 10 meters, \code{zscale} would b
 \item{water_edge_extension}{Default \code{0.5}. For spatial \code{waterheight} inputs, amount in grid cells to expand finite water cells at boundary edges, up to a maximum of half a cell.}
 
 \item{water_edge_clamp}{Default \code{FALSE}. For spatial \code{waterheight} inputs, if \code{TRUE}, resolves each connected water footprint to a single level, then lowers it by the largest finite exterior sidewall height after edge expansion. Heightmap-boundary and NA-slice edges are ignored when computing the lowering amount.}
+
+\item{water_polygon_failure}{Default \code{"raster"}. Behavior for spatial polygon water components that cannot be fit to an admissible terrain-triangle flood. \code{"raster"} renders the failed component with the raster method; \code{"remove"} omits it.}
 
 \item{heightmap_extent}{Default \code{NULL}. Active scene extent for spatial \code{waterheight} inputs.}
 

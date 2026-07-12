@@ -374,6 +374,7 @@ get_plot_3d_surface_texture = function(id, rgl_texture_file) {
 #'@param lineantialias Default `FALSE`. Whether to anti-alias the lines in the scene.
 #'@param water_render_method Default `"raster"`. Water meshing method. `"raster"` renders water at the supplied elevation and emits sidewalls down to the terrain wherever exposed water floats above the surface; `"polygon"` fits each spatial water component by matching flooded terrain-triangle area to raster footprint area, then clips the fixed-grid terrain triangles; `"legacy"` uses the previous box/grid renderer.
 #'@param water_edge_extension Default `0.5`. For spatial `waterdepth` inputs, amount in grid cells to expand finite water cells at boundary edges, up to a maximum of half a cell.
+#'@param water_polygon_failure Default `"raster"`. Behavior for spatial polygon water components that cannot be fit to an admissible terrain-triangle flood. `"raster"` renders the failed component with the raster method; `"remove"` omits it.
 #'@param soil Default `FALSE`. Whether to draw the solid base with a textured soil layer.
 #'@param soil_freq Default `0.1`. Frequency of soil clumps. Higher frequency values give smaller soil clumps.
 #'@param soil_levels Default `16`. Fractal level of the soil.
@@ -501,6 +502,7 @@ plot_3d = function(
   lineantialias = FALSE,
   water_render_method = c("raster", "polygon", "legacy"),
   water_edge_extension = 0.5,
+  water_polygon_failure = c("raster", "remove"),
   soil = FALSE,
   soil_freq = 0.1,
   soil_levels = 16,
@@ -527,6 +529,7 @@ plot_3d = function(
   water_was_missing = missing(water)
   waterdepth_was_missing = missing(waterdepth)
   water_render_method = match.arg(water_render_method)
+  water_polygon_failure = match.arg(water_polygon_failure)
   if (water_was_missing && !waterdepth_was_missing) {
     water = TRUE
   }
@@ -963,6 +966,7 @@ plot_3d = function(
       zscale = zscale,
       water_render_method = water_render_method_current,
       water_edge_extension = water_edge_extension,
+      water_polygon_failure = water_polygon_failure,
       heightmap_extent = extent_cache_value,
       heightmap_crs = crs_cache_value
     )

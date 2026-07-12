@@ -11,6 +11,7 @@
 #'@param water_render_method Default `"raster"`. Water meshing method. `"raster"` renders water at the supplied elevation and emits sidewalls down to the terrain wherever exposed water floats above the surface; `"polygon"` fits each spatial water component by matching flooded terrain-triangle area to raster footprint area, then clips the fixed-grid terrain triangles; `"legacy"` uses the previous box/grid renderer.
 #'@param water_edge_extension Default `0.5`. For spatial `waterheight` inputs, amount in grid cells to expand finite water cells at boundary edges, up to a maximum of half a cell.
 #'@param water_edge_clamp Default `FALSE`. For spatial `waterheight` inputs, if `TRUE`, resolves each connected water footprint to a single level, then lowers it by the largest finite exterior sidewall height after edge expansion. Heightmap-boundary and NA-slice edges are ignored when computing the lowering amount.
+#'@param water_polygon_failure Default `"raster"`. Behavior for spatial polygon water components that cannot be fit to an admissible terrain-triangle flood. `"raster"` renders the failed component with the raster method; `"remove"` omits it.
 #'@param heightmap_extent Default `NULL`. Active scene extent for spatial `waterheight` inputs.
 #'@param heightmap_crs Default `NULL`. Active scene CRS for spatial `waterheight` inputs.
 #'@keywords internal
@@ -23,10 +24,12 @@ make_water = function(
   water_render_method = c("raster", "polygon", "legacy"),
   water_edge_extension = 0.5,
   water_edge_clamp = FALSE,
+  water_polygon_failure = c("raster", "remove"),
   heightmap_extent = NULL,
   heightmap_crs = NULL
 ) {
   water_render_method = match.arg(water_render_method)
+  water_polygon_failure = match.arg(water_polygon_failure)
   if (identical(water_render_method, "legacy")) {
     return(make_water_legacy(
       heightmap = heightmap,
@@ -45,6 +48,7 @@ make_water = function(
     water_render_method = water_render_method,
     water_edge_extension = water_edge_extension,
     water_edge_clamp = water_edge_clamp,
+    water_polygon_failure = water_polygon_failure,
     heightmap_extent = heightmap_extent,
     heightmap_crs = heightmap_crs
   )
@@ -60,10 +64,12 @@ make_water_raster = function(
   water_render_method = c("raster", "polygon"),
   water_edge_extension = 0.5,
   water_edge_clamp = FALSE,
+  water_polygon_failure = c("raster", "remove"),
   heightmap_extent = NULL,
   heightmap_crs = NULL
 ) {
   water_render_method = match.arg(water_render_method)
+  water_polygon_failure = match.arg(water_polygon_failure)
   heightmap = heightmap / zscale
   nr = nrow(heightmap)
   nc = ncol(heightmap)
@@ -87,7 +93,8 @@ make_water_raster = function(
       wateralpha = wateralpha,
       water_render_method = water_render_method,
       water_edge_extension = water_edge_extension,
-      water_edge_clamp = water_edge_clamp
+      water_edge_clamp = water_edge_clamp,
+      water_polygon_failure = water_polygon_failure
     ))
   }
   if (!any(valid_water)) {
@@ -139,11 +146,13 @@ make_spatial_water_surface = function(
   wateralpha = 0.5,
   water_render_method = c("raster", "polygon"),
   water_edge_extension = 0.5,
-  water_edge_clamp = FALSE
+  water_edge_clamp = FALSE,
+  water_polygon_failure = c("raster", "remove")
 ) {
   water_render_method = match.arg(water_render_method)
   water_edge_extension = validate_water_edge_extension(water_edge_extension)
   water_edge_clamp = validate_water_edge_clamp(water_edge_clamp)
+  water_polygon_failure = match.arg(water_polygon_failure)
   water_surface = waterheight
   water_surface[!valid_water] = NA_real_
   if (!any(is.finite(water_surface))) {
@@ -165,7 +174,9 @@ make_spatial_water_surface = function(
   if (identical(water_render_method, "polygon")) {
     water_mesh = make_spatial_water_polygon_surface(
       water_surface = water_surface,
-      heightmap = heightmap
+      heightmap = heightmap,
+      water_edge_extension = water_edge_extension,
+      water_polygon_failure = water_polygon_failure
     )
     triangle_vertices = water_mesh$vertices
     line_vertices = water_mesh$lines
@@ -450,7 +461,9 @@ make_spatial_water_cell_surface = function(
 #'@keywords internal
 make_spatial_water_polygon_surface = function(
   water_surface,
-  heightmap = NULL
+  heightmap = NULL,
+  water_edge_extension = 0.5,
+  water_polygon_failure = c("raster", "remove")
 ) {
   if (is.null(heightmap) || !is.matrix(heightmap)) {
     stop(
@@ -458,6 +471,8 @@ make_spatial_water_polygon_surface = function(
       call. = FALSE
     )
   }
+  water_edge_extension = validate_water_edge_extension(water_edge_extension)
+  water_polygon_failure = match.arg(water_polygon_failure)
   component_labels = label_spatial_water_components(is.finite(water_surface))
   component_count = max(component_labels)
   if (!component_count) {
@@ -465,6 +480,14 @@ make_spatial_water_polygon_surface = function(
   }
   terrain_mesh = make_spatial_water_fixed_grid_terrain_mesh(heightmap)
   if (!nrow(terrain_mesh$faces)) {
+    if (identical(water_polygon_failure, "raster")) {
+      return(make_spatial_water_polygon_raster_fallback(
+        component_mask = is.finite(water_surface),
+        water_surface = water_surface,
+        heightmap = heightmap,
+        water_edge_extension = water_edge_extension
+      ))
+    }
     return(empty_spatial_water_polygon_mesh())
   }
 
@@ -479,7 +502,10 @@ make_spatial_water_polygon_surface = function(
   component_meshes = make_spatial_water_polygon_components(
     component_tasks = component_tasks,
     heightmap = heightmap,
-    terrain_mesh = terrain_mesh
+    terrain_mesh = terrain_mesh,
+    water_surface = water_surface,
+    water_edge_extension = water_edge_extension,
+    water_polygon_failure = water_polygon_failure
   )
   component_meshes = Filter(
     function(mesh) {
@@ -521,13 +547,21 @@ require_spatial_water_polygon_packages = function() {
 make_spatial_water_polygon_components = function(
   component_tasks,
   heightmap,
-  terrain_mesh = make_spatial_water_fixed_grid_terrain_mesh(heightmap)
+  terrain_mesh = make_spatial_water_fixed_grid_terrain_mesh(heightmap),
+  water_surface = NULL,
+  water_edge_extension = 0.5,
+  water_polygon_failure = c("raster", "remove")
 ) {
+  water_edge_extension = validate_water_edge_extension(water_edge_extension)
+  water_polygon_failure = match.arg(water_polygon_failure)
   lapply(
     component_tasks,
     make_spatial_water_polygon_component_from_task,
     heightmap = heightmap,
-    terrain_mesh = terrain_mesh
+    terrain_mesh = terrain_mesh,
+    water_surface = water_surface,
+    water_edge_extension = water_edge_extension,
+    water_polygon_failure = water_polygon_failure
   )
 }
 
@@ -535,13 +569,19 @@ make_spatial_water_polygon_components = function(
 make_spatial_water_polygon_component_from_task = function(
   task,
   heightmap,
-  terrain_mesh = make_spatial_water_fixed_grid_terrain_mesh(heightmap)
+  terrain_mesh = make_spatial_water_fixed_grid_terrain_mesh(heightmap),
+  water_surface = NULL,
+  water_edge_extension = 0.5,
+  water_polygon_failure = c("raster", "remove")
 ) {
   make_spatial_water_polygon_component(
     component_mask = task$component_mask,
     heightmap = heightmap,
     terrain_mesh = terrain_mesh,
-    fallback_level = task$fallback_level
+    fallback_level = task$fallback_level,
+    water_surface = water_surface,
+    water_edge_extension = water_edge_extension,
+    water_polygon_failure = water_polygon_failure
   )
 }
 
@@ -549,6 +589,32 @@ make_spatial_water_polygon_component_from_task = function(
 empty_spatial_water_polygon_mesh = function() {
   list(
     vertices = matrix(nrow = 0, ncol = 3),
+    lines = matrix(nrow = 0, ncol = 3)
+  )
+}
+
+#'@keywords internal
+make_spatial_water_polygon_raster_fallback = function(
+  component_mask,
+  water_surface,
+  heightmap,
+  water_edge_extension = 0.5
+) {
+  if (is.null(water_surface) || !any(component_mask)) {
+    return(empty_spatial_water_polygon_mesh())
+  }
+  component_surface = matrix(
+    NA_real_,
+    nrow = nrow(component_mask),
+    ncol = ncol(component_mask)
+  )
+  component_surface[component_mask] = water_surface[component_mask]
+  list(
+    vertices = make_spatial_water_cell_surface(
+      water_surface = component_surface,
+      heightmap = heightmap,
+      water_edge_extension = water_edge_extension
+    ),
     lines = matrix(nrow = 0, ncol = 3)
   )
 }
@@ -2497,17 +2563,33 @@ make_spatial_water_polygon_component = function(
   component_mask,
   heightmap,
   terrain_mesh = make_spatial_water_fixed_grid_terrain_mesh(heightmap),
-  fallback_level
+  fallback_level,
+  water_surface = NULL,
+  water_edge_extension = 0.5,
+  water_polygon_failure = c("raster", "remove")
 ) {
+  water_edge_extension = validate_water_edge_extension(water_edge_extension)
+  water_polygon_failure = match.arg(water_polygon_failure)
+  failed_component = function() {
+    if (identical(water_polygon_failure, "remove")) {
+      return(empty_spatial_water_polygon_mesh())
+    }
+    make_spatial_water_polygon_raster_fallback(
+      component_mask = component_mask,
+      water_surface = water_surface,
+      heightmap = heightmap,
+      water_edge_extension = water_edge_extension
+    )
+  }
   if (!is.finite(fallback_level)) {
-    return(empty_spatial_water_polygon_mesh())
+    return(failed_component())
   }
   component_metrics = spatial_water_component_mask_metrics(component_mask)
   if (
     !is.finite(component_metrics$area) ||
       component_metrics$area <= sqrt(.Machine$double.eps)
   ) {
-    return(empty_spatial_water_polygon_mesh())
+    return(failed_component())
   }
   fit = fit_spatial_water_component_polygon(
     component_mask = component_mask,
@@ -2517,13 +2599,17 @@ make_spatial_water_polygon_component = function(
     fallback_level = fallback_level
   )
   if (is.null(fit) || !is.finite(fit$area) || fit$area <= 0) {
-    return(empty_spatial_water_polygon_mesh())
+    return(failed_component())
   }
-  make_spatial_water_triangle_clipped_component(
+  polygon_mesh = make_spatial_water_triangle_clipped_component(
     component_mask = component_mask,
     terrain_mesh = terrain_mesh,
     water_level = fit$level
   )
+  if (!nrow(polygon_mesh$vertices)) {
+    return(failed_component())
+  }
+  polygon_mesh
 }
 
 #'@keywords internal
