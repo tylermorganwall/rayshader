@@ -259,6 +259,19 @@ prune_plot_3d_surface_textures = function(device = rgl::cur3d()) {
     return(invisible(NULL))
   }
   texture_keys = ls(envir = ray_surface_texture_envir, all.names = TRUE)
+  if (!length(texture_keys)) {
+    return(invisible(NULL))
+  }
+  active_devices = tryCatch(
+    as.character(unname(rgl::rgl.dev.list())),
+    error = function(e) character()
+  )
+  key_devices = sub(":.*$", "", texture_keys)
+  closed_device_keys = texture_keys[!(key_devices %in% active_devices)]
+  if (length(closed_device_keys)) {
+    rm(list = closed_device_keys, envir = ray_surface_texture_envir)
+    texture_keys = setdiff(texture_keys, closed_device_keys)
+  }
   device_prefix = paste0(device, ":")
   texture_keys = texture_keys[startsWith(texture_keys, device_prefix)]
   if (!length(texture_keys)) {

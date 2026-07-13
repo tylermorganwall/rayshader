@@ -422,6 +422,13 @@ radiance_shade = function(
     } else {
       hillshade_heightmap = get_hillshade_heightmap(default = NULL)
       if (is.null(hillshade_heightmap) || !is.matrix(hillshade_heightmap)) {
+        if (rgl::cur3d() == 0) {
+          stop(
+            "No rgl window currently open and no `heightmap` supplied. ",
+            "Build a 2D hillshade with rayshader, pass `heightmap`, ",
+            "or open a 3D scene and set `capture_scene = TRUE`."
+          )
+        }
         stop(
           "No `heightmap` supplied and no cached hillshade metadata found. ",
           "Build a 2D hillshade with rayshader, pass `heightmap`, or set `capture_scene = TRUE` to render the current rgl scene."

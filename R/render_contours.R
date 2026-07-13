@@ -94,6 +94,7 @@ render_contours = function(
       "No heightmap found. Call `plot_3d()` or `plot_gg()` first, or pass `heightmap` explicitly."
     )
   }
+  storage.mode(heightmap) = "double"
   if (!(length(find.package("sf", quiet = TRUE)) > 0)) {
     stop("`sf` package required for generate_contour_overlay()")
   }
