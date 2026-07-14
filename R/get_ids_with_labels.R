@@ -28,6 +28,7 @@ get_ids_with_labels = function(typeval = NULL) {
     "path3d",
     "contour3d",
     "water_path",
+    "road_path",
     "points3d",
     "polygon3d",
     "floating_overlay",
@@ -108,6 +109,7 @@ get_ids_with_labels = function(typeval = NULL) {
             "path3d",
             "contour3d",
             "water_path",
+            "road_path",
             "zaxis_ticks",
             "zaxis_axis"
           )

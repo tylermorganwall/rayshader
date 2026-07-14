@@ -1273,6 +1273,7 @@ render_highquality = function(
       "path3d",
       "contour3d",
       "water_path",
+      "road_path",
       "zaxis_axis",
       "zaxis_ticks"
     )
@@ -1284,6 +1285,7 @@ render_highquality = function(
   screen_counter = 1
   water_path_surface = resolve_render_highquality_water_path_surface()
   water_path_tasks = list()
+  road_path_tasks = list()
   for (i in seq_len(length(pathids))) {
     temp_verts = rgl.attrib(pathids[i], "vertices")
     temp_verts_split = split_render_highquality_path_vertices(temp_verts)
@@ -1291,13 +1293,26 @@ render_highquality = function(
     temp_lwd_raw = material3d("lwd", id = pathids[i])
     temp_lwd = temp_lwd_raw * line_radius
     is_water_path = identical(pathinfo$tag[i], "water_path")
+    is_road_path = identical(pathinfo$tag[i], "road_path")
+    road_path_info = if (is_road_path) {
+      get_render_road_path_info(pathids[i])
+    } else {
+      NULL
+    }
+    road_texture_file = road_path_info$texture_file
+    road_texture_length = road_path_info$texture_length
+    if (is.null(road_texture_length)) {
+      road_texture_length = 13
+    }
+    road_texture_repeats = road_path_info$texture_repeats
+    road_texture_world_scale = road_path_info$texture_world_scale
     use_screen_line = should_render_highquality_screen_line(
       line_render = line_render,
       tag = pathinfo$tag[i]
     )
     for (j in seq_along(temp_verts_split)) {
       temp_verts_single = as.matrix(temp_verts_split[[j]])
-      if (is_water_path) {
+      if (is_water_path || is_road_path) {
         temp_verts_single = collapse_render_highquality_path_vertices(
           temp_verts_single
         )
@@ -1374,6 +1389,7 @@ render_highquality = function(
         tag = pathinfo$tag[i],
         color = temp_color_single[1:3]
       )
+      has_material_override = !is.null(temp_material)
       if (is.null(temp_material)) {
         if (is_water_path) {
           temp_material = make_render_highquality_water_path_material(
@@ -1383,6 +1399,12 @@ render_highquality = function(
             water_ior = water_ior,
             water_attenuation = water_attenuation,
             water_surface_color = water_surface_color
+          )
+        } else if (is_road_path && !is.null(road_texture_file)) {
+          temp_material = rayrender::diffuse(
+            color = "white",
+            image_texture = road_texture_file,
+            image_repeat = 1
           )
         } else {
           temp_material = rayrender::diffuse(color = temp_color_single[1:3])
@@ -1397,6 +1419,24 @@ render_highquality = function(
           heightmap = water_path_surface$heightmap,
           zscale = water_path_surface$zscale,
           material = temp_material
+        )
+        next
+      } else if (is_road_path) {
+        road_path_tasks[[length(road_path_tasks) + 1L]] = list(
+          points = temp_verts_single,
+          bbox_center = bbox_center,
+          width = temp_lwd_raw,
+          heightmap = water_path_surface$heightmap,
+          zscale = water_path_surface$zscale,
+          material = temp_material,
+          texture_file = if (!has_material_override) {
+            road_texture_file
+          } else {
+            NULL
+          },
+          texture_length = road_texture_length,
+          texture_repeats = road_texture_repeats,
+          texture_world_scale = road_texture_world_scale
         )
         next
       } else if (use_extruded_paths) {
@@ -1425,6 +1465,10 @@ render_highquality = function(
   }
   if (length(water_path_meshes) > 0) {
     pathline = c(pathline, water_path_meshes)
+  }
+  road_path_meshes = make_render_highquality_road_path_meshes(road_path_tasks)
+  if (length(road_path_meshes) > 0) {
+    pathline = c(pathline, road_path_meshes)
   }
   pointinfo = get_ids_with_labels(typeval = "points3d")
   pointids = pointinfo$id
@@ -2566,11 +2610,19 @@ has_render_highquality_dielectric_path_override = function(
 }
 
 is_render_highquality_path_tag = function(tag) {
-  tag %in% c("path3d", "contour3d", "water_path", "zaxis_axis", "zaxis_ticks")
+  tag %in%
+    c(
+      "path3d",
+      "contour3d",
+      "water_path",
+      "road_path",
+      "zaxis_axis",
+      "zaxis_ticks"
+    )
 }
 
 should_render_highquality_screen_line = function(line_render, tag) {
-  if (identical(tag, "water_path")) {
+  if (tag %in% c("water_path", "road_path")) {
     return(FALSE)
   }
   if (identical(line_render, "screen")) {
