@@ -246,7 +246,7 @@ test_that("indent_surface returns spatial rasters for spatial raster inputs", {
   expect_equal(sum(as.numeric(terra::values(lowered)) == 10), 12)
 })
 
-test_that("indent_surface preserves RasterLayer output class", {
+test_that("indent_surface warns and converts RasterLayer inputs to terra", {
   skip_if_not_installed("sf")
   skip_if_not_installed("terra")
   skip_if_not_installed("raster")
@@ -272,14 +272,18 @@ test_that("indent_surface preserves RasterLayer output class", {
     crs = sf::st_crs(3857)
   )
 
-  lowered = indent_surface(
-    heightmap,
-    water,
-    amount = 2,
-    touches = FALSE
+  lowered = NULL
+  expect_warning(
+    lowered <- indent_surface(
+      heightmap,
+      water,
+      amount = 2,
+      touches = FALSE
+    ),
+    "will soon be deprecated"
   )
 
-  expect_true(inherits(lowered, "RasterLayer"))
-  expect_equal(sum(raster::values(lowered) == 8), 4)
-  expect_equal(sum(raster::values(lowered) == 10), 12)
+  expect_true(inherits(lowered, "SpatRaster"))
+  expect_equal(sum(terra::values(lowered) == 8), 4)
+  expect_equal(sum(terra::values(lowered) == 10), 12)
 })

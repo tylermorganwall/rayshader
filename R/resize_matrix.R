@@ -35,98 +35,127 @@
 #'  sphere_shade() |>
 #'  plot_map()
 resize_matrix = function(
-	heightmap,
-	scale = 1,
-	width = NULL,
-	height = NULL,
-	method = "bilinear"
+  heightmap,
+  scale = 1,
+  width = NULL,
+  height = NULL,
+  method = "bilinear"
 ) {
-	currentdim = dim(heightmap)
-	if (is.null(width) && is.null(height)) {
-		width = scale * currentdim[2]
-		height = scale * currentdim[1]
-	} else {
-		if (any(is.null(c(width, height)))) {
-			stop(
-				"If specifying explicit width and height, both must be passed in as arguments."
-			)
-		}
-	}
-	if (width <= 1 && height <= 1) {
-		width = as.integer(width * currentdim[2])
-		height = as.integer(height * currentdim[1])
-	}
-	if (method == "bilinear") {
-		rasternew = raster::raster(matrix(0, width, height))
-		heightmapr = raster::raster(t(heightmap))
-		rasternew = raster::resample(heightmapr, rasternew, method = "bilinear")
-		return(matrix(
-			raster::extract(rasternew, raster::extent(rasternew)),
-			nrow = ncol(rasternew),
-			ncol = nrow(rasternew)
-		))
-	} else if (method == "cubic") {
-		resized_matrix = matrix(0, width, height)
-		heightvals = seq(0, 1, length.out = height)
-		widthvals = seq(0, 1, length.out = width)
-		scaled_height = round(heightvals * (nrow(heightmap) - 1), 10)
-		scaled_width = round(widthvals * (ncol(heightmap) - 1), 10)
+  currentdim = dim(heightmap)
+  if (is.null(width) && is.null(height)) {
+    width = scale * currentdim[2]
+    height = scale * currentdim[1]
+  } else {
+    if (any(is.null(c(width, height)))) {
+      stop(
+        "If specifying explicit width and height, both must be passed in as arguments."
+      )
+    }
+  }
+  if (width <= 1 && height <= 1) {
+    width = as.integer(width * currentdim[2])
+    height = as.integer(height * currentdim[1])
+  }
+  if (method == "bilinear") {
+    if (has_spatial_raster_package("terra")) {
+      unit_extent = terra::ext(0, 1, 0, 1)
+      rasternew = terra::rast(
+        matrix(0, width, height),
+        extent = unit_extent
+      )
+      heightmapr = terra::rast(t(heightmap), extent = unit_extent)
+      rasternew = terra::resample(
+        heightmapr,
+        rasternew,
+        method = "bilinear"
+      )
+      return(matrix(
+        as.numeric(terra::values(rasternew)),
+        nrow = ncol(rasternew),
+        ncol = nrow(rasternew)
+      ))
+    }
+    if (has_spatial_raster_package("raster")) {
+      warn_raster_support_deprecated()
+      rasternew = raster::raster(matrix(0, width, height))
+      heightmapr = raster::raster(t(heightmap))
+      rasternew = raster::resample(
+        heightmapr,
+        rasternew,
+        method = "bilinear"
+      )
+      return(matrix(
+        raster::extract(rasternew, raster::extent(rasternew)),
+        nrow = ncol(rasternew),
+        ncol = nrow(rasternew)
+      ))
+    }
+    stop(
+      "The `terra` package is required for bilinear matrix resizing; the legacy `raster` package can be used as a temporary fallback.",
+      call. = FALSE
+    )
+  } else if (method == "cubic") {
+    resized_matrix = matrix(0, width, height)
+    heightvals = seq(0, 1, length.out = height)
+    widthvals = seq(0, 1, length.out = width)
+    scaled_height = round(heightvals * (nrow(heightmap) - 1), 10)
+    scaled_width = round(widthvals * (ncol(heightmap) - 1), 10)
 
-		#Indices into original matrix
-		index_height = floor(scaled_height) + 1
-		index_width = floor(scaled_width) + 1
+    #Indices into original matrix
+    index_height = floor(scaled_height) + 1
+    index_width = floor(scaled_width) + 1
 
-		#Indices into new matrix
-		index_height_new = round(heightvals * height, 10) + 1
-		index_width_new = round(widthvals * width, 10) + 1
+    #Indices into new matrix
+    index_height_new = round(heightvals * height, 10) + 1
+    index_width_new = round(widthvals * width, 10) + 1
 
-		#Fraction amount between matrices
-		fraction_height = scaled_height - index_height + 1
-		fraction_width = scaled_width - index_width + 1
-		hmr = add_padding(add_padding(heightmap))
-		for (i in seq_len(length(index_height) - 1)) {
-			for (j in seq_len(length(index_width) - 1)) {
-				ih = index_height[i] + 2
-				iw = index_width[j] + 2
-				ihn = index_height_new[i]
-				iwn = index_width_new[j]
-				frh = fraction_height[i]
-				frw = fraction_width[j]
-				resized_matrix[iwn, ihn] = bicubic_interpolate(
-					hmr[(ih - 1):(ih + 2), (iw - 1):(iw + 2)],
-					frh,
-					frw
-				)
-			}
-		}
-		for (i in seq_len(length(index_height) - 1)) {
-			ih = index_height[i] + 2
-			frh = fraction_height[i]
-			values = hmr[(ih - 1):(ih + 2), ncol(heightmap) + 2]
-			resized_matrix[nrow(resized_matrix), i] = cubic_interpolate(
-				values[1],
-				values[2],
-				values[3],
-				values[4],
-				frh
-			)
-		}
-		for (i in seq_len(length(index_width) - 1)) {
-			iw = index_width[i] + 2
-			frw = fraction_width[i]
-			values = hmr[nrow(heightmap) + 2, (iw - 1):(iw + 2)]
-			resized_matrix[i, ncol(resized_matrix)] = cubic_interpolate(
-				values[1],
-				values[2],
-				values[3],
-				values[4],
-				frw
-			)
-		}
-		resized_matrix[nrow(resized_matrix), ncol(resized_matrix)] = heightmap[
-			nrow(heightmap),
-			ncol(heightmap)
-		]
-		return(t(resized_matrix))
-	}
+    #Fraction amount between matrices
+    fraction_height = scaled_height - index_height + 1
+    fraction_width = scaled_width - index_width + 1
+    hmr = add_padding(add_padding(heightmap))
+    for (i in seq_len(length(index_height) - 1)) {
+      for (j in seq_len(length(index_width) - 1)) {
+        ih = index_height[i] + 2
+        iw = index_width[j] + 2
+        ihn = index_height_new[i]
+        iwn = index_width_new[j]
+        frh = fraction_height[i]
+        frw = fraction_width[j]
+        resized_matrix[iwn, ihn] = bicubic_interpolate(
+          hmr[(ih - 1):(ih + 2), (iw - 1):(iw + 2)],
+          frh,
+          frw
+        )
+      }
+    }
+    for (i in seq_len(length(index_height) - 1)) {
+      ih = index_height[i] + 2
+      frh = fraction_height[i]
+      values = hmr[(ih - 1):(ih + 2), ncol(heightmap) + 2]
+      resized_matrix[nrow(resized_matrix), i] = cubic_interpolate(
+        values[1],
+        values[2],
+        values[3],
+        values[4],
+        frh
+      )
+    }
+    for (i in seq_len(length(index_width) - 1)) {
+      iw = index_width[i] + 2
+      frw = fraction_width[i]
+      values = hmr[nrow(heightmap) + 2, (iw - 1):(iw + 2)]
+      resized_matrix[i, ncol(resized_matrix)] = cubic_interpolate(
+        values[1],
+        values[2],
+        values[3],
+        values[4],
+        frw
+      )
+    }
+    resized_matrix[nrow(resized_matrix), ncol(resized_matrix)] = heightmap[
+      nrow(heightmap),
+      ncol(heightmap)
+    ]
+    return(t(resized_matrix))
+  }
 }

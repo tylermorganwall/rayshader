@@ -49,7 +49,8 @@ cells touched by polygons or lines are modified.}
 \code{terra::rasterize()} for cells intersected by multiple features.}
 }
 \value{
-A modified height matrix or spatial raster, matching \code{heightmap}.
+A modified height matrix or \code{terra::SpatRaster}. Legacy \code{Raster*}
+inputs are returned as \code{terra::SpatRaster} objects.
 }
 \description{
 Modifies a heightmap under spatial geometries by a constant or per-feature

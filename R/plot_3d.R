@@ -149,7 +149,7 @@ coerce_plot_3d_heightmap = function(heightmap) {
     return(info)
   }
   if (is.character(heightmap)) {
-    heightmap = raster::raster(heightmap)
+    heightmap = read_spatial_raster(heightmap, caller = "plot_3d")
   }
   if (inherits(heightmap, "SpatRaster") && terra::nlyr(heightmap) > 1) {
     warning("`heightmap` has multiple layers; using the first layer.")
@@ -157,7 +157,11 @@ coerce_plot_3d_heightmap = function(heightmap) {
   }
   if (inherits(heightmap, c("RasterBrick", "RasterStack"))) {
     warning("`heightmap` has multiple layers; using the first layer.")
-    heightmap = raster::raster(heightmap, layer = 1)
+    heightmap = read_spatial_raster(
+      heightmap,
+      layer = 1,
+      caller = "plot_3d"
+    )
   }
   info$is_spatial = TRUE
   info$extent = get_extent(heightmap)

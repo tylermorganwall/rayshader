@@ -1729,7 +1729,7 @@ plot_gg = function(
     }
   }
   mapcolor = rayimage::ray_read_image(colormaptemp)
-  mapheight = mapheight = rayimage::ray_read_image(
+  mapheight = rayimage::ray_read_image(
     heightmaptemp,
     source_linear = TRUE
   )[,, 1]

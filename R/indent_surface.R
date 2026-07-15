@@ -32,7 +32,8 @@
 #' @param fun Default `"max"`. Rasterization reducer passed to
 #' `terra::rasterize()` for cells intersected by multiple features.
 #'
-#' @return A modified height matrix or spatial raster, matching `heightmap`.
+#' @return A modified height matrix or `terra::SpatRaster`. Legacy `Raster*`
+#' inputs are returned as `terra::SpatRaster` objects.
 #' @export
 #'
 #' @examplesIf length(find.package("sf", quiet = TRUE)) > 0
@@ -301,8 +302,9 @@ prepare_indent_surface_spatial = function(
   } else if (
     inherits(heightmap, c("RasterLayer", "RasterBrick", "RasterStack"))
   ) {
+    warn_raster_support_deprecated()
     heightmap = terra::rast(heightmap)
-    input_type = "raster"
+    input_type = "spatraster"
   }
   if (!inherits(heightmap, "SpatRaster")) {
     stop(
@@ -864,9 +866,6 @@ apply_indent_surface_amount = function(
 finalize_indent_surface = function(surface) {
   if (identical(surface$type, "matrix")) {
     return(surface$heightmap)
-  }
-  if (identical(surface$type, "raster")) {
-    return(raster::raster(surface$heightmap))
   }
   surface$heightmap
 }
