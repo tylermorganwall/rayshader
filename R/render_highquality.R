@@ -51,8 +51,7 @@
 #'calculates 1-color
 #'@param water_surface_color Default `TRUE`. Whether the water should have a colored surface or not. This is in contrast to
 #' setting a non-zero water attenuation, where the color comes from the attenuation of light in the water itself.
-#'@param water_ior Default `1`, or `1.5` when omitted and the OIDN denoiser
-#'is enabled and available. Water index of refraction.
+#'@param water_ior Default `1.33`. Water index of refraction.
 #'@param water_material Default `"glassy"`. Water material used in
 #'`render_highquality()`. `"glassy"` renders water with
 #'`rayrender::dielectric()`; `"microfacet"` renders water with
@@ -135,8 +134,7 @@
 #'@param scene_elements Default `NULL`. Extra scene elements to add to the scene, created with rayrender.
 #'@param clear Default `FALSE`. If `TRUE`, the current `rgl` device will be cleared.
 #'@param print_scene_info Default `FALSE`. If `TRUE`, it will print the position and lookat point of the camera.
-#'@param clamp_value Default `NA`. If `NA`, uses `100` when the OIDN denoiser is unavailable
-#'and `1000` when it is available (via `rayrender::has_denoiser()`).
+#'@param clamp_value Default `1000`. Radiance clamp value. If `NA`, uses `1000`.
 #'@param return_scene Default `FALSE`. If `TRUE`, this will return the rayrender scene (instead of rendering the image).
 #'@param load_normals Default `TRUE`. Whether to load the vertex normals if they exist in the OBJ file.
 #'@param calculate_consistent_normals Default `FALSE`. Whether to calculate consistent vertex normals to prevent energy
@@ -283,7 +281,7 @@ render_highquality = function(
   material = rayrender::diffuse(),
   water_attenuation = 0,
   water_surface_color = TRUE,
-  water_ior = 1,
+  water_ior = 1.33,
   water_material = c("glassy", "microfacet"),
   water_roughness = 0.1,
   override_material = FALSE,
@@ -330,7 +328,7 @@ render_highquality = function(
   clear = FALSE,
   return_scene = FALSE,
   print_scene_info = FALSE,
-  clamp_value = NA,
+  clamp_value = 1000,
   calculate_consistent_normals = FALSE,
   load_normals = TRUE,
   rgl_materials = list(),
@@ -340,7 +338,6 @@ render_highquality = function(
 ) {
   text_offset_missing = missing(text_offset)
   scale_text_offset_missing = missing(scale_text_offset)
-  water_ior_missing = missing(water_ior)
   water_material = match.arg(water_material)
   water_roughness = validate_render_highquality_water_roughness(
     water_roughness
@@ -435,21 +432,9 @@ render_highquality = function(
   render_scene_formals = formals(rayrender::render_scene)
   render_scene_supports_environment_light_bake_white =
     "environment_light_bake_white" %in% names(render_scene_formals)
-  denoiser_available = rayrender::has_denoiser()
-  water_defaults = resolve_render_highquality_water_defaults(
-    water_material = water_material,
-    water_ior = water_ior,
-    water_ior_missing = water_ior_missing,
-    dot_args = dot_args,
-    denoiser_available = denoiser_available,
-    render_scene_formals = render_scene_formals
-  )
-  water_material = water_defaults$water_material
-  water_ior = water_defaults$water_ior
   if (is.na(clamp_value)) {
-    clamp_value = if (denoiser_available) 1000 else 100
+    clamp_value = 1000
   }
-
   removed_material_args = intersect(
     names(dot_args),
     c(
@@ -2465,45 +2450,6 @@ validate_render_highquality_water_roughness = function(water_roughness) {
     )
   }
   water_roughness
-}
-
-#' Resolve render_highquality water defaults
-#'
-#' @param water_material Water material after `match.arg()`.
-#' @param water_ior Water index of refraction.
-#' @param water_ior_missing Whether `water_ior` was omitted.
-#' @param dot_args Additional arguments passed to `rayrender::render_scene()`.
-#' @param denoiser_available Whether the OIDN denoiser is available.
-#' @param render_scene_formals Formal arguments from `rayrender::render_scene()`.
-#'
-#' @return A list with resolved `water_material` and `water_ior` values.
-#' @keywords internal
-resolve_render_highquality_water_defaults = function(
-  water_material,
-  water_ior,
-  water_ior_missing,
-  dot_args,
-  denoiser_available,
-  render_scene_formals
-) {
-  denoise_enabled = if ("denoise" %in% names(dot_args)) {
-    isTRUE(dot_args$denoise)
-  } else if ("denoise" %in% names(render_scene_formals)) {
-    isTRUE(render_scene_formals$denoise)
-  } else {
-    FALSE
-  }
-
-  if (isTRUE(denoiser_available) && denoise_enabled) {
-    if (isTRUE(water_ior_missing)) {
-      water_ior = 1.5
-    }
-  }
-
-  list(
-    water_material = water_material,
-    water_ior = water_ior
-  )
 }
 
 get_render_highquality_rgl_material_info = function(rgl_materials) {

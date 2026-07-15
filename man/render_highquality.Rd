@@ -25,7 +25,7 @@ render_highquality(
   material = rayrender::diffuse(),
   water_attenuation = 0,
   water_surface_color = TRUE,
-  water_ior = 1,
+  water_ior = 1.33,
   water_material = c("glassy", "microfacet"),
   water_roughness = 0.1,
   override_material = FALSE,
@@ -72,7 +72,7 @@ render_highquality(
   clear = FALSE,
   return_scene = FALSE,
   print_scene_info = FALSE,
-  clamp_value = NA,
+  clamp_value = 1000,
   calculate_consistent_normals = FALSE,
   load_normals = TRUE,
   rgl_materials = list(),
@@ -147,8 +147,7 @@ calculates 1-color}
 \item{water_surface_color}{Default \code{TRUE}. Whether the water should have a colored surface or not. This is in contrast to
 setting a non-zero water attenuation, where the color comes from the attenuation of light in the water itself.}
 
-\item{water_ior}{Default \code{1}, or \code{1.5} when omitted and the OIDN denoiser
-is enabled and available. Water index of refraction.}
+\item{water_ior}{Default \code{1.33}. Water index of refraction.}
 
 \item{water_material}{Default \code{"glassy"}. Water material used in
 \code{render_highquality()}. \code{"glassy"} renders water with
@@ -278,8 +277,7 @@ and \code{camera_lookat} vectors.}
 
 \item{print_scene_info}{Default \code{FALSE}. If \code{TRUE}, it will print the position and lookat point of the camera.}
 
-\item{clamp_value}{Default \code{NA}. If \code{NA}, uses \code{100} when the OIDN denoiser is unavailable
-and \code{1000} when it is available (via \code{rayrender::has_denoiser()}).}
+\item{clamp_value}{Default \code{1000}. Radiance clamp value. If \code{NA}, uses \code{1000}.}
 
 \item{calculate_consistent_normals}{Default \code{FALSE}. Whether to calculate consistent vertex normals to prevent energy
 loss at edges.}

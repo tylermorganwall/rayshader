@@ -69,7 +69,7 @@
 #'[render_highquality()].
 #'@param water_attenuation Default `0`. Forwarded to [render_highquality()].
 #'@param water_surface_color Default `TRUE`. Forwarded to [render_highquality()].
-#'@param water_ior Default `1`. Forwarded to [render_highquality()].
+#'@param water_ior Default `1.33`. Forwarded to [render_highquality()].
 #'@param override_material Default `FALSE`. Forwarded to [render_highquality()].
 #'@param cache_scene Default `FALSE`. Forwarded to [render_highquality()].
 #'@param reset_scene_cache Default `FALSE`. Forwarded to [render_highquality()].
@@ -77,8 +77,7 @@
 #'the underlying surface dimensions.
 #'@param height Default `NULL`. Output height in pixels. If omitted, derived from
 #'the underlying surface dimensions.
-#'@param clamp_value Default `NA`. Radiance clamp value. Matches
-#'[render_highquality()] default behavior.
+#'@param clamp_value Default `1000`. Radiance clamp value. If `NA`, uses `1000`.
 #'@param auto_exposure Default `TRUE`. Whether to use rayrender's automatic
 #'exposure adjustment in the radiance pass. Forwarded to
 #'`rayrender::render_scene()` via [render_highquality()] when supported by the
@@ -130,13 +129,13 @@ radiance_shade = function(
   material = rayrender::diffuse(),
   water_attenuation = 0,
   water_surface_color = TRUE,
-  water_ior = 1,
+  water_ior = 1.33,
   override_material = FALSE,
   cache_scene = FALSE,
   reset_scene_cache = FALSE,
   width = NULL,
   height = NULL,
-  clamp_value = NA,
+  clamp_value = 1000,
   auto_exposure = TRUE,
   capture_scene = FALSE,
   scene_elements = NULL,
@@ -153,7 +152,7 @@ radiance_shade = function(
     stop("`rayrender` package required for radiance_shade()")
   }
   if (is.na(clamp_value)) {
-    clamp_value = if (rayrender::has_denoiser()) 10000 else 100
+    clamp_value = 1000
   }
   if (!is.na(filename)) {
     if (dirname(filename) != "." && !dir.exists(dirname(filename))) {

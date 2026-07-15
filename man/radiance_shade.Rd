@@ -31,13 +31,13 @@ radiance_shade(
   material = rayrender::diffuse(),
   water_attenuation = 0,
   water_surface_color = TRUE,
-  water_ior = 1,
+  water_ior = 1.33,
   override_material = FALSE,
   cache_scene = FALSE,
   reset_scene_cache = FALSE,
   width = NULL,
   height = NULL,
-  clamp_value = NA,
+  clamp_value = 1000,
   auto_exposure = TRUE,
   capture_scene = FALSE,
   scene_elements = NULL,
@@ -118,7 +118,7 @@ when direct sky arguments are used.}
 
 \item{water_surface_color}{Default \code{TRUE}. Forwarded to \code{\link[=render_highquality]{render_highquality()}}.}
 
-\item{water_ior}{Default \code{1}. Forwarded to \code{\link[=render_highquality]{render_highquality()}}.}
+\item{water_ior}{Default \code{1.33}. Forwarded to \code{\link[=render_highquality]{render_highquality()}}.}
 
 \item{override_material}{Default \code{FALSE}. Forwarded to \code{\link[=render_highquality]{render_highquality()}}.}
 
@@ -132,8 +132,7 @@ the underlying surface dimensions.}
 \item{height}{Default \code{NULL}. Output height in pixels. If omitted, derived from
 the underlying surface dimensions.}
 
-\item{clamp_value}{Default \code{NA}. Radiance clamp value. Matches
-\code{\link[=render_highquality]{render_highquality()}} default behavior.}
+\item{clamp_value}{Default \code{1000}. Radiance clamp value. If \code{NA}, uses \code{1000}.}
 
 \item{auto_exposure}{Default \code{TRUE}. Whether to use rayrender's automatic
 exposure adjustment in the radiance pass. Forwarded to
