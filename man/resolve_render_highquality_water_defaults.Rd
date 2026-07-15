@@ -7,7 +7,6 @@
 resolve_render_highquality_water_defaults(
   water_material,
   water_ior,
-  water_material_missing,
   water_ior_missing,
   dot_args,
   denoiser_available,
@@ -18,8 +17,6 @@ resolve_render_highquality_water_defaults(
 \item{water_material}{Water material after \code{match.arg()}.}
 
 \item{water_ior}{Water index of refraction.}
-
-\item{water_material_missing}{Whether \code{water_material} was omitted.}
 
 \item{water_ior_missing}{Whether \code{water_ior} was omitted.}
 

@@ -53,10 +53,9 @@
 #' setting a non-zero water attenuation, where the color comes from the attenuation of light in the water itself.
 #'@param water_ior Default `1`, or `1.5` when omitted and the OIDN denoiser
 #'is enabled and available. Water index of refraction.
-#'@param water_material Default `"default"`, or `"microfacet"` when omitted
-#'and the OIDN denoiser is enabled and available. Water material used in
-#'`render_highquality()`. `"default"` uses the standard converted rgl water
-#'material; `"microfacet"` renders water with
+#'@param water_material Default `"glassy"`. Water material used in
+#'`render_highquality()`. `"glassy"` renders water with
+#'`rayrender::dielectric()`; `"microfacet"` renders water with
 #'`rayrender::microfacet(transmission = TRUE)`.
 #'@param water_roughness Default `0.1`. Roughness used when `water_material = "microfacet"`.
 #'@param material Default `rayrender::diffuse()`. The material properties of the object file. Only used if `override_material = TRUE`
@@ -285,7 +284,7 @@ render_highquality = function(
   water_attenuation = 0,
   water_surface_color = TRUE,
   water_ior = 1,
-  water_material = c("default", "microfacet"),
+  water_material = c("glassy", "microfacet"),
   water_roughness = 0.1,
   override_material = FALSE,
   cache_scene = FALSE,
@@ -341,7 +340,6 @@ render_highquality = function(
 ) {
   text_offset_missing = missing(text_offset)
   scale_text_offset_missing = missing(scale_text_offset)
-  water_material_missing = missing(water_material)
   water_ior_missing = missing(water_ior)
   water_material = match.arg(water_material)
   water_roughness = validate_render_highquality_water_roughness(
@@ -441,7 +439,6 @@ render_highquality = function(
   water_defaults = resolve_render_highquality_water_defaults(
     water_material = water_material,
     water_ior = water_ior,
-    water_material_missing = water_material_missing,
     water_ior_missing = water_ior_missing,
     dot_args = dot_args,
     denoiser_available = denoiser_available,
@@ -2474,7 +2471,6 @@ validate_render_highquality_water_roughness = function(water_roughness) {
 #'
 #' @param water_material Water material after `match.arg()`.
 #' @param water_ior Water index of refraction.
-#' @param water_material_missing Whether `water_material` was omitted.
 #' @param water_ior_missing Whether `water_ior` was omitted.
 #' @param dot_args Additional arguments passed to `rayrender::render_scene()`.
 #' @param denoiser_available Whether the OIDN denoiser is available.
@@ -2485,7 +2481,6 @@ validate_render_highquality_water_roughness = function(water_roughness) {
 resolve_render_highquality_water_defaults = function(
   water_material,
   water_ior,
-  water_material_missing,
   water_ior_missing,
   dot_args,
   denoiser_available,
@@ -2500,9 +2495,6 @@ resolve_render_highquality_water_defaults = function(
   }
 
   if (isTRUE(denoiser_available) && denoise_enabled) {
-    if (isTRUE(water_material_missing)) {
-      water_material = "microfacet"
-    }
     if (isTRUE(water_ior_missing)) {
       water_ior = 1.5
     }

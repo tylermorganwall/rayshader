@@ -31,64 +31,64 @@ test_that("render_highquality() resolves rgl material overrides", {
 })
 
 test_that("render_highquality() resolves denoiser-aware water defaults", {
+  expect_identical(
+    eval(formals(render_highquality)$water_material),
+    c("glassy", "microfacet")
+  )
+
   default_values = resolve_render_highquality_water_defaults(
-    water_material = "default",
+    water_material = "glassy",
     water_ior = 1,
-    water_material_missing = TRUE,
     water_ior_missing = TRUE,
     dot_args = list(),
     denoiser_available = TRUE,
     render_scene_formals = list(denoise = TRUE)
   )
-  expect_equal(default_values$water_material, "microfacet")
+  expect_equal(default_values$water_material, "glassy")
   expect_equal(default_values$water_ior, 1.5)
 
   disabled_values = resolve_render_highquality_water_defaults(
-    water_material = "default",
+    water_material = "glassy",
     water_ior = 1,
-    water_material_missing = TRUE,
     water_ior_missing = TRUE,
     dot_args = list(denoise = FALSE),
     denoiser_available = TRUE,
     render_scene_formals = list(denoise = TRUE)
   )
-  expect_equal(disabled_values$water_material, "default")
+  expect_equal(disabled_values$water_material, "glassy")
   expect_equal(disabled_values$water_ior, 1)
 
   unavailable_values = resolve_render_highquality_water_defaults(
-    water_material = "default",
+    water_material = "glassy",
     water_ior = 1,
-    water_material_missing = TRUE,
     water_ior_missing = TRUE,
     dot_args = list(),
     denoiser_available = FALSE,
     render_scene_formals = list(denoise = TRUE)
   )
-  expect_equal(unavailable_values$water_material, "default")
+  expect_equal(unavailable_values$water_material, "glassy")
   expect_equal(unavailable_values$water_ior, 1)
 
   explicit_material_values = resolve_render_highquality_water_defaults(
-    water_material = "default",
+    water_material = "glassy",
     water_ior = 1,
-    water_material_missing = FALSE,
     water_ior_missing = TRUE,
     dot_args = list(),
     denoiser_available = TRUE,
     render_scene_formals = list(denoise = TRUE)
   )
-  expect_equal(explicit_material_values$water_material, "default")
+  expect_equal(explicit_material_values$water_material, "glassy")
   expect_equal(explicit_material_values$water_ior, 1.5)
 
   explicit_values = resolve_render_highquality_water_defaults(
-    water_material = "default",
+    water_material = "glassy",
     water_ior = 1.25,
-    water_material_missing = FALSE,
     water_ior_missing = FALSE,
     dot_args = list(),
     denoiser_available = TRUE,
     render_scene_formals = list(denoise = TRUE)
   )
-  expect_equal(explicit_values$water_material, "default")
+  expect_equal(explicit_values$water_material, "glassy")
   expect_equal(explicit_values$water_ior, 1.25)
 })
 

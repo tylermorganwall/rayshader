@@ -633,19 +633,8 @@ test_that("render_streams draws spatial stream paths as water paths", {
     },
     integer(1)
   )
-  expected_material_type = if (rayrender::has_denoiser()) {
-    rayrender::microfacet(transmission = TRUE)[[1]]$type
-  } else {
-    rayrender::dielectric()[[1]]$type
-  }
+  expected_material_type = rayrender::dielectric()[[1]]$type
   expect_true(expected_material_type %in% material_types)
-  if (rayrender::has_denoiser()) {
-    microfacet_material = scene$material[[which(
-      material_types == expected_material_type
-    )[[1]]]]
-    microfacet_info = microfacet_material$glossyinfo[[1]]
-    expect_equal(microfacet_info[4:6], rep(1.25, 3))
-  }
 })
 
 test_that("render_streams reads widths from an sf column", {
