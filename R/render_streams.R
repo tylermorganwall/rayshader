@@ -4,6 +4,13 @@
 #'
 #' @param streams Spatial line data used to draw stream paths. Supports `sf`,
 #' `sfc`, `sfg`, `SpatialLines`, and `SpatialLinesDataFrame` line inputs.
+#' @param water_polygons Default `NULL`. Optional polygon data defining water
+#' areas where streams should not be rendered. Supports `sf`, `sfc`, `sfg`,
+#' `terra::SpatVector`, `SpatialPolygons`, and `SpatialPolygonsDataFrame` inputs.
+#' Multiple polygons are combined before they are removed from the stream
+#' linework. When both inputs have a CRS, the polygons are transformed to the
+#' stream CRS before clipping. When only one input has a CRS, an error is
+#' returned rather than assuming the coordinate systems match.
 #' @param heightmap Default `NULL`. Height matrix or spatial raster for the current
 #' scene. If omitted, this is taken from the cached scene set by [plot_3d()] or
 #' [plot_gg()]. Pass explicitly to override the cached value.
@@ -165,6 +172,7 @@
 #'
 #' render_streams(
 #'   streams = streams,
+#'   water_polygons = water,
 #'   watercolor = "dodgerblue",
 #'   width = 0.35,
 #'   clear_previous = TRUE
@@ -196,7 +204,8 @@ render_streams = function(
   densify = TRUE,
   offset = NULL,
   merge = TRUE,
-  clear_previous = TRUE
+  clear_previous = TRUE,
+  water_polygons = NULL
 ) {
   heightmap = resolve_render_water_heightmap(
     heightmap,
@@ -229,6 +238,7 @@ render_streams = function(
   }
   render_water_paths(
     waterpaths = streams,
+    water_polygons = water_polygons,
     heightmap = heightmap,
     extent = resolve_scene_render_extent(
       heightmap = heightmap,
@@ -267,6 +277,8 @@ is_waterpath_input = function(x) {
 #' Render water stream paths
 #'
 #' @param waterpaths Spatial line input.
+#' @param water_polygons Default `NULL`. Polygon data to remove from the line
+#' input.
 #' @param heightmap Heightmap matrix.
 #' @param extent Scene extent.
 #' @param zscale Effective zscale.
@@ -289,7 +301,8 @@ render_water_paths = function(
   waterpath_width_column = NULL,
   waterpath_densify = TRUE,
   waterpath_offset = NULL,
-  waterpath_merge = TRUE
+  waterpath_merge = TRUE,
+  water_polygons = NULL
 ) {
   if (!is_waterpath_input(waterpaths)) {
     stop(
@@ -317,7 +330,8 @@ render_water_paths = function(
   }
   waterpaths = prepare_render_water_path_geometry(
     waterpaths = waterpaths,
-    waterpath_merge = waterpath_merge
+    waterpath_merge = waterpath_merge,
+    water_polygons = water_polygons
   )
   if (is_empty_scene_sf(waterpaths)) {
     return(invisible(list()))
@@ -652,12 +666,15 @@ validate_waterpath_logical = function(value, name) {
 #'
 #' @param waterpaths Spatial line input.
 #' @param waterpath_merge Whether to merge connected linework.
+#' @param water_polygons Default `NULL`. Polygon data to remove from the line
+#' input before merging.
 #'
 #' @return Spatial line input.
 #' @keywords internal
 prepare_render_water_path_geometry = function(
   waterpaths,
-  waterpath_merge = TRUE
+  waterpath_merge = TRUE,
+  water_polygons = NULL
 ) {
   if (
     !inherits(
@@ -674,6 +691,106 @@ prepare_render_water_path_geometry = function(
     waterpaths = sf::st_sfc(waterpaths)
   }
   waterpaths = coerce_render_path_line_geometry(waterpaths)
+  if (!is.null(water_polygons) && !is_empty_scene_sf(waterpaths)) {
+    if (
+      !inherits(
+        water_polygons,
+        c(
+          "sf",
+          "sfc",
+          "sfg",
+          "SpatVector",
+          "SpatialPolygons",
+          "SpatialPolygonsDataFrame"
+        )
+      )
+    ) {
+      stop(
+        paste0(
+          "`water_polygons` must be an sf, sfc, sfg, SpatVector, ",
+          "SpatialPolygons, or SpatialPolygonsDataFrame polygon object."
+        ),
+        call. = FALSE
+      )
+    }
+    water_geometry = if (inherits(water_polygons, "sfg")) {
+      sf::st_sfc(water_polygons)
+    } else if (inherits(water_polygons, "sfc")) {
+      water_polygons
+    } else {
+      sf::st_geometry(sf::st_as_sf(water_polygons))
+    }
+    if (
+      length(water_geometry) > 0 &&
+        !all(sf::st_is_empty(water_geometry))
+    ) {
+      water_geometry = sf::st_make_valid(water_geometry)
+      water_types = as.character(sf::st_geometry_type(
+        water_geometry,
+        by_geometry = TRUE
+      ))
+      if (
+        !all(
+          water_types %in%
+            c(
+              "POLYGON",
+              "MULTIPOLYGON",
+              "GEOMETRYCOLLECTION"
+            )
+        )
+      ) {
+        stop(
+          "`water_polygons` must contain only polygon or multipolygon geometries.",
+          call. = FALSE
+        )
+      }
+      water_geometry = suppressWarnings(
+        sf::st_collection_extract(water_geometry, "POLYGON")
+      )
+      water_geometry = water_geometry[!sf::st_is_empty(water_geometry)]
+      if (!length(water_geometry)) {
+        stop(
+          "`water_polygons` does not contain any non-empty polygon geometries.",
+          call. = FALSE
+        )
+      }
+
+      stream_crs = sf::st_crs(waterpaths)
+      water_crs = sf::st_crs(water_geometry)
+      stream_has_crs = !is.na(stream_crs)
+      water_has_crs = !is.na(water_crs)
+      if (xor(stream_has_crs, water_has_crs)) {
+        stop(
+          paste0(
+            "`streams` and `water_polygons` must both have a CRS or both ",
+            "be CRS-less."
+          ),
+          call. = FALSE
+        )
+      }
+      if (
+        stream_has_crs &&
+          water_has_crs &&
+          !scene_crs_equal(stream_crs, water_crs)
+      ) {
+        water_geometry = sf::st_transform(water_geometry, stream_crs)
+      }
+      water_union = suppressWarnings(sf::st_union(water_geometry))
+      waterpaths = tryCatch(
+        suppressWarnings(sf::st_difference(waterpaths, water_union)),
+        error = function(e) {
+          stop(
+            paste0(
+              "Could not remove `water_polygons` from `streams`: ",
+              conditionMessage(e)
+            ),
+            call. = FALSE
+          )
+        }
+      )
+      waterpaths = coerce_render_path_line_geometry(waterpaths)
+    }
+  }
   if (!isTRUE(waterpath_merge) || is_empty_scene_sf(waterpaths)) {
     return(waterpaths)
   }

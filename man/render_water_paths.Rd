@@ -14,7 +14,8 @@ render_water_paths(
   waterpath_width_column = NULL,
   waterpath_densify = TRUE,
   waterpath_offset = NULL,
-  waterpath_merge = TRUE
+  waterpath_merge = TRUE,
+  water_polygons = NULL
 )
 }
 \arguments{
@@ -37,6 +38,9 @@ render_water_paths(
 \item{waterpath_offset}{Centerline offset in elevation units.}
 
 \item{waterpath_merge}{Whether to merge connected linework.}
+
+\item{water_polygons}{Default \code{NULL}. Polygon data to remove from the line
+input.}
 }
 \value{
 Invisibly returns the rendered stream coordinates.

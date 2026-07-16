@@ -4,12 +4,19 @@
 \alias{prepare_render_water_path_geometry}
 \title{Prepare render water path geometry}
 \usage{
-prepare_render_water_path_geometry(waterpaths, waterpath_merge = TRUE)
+prepare_render_water_path_geometry(
+  waterpaths,
+  waterpath_merge = TRUE,
+  water_polygons = NULL
+)
 }
 \arguments{
 \item{waterpaths}{Spatial line input.}
 
 \item{waterpath_merge}{Whether to merge connected linework.}
+
+\item{water_polygons}{Default \code{NULL}. Polygon data to remove from the line
+input before merging.}
 }
 \value{
 Spatial line input.

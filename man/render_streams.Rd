@@ -15,7 +15,8 @@ render_streams(
   densify = TRUE,
   offset = NULL,
   merge = TRUE,
-  clear_previous = TRUE
+  clear_previous = TRUE,
+  water_polygons = NULL
 )
 }
 \arguments{
@@ -59,6 +60,14 @@ rendering. This reduces visible caps between adjacent line features in
 
 \item{clear_previous}{Default \code{TRUE}. If \code{TRUE}, removes the existing stream
 layer before drawing the new one.}
+
+\item{water_polygons}{Default \code{NULL}. Optional polygon data defining water
+areas where streams should not be rendered. Supports \code{sf}, \code{sfc}, \code{sfg},
+\code{terra::SpatVector}, \code{SpatialPolygons}, and \code{SpatialPolygonsDataFrame} inputs.
+Multiple polygons are combined before they are removed from the stream
+linework. When both inputs have a CRS, the polygons are transformed to the
+stream CRS before clipping. When only one input has a CRS, an error is
+returned rather than assuming the coordinate systems match.}
 }
 \value{
 Invisibly returns the rendered stream coordinates.
@@ -198,6 +207,7 @@ render_water(
 
 render_streams(
   streams = streams,
+  water_polygons = water,
   watercolor = "dodgerblue",
   width = 0.35,
   clear_previous = TRUE

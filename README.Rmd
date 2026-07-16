@@ -602,6 +602,7 @@ render_water(
 
 render_streams(
 	streams = streams,
+	water_polygons = water,
 	watercolor = "dodgerblue",
 	width = 0.35,
 	clear_previous = TRUE
