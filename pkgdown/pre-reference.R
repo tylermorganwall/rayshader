@@ -17,10 +17,10 @@ if (!file.exists("man/figures/monterey-circle.mp4")) {
   circle_coords_long = moss_landing_coord[2] + 0.25 * cos(t)
 
   # Minimal 3D render -> frames
-  extent_mb = attr(rayshader::montereybay, "extent")
-  rayshader::sphere_shade(rayshader::montereybay) |>
+  extent_mb = terra::ext(rayshader::montereybay_spatial)
+  rayshader::sphere_shade(rayshader::montereybay_spatial) |>
     rayshader::plot_3d(
-      rayshader::montereybay,
+      rayshader::montereybay_spatial,
       vertical_exaggeration = 4,
       zscale = 50,
       water = TRUE,
@@ -34,7 +34,7 @@ if (!file.exists("man/figures/monterey-circle.mp4")) {
 
   rayshader::render_path(
     extent = extent_mb,
-    heightmap = rayshader::montereybay,
+    heightmap = rayshader::montereybay_spatial,
     lat = circle_coords_lat,
     long = circle_coords_long,
     zscale = 50,
@@ -46,7 +46,7 @@ if (!file.exists("man/figures/monterey-circle.mp4")) {
 
   cam = rayshader::convert_path_to_animation_coords(
     extent = extent_mb,
-    heightmap = rayshader::montereybay,
+    heightmap = rayshader::montereybay_spatial,
     lat = circle_coords_lat,
     long = circle_coords_long,
     type = "bezier",
@@ -59,7 +59,7 @@ if (!file.exists("man/figures/monterey-circle.mp4")) {
 
   cam = rayshader::convert_path_to_animation_coords(
     extent = extent_mb,
-    heightmap = rayshader::montereybay,
+    heightmap = rayshader::montereybay_spatial,
     lat = circle_coords_lat,
     long = circle_coords_long,
     type = "bezier",
@@ -90,7 +90,7 @@ if (!file.exists("man/figures/monterey-circle.mp4")) {
 
   follow_cam = rayshader::convert_path_to_animation_coords(
     extent = extent_mb,
-    heightmap = rayshader::montereybay,
+    heightmap = rayshader::montereybay_spatial,
     lat = circle_coords_lat,
     long = circle_coords_long,
     type = "bezier",

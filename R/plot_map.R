@@ -19,46 +19,46 @@
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Plotting the Monterey Bay dataset with bathymetry data
 #'water_palette = colorRampPalette(c("darkblue", "dodgerblue", "lightblue"))(200)
-#'bathy_hs = height_shade(montereybay, texture = water_palette)
+#'bathy_hs = height_shade(montereybay_spatial, texture = water_palette)
 #'#For compass text
 #'par(family = "Arial")
 #'
 #'#Set everything below 0m to water palette
-#'montereybay |>
+#'montereybay_spatial |>
 #'  sphere_shade() |>
-#'  add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0))  |>
+#'  add_overlay(generate_altitude_overlay(bathy_hs, montereybay_spatial, 0, 0))  |>
 #'  add_shadow(ray_shade(vertical_exaggeration = 4),0.3) |>
 #'  plot_map()
 plot_map = function(
-	hillshade,
-	title_text = NA,
-	title_offset = c(20, 20),
-	title_color = "black",
-	title_size = 30,
-	title_font = "sans",
-	title_style = "normal",
-	title_bar_color = NA,
-	title_bar_alpha = 0.5,
-	title_just = "left",
-	...
+  hillshade,
+  title_text = NA,
+  title_offset = c(20, 20),
+  title_color = "black",
+  title_size = 30,
+  title_font = "sans",
+  title_style = "normal",
+  title_bar_color = NA,
+  title_bar_alpha = 0.5,
+  title_just = "left",
+  ...
 ) {
-	has_title = !is.na(title_text)
-	hillshade_img = rayimage::ray_read_image(
-		hillshade
-	)
-	if (has_title) {
-		hillshade_img = rayimage::render_title(
-			hillshade_img,
-			title_text = title_text,
-			title_offset = title_offset,
-			title_color = title_color,
-			title_size = title_size,
-			title_font = title_font,
-			title_style = title_style,
-			title_bar_color = title_bar_color,
-			title_bar_alpha = title_bar_alpha,
-			title_just = title_just
-		)
-	}
-	rayimage::plot_image(hillshade_img, ...)
+  has_title = !is.na(title_text)
+  hillshade_img = rayimage::ray_read_image(
+    hillshade
+  )
+  if (has_title) {
+    hillshade_img = rayimage::render_title(
+      hillshade_img,
+      title_text = title_text,
+      title_offset = title_offset,
+      title_color = title_color,
+      title_size = title_size,
+      title_font = title_font,
+      title_style = title_style,
+      title_bar_color = title_bar_color,
+      title_bar_alpha = title_bar_alpha,
+      title_just = title_just
+    )
+  }
+  rayimage::plot_image(hillshade_img, ...)
 }

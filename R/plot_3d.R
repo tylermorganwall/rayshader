@@ -437,27 +437,27 @@ get_plot_3d_surface_texture = function(id, rgl_texture_file) {
 #'@import rgl
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
-#'#Plotting a spherical texture map of the built-in `montereybay` dataset.
-#'montereybay |>
+#'#Plotting a spherical texture map of the built-in `montereybay_spatial` dataset.
+#'montereybay_spatial |>
 #'  sphere_shade(texture="desert", vertical_exaggeration = 10) |>
 #'  plot_3d(vertical_exaggeration = 4)
 #'render_snapshot()
 #'
-#'montereybay |>
+#'montereybay_spatial |>
 #'  sphere_shade(texture="desert", vertical_exaggeration = 10) |>
 #'  plot_3d(vertical_exaggeration = 4)
 #'render_zaxis(zaxis_location = "bottomleft")
 #'render_snapshot()
 #'
 #'#With a water layer
-#'montereybay |>
+#'montereybay_spatial |>
 #'  sphere_shade(texture="imhof2", vertical_exaggeration = 10) |>
 #'  plot_3d(vertical_exaggeration = 4, water = TRUE, watercolor="imhof2",
 #'          waterlinecolor="white", waterlinealpha=0.5)
 #'render_snapshot()
 #'
 #'#With a soil texture to the base
-#'montereybay |>
+#'montereybay_spatial |>
 #'  sphere_shade(texture="imhof3", vertical_exaggeration = 10) |>
 #'  plot_3d(vertical_exaggeration = 4, water = TRUE,  watercolor="imhof4",
 #'          waterlinecolor="white", waterlinealpha=0.5, soil=TRUE)
@@ -465,13 +465,13 @@ get_plot_3d_surface_texture = function(id, rgl_texture_file) {
 #'render_snapshot()
 #'
 #'#We can also change the base by setting "baseshape" to "hex" or "circle"
-#'montereybay |>
+#'montereybay_spatial |>
 #'  sphere_shade(texture="imhof1", vertical_exaggeration = 10) |>
 #'  plot_3d(vertical_exaggeration = 4, water = TRUE, watercolor="imhof1", theta=-45, zoom=0.7,
 #'          waterlinecolor="white", waterlinealpha=0.5,baseshape="circle")
 #'render_snapshot()
 #'
-#'montereybay |>
+#'montereybay_spatial |>
 #'  sphere_shade(texture="imhof1", vertical_exaggeration = 10) |>
 #'  plot_3d(vertical_exaggeration = 4, water = TRUE, watercolor="imhof1", theta=-45, zoom=0.7,
 #'          waterlinecolor="white", waterlinealpha=0.5,baseshape="hex")
@@ -485,10 +485,10 @@ get_plot_3d_surface_texture = function(id, rgl_texture_file) {
 #'#Here, we only include the deep bathymetry data by setting all points greater than -10
 #'#in the copied elevation matrix to NA.
 #'
-#'mb_water = montereybay
+#'mb_water = montereybay_spatial
 #'mb_water[mb_water > -10] = NA
 #'
-#'montereybay |>
+#'montereybay_spatial |>
 #'  sphere_shade(texture="imhof1", vertical_exaggeration = 10) |>
 #'  plot_3d(mb_water, vertical_exaggeration = 4, water = TRUE, watercolor="imhof1", theta=-45,
 #'          waterlinecolor="white", waterlinealpha=0.5)

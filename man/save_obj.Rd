@@ -44,7 +44,7 @@ save_obj(filename_obj)
 save_obj(filename_obj, save_texture = FALSE)
 
 #Make water have realistic index of refraction
-montereybay |>
+montereybay_spatial |>
  sphere_shade() |>
  plot_3d(vertical_exaggeration = 4)
 

@@ -175,7 +175,7 @@ The size of the circle of confusion is determined by the following formula (z_de
 }
 \examples{
 \dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
-montereybay |>
+montereybay_spatial |>
  sphere_shade(vertical_exaggeration = 10) |>
  plot_3d(vertical_exaggeration = 4, water=TRUE, waterlinecolor="white",
          zoom=0.3,theta=-135,fov=70, phi=20)

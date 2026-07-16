@@ -68,7 +68,7 @@
 #'r_logo_mesh = rayvertex::obj_mesh(rayvertex::r_obj(), center = TRUE, angle=c(0,180,0))
 #'
 #'# Render the 3D map.
-#'montereybay |>
+#'montereybay_spatial |>
 #'  sphere_shade(vertical_exaggeration = 10) |>
 #'  plot_3d(
 #'    vertical_exaggeration = 4,

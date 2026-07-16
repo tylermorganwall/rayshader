@@ -12,24 +12,24 @@
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Create a direct mapping of elevation to color:
-#'montereybay |>
+#'montereybay_spatial |>
 #'  height_shade() |>
 #'  plot_map()
 #'
 #'# Add lambertian shadows:
-#'montereybay |>
+#'montereybay_spatial |>
 #'  height_shade() |>
 #'  add_shadow(lamb_shade(vertical_exaggeration = 6),0) |>
 #'  plot_map()
 #'
 #'# Change the palette:
-#'montereybay |>
+#'montereybay_spatial |>
 #'  height_shade(texture = topo.colors(256)) |>
 #'  add_shadow(lamb_shade(vertical_exaggeration = 6),0) |>
 #'  plot_map()
 #'
 #'#Really change the palette (shield your eyes: gratuitous use of `rainbow()`):
-#'montereybay |>
+#'montereybay_spatial |>
 #'  height_shade(texture = rev(rainbow(256))) |>
 #'  add_shadow(lamb_shade(vertical_exaggeration = 6),0) |>
 #'  plot_map()

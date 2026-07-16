@@ -62,17 +62,17 @@
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Create the water palette
 #'water_palette = colorRampPalette(c("darkblue", "dodgerblue", "lightblue"))(200)
-#'bathy_hs = height_shade(montereybay, texture = water_palette)
+#'bathy_hs = height_shade(montereybay_spatial, texture = water_palette)
 #'#Set scalebar font
 #'par(family = "Arial")
 #'
 #'#Generate flat water heightmap
-#'mbay = montereybay
+#'mbay = montereybay_spatial
 #'mbay[mbay < 0] = 0
 #'
 #'base_map = mbay |>
 #' height_shade() |>
-#' add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0))  |>
+#' add_overlay(generate_altitude_overlay(bathy_hs, montereybay_spatial, 0, 0))  |>
 #' add_shadow(lamb_shade(vertical_exaggeration = 4),0.3)
 #'
 #'#Add a scalebar
@@ -139,593 +139,608 @@
 #'                                        tick_color="red", tick_width=0,
 #'                                        bearing=0, adj = 0, flip_ticks = TRUE,
 #'                                        halo_color="black", halo_blur=3, halo_alpha=0.5,
-#'                                        width = ncol(montereybay)*2,
-#'                                        height = nrow(montereybay)*2,
+#'                                        width = ncol(montereybay_spatial)*2,
+#'                                        height = nrow(montereybay_spatial)*2,
 #'                                        latlong=TRUE), rescale_original=TRUE) |>
 #'  plot_map()
 generate_scalebar_overlay = function(
-	extent = NULL,
-	length,
-	x = 0.05,
-	y = 0.05,
-	latlong = NA,
-	thickness = NA,
-	bearing = 90,
-	unit = "m",
-	flip_ticks = FALSE,
-	labels = NA,
-	text_size = 1,
-	decimals = 0,
-	text_offset = 1,
-	adj = 0.5,
-	heightmap = NULL,
-	width = NA,
-	height = NA,
-	resolution_multiply = 1,
-	color1 = "white",
-	color2 = "black",
-	text_color = "black",
-	font = 1,
-	border_color = "black",
-	tick_color = "black",
-	border_width = 1,
-	tick_width = 1,
-	halo_color = NA,
-	halo_expand = 1,
-	halo_alpha = 1,
-	halo_offset = c(0, 0),
-	halo_blur = 0,
-	halo_edge_softness = 0.1,
-	halo_gap_fill = 2,
-	halo_gap_fill_alpha_threshold = 0.25
+  extent = NULL,
+  length,
+  x = 0.05,
+  y = 0.05,
+  latlong = NA,
+  thickness = NA,
+  bearing = 90,
+  unit = "m",
+  flip_ticks = FALSE,
+  labels = NA,
+  text_size = 1,
+  decimals = 0,
+  text_offset = 1,
+  adj = 0.5,
+  heightmap = NULL,
+  width = NA,
+  height = NA,
+  resolution_multiply = 1,
+  color1 = "white",
+  color2 = "black",
+  text_color = "black",
+  font = 1,
+  border_color = "black",
+  tick_color = "black",
+  border_width = 1,
+  tick_width = 1,
+  halo_color = NA,
+  halo_expand = 1,
+  halo_alpha = 1,
+  halo_offset = c(0, 0),
+  halo_blur = 0,
+  halo_edge_softness = 0.1,
+  halo_gap_fill = 2,
+  halo_gap_fill_alpha_threshold = 0.25
 ) {
-	loc = rep(0, 2)
-	heightmap = resolve_overlay_heightmap(
-		heightmap = heightmap,
-		heightmap_missing = missing(heightmap),
-		width = width,
-		height = height,
-		caller = "generate_scalebar_overlay"
-	)
-	latlong = resolve_scalebar_overlay_latlong(
-		latlong = latlong,
-		extent = extent,
-		heightmap = heightmap,
-		caller = "generate_scalebar_overlay"
-	)
-	extent = resolve_scene_render_extent(
-		extent = extent,
-		heightmap = heightmap,
-		caller = "generate_scalebar_overlay"
-	)
-	extent = get_extent(extent)
-	xdiff = extent["xmax"] - extent["xmin"]
-	ydiff = extent["ymax"] - extent["ymin"]
+  loc = rep(0, 2)
+  heightmap = resolve_overlay_heightmap(
+    heightmap = heightmap,
+    heightmap_missing = missing(heightmap),
+    width = width,
+    height = height,
+    caller = "generate_scalebar_overlay"
+  )
+  latlong = resolve_scalebar_overlay_latlong(
+    latlong = latlong,
+    extent = extent,
+    heightmap = heightmap,
+    caller = "generate_scalebar_overlay"
+  )
+  extent = resolve_scene_render_extent(
+    extent = extent,
+    heightmap = heightmap,
+    caller = "generate_scalebar_overlay"
+  )
+  extent = get_extent(extent)
+  xdiff = extent["xmax"] - extent["xmin"]
+  ydiff = extent["ymax"] - extent["ymin"]
 
-	loc[1] = x * xdiff + extent["xmin"]
-	loc[2] = y * ydiff + extent["ymin"]
+  loc[1] = x * xdiff + extent["xmin"]
+  loc[2] = y * ydiff + extent["ymin"]
 
-	halo_offset[1] = halo_offset[1] * xdiff
-	halo_offset[2] = halo_offset[2] * ydiff
+  halo_offset[1] = halo_offset[1] * xdiff
+  halo_offset[2] = halo_offset[2] * ydiff
 
-	if (!(length(find.package("ragg", quiet = TRUE)) > 0)) {
-		png_device = grDevices::png
-	} else {
-		png_device = ragg::agg_png
-	}
-	if (is.na(height)) {
-		height = ncol(heightmap)
-	}
-	if (is.na(width)) {
-		width = nrow(heightmap)
-	}
-	og_height = height
-	og_width = width
-	height = height * resolution_multiply
-	width = width * resolution_multiply
-	text_size = text_size * resolution_multiply
-	border_width = border_width * resolution_multiply
-	tick_width = tick_width * resolution_multiply
-	halo_expand = halo_expand * resolution_multiply
-	halo_blur = halo_blur * resolution_multiply
-	halo_edge_softness = halo_edge_softness * resolution_multiply
-	halo_gap_fill = halo_gap_fill * resolution_multiply
+  if (!(length(find.package("ragg", quiet = TRUE)) > 0)) {
+    png_device = grDevices::png
+  } else {
+    png_device = ragg::agg_png
+  }
+  if (is.na(height)) {
+    height = ncol(heightmap)
+  }
+  if (is.na(width)) {
+    width = nrow(heightmap)
+  }
+  og_height = height
+  og_width = width
+  height = height * resolution_multiply
+  width = width * resolution_multiply
+  text_size = text_size * resolution_multiply
+  border_width = border_width * resolution_multiply
+  tick_width = tick_width * resolution_multiply
+  halo_expand = halo_expand * resolution_multiply
+  halo_blur = halo_blur * resolution_multiply
+  halo_edge_softness = halo_edge_softness * resolution_multiply
+  halo_gap_fill = halo_gap_fill * resolution_multiply
 
-	if (all(!is.na(labels)) && length(labels) != 3) {
-		stop("If specified, `labels` must be length-3 vector")
-	}
+  if (all(!is.na(labels)) && length(labels) != 3) {
+    stop("If specified, `labels` must be length-3 vector")
+  }
 
-	proj_length = length
-	if (is.na(thickness)) {
-		thickness = proj_length / 20
-	}
-	poly_list = list()
-	line_list = list()
-	text_list = list()
+  proj_length = length
+  if (is.na(thickness)) {
+    thickness = proj_length / 20
+  }
+  poly_list = list()
+  line_list = list()
+  text_list = list()
 
-	if (latlong) {
-		if (!(length(find.package("geosphere", quiet = TRUE)) > 0)) {
-			stop(
-				"{geosphere} package required for generate_scalebar_overlay() using lat/long coordinates"
-			)
-		}
-		length_val = length / 4
-		for (i in 1:4) {
-			temppoly = matrix(0, nrow = 4, ncol = 2)
-			templine = matrix(0, nrow = 2, ncol = 2)
-			if (i == 1) {
-				temppoly[1, ] = c(loc[1], loc[2])
-				temppoly[2, ] = geosphere::destPoint(
-					c(loc[1], loc[2]),
-					b = bearing,
-					d = length_val
-				)
-				temppoly[4, ] = geosphere::destPoint(
-					c(loc[1], loc[2]),
-					b = bearing - 90,
-					d = thickness
-				)
-				temppoly[3, ] = geosphere::destPoint(
-					temppoly[4, ],
-					b = bearing,
-					d = length_val
-				)
-				if (!flip_ticks) {
-					templine[1, ] = temppoly[4, ]
-					templine[2, ] = geosphere::destPoint(
-						temppoly[4, ],
-						b = bearing - 90,
-						d = thickness / 2
-					)
-				} else {
-					templine[1, ] = temppoly[1, ]
-					templine[2, ] = geosphere::destPoint(
-						temppoly[1, ],
-						b = bearing + 90,
-						d = thickness / 2
-					)
-				}
-			} else {
-				temppoly[1, ] = poly_list[[i - 1]][2, ]
-				temppoly[2, ] = geosphere::destPoint(
-					temppoly[1, ],
-					b = bearing,
-					d = length_val
-				)
-				temppoly[4, ] = geosphere::destPoint(
-					temppoly[1, ],
-					b = bearing - 90,
-					d = thickness
-				)
-				temppoly[3, ] = geosphere::destPoint(
-					temppoly[4, ],
-					b = bearing,
-					d = length_val
-				)
-				if (!flip_ticks) {
-					templine[1, ] = temppoly[4, ]
-					templine[2, ] = geosphere::destPoint(
-						temppoly[4, ],
-						b = bearing - 90,
-						d = thickness / 2
-					)
-				} else {
-					templine[1, ] = temppoly[1, ]
-					templine[2, ] = geosphere::destPoint(
-						temppoly[1, ],
-						b = bearing + 90,
-						d = thickness / 2
-					)
-				}
-			}
-			poly_list[[i]] = temppoly
-			line_list[[i]] = templine
-		}
-		line_list[[5]] = matrix(0, nrow = 2, ncol = 2)
+  if (latlong) {
+    if (!(length(find.package("geosphere", quiet = TRUE)) > 0)) {
+      stop(
+        "{geosphere} package required for generate_scalebar_overlay() using lat/long coordinates"
+      )
+    }
+    length_val = length / 4
+    for (i in 1:4) {
+      temppoly = matrix(0, nrow = 4, ncol = 2)
+      templine = matrix(0, nrow = 2, ncol = 2)
+      if (i == 1) {
+        temppoly[1, ] = c(loc[1], loc[2])
+        temppoly[2, ] = geosphere::destPoint(
+          c(loc[1], loc[2]),
+          b = bearing,
+          d = length_val
+        )
+        temppoly[4, ] = geosphere::destPoint(
+          c(loc[1], loc[2]),
+          b = bearing - 90,
+          d = thickness
+        )
+        temppoly[3, ] = geosphere::destPoint(
+          temppoly[4, ],
+          b = bearing,
+          d = length_val
+        )
+        if (!flip_ticks) {
+          templine[1, ] = temppoly[4, ]
+          templine[2, ] = geosphere::destPoint(
+            temppoly[4, ],
+            b = bearing - 90,
+            d = thickness / 2
+          )
+        } else {
+          templine[1, ] = temppoly[1, ]
+          templine[2, ] = geosphere::destPoint(
+            temppoly[1, ],
+            b = bearing + 90,
+            d = thickness / 2
+          )
+        }
+      } else {
+        temppoly[1, ] = poly_list[[i - 1]][2, ]
+        temppoly[2, ] = geosphere::destPoint(
+          temppoly[1, ],
+          b = bearing,
+          d = length_val
+        )
+        temppoly[4, ] = geosphere::destPoint(
+          temppoly[1, ],
+          b = bearing - 90,
+          d = thickness
+        )
+        temppoly[3, ] = geosphere::destPoint(
+          temppoly[4, ],
+          b = bearing,
+          d = length_val
+        )
+        if (!flip_ticks) {
+          templine[1, ] = temppoly[4, ]
+          templine[2, ] = geosphere::destPoint(
+            temppoly[4, ],
+            b = bearing - 90,
+            d = thickness / 2
+          )
+        } else {
+          templine[1, ] = temppoly[1, ]
+          templine[2, ] = geosphere::destPoint(
+            temppoly[1, ],
+            b = bearing + 90,
+            d = thickness / 2
+          )
+        }
+      }
+      poly_list[[i]] = temppoly
+      line_list[[i]] = templine
+    }
+    line_list[[5]] = matrix(0, nrow = 2, ncol = 2)
 
-		if (!flip_ticks) {
-			line_list[[5]][1, ] = poly_list[[4]][3, ]
-			line_list[[5]][2, ] = geosphere::destPoint(
-				poly_list[[4]][3, ],
-				b = bearing - 90,
-				d = thickness / 2
-			)
+    if (!flip_ticks) {
+      line_list[[5]][1, ] = poly_list[[4]][3, ]
+      line_list[[5]][2, ] = geosphere::destPoint(
+        poly_list[[4]][3, ],
+        b = bearing - 90,
+        d = thickness / 2
+      )
 
-			text_list[[1]] = geosphere::destPoint(
-				line_list[[1]][2, ],
-				b = bearing - 90,
-				d = thickness * text_offset
-			)
-			text_list[[2]] = geosphere::destPoint(
-				line_list[[3]][2, ],
-				b = bearing - 90,
-				d = thickness * text_offset
-			)
-			text_list[[3]] = geosphere::destPoint(
-				line_list[[5]][2, ],
-				b = bearing - 90,
-				d = thickness * text_offset
-			)
-		} else {
-			line_list[[5]][1, ] = poly_list[[4]][2, ]
-			line_list[[5]][2, ] = geosphere::destPoint(
-				poly_list[[4]][2, ],
-				b = bearing + 90,
-				d = thickness / 2
-			)
+      text_list[[1]] = geosphere::destPoint(
+        line_list[[1]][2, ],
+        b = bearing - 90,
+        d = thickness * text_offset
+      )
+      text_list[[2]] = geosphere::destPoint(
+        line_list[[3]][2, ],
+        b = bearing - 90,
+        d = thickness * text_offset
+      )
+      text_list[[3]] = geosphere::destPoint(
+        line_list[[5]][2, ],
+        b = bearing - 90,
+        d = thickness * text_offset
+      )
+    } else {
+      line_list[[5]][1, ] = poly_list[[4]][2, ]
+      line_list[[5]][2, ] = geosphere::destPoint(
+        poly_list[[4]][2, ],
+        b = bearing + 90,
+        d = thickness / 2
+      )
 
-			text_list[[1]] = geosphere::destPoint(
-				line_list[[1]][2, ],
-				b = bearing + 90,
-				d = thickness * text_offset
-			)
-			text_list[[2]] = geosphere::destPoint(
-				line_list[[3]][2, ],
-				b = bearing + 90,
-				d = thickness * text_offset
-			)
-			text_list[[3]] = geosphere::destPoint(
-				line_list[[5]][2, ],
-				b = bearing + 90,
-				d = thickness * text_offset
-			)
-		}
-	} else {
-		length_val = length / 4
-		dir = c(sinpi(bearing / 180), cospi(bearing / 180))
-		dir2 = c(sinpi(bearing / 180 - 1 / 2), cospi(bearing / 180 - 1 / 2))
-		dir3 = c(sinpi(bearing / 180 + 1 / 2), cospi(bearing / 180 + 1 / 2))
+      text_list[[1]] = geosphere::destPoint(
+        line_list[[1]][2, ],
+        b = bearing + 90,
+        d = thickness * text_offset
+      )
+      text_list[[2]] = geosphere::destPoint(
+        line_list[[3]][2, ],
+        b = bearing + 90,
+        d = thickness * text_offset
+      )
+      text_list[[3]] = geosphere::destPoint(
+        line_list[[5]][2, ],
+        b = bearing + 90,
+        d = thickness * text_offset
+      )
+    }
+  } else {
+    length_val = length / 4
+    dir = c(sinpi(bearing / 180), cospi(bearing / 180))
+    dir2 = c(sinpi(bearing / 180 - 1 / 2), cospi(bearing / 180 - 1 / 2))
+    dir3 = c(sinpi(bearing / 180 + 1 / 2), cospi(bearing / 180 + 1 / 2))
 
-		for (i in 1:4) {
-			temppoly = matrix(0, nrow = 4, ncol = 2)
-			templine = matrix(0, nrow = 2, ncol = 2)
-			if (i == 1) {
-				temppoly[1, ] = c(loc[1], loc[2])
-				temppoly[2, ] = c(loc[1], loc[2]) + length_val * dir
-				temppoly[4, ] = c(loc[1], loc[2]) + thickness * dir2
-				temppoly[3, ] = temppoly[4, ] + length_val * dir
-				if (!flip_ticks) {
-					templine[1, ] = temppoly[4, ]
-					templine[2, ] = temppoly[4, ] + thickness / 2 * dir2
-				} else {
-					templine[1, ] = temppoly[1, ]
-					templine[2, ] = temppoly[1, ] + thickness / 2 * dir3
-				}
-			} else {
-				temppoly[1, ] = poly_list[[i - 1]][2, ]
-				temppoly[2, ] = temppoly[1, ] + length_val * dir
-				temppoly[4, ] = temppoly[1, ] + thickness * dir2
-				temppoly[3, ] = temppoly[4, ] + length_val * dir
-				if (!flip_ticks) {
-					templine[1, ] = temppoly[4, ]
-					templine[2, ] = temppoly[4, ] + thickness / 2 * dir2
-				} else {
-					templine[1, ] = temppoly[1, ]
-					templine[2, ] = temppoly[1, ] + thickness / 2 * dir3
-				}
-			}
-			poly_list[[i]] = temppoly
-			line_list[[i]] = templine
-		}
-		line_list[[5]] = matrix(0, nrow = 2, ncol = 2)
-		if (!flip_ticks) {
-			line_list[[5]][1, ] = poly_list[[4]][3, ]
-			line_list[[5]][2, ] = poly_list[[4]][3, ] + thickness / 2 * dir2
+    for (i in 1:4) {
+      temppoly = matrix(0, nrow = 4, ncol = 2)
+      templine = matrix(0, nrow = 2, ncol = 2)
+      if (i == 1) {
+        temppoly[1, ] = c(loc[1], loc[2])
+        temppoly[2, ] = c(loc[1], loc[2]) + length_val * dir
+        temppoly[4, ] = c(loc[1], loc[2]) + thickness * dir2
+        temppoly[3, ] = temppoly[4, ] + length_val * dir
+        if (!flip_ticks) {
+          templine[1, ] = temppoly[4, ]
+          templine[2, ] = temppoly[4, ] + thickness / 2 * dir2
+        } else {
+          templine[1, ] = temppoly[1, ]
+          templine[2, ] = temppoly[1, ] + thickness / 2 * dir3
+        }
+      } else {
+        temppoly[1, ] = poly_list[[i - 1]][2, ]
+        temppoly[2, ] = temppoly[1, ] + length_val * dir
+        temppoly[4, ] = temppoly[1, ] + thickness * dir2
+        temppoly[3, ] = temppoly[4, ] + length_val * dir
+        if (!flip_ticks) {
+          templine[1, ] = temppoly[4, ]
+          templine[2, ] = temppoly[4, ] + thickness / 2 * dir2
+        } else {
+          templine[1, ] = temppoly[1, ]
+          templine[2, ] = temppoly[1, ] + thickness / 2 * dir3
+        }
+      }
+      poly_list[[i]] = temppoly
+      line_list[[i]] = templine
+    }
+    line_list[[5]] = matrix(0, nrow = 2, ncol = 2)
+    if (!flip_ticks) {
+      line_list[[5]][1, ] = poly_list[[4]][3, ]
+      line_list[[5]][2, ] = poly_list[[4]][3, ] + thickness / 2 * dir2
 
-			text_list[[1]] = line_list[[1]][2, ] + thickness * text_offset * dir2
-			text_list[[2]] = line_list[[3]][2, ] + thickness * text_offset * dir2
-			text_list[[3]] = line_list[[5]][2, ] + thickness * text_offset * dir2
-		} else {
-			line_list[[5]][1, ] = poly_list[[4]][2, ]
-			line_list[[5]][2, ] = poly_list[[4]][2, ] + thickness / 2 * dir3
+      text_list[[1]] = line_list[[1]][2, ] + thickness * text_offset * dir2
+      text_list[[2]] = line_list[[3]][2, ] + thickness * text_offset * dir2
+      text_list[[3]] = line_list[[5]][2, ] + thickness * text_offset * dir2
+    } else {
+      line_list[[5]][1, ] = poly_list[[4]][2, ]
+      line_list[[5]][2, ] = poly_list[[4]][2, ] + thickness / 2 * dir3
 
-			text_list[[1]] = line_list[[1]][2, ] + thickness * text_offset * dir3
-			text_list[[2]] = line_list[[3]][2, ] + thickness * text_offset * dir3
-			text_list[[3]] = line_list[[5]][2, ] + thickness * text_offset * dir3
-		}
-	}
-	tempoverlay = tempfile(fileext = ".png")
-	png_device(
-		filename = tempoverlay,
-		width = width,
-		height = height,
-		units = "px",
-		bg = "transparent"
-	)
-	graphics::par(mar = c(0, 0, 0, 0))
-	graphics::plot(
-		x = c(extent["xmin"], extent["ymin"]),
-		y = c(extent["xmax"], extent["ymax"]),
-		xlim = c(extent["xmin"], extent["xmax"]),
-		ylim = c(extent["ymin"], extent["ymax"]),
-		pch = 0,
-		bty = "n",
-		axes = FALSE,
-		xaxs = "i",
-		yaxs = "i",
-		cex = 0,
-		col = NA
-	)
+      text_list[[1]] = line_list[[1]][2, ] + thickness * text_offset * dir3
+      text_list[[2]] = line_list[[3]][2, ] + thickness * text_offset * dir3
+      text_list[[3]] = line_list[[5]][2, ] + thickness * text_offset * dir3
+    }
+  }
+  tempoverlay = tempfile(fileext = ".png")
+  png_device(
+    filename = tempoverlay,
+    width = width,
+    height = height,
+    units = "px",
+    bg = "transparent"
+  )
+  graphics::par(mar = c(0, 0, 0, 0))
+  graphics::plot(
+    x = c(extent["xmin"], extent["ymin"]),
+    y = c(extent["xmax"], extent["ymax"]),
+    xlim = c(extent["xmin"], extent["xmax"]),
+    ylim = c(extent["ymin"], extent["ymax"]),
+    pch = 0,
+    bty = "n",
+    axes = FALSE,
+    xaxs = "i",
+    yaxs = "i",
+    cex = 0,
+    col = NA
+  )
 
-	cols <- rep(c(color1, color2), 2)
-	for (i in 1:4) {
-		graphics::polygon(
-			poly_list[[i]],
-			col = cols[i],
-			border = border_color,
-			lwd = border_width
-		)
-	}
-	for (i in 1:5) {
-		graphics::segments(
-			line_list[[i]][1, 1],
-			line_list[[i]][1, 2],
-			line_list[[i]][2, 1],
-			line_list[[i]][2, 2],
-			col = tick_color,
-			lwd = tick_width
-		)
-	}
+  cols = rep(c(color1, color2), 2)
+  for (i in 1:4) {
+    graphics::polygon(
+      poly_list[[i]],
+      col = cols[i],
+      border = border_color,
+      lwd = border_width
+    )
+  }
+  for (i in 1:5) {
+    graphics::segments(
+      line_list[[i]][1, 1],
+      line_list[[i]][1, 2],
+      line_list[[i]][2, 1],
+      line_list[[i]][2, 2],
+      col = tick_color,
+      lwd = tick_width
+    )
+  }
 
-	if (all(is.na(labels)) || length(labels) != 3) {
-		format_string = paste0(c("%0.", decimals, "f"), collapse = "")
-		labels <- paste0(
-			c(sprintf(format_string, c(0, length / 2, length))),
-			c("", "", unit)
-		)
-	}
+  if (all(is.na(labels)) || length(labels) != 3) {
+    format_string = paste0(c("%0.", decimals, "f"), collapse = "")
+    labels = paste0(
+      c(sprintf(format_string, c(0, length / 2, length))),
+      c("", "", unit)
+    )
+  }
 
-	graphics::text(
-		text_list[[1]][1],
-		text_list[[1]][2],
-		labels = labels[1],
-		adj = adj,
-		cex = text_size,
-		col = text_color,
-		font = font
-	)
-	graphics::text(
-		text_list[[2]][1],
-		text_list[[2]][2],
-		labels = labels[2],
-		adj = adj,
-		cex = text_size,
-		col = text_color,
-		font = font
-	)
-	graphics::text(
-		text_list[[3]][1],
-		text_list[[3]][2],
-		labels = labels[3],
-		adj = adj,
-		cex = text_size,
-		col = text_color,
-		font = font
-	)
+  graphics::text(
+    text_list[[1]][1],
+    text_list[[1]][2],
+    labels = labels[1],
+    adj = adj,
+    cex = text_size,
+    col = text_color,
+    font = font
+  )
+  graphics::text(
+    text_list[[2]][1],
+    text_list[[2]][2],
+    labels = labels[2],
+    adj = adj,
+    cex = text_size,
+    col = text_color,
+    font = font
+  )
+  graphics::text(
+    text_list[[3]][1],
+    text_list[[3]][2],
+    labels = labels[3],
+    adj = adj,
+    cex = text_size,
+    col = text_color,
+    font = font
+  )
 
-	grDevices::dev.off() #resets par
-	overlay_temp = rayimage::ray_read_image(tempoverlay)
-	if (!is.na(halo_color)) {
-		if (!(length(find.package("rayimage", quiet = TRUE)) > 0)) {
-			stop("{rayimage} package required for `halo_color`")
-		}
-		tempoverlay = tempfile(fileext = ".png")
-		png_device(
-			filename = tempoverlay,
-			width = width,
-			height = height,
-			units = "px",
-			bg = "transparent"
-		)
-		graphics::par(mar = c(0, 0, 0, 0))
-		graphics::plot(
-			x = c(extent["xmin"], extent["ymin"]),
-			y = c(extent["xmax"], extent["ymax"]),
-			xlim = c(extent["xmin"], extent["xmax"]),
-			ylim = c(extent["ymin"], extent["ymax"]),
-			pch = 0,
-			bty = "n",
-			axes = FALSE,
-			xaxs = "i",
-			yaxs = "i",
-			cex = 0,
-			col = NA
-		)
+  grDevices::dev.off() #resets par
+  overlay_temp = rayimage::ray_read_image(tempoverlay)
+  if (!is.na(halo_color)) {
+    if (!(length(find.package("rayimage", quiet = TRUE)) > 0)) {
+      stop("{rayimage} package required for `halo_color`")
+    }
+    tempoverlay = tempfile(fileext = ".png")
+    png_device(
+      filename = tempoverlay,
+      width = width,
+      height = height,
+      units = "px",
+      bg = "transparent"
+    )
+    graphics::par(mar = c(0, 0, 0, 0))
+    graphics::plot(
+      x = c(extent["xmin"], extent["ymin"]),
+      y = c(extent["xmax"], extent["ymax"]),
+      xlim = c(extent["xmin"], extent["xmax"]),
+      ylim = c(extent["ymin"], extent["ymax"]),
+      pch = 0,
+      bty = "n",
+      axes = FALSE,
+      xaxs = "i",
+      yaxs = "i",
+      cex = 0,
+      col = NA
+    )
 
-		cols <- rep(c(color1, color2), 2)
-		offset_mat = matrix(halo_offset, nrow = 4, ncol = 2, byrow = TRUE)
-		for (i in 1:4) {
-			graphics::polygon(
-				poly_list[[i]] + offset_mat,
-				col = cols[i],
-				border = border_color,
-				lwd = border_width
-			)
-		}
-		for (i in 1:5) {
-			graphics::segments(
-				line_list[[i]][1, 1] + halo_offset[1],
-				line_list[[i]][1, 2] + halo_offset[2],
-				line_list[[i]][2, 1] + halo_offset[1],
-				line_list[[i]][2, 2] + halo_offset[2],
-				col = tick_color,
-				lwd = tick_width
-			)
-		}
+    cols = rep(c(color1, color2), 2)
+    offset_mat = matrix(halo_offset, nrow = 4, ncol = 2, byrow = TRUE)
+    for (i in 1:4) {
+      graphics::polygon(
+        poly_list[[i]] + offset_mat,
+        col = cols[i],
+        border = border_color,
+        lwd = border_width
+      )
+    }
+    for (i in 1:5) {
+      graphics::segments(
+        line_list[[i]][1, 1] + halo_offset[1],
+        line_list[[i]][1, 2] + halo_offset[2],
+        line_list[[i]][2, 1] + halo_offset[1],
+        line_list[[i]][2, 2] + halo_offset[2],
+        col = tick_color,
+        lwd = tick_width
+      )
+    }
 
-		graphics::text(
-			text_list[[1]][1] + halo_offset[1],
-			text_list[[1]][2] + halo_offset[2],
-			labels = labels[1],
-			adj = adj,
-			cex = text_size,
-			col = text_color,
-			font = font
-		)
-		graphics::text(
-			text_list[[2]][1] + halo_offset[1],
-			text_list[[2]][2] + halo_offset[2],
-			labels = labels[2],
-			adj = adj,
-			cex = text_size,
-			col = text_color,
-			font = font
-		)
-		graphics::text(
-			text_list[[3]][1] + halo_offset[1],
-			text_list[[3]][2] + halo_offset[2],
-			labels = labels[3],
-			adj = adj,
-			cex = text_size,
-			col = text_color,
-			font = font
-		)
+    graphics::text(
+      text_list[[1]][1] + halo_offset[1],
+      text_list[[1]][2] + halo_offset[2],
+      labels = labels[1],
+      adj = adj,
+      cex = text_size,
+      col = text_color,
+      font = font
+    )
+    graphics::text(
+      text_list[[2]][1] + halo_offset[1],
+      text_list[[2]][2] + halo_offset[2],
+      labels = labels[2],
+      adj = adj,
+      cex = text_size,
+      col = text_color,
+      font = font
+    )
+    graphics::text(
+      text_list[[3]][1] + halo_offset[1],
+      text_list[[3]][2] + halo_offset[2],
+      labels = labels[3],
+      adj = adj,
+      cex = text_size,
+      col = text_color,
+      font = font
+    )
 
-		grDevices::dev.off() #resets par
-		overlay_temp_under = rayimage::ray_read_image(tempoverlay)
-		overlay_temp_under = generate_halo_underlay(
-			overlay_temp_under,
-			halo_expand,
-			halo_offset,
-			halo_color,
-			halo_alpha,
-			halo_blur,
-			halo_edge_softness,
-			halo_gap_fill,
-			halo_gap_fill_alpha_threshold
-		)
-		overlay_temp = rayimage::render_image_overlay(
-			overlay_temp_under,
-			overlay_temp
-		)
-	}
-	return(overlay_temp)
+    grDevices::dev.off() #resets par
+    overlay_temp_under = rayimage::ray_read_image(tempoverlay)
+    overlay_temp_under = generate_halo_underlay(
+      overlay_temp_under,
+      halo_expand,
+      halo_offset,
+      halo_color,
+      halo_alpha,
+      halo_blur,
+      halo_edge_softness,
+      halo_gap_fill,
+      halo_gap_fill_alpha_threshold
+    )
+    overlay_temp = rayimage::render_image_overlay(
+      overlay_temp_under,
+      overlay_temp
+    )
+  }
+  return(overlay_temp)
 }
 
 resolve_scalebar_overlay_latlong = function(
-	latlong = NA,
-	extent = NULL,
-	heightmap = NULL,
-	caller = NULL
+  latlong = NA,
+  extent = NULL,
+  heightmap = NULL,
+  caller = NULL
 ) {
-	latlong = validate_scalebar_latlong(latlong, caller = caller)
-	inferred_latlong = infer_scalebar_spatial_latlong(
-		extent = extent,
-		heightmap = heightmap,
-		caller = caller
-	)
-	if (!is.na(inferred_latlong)) {
-		return(inferred_latlong)
-	}
-	if (is.matrix(heightmap)) {
-		return(isTRUE(latlong))
-	}
-	FALSE
+  latlong = validate_scalebar_latlong(latlong, caller = caller)
+  inferred_latlong = infer_scalebar_spatial_latlong(
+    extent = extent,
+    heightmap = heightmap,
+    caller = caller
+  )
+  if (!is.na(inferred_latlong)) {
+    return(inferred_latlong)
+  }
+  if (is.matrix(heightmap)) {
+    return(isTRUE(latlong))
+  }
+  FALSE
 }
 
 validate_scalebar_latlong = function(latlong = NA, caller = NULL) {
-	if (
-		length(latlong) != 1 ||
-			!(is.logical(latlong) || is.numeric(latlong))
-	) {
-		stop(
-			paste0(
-				format_render_caller_prefix(caller),
-				"`latlong` must be TRUE, FALSE, or NA."
-			),
-			call. = FALSE
-		)
-	}
-	as.logical(latlong)
+  if (
+    length(latlong) != 1 ||
+      !(is.logical(latlong) || is.numeric(latlong))
+  ) {
+    stop(
+      paste0(
+        format_render_caller_prefix(caller),
+        "`latlong` must be TRUE, FALSE, or NA."
+      ),
+      call. = FALSE
+    )
+  }
+  as.logical(latlong)
 }
 
 infer_scalebar_spatial_latlong = function(
-	extent = NULL,
-	heightmap = NULL,
-	caller = NULL
+  extent = NULL,
+  heightmap = NULL,
+  caller = NULL
 ) {
-	candidates = list(
-		infer_scalebar_input_latlong(extent),
-		infer_scalebar_input_latlong(heightmap),
-		infer_scalebar_crs_latlong(tryCatch(
-			get_scene_target_crs(
-				extent = extent,
-				heightmap = heightmap,
-				caller = caller
-			),
-			error = function(e) NULL
-		)),
-		infer_scalebar_crs_latlong(get_scene_crs(default = NULL)),
-		infer_scalebar_crs_latlong(get_hillshade_crs(default = NULL))
-	)
-	for (candidate in candidates) {
-		if (!is.na(candidate)) {
-			return(candidate)
-		}
-	}
-	NA
+  candidates = list(
+    infer_scalebar_input_latlong(extent),
+    infer_scalebar_input_latlong(heightmap),
+    infer_scalebar_crs_latlong(tryCatch(
+      get_scene_target_crs(
+        extent = extent,
+        heightmap = heightmap,
+        caller = caller
+      ),
+      error = function(e) NULL
+    )),
+    infer_scalebar_crs_latlong(get_scene_crs(default = NULL)),
+    infer_scalebar_crs_latlong(get_hillshade_crs(default = NULL))
+  )
+  for (candidate in candidates) {
+    if (!is.na(candidate)) {
+      return(candidate)
+    }
+  }
+  NA
 }
 
 infer_scalebar_input_latlong = function(x) {
-	if (is.null(x)) {
-		return(NA)
-	}
-	if (inherits(x, "SpatRaster")) {
-		is_lonlat = tryCatch(terra::is.lonlat(x), error = function(e) NA)
-		if (isTRUE(is_lonlat)) {
-			return(TRUE)
-		}
-		crs_value = tryCatch(terra::crs(x), error = function(e) NULL)
-		if (!is.null(crs_value) && nzchar(trimws(as.character(crs_value)[1]))) {
-			return(FALSE)
-		}
-		return(NA)
-	}
-	if (inherits(x, c("RasterLayer", "RasterBrick", "RasterStack"))) {
-		is_lonlat = tryCatch(raster::isLonLat(x), error = function(e) NA)
-		if (isTRUE(is_lonlat)) {
-			return(TRUE)
-		}
-		crs_value = tryCatch(raster::projection(x), error = function(e) NULL)
-		if (!is.null(crs_value) && nzchar(trimws(as.character(crs_value)[1]))) {
-			return(FALSE)
-		}
-		return(NA)
-	}
-	if (
-		inherits(x, c(
-			"sf", "sfc", "sfg", "Spatial", "bbox",
-			"SpatialPolygonsDataFrame", "SpatialPoints", "SpatialPointsDataFrame",
-			"SpatialMultiPoints", "SpatialMultiPointsDataFrame", "SpatialPixels",
-			"SpatialPixelsDataFrame", "SpatialGrid", "SpatialGridDataFrame",
-			"SpatialLines", "SpatialLinesDataFrame", "SpatialPolygons"
-		))
-	) {
-		return(infer_scalebar_crs_latlong(tryCatch(
-			sf::st_crs(x),
-			error = function(e) NULL
-		)))
-	}
-	infer_scalebar_crs_latlong(tryCatch(
-		attr(x, "crs", exact = TRUE),
-		error = function(e) NULL
-	))
+  if (is.null(x)) {
+    return(NA)
+  }
+  if (inherits(x, "SpatRaster")) {
+    is_lonlat = tryCatch(terra::is.lonlat(x), error = function(e) NA)
+    if (isTRUE(is_lonlat)) {
+      return(TRUE)
+    }
+    crs_value = tryCatch(terra::crs(x), error = function(e) NULL)
+    if (!is.null(crs_value) && nzchar(trimws(as.character(crs_value)[1]))) {
+      return(FALSE)
+    }
+    return(NA)
+  }
+  if (inherits(x, c("RasterLayer", "RasterBrick", "RasterStack"))) {
+    is_lonlat = tryCatch(raster::isLonLat(x), error = function(e) NA)
+    if (isTRUE(is_lonlat)) {
+      return(TRUE)
+    }
+    crs_value = tryCatch(raster::projection(x), error = function(e) NULL)
+    if (!is.null(crs_value) && nzchar(trimws(as.character(crs_value)[1]))) {
+      return(FALSE)
+    }
+    return(NA)
+  }
+  if (
+    inherits(
+      x,
+      c(
+        "sf",
+        "sfc",
+        "sfg",
+        "Spatial",
+        "bbox",
+        "SpatialPolygonsDataFrame",
+        "SpatialPoints",
+        "SpatialPointsDataFrame",
+        "SpatialMultiPoints",
+        "SpatialMultiPointsDataFrame",
+        "SpatialPixels",
+        "SpatialPixelsDataFrame",
+        "SpatialGrid",
+        "SpatialGridDataFrame",
+        "SpatialLines",
+        "SpatialLinesDataFrame",
+        "SpatialPolygons"
+      )
+    )
+  ) {
+    return(infer_scalebar_crs_latlong(tryCatch(
+      sf::st_crs(x),
+      error = function(e) NULL
+    )))
+  }
+  infer_scalebar_crs_latlong(tryCatch(
+    attr(x, "crs", exact = TRUE),
+    error = function(e) NULL
+  ))
 }
 
 infer_scalebar_crs_latlong = function(crs) {
-	if (is.null(crs) || !(length(find.package("sf", quiet = TRUE)) > 0)) {
-		return(NA)
-	}
-	parsed_crs = try_parse_scene_crs(crs)
-	if (is.null(parsed_crs)) {
-		return(NA)
-	}
-	is_lonlat = tryCatch(sf::st_is_longlat(parsed_crs), error = function(e) NA)
-	if (isTRUE(is_lonlat)) {
-		return(TRUE)
-	}
-	if (identical(is_lonlat, FALSE)) {
-		return(FALSE)
-	}
-	NA
+  if (is.null(crs) || !(length(find.package("sf", quiet = TRUE)) > 0)) {
+    return(NA)
+  }
+  parsed_crs = try_parse_scene_crs(crs)
+  if (is.null(parsed_crs)) {
+    return(NA)
+  }
+  is_lonlat = tryCatch(sf::st_is_longlat(parsed_crs), error = function(e) NA)
+  if (isTRUE(is_lonlat)) {
+    return(TRUE)
+  }
+  if (identical(is_lonlat, FALSE)) {
+    return(FALSE)
+  }
+  NA
 }

@@ -40,7 +40,7 @@
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #' #Create a flat body of water for Monterey Bay
-#' montbay = raster_to_matrix(montereybay)
+#' montbay = raster_to_matrix(montereybay_spatial)
 #' montbay[montbay < 0] = 0
 #'
 #' #Generate base map with no lines
@@ -89,92 +89,92 @@
 #'                                          evenly_spaced = TRUE, breaks=50)) |>
 #'   plot_map()
 generate_waterline_overlay = function(
-	heightmap,
-	color = "white",
-	linewidth = 1,
-	boolean = FALSE,
-	min = 0.001,
-	max = 0.20,
-	breaks = 9,
-	smooth = 0,
-	fade = TRUE,
-	alpha_dist = max,
-	alpha = 1,
-	falloff = 1.3,
-	evenly_spaced = FALSE,
-	zscale = 1,
-	cutoff = 0.9999999,
-	width = NA,
-	height = NA,
-	resolution_multiply = 1,
-	min_area = length(heightmap) / 400,
-	max_height = NULL,
-	return_distance_matrix = FALSE
+  heightmap,
+  color = "white",
+  linewidth = 1,
+  boolean = FALSE,
+  min = 0.001,
+  max = 0.20,
+  breaks = 9,
+  smooth = 0,
+  fade = TRUE,
+  alpha_dist = max,
+  alpha = 1,
+  falloff = 1.3,
+  evenly_spaced = FALSE,
+  zscale = 1,
+  cutoff = 0.9999999,
+  width = NA,
+  height = NA,
+  resolution_multiply = 1,
+  min_area = length(heightmap) / 400,
+  max_height = NULL,
+  return_distance_matrix = FALSE
 ) {
-	breaks = breaks + 1
-	if (smooth < 0 || !is.numeric(smooth)) {
-		stop("`smooth` should be a numeric value greater than or equal to zero.")
-	}
-	if (breaks < 1) {
-		stop("`breaks` should be a value greater than or equal to one.")
-	}
-	if (alpha > 1 || alpha < 0) {
-		stop("`alpha` should be a value greater than zero or less than one")
-	}
-	if (!boolean) {
-		is_water = detect_water(
-			heightmap,
-			zscale = zscale,
-			cutoff = cutoff,
-			min_area = min_area,
-			max_height = max_height
-		)
-	} else {
-		is_water = heightmap
-	}
-	water_dist = rayimage::render_boolean_distance(is_water != 1)
-	if (return_distance_matrix) {
-		return(flipud(water_dist))
-	}
-	water_dist_bool = scales::rescale(water_dist, to = c(0, 1))
-	if (smooth != 0) {
-		water_dist_bool = rayimage::render_convolution(
-			water_dist_bool,
-			kernel = smooth,
-			kernel_dim = 21
-		)
-		water_dist_bool[!is_water] = 0
-		water_dist_bool = scales::rescale(unclass(water_dist_bool), to = c(0, 1))
-	  class(water_dist_bool) = c('rayimg', 'matrix', 'array')
-	}
-	water_dist_bool = flipud(water_dist_bool)
-	if (!evenly_spaced) {
-		levels = rep(0, breaks)
-		temp = max
-		for (i in seq_len(breaks)) {
-			levels[i] = temp
-			temp = temp / falloff
-		}
-	} else {
-		levels = seq(0, 1, length.out = breaks)
-	}
-	levels = scales::rescale(levels, to = c(min, max))
-	overlay = generate_contour_overlay(
-		water_dist_bool,
-		levels = levels,
-		width = width,
-		height = height,
-		resolution_multiply = resolution_multiply,
-		color = color,
-		linewidth = linewidth
-	)
-	if (fade) {
-		alpha_vals = water_dist_bool
-		alpha_vals = alpha_vals / alpha_dist
-		alpha_vals[alpha_vals > 1] = 1
-		alpha_vals = 1 - alpha_vals
-		overlay[,, 4] = overlay[,, 4] * (t(alpha_vals))
-	}
-	overlay[,, 4] = overlay[,, 4] * alpha
-	return(overlay)
+  breaks = breaks + 1
+  if (smooth < 0 || !is.numeric(smooth)) {
+    stop("`smooth` should be a numeric value greater than or equal to zero.")
+  }
+  if (breaks < 1) {
+    stop("`breaks` should be a value greater than or equal to one.")
+  }
+  if (alpha > 1 || alpha < 0) {
+    stop("`alpha` should be a value greater than zero or less than one")
+  }
+  if (!boolean) {
+    is_water = detect_water(
+      heightmap,
+      zscale = zscale,
+      cutoff = cutoff,
+      min_area = min_area,
+      max_height = max_height
+    )
+  } else {
+    is_water = heightmap
+  }
+  water_dist = rayimage::render_boolean_distance(is_water != 1)
+  if (return_distance_matrix) {
+    return(flipud(water_dist))
+  }
+  water_dist_bool = scales::rescale(water_dist, to = c(0, 1))
+  if (smooth != 0) {
+    water_dist_bool = rayimage::render_convolution(
+      water_dist_bool,
+      kernel = smooth,
+      kernel_dim = 21
+    )
+    water_dist_bool[!is_water] = 0
+    water_dist_bool = scales::rescale(unclass(water_dist_bool), to = c(0, 1))
+    class(water_dist_bool) = c('rayimg', 'matrix', 'array')
+  }
+  water_dist_bool = flipud(water_dist_bool)
+  if (!evenly_spaced) {
+    levels = rep(0, breaks)
+    temp = max
+    for (i in seq_len(breaks)) {
+      levels[i] = temp
+      temp = temp / falloff
+    }
+  } else {
+    levels = seq(0, 1, length.out = breaks)
+  }
+  levels = scales::rescale(levels, to = c(min, max))
+  overlay = generate_contour_overlay(
+    water_dist_bool,
+    levels = levels,
+    width = width,
+    height = height,
+    resolution_multiply = resolution_multiply,
+    color = color,
+    linewidth = linewidth
+  )
+  if (fade) {
+    alpha_vals = water_dist_bool
+    alpha_vals = alpha_vals / alpha_dist
+    alpha_vals[alpha_vals > 1] = 1
+    alpha_vals = 1 - alpha_vals
+    overlay[,, 4] = overlay[,, 4] * (t(alpha_vals))
+  }
+  overlay[,, 4] = overlay[,, 4] * alpha
+  return(overlay)
 }

@@ -154,7 +154,7 @@ Cache fallback messages are disabled by default. Set \code{options(rayshader.ver
 # to the nearest edge.
 \dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Render the county borders as polygons in Monterey Bay as terrain
-montereybay |>
+montereybay_spatial |>
   sphere_shade(texture = "desert",vertical_exaggeration = 20) |>
   add_shadow(ray_shade(vertical_exaggeration = 4)) |>
   plot_3d(water = TRUE, windowsize = 800, watercolor = "dodgerblue",

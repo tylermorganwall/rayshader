@@ -28,15 +28,15 @@
 #'       length(find.package("magick", quiet = TRUE)) > 0)) {
 #'  monterey = c(-121.892933,36.603053)
 #'  monterey_city = sf::st_sfc(sf::st_point(monterey))
-#'  sf::st_crs(monterey_city) = sf::st_crs(montereybay)
+#'  sf::st_crs(monterey_city) = sf::st_crs(montereybay_spatial)
 #'
 #'  #Generate Overlays
-#'  road_overlay = generate_line_overlay(monterey_roads_sf, heightmap = montereybay)
+#'  road_overlay = generate_line_overlay(monterey_roads_sf, heightmap = montereybay_spatial)
 #'  point_overlay = generate_point_overlay(monterey_city, color="red", size=1,
-#'                                         heightmap = montereybay)
+#'                                         heightmap = montereybay_spatial)
 #'
 #'  #Create 3D plot (water transparency set to 1 because multiple transparency layers can interfere)
-#'  montereybay |>
+#'  montereybay_spatial |>
 #'    height_shade() |>
 #'    add_shadow(ray_shade(vertical_exaggeration = 4),0.3) |>
 #'    plot_3d(water = TRUE, wateralpha = 1, windowsize = 800,

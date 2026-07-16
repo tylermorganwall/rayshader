@@ -29,8 +29,8 @@
 #'@return Displays snapshot of current rgl plot (or saves to disk).
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
-#'#Add a scale bar to the montereybay dataset, here representing about 80km
-#'montereybay |>
+#'#Add a scale bar to the montereybay_spatial dataset, here representing about 80km
+#'montereybay_spatial |>
 #'  sphere_shade(vertical_exaggeration = 20) |>
 #'  plot_3d(theta=45, vertical_exaggeration = 4, water=TRUE)
 #'render_scalebar(limits=c(0, 80), label_unit = "km")
@@ -75,347 +75,347 @@
 #'                label_unit = "km", radius=10,text_y_offset=-20,text_x_offset=20)
 #'render_snapshot()
 render_scalebar = function(
-	limits,
-	position = "W",
-	y = NULL,
-	segments = 10,
-	scale_length = 1,
-	label_unit = "",
-	offset = NULL,
-	radius = NULL,
-	color_first = "darkred",
-	color_second = "grey80",
-	color_text = "black",
-	text_switch_side = FALSE,
-	text_x_offset = 0,
-	text_y_offset = 0,
-	text_z_offset = 0,
-	clear_scalebar = FALSE
+  limits,
+  position = "W",
+  y = NULL,
+  segments = 10,
+  scale_length = 1,
+  label_unit = "",
+  offset = NULL,
+  radius = NULL,
+  color_first = "darkred",
+  color_second = "grey80",
+  color_text = "black",
+  text_switch_side = FALSE,
+  text_x_offset = 0,
+  text_y_offset = 0,
+  text_z_offset = 0,
+  clear_scalebar = FALSE
 ) {
-	if (clear_scalebar) {
-		ids = get_ids_with_labels(c(
-			"scalebar_col1",
-			"scalebar_col2",
-			"text_scalebar"
-		))$id
-		rgl::pop3d(id = ids)
-		return(invisible())
-	}
-	if (rgl::cur3d() == 0) {
-		stop("No rgl window currently open.")
-	}
-	if (length(scale_length) > 2) {
-		stop("scale_length argument must be less than length 2")
-	} else if (length(scale_length) == 1) {
-		scale_length = c(0, scale_length)
-	}
-	if (any(scale_length < 0) || any(scale_length > 1)) {
-		stop("scale_length argument must be between 0 and 1")
-	}
-	if (any(limits < 0)) {
-		stop("limits must be greater than (or equal to) 0")
-	}
+  if (clear_scalebar) {
+    ids = get_ids_with_labels(c(
+      "scalebar_col1",
+      "scalebar_col2",
+      "text_scalebar"
+    ))$id
+    rgl::pop3d(id = ids)
+    return(invisible())
+  }
+  if (rgl::cur3d() == 0) {
+    stop("No rgl window currently open.")
+  }
+  if (length(scale_length) > 2) {
+    stop("scale_length argument must be less than length 2")
+  } else if (length(scale_length) == 1) {
+    scale_length = c(0, scale_length)
+  }
+  if (any(scale_length < 0) || any(scale_length > 1)) {
+    stop("scale_length argument must be between 0 and 1")
+  }
+  if (any(limits < 0)) {
+    stop("limits must be greater than (or equal to) 0")
+  }
 
-	id_base = get_ids_with_labels("surface")$id
-	if (length(id_base) == 0) {
-		id_base = get_ids_with_labels("surface_tris")$id
-	}
-	fullverts = rgl::rgl.attrib(id_base, "vertices")
-	xyz_range = apply(fullverts, 2, range, na.rm = TRUE)
-	widths = xyz_range[2, c(1, 3)] - xyz_range[1, c(1, 3)]
+  id_base = get_ids_with_labels("surface")$id
+  if (length(id_base) == 0) {
+    id_base = get_ids_with_labels("surface_tris")$id
+  }
+  fullverts = rgl::rgl.attrib(id_base, "vertices")
+  xyz_range = apply(fullverts, 2, range, na.rm = TRUE)
+  widths = xyz_range[2, c(1, 3)] - xyz_range[1, c(1, 3)]
 
-	if (is.null(offset)) {
-		if (position %in% c("N", "S")) {
-			offset = widths[1] / 10
-		} else if (position %in% c("E", "W")) {
-			offset = widths[2] / 10
-		}
-	}
-	if (is.null(radius)) {
-		radius = offset / 8
-	}
-	if (is.null(y)) {
-		y = xyz_range[2, 2]
-	}
-	if (position %in% c("N", "S")) {
-		xstart = xyz_range[2, 1] *
-			scale_length[2] +
-			(1 - scale_length[2]) * xyz_range[1, 1]
-		xend = xyz_range[1, 1] *
-			(1 - scale_length[1]) +
-			xyz_range[2, 1] * scale_length[1]
-	} else {
-		xstart = xyz_range[2, 1]
-		xend = xyz_range[1, 1]
-	}
-	if (position %in% c("E", "W")) {
-		zstart = xyz_range[2, 3] *
-			scale_length[2] +
-			(1 - scale_length[2]) * xyz_range[1, 3]
-		zend = xyz_range[1, 3] *
-			(1 - scale_length[1]) +
-			xyz_range[2, 3] * scale_length[1]
-	} else {
-		zstart = xyz_range[2, 3]
-		zend = xyz_range[1, 3]
-	}
-	x_break_length = (xend - xstart) / segments
-	z_break_length = (zend - zstart) / segments
-	meshlist1 = list()
-	meshlist2 = list()
-	counter1 = 1
-	counter2 = 1
-	if (position == "N") {
-		temp = xstart
-		for (i in 1:segments) {
-			if (i %% 2 == 1) {
-				meshlist1[[counter1]] = rgl::cylinder3d(
-					center = matrix(
-						c(temp, temp + x_break_length, y, y, zend - offset, zend - offset),
-						ncol = 3,
-						nrow = 2
-					),
-					radius = radius,
-					closed = -2
-				)
-				counter1 = counter1 + 1
-				temp = temp + x_break_length
-			} else {
-				meshlist2[[counter2]] = rgl::cylinder3d(
-					center = matrix(
-						c(temp, temp + x_break_length, y, y, zend - offset, zend - offset),
-						ncol = 3,
-						nrow = 2
-					),
-					radius = radius,
-					closed = -2
-				)
-				counter2 = counter2 + 1
-				temp = temp + x_break_length
-			}
-		}
-	} else if (position == "W") {
-		temp = zstart
-		for (i in 1:segments) {
-			if (i %% 2 == 1) {
-				meshlist1[[counter1]] = rgl::cylinder3d(
-					center = matrix(
-						c(xend - offset, xend - offset, y, y, temp, temp + z_break_length),
-						ncol = 3,
-						nrow = 2
-					),
-					radius = radius,
-					closed = -2
-				)
-				counter1 = counter1 + 1
-				temp = temp + z_break_length
-			} else {
-				meshlist2[[counter2]] = rgl::cylinder3d(
-					center = matrix(
-						c(xend - offset, xend - offset, y, y, temp, temp + z_break_length),
-						ncol = 3,
-						nrow = 2
-					),
-					radius = radius,
-					closed = -2
-				)
-				counter2 = counter2 + 1
-				temp = temp + z_break_length
-			}
-		}
-	} else if (position == "S") {
-		temp = xstart
-		for (i in 1:segments) {
-			if (i %% 2 == 1) {
-				meshlist1[[counter1]] = rgl::cylinder3d(
-					center = matrix(
-						c(
-							temp,
-							temp + x_break_length,
-							y,
-							y,
-							zstart + offset,
-							zstart + offset
-						),
-						ncol = 3,
-						nrow = 2
-					),
-					radius = radius,
-					closed = -2
-				)
-				counter1 = counter1 + 1
-				temp = temp + x_break_length
-			} else {
-				meshlist2[[counter2]] = rgl::cylinder3d(
-					center = matrix(
-						c(
-							temp,
-							temp + x_break_length,
-							y,
-							y,
-							zstart + offset,
-							zstart + offset
-						),
-						ncol = 3,
-						nrow = 2
-					),
-					radius = radius,
-					closed = -2
-				)
-				counter2 = counter2 + 1
-				temp = temp + x_break_length
-			}
-		}
-	} else if (position == "E") {
-		temp = zstart
-		for (i in 1:segments) {
-			if (i %% 2 == 1) {
-				meshlist1[[counter1]] = rgl::cylinder3d(
-					center = matrix(
-						c(
-							xstart + offset,
-							xstart + offset,
-							y,
-							y,
-							temp,
-							temp + z_break_length
-						),
-						ncol = 3,
-						nrow = 2
-					),
-					radius = radius,
-					closed = -2
-				)
-				counter1 = counter1 + 1
-				temp = temp + z_break_length
-			} else {
-				meshlist2[[counter2]] = rgl::cylinder3d(
-					center = matrix(
-						c(
-							xstart + offset,
-							xstart + offset,
-							y,
-							y,
-							temp,
-							temp + z_break_length
-						),
-						ncol = 3,
-						nrow = 2
-					),
-					radius = radius,
-					closed = -2
-				)
-				counter2 = counter2 + 1
-				temp = temp + z_break_length
-			}
-		}
-	}
-	shapelist3d(
-		meshlist1,
-		lit = FALSE,
-		tag = "scalebar_col1",
-		color = color_first,
-		plot = TRUE
-	)
-	shapelist3d(
-		meshlist2,
-		lit = FALSE,
-		tag = "scalebar_col2",
-		color = color_second,
-		plot = TRUE
-	)
+  if (is.null(offset)) {
+    if (position %in% c("N", "S")) {
+      offset = widths[1] / 10
+    } else if (position %in% c("E", "W")) {
+      offset = widths[2] / 10
+    }
+  }
+  if (is.null(radius)) {
+    radius = offset / 8
+  }
+  if (is.null(y)) {
+    y = xyz_range[2, 2]
+  }
+  if (position %in% c("N", "S")) {
+    xstart = xyz_range[2, 1] *
+      scale_length[2] +
+      (1 - scale_length[2]) * xyz_range[1, 1]
+    xend = xyz_range[1, 1] *
+      (1 - scale_length[1]) +
+      xyz_range[2, 1] * scale_length[1]
+  } else {
+    xstart = xyz_range[2, 1]
+    xend = xyz_range[1, 1]
+  }
+  if (position %in% c("E", "W")) {
+    zstart = xyz_range[2, 3] *
+      scale_length[2] +
+      (1 - scale_length[2]) * xyz_range[1, 3]
+    zend = xyz_range[1, 3] *
+      (1 - scale_length[1]) +
+      xyz_range[2, 3] * scale_length[1]
+  } else {
+    zstart = xyz_range[2, 3]
+    zend = xyz_range[1, 3]
+  }
+  x_break_length = (xend - xstart) / segments
+  z_break_length = (zend - zstart) / segments
+  meshlist1 = list()
+  meshlist2 = list()
+  counter1 = 1
+  counter2 = 1
+  if (position == "N") {
+    temp = xstart
+    for (i in 1:segments) {
+      if (i %% 2 == 1) {
+        meshlist1[[counter1]] = rgl::cylinder3d(
+          center = matrix(
+            c(temp, temp + x_break_length, y, y, zend - offset, zend - offset),
+            ncol = 3,
+            nrow = 2
+          ),
+          radius = radius,
+          closed = -2
+        )
+        counter1 = counter1 + 1
+        temp = temp + x_break_length
+      } else {
+        meshlist2[[counter2]] = rgl::cylinder3d(
+          center = matrix(
+            c(temp, temp + x_break_length, y, y, zend - offset, zend - offset),
+            ncol = 3,
+            nrow = 2
+          ),
+          radius = radius,
+          closed = -2
+        )
+        counter2 = counter2 + 1
+        temp = temp + x_break_length
+      }
+    }
+  } else if (position == "W") {
+    temp = zstart
+    for (i in 1:segments) {
+      if (i %% 2 == 1) {
+        meshlist1[[counter1]] = rgl::cylinder3d(
+          center = matrix(
+            c(xend - offset, xend - offset, y, y, temp, temp + z_break_length),
+            ncol = 3,
+            nrow = 2
+          ),
+          radius = radius,
+          closed = -2
+        )
+        counter1 = counter1 + 1
+        temp = temp + z_break_length
+      } else {
+        meshlist2[[counter2]] = rgl::cylinder3d(
+          center = matrix(
+            c(xend - offset, xend - offset, y, y, temp, temp + z_break_length),
+            ncol = 3,
+            nrow = 2
+          ),
+          radius = radius,
+          closed = -2
+        )
+        counter2 = counter2 + 1
+        temp = temp + z_break_length
+      }
+    }
+  } else if (position == "S") {
+    temp = xstart
+    for (i in 1:segments) {
+      if (i %% 2 == 1) {
+        meshlist1[[counter1]] = rgl::cylinder3d(
+          center = matrix(
+            c(
+              temp,
+              temp + x_break_length,
+              y,
+              y,
+              zstart + offset,
+              zstart + offset
+            ),
+            ncol = 3,
+            nrow = 2
+          ),
+          radius = radius,
+          closed = -2
+        )
+        counter1 = counter1 + 1
+        temp = temp + x_break_length
+      } else {
+        meshlist2[[counter2]] = rgl::cylinder3d(
+          center = matrix(
+            c(
+              temp,
+              temp + x_break_length,
+              y,
+              y,
+              zstart + offset,
+              zstart + offset
+            ),
+            ncol = 3,
+            nrow = 2
+          ),
+          radius = radius,
+          closed = -2
+        )
+        counter2 = counter2 + 1
+        temp = temp + x_break_length
+      }
+    }
+  } else if (position == "E") {
+    temp = zstart
+    for (i in 1:segments) {
+      if (i %% 2 == 1) {
+        meshlist1[[counter1]] = rgl::cylinder3d(
+          center = matrix(
+            c(
+              xstart + offset,
+              xstart + offset,
+              y,
+              y,
+              temp,
+              temp + z_break_length
+            ),
+            ncol = 3,
+            nrow = 2
+          ),
+          radius = radius,
+          closed = -2
+        )
+        counter1 = counter1 + 1
+        temp = temp + z_break_length
+      } else {
+        meshlist2[[counter2]] = rgl::cylinder3d(
+          center = matrix(
+            c(
+              xstart + offset,
+              xstart + offset,
+              y,
+              y,
+              temp,
+              temp + z_break_length
+            ),
+            ncol = 3,
+            nrow = 2
+          ),
+          radius = radius,
+          closed = -2
+        )
+        counter2 = counter2 + 1
+        temp = temp + z_break_length
+      }
+    }
+  }
+  shapelist3d(
+    meshlist1,
+    lit = FALSE,
+    tag = "scalebar_col1",
+    color = color_first,
+    plot = TRUE
+  )
+  shapelist3d(
+    meshlist2,
+    lit = FALSE,
+    tag = "scalebar_col2",
+    color = color_second,
+    plot = TRUE
+  )
 
-	max_distance = max(limits)
-	breakpoints = limits / max_distance
-	for (i in 1:length(breakpoints)) {
-		if (position == "N") {
-			if (text_switch_side) {
-				break_dist = breakpoints[i] * xend + (1 - breakpoints[i]) * xstart
-				text3d(
-					x = break_dist + text_x_offset,
-					y = y + text_y_offset + radius * 3,
-					z = zend - offset + text_z_offset - radius * 5,
-					texts = paste0(c(as.character(limits[i]), label_unit), collapse = ""),
-					color = color_text,
-					tag = "text_scalebar"
-				)
-			} else {
-				break_dist = breakpoints[i] * xstart + (1 - breakpoints[i]) * xend
-				text3d(
-					x = break_dist + text_x_offset,
-					y = y + text_y_offset + radius * 3,
-					z = zend - offset + text_z_offset - radius * 5,
-					texts = paste0(c(as.character(limits[i]), label_unit), collapse = ""),
-					color = color_text,
-					tag = "text_scalebar"
-				)
-			}
-		} else if (position == "W") {
-			if (text_switch_side) {
-				break_dist = breakpoints[i] * zstart + (1 - breakpoints[i]) * zend
-				text3d(
-					x = xend - offset + text_x_offset - radius * 5,
-					y = y + text_y_offset + radius * 3,
-					z = break_dist + text_z_offset,
-					texts = paste0(c(as.character(limits[i]), label_unit), collapse = ""),
-					color = color_text,
-					tag = "text_scalebar"
-				)
-			} else {
-				break_dist = breakpoints[i] * zend + (1 - breakpoints[i]) * zstart
-				text3d(
-					x = xend - offset + text_x_offset - radius * 5,
-					y = y + text_y_offset + radius * 3,
-					z = break_dist + text_z_offset,
-					texts = paste0(c(as.character(limits[i]), label_unit), collapse = ""),
-					color = color_text,
-					tag = "text_scalebar"
-				)
-			}
-		} else if (position == "S") {
-			if (text_switch_side) {
-				break_dist = breakpoints[i] * xstart + (1 - breakpoints[i]) * xend
-				text3d(
-					x = break_dist + text_x_offset,
-					y = y + text_y_offset + radius * 3,
-					z = zstart + offset + text_z_offset + radius * 5,
-					texts = paste0(c(as.character(limits[i]), label_unit), collapse = ""),
-					color = color_text,
-					tag = "text_scalebar"
-				)
-			} else {
-				break_dist = breakpoints[i] * xend + (1 - breakpoints[i]) * xstart
-				text3d(
-					x = break_dist + text_x_offset,
-					y = y + text_y_offset + radius * 3,
-					z = zstart + offset + text_z_offset + radius * 5,
-					texts = paste0(c(as.character(limits[i]), label_unit), collapse = ""),
-					color = color_text,
-					tag = "text_scalebar"
-				)
-			}
-		} else if (position == "E") {
-			if (text_switch_side) {
-				break_dist = breakpoints[i] * zend + (1 - breakpoints[i]) * zstart
-				text3d(
-					x = xstart + offset + text_x_offset + radius * 5,
-					y = y + text_y_offset + radius * 3,
-					z = break_dist + text_z_offset,
-					texts = paste0(c(as.character(limits[i]), label_unit), collapse = ""),
-					color = color_text,
-					tag = "text_scalebar"
-				)
-			} else {
-				break_dist = breakpoints[i] * zstart + (1 - breakpoints[i]) * zend
-				text3d(
-					x = xstart + offset + text_x_offset + radius * 5,
-					y = y + text_y_offset + radius * 3,
-					z = break_dist + text_z_offset,
-					texts = paste0(c(as.character(limits[i]), label_unit), collapse = ""),
-					color = color_text,
-					tag = "text_scalebar"
-				)
-			}
-		}
-	}
+  max_distance = max(limits)
+  breakpoints = limits / max_distance
+  for (i in 1:length(breakpoints)) {
+    if (position == "N") {
+      if (text_switch_side) {
+        break_dist = breakpoints[i] * xend + (1 - breakpoints[i]) * xstart
+        text3d(
+          x = break_dist + text_x_offset,
+          y = y + text_y_offset + radius * 3,
+          z = zend - offset + text_z_offset - radius * 5,
+          texts = paste0(c(as.character(limits[i]), label_unit), collapse = ""),
+          color = color_text,
+          tag = "text_scalebar"
+        )
+      } else {
+        break_dist = breakpoints[i] * xstart + (1 - breakpoints[i]) * xend
+        text3d(
+          x = break_dist + text_x_offset,
+          y = y + text_y_offset + radius * 3,
+          z = zend - offset + text_z_offset - radius * 5,
+          texts = paste0(c(as.character(limits[i]), label_unit), collapse = ""),
+          color = color_text,
+          tag = "text_scalebar"
+        )
+      }
+    } else if (position == "W") {
+      if (text_switch_side) {
+        break_dist = breakpoints[i] * zstart + (1 - breakpoints[i]) * zend
+        text3d(
+          x = xend - offset + text_x_offset - radius * 5,
+          y = y + text_y_offset + radius * 3,
+          z = break_dist + text_z_offset,
+          texts = paste0(c(as.character(limits[i]), label_unit), collapse = ""),
+          color = color_text,
+          tag = "text_scalebar"
+        )
+      } else {
+        break_dist = breakpoints[i] * zend + (1 - breakpoints[i]) * zstart
+        text3d(
+          x = xend - offset + text_x_offset - radius * 5,
+          y = y + text_y_offset + radius * 3,
+          z = break_dist + text_z_offset,
+          texts = paste0(c(as.character(limits[i]), label_unit), collapse = ""),
+          color = color_text,
+          tag = "text_scalebar"
+        )
+      }
+    } else if (position == "S") {
+      if (text_switch_side) {
+        break_dist = breakpoints[i] * xstart + (1 - breakpoints[i]) * xend
+        text3d(
+          x = break_dist + text_x_offset,
+          y = y + text_y_offset + radius * 3,
+          z = zstart + offset + text_z_offset + radius * 5,
+          texts = paste0(c(as.character(limits[i]), label_unit), collapse = ""),
+          color = color_text,
+          tag = "text_scalebar"
+        )
+      } else {
+        break_dist = breakpoints[i] * xend + (1 - breakpoints[i]) * xstart
+        text3d(
+          x = break_dist + text_x_offset,
+          y = y + text_y_offset + radius * 3,
+          z = zstart + offset + text_z_offset + radius * 5,
+          texts = paste0(c(as.character(limits[i]), label_unit), collapse = ""),
+          color = color_text,
+          tag = "text_scalebar"
+        )
+      }
+    } else if (position == "E") {
+      if (text_switch_side) {
+        break_dist = breakpoints[i] * zend + (1 - breakpoints[i]) * zstart
+        text3d(
+          x = xstart + offset + text_x_offset + radius * 5,
+          y = y + text_y_offset + radius * 3,
+          z = break_dist + text_z_offset,
+          texts = paste0(c(as.character(limits[i]), label_unit), collapse = ""),
+          color = color_text,
+          tag = "text_scalebar"
+        )
+      } else {
+        break_dist = breakpoints[i] * zstart + (1 - breakpoints[i]) * zend
+        text3d(
+          x = xstart + offset + text_x_offset + radius * 5,
+          y = y + text_y_offset + radius * 3,
+          z = break_dist + text_z_offset,
+          texts = paste0(c(as.character(limits[i]), label_unit), collapse = ""),
+          color = color_text,
+          tag = "text_scalebar"
+        )
+      }
+    }
+  }
 }

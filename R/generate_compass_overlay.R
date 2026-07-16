@@ -40,15 +40,15 @@
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Create the water palette
 #'water_palette = colorRampPalette(c("darkblue", "dodgerblue", "lightblue"))(200)
-#'bathy_hs = height_shade(montereybay, texture = water_palette)
+#'bathy_hs = height_shade(montereybay_spatial, texture = water_palette)
 #'
 #'#Generate flat water heightmap
-#'mbay = montereybay
+#'mbay = montereybay_spatial
 #'mbay[mbay < 0] = 0
 #'
 #'base_map = mbay |>
 #'  height_shade() |>
-#'  add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0))  |>
+#'  add_overlay(generate_altitude_overlay(bathy_hs, montereybay_spatial, 0, 0))  |>
 #'  add_shadow(lamb_shade(vertical_exaggeration = 4),0.3)
 #'
 #'#Plot a compass
@@ -137,340 +137,340 @@
 #'              halo_color="white", halo_expand = 2)) |>
 #'  plot_map()
 generate_compass_overlay = function(
-	x = 0.85,
-	y = 0.15,
-	size = 0.05,
-	text_size = 1,
-	bearing = 0,
-	heightmap = NULL,
-	width = NA,
-	height = NA,
-	resolution_multiply = 1,
-	color1 = NA,
-	color2 = NA,
-	text_color = NA,
-	border_color = "black",
-	border_width = 1,
-	compass_type = c(
-		"classic",
-		"split_arrow",
-		"triangle_circle",
-		"split_arrow_ring"
-	),
-	halo_color = NA,
-	halo_expand = 2,
-	halo_alpha = 1,
-	halo_offset = c(0, 0),
-	halo_blur = 0,
-	halo_edge_softness = 0.1,
-	halo_gap_fill = 2,
-	halo_gap_fill_alpha_threshold = 0.25
+  x = 0.85,
+  y = 0.15,
+  size = 0.05,
+  text_size = 1,
+  bearing = 0,
+  heightmap = NULL,
+  width = NA,
+  height = NA,
+  resolution_multiply = 1,
+  color1 = NA,
+  color2 = NA,
+  text_color = NA,
+  border_color = "black",
+  border_width = 1,
+  compass_type = c(
+    "classic",
+    "split_arrow",
+    "triangle_circle",
+    "split_arrow_ring"
+  ),
+  halo_color = NA,
+  halo_expand = 2,
+  halo_alpha = 1,
+  halo_offset = c(0, 0),
+  halo_blur = 0,
+  halo_edge_softness = 0.1,
+  halo_gap_fill = 2,
+  halo_gap_fill_alpha_threshold = 0.25
 ) {
-	compass_type = match.arg(compass_type)
-	heightmap = resolve_overlay_heightmap(
-		heightmap = heightmap,
-		heightmap_missing = missing(heightmap),
-		width = width,
-		height = height,
-		caller = "generate_compass_overlay"
-	)
-	if (!(length(find.package("ragg", quiet = TRUE)) > 0)) {
-		png_device = grDevices::png
-	} else {
-		png_device = ragg::agg_png
-	}
-	loc = rep(0, 2)
-	loc[1] = x
-	loc[2] = y
-	if (is.na(height)) {
-		height = ncol(heightmap)
-	}
-	if (is.na(width)) {
-		width = nrow(heightmap)
-	}
-	height = height * resolution_multiply
-	width = width * resolution_multiply
+  compass_type = match.arg(compass_type)
+  heightmap = resolve_overlay_heightmap(
+    heightmap = heightmap,
+    heightmap_missing = missing(heightmap),
+    width = width,
+    height = height,
+    caller = "generate_compass_overlay"
+  )
+  if (!(length(find.package("ragg", quiet = TRUE)) > 0)) {
+    png_device = grDevices::png
+  } else {
+    png_device = ragg::agg_png
+  }
+  loc = rep(0, 2)
+  loc[1] = x
+  loc[2] = y
+  if (is.na(height)) {
+    height = ncol(heightmap)
+  }
+  if (is.na(width)) {
+    width = nrow(heightmap)
+  }
+  height = height * resolution_multiply
+  width = width * resolution_multiply
 
-	if (is.na(color1)) {
-		if (compass_type %in% c("classic", "split_arrow", "split_arrow_ring")) {
-			color1 = "white"
-		} else {
-			color1 = "black"
-		}
-	}
-	if (is.na(color2)) {
-		color2 = "black"
-	}
-	if (is.na(text_color)) {
-		if (compass_type %in% c("split_arrow_ring", "triangle_circle")) {
-			text_color = "white"
-		} else {
-			text_color = "black"
-		}
-	}
+  if (is.na(color1)) {
+    if (compass_type %in% c("classic", "split_arrow", "split_arrow_ring")) {
+      color1 = "white"
+    } else {
+      color1 = "black"
+    }
+  }
+  if (is.na(color2)) {
+    color2 = "black"
+  }
+  if (is.na(text_color)) {
+    if (compass_type %in% c("split_arrow_ring", "triangle_circle")) {
+      text_color = "white"
+    } else {
+      text_color = "black"
+    }
+  }
 
-	bearing = -bearing * pi / 180
-	# default colors are white and black
-	if (compass_type == "classic") {
-		cols <- rep(c(color1, color2), 8)
-		radii <- rep(size / c(1, 4, 2, 4), 4)
-		x <- radii[(0:15) + 1] * cos((0:15) * pi / 8 + bearing) + loc[1]
-		y <- radii[(0:15) + 1] * sin((0:15) * pi / 8 + bearing) + loc[2]
-	}
-	cos_b = cos(bearing)
-	sin_b = sin(bearing)
-	transform_points = function(points, offset = c(0, 0)) {
-		if (is.null(dim(points))) {
-			points = matrix(points, ncol = 2)
-		}
-		rot = matrix(c(cos_b, -sin_b, sin_b, cos_b), ncol = 2, byrow = TRUE)
-		transformed = points %*% t(rot)
-		transformed[, 1] = transformed[, 1] + loc[1] + offset[1]
-		transformed[, 2] = transformed[, 2] + loc[2] + offset[2]
-		return(transformed)
-	}
-	draw_circle = function(center, radius, fill, border, offset = c(0, 0)) {
-		if (radius <= 0) {
-			return(invisible())
-		}
-		theta = seq(0, 2 * pi, length.out = 200)
-		center_pt = transform_points(center, offset)
-		xvals = center_pt[1, 1] + radius * cos(theta)
-		yvals = center_pt[1, 2] + radius * sin(theta)
-		graphics::polygon(
-			xvals,
-			yvals,
-			col = fill,
-			border = border,
-			lwd = border_width * 2
-		)
-	}
-	draw_compass = function(offset = c(0, 0)) {
-		if (compass_type == "classic") {
-			for (i in 1:15) {
-				x1 <- c(x[i], x[i + 1], loc[1]) + offset[1]
-				y1 <- c(y[i], y[i + 1], loc[2]) + offset[2]
-				graphics::polygon(
-					x1,
-					y1,
-					col = cols[i],
-					border = border_color,
-					lwd = border_width
-				)
-			}
-			graphics::polygon(
-				c(x[16], x[1], loc[1]) + offset[1],
-				c(y[16], y[1], loc[2]) + offset[2],
-				col = cols[16],
-				border = border_color,
-				lwd = border_width
-			)
-			b <- c("E", "N", "W", "S")
-			for (i in 0:3) {
-				graphics::text(
-					(size + graphics::par("cxy")[1] * resolution_multiply) *
-						cos(bearing + i * pi / 2) +
-						loc[1] +
-						offset[1],
-					(size + graphics::par("cxy")[2] * resolution_multiply) *
-						sin(bearing + i * pi / 2) +
-						loc[2] +
-						offset[2],
-					b[i + 1],
-					cex = text_size,
-					col = text_color,
-					font = 2
-				)
-			}
-			return(invisible())
-		}
-		if (compass_type %in% c("split_arrow", "split_arrow_ring")) {
-			mult = if (compass_type == "split_arrow_ring") 0.8 else 0.8
-			mult_txt = if (compass_type == "split_arrow_ring") 0.8 else 1
-			mult_width = if (compass_type == "split_arrow_ring") 1 else 0.8
+  bearing = -bearing * pi / 180
+  # default colors are white and black
+  if (compass_type == "classic") {
+    cols = rep(c(color1, color2), 8)
+    radii = rep(size / c(1, 4, 2, 4), 4)
+    x = radii[(0:15) + 1] * cos((0:15) * pi / 8 + bearing) + loc[1]
+    y = radii[(0:15) + 1] * sin((0:15) * pi / 8 + bearing) + loc[2]
+  }
+  cos_b = cos(bearing)
+  sin_b = sin(bearing)
+  transform_points = function(points, offset = c(0, 0)) {
+    if (is.null(dim(points))) {
+      points = matrix(points, ncol = 2)
+    }
+    rot = matrix(c(cos_b, -sin_b, sin_b, cos_b), ncol = 2, byrow = TRUE)
+    transformed = points %*% t(rot)
+    transformed[, 1] = transformed[, 1] + loc[1] + offset[1]
+    transformed[, 2] = transformed[, 2] + loc[2] + offset[2]
+    return(transformed)
+  }
+  draw_circle = function(center, radius, fill, border, offset = c(0, 0)) {
+    if (radius <= 0) {
+      return(invisible())
+    }
+    theta = seq(0, 2 * pi, length.out = 200)
+    center_pt = transform_points(center, offset)
+    xvals = center_pt[1, 1] + radius * cos(theta)
+    yvals = center_pt[1, 2] + radius * sin(theta)
+    graphics::polygon(
+      xvals,
+      yvals,
+      col = fill,
+      border = border,
+      lwd = border_width * 2
+    )
+  }
+  draw_compass = function(offset = c(0, 0)) {
+    if (compass_type == "classic") {
+      for (i in 1:15) {
+        x1 = c(x[i], x[i + 1], loc[1]) + offset[1]
+        y1 = c(y[i], y[i + 1], loc[2]) + offset[2]
+        graphics::polygon(
+          x1,
+          y1,
+          col = cols[i],
+          border = border_color,
+          lwd = border_width
+        )
+      }
+      graphics::polygon(
+        c(x[16], x[1], loc[1]) + offset[1],
+        c(y[16], y[1], loc[2]) + offset[2],
+        col = cols[16],
+        border = border_color,
+        lwd = border_width
+      )
+      b = c("E", "N", "W", "S")
+      for (i in 0:3) {
+        graphics::text(
+          (size + graphics::par("cxy")[1] * resolution_multiply) *
+            cos(bearing + i * pi / 2) +
+            loc[1] +
+            offset[1],
+          (size + graphics::par("cxy")[2] * resolution_multiply) *
+            sin(bearing + i * pi / 2) +
+            loc[2] +
+            offset[2],
+          b[i + 1],
+          cex = text_size,
+          col = text_color,
+          font = 2
+        )
+      }
+      return(invisible())
+    }
+    if (compass_type %in% c("split_arrow", "split_arrow_ring")) {
+      mult = if (compass_type == "split_arrow_ring") 0.8 else 0.8
+      mult_txt = if (compass_type == "split_arrow_ring") 0.8 else 1
+      mult_width = if (compass_type == "split_arrow_ring") 1 else 0.8
 
-			tip_y = size * mult
-			base_y = -size * 1.3 * mult / 1.5
-			center_y = -size * 0.5 * mult / 1.5
-			half_width = size * mult_width * mult / 1.5
-			text_size = text_size * mult_txt
-			left_poly = rbind(
-				c(0, tip_y),
-				c(-half_width, base_y),
-				c(0, center_y)
-			)
-			right_poly = rbind(
-				c(0, tip_y),
-				c(0, center_y),
-				c(half_width, base_y)
-			)
-			left_poly = transform_points(left_poly, offset)
-			right_poly = transform_points(right_poly, offset)
-			graphics::polygon(
-				left_poly[, 1],
-				left_poly[, 2],
-				col = color1,
-				border = border_color,
-				lwd = border_width
-			)
-			graphics::polygon(
-				right_poly[, 1],
-				right_poly[, 2],
-				col = color2,
-				border = border_color,
-				lwd = border_width
-			)
-			if (compass_type == "split_arrow_ring") {
-				ring_radius = size * 1.1
-				draw_circle(
-					c(0, 0),
-					ring_radius,
-					fill = NA,
-					border = border_color,
-					offset = offset
-				)
-				top_circle_center = c(0, ring_radius)
-				top_circle_radius = size * 0.2
-				draw_circle(
-					top_circle_center,
-					top_circle_radius,
-					fill = border_color,
-					border = border_color,
-					offset = offset
-				)
-				text_center = transform_points(top_circle_center, offset)
-				graphics::text(
-					text_center[1, 1],
-					text_center[1, 2],
-					"N",
-					cex = text_size,
-					col = text_color,
-					font = 2
-				)
-			} else {
-				text_loc = transform_points(c(0, tip_y + size * 0.4), offset * 0.8)
-				graphics::text(
-					text_loc[1, 1],
-					text_loc[1, 2],
-					"N",
-					cex = text_size,
-					col = text_color,
-					font = 2
-				)
-			}
-			return(invisible())
-		}
-		if (compass_type == "triangle_circle") {
-			size = size * 0.7
-			tip_y = size * 1.5
-			base_y = -size * 0.7
-			half_width = size * 0.7
-			center_bottom = -size * 0.3
-			text_size = text_size * 0.8
-			arrow_poly = rbind(
-				c(0, tip_y),
-				c(-half_width, base_y),
-				c(0, center_bottom),
-				c(half_width, base_y)
-			)
-			arrow_poly = transform_points(arrow_poly, offset)
-			graphics::polygon(
-				arrow_poly[, 1],
-				arrow_poly[, 2],
-				col = color1,
-				border = border_color,
-				lwd = border_width
-			)
-			circle_center = c(0, base_y - size * 0.2)
-			circle_radius = size * 0.35
-			draw_circle(
-				circle_center,
-				circle_radius,
-				fill = color2,
-				border = border_color,
-				offset = offset
-			)
-			text_center = transform_points(circle_center, offset)
-			graphics::text(
-				text_center[1, 1],
-				text_center[1, 2],
-				"N",
-				cex = text_size,
-				col = text_color,
-				font = 2
-			)
-			return(invisible())
-		}
-	}
-	# drawing polygons
-	tempoverlay = tempfile(fileext = ".png")
-	png_device(
-		filename = tempoverlay,
-		width = width,
-		height = height,
-		units = "px",
-		bg = "transparent"
-	)
-	graphics::par(mar = c(0, 0, 0, 0))
-	graphics::plot(
-		x = c(0, 1),
-		y = c(0, 1),
-		xlim = c(0, 1),
-		ylim = c(0, 1),
-		asp = 1,
-		pch = 0,
-		bty = "n",
-		axes = FALSE,
-		xaxs = "i",
-		yaxs = "i",
-		cex = 0,
-		col = NA
-	)
-	draw_compass(c(0, 0))
-	grDevices::dev.off() #resets par
-	overlay_temp = rayimage::ray_read_image(tempoverlay)
-	if (!is.na(halo_color)) {
-		tempoverlay = tempfile(fileext = ".png")
-		png_device(
-			filename = tempoverlay,
-			width = width,
-			height = height,
-			units = "px",
-			bg = "transparent"
-		)
-		graphics::par(mar = c(0, 0, 0, 0))
-		graphics::plot(
-			x = c(0, 1),
-			y = c(0, 1),
-			xlim = c(0, 1),
-			ylim = c(0, 1),
-			asp = 1,
-			pch = 0,
-			bty = "n",
-			axes = FALSE,
-			xaxs = "i",
-			yaxs = "i",
-			cex = 0,
-			col = NA
-		)
-		draw_compass(halo_offset)
-		grDevices::dev.off() #resets par
-		overlay_temp_under = rayimage::ray_read_image(tempoverlay)
-		overlay_temp_under = generate_halo_underlay(
-			overlay_temp_under,
-			halo_expand,
-			halo_offset,
-			halo_color,
-			halo_alpha,
-			halo_blur,
-			halo_edge_softness,
-			halo_gap_fill,
-			halo_gap_fill_alpha_threshold
-		)
-		overlay_temp = rayimage::render_image_overlay(
-			overlay_temp_under,
-			overlay_temp
-		)
-	}
-	return(overlay_temp)
+      tip_y = size * mult
+      base_y = -size * 1.3 * mult / 1.5
+      center_y = -size * 0.5 * mult / 1.5
+      half_width = size * mult_width * mult / 1.5
+      text_size = text_size * mult_txt
+      left_poly = rbind(
+        c(0, tip_y),
+        c(-half_width, base_y),
+        c(0, center_y)
+      )
+      right_poly = rbind(
+        c(0, tip_y),
+        c(0, center_y),
+        c(half_width, base_y)
+      )
+      left_poly = transform_points(left_poly, offset)
+      right_poly = transform_points(right_poly, offset)
+      graphics::polygon(
+        left_poly[, 1],
+        left_poly[, 2],
+        col = color1,
+        border = border_color,
+        lwd = border_width
+      )
+      graphics::polygon(
+        right_poly[, 1],
+        right_poly[, 2],
+        col = color2,
+        border = border_color,
+        lwd = border_width
+      )
+      if (compass_type == "split_arrow_ring") {
+        ring_radius = size * 1.1
+        draw_circle(
+          c(0, 0),
+          ring_radius,
+          fill = NA,
+          border = border_color,
+          offset = offset
+        )
+        top_circle_center = c(0, ring_radius)
+        top_circle_radius = size * 0.2
+        draw_circle(
+          top_circle_center,
+          top_circle_radius,
+          fill = border_color,
+          border = border_color,
+          offset = offset
+        )
+        text_center = transform_points(top_circle_center, offset)
+        graphics::text(
+          text_center[1, 1],
+          text_center[1, 2],
+          "N",
+          cex = text_size,
+          col = text_color,
+          font = 2
+        )
+      } else {
+        text_loc = transform_points(c(0, tip_y + size * 0.4), offset * 0.8)
+        graphics::text(
+          text_loc[1, 1],
+          text_loc[1, 2],
+          "N",
+          cex = text_size,
+          col = text_color,
+          font = 2
+        )
+      }
+      return(invisible())
+    }
+    if (compass_type == "triangle_circle") {
+      size = size * 0.7
+      tip_y = size * 1.5
+      base_y = -size * 0.7
+      half_width = size * 0.7
+      center_bottom = -size * 0.3
+      text_size = text_size * 0.8
+      arrow_poly = rbind(
+        c(0, tip_y),
+        c(-half_width, base_y),
+        c(0, center_bottom),
+        c(half_width, base_y)
+      )
+      arrow_poly = transform_points(arrow_poly, offset)
+      graphics::polygon(
+        arrow_poly[, 1],
+        arrow_poly[, 2],
+        col = color1,
+        border = border_color,
+        lwd = border_width
+      )
+      circle_center = c(0, base_y - size * 0.2)
+      circle_radius = size * 0.35
+      draw_circle(
+        circle_center,
+        circle_radius,
+        fill = color2,
+        border = border_color,
+        offset = offset
+      )
+      text_center = transform_points(circle_center, offset)
+      graphics::text(
+        text_center[1, 1],
+        text_center[1, 2],
+        "N",
+        cex = text_size,
+        col = text_color,
+        font = 2
+      )
+      return(invisible())
+    }
+  }
+  # drawing polygons
+  tempoverlay = tempfile(fileext = ".png")
+  png_device(
+    filename = tempoverlay,
+    width = width,
+    height = height,
+    units = "px",
+    bg = "transparent"
+  )
+  graphics::par(mar = c(0, 0, 0, 0))
+  graphics::plot(
+    x = c(0, 1),
+    y = c(0, 1),
+    xlim = c(0, 1),
+    ylim = c(0, 1),
+    asp = 1,
+    pch = 0,
+    bty = "n",
+    axes = FALSE,
+    xaxs = "i",
+    yaxs = "i",
+    cex = 0,
+    col = NA
+  )
+  draw_compass(c(0, 0))
+  grDevices::dev.off() #resets par
+  overlay_temp = rayimage::ray_read_image(tempoverlay)
+  if (!is.na(halo_color)) {
+    tempoverlay = tempfile(fileext = ".png")
+    png_device(
+      filename = tempoverlay,
+      width = width,
+      height = height,
+      units = "px",
+      bg = "transparent"
+    )
+    graphics::par(mar = c(0, 0, 0, 0))
+    graphics::plot(
+      x = c(0, 1),
+      y = c(0, 1),
+      xlim = c(0, 1),
+      ylim = c(0, 1),
+      asp = 1,
+      pch = 0,
+      bty = "n",
+      axes = FALSE,
+      xaxs = "i",
+      yaxs = "i",
+      cex = 0,
+      col = NA
+    )
+    draw_compass(halo_offset)
+    grDevices::dev.off() #resets par
+    overlay_temp_under = rayimage::ray_read_image(tempoverlay)
+    overlay_temp_under = generate_halo_underlay(
+      overlay_temp_under,
+      halo_expand,
+      halo_offset,
+      halo_color,
+      halo_alpha,
+      halo_blur,
+      halo_edge_softness,
+      halo_gap_fill,
+      halo_gap_fill_alpha_threshold
+    )
+    overlay_temp = rayimage::render_image_overlay(
+      overlay_temp_under,
+      overlay_temp
+    )
+  }
+  return(overlay_temp)
 }

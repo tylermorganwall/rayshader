@@ -159,7 +159,7 @@ Either captures the current rgl view and displays, or saves the current view to 
 }
 \examples{
 \dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
-montereybay |>
+montereybay_spatial |>
  sphere_shade(vertical_exaggeration = 20) |>
  plot_3d(vertical_exaggeration = 4,zoom=0.6,theta=-90,phi=30)
 
@@ -177,7 +177,7 @@ render_snapshot(title_text = "Monterey Bay, California",
                vignette = TRUE, title_offset=c(0,20),
                title_font = "Helvetica", title_position = "north")
 #Use software rendering to render a scene with shadow mapping
-montereybay |>
+montereybay_spatial |>
  height_shade() |>
  plot_3d(shadow=FALSE, solidlinecolor = NULL, vertical_exaggeration = 4)
 #No shadows

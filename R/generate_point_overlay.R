@@ -36,10 +36,10 @@
 #'@return Semi-transparent overlay with contours.
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
-#'#Add the included `sf` object with roads to the montereybay dataset
+#'#Add the included `sf` object with roads to the montereybay_spatial dataset
 #' monterey_city = sf::st_sfc(sf::st_point(c(-121.893611, 36.603056)))
-#' sf::st_crs(monterey_city) = sf::st_crs(montereybay)
-#' montereybay |>
+#' sf::st_crs(monterey_city) = sf::st_crs(montereybay_spatial)
+#' montereybay_spatial |>
 #'    height_shade() |>
 #'    add_overlay(generate_point_overlay(monterey_city, color="red", size=2))  |>
 #'    add_shadow(ray_shade(vertical_exaggeration = 4),0.3) |>

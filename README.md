@@ -530,7 +530,7 @@ bathymetric/topographic data of Monterey Bay, CA (included with
 rayshader):
 
 ``` r
-montereybay |>
+montereybay_spatial |>
     sphere_shade(texture = "imhof1") |>
     add_shadow(ray_shade(vertical_exaggeration = 4, lambert = FALSE), 0.5) |>
     add_shadow(ambient_shade(vertical_exaggeration = 4), 0) |>
@@ -562,7 +562,7 @@ down slightly to center the map.
 ``` r
 library(rayrender)
 
-montereybay |>
+montereybay_spatial |>
     sphere_shade(texture = "imhof1") |>
     plot_3d(
         vertical_exaggeration = 4,
@@ -759,7 +759,7 @@ want by setting the areas you do not want to display to `NA`.
 
 ``` r
 par(mfrow = c(1, 2))
-montereybay |>
+montereybay_spatial |>
     sphere_shade(texture = "imhof1") |>
     add_shadow(ray_shade(vertical_exaggeration = 4, lambert = FALSE), 0.5) |>
     add_shadow(ambient_shade(vertical_exaggeration = 4), 0) |>
@@ -785,7 +785,7 @@ render_snapshot(clear = TRUE)
 ![](man/figures/README_three-d-shapes-1.png)<!-- -->
 
 ``` r
-montereybay |>
+montereybay_spatial |>
     sphere_shade(texture = "imhof1") |>
     add_shadow(ray_shade(vertical_exaggeration = 4, lambert = FALSE), 0.5) |>
     add_shadow(ambient_shade(vertical_exaggeration = 4), 0) |>
@@ -815,7 +815,7 @@ also allows you to customize the line type, color, and size along with
 the font:
 
 ``` r
-montereybay |>
+montereybay_spatial |>
     sphere_shade(texture = "imhof1") |>
     add_shadow(ray_shade(vertical_exaggeration = 4, lambert = FALSE), 0.5) |>
     add_shadow(ambient_shade(vertical_exaggeration = 4), 0) |>
@@ -901,7 +901,7 @@ objects from the `sf` library:
 Polygons:
 
 ``` r
-montereybay |>
+montereybay_spatial |>
     sphere_shade(texture = "desert") |>
     add_shadow(ray_shade(vertical_exaggeration = 4)) |>
     plot_3d(

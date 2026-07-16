@@ -130,7 +130,7 @@ Cache fallback messages are disabled by default. Set \code{options(rayshader.ver
 }
 \examples{
 \dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
-montereybay |>
+montereybay_spatial |>
  sphere_shade(vertical_exaggeration = 10) |>
  plot_3d(vertical_exaggeration = 4,water=TRUE, watercolor="#233aa1",
          zoom=0.9, windowsize = 800)

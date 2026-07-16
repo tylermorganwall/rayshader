@@ -141,17 +141,17 @@ scale bar of the proper length.
 \dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Create the water palette
 water_palette = colorRampPalette(c("darkblue", "dodgerblue", "lightblue"))(200)
-bathy_hs = height_shade(montereybay, texture = water_palette)
+bathy_hs = height_shade(montereybay_spatial, texture = water_palette)
 #Set scalebar font
 par(family = "Arial")
 
 #Generate flat water heightmap
-mbay = montereybay
+mbay = montereybay_spatial
 mbay[mbay < 0] = 0
 
 base_map = mbay |>
 height_shade() |>
-add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0))  |>
+add_overlay(generate_altitude_overlay(bathy_hs, montereybay_spatial, 0, 0))  |>
 add_shadow(lamb_shade(vertical_exaggeration = 4),0.3)
 
 #Add a scalebar
@@ -218,8 +218,8 @@ base_map |>
                                        tick_color="red", tick_width=0,
                                        bearing=0, adj = 0, flip_ticks = TRUE,
                                        halo_color="black", halo_blur=3, halo_alpha=0.5,
-                                       width = ncol(montereybay)*2,
-                                       height = nrow(montereybay)*2,
+                                       width = ncol(montereybay_spatial)*2,
+                                       height = nrow(montereybay_spatial)*2,
                                        latlong=TRUE), rescale_original=TRUE) |>
  plot_map()
 \dontshow{\}) # examplesIf}

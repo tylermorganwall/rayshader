@@ -34,7 +34,7 @@ render_zaxis(
 a length-4 numeric vector specifying \code{c("xmin", "xmax","ymin","ymax")}, or the spatial object (from
 the previously aforementioned packages) which will be automatically converted to an extent object.
 If omitted, rayshader will use cached extent metadata from \code{\link[=plot_gg]{plot_gg()}} or from \code{\link[=plot_3d]{plot_3d()}}
-(either from an explicitly passed \code{extent} argument, or the built-in \code{montereybay} scene metadata).}
+(either from an explicitly passed \code{extent} argument, or the built-in \code{montereybay_spatial} scene metadata).}
 
 \item{panel}{Default \code{NULL}. Facet panel identifier for scenes created with \code{\link[=plot_gg]{plot_gg()}}. Required
 to disambiguate faceted ggplot scenes when panel-specific cached metadata is needed. Ignored
@@ -119,7 +119,7 @@ Cache fallback messages are disabled by default. Set \code{options(rayshader.ver
 \dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 # Add a z-axis to a Monterey Bay terrain scene. The spatial extent and zscale
 # are cached by sphere_shade()/plot_3d(), so render_zaxis() can infer them.
-montereybay |>
+montereybay_spatial |>
  sphere_shade(texture = "imhof1", vertical_exaggeration = 20) |>
  plot_3d(
    vertical_exaggeration = 4,

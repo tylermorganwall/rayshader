@@ -51,7 +51,7 @@
 #'@param heightmap Default `NULL`. Height matrix for the current scene. If omitted, this is taken from the cached scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value.
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
-#'montereybay |>
+#'montereybay_spatial |>
 #'  sphere_shade(vertical_exaggeration = 10) |>
 #'  plot_3d(vertical_exaggeration = 4,water=TRUE, watercolor="#233aa1",
 #'          zoom=0.9, windowsize = 800)

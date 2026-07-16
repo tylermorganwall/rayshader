@@ -19,11 +19,11 @@ NULL
 #' @return Reduced matrix.
 #' @export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
-#'montereybay_matrix = raster_to_matrix(montereybay, verbose = FALSE)
+#'montereybay_matrix = raster_to_matrix(montereybay_spatial, verbose = FALSE)
 #'montbaysmall = resize_matrix(montereybay_matrix, scale=0.5)
 #'montbaysmall |>
 #'  sphere_shade() |>
 #'  plot_map()
 reduce_matrix_size = function(...) {
-	.Defunct("resize_matrix()", package = "rayshader")
+  .Defunct("resize_matrix()", package = "rayshader")
 }

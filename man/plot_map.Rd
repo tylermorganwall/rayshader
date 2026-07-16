@@ -50,14 +50,14 @@ Displays the map in the current device.
 \dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Plotting the Monterey Bay dataset with bathymetry data
 water_palette = colorRampPalette(c("darkblue", "dodgerblue", "lightblue"))(200)
-bathy_hs = height_shade(montereybay, texture = water_palette)
+bathy_hs = height_shade(montereybay_spatial, texture = water_palette)
 #For compass text
 par(family = "Arial")
 
 #Set everything below 0m to water palette
-montereybay |>
+montereybay_spatial |>
  sphere_shade() |>
- add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0))  |>
+ add_overlay(generate_altitude_overlay(bathy_hs, montereybay_spatial, 0, 0))  |>
  add_shadow(ray_shade(vertical_exaggeration = 4),0.3) |>
  plot_map()
 \dontshow{\}) # examplesIf}

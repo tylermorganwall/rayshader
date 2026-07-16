@@ -93,7 +93,7 @@ the \code{return_distance_matrix} argument to \code{TRUE}.
 \examples{
 \dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Create a flat body of water for Monterey Bay
-montbay = raster_to_matrix(montereybay)
+montbay = raster_to_matrix(montereybay_spatial)
 montbay[montbay < 0] = 0
 
 #Generate base map with no lines

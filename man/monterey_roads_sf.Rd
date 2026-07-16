@@ -23,9 +23,11 @@ the \code{montereybay} dataset.
 # This is the full code (commented out) used to generate this dataset from the original data:
 #counties = sf::st_read("tl_2015_06_prisecroads.shp")
 #monterey_bbox = sf::st_bbox(c(
-#  xmin = terra::xmin(montereybay), ymin = terra::ymin(montereybay),
-#  xmax = terra::xmax(montereybay), ymax = terra::ymax(montereybay)
-#), crs = sf::st_crs(terra::crs(montereybay)))
+#  xmin = terra::xmin(montereybay_spatial),
+#  ymin = terra::ymin(montereybay_spatial),
+#  xmax = terra::xmax(montereybay_spatial),
+#  ymax = terra::ymax(montereybay_spatial)
+#), crs = sf::st_crs(terra::crs(montereybay_spatial)))
 #monterey_roads_sf = sf::st_crop(counties, monterey_bbox)
 }
 \keyword{datasets}

@@ -74,7 +74,7 @@
 #'@return 4-layer RGBA array.
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
-#'montereybay |>
+#'montereybay_spatial |>
 #'  sphere_shade(vertical_exaggeration = 10) |>
 #'  plot_3d(vertical_exaggeration = 4, water=TRUE, waterlinecolor="white",
 #'          zoom=0.3,theta=-135,fov=70, phi=20)

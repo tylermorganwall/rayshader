@@ -408,7 +408,7 @@ You can also easily add a water layer by setting `water = TRUE` in `plot_3d()` (
 
 ```{r README_three-d-water, fig.width =  10, fig.height = 8}
 
-montereybay |>
+montereybay_spatial |>
 	sphere_shade(texture = "imhof1", vertical_exaggeration = 10) |>
 	add_shadow(ray_shade(vertical_exaggeration = 4, lambert = FALSE), 0) |>
 	add_shadow(ambient_shade(vertical_exaggeration = 4), 0) |>
@@ -435,7 +435,7 @@ Water is also supported in `render_highquality()`. We load the `rayrender` packa
 ```{r hq, fig.width =  10, fig.height = 8, output = FALSE, warning = FALSE, message = FALSE}
 library(rayrender)
 
-montereybay |>
+montereybay_spatial |>
 	sphere_shade(texture = "imhof1", vertical_exaggeration = 10) |>
 	plot_3d(
 		vertical_exaggeration = 4,
@@ -629,7 +629,7 @@ Rayshader also has map shapes other than rectangular included `c("hex", "circle"
 
 ```{r  README_three-d-shapes, fig.width = 12, fig.height = 6, output = FALSE}
 par(mfrow = c(1, 2))
-montereybay |>
+montereybay_spatial |>
 	sphere_shade(texture = "imhof1") |>
 	add_shadow(ray_shade(vertical_exaggeration = 4, lambert = FALSE), 0.5) |>
 	add_shadow(ambient_shade(vertical_exaggeration = 4), 0) |>
@@ -651,7 +651,7 @@ montereybay |>
 
 render_snapshot(clear = TRUE)
 
-montereybay |>
+montereybay_spatial |>
 	sphere_shade(texture = "imhof1") |>
 	add_shadow(ray_shade(vertical_exaggeration = 4, lambert = FALSE), 0.5) |>
 	add_shadow(ambient_shade(vertical_exaggeration = 4), 0) |>
@@ -677,7 +677,7 @@ render_snapshot(clear = TRUE)
 Adding text labels is done with the `render_label()` function, which also allows you to customize the line type, color, and size along with the font:
 
 ```{r README_three-d-labels, fig.width =  10, fig.height = 8, output = FALSE, message = FALSE}
-montereybay |>
+montereybay_spatial |>
 	sphere_shade(texture = "imhof1") |>
 	add_shadow(ray_shade(vertical_exaggeration = 4, lambert = FALSE), 0.5) |>
 	add_shadow(ambient_shade(vertical_exaggeration = 4), 0) |>
@@ -744,7 +744,7 @@ render_snapshot(clear = TRUE)
 Labels are also supported in `render_highquality()`:
 
 ```{r include=FALSE}
-montereybay |>
+montereybay_spatial |>
 	sphere_shade(texture = "imhof1") |>
 	plot_3d(
 		vertical_exaggeration = 4,
@@ -819,7 +819,7 @@ Polygons:
 
 ```{r README_polygon, fig.width =  10, fig.height = 8, warning=FALSE, message=FALSE, output = FALSE}
 
-montereybay |>
+montereybay_spatial |>
 	sphere_shade(texture = "desert") |>
 	add_shadow(ray_shade(vertical_exaggeration = 4)) |>
 	plot_3d(

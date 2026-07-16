@@ -24,34 +24,34 @@
 #' #Create a direct mapping of elevation to color:
 #'
 #' #Plut using default values
-#' montereybay |>
+#' montereybay_spatial |>
 #'   texture_shade() |>
 #'   plot_map()
 #' #Increase the level of detail
-#' montereybay |>
+#' montereybay_spatial |>
 #'   texture_shade(detail=1) |>
 #'   plot_map()
 #' #Decrease the level of detail
-#' montereybay |>
+#' montereybay_spatial |>
 #'   texture_shade(detail=0) |>
 #'   plot_map()
 #' #Increase the level of contrast
-#' montereybay |>
+#' montereybay_spatial |>
 #'   texture_shade(contrast=3) |>
 #'   plot_map()
 #' #Increase the brightness for this level of contrast
-#' montereybay |>
+#' montereybay_spatial |>
 #'   texture_shade(contrast=5, brightness = 2) |>
 #'   plot_map()
 #' #Add a texture_shade() layer into a map
-#' montbay = raster_to_matrix(montereybay)
+#' montbay = raster_to_matrix(montereybay_spatial)
 #' montbay[montbay < 0] = 0
 #' montbay |>
 #'   height_shade() |>
 #'   add_water(detect_water(montbay), color="dodgerblue3") |>
-#'   add_shadow(texture_shade(montereybay, detail=2/3, contrast = 5,
+#'   add_shadow(texture_shade(montereybay_spatial, detail=2/3, contrast = 5,
 #'                           brightness = 2),0) |>
-#'   add_shadow(lamb_shade(montereybay, vertical_exaggeration = 4),0) |>
+#'   add_shadow(lamb_shade(montereybay_spatial, vertical_exaggeration = 4),0) |>
 #'   plot_map()
 texture_shade = function(
   heightmap,

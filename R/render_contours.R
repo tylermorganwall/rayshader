@@ -22,8 +22,8 @@
 #'`zaxis = TRUE`, `zaxis_location`, `zaxis_breaks`, and `zaxis_labels`.
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
-#'#Add contours to the montereybay dataset
-#'montereybay |>
+#'#Add contours to the montereybay_spatial dataset
+#'montereybay_spatial |>
 #'  height_shade() |>
 #'  add_shadow(ray_shade(),0.3) |>
 #'  plot_3d(theta = -45,  zoom=0.9, windowsize=800, vertical_exaggeration = 4)

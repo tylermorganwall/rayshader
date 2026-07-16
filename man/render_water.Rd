@@ -59,7 +59,7 @@ Cache fallback messages are disabled by default. Set \code{options(rayshader.ver
 }
 \examples{
 \dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
-montereybay |>
+montereybay_spatial |>
  sphere_shade(vertical_exaggeration = 20) |>
  plot_3d(vertical_exaggeration = 4)
 render_snapshot()
@@ -75,8 +75,8 @@ render_snapshot()
 #Slice the water out to the edge
 water_levels = matrix(
  0,
- nrow = nrow(montereybay),
- ncol = ncol(montereybay)
+ nrow = nrow(montereybay_spatial),
+ ncol = ncol(montereybay_spatial)
 )
 water_levels[col(water_levels) > ncol(water_levels) / 2 + 20 |
 col(water_levels) < ncol(water_levels) / 2-20] = -8000
@@ -85,9 +85,9 @@ render_snapshot()
 
 #Use a matrix to vary the water level across the scene
 water_ramp = matrix(
- seq(-1200, -300, length.out = length(montereybay)),
- nrow = nrow(montereybay),
- ncol = ncol(montereybay)
+ seq(-1200, -300, length.out = length(montereybay_spatial)),
+ nrow = nrow(montereybay_spatial),
+ ncol = ncol(montereybay_spatial)
 )
 render_water(waterdepth = water_ramp, watercolor = "dodgerblue3")
 render_highquality()

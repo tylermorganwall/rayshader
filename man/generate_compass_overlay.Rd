@@ -97,15 +97,15 @@ Based on code from "Auxiliary Cartographic Functions in R: North Arrow, Scale Ba
 \dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Create the water palette
 water_palette = colorRampPalette(c("darkblue", "dodgerblue", "lightblue"))(200)
-bathy_hs = height_shade(montereybay, texture = water_palette)
+bathy_hs = height_shade(montereybay_spatial, texture = water_palette)
 
 #Generate flat water heightmap
-mbay = montereybay
+mbay = montereybay_spatial
 mbay[mbay < 0] = 0
 
 base_map = mbay |>
  height_shade() |>
- add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0))  |>
+ add_overlay(generate_altitude_overlay(bathy_hs, montereybay_spatial, 0, 0))  |>
  add_shadow(lamb_shade(vertical_exaggeration = 4),0.3)
 
 #Plot a compass

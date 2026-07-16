@@ -19,27 +19,27 @@
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Generate a basic hillshade
-#'montereybay |>
+#'montereybay_spatial |>
 #'  lamb_shade() |>
 #'  plot_map()
 #'
 #'#Increase the intensity by decreasing the vertical exaggeration
-#'montereybay |>
+#'montereybay_spatial |>
 #'  lamb_shade(vertical_exaggeration = 4) |>
 #'  plot_map()
 #'
 #'#Change the sun direction
-#'montereybay |>
+#'montereybay_spatial |>
 #'  lamb_shade(sunangle=45, vertical_exaggeration = 4) |>
 #'  plot_map()
 #'
 #'#Change the sun altitude
-#'montereybay |>
+#'montereybay_spatial |>
 #'  lamb_shade(sunaltitude=60, vertical_exaggeration = 4) |>
 #'  plot_map()
 #'
 #'#Change the sun to directly overhead, the shading here represents the slope angle
-#'montereybay |>
+#'montereybay_spatial |>
 #'  lamb_shade(sunaltitude=90, vertical_exaggeration = 8) |>
 #'  plot_map()
 lamb_shade = function(

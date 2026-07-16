@@ -149,7 +149,7 @@ Cache fallback messages are disabled by default. Set \code{options(rayshader.ver
 #Let's first start by drawing some trees in a circle around Monterey Bay
 #We won't scale these to a realistic size (yet)
 moss_landing_coord = c(36.806807, -121.793332)
-montereybay |>
+montereybay_spatial |>
  sphere_shade(vertical_exaggeration = 20) |>
  plot_3d(vertical_exaggeration = 4,water=TRUE,
          shadowcolor="#40310a", background = "tan",

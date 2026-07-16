@@ -70,8 +70,8 @@ Places a scale bar on the map in 3D.
 }
 \examples{
 \dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
-#Add a scale bar to the montereybay dataset, here representing about 80km
-montereybay |>
+#Add a scale bar to the montereybay_spatial dataset, here representing about 80km
+montereybay_spatial |>
  sphere_shade(vertical_exaggeration = 20) |>
  plot_3d(theta=45, vertical_exaggeration = 4, water=TRUE)
 render_scalebar(limits=c(0, 80), label_unit = "km")

@@ -83,7 +83,7 @@ is \code{attenuation_coef}, which can be used to adjust the darkness of the resu
 \examples{
 \dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Render clouds with cloud shadows on the ground
-montereybay  |>
+montereybay_spatial  |>
  sphere_shade(vertical_exaggeration = 20)  |>
  add_shadow(cloud_shade(vertical_exaggeration = 4), 0.0) |>
  plot_3d(background="darkred", vertical_exaggeration = 4)
@@ -91,7 +91,7 @@ render_camera(theta=-65, phi = 25, zoom = 0.45, fov = 80)
 render_clouds()
 render_snapshot()
 #Adjust the light direction for shadows and increase the attenuation for darker clouds
-montereybay  |>
+montereybay_spatial  |>
  sphere_shade(vertical_exaggeration = 20)  |>
  add_shadow(cloud_shade(vertical_exaggeration = 4, sun_altitude=20, attenuation_coef = 3), 0.0) |>
  plot_3d(background="darkred", vertical_exaggeration = 4)

@@ -58,7 +58,7 @@
 #'
 #' @examples
 #' # Prepare a mountain heightmap.
-#' mb_mountains = raster_to_matrix(montereybay)
+#' mb_mountains = raster_to_matrix(montereybay_spatial)
 #' mb_mountains[mb_mountains < 0] = 0
 #' mb_mountains = mb_mountains[271:540, 271:540]
 #'

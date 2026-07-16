@@ -24,28 +24,28 @@ Cache fallback messages are disabled by default. Set \code{options(rayshader.ver
 \examples{
 \dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Shade a red map
-montereybay |>
+montereybay_spatial |>
  constant_shade("red") |>
  add_shadow(lamb_shade(),0) |>
  plot_map()
 #Shade a green map
-montereybay |>
+montereybay_spatial |>
  constant_shade("green") |>
  add_shadow(lamb_shade(),0) |>
  plot_map()
 #Add a blue tint
-montereybay |>
+montereybay_spatial |>
  height_shade() |>
  add_overlay(constant_shade(color = "dodgerblue", alpha=0.25)) |>
  add_shadow(lamb_shade(vertical_exaggeration = 4),0) |>
  plot_map()
 #Use a blank map on which to draw other data
-montereybay |>
+montereybay_spatial |>
  constant_shade() |>
  add_overlay(generate_line_overlay(monterey_roads_sf, linewidth=5, color="black",
                                    width = 1080, height = 1080),
                                    alphalayer=0.8)  |>
- add_water(detect_water(raster_to_matrix(montereybay) < 0), "dodgerblue") |>
+ add_water(detect_water(raster_to_matrix(montereybay_spatial) < 0), "dodgerblue") |>
  plot_map()
 \dontshow{\}) # examplesIf}
 }

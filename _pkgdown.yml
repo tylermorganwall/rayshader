@@ -62,6 +62,7 @@ reference:
     desc: "Elevation data included with rayshader"
     contents:
       - "montereybay"
+      - "montereybay_spatial"
       - "monterey_counties_sf"
       - "monterey_roads_sf"
       - "washington_monument_multipolygonz"

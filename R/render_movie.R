@@ -33,7 +33,7 @@
 #'
 #'#By default, the function produces a 12 second orbit at 30 frames per second, at 30 degrees azimuth.
 #'\donttest{
-#'montereybay |>
+#'montereybay_spatial |>
 #'  sphere_shade(texture="imhof1") |>
 #'  plot_3d(vertical_exaggeration = 4, water = TRUE, watercolor="imhof1",
 #'          waterlinecolor="white", waterlinealpha=0.5)

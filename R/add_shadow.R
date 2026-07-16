@@ -11,61 +11,61 @@
 #'@return Shaded texture map.
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
-#'#First we plot the sphere_shade() hillshade of `montereybay` with no shadows
+#'#First we plot the sphere_shade() hillshade of `montereybay_spatial` with no shadows
 #'
-#'montereybay |>
+#'montereybay_spatial |>
 #'  sphere_shade(vertical_exaggeration=20) |>
 #'  plot_map()
 #'
-#'#Raytrace the `montereybay` elevation map and add that shadow to the output of sphere_shade()
-#'montereybay |>
+#'#Raytrace the `montereybay_spatial` elevation map and add that shadow to the output of sphere_shade()
+#'montereybay_spatial |>
 #'  sphere_shade(vertical_exaggeration=20) |>
 #'  add_shadow(ray_shade(sunaltitude=20, vertical_exaggeration = 4),max_darken=0.3) |>
 #'  plot_map()
 #'
 #'#Increase the intensity of the shadow map with the max_darken argument.
-#'montereybay |>
+#'montereybay_spatial |>
 #'  sphere_shade(vertical_exaggeration=20) |>
 #'  add_shadow(ray_shade(sunaltitude=20, vertical_exaggeration = 4),max_darken=0.1) |>
 #'  plot_map()
 #'
 #'#Decrease the intensity of the shadow map.
-#'montereybay |>
+#'montereybay_spatial |>
 #'  sphere_shade(vertical_exaggeration=20) |>
 #'  add_shadow(ray_shade(sunaltitude=20, vertical_exaggeration = 4),max_darken=0.7) |>
 #'  plot_map()
 add_shadow = function(
-	hillshade,
-	shadowmap,
-	max_darken = 0.7,
-	rescale_original = FALSE
+  hillshade,
+  shadowmap,
+  max_darken = 0.7,
+  rescale_original = FALSE
 ) {
-	force(hillshade)
-	hillshade_cache_label = get_hillshade_map_label(
-		default = format_scene_cache_label(deparse(substitute(hillshade)))
-	)
-	if (length(dim(shadowmap)) == 3 && length(dim(hillshade)) == 2) {
-		tempstore = hillshade
-		hillshade = shadowmap
-		shadowmap = tempstore
-	}
-	shadowmap = scales::rescale(shadowmap, to = c(max_darken, 1), from = c(0, 1))
-	shadow_array = array(0, dim = c(dim(shadowmap), 4))
-	shadow_array[,, 4] = 1 - shadowmap
-	shadow_array = rayimage::ray_read_image(
-		shadow_array,
-		assume_colorspace = rayimage::CS_SRGB,
-		assume_white = "D65",
-		source_linear = TRUE
-	)
-	hillshade = rayimage::render_image_overlay(
-		hillshade,
-		image_overlay = rayimage::render_reorient(
-			shadow_array,
-			transpose = FALSE,
-			flipy = FALSE
-		)
-	)
-	cache_hillshade_map(hillshade, label = hillshade_cache_label)
-	return(hillshade)
+  force(hillshade)
+  hillshade_cache_label = get_hillshade_map_label(
+    default = format_scene_cache_label(deparse(substitute(hillshade)))
+  )
+  if (length(dim(shadowmap)) == 3 && length(dim(hillshade)) == 2) {
+    tempstore = hillshade
+    hillshade = shadowmap
+    shadowmap = tempstore
+  }
+  shadowmap = scales::rescale(shadowmap, to = c(max_darken, 1), from = c(0, 1))
+  shadow_array = array(0, dim = c(dim(shadowmap), 4))
+  shadow_array[,, 4] = 1 - shadowmap
+  shadow_array = rayimage::ray_read_image(
+    shadow_array,
+    assume_colorspace = rayimage::CS_SRGB,
+    assume_white = "D65",
+    source_linear = TRUE
+  )
+  hillshade = rayimage::render_image_overlay(
+    hillshade,
+    image_overlay = rayimage::render_reorient(
+      shadow_array,
+      transpose = FALSE,
+      flipy = FALSE
+    )
+  )
+  cache_hillshade_map(hillshade, label = hillshade_cache_label)
+  return(hillshade)
 }

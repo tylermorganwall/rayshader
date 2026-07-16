@@ -53,10 +53,10 @@
 #'@return Semi-transparent overlay with labels.
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
-#'#Add the included `sf` object with roads to the montereybay dataset
+#'#Add the included `sf` object with roads to the montereybay_spatial dataset
 #'#Create the water palette
 #'water_palette = colorRampPalette(c("darkblue", "dodgerblue", "lightblue"))(200)
-#'bathy_hs = height_shade(montereybay, texture = water_palette)
+#'bathy_hs = height_shade(montereybay_spatial, texture = water_palette)
 #'#Set label font
 #'par(family = "Arial")
 #'
@@ -81,9 +81,9 @@
 #'                                     seed=1))  |>
 #'  plot_map()
 #'#Plot the actual town locations, using the manual plotting interface instead of the `sf` object
-#'montereybay |>
+#'montereybay_spatial |>
 #'  height_shade() |>
-#'  add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0)) |>
+#'  add_overlay(generate_altitude_overlay(bathy_hs, montereybay_spatial, 0, 0)) |>
 #'  add_shadow(lamb_shade(vertical_exaggeration = 4),0.3) |>
 #'  add_overlay(generate_label_overlay(labels=as.character(monterey_counties_sf$NAME),
 #'                                     x=as.numeric(as.character(monterey_counties_sf$INTPTLON)),
@@ -93,9 +93,9 @@
 #'                                     seed=1))  |>
 #'  plot_map()
 #'#Adding a softer blurred halo
-#'montereybay |>
+#'montereybay_spatial |>
 #'  height_shade() |>
-#'  add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0)) |>
+#'  add_overlay(generate_altitude_overlay(bathy_hs, montereybay_spatial, 0, 0)) |>
 #'  add_shadow(lamb_shade(vertical_exaggeration = 4),0.3) |>
 #'  add_overlay(generate_label_overlay(labels=as.character(monterey_counties_sf$NAME),
 #'                                     x=as.numeric(as.character(monterey_counties_sf$INTPTLON)),
@@ -105,9 +105,9 @@
 #'                                     seed=1))  |>
 #'  plot_map()
 #'#Changing the seed changes the locations of the labels
-#'montereybay |>
+#'montereybay_spatial |>
 #'  height_shade() |>
-#'  add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0)) |>
+#'  add_overlay(generate_altitude_overlay(bathy_hs, montereybay_spatial, 0, 0)) |>
 #'  add_shadow(lamb_shade(vertical_exaggeration = 4),0.3) |>
 #'  add_overlay(generate_label_overlay(labels=as.character(monterey_counties_sf$NAME),
 #'                                     x=as.numeric(as.character(monterey_counties_sf$INTPTLON)),

@@ -189,7 +189,7 @@ generate_cloud_layer = function(
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Render a cloud layer over Monterey Bay
-#'montereybay  |>
+#'montereybay_spatial  |>
 #'  sphere_shade(vertical_exaggeration = 10)  |>
 #'  plot_3d(background="brown", vertical_exaggeration = 4)
 #'
@@ -197,7 +197,7 @@ generate_cloud_layer = function(
 #'render_clouds()
 #'render_snapshot()
 #'#Change the seed for a different set of clouds and add cloud shadows on the ground
-#'montereybay  |>
+#'montereybay_spatial  |>
 #'  sphere_shade(vertical_exaggeration = 10)  |>
 #'  add_shadow(cloud_shade(vertical_exaggeration = 4, seed = 2), 0.0) |>
 #'  plot_3d(background="brown", vertical_exaggeration = 4)
@@ -205,7 +205,7 @@ generate_cloud_layer = function(
 #'render_clouds(seed=2, clear_clouds = T)
 #'render_snapshot()
 #'
-#'montereybay  |>
+#'montereybay_spatial  |>
 #'  sphere_shade(vertical_exaggeration = 10)  |>
 #'  plot_3d(background="brown", vertical_exaggeration = 4)
 #'
@@ -239,7 +239,7 @@ generate_cloud_layer = function(
 #'              clear_clouds = T)
 #'render_snapshot()
 #'#Render the scene with a different baseshape
-#'montereybay  |>
+#'montereybay_spatial  |>
 #'  sphere_shade(vertical_exaggeration = 10)  |>
 #'  plot_3d(background="darkred", vertical_exaggeration = 4, baseshape="hex")
 #'render_clouds(seed=3, baseshape="hex", clear_clouds = T)
@@ -636,7 +636,7 @@ raymarch_cloud_layer = function(
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Render clouds with cloud shadows on the ground
-#'montereybay  |>
+#'montereybay_spatial  |>
 #'  sphere_shade(vertical_exaggeration = 20)  |>
 #'  add_shadow(cloud_shade(vertical_exaggeration = 4), 0.0) |>
 #'  plot_3d(background="darkred", vertical_exaggeration = 4)
@@ -644,7 +644,7 @@ raymarch_cloud_layer = function(
 #'render_clouds()
 #'render_snapshot()
 #'#Adjust the light direction for shadows and increase the attenuation for darker clouds
-#'montereybay  |>
+#'montereybay_spatial  |>
 #'  sphere_shade(vertical_exaggeration = 20)  |>
 #'  add_shadow(cloud_shade(vertical_exaggeration = 4, sun_altitude=20, attenuation_coef = 3), 0.0) |>
 #'  plot_3d(background="darkred", vertical_exaggeration = 4)

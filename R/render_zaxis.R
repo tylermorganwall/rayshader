@@ -9,7 +9,7 @@
 #' a length-4 numeric vector specifying `c("xmin", "xmax","ymin","ymax")`, or the spatial object (from
 #' the previously aforementioned packages) which will be automatically converted to an extent object.
 #' If omitted, rayshader will use cached extent metadata from [plot_gg()] or from [plot_3d()]
-#'(either from an explicitly passed `extent` argument, or the built-in `montereybay` scene metadata).
+#'(either from an explicitly passed `extent` argument, or the built-in `montereybay_spatial` scene metadata).
 #'@param panel Default `NULL`. Facet panel identifier for scenes created with [plot_gg()]. Required
 #'to disambiguate faceted ggplot scenes when panel-specific cached metadata is needed. Ignored
 #'for non-ggplot scenes.
@@ -68,7 +68,7 @@
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'# Add a z-axis to a Monterey Bay terrain scene. The spatial extent and zscale
 #'# are cached by sphere_shade()/plot_3d(), so render_zaxis() can infer them.
-#'montereybay |>
+#'montereybay_spatial |>
 #'  sphere_shade(texture = "imhof1", vertical_exaggeration = 20) |>
 #'  plot_3d(
 #'    vertical_exaggeration = 4,

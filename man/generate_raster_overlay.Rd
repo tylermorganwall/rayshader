@@ -68,10 +68,10 @@ color or mapped through a color palette.
 \examples{
 if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) {
   # Create a semi-transparent overlay from low elevations:
-  low_elevation = montereybay
+  low_elevation = montereybay_spatial
   low_elevation[low_elevation > 0] = NA
 
-  montereybay |>
+  montereybay_spatial |>
     height_shade() |>
     add_overlay(generate_raster_overlay(low_elevation, palette = "dodgerblue3")) |>
     plot_map()

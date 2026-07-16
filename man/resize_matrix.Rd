@@ -33,7 +33,7 @@ Resizes a matrix (preserving contents) by specifying the desired output dimensio
 \dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Reduce the size of the monterey bay dataset by half
 
-montereybay_matrix = raster_to_matrix(montereybay, verbose = FALSE)
+montereybay_matrix = raster_to_matrix(montereybay_spatial, verbose = FALSE)
 montbaysmall = resize_matrix(montereybay_matrix, scale=0.5)
 montbaysmall |>
  sphere_shade() |>

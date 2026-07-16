@@ -62,27 +62,27 @@ Calculates and returns an overlay of lines for the current height map.
 }
 \examples{
 \dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
-#Add the included `sf` object with roads to the montereybay dataset
+#Add the included `sf` object with roads to the montereybay_spatial dataset
 water_palette = colorRampPalette(c("darkblue", "dodgerblue", "lightblue"))(200)
-bathy_hs = height_shade(montereybay, texture = water_palette)
-montereybay |>
+bathy_hs = height_shade(montereybay_spatial, texture = water_palette)
+montereybay_spatial |>
  height_shade() |>
- add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0))  |>
+ add_overlay(generate_altitude_overlay(bathy_hs, montereybay_spatial, 0, 0))  |>
  add_overlay(generate_line_overlay(monterey_roads_sf))  |>
  add_shadow(ray_shade(vertical_exaggeration = 4),0.3) |>
  plot_map()
 #Change the line width, color, and transparency
-montereybay |>
+montereybay_spatial |>
  height_shade() |>
- add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0))  |>
+ add_overlay(generate_altitude_overlay(bathy_hs, montereybay_spatial, 0, 0))  |>
  add_overlay(generate_line_overlay(monterey_roads_sf, linewidth=3, color="white"),
                                    alphalayer=0.8)  |>
  add_shadow(ray_shade(vertical_exaggeration = 4),0.3) |>
  plot_map()
 #Manually specify the width and height to improve visual quality of the lines
-montereybay |>
+montereybay_spatial |>
  height_shade() |>
- add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0))  |>
+ add_overlay(generate_altitude_overlay(bathy_hs, montereybay_spatial, 0, 0))  |>
  add_shadow(ray_shade(vertical_exaggeration = 4),0.3) |>
  add_overlay(generate_line_overlay(monterey_roads_sf, linewidth=3, color="white",
                                    width = 1080, height = 1080),

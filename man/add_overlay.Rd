@@ -43,16 +43,16 @@ Overlays an image (with a transparency layer) on the current map.
 \examples{
 \dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 #Combining base R plotting with rayshader's spherical color mapping and raytracing:
-montereybay |>
+montereybay_spatial |>
   sphere_shade() |>
   add_overlay(height_shade(),alphalayer = 0.6)  |>
   add_shadow(ray_shade(vertical_exaggeration = 4)) |>
   plot_map()
 
 # Add contours with `generate_contour_overlay()`
-montereybay |>
+montereybay_spatial |>
   height_shade() |>
-  add_overlay(generate_contour_overlay(montereybay))  |>
+  add_overlay(generate_contour_overlay(montereybay_spatial))  |>
   add_shadow(ray_shade(vertical_exaggeration = 4)) |>
   plot_map()
 \dontshow{\}) # examplesIf}

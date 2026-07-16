@@ -68,7 +68,7 @@
 #'@return Displays snapshot of current rgl plot (or saves to disk), as well as invisibly returns an RGBA `rayimg` array.
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
-#'montereybay |>
+#'montereybay_spatial |>
 #'  sphere_shade(vertical_exaggeration = 20) |>
 #'  plot_3d(vertical_exaggeration = 4,zoom=0.6,theta=-90,phi=30)
 #'
@@ -86,7 +86,7 @@
 #'                vignette = TRUE, title_offset=c(0,20),
 #'                title_font = "Helvetica", title_position = "north")
 #'#Use software rendering to render a scene with shadow mapping
-#'montereybay |>
+#'montereybay_spatial |>
 #'  height_shade() |>
 #'  plot_3d(shadow=FALSE, solidlinecolor = NULL, vertical_exaggeration = 4)
 #'#No shadows

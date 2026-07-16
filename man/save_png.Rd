@@ -50,7 +50,7 @@ A wrapper around \code{\link[rayimage:ray_write_image]{rayimage::ray_write_image
 filename_map = tempfile()
 
 #Save the map into `filename_map`
-montereybay |>
+montereybay_spatial |>
  sphere_shade() |>
  save_png(filename_map)
 }

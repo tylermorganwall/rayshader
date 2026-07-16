@@ -25,26 +25,26 @@ Multiplies a texture array or shadow map by a shadow map.
 }
 \examples{
 \dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
-#First we plot the sphere_shade() hillshade of `montereybay` with no shadows
+#First we plot the sphere_shade() hillshade of `montereybay_spatial` with no shadows
 
-montereybay |>
+montereybay_spatial |>
  sphere_shade(vertical_exaggeration=20) |>
  plot_map()
 
-#Raytrace the `montereybay` elevation map and add that shadow to the output of sphere_shade()
-montereybay |>
+#Raytrace the `montereybay_spatial` elevation map and add that shadow to the output of sphere_shade()
+montereybay_spatial |>
  sphere_shade(vertical_exaggeration=20) |>
  add_shadow(ray_shade(sunaltitude=20, vertical_exaggeration = 4),max_darken=0.3) |>
  plot_map()
 
 #Increase the intensity of the shadow map with the max_darken argument.
-montereybay |>
+montereybay_spatial |>
  sphere_shade(vertical_exaggeration=20) |>
  add_shadow(ray_shade(sunaltitude=20, vertical_exaggeration = 4),max_darken=0.1) |>
  plot_map()
 
 #Decrease the intensity of the shadow map.
-montereybay |>
+montereybay_spatial |>
  sphere_shade(vertical_exaggeration=20) |>
  add_shadow(ray_shade(sunaltitude=20, vertical_exaggeration = 4),max_darken=0.7) |>
  plot_map()

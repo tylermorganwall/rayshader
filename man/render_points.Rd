@@ -105,7 +105,7 @@ bird_track_long[[i]] = bird_track_long[[i-1]] + x_vel_out[i]
 
 
 #Render the 3D map
-montereybay |>
+montereybay_spatial |>
  sphere_shade(vertical_exaggeration = 20) |>
  plot_3d(vertical_exaggeration = 4,water=TRUE,
          shadowcolor="#40310a", background = "tan",

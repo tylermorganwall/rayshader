@@ -10,7 +10,7 @@
 #'@param shift_vertical Default `0`. Amount to shift the viewpoint.
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
-#'montereybay |>
+#'montereybay_spatial |>
 #'  sphere_shade(vertical_exaggeration = 10) |>
 #'  plot_3d(vertical_exaggeration = 4, water = TRUE, waterlinecolor="white")
 #'render_snapshot()
@@ -64,51 +64,51 @@
 #'#render_movie(filename = tempfile(fileext = ".mp4"), type = "custom",
 #'#             theta = thetavec, phi = phivecfull, zoom = zoomvec, fov=0)
 render_camera = function(
-	theta = NULL,
-	phi = NULL,
-	zoom = NULL,
-	fov = NULL,
-	shift_vertical = 0
+  theta = NULL,
+  phi = NULL,
+  zoom = NULL,
+  fov = NULL,
+  shift_vertical = 0
 ) {
-	if (is.null(theta) && is.null(phi) && is.null(zoom) && is.null(fov)) {
-		allmissing = TRUE
-	} else {
-		allmissing = FALSE
-	}
-	if (rgl::cur3d() == 0) {
-		stop("No rgl window currently open.")
-	}
-	if (is.null(fov)) {
-		fov = rgl::par3d()$FOV
-	}
-	if (is.null(zoom)) {
-		zoom = rgl::par3d()$zoom
-	}
-	if (is.null(phi) || is.null(theta)) {
-		rotmat = rot_to_euler(rgl::par3d()$userMatrix)
-		if (is.null(phi)) {
-			phi = rotmat[1]
-		}
-		if (is.null(theta)) {
-			if (0.001 > abs(abs(rotmat[3]) - 180)) {
-				theta = -rotmat[2] + 180
-			} else {
-				theta = rotmat[2]
-			}
-			if (abs(phi) == 90) {
-				theta = theta - 90
-			}
-		}
-	}
-	rgl::view3d(theta = theta, phi = phi, fov = fov, zoom = zoom)
-	if (shift_vertical != 0) {
-		rgl::par3d(
-			userMatrix = t(rgl::translationMatrix(0, -shift_vertical, 0)) %*%
-				rgl::par3d("userMatrix")
-		)
-	}
-	if (allmissing) {
-		return(c("theta" = theta, "phi" = phi, "zoom" = zoom, "fov" = fov))
-	}
-	invisible(NULL)
+  if (is.null(theta) && is.null(phi) && is.null(zoom) && is.null(fov)) {
+    allmissing = TRUE
+  } else {
+    allmissing = FALSE
+  }
+  if (rgl::cur3d() == 0) {
+    stop("No rgl window currently open.")
+  }
+  if (is.null(fov)) {
+    fov = rgl::par3d()$FOV
+  }
+  if (is.null(zoom)) {
+    zoom = rgl::par3d()$zoom
+  }
+  if (is.null(phi) || is.null(theta)) {
+    rotmat = rot_to_euler(rgl::par3d()$userMatrix)
+    if (is.null(phi)) {
+      phi = rotmat[1]
+    }
+    if (is.null(theta)) {
+      if (0.001 > abs(abs(rotmat[3]) - 180)) {
+        theta = -rotmat[2] + 180
+      } else {
+        theta = rotmat[2]
+      }
+      if (abs(phi) == 90) {
+        theta = theta - 90
+      }
+    }
+  }
+  rgl::view3d(theta = theta, phi = phi, fov = fov, zoom = zoom)
+  if (shift_vertical != 0) {
+    rgl::par3d(
+      userMatrix = t(rgl::translationMatrix(0, -shift_vertical, 0)) %*%
+        rgl::par3d("userMatrix")
+    )
+  }
+  if (allmissing) {
+    return(c("theta" = theta, "phi" = phi, "zoom" = zoom, "fov" = fov))
+  }
+  invisible(NULL)
 }

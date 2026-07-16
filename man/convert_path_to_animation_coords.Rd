@@ -151,7 +151,7 @@ circle_coords_lat = moss_landing_coord[1] + 0.25 * sin(t)
 circle_coords_long = moss_landing_coord[2] + 0.25 * cos(t)
 
 # Minimal 3D render -> frames
-montereybay |>
+montereybay_spatial |>
 sphere_shade() |>
 plot_3d(
 	vertical_exaggeration = 4,

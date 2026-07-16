@@ -31,27 +31,27 @@
 #'@export
 #'@examples
 #'#Basic example:
-#'montereybay |>
+#'montereybay_spatial |>
 #'  sphere_shade() |>
 #'  plot_map()
 #'
 #'#Increase the color intensity:
-#'montereybay |>
+#'montereybay_spatial |>
 #'  sphere_shade(vertical_exaggeration=10) |>
 #'  plot_map()
 #'
 #'#Change to a built-in color texture:
-#'montereybay |>
+#'montereybay_spatial |>
 #'  sphere_shade(texture="desert", vertical_exaggeration=10) |>
 #'  plot_map()
 #'
 #'#Change the highlight angle:
-#'montereybay |>
+#'montereybay_spatial |>
 #'  sphere_shade(texture="desert", sunangle = 45, vertical_exaggeration=10) |>
 #'  plot_map()
 #'
 #'#Create our own texture using the `create_texture` function:
-#'montereybay |>
+#'montereybay_spatial |>
 #'  sphere_shade(texture=create_texture("#E9C68D","#AF7F38",
 #'                                      "#674F30","#494D30",
 #'                                      "#B3BEA3"),

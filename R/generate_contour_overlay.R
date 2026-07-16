@@ -19,52 +19,52 @@
 #'@return Semi-transparent overlay with contours.
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
-#'#Add contours to the montereybay dataset
-#'montereybay |>
+#'#Add contours to the montereybay_spatial dataset
+#'montereybay_spatial |>
 #'  height_shade() |>
-#'  add_overlay(generate_contour_overlay(montereybay))  |>
+#'  add_overlay(generate_contour_overlay(montereybay_spatial))  |>
 #'  add_shadow(ray_shade(vertical_exaggeration = 4),0.3) |>
 #'  plot_map()
 #'
 #'#Add a different contour color for above and below water, and specify levels manually
 #'water_palette = colorRampPalette(c("darkblue", "dodgerblue", "lightblue"))(200)
-#'bathy_hs = height_shade(montereybay, texture = water_palette)
-#'monterey_range = range(raster_to_matrix(montereybay, verbose = FALSE), na.rm = TRUE)
+#'bathy_hs = height_shade(montereybay_spatial, texture = water_palette)
+#'monterey_range = range(raster_to_matrix(montereybay_spatial, verbose = FALSE), na.rm = TRUE)
 #'breaks = seq(monterey_range[1], monterey_range[2], length.out=50)
 #'water_breaks = breaks[breaks < 0]
 #'land_breaks = breaks[breaks > 0]
 #'
-#'montereybay |>
+#'montereybay_spatial |>
 #'  height_shade() |>
-#'  add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0))  |>
+#'  add_overlay(generate_altitude_overlay(bathy_hs, montereybay_spatial, 0, 0))  |>
 #'  add_shadow(ray_shade(vertical_exaggeration = 4),0.3) |>
-#'  add_overlay(generate_contour_overlay(montereybay, levels = water_breaks, color="white"))  |>
-#'  add_overlay(generate_contour_overlay(montereybay, levels = land_breaks, color="black"))  |>
+#'  add_overlay(generate_contour_overlay(montereybay_spatial, levels = water_breaks, color="white"))  |>
+#'  add_overlay(generate_contour_overlay(montereybay_spatial, levels = land_breaks, color="black"))  |>
 #'  plot_map()
 #'#Increase the resolution of the contour to improve the appearance of lines
-#'montereybay |>
+#'montereybay_spatial |>
 #'  height_shade() |>
-#'  add_overlay(generate_altitude_overlay(bathy_hs, montereybay, 0, 0))  |>
+#'  add_overlay(generate_altitude_overlay(bathy_hs, montereybay_spatial, 0, 0))  |>
 #'  add_shadow(ray_shade(vertical_exaggeration = 4),0.3) |>
-#'  add_overlay(generate_contour_overlay(montereybay, levels = water_breaks, color="white",
-#'                                       height = nrow(montereybay)*2,
-#'                                       width  = ncol(montereybay)*2))  |>
-#'  add_overlay(generate_contour_overlay(montereybay, levels = land_breaks, color="black",
-#'                                       height = nrow(montereybay)*2,
-#'                                       width  = ncol(montereybay)*2))  |>
+#'  add_overlay(generate_contour_overlay(montereybay_spatial, levels = water_breaks, color="white",
+#'                                       height = nrow(montereybay_spatial)*2,
+#'                                       width  = ncol(montereybay_spatial)*2))  |>
+#'  add_overlay(generate_contour_overlay(montereybay_spatial, levels = land_breaks, color="black",
+#'                                       height = nrow(montereybay_spatial)*2,
+#'                                       width  = ncol(montereybay_spatial)*2))  |>
 #'  plot_map()
 #'#Increase the number of breaks and the transparency (via add_overlay)
-#'montereybay |>
+#'montereybay_spatial |>
 #'  height_shade() |>
 #'  add_shadow(ray_shade(vertical_exaggeration = 4),0.3) |>
-#'  add_overlay(generate_contour_overlay(montereybay, linewidth=2, nlevels=100,
-#'                                       height = nrow(montereybay)*2, color="black",
-#'                                       width  = ncol(montereybay)*2), alphalayer=0.5) |>
+#'  add_overlay(generate_contour_overlay(montereybay_spatial, linewidth=2, nlevels=100,
+#'                                       height = nrow(montereybay_spatial)*2, color="black",
+#'                                       width  = ncol(montereybay_spatial)*2), alphalayer=0.5) |>
 #'  plot_map()
 #'#Manually specify the breaks with levels
-#'montereybay |>
+#'montereybay_spatial |>
 #'  height_shade() |>
-#'  add_overlay(generate_contour_overlay(montereybay, linewidth=2, levels = seq(-2000,0,100))) |>
+#'  add_overlay(generate_contour_overlay(montereybay_spatial, linewidth=2, levels = seq(-2000,0,100))) |>
 #'  add_shadow(ray_shade(vertical_exaggeration = 4),0.3) |>
 #'  plot_map()
 generate_contour_overlay = function(

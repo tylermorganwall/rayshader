@@ -178,12 +178,12 @@ rayshader pipeline:
 }
 \examples{
 \dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
-montereybay |>
+montereybay_spatial |>
 height_shade(texture = topo.colors(256)) |>
 add_overlay(radiance_shade(vertical_exaggeration = 10), 1) |>
 plot_map()
 #Plot using sky args
-montereybay |>
+montereybay_spatial |>
 height_shade(texture = topo.colors(256)) |>
 add_overlay(radiance_shade(vertical_exaggeration = 20,
                             sky_sun_elevation = 5, sky_sun_azimuth = 315), 1) |>

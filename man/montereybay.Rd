@@ -3,12 +3,11 @@
 \docType{data}
 \name{montereybay}
 \alias{montereybay}
-\title{Monterey Bay combined topographic and bathymetric elevation raster}
+\title{Monterey Bay combined topographic and bathymetric elevation matrix}
 \format{
-A one-layer \code{terra::SpatRaster} with 540 rows and 540 columns.
-Elevation values are in NAVD88 meters. The raster uses a WGS84 longitude/latitude
-CRS (EPSG:4326), has 0.001851852 degree cell spacing, and covers approximately
--122.366806 to -121.366806 longitude and 36.179398 to 37.179398 latitude.
+A matrix with 540 rows and 540 columns. Elevation values are in
+NAVD88 meters. Spatial extent and CRS metadata are stored in the \code{"extent"}
+and \code{"crs"} attributes, and the \code{"rayshader_data"} attribute is \code{TRUE}.
 }
 \source{
 https://www.ncei.noaa.gov/metadata/geoportal/rest/metadata/item/gov.noaa.ngdc.mgg.dem:3544/html
@@ -17,18 +16,21 @@ https://www.ncei.noaa.gov/metadata/geoportal/rest/metadata/item/gov.noaa.ngdc.mg
 montereybay
 }
 \description{
-This dataset is a downsampled spatial version of a combined topographic and
-bathymetric elevation raster representing the Monterey Bay, CA region. Original
-data from the NOAA National Centers for Environmental Information.
+This dataset is a downsampled matrix version of a combined topographic and
+bathymetric elevation raster representing the Monterey Bay, CA region.
+Original data are from the NOAA National Centers for Environmental
+Information.
 }
 \examples{
-# This is the full code (commented out) used to generate this dataset from the original NOAA data:
+# This is the full code (commented out) used to generate this dataset from
+# the original NOAA data:
 #montbay = terra::rast("~/Downloads/monterey_13_navd88_2012.nc")
 #bottom_left = c(y = -122.366765, x = 36.179392)
 #top_right   = c(y = -121.366765, x = 37.179392)
-#extent_latlong = sp::SpatialPoints(rbind(bottom_left, top_right), 
+#extent_latlong = sp::SpatialPoints(rbind(bottom_left, top_right),
 #                 proj4string=sp::CRS("+proj=longlat +ellps=WGS84 +datum=WGS84"))
 #monterey_cropped = terra::crop(montbay, extent_latlong)
-#montereybay = terra::aggregate(monterey_cropped, 20)
+#montereybay_raster = terra::aggregate(monterey_cropped, 20)
+#montereybay = raster_to_matrix(montereybay_raster)
 }
 \keyword{datasets}

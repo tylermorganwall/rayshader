@@ -32,10 +32,10 @@ island_volcano |>
 
 #We'll do the same thing with the Monterey Bay dataset to fill in the ocean:
 
-montbay_water = raster_to_matrix(montereybay)
+montbay_water = raster_to_matrix(montereybay_spatial)
 montbay_water[montbay_water < 0] = 0
 
-montereybay |>
+montereybay_spatial |>
  sphere_shade(texture="imhof4",vertical_exaggeration=20) |>
  add_water(detect_water(montbay_water),color="imhof4") |>
  plot_map()
