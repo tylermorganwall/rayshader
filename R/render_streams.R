@@ -147,7 +147,7 @@
 #' )
 #'
 #' new_dem = dem |>
-#'   indent_surface(water, 10, direction = "down")
+#'   shift_terrain(water, amount = -10)
 #'
 #' new_dem |>
 #'   height_shade() |>

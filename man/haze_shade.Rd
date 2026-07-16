@@ -44,8 +44,9 @@ finite elevation in \code{heightmap}.}
 \item{alpha}{Default \code{1}. Multiplier applied to the final haze alpha. Must be
 in \verb{[0, 1]}.}
 
-\item{blur}{Default \code{0}. Smoothing applied to the haze alpha map. Set to \code{0}
-to disable.}
+\item{blur}{Default \code{0}. Gaussian standard deviation in output-image pixels.
+\code{0} disables convolution. Positive values use a normalized kernel spanning
+approximately plus or minus three standard deviations.}
 }
 \value{
 A 4-layer RGBA array representing the haze overlay.
@@ -62,14 +63,19 @@ height.
 The haze opacity is computed as:
 
 \if{html}{\out{<div class="sourceCode">}}\preformatted{height_rel = heightmap - reference_height
-tau = optical_depth * exp(-height_rel / scale_height)
-haze_alpha = 1 - exp(-tau)
+log_tau = log(optical_depth) - height_rel / scale_height
+haze_alpha = -expm1(-exp(log_tau))
 }\if{html}{\out{</div>}}
 
 \code{optical_depth} controls the haze strength at \code{reference_height}.
 \code{scale_height} controls how quickly haze decreases with elevation. After
 increasing elevation by one \code{scale_height}, optical depth is multiplied by
 \code{exp(-1)}.
+
+When \code{scale_height = NULL}, the automatic scale height depends on the finite
+elevation range: it is 20 percent of that range for non-flat terrain and one
+elevation unit for flat terrain. Consequently, subsetting a heightmap or
+adding an extreme outlier can change the default haze profile.
 
 The final alpha channel is multiplied by \code{alpha} and clamped to \verb{[0, 1]}.
 }

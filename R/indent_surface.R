@@ -1,27 +1,29 @@
-#' Indent or Raise a Heightmap Surface
+#' Shift a Heightmap Surface
 #'
 #' @description
-#' Modifies a heightmap under spatial geometries by a constant or per-feature
-#' amount. This is useful when a terrain DEM lacks matching bathymetry and a
-#' water surface would otherwise be coincident with the terrain surface.
+#' Shifts a heightmap under spatial geometries by a constant or per-feature
+#' amount. This is useful when terrain needs to be lowered below water or raised
+#' beneath structures.
 #'
-#' Positive `amount` values lower the surface with `direction = "down"` and
-#' raise it with `direction = "up"`. Negative values are allowed and reverse the
-#' effect.
+#' Positive `amount` values raise the surface and negative values lower it.
 #'
 #' @param heightmap Height matrix or spatial raster DEM. Matrix inputs require
-#' `extent` or cached/attribute extent metadata. Spatial raster inputs return a
-#' spatial raster; matrix inputs return a matrix.
+#' `extent` or cached or attribute extent metadata. Spatial raster inputs return
+#' a spatial raster; matrix inputs return a matrix.
 #' @param geometry Spatial geometry used to select the affected cells. Supports
 #' `sf`, `sfc`, `sfg`, `terra::SpatVector`, and `sp` vector objects.
 #' @param amount Default `1`. Constant amount to apply, numeric vector with one
 #' value per feature, or a single character string naming a numeric column in
-#' `geometry`.
-#' @param direction Default `"down"`. Direction to apply `amount`. `"down"`
-#' subtracts from `heightmap`; `"up"` adds to `heightmap`.
-#' @param transition Default `0`. Distance in map units over which the
-#' indentation amount transitions from the polygon edge to the full amount.
-#' `0` applies the full amount abruptly to all selected cells.
+#' `geometry`. Positive values raise terrain, negative values lower terrain,
+#' and `NA` values skip their features.
+#' @param transition Default `0`. Distance over which `amount` transitions from
+#' the polygon edge to the full shift. `0` applies the full amount abruptly to
+#' all selected cells.
+#' @param transition_units Default `c("map", "cells")`. Units for `transition`.
+#' `"map"` uses meters for longitude and latitude rasters, the CRS linear units
+#' for projected rasters, and coordinate units for CRS-less rasters. `"cells"`
+#' measures distance in unit-width and unit-height raster cells, independent of
+#' CRS and spatial resolution.
 #' @param extent Default `NULL`. Spatial extent for matrix `heightmap` inputs.
 #' Ignored for spatial raster inputs.
 #' @param crs Default `NULL`. CRS for matrix `heightmap` inputs or CRS-less
@@ -32,7 +34,14 @@
 #' @param fun Default `"max"`. Rasterization reducer passed to
 #' `terra::rasterize()` for cells intersected by multiple features.
 #'
-#' @return A modified height matrix or `terra::SpatRaster`. Legacy `Raster*`
+#' @details
+#' In map mode, transition distance is measured by `terra::distance()`. The
+#' center-to-boundary inset is one-half of the smaller raster resolution. In
+#' cell mode, distance is calculated on a temporary unit-resolution raster and
+#' uses a half-cell inset of `0.5`. A polygon that fills the raster has no
+#' internal polygon edge, so the raster boundary does not reduce its shift.
+#'
+#' @return A shifted height matrix or `terra::SpatRaster`. Legacy `Raster*`
 #' inputs are returned as `terra::SpatRaster` objects.
 #' @export
 #'
@@ -40,27 +49,28 @@
 #' water_poly = sf::st_sfc(
 #'   sf::st_polygon(list(rbind(
 #'     c(0.2, 0.2), c(0.8, 0.2), c(0.8, 0.8), c(0.2, 0.8), c(0.2, 0.2)
-#'   )))
+#'   ))),
+#'   crs = 4326
 #' )
-#' lowered = indent_surface(
+#' lowered = shift_terrain(
 #'   matrix(10, 10, 10),
 #'   water_poly,
-#'   amount = 2,
+#'   amount = -2,
 #'   extent = c(0, 1, 0, 1)
 #' )
-indent_surface = function(
+shift_terrain = function(
   heightmap,
   geometry,
   amount = 1,
-  direction = c("down", "up"),
   transition = 0,
+  transition_units = c("map", "cells"),
   extent = NULL,
   crs = NULL,
   touches = TRUE,
   fun = "max"
 ) {
   if (!(length(find.package("terra", quiet = TRUE)) > 0)) {
-    stop("`terra` package required for indent_surface().", call. = FALSE)
+    stop("`terra` package required for shift_terrain().", call. = FALSE)
   }
   if (missing(heightmap)) {
     stop("`heightmap` must be supplied.", call. = FALSE)
@@ -69,55 +79,6 @@ indent_surface = function(
     stop("`geometry` must be supplied.", call. = FALSE)
   }
 
-  direction = match.arg(direction)
-  transition = validate_indent_surface_transition(transition)
-  touches = validate_indent_surface_touches(touches)
-  fun = validate_indent_surface_fun(fun)
-  surface = prepare_indent_surface_heightmap(
-    heightmap = heightmap,
-    extent = extent,
-    crs = crs,
-    caller = "indent_surface"
-  )
-  geometry = coerce_indent_surface_geometry(
-    geometry = geometry,
-    caller = "indent_surface"
-  )
-  if (nrow(geometry) == 0) {
-    return(finalize_indent_surface(surface))
-  }
-  geometry = assign_indent_surface_amount(
-    geometry = geometry,
-    amount = amount,
-    caller = "indent_surface"
-  )
-  geometry = align_indent_surface_geometry(
-    geometry = geometry,
-    template = surface$template,
-    caller = "indent_surface"
-  )
-  amount_raster = rasterize_indent_surface_amount(
-    geometry = geometry,
-    template = surface$template,
-    touches = touches,
-    fun = fun,
-    transition = transition,
-    caller = "indent_surface"
-  )
-  apply_indent_surface_amount(
-    surface = surface,
-    amount_raster = amount_raster,
-    direction = direction
-  )
-}
-
-#' Validate indent surface transition
-#'
-#' @param transition Default `0`. Transition distance in map units.
-#'
-#' @return A single non-negative number.
-#' @keywords internal
-validate_indent_surface_transition = function(transition = 0) {
   if (
     !is.numeric(transition) ||
       length(transition) != 1 ||
@@ -130,39 +91,55 @@ validate_indent_surface_transition = function(transition = 0) {
       call. = FALSE
     )
   }
-  transition
-}
-
-#' Validate indent surface touches
-#'
-#' @param touches Default `TRUE`. Whether touched cells should be included.
-#'
-#' @return A single logical.
-#' @keywords internal
-validate_indent_surface_touches = function(touches = TRUE) {
+  transition_units = match.arg(transition_units)
   if (!is.logical(touches) || length(touches) != 1 || is.na(touches)) {
     stop("`touches` must be `TRUE` or `FALSE`.", call. = FALSE)
   }
-  touches
-}
-
-#' Validate indent surface reducer
-#'
-#' @param fun Default `"max"`. Rasterization reducer.
-#'
-#' @return A reducer accepted by `terra::rasterize()`.
-#' @keywords internal
-validate_indent_surface_fun = function(fun = "max") {
-  if (is.function(fun)) {
-    return(fun)
-  }
-  if (!is.character(fun) || length(fun) != 1 || !nzchar(trimws(fun))) {
+  if (
+    !is.function(fun) &&
+      (!is.character(fun) || length(fun) != 1 || !nzchar(trimws(fun)))
+  ) {
     stop(
       "`fun` must be a function or a single non-empty character string.",
       call. = FALSE
     )
   }
-  fun
+  surface = prepare_indent_surface_heightmap(
+    heightmap = heightmap,
+    extent = extent,
+    crs = crs,
+    caller = "shift_terrain"
+  )
+  geometry = coerce_indent_surface_geometry(
+    geometry = geometry,
+    caller = "shift_terrain"
+  )
+  if (nrow(geometry) == 0) {
+    return(finalize_indent_surface(surface))
+  }
+  geometry = assign_indent_surface_amount(
+    geometry = geometry,
+    amount = amount,
+    caller = "shift_terrain"
+  )
+  geometry = align_indent_surface_geometry(
+    geometry = geometry,
+    template = surface$template,
+    caller = "shift_terrain"
+  )
+  amount_raster = rasterize_indent_surface_amount(
+    geometry = geometry,
+    template = surface$template,
+    touches = touches,
+    fun = fun,
+    transition = transition,
+    transition_units = transition_units,
+    caller = "shift_terrain"
+  )
+  apply_indent_surface_amount(
+    surface = surface,
+    amount_raster = amount_raster
+  )
 }
 
 #' Prepare heightmap for surface indentation
@@ -369,7 +346,7 @@ resolve_indent_surface_matrix_crs = function(
   target_crs = indent_surface_terra_crs(get_scene_target_crs(
     extent = resolved_extent,
     heightmap = heightmap,
-    caller = "indent_surface"
+    caller = "shift_terrain"
   ))
   if (!is.null(target_crs)) {
     return(target_crs)
@@ -593,7 +570,8 @@ align_indent_surface_geometry = function(
 #' @param template A `terra::SpatRaster`.
 #' @param touches Default `TRUE`. Whether touched cells should be included.
 #' @param fun Default `"max"`. Rasterization reducer.
-#' @param transition Default `0`. Transition distance in map units.
+#' @param transition Default `0`. Transition distance.
+#' @param transition_units Default `"map"`. Transition distance units.
 #' @param caller Default `NULL`. Calling function.
 #'
 #' @return A `terra::SpatRaster`.
@@ -604,6 +582,7 @@ rasterize_indent_surface_amount = function(
   touches = TRUE,
   fun = "max",
   transition = 0,
+  transition_units = "map",
   caller = NULL
 ) {
   if (transition > 0) {
@@ -613,6 +592,7 @@ rasterize_indent_surface_amount = function(
       touches = touches,
       fun = fun,
       transition = transition,
+      transition_units = transition_units,
       caller = caller
     ))
   }
@@ -644,7 +624,8 @@ rasterize_indent_surface_amount = function(
 #' @param template A `terra::SpatRaster`.
 #' @param touches Default `TRUE`. Whether touched cells should be included.
 #' @param fun Default `"max"`. Rasterization reducer.
-#' @param transition Transition distance in map units.
+#' @param transition Transition distance.
+#' @param transition_units Default `"map"`. Transition distance units.
 #' @param caller Default `NULL`. Calling function.
 #'
 #' @return A `terra::SpatRaster`.
@@ -655,67 +636,154 @@ rasterize_indent_surface_transition_amount = function(
   touches = TRUE,
   fun = "max",
   transition,
+  transition_units = "map",
   caller = NULL
 ) {
   amount_values = as.data.frame(geometry)[["rayshader_surface_amount"]]
-  point_values = vector("list", nrow(geometry))
-  for (feature_index in seq_len(nrow(geometry))) {
-    amount_value = amount_values[feature_index]
-    if (!is.finite(amount_value)) {
-      next
-    }
+  finite_features = which(is.finite(amount_values))
+  empty_raster = terra::rast(template)
+  terra::values(empty_raster) = NA_real_
+  if (!length(finite_features)) {
+    return(empty_raster)
+  }
+
+  finite_amounts = amount_values[finite_features]
+  if (length(unique(finite_amounts)) == 1) {
+    geometry_union = tryCatch(
+      terra::aggregate(geometry[finite_features, ]),
+      error = function(e) {
+        stop(
+          paste0(
+            format_render_caller_prefix(caller),
+            "Could not combine `geometry`: ",
+            conditionMessage(e)
+          ),
+          call. = FALSE
+        )
+      }
+    )
+    feature_mask = rasterize_indent_surface_feature_mask(
+      geometry = geometry_union,
+      template = template,
+      touches = touches,
+      caller = caller
+    )
+    transition_factor = indent_surface_transition_factor(
+      feature_mask = feature_mask,
+      transition = transition,
+      transition_units = transition_units
+    )
+    transition_values = finite_amounts[1] * transition_factor
+    result = terra::rast(template)
+    terra::values(result) = transition_values
+    return(result)
+  }
+
+  use_fast_max = identical(fun, "max") || identical(fun, base::max)
+  result_values = rep(NA_real_, terra::ncell(template))
+  cell_indices = vector("list", length(finite_features))
+  cell_amounts = vector("list", length(finite_features))
+
+  for (finite_index in seq_along(finite_features)) {
+    feature_index = finite_features[finite_index]
     feature_mask = rasterize_indent_surface_feature_mask(
       geometry = geometry[feature_index, ],
       template = template,
       touches = touches,
       caller = caller
     )
-    covered_cells = which(is.finite(terra::values(feature_mask)))
+    transition_factor = indent_surface_transition_factor(
+      feature_mask = feature_mask,
+      transition = transition,
+      transition_units = transition_units
+    )
+    covered_cells = which(is.finite(transition_factor))
     if (!length(covered_cells)) {
       next
     }
-    transition_factor = indent_surface_transition_factor(
-      feature_mask = feature_mask,
-      transition = transition
-    )
-    feature_points = terra::xyFromCell(template, covered_cells)
-    point_values[[feature_index]] = data.frame(
-      x = feature_points[, 1],
-      y = feature_points[, 2],
-      rayshader_surface_amount = amount_value * transition_factor[covered_cells]
-    )
+    transitioned_amount = amount_values[feature_index] *
+      transition_factor[covered_cells]
+
+    if (use_fast_max) {
+      existing_values = result_values[covered_cells]
+      empty_cells = is.na(existing_values)
+      existing_values[empty_cells] = transitioned_amount[empty_cells]
+      existing_values[!empty_cells] = pmax(
+        existing_values[!empty_cells],
+        transitioned_amount[!empty_cells]
+      )
+      result_values[covered_cells] = existing_values
+    } else {
+      cell_indices[[finite_index]] = covered_cells
+      cell_amounts[[finite_index]] = transitioned_amount
+    }
   }
-  point_values = point_values[lengths(point_values) > 0]
-  if (!length(point_values)) {
-    empty_raster = terra::rast(template)
-    terra::values(empty_raster) = NA_real_
-    return(empty_raster)
-  }
-  point_values = do.call(rbind, point_values)
-  point_geometry = terra::vect(
-    point_values,
-    geom = c("x", "y"),
-    crs = terra::crs(template)
-  )
-  tryCatch(
-    terra::rasterize(
-      point_geometry,
-      template,
-      field = "rayshader_surface_amount",
-      fun = fun,
-      background = NA_real_
-    ),
-    error = function(e) {
-      stop(
-        paste0(
-          format_render_caller_prefix(caller),
-          "Could not rasterize transitioned `geometry`: ",
-          conditionMessage(e)
-        ),
-        call. = FALSE
+
+  if (!use_fast_max) {
+    populated = lengths(cell_indices) > 0
+    if (!any(populated)) {
+      return(empty_raster)
+    }
+    all_cells = unlist(cell_indices[populated], use.names = FALSE)
+    all_amounts = unlist(cell_amounts[populated], use.names = FALSE)
+    grouped_amounts = split(all_amounts, all_cells)
+    reducer = if (is.function(fun)) {
+      fun
+    } else if (identical(fun, "modal") || identical(fun, "mode")) {
+      function(values) {
+        unique_values = unique(values)
+        unique_values[which.max(tabulate(match(values, unique_values)))]
+      }
+    } else {
+      tryCatch(
+        match.fun(fun),
+        error = function(e) {
+          stop(
+            paste0(
+              format_render_caller_prefix(caller),
+              "Could not resolve `fun`: ",
+              conditionMessage(e)
+            ),
+            call. = FALSE
+          )
+        }
       )
     }
-  )
+    reduced_amounts = vapply(
+      grouped_amounts,
+      function(values) {
+        reduced = tryCatch(
+          reducer(values),
+          error = function(e) {
+            stop(
+              paste0(
+                format_render_caller_prefix(caller),
+                "`fun` failed while combining transitioned amounts: ",
+                conditionMessage(e)
+              ),
+              call. = FALSE
+            )
+          }
+        )
+        if (!is.numeric(reduced) || length(reduced) != 1) {
+          stop(
+            paste0(
+              format_render_caller_prefix(caller),
+              "`fun` must return one numeric value per raster cell."
+            ),
+            call. = FALSE
+          )
+        }
+        as.numeric(reduced)
+      },
+      numeric(1)
+    )
+    result_values[as.integer(names(reduced_amounts))] = reduced_amounts
+  }
+
+  result = terra::rast(template)
+  terra::values(result) = result_values
+  result
 }
 
 #' Rasterize one indentation feature mask
@@ -757,11 +825,16 @@ rasterize_indent_surface_feature_mask = function(
 #' Calculate indentation transition factor
 #'
 #' @param feature_mask Rasterized single-feature mask.
-#' @param transition Transition distance in map units.
+#' @param transition Transition distance.
+#' @param transition_units Default `"map"`. Transition distance units.
 #'
 #' @return Numeric vector of scale factors matching raster cell order.
 #' @keywords internal
-indent_surface_transition_factor = function(feature_mask, transition) {
+indent_surface_transition_factor = function(
+  feature_mask,
+  transition,
+  transition_units = "map"
+) {
   inside = is.finite(terra::values(feature_mask))
   transition_factor = rep(NA_real_, length(inside))
   if (!any(inside)) {
@@ -778,15 +851,49 @@ indent_surface_transition_factor = function(feature_mask, transition) {
     transition_factor[inside] = 1
     return(transition_factor)
   }
-  edge_raster = terra::rast(feature_mask)
-  if (!nzchar(terra::crs(edge_raster))) {
-    terra::crs(edge_raster) = "EPSG:3857"
+  if (identical(transition_units, "cells")) {
+    distance_template = terra::rast(
+      nrows = terra::nrow(feature_mask),
+      ncols = terra::ncol(feature_mask),
+      xmin = 1000,
+      xmax = 1000 + terra::ncol(feature_mask),
+      ymin = 1000,
+      ymax = 1000 + terra::nrow(feature_mask)
+    )
+    terra::crs(distance_template) = ""
+    edge_cell_inset = 0.5
+  } else {
+    distance_template = terra::rast(feature_mask)
+    distance_has_crs = indent_surface_has_crs(terra::crs(feature_mask))
+    if (distance_has_crs && isTRUE(terra::is.lonlat(feature_mask))) {
+      center = matrix(
+        c(
+          mean(c(terra::xmin(feature_mask), terra::xmax(feature_mask))),
+          mean(c(terra::ymin(feature_mask), terra::ymax(feature_mask)))
+        ),
+        nrow = 1
+      )
+      raster_resolution = terra::res(feature_mask)
+      x_neighbor = center + matrix(c(raster_resolution[1], 0), nrow = 1)
+      y_neighbor = center + matrix(c(0, raster_resolution[2]), nrow = 1)
+      center_distances = c(
+        terra::distance(center, x_neighbor, lonlat = TRUE),
+        terra::distance(center, y_neighbor, lonlat = TRUE)
+      )
+      edge_cell_inset = min(center_distances) / 2
+    } else {
+      edge_cell_inset = min(terra::res(feature_mask)) / 2
+    }
   }
   edge_values = rep(NA_real_, length(inside))
   edge_values[as.vector(t(edge_matrix))] = 1
-  terra::values(edge_raster) = edge_values
-  cell_distance = terra::values(terra::distance(edge_raster))
-  edge_cell_inset = min(terra::res(feature_mask)) / 2
+  terra::values(distance_template) = edge_values
+  distance_raster = if (indent_surface_has_crs(terra::crs(distance_template))) {
+    terra::distance(distance_template)
+  } else {
+    suppressWarnings(terra::distance(distance_template))
+  }
+  cell_distance = terra::values(distance_raster)
   transition_factor[inside] = pmin(
     (cell_distance[inside] + edge_cell_inset) / transition,
     1
@@ -826,23 +933,19 @@ indent_surface_edge_cells = function(inside_matrix) {
 #'
 #' @param surface Surface metadata list.
 #' @param amount_raster Rasterized amount.
-#' @param direction Default `"down"`. Direction to apply.
-#'
 #' @return Modified heightmap.
 #' @keywords internal
 apply_indent_surface_amount = function(
   surface,
-  amount_raster,
-  direction = "down"
+  amount_raster
 ) {
-  direction_sign = if (identical(direction, "down")) -1 else 1
   if (identical(surface$type, "matrix")) {
     amount_matrix = raster_to_matrix(amount_raster, verbose = FALSE)
     modified_heightmap = surface$heightmap
     valid_cells = is.finite(modified_heightmap) & is.finite(amount_matrix)
     modified_heightmap[valid_cells] =
       modified_heightmap[valid_cells] +
-      direction_sign * amount_matrix[valid_cells]
+      amount_matrix[valid_cells]
     return(modified_heightmap)
   }
 
@@ -851,7 +954,7 @@ apply_indent_surface_amount = function(
   amount_values = as.numeric(terra::values(amount_raster))
   valid_cells = is.finite(height_values) & is.finite(amount_values)
   height_values[valid_cells] =
-    height_values[valid_cells] + direction_sign * amount_values[valid_cells]
+    height_values[valid_cells] + amount_values[valid_cells]
   terra::values(modified_raster) = height_values
   names(modified_raster) = names(surface$heightmap)
   finalize_indent_surface(list(

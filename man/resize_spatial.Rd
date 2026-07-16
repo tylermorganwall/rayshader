@@ -2,7 +2,7 @@
 % Please edit documentation in R/resize_spatial.R
 \name{resize_spatial}
 \alias{resize_spatial}
-\title{Resize a SpatRaster by relative scale while preserving spatial metadata}
+\title{Resize a SpatRaster while preserving spatial metadata}
 \usage{
 resize_spatial(
   x,
@@ -16,25 +16,37 @@ resize_spatial(
   threads = FALSE,
   filename = "",
   overwrite = FALSE,
+  write_args = list(),
   ...
 )
 }
 \arguments{
-\item{x}{Default none. A \code{terra::SpatRaster}.}
+\item{x}{A \code{terra::SpatRaster}.}
 
-\item{scale}{Default \code{1}. Relative output size. Values below \code{1} reduce resolution and values above \code{1} increase resolution.}
+\item{scale}{Default \code{1}. Relative output size used only when both \code{width}
+and \code{height} are \code{NULL}.}
 
-\item{width}{Default \code{NULL}. Target number of columns. If \code{NULL}, computed from \code{scale}.}
+\item{width}{Default \code{NULL}. Target number of columns. When supplied alone,
+\code{height} is derived while preserving the current aspect ratio.}
 
-\item{height}{Default \code{NULL}. Target number of rows. If \code{NULL}, computed from \code{scale}.}
+\item{height}{Default \code{NULL}. Target number of rows. When supplied alone,
+\code{width} is derived while preserving the current aspect ratio.}
 
-\item{method_down}{Default \code{"mean"}. Method used when reducing resolution. Aggregation methods such as \code{"mean"} or \code{"max"} will use \code{terra::aggregate()} when the implied factor is integer; otherwise this is passed to \code{terra::resample()}.}
+\item{method_down}{Default \code{"mean"}. Method used when reducing resolution.
+Integer-factor reductions use \code{terra::aggregate()} when possible; other
+reductions use \code{terra::resample()}. The default becomes \code{"modal"} when any
+input layer is categorical.}
 
-\item{method_up}{Default \code{"bilinear"}. Method used when increasing resolution. Passed to \code{terra::resample()}.}
+\item{method_up}{Default \code{"bilinear"}. Method passed to \code{terra::resample()}
+when increasing resolution. The default becomes \code{"near"} when any input
+layer is categorical.}
 
-\item{aggregate_if_possible}{Default \code{TRUE}. If \code{TRUE}, use \code{terra::aggregate()} for integer-factor downsampling when \code{method_down} is an aggregation method.}
+\item{aggregate_if_possible}{Default \code{TRUE}. If \code{TRUE}, use
+\code{terra::aggregate()} for integer-factor downsampling when \code{method_down} is an
+aggregation method.}
 
-\item{tol}{Default \code{1e-8}. Tolerance for deciding whether an implied aggregation factor is effectively an integer.}
+\item{tol}{Default \code{1e-8}. Tolerance for deciding whether an implied
+aggregation factor is effectively an integer.}
 
 \item{threads}{Default \code{FALSE}. Passed to \code{terra::resample()}.}
 
@@ -42,7 +54,11 @@ resize_spatial(
 
 \item{overwrite}{Default \code{FALSE}. Whether to overwrite \code{filename}.}
 
-\item{...}{Default none. Additional arguments passed to \code{terra::aggregate()}, \code{terra::resample()}, or \code{terra::writeRaster()}.}
+\item{write_args}{Default \code{list()}. Named arguments passed only to
+\code{terra::writeRaster()} when \code{filename} is supplied.}
+
+\item{...}{Arguments passed only to the resize operation that is used:
+\code{terra::aggregate()} for aggregation or \code{terra::resample()} for resampling.}
 }
 \value{
 A \code{terra::SpatRaster}.

@@ -4,14 +4,12 @@
 \alias{apply_indent_surface_amount}
 \title{Apply indentation amount to surface}
 \usage{
-apply_indent_surface_amount(surface, amount_raster, direction = "down")
+apply_indent_surface_amount(surface, amount_raster)
 }
 \arguments{
 \item{surface}{Surface metadata list.}
 
 \item{amount_raster}{Rasterized amount.}
-
-\item{direction}{Default \code{"down"}. Direction to apply.}
 }
 \value{
 Modified heightmap.
