@@ -1732,7 +1732,15 @@ render_highquality = function(
   }
 
   if (!is.null(animation_camera_coords)) {
-    stopifnot(ncol(animation_camera_coords) == 14)
+    if (
+      length(dim(animation_camera_coords)) != 2 ||
+        ncol(animation_camera_coords) != 14
+    ) {
+      stop(
+        "`animation_camera_coords` must be a two-dimensional object with exactly 14 columns.",
+        call. = FALSE
+      )
+    }
     animation_args = list(
       scene = scene,
       camera_motion = animation_camera_coords_rayrender,

@@ -144,7 +144,24 @@ get_polygon_data_value = function(
     polygon$new_data_column = default_value
     data_vals = polygon$new_data_column
   }
+  if (!is.numeric(data_vals)) {
+    stop(
+      paste0(
+        format_render_caller_prefix(caller),
+        "`default_value` must be numeric when `data_column_name` is `NULL`."
+      ),
+      call. = FALSE
+    )
+  }
+  if (!is.numeric(scale_data)) {
+    stop(
+      paste0(
+        format_render_caller_prefix(caller),
+        "`scale_data` must be numeric."
+      ),
+      call. = FALSE
+    )
+  }
   data_vals = data_vals * scale_data
-  stopifnot(is.numeric(data_vals))
   return(data_vals)
 }

@@ -65,7 +65,9 @@ generate_raster_overlay = function(
       call. = FALSE
     )
   }
-  stopifnot(!missing(raster))
+  if (missing(raster)) {
+    stop("`raster` must be supplied.", call. = FALSE)
+  }
 
   explicit_extent = extent
   resolution_multiply = validate_raster_overlay_resolution_multiply(

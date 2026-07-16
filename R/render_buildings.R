@@ -469,10 +469,20 @@ render_buildings = function(
     bottom[is.na(bottom)] = min(xyz[, 2])
   }
   if (length(top) != 1) {
-    stopifnot(length(top) == nrow(polygon))
+    if (length(top) != nrow(polygon)) {
+      stop(
+        "`top` must have length 1 or one value for each row of `polygon`.",
+        call. = FALSE
+      )
+    }
   }
   if (length(bottom) != 1) {
-    stopifnot(length(bottom) == nrow(polygon))
+    if (length(bottom) != nrow(polygon)) {
+      stop(
+        "`bottom` must have length 1 or one value for each row of `polygon`.",
+        call. = FALSE
+      )
+    }
   }
   if (!is.null(data_column_top) || !is.null(data_column_bottom)) {
     n_polygon_before_data_drop = nrow(polygon)

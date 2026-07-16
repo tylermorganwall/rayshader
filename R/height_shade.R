@@ -41,7 +41,9 @@ height_shade = function(
   range = NULL
 ) {
   heightmap_missing = missing(heightmap)
-  heightmap_cache_label = format_scene_cache_label(deparse(substitute(heightmap)))
+  heightmap_cache_label = format_scene_cache_label(deparse(substitute(
+    heightmap
+  )))
   if (heightmap_missing) {
     resolved_heightmap = resolve_hillshade_heightmap(
       heightmap_missing = TRUE,
@@ -58,7 +60,9 @@ height_shade = function(
   } else {
     heightmap_cache_label
   }
-  stopifnot(is.matrix(heightmap))
+  if (!is.matrix(heightmap)) {
+    stop("`heightmap` must be a matrix.", call. = FALSE)
+  }
   if (!is.null(range)) {
     range = base::sort(range[1:2])
   } else {

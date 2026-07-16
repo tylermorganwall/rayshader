@@ -147,8 +147,18 @@ render_snapshot = function(
       clear_scene_cache = TRUE
     )
   }
+  if (
+    !is.numeric(fsaa) ||
+      length(fsaa) != 1 ||
+      !is.finite(fsaa) ||
+      fsaa < 1
+  ) {
+    stop(
+      "`fsaa` must be a single finite number greater than or equal to 1.",
+      call. = FALSE
+    )
+  }
   fsaa = as.integer(fsaa)
-  stopifnot(fsaa >= 1)
   if (rgl::cur3d() == 0) {
     stop("No rgl window currently open.")
   }
@@ -204,7 +214,9 @@ render_snapshot = function(
       bgid = rgl::ids3d("background")$id
       background = rgl::rgl.attrib(bgid, "colors")
     }
-    stopifnot(length(text_offset) == 3)
+    if (length(text_offset) != 3) {
+      stop("`text_offset` must contain exactly three values.", call. = FALSE)
+    }
     debug = render_snapshot_software(
       filename = temp,
       cache_scene = cache_scene,

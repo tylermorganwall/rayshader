@@ -531,18 +531,34 @@ plot_gg = function(
   }
   if (is.null(ggobj_height)) {
     if (methods::is(ggobj, "list") && length(ggobj) == 2) {
-      stopifnot(inherits(ggobj[[2]], "ggplot"))
-      stopifnot(inherits(ggobj[[1]], "ggplot"))
+      if (
+        !inherits(ggobj[[1]], "ggplot") ||
+          !inherits(ggobj[[2]], "ggplot")
+      ) {
+        stop(
+          "When `ggobj` is a list, both elements must be ggplot objects.",
+          call. = FALSE
+        )
+      }
       ggplotobj2 = clone_plot_gg_object(ggobj[[2]])
       color_gg = clone_plot_gg_object(ggobj[[1]])
     } else {
-      stopifnot(inherits(ggobj, "ggplot"))
+      if (!inherits(ggobj, "ggplot")) {
+        stop(
+          "`ggobj` must be a ggplot object or a length-2 list of ggplot objects.",
+          call. = FALSE
+        )
+      }
       ggplotobj2 = clone_plot_gg_object(ggobj)
       color_gg = clone_plot_gg_object(ggobj)
     }
   } else {
-    stopifnot(inherits(ggobj, "ggplot"))
-    stopifnot(inherits(ggobj_height, "ggplot"))
+    if (!inherits(ggobj, "ggplot")) {
+      stop("`ggobj` must be a ggplot object.", call. = FALSE)
+    }
+    if (!inherits(ggobj_height, "ggplot")) {
+      stop("`ggobj_height` must be a ggplot object.", call. = FALSE)
+    }
     ggplotobj2 = clone_plot_gg_object(ggobj_height)
     color_gg = clone_plot_gg_object(ggobj)
   }

@@ -403,7 +403,16 @@ render_tree = function(
       trunk_height_ratio = 1 / 3
     }
   } else {
-    stopifnot(all(trunk_height_ratio < 1 & trunk_height_ratio >= 0))
+    if (
+      !is.numeric(trunk_height_ratio) ||
+        anyNA(trunk_height_ratio) ||
+        any(trunk_height_ratio < 0 | trunk_height_ratio >= 1)
+    ) {
+      stop(
+        "`trunk_height_ratio` must contain numeric values greater than or equal to 0 and less than 1.",
+        call. = FALSE
+      )
+    }
   }
   if (!absolute_height) {
     crown_height = (1 - trunk_height_ratio) * tree_height
@@ -582,7 +591,9 @@ render_tree = function(
       trunk_radius = trunk_radius / 2
     }
   }
-  stopifnot(length(lat) == length(long))
+  if (length(lat) != length(long)) {
+    stop("`lat` and `long` must have the same length.", call. = FALSE)
+  }
   height_zscale = 1
 
   # Expand scalar dimensions to vectors if needed

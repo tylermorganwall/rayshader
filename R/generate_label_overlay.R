@@ -117,219 +117,221 @@
 #'                                     seed=2))  |>
 #'  plot_map()
 generate_label_overlay = function(
-	labels,
-	extent = NULL,
-	x = NULL,
-	y = NULL,
-	heightmap = NULL,
-	width = NA,
-	height = NA,
-	resolution_multiply = 1,
-	text_size = 1,
-	color = "black",
-	font = 1,
-	pch = 16,
-	point_size = 1,
-	point_color = NA,
-	offset = c(0, 0),
-	data_label_column = NULL,
-	halo_color = NA,
-	halo_expand = 0,
-	halo_alpha = 1,
-	halo_offset = c(0, 0),
-	halo_blur = 0,
-	halo_edge_softness = 0.1,
-	halo_gap_fill = 2,
-	halo_gap_fill_alpha_threshold = 0.25,
-	seed = NA
+  labels,
+  extent = NULL,
+  x = NULL,
+  y = NULL,
+  heightmap = NULL,
+  width = NA,
+  height = NA,
+  resolution_multiply = 1,
+  text_size = 1,
+  color = "black",
+  font = 1,
+  pch = 16,
+  point_size = 1,
+  point_color = NA,
+  offset = c(0, 0),
+  data_label_column = NULL,
+  halo_color = NA,
+  halo_expand = 0,
+  halo_alpha = 1,
+  halo_offset = c(0, 0),
+  halo_blur = 0,
+  halo_edge_softness = 0.1,
+  halo_gap_fill = 2,
+  halo_gap_fill_alpha_threshold = 0.25,
+  seed = NA
 ) {
-	if (!is.na(seed)) {
-		set.seed(seed)
-	} else {
-		seed = .Random.seed
-	}
-	if (is.na(point_color)) {
-		point_color = color
-	}
-	if (!(length(find.package("car", quiet = TRUE)) > 0)) {
-		stop("{car} package required for generate_label_overlay()")
-	}
-	stopifnot(!missing(labels))
-	heightmap = resolve_overlay_heightmap(
-		heightmap = heightmap,
-		heightmap_missing = missing(heightmap),
-		width = width,
-		height = height,
-		caller = "generate_label_overlay"
-	)
-	extent = resolve_scene_render_extent(
-		extent = extent,
-		heightmap = heightmap,
-		caller = "generate_label_overlay"
-	)
-	if (
-		(inherits(labels, "sf") || inherits(labels, "sfc")) &&
-			(is.null(x) && is.null(y)) &&
-			!is.null(data_label_column)
-	) {
-		if (!(length(find.package("sf", quiet = TRUE)) > 0)) {
-			stop("{sf} package required for {sf} object support")
-		}
-		scene_labels = auto_transform_scene_sf(
-			sf_object = labels,
-			extent = extent,
-			heightmap = heightmap,
-			crs = tryCatch(sf::st_crs(labels), error = function(e) NULL),
-			caller = "generate_label_overlay"
-		)
-		labels = scene_labels$object
-		if (!is.null(scene_labels$extent)) {
-			extent = scene_labels$extent
-		}
-		geometry_list = sf::st_geometry(labels)
-		xycoords = list()
-		for (i in seq_len(length(geometry_list))) {
-			if (
-				inherits(geometry_list[[i]], "POLYGON") ||
-					inherits(geometry_list[[i]], "MULTIPOLYGON")
-			) {
-				xycoords[[i]] = sf::st_coordinates(sf::st_centroid(geometry_list[[i]]))
-			} else {
-				xycoords[[i]] = sf::st_coordinates(geometry_list[[i]])
-			}
-		}
-		xycoords = do.call(rbind, xycoords)
-		labels = as.character(labels[[data_label_column]])
-		x = xycoords[, 1]
-		y = xycoords[, 2]
-	}
-	if (!is.null(x) && !is.null(y)) {
-		scene_xy = auto_transform_scene_xy(
-			x = x,
-			y = y,
-			extent = extent,
-			heightmap = heightmap,
-			caller = "generate_label_overlay"
-		)
-		x = scene_xy$x
-		y = scene_xy$y
-		if (!is.null(scene_xy$extent)) {
-			extent = scene_xy$extent
-		}
-	}
-	extent = get_extent(extent)
-	if (!(length(find.package("ragg", quiet = TRUE)) > 0)) {
-		png_device = grDevices::png
-	} else {
-		png_device = ragg::agg_png
-	}
-	if (is.na(height)) {
-		height = ncol(heightmap)
-	}
-	if (is.na(width)) {
-		width = nrow(heightmap)
-	}
-	height = height * resolution_multiply
-	width = width * resolution_multiply
+  if (!is.na(seed)) {
+    set.seed(seed)
+  } else {
+    seed = .Random.seed
+  }
+  if (is.na(point_color)) {
+    point_color = color
+  }
+  if (!(length(find.package("car", quiet = TRUE)) > 0)) {
+    stop("{car} package required for generate_label_overlay()")
+  }
+  if (missing(labels)) {
+    stop("`labels` must be supplied.", call. = FALSE)
+  }
+  heightmap = resolve_overlay_heightmap(
+    heightmap = heightmap,
+    heightmap_missing = missing(heightmap),
+    width = width,
+    height = height,
+    caller = "generate_label_overlay"
+  )
+  extent = resolve_scene_render_extent(
+    extent = extent,
+    heightmap = heightmap,
+    caller = "generate_label_overlay"
+  )
+  if (
+    (inherits(labels, "sf") || inherits(labels, "sfc")) &&
+      (is.null(x) && is.null(y)) &&
+      !is.null(data_label_column)
+  ) {
+    if (!(length(find.package("sf", quiet = TRUE)) > 0)) {
+      stop("{sf} package required for {sf} object support")
+    }
+    scene_labels = auto_transform_scene_sf(
+      sf_object = labels,
+      extent = extent,
+      heightmap = heightmap,
+      crs = tryCatch(sf::st_crs(labels), error = function(e) NULL),
+      caller = "generate_label_overlay"
+    )
+    labels = scene_labels$object
+    if (!is.null(scene_labels$extent)) {
+      extent = scene_labels$extent
+    }
+    geometry_list = sf::st_geometry(labels)
+    xycoords = list()
+    for (i in seq_len(length(geometry_list))) {
+      if (
+        inherits(geometry_list[[i]], "POLYGON") ||
+          inherits(geometry_list[[i]], "MULTIPOLYGON")
+      ) {
+        xycoords[[i]] = sf::st_coordinates(sf::st_centroid(geometry_list[[i]]))
+      } else {
+        xycoords[[i]] = sf::st_coordinates(geometry_list[[i]])
+      }
+    }
+    xycoords = do.call(rbind, xycoords)
+    labels = as.character(labels[[data_label_column]])
+    x = xycoords[, 1]
+    y = xycoords[, 2]
+  }
+  if (!is.null(x) && !is.null(y)) {
+    scene_xy = auto_transform_scene_xy(
+      x = x,
+      y = y,
+      extent = extent,
+      heightmap = heightmap,
+      caller = "generate_label_overlay"
+    )
+    x = scene_xy$x
+    y = scene_xy$y
+    if (!is.null(scene_xy$extent)) {
+      extent = scene_xy$extent
+    }
+  }
+  extent = get_extent(extent)
+  if (!(length(find.package("ragg", quiet = TRUE)) > 0)) {
+    png_device = grDevices::png
+  } else {
+    png_device = ragg::agg_png
+  }
+  if (is.na(height)) {
+    height = ncol(heightmap)
+  }
+  if (is.na(width)) {
+    width = nrow(heightmap)
+  }
+  height = height * resolution_multiply
+  width = width * resolution_multiply
 
-	tempoverlay = tempfile(fileext = ".png")
-	png_device(
-		filename = tempoverlay,
-		width = width,
-		height = height,
-		units = "px",
-		bg = "transparent"
-	)
-	graphics::par(mar = c(0, 0, 0, 0))
-	graphics::plot(
-		x = x + offset[1],
-		y = y + offset[2],
-		xlim = c(extent["xmin"], extent["xmax"]),
-		ylim = c(extent["ymin"], extent["ymax"]),
-		asp = 1,
-		pch = pch,
-		bty = "n",
-		axes = FALSE,
-		xaxs = "i",
-		yaxs = "i",
-		cex = point_size,
-		col = point_color
-	)
-	car::pointLabel(
-		x = x + offset[1],
-		y = y + offset[2],
-		labels = labels,
-		cex = text_size,
-		xlim = c(extent["xmin"], extent["xmax"]),
-		bty = "n",
-		ylim = c(extent["ymin"], extent["ymax"]),
-		asp = 1,
-		font = font,
-		xaxs = "i",
-		yaxs = "i",
-		col = color
-	)
-	grDevices::dev.off() #resets par
-	overlay_temp = rayimage::ray_read_image(tempoverlay)
-	if (!is.na(halo_color)) {
-		if (!(length(find.package("rayimage", quiet = TRUE)) > 0)) {
-			stop("{rayimage} package required for `halo_color`")
-		}
-		set.seed(seed)
-		tempoverlay = tempfile(fileext = ".png")
-		png_device(
-			filename = tempoverlay,
-			width = width,
-			height = height,
-			units = "px",
-			bg = "transparent"
-		)
-		graphics::par(mar = c(0, 0, 0, 0))
-		graphics::plot(
-			x = x + halo_offset[1],
-			y = y + halo_offset[2],
-			xlim = c(extent["xmin"], extent["xmax"]),
-			ylim = c(extent["ymin"], extent["ymax"]),
-			asp = 1,
-			pch = pch,
-			bty = "n",
-			axes = FALSE,
-			xaxs = "i",
-			yaxs = "i",
-			cex = point_size,
-			col = halo_color
-		)
-		car::pointLabel(
-			x = x + halo_offset[1],
-			y = y + halo_offset[2],
-			labels = labels,
-			cex = text_size,
-			xlim = c(extent["xmin"], extent["xmax"]),
-			bty = "n",
-			ylim = c(extent["ymin"], extent["ymax"]),
-			asp = 1,
-			font = font,
-			xaxs = "i",
-			yaxs = "i",
-			col = halo_color
-		)
-		grDevices::dev.off() #resets par
-		overlay_temp_under = rayimage::ray_read_image(tempoverlay)
-		overlay_temp_under = generate_halo_underlay(
-			overlay_temp_under,
-			halo_expand,
-			halo_offset,
-			halo_color,
-			halo_alpha,
-			halo_blur,
-			halo_edge_softness,
-			halo_gap_fill,
-			halo_gap_fill_alpha_threshold
-		)
-		overlay_temp = rayimage::render_image_overlay(
-			overlay_temp_under,
-			overlay_temp
-		)
-	}
-	return(overlay_temp)
+  tempoverlay = tempfile(fileext = ".png")
+  png_device(
+    filename = tempoverlay,
+    width = width,
+    height = height,
+    units = "px",
+    bg = "transparent"
+  )
+  graphics::par(mar = c(0, 0, 0, 0))
+  graphics::plot(
+    x = x + offset[1],
+    y = y + offset[2],
+    xlim = c(extent["xmin"], extent["xmax"]),
+    ylim = c(extent["ymin"], extent["ymax"]),
+    asp = 1,
+    pch = pch,
+    bty = "n",
+    axes = FALSE,
+    xaxs = "i",
+    yaxs = "i",
+    cex = point_size,
+    col = point_color
+  )
+  car::pointLabel(
+    x = x + offset[1],
+    y = y + offset[2],
+    labels = labels,
+    cex = text_size,
+    xlim = c(extent["xmin"], extent["xmax"]),
+    bty = "n",
+    ylim = c(extent["ymin"], extent["ymax"]),
+    asp = 1,
+    font = font,
+    xaxs = "i",
+    yaxs = "i",
+    col = color
+  )
+  grDevices::dev.off() #resets par
+  overlay_temp = rayimage::ray_read_image(tempoverlay)
+  if (!is.na(halo_color)) {
+    if (!(length(find.package("rayimage", quiet = TRUE)) > 0)) {
+      stop("{rayimage} package required for `halo_color`")
+    }
+    set.seed(seed)
+    tempoverlay = tempfile(fileext = ".png")
+    png_device(
+      filename = tempoverlay,
+      width = width,
+      height = height,
+      units = "px",
+      bg = "transparent"
+    )
+    graphics::par(mar = c(0, 0, 0, 0))
+    graphics::plot(
+      x = x + halo_offset[1],
+      y = y + halo_offset[2],
+      xlim = c(extent["xmin"], extent["xmax"]),
+      ylim = c(extent["ymin"], extent["ymax"]),
+      asp = 1,
+      pch = pch,
+      bty = "n",
+      axes = FALSE,
+      xaxs = "i",
+      yaxs = "i",
+      cex = point_size,
+      col = halo_color
+    )
+    car::pointLabel(
+      x = x + halo_offset[1],
+      y = y + halo_offset[2],
+      labels = labels,
+      cex = text_size,
+      xlim = c(extent["xmin"], extent["xmax"]),
+      bty = "n",
+      ylim = c(extent["ymin"], extent["ymax"]),
+      asp = 1,
+      font = font,
+      xaxs = "i",
+      yaxs = "i",
+      col = halo_color
+    )
+    grDevices::dev.off() #resets par
+    overlay_temp_under = rayimage::ray_read_image(tempoverlay)
+    overlay_temp_under = generate_halo_underlay(
+      overlay_temp_under,
+      halo_expand,
+      halo_offset,
+      halo_color,
+      halo_alpha,
+      halo_blur,
+      halo_edge_softness,
+      halo_gap_fill,
+      halo_gap_fill_alpha_threshold
+    )
+    overlay_temp = rayimage::render_image_overlay(
+      overlay_temp_under,
+      overlay_temp
+    )
+  }
+  return(overlay_temp)
 }

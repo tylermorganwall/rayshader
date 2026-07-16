@@ -271,6 +271,12 @@ render_clouds = function(
   if (all(length(find.package("ambient", quiet = TRUE)) == 0)) {
     stop("`render_clouds()` requires the `ambient` package to be installed")
   }
+  validate_cloud_parameters(
+    start_altitude = start_altitude,
+    end_altitude = end_altitude,
+    layers = layers,
+    sun_altitude = sun_altitude
+  )
   time = -time
   if (start_altitude > end_altitude) {
     temp_alt = start_altitude
@@ -312,9 +318,6 @@ render_clouds = function(
   alpha_coef = 1 - 1 / cloud_cover
   layers = layers[1]
   altitudes = seq(start_altitude, end_altitude, length.out = layers)
-  stopifnot(start_altitude < end_altitude)
-  stopifnot(layers > 0)
-  stopifnot(sun_altitude > 0 && sun_altitude <= 90)
 
   altitudes = seq(start_altitude, end_altitude, length.out = layers + 1)
   attenuation_coef = attenuation_coef / layers
@@ -379,6 +382,12 @@ render_clouds = function(
   if (all(length(find.package("ambient", quiet = TRUE)) == 0)) {
     stop("`render_clouds()` requires the `ambient` package to be installed")
   }
+  validate_cloud_parameters(
+    start_altitude = start_altitude,
+    end_altitude = end_altitude,
+    layers = layers,
+    sun_altitude = sun_altitude
+  )
   time = -time
   if (start_altitude > end_altitude) {
     temp_alt = start_altitude
@@ -419,11 +428,6 @@ render_clouds = function(
   }
   alpha_coef = 1 - 1 / cloud_cover
   layers = layers[1]
-  stopifnot(
-    start_altitude < end_altitude,
-    layers > 0,
-    sun_altitude > 0 && sun_altitude <= 90
-  )
 
   # Use layer boundaries; render at the UPPER boundary so the final quad is at end_altitude
   altitudes = seq(start_altitude, end_altitude, length.out = layers + 1)
@@ -668,6 +672,12 @@ cloud_shade = function(
   zscale = 1,
   vertical_exaggeration = 1
 ) {
+  validate_cloud_parameters(
+    start_altitude = start_altitude,
+    end_altitude = end_altitude,
+    layers = layers,
+    sun_altitude = sun_altitude
+  )
   heightmap_missing = missing(heightmap)
   heightmap_cache_label = format_scene_cache_label(deparse(substitute(
     heightmap
@@ -703,7 +713,9 @@ cloud_shade = function(
     }
     allow_scene_zscale_cache = FALSE
   }
-  stopifnot(is.matrix(heightmap))
+  if (!is.matrix(heightmap)) {
+    stop("`heightmap` must be a matrix.", call. = FALSE)
+  }
   resolved_zscale = resolve_hillshade_zscale(
     zscale = zscale,
     zscale_missing = missing(zscale),
@@ -751,8 +763,6 @@ cloud_shade = function(
   sun_angle = sun_angle + 180
   alpha_coef = 1 - 1 / cloud_cover
   layers = layers[1]
-  stopifnot(start_altitude < end_altitude)
-  stopifnot(layers > 0)
 
   attenuation_coef = attenuation_coef / layers
   if (layers == 1) {

@@ -45,119 +45,121 @@
 #'    add_shadow(ray_shade(vertical_exaggeration = 4),0.3) |>
 #'    plot_map()
 generate_point_overlay = function(
-	geometry,
-	extent = NULL,
-	heightmap = NULL,
-	width = NA,
-	height = NA,
-	resolution_multiply = 1,
-	pch = 16,
-	color = "black",
-	size = 1,
-	offset = c(0, 0),
-	data_column_width = NULL
+  geometry,
+  extent = NULL,
+  heightmap = NULL,
+  width = NA,
+  height = NA,
+  resolution_multiply = 1,
+  pch = 16,
+  color = "black",
+  size = 1,
+  offset = c(0, 0),
+  data_column_width = NULL
 ) {
-	if (!(length(find.package("sf", quiet = TRUE)) > 0)) {
-		stop("{sf} package required for generate_point_overlay()")
-	}
-	stopifnot(!missing(geometry))
-	if (
-		!(inherits(geometry, "sf") ||
-			inherits(geometry, "sfc") ||
-			inherits(geometry, "sfg"))
-	) {
-		stop("geometry must be {sf} object")
-	}
-	if (inherits(geometry, "sfg")) {
-		geometry = sf::st_sfc(geometry)
-	}
-	heightmap = resolve_overlay_heightmap(
-		heightmap = heightmap,
-		heightmap_missing = missing(heightmap),
-		width = width,
-		height = height,
-		caller = "generate_point_overlay"
-	)
-	extent = resolve_scene_render_extent(
-		extent = extent,
-		heightmap = heightmap,
-		caller = "generate_point_overlay"
-	)
-	scene_geometry = auto_transform_scene_sf(
-		sf_object = geometry,
-		extent = extent,
-		heightmap = heightmap,
-		crs = tryCatch(sf::st_crs(geometry), error = function(e) NULL),
-		caller = "generate_point_overlay"
-	)
-	geometry = scene_geometry$object
-	if (!is.null(scene_geometry$extent)) {
-		extent = scene_geometry$extent
-	}
-	sf_point_cropped = base::suppressMessages(base::suppressWarnings(sf::st_crop(
-		geometry,
-		extent
-	)))
+  if (!(length(find.package("sf", quiet = TRUE)) > 0)) {
+    stop("{sf} package required for generate_point_overlay()")
+  }
+  if (missing(geometry)) {
+    stop("`geometry` must be supplied.", call. = FALSE)
+  }
+  if (
+    !(inherits(geometry, "sf") ||
+      inherits(geometry, "sfc") ||
+      inherits(geometry, "sfg"))
+  ) {
+    stop("geometry must be {sf} object")
+  }
+  if (inherits(geometry, "sfg")) {
+    geometry = sf::st_sfc(geometry)
+  }
+  heightmap = resolve_overlay_heightmap(
+    heightmap = heightmap,
+    heightmap_missing = missing(heightmap),
+    width = width,
+    height = height,
+    caller = "generate_point_overlay"
+  )
+  extent = resolve_scene_render_extent(
+    extent = extent,
+    heightmap = heightmap,
+    caller = "generate_point_overlay"
+  )
+  scene_geometry = auto_transform_scene_sf(
+    sf_object = geometry,
+    extent = extent,
+    heightmap = heightmap,
+    crs = tryCatch(sf::st_crs(geometry), error = function(e) NULL),
+    caller = "generate_point_overlay"
+  )
+  geometry = scene_geometry$object
+  if (!is.null(scene_geometry$extent)) {
+    extent = scene_geometry$extent
+  }
+  sf_point_cropped = base::suppressMessages(base::suppressWarnings(sf::st_crop(
+    geometry,
+    extent
+  )))
 
-	if (!(length(find.package("ragg", quiet = TRUE)) > 0)) {
-		png_device = grDevices::png
-	} else {
-		png_device = ragg::agg_png
-	}
-	if (is.na(height)) {
-		height = ncol(heightmap)
-	}
-	if (is.na(width)) {
-		width = nrow(heightmap)
-	}
-	if (!is.null(data_column_width)) {
-		if (data_column_width %in% colnames(sf_point_cropped)) {
-			widthvals = sf_point_cropped[[data_column_width]] /
-				max(sf_point_cropped[[data_column_width]], na.rm = TRUE) *
-				size
-		} else {
-			warning(
-				"Was not able to find data_column_width `",
-				data_column_width,
-				"` in {sf} object."
-			)
-			widthvals = size
-		}
-	} else {
-		widthvals = size
-	}
-	if (any(offset != 0)) {
-		if (length(offset) == 2) {
-			for (i in seq_len(length(sf_point_cropped$geometry))) {
-				sf_point_cropped$geometry[[i]] = sf_point_cropped$geometry[[i]] + offset
-			}
-		} else {
-			stop("`offset` must be of length-2")
-		}
-	}
-	extent = get_extent(extent)
-	tempoverlay = tempfile(fileext = ".png")
-	png_device(
-		filename = tempoverlay,
-		width = width * resolution_multiply,
-		height = height * resolution_multiply,
-		units = "px",
-		bg = "transparent"
-	)
-	graphics::par(mar = c(0, 0, 0, 0))
-	graphics::plot(
-		base::suppressWarnings(sf::st_geometry(sf_point_cropped)),
-		xlim = c(extent["xmin"], extent["xmax"]),
-		ylim = c(extent["ymin"], extent["ymax"]),
-		cex = size,
-		asp = 1,
-		pch = pch,
-		xaxs = "i",
-		yaxs = "i",
-		lwd = widthvals,
-		col = color
-	)
-	grDevices::dev.off() #resets par
-	overlay_temp = rayimage::ray_read_image(tempoverlay)
-	return(overlay_temp)
+  if (!(length(find.package("ragg", quiet = TRUE)) > 0)) {
+    png_device = grDevices::png
+  } else {
+    png_device = ragg::agg_png
+  }
+  if (is.na(height)) {
+    height = ncol(heightmap)
+  }
+  if (is.na(width)) {
+    width = nrow(heightmap)
+  }
+  if (!is.null(data_column_width)) {
+    if (data_column_width %in% colnames(sf_point_cropped)) {
+      widthvals = sf_point_cropped[[data_column_width]] /
+        max(sf_point_cropped[[data_column_width]], na.rm = TRUE) *
+        size
+    } else {
+      warning(
+        "Was not able to find data_column_width `",
+        data_column_width,
+        "` in {sf} object."
+      )
+      widthvals = size
+    }
+  } else {
+    widthvals = size
+  }
+  if (any(offset != 0)) {
+    if (length(offset) == 2) {
+      for (i in seq_len(length(sf_point_cropped$geometry))) {
+        sf_point_cropped$geometry[[i]] = sf_point_cropped$geometry[[i]] + offset
+      }
+    } else {
+      stop("`offset` must be of length-2")
+    }
+  }
+  extent = get_extent(extent)
+  tempoverlay = tempfile(fileext = ".png")
+  png_device(
+    filename = tempoverlay,
+    width = width * resolution_multiply,
+    height = height * resolution_multiply,
+    units = "px",
+    bg = "transparent"
+  )
+  graphics::par(mar = c(0, 0, 0, 0))
+  graphics::plot(
+    base::suppressWarnings(sf::st_geometry(sf_point_cropped)),
+    xlim = c(extent["xmin"], extent["xmax"]),
+    ylim = c(extent["ymin"], extent["ymax"]),
+    cex = size,
+    asp = 1,
+    pch = pch,
+    xaxs = "i",
+    yaxs = "i",
+    lwd = widthvals,
+    col = color
+  )
+  grDevices::dev.off() #resets par
+  overlay_temp = rayimage::ray_read_image(tempoverlay)
+  return(overlay_temp)
 }

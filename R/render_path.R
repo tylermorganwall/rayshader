@@ -243,7 +243,17 @@ render_path = function(
     }
   }
   if (resample_evenly) {
-    stopifnot(resample_n > 1)
+    if (
+      !is.numeric(resample_n) ||
+        length(resample_n) != 1 ||
+        !is.finite(resample_n) ||
+        resample_n <= 1
+    ) {
+      stop(
+        "`resample_n` must be a single finite number greater than 1 when `resample_evenly = TRUE`.",
+        call. = FALSE
+      )
+    }
     xyz = render_path(
       extent = extent,
       panel = panel,
@@ -597,7 +607,12 @@ render_path = function(
             linewidth[seq_len(length(linewidth) - 1)]) /
             2
         }
-        stopifnot(length(linewidth) == (nrow(xyz) - 1))
+        if (length(linewidth) != (nrow(xyz) - 1)) {
+          stop(
+            "`linewidth` must have one value per path segment.",
+            call. = FALSE
+          )
+        }
         color_length = length(color)
         for (i in seq_len(nrow(xyz) - 1)) {
           rgl::lines3d(
@@ -609,7 +624,12 @@ render_path = function(
           )
         }
       } else {
-        stopifnot(length(coord_list) == length(linewidth))
+        if (length(coord_list) != length(linewidth)) {
+          stop(
+            "`linewidth` must have one value per path feature.",
+            call. = FALSE
+          )
+        }
         color_length = length(color)
         for (i in seq_len(length(coord_list))) {
           rgl::lines3d(

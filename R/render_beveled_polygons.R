@@ -341,10 +341,20 @@ render_beveled_polygons = function(
     bottom[is.na(bottom)] = min(xyz[, 2])
   }
   if (length(top) != 1) {
-    stopifnot(length(top) == nrow(polygon))
+    if (length(top) != nrow(polygon)) {
+      stop(
+        "`top` must have length 1 or one value for each row of `polygon`.",
+        call. = FALSE
+      )
+    }
   }
   if (length(bottom) != 1) {
-    stopifnot(length(bottom) == nrow(polygon))
+    if (length(bottom) != nrow(polygon)) {
+      stop(
+        "`bottom` must have length 1 or one value for each row of `polygon`.",
+        call. = FALSE
+      )
+    }
   }
   if (!is.null(data_column_top) || !is.null(data_column_bottom)) {
     n_polygon_before_data_drop = nrow(polygon)
@@ -427,7 +437,18 @@ render_beveled_polygons = function(
   bottom = bottom[idx_sans_missing_geometry]
 
   if (!is.list(bevel)) {
-    stopifnot(angle > 0 && angle < 90)
+    if (
+      !is.numeric(angle) ||
+        length(angle) != 1 ||
+        !is.finite(angle) ||
+        angle <= 0 ||
+        angle >= 90
+    ) {
+      stop(
+        "`angle` must be a single finite number greater than 0 and less than 90.",
+        call. = FALSE
+      )
+    }
     angle_slope = tanpi(angle / 180)
     # Setting width_raw_units to TRUE makes it easier to generate visually nice bevels but
     # don't necessarily corrspond to any meaningful real world distance

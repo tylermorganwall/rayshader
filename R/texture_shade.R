@@ -54,109 +54,113 @@
 #'   add_shadow(lamb_shade(montereybay, vertical_exaggeration = 4),0) |>
 #'   plot_map()
 texture_shade = function(
-	heightmap,
-	detail = 0.5,
-	contrast = 1,
-	brightness = 0,
-	transform = TRUE,
-	dx = 1,
-	dy = 1,
-	pad = 50
+  heightmap,
+  detail = 0.5,
+  contrast = 1,
+  brightness = 0,
+  transform = TRUE,
+  dx = 1,
+  dy = 1,
+  pad = 50
 ) {
-	heightmap_missing = missing(heightmap)
-	heightmap_cache_label = format_scene_cache_label(deparse(substitute(heightmap)))
-	if (heightmap_missing) {
-		resolved_heightmap = resolve_hillshade_heightmap(
-			heightmap_missing = TRUE,
-			caller = "texture_shade"
-		)
-		heightmap = resolved_heightmap$heightmap
-	} else {
-		heightmap_info = coerce_plot_3d_heightmap(heightmap)
-		heightmap = heightmap_info$heightmap
-		cache_hillshade_input_context(heightmap_info, label = heightmap_cache_label)
-	}
-	stopifnot(is.matrix(heightmap))
-	heightmap = t(heightmap)
-	heightmap[is.na(heightmap)] = mean(heightmap, na.rm = TRUE)
-	if (detail < 0 || detail > 1) {
-		stop("`detail` should be a number between 0 and 1.")
-	}
-	if (dx <= 0 || dy <= 0) {
-		stop("`dx` and `dy` should be greater than zero.")
-	}
-	if (pad < 0) {
-		stop("`pad` should be an integer greater than zero.")
-	}
-	heightmap = heightmap - min(heightmap, na.rm = TRUE)
-	heightmap = add_multi_padding(heightmap, pad)
-	odd_padded_cols = FALSE
-	odd_padded_rows = FALSE
-	if (ncol(heightmap) %% 2 != 0) {
-		odd_padded_cols = TRUE
-		heightmap = cbind(heightmap[, 1], heightmap)
-	}
-	if (nrow(heightmap) %% 2 != 0) {
-		odd_padded_rows = TRUE
-		heightmap = rbind(heightmap[1, ], heightmap)
-	}
-	sfunc = function(v, dim) {
-		v = v - dim / 2 + 0.5
-		v = v / dim
-		3 * (sinpi(v))^4 / (pi^2 * (2 + cospi(2 * v))) * 1 / v^4
-	}
-	mfunc = function(i, j, d, dx, dy, dimx, dimy) {
-		i = i - dimx / 2
-		j = j - dimy / 2
-		(2 * pi)^d * ((i / dx)^2 + (j / dy)^2)^(d / 2)
-	}
-	shift_fft = function(fft_mat) {
-		fftcorn_nw = fft_mat[1:(nrow(fft_mat) / 2), 1:(ncol(fft_mat) / 2)]
-		fftcorn_ne = fft_mat[
-			1:(nrow(fft_mat) / 2),
-			(ncol(fft_mat) / 2 + 1):ncol(fft_mat)
-		]
-		fftcorn_sw = fft_mat[
-			(nrow(fft_mat) / 2 + 1):nrow(fft_mat),
-			1:(ncol(fft_mat) / 2)
-		]
-		fftcorn_se = fft_mat[
-			(nrow(fft_mat) / 2 + 1):nrow(fft_mat),
-			(ncol(fft_mat) / 2 + 1):ncol(fft_mat)
-		]
-		rbind(cbind(fftcorn_se, fftcorn_sw), cbind(fftcorn_ne, fftcorn_nw))
-	}
-	fft_heightmap = shift_fft(stats::fft(heightmap))
+  heightmap_missing = missing(heightmap)
+  heightmap_cache_label = format_scene_cache_label(deparse(substitute(
+    heightmap
+  )))
+  if (heightmap_missing) {
+    resolved_heightmap = resolve_hillshade_heightmap(
+      heightmap_missing = TRUE,
+      caller = "texture_shade"
+    )
+    heightmap = resolved_heightmap$heightmap
+  } else {
+    heightmap_info = coerce_plot_3d_heightmap(heightmap)
+    heightmap = heightmap_info$heightmap
+    cache_hillshade_input_context(heightmap_info, label = heightmap_cache_label)
+  }
+  if (!is.matrix(heightmap)) {
+    stop("`heightmap` must be a matrix.", call. = FALSE)
+  }
+  heightmap = t(heightmap)
+  heightmap[is.na(heightmap)] = mean(heightmap, na.rm = TRUE)
+  if (detail < 0 || detail > 1) {
+    stop("`detail` should be a number between 0 and 1.")
+  }
+  if (dx <= 0 || dy <= 0) {
+    stop("`dx` and `dy` should be greater than zero.")
+  }
+  if (pad < 0) {
+    stop("`pad` should be an integer greater than zero.")
+  }
+  heightmap = heightmap - min(heightmap, na.rm = TRUE)
+  heightmap = add_multi_padding(heightmap, pad)
+  odd_padded_cols = FALSE
+  odd_padded_rows = FALSE
+  if (ncol(heightmap) %% 2 != 0) {
+    odd_padded_cols = TRUE
+    heightmap = cbind(heightmap[, 1], heightmap)
+  }
+  if (nrow(heightmap) %% 2 != 0) {
+    odd_padded_rows = TRUE
+    heightmap = rbind(heightmap[1, ], heightmap)
+  }
+  sfunc = function(v, dim) {
+    v = v - dim / 2 + 0.5
+    v = v / dim
+    3 * (sinpi(v))^4 / (pi^2 * (2 + cospi(2 * v))) * 1 / v^4
+  }
+  mfunc = function(i, j, d, dx, dy, dimx, dimy) {
+    i = i - dimx / 2
+    j = j - dimy / 2
+    (2 * pi)^d * ((i / dx)^2 + (j / dy)^2)^(d / 2)
+  }
+  shift_fft = function(fft_mat) {
+    fftcorn_nw = fft_mat[1:(nrow(fft_mat) / 2), 1:(ncol(fft_mat) / 2)]
+    fftcorn_ne = fft_mat[
+      1:(nrow(fft_mat) / 2),
+      (ncol(fft_mat) / 2 + 1):ncol(fft_mat)
+    ]
+    fftcorn_sw = fft_mat[
+      (nrow(fft_mat) / 2 + 1):nrow(fft_mat),
+      1:(ncol(fft_mat) / 2)
+    ]
+    fftcorn_se = fft_mat[
+      (nrow(fft_mat) / 2 + 1):nrow(fft_mat),
+      (ncol(fft_mat) / 2 + 1):ncol(fft_mat)
+    ]
+    rbind(cbind(fftcorn_se, fftcorn_sw), cbind(fftcorn_ne, fftcorn_nw))
+  }
+  fft_heightmap = shift_fft(stats::fft(heightmap))
 
-	conv1 = matrix(0, nrow(fft_heightmap), ncol(fft_heightmap))
-	conv2 = matrix(0, nrow(fft_heightmap), ncol(fft_heightmap))
+  conv1 = matrix(0, nrow(fft_heightmap), ncol(fft_heightmap))
+  conv2 = matrix(0, nrow(fft_heightmap), ncol(fft_heightmap))
 
-	nr = nrow(conv1)
-	nc = ncol(conv1)
+  nr = nrow(conv1)
+  nc = ncol(conv1)
 
-	for (i in seq_len(nr)) {
-		for (j in seq_len(nc)) {
-			conv1[i, j] = sfunc(i, nr) * sfunc(j, nc)
-			conv2[i, j] = mfunc(i, j, d = detail, dx, dy, nr, nc)
-		}
-	}
+  for (i in seq_len(nr)) {
+    for (j in seq_len(nc)) {
+      conv1[i, j] = sfunc(i, nr) * sfunc(j, nc)
+      conv2[i, j] = mfunc(i, j, d = detail, dx, dy, nr, nc)
+    }
+  }
 
-	heightmap_processed = abs(stats::fft(
-		shift_fft(fft_heightmap * conv1 * conv2),
-		inverse = TRUE
-	))
-	if (odd_padded_cols) {
-		heightmap_processed = heightmap_processed[, -1]
-	}
-	if (odd_padded_rows) {
-		heightmap_processed = heightmap_processed[-1, ]
-	}
-	heightmap_trimmed = trim_padding(heightmap_processed, pad)
-	if (transform) {
-		heightmap_trimmed = scales::rescale(heightmap_trimmed, to = c(-1, 1))
-		return((tanh(heightmap_trimmed * contrast + brightness) + 1) / 2)
-	} else {
-		heightmap_trimmed = scales::rescale(heightmap_trimmed, to = c(0, 1))
-		return(heightmap_trimmed)
-	}
+  heightmap_processed = abs(stats::fft(
+    shift_fft(fft_heightmap * conv1 * conv2),
+    inverse = TRUE
+  ))
+  if (odd_padded_cols) {
+    heightmap_processed = heightmap_processed[, -1]
+  }
+  if (odd_padded_rows) {
+    heightmap_processed = heightmap_processed[-1, ]
+  }
+  heightmap_trimmed = trim_padding(heightmap_processed, pad)
+  if (transform) {
+    heightmap_trimmed = scales::rescale(heightmap_trimmed, to = c(-1, 1))
+    return((tanh(heightmap_trimmed * contrast + brightness) + 1) / 2)
+  } else {
+    heightmap_trimmed = scales::rescale(heightmap_trimmed, to = c(0, 1))
+    return(heightmap_trimmed)
+  }
 }

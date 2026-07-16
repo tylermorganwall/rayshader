@@ -35,35 +35,39 @@
 #'  add_water(detect_water(raster_to_matrix(montereybay) < 0), "dodgerblue") |>
 #'  plot_map()
 constant_shade = function(heightmap, color = "white", alpha = 1) {
-	heightmap_missing = missing(heightmap)
-	heightmap_cache_label = format_scene_cache_label(deparse(substitute(heightmap)))
-	if (heightmap_missing) {
-		resolved_heightmap = resolve_hillshade_heightmap(
-			heightmap_missing = TRUE,
-			caller = "constant_shade"
-		)
-		heightmap = resolved_heightmap$heightmap
-	} else {
-		heightmap_info = coerce_plot_3d_heightmap(heightmap)
-		heightmap = heightmap_info$heightmap
-		cache_hillshade_input_context(heightmap_info, label = heightmap_cache_label)
-	}
-	hillshade_cache_label = if (heightmap_missing) {
-		resolved_heightmap$label
-	} else {
-		heightmap_cache_label
-	}
-	stopifnot(is.matrix(heightmap))
-	return_array = array(alpha, dim = c(ncol(heightmap), nrow(heightmap), 4))
-	const_col = convert_color(color)
-	return_array[,, 1] = const_col[1]
-	return_array[,, 2] = const_col[2]
-	return_array[,, 3] = const_col[3]
-	return_array = rayimage::ray_read_image(
-		return_array,
-		assume_colorspace = rayimage::CS_SRGB,
-		assume_white = "D65"
-	)
-	cache_hillshade_map(return_array, label = hillshade_cache_label)
-	return(return_array)
+  heightmap_missing = missing(heightmap)
+  heightmap_cache_label = format_scene_cache_label(deparse(substitute(
+    heightmap
+  )))
+  if (heightmap_missing) {
+    resolved_heightmap = resolve_hillshade_heightmap(
+      heightmap_missing = TRUE,
+      caller = "constant_shade"
+    )
+    heightmap = resolved_heightmap$heightmap
+  } else {
+    heightmap_info = coerce_plot_3d_heightmap(heightmap)
+    heightmap = heightmap_info$heightmap
+    cache_hillshade_input_context(heightmap_info, label = heightmap_cache_label)
+  }
+  hillshade_cache_label = if (heightmap_missing) {
+    resolved_heightmap$label
+  } else {
+    heightmap_cache_label
+  }
+  if (!is.matrix(heightmap)) {
+    stop("`heightmap` must be a matrix.", call. = FALSE)
+  }
+  return_array = array(alpha, dim = c(ncol(heightmap), nrow(heightmap), 4))
+  const_col = convert_color(color)
+  return_array[,, 1] = const_col[1]
+  return_array[,, 2] = const_col[2]
+  return_array[,, 3] = const_col[3]
+  return_array = rayimage::ray_read_image(
+    return_array,
+    assume_colorspace = rayimage::CS_SRGB,
+    assume_white = "D65"
+  )
+  cache_hillshade_map(return_array, label = hillshade_cache_label)
+  return(return_array)
 }

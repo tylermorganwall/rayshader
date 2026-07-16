@@ -295,7 +295,9 @@ render_points = function(
   )
 
   if (length(unique(size)) > 1) {
-    stopifnot(length(size) == nrow(xyz))
+    if (length(size) != nrow(xyz)) {
+      stop("`size` must have one value per point.", call. = FALSE)
+    }
     color_length = length(color)
     for (i in seq_len(nrow(xyz))) {
       rgl::points3d(

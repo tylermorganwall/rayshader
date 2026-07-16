@@ -166,143 +166,148 @@
 #')
 #'}
 convert_path_to_animation_coords = function(
-	lat,
-	long = NULL,
-	altitude = NULL,
-	extent = NULL,
-	frames = 360,
-	reorder = FALSE,
-	reorder_first_index = 1,
-	reorder_duplicate_tolerance = 0.1,
-	reorder_merge_tolerance = 1,
-	simplify_tolerance = 0,
-	zscale = 1,
-	vertical_exaggeration = 1,
-	heightmap = NULL,
-	offset = 5,
-	type = "bezier",
-	offset_lookat = 1,
-	constant_step = TRUE,
-	curvature_adjust = "none",
-	curvature_scale = 30,
-	follow_camera = FALSE,
-	follow_distance = 100,
-	follow_angle = 45,
-	follow_rotations = 0,
-	follow_fixed = FALSE,
-	follow_fixed_offset = c(10, 10, 10),
-	damp_motion = FALSE,
-	damp_magnitude = 0.1,
-	resample_path_evenly = TRUE,
-	...
+  lat,
+  long = NULL,
+  altitude = NULL,
+  extent = NULL,
+  frames = 360,
+  reorder = FALSE,
+  reorder_first_index = 1,
+  reorder_duplicate_tolerance = 0.1,
+  reorder_merge_tolerance = 1,
+  simplify_tolerance = 0,
+  zscale = 1,
+  vertical_exaggeration = 1,
+  heightmap = NULL,
+  offset = 5,
+  type = "bezier",
+  offset_lookat = 1,
+  constant_step = TRUE,
+  curvature_adjust = "none",
+  curvature_scale = 30,
+  follow_camera = FALSE,
+  follow_distance = 100,
+  follow_angle = 45,
+  follow_rotations = 0,
+  follow_fixed = FALSE,
+  follow_fixed_offset = c(10, 10, 10),
+  damp_motion = FALSE,
+  damp_magnitude = 0.1,
+  resample_path_evenly = TRUE,
+  ...
 ) {
-	render_path_args = list(
-		extent = extent,
-		lat = lat,
-		long = long,
-		altitude = altitude,
-		heightmap = heightmap,
-		offset = offset,
-		reorder = reorder,
-		reorder_first_index = reorder_first_index,
-		reorder_duplicate_tolerance = reorder_duplicate_tolerance,
-		reorder_merge_tolerance = reorder_merge_tolerance,
-		simplify_tolerance = simplify_tolerance,
-		clear_previous = FALSE,
-		return_coords = TRUE
-	)
-	if (!missing(zscale)) {
-		render_path_args$zscale = zscale
-	}
-	if (!missing(vertical_exaggeration)) {
-		render_path_args$vertical_exaggeration = vertical_exaggeration
-	}
-	xyz = do.call(render_path, render_path_args)
+  render_path_args = list(
+    extent = extent,
+    lat = lat,
+    long = long,
+    altitude = altitude,
+    heightmap = heightmap,
+    offset = offset,
+    reorder = reorder,
+    reorder_first_index = reorder_first_index,
+    reorder_duplicate_tolerance = reorder_duplicate_tolerance,
+    reorder_merge_tolerance = reorder_merge_tolerance,
+    simplify_tolerance = simplify_tolerance,
+    clear_previous = FALSE,
+    return_coords = TRUE
+  )
+  if (!missing(zscale)) {
+    render_path_args$zscale = zscale
+  }
+  if (!missing(vertical_exaggeration)) {
+    render_path_args$vertical_exaggeration = vertical_exaggeration
+  }
+  xyz = do.call(render_path, render_path_args)
 
-	xyz = do.call(rbind, xyz)
-	if (rgl::cur3d() != 0) {
-		scene_offset = get_scene_depth()
-	} else {
-		warning(
-			"No rgl window open--animation coordinates will be vertically offset from specified values"
-		)
-		scene_offset = 0
-	}
-	xyz[, 2] = xyz[, 2] - scene_offset
-	if (resample_path_evenly) {
-		xyz = get_interpolated_points_path(xyz, n = frames)
-	}
-	animation_coords = rayrender::generate_camera_motion(
-		xyz,
-		lookats = xyz,
-		frames = frames,
-		type = type,
-		offset_lookat = offset_lookat,
-		constant_step = constant_step,
-		curvature_adjust = curvature_adjust,
-		damp_motion = damp_motion,
-		damp_magnitude = damp_magnitude,
-		...
-	)
+  xyz = do.call(rbind, xyz)
+  if (rgl::cur3d() != 0) {
+    scene_offset = get_scene_depth()
+  } else {
+    warning(
+      "No rgl window open--animation coordinates will be vertically offset from specified values"
+    )
+    scene_offset = 0
+  }
+  xyz[, 2] = xyz[, 2] - scene_offset
+  if (resample_path_evenly) {
+    xyz = get_interpolated_points_path(xyz, n = frames)
+  }
+  animation_coords = rayrender::generate_camera_motion(
+    xyz,
+    lookats = xyz,
+    frames = frames,
+    type = type,
+    offset_lookat = offset_lookat,
+    constant_step = constant_step,
+    curvature_adjust = curvature_adjust,
+    damp_motion = damp_motion,
+    damp_magnitude = damp_magnitude,
+    ...
+  )
 
-	if (follow_camera) {
-		xyz_follow = animation_coords
-		if (!follow_fixed) {
-			forward_vec = animation_coords[, 4:6] - animation_coords[, 1:3]
-			forward_vec[, 2] = 0
-			normalized_forward_vec = t(apply(forward_vec, 1, unit_vector))
-			if (follow_rotations != 0) {
-				angle_vals = seq(
-					0,
-					2 * pi * follow_rotations,
-					length.out = nrow(normalized_forward_vec) + 1
-				)[-(nrow(normalized_forward_vec) + 1)]
-				for (i in seq_len(nrow(normalized_forward_vec))) {
-					normalized_forward_vec[i, ] = normalized_forward_vec[i, ] %*%
-						generate_rot_matrix(c(0, angle_vals[i], 0))
-				}
-			}
-			follow_dist = follow_distance * cospi(follow_angle / 180)
-			follow_height = follow_distance * sinpi(follow_angle / 180)
+  if (follow_camera) {
+    xyz_follow = animation_coords
+    if (!follow_fixed) {
+      forward_vec = animation_coords[, 4:6] - animation_coords[, 1:3]
+      forward_vec[, 2] = 0
+      normalized_forward_vec = t(apply(forward_vec, 1, unit_vector))
+      if (follow_rotations != 0) {
+        angle_vals = seq(
+          0,
+          2 * pi * follow_rotations,
+          length.out = nrow(normalized_forward_vec) + 1
+        )[-(nrow(normalized_forward_vec) + 1)]
+        for (i in seq_len(nrow(normalized_forward_vec))) {
+          normalized_forward_vec[i, ] = normalized_forward_vec[i, ] %*%
+            generate_rot_matrix(c(0, angle_vals[i], 0))
+        }
+      }
+      follow_dist = follow_distance * cospi(follow_angle / 180)
+      follow_height = follow_distance * sinpi(follow_angle / 180)
 
-			xyz_follow[, 2] = xyz_follow[, 2] + follow_height
-			xyz_follow[, c(1:3)] = xyz_follow[, c(1:3)] +
-				follow_dist * (-normalized_forward_vec)
-			xyz_follow$focal = sqrt(apply(
-				(xyz_follow[, 1:3] - xyz_follow[, 4:6])^2,
-				1,
-				sum
-			))
-			return(xyz_follow)
-		} else {
-			stopifnot(length(follow_fixed_offset) == 3)
-			if (follow_rotations != 0) {
-				angle_vals = seq(
-					0,
-					2 * pi * follow_rotations,
-					length.out = nrow(xyz_follow) + 1
-				)[-(nrow(xyz_follow) + 1)]
-				for (i in seq_len(nrow(xyz_follow))) {
-					follow_fixed_offset_rot = follow_fixed_offset %*%
-						generate_rot_matrix(c(0, angle_vals[i], 0))
-					xyz_follow[i, 1:3] = xyz_follow[i, 1:3] + follow_fixed_offset_rot
-				}
-			} else {
-				xyz_follow[, 1:3] = xyz_follow[, 1:3] +
-					matrix(
-						follow_fixed_offset,
-						nrow = nrow(xyz_follow),
-						ncol = 3L,
-						byrow = TRUE
-					)
-			}
-			xyz_follow$focal = sqrt(apply(
-				(xyz_follow[, 1:3] - xyz_follow[, 4:6])^2,
-				1,
-				sum
-			))
-			return(xyz_follow)
-		}
-	}
-	return(animation_coords)
+      xyz_follow[, 2] = xyz_follow[, 2] + follow_height
+      xyz_follow[, c(1:3)] = xyz_follow[, c(1:3)] +
+        follow_dist * (-normalized_forward_vec)
+      xyz_follow$focal = sqrt(apply(
+        (xyz_follow[, 1:3] - xyz_follow[, 4:6])^2,
+        1,
+        sum
+      ))
+      return(xyz_follow)
+    } else {
+      if (length(follow_fixed_offset) != 3) {
+        stop(
+          "`follow_fixed_offset` must contain exactly three values.",
+          call. = FALSE
+        )
+      }
+      if (follow_rotations != 0) {
+        angle_vals = seq(
+          0,
+          2 * pi * follow_rotations,
+          length.out = nrow(xyz_follow) + 1
+        )[-(nrow(xyz_follow) + 1)]
+        for (i in seq_len(nrow(xyz_follow))) {
+          follow_fixed_offset_rot = follow_fixed_offset %*%
+            generate_rot_matrix(c(0, angle_vals[i], 0))
+          xyz_follow[i, 1:3] = xyz_follow[i, 1:3] + follow_fixed_offset_rot
+        }
+      } else {
+        xyz_follow[, 1:3] = xyz_follow[, 1:3] +
+          matrix(
+            follow_fixed_offset,
+            nrow = nrow(xyz_follow),
+            ncol = 3L,
+            byrow = TRUE
+          )
+      }
+      xyz_follow$focal = sqrt(apply(
+        (xyz_follow[, 1:3] - xyz_follow[, 4:6])^2,
+        1,
+        sum
+      ))
+      return(xyz_follow)
+    }
+  }
+  return(animation_coords)
 }

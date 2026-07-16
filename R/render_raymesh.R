@@ -383,14 +383,27 @@ render_raymesh = function(
   }
   obj = raymesh
   if (inherits(angle, "matrix")) {
-    stopifnot(is.numeric(angle))
-    stopifnot(ncol(angle) == 3)
+    if (!is.numeric(angle) || ncol(angle) != 3) {
+      stop(
+        "`angle` must be a numeric matrix with exactly three columns.",
+        call. = FALSE
+      )
+    }
   } else if (inherits(angle, "list")) {
     angle = do.call(rbind, angle)
-    stopifnot(is.numeric(angle))
-    stopifnot(ncol(angle) == 3)
+    if (!is.numeric(angle) || ncol(angle) != 3) {
+      stop(
+        "`angle` must be a list of numeric vectors containing exactly three values each.",
+        call. = FALSE
+      )
+    }
   } else {
-    stopifnot(length(angle) == 3)
+    if (!is.numeric(angle) || length(angle) != 3) {
+      stop(
+        "`angle` must be a numeric vector containing exactly three values.",
+        call. = FALSE
+      )
+    }
     if (nrow(xyz) > 0) {
       angle = matrix(angle, ncol = 3, nrow = nrow(xyz), byrow = TRUE)
     } else {
@@ -398,14 +411,27 @@ render_raymesh = function(
     }
   }
   if (inherits(scale, "matrix")) {
-    stopifnot(is.numeric(scale))
-    stopifnot(ncol(scale) == 3)
+    if (!is.numeric(scale) || ncol(scale) != 3) {
+      stop(
+        "`scale` must be a numeric matrix with exactly three columns.",
+        call. = FALSE
+      )
+    }
   } else if (inherits(scale, "list")) {
     scale = do.call(rbind, scale)
-    stopifnot(is.numeric(scale))
-    stopifnot(ncol(scale) == 3)
+    if (!is.numeric(scale) || ncol(scale) != 3) {
+      stop(
+        "`scale` must be a list of numeric vectors containing exactly three values each.",
+        call. = FALSE
+      )
+    }
   } else {
-    stopifnot(length(scale) == 3)
+    if (!is.numeric(scale) || length(scale) != 3) {
+      stop(
+        "`scale` must be a numeric vector containing exactly three values.",
+        call. = FALSE
+      )
+    }
     if (nrow(xyz) > 0) {
       scale = matrix(scale, ncol = 3, nrow = nrow(xyz), byrow = T)
     } else {
@@ -446,7 +472,12 @@ render_raymesh = function(
     scenelist[[k]] = rayvertex::translate_mesh(tempobj, as.numeric(xyz[k, ]))
   }
   if (!raw_coords) {
-    stopifnot(!is.null(heightmap))
+    if (is.null(heightmap)) {
+      stop(
+        "`heightmap` is required unless `xyz` supplies raw coordinates.",
+        call. = FALSE
+      )
+    }
     nrow_map = nrow(heightmap)
     ncol_map = ncol(heightmap)
 

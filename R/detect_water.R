@@ -56,7 +56,9 @@ detect_water = function(
     heightmap_auto_zscale = heightmap_info$zscale
     allow_scene_zscale_cache = FALSE
   }
-  stopifnot(is.matrix(heightmap))
+  if (!is.matrix(heightmap)) {
+    stop("`heightmap` must be a matrix.", call. = FALSE)
+  }
   resolved_zscale = resolve_hillshade_zscale(
     zscale = zscale,
     zscale_missing = missing(zscale),

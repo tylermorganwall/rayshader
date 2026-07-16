@@ -56,161 +56,166 @@
 #'                                    alphalayer=0.8)  |>
 #'  plot_map()
 generate_line_overlay = function(
-	geometry,
-	extent = NULL,
-	heightmap = NULL,
-	width = NA,
-	height = NA,
-	resolution_multiply = 1,
-	color = "black",
-	linewidth = 1,
-	lty = 1,
-	data_column_width = NULL,
-	offset = c(0, 0)
+  geometry,
+  extent = NULL,
+  heightmap = NULL,
+  width = NA,
+  height = NA,
+  resolution_multiply = 1,
+  color = "black",
+  linewidth = 1,
+  lty = 1,
+  data_column_width = NULL,
+  offset = c(0, 0)
 ) {
-	if (!(length(find.package("sf", quiet = TRUE)) > 0)) {
-		stop("{sf} package required for generate_line_overlay()")
-	}
-	stopifnot(!missing(geometry))
-	if (
-		!(inherits(geometry, "sf") ||
-			inherits(geometry, "sfc") ||
-			inherits(geometry, "sfg"))
-	) {
-		stop("geometry must be {sf} object")
-	}
-	if (inherits(geometry, "sfg")) {
-		geometry = sf::st_sfc(geometry)
-	}
-	heightmap = resolve_overlay_heightmap(
-		heightmap = heightmap,
-		heightmap_missing = missing(heightmap),
-		width = width,
-		height = height,
-		caller = "generate_line_overlay"
-	)
-	extent = resolve_scene_render_extent(
-		extent = extent,
-		heightmap = heightmap,
-		caller = "generate_line_overlay"
-	)
-	scene_geometry = auto_transform_scene_sf(
-		sf_object = geometry,
-		extent = extent,
-		heightmap = heightmap,
-		crs = tryCatch(sf::st_crs(geometry), error = function(e) NULL),
-		caller = "generate_line_overlay"
-	)
-	geometry = scene_geometry$object
-	if (!is.null(scene_geometry$extent)) {
-		extent = scene_geometry$extent
-	}
-	# sf_lines_cropped = base::suppressMessages(base::suppressWarnings(sf::st_crop(geometry, extent)))
+  if (!(length(find.package("sf", quiet = TRUE)) > 0)) {
+    stop("{sf} package required for generate_line_overlay()")
+  }
+  if (missing(geometry)) {
+    stop("`geometry` must be supplied.", call. = FALSE)
+  }
+  if (
+    !(inherits(geometry, "sf") ||
+      inherits(geometry, "sfc") ||
+      inherits(geometry, "sfg"))
+  ) {
+    stop("geometry must be {sf} object")
+  }
+  if (inherits(geometry, "sfg")) {
+    geometry = sf::st_sfc(geometry)
+  }
+  heightmap = resolve_overlay_heightmap(
+    heightmap = heightmap,
+    heightmap_missing = missing(heightmap),
+    width = width,
+    height = height,
+    caller = "generate_line_overlay"
+  )
+  extent = resolve_scene_render_extent(
+    extent = extent,
+    heightmap = heightmap,
+    caller = "generate_line_overlay"
+  )
+  scene_geometry = auto_transform_scene_sf(
+    sf_object = geometry,
+    extent = extent,
+    heightmap = heightmap,
+    crs = tryCatch(sf::st_crs(geometry), error = function(e) NULL),
+    caller = "generate_line_overlay"
+  )
+  geometry = scene_geometry$object
+  if (!is.null(scene_geometry$extent)) {
+    extent = scene_geometry$extent
+  }
+  # sf_lines_cropped = base::suppressMessages(base::suppressWarnings(sf::st_crop(geometry, extent)))
 
-	sf_lines_cropped = geometry
-	if (!(length(find.package("ragg", quiet = TRUE)) > 0)) {
-		png_device = grDevices::png
-	} else {
-		png_device = ragg::agg_png
-	}
-	if (is.na(height)) {
-		height = ncol(heightmap)
-	}
-	if (is.na(width)) {
-		width = nrow(heightmap)
-	}
-	og_height = height
-	og_width = width
+  sf_lines_cropped = geometry
+  if (!(length(find.package("ragg", quiet = TRUE)) > 0)) {
+    png_device = grDevices::png
+  } else {
+    png_device = ragg::agg_png
+  }
+  if (is.na(height)) {
+    height = ncol(heightmap)
+  }
+  if (is.na(width)) {
+    width = nrow(heightmap)
+  }
+  og_height = height
+  og_width = width
 
-	if (!is.null(data_column_width)) {
-		if (data_column_width %in% colnames(sf_lines_cropped)) {
-			widthvals = sf_lines_cropped[[data_column_width]] /
-				max(sf_lines_cropped[[data_column_width]], na.rm = TRUE) *
-				linewidth
-		} else {
-			warning(
-				"Was not able to find data_column_width `",
-				data_column_width,
-				"` in {sf} object."
-			)
-			widthvals = linewidth
-		}
-	} else {
-		widthvals = linewidth
-	}
-	if (any(offset != 0)) {
-		if (length(offset) == 2) {
-			line_geometry = sf::st_geometry(sf_lines_cropped)
-			for (i in seq_len(length(line_geometry))) {
-				line_geometry[[i]] = line_geometry[[i]] + offset
-			}
-			if (inherits(sf_lines_cropped, "sf")) {
-				sf::st_geometry(sf_lines_cropped) = line_geometry
-			} else {
-				sf_lines_cropped = line_geometry
-			}
-		} else {
-			stop("`offset` must be of length-2")
-		}
-	}
-	recycle_line_arg = function(x, i) {
-		if (length(x) == 1) {
-			return(x)
-		}
-		x[((i - 1) %% length(x)) + 1]
-	}
-	draw_line_geometry = NULL
-	draw_line_geometry = function(geom, feature_index) {
-		geom_type = intersect(class(geom), c("LINESTRING", "MULTILINESTRING", "GEOMETRYCOLLECTION"))[1]
-		if (is.na(geom_type)) {
-			return(invisible(NULL))
-		}
-		if (geom_type == "LINESTRING") {
-			mat = unclass(geom)
-			if (nrow(mat) > 1) {
-				graphics::lines(
-					mat[, 1],
-					mat[, 2],
-					lty = recycle_line_arg(lty, feature_index),
-					lwd = recycle_line_arg(widthvals, feature_index),
-					col = recycle_line_arg(color, feature_index)
-				)
-			}
-			return(invisible(NULL))
-		}
-		if (geom_type == "MULTILINESTRING") {
-			for (line in unclass(geom)) {
-				draw_line_geometry(sf::st_linestring(line), feature_index)
-			}
-			return(invisible(NULL))
-		}
-		for (child in unclass(geom)) {
-			draw_line_geometry(child, feature_index)
-		}
-		invisible(NULL)
-	}
-	extent = get_extent(extent)
-	tempoverlay = tempfile(fileext = ".png")
-	png_device(
-		filename = tempoverlay,
-		width = width * resolution_multiply,
-		height = height * resolution_multiply,
-		units = "px",
-		bg = "transparent"
-	)
-	graphics::par(mar = c(0, 0, 0, 0))
-	graphics::plot.new()
-	graphics::plot.window(
-		xlim = c(extent["xmin"], extent["xmax"]),
-		ylim = c(extent["ymin"], extent["ymax"]),
-		xaxs = "i",
-		yaxs = "i"
-	)
-	line_geometry = sf::st_geometry(sf_lines_cropped)
-	for (i in seq_along(line_geometry)) {
-		draw_line_geometry(line_geometry[[i]], i)
-	}
-	grDevices::dev.off() #resets par
-	overlay_temp = rayimage::ray_read_image(tempoverlay)
-	return(overlay_temp)
+  if (!is.null(data_column_width)) {
+    if (data_column_width %in% colnames(sf_lines_cropped)) {
+      widthvals = sf_lines_cropped[[data_column_width]] /
+        max(sf_lines_cropped[[data_column_width]], na.rm = TRUE) *
+        linewidth
+    } else {
+      warning(
+        "Was not able to find data_column_width `",
+        data_column_width,
+        "` in {sf} object."
+      )
+      widthvals = linewidth
+    }
+  } else {
+    widthvals = linewidth
+  }
+  if (any(offset != 0)) {
+    if (length(offset) == 2) {
+      line_geometry = sf::st_geometry(sf_lines_cropped)
+      for (i in seq_len(length(line_geometry))) {
+        line_geometry[[i]] = line_geometry[[i]] + offset
+      }
+      if (inherits(sf_lines_cropped, "sf")) {
+        sf::st_geometry(sf_lines_cropped) = line_geometry
+      } else {
+        sf_lines_cropped = line_geometry
+      }
+    } else {
+      stop("`offset` must be of length-2")
+    }
+  }
+  recycle_line_arg = function(x, i) {
+    if (length(x) == 1) {
+      return(x)
+    }
+    x[((i - 1) %% length(x)) + 1]
+  }
+  draw_line_geometry = NULL
+  draw_line_geometry = function(geom, feature_index) {
+    geom_type = intersect(
+      class(geom),
+      c("LINESTRING", "MULTILINESTRING", "GEOMETRYCOLLECTION")
+    )[1]
+    if (is.na(geom_type)) {
+      return(invisible(NULL))
+    }
+    if (geom_type == "LINESTRING") {
+      mat = unclass(geom)
+      if (nrow(mat) > 1) {
+        graphics::lines(
+          mat[, 1],
+          mat[, 2],
+          lty = recycle_line_arg(lty, feature_index),
+          lwd = recycle_line_arg(widthvals, feature_index),
+          col = recycle_line_arg(color, feature_index)
+        )
+      }
+      return(invisible(NULL))
+    }
+    if (geom_type == "MULTILINESTRING") {
+      for (line in unclass(geom)) {
+        draw_line_geometry(sf::st_linestring(line), feature_index)
+      }
+      return(invisible(NULL))
+    }
+    for (child in unclass(geom)) {
+      draw_line_geometry(child, feature_index)
+    }
+    invisible(NULL)
+  }
+  extent = get_extent(extent)
+  tempoverlay = tempfile(fileext = ".png")
+  png_device(
+    filename = tempoverlay,
+    width = width * resolution_multiply,
+    height = height * resolution_multiply,
+    units = "px",
+    bg = "transparent"
+  )
+  graphics::par(mar = c(0, 0, 0, 0))
+  graphics::plot.new()
+  graphics::plot.window(
+    xlim = c(extent["xmin"], extent["xmax"]),
+    ylim = c(extent["ymin"], extent["ymax"]),
+    xaxs = "i",
+    yaxs = "i"
+  )
+  line_geometry = sf::st_geometry(sf_lines_cropped)
+  for (i in seq_along(line_geometry)) {
+    draw_line_geometry(line_geometry[[i]], i)
+  }
+  grDevices::dev.off() #resets par
+  overlay_temp = rayimage::ray_read_image(tempoverlay)
+  return(overlay_temp)
 }

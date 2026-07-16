@@ -62,8 +62,12 @@ indent_surface = function(
   if (!(length(find.package("terra", quiet = TRUE)) > 0)) {
     stop("`terra` package required for indent_surface().", call. = FALSE)
   }
-  stopifnot(!missing(heightmap))
-  stopifnot(!missing(geometry))
+  if (missing(heightmap)) {
+    stop("`heightmap` must be supplied.", call. = FALSE)
+  }
+  if (missing(geometry)) {
+    stop("`geometry` must be supplied.", call. = FALSE)
+  }
 
   direction = match.arg(direction)
   transition = validate_indent_surface_transition(transition)

@@ -64,200 +64,204 @@
 #'  add_shadow(ray_shade(vertical_exaggeration = 4),0.5) |>
 #'  plot_map()
 generate_polygon_overlay = function(
-	geometry,
-	extent = NULL,
-	heightmap = NULL,
-	width = NA,
-	height = NA,
-	resolution_multiply = 1,
-	offset = c(0, 0),
-	data_column_fill = NULL,
-	linecolor = "black",
-	palette = "white",
-	linewidth = 1
+  geometry,
+  extent = NULL,
+  heightmap = NULL,
+  width = NA,
+  height = NA,
+  resolution_multiply = 1,
+  offset = c(0, 0),
+  data_column_fill = NULL,
+  linecolor = "black",
+  palette = "white",
+  linewidth = 1
 ) {
-	if (!(length(find.package("sf", quiet = TRUE)) > 0)) {
-		stop("{sf} package required for generate_polygon_overlay()")
-	}
-	stopifnot(!missing(geometry))
-	if (!inherits(geometry, "sf")) {
-		stop("geometry must be {sf} object")
-	}
-	heightmap = resolve_overlay_heightmap(
-		heightmap = heightmap,
-		heightmap_missing = missing(heightmap),
-		width = width,
-		height = height,
-		caller = "generate_polygon_overlay"
-	)
-	extent = resolve_scene_render_extent(
-		extent = extent,
-		heightmap = heightmap,
-		caller = "generate_polygon_overlay"
-	)
-	scene_geometry = auto_transform_scene_sf(
-		sf_object = geometry,
-		extent = extent,
-		heightmap = heightmap,
-		crs = tryCatch(sf::st_crs(geometry), error = function(e) NULL),
-		caller = "generate_polygon_overlay"
-	)
-	geometry = scene_geometry$object
-	if (!is.null(scene_geometry$extent)) {
-		extent = scene_geometry$extent
-	}
-	if (is.numeric(extent)) {
-		extent = raster::extent(extent)
-	}
-	sf_polygons_cropped = base::suppressMessages(base::suppressWarnings(sf::st_crop(
-		geometry,
-		extent
-	)))
+  if (!(length(find.package("sf", quiet = TRUE)) > 0)) {
+    stop("{sf} package required for generate_polygon_overlay()")
+  }
+  if (missing(geometry)) {
+    stop("`geometry` must be supplied.", call. = FALSE)
+  }
+  if (!inherits(geometry, "sf")) {
+    stop("geometry must be {sf} object")
+  }
+  heightmap = resolve_overlay_heightmap(
+    heightmap = heightmap,
+    heightmap_missing = missing(heightmap),
+    width = width,
+    height = height,
+    caller = "generate_polygon_overlay"
+  )
+  extent = resolve_scene_render_extent(
+    extent = extent,
+    heightmap = heightmap,
+    caller = "generate_polygon_overlay"
+  )
+  scene_geometry = auto_transform_scene_sf(
+    sf_object = geometry,
+    extent = extent,
+    heightmap = heightmap,
+    crs = tryCatch(sf::st_crs(geometry), error = function(e) NULL),
+    caller = "generate_polygon_overlay"
+  )
+  geometry = scene_geometry$object
+  if (!is.null(scene_geometry$extent)) {
+    extent = scene_geometry$extent
+  }
+  if (is.numeric(extent)) {
+    extent = raster::extent(extent)
+  }
+  sf_polygons_cropped = base::suppressMessages(base::suppressWarnings(sf::st_crop(
+    geometry,
+    extent
+  )))
 
-	if (!(length(find.package("ragg", quiet = TRUE)) > 0)) {
-		png_device = grDevices::png
-	} else {
-		png_device = ragg::agg_png
-	}
-	if (is.na(height)) {
-		height = ncol(heightmap)
-	}
-	if (is.na(width)) {
-		width = nrow(heightmap)
-	}
-	transparent_overlay = function() {
-		overlay = array(
-			1,
-			dim = c(
-				height * resolution_multiply,
-				width * resolution_multiply,
-				4
-			)
-		)
-		overlay[,, 4] = 0
-		rayimage::ray_read_image(
-			overlay,
-			assume_colorspace = rayimage::CS_SRGB,
-			assume_white = "D65"
-		)
-	}
-	if (nrow(sf_polygons_cropped)) {
-		sf_polygons_cropped = sf_polygons_cropped[
-			!sf::st_is_empty(sf_polygons_cropped),
-			,
-			drop = FALSE
-		]
-	}
-	if (!nrow(sf_polygons_cropped)) {
-		return(transparent_overlay())
-	}
+  if (!(length(find.package("ragg", quiet = TRUE)) > 0)) {
+    png_device = grDevices::png
+  } else {
+    png_device = ragg::agg_png
+  }
+  if (is.na(height)) {
+    height = ncol(heightmap)
+  }
+  if (is.na(width)) {
+    width = nrow(heightmap)
+  }
+  transparent_overlay = function() {
+    overlay = array(
+      1,
+      dim = c(
+        height * resolution_multiply,
+        width * resolution_multiply,
+        4
+      )
+    )
+    overlay[,, 4] = 0
+    rayimage::ray_read_image(
+      overlay,
+      assume_colorspace = rayimage::CS_SRGB,
+      assume_white = "D65"
+    )
+  }
+  if (nrow(sf_polygons_cropped)) {
+    sf_polygons_cropped = sf_polygons_cropped[
+      !sf::st_is_empty(sf_polygons_cropped),
+      ,
+      drop = FALSE
+    ]
+  }
+  if (!nrow(sf_polygons_cropped)) {
+    return(transparent_overlay())
+  }
 
-	if (is.function(palette)) {
-		palette = palette(nrow(sf_polygons_cropped))
-	}
-	if (is.function(palette)) {
-		transparent = FALSE
-	} else if (length(palette) == 1 && is.na(palette[1])) {
-		transparent = TRUE
-	} else {
-		transparent = FALSE
-	}
-	if (!transparent) {
-		#Calculate colors
-		stopifnot(is.character(palette))
-		if (!is.null(data_column_fill)) {
-			if (data_column_fill %in% colnames(sf_polygons_cropped)) {
-				if (is.numeric(sf_polygons_cropped[[data_column_fill]])) {
-					max_col = max(sf_polygons_cropped[[data_column_fill]], na.rm = TRUE)
-					min_col = min(sf_polygons_cropped[[data_column_fill]], na.rm = TRUE)
-					indices = (sf_polygons_cropped[[data_column_fill]] - min_col) /
-						(max_col - min_col) *
-						(length(palette) - 1)
-					fillvals = palette[as.integer(indices) + 1]
-				} else if (is.character(sf_polygons_cropped[[data_column_fill]])) {
-					mapping = names(palette)
-					indices = match(sf_polygons_cropped[[data_column_fill]], mapping)
-					fillvals = palette[as.integer(indices)]
-				} else if (is.factor(sf_polygons_cropped[[data_column_fill]])) {
-					character_col = as.character(sf_polygons_cropped[[data_column_fill]])
-					mapping = names(palette)
-					indices = match(sf_polygons_cropped[[data_column_fill]], mapping)
-					fillvals = palette[as.integer(indices)]
-				}
-			} else {
-				warning(
-					"Was not able to find data_column_fill `",
-					data_column_fill,
-					"` in {sf} object."
-				)
-				fillvals = palette
-			}
-		} else {
-			if (nrow(sf_polygons_cropped) %% length(palette) != 0) {
-				stop(
-					"Number of explicitly defined colors does not match (or recycle within) number of polygons"
-				)
-			}
-			fillvals = palette
-		}
-	}
-	if (linewidth == 0 || is.na(linewidth)) {
-		lty = "blank"
-		linewidth_plot = 10
-	} else {
-		lty = "solid"
-		linewidth_plot = linewidth
-	}
-	if (any(offset != 0)) {
-		if (length(offset) == 2) {
-			for (i in seq_len(length(sf_polygons_cropped$geometry))) {
-				sf_polygons_cropped$geometry[[i]] = sf_polygons_cropped$geometry[[i]] +
-					offset
-			}
-		} else {
-			stop("`offset` must be of length-2")
-		}
-	}
-	extent = get_extent(extent)
-	tempoverlay = tempfile(fileext = ".png")
-	png_device(
-		filename = tempoverlay,
-		width = width * resolution_multiply,
-		height = height * resolution_multiply,
-		units = "px",
-		bg = "transparent"
-	)
-	graphics::par(mar = c(0, 0, 0, 0))
-	if (!transparent) {
-		graphics::plot(
-			sf::st_geometry(sf_polygons_cropped),
-			xlim = c(extent["xmin"], extent["xmax"]),
-			ylim = c(extent["ymin"], extent["ymax"]),
-			lty = lty,
-			border = NA,
-			asp = 1,
-			xaxs = "i",
-			yaxs = "i",
-			lwd = linewidth_plot,
-			col = fillvals
-		)
-	}
-	if (!is.na(linewidth) && linewidth > 0) {
-		graphics::plot(
-			sf::st_geometry(sf_polygons_cropped),
-			xlim = c(extent["xmin"], extent["xmax"]),
-			ylim = c(extent["ymin"], extent["ymax"]),
-			lty = lty,
-			add = !transparent,
-			asp = 1,
-			xaxs = "i",
-			yaxs = "i",
-			lwd = linewidth_plot,
-			col = NA,
-			border = linecolor
-		)
-	}
-	grDevices::dev.off() #resets par
-	overlay_temp = rayimage::ray_read_image(tempoverlay)
-	return(overlay_temp)
+  if (is.function(palette)) {
+    palette = palette(nrow(sf_polygons_cropped))
+  }
+  if (is.function(palette)) {
+    transparent = FALSE
+  } else if (length(palette) == 1 && is.na(palette[1])) {
+    transparent = TRUE
+  } else {
+    transparent = FALSE
+  }
+  if (!transparent) {
+    #Calculate colors
+    if (!is.character(palette)) {
+      stop("`palette` must be a character vector or `NA`.", call. = FALSE)
+    }
+    if (!is.null(data_column_fill)) {
+      if (data_column_fill %in% colnames(sf_polygons_cropped)) {
+        if (is.numeric(sf_polygons_cropped[[data_column_fill]])) {
+          max_col = max(sf_polygons_cropped[[data_column_fill]], na.rm = TRUE)
+          min_col = min(sf_polygons_cropped[[data_column_fill]], na.rm = TRUE)
+          indices = (sf_polygons_cropped[[data_column_fill]] - min_col) /
+            (max_col - min_col) *
+            (length(palette) - 1)
+          fillvals = palette[as.integer(indices) + 1]
+        } else if (is.character(sf_polygons_cropped[[data_column_fill]])) {
+          mapping = names(palette)
+          indices = match(sf_polygons_cropped[[data_column_fill]], mapping)
+          fillvals = palette[as.integer(indices)]
+        } else if (is.factor(sf_polygons_cropped[[data_column_fill]])) {
+          character_col = as.character(sf_polygons_cropped[[data_column_fill]])
+          mapping = names(palette)
+          indices = match(sf_polygons_cropped[[data_column_fill]], mapping)
+          fillvals = palette[as.integer(indices)]
+        }
+      } else {
+        warning(
+          "Was not able to find data_column_fill `",
+          data_column_fill,
+          "` in {sf} object."
+        )
+        fillvals = palette
+      }
+    } else {
+      if (nrow(sf_polygons_cropped) %% length(palette) != 0) {
+        stop(
+          "Number of explicitly defined colors does not match (or recycle within) number of polygons"
+        )
+      }
+      fillvals = palette
+    }
+  }
+  if (linewidth == 0 || is.na(linewidth)) {
+    lty = "blank"
+    linewidth_plot = 10
+  } else {
+    lty = "solid"
+    linewidth_plot = linewidth
+  }
+  if (any(offset != 0)) {
+    if (length(offset) == 2) {
+      for (i in seq_len(length(sf_polygons_cropped$geometry))) {
+        sf_polygons_cropped$geometry[[i]] = sf_polygons_cropped$geometry[[i]] +
+          offset
+      }
+    } else {
+      stop("`offset` must be of length-2")
+    }
+  }
+  extent = get_extent(extent)
+  tempoverlay = tempfile(fileext = ".png")
+  png_device(
+    filename = tempoverlay,
+    width = width * resolution_multiply,
+    height = height * resolution_multiply,
+    units = "px",
+    bg = "transparent"
+  )
+  graphics::par(mar = c(0, 0, 0, 0))
+  if (!transparent) {
+    graphics::plot(
+      sf::st_geometry(sf_polygons_cropped),
+      xlim = c(extent["xmin"], extent["xmax"]),
+      ylim = c(extent["ymin"], extent["ymax"]),
+      lty = lty,
+      border = NA,
+      asp = 1,
+      xaxs = "i",
+      yaxs = "i",
+      lwd = linewidth_plot,
+      col = fillvals
+    )
+  }
+  if (!is.na(linewidth) && linewidth > 0) {
+    graphics::plot(
+      sf::st_geometry(sf_polygons_cropped),
+      xlim = c(extent["xmin"], extent["xmax"]),
+      ylim = c(extent["ymin"], extent["ymax"]),
+      lty = lty,
+      add = !transparent,
+      asp = 1,
+      xaxs = "i",
+      yaxs = "i",
+      lwd = linewidth_plot,
+      col = NA,
+      border = linecolor
+    )
+  }
+  grDevices::dev.off() #resets par
+  overlay_temp = rayimage::ray_read_image(tempoverlay)
+  return(overlay_temp)
 }
