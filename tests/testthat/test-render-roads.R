@@ -71,6 +71,22 @@ test_that("render_roads caches road metadata by rgl id", {
   expect_no_condition(rayrender:::process_scene(scene))
 })
 
+test_that("colored generated lane textures preserve the road color", {
+  roadcolor = "#536878"
+  texture_file = make_road_lane_texture(
+    roadcolor = roadcolor,
+    lanes = 2,
+    size = 128
+  )
+  texture = png::readPNG(texture_file)
+
+  expect_equal(
+    unname(texture[128, 32, ]),
+    as.vector(col2rgb(roadcolor)) / 255,
+    tolerance = 1 / 255
+  )
+})
+
 test_that("render_roads fits lane texture repeats to each road length", {
   skip_if_not_installed("sf")
   skip_if_not_installed("terra")
@@ -221,7 +237,11 @@ test_that("road mesh texture coordinates repeat along the path", {
 
   texture_file = make_road_lane_texture()
   road_mesh = make_render_highquality_road_path_mesh(
-    points = matrix(c(0, 0, 0, 5, 0, 0), ncol = 3, byrow = TRUE),
+    points = matrix(
+      c(0, 0, 0, 0, 0, 0, 5, 0, 0),
+      ncol = 3,
+      byrow = TRUE
+    ),
     bbox_center = c(0, 0, 0),
     width = 1,
     heightmap = matrix(0, nrow = 7, ncol = 7),
@@ -239,6 +259,17 @@ test_that("road mesh texture coordinates repeat along the path", {
   expect_equal(range(mesh_info$vertices[, 2]), c(0, 0.11), tolerance = 1e-8)
   expect_equal(range(mesh_info$texcoords[, 1]), c(0, 1))
   expect_gt(max(mesh_info$texcoords[, 2]), 1)
+  texture_triangles = mesh_info$indices + 1L
+  texture_triangle_area = apply(texture_triangles, 1, function(index) {
+    texture_vertices = mesh_info$texcoords[index, , drop = FALSE]
+    abs(
+      (texture_vertices[2, 1] - texture_vertices[1, 1]) *
+        (texture_vertices[3, 2] - texture_vertices[1, 2]) -
+        (texture_vertices[2, 2] - texture_vertices[1, 2]) *
+          (texture_vertices[3, 1] - texture_vertices[1, 1])
+    )
+  })
+  expect_true(all(texture_triangle_area > 0))
 
   repeated_road_mesh = make_render_highquality_road_path_mesh(
     points = matrix(c(0, 0, 0, 5, 0, 0), ncol = 3, byrow = TRUE),

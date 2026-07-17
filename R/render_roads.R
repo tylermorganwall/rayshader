@@ -462,7 +462,7 @@ make_road_lane_texture = function(
     }
   }
   texture_file = tempfile(fileext = ".png")
-  rayimage::ray_write_image(texture, filename = texture_file)
+  png::writePNG(texture, target = texture_file)
   normalizePath(texture_file, winslash = "/", mustWork = TRUE)
 }
 
@@ -850,6 +850,15 @@ make_render_highquality_road_path_mesh = function(
 ) {
   points = as.matrix(points)
   points = points[stats::complete.cases(points), , drop = FALSE]
+  if (nrow(points) >= 2) {
+    point_delta = points[-1L, c(1, 3), drop = FALSE] -
+      points[-nrow(points), c(1, 3), drop = FALSE]
+    points = points[
+      c(TRUE, rowSums(point_delta^2) > .Machine$double.eps),
+      ,
+      drop = FALSE
+    ]
+  }
   if (nrow(points) < 2) {
     return(NULL)
   }
@@ -859,6 +868,15 @@ make_render_highquality_road_path_mesh = function(
     heightmap = heightmap,
     zscale = zscale
   )
+  if (nrow(points) >= 2) {
+    point_delta = points[-1L, c(1, 3), drop = FALSE] -
+      points[-nrow(points), c(1, 3), drop = FALSE]
+    points = points[
+      c(TRUE, rowSums(point_delta^2) > .Machine$double.eps),
+      ,
+      drop = FALSE
+    ]
+  }
   if (nrow(points) < 2) {
     return(NULL)
   }
@@ -938,30 +956,32 @@ make_render_highquality_road_path_mesh = function(
     cbind(1, v1),
     cbind(0, v1)
   )
+  side_texture_u = c(0.01, 0.02)
   left_side_texcoords = make_render_highquality_water_path_quad_rows(
-    cbind(0, v0),
-    cbind(0, v1),
-    cbind(0, v1),
-    cbind(0, v0)
+    cbind(side_texture_u[[1]], v0),
+    cbind(side_texture_u[[1]], v1),
+    cbind(side_texture_u[[2]], v1),
+    cbind(side_texture_u[[2]], v0)
   )
   right_side_texcoords = make_render_highquality_water_path_quad_rows(
-    cbind(1, v0),
-    cbind(1, v0),
-    cbind(1, v1),
-    cbind(1, v1)
+    cbind(side_texture_u[[1]], v0),
+    cbind(side_texture_u[[2]], v0),
+    cbind(side_texture_u[[2]], v1),
+    cbind(side_texture_u[[1]], v1)
   )
   start_v = texture_v[[1L]]
   end_v = texture_v[[length(texture_v)]]
+  cap_texture_v_span = 1e-4
   cap_texcoords = rbind(
     matrix(
       c(
-        0,
+        side_texture_u[[1]],
         start_v,
-        0,
-        start_v,
-        1,
-        start_v,
-        1,
+        side_texture_u[[1]],
+        start_v + cap_texture_v_span,
+        side_texture_u[[2]],
+        start_v + cap_texture_v_span,
+        side_texture_u[[2]],
         start_v
       ),
       ncol = 2,
@@ -969,14 +989,14 @@ make_render_highquality_road_path_mesh = function(
     ),
     matrix(
       c(
-        0,
+        side_texture_u[[1]],
         end_v,
-        1,
+        side_texture_u[[2]],
         end_v,
-        1,
-        end_v,
-        0,
-        end_v
+        side_texture_u[[2]],
+        end_v - cap_texture_v_span,
+        side_texture_u[[1]],
+        end_v - cap_texture_v_span
       ),
       ncol = 2,
       byrow = TRUE
