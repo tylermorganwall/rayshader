@@ -128,12 +128,12 @@ test_that("full resolution shadow textures can be requested", {
   expect_error(validate_shadow_texture_size(15), ">= 16")
 })
 
-test_that("shadow texture background matches scene background", {
+test_that("colored shadow texture background matches scene background", {
   on.exit(rgl::close3d(), add = TRUE)
   local_rgl_use_null()
   rgl::open3d(useNULL = TRUE)
 
-  background = "grey50"
+  background = "brown"
   make_shadow(
     matrix(0, nrow = 20, ncol = 30),
     basedepth = -1,

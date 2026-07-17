@@ -637,6 +637,160 @@ test_that("render_streams draws spatial stream paths as water paths", {
   expect_true(expected_material_type %in% material_types)
 })
 
+test_that("render_streams removes stream sections beneath water polygons", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("terra")
+  on.exit(rgl::close3d(), add = TRUE)
+  local_rgl_use_null()
+
+  height_raster = terra::rast(
+    nrows = 10,
+    ncols = 10,
+    xmin = 0,
+    xmax = 10,
+    ymin = 0,
+    ymax = 10,
+    crs = "EPSG:3857"
+  )
+  terra::values(height_raster) = 0
+  streams = sf::st_sf(
+    stream_width = 0.5,
+    geometry = sf::st_sfc(
+      sf::st_linestring(matrix(c(1, 5, 9, 5), ncol = 2, byrow = TRUE)),
+      crs = 3857
+    )
+  )
+  water_polygons = sf::st_sf(
+    water_id = 1:2,
+    geometry = sf::st_sfc(
+      sf::st_polygon(list(matrix(
+        c(3, 4, 4, 4, 4, 6, 3, 6, 3, 4),
+        ncol = 2,
+        byrow = TRUE
+      ))),
+      sf::st_polygon(list(matrix(
+        c(6, 4, 7, 4, 7, 6, 6, 6, 6, 4),
+        ncol = 2,
+        byrow = TRUE
+      ))),
+      crs = 3857
+    )
+  )
+
+  expect_no_condition(plot_3d_test(
+    constant_shade(height_raster),
+    height_raster,
+    solid = FALSE,
+    shadow = FALSE,
+    water = FALSE,
+    windowsize = c(200, 200)
+  ))
+  clipped_coords = render_streams(
+    streams,
+    heightmap = height_raster,
+    water_polygons = water_polygons,
+    width_column = "stream_width",
+    densify = FALSE,
+    merge = FALSE
+  )
+
+  expect_length(clipped_coords, 3)
+  expect_equal(
+    sort(unique(unlist(lapply(clipped_coords, function(coords) coords[, 1])))),
+    c(-3.6, -1.8, -0.9, 0.9, 1.8, 3.6),
+    tolerance = 1e-8
+  )
+  water_path_ids = get_ids_with_labels(typeval = "water_path")
+  expect_equal(nrow(water_path_ids), 3)
+  expect_equal(
+    vapply(
+      water_path_ids$id,
+      function(id) rgl::material3d("lwd", id = id),
+      numeric(1)
+    ),
+    rep(0.5, 3)
+  )
+})
+
+test_that("water polygon clipping aligns CRS and accepts SpatVector input", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("terra")
+
+  streams = sf::st_sf(
+    stream_width = 2,
+    geometry = sf::st_sfc(
+      sf::st_linestring(matrix(c(0, 5, 10, 5), ncol = 2, byrow = TRUE)),
+      crs = 3857
+    )
+  )
+  water_polygons = sf::st_sf(
+    geometry = sf::st_sfc(
+      sf::st_polygon(list(matrix(
+        c(3, 4, 7, 4, 7, 6, 3, 6, 3, 4),
+        ncol = 2,
+        byrow = TRUE
+      ))),
+      crs = 3857
+    )
+  )
+
+  clipped_reprojected = prepare_render_water_path_geometry(
+    waterpaths = streams,
+    waterpath_merge = FALSE,
+    water_polygons = sf::st_transform(water_polygons, 4326)
+  )
+  clipped_spatvector = prepare_render_water_path_geometry(
+    waterpaths = streams,
+    waterpath_merge = FALSE,
+    water_polygons = terra::vect(water_polygons)
+  )
+
+  expect_s3_class(clipped_reprojected, "sf")
+  expect_equal(sf::st_crs(clipped_reprojected), sf::st_crs(streams))
+  expect_equal(nrow(clipped_reprojected), 2)
+  expect_equal(clipped_reprojected$stream_width, c(2, 2))
+  expect_equal(
+    sf::st_coordinates(clipped_reprojected)[, 1:2],
+    sf::st_coordinates(clipped_spatvector)[, 1:2],
+    tolerance = 0.01
+  )
+})
+
+test_that("water polygon clipping rejects ambiguous or non-polygon input", {
+  skip_if_not_installed("sf")
+
+  streams = sf::st_sfc(
+    sf::st_linestring(matrix(c(0, 0, 10, 0), ncol = 2, byrow = TRUE)),
+    crs = 3857
+  )
+  crs_less_water = sf::st_sfc(
+    sf::st_polygon(list(matrix(
+      c(3, -1, 7, -1, 7, 1, 3, 1, 3, -1),
+      ncol = 2,
+      byrow = TRUE
+    )))
+  )
+
+  expect_error(
+    prepare_render_water_path_geometry(
+      streams,
+      waterpath_merge = FALSE,
+      water_polygons = crs_less_water
+    ),
+    "must both have a CRS or both be CRS-less",
+    fixed = TRUE
+  )
+  expect_error(
+    prepare_render_water_path_geometry(
+      streams,
+      waterpath_merge = FALSE,
+      water_polygons = sf::st_sfc(sf::st_point(c(5, 0)), crs = 3857)
+    ),
+    "must contain only polygon or multipolygon geometries",
+    fixed = TRUE
+  )
+})
+
 test_that("render_streams reads widths from an sf column", {
   skip_if_not_installed("sf")
   skip_if_not_installed("terra")

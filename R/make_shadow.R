@@ -70,7 +70,7 @@ make_shadow = function(
     colors = colors,
     shadowcolors = shadowcolors
   )
-  rayimage::ray_write_image(shadowarray, tempmap, write_linear = TRUE) #Colors are already in sRGB
+  png::writePNG(shadowarray, tempmap)
 
   rowmin = min((-shadowwidth + 1):(rows + shadowwidth) - rows / 2) + offset[1]
   rowmax = max((-shadowwidth + 1):(rows + shadowwidth) - rows / 2) + offset[1]

@@ -272,7 +272,7 @@ render_depth = function(
       camera_location = camera_location,
       camera_lookat = camera_lookat,
       background = background,
-      debug = "linear_depth",
+      debug = "raw_depth",
       width = width,
       height = height,
       light_direction = c(0, 1, 0),
@@ -292,7 +292,6 @@ render_depth = function(
     if (transparent_water) {
       detach_transparent_water()
     }
-    image_to_convolve = png::readPNG(temp)
     depthmap = (rgl::rgl.pixels(component = "depth"))
     depthmap = 2 * depthmap - 1
     projmat = rgl::par3d()$projMatrix
@@ -306,10 +305,6 @@ render_depth = function(
       (far_clip + near_clip - depthmap * (far_clip - near_clip))
     restore_transparent_water()
   } else {
-    image_to_convolve = array(0, dim = c(dim(all_image$r)[2:1], 3))
-    image_to_convolve[,, 1] = flipud(t(all_image$r))
-    image_to_convolve[,, 2] = flipud(t(all_image$g))
-    image_to_convolve[,, 3] = flipud(t(all_image$b))
     depthmap = (all_image$linear_depth)
   }
   depthmap = rayimage::render_reorient(depthmap, flipx = TRUE, transpose = TRUE)
@@ -323,7 +318,7 @@ render_depth = function(
     maxval = max(depthmap[depthmap != 1])
     depthmap[depthmap == 1] = maxval
     rayimage::render_bokeh(
-      image_to_convolve,
+      temp,
       depthmap,
       focus = focus,
       preview_focus = TRUE,
