@@ -85,6 +85,30 @@ test_that("colored generated lane textures preserve the road color", {
     as.vector(col2rgb(roadcolor)) / 255,
     tolerance = 1 / 255
   )
+
+  stripe_color = "#d6ad3d"
+  striped_texture_file = make_road_lane_texture(
+    lanes = 6,
+    lane_color = stripe_color,
+    centerline_color = stripe_color,
+    size = 128
+  )
+  striped_texture = png::readPNG(striped_texture_file)
+  divider_columns = round(
+    calculate_road_lane_marking_positions(6)$dividers * 127
+  ) +
+    1L
+  expect_equal(
+    striped_texture[1, divider_columns, ],
+    array(
+      rep(
+        as.vector(col2rgb(stripe_color)) / 255,
+        each = length(divider_columns)
+      ),
+      dim = c(length(divider_columns), 3)
+    ),
+    tolerance = 1 / 255
+  )
 })
 
 test_that("render_roads fits lane texture repeats to each road length", {
@@ -288,4 +312,70 @@ test_that("road mesh texture coordinates repeat along the path", {
   )
   repeated_mesh_info = repeated_road_mesh$shape_info[[1]]$mesh_info[[1]]
   expect_equal(max(repeated_mesh_info$texcoords[, 2]), 3)
+})
+
+test_that("road mesh sweep avoids invalid triangles at tightly spaced bends", {
+  skip_if_not_installed("rayrender")
+  skip_if_not_installed("rayvertex")
+
+  texture_file = make_road_lane_texture()
+  road_mesh = make_render_highquality_road_path_mesh(
+    points = matrix(
+      c(
+        -5,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0.001,
+        0,
+        0.1,
+        5,
+        0,
+        0.2
+      ),
+      ncol = 3,
+      byrow = TRUE
+    ),
+    bbox_center = c(0, 0, 0),
+    width = 4,
+    heightmap = matrix(0, nrow = 40, ncol = 40),
+    zscale = 1,
+    material = rayrender::diffuse(
+      color = "white",
+      image_texture = texture_file,
+      image_repeat = 1
+    ),
+    texture_file = texture_file,
+    texture_length = 13
+  )
+  mesh_info = road_mesh$shape_info[[1]]$mesh_info[[1]]
+  triangles = mesh_info$indices + 1L
+  triangle_a = mesh_info$vertices[triangles[, 2], , drop = FALSE] -
+    mesh_info$vertices[triangles[, 1], , drop = FALSE]
+  triangle_b = mesh_info$vertices[triangles[, 3], , drop = FALSE] -
+    mesh_info$vertices[triangles[, 1], , drop = FALSE]
+  face_normals = row_cross(triangle_a, triangle_b)
+  face_lengths = sqrt(rowSums(face_normals^2))
+  face_normals = face_normals / face_lengths
+  normal_dots = cbind(
+    rowSums(face_normals * mesh_info$normals[triangles[, 1], , drop = FALSE]),
+    rowSums(face_normals * mesh_info$normals[triangles[, 2], , drop = FALSE]),
+    rowSums(face_normals * mesh_info$normals[triangles[, 3], , drop = FALSE])
+  )
+  texture_a = mesh_info$texcoords[triangles[, 2], , drop = FALSE] -
+    mesh_info$texcoords[triangles[, 1], , drop = FALSE]
+  texture_b = mesh_info$texcoords[triangles[, 3], , drop = FALSE] -
+    mesh_info$texcoords[triangles[, 1], , drop = FALSE]
+  texture_area = abs(
+    texture_a[, 1] * texture_b[, 2] - texture_a[, 2] * texture_b[, 1]
+  )
+
+  expect_true(all(is.finite(mesh_info$vertices)))
+  expect_true(all(is.finite(mesh_info$normals)))
+  expect_true(all(is.finite(mesh_info$texcoords)))
+  expect_true(all(face_lengths > 1e-10))
+  expect_true(all(texture_area > 1e-8))
+  expect_true(all(normal_dots > 0))
 })

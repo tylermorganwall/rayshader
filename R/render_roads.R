@@ -848,17 +848,10 @@ make_render_highquality_road_path_mesh = function(
   texture_repeats = NULL,
   texture_world_scale = c(1, 1)
 ) {
-  points = as.matrix(points)
-  points = points[stats::complete.cases(points), , drop = FALSE]
-  if (nrow(points) >= 2) {
-    point_delta = points[-1L, c(1, 3), drop = FALSE] -
-      points[-nrow(points), c(1, 3), drop = FALSE]
-    points = points[
-      c(TRUE, rowSums(point_delta^2) > .Machine$double.eps),
-      ,
-      drop = FALSE
-    ]
-  }
+  points = collapse_render_highquality_road_path_points(
+    points,
+    texture_world_scale = texture_world_scale
+  )
   if (nrow(points) < 2) {
     return(NULL)
   }
@@ -868,15 +861,10 @@ make_render_highquality_road_path_mesh = function(
     heightmap = heightmap,
     zscale = zscale
   )
-  if (nrow(points) >= 2) {
-    point_delta = points[-1L, c(1, 3), drop = FALSE] -
-      points[-nrow(points), c(1, 3), drop = FALSE]
-    points = points[
-      c(TRUE, rowSums(point_delta^2) > .Machine$double.eps),
-      ,
-      drop = FALSE
-    ]
-  }
+  points = collapse_render_highquality_road_path_points(
+    points,
+    texture_world_scale = texture_world_scale
+  )
   if (nrow(points) < 2) {
     return(NULL)
   }
@@ -887,38 +875,76 @@ make_render_highquality_road_path_mesh = function(
     heightmap = heightmap,
     zscale = zscale
   )
-  tangents = calculate_render_highquality_water_path_tangents(
-    points = points,
-    normals = normals
+  segment_indices = seq_len(nrow(points) - 1L)
+  next_indices = segment_indices + 1L
+  segment_start = points[segment_indices, , drop = FALSE]
+  segment_end = points[next_indices, , drop = FALSE]
+  segment_normals = normalize_render_highquality_rows(
+    normals[segment_indices, , drop = FALSE] +
+      normals[next_indices, , drop = FALSE]
   )
-  side_vectors = normalize_render_highquality_rows(row_cross(tangents, normals))
-  side_vectors = replace_invalid_render_highquality_vectors(
-    side_vectors,
+  segment_normals = replace_invalid_render_highquality_vectors(
+    segment_normals,
+    fallback = c(0, 1, 0)
+  )
+  segment_tangents = segment_end - segment_start
+  segment_tangents = segment_tangents -
+    segment_normals * rowSums(segment_tangents * segment_normals)
+  segment_tangents = replace_invalid_render_highquality_vectors(
+    normalize_render_highquality_rows(segment_tangents),
+    fallback = c(1, 0, 0)
+  )
+  horizontal_delta = segment_end[, c(1, 3), drop = FALSE] -
+    segment_start[, c(1, 3), drop = FALSE]
+  segment_side_vectors = normalize_render_highquality_rows(cbind(
+    -horizontal_delta[, 2],
+    0,
+    horizontal_delta[, 1]
+  ))
+  segment_side_vectors = replace_invalid_render_highquality_vectors(
+    segment_side_vectors,
     fallback = c(0, 0, 1)
   )
   edge_centers = make_render_highquality_water_path_edge_centers(
-    points = points,
-    side_vectors = side_vectors,
+    points = rbind(segment_start, segment_end),
+    side_vectors = rbind(segment_side_vectors, segment_side_vectors),
     half_width = half_width,
     heightmap = heightmap,
     zscale = zscale
   )
-  left_bottom = edge_centers$left
-  right_bottom = edge_centers$right
-  left_normals = interpolate_render_highquality_water_path_normals(
-    points = left_bottom,
+  segment_count = length(segment_indices)
+  start_rows = seq_len(segment_count)
+  end_rows = segment_count + start_rows
+  left_start_bottom = edge_centers$left[start_rows, , drop = FALSE]
+  left_end_bottom = edge_centers$left[end_rows, , drop = FALSE]
+  right_start_bottom = edge_centers$right[start_rows, , drop = FALSE]
+  right_end_bottom = edge_centers$right[end_rows, , drop = FALSE]
+  edge_normals = interpolate_render_highquality_water_path_normals(
+    points = rbind(
+      left_start_bottom,
+      left_end_bottom,
+      right_start_bottom,
+      right_end_bottom
+    ),
     heightmap = heightmap,
     zscale = zscale
   )
-  right_normals = interpolate_render_highquality_water_path_normals(
-    points = right_bottom,
-    heightmap = heightmap,
-    zscale = zscale
-  )
-  left_top = left_bottom + left_normals * road_height
-  right_top = right_bottom + right_normals * road_height
-  segment_indices = seq_len(nrow(points) - 1L)
-  next_indices = segment_indices + 1L
+  left_start_normals = edge_normals[start_rows, , drop = FALSE]
+  left_end_normals = edge_normals[end_rows, , drop = FALSE]
+  right_start_normals = edge_normals[
+    2L * segment_count + start_rows,
+    ,
+    drop = FALSE
+  ]
+  right_end_normals = edge_normals[
+    3L * segment_count + start_rows,
+    ,
+    drop = FALSE
+  ]
+  left_start_top = left_start_bottom + left_start_normals * road_height
+  left_end_top = left_end_bottom + left_end_normals * road_height
+  right_start_top = right_start_bottom + right_start_normals * road_height
+  right_end_top = right_end_bottom + right_end_normals * road_height
   texture_length = validate_waterpath_positive_number(
     texture_length,
     "lane_texture_length"
@@ -1004,40 +1030,40 @@ make_render_highquality_road_path_mesh = function(
   )
   vertices = rbind(
     make_render_highquality_water_path_quad_rows(
-      left_top[segment_indices, , drop = FALSE],
-      left_top[next_indices, , drop = FALSE],
-      right_top[next_indices, , drop = FALSE],
-      right_top[segment_indices, , drop = FALSE]
+      left_start_top,
+      left_end_top,
+      right_end_top,
+      right_start_top
     ),
     make_render_highquality_water_path_quad_rows(
-      left_bottom[segment_indices, , drop = FALSE],
-      right_bottom[segment_indices, , drop = FALSE],
-      right_bottom[next_indices, , drop = FALSE],
-      left_bottom[next_indices, , drop = FALSE]
+      left_start_bottom,
+      right_start_bottom,
+      right_end_bottom,
+      left_end_bottom
     ),
     make_render_highquality_water_path_quad_rows(
-      left_bottom[segment_indices, , drop = FALSE],
-      left_bottom[next_indices, , drop = FALSE],
-      left_top[next_indices, , drop = FALSE],
-      left_top[segment_indices, , drop = FALSE]
+      left_start_bottom,
+      left_end_bottom,
+      left_end_top,
+      left_start_top
     ),
     make_render_highquality_water_path_quad_rows(
-      right_bottom[segment_indices, , drop = FALSE],
-      right_top[segment_indices, , drop = FALSE],
-      right_top[next_indices, , drop = FALSE],
-      right_bottom[next_indices, , drop = FALSE]
+      right_start_bottom,
+      right_start_top,
+      right_end_top,
+      right_end_bottom
     ),
     make_render_highquality_water_path_quad_rows(
-      matrix(left_bottom[1L, ], nrow = 1L),
-      matrix(left_top[1L, ], nrow = 1L),
-      matrix(right_top[1L, ], nrow = 1L),
-      matrix(right_bottom[1L, ], nrow = 1L)
+      matrix(left_start_bottom[1L, ], nrow = 1L),
+      matrix(left_start_top[1L, ], nrow = 1L),
+      matrix(right_start_top[1L, ], nrow = 1L),
+      matrix(right_start_bottom[1L, ], nrow = 1L)
     ),
     make_render_highquality_water_path_quad_rows(
-      matrix(left_bottom[nrow(points), ], nrow = 1L),
-      matrix(right_bottom[nrow(points), ], nrow = 1L),
-      matrix(right_top[nrow(points), ], nrow = 1L),
-      matrix(left_top[nrow(points), ], nrow = 1L)
+      matrix(left_end_bottom[segment_count, ], nrow = 1L),
+      matrix(right_end_bottom[segment_count, ], nrow = 1L),
+      matrix(right_end_top[segment_count, ], nrow = 1L),
+      matrix(left_end_top[segment_count, ], nrow = 1L)
     )
   )
   vertex_normals = rbind(
@@ -1054,28 +1080,28 @@ make_render_highquality_road_path_mesh = function(
       -normals[next_indices, , drop = FALSE]
     ),
     make_render_highquality_water_path_quad_rows(
-      side_vectors[segment_indices, , drop = FALSE],
-      side_vectors[next_indices, , drop = FALSE],
-      side_vectors[next_indices, , drop = FALSE],
-      side_vectors[segment_indices, , drop = FALSE]
+      segment_side_vectors,
+      segment_side_vectors,
+      segment_side_vectors,
+      segment_side_vectors
     ),
     make_render_highquality_water_path_quad_rows(
-      -side_vectors[segment_indices, , drop = FALSE],
-      -side_vectors[segment_indices, , drop = FALSE],
-      -side_vectors[next_indices, , drop = FALSE],
-      -side_vectors[next_indices, , drop = FALSE]
+      -segment_side_vectors,
+      -segment_side_vectors,
+      -segment_side_vectors,
+      -segment_side_vectors
     ),
     make_render_highquality_water_path_quad_rows(
-      matrix(-tangents[1L, ], nrow = 1L),
-      matrix(-tangents[1L, ], nrow = 1L),
-      matrix(-tangents[1L, ], nrow = 1L),
-      matrix(-tangents[1L, ], nrow = 1L)
+      matrix(-segment_tangents[1L, ], nrow = 1L),
+      matrix(-segment_tangents[1L, ], nrow = 1L),
+      matrix(-segment_tangents[1L, ], nrow = 1L),
+      matrix(-segment_tangents[1L, ], nrow = 1L)
     ),
     make_render_highquality_water_path_quad_rows(
-      matrix(tangents[nrow(points), ], nrow = 1L),
-      matrix(tangents[nrow(points), ], nrow = 1L),
-      matrix(tangents[nrow(points), ], nrow = 1L),
-      matrix(tangents[nrow(points), ], nrow = 1L)
+      matrix(segment_tangents[segment_count, ], nrow = 1L),
+      matrix(segment_tangents[segment_count, ], nrow = 1L),
+      matrix(segment_tangents[segment_count, ], nrow = 1L),
+      matrix(segment_tangents[segment_count, ], nrow = 1L)
     )
   )
   texcoords = rbind(
@@ -1089,6 +1115,10 @@ make_render_highquality_road_path_mesh = function(
   indices = rbind(
     cbind(quad_starts, quad_starts + 1L, quad_starts + 2L),
     cbind(quad_starts, quad_starts + 2L, quad_starts + 3L)
+  )
+  vertex_normals = sanitize_render_highquality_road_quad_normals(
+    vertices,
+    vertex_normals
   )
   vertices = sweep(vertices, 2, bbox_center, FUN = "-")
   mesh = list(
@@ -1104,4 +1134,134 @@ make_render_highquality_road_path_mesh = function(
     override_material = is.null(texture_file),
     material = material
   )
+}
+
+#' Collapse effectively duplicated road path points
+#'
+#' @param points Path points.
+#' @param texture_world_scale Default `c(1, 1)`. Multipliers converting scene
+#' x-z distances to world distances.
+#' @param minimum_world_step Default `1e-4`. Minimum horizontal distance between
+#' retained points in world units.
+#'
+#' @return Filtered path point matrix.
+#' @keywords internal
+collapse_render_highquality_road_path_points = function(
+  points,
+  texture_world_scale = c(1, 1),
+  minimum_world_step = 1e-4
+) {
+  points = as.matrix(points)
+  points = points[stats::complete.cases(points), , drop = FALSE]
+  if (nrow(points) < 2) {
+    return(points)
+  }
+  texture_world_scale = suppressWarnings(as.numeric(texture_world_scale[1:2]))
+  if (
+    length(texture_world_scale) != 2 ||
+      any(!is.finite(texture_world_scale)) ||
+      any(texture_world_scale <= 0)
+  ) {
+    texture_world_scale = c(1, 1)
+  }
+  minimum_world_step = suppressWarnings(as.numeric(minimum_world_step[1]))
+  if (
+    !length(minimum_world_step) ||
+      !is.finite(minimum_world_step) ||
+      minimum_world_step <= 0
+  ) {
+    minimum_world_step = 1e-4
+  }
+  keep = rep(FALSE, nrow(points))
+  keep[[1L]] = TRUE
+  previous_index = 1L
+  for (point_index in seq.int(2L, nrow(points))) {
+    world_delta = (points[point_index, c(1, 3)] -
+      points[previous_index, c(1, 3)]) *
+      texture_world_scale
+    if (sqrt(sum(world_delta^2)) > minimum_world_step) {
+      keep[[point_index]] = TRUE
+      previous_index = point_index
+    }
+  }
+  points[keep, , drop = FALSE]
+}
+
+#' Sanitize road quad vertex normals
+#'
+#' @param vertices Road mesh vertices, with four consecutive rows per quad.
+#' @param vertex_normals Proposed vertex normals matching `vertices`.
+#'
+#' @return Vertex normals that remain in the geometric hemisphere of both
+#' triangles in each quad.
+#' @keywords internal
+sanitize_render_highquality_road_quad_normals = function(
+  vertices,
+  vertex_normals
+) {
+  vertices = as.matrix(vertices)
+  vertex_normals = as.matrix(vertex_normals)
+  if (
+    nrow(vertices) != nrow(vertex_normals) ||
+      nrow(vertices) %% 4L != 0L
+  ) {
+    return(vertex_normals)
+  }
+  quad_starts = seq(1L, nrow(vertices), by = 4L)
+  first_face = row_cross(
+    vertices[quad_starts + 1L, , drop = FALSE] -
+      vertices[quad_starts, , drop = FALSE],
+    vertices[quad_starts + 2L, , drop = FALSE] -
+      vertices[quad_starts, , drop = FALSE]
+  )
+  second_face = row_cross(
+    vertices[quad_starts + 2L, , drop = FALSE] -
+      vertices[quad_starts, , drop = FALSE],
+    vertices[quad_starts + 3L, , drop = FALSE] -
+      vertices[quad_starts, , drop = FALSE]
+  )
+  first_face = normalize_render_highquality_rows(first_face)
+  second_face = normalize_render_highquality_rows(second_face)
+  fallback_normals = normalize_render_highquality_rows(first_face + second_face)
+  fallback_normals = replace_invalid_render_highquality_vectors(
+    fallback_normals,
+    fallback = c(0, 1, 0)
+  )
+  invalid_quad = !stats::complete.cases(first_face) |
+    !stats::complete.cases(second_face)
+  first_rows = cbind(
+    quad_starts,
+    quad_starts + 1L,
+    quad_starts + 2L
+  )
+  second_rows = cbind(
+    quad_starts,
+    quad_starts + 2L,
+    quad_starts + 3L
+  )
+  for (corner_index in seq_len(ncol(first_rows))) {
+    invalid_quad = invalid_quad |
+      rowSums(
+        vertex_normals[first_rows[, corner_index], , drop = FALSE] *
+          first_face
+      ) <=
+        0 |
+      rowSums(
+        vertex_normals[second_rows[, corner_index], , drop = FALSE] *
+          second_face
+      ) <=
+        0
+  }
+  if (any(invalid_quad)) {
+    invalid_rows = unlist(lapply(
+      quad_starts[invalid_quad],
+      function(quad_start) seq.int(quad_start, quad_start + 3L)
+    ))
+    vertex_normals[invalid_rows, ] = fallback_normals[
+      rep(which(invalid_quad), each = 4L),
+      ,
+      drop = FALSE
+    ]
+  }
+  vertex_normals
 }
