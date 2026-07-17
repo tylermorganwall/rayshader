@@ -81,7 +81,7 @@ test_that("render_movie_hq generates motion from saved keyframes", {
   expect_false(animation_args$progress)
 })
 
-test_that("render_movie_hq routes direct scene arguments to render_highquality", {
+test_that("render_movie_hq routes dots only to render_animation", {
   keyframes = data.frame(
     x = c(0, 1),
     y = c(2, 3),
@@ -120,11 +120,14 @@ test_that("render_movie_hq routes direct scene arguments to render_highquality",
     filename = "movie.mp4",
     samples = 4,
     progress = FALSE,
-    light = FALSE,
-    line_radius = 2,
-    joined_stream_mesh = TRUE,
-    rgl_materials = rgl_materials,
-    render_highquality_args = list(light = TRUE, return_scene = FALSE)
+    light = TRUE,
+    render_highquality_args = list(
+      light = FALSE,
+      line_radius = 2,
+      joined_stream_mesh = TRUE,
+      rgl_materials = rgl_materials,
+      return_scene = FALSE
+    )
   )
 
   expect_identical(scene_args$light, FALSE)
@@ -132,7 +135,7 @@ test_that("render_movie_hq routes direct scene arguments to render_highquality",
   expect_true(scene_args$joined_stream_mesh)
   expect_identical(scene_args$rgl_materials, rgl_materials)
   expect_true(scene_args$return_scene)
-  expect_false("light" %in% names(animation_args))
+  expect_true(animation_args$light)
   expect_false("line_radius" %in% names(animation_args))
   expect_false("joined_stream_mesh" %in% names(animation_args))
   expect_false("rgl_materials" %in% names(animation_args))

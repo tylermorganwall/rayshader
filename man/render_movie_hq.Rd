@@ -25,15 +25,10 @@ the first saved keyframe.}
 \item{damp_motion}{Default \code{TRUE}. Whether to damp quick camera movements.}
 
 \item{render_highquality_args}{Default \code{list()}. Additional arguments passed
-to \code{\link[=render_highquality]{render_highquality()}} when extracting the scene. Named arguments in \code{...}
-that are only \code{\link[=render_highquality]{render_highquality()}} arguments are also passed to scene
-extraction. \code{return_scene = TRUE} is always applied.}
+to \code{\link[=render_highquality]{render_highquality()}} when extracting the scene. \code{return_scene = TRUE} is
+always applied.}
 
-\item{...}{Additional parameters to pass to \code{rayrender::render_animation()}.
-Named arguments that are only \code{\link[=render_highquality]{render_highquality()}} arguments are passed to
-scene extraction. If a name exists in both \code{\link[=render_highquality]{render_highquality()}} and
-\code{rayrender::render_animation()}, it is passed to animation; use
-\code{render_highquality_args} to pass overlapping names to scene extraction.}
+\item{...}{Additional parameters to pass to \code{rayrender::render_animation()}.}
 }
 \value{
 Invisibly returns the value from \code{rayrender::render_animation()}.
