@@ -522,8 +522,11 @@ resolve_waterpath_widths = function(
 #' @param zscale Effective zscale.
 #' @param watercolor Water color.
 #' @param waterpath_width Stream widths.
+#' @param force_by_feature Default `FALSE`. Whether to render each feature
+#' separately even when all widths are equal.
 #'
-#' @return List containing coordinates and matching widths.
+#' @return List containing coordinates, matching widths, and source feature
+#' indices.
 #' @keywords internal
 render_water_path_coords_by_width = function(
   waterpaths,
@@ -531,8 +534,24 @@ render_water_path_coords_by_width = function(
   extent,
   zscale,
   watercolor,
-  waterpath_width
+  waterpath_width,
+  force_by_feature = FALSE
 ) {
+  feature_count = if (inherits(waterpaths, "sf")) {
+    nrow(waterpaths)
+  } else if (inherits(waterpaths, "sfc")) {
+    length(waterpaths)
+  } else {
+    NA_integer_
+  }
+  if (
+    isTRUE(force_by_feature) &&
+      is.finite(feature_count) &&
+      feature_count > 1L &&
+      length(waterpath_width) == 1L
+  ) {
+    waterpath_width = rep(waterpath_width, feature_count)
+  }
   if (length(waterpath_width) == 1) {
     coord_list = render_water_path_coords(
       waterpaths = waterpaths,
@@ -544,11 +563,13 @@ render_water_path_coords_by_width = function(
     )
     return(list(
       coord_list = coord_list,
-      width = rep(waterpath_width, length(coord_list))
+      width = rep(waterpath_width, length(coord_list)),
+      feature = rep(1L, length(coord_list))
     ))
   }
   coord_list = list()
   coord_width = numeric(0)
+  coord_feature = integer(0)
   for (path_index in seq_along(waterpath_width)) {
     path = subset_waterpath_geometry(waterpaths, path_index)
     path_coords = render_water_path_coords(
@@ -567,8 +588,16 @@ render_water_path_coords_by_width = function(
       coord_width,
       rep(waterpath_width[[path_index]], length(path_coords))
     )
+    coord_feature = c(
+      coord_feature,
+      rep(path_index, length(path_coords))
+    )
   }
-  list(coord_list = coord_list, width = coord_width)
+  list(
+    coord_list = coord_list,
+    width = coord_width,
+    feature = coord_feature
+  )
 }
 
 #' Render water path coordinates

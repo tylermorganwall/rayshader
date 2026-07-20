@@ -14,6 +14,9 @@ render_roads(
   width_column = NULL,
   densify = TRUE,
   offset = 0,
+  offset_transition = 0,
+  layer = NULL,
+  layer_height = 5.5,
   merge = TRUE,
   lane_texture = FALSE,
   lane_texture_file = NULL,
@@ -65,6 +68,33 @@ to use the vertices returned by \code{\link[=render_path]{render_path()}} direct
 \item{offset}{Default \code{0}. Additional vertical road base offset in elevation
 units above the sampled surface.}
 
+\item{offset_transition}{Default \code{0}. Length in scene/world units over which
+each end of a road transitions between the sampled surface and \code{offset}.
+Positive values use the terrain height at the path midpoint plus \code{offset} as
+a constant deck height, with a quadratic Bezier ramp at each end. If a road
+is shorter than twice this distance, each ramp is shortened to half the road
+length.}
+
+\item{layer}{Default \code{NULL}. An unquoted or character column name in an \code{sf}
+road object containing OpenStreetMap-style layer values. Missing values are
+treated as the implicit layer \code{0} when determining local crossing order.
+Roads are grouped by actual intersections and a branched graph of coincident
+feature endpoints. Each higher road is constrained above the already-solved
+height of the road below at every exact intersection. Positive layers use a
+linear interpolation between their sampled endpoint elevations as the deck
+baseline instead of following interior terrain. The resulting branched
+profile is low-pass filtered across both individual features and accepted
+endpoint continuations, while retaining the requested clearance at every
+crossing. Non-tunnel roads are constrained to remain at or above their
+sampled terrain everywhere; negative layers retain their below-terrain
+tunnel profile. Ambiguous endpoint matches that would create a contradictory
+clearance cycle are excluded. Supplying \code{layer} disables \code{merge}.}
+
+\item{layer_height}{Default \code{5.5}. Either a single positive spacing in
+elevation units between locally ordered layers, or an unquoted or character
+column name containing each feature's positive separation above the lower
+road at an intersection. Column heights override constant layer spacing.}
+
 \item{merge}{Default \code{TRUE}. Whether to merge connected road linework before
 rendering. This reduces visible joins between adjacent line features in
 \code{\link[=render_highquality]{render_highquality()}}.}
@@ -94,7 +124,9 @@ assigned a texture repetition count based on its world-unit length and
 directly.}
 
 \item{lanes}{Default \code{2}. Number of lanes used when generating the default
-lane texture and, when \code{width = NULL}, deriving the road width.}
+lane texture and, when \code{width = NULL}, deriving the road width. May also be
+an unquoted or character column name in an \code{sf} road object; this generates
+the matching texture and width for each feature.}
 
 \item{lane_width}{Default \code{3}. Lane width in scene/world units used when
 \code{width = NULL}. The derived road width is \code{lane_width * (lanes + 2)},
@@ -122,5 +154,5 @@ Invisibly returns the rendered road coordinates.
 }
 \description{
 Adds road paths to the scene. Roads are previewed as rgl lines
-and rendered by \code{\link[=render_highquality]{render_highquality()}} as flat terrain-following rectangles.
+and rendered by \code{\link[=render_highquality]{render_highquality()}} as textured rectangular meshes.
 }

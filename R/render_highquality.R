@@ -1288,6 +1288,10 @@ render_highquality = function(
     }
     road_texture_repeats = road_path_info$texture_repeats
     road_texture_world_scale = road_path_info$texture_world_scale
+    road_terrain_following = road_path_info$terrain_following
+    if (is.null(road_terrain_following)) {
+      road_terrain_following = TRUE
+    }
     use_screen_line = should_render_highquality_screen_line(
       line_render = line_render,
       tag = pathinfo$tag[i]
@@ -1418,7 +1422,8 @@ render_highquality = function(
           },
           texture_length = road_texture_length,
           texture_repeats = road_texture_repeats,
-          texture_world_scale = road_texture_world_scale
+          texture_world_scale = road_texture_world_scale,
+          terrain_following = road_terrain_following
         )
         next
       } else if (use_extruded_paths) {
