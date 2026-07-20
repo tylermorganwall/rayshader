@@ -21,7 +21,7 @@ either convert_path_to_animation_coords() or rayrender::generate_camera_motion()
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">rayshader</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.41.1</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.41.2</span>
       </span>
     </div>
 
@@ -457,25 +457,25 @@ or <code><a href="http://www.rayrender.net/reference/generate_camera_motion.html
     <h2>Examples</h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co">#Render the volcano dataset using pathtracing</span></span></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
-<span class="r-in"><span><span class="va">volcano</span> <span class="op">%&gt;%</span></span></span>
-<span class="r-in"><span> <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span><span class="op">)</span> <span class="op">%&gt;%</span></span></span>
+<span class="r-in"><span><span class="va">volcano</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
+<span class="r-in"><span> <span class="fu"><a href="sphere_shade.html">sphere_shade</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="pipe.html">%&gt;%</a></span></span></span>
 <span class="r-in"><span> <span class="fu"><a href="plot_3d.html">plot_3d</a></span><span class="op">(</span><span class="va">volcano</span>,zscale <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">render_highquality</span><span class="op">(</span>min_variance <span class="op">=</span> <span class="fl">0</span>, sample_method <span class="op">=</span> <span class="st">"sobol_blue"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error in volcano %&gt;% sphere_shade() %&gt;% plot_3d(volcano, zscale = 2):</span> could not find function "%&gt;%"</span>
+<span class="r-plt img"><img src="render_highquality-1.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#Change position of light</span></span></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="fu">render_highquality</span><span class="op">(</span>lightdirection <span class="op">=</span> <span class="fl">45</span>, min_variance <span class="op">=</span> <span class="fl">0</span>, sample_method <span class="op">=</span> <span class="st">"sobol_blue"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-plt img"><img src="render_highquality-1.png" alt="" width="768" height="768"></span>
+<span class="r-plt img"><img src="render_highquality-2.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#Change vertical position of light</span></span></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="fu">render_highquality</span><span class="op">(</span>lightdirection <span class="op">=</span> <span class="fl">45</span>, lightaltitude <span class="op">=</span> <span class="fl">10</span>,</span></span>
 <span class="r-in"><span>                  min_variance <span class="op">=</span> <span class="fl">0</span>, samples <span class="op">=</span> <span class="fl">16</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-plt img"><img src="render_highquality-2.png" alt="" width="768" height="768"></span>
+<span class="r-plt img"><img src="render_highquality-3.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#Change the ground material</span></span></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
@@ -483,7 +483,7 @@ or <code><a href="http://www.rayrender.net/reference/generate_camera_motion.html
 <span class="r-in"><span>                  ground_material <span class="op">=</span> <span class="fu">rayrender</span><span class="fu">::</span><span class="fu"><a href="http://www.rayrender.net/reference/diffuse.html" class="external-link">diffuse</a></span><span class="op">(</span>checkerperiod <span class="op">=</span> <span class="fl">30</span>, checkercolor<span class="op">=</span><span class="st">"grey50"</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                  min_variance <span class="op">=</span> <span class="fl">0</span>, samples <span class="op">=</span> <span class="fl">16</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-plt img"><img src="render_highquality-3.png" alt="" width="768" height="768"></span>
+<span class="r-plt img"><img src="render_highquality-4.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#Add three different color lights and a title</span></span></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
@@ -492,8 +492,8 @@ or <code><a href="http://www.rayrender.net/reference/generate_camera_motion.html
 <span class="r-in"><span>                  title_bar_color<span class="op">=</span><span class="st">"white"</span>, title_bar_alpha<span class="op">=</span><span class="fl">0.8</span>,</span></span>
 <span class="r-in"><span>                  min_variance <span class="op">=</span> <span class="fl">0</span>, samples <span class="op">=</span> <span class="fl">16</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-plt img"><img src="render_highquality-4.png" alt="" width="768" height="768"></span>
 <span class="r-plt img"><img src="render_highquality-5.png" alt="" width="768" height="768"></span>
+<span class="r-plt img"><img src="render_highquality-6.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#Change the camera:</span></span></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
@@ -502,7 +502,7 @@ or <code><a href="http://www.rayrender.net/reference/generate_camera_motion.html
 <span class="r-in"><span>                  title_bar_color<span class="op">=</span><span class="st">"white"</span>, title_bar_alpha<span class="op">=</span><span class="fl">0.8</span>,</span></span>
 <span class="r-in"><span>                  min_variance <span class="op">=</span> <span class="fl">0</span>, samples <span class="op">=</span> <span class="fl">16</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-plt img"><img src="render_highquality-6.png" alt="" width="768" height="768"></span>
+<span class="r-plt img"><img src="render_highquality-7.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="co">#Add a shiny metal sphere</span></span></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_camera.html">render_camera</a></span><span class="op">(</span>theta<span class="op">=</span><span class="op">-</span><span class="fl">45</span>,phi<span class="op">=</span><span class="fl">60</span>,fov<span class="op">=</span><span class="fl">60</span>,zoom<span class="op">=</span><span class="fl">0.8</span><span class="op">)</span></span></span>
@@ -512,7 +512,7 @@ or <code><a href="http://www.rayrender.net/reference/generate_camera_motion.html
 <span class="r-in"><span>                                                     radius<span class="op">=</span><span class="fl">20</span>,material<span class="op">=</span><span class="fu">rayrender</span><span class="fu">::</span><span class="fu"><a href="http://www.rayrender.net/reference/metal.html" class="external-link">metal</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                  min_variance <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-plt img"><img src="render_highquality-7.png" alt="" width="768" height="768"></span>
+<span class="r-plt img"><img src="render_highquality-8.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">#Add a red light to the volcano and change the ambient light to dusk</span></span></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
@@ -523,7 +523,7 @@ or <code><a href="http://www.rayrender.net/reference/generate_camera_motion.html
 <span class="r-in"><span>                                   material<span class="op">=</span><span class="fu">rayrender</span><span class="fu">::</span><span class="fu"><a href="http://www.rayrender.net/reference/light.html" class="external-link">light</a></span><span class="op">(</span>color<span class="op">=</span><span class="st">"red"</span>,intensity<span class="op">=</span><span class="fl">10</span><span class="op">)</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                  min_variance <span class="op">=</span> <span class="fl">0</span>, samples <span class="op">=</span> <span class="fl">16</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-plt img"><img src="render_highquality-8.png" alt="" width="768" height="768"></span>
+<span class="r-plt img"><img src="render_highquality-9.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="co">#Manually change the camera location and direction</span></span></span>
 <span class="r-in"><span><span class="kw">if</span><span class="op">(</span><span class="fu"><a href="run_documentation.html">run_documentation</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="render_camera.html">render_camera</a></span><span class="op">(</span>theta<span class="op">=</span><span class="fl">45</span>,phi<span class="op">=</span><span class="fl">45</span>,fov<span class="op">=</span><span class="fl">90</span><span class="op">)</span></span></span>
@@ -533,7 +533,7 @@ or <code><a href="http://www.rayrender.net/reference/generate_camera_motion.html
 <span class="r-in"><span>                                   material<span class="op">=</span><span class="fu">rayrender</span><span class="fu">::</span><span class="fu"><a href="http://www.rayrender.net/reference/light.html" class="external-link">light</a></span><span class="op">(</span>color<span class="op">=</span><span class="st">"red"</span>,intensity<span class="op">=</span><span class="fl">10</span><span class="op">)</span><span class="op">)</span>,</span></span>
 <span class="r-in"><span>                  min_variance <span class="op">=</span> <span class="fl">0</span>, samples <span class="op">=</span> <span class="fl">16</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="op">}</span></span></span>
-<span class="r-plt img"><img src="render_highquality-9.png" alt="" width="768" height="768"></span>
+<span class="r-plt img"><img src="render_highquality-10.png" alt="" width="768" height="768"></span>
 <span class="r-in"><span><span class="co"># Render the shadow of the Washington Monument with a realistic sky at that datetime</span></span></span>
 <span class="r-in"><span><span class="co"># using the `skymodelr` package.</span></span></span>
 <span class="r-in"><span><span class="va">run_examples</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/find.package.html" class="external-link">find.package</a></span><span class="op">(</span><span class="st">"sf"</span>, quiet <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">&amp;&amp;</span></span></span>
@@ -604,7 +604,7 @@ or <code><a href="http://www.rayrender.net/reference/generate_camera_motion.html
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Mosaicing &amp; Projecting</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Note: Elevation units are in meters.</span>
 <span class="r-wrn co"><span class="r-pr">#&gt;</span> <span class="warning">Warning: </span>Installed libopenexr does not support EXR metadata; writing pixel data only.</span>
-<span class="r-plt img"><img src="render_highquality-10.png" alt="" width="768" height="768"></span>
+<span class="r-plt img"><img src="render_highquality-11.png" alt="" width="768" height="768"></span>
 <span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> The Prague sky model coefficient file 'SkyModelDatasetGround.dat' is not installed. Run download_sky_data(sea_level = TRUE, wide_spectrum = FALSE) explicitly to download it.</span>
 </code></pre></div>
     </div>
