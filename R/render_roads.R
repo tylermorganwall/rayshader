@@ -886,6 +886,2022 @@ offset_render_road_path_coords = function(
   })
 }
 
+# Road layer feature preparation -------------------------------------------
+
+#' Resolve a metric CRS for road topology
+#'
+#' @param roads Road features with a defined CRS.
+#'
+#' @return An `sf` CRS using metre units near the road data.
+#' @keywords internal
+resolve_render_road_metric_crs = function(roads) {
+  if (!inherits(roads, "sf") || is.na(sf::st_crs(roads))) {
+    stop(
+      "Road layer topology requires an `sf` object with a defined CRS.",
+      call. = FALSE
+    )
+  }
+  source_crs = sf::st_crs(roads)
+  source_units = source_crs$units_gdal
+  if (is.null(source_units) || is.na(source_units)) {
+    source_units = ""
+  }
+  source_units = tolower(source_units)
+  metric_units = source_units %in% c("m", "meter", "metre")
+  if (!isTRUE(sf::st_is_longlat(roads)) && metric_units) {
+    return(source_crs)
+  }
+
+  center = sf::st_as_sfc(sf::st_bbox(roads)) |>
+    sf::st_centroid() |>
+    sf::st_transform(4326) |>
+    sf::st_coordinates()
+  longitude = center[[1L, 1L]]
+  latitude = center[[1L, 2L]]
+  if (!is.finite(longitude) || !is.finite(latitude)) {
+    stop(
+      "Could not derive a local metric CRS for road topology.",
+      call. = FALSE
+    )
+  }
+  zone = min(max(floor((longitude + 180) / 6) + 1L, 1L), 60L)
+  epsg = if (latitude >= 0) 32600L + zone else 32700L + zone
+  sf::st_crs(epsg)
+}
+
+#' Collapse consecutive duplicate road line coordinates
+#'
+#' @param original_geometry Road fragment geometry in its source CRS.
+#' @param metric_geometry Matching road fragment geometry in a metric CRS.
+#' @param minimum_step Default `1e-3`. Minimum retained horizontal separation
+#' in metres.
+#'
+#' @return Original and metric geometries with matching retained coordinates.
+#' @keywords internal
+collapse_render_road_line_coordinates = function(
+  original_geometry,
+  metric_geometry,
+  minimum_step = 1e-3
+) {
+  original_coords = unclass(original_geometry)
+  metric_coords = unclass(metric_geometry)
+  if (
+    !is.matrix(original_coords) ||
+      !is.matrix(metric_coords) ||
+      nrow(original_coords) != nrow(metric_coords) ||
+      nrow(metric_coords) < 2L
+  ) {
+    return(NULL)
+  }
+  minimum_step = suppressWarnings(as.numeric(minimum_step[[1L]]))
+  if (!is.finite(minimum_step) || minimum_step <= 0) {
+    minimum_step = 1e-3
+  }
+
+  keep = rep(FALSE, nrow(metric_coords))
+  keep[[1L]] = TRUE
+  previous = 1L
+  for (index in seq.int(2L, nrow(metric_coords))) {
+    separation = sqrt(sum(
+      (metric_coords[index, 1:2] - metric_coords[previous, 1:2])^2
+    ))
+    if (is.finite(separation) && separation > minimum_step) {
+      keep[[index]] = TRUE
+      previous = index
+    }
+  }
+  final = nrow(metric_coords)
+  if (!keep[[final]] && previous != 1L) {
+    keep[[previous]] = FALSE
+    keep[[final]] = TRUE
+  }
+  if (sum(keep) < 2L) {
+    return(NULL)
+  }
+  list(
+    original = sf::st_linestring(original_coords[keep, , drop = FALSE]),
+    metric = sf::st_linestring(metric_coords[keep, , drop = FALSE])
+  )
+}
+
+#' Clean matching source and metric road fragments
+#'
+#' @param source_fragments Road fragments in the source CRS.
+#' @param metric_fragments Matching road fragments in a metric CRS.
+#' @param minimum_step Default `1e-3`. Minimum retained horizontal separation
+#' in metres.
+#'
+#' @return Clean source and metric fragments plus dropped fragment identifiers.
+#' @keywords internal
+clean_render_road_line_fragments = function(
+  source_fragments,
+  metric_fragments,
+  minimum_step = 1e-3
+) {
+  source_geometry = sf::st_geometry(source_fragments)
+  metric_geometry = sf::st_geometry(metric_fragments)
+  cleaned = lapply(seq_along(source_geometry), function(index) {
+    collapse_render_road_line_coordinates(
+      original_geometry = source_geometry[[index]],
+      metric_geometry = metric_geometry[[index]],
+      minimum_step = minimum_step
+    )
+  })
+  keep = !vapply(cleaned, is.null, logical(1))
+  dropped = source_fragments$render_road_fragment_id[!keep]
+  source_fragments = source_fragments[keep, , drop = FALSE]
+  metric_fragments = metric_fragments[keep, , drop = FALSE]
+  cleaned = cleaned[keep]
+  sf::st_geometry(source_fragments) = sf::st_sfc(
+    lapply(cleaned, `[[`, "original"),
+    crs = sf::st_crs(source_fragments)
+  )
+  sf::st_geometry(metric_fragments) = sf::st_sfc(
+    lapply(cleaned, `[[`, "metric"),
+    crs = sf::st_crs(metric_fragments)
+  )
+  list(
+    source = source_fragments,
+    metric = metric_fragments,
+    dropped_fragment_id = dropped
+  )
+}
+
+#' Build road fragment endpoint diagnostics
+#'
+#' @param fragments Metric road fragments.
+#' @param boundary Default `NULL`. Optional source-data boundary geometry.
+#' @param boundary_tolerance Default `1`. Distance in metres used to identify
+#' endpoints on the supplied-data boundary.
+#'
+#' @return An `sf` endpoint table with inward directions and boundary flags.
+#' @keywords internal
+build_render_road_endpoint_table = function(
+  fragments,
+  boundary = NULL,
+  boundary_tolerance = 1
+) {
+  fragment_count = nrow(fragments)
+  if (!fragment_count) {
+    return(sf::st_sf(
+      render_road_endpoint_id = integer(0),
+      render_road_fragment_id = integer(0),
+      endpoint_side = character(0),
+      direction_x = numeric(0),
+      direction_y = numeric(0),
+      supplied_boundary = logical(0),
+      geometry = sf::st_sfc(crs = sf::st_crs(fragments))
+    ))
+  }
+  boundary_tolerance = suppressWarnings(as.numeric(boundary_tolerance[[1L]]))
+  if (!is.finite(boundary_tolerance) || boundary_tolerance < 0) {
+    boundary_tolerance = 1
+  }
+
+  endpoint_geometry = vector("list", fragment_count * 2L)
+  direction_x = rep(NA_real_, fragment_count * 2L)
+  direction_y = rep(NA_real_, fragment_count * 2L)
+  for (fragment in seq_len(fragment_count)) {
+    coordinates = unclass(sf::st_geometry(fragments)[[fragment]])
+    endpoint_index = c(2L * fragment - 1L, 2L * fragment)
+    endpoint_geometry[[endpoint_index[[1L]]]] = sf::st_point(coordinates[
+      1L,
+      1:2
+    ])
+    endpoint_geometry[[endpoint_index[[2L]]]] = sf::st_point(
+      coordinates[nrow(coordinates), 1:2]
+    )
+    inward = rbind(
+      coordinates[2L, 1:2] - coordinates[1L, 1:2],
+      coordinates[nrow(coordinates) - 1L, 1:2] -
+        coordinates[nrow(coordinates), 1:2]
+    )
+    inward_length = sqrt(rowSums(inward^2))
+    valid = is.finite(inward_length) & inward_length > 0
+    inward[valid, ] = inward[valid, , drop = FALSE] / inward_length[valid]
+    inward[!valid, ] = NA_real_
+    direction_x[endpoint_index] = inward[, 1L]
+    direction_y[endpoint_index] = inward[, 2L]
+  }
+  endpoints = sf::st_sf(
+    render_road_endpoint_id = seq_len(fragment_count * 2L),
+    render_road_fragment_id = rep(
+      fragments$render_road_fragment_id,
+      each = 2L
+    ),
+    endpoint_side = rep(c("start", "end"), fragment_count),
+    direction_x = direction_x,
+    direction_y = direction_y,
+    supplied_boundary = FALSE,
+    geometry = sf::st_sfc(endpoint_geometry, crs = sf::st_crs(fragments))
+  )
+
+  if (is.null(boundary)) {
+    boundary = sf::st_as_sfc(sf::st_bbox(fragments))
+  } else {
+    if (inherits(boundary, "bbox")) {
+      boundary = sf::st_as_sfc(boundary)
+    } else if (inherits(boundary, "sf")) {
+      boundary = sf::st_geometry(boundary)
+    } else if (inherits(boundary, "sfg")) {
+      boundary = sf::st_sfc(boundary)
+    }
+    if (!inherits(boundary, "sfc")) {
+      stop("`boundary` must be an sf geometry or bounding box.", call. = FALSE)
+    }
+    if (is.na(sf::st_crs(boundary))) {
+      stop("`boundary` must have a defined CRS.", call. = FALSE)
+    }
+    boundary = sf::st_transform(boundary, sf::st_crs(fragments))
+  }
+  boundary_line = sf::st_boundary(sf::st_union(boundary))
+  endpoints$supplied_boundary = lengths(sf::st_is_within_distance(
+    endpoints,
+    boundary_line,
+    dist = boundary_tolerance
+  )) >
+    0L
+  endpoints
+}
+
+#' Prepare road layer features for local topology
+#'
+#' @param roads Road line features.
+#' @param layer_column Column containing OSM layer values.
+#' @param layer_height_column Default `NULL`. Optional feature clearance column.
+#' @param boundary Default `NULL`. Optional supplied-data boundary geometry.
+#' @param minimum_step Default `1e-3`. Minimum retained coordinate separation
+#' in metres.
+#' @param boundary_tolerance Default `1`. Boundary endpoint tolerance in metres.
+#'
+#' @return Prepared source fragments, metric fragments, endpoints, and metadata.
+#' @keywords internal
+prepare_render_road_layer_features = function(
+  roads,
+  layer_column,
+  layer_height_column = NULL,
+  boundary = NULL,
+  minimum_step = 1e-3,
+  boundary_tolerance = 1
+) {
+  if (!requireNamespace("sf", quietly = TRUE)) {
+    stop("The `sf` package is required for road layer topology.", call. = FALSE)
+  }
+  if (!inherits(roads, "sf")) {
+    stop("Road layer topology requires an `sf` road object.", call. = FALSE)
+  }
+  layer_column = validate_render_road_column_name(layer_column, "layer")
+  if (!(layer_column %in% names(roads))) {
+    stop(sprintf("`layer` must name a column in `roads`: %s", layer_column))
+  }
+  geometry_type = as.character(sf::st_geometry_type(roads))
+  supported = geometry_type %in% c("LINESTRING", "MULTILINESTRING")
+  if (!all(supported)) {
+    stop(
+      "Road layer topology supports LINESTRING and MULTILINESTRING features.",
+      call. = FALSE
+    )
+  }
+
+  roads$render_road_feature_id = seq_len(nrow(roads))
+  source_crs = sf::st_crs(roads)
+  metric_crs = resolve_render_road_metric_crs(roads)
+  source_fragments = suppressWarnings(sf::st_cast(roads, "LINESTRING"))
+  source_fragments$render_road_fragment_id = seq_len(nrow(source_fragments))
+  metric_fragments = sf::st_transform(source_fragments, metric_crs)
+  cleaned = clean_render_road_line_fragments(
+    source_fragments = source_fragments,
+    metric_fragments = metric_fragments,
+    minimum_step = minimum_step
+  )
+  source_fragments = cleaned$source
+  metric_fragments = cleaned$metric
+
+  raw_layer = source_fragments[[layer_column]]
+  if (is.factor(raw_layer)) {
+    raw_layer = as.character(raw_layer)
+  }
+  layer_explicit = !is.na(raw_layer)
+  if (is.character(raw_layer)) {
+    layer_explicit = layer_explicit & nzchar(trimws(raw_layer))
+  }
+  effective_layer = suppressWarnings(as.numeric(raw_layer))
+  if (any(layer_explicit & !is.finite(effective_layer))) {
+    stop("Explicit road layer values must be finite numbers.", call. = FALSE)
+  }
+  effective_layer[!layer_explicit] = 0
+
+  clearance = rep(NA_real_, nrow(source_fragments))
+  if (!is.null(layer_height_column)) {
+    layer_height_column = validate_render_road_column_name(
+      layer_height_column,
+      "layer_height"
+    )
+    if (!(layer_height_column %in% names(source_fragments))) {
+      stop(sprintf(
+        "`layer_height` must name a column in `roads`: %s",
+        layer_height_column
+      ))
+    }
+    clearance = suppressWarnings(as.numeric(source_fragments[[
+      layer_height_column
+    ]]))
+    present = !is.na(source_fragments[[layer_height_column]])
+    if (any(present & (!is.finite(clearance) | clearance <= 0))) {
+      stop("Explicit road layer heights must be positive finite numbers.")
+    }
+  }
+
+  metadata_value = function(candidates) {
+    column = candidates[candidates %in% names(source_fragments)][1L]
+    if (!length(column) || is.na(column)) {
+      return(rep(NA_character_, nrow(source_fragments)))
+    }
+    as.character(source_fragments[[column]])
+  }
+  topology_columns = list(
+    render_road_layer = effective_layer,
+    render_road_layer_explicit = layer_explicit,
+    render_road_clearance = clearance,
+    render_road_way_id = metadata_value(c("osm_id", "way_id", "id")),
+    render_road_ref = metadata_value("ref"),
+    render_road_name = metadata_value("name"),
+    render_road_highway = metadata_value("highway"),
+    render_road_bridge = metadata_value("bridge"),
+    render_road_tunnel = metadata_value("tunnel"),
+    render_road_location = metadata_value("location")
+  )
+  for (column in names(topology_columns)) {
+    source_fragments[[column]] = topology_columns[[column]]
+    metric_fragments[[column]] = topology_columns[[column]]
+  }
+
+  endpoints = build_render_road_endpoint_table(
+    fragments = metric_fragments,
+    boundary = boundary,
+    boundary_tolerance = boundary_tolerance
+  )
+  endpoint_fragment = match(
+    endpoints$render_road_fragment_id,
+    metric_fragments$render_road_fragment_id
+  )
+  for (column in c(
+    "render_road_feature_id",
+    "render_road_layer",
+    "render_road_layer_explicit",
+    "render_road_way_id",
+    "render_road_ref",
+    "render_road_name",
+    "render_road_highway"
+  )) {
+    endpoints[[column]] = metric_fragments[[column]][endpoint_fragment]
+  }
+
+  list(
+    source_fragments = source_fragments,
+    fragments = metric_fragments,
+    endpoints = endpoints,
+    source_crs = source_crs,
+    metric_crs = metric_crs,
+    layer_column = layer_column,
+    layer_height_column = layer_height_column,
+    dropped_fragment_id = cleaned$dropped_fragment_id,
+    minimum_step = minimum_step,
+    boundary_tolerance = boundary_tolerance
+  )
+}
+
+# Road layer event topology -----------------------------------------------
+
+#' Project a topology point onto a road fragment
+#'
+#' @param geometry Metric LINESTRING geometry.
+#' @param point Two-value metric point coordinate.
+#' @param endpoint_tolerance Default `1e-2`. Endpoint tolerance in metres.
+#'
+#' @return Projection distance, separation, and endpoint classification.
+#' @keywords internal
+project_render_road_topology_point = function(
+  geometry,
+  point,
+  endpoint_tolerance = 1e-2
+) {
+  coordinates = unclass(geometry)[, 1:2, drop = FALSE]
+  if (nrow(coordinates) < 2L) {
+    return(NULL)
+  }
+  segment = coordinates[-1L, , drop = FALSE] -
+    coordinates[-nrow(coordinates), , drop = FALSE]
+  segment_length_squared = rowSums(segment^2)
+  valid = is.finite(segment_length_squared) & segment_length_squared > 0
+  if (!any(valid)) {
+    return(NULL)
+  }
+  difference = sweep(
+    coordinates[-nrow(coordinates), , drop = FALSE],
+    2,
+    as.numeric(point[1:2]),
+    FUN = "-"
+  )
+  fraction = -rowSums(difference * segment) / segment_length_squared
+  fraction = pmin(pmax(fraction, 0), 1)
+  projection = coordinates[-nrow(coordinates), , drop = FALSE] +
+    fraction * segment
+  separation_squared = rowSums(
+    sweep(
+      projection,
+      2,
+      as.numeric(point[1:2]),
+      FUN = "-"
+    )^2
+  )
+  separation_squared[!valid] = Inf
+  closest = which.min(separation_squared)
+  if (!length(closest) || !is.finite(separation_squared[[closest]])) {
+    return(NULL)
+  }
+  segment_length = sqrt(segment_length_squared)
+  cumulative = c(0, cumsum(segment_length))
+  distance = cumulative[[closest]] +
+    fraction[[closest]] * segment_length[[closest]]
+  total_length = tail(cumulative, 1L)
+  tolerance = max(endpoint_tolerance, total_length * 1e-10)
+  list(
+    distance = distance,
+    total_length = total_length,
+    separation = sqrt(separation_squared[[closest]]),
+    at_start = distance <= tolerance,
+    at_end = distance >= total_length - tolerance
+  )
+}
+
+#' Extract point and line parts from a road intersection
+#'
+#' @param intersection Exact `sf` intersection geometry.
+#'
+#' @return Point and LINESTRING simple-feature collections.
+#' @keywords internal
+extract_render_road_topology_intersection_parts = function(intersection) {
+  intersection_crs = sf::st_crs(intersection)
+  empty_points = sf::st_sfc(crs = intersection_crs)
+  empty_lines = sf::st_sfc(crs = intersection_crs)
+  if (
+    is.null(intersection) ||
+      !length(intersection) ||
+      all(sf::st_is_empty(intersection))
+  ) {
+    return(list(points = empty_points, lines = empty_lines))
+  }
+
+  extract_type = function(type) {
+    extracted = tryCatch(
+      suppressWarnings(sf::st_collection_extract(intersection, type)),
+      error = function(error) NULL
+    )
+    if (is.null(extracted) || !length(extracted)) {
+      return(sf::st_sfc(crs = intersection_crs))
+    }
+    extracted = extracted[!sf::st_is_empty(extracted)]
+    if (!length(extracted)) {
+      return(sf::st_sfc(crs = intersection_crs))
+    }
+    suppressWarnings(sf::st_cast(extracted, type))
+  }
+  list(
+    points = extract_type("POINT"),
+    lines = extract_type("LINESTRING")
+  )
+}
+
+#' Group pairwise road point events into physical events
+#'
+#' @param pair_events Pairwise point-event `sf` rows.
+#' @param fragments Prepared metric road fragments.
+#' @param event_name Event identifier prefix.
+#' @param tolerance Default `1e-2`. Point grouping tolerance in metres.
+#'
+#' @return Physical events, participants, and pair relationships.
+#' @keywords internal
+group_render_road_point_events = function(
+  pair_events,
+  fragments,
+  event_name,
+  tolerance = 1e-2
+) {
+  if (!requireNamespace("igraph", quietly = TRUE)) {
+    stop("The `igraph` package is required for road layer topology.")
+  }
+  event_id_column = paste0(event_name, "_id")
+  if (!nrow(pair_events)) {
+    events = sf::st_sf(
+      event_id = integer(0),
+      participant_count = integer(0),
+      geometry = sf::st_sfc(crs = sf::st_crs(fragments))
+    )
+    names(events)[names(events) == "event_id"] = event_id_column
+    participants = data.frame(
+      event_id = integer(0),
+      render_road_fragment_id = integer(0),
+      render_road_feature_id = integer(0),
+      distance = numeric(0),
+      render_road_layer = numeric(0),
+      render_road_layer_explicit = logical(0)
+    )
+    names(participants)[names(participants) == "event_id"] = event_id_column
+    pairs = sf::st_drop_geometry(pair_events)
+    pairs[[event_id_column]] = integer(0)
+    return(list(events = events, participants = participants, pairs = pairs))
+  }
+
+  neighbors = sf::st_is_within_distance(
+    pair_events,
+    pair_events,
+    dist = tolerance
+  )
+  edge_rows = lapply(seq_along(neighbors), function(from) {
+    to = neighbors[[from]]
+    to = to[to > from]
+    if (!length(to)) {
+      return(NULL)
+    }
+    cbind(from = from, to = to)
+  })
+  edge_rows = Filter(Negate(is.null), edge_rows)
+  edges = if (length(edge_rows)) {
+    do.call(rbind, edge_rows)
+  } else {
+    matrix(integer(0), ncol = 2L)
+  }
+  graph = igraph::make_empty_graph(n = nrow(pair_events), directed = FALSE)
+  if (nrow(edges)) {
+    graph = igraph::add_edges(graph, as.vector(t(edges)))
+  }
+  membership = igraph::components(graph)$membership
+  membership = match(membership, unique(membership))
+  pair_events[[event_id_column]] = membership
+
+  event_groups = split(seq_len(nrow(pair_events)), membership)
+  event_geometry = sf::st_geometry(pair_events)[vapply(
+    event_groups,
+    `[[`,
+    integer(1),
+    1L
+  )]
+  event_rows = lapply(seq_along(event_groups), function(event_id) {
+    rows = event_groups[[event_id]]
+    fragments_present = unique(c(
+      pair_events$fragment_a[rows],
+      pair_events$fragment_b[rows]
+    ))
+    data.frame(
+      event_id = event_id,
+      participant_count = length(fragments_present),
+      layer_min = min(
+        fragments$render_road_layer[match(
+          fragments_present,
+          fragments$render_road_fragment_id
+        )]
+      ),
+      layer_max = max(
+        fragments$render_road_layer[match(
+          fragments_present,
+          fragments$render_road_fragment_id
+        )]
+      )
+    )
+  })
+  events = sf::st_sf(
+    do.call(rbind, event_rows),
+    geometry = event_geometry,
+    crs = sf::st_crs(pair_events)
+  )
+  names(events)[names(events) == "event_id"] = event_id_column
+
+  participant_rows = lapply(seq_along(event_groups), function(event_id) {
+    rows = event_groups[[event_id]]
+    fragment_id = unique(c(
+      pair_events$fragment_a[rows],
+      pair_events$fragment_b[rows]
+    ))
+    data_rows = lapply(fragment_id, function(fragment) {
+      distance = c(
+        pair_events$distance_a[rows][pair_events$fragment_a[rows] == fragment],
+        pair_events$distance_b[rows][pair_events$fragment_b[rows] == fragment]
+      )
+      fragment_row = match(fragment, fragments$render_road_fragment_id)
+      data.frame(
+        event_id = event_id,
+        render_road_fragment_id = fragment,
+        render_road_feature_id = fragments$render_road_feature_id[[
+          fragment_row
+        ]],
+        distance = mean(distance),
+        render_road_layer = fragments$render_road_layer[[fragment_row]],
+        render_road_layer_explicit = fragments$render_road_layer_explicit[[
+          fragment_row
+        ]]
+      )
+    })
+    do.call(rbind, data_rows)
+  })
+  participants = do.call(rbind, participant_rows)
+  names(participants)[names(participants) == "event_id"] = event_id_column
+  pairs = sf::st_drop_geometry(pair_events)
+  list(events = events, participants = participants, pairs = pairs)
+}
+
+#' Find exact local road layer events
+#'
+#' @param prepared Prepared road layer features.
+#' @param endpoint_tolerance Default `1e-2`. Endpoint and event tolerance in
+#' metres.
+#'
+#' @return Crossing, junction, no-layer-relationship, and overlap event tables.
+#' @keywords internal
+find_render_road_layer_events = function(
+  prepared,
+  endpoint_tolerance = 1e-2
+) {
+  fragments = prepared$fragments
+  fragment_count = nrow(fragments)
+  empty_pair_events = sf::st_sf(
+    fragment_a = integer(0),
+    fragment_b = integer(0),
+    distance_a = numeric(0),
+    distance_b = numeric(0),
+    endpoint_a = logical(0),
+    endpoint_b = logical(0),
+    geometry = sf::st_sfc(crs = sf::st_crs(fragments))
+  )
+  empty_overlaps = sf::st_sf(
+    overlap_id = integer(0),
+    fragment_a = integer(0),
+    fragment_b = integer(0),
+    layer_relationship = logical(0),
+    distance_a_start = numeric(0),
+    distance_a_end = numeric(0),
+    distance_b_start = numeric(0),
+    distance_b_end = numeric(0),
+    geometry = sf::st_sfc(crs = sf::st_crs(fragments))
+  )
+  if (fragment_count < 2L) {
+    crossings = group_render_road_point_events(
+      empty_pair_events,
+      fragments,
+      "crossing",
+      endpoint_tolerance
+    )
+    junctions = group_render_road_point_events(
+      empty_pair_events,
+      fragments,
+      "junction",
+      endpoint_tolerance
+    )
+    no_relationship = group_render_road_point_events(
+      empty_pair_events,
+      fragments,
+      "no_relationship",
+      endpoint_tolerance
+    )
+    return(list(
+      crossings = crossings,
+      junctions = junctions,
+      no_relationship = no_relationship,
+      overlaps = empty_overlaps,
+      candidate_pair_count = 0L
+    ))
+  }
+
+  candidate_index = sf::st_intersects(fragments, sparse = TRUE)
+  candidate_pairs = lapply(seq_along(candidate_index), function(first) {
+    second = candidate_index[[first]]
+    second = second[second > first]
+    if (!length(second)) {
+      return(NULL)
+    }
+    cbind(first = first, second = second)
+  })
+  candidate_pairs = Filter(Negate(is.null), candidate_pairs)
+  candidate_pairs = if (length(candidate_pairs)) {
+    do.call(rbind, candidate_pairs)
+  } else {
+    matrix(integer(0), ncol = 2L)
+  }
+
+  pair_results = lapply(seq_len(nrow(candidate_pairs)), function(pair_index) {
+    row_a = candidate_pairs[pair_index, 1L]
+    row_b = candidate_pairs[pair_index, 2L]
+    fragment_a = fragments$render_road_fragment_id[[row_a]]
+    fragment_b = fragments$render_road_fragment_id[[row_b]]
+    intersection = tryCatch(
+      suppressWarnings(sf::st_intersection(
+        sf::st_geometry(fragments)[row_a],
+        sf::st_geometry(fragments)[row_b]
+      )),
+      error = function(error) NULL
+    )
+    parts = extract_render_road_topology_intersection_parts(intersection)
+
+    point_rows = lapply(seq_along(parts$points), function(point_index) {
+      point = sf::st_coordinates(parts$points[point_index])[1L, 1:2]
+      projection_a = project_render_road_topology_point(
+        sf::st_geometry(fragments)[[row_a]],
+        point,
+        endpoint_tolerance
+      )
+      projection_b = project_render_road_topology_point(
+        sf::st_geometry(fragments)[[row_b]],
+        point,
+        endpoint_tolerance
+      )
+      if (is.null(projection_a) || is.null(projection_b)) {
+        return(NULL)
+      }
+      endpoint_a = projection_a$at_start || projection_a$at_end
+      endpoint_b = projection_b$at_start || projection_b$at_end
+      classification = if (endpoint_a || endpoint_b) {
+        "junction"
+      } else if (
+        fragments$render_road_layer[[row_a]] !=
+          fragments$render_road_layer[[row_b]]
+      ) {
+        "crossing"
+      } else {
+        "no_relationship"
+      }
+      sf::st_sf(
+        fragment_a = fragment_a,
+        fragment_b = fragment_b,
+        distance_a = projection_a$distance,
+        distance_b = projection_b$distance,
+        endpoint_a = endpoint_a,
+        endpoint_b = endpoint_b,
+        classification = classification,
+        geometry = parts$points[point_index]
+      )
+    })
+    point_rows = Filter(Negate(is.null), point_rows)
+
+    overlap_rows = lapply(seq_along(parts$lines), function(line_index) {
+      line = parts$lines[line_index]
+      line_coordinates = sf::st_coordinates(line)[, 1:2, drop = FALSE]
+      endpoint_coordinates = line_coordinates[
+        c(1L, nrow(line_coordinates)),
+        ,
+        drop = FALSE
+      ]
+      projections_a = lapply(seq_len(2L), function(endpoint) {
+        project_render_road_topology_point(
+          sf::st_geometry(fragments)[[row_a]],
+          endpoint_coordinates[endpoint, ],
+          endpoint_tolerance
+        )
+      })
+      projections_b = lapply(seq_len(2L), function(endpoint) {
+        project_render_road_topology_point(
+          sf::st_geometry(fragments)[[row_b]],
+          endpoint_coordinates[endpoint, ],
+          endpoint_tolerance
+        )
+      })
+      if (any(vapply(c(projections_a, projections_b), is.null, logical(1)))) {
+        return(NULL)
+      }
+      sf::st_sf(
+        fragment_a = fragment_a,
+        fragment_b = fragment_b,
+        layer_relationship = fragments$render_road_layer[[row_a]] !=
+          fragments$render_road_layer[[row_b]],
+        distance_a_start = projections_a[[1L]]$distance,
+        distance_a_end = projections_a[[2L]]$distance,
+        distance_b_start = projections_b[[1L]]$distance,
+        distance_b_end = projections_b[[2L]]$distance,
+        geometry = line
+      )
+    })
+    overlap_rows = Filter(Negate(is.null), overlap_rows)
+    list(points = point_rows, overlaps = overlap_rows)
+  })
+  point_rows = unlist(lapply(pair_results, `[[`, "points"), recursive = FALSE)
+  overlap_rows = unlist(
+    lapply(pair_results, `[[`, "overlaps"),
+    recursive = FALSE
+  )
+  all_points = if (length(point_rows)) {
+    do.call(rbind, point_rows)
+  } else {
+    empty_pair_events
+  }
+  overlaps = if (length(overlap_rows)) {
+    do.call(rbind, overlap_rows)
+  } else {
+    empty_overlaps[, setdiff(names(empty_overlaps), "overlap_id"), drop = FALSE]
+  }
+  overlaps$overlap_id = seq_len(nrow(overlaps))
+  if (nrow(overlaps)) {
+    overlaps = overlaps[, c(
+      "overlap_id",
+      setdiff(names(overlaps), c("overlap_id", attr(overlaps, "sf_column"))),
+      attr(overlaps, "sf_column")
+    )]
+  }
+
+  event_group = function(classification, event_name) {
+    selected = if (nrow(all_points)) {
+      all_points[all_points$classification == classification, , drop = FALSE]
+    } else {
+      empty_pair_events
+    }
+    selected$classification = NULL
+    group_render_road_point_events(
+      selected,
+      fragments,
+      event_name,
+      endpoint_tolerance
+    )
+  }
+  list(
+    crossings = event_group("crossing", "crossing"),
+    junctions = event_group("junction", "junction"),
+    no_relationship = event_group("no_relationship", "no_relationship"),
+    overlaps = overlaps,
+    candidate_pair_count = nrow(candidate_pairs)
+  )
+}
+
+# Endpoint continuations and topology graph -------------------------------
+
+#' Select conservative road endpoint continuations
+#'
+#' @param prepared Prepared road layer features.
+#' @param endpoint_tolerance Default `1e-2`. Exact endpoint tolerance in metres.
+#' @param continuation_tolerance Default `0.25`. Maximum true geometry gap in
+#' metres.
+#' @param minimum_direction_score Default `cos(pi / 6)`. Minimum directional
+#' agreement for a continuation candidate.
+#'
+#' @return Selected, ambiguous, and rejected continuation diagnostics.
+#' @keywords internal
+select_render_road_continuations = function(
+  prepared,
+  endpoint_tolerance = 1e-2,
+  continuation_tolerance = 0.25,
+  minimum_direction_score = cos(pi / 6)
+) {
+  endpoints = prepared$endpoints
+  empty = sf::st_sf(
+    continuation_id = integer(0),
+    endpoint_a = integer(0),
+    endpoint_b = integer(0),
+    fragment_a = integer(0),
+    fragment_b = integer(0),
+    side_a = character(0),
+    side_b = character(0),
+    endpoint_distance = numeric(0),
+    direction_score = numeric(0),
+    same_way = logical(0),
+    same_ref = logical(0),
+    same_name = logical(0),
+    same_highway = logical(0),
+    exact_endpoint = logical(0),
+    metadata_match = character(0),
+    selection_score = numeric(0),
+    selection_reason = character(0),
+    status = character(0),
+    geometry = sf::st_sfc(crs = sf::st_crs(endpoints))
+  )
+  if (nrow(endpoints) < 2L) {
+    return(list(
+      selected = empty,
+      ambiguous = empty,
+      rejected = empty,
+      candidates = empty
+    ))
+  }
+  continuation_tolerance = suppressWarnings(as.numeric(
+    continuation_tolerance[[1L]]
+  ))
+  if (!is.finite(continuation_tolerance) || continuation_tolerance <= 0) {
+    continuation_tolerance = 0.25
+  }
+  endpoint_tolerance = suppressWarnings(as.numeric(endpoint_tolerance[[1L]]))
+  if (!is.finite(endpoint_tolerance) || endpoint_tolerance <= 0) {
+    endpoint_tolerance = 1e-2
+  }
+
+  nearby = sf::st_is_within_distance(
+    endpoints,
+    endpoints,
+    dist = continuation_tolerance
+  )
+  pair_index = lapply(seq_along(nearby), function(first) {
+    second = nearby[[first]]
+    second = second[
+      second > first &
+        endpoints$render_road_fragment_id[second] !=
+          endpoints$render_road_fragment_id[[first]]
+    ]
+    if (!length(second)) {
+      return(NULL)
+    }
+    cbind(first = first, second = second)
+  })
+  pair_index = Filter(Negate(is.null), pair_index)
+  if (!length(pair_index)) {
+    return(list(
+      selected = empty,
+      ambiguous = empty,
+      rejected = empty,
+      candidates = empty
+    ))
+  }
+  pair_index = do.call(rbind, pair_index)
+
+  clean_metadata = function(value) {
+    value = trimws(as.character(value))
+    value[is.na(value) | !nzchar(value)] = NA_character_
+    tolower(value)
+  }
+  endpoint_coordinates = sf::st_coordinates(endpoints)[, 1:2, drop = FALSE]
+  candidate_rows = lapply(seq_len(nrow(pair_index)), function(candidate_id) {
+    first = pair_index[candidate_id, 1L]
+    second = pair_index[candidate_id, 2L]
+    gap = endpoint_coordinates[second, ] - endpoint_coordinates[first, ]
+    gap_distance = sqrt(sum(gap^2))
+    exact_endpoint = gap_distance <= endpoint_tolerance
+    inward_a = c(endpoints$direction_x[[first]], endpoints$direction_y[[first]])
+    inward_b = c(
+      endpoints$direction_x[[second]],
+      endpoints$direction_y[[second]]
+    )
+    through_score = -sum(inward_a * inward_b)
+    if (exact_endpoint) {
+      alignment_a = 1
+      alignment_b = 1
+    } else {
+      gap_direction = gap / gap_distance
+      alignment_a = -sum(gap_direction * inward_a)
+      alignment_b = sum(gap_direction * inward_b)
+    }
+    direction_score = min(through_score, alignment_a, alignment_b)
+
+    way_a = clean_metadata(endpoints$render_road_way_id[[first]])
+    way_b = clean_metadata(endpoints$render_road_way_id[[second]])
+    ref_a = clean_metadata(endpoints$render_road_ref[[first]])
+    ref_b = clean_metadata(endpoints$render_road_ref[[second]])
+    name_a = clean_metadata(endpoints$render_road_name[[first]])
+    name_b = clean_metadata(endpoints$render_road_name[[second]])
+    highway_a = clean_metadata(endpoints$render_road_highway[[first]])
+    highway_b = clean_metadata(endpoints$render_road_highway[[second]])
+    same_value = function(first_value, second_value) {
+      !is.na(first_value) &&
+        !is.na(second_value) &&
+        identical(first_value, second_value)
+    }
+    same_way = same_value(way_a, way_b) ||
+      endpoints$render_road_feature_id[[first]] ==
+        endpoints$render_road_feature_id[[second]]
+    same_ref = same_value(ref_a, ref_b)
+    same_name = same_value(name_a, name_b)
+    same_highway = same_value(highway_a, highway_b)
+    metadata_match = c(
+      if (same_way) "way",
+      if (same_ref) "ref",
+      if (same_name) "name",
+      if (same_highway) "highway"
+    )
+    if (!length(metadata_match)) {
+      metadata_match = "direction"
+    }
+    selection_score = 10000 *
+      exact_endpoint +
+      1000 *
+        same_way +
+      100 * same_ref +
+      50 * same_name +
+      10 * same_highway +
+      direction_score
+    eligible = is.finite(direction_score) &&
+      direction_score >= minimum_direction_score
+    selection_reason = if (!eligible) {
+      "direction_mismatch"
+    } else if (exact_endpoint) {
+      "exact_shared_endpoint"
+    } else if (same_way) {
+      "same_way"
+    } else if (same_ref) {
+      "matching_ref"
+    } else if (same_name) {
+      "matching_name"
+    } else if (same_highway) {
+      "compatible_highway"
+    } else {
+      "unique_direction"
+    }
+    sf::st_sf(
+      continuation_id = candidate_id,
+      endpoint_a = endpoints$render_road_endpoint_id[[first]],
+      endpoint_b = endpoints$render_road_endpoint_id[[second]],
+      fragment_a = endpoints$render_road_fragment_id[[first]],
+      fragment_b = endpoints$render_road_fragment_id[[second]],
+      side_a = endpoints$endpoint_side[[first]],
+      side_b = endpoints$endpoint_side[[second]],
+      endpoint_distance = gap_distance,
+      direction_score = direction_score,
+      same_way = same_way,
+      same_ref = same_ref,
+      same_name = same_name,
+      same_highway = same_highway,
+      exact_endpoint = exact_endpoint,
+      metadata_match = paste(metadata_match, collapse = "+"),
+      selection_score = selection_score,
+      selection_reason = selection_reason,
+      eligible = eligible,
+      status = if (eligible) "candidate" else "rejected",
+      geometry = sf::st_sfc(
+        sf::st_linestring(rbind(
+          endpoint_coordinates[first, ],
+          endpoint_coordinates[second, ]
+        )),
+        crs = sf::st_crs(endpoints)
+      )
+    )
+  })
+  candidates = do.call(rbind, candidate_rows)
+  eligible_rows = which(candidates$eligible)
+  best_candidate = integer(nrow(endpoints))
+  ambiguous_endpoint = logical(nrow(endpoints))
+  for (endpoint_row in seq_len(nrow(endpoints))) {
+    endpoint_id = endpoints$render_road_endpoint_id[[endpoint_row]]
+    rows = eligible_rows[
+      candidates$endpoint_a[eligible_rows] == endpoint_id |
+        candidates$endpoint_b[eligible_rows] == endpoint_id
+    ]
+    if (!length(rows)) {
+      next
+    }
+    score = candidates$selection_score[rows]
+    best = rows[score >= max(score) - 1e-8]
+    if (length(best) == 1L) {
+      best_candidate[[endpoint_row]] = best
+    } else {
+      ambiguous_endpoint[[endpoint_row]] = TRUE
+    }
+  }
+
+  endpoint_row = setNames(
+    seq_len(nrow(endpoints)),
+    endpoints$render_road_endpoint_id
+  )
+  for (row in eligible_rows) {
+    first = endpoint_row[[as.character(candidates$endpoint_a[[row]])]]
+    second = endpoint_row[[as.character(candidates$endpoint_b[[row]])]]
+    if (
+      best_candidate[[first]] == row &&
+        best_candidate[[second]] == row
+    ) {
+      candidates$status[[row]] = "selected"
+    } else if (
+      ambiguous_endpoint[[first]] ||
+        ambiguous_endpoint[[second]]
+    ) {
+      candidates$status[[row]] = "ambiguous"
+      candidates$selection_reason[[row]] = "ambiguous_best_match"
+    } else {
+      candidates$status[[row]] = "rejected"
+      candidates$selection_reason[[row]] = "non_mutual_best_match"
+    }
+  }
+  candidates$eligible = NULL
+  candidates$continuation_id = seq_len(nrow(candidates))
+  list(
+    selected = candidates[candidates$status == "selected", , drop = FALSE],
+    ambiguous = candidates[candidates$status == "ambiguous", , drop = FALSE],
+    rejected = candidates[candidates$status == "rejected", , drop = FALSE],
+    candidates = candidates
+  )
+}
+
+#' Build an igraph road topology graph
+#'
+#' @param prepared Prepared road layer features.
+#' @param events Exact road layer events.
+#' @param continuations Continuation selection diagnostics.
+#'
+#' @return Fragment graph and solve-component membership.
+#' @keywords internal
+build_render_road_topology_graph = function(prepared, events, continuations) {
+  if (!requireNamespace("igraph", quietly = TRUE)) {
+    stop("The `igraph` package is required for road layer topology.")
+  }
+  fragments = prepared$fragments
+  fragment_id = fragments$render_road_fragment_id
+  vertices = data.frame(
+    name = as.character(fragment_id),
+    render_road_fragment_id = fragment_id,
+    render_road_feature_id = fragments$render_road_feature_id,
+    render_road_layer = fragments$render_road_layer,
+    stringsAsFactors = FALSE
+  )
+
+  participant_edges = function(participants, event_id_column, edge_type) {
+    if (!nrow(participants)) {
+      return(NULL)
+    }
+    groups = split(
+      participants$render_road_fragment_id,
+      participants[[event_id_column]]
+    )
+    rows = lapply(groups, function(group) {
+      group = unique(group)
+      if (length(group) < 2L) {
+        return(NULL)
+      }
+      pairs = utils::combn(group, 2L)
+      data.frame(
+        from = as.character(pairs[1L, ]),
+        to = as.character(pairs[2L, ]),
+        topology_type = edge_type,
+        stringsAsFactors = FALSE
+      )
+    })
+    rows = Filter(Negate(is.null), rows)
+    if (length(rows)) do.call(rbind, rows) else NULL
+  }
+  edge_rows = list(
+    participant_edges(
+      events$crossings$participants,
+      "crossing_id",
+      "crossing"
+    ),
+    participant_edges(
+      events$junctions$participants,
+      "junction_id",
+      "junction"
+    )
+  )
+  if (nrow(events$overlaps)) {
+    edge_rows[[length(edge_rows) + 1L]] = data.frame(
+      from = as.character(events$overlaps$fragment_a),
+      to = as.character(events$overlaps$fragment_b),
+      topology_type = "overlap",
+      stringsAsFactors = FALSE
+    )
+  }
+  if (nrow(continuations$selected)) {
+    edge_rows[[length(edge_rows) + 1L]] = data.frame(
+      from = as.character(continuations$selected$fragment_a),
+      to = as.character(continuations$selected$fragment_b),
+      topology_type = "continuation",
+      stringsAsFactors = FALSE
+    )
+  }
+  edge_rows = Filter(function(value) !is.null(value) && nrow(value), edge_rows)
+  edges = if (length(edge_rows)) {
+    do.call(rbind, edge_rows)
+  } else {
+    data.frame(
+      from = character(0),
+      to = character(0),
+      topology_type = character(0)
+    )
+  }
+  graph = igraph::graph_from_data_frame(
+    edges,
+    directed = FALSE,
+    vertices = vertices
+  )
+  component = igraph::components(graph)$membership
+  components = data.frame(
+    render_road_fragment_id = as.integer(names(component)),
+    solve_component_id = as.integer(component),
+    stringsAsFactors = FALSE
+  )
+  components = components[
+    match(fragment_id, components$render_road_fragment_id),
+  ]
+  list(graph = graph, components = components, edges = edges)
+}
+
+#' Build complete local road layer topology
+#'
+#' @param prepared Prepared road layer features.
+#' @param endpoint_tolerance Default `1e-2`. Exact topology tolerance in metres.
+#' @param continuation_tolerance Default `0.25`. Maximum true continuation gap
+#' in metres.
+#'
+#' @return Prepared features, events, continuations, graph, and diagnostics.
+#' @keywords internal
+build_render_road_layer_topology = function(
+  prepared,
+  endpoint_tolerance = 1e-2,
+  continuation_tolerance = 0.25
+) {
+  events = find_render_road_layer_events(
+    prepared = prepared,
+    endpoint_tolerance = endpoint_tolerance
+  )
+  continuations = select_render_road_continuations(
+    prepared = prepared,
+    endpoint_tolerance = endpoint_tolerance,
+    continuation_tolerance = continuation_tolerance
+  )
+  topology_graph = build_render_road_topology_graph(
+    prepared = prepared,
+    events = events,
+    continuations = continuations
+  )
+  fragments = prepared$fragments
+  fragments$solve_component_id = topology_graph$components$solve_component_id
+
+  crossing_stack = events$crossings$participants
+  if (nrow(crossing_stack)) {
+    crossing_stack = crossing_stack[
+      order(
+        crossing_stack$crossing_id,
+        crossing_stack$render_road_layer,
+        crossing_stack$render_road_fragment_id
+      ),
+      ,
+      drop = FALSE
+    ]
+    crossing_stack$local_order = ave(
+      crossing_stack$render_road_layer,
+      crossing_stack$crossing_id,
+      FUN = seq_along
+    )
+  } else {
+    crossing_stack$local_order = integer(0)
+  }
+
+  list(
+    prepared = prepared,
+    fragments = fragments,
+    endpoints = prepared$endpoints,
+    junctions = events$junctions$events,
+    junction_participants = events$junctions$participants,
+    crossings = events$crossings$events,
+    crossing_participants = crossing_stack,
+    crossing_pairs = events$crossings$pairs,
+    no_layer_relationships = events$no_relationship$events,
+    no_layer_relationship_participants = events$no_relationship$participants,
+    overlaps = events$overlaps,
+    selected_continuations = continuations$selected,
+    ambiguous_continuations = continuations$ambiguous,
+    rejected_continuations = continuations$rejected,
+    continuation_candidates = continuations$candidates,
+    graph = topology_graph$graph,
+    graph_edges = topology_graph$edges,
+    components = topology_graph$components,
+    diagnostics = list(
+      candidate_pair_count = events$candidate_pair_count,
+      dropped_fragment_id = prepared$dropped_fragment_id,
+      endpoint_tolerance = endpoint_tolerance,
+      continuation_tolerance = continuation_tolerance
+    )
+  )
+}
+
+# Road topology diagnostics -----------------------------------------------
+
+#' Resolve road topology layer colors
+#'
+#' @param layer Effective numeric road layers.
+#' @param layer_colors Default `NULL`. Optional named or layer-ordered colors.
+#'
+#' @return A named character vector mapping layers to colors.
+#' @keywords internal
+resolve_render_road_topology_layer_colors = function(
+  layer,
+  layer_colors = NULL
+) {
+  layer_levels = as.character(sort(unique(layer)))
+  default_colors = c(
+    `-2` = "#2d004b",
+    `-1` = "#7b3294",
+    `0` = "#5f6368",
+    `1` = "#e66101",
+    `2` = "#d73027",
+    `3` = "#a50026",
+    `4` = "#67000d"
+  )
+  resolved = unname(default_colors[layer_levels])
+  missing_color = is.na(resolved)
+  if (any(missing_color)) {
+    resolved[missing_color] = grDevices::hcl.colors(
+      sum(missing_color),
+      palette = "Dark 3"
+    )
+  }
+  names(resolved) = layer_levels
+
+  if (!is.null(layer_colors)) {
+    layer_colors = as.character(layer_colors)
+    color_names = names(layer_colors)
+    if (is.null(color_names)) {
+      if (length(layer_colors) != length(layer_levels)) {
+        stop(
+          "Unnamed `layer_colors` must supply one color per effective layer.",
+          call. = FALSE
+        )
+      }
+      names(layer_colors) = layer_levels
+    } else if (any(is.na(color_names) | !nzchar(color_names))) {
+      stop("Named `layer_colors` cannot contain empty names.", call. = FALSE)
+    }
+    matched = intersect(names(layer_colors), layer_levels)
+    resolved[matched] = layer_colors[matched]
+  }
+  valid_colors = tryCatch(
+    {
+      grDevices::col2rgb(unname(resolved))
+      TRUE
+    },
+    error = function(error) FALSE
+  )
+  if (!valid_colors) {
+    stop("`layer_colors` contains an invalid color.", call. = FALSE)
+  }
+  resolved
+}
+
+#' Calculate a point along a road topology line
+#'
+#' @param geometry LINESTRING geometry.
+#' @param fraction Default `0.5`. Fraction of line length used for the point.
+#'
+#' @return Two-value point coordinate.
+#' @keywords internal
+calculate_render_road_topology_line_point = function(
+  geometry,
+  fraction = 0.5
+) {
+  coordinates = unclass(geometry)[, 1:2, drop = FALSE]
+  if (nrow(coordinates) < 2L) {
+    return(rep(NA_real_, 2L))
+  }
+  fraction = suppressWarnings(as.numeric(fraction[[1L]]))
+  if (!is.finite(fraction)) {
+    fraction = 0.5
+  }
+  fraction = min(max(fraction, 0), 1)
+  segment = coordinates[-1L, , drop = FALSE] -
+    coordinates[-nrow(coordinates), , drop = FALSE]
+  segment_length = sqrt(rowSums(segment^2))
+  total_length = sum(segment_length)
+  if (!is.finite(total_length) || total_length <= 0) {
+    return(colMeans(coordinates[c(1L, nrow(coordinates)), , drop = FALSE]))
+  }
+  cumulative = c(0, cumsum(segment_length))
+  target_distance = total_length * fraction
+  segment_index = which(cumulative[-1L] >= target_distance)[1L]
+  if (!length(segment_index) || is.na(segment_index)) {
+    segment_index = length(segment_length)
+  }
+  local_fraction = if (segment_length[[segment_index]] > 0) {
+    (target_distance - cumulative[[segment_index]]) /
+      segment_length[[segment_index]]
+  } else {
+    0
+  }
+  coordinates[segment_index, ] + local_fraction * segment[segment_index, ]
+}
+
+#' Resolve the detailed road topology plot bounds
+#'
+#' @param topology Road topology diagnostics.
+#' @param focus Default `NULL`. Optional metric focus bounds or center.
+#'
+#' @return Four named metric plot bounds.
+#' @keywords internal
+resolve_render_road_topology_focus = function(topology, focus = NULL) {
+  fragments = topology$fragments
+  complete_bounds = sf::st_bbox(fragments)
+  span_x = complete_bounds[["xmax"]] - complete_bounds[["xmin"]]
+  span_y = complete_bounds[["ymax"]] - complete_bounds[["ymin"]]
+  detail_width = max(
+    span_x * 0.36,
+    topology$diagnostics$endpoint_tolerance * 20
+  )
+  detail_height = max(
+    span_y * 0.36,
+    topology$diagnostics$endpoint_tolerance * 20
+  )
+
+  if (!is.null(focus)) {
+    if (inherits(focus, "bbox")) {
+      focus = unclass(focus)
+    }
+    if (!is.numeric(focus) || !(length(focus) %in% c(2L, 4L))) {
+      stop(
+        "`focus` must be a two-value center or four-value metric bounding box.",
+        call. = FALSE
+      )
+    }
+    focus = as.numeric(focus)
+    if (any(!is.finite(focus))) {
+      stop("`focus` values must be finite.", call. = FALSE)
+    }
+    if (length(focus) == 4L) {
+      bounds = setNames(focus, c("xmin", "ymin", "xmax", "ymax"))
+      if (
+        bounds[["xmax"]] <= bounds[["xmin"]] ||
+          bounds[["ymax"]] <= bounds[["ymin"]]
+      ) {
+        stop("`focus` bounding-box maxima must exceed minima.", call. = FALSE)
+      }
+      return(bounds)
+    }
+    center = focus
+  } else if (nrow(topology$crossings)) {
+    crossing_geometry = sf::st_geometry(topology$crossings)
+    density_radius = max(
+      min(span_x, span_y) * 0.12,
+      topology$diagnostics$endpoint_tolerance * 20
+    )
+    crossing_density = lengths(sf::st_is_within_distance(
+      crossing_geometry,
+      crossing_geometry,
+      dist = density_radius
+    ))
+    center = sf::st_coordinates(
+      crossing_geometry[which.max(crossing_density)]
+    )[1L, 1:2]
+  } else {
+    center = c(
+      mean(complete_bounds[c("xmin", "xmax")]),
+      mean(complete_bounds[c("ymin", "ymax")])
+    )
+  }
+  c(
+    xmin = center[[1L]] - detail_width / 2,
+    ymin = center[[2L]] - detail_height / 2,
+    xmax = center[[1L]] + detail_width / 2,
+    ymax = center[[2L]] + detail_height / 2
+  )
+}
+
+#' Draw one road topology diagnostic panel
+#'
+#' @param topology Road topology diagnostics.
+#' @param bounds Four named metric plot bounds.
+#' @param title Panel title.
+#' @param label_fragment_id Fragment identifiers to label.
+#' @param layer_colors Named effective-layer colors.
+#' @param label_components Whether to draw component identifiers.
+#' @param show_legend Whether to draw the symbol legend.
+#' @param road_width Road line width.
+#' @param label_size Label size.
+#'
+#' @return Invisibly returns `topology`.
+#' @keywords internal
+draw_render_road_topology_panel = function(
+  topology,
+  bounds,
+  title,
+  label_fragment_id,
+  layer_colors,
+  label_components = TRUE,
+  show_legend = TRUE,
+  road_width = 2,
+  label_size = 0.55
+) {
+  fragments = topology$fragments
+  line_points = function(object, fraction = 0.5) {
+    if (!nrow(object)) {
+      return(matrix(numeric(0), ncol = 2L))
+    }
+    t(vapply(
+      sf::st_geometry(object),
+      calculate_render_road_topology_line_point,
+      numeric(2),
+      fraction = fraction
+    ))
+  }
+
+  graphics::plot(
+    sf::st_geometry(fragments),
+    col = unname(layer_colors[as.character(fragments$render_road_layer)]),
+    lwd = road_width,
+    xlim = bounds[c("xmin", "xmax")],
+    ylim = bounds[c("ymin", "ymax")],
+    axes = TRUE,
+    reset = FALSE,
+    main = title
+  )
+  graphics::box(col = "#222222")
+
+  if (nrow(topology$overlaps)) {
+    graphics::plot(
+      sf::st_geometry(topology$overlaps),
+      add = TRUE,
+      col = "#00a6a6",
+      lwd = road_width + 4
+    )
+    graphics::plot(
+      sf::st_geometry(topology$overlaps),
+      add = TRUE,
+      col = "#bdf2f2",
+      lwd = max(2, road_width - 1)
+    )
+  }
+  if (nrow(topology$junctions)) {
+    graphics::plot(
+      sf::st_geometry(topology$junctions),
+      add = TRUE,
+      pch = 21,
+      bg = "#40c463",
+      col = "#005a24",
+      cex = max(0.45, min(1.1, road_width / 2.5))
+    )
+  }
+  if (nrow(topology$crossings)) {
+    graphics::plot(
+      sf::st_geometry(topology$crossings),
+      add = TRUE,
+      pch = 4,
+      col = "#d50000",
+      lwd = 2,
+      cex = max(0.55, min(1.25, road_width / 2))
+    )
+  }
+  continuation_size = max(0.38, min(0.9, road_width / 5))
+  if (nrow(topology$selected_continuations)) {
+    graphics::plot(
+      sf::st_geometry(topology$selected_continuations),
+      add = TRUE,
+      col = "#0878d1",
+      lwd = max(1.2, road_width * 0.65)
+    )
+    graphics::points(
+      line_points(topology$selected_continuations),
+      pch = 23,
+      bg = grDevices::adjustcolor("#37a8ff", alpha.f = 0.82),
+      col = "#005a9c",
+      cex = continuation_size
+    )
+  }
+  if (nrow(topology$ambiguous_continuations)) {
+    graphics::plot(
+      sf::st_geometry(topology$ambiguous_continuations),
+      add = TRUE,
+      col = "#ed8b00",
+      lwd = max(1.2, road_width * 0.5),
+      lty = 2
+    )
+    graphics::points(
+      line_points(topology$ambiguous_continuations),
+      pch = 24,
+      bg = "#ffb000",
+      col = "#8c510a",
+      cex = continuation_size * 1.1
+    )
+  }
+
+  label_fragment_id = intersect(
+    as.integer(label_fragment_id),
+    fragments$render_road_fragment_id
+  )
+  if (length(label_fragment_id)) {
+    label_rows = match(
+      label_fragment_id,
+      fragments$render_road_fragment_id
+    )
+    label_fraction = ifelse(seq_along(label_rows) %% 2L, 0.67, 0.36)
+    label_points = t(vapply(
+      seq_along(label_rows),
+      function(label_index) {
+        calculate_render_road_topology_line_point(
+          sf::st_geometry(fragments)[[label_rows[[label_index]]]],
+          label_fraction[[label_index]]
+        )
+      },
+      numeric(2)
+    ))
+    graphics::text(
+      label_points,
+      labels = sprintf(
+        "S%d/F%d L%s C%d",
+        fragments$render_road_feature_id[label_rows],
+        fragments$render_road_fragment_id[label_rows],
+        fragments$render_road_layer[label_rows],
+        fragments$solve_component_id[label_rows]
+      ),
+      pos = 3,
+      cex = label_size,
+      col = "#151515",
+      xpd = NA
+    )
+  }
+
+  if (isTRUE(label_components)) {
+    fragment_midpoints = line_points(fragments)
+    component_groups = split(
+      seq_len(nrow(fragments)),
+      fragments$solve_component_id
+    )
+    for (component in names(component_groups)) {
+      component_point = colMeans(fragment_midpoints[
+        component_groups[[component]],
+        ,
+        drop = FALSE
+      ])
+      graphics::text(
+        component_point[[1L]],
+        component_point[[2L]],
+        labels = paste0("C", component),
+        cex = 0.8,
+        font = 2,
+        col = grDevices::adjustcolor("#005a9c", alpha.f = 0.8),
+        pos = 4
+      )
+    }
+  }
+
+  if (isTRUE(show_legend)) {
+    layers_present = sort(unique(fragments$render_road_layer))
+    layer_count = length(layers_present)
+    graphics::legend(
+      "bottomleft",
+      legend = c(
+        paste0("layer ", layers_present),
+        "shared junction",
+        "interior crossing",
+        "overlap section",
+        "selected continuation",
+        "ambiguous continuation"
+      ),
+      col = c(
+        unname(layer_colors[as.character(layers_present)]),
+        "#005a24",
+        "#d50000",
+        "#00a6a6",
+        "#0878d1",
+        "#ed8b00"
+      ),
+      lwd = c(rep(4, layer_count), NA, 2, 6, 3, 2),
+      lty = c(rep(1, layer_count), NA, NA, 1, 1, 2),
+      pch = c(rep(NA, layer_count), 21, 4, NA, 23, 24),
+      pt.bg = c(
+        rep(NA, layer_count),
+        "#40c463",
+        NA,
+        NA,
+        "#37a8ff",
+        "#ffb000"
+      ),
+      bg = grDevices::adjustcolor("white", alpha.f = 0.9),
+      cex = 0.72
+    )
+  }
+  graphics::mtext(
+    sprintf(
+      paste0(
+        "%d fragments | %d junctions | %d crossings | %d overlaps | ",
+        "%d selected | %d ambiguous"
+      ),
+      nrow(fragments),
+      nrow(topology$junctions),
+      nrow(topology$crossings),
+      nrow(topology$overlaps),
+      nrow(topology$selected_continuations),
+      nrow(topology$ambiguous_continuations)
+    ),
+    side = 1,
+    line = 3,
+    cex = 0.75
+  )
+  invisible(topology)
+}
+
+#' Plot Road Layer Topology
+#'
+#' @description Processes road features into the local layer-event topology
+#' used by [render_roads()] and draws reproducible two-dimensional diagnostics.
+#' The plot distinguishes effective layers, source and fragment IDs, shared
+#' junctions, interior crossings, overlaps, selected and ambiguous
+#' continuations, and solve components.
+#'
+#' @param roads Road `sf` LINESTRING or MULTILINESTRING features.
+#' @param layer An unquoted or character column name containing
+#' OpenStreetMap-style layer values. Missing values are treated as implicit
+#' layer `0` while retaining their implicit status.
+#' @param layer_height Default `5.5`. A positive constant clearance or an
+#' unquoted or character column name containing positive feature clearances.
+#' @param boundary Default `NULL`. Optional supplied-data boundary geometry.
+#' Endpoints near this boundary are marked in the returned diagnostics.
+#' @param boundary_tolerance Default `1`. Distance in metres used to identify
+#' endpoints on the supplied-data boundary.
+#' @param endpoint_tolerance Default `1e-2`. Exact topology tolerance in metres.
+#' @param continuation_tolerance Default `0.25`. Maximum true continuation gap
+#' in metres.
+#' @param views Default `c("overview", "crossing_detail")`. Panels to draw.
+#' Supported values are `"overview"` and `"crossing_detail"`.
+#' @param focus Default `NULL`. Optional two-value metric center or four-value
+#' metric bounding box for the crossing-detail panel. By default, the function
+#' locates the densest crossing neighborhood.
+#' @param labels Default `TRUE`. Whether to label source, fragment, layer, and
+#' component IDs.
+#' @param max_labels Default `40`. Maximum number of fragment labels per panel.
+#' @param label_components Default `TRUE`. Whether to draw component IDs.
+#' @param layer_colors Default `NULL`. Optional named or layer-ordered colors.
+#' @param main Default `NULL`. Optional title or one title per requested view.
+#' @param filename Default `NULL`. Optional PNG output path. When omitted, the
+#' diagnostic is drawn on the active graphics device.
+#' @param width Default `2400`. PNG width in pixels.
+#' @param height Default `1400`. PNG height in pixels.
+#' @param res Default `150`. PNG resolution in pixels per inch.
+#'
+#' @return Invisibly returns a `render_road_topology` list containing prepared
+#' fragments, exact events, continuation diagnostics, the `igraph` graph,
+#' component membership, and plot metadata.
+#' @export
+plot_render_road_topology = function(
+  roads,
+  layer,
+  layer_height = 5.5,
+  boundary = NULL,
+  boundary_tolerance = 1,
+  endpoint_tolerance = 1e-2,
+  continuation_tolerance = 0.25,
+  views = c("overview", "crossing_detail"),
+  focus = NULL,
+  labels = TRUE,
+  max_labels = 40,
+  label_components = TRUE,
+  layer_colors = NULL,
+  main = NULL,
+  filename = NULL,
+  width = 2400,
+  height = 1400,
+  res = 150
+) {
+  if (!requireNamespace("sf", quietly = TRUE)) {
+    stop("The `sf` package is required for road topology plots.", call. = FALSE)
+  }
+  if (!inherits(roads, "sf") || !nrow(roads)) {
+    stop("`roads` must be a non-empty `sf` road object.", call. = FALSE)
+  }
+  layer_column = resolve_render_road_column(
+    value = layer,
+    value_expr = substitute(layer),
+    value_missing = missing(layer),
+    argument = "layer"
+  )
+  if (is.null(layer_column)) {
+    stop("`layer` must name a column in `roads`.", call. = FALSE)
+  }
+  layer_height_spec = resolve_render_road_layer_height(
+    value = layer_height,
+    value_expr = substitute(layer_height),
+    value_missing = missing(layer_height)
+  )
+  if (!is.null(layer_height_spec$spacing)) {
+    spacing = suppressWarnings(as.numeric(layer_height_spec$spacing[[1L]]))
+    if (!is.finite(spacing) || spacing <= 0) {
+      stop("Numeric `layer_height` must be positive and finite.", call. = FALSE)
+    }
+    layer_height_spec$spacing = spacing
+  }
+  validate_tolerance = function(value, argument, allow_zero = FALSE) {
+    if (!is.numeric(value) || length(value) != 1L) {
+      stop(sprintf("`%s` must be a single number.", argument), call. = FALSE)
+    }
+    value = suppressWarnings(as.numeric(value[[1L]]))
+    invalid = !is.finite(value) || if (allow_zero) value < 0 else value <= 0
+    if (invalid) {
+      qualifier = if (allow_zero) "non-negative" else "positive"
+      stop(
+        sprintf("`%s` must be %s and finite.", argument, qualifier),
+        call. = FALSE
+      )
+    }
+    value
+  }
+  boundary_tolerance = validate_tolerance(
+    boundary_tolerance,
+    "boundary_tolerance",
+    allow_zero = TRUE
+  )
+  endpoint_tolerance = validate_tolerance(
+    endpoint_tolerance,
+    "endpoint_tolerance"
+  )
+  continuation_tolerance = validate_tolerance(
+    continuation_tolerance,
+    "continuation_tolerance"
+  )
+
+  supported_views = c("overview", "crossing_detail")
+  if (
+    !is.character(views) ||
+      !length(views) ||
+      any(is.na(views) | !(views %in% supported_views))
+  ) {
+    stop(
+      "`views` must contain `\"overview\"` or `\"crossing_detail\"`.",
+      call. = FALSE
+    )
+  }
+  views = unique(views)
+  if (!is.logical(labels) || length(labels) != 1L || is.na(labels)) {
+    stop("`labels` must be `TRUE` or `FALSE`.", call. = FALSE)
+  }
+  if (
+    !is.logical(label_components) ||
+      length(label_components) != 1L ||
+      is.na(label_components)
+  ) {
+    stop("`label_components` must be `TRUE` or `FALSE`.", call. = FALSE)
+  }
+  if (
+    !is.numeric(max_labels) ||
+      length(max_labels) != 1L ||
+      !is.finite(max_labels) ||
+      max_labels < 0 ||
+      max_labels != floor(max_labels)
+  ) {
+    stop("`max_labels` must be a non-negative integer.", call. = FALSE)
+  }
+  max_labels = as.integer(max_labels)
+
+  prepared = prepare_render_road_layer_features(
+    roads = roads,
+    layer_column = layer_column,
+    layer_height_column = layer_height_spec$column,
+    boundary = boundary,
+    boundary_tolerance = boundary_tolerance
+  )
+  topology = build_render_road_layer_topology(
+    prepared = prepared,
+    endpoint_tolerance = endpoint_tolerance,
+    continuation_tolerance = continuation_tolerance
+  )
+  topology$layer_spacing = layer_height_spec$spacing
+  topology$layer_height_column = layer_height_spec$column
+  class(topology) = c("render_road_topology", class(topology))
+
+  complete_bounds = sf::st_bbox(topology$fragments)
+  span_x = complete_bounds[["xmax"]] - complete_bounds[["xmin"]]
+  span_y = complete_bounds[["ymax"]] - complete_bounds[["ymin"]]
+  padding_reference = max(
+    span_x,
+    span_y,
+    topology$diagnostics$endpoint_tolerance * 20
+  )
+  overview_bounds = c(
+    xmin = complete_bounds[["xmin"]] -
+      max(span_x * 0.08, padding_reference * 0.01),
+    ymin = complete_bounds[["ymin"]] -
+      max(span_y * 0.08, padding_reference * 0.01),
+    xmax = complete_bounds[["xmax"]] +
+      max(span_x * 0.08, padding_reference * 0.01),
+    ymax = complete_bounds[["ymax"]] +
+      max(span_y * 0.08, padding_reference * 0.01)
+  )
+  detail_bounds = resolve_render_road_topology_focus(topology, focus)
+  panel_bounds = list(
+    overview = overview_bounds,
+    crossing_detail = detail_bounds
+  )
+  resolved_colors = resolve_render_road_topology_layer_colors(
+    topology$fragments$render_road_layer,
+    layer_colors
+  )
+
+  sample_fragment_ids = function(fragment_id) {
+    fragment_id = unique(as.integer(fragment_id))
+    if (!isTRUE(labels) || !max_labels || !length(fragment_id)) {
+      return(integer(0))
+    }
+    if (length(fragment_id) <= max_labels) {
+      return(fragment_id)
+    }
+    fragment_id[unique(round(seq(
+      1,
+      length(fragment_id),
+      length.out = max_labels
+    )))]
+  }
+  fragments = topology$fragments
+  overview_candidates = fragments$render_road_fragment_id[
+    fragments$render_road_layer_explicit
+  ]
+  if (!length(overview_candidates)) {
+    overview_candidates = fragments$render_road_fragment_id
+  }
+  detail_polygon = sf::st_as_sfc(sf::st_bbox(
+    detail_bounds,
+    crs = sf::st_crs(fragments)
+  ))
+  detail_rows = which(
+    lengths(sf::st_intersects(
+      fragments,
+      detail_polygon
+    )) >
+      0L
+  )
+  event_fragments = unique(c(
+    topology$crossing_participants$render_road_fragment_id,
+    topology$junction_participants$render_road_fragment_id
+  ))
+  detail_candidates = intersect(
+    fragments$render_road_fragment_id[detail_rows],
+    event_fragments
+  )
+  if (!length(detail_candidates)) {
+    detail_candidates = fragments$render_road_fragment_id[detail_rows]
+  }
+  panel_labels = list(
+    overview = sample_fragment_ids(overview_candidates),
+    crossing_detail = sample_fragment_ids(detail_candidates)
+  )
+
+  default_title = c(
+    overview = "Road layer topology overview",
+    crossing_detail = "Densest crossing neighborhood"
+  )
+  if (is.null(main)) {
+    panel_title = unname(default_title[views])
+  } else {
+    main = as.character(main)
+    if (!(length(main) %in% c(1L, length(views))) || any(is.na(main))) {
+      stop(
+        "`main` must contain one title or one title per view.",
+        call. = FALSE
+      )
+    }
+    panel_title = rep(main, length.out = length(views))
+  }
+
+  opened_device = FALSE
+  if (!is.null(filename)) {
+    if (
+      !is.character(filename) ||
+        length(filename) != 1L ||
+        is.na(filename) ||
+        !nzchar(filename)
+    ) {
+      stop("`filename` must be a single non-empty path.", call. = FALSE)
+    }
+    dimensions = suppressWarnings(as.numeric(c(width, height, res)))
+    if (
+      length(dimensions) != 3L || any(!is.finite(dimensions) | dimensions <= 0)
+    ) {
+      stop(
+        "`width`, `height`, and `res` must be positive numbers.",
+        call. = FALSE
+      )
+    }
+    if (!dir.exists(dirname(filename))) {
+      stop("The directory containing `filename` does not exist.", call. = FALSE)
+    }
+    grDevices::png(
+      filename = filename,
+      width = dimensions[[1L]],
+      height = dimensions[[2L]],
+      res = dimensions[[3L]]
+    )
+    opened_device = TRUE
+  }
+  previous_parameters = graphics::par(no.readonly = TRUE)
+  on.exit(
+    {
+      try(graphics::par(previous_parameters), silent = TRUE)
+      if (opened_device) {
+        grDevices::dev.off()
+      }
+    },
+    add = TRUE
+  )
+  graphics::par(
+    mfrow = c(1L, length(views)),
+    mar = c(5.2, 4.2, 4.2, 1.2)
+  )
+  for (panel_index in seq_along(views)) {
+    view = views[[panel_index]]
+    draw_render_road_topology_panel(
+      topology = topology,
+      bounds = panel_bounds[[view]],
+      title = panel_title[[panel_index]],
+      label_fragment_id = panel_labels[[view]],
+      layer_colors = resolved_colors,
+      label_components = label_components && identical(view, "overview"),
+      show_legend = identical(panel_index, 1L),
+      road_width = if (identical(view, "overview")) 2 else 3,
+      label_size = if (identical(view, "overview")) 0.5 else 0.55
+    )
+  }
+
+  topology$plot = list(
+    views = views,
+    bounds = panel_bounds[views],
+    layer_colors = resolved_colors,
+    filename = filename
+  )
+  invisible(topology)
+}
+
 #' Elevate road paths from local layer ordering
 #'
 #' @param coord_list List of terrain-sampled scene coordinate matrices.
