@@ -1130,3 +1130,224 @@ test_that("road mesh drops sub-millimeter densification fragments", {
     points[c(1, 2, 4), , drop = FALSE]
   )
 })
+
+make_test_render_road_topology_lines = function(
+  coordinates,
+  layer,
+  osm_id = seq_along(coordinates),
+  ref = NA_character_,
+  name = NA_character_,
+  highway = "primary"
+) {
+  count = length(coordinates)
+  recycle = function(value) rep(value, length.out = count)
+  sf::st_sf(
+    layer = recycle(layer),
+    osm_id = recycle(osm_id),
+    ref = recycle(ref),
+    name = recycle(name),
+    highway = recycle(highway),
+    geometry = sf::st_sfc(
+      lapply(coordinates, sf::st_linestring),
+      crs = 32615
+    )
+  )
+}
+
+test_that("road topology preserves parent features and boundary endpoints", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("igraph")
+
+  roads = sf::st_sf(
+    layer = 1,
+    osm_id = "parent-way",
+    ref = "A 1",
+    name = "Preserved Road",
+    highway = "primary",
+    geometry = sf::st_sfc(
+      sf::st_multilinestring(list(
+        rbind(c(0, 0), c(0, 0), c(10, 0)),
+        rbind(c(10, 0), c(20, 0))
+      )),
+      crs = 32615
+    )
+  )
+  boundary = sf::st_as_sfc(sf::st_bbox(
+    c(xmin = 0, ymin = -10, xmax = 20, ymax = 10),
+    crs = sf::st_crs(32615)
+  ))
+  prepared = prepare_render_road_layer_features(
+    roads,
+    layer_column = "layer",
+    boundary = boundary,
+    boundary_tolerance = 0.01
+  )
+
+  expect_equal(nrow(prepared$source_fragments), 2L)
+  expect_equal(prepared$source_fragments$render_road_feature_id, c(1L, 1L))
+  expect_equal(
+    prepared$source_fragments$render_road_way_id,
+    rep("parent-way", 2)
+  )
+  expect_equal(prepared$source_fragments$render_road_ref, rep("A 1", 2))
+  expect_equal(
+    nrow(unclass(sf::st_geometry(prepared$source_fragments)[[1L]])),
+    2L
+  )
+  expect_equal(sum(prepared$endpoints$supplied_boundary), 2L)
+})
+
+test_that("road topology retains local and repeated exact crossings", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("igraph")
+
+  three_way = make_test_render_road_topology_lines(
+    list(
+      rbind(c(-20, 0), c(20, 0)),
+      rbind(c(0, -20), c(0, 20)),
+      rbind(c(-15, -15), c(15, 15))
+    ),
+    layer = c(0, 1, 2)
+  )
+  three_way_topology = build_render_road_layer_topology(
+    prepare_render_road_layer_features(three_way, "layer")
+  )
+
+  expect_equal(nrow(three_way_topology$crossings), 1L)
+  expect_equal(three_way_topology$crossings$participant_count, 3L)
+  expect_equal(nrow(three_way_topology$crossing_pairs), 3L)
+  expect_equal(three_way_topology$crossing_participants$local_order, 1:3)
+  expect_equal(nrow(three_way_topology$junctions), 0L)
+
+  repeated = make_test_render_road_topology_lines(
+    list(
+      rbind(c(-20, 0), c(20, 0)),
+      rbind(
+        c(-15, -10),
+        c(-10, 10),
+        c(-5, -10),
+        c(0, 10),
+        c(5, -10),
+        c(10, 10),
+        c(15, -10)
+      )
+    ),
+    layer = c(0, 1)
+  )
+  repeated_topology = build_render_road_layer_topology(
+    prepare_render_road_layer_features(repeated, "layer")
+  )
+  expect_equal(nrow(repeated_topology$crossings), 6L)
+  expect_equal(nrow(repeated_topology$crossing_pairs), 6L)
+
+  overlap = make_test_render_road_topology_lines(
+    list(
+      rbind(c(-10, 0), c(10, 0)),
+      rbind(c(0, 0), c(20, 0))
+    ),
+    layer = c(0, 1)
+  )
+  overlap_topology = build_render_road_layer_topology(
+    prepare_render_road_layer_features(overlap, "layer")
+  )
+  expect_equal(nrow(overlap_topology$overlaps), 1L)
+  expect_true(overlap_topology$overlaps$layer_relationship)
+})
+
+test_that("road topology keeps branch continuation choices conservative", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("igraph")
+
+  branch = make_test_render_road_topology_lines(
+    list(
+      rbind(c(-20, 0), c(0, 0)),
+      rbind(c(0, 0), c(20, 0)),
+      rbind(c(0, 0), c(0, 15)),
+      rbind(c(-15, -20), c(0, -20)),
+      rbind(c(0, -20), c(14.1, -14.9)),
+      rbind(c(0, -20), c(14.1, -25.1))
+    ),
+    layer = 0,
+    osm_id = c("main", "main", "branch", "fork-in", "fork-up", "fork-down"),
+    ref = c("US 1", "US 1", NA, NA, NA, NA),
+    name = c("Main Street", "Main Street", "Branch Street", NA, NA, NA),
+    highway = c(rep("primary", 3), rep("residential", 3))
+  )
+  branch_topology = build_render_road_layer_topology(
+    prepare_render_road_layer_features(branch, "layer")
+  )
+
+  expect_equal(nrow(branch_topology$junctions), 2L)
+  expect_equal(branch_topology$junctions$participant_count, c(3L, 3L))
+  expect_equal(nrow(branch_topology$crossings), 0L)
+  expect_equal(nrow(branch_topology$selected_continuations), 1L)
+  expect_equal(nrow(branch_topology$ambiguous_continuations), 2L)
+  expect_equal(
+    sort(c(
+      branch_topology$selected_continuations$fragment_a,
+      branch_topology$selected_continuations$fragment_b
+    )),
+    c(1L, 2L)
+  )
+
+  fragmented = make_test_render_road_topology_lines(
+    list(
+      rbind(c(-20, 0), c(-0.05, 0)),
+      rbind(c(0.05, 0), c(20, 0)),
+      rbind(c(0, 0.15), c(0, 10))
+    ),
+    layer = c(1, 1, 0),
+    osm_id = c("fragment-a", "fragment-b", "unrelated"),
+    ref = c("I 10", "I 10", NA),
+    name = c("Interstate 10", "Interstate 10", "Side Road"),
+    highway = c("motorway", "motorway", "residential")
+  )
+  fragmented_topology = build_render_road_layer_topology(
+    prepare_render_road_layer_features(fragmented, "layer")
+  )
+
+  expect_equal(nrow(fragmented_topology$selected_continuations), 1L)
+  expect_equal(
+    fragmented_topology$selected_continuations$endpoint_distance,
+    0.1,
+    tolerance = 1e-8
+  )
+  expect_false(any(fragmented_topology$selected_continuations$fragment_a == 3L))
+  expect_false(any(fragmented_topology$selected_continuations$fragment_b == 3L))
+  expect_equal(
+    length(unique(
+      fragmented_topology$components$solve_component_id
+    )),
+    2L
+  )
+})
+
+test_that("plot_render_road_topology exports plots and diagnostics", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("igraph")
+
+  roads = make_test_render_road_topology_lines(
+    list(
+      rbind(c(-10, 0), c(10, 0)),
+      rbind(c(0, -10), c(0, 10))
+    ),
+    layer = c(0, 1)
+  )
+  output = tempfile(fileext = ".png")
+  on.exit(unlink(output), add = TRUE)
+  topology = plot_render_road_topology(
+    roads,
+    layer = layer,
+    views = "overview",
+    filename = output,
+    width = 600,
+    height = 400,
+    res = 72
+  )
+
+  expect_true(file.exists(output))
+  expect_s3_class(topology, "render_road_topology")
+  expect_s3_class(topology$graph, "igraph")
+  expect_equal(nrow(topology$crossings), 1L)
+  expect_equal(topology$plot$filename, output)
+})
