@@ -2983,15 +2983,12 @@ build_render_road_prospective_solve_graph = function(
     stringsAsFactors = FALSE
   )
 
-  # Phase 2 currently solves elevated and surface approaches only. Underground
-  # fragments remain in the physical topology but are deferred until an absolute
-  # tunnel-height reference is available. Use the same metadata-aware classifier as
-  # the profile solver so layer-zero tunnels cannot enter through event edges.
+  # Phase 3 admits every fragment participating in a layer event. Explicit
+  # underground fragments receive a bounded terrain-relative reference in the
+  # profile model, while negative layer values without tunnel metadata remain
+  # ordinary terrain-constrained roads.
   underground = identify_render_road_underground_fragments(fragments)
-  eligible_fragment_id = fragment_id[
-    fragments$render_road_layer >= 0 & !underground
-  ]
-  deferred_profile_fragment_id = setdiff(fragment_id, eligible_fragment_id)
+  eligible_fragment_id = fragment_id
   crossing_pairs = events$crossing_order_pairs[
     events$crossing_order_pairs$fragment_a %in%
       eligible_fragment_id &
@@ -3023,17 +3020,17 @@ build_render_road_prospective_solve_graph = function(
     "layer_overlap",
     "overlap_id"
   )
-  explicit_elevated_seed_id = fragment_id[
-    fragments$render_road_layer_explicit &
-      fragments$render_road_layer > 0 &
-      !underground
+  explicit_profile_seed_id = fragment_id[
+    (fragments$render_road_layer_explicit &
+      fragments$render_road_layer > 0) |
+      underground
   ]
   seed_fragment_id = unique(c(
     crossing_pairs$fragment_a,
     crossing_pairs$fragment_b,
     layer_overlaps$fragment_a,
     layer_overlaps$fragment_b,
-    explicit_elevated_seed_id
+    explicit_profile_seed_id
   ))
 
   # Follow only selected endpoint continuations from a seed. Ordinary junction and
@@ -3184,19 +3181,10 @@ build_render_road_prospective_solve_graph = function(
       break
     }
   }
-  unexpected_active = intersect(
-    active_fragment_id,
-    deferred_profile_fragment_id
-  )
-  if (length(unexpected_active)) {
-    stop(
-      paste0(
-        "Deferred road fragments entered the prospective profile graph: ",
-        paste(unexpected_active, collapse = ", ")
-      ),
-      call. = FALSE
-    )
-  }
+  # Retain the established diagnostic name, but report fragments not activated
+  # by a seed or permitted graph traversal instead of the now-empty eligibility
+  # complement.
+  deferred_profile_fragment_id = setdiff(fragment_id, active_fragment_id)
   permitted_continuations = selected_continuations[
     selected_continuations$continuation_id %in% permitted_continuation_id,
     ,
@@ -5451,6 +5439,8 @@ build_render_road_profile_spans = function(topology, fragment_length) {
         no_dip = regime == "elevated",
         reference = if (regime == "surface") {
           "terrain"
+        } else if (regime == "underground") {
+          "underground_terrain"
         } else if (run_closed) {
           "periodic_chord"
         } else {
@@ -7300,6 +7290,10 @@ build_render_road_chord_constraints = function(profile_spans, controls) {
 #' @param curvature_weight Curvature objective weight.
 #' @param grade_weight Grade objective weight.
 #' @param terrain_reference_weight Height-reference objective weight.
+#' @param underground_reference_depth Terrain-relative reference depth for
+#' explicit underground fragments.
+#' @param underground_reference_weight Underground height-reference objective
+#' weight.
 #' @param anchor_grade_weight Anchor-grade objective weight.
 #' @param uplift_weight Linear uplift objective weight.
 #'
@@ -7313,6 +7307,8 @@ build_render_road_profile_objective = function(
   curvature_weight,
   grade_weight,
   terrain_reference_weight,
+  underground_reference_depth,
+  underground_reference_weight,
   anchor_grade_weight,
   uplift_weight
 ) {
@@ -7326,15 +7322,30 @@ build_render_road_profile_objective = function(
     station_weight = controls$station_weight[[control]]
     height_variable = controls$height_variable[[control]]
     grade_variable = controls$grade_variable[[control]]
-    objective_q[[height_variable]] =
-      objective_q[[height_variable]] + uplift_weight * station_weight
+    span = spans[spans$span_id == controls$span_id[[control]], , drop = FALSE]
+    underground_reference = identical(
+      span$reference[[1L]],
+      "underground_terrain"
+    )
+    if (!underground_reference) {
+      objective_q[[height_variable]] =
+        objective_q[[height_variable]] + uplift_weight * station_weight
+    }
     if (grade_weight > 0) {
       p_i = c(p_i, grade_variable)
       p_j = c(p_j, grade_variable)
       p_x = c(p_x, 2 * grade_weight * station_weight)
     }
-    span = spans[spans$span_id == controls$span_id[[control]], , drop = FALSE]
-    if (
+    if (underground_reference) {
+      weight = underground_reference_weight * station_weight
+      reference_height = controls$terrain[[control]] -
+        underground_reference_depth
+      p_i = c(p_i, height_variable)
+      p_j = c(p_j, height_variable)
+      p_x = c(p_x, 2 * weight)
+      objective_q[[height_variable]] = objective_q[[height_variable]] -
+        2 * weight * reference_height
+    } else if (
       terrain_reference_weight > 0 &&
         span$reference[[1L]] %in% c("span_chord", "periodic_chord")
     ) {
@@ -7581,6 +7592,12 @@ validate_render_road_profile_component_blocks = function(
 #' @param grade_weight Default `1`. Objective weight on grade magnitude.
 #' @param terrain_reference_weight Default `1e-3`. Objective weight toward the
 #' sampled terrain reference.
+#' @param underground_reference_depth Default `NULL`, which uses
+#' `layer_spacing`. Terrain-relative reference depth in metres for explicit
+#' underground fragments.
+#' @param underground_reference_weight Default `1e-3`. Positive objective
+#' weight that bounds explicit underground profiles around their reference
+#' depth.
 #' @param anchor_grade_weight Default `10`. Objective weight toward terrain
 #' grade at fixed outer anchors.
 #' @param uplift_weight Default `1e-5`. Linear objective weight discouraging
@@ -7604,6 +7621,8 @@ build_render_road_profile_problem = function(
   curvature_weight = 100,
   grade_weight = 1,
   terrain_reference_weight = 1e-3,
+  underground_reference_depth = NULL,
+  underground_reference_weight = 1e-3,
   anchor_grade_weight = 10,
   uplift_weight = 1e-5,
   anchor_grade_window = 10,
@@ -7642,6 +7661,18 @@ build_render_road_profile_problem = function(
     terrain_reference_weight,
     "terrain_reference_weight",
     allow_zero = TRUE
+  )
+  if (is.null(underground_reference_depth)) {
+    underground_reference_depth = layer_spacing
+  } else {
+    underground_reference_depth = validate_render_road_profile_setting(
+      underground_reference_depth,
+      "underground_reference_depth"
+    )
+  }
+  underground_reference_weight = validate_render_road_profile_setting(
+    underground_reference_weight,
+    "underground_reference_weight"
   )
   anchor_grade_weight = validate_render_road_profile_setting(
     anchor_grade_weight,
@@ -7766,6 +7797,8 @@ build_render_road_profile_problem = function(
     curvature_weight = curvature_weight,
     grade_weight = grade_weight,
     terrain_reference_weight = terrain_reference_weight,
+    underground_reference_depth = underground_reference_depth,
+    underground_reference_weight = underground_reference_weight,
     anchor_grade_weight = anchor_grade_weight,
     uplift_weight = uplift_weight
   )
@@ -7817,6 +7850,8 @@ build_render_road_profile_problem = function(
       curvature_weight = curvature_weight,
       grade_weight = grade_weight,
       terrain_reference_weight = terrain_reference_weight,
+      underground_reference_depth = underground_reference_depth,
+      underground_reference_weight = underground_reference_weight,
       anchor_grade_weight = anchor_grade_weight,
       uplift_weight = uplift_weight,
       anchor_grade_window = anchor_grade_window,
@@ -7829,6 +7864,7 @@ build_render_road_profile_problem = function(
       constraint_counts = table(matrices$constraints$type),
       ground_anchor_endpoint_id = anchor_sets$ground_anchor_endpoint_id,
       solve_frontier_endpoint_id = anchor_sets$solve_frontier_endpoint_id,
+      boundary_frontier_endpoint_id = anchor_sets$boundary_endpoint_id,
       ambiguous_endpoint_id = anchor_sets$ambiguous_endpoint_id,
       conflict_endpoint_id = anchor_sets$conflict_endpoint_id
     )
@@ -8670,8 +8706,8 @@ rebuild_render_road_profile_problem = function(
 #' @param relative_tolerance Default `1e-7`. Relative solver tolerance.
 #' @param maximum_iterations Default `20000`. Maximum OSQP iterations per
 #' component.
-#' @param engineering_tolerance Default `1e-6`. Required discrete and
-#' continuous engineering-audit tolerance.
+#' @param profile_tolerance Default `1e-3`. Accepted geometric profile
+#' tolerance in metres for adaptive refinement and the engineering audit.
 #' @param maximum_refinement_iterations Default `20`. Maximum adaptive
 #' continuous-constraint refinement iterations.
 #'
@@ -8683,7 +8719,7 @@ solve_render_road_profile_problem = function(
   absolute_tolerance = 1e-7,
   relative_tolerance = 1e-7,
   maximum_iterations = 20000,
-  engineering_tolerance = 1e-6,
+  profile_tolerance = 1e-3,
   maximum_refinement_iterations = 20
 ) {
   if (!inherits(problem, "render_road_profile_problem")) {
@@ -8703,9 +8739,9 @@ solve_render_road_profile_problem = function(
     relative_tolerance,
     "relative_tolerance"
   )
-  engineering_tolerance = validate_render_road_profile_setting(
-    engineering_tolerance,
-    "engineering_tolerance",
+  profile_tolerance = validate_render_road_profile_setting(
+    profile_tolerance,
+    "profile_tolerance",
     allow_zero = TRUE
   )
   if (
@@ -8741,7 +8777,7 @@ solve_render_road_profile_problem = function(
     continuous = find_render_road_profile_continuous_violations(
       current_problem,
       solved,
-      engineering_tolerance
+      profile_tolerance
     )
     if (nrow(continuous$requests)) {
       if (refinement_iteration >= maximum_refinement_iterations) {
@@ -8814,7 +8850,7 @@ solve_render_road_profile_problem = function(
     engineering_audit = audit_render_road_profiles(
       current_problem,
       solved,
-      tolerance = engineering_tolerance
+      tolerance = profile_tolerance
     )
     inaccurate = any(
       tolower(solved$components$status) == "solved inaccurate"

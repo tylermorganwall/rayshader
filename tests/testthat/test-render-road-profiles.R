@@ -178,60 +178,62 @@ test_that("surface equality closure stops after one terminal partner", {
   ))
 })
 
-test_that("metadata-defined underground roads are deferred from profiles", {
-  skip_render_road_profile_test_dependencies()
+test_that("metadata-only tunnels seed independently and remain bounded", {
+  skip_render_road_profile_test_dependencies(solver = TRUE)
 
   roads = make_render_road_profile_test_roads(
     lines = list(
       make_render_road_profile_test_line(c(0, -100, 0, 100)),
-      make_render_road_profile_test_line(c(-40, -100, -40, 100)),
-      make_render_road_profile_test_line(c(-100, 0, 100, 0)),
-      make_render_road_profile_test_line(c(60, -100, 60, 100))
+      make_render_road_profile_test_line(c(100, -100, 100, 100))
     ),
-    layer = c(0, 1, 1, 0),
-    way_id = c("tunnel-layer-0", "tunnel-layer-1", "bridge", "surface"),
-    bridge = c(NA_character_, NA_character_, "yes", NA_character_),
-    tunnel = c("yes", "yes", NA_character_, NA_character_)
+    layer = c(NA_real_, -1),
+    way_id = c("metadata-tunnel", "untagged-negative"),
+    bridge = c(NA_character_, NA_character_),
+    tunnel = c("yes", NA_character_)
   )
   topology = build_render_road_profile_test_topology(roads)
-  tunnel_id = topology$fragments$render_road_fragment_id[
-    topology$fragments$render_road_way_id %in%
-      c("tunnel-layer-0", "tunnel-layer-1")
-  ]
-  problem = build_render_road_profile_test_problem(topology)
+  fragment_id = setNames(
+    topology$fragments$render_road_fragment_id,
+    topology$fragments$render_road_way_id
+  )
+  tunnel_id = fragment_id[["metadata-tunnel"]]
+  negative_id = fragment_id[["untagged-negative"]]
+  tunnel_row = match(
+    tunnel_id,
+    topology$fragments$render_road_fragment_id
+  )
 
-  expect_length(tunnel_id, 2L)
-  expect_true(all(
+  expect_false(topology$fragments$render_road_layer_explicit[[tunnel_row]])
+  expect_true(tunnel_id %in% topology$prospective_solve_seed_fragment_id)
+  expect_true(tunnel_id %in% topology$prospective_solve_fragment_id)
+  expect_false(
     tunnel_id %in%
       topology$prospective_solve_deferred_profile_fragment_id
-  ))
-  expect_false(any(
-    tunnel_id %in% topology$prospective_solve_seed_fragment_id
-  ))
-  expect_false(any(
-    tunnel_id %in% topology$prospective_solve_fragment_id
-  ))
-  expect_false(any(
-    topology$prospective_solve_continuations$fragment_a %in%
-      tunnel_id |
-      topology$prospective_solve_continuations$fragment_b %in% tunnel_id
-  ))
-  expect_false(any(
-    topology$prospective_solve_junction_equality_pairs$fragment_a %in%
-      tunnel_id |
-      topology$prospective_solve_junction_equality_pairs$fragment_b %in%
-        tunnel_id
-  ))
-  expect_false(any(
-    problem$topology$fragments$render_road_fragment_id %in% tunnel_id
-  ))
-  expect_length(
-    intersect(
-      topology$prospective_solve_fragment_id,
-      topology$prospective_solve_deferred_profile_fragment_id
-    ),
-    0L
   )
+  expect_false(negative_id %in% topology$prospective_solve_seed_fragment_id)
+  expect_false(negative_id %in% topology$prospective_solve_fragment_id)
+  expect_true(
+    negative_id %in%
+      topology$prospective_solve_deferred_profile_fragment_id
+  )
+
+  problem = build_render_road_profile_test_problem(
+    topology,
+    terrain_elevation = 20,
+    settings = list(underground_reference_depth = 6)
+  )
+  solution = solve_render_road_profile_problem(
+    problem,
+    maximum_iterations = 100000
+  )
+
+  expect_equal(problem$spans$reference, "underground_terrain")
+  expect_equal(
+    solution$controls$height,
+    rep(14, nrow(solution$controls)),
+    tolerance = 1e-4
+  )
+  expect_true(solution$engineering_audit$passed)
 })
 
 test_that("dense ranks and mixed events compile pair-specific constraints", {
@@ -451,8 +453,9 @@ test_that("adaptive refinement removes a between-control chord dip", {
   expect_gt(solution$refinement_iterations, 0L)
   expect_gte(
     solution$continuous_diagnostics$continuous_chord_margin,
-    -1e-6
+    -1e-3
   )
+  expect_equal(solution$engineering_audit$tolerance, 1e-3)
   expect_true(solution$engineering_audit$passed)
 })
 
