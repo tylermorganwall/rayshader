@@ -1250,8 +1250,8 @@ test_that("road topology retains local and repeated exact crossings", {
   overlap_topology = build_render_road_layer_topology(
     prepare_render_road_layer_features(overlap, "layer")
   )
-  expect_equal(nrow(overlap_topology$overlaps), 1L)
-  expect_true(overlap_topology$overlaps$layer_relationship)
+  expect_equal(nrow(overlap_topology$layer_overlaps), 1L)
+  expect_true(overlap_topology$layer_overlaps$layer_relationship)
 })
 
 test_that("road topology keeps branch continuation choices conservative", {
@@ -1316,9 +1316,15 @@ test_that("road topology keeps branch continuation choices conservative", {
   expect_false(any(fragmented_topology$selected_continuations$fragment_b == 3L))
   expect_equal(
     length(unique(
-      fragmented_topology$components$solve_component_id
+      fragmented_topology$network_components$network_component_id
     )),
     2L
+  )
+  expect_equal(
+    length(unique(
+      fragmented_topology$prospective_solve_components$prospective_solve_component_id
+    )),
+    1L
   )
 })
 
@@ -1347,7 +1353,8 @@ test_that("plot_render_road_topology exports plots and diagnostics", {
 
   expect_true(file.exists(output))
   expect_s3_class(topology, "render_road_topology")
-  expect_s3_class(topology$graph, "igraph")
+  expect_s3_class(topology$network_graph, "igraph")
+  expect_s3_class(topology$prospective_solve_graph, "igraph")
   expect_equal(nrow(topology$crossings), 1L)
   expect_equal(topology$plot$filename, output)
 })
