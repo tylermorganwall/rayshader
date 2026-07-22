@@ -1868,6 +1868,45 @@ is_render_road_projection_on_supplied_boundary = function(
   any(endpoints$supplied_boundary & endpoint_rows & side_matches)
 }
 
+#' Resolve a projected road endpoint to its stable endpoint identity
+#'
+#' @param endpoints Prepared endpoint table.
+#' @param fragment_id Fragment identifier.
+#' @param projection Point projection on the fragment.
+#'
+#' @return Endpoint identifier and side, or missing values for an interior point.
+#' @keywords internal
+resolve_render_road_projection_endpoint = function(
+  endpoints,
+  fragment_id,
+  projection
+) {
+  endpoint_side = if (isTRUE(projection$at_start)) {
+    "start"
+  } else if (isTRUE(projection$at_end)) {
+    "end"
+  } else {
+    NA_character_
+  }
+  if (is.na(endpoint_side)) {
+    return(list(endpoint_id = NA_integer_, endpoint_side = endpoint_side))
+  }
+  endpoint_row = which(
+    endpoints$render_road_fragment_id == fragment_id &
+      endpoints$endpoint_side == endpoint_side
+  )
+  if (length(endpoint_row) != 1L) {
+    stop(
+      "A projected fragment endpoint did not resolve to one prepared endpoint.",
+      call. = FALSE
+    )
+  }
+  list(
+    endpoint_id = endpoints$render_road_endpoint_id[[endpoint_row]],
+    endpoint_side = endpoint_side
+  )
+}
+
 #' Build one exact road point-pair record
 #'
 #' @param prepared Prepared road layer features.
@@ -1921,6 +1960,16 @@ build_render_road_point_pair = function(
     supplied_boundary_a,
     supplied_boundary_b
   )
+  endpoint_identity_a = resolve_render_road_projection_endpoint(
+    prepared$endpoints,
+    fragment_a,
+    projection_a
+  )
+  endpoint_identity_b = resolve_render_road_projection_endpoint(
+    prepared$endpoints,
+    fragment_b,
+    projection_b
+  )
   sf::st_sf(
     fragment_a = fragment_a,
     fragment_b = fragment_b,
@@ -1928,6 +1977,10 @@ build_render_road_point_pair = function(
     distance_b = projection_b$distance,
     endpoint_a = relation$endpoint_a,
     endpoint_b = relation$endpoint_b,
+    endpoint_id_a = endpoint_identity_a$endpoint_id,
+    endpoint_id_b = endpoint_identity_b$endpoint_id,
+    endpoint_side_a = endpoint_identity_a$endpoint_side,
+    endpoint_side_b = endpoint_identity_b$endpoint_side,
     supplied_boundary_a = supplied_boundary_a,
     supplied_boundary_b = supplied_boundary_b,
     layer_relationship = layer_relationship,
@@ -2118,6 +2171,10 @@ find_render_road_layer_events = function(
     distance_b = numeric(0),
     endpoint_a = logical(0),
     endpoint_b = logical(0),
+    endpoint_id_a = integer(0),
+    endpoint_id_b = integer(0),
+    endpoint_side_a = character(0),
+    endpoint_side_b = character(0),
     supplied_boundary_a = logical(0),
     supplied_boundary_b = logical(0),
     layer_relationship = logical(0),
@@ -2869,6 +2926,36 @@ identify_render_road_candidate_anchor_endpoints = function(prepared) {
   )
 }
 
+#' Build graph edges from a fragment-pair table
+#'
+#' @param pairs Fragment-pair table.
+#' @param topology_type Edge relationship type.
+#' @param relation_column Pair identifier column.
+#'
+#' @return A graph edge table, or `NULL` for an empty pair table.
+#' @keywords internal
+build_render_road_pair_edges = function(
+  pairs,
+  topology_type,
+  relation_column
+) {
+  if (!nrow(pairs)) {
+    return(NULL)
+  }
+  relation_id = if (relation_column %in% names(pairs)) {
+    pairs[[relation_column]]
+  } else {
+    seq_len(nrow(pairs))
+  }
+  data.frame(
+    from = as.character(pairs$fragment_a),
+    to = as.character(pairs$fragment_b),
+    topology_type = topology_type,
+    relation_id = as.integer(relation_id),
+    stringsAsFactors = FALSE
+  )
+}
+
 #' Build a prospective sparse road-profile solve graph
 #'
 #' @param prepared Prepared road layer features.
@@ -2896,79 +2983,81 @@ build_render_road_prospective_solve_graph = function(
     stringsAsFactors = FALSE
   )
 
-  # Seed profile work from pair-specific unequal-layer constraints rather than every
-  # participant at a mixed physical event.
-  layer_event_edges = if (nrow(events$crossing_order_pairs)) {
-    data.frame(
-      from = as.character(events$crossing_order_pairs$fragment_a),
-      to = as.character(events$crossing_order_pairs$fragment_b),
-      topology_type = "layer_crossing",
-      stringsAsFactors = FALSE
-    )
-  } else {
-    NULL
-  }
-  if (nrow(events$layer_overlaps)) {
-    layer_event_edges = c(
-      list(layer_event_edges),
-      list(data.frame(
-        from = as.character(events$layer_overlaps$fragment_a),
-        to = as.character(events$layer_overlaps$fragment_b),
-        topology_type = "layer_overlap",
-        stringsAsFactors = FALSE
-      ))
-    )
-    layer_event_edges = Filter(Negate(is.null), layer_event_edges)
-    layer_event_edges = do.call(rbind, layer_event_edges)
-  }
-  mixed_event_id = intersect(
-    events$crossings$events$crossing_id,
-    events$junctions$events$junction_id
-  )
-  mixed_junction_pairs = events$junctions$pairs[
-    events$junctions$pairs$junction_id %in% mixed_event_id,
+  # Phase 2 currently solves elevated and surface approaches only. Underground
+  # fragments remain in the physical topology but are deferred until an absolute
+  # tunnel-height reference is available. Use the same metadata-aware classifier as
+  # the profile solver so layer-zero tunnels cannot enter through event edges.
+  underground = identify_render_road_underground_fragments(fragments)
+  eligible_fragment_id = fragment_id[
+    fragments$render_road_layer >= 0 & !underground
+  ]
+  deferred_profile_fragment_id = setdiff(fragment_id, eligible_fragment_id)
+  crossing_pairs = events$crossing_order_pairs[
+    events$crossing_order_pairs$fragment_a %in%
+      eligible_fragment_id &
+      events$crossing_order_pairs$fragment_b %in% eligible_fragment_id,
     ,
     drop = FALSE
   ]
-  if (nrow(mixed_junction_pairs)) {
-    mixed_junction_edges = data.frame(
-      from = as.character(mixed_junction_pairs$fragment_a),
-      to = as.character(mixed_junction_pairs$fragment_b),
-      topology_type = "local_event_equality",
-      stringsAsFactors = FALSE
-    )
-    layer_event_edges = Filter(
-      Negate(is.null),
-      list(layer_event_edges, mixed_junction_edges)
-    )
-    layer_event_edges = do.call(rbind, layer_event_edges)
-  }
+  layer_overlaps = events$layer_overlaps[
+    events$layer_overlaps$fragment_a %in%
+      eligible_fragment_id &
+      events$layer_overlaps$fragment_b %in% eligible_fragment_id,
+    ,
+    drop = FALSE
+  ]
+  equality_pairs = events$junctions$pairs[
+    events$junctions$pairs$fragment_a %in%
+      eligible_fragment_id &
+      events$junctions$pairs$fragment_b %in% eligible_fragment_id,
+    ,
+    drop = FALSE
+  ]
+  crossing_edges = build_render_road_pair_edges(
+    crossing_pairs,
+    "layer_crossing",
+    "point_pair_id"
+  )
+  overlap_edges = build_render_road_pair_edges(
+    layer_overlaps,
+    "layer_overlap",
+    "overlap_id"
+  )
+  explicit_elevated_seed_id = fragment_id[
+    fragments$render_road_layer_explicit &
+      fragments$render_road_layer > 0 &
+      !underground
+  ]
   seed_fragment_id = unique(c(
-    events$crossing_order_pairs$fragment_a,
-    events$crossing_order_pairs$fragment_b,
-    events$layer_overlaps$fragment_a,
-    events$layer_overlaps$fragment_b,
-    mixed_junction_pairs$fragment_a,
-    mixed_junction_pairs$fragment_b,
-    fragment_id[
-      fragments$render_road_layer_explicit &
-        fragments$render_road_layer != 0
-    ]
+    crossing_pairs$fragment_a,
+    crossing_pairs$fragment_b,
+    layer_overlaps$fragment_a,
+    layer_overlaps$fragment_b,
+    explicit_elevated_seed_id
   ))
 
   # Follow only selected endpoint continuations from a seed. Ordinary junction and
   # at-grade network edges never enlarge a solve component.
-  continuation_edges = if (nrow(continuations$selected)) {
+  selected_continuations = continuations$selected[
+    continuations$selected$fragment_a %in%
+      eligible_fragment_id &
+      continuations$selected$fragment_b %in% eligible_fragment_id,
+    ,
+    drop = FALSE
+  ]
+  continuation_edges = if (nrow(selected_continuations)) {
     data.frame(
-      from = as.character(continuations$selected$fragment_a),
-      to = as.character(continuations$selected$fragment_b),
-      from_endpoint = continuations$selected$endpoint_a,
-      to_endpoint = continuations$selected$endpoint_b,
+      continuation_id = selected_continuations$continuation_id,
+      from = as.character(selected_continuations$fragment_a),
+      to = as.character(selected_continuations$fragment_b),
+      from_endpoint = selected_continuations$endpoint_a,
+      to_endpoint = selected_continuations$endpoint_b,
       topology_type = "approach_continuation",
       stringsAsFactors = FALSE
     )
   } else {
     data.frame(
+      continuation_id = integer(0),
       from = character(0),
       to = character(0),
       from_endpoint = integer(0),
@@ -2988,6 +3077,7 @@ build_render_road_prospective_solve_graph = function(
   ]
   if (nrow(reverse_continuation_edges)) {
     reverse_continuation_edges = data.frame(
+      continuation_id = reverse_continuation_edges$continuation_id,
       from = reverse_continuation_edges$to,
       to = reverse_continuation_edges$from,
       from_endpoint = reverse_continuation_edges$to_endpoint,
@@ -3004,75 +3094,137 @@ build_render_road_prospective_solve_graph = function(
     ],
     reverse_continuation_edges
   )
-  super_source = "__render_road_super_source__"
-  source_edges = data.frame(
-    from = rep(super_source, length(seed_fragment_id)),
-    to = as.character(seed_fragment_id),
-    from_endpoint = rep(NA_integer_, length(seed_fragment_id)),
-    to_endpoint = rep(NA_integer_, length(seed_fragment_id)),
-    topology_type = rep("solve_seed", length(seed_fragment_id)),
-    stringsAsFactors = FALSE
-  )
-  reachability_edges = rbind(directed_continuation_edges, source_edges)
-  reachability_vertices = rbind(
-    all_vertices,
-    data.frame(
-      name = super_source,
-      render_road_fragment_id = NA_integer_,
-      render_road_feature_id = NA_integer_,
-      render_road_layer = NA_real_,
-      stringsAsFactors = FALSE
+
+  # Track active solve context separately from fragments allowed to propagate it.
+  # A surface fragment reached at a candidate ground endpoint supplies a terminal
+  # equality/anchor context without opening the rest of its street network. Equality
+  # traversal, like continuation traversal, cannot depart from a candidate anchor.
+  active_fragment_id = sort(unique(seed_fragment_id))
+  expandable_fragment_id = active_fragment_id
+  terminal_ground_fragment_id = integer(0)
+  permitted_continuation_id = integer(0)
+  permitted_equality_pair_id = integer(0)
+  repeat {
+    previous_fragment_id = active_fragment_id
+    previous_expandable_fragment_id = expandable_fragment_id
+    previous_continuation_id = permitted_continuation_id
+    if (nrow(directed_continuation_edges)) {
+      traversed = directed_continuation_edges$from %in%
+        as.character(expandable_fragment_id)
+      permitted_continuation_id = sort(unique(c(
+        permitted_continuation_id,
+        directed_continuation_edges$continuation_id[traversed]
+      )))
+      target_fragment_id = as.integer(
+        directed_continuation_edges$to[traversed]
+      )
+      target_endpoint_id = directed_continuation_edges$to_endpoint[traversed]
+      terminal_target = target_fragment_id %in%
+        candidate_anchors$surface_fragment_id &
+        target_endpoint_id %in% candidate_anchor_endpoint_id
+      active_fragment_id = sort(unique(c(
+        active_fragment_id,
+        target_fragment_id
+      )))
+      expandable_fragment_id = sort(unique(c(
+        expandable_fragment_id,
+        target_fragment_id[!terminal_target]
+      )))
+      terminal_ground_fragment_id = sort(unique(c(
+        terminal_ground_fragment_id,
+        target_fragment_id[terminal_target]
+      )))
+    }
+    if (nrow(equality_pairs)) {
+      from_a = equality_pairs$fragment_a %in%
+        expandable_fragment_id &
+        !(equality_pairs$endpoint_id_a %in% candidate_anchor_endpoint_id)
+      from_b = equality_pairs$fragment_b %in%
+        expandable_fragment_id &
+        !(equality_pairs$endpoint_id_b %in% candidate_anchor_endpoint_id)
+      traversed_equality = from_a | from_b
+      permitted_equality_pair_id = sort(unique(c(
+        permitted_equality_pair_id,
+        equality_pairs$point_pair_id[traversed_equality]
+      )))
+      target_fragment_id = c(
+        equality_pairs$fragment_b[from_a],
+        equality_pairs$fragment_a[from_b]
+      )
+      # A newly reached ordinary surface fragment supplies only immediate equality
+      # context. This is endpoint-independent so interior at-grade intersections do
+      # not relay solve membership through the surface street grid.
+      terminal_target = target_fragment_id %in%
+        candidate_anchors$surface_fragment_id
+      active_fragment_id = sort(unique(c(
+        active_fragment_id,
+        target_fragment_id
+      )))
+      expandable_fragment_id = sort(unique(c(
+        expandable_fragment_id,
+        target_fragment_id[!terminal_target]
+      )))
+      terminal_ground_fragment_id = sort(unique(c(
+        terminal_ground_fragment_id,
+        target_fragment_id[terminal_target]
+      )))
+    }
+    terminal_ground_fragment_id = setdiff(
+      terminal_ground_fragment_id,
+      expandable_fragment_id
     )
-  )
-  reachability_graph = igraph::graph_from_data_frame(
-    reachability_edges,
-    directed = TRUE,
-    vertices = reachability_vertices
-  )
-  if (length(seed_fragment_id)) {
-    reachable_vertex = igraph::subcomponent(
-      reachability_graph,
-      v = super_source,
-      mode = "out"
-    )
-    reachable_name = igraph::V(reachability_graph)$name[reachable_vertex]
-    active_fragment_id = as.integer(setdiff(reachable_name, super_source))
-  } else {
-    active_fragment_id = integer(0)
+    if (
+      identical(previous_fragment_id, active_fragment_id) &&
+        identical(
+          previous_expandable_fragment_id,
+          expandable_fragment_id
+        ) &&
+        identical(previous_continuation_id, permitted_continuation_id)
+    ) {
+      break
+    }
   }
-  active_fragment_id = sort(unique(c(seed_fragment_id, active_fragment_id)))
-  active_continuation = directed_continuation_edges$from %in%
-    active_fragment_id &
-    directed_continuation_edges$to %in% active_fragment_id
-  permitted_continuation_edges = directed_continuation_edges[
-    active_continuation,
+  unexpected_active = intersect(
+    active_fragment_id,
+    deferred_profile_fragment_id
+  )
+  if (length(unexpected_active)) {
+    stop(
+      paste0(
+        "Deferred road fragments entered the prospective profile graph: ",
+        paste(unexpected_active, collapse = ", ")
+      ),
+      call. = FALSE
+    )
+  }
+  permitted_continuations = selected_continuations[
+    selected_continuations$continuation_id %in% permitted_continuation_id,
     ,
     drop = FALSE
   ]
-  if (nrow(permitted_continuation_edges)) {
-    permitted_continuation_edges = data.frame(
-      from = as.character(pmin(
-        as.integer(permitted_continuation_edges$from),
-        as.integer(permitted_continuation_edges$to)
-      )),
-      to = as.character(pmax(
-        as.integer(permitted_continuation_edges$from),
-        as.integer(permitted_continuation_edges$to)
-      )),
-      topology_type = permitted_continuation_edges$topology_type,
-      stringsAsFactors = FALSE
-    )
-    permitted_continuation_edges = unique(permitted_continuation_edges)
-  } else {
-    permitted_continuation_edges = data.frame(
-      from = character(0),
-      to = character(0),
-      topology_type = character(0)
-    )
-  }
+  permitted_continuation_edges = build_render_road_pair_edges(
+    sf::st_drop_geometry(permitted_continuations),
+    "approach_continuation",
+    "continuation_id"
+  )
+  active_equality_pairs = equality_pairs[
+    equality_pairs$point_pair_id %in%
+      permitted_equality_pair_id &
+      equality_pairs$fragment_a %in% active_fragment_id &
+      equality_pairs$fragment_b %in% active_fragment_id,
+    ,
+    drop = FALSE
+  ]
+  equality_edges = build_render_road_pair_edges(
+    active_equality_pairs,
+    "junction_equality",
+    "point_pair_id"
+  )
 
   edge_rows = list(
-    layer_event_edges,
+    crossing_edges,
+    overlap_edges,
+    equality_edges,
     permitted_continuation_edges
   )
   edge_rows = Filter(function(value) !is.null(value) && nrow(value), edge_rows)
@@ -3082,7 +3234,8 @@ build_render_road_prospective_solve_graph = function(
     data.frame(
       from = character(0),
       to = character(0),
-      topology_type = character(0)
+      topology_type = character(0),
+      relation_id = integer(0)
     )
   }
   active_vertices = all_vertices[
@@ -3106,6 +3259,32 @@ build_render_road_prospective_solve_graph = function(
     ,
     drop = FALSE
   ]
+  permitted_continuations$fragment_a_component = components$prospective_solve_component_id[
+    match(
+      permitted_continuations$fragment_a,
+      components$render_road_fragment_id
+    )
+  ]
+  permitted_continuations$fragment_b_component = components$prospective_solve_component_id[
+    match(
+      permitted_continuations$fragment_b,
+      components$render_road_fragment_id
+    )
+  ]
+  if (
+    nrow(permitted_continuations) &&
+      any(
+        is.na(permitted_continuations$fragment_a_component) |
+          is.na(permitted_continuations$fragment_b_component) |
+          permitted_continuations$fragment_a_component !=
+            permitted_continuations$fragment_b_component
+      )
+  ) {
+    stop(
+      "A prospective continuation crosses solve-component boundaries.",
+      call. = FALSE
+    )
+  }
   list(
     graph = graph,
     components = components,
@@ -3113,7 +3292,12 @@ build_render_road_prospective_solve_graph = function(
     seed_fragment_id = sort(unique(seed_fragment_id)),
     candidate_anchor_endpoint_id = sort(unique(candidate_anchor_endpoint_id)),
     candidate_anchor_fragment_id = candidate_anchors$candidate_anchor_fragment_id,
-    active_fragment_id = active_fragment_id
+    active_fragment_id = active_fragment_id,
+    expandable_fragment_id = expandable_fragment_id,
+    terminal_ground_fragment_id = terminal_ground_fragment_id,
+    deferred_profile_fragment_id = deferred_profile_fragment_id,
+    permitted_continuations = permitted_continuations,
+    active_equality_pairs = active_equality_pairs
   )
 }
 
@@ -3214,6 +3398,7 @@ build_render_road_layer_topology = function(
     layer_overlaps = events$layer_overlaps,
     equal_layer_overlaps = events$equal_layer_overlaps,
     selected_continuations = continuations$selected,
+    prospective_solve_continuations = prospective_solve_graph$permitted_continuations,
     ambiguous_continuations = continuations$ambiguous,
     rejected_continuations = continuations$rejected,
     continuation_candidates = continuations$candidates,
@@ -3223,10 +3408,14 @@ build_render_road_layer_topology = function(
     prospective_solve_graph = prospective_solve_graph$graph,
     prospective_solve_graph_edges = prospective_solve_graph$edges,
     prospective_solve_components = prospective_solve_graph$components,
+    prospective_solve_junction_equality_pairs = prospective_solve_graph$active_equality_pairs,
     prospective_solve_seed_fragment_id = prospective_solve_graph$seed_fragment_id,
     candidate_anchor_endpoint_id = prospective_solve_graph$candidate_anchor_endpoint_id,
     candidate_anchor_fragment_id = prospective_solve_graph$candidate_anchor_fragment_id,
     prospective_solve_fragment_id = prospective_solve_graph$active_fragment_id,
+    prospective_solve_expandable_fragment_id = prospective_solve_graph$expandable_fragment_id,
+    prospective_solve_terminal_ground_fragment_id = prospective_solve_graph$terminal_ground_fragment_id,
+    prospective_solve_deferred_profile_fragment_id = prospective_solve_graph$deferred_profile_fragment_id,
     diagnostics = list(
       candidate_pair_count = events$candidate_pair_count,
       dropped_fragment_id = prepared$dropped_fragment_id,
@@ -4848,8 +5037,18 @@ subset_render_road_profile_topology = function(
       ]
     }
   }
+  topology$junction_equality_pairs =
+    topology$prospective_solve_junction_equality_pairs[
+      topology$prospective_solve_junction_equality_pairs$fragment_a %in%
+        active_fragment_id &
+        topology$prospective_solve_junction_equality_pairs$fragment_b %in%
+          active_fragment_id,
+      ,
+      drop = FALSE
+    ]
   continuation_tables = c(
     "selected_continuations",
+    "prospective_solve_continuations",
     "ambiguous_continuations",
     "rejected_continuations",
     "continuation_candidates"
@@ -5013,7 +5212,125 @@ identify_render_road_elevated_fragments = function(topology) {
   sort(unique(elevated))
 }
 
-#' Build maximal selected through-continuation spans
+#' Traverse one path- or cycle-structured continuation component
+#'
+#' @param members Fragment identifiers in one continuation component.
+#' @param continuations Prospective continuation relations without geometry.
+#' @param fragment_length Named fragment lengths in metres.
+#'
+#' @return Ordered members, closure status, and the closing true-gap length.
+#' @keywords internal
+traverse_render_road_profile_path = function(
+  members,
+  continuations,
+  fragment_length
+) {
+  members = sort(unique(as.integer(members)))
+  component_edge = which(
+    continuations$fragment_a %in%
+      members &
+      continuations$fragment_b %in% members
+  )
+  degree = setNames(integer(length(members)), as.character(members))
+  for (edge in component_edge) {
+    degree[[as.character(continuations$fragment_a[[edge]])]] =
+      degree[[as.character(continuations$fragment_a[[edge]])]] + 1L
+    degree[[as.character(continuations$fragment_b[[edge]])]] =
+      degree[[as.character(continuations$fragment_b[[edge]])]] + 1L
+  }
+  if (any(degree > 2L)) {
+    stop(
+      "Selected continuation graph is not path/cycle structured.",
+      call. = FALSE
+    )
+  }
+  closed = length(members) > 1L && all(degree == 2L)
+  frontier = members[degree < 2L]
+  current = if (length(frontier)) min(frontier) else min(members)
+  previous_edge = NA_integer_
+  entering_side = NA_character_
+  used_fragment = integer(0)
+  path_rows = list()
+  repeat {
+    if (current %in% used_fragment) {
+      break
+    }
+    incident_edge = component_edge[
+      continuations$fragment_a[component_edge] == current |
+        continuations$fragment_b[component_edge] == current
+    ]
+    outgoing_edge = setdiff(incident_edge, previous_edge)
+    outgoing_edge = if (length(outgoing_edge)) {
+      min(outgoing_edge)
+    } else {
+      NA_integer_
+    }
+    if (is.na(entering_side)) {
+      if (is.na(outgoing_edge)) {
+        orientation = 1L
+      } else {
+        current_side = if (
+          continuations$fragment_a[[outgoing_edge]] == current
+        ) {
+          continuations$side_a[[outgoing_edge]]
+        } else {
+          continuations$side_b[[outgoing_edge]]
+        }
+        orientation = if (current_side == "end") 1L else -1L
+      }
+    } else {
+      orientation = if (entering_side == "start") 1L else -1L
+    }
+    length_m = fragment_length[[as.character(current)]]
+    next_fragment = NA_integer_
+    next_side = NA_character_
+    gap_after = 0
+    if (!is.na(outgoing_edge)) {
+      if (continuations$fragment_a[[outgoing_edge]] == current) {
+        next_fragment = continuations$fragment_b[[outgoing_edge]]
+        next_side = continuations$side_b[[outgoing_edge]]
+      } else {
+        next_fragment = continuations$fragment_a[[outgoing_edge]]
+        next_side = continuations$side_a[[outgoing_edge]]
+      }
+      gap_after = continuations$endpoint_distance[[outgoing_edge]]
+      if (!is.finite(gap_after) || gap_after < 0) {
+        gap_after = 0
+      }
+    }
+    path_rows[[length(path_rows) + 1L]] = data.frame(
+      path_order = length(path_rows) + 1L,
+      render_road_fragment_id = current,
+      orientation = orientation,
+      fragment_length = length_m,
+      gap_after = gap_after,
+      stringsAsFactors = FALSE
+    )
+    used_fragment = c(used_fragment, current)
+    if (is.na(outgoing_edge) || next_fragment %in% used_fragment) {
+      if (closed && !identical(next_fragment, used_fragment[[1L]])) {
+        stop(
+          "A continuation cycle did not close at its first fragment.",
+          call. = FALSE
+        )
+      }
+      break
+    }
+    previous_edge = outgoing_edge
+    entering_side = next_side
+    current = next_fragment
+  }
+  if (!setequal(used_fragment, members)) {
+    stop("Profile span traversal omitted fragments.", call. = FALSE)
+  }
+  list(
+    members = do.call(rbind, path_rows),
+    closed = closed,
+    closing_gap = if (closed) path_rows[[length(path_rows)]]$gap_after else 0
+  )
+}
+
+#' Build physical-regime road-profile spans
 #'
 #' @param topology Active road topology.
 #' @param fragment_length Named fragment lengths in metres.
@@ -5025,19 +5342,17 @@ build_render_road_profile_spans = function(topology, fragment_length) {
     stop("The `igraph` package is required for road profile spans.")
   }
   fragment_id = topology$fragments$render_road_fragment_id
-  continuations = sf::st_drop_geometry(topology$selected_continuations)
-  if (nrow(continuations)) {
-    graph_edges = data.frame(
+  continuations = sf::st_drop_geometry(
+    topology$prospective_solve_continuations
+  )
+  graph_edges = if (nrow(continuations)) {
+    data.frame(
       from = as.character(continuations$fragment_a),
       to = as.character(continuations$fragment_b),
       stringsAsFactors = FALSE
     )
   } else {
-    graph_edges = data.frame(
-      from = character(0),
-      to = character(0),
-      stringsAsFactors = FALSE
-    )
+    data.frame(from = character(0), to = character(0))
   }
   graph = igraph::graph_from_data_frame(
     graph_edges,
@@ -5052,136 +5367,118 @@ build_render_road_profile_spans = function(topology, fragment_length) {
   component_fragment = component_fragment[
     order(vapply(component_fragment, min, integer(1)))
   ]
+
   elevated_fragment = identify_render_road_elevated_fragments(topology)
-  underground = identify_render_road_underground_fragments(topology$fragments)
   underground_fragment = topology$fragments$render_road_fragment_id[
-    underground
+    identify_render_road_underground_fragments(topology$fragments)
   ]
-  member_rows = list()
+  fragment_regime = setNames(
+    ifelse(
+      fragment_id %in% underground_fragment,
+      "underground",
+      ifelse(fragment_id %in% elevated_fragment, "elevated", "surface")
+    ),
+    fragment_id
+  )
+
   span_rows = list()
-  member_index = 0L
-  for (span_id in seq_along(component_fragment)) {
-    members = sort(component_fragment[[span_id]])
-    component_edge = which(
-      continuations$fragment_a %in%
-        members &
-        continuations$fragment_b %in% members
+  member_rows = list()
+  used_fragment = integer(0)
+  for (path_id in seq_along(component_fragment)) {
+    path = traverse_render_road_profile_path(
+      component_fragment[[path_id]],
+      continuations,
+      fragment_length
     )
-    degree = setNames(integer(length(members)), as.character(members))
-    if (length(component_edge)) {
-      for (edge in component_edge) {
-        degree[[as.character(continuations$fragment_a[[edge]])]] =
-          degree[[as.character(continuations$fragment_a[[edge]])]] + 1L
-        degree[[as.character(continuations$fragment_b[[edge]])]] =
-          degree[[as.character(continuations$fragment_b[[edge]])]] + 1L
-      }
+    ordered = path$members
+    ordered$regime = unname(
+      fragment_regime[as.character(ordered$render_road_fragment_id)]
+    )
+    if (path$closed && length(unique(ordered$regime)) > 1L) {
+      next_regime = c(ordered$regime[-1L], ordered$regime[[1L]])
+      boundary = which(ordered$regime != next_regime)
+      start = boundary[[1L]] %% nrow(ordered) + 1L
+      order_index = c(
+        seq.int(start, nrow(ordered)),
+        if (start > 1L) seq_len(start - 1L) else integer(0)
+      )
+      ordered = ordered[order_index, , drop = FALSE]
+      rownames(ordered) = NULL
     }
-    closed = length(members) > 1L && all(degree == 2L)
-    frontier = members[degree < 2L]
-    current = if (length(frontier)) min(frontier) else min(members)
-    previous_edge = NA_integer_
-    entering_side = NA_character_
-    used_fragment = integer(0)
-    offset = 0
-    order_in_span = 0L
-    repeat {
-      if (current %in% used_fragment) {
-        break
-      }
-      incident_edge = component_edge[
-        continuations$fragment_a[component_edge] == current |
-          continuations$fragment_b[component_edge] == current
-      ]
-      outgoing_edge = setdiff(incident_edge, previous_edge)
-      if (length(outgoing_edge)) {
-        outgoing_edge = min(outgoing_edge)
+    run_id = cumsum(c(
+      TRUE,
+      ordered$regime[-1L] != ordered$regime[-nrow(ordered)]
+    ))
+    for (run in unique(run_id)) {
+      run_members = ordered[run_id == run, , drop = FALSE]
+      run_closed = path$closed && nrow(run_members) == nrow(ordered)
+      span_id = length(span_rows) + 1L
+      increments = run_members$fragment_length + run_members$gap_after
+      span_offset = c(0, head(cumsum(increments), -1L))
+      if (!run_closed) {
+        span_length = tail(span_offset + run_members$fragment_length, 1L)
       } else {
-        outgoing_edge = NA_integer_
+        span_length = sum(increments)
       }
-      if (is.na(entering_side)) {
-        if (is.na(outgoing_edge)) {
-          orientation = 1L
-        } else if (continuations$fragment_a[[outgoing_edge]] == current) {
-          orientation = if (continuations$side_a[[outgoing_edge]] == "end") {
-            1L
-          } else {
-            -1L
-          }
-        } else {
-          orientation = if (continuations$side_b[[outgoing_edge]] == "end") {
-            1L
-          } else {
-            -1L
-          }
-        }
+      first_member = run_members[1L, , drop = FALSE]
+      last_member = run_members[nrow(run_members), , drop = FALSE]
+      start_side = if (first_member$orientation[[1L]] == 1L) "start" else "end"
+      outer_end_side = if (last_member$orientation[[1L]] == 1L) {
+        "end"
       } else {
-        orientation = if (entering_side == "start") 1L else -1L
+        "start"
       }
-      order_in_span = order_in_span + 1L
-      member_index = member_index + 1L
-      length_m = fragment_length[[as.character(current)]]
-      member_rows[[member_index]] = data.frame(
+      regime = run_members$regime[[1L]]
+      span_rows[[span_id]] = data.frame(
         span_id = span_id,
-        order_in_span = order_in_span,
-        render_road_fragment_id = current,
-        orientation = orientation,
-        span_offset = offset,
-        fragment_length = length_m,
+        path_id = path_id,
+        reference_regime = regime,
+        span_length = span_length,
+        start_fragment_id = first_member$render_road_fragment_id[[1L]],
+        start_side = start_side,
+        end_fragment_id = if (run_closed) {
+          first_member$render_road_fragment_id[[1L]]
+        } else {
+          last_member$render_road_fragment_id[[1L]]
+        },
+        end_side = if (run_closed) start_side else outer_end_side,
+        outer_end_fragment_id = last_member$render_road_fragment_id[[1L]],
+        outer_end_side = outer_end_side,
+        closing_gap = if (run_closed) last_member$gap_after[[1L]] else 0,
+        closed = run_closed,
+        elevated = regime == "elevated",
+        underground = regime == "underground",
+        no_dip = regime == "elevated",
+        reference = if (regime == "surface") {
+          "terrain"
+        } else if (run_closed) {
+          "periodic_chord"
+        } else {
+          "span_chord"
+        },
         stringsAsFactors = FALSE
       )
-      used_fragment = c(used_fragment, current)
-      if (is.na(outgoing_edge)) {
-        break
-      }
-      if (continuations$fragment_a[[outgoing_edge]] == current) {
-        next_fragment = continuations$fragment_b[[outgoing_edge]]
-        next_side = continuations$side_b[[outgoing_edge]]
-      } else {
-        next_fragment = continuations$fragment_a[[outgoing_edge]]
-        next_side = continuations$side_a[[outgoing_edge]]
-      }
-      gap = continuations$endpoint_distance[[outgoing_edge]]
-      if (!is.finite(gap) || gap < 0) {
-        gap = 0
-      }
-      offset = offset + length_m + gap
-      previous_edge = outgoing_edge
-      entering_side = next_side
-      current = next_fragment
-    }
-    span_member_rows = member_rows[
-      vapply(
-        member_rows,
-        function(row) row$span_id[[1L]] == span_id,
-        logical(1)
+      run_members$span_id = span_id
+      run_members$order_in_span = seq_len(nrow(run_members))
+      run_members$span_offset = span_offset
+      member_rows[[length(member_rows) + 1L]] = run_members[, c(
+        "span_id",
+        "order_in_span",
+        "render_road_fragment_id",
+        "orientation",
+        "span_offset",
+        "fragment_length",
+        "gap_after",
+        "regime"
+      )]
+      used_fragment = c(
+        used_fragment,
+        run_members$render_road_fragment_id
       )
-    ]
-    span_members = do.call(rbind, span_member_rows)
-    first_member = span_members[1L, , drop = FALSE]
-    last_member = span_members[nrow(span_members), , drop = FALSE]
-    start_side = if (first_member$orientation[[1L]] == 1L) "start" else "end"
-    end_side = if (last_member$orientation[[1L]] == 1L) "end" else "start"
-    span_length = last_member$span_offset[[1L]] +
-      last_member$fragment_length[[1L]]
-    span_elevated = any(members %in% elevated_fragment)
-    span_underground = any(members %in% underground_fragment)
-    span_rows[[span_id]] = data.frame(
-      span_id = span_id,
-      span_length = span_length,
-      start_fragment_id = first_member$render_road_fragment_id[[1L]],
-      start_side = start_side,
-      end_fragment_id = last_member$render_road_fragment_id[[1L]],
-      end_side = end_side,
-      closed = closed,
-      elevated = span_elevated,
-      no_dip = span_elevated && !span_underground && !closed,
-      reference = if (span_elevated && !span_underground && !closed) {
-        "span_chord"
-      } else {
-        "terrain"
-      },
-      stringsAsFactors = FALSE
-    )
+    }
+  }
+  if (!setequal(used_fragment, fragment_id)) {
+    stop("Profile span traversal omitted fragments.", call. = FALSE)
   }
   list(
     spans = do.call(rbind, span_rows),
@@ -5312,6 +5609,15 @@ match_render_road_profile_control_id = function(
       ),
       call. = FALSE
     )
+  }
+  if ("control_tolerance" %in% names(controls)) {
+    fragment_tolerance = unique(controls$control_tolerance[rows])
+    fragment_tolerance = fragment_tolerance[
+      is.finite(fragment_tolerance) & fragment_tolerance >= 0
+    ]
+    if (length(fragment_tolerance)) {
+      tolerance = max(tolerance, fragment_tolerance)
+    }
   }
   separation = abs(controls$distance[rows] - distance)
   match_index = which.min(separation)
@@ -5451,6 +5757,7 @@ build_render_road_profile_controls = function(
       render_road_feature_id = fragments$render_road_feature_id[[row]],
       solve_component_id = fragments$solve_component_id[[row]],
       distance = distance,
+      control_tolerance = tolerance,
       terrain = interpolate_render_road_profile_reference(
         terrain_profiles[[as.character(fragment)]],
         distance
@@ -5567,9 +5874,15 @@ build_render_road_profile_controls = function(
         controls$station_weight[rows[-1L]] + interval_length / 2
     }
   }
-  if (nrow(topology$selected_continuations)) {
-    for (continuation in seq_len(nrow(topology$selected_continuations))) {
-      record = topology$selected_continuations[continuation, , drop = FALSE]
+  if (nrow(topology$prospective_solve_continuations)) {
+    for (continuation in seq_len(nrow(
+      topology$prospective_solve_continuations
+    ))) {
+      record = topology$prospective_solve_continuations[
+        continuation,
+        ,
+        drop = FALSE
+      ]
       gap = record$endpoint_distance[[1L]]
       if (!is.finite(gap) || gap <= 0) {
         next
@@ -5629,7 +5942,74 @@ attach_render_road_profile_span_controls = function(
   spans = profile_spans$spans
   spans$start_control_id = integer(nrow(spans))
   spans$end_control_id = integer(nrow(spans))
+  spans$periodic_support_control_id = rep(NA_integer_, nrow(spans))
+  support_arc_rows = list()
   for (span in seq_len(nrow(spans))) {
+    if (isTRUE(spans$closed[[span]])) {
+      support = which(
+        controls$span_id == spans$span_id[[span]] &
+          (controls$crossing_control | controls$overlap_control)
+      )
+      if (!length(support)) {
+        support = which(
+          controls$span_id == spans$span_id[[span]] &
+            controls$endpoint_control
+        )
+      }
+      if (!length(support)) {
+        stop(
+          "A closed profile span has no periodic support control.",
+          call. = FALSE
+        )
+      }
+      support = support[
+        order(
+          controls$span_station[support],
+          controls$control_id[support]
+        )
+      ]
+      support_station = controls$span_station[support]
+      keep = !duplicated(round(support_station / control_tolerance))
+      support = support[keep]
+      support_station = support_station[keep]
+      spans$start_control_id[[span]] = support[[1L]]
+      spans$end_control_id[[span]] = support[[1L]]
+      if (length(support) == 1L) {
+        spans$periodic_support_control_id[[span]] = support[[1L]]
+        support_arc_rows[[length(support_arc_rows) + 1L]] = data.frame(
+          span_id = spans$span_id[[span]],
+          start_control_id = support[[1L]],
+          end_control_id = support[[1L]],
+          start_station = support_station[[1L]],
+          end_station = support_station[[1L]] + spans$span_length[[span]],
+          arc_length = spans$span_length[[span]],
+          span_length = spans$span_length[[span]],
+          closed = TRUE,
+          stringsAsFactors = FALSE
+        )
+      } else {
+        next_support = c(support[-1L], support[[1L]])
+        next_station = c(
+          support_station[-1L],
+          support_station[[1L]] + spans$span_length[[span]]
+        )
+        for (support_index in seq_along(support)) {
+          support_arc_rows[[length(support_arc_rows) + 1L]] = data.frame(
+            span_id = spans$span_id[[span]],
+            start_control_id = support[[support_index]],
+            end_control_id = next_support[[support_index]],
+            start_station = support_station[[support_index]],
+            end_station = next_station[[support_index]],
+            arc_length = next_station[[support_index]] -
+              support_station[[support_index]],
+            span_length = spans$span_length[[span]],
+            closed = TRUE,
+            stringsAsFactors = FALSE
+          )
+        }
+      }
+      next
+    }
     start_distance = if (spans$start_side[[span]] == "start") {
       0
     } else {
@@ -5654,9 +6034,91 @@ attach_render_road_profile_span_controls = function(
       control_tolerance,
       sprintf("span %s end", spans$span_id[[span]])
     )
+    support_arc_rows[[length(support_arc_rows) + 1L]] = data.frame(
+      span_id = spans$span_id[[span]],
+      start_control_id = spans$start_control_id[[span]],
+      end_control_id = spans$end_control_id[[span]],
+      start_station = 0,
+      end_station = spans$span_length[[span]],
+      arc_length = spans$span_length[[span]],
+      span_length = spans$span_length[[span]],
+      closed = FALSE,
+      stringsAsFactors = FALSE
+    )
   }
   profile_spans$spans = spans
+  profile_spans$support_arcs = do.call(rbind, support_arc_rows)
+  profile_spans$support_arcs$support_arc_id = seq_len(
+    nrow(profile_spans$support_arcs)
+  )
   profile_spans
+}
+
+#' Resolve support-chord arcs at profile-span stations
+#'
+#' @param support_arcs Ordered support arcs.
+#' @param span_id Profile span identifier.
+#' @param station Span stations to resolve.
+#'
+#' @return One support-arc row and interpolation fraction per station.
+#' @keywords internal
+resolve_render_road_profile_support_arcs = function(
+  support_arcs,
+  span_id,
+  station
+) {
+  arcs = support_arcs[support_arcs$span_id == span_id, , drop = FALSE]
+  if (!nrow(arcs)) {
+    stop(
+      sprintf("Profile span %s has no support chord.", span_id),
+      call. = FALSE
+    )
+  }
+  resolved = vector("list", length(station))
+  tolerance = sqrt(.Machine$double.eps)
+  for (station_index in seq_along(station)) {
+    value = station[[station_index]]
+    candidate_value = if (isTRUE(arcs$closed[[1L]])) {
+      normalized = value %% arcs$span_length[[1L]]
+      c(normalized, normalized + arcs$span_length[[1L]])
+    } else {
+      value
+    }
+    arc_index = integer(0)
+    adjusted_station = NA_real_
+    for (candidate in candidate_value) {
+      matches = which(
+        candidate >= arcs$start_station - tolerance &
+          candidate < arcs$end_station - tolerance
+      )
+      if (length(matches)) {
+        arc_index = matches[[1L]]
+        adjusted_station = candidate
+        break
+      }
+    }
+    if (!length(arc_index)) {
+      terminal_match = which(
+        abs(candidate_value[[length(candidate_value)]] - arcs$end_station) <=
+          tolerance
+      )
+      if (length(terminal_match)) {
+        arc_index = tail(terminal_match, 1L)
+        adjusted_station = arcs$end_station[[arc_index]]
+      } else {
+        stop(
+          sprintf("Station %.6f is outside profile span %s.", value, span_id),
+          call. = FALSE
+        )
+      }
+    }
+    row = arcs[arc_index, , drop = FALSE]
+    row$station = value
+    row$adjusted_station = adjusted_station
+    row$fraction = (adjusted_station - row$start_station) / row$arc_length
+    resolved[[station_index]] = row
+  }
+  do.call(rbind, resolved)
 }
 
 #' Construct one sparse road-profile constraint record
@@ -5853,8 +6315,8 @@ identify_render_road_profile_anchor_sets = function(
     endpoints$supplied_boundary
   ]
   selected_endpoint_id = unique(c(
-    topology$selected_continuations$endpoint_a,
-    topology$selected_continuations$endpoint_b
+    topology$prospective_solve_continuations$endpoint_a,
+    topology$prospective_solve_continuations$endpoint_b
   ))
   ambiguous_endpoint_id = unique(c(
     topology$ambiguous_continuations$endpoint_a,
@@ -5863,31 +6325,11 @@ identify_render_road_profile_anchor_sets = function(
   conflict_endpoint_id = integer(0)
   conflicts = topology$topology_conflict_pairs
   if (nrow(conflicts)) {
-    for (conflict in seq_len(nrow(conflicts))) {
-      for (suffix in c("a", "b")) {
-        if (!isTRUE(conflicts[[paste0("endpoint_", suffix)]][[conflict]])) {
-          next
-        }
-        fragment = conflicts[[paste0("fragment_", suffix)]][[conflict]]
-        distance = conflicts[[paste0("distance_", suffix)]][[conflict]]
-        length_m = fragment_length[[as.character(fragment)]]
-        side = if (distance <= control_tolerance) {
-          "start"
-        } else if (distance >= length_m - control_tolerance) {
-          "end"
-        } else {
-          next
-        }
-        endpoint_row = which(
-          endpoints$render_road_fragment_id == fragment &
-            endpoints$endpoint_side == side
-        )
-        conflict_endpoint_id = c(
-          conflict_endpoint_id,
-          endpoints$render_road_endpoint_id[endpoint_row]
-        )
-      }
-    }
+    conflict_endpoint_id = unique(c(
+      conflicts$endpoint_id_a[conflicts$endpoint_a],
+      conflicts$endpoint_id_b[conflicts$endpoint_b]
+    ))
+    conflict_endpoint_id = conflict_endpoint_id[!is.na(conflict_endpoint_id)]
   }
   ambiguous_endpoint_id = intersect(
     active_endpoint_id,
@@ -6084,7 +6526,226 @@ build_render_road_anchor_constraints = function(
   list(constraints = constraints, anchors = anchors)
 }
 
-#' Build pair-specific road event constraints
+#' Build pair-specific crossing-clearance constraints
+#'
+#' @param topology Active road topology.
+#' @param controls Road-profile controls.
+#' @param layer_spacing Fallback adjacent-layer clearance in metres.
+#' @param control_tolerance Control matching tolerance in metres.
+#'
+#' @return Crossing constraints and clearance diagnostics.
+#' @keywords internal
+build_render_road_crossing_constraints = function(
+  topology,
+  controls,
+  layer_spacing,
+  control_tolerance
+) {
+  fragments = topology$fragments
+  fragment_row = setNames(
+    seq_len(nrow(fragments)),
+    fragments$render_road_fragment_id
+  )
+  constraints = list()
+  clearance_rows = list()
+  crossing_pairs = topology$crossing_pairs
+  for (pair in seq_len(nrow(crossing_pairs))) {
+    record = crossing_pairs[pair, , drop = FALSE]
+    participant = topology$crossing_participants[
+      topology$crossing_participants$crossing_id == record$crossing_id[[1L]] &
+        topology$crossing_participants$render_road_fragment_id %in%
+          c(record$fragment_a[[1L]], record$fragment_b[[1L]]),
+      ,
+      drop = FALSE
+    ]
+    rank_a = participant$local_order[
+      participant$render_road_fragment_id == record$fragment_a[[1L]]
+    ]
+    rank_b = participant$local_order[
+      participant$render_road_fragment_id == record$fragment_b[[1L]]
+    ]
+    if (length(rank_a) != 1L || length(rank_b) != 1L) {
+      stop(
+        sprintf(
+          "Crossing pair %s does not map to two dense event ranks.",
+          record$point_pair_id[[1L]]
+        ),
+        call. = FALSE
+      )
+    }
+    if (rank_a < rank_b) {
+      lower_fragment = record$fragment_a[[1L]]
+      lower_distance = record$distance_a[[1L]]
+      upper_fragment = record$fragment_b[[1L]]
+      upper_distance = record$distance_b[[1L]]
+      lower_rank = rank_a
+      upper_rank = rank_b
+    } else {
+      lower_fragment = record$fragment_b[[1L]]
+      lower_distance = record$distance_b[[1L]]
+      upper_fragment = record$fragment_a[[1L]]
+      upper_distance = record$distance_a[[1L]]
+      lower_rank = rank_b
+      upper_rank = rank_a
+    }
+    lower_control = match_render_road_profile_control_id(
+      controls,
+      lower_fragment,
+      lower_distance,
+      control_tolerance,
+      sprintf("crossing pair %s lower", record$point_pair_id[[1L]])
+    )
+    upper_control = match_render_road_profile_control_id(
+      controls,
+      upper_fragment,
+      upper_distance,
+      control_tolerance,
+      sprintf("crossing pair %s upper", record$point_pair_id[[1L]])
+    )
+    clearance = fragments$render_road_clearance[
+      fragment_row[[as.character(upper_fragment)]]
+    ]
+    if (!is.finite(clearance)) {
+      clearance = layer_spacing
+    }
+    component_id = controls$solve_component_id[[upper_control]]
+    constraints[[length(constraints) + 1L]] =
+      new_render_road_profile_constraint(
+        index = c(
+          controls$height_variable[[lower_control]],
+          controls$height_variable[[upper_control]]
+        ),
+        value = c(-1, 1),
+        lower = clearance,
+        upper = Inf,
+        type = "crossing_clearance",
+        component_id = component_id,
+        fragment_a = lower_fragment,
+        fragment_b = upper_fragment,
+        event_id = record$crossing_id[[1L]],
+        clearance = clearance,
+        distance_a = lower_distance,
+        distance_b = upper_distance
+      )
+    clearance_rows[[length(clearance_rows) + 1L]] = data.frame(
+      type = "crossing",
+      event_id = record$crossing_id[[1L]],
+      pair_id = record$point_pair_id[[1L]],
+      lower_fragment_id = lower_fragment,
+      upper_fragment_id = upper_fragment,
+      lower_control_id = lower_control,
+      upper_control_id = upper_control,
+      lower_distance = lower_distance,
+      upper_distance = upper_distance,
+      lower_rank = lower_rank,
+      upper_rank = upper_rank,
+      clearance = clearance,
+      solve_component_id = component_id,
+      stringsAsFactors = FALSE
+    )
+  }
+  clearances = if (length(clearance_rows)) {
+    do.call(rbind, clearance_rows)
+  } else {
+    data.frame(
+      type = character(0),
+      event_id = integer(0),
+      pair_id = integer(0),
+      lower_fragment_id = integer(0),
+      upper_fragment_id = integer(0),
+      lower_control_id = integer(0),
+      upper_control_id = integer(0),
+      lower_distance = numeric(0),
+      upper_distance = numeric(0),
+      lower_rank = integer(0),
+      upper_rank = integer(0),
+      clearance = numeric(0),
+      solve_component_id = integer(0),
+      stringsAsFactors = FALSE
+    )
+  }
+  list(constraints = constraints, clearances = clearances)
+}
+
+#' Build pair-specific junction-height constraints
+#'
+#' @param topology Active road topology.
+#' @param controls Road-profile controls.
+#' @param control_tolerance Control matching tolerance in metres.
+#'
+#' @return Junction constraints and equality diagnostics.
+#' @keywords internal
+build_render_road_junction_constraints = function(
+  topology,
+  controls,
+  control_tolerance
+) {
+  constraints = list()
+  junction_rows = list()
+  junction_pairs = topology$junction_equality_pairs
+  for (pair in seq_len(nrow(junction_pairs))) {
+    record = junction_pairs[pair, , drop = FALSE]
+    control_a = match_render_road_profile_control_id(
+      controls,
+      record$fragment_a[[1L]],
+      record$distance_a[[1L]],
+      control_tolerance,
+      sprintf("junction pair %s side a", record$point_pair_id[[1L]])
+    )
+    control_b = match_render_road_profile_control_id(
+      controls,
+      record$fragment_b[[1L]],
+      record$distance_b[[1L]],
+      control_tolerance,
+      sprintf("junction pair %s side b", record$point_pair_id[[1L]])
+    )
+    component_id = controls$solve_component_id[[control_a]]
+    constraints[[length(constraints) + 1L]] =
+      new_render_road_profile_constraint(
+        index = c(
+          controls$height_variable[[control_a]],
+          controls$height_variable[[control_b]]
+        ),
+        value = c(-1, 1),
+        lower = 0,
+        upper = 0,
+        type = "junction_height",
+        component_id = component_id,
+        fragment_a = record$fragment_a[[1L]],
+        fragment_b = record$fragment_b[[1L]],
+        event_id = record$junction_id[[1L]],
+        distance_a = record$distance_a[[1L]],
+        distance_b = record$distance_b[[1L]]
+      )
+    junction_rows[[length(junction_rows) + 1L]] = data.frame(
+      junction_id = record$junction_id[[1L]],
+      pair_id = record$point_pair_id[[1L]],
+      fragment_a = record$fragment_a[[1L]],
+      fragment_b = record$fragment_b[[1L]],
+      control_a = control_a,
+      control_b = control_b,
+      solve_component_id = component_id,
+      stringsAsFactors = FALSE
+    )
+  }
+  equalities = if (length(junction_rows)) {
+    do.call(rbind, junction_rows)
+  } else {
+    data.frame(
+      junction_id = integer(0),
+      pair_id = integer(0),
+      fragment_a = integer(0),
+      fragment_b = integer(0),
+      control_a = integer(0),
+      control_b = integer(0),
+      solve_component_id = integer(0),
+      stringsAsFactors = FALSE
+    )
+  }
+  list(constraints = constraints, equalities = equalities)
+}
+
+#' Build pair-specific overlap-clearance constraints
 #'
 #' @param topology Active road topology.
 #' @param controls Road-profile controls.
@@ -6092,9 +6753,9 @@ build_render_road_anchor_constraints = function(
 #' @param layer_spacing Fallback adjacent-layer clearance in metres.
 #' @param control_tolerance Control matching tolerance in metres.
 #'
-#' @return Event constraints and relation-specific diagnostics.
+#' @return Overlap constraints and relation-specific diagnostics.
 #' @keywords internal
-build_render_road_event_constraints = function(
+build_render_road_overlap_constraints = function(
   topology,
   controls,
   adaptive_constraints,
@@ -6108,167 +6769,6 @@ build_render_road_event_constraints = function(
   )
   constraints = list()
   clearance_rows = list()
-  junction_rows = list()
-  skipped_crossing_rows = list()
-  crossing_pairs = topology$crossing_pairs
-  if (nrow(crossing_pairs)) {
-    for (pair in seq_len(nrow(crossing_pairs))) {
-      record = crossing_pairs[pair, , drop = FALSE]
-      participant = topology$crossing_participants[
-        topology$crossing_participants$crossing_id == record$crossing_id[[1L]] &
-          topology$crossing_participants$render_road_fragment_id %in%
-            c(record$fragment_a[[1L]], record$fragment_b[[1L]]),
-        ,
-        drop = FALSE
-      ]
-      rank_a = participant$local_order[
-        participant$render_road_fragment_id == record$fragment_a[[1L]]
-      ]
-      rank_b = participant$local_order[
-        participant$render_road_fragment_id == record$fragment_b[[1L]]
-      ]
-      if (length(rank_a) != 1L || length(rank_b) != 1L) {
-        stop(
-          sprintf(
-            "Crossing pair %s does not map to two dense event ranks.",
-            record$point_pair_id[[1L]]
-          ),
-          call. = FALSE
-        )
-      }
-      if (abs(rank_a - rank_b) != 1L) {
-        skipped_crossing_rows[[length(skipped_crossing_rows) + 1L]] =
-          data.frame(
-            point_pair_id = record$point_pair_id[[1L]],
-            crossing_id = record$crossing_id[[1L]],
-            fragment_a = record$fragment_a[[1L]],
-            fragment_b = record$fragment_b[[1L]],
-            rank_a = rank_a,
-            rank_b = rank_b,
-            reason = "non_adjacent_dense_rank",
-            stringsAsFactors = FALSE
-          )
-        next
-      }
-      if (rank_a < rank_b) {
-        lower_fragment = record$fragment_a[[1L]]
-        lower_distance = record$distance_a[[1L]]
-        upper_fragment = record$fragment_b[[1L]]
-        upper_distance = record$distance_b[[1L]]
-        lower_rank = rank_a
-        upper_rank = rank_b
-      } else {
-        lower_fragment = record$fragment_b[[1L]]
-        lower_distance = record$distance_b[[1L]]
-        upper_fragment = record$fragment_a[[1L]]
-        upper_distance = record$distance_a[[1L]]
-        lower_rank = rank_b
-        upper_rank = rank_a
-      }
-      lower_control = match_render_road_profile_control_id(
-        controls,
-        lower_fragment,
-        lower_distance,
-        control_tolerance,
-        sprintf("crossing pair %s lower", record$point_pair_id[[1L]])
-      )
-      upper_control = match_render_road_profile_control_id(
-        controls,
-        upper_fragment,
-        upper_distance,
-        control_tolerance,
-        sprintf("crossing pair %s upper", record$point_pair_id[[1L]])
-      )
-      upper_row = fragment_row[[as.character(upper_fragment)]]
-      clearance = fragments$render_road_clearance[[upper_row]]
-      if (!is.finite(clearance)) {
-        clearance = layer_spacing
-      }
-      component_id = controls$solve_component_id[[upper_control]]
-      constraints[[length(constraints) + 1L]] =
-        new_render_road_profile_constraint(
-          index = c(
-            controls$height_variable[[lower_control]],
-            controls$height_variable[[upper_control]]
-          ),
-          value = c(-1, 1),
-          lower = clearance,
-          upper = Inf,
-          type = "crossing_clearance",
-          component_id = component_id,
-          fragment_a = lower_fragment,
-          fragment_b = upper_fragment,
-          event_id = record$crossing_id[[1L]],
-          clearance = clearance,
-          distance_a = lower_distance,
-          distance_b = upper_distance
-        )
-      clearance_rows[[length(clearance_rows) + 1L]] = data.frame(
-        type = "crossing",
-        event_id = record$crossing_id[[1L]],
-        pair_id = record$point_pair_id[[1L]],
-        lower_fragment_id = lower_fragment,
-        upper_fragment_id = upper_fragment,
-        lower_control_id = lower_control,
-        upper_control_id = upper_control,
-        lower_distance = lower_distance,
-        upper_distance = upper_distance,
-        lower_rank = lower_rank,
-        upper_rank = upper_rank,
-        clearance = clearance,
-        solve_component_id = component_id,
-        stringsAsFactors = FALSE
-      )
-    }
-  }
-  junction_pairs = topology$junction_equality_pairs
-  if (nrow(junction_pairs)) {
-    for (pair in seq_len(nrow(junction_pairs))) {
-      record = junction_pairs[pair, , drop = FALSE]
-      control_a = match_render_road_profile_control_id(
-        controls,
-        record$fragment_a[[1L]],
-        record$distance_a[[1L]],
-        control_tolerance,
-        sprintf("junction pair %s side a", record$point_pair_id[[1L]])
-      )
-      control_b = match_render_road_profile_control_id(
-        controls,
-        record$fragment_b[[1L]],
-        record$distance_b[[1L]],
-        control_tolerance,
-        sprintf("junction pair %s side b", record$point_pair_id[[1L]])
-      )
-      component_id = controls$solve_component_id[[control_a]]
-      constraints[[length(constraints) + 1L]] =
-        new_render_road_profile_constraint(
-          index = c(
-            controls$height_variable[[control_a]],
-            controls$height_variable[[control_b]]
-          ),
-          value = c(-1, 1),
-          lower = 0,
-          upper = 0,
-          type = "junction_height",
-          component_id = component_id,
-          fragment_a = record$fragment_a[[1L]],
-          fragment_b = record$fragment_b[[1L]],
-          event_id = record$junction_id[[1L]],
-          distance_a = record$distance_a[[1L]],
-          distance_b = record$distance_b[[1L]]
-        )
-      junction_rows[[length(junction_rows) + 1L]] = data.frame(
-        junction_id = record$junction_id[[1L]],
-        pair_id = record$point_pair_id[[1L]],
-        fragment_a = record$fragment_a[[1L]],
-        fragment_b = record$fragment_b[[1L]],
-        control_a = control_a,
-        control_b = control_b,
-        solve_component_id = component_id,
-        stringsAsFactors = FALSE
-      )
-    }
-  }
   overlap_relation_rows = list()
   if (nrow(topology$layer_overlaps)) {
     for (overlap in seq_len(nrow(topology$layer_overlaps))) {
@@ -6462,34 +6962,6 @@ build_render_road_event_constraints = function(
       stringsAsFactors = FALSE
     )
   }
-  junction_equalities = if (length(junction_rows)) {
-    do.call(rbind, junction_rows)
-  } else {
-    data.frame(
-      junction_id = integer(0),
-      pair_id = integer(0),
-      fragment_a = integer(0),
-      fragment_b = integer(0),
-      control_a = integer(0),
-      control_b = integer(0),
-      solve_component_id = integer(0),
-      stringsAsFactors = FALSE
-    )
-  }
-  skipped_crossing_pairs = if (length(skipped_crossing_rows)) {
-    do.call(rbind, skipped_crossing_rows)
-  } else {
-    data.frame(
-      point_pair_id = integer(0),
-      crossing_id = integer(0),
-      fragment_a = integer(0),
-      fragment_b = integer(0),
-      rank_a = integer(0),
-      rank_b = integer(0),
-      reason = character(0),
-      stringsAsFactors = FALSE
-    )
-  }
   overlap_relations = if (length(overlap_relation_rows)) {
     do.call(rbind, overlap_relation_rows)
   } else {
@@ -6508,9 +6980,54 @@ build_render_road_event_constraints = function(
   list(
     constraints = constraints,
     clearances = clearances,
-    junction_equalities = junction_equalities,
-    overlap_relations = overlap_relations,
-    skipped_crossing_pairs = skipped_crossing_pairs,
+    overlap_relations = overlap_relations
+  )
+}
+
+#' Build pair-specific road event constraints
+#'
+#' @param topology Active road topology.
+#' @param controls Road-profile controls.
+#' @param adaptive_constraints Adaptive constraint requests.
+#' @param layer_spacing Fallback adjacent-layer clearance in metres.
+#' @param control_tolerance Control matching tolerance in metres.
+#'
+#' @return Event constraints and relation-specific diagnostics.
+#' @keywords internal
+build_render_road_event_constraints = function(
+  topology,
+  controls,
+  adaptive_constraints,
+  layer_spacing,
+  control_tolerance
+) {
+  crossing = build_render_road_crossing_constraints(
+    topology,
+    controls,
+    layer_spacing,
+    control_tolerance
+  )
+  junction = build_render_road_junction_constraints(
+    topology,
+    controls,
+    control_tolerance
+  )
+  overlap = build_render_road_overlap_constraints(
+    topology,
+    controls,
+    adaptive_constraints,
+    layer_spacing,
+    control_tolerance
+  )
+  list(
+    constraints = c(
+      crossing$constraints,
+      junction$constraints,
+      overlap$constraints
+    ),
+    clearances = rbind(crossing$clearances, overlap$clearances),
+    junction_equalities = junction$equalities,
+    overlap_relations = overlap$overlap_relations,
     topology_conflict_pairs = topology$topology_conflict_pairs
   )
 }
@@ -6535,7 +7052,7 @@ build_render_road_continuation_constraints = function(
   constraints = list()
   continuation_rows = list()
   curvature_rows = list()
-  continuations = topology$selected_continuations
+  continuations = topology$prospective_solve_continuations
   if (nrow(continuations)) {
     for (continuation in seq_len(nrow(continuations))) {
       record = continuations[continuation, , drop = FALSE]
@@ -6718,13 +7235,18 @@ build_render_road_chord_constraints = function(profile_spans, controls) {
     for (span_row in seq_len(nrow(active_span))) {
       span = active_span[span_row, , drop = FALSE]
       rows = which(controls$span_id == span$span_id[[1L]])
-      start_control = span$start_control_id[[1L]]
-      end_control = span$end_control_id[[1L]]
       for (control in rows) {
+        support_arc = resolve_render_road_profile_support_arcs(
+          profile_spans$support_arcs,
+          span$span_id[[1L]],
+          controls$span_station[[control]]
+        )
+        start_control = support_arc$start_control_id[[1L]]
+        end_control = support_arc$end_control_id[[1L]]
         if (control %in% c(start_control, end_control)) {
           next
         }
-        fraction = controls$span_station[[control]] / span$span_length[[1L]]
+        fraction = support_arc$fraction[[1L]]
         constraints[[length(constraints) + 1L]] =
           new_render_road_profile_constraint(
             index = c(
@@ -6743,6 +7265,7 @@ build_render_road_chord_constraints = function(profile_spans, controls) {
           )
         chord_rows[[length(chord_rows) + 1L]] = data.frame(
           span_id = span$span_id[[1L]],
+          support_arc_id = support_arc$support_arc_id[[1L]],
           control_id = control,
           start_control_id = start_control,
           end_control_id = end_control,
@@ -6757,6 +7280,7 @@ build_render_road_chord_constraints = function(profile_spans, controls) {
   } else {
     data.frame(
       span_id = integer(0),
+      support_arc_id = integer(0),
       control_id = integer(0),
       start_control_id = integer(0),
       end_control_id = integer(0),
@@ -6812,14 +7336,19 @@ build_render_road_profile_objective = function(
     span = spans[spans$span_id == controls$span_id[[control]], , drop = FALSE]
     if (
       terrain_reference_weight > 0 &&
-        span$reference[[1L]] == "span_chord"
+        span$reference[[1L]] %in% c("span_chord", "periodic_chord")
     ) {
-      fraction = controls$span_station[[control]] / span$span_length[[1L]]
+      support_arc = resolve_render_road_profile_support_arcs(
+        profile_spans$support_arcs,
+        span$span_id[[1L]],
+        controls$span_station[[control]]
+      )
+      fraction = support_arc$fraction[[1L]]
       coefficient = c(1, -(1 - fraction), -fraction)
       variable = c(
         height_variable,
-        controls$height_variable[[span$start_control_id[[1L]]]],
-        controls$height_variable[[span$end_control_id[[1L]]]]
+        controls$height_variable[[support_arc$start_control_id[[1L]]]],
+        controls$height_variable[[support_arc$end_control_id[[1L]]]]
       )
       coefficient_by_variable = tapply(coefficient, variable, sum)
       coefficient_by_variable = coefficient_by_variable[
@@ -6947,6 +7476,94 @@ compile_render_road_profile_matrices = function(
     upper = upper,
     constraints = constraint_table
   )
+}
+
+#' Validate solve-component separation before optimization
+#'
+#' @param topology Active road topology.
+#' @param controls Road-profile controls.
+#' @param constraints Constraint records before matrix compilation.
+#' @param matrix_a Sparse constraint matrix.
+#' @param matrix_p Sparse quadratic objective matrix.
+#'
+#' @return `TRUE`, invisibly, or an error describing a cross-component coupling.
+#' @keywords internal
+validate_render_road_profile_component_blocks = function(
+  topology,
+  controls,
+  constraints,
+  matrix_a,
+  matrix_p
+) {
+  fragment_component = setNames(
+    topology$fragments$solve_component_id,
+    topology$fragments$render_road_fragment_id
+  )
+  hard_pair = vapply(
+    constraints,
+    function(record) {
+      is.finite(record$fragment_a) && is.finite(record$fragment_b)
+    },
+    logical(1)
+  )
+  if (any(hard_pair)) {
+    pair_component = vapply(
+      constraints[hard_pair],
+      function(record) {
+        component_a = fragment_component[[as.character(record$fragment_a)]]
+        component_b = fragment_component[[as.character(record$fragment_b)]]
+        length(component_a) == 1L &&
+          length(component_b) == 1L &&
+          is.finite(component_a) &&
+          is.finite(component_b) &&
+          component_a == component_b
+      },
+      logical(1)
+    )
+    if (!all(pair_component)) {
+      bad = which(hard_pair)[which(!pair_component)[[1L]]]
+      stop(
+        sprintf(
+          "Hard constraint `%s` couples fragments from different solve components.",
+          constraints[[bad]]$type
+        ),
+        call. = FALSE
+      )
+    }
+  }
+
+  variable_component = c(
+    controls$solve_component_id,
+    controls$solve_component_id
+  )
+  summary_a = Matrix::summary(matrix_a)
+  if (nrow(summary_a)) {
+    component_by_row = split(variable_component[summary_a$j], summary_a$i)
+    invalid_a = vapply(
+      component_by_row,
+      function(value) length(unique(value)) != 1L,
+      logical(1)
+    )
+    if (any(invalid_a)) {
+      stop(
+        "The hard-constraint matrix is not solve-component block diagonal.",
+        call. = FALSE
+      )
+    }
+  }
+  summary_p = Matrix::summary(matrix_p)
+  off_block = nrow(summary_p) &&
+    any(
+      abs(summary_p$x) > 1e-14 &
+        variable_component[summary_p$i] != variable_component[summary_p$j]
+    )
+  if (off_block) {
+    stop(
+      "The quadratic objective is not solve-component block diagonal.",
+      call. = FALSE
+    )
+  }
+  invisible(TRUE)
 }
 
 #' Build a sparse quadratic road profile problem
@@ -7156,6 +7773,13 @@ build_render_road_profile_problem = function(
     constraints,
     nrow(controls) * 2L
   )
+  validate_render_road_profile_component_blocks(
+    topology = topology,
+    controls = controls,
+    constraints = constraints,
+    matrix_a = matrices$A,
+    matrix_p = objective$P
+  )
   result = list(
     topology = topology,
     terrain_profiles = terrain_profiles,
@@ -7166,6 +7790,7 @@ build_render_road_profile_problem = function(
     intervals = interval_result$intervals,
     spans = profile_spans$spans,
     span_members = profile_spans$members,
+    support_arcs = profile_spans$support_arcs,
     anchors = anchor_result$anchors,
     anchor_sets = anchor_sets,
     clearances = event_result$clearances,
@@ -7174,7 +7799,6 @@ build_render_road_profile_problem = function(
     continuation_equalities = continuation_result$continuation_equalities,
     chord_controls = chord_result$chord_controls,
     curvature_terms = curvature_terms,
-    skipped_crossing_pairs = event_result$skipped_crossing_pairs,
     topology_conflict_pairs = event_result$topology_conflict_pairs,
     P = objective$P,
     q = objective$q,
@@ -7265,6 +7889,64 @@ evaluate_render_road_profile_at = function(
     control_b = second,
     stringsAsFactors = FALSE
   )
+}
+
+#' Collapse continuous-audit requests by constraint family and relation
+#'
+#' @param request_rows Candidate adaptive-request rows.
+#'
+#' @return Deduplicated adaptive constraint requests.
+#' @keywords internal
+collapse_render_road_profile_adaptive_requests = function(request_rows) {
+  if (!length(request_rows)) {
+    return(normalize_render_road_adaptive_constraints())
+  }
+  requests = do.call(rbind, request_rows)
+  single_fragment = requests$type != "overlap_clearance"
+  selected_request = integer(0)
+  if (any(single_fragment)) {
+    request_group = split(
+      which(single_fragment),
+      interaction(
+        requests$type[single_fragment],
+        requests$fragment_a[single_fragment],
+        drop = TRUE
+      )
+    )
+    selected_request = c(
+      selected_request,
+      vapply(
+        request_group,
+        function(rows) rows[[which.min(requests$source_margin[rows])]],
+        integer(1)
+      )
+    )
+  }
+  if (any(!single_fragment)) {
+    overlap_group = split(
+      which(!single_fragment),
+      requests$event_id[!single_fragment]
+    )
+    selected_request = c(
+      selected_request,
+      vapply(
+        overlap_group,
+        function(rows) rows[[which.min(requests$source_margin[rows])]],
+        integer(1)
+      )
+    )
+  }
+  requests = requests[sort(unique(selected_request)), , drop = FALSE]
+  request_key = paste(
+    requests$type,
+    requests$fragment_a,
+    signif(requests$distance_a, 12),
+    requests$fragment_b,
+    signif(requests$distance_b, 12),
+    requests$event_id,
+    sep = ":"
+  )
+  requests[!duplicated(request_key), , drop = FALSE]
 }
 
 #' Find continuous road-profile engineering violations
@@ -7375,10 +8057,12 @@ find_render_road_profile_continuous_violations = function(
         )
         if (margin[[worst]] < -tolerance) {
           existing_distance = controls$distance[fragment_controls]
+          fragment_tolerance = max(
+            controls$control_tolerance[fragment_controls]
+          )
           if (
             all(
-              abs(existing_distance - candidate[[worst]]) >
-                problem$settings$control_tolerance
+              abs(existing_distance - candidate[[worst]]) > fragment_tolerance
             )
           ) {
             request_rows[[length(request_rows) + 1L]] = data.frame(
@@ -7401,9 +8085,6 @@ find_render_road_profile_continuous_violations = function(
   if (nrow(active_spans)) {
     for (span_row in seq_len(nrow(active_spans))) {
       span = active_spans[span_row, , drop = FALSE]
-      start_height = controls$height[[span$start_control_id[[1L]]]]
-      end_height = controls$height[[span$end_control_id[[1L]]]]
-      span_slope = (end_height - start_height) / span$span_length[[1L]]
       members = problem$span_members[
         problem$span_members$span_id == span$span_id[[1L]],
         ,
@@ -7418,7 +8099,6 @@ find_render_road_profile_continuous_violations = function(
         fragment_controls = fragment_controls[
           order(controls$distance[fragment_controls])
         ]
-        chord_local_slope = span_slope * member$orientation[[1L]]
         for (interval in seq_len(length(fragment_controls) - 1L)) {
           control_a = fragment_controls[[interval]]
           control_b = fragment_controls[[interval + 1L]]
@@ -7428,6 +8108,25 @@ find_render_road_profile_continuous_violations = function(
           quadratic_coefficient = (controls$grade[[control_b]] -
             controls$grade[[control_a]]) /
             (2 * interval_length)
+          midpoint_station = map_render_road_profile_span_station(
+            problem$span_members,
+            fragment,
+            (interval_start + interval_end) / 2
+          )
+          support_arc = resolve_render_road_profile_support_arcs(
+            problem$support_arcs,
+            span$span_id[[1L]],
+            midpoint_station
+          )
+          start_height = controls$height[
+            support_arc$start_control_id[[1L]]
+          ]
+          end_height = controls$height[
+            support_arc$end_control_id[[1L]]
+          ]
+          span_slope = (end_height - start_height) /
+            support_arc$arc_length[[1L]]
+          chord_local_slope = span_slope * member$orientation[[1L]]
           candidate = c(interval_start, interval_end)
           if (abs(quadratic_coefficient) > 1e-14) {
             stationary_local = (chord_local_slope -
@@ -7450,11 +8149,20 @@ find_render_road_profile_continuous_violations = function(
             fragment,
             candidate
           )
-          chord = start_height + span_slope * span_station
+          candidate_arcs = resolve_render_road_profile_support_arcs(
+            problem$support_arcs,
+            span$span_id[[1L]],
+            span_station
+          )
+          chord = controls$height[candidate_arcs$start_control_id] +
+            candidate_arcs$fraction *
+              (controls$height[candidate_arcs$end_control_id] -
+                controls$height[candidate_arcs$start_control_id])
           margin = profile_value$height - chord
           worst = which.min(margin)
           chord_rows[[length(chord_rows) + 1L]] = data.frame(
             span_id = span$span_id[[1L]],
+            support_arc_id = candidate_arcs$support_arc_id[[worst]],
             render_road_fragment_id = fragment,
             distance = candidate[[worst]],
             span_station = span_station[[worst]],
@@ -7465,10 +8173,12 @@ find_render_road_profile_continuous_violations = function(
           )
           if (margin[[worst]] < -tolerance) {
             existing_distance = controls$distance[fragment_controls]
+            fragment_tolerance = max(
+              controls$control_tolerance[fragment_controls]
+            )
             if (
               all(
-                abs(existing_distance - candidate[[worst]]) >
-                  problem$settings$control_tolerance
+                abs(existing_distance - candidate[[worst]]) > fragment_tolerance
               )
             ) {
               request_rows[[length(request_rows) + 1L]] = data.frame(
@@ -7598,9 +8308,13 @@ find_render_road_profile_continuous_violations = function(
           already_requested = nrow(prior) &&
             any(
               abs(prior$distance_a - lower_distance_worst) <=
-                problem$settings$control_tolerance &
+                max(controls$control_tolerance[
+                  controls$render_road_fragment_id == lower_fragment
+                ]) &
                 abs(prior$distance_b - upper_distance_worst) <=
-                  problem$settings$control_tolerance
+                  max(controls$control_tolerance[
+                    controls$render_road_fragment_id == upper_fragment
+                  ])
             )
           if (!already_requested) {
             request_rows[[length(request_rows) + 1L]] = data.frame(
@@ -7636,6 +8350,7 @@ find_render_road_profile_continuous_violations = function(
   } else {
     data.frame(
       span_id = integer(0),
+      support_arc_id = integer(0),
       render_road_fragment_id = integer(0),
       distance = numeric(0),
       span_station = numeric(0),
@@ -7659,52 +8374,7 @@ find_render_road_profile_continuous_violations = function(
       stringsAsFactors = FALSE
     )
   }
-  requests = if (length(request_rows)) {
-    requests = do.call(rbind, request_rows)
-    single_fragment = requests$type != "overlap_clearance"
-    selected_request = integer(0)
-    if (any(single_fragment)) {
-      request_group = split(
-        which(single_fragment),
-        requests$fragment_a[single_fragment]
-      )
-      selected_request = c(
-        selected_request,
-        vapply(
-          request_group,
-          function(rows) rows[[which.min(requests$source_margin[rows])]],
-          integer(1)
-        )
-      )
-    }
-    if (any(!single_fragment)) {
-      overlap_group = split(
-        which(!single_fragment),
-        requests$event_id[!single_fragment]
-      )
-      selected_request = c(
-        selected_request,
-        vapply(
-          overlap_group,
-          function(rows) rows[[which.min(requests$source_margin[rows])]],
-          integer(1)
-        )
-      )
-    }
-    requests = requests[sort(unique(selected_request)), , drop = FALSE]
-    request_key = paste(
-      requests$type,
-      requests$fragment_a,
-      signif(requests$distance_a, 12),
-      requests$fragment_b,
-      signif(requests$distance_b, 12),
-      requests$event_id,
-      sep = ":"
-    )
-    requests[!duplicated(request_key), , drop = FALSE]
-  } else {
-    normalize_render_road_adaptive_constraints()
-  }
+  requests = collapse_render_road_profile_adaptive_requests(request_rows)
   list(
     continuous_terrain_margin = if (nrow(terrain_checks)) {
       min(terrain_checks$margin)
@@ -8290,11 +8960,15 @@ evaluate_render_road_profiles = function(
       fragment,
       distance
     )
-    endpoint_chord = controls$height[[span$start_control_id[[1L]]]] +
-      span_station /
-        span$span_length[[1L]] *
-        (controls$height[[span$end_control_id[[1L]]]] -
-          controls$height[[span$start_control_id[[1L]]]])
+    support_arcs = resolve_render_road_profile_support_arcs(
+      problem$support_arcs,
+      span$span_id[[1L]],
+      span_station
+    )
+    endpoint_chord = controls$height[support_arcs$start_control_id] +
+      support_arcs$fraction *
+        (controls$height[support_arcs$end_control_id] -
+          controls$height[support_arcs$start_control_id])
     data.frame(
       render_road_fragment_id = fragment,
       render_road_feature_id = fragments$render_road_feature_id[[fragment_row]],
