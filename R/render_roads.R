@@ -36,7 +36,10 @@
 #' length.
 #' @param layer Default `NULL`. An unquoted or character column name in an `sf`
 #' road object containing OpenStreetMap-style layer values. Missing values are
-#' treated as the implicit layer `0` when determining local crossing order.
+#' treated as implicit layer `0`, except affirmative `bridge` or elevated
+#' `location` metadata infer effective layer `1` and affirmative `tunnel` or
+#' underground `location` metadata infer effective layer `-1`. Inferred values
+#' remain distinguishable from explicit OSM layer tags in diagnostics.
 #' Roads are grouped by exact physical events and conservative endpoint
 #' continuations. A sparse quadratic profile solve enforces crossing clearance,
 #' longitudinal grade and grade-rate limits, junction height continuity, and
@@ -74,8 +77,10 @@
 #' directly.
 #' @param lanes Default `2`. Number of lanes used when generating the default
 #' lane texture and, when `width = NULL`, deriving the road width. May also be
-#' an unquoted or character column name in an `sf` road object; this generates
-#' the matching texture and width for each feature.
+#' an unquoted or character column name in an `sf` road object. OSM-style
+#' compound values use their first positive integer. Missing values first use
+#' `lanes:forward` plus `lanes:backward`, then fall back to one lane for links
+#' and one-way roads or two lanes for other roads.
 #' @param lane_width Default `3`. Lane width in scene/world units used when
 #' `width = NULL`. The derived road width is
 #' `lane_width * (lanes + 2)`. The generated lane texture leaves one lane width
@@ -374,6 +379,65 @@ resolve_render_road_lanes = function(
   )
 }
 
+#' Parse an OSM lane-count tag
+#'
+#' @param value Raw OSM lane-count values.
+#'
+#' @return Integer lane counts with invalid or missing entries represented by
+#' `NA`.
+#' @keywords internal
+parse_render_road_osm_lane_count = function(value) {
+  if (is.factor(value)) {
+    value = as.character(value)
+  }
+  if (is.numeric(value)) {
+    parsed = suppressWarnings(as.numeric(value))
+  } else {
+    value = trimws(as.character(value))
+    matched = regexpr(
+      "[0-9]+(?:\\.[0-9]+)?",
+      value,
+      perl = TRUE
+    )
+    parsed = rep(NA_real_, length(value))
+    present = !is.na(value) & matched > 0L
+    match_length = attr(matched, "match.length")
+    parsed[present] = suppressWarnings(as.numeric(substring(
+      value[present],
+      matched[present],
+      matched[present] + match_length[present] - 1L
+    )))
+  }
+  valid = is.finite(parsed) &
+    parsed >= 1 &
+    parsed == floor(parsed)
+  parsed[!valid] = NA_real_
+  as.integer(parsed)
+}
+
+#' Normalize an OSM text tag
+#'
+#' @param value Raw OSM tag values.
+#'
+#' @return Lowercase character values with missing and blank entries as `NA`.
+#' @keywords internal
+normalize_render_road_osm_tag = function(value) {
+  value = tolower(trimws(as.character(value)))
+  value[is.na(value) | !nzchar(value)] = NA_character_
+  value
+}
+
+#' Identify truthy OSM structure tags
+#'
+#' @param value Raw OSM tag values.
+#'
+#' @return Logical values indicating affirmative structure metadata.
+#' @keywords internal
+is_truthy_render_road_osm_tag = function(value) {
+  value = normalize_render_road_osm_tag(value)
+  !is.na(value) & !(value %in% c("no", "false", "0"))
+}
+
 #' Resolve render road lane values
 #'
 #' @param roads Prepared road features.
@@ -399,25 +463,103 @@ resolve_render_road_lane_values = function(
       call. = FALSE
     )
   }
-  raw_lanes = roads[[lanes_column]]
-  if (is.factor(raw_lanes)) {
-    raw_lanes = as.character(raw_lanes)
+  lane_values = parse_render_road_osm_lane_count(roads[[lanes_column]])
+  directional_value = function(column) {
+    if (!(column %in% names(roads))) {
+      return(rep(NA_integer_, nrow(roads)))
+    }
+    parse_render_road_osm_lane_count(roads[[column]])
   }
-  lane_values = suppressWarnings(as.numeric(raw_lanes))
-  valid = length(lane_values) == nrow(roads) &&
-    all(is.finite(lane_values)) &&
-    all(lane_values >= 1) &&
-    all(lane_values == floor(lane_values))
-  if (!valid) {
+  forward = directional_value("lanes:forward")
+  backward = directional_value("lanes:backward")
+  directional_present = is.finite(forward) | is.finite(backward)
+  directional_total = rowSums(
+    cbind(forward, backward),
+    na.rm = TRUE
+  )
+  use_directional = !is.finite(lane_values) & directional_present
+  lane_values[use_directional] = directional_total[use_directional]
+
+  highway = if ("highway" %in% names(roads)) {
+    normalize_render_road_osm_tag(roads$highway)
+  } else {
+    rep(NA_character_, nrow(roads))
+  }
+  oneway = if ("oneway" %in% names(roads)) {
+    normalize_render_road_osm_tag(roads$oneway) %in%
+      c("yes", "true", "1", "-1")
+  } else {
+    rep(FALSE, nrow(roads))
+  }
+  link = !is.na(highway) & grepl("_link$", highway)
+  fallback = ifelse(oneway | link, 1L, 2L)
+  missing = !is.finite(lane_values) | lane_values < 1L
+  lane_values[missing] = fallback[missing]
+  as.integer(lane_values)
+}
+
+#' Resolve effective OSM road layers
+#'
+#' @param roads Road features containing OSM-style metadata.
+#' @param layer_column Column containing explicit OSM layer values.
+#'
+#' @return Effective layers, explicit and inferred flags, and inference sources.
+#' @keywords internal
+resolve_render_road_osm_layer_values = function(roads, layer_column) {
+  raw_layer = roads[[layer_column]]
+  if (is.factor(raw_layer)) {
+    raw_layer = as.character(raw_layer)
+  }
+  explicit = !is.na(raw_layer)
+  if (is.character(raw_layer)) {
+    explicit = explicit & nzchar(trimws(raw_layer))
+  }
+  layer = suppressWarnings(as.numeric(raw_layer))
+  if (any(explicit & !is.finite(layer))) {
     stop(
       sprintf(
-        "`lanes` column `%s` must contain positive finite integers.",
-        lanes_column
+        "`layer` column `%s` must contain finite numeric values or NA.",
+        layer_column
       ),
       call. = FALSE
     )
   }
-  as.integer(lane_values)
+  layer[!explicit] = 0
+
+  metadata_value = function(column) {
+    if (!(column %in% names(roads))) {
+      return(rep(NA_character_, nrow(roads)))
+    }
+    roads[[column]]
+  }
+  bridge = is_truthy_render_road_osm_tag(metadata_value("bridge"))
+  tunnel = is_truthy_render_road_osm_tag(metadata_value("tunnel"))
+  location = normalize_render_road_osm_tag(metadata_value("location"))
+  elevated_location = !is.na(location) &
+    location %in% c("elevated", "overground")
+  underground_location = !is.na(location) &
+    location %in% c("underground", "underwater", "subway")
+  upper = bridge | elevated_location
+  lower = tunnel | underground_location
+  inferred_upper = !explicit & upper & !lower
+  inferred_lower = !explicit & lower & !upper
+  conflicting = !explicit & upper & lower
+  layer[inferred_upper] = 1
+  layer[inferred_lower] = -1
+  inferred = inferred_upper | inferred_lower
+  source = rep("implicit_surface", nrow(roads))
+  source[explicit] = "explicit_layer"
+  source[inferred_upper & bridge] = "bridge"
+  source[inferred_upper & !bridge] = "elevated_location"
+  source[inferred_lower & tunnel] = "tunnel"
+  source[inferred_lower & !tunnel] = "underground_location"
+  source[conflicting] = "conflicting_structure_metadata"
+  list(
+    layer = layer,
+    explicit = explicit,
+    inferred = inferred,
+    source = source
+  )
 }
 
 #' Resolve render road layer values
@@ -445,25 +587,7 @@ resolve_render_road_layer_values = function(
       call. = FALSE
     )
   }
-  raw_layer = roads[[layer_column]]
-  if (is.factor(raw_layer)) {
-    raw_layer = as.character(raw_layer)
-  }
-  explicit = !is.na(raw_layer)
-  if (is.character(raw_layer)) {
-    explicit = explicit & nzchar(trimws(raw_layer))
-  }
-  layer = suppressWarnings(as.numeric(raw_layer))
-  if (any(explicit & !is.finite(layer))) {
-    stop(
-      sprintf(
-        "`layer` column `%s` must contain finite numeric values or NA.",
-        layer_column
-      ),
-      call. = FALSE
-    )
-  }
-  layer[!explicit] = 0
+  layer_values = resolve_render_road_osm_layer_values(roads, layer_column)
 
   height = NULL
   if (!is.null(layer_height_column)) {
@@ -499,7 +623,13 @@ resolve_render_road_layer_values = function(
     }
     height[!height_present] = NA_real_
   }
-  list(layer = layer, explicit = explicit, height = height)
+  list(
+    layer = layer_values$layer,
+    explicit = layer_values$explicit,
+    inferred = layer_values$inferred,
+    source = layer_values$source,
+    height = height
+  )
 }
 
 #' Render road paths
@@ -1593,22 +1723,15 @@ prepare_render_road_layer_features = function(
   source_fragments = cleaned$source
   metric_fragments = cleaned$metric
 
-  # Parse OSM layer values while retaining whether layer 0 was explicit or implied.
-  # Missing/blank layer values participate as effective layer 0, but the explicit
-  # flag remains available for later policy and diagnostics.
-  raw_layer = source_fragments[[layer_column]]
-  if (is.factor(raw_layer)) {
-    raw_layer = as.character(raw_layer)
-  }
-  layer_explicit = !is.na(raw_layer)
-  if (is.character(raw_layer)) {
-    layer_explicit = layer_explicit & nzchar(trimws(raw_layer))
-  }
-  effective_layer = suppressWarnings(as.numeric(raw_layer))
-  if (any(layer_explicit & !is.finite(effective_layer))) {
-    stop("Explicit road layer values must be finite numbers.", call. = FALSE)
-  }
-  effective_layer[!layer_explicit] = 0
+  # Parse explicit OSM layers and infer only missing bridge/tunnel structure
+  # values. The explicit and inferred flags remain separate for diagnostics and
+  # later solver policy.
+  layer_values = resolve_render_road_osm_layer_values(
+    source_fragments,
+    layer_column
+  )
+  layer_explicit = layer_values$explicit
+  effective_layer = layer_values$layer
 
   # Optionally read per-feature clearance values. These are physical separations for
   # future constraints; they are not used to turn raw OSM layer numbers into heights.
@@ -1651,6 +1774,8 @@ prepare_render_road_layer_features = function(
   topology_columns = list(
     render_road_layer = effective_layer,
     render_road_layer_explicit = layer_explicit,
+    render_road_layer_inferred = layer_values$inferred,
+    render_road_layer_source = layer_values$source,
     render_road_clearance = clearance,
     render_road_way_id = metadata_value(c("osm_id", "way_id")),
     render_road_ref = metadata_value("ref"),
@@ -1683,6 +1808,8 @@ prepare_render_road_layer_features = function(
     "render_road_feature_id",
     "render_road_layer",
     "render_road_layer_explicit",
+    "render_road_layer_inferred",
+    "render_road_layer_source",
     "render_road_way_id",
     "render_road_ref",
     "render_road_name",
@@ -3219,9 +3346,8 @@ build_render_road_prospective_solve_graph = function(
     "layer_overlap",
     "overlap_id"
   )
-  explicit_profile_seed_id = fragment_id[
-    (fragments$render_road_layer_explicit &
-      fragments$render_road_layer > 0) |
+  structure_profile_seed_id = fragment_id[
+    fragments$render_road_layer > 0 |
       underground
   ]
   seed_fragment_id = unique(c(
@@ -3229,7 +3355,7 @@ build_render_road_prospective_solve_graph = function(
     crossing_pairs$fragment_b,
     layer_overlaps$fragment_a,
     layer_overlaps$fragment_b,
-    explicit_profile_seed_id
+    structure_profile_seed_id
   ))
 
   # Follow only selected endpoint continuations from a seed. Ordinary junction and
@@ -4719,11 +4845,13 @@ plot_render_road_topology = function(
       length.out = max_labels
     )))]
   }
-  # Prefer explicit-layer roads for overview labels because they are the roads that drive
-  # vertical ordering. Fall back to all fragments when no layer tags are explicit.
+  # Prefer explicit or metadata-inferred layer roads for overview labels because
+  # they are the roads that drive vertical ordering. Fall back to all fragments
+  # when no vertical structure is present.
   fragments = topology$fragments
   overview_candidates = fragments$render_road_fragment_id[
-    fragments$render_road_layer_explicit
+    fragments$render_road_layer_explicit |
+      fragments$render_road_layer_inferred
   ]
   if (!length(overview_candidates)) {
     overview_candidates = fragments$render_road_fragment_id
@@ -5362,7 +5490,7 @@ identify_render_road_elevated_fragments = function(topology) {
     fragments$render_road_fragment_id
   )
   elevated = fragments$render_road_fragment_id[
-    fragments$render_road_layer_explicit & fragments$render_road_layer > 0
+    fragments$render_road_layer > 0
   ]
   if (nrow(topology$crossing_pairs)) {
     for (pair in seq_len(nrow(topology$crossing_pairs))) {
