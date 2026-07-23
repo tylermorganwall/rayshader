@@ -37,17 +37,16 @@
 #' @param layer Default `NULL`. An unquoted or character column name in an `sf`
 #' road object containing OpenStreetMap-style layer values. Missing values are
 #' treated as the implicit layer `0` when determining local crossing order.
-#' Roads are grouped by actual intersections and a branched graph of coincident
-#' feature endpoints. Each higher road is constrained above the already-solved
-#' height of the road below at every exact intersection. Positive layers use a
-#' linear interpolation between their sampled endpoint elevations as the deck
-#' baseline instead of following interior terrain. The resulting branched
-#' profile is low-pass filtered across both individual features and accepted
-#' endpoint continuations, while retaining the requested clearance at every
-#' crossing. Non-tunnel roads are constrained to remain at or above their
-#' sampled terrain everywhere; negative layers retain their below-terrain
-#' tunnel profile. Ambiguous endpoint matches that would create a contradictory
-#' clearance cycle are excluded. Supplying `layer` disables `merge`.
+#' Roads are grouped by exact physical events and conservative endpoint
+#' continuations. A sparse quadratic profile solve enforces crossing clearance,
+#' longitudinal grade and grade-rate limits, junction height continuity, and
+#' selected through-road grade continuity. Surface roads retain a sampled
+#' terrain reference, elevated spans use endpoint support chords, and roads with
+#' explicit tunnel or underground metadata use a bounded terrain-relative
+#' reference. Untagged negative layers are not independently activated as
+#' tunnels. Ambiguous endpoint matches that would create a contradictory
+#' clearance cycle are excluded. Supplying `layer` disables `merge` and requires
+#' the suggested `sf`, `igraph`, `Matrix`, and `osqp` packages.
 #' @param layer_height Default `5.5`. Either a single positive spacing in
 #' elevation units between locally ordered layers, or an unquoted or character
 #' column name containing each feature's positive separation above the lower
@@ -92,7 +91,9 @@
 #' @param clear_previous Default `TRUE`. If `TRUE`, removes the existing road
 #' layer before drawing the new one.
 #'
-#' @return Invisibly returns the rendered road coordinates.
+#' @return Invisibly returns the rendered road coordinates. When `layer` is
+#' supplied, the result has `terrain_following` and `profile_diagnostics`
+#' attributes describing the sparse profile solve.
 #' @export
 render_roads = function(
   roads,
@@ -647,11 +648,6 @@ render_road_paths = function(
   if (is_empty_scene_sf(roads)) {
     return(invisible(list()))
   }
-  road_layer_info = resolve_render_road_layer_values(
-    roads = roads,
-    layer_column = road_layer_column,
-    layer_height_column = road_layer_height_column
-  )
   road_lanes = resolve_render_road_lane_values(
     roads = roads,
     lanes = lanes,
@@ -716,16 +712,13 @@ render_road_paths = function(
     )
   }
   if (!is.null(road_layer_column)) {
-    coord_list = elevate_render_road_layer_coords(
+    coord_list = solve_render_road_path_profiles(
       coord_list = coord_list,
-      layer = road_layer_info$layer[coord_feature],
-      layer_explicit = road_layer_info$explicit[coord_feature],
+      coord_feature = coord_feature,
+      roads = roads,
+      layer_column = road_layer_column,
+      layer_height_column = road_layer_height_column,
       layer_spacing = road_layer_spacing,
-      layer_height = if (is.null(road_layer_info$height)) {
-        NULL
-      } else {
-        road_layer_info$height[coord_feature]
-      },
       zscale = zscale,
       texture_world_scale = texture_world_scale
     )
@@ -792,6 +785,212 @@ render_road_paths = function(
     }
   }
   invisible(coord_list)
+}
+
+#' Solve road profiles for rendered path coordinates
+#'
+#' @param coord_list Terrain-sampled scene coordinate matrices.
+#' @param coord_feature Source feature index for every coordinate matrix.
+#' @param roads Prepared road features corresponding to `coord_feature`.
+#' @param layer_column Column containing OSM-style layer values.
+#' @param layer_height_column Default `NULL`. Optional clearance column.
+#' @param layer_spacing Default `5.5`. Fallback adjacent-layer clearance in
+#' metres.
+#' @param zscale Effective scene zscale.
+#' @param texture_world_scale Two-value x-z multiplier from scene units to
+#' world units.
+#'
+#' @return Coordinate matrices with solved heights and profile diagnostics.
+#' @keywords internal
+solve_render_road_path_profiles = function(
+  coord_list,
+  coord_feature,
+  roads,
+  layer_column,
+  layer_height_column = NULL,
+  layer_spacing = 5.5,
+  zscale = 1,
+  texture_world_scale = c(1, 1)
+) {
+  if (!inherits(roads, "sf")) {
+    stop("Road profile solving requires an `sf` road object.", call. = FALSE)
+  }
+  if (length(coord_feature) != length(coord_list)) {
+    stop(
+      "Rendered road feature indices must match the coordinate paths.",
+      call. = FALSE
+    )
+  }
+  zscale = validate_waterpath_positive_number(zscale, "zscale")
+  texture_world_scale = validate_render_road_world_scale(
+    texture_world_scale
+  )
+  layer_spacing = if (is.null(layer_spacing)) {
+    5.5
+  } else {
+    validate_waterpath_positive_number(layer_spacing, "layer_height")
+  }
+  coord_list = lapply(
+    coord_list,
+    collapse_render_highquality_road_path_points,
+    texture_world_scale = texture_world_scale
+  )
+  valid_path = vapply(
+    coord_list,
+    function(coords) {
+      is.matrix(coords) &&
+        nrow(coords) >= 2L &&
+        ncol(coords) >= 3L &&
+        all(is.finite(coords[, 1:3, drop = FALSE]))
+    },
+    logical(1)
+  )
+  valid_feature = is.finite(coord_feature) &
+    coord_feature >= 1L &
+    coord_feature <= nrow(roads)
+  if (any(!valid_feature)) {
+    stop("Rendered road feature indices are invalid.", call. = FALSE)
+  }
+  visible_feature = sort(unique(as.integer(coord_feature[valid_path])))
+  terrain_following = rep(TRUE, length(coord_list))
+  if (!length(visible_feature)) {
+    attr(coord_list, "terrain_following") = terrain_following
+    attr(coord_list, "profile_diagnostics") = list(
+      solver = "sparse_qp",
+      active_fragment_count = 0L,
+      solve_component_count = 0L,
+      refinement_iterations = 0L
+    )
+    return(coord_list)
+  }
+
+  profile_roads = roads[visible_feature, , drop = FALSE]
+  profile_roads$render_road_path_feature_index = visible_feature
+  prepared = prepare_render_road_layer_features(
+    roads = profile_roads,
+    layer_column = layer_column,
+    layer_height_column = layer_height_column
+  )
+  topology = build_render_road_layer_topology(prepared)
+  active_fragment_id = topology$prospective_solve_fragment_id
+  if (!length(active_fragment_id)) {
+    attr(coord_list, "terrain_following") = terrain_following
+    attr(coord_list, "profile_diagnostics") = list(
+      solver = "sparse_qp",
+      active_fragment_count = 0L,
+      solve_component_count = 0L,
+      refinement_iterations = 0L
+    )
+    return(coord_list)
+  }
+
+  fragments = topology$fragments
+  active_row = fragments$render_road_fragment_id %in% active_fragment_id
+  active_fragments = fragments[active_row, , drop = FALSE]
+  path_by_feature = split(
+    seq_along(coord_list)[valid_path],
+    as.character(coord_feature[valid_path])
+  )
+  terrain_profiles = vector("list", nrow(active_fragments))
+  names(terrain_profiles) = as.character(
+    active_fragments$render_road_fragment_id
+  )
+  fragment_path = integer(nrow(active_fragments))
+  for (fragment_row in seq_len(nrow(active_fragments))) {
+    feature_index = active_fragments$render_road_path_feature_index[[
+      fragment_row
+    ]]
+    path_index = path_by_feature[[as.character(feature_index)]]
+    if (length(path_index) != 1L) {
+      stop(
+        sprintf(
+          paste0(
+            "Active road fragment %s must map to exactly one rendered ",
+            "coordinate path."
+          ),
+          active_fragments$render_road_fragment_id[[fragment_row]]
+        ),
+        call. = FALSE
+      )
+    }
+    fragment_path[[fragment_row]] = path_index
+    coordinates = coord_list[[path_index]]
+    path_distance = calculate_road_path_cumulative_distance(
+      coordinates,
+      texture_world_scale = texture_world_scale
+    )
+    path_length = tail(path_distance, 1L)
+    geometry_info = calculate_render_road_metric_line_distances(
+      sf::st_geometry(active_fragments)[[fragment_row]]
+    )
+    if (!is.finite(path_length) || path_length <= 0) {
+      stop("Rendered road paths must have positive length.", call. = FALSE)
+    }
+    terrain_profiles[[fragment_row]] = data.frame(
+      distance = path_distance * geometry_info$length / path_length,
+      elevation = coordinates[, 2L] * zscale
+    )
+  }
+
+  problem = build_render_road_profile_problem(
+    topology = topology,
+    terrain_profiles = terrain_profiles,
+    layer_spacing = layer_spacing
+  )
+  solution = solve_render_road_profile_problem(
+    problem,
+    maximum_iterations = 100000,
+    profile_tolerance = 1e-3
+  )
+  problem = solution$problem
+  solved_fragment_id = problem$topology$fragments$render_road_fragment_id
+  fragment_row = match(
+    solved_fragment_id,
+    active_fragments$render_road_fragment_id
+  )
+  for (solved_row in seq_along(solved_fragment_id)) {
+    source_row = fragment_row[[solved_row]]
+    path_index = fragment_path[[source_row]]
+    coordinates = coord_list[[path_index]]
+    path_distance = calculate_road_path_cumulative_distance(
+      coordinates,
+      texture_world_scale = texture_world_scale
+    )
+    fragment_length = problem$fragment_length[[
+      as.character(solved_fragment_id[[solved_row]])
+    ]]
+    evaluation_distance = path_distance *
+      fragment_length /
+      tail(path_distance, 1L)
+    profile = evaluate_render_road_profile_at(
+      problem = problem,
+      solution = solution,
+      fragment = solved_fragment_id[[solved_row]],
+      distance = evaluation_distance
+    )
+    solved_height = profile$height / zscale
+    terrain_following[[path_index]] = max(
+      abs(solved_height - coordinates[, 2L])
+    ) <=
+      1e-3 / zscale
+    coordinates[, 2L] = solved_height
+    coord_list[[path_index]] = coordinates
+  }
+
+  component_id = unique(
+    problem$topology$fragments$solve_component_id
+  )
+  attr(coord_list, "terrain_following") = terrain_following
+  attr(coord_list, "profile_diagnostics") = list(
+    solver = "sparse_qp",
+    active_fragment_count = length(solved_fragment_id),
+    solve_component_count = length(component_id),
+    refinement_iterations = solution$refinement_iterations,
+    maximum_violation = solution$engineering_audit$maximum_violation,
+    engineering_tolerance = solution$engineering_audit$tolerance,
+    engineering_audit_passed = solution$engineering_audit$passed
+  )
+  coord_list
 }
 
 #' Offset road path coordinates
@@ -6474,7 +6673,11 @@ build_render_road_anchor_constraints = function(
           index = controls$height_variable[[control]],
           value = 1,
           lower = controls$terrain[[control]],
-          upper = controls$terrain[[control]],
+          # Treat the sampled terrain as a one-sided contact. The uplift
+          # objective keeps feasible anchors on terrain, while allowing the
+          # endpoint to rise when fixing noisy DEM samples would contradict
+          # the physical grade or grade-rate limits.
+          upper = Inf,
           type = "ground_anchor",
           component_id = component_id,
           fragment_a = fragment,
