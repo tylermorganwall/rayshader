@@ -807,9 +807,66 @@ test_that("road point collapse preserves the final endpoint", {
   expect_true(all(diff(collapsed[, 1]) > 1e-3))
 })
 
+test_that("OSM lane tags use directional and road-class fallbacks", {
+  skip_if_not_installed("sf")
+
+  roads = sf::st_sf(
+    lanes = c("3", "2;3", NA, NA, "1.5", "7"),
+    `lanes:forward` = c(NA, NA, "2", NA, NA, NA),
+    `lanes:backward` = c(NA, NA, "1", NA, NA, NA),
+    highway = c(
+      "primary",
+      "primary",
+      "primary",
+      "motorway_link",
+      "secondary",
+      "motorway"
+    ),
+    oneway = c("no", "no", "no", "yes", "no", "yes"),
+    geometry = sf::st_sfc(
+      lapply(seq_len(6L), function(index) {
+        sf::st_linestring(rbind(c(0, index), c(1, index)))
+      }),
+      crs = 3857
+    ),
+    check.names = FALSE
+  )
+
+  expect_equal(
+    resolve_render_road_lane_values(
+      roads,
+      lanes = NULL,
+      lanes_column = "lanes"
+    ),
+    c(3L, 2L, 3L, 1L, 2L, 7L)
+  )
+  lane_evidence = resolve_render_road_lane_evidence(
+    roads,
+    lanes_column = "lanes"
+  )
+  expect_equal(
+    lane_evidence$lane_count,
+    c(3L, 2L, 3L, NA_integer_, NA_integer_, 7L)
+  )
+  expect_equal(
+    lane_evidence$source,
+    c(
+      "selected_column",
+      "selected_column",
+      "directional_sum",
+      "unavailable",
+      "unavailable",
+      "selected_column"
+    )
+  )
+})
+
 test_that("render_roads accepts layer and feature height columns", {
   skip_if_not_installed("sf")
   skip_if_not_installed("terra")
+  skip_if_not_installed("igraph")
+  skip_if_not_installed("Matrix")
+  skip_if_not_installed("osqp")
   on.exit(rgl::close3d(), add = TRUE)
   local_rgl_use_null()
 
@@ -857,6 +914,11 @@ test_that("render_roads accepts layer and feature height columns", {
     vapply(road_coords, function(x) max(x[, 2]), numeric(1)),
     c(0, 7)
   )
+  profile_diagnostics = attr(road_coords, "profile_diagnostics")
+  expect_identical(profile_diagnostics$solver, "sparse_qp")
+  expect_equal(profile_diagnostics$active_fragment_count, 2L)
+  expect_equal(profile_diagnostics$solve_component_count, 1L)
+  expect_true(profile_diagnostics$engineering_audit_passed)
   expect_lte(maximum_test_road_grade(road_coords[[2]]), 0.07 + 1e-8)
   road_path_ids = get_ids_with_labels(typeval = "road_path")
   terrain_following = vapply(
@@ -871,6 +933,74 @@ test_that("render_roads accepts layer and feature height columns", {
     road_info[[1]]$texture_file,
     road_info[[2]]$texture_file
   ))
+})
+
+test_that("render_roads accepts raw OSM bridge and lane metadata", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("terra")
+  skip_if_not_installed("igraph")
+  skip_if_not_installed("Matrix")
+  skip_if_not_installed("osqp")
+  on.exit(rgl::close3d(), add = TRUE)
+  local_rgl_use_null()
+
+  height_raster = terra::rast(
+    nrows = 101,
+    ncols = 101,
+    xmin = 0,
+    xmax = 100,
+    ymin = 0,
+    ymax = 100,
+    crs = "EPSG:3857"
+  )
+  terra::values(height_raster) = 0
+  roads = sf::st_sf(
+    osm_id = c("surface", "unlayered-bridge"),
+    highway = c("primary", "motorway_link"),
+    lanes = c("2", NA_character_),
+    oneway = c("no", "yes"),
+    bridge = c(NA_character_, "yes"),
+    tunnel = NA_character_,
+    location = NA_character_,
+    layer = NA_character_,
+    geometry = sf::st_sfc(
+      sf::st_linestring(rbind(c(5, 50), c(95, 50))),
+      sf::st_linestring(rbind(c(50, 5), c(50, 95))),
+      crs = 3857
+    )
+  )
+
+  expect_no_condition(plot_3d_test(
+    constant_shade(height_raster),
+    height_raster,
+    solid = FALSE,
+    shadow = FALSE,
+    water = FALSE,
+    windowsize = c(200, 200)
+  ))
+  road_coords = render_roads(
+    roads,
+    heightmap = height_raster,
+    zscale = 1,
+    vertical_exaggeration = 1,
+    layer = layer,
+    lanes = lanes
+  )
+
+  expect_equal(length(road_coords), 2L)
+  expect_equal(max(road_coords[[1]][, 2]), 0, tolerance = 1e-6)
+  expect_equal(min(road_coords[[2]][, 2]), 5.5, tolerance = 1e-3)
+  expect_lt(max(road_coords[[2]][, 2]), 5.6)
+  expect_identical(
+    attr(road_coords, "profile_diagnostics")$solver,
+    "sparse_qp"
+  )
+  road_path_ids = get_ids_with_labels(typeval = "road_path")
+  road_info = lapply(road_path_ids$id, get_render_road_path_info)
+  expect_equal(
+    vapply(road_info, `[[`, numeric(1), "road_width"),
+    c(12, 9)
+  )
 })
 
 test_that("elevated road meshes preserve absolute profiles", {
@@ -1154,6 +1284,57 @@ make_test_render_road_topology_lines = function(
   )
 }
 
+test_that("road topology infers missing OSM structure layers", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("igraph")
+
+  roads = sf::st_sf(
+    layer = c(NA, NA, NA, NA, 3),
+    bridge = c(NA, "yes", NA, NA, "yes"),
+    tunnel = c(NA, NA, "yes", NA, NA),
+    location = c(NA, NA, NA, "elevated", NA),
+    highway = c("primary", rep("motorway_link", 4)),
+    osm_id = paste0("way-", seq_len(5L)),
+    geometry = sf::st_sfc(
+      sf::st_linestring(rbind(c(-120, 0), c(120, 0))),
+      sf::st_linestring(rbind(c(-60, -30), c(-60, 30))),
+      sf::st_linestring(rbind(c(0, -30), c(0, 30))),
+      sf::st_linestring(rbind(c(60, -30), c(60, 30))),
+      sf::st_linestring(rbind(c(100, -30), c(100, 30))),
+      crs = 32615
+    )
+  )
+  topology = build_render_road_layer_topology(
+    prepare_render_road_layer_features(roads, "layer")
+  )
+  fragments = topology$fragments
+
+  expect_equal(fragments$render_road_layer, c(0, 1, -1, 1, 3))
+  expect_equal(
+    fragments$render_road_layer_explicit,
+    c(FALSE, FALSE, FALSE, FALSE, TRUE)
+  )
+  expect_equal(
+    fragments$render_road_layer_inferred,
+    c(FALSE, TRUE, TRUE, TRUE, FALSE)
+  )
+  expect_equal(
+    fragments$render_road_layer_source,
+    c(
+      "implicit_surface",
+      "bridge",
+      "tunnel",
+      "elevated_location",
+      "explicit_layer"
+    )
+  )
+  expect_equal(nrow(topology$crossing_pairs), 4L)
+  expect_true(all(
+    fragments$render_road_fragment_id[-1L] %in%
+      topology$prospective_solve_seed_fragment_id
+  ))
+})
+
 test_that("road topology preserves parent features and boundary endpoints", {
   skip_if_not_installed("sf")
   skip_if_not_installed("igraph")
@@ -1326,6 +1507,61 @@ test_that("road topology keeps branch continuation choices conservative", {
     )),
     1L
   )
+})
+
+test_that("lane continuity subclasses resolve otherwise ambiguous branches", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("igraph")
+
+  roads = sf::st_sf(
+    layer = c(1, 0, 0),
+    lanes = c(2, 2, 1),
+    osm_id = c("bridge", "main-approach", "branch-approach"),
+    ref = NA_character_,
+    name = NA_character_,
+    highway = "motorway_link",
+    geometry = sf::st_sfc(
+      sf::st_linestring(rbind(c(0, 0), c(-20, 0))),
+      sf::st_linestring(rbind(c(20, 1), c(0, 0))),
+      sf::st_linestring(rbind(c(20, -3), c(0, 0))),
+      crs = 32615
+    )
+  )
+  topology = build_render_road_layer_topology(
+    prepare_render_road_layer_features(
+      roads,
+      layer_column = "layer",
+      lane_column = "lanes"
+    )
+  )
+
+  expect_equal(nrow(topology$selected_continuations), 1L)
+  expect_equal(
+    sort(c(
+      topology$selected_continuations$fragment_a,
+      topology$selected_continuations$fragment_b
+    )),
+    c(1L, 2L)
+  )
+  expect_true(topology$selected_continuations$same_lanes)
+  expect_equal(
+    topology$selected_continuations$evidence_subclass,
+    "exact_same_highway_same_lanes"
+  )
+  bridge_candidates = topology$continuation_candidates[
+    topology$continuation_candidates$fragment_a == 1L |
+      topology$continuation_candidates$fragment_b == 1L,
+    ,
+    drop = FALSE
+  ]
+  expect_equal(
+    sort(bridge_candidates$lane_continuity_rank),
+    c(0L, 1L)
+  )
+  expect_false(any(
+    topology$ambiguous_continuations$fragment_a == 1L |
+      topology$ambiguous_continuations$fragment_b == 1L
+  ))
 })
 
 test_that("plot_render_road_topology exports plots and diagnostics", {

@@ -438,6 +438,47 @@ is_truthy_render_road_osm_tag = function(value) {
   !is.na(value) & !(value %in% c("no", "false", "0"))
 }
 
+#' Resolve reliable lane-count evidence
+#'
+#' @param roads Prepared road features.
+#' @param lanes_column Default `NULL`. Optional lane-count column.
+#'
+#' @return Lane counts suitable for topology evidence and their sources.
+#' @keywords internal
+resolve_render_road_lane_evidence = function(roads, lanes_column = NULL) {
+  lane_count = rep(NA_integer_, nrow(roads))
+  source = rep("unavailable", nrow(roads))
+  if (is.null(lanes_column)) {
+    return(list(lane_count = lane_count, source = source))
+  }
+  if (!(lanes_column %in% names(roads))) {
+    stop(
+      sprintf("`lanes` must name a column in `roads`: %s", lanes_column),
+      call. = FALSE
+    )
+  }
+
+  lane_count = parse_render_road_osm_lane_count(roads[[lanes_column]])
+  source[is.finite(lane_count)] = "selected_column"
+  directional_value = function(column) {
+    if (!(column %in% names(roads))) {
+      return(rep(NA_integer_, nrow(roads)))
+    }
+    parse_render_road_osm_lane_count(roads[[column]])
+  }
+  forward = directional_value("lanes:forward")
+  backward = directional_value("lanes:backward")
+  directional_present = is.finite(forward) | is.finite(backward)
+  directional_total = rowSums(
+    cbind(forward, backward),
+    na.rm = TRUE
+  )
+  use_directional = !is.finite(lane_count) & directional_present
+  lane_count[use_directional] = directional_total[use_directional]
+  source[use_directional] = "directional_sum"
+  list(lane_count = as.integer(lane_count), source = source)
+}
+
 #' Resolve render road lane values
 #'
 #' @param roads Prepared road features.
@@ -463,22 +504,8 @@ resolve_render_road_lane_values = function(
       call. = FALSE
     )
   }
-  lane_values = parse_render_road_osm_lane_count(roads[[lanes_column]])
-  directional_value = function(column) {
-    if (!(column %in% names(roads))) {
-      return(rep(NA_integer_, nrow(roads)))
-    }
-    parse_render_road_osm_lane_count(roads[[column]])
-  }
-  forward = directional_value("lanes:forward")
-  backward = directional_value("lanes:backward")
-  directional_present = is.finite(forward) | is.finite(backward)
-  directional_total = rowSums(
-    cbind(forward, backward),
-    na.rm = TRUE
-  )
-  use_directional = !is.finite(lane_values) & directional_present
-  lane_values[use_directional] = directional_total[use_directional]
+  lane_evidence = resolve_render_road_lane_evidence(roads, lanes_column)
+  lane_values = lane_evidence$lane_count
 
   highway = if ("highway" %in% names(roads)) {
     normalize_render_road_osm_tag(roads$highway)
@@ -847,6 +874,7 @@ render_road_paths = function(
       coord_feature = coord_feature,
       roads = roads,
       layer_column = road_layer_column,
+      lane_column = road_lanes_column,
       layer_height_column = road_layer_height_column,
       layer_spacing = road_layer_spacing,
       zscale = zscale,
@@ -923,6 +951,8 @@ render_road_paths = function(
 #' @param coord_feature Source feature index for every coordinate matrix.
 #' @param roads Prepared road features corresponding to `coord_feature`.
 #' @param layer_column Column containing OSM-style layer values.
+#' @param lane_column Default `NULL`. Optional lane-count column used as
+#' continuation evidence.
 #' @param layer_height_column Default `NULL`. Optional clearance column.
 #' @param layer_spacing Default `5.5`. Fallback adjacent-layer clearance in
 #' metres.
@@ -937,6 +967,7 @@ solve_render_road_path_profiles = function(
   coord_feature,
   roads,
   layer_column,
+  lane_column = NULL,
   layer_height_column = NULL,
   layer_spacing = 5.5,
   zscale = 1,
@@ -999,6 +1030,7 @@ solve_render_road_path_profiles = function(
   prepared = prepare_render_road_layer_features(
     roads = profile_roads,
     layer_column = layer_column,
+    lane_column = lane_column,
     layer_height_column = layer_height_column
   )
   topology = build_render_road_layer_topology(prepared)
@@ -1663,6 +1695,8 @@ build_render_road_endpoint_table = function(
 #'
 #' @param roads Road line features.
 #' @param layer_column Column containing OSM layer values.
+#' @param lane_column Default `NULL`. Optional lane-count column used as
+#' continuation evidence.
 #' @param layer_height_column Default `NULL`. Optional feature clearance column.
 #' @param boundary Default `NULL`. Optional supplied-data boundary geometry.
 #' @param minimum_step Default `1e-3`. Minimum retained coordinate separation
@@ -1676,6 +1710,7 @@ build_render_road_endpoint_table = function(
 prepare_render_road_layer_features = function(
   roads,
   layer_column,
+  lane_column = NULL,
   layer_height_column = NULL,
   boundary = NULL,
   minimum_step = 1e-3,
@@ -1732,6 +1767,10 @@ prepare_render_road_layer_features = function(
   )
   layer_explicit = layer_values$explicit
   effective_layer = layer_values$layer
+  lane_evidence = resolve_render_road_lane_evidence(
+    source_fragments,
+    lane_column
+  )
 
   # Optionally read per-feature clearance values. These are physical separations for
   # future constraints; they are not used to turn raw OSM layer numbers into heights.
@@ -1777,6 +1816,8 @@ prepare_render_road_layer_features = function(
     render_road_layer_inferred = layer_values$inferred,
     render_road_layer_source = layer_values$source,
     render_road_clearance = clearance,
+    render_road_lanes = lane_evidence$lane_count,
+    render_road_lane_source = lane_evidence$source,
     render_road_way_id = metadata_value(c("osm_id", "way_id")),
     render_road_ref = metadata_value("ref"),
     render_road_name = metadata_value("name"),
@@ -1810,6 +1851,8 @@ prepare_render_road_layer_features = function(
     "render_road_layer_explicit",
     "render_road_layer_inferred",
     "render_road_layer_source",
+    "render_road_lanes",
+    "render_road_lane_source",
     "render_road_way_id",
     "render_road_ref",
     "render_road_name",
@@ -1831,6 +1874,7 @@ prepare_render_road_layer_features = function(
     source_crs = source_crs,
     metric_crs = metric_crs,
     layer_column = layer_column,
+    lane_column = lane_column,
     layer_height_column = layer_height_column,
     dropped_fragment_id = cleaned$dropped_fragment_id,
     dropped_fragment_diagnostics = cleaned$dropped_fragment_diagnostics,
@@ -2774,6 +2818,27 @@ score_render_road_continuation_pair = function(
     clean_metadata(endpoints$render_road_highway[[first]]),
     clean_metadata(endpoints$render_road_highway[[second]])
   )
+  lane_count_a = suppressWarnings(as.integer(
+    endpoints$render_road_lanes[[first]]
+  ))
+  lane_count_b = suppressWarnings(as.integer(
+    endpoints$render_road_lanes[[second]]
+  ))
+  lane_evidence = is.finite(lane_count_a) && is.finite(lane_count_b)
+  same_lanes = lane_evidence && lane_count_a == lane_count_b
+  lane_difference = if (lane_evidence) {
+    abs(lane_count_a - lane_count_b)
+  } else {
+    NA_integer_
+  }
+  lane_continuity_rank = as.integer(same_lanes)
+  lane_subclass = if (same_lanes) {
+    "same_lanes"
+  } else if (lane_evidence) {
+    "different_lanes"
+  } else {
+    "unknown_lanes"
+  }
   metadata_match = c(
     if (same_way) "way",
     if (same_ref) "ref",
@@ -2806,6 +2871,7 @@ score_render_road_continuation_pair = function(
     if (exact_endpoint) "exact_" else "gap_",
     metadata_tier
   )
+  evidence_subclass = paste(evidence_tier, lane_subclass, sep = "_")
   eligible = is.finite(direction_score) &&
     direction_score >= minimum_direction_score
   selection_reason = if (!eligible) {
@@ -2837,11 +2903,21 @@ score_render_road_continuation_pair = function(
     same_ref = same_ref,
     same_name = same_name,
     same_highway = same_highway,
+    lane_count_a = lane_count_a,
+    lane_count_b = lane_count_b,
+    lane_evidence = lane_evidence,
+    same_lanes = same_lanes,
+    lane_difference = lane_difference,
+    lane_continuity_rank = lane_continuity_rank,
     exact_endpoint = exact_endpoint,
     evidence_rank = evidence_rank,
     evidence_tier = evidence_tier,
+    evidence_subclass = evidence_subclass,
     metadata_match = paste(metadata_match, collapse = "+"),
-    selection_score = evidence_rank * 100 + direction_score,
+    selection_score = evidence_rank *
+      1000 +
+      lane_continuity_rank * 100 +
+      direction_score,
     selection_reason = selection_reason,
     eligible = eligible,
     status = if (eligible) "candidate" else "rejected",
@@ -2883,6 +2959,12 @@ select_render_road_endpoint_candidate = function(
     }
     highest_evidence = max(candidates$evidence_rank[rows])
     tier_rows = rows[candidates$evidence_rank[rows] == highest_evidence]
+    highest_lane_continuity = max(
+      candidates$lane_continuity_rank[tier_rows]
+    )
+    tier_rows = tier_rows[
+      candidates$lane_continuity_rank[tier_rows] == highest_lane_continuity
+    ]
     best_direction = max(candidates$direction_score[tier_rows])
     competing = tier_rows[
       candidates$direction_score[tier_rows] >=
@@ -2940,9 +3022,16 @@ select_render_road_continuations = function(
     same_ref = logical(0),
     same_name = logical(0),
     same_highway = logical(0),
+    lane_count_a = integer(0),
+    lane_count_b = integer(0),
+    lane_evidence = logical(0),
+    same_lanes = logical(0),
+    lane_difference = integer(0),
+    lane_continuity_rank = integer(0),
     exact_endpoint = logical(0),
     evidence_rank = integer(0),
     evidence_tier = character(0),
+    evidence_subclass = character(0),
     metadata_match = character(0),
     selection_score = numeric(0),
     selection_reason = character(0),
@@ -3418,9 +3507,10 @@ build_render_road_prospective_solve_graph = function(
   )
 
   # Track active solve context separately from fragments allowed to propagate it.
-  # A surface fragment reached at a candidate ground endpoint supplies a terminal
-  # equality/anchor context without opening the rest of its street network. Equality
-  # traversal, like continuation traversal, cannot depart from a candidate anchor.
+  # A surface fragment reached through an equality supplies terminal context without
+  # opening the rest of its street network. Active fragments may still emit their
+  # immediate junction equalities at candidate anchors so every incident approach
+  # shares the junction height.
   active_fragment_id = sort(unique(seed_fragment_id))
   expandable_fragment_id = active_fragment_id
   terminal_ground_fragment_id = integer(0)
@@ -3459,11 +3549,9 @@ build_render_road_prospective_solve_graph = function(
     }
     if (nrow(equality_pairs)) {
       from_a = equality_pairs$fragment_a %in%
-        expandable_fragment_id &
-        !(equality_pairs$endpoint_id_a %in% candidate_anchor_endpoint_id)
+        expandable_fragment_id
       from_b = equality_pairs$fragment_b %in%
-        expandable_fragment_id &
-        !(equality_pairs$endpoint_id_b %in% candidate_anchor_endpoint_id)
+        expandable_fragment_id
       traversed_equality = from_a | from_b
       permitted_equality_pair_id = sort(unique(c(
         permitted_equality_pair_id,

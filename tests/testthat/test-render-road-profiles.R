@@ -178,6 +178,67 @@ test_that("surface equality closure stops after one terminal partner", {
   ))
 })
 
+test_that("candidate ground anchors emit immediate junction equalities", {
+  skip_render_road_profile_test_dependencies()
+
+  roads = make_render_road_profile_test_roads(
+    lines = list(
+      make_render_road_profile_test_line(c(-100, 0, 0, 0)),
+      make_render_road_profile_test_line(c(0, 0, 100, 5)),
+      make_render_road_profile_test_line(c(0, 0, 100, -5)),
+      make_render_road_profile_test_line(c(-50, -20, -50, 20))
+    ),
+    layer = c(0, 0, 0, 1),
+    way_id = c("active-surface", "approach-a", "approach-b", "bridge")
+  )
+  topology = build_render_road_profile_test_topology(roads)
+  fragment_id = setNames(
+    topology$fragments$render_road_fragment_id,
+    topology$fragments$render_road_way_id
+  )
+  active_surface_id = fragment_id[["active-surface"]]
+  approach_id = fragment_id[c("approach-a", "approach-b")]
+  active_endpoint_id = topology$endpoints$render_road_endpoint_id[
+    topology$endpoints$render_road_fragment_id == active_surface_id &
+      topology$endpoints$endpoint_side == "end"
+  ]
+
+  expect_true(
+    active_endpoint_id %in% topology$candidate_anchor_endpoint_id
+  )
+  expect_true(
+    active_surface_id %in%
+      topology$prospective_solve_expandable_fragment_id
+  )
+  expect_true(all(
+    approach_id %in%
+      topology$prospective_solve_terminal_ground_fragment_id
+  ))
+  expect_true(all(
+    approach_id %in% topology$prospective_solve_fragment_id
+  ))
+
+  active_equality = topology$prospective_solve_junction_equality_pairs
+  equality_partner = c(
+    active_equality$fragment_b[
+      active_equality$fragment_a == active_surface_id
+    ],
+    active_equality$fragment_a[
+      active_equality$fragment_b == active_surface_id
+    ]
+  )
+  expect_setequal(equality_partner, approach_id)
+  expect_false(any(
+    active_equality$fragment_a %in%
+      approach_id &
+      active_equality$fragment_b %in% approach_id
+  ))
+  expect_false(any(
+    topology$selected_continuations$fragment_a == active_surface_id |
+      topology$selected_continuations$fragment_b == active_surface_id
+  ))
+})
+
 test_that("metadata-only tunnels seed independently and remain bounded", {
   skip_render_road_profile_test_dependencies(solver = TRUE)
 
