@@ -10,7 +10,8 @@ render_water_path_coords_by_width(
   extent,
   zscale,
   watercolor,
-  waterpath_width
+  waterpath_width,
+  force_by_feature = FALSE
 )
 }
 \arguments{
@@ -25,9 +26,13 @@ render_water_path_coords_by_width(
 \item{watercolor}{Water color.}
 
 \item{waterpath_width}{Stream widths.}
+
+\item{force_by_feature}{Default \code{FALSE}. Whether to render each feature
+separately even when all widths are equal.}
 }
 \value{
-List containing coordinates and matching widths.
+List containing coordinates, matching widths, and source feature
+indices.
 }
 \description{
 Render water path coordinates by width

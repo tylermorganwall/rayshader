@@ -212,8 +212,8 @@ render_people(x = 25, y = 25, pose = "walking")
 # Arrange alternating models around a closed line. The stretch pose extends
 # along local Z, so automatic line orientation creates a hands-around-the-world
 # effect.
-flat_heightmap = matrix(0, nrow = 80, ncol = 80)
-flat_extent = c(xmin = 0, xmax = 80, ymin = 0, ymax = 80)
+flat_heightmap = rayimage::generate_2d_gaussian(dim = c(31,31)) * 1000
+flat_extent = c(xmin = 0, xmax = 31, ymin = 0, ymax = 31)
 flat_heightmap |>
   height_shade() |>
   plot_3d(
@@ -224,17 +224,42 @@ flat_heightmap |>
   )
 
 theta = seq(0, 2 * pi, length.out = 200)
-people_line = sf::st_sfc(sf::st_linestring(cbind(
-  40 + 20 * cos(theta),
-  40 + 20 * sin(theta)
+people_line = sf::st_sfc(
+sf::st_linestring(cbind(
+  15.5 + 12.5 * cos(theta),
+  15.5 + 12.5 * sin(theta)
+)),
+sf::st_linestring(cbind(
+  15.5 + 10.5 * cos(theta),
+  15.5 + 10.5 * sin(theta)
+)),
+sf::st_linestring(cbind(
+  15.5 + 8.5 * cos(theta),
+  15.5 + 8.5 * sin(theta)
+)),
+sf::st_linestring(cbind(
+  15.5 + 6.5 * cos(theta),
+  15.5 + 6.5 * sin(theta)
+)),
+sf::st_linestring(cbind(
+  15.5 + 4.5 * cos(theta),
+  15.5 + 4.5 * sin(theta)
+)),
+sf::st_linestring(cbind(
+  15.5 + 2.5 * cos(theta),
+  15.5 + 2.5 * sin(theta)
 )))
 render_people(
   line = people_line,
-  extent = flat_extent,
   pose = "stretch",
   pattern = "MF",
   spacing = 2,
-  color = c("steelblue", "tomato")
+  color = c("dodgerblue", "tomato"), clear_previous=T
+)
+render_people(
+  y = 15.5,
+  x = 15.5,
+  pose = "rocky", color="white"
 )
 \dontshow{\}) # examplesIf}
 }

@@ -50,16 +50,17 @@ raster cell resolution.}
 
 \item{vertical_exaggeration}{Default \code{1}. Multiplier applied to the effective
 visual relief. If omitted, rayshader uses the cached scene value from
-\code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}} when available; pass explicitly to override for this call.}
+\code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}} when available; pass explicitly to override for
+this call.}
 
 \item{width}{Default \code{NULL}, which derives road width from \code{lanes} and
 \code{lane_width}. If supplied, road width in scene grid-cell units for
 \code{\link[=render_highquality]{render_highquality()}}. The rgl preview uses the same value as line width.}
 
 \item{width_column}{Default \code{NULL}. Column name in an \code{sf} road object used
-to set per-feature road widths. Values must be positive finite numbers and use
-the same units as \code{width}. When supplied, road merging is disabled to preserve
-feature attributes.}
+to set per-feature road widths. Values must be positive finite numbers and
+use the same units as \code{width}. When supplied, road merging is disabled to
+preserve feature attributes.}
 
 \item{densify}{Default \code{TRUE}. Whether to densify road paths and resample
 them along the terrain before \code{\link[=render_highquality]{render_highquality()}} meshing. Set to \code{FALSE}
@@ -77,18 +78,20 @@ length.}
 
 \item{layer}{Default \code{NULL}. An unquoted or character column name in an \code{sf}
 road object containing OpenStreetMap-style layer values. Missing values are
-treated as the implicit layer \code{0} when determining local crossing order.
-Roads are grouped by actual intersections and a branched graph of coincident
-feature endpoints. Each higher road is constrained above the already-solved
-height of the road below at every exact intersection. Positive layers use a
-linear interpolation between their sampled endpoint elevations as the deck
-baseline instead of following interior terrain. The resulting branched
-profile is low-pass filtered across both individual features and accepted
-endpoint continuations, while retaining the requested clearance at every
-crossing. Non-tunnel roads are constrained to remain at or above their
-sampled terrain everywhere; negative layers retain their below-terrain
-tunnel profile. Ambiguous endpoint matches that would create a contradictory
-clearance cycle are excluded. Supplying \code{layer} disables \code{merge}.}
+treated as implicit layer \code{0}, except affirmative \code{bridge} or elevated
+\code{location} metadata infer effective layer \code{1} and affirmative \code{tunnel} or
+underground \code{location} metadata infer effective layer \code{-1}. Inferred values
+remain distinguishable from explicit OSM layer tags in diagnostics.
+Roads are grouped by exact physical events and conservative endpoint
+continuations. A sparse quadratic profile solve enforces crossing clearance,
+longitudinal grade and grade-rate limits, junction height continuity, and
+selected through-road grade continuity. Surface roads retain a sampled
+terrain reference, elevated spans use endpoint support chords, and roads with
+explicit tunnel or underground metadata use a bounded terrain-relative
+reference. Untagged negative layers are not independently activated as
+tunnels. Ambiguous endpoint matches that would create a contradictory
+clearance cycle are excluded. Supplying \code{layer} disables \code{merge} and requires
+the suggested \code{sf}, \code{igraph}, \code{Matrix}, and \code{osqp} packages.}
 
 \item{layer_height}{Default \code{5.5}. Either a single positive spacing in
 elevation units between locally ordered layers, or an unquoted or character
@@ -107,8 +110,8 @@ texture. When supplied, it is used instead of the generated texture and
 \code{lane_texture} is treated as \code{TRUE}.}
 
 \item{lane_dash_length}{Default \code{3}. Painted dash length in scene/world units
-for generated dashed lane markings. The default approximates a 10 foot dash as
-3 meters.}
+for generated dashed lane markings. The default approximates a 10 foot dash
+as 3 meters.}
 
 \item{lane_gap_length}{Default \code{10}. Gap length in scene/world units for
 generated dashed lane markings. The default approximates a 30 foot gap as
@@ -125,13 +128,15 @@ directly.}
 
 \item{lanes}{Default \code{2}. Number of lanes used when generating the default
 lane texture and, when \code{width = NULL}, deriving the road width. May also be
-an unquoted or character column name in an \code{sf} road object; this generates
-the matching texture and width for each feature.}
+an unquoted or character column name in an \code{sf} road object. OSM-style
+compound values use their first positive integer. Missing values first use
+\code{lanes:forward} plus \code{lanes:backward}, then fall back to one lane for links
+and one-way roads or two lanes for other roads.}
 
 \item{lane_width}{Default \code{3}. Lane width in scene/world units used when
-\code{width = NULL}. The derived road width is \code{lane_width * (lanes + 2)},
-and the generated lane texture leaves one lane width total outside the edge
-lines, split between both sides.}
+\code{width = NULL}. The derived road width is
+\code{lane_width * (lanes + 2)}. The generated lane texture leaves one lane width
+total outside the edge lines, split between both sides.}
 
 \item{lane_color}{Default \code{"white"}. Color for dashed lane divider markings.}
 
@@ -150,7 +155,9 @@ texture repetition occupied by a dash for dashed lane markings.}
 layer before drawing the new one.}
 }
 \value{
-Invisibly returns the rendered road coordinates.
+Invisibly returns the rendered road coordinates. When \code{layer} is
+supplied, the result has \code{terrain_following} and \code{profile_diagnostics}
+attributes describing the sparse profile solve.
 }
 \description{
 Adds road paths to the scene. Roads are previewed as rgl lines
