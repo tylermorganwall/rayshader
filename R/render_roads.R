@@ -13155,6 +13155,647 @@ make_render_highquality_road_path_polygon = function() {
   )
 }
 
+#' Calculate a high-quality road task endpoint direction
+#'
+#' @param task High-quality road mesh task.
+#' @param endpoint_side Endpoint side, either `"start"` or `"end"`.
+#' @param direction_lookahead Default `8`. Physical look-ahead distance in
+#' metres.
+#'
+#' @return Inward unit direction and physical look-ahead distance.
+#' @keywords internal
+calculate_render_road_mesh_task_endpoint_direction = function(
+  task,
+  endpoint_side,
+  direction_lookahead = 8
+) {
+  points = as.matrix(task$points)
+  texture_world_scale = validate_render_road_world_scale(
+    task$texture_world_scale
+  )
+  metric_coordinates = sweep(
+    points[, c(1, 3), drop = FALSE],
+    2,
+    texture_world_scale,
+    FUN = "*"
+  )
+  calculate_render_road_endpoint_direction(
+    geometry = metric_coordinates,
+    endpoint_side = endpoint_side,
+    direction_lookahead = direction_lookahead
+  )
+}
+
+#' Build high-quality road mesh task endpoints
+#'
+#' @param tasks High-quality road mesh task list.
+#' @param direction_lookahead Default `8`. Physical look-ahead distance in
+#' metres.
+#'
+#' @return Endpoint table.
+#' @keywords internal
+build_render_road_mesh_chain_endpoints = function(
+  tasks,
+  direction_lookahead = 8
+) {
+  direction_lookahead = validate_waterpath_positive_number(
+    direction_lookahead,
+    "direction_lookahead"
+  )
+  endpoint_rows = lapply(seq_along(tasks), function(task_index) {
+    points = as.matrix(tasks[[task_index]]$points)
+    if (
+      nrow(points) < 2L ||
+        ncol(points) < 3L ||
+        any(!is.finite(points[, 1:3, drop = FALSE]))
+    ) {
+      return(NULL)
+    }
+    start_direction =
+      calculate_render_road_mesh_task_endpoint_direction(
+        tasks[[task_index]],
+        endpoint_side = "start",
+        direction_lookahead = direction_lookahead
+      )
+    end_direction =
+      calculate_render_road_mesh_task_endpoint_direction(
+        tasks[[task_index]],
+        endpoint_side = "end",
+        direction_lookahead = direction_lookahead
+      )
+    endpoint_index = c(1L, nrow(points))
+    data.frame(
+      endpoint_id = paste0(
+        task_index,
+        ":",
+        c("start", "end")
+      ),
+      road_path_task_id = task_index,
+      endpoint_side = c("start", "end"),
+      x = points[endpoint_index, 1],
+      y = points[endpoint_index, 2],
+      z = points[endpoint_index, 3],
+      direction_x = c(
+        start_direction[["direction_x"]],
+        end_direction[["direction_x"]]
+      ),
+      direction_z = c(
+        start_direction[["direction_y"]],
+        end_direction[["direction_y"]]
+      ),
+      direction_lookahead_distance = c(
+        start_direction[["distance"]],
+        end_direction[["distance"]]
+      ),
+      stringsAsFactors = FALSE
+    )
+  })
+  endpoint_rows = Filter(Negate(is.null), endpoint_rows)
+  if (!length(endpoint_rows)) {
+    return(data.frame(
+      endpoint_id = character(0),
+      road_path_task_id = integer(0),
+      endpoint_side = character(0),
+      x = numeric(0),
+      y = numeric(0),
+      z = numeric(0),
+      direction_x = numeric(0),
+      direction_z = numeric(0),
+      direction_lookahead_distance = numeric(0),
+      stringsAsFactors = FALSE
+    ))
+  }
+  do.call(rbind, endpoint_rows)
+}
+
+#' Test whether two high-quality road tasks can share one mesh
+#'
+#' @param task_a First high-quality road mesh task.
+#' @param task_b Second high-quality road mesh task.
+#'
+#' @return Logical scalar.
+#' @keywords internal
+are_render_road_mesh_tasks_chain_compatible = function(task_a, task_b) {
+  numeric_equal = function(first, second, tolerance = 1e-8) {
+    first = suppressWarnings(as.numeric(first))
+    second = suppressWarnings(as.numeric(second))
+    length(first) == length(second) &&
+      length(first) > 0L &&
+      all(is.finite(first)) &&
+      all(is.finite(second)) &&
+      all(abs(first - second) <= tolerance)
+  }
+  width_scale = max(
+    1,
+    abs(suppressWarnings(as.numeric(task_a$width[[1L]]))),
+    abs(suppressWarnings(as.numeric(task_b$width[[1L]])))
+  )
+  numeric_equal(
+    task_a$width,
+    task_b$width,
+    tolerance = width_scale * 1e-8
+  ) &&
+    numeric_equal(task_a$bbox_center, task_b$bbox_center) &&
+    numeric_equal(task_a$zscale, task_b$zscale) &&
+    numeric_equal(
+      validate_render_road_world_scale(task_a$texture_world_scale),
+      validate_render_road_world_scale(task_b$texture_world_scale)
+    ) &&
+    numeric_equal(task_a$texture_length, task_b$texture_length) &&
+    identical(
+      isTRUE(task_a$terrain_following),
+      isTRUE(task_b$terrain_following)
+    ) &&
+    identical(task_a$texture_file, task_b$texture_file) &&
+    identical(task_a$material, task_b$material)
+}
+
+#' Select exact high-quality road task continuations
+#'
+#' @param tasks High-quality road mesh task list.
+#' @param endpoints Road task endpoint table.
+#' @param endpoint_tolerance Default `1e-6`. Maximum three-dimensional endpoint
+#' gap in scene units.
+#' @param ambiguity_margin Default `0.03`. Minimum directional-score margin for
+#' a unique selection.
+#' @param maximum_turn Default `60`. Maximum continuation turn in degrees.
+#'
+#' @return Candidate, selected, and ambiguous continuation tables.
+#' @keywords internal
+build_render_road_mesh_chain_connections = function(
+  tasks,
+  endpoints,
+  endpoint_tolerance = 1e-6,
+  ambiguity_margin = 0.03,
+  maximum_turn = 60
+) {
+  endpoint_tolerance = validate_waterpath_positive_number(
+    endpoint_tolerance,
+    "endpoint_tolerance"
+  )
+  ambiguity_margin = validate_waterpath_positive_number(
+    ambiguity_margin,
+    "ambiguity_margin"
+  )
+  maximum_turn = suppressWarnings(as.numeric(maximum_turn[[1L]]))
+  if (
+    !is.finite(maximum_turn) ||
+      maximum_turn <= 0 ||
+      maximum_turn >= 180
+  ) {
+    stop(
+      "`maximum_turn` must be greater than zero and less than 180.",
+      call. = FALSE
+    )
+  }
+  empty_connections = data.frame(
+    connection_id = integer(0),
+    endpoint_a = character(0),
+    endpoint_b = character(0),
+    task_a = integer(0),
+    task_b = integer(0),
+    endpoint_side_a = character(0),
+    endpoint_side_b = character(0),
+    endpoint_gap = numeric(0),
+    direction_score = numeric(0),
+    compatible = logical(0),
+    eligible = logical(0),
+    ambiguous = logical(0),
+    selected = logical(0),
+    diagnostic_reason = character(0),
+    stringsAsFactors = FALSE
+  )
+  if (nrow(endpoints) < 2L) {
+    return(list(
+      candidates = empty_connections,
+      selected = empty_connections,
+      ambiguous = empty_connections
+    ))
+  }
+  key_digits = max(0L, ceiling(-log10(endpoint_tolerance)))
+  position_key = paste(
+    round(endpoints$x, key_digits),
+    round(endpoints$y, key_digits),
+    round(endpoints$z, key_digits),
+    sep = ":"
+  )
+  endpoint_groups = split(seq_len(nrow(endpoints)), position_key)
+  endpoint_groups = endpoint_groups[lengths(endpoint_groups) >= 2L]
+  candidate_rows = list()
+  candidate_index = 0L
+  minimum_direction_score = cos(maximum_turn * pi / 180)
+  for (endpoint_group in endpoint_groups) {
+    pair_indices = utils::combn(endpoint_group, 2L)
+    for (pair_index in seq_len(ncol(pair_indices))) {
+      first = pair_indices[1L, pair_index]
+      second = pair_indices[2L, pair_index]
+      task_a = endpoints$road_path_task_id[[first]]
+      task_b = endpoints$road_path_task_id[[second]]
+      if (task_a == task_b) {
+        next
+      }
+      endpoint_gap = sqrt(sum(
+        (unlist(
+          endpoints[first, c("x", "y", "z")],
+          use.names = FALSE
+        ) -
+          unlist(
+            endpoints[second, c("x", "y", "z")],
+            use.names = FALSE
+          ))^2
+      ))
+      if (
+        !is.finite(endpoint_gap) ||
+          endpoint_gap > endpoint_tolerance
+      ) {
+        next
+      }
+      direction_score = -sum(
+        unlist(
+          endpoints[first, c("direction_x", "direction_z")],
+          use.names = FALSE
+        ) *
+          unlist(
+            endpoints[second, c("direction_x", "direction_z")],
+            use.names = FALSE
+          )
+      )
+      compatible = are_render_road_mesh_tasks_chain_compatible(
+        tasks[[task_a]],
+        tasks[[task_b]]
+      )
+      eligible = compatible &&
+        is.finite(direction_score) &&
+        direction_score >= minimum_direction_score
+      candidate_index = candidate_index + 1L
+      candidate_rows[[candidate_index]] = data.frame(
+        connection_id = candidate_index,
+        endpoint_a = endpoints$endpoint_id[[first]],
+        endpoint_b = endpoints$endpoint_id[[second]],
+        task_a = task_a,
+        task_b = task_b,
+        endpoint_side_a = endpoints$endpoint_side[[first]],
+        endpoint_side_b = endpoints$endpoint_side[[second]],
+        endpoint_gap = endpoint_gap,
+        direction_score = direction_score,
+        compatible = compatible,
+        eligible = eligible,
+        ambiguous = FALSE,
+        selected = FALSE,
+        diagnostic_reason = if (!compatible) {
+          "incompatible_mesh_section"
+        } else if (!eligible) {
+          "turn_exceeds_limit"
+        } else {
+          "eligible_exact_continuation"
+        },
+        stringsAsFactors = FALSE
+      )
+    }
+  }
+  if (!length(candidate_rows)) {
+    return(list(
+      candidates = empty_connections,
+      selected = empty_connections,
+      ambiguous = empty_connections
+    ))
+  }
+  candidates = do.call(rbind, candidate_rows)
+  eligible_rows = which(candidates$eligible)
+  best_connection = setNames(
+    rep(NA_integer_, nrow(endpoints)),
+    endpoints$endpoint_id
+  )
+  for (endpoint_id in endpoints$endpoint_id) {
+    endpoint_candidates = eligible_rows[
+      candidates$endpoint_a[eligible_rows] == endpoint_id |
+        candidates$endpoint_b[eligible_rows] == endpoint_id
+    ]
+    if (!length(endpoint_candidates)) {
+      next
+    }
+    ordered_candidates = endpoint_candidates[
+      order(
+        -candidates$direction_score[endpoint_candidates],
+        candidates$connection_id[endpoint_candidates]
+      )
+    ]
+    if (
+      length(ordered_candidates) > 1L &&
+        candidates$direction_score[[ordered_candidates[[1L]]]] -
+          candidates$direction_score[[ordered_candidates[[2L]]]] <
+          ambiguity_margin
+    ) {
+      candidates$ambiguous[ordered_candidates[1:2]] = TRUE
+      candidates$diagnostic_reason[ordered_candidates[1:2]] =
+        "ambiguous_direction_margin"
+      next
+    }
+    best_connection[[endpoint_id]] = candidates$connection_id[[
+      ordered_candidates[[1L]]
+    ]]
+  }
+  for (candidate_row in eligible_rows) {
+    connection_id = candidates$connection_id[[candidate_row]]
+    endpoint_a = candidates$endpoint_a[[candidate_row]]
+    endpoint_b = candidates$endpoint_b[[candidate_row]]
+    if (
+      identical(
+        unname(best_connection[[endpoint_a]]),
+        connection_id
+      ) &&
+        identical(
+          unname(best_connection[[endpoint_b]]),
+          connection_id
+        )
+    ) {
+      candidates$selected[[candidate_row]] = TRUE
+      candidates$diagnostic_reason[[candidate_row]] =
+        "mutual_unique_exact_continuation"
+    } else if (!candidates$ambiguous[[candidate_row]]) {
+      candidates$diagnostic_reason[[candidate_row]] =
+        "not_mutual_unique"
+    }
+  }
+  list(
+    candidates = candidates,
+    selected = candidates[candidates$selected, , drop = FALSE],
+    ambiguous = candidates[candidates$ambiguous, , drop = FALSE]
+  )
+}
+
+#' Order one high-quality road mesh chain
+#'
+#' @param component_task_id Task identifiers in one connection component.
+#' @param selected_connections Selected exact continuation table.
+#'
+#' @return Ordered member table and closed-chain flag.
+#' @keywords internal
+order_render_road_mesh_chain_component = function(
+  component_task_id,
+  selected_connections
+) {
+  component_task_id = sort(unique(as.integer(component_task_id)))
+  component_connections = selected_connections[
+    selected_connections$task_a %in%
+      component_task_id &
+      selected_connections$task_b %in% component_task_id,
+    ,
+    drop = FALSE
+  ]
+  endpoint_connection = setNames(
+    rep(NA_integer_, length(component_task_id) * 2L),
+    paste0(
+      rep(component_task_id, each = 2L),
+      ":",
+      rep(c("start", "end"), times = length(component_task_id))
+    )
+  )
+  if (nrow(component_connections)) {
+    for (connection_row in seq_len(nrow(component_connections))) {
+      endpoint_connection[[
+        component_connections$endpoint_a[[connection_row]]
+      ]] = connection_row
+      endpoint_connection[[
+        component_connections$endpoint_b[[connection_row]]
+      ]] = connection_row
+    }
+  }
+  degree = vapply(
+    component_task_id,
+    function(task_id) {
+      sum(is.finite(endpoint_connection[
+        paste0(task_id, ":", c("start", "end"))
+      ]))
+    },
+    integer(1)
+  )
+  if (any(degree > 2L)) {
+    stop(
+      "An exact road mesh continuation component is not path structured.",
+      call. = FALSE
+    )
+  }
+  closed = length(component_task_id) > 1L && all(degree == 2L)
+  if (closed) {
+    current_task = min(component_task_id)
+    entry_side = "start"
+  } else {
+    terminal_task = component_task_id[degree <= 1L]
+    current_task = min(terminal_task)
+    connected_sides = c("start", "end")[
+      is.finite(endpoint_connection[
+        paste0(current_task, ":", c("start", "end"))
+      ])
+    ]
+    entry_side = if (!length(connected_sides)) {
+      "start"
+    } else if (identical(connected_sides[[1L]], "start")) {
+      "end"
+    } else {
+      "start"
+    }
+  }
+  member_rows = list()
+  visited = integer(0)
+  while (!(current_task %in% visited)) {
+    member_rows[[length(member_rows) + 1L]] = data.frame(
+      road_path_task_id = current_task,
+      orientation = if (identical(entry_side, "start")) 1L else -1L,
+      stringsAsFactors = FALSE
+    )
+    visited = c(visited, current_task)
+    exit_side = if (identical(entry_side, "start")) {
+      "end"
+    } else {
+      "start"
+    }
+    connection_row = endpoint_connection[[
+      paste0(current_task, ":", exit_side)
+    ]]
+    if (!is.finite(connection_row)) {
+      break
+    }
+    connection = component_connections[connection_row, , drop = FALSE]
+    if (connection$task_a[[1L]] == current_task) {
+      next_task = connection$task_b[[1L]]
+      next_entry_side = connection$endpoint_side_b[[1L]]
+    } else {
+      next_task = connection$task_a[[1L]]
+      next_entry_side = connection$endpoint_side_a[[1L]]
+    }
+    current_task = next_task
+    entry_side = next_entry_side
+  }
+  if (!setequal(visited, component_task_id)) {
+    stop(
+      "An exact road mesh continuation component could not be ordered.",
+      call. = FALSE
+    )
+  }
+  list(
+    members = do.call(rbind, member_rows),
+    closed = closed
+  )
+}
+
+#' Assemble compatible exact road continuations into mesh-chain tasks
+#'
+#' @param tasks High-quality road mesh task list.
+#' @param endpoint_tolerance Default `1e-6`. Maximum three-dimensional endpoint
+#' gap in scene units.
+#' @param ambiguity_margin Default `0.03`. Minimum directional-score margin for
+#' a unique selection.
+#' @param maximum_turn Default `60`. Maximum continuation turn in degrees.
+#' @param direction_lookahead Default `8`. Physical look-ahead distance in
+#' metres.
+#'
+#' @return High-quality road mesh-chain task list with diagnostics.
+#' @keywords internal
+assemble_render_road_mesh_chain_tasks = function(
+  tasks,
+  endpoint_tolerance = 1e-6,
+  ambiguity_margin = 0.03,
+  maximum_turn = 60,
+  direction_lookahead = 8
+) {
+  if (!length(tasks)) {
+    return(tasks)
+  }
+  endpoints = build_render_road_mesh_chain_endpoints(
+    tasks,
+    direction_lookahead = direction_lookahead
+  )
+  connections = build_render_road_mesh_chain_connections(
+    tasks = tasks,
+    endpoints = endpoints,
+    endpoint_tolerance = endpoint_tolerance,
+    ambiguity_margin = ambiguity_margin,
+    maximum_turn = maximum_turn
+  )
+  task_graph = igraph::make_empty_graph(
+    n = length(tasks),
+    directed = FALSE
+  )
+  if (nrow(connections$selected)) {
+    edge_vector = as.vector(t(as.matrix(
+      connections$selected[, c("task_a", "task_b"), drop = FALSE]
+    )))
+    task_graph = igraph::add_edges(task_graph, edge_vector)
+  }
+  component = igraph::components(task_graph)$membership
+  component_task = split(seq_along(tasks), component)
+  chain_tasks = vector("list", length(component_task))
+  member_rows = list()
+  suppressed_internal_cap_count = 0L
+  for (chain_index in seq_along(component_task)) {
+    ordered = order_render_road_mesh_chain_component(
+      component_task_id = component_task[[chain_index]],
+      selected_connections = connections$selected
+    )
+    ordered_members = ordered$members
+    chain_points = NULL
+    chain_station = 0
+    repeats = numeric(0)
+    chain_member_rows = list()
+    for (member_index in seq_len(nrow(ordered_members))) {
+      task_id = ordered_members$road_path_task_id[[member_index]]
+      orientation = ordered_members$orientation[[member_index]]
+      member_points = as.matrix(tasks[[task_id]]$points)
+      if (orientation < 0L) {
+        member_points = member_points[nrow(member_points):1L, , drop = FALSE]
+      }
+      member_scale = validate_render_road_world_scale(
+        tasks[[task_id]]$texture_world_scale
+      )
+      member_station = calculate_road_path_cumulative_distance(
+        member_points,
+        texture_world_scale = member_scale
+      )
+      station_start = chain_station
+      station_end = chain_station + tail(member_station, 1L)
+      chain_member_rows[[member_index]] = data.frame(
+        mesh_chain_id = chain_index,
+        render_road_fragment_id = task_id,
+        member_order = member_index,
+        orientation = orientation,
+        chain_station_start = station_start,
+        chain_station_end = station_end,
+        cap_start = !ordered$closed && member_index == 1L,
+        cap_end = !ordered$closed &&
+          member_index == nrow(ordered_members),
+        closed = ordered$closed,
+        stringsAsFactors = FALSE
+      )
+      chain_station = station_end
+      if (is.null(chain_points)) {
+        chain_points = member_points
+      } else {
+        member_points[1L, ] = chain_points[nrow(chain_points), ]
+        chain_points = rbind(
+          chain_points,
+          member_points[-1L, , drop = FALSE]
+        )
+        suppressed_internal_cap_count =
+          suppressed_internal_cap_count + 2L
+      }
+      member_repeats = suppressWarnings(as.numeric(
+        tasks[[task_id]]$texture_repeats[[1L]]
+      ))
+      if (length(member_repeats) && is.finite(member_repeats)) {
+        repeats = c(repeats, member_repeats)
+      } else {
+        repeats = c(repeats, NA_real_)
+      }
+    }
+    if (ordered$closed) {
+      closing_gap = sqrt(sum(
+        (chain_points[nrow(chain_points), 1:3] -
+          chain_points[1L, 1:3])^2
+      ))
+      if (
+        is.finite(closing_gap) &&
+          closing_gap <= endpoint_tolerance
+      ) {
+        chain_points = chain_points[-nrow(chain_points), , drop = FALSE]
+      }
+      suppressed_internal_cap_count =
+        suppressed_internal_cap_count + 2L
+    }
+    base_task_id = ordered_members$road_path_task_id[[1L]]
+    chain_task = tasks[[base_task_id]]
+    chain_task$points = chain_points
+    chain_task$texture_repeats = if (all(is.finite(repeats))) {
+      sum(repeats)
+    } else {
+      NULL
+    }
+    chain_task$cap_start = !ordered$closed
+    chain_task$cap_end = !ordered$closed
+    chain_task$closed = ordered$closed
+    chain_tasks[[chain_index]] = chain_task
+    member_rows[[chain_index]] = do.call(rbind, chain_member_rows)
+  }
+  mesh_chain_members = do.call(rbind, member_rows)
+  attr(chain_tasks, "mesh_chain_members") = mesh_chain_members
+  attr(chain_tasks, "mesh_chain_connections") = connections
+  attr(chain_tasks, "mesh_chain_diagnostics") = list(
+    source_task_count = length(tasks),
+    mesh_chain_count = length(chain_tasks),
+    selected_continuation_count = nrow(connections$selected),
+    ambiguous_continuation_count = nrow(connections$ambiguous),
+    suppressed_internal_cap_count = suppressed_internal_cap_count,
+    retained_physical_cap_count = sum(mesh_chain_members$cap_start) +
+      sum(mesh_chain_members$cap_end),
+    closed_loop_count = sum(vapply(
+      chain_tasks,
+      function(task) isTRUE(task$closed),
+      logical(1)
+    ))
+  )
+  chain_tasks
+}
+
 #' Make high-quality road path meshes
 #'
 #' @param tasks Road path task list.
@@ -13162,10 +13803,1503 @@ make_render_highquality_road_path_polygon = function() {
 #' @return List of rayrender mesh objects.
 #' @keywords internal
 make_render_highquality_road_path_meshes = function(tasks) {
-  meshes = lapply(tasks, function(task) {
-    do.call(make_render_highquality_road_path_mesh, task)
+  chain_tasks = assemble_render_road_mesh_chain_tasks(tasks)
+  chain_members = attr(chain_tasks, "mesh_chain_members")
+  chain_diagnostics = attr(chain_tasks, "mesh_chain_diagnostics")
+  meshes = lapply(seq_along(chain_tasks), function(chain_index) {
+    task = chain_tasks[[chain_index]]
+    tryCatch(
+      do.call(make_render_highquality_road_path_mesh, task),
+      error = function(error) {
+        source_task = chain_members$render_road_fragment_id[
+          chain_members$mesh_chain_id == chain_index
+        ]
+        stop(
+          sprintf(
+            paste0(
+              "High-quality road mesh chain %i (source tasks %s) ",
+              "failed: %s"
+            ),
+            chain_index,
+            paste(source_task, collapse = ", "),
+            conditionMessage(error)
+          ),
+          call. = FALSE
+        )
+      }
+    )
   })
-  Filter(Negate(is.null), meshes)
+  meshes = Filter(Negate(is.null), meshes)
+  attr(meshes, "mesh_chain_members") = chain_members
+  attr(meshes, "mesh_chain_diagnostics") = chain_diagnostics
+  meshes
+}
+
+#' Resolve a road vertex join style
+#'
+#' @param incoming_tangent Incoming horizontal unit tangent.
+#' @param outgoing_tangent Outgoing horizontal unit tangent.
+#' @param miter_limit Maximum permitted miter scale.
+#'
+#' @return Join style, side direction, scale, and turn diagnostics.
+#' @keywords internal
+resolve_render_road_join_style = function(
+  incoming_tangent,
+  outgoing_tangent,
+  miter_limit = 4
+) {
+  incoming_tangent = suppressWarnings(as.numeric(incoming_tangent[1:2]))
+  outgoing_tangent = suppressWarnings(as.numeric(outgoing_tangent[1:2]))
+  normalize = function(value) {
+    magnitude = sqrt(sum(value^2))
+    if (!is.finite(magnitude) || magnitude <= sqrt(.Machine$double.eps)) {
+      return(c(NA_real_, NA_real_))
+    }
+    value / magnitude
+  }
+  incoming_tangent = normalize(incoming_tangent)
+  outgoing_tangent = normalize(outgoing_tangent)
+  incoming_side = c(-incoming_tangent[[2]], incoming_tangent[[1]])
+  outgoing_side = c(-outgoing_tangent[[2]], outgoing_tangent[[1]])
+  miter_side = normalize(incoming_side + outgoing_side)
+  denominator = sum(miter_side * outgoing_side)
+  miter_scale = 1 / denominator
+  stable = all(is.finite(c(
+    incoming_tangent,
+    outgoing_tangent,
+    miter_side,
+    denominator,
+    miter_scale
+  ))) &&
+    denominator > sqrt(.Machine$double.eps) &&
+    miter_scale <= miter_limit
+  list(
+    style = if (stable) "miter" else "round",
+    side_x = if (stable) miter_side[[1]] else outgoing_side[[1]],
+    side_z = if (stable) miter_side[[2]] else outgoing_side[[2]],
+    miter_scale = if (stable) miter_scale else NA_real_,
+    turn_cross = incoming_tangent[[1]] *
+      outgoing_tangent[[2]] -
+      incoming_tangent[[2]] * outgoing_tangent[[1]],
+    turn_dot = sum(incoming_tangent * outgoing_tangent)
+  )
+}
+
+#' Calculate road path vertex frames
+#'
+#' @param points Road centerline points.
+#' @param closed Whether the path is periodic.
+#' @param miter_limit Maximum permitted miter scale.
+#'
+#' @return Per-vertex tangents, sides, scales, and join styles.
+#' @keywords internal
+calculate_render_road_vertex_frames = function(
+  points,
+  closed = FALSE,
+  miter_limit = 4
+) {
+  points = as.matrix(points)
+  point_count = nrow(points)
+  closed = validate_waterpath_logical(closed, "closed")
+  if (point_count < if (closed) 3L else 2L) {
+    stop("Road vertex frames require a valid path.", call. = FALSE)
+  }
+  segment_start = if (closed) {
+    seq_len(point_count)
+  } else {
+    seq_len(point_count - 1L)
+  }
+  segment_end = if (closed) {
+    c(seq.int(2L, point_count), 1L)
+  } else {
+    seq.int(2L, point_count)
+  }
+  segment_delta = points[segment_end, c(1, 3), drop = FALSE] -
+    points[segment_start, c(1, 3), drop = FALSE]
+  segment_length = sqrt(rowSums(segment_delta^2))
+  if (any(!is.finite(segment_length) | segment_length <= 0)) {
+    stop("Road vertex frames contain a zero-length segment.", call. = FALSE)
+  }
+  segment_tangent = segment_delta / segment_length
+  incoming_tangent = matrix(NA_real_, nrow = point_count, ncol = 2L)
+  outgoing_tangent = matrix(NA_real_, nrow = point_count, ncol = 2L)
+  if (closed) {
+    incoming_tangent = segment_tangent[
+      c(point_count, seq_len(point_count - 1L)),
+      ,
+      drop = FALSE
+    ]
+    outgoing_tangent = segment_tangent
+  } else {
+    incoming_tangent[1L, ] = segment_tangent[1L, ]
+    incoming_tangent[-1L, ] = segment_tangent
+    outgoing_tangent[-point_count, ] = segment_tangent
+    outgoing_tangent[point_count, ] = segment_tangent[nrow(segment_tangent), ]
+  }
+  endpoint = !closed & seq_len(point_count) %in% c(1L, point_count)
+  join_rows = lapply(seq_len(point_count), function(index) {
+    if (endpoint[[index]]) {
+      tangent = if (index == 1L) {
+        outgoing_tangent[index, ]
+      } else {
+        incoming_tangent[index, ]
+      }
+      side = c(-tangent[[2]], tangent[[1]])
+      return(data.frame(
+        join_style = "endpoint",
+        side_x = side[[1]],
+        side_z = side[[2]],
+        miter_scale = 1,
+        turn_cross = 0,
+        turn_dot = 1,
+        stringsAsFactors = FALSE
+      ))
+    }
+    join = resolve_render_road_join_style(
+      incoming_tangent[index, ],
+      outgoing_tangent[index, ],
+      miter_limit = miter_limit
+    )
+    data.frame(
+      join_style = join$style,
+      side_x = join$side_x,
+      side_z = join$side_z,
+      miter_scale = join$miter_scale,
+      turn_cross = join$turn_cross,
+      turn_dot = join$turn_dot,
+      stringsAsFactors = FALSE
+    )
+  })
+  joins = do.call(rbind, join_rows)
+  list(
+    incoming_tangent = incoming_tangent,
+    outgoing_tangent = outgoing_tangent,
+    side = as.matrix(joins[, c("side_x", "side_z"), drop = FALSE]),
+    miter_scale = joins$miter_scale,
+    join_style = joins$join_style,
+    turn_cross = joins$turn_cross,
+    turn_dot = joins$turn_dot,
+    segment_length = segment_length
+  )
+}
+
+#' Expand unstable road joins with short rounded sections
+#'
+#' @param points Road centerline points.
+#' @param left_distance Left section distance at each point.
+#' @param right_distance Right section distance at each point.
+#' @param closed Whether the path is periodic.
+#' @param miter_limit Maximum permitted miter scale.
+#' @param round_join_segments Number of segments in each rounded fallback.
+#'
+#' @return Expanded points, section distances, and join diagnostics.
+#' @keywords internal
+expand_render_road_unstable_joins = function(
+  points,
+  left_distance,
+  right_distance,
+  closed = FALSE,
+  miter_limit = 4,
+  round_join_segments = 5L
+) {
+  points = as.matrix(points)
+  point_count = nrow(points)
+  frames = calculate_render_road_vertex_frames(
+    points,
+    closed = closed,
+    miter_limit = miter_limit
+  )
+  round_join_segments = suppressWarnings(as.integer(round_join_segments[[1L]]))
+  if (!is.finite(round_join_segments) || round_join_segments < 2L) {
+    round_join_segments = 5L
+  }
+  point_rows = vector("list", point_count)
+  left_rows = vector("list", point_count)
+  right_rows = vector("list", point_count)
+  inserted_count = integer(point_count)
+  for (index in seq_len(point_count)) {
+    if (frames$join_style[[index]] != "round") {
+      point_rows[[index]] = matrix(points[index, ], nrow = 1L)
+      left_rows[[index]] = left_distance[[index]]
+      right_rows[[index]] = right_distance[[index]]
+      inserted_count[[index]] = 1L
+      next
+    }
+    previous_index = if (index == 1L) point_count else index - 1L
+    next_index = if (index == point_count) 1L else index + 1L
+    incoming_length = sqrt(sum(
+      (points[index, c(1, 3)] - points[previous_index, c(1, 3)])^2
+    ))
+    outgoing_length = sqrt(sum(
+      (points[next_index, c(1, 3)] - points[index, c(1, 3)])^2
+    ))
+    maximum_distance = max(
+      left_distance[[index]],
+      right_distance[[index]]
+    )
+    turn_angle = acos(max(-1, min(1, frames$turn_dot[[index]])))
+    turn_sign = sign(frames$turn_cross[[index]])
+    target_radius = maximum_distance * 1.25
+    required_setback = target_radius * tan(turn_angle / 2)
+    setback = min(
+      required_setback,
+      incoming_length * 0.8,
+      outgoing_length * 0.8
+    )
+    if (!is.finite(setback) || setback <= sqrt(.Machine$double.eps)) {
+      stop("An unstable road join cannot be rounded safely.", call. = FALSE)
+    }
+    radius = setback / tan(turn_angle / 2)
+    if (
+      !is.finite(radius) ||
+        radius <= maximum_distance * (1 + sqrt(.Machine$double.eps)) ||
+        turn_sign == 0
+    ) {
+      stop(
+        "An unstable road join has insufficient length for a safe round join.",
+        call. = FALSE
+      )
+    }
+    incoming = frames$incoming_tangent[index, ]
+    outgoing = frames$outgoing_tangent[index, ]
+    start = points[index, ]
+    start[c(1, 3)] = start[c(1, 3)] - incoming * setback
+    start[[2L]] = points[index, 2L] +
+      (points[previous_index, 2L] - points[index, 2L]) *
+        setback /
+        incoming_length
+    end = points[index, ]
+    end[c(1, 3)] = end[c(1, 3)] + outgoing * setback
+    end[[2L]] = points[index, 2L] +
+      (points[next_index, 2L] - points[index, 2L]) *
+        setback /
+        outgoing_length
+    fraction = seq(0, 1, length.out = round_join_segments + 1L)
+    incoming_side = c(-incoming[[2]], incoming[[1]])
+    center_xz = start[c(1, 3)] +
+      incoming_side * turn_sign * radius
+    start_angle = atan2(
+      start[[3L]] - center_xz[[2L]],
+      start[[1L]] - center_xz[[1L]]
+    )
+    curve_angle = start_angle + fraction * turn_sign * turn_angle
+    curve = cbind(
+      center_xz[[1L]] + radius * cos(curve_angle),
+      start[[2L]] + (end[[2L]] - start[[2L]]) * fraction,
+      center_xz[[2L]] + radius * sin(curve_angle)
+    )
+    point_rows[[index]] = curve
+    left_rows[[index]] = rep(
+      left_distance[[index]],
+      nrow(curve)
+    )
+    right_rows[[index]] = rep(
+      right_distance[[index]],
+      nrow(curve)
+    )
+    inserted_count[[index]] = nrow(curve)
+  }
+  list(
+    points = do.call(rbind, point_rows),
+    left_distance = unlist(left_rows, use.names = FALSE),
+    right_distance = unlist(right_rows, use.names = FALSE),
+    diagnostics = data.frame(
+      source_vertex = seq_len(point_count),
+      join_style = frames$join_style,
+      miter_scale = frames$miter_scale,
+      inserted_section_count = inserted_count,
+      stringsAsFactors = FALSE
+    )
+  )
+}
+
+#' Calculate road vertex cross-sections
+#'
+#' @param points Road centerline points.
+#' @param left_distance Left distance from the centerline.
+#' @param right_distance Right distance from the centerline.
+#' @param heightmap Cached heightmap.
+#' @param zscale Effective zscale.
+#' @param closed Whether the path is periodic.
+#' @param miter_limit Maximum permitted miter scale.
+#' @param frames Default `NULL`. Optional precomputed vertex frames.
+#'
+#' @return Bottom and top edge positions, normals, and vertex frames.
+#' @keywords internal
+calculate_render_road_vertex_sections = function(
+  points,
+  left_distance,
+  right_distance,
+  heightmap = NULL,
+  zscale = 1,
+  closed = FALSE,
+  miter_limit = 4,
+  frames = NULL
+) {
+  points = as.matrix(points)
+  if (is.null(frames)) {
+    frames = calculate_render_road_vertex_frames(
+      points,
+      closed = closed,
+      miter_limit = miter_limit
+    )
+  }
+  if (
+    !is.list(frames) ||
+      !is.matrix(frames$side) ||
+      nrow(frames$side) != nrow(points) ||
+      length(frames$miter_scale) != nrow(points)
+  ) {
+    stop("Road vertex frames do not match the centerline.", call. = FALSE)
+  }
+  if (any(frames$join_style == "round")) {
+    stop(
+      "Road join expansion left an unresolved unstable vertex.",
+      call. = FALSE
+    )
+  }
+  side = cbind(frames$side[, 1], 0, frames$side[, 2])
+  scale = frames$miter_scale
+  left_bottom = points + side * (left_distance * scale)
+  right_bottom = points - side * (right_distance * scale)
+  heightmap_scene = scale_render_highquality_water_path_heightmap(
+    heightmap = heightmap,
+    zscale = zscale
+  )$heightmap
+  if (!is.null(heightmap_scene) && is.matrix(heightmap_scene)) {
+    center_height = interpolate_spatial_water_height(
+      heightmap_scene,
+      points[, 1],
+      points[, 3]
+    )
+    center_offset = points[, 2] - center_height
+    left_bottom[, 2] = interpolate_spatial_water_height(
+      heightmap_scene,
+      left_bottom[, 1],
+      left_bottom[, 3]
+    ) +
+      center_offset
+    right_bottom[, 2] = interpolate_spatial_water_height(
+      heightmap_scene,
+      right_bottom[, 1],
+      right_bottom[, 3]
+    ) +
+      center_offset
+  }
+  left_normal = interpolate_render_highquality_water_path_normals(
+    points = left_bottom,
+    heightmap = heightmap,
+    zscale = zscale
+  )
+  right_normal = interpolate_render_highquality_water_path_normals(
+    points = right_bottom,
+    heightmap = heightmap,
+    zscale = zscale
+  )
+  road_height = diff(range(make_render_highquality_road_path_polygon()[, 2]))
+  list(
+    points = points,
+    frames = frames,
+    left_bottom = left_bottom,
+    right_bottom = right_bottom,
+    left_top = left_bottom + left_normal * road_height,
+    right_top = right_bottom + right_normal * road_height,
+    left_normal = left_normal,
+    right_normal = right_normal
+  )
+}
+
+#' Resolve one shared road-surface normal
+#'
+#' @param face_normals Incident area-weighted face normals.
+#' @param fallback Fallback outward normal.
+#' @param minimum_dot Default `1e-8`. Minimum positive dot product with each
+#' incident face.
+#'
+#' @return A unit normal in the geometric hemisphere of every incident face.
+#' @keywords internal
+resolve_render_road_shared_surface_normal = function(
+  face_normals,
+  fallback,
+  minimum_dot = 1e-8
+) {
+  face_normals = as.matrix(face_normals)
+  fallback = suppressWarnings(as.numeric(fallback[1:3]))
+  if (!nrow(face_normals) || ncol(face_normals) != 3L) {
+    return(fallback)
+  }
+  face_length = sqrt(rowSums(face_normals^2))
+  valid = stats::complete.cases(face_normals) &
+    is.finite(face_length) &
+    face_length > sqrt(.Machine$double.eps)
+  face_normals = face_normals[valid, , drop = FALSE]
+  face_length = face_length[valid]
+  if (!nrow(face_normals)) {
+    return(fallback)
+  }
+  unit_face = face_normals / face_length
+  candidate = colSums(face_normals)
+  candidate_length = sqrt(sum(candidate^2))
+  if (
+    !is.finite(candidate_length) ||
+      candidate_length <= sqrt(.Machine$double.eps)
+  ) {
+    candidate = colSums(unit_face)
+    candidate_length = sqrt(sum(candidate^2))
+  }
+  if (
+    !is.finite(candidate_length) ||
+      candidate_length <= sqrt(.Machine$double.eps)
+  ) {
+    candidate = fallback
+  } else {
+    candidate = candidate / candidate_length
+  }
+  for (iteration in seq_len(32L)) {
+    dot = as.vector(unit_face %*% candidate)
+    violation = which(!is.finite(dot) | dot < minimum_dot)
+    if (!length(violation)) {
+      break
+    }
+    for (face_index in violation) {
+      face_dot = sum(unit_face[face_index, ] * candidate)
+      if (!is.finite(face_dot)) {
+        next
+      }
+      candidate = candidate +
+        (minimum_dot - face_dot) * unit_face[face_index, ]
+    }
+  }
+  candidate_length = sqrt(sum(candidate^2))
+  if (
+    !is.finite(candidate_length) ||
+      candidate_length <= sqrt(.Machine$double.eps)
+  ) {
+    candidate = fallback
+  } else {
+    candidate = candidate / candidate_length
+  }
+  final_dot = as.vector(unit_face %*% candidate)
+  if (any(final_dot <= 0)) {
+    stop(
+      sprintf(
+        paste0(
+          "A road surface vertex has no common outward shading hemisphere ",
+          "(minimum face dot %.6g)."
+        ),
+        min(final_dot)
+      ),
+      call. = FALSE
+    )
+  }
+  candidate
+}
+
+#' Calculate smooth normals for a ruled road surface
+#'
+#' @param left_vertices Left boundary vertices ordered by road station.
+#' @param right_vertices Right boundary vertices ordered by road station.
+#' @param closed Whether the surface is periodic.
+#' @param outward_sign Default `1`. Direction relative to the top-surface
+#' winding.
+#'
+#' @return Left and right area-weighted vertex normals derived from the final
+#' surface geometry.
+#' @keywords internal
+calculate_render_road_surface_normals = function(
+  left_vertices,
+  right_vertices,
+  closed = FALSE,
+  outward_sign = 1
+) {
+  left_vertices = as.matrix(left_vertices)
+  right_vertices = as.matrix(right_vertices)
+  closed = validate_waterpath_logical(closed, "closed")
+  outward_sign = suppressWarnings(as.numeric(outward_sign[[1L]]))
+  if (
+    nrow(left_vertices) != nrow(right_vertices) ||
+      ncol(left_vertices) != 3L ||
+      ncol(right_vertices) != 3L ||
+      nrow(left_vertices) < if (closed) 3L else 2L
+  ) {
+    stop("Road surface boundaries do not define a valid strip.", call. = FALSE)
+  }
+  if (!is.finite(outward_sign) || outward_sign == 0) {
+    stop("`outward_sign` must be finite and nonzero.", call. = FALSE)
+  }
+  point_count = nrow(left_vertices)
+  segment_index = if (closed) {
+    seq_len(point_count)
+  } else {
+    seq_len(point_count - 1L)
+  }
+  next_index = if (closed) {
+    c(seq.int(2L, point_count), 1L)
+  } else {
+    seq.int(2L, point_count)
+  }
+  first_face = row_cross(
+    left_vertices[next_index, , drop = FALSE] -
+      left_vertices[segment_index, , drop = FALSE],
+    right_vertices[next_index, , drop = FALSE] -
+      left_vertices[segment_index, , drop = FALSE]
+  )
+  second_face = row_cross(
+    right_vertices[next_index, , drop = FALSE] -
+      left_vertices[segment_index, , drop = FALSE],
+    right_vertices[segment_index, , drop = FALSE] -
+      left_vertices[segment_index, , drop = FALSE]
+  )
+  first_face = first_face * outward_sign
+  second_face = second_face * outward_sign
+  left_face = vector("list", point_count)
+  right_face = vector("list", point_count)
+  for (segment_row in seq_along(segment_index)) {
+    current = segment_index[[segment_row]]
+    following = next_index[[segment_row]]
+    first = matrix(first_face[segment_row, ], nrow = 1L)
+    second = matrix(second_face[segment_row, ], nrow = 1L)
+    left_face[[current]] = rbind(left_face[[current]], first, second)
+    left_face[[following]] = rbind(left_face[[following]], first)
+    right_face[[following]] = rbind(right_face[[following]], first, second)
+    right_face[[current]] = rbind(right_face[[current]], second)
+  }
+  fallback = c(0, sign(outward_sign), 0)
+  left_normal = t(vapply(
+    left_face,
+    resolve_render_road_shared_surface_normal,
+    numeric(3),
+    fallback = fallback
+  ))
+  right_normal = t(vapply(
+    right_face,
+    resolve_render_road_shared_surface_normal,
+    numeric(3),
+    fallback = fallback
+  ))
+  list(
+    left = left_normal,
+    right = right_normal,
+    first_face = first_face,
+    second_face = second_face
+  )
+}
+
+#' Identify inverted road-strip segments
+#'
+#' @param left_vertices Left surface boundary.
+#' @param right_vertices Right surface boundary.
+#' @param closed Whether the strip is periodic.
+#' @param tolerance Default `1e-12`. Minimum upward projected triangle area.
+#'
+#' @return Segment indices containing an inverted or degenerate triangle.
+#' @keywords internal
+identify_render_road_inverted_surface_segments = function(
+  left_vertices,
+  right_vertices,
+  closed = FALSE,
+  tolerance = 1e-12
+) {
+  left_vertices = as.matrix(left_vertices)
+  right_vertices = as.matrix(right_vertices)
+  closed = validate_waterpath_logical(closed, "closed")
+  point_count = nrow(left_vertices)
+  segment_index = if (closed) {
+    seq_len(point_count)
+  } else {
+    seq_len(point_count - 1L)
+  }
+  next_index = if (closed) {
+    c(seq.int(2L, point_count), 1L)
+  } else {
+    seq.int(2L, point_count)
+  }
+  first_face = row_cross(
+    left_vertices[next_index, , drop = FALSE] -
+      left_vertices[segment_index, , drop = FALSE],
+    right_vertices[next_index, , drop = FALSE] -
+      left_vertices[segment_index, , drop = FALSE]
+  )
+  second_face = row_cross(
+    right_vertices[next_index, , drop = FALSE] -
+      left_vertices[segment_index, , drop = FALSE],
+    right_vertices[segment_index, , drop = FALSE] -
+      left_vertices[segment_index, , drop = FALSE]
+  )
+  invalid = !stats::complete.cases(first_face) |
+    !stats::complete.cases(second_face) |
+    first_face[, 2] <= tolerance |
+    second_face[, 2] <= tolerance
+  segment_index[invalid]
+}
+
+#' Calculate stabilized road sweep frames
+#'
+#' @param points Dense road centerline points.
+#' @param left_distance Left section distance at each point.
+#' @param right_distance Right section distance at each point.
+#' @param texture_world_scale Scene-to-world horizontal scale.
+#' @param closed Whether the path is periodic.
+#' @param miter_limit Maximum permitted miter scale.
+#' @param guide_step_fraction Default `0.2`. Guide spacing relative to the
+#' maximum half-width.
+#'
+#' @return Dense vertex frames interpolated from a width-scale guide path.
+#' @keywords internal
+calculate_render_road_stabilized_vertex_frames = function(
+  points,
+  left_distance,
+  right_distance,
+  texture_world_scale,
+  closed = FALSE,
+  miter_limit = 4,
+  guide_step_fraction = 0.2
+) {
+  points = as.matrix(points)
+  point_count = nrow(points)
+  guide_step_fraction = validate_waterpath_positive_number(
+    guide_step_fraction,
+    "guide_step_fraction"
+  )
+  station = calculate_road_path_cumulative_distance(
+    points,
+    texture_world_scale = texture_world_scale
+  )
+  total_length = tail(station, 1L)
+  if (closed) {
+    closing_delta = (points[1L, c(1, 3)] -
+      points[point_count, c(1, 3)]) *
+      texture_world_scale
+    total_length = total_length + sqrt(sum(closing_delta^2))
+  }
+  minimum_guide_step = max(
+    1e-3,
+    guide_step_fraction *
+      max(c(left_distance, right_distance)) *
+      mean(texture_world_scale)
+  )
+  keep = rep(FALSE, point_count)
+  keep[[1L]] = TRUE
+  previous = 1L
+  if (point_count > 2L) {
+    for (index in seq.int(2L, point_count - 1L)) {
+      if (station[[index]] - station[[previous]] >= minimum_guide_step) {
+        keep[[index]] = TRUE
+        previous = index
+      }
+    }
+  }
+  keep[[point_count]] = TRUE
+  guide_index = which(keep)
+  if (
+    closed &&
+      length(guide_index) > 3L &&
+      total_length - station[[tail(guide_index, 1L)]] < minimum_guide_step
+  ) {
+    guide_index = guide_index[-length(guide_index)]
+  }
+  if (length(guide_index) < if (closed) 3L else 2L) {
+    stop(
+      "Road sweep stabilization has insufficient guide points.",
+      call. = FALSE
+    )
+  }
+  guide_frames = calculate_render_road_vertex_frames(
+    points[guide_index, , drop = FALSE],
+    closed = closed,
+    miter_limit = miter_limit
+  )
+  if (any(guide_frames$join_style == "round")) {
+    stop(
+      "Road sweep stabilization encountered an unresolved sharp guide join.",
+      call. = FALSE
+    )
+  }
+  guide_station = station[guide_index]
+  guide_angle = atan2(
+    guide_frames$side[, 2],
+    guide_frames$side[, 1]
+  )
+  if (length(guide_angle) > 1L) {
+    for (index in seq.int(2L, length(guide_angle))) {
+      angle_delta = guide_angle[[index]] - guide_angle[[index - 1L]]
+      while (angle_delta > pi) {
+        guide_angle[[index]] = guide_angle[[index]] - 2 * pi
+        angle_delta = guide_angle[[index]] - guide_angle[[index - 1L]]
+      }
+      while (angle_delta < -pi) {
+        guide_angle[[index]] = guide_angle[[index]] + 2 * pi
+        angle_delta = guide_angle[[index]] - guide_angle[[index - 1L]]
+      }
+    }
+  }
+  guide_scale = guide_frames$miter_scale
+  if (closed) {
+    closing_angle = guide_angle[[1L]]
+    while (closing_angle - tail(guide_angle, 1L) > pi) {
+      closing_angle = closing_angle - 2 * pi
+    }
+    while (closing_angle - tail(guide_angle, 1L) < -pi) {
+      closing_angle = closing_angle + 2 * pi
+    }
+    guide_station = c(guide_station, total_length)
+    guide_angle = c(guide_angle, closing_angle)
+    guide_scale = c(guide_scale, guide_scale[[1L]])
+  }
+  dense_angle = stats::approx(
+    guide_station,
+    guide_angle,
+    xout = station,
+    rule = 2
+  )$y
+  dense_scale = stats::approx(
+    guide_station,
+    guide_scale,
+    xout = station,
+    rule = 2
+  )$y
+  frames = calculate_render_road_vertex_frames(
+    points,
+    closed = closed,
+    miter_limit = miter_limit
+  )
+  frames$side = cbind(cos(dense_angle), sin(dense_angle))
+  frames$miter_scale = dense_scale
+  stabilize = frames$join_style != "endpoint"
+  frames$join_style[stabilize] = "stabilized"
+  attr(frames, "render_road_stabilization") = list(
+    guide_index = guide_index,
+    minimum_guide_step = minimum_guide_step
+  )
+  frames
+}
+
+#' Sanitize a road section mesh
+#'
+#' @param vertices Quad vertices.
+#' @param vertex_normals Quad shading normals.
+#' @param texcoords Quad texture coordinates.
+#' @param geometry_tolerance Minimum triangle area.
+#' @param uv_tolerance Minimum texture triangle area.
+#'
+#' @return Sanitized quad arrays and diagnostics.
+#' @keywords internal
+sanitize_render_road_section_mesh = function(
+  vertices,
+  vertex_normals,
+  texcoords,
+  geometry_tolerance = 1e-12,
+  uv_tolerance = 1e-14
+) {
+  quad_start = seq(1L, nrow(vertices), by = 4L)
+  first_area = sqrt(rowSums(
+    row_cross(
+      vertices[quad_start + 1L, , drop = FALSE] -
+        vertices[quad_start, , drop = FALSE],
+      vertices[quad_start + 2L, , drop = FALSE] -
+        vertices[quad_start, , drop = FALSE]
+    )^2
+  )) /
+    2
+  second_area = sqrt(rowSums(
+    row_cross(
+      vertices[quad_start + 2L, , drop = FALSE] -
+        vertices[quad_start, , drop = FALSE],
+      vertices[quad_start + 3L, , drop = FALSE] -
+        vertices[quad_start, , drop = FALSE]
+    )^2
+  )) /
+    2
+  uv_cross = function(first, second) {
+    abs(first[, 1] * second[, 2] - first[, 2] * second[, 1]) / 2
+  }
+  first_uv_area = uv_cross(
+    texcoords[quad_start + 1L, , drop = FALSE] -
+      texcoords[quad_start, , drop = FALSE],
+    texcoords[quad_start + 2L, , drop = FALSE] -
+      texcoords[quad_start, , drop = FALSE]
+  )
+  second_uv_area = uv_cross(
+    texcoords[quad_start + 2L, , drop = FALSE] -
+      texcoords[quad_start, , drop = FALSE],
+    texcoords[quad_start + 3L, , drop = FALSE] -
+      texcoords[quad_start, , drop = FALSE]
+  )
+  finite_quad = vapply(
+    seq_along(quad_start),
+    function(index) {
+      rows = seq.int(quad_start[[index]], quad_start[[index]] + 3L)
+      all(is.finite(vertices[rows, ])) &&
+        all(is.finite(vertex_normals[rows, ])) &&
+        all(is.finite(texcoords[rows, ]))
+    },
+    logical(1)
+  )
+  keep_quad = finite_quad &
+    first_area > geometry_tolerance &
+    second_area > geometry_tolerance &
+    first_uv_area > uv_tolerance &
+    second_uv_area > uv_tolerance
+  keep_rows = unlist(lapply(
+    quad_start[keep_quad],
+    function(start) seq.int(start, start + 3L)
+  ))
+  geometry_area = c(first_area[keep_quad], second_area[keep_quad])
+  uv_area = c(first_uv_area[keep_quad], second_uv_area[keep_quad])
+  list(
+    vertices = vertices[keep_rows, , drop = FALSE],
+    vertex_normals = vertex_normals[keep_rows, , drop = FALSE],
+    texcoords = texcoords[keep_rows, , drop = FALSE],
+    diagnostics = list(
+      input_quad_count = length(quad_start),
+      retained_quad_count = sum(keep_quad),
+      removed_quad_count = sum(!keep_quad),
+      non_finite_quad_count = sum(!finite_quad),
+      minimum_triangle_area = if (length(geometry_area)) {
+        min(geometry_area)
+      } else {
+        NA_real_
+      },
+      minimum_uv_triangle_area = if (length(uv_area)) {
+        min(uv_area)
+      } else {
+        NA_real_
+      }
+    )
+  )
+}
+
+#' Build a road mesh from shared vertex sections
+#'
+#' @param sections Road vertex sections.
+#' @param station Global station at each section.
+#' @param total_length Total open or periodic path length.
+#' @param bbox_center Scene center.
+#' @param texture_file Default `NULL`. Road texture file.
+#' @param texture_length Texture repeat length.
+#' @param texture_repeats Default `NULL`. Number of texture repeats.
+#' @param cap_start Whether to cap the first section.
+#' @param cap_end Whether to cap the final section.
+#' @param closed Whether the path is periodic.
+#'
+#' @return A raw `mesh3d` object with mesh diagnostics.
+#' @keywords internal
+build_render_road_section_mesh = function(
+  sections,
+  station,
+  total_length,
+  bbox_center,
+  texture_file = NULL,
+  texture_length = 20,
+  texture_repeats = NULL,
+  cap_start = TRUE,
+  cap_end = TRUE,
+  closed = FALSE
+) {
+  point_count = nrow(sections$points)
+  segment_indices = if (closed) {
+    seq_len(point_count)
+  } else {
+    seq_len(point_count - 1L)
+  }
+  next_indices = if (closed) {
+    c(seq.int(2L, point_count), 1L)
+  } else {
+    seq.int(2L, point_count)
+  }
+  texture_length = validate_waterpath_positive_number(
+    texture_length,
+    "lane_texture_length"
+  )
+  texture_repeats = suppressWarnings(as.numeric(texture_repeats[1]))
+  if (
+    length(texture_repeats) &&
+      is.finite(texture_repeats) &&
+      texture_repeats > 0 &&
+      is.finite(total_length) &&
+      total_length > 0
+  ) {
+    texture_v = station / total_length * texture_repeats
+    closing_v = texture_repeats
+  } else if (closed) {
+    closed_texture_repeats = max(
+      1,
+      round(total_length / texture_length)
+    )
+    texture_v = station / total_length * closed_texture_repeats
+    closing_v = closed_texture_repeats
+  } else {
+    texture_v = station / texture_length
+    closing_v = total_length / texture_length
+  }
+  v0 = texture_v[segment_indices]
+  v1 = texture_v[next_indices]
+  if (closed) {
+    v1[[length(v1)]] = closing_v
+  }
+  top_vertices = make_render_highquality_water_path_quad_rows(
+    sections$left_top[segment_indices, , drop = FALSE],
+    sections$left_top[next_indices, , drop = FALSE],
+    sections$right_top[next_indices, , drop = FALSE],
+    sections$right_top[segment_indices, , drop = FALSE]
+  )
+  bottom_vertices = make_render_highquality_water_path_quad_rows(
+    sections$left_bottom[segment_indices, , drop = FALSE],
+    sections$right_bottom[segment_indices, , drop = FALSE],
+    sections$right_bottom[next_indices, , drop = FALSE],
+    sections$left_bottom[next_indices, , drop = FALSE]
+  )
+  left_vertices = make_render_highquality_water_path_quad_rows(
+    sections$left_bottom[segment_indices, , drop = FALSE],
+    sections$left_bottom[next_indices, , drop = FALSE],
+    sections$left_top[next_indices, , drop = FALSE],
+    sections$left_top[segment_indices, , drop = FALSE]
+  )
+  right_vertices = make_render_highquality_water_path_quad_rows(
+    sections$right_bottom[segment_indices, , drop = FALSE],
+    sections$right_top[segment_indices, , drop = FALSE],
+    sections$right_top[next_indices, , drop = FALSE],
+    sections$right_bottom[next_indices, , drop = FALSE]
+  )
+  top_surface_normals = calculate_render_road_surface_normals(
+    sections$left_top,
+    sections$right_top,
+    closed = closed
+  )
+  bottom_surface_normals = calculate_render_road_surface_normals(
+    sections$left_bottom,
+    sections$right_bottom,
+    closed = closed,
+    outward_sign = -1
+  )
+  top_normals = make_render_highquality_water_path_quad_rows(
+    top_surface_normals$left[segment_indices, , drop = FALSE],
+    top_surface_normals$left[next_indices, , drop = FALSE],
+    top_surface_normals$right[next_indices, , drop = FALSE],
+    top_surface_normals$right[segment_indices, , drop = FALSE]
+  )
+  bottom_normals = make_render_highquality_water_path_quad_rows(
+    bottom_surface_normals$left[segment_indices, , drop = FALSE],
+    bottom_surface_normals$right[segment_indices, , drop = FALSE],
+    bottom_surface_normals$right[next_indices, , drop = FALSE],
+    bottom_surface_normals$left[next_indices, , drop = FALSE]
+  )
+  left_forward = sections$left_bottom[next_indices, , drop = FALSE] -
+    sections$left_bottom[segment_indices, , drop = FALSE]
+  left_up = sections$left_top[segment_indices, , drop = FALSE] -
+    sections$left_bottom[segment_indices, , drop = FALSE]
+  left_wall_normal = replace_invalid_render_highquality_vectors(
+    normalize_render_highquality_rows(row_cross(left_forward, left_up)),
+    fallback = c(0, 0, 1)
+  )
+  right_forward = sections$right_bottom[next_indices, , drop = FALSE] -
+    sections$right_bottom[segment_indices, , drop = FALSE]
+  right_up = sections$right_top[segment_indices, , drop = FALSE] -
+    sections$right_bottom[segment_indices, , drop = FALSE]
+  right_wall_normal = replace_invalid_render_highquality_vectors(
+    normalize_render_highquality_rows(row_cross(right_up, right_forward)),
+    fallback = c(0, 0, -1)
+  )
+  left_normals = make_render_highquality_water_path_quad_rows(
+    left_wall_normal,
+    left_wall_normal,
+    left_wall_normal,
+    left_wall_normal
+  )
+  right_normals = make_render_highquality_water_path_quad_rows(
+    right_wall_normal,
+    right_wall_normal,
+    right_wall_normal,
+    right_wall_normal
+  )
+  top_texcoords = make_render_highquality_water_path_quad_rows(
+    cbind(0, v0),
+    cbind(0, v1),
+    cbind(1, v1),
+    cbind(1, v0)
+  )
+  bottom_texcoords = make_render_highquality_water_path_quad_rows(
+    cbind(0, v0),
+    cbind(1, v0),
+    cbind(1, v1),
+    cbind(0, v1)
+  )
+  side_texture_u = c(0.01, 0.02)
+  left_texcoords = make_render_highquality_water_path_quad_rows(
+    cbind(side_texture_u[[1]], v0),
+    cbind(side_texture_u[[1]], v1),
+    cbind(side_texture_u[[2]], v1),
+    cbind(side_texture_u[[2]], v0)
+  )
+  right_texcoords = make_render_highquality_water_path_quad_rows(
+    cbind(side_texture_u[[1]], v0),
+    cbind(side_texture_u[[2]], v0),
+    cbind(side_texture_u[[2]], v1),
+    cbind(side_texture_u[[1]], v1)
+  )
+  vertices = rbind(
+    top_vertices,
+    bottom_vertices,
+    left_vertices,
+    right_vertices
+  )
+  vertex_normals = rbind(
+    top_normals,
+    bottom_normals,
+    left_normals,
+    right_normals
+  )
+  texcoords = rbind(
+    top_texcoords,
+    bottom_texcoords,
+    left_texcoords,
+    right_texcoords
+  )
+  cap_texture_v_span = 1e-4
+  if (!closed && isTRUE(cap_start)) {
+    start_tangent = sections$frames$outgoing_tangent[1L, ]
+    cap_normal = matrix(
+      c(-start_tangent[[1]], 0, -start_tangent[[2]]),
+      nrow = 1L
+    )
+    vertices = rbind(
+      vertices,
+      make_render_highquality_water_path_quad_rows(
+        matrix(sections$left_bottom[1L, ], nrow = 1L),
+        matrix(sections$left_top[1L, ], nrow = 1L),
+        matrix(sections$right_top[1L, ], nrow = 1L),
+        matrix(sections$right_bottom[1L, ], nrow = 1L)
+      )
+    )
+    vertex_normals = rbind(
+      vertex_normals,
+      make_render_highquality_water_path_quad_rows(
+        cap_normal,
+        cap_normal,
+        cap_normal,
+        cap_normal
+      )
+    )
+    start_v = texture_v[[1L]]
+    texcoords = rbind(
+      texcoords,
+      matrix(
+        c(
+          side_texture_u[[1]],
+          start_v,
+          side_texture_u[[1]],
+          start_v + cap_texture_v_span,
+          side_texture_u[[2]],
+          start_v + cap_texture_v_span,
+          side_texture_u[[2]],
+          start_v
+        ),
+        ncol = 2,
+        byrow = TRUE
+      )
+    )
+  }
+  if (!closed && isTRUE(cap_end)) {
+    end_tangent = sections$frames$incoming_tangent[point_count, ]
+    cap_normal = matrix(
+      c(end_tangent[[1]], 0, end_tangent[[2]]),
+      nrow = 1L
+    )
+    vertices = rbind(
+      vertices,
+      make_render_highquality_water_path_quad_rows(
+        matrix(sections$left_bottom[point_count, ], nrow = 1L),
+        matrix(sections$right_bottom[point_count, ], nrow = 1L),
+        matrix(sections$right_top[point_count, ], nrow = 1L),
+        matrix(sections$left_top[point_count, ], nrow = 1L)
+      )
+    )
+    vertex_normals = rbind(
+      vertex_normals,
+      make_render_highquality_water_path_quad_rows(
+        cap_normal,
+        cap_normal,
+        cap_normal,
+        cap_normal
+      )
+    )
+    end_v = texture_v[[point_count]]
+    texcoords = rbind(
+      texcoords,
+      matrix(
+        c(
+          side_texture_u[[1]],
+          end_v,
+          side_texture_u[[2]],
+          end_v,
+          side_texture_u[[2]],
+          end_v - cap_texture_v_span,
+          side_texture_u[[1]],
+          end_v - cap_texture_v_span
+        ),
+        ncol = 2,
+        byrow = TRUE
+      )
+    )
+  }
+  vertex_normals = sanitize_render_highquality_road_quad_normals(
+    vertices,
+    vertex_normals
+  )
+  sanitized = sanitize_render_road_section_mesh(
+    vertices,
+    vertex_normals,
+    texcoords
+  )
+  if (!nrow(sanitized$vertices)) {
+    return(NULL)
+  }
+  vertices = sweep(
+    sanitized$vertices,
+    2,
+    bbox_center,
+    FUN = "-"
+  )
+  quad_starts = seq(1L, nrow(vertices), by = 4L)
+  indices = rbind(
+    cbind(quad_starts, quad_starts + 1L, quad_starts + 2L),
+    cbind(quad_starts, quad_starts + 2L, quad_starts + 3L)
+  )
+  mesh = list(
+    vb = t(cbind(vertices, 1)),
+    it = t(indices),
+    normals = t(sanitized$vertex_normals),
+    texcoords = t(sanitized$texcoords),
+    material = list(texture = texture_file, bump_texture = NULL, color = NULL)
+  )
+  class(mesh) = "mesh3d"
+  attr(mesh, "render_road_mesh_diagnostics") = sanitized$diagnostics
+  mesh
+}
+
+#' Make a high-quality continuous road chain mesh
+#'
+#' @param points Path points.
+#' @param bbox_center Scene center.
+#' @param width Road width.
+#' @param heightmap Cached heightmap.
+#' @param zscale Effective zscale.
+#' @param material Rayrender material.
+#' @param texture_file Default `NULL`. Road texture file.
+#' @param texture_length Texture repeat length in scene units.
+#' @param texture_repeats Default `NULL`. Number of texture repeats.
+#' @param texture_world_scale Default `c(1, 1)`. Scene-to-world scale.
+#' @param terrain_following Whether the mesh follows terrain.
+#' @param left_width Default `NULL`. Left distance from the centerline.
+#' @param right_width Default `NULL`. Right distance from the centerline.
+#' @param cap_start Whether to cap the first section.
+#' @param cap_end Whether to cap the final section.
+#' @param closed Whether the path is periodic.
+#' @param miter_limit Maximum permitted miter scale.
+#' @param round_join_segments Number of rounded fallback segments.
+#' @param return_mesh Whether to return raw mesh data instead of a rayrender model.
+#'
+#' @return A rayrender mesh model, raw `mesh3d`, or `NULL`.
+#' @keywords internal
+make_render_highquality_road_chain_mesh = function(
+  points,
+  bbox_center,
+  width,
+  heightmap = NULL,
+  zscale = 1,
+  material,
+  texture_file = NULL,
+  texture_length = 20,
+  texture_repeats = NULL,
+  texture_world_scale = c(1, 1),
+  terrain_following = TRUE,
+  left_width = NULL,
+  right_width = NULL,
+  cap_start = TRUE,
+  cap_end = TRUE,
+  closed = FALSE,
+  miter_limit = 4,
+  round_join_segments = 5L,
+  return_mesh = FALSE
+) {
+  terrain_following = validate_waterpath_logical(
+    terrain_following,
+    "terrain_following"
+  )
+  closed = validate_waterpath_logical(closed, "closed")
+  cap_start = validate_waterpath_logical(cap_start, "cap_start")
+  cap_end = validate_waterpath_logical(cap_end, "cap_end")
+  return_mesh = validate_waterpath_logical(return_mesh, "return_mesh")
+  miter_limit = validate_waterpath_positive_number(
+    miter_limit,
+    "miter_limit"
+  )
+  if (miter_limit <= 1) {
+    stop("`miter_limit` must be greater than one.", call. = FALSE)
+  }
+  texture_world_scale = suppressWarnings(as.numeric(texture_world_scale[1:2]))
+  if (
+    length(texture_world_scale) != 2L ||
+      any(!is.finite(texture_world_scale)) ||
+      any(texture_world_scale <= 0)
+  ) {
+    texture_world_scale = c(1, 1)
+  }
+  points = collapse_render_highquality_road_path_points(
+    points,
+    texture_world_scale = texture_world_scale
+  )
+  if (closed && nrow(points) >= 2L) {
+    closing_delta = (points[nrow(points), c(1, 3)] -
+      points[1L, c(1, 3)]) *
+      texture_world_scale
+    if (sqrt(sum(closing_delta^2)) <= 1e-3) {
+      points = points[-nrow(points), , drop = FALSE]
+    }
+  }
+  if (nrow(points) < if (closed) 3L else 2L) {
+    return(NULL)
+  }
+  mesh_heightmap = if (terrain_following) heightmap else NULL
+  densify_points = if (closed) {
+    rbind(points, points[1L, , drop = FALSE])
+  } else {
+    points
+  }
+  densify_points = densify_render_highquality_water_path_points(
+    points = densify_points,
+    width = width,
+    heightmap = mesh_heightmap,
+    zscale = zscale
+  )
+  if (closed) {
+    densify_points = densify_points[-nrow(densify_points), , drop = FALSE]
+  }
+  points = collapse_render_highquality_road_path_points(
+    densify_points,
+    texture_world_scale = texture_world_scale
+  )
+  if (nrow(points) < if (closed) 3L else 2L) {
+    return(NULL)
+  }
+  half_width = width / 2
+  left_width = if (is.null(left_width)) half_width else left_width
+  right_width = if (is.null(right_width)) half_width else right_width
+  normalize_distance = function(value, name) {
+    value = suppressWarnings(as.numeric(value))
+    if (length(value) == 1L) {
+      value = rep(value, nrow(points))
+    }
+    if (
+      length(value) != nrow(points) ||
+        any(!is.finite(value)) ||
+        any(value <= 0)
+    ) {
+      stop(
+        sprintf("`%s` must contain positive section distances.", name),
+        call. = FALSE
+      )
+    }
+    value
+  }
+  left_distance = normalize_distance(left_width, "left_width")
+  right_distance = normalize_distance(right_width, "right_width")
+  join_diagnostics = list()
+  for (iteration in seq_len(3L)) {
+    frames = calculate_render_road_vertex_frames(
+      points,
+      closed = closed,
+      miter_limit = miter_limit
+    )
+    if (!any(frames$join_style == "round")) {
+      break
+    }
+    expanded = expand_render_road_unstable_joins(
+      points = points,
+      left_distance = left_distance,
+      right_distance = right_distance,
+      closed = closed,
+      miter_limit = miter_limit,
+      round_join_segments = round_join_segments
+    )
+    join_diagnostics[[length(join_diagnostics) + 1L]] =
+      expanded$diagnostics
+    points = expanded$points
+    left_distance = expanded$left_distance
+    right_distance = expanded$right_distance
+  }
+  frames = calculate_render_road_vertex_frames(
+    points,
+    closed = closed,
+    miter_limit = miter_limit
+  )
+  if (any(frames$join_style == "round")) {
+    stop("Road join expansion did not converge.", call. = FALSE)
+  }
+  sections = calculate_render_road_vertex_sections(
+    points = points,
+    left_distance = left_distance,
+    right_distance = right_distance,
+    heightmap = mesh_heightmap,
+    zscale = zscale,
+    closed = closed,
+    miter_limit = miter_limit
+  )
+  inverted_segment = sort(unique(c(
+    identify_render_road_inverted_surface_segments(
+      sections$left_bottom,
+      sections$right_bottom,
+      closed = closed
+    ),
+    identify_render_road_inverted_surface_segments(
+      sections$left_top,
+      sections$right_top,
+      closed = closed
+    )
+  )))
+  stabilization = NULL
+  if (length(inverted_segment)) {
+    stabilization_fraction = c(0.2, 0.3, 0.4, 0.6, 0.8, 1)
+    stabilization_attempt = vector(
+      "list",
+      length(stabilization_fraction)
+    )
+    stabilized_sections = NULL
+    for (attempt in seq_along(stabilization_fraction)) {
+      fraction = stabilization_fraction[[attempt]]
+      attempt_result = tryCatch(
+        {
+          stabilized_frames = calculate_render_road_stabilized_vertex_frames(
+            points = points,
+            left_distance = left_distance,
+            right_distance = right_distance,
+            texture_world_scale = texture_world_scale,
+            closed = closed,
+            miter_limit = miter_limit,
+            guide_step_fraction = fraction
+          )
+          attempt_sections = calculate_render_road_vertex_sections(
+            points = points,
+            left_distance = left_distance,
+            right_distance = right_distance,
+            heightmap = mesh_heightmap,
+            zscale = zscale,
+            closed = closed,
+            miter_limit = miter_limit,
+            frames = stabilized_frames
+          )
+          remaining_inverted_segment = sort(unique(c(
+            identify_render_road_inverted_surface_segments(
+              attempt_sections$left_bottom,
+              attempt_sections$right_bottom,
+              closed = closed
+            ),
+            identify_render_road_inverted_surface_segments(
+              attempt_sections$left_top,
+              attempt_sections$right_top,
+              closed = closed
+            )
+          )))
+          list(
+            frames = stabilized_frames,
+            sections = attempt_sections,
+            remaining_inverted_segment = remaining_inverted_segment,
+            error = NA_character_
+          )
+        },
+        error = function(error) {
+          list(
+            frames = NULL,
+            sections = NULL,
+            remaining_inverted_segment = integer(0),
+            error = conditionMessage(error)
+          )
+        }
+      )
+      stabilization_attempt[[attempt]] = data.frame(
+        guide_step_fraction = fraction,
+        remaining_inverted_segment = paste(
+          attempt_result$remaining_inverted_segment,
+          collapse = ","
+        ),
+        error = attempt_result$error,
+        stringsAsFactors = FALSE
+      )
+      if (
+        is.na(attempt_result$error) &&
+          !length(attempt_result$remaining_inverted_segment)
+      ) {
+        stabilized_sections = attempt_result$sections
+        stabilization = attr(
+          attempt_result$frames,
+          "render_road_stabilization"
+        )
+        stabilization$guide_step_fraction = fraction
+        break
+      }
+    }
+    stabilization_attempt = Filter(
+      Negate(is.null),
+      stabilization_attempt
+    )
+    stabilization_attempt = do.call(rbind, stabilization_attempt)
+    if (is.null(stabilized_sections)) {
+      stop(
+        paste0(
+          "Road sweep stabilization could not resolve inverted surface ",
+          "segments: ",
+          paste(inverted_segment, collapse = ", "),
+          "."
+        ),
+        call. = FALSE
+      )
+    }
+    stabilization$initial_inverted_segment = inverted_segment
+    stabilization$attempts = stabilization_attempt
+    sections = stabilized_sections
+  }
+  station = calculate_road_path_cumulative_distance(
+    points,
+    texture_world_scale = texture_world_scale
+  )
+  total_length = tail(station, 1L)
+  if (closed) {
+    closing_delta = (points[1L, c(1, 3)] -
+      points[nrow(points), c(1, 3)]) *
+      texture_world_scale
+    total_length = total_length + sqrt(sum(closing_delta^2))
+  }
+  mesh = build_render_road_section_mesh(
+    sections = sections,
+    station = station,
+    total_length = total_length,
+    bbox_center = bbox_center,
+    texture_file = texture_file,
+    texture_length = texture_length,
+    texture_repeats = texture_repeats,
+    cap_start = cap_start,
+    cap_end = cap_end,
+    closed = closed
+  )
+  if (is.null(mesh)) {
+    return(NULL)
+  }
+  diagnostics = attr(mesh, "render_road_mesh_diagnostics")
+  diagnostics$closed = closed
+  diagnostics$cap_start = !closed && cap_start
+  diagnostics$cap_end = !closed && cap_end
+  diagnostics$section_count = nrow(points)
+  diagnostics$join_expansion = join_diagnostics
+  diagnostics$sweep_stabilization = stabilization
+  attr(mesh, "render_road_mesh_diagnostics") = diagnostics
+  if (return_mesh) {
+    return(mesh)
+  }
+  rayrender::mesh3d_model(
+    mesh,
+    override_material = is.null(texture_file),
+    material = material
+  )
 }
 
 #' Make high-quality road path mesh
@@ -13184,6 +15318,9 @@ make_render_highquality_road_path_meshes = function(tasks) {
 #' x-z distances to world distances.
 #' @param terrain_following Default `TRUE`. Whether high-quality mesh
 #' densification and road edges should follow the terrain.
+#' @param cap_start Whether to cap the first section.
+#' @param cap_end Whether to cap the final section.
+#' @param closed Whether the path is periodic.
 #'
 #' @return A rayrender mesh object or `NULL`.
 #' @keywords internal
@@ -13198,298 +15335,26 @@ make_render_highquality_road_path_mesh = function(
   texture_length = 20,
   texture_repeats = NULL,
   texture_world_scale = c(1, 1),
-  terrain_following = TRUE
+  terrain_following = TRUE,
+  cap_start = TRUE,
+  cap_end = TRUE,
+  closed = FALSE
 ) {
-  terrain_following = validate_waterpath_logical(
-    terrain_following,
-    "terrain_following"
-  )
-  mesh_heightmap = if (isTRUE(terrain_following)) heightmap else NULL
-  points = collapse_render_highquality_road_path_points(
+  make_render_highquality_road_chain_mesh(
     points,
-    texture_world_scale = texture_world_scale
-  )
-  if (nrow(points) < 2) {
-    return(NULL)
-  }
-  points = densify_render_highquality_water_path_points(
-    points = points,
+    bbox_center = bbox_center,
     width = width,
-    heightmap = mesh_heightmap,
-    zscale = zscale
-  )
-  points = collapse_render_highquality_road_path_points(
-    points,
-    texture_world_scale = texture_world_scale
-  )
-  if (nrow(points) < 2) {
-    return(NULL)
-  }
-  half_width = width / 2
-  road_height = diff(range(make_render_highquality_road_path_polygon()[, 2]))
-  normals = interpolate_render_highquality_water_path_normals(
-    points = points,
-    heightmap = mesh_heightmap,
-    zscale = zscale
-  )
-  segment_indices = seq_len(nrow(points) - 1L)
-  next_indices = segment_indices + 1L
-  segment_start = points[segment_indices, , drop = FALSE]
-  segment_end = points[next_indices, , drop = FALSE]
-  segment_normals = normalize_render_highquality_rows(
-    normals[segment_indices, , drop = FALSE] +
-      normals[next_indices, , drop = FALSE]
-  )
-  segment_normals = replace_invalid_render_highquality_vectors(
-    segment_normals,
-    fallback = c(0, 1, 0)
-  )
-  segment_tangents = segment_end - segment_start
-  segment_tangents = segment_tangents -
-    segment_normals * rowSums(segment_tangents * segment_normals)
-  segment_tangents = replace_invalid_render_highquality_vectors(
-    normalize_render_highquality_rows(segment_tangents),
-    fallback = c(1, 0, 0)
-  )
-  horizontal_delta = segment_end[, c(1, 3), drop = FALSE] -
-    segment_start[, c(1, 3), drop = FALSE]
-  segment_side_vectors = normalize_render_highquality_rows(cbind(
-    -horizontal_delta[, 2],
-    0,
-    horizontal_delta[, 1]
-  ))
-  segment_side_vectors = replace_invalid_render_highquality_vectors(
-    segment_side_vectors,
-    fallback = c(0, 0, 1)
-  )
-  edge_centers = make_render_highquality_water_path_edge_centers(
-    points = rbind(segment_start, segment_end),
-    side_vectors = rbind(segment_side_vectors, segment_side_vectors),
-    half_width = half_width,
-    heightmap = mesh_heightmap,
-    zscale = zscale
-  )
-  segment_count = length(segment_indices)
-  start_rows = seq_len(segment_count)
-  end_rows = segment_count + start_rows
-  left_start_bottom = edge_centers$left[start_rows, , drop = FALSE]
-  left_end_bottom = edge_centers$left[end_rows, , drop = FALSE]
-  right_start_bottom = edge_centers$right[start_rows, , drop = FALSE]
-  right_end_bottom = edge_centers$right[end_rows, , drop = FALSE]
-  edge_normals = interpolate_render_highquality_water_path_normals(
-    points = rbind(
-      left_start_bottom,
-      left_end_bottom,
-      right_start_bottom,
-      right_end_bottom
-    ),
-    heightmap = mesh_heightmap,
-    zscale = zscale
-  )
-  left_start_normals = edge_normals[start_rows, , drop = FALSE]
-  left_end_normals = edge_normals[end_rows, , drop = FALSE]
-  right_start_normals = edge_normals[
-    2L * segment_count + start_rows,
-    ,
-    drop = FALSE
-  ]
-  right_end_normals = edge_normals[
-    3L * segment_count + start_rows,
-    ,
-    drop = FALSE
-  ]
-  left_start_top = left_start_bottom + left_start_normals * road_height
-  left_end_top = left_end_bottom + left_end_normals * road_height
-  right_start_top = right_start_bottom + right_start_normals * road_height
-  right_end_top = right_end_bottom + right_end_normals * road_height
-  texture_length = validate_waterpath_positive_number(
-    texture_length,
-    "lane_texture_length"
-  )
-  center_dist = calculate_road_path_cumulative_distance(
-    points,
-    texture_world_scale = texture_world_scale
-  )
-  texture_repeats = suppressWarnings(as.numeric(texture_repeats[1]))
-  if (
-    length(texture_repeats) &&
-      is.finite(texture_repeats) &&
-      texture_repeats > 0
-  ) {
-    road_length = center_dist[[length(center_dist)]]
-    texture_v = if (is.finite(road_length) && road_length > 0) {
-      center_dist / road_length * texture_repeats
-    } else {
-      center_dist
-    }
-  } else {
-    texture_v = center_dist / texture_length
-  }
-  v0 = texture_v[segment_indices]
-  v1 = texture_v[next_indices]
-  texcoords = make_render_highquality_water_path_quad_rows(
-    cbind(0, v0),
-    cbind(0, v1),
-    cbind(1, v1),
-    cbind(1, v0)
-  )
-  bottom_texcoords = make_render_highquality_water_path_quad_rows(
-    cbind(0, v0),
-    cbind(1, v0),
-    cbind(1, v1),
-    cbind(0, v1)
-  )
-  side_texture_u = c(0.01, 0.02)
-  left_side_texcoords = make_render_highquality_water_path_quad_rows(
-    cbind(side_texture_u[[1]], v0),
-    cbind(side_texture_u[[1]], v1),
-    cbind(side_texture_u[[2]], v1),
-    cbind(side_texture_u[[2]], v0)
-  )
-  right_side_texcoords = make_render_highquality_water_path_quad_rows(
-    cbind(side_texture_u[[1]], v0),
-    cbind(side_texture_u[[2]], v0),
-    cbind(side_texture_u[[2]], v1),
-    cbind(side_texture_u[[1]], v1)
-  )
-  start_v = texture_v[[1L]]
-  end_v = texture_v[[length(texture_v)]]
-  cap_texture_v_span = 1e-4
-  cap_texcoords = rbind(
-    matrix(
-      c(
-        side_texture_u[[1]],
-        start_v,
-        side_texture_u[[1]],
-        start_v + cap_texture_v_span,
-        side_texture_u[[2]],
-        start_v + cap_texture_v_span,
-        side_texture_u[[2]],
-        start_v
-      ),
-      ncol = 2,
-      byrow = TRUE
-    ),
-    matrix(
-      c(
-        side_texture_u[[1]],
-        end_v,
-        side_texture_u[[2]],
-        end_v,
-        side_texture_u[[2]],
-        end_v - cap_texture_v_span,
-        side_texture_u[[1]],
-        end_v - cap_texture_v_span
-      ),
-      ncol = 2,
-      byrow = TRUE
-    )
-  )
-  vertices = rbind(
-    make_render_highquality_water_path_quad_rows(
-      left_start_top,
-      left_end_top,
-      right_end_top,
-      right_start_top
-    ),
-    make_render_highquality_water_path_quad_rows(
-      left_start_bottom,
-      right_start_bottom,
-      right_end_bottom,
-      left_end_bottom
-    ),
-    make_render_highquality_water_path_quad_rows(
-      left_start_bottom,
-      left_end_bottom,
-      left_end_top,
-      left_start_top
-    ),
-    make_render_highquality_water_path_quad_rows(
-      right_start_bottom,
-      right_start_top,
-      right_end_top,
-      right_end_bottom
-    ),
-    make_render_highquality_water_path_quad_rows(
-      matrix(left_start_bottom[1L, ], nrow = 1L),
-      matrix(left_start_top[1L, ], nrow = 1L),
-      matrix(right_start_top[1L, ], nrow = 1L),
-      matrix(right_start_bottom[1L, ], nrow = 1L)
-    ),
-    make_render_highquality_water_path_quad_rows(
-      matrix(left_end_bottom[segment_count, ], nrow = 1L),
-      matrix(right_end_bottom[segment_count, ], nrow = 1L),
-      matrix(right_end_top[segment_count, ], nrow = 1L),
-      matrix(left_end_top[segment_count, ], nrow = 1L)
-    )
-  )
-  vertex_normals = rbind(
-    make_render_highquality_water_path_quad_rows(
-      normals[segment_indices, , drop = FALSE],
-      normals[next_indices, , drop = FALSE],
-      normals[next_indices, , drop = FALSE],
-      normals[segment_indices, , drop = FALSE]
-    ),
-    make_render_highquality_water_path_quad_rows(
-      -normals[segment_indices, , drop = FALSE],
-      -normals[segment_indices, , drop = FALSE],
-      -normals[next_indices, , drop = FALSE],
-      -normals[next_indices, , drop = FALSE]
-    ),
-    make_render_highquality_water_path_quad_rows(
-      segment_side_vectors,
-      segment_side_vectors,
-      segment_side_vectors,
-      segment_side_vectors
-    ),
-    make_render_highquality_water_path_quad_rows(
-      -segment_side_vectors,
-      -segment_side_vectors,
-      -segment_side_vectors,
-      -segment_side_vectors
-    ),
-    make_render_highquality_water_path_quad_rows(
-      matrix(-segment_tangents[1L, ], nrow = 1L),
-      matrix(-segment_tangents[1L, ], nrow = 1L),
-      matrix(-segment_tangents[1L, ], nrow = 1L),
-      matrix(-segment_tangents[1L, ], nrow = 1L)
-    ),
-    make_render_highquality_water_path_quad_rows(
-      matrix(segment_tangents[segment_count, ], nrow = 1L),
-      matrix(segment_tangents[segment_count, ], nrow = 1L),
-      matrix(segment_tangents[segment_count, ], nrow = 1L),
-      matrix(segment_tangents[segment_count, ], nrow = 1L)
-    )
-  )
-  texcoords = rbind(
-    texcoords,
-    bottom_texcoords,
-    left_side_texcoords,
-    right_side_texcoords,
-    cap_texcoords
-  )
-  quad_starts = seq(1L, nrow(vertices), by = 4L)
-  indices = rbind(
-    cbind(quad_starts, quad_starts + 1L, quad_starts + 2L),
-    cbind(quad_starts, quad_starts + 2L, quad_starts + 3L)
-  )
-  vertex_normals = sanitize_render_highquality_road_quad_normals(
-    vertices,
-    vertex_normals
-  )
-  vertices = sweep(vertices, 2, bbox_center, FUN = "-")
-  mesh = list(
-    vb = t(cbind(vertices, 1)),
-    it = t(indices),
-    normals = t(vertex_normals),
-    texcoords = t(texcoords),
-    material = list(texture = texture_file, bump_texture = NULL, color = NULL)
-  )
-  class(mesh) = "mesh3d"
-  rayrender::mesh3d_model(
-    mesh,
-    override_material = is.null(texture_file),
-    material = material
+    heightmap = heightmap,
+    zscale = zscale,
+    material = material,
+    texture_file = texture_file,
+    texture_length = texture_length,
+    texture_repeats = texture_repeats,
+    texture_world_scale = texture_world_scale,
+    terrain_following = terrain_following,
+    cap_start = cap_start,
+    cap_end = cap_end,
+    closed = closed
   )
 }
 
