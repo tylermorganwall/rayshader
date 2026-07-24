@@ -97,8 +97,9 @@
 #' layer before drawing the new one.
 #'
 #' @return Invisibly returns the rendered road coordinates. When `layer` is
-#' supplied, the result has `terrain_following` and `profile_diagnostics`
-#' attributes describing the sparse profile solve.
+#' supplied, the result has `terrain_following`, `profile_diagnostics`, and
+#' `mesh_topology` attributes describing the sparse profile solve and selected
+#' physical mesh continuations.
 #' @export
 render_roads = function(
   roads,
@@ -521,6 +522,33 @@ resolve_render_road_lane_values = function(
   link = !is.na(highway) & grepl("_link$", highway)
   fallback = ifelse(oneway | link, 1L, 2L)
   missing = !is.finite(lane_values) | lane_values < 1L
+  if (any(missing)) {
+    evidence_group = paste(
+      ifelse(is.na(highway), "<missing>", highway),
+      oneway,
+      sep = ":"
+    )
+    available_group = unique(evidence_group[
+      !missing &
+        !is.na(highway)
+    ])
+    for (group in available_group) {
+      target = missing & evidence_group == group
+      if (!any(target)) {
+        next
+      }
+      group_lane_values = lane_values[
+        !missing &
+          evidence_group == group
+      ]
+      inferred = suppressWarnings(as.integer(round(
+        stats::median(group_lane_values, na.rm = TRUE)
+      )))
+      if (is.finite(inferred) && inferred >= 1L) {
+        fallback[target] = inferred
+      }
+    }
+  }
   lane_values[missing] = fallback[missing]
   as.integer(lane_values)
 }
@@ -875,6 +903,11 @@ render_road_paths = function(
       roads = roads,
       layer_column = road_layer_column,
       lane_column = road_lanes_column,
+      lane_values = if (length(road_lanes) == 1L) {
+        rep(road_lanes, nrow(roads))
+      } else {
+        road_lanes
+      },
       layer_height_column = road_layer_height_column,
       layer_spacing = road_layer_spacing,
       zscale = zscale,
@@ -912,13 +945,11 @@ render_road_paths = function(
     lane_texture_mapping = lane_texture_mapping,
     texture_world_scale = texture_world_scale
   )
+  mesh_topology = attr(coord_list, "mesh_topology")
+  road_id_by_path = rep(NA_integer_, length(coord_list))
   for (coord_index in seq_along(coord_list)) {
     coord = coord_list[[coord_index]]
     if (is.matrix(coord) && nrow(coord) >= 2) {
-      texture_repeats = texture_mapping$texture_repeats[[coord_index]]
-      if (!is.finite(texture_repeats)) {
-        texture_repeats = NULL
-      }
       road_id = rgl::lines3d(
         coord,
         color = roadcolor,
@@ -926,23 +957,614 @@ render_road_paths = function(
         lwd = coord_width[[coord_index]],
         line_antialias = FALSE
       )
-      register_render_road_path_info(
-        id = road_id,
-        info = list(
-          texture_file = texture_files[[coord_index]],
-          texture_length = texture_mapping$texture_length[[coord_index]],
-          texture_repeats = texture_repeats,
-          texture_mapping = lane_texture_mapping,
-          road_length = texture_mapping$road_length[[coord_index]],
-          texture_world_scale = texture_mapping$texture_world_scale,
-          terrain_following = coord_terrain_following[[coord_index]],
-          road_width = coord_width[[coord_index]],
-          roadcolor = roadcolor
-        )
-      )
+      road_id_by_path[[coord_index]] = as.integer(road_id[[1L]])
     }
   }
+  topology_connections = if (!is.null(mesh_topology)) {
+    mesh_topology$selected_connections
+  } else {
+    NULL
+  }
+  topology_side_branches = if (!is.null(mesh_topology)) {
+    mesh_topology$side_branches
+  } else {
+    NULL
+  }
+  if (!is.null(topology_connections) && nrow(topology_connections)) {
+    topology_connections$road_path_key_a = as.character(
+      road_id_by_path[topology_connections$road_path_id_a]
+    )
+    topology_connections$road_path_key_b = as.character(
+      road_id_by_path[topology_connections$road_path_id_b]
+    )
+  }
+  if (!is.null(topology_side_branches) && nrow(topology_side_branches)) {
+    topology_side_branches$road_path_key_a = as.character(
+      road_id_by_path[topology_side_branches$road_path_id_a]
+    )
+    topology_side_branches$road_path_key_b = as.character(
+      road_id_by_path[topology_side_branches$road_path_id_b]
+    )
+  }
+  for (coord_index in which(is.finite(road_id_by_path))) {
+    texture_repeats = texture_mapping$texture_repeats[[coord_index]]
+    if (!is.finite(texture_repeats)) {
+      texture_repeats = NULL
+    }
+    path_member = if (!is.null(mesh_topology)) {
+      mesh_topology$path_members[
+        mesh_topology$path_members$road_path_id == coord_index,
+        ,
+        drop = FALSE
+      ]
+    } else {
+      NULL
+    }
+    path_connections = if (
+      !is.null(topology_connections) &&
+        nrow(topology_connections)
+    ) {
+      topology_connections[
+        topology_connections$road_path_id_a == coord_index |
+          topology_connections$road_path_id_b == coord_index,
+        ,
+        drop = FALSE
+      ]
+    } else {
+      topology_connections
+    }
+    path_side_branches = if (
+      !is.null(topology_side_branches) &&
+        nrow(topology_side_branches)
+    ) {
+      topology_side_branches[
+        topology_side_branches$road_path_id_a == coord_index |
+          topology_side_branches$road_path_id_b == coord_index,
+        ,
+        drop = FALSE
+      ]
+    } else {
+      topology_side_branches
+    }
+    endpoint_status = if (!is.null(mesh_topology)) {
+      mesh_topology$endpoint_status[
+        mesh_topology$endpoint_status$road_path_id == coord_index,
+        ,
+        drop = FALSE
+      ]
+    } else {
+      NULL
+    }
+    register_render_road_path_info(
+      id = road_id_by_path[[coord_index]],
+      info = list(
+        texture_file = texture_files[[coord_index]],
+        texture_length = texture_mapping$texture_length[[coord_index]],
+        texture_repeats = texture_repeats,
+        texture_mapping = lane_texture_mapping,
+        road_length = texture_mapping$road_length[[coord_index]],
+        texture_world_scale = texture_mapping$texture_world_scale,
+        terrain_following = coord_terrain_following[[coord_index]],
+        road_width = coord_width[[coord_index]],
+        roadcolor = roadcolor,
+        road_lanes = coord_lanes[[coord_index]],
+        road_path_key = as.character(road_id_by_path[[coord_index]]),
+        road_path_id = coord_index,
+        render_road_fragment_id = if (
+          !is.null(path_member) &&
+            nrow(path_member)
+        ) {
+          path_member$render_road_fragment_id[[1L]]
+        } else {
+          NA_integer_
+        },
+        render_road_feature_id = if (
+          !is.null(path_member) &&
+            nrow(path_member)
+        ) {
+          path_member$render_road_feature_id[[1L]]
+        } else {
+          NA_integer_
+        },
+        mesh_topology_available = !is.null(path_member) &&
+          nrow(path_member) &&
+          identical(path_member$mapping_status[[1L]], "mapped"),
+        mesh_connections = path_connections,
+        mesh_side_branches = path_side_branches,
+        mesh_endpoint_status = endpoint_status
+      )
+    )
+  }
   invisible(coord_list)
+}
+
+#' Build rendered-path to topology-fragment membership
+#'
+#' @param topology Prepared road topology.
+#' @param coord_feature Source feature index for every rendered path.
+#' @param valid_path Logical vector identifying usable rendered paths.
+#'
+#' @return Schema-stable rendered-path membership table.
+#' @keywords internal
+build_render_road_path_mesh_members = function(
+  topology,
+  coord_feature,
+  valid_path
+) {
+  path_count = length(coord_feature)
+  members = data.frame(
+    road_path_id = seq_len(path_count),
+    render_road_fragment_id = rep(NA_integer_, path_count),
+    render_road_feature_id = rep(NA_integer_, path_count),
+    render_road_path_feature_index = as.integer(coord_feature),
+    render_road_layer = rep(NA_real_, path_count),
+    mapping_status = ifelse(valid_path, "unmapped", "invalid_path"),
+    stringsAsFactors = FALSE
+  )
+  fragments = topology$fragments
+  if (!nrow(fragments) || !path_count) {
+    return(members)
+  }
+  fragment_feature = fragments$render_road_path_feature_index
+  fragment_groups = split(
+    seq_len(nrow(fragments)),
+    as.character(fragment_feature)
+  )
+  path_groups = split(
+    seq_len(path_count)[valid_path],
+    as.character(coord_feature[valid_path])
+  )
+  common_feature = intersect(names(fragment_groups), names(path_groups))
+  for (feature_key in common_feature) {
+    fragment_rows = fragment_groups[[feature_key]]
+    path_rows = path_groups[[feature_key]]
+    if (length(fragment_rows) != length(path_rows)) {
+      members$mapping_status[path_rows] = "ambiguous_feature_parts"
+      next
+    }
+    fragment_rows = fragment_rows[
+      order(fragments$render_road_fragment_id[fragment_rows])
+    ]
+    path_rows = sort(path_rows)
+    members$render_road_fragment_id[path_rows] =
+      fragments$render_road_fragment_id[fragment_rows]
+    members$render_road_feature_id[path_rows] =
+      fragments$render_road_feature_id[fragment_rows]
+    members$render_road_layer[path_rows] =
+      fragments$render_road_layer[fragment_rows]
+    members$mapping_status[path_rows] = "mapped"
+  }
+  members
+}
+
+#' Map selected physical continuations to rendered road paths
+#'
+#' @param topology Prepared road topology.
+#' @param path_members Rendered-path membership table.
+#'
+#' @return Schema-stable physical mesh-connection table.
+#' @keywords internal
+build_render_road_path_mesh_connections = function(
+  topology,
+  path_members
+) {
+  empty = data.frame(
+    mesh_connection_id = integer(0),
+    source_connection_id = integer(0),
+    connection_type = character(0),
+    road_path_id_a = integer(0),
+    road_path_id_b = integer(0),
+    render_road_fragment_id_a = integer(0),
+    render_road_fragment_id_b = integer(0),
+    endpoint_id_a = integer(0),
+    endpoint_id_b = integer(0),
+    endpoint_side_a = character(0),
+    endpoint_side_b = character(0),
+    layer_a = numeric(0),
+    layer_b = numeric(0),
+    lane_count_a = integer(0),
+    lane_count_b = integer(0),
+    exact_endpoint = logical(0),
+    evidence_tier = character(0),
+    evidence_subclass = character(0),
+    direction_score = numeric(0),
+    endpoint_distance = numeric(0),
+    selected = logical(0),
+    ambiguous = logical(0),
+    mesh_chain_eligible = logical(0),
+    diagnostic_reason = character(0),
+    stringsAsFactors = FALSE
+  )
+  selected = topology$selected_continuations
+  if (is.null(selected) || !nrow(selected)) {
+    return(empty)
+  }
+  fragment_path = setNames(
+    path_members$road_path_id,
+    as.character(path_members$render_road_fragment_id)
+  )
+  path_a = unname(fragment_path[as.character(selected$fragment_a)])
+  path_b = unname(fragment_path[as.character(selected$fragment_b)])
+  mapped = is.finite(path_a) & is.finite(path_b) & path_a != path_b
+  if (!any(mapped)) {
+    return(empty)
+  }
+  selected = selected[mapped, , drop = FALSE]
+  path_a = as.integer(path_a[mapped])
+  path_b = as.integer(path_b[mapped])
+  layer_a = path_members$render_road_layer[
+    match(path_a, path_members$road_path_id)
+  ]
+  layer_b = path_members$render_road_layer[
+    match(path_b, path_members$road_path_id)
+  ]
+  exact_endpoint = as.logical(selected$exact_endpoint)
+  lane_count_a = suppressWarnings(as.integer(selected$lane_count_a))
+  lane_count_b = suppressWarnings(as.integer(selected$lane_count_b))
+  lane_transition = exact_endpoint &
+    is.finite(lane_count_a) &
+    is.finite(lane_count_b) &
+    lane_count_a != lane_count_b
+  layer_transition = exact_endpoint &
+    is.finite(layer_a) &
+    is.finite(layer_b) &
+    layer_a != layer_b
+  accepted_layer_transition = layer_transition &
+    (selected$same_way |
+      selected$same_ref |
+      selected$same_name |
+      (selected$same_highway & selected$same_lanes))
+  unresolved_layer_transition = layer_transition &
+    !accepted_layer_transition
+  accepted_short_gap = !exact_endpoint &
+    is.finite(selected$endpoint_distance) &
+    selected$endpoint_distance <= 0.25
+  connection_type = ifelse(
+    accepted_layer_transition,
+    "longitudinal_layer_transition",
+    ifelse(
+      unresolved_layer_transition,
+      "unresolved_layer_transition",
+      ifelse(
+        lane_transition,
+        "lane_count_transition",
+        ifelse(
+          exact_endpoint,
+          "exact_continuation",
+          "true_gap_continuation"
+        )
+      )
+    )
+  )
+  mesh_chain_eligible = (exact_endpoint | accepted_short_gap) &
+    !unresolved_layer_transition
+  diagnostic_reason = ifelse(
+    accepted_layer_transition,
+    "selected_longitudinal_layer_transition",
+    ifelse(
+      unresolved_layer_transition,
+      "layer_transition_lacks_continuity_evidence",
+      ifelse(
+        exact_endpoint,
+        "selected_physical_continuation",
+        ifelse(
+          accepted_short_gap,
+          "selected_short_gap_mesh_connector",
+          "selected_gap_exceeds_mesh_tolerance"
+        )
+      )
+    )
+  )
+  source_connection_id = suppressWarnings(as.integer(
+    selected$continuation_id
+  ))
+  source_connection_id[!is.finite(source_connection_id)] =
+    seq_len(nrow(selected))[!is.finite(source_connection_id)]
+  data.frame(
+    mesh_connection_id = seq_len(nrow(selected)),
+    source_connection_id = source_connection_id,
+    connection_type = connection_type,
+    road_path_id_a = path_a,
+    road_path_id_b = path_b,
+    render_road_fragment_id_a = as.integer(selected$fragment_a),
+    render_road_fragment_id_b = as.integer(selected$fragment_b),
+    endpoint_id_a = as.integer(selected$endpoint_a),
+    endpoint_id_b = as.integer(selected$endpoint_b),
+    endpoint_side_a = as.character(selected$side_a),
+    endpoint_side_b = as.character(selected$side_b),
+    layer_a = layer_a,
+    layer_b = layer_b,
+    lane_count_a = lane_count_a,
+    lane_count_b = lane_count_b,
+    exact_endpoint = exact_endpoint,
+    evidence_tier = as.character(selected$evidence_tier),
+    evidence_subclass = as.character(selected$evidence_subclass),
+    direction_score = as.numeric(selected$direction_score),
+    endpoint_distance = as.numeric(selected$endpoint_distance),
+    selected = TRUE,
+    ambiguous = FALSE,
+    mesh_chain_eligible = mesh_chain_eligible,
+    diagnostic_reason = diagnostic_reason,
+    stringsAsFactors = FALSE
+  )
+}
+
+#' Build non-through branch relationships for mesh diagnostics
+#'
+#' @param topology Prepared road topology.
+#' @param path_members Rendered-path membership table.
+#' @param selected_connections Selected physical mesh connections.
+#'
+#' @return Schema-stable side-branch table.
+#' @keywords internal
+build_render_road_path_mesh_side_branches = function(
+  topology,
+  path_members,
+  selected_connections
+) {
+  empty = data.frame(
+    branch_id = integer(0),
+    road_path_id_a = integer(0),
+    road_path_id_b = integer(0),
+    render_road_fragment_id_a = integer(0),
+    render_road_fragment_id_b = integer(0),
+    endpoint_side_a = character(0),
+    endpoint_side_b = character(0),
+    topology_relation = character(0),
+    connection_type = character(0),
+    diagnostic_reason = character(0),
+    stringsAsFactors = FALSE
+  )
+  point_pairs = topology$junction_equality_pairs
+  if (is.null(point_pairs) || !nrow(point_pairs)) {
+    return(empty)
+  }
+  endpoint_relation = point_pairs$endpoint_a | point_pairs$endpoint_b
+  point_pairs = point_pairs[endpoint_relation, , drop = FALSE]
+  if (!nrow(point_pairs)) {
+    return(empty)
+  }
+  fragment_path = setNames(
+    path_members$road_path_id,
+    as.character(path_members$render_road_fragment_id)
+  )
+  path_a = unname(fragment_path[as.character(point_pairs$fragment_a)])
+  path_b = unname(fragment_path[as.character(point_pairs$fragment_b)])
+  mapped = is.finite(path_a) & is.finite(path_b) & path_a != path_b
+  point_pairs = point_pairs[mapped, , drop = FALSE]
+  path_a = as.integer(path_a[mapped])
+  path_b = as.integer(path_b[mapped])
+  if (!nrow(point_pairs)) {
+    return(empty)
+  }
+  selected_key = paste(
+    pmin(
+      selected_connections$render_road_fragment_id_a,
+      selected_connections$render_road_fragment_id_b
+    ),
+    pmax(
+      selected_connections$render_road_fragment_id_a,
+      selected_connections$render_road_fragment_id_b
+    ),
+    sep = ":"
+  )
+  pair_key = paste(
+    pmin(point_pairs$fragment_a, point_pairs$fragment_b),
+    pmax(point_pairs$fragment_a, point_pairs$fragment_b),
+    sep = ":"
+  )
+  side_branch = !(pair_key %in% selected_key)
+  point_pairs = point_pairs[side_branch, , drop = FALSE]
+  path_a = path_a[side_branch]
+  path_b = path_b[side_branch]
+  if (!nrow(point_pairs)) {
+    return(empty)
+  }
+  data.frame(
+    branch_id = seq_len(nrow(point_pairs)),
+    road_path_id_a = path_a,
+    road_path_id_b = path_b,
+    render_road_fragment_id_a = as.integer(point_pairs$fragment_a),
+    render_road_fragment_id_b = as.integer(point_pairs$fragment_b),
+    endpoint_side_a = as.character(point_pairs$endpoint_side_a),
+    endpoint_side_b = as.character(point_pairs$endpoint_side_b),
+    topology_relation = as.character(point_pairs$topology_relation),
+    connection_type = "side_branch",
+    diagnostic_reason = "not_selected_as_through_continuation",
+    stringsAsFactors = FALSE
+  )
+}
+
+#' Build mesh endpoint cap diagnostics
+#'
+#' @param topology Prepared road topology.
+#' @param path_members Rendered-path membership table.
+#' @param selected_connections Selected physical mesh connections.
+#' @param side_branches Non-through branch relationships.
+#'
+#' @return Schema-stable endpoint cap-status table.
+#' @keywords internal
+build_render_road_path_mesh_endpoint_status = function(
+  topology,
+  path_members,
+  selected_connections,
+  side_branches
+) {
+  empty = data.frame(
+    road_path_id = integer(0),
+    render_road_fragment_id = integer(0),
+    render_road_endpoint_id = integer(0),
+    endpoint_side = character(0),
+    supplied_boundary = logical(0),
+    selected_connection = logical(0),
+    side_branch = logical(0),
+    ambiguous = logical(0),
+    cap = logical(0),
+    cap_status = character(0),
+    stringsAsFactors = FALSE
+  )
+  topology_endpoints = topology$endpoints
+  if (is.null(topology_endpoints) || !nrow(topology_endpoints)) {
+    return(empty)
+  }
+  fragment_path = setNames(
+    path_members$road_path_id,
+    as.character(path_members$render_road_fragment_id)
+  )
+  road_path_id = unname(fragment_path[
+    as.character(topology_endpoints$render_road_fragment_id)
+  ])
+  mapped = is.finite(road_path_id)
+  topology_endpoints = topology_endpoints[mapped, , drop = FALSE]
+  road_path_id = as.integer(road_path_id[mapped])
+  if (!nrow(topology_endpoints)) {
+    return(empty)
+  }
+  endpoint_id = topology_endpoints$render_road_endpoint_id
+  selected_endpoint_id = c(
+    selected_connections$endpoint_id_a[
+      selected_connections$mesh_chain_eligible
+    ],
+    selected_connections$endpoint_id_b[
+      selected_connections$mesh_chain_eligible
+    ]
+  )
+  branch_endpoint_id = integer(0)
+  if (nrow(side_branches)) {
+    for (branch_row in seq_len(nrow(side_branches))) {
+      fragment_side = list(
+        c(
+          side_branches$render_road_fragment_id_a[[branch_row]],
+          side_branches$endpoint_side_a[[branch_row]]
+        ),
+        c(
+          side_branches$render_road_fragment_id_b[[branch_row]],
+          side_branches$endpoint_side_b[[branch_row]]
+        )
+      )
+      for (record in fragment_side) {
+        if (!is.na(record[[2L]]) && nzchar(record[[2L]])) {
+          matched = topology_endpoints$render_road_fragment_id ==
+            as.integer(record[[1L]]) &
+            topology_endpoints$endpoint_side == record[[2L]]
+          branch_endpoint_id = c(
+            branch_endpoint_id,
+            topology_endpoints$render_road_endpoint_id[matched]
+          )
+        }
+      }
+    }
+  }
+  ambiguous_table = topology$ambiguous_continuations
+  ambiguous_endpoint_id = if (
+    !is.null(ambiguous_table) &&
+      nrow(ambiguous_table)
+  ) {
+    c(ambiguous_table$endpoint_a, ambiguous_table$endpoint_b)
+  } else {
+    integer(0)
+  }
+  selected_connection = endpoint_id %in% selected_endpoint_id
+  side_branch = endpoint_id %in% branch_endpoint_id
+  ambiguous = endpoint_id %in% ambiguous_endpoint_id
+  supplied_boundary = as.logical(topology_endpoints$supplied_boundary)
+  cap = !selected_connection
+  cap_status = ifelse(
+    selected_connection,
+    "suppressed_internal_continuation",
+    ifelse(
+      ambiguous,
+      "retained_ambiguous_endpoint",
+      ifelse(
+        side_branch,
+        "retained_side_branch_pending_patch",
+        ifelse(
+          supplied_boundary,
+          "retained_supplied_boundary",
+          "retained_physical_terminus"
+        )
+      )
+    )
+  )
+  data.frame(
+    road_path_id = road_path_id,
+    render_road_fragment_id = as.integer(
+      topology_endpoints$render_road_fragment_id
+    ),
+    render_road_endpoint_id = as.integer(endpoint_id),
+    endpoint_side = as.character(topology_endpoints$endpoint_side),
+    supplied_boundary = supplied_boundary,
+    selected_connection = selected_connection,
+    side_branch = side_branch,
+    ambiguous = ambiguous,
+    cap = cap,
+    cap_status = cap_status,
+    stringsAsFactors = FALSE
+  )
+}
+
+#' Build physical mesh topology for rendered road paths
+#'
+#' @param topology Prepared road topology.
+#' @param coord_feature Source feature index for every rendered path.
+#' @param valid_path Logical vector identifying usable rendered paths.
+#'
+#' @return Physical mesh-topology tables and summary diagnostics.
+#' @keywords internal
+build_render_road_path_mesh_topology = function(
+  topology,
+  coord_feature,
+  valid_path
+) {
+  path_members = build_render_road_path_mesh_members(
+    topology = topology,
+    coord_feature = coord_feature,
+    valid_path = valid_path
+  )
+  selected_connections = build_render_road_path_mesh_connections(
+    topology = topology,
+    path_members = path_members
+  )
+  side_branches = build_render_road_path_mesh_side_branches(
+    topology = topology,
+    path_members = path_members,
+    selected_connections = selected_connections
+  )
+  endpoint_status = build_render_road_path_mesh_endpoint_status(
+    topology = topology,
+    path_members = path_members,
+    selected_connections = selected_connections,
+    side_branches = side_branches
+  )
+  list(
+    path_members = path_members,
+    selected_connections = selected_connections,
+    side_branches = side_branches,
+    endpoint_status = endpoint_status,
+    diagnostics = list(
+      mapped_path_count = sum(path_members$mapping_status == "mapped"),
+      unmapped_path_count = sum(path_members$mapping_status != "mapped"),
+      selected_connection_count = nrow(selected_connections),
+      exact_continuation_count = sum(
+        selected_connections$connection_type == "exact_continuation"
+      ),
+      longitudinal_layer_transition_count = sum(
+        selected_connections$connection_type == "longitudinal_layer_transition"
+      ),
+      unresolved_layer_transition_count = sum(
+        selected_connections$connection_type == "unresolved_layer_transition"
+      ),
+      lane_count_transition_count = sum(
+        selected_connections$connection_type == "lane_count_transition"
+      ),
+      true_gap_continuation_count = sum(
+        selected_connections$connection_type == "true_gap_continuation"
+      ),
+      side_branch_count = nrow(side_branches),
+      suppressed_endpoint_cap_count = sum(!endpoint_status$cap),
+      retained_endpoint_cap_count = sum(endpoint_status$cap)
+    )
+  )
 }
 
 #' Solve road profiles for rendered path coordinates
@@ -953,6 +1575,8 @@ render_road_paths = function(
 #' @param layer_column Column containing OSM-style layer values.
 #' @param lane_column Default `NULL`. Optional lane-count column used as
 #' continuation evidence.
+#' @param lane_values Default `NULL`. Effective positive lane counts used by
+#' the rendered paths.
 #' @param layer_height_column Default `NULL`. Optional clearance column.
 #' @param layer_spacing Default `5.5`. Fallback adjacent-layer clearance in
 #' metres.
@@ -968,6 +1592,7 @@ solve_render_road_path_profiles = function(
   roads,
   layer_column,
   lane_column = NULL,
+  lane_values = NULL,
   layer_height_column = NULL,
   layer_spacing = 5.5,
   zscale = 1,
@@ -1027,6 +1652,20 @@ solve_render_road_path_profiles = function(
 
   profile_roads = roads[visible_feature, , drop = FALSE]
   profile_roads$render_road_path_feature_index = visible_feature
+  if (!is.null(lane_values)) {
+    lane_values = suppressWarnings(as.integer(lane_values))
+    if (
+      length(lane_values) != nrow(roads) ||
+        any(!is.finite(lane_values) | lane_values < 1L)
+    ) {
+      stop(
+        "Effective rendered lane counts must match the road features.",
+        call. = FALSE
+      )
+    }
+    lane_column = "render_road_effective_lanes"
+    profile_roads[[lane_column]] = lane_values[visible_feature]
+  }
   prepared = prepare_render_road_layer_features(
     roads = profile_roads,
     layer_column = layer_column,
@@ -1034,6 +1673,12 @@ solve_render_road_path_profiles = function(
     layer_height_column = layer_height_column
   )
   topology = build_render_road_layer_topology(prepared)
+  mesh_topology = build_render_road_path_mesh_topology(
+    topology = topology,
+    coord_feature = coord_feature,
+    valid_path = valid_path
+  )
+  attr(coord_list, "mesh_topology") = mesh_topology
   active_fragment_id = topology$prospective_solve_fragment_id
   if (!length(active_fragment_id)) {
     attr(coord_list, "terrain_following") = terrain_following
@@ -12851,6 +13496,480 @@ calculate_road_lane_marking_positions = function(lanes) {
   )
 }
 
+#' Calculate local road lane geometry
+#'
+#' @param lanes Number of traffic lanes.
+#' @param lane_width Traffic-lane width.
+#' @param center_offset Default `0`. Lateral road-envelope offset, positive to
+#' the left of chain travel.
+#' @param left_shoulder Default `lane_width`. Left shoulder width.
+#' @param right_shoulder Default `lane_width`. Right shoulder width.
+#'
+#' @return Asphalt edges, shoulder boundaries, lane boundaries, and centers in
+#' local lateral coordinates ordered from left to right.
+#' @keywords internal
+calculate_render_road_lane_geometry = function(
+  lanes,
+  lane_width,
+  center_offset = 0,
+  left_shoulder = lane_width,
+  right_shoulder = lane_width
+) {
+  lanes = validate_road_lanes(lanes)
+  lane_width = validate_waterpath_positive_number(
+    lane_width,
+    "lane_width"
+  )
+  center_offset = suppressWarnings(as.numeric(center_offset[[1L]]))
+  if (!is.finite(center_offset)) {
+    stop("`center_offset` must be finite.", call. = FALSE)
+  }
+  left_shoulder = validate_waterpath_positive_number(
+    left_shoulder,
+    "left_shoulder"
+  )
+  right_shoulder = validate_waterpath_positive_number(
+    right_shoulder,
+    "right_shoulder"
+  )
+  lane_half_width = lanes * lane_width / 2
+  lane_boundaries = seq(
+    center_offset + lane_half_width,
+    center_offset - lane_half_width,
+    length.out = lanes + 1L
+  )
+  list(
+    left_edge = lane_boundaries[[1L]] + left_shoulder,
+    right_edge = lane_boundaries[[length(lane_boundaries)]] -
+      right_shoulder,
+    shoulder_boundaries = c(
+      left = lane_boundaries[[1L]],
+      right = lane_boundaries[[length(lane_boundaries)]]
+    ),
+    lane_boundaries = lane_boundaries,
+    lane_centers = (lane_boundaries[-length(lane_boundaries)] +
+      lane_boundaries[-1L]) /
+      2,
+    lane_width = lane_width,
+    left_shoulder = left_shoulder,
+    right_shoulder = right_shoulder
+  )
+}
+
+#' Evaluate the quintic road-envelope transition curve
+#'
+#' @param value Transition fraction.
+#'
+#' @return Quintic smoothstep values on the closed interval from zero to one.
+#' @keywords internal
+calculate_render_road_transition_fraction = function(value) {
+  value = pmin(1, pmax(0, suppressWarnings(as.numeric(value))))
+  value^3 * (value * (value * 6 - 15) + 10)
+}
+
+#' Calculate a visual road-envelope transition length
+#'
+#' @param lateral_change Maximum center or edge displacement.
+#' @param maximum_lateral_rate Default `0.05`. Maximum lateral change per metre
+#' of longitudinal distance.
+#' @param minimum_length Default `20`. Minimum transition length in metres.
+#' @param maximum_length Default `150`. Maximum transition length in metres.
+#'
+#' @return Transition length in metres.
+#' @keywords internal
+calculate_render_road_lane_transition_length = function(
+  lateral_change,
+  maximum_lateral_rate = 0.05,
+  minimum_length = 20,
+  maximum_length = 150
+) {
+  lateral_change = suppressWarnings(as.numeric(lateral_change[[1L]]))
+  if (!is.finite(lateral_change) || lateral_change < 0) {
+    stop("`lateral_change` must be finite and nonnegative.", call. = FALSE)
+  }
+  maximum_lateral_rate = validate_waterpath_positive_number(
+    maximum_lateral_rate,
+    "maximum_lateral_rate"
+  )
+  minimum_length = validate_waterpath_positive_number(
+    minimum_length,
+    "minimum_transition_length"
+  )
+  maximum_length = validate_waterpath_positive_number(
+    maximum_length,
+    "maximum_transition_length"
+  )
+  if (maximum_length < minimum_length) {
+    stop(
+      "Maximum transition length cannot be less than the minimum.",
+      call. = FALSE
+    )
+  }
+  min(
+    maximum_length,
+    max(
+      minimum_length,
+      1.875 * lateral_change / maximum_lateral_rate
+    )
+  )
+}
+
+#' Build station-based lane envelope sections for one physical mesh chain
+#'
+#' @param mesh_chain_members Ordered member table for one physical mesh chain.
+#' @param transition_anchors Default `NULL`. Optional table containing
+#' `member_order` and `anchor_edge` values (`"left"`, `"right"`, or
+#' `"center"`) for the boundary after that member.
+#' @param maximum_lateral_rate Default `0.05`. Maximum lateral envelope change
+#' per metre.
+#' @param minimum_transition_length Default `20`. Minimum transition length.
+#' @param maximum_transition_length Default `150`. Maximum transition length.
+#'
+#' @return Schema-stable lane-profile section table.
+#' @keywords internal
+build_render_road_lane_profile_sections = function(
+  mesh_chain_members,
+  transition_anchors = NULL,
+  maximum_lateral_rate = 0.05,
+  minimum_transition_length = 20,
+  maximum_transition_length = 150
+) {
+  empty = data.frame(
+    mesh_chain_id = integer(0),
+    station_start = numeric(0),
+    station_end = numeric(0),
+    lane_count_start = numeric(0),
+    lane_count_end = numeric(0),
+    center_offset_start = numeric(0),
+    center_offset_end = numeric(0),
+    left_half_width_start = numeric(0),
+    left_half_width_end = numeric(0),
+    right_half_width_start = numeric(0),
+    right_half_width_end = numeric(0),
+    anchor_edge = character(0),
+    transition_type = character(0),
+    ambiguous = logical(0),
+    stringsAsFactors = FALSE
+  )
+  if (!nrow(mesh_chain_members)) {
+    return(empty)
+  }
+  mesh_chain_members = mesh_chain_members[
+    order(mesh_chain_members$member_order),
+    ,
+    drop = FALSE
+  ]
+  required_columns = c(
+    "mesh_chain_id",
+    "member_order",
+    "chain_station_start",
+    "chain_station_end",
+    "road_lanes",
+    "road_width"
+  )
+  if (!all(required_columns %in% names(mesh_chain_members))) {
+    stop(
+      "Mesh chain members do not contain lane-envelope metadata.",
+      call. = FALSE
+    )
+  }
+  lane_count = suppressWarnings(as.integer(mesh_chain_members$road_lanes))
+  road_width = suppressWarnings(as.numeric(mesh_chain_members$road_width))
+  if (
+    any(!is.finite(lane_count) | lane_count < 1L) ||
+      any(!is.finite(road_width) | road_width <= 0)
+  ) {
+    stop(
+      "Lane-profile members require positive lane counts and widths.",
+      call. = FALSE
+    )
+  }
+  member_count = nrow(mesh_chain_members)
+  half_width = road_width / 2
+  center_offset = numeric(member_count)
+  boundary_anchor = rep("center", max(0L, member_count - 1L))
+  boundary_ambiguous = rep(TRUE, max(0L, member_count - 1L))
+  if (!is.null(transition_anchors) && nrow(transition_anchors)) {
+    anchor_row = match(
+      seq_len(member_count - 1L),
+      transition_anchors$member_order
+    )
+    matched = is.finite(anchor_row)
+    boundary_anchor[matched] = as.character(
+      transition_anchors$anchor_edge[anchor_row[matched]]
+    )
+    if ("ambiguous" %in% names(transition_anchors)) {
+      boundary_ambiguous[matched] = as.logical(
+        transition_anchors$ambiguous[anchor_row[matched]]
+      )
+    } else {
+      boundary_ambiguous[matched] = FALSE
+    }
+  }
+  valid_anchor = boundary_anchor %in% c("left", "right", "center")
+  boundary_anchor[!valid_anchor] = "center"
+  boundary_ambiguous[!valid_anchor] = TRUE
+  if (member_count > 1L) {
+    for (member_index in seq_len(member_count - 1L)) {
+      anchor = boundary_anchor[[member_index]]
+      center_offset[[member_index + 1L]] = if (anchor == "left") {
+        center_offset[[member_index]] +
+          half_width[[member_index]] -
+          half_width[[member_index + 1L]]
+      } else if (anchor == "right") {
+        center_offset[[member_index]] -
+          half_width[[member_index]] +
+          half_width[[member_index + 1L]]
+      } else {
+        0
+      }
+    }
+  }
+  changed_boundary = if (member_count > 1L) {
+    which(
+      lane_count[-member_count] != lane_count[-1L] |
+        abs(road_width[-member_count] - road_width[-1L]) > 1e-10 |
+        abs(
+          center_offset[-member_count] -
+            center_offset[-1L]
+        ) >
+          1e-10
+    )
+  } else {
+    integer(0)
+  }
+  chain_start = mesh_chain_members$chain_station_start[[1L]]
+  chain_end = mesh_chain_members$chain_station_end[[member_count]]
+  if (!length(changed_boundary)) {
+    return(data.frame(
+      mesh_chain_id = mesh_chain_members$mesh_chain_id[[1L]],
+      station_start = chain_start,
+      station_end = chain_end,
+      lane_count_start = lane_count[[1L]],
+      lane_count_end = lane_count[[1L]],
+      center_offset_start = center_offset[[1L]],
+      center_offset_end = center_offset[[1L]],
+      left_half_width_start = half_width[[1L]],
+      left_half_width_end = half_width[[1L]],
+      right_half_width_start = half_width[[1L]],
+      right_half_width_end = half_width[[1L]],
+      anchor_edge = "center",
+      transition_type = "uniform",
+      ambiguous = FALSE,
+      stringsAsFactors = FALSE
+    ))
+  }
+  transition = lapply(changed_boundary, function(member_index) {
+    boundary_station =
+      mesh_chain_members$chain_station_end[[member_index]]
+    left_edge_start = center_offset[[member_index]] +
+      half_width[[member_index]]
+    left_edge_end = center_offset[[member_index + 1L]] +
+      half_width[[member_index + 1L]]
+    right_edge_start = center_offset[[member_index]] -
+      half_width[[member_index]]
+    right_edge_end = center_offset[[member_index + 1L]] -
+      half_width[[member_index + 1L]]
+    lateral_change = max(abs(c(
+      center_offset[[member_index + 1L]] -
+        center_offset[[member_index]],
+      left_edge_end - left_edge_start,
+      right_edge_end - right_edge_start
+    )))
+    transition_length = calculate_render_road_lane_transition_length(
+      lateral_change = lateral_change,
+      maximum_lateral_rate = maximum_lateral_rate,
+      minimum_length = minimum_transition_length,
+      maximum_length = maximum_transition_length
+    )
+    data.frame(
+      member_order = member_index,
+      boundary_station = boundary_station,
+      station_start = max(
+        chain_start,
+        boundary_station - transition_length / 2
+      ),
+      station_end = min(
+        chain_end,
+        boundary_station + transition_length / 2
+      ),
+      lane_count_start = lane_count[[member_index]],
+      lane_count_end = lane_count[[member_index + 1L]],
+      center_offset_start = center_offset[[member_index]],
+      center_offset_end = center_offset[[member_index + 1L]],
+      left_half_width_start = half_width[[member_index]],
+      left_half_width_end = half_width[[member_index + 1L]],
+      right_half_width_start = half_width[[member_index]],
+      right_half_width_end = half_width[[member_index + 1L]],
+      anchor_edge = boundary_anchor[[member_index]],
+      ambiguous = boundary_ambiguous[[member_index]],
+      stringsAsFactors = FALSE
+    )
+  })
+  transition = do.call(rbind, transition)
+  if (nrow(transition) > 1L) {
+    for (transition_index in seq_len(nrow(transition) - 1L)) {
+      if (
+        transition$station_end[[transition_index]] >
+          transition$station_start[[transition_index + 1L]]
+      ) {
+        split_station = (transition$boundary_station[[transition_index]] +
+          transition$boundary_station[[transition_index + 1L]]) /
+          2
+        transition$station_end[[transition_index]] = split_station
+        transition$station_start[[transition_index + 1L]] = split_station
+      }
+    }
+  }
+  section_rows = list()
+  section_index = 0L
+  current_station = chain_start
+  current_transition = NULL
+  for (transition_index in seq_len(nrow(transition))) {
+    record = transition[transition_index, , drop = FALSE]
+    if (record$station_start[[1L]] > current_station) {
+      if (is.null(current_transition)) {
+        uniform_lane = record$lane_count_start[[1L]]
+        uniform_offset = record$center_offset_start[[1L]]
+        uniform_left = record$left_half_width_start[[1L]]
+        uniform_right = record$right_half_width_start[[1L]]
+      } else {
+        uniform_lane = current_transition$lane_count_end[[1L]]
+        uniform_offset = current_transition$center_offset_end[[1L]]
+        uniform_left = current_transition$left_half_width_end[[1L]]
+        uniform_right = current_transition$right_half_width_end[[1L]]
+      }
+      section_index = section_index + 1L
+      section_rows[[section_index]] = data.frame(
+        mesh_chain_id = mesh_chain_members$mesh_chain_id[[1L]],
+        station_start = current_station,
+        station_end = record$station_start[[1L]],
+        lane_count_start = uniform_lane,
+        lane_count_end = uniform_lane,
+        center_offset_start = uniform_offset,
+        center_offset_end = uniform_offset,
+        left_half_width_start = uniform_left,
+        left_half_width_end = uniform_left,
+        right_half_width_start = uniform_right,
+        right_half_width_end = uniform_right,
+        anchor_edge = "none",
+        transition_type = "uniform",
+        ambiguous = FALSE,
+        stringsAsFactors = FALSE
+      )
+    }
+    section_index = section_index + 1L
+    section_rows[[section_index]] = data.frame(
+      mesh_chain_id = mesh_chain_members$mesh_chain_id[[1L]],
+      station_start = record$station_start[[1L]],
+      station_end = record$station_end[[1L]],
+      lane_count_start = record$lane_count_start[[1L]],
+      lane_count_end = record$lane_count_end[[1L]],
+      center_offset_start = record$center_offset_start[[1L]],
+      center_offset_end = record$center_offset_end[[1L]],
+      left_half_width_start = record$left_half_width_start[[1L]],
+      left_half_width_end = record$left_half_width_end[[1L]],
+      right_half_width_start = record$right_half_width_start[[1L]],
+      right_half_width_end = record$right_half_width_end[[1L]],
+      anchor_edge = record$anchor_edge[[1L]],
+      transition_type = if (
+        record$lane_count_start[[1L]] != record$lane_count_end[[1L]]
+      ) {
+        "lane_count_transition"
+      } else {
+        "width_transition"
+      },
+      ambiguous = record$ambiguous[[1L]],
+      stringsAsFactors = FALSE
+    )
+    current_station = record$station_end[[1L]]
+    current_transition = record
+  }
+  if (current_station < chain_end) {
+    section_index = section_index + 1L
+    section_rows[[section_index]] = data.frame(
+      mesh_chain_id = mesh_chain_members$mesh_chain_id[[1L]],
+      station_start = current_station,
+      station_end = chain_end,
+      lane_count_start = current_transition$lane_count_end[[1L]],
+      lane_count_end = current_transition$lane_count_end[[1L]],
+      center_offset_start = current_transition$center_offset_end[[1L]],
+      center_offset_end = current_transition$center_offset_end[[1L]],
+      left_half_width_start = current_transition$left_half_width_end[[1L]],
+      left_half_width_end = current_transition$left_half_width_end[[1L]],
+      right_half_width_start = current_transition$right_half_width_end[[1L]],
+      right_half_width_end = current_transition$right_half_width_end[[1L]],
+      anchor_edge = "none",
+      transition_type = "uniform",
+      ambiguous = FALSE,
+      stringsAsFactors = FALSE
+    )
+  }
+  sections = do.call(rbind, section_rows)
+  if (any(sections$station_end <= sections$station_start)) {
+    stop("Lane-profile sections have nonpositive length.", call. = FALSE)
+  }
+  rownames(sections) = NULL
+  sections
+}
+
+#' Evaluate station-based road lane envelope sections
+#'
+#' @param lane_profile_sections Lane-profile section table.
+#' @param station Chain stations to evaluate.
+#'
+#' @return Evaluated lane count, center offset, and left/right half-width.
+#' @keywords internal
+evaluate_render_road_lane_profile_sections = function(
+  lane_profile_sections,
+  station
+) {
+  station = suppressWarnings(as.numeric(station))
+  if (!nrow(lane_profile_sections) || any(!is.finite(station))) {
+    stop("Lane-profile evaluation requires finite sections and stations.")
+  }
+  section_index = findInterval(
+    station,
+    lane_profile_sections$station_end,
+    left.open = TRUE
+  ) +
+    1L
+  section_index = pmin(nrow(lane_profile_sections), pmax(1L, section_index))
+  section = lane_profile_sections[section_index, , drop = FALSE]
+  section_length = section$station_end - section$station_start
+  fraction = ifelse(
+    section_length > 0,
+    (station - section$station_start) / section_length,
+    0
+  )
+  transition_fraction = calculate_render_road_transition_fraction(fraction)
+  interpolate = function(start, end) {
+    start + (end - start) * transition_fraction
+  }
+  data.frame(
+    station = station,
+    lane_count = interpolate(
+      section$lane_count_start,
+      section$lane_count_end
+    ),
+    center_offset = interpolate(
+      section$center_offset_start,
+      section$center_offset_end
+    ),
+    left_half_width = interpolate(
+      section$left_half_width_start,
+      section$left_half_width_end
+    ),
+    right_half_width = interpolate(
+      section$right_half_width_start,
+      section$right_half_width_end
+    ),
+    transition_type = section$transition_type,
+    anchor_edge = section$anchor_edge,
+    stringsAsFactors = FALSE
+  )
+}
+
 #' Resolve road lane texture mapping
 #'
 #' @param coord_list List of road coordinate matrices.
@@ -13133,6 +14252,68 @@ roadpath_profile_height = function() {
   0.11
 }
 
+#' Attach registered physical topology to high-quality road tasks
+#'
+#' @param tasks High-quality road mesh task list.
+#'
+#' @return Road tasks carrying path-local mesh-topology attributes.
+#' @keywords internal
+attach_render_road_mesh_task_metadata = function(tasks) {
+  if (!length(tasks)) {
+    return(tasks)
+  }
+  existing_topology = vapply(
+    tasks,
+    function(task) !is.null(attr(task, "mesh_topology")),
+    logical(1)
+  )
+  if (all(existing_topology)) {
+    return(tasks)
+  }
+  road_path_info = get_ids_with_labels(typeval = "road_path")
+  road_path_id = road_path_info$id
+  if (length(road_path_id) != length(tasks)) {
+    for (task_index in seq_along(tasks)) {
+      if (existing_topology[[task_index]]) {
+        next
+      }
+      attr(tasks[[task_index]], "mesh_topology") = list(
+        mesh_topology_available = FALSE,
+        diagnostic_reason = "road_path_task_count_mismatch"
+      )
+    }
+    return(tasks)
+  }
+  for (task_index in seq_along(tasks)) {
+    if (existing_topology[[task_index]]) {
+      next
+    }
+    path_info = get_render_road_path_info(road_path_id[[task_index]])
+    if (is.null(path_info)) {
+      path_info = list()
+    }
+    attr(tasks[[task_index]], "mesh_topology") = list(
+      road_path_key = path_info$road_path_key,
+      road_path_id = path_info$road_path_id,
+      render_road_fragment_id = path_info$render_road_fragment_id,
+      render_road_feature_id = path_info$render_road_feature_id,
+      road_lanes = path_info$road_lanes,
+      mesh_topology_available = isTRUE(
+        path_info$mesh_topology_available
+      ),
+      mesh_connections = path_info$mesh_connections,
+      mesh_side_branches = path_info$mesh_side_branches,
+      mesh_endpoint_status = path_info$mesh_endpoint_status,
+      diagnostic_reason = if (isTRUE(path_info$mesh_topology_available)) {
+        "explicit_physical_topology"
+      } else {
+        "geometry_fallback"
+      }
+    )
+  }
+  tasks
+}
+
 #' Make high-quality road path profile polygon
 #'
 #' @return Road profile polygon.
@@ -13272,10 +14453,19 @@ build_render_road_mesh_chain_endpoints = function(
 #'
 #' @param task_a First high-quality road mesh task.
 #' @param task_b Second high-quality road mesh task.
+#' @param allow_terrain_transition Default `FALSE`. Whether differing
+#' terrain-following classifications may share a longitudinal transition.
+#' @param allow_lane_transition Default `FALSE`. Whether differing width and
+#' lane-texture sections may share one variable-width physical chain.
 #'
 #' @return Logical scalar.
 #' @keywords internal
-are_render_road_mesh_tasks_chain_compatible = function(task_a, task_b) {
+are_render_road_mesh_tasks_chain_compatible = function(
+  task_a,
+  task_b,
+  allow_terrain_transition = FALSE,
+  allow_lane_transition = FALSE
+) {
   numeric_equal = function(first, second, tolerance = 1e-8) {
     first = suppressWarnings(as.numeric(first))
     second = suppressWarnings(as.numeric(second))
@@ -13290,35 +14480,42 @@ are_render_road_mesh_tasks_chain_compatible = function(task_a, task_b) {
     abs(suppressWarnings(as.numeric(task_a$width[[1L]]))),
     abs(suppressWarnings(as.numeric(task_b$width[[1L]])))
   )
-  numeric_equal(
-    task_a$width,
-    task_b$width,
-    tolerance = width_scale * 1e-8
-  ) &&
+  (isTRUE(allow_lane_transition) ||
+    numeric_equal(
+      task_a$width,
+      task_b$width,
+      tolerance = width_scale * 1e-8
+    )) &&
     numeric_equal(task_a$bbox_center, task_b$bbox_center) &&
     numeric_equal(task_a$zscale, task_b$zscale) &&
     numeric_equal(
       validate_render_road_world_scale(task_a$texture_world_scale),
       validate_render_road_world_scale(task_b$texture_world_scale)
     ) &&
-    numeric_equal(task_a$texture_length, task_b$texture_length) &&
-    identical(
-      isTRUE(task_a$terrain_following),
-      isTRUE(task_b$terrain_following)
-    ) &&
-    identical(task_a$texture_file, task_b$texture_file) &&
-    identical(task_a$material, task_b$material)
+    (isTRUE(allow_lane_transition) ||
+      numeric_equal(task_a$texture_length, task_b$texture_length)) &&
+    (isTRUE(allow_terrain_transition) ||
+      identical(
+        isTRUE(task_a$terrain_following),
+        isTRUE(task_b$terrain_following)
+      )) &&
+    (isTRUE(allow_lane_transition) ||
+      identical(task_a$texture_file, task_b$texture_file)) &&
+    (isTRUE(allow_lane_transition) ||
+      identical(task_a$material, task_b$material))
 }
 
 #' Select exact high-quality road task continuations
 #'
 #' @param tasks High-quality road mesh task list.
 #' @param endpoints Road task endpoint table.
-#' @param endpoint_tolerance Default `1e-6`. Maximum three-dimensional endpoint
-#' gap in scene units.
+#' @param endpoint_tolerance Default `1e-2`. Maximum three-dimensional endpoint
+#' gap in world units for a topology-selected continuation.
 #' @param ambiguity_margin Default `0.03`. Minimum directional-score margin for
 #' a unique selection.
 #' @param maximum_turn Default `60`. Maximum continuation turn in degrees.
+#' @param eligible_task_id Default `seq_along(tasks)`. Tasks permitted to use
+#' geometry-only continuation inference.
 #'
 #' @return Candidate, selected, and ambiguous continuation tables.
 #' @keywords internal
@@ -13327,7 +14524,8 @@ build_render_road_mesh_chain_connections = function(
   endpoints,
   endpoint_tolerance = 1e-6,
   ambiguity_margin = 0.03,
-  maximum_turn = 60
+  maximum_turn = 60,
+  eligible_task_id = seq_along(tasks)
 ) {
   endpoint_tolerance = validate_waterpath_positive_number(
     endpoint_tolerance,
@@ -13350,6 +14548,9 @@ build_render_road_mesh_chain_connections = function(
   }
   empty_connections = data.frame(
     connection_id = integer(0),
+    source_connection_id = integer(0),
+    connection_type = character(0),
+    explicit = logical(0),
     endpoint_a = character(0),
     endpoint_b = character(0),
     task_a = integer(0),
@@ -13366,6 +14567,17 @@ build_render_road_mesh_chain_connections = function(
     stringsAsFactors = FALSE
   )
   if (nrow(endpoints) < 2L) {
+    return(list(
+      candidates = empty_connections,
+      selected = empty_connections,
+      ambiguous = empty_connections
+    ))
+  }
+  eligible_task_id = intersect(
+    seq_along(tasks),
+    suppressWarnings(as.integer(eligible_task_id))
+  )
+  if (length(eligible_task_id) < 2L) {
     return(list(
       candidates = empty_connections,
       selected = empty_connections,
@@ -13391,7 +14603,11 @@ build_render_road_mesh_chain_connections = function(
       second = pair_indices[2L, pair_index]
       task_a = endpoints$road_path_task_id[[first]]
       task_b = endpoints$road_path_task_id[[second]]
-      if (task_a == task_b) {
+      if (
+        task_a == task_b ||
+          !(task_a %in% eligible_task_id) ||
+          !(task_b %in% eligible_task_id)
+      ) {
         next
       }
       endpoint_gap = sqrt(sum(
@@ -13430,6 +14646,9 @@ build_render_road_mesh_chain_connections = function(
       candidate_index = candidate_index + 1L
       candidate_rows[[candidate_index]] = data.frame(
         connection_id = candidate_index,
+        source_connection_id = NA_integer_,
+        connection_type = "geometry_fallback",
+        explicit = FALSE,
         endpoint_a = endpoints$endpoint_id[[first]],
         endpoint_b = endpoints$endpoint_id[[second]],
         task_a = task_a,
@@ -13524,16 +14743,315 @@ build_render_road_mesh_chain_connections = function(
   )
 }
 
+#' Resolve topology-selected high-quality road continuations
+#'
+#' @param tasks High-quality road mesh task list.
+#' @param endpoints Road task endpoint table.
+#' @param endpoint_tolerance Default `0.01`. Maximum three-dimensional endpoint
+#' gap in scene units.
+#' @param gap_endpoint_tolerance Default `0.25`. Maximum selected short-gap
+#' continuation distance in world units.
+#' @param vertical_endpoint_tolerance Default `1`. Maximum rendered vertical
+#' mismatch repaired at an exact topology-selected endpoint.
+#'
+#' @return Candidate, selected, and ambiguous explicit continuation tables.
+#' @keywords internal
+build_explicit_render_road_mesh_chain_connections = function(
+  tasks,
+  endpoints,
+  endpoint_tolerance = 1e-2,
+  gap_endpoint_tolerance = 0.25,
+  vertical_endpoint_tolerance = 1
+) {
+  endpoint_tolerance = validate_waterpath_positive_number(
+    endpoint_tolerance,
+    "endpoint_tolerance"
+  )
+  gap_endpoint_tolerance = validate_waterpath_positive_number(
+    gap_endpoint_tolerance,
+    "gap_endpoint_tolerance"
+  )
+  vertical_endpoint_tolerance = validate_waterpath_positive_number(
+    vertical_endpoint_tolerance,
+    "vertical_endpoint_tolerance"
+  )
+  empty_connections = data.frame(
+    connection_id = integer(0),
+    source_connection_id = integer(0),
+    connection_type = character(0),
+    explicit = logical(0),
+    endpoint_a = character(0),
+    endpoint_b = character(0),
+    task_a = integer(0),
+    task_b = integer(0),
+    endpoint_side_a = character(0),
+    endpoint_side_b = character(0),
+    endpoint_gap = numeric(0),
+    direction_score = numeric(0),
+    compatible = logical(0),
+    eligible = logical(0),
+    ambiguous = logical(0),
+    selected = logical(0),
+    diagnostic_reason = character(0),
+    stringsAsFactors = FALSE
+  )
+  task_topology = lapply(
+    tasks,
+    function(task) attr(task, "mesh_topology")
+  )
+  task_key = vapply(
+    task_topology,
+    function(topology) {
+      value = topology$road_path_key
+      if (is.null(value) || !length(value)) {
+        return(NA_character_)
+      }
+      as.character(value[[1L]])
+    },
+    character(1)
+  )
+  connection_rows = lapply(task_topology, function(topology) {
+    if (
+      is.null(topology) ||
+        !isTRUE(topology$mesh_topology_available) ||
+        is.null(topology$mesh_connections) ||
+        !nrow(topology$mesh_connections)
+    ) {
+      return(NULL)
+    }
+    topology$mesh_connections
+  })
+  connection_rows = Filter(Negate(is.null), connection_rows)
+  if (!length(connection_rows)) {
+    return(list(
+      candidates = empty_connections,
+      selected = empty_connections,
+      ambiguous = empty_connections
+    ))
+  }
+  topology_connections = do.call(rbind, connection_rows)
+  connection_key = paste(
+    pmin(
+      topology_connections$road_path_key_a,
+      topology_connections$road_path_key_b
+    ),
+    pmax(
+      topology_connections$road_path_key_a,
+      topology_connections$road_path_key_b
+    ),
+    topology_connections$source_connection_id,
+    topology_connections$connection_type,
+    sep = ":"
+  )
+  topology_connections = topology_connections[
+    !duplicated(connection_key),
+    ,
+    drop = FALSE
+  ]
+  candidate_rows = vector("list", nrow(topology_connections))
+  candidate_count = 0L
+  for (connection_row in seq_len(nrow(topology_connections))) {
+    connection = topology_connections[connection_row, , drop = FALSE]
+    task_a = match(connection$road_path_key_a[[1L]], task_key)
+    task_b = match(connection$road_path_key_b[[1L]], task_key)
+    if (
+      !is.finite(task_a) ||
+        !is.finite(task_b) ||
+        task_a == task_b
+    ) {
+      next
+    }
+    side_a = connection$endpoint_side_a[[1L]]
+    side_b = connection$endpoint_side_b[[1L]]
+    endpoint_a = paste0(task_a, ":", side_a)
+    endpoint_b = paste0(task_b, ":", side_b)
+    endpoint_row_a = match(endpoint_a, endpoints$endpoint_id)
+    endpoint_row_b = match(endpoint_b, endpoints$endpoint_id)
+    if (!is.finite(endpoint_row_a) || !is.finite(endpoint_row_b)) {
+      next
+    }
+    endpoint_delta = unlist(
+      endpoints[
+        endpoint_row_a,
+        c("x", "y", "z"),
+        drop = FALSE
+      ],
+      use.names = FALSE
+    ) -
+      unlist(
+        endpoints[
+          endpoint_row_b,
+          c("x", "y", "z"),
+          drop = FALSE
+        ],
+        use.names = FALSE
+      )
+    world_scale = validate_render_road_world_scale(
+      tasks[[task_a]]$texture_world_scale
+    )
+    endpoint_world_delta = endpoint_delta *
+      c(
+        world_scale[[1L]],
+        tasks[[task_a]]$zscale,
+        world_scale[[2L]]
+      )
+    endpoint_gap = sqrt(sum(endpoint_world_delta^2))
+    endpoint_horizontal_gap = sqrt(sum(
+      endpoint_world_delta[c(1L, 3L)]^2
+    ))
+    endpoint_vertical_gap = abs(endpoint_world_delta[[2L]])
+    compatible = are_render_road_mesh_tasks_chain_compatible(
+      task_a = tasks[[task_a]],
+      task_b = tasks[[task_b]],
+      allow_terrain_transition = TRUE,
+      allow_lane_transition = TRUE
+    )
+    exact_endpoint = isTRUE(connection$exact_endpoint[[1L]]) &&
+      is.finite(endpoint_horizontal_gap) &&
+      endpoint_horizontal_gap <= endpoint_tolerance &&
+      is.finite(endpoint_vertical_gap) &&
+      endpoint_vertical_gap <= vertical_endpoint_tolerance
+    short_gap = identical(
+      connection$connection_type[[1L]],
+      "true_gap_continuation"
+    ) &&
+      is.finite(endpoint_gap) &&
+      endpoint_gap <= gap_endpoint_tolerance
+    chain_eligible = isTRUE(
+      connection$mesh_chain_eligible[[1L]]
+    ) &&
+      (exact_endpoint || short_gap) &&
+      compatible
+    candidate_count = candidate_count + 1L
+    candidate_rows[[candidate_count]] = data.frame(
+      connection_id = candidate_count,
+      source_connection_id = as.integer(
+        connection$source_connection_id[[1L]]
+      ),
+      connection_type = as.character(
+        connection$connection_type[[1L]]
+      ),
+      explicit = TRUE,
+      endpoint_a = endpoint_a,
+      endpoint_b = endpoint_b,
+      task_a = task_a,
+      task_b = task_b,
+      endpoint_side_a = side_a,
+      endpoint_side_b = side_b,
+      endpoint_gap = endpoint_gap,
+      direction_score = as.numeric(
+        connection$direction_score[[1L]]
+      ),
+      compatible = compatible,
+      eligible = chain_eligible,
+      ambiguous = isTRUE(connection$ambiguous[[1L]]),
+      selected = chain_eligible,
+      diagnostic_reason = if (!exact_endpoint && !short_gap) {
+        "topology_connection_exceeds_geometry_gap"
+      } else if (!compatible) {
+        "mesh_section_transition_pending"
+      } else if (!isTRUE(connection$mesh_chain_eligible[[1L]])) {
+        "topology_connection_not_chain_eligible"
+      } else if (short_gap) {
+        "topology_selected_short_gap_continuation"
+      } else {
+        "topology_selected_physical_continuation"
+      },
+      stringsAsFactors = FALSE
+    )
+  }
+  if (!candidate_count) {
+    return(list(
+      candidates = empty_connections,
+      selected = empty_connections,
+      ambiguous = empty_connections
+    ))
+  }
+  candidates = do.call(rbind, candidate_rows[seq_len(candidate_count)])
+  list(
+    candidates = candidates,
+    selected = candidates[candidates$selected, , drop = FALSE],
+    ambiguous = candidates[candidates$ambiguous, , drop = FALSE]
+  )
+}
+
+#' Resolve explicit and geometry-fallback road mesh continuations
+#'
+#' @param tasks High-quality road mesh task list.
+#' @param endpoints Road task endpoint table.
+#' @param endpoint_tolerance Default `1e-6`. Maximum three-dimensional endpoint
+#' gap in scene units.
+#' @param topology_endpoint_tolerance Default `1e-2`. Maximum
+#' three-dimensional endpoint gap in world units for an explicit topology
+#' continuation.
+#' @param ambiguity_margin Default `0.03`. Minimum directional-score margin for
+#' a unique geometry fallback.
+#' @param maximum_turn Default `60`. Maximum geometry-fallback turn in degrees.
+#'
+#' @return Combined continuation tables.
+#' @keywords internal
+resolve_render_road_mesh_chain_connections = function(
+  tasks,
+  endpoints,
+  endpoint_tolerance = 1e-6,
+  topology_endpoint_tolerance = 1e-2,
+  ambiguity_margin = 0.03,
+  maximum_turn = 60
+) {
+  explicit_connections =
+    build_explicit_render_road_mesh_chain_connections(
+      tasks = tasks,
+      endpoints = endpoints,
+      endpoint_tolerance = topology_endpoint_tolerance
+    )
+  explicit_topology = vapply(
+    tasks,
+    function(task) {
+      topology = attr(task, "mesh_topology")
+      !is.null(topology) && isTRUE(topology$mesh_topology_available)
+    },
+    logical(1)
+  )
+  fallback_connections = build_render_road_mesh_chain_connections(
+    tasks = tasks,
+    endpoints = endpoints,
+    endpoint_tolerance = endpoint_tolerance,
+    ambiguity_margin = ambiguity_margin,
+    maximum_turn = maximum_turn,
+    eligible_task_id = which(!explicit_topology)
+  )
+  combine = function(name) {
+    explicit_table = explicit_connections[[name]]
+    fallback_table = fallback_connections[[name]]
+    if (!nrow(explicit_table)) {
+      return(fallback_table)
+    }
+    if (!nrow(fallback_table)) {
+      return(explicit_table)
+    }
+    combined = rbind(explicit_table, fallback_table)
+    combined$connection_id = seq_len(nrow(combined))
+    combined
+  }
+  list(
+    candidates = combine("candidates"),
+    selected = combine("selected"),
+    ambiguous = combine("ambiguous")
+  )
+}
+
 #' Order one high-quality road mesh chain
 #'
 #' @param component_task_id Task identifiers in one connection component.
 #' @param selected_connections Selected exact continuation table.
+#' @param endpoints Road task endpoint table.
 #'
 #' @return Ordered member table and closed-chain flag.
 #' @keywords internal
 order_render_road_mesh_chain_component = function(
   component_task_id,
-  selected_connections
+  selected_connections,
+  endpoints
 ) {
   component_task_id = sort(unique(as.integer(component_task_id)))
   component_connections = selected_connections[
@@ -13577,25 +15095,48 @@ order_render_road_mesh_chain_component = function(
     )
   }
   closed = length(component_task_id) > 1L && all(degree == 2L)
-  if (closed) {
-    current_task = min(component_task_id)
-    entry_side = "start"
+  candidate_endpoint = if (closed) {
+    endpoints[
+      endpoints$road_path_task_id %in% component_task_id,
+      ,
+      drop = FALSE
+    ]
   } else {
     terminal_task = component_task_id[degree <= 1L]
-    current_task = min(terminal_task)
-    connected_sides = c("start", "end")[
-      is.finite(endpoint_connection[
-        paste0(current_task, ":", c("start", "end"))
+    terminal_rows = lapply(terminal_task, function(task_id) {
+      task_endpoint = endpoints[
+        endpoints$road_path_task_id == task_id,
+        ,
+        drop = FALSE
+      ]
+      connected = is.finite(endpoint_connection[
+        paste0(task_id, ":", task_endpoint$endpoint_side)
       ])
-    ]
-    entry_side = if (!length(connected_sides)) {
-      "start"
-    } else if (identical(connected_sides[[1L]], "start")) {
-      "end"
-    } else {
-      "start"
-    }
+      task_endpoint[!connected, , drop = FALSE]
+    })
+    do.call(rbind, terminal_rows)
   }
+  if (!nrow(candidate_endpoint)) {
+    stop(
+      "A road mesh chain has no canonical outer endpoint.",
+      call. = FALSE
+    )
+  }
+  canonical_order = order(
+    candidate_endpoint$x,
+    candidate_endpoint$z,
+    candidate_endpoint$y,
+    candidate_endpoint$direction_x,
+    candidate_endpoint$direction_z,
+    candidate_endpoint$endpoint_side
+  )
+  canonical_endpoint = candidate_endpoint[
+    canonical_order[[1L]],
+    ,
+    drop = FALSE
+  ]
+  current_task = canonical_endpoint$road_path_task_id[[1L]]
+  entry_side = canonical_endpoint$endpoint_side[[1L]]
   member_rows = list()
   visited = integer(0)
   while (!(current_task %in% visited)) {
@@ -13639,11 +15180,73 @@ order_render_road_mesh_chain_component = function(
   )
 }
 
+#' Resolve lane-transition anchor overrides for an ordered mesh chain
+#'
+#' @param ordered_members Ordered mesh-chain members.
+#' @param tasks High-quality road mesh task list.
+#'
+#' @return Boundary anchor table. Missing or conflicting evidence is centered
+#' and marked ambiguous.
+#' @keywords internal
+resolve_render_road_chain_transition_anchors = function(
+  ordered_members,
+  tasks
+) {
+  member_count = nrow(ordered_members)
+  if (member_count < 2L) {
+    return(data.frame(
+      member_order = integer(0),
+      anchor_edge = character(0),
+      ambiguous = logical(0),
+      diagnostic_reason = character(0),
+      stringsAsFactors = FALSE
+    ))
+  }
+  anchor_rows = lapply(seq_len(member_count - 1L), function(member_index) {
+    first_task_id = ordered_members$road_path_task_id[[member_index]]
+    second_task_id = ordered_members$road_path_task_id[[member_index + 1L]]
+    first_orientation = ordered_members$orientation[[member_index]]
+    second_orientation = ordered_members$orientation[[member_index + 1L]]
+    first_side = if (first_orientation > 0L) "end" else "start"
+    second_side = if (second_orientation > 0L) "start" else "end"
+    first_topology = attr(tasks[[first_task_id]], "mesh_topology")
+    second_topology = attr(tasks[[second_task_id]], "mesh_topology")
+    first_anchor = first_topology[[
+      paste0("lane_transition_anchor_", first_side)
+    ]]
+    second_anchor = second_topology[[
+      paste0("lane_transition_anchor_", second_side)
+    ]]
+    candidate = unique(as.character(c(first_anchor, second_anchor)))
+    candidate = candidate[
+      candidate %in% c("left", "right", "center")
+    ]
+    ambiguous = length(candidate) != 1L
+    data.frame(
+      member_order = member_index,
+      anchor_edge = if (ambiguous) "center" else candidate[[1L]],
+      ambiguous = ambiguous,
+      diagnostic_reason = if (!length(candidate)) {
+        "no_branch_side_evidence"
+      } else if (length(candidate) > 1L) {
+        "conflicting_branch_side_evidence"
+      } else {
+        "explicit_branch_side_evidence"
+      },
+      stringsAsFactors = FALSE
+    )
+  })
+  do.call(rbind, anchor_rows)
+}
+
 #' Assemble compatible exact road continuations into mesh-chain tasks
 #'
 #' @param tasks High-quality road mesh task list.
 #' @param endpoint_tolerance Default `1e-6`. Maximum three-dimensional endpoint
 #' gap in scene units.
+#' @param topology_endpoint_tolerance Default `1e-2`. Maximum
+#' three-dimensional endpoint gap in world units for an explicit topology
+#' continuation.
 #' @param ambiguity_margin Default `0.03`. Minimum directional-score margin for
 #' a unique selection.
 #' @param maximum_turn Default `60`. Maximum continuation turn in degrees.
@@ -13655,6 +15258,7 @@ order_render_road_mesh_chain_component = function(
 assemble_render_road_mesh_chain_tasks = function(
   tasks,
   endpoint_tolerance = 1e-6,
+  topology_endpoint_tolerance = 1e-2,
   ambiguity_margin = 0.03,
   maximum_turn = 60,
   direction_lookahead = 8
@@ -13666,10 +15270,11 @@ assemble_render_road_mesh_chain_tasks = function(
     tasks,
     direction_lookahead = direction_lookahead
   )
-  connections = build_render_road_mesh_chain_connections(
+  connections = resolve_render_road_mesh_chain_connections(
     tasks = tasks,
     endpoints = endpoints,
     endpoint_tolerance = endpoint_tolerance,
+    topology_endpoint_tolerance = topology_endpoint_tolerance,
     ambiguity_margin = ambiguity_margin,
     maximum_turn = maximum_turn
   )
@@ -13685,18 +15290,42 @@ assemble_render_road_mesh_chain_tasks = function(
   }
   component = igraph::components(task_graph)$membership
   component_task = split(seq_along(tasks), component)
+  component_key = vapply(
+    component_task,
+    function(task_id) {
+      component_endpoint = endpoints[
+        endpoints$road_path_task_id %in% task_id,
+        ,
+        drop = FALSE
+      ]
+      endpoint_order = order(
+        component_endpoint$x,
+        component_endpoint$z,
+        component_endpoint$y
+      )
+      endpoint = component_endpoint[endpoint_order[[1L]], , drop = FALSE]
+      paste(
+        sprintf("%.12f", endpoint$x[[1L]]),
+        sprintf("%.12f", endpoint$z[[1L]]),
+        sprintf("%.12f", endpoint$y[[1L]]),
+        sep = ":"
+      )
+    },
+    character(1)
+  )
+  component_task = component_task[order(component_key)]
   chain_tasks = vector("list", length(component_task))
   member_rows = list()
   suppressed_internal_cap_count = 0L
   for (chain_index in seq_along(component_task)) {
     ordered = order_render_road_mesh_chain_component(
       component_task_id = component_task[[chain_index]],
-      selected_connections = connections$selected
+      selected_connections = connections$selected,
+      endpoints = endpoints
     )
     ordered_members = ordered$members
     chain_points = NULL
     chain_station = 0
-    repeats = numeric(0)
     chain_member_rows = list()
     for (member_index in seq_len(nrow(ordered_members))) {
       task_id = ordered_members$road_path_task_id[[member_index]]
@@ -13704,6 +15333,13 @@ assemble_render_road_mesh_chain_tasks = function(
       member_points = as.matrix(tasks[[task_id]]$points)
       if (orientation < 0L) {
         member_points = member_points[nrow(member_points):1L, , drop = FALSE]
+      }
+      if (!is.null(chain_points)) {
+        shared_endpoint = (member_points[1L, ] +
+          chain_points[nrow(chain_points), ]) /
+          2
+        chain_points[nrow(chain_points), ] = shared_endpoint
+        member_points[1L, ] = shared_endpoint
       }
       member_scale = validate_render_road_world_scale(
         tasks[[task_id]]$texture_world_scale
@@ -13714,9 +15350,38 @@ assemble_render_road_mesh_chain_tasks = function(
       )
       station_start = chain_station
       station_end = chain_station + tail(member_station, 1L)
+      member_topology = attr(tasks[[task_id]], "mesh_topology")
+      fragment_id = suppressWarnings(as.integer(
+        member_topology$render_road_fragment_id[[1L]]
+      ))
+      if (!length(fragment_id) || !is.finite(fragment_id)) {
+        fragment_id = task_id
+      }
+      feature_id = suppressWarnings(as.integer(
+        member_topology$render_road_feature_id[[1L]]
+      ))
+      if (!length(feature_id) || !is.finite(feature_id)) {
+        feature_id = NA_integer_
+      }
+      road_lanes = suppressWarnings(as.integer(
+        member_topology$road_lanes[[1L]]
+      ))
+      if (!length(road_lanes) || !is.finite(road_lanes)) {
+        road_lanes = NA_integer_
+      }
+      road_width = suppressWarnings(as.numeric(
+        tasks[[task_id]]$width[[1L]]
+      ))
+      if (!length(road_width) || !is.finite(road_width)) {
+        road_width = NA_real_
+      }
       chain_member_rows[[member_index]] = data.frame(
         mesh_chain_id = chain_index,
-        render_road_fragment_id = task_id,
+        road_path_task_id = task_id,
+        render_road_fragment_id = fragment_id,
+        render_road_feature_id = feature_id,
+        road_lanes = road_lanes,
+        road_width = road_width,
         member_order = member_index,
         orientation = orientation,
         chain_station_start = station_start,
@@ -13724,6 +15389,22 @@ assemble_render_road_mesh_chain_tasks = function(
         cap_start = !ordered$closed && member_index == 1L,
         cap_end = !ordered$closed &&
           member_index == nrow(ordered_members),
+        cap_start_status = if (
+          !ordered$closed &&
+            member_index == 1L
+        ) {
+          "retained_physical_cap"
+        } else {
+          "suppressed_internal_cap"
+        },
+        cap_end_status = if (
+          !ordered$closed &&
+            member_index == nrow(ordered_members)
+        ) {
+          "retained_physical_cap"
+        } else {
+          "suppressed_internal_cap"
+        },
         closed = ordered$closed,
         stringsAsFactors = FALSE
       )
@@ -13731,21 +15412,12 @@ assemble_render_road_mesh_chain_tasks = function(
       if (is.null(chain_points)) {
         chain_points = member_points
       } else {
-        member_points[1L, ] = chain_points[nrow(chain_points), ]
         chain_points = rbind(
           chain_points,
           member_points[-1L, , drop = FALSE]
         )
         suppressed_internal_cap_count =
           suppressed_internal_cap_count + 2L
-      }
-      member_repeats = suppressWarnings(as.numeric(
-        tasks[[task_id]]$texture_repeats[[1L]]
-      ))
-      if (length(member_repeats) && is.finite(member_repeats)) {
-        repeats = c(repeats, member_repeats)
-      } else {
-        repeats = c(repeats, NA_real_)
       }
     }
     if (ordered$closed) {
@@ -13764,26 +15436,144 @@ assemble_render_road_mesh_chain_tasks = function(
     }
     base_task_id = ordered_members$road_path_task_id[[1L]]
     chain_task = tasks[[base_task_id]]
-    chain_task$points = chain_points
-    chain_task$texture_repeats = if (all(is.finite(repeats))) {
-      sum(repeats)
+    chain_members = do.call(rbind, chain_member_rows)
+    transition_anchors = resolve_render_road_chain_transition_anchors(
+      ordered_members = ordered_members,
+      tasks = tasks
+    )
+    lane_profile_sections = if (
+      all(is.finite(chain_members$road_lanes)) &&
+        all(is.finite(chain_members$road_width))
+    ) {
+      build_render_road_lane_profile_sections(
+        mesh_chain_members = chain_members,
+        transition_anchors = transition_anchors
+      )
     } else {
       NULL
     }
+    material_sections = lapply(
+      seq_len(nrow(ordered_members)),
+      function(member_index) {
+        task_id = ordered_members$road_path_task_id[[member_index]]
+        list(
+          mesh_chain_id = chain_index,
+          member_order = member_index,
+          road_path_task_id = task_id,
+          station_start = chain_members$chain_station_start[[member_index]],
+          station_end = chain_members$chain_station_end[[member_index]],
+          road_lanes = chain_members$road_lanes[[member_index]],
+          material = tasks[[task_id]]$material,
+          texture_file = tasks[[task_id]]$texture_file,
+          texture_length = tasks[[task_id]]$texture_length,
+          texture_repeats = tasks[[task_id]]$texture_repeats
+        )
+      }
+    )
+    chain_task$points = chain_points
+    chain_task$width = max(chain_members$road_width, na.rm = TRUE)
+    if (!is.finite(chain_task$width)) {
+      chain_task$width = tasks[[base_task_id]]$width
+    }
+    chain_task$lane_profile_sections = lane_profile_sections
+    chain_task$material_sections = material_sections
     chain_task$cap_start = !ordered$closed
     chain_task$cap_end = !ordered$closed
     chain_task$closed = ordered$closed
+    chain_task$terrain_following = all(vapply(
+      ordered_members$road_path_task_id,
+      function(task_id) isTRUE(tasks[[task_id]]$terrain_following),
+      logical(1)
+    ))
+    attr(chain_task, "mesh_topology") = list(
+      mesh_chain_id = chain_index,
+      mesh_chain_members = chain_members,
+      lane_profile_sections = lane_profile_sections,
+      material_sections = material_sections,
+      transition_anchors = transition_anchors,
+      explicit_connection = any(
+        connections$selected$explicit &
+          connections$selected$task_a %in%
+            ordered_members$road_path_task_id &
+          connections$selected$task_b %in%
+            ordered_members$road_path_task_id
+      )
+    )
     chain_tasks[[chain_index]] = chain_task
-    member_rows[[chain_index]] = do.call(rbind, chain_member_rows)
+    member_rows[[chain_index]] = chain_members
   }
   mesh_chain_members = do.call(rbind, member_rows)
+  lane_profile_rows = lapply(chain_tasks, function(task) {
+    task$lane_profile_sections
+  })
+  lane_profile_rows = Filter(Negate(is.null), lane_profile_rows)
+  lane_profile_sections = if (length(lane_profile_rows)) {
+    do.call(rbind, lane_profile_rows)
+  } else {
+    NULL
+  }
   attr(chain_tasks, "mesh_chain_members") = mesh_chain_members
+  attr(chain_tasks, "lane_profile_sections") = lane_profile_sections
   attr(chain_tasks, "mesh_chain_connections") = connections
+  side_branch_rows = lapply(tasks, function(task) {
+    topology = attr(task, "mesh_topology")
+    if (
+      is.null(topology) ||
+        is.null(topology$mesh_side_branches) ||
+        !nrow(topology$mesh_side_branches)
+    ) {
+      return(NULL)
+    }
+    topology$mesh_side_branches
+  })
+  side_branch_rows = Filter(Negate(is.null), side_branch_rows)
+  side_branches = if (length(side_branch_rows)) {
+    side_branches = do.call(rbind, side_branch_rows)
+    branch_key = paste(
+      pmin(
+        side_branches$road_path_key_a,
+        side_branches$road_path_key_b
+      ),
+      pmax(
+        side_branches$road_path_key_a,
+        side_branches$road_path_key_b
+      ),
+      side_branches$branch_id,
+      sep = ":"
+    )
+    side_branches[!duplicated(branch_key), , drop = FALSE]
+  } else {
+    NULL
+  }
+  attr(chain_tasks, "mesh_chain_side_branches") = side_branches
   attr(chain_tasks, "mesh_chain_diagnostics") = list(
     source_task_count = length(tasks),
     mesh_chain_count = length(chain_tasks),
     selected_continuation_count = nrow(connections$selected),
+    explicit_continuation_count = sum(
+      connections$selected$explicit
+    ),
+    geometry_fallback_continuation_count = sum(
+      !connections$selected$explicit
+    ),
     ambiguous_continuation_count = nrow(connections$ambiguous),
+    side_branch_count = if (is.null(side_branches)) {
+      0L
+    } else {
+      nrow(side_branches)
+    },
+    material_section_count = sum(vapply(
+      chain_tasks,
+      function(task) length(task$material_sections),
+      integer(1)
+    )),
+    lane_count_transition_count = if (is.null(lane_profile_sections)) {
+      0L
+    } else {
+      sum(
+        lane_profile_sections$transition_type == "lane_count_transition"
+      )
+    },
     suppressed_internal_cap_count = suppressed_internal_cap_count,
     retained_physical_cap_count = sum(mesh_chain_members$cap_start) +
       sum(mesh_chain_members$cap_end),
@@ -13803,10 +15593,14 @@ assemble_render_road_mesh_chain_tasks = function(
 #' @return List of rayrender mesh objects.
 #' @keywords internal
 make_render_highquality_road_path_meshes = function(tasks) {
+  tasks = attach_render_road_mesh_task_metadata(tasks)
   chain_tasks = assemble_render_road_mesh_chain_tasks(tasks)
   chain_members = attr(chain_tasks, "mesh_chain_members")
+  lane_profile_sections = attr(chain_tasks, "lane_profile_sections")
+  chain_connections = attr(chain_tasks, "mesh_chain_connections")
+  chain_side_branches = attr(chain_tasks, "mesh_chain_side_branches")
   chain_diagnostics = attr(chain_tasks, "mesh_chain_diagnostics")
-  meshes = lapply(seq_along(chain_tasks), function(chain_index) {
+  chain_meshes = lapply(seq_along(chain_tasks), function(chain_index) {
     task = chain_tasks[[chain_index]]
     tryCatch(
       do.call(make_render_highquality_road_path_mesh, task),
@@ -13829,8 +15623,18 @@ make_render_highquality_road_path_meshes = function(tasks) {
       }
     )
   })
-  meshes = Filter(Negate(is.null), meshes)
+  chain_meshes = Filter(Negate(is.null), chain_meshes)
+  mesh_groups = lapply(chain_meshes, function(mesh) {
+    if (inherits(mesh, "render_road_mesh_group")) {
+      return(lapply(seq_along(mesh), function(index) mesh[[index]]))
+    }
+    list(mesh)
+  })
+  meshes = do.call(c, mesh_groups)
   attr(meshes, "mesh_chain_members") = chain_members
+  attr(meshes, "lane_profile_sections") = lane_profile_sections
+  attr(meshes, "mesh_chain_connections") = chain_connections
+  attr(meshes, "mesh_chain_side_branches") = chain_side_branches
   attr(meshes, "mesh_chain_diagnostics") = chain_diagnostics
   meshes
 }
@@ -14678,6 +16482,8 @@ sanitize_render_road_section_mesh = function(
 #' @param texture_file Default `NULL`. Road texture file.
 #' @param texture_length Texture repeat length.
 #' @param texture_repeats Default `NULL`. Number of texture repeats.
+#' @param surface_normals Default `NULL`. Optional top and bottom surface
+#' normals calculated over the complete physical mesh chain.
 #' @param cap_start Whether to cap the first section.
 #' @param cap_end Whether to cap the final section.
 #' @param closed Whether the path is periodic.
@@ -14692,6 +16498,7 @@ build_render_road_section_mesh = function(
   texture_file = NULL,
   texture_length = 20,
   texture_repeats = NULL,
+  surface_normals = NULL,
   cap_start = TRUE,
   cap_end = TRUE,
   closed = FALSE
@@ -14761,17 +16568,39 @@ build_render_road_section_mesh = function(
     sections$right_top[next_indices, , drop = FALSE],
     sections$right_bottom[next_indices, , drop = FALSE]
   )
-  top_surface_normals = calculate_render_road_surface_normals(
-    sections$left_top,
-    sections$right_top,
-    closed = closed
-  )
-  bottom_surface_normals = calculate_render_road_surface_normals(
-    sections$left_bottom,
-    sections$right_bottom,
-    closed = closed,
-    outward_sign = -1
-  )
+  if (is.null(surface_normals)) {
+    top_surface_normals = calculate_render_road_surface_normals(
+      sections$left_top,
+      sections$right_top,
+      closed = closed
+    )
+    bottom_surface_normals = calculate_render_road_surface_normals(
+      sections$left_bottom,
+      sections$right_bottom,
+      closed = closed,
+      outward_sign = -1
+    )
+  } else {
+    top_surface_normals = surface_normals$top
+    bottom_surface_normals = surface_normals$bottom
+    valid_surface_normals =
+      is.list(top_surface_normals) &&
+      is.list(bottom_surface_normals) &&
+      is.matrix(top_surface_normals$left) &&
+      is.matrix(top_surface_normals$right) &&
+      is.matrix(bottom_surface_normals$left) &&
+      is.matrix(bottom_surface_normals$right) &&
+      nrow(top_surface_normals$left) == point_count &&
+      nrow(top_surface_normals$right) == point_count &&
+      nrow(bottom_surface_normals$left) == point_count &&
+      nrow(bottom_surface_normals$right) == point_count
+    if (!valid_surface_normals) {
+      stop(
+        "Shared road-surface normals do not match the material section.",
+        call. = FALSE
+      )
+    }
+  }
   top_normals = make_render_highquality_water_path_quad_rows(
     top_surface_normals$left[segment_indices, , drop = FALSE],
     top_surface_normals$left[next_indices, , drop = FALSE],
@@ -14977,6 +16806,99 @@ build_render_road_section_mesh = function(
   mesh
 }
 
+#' Subset shared road-chain sections
+#'
+#' @param sections Complete physical-chain vertex sections.
+#' @param section_index Ordered section indices to retain.
+#'
+#' @return Vertex sections for one material section.
+#' @keywords internal
+subset_render_road_vertex_sections = function(sections, section_index) {
+  section_index = suppressWarnings(as.integer(section_index))
+  if (
+    length(section_index) < 2L ||
+      any(!is.finite(section_index)) ||
+      any(section_index < 1L) ||
+      any(section_index > nrow(sections$points))
+  ) {
+    stop(
+      "A road material section requires at least two valid rings.",
+      call. = FALSE
+    )
+  }
+  result = sections
+  matrix_names = c(
+    "points",
+    "left_bottom",
+    "right_bottom",
+    "left_top",
+    "right_top",
+    "left_normal",
+    "right_normal"
+  )
+  for (name in matrix_names) {
+    result[[name]] = sections[[name]][section_index, , drop = FALSE]
+  }
+  frame_matrix_names = c(
+    "incoming_tangent",
+    "outgoing_tangent",
+    "side"
+  )
+  for (name in frame_matrix_names) {
+    result$frames[[name]] =
+      sections$frames[[name]][section_index, , drop = FALSE]
+  }
+  frame_vector_names = c(
+    "miter_scale",
+    "turn_cross",
+    "turn_dot",
+    "join_style"
+  )
+  for (name in frame_vector_names) {
+    result$frames[[name]] = sections$frames[[name]][section_index]
+  }
+  result
+}
+
+#' Subset shared road-chain surface normals
+#'
+#' @param surface_normals Complete physical-chain surface normals.
+#' @param section_index Ordered section indices to retain.
+#'
+#' @return Surface normals for one material section.
+#' @keywords internal
+subset_render_road_surface_normals = function(
+  surface_normals,
+  section_index
+) {
+  list(
+    top = list(
+      left = surface_normals$top$left[
+        section_index,
+        ,
+        drop = FALSE
+      ],
+      right = surface_normals$top$right[
+        section_index,
+        ,
+        drop = FALSE
+      ]
+    ),
+    bottom = list(
+      left = surface_normals$bottom$left[
+        section_index,
+        ,
+        drop = FALSE
+      ],
+      right = surface_normals$bottom$right[
+        section_index,
+        ,
+        drop = FALSE
+      ]
+    )
+  )
+}
+
 #' Make a high-quality continuous road chain mesh
 #'
 #' @param points Path points.
@@ -14992,6 +16914,10 @@ build_render_road_section_mesh = function(
 #' @param terrain_following Whether the mesh follows terrain.
 #' @param left_width Default `NULL`. Left distance from the centerline.
 #' @param right_width Default `NULL`. Right distance from the centerline.
+#' @param lane_profile_sections Default `NULL`. Station-based variable road
+#' envelope sections.
+#' @param material_sections Default `NULL`. Source material and texture
+#' sections along the physical mesh chain.
 #' @param cap_start Whether to cap the first section.
 #' @param cap_end Whether to cap the final section.
 #' @param closed Whether the path is periodic.
@@ -15015,6 +16941,8 @@ make_render_highquality_road_chain_mesh = function(
   terrain_following = TRUE,
   left_width = NULL,
   right_width = NULL,
+  lane_profile_sections = NULL,
+  material_sections = NULL,
   cap_start = TRUE,
   cap_end = TRUE,
   closed = FALSE,
@@ -15083,8 +17011,6 @@ make_render_highquality_road_chain_mesh = function(
     return(NULL)
   }
   half_width = width / 2
-  left_width = if (is.null(left_width)) half_width else left_width
-  right_width = if (is.null(right_width)) half_width else right_width
   normalize_distance = function(value, name) {
     value = suppressWarnings(as.numeric(value))
     if (length(value) == 1L) {
@@ -15102,8 +17028,29 @@ make_render_highquality_road_chain_mesh = function(
     }
     value
   }
-  left_distance = normalize_distance(left_width, "left_width")
-  right_distance = normalize_distance(right_width, "right_width")
+  if (!is.null(lane_profile_sections)) {
+    lane_profile_station = calculate_road_path_cumulative_distance(
+      points,
+      texture_world_scale = texture_world_scale
+    )
+    lane_profile = evaluate_render_road_lane_profile_sections(
+      lane_profile_sections = lane_profile_sections,
+      station = lane_profile_station
+    )
+    left_distance = normalize_distance(
+      lane_profile$left_half_width + lane_profile$center_offset,
+      "left_width"
+    )
+    right_distance = normalize_distance(
+      lane_profile$right_half_width - lane_profile$center_offset,
+      "right_width"
+    )
+  } else {
+    left_width = if (is.null(left_width)) half_width else left_width
+    right_width = if (is.null(right_width)) half_width else right_width
+    left_distance = normalize_distance(left_width, "left_width")
+    right_distance = normalize_distance(right_width, "right_width")
+  }
   join_diagnostics = list()
   for (iteration in seq_len(3L)) {
     frames = calculate_render_road_vertex_frames(
@@ -15269,37 +17216,208 @@ make_render_highquality_road_chain_mesh = function(
       texture_world_scale
     total_length = total_length + sqrt(sum(closing_delta^2))
   }
-  mesh = build_render_road_section_mesh(
-    sections = sections,
-    station = station,
-    total_length = total_length,
-    bbox_center = bbox_center,
-    texture_file = texture_file,
-    texture_length = texture_length,
-    texture_repeats = texture_repeats,
-    cap_start = cap_start,
-    cap_end = cap_end,
-    closed = closed
+  add_diagnostics = function(
+    mesh,
+    material_section_index = 1L,
+    material_section_count = 1L,
+    rendered_cap_start = !closed && cap_start,
+    rendered_cap_end = !closed && cap_end,
+    rendered_closed = closed
+  ) {
+    diagnostics = attr(mesh, "render_road_mesh_diagnostics")
+    diagnostics$closed = rendered_closed
+    diagnostics$cap_start = rendered_cap_start
+    diagnostics$cap_end = rendered_cap_end
+    diagnostics$section_count = nrow(points)
+    diagnostics$join_expansion = join_diagnostics
+    diagnostics$sweep_stabilization = stabilization
+    diagnostics$lane_profile_section_count = if (
+      is.null(lane_profile_sections)
+    ) {
+      0L
+    } else {
+      nrow(lane_profile_sections)
+    }
+    diagnostics$material_section_index = material_section_index
+    diagnostics$material_section_count = material_section_count
+    diagnostics$minimum_left_width = min(left_distance)
+    diagnostics$maximum_left_width = max(left_distance)
+    diagnostics$minimum_right_width = min(right_distance)
+    diagnostics$maximum_right_width = max(right_distance)
+    attr(mesh, "render_road_mesh_diagnostics") = diagnostics
+    mesh
+  }
+  if (is.null(material_sections) || length(material_sections) <= 1L) {
+    mesh = build_render_road_section_mesh(
+      sections = sections,
+      station = station,
+      total_length = total_length,
+      bbox_center = bbox_center,
+      texture_file = texture_file,
+      texture_length = texture_length,
+      texture_repeats = texture_repeats,
+      cap_start = cap_start,
+      cap_end = cap_end,
+      closed = closed
+    )
+    if (is.null(mesh)) {
+      return(NULL)
+    }
+    mesh = add_diagnostics(mesh)
+    if (return_mesh) {
+      return(mesh)
+    }
+    return(rayrender::mesh3d_model(
+      mesh,
+      override_material = is.null(texture_file),
+      material = material
+    ))
+  }
+  material_sections = material_sections[
+    order(vapply(
+      material_sections,
+      function(section) as.numeric(section$station_start[[1L]]),
+      numeric(1)
+    ))
+  ]
+  source_total_length = max(vapply(
+    material_sections,
+    function(section) as.numeric(section$station_end[[1L]]),
+    numeric(1)
+  ))
+  if (
+    !is.finite(source_total_length) ||
+      source_total_length <= 0 ||
+      !is.finite(total_length) ||
+      total_length <= 0
+  ) {
+    stop("Road material sections have invalid stations.", call. = FALSE)
+  }
+  boundary_station = c(
+    vapply(
+      material_sections,
+      function(section) as.numeric(section$station_start[[1L]]),
+      numeric(1)
+    ),
+    source_total_length
   )
-  if (is.null(mesh)) {
+  boundary_station = boundary_station / source_total_length * total_length
+  boundary_index = integer(length(boundary_station))
+  boundary_index[[1L]] = 1L
+  boundary_index[[length(boundary_index)]] = if (closed) {
+    nrow(points) + 1L
+  } else {
+    nrow(points)
+  }
+  if (length(boundary_index) > 2L) {
+    for (boundary in seq.int(2L, length(boundary_index) - 1L)) {
+      available_start = boundary_index[[boundary - 1L]] + 1L
+      available_end = nrow(points) -
+        (length(boundary_index) - boundary - 1L)
+      if (available_end < available_start) {
+        stop(
+          "Road material sections contain insufficient shared rings.",
+          call. = FALSE
+        )
+      }
+      candidate = seq.int(available_start, available_end)
+      boundary_index[[boundary]] = candidate[which.min(abs(
+        station[candidate] - boundary_station[[boundary]]
+      ))]
+    }
+  }
+  shared_surface_normals = list(
+    top = calculate_render_road_surface_normals(
+      sections$left_top,
+      sections$right_top,
+      closed = closed
+    ),
+    bottom = calculate_render_road_surface_normals(
+      sections$left_bottom,
+      sections$right_bottom,
+      closed = closed,
+      outward_sign = -1
+    )
+  )
+  section_meshes = vector("list", length(material_sections))
+  for (material_index in seq_along(material_sections)) {
+    start_index = boundary_index[[material_index]]
+    end_index = boundary_index[[material_index + 1L]]
+    if (closed && end_index == nrow(points) + 1L) {
+      section_index = c(seq.int(start_index, nrow(points)), 1L)
+      section_station = c(
+        station[seq.int(start_index, nrow(points))] -
+          station[[start_index]],
+        total_length - station[[start_index]]
+      )
+    } else {
+      section_index = seq.int(start_index, end_index)
+      section_station = station[section_index] -
+        station[[start_index]]
+    }
+    section_length = tail(section_station, 1L)
+    if (!is.finite(section_length) || section_length <= 0) {
+      stop(
+        "A road material section has nonpositive rendered length.",
+        call. = FALSE
+      )
+    }
+    specification = material_sections[[material_index]]
+    section_mesh = build_render_road_section_mesh(
+      sections = subset_render_road_vertex_sections(
+        sections,
+        section_index
+      ),
+      station = section_station,
+      total_length = section_length,
+      bbox_center = bbox_center,
+      texture_file = specification$texture_file,
+      texture_length = specification$texture_length,
+      texture_repeats = specification$texture_repeats,
+      surface_normals = subset_render_road_surface_normals(
+        shared_surface_normals,
+        section_index
+      ),
+      cap_start = !closed &&
+        material_index == 1L &&
+        cap_start,
+      cap_end = !closed &&
+        material_index == length(material_sections) &&
+        cap_end,
+      closed = FALSE
+    )
+    if (is.null(section_mesh)) {
+      next
+    }
+    section_mesh = add_diagnostics(
+      section_mesh,
+      material_section_index = material_index,
+      material_section_count = length(material_sections),
+      rendered_cap_start = !closed &&
+        material_index == 1L &&
+        cap_start,
+      rendered_cap_end = !closed &&
+        material_index == length(material_sections) &&
+        cap_end,
+      rendered_closed = FALSE
+    )
+    section_meshes[[material_index]] = if (return_mesh) {
+      section_mesh
+    } else {
+      rayrender::mesh3d_model(
+        section_mesh,
+        override_material = is.null(specification$texture_file),
+        material = specification$material
+      )
+    }
+  }
+  section_meshes = Filter(Negate(is.null), section_meshes)
+  if (!length(section_meshes)) {
     return(NULL)
   }
-  diagnostics = attr(mesh, "render_road_mesh_diagnostics")
-  diagnostics$closed = closed
-  diagnostics$cap_start = !closed && cap_start
-  diagnostics$cap_end = !closed && cap_end
-  diagnostics$section_count = nrow(points)
-  diagnostics$join_expansion = join_diagnostics
-  diagnostics$sweep_stabilization = stabilization
-  attr(mesh, "render_road_mesh_diagnostics") = diagnostics
-  if (return_mesh) {
-    return(mesh)
-  }
-  rayrender::mesh3d_model(
-    mesh,
-    override_material = is.null(texture_file),
-    material = material
-  )
+  class(section_meshes) = c("render_road_mesh_group", "list")
+  attr(section_meshes, "boundary_index") = boundary_index
+  section_meshes
 }
 
 #' Make high-quality road path mesh
@@ -15318,6 +17436,10 @@ make_render_highquality_road_chain_mesh = function(
 #' x-z distances to world distances.
 #' @param terrain_following Default `TRUE`. Whether high-quality mesh
 #' densification and road edges should follow the terrain.
+#' @param lane_profile_sections Default `NULL`. Station-based variable road
+#' envelope sections.
+#' @param material_sections Default `NULL`. Source material and texture
+#' sections along the physical mesh chain.
 #' @param cap_start Whether to cap the first section.
 #' @param cap_end Whether to cap the final section.
 #' @param closed Whether the path is periodic.
@@ -15336,6 +17458,8 @@ make_render_highquality_road_path_mesh = function(
   texture_repeats = NULL,
   texture_world_scale = c(1, 1),
   terrain_following = TRUE,
+  lane_profile_sections = NULL,
+  material_sections = NULL,
   cap_start = TRUE,
   cap_end = TRUE,
   closed = FALSE
@@ -15352,6 +17476,8 @@ make_render_highquality_road_path_mesh = function(
     texture_repeats = texture_repeats,
     texture_world_scale = texture_world_scale,
     terrain_following = terrain_following,
+    lane_profile_sections = lane_profile_sections,
+    material_sections = material_sections,
     cap_start = cap_start,
     cap_end = cap_end,
     closed = closed
