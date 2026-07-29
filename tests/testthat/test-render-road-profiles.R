@@ -111,28 +111,6 @@ build_render_road_profile_test_problem = function(
   do.call(build_render_road_profile_problem, arguments)
 }
 
-extract_render_road_profile_test_way = function(
-  problem,
-  solution,
-  way_id,
-  sample_spacing = 0.25
-) {
-  fragment_id = problem$topology$fragments$render_road_fragment_id[
-    problem$topology$fragments$render_road_way_id == way_id
-  ]
-  sample_distances = lapply(problem$terrain_profiles, function(profile) {
-    maximum = max(profile$distance)
-    sort(unique(c(seq(0, maximum, by = sample_spacing), maximum)))
-  })
-  profiles = evaluate_render_road_profiles(
-    problem,
-    solution,
-    sample_distances
-  )$profiles[as.character(fragment_id)]
-  profile = do.call(rbind, profiles)
-  profile = stats::aggregate(height ~ x, data = profile, FUN = mean)
-  profile[order(profile$x), , drop = FALSE]
-}
 
 test_that("surface equality closure stops after one terminal partner", {
   skip_render_road_profile_test_dependencies()
@@ -393,81 +371,6 @@ test_that("positive-layer branches share height but only through pairs share gra
   )
 })
 
-test_that("profiles are invariant to splitting a through road", {
-  skip_render_road_profile_test_dependencies(solver = TRUE)
-
-  make_split_roads = function(split_bridge) {
-    bridge_lines = if (split_bridge) {
-      list(
-        make_render_road_profile_test_line(c(-90, 0, -30, 0)),
-        make_render_road_profile_test_line(c(-30, 0, 30, 0)),
-        make_render_road_profile_test_line(c(30, 0, 90, 0))
-      )
-    } else {
-      list(make_render_road_profile_test_line(c(-90, 0, 90, 0)))
-    }
-    make_render_road_profile_test_roads(
-      lines = c(
-        list(
-          make_render_road_profile_test_line(c(0, -120, 0, 120)),
-          make_render_road_profile_test_line(c(-180, 0, -90, 0))
-        ),
-        bridge_lines,
-        list(make_render_road_profile_test_line(c(90, 0, 180, 0)))
-      ),
-      layer = c(0, 0, rep(1, length(bridge_lines)), 0),
-      way_id = c("lower", rep("through", length(bridge_lines) + 2L))
-    )
-  }
-
-  unsplit_topology = build_render_road_profile_test_topology(
-    make_split_roads(FALSE)
-  )
-  unsplit_problem = build_render_road_profile_test_problem(
-    unsplit_topology,
-    explicit_controls = list(
-      numeric(0),
-      numeric(0),
-      c(60, 120),
-      numeric(0)
-    )
-  )
-  split_topology = build_render_road_profile_test_topology(
-    make_split_roads(TRUE)
-  )
-  split_problem = build_render_road_profile_test_problem(split_topology)
-  unsplit_solution = solve_render_road_profile_problem(
-    unsplit_problem,
-    maximum_iterations = 100000
-  )
-  split_solution = solve_render_road_profile_problem(
-    split_problem,
-    maximum_iterations = 100000
-  )
-  unsplit_profile = extract_render_road_profile_test_way(
-    unsplit_solution$problem,
-    unsplit_solution,
-    "through"
-  )
-  split_profile = extract_render_road_profile_test_way(
-    split_solution$problem,
-    split_solution,
-    "through"
-  )
-  station = seq(-180, 180, by = 0.5)
-  unsplit_height = stats::approx(
-    unsplit_profile$x,
-    unsplit_profile$height,
-    station
-  )$y
-  split_height = stats::approx(
-    split_profile$x,
-    split_profile$height,
-    station
-  )$y
-
-  expect_lt(max(abs(unsplit_height - split_height)), 1e-5)
-})
 
 test_that("adaptive refinement removes a between-control chord dip", {
   skip_render_road_profile_test_dependencies(solver = TRUE)
