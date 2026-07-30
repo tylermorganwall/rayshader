@@ -347,7 +347,8 @@ render_water_paths = function(
     extent = extent,
     zscale = zscale,
     watercolor = watercolor,
-    waterpath_width = waterpath_width
+    waterpath_width = waterpath_width,
+    force_by_feature = TRUE
   )
   coord_list = path_render$coord_list
   coord_width = path_render$width
@@ -367,6 +368,13 @@ render_water_paths = function(
       offset = waterpath_offset / zscale
     )
   }
+  path_members = data.frame(
+    water_path_id = seq_along(coord_list),
+    render_line_feature_id = as.integer(path_render$feature),
+    stringsAsFactors = FALSE
+  )
+  path_members$source_feature_id = I(path_render$source_feature)
+  attr(coord_list, "path_members") = path_members
   for (coord_index in seq_along(coord_list)) {
     coord = coord_list[[coord_index]]
     if (is.matrix(coord) && nrow(coord) >= 2) {
@@ -544,6 +552,18 @@ render_water_path_coords_by_width = function(
   } else {
     NA_integer_
   }
+  source_feature_id = if (
+    inherits(waterpaths, "sf") &&
+      "render_line_source_feature_id" %in% names(waterpaths)
+  ) {
+    lapply(waterpaths$render_line_source_feature_id, function(value) {
+      sort(unique(as.integer(value)))
+    })
+  } else if (is.finite(feature_count)) {
+    lapply(seq_len(feature_count), as.integer)
+  } else {
+    list(1L)
+  }
   if (
     isTRUE(force_by_feature) &&
       is.finite(feature_count) &&
@@ -564,12 +584,14 @@ render_water_path_coords_by_width = function(
     return(list(
       coord_list = coord_list,
       width = rep(waterpath_width, length(coord_list)),
-      feature = rep(1L, length(coord_list))
+      feature = rep(1L, length(coord_list)),
+      source_feature = rep(source_feature_id[1L], length(coord_list))
     ))
   }
   coord_list = list()
   coord_width = numeric(0)
   coord_feature = integer(0)
+  coord_source_feature = list()
   for (path_index in seq_along(waterpath_width)) {
     path = subset_waterpath_geometry(waterpaths, path_index)
     path_coords = render_water_path_coords(
@@ -592,11 +614,16 @@ render_water_path_coords_by_width = function(
       coord_feature,
       rep(path_index, length(path_coords))
     )
+    coord_source_feature = c(
+      coord_source_feature,
+      rep(source_feature_id[path_index], length(path_coords))
+    )
   }
   list(
     coord_list = coord_list,
     width = coord_width,
-    feature = coord_feature
+    feature = coord_feature,
+    source_feature = coord_source_feature
   )
 }
 
@@ -719,6 +746,20 @@ prepare_render_water_path_geometry = function(
   if (inherits(waterpaths, "sfg")) {
     waterpaths = sf::st_sfc(waterpaths)
   }
+  if (inherits(waterpaths, "sfc")) {
+    waterpaths = sf::st_sf(
+      render_line_source_feature_id = I(lapply(
+        seq_along(waterpaths),
+        as.integer
+      )),
+      geometry = waterpaths
+    )
+  } else if (inherits(waterpaths, "sf")) {
+    waterpaths$render_line_source_feature_id = I(lapply(
+      seq_len(nrow(waterpaths)),
+      as.integer
+    ))
+  }
   waterpaths = coerce_render_path_line_geometry(waterpaths)
   if (!is.null(water_polygons) && !is_empty_scene_sf(waterpaths)) {
     if (
@@ -823,16 +864,34 @@ prepare_render_water_path_geometry = function(
   if (!isTRUE(waterpath_merge) || is_empty_scene_sf(waterpaths)) {
     return(waterpaths)
   }
-  geometry = if (inherits(waterpaths, "sf")) {
-    sf::st_geometry(waterpaths)
-  } else {
-    waterpaths
-  }
+  geometry = sf::st_geometry(waterpaths)
+  source_feature_id = waterpaths$render_line_source_feature_id
   merged_geometry = tryCatch(
     suppressWarnings(sf::st_line_merge(sf::st_union(geometry))),
     error = function(e) geometry
   )
-  coerce_render_path_line_geometry(merged_geometry)
+  merged_geometry = coerce_render_path_line_geometry(merged_geometry)
+  if (is_empty_scene_sf(merged_geometry)) {
+    return(sf::st_sf(
+      render_line_source_feature_id = I(list()),
+      geometry = merged_geometry
+    ))
+  }
+  source_overlap = sf::st_relate(
+    merged_geometry,
+    geometry,
+    pattern = "1********"
+  )
+  merged_source_feature_id = lapply(source_overlap, function(source_row) {
+    sort(unique(as.integer(unlist(
+      source_feature_id[source_row],
+      use.names = FALSE
+    ))))
+  })
+  sf::st_sf(
+    render_line_source_feature_id = I(merged_source_feature_id),
+    geometry = merged_geometry
+  )
 }
 
 #' Densify water path coordinates
@@ -1113,10 +1172,15 @@ densify_single_water_path_coord = function(
 #' Collapse duplicated path vertices
 #'
 #' @param vertices Path vertex matrix.
+#' @param minimum_step Default `sqrt(.Machine$double.eps)`. Minimum retained
+#' distance between consecutive vertices.
 #'
 #' @return Path vertex matrix with consecutive duplicated vertices removed.
 #' @keywords internal
-collapse_render_highquality_path_vertices = function(vertices) {
+collapse_render_highquality_path_vertices = function(
+  vertices,
+  minimum_step = sqrt(.Machine$double.eps)
+) {
   vertices = as.matrix(vertices)
   if (nrow(vertices) < 2) {
     return(vertices)
@@ -1126,12 +1190,32 @@ collapse_render_highquality_path_vertices = function(vertices) {
   if (nrow(vertices) < 2) {
     return(vertices)
   }
-  step_distance = sqrt(rowSums(
-    (vertices[-1, , drop = FALSE] -
-      vertices[-nrow(vertices), , drop = FALSE])^2
-  ))
-  keep = c(TRUE, step_distance > sqrt(.Machine$double.eps))
-  vertices[keep, , drop = FALSE]
+  minimum_step = suppressWarnings(as.numeric(minimum_step[[1L]]))
+  if (!is.finite(minimum_step) || minimum_step < 0) {
+    stop("`minimum_step` must be a non-negative finite number.", call. = FALSE)
+  }
+  keep = 1L
+  if (nrow(vertices) > 2L) {
+    for (vertex_index in seq.int(2L, nrow(vertices) - 1L)) {
+      step_distance = sqrt(sum(
+        (vertices[vertex_index, ] - vertices[tail(keep, 1L), ])^2
+      ))
+      if (step_distance > minimum_step) {
+        keep = c(keep, vertex_index)
+      }
+    }
+  }
+  final_index = nrow(vertices)
+  while (
+    length(keep) > 1L &&
+      sqrt(sum(
+        (vertices[final_index, ] - vertices[tail(keep, 1L), ])^2
+      )) <=
+        minimum_step
+  ) {
+    keep = keep[-length(keep)]
+  }
+  vertices[c(keep, final_index), , drop = FALSE]
 }
 
 #' Make water path extrusion profile
@@ -2634,6 +2718,16 @@ make_render_highquality_water_path_mesh = function(
     if (nrow(points) < 2) {
       return(NULL)
     }
+    points = collapse_render_highquality_path_vertices(
+      points,
+      minimum_step = max(
+        abs(suppressWarnings(as.numeric(width[[1L]]))) * 0.01,
+        sqrt(.Machine$double.eps)
+      )
+    )
+    if (nrow(points) < 2) {
+      return(NULL)
+    }
   }
   if (is.null(segment_end)) {
     segment_end = nrow(points) - 1L
@@ -2796,6 +2890,40 @@ make_render_highquality_water_path_mesh = function(
     cbind(quad_starts, quad_starts + 1L, quad_starts + 2L),
     cbind(quad_starts, quad_starts + 2L, quad_starts + 3L)
   )
+  first_edge = vertices[indices[, 2L], , drop = FALSE] -
+    vertices[indices[, 1L], , drop = FALSE]
+  second_edge = vertices[indices[, 3L], , drop = FALSE] -
+    vertices[indices[, 1L], , drop = FALSE]
+  face_cross = row_cross(first_edge, second_edge)
+  face_area = sqrt(rowSums(face_cross^2))
+  average_normal = vertex_normals[indices[, 1L], , drop = FALSE] +
+    vertex_normals[indices[, 2L], , drop = FALSE] +
+    vertex_normals[indices[, 3L], , drop = FALSE]
+  average_normal_length = sqrt(rowSums(average_normal^2))
+  valid_face = stats::complete.cases(face_cross) &
+    is.finite(face_area) &
+    face_area > max(abs(width), 1)^2 * 1e-12 &
+    stats::complete.cases(average_normal) &
+    is.finite(average_normal_length) &
+    average_normal_length > sqrt(.Machine$double.eps)
+  if (!all(valid_face)) {
+    indices = indices[valid_face, , drop = FALSE]
+    face_cross = face_cross[valid_face, , drop = FALSE]
+    face_area = face_area[valid_face]
+    average_normal = average_normal[valid_face, , drop = FALSE]
+    average_normal_length = average_normal_length[valid_face]
+  }
+  if (!nrow(indices)) {
+    return(NULL)
+  }
+  face_normal = face_cross / face_area
+  average_normal = average_normal / average_normal_length
+  reverse_face = rowSums(face_normal * average_normal) < 0
+  if (any(reverse_face)) {
+    reverse_index = indices[reverse_face, 2L]
+    indices[reverse_face, 2L] = indices[reverse_face, 3L]
+    indices[reverse_face, 3L] = reverse_index
+  }
   vertices = sweep(vertices, 2, bbox_center, FUN = "-")
   mesh = list(
     vb = t(cbind(vertices, 1)),

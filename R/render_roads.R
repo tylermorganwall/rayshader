@@ -804,8 +804,7 @@ render_road_paths = function(
     zscale = zscale,
     watercolor = roadcolor,
     waterpath_width = road_width,
-    force_by_feature = !is.null(road_layer_column) ||
-      !is.null(road_lanes_column)
+    force_by_feature = TRUE
   )
   coord_list = path_render$coord_list
   coord_width = path_render$width
@@ -877,13 +876,30 @@ render_road_paths = function(
     texture_world_scale = texture_world_scale
   )
   mesh_topology = attr(coord_list, "mesh_topology")
+  path_members = if (is.null(mesh_topology)) {
+    source_feature_id = vapply(
+      path_render$source_feature,
+      function(value) {
+        value = unique(as.integer(value))
+        if (length(value) == 1L && is.finite(value)) {
+          return(value)
+        }
+        NA_integer_
+      },
+      integer(1)
+    )
+    data.frame(
+      road_path_id = seq_along(coord_list),
+      render_road_fragment_id = NA_integer_,
+      render_road_feature_id = source_feature_id,
+      stringsAsFactors = FALSE
+    )
+  } else {
+    mesh_topology$path_members
+  }
   mesh_chain_members = build_render_road_mesh_chain_members(
     coord_list = coord_list,
-    path_members = if (is.null(mesh_topology)) {
-      NULL
-    } else {
-      mesh_topology$path_members
-    },
+    path_members = path_members,
     selected_connections = if (is.null(mesh_topology)) {
       NULL
     } else {
@@ -924,6 +940,16 @@ render_road_paths = function(
       id = road_id_by_path[[coord_index]],
       info = list(
         road_path_id = coord_index,
+        fragment_id = if (nrow(path_member)) {
+          path_member$fragment_id[[1L]]
+        } else {
+          NA_integer_
+        },
+        feature_id = if (nrow(path_member)) {
+          path_member$feature_id[[1L]]
+        } else {
+          NA_integer_
+        },
         mesh_chain_id = if (nrow(path_member)) {
           path_member$mesh_chain_id[[1L]]
         } else {
@@ -2343,7 +2369,26 @@ prepare_render_road_layer_features = function(
   # Assign a stable source-feature ID before casting MULTILINESTRING rows. The cast
   # can create several fragments from one source feature, and later metadata must
   # still be traceable to the original sf row.
-  roads$render_road_feature_id = seq_len(nrow(roads))
+  roads$render_road_feature_id = if (
+    "render_line_source_feature_id" %in% names(roads)
+  ) {
+    vapply(
+      roads$render_line_source_feature_id,
+      function(value) {
+        value = unique(as.integer(value))
+        if (length(value) != 1L || !is.finite(value)) {
+          stop(
+            "Layered road features must resolve to one source feature ID.",
+            call. = FALSE
+          )
+        }
+        value
+      },
+      integer(1)
+    )
+  } else {
+    seq_len(nrow(roads))
+  }
   source_crs = sf::st_crs(roads)
   metric_crs = resolve_render_road_metric_crs(roads)
   source_fragments = suppressWarnings(sf::st_cast(roads, "LINESTRING"))
@@ -9292,6 +9337,8 @@ attach_render_road_mesh_task_metadata = function(tasks) {
       path_info = list(
         mesh_chain_id = next_chain_id,
         road_path_id = task_index,
+        fragment_id = NA_integer_,
+        feature_id = NA_integer_,
         member_order = 1L,
         orientation = 1L,
         closed = FALSE,
@@ -9301,6 +9348,16 @@ attach_render_road_mesh_task_metadata = function(tasks) {
     attr(tasks[[task_index]], "mesh_topology") = list(
       mesh_chain_id = as.integer(path_info$mesh_chain_id[[1L]]),
       road_path_id = path_info$road_path_id,
+      render_road_fragment_id = if (is.null(path_info$fragment_id)) {
+        NA_integer_
+      } else {
+        as.integer(path_info$fragment_id[[1L]])
+      },
+      render_road_feature_id = if (is.null(path_info$feature_id)) {
+        NA_integer_
+      } else {
+        as.integer(path_info$feature_id[[1L]])
+      },
       member_order = as.integer(path_info$member_order[[1L]]),
       orientation = as.integer(path_info$orientation[[1L]]),
       closed = isTRUE(path_info$closed),
@@ -9431,12 +9488,22 @@ assemble_render_road_mesh_chain_tasks = function(
       station_end = chain_station + tail(member_station, 1L)
       member_topology = topology[[current_task_id]]
       fragment_id = suppressWarnings(as.integer(
-        member_topology$road_path_id[[1L]]
+        member_topology$render_road_fragment_id[[1L]]
       ))
+      if (!length(fragment_id) || !is.finite(fragment_id)) {
+        fragment_id = suppressWarnings(as.integer(
+          member_topology$road_path_id[[1L]]
+        ))
+      }
       if (!length(fragment_id) || !is.finite(fragment_id)) {
         fragment_id = current_task_id
       }
-      feature_id = NA_integer_
+      feature_id = suppressWarnings(as.integer(
+        member_topology$render_road_feature_id[[1L]]
+      ))
+      if (!length(feature_id) || !is.finite(feature_id)) {
+        feature_id = NA_integer_
+      }
       road_lanes = suppressWarnings(as.integer(
         member_topology$road_lanes[[1L]]
       ))
