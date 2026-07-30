@@ -1523,16 +1523,103 @@ make_render_highquality_joined_water_path_mesh = function(
       top_indices[, 1] + vertex_count
     )
   }
-  side_indices = make_render_highquality_water_path_side_faces(top_indices)
+
+  # Top, bottom, and wall vertices are intentionally separate. A shared vertex
+  # can carry only one shading normal, which would either facet the top surface
+  # or smooth the hard stream edge into the walls.
+  top_normals = interpolate_render_highquality_water_path_normals(
+    points = top_vertices,
+    heightmap = group$heightmap,
+    zscale = 1
+  )
+
+  directed_edges = rbind(
+    top_indices[, c(1L, 2L), drop = FALSE],
+    top_indices[, c(2L, 3L), drop = FALSE],
+    top_indices[, c(3L, 1L), drop = FALSE]
+  )
+  edge_keys = paste(
+    pmin(directed_edges[, 1L], directed_edges[, 2L]),
+    pmax(directed_edges[, 1L], directed_edges[, 2L]),
+    sep = "_"
+  )
+  unique_edge_key = unique(edge_keys)
+  edge_count = tabulate(match(edge_keys, unique_edge_key))
+  boundary_edges = directed_edges[
+    edge_count[match(edge_keys, unique_edge_key)] == 1L,
+    ,
+    drop = FALSE
+  ]
+  side_vertices = matrix(numeric(0), ncol = 3L)
+  side_normals = matrix(numeric(0), ncol = 3L)
+  side_indices = matrix(integer(0), ncol = 3L)
+  if (nrow(boundary_edges)) {
+    boundary_start = boundary_edges[, 1L]
+    boundary_end = boundary_edges[, 2L]
+    boundary_vertex = sort(unique(c(boundary_start, boundary_end)))
+    boundary_vertex_count = length(boundary_vertex)
+    boundary_start_index = match(boundary_start, boundary_vertex)
+    boundary_end_index = match(boundary_end, boundary_vertex)
+    side_vertices = rbind(
+      top_vertices[boundary_vertex, , drop = FALSE],
+      bottom_vertices[boundary_vertex, , drop = FALSE]
+    )
+    local_side_indices = rbind(
+      cbind(
+        boundary_start_index,
+        boundary_end_index + boundary_vertex_count,
+        boundary_end_index
+      ),
+      cbind(
+        boundary_start_index,
+        boundary_start_index + boundary_vertex_count,
+        boundary_end_index + boundary_vertex_count
+      )
+    )
+    side_first_edge =
+      side_vertices[local_side_indices[, 2L], , drop = FALSE] -
+      side_vertices[local_side_indices[, 1L], , drop = FALSE]
+    side_second_edge =
+      side_vertices[local_side_indices[, 3L], , drop = FALSE] -
+      side_vertices[local_side_indices[, 1L], , drop = FALSE]
+    side_face_cross = row_cross(side_first_edge, side_second_edge)
+    side_normals = matrix(0, nrow = nrow(side_vertices), ncol = 3L)
+    for (corner in seq_len(3L)) {
+      corner_index = local_side_indices[, corner]
+      corner_normal = rowsum(
+        side_face_cross,
+        group = corner_index,
+        reorder = FALSE
+      )
+      normal_index = as.integer(rownames(corner_normal))
+      side_normals[normal_index, ] =
+        side_normals[normal_index, , drop = FALSE] + corner_normal
+    }
+    side_normals = normalize_render_highquality_rows(side_normals)
+    side_normals = replace_invalid_render_highquality_vectors(
+      side_normals,
+      fallback = c(0, 0, 1)
+    )
+    side_indices = local_side_indices + 2L * vertex_count
+  }
+
   indices = rbind(top_indices, bottom_indices, side_indices)
   if (!nrow(indices)) {
     stop("Joined stream mesh produced no faces.")
   }
-  vertices = rbind(top_vertices, bottom_vertices)
+  vertices = rbind(top_vertices, bottom_vertices, side_vertices)
+  bottom_normals = matrix(
+    c(0, -1, 0),
+    nrow = vertex_count,
+    ncol = 3L,
+    byrow = TRUE
+  )
+  vertex_normals = rbind(top_normals, bottom_normals, side_normals)
   vertices = sweep(vertices, 2, group$bbox_center, FUN = "-")
   mesh = list(
     vb = t(cbind(vertices, 1)),
-    it = t(indices)
+    it = t(indices),
+    normals = t(vertex_normals)
   )
   class(mesh) = "mesh3d"
   rayrender::mesh3d_model(
@@ -2386,44 +2473,6 @@ orient_render_highquality_water_path_top_indices = function(vertices, indices) {
     }
   }
   oriented[keep, , drop = FALSE]
-}
-
-#' Make joined water path side faces
-#'
-#' @param top_indices Oriented top triangle indices.
-#'
-#' @return Side triangle index matrix.
-#' @keywords internal
-make_render_highquality_water_path_side_faces = function(top_indices) {
-  if (!nrow(top_indices)) {
-    return(matrix(integer(0), ncol = 3))
-  }
-  vertex_count = max(top_indices)
-  directed_edges = rbind(
-    top_indices[, c(1L, 2L), drop = FALSE],
-    top_indices[, c(2L, 3L), drop = FALSE],
-    top_indices[, c(3L, 1L), drop = FALSE]
-  )
-  edge_keys = paste(
-    pmin(directed_edges[, 1], directed_edges[, 2]),
-    pmax(directed_edges[, 1], directed_edges[, 2]),
-    sep = "_"
-  )
-  edge_counts = tabulate(match(edge_keys, unique(edge_keys)))
-  boundary_edges = directed_edges[
-    edge_counts[match(edge_keys, unique(edge_keys))] == 1L,
-    ,
-    drop = FALSE
-  ]
-  if (!nrow(boundary_edges)) {
-    return(matrix(integer(0), ncol = 3))
-  }
-  a = boundary_edges[, 1]
-  b = boundary_edges[, 2]
-  rbind(
-    cbind(a, b + vertex_count, b),
-    cbind(a, a + vertex_count, b + vertex_count)
-  )
 }
 
 #' Count undirected mesh triangle edges
