@@ -3274,7 +3274,7 @@ make_spatial_water_polygon_sidewall_vertices = function(
   )
   segment_x = x_start + (x_end - x_start) * breakpoints
   segment_z = z_start + (z_end - z_start) * breakpoints
-  segment_terrain = interpolate_spatial_water_height(
+  segment_terrain = interpolate_render_heightmap_height(
     heightmap = heightmap,
     x = segment_x + inward_normal[1] * eps,
     z = segment_z + inward_normal[2] * eps
@@ -3721,8 +3721,8 @@ spatial_water_rectangle_supported_below_water = function(
 
 #'@keywords internal
 spatial_water_overlapping_terrain_cells = function(heightmap, x0, x1, z0, z1) {
-  row_col_min = spatial_water_row_col(heightmap, x0, z0)
-  row_col_max = spatial_water_row_col(heightmap, x1, z1)
+  row_col_min = render_heightmap_row_col(heightmap, x0, z0)
+  row_col_max = render_heightmap_row_col(heightmap, x1, z1)
   eps = sqrt(.Machine$double.eps)
   row_min = min(row_col_min$row, row_col_max$row)
   row_max = max(row_col_min$row, row_col_max$row)
@@ -4715,8 +4715,8 @@ spatial_water_side_segment_breakpoints = function(
   x_end,
   z_end
 ) {
-  row_col_start = spatial_water_row_col(heightmap, x_start, z_start)
-  row_col_end = spatial_water_row_col(heightmap, x_end, z_end)
+  row_col_start = render_heightmap_row_col(heightmap, x_start, z_start)
+  row_col_end = render_heightmap_row_col(heightmap, x_end, z_end)
   row_start = row_col_start$row
   row_end = row_col_end$row
   col_start = row_col_start$col
@@ -4993,30 +4993,9 @@ subtract_spatial_water_coverage = function(edge_range, coverage) {
   uncovered
 }
 
-#' Convert spatial water scene coordinates to heightmap row/column coordinates
-#'
-#' @param heightmap Heightmap matrix.
-#' @param x X scene coordinate.
-#' @param z Z scene coordinate.
-#' @param clamp Default `TRUE`. Whether to clamp coordinates to the heightmap.
-#'
-#' @return List with `row` and `col` coordinates.
-#' @keywords internal
-spatial_water_row_col = function(heightmap, x, z, clamp = TRUE) {
-  nr = nrow(heightmap)
-  nc = ncol(heightmap)
-  row = x + (nr - 1) / 2 + 1
-  col = z + (nc - 1) / 2 + 1
-  if (isTRUE(clamp)) {
-    row = pmin(pmax(row, 1), nr)
-    col = pmin(pmax(col, 1), nc)
-  }
-  list(row = row, col = col)
-}
-
 #'@keywords internal
 spatial_water_point_has_finite_heightmap_cell = function(heightmap, x, z) {
-  row_col = spatial_water_row_col(heightmap, x, z, clamp = FALSE)
+  row_col = render_heightmap_row_col(heightmap, x, z, clamp = FALSE)
   row = row_col$row
   col = row_col$col
   row_index = floor(row + 0.5)
@@ -5038,55 +5017,13 @@ spatial_water_point_has_finite_heightmap_cell = function(heightmap, x, z) {
 }
 
 #'@keywords internal
-interpolate_spatial_water_height = function(heightmap, x, z) {
-  nr = nrow(heightmap)
-  nc = ncol(heightmap)
-  if (nr < 2 || nc < 2) {
-    return(rep(heightmap[1, 1], length(x)))
-  }
-  row_col = spatial_water_row_col(heightmap, x, z)
-  row = row_col$row
-  col = row_col$col
-  row0 = pmin(pmax(floor(row), 1), nr - 1)
-  row1 = row0 + 1L
-  col0 = pmin(pmax(floor(col), 1), nc - 1)
-  col1 = col0 + 1L
-  row_weight = row - row0
-  col_weight = col - col0
-
-  height00 = heightmap[cbind(row0, col0)]
-  height10 = heightmap[cbind(row1, col0)]
-  height01 = heightmap[cbind(row0, col1)]
-  height11 = heightmap[cbind(row1, col1)]
-  top_triangle = row_weight + col_weight <= 1
-  interpolated = numeric(length(row))
-  interpolated[top_triangle] = height00[top_triangle] +
-    row_weight[top_triangle] *
-      (height10[top_triangle] - height00[top_triangle]) +
-    col_weight[top_triangle] *
-      (height01[top_triangle] - height00[top_triangle])
-  interpolated[!top_triangle] = height11[!top_triangle] +
-    (1 - col_weight[!top_triangle]) *
-      (height10[!top_triangle] - height11[!top_triangle]) +
-    (1 - row_weight[!top_triangle]) *
-      (height01[!top_triangle] - height11[!top_triangle])
-
-  nearest_row = as.integer(round(row))
-  nearest_col = as.integer(round(col))
-  nearest_height = heightmap[cbind(nearest_row, nearest_col)]
-  fallback = !is.finite(interpolated)
-  interpolated[fallback] = nearest_height[fallback]
-  interpolated
-}
-
-#'@keywords internal
 interpolate_spatial_water_surface_height = function(heightmap, x, z) {
   nr = nrow(heightmap)
   nc = ncol(heightmap)
   if (nr < 2 || nc < 2) {
     return(rep(heightmap[1, 1], length(x)))
   }
-  row_col = spatial_water_row_col(heightmap, x, z)
+  row_col = render_heightmap_row_col(heightmap, x, z)
   row = row_col$row
   col = row_col$col
   row0 = pmin(pmax(floor(row), 1), nr - 1)
@@ -5119,7 +5056,7 @@ interpolate_spatial_water_surface_height = function(heightmap, x, z) {
 interpolate_spatial_water_surface_height_unclamped = function(heightmap, x, z) {
   nr = nrow(heightmap)
   nc = ncol(heightmap)
-  row_col = spatial_water_row_col(heightmap, x, z, clamp = FALSE)
+  row_col = render_heightmap_row_col(heightmap, x, z, clamp = FALSE)
   in_bounds = row_col$row >= 1 &
     row_col$row <= nr &
     row_col$col >= 1 &

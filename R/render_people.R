@@ -989,7 +989,7 @@ sample_person_terrain_line_geometry = function(
         (profile$y - terrain_extent["ymin"]) /
           extent_height *
           map_height
-      terrain_y = interpolate_spatial_water_height(
+      terrain_y = interpolate_render_heightmap_height(
         heightmap_scene,
         profile$scene_x,
         profile$scene_z
@@ -1131,7 +1131,7 @@ person_terrain_line_angles = function(
     2 -
     (y - terrain_extent["ymin"]) / extent_height * map_height
   terrain_points = cbind(scene_x, 0, scene_z)
-  terrain_normals = interpolate_render_highquality_water_path_normals(
+  terrain_normals = interpolate_render_highquality_normals(
     points = terrain_points,
     heightmap = heightmap,
     zscale = zscale

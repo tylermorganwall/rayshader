@@ -140,7 +140,7 @@ render_roads = function(
   layer_height_expr = substitute(layer_height)
   lanes_expr = substitute(lanes)
 
-  if (!is_waterpath_input(roads)) {
+  if (!is_render_line_input(roads)) {
     stop(
       "`roads` must be an sf, sfc, sfg, SpatialLines, or SpatialLinesDataFrame line object.",
       call. = FALSE
@@ -285,7 +285,7 @@ render_roads = function(
   if (rgl::cur3d() == 0) {
     stop("No rgl window currently open.")
   }
-  width_column = resolve_waterpath_width_column(
+  width_column = resolve_render_line_width_column(
     width_column = width_column,
     width_column_expr = width_column_expr,
     width_column_missing = missing(width_column)
@@ -927,9 +927,10 @@ render_road_paths = function(
   if (!is.null(road_width_column)) {
     road_merge = FALSE
   }
-  roads = prepare_render_water_path_geometry(
-    waterpaths = roads,
-    waterpath_merge = road_merge
+  roads = prepare_render_line_geometry(
+    lines = roads,
+    merge = road_merge,
+    line_argument = "roads"
   )
   if (is_empty_scene_sf(roads)) {
     return(invisible(list()))
@@ -963,18 +964,18 @@ render_road_paths = function(
   } else if (!is.null(road_width_column)) {
     road_width = as.numeric(roads[[road_width_column]])
   }
-  path_render = render_water_path_coords_by_width(
-    waterpaths = roads,
+  path_data = render_line_coords_by_width(
+    lines = roads,
     heightmap = heightmap,
     extent = extent,
     zscale = zscale,
-    watercolor = roadcolor,
-    waterpath_width = road_width,
+    color = roadcolor,
+    width = road_width,
     force_by_feature = TRUE
   )
-  coord_list = path_render$coord_list
-  coord_width = path_render$width
-  coord_feature = path_render$feature
+  coord_list = path_data$coords
+  coord_width = path_data$width
+  coord_feature = path_data$feature_id
   coord_lanes = if (length(road_lanes) == 1L) {
     rep(road_lanes, length(coord_list))
   } else {
@@ -985,8 +986,8 @@ render_road_paths = function(
     return(invisible(coord_list))
   }
   if (isTRUE(road_densify)) {
-    coord_list = densify_water_path_coords(
-      coord_list = coord_list,
+    coord_list = densify_render_line_coords(
+      coords = coord_list,
       heightmap = heightmap,
       zscale = zscale,
       offset = 0
@@ -1044,7 +1045,7 @@ render_road_paths = function(
   mesh_topology = attr(coord_list, "mesh_topology")
   path_members = if (is.null(mesh_topology)) {
     source_feature_id = vapply(
-      path_render$source_feature,
+      path_data$source_feature_id,
       function(value) {
         value = unique(as.integer(value))
         if (length(value) == 1L && is.finite(value)) {
@@ -1967,7 +1968,7 @@ offset_render_road_path_coords = function(
     return(coord_list)
   }
   if (!is.finite(transition_length) || transition_length <= 0) {
-    return(offset_water_path_coords(coord_list, offset))
+    return(offset_render_line_coords(coord_list, offset))
   }
   lapply(coord_list, function(coords) {
     coords = collapse_render_highquality_road_path_points(
@@ -8765,11 +8766,11 @@ make_road_lane_texture = function(
     lane_line_width,
     "lane_line_width"
   )
-  lane_dash_length = validate_waterpath_positive_number(
+  lane_dash_length = resolve_render_positive_number(
     lane_dash_length,
     "lane_dash_length"
   )
-  lane_gap_length = validate_waterpath_positive_number(
+  lane_gap_length = resolve_render_positive_number(
     lane_gap_length,
     "lane_gap_length",
     allow_zero = TRUE
@@ -8896,15 +8897,15 @@ calculate_render_road_envelope_transition_length = function(
   if (!is.finite(lateral_change) || lateral_change < 0) {
     stop("`lateral_change` must be finite and nonnegative.", call. = FALSE)
   }
-  maximum_lateral_rate = validate_waterpath_positive_number(
+  maximum_lateral_rate = resolve_render_positive_number(
     maximum_lateral_rate,
     "maximum_lateral_rate"
   )
-  minimum_length = validate_waterpath_positive_number(
+  minimum_length = resolve_render_positive_number(
     minimum_length,
     "minimum_transition_length"
   )
-  maximum_length = validate_waterpath_positive_number(
+  maximum_length = resolve_render_positive_number(
     maximum_length,
     "maximum_transition_length"
   )
@@ -9257,7 +9258,7 @@ resolve_road_lane_texture_length = function(
   if (is.null(lane_texture_length)) {
     return(lane_dash_length + lane_gap_length)
   }
-  validate_waterpath_positive_number(
+  resolve_render_positive_number(
     lane_texture_length,
     "lane_texture_length"
   )
@@ -9922,7 +9923,7 @@ calculate_render_road_vertex_frames = function(
 ) {
   points = as.matrix(points)
   point_count = nrow(points)
-  closed = validate_waterpath_logical(closed, "closed")
+  closed = resolve_render_logical(closed, "closed")
   if (point_count < if (closed) 3L else 2L) {
     stop("Road vertex frames require a valid path.", call. = FALSE)
   }
@@ -10184,36 +10185,36 @@ calculate_render_road_vertex_sections = function(
   scale = frames$miter_scale
   left_bottom = points + side * (left_distance * scale)
   right_bottom = points - side * (right_distance * scale)
-  heightmap_scene = scale_render_highquality_water_path_heightmap(
+  heightmap_scene = scale_render_highquality_heightmap(
     heightmap = heightmap,
     zscale = zscale
   )$heightmap
   if (!is.null(heightmap_scene) && is.matrix(heightmap_scene)) {
-    center_height = interpolate_spatial_water_height(
+    center_height = interpolate_render_heightmap_height(
       heightmap_scene,
       points[, 1],
       points[, 3]
     )
     center_offset = points[, 2] - center_height
-    left_bottom[, 2] = interpolate_spatial_water_height(
+    left_bottom[, 2] = interpolate_render_heightmap_height(
       heightmap_scene,
       left_bottom[, 1],
       left_bottom[, 3]
     ) +
       center_offset
-    right_bottom[, 2] = interpolate_spatial_water_height(
+    right_bottom[, 2] = interpolate_render_heightmap_height(
       heightmap_scene,
       right_bottom[, 1],
       right_bottom[, 3]
     ) +
       center_offset
   }
-  left_normal = interpolate_render_highquality_water_path_normals(
+  left_normal = interpolate_render_highquality_normals(
     points = left_bottom,
     heightmap = heightmap,
     zscale = zscale
   )
-  right_normal = interpolate_render_highquality_water_path_normals(
+  right_normal = interpolate_render_highquality_normals(
     points = right_bottom,
     heightmap = heightmap,
     zscale = zscale
@@ -10336,7 +10337,7 @@ calculate_render_road_surface_normals = function(
 ) {
   left_vertices = as.matrix(left_vertices)
   right_vertices = as.matrix(right_vertices)
-  closed = validate_waterpath_logical(closed, "closed")
+  closed = resolve_render_logical(closed, "closed")
   outward_sign = suppressWarnings(as.numeric(outward_sign[[1L]]))
   if (
     nrow(left_vertices) != nrow(right_vertices) ||
@@ -10424,7 +10425,7 @@ identify_render_road_inverted_surface_segments = function(
 ) {
   left_vertices = as.matrix(left_vertices)
   right_vertices = as.matrix(right_vertices)
-  closed = validate_waterpath_logical(closed, "closed")
+  closed = resolve_render_logical(closed, "closed")
   point_count = nrow(left_vertices)
   segment_index = if (closed) {
     seq_len(point_count)
@@ -10479,7 +10480,7 @@ calculate_render_road_stabilized_vertex_frames = function(
 ) {
   points = as.matrix(points)
   point_count = nrow(points)
-  guide_step_fraction = validate_waterpath_positive_number(
+  guide_step_fraction = resolve_render_positive_number(
     guide_step_fraction,
     "guide_step_fraction"
   )
@@ -10732,7 +10733,7 @@ build_render_road_section_mesh = function(
   } else {
     seq.int(2L, point_count)
   }
-  texture_length = validate_waterpath_positive_number(
+  texture_length = resolve_render_positive_number(
     texture_length,
     "lane_texture_length"
   )
@@ -10762,25 +10763,25 @@ build_render_road_section_mesh = function(
   if (closed) {
     v1[[length(v1)]] = closing_v
   }
-  top_vertices = make_render_highquality_water_path_quad_rows(
+  top_vertices = make_render_highquality_quad_rows(
     sections$left_top[segment_indices, , drop = FALSE],
     sections$left_top[next_indices, , drop = FALSE],
     sections$right_top[next_indices, , drop = FALSE],
     sections$right_top[segment_indices, , drop = FALSE]
   )
-  bottom_vertices = make_render_highquality_water_path_quad_rows(
+  bottom_vertices = make_render_highquality_quad_rows(
     sections$left_bottom[segment_indices, , drop = FALSE],
     sections$right_bottom[segment_indices, , drop = FALSE],
     sections$right_bottom[next_indices, , drop = FALSE],
     sections$left_bottom[next_indices, , drop = FALSE]
   )
-  left_vertices = make_render_highquality_water_path_quad_rows(
+  left_vertices = make_render_highquality_quad_rows(
     sections$left_bottom[segment_indices, , drop = FALSE],
     sections$left_bottom[next_indices, , drop = FALSE],
     sections$left_top[next_indices, , drop = FALSE],
     sections$left_top[segment_indices, , drop = FALSE]
   )
-  right_vertices = make_render_highquality_water_path_quad_rows(
+  right_vertices = make_render_highquality_quad_rows(
     sections$right_bottom[segment_indices, , drop = FALSE],
     sections$right_top[segment_indices, , drop = FALSE],
     sections$right_top[next_indices, , drop = FALSE],
@@ -10819,13 +10820,13 @@ build_render_road_section_mesh = function(
       )
     }
   }
-  top_normals = make_render_highquality_water_path_quad_rows(
+  top_normals = make_render_highquality_quad_rows(
     top_surface_normals$left[segment_indices, , drop = FALSE],
     top_surface_normals$left[next_indices, , drop = FALSE],
     top_surface_normals$right[next_indices, , drop = FALSE],
     top_surface_normals$right[segment_indices, , drop = FALSE]
   )
-  bottom_normals = make_render_highquality_water_path_quad_rows(
+  bottom_normals = make_render_highquality_quad_rows(
     bottom_surface_normals$left[segment_indices, , drop = FALSE],
     bottom_surface_normals$right[segment_indices, , drop = FALSE],
     bottom_surface_normals$right[next_indices, , drop = FALSE],
@@ -10847,38 +10848,38 @@ build_render_road_section_mesh = function(
     normalize_render_highquality_rows(row_cross(right_up, right_forward)),
     fallback = c(0, 0, -1)
   )
-  left_normals = make_render_highquality_water_path_quad_rows(
+  left_normals = make_render_highquality_quad_rows(
     left_wall_normal,
     left_wall_normal,
     left_wall_normal,
     left_wall_normal
   )
-  right_normals = make_render_highquality_water_path_quad_rows(
+  right_normals = make_render_highquality_quad_rows(
     right_wall_normal,
     right_wall_normal,
     right_wall_normal,
     right_wall_normal
   )
-  top_texcoords = make_render_highquality_water_path_quad_rows(
+  top_texcoords = make_render_highquality_quad_rows(
     cbind(0, v0),
     cbind(0, v1),
     cbind(1, v1),
     cbind(1, v0)
   )
-  bottom_texcoords = make_render_highquality_water_path_quad_rows(
+  bottom_texcoords = make_render_highquality_quad_rows(
     cbind(0, v0),
     cbind(1, v0),
     cbind(1, v1),
     cbind(0, v1)
   )
   side_texture_u = c(0.01, 0.02)
-  left_texcoords = make_render_highquality_water_path_quad_rows(
+  left_texcoords = make_render_highquality_quad_rows(
     cbind(side_texture_u[[1]], v0),
     cbind(side_texture_u[[1]], v1),
     cbind(side_texture_u[[2]], v1),
     cbind(side_texture_u[[2]], v0)
   )
-  right_texcoords = make_render_highquality_water_path_quad_rows(
+  right_texcoords = make_render_highquality_quad_rows(
     cbind(side_texture_u[[1]], v0),
     cbind(side_texture_u[[2]], v0),
     cbind(side_texture_u[[2]], v1),
@@ -10911,7 +10912,7 @@ build_render_road_section_mesh = function(
     )
     vertices = rbind(
       vertices,
-      make_render_highquality_water_path_quad_rows(
+      make_render_highquality_quad_rows(
         matrix(sections$left_bottom[1L, ], nrow = 1L),
         matrix(sections$left_top[1L, ], nrow = 1L),
         matrix(sections$right_top[1L, ], nrow = 1L),
@@ -10920,7 +10921,7 @@ build_render_road_section_mesh = function(
     )
     vertex_normals = rbind(
       vertex_normals,
-      make_render_highquality_water_path_quad_rows(
+      make_render_highquality_quad_rows(
         cap_normal,
         cap_normal,
         cap_normal,
@@ -10954,7 +10955,7 @@ build_render_road_section_mesh = function(
     )
     vertices = rbind(
       vertices,
-      make_render_highquality_water_path_quad_rows(
+      make_render_highquality_quad_rows(
         matrix(sections$left_bottom[point_count, ], nrow = 1L),
         matrix(sections$right_bottom[point_count, ], nrow = 1L),
         matrix(sections$right_top[point_count, ], nrow = 1L),
@@ -10963,7 +10964,7 @@ build_render_road_section_mesh = function(
     )
     vertex_normals = rbind(
       vertex_normals,
-      make_render_highquality_water_path_quad_rows(
+      make_render_highquality_quad_rows(
         cap_normal,
         cap_normal,
         cap_normal,
@@ -11168,15 +11169,15 @@ make_render_highquality_road_chain_mesh = function(
   round_join_segments = 5L,
   return_mesh = FALSE
 ) {
-  terrain_following = validate_waterpath_logical(
+  terrain_following = resolve_render_logical(
     terrain_following,
     "terrain_following"
   )
-  closed = validate_waterpath_logical(closed, "closed")
-  cap_start = validate_waterpath_logical(cap_start, "cap_start")
-  cap_end = validate_waterpath_logical(cap_end, "cap_end")
-  return_mesh = validate_waterpath_logical(return_mesh, "return_mesh")
-  miter_limit = validate_waterpath_positive_number(
+  closed = resolve_render_logical(closed, "closed")
+  cap_start = resolve_render_logical(cap_start, "cap_start")
+  cap_end = resolve_render_logical(cap_end, "cap_end")
+  return_mesh = resolve_render_logical(return_mesh, "return_mesh")
+  miter_limit = resolve_render_positive_number(
     miter_limit,
     "miter_limit"
   )
@@ -11212,7 +11213,7 @@ make_render_highquality_road_chain_mesh = function(
   } else {
     points
   }
-  densify_points = densify_render_highquality_water_path_points(
+  densify_points = densify_render_highquality_path_points(
     points = densify_points,
     width = width,
     heightmap = mesh_heightmap,

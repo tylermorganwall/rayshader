@@ -692,3 +692,930 @@ coerce_render_path_line_geometry = function(path) {
   }
   suppressWarnings(sf::st_cast(path, "LINESTRING"))
 }
+
+#' Is render line input
+#'
+#' @param x Object to test.
+#'
+#' @return Logical value.
+#' @keywords internal
+is_render_line_input = function(x) {
+  inherits(
+    x,
+    c(
+      "sf",
+      "sfc",
+      "sfg",
+      "SpatialLines",
+      "SpatialLinesDataFrame"
+    )
+  )
+}
+
+#' Resolve a positive render number
+#'
+#' @param value Numeric-like value.
+#' @param name Argument name.
+#' @param allow_zero Default `FALSE`. Whether zero is allowed.
+#'
+#' @return Numeric scalar.
+#' @keywords internal
+resolve_render_positive_number = function(
+  value,
+  name,
+  allow_zero = FALSE
+) {
+  value = suppressWarnings(as.numeric(value))
+  valid = length(value) == 1L &&
+    is.finite(value) &&
+    if (allow_zero) value >= 0 else value > 0
+  if (!valid) {
+    stop(
+      sprintf(
+        "`%s` must be a single %s number.",
+        name,
+        if (allow_zero) "non-negative" else "positive"
+      ),
+      call. = FALSE
+    )
+  }
+  value
+}
+
+#' Resolve a render logical
+#'
+#' @param value Logical-like value.
+#' @param name Argument name.
+#'
+#' @return Logical scalar.
+#' @keywords internal
+resolve_render_logical = function(value, name) {
+  value = suppressWarnings(as.logical(value))
+  if (!length(value) || is.na(value[[1L]])) {
+    stop(sprintf("`%s` must be TRUE or FALSE.", name), call. = FALSE)
+  }
+  value[[1L]]
+}
+
+#' Resolve render line width column
+#'
+#' @param width_column Default `NULL`. Width column value.
+#' @param width_column_expr Default `NULL`. Width column expression.
+#' @param width_column_missing Default `FALSE`. Whether the argument was
+#' omitted.
+#'
+#' @return Column name or `NULL`.
+#' @keywords internal
+resolve_render_line_width_column = function(
+  width_column = NULL,
+  width_column_expr = NULL,
+  width_column_missing = FALSE
+) {
+  if (
+    isTRUE(width_column_missing) ||
+      identical(width_column_expr, quote(NULL))
+  ) {
+    return(NULL)
+  }
+  if (is.character(width_column_expr)) {
+    return(validate_render_line_width_column_name(width_column_expr))
+  }
+  if (is.name(width_column_expr)) {
+    value = tryCatch(width_column, error = function(e) NULL)
+    if (is.character(value) && length(value) == 1L) {
+      return(validate_render_line_width_column_name(value))
+    }
+    return(validate_render_line_width_column_name(as.character(
+      width_column_expr
+    )))
+  }
+  validate_render_line_width_column_name(width_column)
+}
+
+#' Validate render line width column name
+#'
+#' @param width_column Width column name.
+#'
+#' @return Column name.
+#' @keywords internal
+validate_render_line_width_column_name = function(width_column) {
+  if (
+    !is.character(width_column) ||
+      length(width_column) != 1L ||
+      is.na(width_column) ||
+      !nzchar(width_column)
+  ) {
+    stop("`width_column` must be a single column name.", call. = FALSE)
+  }
+  width_column
+}
+
+#' Convert scene coordinates to heightmap row and column coordinates
+#'
+#' @param heightmap Heightmap matrix.
+#' @param x X scene coordinate.
+#' @param z Z scene coordinate.
+#' @param clamp Default `TRUE`. Whether to clamp coordinates to the heightmap.
+#'
+#' @return List with `row` and `col` coordinates.
+#' @keywords internal
+render_heightmap_row_col = function(heightmap, x, z, clamp = TRUE) {
+  nr = nrow(heightmap)
+  nc = ncol(heightmap)
+  row = x + (nr - 1) / 2 + 1
+  col = z + (nc - 1) / 2 + 1
+  if (isTRUE(clamp)) {
+    row = pmin(pmax(row, 1), nr)
+    col = pmin(pmax(col, 1), nc)
+  }
+  list(row = row, col = col)
+}
+
+#' Interpolate a render heightmap
+#'
+#' @param heightmap Heightmap matrix.
+#' @param x X scene coordinate.
+#' @param z Z scene coordinate.
+#'
+#' @return Numeric terrain heights.
+#' @keywords internal
+interpolate_render_heightmap_height = function(heightmap, x, z) {
+  nr = nrow(heightmap)
+  nc = ncol(heightmap)
+  if (nr < 2L || nc < 2L) {
+    return(rep(heightmap[1L, 1L], length(x)))
+  }
+  row_col = render_heightmap_row_col(heightmap, x, z)
+  row = row_col$row
+  col = row_col$col
+  row0 = pmin(pmax(floor(row), 1), nr - 1L)
+  row1 = row0 + 1L
+  col0 = pmin(pmax(floor(col), 1), nc - 1L)
+  col1 = col0 + 1L
+  row_weight = row - row0
+  col_weight = col - col0
+
+  height00 = heightmap[cbind(row0, col0)]
+  height10 = heightmap[cbind(row1, col0)]
+  height01 = heightmap[cbind(row0, col1)]
+  height11 = heightmap[cbind(row1, col1)]
+  top_triangle = row_weight + col_weight <= 1
+  interpolated = numeric(length(row))
+  interpolated[top_triangle] = height00[top_triangle] +
+    row_weight[top_triangle] *
+      (height10[top_triangle] - height00[top_triangle]) +
+    col_weight[top_triangle] *
+      (height01[top_triangle] - height00[top_triangle])
+  interpolated[!top_triangle] = height11[!top_triangle] +
+    (1 - col_weight[!top_triangle]) *
+      (height10[!top_triangle] - height11[!top_triangle]) +
+    (1 - row_weight[!top_triangle]) *
+      (height01[!top_triangle] - height11[!top_triangle])
+
+  nearest_row = as.integer(round(row))
+  nearest_col = as.integer(round(col))
+  nearest_height = heightmap[cbind(nearest_row, nearest_col)]
+  fallback = !is.finite(interpolated)
+  interpolated[fallback] = nearest_height[fallback]
+  interpolated
+}
+
+#' Normalize render line source feature IDs
+#'
+#' @param lines Normalized `sf` line input.
+#'
+#' @return List column of integer source feature IDs.
+#' @keywords internal
+normalize_render_line_source_feature_ids = function(lines) {
+  if (
+    "render_line_source_feature_id" %in%
+      names(lines) &&
+      length(lines$render_line_source_feature_id) == nrow(lines)
+  ) {
+    return(lapply(lines$render_line_source_feature_id, function(value) {
+      value = suppressWarnings(as.integer(unlist(value, use.names = FALSE)))
+      sort(unique(value[is.finite(value)]))
+    }))
+  }
+  lapply(seq_len(nrow(lines)), as.integer)
+}
+
+#' Prepare render line geometry
+#'
+#' @param lines Spatial line input.
+#' @param merge Whether to merge connected linework.
+#' @param exclude_polygons Default `NULL`. Polygon geometry to remove before
+#' merging.
+#' @param line_argument Default `"lines"`. Line argument name used in errors.
+#' @param polygon_argument Default `"exclude_polygons"`. Polygon argument name
+#' used in errors.
+#'
+#' @return Normalized `sf` line geometry with stable feature lineage columns.
+#' @keywords internal
+prepare_render_line_geometry = function(
+  lines,
+  merge = TRUE,
+  exclude_polygons = NULL,
+  line_argument = "lines",
+  polygon_argument = "exclude_polygons"
+) {
+  if (!is_render_line_input(lines)) {
+    stop(
+      sprintf(
+        "`%s` must be an sf, sfc, sfg, SpatialLines, or SpatialLinesDataFrame line object.",
+        line_argument
+      ),
+      call. = FALSE
+    )
+  }
+  if (inherits(lines, c("SpatialLines", "SpatialLinesDataFrame"))) {
+    lines = sf::st_as_sf(lines)
+  }
+  if (inherits(lines, "sfg")) {
+    lines = sf::st_sfc(lines)
+  }
+  if (inherits(lines, "sfc")) {
+    lines = sf::st_sf(geometry = lines)
+  }
+  lines$render_line_source_feature_id = I(
+    normalize_render_line_source_feature_ids(lines)
+  )
+  lines = coerce_render_path_line_geometry(lines)
+  if (inherits(lines, "sfc")) {
+    lines = sf::st_sf(geometry = lines)
+  }
+  if (!is_empty_scene_sf(lines)) {
+    lines$render_line_feature_id = seq_len(nrow(lines))
+  } else {
+    lines$render_line_feature_id = integer(0)
+  }
+
+  if (!is.null(exclude_polygons) && !is_empty_scene_sf(lines)) {
+    if (
+      !inherits(
+        exclude_polygons,
+        c(
+          "sf",
+          "sfc",
+          "sfg",
+          "SpatVector",
+          "SpatialPolygons",
+          "SpatialPolygonsDataFrame"
+        )
+      )
+    ) {
+      stop(
+        sprintf(
+          paste0(
+            "`%s` must be an sf, sfc, sfg, SpatVector, SpatialPolygons, ",
+            "or SpatialPolygonsDataFrame polygon object."
+          ),
+          polygon_argument
+        ),
+        call. = FALSE
+      )
+    }
+    polygon_geometry = if (inherits(exclude_polygons, "sfg")) {
+      sf::st_sfc(exclude_polygons)
+    } else if (inherits(exclude_polygons, "sfc")) {
+      exclude_polygons
+    } else {
+      sf::st_geometry(sf::st_as_sf(exclude_polygons))
+    }
+    if (
+      length(polygon_geometry) > 0 &&
+        !all(sf::st_is_empty(polygon_geometry))
+    ) {
+      polygon_geometry = sf::st_make_valid(polygon_geometry)
+      polygon_types = as.character(sf::st_geometry_type(
+        polygon_geometry,
+        by_geometry = TRUE
+      ))
+      if (
+        !all(
+          polygon_types %in%
+            c("POLYGON", "MULTIPOLYGON", "GEOMETRYCOLLECTION")
+        )
+      ) {
+        stop(
+          sprintf(
+            "`%s` must contain only polygon or multipolygon geometries.",
+            polygon_argument
+          ),
+          call. = FALSE
+        )
+      }
+      polygon_geometry = suppressWarnings(
+        sf::st_collection_extract(polygon_geometry, "POLYGON")
+      )
+      polygon_geometry = polygon_geometry[
+        !sf::st_is_empty(polygon_geometry)
+      ]
+      if (!length(polygon_geometry)) {
+        stop(
+          sprintf(
+            "`%s` does not contain any non-empty polygon geometries.",
+            polygon_argument
+          ),
+          call. = FALSE
+        )
+      }
+
+      line_crs = sf::st_crs(lines)
+      polygon_crs = sf::st_crs(polygon_geometry)
+      line_has_crs = !is.na(line_crs)
+      polygon_has_crs = !is.na(polygon_crs)
+      if (xor(line_has_crs, polygon_has_crs)) {
+        stop(
+          sprintf(
+            "`%s` and `%s` must both have a CRS or both be CRS-less.",
+            line_argument,
+            polygon_argument
+          ),
+          call. = FALSE
+        )
+      }
+      if (
+        line_has_crs &&
+          polygon_has_crs &&
+          !scene_crs_equal(line_crs, polygon_crs)
+      ) {
+        polygon_geometry = sf::st_transform(polygon_geometry, line_crs)
+      }
+      polygon_union = suppressWarnings(sf::st_union(polygon_geometry))
+      lines = tryCatch(
+        suppressWarnings(sf::st_difference(lines, polygon_union)),
+        error = function(e) {
+          stop(
+            sprintf(
+              "Could not remove `%s` from `%s`: %s",
+              polygon_argument,
+              line_argument,
+              conditionMessage(e)
+            ),
+            call. = FALSE
+          )
+        }
+      )
+      lines = coerce_render_path_line_geometry(lines)
+      lines$render_line_feature_id = seq_len(nrow(lines))
+    }
+  }
+  if (!isTRUE(merge) || is_empty_scene_sf(lines)) {
+    return(lines)
+  }
+
+  geometry = sf::st_geometry(lines)
+  source_feature_id = lines$render_line_source_feature_id
+  merged_geometry = tryCatch(
+    suppressWarnings(sf::st_line_merge(sf::st_union(geometry))),
+    error = function(e) geometry
+  )
+  merged_geometry = coerce_render_path_line_geometry(merged_geometry)
+  if (is_empty_scene_sf(merged_geometry)) {
+    return(sf::st_sf(
+      render_line_feature_id = integer(0),
+      render_line_source_feature_id = I(list()),
+      geometry = merged_geometry
+    ))
+  }
+  source_overlap = sf::st_relate(
+    merged_geometry,
+    geometry,
+    pattern = "1********"
+  )
+  merged_source_feature_id = lapply(source_overlap, function(source_row) {
+    sort(unique(as.integer(unlist(
+      source_feature_id[source_row],
+      use.names = FALSE
+    ))))
+  })
+  sf::st_sf(
+    render_line_feature_id = seq_along(merged_geometry),
+    render_line_source_feature_id = I(merged_source_feature_id),
+    geometry = merged_geometry
+  )
+}
+
+#' Resolve render feature widths
+#'
+#' @param lines Normalized `sf` line input.
+#' @param width Scalar width.
+#' @param width_column Default `NULL`. Column containing feature widths.
+#' @param line_argument Default `"lines"`. Line argument name used in errors.
+#'
+#' @return Positive numeric feature widths.
+#' @keywords internal
+resolve_render_feature_widths = function(
+  lines,
+  width,
+  width_column = NULL,
+  line_argument = "lines"
+) {
+  if (is.null(width_column)) {
+    width = suppressWarnings(as.numeric(width))
+    if (length(width) != 1L || !is.finite(width) || width <= 0) {
+      stop("`width` must be a single positive number.", call. = FALSE)
+    }
+    return(width)
+  }
+  if (!inherits(lines, "sf")) {
+    stop(
+      sprintf(
+        "Feature widths require `%s` to be an `sf` object.",
+        line_argument
+      ),
+      call. = FALSE
+    )
+  }
+  if (!(width_column %in% names(lines))) {
+    stop(
+      sprintf(
+        "`width_column` must name a column in `%s`: %s",
+        line_argument,
+        width_column
+      ),
+      call. = FALSE
+    )
+  }
+  widths = suppressWarnings(as.numeric(lines[[width_column]]))
+  if (
+    length(widths) != nrow(lines) ||
+      any(!is.finite(widths)) ||
+      any(widths <= 0)
+  ) {
+    stop(
+      sprintf(
+        "`width_column` column `%s` must contain positive finite numeric values.",
+        width_column
+      ),
+      call. = FALSE
+    )
+  }
+  widths
+}
+
+#' Create render line path data
+#'
+#' @param coords List of path coordinate matrices.
+#' @param width Numeric width per path.
+#' @param feature_id Integer normalized feature ID per path.
+#' @param source_feature_id List of source feature IDs per path.
+#'
+#' @return Structured internal path-data list.
+#' @keywords internal
+new_render_line_path_data = function(
+  coords,
+  width,
+  feature_id,
+  source_feature_id
+) {
+  path_count = length(coords)
+  if (
+    length(width) != path_count ||
+      length(feature_id) != path_count ||
+      length(source_feature_id) != path_count
+  ) {
+    stop("Render line path data fields must have equal lengths.", call. = FALSE)
+  }
+  structure(
+    list(
+      coords = coords,
+      width = as.numeric(width),
+      feature_id = as.integer(feature_id),
+      source_feature_id = source_feature_id
+    ),
+    class = c("render_line_path_data", "list")
+  )
+}
+
+#' Render line coordinates
+#'
+#' @param lines Normalized spatial line input.
+#' @param heightmap Heightmap matrix.
+#' @param extent Scene extent.
+#' @param zscale Effective zscale.
+#' @param color Line color.
+#' @param width Line width.
+#'
+#' @return List of coordinate matrices.
+#' @keywords internal
+render_line_coords = function(
+  lines,
+  heightmap,
+  extent,
+  zscale,
+  color,
+  width
+) {
+  render_path(
+    y = lines,
+    extent = extent,
+    zscale = zscale,
+    vertical_exaggeration = 1,
+    heightmap = heightmap,
+    offset = 0,
+    linewidth = width,
+    color = color,
+    return_coords = TRUE,
+    tag = "water_path"
+  )
+}
+
+#' Subset render line geometry
+#'
+#' @param lines Normalized spatial line input.
+#' @param index Feature index.
+#'
+#' @return One-feature line input.
+#' @keywords internal
+subset_render_line_geometry = function(lines, index) {
+  if (inherits(lines, "sf")) {
+    return(lines[index, , drop = FALSE])
+  }
+  if (inherits(lines, "sfc")) {
+    return(lines[index])
+  }
+  lines
+}
+
+#' Render line coordinates by width
+#'
+#' @param lines Normalized spatial line input.
+#' @param heightmap Heightmap matrix.
+#' @param extent Scene extent.
+#' @param zscale Effective zscale.
+#' @param color Line color.
+#' @param width Feature widths.
+#' @param force_by_feature Default `FALSE`. Whether to preserve every feature
+#' as a distinct rendered path when widths are equal.
+#'
+#' @return Structured internal path-data list.
+#' @keywords internal
+render_line_coords_by_width = function(
+  lines,
+  heightmap,
+  extent,
+  zscale,
+  color,
+  width,
+  force_by_feature = FALSE
+) {
+  feature_count = if (inherits(lines, "sf")) {
+    nrow(lines)
+  } else if (inherits(lines, "sfc")) {
+    length(lines)
+  } else {
+    NA_integer_
+  }
+  feature_id = if (
+    inherits(lines, "sf") &&
+      "render_line_feature_id" %in% names(lines)
+  ) {
+    as.integer(lines$render_line_feature_id)
+  } else if (is.finite(feature_count)) {
+    seq_len(feature_count)
+  } else {
+    1L
+  }
+  source_feature_id = if (
+    inherits(lines, "sf") &&
+      "render_line_source_feature_id" %in% names(lines)
+  ) {
+    lapply(lines$render_line_source_feature_id, function(value) {
+      sort(unique(as.integer(value)))
+    })
+  } else if (is.finite(feature_count)) {
+    lapply(seq_len(feature_count), as.integer)
+  } else {
+    list(1L)
+  }
+  if (
+    isTRUE(force_by_feature) &&
+      is.finite(feature_count) &&
+      feature_count > 1L &&
+      length(width) == 1L
+  ) {
+    width = rep(width, feature_count)
+  }
+  if (length(width) == 1L) {
+    coords = render_line_coords(
+      lines = lines,
+      heightmap = heightmap,
+      extent = extent,
+      zscale = zscale,
+      color = color,
+      width = width
+    )
+    return(new_render_line_path_data(
+      coords = coords,
+      width = rep(width, length(coords)),
+      feature_id = rep(feature_id[[1L]], length(coords)),
+      source_feature_id = rep(source_feature_id[1L], length(coords))
+    ))
+  }
+
+  coords = list()
+  coord_width = numeric(0)
+  coord_feature_id = integer(0)
+  coord_source_feature_id = list()
+  for (path_index in seq_along(width)) {
+    path = subset_render_line_geometry(lines, path_index)
+    path_coords = render_line_coords(
+      lines = path,
+      heightmap = heightmap,
+      extent = extent,
+      zscale = zscale,
+      color = color,
+      width = width[[path_index]]
+    )
+    if (!length(path_coords)) {
+      next
+    }
+    coords = c(coords, path_coords)
+    coord_width = c(
+      coord_width,
+      rep(width[[path_index]], length(path_coords))
+    )
+    coord_feature_id = c(
+      coord_feature_id,
+      rep(feature_id[[path_index]], length(path_coords))
+    )
+    coord_source_feature_id = c(
+      coord_source_feature_id,
+      rep(source_feature_id[path_index], length(path_coords))
+    )
+  }
+  new_render_line_path_data(
+    coords = coords,
+    width = coord_width,
+    feature_id = coord_feature_id,
+    source_feature_id = coord_source_feature_id
+  )
+}
+
+#' Densify render line coordinates
+#'
+#' @param coords List of scene coordinate matrices.
+#' @param heightmap Heightmap matrix.
+#' @param zscale Effective zscale.
+#' @param offset Centerline offset in elevation units.
+#'
+#' @return List of densified coordinate matrices.
+#' @keywords internal
+densify_render_line_coords = function(coords, heightmap, zscale, offset) {
+  heightmap_scene = heightmap / zscale
+  offset_scene = offset / zscale
+  lapply(coords, function(path_coords) {
+    densify_single_render_line_coord(
+      coords = path_coords,
+      heightmap = heightmap_scene,
+      offset = offset_scene
+    )
+  })
+}
+
+#' Calculate render line segment sample positions
+#'
+#' @param heightmap Heightmap matrix scaled into scene units.
+#' @param segment_start Two-value segment start coordinate.
+#' @param segment_end Two-value segment end coordinate.
+#'
+#' @return Numeric vector of segment interpolation values.
+#' @keywords internal
+calculate_render_line_segment_t = function(
+  heightmap,
+  segment_start,
+  segment_end
+) {
+  calculate_render_line_triangle_boundary_t(
+    heightmap = heightmap,
+    segment_start = segment_start,
+    segment_end = segment_end
+  )
+}
+
+#' Calculate render line terrain triangle boundary positions
+#'
+#' @param heightmap Heightmap matrix scaled into scene units.
+#' @param segment_start Two-value segment start coordinate.
+#' @param segment_end Two-value segment end coordinate.
+#'
+#' @return Numeric vector of segment interpolation values.
+#' @keywords internal
+calculate_render_line_triangle_boundary_t = function(
+  heightmap,
+  segment_start,
+  segment_end
+) {
+  nr = nrow(heightmap)
+  nc = ncol(heightmap)
+  if (nr < 2 || nc < 2) {
+    return(c(0, 1))
+  }
+  start_row_col = render_heightmap_row_col(
+    heightmap,
+    segment_start[[1]],
+    segment_start[[2]],
+    clamp = FALSE
+  )
+  end_row_col = render_heightmap_row_col(
+    heightmap,
+    segment_end[[1]],
+    segment_end[[2]],
+    clamp = FALSE
+  )
+  row0 = start_row_col$row
+  row1 = end_row_col$row
+  col0 = start_row_col$col
+  col1 = end_row_col$col
+  grid_t = unique_render_line_t(c(
+    0,
+    1,
+    calculate_render_line_axis_boundary_t(row0, row1, 1, nr),
+    calculate_render_line_axis_boundary_t(col0, col1, 1, nc)
+  ))
+  diagonal_t = calculate_render_line_diagonal_boundary_t(
+    row0 = row0,
+    row1 = row1,
+    col0 = col0,
+    col1 = col1,
+    grid_t = grid_t,
+    nr = nr,
+    nc = nc
+  )
+  unique_render_line_t(c(grid_t, diagonal_t))
+}
+
+#' Calculate render line axis boundary positions
+#'
+#' @param start Axis start coordinate.
+#' @param end Axis end coordinate.
+#' @param lower Lower axis boundary.
+#' @param upper Upper axis boundary.
+#'
+#' @return Numeric vector of segment interpolation values.
+#' @keywords internal
+calculate_render_line_axis_boundary_t = function(start, end, lower, upper) {
+  delta = end - start
+  eps = sqrt(.Machine$double.eps)
+  if (!is.finite(delta) || abs(delta) <= eps) {
+    return(numeric(0))
+  }
+  boundary_min = max(lower, ceiling(min(start, end)))
+  boundary_max = min(upper, floor(max(start, end)))
+  if (boundary_min > boundary_max) {
+    return(numeric(0))
+  }
+  boundaries = seq(boundary_min, boundary_max)
+  boundaries = boundaries[
+    boundaries > min(start, end) + eps &
+      boundaries < max(start, end) - eps
+  ]
+  (boundaries - start) / delta
+}
+
+#' Calculate render line terrain diagonal boundary positions
+#'
+#' @param row0 Segment start row coordinate.
+#' @param row1 Segment end row coordinate.
+#' @param col0 Segment start column coordinate.
+#' @param col1 Segment end column coordinate.
+#' @param grid_t Segment positions already split at grid boundaries.
+#' @param nr Heightmap row count.
+#' @param nc Heightmap column count.
+#'
+#' @return Numeric vector of segment interpolation values.
+#' @keywords internal
+calculate_render_line_diagonal_boundary_t = function(
+  row0,
+  row1,
+  col0,
+  col1,
+  grid_t,
+  nr,
+  nc
+) {
+  eps = sqrt(.Machine$double.eps)
+  row_delta = row1 - row0
+  col_delta = col1 - col0
+  diagonal_delta = row_delta + col_delta
+  if (!is.finite(diagonal_delta) || abs(diagonal_delta) <= eps) {
+    return(numeric(0))
+  }
+  diagonal_t = numeric(0)
+  for (index in seq_len(length(grid_t) - 1L)) {
+    interval_start = grid_t[[index]]
+    interval_end = grid_t[[index + 1L]]
+    if (interval_end - interval_start <= eps) {
+      next
+    }
+    interval_mid = (interval_start + interval_end) / 2
+    row_mid = row0 + row_delta * interval_mid
+    col_mid = col0 + col_delta * interval_mid
+    if (row_mid < 1 || row_mid > nr || col_mid < 1 || col_mid > nc) {
+      next
+    }
+    row_cell = pmin(pmax(floor(row_mid), 1), nr - 1)
+    col_cell = pmin(pmax(floor(col_mid), 1), nc - 1)
+    target_sum = row_cell + col_cell + 1
+    crossing_t = (target_sum - row0 - col0) / diagonal_delta
+    if (
+      is.finite(crossing_t) &&
+        crossing_t > interval_start + eps &&
+        crossing_t < interval_end - eps
+    ) {
+      diagonal_t = c(diagonal_t, crossing_t)
+    }
+  }
+  diagonal_t
+}
+
+#' Return sorted unique render line segment positions
+#'
+#' @param t_values Segment interpolation values.
+#'
+#' @return Numeric vector of segment interpolation values.
+#' @keywords internal
+unique_render_line_t = function(t_values) {
+  eps = sqrt(.Machine$double.eps)
+  t_values = t_values[
+    is.finite(t_values) &
+      t_values >= -eps &
+      t_values <= 1 + eps
+  ]
+  t_values = pmin(pmax(t_values, 0), 1)
+  sort(unique(round(t_values, 12)))
+}
+
+#' Offset render line coordinates
+#'
+#' @param coords List of scene coordinate matrices.
+#' @param offset Vertical offset in scene units.
+#'
+#' @return List of coordinate matrices.
+#' @keywords internal
+offset_render_line_coords = function(coords, offset) {
+  lapply(coords, function(path_coords) {
+    path_coords = as.matrix(path_coords)
+    if (nrow(path_coords) > 0 && ncol(path_coords) >= 2) {
+      path_coords[, 2] = path_coords[, 2] + offset
+    }
+    path_coords
+  })
+}
+
+#' Densify one render line coordinate matrix
+#'
+#' @param coords Scene coordinate matrix.
+#' @param heightmap Heightmap matrix scaled into scene units.
+#' @param offset Centerline offset in scene units.
+#'
+#' @return Densified coordinate matrix.
+#' @keywords internal
+densify_single_render_line_coord = function(coords, heightmap, offset) {
+  coords = as.matrix(coords)
+  coords = coords[
+    stats::complete.cases(coords[, c(1, 3), drop = FALSE]),
+    ,
+    drop = FALSE
+  ]
+  if (nrow(coords) < 2) {
+    return(coords)
+  }
+  segment_count = nrow(coords) - 1L
+  segment_t_values = vector("list", segment_count)
+  point_counts = integer(segment_count)
+  for (index in seq_len(segment_count)) {
+    segment_t = calculate_render_line_segment_t(
+      heightmap = heightmap,
+      segment_start = coords[index, c(1, 3)],
+      segment_end = coords[index + 1L, c(1, 3)]
+    )
+    if (index > 1L) {
+      segment_t = segment_t[-1L]
+    }
+    segment_t_values[[index]] = segment_t
+    point_counts[[index]] = length(segment_t)
+  }
+  x_vals = numeric(sum(point_counts))
+  z_vals = numeric(sum(point_counts))
+  position = 1L
+  for (index in seq_len(segment_count)) {
+    segment_start = coords[index, c(1, 3)]
+    segment_end = coords[index + 1L, c(1, 3)]
+    segment_t = segment_t_values[[index]]
+    next_position = position + length(segment_t) - 1L
+    fill_indices = seq.int(position, next_position)
+    x_vals[fill_indices] = segment_start[[1]] +
+      (segment_end[[1]] - segment_start[[1]]) * segment_t
+    z_vals[fill_indices] = segment_start[[2]] +
+      (segment_end[[2]] - segment_start[[2]]) * segment_t
+    position = next_position + 1L
+  }
+  y_vals = interpolate_render_heightmap_height(heightmap, x_vals, z_vals)
+  if (any(!is.finite(y_vals))) {
+    y_vals[!is.finite(y_vals)] = min(heightmap, na.rm = TRUE)
+  }
+  cbind(x_vals, y_vals + offset, z_vals)
+}

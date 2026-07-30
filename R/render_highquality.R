@@ -2905,3 +2905,306 @@ is_rayrender_material = function(x) {
 is_empty_raymesh_scene = function(ray_scene) {
   is.null(ray_scene$shapes) || length(ray_scene$shapes) == 0
 }
+
+#' Scale a render heightmap to scene units
+#'
+#' @param heightmap Default `NULL`. Cached heightmap matrix.
+#' @param zscale Effective zscale.
+#'
+#' @return List containing the heightmap in scene units and effective zscale.
+#' @keywords internal
+scale_render_highquality_heightmap = function(
+  heightmap = NULL,
+  zscale = 1
+) {
+  zscale = suppressWarnings(as.numeric(zscale[[1L]]))
+  if (!is.finite(zscale) || zscale <= 0) {
+    zscale = 1
+  }
+  if (is.null(heightmap) || !is.matrix(heightmap)) {
+    return(list(heightmap = NULL, zscale = zscale))
+  }
+  if (abs(zscale - 1) <= sqrt(.Machine$double.eps)) {
+    return(list(heightmap = heightmap, zscale = 1))
+  }
+  list(heightmap = heightmap / zscale, zscale = 1)
+}
+
+#' Normalize matrix rows
+#'
+#' @param values Numeric matrix.
+#'
+#' @return Matrix with unit-length rows.
+#' @keywords internal
+normalize_render_highquality_rows = function(values) {
+  values = as.matrix(values)
+  lengths = sqrt(rowSums(values^2))
+  values / lengths
+}
+
+#' Replace invalid vectors
+#'
+#' @param values Numeric matrix.
+#' @param fallback Fallback vector.
+#'
+#' @return Numeric matrix.
+#' @keywords internal
+replace_invalid_render_highquality_vectors = function(values, fallback) {
+  invalid = !stats::complete.cases(values) |
+    sqrt(rowSums(values^2)) < sqrt(.Machine$double.eps)
+  if (any(invalid)) {
+    values[invalid, ] = matrix(
+      fallback,
+      nrow = sum(invalid),
+      ncol = length(fallback),
+      byrow = TRUE
+    )
+  }
+  values
+}
+
+#' Calculate row-wise cross products
+#'
+#' @param x First matrix.
+#' @param y Second matrix.
+#'
+#' @return Matrix of row-wise cross products.
+#' @keywords internal
+row_cross = function(x, y) {
+  cbind(
+    x[, 2] * y[, 3] - x[, 3] * y[, 2],
+    x[, 3] * y[, 1] - x[, 1] * y[, 3],
+    x[, 1] * y[, 2] - x[, 2] * y[, 1]
+  )
+}
+
+#' Interpolate render path normals
+#'
+#' @param points Path points in rgl scene coordinates.
+#' @param heightmap Default `NULL`. Cached heightmap matrix.
+#' @param zscale Effective zscale.
+#'
+#' @return Matrix of normal vectors.
+#' @keywords internal
+interpolate_render_highquality_normals = function(
+  points,
+  heightmap = NULL,
+  zscale = 1
+) {
+  fallback = matrix(
+    c(0, 1, 0),
+    nrow = nrow(points),
+    ncol = 3,
+    byrow = TRUE
+  )
+  if (is.null(heightmap) || !is.matrix(heightmap)) {
+    return(fallback)
+  }
+  zscale = suppressWarnings(as.numeric(zscale[[1L]]))
+  if (!is.finite(zscale) || zscale <= 0) {
+    zscale = 1
+  }
+  heightmap_scene = if (abs(zscale - 1) <= sqrt(.Machine$double.eps)) {
+    heightmap
+  } else {
+    heightmap / zscale
+  }
+  x = points[, 1]
+  z = points[, 3]
+  dx = (interpolate_render_heightmap_height(heightmap_scene, x + 1, z) -
+    interpolate_render_heightmap_height(heightmap_scene, x - 1, z)) /
+    2
+  dz = (interpolate_render_heightmap_height(heightmap_scene, x, z + 1) -
+    interpolate_render_heightmap_height(heightmap_scene, x, z - 1)) /
+    2
+  normals = cbind(-dx, 1, -dz)
+  normals = normalize_render_highquality_rows(normals)
+  replace_invalid_render_highquality_vectors(normals, fallback = c(0, 1, 0))
+}
+
+#' Calculate render path tangents
+#'
+#' @param points Path points.
+#' @param normals Path normals.
+#'
+#' @return Matrix of tangent vectors.
+#' @keywords internal
+calculate_render_highquality_path_tangents = function(points, normals) {
+  tangents = matrix(0, nrow = nrow(points), ncol = 3)
+  tangents[1L, ] = points[2L, ] - points[1L, ]
+  tangents[nrow(points), ] = points[nrow(points), ] -
+    points[nrow(points) - 1L, ]
+  if (nrow(points) > 2L) {
+    for (index in seq(2L, nrow(points) - 1L)) {
+      tangents[index, ] = points[index + 1L, ] - points[index - 1L, ]
+    }
+  }
+  tangents = tangents - normals * rowSums(tangents * normals)
+  tangents = normalize_render_highquality_rows(tangents)
+  replace_invalid_render_highquality_vectors(tangents, fallback = c(1, 0, 0))
+}
+
+#' Make render path edge centers
+#'
+#' @param points Path center points.
+#' @param side_vectors Unit side vectors.
+#' @param half_width Half path width.
+#' @param heightmap Default `NULL`. Cached heightmap matrix.
+#' @param zscale Effective zscale.
+#'
+#' @return List with left and right edge center matrices.
+#' @keywords internal
+make_render_highquality_path_edge_centers = function(
+  points,
+  side_vectors,
+  half_width,
+  heightmap = NULL,
+  zscale = 1
+) {
+  left_center = points + side_vectors * half_width
+  right_center = points - side_vectors * half_width
+  heightmap_scene = scale_render_highquality_heightmap(
+    heightmap = heightmap,
+    zscale = zscale
+  )$heightmap
+  if (is.null(heightmap_scene) || !is.matrix(heightmap_scene)) {
+    return(list(left = left_center, right = right_center))
+  }
+  center_height = interpolate_render_heightmap_height(
+    heightmap_scene,
+    points[, 1],
+    points[, 3]
+  )
+  center_offset = points[, 2] - center_height
+  left_center[, 2] = interpolate_render_heightmap_height(
+    heightmap_scene,
+    left_center[, 1],
+    left_center[, 3]
+  ) +
+    center_offset
+  right_center[, 2] = interpolate_render_heightmap_height(
+    heightmap_scene,
+    right_center[, 1],
+    right_center[, 3]
+  ) +
+    center_offset
+  list(left = left_center, right = right_center)
+}
+
+#' Densify render path points at terrain triangle edges
+#'
+#' @param points Path center points in rgl scene coordinates.
+#' @param width Path width.
+#' @param heightmap Default `NULL`. Cached heightmap matrix.
+#' @param zscale Effective zscale.
+#'
+#' @return Path center points with additional terrain triangle edge samples.
+#' @keywords internal
+densify_render_highquality_path_points = function(
+  points,
+  width,
+  heightmap = NULL,
+  zscale = 1
+) {
+  points = as.matrix(points)
+  if (nrow(points) < 2L || is.null(heightmap) || !is.matrix(heightmap)) {
+    return(points)
+  }
+  heightmap_scene = scale_render_highquality_heightmap(
+    heightmap = heightmap,
+    zscale = zscale
+  )$heightmap
+  if (is.null(heightmap_scene) || !is.matrix(heightmap_scene)) {
+    return(points)
+  }
+  center_height = interpolate_render_heightmap_height(
+    heightmap_scene,
+    points[, 1],
+    points[, 3]
+  )
+  center_offset = points[, 2] - center_height
+  normals = interpolate_render_highquality_normals(
+    points = points,
+    heightmap = heightmap_scene,
+    zscale = 1
+  )
+  tangents = calculate_render_highquality_path_tangents(
+    points = points,
+    normals = normals
+  )
+  side_vectors = normalize_render_highquality_rows(row_cross(tangents, normals))
+  side_vectors = replace_invalid_render_highquality_vectors(
+    side_vectors,
+    fallback = c(0, 0, 1)
+  )
+  edge_centers = make_render_highquality_path_edge_centers(
+    points = points,
+    side_vectors = side_vectors,
+    half_width = width / 2,
+    heightmap = heightmap_scene,
+    zscale = 1
+  )
+  segment_count = nrow(points) - 1L
+  segment_t_values = vector("list", segment_count)
+  point_counts = integer(segment_count)
+  for (index in seq_len(segment_count)) {
+    segment_t = unique_render_line_t(c(
+      calculate_render_line_triangle_boundary_t(
+        heightmap = heightmap_scene,
+        segment_start = points[index, c(1, 3)],
+        segment_end = points[index + 1L, c(1, 3)]
+      ),
+      calculate_render_line_triangle_boundary_t(
+        heightmap = heightmap_scene,
+        segment_start = edge_centers$left[index, c(1, 3)],
+        segment_end = edge_centers$left[index + 1L, c(1, 3)]
+      ),
+      calculate_render_line_triangle_boundary_t(
+        heightmap = heightmap_scene,
+        segment_start = edge_centers$right[index, c(1, 3)],
+        segment_end = edge_centers$right[index + 1L, c(1, 3)]
+      )
+    ))
+    if (index > 1L) {
+      segment_t = segment_t[-1L]
+    }
+    segment_t_values[[index]] = segment_t
+    point_counts[[index]] = length(segment_t)
+  }
+  x_vals = numeric(sum(point_counts))
+  z_vals = numeric(sum(point_counts))
+  offset_vals = numeric(sum(point_counts))
+  position = 1L
+  for (index in seq_len(segment_count)) {
+    segment_t = segment_t_values[[index]]
+    next_position = position + length(segment_t) - 1L
+    fill_indices = seq.int(position, next_position)
+    x_vals[fill_indices] = points[index, 1] +
+      (points[index + 1L, 1] - points[index, 1]) * segment_t
+    z_vals[fill_indices] = points[index, 3] +
+      (points[index + 1L, 3] - points[index, 3]) * segment_t
+    offset_vals[fill_indices] = center_offset[[index]] +
+      (center_offset[[index + 1L]] - center_offset[[index]]) * segment_t
+    position = next_position + 1L
+  }
+  y_vals = interpolate_render_heightmap_height(heightmap_scene, x_vals, z_vals)
+  cbind(x_vals, y_vals + offset_vals, z_vals)
+}
+
+#' Make render path quad rows
+#'
+#' @param v1 First vertex.
+#' @param v2 Second vertex.
+#' @param v3 Third vertex.
+#' @param v4 Fourth vertex.
+#'
+#' @return Matrix of interleaved quad rows.
+#' @keywords internal
+make_render_highquality_quad_rows = function(v1, v2, v3, v4) {
+  out = matrix(NA_real_, nrow = nrow(v1) * 4L, ncol = ncol(v1))
+  out[seq(1L, nrow(out), by = 4L), ] = v1
+  out[seq(2L, nrow(out), by = 4L), ] = v2
+  out[seq(3L, nrow(out), by = 4L), ] = v3
+  out[seq(4L, nrow(out), by = 4L), ] = v4
+  out
+}

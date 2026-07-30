@@ -215,7 +215,7 @@ render_streams = function(
   width_column_missing = missing(width_column)
   width_column_expr = substitute(width_column)
 
-  if (!is_waterpath_input(streams)) {
+  if (!is_render_line_input(streams)) {
     stop(
       "`streams` must be an sf, sfc, sfg, SpatialLines, or SpatialLinesDataFrame line object.",
       call. = FALSE
@@ -375,25 +375,6 @@ render_streams = function(
   )
 }
 
-#' Is water path input
-#'
-#' @param x Object to test.
-#'
-#' @return Logical value.
-#' @keywords internal
-is_waterpath_input = function(x) {
-  inherits(
-    x,
-    c(
-      "sf",
-      "sfc",
-      "sfg",
-      "SpatialLines",
-      "SpatialLinesDataFrame"
-    )
-  )
-}
-
 #' Render water stream paths
 #'
 #' @param waterpaths Spatial line input.
@@ -427,10 +408,12 @@ render_water_paths = function(
   if (!is.null(waterpath_width_column)) {
     waterpath_merge = FALSE
   }
-  waterpaths = prepare_render_water_path_geometry(
-    waterpaths = waterpaths,
-    waterpath_merge = waterpath_merge,
-    water_polygons = water_polygons
+  waterpaths = prepare_render_line_geometry(
+    lines = waterpaths,
+    merge = waterpath_merge,
+    exclude_polygons = water_polygons,
+    line_argument = "streams",
+    polygon_argument = "water_polygons"
   )
   if (is_empty_scene_sf(waterpaths)) {
     return(invisible(list()))
@@ -440,39 +423,39 @@ render_water_paths = function(
   } else {
     as.numeric(waterpaths[[waterpath_width_column]])
   }
-  path_render = render_water_path_coords_by_width(
-    waterpaths = waterpaths,
+  path_data = render_line_coords_by_width(
+    lines = waterpaths,
     heightmap = heightmap,
     extent = extent,
     zscale = zscale,
-    watercolor = watercolor,
-    waterpath_width = waterpath_width,
+    color = watercolor,
+    width = waterpath_width,
     force_by_feature = TRUE
   )
-  coord_list = path_render$coord_list
-  coord_width = path_render$width
+  coord_list = path_data$coords
+  coord_width = path_data$width
   if (!length(coord_list)) {
     return(invisible(coord_list))
   }
   if (isTRUE(waterpath_densify)) {
-    coord_list = densify_water_path_coords(
-      coord_list = coord_list,
+    coord_list = densify_render_line_coords(
+      coords = coord_list,
       heightmap = heightmap,
       zscale = zscale,
       offset = waterpath_offset
     )
   } else if (!identical(waterpath_offset, 0)) {
-    coord_list = offset_water_path_coords(
-      coord_list = coord_list,
+    coord_list = offset_render_line_coords(
+      coords = coord_list,
       offset = waterpath_offset / zscale
     )
   }
   path_members = data.frame(
     water_path_id = seq_along(coord_list),
-    render_line_feature_id = as.integer(path_render$feature),
+    render_line_feature_id = as.integer(path_data$feature_id),
     stringsAsFactors = FALSE
   )
-  path_members$source_feature_id = I(path_render$source_feature)
+  path_members$source_feature_id = I(path_data$source_feature_id)
   attr(coord_list, "path_members") = path_members
   for (coord_index in seq_along(coord_list)) {
     coord = coord_list[[coord_index]]
@@ -489,293 +472,6 @@ render_water_paths = function(
   invisible(coord_list)
 }
 
-#' Validate water path positive number
-#'
-#' @param value Numeric value.
-#' @param name Argument name.
-#' @param allow_zero Default `FALSE`. Whether zero is allowed.
-#'
-#' @return Numeric value.
-#' @keywords internal
-validate_waterpath_positive_number = function(
-  value,
-  name,
-  allow_zero = FALSE
-) {
-  value = suppressWarnings(as.numeric(value))
-  valid = length(value) == 1 &&
-    is.finite(value) &&
-    if (allow_zero) value >= 0 else value > 0
-  if (!valid) {
-    stop(
-      sprintf(
-        "`%s` must be a single %s number.",
-        name,
-        if (allow_zero) "non-negative" else "positive"
-      ),
-      call. = FALSE
-    )
-  }
-  value
-}
-
-#' Resolve water path width column
-#'
-#' @param width_column Width column value.
-#' @param width_column_expr Width column expression.
-#' @param width_column_missing Whether the width column argument was omitted.
-#'
-#' @return Column name or `NULL`.
-#' @keywords internal
-resolve_waterpath_width_column = function(
-  width_column = NULL,
-  width_column_expr = NULL,
-  width_column_missing = FALSE
-) {
-  if (
-    isTRUE(width_column_missing) ||
-      identical(width_column_expr, quote(NULL))
-  ) {
-    return(NULL)
-  }
-  if (is.character(width_column_expr)) {
-    return(validate_waterpath_width_column_name(width_column_expr))
-  }
-  if (is.name(width_column_expr)) {
-    value = tryCatch(width_column, error = function(e) NULL)
-    if (is.character(value) && length(value) == 1) {
-      return(validate_waterpath_width_column_name(value))
-    }
-    return(validate_waterpath_width_column_name(as.character(
-      width_column_expr
-    )))
-  }
-  validate_waterpath_width_column_name(width_column)
-}
-
-#' Validate water path width column name
-#'
-#' @param width_column Width column name.
-#'
-#' @return Column name.
-#' @keywords internal
-validate_waterpath_width_column_name = function(width_column) {
-  if (
-    !is.character(width_column) ||
-      length(width_column) != 1 ||
-      is.na(width_column) ||
-      !nzchar(width_column)
-  ) {
-    stop("`width_column` must be a single column name.", call. = FALSE)
-  }
-  width_column
-}
-
-#' Resolve water path widths
-#'
-#' @param waterpaths Spatial line input.
-#' @param waterpath_width Stream width.
-#' @param waterpath_width_column Column name containing stream widths.
-#'
-#' @return Numeric stream widths.
-#' @keywords internal
-resolve_waterpath_widths = function(
-  waterpaths,
-  waterpath_width,
-  waterpath_width_column = NULL
-) {
-  if (is.null(waterpath_width_column)) {
-    return(validate_waterpath_positive_number(
-      waterpath_width,
-      "width"
-    ))
-  }
-  if (!inherits(waterpaths, "sf")) {
-    stop(
-      "`width_column` can only be used with `sf` or `SpatialLinesDataFrame` stream inputs.",
-      call. = FALSE
-    )
-  }
-  if (!(waterpath_width_column %in% names(waterpaths))) {
-    stop(
-      sprintf(
-        "`width_column` must name a column in `streams`: %s",
-        waterpath_width_column
-      ),
-      call. = FALSE
-    )
-  }
-  widths = suppressWarnings(as.numeric(waterpaths[[waterpath_width_column]]))
-  valid = length(widths) == nrow(waterpaths) &&
-    all(is.finite(widths)) &&
-    all(widths > 0)
-  if (!valid) {
-    stop(
-      sprintf(
-        "`width_column` column `%s` must contain positive finite numeric values.",
-        waterpath_width_column
-      ),
-      call. = FALSE
-    )
-  }
-  widths
-}
-
-#' Render water path coordinates by width
-#'
-#' @param waterpaths Spatial line input.
-#' @param heightmap Heightmap matrix.
-#' @param extent Scene extent.
-#' @param zscale Effective zscale.
-#' @param watercolor Water color.
-#' @param waterpath_width Stream widths.
-#' @param force_by_feature Default `FALSE`. Whether to render each feature
-#' separately even when all widths are equal.
-#'
-#' @return List containing coordinates, matching widths, and source feature
-#' indices.
-#' @keywords internal
-render_water_path_coords_by_width = function(
-  waterpaths,
-  heightmap,
-  extent,
-  zscale,
-  watercolor,
-  waterpath_width,
-  force_by_feature = FALSE
-) {
-  feature_count = if (inherits(waterpaths, "sf")) {
-    nrow(waterpaths)
-  } else if (inherits(waterpaths, "sfc")) {
-    length(waterpaths)
-  } else {
-    NA_integer_
-  }
-  source_feature_id = if (
-    inherits(waterpaths, "sf") &&
-      "render_line_source_feature_id" %in% names(waterpaths)
-  ) {
-    lapply(waterpaths$render_line_source_feature_id, function(value) {
-      sort(unique(as.integer(value)))
-    })
-  } else if (is.finite(feature_count)) {
-    lapply(seq_len(feature_count), as.integer)
-  } else {
-    list(1L)
-  }
-  if (
-    isTRUE(force_by_feature) &&
-      is.finite(feature_count) &&
-      feature_count > 1L &&
-      length(waterpath_width) == 1L
-  ) {
-    waterpath_width = rep(waterpath_width, feature_count)
-  }
-  if (length(waterpath_width) == 1) {
-    coord_list = render_water_path_coords(
-      waterpaths = waterpaths,
-      heightmap = heightmap,
-      extent = extent,
-      zscale = zscale,
-      watercolor = watercolor,
-      waterpath_width = waterpath_width
-    )
-    return(list(
-      coord_list = coord_list,
-      width = rep(waterpath_width, length(coord_list)),
-      feature = rep(1L, length(coord_list)),
-      source_feature = rep(source_feature_id[1L], length(coord_list))
-    ))
-  }
-  coord_list = list()
-  coord_width = numeric(0)
-  coord_feature = integer(0)
-  coord_source_feature = list()
-  for (path_index in seq_along(waterpath_width)) {
-    path = subset_waterpath_geometry(waterpaths, path_index)
-    path_coords = render_water_path_coords(
-      waterpaths = path,
-      heightmap = heightmap,
-      extent = extent,
-      zscale = zscale,
-      watercolor = watercolor,
-      waterpath_width = waterpath_width[[path_index]]
-    )
-    if (!length(path_coords)) {
-      next
-    }
-    coord_list = c(coord_list, path_coords)
-    coord_width = c(
-      coord_width,
-      rep(waterpath_width[[path_index]], length(path_coords))
-    )
-    coord_feature = c(
-      coord_feature,
-      rep(path_index, length(path_coords))
-    )
-    coord_source_feature = c(
-      coord_source_feature,
-      rep(source_feature_id[path_index], length(path_coords))
-    )
-  }
-  list(
-    coord_list = coord_list,
-    width = coord_width,
-    feature = coord_feature,
-    source_feature = coord_source_feature
-  )
-}
-
-#' Render water path coordinates
-#'
-#' @param waterpaths Spatial line input.
-#' @param heightmap Heightmap matrix.
-#' @param extent Scene extent.
-#' @param zscale Effective zscale.
-#' @param watercolor Water color.
-#' @param waterpath_width Stream width.
-#'
-#' @return List of coordinate matrices.
-#' @keywords internal
-render_water_path_coords = function(
-  waterpaths,
-  heightmap,
-  extent,
-  zscale,
-  watercolor,
-  waterpath_width
-) {
-  render_path(
-    y = waterpaths,
-    extent = extent,
-    zscale = zscale,
-    vertical_exaggeration = 1,
-    heightmap = heightmap,
-    offset = 0,
-    linewidth = waterpath_width,
-    color = watercolor,
-    return_coords = TRUE,
-    tag = "water_path"
-  )
-}
-
-#' Subset water path geometry
-#'
-#' @param waterpaths Spatial line input.
-#' @param index Feature index.
-#'
-#' @return Spatial line input subset.
-#' @keywords internal
-subset_waterpath_geometry = function(waterpaths, index) {
-  if (inherits(waterpaths, "sf")) {
-    return(waterpaths[index, , drop = FALSE])
-  }
-  if (inherits(waterpaths, "sfc")) {
-    return(waterpaths[index])
-  }
-  waterpaths
-}
-
 #' Resolve water path offset
 #'
 #' @param value Default `NULL`. Requested offset in elevation units.
@@ -785,7 +481,7 @@ subset_waterpath_geometry = function(waterpaths, index) {
 #' @keywords internal
 resolve_waterpath_offset = function(value = NULL, name = "offset") {
   if (!is.null(value)) {
-    return(validate_waterpath_positive_number(
+    return(resolve_render_positive_number(
       value,
       name,
       allow_zero = TRUE
@@ -800,472 +496,6 @@ resolve_waterpath_offset = function(value = NULL, name = "offset") {
 #' @keywords internal
 waterpath_profile_height_ratio = function() {
   0.2
-}
-
-#' Validate water path logical value
-#'
-#' @param value Logical-like value.
-#' @param name Argument name.
-#'
-#' @return Logical value.
-#' @keywords internal
-validate_waterpath_logical = function(value, name) {
-  value = suppressWarnings(as.logical(value))
-  if (!length(value) || is.na(value[1])) {
-    stop(sprintf("`%s` must be TRUE or FALSE.", name), call. = FALSE)
-  }
-  value[1]
-}
-
-#' Prepare render water path geometry
-#'
-#' @param waterpaths Spatial line input.
-#' @param waterpath_merge Whether to merge connected linework.
-#' @param water_polygons Default `NULL`. Polygon data to remove from the line
-#' input before merging.
-#'
-#' @return Spatial line input.
-#' @keywords internal
-prepare_render_water_path_geometry = function(
-  waterpaths,
-  waterpath_merge = TRUE,
-  water_polygons = NULL
-) {
-  if (
-    !inherits(
-      waterpaths,
-      c("sf", "sfc", "sfg", "SpatialLines", "SpatialLinesDataFrame")
-    )
-  ) {
-    return(waterpaths)
-  }
-  if (inherits(waterpaths, c("SpatialLines", "SpatialLinesDataFrame"))) {
-    waterpaths = sf::st_as_sf(waterpaths)
-  }
-  if (inherits(waterpaths, "sfg")) {
-    waterpaths = sf::st_sfc(waterpaths)
-  }
-  if (inherits(waterpaths, "sfc")) {
-    waterpaths = sf::st_sf(
-      render_line_source_feature_id = I(lapply(
-        seq_along(waterpaths),
-        as.integer
-      )),
-      geometry = waterpaths
-    )
-  } else if (inherits(waterpaths, "sf")) {
-    waterpaths$render_line_source_feature_id = I(lapply(
-      seq_len(nrow(waterpaths)),
-      as.integer
-    ))
-  }
-  waterpaths = coerce_render_path_line_geometry(waterpaths)
-  if (!is.null(water_polygons) && !is_empty_scene_sf(waterpaths)) {
-    if (
-      !inherits(
-        water_polygons,
-        c(
-          "sf",
-          "sfc",
-          "sfg",
-          "SpatVector",
-          "SpatialPolygons",
-          "SpatialPolygonsDataFrame"
-        )
-      )
-    ) {
-      stop(
-        paste0(
-          "`water_polygons` must be an sf, sfc, sfg, SpatVector, ",
-          "SpatialPolygons, or SpatialPolygonsDataFrame polygon object."
-        ),
-        call. = FALSE
-      )
-    }
-    water_geometry = if (inherits(water_polygons, "sfg")) {
-      sf::st_sfc(water_polygons)
-    } else if (inherits(water_polygons, "sfc")) {
-      water_polygons
-    } else {
-      sf::st_geometry(sf::st_as_sf(water_polygons))
-    }
-    if (
-      length(water_geometry) > 0 &&
-        !all(sf::st_is_empty(water_geometry))
-    ) {
-      water_geometry = sf::st_make_valid(water_geometry)
-      water_types = as.character(sf::st_geometry_type(
-        water_geometry,
-        by_geometry = TRUE
-      ))
-      if (
-        !all(
-          water_types %in%
-            c(
-              "POLYGON",
-              "MULTIPOLYGON",
-              "GEOMETRYCOLLECTION"
-            )
-        )
-      ) {
-        stop(
-          "`water_polygons` must contain only polygon or multipolygon geometries.",
-          call. = FALSE
-        )
-      }
-      water_geometry = suppressWarnings(
-        sf::st_collection_extract(water_geometry, "POLYGON")
-      )
-      water_geometry = water_geometry[!sf::st_is_empty(water_geometry)]
-      if (!length(water_geometry)) {
-        stop(
-          "`water_polygons` does not contain any non-empty polygon geometries.",
-          call. = FALSE
-        )
-      }
-
-      stream_crs = sf::st_crs(waterpaths)
-      water_crs = sf::st_crs(water_geometry)
-      stream_has_crs = !is.na(stream_crs)
-      water_has_crs = !is.na(water_crs)
-      if (xor(stream_has_crs, water_has_crs)) {
-        stop(
-          paste0(
-            "`streams` and `water_polygons` must both have a CRS or both ",
-            "be CRS-less."
-          ),
-          call. = FALSE
-        )
-      }
-      if (
-        stream_has_crs &&
-          water_has_crs &&
-          !scene_crs_equal(stream_crs, water_crs)
-      ) {
-        water_geometry = sf::st_transform(water_geometry, stream_crs)
-      }
-      water_union = suppressWarnings(sf::st_union(water_geometry))
-      waterpaths = tryCatch(
-        suppressWarnings(sf::st_difference(waterpaths, water_union)),
-        error = function(e) {
-          stop(
-            paste0(
-              "Could not remove `water_polygons` from `streams`: ",
-              conditionMessage(e)
-            ),
-            call. = FALSE
-          )
-        }
-      )
-      waterpaths = coerce_render_path_line_geometry(waterpaths)
-    }
-  }
-  if (!isTRUE(waterpath_merge) || is_empty_scene_sf(waterpaths)) {
-    return(waterpaths)
-  }
-  geometry = sf::st_geometry(waterpaths)
-  source_feature_id = waterpaths$render_line_source_feature_id
-  merged_geometry = tryCatch(
-    suppressWarnings(sf::st_line_merge(sf::st_union(geometry))),
-    error = function(e) geometry
-  )
-  merged_geometry = coerce_render_path_line_geometry(merged_geometry)
-  if (is_empty_scene_sf(merged_geometry)) {
-    return(sf::st_sf(
-      render_line_source_feature_id = I(list()),
-      geometry = merged_geometry
-    ))
-  }
-  source_overlap = sf::st_relate(
-    merged_geometry,
-    geometry,
-    pattern = "1********"
-  )
-  merged_source_feature_id = lapply(source_overlap, function(source_row) {
-    sort(unique(as.integer(unlist(
-      source_feature_id[source_row],
-      use.names = FALSE
-    ))))
-  })
-  sf::st_sf(
-    render_line_source_feature_id = I(merged_source_feature_id),
-    geometry = merged_geometry
-  )
-}
-
-#' Densify water path coordinates
-#'
-#' @param coord_list List of scene coordinate matrices.
-#' @param heightmap Heightmap matrix.
-#' @param zscale Effective zscale.
-#' @param offset Centerline offset in elevation units.
-#'
-#' @return List of densified coordinate matrices.
-#' @keywords internal
-densify_water_path_coords = function(
-  coord_list,
-  heightmap,
-  zscale,
-  offset
-) {
-  heightmap_scene = heightmap / zscale
-  offset_scene = offset / zscale
-  lapply(coord_list, function(coords) {
-    densify_single_water_path_coord(
-      coords = coords,
-      heightmap = heightmap_scene,
-      offset = offset_scene
-    )
-  })
-}
-
-#' Calculate water path segment sample positions
-#'
-#' @param heightmap Heightmap matrix scaled into scene units.
-#' @param segment_start Two-value segment start coordinate.
-#' @param segment_end Two-value segment end coordinate.
-#'
-#' @return Numeric vector of segment interpolation values.
-#' @keywords internal
-calculate_water_path_segment_t = function(
-  heightmap,
-  segment_start,
-  segment_end
-) {
-  calculate_water_path_triangle_boundary_t(
-    heightmap = heightmap,
-    segment_start = segment_start,
-    segment_end = segment_end
-  )
-}
-
-#' Calculate water path terrain triangle boundary positions
-#'
-#' @param heightmap Heightmap matrix scaled into scene units.
-#' @param segment_start Two-value segment start coordinate.
-#' @param segment_end Two-value segment end coordinate.
-#'
-#' @return Numeric vector of segment interpolation values.
-#' @keywords internal
-calculate_water_path_triangle_boundary_t = function(
-  heightmap,
-  segment_start,
-  segment_end
-) {
-  nr = nrow(heightmap)
-  nc = ncol(heightmap)
-  if (nr < 2 || nc < 2) {
-    return(c(0, 1))
-  }
-  start_row_col = spatial_water_row_col(
-    heightmap,
-    segment_start[[1]],
-    segment_start[[2]],
-    clamp = FALSE
-  )
-  end_row_col = spatial_water_row_col(
-    heightmap,
-    segment_end[[1]],
-    segment_end[[2]],
-    clamp = FALSE
-  )
-  row0 = start_row_col$row
-  row1 = end_row_col$row
-  col0 = start_row_col$col
-  col1 = end_row_col$col
-  grid_t = unique_water_path_t(c(
-    0,
-    1,
-    calculate_water_path_axis_boundary_t(row0, row1, 1, nr),
-    calculate_water_path_axis_boundary_t(col0, col1, 1, nc)
-  ))
-  diagonal_t = calculate_water_path_diagonal_boundary_t(
-    row0 = row0,
-    row1 = row1,
-    col0 = col0,
-    col1 = col1,
-    grid_t = grid_t,
-    nr = nr,
-    nc = nc
-  )
-  unique_water_path_t(c(grid_t, diagonal_t))
-}
-
-#' Calculate water path axis boundary positions
-#'
-#' @param start Axis start coordinate.
-#' @param end Axis end coordinate.
-#' @param lower Lower axis boundary.
-#' @param upper Upper axis boundary.
-#'
-#' @return Numeric vector of segment interpolation values.
-#' @keywords internal
-calculate_water_path_axis_boundary_t = function(start, end, lower, upper) {
-  delta = end - start
-  eps = sqrt(.Machine$double.eps)
-  if (!is.finite(delta) || abs(delta) <= eps) {
-    return(numeric(0))
-  }
-  boundary_min = max(lower, ceiling(min(start, end)))
-  boundary_max = min(upper, floor(max(start, end)))
-  if (boundary_min > boundary_max) {
-    return(numeric(0))
-  }
-  boundaries = seq(boundary_min, boundary_max)
-  boundaries = boundaries[
-    boundaries > min(start, end) + eps &
-      boundaries < max(start, end) - eps
-  ]
-  (boundaries - start) / delta
-}
-
-#' Calculate water path terrain diagonal boundary positions
-#'
-#' @param row0 Segment start row coordinate.
-#' @param row1 Segment end row coordinate.
-#' @param col0 Segment start column coordinate.
-#' @param col1 Segment end column coordinate.
-#' @param grid_t Segment positions already split at grid boundaries.
-#' @param nr Heightmap row count.
-#' @param nc Heightmap column count.
-#'
-#' @return Numeric vector of segment interpolation values.
-#' @keywords internal
-calculate_water_path_diagonal_boundary_t = function(
-  row0,
-  row1,
-  col0,
-  col1,
-  grid_t,
-  nr,
-  nc
-) {
-  eps = sqrt(.Machine$double.eps)
-  row_delta = row1 - row0
-  col_delta = col1 - col0
-  diagonal_delta = row_delta + col_delta
-  if (!is.finite(diagonal_delta) || abs(diagonal_delta) <= eps) {
-    return(numeric(0))
-  }
-  diagonal_t = numeric(0)
-  for (index in seq_len(length(grid_t) - 1L)) {
-    interval_start = grid_t[[index]]
-    interval_end = grid_t[[index + 1L]]
-    if (interval_end - interval_start <= eps) {
-      next
-    }
-    interval_mid = (interval_start + interval_end) / 2
-    row_mid = row0 + row_delta * interval_mid
-    col_mid = col0 + col_delta * interval_mid
-    if (row_mid < 1 || row_mid > nr || col_mid < 1 || col_mid > nc) {
-      next
-    }
-    row_cell = pmin(pmax(floor(row_mid), 1), nr - 1)
-    col_cell = pmin(pmax(floor(col_mid), 1), nc - 1)
-    target_sum = row_cell + col_cell + 1
-    crossing_t = (target_sum - row0 - col0) / diagonal_delta
-    if (
-      is.finite(crossing_t) &&
-        crossing_t > interval_start + eps &&
-        crossing_t < interval_end - eps
-    ) {
-      diagonal_t = c(diagonal_t, crossing_t)
-    }
-  }
-  diagonal_t
-}
-
-#' Return sorted unique water path segment positions
-#'
-#' @param t_values Segment interpolation values.
-#'
-#' @return Numeric vector of segment interpolation values.
-#' @keywords internal
-unique_water_path_t = function(t_values) {
-  eps = sqrt(.Machine$double.eps)
-  t_values = t_values[
-    is.finite(t_values) &
-      t_values >= -eps &
-      t_values <= 1 + eps
-  ]
-  t_values = pmin(pmax(t_values, 0), 1)
-  sort(unique(round(t_values, 12)))
-}
-
-#' Offset water path coordinates
-#'
-#' @param coord_list List of scene coordinate matrices.
-#' @param offset Vertical offset in scene units.
-#'
-#' @return List of coordinate matrices.
-#' @keywords internal
-offset_water_path_coords = function(coord_list, offset) {
-  lapply(coord_list, function(coords) {
-    coords = as.matrix(coords)
-    if (nrow(coords) > 0 && ncol(coords) >= 2) {
-      coords[, 2] = coords[, 2] + offset
-    }
-    coords
-  })
-}
-
-#' Densify one water path coordinate matrix
-#'
-#' @param coords Scene coordinate matrix.
-#' @param heightmap Heightmap matrix scaled into scene units.
-#' @param offset Centerline offset in scene units.
-#'
-#' @return Densified coordinate matrix.
-#' @keywords internal
-densify_single_water_path_coord = function(
-  coords,
-  heightmap,
-  offset
-) {
-  coords = as.matrix(coords)
-  coords = coords[
-    stats::complete.cases(coords[, c(1, 3), drop = FALSE]),
-    ,
-    drop = FALSE
-  ]
-  if (nrow(coords) < 2) {
-    return(coords)
-  }
-  segment_count = nrow(coords) - 1L
-  segment_t_values = vector("list", segment_count)
-  point_counts = integer(segment_count)
-  for (index in seq_len(segment_count)) {
-    segment_t = calculate_water_path_segment_t(
-      heightmap = heightmap,
-      segment_start = coords[index, c(1, 3)],
-      segment_end = coords[index + 1L, c(1, 3)]
-    )
-    if (index > 1L) {
-      segment_t = segment_t[-1L]
-    }
-    segment_t_values[[index]] = segment_t
-    point_counts[[index]] = length(segment_t)
-  }
-  x_vals = numeric(sum(point_counts))
-  z_vals = numeric(sum(point_counts))
-  position = 1L
-  for (index in seq_len(segment_count)) {
-    segment_start = coords[index, c(1, 3)]
-    segment_end = coords[index + 1L, c(1, 3)]
-    segment_t = segment_t_values[[index]]
-    next_position = position + length(segment_t) - 1L
-    fill_indices = seq.int(position, next_position)
-    x_vals[fill_indices] = segment_start[[1]] +
-      (segment_end[[1]] - segment_start[[1]]) * segment_t
-    z_vals[fill_indices] = segment_start[[2]] +
-      (segment_end[[2]] - segment_start[[2]]) * segment_t
-    position = next_position + 1L
-  }
-  y_vals = interpolate_spatial_water_height(heightmap, x_vals, z_vals)
-  if (any(!is.finite(y_vals))) {
-    y_vals[!is.finite(y_vals)] = min(heightmap, na.rm = TRUE)
-  }
-  cbind(x_vals, y_vals + offset, z_vals)
 }
 
 #' Collapse duplicated path vertices
@@ -1355,34 +585,10 @@ resolve_render_highquality_water_path_surface = function() {
     resolve_render_highquality_camera_zscale(),
     error = function(e) 1
   )
-  scale_render_highquality_water_path_heightmap(
+  scale_render_highquality_heightmap(
     heightmap = heightmap,
     zscale = zscale
   )
-}
-
-#' Scale water path heightmap to scene units
-#'
-#' @param heightmap Default `NULL`. Cached heightmap matrix.
-#' @param zscale Effective zscale.
-#'
-#' @return List containing heightmap in scene units and zscale.
-#' @keywords internal
-scale_render_highquality_water_path_heightmap = function(
-  heightmap = NULL,
-  zscale = 1
-) {
-  zscale = suppressWarnings(as.numeric(zscale[1]))
-  if (!is.finite(zscale) || zscale <= 0) {
-    zscale = 1
-  }
-  if (is.null(heightmap) || !is.matrix(heightmap)) {
-    return(list(heightmap = NULL, zscale = zscale))
-  }
-  if (abs(zscale - 1) <= sqrt(.Machine$double.eps)) {
-    return(list(heightmap = heightmap, zscale = 1))
-  }
-  list(heightmap = heightmap / zscale, zscale = 1)
 }
 
 #' Make render_highquality water path meshes
@@ -1626,7 +832,7 @@ make_render_highquality_joined_water_path_mesh = function(
   # Top, bottom, and wall vertices are intentionally separate. A shared vertex
   # can carry only one shading normal, which would either facet the top surface
   # or smooth the hard stream edge into the walls.
-  top_normals = interpolate_render_highquality_water_path_normals(
+  top_normals = interpolate_render_highquality_normals(
     points = top_vertices,
     heightmap = group$heightmap,
     zscale = 1
@@ -1743,7 +949,7 @@ prepare_render_highquality_water_path_line_group = function(tasks) {
   if (!is.finite(width) || width <= 0) {
     return(NULL)
   }
-  heightmap_scene = scale_render_highquality_water_path_heightmap(
+  heightmap_scene = scale_render_highquality_heightmap(
     heightmap = prototype$heightmap,
     zscale = prototype$zscale
   )$heightmap
@@ -1762,7 +968,7 @@ prepare_render_highquality_water_path_line_group = function(tasks) {
     for (points in point_groups) {
       finite_xyz = stats::complete.cases(points[, 1:3, drop = FALSE])
       if (any(finite_xyz)) {
-        terrain_y = interpolate_spatial_water_height(
+        terrain_y = interpolate_render_heightmap_height(
           heightmap_scene,
           points[finite_xyz, 1],
           points[finite_xyz, 3]
@@ -2465,7 +1671,7 @@ sample_render_highquality_water_path_surface = function(
   tri_id = NULL
 ) {
   points_xz = as.matrix(points_xz)
-  heights = interpolate_spatial_water_height(
+  heights = interpolate_render_heightmap_height(
     heightmap,
     points_xz[, 1],
     points_xz[, 2]
@@ -2511,7 +1717,7 @@ calculate_render_highquality_water_path_triangle_height = function(
   points_xz,
   terrain_triangles
 ) {
-  row_col = spatial_water_row_col(
+  row_col = render_heightmap_row_col(
     heightmap,
     points_xz[, 1],
     points_xz[, 2],
@@ -2673,153 +1879,6 @@ render_highquality_water_path_edge_side = function(
     (points[, 2] - edge_start[[2]]) * (edge_end[[1]] - edge_start[[1]])
 }
 
-#' Make water path edge centers
-#'
-#' @param points Path center points.
-#' @param side_vectors Unit side vectors.
-#' @param half_width Half stream width.
-#' @param heightmap Default `NULL`. Cached heightmap matrix.
-#' @param zscale Effective zscale.
-#'
-#' @return List with left and right edge center matrices.
-#' @keywords internal
-make_render_highquality_water_path_edge_centers = function(
-  points,
-  side_vectors,
-  half_width,
-  heightmap = NULL,
-  zscale = 1
-) {
-  left_center = points + side_vectors * half_width
-  right_center = points - side_vectors * half_width
-  heightmap_scene = scale_render_highquality_water_path_heightmap(
-    heightmap = heightmap,
-    zscale = zscale
-  )$heightmap
-  if (is.null(heightmap_scene) || !is.matrix(heightmap_scene)) {
-    return(list(left = left_center, right = right_center))
-  }
-  center_height = interpolate_spatial_water_height(
-    heightmap_scene,
-    points[, 1],
-    points[, 3]
-  )
-  center_offset = points[, 2] - center_height
-  left_center[, 2] = interpolate_spatial_water_height(
-    heightmap_scene,
-    left_center[, 1],
-    left_center[, 3]
-  ) +
-    center_offset
-  right_center[, 2] = interpolate_spatial_water_height(
-    heightmap_scene,
-    right_center[, 1],
-    right_center[, 3]
-  ) +
-    center_offset
-  list(left = left_center, right = right_center)
-}
-
-#' Densify render_highquality water path points at terrain triangle edges
-#'
-#' @param points Path center points in rgl scene coordinates.
-#' @param width Stream width.
-#' @param heightmap Default `NULL`. Cached heightmap matrix.
-#' @param zscale Effective zscale.
-#'
-#' @return Path center points with additional terrain triangle edge samples.
-#' @keywords internal
-densify_render_highquality_water_path_points = function(
-  points,
-  width,
-  heightmap = NULL,
-  zscale = 1
-) {
-  points = as.matrix(points)
-  if (nrow(points) < 2 || is.null(heightmap) || !is.matrix(heightmap)) {
-    return(points)
-  }
-  heightmap_scene = scale_render_highquality_water_path_heightmap(
-    heightmap = heightmap,
-    zscale = zscale
-  )$heightmap
-  if (is.null(heightmap_scene) || !is.matrix(heightmap_scene)) {
-    return(points)
-  }
-  center_height = interpolate_spatial_water_height(
-    heightmap_scene,
-    points[, 1],
-    points[, 3]
-  )
-  center_offset = points[, 2] - center_height
-  normals = interpolate_render_highquality_water_path_normals(
-    points = points,
-    heightmap = heightmap_scene,
-    zscale = 1
-  )
-  tangents = calculate_render_highquality_water_path_tangents(
-    points = points,
-    normals = normals
-  )
-  side_vectors = normalize_render_highquality_rows(row_cross(tangents, normals))
-  side_vectors = replace_invalid_render_highquality_vectors(
-    side_vectors,
-    fallback = c(0, 0, 1)
-  )
-  edge_centers = make_render_highquality_water_path_edge_centers(
-    points = points,
-    side_vectors = side_vectors,
-    half_width = width / 2,
-    heightmap = heightmap_scene,
-    zscale = 1
-  )
-  segment_count = nrow(points) - 1L
-  segment_t_values = vector("list", segment_count)
-  point_counts = integer(segment_count)
-  for (index in seq_len(segment_count)) {
-    segment_t = unique_water_path_t(c(
-      calculate_water_path_triangle_boundary_t(
-        heightmap = heightmap_scene,
-        segment_start = points[index, c(1, 3)],
-        segment_end = points[index + 1L, c(1, 3)]
-      ),
-      calculate_water_path_triangle_boundary_t(
-        heightmap = heightmap_scene,
-        segment_start = edge_centers$left[index, c(1, 3)],
-        segment_end = edge_centers$left[index + 1L, c(1, 3)]
-      ),
-      calculate_water_path_triangle_boundary_t(
-        heightmap = heightmap_scene,
-        segment_start = edge_centers$right[index, c(1, 3)],
-        segment_end = edge_centers$right[index + 1L, c(1, 3)]
-      )
-    ))
-    if (index > 1L) {
-      segment_t = segment_t[-1L]
-    }
-    segment_t_values[[index]] = segment_t
-    point_counts[[index]] = length(segment_t)
-  }
-  x_vals = numeric(sum(point_counts))
-  z_vals = numeric(sum(point_counts))
-  offset_vals = numeric(sum(point_counts))
-  position = 1L
-  for (index in seq_len(segment_count)) {
-    segment_t = segment_t_values[[index]]
-    next_position = position + length(segment_t) - 1L
-    fill_indices = seq.int(position, next_position)
-    x_vals[fill_indices] = points[index, 1] +
-      (points[index + 1L, 1] - points[index, 1]) * segment_t
-    z_vals[fill_indices] = points[index, 3] +
-      (points[index + 1L, 3] - points[index, 3]) * segment_t
-    offset_vals[fill_indices] = center_offset[[index]] +
-      (center_offset[[index + 1L]] - center_offset[[index]]) * segment_t
-    position = next_position + 1L
-  }
-  y_vals = interpolate_spatial_water_height(heightmap_scene, x_vals, z_vals)
-  cbind(x_vals, y_vals + offset_vals, z_vals)
-}
-
 #' Make render_highquality water path mesh
 #'
 #' @param points Path points in rgl scene coordinates.
@@ -2857,7 +1916,7 @@ make_render_highquality_water_path_mesh = function(
     return(NULL)
   }
   if (is.null(segment_end)) {
-    points = densify_render_highquality_water_path_points(
+    points = densify_render_highquality_path_points(
       points = points,
       width = width,
       heightmap = heightmap,
@@ -2897,12 +1956,12 @@ make_render_highquality_water_path_mesh = function(
   height_ratio = diff(range(make_render_highquality_water_path_polygon()[, 2]))
   half_width = width / 2
   half_thickness = width * height_ratio / 2
-  normals = interpolate_render_highquality_water_path_normals(
+  normals = interpolate_render_highquality_normals(
     points = points,
     heightmap = heightmap,
     zscale = zscale
   )
-  tangents = calculate_render_highquality_water_path_tangents(
+  tangents = calculate_render_highquality_path_tangents(
     points = points,
     normals = normals
   )
@@ -2912,7 +1971,7 @@ make_render_highquality_water_path_mesh = function(
     fallback = c(0, 0, 1)
   )
 
-  edge_centers = make_render_highquality_water_path_edge_centers(
+  edge_centers = make_render_highquality_path_edge_centers(
     points = points,
     side_vectors = side_vectors,
     half_width = half_width,
@@ -2921,12 +1980,12 @@ make_render_highquality_water_path_mesh = function(
   )
   left_center = edge_centers$left
   right_center = edge_centers$right
-  left_normals = interpolate_render_highquality_water_path_normals(
+  left_normals = interpolate_render_highquality_normals(
     points = left_center,
     heightmap = heightmap,
     zscale = zscale
   )
-  right_normals = interpolate_render_highquality_water_path_normals(
+  right_normals = interpolate_render_highquality_normals(
     points = right_center,
     heightmap = heightmap,
     zscale = zscale
@@ -2940,25 +1999,25 @@ make_render_highquality_water_path_mesh = function(
   segment_indices = seq.int(segment_start, segment_end)
   next_indices = segment_indices + 1L
   vertices = rbind(
-    make_render_highquality_water_path_quad_rows(
+    make_render_highquality_quad_rows(
       left_top[segment_indices, , drop = FALSE],
       left_top[next_indices, , drop = FALSE],
       right_top[next_indices, , drop = FALSE],
       right_top[segment_indices, , drop = FALSE]
     ),
-    make_render_highquality_water_path_quad_rows(
+    make_render_highquality_quad_rows(
       left_bottom[segment_indices, , drop = FALSE],
       right_bottom[segment_indices, , drop = FALSE],
       right_bottom[next_indices, , drop = FALSE],
       left_bottom[next_indices, , drop = FALSE]
     ),
-    make_render_highquality_water_path_quad_rows(
+    make_render_highquality_quad_rows(
       left_bottom[segment_indices, , drop = FALSE],
       left_bottom[next_indices, , drop = FALSE],
       left_top[next_indices, , drop = FALSE],
       left_top[segment_indices, , drop = FALSE]
     ),
-    make_render_highquality_water_path_quad_rows(
+    make_render_highquality_quad_rows(
       right_bottom[segment_indices, , drop = FALSE],
       right_top[segment_indices, , drop = FALSE],
       right_top[next_indices, , drop = FALSE],
@@ -2966,25 +2025,25 @@ make_render_highquality_water_path_mesh = function(
     )
   )
   vertex_normals = rbind(
-    make_render_highquality_water_path_quad_rows(
+    make_render_highquality_quad_rows(
       left_normals[segment_indices, , drop = FALSE],
       left_normals[next_indices, , drop = FALSE],
       right_normals[next_indices, , drop = FALSE],
       right_normals[segment_indices, , drop = FALSE]
     ),
-    make_render_highquality_water_path_quad_rows(
+    make_render_highquality_quad_rows(
       -left_normals[segment_indices, , drop = FALSE],
       -right_normals[segment_indices, , drop = FALSE],
       -right_normals[next_indices, , drop = FALSE],
       -left_normals[next_indices, , drop = FALSE]
     ),
-    make_render_highquality_water_path_quad_rows(
+    make_render_highquality_quad_rows(
       side_vectors[segment_indices, , drop = FALSE],
       side_vectors[next_indices, , drop = FALSE],
       side_vectors[next_indices, , drop = FALSE],
       side_vectors[segment_indices, , drop = FALSE]
     ),
-    make_render_highquality_water_path_quad_rows(
+    make_render_highquality_quad_rows(
       -side_vectors[segment_indices, , drop = FALSE],
       -side_vectors[segment_indices, , drop = FALSE],
       -side_vectors[next_indices, , drop = FALSE],
@@ -2994,7 +2053,7 @@ make_render_highquality_water_path_mesh = function(
   if (isTRUE(cap_start)) {
     vertices = rbind(
       vertices,
-      make_render_highquality_water_path_quad_rows(
+      make_render_highquality_quad_rows(
         matrix(left_bottom[segment_start, ], nrow = 1L),
         matrix(left_top[segment_start, ], nrow = 1L),
         matrix(right_top[segment_start, ], nrow = 1L),
@@ -3003,7 +2062,7 @@ make_render_highquality_water_path_mesh = function(
     )
     vertex_normals = rbind(
       vertex_normals,
-      make_render_highquality_water_path_quad_rows(
+      make_render_highquality_quad_rows(
         matrix(-tangents[segment_start, ], nrow = 1L),
         matrix(-tangents[segment_start, ], nrow = 1L),
         matrix(-tangents[segment_start, ], nrow = 1L),
@@ -3015,7 +2074,7 @@ make_render_highquality_water_path_mesh = function(
     end_index = segment_end + 1L
     vertices = rbind(
       vertices,
-      make_render_highquality_water_path_quad_rows(
+      make_render_highquality_quad_rows(
         matrix(left_bottom[end_index, ], nrow = 1L),
         matrix(right_bottom[end_index, ], nrow = 1L),
         matrix(right_top[end_index, ], nrow = 1L),
@@ -3024,7 +2083,7 @@ make_render_highquality_water_path_mesh = function(
     )
     vertex_normals = rbind(
       vertex_normals,
-      make_render_highquality_water_path_quad_rows(
+      make_render_highquality_quad_rows(
         matrix(tangents[end_index, ], nrow = 1L),
         matrix(tangents[end_index, ], nrow = 1L),
         matrix(tangents[end_index, ], nrow = 1L),
@@ -3083,143 +2142,6 @@ make_render_highquality_water_path_mesh = function(
     mesh,
     override_material = TRUE,
     material = material
-  )
-}
-
-#' Make water path quad rows
-#'
-#' @param v1 First vertex.
-#' @param v2 Second vertex.
-#' @param v3 Third vertex.
-#' @param v4 Fourth vertex.
-#'
-#' @return Matrix of interleaved quad rows.
-#' @keywords internal
-make_render_highquality_water_path_quad_rows = function(
-  v1,
-  v2,
-  v3,
-  v4
-) {
-  out = matrix(NA_real_, nrow = nrow(v1) * 4L, ncol = ncol(v1))
-  out[seq(1L, nrow(out), by = 4L), ] = v1
-  out[seq(2L, nrow(out), by = 4L), ] = v2
-  out[seq(3L, nrow(out), by = 4L), ] = v3
-  out[seq(4L, nrow(out), by = 4L), ] = v4
-  out
-}
-
-#' Interpolate water path normals
-#'
-#' @param points Path points in rgl scene coordinates.
-#' @param heightmap Default `NULL`. Cached heightmap matrix.
-#' @param zscale Effective zscale.
-#'
-#' @return Matrix of normal vectors.
-#' @keywords internal
-interpolate_render_highquality_water_path_normals = function(
-  points,
-  heightmap = NULL,
-  zscale = 1
-) {
-  fallback = matrix(
-    c(0, 1, 0),
-    nrow = nrow(points),
-    ncol = 3,
-    byrow = TRUE
-  )
-  if (is.null(heightmap) || !is.matrix(heightmap)) {
-    return(fallback)
-  }
-  zscale = suppressWarnings(as.numeric(zscale[1]))
-  if (!is.finite(zscale) || zscale <= 0) {
-    zscale = 1
-  }
-  heightmap_scene = if (abs(zscale - 1) <= sqrt(.Machine$double.eps)) {
-    heightmap
-  } else {
-    heightmap / zscale
-  }
-  x = points[, 1]
-  z = points[, 3]
-  dx = (interpolate_spatial_water_height(heightmap_scene, x + 1, z) -
-    interpolate_spatial_water_height(heightmap_scene, x - 1, z)) /
-    2
-  dz = (interpolate_spatial_water_height(heightmap_scene, x, z + 1) -
-    interpolate_spatial_water_height(heightmap_scene, x, z - 1)) /
-    2
-  normals = cbind(-dx, 1, -dz)
-  normals = normalize_render_highquality_rows(normals)
-  replace_invalid_render_highquality_vectors(normals, fallback = c(0, 1, 0))
-}
-
-#' Calculate water path tangents
-#'
-#' @param points Path points.
-#' @param normals Path normals.
-#'
-#' @return Matrix of tangent vectors.
-#' @keywords internal
-calculate_render_highquality_water_path_tangents = function(points, normals) {
-  tangents = matrix(0, nrow = nrow(points), ncol = 3)
-  tangents[1L, ] = points[2L, ] - points[1L, ]
-  tangents[nrow(points), ] = points[nrow(points), ] -
-    points[nrow(points) - 1L, ]
-  if (nrow(points) > 2) {
-    for (index in seq(2L, nrow(points) - 1L)) {
-      tangents[index, ] = points[index + 1L, ] - points[index - 1L, ]
-    }
-  }
-  tangents = tangents - normals * rowSums(tangents * normals)
-  tangents = normalize_render_highquality_rows(tangents)
-  replace_invalid_render_highquality_vectors(tangents, fallback = c(1, 0, 0))
-}
-
-#' Normalize matrix rows
-#'
-#' @param values Numeric matrix.
-#'
-#' @return Matrix with unit-length rows.
-#' @keywords internal
-normalize_render_highquality_rows = function(values) {
-  values = as.matrix(values)
-  lengths = sqrt(rowSums(values^2))
-  values / lengths
-}
-
-#' Replace invalid vectors
-#'
-#' @param values Numeric matrix.
-#' @param fallback Fallback vector.
-#'
-#' @return Numeric matrix.
-#' @keywords internal
-replace_invalid_render_highquality_vectors = function(values, fallback) {
-  invalid = !stats::complete.cases(values) |
-    sqrt(rowSums(values^2)) < sqrt(.Machine$double.eps)
-  if (any(invalid)) {
-    values[invalid, ] = matrix(
-      fallback,
-      nrow = sum(invalid),
-      ncol = length(fallback),
-      byrow = TRUE
-    )
-  }
-  values
-}
-
-#' Calculate row-wise cross products
-#'
-#' @param x First matrix.
-#' @param y Second matrix.
-#'
-#' @return Matrix of row-wise cross products.
-#' @keywords internal
-row_cross = function(x, y) {
-  cbind(
-    x[, 2] * y[, 3] - x[, 3] * y[, 2],
-    x[, 3] * y[, 1] - x[, 1] * y[, 3],
-    x[, 1] * y[, 2] - x[, 2] * y[, 1]
   )
 }
 
