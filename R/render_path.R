@@ -880,26 +880,6 @@ interpolate_render_heightmap_height = function(heightmap, x, z) {
   interpolated
 }
 
-#' Normalize render line source feature IDs
-#'
-#' @param lines Normalized `sf` line input.
-#'
-#' @return List column of integer source feature IDs.
-#' @keywords internal
-normalize_render_line_source_feature_ids = function(lines) {
-  if (
-    "render_line_source_feature_id" %in%
-      names(lines) &&
-      length(lines$render_line_source_feature_id) == nrow(lines)
-  ) {
-    return(lapply(lines$render_line_source_feature_id, function(value) {
-      value = suppressWarnings(as.integer(unlist(value, use.names = FALSE)))
-      sort(unique(value[is.finite(value)]))
-    }))
-  }
-  lapply(seq_len(nrow(lines)), as.integer)
-}
-
 #' Prepare render line geometry
 #'
 #' @param lines Spatial line input.
@@ -919,6 +899,20 @@ prepare_render_line_geometry = function(
   line_argument = "lines",
   polygon_argument = "exclude_polygons"
 ) {
+  normalize_source_feature_ids = function(lines) {
+    if (
+      "render_line_source_feature_id" %in%
+        names(lines) &&
+        length(lines$render_line_source_feature_id) == nrow(lines)
+    ) {
+      return(lapply(lines$render_line_source_feature_id, function(value) {
+        value = suppressWarnings(as.integer(unlist(value, use.names = FALSE)))
+        sort(unique(value[is.finite(value)]))
+      }))
+    }
+    lapply(seq_len(nrow(lines)), as.integer)
+  }
+
   if (!is_render_line_input(lines)) {
     stop(
       sprintf(
@@ -938,7 +932,7 @@ prepare_render_line_geometry = function(
     lines = sf::st_sf(geometry = lines)
   }
   lines$render_line_source_feature_id = I(
-    normalize_render_line_source_feature_ids(lines)
+    normalize_source_feature_ids(lines)
   )
   lines = coerce_render_path_line_geometry(lines)
   if (inherits(lines, "sfc")) {
@@ -1189,56 +1183,6 @@ new_render_line_path_data = function(
   )
 }
 
-#' Render line coordinates
-#'
-#' @param lines Normalized spatial line input.
-#' @param heightmap Heightmap matrix.
-#' @param extent Scene extent.
-#' @param zscale Effective zscale.
-#' @param color Line color.
-#' @param width Line width.
-#'
-#' @return List of coordinate matrices.
-#' @keywords internal
-render_line_coords = function(
-  lines,
-  heightmap,
-  extent,
-  zscale,
-  color,
-  width
-) {
-  render_path(
-    y = lines,
-    extent = extent,
-    zscale = zscale,
-    vertical_exaggeration = 1,
-    heightmap = heightmap,
-    offset = 0,
-    linewidth = width,
-    color = color,
-    return_coords = TRUE,
-    tag = "water_path"
-  )
-}
-
-#' Subset render line geometry
-#'
-#' @param lines Normalized spatial line input.
-#' @param index Feature index.
-#'
-#' @return One-feature line input.
-#' @keywords internal
-subset_render_line_geometry = function(lines, index) {
-  if (inherits(lines, "sf")) {
-    return(lines[index, , drop = FALSE])
-  }
-  if (inherits(lines, "sfc")) {
-    return(lines[index])
-  }
-  lines
-}
-
 #' Render line coordinates by width
 #'
 #' @param lines Normalized spatial line input.
@@ -1261,6 +1205,21 @@ render_line_coords_by_width = function(
   width,
   force_by_feature = FALSE
 ) {
+  render_coords = function(lines, width) {
+    render_path(
+      y = lines,
+      extent = extent,
+      zscale = zscale,
+      vertical_exaggeration = 1,
+      heightmap = heightmap,
+      offset = 0,
+      linewidth = width,
+      color = color,
+      return_coords = TRUE,
+      tag = "water_path"
+    )
+  }
+
   feature_count = if (inherits(lines, "sf")) {
     nrow(lines)
   } else if (inherits(lines, "sfc")) {
@@ -1299,14 +1258,7 @@ render_line_coords_by_width = function(
     width = rep(width, feature_count)
   }
   if (length(width) == 1L) {
-    coords = render_line_coords(
-      lines = lines,
-      heightmap = heightmap,
-      extent = extent,
-      zscale = zscale,
-      color = color,
-      width = width
-    )
+    coords = render_coords(lines = lines, width = width)
     return(new_render_line_path_data(
       coords = coords,
       width = rep(width, length(coords)),
@@ -1320,13 +1272,15 @@ render_line_coords_by_width = function(
   coord_feature_id = integer(0)
   coord_source_feature_id = list()
   for (path_index in seq_along(width)) {
-    path = subset_render_line_geometry(lines, path_index)
-    path_coords = render_line_coords(
+    path = if (inherits(lines, "sf")) {
+      lines[path_index, , drop = FALSE]
+    } else if (inherits(lines, "sfc")) {
+      lines[path_index]
+    } else {
+      lines
+    }
+    path_coords = render_coords(
       lines = path,
-      heightmap = heightmap,
-      extent = extent,
-      zscale = zscale,
-      color = color,
       width = width[[path_index]]
     )
     if (!length(path_coords)) {
