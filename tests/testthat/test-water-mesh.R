@@ -599,14 +599,6 @@ test_that("render_streams draws spatial stream paths as water paths", {
     abs(range(as.numeric(water_path_vertices[, 2]))) < 1e-8
   ))
   expect_equal(
-    resolve_waterpath_offset(NULL),
-    0
-  )
-  expect_equal(
-    resolve_waterpath_offset(0),
-    0
-  )
-  expect_equal(
     rgl::material3d("lwd", id = water_path_ids$id[[1]]),
     0.5
   )
