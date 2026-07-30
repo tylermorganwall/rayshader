@@ -207,9 +207,45 @@ render_streams = function(
   clear_previous = TRUE,
   water_polygons = NULL
 ) {
-  heightmap = resolve_render_water_heightmap(
-    heightmap,
-    heightmap_missing = missing(heightmap),
+  heightmap_missing = missing(heightmap)
+  zscale_missing = missing(zscale)
+  vertical_exaggeration_missing = missing(vertical_exaggeration)
+  width_missing = missing(width)
+  width_expr = substitute(width)
+  width_column_missing = missing(width_column)
+  width_column_expr = substitute(width_column)
+
+  if (!is_waterpath_input(streams)) {
+    stop(
+      "`streams` must be an sf, sfc, sfg, SpatialLines, or SpatialLinesDataFrame line object.",
+      call. = FALSE
+    )
+  }
+  if (
+    !is.null(water_polygons) &&
+      !inherits(
+        water_polygons,
+        c(
+          "sf",
+          "sfc",
+          "sfg",
+          "SpatVector",
+          "SpatialPolygons",
+          "SpatialPolygonsDataFrame"
+        )
+      )
+  ) {
+    stop(
+      paste0(
+        "`water_polygons` must be an sf, sfc, sfg, SpatVector, ",
+        "SpatialPolygons, or SpatialPolygonsDataFrame polygon object."
+      ),
+      call. = FALSE
+    )
+  }
+  heightmap = resolve_scene_render_heightmap(
+    heightmap = heightmap,
+    heightmap_missing = heightmap_missing,
     caller = "render_streams"
   )
   if (is.null(heightmap)) {
@@ -217,22 +253,106 @@ render_streams = function(
       "No heightmap found. Call `plot_3d()` or `plot_gg()` first, or pass `heightmap` explicitly."
     )
   }
-  zscale = resolve_render_water_effective_zscale(
+  zscale = resolve_scene_render_effective_zscale(
     zscale = zscale,
-    zscale_missing = missing(zscale),
+    zscale_missing = zscale_missing,
     vertical_exaggeration = vertical_exaggeration,
-    vertical_exaggeration_missing = missing(vertical_exaggeration),
+    vertical_exaggeration_missing = vertical_exaggeration_missing,
     heightmap = heightmap,
     caller = "render_streams"
   )
+  densify = resolve_render_scalar(
+    densify,
+    missing(densify),
+    TRUE,
+    "densify",
+    type = "logical"
+  )
+  merge = resolve_render_scalar(
+    merge,
+    missing(merge),
+    TRUE,
+    "merge",
+    type = "logical"
+  )
+  clear_previous = resolve_render_scalar(
+    clear_previous,
+    missing(clear_previous),
+    TRUE,
+    "clear_previous",
+    type = "logical"
+  )
+  offset = if (is.null(offset)) {
+    0
+  } else {
+    resolve_render_scalar(
+      offset,
+      FALSE,
+      0,
+      "offset",
+      lower = 0
+    )
+  }
   if (rgl::cur3d() == 0) {
     stop("No rgl window currently open.")
   }
-  width_column = resolve_waterpath_width_column(
-    width_column = width_column,
-    width_column_expr = substitute(width_column),
-    width_column_missing = missing(width_column)
-  )
+  width_column_supplied = !isTRUE(width_column_missing) &&
+    !identical(width_column_expr, quote(NULL))
+  if (width_column_supplied) {
+    width_values = resolve_render_feature_values(
+      data = streams,
+      value = width_column,
+      value_expr = width_column_expr,
+      missing = FALSE,
+      default = 1,
+      argument = "width_column",
+      type = "double",
+      lower = .Machine$double.xmin
+    )
+    if (inherits(streams, "SpatialLinesDataFrame")) {
+      streams = sf::st_as_sf(streams)
+    }
+    if (!inherits(streams, "sf")) {
+      stop(
+        "`width_column` can only be used with `sf` or `SpatialLinesDataFrame` stream inputs.",
+        call. = FALSE
+      )
+    }
+    streams$render_line_width = width_values
+    width_column = "render_line_width"
+    merge = FALSE
+  } else {
+    width_values = resolve_render_feature_values(
+      data = streams,
+      value = width,
+      value_expr = width_expr,
+      missing = width_missing,
+      default = 1,
+      argument = "width",
+      type = "double",
+      lower = .Machine$double.xmin
+    )
+    width_column = NULL
+    if (length(unique(width_values)) > 1L) {
+      if (inherits(streams, "SpatialLinesDataFrame")) {
+        streams = sf::st_as_sf(streams)
+      }
+      if (!inherits(streams, "sf")) {
+        stop(
+          "Feature-varying `width` values require an `sf` stream input.",
+          call. = FALSE
+        )
+      }
+      streams$render_line_width = width_values
+      width_column = "render_line_width"
+      merge = FALSE
+    }
+  }
+  width = if (is.null(width_column)) {
+    if (length(width_values)) width_values[[1L]] else 1
+  } else {
+    NULL
+  }
   if (isTRUE(clear_previous)) {
     rgl::pop3d(tag = "water_path")
   }
@@ -304,28 +424,7 @@ render_water_paths = function(
   waterpath_merge = TRUE,
   water_polygons = NULL
 ) {
-  if (!is_waterpath_input(waterpaths)) {
-    stop(
-      "`streams` must be an sf, sfc, sfg, SpatialLines, or SpatialLinesDataFrame line object.",
-      call. = FALSE
-    )
-  }
-  waterpath_densify = validate_waterpath_logical(
-    waterpath_densify,
-    "densify"
-  )
-  waterpath_merge = validate_waterpath_logical(
-    waterpath_merge,
-    "merge"
-  )
-  waterpath_offset = resolve_waterpath_offset(
-    waterpath_offset,
-    name = "offset"
-  )
   if (!is.null(waterpath_width_column)) {
-    waterpath_width_column = validate_waterpath_width_column_name(
-      waterpath_width_column
-    )
     waterpath_merge = FALSE
   }
   waterpaths = prepare_render_water_path_geometry(
@@ -336,11 +435,11 @@ render_water_paths = function(
   if (is_empty_scene_sf(waterpaths)) {
     return(invisible(list()))
   }
-  waterpath_width = resolve_waterpath_widths(
-    waterpaths = waterpaths,
-    waterpath_width = waterpath_width,
-    waterpath_width_column = waterpath_width_column
-  )
+  waterpath_width = if (is.null(waterpath_width_column)) {
+    waterpath_width
+  } else {
+    as.numeric(waterpaths[[waterpath_width_column]])
+  }
   path_render = render_water_path_coords_by_width(
     waterpaths = waterpaths,
     heightmap = heightmap,
@@ -1875,7 +1974,7 @@ make_render_highquality_water_path_buffer_footprint = function(lines, width) {
     mitreLimit = 1
   ))
   footprint = suppressWarnings(sf::st_union(buffered))
-  footprint = validate_render_highquality_water_path_footprint(footprint)
+  footprint = assert_render_highquality_stream_footprint(footprint)
   if (is.null(footprint) || !length(footprint)) {
     return(NULL)
   }
@@ -1888,13 +1987,13 @@ make_render_highquality_water_path_buffer_footprint = function(lines, width) {
   footprint
 }
 
-#' Validate water path footprint geometry
+#' Assert and repair stream footprint geometry
 #'
 #' @param footprint Footprint geometry.
 #'
 #' @return Valid polygon geometry or `NULL`.
 #' @keywords internal
-validate_render_highquality_water_path_footprint = function(footprint) {
+assert_render_highquality_stream_footprint = function(footprint) {
   if (is.null(footprint) || !length(footprint)) {
     return(NULL)
   }
@@ -2481,7 +2580,7 @@ orient_render_highquality_water_path_top_indices = function(vertices, indices) {
 #'
 #' @return Named integer edge counts.
 #' @keywords internal
-validate_render_highquality_water_path_edge_counts = function(indices) {
+count_render_highquality_stream_edges = function(indices) {
   if (!nrow(indices)) {
     return(integer(0))
   }

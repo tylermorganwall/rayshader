@@ -130,9 +130,25 @@ render_roads = function(
   lane_dash_fraction = NULL,
   clear_previous = TRUE
 ) {
-  heightmap = resolve_render_water_heightmap(
-    heightmap,
-    heightmap_missing = missing(heightmap),
+  heightmap_missing = missing(heightmap)
+  zscale_missing = missing(zscale)
+  vertical_exaggeration_missing = missing(vertical_exaggeration)
+  width_missing = missing(width)
+  width_expr = substitute(width)
+  width_column_expr = substitute(width_column)
+  layer_expr = substitute(layer)
+  layer_height_expr = substitute(layer_height)
+  lanes_expr = substitute(lanes)
+
+  if (!is_waterpath_input(roads)) {
+    stop(
+      "`roads` must be an sf, sfc, sfg, SpatialLines, or SpatialLinesDataFrame line object.",
+      call. = FALSE
+    )
+  }
+  heightmap = resolve_scene_render_heightmap(
+    heightmap = heightmap,
+    heightmap_missing = heightmap_missing,
     caller = "render_roads"
   )
   if (is.null(heightmap)) {
@@ -140,40 +156,282 @@ render_roads = function(
       "No heightmap found. Call `plot_3d()` or `plot_gg()` first, or pass `heightmap` explicitly."
     )
   }
-  zscale = resolve_render_water_effective_zscale(
+  zscale = resolve_scene_render_effective_zscale(
     zscale = zscale,
-    zscale_missing = missing(zscale),
+    zscale_missing = zscale_missing,
     vertical_exaggeration = vertical_exaggeration,
-    vertical_exaggeration_missing = missing(vertical_exaggeration),
+    vertical_exaggeration_missing = vertical_exaggeration_missing,
     heightmap = heightmap,
     caller = "render_roads"
   )
+  densify = resolve_render_scalar(
+    densify,
+    missing(densify),
+    TRUE,
+    "densify",
+    type = "logical"
+  )
+  offset = resolve_render_scalar(
+    offset,
+    missing(offset),
+    0,
+    "offset",
+    lower = 0
+  )
+  offset_transition = resolve_render_scalar(
+    offset_transition,
+    missing(offset_transition),
+    0,
+    "offset_transition",
+    lower = 0
+  )
+  merge = resolve_render_scalar(
+    merge,
+    missing(merge),
+    TRUE,
+    "merge",
+    type = "logical"
+  )
+  lane_texture = resolve_render_scalar(
+    lane_texture,
+    missing(lane_texture),
+    FALSE,
+    "lane_texture",
+    type = "logical"
+  )
+  lane_dash_length = resolve_render_scalar(
+    lane_dash_length,
+    missing(lane_dash_length),
+    3,
+    "lane_dash_length",
+    lower = 0,
+    lower_inclusive = FALSE
+  )
+  lane_gap_length = resolve_render_scalar(
+    lane_gap_length,
+    missing(lane_gap_length),
+    10,
+    "lane_gap_length",
+    lower = 0
+  )
+  lane_texture_length = if (is.null(lane_texture_length)) {
+    lane_dash_length + lane_gap_length
+  } else {
+    resolve_render_scalar(
+      lane_texture_length,
+      FALSE,
+      lane_dash_length + lane_gap_length,
+      "lane_texture_length",
+      lower = 0,
+      lower_inclusive = FALSE
+    )
+  }
+  lane_texture_mapping = match.arg(lane_texture_mapping)
+  lane_width = resolve_render_scalar(
+    lane_width,
+    missing(lane_width),
+    3,
+    "lane_width",
+    lower = 0,
+    lower_inclusive = FALSE
+  )
+  lane_line_width = resolve_render_scalar(
+    lane_line_width,
+    missing(lane_line_width),
+    0.035,
+    "lane_line_width",
+    lower = 0,
+    upper = 1,
+    lower_inclusive = FALSE,
+    upper_inclusive = FALSE
+  )
+  lane_dash_fraction = if (is.null(lane_dash_fraction)) {
+    lane_dash_length / (lane_dash_length + lane_gap_length)
+  } else {
+    resolve_render_scalar(
+      lane_dash_fraction,
+      FALSE,
+      lane_dash_length / (lane_dash_length + lane_gap_length),
+      "lane_dash_fraction",
+      lower = 0,
+      upper = 1,
+      lower_inclusive = FALSE,
+      upper_inclusive = FALSE
+    )
+  }
+  clear_previous = resolve_render_scalar(
+    clear_previous,
+    missing(clear_previous),
+    TRUE,
+    "clear_previous",
+    type = "logical"
+  )
+  if (!is.null(lane_texture_file)) {
+    if (
+      !is.character(lane_texture_file) ||
+        length(lane_texture_file) != 1L ||
+        is.na(lane_texture_file) ||
+        !nzchar(lane_texture_file) ||
+        !file.exists(lane_texture_file)
+    ) {
+      stop("`lane_texture_file` must be a path to an existing image file.")
+    }
+    lane_texture_file = normalizePath(
+      lane_texture_file,
+      winslash = "/",
+      mustWork = TRUE
+    )
+  }
   if (rgl::cur3d() == 0) {
     stop("No rgl window currently open.")
   }
   width_column = resolve_waterpath_width_column(
     width_column = width_column,
-    width_column_expr = substitute(width_column),
+    width_column_expr = width_column_expr,
     width_column_missing = missing(width_column)
   )
   layer_column = resolve_render_road_column(
     value = layer,
-    value_expr = substitute(layer),
+    value_expr = layer_expr,
     value_missing = missing(layer),
     argument = "layer"
   )
   layer_height_spec = resolve_render_road_layer_height(
     value = layer_height,
-    value_expr = substitute(layer_height),
+    value_expr = layer_height_expr,
     value_missing = missing(layer_height)
   )
   lanes_spec = resolve_render_road_lanes(
     value = lanes,
-    value_expr = substitute(lanes),
+    value_expr = lanes_expr,
     value_missing = missing(lanes)
   )
   if (is.null(layer_column) && !is.null(layer_height_spec$column)) {
     stop("`layer_height` can only name a column when `layer` is supplied.")
+  }
+  if (!is.null(layer_column) && (offset != 0 || offset_transition != 0)) {
+    stop(
+      "`layer` cannot be combined with `offset` or `offset_transition`.",
+      call. = FALSE
+    )
+  }
+  column_input = any(c(
+    !is.null(width_column),
+    !is.null(layer_column),
+    !is.null(layer_height_spec$column),
+    !is.null(lanes_spec$column)
+  ))
+  if (column_input && inherits(roads, "SpatialLinesDataFrame")) {
+    roads = sf::st_as_sf(roads)
+  }
+  if (column_input && !inherits(roads, "sf")) {
+    stop(
+      "Road column arguments require an `sf` or `SpatialLinesDataFrame` road object.",
+      call. = FALSE
+    )
+  }
+  if (!is.null(width_column)) {
+    roads$render_road_input_width = resolve_render_feature_values(
+      data = roads,
+      value = width_column,
+      value_expr = width_column_expr,
+      missing = FALSE,
+      default = NA_real_,
+      argument = "width_column",
+      type = "double",
+      lower = .Machine$double.xmin
+    )
+    width_column = "render_road_input_width"
+    width = NULL
+    merge = FALSE
+  } else if (!isTRUE(width_missing) && !identical(width_expr, quote(NULL))) {
+    width_values = resolve_render_feature_values(
+      data = roads,
+      value = width,
+      value_expr = width_expr,
+      missing = FALSE,
+      default = NA_real_,
+      argument = "width",
+      type = "double",
+      lower = .Machine$double.xmin
+    )
+    if (length(unique(width_values)) > 1L) {
+      if (inherits(roads, "SpatialLinesDataFrame")) {
+        roads = sf::st_as_sf(roads)
+      }
+      if (!inherits(roads, "sf")) {
+        stop(
+          "Feature-varying `width` values require an `sf` road input.",
+          call. = FALSE
+        )
+      }
+      roads$render_road_input_width = width_values
+      width_column = "render_road_input_width"
+      width = NULL
+      merge = FALSE
+    } else {
+      width = if (length(width_values)) width_values[[1L]] else 1
+    }
+  }
+  if (!is.null(layer_column)) {
+    roads$render_road_input_layer = resolve_render_feature_values(
+      data = roads,
+      value = layer,
+      value_expr = layer_expr,
+      missing = FALSE,
+      default = NA_real_,
+      argument = "layer",
+      type = "double",
+      allow_na = TRUE
+    )
+    layer_column = "render_road_input_layer"
+    merge = FALSE
+  }
+  if (!is.null(layer_height_spec$column)) {
+    roads$render_road_input_layer_height = resolve_render_feature_values(
+      data = roads,
+      value = layer_height,
+      value_expr = layer_height_expr,
+      missing = FALSE,
+      default = NA_real_,
+      argument = "layer_height",
+      type = "double",
+      lower = .Machine$double.xmin,
+      allow_na = TRUE
+    )
+    layer_height_spec$column = "render_road_input_layer_height"
+  } else {
+    layer_height_spec$spacing = resolve_render_scalar(
+      layer_height_spec$spacing,
+      FALSE,
+      5.5,
+      "layer_height",
+      lower = 0,
+      lower_inclusive = FALSE
+    )
+  }
+  if (!is.null(lanes_spec$column)) {
+    roads$render_road_input_lanes = resolve_render_feature_values(
+      data = roads,
+      value = lanes,
+      value_expr = lanes_expr,
+      missing = FALSE,
+      default = NA_character_,
+      argument = "lanes",
+      type = "character",
+      allow_na = TRUE
+    )
+    lanes_spec$column = "render_road_input_lanes"
+    merge = FALSE
+  } else {
+    lanes_spec$value = resolve_render_scalar(
+      lanes_spec$value,
+      FALSE,
+      2L,
+      "lanes",
+      type = "integer",
+      lower = 1
+    )
   }
   if (isTRUE(clear_previous)) {
     rgl::pop3d(tag = "road_path")
@@ -454,7 +712,10 @@ resolve_render_road_lane_evidence = function(roads, lanes_column = NULL) {
   }
   if (!(lanes_column %in% names(roads))) {
     stop(
-      sprintf("`lanes` must name a column in `roads`: %s", lanes_column),
+      sprintf(
+        "Prepared road data is missing lane column `%s`.",
+        lanes_column
+      ),
       call. = FALSE
     )
   }
@@ -494,16 +755,7 @@ resolve_render_road_lane_values = function(
   lanes_column = NULL
 ) {
   if (is.null(lanes_column)) {
-    return(validate_road_lanes(lanes))
-  }
-  if (!inherits(roads, "sf")) {
-    stop("A `lanes` column can only be used with an `sf` road object.")
-  }
-  if (!(lanes_column %in% names(roads))) {
-    stop(
-      sprintf("`lanes` must name a column in `roads`: %s", lanes_column),
-      call. = FALSE
-    )
+    return(as.integer(lanes))
   }
   lane_evidence = resolve_render_road_lane_evidence(roads, lanes_column)
   lane_values = lane_evidence$lane_count
@@ -562,23 +814,8 @@ resolve_render_road_lane_values = function(
 #' @keywords internal
 resolve_render_road_osm_layer_values = function(roads, layer_column) {
   raw_layer = roads[[layer_column]]
-  if (is.factor(raw_layer)) {
-    raw_layer = as.character(raw_layer)
-  }
   explicit = !is.na(raw_layer)
-  if (is.character(raw_layer)) {
-    explicit = explicit & nzchar(trimws(raw_layer))
-  }
-  layer = suppressWarnings(as.numeric(raw_layer))
-  if (any(explicit & !is.finite(layer))) {
-    stop(
-      sprintf(
-        "`layer` column `%s` must contain finite numeric values or NA.",
-        layer_column
-      ),
-      call. = FALSE
-    )
-  }
+  layer = as.numeric(raw_layer)
   layer[!explicit] = 0
 
   metadata_value = function(column) {
@@ -681,80 +918,13 @@ render_road_paths = function(
   lane_line_width = 0.035,
   lane_dash_fraction = NULL
 ) {
-  if (!is_waterpath_input(roads)) {
-    stop(
-      "`roads` must be an sf, sfc, sfg, SpatialLines, or SpatialLinesDataFrame line object.",
-      call. = FALSE
-    )
-  }
-  road_densify = validate_waterpath_logical(road_densify, "densify")
-  road_merge = validate_waterpath_logical(road_merge, "merge")
-  road_offset = resolve_waterpath_offset(road_offset, name = "offset")
-  road_offset_transition = validate_waterpath_positive_number(
-    road_offset_transition,
-    "offset_transition",
-    allow_zero = TRUE
-  )
   if (!is.null(road_layer_column)) {
-    road_layer_column = validate_render_road_column_name(
-      road_layer_column,
-      "layer"
-    )
-    if (road_offset != 0 || road_offset_transition != 0) {
-      stop(
-        "`layer` cannot be combined with `offset` or `offset_transition`.",
-        call. = FALSE
-      )
-    }
     road_merge = FALSE
   }
-  if (!is.null(road_layer_height_column)) {
-    road_layer_height_column = validate_render_road_column_name(
-      road_layer_height_column,
-      "layer_height"
-    )
-  } else {
-    road_layer_spacing = validate_waterpath_positive_number(
-      road_layer_spacing,
-      "layer_height"
-    )
-  }
-  lane_texture = validate_waterpath_logical(lane_texture, "lane_texture")
-  lane_texture_mapping = match.arg(lane_texture_mapping)
   if (!is.null(road_lanes_column)) {
-    road_lanes_column = validate_render_road_column_name(
-      road_lanes_column,
-      "lanes"
-    )
     road_merge = FALSE
-  } else {
-    lanes = validate_road_lanes(lanes)
   }
-  lane_width = validate_waterpath_positive_number(
-    lane_width,
-    "lane_width"
-  )
-  lane_dash_length = validate_waterpath_positive_number(
-    lane_dash_length,
-    "lane_dash_length"
-  )
-  lane_gap_length = validate_waterpath_positive_number(
-    lane_gap_length,
-    "lane_gap_length",
-    allow_zero = TRUE
-  )
-  lane_texture_length = resolve_road_lane_texture_length(
-    lane_texture_length,
-    lane_dash_length = lane_dash_length,
-    lane_gap_length = lane_gap_length
-  )
-  lane_dash_fraction = resolve_road_lane_dash_fraction(
-    lane_dash_fraction,
-    lane_dash_length = lane_dash_length,
-    lane_gap_length = lane_gap_length
-  )
   if (!is.null(road_width_column)) {
-    road_width_column = validate_waterpath_width_column_name(road_width_column)
     road_merge = FALSE
   }
   roads = prepare_render_water_path_geometry(
@@ -790,12 +960,8 @@ render_road_paths = function(
         call. = FALSE
       )
     }
-  } else {
-    road_width = resolve_waterpath_widths(
-      waterpaths = roads,
-      waterpath_width = road_width,
-      waterpath_width_column = road_width_column
-    )
+  } else if (!is.null(road_width_column)) {
+    road_width = as.numeric(roads[[road_width_column]])
   }
   path_render = render_water_path_coords_by_width(
     waterpaths = roads,
@@ -1588,14 +1754,13 @@ solve_render_road_path_profiles = function(
       call. = FALSE
     )
   }
-  zscale = validate_waterpath_positive_number(zscale, "zscale")
-  texture_world_scale = validate_render_road_world_scale(
+  texture_world_scale = normalize_render_road_world_scale(
     texture_world_scale
   )
   layer_spacing = if (is.null(layer_spacing)) {
     5.5
   } else {
-    validate_waterpath_positive_number(layer_spacing, "layer_height")
+    as.numeric(layer_spacing)
   }
   coord_list = lapply(
     coord_list,
@@ -2343,17 +2508,19 @@ prepare_render_road_layer_features = function(
   boundary_tolerance = 1,
   direction_lookahead = 8
 ) {
-  # Validate package availability and the basic sf input contract.
+  # Assert package availability and the normalized sf input contract.
   if (!requireNamespace("sf", quietly = TRUE)) {
     stop("The `sf` package is required for road layer topology.", call. = FALSE)
   }
   if (!inherits(roads, "sf")) {
     stop("Road layer topology requires an `sf` road object.", call. = FALSE)
   }
-  # Resolve and validate the layer column before fragmenting the geometry.
-  layer_column = validate_render_road_column_name(layer_column, "layer")
+  # Assert the normalized layer column before fragmenting the geometry.
   if (!(layer_column %in% names(roads))) {
-    stop(sprintf("`layer` must name a column in `roads`: %s", layer_column))
+    stop(sprintf(
+      "Prepared road data is missing layer column `%s`.",
+      layer_column
+    ))
   }
   # Limit the topology subsystem to line features. Other geometry types require
   # different intersection and path-distance semantics.
@@ -2421,28 +2588,13 @@ prepare_render_road_layer_features = function(
   # future constraints; they are not used to turn raw OSM layer numbers into heights.
   clearance = rep(NA_real_, nrow(source_fragments))
   if (!is.null(layer_height_column)) {
-    layer_height_column = validate_render_road_column_name(
-      layer_height_column,
-      "layer_height"
-    )
     if (!(layer_height_column %in% names(source_fragments))) {
       stop(sprintf(
-        "`layer_height` must name a column in `roads`: %s",
+        "Prepared road data is missing layer-height column `%s`.",
         layer_height_column
       ))
     }
-    raw_clearance = source_fragments[[layer_height_column]]
-    if (is.factor(raw_clearance)) {
-      raw_clearance = as.character(raw_clearance)
-    }
-    clearance = suppressWarnings(as.numeric(raw_clearance))
-    present = !is.na(raw_clearance)
-    if (is.character(raw_clearance)) {
-      present = present & nzchar(trimws(raw_clearance))
-    }
-    if (any(present & (!is.finite(clearance) | clearance <= 0))) {
-      stop("Explicit road layer heights must be positive finite numbers.")
-    }
+    clearance = as.numeric(source_fragments[[layer_height_column]])
   }
 
   # Resolve the first available OSM-style metadata column from a list of aliases.
@@ -4600,15 +4752,15 @@ resolve_render_road_overlap_endpoint_distance = function(
   }
 }
 
-#' Validate one road-profile solver setting
+#' Assert one road-profile solver setting
 #'
 #' @param value Setting value.
 #' @param argument Argument name used in errors.
 #' @param allow_zero Default `FALSE`. Whether zero is valid.
 #'
-#' @return A validated numeric scalar.
+#' @return An asserted numeric scalar.
 #' @keywords internal
-validate_render_road_profile_setting = function(
+assert_render_road_profile_setting = function(
   value,
   argument,
   allow_zero = FALSE
@@ -7118,7 +7270,7 @@ compile_render_road_profile_matrices = function(
   )
 }
 
-#' Validate solve-component separation before optimization
+#' Assert solve-component separation before optimization
 #'
 #' @param topology Active road topology.
 #' @param controls Road-profile controls.
@@ -7128,7 +7280,7 @@ compile_render_road_profile_matrices = function(
 #'
 #' @return `TRUE`, invisibly, or an error describing a cross-component coupling.
 #' @keywords internal
-validate_render_road_profile_component_blocks = function(
+assert_render_road_profile_component_blocks = function(
   topology,
   controls,
   constraints,
@@ -7261,29 +7413,29 @@ build_render_road_profile_problem = function(
       call. = FALSE
     )
   }
-  layer_spacing = validate_render_road_profile_setting(
+  layer_spacing = assert_render_road_profile_setting(
     layer_spacing,
     "layer_spacing"
   )
-  maximum_grade = validate_render_road_profile_setting(
+  maximum_grade = assert_render_road_profile_setting(
     maximum_grade,
     "maximum_grade"
   )
-  maximum_grade_rate = validate_render_road_profile_setting(
+  maximum_grade_rate = assert_render_road_profile_setting(
     maximum_grade_rate,
     "maximum_grade_rate"
   )
-  curvature_weight = validate_render_road_profile_setting(
+  curvature_weight = assert_render_road_profile_setting(
     curvature_weight,
     "curvature_weight",
     allow_zero = TRUE
   )
-  grade_weight = validate_render_road_profile_setting(
+  grade_weight = assert_render_road_profile_setting(
     grade_weight,
     "grade_weight",
     allow_zero = TRUE
   )
-  terrain_reference_weight = validate_render_road_profile_setting(
+  terrain_reference_weight = assert_render_road_profile_setting(
     terrain_reference_weight,
     "terrain_reference_weight",
     allow_zero = TRUE
@@ -7291,30 +7443,30 @@ build_render_road_profile_problem = function(
   if (is.null(underground_reference_depth)) {
     underground_reference_depth = layer_spacing
   } else {
-    underground_reference_depth = validate_render_road_profile_setting(
+    underground_reference_depth = assert_render_road_profile_setting(
       underground_reference_depth,
       "underground_reference_depth"
     )
   }
-  underground_reference_weight = validate_render_road_profile_setting(
+  underground_reference_weight = assert_render_road_profile_setting(
     underground_reference_weight,
     "underground_reference_weight"
   )
-  anchor_grade_weight = validate_render_road_profile_setting(
+  anchor_grade_weight = assert_render_road_profile_setting(
     anchor_grade_weight,
     "anchor_grade_weight",
     allow_zero = TRUE
   )
-  uplift_weight = validate_render_road_profile_setting(
+  uplift_weight = assert_render_road_profile_setting(
     uplift_weight,
     "uplift_weight",
     allow_zero = TRUE
   )
-  anchor_grade_window = validate_render_road_profile_setting(
+  anchor_grade_window = assert_render_road_profile_setting(
     anchor_grade_window,
     "anchor_grade_window"
   )
-  control_tolerance = validate_render_road_profile_setting(
+  control_tolerance = assert_render_road_profile_setting(
     control_tolerance,
     "control_tolerance"
   )
@@ -7426,7 +7578,7 @@ build_render_road_profile_problem = function(
     constraints,
     nrow(controls) * 2L
   )
-  validate_render_road_profile_component_blocks(
+  assert_render_road_profile_component_blocks(
     topology = topology,
     controls = controls,
     constraints = constraints,
@@ -8259,15 +8411,15 @@ solve_render_road_profile_problem = function(
       call. = FALSE
     )
   }
-  absolute_tolerance = validate_render_road_profile_setting(
+  absolute_tolerance = assert_render_road_profile_setting(
     absolute_tolerance,
     "absolute_tolerance"
   )
-  relative_tolerance = validate_render_road_profile_setting(
+  relative_tolerance = assert_render_road_profile_setting(
     relative_tolerance,
     "relative_tolerance"
   )
-  profile_tolerance = validate_render_road_profile_setting(
+  profile_tolerance = assert_render_road_profile_setting(
     profile_tolerance,
     "profile_tolerance",
     allow_zero = TRUE
@@ -8496,13 +8648,13 @@ audit_render_road_profiles = function(
 }
 
 
-#' Validate road world scale
+#' Normalize road world scale
 #'
 #' @param texture_world_scale Two-value x-z world scale.
 #'
-#' @return Validated world scale.
+#' @return Normalized world scale.
 #' @keywords internal
-validate_render_road_world_scale = function(texture_world_scale) {
+normalize_render_road_world_scale = function(texture_world_scale) {
   texture_world_scale = suppressWarnings(as.numeric(
     texture_world_scale[1:2]
   ))
@@ -8537,7 +8689,7 @@ resolve_road_lane_texture_files = function(
   if (!length(coord_lanes)) {
     return(list())
   }
-  coord_lanes = vapply(coord_lanes, validate_road_lanes, integer(1))
+  coord_lanes = vapply(coord_lanes, assert_render_road_lane_count, integer(1))
   unique_lanes = unique(coord_lanes)
   unique_files = lapply(unique_lanes, function(lanes) {
     resolve_road_lane_texture_file(
@@ -8573,16 +8725,7 @@ resolve_road_lane_texture_file = function(
   lane_dash_fraction
 ) {
   if (!is.null(lane_texture_file)) {
-    if (
-      !is.character(lane_texture_file) ||
-        length(lane_texture_file) != 1 ||
-        is.na(lane_texture_file) ||
-        !nzchar(lane_texture_file) ||
-        !file.exists(lane_texture_file)
-    ) {
-      stop("`lane_texture_file` must be a path to an existing image file.")
-    }
-    return(normalizePath(lane_texture_file, winslash = "/", mustWork = TRUE))
+    return(lane_texture_file)
   }
   if (!isTRUE(lane_texture)) {
     return(NULL)
@@ -8617,8 +8760,8 @@ make_road_lane_texture = function(
   lane_gap_length = 10,
   size = 128
 ) {
-  lanes = validate_road_lanes(lanes)
-  lane_line_width = validate_road_fraction(
+  lanes = assert_render_road_lane_count(lanes)
+  lane_line_width = assert_render_road_fraction(
     lane_line_width,
     "lane_line_width"
   )
@@ -8685,13 +8828,13 @@ make_road_lane_texture = function(
   normalizePath(texture_file, winslash = "/", mustWork = TRUE)
 }
 
-#' Validate road lanes
+#' Assert road lane count
 #'
 #' @param lanes Number of lanes.
 #'
 #' @return Positive integer lane count.
 #' @keywords internal
-validate_road_lanes = function(lanes) {
+assert_render_road_lane_count = function(lanes) {
   lanes = suppressWarnings(as.integer(lanes[1]))
   if (!is.finite(lanes) || lanes < 1L) {
     stop("`lanes` must be a positive integer.")
@@ -8707,7 +8850,7 @@ validate_road_lanes = function(lanes) {
 #' coordinates.
 #' @keywords internal
 calculate_road_lane_marking_positions = function(lanes) {
-  lanes = validate_road_lanes(lanes)
+  lanes = assert_render_road_lane_count(lanes)
   edge_offset = 0.5 / (lanes + 2)
   lane_edges = seq(edge_offset, 1 - edge_offset, length.out = lanes + 1L)
   dividers = if (lanes > 1L) {
@@ -9143,7 +9286,7 @@ resolve_road_lane_dash_fraction = function(
     }
     return(lane_dash_length / cycle_length)
   }
-  validate_road_fraction(
+  assert_render_road_fraction(
     lane_dash_fraction,
     "lane_dash_fraction"
   )
@@ -9214,14 +9357,14 @@ calculate_road_path_cumulative_distance = function(
   )
 }
 
-#' Validate road fraction
+#' Assert road fraction
 #'
 #' @param value Value to validate.
 #' @param name Argument name.
 #'
 #' @return Numeric fraction.
 #' @keywords internal
-validate_road_fraction = function(value, name) {
+assert_render_road_fraction = function(value, name) {
   value = suppressWarnings(as.numeric(value[1]))
   if (!is.finite(value) || value <= 0 || value >= 1) {
     stop(sprintf("`%s` must be a single number between 0 and 1.", name))
@@ -9477,7 +9620,7 @@ assemble_render_road_mesh_chain_tasks = function(
         chain_points[nrow(chain_points), ] = shared_endpoint
         member_points[1L, ] = shared_endpoint
       }
-      member_scale = validate_render_road_world_scale(
+      member_scale = normalize_render_road_world_scale(
         tasks[[current_task_id]]$texture_world_scale
       )
       member_station = calculate_road_path_cumulative_distance(

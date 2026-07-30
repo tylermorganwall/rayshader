@@ -77,7 +77,7 @@ render_water = function(
 ) {
   water_render_method = match.arg(water_render_method)
   water_polygon_failure = match.arg(water_polygon_failure)
-  heightmap = resolve_render_water_heightmap(
+  heightmap = resolve_scene_render_heightmap(
     heightmap,
     heightmap_missing = missing(heightmap),
     caller = "render_water"
@@ -87,7 +87,7 @@ render_water = function(
       "No heightmap found. Call `plot_3d()` or `plot_gg()` first, or pass `heightmap` explicitly."
     )
   }
-  zscale = resolve_render_water_effective_zscale(
+  zscale = resolve_scene_render_effective_zscale(
     zscale = zscale,
     zscale_missing = missing(zscale),
     vertical_exaggeration = vertical_exaggeration,
@@ -191,26 +191,9 @@ resolve_render_water_heightmap = function(
   heightmap_missing = FALSE,
   caller = NULL
 ) {
-  if (
-    !isTRUE(heightmap_missing) &&
-      !is.null(heightmap) &&
-      is_spatial_heightmap_input(heightmap)
-  ) {
-    heightmap_info = coerce_plot_3d_heightmap(heightmap)
-    heightmap = heightmap_info$heightmap
-    if (!is.null(heightmap_info$extent)) {
-      attr(heightmap, "extent") = heightmap_info$extent
-    }
-    if (!is.null(heightmap_info$crs)) {
-      attr(heightmap, "crs") = heightmap_info$crs
-    }
-    if (is.finite(heightmap_info$zscale) && heightmap_info$zscale > 0) {
-      attr(heightmap, "zscale") = heightmap_info$zscale
-    }
-    return(heightmap)
-  }
   resolve_scene_render_heightmap(
-    heightmap,
+    heightmap = heightmap,
+    heightmap_missing = heightmap_missing,
     caller = caller
   )
 }
@@ -234,30 +217,12 @@ resolve_render_water_effective_zscale = function(
   heightmap = NULL,
   caller = NULL
 ) {
-  heightmap_zscale = suppressWarnings(
-    as.numeric(attr(heightmap, "zscale", exact = TRUE))[1]
-  )
-  if (
-    isTRUE(zscale_missing) &&
-      is.finite(heightmap_zscale) &&
-      heightmap_zscale > 0
-  ) {
-    zscale = heightmap_zscale
-  } else {
-    zscale = resolve_scene_render_zscale(
-      zscale = zscale,
-      zscale_missing = zscale_missing,
-      caller = caller
-    )
-  }
-  vertical_exaggeration = resolve_scene_render_vertical_exaggeration(
+  resolve_scene_render_effective_zscale(
+    zscale = zscale,
+    zscale_missing = zscale_missing,
     vertical_exaggeration = vertical_exaggeration,
     vertical_exaggeration_missing = vertical_exaggeration_missing,
-    caller = caller
-  )
-  apply_vertical_exaggeration(
-    zscale = zscale,
-    vertical_exaggeration = vertical_exaggeration,
+    heightmap = heightmap,
     caller = caller
   )
 }

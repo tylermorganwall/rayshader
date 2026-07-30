@@ -2390,13 +2390,25 @@ resolve_scene_render_effective_zscale = function(
   zscale_missing = FALSE,
   vertical_exaggeration = 1,
   vertical_exaggeration_missing = FALSE,
+  heightmap = NULL,
   caller = NULL
 ) {
-  zscale = resolve_scene_render_zscale(
-    zscale = zscale,
-    zscale_missing = zscale_missing,
-    caller = caller
-  )
+  heightmap_zscale = suppressWarnings(as.numeric(
+    attr(heightmap, "zscale", exact = TRUE)
+  )[1])
+  if (
+    isTRUE(zscale_missing) &&
+      is.finite(heightmap_zscale) &&
+      heightmap_zscale > 0
+  ) {
+    zscale = heightmap_zscale
+  } else {
+    zscale = resolve_scene_render_zscale(
+      zscale = zscale,
+      zscale_missing = zscale_missing,
+      caller = caller
+    )
+  }
   vertical_exaggeration = resolve_scene_render_vertical_exaggeration(
     vertical_exaggeration = vertical_exaggeration,
     vertical_exaggeration_missing = vertical_exaggeration_missing,
@@ -2427,8 +2439,12 @@ warn_scale_data_with_vertical_exaggeration = function(
   invisible(NULL)
 }
 
-resolve_scene_render_heightmap = function(heightmap = NULL, caller = NULL) {
-  if (!is.null(heightmap)) {
+resolve_scene_render_heightmap = function(
+  heightmap = NULL,
+  heightmap_missing = FALSE,
+  caller = NULL
+) {
+  if (!isTRUE(heightmap_missing) && !is.null(heightmap)) {
     if (is_spatial_heightmap_input(heightmap)) {
       heightmap_info = coerce_plot_3d_heightmap(heightmap)
       if (!is.null(heightmap_info$extent)) {
@@ -2436,6 +2452,12 @@ resolve_scene_render_heightmap = function(heightmap = NULL, caller = NULL) {
       }
       if (!is.null(heightmap_info$crs)) {
         attr(heightmap_info$heightmap, "crs") = heightmap_info$crs
+      }
+      if (
+        is.finite(heightmap_info$zscale) &&
+          heightmap_info$zscale > 0
+      ) {
+        attr(heightmap_info$heightmap, "zscale") = heightmap_info$zscale
       }
       return(heightmap_info$heightmap)
     }
@@ -2451,6 +2473,250 @@ resolve_scene_render_heightmap = function(heightmap = NULL, caller = NULL) {
     )
   }
   scene_heightmap
+}
+
+#' Resolve a scalar render argument
+#'
+#' @param value Argument value.
+#' @param missing Whether the argument was omitted.
+#' @param default Default value used for an omitted argument.
+#' @param argument Argument name used in errors.
+#' @param type Default `c("double", "integer", "logical")`. Scalar type.
+#' @param lower Default `-Inf`. Lower accepted bound.
+#' @param upper Default `Inf`. Upper accepted bound.
+#' @param lower_inclusive Default `TRUE`. Whether `lower` is inclusive.
+#' @param upper_inclusive Default `TRUE`. Whether `upper` is inclusive.
+#' @param allow_null Default `FALSE`. Whether an explicit `NULL` is accepted.
+#'
+#' @return A normalized scalar or `NULL`.
+#' @keywords internal
+resolve_render_scalar = function(
+  value,
+  missing,
+  default,
+  argument,
+  type = c("double", "integer", "logical"),
+  lower = -Inf,
+  upper = Inf,
+  lower_inclusive = TRUE,
+  upper_inclusive = TRUE,
+  allow_null = FALSE
+) {
+  type = match.arg(type)
+  if (isTRUE(missing)) {
+    value = default
+  }
+  if (is.null(value)) {
+    if (isTRUE(allow_null)) {
+      return(NULL)
+    }
+    stop(sprintf("`%s` cannot be NULL.", argument), call. = FALSE)
+  }
+  if (length(value) != 1L) {
+    stop(sprintf("`%s` must be a single value.", argument), call. = FALSE)
+  }
+  resolved = switch(
+    type,
+    double = suppressWarnings(as.numeric(value)),
+    integer = suppressWarnings(as.numeric(value)),
+    logical = suppressWarnings(as.logical(value))
+  )
+  if (
+    length(resolved) != 1L ||
+      is.na(resolved) ||
+      (type != "logical" && !is.finite(resolved))
+  ) {
+    stop(
+      sprintf("`%s` must be a single %s value.", argument, type),
+      call. = FALSE
+    )
+  }
+  if (type == "integer") {
+    if (resolved != floor(resolved)) {
+      stop(sprintf("`%s` must be a whole number.", argument), call. = FALSE)
+    }
+    resolved = as.integer(resolved)
+  }
+  if (type == "logical") {
+    return(resolved)
+  }
+  below = if (isTRUE(lower_inclusive)) {
+    resolved < lower
+  } else {
+    resolved <= lower
+  }
+  above = if (isTRUE(upper_inclusive)) {
+    resolved > upper
+  } else {
+    resolved >= upper
+  }
+  if (below || above) {
+    lower_relation = if (isTRUE(lower_inclusive)) ">=" else ">"
+    upper_relation = if (isTRUE(upper_inclusive)) "<=" else "<"
+    stop(
+      sprintf(
+        "`%s` must satisfy %s %s and %s %s.",
+        argument,
+        lower_relation,
+        format(lower),
+        upper_relation,
+        format(upper)
+      ),
+      call. = FALSE
+    )
+  }
+  resolved
+}
+
+#' Resolve feature-aligned render argument values
+#'
+#' @param data Spatial or tabular feature data.
+#' @param value Argument value.
+#' @param value_expr Captured argument expression.
+#' @param missing Whether the argument was omitted.
+#' @param default Default scalar used for an omitted argument.
+#' @param argument Argument name used in errors.
+#' @param type Default `c("double", "integer", "character")`. Value type.
+#' @param lower Default `-Inf`. Lower accepted numeric bound.
+#' @param upper Default `Inf`. Upper accepted numeric bound.
+#' @param allow_na Default `FALSE`. Whether missing values are accepted.
+#'
+#' @return A vector aligned with the rows or features in `data`.
+#' @keywords internal
+resolve_render_feature_values = function(
+  data,
+  value,
+  value_expr,
+  missing,
+  default,
+  argument,
+  type = c("double", "integer", "character"),
+  lower = -Inf,
+  upper = Inf,
+  allow_na = FALSE
+) {
+  type = match.arg(type)
+  feature_data = if (inherits(data, "SpatialLinesDataFrame")) {
+    data@data
+  } else if (inherits(data, "sf") || is.data.frame(data)) {
+    data
+  } else {
+    NULL
+  }
+  feature_count = if (!is.null(feature_data)) {
+    nrow(feature_data)
+  } else if (inherits(data, "sfc")) {
+    length(data)
+  } else if (inherits(data, "sfg")) {
+    1L
+  } else if (inherits(data, "SpatialLines")) {
+    length(data@lines)
+  } else {
+    0L
+  }
+  column_names = if (is.null(feature_data)) {
+    character(0)
+  } else {
+    names(feature_data)
+  }
+  if (isTRUE(missing)) {
+    resolved = default
+  } else if (
+    is.name(value_expr) &&
+      as.character(value_expr) %in% column_names
+  ) {
+    resolved = feature_data[[as.character(value_expr)]]
+  } else {
+    evaluated = tryCatch(
+      value,
+      error = function(error) {
+        stop(
+          sprintf(
+            "Could not resolve `%s`: %s",
+            argument,
+            conditionMessage(error)
+          ),
+          call. = FALSE
+        )
+      }
+    )
+    if (
+      is.character(evaluated) &&
+        length(evaluated) == 1L &&
+        !is.na(evaluated) &&
+        evaluated %in% column_names
+    ) {
+      resolved = feature_data[[evaluated]]
+    } else {
+      resolved = evaluated
+    }
+  }
+  if (is.factor(resolved)) {
+    resolved = as.character(resolved)
+  }
+  raw_missing = is.na(resolved)
+  if (is.character(resolved)) {
+    raw_missing = raw_missing | !nzchar(trimws(resolved))
+  }
+  resolved = switch(
+    type,
+    double = suppressWarnings(as.numeric(resolved)),
+    integer = suppressWarnings(as.numeric(resolved)),
+    character = as.character(resolved)
+  )
+  if (length(resolved) == 1L && feature_count != 1L) {
+    resolved = rep(resolved, feature_count)
+  }
+  if (length(resolved) != feature_count) {
+    stop(
+      sprintf(
+        "`%s` must be scalar or contain one value per feature.",
+        argument
+      ),
+      call. = FALSE
+    )
+  }
+  missing_value = is.na(resolved)
+  if (type != "character") {
+    missing_value = missing_value | !is.finite(resolved)
+    invalid_coercion = !raw_missing & missing_value
+    if (any(invalid_coercion)) {
+      stop(
+        sprintf("`%s` contains values that cannot be converted.", argument),
+        call. = FALSE
+      )
+    }
+  }
+  if (!isTRUE(allow_na) && any(missing_value)) {
+    stop(
+      sprintf("`%s` cannot contain missing values.", argument),
+      call. = FALSE
+    )
+  }
+  present = !missing_value
+  if (type != "character") {
+    if (any(resolved[present] < lower | resolved[present] > upper)) {
+      stop(
+        sprintf(
+          "`%s` values must be between %s and %s.",
+          argument,
+          format(lower),
+          format(upper)
+        ),
+        call. = FALSE
+      )
+    }
+    if (
+      type == "integer" &&
+        any(resolved[present] != floor(resolved[present]))
+    ) {
+      stop(sprintf("`%s` must contain whole numbers.", argument), call. = FALSE)
+    }
+  }
+  if (type == "integer") {
+    resolved = as.integer(resolved)
+  }
+  resolved
 }
 
 resolve_hillshade_heightmap = function(
