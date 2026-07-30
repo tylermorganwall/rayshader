@@ -130,6 +130,7 @@ render_roads = function(
   lane_dash_fraction = NULL,
   clear_previous = TRUE
 ) {
+  # 1. Capture expressions needed to distinguish values from column references.
   heightmap_missing = missing(heightmap)
   zscale_missing = missing(zscale)
   vertical_exaggeration_missing = missing(vertical_exaggeration)
@@ -140,6 +141,7 @@ render_roads = function(
   layer_height_expr = substitute(layer_height)
   lanes_expr = substitute(lanes)
 
+  # 2. Resolve the active scene and validate public scalar arguments once.
   if (!is_render_line_input(roads)) {
     stop(
       "`roads` must be an sf, sfc, sfg, SpatialLines, or SpatialLinesDataFrame line object.",
@@ -285,6 +287,8 @@ render_roads = function(
   if (rgl::cur3d() == 0) {
     stop("No rgl window currently open.")
   }
+
+  # 3. Resolve columns and normalize every feature-aligned public value.
   width_column = resolve_render_line_width_column(
     width_column = width_column,
     width_column_expr = width_column_expr,
@@ -437,40 +441,240 @@ render_roads = function(
     rgl::pop3d(tag = "road_path")
     clear_render_road_path_info()
   }
-  render_road_paths(
-    roads = roads,
+
+  # 4. Normalize geometry and create terrain-sampled centerline paths.
+  extent = resolve_scene_render_extent(
     heightmap = heightmap,
-    extent = resolve_scene_render_extent(
-      heightmap = heightmap,
-      caller = "render_roads",
-      error_if_missing = FALSE
-    ),
-    zscale = zscale,
-    roadcolor = roadcolor,
+    caller = "render_roads",
+    error_if_missing = FALSE
+  )
+  roads = prepare_render_line_geometry(
+    lines = roads,
+    merge = merge,
+    line_argument = "roads"
+  )
+  if (is_empty_scene_sf(roads)) {
+    return(invisible(list()))
+  }
+  road_lanes = resolve_render_road_lane_values(
+    roads = roads,
+    lanes = lanes_spec$value,
+    lanes_column = lanes_spec$column
+  )
+  texture_world_scale = calculate_road_path_world_scale(
+    heightmap = heightmap,
+    extent = extent
+  )
+  road_width = resolve_render_road_width(
     road_width = width,
-    road_width_column = width_column,
-    road_densify = densify,
-    road_offset = offset,
-    road_offset_transition = offset_transition,
-    road_layer_column = layer_column,
-    road_layer_spacing = layer_height_spec$spacing,
-    road_layer_height_column = layer_height_spec$column,
-    road_lanes_column = lanes_spec$column,
-    road_merge = merge,
+    lanes = road_lanes,
+    lane_width = lane_width,
+    texture_world_scale = texture_world_scale
+  )
+  if (length(road_width) > 1L && is.null(width_column)) {
+    if (
+      length(road_width) != nrow(roads) ||
+        any(!is.finite(road_width)) ||
+        any(road_width <= 0)
+    ) {
+      stop(
+        "Derived road widths must be positive and match the road features.",
+        call. = FALSE
+      )
+    }
+  } else if (!is.null(width_column)) {
+    road_width = as.numeric(roads[[width_column]])
+  }
+  path_data = render_line_coords_by_width(
+    lines = roads,
+    heightmap = heightmap,
+    extent = extent,
+    zscale = zscale,
+    color = roadcolor,
+    width = road_width,
+    force_by_feature = TRUE
+  )
+  coord_list = path_data$coords
+  coord_width = path_data$width
+  coord_feature = path_data$feature_id
+  coord_lanes = if (length(road_lanes) == 1L) {
+    rep(road_lanes, length(coord_list))
+  } else {
+    road_lanes[coord_feature]
+  }
+  coord_terrain_following = rep(TRUE, length(coord_list))
+  if (!length(coord_list)) {
+    return(invisible(coord_list))
+  }
+  if (isTRUE(densify)) {
+    coord_list = densify_render_line_coords(
+      coords = coord_list,
+      heightmap = heightmap,
+      zscale = zscale,
+      offset = 0
+    )
+  }
+
+  # 5. Apply sparse layered profiles or the ordinary terrain-relative offset.
+  if (!is.null(layer_column)) {
+    coord_list = solve_render_road_path_profiles(
+      coord_list = coord_list,
+      coord_feature = coord_feature,
+      roads = roads,
+      layer_column = layer_column,
+      lane_column = lanes_spec$column,
+      lane_values = if (length(road_lanes) == 1L) {
+        rep(road_lanes, nrow(roads))
+      } else {
+        road_lanes
+      },
+      layer_height_column = layer_height_spec$column,
+      layer_spacing = layer_height_spec$spacing,
+      zscale = zscale,
+      texture_world_scale = texture_world_scale
+    )
+    layer_terrain_following = attr(coord_list, "terrain_following")
+    if (length(layer_terrain_following) == length(coord_list)) {
+      coord_terrain_following = layer_terrain_following
+    }
+  } else {
+    coord_list = offset_render_road_path_coords(
+      coord_list = coord_list,
+      offset = offset / zscale,
+      transition_length = offset_transition,
+      texture_world_scale = texture_world_scale
+    )
+    if (offset > 0 && offset_transition > 0) {
+      coord_terrain_following[] = FALSE
+    }
+  }
+
+  # 6. Resolve lane textures and station-based road-envelope metadata.
+  texture_files = resolve_road_lane_texture_files(
+    coord_lanes = coord_lanes,
     lane_texture = lane_texture,
     lane_texture_file = lane_texture_file,
-    lane_dash_length = lane_dash_length,
-    lane_gap_length = lane_gap_length,
-    lane_texture_length = lane_texture_length,
-    lane_texture_mapping = lane_texture_mapping,
-    lanes = lanes_spec$value,
-    lane_width = lane_width,
+    roadcolor = roadcolor,
     lane_color = lane_color,
     centerline_color = centerline_color,
     edge_line_color = edge_line_color,
     lane_line_width = lane_line_width,
     lane_dash_fraction = lane_dash_fraction
   )
+  texture_mapping = resolve_road_lane_texture_mapping(
+    coord_list = coord_list,
+    lane_texture_length = lane_texture_length,
+    lane_texture_mapping = lane_texture_mapping,
+    texture_world_scale = texture_world_scale
+  )
+
+  # 7. Build physical mesh chains from accepted exact continuations.
+  mesh_topology = attr(coord_list, "mesh_topology")
+  path_members = if (is.null(mesh_topology)) {
+    source_feature_id = vapply(
+      path_data$source_feature_id,
+      function(value) {
+        value = unique(as.integer(value))
+        if (length(value) == 1L && is.finite(value)) {
+          return(value)
+        }
+        NA_integer_
+      },
+      integer(1)
+    )
+    data.frame(
+      road_path_id = seq_along(coord_list),
+      render_road_fragment_id = NA_integer_,
+      render_road_feature_id = source_feature_id,
+      stringsAsFactors = FALSE
+    )
+  } else {
+    mesh_topology$path_members
+  }
+  mesh_chain_members = build_render_road_mesh_chain_members(
+    coord_list = coord_list,
+    path_members = path_members,
+    selected_connections = if (is.null(mesh_topology)) {
+      NULL
+    } else {
+      mesh_topology$selected_connections
+    },
+    lanes = coord_lanes,
+    width = coord_width,
+    texture_file = texture_files,
+    texture_length = texture_mapping$texture_length,
+    texture_repeats = texture_mapping$texture_repeats
+  )
+  attr(coord_list, "mesh_chain_members") = mesh_chain_members
+
+  # 8. Draw preview paths and register the compact high-quality mesh contract.
+  road_id_by_path = rep(NA_integer_, length(coord_list))
+  for (coord_index in seq_along(coord_list)) {
+    coord = coord_list[[coord_index]]
+    if (is.matrix(coord) && nrow(coord) >= 2) {
+      road_id = rgl::lines3d(
+        coord,
+        color = roadcolor,
+        tag = "road_path",
+        lwd = coord_width[[coord_index]],
+        line_antialias = FALSE
+      )
+      road_id_by_path[[coord_index]] = as.integer(road_id[[1L]])
+    }
+  }
+  for (coord_index in which(is.finite(road_id_by_path))) {
+    texture_repeats = texture_mapping$texture_repeats[[coord_index]]
+    if (!is.finite(texture_repeats)) {
+      texture_repeats = NULL
+    }
+    path_member = mesh_chain_members[
+      mesh_chain_members$road_path_id == coord_index,
+      ,
+      drop = FALSE
+    ]
+    register_render_road_path_info(
+      id = road_id_by_path[[coord_index]],
+      info = list(
+        road_path_id = coord_index,
+        fragment_id = if (nrow(path_member)) {
+          path_member$fragment_id[[1L]]
+        } else {
+          NA_integer_
+        },
+        feature_id = if (nrow(path_member)) {
+          path_member$feature_id[[1L]]
+        } else {
+          NA_integer_
+        },
+        mesh_chain_id = if (nrow(path_member)) {
+          path_member$mesh_chain_id[[1L]]
+        } else {
+          NA_integer_
+        },
+        member_order = if (nrow(path_member)) {
+          path_member$member_order[[1L]]
+        } else {
+          1L
+        },
+        orientation = if (nrow(path_member)) {
+          path_member$orientation[[1L]]
+        } else {
+          1L
+        },
+        closed = nrow(path_member) && isTRUE(path_member$closed[[1L]]),
+        lanes = coord_lanes[[coord_index]],
+        width = coord_width[[coord_index]],
+        texture_file = texture_files[[coord_index]],
+        texture_length = texture_mapping$texture_length[[coord_index]],
+        texture_repeats = texture_repeats,
+        texture_world_scale = texture_mapping$texture_world_scale,
+        terrain_following = coord_terrain_following[[coord_index]]
+      )
+    )
+  }
+
+  # 9. Preserve the public coordinate-list return value and diagnostics.
+  invisible(coord_list)
 }
 
 #' Resolve a render road column
@@ -854,297 +1058,6 @@ resolve_render_road_osm_layer_values = function(roads, layer_column) {
   )
 }
 
-
-#' Render road paths
-#'
-#' @param roads Spatial line input.
-#' @param heightmap Heightmap matrix.
-#' @param extent Scene extent.
-#' @param zscale Effective zscale.
-#' @param roadcolor Road color.
-#' @param road_width Road width.
-#' @param road_width_column Column name containing road widths.
-#' @param road_densify Whether to densify paths.
-#' @param road_offset Centerline offset in elevation units.
-#' @param road_offset_transition Quadratic transition length at each path end.
-#' @param road_layer_column Column containing OSM-style layer values.
-#' @param road_layer_spacing Constant vertical spacing between ordered layers.
-#' @param road_layer_height_column Column containing feature-specific heights.
-#' @param road_lanes_column Column containing feature lane counts.
-#' @param road_merge Whether to merge connected linework.
-#' @param lane_texture Whether to use a lane texture.
-#' @param lane_texture_file Optional lane texture file.
-#' @param lane_dash_length Painted dash length.
-#' @param lane_gap_length Gap length.
-#' @param lane_texture_length Scene-unit length per texture repeat.
-#' @param lane_texture_mapping Texture mapping mode.
-#' @param lanes Number of lanes.
-#' @param lane_width Lane width.
-#' @param lane_color Lane marking color.
-#' @param centerline_color Center line color.
-#' @param edge_line_color Edge line color.
-#' @param lane_line_width Lane line width fraction.
-#' @param lane_dash_fraction Dash fraction.
-#'
-#' @return Invisibly returns the rendered road coordinates.
-#' @keywords internal
-render_road_paths = function(
-  roads,
-  heightmap,
-  extent,
-  zscale,
-  roadcolor,
-  road_width = NULL,
-  road_width_column = NULL,
-  road_densify = TRUE,
-  road_offset = 0,
-  road_offset_transition = 0,
-  road_layer_column = NULL,
-  road_layer_spacing = 5.5,
-  road_layer_height_column = NULL,
-  road_lanes_column = NULL,
-  road_merge = TRUE,
-  lane_texture = FALSE,
-  lane_texture_file = NULL,
-  lane_dash_length = 3,
-  lane_gap_length = 10,
-  lane_texture_length = NULL,
-  lane_texture_mapping = c("auto", "fixed"),
-  lanes = 2,
-  lane_width = 3,
-  lane_color = "white",
-  centerline_color = "#ffd23f",
-  edge_line_color = "white",
-  lane_line_width = 0.035,
-  lane_dash_fraction = NULL
-) {
-  if (!is.null(road_layer_column)) {
-    road_merge = FALSE
-  }
-  if (!is.null(road_lanes_column)) {
-    road_merge = FALSE
-  }
-  if (!is.null(road_width_column)) {
-    road_merge = FALSE
-  }
-  roads = prepare_render_line_geometry(
-    lines = roads,
-    merge = road_merge,
-    line_argument = "roads"
-  )
-  if (is_empty_scene_sf(roads)) {
-    return(invisible(list()))
-  }
-  road_lanes = resolve_render_road_lane_values(
-    roads = roads,
-    lanes = lanes,
-    lanes_column = road_lanes_column
-  )
-  texture_world_scale = calculate_road_path_world_scale(
-    heightmap = heightmap,
-    extent = extent
-  )
-  road_width = resolve_render_road_width(
-    road_width = road_width,
-    lanes = road_lanes,
-    lane_width = lane_width,
-    texture_world_scale = texture_world_scale
-  )
-  if (length(road_width) > 1L && is.null(road_width_column)) {
-    if (
-      length(road_width) != nrow(roads) ||
-        any(!is.finite(road_width)) ||
-        any(road_width <= 0)
-    ) {
-      stop(
-        "Derived road widths must be positive and match the road features.",
-        call. = FALSE
-      )
-    }
-  } else if (!is.null(road_width_column)) {
-    road_width = as.numeric(roads[[road_width_column]])
-  }
-  path_data = render_line_coords_by_width(
-    lines = roads,
-    heightmap = heightmap,
-    extent = extent,
-    zscale = zscale,
-    color = roadcolor,
-    width = road_width,
-    force_by_feature = TRUE
-  )
-  coord_list = path_data$coords
-  coord_width = path_data$width
-  coord_feature = path_data$feature_id
-  coord_lanes = if (length(road_lanes) == 1L) {
-    rep(road_lanes, length(coord_list))
-  } else {
-    road_lanes[coord_feature]
-  }
-  coord_terrain_following = rep(TRUE, length(coord_list))
-  if (!length(coord_list)) {
-    return(invisible(coord_list))
-  }
-  if (isTRUE(road_densify)) {
-    coord_list = densify_render_line_coords(
-      coords = coord_list,
-      heightmap = heightmap,
-      zscale = zscale,
-      offset = 0
-    )
-  }
-  if (!is.null(road_layer_column)) {
-    coord_list = solve_render_road_path_profiles(
-      coord_list = coord_list,
-      coord_feature = coord_feature,
-      roads = roads,
-      layer_column = road_layer_column,
-      lane_column = road_lanes_column,
-      lane_values = if (length(road_lanes) == 1L) {
-        rep(road_lanes, nrow(roads))
-      } else {
-        road_lanes
-      },
-      layer_height_column = road_layer_height_column,
-      layer_spacing = road_layer_spacing,
-      zscale = zscale,
-      texture_world_scale = texture_world_scale
-    )
-    layer_terrain_following = attr(coord_list, "terrain_following")
-    if (length(layer_terrain_following) == length(coord_list)) {
-      coord_terrain_following = layer_terrain_following
-    }
-  } else {
-    coord_list = offset_render_road_path_coords(
-      coord_list = coord_list,
-      offset = road_offset / zscale,
-      transition_length = road_offset_transition,
-      texture_world_scale = texture_world_scale
-    )
-    if (road_offset > 0 && road_offset_transition > 0) {
-      coord_terrain_following[] = FALSE
-    }
-  }
-  texture_files = resolve_road_lane_texture_files(
-    coord_lanes = coord_lanes,
-    lane_texture = lane_texture,
-    lane_texture_file = lane_texture_file,
-    roadcolor = roadcolor,
-    lane_color = lane_color,
-    centerline_color = centerline_color,
-    edge_line_color = edge_line_color,
-    lane_line_width = lane_line_width,
-    lane_dash_fraction = lane_dash_fraction
-  )
-  texture_mapping = resolve_road_lane_texture_mapping(
-    coord_list = coord_list,
-    lane_texture_length = lane_texture_length,
-    lane_texture_mapping = lane_texture_mapping,
-    texture_world_scale = texture_world_scale
-  )
-  mesh_topology = attr(coord_list, "mesh_topology")
-  path_members = if (is.null(mesh_topology)) {
-    source_feature_id = vapply(
-      path_data$source_feature_id,
-      function(value) {
-        value = unique(as.integer(value))
-        if (length(value) == 1L && is.finite(value)) {
-          return(value)
-        }
-        NA_integer_
-      },
-      integer(1)
-    )
-    data.frame(
-      road_path_id = seq_along(coord_list),
-      render_road_fragment_id = NA_integer_,
-      render_road_feature_id = source_feature_id,
-      stringsAsFactors = FALSE
-    )
-  } else {
-    mesh_topology$path_members
-  }
-  mesh_chain_members = build_render_road_mesh_chain_members(
-    coord_list = coord_list,
-    path_members = path_members,
-    selected_connections = if (is.null(mesh_topology)) {
-      NULL
-    } else {
-      mesh_topology$selected_connections
-    },
-    lanes = coord_lanes,
-    width = coord_width,
-    texture_file = texture_files,
-    texture_length = texture_mapping$texture_length,
-    texture_repeats = texture_mapping$texture_repeats
-  )
-  attr(coord_list, "mesh_chain_members") = mesh_chain_members
-  road_id_by_path = rep(NA_integer_, length(coord_list))
-  for (coord_index in seq_along(coord_list)) {
-    coord = coord_list[[coord_index]]
-    if (is.matrix(coord) && nrow(coord) >= 2) {
-      road_id = rgl::lines3d(
-        coord,
-        color = roadcolor,
-        tag = "road_path",
-        lwd = coord_width[[coord_index]],
-        line_antialias = FALSE
-      )
-      road_id_by_path[[coord_index]] = as.integer(road_id[[1L]])
-    }
-  }
-  for (coord_index in which(is.finite(road_id_by_path))) {
-    texture_repeats = texture_mapping$texture_repeats[[coord_index]]
-    if (!is.finite(texture_repeats)) {
-      texture_repeats = NULL
-    }
-    path_member = mesh_chain_members[
-      mesh_chain_members$road_path_id == coord_index,
-      ,
-      drop = FALSE
-    ]
-    register_render_road_path_info(
-      id = road_id_by_path[[coord_index]],
-      info = list(
-        road_path_id = coord_index,
-        fragment_id = if (nrow(path_member)) {
-          path_member$fragment_id[[1L]]
-        } else {
-          NA_integer_
-        },
-        feature_id = if (nrow(path_member)) {
-          path_member$feature_id[[1L]]
-        } else {
-          NA_integer_
-        },
-        mesh_chain_id = if (nrow(path_member)) {
-          path_member$mesh_chain_id[[1L]]
-        } else {
-          NA_integer_
-        },
-        member_order = if (nrow(path_member)) {
-          path_member$member_order[[1L]]
-        } else {
-          1L
-        },
-        orientation = if (nrow(path_member)) {
-          path_member$orientation[[1L]]
-        } else {
-          1L
-        },
-        closed = nrow(path_member) && isTRUE(path_member$closed[[1L]]),
-        lanes = coord_lanes[[coord_index]],
-        width = coord_width[[coord_index]],
-        texture_file = texture_files[[coord_index]],
-        texture_length = texture_mapping$texture_length[[coord_index]],
-        texture_repeats = texture_repeats,
-        texture_world_scale = texture_mapping$texture_world_scale,
-        terrain_following = coord_terrain_following[[coord_index]]
-      )
-    )
-  }
-  invisible(coord_list)
-}
 
 #' Build rendered-path to topology-fragment membership
 #'
@@ -8672,7 +8585,7 @@ normalize_render_road_world_scale = function(texture_world_scale) {
 #' Resolve road lane texture files by lane count
 #'
 #' @param coord_lanes Lane count for each rendered coordinate path.
-#' @inheritParams render_road_paths
+#' @inheritParams render_roads
 #'
 #' @return List of texture paths or `NULL` entries for each path.
 #' @keywords internal
@@ -8710,7 +8623,7 @@ resolve_road_lane_texture_files = function(
 
 #' Resolve road lane texture file
 #'
-#' @inheritParams render_road_paths
+#' @inheritParams render_roads
 #'
 #' @return Texture file path or `NULL`.
 #' @keywords internal
@@ -8744,7 +8657,7 @@ resolve_road_lane_texture_file = function(
 
 #' Make default road lane texture
 #'
-#' @inheritParams render_road_paths
+#' @inheritParams render_roads
 #' @param size Default `128`. Texture width/height in pixels.
 #'
 #' @return Texture file path.

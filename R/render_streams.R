@@ -207,6 +207,7 @@ render_streams = function(
   clear_previous = TRUE,
   water_polygons = NULL
 ) {
+  # 1. Capture expressions needed to distinguish values from column references.
   heightmap_missing = missing(heightmap)
   zscale_missing = missing(zscale)
   vertical_exaggeration_missing = missing(vertical_exaggeration)
@@ -215,6 +216,7 @@ render_streams = function(
   width_column_missing = missing(width_column)
   width_column_expr = substitute(width_column)
 
+  # 2. Resolve the active scene and validate public scalar arguments once.
   if (!is_render_line_input(streams)) {
     stop(
       "`streams` must be an sf, sfc, sfg, SpatialLines, or SpatialLinesDataFrame line object.",
@@ -296,6 +298,8 @@ render_streams = function(
   if (rgl::cur3d() == 0) {
     stop("No rgl window currently open.")
   }
+
+  # 3. Resolve feature-aligned widths before geometry normalization.
   width_column_name = resolve_render_line_width_column(
     width_column = width_column,
     width_column_expr = width_column_expr,
@@ -369,80 +373,37 @@ render_streams = function(
   if (isTRUE(clear_previous)) {
     rgl::pop3d(tag = "water_path")
   }
-  render_water_paths(
-    waterpaths = streams,
-    water_polygons = water_polygons,
-    heightmap = heightmap,
-    extent = resolve_scene_render_extent(
-      heightmap = heightmap,
-      caller = "render_streams",
-      error_if_missing = FALSE
-    ),
-    zscale = zscale,
-    watercolor = watercolor,
-    waterpath_width = width,
-    waterpath_width_column = width_column,
-    waterpath_densify = densify,
-    waterpath_offset = offset,
-    waterpath_merge = merge
-  )
-}
 
-#' Render water stream paths
-#'
-#' @param waterpaths Spatial line input.
-#' @param water_polygons Default `NULL`. Polygon data to remove from the line
-#' input.
-#' @param heightmap Heightmap matrix.
-#' @param extent Scene extent.
-#' @param zscale Effective zscale.
-#' @param watercolor Water color.
-#' @param waterpath_width Stream width.
-#' @param waterpath_width_column Column name containing stream widths.
-#' @param waterpath_densify Whether to densify paths.
-#' @param waterpath_offset Centerline offset in elevation units.
-#' @param waterpath_merge Whether to merge connected linework.
-#'
-#' @return Invisibly returns the rendered stream coordinates.
-#' @keywords internal
-render_water_paths = function(
-  waterpaths,
-  heightmap,
-  extent,
-  zscale,
-  watercolor,
-  waterpath_width = 1,
-  waterpath_width_column = NULL,
-  waterpath_densify = TRUE,
-  waterpath_offset = NULL,
-  waterpath_merge = TRUE,
-  water_polygons = NULL
-) {
-  if (!is.null(waterpath_width_column)) {
-    waterpath_merge = FALSE
-  }
-  waterpaths = prepare_render_line_geometry(
-    lines = waterpaths,
-    merge = waterpath_merge,
+  # 4. Normalize, clip, and preserve source identities in the line geometry.
+  extent = resolve_scene_render_extent(
+    heightmap = heightmap,
+    caller = "render_streams",
+    error_if_missing = FALSE
+  )
+  streams = prepare_render_line_geometry(
+    lines = streams,
+    merge = merge,
     exclude_polygons = water_polygons,
     line_argument = "streams",
     polygon_argument = "water_polygons"
   )
-  if (is_empty_scene_sf(waterpaths)) {
+  if (is_empty_scene_sf(streams)) {
     return(invisible(list()))
   }
-  waterpath_width = if (is.null(waterpath_width_column)) {
-    waterpath_width
+  stream_width = if (is.null(width_column)) {
+    width
   } else {
-    as.numeric(waterpaths[[waterpath_width_column]])
+    as.numeric(streams[[width_column]])
   }
+
+  # 5. Build terrain-sampled coordinates and their feature mapping.
   path_data = render_line_coords_by_width(
-    lines = waterpaths,
+    lines = streams,
     heightmap = heightmap,
     extent = extent,
     zscale = zscale,
     color = watercolor,
-    width = waterpath_width,
+    width = stream_width,
     force_by_feature = TRUE
   )
   coord_list = path_data$coords
@@ -450,19 +411,23 @@ render_water_paths = function(
   if (!length(coord_list)) {
     return(invisible(coord_list))
   }
-  if (isTRUE(waterpath_densify)) {
+
+  # 6. Densify against the terrain grid or apply the requested offset.
+  if (isTRUE(densify)) {
     coord_list = densify_render_line_coords(
       coords = coord_list,
       heightmap = heightmap,
       zscale = zscale,
-      offset = waterpath_offset
+      offset = offset
     )
-  } else if (!identical(waterpath_offset, 0)) {
+  } else if (!identical(offset, 0)) {
     coord_list = offset_render_line_coords(
       coords = coord_list,
-      offset = waterpath_offset / zscale
+      offset = offset / zscale
     )
   }
+
+  # 7. Draw the preview paths and return the compatibility coordinate list.
   path_members = data.frame(
     water_path_id = seq_along(coord_list),
     render_line_feature_id = as.integer(path_data$feature_id),
@@ -483,32 +448,6 @@ render_water_paths = function(
     }
   }
   invisible(coord_list)
-}
-
-#' Resolve water path offset
-#'
-#' @param value Default `NULL`. Requested offset in elevation units.
-#' @param name Default `"offset"`. Argument name for error messages.
-#'
-#' @return Offset in elevation units.
-#' @keywords internal
-resolve_waterpath_offset = function(value = NULL, name = "offset") {
-  if (!is.null(value)) {
-    return(resolve_render_positive_number(
-      value,
-      name,
-      allow_zero = TRUE
-    ))
-  }
-  0
-}
-
-#' Water path profile height ratio
-#'
-#' @return Height-to-width ratio for high-quality rectangular stream meshes.
-#' @keywords internal
-waterpath_profile_height_ratio = function() {
-  0.2
 }
 
 #' Collapse duplicated path vertices
@@ -565,7 +504,7 @@ collapse_render_highquality_path_vertices = function(
 #' @return Two-column matrix defining a shallow rectangular extrusion profile.
 #' @keywords internal
 make_render_highquality_water_path_polygon = function() {
-  height_ratio = waterpath_profile_height_ratio()
+  height_ratio = 0.2
   matrix(
     c(
       -0.5,
@@ -806,7 +745,7 @@ make_render_highquality_joined_water_path_mesh = function(
   if (any(!is.finite(terrain_y))) {
     stop("Joined stream mesh height sampling produced non-finite values.")
   }
-  height = group$width * waterpath_profile_height_ratio()
+  height = group$width * 0.2
   if (is.null(seal_epsilon)) {
     seal_epsilon = max(group$width, 1) * 1e-5
   } else {
