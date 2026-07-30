@@ -4,10 +4,16 @@
 \alias{collapse_render_highquality_path_vertices}
 \title{Collapse duplicated path vertices}
 \usage{
-collapse_render_highquality_path_vertices(vertices)
+collapse_render_highquality_path_vertices(
+  vertices,
+  minimum_step = sqrt(.Machine$double.eps)
+)
 }
 \arguments{
 \item{vertices}{Path vertex matrix.}
+
+\item{minimum_step}{Default \code{sqrt(.Machine$double.eps)}. Minimum retained
+distance between consecutive vertices.}
 }
 \value{
 Path vertex matrix with consecutive duplicated vertices removed.

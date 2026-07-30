@@ -95,20 +95,42 @@ test_that("colored generated lane textures preserve the road color", {
     size = 128
   )
   striped_texture = png::readPNG(striped_texture_file)
-  divider_columns = round(
-    calculate_road_lane_marking_positions(6)$dividers * 127
-  ) +
-    1L
+  stripe_rgb = as.vector(col2rgb(stripe_color)) / 255
+  stripe_distance = apply(
+    abs(sweep(striped_texture[1, , ], 2, stripe_rgb, "-")),
+    1,
+    max
+  )
+  striped_columns = which(stripe_distance <= 1 / 255)
+  stripe_runs = split(
+    striped_columns,
+    cumsum(c(TRUE, diff(striped_columns) > 1L))
+  )
+  divider_columns = as.integer(round(vapply(
+    stripe_runs,
+    mean,
+    numeric(1)
+  )))
+  expect_equal(divider_columns, c(27L, 46L, 65L, 83L, 102L))
   expect_equal(
     striped_texture[1, divider_columns, ],
     array(
       rep(
-        as.vector(col2rgb(stripe_color)) / 255,
+        stripe_rgb,
         each = length(divider_columns)
       ),
       dim = c(length(divider_columns), 3)
     ),
     tolerance = 1 / 255
+  )
+  centerline_distance = apply(
+    abs(sweep(striped_texture[, divider_columns[[3L]], ], 2, stripe_rgb, "-")),
+    1,
+    max
+  )
+  expect_equal(
+    which(centerline_distance <= 1 / 255),
+    seq_len(floor(128 * 3 / 13))
   )
 })
 
@@ -174,6 +196,22 @@ test_that("render_roads fits lane texture repeats to each road length", {
     c(3 / 2, 5 / 2),
     tolerance = 1e-8
   )
+
+  expect_no_condition(render_roads(
+    roads,
+    heightmap = height_raster,
+    lane_texture = TRUE,
+    lane_texture_length = 2,
+    lane_texture_mapping = "fixed",
+    merge = FALSE
+  ))
+  fixed_path_ids = get_ids_with_labels(typeval = "road_path")
+  fixed_info = lapply(fixed_path_ids$id, get_render_road_path_info)
+  expect_true(all(vapply(
+    fixed_info,
+    function(info) is.null(info$texture_repeats),
+    logical(1)
+  )))
 })
 
 test_that("road offsets use local quadratic transitions", {
@@ -509,37 +547,10 @@ test_that("elevated road meshes preserve absolute profiles", {
   expect_equal(range(vertices[, 2]), c(1, 4.11), tolerance = 1e-8)
 })
 
-test_that("road mesh texture coordinates repeat along the path", {
+test_that("road width and mesh texture coordinates follow public settings", {
   skip_if_not_installed("rayrender")
   skip_if_not_installed("rayvertex")
 
-  fixed_mapping = resolve_road_lane_texture_mapping(
-    coord_list = list(matrix(c(0, 0, 0, 5, 0, 0), ncol = 3, byrow = TRUE)),
-    lane_texture_length = 2,
-    lane_texture_mapping = "fixed"
-  )
-  expect_equal(fixed_mapping$texture_length, 2)
-  expect_true(is.na(fixed_mapping$texture_repeats))
-
-  default_mapping = resolve_road_lane_texture_mapping(
-    coord_list = list(matrix(c(0, 0, 0, 26, 0, 0), ncol = 3, byrow = TRUE)),
-    lane_texture_length = resolve_road_lane_texture_length(
-      NULL,
-      lane_dash_length = 3,
-      lane_gap_length = 10
-    ),
-    lane_texture_mapping = "auto"
-  )
-  expect_equal(default_mapping$texture_length, 13)
-  expect_equal(default_mapping$texture_repeats, 2)
-  expect_equal(
-    resolve_road_lane_dash_fraction(
-      NULL,
-      lane_dash_length = 3,
-      lane_gap_length = 10
-    ),
-    3 / 13
-  )
   expect_equal(
     resolve_render_road_width(
       road_width = NULL,
@@ -557,14 +568,6 @@ test_that("road mesh texture coordinates repeat along the path", {
       texture_world_scale = c(1, 1)
     ),
     15
-  )
-  expect_equal(
-    calculate_road_lane_marking_positions(2),
-    list(edge_lines = c(1 / 8, 7 / 8), dividers = 1 / 2)
-  )
-  expect_equal(
-    calculate_road_lane_marking_positions(3),
-    list(edge_lines = c(1 / 10, 9 / 10), dividers = c(11 / 30, 19 / 30))
   )
   texture_file = make_road_lane_texture()
   road_mesh = make_render_highquality_road_chain_mesh(

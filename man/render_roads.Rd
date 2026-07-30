@@ -156,8 +156,9 @@ layer before drawing the new one.}
 }
 \value{
 Invisibly returns the rendered road coordinates. When \code{layer} is
-supplied, the result has \code{terrain_following} and \code{profile_diagnostics}
-attributes describing the sparse profile solve.
+supplied, the result has \code{terrain_following}, \code{profile_diagnostics}, and
+\code{mesh_topology} attributes describing the sparse profile solve and selected
+physical mesh continuations.
 }
 \description{
 Adds road paths to the scene. Roads are previewed as rgl lines

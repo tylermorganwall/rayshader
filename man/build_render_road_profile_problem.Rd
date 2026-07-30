@@ -7,7 +7,6 @@
 build_render_road_profile_problem(
   topology,
   terrain_profiles = NULL,
-  explicit_controls = NULL,
   layer_spacing = 5.5,
   maximum_grade = 0.07,
   maximum_grade_rate = 0.001,
@@ -28,9 +27,6 @@ build_render_road_profile_problem(
 
 \item{terrain_profiles}{Default \code{NULL}. Terrain reference profiles accepted
 by \code{\link[=normalize_render_road_terrain_profiles]{normalize_render_road_terrain_profiles()}}.}
-
-\item{explicit_controls}{Default \code{NULL}. Optional list of additional control
-distances by fragment.}
 
 \item{layer_spacing}{Default \code{5.5}. Fallback adjacent-layer clearance in
 metres.}

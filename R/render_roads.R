@@ -1038,7 +1038,7 @@ build_render_road_path_mesh_connections = function(
   if (is.null(selected) || !nrow(selected)) {
     return(empty)
   }
-  fragment_path = setNames(
+  fragment_path = stats::setNames(
     path_members$road_path_id,
     as.character(path_members$render_road_fragment_id)
   )
@@ -1239,7 +1239,7 @@ order_render_road_precomputed_mesh_chain = function(
     ":",
     endpoints$endpoint_side
   )
-  endpoint_connection = setNames(
+  endpoint_connection = stats::setNames(
     rep(NA_integer_, length(endpoint_key)),
     endpoint_key
   )
@@ -1664,7 +1664,7 @@ solve_render_road_path_profiles = function(
       coordinates,
       texture_world_scale = texture_world_scale
     )
-    path_length = tail(path_distance, 1L)
+    path_length = utils::tail(path_distance, 1L)
     geometry_info = calculate_render_road_metric_line_distances(
       sf::st_geometry(active_fragments)[[fragment_row]]
     )
@@ -1706,7 +1706,7 @@ solve_render_road_path_profiles = function(
     ]]
     evaluation_distance = path_distance *
       fragment_length /
-      tail(path_distance, 1L)
+      utils::tail(path_distance, 1L)
     profile = evaluate_render_road_profile_at(
       problem = problem,
       solution = solution,
@@ -2098,7 +2098,7 @@ calculate_render_road_endpoint_direction = function(
     return(c(direction_x = NA_real_, direction_y = NA_real_, distance = 0))
   }
   cumulative = c(0, cumsum(segment_length))
-  total_length = tail(cumulative, 1L)
+  total_length = utils::tail(cumulative, 1L)
   lookahead_distance = min(direction_lookahead, total_length)
   target_distance = if (identical(endpoint_side, "start")) {
     lookahead_distance
@@ -2130,7 +2130,7 @@ calculate_render_road_endpoint_direction = function(
     fallback = if (identical(endpoint_side, "start")) {
       which(valid_segment)[[1L]]
     } else {
-      tail(which(valid_segment), 1L)
+      utils::tail(which(valid_segment), 1L)
     }
     direction = if (identical(endpoint_side, "start")) {
       segment[fallback, ]
@@ -2535,7 +2535,7 @@ project_render_road_topology_point = function(
   cumulative = c(0, cumsum(segment_length))
   distance = cumulative[[closest]] +
     fraction[[closest]] * segment_length[[closest]]
-  total_length = tail(cumulative, 1L)
+  total_length = utils::tail(cumulative, 1L)
   # Classify whether the projected point lies at either road endpoint within a mixed
   # absolute/relative tolerance. Endpoint classification separates junctions from
   # interior grade-separated crossings.
@@ -3730,7 +3730,7 @@ select_render_road_continuations = function(
   # Select an edge only when each endpoint chooses the other as its unique best match.
   # Mutual-best matching limits an endpoint to one through continuation while leaving
   # side branches connected by junction height but not by grade continuity.
-  endpoint_row = setNames(
+  endpoint_row = stats::setNames(
     seq_len(nrow(endpoints)),
     endpoints$render_road_endpoint_id
   )
@@ -4240,7 +4240,7 @@ build_render_road_layer_topology = function(
       ,
       drop = FALSE
     ]
-    crossing_stack$local_order = ave(
+    crossing_stack$local_order = stats::ave(
       crossing_stack$render_road_layer,
       crossing_stack$crossing_id,
       FUN = function(value) {
@@ -4328,7 +4328,7 @@ calculate_render_road_metric_line_distances = function(geometry) {
   list(
     coordinates = coordinates,
     distance = distance,
-    length = tail(distance, 1L)
+    length = utils::tail(distance, 1L)
   )
 }
 
@@ -4464,7 +4464,7 @@ normalize_render_road_terrain_profiles = function(
     tolerance = max(1e-8, info$length * 1e-10)
     if (
       profile$distance[[1L]] > tolerance ||
-        tail(profile$distance, 1L) < info$length - tolerance
+        utils::tail(profile$distance, 1L) < info$length - tolerance
     ) {
       stop(
         "Each terrain profile must cover both fragment endpoints.",
@@ -4744,7 +4744,7 @@ identify_render_road_underground_fragments = function(fragments) {
 #' @keywords internal
 identify_render_road_elevated_fragments = function(topology) {
   fragments = topology$fragments
-  fragment_row = setNames(
+  fragment_row = stats::setNames(
     seq_len(nrow(fragments)),
     fragments$render_road_fragment_id
   )
@@ -4805,7 +4805,7 @@ traverse_render_road_profile_path = function(
       members &
       continuations$fragment_b %in% members
   )
-  degree = setNames(integer(length(members)), as.character(members))
+  degree = stats::setNames(integer(length(members)), as.character(members))
   for (edge in component_edge) {
     degree[[as.character(continuations$fragment_a[[edge]])]] =
       degree[[as.character(continuations$fragment_a[[edge]])]] + 1L
@@ -4946,7 +4946,7 @@ build_render_road_profile_spans = function(topology, fragment_length) {
   underground_fragment = topology$fragments$render_road_fragment_id[
     identify_render_road_underground_fragments(topology$fragments)
   ]
-  fragment_regime = setNames(
+  fragment_regime = stats::setNames(
     ifelse(
       fragment_id %in% underground_fragment,
       "underground",
@@ -4988,9 +4988,12 @@ build_render_road_profile_spans = function(topology, fragment_length) {
       run_closed = path$closed && nrow(run_members) == nrow(ordered)
       span_id = length(span_rows) + 1L
       increments = run_members$fragment_length + run_members$gap_after
-      span_offset = c(0, head(cumsum(increments), -1L))
+      span_offset = c(0, utils::head(cumsum(increments), -1L))
       if (!run_closed) {
-        span_length = tail(span_offset + run_members$fragment_length, 1L)
+        span_length = utils::tail(
+          span_offset + run_members$fragment_length,
+          1L
+        )
       } else {
         span_length = sum(increments)
       }
@@ -5241,7 +5244,7 @@ build_render_road_profile_controls = function(
 ) {
   fragments = topology$fragments
   fragment_id = fragments$render_road_fragment_id
-  fragment_row = setNames(seq_len(nrow(fragments)), fragment_id)
+  fragment_row = stats::setNames(seq_len(nrow(fragments)), fragment_id)
   control_distance = lapply(fragment_id, function(fragment) {
     c(0, fragment_length[[as.character(fragment)]])
   })
@@ -5662,7 +5665,7 @@ resolve_render_road_profile_support_arcs = function(
           tolerance
       )
       if (length(terminal_match)) {
-        arc_index = tail(terminal_match, 1L)
+        arc_index = utils::tail(terminal_match, 1L)
         adjusted_station = arcs$end_station[[arc_index]]
       } else {
         stop(
@@ -6105,7 +6108,7 @@ build_render_road_crossing_constraints = function(
   control_tolerance
 ) {
   fragments = topology$fragments
-  fragment_row = setNames(
+  fragment_row = stats::setNames(
     seq_len(nrow(fragments)),
     fragments$render_road_fragment_id
   )
@@ -6326,7 +6329,7 @@ build_render_road_overlap_constraints = function(
   control_tolerance
 ) {
   fragments = topology$fragments
-  fragment_row = setNames(
+  fragment_row = stats::setNames(
     seq_len(nrow(fragments)),
     fragments$render_road_fragment_id
   )
@@ -7079,7 +7082,7 @@ assert_render_road_profile_component_blocks = function(
   matrix_a,
   matrix_p
 ) {
-  fragment_component = setNames(
+  fragment_component = stats::setNames(
     topology$fragments$solve_component_id,
     topology$fragments$render_road_fragment_id
   )
@@ -7461,7 +7464,7 @@ evaluate_render_road_profile_at = function(
     )
   }
   distance = as.numeric(distance)
-  profile_length = tail(controls$distance[rows], 1L)
+  profile_length = utils::tail(controls$distance[rows], 1L)
   distance = pmin(pmax(distance, 0), profile_length)
   interval = findInterval(
     distance,
@@ -9266,7 +9269,7 @@ assemble_render_road_mesh_chain_tasks = function(
         texture_world_scale = member_scale
       )
       station_start = chain_station
-      station_end = chain_station + tail(member_station, 1L)
+      station_end = chain_station + utils::tail(member_station, 1L)
       member_topology = topology[[current_task_id]]
       fragment_id = suppressWarnings(as.integer(
         member_topology$render_road_fragment_id[[1L]]
@@ -10125,7 +10128,7 @@ calculate_render_road_stabilized_vertex_frames = function(
     points,
     texture_world_scale = texture_world_scale
   )
-  total_length = tail(station, 1L)
+  total_length = utils::tail(station, 1L)
   if (closed) {
     closing_delta = (points[1L, c(1, 3)] -
       points[point_count, c(1, 3)]) *
@@ -10154,7 +10157,8 @@ calculate_render_road_stabilized_vertex_frames = function(
   if (
     closed &&
       length(guide_index) > 3L &&
-      total_length - station[[tail(guide_index, 1L)]] < minimum_guide_step
+      total_length - station[[utils::tail(guide_index, 1L)]] <
+        minimum_guide_step
   ) {
     guide_index = guide_index[-length(guide_index)]
   }
@@ -10196,10 +10200,10 @@ calculate_render_road_stabilized_vertex_frames = function(
   guide_scale = guide_frames$miter_scale
   if (closed) {
     closing_angle = guide_angle[[1L]]
-    while (closing_angle - tail(guide_angle, 1L) > pi) {
+    while (closing_angle - utils::tail(guide_angle, 1L) > pi) {
       closing_angle = closing_angle - 2 * pi
     }
-    while (closing_angle - tail(guide_angle, 1L) < -pi) {
+    while (closing_angle - utils::tail(guide_angle, 1L) < -pi) {
       closing_angle = closing_angle + 2 * pi
     }
     guide_station = c(guide_station, total_length)
@@ -11065,7 +11069,7 @@ make_render_highquality_road_chain_mesh = function(
     points,
     texture_world_scale = texture_world_scale
   )
-  total_length = tail(station, 1L)
+  total_length = utils::tail(station, 1L)
   if (closed) {
     closing_delta = (points[1L, c(1, 3)] -
       points[nrow(points), c(1, 3)]) *
@@ -11209,7 +11213,7 @@ make_render_highquality_road_chain_mesh = function(
       section_station = station[section_index] -
         station[[start_index]]
     }
-    section_length = tail(section_station, 1L)
+    section_length = utils::tail(section_station, 1L)
     if (!is.finite(section_length) || section_length <= 0) {
       stop(
         "A road material section has nonpositive rendered length.",

@@ -10,6 +10,7 @@ solve_render_road_path_profiles(
   roads,
   layer_column,
   lane_column = NULL,
+  lane_values = NULL,
   layer_height_column = NULL,
   layer_spacing = 5.5,
   zscale = 1,
@@ -27,6 +28,9 @@ solve_render_road_path_profiles(
 
 \item{lane_column}{Default \code{NULL}. Optional lane-count column used as
 continuation evidence.}
+
+\item{lane_values}{Default \code{NULL}. Effective positive lane counts used by
+the rendered paths.}
 
 \item{layer_height_column}{Default \code{NULL}. Optional clearance column.}
 

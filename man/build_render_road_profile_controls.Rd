@@ -7,7 +7,6 @@
 build_render_road_profile_controls(
   topology,
   terrain_profiles,
-  explicit_controls,
   adaptive_constraints,
   profile_spans,
   fragment_length,
@@ -18,8 +17,6 @@ build_render_road_profile_controls(
 \item{topology}{Active road topology.}
 
 \item{terrain_profiles}{Normalized terrain profiles.}
-
-\item{explicit_controls}{Named caller-supplied control distances.}
 
 \item{adaptive_constraints}{Adaptive constraint requests.}
 

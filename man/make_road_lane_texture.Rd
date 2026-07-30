@@ -18,23 +18,35 @@ make_road_lane_texture(
 )
 }
 \arguments{
-\item{roadcolor}{Road color.}
+\item{roadcolor}{Default \code{"#303030"}. Road surface color.}
 
-\item{lanes}{Number of lanes.}
+\item{lanes}{Default \code{2}. Number of lanes used when generating the default
+lane texture and, when \code{width = NULL}, deriving the road width. May also be
+an unquoted or character column name in an \code{sf} road object. OSM-style
+compound values use their first positive integer. Missing values first use
+\code{lanes:forward} plus \code{lanes:backward}, then fall back to one lane for links
+and one-way roads or two lanes for other roads.}
 
-\item{lane_color}{Lane marking color.}
+\item{lane_color}{Default \code{"white"}. Color for dashed lane divider markings.}
 
-\item{centerline_color}{Center line color.}
+\item{centerline_color}{Default \code{"#ffd23f"}. Color for the center divider.}
 
-\item{edge_line_color}{Edge line color.}
+\item{edge_line_color}{Default \code{"white"}. Color for solid edge markings.}
 
-\item{lane_line_width}{Lane line width fraction.}
+\item{lane_line_width}{Default \code{0.035}. Lane marking width as a fraction of
+the road width in the generated texture.}
 
-\item{lane_dash_fraction}{Dash fraction.}
+\item{lane_dash_fraction}{Default \code{NULL}, which uses
+\code{lane_dash_length / (lane_dash_length + lane_gap_length)}. Fraction of each
+texture repetition occupied by a dash for dashed lane markings.}
 
-\item{lane_dash_length}{Painted dash length.}
+\item{lane_dash_length}{Default \code{3}. Painted dash length in scene/world units
+for generated dashed lane markings. The default approximates a 10 foot dash
+as 3 meters.}
 
-\item{lane_gap_length}{Gap length.}
+\item{lane_gap_length}{Default \code{10}. Gap length in scene/world units for
+generated dashed lane markings. The default approximates a 30 foot gap as
+10 meters.}
 
 \item{size}{Default \code{128}. Texture width/height in pixels.}
 }

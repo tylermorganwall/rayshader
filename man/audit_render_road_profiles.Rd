@@ -14,7 +14,7 @@ audit_render_road_profiles(problem, solution, tolerance = 1e-06)
 \item{tolerance}{Default \code{1e-6}. Feasibility tolerance.}
 }
 \value{
-Constraint-family and engineering-margin diagnostics.
+Rendering-critical feasibility and continuous-margin diagnostics.
 }
 \description{
 Audit solved road profile constraints

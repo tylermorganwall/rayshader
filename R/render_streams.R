@@ -480,7 +480,7 @@ collapse_render_highquality_path_vertices = function(
   if (nrow(vertices) > 2L) {
     for (vertex_index in seq.int(2L, nrow(vertices) - 1L)) {
       step_distance = sqrt(sum(
-        (vertices[vertex_index, ] - vertices[tail(keep, 1L), ])^2
+        (vertices[vertex_index, ] - vertices[utils::tail(keep, 1L), ])^2
       ))
       if (step_distance > minimum_step) {
         keep = c(keep, vertex_index)
@@ -491,7 +491,7 @@ collapse_render_highquality_path_vertices = function(
   while (
     length(keep) > 1L &&
       sqrt(sum(
-        (vertices[final_index, ] - vertices[tail(keep, 1L), ])^2
+        (vertices[final_index, ] - vertices[utils::tail(keep, 1L), ])^2
       )) <=
         minimum_step
   ) {
@@ -1699,29 +1699,6 @@ sample_render_highquality_water_path_surface = function(
     }
   }
   heights
-}
-
-#' Count undirected mesh triangle edges
-#'
-#' @param indices Triangle index matrix.
-#'
-#' @return Named integer edge counts.
-#' @keywords internal
-count_render_highquality_stream_edges = function(indices) {
-  if (!nrow(indices)) {
-    return(integer(0))
-  }
-  edges = rbind(
-    indices[, c(1L, 2L), drop = FALSE],
-    indices[, c(2L, 3L), drop = FALSE],
-    indices[, c(3L, 1L), drop = FALSE]
-  )
-  keys = paste(
-    pmin(edges[, 1], edges[, 2]),
-    pmax(edges[, 1], edges[, 2]),
-    sep = "_"
-  )
-  stats::setNames(tabulate(match(keys, unique(keys))), unique(keys))
 }
 
 #' Make render_highquality water path mesh

@@ -23,7 +23,7 @@ in metres.}
 margin within the best continuation evidence tier.}
 }
 \value{
-Prepared features, events, continuations, graph, and diagnostics.
+Prepared features, active topology, continuations, and diagnostics.
 }
 \description{
 Build complete local road layer topology
