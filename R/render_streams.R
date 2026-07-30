@@ -300,10 +300,11 @@ render_streams = function(
   }
 
   # 3. Resolve feature-aligned widths before geometry normalization.
-  width_column_name = resolve_render_line_width_column(
-    width_column = width_column,
-    width_column_expr = width_column_expr,
-    width_column_missing = width_column_missing
+  width_column_name = resolve_render_column_name(
+    value = width_column,
+    value_expr = width_column_expr,
+    missing = width_column_missing,
+    argument = "width_column"
   )
   width_column_supplied = !is.null(width_column_name)
   if (width_column_supplied) {

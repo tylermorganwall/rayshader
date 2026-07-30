@@ -289,26 +289,38 @@ render_roads = function(
   }
 
   # 3. Resolve columns and normalize every feature-aligned public value.
-  width_column = resolve_render_line_width_column(
-    width_column = width_column,
-    width_column_expr = width_column_expr,
-    width_column_missing = missing(width_column)
+
+  width_column = resolve_render_column_name(
+    value = width_column,
+    value_expr = width_column_expr,
+    missing = missing(width_column),
+    argument = "width_column"
   )
-  layer_column = resolve_render_road_column(
+  layer_column = resolve_render_column_name(
     value = layer,
     value_expr = layer_expr,
-    value_missing = missing(layer),
+    missing = missing(layer),
     argument = "layer"
   )
-  layer_height_spec = resolve_render_road_layer_height(
+  layer_height_spec = resolve_render_scalar_or_column(
     value = layer_height,
     value_expr = layer_height_expr,
-    value_missing = missing(layer_height)
+    missing = missing(layer_height) ||
+      identical(layer_height_expr, quote(NULL)),
+    default = 5.5,
+    argument = "layer_height",
+    type = "double",
+    lower = 0,
+    lower_inclusive = FALSE
   )
-  lanes_spec = resolve_render_road_lanes(
+  lanes_spec = resolve_render_scalar_or_column(
     value = lanes,
     value_expr = lanes_expr,
-    value_missing = missing(lanes)
+    missing = missing(lanes),
+    default = 2L,
+    argument = "lanes",
+    type = "integer",
+    lower = 1
   )
   if (is.null(layer_column) && !is.null(layer_height_spec$column)) {
     stop("`layer_height` can only name a column when `layer` is supplied.")
@@ -404,15 +416,11 @@ render_roads = function(
       allow_na = TRUE
     )
     layer_height_spec$column = "render_road_input_layer_height"
+  }
+  layer_spacing = if (is.null(layer_height_spec$value)) {
+    5.5
   } else {
-    layer_height_spec$spacing = resolve_render_scalar(
-      layer_height_spec$spacing,
-      FALSE,
-      5.5,
-      "layer_height",
-      lower = 0,
-      lower_inclusive = FALSE
-    )
+    layer_height_spec$value
   }
   if (!is.null(lanes_spec$column)) {
     roads$render_road_input_lanes = resolve_render_feature_values(
@@ -427,15 +435,6 @@ render_roads = function(
     )
     lanes_spec$column = "render_road_input_lanes"
     merge = FALSE
-  } else {
-    lanes_spec$value = resolve_render_scalar(
-      lanes_spec$value,
-      FALSE,
-      2L,
-      "lanes",
-      type = "integer",
-      lower = 1
-    )
   }
   if (isTRUE(clear_previous)) {
     rgl::pop3d(tag = "road_path")
@@ -529,7 +528,7 @@ render_roads = function(
         road_lanes
       },
       layer_height_column = layer_height_spec$column,
-      layer_spacing = layer_height_spec$spacing,
+      layer_spacing = layer_spacing,
       zscale = zscale,
       texture_world_scale = texture_world_scale
     )
@@ -550,23 +549,67 @@ render_roads = function(
   }
 
   # 6. Resolve lane textures and station-based road-envelope metadata.
-  texture_files = resolve_road_lane_texture_files(
-    coord_lanes = coord_lanes,
-    lane_texture = lane_texture,
-    lane_texture_file = lane_texture_file,
-    roadcolor = roadcolor,
-    lane_color = lane_color,
-    centerline_color = centerline_color,
-    edge_line_color = edge_line_color,
-    lane_line_width = lane_line_width,
-    lane_dash_fraction = lane_dash_fraction
-  )
-  texture_mapping = resolve_road_lane_texture_mapping(
-    coord_list = coord_list,
-    lane_texture_length = lane_texture_length,
-    lane_texture_mapping = lane_texture_mapping,
-    texture_world_scale = texture_world_scale
-  )
+  resolve_texture_files = function(coord_lanes) {
+    resolve_texture_file = function(lanes) {
+      if (!is.null(lane_texture_file)) {
+        return(lane_texture_file)
+      }
+      if (!isTRUE(lane_texture)) {
+        return(NULL)
+      }
+      make_road_lane_texture(
+        roadcolor = roadcolor,
+        lanes = lanes,
+        lane_color = lane_color,
+        centerline_color = centerline_color,
+        edge_line_color = edge_line_color,
+        lane_line_width = lane_line_width,
+        lane_dash_fraction = lane_dash_fraction
+      )
+    }
+
+    if (!length(coord_lanes)) {
+      return(list())
+    }
+    coord_lanes = vapply(
+      coord_lanes,
+      assert_render_road_lane_count,
+      integer(1)
+    )
+    unique_lanes = unique(coord_lanes)
+    unique_files = lapply(unique_lanes, resolve_texture_file)
+    unique_files[match(coord_lanes, unique_lanes)]
+  }
+  resolve_texture_mapping = function(coord_list) {
+    path_length = function(points) {
+      cumulative_distance = calculate_road_path_cumulative_distance(
+        points,
+        texture_world_scale = texture_world_scale
+      )
+      if (!length(cumulative_distance)) {
+        return(0)
+      }
+      cumulative_distance[[length(cumulative_distance)]]
+    }
+
+    road_lengths = vapply(coord_list, path_length, numeric(1))
+    texture_lengths = rep(lane_texture_length, length(road_lengths))
+    texture_repeats = rep(NA_real_, length(road_lengths))
+    if (identical(lane_texture_mapping, "auto")) {
+      valid_length = is.finite(road_lengths) & road_lengths > 0
+      texture_repeats[valid_length] =
+        road_lengths[valid_length] / lane_texture_length
+    }
+    list(
+      road_length = road_lengths,
+      texture_length = texture_lengths,
+      texture_repeats = texture_repeats,
+      texture_world_scale = texture_world_scale
+    )
+  }
+
+  texture_files = resolve_texture_files(coord_lanes)
+  texture_mapping = resolve_texture_mapping(coord_list)
 
   # 7. Build physical mesh chains from accepted exact continuations.
   mesh_topology = attr(coord_list, "mesh_topology")
@@ -675,171 +718,6 @@ render_roads = function(
 
   # 9. Preserve the public coordinate-list return value and diagnostics.
   invisible(coord_list)
-}
-
-#' Resolve a render road column
-#'
-#' @param value Column argument value.
-#' @param value_expr Captured column argument expression.
-#' @param value_missing Whether the argument was omitted.
-#' @param argument Argument name used in errors.
-#'
-#' @return Column name or `NULL`.
-#' @keywords internal
-resolve_render_road_column = function(
-  value = NULL,
-  value_expr = NULL,
-  value_missing = FALSE,
-  argument
-) {
-  if (isTRUE(value_missing) || identical(value_expr, quote(NULL))) {
-    return(NULL)
-  }
-  if (is.character(value_expr)) {
-    return(validate_render_road_column_name(value_expr, argument))
-  }
-  if (is.name(value_expr)) {
-    evaluated = tryCatch(value, error = function(error) NULL)
-    if (is.character(evaluated) && length(evaluated) == 1L) {
-      return(validate_render_road_column_name(evaluated, argument))
-    }
-    return(validate_render_road_column_name(
-      as.character(value_expr),
-      argument
-    ))
-  }
-  validate_render_road_column_name(value, argument)
-}
-
-#' Validate a render road column name
-#'
-#' @param value Column name.
-#' @param argument Argument name used in errors.
-#'
-#' @return Validated column name.
-#' @keywords internal
-validate_render_road_column_name = function(value, argument) {
-  if (
-    !is.character(value) ||
-      length(value) != 1L ||
-      is.na(value) ||
-      !nzchar(value)
-  ) {
-    stop(
-      sprintf("`%s` must be a single column name.", argument),
-      call. = FALSE
-    )
-  }
-  value
-}
-
-#' Resolve render road layer height input
-#'
-#' @param value Layer height argument value.
-#' @param value_expr Captured layer height expression.
-#' @param value_missing Whether the argument was omitted.
-#'
-#' @return List containing either a spacing or column name.
-#' @keywords internal
-resolve_render_road_layer_height = function(
-  value = 5.5,
-  value_expr = NULL,
-  value_missing = FALSE
-) {
-  if (isTRUE(value_missing) || identical(value_expr, quote(NULL))) {
-    return(list(spacing = 5.5, column = NULL))
-  }
-  if (is.character(value_expr)) {
-    return(list(
-      spacing = NULL,
-      column = validate_render_road_column_name(
-        value_expr,
-        "layer_height"
-      )
-    ))
-  }
-  if (is.name(value_expr)) {
-    evaluated = tryCatch(value, error = function(error) NULL)
-    if (is.numeric(evaluated) && length(evaluated) == 1L) {
-      return(list(spacing = evaluated, column = NULL))
-    }
-    if (is.character(evaluated) && length(evaluated) == 1L) {
-      return(list(
-        spacing = NULL,
-        column = validate_render_road_column_name(
-          evaluated,
-          "layer_height"
-        )
-      ))
-    }
-    return(list(
-      spacing = NULL,
-      column = validate_render_road_column_name(
-        as.character(value_expr),
-        "layer_height"
-      )
-    ))
-  }
-  if (is.numeric(value) && length(value) == 1L) {
-    return(list(spacing = value, column = NULL))
-  }
-  stop(
-    paste0(
-      "`layer_height` must be a single positive number or a single ",
-      "column name."
-    ),
-    call. = FALSE
-  )
-}
-
-#' Resolve render road lanes input
-#'
-#' @param value Lanes argument value.
-#' @param value_expr Captured lanes expression.
-#' @param value_missing Whether the argument was omitted.
-#'
-#' @return List containing either a lane value or column name.
-#' @keywords internal
-resolve_render_road_lanes = function(
-  value = 2,
-  value_expr = NULL,
-  value_missing = FALSE
-) {
-  if (isTRUE(value_missing)) {
-    return(list(value = 2L, column = NULL))
-  }
-  if (is.character(value_expr)) {
-    return(list(
-      value = NULL,
-      column = validate_render_road_column_name(value_expr, "lanes")
-    ))
-  }
-  if (is.name(value_expr)) {
-    evaluated = tryCatch(value, error = function(error) NULL)
-    if (is.numeric(evaluated) && length(evaluated) == 1L) {
-      return(list(value = evaluated, column = NULL))
-    }
-    if (is.character(evaluated) && length(evaluated) == 1L) {
-      return(list(
-        value = NULL,
-        column = validate_render_road_column_name(evaluated, "lanes")
-      ))
-    }
-    return(list(
-      value = NULL,
-      column = validate_render_road_column_name(
-        as.character(value_expr),
-        "lanes"
-      )
-    ))
-  }
-  if (is.numeric(value) && length(value) == 1L) {
-    return(list(value = value, column = NULL))
-  }
-  stop(
-    "`lanes` must be a single positive integer or a single column name.",
-    call. = FALSE
-  )
 }
 
 #' Parse an OSM lane-count tag
@@ -8582,79 +8460,6 @@ normalize_render_road_world_scale = function(texture_world_scale) {
   texture_world_scale
 }
 
-#' Resolve road lane texture files by lane count
-#'
-#' @param coord_lanes Lane count for each rendered coordinate path.
-#' @inheritParams render_roads
-#'
-#' @return List of texture paths or `NULL` entries for each path.
-#' @keywords internal
-resolve_road_lane_texture_files = function(
-  coord_lanes,
-  lane_texture,
-  lane_texture_file,
-  roadcolor,
-  lane_color,
-  centerline_color,
-  edge_line_color,
-  lane_line_width,
-  lane_dash_fraction
-) {
-  if (!length(coord_lanes)) {
-    return(list())
-  }
-  coord_lanes = vapply(coord_lanes, assert_render_road_lane_count, integer(1))
-  unique_lanes = unique(coord_lanes)
-  unique_files = lapply(unique_lanes, function(lanes) {
-    resolve_road_lane_texture_file(
-      lane_texture = lane_texture,
-      lane_texture_file = lane_texture_file,
-      roadcolor = roadcolor,
-      lanes = lanes,
-      lane_color = lane_color,
-      centerline_color = centerline_color,
-      edge_line_color = edge_line_color,
-      lane_line_width = lane_line_width,
-      lane_dash_fraction = lane_dash_fraction
-    )
-  })
-  unique_files[match(coord_lanes, unique_lanes)]
-}
-
-#' Resolve road lane texture file
-#'
-#' @inheritParams render_roads
-#'
-#' @return Texture file path or `NULL`.
-#' @keywords internal
-resolve_road_lane_texture_file = function(
-  lane_texture,
-  lane_texture_file,
-  roadcolor,
-  lanes,
-  lane_color,
-  centerline_color,
-  edge_line_color,
-  lane_line_width,
-  lane_dash_fraction
-) {
-  if (!is.null(lane_texture_file)) {
-    return(lane_texture_file)
-  }
-  if (!isTRUE(lane_texture)) {
-    return(NULL)
-  }
-  make_road_lane_texture(
-    roadcolor = roadcolor,
-    lanes = lanes,
-    lane_color = lane_color,
-    centerline_color = centerline_color,
-    edge_line_color = edge_line_color,
-    lane_line_width = lane_line_width,
-    lane_dash_fraction = lane_dash_fraction
-  )
-}
-
 #' Make default road lane texture
 #'
 #' @inheritParams render_roads
@@ -8674,6 +8479,45 @@ make_road_lane_texture = function(
   lane_gap_length = 10,
   size = 128
 ) {
+  resolve_dash_fraction = function(
+    lane_dash_fraction,
+    lane_dash_length,
+    lane_gap_length
+  ) {
+    if (is.null(lane_dash_fraction)) {
+      cycle_length = lane_dash_length + lane_gap_length
+      if (!is.finite(cycle_length) || cycle_length <= 0) {
+        stop(
+          "`lane_dash_length + lane_gap_length` must be positive.",
+          call. = FALSE
+        )
+      }
+      return(lane_dash_length / cycle_length)
+    }
+    assert_render_road_fraction(
+      lane_dash_fraction,
+      "lane_dash_fraction"
+    )
+  }
+  calculate_marking_positions = function(lanes) {
+    lanes = assert_render_road_lane_count(lanes)
+    edge_offset = 0.5 / (lanes + 2)
+    lane_edges = seq(
+      edge_offset,
+      1 - edge_offset,
+      length.out = lanes + 1L
+    )
+    dividers = if (lanes > 1L) {
+      lane_edges[-c(1L, length(lane_edges))]
+    } else {
+      numeric(0)
+    }
+    list(
+      edge_lines = c(edge_offset, 1 - edge_offset),
+      dividers = dividers
+    )
+  }
+
   lanes = assert_render_road_lane_count(lanes)
   lane_line_width = assert_render_road_fraction(
     lane_line_width,
@@ -8688,7 +8532,7 @@ make_road_lane_texture = function(
     "lane_gap_length",
     allow_zero = TRUE
   )
-  lane_dash_fraction = resolve_road_lane_dash_fraction(
+  lane_dash_fraction = resolve_dash_fraction(
     lane_dash_fraction,
     lane_dash_length = lane_dash_length,
     lane_gap_length = lane_gap_length
@@ -8699,20 +8543,29 @@ make_road_lane_texture = function(
     dim = c(size, size, 3)
   )
   line_half_width = max(1L, round(size * lane_line_width / 2))
-  draw_vertical_line = function(u, color, rows = seq_len(size)) {
+  draw_vertical_line = function(texture, u, color, rows = seq_len(size)) {
     col = min(size, max(1L, round(u * (size - 1L)) + 1L))
     cols = seq.int(
       max(1L, col - line_half_width),
       min(size, col + line_half_width)
     )
-    texture[rows, cols, ] <<- array(
+    texture[rows, cols, ] = array(
       rep(convert_color(color), each = length(rows) * length(cols)),
       dim = c(length(rows), length(cols), 3)
     )
+    texture
   }
-  marking_positions = calculate_road_lane_marking_positions(lanes)
-  draw_vertical_line(marking_positions$edge_lines[[1]], edge_line_color)
-  draw_vertical_line(marking_positions$edge_lines[[2]], edge_line_color)
+  marking_positions = calculate_marking_positions(lanes)
+  texture = draw_vertical_line(
+    texture,
+    marking_positions$edge_lines[[1]],
+    edge_line_color
+  )
+  texture = draw_vertical_line(
+    texture,
+    marking_positions$edge_lines[[2]],
+    edge_line_color
+  )
   if (length(marking_positions$dividers) > 0) {
     dash_rows = seq_len(max(1L, floor(size * lane_dash_fraction)))
     center_index = which.min(abs(marking_positions$dividers - 0.5))
@@ -8722,7 +8575,8 @@ make_road_lane_texture = function(
       } else {
         lane_color
       }
-      draw_vertical_line(
+      texture = draw_vertical_line(
+        texture,
         marking_positions$dividers[[divider_index]],
         divider_color,
         dash_rows
@@ -8755,29 +8609,6 @@ assert_render_road_lane_count = function(lanes) {
   }
   lanes
 }
-
-#' Calculate road lane marking positions
-#'
-#' @param lanes Number of lanes.
-#'
-#' @return List of edge line and lane divider positions in texture u
-#' coordinates.
-#' @keywords internal
-calculate_road_lane_marking_positions = function(lanes) {
-  lanes = assert_render_road_lane_count(lanes)
-  edge_offset = 0.5 / (lanes + 2)
-  lane_edges = seq(edge_offset, 1 - edge_offset, length.out = lanes + 1L)
-  dividers = if (lanes > 1L) {
-    lane_edges[-c(1L, length(lane_edges))]
-  } else {
-    numeric(0)
-  }
-  list(
-    edge_lines = c(edge_offset, 1 - edge_offset),
-    dividers = dividers
-  )
-}
-
 
 #' Evaluate the quintic road-envelope transition curve
 #'
@@ -9059,43 +8890,6 @@ evaluate_render_road_envelope_sections = function(
   )
 }
 
-#' Resolve road lane texture mapping
-#'
-#' @param coord_list List of road coordinate matrices.
-#' @param lane_texture_length Target or fixed texture repetition length.
-#' @param lane_texture_mapping Texture mapping mode.
-#' @param texture_world_scale Default `c(1, 1)`. Multipliers converting scene
-#' x-z distances to world distances.
-#'
-#' @return List containing road lengths, texture lengths, and texture repeats.
-#' @keywords internal
-resolve_road_lane_texture_mapping = function(
-  coord_list,
-  lane_texture_length,
-  lane_texture_mapping,
-  texture_world_scale = c(1, 1)
-) {
-  road_lengths = vapply(
-    coord_list,
-    calculate_road_path_length,
-    numeric(1),
-    texture_world_scale = texture_world_scale
-  )
-  texture_lengths = rep(lane_texture_length, length(road_lengths))
-  texture_repeats = rep(NA_real_, length(road_lengths))
-  if (identical(lane_texture_mapping, "auto")) {
-    valid_length = is.finite(road_lengths) & road_lengths > 0
-    texture_repeats[valid_length] =
-      road_lengths[valid_length] / lane_texture_length
-  }
-  list(
-    road_length = road_lengths,
-    texture_length = texture_lengths,
-    texture_repeats = texture_repeats,
-    texture_world_scale = texture_world_scale
-  )
-}
-
 #' Calculate road path world scale
 #'
 #' @param heightmap Heightmap matrix.
@@ -9153,76 +8947,6 @@ resolve_render_road_width = function(
   }
   road_width_world = lane_width * (lanes + 2)
   road_width_world / mean(texture_world_scale)
-}
-
-#' Resolve road lane texture length
-#'
-#' @param lane_texture_length Requested texture length.
-#' @param lane_dash_length Painted dash length.
-#' @param lane_gap_length Gap length.
-#'
-#' @return Texture length in scene/world units.
-#' @keywords internal
-resolve_road_lane_texture_length = function(
-  lane_texture_length,
-  lane_dash_length,
-  lane_gap_length
-) {
-  if (is.null(lane_texture_length)) {
-    return(lane_dash_length + lane_gap_length)
-  }
-  resolve_render_positive_number(
-    lane_texture_length,
-    "lane_texture_length"
-  )
-}
-
-#' Resolve road lane dash fraction
-#'
-#' @param lane_dash_fraction Requested dash fraction.
-#' @param lane_dash_length Painted dash length.
-#' @param lane_gap_length Gap length.
-#'
-#' @return Dash fraction.
-#' @keywords internal
-resolve_road_lane_dash_fraction = function(
-  lane_dash_fraction,
-  lane_dash_length,
-  lane_gap_length
-) {
-  if (is.null(lane_dash_fraction)) {
-    cycle_length = lane_dash_length + lane_gap_length
-    if (!is.finite(cycle_length) || cycle_length <= 0) {
-      stop(
-        "`lane_dash_length + lane_gap_length` must be positive.",
-        call. = FALSE
-      )
-    }
-    return(lane_dash_length / cycle_length)
-  }
-  assert_render_road_fraction(
-    lane_dash_fraction,
-    "lane_dash_fraction"
-  )
-}
-
-#' Calculate road path length
-#'
-#' @param points Road path points.
-#' @param texture_world_scale Default `c(1, 1)`. Multipliers converting scene
-#' x-z distances to world distances.
-#'
-#' @return Road path length in world x-z units.
-#' @keywords internal
-calculate_road_path_length = function(points, texture_world_scale = c(1, 1)) {
-  cumulative_distance = calculate_road_path_cumulative_distance(
-    points,
-    texture_world_scale = texture_world_scale
-  )
-  if (!length(cumulative_distance)) {
-    return(0)
-  }
-  cumulative_distance[[length(cumulative_distance)]]
 }
 
 #' Calculate road path cumulative distance
