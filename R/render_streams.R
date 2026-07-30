@@ -613,12 +613,36 @@ make_render_highquality_joined_water_path_meshes = function(tasks, ...) {
 #' @return List of grouped task lists.
 #' @keywords internal
 group_render_highquality_water_path_tasks = function(tasks) {
+  same_number = function(x, y) {
+    isTRUE(all.equal(
+      suppressWarnings(as.numeric(x[1])),
+      suppressWarnings(as.numeric(y[1])),
+      tolerance = sqrt(.Machine$double.eps),
+      check.attributes = FALSE
+    ))
+  }
+  same_vector = function(x, y) {
+    isTRUE(all.equal(
+      suppressWarnings(as.numeric(x)),
+      suppressWarnings(as.numeric(y)),
+      tolerance = sqrt(.Machine$double.eps),
+      check.attributes = FALSE
+    ))
+  }
+  tasks_are_compatible = function(task, prototype) {
+    same_number(task$width, prototype$width) &&
+      same_number(task$zscale, prototype$zscale) &&
+      same_vector(task$bbox_center, prototype$bbox_center) &&
+      identical(task$heightmap, prototype$heightmap) &&
+      identical(task$material, prototype$material)
+  }
+
   groups = list()
   for (task in tasks) {
     matched_group = 0L
     for (group_index in seq_along(groups)) {
       if (
-        are_render_highquality_water_path_tasks_compatible(
+        tasks_are_compatible(
           task,
           groups[[group_index]]$prototype
         )
@@ -642,37 +666,6 @@ group_render_highquality_water_path_tasks = function(tasks) {
   groups
 }
 
-#' Test water path task compatibility
-#'
-#' @param task Water path mesh task.
-#' @param prototype Prototype water path mesh task.
-#'
-#' @return Logical value.
-#' @keywords internal
-are_render_highquality_water_path_tasks_compatible = function(task, prototype) {
-  same_number = function(x, y) {
-    isTRUE(all.equal(
-      suppressWarnings(as.numeric(x[1])),
-      suppressWarnings(as.numeric(y[1])),
-      tolerance = sqrt(.Machine$double.eps),
-      check.attributes = FALSE
-    ))
-  }
-  same_vector = function(x, y) {
-    isTRUE(all.equal(
-      suppressWarnings(as.numeric(x)),
-      suppressWarnings(as.numeric(y)),
-      tolerance = sqrt(.Machine$double.eps),
-      check.attributes = FALSE
-    ))
-  }
-  same_number(task$width, prototype$width) &&
-    same_number(task$zscale, prototype$zscale) &&
-    same_vector(task$bbox_center, prototype$bbox_center) &&
-    identical(task$heightmap, prototype$heightmap) &&
-    identical(task$material, prototype$material)
-}
-
 #' Make one joined render_highquality water path mesh
 #'
 #' @param tasks Compatible water path mesh tasks.
@@ -691,6 +684,35 @@ make_render_highquality_joined_water_path_mesh = function(
   if (!requireNamespace("sf", quietly = TRUE)) {
     stop("The `sf` package is required for joined stream meshes.")
   }
+  orient_top_indices = function(vertices, indices) {
+    if (!nrow(indices)) {
+      return(indices)
+    }
+    oriented = indices
+    keep = rep(TRUE, nrow(oriented))
+    for (index in seq_len(nrow(oriented))) {
+      triangle = vertices[oriented[index, ], , drop = FALSE]
+      first_edge = triangle[2L, ] - triangle[1L, ]
+      second_edge = triangle[3L, ] - triangle[1L, ]
+      normal = c(
+        first_edge[[2]] * second_edge[[3]] - first_edge[[3]] * second_edge[[2]],
+        first_edge[[3]] * second_edge[[1]] - first_edge[[1]] * second_edge[[3]],
+        first_edge[[1]] * second_edge[[2]] - first_edge[[2]] * second_edge[[1]]
+      )
+      if (
+        !all(is.finite(normal)) ||
+          sqrt(sum(normal^2)) <= .Machine$double.eps
+      ) {
+        keep[[index]] = FALSE
+        next
+      }
+      if (normal[[2]] < 0) {
+        oriented[index, c(2L, 3L)] = oriented[index, c(3L, 2L)]
+      }
+    }
+    oriented[keep, , drop = FALSE]
+  }
+
   group = prepare_render_highquality_water_path_line_group(tasks)
   if (is.null(group) || !length(group$lines)) {
     stop("No valid stream lines were available.")
@@ -759,7 +781,7 @@ make_render_highquality_joined_water_path_mesh = function(
     terrain_y + group$offset_scene + height,
     triangulated$vertices_xz[, 2]
   )
-  top_indices = orient_render_highquality_water_path_top_indices(
+  top_indices = orient_top_indices(
     vertices = top_vertices,
     indices = triangulated$indices
   )
@@ -893,6 +915,30 @@ make_render_highquality_joined_water_path_mesh = function(
 #' @return Prepared line group.
 #' @keywords internal
 prepare_render_highquality_water_path_line_group = function(tasks) {
+  split_task_points = function(points) {
+    points = as.matrix(points)
+    if (!nrow(points) || ncol(points) < 3) {
+      return(list())
+    }
+    separator = rowSums(!is.finite(points[, 1:3, drop = FALSE])) > 0
+    groups = cumsum(separator)
+    point_indices = split(seq_len(nrow(points)), groups)
+    out = vector("list", length(point_indices))
+    for (index in seq_along(point_indices)) {
+      group_points = points[point_indices[[index]], , drop = FALSE]
+      if (index > 1L && nrow(group_points) > 0) {
+        group_points = group_points[-1L, , drop = FALSE]
+      }
+      group_points = group_points[
+        stats::complete.cases(group_points[, c(1, 3), drop = FALSE]),
+        ,
+        drop = FALSE
+      ]
+      out[[index]] = group_points
+    }
+    out[vapply(out, nrow, integer(1)) > 0L]
+  }
+
   if (!length(tasks)) {
     return(NULL)
   }
@@ -916,7 +962,7 @@ prepare_render_highquality_water_path_line_group = function(tasks) {
   lines = list()
   offset_values = numeric(0)
   for (task in tasks) {
-    point_groups = split_render_highquality_water_path_task_points(task$points)
+    point_groups = split_task_points(task$points)
     for (points in point_groups) {
       finite_xyz = stats::complete.cases(points[, 1:3, drop = FALSE])
       if (any(finite_xyz)) {
@@ -957,36 +1003,6 @@ prepare_render_highquality_water_path_line_group = function(tasks) {
     offset_scene = offset_scene,
     tasks = tasks
   )
-}
-
-#' Split a water path task point matrix
-#'
-#' @param points Path points.
-#'
-#' @return List of finite path point matrices.
-#' @keywords internal
-split_render_highquality_water_path_task_points = function(points) {
-  points = as.matrix(points)
-  if (!nrow(points) || ncol(points) < 3) {
-    return(list())
-  }
-  separator = rowSums(!is.finite(points[, 1:3, drop = FALSE])) > 0
-  groups = cumsum(separator)
-  point_indices = split(seq_len(nrow(points)), groups)
-  out = vector("list", length(point_indices))
-  for (index in seq_along(point_indices)) {
-    group_points = points[point_indices[[index]], , drop = FALSE]
-    if (index > 1L && nrow(group_points) > 0) {
-      group_points = group_points[-1L, , drop = FALSE]
-    }
-    group_points = group_points[
-      stats::complete.cases(group_points[, c(1, 3), drop = FALSE]),
-      ,
-      drop = FALSE
-    ]
-    out[[index]] = group_points
-  }
-  out[vapply(out, nrow, integer(1)) > 0L]
 }
 
 #' Collapse duplicated water path line vertices
@@ -1191,7 +1207,22 @@ make_render_highquality_water_path_valid_terrain_triangles = function(
   if (!requireNamespace("sf", quietly = TRUE)) {
     stop("The `sf` package is required for joined stream meshes.")
   }
-  empty = make_empty_render_highquality_water_path_terrain_triangles()
+  make_empty = function() {
+    sf::st_sf(
+      tri_id = integer(),
+      row = integer(),
+      col = integer(),
+      triangle = character(),
+      geometry = sf::st_sfc(crs = sf::NA_crs_)
+    )
+  }
+  bbox_cell_range = function(min_value, max_value, center, upper) {
+    start = max(1L, floor(min_value + center + 1) - 1L)
+    end = min(upper, ceiling(max_value + center + 1))
+    c(as.integer(start), as.integer(end))
+  }
+
+  empty = make_empty()
   if (
     is.null(heightmap) ||
       !is.matrix(heightmap) ||
@@ -1211,13 +1242,13 @@ make_render_highquality_water_path_valid_terrain_triangles = function(
     }
     bbox = as.numeric(bbox)
     if (length(bbox) >= 4 && all(is.finite(bbox[1:4]))) {
-      row_range = render_highquality_water_path_bbox_cell_range(
+      row_range = bbox_cell_range(
         min_value = bbox[[1]] - margin,
         max_value = bbox[[3]] + margin,
         center = (nr - 1) / 2,
         upper = nr - 1L
       )
-      col_range = render_highquality_water_path_bbox_cell_range(
+      col_range = bbox_cell_range(
         min_value = bbox[[2]] - margin,
         max_value = bbox[[4]] + margin,
         center = (nc - 1) / 2,
@@ -1287,40 +1318,6 @@ make_render_highquality_water_path_valid_terrain_triangles = function(
   )
 }
 
-#' Make empty terrain triangle sf
-#'
-#' @return Empty terrain triangle sf object.
-#' @keywords internal
-make_empty_render_highquality_water_path_terrain_triangles = function() {
-  sf::st_sf(
-    tri_id = integer(),
-    row = integer(),
-    col = integer(),
-    triangle = character(),
-    geometry = sf::st_sfc(crs = sf::NA_crs_)
-  )
-}
-
-#' Convert a scene coordinate range to terrain cell indices
-#'
-#' @param min_value Minimum scene coordinate.
-#' @param max_value Maximum scene coordinate.
-#' @param center Terrain center offset.
-#' @param upper Maximum cell index.
-#'
-#' @return Integer length-two cell range.
-#' @keywords internal
-render_highquality_water_path_bbox_cell_range = function(
-  min_value,
-  max_value,
-  center,
-  upper
-) {
-  start = max(1L, floor(min_value + center + 1) - 1L)
-  end = min(upper, ceiling(max_value + center + 1))
-  c(as.integer(start), as.integer(end))
-}
-
 #' Clip water path footprint to valid terrain
 #'
 #' @param footprint Stream footprint geometry.
@@ -1377,6 +1374,187 @@ triangulate_render_highquality_water_path_fragments = function(
   if (!requireNamespace("sf", quietly = TRUE)) {
     stop("The `sf` package is required for joined stream meshes.")
   }
+  signed_area2 = function(points) {
+    (points[2L, 1] - points[1L, 1]) *
+      (points[3L, 2] - points[1L, 2]) -
+      (points[2L, 2] - points[1L, 2]) *
+        (points[3L, 1] - points[1L, 1])
+  }
+  ring_area = function(points) {
+    next_index = c(seq_len(nrow(points))[-1L], 1L)
+    sum(
+      points[, 1] * points[next_index, 2] - points[next_index, 1] * points[, 2]
+    ) /
+      2
+  }
+  edge_side = function(points, edge_start, edge_end) {
+    (points[, 1] - edge_start[[1]]) *
+      (edge_end[[2]] - edge_start[[2]]) -
+      (points[, 2] - edge_start[[2]]) *
+        (edge_end[[1]] - edge_start[[1]])
+  }
+  points_in_triangle = function(points, triangle) {
+    area = signed_area2(triangle)
+    if (!is.finite(area) || abs(area) <= .Machine$double.eps) {
+      return(rep(FALSE, nrow(points)))
+    }
+    sign1 = edge_side(points, triangle[1L, ], triangle[2L, ])
+    sign2 = edge_side(points, triangle[2L, ], triangle[3L, ])
+    sign3 = edge_side(points, triangle[3L, ], triangle[1L, ])
+    eps = sqrt(.Machine$double.eps)
+    (sign1 >= -eps & sign2 >= -eps & sign3 >= -eps) |
+      (sign1 <= eps & sign2 <= eps & sign3 <= eps)
+  }
+  extract_triangle_polygons = function(triangles, fragment) {
+    if (is.null(triangles) || !length(triangles)) {
+      return(NULL)
+    }
+    triangles = suppressWarnings(
+      sf::st_collection_extract(triangles, "POLYGON")
+    )
+    triangles = suppressWarnings(
+      sf::st_cast(triangles, "POLYGON", warn = FALSE)
+    )
+    if (!length(triangles)) {
+      return(NULL)
+    }
+    triangles = triangles[!sf::st_is_empty(triangles)]
+    if (!length(triangles)) {
+      return(NULL)
+    }
+    representative_points = suppressWarnings(
+      sf::st_point_on_surface(triangles)
+    )
+    inside = tryCatch(
+      as.logical(sf::st_covered_by(
+        representative_points,
+        fragment,
+        sparse = FALSE
+      )[, 1]),
+      error = function(e) rep(TRUE, length(triangles))
+    )
+    triangles[inside]
+  }
+  earclip_fragment = function(fragment) {
+    geometry = fragment[[1]]
+    if (!inherits(geometry, "XY") || !inherits(geometry, "POLYGON")) {
+      return(NULL)
+    }
+    if (length(geometry) != 1L) {
+      return(NULL)
+    }
+    ring = geometry[[1]]
+    if (nrow(ring) > 1L && all(ring[1, ] == ring[nrow(ring), ])) {
+      ring = ring[-nrow(ring), , drop = FALSE]
+    }
+    ring = collapse_render_highquality_water_path_line(ring)
+    if (nrow(ring) < 3) {
+      return(NULL)
+    }
+    if (ring_area(ring) < 0) {
+      ring = ring[rev(seq_len(nrow(ring))), , drop = FALSE]
+    }
+    remaining = seq_len(nrow(ring))
+    triangles = list()
+    guard = 0L
+    while (length(remaining) > 3L && guard < nrow(ring)^2) {
+      guard = guard + 1L
+      clipped = FALSE
+      for (position in seq_along(remaining)) {
+        previous = remaining[[ifelse(
+          position == 1L,
+          length(remaining),
+          position - 1L
+        )]]
+        current = remaining[[position]]
+        next_val = remaining[[ifelse(
+          position == length(remaining),
+          1L,
+          position + 1L
+        )]]
+        ear = ring[c(previous, current, next_val), , drop = FALSE]
+        if (signed_area2(ear) <= 0) {
+          next
+        }
+        other = setdiff(remaining, c(previous, current, next_val))
+        if (
+          length(other) &&
+            any(points_in_triangle(
+              ring[other, , drop = FALSE],
+              ear
+            ))
+        ) {
+          next
+        }
+        triangles[[length(triangles) + 1L]] = ear
+        remaining = remaining[-position]
+        clipped = TRUE
+        break
+      }
+      if (!clipped) {
+        return(NULL)
+      }
+    }
+    if (length(remaining) == 3L) {
+      triangles[[length(triangles) + 1L]] =
+        ring[remaining, , drop = FALSE]
+    }
+    if (!length(triangles)) {
+      return(NULL)
+    }
+    triangle_geometries = lapply(triangles, function(triangle) {
+      sf::st_polygon(list(rbind(triangle, triangle[1, ])))
+    })
+    do.call(sf::st_sfc, c(triangle_geometries, list(crs = sf::NA_crs_)))
+  }
+  triangulate_fragment = function(fragment) {
+    triangles = NULL
+    if (exists("st_triangulate_constrained", envir = asNamespace("sf"))) {
+      triangles = tryCatch(
+        suppressWarnings(sf::st_triangulate_constrained(fragment)),
+        error = function(e) NULL
+      )
+      triangles = extract_triangle_polygons(triangles, fragment)
+    }
+    if (is.null(triangles) || !length(triangles)) {
+      triangles = tryCatch(
+        suppressWarnings(sf::st_triangulate(fragment)),
+        error = function(e) NULL
+      )
+      triangles = extract_triangle_polygons(triangles, fragment)
+    }
+    if (is.null(triangles) || !length(triangles)) {
+      triangles = earclip_fragment(fragment)
+    }
+    triangles
+  }
+  extract_triangle_vertices = function(geometry) {
+    coords = sf::st_coordinates(geometry)
+    if (!nrow(coords)) {
+      return(list())
+    }
+    coords = coords[, 1:2, drop = FALSE]
+    if (
+      nrow(coords) > 1L &&
+        all(coords[1, ] == coords[nrow(coords), ])
+    ) {
+      coords = coords[-nrow(coords), , drop = FALSE]
+    }
+    coords = collapse_render_highquality_water_path_line(coords)
+    if (nrow(coords) < 3) {
+      return(list())
+    }
+    if (nrow(coords) == 3L) {
+      return(list(coords))
+    }
+    out = vector("list", nrow(coords) - 2L)
+    for (index in seq_len(nrow(coords) - 2L)) {
+      out[[index]] =
+        coords[c(1L, index + 1L, index + 2L), , drop = FALSE]
+    }
+    out
+  }
+
   if (is.null(fragments) || !nrow(fragments)) {
     return(NULL)
   }
@@ -1387,16 +1565,14 @@ triangulate_render_highquality_water_path_fragments = function(
   vertex_lookup = integer(0)
   for (fragment_index in seq_len(nrow(fragments))) {
     fragment = sf::st_geometry(fragments[fragment_index, , drop = FALSE])
-    triangles = triangulate_render_highquality_water_path_fragment(fragment)
+    triangles = triangulate_fragment(fragment)
     if (is.null(triangles) || !length(triangles)) {
       next
     }
     for (triangle_index in seq_along(triangles)) {
-      triangle_vertices = extract_render_highquality_water_path_triangle_vertices(
-        triangles[[triangle_index]]
-      )
+      triangle_vertices = extract_triangle_vertices(triangles[[triangle_index]])
       for (triangle_vertex in triangle_vertices) {
-        area2 = render_highquality_water_path_signed_area2(triangle_vertex)
+        area2 = signed_area2(triangle_vertex)
         if (!is.finite(area2) || abs(area2) <= precision^2) {
           next
         }
@@ -1431,182 +1607,6 @@ triangulate_render_highquality_water_path_fragments = function(
   )
 }
 
-#' Triangulate one water path fragment
-#'
-#' @param fragment Fragment geometry.
-#'
-#' @return Triangle polygon geometry.
-#' @keywords internal
-triangulate_render_highquality_water_path_fragment = function(fragment) {
-  triangles = NULL
-  if (exists("st_triangulate_constrained", envir = asNamespace("sf"))) {
-    triangles = tryCatch(
-      suppressWarnings(sf::st_triangulate_constrained(fragment)),
-      error = function(e) NULL
-    )
-    triangles = extract_render_highquality_water_path_triangle_polygons(
-      triangles,
-      fragment
-    )
-  }
-  if (is.null(triangles) || !length(triangles)) {
-    triangles = tryCatch(
-      suppressWarnings(sf::st_triangulate(fragment)),
-      error = function(e) NULL
-    )
-    triangles = extract_render_highquality_water_path_triangle_polygons(
-      triangles,
-      fragment
-    )
-  }
-  if (is.null(triangles) || !length(triangles)) {
-    triangles = earclip_render_highquality_water_path_fragment(fragment)
-  }
-  triangles
-}
-
-#' Extract triangle polygons
-#'
-#' @param triangles Triangle geometry.
-#' @param fragment Source fragment geometry.
-#'
-#' @return Triangle polygon geometry.
-#' @keywords internal
-extract_render_highquality_water_path_triangle_polygons = function(
-  triangles,
-  fragment
-) {
-  if (is.null(triangles) || !length(triangles)) {
-    return(NULL)
-  }
-  triangles = suppressWarnings(sf::st_collection_extract(triangles, "POLYGON"))
-  triangles = suppressWarnings(sf::st_cast(triangles, "POLYGON", warn = FALSE))
-  if (!length(triangles)) {
-    return(NULL)
-  }
-  triangles = triangles[!sf::st_is_empty(triangles)]
-  if (!length(triangles)) {
-    return(NULL)
-  }
-  representative_points = suppressWarnings(sf::st_point_on_surface(triangles))
-  inside = tryCatch(
-    as.logical(sf::st_covered_by(
-      representative_points,
-      fragment,
-      sparse = FALSE
-    )[, 1]),
-    error = function(e) rep(TRUE, length(triangles))
-  )
-  triangles[inside]
-}
-
-#' Ear-clip a simple water path fragment
-#'
-#' @param fragment Fragment geometry.
-#'
-#' @return Triangle polygon geometry or `NULL`.
-#' @keywords internal
-earclip_render_highquality_water_path_fragment = function(fragment) {
-  geometry = fragment[[1]]
-  if (!inherits(geometry, "XY") || !inherits(geometry, "POLYGON")) {
-    return(NULL)
-  }
-  if (length(geometry) != 1L) {
-    return(NULL)
-  }
-  ring = geometry[[1]]
-  if (nrow(ring) > 1L && all(ring[1, ] == ring[nrow(ring), ])) {
-    ring = ring[-nrow(ring), , drop = FALSE]
-  }
-  ring = collapse_render_highquality_water_path_line(ring)
-  if (nrow(ring) < 3) {
-    return(NULL)
-  }
-  if (render_highquality_water_path_ring_area(ring) < 0) {
-    ring = ring[rev(seq_len(nrow(ring))), , drop = FALSE]
-  }
-  remaining = seq_len(nrow(ring))
-  triangles = list()
-  guard = 0L
-  while (length(remaining) > 3L && guard < nrow(ring)^2) {
-    guard = guard + 1L
-    clipped = FALSE
-    for (position in seq_along(remaining)) {
-      previous = remaining[[ifelse(
-        position == 1L,
-        length(remaining),
-        position - 1L
-      )]]
-      current = remaining[[position]]
-      next_val = remaining[[ifelse(
-        position == length(remaining),
-        1L,
-        position + 1L
-      )]]
-      ear = ring[c(previous, current, next_val), , drop = FALSE]
-      if (render_highquality_water_path_signed_area2(ear) <= 0) {
-        next
-      }
-      other = setdiff(remaining, c(previous, current, next_val))
-      if (
-        length(other) &&
-          any(render_highquality_water_path_points_in_triangle(
-            ring[other, , drop = FALSE],
-            ear
-          ))
-      ) {
-        next
-      }
-      triangles[[length(triangles) + 1L]] = ear
-      remaining = remaining[-position]
-      clipped = TRUE
-      break
-    }
-    if (!clipped) {
-      return(NULL)
-    }
-  }
-  if (length(remaining) == 3L) {
-    triangles[[length(triangles) + 1L]] = ring[remaining, , drop = FALSE]
-  }
-  if (!length(triangles)) {
-    return(NULL)
-  }
-  triangle_geometries = lapply(triangles, function(triangle) {
-    sf::st_polygon(list(rbind(triangle, triangle[1, ])))
-  })
-  do.call(sf::st_sfc, c(triangle_geometries, list(crs = sf::NA_crs_)))
-}
-
-#' Extract triangle vertices
-#'
-#' @param geometry Triangle geometry.
-#'
-#' @return List of three-row `x`/`z` matrices.
-#' @keywords internal
-extract_render_highquality_water_path_triangle_vertices = function(geometry) {
-  coords = sf::st_coordinates(geometry)
-  if (!nrow(coords)) {
-    return(list())
-  }
-  coords = coords[, 1:2, drop = FALSE]
-  if (nrow(coords) > 1L && all(coords[1, ] == coords[nrow(coords), ])) {
-    coords = coords[-nrow(coords), , drop = FALSE]
-  }
-  coords = collapse_render_highquality_water_path_line(coords)
-  if (nrow(coords) < 3) {
-    return(list())
-  }
-  if (nrow(coords) == 3L) {
-    return(list(coords))
-  }
-  out = vector("list", nrow(coords) - 2L)
-  for (index in seq_len(nrow(coords) - 2L)) {
-    out[[index]] = coords[c(1L, index + 1L, index + 2L), , drop = FALSE]
-  }
-  out
-}
-
 #' Sample joined water path terrain surface
 #'
 #' @param points_xz Two-column `x`/`z` point matrix.
@@ -1622,6 +1622,50 @@ sample_render_highquality_water_path_surface = function(
   terrain_triangles = NULL,
   tri_id = NULL
 ) {
+  calculate_triangle_height = function(
+    heightmap,
+    points_xz,
+    terrain_triangles
+  ) {
+    row_col = render_heightmap_row_col(
+      heightmap,
+      points_xz[, 1],
+      points_xz[, 2],
+      clamp = FALSE
+    )
+    row_weight = row_col$row - terrain_triangles$row
+    col_weight = row_col$col - terrain_triangles$col
+    height00 = heightmap[cbind(
+      terrain_triangles$row,
+      terrain_triangles$col
+    )]
+    height10 = heightmap[cbind(
+      terrain_triangles$row + 1L,
+      terrain_triangles$col
+    )]
+    height01 = heightmap[cbind(
+      terrain_triangles$row,
+      terrain_triangles$col + 1L
+    )]
+    height11 = heightmap[cbind(
+      terrain_triangles$row + 1L,
+      terrain_triangles$col + 1L
+    )]
+    heights = numeric(nrow(points_xz))
+    top_triangle = terrain_triangles$triangle == "top"
+    heights[top_triangle] = height00[top_triangle] +
+      row_weight[top_triangle] *
+        (height10[top_triangle] - height00[top_triangle]) +
+      col_weight[top_triangle] *
+        (height01[top_triangle] - height00[top_triangle])
+    heights[!top_triangle] = height11[!top_triangle] +
+      (1 - col_weight[!top_triangle]) *
+        (height10[!top_triangle] - height11[!top_triangle]) +
+      (1 - row_weight[!top_triangle]) *
+        (height01[!top_triangle] - height11[!top_triangle])
+    heights
+  }
+
   points_xz = as.matrix(points_xz)
   heights = interpolate_render_heightmap_height(
     heightmap,
@@ -1639,7 +1683,7 @@ sample_render_highquality_water_path_surface = function(
     if (any(valid)) {
       exact_heights[
         valid
-      ] = calculate_render_highquality_water_path_triangle_height(
+      ] = calculate_triangle_height(
         heightmap = heightmap,
         points_xz = points_xz[valid, , drop = FALSE],
         terrain_triangles = terrain_triangles[
@@ -1654,82 +1698,6 @@ sample_render_highquality_water_path_surface = function(
     }
   }
   heights
-}
-
-#' Calculate terrain triangle heights
-#'
-#' @param heightmap Heightmap matrix in scene units.
-#' @param points_xz Two-column `x`/`z` point matrix.
-#' @param terrain_triangles Terrain triangle metadata.
-#'
-#' @return Numeric heights.
-#' @keywords internal
-calculate_render_highquality_water_path_triangle_height = function(
-  heightmap,
-  points_xz,
-  terrain_triangles
-) {
-  row_col = render_heightmap_row_col(
-    heightmap,
-    points_xz[, 1],
-    points_xz[, 2],
-    clamp = FALSE
-  )
-  row_weight = row_col$row - terrain_triangles$row
-  col_weight = row_col$col - terrain_triangles$col
-  height00 = heightmap[cbind(terrain_triangles$row, terrain_triangles$col)]
-  height10 = heightmap[cbind(terrain_triangles$row + 1L, terrain_triangles$col)]
-  height01 = heightmap[cbind(terrain_triangles$row, terrain_triangles$col + 1L)]
-  height11 = heightmap[cbind(
-    terrain_triangles$row + 1L,
-    terrain_triangles$col + 1L
-  )]
-  heights = numeric(nrow(points_xz))
-  top_triangle = terrain_triangles$triangle == "top"
-  heights[top_triangle] = height00[top_triangle] +
-    row_weight[top_triangle] *
-      (height10[top_triangle] - height00[top_triangle]) +
-    col_weight[top_triangle] *
-      (height01[top_triangle] - height00[top_triangle])
-  heights[!top_triangle] = height11[!top_triangle] +
-    (1 - col_weight[!top_triangle]) *
-      (height10[!top_triangle] - height11[!top_triangle]) +
-    (1 - row_weight[!top_triangle]) *
-      (height01[!top_triangle] - height11[!top_triangle])
-  heights
-}
-
-#' Orient joined water path top triangles upward
-#'
-#' @param vertices Top vertex matrix.
-#' @param indices Top triangle indices.
-#'
-#' @return Oriented triangle index matrix.
-#' @keywords internal
-orient_render_highquality_water_path_top_indices = function(vertices, indices) {
-  if (!nrow(indices)) {
-    return(indices)
-  }
-  oriented = indices
-  keep = rep(TRUE, nrow(oriented))
-  for (index in seq_len(nrow(oriented))) {
-    triangle = vertices[oriented[index, ], , drop = FALSE]
-    first_edge = triangle[2L, ] - triangle[1L, ]
-    second_edge = triangle[3L, ] - triangle[1L, ]
-    normal = c(
-      first_edge[[2]] * second_edge[[3]] - first_edge[[3]] * second_edge[[2]],
-      first_edge[[3]] * second_edge[[1]] - first_edge[[1]] * second_edge[[3]],
-      first_edge[[1]] * second_edge[[2]] - first_edge[[2]] * second_edge[[1]]
-    )
-    if (!all(is.finite(normal)) || sqrt(sum(normal^2)) <= .Machine$double.eps) {
-      keep[[index]] = FALSE
-      next
-    }
-    if (normal[[2]] < 0) {
-      oriented[index, c(2L, 3L)] = oriented[index, c(3L, 2L)]
-    }
-  }
-  oriented[keep, , drop = FALSE]
 }
 
 #' Count undirected mesh triangle edges
@@ -1753,82 +1721,6 @@ count_render_highquality_stream_edges = function(indices) {
     sep = "_"
   )
   stats::setNames(tabulate(match(keys, unique(keys))), unique(keys))
-}
-
-#' Calculate twice signed triangle area in x/z space
-#'
-#' @param points Three-row point matrix.
-#'
-#' @return Signed area times two.
-#' @keywords internal
-render_highquality_water_path_signed_area2 = function(points) {
-  (points[2L, 1] - points[1L, 1]) *
-    (points[3L, 2] - points[1L, 2]) -
-    (points[2L, 2] - points[1L, 2]) * (points[3L, 1] - points[1L, 1])
-}
-
-#' Calculate polygon ring area
-#'
-#' @param points Ring points.
-#'
-#' @return Signed area.
-#' @keywords internal
-render_highquality_water_path_ring_area = function(points) {
-  next_index = c(seq_len(nrow(points))[-1L], 1L)
-  sum(
-    points[, 1] * points[next_index, 2] - points[next_index, 1] * points[, 2]
-  ) /
-    2
-}
-
-#' Test whether points are inside a triangle
-#'
-#' @param points Point matrix.
-#' @param triangle Triangle point matrix.
-#'
-#' @return Logical vector.
-#' @keywords internal
-render_highquality_water_path_points_in_triangle = function(points, triangle) {
-  area = render_highquality_water_path_signed_area2(triangle)
-  if (!is.finite(area) || abs(area) <= .Machine$double.eps) {
-    return(rep(FALSE, nrow(points)))
-  }
-  sign1 = render_highquality_water_path_edge_side(
-    points,
-    triangle[1L, ],
-    triangle[2L, ]
-  )
-  sign2 = render_highquality_water_path_edge_side(
-    points,
-    triangle[2L, ],
-    triangle[3L, ]
-  )
-  sign3 = render_highquality_water_path_edge_side(
-    points,
-    triangle[3L, ],
-    triangle[1L, ]
-  )
-  eps = sqrt(.Machine$double.eps)
-  (sign1 >= -eps & sign2 >= -eps & sign3 >= -eps) |
-    (sign1 <= eps & sign2 <= eps & sign3 <= eps)
-}
-
-#' Calculate point side of a directed edge
-#'
-#' @param points Point matrix.
-#' @param edge_start Edge start.
-#' @param edge_end Edge end.
-#'
-#' @return Signed edge side values.
-#' @keywords internal
-render_highquality_water_path_edge_side = function(
-  points,
-  edge_start,
-  edge_end
-) {
-  (points[, 1] - edge_start[[1]]) *
-    (edge_end[[2]] - edge_start[[2]]) -
-    (points[, 2] - edge_start[[2]]) * (edge_end[[1]] - edge_start[[1]])
 }
 
 #' Make render_highquality water path mesh
