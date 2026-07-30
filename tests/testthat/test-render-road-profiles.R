@@ -67,7 +67,6 @@ build_render_road_profile_test_problem = function(
   topology,
   terrain_elevation = 0,
   terrain_spacing = 1,
-  explicit_controls = NULL,
   settings = list()
 ) {
   fragments = topology$fragments
@@ -96,7 +95,6 @@ build_render_road_profile_test_problem = function(
     list(
       topology = topology,
       terrain_profiles = terrain_profiles,
-      explicit_controls = explicit_controls,
       layer_spacing = 5.5,
       maximum_grade = 0.07,
       maximum_grade_rate = 1e-3,
@@ -364,9 +362,22 @@ test_that("positive-layer branches share height but only through pairs share gra
   expect_equal(nrow(problem$junction_equalities), 3L)
   expect_equal(nrow(problem$continuation_equalities), 1L)
   expect_true(audit$passed)
-  expect_lt(max(abs(audit$junctions$height_residual)), 1e-6)
+  junctions = problem$junction_equalities
   expect_lt(
-    max(abs(audit$continuations$oriented_grade_residual)),
+    max(abs(
+      solution$controls$height[junctions$control_b] -
+        solution$controls$height[junctions$control_a]
+    )),
+    1e-6
+  )
+  continuations = problem$continuation_equalities
+  expect_lt(
+    max(abs(
+      continuations$sign_a *
+        solution$controls$grade[continuations$control_a] -
+        continuations$sign_b *
+          solution$controls$grade[continuations$control_b]
+    )),
     1e-6
   )
 })

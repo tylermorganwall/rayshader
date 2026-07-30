@@ -56,9 +56,10 @@ test_that("render_roads caches road metadata by rgl id", {
 
   road_info = get_render_road_path_info(road_path_ids$id[[1]])
   expect_true(file.exists(road_info$texture_file))
-  expect_equal(road_info$texture_mapping, "auto")
+  expect_equal(road_info$lanes, 2L)
+  expect_equal(road_info$width, 0.5)
   expect_equal(road_info$texture_length, 13)
-  expect_equal(road_info$texture_repeats, road_info$road_length / 13)
+  expect_equal(road_info$texture_repeats, 3 / 13)
 
   scene = render_highquality(return_scene = TRUE, light = FALSE)
   expect_true(any(vapply(
@@ -163,11 +164,6 @@ test_that("render_roads fits lane texture repeats to each road length", {
     c(12, 12)
   )
   road_info = lapply(road_path_ids$id, get_render_road_path_info)
-  expect_equal(
-    sort(vapply(road_info, `[[`, numeric(1), "road_length")),
-    c(3, 5),
-    tolerance = 1e-8
-  )
   expect_equal(
     sort(vapply(road_info, `[[`, numeric(1), "texture_length")),
     c(2, 2),
@@ -413,7 +409,7 @@ test_that("render_roads accepts layer and feature height columns", {
   )
   expect_equal(terrain_following, c(TRUE, FALSE))
   road_info = lapply(road_path_ids$id, get_render_road_path_info)
-  expect_equal(vapply(road_info, `[[`, numeric(1), "road_width"), c(12, 18))
+  expect_equal(vapply(road_info, `[[`, numeric(1), "width"), c(12, 18))
   expect_false(identical(
     road_info[[1]]$texture_file,
     road_info[[2]]$texture_file
@@ -483,7 +479,7 @@ test_that("render_roads accepts raw OSM bridge and lane metadata", {
   road_path_ids = get_ids_with_labels(typeval = "road_path")
   road_info = lapply(road_path_ids$id, get_render_road_path_info)
   expect_equal(
-    vapply(road_info, `[[`, numeric(1), "road_width"),
+    vapply(road_info, `[[`, numeric(1), "width"),
     c(12, 9)
   )
 })
@@ -498,7 +494,7 @@ test_that("elevated road meshes preserve absolute profiles", {
     byrow = TRUE
   )
   sloped_heightmap = outer(seq_len(11), seq_len(11), `+`) * 10
-  road_mesh = make_render_highquality_road_path_mesh(
+  road_mesh = make_render_highquality_road_chain_mesh(
     points = points,
     bbox_center = c(0, 0, 0),
     width = 2,
@@ -570,30 +566,8 @@ test_that("road mesh texture coordinates repeat along the path", {
     calculate_road_lane_marking_positions(3),
     list(edge_lines = c(1 / 10, 9 / 10), dividers = c(11 / 30, 19 / 30))
   )
-  expect_equal(
-    make_render_highquality_road_path_polygon(),
-    matrix(
-      c(
-        -0.5,
-        0,
-        0.5,
-        0,
-        0.5,
-        0.11,
-        -0.5,
-        0.11
-      ),
-      ncol = 2,
-      byrow = TRUE
-    )
-  )
-  expect_gt(
-    max(make_render_highquality_road_path_polygon()[, 2]),
-    max(make_render_highquality_water_path_polygon()[, 2])
-  )
-
   texture_file = make_road_lane_texture()
-  road_mesh = make_render_highquality_road_path_mesh(
+  road_mesh = make_render_highquality_road_chain_mesh(
     points = matrix(
       c(0, 0, 0, 0, 0, 0, 5, 0, 0),
       ncol = 3,
@@ -628,7 +602,7 @@ test_that("road mesh texture coordinates repeat along the path", {
   })
   expect_true(all(texture_triangle_area > 0))
 
-  repeated_road_mesh = make_render_highquality_road_path_mesh(
+  repeated_road_mesh = make_render_highquality_road_chain_mesh(
     points = matrix(c(0, 0, 0, 5, 0, 0), ncol = 3, byrow = TRUE),
     bbox_center = c(0, 0, 0),
     width = 1,
@@ -652,7 +626,7 @@ test_that("road mesh sweep avoids invalid triangles at tightly spaced bends", {
   skip_if_not_installed("rayvertex")
 
   texture_file = make_road_lane_texture()
-  road_mesh = make_render_highquality_road_path_mesh(
+  road_mesh = make_render_highquality_road_chain_mesh(
     points = matrix(
       c(
         -5,

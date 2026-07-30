@@ -296,19 +296,13 @@ render_streams = function(
   if (rgl::cur3d() == 0) {
     stop("No rgl window currently open.")
   }
-  width_column_supplied = !isTRUE(width_column_missing) &&
-    !identical(width_column_expr, quote(NULL))
+  width_column_name = resolve_render_line_width_column(
+    width_column = width_column,
+    width_column_expr = width_column_expr,
+    width_column_missing = width_column_missing
+  )
+  width_column_supplied = !is.null(width_column_name)
   if (width_column_supplied) {
-    width_values = resolve_render_feature_values(
-      data = streams,
-      value = width_column,
-      value_expr = width_column_expr,
-      missing = FALSE,
-      default = 1,
-      argument = "width_column",
-      type = "double",
-      lower = .Machine$double.xmin
-    )
     if (inherits(streams, "SpatialLinesDataFrame")) {
       streams = sf::st_as_sf(streams)
     }
@@ -318,6 +312,25 @@ render_streams = function(
         call. = FALSE
       )
     }
+    if (!(width_column_name %in% names(streams))) {
+      stop(
+        sprintf(
+          "`width_column` must name a column in `streams`: %s",
+          width_column_name
+        ),
+        call. = FALSE
+      )
+    }
+    width_values = resolve_render_feature_values(
+      data = streams,
+      value = width_column_name,
+      value_expr = as.name(width_column_name),
+      missing = FALSE,
+      default = 1,
+      argument = "width_column",
+      type = "double",
+      lower = .Machine$double.xmin
+    )
     streams$render_line_width = width_values
     width_column = "render_line_width"
     merge = FALSE

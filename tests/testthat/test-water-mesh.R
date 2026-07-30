@@ -409,12 +409,12 @@ test_that("render_streams draws spatial stream paths as water paths", {
     ncol = 3,
     byrow = TRUE
   )
-  undensified_stream_coords = offset_water_path_coords(
+  undensified_stream_coords = offset_render_line_coords(
     list(sparse_stream_coords),
     offset = 2
   )[[1]]
-  densified_stream_coords = densify_water_path_coords(
-    coord_list = list(sparse_stream_coords),
+  densified_stream_coords = densify_render_line_coords(
+    coords = list(sparse_stream_coords),
     heightmap = matrix(0, nrow = 5, ncol = 5),
     zscale = 1,
     offset = 2
@@ -423,9 +423,9 @@ test_that("render_streams draws spatial stream paths as water paths", {
   expect_equal(undensified_stream_coords[, 2], c(2, 2))
   expect_gt(nrow(densified_stream_coords), nrow(sparse_stream_coords))
   expect_equal(unique(densified_stream_coords[, 2]), 2)
-  expect_false(validate_waterpath_logical(FALSE, "waterpath_densify"))
+  expect_false(resolve_render_logical(FALSE, "waterpath_densify"))
   expect_error(
-    validate_waterpath_logical(NA, "waterpath_densify"),
+    resolve_render_logical(NA, "waterpath_densify"),
     "`waterpath_densify` must be TRUE or FALSE.",
     fixed = TRUE
   )
@@ -498,14 +498,14 @@ test_that("render_streams draws spatial stream paths as water paths", {
     ncol = 5
   )
   scaled_water_path_heightmap =
-    scale_render_highquality_water_path_heightmap(
+    scale_render_highquality_heightmap(
       heightmap = sloped_heightmap,
       zscale = 2
     )
   expect_equal(scaled_water_path_heightmap$heightmap, sloped_heightmap / 2)
   expect_equal(scaled_water_path_heightmap$zscale, 1)
   expect_equal(
-    scale_render_highquality_water_path_heightmap(
+    scale_render_highquality_heightmap(
       heightmap = sloped_heightmap,
       zscale = 1
     )$heightmap,
@@ -513,7 +513,7 @@ test_that("render_streams draws spatial stream paths as water paths", {
   )
   expected_normal = c(-1, 1, 0) / sqrt(2)
   expect_equal(
-    interpolate_render_highquality_water_path_normals(
+    interpolate_render_highquality_normals(
       points = matrix(c(0, 0, 0), ncol = 3),
       heightmap = sloped_heightmap,
       zscale = 1
@@ -522,12 +522,12 @@ test_that("render_streams draws spatial stream paths as water paths", {
     tolerance = 1e-8
   )
   expect_equal(
-    interpolate_render_highquality_water_path_normals(
+    interpolate_render_highquality_normals(
       points = matrix(c(0, 0, 0), ncol = 3),
       heightmap = sloped_heightmap,
       zscale = 2
     )[1, ],
-    interpolate_render_highquality_water_path_normals(
+    interpolate_render_highquality_normals(
       points = matrix(c(0, 0, 0), ncol = 3),
       heightmap = scaled_water_path_heightmap$heightmap,
       zscale = scaled_water_path_heightmap$zscale
@@ -541,15 +541,15 @@ test_that("render_streams draws spatial stream paths as water paths", {
   )
   sloped_points = cbind(
     c(0, 1),
-    interpolate_spatial_water_height(z_sloped_heightmap, c(0, 1), c(0, 0)),
+    interpolate_render_heightmap_height(z_sloped_heightmap, c(0, 1), c(0, 0)),
     c(0, 0)
   )
-  sloped_normals = interpolate_render_highquality_water_path_normals(
+  sloped_normals = interpolate_render_highquality_normals(
     points = sloped_points,
     heightmap = z_sloped_heightmap,
     zscale = 1
   )
-  sloped_tangents = calculate_render_highquality_water_path_tangents(
+  sloped_tangents = calculate_render_highquality_path_tangents(
     points = sloped_points,
     normals = sloped_normals
   )
@@ -557,7 +557,7 @@ test_that("render_streams draws spatial stream paths as water paths", {
     sloped_tangents,
     sloped_normals
   ))
-  sloped_edge_centers = make_render_highquality_water_path_edge_centers(
+  sloped_edge_centers = make_render_highquality_path_edge_centers(
     points = sloped_points,
     side_vectors = sloped_side_vectors,
     half_width = 0.5,
@@ -566,7 +566,7 @@ test_that("render_streams draws spatial stream paths as water paths", {
   )
   expect_equal(
     sloped_edge_centers$left[, 2],
-    interpolate_spatial_water_height(
+    interpolate_render_heightmap_height(
       z_sloped_heightmap,
       sloped_edge_centers$left[, 1],
       sloped_edge_centers$left[, 3]
@@ -575,14 +575,14 @@ test_that("render_streams draws spatial stream paths as water paths", {
   )
   expect_equal(
     sloped_edge_centers$right[, 2],
-    interpolate_spatial_water_height(
+    interpolate_render_heightmap_height(
       z_sloped_heightmap,
       sloped_edge_centers$right[, 1],
       sloped_edge_centers$right[, 3]
     ),
     tolerance = 1e-8
   )
-  highquality_densified_points = densify_render_highquality_water_path_points(
+  highquality_densified_points = densify_render_highquality_path_points(
     points = matrix(c(-1.25, 0, 0, 1.25, 0, 0), ncol = 3, byrow = TRUE),
     width = 0.5,
     heightmap = matrix(0, nrow = 5, ncol = 5),
@@ -734,15 +734,19 @@ test_that("water polygon clipping aligns CRS and accepts SpatVector input", {
     )
   )
 
-  clipped_reprojected = prepare_render_water_path_geometry(
-    waterpaths = streams,
-    waterpath_merge = FALSE,
-    water_polygons = sf::st_transform(water_polygons, 4326)
+  clipped_reprojected = prepare_render_line_geometry(
+    lines = streams,
+    merge = FALSE,
+    exclude_polygons = sf::st_transform(water_polygons, 4326),
+    line_argument = "streams",
+    polygon_argument = "water_polygons"
   )
-  clipped_spatvector = prepare_render_water_path_geometry(
-    waterpaths = streams,
-    waterpath_merge = FALSE,
-    water_polygons = terra::vect(water_polygons)
+  clipped_spatvector = prepare_render_line_geometry(
+    lines = streams,
+    merge = FALSE,
+    exclude_polygons = terra::vect(water_polygons),
+    line_argument = "streams",
+    polygon_argument = "water_polygons"
   )
 
   expect_s3_class(clipped_reprojected, "sf")
@@ -772,19 +776,23 @@ test_that("water polygon clipping rejects ambiguous or non-polygon input", {
   )
 
   expect_error(
-    prepare_render_water_path_geometry(
-      streams,
-      waterpath_merge = FALSE,
-      water_polygons = crs_less_water
+    prepare_render_line_geometry(
+      lines = streams,
+      merge = FALSE,
+      exclude_polygons = crs_less_water,
+      line_argument = "streams",
+      polygon_argument = "water_polygons"
     ),
     "must both have a CRS or both be CRS-less",
     fixed = TRUE
   )
   expect_error(
-    prepare_render_water_path_geometry(
-      streams,
-      waterpath_merge = FALSE,
-      water_polygons = sf::st_sfc(sf::st_point(c(5, 0)), crs = 3857)
+    prepare_render_line_geometry(
+      lines = streams,
+      merge = FALSE,
+      exclude_polygons = sf::st_sfc(sf::st_point(c(5, 0)), crs = 3857),
+      line_argument = "streams",
+      polygon_argument = "water_polygons"
     ),
     "must contain only polygon or multipolygon geometries",
     fixed = TRUE
@@ -854,21 +862,21 @@ test_that("render_streams reads widths from an sf column", {
 test_that("water path densification samples terrain triangle boundaries", {
   heightmap = matrix(0, nrow = 5, ncol = 5)
 
-  boundary_t = calculate_water_path_triangle_boundary_t(
+  boundary_t = calculate_render_line_triangle_boundary_t(
     heightmap = heightmap,
     segment_start = c(-1.25, 0),
     segment_end = c(1.25, 0)
   )
   expect_true(all(c(0.1, 0.5, 0.9) %in% round(boundary_t, 8)))
 
-  diagonal_t = calculate_water_path_triangle_boundary_t(
+  diagonal_t = calculate_render_line_triangle_boundary_t(
     heightmap = heightmap,
     segment_start = c(-0.9, -0.9),
     segment_end = c(-0.6, -0.2)
   )
   expect_true(any(abs(diagonal_t - 0.8) < 1e-8))
 
-  densified = densify_single_water_path_coord(
+  densified = densify_single_render_line_coord(
     coords = matrix(c(-1.25, 0, 0, 1.25, 0, 0), ncol = 3, byrow = TRUE),
     heightmap = heightmap,
     offset = 0
@@ -972,21 +980,37 @@ test_that("joined stream terrain overlay clips invalid cells and closes meshes",
   flat_info = flat_mesh$shape_info[[1]]$mesh_info[[1]]
   expect_equal(max(flat_info$vertices[, 2]), 0.2, tolerance = 1e-8)
   expect_lt(min(flat_info$vertices[, 2]), 0)
-  expect_true(all(
-    validate_render_highquality_water_path_edge_counts(flat_info$indices) == 2
-  ))
+  flat_indices = as.matrix(flat_info$indices)
+  if (min(flat_indices) == 0L) {
+    flat_indices = flat_indices + 1L
+  }
+  flat_vertex_keys = apply(
+    round(as.matrix(flat_info$vertices), 10L),
+    1L,
+    paste,
+    collapse = ":"
+  )
+  flat_edges = rbind(
+    flat_indices[, c(1L, 2L), drop = FALSE],
+    flat_indices[, c(2L, 3L), drop = FALSE],
+    flat_indices[, c(3L, 1L), drop = FALSE]
+  )
+  flat_edge_keys = apply(flat_edges, 1L, function(edge) {
+    paste(sort(flat_vertex_keys[edge]), collapse = "|")
+  })
+  expect_true(all(table(flat_edge_keys) == 2L))
 
   sloped_heightmap = matrix(rep(seq_len(5), times = 5), nrow = 5, ncol = 5)
   sloped_task = flat_task
   sloped_task[[1]]$heightmap = sloped_heightmap
-  sloped_task[[1]]$points[, 2] = interpolate_spatial_water_height(
+  sloped_task[[1]]$points[, 2] = interpolate_render_heightmap_height(
     sloped_heightmap,
     sloped_task[[1]]$points[, 1],
     sloped_task[[1]]$points[, 3]
   )
   sloped_mesh = make_render_highquality_joined_water_path_mesh(sloped_task)
   sloped_info = sloped_mesh$shape_info[[1]]$mesh_info[[1]]
-  terrain_y = interpolate_spatial_water_height(
+  terrain_y = interpolate_render_heightmap_height(
     sloped_heightmap,
     sloped_info$vertices[, 1],
     sloped_info$vertices[, 3]
@@ -1061,7 +1085,7 @@ test_that("spatial water height interpolation matches terrain triangles", {
   saddle_heightmap = matrix(c(0, 0, 0, 10), nrow = 2, ncol = 2)
 
   expect_equal(
-    interpolate_spatial_water_height(
+    interpolate_render_heightmap_height(
       saddle_heightmap,
       x = -0.25,
       z = -0.25
@@ -1069,7 +1093,7 @@ test_that("spatial water height interpolation matches terrain triangles", {
     0
   )
   expect_equal(
-    interpolate_spatial_water_height(
+    interpolate_render_heightmap_height(
       saddle_heightmap,
       x = 0.25,
       z = 0.25
