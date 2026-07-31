@@ -9540,6 +9540,9 @@ restore_render_road_profile_native_solution = function(result, problem) {
 #' Solve sparse quadratic road profiles with a native adaptive loop
 #'
 #' @inheritParams solve_render_road_profile_problem_r_reference
+#' @param maximum_requests_per_relation Default `1L`. Experimental maximum
+#'   number of well-separated refinement requests selected for each fragment
+#'   and request type, or each overlap event. Must be between 1 and 4.
 #'
 #' @return Solved variables, controls, and component diagnostics.
 #' @keywords internal
@@ -9550,7 +9553,8 @@ solve_render_road_profile_problem = function(
   relative_tolerance = 1e-7,
   maximum_iterations = 20000,
   profile_tolerance = 1e-3,
-  maximum_refinement_iterations = 20
+  maximum_refinement_iterations = 20,
+  maximum_requests_per_relation = 1L
 ) {
   if (!inherits(problem, "render_road_profile_problem")) {
     stop("`problem` must be a road profile problem.", call. = FALSE)
@@ -9596,9 +9600,28 @@ solve_render_road_profile_problem = function(
     )
   }
   if (
+    !is.numeric(maximum_requests_per_relation) ||
+      length(maximum_requests_per_relation) != 1L ||
+      !is.finite(maximum_requests_per_relation) ||
+      maximum_requests_per_relation < 1 ||
+      maximum_requests_per_relation > 4 ||
+      maximum_requests_per_relation != floor(maximum_requests_per_relation)
+  ) {
+    stop(
+      "`maximum_requests_per_relation` must be an integer between 1 and 4.",
+      call. = FALSE
+    )
+  }
+  if (
     is.null(problem$profile_specification) ||
       is.null(problem$profile_context)
   ) {
+    if (maximum_requests_per_relation != 1L) {
+      stop(
+        "Request batching requires a native road-profile specification.",
+        call. = FALSE
+      )
+    }
     return(solve_render_road_profile_problem_r_reference(
       problem = problem,
       verbose = verbose,
@@ -9712,7 +9735,10 @@ solve_render_road_profile_problem = function(
     solve_component = solve_component,
     profile_tolerance = profile_tolerance,
     maximum_refinement_iterations = as.integer(maximum_refinement_iterations),
-    diagnostics = FALSE
+    diagnostics = FALSE,
+    maximum_requests_per_relation = as.integer(
+      maximum_requests_per_relation
+    )
   )
   native_adaptive = as.data.frame(
     native$adaptive,

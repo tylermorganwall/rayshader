@@ -355,8 +355,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // audit_render_road_profiles_cpp
-List audit_render_road_profiles_cpp(List specification_list, NumericVector height, NumericVector grade, double tolerance, bool diagnostics);
-RcppExport SEXP _rayshader_audit_render_road_profiles_cpp(SEXP specification_listSEXP, SEXP heightSEXP, SEXP gradeSEXP, SEXP toleranceSEXP, SEXP diagnosticsSEXP) {
+List audit_render_road_profiles_cpp(List specification_list, NumericVector height, NumericVector grade, double tolerance, bool diagnostics, int maximum_requests_per_relation);
+RcppExport SEXP _rayshader_audit_render_road_profiles_cpp(SEXP specification_listSEXP, SEXP heightSEXP, SEXP gradeSEXP, SEXP toleranceSEXP, SEXP diagnosticsSEXP, SEXP maximum_requests_per_relationSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -365,7 +365,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< NumericVector >::type grade(gradeSEXP);
     Rcpp::traits::input_parameter< double >::type tolerance(toleranceSEXP);
     Rcpp::traits::input_parameter< bool >::type diagnostics(diagnosticsSEXP);
-    rcpp_result_gen = Rcpp::wrap(audit_render_road_profiles_cpp(specification_list, height, grade, tolerance, diagnostics));
+    Rcpp::traits::input_parameter< int >::type maximum_requests_per_relation(maximum_requests_per_relationSEXP);
+    rcpp_result_gen = Rcpp::wrap(audit_render_road_profiles_cpp(specification_list, height, grade, tolerance, diagnostics, maximum_requests_per_relation));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -382,8 +383,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // solve_render_road_profiles_cpp
-List solve_render_road_profiles_cpp(List specification, Function solve_component, double profile_tolerance, int maximum_refinement_iterations, bool diagnostics);
-RcppExport SEXP _rayshader_solve_render_road_profiles_cpp(SEXP specificationSEXP, SEXP solve_componentSEXP, SEXP profile_toleranceSEXP, SEXP maximum_refinement_iterationsSEXP, SEXP diagnosticsSEXP) {
+List solve_render_road_profiles_cpp(List specification, Function solve_component, double profile_tolerance, int maximum_refinement_iterations, bool diagnostics, int maximum_requests_per_relation);
+RcppExport SEXP _rayshader_solve_render_road_profiles_cpp(SEXP specificationSEXP, SEXP solve_componentSEXP, SEXP profile_toleranceSEXP, SEXP maximum_refinement_iterationsSEXP, SEXP diagnosticsSEXP, SEXP maximum_requests_per_relationSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -392,7 +393,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type profile_tolerance(profile_toleranceSEXP);
     Rcpp::traits::input_parameter< int >::type maximum_refinement_iterations(maximum_refinement_iterationsSEXP);
     Rcpp::traits::input_parameter< bool >::type diagnostics(diagnosticsSEXP);
-    rcpp_result_gen = Rcpp::wrap(solve_render_road_profiles_cpp(specification, solve_component, profile_tolerance, maximum_refinement_iterations, diagnostics));
+    Rcpp::traits::input_parameter< int >::type maximum_requests_per_relation(maximum_requests_per_relationSEXP);
+    rcpp_result_gen = Rcpp::wrap(solve_render_road_profiles_cpp(specification, solve_component, profile_tolerance, maximum_refinement_iterations, diagnostics, maximum_requests_per_relation));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -497,9 +499,9 @@ static const R_CallMethodDef CallEntries[] = {
     {"_rayshader_rayshade_cpp", (DL_FUNC) &_rayshader_rayshade_cpp, 7},
     {"_rayshader_rayshade_multicore", (DL_FUNC) &_rayshader_rayshade_multicore, 7},
     {"_rayshader_evaluate_render_road_profiles_cpp", (DL_FUNC) &_rayshader_evaluate_render_road_profiles_cpp, 8},
-    {"_rayshader_audit_render_road_profiles_cpp", (DL_FUNC) &_rayshader_audit_render_road_profiles_cpp, 5},
+    {"_rayshader_audit_render_road_profiles_cpp", (DL_FUNC) &_rayshader_audit_render_road_profiles_cpp, 6},
     {"_rayshader_compile_render_road_profile_problem_cpp", (DL_FUNC) &_rayshader_compile_render_road_profile_problem_cpp, 2},
-    {"_rayshader_solve_render_road_profiles_cpp", (DL_FUNC) &_rayshader_solve_render_road_profiles_cpp, 5},
+    {"_rayshader_solve_render_road_profiles_cpp", (DL_FUNC) &_rayshader_solve_render_road_profiles_cpp, 6},
     {"_rayshader_make_spatial_water_fixed_grid_terrain_mesh_cpp", (DL_FUNC) &_rayshader_make_spatial_water_fixed_grid_terrain_mesh_cpp, 1},
     {"_rayshader_spatial_water_face_sublevel_area_cpp", (DL_FUNC) &_rayshader_spatial_water_face_sublevel_area_cpp, 4},
     {"_rayshader_spatial_water_traverse_seeded_clipped_faces_cpp", (DL_FUNC) &_rayshader_spatial_water_traverse_seeded_clipped_faces_cpp, 8},

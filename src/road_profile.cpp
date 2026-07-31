@@ -322,7 +322,123 @@ int resolve_support_arc(
   return terminal_arc;
 }
 
-List make_request_list(const std::vector<AdaptiveRequest>& candidates) {
+List request_list_from_indices(
+    const std::vector<AdaptiveRequest>& candidates,
+    const std::vector<int>& selected) {
+  IntegerVector type(selected.size());
+  IntegerVector fragment_a(selected.size());
+  NumericVector distance_a(selected.size());
+  IntegerVector fragment_b(selected.size());
+  NumericVector distance_b(selected.size());
+  IntegerVector event_id(selected.size());
+  NumericVector clearance(selected.size());
+  NumericVector source_margin(selected.size());
+  for (std::size_t row = 0; row < selected.size(); ++row) {
+    const AdaptiveRequest& request = candidates[selected[row]];
+    type[row] = request.type;
+    fragment_a[row] = request.fragment_a;
+    distance_a[row] = request.distance_a;
+    fragment_b[row] = request.fragment_b;
+    distance_b[row] = request.distance_b;
+    event_id[row] = request.event_id;
+    clearance[row] = request.clearance;
+    source_margin[row] = request.source_margin;
+  }
+  return List::create(
+      _["type"] = type,
+      _["fragment_a"] = fragment_a,
+      _["distance_a"] = distance_a,
+      _["fragment_b"] = fragment_b,
+      _["distance_b"] = distance_b,
+      _["event_id"] = event_id,
+      _["clearance"] = clearance,
+      _["source_margin"] = source_margin);
+}
+
+double request_separation(
+    const AuditSpecification& specification,
+    int fragment_id,
+    int maximum_requests_per_relation) {
+  for (R_xlen_t fragment = 0;
+       fragment < specification.fragment_id.size();
+       ++fragment) {
+    if (specification.fragment_id[fragment] != fragment_id) {
+      continue;
+    }
+    const int start = specification.control_start[fragment];
+    const int count = specification.control_count[fragment];
+    const double length =
+        specification.control_distance[start + count - 1];
+    return std::max(
+        specification.control_tolerance[fragment],
+        length / (8.0 * maximum_requests_per_relation));
+  }
+  stop("Unknown fragment %d in an adaptive request.", fragment_id);
+}
+
+void select_separated_requests(
+    const AuditSpecification& specification,
+    const std::vector<AdaptiveRequest>& candidates,
+    std::vector<int> group,
+    int maximum_requests_per_relation,
+    std::vector<int>& selected) {
+  std::stable_sort(
+      group.begin(),
+      group.end(),
+      [&candidates](int first, int second) {
+        return candidates[first].source_margin <
+               candidates[second].source_margin;
+      });
+  for (int candidate_index : group) {
+    const AdaptiveRequest& candidate = candidates[candidate_index];
+    const double separation_a = request_separation(
+        specification,
+        candidate.fragment_a,
+        maximum_requests_per_relation);
+    bool separated = true;
+    for (int selected_index : selected) {
+      const AdaptiveRequest& prior = candidates[selected_index];
+      const bool same_relation =
+          candidate.type == overlap_clearance_request
+              ? prior.type == overlap_clearance_request &&
+                    prior.event_id == candidate.event_id
+              : prior.type == candidate.type &&
+                    prior.fragment_a == candidate.fragment_a;
+      if (!same_relation) {
+        continue;
+      }
+      bool nearby =
+          std::abs(candidate.distance_a - prior.distance_a) <
+          separation_a;
+      if (candidate.type == overlap_clearance_request) {
+        const double separation_b = request_separation(
+            specification,
+            candidate.fragment_b,
+            maximum_requests_per_relation);
+        nearby =
+            nearby &&
+            std::abs(candidate.distance_b - prior.distance_b) <
+                separation_b;
+      }
+      if (nearby) {
+        separated = false;
+        break;
+      }
+    }
+    if (separated) {
+      selected.push_back(candidate_index);
+      if (static_cast<int>(selected.size()) >=
+          maximum_requests_per_relation) {
+        return;
+      }
+    }
+  }
+}
+
+List make_request_list(
+    const AuditSpecification& specification,
+    const std::vector<AdaptiveRequest>& candidates,
+    int maximum_requests_per_relation) {
   std::map<std::pair<int, int>, int> single_best;
   std::map<int, int> overlap_best;
   for (std::size_t index = 0; index < candidates.size(); ++index) {
@@ -354,35 +470,52 @@ List make_request_list(const std::vector<AdaptiveRequest>& candidates) {
   }
   std::sort(selected.begin(), selected.end());
   selected.erase(std::unique(selected.begin(), selected.end()), selected.end());
-
-  IntegerVector type(selected.size());
-  IntegerVector fragment_a(selected.size());
-  NumericVector distance_a(selected.size());
-  IntegerVector fragment_b(selected.size());
-  NumericVector distance_b(selected.size());
-  IntegerVector event_id(selected.size());
-  NumericVector clearance(selected.size());
-  NumericVector source_margin(selected.size());
-  for (std::size_t row = 0; row < selected.size(); ++row) {
-    const AdaptiveRequest& request = candidates[selected[row]];
-    type[row] = request.type;
-    fragment_a[row] = request.fragment_a;
-    distance_a[row] = request.distance_a;
-    fragment_b[row] = request.fragment_b;
-    distance_b[row] = request.distance_b;
-    event_id[row] = request.event_id;
-    clearance[row] = request.clearance;
-    source_margin[row] = request.source_margin;
+  if (maximum_requests_per_relation == 1) {
+    return request_list_from_indices(candidates, selected);
   }
-  return List::create(
-      _["type"] = type,
-      _["fragment_a"] = fragment_a,
-      _["distance_a"] = distance_a,
-      _["fragment_b"] = fragment_b,
-      _["distance_b"] = distance_b,
-      _["event_id"] = event_id,
-      _["clearance"] = clearance,
-      _["source_margin"] = source_margin);
+
+  selected.clear();
+  std::map<std::pair<int, int>, std::vector<int>> single_group;
+  std::map<int, std::vector<int>> overlap_group;
+  for (std::size_t index = 0; index < candidates.size(); ++index) {
+    const AdaptiveRequest& request = candidates[index];
+    if (request.type == overlap_clearance_request) {
+      overlap_group[request.event_id].push_back(
+          static_cast<int>(index));
+    } else {
+      single_group[
+          std::pair<int, int>(request.type, request.fragment_a)]
+              .push_back(static_cast<int>(index));
+    }
+  }
+  for (const auto& entry : single_group) {
+    std::vector<int> group_selected;
+    select_separated_requests(
+        specification,
+        candidates,
+        entry.second,
+        maximum_requests_per_relation,
+        group_selected);
+    selected.insert(
+        selected.end(),
+        group_selected.begin(),
+        group_selected.end());
+  }
+  for (const auto& entry : overlap_group) {
+    std::vector<int> group_selected;
+    select_separated_requests(
+        specification,
+        candidates,
+        entry.second,
+        maximum_requests_per_relation,
+        group_selected);
+    selected.insert(
+        selected.end(),
+        group_selected.begin(),
+        group_selected.end());
+  }
+  std::sort(selected.begin(), selected.end());
+  return request_list_from_indices(candidates, selected);
 }
 
 }  // namespace
@@ -469,7 +602,14 @@ List audit_render_road_profiles_cpp(
     NumericVector height,
     NumericVector grade,
     double tolerance,
-    bool diagnostics = false) {
+    bool diagnostics = false,
+    int maximum_requests_per_relation = 1) {
+  if (maximum_requests_per_relation < 1 ||
+      maximum_requests_per_relation > 4) {
+    stop(
+        "`maximum_requests_per_relation` must be an integer "
+        "between 1 and 4.");
+  }
   AuditSpecification specification(specification_list);
   if (height.size() != grade.size() ||
       height.size() != specification.control_row.size()) {
@@ -1006,7 +1146,10 @@ List audit_render_road_profiles_cpp(
       _["continuous_chord_margin"] = chord_margin,
       _["continuous_overlap_clearance_margin"] = overlap_margin,
       _["finite_profile_coordinates"] = finite_profile_coordinates,
-      _["requests"] = make_request_list(request_candidates));
+      _["requests"] = make_request_list(
+          specification,
+          request_candidates,
+          maximum_requests_per_relation));
   if (diagnostics) {
     result["terrain"] = DataFrame::create(
         _["render_road_fragment_id"] = wrap(terrain_fragment),
@@ -3417,7 +3560,8 @@ List solve_render_road_profiles_cpp(
     Function solve_component,
     double profile_tolerance,
     int maximum_refinement_iterations,
-    bool diagnostics = false) {
+    bool diagnostics = false,
+    int maximum_requests_per_relation = 1) {
   if (!finite_number(profile_tolerance) || profile_tolerance < 0.0) {
     stop("`profile_tolerance` must be non-negative and finite.");
   }
@@ -3425,6 +3569,12 @@ List solve_render_road_profiles_cpp(
     stop(
         "`maximum_refinement_iterations` must be a non-negative "
         "integer.");
+  }
+  if (maximum_requests_per_relation < 1 ||
+      maximum_requests_per_relation > 4) {
+    stop(
+        "`maximum_requests_per_relation` must be an integer "
+        "between 1 and 4.");
   }
   const RoadProfileClock::time_point total_start =
       RoadProfileClock::now();
@@ -3604,7 +3754,8 @@ List solve_render_road_profiles_cpp(
         height,
         grade,
         profile_tolerance,
-        false);
+        false,
+        maximum_requests_per_relation);
     audit_elapsed += road_profile_elapsed(
         audit_start, RoadProfileClock::now());
     const List requests = continuous["requests"];
@@ -3621,7 +3772,8 @@ List solve_render_road_profiles_cpp(
             height,
             grade,
             profile_tolerance,
-            true);
+            true,
+            maximum_requests_per_relation);
         audit_elapsed += road_profile_elapsed(
             detailed_start, RoadProfileClock::now());
         return List::create(
@@ -3667,7 +3819,8 @@ List solve_render_road_profiles_cpp(
             height,
             grade,
             profile_tolerance,
-            true);
+            true,
+            maximum_requests_per_relation);
         audit_elapsed += road_profile_elapsed(
             detailed_start, RoadProfileClock::now());
         return List::create(
@@ -3736,7 +3889,8 @@ List solve_render_road_profiles_cpp(
           height,
           grade,
           profile_tolerance,
-          true);
+          true,
+          maximum_requests_per_relation);
       audit_elapsed += road_profile_elapsed(
           detailed_start, RoadProfileClock::now());
       return List::create(
@@ -3786,7 +3940,8 @@ List solve_render_road_profiles_cpp(
           height,
           grade,
           profile_tolerance,
-          true);
+          true,
+          maximum_requests_per_relation);
       audit_elapsed += road_profile_elapsed(
           detailed_start, RoadProfileClock::now());
     }

@@ -101,16 +101,16 @@ evaluate_render_road_profiles_cpp <- function(fragment_index, distance, control_
     .Call(`_rayshader_evaluate_render_road_profiles_cpp`, fragment_index, distance, control_start, control_count, control_row, control_distance, height, grade)
 }
 
-audit_render_road_profiles_cpp <- function(specification_list, height, grade, tolerance, diagnostics = FALSE) {
-    .Call(`_rayshader_audit_render_road_profiles_cpp`, specification_list, height, grade, tolerance, diagnostics)
+audit_render_road_profiles_cpp <- function(specification_list, height, grade, tolerance, diagnostics = FALSE, maximum_requests_per_relation = 1L) {
+    .Call(`_rayshader_audit_render_road_profiles_cpp`, specification_list, height, grade, tolerance, diagnostics, maximum_requests_per_relation)
 }
 
 compile_render_road_profile_problem_cpp <- function(specification_list, adaptive_list) {
     .Call(`_rayshader_compile_render_road_profile_problem_cpp`, specification_list, adaptive_list)
 }
 
-solve_render_road_profiles_cpp <- function(specification, solve_component, profile_tolerance, maximum_refinement_iterations, diagnostics = FALSE) {
-    .Call(`_rayshader_solve_render_road_profiles_cpp`, specification, solve_component, profile_tolerance, maximum_refinement_iterations, diagnostics)
+solve_render_road_profiles_cpp <- function(specification, solve_component, profile_tolerance, maximum_refinement_iterations, diagnostics = FALSE, maximum_requests_per_relation = 1L) {
+    .Call(`_rayshader_solve_render_road_profiles_cpp`, specification, solve_component, profile_tolerance, maximum_refinement_iterations, diagnostics, maximum_requests_per_relation)
 }
 
 make_spatial_water_fixed_grid_terrain_mesh_cpp <- function(heightmap) {
