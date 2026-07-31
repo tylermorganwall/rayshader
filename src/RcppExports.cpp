@@ -336,6 +336,39 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// evaluate_render_road_profiles_cpp
+List evaluate_render_road_profiles_cpp(IntegerVector fragment_index, NumericVector distance, IntegerVector control_start, IntegerVector control_count, IntegerVector control_row, NumericVector control_distance, NumericVector height, NumericVector grade);
+RcppExport SEXP _rayshader_evaluate_render_road_profiles_cpp(SEXP fragment_indexSEXP, SEXP distanceSEXP, SEXP control_startSEXP, SEXP control_countSEXP, SEXP control_rowSEXP, SEXP control_distanceSEXP, SEXP heightSEXP, SEXP gradeSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< IntegerVector >::type fragment_index(fragment_indexSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type distance(distanceSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type control_start(control_startSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type control_count(control_countSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type control_row(control_rowSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type control_distance(control_distanceSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type height(heightSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type grade(gradeSEXP);
+    rcpp_result_gen = Rcpp::wrap(evaluate_render_road_profiles_cpp(fragment_index, distance, control_start, control_count, control_row, control_distance, height, grade));
+    return rcpp_result_gen;
+END_RCPP
+}
+// audit_render_road_profiles_cpp
+List audit_render_road_profiles_cpp(List specification_list, NumericVector height, NumericVector grade, double tolerance, bool diagnostics);
+RcppExport SEXP _rayshader_audit_render_road_profiles_cpp(SEXP specification_listSEXP, SEXP heightSEXP, SEXP gradeSEXP, SEXP toleranceSEXP, SEXP diagnosticsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< List >::type specification_list(specification_listSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type height(heightSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type grade(gradeSEXP);
+    Rcpp::traits::input_parameter< double >::type tolerance(toleranceSEXP);
+    Rcpp::traits::input_parameter< bool >::type diagnostics(diagnosticsSEXP);
+    rcpp_result_gen = Rcpp::wrap(audit_render_road_profiles_cpp(specification_list, height, grade, tolerance, diagnostics));
+    return rcpp_result_gen;
+END_RCPP
+}
 // make_spatial_water_fixed_grid_terrain_mesh_cpp
 List make_spatial_water_fixed_grid_terrain_mesh_cpp(const NumericMatrix& heightmap);
 RcppExport SEXP _rayshader_make_spatial_water_fixed_grid_terrain_mesh_cpp(SEXP heightmapSEXP) {
@@ -436,6 +469,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_rayshader_psf", (DL_FUNC) &_rayshader_psf, 11},
     {"_rayshader_rayshade_cpp", (DL_FUNC) &_rayshader_rayshade_cpp, 7},
     {"_rayshader_rayshade_multicore", (DL_FUNC) &_rayshader_rayshade_multicore, 7},
+    {"_rayshader_evaluate_render_road_profiles_cpp", (DL_FUNC) &_rayshader_evaluate_render_road_profiles_cpp, 8},
+    {"_rayshader_audit_render_road_profiles_cpp", (DL_FUNC) &_rayshader_audit_render_road_profiles_cpp, 5},
     {"_rayshader_make_spatial_water_fixed_grid_terrain_mesh_cpp", (DL_FUNC) &_rayshader_make_spatial_water_fixed_grid_terrain_mesh_cpp, 1},
     {"_rayshader_spatial_water_face_sublevel_area_cpp", (DL_FUNC) &_rayshader_spatial_water_face_sublevel_area_cpp, 4},
     {"_rayshader_spatial_water_traverse_seeded_clipped_faces_cpp", (DL_FUNC) &_rayshader_spatial_water_traverse_seeded_clipped_faces_cpp, 8},

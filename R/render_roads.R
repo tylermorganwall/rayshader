@@ -7435,8 +7435,158 @@ build_render_road_profile_problem = function(
       conflict_endpoint_id = anchor_sets$conflict_endpoint_id
     )
   )
+  result$audit_specification =
+    prepare_render_road_profile_audit_specification(result)
   class(result) = c("render_road_profile_problem", class(result))
   result
+}
+
+#' Prepare a transient continuous-audit specification
+#'
+#' @param problem Sparse road profile problem.
+#'
+#' @return Ordinary vectors describing controls, terrain, support chords, and
+#' overlap relations for the transient native continuous audit. Dense indices,
+#' slice starts, and control rows are zero-based; external relation identifiers
+#' remain stable R identifiers. Numerical distances and elevations are metres.
+#' @keywords internal
+prepare_render_road_profile_audit_specification = function(problem) {
+  fragments = problem$topology$fragments
+  fragment_id = fragments$render_road_fragment_id
+  controls = problem$controls
+  control_rows = lapply(fragment_id, function(fragment) {
+    rows = which(controls$render_road_fragment_id == fragment)
+    rows[order(controls$distance[rows])]
+  })
+  control_count = lengths(control_rows)
+  if (any(control_count < 2L)) {
+    fragment = fragment_id[which(control_count < 2L)[[1L]]]
+    stop(
+      sprintf("Fragment %s does not have two profile controls.", fragment),
+      call. = FALSE
+    )
+  }
+  control_row = unlist(control_rows, use.names = FALSE)
+  control_start = cumsum(c(0L, utils::head(control_count, -1L)))
+  terrain_profiles = problem$terrain_profiles[as.character(fragment_id)]
+  terrain_count = vapply(terrain_profiles, nrow, integer(1))
+  terrain_start = cumsum(c(0L, utils::head(terrain_count, -1L)))
+
+  active_spans = problem$spans[problem$spans$no_dip, , drop = FALSE]
+  active_members = lapply(active_spans$span_id, function(span_id) {
+    problem$span_members[
+      problem$span_members$span_id == span_id,
+      ,
+      drop = FALSE
+    ]
+  })
+  active_members = if (length(active_members)) {
+    do.call(rbind, active_members)
+  } else {
+    problem$span_members[0, , drop = FALSE]
+  }
+  active_arcs = problem$support_arcs[
+    problem$support_arcs$span_id %in% active_spans$span_id,
+    ,
+    drop = FALSE
+  ]
+
+  overlaps = problem$overlap_relations
+  adaptive_overlap = problem$adaptive_constraints[
+    problem$adaptive_constraints$type == "overlap_clearance",
+    ,
+    drop = FALSE
+  ]
+  geometry_info = attr(problem$terrain_profiles, "geometry_info")
+  if (is.null(geometry_info)) {
+    geometry_info = lapply(
+      sf::st_geometry(fragments),
+      calculate_render_road_metric_line_distances
+    )
+  } else {
+    geometry_info = geometry_info[as.character(fragment_id)]
+  }
+  finite_geometry = all(vapply(
+    geometry_info,
+    function(info) {
+      all(is.finite(c(info$coordinates, info$distance, info$length)))
+    },
+    logical(1)
+  ))
+
+  list(
+    fragment_id = as.integer(fragment_id),
+    fragment_component = as.integer(fragments$solve_component_id),
+    control_start = as.integer(control_start),
+    control_count = as.integer(control_count),
+    control_row = as.integer(control_row - 1L),
+    control_distance = as.numeric(controls$distance[control_row]),
+    control_tolerance = as.numeric(vapply(
+      control_rows,
+      function(rows) max(controls$control_tolerance[rows]),
+      numeric(1)
+    )),
+    underground = identify_render_road_underground_fragments(fragments),
+    terrain_start = as.integer(terrain_start),
+    terrain_count = as.integer(terrain_count),
+    terrain_distance = as.numeric(unlist(
+      lapply(terrain_profiles, `[[`, "distance"),
+      use.names = FALSE
+    )),
+    terrain_elevation = as.numeric(unlist(
+      lapply(terrain_profiles, `[[`, "elevation"),
+      use.names = FALSE
+    )),
+    chord_span_id = as.integer(active_members$span_id),
+    chord_fragment_index = as.integer(
+      match(
+        active_members$render_road_fragment_id,
+        fragment_id
+      ) -
+        1L
+    ),
+    chord_span_offset = as.numeric(active_members$span_offset),
+    chord_orientation = as.integer(active_members$orientation),
+    chord_fragment_length = as.numeric(active_members$fragment_length),
+    arc_span_id = as.integer(active_arcs$span_id),
+    arc_start_control = as.integer(active_arcs$start_control_id - 1L),
+    arc_end_control = as.integer(active_arcs$end_control_id - 1L),
+    arc_start_station = as.numeric(active_arcs$start_station),
+    arc_end_station = as.numeric(active_arcs$end_station),
+    arc_length = as.numeric(active_arcs$arc_length),
+    arc_span_length = as.numeric(active_arcs$span_length),
+    arc_closed = as.logical(active_arcs$closed),
+    arc_id = as.integer(active_arcs$support_arc_id),
+    overlap_id = as.integer(overlaps$overlap_id),
+    overlap_lower_fragment_index = as.integer(
+      match(
+        overlaps$lower_fragment_id,
+        fragment_id
+      ) -
+        1L
+    ),
+    overlap_upper_fragment_index = as.integer(
+      match(
+        overlaps$upper_fragment_id,
+        fragment_id
+      ) -
+        1L
+    ),
+    overlap_lower_start = as.numeric(overlaps$lower_distance_start),
+    overlap_lower_end = as.numeric(overlaps$lower_distance_end),
+    overlap_upper_start = as.numeric(overlaps$upper_distance_start),
+    overlap_upper_end = as.numeric(overlaps$upper_distance_end),
+    overlap_clearance = as.numeric(overlaps$clearance),
+    prior_overlap_id = as.integer(adaptive_overlap$event_id),
+    prior_lower_distance = as.numeric(adaptive_overlap$distance_a),
+    prior_upper_distance = as.numeric(adaptive_overlap$distance_b),
+    finite_geometry = finite_geometry,
+    finite_control_terrain = all(is.finite(c(
+      controls$distance,
+      controls$terrain,
+      unlist(terrain_profiles, use.names = FALSE)
+    )))
+  )
 }
 
 #' Evaluate one quadratic road profile at arbitrary stations
@@ -7455,42 +7605,30 @@ evaluate_render_road_profile_at = function(
   distance
 ) {
   controls = solution$controls
-  rows = which(controls$render_road_fragment_id == fragment)
-  rows = rows[order(controls$distance[rows])]
-  if (length(rows) < 2L) {
+  distance = as.numeric(distance)
+  specification = problem$audit_specification
+  if (is.null(specification)) {
+    specification =
+      prepare_render_road_profile_audit_specification(problem)
+  }
+  fragment_index = match(as.integer(fragment), specification$fragment_id)
+  if (is.na(fragment_index)) {
     stop(
       sprintf("Fragment %s does not have two profile controls.", fragment),
       call. = FALSE
     )
   }
-  distance = as.numeric(distance)
-  profile_length = utils::tail(controls$distance[rows], 1L)
-  distance = pmin(pmax(distance, 0), profile_length)
-  interval = findInterval(
-    distance,
-    controls$distance[rows],
-    all.inside = TRUE,
-    rightmost.closed = TRUE
-  )
-  interval = pmin(interval, length(rows) - 1L)
-  first = rows[interval]
-  second = rows[interval + 1L]
-  interval_length = controls$distance[second] - controls$distance[first]
-  local_distance = distance - controls$distance[first]
-  grade_change = controls$grade[second] - controls$grade[first]
-  height = controls$height[first] +
-    controls$grade[first] * local_distance +
-    grade_change * local_distance^2 / (2 * interval_length)
-  grade = controls$grade[first] +
-    grade_change * local_distance / interval_length
-  data.frame(
+  result = evaluate_render_road_profiles_cpp(
+    fragment_index = rep.int(fragment_index - 1L, length(distance)),
     distance = distance,
-    height = height,
-    grade = grade,
-    control_a = first,
-    control_b = second,
-    stringsAsFactors = FALSE
+    control_start = specification$control_start,
+    control_count = specification$control_count,
+    control_row = specification$control_row,
+    control_distance = specification$control_distance,
+    height = as.numeric(controls$height),
+    grade = as.numeric(controls$grade)
   )
+  as.data.frame(result, stringsAsFactors = FALSE)
 }
 
 #' Collapse continuous-audit requests by constraint family and relation
@@ -7551,7 +7689,7 @@ collapse_render_road_profile_adaptive_requests = function(request_rows) {
   requests[!duplicated(request_key), , drop = FALSE]
 }
 
-#' Find continuous road-profile engineering violations
+#' Find continuous road-profile engineering violations in R
 #'
 #' @param problem Sparse road profile problem.
 #' @param solution Solved road profile object.
@@ -7559,7 +7697,7 @@ collapse_render_road_profile_adaptive_requests = function(request_rows) {
 #'
 #' @return Continuous margins, details, and adaptive control requests.
 #' @keywords internal
-find_render_road_profile_continuous_violations = function(
+find_render_road_profile_continuous_violations_r_reference = function(
   problem,
   solution,
   tolerance
@@ -8001,6 +8139,60 @@ find_render_road_profile_continuous_violations = function(
   )
 }
 
+#' Find continuous road-profile engineering violations
+#'
+#' @param problem Sparse road profile problem.
+#' @param solution Solved road profile object.
+#' @param tolerance Feasibility tolerance in metres.
+#' @param diagnostics Default `TRUE`. Whether to return complete continuous
+#' check tables.
+#'
+#' @return Continuous margins, optional details, and adaptive control requests.
+#' @keywords internal
+find_render_road_profile_continuous_violations = function(
+  problem,
+  solution,
+  tolerance,
+  diagnostics = TRUE
+) {
+  specification = problem$audit_specification
+  if (is.null(specification)) {
+    specification =
+      prepare_render_road_profile_audit_specification(problem)
+  }
+  controls = solution$controls
+  result = audit_render_road_profiles_cpp(
+    specification = specification,
+    height = as.numeric(controls$height),
+    grade = as.numeric(controls$grade),
+    tolerance = tolerance,
+    diagnostics = diagnostics
+  )
+  request_type = c(
+    "terrain_floor",
+    "no_dip_chord",
+    "overlap_clearance"
+  )
+  requests = as.data.frame(result$requests, stringsAsFactors = FALSE)
+  requests$type = request_type[requests$type]
+  result$requests = normalize_render_road_adaptive_constraints(requests)
+  if (diagnostics) {
+    result$terrain = as.data.frame(
+      result$terrain,
+      stringsAsFactors = FALSE
+    )
+    result$chord = as.data.frame(
+      result$chord,
+      stringsAsFactors = FALSE
+    )
+    result$overlap = as.data.frame(
+      result$overlap,
+      stringsAsFactors = FALSE
+    )
+  }
+  result
+}
+
 #' Describe an infeasible road profile component
 #'
 #' @param problem Sparse road profile problem.
@@ -8252,10 +8444,17 @@ solve_render_road_profile_problem = function(
     continuous = find_render_road_profile_continuous_violations(
       current_problem,
       solved,
-      profile_tolerance
+      profile_tolerance,
+      diagnostics = FALSE
     )
     if (nrow(continuous$requests)) {
       if (refinement_iteration >= maximum_refinement_iterations) {
+        continuous = find_render_road_profile_continuous_violations(
+          current_problem,
+          solved,
+          profile_tolerance,
+          diagnostics = TRUE
+        )
         condition = structure(
           list(
             message = sprintf(
@@ -8298,6 +8497,12 @@ solve_render_road_profile_problem = function(
       if (
         nrow(adaptive_constraints) <= nrow(current_problem$adaptive_constraints)
       ) {
+        continuous = find_render_road_profile_continuous_violations(
+          current_problem,
+          solved,
+          profile_tolerance,
+          diagnostics = TRUE
+        )
         condition = structure(
           list(
             message = paste0(
@@ -8325,7 +8530,8 @@ solve_render_road_profile_problem = function(
     engineering_audit = audit_render_road_profiles(
       current_problem,
       solved,
-      tolerance = profile_tolerance
+      tolerance = profile_tolerance,
+      continuous = continuous
     )
     inaccurate = any(
       tolower(solved$components$status) == "solved inaccurate"
@@ -8376,13 +8582,16 @@ solve_render_road_profile_problem = function(
 #' @param problem Sparse road profile problem.
 #' @param solution Solved road profile object.
 #' @param tolerance Default `1e-6`. Feasibility tolerance.
+#' @param continuous Default `NULL`. An already computed continuous-audit
+#' result for the same problem, solution, and tolerance.
 #'
 #' @return Rendering-critical feasibility and continuous-margin diagnostics.
 #' @keywords internal
 audit_render_road_profiles = function(
   problem,
   solution,
-  tolerance = 1e-6
+  tolerance = 1e-6,
+  continuous = NULL
 ) {
   if (!inherits(problem, "render_road_profile_problem")) {
     stop("`problem` must be a road profile problem.", call. = FALSE)
@@ -8405,11 +8614,14 @@ audit_render_road_profiles = function(
   lower_violation = pmax(problem$lower - activity, 0)
   upper_violation = pmax(activity - problem$upper, 0)
   constraint_violation = pmax(lower_violation, upper_violation)
-  continuous = find_render_road_profile_continuous_violations(
-    problem,
-    solution,
-    tolerance
-  )
+  if (is.null(continuous)) {
+    continuous = find_render_road_profile_continuous_violations(
+      problem,
+      solution,
+      tolerance,
+      diagnostics = FALSE
+    )
+  }
   maximum_constraint_violation = if (length(constraint_violation)) {
     max(constraint_violation)
   } else {
@@ -8438,6 +8650,18 @@ audit_render_road_profiles = function(
     continuous_overlap_clearance_margin = continuous$continuous_overlap_clearance_margin,
     finite_profile_coordinates = continuous$finite_profile_coordinates
   )
+  if (
+    !result$passed &&
+      is.null(continuous$terrain)
+  ) {
+    result$continuous_diagnostics =
+      find_render_road_profile_continuous_violations(
+        problem,
+        solution,
+        tolerance,
+        diagnostics = TRUE
+      )
+  }
   class(result) = c("render_road_profile_audit", class(result))
   result
 }

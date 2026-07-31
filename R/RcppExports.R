@@ -97,6 +97,14 @@ rayshade_multicore <- function(sunangle, anglebreaks, heightmap, zscale, chunkin
     .Call(`_rayshader_rayshade_multicore`, sunangle, anglebreaks, heightmap, zscale, chunkindices, maxsearch, cache_mask)
 }
 
+evaluate_render_road_profiles_cpp <- function(fragment_index, distance, control_start, control_count, control_row, control_distance, height, grade) {
+    .Call(`_rayshader_evaluate_render_road_profiles_cpp`, fragment_index, distance, control_start, control_count, control_row, control_distance, height, grade)
+}
+
+audit_render_road_profiles_cpp <- function(specification_list, height, grade, tolerance, diagnostics = FALSE) {
+    .Call(`_rayshader_audit_render_road_profiles_cpp`, specification_list, height, grade, tolerance, diagnostics)
+}
+
 make_spatial_water_fixed_grid_terrain_mesh_cpp <- function(heightmap) {
     .Call(`_rayshader_make_spatial_water_fixed_grid_terrain_mesh_cpp`, heightmap)
 }
