@@ -369,6 +369,18 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// compile_render_road_profile_problem_cpp
+List compile_render_road_profile_problem_cpp(List specification_list, List adaptive_list);
+RcppExport SEXP _rayshader_compile_render_road_profile_problem_cpp(SEXP specification_listSEXP, SEXP adaptive_listSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< List >::type specification_list(specification_listSEXP);
+    Rcpp::traits::input_parameter< List >::type adaptive_list(adaptive_listSEXP);
+    rcpp_result_gen = Rcpp::wrap(compile_render_road_profile_problem_cpp(specification_list, adaptive_list));
+    return rcpp_result_gen;
+END_RCPP
+}
 // make_spatial_water_fixed_grid_terrain_mesh_cpp
 List make_spatial_water_fixed_grid_terrain_mesh_cpp(const NumericMatrix& heightmap);
 RcppExport SEXP _rayshader_make_spatial_water_fixed_grid_terrain_mesh_cpp(SEXP heightmapSEXP) {
@@ -471,6 +483,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_rayshader_rayshade_multicore", (DL_FUNC) &_rayshader_rayshade_multicore, 7},
     {"_rayshader_evaluate_render_road_profiles_cpp", (DL_FUNC) &_rayshader_evaluate_render_road_profiles_cpp, 8},
     {"_rayshader_audit_render_road_profiles_cpp", (DL_FUNC) &_rayshader_audit_render_road_profiles_cpp, 5},
+    {"_rayshader_compile_render_road_profile_problem_cpp", (DL_FUNC) &_rayshader_compile_render_road_profile_problem_cpp, 2},
     {"_rayshader_make_spatial_water_fixed_grid_terrain_mesh_cpp", (DL_FUNC) &_rayshader_make_spatial_water_fixed_grid_terrain_mesh_cpp, 1},
     {"_rayshader_spatial_water_face_sublevel_area_cpp", (DL_FUNC) &_rayshader_spatial_water_face_sublevel_area_cpp, 4},
     {"_rayshader_spatial_water_traverse_seeded_clipped_faces_cpp", (DL_FUNC) &_rayshader_spatial_water_traverse_seeded_clipped_faces_cpp, 8},

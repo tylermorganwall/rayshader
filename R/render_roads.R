@@ -7185,7 +7185,7 @@ assert_render_road_profile_component_blocks = function(
 #'
 #' @return Sparse matrices, controls, constraints, and solve diagnostics.
 #' @keywords internal
-build_render_road_profile_problem = function(
+build_render_road_profile_problem_r_reference = function(
   topology,
   terrain_profiles = NULL,
   layer_spacing = 5.5,
@@ -7439,6 +7439,855 @@ build_render_road_profile_problem = function(
     prepare_render_road_profile_audit_specification(result)
   class(result) = c("render_road_profile_problem", class(result))
   result
+}
+
+#' Prepare immutable numerical road-profile compiler input
+#'
+#' @param topology Road topology diagnostics.
+#' @param terrain_profiles Default `NULL`. Terrain reference profiles accepted
+#' by [normalize_render_road_terrain_profiles()].
+#' @param layer_spacing Default `5.5`. Fallback adjacent-layer clearance in
+#' metres.
+#' @param maximum_grade Default `0.07`. Maximum absolute longitudinal grade.
+#' @param maximum_grade_rate Default `1e-3`. Maximum grade change per metre.
+#' @param curvature_weight Default `100`. Objective weight on grade change.
+#' @param grade_weight Default `1`. Objective weight on grade magnitude.
+#' @param terrain_reference_weight Default `1e-3`. Objective weight toward the
+#' sampled terrain reference.
+#' @param underground_reference_depth Default `NULL`, which uses
+#' `layer_spacing`. Terrain-relative reference depth in metres.
+#' @param underground_reference_weight Default `1e-3`. Underground reference
+#' objective weight.
+#' @param anchor_grade_weight Default `10`. Ground-anchor grade objective
+#' weight.
+#' @param uplift_weight Default `1e-5`. Linear uplift objective weight.
+#' @param anchor_grade_window Default `10`. Terrain-grade regression window in
+#' metres.
+#' @param control_tolerance Default `1e-7`. Control matching tolerance in
+#' metres.
+#'
+#' @return Immutable numerical compiler input and R-side result context.
+#' @keywords internal
+prepare_render_road_profile_specification = function(
+  topology,
+  terrain_profiles = NULL,
+  layer_spacing = 5.5,
+  maximum_grade = 0.07,
+  maximum_grade_rate = 1e-3,
+  curvature_weight = 100,
+  grade_weight = 1,
+  terrain_reference_weight = 1e-3,
+  underground_reference_depth = NULL,
+  underground_reference_weight = 1e-3,
+  anchor_grade_weight = 10,
+  uplift_weight = 1e-5,
+  anchor_grade_window = 10,
+  control_tolerance = 1e-7
+) {
+  if (!requireNamespace("Matrix", quietly = TRUE)) {
+    stop(
+      "The `Matrix` package is required for road profile solving.",
+      call. = FALSE
+    )
+  }
+  layer_spacing = assert_render_road_profile_setting(
+    layer_spacing,
+    "layer_spacing"
+  )
+  maximum_grade = assert_render_road_profile_setting(
+    maximum_grade,
+    "maximum_grade"
+  )
+  maximum_grade_rate = assert_render_road_profile_setting(
+    maximum_grade_rate,
+    "maximum_grade_rate"
+  )
+  curvature_weight = assert_render_road_profile_setting(
+    curvature_weight,
+    "curvature_weight",
+    allow_zero = TRUE
+  )
+  grade_weight = assert_render_road_profile_setting(
+    grade_weight,
+    "grade_weight",
+    allow_zero = TRUE
+  )
+  terrain_reference_weight = assert_render_road_profile_setting(
+    terrain_reference_weight,
+    "terrain_reference_weight",
+    allow_zero = TRUE
+  )
+  if (is.null(underground_reference_depth)) {
+    underground_reference_depth = layer_spacing
+  } else {
+    underground_reference_depth = assert_render_road_profile_setting(
+      underground_reference_depth,
+      "underground_reference_depth"
+    )
+  }
+  underground_reference_weight = assert_render_road_profile_setting(
+    underground_reference_weight,
+    "underground_reference_weight"
+  )
+  anchor_grade_weight = assert_render_road_profile_setting(
+    anchor_grade_weight,
+    "anchor_grade_weight",
+    allow_zero = TRUE
+  )
+  uplift_weight = assert_render_road_profile_setting(
+    uplift_weight,
+    "uplift_weight",
+    allow_zero = TRUE
+  )
+  anchor_grade_window = assert_render_road_profile_setting(
+    anchor_grade_window,
+    "anchor_grade_window"
+  )
+  control_tolerance = assert_render_road_profile_setting(
+    control_tolerance,
+    "control_tolerance"
+  )
+  settings = list(
+    layer_spacing = layer_spacing,
+    maximum_grade = maximum_grade,
+    maximum_grade_rate = maximum_grade_rate,
+    curvature_weight = curvature_weight,
+    grade_weight = grade_weight,
+    terrain_reference_weight = terrain_reference_weight,
+    underground_reference_depth = underground_reference_depth,
+    underground_reference_weight = underground_reference_weight,
+    anchor_grade_weight = anchor_grade_weight,
+    uplift_weight = uplift_weight,
+    anchor_grade_window = anchor_grade_window,
+    control_tolerance = control_tolerance
+  )
+
+  subset = build_render_road_active_profile_topology(
+    topology,
+    terrain_profiles
+  )
+  topology = subset$topology
+  fragments = topology$fragments
+  fragment_id = as.integer(fragments$render_road_fragment_id)
+  fragment_index = stats::setNames(
+    seq_along(fragment_id) - 1L,
+    as.character(fragment_id)
+  )
+  terrain_profiles = normalize_render_road_terrain_profiles(
+    topology,
+    subset$terrain_profiles
+  )
+  geometry_info = attr(terrain_profiles, "geometry_info")
+  fragment_length = vapply(geometry_info, `[[`, numeric(1), "length")
+  names(fragment_length) = as.character(fragment_id)
+  profile_spans = build_render_road_profile_spans(
+    topology,
+    fragment_length
+  )
+  anchor_sets = identify_render_road_profile_anchor_sets(
+    topology,
+    fragment_length,
+    control_tolerance
+  )
+
+  terrain_count = vapply(terrain_profiles, nrow, integer(1))
+  terrain_start = cumsum(c(0L, utils::head(terrain_count, -1L)))
+  terrain_distance = unlist(
+    lapply(terrain_profiles, `[[`, "distance"),
+    use.names = FALSE
+  )
+  terrain_elevation = unlist(
+    lapply(terrain_profiles, `[[`, "elevation"),
+    use.names = FALSE
+  )
+  span_member_row = match(
+    fragment_id,
+    profile_spans$members$render_road_fragment_id
+  )
+  spans = profile_spans$spans
+
+  participants = topology$point_event_participants
+  initial_control = list(
+    fragment_index = if (nrow(participants)) {
+      unname(fragment_index[
+        as.character(participants$render_road_fragment_id)
+      ])
+    } else {
+      integer(0)
+    },
+    distance = if (nrow(participants)) {
+      as.numeric(participants$distance)
+    } else {
+      numeric(0)
+    }
+  )
+
+  point_pairs = topology$point_pairs
+  point_flag = if (nrow(point_pairs)) {
+    ifelse(
+      point_pairs$topology_layer_conflict,
+      3L,
+      ifelse(
+        point_pairs$layer_relationship &
+          point_pairs$topology_relation == "interior_crossing",
+        1L,
+        2L
+      )
+    )
+  } else {
+    integer(0)
+  }
+  point_relations = list(
+    pair_id = as.integer(point_pairs$point_pair_id),
+    fragment_a = unname(
+      fragment_index[as.character(point_pairs$fragment_a)]
+    ),
+    distance_a = as.numeric(point_pairs$distance_a),
+    fragment_b = unname(
+      fragment_index[as.character(point_pairs$fragment_b)]
+    ),
+    distance_b = as.numeric(point_pairs$distance_b),
+    flag = as.integer(point_flag)
+  )
+
+  crossing_pairs = topology$crossing_pairs
+  crossing_count = nrow(crossing_pairs)
+  crossing = list(
+    crossing_id = integer(crossing_count),
+    pair_id = integer(crossing_count),
+    lower_fragment = integer(crossing_count),
+    upper_fragment = integer(crossing_count),
+    lower_distance = numeric(crossing_count),
+    upper_distance = numeric(crossing_count),
+    lower_rank = numeric(crossing_count),
+    upper_rank = numeric(crossing_count),
+    clearance = numeric(crossing_count)
+  )
+  if (crossing_count) {
+    for (pair in seq_len(crossing_count)) {
+      record = crossing_pairs[pair, , drop = FALSE]
+      participant = topology$crossing_participants[
+        topology$crossing_participants$crossing_id == record$crossing_id[[1L]] &
+          topology$crossing_participants$render_road_fragment_id %in%
+            c(record$fragment_a[[1L]], record$fragment_b[[1L]]),
+        ,
+        drop = FALSE
+      ]
+      rank_a = participant$local_order[
+        participant$render_road_fragment_id == record$fragment_a[[1L]]
+      ]
+      rank_b = participant$local_order[
+        participant$render_road_fragment_id == record$fragment_b[[1L]]
+      ]
+      if (length(rank_a) != 1L || length(rank_b) != 1L) {
+        stop(
+          sprintf(
+            "Crossing pair %s does not map to two dense event ranks.",
+            record$point_pair_id[[1L]]
+          ),
+          call. = FALSE
+        )
+      }
+      lower_is_a = rank_a < rank_b
+      lower_fragment = if (lower_is_a) {
+        record$fragment_a[[1L]]
+      } else {
+        record$fragment_b[[1L]]
+      }
+      upper_fragment = if (lower_is_a) {
+        record$fragment_b[[1L]]
+      } else {
+        record$fragment_a[[1L]]
+      }
+      upper_row = match(upper_fragment, fragment_id)
+      clearance = fragments$render_road_clearance[[upper_row]]
+      if (!is.finite(clearance)) {
+        clearance = layer_spacing
+      }
+      crossing$crossing_id[[pair]] = record$crossing_id[[1L]]
+      crossing$pair_id[[pair]] = record$point_pair_id[[1L]]
+      crossing$lower_fragment[[pair]] = fragment_index[[
+        as.character(lower_fragment)
+      ]]
+      crossing$upper_fragment[[pair]] = fragment_index[[
+        as.character(upper_fragment)
+      ]]
+      crossing$lower_distance[[pair]] = if (lower_is_a) {
+        record$distance_a[[1L]]
+      } else {
+        record$distance_b[[1L]]
+      }
+      crossing$upper_distance[[pair]] = if (lower_is_a) {
+        record$distance_b[[1L]]
+      } else {
+        record$distance_a[[1L]]
+      }
+      crossing$lower_rank[[pair]] = if (lower_is_a) rank_a else rank_b
+      crossing$upper_rank[[pair]] = if (lower_is_a) rank_b else rank_a
+      crossing$clearance[[pair]] = clearance
+    }
+  }
+
+  junction_pairs = topology$junction_equality_pairs
+  junction = list(
+    junction_id = as.integer(junction_pairs$junction_id),
+    pair_id = as.integer(junction_pairs$point_pair_id),
+    fragment_a = unname(
+      fragment_index[as.character(junction_pairs$fragment_a)]
+    ),
+    fragment_b = unname(
+      fragment_index[as.character(junction_pairs$fragment_b)]
+    ),
+    distance_a = as.numeric(junction_pairs$distance_a),
+    distance_b = as.numeric(junction_pairs$distance_b)
+  )
+
+  layer_overlaps = topology$layer_overlaps
+  overlap_count = nrow(layer_overlaps)
+  overlap = list(
+    overlap_id = integer(overlap_count),
+    lower_fragment = integer(overlap_count),
+    upper_fragment = integer(overlap_count),
+    lower_start = numeric(overlap_count),
+    lower_end = numeric(overlap_count),
+    upper_start = numeric(overlap_count),
+    upper_end = numeric(overlap_count),
+    clearance = numeric(overlap_count)
+  )
+  if (overlap_count) {
+    for (relation in seq_len(overlap_count)) {
+      record = layer_overlaps[relation, , drop = FALSE]
+      row_a = match(record$fragment_a[[1L]], fragment_id)
+      row_b = match(record$fragment_b[[1L]], fragment_id)
+      lower_is_a = fragments$render_road_layer[[row_a]] <
+        fragments$render_road_layer[[row_b]]
+      lower_suffix = if (lower_is_a) "a" else "b"
+      upper_suffix = if (lower_is_a) "b" else "a"
+      lower_fragment = record[[paste0("fragment_", lower_suffix)]][[1L]]
+      upper_fragment = record[[paste0("fragment_", upper_suffix)]][[1L]]
+      upper_row = if (lower_is_a) row_b else row_a
+      clearance = fragments$render_road_clearance[[upper_row]]
+      if (!is.finite(clearance)) {
+        clearance = layer_spacing
+      }
+      overlap$overlap_id[[relation]] = record$overlap_id[[1L]]
+      overlap$lower_fragment[[relation]] = fragment_index[[
+        as.character(lower_fragment)
+      ]]
+      overlap$upper_fragment[[relation]] = fragment_index[[
+        as.character(upper_fragment)
+      ]]
+      overlap$lower_start[[relation]] =
+        resolve_render_road_overlap_endpoint_distance(
+          record,
+          lower_suffix,
+          "start"
+        )
+      overlap$lower_end[[relation]] =
+        resolve_render_road_overlap_endpoint_distance(
+          record,
+          lower_suffix,
+          "end"
+        )
+      overlap$upper_start[[relation]] =
+        resolve_render_road_overlap_endpoint_distance(
+          record,
+          upper_suffix,
+          "start"
+        )
+      overlap$upper_end[[relation]] =
+        resolve_render_road_overlap_endpoint_distance(
+          record,
+          upper_suffix,
+          "end"
+        )
+      overlap$clearance[[relation]] = clearance
+    }
+  }
+
+  continuation_source = topology$prospective_solve_continuations
+  continuation_count = nrow(continuation_source)
+  continuation = list(
+    continuation_id = as.integer(continuation_source$continuation_id),
+    fragment_a = unname(
+      fragment_index[as.character(continuation_source$fragment_a)]
+    ),
+    fragment_b = unname(
+      fragment_index[as.character(continuation_source$fragment_b)]
+    ),
+    distance_a = numeric(continuation_count),
+    distance_b = numeric(continuation_count),
+    sign_a = ifelse(continuation_source$side_a == "end", 1, -1),
+    sign_b = ifelse(continuation_source$side_b == "start", 1, -1),
+    gap = as.numeric(continuation_source$endpoint_distance),
+    exact = as.logical(continuation_source$exact_endpoint)
+  )
+  if (continuation_count) {
+    continuation$distance_a = ifelse(
+      continuation_source$side_a == "start",
+      0,
+      fragment_length[as.character(continuation_source$fragment_a)]
+    )
+    continuation$distance_b = ifelse(
+      continuation_source$side_b == "start",
+      0,
+      fragment_length[as.character(continuation_source$fragment_b)]
+    )
+  }
+
+  endpoints = sf::st_drop_geometry(topology$endpoints)
+  anchor_endpoint = endpoints[
+    endpoints$render_road_endpoint_id %in%
+      anchor_sets$ground_anchor_endpoint_id,
+    ,
+    drop = FALSE
+  ]
+  anchor_count = nrow(anchor_endpoint)
+  anchor = list(
+    endpoint_id = as.integer(anchor_endpoint$render_road_endpoint_id),
+    fragment = unname(
+      fragment_index[
+        as.character(anchor_endpoint$render_road_fragment_id)
+      ]
+    ),
+    side = ifelse(anchor_endpoint$endpoint_side == "start", 0L, 1L),
+    distance = numeric(anchor_count),
+    terrain_grade = numeric(anchor_count)
+  )
+  if (anchor_count) {
+    for (row in seq_len(anchor_count)) {
+      fragment = anchor_endpoint$render_road_fragment_id[[row]]
+      distance = if (anchor$side[[row]] == 0L) {
+        0
+      } else {
+        fragment_length[[as.character(fragment)]]
+      }
+      anchor$distance[[row]] = distance
+      anchor$terrain_grade[[row]] =
+        calculate_render_road_smoothed_reference_grade(
+          terrain_profiles[[as.character(fragment)]],
+          distance,
+          anchor_grade_window
+        )
+    }
+  }
+  endpoint_fragment = unname(
+    fragment_index[as.character(endpoints$render_road_fragment_id)]
+  )
+  endpoint_side = ifelse(endpoints$endpoint_side == "start", 0L, 1L)
+  endpoint_distance = ifelse(
+    endpoint_side == 0L,
+    0,
+    fragment_length[as.character(endpoints$render_road_fragment_id)]
+  )
+  span_members = profile_spans$members
+  support_point = point_relations$flag == 1L
+  support_candidate_fragment = c(
+    point_relations$fragment_a[support_point],
+    point_relations$fragment_b[support_point],
+    overlap$lower_fragment,
+    overlap$lower_fragment,
+    overlap$upper_fragment,
+    overlap$upper_fragment
+  )
+  support_candidate_distance = c(
+    point_relations$distance_a[support_point],
+    point_relations$distance_b[support_point],
+    overlap$lower_start,
+    overlap$lower_end,
+    overlap$upper_start,
+    overlap$upper_end
+  )
+
+  specification = list(
+    component = list(
+      id = sort(unique(as.integer(fragments$solve_component_id))),
+      fragment_component_index = match(
+        fragments$solve_component_id,
+        sort(unique(fragments$solve_component_id))
+      ) -
+        1L
+    ),
+    fragment = list(
+      id = fragment_id,
+      feature_id = as.integer(fragments$render_road_feature_id),
+      component_id = as.integer(fragments$solve_component_id),
+      length = unname(as.numeric(fragment_length)),
+      layer = as.numeric(fragments$render_road_layer),
+      underground = identify_render_road_underground_fragments(fragments),
+      span_id = as.integer(
+        profile_spans$members$span_id[span_member_row]
+      ),
+      span_station_offset = as.numeric(
+        profile_spans$members$span_offset[span_member_row]
+      ),
+      span_orientation = as.integer(
+        profile_spans$members$orientation[span_member_row]
+      )
+    ),
+    terrain = list(
+      start = as.integer(terrain_start),
+      count = as.integer(terrain_count),
+      distance = as.numeric(terrain_distance),
+      elevation = as.numeric(terrain_elevation)
+    ),
+    initial_control = initial_control,
+    point_relation = point_relations,
+    endpoint = list(
+      id = as.integer(endpoints$render_road_endpoint_id),
+      fragment = as.integer(endpoint_fragment),
+      side = as.integer(endpoint_side),
+      distance = as.numeric(endpoint_distance),
+      role = match(
+        anchor_sets$endpoints$endpoint_role,
+        c(
+          "internal_or_unclassified",
+          "selected_continuation",
+          "solve_frontier",
+          "boundary_frontier",
+          "ambiguous_frontier",
+          "conflict_frontier",
+          "ground_anchor"
+        )
+      )
+    ),
+    span = list(
+      id = as.integer(spans$span_id),
+      length = as.numeric(spans$span_length),
+      start_fragment = unname(
+        fragment_index[as.character(spans$start_fragment_id)]
+      ),
+      start_side = ifelse(spans$start_side == "start", 0L, 1L),
+      end_fragment = unname(
+        fragment_index[as.character(spans$end_fragment_id)]
+      ),
+      end_side = ifelse(spans$end_side == "start", 0L, 1L),
+      closed = as.logical(spans$closed),
+      no_dip = as.logical(spans$no_dip),
+      reference = match(
+        spans$reference,
+        c(
+          "terrain",
+          "underground_terrain",
+          "span_chord",
+          "periodic_chord"
+        )
+      )
+    ),
+    span_member = list(
+      span_id = as.integer(span_members$span_id),
+      order = as.integer(span_members$order_in_span),
+      fragment = unname(
+        fragment_index[
+          as.character(span_members$render_road_fragment_id)
+        ]
+      ),
+      orientation = as.integer(span_members$orientation),
+      offset = as.numeric(span_members$span_offset),
+      fragment_length = as.numeric(span_members$fragment_length),
+      gap_after = as.numeric(span_members$gap_after),
+      regime = match(
+        span_members$regime,
+        c("surface", "elevated", "underground")
+      )
+    ),
+    support_arc = list(
+      span_id = as.integer(spans$span_id),
+      closed = as.logical(spans$closed),
+      span_length = as.numeric(spans$span_length),
+      start_fragment = unname(
+        fragment_index[as.character(spans$start_fragment_id)]
+      ),
+      start_side = ifelse(spans$start_side == "start", 0L, 1L),
+      end_fragment = unname(
+        fragment_index[as.character(spans$end_fragment_id)]
+      ),
+      end_side = ifelse(spans$end_side == "start", 0L, 1L),
+      candidate_fragment = as.integer(support_candidate_fragment),
+      candidate_distance = as.numeric(support_candidate_distance)
+    ),
+    anchor = anchor,
+    crossing = crossing,
+    junction = junction,
+    overlap = overlap,
+    continuation = continuation,
+    settings = unlist(settings, use.names = TRUE)
+  )
+  context = list(
+    topology = topology,
+    terrain_profiles = terrain_profiles,
+    fragment_length = fragment_length,
+    spans = profile_spans$spans,
+    span_members = profile_spans$members,
+    anchor_sets = anchor_sets,
+    topology_conflict_pairs = topology$topology_conflict_pairs,
+    settings = settings
+  )
+  list(specification = specification, context = context)
+}
+
+#' Compile one numerical road-profile problem
+#'
+#' @param specification Immutable numerical compiler input.
+#' @param context Immutable R-side result context.
+#' @param adaptive_constraints Default `NULL`. Continuous-audit requests.
+#'
+#' @return A `render_road_profile_problem`.
+#' @keywords internal
+compile_render_road_profile_problem = function(
+  specification,
+  context,
+  adaptive_constraints = NULL
+) {
+  adaptive_constraints = normalize_render_road_adaptive_constraints(
+    adaptive_constraints
+  )
+  fragment_id = specification$fragment$id
+  if (
+    nrow(adaptive_constraints) &&
+      any(!(adaptive_constraints$fragment_a %in% fragment_id))
+  ) {
+    stop("Adaptive controls reference an inactive fragment.", call. = FALSE)
+  }
+  adaptive_fragment_a = match(
+    adaptive_constraints$fragment_a,
+    fragment_id
+  ) -
+    1L
+  adaptive_fragment_b = match(
+    adaptive_constraints$fragment_b,
+    fragment_id
+  ) -
+    1L
+  adaptive_fragment_b[!is.finite(adaptive_constraints$fragment_b)] =
+    NA_integer_
+  native = compile_render_road_profile_problem_cpp(
+    specification,
+    list(
+      type = match(
+        adaptive_constraints$type,
+        c(
+          "terrain_floor",
+          "no_dip_chord",
+          "overlap_clearance"
+        )
+      ),
+      fragment_a = as.integer(adaptive_fragment_a),
+      distance_a = as.numeric(adaptive_constraints$distance_a),
+      fragment_b = as.integer(adaptive_fragment_b),
+      distance_b = as.numeric(adaptive_constraints$distance_b),
+      event_id = as.integer(adaptive_constraints$event_id),
+      clearance = as.numeric(adaptive_constraints$clearance),
+      source_margin = as.numeric(adaptive_constraints$source_margin)
+    )
+  )
+  control = native$controls
+  controls = data.frame(
+    control_id = seq_along(control$fragment_id),
+    render_road_fragment_id = control$fragment_id,
+    render_road_feature_id = control$feature_id,
+    solve_component_id = control$component_id,
+    distance = control$distance,
+    control_tolerance = control$tolerance,
+    terrain = control$terrain,
+    render_road_layer = control$layer,
+    span_id = control$span_id,
+    span_station = control$span_station,
+    endpoint_control = control$endpoint,
+    crossing_control = control$crossing,
+    junction_control = control$junction,
+    conflict_control = control$conflict,
+    overlap_control = control$overlap,
+    adaptive_control = control$adaptive,
+    station_weight = control$station_weight,
+    height_variable = control$height_variable,
+    grade_variable = control$grade_variable,
+    stringsAsFactors = FALSE
+  )
+  intervals = as.data.frame(native$interval_metadata)
+  spans = context$spans
+  spans$start_control_id = native$span_controls$start
+  spans$end_control_id = native$span_controls$end
+  spans$periodic_support_control_id = native$span_controls$periodic
+  support_arcs = as.data.frame(native$support_arcs)
+  anchors = as.data.frame(native$anchors)
+  anchors$endpoint_side = as.character(ifelse(
+    anchors$endpoint_side == 0L,
+    "start",
+    "end"
+  ))
+  anchors = anchors[, c(
+    "render_road_endpoint_id",
+    "render_road_fragment_id",
+    "endpoint_side",
+    "control_id",
+    "terrain",
+    "terrain_grade",
+    "solve_component_id"
+  )]
+  clearances = as.data.frame(native$clearances)
+  clearances$type = c(
+    "crossing",
+    "overlap_start",
+    "overlap_end",
+    "overlap_adaptive"
+  )[clearances$type]
+  clearances = clearances[, c(
+    "type",
+    "event_id",
+    "pair_id",
+    "lower_fragment_id",
+    "upper_fragment_id",
+    "lower_control_id",
+    "upper_control_id",
+    "lower_distance",
+    "upper_distance",
+    "lower_rank",
+    "upper_rank",
+    "clearance",
+    "solve_component_id"
+  )]
+  overlap_relations = as.data.frame(native$overlap_relations)
+  junction_equalities = as.data.frame(native$junction_equalities)
+  continuation_equalities = as.data.frame(native$continuation_equalities)
+  chord_controls = as.data.frame(native$chord_controls)
+  curvature_terms = as.data.frame(native$curvature_terms)
+  constraint_names = c(
+    "quadratic_interval",
+    "grade_rate",
+    "grade_bound",
+    "terrain_floor",
+    "ground_anchor",
+    "crossing_clearance",
+    "junction_height",
+    "overlap_clearance",
+    "overlap_clearance_adaptive",
+    "continuation_height",
+    "continuation_grade",
+    "continuation_gap_interval",
+    "continuation_gap_grade_rate",
+    "no_dip_span_chord"
+  )
+  constraints = as.data.frame(native$constraint_metadata)
+  constraints$type = constraint_names[constraints$type]
+  constraints = constraints[, c(
+    "constraint_id",
+    "type",
+    "solve_component_id",
+    "fragment_a",
+    "fragment_b",
+    "event_id",
+    "clearance",
+    "distance_a",
+    "distance_b",
+    "lower",
+    "upper"
+  )]
+  variable_count = nrow(controls) * 2L
+  matrix_p = Matrix::sparseMatrix(
+    i = native$P$i,
+    j = native$P$j,
+    x = native$P$x,
+    dims = c(variable_count, variable_count)
+  )
+  matrix_a = Matrix::sparseMatrix(
+    i = native$A$i,
+    j = native$A$j,
+    x = native$A$x,
+    dims = c(nrow(constraints), variable_count)
+  )
+  result = list(
+    topology = context$topology,
+    terrain_profiles = context$terrain_profiles,
+    adaptive_constraints = adaptive_constraints,
+    fragment_length = context$fragment_length,
+    controls = controls,
+    intervals = intervals,
+    spans = spans,
+    span_members = context$span_members,
+    support_arcs = support_arcs,
+    anchors = anchors,
+    anchor_sets = context$anchor_sets,
+    clearances = clearances,
+    overlap_relations = overlap_relations,
+    junction_equalities = junction_equalities,
+    continuation_equalities = continuation_equalities,
+    chord_controls = chord_controls,
+    curvature_terms = curvature_terms,
+    topology_conflict_pairs = context$topology_conflict_pairs,
+    P = Matrix::forceSymmetric(matrix_p, uplo = "U"),
+    q = native$q,
+    A = matrix_a,
+    lower = native$lower,
+    upper = native$upper,
+    constraints = constraints,
+    variable_component = native$variable_component,
+    settings = context$settings,
+    diagnostics = list(
+      control_count = nrow(controls),
+      adaptive_control_count = sum(controls$adaptive_control),
+      constraint_count = nrow(constraints),
+      constraint_counts = table(constraints$type),
+      ground_anchor_endpoint_id = context$anchor_sets$ground_anchor_endpoint_id,
+      solve_frontier_endpoint_id = context$anchor_sets$solve_frontier_endpoint_id,
+      boundary_frontier_endpoint_id = context$anchor_sets$boundary_endpoint_id,
+      ambiguous_endpoint_id = context$anchor_sets$ambiguous_endpoint_id,
+      conflict_endpoint_id = context$anchor_sets$conflict_endpoint_id
+    ),
+    profile_specification = specification,
+    profile_context = context,
+    compiler_diagnostics = native$diagnostics
+  )
+  result$audit_specification =
+    prepare_render_road_profile_audit_specification(result)
+  class(result) = c("render_road_profile_problem", class(result))
+  result
+}
+
+#' Build a sparse quadratic road profile problem
+#'
+#' @inheritParams build_render_road_profile_problem_r_reference
+#'
+#' @return Sparse matrices, controls, constraints, and solve diagnostics.
+#' @keywords internal
+build_render_road_profile_problem = function(
+  topology,
+  terrain_profiles = NULL,
+  layer_spacing = 5.5,
+  maximum_grade = 0.07,
+  maximum_grade_rate = 1e-3,
+  curvature_weight = 100,
+  grade_weight = 1,
+  terrain_reference_weight = 1e-3,
+  underground_reference_depth = NULL,
+  underground_reference_weight = 1e-3,
+  anchor_grade_weight = 10,
+  uplift_weight = 1e-5,
+  anchor_grade_window = 10,
+  control_tolerance = 1e-7,
+  adaptive_constraints = NULL
+) {
+  prepared = prepare_render_road_profile_specification(
+    topology = topology,
+    terrain_profiles = terrain_profiles,
+    layer_spacing = layer_spacing,
+    maximum_grade = maximum_grade,
+    maximum_grade_rate = maximum_grade_rate,
+    curvature_weight = curvature_weight,
+    grade_weight = grade_weight,
+    terrain_reference_weight = terrain_reference_weight,
+    underground_reference_depth = underground_reference_depth,
+    underground_reference_weight = underground_reference_weight,
+    anchor_grade_weight = anchor_grade_weight,
+    uplift_weight = uplift_weight,
+    anchor_grade_window = anchor_grade_window,
+    control_tolerance = control_tolerance
+  )
+  compile_render_road_profile_problem(
+    prepared$specification,
+    prepared$context,
+    adaptive_constraints
+  )
 }
 
 #' Prepare a transient continuous-audit specification
@@ -8352,16 +9201,26 @@ rebuild_render_road_profile_problem = function(
   problem,
   adaptive_constraints
 ) {
-  do.call(
-    build_render_road_profile_problem,
-    c(
-      list(
-        topology = problem$topology,
-        terrain_profiles = problem$terrain_profiles,
-        adaptive_constraints = adaptive_constraints
-      ),
-      problem$settings
-    )
+  if (
+    is.null(problem$profile_specification) ||
+      is.null(problem$profile_context)
+  ) {
+    return(do.call(
+      build_render_road_profile_problem,
+      c(
+        list(
+          topology = problem$topology,
+          terrain_profiles = problem$terrain_profiles,
+          adaptive_constraints = adaptive_constraints
+        ),
+        problem$settings
+      )
+    ))
+  }
+  compile_render_road_profile_problem(
+    problem$profile_specification,
+    problem$profile_context,
+    adaptive_constraints
   )
 }
 

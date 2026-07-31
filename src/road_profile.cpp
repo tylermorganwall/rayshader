@@ -1034,3 +1034,1711 @@ List audit_render_road_profiles_cpp(
   }
   return result;
 }
+
+namespace {
+
+constexpr int point_crossing_flag = 1;
+constexpr int point_junction_flag = 2;
+constexpr int point_conflict_flag = 3;
+
+constexpr int constraint_quadratic_interval = 1;
+constexpr int constraint_grade_rate = 2;
+constexpr int constraint_grade_bound = 3;
+constexpr int constraint_terrain_floor = 4;
+constexpr int constraint_ground_anchor = 5;
+constexpr int constraint_crossing_clearance = 6;
+constexpr int constraint_junction_height = 7;
+constexpr int constraint_overlap_clearance = 8;
+constexpr int constraint_overlap_clearance_adaptive = 9;
+constexpr int constraint_continuation_height = 10;
+constexpr int constraint_continuation_grade = 11;
+constexpr int constraint_continuation_gap_interval = 12;
+constexpr int constraint_continuation_gap_grade_rate = 13;
+constexpr int constraint_no_dip_span_chord = 14;
+
+struct CompilerSpecification {
+  IntegerVector fragment_id;
+  IntegerVector feature_id;
+  IntegerVector component_id;
+  NumericVector fragment_length;
+  NumericVector layer;
+  LogicalVector underground;
+  IntegerVector fragment_span_id;
+  NumericVector fragment_span_offset;
+  IntegerVector fragment_span_orientation;
+  IntegerVector terrain_start;
+  IntegerVector terrain_count;
+  NumericVector terrain_distance;
+  NumericVector terrain_elevation;
+  IntegerVector initial_fragment;
+  NumericVector initial_distance;
+  IntegerVector point_pair_id;
+  IntegerVector point_fragment_a;
+  NumericVector point_distance_a;
+  IntegerVector point_fragment_b;
+  NumericVector point_distance_b;
+  IntegerVector point_flag;
+  IntegerVector span_id;
+  NumericVector span_length;
+  IntegerVector span_start_fragment;
+  IntegerVector span_start_side;
+  IntegerVector span_end_fragment;
+  IntegerVector span_end_side;
+  LogicalVector span_closed;
+  LogicalVector span_no_dip;
+  IntegerVector span_reference;
+  IntegerVector anchor_endpoint_id;
+  IntegerVector anchor_fragment;
+  IntegerVector anchor_side;
+  NumericVector anchor_distance;
+  NumericVector anchor_terrain_grade;
+  IntegerVector crossing_id;
+  IntegerVector crossing_pair_id;
+  IntegerVector crossing_lower_fragment;
+  IntegerVector crossing_upper_fragment;
+  NumericVector crossing_lower_distance;
+  NumericVector crossing_upper_distance;
+  NumericVector crossing_lower_rank;
+  NumericVector crossing_upper_rank;
+  NumericVector crossing_clearance;
+  IntegerVector junction_id;
+  IntegerVector junction_pair_id;
+  IntegerVector junction_fragment_a;
+  IntegerVector junction_fragment_b;
+  NumericVector junction_distance_a;
+  NumericVector junction_distance_b;
+  IntegerVector overlap_id;
+  IntegerVector overlap_lower_fragment;
+  IntegerVector overlap_upper_fragment;
+  NumericVector overlap_lower_start;
+  NumericVector overlap_lower_end;
+  NumericVector overlap_upper_start;
+  NumericVector overlap_upper_end;
+  NumericVector overlap_clearance;
+  IntegerVector continuation_id;
+  IntegerVector continuation_fragment_a;
+  IntegerVector continuation_fragment_b;
+  NumericVector continuation_distance_a;
+  NumericVector continuation_distance_b;
+  NumericVector continuation_sign_a;
+  NumericVector continuation_sign_b;
+  NumericVector continuation_gap;
+  LogicalVector continuation_exact;
+  double maximum_grade;
+  double maximum_grade_rate;
+  double curvature_weight;
+  double grade_weight;
+  double terrain_reference_weight;
+  double underground_reference_depth;
+  double underground_reference_weight;
+  double anchor_grade_weight;
+  double uplift_weight;
+  double control_tolerance;
+
+  explicit CompilerSpecification(const List& specification) {
+    const List fragment = specification["fragment"];
+    fragment_id = fragment["id"];
+    feature_id = fragment["feature_id"];
+    component_id = fragment["component_id"];
+    fragment_length = fragment["length"];
+    layer = fragment["layer"];
+    underground = fragment["underground"];
+    fragment_span_id = fragment["span_id"];
+    fragment_span_offset = fragment["span_station_offset"];
+    fragment_span_orientation = fragment["span_orientation"];
+    const List terrain = specification["terrain"];
+    terrain_start = terrain["start"];
+    terrain_count = terrain["count"];
+    terrain_distance = terrain["distance"];
+    terrain_elevation = terrain["elevation"];
+    const List initial_control = specification["initial_control"];
+    initial_fragment = initial_control["fragment_index"];
+    initial_distance = initial_control["distance"];
+    const List point_relation = specification["point_relation"];
+    point_pair_id = point_relation["pair_id"];
+    point_fragment_a = point_relation["fragment_a"];
+    point_distance_a = point_relation["distance_a"];
+    point_fragment_b = point_relation["fragment_b"];
+    point_distance_b = point_relation["distance_b"];
+    point_flag = point_relation["flag"];
+    const List span = specification["span"];
+    span_id = span["id"];
+    span_length = span["length"];
+    span_start_fragment = span["start_fragment"];
+    span_start_side = span["start_side"];
+    span_end_fragment = span["end_fragment"];
+    span_end_side = span["end_side"];
+    span_closed = span["closed"];
+    span_no_dip = span["no_dip"];
+    span_reference = span["reference"];
+    const List anchor = specification["anchor"];
+    anchor_endpoint_id = anchor["endpoint_id"];
+    anchor_fragment = anchor["fragment"];
+    anchor_side = anchor["side"];
+    anchor_distance = anchor["distance"];
+    anchor_terrain_grade = anchor["terrain_grade"];
+    const List crossing = specification["crossing"];
+    crossing_id = crossing["crossing_id"];
+    crossing_pair_id = crossing["pair_id"];
+    crossing_lower_fragment = crossing["lower_fragment"];
+    crossing_upper_fragment = crossing["upper_fragment"];
+    crossing_lower_distance = crossing["lower_distance"];
+    crossing_upper_distance = crossing["upper_distance"];
+    crossing_lower_rank = crossing["lower_rank"];
+    crossing_upper_rank = crossing["upper_rank"];
+    crossing_clearance = crossing["clearance"];
+    const List junction = specification["junction"];
+    junction_id = junction["junction_id"];
+    junction_pair_id = junction["pair_id"];
+    junction_fragment_a = junction["fragment_a"];
+    junction_fragment_b = junction["fragment_b"];
+    junction_distance_a = junction["distance_a"];
+    junction_distance_b = junction["distance_b"];
+    const List overlap = specification["overlap"];
+    overlap_id = overlap["overlap_id"];
+    overlap_lower_fragment = overlap["lower_fragment"];
+    overlap_upper_fragment = overlap["upper_fragment"];
+    overlap_lower_start = overlap["lower_start"];
+    overlap_lower_end = overlap["lower_end"];
+    overlap_upper_start = overlap["upper_start"];
+    overlap_upper_end = overlap["upper_end"];
+    overlap_clearance = overlap["clearance"];
+    const List continuation = specification["continuation"];
+    continuation_id = continuation["continuation_id"];
+    continuation_fragment_a = continuation["fragment_a"];
+    continuation_fragment_b = continuation["fragment_b"];
+    continuation_distance_a = continuation["distance_a"];
+    continuation_distance_b = continuation["distance_b"];
+    continuation_sign_a = continuation["sign_a"];
+    continuation_sign_b = continuation["sign_b"];
+    continuation_gap = continuation["gap"];
+    continuation_exact = continuation["exact"];
+    const NumericVector settings = specification["settings"];
+    maximum_grade = settings["maximum_grade"];
+    maximum_grade_rate = settings["maximum_grade_rate"];
+    curvature_weight = settings["curvature_weight"];
+    grade_weight = settings["grade_weight"];
+    terrain_reference_weight = settings["terrain_reference_weight"];
+    underground_reference_depth = settings["underground_reference_depth"];
+    underground_reference_weight = settings["underground_reference_weight"];
+    anchor_grade_weight = settings["anchor_grade_weight"];
+    uplift_weight = settings["uplift_weight"];
+    control_tolerance = settings["control_tolerance"];
+  }
+};
+
+struct AdaptiveCompilerInput {
+  IntegerVector type;
+  IntegerVector fragment_a;
+  NumericVector distance_a;
+  IntegerVector fragment_b;
+  NumericVector distance_b;
+  IntegerVector event_id;
+  NumericVector clearance;
+
+  explicit AdaptiveCompilerInput(const List& adaptive)
+      : type(adaptive["type"]),
+        fragment_a(adaptive["fragment_a"]),
+        distance_a(adaptive["distance_a"]),
+        fragment_b(adaptive["fragment_b"]),
+        distance_b(adaptive["distance_b"]),
+        event_id(adaptive["event_id"]),
+        clearance(adaptive["clearance"]) {}
+};
+
+struct CompilerControls {
+  std::vector<int> start;
+  std::vector<int> count;
+  std::vector<int> fragment;
+  std::vector<double> distance;
+  std::vector<double> tolerance;
+  std::vector<double> terrain;
+  std::vector<double> span_station;
+  std::vector<bool> endpoint;
+  std::vector<bool> crossing;
+  std::vector<bool> junction;
+  std::vector<bool> conflict;
+  std::vector<bool> overlap;
+  std::vector<bool> adaptive;
+  std::vector<double> station_weight;
+};
+
+struct SupportArc {
+  int id;
+  int span;
+  int start_control;
+  int end_control;
+  double start_station;
+  double end_station;
+  double arc_length;
+  double span_length;
+  bool closed;
+};
+
+struct ResolvedArc {
+  const SupportArc* arc;
+  double fraction;
+};
+
+struct ConstraintCompiler {
+  std::vector<int> a_i;
+  std::vector<int> a_j;
+  std::vector<double> a_x;
+  std::vector<double> lower;
+  std::vector<double> upper;
+  std::vector<int> type;
+  std::vector<int> component;
+  std::vector<int> fragment_a;
+  std::vector<int> fragment_b;
+  std::vector<int> event_id;
+  std::vector<double> clearance;
+  std::vector<double> distance_a;
+  std::vector<double> distance_b;
+
+  void reserve(std::size_t constraints, std::size_t nonzero) {
+    a_i.reserve(nonzero);
+    a_j.reserve(nonzero);
+    a_x.reserve(nonzero);
+    lower.reserve(constraints);
+    upper.reserve(constraints);
+    type.reserve(constraints);
+    component.reserve(constraints);
+    fragment_a.reserve(constraints);
+    fragment_b.reserve(constraints);
+    event_id.reserve(constraints);
+    clearance.reserve(constraints);
+    distance_a.reserve(constraints);
+    distance_b.reserve(constraints);
+  }
+
+  void add(
+      std::initializer_list<int> index,
+      std::initializer_list<double> value,
+      double lower_value,
+      double upper_value,
+      int type_value,
+      int component_value,
+      int fragment_a_value = NA_INTEGER,
+      int fragment_b_value = NA_INTEGER,
+      int event_id_value = NA_INTEGER,
+      double clearance_value = NA_REAL,
+      double distance_a_value = NA_REAL,
+      double distance_b_value = NA_REAL) {
+    const int row = static_cast<int>(lower.size()) + 1;
+    auto value_iterator = value.begin();
+    for (const int variable : index) {
+      a_i.push_back(row);
+      a_j.push_back(variable + 1);
+      a_x.push_back(*value_iterator++);
+    }
+    lower.push_back(lower_value);
+    upper.push_back(upper_value);
+    type.push_back(type_value);
+    component.push_back(component_value);
+    fragment_a.push_back(fragment_a_value);
+    fragment_b.push_back(fragment_b_value);
+    event_id.push_back(event_id_value);
+    clearance.push_back(clearance_value);
+    distance_a.push_back(distance_a_value);
+    distance_b.push_back(distance_b_value);
+  }
+};
+
+struct CurvatureTerm {
+  int grade_a;
+  int grade_b;
+  double sign_a;
+  double sign_b;
+  double length;
+};
+
+struct ObjectiveCompiler {
+  std::vector<int> i;
+  std::vector<int> j;
+  std::vector<double> x;
+
+  void add(int row, int column, double value) {
+    i.push_back(row + 1);
+    j.push_back(column + 1);
+    x.push_back(value);
+  }
+};
+
+inline bool valid_fragment(int fragment, int fragment_count) {
+  return fragment != NA_INTEGER && fragment >= 0 && fragment < fragment_count;
+}
+
+double interpolate_compiler_terrain(
+    const CompilerSpecification& specification,
+    int fragment,
+    double distance) {
+  const int start = specification.terrain_start[fragment];
+  const int count = specification.terrain_count[fragment];
+  const double* first = specification.terrain_distance.begin() + start;
+  const double* last = first + count;
+  if (distance <= *first) {
+    return specification.terrain_elevation[start];
+  }
+  if (distance >= *(last - 1)) {
+    return specification.terrain_elevation[start + count - 1];
+  }
+  const double* upper = std::upper_bound(first, last, distance);
+  const int right = static_cast<int>(upper - first);
+  const int left = right - 1;
+  const double fraction =
+      (distance - first[left]) / (first[right] - first[left]);
+  return specification.terrain_elevation[start + left] +
+         fraction *
+             (specification.terrain_elevation[start + right] -
+              specification.terrain_elevation[start + left]);
+}
+
+int match_compiler_control(
+    const CompilerControls& controls,
+    int fragment,
+    double distance,
+    const char* context) {
+  const int start = controls.start[fragment];
+  const int count = controls.count[fragment];
+  const auto first = controls.distance.begin() + start;
+  const auto last = first + count;
+  const auto lower = std::lower_bound(first, last, distance);
+  int match;
+  if (lower == first) {
+    match = start;
+  } else if (lower == last) {
+    match = start + count - 1;
+  } else {
+    const int right = start + static_cast<int>(lower - first);
+    const int left = right - 1;
+    match = std::abs(controls.distance[left] - distance) <=
+                    std::abs(controls.distance[right] - distance)
+                ? left
+                : right;
+  }
+  const double separation = std::abs(controls.distance[match] - distance);
+  if (!finite_number(separation) ||
+      separation > controls.tolerance[match]) {
+    stop(
+        "No profile control matched fragment index %d at %.12g m for %s "
+        "within %.3g m; nearest separation was %.3g m.",
+        fragment,
+        distance,
+        context,
+        controls.tolerance[match],
+        separation);
+  }
+  return match;
+}
+
+ResolvedArc resolve_compiler_arc(
+    const std::vector<SupportArc>& arcs,
+    int span,
+    double station) {
+  const double tolerance = std::sqrt(std::numeric_limits<double>::epsilon());
+  const SupportArc* first_arc = nullptr;
+  for (const SupportArc& arc : arcs) {
+    if (arc.span == span) {
+      first_arc = &arc;
+      break;
+    }
+  }
+  if (first_arc == nullptr) {
+    stop("Profile span index %d has no support chord.", span);
+  }
+  double candidate[2] = {station, station};
+  int candidate_count = 1;
+  if (first_arc->closed) {
+    double normalized = std::fmod(station, first_arc->span_length);
+    if (normalized < 0.0) {
+      normalized += first_arc->span_length;
+    }
+    candidate[0] = normalized;
+    candidate[1] = normalized + first_arc->span_length;
+    candidate_count = 2;
+  }
+  for (int candidate_index = 0;
+       candidate_index < candidate_count;
+       ++candidate_index) {
+    for (const SupportArc& arc : arcs) {
+      if (arc.span == span &&
+          candidate[candidate_index] >= arc.start_station - tolerance &&
+          candidate[candidate_index] < arc.end_station - tolerance) {
+        return {
+            &arc,
+            (candidate[candidate_index] - arc.start_station) /
+                arc.arc_length};
+      }
+    }
+  }
+  const double terminal = candidate[candidate_count - 1];
+  const SupportArc* terminal_arc = nullptr;
+  for (const SupportArc& arc : arcs) {
+    if (arc.span == span &&
+        std::abs(terminal - arc.end_station) <= tolerance) {
+      terminal_arc = &arc;
+    }
+  }
+  if (terminal_arc == nullptr) {
+    stop("Station %.12g is outside profile span index %d.", station, span);
+  }
+  return {
+      terminal_arc,
+      (terminal - terminal_arc->start_station) /
+          terminal_arc->arc_length};
+}
+
+List compiler_controls_list(
+    const CompilerSpecification& specification,
+    const CompilerControls& controls) {
+  const int count = static_cast<int>(controls.distance.size());
+  IntegerVector fragment_id(count);
+  IntegerVector feature_id(count);
+  IntegerVector component_id(count);
+  NumericVector layer(count);
+  IntegerVector span_id(count);
+  IntegerVector height_variable(count);
+  IntegerVector grade_variable(count);
+  for (int control = 0; control < count; ++control) {
+    const int fragment = controls.fragment[control];
+    fragment_id[control] = specification.fragment_id[fragment];
+    feature_id[control] = specification.feature_id[fragment];
+    component_id[control] = specification.component_id[fragment];
+    layer[control] = specification.layer[fragment];
+    span_id[control] = specification.fragment_span_id[fragment];
+    height_variable[control] = control + 1;
+    grade_variable[control] = count + control + 1;
+  }
+  return List::create(
+      _["fragment_id"] = fragment_id,
+      _["feature_id"] = feature_id,
+      _["component_id"] = component_id,
+      _["distance"] = wrap(controls.distance),
+      _["tolerance"] = wrap(controls.tolerance),
+      _["terrain"] = wrap(controls.terrain),
+      _["layer"] = layer,
+      _["span_id"] = span_id,
+      _["span_station"] = wrap(controls.span_station),
+      _["endpoint"] = wrap(controls.endpoint),
+      _["crossing"] = wrap(controls.crossing),
+      _["junction"] = wrap(controls.junction),
+      _["conflict"] = wrap(controls.conflict),
+      _["overlap"] = wrap(controls.overlap),
+      _["adaptive"] = wrap(controls.adaptive),
+      _["station_weight"] = wrap(controls.station_weight),
+      _["height_variable"] = height_variable,
+      _["grade_variable"] = grade_variable);
+}
+
+}  // namespace
+
+// The compiler consumes only ordinary, immutable R vectors. Dense fragment
+// indices and variables are zero-based internally. Stable IDs are retained for
+// diagnostics, while every sparse triplet index returned to R is one-based.
+// Distances, elevations, clearances, grades, and weights use existing solver
+// units.
+//
+// [[Rcpp::export]]
+List compile_render_road_profile_problem_cpp(
+    List specification_list,
+    List adaptive_list) {
+  const CompilerSpecification specification(specification_list);
+  const AdaptiveCompilerInput adaptive(adaptive_list);
+  const int fragment_count = specification.fragment_id.size();
+  const int span_count = specification.span_id.size();
+
+  std::vector<std::vector<double>> station(fragment_count);
+  for (int fragment = 0; fragment < fragment_count; ++fragment) {
+    station[fragment].reserve(8);
+    station[fragment].push_back(0.0);
+    station[fragment].push_back(specification.fragment_length[fragment]);
+  }
+  for (R_xlen_t control = 0;
+       control < specification.initial_fragment.size();
+       ++control) {
+    const int fragment = specification.initial_fragment[control];
+    if (valid_fragment(fragment, fragment_count)) {
+      station[fragment].push_back(specification.initial_distance[control]);
+    }
+  }
+  for (R_xlen_t relation = 0;
+       relation < specification.overlap_id.size();
+       ++relation) {
+    const int lower = specification.overlap_lower_fragment[relation];
+    const int upper = specification.overlap_upper_fragment[relation];
+    station[lower].push_back(specification.overlap_lower_start[relation]);
+    station[lower].push_back(specification.overlap_lower_end[relation]);
+    station[upper].push_back(specification.overlap_upper_start[relation]);
+    station[upper].push_back(specification.overlap_upper_end[relation]);
+  }
+  for (R_xlen_t request = 0; request < adaptive.type.size(); ++request) {
+    if (valid_fragment(adaptive.fragment_a[request], fragment_count)) {
+      station[adaptive.fragment_a[request]].push_back(
+          adaptive.distance_a[request]);
+    }
+    if (valid_fragment(adaptive.fragment_b[request], fragment_count)) {
+      station[adaptive.fragment_b[request]].push_back(
+          adaptive.distance_b[request]);
+    }
+  }
+
+  CompilerControls controls;
+  controls.start.resize(fragment_count);
+  controls.count.resize(fragment_count);
+  std::size_t estimated_controls = 0;
+  for (const auto& fragment_station : station) {
+    estimated_controls += fragment_station.size();
+  }
+  controls.fragment.reserve(estimated_controls);
+  controls.distance.reserve(estimated_controls);
+  controls.tolerance.reserve(estimated_controls);
+  controls.terrain.reserve(estimated_controls);
+  controls.span_station.reserve(estimated_controls);
+  controls.endpoint.reserve(estimated_controls);
+  for (int fragment = 0; fragment < fragment_count; ++fragment) {
+    if ((fragment & 127) == 0) {
+      checkUserInterrupt();
+    }
+    std::vector<double>& fragment_station = station[fragment];
+    fragment_station.erase(
+        std::remove_if(
+            fragment_station.begin(),
+            fragment_station.end(),
+            [](double value) { return !finite_number(value); }),
+        fragment_station.end());
+    const double fragment_length =
+        specification.fragment_length[fragment];
+    for (double& value : fragment_station) {
+      value = std::min(std::max(value, 0.0), fragment_length);
+    }
+    std::sort(fragment_station.begin(), fragment_station.end());
+    const double tolerance = std::max(
+        specification.control_tolerance,
+        fragment_length * 1e-10);
+    std::vector<double> deduplicated;
+    deduplicated.reserve(fragment_station.size());
+    for (std::size_t index = 0;
+         index < fragment_station.size();
+         ++index) {
+      if (index == 0 ||
+          fragment_station[index] - fragment_station[index - 1] >
+              tolerance) {
+        deduplicated.push_back(fragment_station[index]);
+      }
+    }
+    if (deduplicated.size() < 2) {
+      stop("Every fragment requires at least two distinct controls.");
+    }
+    controls.start[fragment] =
+        static_cast<int>(controls.distance.size());
+    controls.count[fragment] =
+        static_cast<int>(deduplicated.size());
+    for (const double value : deduplicated) {
+      controls.fragment.push_back(fragment);
+      controls.distance.push_back(value);
+      controls.tolerance.push_back(tolerance);
+      controls.terrain.push_back(
+          interpolate_compiler_terrain(specification, fragment, value));
+      controls.span_station.push_back(
+          specification.fragment_span_offset[fragment] +
+          (specification.fragment_span_orientation[fragment] == 1
+               ? value
+               : fragment_length - value));
+      controls.endpoint.push_back(
+          value <= tolerance ||
+          value >= fragment_length - tolerance);
+    }
+  }
+  const int control_count = static_cast<int>(controls.distance.size());
+  controls.crossing.assign(control_count, false);
+  controls.junction.assign(control_count, false);
+  controls.conflict.assign(control_count, false);
+  controls.overlap.assign(control_count, false);
+  controls.adaptive.assign(control_count, false);
+  controls.station_weight.assign(control_count, 0.0);
+
+  for (R_xlen_t relation = 0;
+       relation < specification.point_pair_id.size();
+       ++relation) {
+    const int control_a = match_compiler_control(
+        controls,
+        specification.point_fragment_a[relation],
+        specification.point_distance_a[relation],
+        "point relation side a");
+    const int control_b = match_compiler_control(
+        controls,
+        specification.point_fragment_b[relation],
+        specification.point_distance_b[relation],
+        "point relation side b");
+    const int flag = specification.point_flag[relation];
+    if (flag == point_crossing_flag) {
+      controls.crossing[control_a] = true;
+      controls.crossing[control_b] = true;
+    } else if (flag == point_junction_flag) {
+      controls.junction[control_a] = true;
+      controls.junction[control_b] = true;
+    } else if (flag == point_conflict_flag) {
+      controls.conflict[control_a] = true;
+      controls.conflict[control_b] = true;
+    }
+  }
+  for (R_xlen_t relation = 0;
+       relation < specification.overlap_id.size();
+       ++relation) {
+    const int lower = specification.overlap_lower_fragment[relation];
+    const int upper = specification.overlap_upper_fragment[relation];
+    controls.overlap[match_compiler_control(
+        controls,
+        lower,
+        specification.overlap_lower_start[relation],
+        "overlap lower start")] = true;
+    controls.overlap[match_compiler_control(
+        controls,
+        lower,
+        specification.overlap_lower_end[relation],
+        "overlap lower end")] = true;
+    controls.overlap[match_compiler_control(
+        controls,
+        upper,
+        specification.overlap_upper_start[relation],
+        "overlap upper start")] = true;
+    controls.overlap[match_compiler_control(
+        controls,
+        upper,
+        specification.overlap_upper_end[relation],
+        "overlap upper end")] = true;
+  }
+  for (R_xlen_t request = 0; request < adaptive.type.size(); ++request) {
+    controls.adaptive[match_compiler_control(
+        controls,
+        adaptive.fragment_a[request],
+        adaptive.distance_a[request],
+        "adaptive request side a")] = true;
+    if (valid_fragment(adaptive.fragment_b[request], fragment_count)) {
+      controls.adaptive[match_compiler_control(
+          controls,
+          adaptive.fragment_b[request],
+          adaptive.distance_b[request],
+          "adaptive request side b")] = true;
+    }
+  }
+  for (int fragment = 0; fragment < fragment_count; ++fragment) {
+    const int start = controls.start[fragment];
+    const int count = controls.count[fragment];
+    for (int local = 0; local < count - 1; ++local) {
+      const int first = start + local;
+      const int second = first + 1;
+      const double length =
+          controls.distance[second] - controls.distance[first];
+      controls.station_weight[first] += length / 2.0;
+      controls.station_weight[second] += length / 2.0;
+    }
+  }
+  for (R_xlen_t relation = 0;
+       relation < specification.continuation_id.size();
+       ++relation) {
+    const double gap = specification.continuation_gap[relation];
+    if (!finite_number(gap) || gap <= 0.0) {
+      continue;
+    }
+    const int control_a = match_compiler_control(
+        controls,
+        specification.continuation_fragment_a[relation],
+        specification.continuation_distance_a[relation],
+        "continuation side a");
+    const int control_b = match_compiler_control(
+        controls,
+        specification.continuation_fragment_b[relation],
+        specification.continuation_distance_b[relation],
+        "continuation side b");
+    controls.station_weight[control_a] += gap / 2.0;
+    controls.station_weight[control_b] += gap / 2.0;
+  }
+  for (const double weight : controls.station_weight) {
+    if (!finite_number(weight) || weight <= 0.0) {
+      stop("Every road-profile control requires a positive station weight.");
+    }
+  }
+
+  std::vector<int> span_start_control(span_count, NA_INTEGER);
+  std::vector<int> span_end_control(span_count, NA_INTEGER);
+  std::vector<int> span_periodic_control(span_count, NA_INTEGER);
+  std::vector<SupportArc> arcs;
+  arcs.reserve(span_count + specification.overlap_id.size() * 2);
+  for (int span = 0; span < span_count; ++span) {
+    if ((span & 127) == 0) {
+      checkUserInterrupt();
+    }
+    if (specification.span_closed[span]) {
+      std::vector<int> support;
+      for (int control = 0; control < control_count; ++control) {
+        if (specification.fragment_span_id[controls.fragment[control]] ==
+                specification.span_id[span] &&
+            (controls.crossing[control] || controls.overlap[control])) {
+          support.push_back(control);
+        }
+      }
+      if (support.empty()) {
+        for (int control = 0; control < control_count; ++control) {
+          if (specification.fragment_span_id[controls.fragment[control]] ==
+                  specification.span_id[span] &&
+              controls.endpoint[control]) {
+            support.push_back(control);
+          }
+        }
+      }
+      if (support.empty()) {
+        stop("A closed profile span has no periodic support control.");
+      }
+      std::sort(
+          support.begin(),
+          support.end(),
+          [&controls](int first, int second) {
+            if (controls.span_station[first] ==
+                controls.span_station[second]) {
+              return first < second;
+            }
+            return controls.span_station[first] <
+                   controls.span_station[second];
+          });
+      std::vector<int> deduplicated;
+      double prior_key = NA_REAL;
+      for (const int control : support) {
+        const double key = std::nearbyint(
+            controls.span_station[control] /
+            specification.control_tolerance);
+        if (deduplicated.empty() || key != prior_key) {
+          deduplicated.push_back(control);
+          prior_key = key;
+        }
+      }
+      support.swap(deduplicated);
+      span_start_control[span] = support.front();
+      span_end_control[span] = support.front();
+      if (support.size() == 1) {
+        span_periodic_control[span] = support.front();
+        arcs.push_back({
+            static_cast<int>(arcs.size()),
+            span,
+            support.front(),
+            support.front(),
+            controls.span_station[support.front()],
+            controls.span_station[support.front()] +
+                specification.span_length[span],
+            specification.span_length[span],
+            specification.span_length[span],
+            true});
+      } else {
+        for (std::size_t index = 0; index < support.size(); ++index) {
+          const std::size_t next = (index + 1) % support.size();
+          const double start_station =
+              controls.span_station[support[index]];
+          double end_station = controls.span_station[support[next]];
+          if (next == 0) {
+            end_station += specification.span_length[span];
+          }
+          arcs.push_back({
+              static_cast<int>(arcs.size()),
+              span,
+              support[index],
+              support[next],
+              start_station,
+              end_station,
+              end_station - start_station,
+              specification.span_length[span],
+              true});
+        }
+      }
+    } else {
+      const int start_fragment =
+          specification.span_start_fragment[span];
+      const int end_fragment = specification.span_end_fragment[span];
+      const double start_distance =
+          specification.span_start_side[span] == 0
+              ? 0.0
+              : specification.fragment_length[start_fragment];
+      const double end_distance =
+          specification.span_end_side[span] == 0
+              ? 0.0
+              : specification.fragment_length[end_fragment];
+      span_start_control[span] = match_compiler_control(
+          controls,
+          start_fragment,
+          start_distance,
+          "span start");
+      span_end_control[span] = match_compiler_control(
+          controls,
+          end_fragment,
+          end_distance,
+          "span end");
+      arcs.push_back({
+          static_cast<int>(arcs.size()),
+          span,
+          span_start_control[span],
+          span_end_control[span],
+          0.0,
+          specification.span_length[span],
+          specification.span_length[span],
+          specification.span_length[span],
+          false});
+    }
+  }
+
+  ConstraintCompiler constraint;
+  constraint.reserve(
+      static_cast<std::size_t>(control_count) * 4,
+      static_cast<std::size_t>(control_count) * 8);
+  std::vector<int> interval_component;
+  std::vector<int> interval_fragment;
+  std::vector<int> interval_control_a;
+  std::vector<int> interval_control_b;
+  std::vector<double> interval_length;
+  std::vector<CurvatureTerm> interval_curvature;
+  interval_component.reserve(control_count - fragment_count);
+  interval_fragment.reserve(control_count - fragment_count);
+  interval_control_a.reserve(control_count - fragment_count);
+  interval_control_b.reserve(control_count - fragment_count);
+  interval_length.reserve(control_count - fragment_count);
+  interval_curvature.reserve(control_count - fragment_count);
+  for (int fragment = 0; fragment < fragment_count; ++fragment) {
+    const int start = controls.start[fragment];
+    const int count = controls.count[fragment];
+    for (int local = 0; local < count - 1; ++local) {
+      const int first = start + local;
+      const int second = first + 1;
+      const double length =
+          controls.distance[second] - controls.distance[first];
+      if (!finite_number(length) || length <= 0.0) {
+        stop(
+            "Fragment %d contains a non-positive control interval.",
+            specification.fragment_id[fragment]);
+      }
+      const int component = specification.component_id[fragment];
+      interval_component.push_back(component);
+      interval_fragment.push_back(specification.fragment_id[fragment]);
+      interval_control_a.push_back(first + 1);
+      interval_control_b.push_back(second + 1);
+      interval_length.push_back(length);
+      constraint.add(
+          {first, second, control_count + first, control_count + second},
+          {-1.0, 1.0, -length / 2.0, -length / 2.0},
+          0.0,
+          0.0,
+          constraint_quadratic_interval,
+          component,
+          specification.fragment_id[fragment],
+          NA_INTEGER,
+          NA_INTEGER,
+          NA_REAL,
+          controls.distance[first],
+          controls.distance[second]);
+      constraint.add(
+          {control_count + first, control_count + second},
+          {-1.0, 1.0},
+          -specification.maximum_grade_rate * length,
+          specification.maximum_grade_rate * length,
+          constraint_grade_rate,
+          component,
+          specification.fragment_id[fragment],
+          NA_INTEGER,
+          NA_INTEGER,
+          NA_REAL,
+          controls.distance[first],
+          controls.distance[second]);
+      interval_curvature.push_back({
+          control_count + first,
+          control_count + second,
+          1.0,
+          1.0,
+          length});
+    }
+  }
+  for (int control = 0; control < control_count; ++control) {
+    const int fragment = controls.fragment[control];
+    const int external_fragment = specification.fragment_id[fragment];
+    const int component = specification.component_id[fragment];
+    constraint.add(
+        {control_count + control},
+        {1.0},
+        -specification.maximum_grade,
+        specification.maximum_grade,
+        constraint_grade_bound,
+        component,
+        external_fragment,
+        NA_INTEGER,
+        NA_INTEGER,
+        NA_REAL,
+        controls.distance[control],
+        NA_REAL);
+    if (!specification.underground[fragment]) {
+      constraint.add(
+          {control},
+          {1.0},
+          controls.terrain[control],
+          R_PosInf,
+          constraint_terrain_floor,
+          component,
+          external_fragment,
+          NA_INTEGER,
+          NA_INTEGER,
+          NA_REAL,
+          controls.distance[control],
+          NA_REAL);
+    }
+  }
+
+  std::vector<int> anchor_control;
+  std::vector<double> anchor_terrain;
+  std::vector<int> anchor_component;
+  anchor_control.reserve(specification.anchor_endpoint_id.size());
+  anchor_terrain.reserve(specification.anchor_endpoint_id.size());
+  anchor_component.reserve(specification.anchor_endpoint_id.size());
+  for (R_xlen_t anchor = 0;
+       anchor < specification.anchor_endpoint_id.size();
+       ++anchor) {
+    const int fragment = specification.anchor_fragment[anchor];
+    const int control = match_compiler_control(
+        controls,
+        fragment,
+        specification.anchor_distance[anchor],
+        "ground anchor");
+    const int component = specification.component_id[fragment];
+    anchor_control.push_back(control);
+    anchor_terrain.push_back(controls.terrain[control]);
+    anchor_component.push_back(component);
+    constraint.add(
+        {control},
+        {1.0},
+        controls.terrain[control],
+        R_PosInf,
+        constraint_ground_anchor,
+        component,
+        specification.fragment_id[fragment],
+        NA_INTEGER,
+        NA_INTEGER,
+        NA_REAL,
+        specification.anchor_distance[anchor],
+        NA_REAL);
+  }
+
+  std::vector<int> clearance_type;
+  std::vector<int> clearance_event_id;
+  std::vector<int> clearance_pair_id;
+  std::vector<int> clearance_lower_fragment;
+  std::vector<int> clearance_upper_fragment;
+  std::vector<int> clearance_lower_control;
+  std::vector<int> clearance_upper_control;
+  std::vector<double> clearance_lower_distance;
+  std::vector<double> clearance_upper_distance;
+  std::vector<double> clearance_lower_rank;
+  std::vector<double> clearance_upper_rank;
+  std::vector<double> clearance_value;
+  std::vector<int> clearance_component;
+  auto add_clearance_metadata = [&](
+      int type,
+      int event,
+      int pair,
+      int lower_fragment,
+      int upper_fragment,
+      int lower_control,
+      int upper_control,
+      double lower_distance,
+      double upper_distance,
+      double lower_rank,
+      double upper_rank,
+      double clearance,
+      int component) {
+    clearance_type.push_back(type);
+    clearance_event_id.push_back(event);
+    clearance_pair_id.push_back(pair);
+    clearance_lower_fragment.push_back(lower_fragment);
+    clearance_upper_fragment.push_back(upper_fragment);
+    clearance_lower_control.push_back(lower_control + 1);
+    clearance_upper_control.push_back(upper_control + 1);
+    clearance_lower_distance.push_back(lower_distance);
+    clearance_upper_distance.push_back(upper_distance);
+    clearance_lower_rank.push_back(lower_rank);
+    clearance_upper_rank.push_back(upper_rank);
+    clearance_value.push_back(clearance);
+    clearance_component.push_back(component);
+  };
+
+  for (R_xlen_t crossing = 0;
+       crossing < specification.crossing_id.size();
+       ++crossing) {
+    const int lower_fragment =
+        specification.crossing_lower_fragment[crossing];
+    const int upper_fragment =
+        specification.crossing_upper_fragment[crossing];
+    const int lower_control = match_compiler_control(
+        controls,
+        lower_fragment,
+        specification.crossing_lower_distance[crossing],
+        "crossing lower");
+    const int upper_control = match_compiler_control(
+        controls,
+        upper_fragment,
+        specification.crossing_upper_distance[crossing],
+        "crossing upper");
+    const int component = specification.component_id[upper_fragment];
+    if (component != specification.component_id[lower_fragment]) {
+      stop("A crossing constraint spans solve components.");
+    }
+    constraint.add(
+        {lower_control, upper_control},
+        {-1.0, 1.0},
+        specification.crossing_clearance[crossing],
+        R_PosInf,
+        constraint_crossing_clearance,
+        component,
+        specification.fragment_id[lower_fragment],
+        specification.fragment_id[upper_fragment],
+        specification.crossing_id[crossing],
+        specification.crossing_clearance[crossing],
+        specification.crossing_lower_distance[crossing],
+        specification.crossing_upper_distance[crossing]);
+    add_clearance_metadata(
+        1,
+        specification.crossing_id[crossing],
+        specification.crossing_pair_id[crossing],
+        specification.fragment_id[lower_fragment],
+        specification.fragment_id[upper_fragment],
+        lower_control,
+        upper_control,
+        specification.crossing_lower_distance[crossing],
+        specification.crossing_upper_distance[crossing],
+        specification.crossing_lower_rank[crossing],
+        specification.crossing_upper_rank[crossing],
+        specification.crossing_clearance[crossing],
+        component);
+  }
+
+  std::vector<int> junction_control_a;
+  std::vector<int> junction_control_b;
+  std::vector<int> junction_component;
+  junction_control_a.reserve(specification.junction_id.size());
+  junction_control_b.reserve(specification.junction_id.size());
+  junction_component.reserve(specification.junction_id.size());
+  for (R_xlen_t junction = 0;
+       junction < specification.junction_id.size();
+       ++junction) {
+    const int fragment_a = specification.junction_fragment_a[junction];
+    const int fragment_b = specification.junction_fragment_b[junction];
+    const int control_a = match_compiler_control(
+        controls,
+        fragment_a,
+        specification.junction_distance_a[junction],
+        "junction side a");
+    const int control_b = match_compiler_control(
+        controls,
+        fragment_b,
+        specification.junction_distance_b[junction],
+        "junction side b");
+    const int component = specification.component_id[fragment_a];
+    if (component != specification.component_id[fragment_b]) {
+      stop("A junction constraint spans solve components.");
+    }
+    junction_control_a.push_back(control_a + 1);
+    junction_control_b.push_back(control_b + 1);
+    junction_component.push_back(component);
+    constraint.add(
+        {control_a, control_b},
+        {-1.0, 1.0},
+        0.0,
+        0.0,
+        constraint_junction_height,
+        component,
+        specification.fragment_id[fragment_a],
+        specification.fragment_id[fragment_b],
+        specification.junction_id[junction],
+        NA_REAL,
+        specification.junction_distance_a[junction],
+        specification.junction_distance_b[junction]);
+  }
+
+  for (R_xlen_t overlap = 0;
+       overlap < specification.overlap_id.size();
+       ++overlap) {
+    const int lower_fragment =
+        specification.overlap_lower_fragment[overlap];
+    const int upper_fragment =
+        specification.overlap_upper_fragment[overlap];
+    const int component = specification.component_id[upper_fragment];
+    if (component != specification.component_id[lower_fragment]) {
+      stop("An overlap constraint spans solve components.");
+    }
+    const double lower_distance[2] = {
+        specification.overlap_lower_start[overlap],
+        specification.overlap_lower_end[overlap]};
+    const double upper_distance[2] = {
+        specification.overlap_upper_start[overlap],
+        specification.overlap_upper_end[overlap]};
+    for (int endpoint = 0; endpoint < 2; ++endpoint) {
+      const int lower_control = match_compiler_control(
+          controls,
+          lower_fragment,
+          lower_distance[endpoint],
+          "overlap lower endpoint");
+      const int upper_control = match_compiler_control(
+          controls,
+          upper_fragment,
+          upper_distance[endpoint],
+          "overlap upper endpoint");
+      constraint.add(
+          {lower_control, upper_control},
+          {-1.0, 1.0},
+          specification.overlap_clearance[overlap],
+          R_PosInf,
+          constraint_overlap_clearance,
+          component,
+          specification.fragment_id[lower_fragment],
+          specification.fragment_id[upper_fragment],
+          specification.overlap_id[overlap],
+          specification.overlap_clearance[overlap],
+          lower_distance[endpoint],
+          upper_distance[endpoint]);
+      add_clearance_metadata(
+          endpoint == 0 ? 2 : 3,
+          specification.overlap_id[overlap],
+          NA_INTEGER,
+          specification.fragment_id[lower_fragment],
+          specification.fragment_id[upper_fragment],
+          lower_control,
+          upper_control,
+          lower_distance[endpoint],
+          upper_distance[endpoint],
+          NA_REAL,
+          NA_REAL,
+          specification.overlap_clearance[overlap],
+          component);
+    }
+  }
+  for (R_xlen_t request = 0; request < adaptive.type.size(); ++request) {
+    if (adaptive.type[request] != overlap_clearance_request) {
+      continue;
+    }
+    const int lower_fragment = adaptive.fragment_a[request];
+    const int upper_fragment = adaptive.fragment_b[request];
+    const int lower_control = match_compiler_control(
+        controls,
+        lower_fragment,
+        adaptive.distance_a[request],
+        "adaptive overlap lower");
+    const int upper_control = match_compiler_control(
+        controls,
+        upper_fragment,
+        adaptive.distance_b[request],
+        "adaptive overlap upper");
+    const int component = specification.component_id[upper_fragment];
+    if (component != specification.component_id[lower_fragment]) {
+      stop("An adaptive overlap constraint spans solve components.");
+    }
+    constraint.add(
+        {lower_control, upper_control},
+        {-1.0, 1.0},
+        adaptive.clearance[request],
+        R_PosInf,
+        constraint_overlap_clearance_adaptive,
+        component,
+        specification.fragment_id[lower_fragment],
+        specification.fragment_id[upper_fragment],
+        adaptive.event_id[request],
+        adaptive.clearance[request],
+        adaptive.distance_a[request],
+        adaptive.distance_b[request]);
+    add_clearance_metadata(
+        4,
+        adaptive.event_id[request],
+        NA_INTEGER,
+        specification.fragment_id[lower_fragment],
+        specification.fragment_id[upper_fragment],
+        lower_control,
+        upper_control,
+        adaptive.distance_a[request],
+        adaptive.distance_b[request],
+        NA_REAL,
+        NA_REAL,
+        adaptive.clearance[request],
+        component);
+  }
+
+  std::vector<int> continuation_control_a;
+  std::vector<int> continuation_control_b;
+  std::vector<int> continuation_component;
+  std::vector<CurvatureTerm> continuation_curvature;
+  continuation_control_a.reserve(specification.continuation_id.size());
+  continuation_control_b.reserve(specification.continuation_id.size());
+  continuation_component.reserve(specification.continuation_id.size());
+  continuation_curvature.reserve(specification.continuation_id.size());
+  for (R_xlen_t continuation = 0;
+       continuation < specification.continuation_id.size();
+       ++continuation) {
+    const int fragment_a =
+        specification.continuation_fragment_a[continuation];
+    const int fragment_b =
+        specification.continuation_fragment_b[continuation];
+    const int control_a = match_compiler_control(
+        controls,
+        fragment_a,
+        specification.continuation_distance_a[continuation],
+        "continuation side a");
+    const int control_b = match_compiler_control(
+        controls,
+        fragment_b,
+        specification.continuation_distance_b[continuation],
+        "continuation side b");
+    const int component = specification.component_id[fragment_a];
+    if (component != specification.component_id[fragment_b]) {
+      stop("A continuation constraint spans solve components.");
+    }
+    continuation_control_a.push_back(control_a + 1);
+    continuation_control_b.push_back(control_b + 1);
+    continuation_component.push_back(component);
+    const double sign_a = specification.continuation_sign_a[continuation];
+    const double sign_b = specification.continuation_sign_b[continuation];
+    const double gap = specification.continuation_gap[continuation];
+    if (specification.continuation_exact[continuation]) {
+      constraint.add(
+          {control_a, control_b},
+          {-1.0, 1.0},
+          0.0,
+          0.0,
+          constraint_continuation_height,
+          component,
+          specification.fragment_id[fragment_a],
+          specification.fragment_id[fragment_b],
+          specification.continuation_id[continuation],
+          NA_REAL,
+          specification.continuation_distance_a[continuation],
+          specification.continuation_distance_b[continuation]);
+      constraint.add(
+          {control_count + control_a, control_count + control_b},
+          {sign_a, -sign_b},
+          0.0,
+          0.0,
+          constraint_continuation_grade,
+          component,
+          specification.fragment_id[fragment_a],
+          specification.fragment_id[fragment_b],
+          specification.continuation_id[continuation],
+          NA_REAL,
+          specification.continuation_distance_a[continuation],
+          specification.continuation_distance_b[continuation]);
+    } else {
+      constraint.add(
+          {
+              control_a,
+              control_b,
+              control_count + control_a,
+              control_count + control_b},
+          {
+              -1.0,
+              1.0,
+              -gap * sign_a / 2.0,
+              -gap * sign_b / 2.0},
+          0.0,
+          0.0,
+          constraint_continuation_gap_interval,
+          component,
+          specification.fragment_id[fragment_a],
+          specification.fragment_id[fragment_b],
+          specification.continuation_id[continuation],
+          NA_REAL,
+          specification.continuation_distance_a[continuation],
+          specification.continuation_distance_b[continuation]);
+      constraint.add(
+          {control_count + control_a, control_count + control_b},
+          {-sign_a, sign_b},
+          -specification.maximum_grade_rate * gap,
+          specification.maximum_grade_rate * gap,
+          constraint_continuation_gap_grade_rate,
+          component,
+          specification.fragment_id[fragment_a],
+          specification.fragment_id[fragment_b],
+          specification.continuation_id[continuation],
+          NA_REAL,
+          specification.continuation_distance_a[continuation],
+          specification.continuation_distance_b[continuation]);
+      continuation_curvature.push_back({
+          control_count + control_a,
+          control_count + control_b,
+          sign_a,
+          sign_b,
+          gap});
+    }
+  }
+
+  std::vector<int> chord_span;
+  std::vector<int> chord_arc;
+  std::vector<int> chord_control;
+  std::vector<int> chord_start_control;
+  std::vector<int> chord_end_control;
+  std::vector<double> chord_fraction;
+  for (int span = 0; span < span_count; ++span) {
+    if (!specification.span_no_dip[span]) {
+      continue;
+    }
+    for (int control = 0; control < control_count; ++control) {
+      if (specification.fragment_span_id[controls.fragment[control]] !=
+          specification.span_id[span]) {
+        continue;
+      }
+      const ResolvedArc resolved =
+          resolve_compiler_arc(arcs, span, controls.span_station[control]);
+      const int start_control = resolved.arc->start_control;
+      const int end_control = resolved.arc->end_control;
+      if (control == start_control || control == end_control) {
+        continue;
+      }
+      constraint.add(
+          {start_control, control, end_control},
+          {-(1.0 - resolved.fraction), 1.0, -resolved.fraction},
+          0.0,
+          R_PosInf,
+          constraint_no_dip_span_chord,
+          specification.component_id[controls.fragment[control]],
+          specification.fragment_id[controls.fragment[control]],
+          NA_INTEGER,
+          specification.span_id[span],
+          NA_REAL,
+          controls.distance[control],
+          NA_REAL);
+      chord_span.push_back(specification.span_id[span]);
+      chord_arc.push_back(resolved.arc->id + 1);
+      chord_control.push_back(control + 1);
+      chord_start_control.push_back(start_control + 1);
+      chord_end_control.push_back(end_control + 1);
+      chord_fraction.push_back(resolved.fraction);
+    }
+  }
+
+  std::vector<CurvatureTerm> curvature = interval_curvature;
+  curvature.insert(
+      curvature.end(),
+      continuation_curvature.begin(),
+      continuation_curvature.end());
+  const int variable_count = control_count * 2;
+  std::vector<double> objective_q(variable_count, 0.0);
+  ObjectiveCompiler objective_p;
+  objective_p.i.reserve(
+      static_cast<std::size_t>(control_count) * 5 +
+      curvature.size() * 4);
+  objective_p.j.reserve(objective_p.i.capacity());
+  objective_p.x.reserve(objective_p.i.capacity());
+  for (int control = 0; control < control_count; ++control) {
+    const int fragment = controls.fragment[control];
+    const int span = specification.fragment_span_id[fragment] - 1;
+    const int reference = specification.span_reference[span];
+    const double station_weight = controls.station_weight[control];
+    const int height_variable = control;
+    const int grade_variable = control_count + control;
+    const bool underground_reference = reference == 2;
+    if (!underground_reference) {
+      objective_q[height_variable] +=
+          specification.uplift_weight * station_weight;
+    }
+    if (specification.grade_weight > 0.0) {
+      objective_p.add(
+          grade_variable,
+          grade_variable,
+          2.0 * specification.grade_weight * station_weight);
+    }
+    if (underground_reference) {
+      const double weight =
+          specification.underground_reference_weight * station_weight;
+      const double reference_height =
+          controls.terrain[control] -
+          specification.underground_reference_depth;
+      objective_p.add(height_variable, height_variable, 2.0 * weight);
+      objective_q[height_variable] -=
+          2.0 * weight * reference_height;
+    } else if (
+        specification.terrain_reference_weight > 0.0 &&
+        (reference == 3 || reference == 4)) {
+      const ResolvedArc resolved =
+          resolve_compiler_arc(arcs, span, controls.span_station[control]);
+      std::map<int, double> coefficient;
+      coefficient[height_variable] += 1.0;
+      coefficient[resolved.arc->start_control] -=
+          1.0 - resolved.fraction;
+      coefficient[resolved.arc->end_control] -= resolved.fraction;
+      for (auto iterator = coefficient.begin();
+           iterator != coefficient.end();) {
+        if (std::abs(iterator->second) <= quadratic_tolerance) {
+          iterator = coefficient.erase(iterator);
+        } else {
+          ++iterator;
+        }
+      }
+      const double weight =
+          specification.terrain_reference_weight * station_weight;
+      for (const auto& first : coefficient) {
+        for (const auto& second : coefficient) {
+          objective_p.add(
+              first.first,
+              second.first,
+              2.0 * weight * first.second * second.second);
+        }
+      }
+    } else if (specification.terrain_reference_weight > 0.0) {
+      const double weight =
+          specification.terrain_reference_weight * station_weight;
+      objective_p.add(height_variable, height_variable, 2.0 * weight);
+      objective_q[height_variable] -=
+          2.0 * weight * controls.terrain[control];
+    }
+  }
+  if (specification.anchor_grade_weight > 0.0) {
+    for (R_xlen_t anchor = 0;
+         anchor < specification.anchor_endpoint_id.size();
+         ++anchor) {
+      const int variable = control_count + anchor_control[anchor];
+      objective_p.add(
+          variable,
+          variable,
+          2.0 * specification.anchor_grade_weight);
+      objective_q[variable] -=
+          2.0 * specification.anchor_grade_weight *
+          specification.anchor_terrain_grade[anchor];
+    }
+  }
+  if (specification.curvature_weight > 0.0) {
+    for (const CurvatureTerm& term : curvature) {
+      const int variable[2] = {term.grade_a, term.grade_b};
+      const double coefficient[2] = {-term.sign_a, term.sign_b};
+      const double weight = specification.curvature_weight / term.length;
+      for (int first = 0; first < 2; ++first) {
+        for (int second = 0; second < 2; ++second) {
+          objective_p.add(
+              variable[first],
+              variable[second],
+              2.0 * weight *
+                  coefficient[first] * coefficient[second]);
+        }
+      }
+    }
+  }
+
+  IntegerVector support_span(arcs.size());
+  IntegerVector support_start(arcs.size());
+  IntegerVector support_end(arcs.size());
+  NumericVector support_start_station(arcs.size());
+  NumericVector support_end_station(arcs.size());
+  NumericVector support_length(arcs.size());
+  NumericVector support_span_length(arcs.size());
+  LogicalVector support_closed(arcs.size());
+  IntegerVector support_id(arcs.size());
+  for (std::size_t arc = 0; arc < arcs.size(); ++arc) {
+    support_span[arc] = specification.span_id[arcs[arc].span];
+    support_start[arc] = arcs[arc].start_control + 1;
+    support_end[arc] = arcs[arc].end_control + 1;
+    support_start_station[arc] = arcs[arc].start_station;
+    support_end_station[arc] = arcs[arc].end_station;
+    support_length[arc] = arcs[arc].arc_length;
+    support_span_length[arc] = arcs[arc].span_length;
+    support_closed[arc] = arcs[arc].closed;
+    support_id[arc] = arcs[arc].id + 1;
+  }
+  IntegerVector span_start(span_count);
+  IntegerVector span_end(span_count);
+  IntegerVector span_periodic(span_count);
+  for (int span = 0; span < span_count; ++span) {
+    span_start[span] = span_start_control[span] + 1;
+    span_end[span] = span_end_control[span] + 1;
+    span_periodic[span] =
+        span_periodic_control[span] == NA_INTEGER
+            ? NA_INTEGER
+            : span_periodic_control[span] + 1;
+  }
+  IntegerVector variable_component(variable_count);
+  for (int control = 0; control < control_count; ++control) {
+    const int component =
+        specification.component_id[controls.fragment[control]];
+    variable_component[control] = component;
+    variable_component[control_count + control] = component;
+  }
+  IntegerVector curvature_grade_a(curvature.size());
+  IntegerVector curvature_grade_b(curvature.size());
+  NumericVector curvature_sign_a(curvature.size());
+  NumericVector curvature_sign_b(curvature.size());
+  NumericVector curvature_length(curvature.size());
+  for (std::size_t term = 0; term < curvature.size(); ++term) {
+    curvature_grade_a[term] = curvature[term].grade_a + 1;
+    curvature_grade_b[term] = curvature[term].grade_b + 1;
+    curvature_sign_a[term] = curvature[term].sign_a;
+    curvature_sign_b[term] = curvature[term].sign_b;
+    curvature_length[term] = curvature[term].length;
+  }
+  IntegerVector overlap_lower_id(specification.overlap_id.size());
+  IntegerVector overlap_upper_id(specification.overlap_id.size());
+  for (R_xlen_t relation = 0;
+       relation < specification.overlap_id.size();
+       ++relation) {
+    overlap_lower_id[relation] = specification.fragment_id[
+        specification.overlap_lower_fragment[relation]];
+    overlap_upper_id[relation] = specification.fragment_id[
+        specification.overlap_upper_fragment[relation]];
+  }
+  IntegerVector anchor_fragment_id(specification.anchor_endpoint_id.size());
+  IntegerVector anchor_control_id(specification.anchor_endpoint_id.size());
+  for (R_xlen_t anchor = 0;
+       anchor < specification.anchor_endpoint_id.size();
+       ++anchor) {
+    anchor_fragment_id[anchor] =
+        specification.fragment_id[specification.anchor_fragment[anchor]];
+    anchor_control_id[anchor] = anchor_control[anchor] + 1;
+  }
+  IntegerVector continuation_fragment_a_id(
+      specification.continuation_id.size());
+  IntegerVector continuation_fragment_b_id(
+      specification.continuation_id.size());
+  for (R_xlen_t relation = 0;
+       relation < specification.continuation_id.size();
+       ++relation) {
+    continuation_fragment_a_id[relation] = specification.fragment_id[
+        specification.continuation_fragment_a[relation]];
+    continuation_fragment_b_id[relation] = specification.fragment_id[
+        specification.continuation_fragment_b[relation]];
+  }
+  IntegerVector junction_fragment_a_id(specification.junction_id.size());
+  IntegerVector junction_fragment_b_id(specification.junction_id.size());
+  for (R_xlen_t relation = 0;
+       relation < specification.junction_id.size();
+       ++relation) {
+    junction_fragment_a_id[relation] =
+        specification.fragment_id[specification.junction_fragment_a[relation]];
+    junction_fragment_b_id[relation] =
+        specification.fragment_id[specification.junction_fragment_b[relation]];
+  }
+  const int constraint_count = constraint.lower.size();
+  IntegerVector constraint_id(constraint_count);
+  for (int row = 0; row < constraint_count; ++row) {
+    constraint_id[row] = row + 1;
+  }
+  IntegerVector interval_id(interval_length.size());
+  for (R_xlen_t row = 0; row < interval_id.size(); ++row) {
+    interval_id[row] = row + 1;
+  }
+
+  return List::create(
+      _["controls"] = compiler_controls_list(specification, controls),
+      _["P"] = List::create(
+          _["i"] = wrap(objective_p.i),
+          _["j"] = wrap(objective_p.j),
+          _["x"] = wrap(objective_p.x)),
+      _["q"] = wrap(objective_q),
+      _["A"] = List::create(
+          _["i"] = wrap(constraint.a_i),
+          _["j"] = wrap(constraint.a_j),
+          _["x"] = wrap(constraint.a_x)),
+      _["lower"] = wrap(constraint.lower),
+      _["upper"] = wrap(constraint.upper),
+      _["variable_component"] = variable_component,
+      _["constraint_metadata"] = List::create(
+          _["constraint_id"] = constraint_id,
+          _["type"] = wrap(constraint.type),
+          _["solve_component_id"] = wrap(constraint.component),
+          _["fragment_a"] = wrap(constraint.fragment_a),
+          _["fragment_b"] = wrap(constraint.fragment_b),
+          _["event_id"] = wrap(constraint.event_id),
+          _["clearance"] = wrap(constraint.clearance),
+          _["distance_a"] = wrap(constraint.distance_a),
+          _["distance_b"] = wrap(constraint.distance_b),
+          _["lower"] = wrap(constraint.lower),
+          _["upper"] = wrap(constraint.upper)),
+      _["interval_metadata"] = List::create(
+          _["interval_id"] = interval_id,
+          _["solve_component_id"] = wrap(interval_component),
+          _["render_road_fragment_id"] = wrap(interval_fragment),
+          _["control_a"] = wrap(interval_control_a),
+          _["control_b"] = wrap(interval_control_b),
+          _["length"] = wrap(interval_length)),
+      _["span_controls"] = List::create(
+          _["start"] = span_start,
+          _["end"] = span_end,
+          _["periodic"] = span_periodic),
+      _["support_arcs"] = List::create(
+          _["span_id"] = support_span,
+          _["start_control_id"] = support_start,
+          _["end_control_id"] = support_end,
+          _["start_station"] = support_start_station,
+          _["end_station"] = support_end_station,
+          _["arc_length"] = support_length,
+          _["span_length"] = support_span_length,
+          _["closed"] = support_closed,
+          _["support_arc_id"] = support_id),
+      _["anchors"] = List::create(
+          _["render_road_endpoint_id"] =
+              specification.anchor_endpoint_id,
+          _["render_road_fragment_id"] = anchor_fragment_id,
+          _["endpoint_side"] = specification.anchor_side,
+          _["control_id"] = anchor_control_id,
+          _["terrain"] = wrap(anchor_terrain),
+          _["terrain_grade"] = specification.anchor_terrain_grade,
+          _["solve_component_id"] = wrap(anchor_component)),
+      _["clearances"] = List::create(
+          _["type"] = wrap(clearance_type),
+          _["event_id"] = wrap(clearance_event_id),
+          _["pair_id"] = wrap(clearance_pair_id),
+          _["lower_fragment_id"] = wrap(clearance_lower_fragment),
+          _["upper_fragment_id"] = wrap(clearance_upper_fragment),
+          _["lower_control_id"] = wrap(clearance_lower_control),
+          _["upper_control_id"] = wrap(clearance_upper_control),
+          _["lower_distance"] = wrap(clearance_lower_distance),
+          _["upper_distance"] = wrap(clearance_upper_distance),
+          _["lower_rank"] = wrap(clearance_lower_rank),
+          _["upper_rank"] = wrap(clearance_upper_rank),
+          _["clearance"] = wrap(clearance_value),
+          _["solve_component_id"] = wrap(clearance_component)),
+      _["overlap_relations"] = List::create(
+          _["overlap_id"] = specification.overlap_id,
+          _["lower_fragment_id"] = overlap_lower_id,
+          _["upper_fragment_id"] = overlap_upper_id,
+          _["lower_distance_start"] =
+              specification.overlap_lower_start,
+          _["lower_distance_end"] = specification.overlap_lower_end,
+          _["upper_distance_start"] =
+              specification.overlap_upper_start,
+          _["upper_distance_end"] = specification.overlap_upper_end,
+          _["clearance"] = specification.overlap_clearance),
+      _["junction_equalities"] = List::create(
+          _["junction_id"] = specification.junction_id,
+          _["pair_id"] = specification.junction_pair_id,
+          _["fragment_a"] = junction_fragment_a_id,
+          _["fragment_b"] = junction_fragment_b_id,
+          _["control_a"] = wrap(junction_control_a),
+          _["control_b"] = wrap(junction_control_b),
+          _["solve_component_id"] = wrap(junction_component)),
+      _["continuation_equalities"] = List::create(
+          _["continuation_id"] = specification.continuation_id,
+          _["fragment_a"] = continuation_fragment_a_id,
+          _["fragment_b"] = continuation_fragment_b_id,
+          _["control_a"] = wrap(continuation_control_a),
+          _["control_b"] = wrap(continuation_control_b),
+          _["sign_a"] = specification.continuation_sign_a,
+          _["sign_b"] = specification.continuation_sign_b,
+          _["gap"] = specification.continuation_gap,
+          _["exact_endpoint"] = specification.continuation_exact,
+          _["solve_component_id"] = wrap(continuation_component)),
+      _["chord_controls"] = List::create(
+          _["span_id"] = wrap(chord_span),
+          _["support_arc_id"] = wrap(chord_arc),
+          _["control_id"] = wrap(chord_control),
+          _["start_control_id"] = wrap(chord_start_control),
+          _["end_control_id"] = wrap(chord_end_control),
+          _["fraction"] = wrap(chord_fraction)),
+      _["curvature_terms"] = List::create(
+          _["grade_a"] = curvature_grade_a,
+          _["grade_b"] = curvature_grade_b,
+          _["sign_a"] = curvature_sign_a,
+          _["sign_b"] = curvature_sign_b,
+          _["length"] = curvature_length),
+      _["diagnostics"] = List::create(
+          _["fragment_count"] = fragment_count,
+          _["control_count"] = control_count,
+          _["constraint_count"] = constraint_count,
+          _["P_triplet_count"] =
+              static_cast<int>(objective_p.x.size()),
+          _["A_triplet_count"] =
+              static_cast<int>(constraint.a_x.size())));
+}
