@@ -1,9 +1,12 @@
 #include <Rcpp.h>
 
 #include <algorithm>
+#include <cctype>
+#include <chrono>
 #include <cmath>
 #include <limits>
 #include <map>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -2741,4 +2744,1086 @@ List compile_render_road_profile_problem_cpp(
               static_cast<int>(objective_p.x.size()),
           _["A_triplet_count"] =
               static_cast<int>(constraint.a_x.size())));
+}
+
+namespace {
+
+using RoadProfileClock = std::chrono::steady_clock;
+
+double road_profile_elapsed(
+    const RoadProfileClock::time_point& start,
+    const RoadProfileClock::time_point& end) {
+  return std::chrono::duration<double>(end - start).count();
+}
+
+struct NativeAdaptiveState {
+  std::vector<int> type;
+  std::vector<int> fragment_a;
+  std::vector<double> distance_a;
+  std::vector<int> fragment_b;
+  std::vector<double> distance_b;
+  std::vector<int> event_id;
+  std::vector<double> clearance;
+  std::vector<double> source_margin;
+
+  std::size_t size() const {
+    return type.size();
+  }
+};
+
+NativeAdaptiveState parse_native_adaptive(const List& specification) {
+  NativeAdaptiveState adaptive;
+  if (!specification.containsElementNamed("adaptive")) {
+    return adaptive;
+  }
+  const List input = specification["adaptive"];
+  const IntegerVector type = input["type"];
+  const IntegerVector fragment_a = input["fragment_a"];
+  const NumericVector distance_a = input["distance_a"];
+  const IntegerVector fragment_b = input["fragment_b"];
+  const NumericVector distance_b = input["distance_b"];
+  const IntegerVector event_id = input["event_id"];
+  const NumericVector clearance = input["clearance"];
+  const NumericVector source_margin = input["source_margin"];
+  const R_xlen_t count = type.size();
+  if (fragment_a.size() != count ||
+      distance_a.size() != count ||
+      fragment_b.size() != count ||
+      distance_b.size() != count ||
+      event_id.size() != count ||
+      clearance.size() != count ||
+      source_margin.size() != count) {
+    stop("Native adaptive road-profile vectors must have equal lengths.");
+  }
+  adaptive.type.assign(type.begin(), type.end());
+  adaptive.fragment_a.assign(fragment_a.begin(), fragment_a.end());
+  adaptive.distance_a.assign(distance_a.begin(), distance_a.end());
+  adaptive.fragment_b.assign(fragment_b.begin(), fragment_b.end());
+  adaptive.distance_b.assign(distance_b.begin(), distance_b.end());
+  adaptive.event_id.assign(event_id.begin(), event_id.end());
+  adaptive.clearance.assign(clearance.begin(), clearance.end());
+  adaptive.source_margin.assign(
+      source_margin.begin(), source_margin.end());
+  return adaptive;
+}
+
+List compiler_adaptive_list(const NativeAdaptiveState& adaptive) {
+  return List::create(
+      _["type"] = wrap(adaptive.type),
+      _["fragment_a"] = wrap(adaptive.fragment_a),
+      _["distance_a"] = wrap(adaptive.distance_a),
+      _["fragment_b"] = wrap(adaptive.fragment_b),
+      _["distance_b"] = wrap(adaptive.distance_b),
+      _["event_id"] = wrap(adaptive.event_id),
+      _["clearance"] = wrap(adaptive.clearance),
+      _["source_margin"] = wrap(adaptive.source_margin));
+}
+
+List external_adaptive_list(
+    const NativeAdaptiveState& adaptive,
+    const IntegerVector& fragment_id) {
+  IntegerVector fragment_a(adaptive.size());
+  IntegerVector fragment_b(adaptive.size());
+  for (std::size_t row = 0; row < adaptive.size(); ++row) {
+    fragment_a[row] =
+        adaptive.fragment_a[row] == NA_INTEGER
+            ? NA_INTEGER
+            : fragment_id[adaptive.fragment_a[row]];
+    fragment_b[row] =
+        adaptive.fragment_b[row] == NA_INTEGER
+            ? NA_INTEGER
+            : fragment_id[adaptive.fragment_b[row]];
+  }
+  return List::create(
+      _["type"] = wrap(adaptive.type),
+      _["fragment_a"] = fragment_a,
+      _["distance_a"] = wrap(adaptive.distance_a),
+      _["fragment_b"] = fragment_b,
+      _["distance_b"] = wrap(adaptive.distance_b),
+      _["event_id"] = wrap(adaptive.event_id),
+      _["clearance"] = wrap(adaptive.clearance),
+      _["source_margin"] = wrap(adaptive.source_margin));
+}
+
+double significant_road_profile_value(double value) {
+  if (!finite_number(value) || value == 0.0) {
+    return value;
+  }
+  const double exponent = std::floor(std::log10(std::abs(value)));
+  const double scale = std::pow(10.0, 11.0 - exponent);
+  if (!finite_number(scale) || scale == 0.0) {
+    return value;
+  }
+  return std::nearbyint(value * scale) / scale;
+}
+
+bool equal_road_profile_integer(int first, int second) {
+  return first == second ||
+         (first == NA_INTEGER && second == NA_INTEGER);
+}
+
+bool equal_road_profile_number(double first, double second) {
+  return first == second ||
+         (NumericVector::is_na(first) && NumericVector::is_na(second)) ||
+         (std::isnan(first) && std::isnan(second));
+}
+
+bool duplicate_native_adaptive(
+    const NativeAdaptiveState& adaptive,
+    int type,
+    int fragment_a,
+    double distance_a,
+    int fragment_b,
+    double distance_b,
+    int event_id) {
+  const double key_distance_a =
+      significant_road_profile_value(distance_a);
+  const double key_distance_b =
+      significant_road_profile_value(distance_b);
+  for (std::size_t row = 0; row < adaptive.size(); ++row) {
+    if (adaptive.type[row] == type &&
+        equal_road_profile_integer(
+            adaptive.fragment_a[row], fragment_a) &&
+        equal_road_profile_number(
+            significant_road_profile_value(adaptive.distance_a[row]),
+            key_distance_a) &&
+        equal_road_profile_integer(
+            adaptive.fragment_b[row], fragment_b) &&
+        equal_road_profile_number(
+            significant_road_profile_value(adaptive.distance_b[row]),
+            key_distance_b) &&
+        equal_road_profile_integer(adaptive.event_id[row], event_id)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+int dense_fragment_index(
+    const std::map<int, int>& fragment_index,
+    int fragment_id) {
+  if (fragment_id == NA_INTEGER) {
+    return NA_INTEGER;
+  }
+  const auto found = fragment_index.find(fragment_id);
+  if (found == fragment_index.end()) {
+    stop(
+        "Adaptive controls reference inactive fragment %d.",
+        fragment_id);
+  }
+  return found->second;
+}
+
+int append_native_requests(
+    NativeAdaptiveState& adaptive,
+    const List& requests,
+    const std::map<int, int>& fragment_index) {
+  const IntegerVector type = requests["type"];
+  const IntegerVector fragment_a_id = requests["fragment_a"];
+  const NumericVector distance_a = requests["distance_a"];
+  const IntegerVector fragment_b_id = requests["fragment_b"];
+  const NumericVector distance_b = requests["distance_b"];
+  const IntegerVector event_id = requests["event_id"];
+  const NumericVector clearance = requests["clearance"];
+  const NumericVector source_margin = requests["source_margin"];
+  int added = 0;
+  for (R_xlen_t row = 0; row < type.size(); ++row) {
+    const int fragment_a =
+        dense_fragment_index(fragment_index, fragment_a_id[row]);
+    const int fragment_b =
+        dense_fragment_index(fragment_index, fragment_b_id[row]);
+    if (duplicate_native_adaptive(
+            adaptive,
+            type[row],
+            fragment_a,
+            distance_a[row],
+            fragment_b,
+            distance_b[row],
+            event_id[row])) {
+      continue;
+    }
+    adaptive.type.push_back(type[row]);
+    adaptive.fragment_a.push_back(fragment_a);
+    adaptive.distance_a.push_back(distance_a[row]);
+    adaptive.fragment_b.push_back(fragment_b);
+    adaptive.distance_b.push_back(distance_b[row]);
+    adaptive.event_id.push_back(event_id[row]);
+    adaptive.clearance.push_back(clearance[row]);
+    adaptive.source_margin.push_back(source_margin[row]);
+    ++added;
+  }
+  return added;
+}
+
+bool active_no_dip_span(
+    int span_id,
+    const IntegerVector& ids,
+    const LogicalVector& no_dip) {
+  for (R_xlen_t span = 0; span < ids.size(); ++span) {
+    if (ids[span] == span_id) {
+      return no_dip[span];
+    }
+  }
+  return false;
+}
+
+List make_native_audit_specification(
+    const List& specification,
+    const List& compiled,
+    const NativeAdaptiveState& adaptive) {
+  const List fragment = specification["fragment"];
+  const IntegerVector fragment_id = fragment["id"];
+  const IntegerVector fragment_component = fragment["component_id"];
+  const LogicalVector underground = fragment["underground"];
+  const int fragment_count = fragment_id.size();
+  std::map<int, int> fragment_index;
+  for (int fragment_row = 0;
+       fragment_row < fragment_count;
+       ++fragment_row) {
+    fragment_index[fragment_id[fragment_row]] = fragment_row;
+  }
+
+  const List control = compiled["controls"];
+  const IntegerVector control_fragment = control["fragment_id"];
+  const NumericVector control_distance = control["distance"];
+  const NumericVector control_tolerance_value = control["tolerance"];
+  IntegerVector control_start(fragment_count);
+  IntegerVector control_count(fragment_count);
+  IntegerVector control_row(control_fragment.size());
+  NumericVector control_tolerance(fragment_count);
+  std::fill(
+      control_start.begin(), control_start.end(), NA_INTEGER);
+  for (R_xlen_t row = 0; row < control_fragment.size(); ++row) {
+    const auto found = fragment_index.find(control_fragment[row]);
+    if (found == fragment_index.end()) {
+      stop("Compiled controls contain an inactive fragment.");
+    }
+    const int dense_fragment = found->second;
+    if (control_start[dense_fragment] == NA_INTEGER) {
+      control_start[dense_fragment] = row;
+    }
+    ++control_count[dense_fragment];
+    control_row[row] = row;
+    control_tolerance[dense_fragment] = std::max(
+        control_tolerance[dense_fragment],
+        control_tolerance_value[row]);
+  }
+  for (int fragment_row = 0;
+       fragment_row < fragment_count;
+       ++fragment_row) {
+    if (control_count[fragment_row] < 2) {
+      stop(
+          "Fragment %d does not have two profile controls.",
+          fragment_id[fragment_row]);
+    }
+  }
+
+  const List terrain = specification["terrain"];
+  const List span = specification["span"];
+  const IntegerVector span_id = span["id"];
+  const LogicalVector span_no_dip = span["no_dip"];
+  const List member = specification["span_member"];
+  const IntegerVector member_span = member["span_id"];
+  const IntegerVector member_fragment = member["fragment"];
+  const IntegerVector member_orientation = member["orientation"];
+  const NumericVector member_offset = member["offset"];
+  const NumericVector member_length = member["fragment_length"];
+  std::vector<int> chord_span;
+  std::vector<int> chord_fragment;
+  std::vector<double> chord_offset;
+  std::vector<int> chord_orientation;
+  std::vector<double> chord_length;
+  for (R_xlen_t span_row = 0;
+       span_row < span_id.size();
+       ++span_row) {
+    if (!span_no_dip[span_row]) {
+      continue;
+    }
+    for (R_xlen_t member_row = 0;
+         member_row < member_span.size();
+         ++member_row) {
+      if (member_span[member_row] == span_id[span_row]) {
+        chord_span.push_back(member_span[member_row]);
+        chord_fragment.push_back(member_fragment[member_row]);
+        chord_offset.push_back(member_offset[member_row]);
+        chord_orientation.push_back(member_orientation[member_row]);
+        chord_length.push_back(member_length[member_row]);
+      }
+    }
+  }
+
+  const List support = compiled["support_arcs"];
+  const IntegerVector support_span = support["span_id"];
+  const IntegerVector support_start = support["start_control_id"];
+  const IntegerVector support_end = support["end_control_id"];
+  const NumericVector support_start_station = support["start_station"];
+  const NumericVector support_end_station = support["end_station"];
+  const NumericVector support_length = support["arc_length"];
+  const NumericVector support_span_length = support["span_length"];
+  const LogicalVector support_closed = support["closed"];
+  const IntegerVector support_id = support["support_arc_id"];
+  std::vector<int> arc_span;
+  std::vector<int> arc_start;
+  std::vector<int> arc_end;
+  std::vector<double> arc_start_station;
+  std::vector<double> arc_end_station;
+  std::vector<double> arc_length;
+  std::vector<double> arc_span_length;
+  std::vector<bool> arc_closed;
+  std::vector<int> arc_id;
+  for (R_xlen_t arc = 0; arc < support_span.size(); ++arc) {
+    if (!active_no_dip_span(
+            support_span[arc], span_id, span_no_dip)) {
+      continue;
+    }
+    arc_span.push_back(support_span[arc]);
+    arc_start.push_back(support_start[arc] - 1);
+    arc_end.push_back(support_end[arc] - 1);
+    arc_start_station.push_back(support_start_station[arc]);
+    arc_end_station.push_back(support_end_station[arc]);
+    arc_length.push_back(support_length[arc]);
+    arc_span_length.push_back(support_span_length[arc]);
+    arc_closed.push_back(support_closed[arc]);
+    arc_id.push_back(support_id[arc]);
+  }
+
+  const List overlap = specification["overlap"];
+  const IntegerVector overlap_id = overlap["overlap_id"];
+  std::vector<int> prior_overlap_id;
+  std::vector<double> prior_lower_distance;
+  std::vector<double> prior_upper_distance;
+  for (std::size_t row = 0; row < adaptive.size(); ++row) {
+    if (adaptive.type[row] == overlap_clearance_request) {
+      prior_overlap_id.push_back(adaptive.event_id[row]);
+      prior_lower_distance.push_back(adaptive.distance_a[row]);
+      prior_upper_distance.push_back(adaptive.distance_b[row]);
+    }
+  }
+
+  bool finite_control_terrain = true;
+  for (R_xlen_t row = 0; row < control_distance.size(); ++row) {
+    finite_control_terrain =
+        finite_control_terrain &&
+        finite_number(control_distance[row]) &&
+        finite_number(as<NumericVector>(control["terrain"])[row]);
+  }
+  const NumericVector terrain_distance = terrain["distance"];
+  const NumericVector terrain_elevation = terrain["elevation"];
+  for (R_xlen_t row = 0; row < terrain_distance.size(); ++row) {
+    finite_control_terrain =
+        finite_control_terrain &&
+        finite_number(terrain_distance[row]) &&
+        finite_number(terrain_elevation[row]);
+  }
+  bool finite_geometry = true;
+  if (specification.containsElementNamed("validity")) {
+    const List validity = specification["validity"];
+    finite_geometry = as<bool>(validity["finite_geometry"]);
+    finite_control_terrain =
+        finite_control_terrain &&
+        as<bool>(validity["finite_control_terrain"]);
+  }
+
+  return List::create(
+      _["fragment_id"] = fragment_id,
+      _["fragment_component"] = fragment_component,
+      _["control_start"] = control_start,
+      _["control_count"] = control_count,
+      _["control_row"] = control_row,
+      _["control_distance"] = control_distance,
+      _["control_tolerance"] = control_tolerance,
+      _["underground"] = underground,
+      _["terrain_start"] = terrain["start"],
+      _["terrain_count"] = terrain["count"],
+      _["terrain_distance"] = terrain_distance,
+      _["terrain_elevation"] = terrain_elevation,
+      _["chord_span_id"] = wrap(chord_span),
+      _["chord_fragment_index"] = wrap(chord_fragment),
+      _["chord_span_offset"] = wrap(chord_offset),
+      _["chord_orientation"] = wrap(chord_orientation),
+      _["chord_fragment_length"] = wrap(chord_length),
+      _["arc_span_id"] = wrap(arc_span),
+      _["arc_start_control"] = wrap(arc_start),
+      _["arc_end_control"] = wrap(arc_end),
+      _["arc_start_station"] = wrap(arc_start_station),
+      _["arc_end_station"] = wrap(arc_end_station),
+      _["arc_length"] = wrap(arc_length),
+      _["arc_span_length"] = wrap(arc_span_length),
+      _["arc_closed"] = wrap(arc_closed),
+      _["arc_id"] = wrap(arc_id),
+      _["overlap_id"] = overlap_id,
+      _["overlap_lower_fragment_index"] = overlap["lower_fragment"],
+      _["overlap_upper_fragment_index"] = overlap["upper_fragment"],
+      _["overlap_lower_start"] = overlap["lower_start"],
+      _["overlap_lower_end"] = overlap["lower_end"],
+      _["overlap_upper_start"] = overlap["upper_start"],
+      _["overlap_upper_end"] = overlap["upper_end"],
+      _["overlap_clearance"] = overlap["clearance"],
+      _["prior_overlap_id"] = wrap(prior_overlap_id),
+      _["prior_lower_distance"] = wrap(prior_lower_distance),
+      _["prior_upper_distance"] = wrap(prior_upper_distance),
+      _["finite_geometry"] = finite_geometry,
+      _["finite_control_terrain"] = finite_control_terrain);
+}
+
+std::string lower_road_profile_status(std::string status) {
+  std::transform(
+      status.begin(),
+      status.end(),
+      status.begin(),
+      [](unsigned char value) {
+        return static_cast<char>(std::tolower(value));
+      });
+  return status;
+}
+
+List native_timing_list(
+    const RoadProfileClock::time_point& total_start,
+    double compile_elapsed,
+    double callback_elapsed,
+    double solver_elapsed,
+    double audit_elapsed,
+    double conversion_elapsed,
+    int callback_count) {
+  const double total_elapsed =
+      road_profile_elapsed(total_start, RoadProfileClock::now());
+  return List::create(
+      _["total_elapsed"] = total_elapsed,
+      _["compile_elapsed"] = compile_elapsed,
+      _["solver_elapsed"] = solver_elapsed,
+      _["native_audit_elapsed"] = audit_elapsed,
+      _["callback_count"] = callback_count,
+      _["callback_elapsed"] = callback_elapsed,
+      _["callback_overhead_elapsed"] =
+          callback_elapsed - solver_elapsed,
+      _["Rcpp_conversion_elapsed"] = conversion_elapsed);
+}
+
+List native_component_payload(
+    const List& compiled,
+    int component_id,
+    std::vector<int>& variable,
+    std::vector<int>& constraint_row) {
+  const IntegerVector variable_component =
+      compiled["variable_component"];
+  const List constraint_metadata = compiled["constraint_metadata"];
+  const IntegerVector constraint_component =
+      constraint_metadata["solve_component_id"];
+  const int variable_count = variable_component.size();
+  std::vector<int> variable_local(variable_count, -1);
+  variable.clear();
+  for (int index = 0; index < variable_count; ++index) {
+    if (variable_component[index] == component_id) {
+      variable_local[index] = variable.size();
+      variable.push_back(index);
+    }
+  }
+  constraint_row.clear();
+  std::vector<int> constraint_local(
+      constraint_component.size(), -1);
+  for (R_xlen_t row = 0; row < constraint_component.size(); ++row) {
+    if (constraint_component[row] == component_id) {
+      constraint_local[row] = constraint_row.size();
+      constraint_row.push_back(row);
+    }
+  }
+
+  const List full_p = compiled["P"];
+  const IntegerVector full_p_i = full_p["i"];
+  const IntegerVector full_p_j = full_p["j"];
+  const NumericVector full_p_x = full_p["x"];
+  std::vector<int> p_i;
+  std::vector<int> p_j;
+  std::vector<double> p_x;
+  for (R_xlen_t entry = 0; entry < full_p_x.size(); ++entry) {
+    const int global_i = full_p_i[entry] - 1;
+    const int global_j = full_p_j[entry] - 1;
+    if (global_i <= global_j &&
+        variable_local[global_i] >= 0 &&
+        variable_local[global_j] >= 0) {
+      p_i.push_back(variable_local[global_i] + 1);
+      p_j.push_back(variable_local[global_j] + 1);
+      p_x.push_back(full_p_x[entry]);
+    }
+  }
+
+  const List full_a = compiled["A"];
+  const IntegerVector full_a_i = full_a["i"];
+  const IntegerVector full_a_j = full_a["j"];
+  const NumericVector full_a_x = full_a["x"];
+  std::vector<int> a_i;
+  std::vector<int> a_j;
+  std::vector<double> a_x;
+  for (R_xlen_t entry = 0; entry < full_a_x.size(); ++entry) {
+    const int global_row = full_a_i[entry] - 1;
+    const int global_column = full_a_j[entry] - 1;
+    if (constraint_local[global_row] < 0) {
+      continue;
+    }
+    if (variable_local[global_column] < 0) {
+      stop(
+          "A road profile component constraint references another "
+          "component.");
+    }
+    a_i.push_back(constraint_local[global_row] + 1);
+    a_j.push_back(variable_local[global_column] + 1);
+    a_x.push_back(full_a_x[entry]);
+  }
+
+  const NumericVector full_q = compiled["q"];
+  NumericVector q(variable.size());
+  for (std::size_t index = 0; index < variable.size(); ++index) {
+    q[index] = full_q[variable[index]];
+  }
+  const NumericVector full_lower = compiled["lower"];
+  const NumericVector full_upper = compiled["upper"];
+  NumericVector lower(constraint_row.size());
+  NumericVector upper(constraint_row.size());
+  for (std::size_t row = 0; row < constraint_row.size(); ++row) {
+    lower[row] = full_lower[constraint_row[row]];
+    upper[row] = full_upper[constraint_row[row]];
+  }
+  return List::create(
+      _["component_id"] = component_id,
+      _["variable_count"] = static_cast<int>(variable.size()),
+      _["constraint_count"] =
+          static_cast<int>(constraint_row.size()),
+      _["P"] = List::create(
+          _["i"] = wrap(p_i),
+          _["j"] = wrap(p_j),
+          _["x"] = wrap(p_x)),
+      _["q"] = q,
+      _["A"] = List::create(
+          _["i"] = wrap(a_i),
+          _["j"] = wrap(a_j),
+          _["x"] = wrap(a_x)),
+      _["lower"] = lower,
+      _["upper"] = upper);
+}
+
+double native_constraint_violation(
+    const List& compiled,
+    const NumericVector& solution) {
+  const NumericVector lower = compiled["lower"];
+  const NumericVector upper = compiled["upper"];
+  NumericVector activity(lower.size());
+  const List matrix = compiled["A"];
+  const IntegerVector row = matrix["i"];
+  const IntegerVector column = matrix["j"];
+  const NumericVector value = matrix["x"];
+  for (R_xlen_t entry = 0; entry < value.size(); ++entry) {
+    activity[row[entry] - 1] +=
+        value[entry] * solution[column[entry] - 1];
+  }
+  double maximum = 0.0;
+  for (R_xlen_t constraint = 0;
+       constraint < activity.size();
+       ++constraint) {
+    maximum = std::max(
+        maximum,
+        std::max(
+            lower[constraint] - activity[constraint],
+            activity[constraint] - upper[constraint]));
+  }
+  return maximum;
+}
+
+double negative_margin_violation(double margin) {
+  return std::max(-margin, 0.0);
+}
+
+List native_engineering_audit(
+    const List& compiled,
+    const NumericVector& solution,
+    const List& continuous,
+    double tolerance) {
+  const double maximum_constraint =
+      native_constraint_violation(compiled, solution);
+  const double continuous_violation = std::max(
+      negative_margin_violation(
+          as<double>(continuous["continuous_terrain_margin"])),
+      std::max(
+          negative_margin_violation(
+              as<double>(continuous["continuous_chord_margin"])),
+          negative_margin_violation(as<double>(
+              continuous[
+                  "continuous_overlap_clearance_margin"]))));
+  const bool finite =
+      as<bool>(continuous["finite_profile_coordinates"]);
+  const double maximum = std::max(
+      std::max(maximum_constraint, continuous_violation),
+      finite ? 0.0 : R_PosInf);
+  return List::create(
+      _["passed"] =
+          finite_number(maximum) && maximum <= tolerance && finite,
+      _["tolerance"] = tolerance,
+      _["maximum_violation"] = maximum,
+      _["maximum_constraint_violation"] = maximum_constraint,
+      _["continuous_terrain_margin"] =
+          continuous["continuous_terrain_margin"],
+      _["continuous_chord_margin"] =
+          continuous["continuous_chord_margin"],
+      _["continuous_overlap_clearance_margin"] =
+          continuous[
+              "continuous_overlap_clearance_margin"],
+      _["finite_profile_coordinates"] = finite);
+}
+
+List native_rendered_elevation(
+    const List& audit_specification,
+    const NumericVector& height,
+    const NumericVector& grade) {
+  const AuditSpecification audit(audit_specification);
+  NumericVector elevation(audit.terrain_distance.size());
+  for (R_xlen_t fragment = 0;
+       fragment < audit.fragment_id.size();
+       ++fragment) {
+    const int begin = audit.terrain_start[fragment];
+    const int end = begin + audit.terrain_count[fragment];
+    for (int row = begin; row < end; ++row) {
+      elevation[row] = evaluate_profile(
+          audit,
+          height,
+          grade,
+          fragment,
+          audit.terrain_distance[row])
+                           .height;
+    }
+  }
+  return List::create(
+      _["offset"] = audit.terrain_start,
+      _["elevation"] = elevation);
+}
+
+List trim_native_refinement_trace(
+    const List& trace,
+    int count) {
+  List result(count);
+  for (int iteration = 0; iteration < count; ++iteration) {
+    result[iteration] = trace[iteration];
+  }
+  return result;
+}
+
+}  // namespace
+
+// The adaptive solver retains no native state after returning. Compilation,
+// profile evaluation, auditing, and request deduplication stay in C++; the only
+// C++-to-R callback is one main-thread invocation for one OSQP component solve.
+//
+// [[Rcpp::export]]
+List solve_render_road_profiles_cpp(
+    List specification,
+    Function solve_component,
+    double profile_tolerance,
+    int maximum_refinement_iterations,
+    bool diagnostics = false) {
+  if (!finite_number(profile_tolerance) || profile_tolerance < 0.0) {
+    stop("`profile_tolerance` must be non-negative and finite.");
+  }
+  if (maximum_refinement_iterations < 0) {
+    stop(
+        "`maximum_refinement_iterations` must be a non-negative "
+        "integer.");
+  }
+  const RoadProfileClock::time_point total_start =
+      RoadProfileClock::now();
+  double compile_elapsed = 0.0;
+  double callback_elapsed = 0.0;
+  double solver_elapsed = 0.0;
+  double audit_elapsed = 0.0;
+  double conversion_elapsed = 0.0;
+  int callback_count = 0;
+
+  const List fragment = specification["fragment"];
+  const IntegerVector fragment_id = fragment["id"];
+  std::map<int, int> fragment_index;
+  for (R_xlen_t row = 0; row < fragment_id.size(); ++row) {
+    fragment_index[fragment_id[row]] = row;
+  }
+  const List component = specification["component"];
+  const IntegerVector component_id = component["id"];
+  NativeAdaptiveState adaptive = parse_native_adaptive(specification);
+
+  List compiled;
+  List continuous;
+  List engineering_audit;
+  NumericVector solution;
+  NumericVector height;
+  NumericVector grade;
+  List component_results;
+  CharacterVector component_status;
+  IntegerVector component_iterations;
+  NumericVector component_objective;
+  NumericVector component_primal;
+  NumericVector component_dual;
+  List refinement_requests(maximum_refinement_iterations + 1);
+
+  for (int refinement_iteration = 0;
+       refinement_iteration <= maximum_refinement_iterations;
+       ++refinement_iteration) {
+    checkUserInterrupt();
+    const RoadProfileClock::time_point compile_start =
+        RoadProfileClock::now();
+    compiled = compile_render_road_profile_problem_cpp(
+        specification, compiler_adaptive_list(adaptive));
+    compile_elapsed += road_profile_elapsed(
+        compile_start, RoadProfileClock::now());
+
+    const NumericVector q = compiled["q"];
+    solution = NumericVector(q.size(), NA_REAL);
+    component_results = List(component_id.size());
+    component_status = CharacterVector(component_id.size());
+    component_iterations = IntegerVector(component_id.size());
+    component_objective = NumericVector(component_id.size());
+    component_primal = NumericVector(component_id.size());
+    component_dual = NumericVector(component_id.size());
+    for (R_xlen_t component_index = 0;
+         component_index < component_id.size();
+         ++component_index) {
+      checkUserInterrupt();
+      std::vector<int> variable;
+      std::vector<int> constraint_row;
+      const RoadProfileClock::time_point payload_start =
+          RoadProfileClock::now();
+      const List payload = native_component_payload(
+          compiled,
+          component_id[component_index],
+          variable,
+          constraint_row);
+      conversion_elapsed += road_profile_elapsed(
+          payload_start, RoadProfileClock::now());
+
+      const RoadProfileClock::time_point callback_start =
+          RoadProfileClock::now();
+      const List result = solve_component(payload);
+      callback_elapsed += road_profile_elapsed(
+          callback_start, RoadProfileClock::now());
+      ++callback_count;
+
+      const RoadProfileClock::time_point parse_start =
+          RoadProfileClock::now();
+      if (!result.containsElementNamed("status") ||
+          !result.containsElementNamed("status_message") ||
+          !result.containsElementNamed("x")) {
+        stop(
+            "The road-profile solver callback returned a malformed "
+            "result.");
+      }
+      const NumericVector component_solution = result["x"];
+      const std::string status =
+          as<std::string>(result["status"]);
+      const std::string status_message =
+          as<std::string>(result["status_message"]);
+      const std::string normalized_status =
+          lower_road_profile_status(status);
+      const int iterations =
+          result.containsElementNamed("iterations")
+              ? as<int>(result["iterations"])
+              : NA_INTEGER;
+      const double objective =
+          result.containsElementNamed("objective")
+              ? as<double>(result["objective"])
+              : NA_REAL;
+      const double primal =
+          result.containsElementNamed("primal_residual")
+              ? as<double>(result["primal_residual"])
+              : NA_REAL;
+      const double dual =
+          result.containsElementNamed("dual_residual")
+              ? as<double>(result["dual_residual"])
+              : NA_REAL;
+      const double elapsed =
+          result.containsElementNamed("elapsed")
+              ? as<double>(result["elapsed"])
+              : NA_REAL;
+      if (finite_number(elapsed)) {
+        solver_elapsed += elapsed;
+      }
+      bool finite_solution =
+          component_solution.size() ==
+          static_cast<R_xlen_t>(variable.size());
+      for (R_xlen_t index = 0;
+           finite_solution && index < component_solution.size();
+           ++index) {
+        finite_solution =
+            finite_solution &&
+            finite_number(component_solution[index]);
+      }
+      component_results[component_index] = result;
+      component_status[component_index] = status_message;
+      component_iterations[component_index] = iterations;
+      component_objective[component_index] = objective;
+      component_primal[component_index] = primal;
+      component_dual[component_index] = dual;
+      conversion_elapsed += road_profile_elapsed(
+          parse_start, RoadProfileClock::now());
+      if ((normalized_status != "solved" &&
+           normalized_status != "solved inaccurate") ||
+          !finite_solution) {
+        return List::create(
+            _["success"] = false,
+            _["failure_type"] = "solver",
+            _["component_id"] = component_id[component_index],
+            _["refinement_iteration"] = refinement_iteration,
+            _["solver_result"] = result,
+            _["compiled"] = compiled,
+            _["adaptive"] =
+                external_adaptive_list(adaptive, fragment_id),
+            _["timing"] = native_timing_list(
+                total_start,
+                compile_elapsed,
+                callback_elapsed,
+                solver_elapsed,
+                audit_elapsed,
+                conversion_elapsed,
+                callback_count));
+      }
+      for (std::size_t index = 0; index < variable.size(); ++index) {
+        solution[variable[index]] = component_solution[index];
+      }
+    }
+
+    const List compiled_controls = compiled["controls"];
+    const int control_count =
+        as<IntegerVector>(compiled_controls["fragment_id"]).size();
+    height = NumericVector(control_count);
+    grade = NumericVector(control_count);
+    for (int control = 0; control < control_count; ++control) {
+      height[control] = solution[control];
+      grade[control] = solution[control_count + control];
+    }
+
+    const RoadProfileClock::time_point audit_start =
+        RoadProfileClock::now();
+    const List audit_specification =
+        make_native_audit_specification(
+            specification, compiled, adaptive);
+    continuous = audit_render_road_profiles_cpp(
+        audit_specification,
+        height,
+        grade,
+        profile_tolerance,
+        false);
+    audit_elapsed += road_profile_elapsed(
+        audit_start, RoadProfileClock::now());
+    const List requests = continuous["requests"];
+    refinement_requests[refinement_iteration] = requests;
+    const IntegerVector request_type = requests["type"];
+    if (request_type.size() > 0) {
+      if (
+          refinement_iteration >=
+          maximum_refinement_iterations) {
+        const RoadProfileClock::time_point detailed_start =
+            RoadProfileClock::now();
+        continuous = audit_render_road_profiles_cpp(
+            audit_specification,
+            height,
+            grade,
+            profile_tolerance,
+            true);
+        audit_elapsed += road_profile_elapsed(
+            detailed_start, RoadProfileClock::now());
+        return List::create(
+            _["success"] = false,
+            _["failure_type"] = "refinement",
+            _["failure_reason"] = "iteration_limit",
+            _["refinement_iteration"] = refinement_iteration,
+            _["solution"] = solution,
+            _["height"] = height,
+            _["grade"] = grade,
+            _["components"] = List::create(
+                _["solve_component_id"] = component_id,
+                _["status"] = component_status,
+                _["iterations"] = component_iterations,
+                _["objective"] = component_objective,
+                _["primal_residual"] = component_primal,
+                _["dual_residual"] = component_dual),
+            _["solver_results"] = component_results,
+            _["continuous_diagnostics"] = continuous,
+            _["compiled"] = compiled,
+            _["adaptive"] =
+                external_adaptive_list(adaptive, fragment_id),
+            _["refinement_requests"] =
+                trim_native_refinement_trace(
+                    refinement_requests,
+                    refinement_iteration + 1),
+            _["timing"] = native_timing_list(
+                total_start,
+                compile_elapsed,
+                callback_elapsed,
+                solver_elapsed,
+                audit_elapsed,
+                conversion_elapsed,
+                callback_count));
+      }
+      const int added = append_native_requests(
+          adaptive, requests, fragment_index);
+      if (added == 0) {
+        const RoadProfileClock::time_point detailed_start =
+            RoadProfileClock::now();
+        continuous = audit_render_road_profiles_cpp(
+            audit_specification,
+            height,
+            grade,
+            profile_tolerance,
+            true);
+        audit_elapsed += road_profile_elapsed(
+            detailed_start, RoadProfileClock::now());
+        return List::create(
+            _["success"] = false,
+            _["failure_type"] = "refinement",
+            _["failure_reason"] = "duplicate_request",
+            _["refinement_iteration"] = refinement_iteration,
+            _["solution"] = solution,
+            _["height"] = height,
+            _["grade"] = grade,
+            _["components"] = List::create(
+                _["solve_component_id"] = component_id,
+                _["status"] = component_status,
+                _["iterations"] = component_iterations,
+                _["objective"] = component_objective,
+                _["primal_residual"] = component_primal,
+                _["dual_residual"] = component_dual),
+            _["solver_results"] = component_results,
+            _["continuous_diagnostics"] = continuous,
+            _["compiled"] = compiled,
+            _["adaptive"] =
+                external_adaptive_list(adaptive, fragment_id),
+            _["refinement_requests"] =
+                trim_native_refinement_trace(
+                    refinement_requests,
+                    refinement_iteration + 1),
+            _["timing"] = native_timing_list(
+                total_start,
+                compile_elapsed,
+                callback_elapsed,
+                solver_elapsed,
+                audit_elapsed,
+                conversion_elapsed,
+                callback_count));
+      }
+      continue;
+    }
+
+    engineering_audit = native_engineering_audit(
+        compiled, solution, continuous, profile_tolerance);
+    if (!as<bool>(engineering_audit["passed"])) {
+      int worst_component = 0;
+      for (R_xlen_t component_index = 1;
+           component_index < component_primal.size();
+           ++component_index) {
+        if (component_primal[component_index] >
+            component_primal[worst_component]) {
+          worst_component = component_index;
+        }
+      }
+      bool inaccurate = false;
+      for (R_xlen_t component_index = 0;
+           component_index < component_status.size();
+           ++component_index) {
+        inaccurate =
+            inaccurate ||
+            lower_road_profile_status(
+                as<std::string>(
+                    component_status[component_index])) ==
+                "solved inaccurate";
+      }
+      const RoadProfileClock::time_point detailed_start =
+          RoadProfileClock::now();
+      continuous = audit_render_road_profiles_cpp(
+          audit_specification,
+          height,
+          grade,
+          profile_tolerance,
+          true);
+      audit_elapsed += road_profile_elapsed(
+          detailed_start, RoadProfileClock::now());
+      return List::create(
+          _["success"] = false,
+          _["failure_type"] = "engineering",
+          _["failure_status"] =
+              inaccurate
+                  ? "solved inaccurate; engineering audit failed"
+                  : "engineering audit failed",
+          _["component_id"] = component_id[worst_component],
+          _["refinement_iteration"] = refinement_iteration,
+          _["solution"] = solution,
+          _["height"] = height,
+          _["grade"] = grade,
+          _["components"] = List::create(
+              _["solve_component_id"] = component_id,
+              _["status"] = component_status,
+              _["iterations"] = component_iterations,
+              _["objective"] = component_objective,
+              _["primal_residual"] = component_primal,
+              _["dual_residual"] = component_dual),
+          _["solver_results"] = component_results,
+          _["continuous_diagnostics"] = continuous,
+          _["engineering_audit"] = engineering_audit,
+          _["compiled"] = compiled,
+          _["adaptive"] =
+              external_adaptive_list(adaptive, fragment_id),
+          _["refinement_requests"] =
+              trim_native_refinement_trace(
+                  refinement_requests,
+                  refinement_iteration + 1),
+          _["timing"] = native_timing_list(
+              total_start,
+              compile_elapsed,
+              callback_elapsed,
+              solver_elapsed,
+              audit_elapsed,
+              conversion_elapsed,
+              callback_count));
+    }
+
+    if (diagnostics) {
+      const RoadProfileClock::time_point detailed_start =
+          RoadProfileClock::now();
+      continuous = audit_render_road_profiles_cpp(
+          audit_specification,
+          height,
+          grade,
+          profile_tolerance,
+          true);
+      audit_elapsed += road_profile_elapsed(
+          detailed_start, RoadProfileClock::now());
+    }
+    return List::create(
+        _["success"] = true,
+        _["solution"] = solution,
+        _["controls"] = List::create(
+            _["height"] = height,
+            _["grade"] = grade),
+        _["components"] = List::create(
+            _["solve_component_id"] = component_id,
+            _["status"] = component_status,
+            _["iterations"] = component_iterations,
+            _["objective"] = component_objective,
+            _["primal_residual"] = component_primal,
+            _["dual_residual"] = component_dual),
+        _["solver_results"] = component_results,
+        _["continuous_diagnostics"] = continuous,
+        _["engineering_audit"] = engineering_audit,
+        _["refinement_iterations"] = refinement_iteration,
+        _["rendered_elevation"] = native_rendered_elevation(
+            audit_specification, height, grade),
+        _["compiled"] = compiled,
+        _["adaptive"] =
+            external_adaptive_list(adaptive, fragment_id),
+        _["refinement_requests"] =
+            trim_native_refinement_trace(
+                refinement_requests,
+                refinement_iteration + 1),
+        _["timing"] = native_timing_list(
+            total_start,
+            compile_elapsed,
+            callback_elapsed,
+            solver_elapsed,
+            audit_elapsed,
+            conversion_elapsed,
+            callback_count));
+  }
+  stop("Road-profile refinement ended unexpectedly.");
 }

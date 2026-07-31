@@ -8011,6 +8011,23 @@ prepare_render_road_profile_specification = function(
     junction = junction,
     overlap = overlap,
     continuation = continuation,
+    validity = list(
+      finite_geometry = all(vapply(
+        geometry_info,
+        function(info) {
+          all(is.finite(c(
+            info$coordinates,
+            info$distance,
+            info$length
+          )))
+        },
+        logical(1)
+      )),
+      finite_control_terrain = all(is.finite(c(
+        terrain_distance,
+        terrain_elevation
+      )))
+    ),
     settings = unlist(settings, use.names = TRUE)
   )
   context = list(
@@ -8031,13 +8048,15 @@ prepare_render_road_profile_specification = function(
 #' @param specification Immutable numerical compiler input.
 #' @param context Immutable R-side result context.
 #' @param adaptive_constraints Default `NULL`. Continuous-audit requests.
+#' @param native Default `NULL`. Precompiled native numerical problem.
 #'
 #' @return A `render_road_profile_problem`.
 #' @keywords internal
 compile_render_road_profile_problem = function(
   specification,
   context,
-  adaptive_constraints = NULL
+  adaptive_constraints = NULL,
+  native = NULL
 ) {
   adaptive_constraints = normalize_render_road_adaptive_constraints(
     adaptive_constraints
@@ -8061,26 +8080,28 @@ compile_render_road_profile_problem = function(
     1L
   adaptive_fragment_b[!is.finite(adaptive_constraints$fragment_b)] =
     NA_integer_
-  native = compile_render_road_profile_problem_cpp(
-    specification,
-    list(
-      type = match(
-        adaptive_constraints$type,
-        c(
-          "terrain_floor",
-          "no_dip_chord",
-          "overlap_clearance"
-        )
-      ),
-      fragment_a = as.integer(adaptive_fragment_a),
-      distance_a = as.numeric(adaptive_constraints$distance_a),
-      fragment_b = as.integer(adaptive_fragment_b),
-      distance_b = as.numeric(adaptive_constraints$distance_b),
-      event_id = as.integer(adaptive_constraints$event_id),
-      clearance = as.numeric(adaptive_constraints$clearance),
-      source_margin = as.numeric(adaptive_constraints$source_margin)
+  if (is.null(native)) {
+    native = compile_render_road_profile_problem_cpp(
+      specification,
+      list(
+        type = match(
+          adaptive_constraints$type,
+          c(
+            "terrain_floor",
+            "no_dip_chord",
+            "overlap_clearance"
+          )
+        ),
+        fragment_a = as.integer(adaptive_fragment_a),
+        distance_a = as.numeric(adaptive_constraints$distance_a),
+        fragment_b = as.integer(adaptive_fragment_b),
+        distance_b = as.numeric(adaptive_constraints$distance_b),
+        event_id = as.integer(adaptive_constraints$event_id),
+        clearance = as.numeric(adaptive_constraints$clearance),
+        source_margin = as.numeric(adaptive_constraints$source_margin)
+      )
     )
-  )
+  }
   control = native$controls
   controls = data.frame(
     control_id = seq_along(control$fragment_id),
@@ -9239,7 +9260,7 @@ rebuild_render_road_profile_problem = function(
 #'
 #' @return Solved variables, controls, and component diagnostics.
 #' @keywords internal
-solve_render_road_profile_problem = function(
+solve_render_road_profile_problem_r_reference = function(
   problem,
   verbose = FALSE,
   absolute_tolerance = 1e-7,
@@ -9292,6 +9313,10 @@ solve_render_road_profile_problem = function(
     )
   }
   current_problem = problem
+  refinement_requests = vector(
+    "list",
+    as.integer(maximum_refinement_iterations) + 1L
+  )
   for (refinement_iteration in 0:as.integer(maximum_refinement_iterations)) {
     solved = solve_render_road_profile_components_once(
       problem = current_problem,
@@ -9306,6 +9331,8 @@ solve_render_road_profile_problem = function(
       profile_tolerance,
       diagnostics = FALSE
     )
+    refinement_requests[[refinement_iteration + 1L]] =
+      continuous$requests
     if (nrow(continuous$requests)) {
       if (refinement_iteration >= maximum_refinement_iterations) {
         continuous = find_render_road_profile_continuous_violations(
@@ -9430,9 +9457,385 @@ solve_render_road_profile_problem = function(
     solved$continuous_diagnostics = continuous
     solved$engineering_audit = engineering_audit
     solved$refinement_iterations = refinement_iteration
+    solved$refinement_requests = refinement_requests[
+      seq_len(refinement_iteration + 1L)
+    ]
     return(solved)
   }
   stop("Road-profile refinement ended unexpectedly.", call. = FALSE)
+}
+
+#' Restore native continuous road-profile diagnostics
+#'
+#' @param result Native continuous-audit result.
+#'
+#' @return Continuous diagnostics with standard request names and tables.
+#' @keywords internal
+restore_render_road_profile_continuous_diagnostics = function(result) {
+  request_type = c(
+    "terrain_floor",
+    "no_dip_chord",
+    "overlap_clearance"
+  )
+  requests = as.data.frame(result$requests, stringsAsFactors = FALSE)
+  requests$type = request_type[requests$type]
+  result$requests = normalize_render_road_adaptive_constraints(requests)
+  if (!is.null(result$terrain)) {
+    result$terrain = as.data.frame(
+      result$terrain,
+      stringsAsFactors = FALSE
+    )
+  }
+  if (!is.null(result$chord)) {
+    result$chord = as.data.frame(
+      result$chord,
+      stringsAsFactors = FALSE
+    )
+  }
+  if (!is.null(result$overlap)) {
+    result$overlap = as.data.frame(
+      result$overlap,
+      stringsAsFactors = FALSE
+    )
+  }
+  result
+}
+
+#' Restore one native road-profile solution
+#'
+#' @param result Native adaptive-solver result.
+#' @param problem Final sparse road-profile problem.
+#'
+#' @return A standard `render_road_profile_solution`.
+#' @keywords internal
+restore_render_road_profile_native_solution = function(result, problem) {
+  controls = problem$controls
+  height = if (is.null(result$height)) {
+    result$controls$height
+  } else {
+    result$height
+  }
+  grade = if (is.null(result$grade)) {
+    result$controls$grade
+  } else {
+    result$grade
+  }
+  controls$height = as.numeric(height)
+  controls$grade = as.numeric(grade)
+  components = as.data.frame(
+    result$components,
+    stringsAsFactors = FALSE
+  )
+  solved = list(
+    problem = problem,
+    solution = as.numeric(result$solution),
+    controls = controls,
+    components = components,
+    solver_results = result$solver_results
+  )
+  class(solved) = c("render_road_profile_solution", class(solved))
+  solved
+}
+
+#' Solve sparse quadratic road profiles with a native adaptive loop
+#'
+#' @inheritParams solve_render_road_profile_problem_r_reference
+#'
+#' @return Solved variables, controls, and component diagnostics.
+#' @keywords internal
+solve_render_road_profile_problem = function(
+  problem,
+  verbose = FALSE,
+  absolute_tolerance = 1e-7,
+  relative_tolerance = 1e-7,
+  maximum_iterations = 20000,
+  profile_tolerance = 1e-3,
+  maximum_refinement_iterations = 20
+) {
+  if (!inherits(problem, "render_road_profile_problem")) {
+    stop("`problem` must be a road profile problem.", call. = FALSE)
+  }
+  if (!requireNamespace("osqp", quietly = TRUE)) {
+    stop(
+      "The `osqp` package is required for road profile solving.",
+      call. = FALSE
+    )
+  }
+  absolute_tolerance = assert_render_road_profile_setting(
+    absolute_tolerance,
+    "absolute_tolerance"
+  )
+  relative_tolerance = assert_render_road_profile_setting(
+    relative_tolerance,
+    "relative_tolerance"
+  )
+  profile_tolerance = assert_render_road_profile_setting(
+    profile_tolerance,
+    "profile_tolerance",
+    allow_zero = TRUE
+  )
+  if (
+    !is.numeric(maximum_iterations) ||
+      length(maximum_iterations) != 1L ||
+      !is.finite(maximum_iterations) ||
+      maximum_iterations < 1 ||
+      maximum_iterations != floor(maximum_iterations)
+  ) {
+    stop("`maximum_iterations` must be a positive integer.", call. = FALSE)
+  }
+  if (
+    !is.numeric(maximum_refinement_iterations) ||
+      length(maximum_refinement_iterations) != 1L ||
+      !is.finite(maximum_refinement_iterations) ||
+      maximum_refinement_iterations < 0 ||
+      maximum_refinement_iterations != floor(maximum_refinement_iterations)
+  ) {
+    stop(
+      "`maximum_refinement_iterations` must be a non-negative integer.",
+      call. = FALSE
+    )
+  }
+  if (
+    is.null(problem$profile_specification) ||
+      is.null(problem$profile_context)
+  ) {
+    return(solve_render_road_profile_problem_r_reference(
+      problem = problem,
+      verbose = verbose,
+      absolute_tolerance = absolute_tolerance,
+      relative_tolerance = relative_tolerance,
+      maximum_iterations = maximum_iterations,
+      profile_tolerance = profile_tolerance,
+      maximum_refinement_iterations = maximum_refinement_iterations
+    ))
+  }
+
+  native_specification = problem$profile_specification
+  adaptive_constraints = normalize_render_road_adaptive_constraints(
+    problem$adaptive_constraints
+  )
+  fragment_id = native_specification$fragment$id
+  adaptive_fragment_a = match(
+    adaptive_constraints$fragment_a,
+    fragment_id
+  ) -
+    1L
+  adaptive_fragment_b = match(
+    adaptive_constraints$fragment_b,
+    fragment_id
+  ) -
+    1L
+  adaptive_fragment_b[!is.finite(adaptive_constraints$fragment_b)] =
+    NA_integer_
+  native_specification$adaptive = list(
+    type = match(
+      adaptive_constraints$type,
+      c(
+        "terrain_floor",
+        "no_dip_chord",
+        "overlap_clearance"
+      )
+    ),
+    fragment_a = as.integer(adaptive_fragment_a),
+    distance_a = as.numeric(adaptive_constraints$distance_a),
+    fragment_b = as.integer(adaptive_fragment_b),
+    distance_b = as.numeric(adaptive_constraints$distance_b),
+    event_id = as.integer(adaptive_constraints$event_id),
+    clearance = as.numeric(adaptive_constraints$clearance),
+    source_margin = as.numeric(adaptive_constraints$source_margin)
+  )
+
+  solve_component = function(component) {
+    tryCatch(
+      {
+        matrix_p = Matrix::sparseMatrix(
+          i = component$P$i,
+          j = component$P$j,
+          x = component$P$x,
+          dims = c(
+            component$variable_count,
+            component$variable_count
+          ),
+          symmetric = TRUE
+        )
+        matrix_a = Matrix::sparseMatrix(
+          i = component$A$i,
+          j = component$A$j,
+          x = component$A$x,
+          dims = c(
+            component$constraint_count,
+            component$variable_count
+          )
+        )
+        result = osqp::solve_osqp(
+          P = matrix_p,
+          q = component$q,
+          A = matrix_a,
+          l = component$lower,
+          u = component$upper,
+          pars = osqp::osqpSettings(
+            verbose = verbose,
+            eps_abs = absolute_tolerance,
+            eps_rel = relative_tolerance,
+            max_iter = as.integer(maximum_iterations),
+            polishing = TRUE
+          )
+        )
+        list(
+          x = as.numeric(result$x),
+          status = tolower(result$info$status),
+          status_message = result$info$status,
+          iterations = result$info$iter,
+          objective = result$info$obj_val,
+          primal_residual = result$info$prim_res,
+          dual_residual = result$info$dual_res,
+          elapsed = result$info$run_time
+        )
+      },
+      error = function(error) {
+        list(
+          x = numeric(0),
+          status = "callback error",
+          status_message = conditionMessage(error),
+          iterations = NA_integer_,
+          objective = NA_real_,
+          primal_residual = NA_real_,
+          dual_residual = NA_real_,
+          elapsed = NA_real_
+        )
+      }
+    )
+  }
+
+  native = solve_render_road_profiles_cpp(
+    specification = native_specification,
+    solve_component = solve_component,
+    profile_tolerance = profile_tolerance,
+    maximum_refinement_iterations = as.integer(maximum_refinement_iterations),
+    diagnostics = FALSE
+  )
+  native_adaptive = as.data.frame(
+    native$adaptive,
+    stringsAsFactors = FALSE
+  )
+  native_adaptive$type = c(
+    "terrain_floor",
+    "no_dip_chord",
+    "overlap_clearance"
+  )[native_adaptive$type]
+  native_adaptive = normalize_render_road_adaptive_constraints(
+    native_adaptive
+  )
+  final_problem = compile_render_road_profile_problem(
+    specification = problem$profile_specification,
+    context = problem$profile_context,
+    adaptive_constraints = native_adaptive,
+    native = native$compiled
+  )
+
+  if (!native$success && native$failure_type == "solver") {
+    status = native$solver_result$status_message
+    diagnostics = diagnose_render_road_profile_component(
+      final_problem,
+      native$component_id,
+      status
+    )
+    condition = structure(
+      list(
+        message = sprintf(
+          "Road profile component %d was not solved: %s.",
+          native$component_id,
+          status
+        ),
+        call = NULL,
+        diagnostics = diagnostics
+      ),
+      class = c(
+        "render_road_profile_infeasible",
+        "error",
+        "condition"
+      )
+    )
+    stop(condition)
+  }
+
+  solved = restore_render_road_profile_native_solution(
+    native,
+    final_problem
+  )
+  continuous = restore_render_road_profile_continuous_diagnostics(
+    native$continuous_diagnostics
+  )
+  if (!native$success && native$failure_type == "refinement") {
+    message = if (native$failure_reason == "iteration_limit") {
+      sprintf(
+        paste0(
+          "Road-profile continuous refinement did not converge after ",
+          "%d iterations."
+        ),
+        maximum_refinement_iterations
+      )
+    } else {
+      paste0(
+        "A continuous road-profile violation remained at an ",
+        "already-constrained station."
+      )
+    }
+    condition = structure(
+      list(
+        message = message,
+        call = NULL,
+        diagnostics = continuous,
+        solution = solved
+      ),
+      class = c(
+        "render_road_profile_refinement_failure",
+        "error",
+        "condition"
+      )
+    )
+    stop(condition)
+  }
+  if (!native$success && native$failure_type == "engineering") {
+    status = native$failure_status
+    condition = structure(
+      list(
+        message = sprintf(
+          "Road profile component %d failed after %s.",
+          native$component_id,
+          status
+        ),
+        call = NULL,
+        diagnostics = diagnose_render_road_profile_component(
+          final_problem,
+          native$component_id,
+          status
+        )
+      ),
+      class = c(
+        "render_road_profile_infeasible",
+        "error",
+        "condition"
+      )
+    )
+    stop(condition)
+  }
+  if (!native$success) {
+    stop("Native road-profile solving failed unexpectedly.", call. = FALSE)
+  }
+
+  engineering_audit = native$engineering_audit
+  class(engineering_audit) = c(
+    "render_road_profile_audit",
+    class(engineering_audit)
+  )
+  solved$continuous_diagnostics = continuous
+  solved$engineering_audit = engineering_audit
+  solved$refinement_iterations = native$refinement_iterations
+  solved$refinement_requests = native$refinement_requests
+  solved$rendered_elevation = native$rendered_elevation
+  solved$timing = native$timing
+  solved
 }
 
 

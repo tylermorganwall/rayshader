@@ -109,6 +109,10 @@ compile_render_road_profile_problem_cpp <- function(specification_list, adaptive
     .Call(`_rayshader_compile_render_road_profile_problem_cpp`, specification_list, adaptive_list)
 }
 
+solve_render_road_profiles_cpp <- function(specification, solve_component, profile_tolerance, maximum_refinement_iterations, diagnostics = FALSE) {
+    .Call(`_rayshader_solve_render_road_profiles_cpp`, specification, solve_component, profile_tolerance, maximum_refinement_iterations, diagnostics)
+}
+
 make_spatial_water_fixed_grid_terrain_mesh_cpp <- function(heightmap) {
     .Call(`_rayshader_make_spatial_water_fixed_grid_terrain_mesh_cpp`, heightmap)
 }
