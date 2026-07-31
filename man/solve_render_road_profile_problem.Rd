@@ -2,7 +2,7 @@
 % Please edit documentation in R/render_roads.R
 \name{solve_render_road_profile_problem}
 \alias{solve_render_road_profile_problem}
-\title{Solve sparse quadratic road profiles by component}
+\title{Solve sparse quadratic road profiles with a native adaptive loop}
 \usage{
 solve_render_road_profile_problem(
   problem,
@@ -11,7 +11,8 @@ solve_render_road_profile_problem(
   relative_tolerance = 1e-07,
   maximum_iterations = 20000,
   profile_tolerance = 0.001,
-  maximum_refinement_iterations = 20
+  maximum_refinement_iterations = 20,
+  maximum_requests_per_relation = 1L
 )
 }
 \arguments{
@@ -31,11 +32,15 @@ tolerance in metres for adaptive refinement and the engineering audit.}
 
 \item{maximum_refinement_iterations}{Default \code{20}. Maximum adaptive
 continuous-constraint refinement iterations.}
+
+\item{maximum_requests_per_relation}{Default \code{1L}. Experimental maximum
+number of well-separated refinement requests selected for each fragment
+and request type, or each overlap event. Must be between 1 and 4.}
 }
 \value{
 Solved variables, controls, and component diagnostics.
 }
 \description{
-Solve sparse quadratic road profiles by component
+Solve sparse quadratic road profiles with a native adaptive loop
 }
 \keyword{internal}

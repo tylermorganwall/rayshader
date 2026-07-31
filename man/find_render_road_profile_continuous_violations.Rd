@@ -4,7 +4,12 @@
 \alias{find_render_road_profile_continuous_violations}
 \title{Find continuous road-profile engineering violations}
 \usage{
-find_render_road_profile_continuous_violations(problem, solution, tolerance)
+find_render_road_profile_continuous_violations(
+  problem,
+  solution,
+  tolerance,
+  diagnostics = TRUE
+)
 }
 \arguments{
 \item{problem}{Sparse road profile problem.}
@@ -12,9 +17,12 @@ find_render_road_profile_continuous_violations(problem, solution, tolerance)
 \item{solution}{Solved road profile object.}
 
 \item{tolerance}{Feasibility tolerance in metres.}
+
+\item{diagnostics}{Default \code{TRUE}. Whether to return complete continuous
+check tables.}
 }
 \value{
-Continuous margins, details, and adaptive control requests.
+Continuous margins, optional details, and adaptive control requests.
 }
 \description{
 Find continuous road-profile engineering violations

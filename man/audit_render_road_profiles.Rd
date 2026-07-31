@@ -4,7 +4,12 @@
 \alias{audit_render_road_profiles}
 \title{Audit solved road profile constraints}
 \usage{
-audit_render_road_profiles(problem, solution, tolerance = 1e-06)
+audit_render_road_profiles(
+  problem,
+  solution,
+  tolerance = 1e-06,
+  continuous = NULL
+)
 }
 \arguments{
 \item{problem}{Sparse road profile problem.}
@@ -12,6 +17,9 @@ audit_render_road_profiles(problem, solution, tolerance = 1e-06)
 \item{solution}{Solved road profile object.}
 
 \item{tolerance}{Default \code{1e-6}. Feasibility tolerance.}
+
+\item{continuous}{Default \code{NULL}. An already computed continuous-audit
+result for the same problem, solution, and tolerance.}
 }
 \value{
 Rendering-critical feasibility and continuous-margin diagnostics.

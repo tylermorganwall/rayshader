@@ -2,7 +2,7 @@
 % Please edit documentation in R/render_roads.R
 \name{identify_render_road_profile_anchor_sets}
 \alias{identify_render_road_profile_anchor_sets}
-\title{Classify ground anchors and free solve frontiers}
+\title{Resolve one road-profile control with a checked tolerance}
 \usage{
 identify_render_road_profile_anchor_sets(
   topology,

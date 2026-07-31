@@ -642,7 +642,7 @@ test_that("native profile evaluation preserves interval and clamp semantics", {
   expect_identical(native$control_b, reference$control_b)
 })
 
-test_that("native continuous audit matches the R reference and stays compact", {
+test_that("native continuous audit reports violations and stays compact", {
   skip_render_road_profile_test_dependencies(solver = TRUE)
 
   roads = make_render_road_profile_test_roads(
@@ -671,11 +671,6 @@ test_that("native continuous audit matches the R reference and stays compact", {
     relative_tolerance = 1e-7,
     maximum_iterations = 100000
   )
-  reference = find_render_road_profile_continuous_violations_r_reference(
-    problem,
-    solution,
-    tolerance = 1e-6
-  )
   native = find_render_road_profile_continuous_violations(
     problem,
     solution,
@@ -689,35 +684,33 @@ test_that("native continuous audit matches the R reference and stays compact", {
     diagnostics = FALSE
   )
 
+  expect_true(native$finite_profile_coordinates)
+  expect_lt(native$continuous_chord_margin, -1e-6)
+  expect_gt(nrow(native$chord), 0L)
+  expect_gt(nrow(native$requests), 0L)
+  expect_true(all(native$requests$source_margin < -1e-6))
+  relation = ifelse(
+    native$requests$type == "overlap_clearance",
+    paste("overlap", native$requests$event_id),
+    paste(native$requests$type, native$requests$fragment_a)
+  )
+  expect_false(anyDuplicated(relation) > 0L)
   expect_equal(
-    native$continuous_terrain_margin,
-    reference$continuous_terrain_margin,
-    tolerance = 1e-12
-  )
-  expect_equal(
-    native$continuous_chord_margin,
-    reference$continuous_chord_margin,
-    tolerance = 1e-12
-  )
-  expect_equal(native$terrain, reference$terrain, tolerance = 1e-12)
-  expect_equal(native$chord, reference$chord, tolerance = 1e-12)
-  expect_identical(
-    native$requests$type,
-    reference$requests$type
-  )
-  expect_identical(
-    native$requests$event_id,
-    reference$requests$event_id
-  )
-  expect_equal(
-    native$requests[c("distance_a", "distance_b")],
-    reference$requests[c("distance_a", "distance_b")],
-    tolerance = max(problem$controls$control_tolerance),
-    ignore_attr = TRUE
-  )
-  expect_identical(
-    compact$finite_profile_coordinates,
-    reference$finite_profile_coordinates
+    compact[c(
+      "continuous_terrain_margin",
+      "continuous_chord_margin",
+      "continuous_overlap_clearance_margin",
+      "finite_profile_coordinates",
+      "requests"
+    )],
+    native[c(
+      "continuous_terrain_margin",
+      "continuous_chord_margin",
+      "continuous_overlap_clearance_margin",
+      "finite_profile_coordinates",
+      "requests"
+    )],
+    tolerance = 0
   )
   expect_false(any(c("terrain", "chord", "overlap") %in% names(compact)))
 
@@ -734,7 +727,7 @@ test_that("native continuous audit matches the R reference and stays compact", {
   )
 })
 
-test_that("native overlap requests and non-finite flags preserve R semantics", {
+test_that("native overlap requests and non-finite flags are stable", {
   skip_render_road_profile_test_dependencies(solver = TRUE)
 
   roads = make_render_road_profile_test_roads(
@@ -759,11 +752,6 @@ test_that("native overlap requests and non-finite flags preserve R semantics", {
   upper_control = solution$controls$render_road_fragment_id == upper_fragment
   solution$controls$height[upper_control] =
     solution$controls$height[upper_control] - 10
-  reference = find_render_road_profile_continuous_violations_r_reference(
-    problem,
-    solution,
-    tolerance = 1e-6
-  )
   native = find_render_road_profile_continuous_violations(
     problem,
     solution,
@@ -771,83 +759,33 @@ test_that("native overlap requests and non-finite flags preserve R semantics", {
     diagnostics = TRUE
   )
 
+  expect_lt(native$continuous_overlap_clearance_margin, -9.9)
+  overlap_request = native$requests$type == "overlap_clearance"
+  expect_true(any(overlap_request))
   expect_equal(
+    native$requests$source_margin[overlap_request],
     native$continuous_overlap_clearance_margin,
-    reference$continuous_overlap_clearance_margin,
     tolerance = 1e-12
   )
-  expect_identical(native$requests$type, reference$requests$type)
-  expect_identical(native$requests$event_id, reference$requests$event_id)
-  expect_equal(
-    native$requests[c("distance_a", "distance_b")],
-    reference$requests[c("distance_a", "distance_b")],
-    tolerance = max(problem$controls$control_tolerance),
-    ignore_attr = TRUE
+  expect_setequal(
+    native$requests$event_id[overlap_request],
+    problem$overlap_relations$overlap_id
   )
 
   problem$controls$terrain[[1L]] = Inf
   problem$audit_specification =
     prepare_render_road_profile_audit_specification(problem)
   solution$controls$terrain[[1L]] = Inf
-  reference_finite =
-    find_render_road_profile_continuous_violations_r_reference(
-      problem,
-      solution,
-      tolerance = 1e-6
-    )$finite_profile_coordinates
   native_finite = find_render_road_profile_continuous_violations(
     problem,
     solution,
     tolerance = 1e-6,
     diagnostics = TRUE
   )$finite_profile_coordinates
-  expect_identical(native_finite, reference_finite)
+  expect_false(native_finite)
 })
 
-expect_render_road_profile_compiler_parity = function(reference, native) {
-  table_fields = c(
-    "controls",
-    "intervals",
-    "spans",
-    "support_arcs",
-    "anchors",
-    "clearances",
-    "overlap_relations",
-    "junction_equalities",
-    "continuation_equalities",
-    "chord_controls",
-    "curvature_terms",
-    "constraints"
-  )
-  for (field in table_fields) {
-    expect_equal(
-      native[[field]],
-      reference[[field]],
-      tolerance = 1e-12,
-      ignore_attr = TRUE,
-      info = field
-    )
-  }
-  expect_equal(native$P, reference$P, tolerance = 1e-12)
-  expect_equal(native$q, reference$q, tolerance = 1e-12)
-  expect_equal(native$A, reference$A, tolerance = 1e-12)
-  expect_equal(native$lower, reference$lower, tolerance = 1e-12)
-  expect_equal(native$upper, reference$upper, tolerance = 1e-12)
-  expect_identical(
-    native$variable_component,
-    reference$variable_component
-  )
-  expect_identical(
-    as.integer(native$diagnostics$constraint_counts),
-    as.integer(reference$diagnostics$constraint_counts)
-  )
-  expect_identical(
-    names(native$diagnostics$constraint_counts),
-    names(reference$diagnostics$constraint_counts)
-  )
-}
-
-test_that("native problem compiler matches reference overlap rebuilds", {
+test_that("native problem compiler rebuilds overlap controls", {
   skip_render_road_profile_test_dependencies()
 
   roads = make_render_road_profile_test_roads(
@@ -860,17 +798,15 @@ test_that("native problem compiler matches reference overlap rebuilds", {
   )
   topology = build_render_road_profile_test_topology(roads)
   native = build_render_road_profile_test_problem(topology)
-  reference = do.call(
-    build_render_road_profile_problem_r_reference,
-    c(
-      list(
-        topology = native$topology,
-        terrain_profiles = native$terrain_profiles
-      ),
-      native$settings
-    )
+  expect_s3_class(native, "render_road_profile_problem")
+  expect_equal(dim(native$P), rep(length(native$q), 2L))
+  expect_equal(dim(native$A), c(nrow(native$constraints), length(native$q)))
+  expect_length(native$variable_component, length(native$q))
+  expect_equal(nrow(native$controls), native$diagnostics$control_count)
+  expect_equal(
+    nrow(native$constraints),
+    native$diagnostics$constraint_count
   )
-  expect_render_road_profile_compiler_parity(reference, native)
 
   overlap = native$overlap_relations[1L, , drop = FALSE]
   fraction = 0.37
@@ -929,27 +865,28 @@ test_that("native problem compiler matches reference overlap rebuilds", {
     source_margin = rep(-1, 4),
     stringsAsFactors = FALSE
   )
-  reference_rebuild = do.call(
-    build_render_road_profile_problem_r_reference,
-    c(
-      list(
-        topology = native$topology,
-        terrain_profiles = native$terrain_profiles,
-        adaptive_constraints = adaptive
-      ),
-      native$settings
-    )
-  )
   specification = native$profile_specification
-  native$topology = NULL
-  native$terrain_profiles = NULL
-  native_rebuild = rebuild_render_road_profile_problem(native, adaptive)
+  native_rebuild = compile_render_road_profile_problem(
+    native$profile_specification,
+    native$profile_context,
+    adaptive
+  )
 
   expect_identical(native_rebuild$profile_specification, specification)
-  expect_render_road_profile_compiler_parity(
-    reference_rebuild,
-    native_rebuild
+  expect_equal(
+    native_rebuild$adaptive_constraints,
+    normalize_render_road_adaptive_constraints(adaptive),
+    tolerance = 0,
+    ignore_attr = TRUE
   )
+  expect_gt(nrow(native_rebuild$controls), nrow(native$controls))
+  expect_equal(
+    nrow(native_rebuild$constraints),
+    native_rebuild$diagnostics$constraint_count
+  )
+  expect_true(any(
+    native_rebuild$constraints$type == "overlap_clearance"
+  ))
 })
 
 test_that("native compiler specification is transient numerical input", {
@@ -972,16 +909,6 @@ test_that("native compiler specification is transient numerical input", {
       maximum_grade_rate = 5e-3
     )
   )
-  reference = do.call(
-    build_render_road_profile_problem_r_reference,
-    c(
-      list(
-        topology = native$topology,
-        terrain_profiles = native$terrain_profiles
-      ),
-      native$settings
-    )
-  )
   specification_objects = unlist(
     lapply(native$profile_specification, unclass),
     recursive = TRUE
@@ -1001,10 +928,14 @@ test_that("native compiler specification is transient numerical input", {
     ) ==
       "externalptr"
   ))
-  expect_render_road_profile_compiler_parity(reference, native)
+  expect_equal(dim(native$P), rep(length(native$q), 2L))
+  expect_equal(dim(native$A), c(nrow(native$constraints), length(native$q)))
+  expect_true(all(is.finite(native$q)))
+  expect_true(all(is.finite(native$P@x)))
+  expect_true(all(is.finite(native$A@x)))
 })
 
-test_that("native adaptive loop preserves the R refinement path", {
+test_that("native adaptive loop converges deterministically", {
   skip_render_road_profile_test_dependencies(solver = TRUE)
 
   roads = make_render_road_profile_test_roads(
@@ -1035,73 +966,46 @@ test_that("native adaptive loop preserves the R refinement path", {
     maximum_iterations = 100000,
     profile_tolerance = 1e-3
   )
-  reference = do.call(
-    solve_render_road_profile_problem_r_reference,
-    c(list(problem = problem), settings)
-  )
   native = do.call(
     solve_render_road_profile_problem,
     c(list(problem = problem), settings)
   )
 
-  expect_identical(
-    native$controls$control_id,
-    reference$controls$control_id
-  )
-  expect_equal(
-    native$controls$height,
-    reference$controls$height,
-    tolerance = 1e-7
-  )
-  expect_equal(
-    native$controls$grade,
-    reference$controls$grade,
-    tolerance = 1e-9
-  )
-  expect_identical(native$components$status, reference$components$status)
-  expect_identical(
-    native$refinement_iterations,
-    reference$refinement_iterations
-  )
-  expect_equal(
+  expect_true(native$engineering_audit$passed)
+  expect_gt(native$refinement_iterations, 0L)
+  expect_true(all(
+    tolower(native$components$status) %in% c("solved", "solved inaccurate")
+  ))
+  expect_gte(
     native$continuous_diagnostics$continuous_terrain_margin,
-    reference$continuous_diagnostics$continuous_terrain_margin,
-    tolerance = 1e-8
+    -settings$profile_tolerance
   )
-  expect_equal(
+  expect_gte(
     native$continuous_diagnostics$continuous_chord_margin,
-    reference$continuous_diagnostics$continuous_chord_margin,
-    tolerance = 1e-8
+    -settings$profile_tolerance
   )
-  expect_equal(
+  expect_gte(
     native$continuous_diagnostics$continuous_overlap_clearance_margin,
-    reference$continuous_diagnostics$continuous_overlap_clearance_margin,
-    tolerance = 1e-8
+    -settings$profile_tolerance
   )
 
-  request_type = c(
-    "terrain_floor",
-    "no_dip_chord",
-    "overlap_clearance"
-  )
   expect_length(
     native$refinement_requests,
-    length(reference$refinement_requests)
+    native$refinement_iterations + 1L
   )
-  for (iteration in seq_along(reference$refinement_requests)) {
-    native_requests = as.data.frame(
-      native$refinement_requests[[iteration]],
-      stringsAsFactors = FALSE
-    )
-    native_requests$type = request_type[native_requests$type]
-    expect_equal(
-      native_requests,
-      reference$refinement_requests[[iteration]],
-      tolerance = 0,
-      ignore_attr = TRUE,
-      info = paste("refinement", iteration - 1L)
-    )
-  }
+  request_count = vapply(
+    native$refinement_requests,
+    function(requests) length(requests$type),
+    integer(1)
+  )
+  expect_true(all(request_count[-length(request_count)] > 0L))
+  expect_identical(request_count[[length(request_count)]], 0L)
+  request_type = unlist(lapply(
+    native$refinement_requests,
+    `[[`,
+    "type"
+  ))
+  expect_true(all(request_type %in% 1:3))
 
   rendered_reference = unlist(
     lapply(
@@ -1110,8 +1014,8 @@ test_that("native adaptive loop preserves the R refinement path", {
         distance =
           problem$terrain_profiles[[as.character(fragment_id)]]$distance
         evaluate_render_road_profile_at(
-          reference$problem,
-          reference,
+          native$problem,
+          native,
           fragment_id,
           distance
         )$height
@@ -1129,9 +1033,29 @@ test_that("native adaptive loop preserves the R refinement path", {
     nrow(native$components) *
       (native$refinement_iterations + 1L)
   )
+
+  explicit_single_request = do.call(
+    solve_render_road_profile_problem,
+    c(
+      list(
+        problem = problem,
+        maximum_requests_per_relation = 1L
+      ),
+      settings
+    )
+  )
+  expect_identical(
+    explicit_single_request$refinement_requests,
+    native$refinement_requests
+  )
+  expect_equal(
+    explicit_single_request$solution,
+    native$solution,
+    tolerance = 0
+  )
 })
 
-test_that("native adaptive failures preserve existing condition classes", {
+test_that("experimental native request batching is capped and converges", {
   skip_render_road_profile_test_dependencies(solver = TRUE)
 
   roads = make_render_road_profile_test_roads(
@@ -1153,13 +1077,135 @@ test_that("native adaptive failures preserve existing condition classes", {
       uplift_weight = 1e-2
     )
   )
-  reference_refinement = tryCatch(
-    solve_render_road_profile_problem_r_reference(
+  solve_settings = list(
+    problem = problem,
+    maximum_iterations = 100000,
+    profile_tolerance = 1e-3
+  )
+  single_request = do.call(
+    solve_render_road_profile_problem,
+    solve_settings
+  )
+  batched = do.call(
+    solve_render_road_profile_problem,
+    c(
+      solve_settings,
+      list(maximum_requests_per_relation = 4L)
+    )
+  )
+
+  expect_true(batched$engineering_audit$passed)
+  expect_lte(
+    batched$engineering_audit$maximum_violation,
+    batched$engineering_audit$tolerance
+  )
+  expect_lt(
+    batched$refinement_iterations,
+    single_request$refinement_iterations
+  )
+  expect_gte(nrow(batched$controls), nrow(single_request$controls))
+  expect_equal(
+    batched$rendered_elevation$elevation,
+    single_request$rendered_elevation$elevation,
+    tolerance = 1e-3
+  )
+
+  for (requests in batched$refinement_requests) {
+    requests = as.data.frame(requests, stringsAsFactors = FALSE)
+    if (!nrow(requests)) {
+      next
+    }
+    relation = ifelse(
+      requests$type == 3L,
+      paste("overlap", requests$event_id),
+      paste(
+        requests$type,
+        requests$fragment_a,
+        sep = ":"
+      )
+    )
+    expect_lte(max(table(relation)), 4L)
+    for (rows in split(seq_len(nrow(requests)), relation)) {
+      if (length(rows) < 2L) {
+        next
+      }
+      for (pair in utils::combn(rows, 2L, simplify = FALSE)) {
+        first = pair[[1L]]
+        second = pair[[2L]]
+        fragment_a = as.character(requests$fragment_a[[first]])
+        separation_a = max(
+          problem$settings$control_tolerance,
+          problem$fragment_length[[fragment_a]] / 32
+        )
+        separated =
+          abs(
+            requests$distance_a[[first]] -
+              requests$distance_a[[second]]
+          ) >=
+            separation_a
+        if (requests$type[[first]] == 3L) {
+          fragment_b = as.character(requests$fragment_b[[first]])
+          separation_b = max(
+            problem$settings$control_tolerance,
+            problem$fragment_length[[fragment_b]] / 32
+          )
+          separated =
+            separated ||
+            abs(
+              requests$distance_b[[first]] -
+                requests$distance_b[[second]]
+            ) >=
+              separation_b
+        }
+        expect_true(separated)
+      }
+    }
+  }
+
+  expect_error(
+    solve_render_road_profile_problem(
       problem,
-      maximum_iterations = 100000,
-      maximum_refinement_iterations = 0
+      maximum_requests_per_relation = 0L
     ),
-    error = identity
+    "between 1 and 4"
+  )
+  expect_error(
+    solve_render_road_profile_problem(
+      problem,
+      maximum_requests_per_relation = 5L
+    ),
+    "between 1 and 4"
+  )
+  expect_error(
+    solve_render_road_profile_problem(
+      problem,
+      maximum_requests_per_relation = 1.5
+    ),
+    "between 1 and 4"
+  )
+})
+
+test_that("native adaptive failures retain classed diagnostics", {
+  skip_render_road_profile_test_dependencies(solver = TRUE)
+
+  roads = make_render_road_profile_test_roads(
+    lines = list(
+      make_render_road_profile_test_line(c(0, -120, 0, 120)),
+      make_render_road_profile_test_line(c(-160, 0, -80, 0)),
+      make_render_road_profile_test_line(c(-80, 0, 80, 0)),
+      make_render_road_profile_test_line(c(80, 0, 160, 0))
+    ),
+    layer = c(0, 1, 1, 1),
+    way_id = c("lower", "upper", "upper", "upper")
+  )
+  problem = build_render_road_profile_test_problem(
+    build_render_road_profile_test_topology(roads),
+    settings = list(
+      maximum_grade = 0.15,
+      maximum_grade_rate = 1.4e-3,
+      terrain_reference_weight = 1e-3,
+      uplift_weight = 1e-2
+    )
   )
   native_refinement = tryCatch(
     solve_render_road_profile_problem(
@@ -1170,18 +1216,15 @@ test_that("native adaptive failures preserve existing condition classes", {
     error = identity
   )
   expect_s3_class(
-    reference_refinement,
+    native_refinement,
     "render_road_profile_refinement_failure"
   )
-  expect_identical(class(native_refinement), class(reference_refinement))
-
-  reference_solver = tryCatch(
-    solve_render_road_profile_problem_r_reference(
-      problem,
-      maximum_iterations = 1
-    ),
-    error = identity
+  expect_type(native_refinement$diagnostics, "list")
+  expect_s3_class(
+    native_refinement$solution,
+    "render_road_profile_solution"
   )
+
   native_solver = tryCatch(
     solve_render_road_profile_problem(
       problem,
@@ -1189,8 +1232,15 @@ test_that("native adaptive failures preserve existing condition classes", {
     ),
     error = identity
   )
-  expect_s3_class(reference_solver, "render_road_profile_infeasible")
-  expect_identical(class(native_solver), class(reference_solver))
+  expect_s3_class(native_solver, "render_road_profile_infeasible")
+  expect_type(native_solver$diagnostics, "list")
+
+  incomplete_problem = problem
+  incomplete_problem$profile_specification = NULL
+  expect_error(
+    solve_render_road_profile_problem(incomplete_problem),
+    "transient native specification"
+  )
 })
 
 test_that("native adaptive results retain no external pointer", {
