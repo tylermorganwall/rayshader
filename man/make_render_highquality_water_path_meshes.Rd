@@ -4,10 +4,12 @@
 \alias{make_render_highquality_water_path_meshes}
 \title{Make render_highquality water path meshes}
 \usage{
-make_render_highquality_water_path_meshes(tasks)
+make_render_highquality_water_path_meshes(tasks, verbose = FALSE)
 }
 \arguments{
 \item{tasks}{Water path mesh task list.}
+
+\item{verbose}{Default \code{FALSE}. Whether to display mesh-building progress.}
 }
 \value{
 List of rayrender mesh objects.

@@ -17,8 +17,13 @@ transform_into_heightmap_coords(
   crs = NULL,
   panel = NULL,
   transform_scene = TRUE,
-  caller = NULL
+  caller = NULL,
+  missing_height_group = NULL
 )
+}
+\arguments{
+\item{missing_height_group}{Default \code{NULL}. Optional grouping vector used to
+replace missing heights with the minimum height from the same path.}
 }
 \value{
 x/y/z

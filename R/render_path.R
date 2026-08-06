@@ -1029,6 +1029,123 @@ new_render_line_path_data = function(
   )
 }
 
+#' Convert spatial line features to scene path data
+#'
+#' @param lines Normalized `sf` line features carrying render feature IDs.
+#' @param heightmap Heightmap matrix.
+#' @param extent Scene extent.
+#' @param zscale Effective zscale.
+#'
+#' @return Structured path data without assigned widths.
+#' @keywords internal
+render_spatial_line_path_data = function(
+  lines,
+  heightmap,
+  extent,
+  zscale
+) {
+  scene_path = auto_transform_scene_sf(
+    sf_object = lines,
+    extent = extent,
+    heightmap = heightmap,
+    caller = "render_path"
+  )
+  lines = scene_path$object
+  if (!is.null(scene_path$extent)) {
+    extent = scene_path$extent
+  }
+  filtered_path = filter_scene_sf_to_extent(
+    sf_object = lines,
+    extent = extent,
+    heightmap = heightmap,
+    filter_to_extent = TRUE,
+    caller = "render_path"
+  )
+  lines = coerce_render_path_line_geometry(filtered_path$object)
+  if (is_empty_scene_sf(lines)) {
+    return(list(
+      coords = list(),
+      feature_id = integer(),
+      source_feature_id = list()
+    ))
+  }
+  if (!inherits(lines, "sf")) {
+    stop("Spatial render line metadata requires an `sf` object.", call. = FALSE)
+  }
+
+  line_coordinates = sf::st_coordinates(lines)
+  if (ncol(line_coordinates) == 3L) {
+    groups = line_coordinates[, 3L]
+    geometry_index = line_coordinates[, 3L]
+  } else if (ncol(line_coordinates) == 4L) {
+    groups = interaction(line_coordinates[, 3L], line_coordinates[, 4L])
+    geometry_index = line_coordinates[, 4L]
+  } else {
+    stop(
+      "Spatial render lines must have two-dimensional coordinates.",
+      call. = FALSE
+    )
+  }
+  coordinate_rows = split(seq_len(nrow(line_coordinates)), groups)
+  coordinate_rows = coordinate_rows[lengths(coordinate_rows) >= 2L]
+  if (!length(coordinate_rows)) {
+    return(list(
+      coords = list(),
+      feature_id = integer(),
+      source_feature_id = list()
+    ))
+  }
+  source_row = unname(vapply(
+    coordinate_rows,
+    function(rows) {
+      path_source_row = unique(as.integer(geometry_index[rows]))
+      if (length(path_source_row) != 1L) {
+        stop(
+          "A spatial render path group must belong to exactly one feature.",
+          call. = FALSE
+        )
+      }
+      path_source_row
+    },
+    integer(1L)
+  ))
+  path_lengths = lengths(coordinate_rows)
+  path_group = rep.int(seq_along(coordinate_rows), path_lengths)
+  rows = unlist(coordinate_rows, use.names = FALSE)
+  transformed_coords = transform_into_heightmap_coords(
+    extent,
+    heightmap,
+    line_coordinates[rows, 2L],
+    line_coordinates[rows, 1L],
+    NULL,
+    0,
+    zscale,
+    filter_bounds = FALSE,
+    transform_scene = FALSE,
+    caller = "render_path",
+    missing_height_group = path_group
+  )
+  coord_rows = unname(split(seq_len(nrow(transformed_coords)), path_group))
+  coords = lapply(coord_rows, function(rows) {
+    transformed_coords[rows, , drop = FALSE]
+  })
+  feature_id = vapply(
+    source_row,
+    function(row) {
+      as.integer(lines$render_line_feature_id[[row]])
+    },
+    integer(1L)
+  )
+  source_feature_id = lapply(source_row, function(row) {
+    lines$render_line_source_feature_id[[row]]
+  })
+  list(
+    coords = coords,
+    feature_id = feature_id,
+    source_feature_id = source_feature_id
+  )
+}
+
 #' Render line coordinates by width
 #'
 #' @param lines Normalized spatial line input.
@@ -1094,6 +1211,38 @@ render_line_coords_by_width = function(
     lapply(seq_len(feature_count), as.integer)
   } else {
     list(1L)
+  }
+  if (
+    inherits(lines, "sf") &&
+      (isTRUE(force_by_feature) || length(width) > 1L)
+  ) {
+    spatial_path_data = render_spatial_line_path_data(
+      lines = lines,
+      heightmap = heightmap,
+      extent = extent,
+      zscale = zscale
+    )
+    path_feature_index = match(
+      spatial_path_data$feature_id,
+      feature_id
+    )
+    if (anyNA(path_feature_index)) {
+      stop(
+        "Spatial render path feature metadata did not match the input features.",
+        call. = FALSE
+      )
+    }
+    path_width = if (length(width) == 1L) {
+      rep(width, length(spatial_path_data$coords))
+    } else {
+      width[path_feature_index]
+    }
+    return(new_render_line_path_data(
+      coords = spatial_path_data$coords,
+      width = path_width,
+      feature_id = spatial_path_data$feature_id,
+      source_feature_id = spatial_path_data$source_feature_id
+    ))
   }
   if (
     isTRUE(force_by_feature) &&

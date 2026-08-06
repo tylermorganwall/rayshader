@@ -1,3 +1,29 @@
+#' Create a render_highquality scene-building progress bar
+#'
+#' @param verbose Whether to display scene-building progress.
+#' @param label Progress-bar label.
+#' @param total Number of work units.
+#'
+#' @return A `progress` progress bar, or `NULL` when progress is disabled.
+#' @keywords internal
+new_render_highquality_progress_bar = function(verbose, label, total) {
+  if (!isTRUE(verbose) || !length(total) || total < 1L) {
+    return(NULL)
+  }
+  progress::progress_bar$new(
+    format = paste0(
+      "  ",
+      label,
+      " [:bar] :current/:total (:percent) eta: :eta"
+    ),
+    total = total,
+    clear = FALSE,
+    width = 80,
+    show_after = 0,
+    force = TRUE
+  )
+}
+
 #'@title Render High Quality
 #'
 #'@description Renders a raytraced version of the displayed rgl scene, using the `rayrender` package.
@@ -147,7 +173,9 @@
 #'@param animation_camera_coords Default `NULL`. Expects camera animation output from either [convert_path_to_animation_coords()]
 #'or `rayrender::generate_camera_motion()` functions.
 #'@param plot Default `is.na(filename)`. Whether to plot the scene, or just return the RGBA array.
-#'@param ... Additional parameters to pass to `rayrender::render_scene`()
+#'@param verbose Default `FALSE`. If `TRUE`, displays progress bars while
+#'converting line, stream, and road paths into raytraced scene objects.
+#'@param ... Additional parameters to pass to `rayrender::render_scene()`.
 #'
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
@@ -334,10 +362,16 @@ render_highquality = function(
   rgl_materials = list(),
   animation_camera_coords = NULL,
   plot = is.na(filename),
+  verbose = FALSE,
   ...
 ) {
   text_offset_missing = missing(text_offset)
   scale_text_offset_missing = missing(scale_text_offset)
+  verbose = suppressWarnings(as.logical(verbose))
+  if (!length(verbose) || is.na(verbose[1L])) {
+    stop("`verbose` must be TRUE or FALSE.", call. = FALSE)
+  }
+  verbose = verbose[1L]
   water_material = match.arg(water_material)
   water_roughness = validate_render_highquality_water_roughness(
     water_roughness
@@ -1268,8 +1302,13 @@ render_highquality = function(
   water_path_surface = resolve_render_highquality_water_path_surface()
   water_path_tasks = list()
   road_path_tasks = list()
+  line_progress = new_render_highquality_progress_bar(
+    verbose = verbose,
+    label = "Preparing line paths",
+    total = length(pathids)
+  )
   for (i in seq_len(length(pathids))) {
-    temp_verts = rgl.attrib(pathids[i], "vertices")
+    temp_verts = get_render_source_vertices(pathids[i])
     temp_verts_split = split_render_highquality_path_vertices(temp_verts)
     temp_color = rgl.attrib(pathids[i], "colors")
     temp_lwd_raw = material3d("lwd", id = pathids[i])
@@ -1444,16 +1483,28 @@ render_highquality = function(
       }
       counter = counter + 1
     }
+    if (!is.null(line_progress)) {
+      line_progress$tick()
+    }
   }
   water_path_meshes = if (isTRUE(joined_stream_mesh)) {
-    make_render_highquality_joined_water_path_meshes(water_path_tasks)
+    make_render_highquality_joined_water_path_meshes(
+      water_path_tasks,
+      verbose = verbose
+    )
   } else {
-    make_render_highquality_water_path_meshes(water_path_tasks)
+    make_render_highquality_water_path_meshes(
+      water_path_tasks,
+      verbose = verbose
+    )
   }
   if (length(water_path_meshes) > 0) {
     pathline = c(pathline, water_path_meshes)
   }
-  road_path_meshes = make_render_highquality_road_path_meshes(road_path_tasks)
+  road_path_meshes = make_render_highquality_road_path_meshes(
+    road_path_tasks,
+    verbose = verbose
+  )
   if (length(road_path_meshes) > 0) {
     pathline = c(pathline, road_path_meshes)
   }

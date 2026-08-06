@@ -26,9 +26,9 @@ render_roads(
   lane_texture_mapping = c("auto", "fixed"),
   lanes = 2,
   lane_width = 3,
-  lane_color = "white",
-  centerline_color = "#ffd23f",
-  edge_line_color = "white",
+  lane_color = "#eeeade",
+  centerline_color = "#eeeade",
+  edge_line_color = "#d6ad3d",
   lane_line_width = 0.035,
   lane_dash_fraction = NULL,
   clear_previous = TRUE
@@ -140,9 +140,9 @@ total outside the edge lines, split between both sides.}
 
 \item{lane_color}{Default \code{"white"}. Color for dashed lane divider markings.}
 
-\item{centerline_color}{Default \code{"#ffd23f"}. Color for the center divider.}
+\item{centerline_color}{Default \code{"#eeeade"}. Color for the center divider.}
 
-\item{edge_line_color}{Default \code{"white"}. Color for solid edge markings.}
+\item{edge_line_color}{Default \code{"#d6ad3d"}. Color for solid edge markings.}
 
 \item{lane_line_width}{Default \code{0.035}. Lane marking width as a fraction of
 the road width in the generated texture.}

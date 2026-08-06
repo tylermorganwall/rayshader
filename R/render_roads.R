@@ -86,8 +86,8 @@
 #' `lane_width * (lanes + 2)`. The generated lane texture leaves one lane width
 #' total outside the edge lines, split between both sides.
 #' @param lane_color Default `"white"`. Color for dashed lane divider markings.
-#' @param centerline_color Default `"#ffd23f"`. Color for the center divider.
-#' @param edge_line_color Default `"white"`. Color for solid edge markings.
+#' @param centerline_color Default `"#eeeade"`. Color for the center divider.
+#' @param edge_line_color Default `"#d6ad3d"`. Color for solid edge markings.
 #' @param lane_line_width Default `0.035`. Lane marking width as a fraction of
 #' the road width in the generated texture.
 #' @param lane_dash_fraction Default `NULL`, which uses
@@ -123,9 +123,9 @@ render_roads = function(
   lane_texture_mapping = c("auto", "fixed"),
   lanes = 2,
   lane_width = 3,
-  lane_color = "white",
-  centerline_color = "#ffd23f",
-  edge_line_color = "white",
+  lane_color = "#eeeade",
+  centerline_color = "#eeeade",
+  edge_line_color = "#d6ad3d",
   lane_line_width = 0.035,
   lane_dash_fraction = NULL,
   clear_previous = TRUE
@@ -651,12 +651,17 @@ render_roads = function(
   attr(coord_list, "mesh_chain_members") = mesh_chain_members
 
   # 8. Draw preview paths and register the compact high-quality mesh contract.
+  rgl_preview_offset = 0.01
   road_id_by_path = rep(NA_integer_, length(coord_list))
+  previous_rgl_parameters = rgl::par3d(skipRedraw = TRUE)
+  on.exit(rgl::par3d(previous_rgl_parameters), add = TRUE)
   for (coord_index in seq_along(coord_list)) {
     coord = coord_list[[coord_index]]
     if (is.matrix(coord) && nrow(coord) >= 2) {
+      preview_coord = coord
+      preview_coord[, 2] = preview_coord[, 2] + rgl_preview_offset
       road_id = rgl::lines3d(
-        coord,
+        preview_coord,
         color = roadcolor,
         tag = "road_path",
         lwd = coord_width[[coord_index]],
@@ -711,7 +716,8 @@ render_roads = function(
         texture_length = texture_mapping$texture_length[[coord_index]],
         texture_repeats = texture_repeats,
         texture_world_scale = texture_mapping$texture_world_scale,
-        terrain_following = coord_terrain_following[[coord_index]]
+        terrain_following = coord_terrain_following[[coord_index]],
+        rgl_preview_offset = rgl_preview_offset
       )
     )
   }
@@ -6917,6 +6923,8 @@ normalize_render_road_world_scale = function(texture_world_scale) {
 #' Make default road lane texture
 #'
 #' @inheritParams render_roads
+#' @param centerline_color Default `"#ffd23f"`. Color for the center divider.
+#' @param edge_line_color Default `"white"`. Color for solid edge markings.
 #' @param size Default `128`. Texture width/height in pixels.
 #'
 #' @return Texture file path.
@@ -7493,6 +7501,35 @@ get_render_road_path_info = function(id) {
   )
 }
 
+#' Get source vertices for a rendered rgl object
+#'
+#' @param id rgl object identifier.
+#'
+#' @return Vertex matrix with any display-only road height offset removed.
+#' @keywords internal
+get_render_source_vertices = function(id) {
+  vertices = rgl::rgl.attrib(id, "vertices")
+  road_path_info = get_render_road_path_info(id)
+  preview_offset = road_path_info$rgl_preview_offset
+  if (is.null(preview_offset)) {
+    return(vertices)
+  }
+  preview_offset = tryCatch(
+    suppressWarnings(as.numeric(preview_offset[[1L]])),
+    error = function(error) NA_real_
+  )
+  if (
+    length(preview_offset) == 1L &&
+      is.finite(preview_offset) &&
+      preview_offset != 0 &&
+      is.matrix(vertices) &&
+      ncol(vertices) >= 2L
+  ) {
+    vertices[, 2] = vertices[, 2] - preview_offset
+  }
+  vertices
+}
+
 #' Clear road path info
 #'
 #' @param id Default `NULL`. Optional id to clear.
@@ -7902,39 +7939,92 @@ assemble_render_road_mesh_chain_tasks = function(
 #' Make high-quality road path meshes
 #'
 #' @param tasks Road path task list.
+#' @param verbose Default `FALSE`. Whether to display mesh-building progress.
 #'
 #' @return List of rayrender mesh objects.
 #' @keywords internal
-make_render_highquality_road_path_meshes = function(tasks) {
+make_render_highquality_road_path_meshes = function(
+  tasks,
+  verbose = FALSE
+) {
   tasks = attach_render_road_mesh_task_metadata(tasks)
+  if (!length(tasks)) {
+    return(tasks)
+  }
   chain_tasks = assemble_render_road_mesh_chain_tasks(tasks)
   chain_members = attr(chain_tasks, "mesh_chain_members")
   envelope_sections = attr(chain_tasks, "envelope_sections")
   chain_diagnostics = attr(chain_tasks, "mesh_chain_diagnostics")
-  chain_meshes = lapply(seq_along(chain_tasks), function(chain_index) {
+  mesh_progress = new_render_highquality_progress_bar(
+    verbose = verbose,
+    label = "Converting roads to meshes",
+    total = length(chain_tasks)
+  )
+  mesh_results = vector("list", length(chain_tasks))
+  for (chain_index in seq_along(chain_tasks)) {
+    mesh_results[[chain_index]] =
+      make_render_highquality_road_chain_mesh_result(
+        chain_tasks[[chain_index]]
+      )
+    if (!is.null(mesh_progress)) {
+      mesh_progress$tick()
+    }
+  }
+  for (chain_index in seq_along(mesh_results)) {
+    mesh_result = mesh_results[[chain_index]]
+    if (!isTRUE(mesh_result$failed)) {
+      next
+    }
     task = chain_tasks[[chain_index]]
-    tryCatch(
-      do.call(make_render_highquality_road_chain_mesh, task),
-      error = function(error) {
-        mesh_chain_id = attr(task, "mesh_topology")$mesh_chain_id
-        source_task = chain_members$render_road_fragment_id[
-          chain_members$mesh_chain_id == mesh_chain_id
-        ]
-        stop(
-          sprintf(
-            paste0(
-              "High-quality road mesh chain %i (source tasks %s) ",
-              "failed: %s"
-            ),
-            chain_index,
-            paste(source_task, collapse = ", "),
-            conditionMessage(error)
-          ),
-          call. = FALSE
+    mesh_chain_id = attr(task, "mesh_topology")$mesh_chain_id
+    source_task = chain_members$render_road_fragment_id[
+      chain_members$mesh_chain_id == mesh_chain_id
+    ]
+    stop(
+      sprintf(
+        paste0(
+          "High-quality road mesh chain %i (source tasks %s) ",
+          "failed: %s"
+        ),
+        chain_index,
+        paste(source_task, collapse = ", "),
+        paste0(
+          mesh_result$sweep_error,
+          " Buffered fallback failed: ",
+          mesh_result$fallback_error,
+          "."
         )
-      }
+      ),
+      call. = FALSE
     )
-  })
+  }
+  chain_meshes = lapply(mesh_results, `[[`, "mesh")
+  buffered_fallback = vapply(
+    chain_meshes,
+    function(mesh) {
+      isTRUE(attr(mesh, "render_road_buffered_fallback")$used)
+    },
+    logical(1)
+  )
+  buffered_fallback_count = sum(buffered_fallback)
+  if (buffered_fallback_count) {
+    fallback_label = if (buffered_fallback_count == 1L) {
+      "chain"
+    } else {
+      "chains"
+    }
+    warning(
+      sprintf(
+        paste0(
+          "Used the terrain-buffered road mesh fallback for %i %s with ",
+          "self-overlapping sweeps."
+        ),
+        buffered_fallback_count,
+        fallback_label
+      ),
+      call. = FALSE
+    )
+  }
   chain_meshes = Filter(Negate(is.null), chain_meshes)
   mesh_groups = lapply(chain_meshes, function(mesh) {
     if (inherits(mesh, "render_road_mesh_group")) {
@@ -7945,8 +8035,111 @@ make_render_highquality_road_path_meshes = function(tasks) {
   meshes = do.call(c, mesh_groups)
   attr(meshes, "mesh_chain_members") = chain_members
   attr(meshes, "envelope_sections") = envelope_sections
+  chain_diagnostics$buffered_fallback_count = buffered_fallback_count
+  chain_diagnostics$buffered_fallback_chain_id = vapply(
+    chain_tasks[buffered_fallback],
+    function(task) attr(task, "mesh_topology")$mesh_chain_id,
+    integer(1)
+  )
   attr(meshes, "mesh_chain_diagnostics") = chain_diagnostics
   meshes
+}
+
+#' Build one high-quality road chain mesh with fallback diagnostics
+#'
+#' @param task Assembled road mesh-chain task.
+#'
+#' @return List containing the mesh and captured errors.
+#' @keywords internal
+make_render_highquality_road_chain_mesh_result = function(task) {
+  sweep_result = tryCatch(
+    list(
+      mesh = do.call(make_render_highquality_road_chain_mesh, task),
+      error = NULL
+    ),
+    error = function(error) {
+      list(mesh = NULL, error = conditionMessage(error))
+    }
+  )
+  if (is.null(sweep_result$error)) {
+    return(list(
+      mesh = sweep_result$mesh,
+      failed = FALSE,
+      sweep_error = NULL,
+      fallback_error = NULL
+    ))
+  }
+  fallback_result = tryCatch(
+    list(
+      mesh = make_render_highquality_buffered_road_chain_mesh(
+        task = task,
+        sweep_error = simpleError(sweep_result$error)
+      ),
+      error = NULL
+    ),
+    error = function(error) {
+      list(mesh = NULL, error = conditionMessage(error))
+    }
+  )
+  list(
+    mesh = fallback_result$mesh,
+    failed = !is.null(fallback_result$error),
+    sweep_error = sweep_result$error,
+    fallback_error = fallback_result$error
+  )
+}
+
+#' Make a terrain-buffered fallback for a self-overlapping road sweep
+#'
+#' @param task Assembled road mesh-chain task.
+#' @param sweep_error Error raised by the ordinary road sweep.
+#'
+#' @return Rayrender mesh object with fallback diagnostics.
+#' @keywords internal
+make_render_highquality_buffered_road_chain_mesh = function(
+  task,
+  sweep_error
+) {
+  if (!isTRUE(task$terrain_following)) {
+    stop(
+      "the chain has an absolute or layered elevation profile",
+      call. = FALSE
+    )
+  }
+  texture_file = task$texture_file
+  has_texture = length(texture_file) &&
+    !all(is.na(texture_file)) &&
+    any(nzchar(texture_file))
+  if (has_texture) {
+    stop("the chain uses a road texture", call. = FALSE)
+  }
+  if (
+    !is.null(task$material_sections) &&
+      length(task$material_sections) > 1L
+  ) {
+    stop("the chain has multiple material sections", call. = FALSE)
+  }
+  if (!requireNamespace("sf", quietly = TRUE)) {
+    stop("the `sf` package is unavailable", call. = FALSE)
+  }
+  fallback_task = task
+  if (isTRUE(fallback_task$closed)) {
+    fallback_task$points = rbind(
+      fallback_task$points,
+      fallback_task$points[1L, , drop = FALSE]
+    )
+  }
+  mesh = make_render_highquality_joined_water_path_mesh(
+    tasks = list(fallback_task),
+    seal_epsilon = 0,
+    bottom_cap = TRUE,
+    height = 0.11
+  )
+  attr(mesh, "render_road_buffered_fallback") = list(
+    used = TRUE,
+    sweep_error = conditionMessage(sweep_error)
+  )
+  mesh
 }
 
 #' Resolve a road vertex join style
@@ -9417,7 +9610,20 @@ make_render_highquality_road_chain_mesh = function(
   )))
   stabilization = NULL
   if (length(inverted_segment)) {
-    stabilization_fraction = c(0.2, 0.3, 0.4, 0.6, 0.8, 1)
+    stabilization_fraction = c(
+      0.2,
+      0.3,
+      0.4,
+      0.6,
+      0.8,
+      1,
+      1.5,
+      2,
+      3,
+      4,
+      6,
+      8
+    )
     stabilization_attempt = vector(
       "list",
       length(stabilization_fraction)

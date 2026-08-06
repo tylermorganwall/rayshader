@@ -1,5 +1,8 @@
 #' Get Position from Lat/Long and heightmap/extent
 #'
+#' @param missing_height_group Default `NULL`. Optional grouping vector used to
+#' replace missing heights with the minimum height from the same path.
+#'
 #' @return x/y/z
 #' @keywords internal
 #'
@@ -18,7 +21,8 @@ transform_into_heightmap_coords = function(
   crs = NULL,
   panel = NULL,
   transform_scene = TRUE,
-  caller = NULL
+  caller = NULL,
+  missing_height_group = NULL
 ) {
   altitude_supplied = !is.null(altitude)
   offset = offset / zscale
@@ -150,11 +154,45 @@ transform_into_heightmap_coords = function(
         "Some coords outside of heightmap extent--the altitude of those points have been set to the heightmap minimum."
       )
     }
-    replacement_height = suppressWarnings(min(matrix_vals[, 2], na.rm = TRUE))
-    if (!is.finite(replacement_height)) {
-      replacement_height = min(heightmap, na.rm = TRUE) / zscale + offset
+    fallback_height = NULL
+    if (is.null(missing_height_group)) {
+      replacement_height = suppressWarnings(min(
+        matrix_vals[, 2],
+        na.rm = TRUE
+      ))
+      if (!is.finite(replacement_height)) {
+        fallback_height = min(heightmap, na.rm = TRUE) / zscale + offset
+        replacement_height = fallback_height
+      }
+      matrix_vals[missing_height, 2] = replacement_height
+    } else {
+      if (length(missing_height_group) != nrow(matrix_vals)) {
+        stop(
+          "Missing-height groups must match the number of coordinates.",
+          call. = FALSE
+        )
+      }
+      if (anyNA(missing_height_group)) {
+        stop(
+          "Missing-height groups cannot contain missing values.",
+          call. = FALSE
+        )
+      }
+      for (group in unique(missing_height_group[missing_height])) {
+        group_rows = missing_height_group == group
+        replacement_height = suppressWarnings(min(
+          matrix_vals[group_rows, 2],
+          na.rm = TRUE
+        ))
+        if (!is.finite(replacement_height)) {
+          if (is.null(fallback_height)) {
+            fallback_height = min(heightmap, na.rm = TRUE) / zscale + offset
+          }
+          replacement_height = fallback_height
+        }
+        matrix_vals[missing_height & group_rows, 2] = replacement_height
+      }
     }
-    matrix_vals[missing_height, 2] = replacement_height
   }
   return(matrix_vals)
 }

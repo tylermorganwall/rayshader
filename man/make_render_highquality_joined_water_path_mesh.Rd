@@ -7,7 +7,8 @@
 make_render_highquality_joined_water_path_mesh(
   tasks,
   seal_epsilon = NULL,
-  bottom_cap = TRUE
+  bottom_cap = TRUE,
+  height = NULL
 )
 }
 \arguments{
@@ -18,6 +19,9 @@ units. When \code{NULL}, uses a width-scaled epsilon.}
 
 \item{bottom_cap}{Default \code{TRUE}. Whether to add a hidden bottom cap below the
 terrain surface.}
+
+\item{height}{Default \code{NULL}, which uses 20 percent of the path width.
+Extrusion height above the terrain surface in scene units.}
 }
 \value{
 Rayrender mesh object.

@@ -4,10 +4,12 @@
 \alias{make_render_highquality_road_path_meshes}
 \title{Make high-quality road path meshes}
 \usage{
-make_render_highquality_road_path_meshes(tasks)
+make_render_highquality_road_path_meshes(tasks, verbose = FALSE)
 }
 \arguments{
 \item{tasks}{Road path task list.}
+
+\item{verbose}{Default \code{FALSE}. Whether to display mesh-building progress.}
 }
 \value{
 List of rayrender mesh objects.

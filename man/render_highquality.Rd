@@ -78,6 +78,7 @@ render_highquality(
   rgl_materials = list(),
   animation_camera_coords = NULL,
   plot = is.na(filename),
+  verbose = FALSE,
   ...
 )
 }
@@ -295,7 +296,10 @@ or \code{rayrender::generate_camera_motion()} functions.}
 
 \item{plot}{Default \code{is.na(filename)}. Whether to plot the scene, or just return the RGBA array.}
 
-\item{...}{Additional parameters to pass to \code{rayrender::render_scene}()}
+\item{verbose}{Default \code{FALSE}. If \code{TRUE}, displays progress bars while
+converting line, stream, and road paths into raytraced scene objects.}
+
+\item{...}{Additional parameters to pass to \code{rayrender::render_scene()}.}
 }
 \description{
 Renders a raytraced version of the displayed rgl scene, using the \code{rayrender} package.

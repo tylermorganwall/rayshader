@@ -93,7 +93,7 @@ save_obj = function(
   # allvertices = matrix(nrow=0,ncol=3) #Debug line
   #Writes data and increments vertex/normal/texture counter
   write_data = function(id, con) {
-    vertices = rgl.attrib(id, "vertices")
+    vertices = get_render_source_vertices(id)
     vertices[is.na(vertices)] = 0
     # allvertices <<- rbind(allvertices,vertices) #Debug line
     textures = rgl.attrib(id, "texcoords")
@@ -605,7 +605,7 @@ save_obj = function(
         cat("usemtl ray_surface", file = con, sep = "\n")
       }
       dims = rgl::rgl.attrib(vertex_info$id[row], "dim")
-      vertices_y = rgl.attrib(vertex_info$id[row], "vertices")[, 2]
+      vertices_y = get_render_source_vertices(vertex_info$id[row])[, 2]
       if (
         !is.na(vertex_info$startindexnormals[row]) &&
           !is.na(vertex_info$endindexnormals[row])
@@ -698,7 +698,7 @@ save_obj = function(
         hasnormals = FALSE
       }
       dims = rgl::rgl.attrib(vertex_info$id[row], "dim")
-      vertices_y = rgl.attrib(vertex_info$id[row], "vertices")[, 2]
+      vertices_y = get_render_source_vertices(vertex_info$id[row])[, 2]
       nx = dims[1]
       nz = dims[2]
       indices = rep(0, 6 * (nz - 1) * (nx - 1))

@@ -547,19 +547,28 @@ resolve_render_highquality_water_path_surface = function() {
 #' Make render_highquality water path meshes
 #'
 #' @param tasks Water path mesh task list.
+#' @param verbose Default `FALSE`. Whether to display mesh-building progress.
 #'
 #' @return List of rayrender mesh objects.
 #' @keywords internal
-make_render_highquality_water_path_meshes = function(tasks) {
+make_render_highquality_water_path_meshes = function(tasks, verbose = FALSE) {
   if (!length(tasks)) {
     return(list())
   }
+  mesh_progress = new_render_highquality_progress_bar(
+    verbose = verbose,
+    label = "Converting stream lines to meshes",
+    total = length(tasks)
+  )
   meshes = vector("list", length(tasks))
   for (index in seq_along(tasks)) {
     meshes[[index]] = do.call(
       make_render_highquality_water_path_mesh,
       tasks[[index]]
     )
+    if (!is.null(mesh_progress)) {
+      mesh_progress$tick()
+    }
   }
   Filter(Negate(is.null), meshes)
 }
@@ -567,16 +576,26 @@ make_render_highquality_water_path_meshes = function(tasks) {
 #' Make joined render_highquality water path meshes
 #'
 #' @param tasks Water path mesh task list.
+#' @param verbose Default `FALSE`. Whether to display mesh-building progress.
 #' @param ... Additional arguments passed to
 #' [make_render_highquality_joined_water_path_mesh()].
 #'
 #' @return List of rayrender mesh objects.
 #' @keywords internal
-make_render_highquality_joined_water_path_meshes = function(tasks, ...) {
+make_render_highquality_joined_water_path_meshes = function(
+  tasks,
+  verbose = FALSE,
+  ...
+) {
   if (!length(tasks)) {
     return(list())
   }
   groups = group_render_highquality_water_path_tasks(tasks)
+  mesh_progress = new_render_highquality_progress_bar(
+    verbose = verbose,
+    label = "Converting stream lines to meshes",
+    total = length(groups)
+  )
   meshes = list()
   warned = FALSE
   warn_fallback = function(message) {
@@ -599,9 +618,18 @@ make_render_highquality_joined_water_path_meshes = function(tasks, ...) {
     )
     if (is.null(mesh)) {
       warn_fallback("empty joined mesh")
-      meshes = c(meshes, make_render_highquality_water_path_meshes(group$tasks))
+      meshes = c(
+        meshes,
+        make_render_highquality_water_path_meshes(
+          group$tasks,
+          verbose = FALSE
+        )
+      )
     } else {
       meshes[[length(meshes) + 1L]] = mesh
+    }
+    if (!is.null(mesh_progress)) {
+      mesh_progress$tick()
     }
   }
   meshes
@@ -674,13 +702,16 @@ group_render_highquality_water_path_tasks = function(tasks) {
 #' units. When `NULL`, uses a width-scaled epsilon.
 #' @param bottom_cap Default `TRUE`. Whether to add a hidden bottom cap below the
 #' terrain surface.
+#' @param height Default `NULL`, which uses 20 percent of the path width.
+#' Extrusion height above the terrain surface in scene units.
 #'
 #' @return Rayrender mesh object.
 #' @keywords internal
 make_render_highquality_joined_water_path_mesh = function(
   tasks,
   seal_epsilon = NULL,
-  bottom_cap = TRUE
+  bottom_cap = TRUE,
+  height = NULL
 ) {
   if (!requireNamespace("sf", quietly = TRUE)) {
     stop("The `sf` package is required for joined stream meshes.")
@@ -768,7 +799,11 @@ make_render_highquality_joined_water_path_mesh = function(
   if (any(!is.finite(terrain_y))) {
     stop("Joined stream mesh height sampling produced non-finite values.")
   }
-  height = group$width * 0.2
+  if (is.null(height)) {
+    height = group$width * 0.2
+  } else {
+    height = resolve_render_positive_number(height, "height")
+  }
   if (is.null(seal_epsilon)) {
     seal_epsilon = max(group$width, 1) * 1e-5
   } else {

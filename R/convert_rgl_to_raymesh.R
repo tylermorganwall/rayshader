@@ -69,7 +69,7 @@ convert_rgl_to_raymesh = function(
       byrow = TRUE
     ) -
       1
-    vertices = rgl.attrib(vertex_info$id[row], "vertices")
+    vertices = get_render_source_vertices(vertex_info$id[row])
     if (nrow(indices) == 0 && !quads) {
       indices = matrix(
         seq_len(nrow(vertices)) - 1,
@@ -165,7 +165,7 @@ convert_rgl_to_raymesh = function(
         substr(vertex_info$tag[row], 1, 12) != "surface_tris"
     ) {
       dims = rgl::rgl.attrib(vertex_info$id[row], "dim")
-      vertices = rgl.attrib(vertex_info$id[row], "vertices")
+      vertices = get_render_source_vertices(vertex_info$id[row])
       textures = rgl.attrib(vertex_info$id[row], "texcoords")
       vertices_y = vertices[, 2]
       #Need to add has_normals

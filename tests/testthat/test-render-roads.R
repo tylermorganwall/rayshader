@@ -53,8 +53,13 @@ test_that("render_roads caches road metadata by rgl id", {
     ))),
     0
   )
+  preview_vertices = rgl::rgl.attrib(road_path_ids$id[[1]], "vertices")
+  expect_equal(unname(unique(preview_vertices[, 2])), 0.01, tolerance = 1e-7)
+  source_vertices = get_render_source_vertices(road_path_ids$id[[1]])
+  expect_equal(unname(unique(source_vertices[, 2])), 0, tolerance = 1e-7)
 
   road_info = get_render_road_path_info(road_path_ids$id[[1]])
+  expect_equal(road_info$rgl_preview_offset, 0.01)
   expect_true(file.exists(road_info$texture_file))
   expect_equal(road_info$lanes, 2L)
   expect_equal(road_info$width, 0.5)
@@ -70,6 +75,240 @@ test_that("render_roads caches road metadata by rgl id", {
     logical(1)
   )))
   expect_no_condition(rayrender:::process_scene(scene))
+
+  captured = new.env(parent = emptyenv())
+  testthat::local_mocked_bindings(
+    make_render_highquality_road_path_meshes = function(
+      tasks,
+      verbose = FALSE,
+      parallel = FALSE
+    ) {
+      captured$tasks = tasks
+      captured$verbose = verbose
+      captured$parallel = parallel
+      list()
+    },
+    .package = "rayshader"
+  )
+  expect_no_condition(render_highquality(return_scene = TRUE, light = FALSE))
+  expect_false(captured$verbose)
+  expect_false(captured$parallel)
+  expect_equal(
+    captured$tasks[[1L]]$points[, 2],
+    road_coords[[1L]][, 2],
+    tolerance = 1e-7
+  )
+})
+
+test_that("non-rgl converters remove the road preview offset", {
+  rgl::open3d(useNULL = TRUE)
+  on.exit(rgl::close3d(), add = TRUE)
+  road_geometry_id = rgl::triangles3d(
+    x = c(0, 1, 0),
+    y = rep(0.01, 3),
+    z = c(0, 0, 1),
+    color = "white",
+    tag = "polygon3d"
+  )
+  register_render_road_path_info(
+    road_geometry_id,
+    list(rgl_preview_offset = 0.01)
+  )
+  on.exit(clear_render_road_path_info(road_geometry_id), add = TRUE)
+
+  raymesh = convert_rgl_to_raymesh(
+    save_shadow = FALSE,
+    include_ids = road_geometry_id
+  )
+  expect_equal(
+    raymesh$vertices[[1L]][, 2],
+    rep(0, 3),
+    tolerance = 1e-7
+  )
+
+  obj_file = tempfile(fileext = ".obj")
+  save_obj(obj_file, save_texture = FALSE)
+  obj_vertex_lines = grep("^v ", readLines(obj_file), value = TRUE)
+  obj_vertices = do.call(
+    rbind,
+    lapply(strsplit(sub("^v ", "", obj_vertex_lines), " +"), as.numeric)
+  )
+  expect_equal(obj_vertices[, 2], rep(0, 3), tolerance = 1e-7)
+})
+
+test_that("spatial road paths transform and crop once without changing path data", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("terra")
+  on.exit(rgl::close3d(), add = TRUE)
+  local_rgl_use_null()
+
+  height_raster = terra::rast(
+    nrows = 11,
+    ncols = 11,
+    xmin = 0,
+    xmax = 10,
+    ymin = 0,
+    ymax = 10,
+    crs = "EPSG:3857"
+  )
+  terra::values(height_raster) = seq_len(terra::ncell(height_raster))
+  roads = sf::st_sf(
+    geometry = sf::st_sfc(
+      sf::st_linestring(matrix(c(1, 1, 9, 9), ncol = 2, byrow = TRUE)),
+      sf::st_linestring(matrix(c(20, 20, 30, 30), ncol = 2, byrow = TRUE)),
+      sf::st_linestring(matrix(
+        c(-2, 2, 5, 2, 12, 2, 5, 4, -2, 4),
+        ncol = 2,
+        byrow = TRUE
+      )),
+      sf::st_multilinestring(list(
+        matrix(c(2, 8, 8, 8), ncol = 2, byrow = TRUE),
+        matrix(c(2, 6, 8, 6), ncol = 2, byrow = TRUE)
+      )),
+      crs = 3857
+    )
+  )
+  prepared = prepare_render_line_geometry(roads, merge = FALSE)
+  widths = seq_len(nrow(prepared))
+
+  expect_no_condition(plot_3d_test(
+    constant_shade(height_raster),
+    height_raster,
+    solid = FALSE,
+    shadow = FALSE,
+    water = FALSE,
+    windowsize = c(200, 200)
+  ))
+  filter_calls = new.env(parent = emptyenv())
+  filter_calls$count = 0L
+  transform_calls = new.env(parent = emptyenv())
+  transform_calls$count = 0L
+  original_filter = filter_scene_sf_to_extent
+  original_transform = transform_into_heightmap_coords
+  testthat::local_mocked_bindings(
+    filter_scene_sf_to_extent = function(...) {
+      filter_calls$count = filter_calls$count + 1L
+      original_filter(...)
+    },
+    transform_into_heightmap_coords = function(...) {
+      transform_calls$count = transform_calls$count + 1L
+      original_transform(...)
+    },
+    .package = "rayshader"
+  )
+  actual = suppressWarnings(render_line_coords_by_width(
+    lines = prepared,
+    heightmap = height_raster,
+    extent = terra::ext(height_raster),
+    zscale = 1,
+    color = "black",
+    width = widths,
+    force_by_feature = TRUE
+  ))
+
+  expect_equal(filter_calls$count, 1L)
+  expect_equal(transform_calls$count, 1L)
+  expected_coords = list()
+  expected_width = numeric()
+  expected_feature_id = integer()
+  expected_source_feature_id = list()
+  for (feature_index in seq_len(nrow(prepared))) {
+    feature_coords = suppressWarnings(render_path(
+      y = prepared[feature_index, , drop = FALSE],
+      extent = terra::ext(height_raster),
+      zscale = 1,
+      vertical_exaggeration = 1,
+      heightmap = height_raster,
+      offset = 0,
+      linewidth = widths[[feature_index]],
+      color = "black",
+      return_coords = TRUE,
+      tag = "water_path"
+    ))
+    if (!length(feature_coords)) {
+      next
+    }
+    expected_coords = c(expected_coords, feature_coords)
+    expected_width = c(
+      expected_width,
+      rep(widths[[feature_index]], length(feature_coords))
+    )
+    expected_feature_id = c(
+      expected_feature_id,
+      rep(
+        prepared$render_line_feature_id[[feature_index]],
+        length(feature_coords)
+      )
+    )
+    expected_source_feature_id = c(
+      expected_source_feature_id,
+      rep(
+        prepared$render_line_source_feature_id[feature_index],
+        length(feature_coords)
+      )
+    )
+  }
+
+  expect_equal(actual$coords, expected_coords, tolerance = 0)
+  expect_equal(actual$width, expected_width)
+  expect_equal(actual$feature_id, expected_feature_id)
+  expect_equal(actual$source_feature_id, expected_source_feature_id)
+})
+
+test_that("render_roads defers and restores rgl redraw state", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("terra")
+  on.exit(rgl::close3d(), add = TRUE)
+  local_rgl_use_null()
+
+  height_raster = terra::rast(
+    nrows = 5,
+    ncols = 5,
+    xmin = 0,
+    xmax = 5,
+    ymin = 0,
+    ymax = 5,
+    crs = "EPSG:3857"
+  )
+  terra::values(height_raster) = 0
+  roads = sf::st_sf(
+    geometry = sf::st_sfc(
+      sf::st_linestring(matrix(c(1, 2.5, 4, 2.5), ncol = 2, byrow = TRUE)),
+      crs = 3857
+    )
+  )
+  expect_no_condition(plot_3d_test(
+    constant_shade(height_raster),
+    height_raster,
+    solid = FALSE,
+    shadow = FALSE,
+    water = FALSE,
+    windowsize = c(200, 200)
+  ))
+
+  redraw_state = new.env(parent = emptyenv())
+  redraw_state$during_registration = logical()
+  original_register = register_render_road_path_info
+  testthat::local_mocked_bindings(
+    register_render_road_path_info = function(id, info) {
+      redraw_state$during_registration = c(
+        redraw_state$during_registration,
+        rgl::par3d("skipRedraw")
+      )
+      original_register(id, info)
+    },
+    .package = "rayshader"
+  )
+
+  expect_false(rgl::par3d("skipRedraw"))
+  expect_no_condition(render_roads(roads, heightmap = height_raster, width = 1))
+  expect_false(rgl::par3d("skipRedraw"))
+
+  previous_rgl_parameters = rgl::par3d(skipRedraw = TRUE)
+  on.exit(rgl::par3d(previous_rgl_parameters), add = TRUE)
+  expect_no_condition(render_roads(roads, heightmap = height_raster, width = 1))
+  expect_true(rgl::par3d("skipRedraw"))
+  expect_true(all(redraw_state$during_registration))
 })
 
 test_that("colored generated lane textures preserve the road color", {
@@ -688,6 +927,130 @@ test_that("road mesh sweep avoids invalid triangles at tightly spaced bends", {
   expect_true(all(face_lengths > 1e-10))
   expect_true(all(texture_area > 1e-8))
   expect_true(all(normal_dots > 0))
+})
+
+test_that("road mesh sweep stabilizes narrow closed loops", {
+  skip_if_not_installed("rayrender")
+  skip_if_not_installed("rayvertex")
+
+  loop_x = c(
+    0,
+    -0.659934,
+    -0.949731,
+    -1.594436,
+    -1.652689,
+    -1.653554,
+    -1.659934,
+    -1.760409,
+    -1.659934,
+    -1.658622,
+    -1.657342,
+    -1.23523,
+    -1.150157,
+    -0.659934,
+    -0.552698,
+    -0.393536,
+    -0.298016,
+    -0.200248,
+    0.340066,
+    0.538476,
+    0.516297,
+    0.509003,
+    0.491287,
+    0.340066,
+    0.281515,
+    0.2476,
+    -0.026489,
+    -0.023078,
+    -0.01551,
+    -0.001795
+  )
+  loop_z = c(
+    0,
+    0.517151,
+    0.744247,
+    1.249466,
+    1.737,
+    1.744247,
+    1.797638,
+    2.63855,
+    2.741592,
+    2.742935,
+    2.744247,
+    3.177155,
+    3.234467,
+    3.564758,
+    3.637009,
+    3.744247,
+    3.808609,
+    3.744247,
+    3.38858,
+    3.25798,
+    2.744247,
+    2.575317,
+    2.164963,
+    1.903885,
+    1.802795,
+    1.744247,
+    1.271042,
+    1.107391,
+    0.744247,
+    0.086105
+  )
+  road_mesh = make_render_highquality_road_chain_mesh(
+    points = cbind(loop_x, 0, loop_z),
+    bbox_center = c(0, 0, 0),
+    width = 0.39644566178321838,
+    material = rayrender::diffuse(color = "white"),
+    texture_world_scale = c(30.24465, 30.29328),
+    terrain_following = FALSE,
+    closed = TRUE,
+    return_mesh = TRUE
+  )
+  diagnostics = attr(road_mesh, "render_road_mesh_diagnostics")
+
+  expect_equal(
+    diagnostics$sweep_stabilization$initial_inverted_segment,
+    c(16L, 17L, 30L)
+  )
+  expect_equal(diagnostics$sweep_stabilization$guide_step_fraction, 3)
+  expect_equal(diagnostics$removed_quad_count, 0L)
+  expect_gt(diagnostics$minimum_triangle_area, 0)
+  expect_true(all(is.finite(road_mesh$vb)))
+  expect_true(all(is.finite(road_mesh$normals)))
+})
+
+test_that("terrain-buffered road fallback handles self-overlapping sweeps", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("rayrender")
+  skip_if_not_installed("rayvertex")
+
+  task = list(
+    points = matrix(
+      c(0, 0, 0, 5, 0, 0, 4.9, 0, 0.1),
+      ncol = 3,
+      byrow = TRUE
+    ),
+    bbox_center = c(0, 0, 0),
+    width = 4,
+    heightmap = matrix(0, nrow = 9, ncol = 9),
+    zscale = 1,
+    material = rayrender::diffuse(color = "white"),
+    texture_world_scale = c(1, 1),
+    terrain_following = TRUE
+  )
+
+  expect_warning(
+    meshes <- make_render_highquality_road_path_meshes(list(task)),
+    "terrain-buffered road mesh fallback"
+  )
+  diagnostics = attr(meshes, "mesh_chain_diagnostics")
+
+  expect_length(meshes, 1L)
+  expect_equal(diagnostics$buffered_fallback_count, 1L)
+  expect_equal(length(diagnostics$buffered_fallback_chain_id), 1L)
+  expect_true(attr(meshes[[1L]], "render_road_buffered_fallback")$used)
+  expect_no_condition(rayrender:::process_scene(meshes[[1L]]))
 })
 
 test_that("road mesh drops sub-millimeter densification fragments", {
