@@ -23,6 +23,136 @@ water_mesh_triangle_normals = function(vertices) {
   list(normals = normals, centers = centers)
 }
 
+densify_render_highquality_path_points_reference = function(
+  points,
+  width,
+  heightmap = NULL,
+  zscale = 1
+) {
+  points = as.matrix(points)
+  heightmap_scene = scale_render_highquality_heightmap(
+    heightmap = heightmap,
+    zscale = zscale
+  )$heightmap
+  center_height = interpolate_render_heightmap_height(
+    heightmap_scene,
+    points[, 1],
+    points[, 3]
+  )
+  center_offset = points[, 2] - center_height
+  normals = interpolate_render_highquality_normals(
+    points = points,
+    heightmap = heightmap_scene,
+    zscale = 1
+  )
+  tangents = calculate_render_highquality_path_tangents(
+    points = points,
+    normals = normals
+  )
+  side_vectors = normalize_render_highquality_rows(row_cross(tangents, normals))
+  side_vectors = replace_invalid_render_highquality_vectors(
+    side_vectors,
+    fallback = c(0, 0, 1)
+  )
+  edge_centers = make_render_highquality_path_edge_centers(
+    points = points,
+    side_vectors = side_vectors,
+    half_width = width / 2,
+    heightmap = heightmap_scene,
+    zscale = 1
+  )
+  segment_count = nrow(points) - 1L
+  segment_t_values = vector("list", segment_count)
+  point_counts = integer(segment_count)
+  for (index in seq_len(segment_count)) {
+    segment_t = unique_render_line_t(c(
+      calculate_render_line_triangle_boundary_t(
+        heightmap = heightmap_scene,
+        segment_start = points[index, c(1, 3)],
+        segment_end = points[index + 1L, c(1, 3)]
+      ),
+      calculate_render_line_triangle_boundary_t(
+        heightmap = heightmap_scene,
+        segment_start = edge_centers$left[index, c(1, 3)],
+        segment_end = edge_centers$left[index + 1L, c(1, 3)]
+      ),
+      calculate_render_line_triangle_boundary_t(
+        heightmap = heightmap_scene,
+        segment_start = edge_centers$right[index, c(1, 3)],
+        segment_end = edge_centers$right[index + 1L, c(1, 3)]
+      )
+    ))
+    if (index > 1L) {
+      segment_t = segment_t[-1L]
+    }
+    segment_t_values[[index]] = segment_t
+    point_counts[[index]] = length(segment_t)
+  }
+  x_vals = numeric(sum(point_counts))
+  z_vals = numeric(sum(point_counts))
+  offset_vals = numeric(sum(point_counts))
+  position = 1L
+  for (index in seq_len(segment_count)) {
+    segment_t = segment_t_values[[index]]
+    next_position = position + length(segment_t) - 1L
+    fill_indices = seq.int(position, next_position)
+    x_vals[fill_indices] = points[index, 1] +
+      (points[index + 1L, 1] - points[index, 1]) * segment_t
+    z_vals[fill_indices] = points[index, 3] +
+      (points[index + 1L, 3] - points[index, 3]) * segment_t
+    offset_vals[fill_indices] = center_offset[[index]] +
+      (center_offset[[index + 1L]] - center_offset[[index]]) * segment_t
+    position = next_position + 1L
+  }
+  y_vals = interpolate_render_heightmap_height(heightmap_scene, x_vals, z_vals)
+  cbind(x_vals, y_vals + offset_vals, z_vals)
+}
+
+test_that("compiled high-quality path densification matches the R reference", {
+  heightmap = outer(
+    seq_len(13L),
+    seq_len(17L),
+    function(row, column) sin(row / 3) + cos(column / 4)
+  )
+  cases = list(
+    matrix(c(-4.75, 1, -2.1, 4.25, 2, 3.7), ncol = 3L, byrow = TRUE),
+    matrix(
+      c(
+        -5.1,
+        0.2,
+        -7.2,
+        -2.4,
+        0.4,
+        -1.8,
+        0.1,
+        0.1,
+        2.3,
+        3.8,
+        -0.2,
+        6.9
+      ),
+      ncol = 3L,
+      byrow = TRUE
+    )
+  )
+
+  for (points in cases) {
+    reference = densify_render_highquality_path_points_reference(
+      points = points,
+      width = 1.7,
+      heightmap = heightmap,
+      zscale = 2.5
+    )
+    compiled = densify_render_highquality_path_points(
+      points = points,
+      width = 1.7,
+      heightmap = heightmap,
+      zscale = 2.5
+    )
+    expect_equal(compiled, reference, tolerance = 1e-12)
+  }
+})
+
 test_that("make_water_mesh_cpp handles empty and clipped water", {
   heightmap = matrix(2, nrow = 3, ncol = 3)
   waterheight = matrix(1, nrow = 3, ncol = 3)

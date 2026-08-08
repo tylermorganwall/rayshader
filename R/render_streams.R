@@ -703,7 +703,9 @@ group_render_highquality_water_path_tasks = function(tasks) {
 #' @param bottom_cap Default `TRUE`. Whether to add a hidden bottom cap below the
 #' terrain surface.
 #' @param height Default `NULL`, which uses 20 percent of the path width.
-#' Extrusion height above the terrain surface in scene units.
+#' Extrusion height in scene units.
+#' @param extrusion_alignment Default `"above"`. Whether to place the extrusion
+#' `"above"`, `"center"` it on, or place it `"below"` the path elevation.
 #'
 #' @return Rayrender mesh object.
 #' @keywords internal
@@ -711,7 +713,8 @@ make_render_highquality_joined_water_path_mesh = function(
   tasks,
   seal_epsilon = NULL,
   bottom_cap = TRUE,
-  height = NULL
+  height = NULL,
+  extrusion_alignment = c("above", "center", "below")
 ) {
   if (!requireNamespace("sf", quietly = TRUE)) {
     stop("The `sf` package is required for joined stream meshes.")
@@ -804,6 +807,7 @@ make_render_highquality_joined_water_path_mesh = function(
   } else {
     height = resolve_render_positive_number(height, "height")
   }
+  extrusion_alignment = match.arg(extrusion_alignment)
   if (is.null(seal_epsilon)) {
     seal_epsilon = max(group$width, 1) * 1e-5
   } else {
@@ -812,9 +816,22 @@ make_render_highquality_joined_water_path_mesh = function(
       stop("`seal_epsilon` must be a single non-negative number.")
     }
   }
+  surface_y = terrain_y + group$offset_scene
+  top_y = switch(
+    extrusion_alignment,
+    above = surface_y + height,
+    center = surface_y + height / 2,
+    below = surface_y
+  )
+  bottom_y = switch(
+    extrusion_alignment,
+    above = terrain_y - seal_epsilon,
+    center = surface_y - height / 2 - seal_epsilon,
+    below = surface_y - height - seal_epsilon
+  )
   top_vertices = cbind(
     triangulated$vertices_xz[, 1],
-    terrain_y + group$offset_scene + height,
+    top_y,
     triangulated$vertices_xz[, 2]
   )
   top_indices = orient_top_indices(
@@ -826,7 +843,7 @@ make_render_highquality_joined_water_path_mesh = function(
   }
   bottom_vertices = cbind(
     triangulated$vertices_xz[, 1],
-    terrain_y - seal_epsilon,
+    bottom_y,
     triangulated$vertices_xz[, 2]
   )
   vertex_count = nrow(top_vertices)

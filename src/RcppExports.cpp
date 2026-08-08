@@ -336,6 +336,35 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// calculate_render_road_vertex_frames_cpp
+List calculate_render_road_vertex_frames_cpp(const NumericMatrix& points, bool closed, double miter_limit);
+RcppExport SEXP _rayshader_calculate_render_road_vertex_frames_cpp(SEXP pointsSEXP, SEXP closedSEXP, SEXP miter_limitSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const NumericMatrix& >::type points(pointsSEXP);
+    Rcpp::traits::input_parameter< bool >::type closed(closedSEXP);
+    Rcpp::traits::input_parameter< double >::type miter_limit(miter_limitSEXP);
+    rcpp_result_gen = Rcpp::wrap(calculate_render_road_vertex_frames_cpp(points, closed, miter_limit));
+    return rcpp_result_gen;
+END_RCPP
+}
+// densify_render_highquality_path_xz_cpp
+NumericMatrix densify_render_highquality_path_xz_cpp(const NumericMatrix& points, const NumericMatrix& left_edge, const NumericMatrix& right_edge, const NumericVector& center_offset, int row_count, int column_count);
+RcppExport SEXP _rayshader_densify_render_highquality_path_xz_cpp(SEXP pointsSEXP, SEXP left_edgeSEXP, SEXP right_edgeSEXP, SEXP center_offsetSEXP, SEXP row_countSEXP, SEXP column_countSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const NumericMatrix& >::type points(pointsSEXP);
+    Rcpp::traits::input_parameter< const NumericMatrix& >::type left_edge(left_edgeSEXP);
+    Rcpp::traits::input_parameter< const NumericMatrix& >::type right_edge(right_edgeSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type center_offset(center_offsetSEXP);
+    Rcpp::traits::input_parameter< int >::type row_count(row_countSEXP);
+    Rcpp::traits::input_parameter< int >::type column_count(column_countSEXP);
+    rcpp_result_gen = Rcpp::wrap(densify_render_highquality_path_xz_cpp(points, left_edge, right_edge, center_offset, row_count, column_count));
+    return rcpp_result_gen;
+END_RCPP
+}
 // evaluate_render_road_profiles_cpp
 List evaluate_render_road_profiles_cpp(IntegerVector fragment_index, NumericVector distance, IntegerVector control_start, IntegerVector control_count, IntegerVector control_row, NumericVector control_distance, NumericVector height, NumericVector grade);
 RcppExport SEXP _rayshader_evaluate_render_road_profiles_cpp(SEXP fragment_indexSEXP, SEXP distanceSEXP, SEXP control_startSEXP, SEXP control_countSEXP, SEXP control_rowSEXP, SEXP control_distanceSEXP, SEXP heightSEXP, SEXP gradeSEXP) {
@@ -498,6 +527,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_rayshader_psf", (DL_FUNC) &_rayshader_psf, 11},
     {"_rayshader_rayshade_cpp", (DL_FUNC) &_rayshader_rayshade_cpp, 7},
     {"_rayshader_rayshade_multicore", (DL_FUNC) &_rayshader_rayshade_multicore, 7},
+    {"_rayshader_calculate_render_road_vertex_frames_cpp", (DL_FUNC) &_rayshader_calculate_render_road_vertex_frames_cpp, 3},
+    {"_rayshader_densify_render_highquality_path_xz_cpp", (DL_FUNC) &_rayshader_densify_render_highquality_path_xz_cpp, 6},
     {"_rayshader_evaluate_render_road_profiles_cpp", (DL_FUNC) &_rayshader_evaluate_render_road_profiles_cpp, 8},
     {"_rayshader_audit_render_road_profiles_cpp", (DL_FUNC) &_rayshader_audit_render_road_profiles_cpp, 6},
     {"_rayshader_compile_render_road_profile_problem_cpp", (DL_FUNC) &_rayshader_compile_render_road_profile_problem_cpp, 2},

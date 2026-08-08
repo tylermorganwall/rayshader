@@ -18,7 +18,7 @@ render_label(
   panel = NULL,
   zscale = 1,
   vertical_exaggeration = 1,
-  relativez = TRUE,
+  relativez = FALSE,
   offset = 0,
   clear_previous = FALSE,
   textsize = 1,
@@ -78,7 +78,7 @@ for non-ggplot scenes.}
 
 \item{vertical_exaggeration}{Default \code{1}. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}} when available; pass explicitly to override for this call.}
 
-\item{relativez}{Default \code{TRUE}. Whether \code{z} should be measured in relation to the underlying elevation at that point in the heightmap, or set absolutely (\code{FALSE}).}
+\item{relativez}{Default \code{FALSE}. Whether \code{z} should be measured in relation to the underlying elevation at that point in the heightmap, or set absolutely (\code{FALSE}).}
 
 \item{offset}{Elevation above the surface (at the label point) to start drawing the line.}
 
@@ -152,10 +152,10 @@ render_label(lat = monterey[1], long = monterey[2], altitude = 10000,
 render_snapshot()
 
 canyon = c(36.621049, -122.333912)
-#By default, z specifies the altitude above that point on the elevation matrix. We can also specify
-#an absolute height by setting `relativez=FALSE`.
+#By default, z specifies the absolute altitude. We can also specify
+#an relative height by setting `relativez=FALSE`.
 render_label(lat = canyon[1], long = canyon[2], altitude = 2000,
-            textsize = 2, text = "Monterey Canyon", relativez=FALSE)
+            textsize = 2, text = "Monterey Canyon", relativez = TRUE)
 render_snapshot()
 
 #We can also render labels in high quality with `render_highquality()`, specifying a custom

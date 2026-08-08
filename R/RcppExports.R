@@ -97,6 +97,14 @@ rayshade_multicore <- function(sunangle, anglebreaks, heightmap, zscale, chunkin
     .Call(`_rayshader_rayshade_multicore`, sunangle, anglebreaks, heightmap, zscale, chunkindices, maxsearch, cache_mask)
 }
 
+calculate_render_road_vertex_frames_cpp <- function(points, closed, miter_limit) {
+    .Call(`_rayshader_calculate_render_road_vertex_frames_cpp`, points, closed, miter_limit)
+}
+
+densify_render_highquality_path_xz_cpp <- function(points, left_edge, right_edge, center_offset, row_count, column_count) {
+    .Call(`_rayshader_densify_render_highquality_path_xz_cpp`, points, left_edge, right_edge, center_offset, row_count, column_count)
+}
+
 evaluate_render_road_profiles_cpp <- function(fragment_index, distance, control_start, control_count, control_row, control_distance, height, grade) {
     .Call(`_rayshader_evaluate_render_road_profiles_cpp`, fragment_index, distance, control_start, control_count, control_row, control_distance, height, grade)
 }

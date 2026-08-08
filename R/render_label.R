@@ -26,7 +26,7 @@
 #'for non-ggplot scenes.
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
 #'@param vertical_exaggeration Default `1`. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from [plot_3d()] or [plot_gg()] when available; pass explicitly to override for this call.
-#'@param relativez Default `TRUE`. Whether `z` should be measured in relation to the underlying elevation at that point in the heightmap, or set absolutely (`FALSE`).
+#'@param relativez Default `FALSE`. Whether `z` should be measured in relation to the underlying elevation at that point in the heightmap, or set absolutely (`FALSE`).
 #'@param offset Elevation above the surface (at the label point) to start drawing the line.
 #'@param clear_previous Default `FALSE`. If `TRUE`, it will clear all existing text and lines rendered with [render_label()]. If no
 #'other arguments are passed to [render_label()], this will just remove all existing lines.
@@ -73,10 +73,10 @@
 #'render_snapshot()
 #'
 #'canyon = c(36.621049, -122.333912)
-#'#By default, z specifies the altitude above that point on the elevation matrix. We can also specify
-#'#an absolute height by setting `relativez=FALSE`.
+#'#By default, z specifies the absolute altitude. We can also specify
+#'#an relative height by setting `relativez=FALSE`.
 #'render_label(lat = canyon[1], long = canyon[2], altitude = 2000,
-#'             textsize = 2, text = "Monterey Canyon", relativez=FALSE)
+#'             textsize = 2, text = "Monterey Canyon", relativez = TRUE)
 #'render_snapshot()
 #'
 #'#We can also render labels in high quality with `render_highquality()`, specifying a custom
@@ -110,7 +110,7 @@ render_label = function(
   panel = NULL,
   zscale = 1,
   vertical_exaggeration = 1,
-  relativez = TRUE,
+  relativez = FALSE,
   offset = 0,
   clear_previous = FALSE,
   textsize = 1,

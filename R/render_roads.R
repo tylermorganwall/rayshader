@@ -8129,11 +8129,15 @@ make_render_highquality_buffered_road_chain_mesh = function(
       fallback_task$points[1L, , drop = FALSE]
     )
   }
+  road_surface_clearance = 0.055
+  fallback_task$points[, 2] =
+    fallback_task$points[, 2] + road_surface_clearance
   mesh = make_render_highquality_joined_water_path_mesh(
     tasks = list(fallback_task),
     seal_epsilon = 0,
     bottom_cap = TRUE,
-    height = 0.11
+    height = 0.11,
+    extrusion_alignment = "below"
   )
   attr(mesh, "render_road_buffered_fallback") = list(
     used = TRUE,
@@ -8208,85 +8212,13 @@ calculate_render_road_vertex_frames = function(
   points = as.matrix(points)
   point_count = nrow(points)
   closed = resolve_render_logical(closed, "closed")
-  if (point_count < if (closed) 3L else 2L) {
+  if (ncol(points) < 3L || point_count < if (closed) 3L else 2L) {
     stop("Road vertex frames require a valid path.", call. = FALSE)
   }
-  segment_start = if (closed) {
-    seq_len(point_count)
-  } else {
-    seq_len(point_count - 1L)
-  }
-  segment_end = if (closed) {
-    c(seq.int(2L, point_count), 1L)
-  } else {
-    seq.int(2L, point_count)
-  }
-  segment_delta = points[segment_end, c(1, 3), drop = FALSE] -
-    points[segment_start, c(1, 3), drop = FALSE]
-  segment_length = sqrt(rowSums(segment_delta^2))
-  if (any(!is.finite(segment_length) | segment_length <= 0)) {
-    stop("Road vertex frames contain a zero-length segment.", call. = FALSE)
-  }
-  segment_tangent = segment_delta / segment_length
-  incoming_tangent = matrix(NA_real_, nrow = point_count, ncol = 2L)
-  outgoing_tangent = matrix(NA_real_, nrow = point_count, ncol = 2L)
-  if (closed) {
-    incoming_tangent = segment_tangent[
-      c(point_count, seq_len(point_count - 1L)),
-      ,
-      drop = FALSE
-    ]
-    outgoing_tangent = segment_tangent
-  } else {
-    incoming_tangent[1L, ] = segment_tangent[1L, ]
-    incoming_tangent[-1L, ] = segment_tangent
-    outgoing_tangent[-point_count, ] = segment_tangent
-    outgoing_tangent[point_count, ] = segment_tangent[nrow(segment_tangent), ]
-  }
-  endpoint = !closed & seq_len(point_count) %in% c(1L, point_count)
-  join_rows = lapply(seq_len(point_count), function(index) {
-    if (endpoint[[index]]) {
-      tangent = if (index == 1L) {
-        outgoing_tangent[index, ]
-      } else {
-        incoming_tangent[index, ]
-      }
-      side = c(-tangent[[2]], tangent[[1]])
-      return(data.frame(
-        join_style = "endpoint",
-        side_x = side[[1]],
-        side_z = side[[2]],
-        miter_scale = 1,
-        turn_cross = 0,
-        turn_dot = 1,
-        stringsAsFactors = FALSE
-      ))
-    }
-    join = resolve_render_road_join_style(
-      incoming_tangent[index, ],
-      outgoing_tangent[index, ],
-      miter_limit = miter_limit
-    )
-    data.frame(
-      join_style = join$style,
-      side_x = join$side_x,
-      side_z = join$side_z,
-      miter_scale = join$miter_scale,
-      turn_cross = join$turn_cross,
-      turn_dot = join$turn_dot,
-      stringsAsFactors = FALSE
-    )
-  })
-  joins = do.call(rbind, join_rows)
-  list(
-    incoming_tangent = incoming_tangent,
-    outgoing_tangent = outgoing_tangent,
-    side = as.matrix(joins[, c("side_x", "side_z"), drop = FALSE]),
-    miter_scale = joins$miter_scale,
-    join_style = joins$join_style,
-    turn_cross = joins$turn_cross,
-    turn_dot = joins$turn_dot,
-    segment_length = segment_length
+  calculate_render_road_vertex_frames_cpp(
+    points = points,
+    closed = closed,
+    miter_limit = miter_limit
   )
 }
 
@@ -8504,13 +8436,20 @@ calculate_render_road_vertex_sections = function(
     zscale = zscale
   )
   road_height = 0.11
+  road_surface_clearance = 0.055
+  left_surface = left_bottom
+  right_surface = right_bottom
+  left_top = left_surface + left_normal * road_surface_clearance
+  right_top = right_surface + right_normal * road_surface_clearance
+  left_bottom = left_top - left_normal * road_height
+  right_bottom = right_top - right_normal * road_height
   list(
     points = points,
     frames = frames,
     left_bottom = left_bottom,
     right_bottom = right_bottom,
-    left_top = left_bottom + left_normal * road_height,
-    right_top = right_bottom + right_normal * road_height,
+    left_top = left_top,
+    right_top = right_top,
     left_normal = left_normal,
     right_normal = right_normal
   )

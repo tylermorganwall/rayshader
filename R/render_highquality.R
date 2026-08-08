@@ -3195,49 +3195,17 @@ densify_render_highquality_path_points = function(
     heightmap = heightmap_scene,
     zscale = 1
   )
-  segment_count = nrow(points) - 1L
-  segment_t_values = vector("list", segment_count)
-  point_counts = integer(segment_count)
-  for (index in seq_len(segment_count)) {
-    segment_t = unique_render_line_t(c(
-      calculate_render_line_triangle_boundary_t(
-        heightmap = heightmap_scene,
-        segment_start = points[index, c(1, 3)],
-        segment_end = points[index + 1L, c(1, 3)]
-      ),
-      calculate_render_line_triangle_boundary_t(
-        heightmap = heightmap_scene,
-        segment_start = edge_centers$left[index, c(1, 3)],
-        segment_end = edge_centers$left[index + 1L, c(1, 3)]
-      ),
-      calculate_render_line_triangle_boundary_t(
-        heightmap = heightmap_scene,
-        segment_start = edge_centers$right[index, c(1, 3)],
-        segment_end = edge_centers$right[index + 1L, c(1, 3)]
-      )
-    ))
-    if (index > 1L) {
-      segment_t = segment_t[-1L]
-    }
-    segment_t_values[[index]] = segment_t
-    point_counts[[index]] = length(segment_t)
-  }
-  x_vals = numeric(sum(point_counts))
-  z_vals = numeric(sum(point_counts))
-  offset_vals = numeric(sum(point_counts))
-  position = 1L
-  for (index in seq_len(segment_count)) {
-    segment_t = segment_t_values[[index]]
-    next_position = position + length(segment_t) - 1L
-    fill_indices = seq.int(position, next_position)
-    x_vals[fill_indices] = points[index, 1] +
-      (points[index + 1L, 1] - points[index, 1]) * segment_t
-    z_vals[fill_indices] = points[index, 3] +
-      (points[index + 1L, 3] - points[index, 3]) * segment_t
-    offset_vals[fill_indices] = center_offset[[index]] +
-      (center_offset[[index + 1L]] - center_offset[[index]]) * segment_t
-    position = next_position + 1L
-  }
+  densified = densify_render_highquality_path_xz_cpp(
+    points = points,
+    left_edge = edge_centers$left,
+    right_edge = edge_centers$right,
+    center_offset = center_offset,
+    row_count = nrow(heightmap_scene),
+    column_count = ncol(heightmap_scene)
+  )
+  x_vals = densified[, 1L]
+  z_vals = densified[, 2L]
+  offset_vals = densified[, 3L]
   y_vals = interpolate_render_heightmap_height(heightmap_scene, x_vals, z_vals)
   cbind(x_vals, y_vals + offset_vals, z_vals)
 }

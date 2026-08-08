@@ -783,7 +783,8 @@ test_that("elevated road meshes preserve absolute profiles", {
   vertices = road_mesh$shape_info[[1]]$mesh_info[[1]]$vertices
 
   expect_true(all(is.finite(vertices)))
-  expect_equal(range(vertices[, 2]), c(1, 4.11), tolerance = 1e-8)
+  expect_equal(max(vertices[, 2]), 4.055, tolerance = 1e-8)
+  expect_lt(min(vertices[, 2]), 1)
 })
 
 test_that("road width and mesh texture coordinates follow public settings", {
@@ -829,7 +830,11 @@ test_that("road width and mesh texture coordinates follow public settings", {
   )
 
   mesh_info = road_mesh$shape_info[[1]]$mesh_info[[1]]
-  expect_equal(range(mesh_info$vertices[, 2]), c(0, 0.11), tolerance = 1e-8)
+  expect_equal(
+    range(mesh_info$vertices[, 2]),
+    c(-0.055, 0.055),
+    tolerance = 1e-8
+  )
   expect_equal(range(mesh_info$texcoords[, 1]), c(0, 1))
   expect_gt(max(mesh_info$texcoords[, 2]), 1)
   texture_triangles = mesh_info$indices + 1L
@@ -1050,6 +1055,12 @@ test_that("terrain-buffered road fallback handles self-overlapping sweeps", {
   expect_equal(diagnostics$buffered_fallback_count, 1L)
   expect_equal(length(diagnostics$buffered_fallback_chain_id), 1L)
   expect_true(attr(meshes[[1L]], "render_road_buffered_fallback")$used)
+  fallback_vertices = meshes[[1L]]$shape_info[[1L]]$mesh_info[[1L]]$vertices
+  expect_equal(
+    range(fallback_vertices[, 2]),
+    c(-0.055, 0.055),
+    tolerance = 1e-8
+  )
   expect_no_condition(rayrender:::process_scene(meshes[[1L]]))
 })
 
@@ -1258,4 +1269,141 @@ test_that("road topology retains local and repeated exact crossings", {
   )
   expect_equal(nrow(overlap_topology$layer_overlaps), 1L)
   expect_true(overlap_topology$layer_overlaps$layer_relationship)
+})
+calculate_render_road_vertex_frames_reference = function(
+  points,
+  closed = FALSE,
+  miter_limit = 4
+) {
+  points = as.matrix(points)
+  point_count = nrow(points)
+  segment_start = if (closed) {
+    seq_len(point_count)
+  } else {
+    seq_len(point_count - 1L)
+  }
+  segment_end = if (closed) {
+    c(seq.int(2L, point_count), 1L)
+  } else {
+    seq.int(2L, point_count)
+  }
+  segment_delta = points[segment_end, c(1, 3), drop = FALSE] -
+    points[segment_start, c(1, 3), drop = FALSE]
+  segment_length = sqrt(rowSums(segment_delta^2))
+  segment_tangent = segment_delta / segment_length
+  incoming_tangent = matrix(NA_real_, nrow = point_count, ncol = 2L)
+  outgoing_tangent = matrix(NA_real_, nrow = point_count, ncol = 2L)
+  if (closed) {
+    incoming_tangent = segment_tangent[
+      c(point_count, seq_len(point_count - 1L)),
+      ,
+      drop = FALSE
+    ]
+    outgoing_tangent = segment_tangent
+  } else {
+    incoming_tangent[1L, ] = segment_tangent[1L, ]
+    incoming_tangent[-1L, ] = segment_tangent
+    outgoing_tangent[-point_count, ] = segment_tangent
+    outgoing_tangent[point_count, ] = segment_tangent[nrow(segment_tangent), ]
+  }
+  endpoint = !closed & seq_len(point_count) %in% c(1L, point_count)
+  join_rows = lapply(seq_len(point_count), function(index) {
+    if (endpoint[[index]]) {
+      tangent = if (index == 1L) {
+        outgoing_tangent[index, ]
+      } else {
+        incoming_tangent[index, ]
+      }
+      side = c(-tangent[[2]], tangent[[1]])
+      return(data.frame(
+        join_style = "endpoint",
+        side_x = side[[1]],
+        side_z = side[[2]],
+        miter_scale = 1,
+        turn_cross = 0,
+        turn_dot = 1,
+        stringsAsFactors = FALSE
+      ))
+    }
+    join = resolve_render_road_join_style(
+      incoming_tangent[index, ],
+      outgoing_tangent[index, ],
+      miter_limit = miter_limit
+    )
+    data.frame(
+      join_style = join$style,
+      side_x = join$side_x,
+      side_z = join$side_z,
+      miter_scale = join$miter_scale,
+      turn_cross = join$turn_cross,
+      turn_dot = join$turn_dot,
+      stringsAsFactors = FALSE
+    )
+  })
+  joins = do.call(rbind, join_rows)
+  list(
+    incoming_tangent = incoming_tangent,
+    outgoing_tangent = outgoing_tangent,
+    side = as.matrix(joins[, c("side_x", "side_z"), drop = FALSE]),
+    miter_scale = joins$miter_scale,
+    join_style = joins$join_style,
+    turn_cross = joins$turn_cross,
+    turn_dot = joins$turn_dot,
+    segment_length = segment_length
+  )
+}
+
+test_that("compiled road vertex frames match the reference implementation", {
+  set.seed(20260808)
+  random_points = cbind(
+    cumsum(runif(80L, 0.1, 2)),
+    rnorm(80L),
+    cumsum(rnorm(80L))
+  )
+  cases = list(
+    list(
+      points = matrix(c(0, 0, 0, 1, 0, 0, 2, 0, 0), ncol = 3L, byrow = TRUE),
+      closed = FALSE
+    ),
+    list(
+      points = matrix(c(0, 0, 0, 1, 0, 0, 1, 0, 1), ncol = 3L, byrow = TRUE),
+      closed = FALSE
+    ),
+    list(
+      points = matrix(
+        c(0, 0, 0, 1, 0, 0, 0.01, 0, 0.01),
+        ncol = 3L,
+        byrow = TRUE
+      ),
+      closed = FALSE
+    ),
+    list(
+      points = matrix(
+        c(0, 0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1),
+        ncol = 3L,
+        byrow = TRUE
+      ),
+      closed = TRUE
+    ),
+    list(points = random_points, closed = FALSE)
+  )
+
+  for (case in cases) {
+    reference = calculate_render_road_vertex_frames_reference(
+      case$points,
+      closed = case$closed
+    )
+    compiled = calculate_render_road_vertex_frames(
+      case$points,
+      closed = case$closed
+    )
+    expect_equal(compiled$join_style, reference$join_style)
+    for (name in setdiff(names(reference), "join_style")) {
+      expect_equal(
+        unname(compiled[[name]]),
+        unname(reference[[name]]),
+        tolerance = 1e-14
+      )
+    }
+  }
 })

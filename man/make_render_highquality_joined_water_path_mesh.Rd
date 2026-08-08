@@ -8,7 +8,8 @@ make_render_highquality_joined_water_path_mesh(
   tasks,
   seal_epsilon = NULL,
   bottom_cap = TRUE,
-  height = NULL
+  height = NULL,
+  extrusion_alignment = c("above", "center", "below")
 )
 }
 \arguments{
@@ -21,7 +22,10 @@ units. When \code{NULL}, uses a width-scaled epsilon.}
 terrain surface.}
 
 \item{height}{Default \code{NULL}, which uses 20 percent of the path width.
-Extrusion height above the terrain surface in scene units.}
+Extrusion height in scene units.}
+
+\item{extrusion_alignment}{Default \code{"above"}. Whether to place the extrusion
+\code{"above"}, \code{"center"} it on, or place it \code{"below"} the path elevation.}
 }
 \value{
 Rayrender mesh object.
