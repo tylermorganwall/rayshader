@@ -7940,13 +7940,16 @@ assemble_render_road_mesh_chain_tasks = function(
 #'
 #' @param tasks Road path task list.
 #' @param verbose Default `FALSE`. Whether to display mesh-building progress.
+#' @param parallel Default `FALSE`. Whether to use multiple native threads.
 #'
 #' @return List of rayrender mesh objects.
 #' @keywords internal
 make_render_highquality_road_path_meshes = function(
   tasks,
-  verbose = FALSE
+  verbose = FALSE,
+  parallel = FALSE
 ) {
+  parallel = resolve_render_logical(parallel, "parallel")
   tasks = attach_render_road_mesh_task_metadata(tasks)
   if (!length(tasks)) {
     return(tasks)
@@ -7955,19 +7958,84 @@ make_render_highquality_road_path_meshes = function(
   chain_members = attr(chain_tasks, "mesh_chain_members")
   envelope_sections = attr(chain_tasks, "envelope_sections")
   chain_diagnostics = attr(chain_tasks, "mesh_chain_diagnostics")
-  mesh_progress = new_render_highquality_progress_bar(
+  prepared_results = prepare_render_highquality_road_chain_meshes(
+    tasks = chain_tasks,
     verbose = verbose,
-    label = "Converting roads to meshes",
-    total = length(chain_tasks)
+    parallel = parallel
   )
+  prepared_index = which(vapply(
+    prepared_results,
+    function(result) is.null(result$error) && !is.null(result$prepared),
+    logical(1)
+  ))
+  native_results = if (length(prepared_index)) {
+    build_render_highquality_road_mesh_batch_cpp(
+      input_jobs = lapply(
+        prepared_results[prepared_index],
+        function(result) result$prepared$job
+      ),
+      parallel = parallel,
+      verbose = verbose
+    )
+  } else {
+    list()
+  }
+  native_result_by_chain = vector("list", length(chain_tasks))
+  native_result_by_chain[prepared_index] = native_results
   mesh_results = vector("list", length(chain_tasks))
   for (chain_index in seq_along(chain_tasks)) {
-    mesh_results[[chain_index]] =
-      make_render_highquality_road_chain_mesh_result(
-        chain_tasks[[chain_index]]
+    preparation_result = prepared_results[[chain_index]]
+    if (!is.null(preparation_result$error)) {
+      mesh_results[[chain_index]] =
+        make_render_highquality_road_chain_fallback_result(
+          task = chain_tasks[[chain_index]],
+          sweep_error = preparation_result$error
+        )
+      next
+    }
+    if (is.null(preparation_result$prepared)) {
+      mesh_results[[chain_index]] = list(
+        mesh = NULL,
+        failed = FALSE,
+        sweep_error = NULL,
+        fallback_error = NULL
       )
-    if (!is.null(mesh_progress)) {
-      mesh_progress$tick()
+      next
+    }
+    native_result = native_result_by_chain[[chain_index]]
+    if (!isTRUE(native_result$success)) {
+      mesh_results[[chain_index]] =
+        make_render_highquality_road_chain_fallback_result(
+          task = chain_tasks[[chain_index]],
+          sweep_error = native_result$error
+        )
+      next
+    }
+    finalization_result = tryCatch(
+      list(
+        mesh = finalize_render_highquality_road_chain_mesh(
+          preparation_result$prepared,
+          native_result
+        ),
+        error = NULL
+      ),
+      error = function(error) {
+        list(mesh = NULL, error = conditionMessage(error))
+      }
+    )
+    if (is.null(finalization_result$error)) {
+      mesh_results[[chain_index]] = list(
+        mesh = finalization_result$mesh,
+        failed = FALSE,
+        sweep_error = NULL,
+        fallback_error = NULL
+      )
+    } else {
+      mesh_results[[chain_index]] =
+        make_render_highquality_road_chain_fallback_result(
+          task = chain_tasks[[chain_index]],
+          sweep_error = finalization_result$error
+        )
     }
   }
   for (chain_index in seq_along(mesh_results)) {
@@ -8048,15 +8116,47 @@ make_render_highquality_road_path_meshes = function(
 #' Build one high-quality road chain mesh with fallback diagnostics
 #'
 #' @param task Assembled road mesh-chain task.
+#' @param parallel Default `FALSE`. Whether to use multiple native threads.
 #'
 #' @return List containing the mesh and captured errors.
 #' @keywords internal
-make_render_highquality_road_chain_mesh_result = function(task) {
+make_render_highquality_road_chain_mesh_result = function(
+  task,
+  parallel = FALSE
+) {
+  parallel = resolve_render_logical(parallel, "parallel")
   sweep_result = tryCatch(
-    list(
-      mesh = do.call(make_render_highquality_road_chain_mesh, task),
-      error = NULL
-    ),
+    {
+      preparation_result = prepare_render_highquality_road_chain_meshes(
+        tasks = list(task),
+        verbose = FALSE,
+        parallel = parallel
+      )[[1L]]
+      if (!is.null(preparation_result$error)) {
+        stop(preparation_result$error, call. = FALSE)
+      }
+      prepared = preparation_result$prepared
+      native_result = if (is.null(prepared)) {
+        NULL
+      } else {
+        build_render_highquality_road_mesh_batch_cpp(
+          input_jobs = list(prepared$job),
+          parallel = parallel,
+          verbose = FALSE
+        )[[1L]]
+      }
+      if (!is.null(native_result) && !isTRUE(native_result$success)) {
+        stop(native_result$error, call. = FALSE)
+      }
+      list(
+        mesh = if (is.null(prepared)) {
+          NULL
+        } else {
+          finalize_render_highquality_road_chain_mesh(prepared, native_result)
+        },
+        error = NULL
+      )
+    },
     error = function(error) {
       list(mesh = NULL, error = conditionMessage(error))
     }
@@ -8069,11 +8169,28 @@ make_render_highquality_road_chain_mesh_result = function(task) {
       fallback_error = NULL
     ))
   }
+  make_render_highquality_road_chain_fallback_result(
+    task = task,
+    sweep_error = sweep_result$error
+  )
+}
+
+#' Build a road-chain fallback result
+#'
+#' @param task Assembled road mesh-chain task.
+#' @param sweep_error Ordinary road-sweep error message.
+#'
+#' @return List containing the fallback mesh and captured errors.
+#' @keywords internal
+make_render_highquality_road_chain_fallback_result = function(
+  task,
+  sweep_error
+) {
   fallback_result = tryCatch(
     list(
       mesh = make_render_highquality_buffered_road_chain_mesh(
         task = task,
-        sweep_error = simpleError(sweep_result$error)
+        sweep_error = simpleError(sweep_error)
       ),
       error = NULL
     ),
@@ -8084,7 +8201,7 @@ make_render_highquality_road_chain_mesh_result = function(task) {
   list(
     mesh = fallback_result$mesh,
     failed = !is.null(fallback_result$error),
-    sweep_error = sweep_result$error,
+    sweep_error = sweep_error,
     fallback_error = fallback_result$error
   )
 }
@@ -8397,61 +8514,32 @@ calculate_render_road_vertex_sections = function(
       call. = FALSE
     )
   }
-  side = cbind(frames$side[, 1], 0, frames$side[, 2])
-  scale = frames$miter_scale
-  left_bottom = points + side * (left_distance * scale)
-  right_bottom = points - side * (right_distance * scale)
-  heightmap_scene = scale_render_highquality_heightmap(
-    heightmap = heightmap,
-    zscale = zscale
-  )$heightmap
-  if (!is.null(heightmap_scene) && is.matrix(heightmap_scene)) {
-    center_height = interpolate_render_heightmap_height(
-      heightmap_scene,
-      points[, 1],
-      points[, 3]
-    )
-    center_offset = points[, 2] - center_height
-    left_bottom[, 2] = interpolate_render_heightmap_height(
-      heightmap_scene,
-      left_bottom[, 1],
-      left_bottom[, 3]
-    ) +
-      center_offset
-    right_bottom[, 2] = interpolate_render_heightmap_height(
-      heightmap_scene,
-      right_bottom[, 1],
-      right_bottom[, 3]
-    ) +
-      center_offset
+  terrain_following = !is.null(heightmap) && is.matrix(heightmap)
+  terrain_heightmap = if (terrain_following) {
+    heightmap
+  } else {
+    matrix(numeric(), nrow = 0L, ncol = 0L)
   }
-  left_normal = interpolate_render_highquality_normals(
-    points = left_bottom,
-    heightmap = heightmap,
-    zscale = zscale
-  )
-  right_normal = interpolate_render_highquality_normals(
-    points = right_bottom,
-    heightmap = heightmap,
-    zscale = zscale
-  )
-  road_height = 0.11
-  road_surface_clearance = 0.055
-  left_surface = left_bottom
-  right_surface = right_bottom
-  left_top = left_surface + left_normal * road_surface_clearance
-  right_top = right_surface + right_normal * road_surface_clearance
-  left_bottom = left_top - left_normal * road_height
-  right_bottom = right_top - right_normal * road_height
-  list(
-    points = points,
-    frames = frames,
-    left_bottom = left_bottom,
-    right_bottom = right_bottom,
-    left_top = left_top,
-    right_top = right_top,
-    left_normal = left_normal,
-    right_normal = right_normal
+  section_data = sample_render_road_sections_batch_cpp(
+    input_jobs = list(list(
+      points = points,
+      left_distance = left_distance,
+      right_distance = right_distance,
+      side = frames$side,
+      miter_scale = frames$miter_scale,
+      terrain_following = terrain_following
+    )),
+    heightmap = terrain_heightmap,
+    zscale = zscale,
+    parallel = FALSE,
+    verbose = FALSE
+  )[[1L]]
+  c(
+    list(
+      points = points,
+      frames = frames
+    ),
+    section_data
   )
 }
 
@@ -8541,18 +8629,18 @@ resolve_render_road_shared_surface_normal = function(
   candidate
 }
 
-#' Calculate smooth normals for a ruled road surface
+#' Calculate smooth normals for a ruled road surface in R
 #'
 #' @param left_vertices Left boundary vertices ordered by road station.
 #' @param right_vertices Right boundary vertices ordered by road station.
-#' @param closed Whether the surface is periodic.
+#' @param closed Default `FALSE`. Whether the surface is periodic.
 #' @param outward_sign Default `1`. Direction relative to the top-surface
 #' winding.
 #'
 #' @return Left and right area-weighted vertex normals derived from the final
 #' surface geometry.
 #' @keywords internal
-calculate_render_road_surface_normals = function(
+calculate_render_road_surface_normals_reference = function(
   left_vertices,
   right_vertices,
   closed = FALSE,
@@ -8628,6 +8716,50 @@ calculate_render_road_surface_normals = function(
     right = right_normal,
     first_face = first_face,
     second_face = second_face
+  )
+}
+
+#' Calculate smooth normals for a ruled road surface
+#'
+#' @param left_vertices Left boundary vertices ordered by road station.
+#' @param right_vertices Right boundary vertices ordered by road station.
+#' @param closed Default `FALSE`. Whether the surface is periodic.
+#' @param outward_sign Default `1`. Direction relative to the top-surface
+#' winding.
+#' @param parallel Default `FALSE`. Whether to use multiple native threads.
+#'
+#' @return Left and right area-weighted vertex normals derived from the final
+#' surface geometry.
+#' @keywords internal
+calculate_render_road_surface_normals = function(
+  left_vertices,
+  right_vertices,
+  closed = FALSE,
+  outward_sign = 1,
+  parallel = FALSE
+) {
+  left_vertices = as.matrix(left_vertices)
+  right_vertices = as.matrix(right_vertices)
+  closed = resolve_render_logical(closed, "closed")
+  parallel = resolve_render_logical(parallel, "parallel")
+  outward_sign = suppressWarnings(as.numeric(outward_sign[[1L]]))
+  if (
+    nrow(left_vertices) != nrow(right_vertices) ||
+      ncol(left_vertices) != 3L ||
+      ncol(right_vertices) != 3L ||
+      nrow(left_vertices) < if (closed) 3L else 2L
+  ) {
+    stop("Road surface boundaries do not define a valid strip.", call. = FALSE)
+  }
+  if (!is.finite(outward_sign) || outward_sign == 0) {
+    stop("`outward_sign` must be finite and nonzero.", call. = FALSE)
+  }
+  calculate_render_road_surface_normals_cpp(
+    left_vertices = left_vertices,
+    right_vertices = right_vertices,
+    closed = closed,
+    outward_sign = outward_sign,
+    parallel = parallel
   )
 }
 
@@ -8916,24 +9048,24 @@ sanitize_render_road_section_mesh = function(
   )
 }
 
-#' Build a road mesh from shared vertex sections
+#' Build a road mesh from shared vertex sections in R
 #'
 #' @param sections Road vertex sections.
 #' @param station Global station at each section.
 #' @param total_length Total open or periodic path length.
 #' @param bbox_center Scene center.
 #' @param texture_file Default `NULL`. Road texture file.
-#' @param texture_length Texture repeat length.
+#' @param texture_length Default `20`. Texture repeat length.
 #' @param texture_repeats Default `NULL`. Number of texture repeats.
 #' @param surface_normals Default `NULL`. Optional top and bottom surface
 #' normals calculated over the complete physical mesh chain.
-#' @param cap_start Whether to cap the first section.
-#' @param cap_end Whether to cap the final section.
-#' @param closed Whether the path is periodic.
+#' @param cap_start Default `TRUE`. Whether to cap the first section.
+#' @param cap_end Default `TRUE`. Whether to cap the final section.
+#' @param closed Default `FALSE`. Whether the path is periodic.
 #'
 #' @return A raw `mesh3d` object with mesh diagnostics.
 #' @keywords internal
-build_render_road_section_mesh = function(
+build_render_road_section_mesh_reference = function(
   sections,
   station,
   total_length,
@@ -9012,12 +9144,12 @@ build_render_road_section_mesh = function(
     sections$right_bottom[next_indices, , drop = FALSE]
   )
   if (is.null(surface_normals)) {
-    top_surface_normals = calculate_render_road_surface_normals(
+    top_surface_normals = calculate_render_road_surface_normals_reference(
       sections$left_top,
       sections$right_top,
       closed = closed
     )
-    bottom_surface_normals = calculate_render_road_surface_normals(
+    bottom_surface_normals = calculate_render_road_surface_normals_reference(
       sections$left_bottom,
       sections$right_bottom,
       closed = closed,
@@ -9249,6 +9381,138 @@ build_render_road_section_mesh = function(
   mesh
 }
 
+#' Build a road mesh from shared vertex sections
+#'
+#' @param sections Road vertex sections.
+#' @param station Global station at each section.
+#' @param total_length Total open or periodic path length.
+#' @param bbox_center Scene center.
+#' @param texture_file Default `NULL`. Road texture file.
+#' @param texture_length Default `20`. Texture repeat length.
+#' @param texture_repeats Default `NULL`. Number of texture repeats.
+#' @param surface_normals Default `NULL`. Optional top and bottom surface
+#' normals calculated over the complete physical mesh chain.
+#' @param cap_start Default `TRUE`. Whether to cap the first section.
+#' @param cap_end Default `TRUE`. Whether to cap the final section.
+#' @param closed Default `FALSE`. Whether the path is periodic.
+#' @param parallel Default `FALSE`. Whether to use multiple native threads.
+#'
+#' @return A raw `mesh3d` object with mesh diagnostics.
+#' @keywords internal
+build_render_road_section_mesh = function(
+  sections,
+  station,
+  total_length,
+  bbox_center,
+  texture_file = NULL,
+  texture_length = 20,
+  texture_repeats = NULL,
+  surface_normals = NULL,
+  cap_start = TRUE,
+  cap_end = TRUE,
+  closed = FALSE,
+  parallel = FALSE
+) {
+  point_count = nrow(sections$points)
+  closed = resolve_render_logical(closed, "closed")
+  cap_start = resolve_render_logical(cap_start, "cap_start")
+  cap_end = resolve_render_logical(cap_end, "cap_end")
+  parallel = resolve_render_logical(parallel, "parallel")
+  texture_length = resolve_render_positive_number(
+    texture_length,
+    "lane_texture_length"
+  )
+  texture_repeats = suppressWarnings(as.numeric(texture_repeats[1]))
+  if (
+    length(texture_repeats) &&
+      is.finite(texture_repeats) &&
+      texture_repeats > 0 &&
+      is.finite(total_length) &&
+      total_length > 0
+  ) {
+    texture_v = station / total_length * texture_repeats
+    closing_v = texture_repeats
+  } else if (closed) {
+    closed_texture_repeats = max(
+      1,
+      round(total_length / texture_length)
+    )
+    texture_v = station / total_length * closed_texture_repeats
+    closing_v = closed_texture_repeats
+  } else {
+    texture_v = station / texture_length
+    closing_v = total_length / texture_length
+  }
+  if (is.null(surface_normals)) {
+    top_surface_normals = calculate_render_road_surface_normals(
+      sections$left_top,
+      sections$right_top,
+      closed = closed,
+      parallel = parallel
+    )
+    bottom_surface_normals = calculate_render_road_surface_normals(
+      sections$left_bottom,
+      sections$right_bottom,
+      closed = closed,
+      outward_sign = -1,
+      parallel = parallel
+    )
+  } else {
+    top_surface_normals = surface_normals$top
+    bottom_surface_normals = surface_normals$bottom
+    valid_surface_normals =
+      is.list(top_surface_normals) &&
+      is.list(bottom_surface_normals) &&
+      is.matrix(top_surface_normals$left) &&
+      is.matrix(top_surface_normals$right) &&
+      is.matrix(bottom_surface_normals$left) &&
+      is.matrix(bottom_surface_normals$right) &&
+      nrow(top_surface_normals$left) == point_count &&
+      nrow(top_surface_normals$right) == point_count &&
+      nrow(bottom_surface_normals$left) == point_count &&
+      nrow(bottom_surface_normals$right) == point_count
+    if (!valid_surface_normals) {
+      stop(
+        "Shared road-surface normals do not match the material section.",
+        call. = FALSE
+      )
+    }
+  }
+  mesh_data = build_render_road_section_mesh_cpp(
+    left_bottom_matrix = sections$left_bottom,
+    right_bottom_matrix = sections$right_bottom,
+    left_top_matrix = sections$left_top,
+    right_top_matrix = sections$right_top,
+    incoming_tangent = sections$frames$incoming_tangent,
+    outgoing_tangent = sections$frames$outgoing_tangent,
+    texture_v = texture_v,
+    closing_v = closing_v,
+    bbox_center = bbox_center,
+    top_left_normal_matrix = top_surface_normals$left,
+    top_right_normal_matrix = top_surface_normals$right,
+    bottom_left_normal_matrix = bottom_surface_normals$left,
+    bottom_right_normal_matrix = bottom_surface_normals$right,
+    cap_start = cap_start,
+    cap_end = cap_end,
+    closed = closed,
+    parallel = parallel
+  )
+  if (!nrow(mesh_data$vertices)) {
+    return(NULL)
+  }
+  colnames(mesh_data$indices) = c("quad_starts", "", "")
+  mesh = list(
+    vb = t(cbind(mesh_data$vertices, 1)),
+    it = t(mesh_data$indices),
+    normals = t(mesh_data$vertex_normals),
+    texcoords = t(mesh_data$texcoords),
+    material = list(texture = texture_file, bump_texture = NULL, color = NULL)
+  )
+  class(mesh) = "mesh3d"
+  attr(mesh, "render_road_mesh_diagnostics") = mesh_data$diagnostics
+  mesh
+}
+
 #' Subset shared road-chain sections
 #'
 #' @param sections Complete physical-chain vertex sections.
@@ -9342,7 +9606,463 @@ subset_render_road_surface_normals = function(
   )
 }
 
-#' Make a high-quality continuous road chain mesh
+#' Calculate road texture coordinates
+#'
+#' @param station Road station at every ring.
+#' @param total_length Total open or periodic road length.
+#' @param texture_length Texture repeat length in scene units.
+#' @param texture_repeats Default `NULL`. Explicit number of texture repeats.
+#' @param closed Whether the road is periodic.
+#'
+#' @return Texture coordinates and the closing texture coordinate.
+#' @keywords internal
+calculate_render_road_texture_coordinates = function(
+  station,
+  total_length,
+  texture_length,
+  texture_repeats = NULL,
+  closed
+) {
+  texture_length = resolve_render_positive_number(
+    texture_length,
+    "lane_texture_length"
+  )
+  texture_repeats = suppressWarnings(as.numeric(texture_repeats[1]))
+  if (
+    length(texture_repeats) &&
+      is.finite(texture_repeats) &&
+      texture_repeats > 0 &&
+      is.finite(total_length) &&
+      total_length > 0
+  ) {
+    texture_v = station / total_length * texture_repeats
+    closing_v = texture_repeats
+  } else if (closed) {
+    closed_texture_repeats = max(
+      1,
+      round(total_length / texture_length)
+    )
+    texture_v = station / total_length * closed_texture_repeats
+    closing_v = closed_texture_repeats
+  } else {
+    texture_v = station / texture_length
+    closing_v = total_length / texture_length
+  }
+  list(texture_v = texture_v, closing_v = closing_v)
+}
+
+#' Initialize batched road-chain preparation
+#'
+#' @param task Assembled road mesh-chain task.
+#'
+#' @return Normalized task and native densification job, or `NULL`.
+#' @keywords internal
+initialize_render_highquality_road_chain_preparation = function(task) {
+  defaults = list(
+    heightmap = NULL,
+    zscale = 1,
+    texture_file = NULL,
+    texture_length = 20,
+    texture_repeats = NULL,
+    texture_world_scale = c(1, 1),
+    terrain_following = TRUE,
+    left_width = NULL,
+    right_width = NULL,
+    envelope_sections = NULL,
+    material_sections = NULL,
+    cap_start = TRUE,
+    cap_end = TRUE,
+    closed = FALSE,
+    miter_limit = 4,
+    round_join_segments = 5L,
+    return_mesh = FALSE
+  )
+  task = utils::modifyList(defaults, task, keep.null = TRUE)
+  required = c("points", "bbox_center", "width", "material")
+  if (!all(required %in% names(task))) {
+    stop("Road mesh-chain task inputs do not match.", call. = FALSE)
+  }
+  task$terrain_following = resolve_render_logical(
+    task$terrain_following,
+    "terrain_following"
+  )
+  task$closed = resolve_render_logical(task$closed, "closed")
+  task$cap_start = resolve_render_logical(task$cap_start, "cap_start")
+  task$cap_end = resolve_render_logical(task$cap_end, "cap_end")
+  task$return_mesh = resolve_render_logical(task$return_mesh, "return_mesh")
+  task$miter_limit = resolve_render_positive_number(
+    task$miter_limit,
+    "miter_limit"
+  )
+  if (task$miter_limit <= 1) {
+    stop("`miter_limit` must be greater than one.", call. = FALSE)
+  }
+  task$width = resolve_render_positive_number(task$width, "width")
+  task$zscale = suppressWarnings(as.numeric(task$zscale[[1L]]))
+  if (!is.finite(task$zscale) || task$zscale <= 0) {
+    task$zscale = 1
+  }
+  task$texture_world_scale = suppressWarnings(as.numeric(
+    task$texture_world_scale[1:2]
+  ))
+  if (
+    length(task$texture_world_scale) != 2L ||
+      any(!is.finite(task$texture_world_scale)) ||
+      any(task$texture_world_scale <= 0)
+  ) {
+    task$texture_world_scale = c(1, 1)
+  }
+  task$points = collapse_render_highquality_road_path_points(
+    task$points,
+    texture_world_scale = task$texture_world_scale
+  )
+  if (task$closed && nrow(task$points) >= 2L) {
+    closing_delta = (task$points[nrow(task$points), c(1, 3)] -
+      task$points[1L, c(1, 3)]) *
+      task$texture_world_scale
+    if (sqrt(sum(closing_delta^2)) <= 1e-3) {
+      task$points = task$points[-nrow(task$points), , drop = FALSE]
+    }
+  }
+  if (nrow(task$points) < if (task$closed) 3L else 2L) {
+    return(NULL)
+  }
+  densify_points = if (task$closed) {
+    rbind(task$points, task$points[1L, , drop = FALSE])
+  } else {
+    task$points
+  }
+  list(
+    task = task,
+    densify_job = list(
+      points = densify_points,
+      width = task$width,
+      terrain_following = task$terrain_following &&
+        is.matrix(task$heightmap)
+    )
+  )
+}
+
+#' Prepare a road-chain terrain-section job
+#'
+#' @param initialized Initialized road-chain preparation.
+#' @param densified_points Native densified path points.
+#'
+#' @return Geometry metadata and native terrain-section job, or `NULL`.
+#' @keywords internal
+prepare_render_highquality_road_chain_section_job = function(
+  initialized,
+  densified_points
+) {
+  task = initialized$task
+  points = as.matrix(densified_points)
+  if (task$closed && nrow(points)) {
+    points = points[-nrow(points), , drop = FALSE]
+  }
+  points = collapse_render_highquality_road_path_points(
+    points,
+    texture_world_scale = task$texture_world_scale
+  )
+  if (nrow(points) < if (task$closed) 3L else 2L) {
+    return(NULL)
+  }
+  normalize_distance = function(value, name) {
+    value = suppressWarnings(as.numeric(value))
+    if (length(value) == 1L) {
+      value = rep(value, nrow(points))
+    }
+    if (
+      length(value) != nrow(points) ||
+        any(!is.finite(value)) ||
+        any(value <= 0)
+    ) {
+      stop(
+        sprintf("`%s` must contain positive section distances.", name),
+        call. = FALSE
+      )
+    }
+    value
+  }
+  if (!is.null(task$envelope_sections)) {
+    envelope_station = calculate_road_path_cumulative_distance(
+      points,
+      texture_world_scale = task$texture_world_scale
+    )
+    envelope = evaluate_render_road_envelope_sections(
+      envelope_sections = task$envelope_sections,
+      station = envelope_station
+    )
+    left_distance = normalize_distance(envelope$half_width, "left_width")
+    right_distance = normalize_distance(envelope$half_width, "right_width")
+  } else {
+    left_width = if (is.null(task$left_width)) {
+      task$width / 2
+    } else {
+      task$left_width
+    }
+    right_width = if (is.null(task$right_width)) {
+      task$width / 2
+    } else {
+      task$right_width
+    }
+    left_distance = normalize_distance(left_width, "left_width")
+    right_distance = normalize_distance(right_width, "right_width")
+  }
+  join_diagnostics = list()
+  for (iteration in seq_len(3L)) {
+    frames = calculate_render_road_vertex_frames(
+      points,
+      closed = task$closed,
+      miter_limit = task$miter_limit
+    )
+    if (!any(frames$join_style == "round")) {
+      break
+    }
+    expanded = expand_render_road_unstable_joins(
+      points = points,
+      left_distance = left_distance,
+      right_distance = right_distance,
+      closed = task$closed,
+      miter_limit = task$miter_limit,
+      round_join_segments = task$round_join_segments
+    )
+    join_diagnostics[[length(join_diagnostics) + 1L]] = expanded$diagnostics
+    points = expanded$points
+    left_distance = expanded$left_distance
+    right_distance = expanded$right_distance
+  }
+  frames = calculate_render_road_vertex_frames(
+    points,
+    closed = task$closed,
+    miter_limit = task$miter_limit
+  )
+  if (any(frames$join_style == "round")) {
+    stop("Road join expansion did not converge.", call. = FALSE)
+  }
+  geometry = task
+  geometry$points = points
+  geometry["mesh_heightmap"] = list(
+    if (task$terrain_following) {
+      task$heightmap
+    } else {
+      NULL
+    }
+  )
+  geometry$left_distance = left_distance
+  geometry$right_distance = right_distance
+  geometry$join_diagnostics = join_diagnostics
+  geometry$frames = frames
+  geometry$section_job = list(
+    points = points,
+    left_distance = left_distance,
+    right_distance = right_distance,
+    side = frames$side,
+    miter_scale = frames$miter_scale,
+    terrain_following = task$terrain_following && is.matrix(task$heightmap)
+  )
+  geometry
+}
+
+#' Group road preparations by shared terrain
+#'
+#' @param preparations Initialized road-chain preparations.
+#' @param indices Preparation indices to group.
+#'
+#' @return Terrain groups with original preparation indices.
+#' @keywords internal
+group_render_highquality_road_preparations_by_terrain = function(
+  preparations,
+  indices
+) {
+  groups = list()
+  for (index in indices) {
+    preparation = preparations[[index]]
+    task = preparation$task
+    has_terrain = task$terrain_following && is.matrix(task$heightmap)
+    matched = FALSE
+    for (group_index in seq_along(groups)) {
+      group = groups[[group_index]]
+      same_terrain = if (!has_terrain && !group$has_terrain) {
+        TRUE
+      } else {
+        has_terrain &&
+          group$has_terrain &&
+          identical(task$zscale, group$zscale) &&
+          identical(task$heightmap, group$heightmap)
+      }
+      if (same_terrain) {
+        groups[[group_index]]$indices = c(group$indices, index)
+        matched = TRUE
+        break
+      }
+    }
+    if (!matched) {
+      groups[[length(groups) + 1L]] = list(
+        indices = index,
+        has_terrain = has_terrain,
+        heightmap = if (has_terrain) {
+          task$heightmap
+        } else {
+          matrix(numeric(), nrow = 0L, ncol = 0L)
+        },
+        zscale = if (has_terrain) task$zscale else 1
+      )
+    }
+  }
+  groups
+}
+
+#' Prepare all high-quality road chains with native terrain queues
+#'
+#' @param tasks Assembled road mesh-chain tasks.
+#' @param verbose Whether to display preparation progress.
+#' @param parallel Whether to use native worker threads.
+#'
+#' @return Per-chain prepared results and captured errors.
+#' @keywords internal
+prepare_render_highquality_road_chain_meshes = function(
+  tasks,
+  verbose = FALSE,
+  parallel = FALSE
+) {
+  preparation_progress = new_render_highquality_progress_bar(
+    verbose = verbose,
+    label = "Preparing road mesh jobs",
+    total = length(tasks)
+  )
+  initialized_results = lapply(tasks, function(task) {
+    tryCatch(
+      list(
+        initialized = initialize_render_highquality_road_chain_preparation(
+          task
+        ),
+        error = NULL
+      ),
+      error = function(error) {
+        list(initialized = NULL, error = conditionMessage(error))
+      }
+    )
+  })
+  initialized = lapply(initialized_results, `[[`, "initialized")
+  initialized_index = which(vapply(
+    initialized_results,
+    function(result) is.null(result$error) && !is.null(result$initialized),
+    logical(1)
+  ))
+  densified = vector("list", length(tasks))
+  terrain_groups = group_render_highquality_road_preparations_by_terrain(
+    initialized,
+    initialized_index
+  )
+  for (group in terrain_groups) {
+    densified[group$indices] = densify_render_road_paths_batch_cpp(
+      input_jobs = lapply(
+        initialized[group$indices],
+        `[[`,
+        "densify_job"
+      ),
+      heightmap = group$heightmap,
+      zscale = group$zscale,
+      parallel = parallel,
+      verbose = verbose
+    )
+  }
+  geometry_results = vector("list", length(tasks))
+  for (index in initialized_index) {
+    geometry_results[[index]] = tryCatch(
+      list(
+        geometry = prepare_render_highquality_road_chain_section_job(
+          initialized[[index]],
+          densified[[index]]
+        ),
+        error = NULL
+      ),
+      error = function(error) {
+        list(geometry = NULL, error = conditionMessage(error))
+      }
+    )
+  }
+  geometry_index = which(vapply(
+    geometry_results,
+    function(result) {
+      !is.null(result) &&
+        is.null(result$error) &&
+        !is.null(result$geometry)
+    },
+    logical(1)
+  ))
+  geometry = lapply(geometry_results, function(result) {
+    if (is.null(result)) NULL else result$geometry
+  })
+  section_data = vector("list", length(tasks))
+  section_groups = group_render_highquality_road_preparations_by_terrain(
+    initialized,
+    geometry_index
+  )
+  for (group in section_groups) {
+    section_data[group$indices] = sample_render_road_sections_batch_cpp(
+      input_jobs = lapply(
+        geometry[group$indices],
+        `[[`,
+        "section_job"
+      ),
+      heightmap = group$heightmap,
+      zscale = group$zscale,
+      parallel = parallel,
+      verbose = verbose
+    )
+  }
+  prepared_results = vector("list", length(tasks))
+  for (index in seq_along(tasks)) {
+    preparation_error = initialized_results[[index]]$error
+    if (is.null(preparation_error) && !is.null(geometry_results[[index]])) {
+      preparation_error = geometry_results[[index]]$error
+    }
+    if (!is.null(preparation_error)) {
+      prepared_results[[index]] = list(
+        prepared = NULL,
+        error = preparation_error
+      )
+    } else if (
+      is.null(initialized[[index]]) ||
+        is.null(geometry[[index]])
+    ) {
+      prepared_results[[index]] = list(prepared = NULL, error = NULL)
+    } else {
+      sections = c(
+        list(
+          points = geometry[[index]]$points,
+          frames = geometry[[index]]$frames
+        ),
+        section_data[[index]]
+      )
+      prepared_results[[index]] = tryCatch(
+        list(
+          prepared = do.call(
+            prepare_render_highquality_road_chain_mesh,
+            c(
+              tasks[[index]],
+              list(
+                preparation_geometry = geometry[[index]],
+                precomputed_sections = sections
+              )
+            )
+          ),
+          error = NULL
+        ),
+        error = function(error) {
+          list(prepared = NULL, error = conditionMessage(error))
+        }
+      )
+    }
+    if (!is.null(preparation_progress)) {
+      preparation_progress$tick()
+    }
+  }
+  prepared_results
+}
+
+#' Prepare a high-quality continuous road chain mesh
 #'
 #' @param points Path points.
 #' @param bbox_center Scene center.
@@ -9367,10 +10087,14 @@ subset_render_road_surface_normals = function(
 #' @param miter_limit Maximum permitted miter scale.
 #' @param round_join_segments Number of rounded fallback segments.
 #' @param return_mesh Whether to return raw mesh data instead of a rayrender model.
+#' @param preparation_geometry Default `NULL`. Precomputed road geometry used
+#' by the collection preparation queue.
+#' @param precomputed_sections Default `NULL`. Precomputed terrain-following
+#' road sections used by the collection preparation queue.
 #'
-#' @return A rayrender mesh model, raw `mesh3d`, or `NULL`.
+#' @return Prepared native mesh job and R-only finalization metadata, or `NULL`.
 #' @keywords internal
-make_render_highquality_road_chain_mesh = function(
+prepare_render_highquality_road_chain_mesh = function(
   points,
   bbox_center,
   width,
@@ -9391,150 +10115,158 @@ make_render_highquality_road_chain_mesh = function(
   closed = FALSE,
   miter_limit = 4,
   round_join_segments = 5L,
-  return_mesh = FALSE
+  return_mesh = FALSE,
+  preparation_geometry = NULL,
+  precomputed_sections = NULL
 ) {
-  terrain_following = resolve_render_logical(
-    terrain_following,
-    "terrain_following"
-  )
-  closed = resolve_render_logical(closed, "closed")
-  cap_start = resolve_render_logical(cap_start, "cap_start")
-  cap_end = resolve_render_logical(cap_end, "cap_end")
-  return_mesh = resolve_render_logical(return_mesh, "return_mesh")
-  miter_limit = resolve_render_positive_number(
-    miter_limit,
-    "miter_limit"
-  )
-  if (miter_limit <= 1) {
-    stop("`miter_limit` must be greater than one.", call. = FALSE)
-  }
-  texture_world_scale = suppressWarnings(as.numeric(texture_world_scale[1:2]))
-  if (
-    length(texture_world_scale) != 2L ||
-      any(!is.finite(texture_world_scale)) ||
-      any(texture_world_scale <= 0)
-  ) {
-    texture_world_scale = c(1, 1)
-  }
-  points = collapse_render_highquality_road_path_points(
-    points,
-    texture_world_scale = texture_world_scale
-  )
-  if (closed && nrow(points) >= 2L) {
-    closing_delta = (points[nrow(points), c(1, 3)] -
-      points[1L, c(1, 3)]) *
-      texture_world_scale
-    if (sqrt(sum(closing_delta^2)) <= 1e-3) {
-      points = points[-nrow(points), , drop = FALSE]
+  if (is.null(preparation_geometry)) {
+    terrain_following = resolve_render_logical(
+      terrain_following,
+      "terrain_following"
+    )
+    closed = resolve_render_logical(closed, "closed")
+    cap_start = resolve_render_logical(cap_start, "cap_start")
+    cap_end = resolve_render_logical(cap_end, "cap_end")
+    return_mesh = resolve_render_logical(return_mesh, "return_mesh")
+    miter_limit = resolve_render_positive_number(
+      miter_limit,
+      "miter_limit"
+    )
+    if (miter_limit <= 1) {
+      stop("`miter_limit` must be greater than one.", call. = FALSE)
     }
-  }
-  if (nrow(points) < if (closed) 3L else 2L) {
-    return(NULL)
-  }
-  mesh_heightmap = if (terrain_following) heightmap else NULL
-  densify_points = if (closed) {
-    rbind(points, points[1L, , drop = FALSE])
-  } else {
-    points
-  }
-  densify_points = densify_render_highquality_path_points(
-    points = densify_points,
-    width = width,
-    heightmap = mesh_heightmap,
-    zscale = zscale
-  )
-  if (closed) {
-    densify_points = densify_points[-nrow(densify_points), , drop = FALSE]
-  }
-  points = collapse_render_highquality_road_path_points(
-    densify_points,
-    texture_world_scale = texture_world_scale
-  )
-  if (nrow(points) < if (closed) 3L else 2L) {
-    return(NULL)
-  }
-  half_width = width / 2
-  normalize_distance = function(value, name) {
-    value = suppressWarnings(as.numeric(value))
-    if (length(value) == 1L) {
-      value = rep(value, nrow(points))
-    }
+    texture_world_scale = suppressWarnings(as.numeric(texture_world_scale[1:2]))
     if (
-      length(value) != nrow(points) ||
-        any(!is.finite(value)) ||
-        any(value <= 0)
+      length(texture_world_scale) != 2L ||
+        any(!is.finite(texture_world_scale)) ||
+        any(texture_world_scale <= 0)
     ) {
-      stop(
-        sprintf("`%s` must contain positive section distances.", name),
-        call. = FALSE
-      )
+      texture_world_scale = c(1, 1)
     }
-    value
-  }
-  if (!is.null(envelope_sections)) {
-    envelope_station = calculate_road_path_cumulative_distance(
+    points = collapse_render_highquality_road_path_points(
       points,
       texture_world_scale = texture_world_scale
     )
-    envelope = evaluate_render_road_envelope_sections(
-      envelope_sections = envelope_sections,
-      station = envelope_station
+    if (closed && nrow(points) >= 2L) {
+      closing_delta = (points[nrow(points), c(1, 3)] -
+        points[1L, c(1, 3)]) *
+        texture_world_scale
+      if (sqrt(sum(closing_delta^2)) <= 1e-3) {
+        points = points[-nrow(points), , drop = FALSE]
+      }
+    }
+    if (nrow(points) < if (closed) 3L else 2L) {
+      return(NULL)
+    }
+    mesh_heightmap = if (terrain_following) heightmap else NULL
+    densify_points = if (closed) {
+      rbind(points, points[1L, , drop = FALSE])
+    } else {
+      points
+    }
+    densify_points = densify_render_highquality_path_points(
+      points = densify_points,
+      width = width,
+      heightmap = mesh_heightmap,
+      zscale = zscale
     )
-    left_distance = normalize_distance(
-      envelope$half_width,
-      "left_width"
+    if (closed) {
+      densify_points = densify_points[-nrow(densify_points), , drop = FALSE]
+    }
+    points = collapse_render_highquality_road_path_points(
+      densify_points,
+      texture_world_scale = texture_world_scale
     )
-    right_distance = normalize_distance(
-      envelope$half_width,
-      "right_width"
-    )
-  } else {
-    left_width = if (is.null(left_width)) half_width else left_width
-    right_width = if (is.null(right_width)) half_width else right_width
-    left_distance = normalize_distance(left_width, "left_width")
-    right_distance = normalize_distance(right_width, "right_width")
-  }
-  join_diagnostics = list()
-  for (iteration in seq_len(3L)) {
+    if (nrow(points) < if (closed) 3L else 2L) {
+      return(NULL)
+    }
+    half_width = width / 2
+    normalize_distance = function(value, name) {
+      value = suppressWarnings(as.numeric(value))
+      if (length(value) == 1L) {
+        value = rep(value, nrow(points))
+      }
+      if (
+        length(value) != nrow(points) ||
+          any(!is.finite(value)) ||
+          any(value <= 0)
+      ) {
+        stop(
+          sprintf("`%s` must contain positive section distances.", name),
+          call. = FALSE
+        )
+      }
+      value
+    }
+    if (!is.null(envelope_sections)) {
+      envelope_station = calculate_road_path_cumulative_distance(
+        points,
+        texture_world_scale = texture_world_scale
+      )
+      envelope = evaluate_render_road_envelope_sections(
+        envelope_sections = envelope_sections,
+        station = envelope_station
+      )
+      left_distance = normalize_distance(
+        envelope$half_width,
+        "left_width"
+      )
+      right_distance = normalize_distance(
+        envelope$half_width,
+        "right_width"
+      )
+    } else {
+      left_width = if (is.null(left_width)) half_width else left_width
+      right_width = if (is.null(right_width)) half_width else right_width
+      left_distance = normalize_distance(left_width, "left_width")
+      right_distance = normalize_distance(right_width, "right_width")
+    }
+    join_diagnostics = list()
+    for (iteration in seq_len(3L)) {
+      frames = calculate_render_road_vertex_frames(
+        points,
+        closed = closed,
+        miter_limit = miter_limit
+      )
+      if (!any(frames$join_style == "round")) {
+        break
+      }
+      expanded = expand_render_road_unstable_joins(
+        points = points,
+        left_distance = left_distance,
+        right_distance = right_distance,
+        closed = closed,
+        miter_limit = miter_limit,
+        round_join_segments = round_join_segments
+      )
+      join_diagnostics[[length(join_diagnostics) + 1L]] =
+        expanded$diagnostics
+      points = expanded$points
+      left_distance = expanded$left_distance
+      right_distance = expanded$right_distance
+    }
     frames = calculate_render_road_vertex_frames(
       points,
       closed = closed,
       miter_limit = miter_limit
     )
-    if (!any(frames$join_style == "round")) {
-      break
+    if (any(frames$join_style == "round")) {
+      stop("Road join expansion did not converge.", call. = FALSE)
     }
-    expanded = expand_render_road_unstable_joins(
+    sections = calculate_render_road_vertex_sections(
       points = points,
       left_distance = left_distance,
       right_distance = right_distance,
+      heightmap = mesh_heightmap,
+      zscale = zscale,
       closed = closed,
-      miter_limit = miter_limit,
-      round_join_segments = round_join_segments
+      miter_limit = miter_limit
     )
-    join_diagnostics[[length(join_diagnostics) + 1L]] =
-      expanded$diagnostics
-    points = expanded$points
-    left_distance = expanded$left_distance
-    right_distance = expanded$right_distance
+  } else {
+    list2env(preparation_geometry, envir = environment())
+    mesh_heightmap = if (terrain_following) heightmap else NULL
+    sections = precomputed_sections
   }
-  frames = calculate_render_road_vertex_frames(
-    points,
-    closed = closed,
-    miter_limit = miter_limit
-  )
-  if (any(frames$join_style == "round")) {
-    stop("Road join expansion did not converge.", call. = FALSE)
-  }
-  sections = calculate_render_road_vertex_sections(
-    points = points,
-    left_distance = left_distance,
-    right_distance = right_distance,
-    heightmap = mesh_heightmap,
-    zscale = zscale,
-    closed = closed,
-    miter_limit = miter_limit
-  )
   inverted_segment = sort(unique(c(
     identify_render_road_inverted_surface_segments(
       sections$left_bottom,
@@ -9672,59 +10404,53 @@ make_render_highquality_road_chain_mesh = function(
       texture_world_scale
     total_length = total_length + sqrt(sum(closing_delta^2))
   }
-  add_diagnostics = function(
-    mesh,
-    material_section_index = 1L,
-    material_section_count = 1L,
-    rendered_cap_start = !closed && cap_start,
-    rendered_cap_end = !closed && cap_end,
-    rendered_closed = closed
-  ) {
-    diagnostics = attr(mesh, "render_road_mesh_diagnostics")
-    diagnostics$closed = rendered_closed
-    diagnostics$cap_start = rendered_cap_start
-    diagnostics$cap_end = rendered_cap_end
-    diagnostics$section_count = nrow(points)
-    diagnostics$join_expansion = join_diagnostics
-    diagnostics$sweep_stabilization = stabilization
-    diagnostics$envelope_section_count = if (is.null(envelope_sections)) {
+  diagnostics = list(
+    section_count = nrow(points),
+    join_expansion = join_diagnostics,
+    sweep_stabilization = stabilization,
+    envelope_section_count = if (is.null(envelope_sections)) {
       0L
     } else {
       nrow(envelope_sections)
-    }
-    diagnostics$material_section_index = material_section_index
-    diagnostics$material_section_count = material_section_count
-    diagnostics$minimum_left_width = min(left_distance)
-    diagnostics$maximum_left_width = max(left_distance)
-    diagnostics$minimum_right_width = min(right_distance)
-    diagnostics$maximum_right_width = max(right_distance)
-    attr(mesh, "render_road_mesh_diagnostics") = diagnostics
-    mesh
-  }
+    },
+    minimum_left_width = min(left_distance),
+    maximum_left_width = max(left_distance),
+    minimum_right_width = min(right_distance),
+    maximum_right_width = max(right_distance)
+  )
   if (is.null(material_sections) || length(material_sections) <= 1L) {
-    mesh = build_render_road_section_mesh(
-      sections = sections,
+    texture_coordinates = calculate_render_road_texture_coordinates(
       station = station,
       total_length = total_length,
-      bbox_center = bbox_center,
-      texture_file = texture_file,
       texture_length = texture_length,
       texture_repeats = texture_repeats,
-      cap_start = cap_start,
-      cap_end = cap_end,
       closed = closed
     )
-    if (is.null(mesh)) {
-      return(NULL)
-    }
-    mesh = add_diagnostics(mesh)
-    if (return_mesh) {
-      return(mesh)
-    }
-    return(rayrender::mesh3d_model(
-      mesh,
-      override_material = is.null(texture_file),
-      material = material
+    return(list(
+      job = list(
+        sections = sections,
+        bbox_center = bbox_center,
+        closed = closed,
+        mesh_sections = list(list(
+          section_index = seq_len(nrow(points)),
+          texture_v = texture_coordinates$texture_v,
+          closing_v = texture_coordinates$closing_v,
+          cap_start = cap_start,
+          cap_end = cap_end,
+          closed = closed
+        ))
+      ),
+      specifications = list(list(
+        texture_file = texture_file,
+        material = material,
+        cap_start = !closed && cap_start,
+        cap_end = !closed && cap_end,
+        closed = closed
+      )),
+      diagnostics = diagnostics,
+      boundary_index = NULL,
+      return_mesh = return_mesh,
+      grouped = FALSE
     ))
   }
   material_sections = material_sections[
@@ -9780,20 +10506,8 @@ make_render_highquality_road_chain_mesh = function(
       ))]
     }
   }
-  shared_surface_normals = list(
-    top = calculate_render_road_surface_normals(
-      sections$left_top,
-      sections$right_top,
-      closed = closed
-    ),
-    bottom = calculate_render_road_surface_normals(
-      sections$left_bottom,
-      sections$right_bottom,
-      closed = closed,
-      outward_sign = -1
-    )
-  )
-  section_meshes = vector("list", length(material_sections))
+  mesh_sections = vector("list", length(material_sections))
+  specifications = vector("list", length(material_sections))
   for (material_index in seq_along(material_sections)) {
     start_index = boundary_index[[material_index]]
     end_index = boundary_index[[material_index + 1L]]
@@ -9817,49 +10531,111 @@ make_render_highquality_road_chain_mesh = function(
       )
     }
     specification = material_sections[[material_index]]
-    section_mesh = build_render_road_section_mesh(
-      sections = subset_render_road_vertex_sections(
-        sections,
-        section_index
-      ),
+    texture_coordinates = calculate_render_road_texture_coordinates(
       station = section_station,
       total_length = section_length,
-      bbox_center = bbox_center,
-      texture_file = specification$texture_file,
       texture_length = specification$texture_length,
       texture_repeats = specification$texture_repeats,
-      surface_normals = subset_render_road_surface_normals(
-        shared_surface_normals,
-        section_index
-      ),
-      cap_start = !closed &&
-        material_index == 1L &&
-        cap_start,
-      cap_end = !closed &&
-        material_index == length(material_sections) &&
-        cap_end,
       closed = FALSE
     )
-    if (is.null(section_mesh)) {
+    rendered_cap_start = !closed &&
+      material_index == 1L &&
+      cap_start
+    rendered_cap_end = !closed &&
+      material_index == length(material_sections) &&
+      cap_end
+    mesh_sections[[material_index]] = list(
+      section_index = section_index,
+      texture_v = texture_coordinates$texture_v,
+      closing_v = texture_coordinates$closing_v,
+      cap_start = rendered_cap_start,
+      cap_end = rendered_cap_end,
+      closed = FALSE
+    )
+    specifications[[material_index]] = list(
+      texture_file = specification$texture_file,
+      material = specification$material,
+      cap_start = rendered_cap_start,
+      cap_end = rendered_cap_end,
+      closed = FALSE
+    )
+  }
+  list(
+    job = list(
+      sections = sections,
+      bbox_center = bbox_center,
+      closed = closed,
+      mesh_sections = mesh_sections
+    ),
+    specifications = specifications,
+    diagnostics = diagnostics,
+    boundary_index = boundary_index,
+    return_mesh = return_mesh,
+    grouped = TRUE
+  )
+}
+
+#' Finalize a prepared high-quality road chain mesh
+#'
+#' @param prepared Prepared road-chain job and R-only metadata.
+#' @param native_result Native mesh arrays for every material section.
+#'
+#' @return A rayrender mesh model, raw `mesh3d`, mesh group, or `NULL`.
+#' @keywords internal
+finalize_render_highquality_road_chain_mesh = function(
+  prepared,
+  native_result
+) {
+  native_meshes = native_result$meshes
+  if (length(native_meshes) != length(prepared$specifications)) {
+    stop("Native road mesh result sections do not match.", call. = FALSE)
+  }
+  section_meshes = vector("list", length(native_meshes))
+  for (material_index in seq_along(native_meshes)) {
+    mesh_data = native_meshes[[material_index]]
+    if (!nrow(mesh_data$vertices)) {
       next
     }
-    section_mesh = add_diagnostics(
-      section_mesh,
-      material_section_index = material_index,
-      material_section_count = length(material_sections),
-      rendered_cap_start = !closed &&
-        material_index == 1L &&
-        cap_start,
-      rendered_cap_end = !closed &&
-        material_index == length(material_sections) &&
-        cap_end,
-      rendered_closed = FALSE
+    colnames(mesh_data$indices) = c("quad_starts", "", "")
+    specification = prepared$specifications[[material_index]]
+    mesh = list(
+      vb = t(cbind(mesh_data$vertices, 1)),
+      it = t(mesh_data$indices),
+      normals = t(mesh_data$vertex_normals),
+      texcoords = t(mesh_data$texcoords),
+      material = list(
+        texture = specification$texture_file,
+        bump_texture = NULL,
+        color = NULL
+      )
     )
-    section_meshes[[material_index]] = if (return_mesh) {
-      section_mesh
+    class(mesh) = "mesh3d"
+    diagnostics = mesh_data$diagnostics
+    diagnostics$closed = specification$closed
+    diagnostics$cap_start = specification$cap_start
+    diagnostics$cap_end = specification$cap_end
+    diagnostics$section_count = prepared$diagnostics$section_count
+    diagnostics$join_expansion = prepared$diagnostics$join_expansion
+    diagnostics$sweep_stabilization =
+      prepared$diagnostics$sweep_stabilization
+    diagnostics$envelope_section_count =
+      prepared$diagnostics$envelope_section_count
+    diagnostics$material_section_index = material_index
+    diagnostics$material_section_count = length(native_meshes)
+    diagnostics$minimum_left_width =
+      prepared$diagnostics$minimum_left_width
+    diagnostics$maximum_left_width =
+      prepared$diagnostics$maximum_left_width
+    diagnostics$minimum_right_width =
+      prepared$diagnostics$minimum_right_width
+    diagnostics$maximum_right_width =
+      prepared$diagnostics$maximum_right_width
+    attr(mesh, "render_road_mesh_diagnostics") = diagnostics
+    section_meshes[[material_index]] = if (prepared$return_mesh) {
+      mesh
     } else {
       rayrender::mesh3d_model(
-        section_mesh,
+        mesh,
         override_material = is.null(specification$texture_file),
         material = specification$material
       )
@@ -9869,9 +10645,69 @@ make_render_highquality_road_chain_mesh = function(
   if (!length(section_meshes)) {
     return(NULL)
   }
+  if (!prepared$grouped) {
+    return(section_meshes[[1L]])
+  }
   class(section_meshes) = c("render_road_mesh_group", "list")
-  attr(section_meshes, "boundary_index") = boundary_index
+  attr(section_meshes, "boundary_index") = prepared$boundary_index
   section_meshes
+}
+
+#' Make a high-quality continuous road chain mesh
+#'
+#' @inheritParams prepare_render_highquality_road_chain_mesh
+#' @param parallel Default `FALSE`. Whether to use multiple native threads.
+#'
+#' @return A rayrender mesh model, raw `mesh3d`, or `NULL`.
+#' @keywords internal
+make_render_highquality_road_chain_mesh = function(
+  points,
+  bbox_center,
+  width,
+  heightmap = NULL,
+  zscale = 1,
+  material,
+  texture_file = NULL,
+  texture_length = 20,
+  texture_repeats = NULL,
+  texture_world_scale = c(1, 1),
+  terrain_following = TRUE,
+  left_width = NULL,
+  right_width = NULL,
+  envelope_sections = NULL,
+  material_sections = NULL,
+  cap_start = TRUE,
+  cap_end = TRUE,
+  closed = FALSE,
+  miter_limit = 4,
+  round_join_segments = 5L,
+  return_mesh = FALSE,
+  parallel = FALSE
+) {
+  parallel = resolve_render_logical(parallel, "parallel")
+  preparation_arguments = as.list(environment())
+  preparation_arguments$parallel = NULL
+  preparation_result = prepare_render_highquality_road_chain_meshes(
+    tasks = list(preparation_arguments),
+    verbose = FALSE,
+    parallel = parallel
+  )[[1L]]
+  if (!is.null(preparation_result$error)) {
+    stop(preparation_result$error, call. = FALSE)
+  }
+  prepared = preparation_result$prepared
+  if (is.null(prepared)) {
+    return(NULL)
+  }
+  native_result = build_render_highquality_road_mesh_batch_cpp(
+    input_jobs = list(prepared$job),
+    parallel = parallel,
+    verbose = FALSE
+  )[[1L]]
+  if (!isTRUE(native_result$success)) {
+    stop(native_result$error, call. = FALSE)
+  }
+  finalize_render_highquality_road_chain_mesh(prepared, native_result)
 }
 
 #' Collapse effectively duplicated road path points

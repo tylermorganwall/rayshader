@@ -175,6 +175,8 @@ new_render_highquality_progress_bar = function(verbose, label, total) {
 #'@param plot Default `is.na(filename)`. Whether to plot the scene, or just return the RGBA array.
 #'@param verbose Default `FALSE`. If `TRUE`, displays progress bars while
 #'converting line, stream, and road paths into raytraced scene objects.
+#'@param parallel Default `TRUE`. Whether to use multiple threads for road mesh
+#'construction and raytracing.
 #'@param ... Additional parameters to pass to `rayrender::render_scene()`.
 #'
 #'@export
@@ -363,6 +365,7 @@ render_highquality = function(
   animation_camera_coords = NULL,
   plot = is.na(filename),
   verbose = FALSE,
+  parallel = TRUE,
   ...
 ) {
   text_offset_missing = missing(text_offset)
@@ -372,6 +375,7 @@ render_highquality = function(
     stop("`verbose` must be TRUE or FALSE.", call. = FALSE)
   }
   verbose = verbose[1L]
+  parallel = resolve_render_logical(parallel, "parallel")
   water_material = match.arg(water_material)
   water_roughness = validate_render_highquality_water_roughness(
     water_roughness
@@ -463,6 +467,7 @@ render_highquality = function(
     arg_name = "screen_line_args"
   )
   dot_args = list(...)
+  dot_args$parallel = parallel
   render_scene_formals = formals(rayrender::render_scene)
   render_scene_supports_environment_light_bake_white =
     "environment_light_bake_white" %in% names(render_scene_formals)
@@ -1503,7 +1508,8 @@ render_highquality = function(
   }
   road_path_meshes = make_render_highquality_road_path_meshes(
     road_path_tasks,
-    verbose = verbose
+    verbose = verbose,
+    parallel = parallel
   )
   if (length(road_path_meshes) > 0) {
     pathline = c(pathline, road_path_meshes)

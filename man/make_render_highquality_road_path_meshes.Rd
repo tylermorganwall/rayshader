@@ -4,12 +4,18 @@
 \alias{make_render_highquality_road_path_meshes}
 \title{Make high-quality road path meshes}
 \usage{
-make_render_highquality_road_path_meshes(tasks, verbose = FALSE)
+make_render_highquality_road_path_meshes(
+  tasks,
+  verbose = FALSE,
+  parallel = FALSE
+)
 }
 \arguments{
 \item{tasks}{Road path task list.}
 
 \item{verbose}{Default \code{FALSE}. Whether to display mesh-building progress.}
+
+\item{parallel}{Default \code{FALSE}. Whether to use multiple native threads.}
 }
 \value{
 List of rayrender mesh objects.

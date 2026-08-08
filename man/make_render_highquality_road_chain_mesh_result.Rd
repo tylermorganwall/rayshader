@@ -4,10 +4,12 @@
 \alias{make_render_highquality_road_chain_mesh_result}
 \title{Build one high-quality road chain mesh with fallback diagnostics}
 \usage{
-make_render_highquality_road_chain_mesh_result(task)
+make_render_highquality_road_chain_mesh_result(task, parallel = FALSE)
 }
 \arguments{
 \item{task}{Assembled road mesh-chain task.}
+
+\item{parallel}{Default \code{FALSE}. Whether to use multiple native threads.}
 }
 \value{
 List containing the mesh and captured errors.

@@ -60,7 +60,7 @@ Suggests:
 	ragg,
 	skymodelr,
 	tigris
-LinkingTo: Rcpp, progress, RcppArmadillo
+LinkingTo: Rcpp, RcppThread (>= 2.4.0), progress, RcppArmadillo
 Roxygen: list(markdown = TRUE)
 Encoding: UTF-8
 URL: https://www.rayshader.com,

@@ -92,6 +92,12 @@ test_that("render_roads caches road metadata by rgl id", {
   )
   expect_no_condition(render_highquality(return_scene = TRUE, light = FALSE))
   expect_false(captured$verbose)
+  expect_true(captured$parallel)
+  expect_no_condition(render_highquality(
+    return_scene = TRUE,
+    light = FALSE,
+    parallel = FALSE
+  ))
   expect_false(captured$parallel)
   expect_equal(
     captured$tasks[[1L]]$points[, 2],
@@ -785,6 +791,373 @@ test_that("elevated road meshes preserve absolute profiles", {
   expect_true(all(is.finite(vertices)))
   expect_equal(max(vertices[, 2]), 4.055, tolerance = 1e-8)
   expect_lt(min(vertices[, 2]), 1)
+})
+
+test_that("native road meshing matches the R reference and threaded output", {
+  point_count = 200L
+  point_x = seq(0, 100, length.out = point_count)
+  points = cbind(
+    point_x,
+    sin(point_x / 8) * 0.1,
+    sin(point_x / 10) * 2
+  )
+  sections = calculate_render_road_vertex_sections(
+    points = points,
+    left_distance = rep(0.5, point_count),
+    right_distance = rep(0.5, point_count)
+  )
+  station = calculate_road_path_cumulative_distance(points)
+  mesh_args = list(
+    sections = sections,
+    station = station,
+    total_length = utils::tail(station, 1L),
+    bbox_center = c(50, 0, 0)
+  )
+
+  reference_normals = calculate_render_road_surface_normals_reference(
+    sections$left_top,
+    sections$right_top
+  )
+  serial_normals = calculate_render_road_surface_normals(
+    sections$left_top,
+    sections$right_top,
+    parallel = FALSE
+  )
+  threaded_normals = calculate_render_road_surface_normals(
+    sections$left_top,
+    sections$right_top,
+    parallel = TRUE
+  )
+  expect_equal(serial_normals, reference_normals, tolerance = 1e-12)
+  expect_identical(threaded_normals, serial_normals)
+
+  reference_mesh = do.call(build_render_road_section_mesh_reference, mesh_args)
+  serial_mesh = do.call(
+    build_render_road_section_mesh,
+    c(mesh_args, list(parallel = FALSE))
+  )
+  threaded_mesh = do.call(
+    build_render_road_section_mesh,
+    c(mesh_args, list(parallel = TRUE))
+  )
+  expect_equal(serial_mesh$vb, reference_mesh$vb, tolerance = 1e-12)
+  expect_equal(serial_mesh$it, reference_mesh$it)
+  expect_equal(serial_mesh$normals, reference_mesh$normals, tolerance = 1e-12)
+  expect_equal(
+    serial_mesh$texcoords,
+    reference_mesh$texcoords,
+    tolerance = 1e-12
+  )
+  expect_equal(
+    attr(serial_mesh, "render_road_mesh_diagnostics"),
+    attr(reference_mesh, "render_road_mesh_diagnostics"),
+    tolerance = 1e-12
+  )
+  expect_identical(threaded_mesh, serial_mesh)
+})
+
+test_that("batched terrain preparation matches R and threaded output", {
+  heightmap = outer(
+    seq_len(48L),
+    seq_len(44L),
+    function(row, column) sin(row / 5) + cos(column / 7)
+  )
+  points = matrix(
+    c(
+      -12,
+      0.2,
+      -10,
+      -5,
+      0.4,
+      -2,
+      3,
+      0.1,
+      5,
+      11,
+      0.3,
+      12
+    ),
+    ncol = 3L,
+    byrow = TRUE
+  )
+  densify_job = list(
+    points = points,
+    width = 2.5,
+    terrain_following = TRUE
+  )
+  densify_jobs = rep(list(densify_job), 12L)
+  densify_reference = densify_render_highquality_path_points(
+    points = points,
+    width = densify_job$width,
+    heightmap = heightmap,
+    zscale = 2
+  )
+  densify_serial = densify_render_road_paths_batch_cpp(
+    densify_jobs,
+    heightmap = heightmap,
+    zscale = 2,
+    parallel = FALSE,
+    verbose = FALSE
+  )
+  densify_threaded = densify_render_road_paths_batch_cpp(
+    densify_jobs,
+    heightmap = heightmap,
+    zscale = 2,
+    parallel = TRUE,
+    verbose = FALSE
+  )
+
+  expect_equal(
+    unname(densify_serial[[1L]]),
+    unname(densify_reference),
+    tolerance = 1e-12
+  )
+  expect_identical(densify_threaded, densify_serial)
+
+  frames = calculate_render_road_vertex_frames(points)
+  left_distance = c(0.8, 1, 1.2, 0.9)
+  right_distance = c(1.1, 1, 0.9, 0.8)
+  side = cbind(frames$side[, 1L], 0, frames$side[, 2L])
+  left_surface = points +
+    side * (left_distance * frames$miter_scale)
+  right_surface = points -
+    side * (right_distance * frames$miter_scale)
+  heightmap_scene = heightmap / 2
+  center_height = interpolate_render_heightmap_height(
+    heightmap_scene,
+    points[, 1L],
+    points[, 3L]
+  )
+  center_offset = points[, 2L] - center_height
+  left_surface[, 2L] = interpolate_render_heightmap_height(
+    heightmap_scene,
+    left_surface[, 1L],
+    left_surface[, 3L]
+  ) +
+    center_offset
+  right_surface[, 2L] = interpolate_render_heightmap_height(
+    heightmap_scene,
+    right_surface[, 1L],
+    right_surface[, 3L]
+  ) +
+    center_offset
+  left_normal = interpolate_render_highquality_normals(
+    left_surface,
+    heightmap,
+    zscale = 2
+  )
+  right_normal = interpolate_render_highquality_normals(
+    right_surface,
+    heightmap,
+    zscale = 2
+  )
+  left_top = left_surface + left_normal * 0.055
+  right_top = right_surface + right_normal * 0.055
+  section_reference = list(
+    left_bottom = left_top - left_normal * 0.11,
+    right_bottom = right_top - right_normal * 0.11,
+    left_top = left_top,
+    right_top = right_top,
+    left_normal = left_normal,
+    right_normal = right_normal
+  )
+  section_job = list(
+    points = points,
+    left_distance = left_distance,
+    right_distance = right_distance,
+    side = frames$side,
+    miter_scale = frames$miter_scale,
+    terrain_following = TRUE
+  )
+  section_jobs = rep(list(section_job), 12L)
+  section_serial = sample_render_road_sections_batch_cpp(
+    section_jobs,
+    heightmap = heightmap,
+    zscale = 2,
+    parallel = FALSE,
+    verbose = FALSE
+  )
+  section_threaded = sample_render_road_sections_batch_cpp(
+    section_jobs,
+    heightmap = heightmap,
+    zscale = 2,
+    parallel = TRUE,
+    verbose = FALSE
+  )
+
+  expect_equal(
+    unname(section_serial[[1L]]),
+    unname(section_reference),
+    tolerance = 1e-12
+  )
+  expect_identical(section_threaded, section_serial)
+  expect_output(
+    densify_render_road_paths_batch_cpp(
+      densify_jobs[1:2],
+      heightmap,
+      zscale = 2,
+      parallel = TRUE,
+      verbose = TRUE
+    ),
+    "Densifying road paths: 100%"
+  )
+  expect_output(
+    sample_render_road_sections_batch_cpp(
+      section_jobs[1:2],
+      heightmap,
+      zscale = 2,
+      parallel = TRUE,
+      verbose = TRUE
+    ),
+    "Sampling road terrain sections: 100%"
+  )
+})
+
+test_that("batched road jobs are identical in serial and parallel", {
+  make_prepared_job = function(
+    points,
+    closed = FALSE,
+    material_sections = NULL
+  ) {
+    prepare_render_highquality_road_chain_mesh(
+      points = points,
+      bbox_center = c(0, 0, 0),
+      width = 0.4,
+      material = list(name = "default"),
+      texture_length = 2,
+      terrain_following = FALSE,
+      material_sections = material_sections,
+      closed = closed,
+      return_mesh = TRUE
+    )$job
+  }
+  open_points = cbind(
+    seq(0, 6),
+    sin(seq(0, 6)) / 10,
+    c(0, 0.2, 0.5, 0.4, 0.8, 1, 1.1)
+  )
+  loop_angle = seq(0, 2 * pi, length.out = 9L)[-9L]
+  closed_points = cbind(cos(loop_angle), 0, sin(loop_angle))
+  material_sections = list(
+    list(
+      station_start = 0,
+      station_end = 3,
+      texture_file = NULL,
+      texture_length = 1,
+      texture_repeats = NULL,
+      material = list(name = "first")
+    ),
+    list(
+      station_start = 3,
+      station_end = 6,
+      texture_file = NULL,
+      texture_length = 3,
+      texture_repeats = 2,
+      material = list(name = "second")
+    )
+  )
+  jobs = list(
+    make_prepared_job(open_points[1:2, , drop = FALSE]),
+    make_prepared_job(open_points),
+    make_prepared_job(closed_points, closed = TRUE),
+    make_prepared_job(
+      open_points,
+      material_sections = material_sections
+    )
+  )
+
+  serial = build_render_highquality_road_mesh_batch_cpp(
+    jobs,
+    parallel = FALSE,
+    verbose = FALSE
+  )
+  threaded = build_render_highquality_road_mesh_batch_cpp(
+    jobs,
+    parallel = TRUE,
+    verbose = FALSE
+  )
+
+  expect_identical(threaded, serial)
+  expect_true(all(vapply(serial, `[[`, logical(1), "success")))
+  expect_equal(vapply(serial, function(result) length(result$meshes), 1L), {
+    c(1L, 1L, 1L, 2L)
+  })
+  expect_true(all(vapply(
+    unlist(lapply(serial, `[[`, "meshes"), recursive = FALSE),
+    function(mesh) {
+      all(is.finite(mesh$vertices)) &&
+        all(is.finite(mesh$vertex_normals)) &&
+        all(is.finite(mesh$texcoords))
+    },
+    logical(1)
+  )))
+  expect_output(
+    build_render_highquality_road_mesh_batch_cpp(
+      jobs[1L],
+      parallel = FALSE,
+      verbose = TRUE
+    ),
+    "Converting roads to meshes: 100%"
+  )
+})
+
+test_that("batched road jobs capture expected native geometry failures", {
+  left_top = rbind(c(0, 0.1, -1), c(1, 0.1, -1), c(0, 0.1, -1))
+  right_top = rbind(c(0, 0.1, 1), c(1, 0.1, 1), c(0, 0.1, 1))
+  vertical_drop = matrix(rep(c(0, 0.2, 0), 3L), 3L, 3L, byrow = TRUE)
+  sections = list(
+    left_top = left_top,
+    right_top = right_top,
+    left_bottom = left_top - vertical_drop,
+    right_bottom = right_top - vertical_drop,
+    frames = list(
+      incoming_tangent = matrix(
+        c(1, 0, 1, 0, -1, 0),
+        3L,
+        2L,
+        byrow = TRUE
+      ),
+      outgoing_tangent = matrix(
+        c(1, 0, -1, 0, -1, 0),
+        3L,
+        2L,
+        byrow = TRUE
+      )
+    )
+  )
+  invalid_job = list(
+    sections = sections,
+    bbox_center = c(0, 0, 0),
+    closed = FALSE,
+    mesh_sections = list(list(
+      section_index = 1:3,
+      texture_v = 0:2,
+      closing_v = 2,
+      cap_start = TRUE,
+      cap_end = TRUE,
+      closed = FALSE
+    ))
+  )
+  valid_job = prepare_render_highquality_road_chain_mesh(
+    points = cbind(0:2, 0, 0),
+    bbox_center = c(0, 0, 0),
+    width = 0.2,
+    material = list(),
+    terrain_following = FALSE,
+    return_mesh = TRUE
+  )$job
+
+  results = build_render_highquality_road_mesh_batch_cpp(
+    list(invalid_job, valid_job),
+    parallel = TRUE,
+    verbose = FALSE
+  )
+
+  expect_false(results[[1L]]$success)
+  expect_match(results[[1L]]$error, "no common outward shading hemisphere")
+  expect_length(results[[1L]]$meshes, 0L)
+  expect_true(results[[2L]]$success)
+  expect_length(results[[2L]]$meshes, 1L)
 })
 
 test_that("road width and mesh texture coordinates follow public settings", {

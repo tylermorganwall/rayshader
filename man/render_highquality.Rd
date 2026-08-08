@@ -79,6 +79,7 @@ render_highquality(
   animation_camera_coords = NULL,
   plot = is.na(filename),
   verbose = FALSE,
+  parallel = TRUE,
   ...
 )
 }
@@ -298,6 +299,9 @@ or \code{rayrender::generate_camera_motion()} functions.}
 
 \item{verbose}{Default \code{FALSE}. If \code{TRUE}, displays progress bars while
 converting line, stream, and road paths into raytraced scene objects.}
+
+\item{parallel}{Default \code{TRUE}. Whether to use multiple threads for road mesh
+construction and raytracing.}
 
 \item{...}{Additional parameters to pass to \code{rayrender::render_scene()}.}
 }

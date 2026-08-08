@@ -105,6 +105,26 @@ densify_render_highquality_path_xz_cpp <- function(points, left_edge, right_edge
     .Call(`_rayshader_densify_render_highquality_path_xz_cpp`, points, left_edge, right_edge, center_offset, row_count, column_count)
 }
 
+calculate_render_road_surface_normals_cpp <- function(left_vertices, right_vertices, closed, outward_sign, parallel) {
+    .Call(`_rayshader_calculate_render_road_surface_normals_cpp`, left_vertices, right_vertices, closed, outward_sign, parallel)
+}
+
+build_render_road_section_mesh_cpp <- function(left_bottom_matrix, right_bottom_matrix, left_top_matrix, right_top_matrix, incoming_tangent, outgoing_tangent, texture_v, closing_v, bbox_center, top_left_normal_matrix, top_right_normal_matrix, bottom_left_normal_matrix, bottom_right_normal_matrix, cap_start, cap_end, closed, parallel, geometry_tolerance = 1e-12, uv_tolerance = 1e-14) {
+    .Call(`_rayshader_build_render_road_section_mesh_cpp`, left_bottom_matrix, right_bottom_matrix, left_top_matrix, right_top_matrix, incoming_tangent, outgoing_tangent, texture_v, closing_v, bbox_center, top_left_normal_matrix, top_right_normal_matrix, bottom_left_normal_matrix, bottom_right_normal_matrix, cap_start, cap_end, closed, parallel, geometry_tolerance, uv_tolerance)
+}
+
+densify_render_road_paths_batch_cpp <- function(input_jobs, heightmap, zscale, parallel, verbose) {
+    .Call(`_rayshader_densify_render_road_paths_batch_cpp`, input_jobs, heightmap, zscale, parallel, verbose)
+}
+
+sample_render_road_sections_batch_cpp <- function(input_jobs, heightmap, zscale, parallel, verbose) {
+    .Call(`_rayshader_sample_render_road_sections_batch_cpp`, input_jobs, heightmap, zscale, parallel, verbose)
+}
+
+build_render_highquality_road_mesh_batch_cpp <- function(input_jobs, parallel, verbose) {
+    .Call(`_rayshader_build_render_highquality_road_mesh_batch_cpp`, input_jobs, parallel, verbose)
+}
+
 evaluate_render_road_profiles_cpp <- function(fragment_index, distance, control_start, control_count, control_row, control_distance, height, grade) {
     .Call(`_rayshader_evaluate_render_road_profiles_cpp`, fragment_index, distance, control_start, control_count, control_row, control_distance, height, grade)
 }
