@@ -298,10 +298,11 @@ or \code{rayrender::generate_camera_motion()} functions.}
 \item{plot}{Default \code{is.na(filename)}. Whether to plot the scene, or just return the RGBA array.}
 
 \item{verbose}{Default \code{FALSE}. If \code{TRUE}, displays progress bars while
-converting line, stream, and road paths into raytraced scene objects.}
+converting line and stream paths into raytraced scene objects. Road meshes
+built by \code{\link[=render_roads]{render_roads()}} are reused from the active scene cache.}
 
-\item{parallel}{Default \code{TRUE}. Whether to use multiple threads for road mesh
-construction and raytracing.}
+\item{parallel}{Default \code{TRUE}. Whether to use multiple threads for raytracing
+and for legacy uncached road-path conversion.}
 
 \item{...}{Additional parameters to pass to \code{rayrender::render_scene()}.}
 }

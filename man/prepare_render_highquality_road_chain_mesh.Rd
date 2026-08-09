@@ -26,6 +26,8 @@ prepare_render_highquality_road_chain_mesh(
   miter_limit = 4,
   round_join_segments = 5L,
   return_mesh = FALSE,
+  rgl_id = NULL,
+  roadcolor = NULL,
   preparation_geometry = NULL,
   precomputed_sections = NULL
 )
@@ -74,6 +76,12 @@ sections along the physical mesh chain.}
 \item{round_join_segments}{Number of rounded fallback segments.}
 
 \item{return_mesh}{Whether to return raw mesh data instead of a rayrender model.}
+
+\item{rgl_id}{Default \code{NULL}. Source rgl path identifier used for later
+material overrides.}
+
+\item{roadcolor}{Default \code{NULL}. Source road color used for mesh previews and
+material functions.}
 
 \item{preparation_geometry}{Default \code{NULL}. Precomputed road geometry used
 by the collection preparation queue.}

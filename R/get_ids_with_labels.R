@@ -29,6 +29,7 @@ get_ids_with_labels = function(typeval = NULL) {
     "contour3d",
     "water_path",
     "road_path",
+    "road_mesh_preview",
     "points3d",
     "polygon3d",
     "floating_overlay",

@@ -9,7 +9,8 @@ make_render_highquality_joined_water_path_mesh(
   seal_epsilon = NULL,
   bottom_cap = TRUE,
   height = NULL,
-  extrusion_alignment = c("above", "center", "below")
+  extrusion_alignment = c("above", "center", "below"),
+  return_mesh = FALSE
 )
 }
 \arguments{
@@ -26,9 +27,12 @@ Extrusion height in scene units.}
 
 \item{extrusion_alignment}{Default \code{"above"}. Whether to place the extrusion
 \code{"above"}, \code{"center"} it on, or place it \code{"below"} the path elevation.}
+
+\item{return_mesh}{Default \code{FALSE}. Whether to return the raw \code{mesh3d}
+instead of a rayrender model.}
 }
 \value{
-Rayrender mesh object.
+A rayrender mesh object, or a raw \code{mesh3d} when \code{return_mesh = TRUE}.
 }
 \description{
 Make one joined render_highquality water path mesh

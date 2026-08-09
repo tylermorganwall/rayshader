@@ -18,7 +18,7 @@ make_road_lane_texture(
 )
 }
 \arguments{
-\item{roadcolor}{Default \code{"#303030"}. Road surface color.}
+\item{roadcolor}{Default \code{"#303030"}. sRGB road surface color.}
 
 \item{lanes}{Default \code{2}. Number of lanes used when generating the default
 lane texture and, when \code{width = NULL}, deriving the road width. May also be
@@ -27,11 +27,13 @@ compound values use their first positive integer. Missing values first use
 \code{lanes:forward} plus \code{lanes:backward}, then fall back to one lane for links
 and one-way roads or two lanes for other roads.}
 
-\item{lane_color}{Default \code{"white"}. Color for dashed lane divider markings.}
+\item{lane_color}{Default \code{"white"}. sRGB color for dashed lane divider
+markings.}
 
-\item{centerline_color}{Default \code{"#ffd23f"}. Color for the center divider.}
+\item{centerline_color}{Default \code{"#ffd23f"}. sRGB color for the center
+divider.}
 
-\item{edge_line_color}{Default \code{"white"}. Color for solid edge markings.}
+\item{edge_line_color}{Default \code{"white"}. sRGB color for solid edge markings.}
 
 \item{lane_line_width}{Default \code{0.035}. Lane marking width as a fraction of
 the road width in the generated texture.}

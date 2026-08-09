@@ -1,14 +1,15 @@
 #' Render Road Paths
 #'
-#' @description Adds road paths to the scene. Roads are previewed as rgl lines
-#' and rendered by [render_highquality()] as textured rectangular meshes.
+#' @description Adds road paths to the scene and eagerly builds their reusable
+#' high-quality meshes. Roads can be previewed as rgl lines or as the same mesh
+#' geometry consumed by [render_highquality()].
 #'
 #' @param roads Spatial line data used to draw road paths. Supports `sf`,
 #' `sfc`, `sfg`, `SpatialLines`, and `SpatialLinesDataFrame` line inputs.
 #' @param heightmap Default `NULL`. Height matrix or spatial raster for the
 #' current scene. If omitted, this is taken from the cached scene set by
 #' [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value.
-#' @param roadcolor Default `"#303030"`. Road surface color.
+#' @param roadcolor Default `"#303030"`. sRGB road surface color.
 #' @param zscale Default `1`. The ratio between the x and y spacing and the z
 #' axis. If omitted and `heightmap` is a spatial raster, rayshader uses the
 #' raster cell resolution.
@@ -85,9 +86,12 @@
 #' `width = NULL`. The derived road width is
 #' `lane_width * (lanes + 2)`. The generated lane texture leaves one lane width
 #' total outside the edge lines, split between both sides.
-#' @param lane_color Default `"white"`. Color for dashed lane divider markings.
-#' @param centerline_color Default `"#eeeade"`. Color for the center divider.
-#' @param edge_line_color Default `"#d6ad3d"`. Color for solid edge markings.
+#' @param lane_color Default `"#eeeade"`. sRGB color for dashed lane divider
+#' markings.
+#' @param centerline_color Default `"#eeeade"`. sRGB color for the center
+#' divider.
+#' @param edge_line_color Default `"#d6ad3d"`. sRGB color for solid edge
+#' markings.
 #' @param lane_line_width Default `0.035`. Lane marking width as a fraction of
 #' the road width in the generated texture.
 #' @param lane_dash_fraction Default `NULL`, which uses
@@ -95,6 +99,13 @@
 #' texture repetition occupied by a dash for dashed lane markings.
 #' @param clear_previous Default `TRUE`. If `TRUE`, removes the existing road
 #' layer before drawing the new one.
+#' @param preview Default `"line"`. Whether roads are drawn in rgl as lightweight
+#' `"line"` previews or as their cached `"mesh"` geometry. The mesh is the exact
+#' high-quality geometry and does not include the line-only preview offset.
+#' @param verbose Default `FALSE`. Whether to display progress while building
+#' and caching the road meshes.
+#' @param parallel Default `TRUE`. Whether to use multiple native threads while
+#' building the cached road meshes.
 #'
 #' @return Invisibly returns the rendered road coordinates. When `layer` is
 #' supplied, the result has `terrain_following`, `profile_diagnostics`, and
@@ -128,7 +139,10 @@ render_roads = function(
   edge_line_color = "#d6ad3d",
   lane_line_width = 0.035,
   lane_dash_fraction = NULL,
-  clear_previous = TRUE
+  clear_previous = TRUE,
+  preview = c("line", "mesh"),
+  verbose = FALSE,
+  parallel = TRUE
 ) {
   # 1. Capture expressions needed to distinguish values from column references.
   heightmap_missing = missing(heightmap)
@@ -266,6 +280,21 @@ render_roads = function(
     missing(clear_previous),
     TRUE,
     "clear_previous",
+    type = "logical"
+  )
+  preview = match.arg(preview)
+  verbose = resolve_render_scalar(
+    verbose,
+    missing(verbose),
+    FALSE,
+    "verbose",
+    type = "logical"
+  )
+  parallel = resolve_render_scalar(
+    parallel,
+    missing(parallel),
+    TRUE,
+    "parallel",
     type = "logical"
   )
   if (!is.null(lane_texture_file)) {
@@ -437,8 +466,14 @@ render_roads = function(
     merge = FALSE
   }
   if (isTRUE(clear_previous)) {
-    rgl::pop3d(tag = "road_path")
+    road_scene_ids = get_ids_with_labels(
+      typeval = c("road_path", "road_mesh_preview")
+    )$id
+    for (road_scene_id in road_scene_ids) {
+      rgl::pop3d(id = road_scene_id)
+    }
     clear_render_road_path_info()
+    cache_scene_road_meshes(NULL)
   }
 
   # 4. Normalize geometry and create terrain-sampled centerline paths.
@@ -650,8 +685,9 @@ render_roads = function(
   )
   attr(coord_list, "mesh_chain_members") = mesh_chain_members
 
-  # 8. Draw preview paths and register the compact high-quality mesh contract.
+  # 8. Draw source paths and register the compact high-quality mesh contract.
   rgl_preview_offset = 0.01
+  mesh_preview = identical(preview, "mesh")
   road_id_by_path = rep(NA_integer_, length(coord_list))
   previous_rgl_parameters = rgl::par3d(skipRedraw = TRUE)
   on.exit(rgl::par3d(previous_rgl_parameters), add = TRUE)
@@ -663,6 +699,7 @@ render_roads = function(
       road_id = rgl::lines3d(
         preview_coord,
         color = roadcolor,
+        alpha = if (mesh_preview) 0 else 1,
         tag = "road_path",
         lwd = coord_width[[coord_index]],
         line_antialias = FALSE
@@ -717,13 +754,112 @@ render_roads = function(
         texture_repeats = texture_repeats,
         texture_world_scale = texture_mapping$texture_world_scale,
         terrain_following = coord_terrain_following[[coord_index]],
-        rgl_preview_offset = rgl_preview_offset
+        rgl_preview_offset = rgl_preview_offset,
+        roadcolor = roadcolor
       )
     )
   }
 
-  # 9. Preserve the public coordinate-list return value and diagnostics.
+  # 9. Build absolute-coordinate meshes once and cache them for every later
+  # high-quality render of this scene.
+  road_mesh_tasks = lapply(
+    which(is.finite(road_id_by_path)),
+    function(coord_index) {
+      road_info = get_render_road_path_info(
+        road_id_by_path[[coord_index]]
+      )
+      material = if (is.null(road_info$texture_file)) {
+        rayrender::diffuse(
+          color = convert_color(roadcolor, linear = TRUE)
+        )
+      } else {
+        rayrender::diffuse(
+          color = "white",
+          image_texture = road_info$texture_file,
+          image_repeat = 1
+        )
+      }
+      task = list(
+        points = coord_list[[coord_index]],
+        bbox_center = c(0, 0, 0),
+        width = coord_width[[coord_index]],
+        heightmap = heightmap,
+        zscale = zscale,
+        material = material,
+        texture_file = road_info$texture_file,
+        texture_length = road_info$texture_length,
+        texture_repeats = road_info$texture_repeats,
+        texture_world_scale = road_info$texture_world_scale,
+        terrain_following = road_info$terrain_following,
+        return_mesh = TRUE,
+        rgl_id = road_id_by_path[[coord_index]],
+        roadcolor = roadcolor
+      )
+      attr(task, "mesh_topology") = list(
+        mesh_chain_id = as.integer(road_info$mesh_chain_id[[1L]]),
+        road_path_id = road_info$road_path_id,
+        render_road_fragment_id = as.integer(road_info$fragment_id[[1L]]),
+        render_road_feature_id = as.integer(road_info$feature_id[[1L]]),
+        member_order = as.integer(road_info$member_order[[1L]]),
+        orientation = as.integer(road_info$orientation[[1L]]),
+        closed = isTRUE(road_info$closed),
+        road_lanes = road_info$lanes
+      )
+      task
+    }
+  )
+  road_meshes = make_render_highquality_road_path_meshes(
+    road_mesh_tasks,
+    verbose = verbose,
+    parallel = parallel
+  )
+  cache_scene_road_meshes(
+    road_meshes,
+    append = !isTRUE(clear_previous)
+  )
+  if (mesh_preview && length(road_meshes)) {
+    draw_render_road_mesh_preview(road_meshes, color = roadcolor)
+  }
+
+  # 10. Preserve the public coordinate-list return value and diagnostics.
   invisible(coord_list)
+}
+
+#' Draw cached road meshes in rgl
+#'
+#' @param meshes Absolute-coordinate road `mesh3d` objects.
+#' @param color Default `"#303030"`. Fallback preview color.
+#'
+#' @return Invisibly returns the created rgl identifiers.
+#' @keywords internal
+draw_render_road_mesh_preview = function(meshes, color = "#303030") {
+  mesh_ids = integer(0)
+  for (mesh in meshes) {
+    if (!inherits(mesh, "mesh3d")) {
+      next
+    }
+    specification = attr(mesh, "render_road_mesh_specification")
+    mesh_color = if (is.null(specification$texture_file)) {
+      specification$roadcolor
+    } else {
+      "white"
+    }
+    if (
+      is.null(mesh_color) ||
+        !is.character(mesh_color) ||
+        !length(mesh_color) ||
+        is.na(mesh_color[[1L]])
+    ) {
+      mesh_color = color
+    }
+    mesh_id = rgl::shade3d(
+      mesh,
+      color = mesh_color[[1L]],
+      tag = "road_mesh_preview"
+    )
+    mesh_ids = c(mesh_ids, as.integer(mesh_id))
+  }
+  invisible(mesh_ids)
 }
 
 #' Parse an OSM lane-count tag
@@ -6923,8 +7059,11 @@ normalize_render_road_world_scale = function(texture_world_scale) {
 #' Make default road lane texture
 #'
 #' @inheritParams render_roads
-#' @param centerline_color Default `"#ffd23f"`. Color for the center divider.
-#' @param edge_line_color Default `"white"`. Color for solid edge markings.
+#' @param lane_color Default `"white"`. sRGB color for dashed lane divider
+#' markings.
+#' @param centerline_color Default `"#ffd23f"`. sRGB color for the center
+#' divider.
+#' @param edge_line_color Default `"white"`. sRGB color for solid edge markings.
 #' @param size Default `128`. Texture width/height in pixels.
 #'
 #' @return Texture file path.
@@ -6999,7 +7138,7 @@ make_road_lane_texture = function(
     lane_dash_length = lane_dash_length,
     lane_gap_length = lane_gap_length
   )
-  road_rgb = convert_color(roadcolor)
+  road_rgb = convert_color(roadcolor, linear = TRUE)
   texture = array(
     rep(road_rgb, each = size * size),
     dim = c(size, size, 3)
@@ -7012,7 +7151,10 @@ make_road_lane_texture = function(
       min(size, col + line_half_width)
     )
     texture[rows, cols, ] = array(
-      rep(convert_color(color), each = length(rows) * length(cols)),
+      rep(
+        convert_color(color, linear = TRUE),
+        each = length(rows) * length(cols)
+      ),
       dim = c(length(rows), length(cols), 3)
     )
     texture
@@ -7053,7 +7195,7 @@ make_road_lane_texture = function(
       assume_colorspace = rayimage::CS_SRGB
     ),
     texture_file,
-    write_linear = TRUE
+    write_linear = FALSE
   )
   normalizePath(texture_file, winslash = "/", mustWork = TRUE)
 }
@@ -7852,6 +7994,8 @@ assemble_render_road_mesh_chain_tasks = function(
           mesh_chain_id = current_chain_id,
           member_order = member_index,
           road_path_task_id = current_task_id,
+          rgl_id = tasks[[current_task_id]]$rgl_id,
+          roadcolor = tasks[[current_task_id]]$roadcolor,
           station_start = chain_members$chain_station_start[[member_index]],
           station_end = chain_members$chain_station_end[[member_index]],
           road_lanes = chain_members$road_lanes[[member_index]],
@@ -8113,6 +8257,73 @@ make_render_highquality_road_path_meshes = function(
   meshes
 }
 
+#' Convert cached road meshes into translated rayrender models
+#'
+#' @param meshes Absolute-coordinate cached road `mesh3d` objects.
+#' @param bbox_center Active rayrender scene center.
+#' @param rgl_materials Default `list()`. Validated rgl material overrides.
+#'
+#' @return List of translated rayrender mesh models.
+#' @keywords internal
+make_render_highquality_cached_road_meshes = function(
+  meshes,
+  bbox_center,
+  rgl_materials = list()
+) {
+  bbox_center = suppressWarnings(as.numeric(bbox_center[1:3]))
+  if (length(bbox_center) != 3L || any(!is.finite(bbox_center))) {
+    stop("Cached road meshes require a finite scene center.", call. = FALSE)
+  }
+  models = lapply(meshes, function(mesh) {
+    if (!inherits(mesh, "mesh3d")) {
+      return(NULL)
+    }
+    specification = attr(mesh, "render_road_mesh_specification")
+    roadcolor = specification$roadcolor
+    if (
+      is.null(roadcolor) ||
+        !is.character(roadcolor) ||
+        !length(roadcolor) ||
+        is.na(roadcolor[[1L]])
+    ) {
+      roadcolor = "#303030"
+    }
+    rgl_id = specification$rgl_id
+    if (is.null(rgl_id) || !length(rgl_id)) {
+      rgl_id = NA_integer_
+    }
+    material_override = resolve_render_highquality_rgl_material(
+      rgl_materials = rgl_materials,
+      id = rgl_id[[1L]],
+      tag = "road_path",
+      color = roadcolor[[1L]]
+    )
+    material = material_override
+    if (is.null(material)) {
+      material = specification$material
+    }
+    if (is.null(material)) {
+      material = rayrender::diffuse(
+        color = convert_color(roadcolor[[1L]], linear = TRUE)
+      )
+    }
+    texture_file = specification$texture_file
+    if (!is.null(material_override)) {
+      mesh$material$texture = NULL
+      texture_file = NULL
+    }
+    rayrender::mesh3d_model(
+      mesh,
+      x = -bbox_center[[1L]],
+      y = -bbox_center[[2L]],
+      z = -bbox_center[[3L]],
+      override_material = is.null(texture_file),
+      material = material
+    )
+  })
+  Filter(Negate(is.null), models)
+}
+
 #' Build one high-quality road chain mesh with fallback diagnostics
 #'
 #' @param task Assembled road mesh-chain task.
@@ -8254,8 +8465,20 @@ make_render_highquality_buffered_road_chain_mesh = function(
     seal_epsilon = 0,
     bottom_cap = TRUE,
     height = 0.11,
-    extrusion_alignment = "below"
+    extrusion_alignment = "below",
+    return_mesh = isTRUE(task$return_mesh)
   )
+  if (inherits(mesh, "mesh3d")) {
+    attr(mesh, "render_road_mesh_specification") = list(
+      rgl_id = task$rgl_id,
+      roadcolor = task$roadcolor,
+      texture_file = NULL,
+      material = task$material,
+      cap_start = TRUE,
+      cap_end = TRUE,
+      closed = isTRUE(task$closed)
+    )
+  }
   attr(mesh, "render_road_buffered_fallback") = list(
     used = TRUE,
     sweep_error = conditionMessage(sweep_error)
@@ -9675,7 +9898,9 @@ initialize_render_highquality_road_chain_preparation = function(task) {
     closed = FALSE,
     miter_limit = 4,
     round_join_segments = 5L,
-    return_mesh = FALSE
+    return_mesh = FALSE,
+    rgl_id = NULL,
+    roadcolor = NULL
   )
   task = utils::modifyList(defaults, task, keep.null = TRUE)
   required = c("points", "bbox_center", "width", "material")
@@ -10087,6 +10312,10 @@ prepare_render_highquality_road_chain_meshes = function(
 #' @param miter_limit Maximum permitted miter scale.
 #' @param round_join_segments Number of rounded fallback segments.
 #' @param return_mesh Whether to return raw mesh data instead of a rayrender model.
+#' @param rgl_id Default `NULL`. Source rgl path identifier used for later
+#' material overrides.
+#' @param roadcolor Default `NULL`. Source road color used for mesh previews and
+#' material functions.
 #' @param preparation_geometry Default `NULL`. Precomputed road geometry used
 #' by the collection preparation queue.
 #' @param precomputed_sections Default `NULL`. Precomputed terrain-following
@@ -10116,6 +10345,8 @@ prepare_render_highquality_road_chain_mesh = function(
   miter_limit = 4,
   round_join_segments = 5L,
   return_mesh = FALSE,
+  rgl_id = NULL,
+  roadcolor = NULL,
   preparation_geometry = NULL,
   precomputed_sections = NULL
 ) {
@@ -10441,6 +10672,8 @@ prepare_render_highquality_road_chain_mesh = function(
         ))
       ),
       specifications = list(list(
+        rgl_id = rgl_id,
+        roadcolor = roadcolor,
         texture_file = texture_file,
         material = material,
         cap_start = !closed && cap_start,
@@ -10553,6 +10786,8 @@ prepare_render_highquality_road_chain_mesh = function(
       closed = FALSE
     )
     specifications[[material_index]] = list(
+      rgl_id = specification$rgl_id,
+      roadcolor = specification$roadcolor,
       texture_file = specification$texture_file,
       material = specification$material,
       cap_start = rendered_cap_start,
@@ -10631,6 +10866,7 @@ finalize_render_highquality_road_chain_mesh = function(
     diagnostics$maximum_right_width =
       prepared$diagnostics$maximum_right_width
     attr(mesh, "render_road_mesh_diagnostics") = diagnostics
+    attr(mesh, "render_road_mesh_specification") = specification
     section_meshes[[material_index]] = if (prepared$return_mesh) {
       mesh
     } else {
@@ -10682,6 +10918,8 @@ make_render_highquality_road_chain_mesh = function(
   miter_limit = 4,
   round_join_segments = 5L,
   return_mesh = FALSE,
+  rgl_id = NULL,
+  roadcolor = NULL,
   parallel = FALSE
 ) {
   parallel = resolve_render_logical(parallel, "parallel")

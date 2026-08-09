@@ -706,15 +706,18 @@ group_render_highquality_water_path_tasks = function(tasks) {
 #' Extrusion height in scene units.
 #' @param extrusion_alignment Default `"above"`. Whether to place the extrusion
 #' `"above"`, `"center"` it on, or place it `"below"` the path elevation.
+#' @param return_mesh Default `FALSE`. Whether to return the raw `mesh3d`
+#' instead of a rayrender model.
 #'
-#' @return Rayrender mesh object.
+#' @return A rayrender mesh object, or a raw `mesh3d` when `return_mesh = TRUE`.
 #' @keywords internal
 make_render_highquality_joined_water_path_mesh = function(
   tasks,
   seal_epsilon = NULL,
   bottom_cap = TRUE,
   height = NULL,
-  extrusion_alignment = c("above", "center", "below")
+  extrusion_alignment = c("above", "center", "below"),
+  return_mesh = FALSE
 ) {
   if (!requireNamespace("sf", quietly = TRUE)) {
     stop("The `sf` package is required for joined stream meshes.")
@@ -954,6 +957,9 @@ make_render_highquality_joined_water_path_mesh = function(
     normals = t(vertex_normals)
   )
   class(mesh) = "mesh3d"
+  if (isTRUE(return_mesh)) {
+    return(mesh)
+  }
   rayrender::mesh3d_model(
     mesh,
     override_material = TRUE,

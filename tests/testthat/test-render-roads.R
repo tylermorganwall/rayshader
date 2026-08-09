@@ -65,6 +65,16 @@ test_that("render_roads caches road metadata by rgl id", {
   expect_equal(road_info$width, 0.5)
   expect_equal(road_info$texture_length, 13)
   expect_equal(road_info$texture_repeats, 3 / 13)
+  cached_road_meshes = get_scene_road_meshes()
+  expect_length(cached_road_meshes, 1L)
+  expect_s3_class(cached_road_meshes[[1L]], "mesh3d")
+  expect_equal(
+    attr(
+      cached_road_meshes[[1L]],
+      "render_road_mesh_specification"
+    )$rgl_id,
+    road_path_ids$id[[1L]]
+  )
 
   scene = render_highquality(return_scene = TRUE, light = FALSE)
   expect_true(any(vapply(
@@ -75,35 +85,233 @@ test_that("render_roads caches road metadata by rgl id", {
     logical(1)
   )))
   expect_no_condition(rayrender:::process_scene(scene))
+  overridden_scene = render_highquality(
+    return_scene = TRUE,
+    light = FALSE,
+    rgl_materials = list(road_path = rayrender::metal())
+  )
+  overridden_road_materials = overridden_scene$material[
+    overridden_scene$shape == "mesh3d"
+  ]
+  expect_true(any(vapply(
+    overridden_road_materials,
+    function(material) {
+      identical(material$type, rayrender::metal()[[1L]]$type)
+    },
+    logical(1)
+  )))
 
   captured = new.env(parent = emptyenv())
+  captured$build_count = 0L
+  captured$line_progress_totals = integer()
+  original_get_render_source_vertices = get_render_source_vertices
   testthat::local_mocked_bindings(
     make_render_highquality_road_path_meshes = function(
       tasks,
       verbose = FALSE,
       parallel = FALSE
     ) {
-      captured$tasks = tasks
-      captured$verbose = verbose
-      captured$parallel = parallel
-      list()
+      captured$build_count = captured$build_count + 1L
+      stop("cached roads should not be rebuilt")
+    },
+    get_render_source_vertices = function(id) {
+      if (id %in% road_path_ids$id) {
+        stop("cached road paths should not be prepared")
+      }
+      original_get_render_source_vertices(id)
+    },
+    new_render_highquality_progress_bar = function(verbose, label, total) {
+      if (identical(label, "Preparing line paths")) {
+        captured$line_progress_totals = c(
+          captured$line_progress_totals,
+          total
+        )
+      }
+      NULL
     },
     .package = "rayshader"
   )
   expect_no_condition(render_highquality(return_scene = TRUE, light = FALSE))
-  expect_false(captured$verbose)
-  expect_true(captured$parallel)
   expect_no_condition(render_highquality(
     return_scene = TRUE,
     light = FALSE,
     parallel = FALSE
   ))
-  expect_false(captured$parallel)
+  expect_equal(captured$build_count, 0L)
+  expect_equal(captured$line_progress_totals, c(0L, 0L))
+  expect_identical(get_scene_road_meshes(), cached_road_meshes)
+})
+
+test_that("render_roads can preview the exact cached road meshes", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("terra")
+  skip_if_not_installed("rayrender")
+  skip_if_not_installed("rayvertex")
+  on.exit(rgl::close3d(), add = TRUE)
+  local_rgl_use_null()
+
+  height_raster = terra::rast(
+    nrows = 12,
+    ncols = 12,
+    xmin = 0,
+    xmax = 12,
+    ymin = 0,
+    ymax = 12,
+    crs = "EPSG:3857"
+  )
+  terra::values(height_raster) = 0
+  roads = sf::st_sf(
+    id = 1,
+    geometry = sf::st_sfc(
+      sf::st_linestring(matrix(c(2, 6, 10, 6), ncol = 2, byrow = TRUE)),
+      crs = 3857
+    )
+  )
+  expect_no_condition(plot_3d_test(
+    constant_shade(height_raster),
+    height_raster,
+    solid = FALSE,
+    shadow = FALSE,
+    water = FALSE,
+    windowsize = c(200, 200)
+  ))
+
+  expect_no_condition(render_roads(
+    roads,
+    heightmap = height_raster,
+    width = 0.75,
+    preview = "mesh"
+  ))
+
+  road_path_ids = get_ids_with_labels(typeval = "road_path")
+  mesh_preview_ids = get_ids_with_labels(typeval = "road_mesh_preview")
+  expect_equal(nrow(road_path_ids), 1L)
+  expect_gt(nrow(mesh_preview_ids), 0L)
   expect_equal(
-    captured$tasks[[1L]]$points[, 2],
-    road_coords[[1L]][, 2],
+    rgl::material3d("alpha", id = road_path_ids$id[[1L]]),
+    0
+  )
+  expect_true(all(vapply(
+    get_scene_road_meshes(),
+    inherits,
+    logical(1),
+    "mesh3d"
+  )))
+  cached_mesh = get_scene_road_meshes()[[1L]]
+  cached_specification = attr(
+    cached_mesh,
+    "render_road_mesh_specification"
+  )
+  expect_equal(
+    cached_specification$material[[1L]]$properties[[1L]],
+    convert_color("#303030", linear = TRUE),
+    tolerance = 1e-10
+  )
+  cached_vertices = t(cached_mesh$vb[1:3, , drop = FALSE])
+  preview_vertices = rgl::rgl.attrib(
+    mesh_preview_ids$id[[1L]],
+    "vertices"
+  )
+  expect_equal(
+    unname(apply(preview_vertices, 2, range)),
+    unname(apply(cached_vertices, 2, range)),
     tolerance = 1e-7
   )
+
+  expect_no_condition(render_roads(
+    roads,
+    heightmap = height_raster,
+    width = 0.75,
+    offset = 1,
+    preview = "mesh"
+  ))
+  expect_gt(nrow(get_ids_with_labels(typeval = "road_mesh_preview")), 0L)
+  expect_equal(
+    rgl::material3d(
+      "alpha",
+      id = get_ids_with_labels(typeval = "road_path")$id[[1L]]
+    ),
+    0
+  )
+})
+
+test_that("render_roads appends, replaces, and resets cached road meshes", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("terra")
+  skip_if_not_installed("rayrender")
+  skip_if_not_installed("rayvertex")
+  on.exit(rgl::close3d(), add = TRUE)
+  local_rgl_use_null()
+
+  height_raster = terra::rast(
+    nrows = 12,
+    ncols = 12,
+    xmin = 0,
+    xmax = 12,
+    ymin = 0,
+    ymax = 12,
+    crs = "EPSG:3857"
+  )
+  terra::values(height_raster) = 0
+  make_road = function(y) {
+    sf::st_sf(
+      id = 1,
+      geometry = sf::st_sfc(
+        sf::st_linestring(matrix(c(2, y, 10, y), ncol = 2, byrow = TRUE)),
+        crs = 3857
+      )
+    )
+  }
+  expect_no_condition(plot_3d_test(
+    constant_shade(height_raster),
+    height_raster,
+    solid = FALSE,
+    shadow = FALSE,
+    water = FALSE,
+    windowsize = c(200, 200)
+  ))
+
+  expect_no_condition(render_roads(
+    make_road(4),
+    heightmap = height_raster,
+    width = 0.75
+  ))
+  expect_length(get_scene_road_meshes(), 1L)
+
+  expect_no_condition(render_roads(
+    make_road(8),
+    heightmap = height_raster,
+    width = 0.75,
+    clear_previous = FALSE
+  ))
+  appended_meshes = get_scene_road_meshes()
+  road_path_ids = get_ids_with_labels(typeval = "road_path")$id
+  expect_length(appended_meshes, 2L)
+  expect_length(road_path_ids, 2L)
+  expect_setequal(
+    vapply(
+      appended_meshes,
+      function(mesh) {
+        attr(mesh, "render_road_mesh_specification")$rgl_id
+      },
+      integer(1)
+    ),
+    road_path_ids
+  )
+
+  expect_no_condition(render_roads(
+    make_road(6),
+    heightmap = height_raster,
+    width = 0.75
+  ))
+  expect_length(get_scene_road_meshes(), 1L)
+  expect_length(get_ids_with_labels(typeval = "road_path")$id, 1L)
+
+  reset_scene_context(
+    clear_scene_metadata = FALSE,
+    clear_scene_cache = TRUE
+  )
+  expect_null(get_scene_road_meshes())
 })
 
 test_that("non-rgl converters remove the road preview offset", {
@@ -377,6 +585,39 @@ test_that("colored generated lane textures preserve the road color", {
     which(centerline_distance <= 1 / 255),
     seq_len(floor(128 * 3 / 13))
   )
+
+  colors = c(
+    road = "#303030",
+    lane = "#2457a6",
+    centerline = "#f3b61f",
+    edge = "#d45d35"
+  )
+  srgb_texture_file = make_road_lane_texture(
+    roadcolor = colors[["road"]],
+    lanes = 4,
+    lane_color = colors[["lane"]],
+    centerline_color = colors[["centerline"]],
+    edge_line_color = colors[["edge"]],
+    size = 128
+  )
+  srgb_texture = png::readPNG(srgb_texture_file)
+  linear_texture = unclass(rayimage::ray_read_image(srgb_texture_file))
+  for (color in colors) {
+    expected_srgb = convert_color(color)
+    expected_linear = convert_color(color, linear = TRUE)
+    srgb_distance = apply(
+      abs(sweep(srgb_texture, 3, expected_srgb, "-")),
+      c(1, 2),
+      max
+    )
+    linear_distance = apply(
+      abs(sweep(linear_texture, 3, expected_linear, "-")),
+      c(1, 2),
+      max
+    )
+    expect_true(any(srgb_distance <= 1 / 255))
+    expect_true(any(linear_distance <= 1e-7))
+  }
 })
 
 test_that("render_roads fits lane texture repeats to each road length", {

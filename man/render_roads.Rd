@@ -31,7 +31,10 @@ render_roads(
   edge_line_color = "#d6ad3d",
   lane_line_width = 0.035,
   lane_dash_fraction = NULL,
-  clear_previous = TRUE
+  clear_previous = TRUE,
+  preview = c("line", "mesh"),
+  verbose = FALSE,
+  parallel = TRUE
 )
 }
 \arguments{
@@ -42,7 +45,7 @@ render_roads(
 current scene. If omitted, this is taken from the cached scene set by
 \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}. Pass explicitly to override the cached value.}
 
-\item{roadcolor}{Default \code{"#303030"}. Road surface color.}
+\item{roadcolor}{Default \code{"#303030"}. sRGB road surface color.}
 
 \item{zscale}{Default \code{1}. The ratio between the x and y spacing and the z
 axis. If omitted and \code{heightmap} is a spatial raster, rayshader uses the
@@ -138,11 +141,14 @@ and one-way roads or two lanes for other roads.}
 \code{lane_width * (lanes + 2)}. The generated lane texture leaves one lane width
 total outside the edge lines, split between both sides.}
 
-\item{lane_color}{Default \code{"white"}. Color for dashed lane divider markings.}
+\item{lane_color}{Default \code{"#eeeade"}. sRGB color for dashed lane divider
+markings.}
 
-\item{centerline_color}{Default \code{"#eeeade"}. Color for the center divider.}
+\item{centerline_color}{Default \code{"#eeeade"}. sRGB color for the center
+divider.}
 
-\item{edge_line_color}{Default \code{"#d6ad3d"}. Color for solid edge markings.}
+\item{edge_line_color}{Default \code{"#d6ad3d"}. sRGB color for solid edge
+markings.}
 
 \item{lane_line_width}{Default \code{0.035}. Lane marking width as a fraction of
 the road width in the generated texture.}
@@ -153,6 +159,16 @@ texture repetition occupied by a dash for dashed lane markings.}
 
 \item{clear_previous}{Default \code{TRUE}. If \code{TRUE}, removes the existing road
 layer before drawing the new one.}
+
+\item{preview}{Default \code{"line"}. Whether roads are drawn in rgl as lightweight
+\code{"line"} previews or as their cached \code{"mesh"} geometry. The mesh is the exact
+high-quality geometry and does not include the line-only preview offset.}
+
+\item{verbose}{Default \code{FALSE}. Whether to display progress while building
+and caching the road meshes.}
+
+\item{parallel}{Default \code{TRUE}. Whether to use multiple native threads while
+building the cached road meshes.}
 }
 \value{
 Invisibly returns the rendered road coordinates. When \code{layer} is
@@ -161,6 +177,7 @@ supplied, the result has \code{terrain_following}, \code{profile_diagnostics}, a
 physical mesh continuations.
 }
 \description{
-Adds road paths to the scene. Roads are previewed as rgl lines
-and rendered by \code{\link[=render_highquality]{render_highquality()}} as textured rectangular meshes.
+Adds road paths to the scene and eagerly builds their reusable
+high-quality meshes. Roads can be previewed as rgl lines or as the same mesh
+geometry consumed by \code{\link[=render_highquality]{render_highquality()}}.
 }

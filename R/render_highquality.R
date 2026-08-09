@@ -174,9 +174,10 @@ new_render_highquality_progress_bar = function(verbose, label, total) {
 #'or `rayrender::generate_camera_motion()` functions.
 #'@param plot Default `is.na(filename)`. Whether to plot the scene, or just return the RGBA array.
 #'@param verbose Default `FALSE`. If `TRUE`, displays progress bars while
-#'converting line, stream, and road paths into raytraced scene objects.
-#'@param parallel Default `TRUE`. Whether to use multiple threads for road mesh
-#'construction and raytracing.
+#'converting line and stream paths into raytraced scene objects. Road meshes
+#'built by [render_roads()] are reused from the active scene cache.
+#'@param parallel Default `TRUE`. Whether to use multiple threads for raytracing
+#'and for legacy uncached road-path conversion.
 #'@param ... Additional parameters to pass to `rayrender::render_scene()`.
 #'
 #'@export
@@ -1011,6 +1012,13 @@ render_highquality = function(
     rgl_material_info = rgl_material_info
   )
   raymesh_material_ids = unique(raymesh_material_info$id)
+  road_mesh_preview_ids = get_ids_with_labels(
+    typeval = "road_mesh_preview"
+  )$id
+  raymesh_exclude_ids = unique(c(
+    raymesh_material_ids,
+    road_mesh_preview_ids
+  ))
   if (
     !use_extruded_paths &&
       has_render_highquality_dielectric_path_override(
@@ -1062,7 +1070,8 @@ render_highquality = function(
         save_shadow = FALSE,
         water_attenuation = water_attenuation,
         water_surface_color = water_surface_color,
-        water_ior = water_ior
+        water_ior = water_ior,
+        exclude_ids = road_mesh_preview_ids
       )
       cache_scene_cache(ray_scene)
     }
@@ -1072,7 +1081,7 @@ render_highquality = function(
       water_attenuation = water_attenuation,
       water_surface_color = water_surface_color,
       water_ior = water_ior,
-      exclude_ids = raymesh_material_ids
+      exclude_ids = raymesh_exclude_ids
     )
   }
 
@@ -1299,6 +1308,11 @@ render_highquality = function(
       "zaxis_ticks"
     )
   )
+  cached_road_meshes = get_scene_road_meshes(default = NULL)
+  has_cached_road_meshes = length(cached_road_meshes) > 0L
+  if (has_cached_road_meshes) {
+    pathinfo = pathinfo[pathinfo$tag != "road_path", , drop = FALSE]
+  }
   pathids = pathinfo$id
   pathline = list()
   pathline_screen = list()
@@ -1313,13 +1327,13 @@ render_highquality = function(
     total = length(pathids)
   )
   for (i in seq_len(length(pathids))) {
+    is_water_path = identical(pathinfo$tag[i], "water_path")
+    is_road_path = identical(pathinfo$tag[i], "road_path")
     temp_verts = get_render_source_vertices(pathids[i])
     temp_verts_split = split_render_highquality_path_vertices(temp_verts)
     temp_color = rgl.attrib(pathids[i], "colors")
     temp_lwd_raw = material3d("lwd", id = pathids[i])
     temp_lwd = temp_lwd_raw * line_radius
-    is_water_path = identical(pathinfo$tag[i], "water_path")
-    is_road_path = identical(pathinfo$tag[i], "road_path")
     road_path_info = if (is_road_path) {
       get_render_road_path_info(pathids[i])
     } else {
@@ -1436,6 +1450,10 @@ render_highquality = function(
             image_texture = road_texture_file,
             image_repeat = 1
           )
+        } else if (is_road_path) {
+          temp_material = rayrender::diffuse(
+            color = convert_color(temp_color_single[1:3], linear = TRUE)
+          )
         } else {
           temp_material = rayrender::diffuse(color = temp_color_single[1:3])
         }
@@ -1506,11 +1524,19 @@ render_highquality = function(
   if (length(water_path_meshes) > 0) {
     pathline = c(pathline, water_path_meshes)
   }
-  road_path_meshes = make_render_highquality_road_path_meshes(
-    road_path_tasks,
-    verbose = verbose,
-    parallel = parallel
-  )
+  road_path_meshes = if (has_cached_road_meshes) {
+    make_render_highquality_cached_road_meshes(
+      meshes = cached_road_meshes,
+      bbox_center = bbox_center,
+      rgl_materials = rgl_materials
+    )
+  } else {
+    make_render_highquality_road_path_meshes(
+      road_path_tasks,
+      verbose = verbose,
+      parallel = parallel
+    )
+  }
   if (length(road_path_meshes) > 0) {
     pathline = c(pathline, road_path_meshes)
   }

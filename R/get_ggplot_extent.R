@@ -1771,12 +1771,49 @@ get_scene_cache = function(default = NULL) {
   get_scene_context_value("scene_cache", default = default)
 }
 
+#' Cache eagerly built road meshes for the active scene
+#'
+#' @param meshes Default `NULL`. Absolute-coordinate road `mesh3d` objects.
+#' @param append Default `FALSE`. Whether to append a new road layer.
+#'
+#' @return Invisibly returns `NULL`.
+#' @keywords internal
+cache_scene_road_meshes = function(meshes = NULL, append = FALSE) {
+  if (is.null(meshes)) {
+    assign("road_meshes", NULL, envir = ray_cache_scene_envir)
+    return(invisible(NULL))
+  }
+  append = isTRUE(append)
+  existing = if (append) {
+    get_scene_road_meshes(default = list())
+  } else {
+    list()
+  }
+  assign(
+    "road_meshes",
+    c(existing, unclass(meshes)),
+    envir = ray_cache_scene_envir
+  )
+  invisible(NULL)
+}
+
+#' Get eagerly built road meshes for the active scene
+#'
+#' @param default Default `NULL`. Value returned when no cache is available.
+#'
+#' @return Cached absolute-coordinate road `mesh3d` objects.
+#' @keywords internal
+get_scene_road_meshes = function(default = NULL) {
+  get_scene_context_value("road_meshes", default = default)
+}
+
 reset_scene_context = function(
   clear_scene_metadata = TRUE,
   clear_scene_cache = TRUE
 ) {
   if (isTRUE(clear_scene_cache)) {
     cache_scene_cache(NULL)
+    cache_scene_road_meshes(NULL)
   }
   if (isTRUE(clear_scene_metadata)) {
     cache_scene_context_token(NULL)
