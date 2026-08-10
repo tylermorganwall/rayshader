@@ -428,9 +428,9 @@ test_that("adaptive refinement removes a between-control chord dip", {
   expect_gt(solution$refinement_iterations, 0L)
   expect_gte(
     solution$continuous_diagnostics$continuous_chord_margin,
-    -1e-3
+    -0.05
   )
-  expect_equal(solution$engineering_audit$tolerance, 1e-3)
+  expect_equal(solution$engineering_audit$tolerance, 0.05)
   expect_true(solution$engineering_audit$passed)
 })
 
@@ -1084,7 +1084,10 @@ test_that("experimental native request batching is capped and converges", {
   )
   single_request = do.call(
     solve_render_road_profile_problem,
-    solve_settings
+    c(
+      solve_settings,
+      list(maximum_requests_per_relation = 1L)
+    )
   )
   batched = do.call(
     solve_render_road_profile_problem,

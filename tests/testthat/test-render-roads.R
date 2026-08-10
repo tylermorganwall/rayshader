@@ -1401,6 +1401,51 @@ test_that("batched road jobs capture expected native geometry failures", {
   expect_length(results[[2L]]$meshes, 1L)
 })
 
+test_that("road world scale converts geographic scene cells to metres", {
+  skip_if_not_installed("sf")
+
+  projected_scale = calculate_road_path_world_scale(
+    heightmap = matrix(0, nrow = 11, ncol = 21),
+    extent = c(xmin = 0, xmax = 1000, ymin = 0, ymax = 1000),
+    crs = sf::st_crs(32632)
+  )
+  expect_equal(projected_scale, c(100, 50), tolerance = 1e-7)
+
+  geographic_scale = calculate_road_path_world_scale(
+    heightmap = matrix(0, nrow = 101, ncol = 101),
+    extent = c(
+      xmin = 7.76,
+      xmax = 8.02,
+      ymin = 46.52,
+      ymax = 46.80
+    ),
+    crs = sf::st_crs(4326)
+  )
+  expect_equal(geographic_scale, c(198.9, 311.2), tolerance = 1)
+  expect_true(all(geographic_scale > 100))
+})
+
+test_that("stabilized road frames preserve unit cross-section widths", {
+  points = cbind(
+    seq(0, 10, by = 2),
+    0,
+    c(0, 0.5, 1.5, 3, 5, 7.5)
+  )
+  frames = calculate_render_road_stabilized_vertex_frames(
+    points = points,
+    left_distance = rep(0.5, nrow(points)),
+    right_distance = rep(0.5, nrow(points)),
+    texture_world_scale = c(1, 1),
+    guide_step_fraction = 0.2
+  )
+
+  expect_equal(frames$miter_scale, rep(1, nrow(points)))
+  expect_equal(
+    frames$join_style,
+    c("endpoint", rep("stabilized", 4), "endpoint")
+  )
+})
+
 test_that("road width and mesh texture coordinates follow public settings", {
   skip_if_not_installed("rayrender")
   skip_if_not_installed("rayvertex")
@@ -1632,7 +1677,7 @@ test_that("road mesh sweep stabilizes narrow closed loops", {
     diagnostics$sweep_stabilization$initial_inverted_segment,
     c(16L, 17L, 30L)
   )
-  expect_equal(diagnostics$sweep_stabilization$guide_step_fraction, 3)
+  expect_equal(diagnostics$sweep_stabilization$guide_step_fraction, 0.6)
   expect_equal(diagnostics$removed_quad_count, 0L)
   expect_gt(diagnostics$minimum_triangle_area, 0)
   expect_true(all(is.finite(road_mesh$vb)))

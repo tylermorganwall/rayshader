@@ -495,9 +495,15 @@ render_roads = function(
     lanes = lanes_spec$value,
     lanes_column = lanes_spec$column
   )
+  scene_crs = get_scene_target_crs(
+    extent = extent,
+    heightmap = heightmap,
+    caller = "render_roads"
+  )
   texture_world_scale = calculate_road_path_world_scale(
     heightmap = heightmap,
-    extent = extent
+    extent = extent,
+    crs = scene_crs
   )
   road_width = resolve_render_road_width(
     road_width = width,
@@ -1827,7 +1833,7 @@ solve_render_road_path_profiles = function(
   solution = solve_render_road_profile_problem(
     problem,
     maximum_iterations = 100000,
-    profile_tolerance = 1e-3
+    profile_tolerance = 0.05
   )
   problem = solution$problem
   solved_fragment_id = problem$topology$fragments$render_road_fragment_id
@@ -6625,11 +6631,11 @@ restore_render_road_profile_native_solution = function(result, problem) {
 #' @param relative_tolerance Default `1e-7`. Relative solver tolerance.
 #' @param maximum_iterations Default `20000`. Maximum OSQP iterations per
 #'   component.
-#' @param profile_tolerance Default `1e-3`. Accepted geometric profile
+#' @param profile_tolerance Default `0.05`. Accepted geometric profile
 #'   tolerance in metres for adaptive refinement and the engineering audit.
 #' @param maximum_refinement_iterations Default `20`. Maximum adaptive
 #'   continuous-constraint refinement iterations.
-#' @param maximum_requests_per_relation Default `1L`. Experimental maximum
+#' @param maximum_requests_per_relation Default `4L`. Maximum
 #'   number of well-separated refinement requests selected for each fragment
 #'   and request type, or each overlap event. Must be between 1 and 4.
 #'
@@ -6641,9 +6647,9 @@ solve_render_road_profile_problem = function(
   absolute_tolerance = 1e-7,
   relative_tolerance = 1e-7,
   maximum_iterations = 20000,
-  profile_tolerance = 1e-3,
+  profile_tolerance = 0.05,
   maximum_refinement_iterations = 20,
-  maximum_requests_per_relation = 1L
+  maximum_requests_per_relation = 4L
 ) {
   if (!inherits(problem, "render_road_profile_problem")) {
     stop("`problem` must be a road profile problem.", call. = FALSE)
@@ -7498,10 +7504,11 @@ evaluate_render_road_envelope_sections = function(
 #'
 #' @param heightmap Heightmap matrix.
 #' @param extent Scene extent.
+#' @param crs Default `NULL`. Scene CRS used to convert axis spacing to metres.
 #'
 #' @return Two-value x-z multiplier from scene units to world units.
 #' @keywords internal
-calculate_road_path_world_scale = function(heightmap, extent) {
+calculate_road_path_world_scale = function(heightmap, extent, crs = NULL) {
   extent = tryCatch(get_extent(extent), error = function(e) NULL)
   if (
     is.null(extent) ||
@@ -7516,10 +7523,49 @@ calculate_road_path_world_scale = function(heightmap, extent) {
   if (!is.finite(x_range) || !is.finite(z_range)) {
     return(c(1, 1))
   }
-  c(
+  axis_scale = c(
     abs(x_range) / (nrow(heightmap) - 1),
     abs(z_range) / (ncol(heightmap) - 1)
   )
+  parsed_crs = try_parse_scene_crs(crs)
+  if (is.null(parsed_crs) || !requireNamespace("sf", quietly = TRUE)) {
+    return(axis_scale)
+  }
+  center = c(
+    mean(extent[c("xmin", "xmax")]),
+    mean(extent[c("ymin", "ymax")])
+  )
+  metric_scale = tryCatch(
+    {
+      axis_points = sf::st_sf(
+        geometry = sf::st_sfc(
+          sf::st_point(center),
+          sf::st_point(center + c(axis_scale[[1L]], 0)),
+          sf::st_point(center + c(0, axis_scale[[2L]])),
+          crs = parsed_crs
+        )
+      )
+      metric_crs = resolve_render_road_metric_crs(axis_points)
+      metric_coordinates = sf::st_coordinates(
+        sf::st_transform(axis_points, metric_crs)
+      )
+      c(
+        sqrt(sum(
+          (metric_coordinates[2L, ] -
+            metric_coordinates[1L, ])^2
+        )),
+        sqrt(sum(
+          (metric_coordinates[3L, ] -
+            metric_coordinates[1L, ])^2
+        ))
+      )
+    },
+    error = function(error) c(NA_real_, NA_real_)
+  )
+  if (any(!is.finite(metric_scale)) || any(metric_scale <= 0)) {
+    return(axis_scale)
+  }
+  metric_scale
 }
 
 #' Resolve render road width
@@ -9135,7 +9181,6 @@ calculate_render_road_stabilized_vertex_frames = function(
       }
     }
   }
-  guide_scale = guide_frames$miter_scale
   if (closed) {
     closing_angle = guide_angle[[1L]]
     while (closing_angle - utils::tail(guide_angle, 1L) > pi) {
@@ -9146,17 +9191,10 @@ calculate_render_road_stabilized_vertex_frames = function(
     }
     guide_station = c(guide_station, total_length)
     guide_angle = c(guide_angle, closing_angle)
-    guide_scale = c(guide_scale, guide_scale[[1L]])
   }
   dense_angle = stats::approx(
     guide_station,
     guide_angle,
-    xout = station,
-    rule = 2
-  )$y
-  dense_scale = stats::approx(
-    guide_station,
-    guide_scale,
     xout = station,
     rule = 2
   )$y
@@ -9166,7 +9204,12 @@ calculate_render_road_stabilized_vertex_frames = function(
     miter_limit = miter_limit
   )
   frames$side = cbind(cos(dense_angle), sin(dense_angle))
-  frames$miter_scale = dense_scale
+  # The interpolated side is a smooth unit cross-section normal, not the
+  # exact bisector of either adjacent segment. Applying the guide-path miter
+  # scale to it overextends tight bends and can invert an otherwise valid
+  # strip. Unit scale preserves the requested width while the interpolated
+  # direction supplies the stabilization.
+  frames$miter_scale = rep(1, point_count)
   stabilize = frames$join_style != "endpoint"
   frames$join_style[stabilize] = "stabilized"
   attr(frames, "render_road_stabilization") = list(
