@@ -39,6 +39,9 @@
 #' [render_highquality()].
 #' @param clear_previous Default `TRUE`. If `TRUE`, removes the existing stream
 #' layer before drawing the new one.
+#' @param height Default `0.05`. Total stream mesh thickness in scene units for
+#' [render_highquality()]. This is independent of `width` and centered on the
+#' sampled stream path, leaving the top surface slightly above the terrain.
 #'
 #' @return Invisibly returns the rendered stream coordinates.
 #' @examplesIf all(vapply(c("sf", "terra", "dplyr", "tigris", "elevatr", "rayrender", "rayvertex", "skymodelr"), requireNamespace, logical(1), quietly = TRUE)) && (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true"))
@@ -205,7 +208,8 @@ render_streams = function(
   offset = NULL,
   merge = TRUE,
   clear_previous = TRUE,
-  water_polygons = NULL
+  water_polygons = NULL,
+  height = 0.05
 ) {
   # 1. Capture expressions needed to distinguish values from column references.
   heightmap_missing = missing(heightmap)
@@ -295,6 +299,7 @@ render_streams = function(
       lower = 0
     )
   }
+  height = resolve_render_positive_number(height, "height")
   if (rgl::cur3d() == 0) {
     stop("No rgl window currently open.")
   }
@@ -373,6 +378,7 @@ render_streams = function(
   }
   if (isTRUE(clear_previous)) {
     rgl::pop3d(tag = "water_path")
+    clear_render_water_path_info()
   }
 
   # 4. Normalize, clip, and preserve source identities in the line geometry.
@@ -439,16 +445,88 @@ render_streams = function(
   for (coord_index in seq_along(coord_list)) {
     coord = coord_list[[coord_index]]
     if (is.matrix(coord) && nrow(coord) >= 2) {
-      rgl::lines3d(
+      water_path_rgl_id = rgl::lines3d(
         coord,
         color = watercolor,
         tag = "water_path",
         lwd = coord_width[[coord_index]],
         line_antialias = FALSE
       )
+      register_render_water_path_info(
+        id = water_path_rgl_id,
+        info = list(height = height)
+      )
     }
   }
   invisible(coord_list)
+}
+
+#' Default stream mesh height
+#'
+#' @return Default total stream mesh thickness in scene units.
+#' @keywords internal
+default_render_stream_height = function() {
+  0.05
+}
+
+#' Resolve stream mesh height
+#'
+#' @param height Default `NULL`. Total stream mesh thickness in scene units.
+#'
+#' @return Validated stream mesh height.
+#' @keywords internal
+resolve_render_stream_height = function(height = NULL) {
+  if (is.null(height)) {
+    height = default_render_stream_height()
+  }
+  resolve_render_positive_number(height, "height")
+}
+
+#' Register water path info
+#'
+#' @param id rgl id.
+#' @param info Water path info.
+#'
+#' @return Invisibly returns `id`.
+#' @keywords internal
+register_render_water_path_info = function(id, info) {
+  id = as.integer(id)
+  for (id_single in id) {
+    assign(as.character(id_single), info, envir = ray_water_path_envir)
+  }
+  invisible(id)
+}
+
+#' Get water path info
+#'
+#' @param id rgl id.
+#'
+#' @return Water path info.
+#' @keywords internal
+get_render_water_path_info = function(id) {
+  get0(
+    as.character(as.integer(id)),
+    envir = ray_water_path_envir,
+    inherits = FALSE
+  )
+}
+
+#' Clear water path info
+#'
+#' @param id Default `NULL`. Optional id to clear.
+#'
+#' @return Invisibly returns `NULL`.
+#' @keywords internal
+clear_render_water_path_info = function(id = NULL) {
+  if (is.null(id)) {
+    ids = ls(envir = ray_water_path_envir, all.names = TRUE)
+  } else {
+    ids = as.character(as.integer(id))
+  }
+  if (length(ids)) {
+    rm(list = ids, envir = ray_water_path_envir)
+  }
+  invisible(NULL)
 }
 
 #' Collapse duplicated path vertices
@@ -502,20 +580,27 @@ collapse_render_highquality_path_vertices = function(
 
 #' Make water path extrusion profile
 #'
+#' @param width Default `1`. Stream mesh width in scene units.
+#' @param height Default `0.05`. Stream mesh height in scene units.
+#'
 #' @return Two-column matrix defining a shallow rectangular extrusion profile.
 #' @keywords internal
-make_render_highquality_water_path_polygon = function() {
-  height_ratio = 0.2
+make_render_highquality_water_path_polygon = function(
+  width = 1,
+  height = default_render_stream_height()
+) {
+  width = resolve_render_positive_number(width, "width")
+  height = resolve_render_stream_height(height)
   matrix(
     c(
-      -0.5,
-      -height_ratio / 2,
-      0.5,
-      -height_ratio / 2,
-      0.5,
-      height_ratio / 2,
-      -0.5,
-      height_ratio / 2
+      -width / 2,
+      -height / 2,
+      width / 2,
+      -height / 2,
+      width / 2,
+      height / 2,
+      -width / 2,
+      height / 2
     ),
     ncol = 2,
     byrow = TRUE
@@ -660,6 +745,10 @@ group_render_highquality_water_path_tasks = function(tasks) {
   }
   tasks_are_compatible = function(task, prototype) {
     same_number(task$width, prototype$width) &&
+      same_number(
+        resolve_render_stream_height(task[["height"]]),
+        resolve_render_stream_height(prototype[["height"]])
+      ) &&
       same_number(task$zscale, prototype$zscale) &&
       same_vector(task$bbox_center, prototype$bbox_center) &&
       identical(task$heightmap, prototype$heightmap) &&
@@ -699,12 +788,12 @@ group_render_highquality_water_path_tasks = function(tasks) {
 #'
 #' @param tasks Compatible water path mesh tasks.
 #' @param seal_epsilon Default `NULL`. Downward terrain sealing distance in scene
-#' units. When `NULL`, uses a width-scaled epsilon.
+#' units. When `NULL`, uses `1e-5` scene units.
 #' @param bottom_cap Default `TRUE`. Whether to add a hidden bottom cap below the
 #' terrain surface.
-#' @param height Default `NULL`, which uses 20 percent of the path width.
-#' Extrusion height in scene units.
-#' @param extrusion_alignment Default `"above"`. Whether to place the extrusion
+#' @param height Default `NULL`, which uses the height stored in the path tasks
+#' or `default_render_stream_height()`. Extrusion height in scene units.
+#' @param extrusion_alignment Default `"center"`. Whether to place the extrusion
 #' `"above"`, `"center"` it on, or place it `"below"` the path elevation.
 #' @param return_mesh Default `FALSE`. Whether to return the raw `mesh3d`
 #' instead of a rayrender model.
@@ -716,7 +805,7 @@ make_render_highquality_joined_water_path_mesh = function(
   seal_epsilon = NULL,
   bottom_cap = TRUE,
   height = NULL,
-  extrusion_alignment = c("above", "center", "below"),
+  extrusion_alignment = c("center", "above", "below"),
   return_mesh = FALSE
 ) {
   if (!requireNamespace("sf", quietly = TRUE)) {
@@ -806,13 +895,13 @@ make_render_highquality_joined_water_path_mesh = function(
     stop("Joined stream mesh height sampling produced non-finite values.")
   }
   if (is.null(height)) {
-    height = group$width * 0.2
+    height = group$height
   } else {
     height = resolve_render_positive_number(height, "height")
   }
   extrusion_alignment = match.arg(extrusion_alignment)
   if (is.null(seal_epsilon)) {
-    seal_epsilon = max(group$width, 1) * 1e-5
+    seal_epsilon = 1e-5
   } else {
     seal_epsilon = suppressWarnings(as.numeric(seal_epsilon[1]))
     if (!is.finite(seal_epsilon) || seal_epsilon < 0) {
@@ -1006,6 +1095,7 @@ prepare_render_highquality_water_path_line_group = function(tasks) {
   if (!is.finite(width) || width <= 0) {
     return(NULL)
   }
+  height = resolve_render_stream_height(prototype[["height"]])
   heightmap_scene = scale_render_highquality_heightmap(
     heightmap = prototype$heightmap,
     zscale = prototype$zscale
@@ -1055,6 +1145,7 @@ prepare_render_highquality_water_path_line_group = function(tasks) {
   list(
     lines = lines,
     width = width,
+    height = height,
     bbox_center = prototype$bbox_center,
     heightmap = heightmap_scene,
     zscale = 1,
@@ -1764,6 +1855,8 @@ sample_render_highquality_water_path_surface = function(
 #' @param points Path points in rgl scene coordinates.
 #' @param bbox_center Scene bounding box center.
 #' @param width Stream width.
+#' @param height Default `0.05`. Total stream mesh thickness in scene units,
+#' centered on the path.
 #' @param heightmap Default `NULL`. Cached heightmap matrix.
 #' @param zscale Effective zscale.
 #' @param material Rayrender material.
@@ -1778,6 +1871,7 @@ make_render_highquality_water_path_mesh = function(
   points,
   bbox_center,
   width,
+  height = default_render_stream_height(),
   heightmap = NULL,
   zscale = 1,
   material,
@@ -1795,6 +1889,7 @@ make_render_highquality_water_path_mesh = function(
   if (nrow(points) < 2) {
     return(NULL)
   }
+  height = resolve_render_positive_number(height, "height")
   if (is.null(segment_end)) {
     points = densify_render_highquality_path_points(
       points = points,
@@ -1833,9 +1928,12 @@ make_render_highquality_water_path_mesh = function(
   if (segment_end < segment_start) {
     return(NULL)
   }
-  height_ratio = diff(range(make_render_highquality_water_path_polygon()[, 2]))
-  half_width = width / 2
-  half_thickness = width * height_ratio / 2
+  profile = make_render_highquality_water_path_polygon(
+    width = width,
+    height = height
+  )
+  half_width = diff(range(profile[, 1])) / 2
+  half_thickness = diff(range(profile[, 2])) / 2
   normals = interpolate_render_highquality_normals(
     points = points,
     heightmap = heightmap,

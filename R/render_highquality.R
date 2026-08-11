@@ -1339,6 +1339,14 @@ render_highquality = function(
     } else {
       NULL
     }
+    water_path_info = if (is_water_path) {
+      get_render_water_path_info(pathids[i])
+    } else {
+      NULL
+    }
+    water_path_height = resolve_render_stream_height(
+      water_path_info[["height"]]
+    )
     road_texture_file = road_path_info$texture_file
     road_texture_length = road_path_info$texture_length
     if (is.null(road_texture_length)) {
@@ -1464,6 +1472,7 @@ render_highquality = function(
           points = temp_verts_single,
           bbox_center = bbox_center,
           width = temp_lwd_raw,
+          height = water_path_height,
           heightmap = water_path_surface$heightmap,
           zscale = water_path_surface$zscale,
           material = temp_material

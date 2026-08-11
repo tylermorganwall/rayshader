@@ -16,7 +16,8 @@ render_streams(
   offset = NULL,
   merge = TRUE,
   clear_previous = TRUE,
-  water_polygons = NULL
+  water_polygons = NULL,
+  height = 0.05
 )
 }
 \arguments{
@@ -68,6 +69,10 @@ Multiple polygons are combined before they are removed from the stream
 linework. When both inputs have a CRS, the polygons are transformed to the
 stream CRS before clipping. When only one input has a CRS, an error is
 returned rather than assuming the coordinate systems match.}
+
+\item{height}{Default \code{0.05}. Total stream mesh thickness in scene units for
+\code{\link[=render_highquality]{render_highquality()}}. This is independent of \code{width} and centered on the
+sampled stream path, leaving the top surface slightly above the terrain.}
 }
 \value{
 Invisibly returns the rendered stream coordinates.

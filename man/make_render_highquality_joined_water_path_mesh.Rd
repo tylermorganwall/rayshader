@@ -9,7 +9,7 @@ make_render_highquality_joined_water_path_mesh(
   seal_epsilon = NULL,
   bottom_cap = TRUE,
   height = NULL,
-  extrusion_alignment = c("above", "center", "below"),
+  extrusion_alignment = c("center", "above", "below"),
   return_mesh = FALSE
 )
 }
@@ -17,15 +17,15 @@ make_render_highquality_joined_water_path_mesh(
 \item{tasks}{Compatible water path mesh tasks.}
 
 \item{seal_epsilon}{Default \code{NULL}. Downward terrain sealing distance in scene
-units. When \code{NULL}, uses a width-scaled epsilon.}
+units. When \code{NULL}, uses \code{1e-5} scene units.}
 
 \item{bottom_cap}{Default \code{TRUE}. Whether to add a hidden bottom cap below the
 terrain surface.}
 
-\item{height}{Default \code{NULL}, which uses 20 percent of the path width.
-Extrusion height in scene units.}
+\item{height}{Default \code{NULL}, which uses the height stored in the path tasks
+or \code{default_render_stream_height()}. Extrusion height in scene units.}
 
-\item{extrusion_alignment}{Default \code{"above"}. Whether to place the extrusion
+\item{extrusion_alignment}{Default \code{"center"}. Whether to place the extrusion
 \code{"above"}, \code{"center"} it on, or place it \code{"below"} the path elevation.}
 
 \item{return_mesh}{Default \code{FALSE}. Whether to return the raw \code{mesh3d}

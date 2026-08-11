@@ -10,9 +10,9 @@ solve_render_road_profile_problem(
   absolute_tolerance = 1e-07,
   relative_tolerance = 1e-07,
   maximum_iterations = 20000,
-  profile_tolerance = 0.001,
+  profile_tolerance = 0.05,
   maximum_refinement_iterations = 20,
-  maximum_requests_per_relation = 1L
+  maximum_requests_per_relation = 4L
 )
 }
 \arguments{
@@ -27,13 +27,13 @@ solve_render_road_profile_problem(
 \item{maximum_iterations}{Default \code{20000}. Maximum OSQP iterations per
 component.}
 
-\item{profile_tolerance}{Default \code{1e-3}. Accepted geometric profile
+\item{profile_tolerance}{Default \code{0.05}. Accepted geometric profile
 tolerance in metres for adaptive refinement and the engineering audit.}
 
 \item{maximum_refinement_iterations}{Default \code{20}. Maximum adaptive
 continuous-constraint refinement iterations.}
 
-\item{maximum_requests_per_relation}{Default \code{1L}. Experimental maximum
+\item{maximum_requests_per_relation}{Default \code{4L}. Maximum
 number of well-separated refinement requests selected for each fragment
 and request type, or each overlap event. Must be between 1 and 4.}
 }

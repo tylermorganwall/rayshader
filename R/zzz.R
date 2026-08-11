@@ -3,6 +3,7 @@ ray_has_norm_envir = new.env(parent = emptyenv())
 ray_cache_scene_envir = new.env(parent = emptyenv())
 ray_surface_texture_envir = new.env(parent = emptyenv())
 ray_road_path_envir = new.env(parent = emptyenv())
+ray_water_path_envir = new.env(parent = emptyenv())
 
 assign("scene_cache", NULL, envir = ray_cache_scene_envir)
 assign("scene_context_token", NULL, envir = ray_cache_scene_envir)

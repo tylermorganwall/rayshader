@@ -4,12 +4,14 @@
 \alias{calculate_road_path_world_scale}
 \title{Calculate road path world scale}
 \usage{
-calculate_road_path_world_scale(heightmap, extent)
+calculate_road_path_world_scale(heightmap, extent, crs = NULL)
 }
 \arguments{
 \item{heightmap}{Heightmap matrix.}
 
 \item{extent}{Scene extent.}
+
+\item{crs}{Default \code{NULL}. Scene CRS used to convert axis spacing to metres.}
 }
 \value{
 Two-value x-z multiplier from scene units to world units.

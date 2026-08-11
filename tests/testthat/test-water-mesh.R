@@ -451,6 +451,10 @@ test_that("render_streams draws spatial stream paths as water paths", {
   expect_equal(nrow(get_ids_with_labels(typeval = "water")), 0)
   water_path_ids = get_ids_with_labels(typeval = "water_path")
   expect_equal(nrow(water_path_ids), 1)
+  expect_equal(
+    get_render_water_path_info(water_path_ids$id[[1]])$height,
+    0.05
+  )
 
   water_path_vertices = rgl::rgl.attrib(water_path_ids$id[[1]], "vertices")
   expect_gt(nrow(water_path_vertices), 2)
@@ -515,13 +519,13 @@ test_that("render_streams draws spatial stream paths as water paths", {
     matrix(
       c(
         -0.5,
-        -0.1,
+        -0.025,
         0.5,
-        -0.1,
+        -0.025,
         0.5,
-        0.1,
+        0.025,
         -0.5,
-        0.1
+        0.025
       ),
       ncol = 2,
       byrow = TRUE
@@ -614,12 +618,32 @@ test_that("render_streams draws spatial stream paths as water paths", {
   expect_length(water_path_meshes, 1)
   expect_equal(
     range(water_path_mesh_vertices[, 2]),
-    c(-0.1, 0.1),
+    c(-0.025, 0.025),
     tolerance = 1e-8
   )
   expect_equal(
     range(water_path_mesh_vertices[, 3]),
     c(-0.5, 0.5),
+    tolerance = 1e-8
+  )
+  wide_water_path_mesh = make_render_highquality_water_path_mesh(
+    points = matrix(c(0, 0, 0, 1, 0, 0), ncol = 3, byrow = TRUE),
+    bbox_center = c(0, 0, 0),
+    width = 4,
+    heightmap = matrix(0, nrow = 3, ncol = 3),
+    zscale = 1,
+    material = rayrender::dielectric()
+  )
+  wide_water_path_vertices =
+    wide_water_path_mesh$shape_info[[1]]$mesh_info[[1]]$vertices
+  expect_equal(
+    range(wide_water_path_vertices[, 2]),
+    c(-0.025, 0.025),
+    tolerance = 1e-8
+  )
+  expect_equal(
+    range(wide_water_path_vertices[, 3]),
+    c(-2, 2),
     tolerance = 1e-8
   )
   sloped_heightmap = matrix(
@@ -725,9 +749,8 @@ test_that("render_streams draws spatial stream paths as water paths", {
         8
       )
   ))
-  expect_true(all(
-    abs(range(as.numeric(water_path_vertices[, 2]))) < 1e-8
-  ))
+  expect_lt(min(water_path_mesh_vertices[, 2]), 0)
+  expect_gt(max(water_path_mesh_vertices[, 2]), 0)
   expect_equal(
     rgl::material3d("lwd", id = water_path_ids$id[[1]]),
     0.5
@@ -832,6 +855,64 @@ test_that("render_streams removes stream sections beneath water polygons", {
     ),
     rep(0.5, 3)
   )
+})
+
+test_that("render_highquality forwards registered stream mesh heights", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("terra")
+  skip_if_not_installed("rayrender")
+  skip_if_not_installed("rayvertex")
+  on.exit(rgl::close3d(), add = TRUE)
+  local_rgl_use_null()
+
+  height_raster = terra::rast(
+    nrows = 5,
+    ncols = 5,
+    xmin = 0,
+    xmax = 5,
+    ymin = 0,
+    ymax = 5,
+    crs = "EPSG:3857"
+  )
+  terra::values(height_raster) = 0
+  stream = sf::st_sf(
+    geometry = sf::st_sfc(
+      sf::st_linestring(matrix(c(1, 2.5, 4, 2.5), ncol = 2, byrow = TRUE)),
+      crs = 3857
+    )
+  )
+  expect_no_condition(plot_3d_test(
+    constant_shade(height_raster),
+    height_raster,
+    solid = FALSE,
+    shadow = FALSE,
+    water = FALSE,
+    windowsize = c(200, 200)
+  ))
+  expect_no_condition(render_streams(
+    stream,
+    heightmap = height_raster,
+    width = 0.5,
+    height = 0.08
+  ))
+
+  captured = new.env(parent = emptyenv())
+  testthat::local_mocked_bindings(
+    make_render_highquality_water_path_meshes = function(
+      tasks,
+      verbose = FALSE
+    ) {
+      captured$tasks = tasks
+      list()
+    },
+    .package = "rayshader"
+  )
+  expect_no_condition(render_highquality(
+    return_scene = TRUE,
+    light = FALSE
+  ))
+  expect_length(captured$tasks, 1)
+  expect_equal(captured$tasks[[1]]$height, 0.08)
 })
 
 test_that("water polygon clipping aligns CRS and accepts SpatVector input", {
@@ -970,6 +1051,19 @@ test_that("render_streams reads widths from an sf column", {
     numeric(1)
   )
   expect_equal(sort(water_path_widths), c(0.25, 0.75))
+  expect_no_condition(render_streams(
+    streams,
+    heightmap = height_raster,
+    width_column = "stream_width",
+    height = 0.08
+  ))
+  water_path_ids = get_ids_with_labels(typeval = "water_path")
+  water_path_heights = vapply(
+    water_path_ids$id,
+    function(id) get_render_water_path_info(id)$height,
+    numeric(1)
+  )
+  expect_equal(water_path_heights, rep(0.08, 2))
   expect_error(
     render_streams(
       streams,
@@ -977,6 +1071,16 @@ test_that("render_streams reads widths from an sf column", {
       width_column = "missing_width"
     ),
     "`width_column` must name a column in `streams`: missing_width",
+    fixed = TRUE
+  )
+  expect_error(
+    render_streams(
+      streams,
+      heightmap = height_raster,
+      width_column = "stream_width",
+      height = 0
+    ),
+    "`height` must be a single positive number.",
     fixed = TRUE
   )
 })
@@ -1100,8 +1204,19 @@ test_that("joined stream terrain overlay clips invalid cells and closes meshes",
   )
   flat_mesh = make_render_highquality_joined_water_path_mesh(flat_task)
   flat_info = flat_mesh$shape_info[[1]]$mesh_info[[1]]
-  expect_equal(max(flat_info$vertices[, 2]), 0.2, tolerance = 1e-8)
+  expect_equal(max(flat_info$vertices[, 2]), 0.025, tolerance = 1e-8)
   expect_lt(min(flat_info$vertices[, 2]), 0)
+  wide_flat_task = flat_task
+  wide_flat_task[[1]]$width = 2
+  wide_flat_mesh = make_render_highquality_joined_water_path_mesh(
+    wide_flat_task
+  )
+  wide_flat_info = wide_flat_mesh$shape_info[[1]]$mesh_info[[1]]
+  expect_equal(
+    range(wide_flat_info$vertices[, 2]),
+    range(flat_info$vertices[, 2]),
+    tolerance = 1e-8
+  )
   flat_indices = as.matrix(flat_info$indices)
   if (min(flat_indices) == 0L) {
     flat_indices = flat_indices + 1L
@@ -1139,8 +1254,8 @@ test_that("joined stream terrain overlay clips invalid cells and closes meshes",
   )
   y_delta = sloped_info$vertices[, 2] - terrain_y
   expect_true(all(
-    abs(y_delta - 0.2) < 1e-8 |
-      abs(y_delta + 1e-5) < 1e-8
+    abs(y_delta - 0.025) < 1e-8 |
+      abs(y_delta + 0.02501) < 1e-8
   ))
 })
 

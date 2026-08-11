@@ -8,6 +8,7 @@ make_render_highquality_water_path_mesh(
   points,
   bbox_center,
   width,
+  height = default_render_stream_height(),
   heightmap = NULL,
   zscale = 1,
   material,
@@ -23,6 +24,9 @@ make_render_highquality_water_path_mesh(
 \item{bbox_center}{Scene bounding box center.}
 
 \item{width}{Stream width.}
+
+\item{height}{Default \code{0.05}. Total stream mesh thickness in scene units,
+centered on the path.}
 
 \item{heightmap}{Default \code{NULL}. Cached heightmap matrix.}
 

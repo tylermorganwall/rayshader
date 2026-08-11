@@ -4,7 +4,15 @@
 \alias{make_render_highquality_water_path_polygon}
 \title{Make water path extrusion profile}
 \usage{
-make_render_highquality_water_path_polygon()
+make_render_highquality_water_path_polygon(
+  width = 1,
+  height = default_render_stream_height()
+)
+}
+\arguments{
+\item{width}{Default \code{1}. Stream mesh width in scene units.}
+
+\item{height}{Default \code{0.05}. Stream mesh height in scene units.}
 }
 \value{
 Two-column matrix defining a shallow rectangular extrusion profile.
