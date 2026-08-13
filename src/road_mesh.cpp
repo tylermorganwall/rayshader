@@ -1720,6 +1720,353 @@ List wrap_road_section_data(const RoadSectionData& sections) {
       _["right_normal"] = wrap_road_vec3_matrix(sections.right_normal));
 }
 
+struct StreamMeshJob {
+  std::vector<RoadVec3> points;
+  RoadVec3 center;
+  double width = 1.0;
+  double height = 0.05;
+  bool cap_start = true;
+  bool cap_end = true;
+};
+
+struct StreamMeshData {
+  std::vector<double> vertices;
+  std::vector<double> vertex_normals;
+  std::vector<int> indices;
+  int input_triangle_count = 0;
+  int retained_triangle_count = 0;
+};
+
+std::vector<RoadVec3> collapse_stream_path_vertices(
+    const std::vector<RoadVec3>& points,
+    double minimum_step) {
+  if (points.size() < 2) {
+    return points;
+  }
+  std::vector<int> keep;
+  keep.reserve(points.size());
+  keep.push_back(0);
+  for (std::size_t index = 1; index + 1 < points.size(); ++index) {
+    check_road_mesh_interrupt(static_cast<int>(index));
+    const RoadVec3 delta = road_vec3_subtract(
+        points[index], points[keep.back()]);
+    if (road_vec3_length(delta) > minimum_step) {
+      keep.push_back(static_cast<int>(index));
+    }
+  }
+  const int final_index = static_cast<int>(points.size()) - 1;
+  while (keep.size() > 1) {
+    const RoadVec3 delta = road_vec3_subtract(
+        points[final_index], points[keep.back()]);
+    if (road_vec3_length(delta) > minimum_step) {
+      break;
+    }
+    keep.pop_back();
+  }
+  std::vector<RoadVec3> result;
+  result.reserve(keep.size() + 1);
+  for (int index : keep) {
+    result.push_back(points[index]);
+  }
+  result.push_back(points[final_index]);
+  return result;
+}
+
+StreamMeshJob parse_stream_mesh_job(const List& input) {
+  const NumericMatrix points = input["points"];
+  const NumericVector bbox_center = input["bbox_center"];
+  const double width = as<double>(input["width"]);
+  const double height = as<double>(input["height"]);
+  if (points.nrow() < 2 || points.ncol() != 3 || bbox_center.size() < 3 ||
+      !std::isfinite(width) || width <= 0.0 ||
+      !std::isfinite(height) || height <= 0.0) {
+    stop("Stream mesh batch job inputs do not match.");
+  }
+  StreamMeshJob job;
+  job.points = copy_road_vec3_matrix(points);
+  for (const RoadVec3& point : job.points) {
+    if (!road_vec3_finite(point)) {
+      stop("Stream mesh batch path points must be finite.");
+    }
+  }
+  job.center = {bbox_center[0], bbox_center[1], bbox_center[2]};
+  if (!road_vec3_finite(job.center)) {
+    stop("Stream mesh batch scene centers must be finite.");
+  }
+  job.width = width;
+  job.height = height;
+  job.cap_start = as<bool>(input["cap_start"]);
+  job.cap_end = as<bool>(input["cap_end"]);
+  return job;
+}
+
+StreamMeshData build_stream_mesh_native(
+    const StreamMeshJob& job,
+    const RoadTerrain& terrain) {
+  RoadDensifyJob densify_job;
+  densify_job.points = job.points;
+  densify_job.width = job.width;
+  densify_job.terrain_following = terrain.available();
+  std::vector<RoadVec3> points = densify_road_path_native(
+      densify_job, terrain);
+  points = collapse_stream_path_vertices(
+      points,
+      std::max(
+          std::abs(job.width) * 0.01,
+          std::sqrt(std::numeric_limits<double>::epsilon())));
+
+  StreamMeshData mesh;
+  if (points.size() < 2) {
+    return mesh;
+  }
+  const int point_count = static_cast<int>(points.size());
+  const int segment_count = point_count - 1;
+  std::vector<RoadVec3> normals(point_count);
+  std::vector<RoadVec3> tangents(point_count);
+  std::vector<RoadVec3> side(point_count);
+  std::vector<RoadVec3> left_center(point_count);
+  std::vector<RoadVec3> right_center(point_count);
+  std::vector<RoadVec3> left_normal(point_count);
+  std::vector<RoadVec3> right_normal(point_count);
+  std::vector<RoadVec3> left_top(point_count);
+  std::vector<RoadVec3> right_top(point_count);
+  std::vector<RoadVec3> left_bottom(point_count);
+  std::vector<RoadVec3> right_bottom(point_count);
+
+  for (int point = 0; point < point_count; ++point) {
+    check_road_mesh_interrupt(point);
+    normals[point] = terrain.available()
+        ? terrain.normal(points[point].x, points[point].z)
+        : RoadVec3{0.0, 1.0, 0.0};
+  }
+  for (int point = 0; point < point_count; ++point) {
+    RoadVec3 raw;
+    if (point == 0) {
+      raw = road_vec3_subtract(points[1], points[0]);
+    } else if (point == point_count - 1) {
+      raw = road_vec3_subtract(points[point], points[point - 1]);
+    } else {
+      raw = road_vec3_subtract(points[point + 1], points[point - 1]);
+    }
+    raw = road_vec3_subtract(
+        raw,
+        road_vec3_scale(normals[point], road_vec3_dot(raw, normals[point])));
+    if (!normalize_road_vec3(raw, tangents[point])) {
+      tangents[point] = {1.0, 0.0, 0.0};
+    }
+    if (!normalize_road_vec3(
+            road_vec3_cross(tangents[point], normals[point]), side[point])) {
+      side[point] = {0.0, 0.0, 1.0};
+    }
+  }
+
+  const double half_width = job.width / 2.0;
+  const double half_height = job.height / 2.0;
+  for (int point = 0; point < point_count; ++point) {
+    left_center[point] = road_vec3_add(
+        points[point], road_vec3_scale(side[point], half_width));
+    right_center[point] = road_vec3_subtract(
+        points[point], road_vec3_scale(side[point], half_width));
+    if (terrain.available()) {
+      const double center_height = terrain.sample(
+          points[point].x, points[point].z);
+      const double center_offset = points[point].y - center_height;
+      left_center[point].y = terrain.sample(
+          left_center[point].x, left_center[point].z) + center_offset;
+      right_center[point].y = terrain.sample(
+          right_center[point].x, right_center[point].z) + center_offset;
+      left_normal[point] = terrain.normal(
+          left_center[point].x, left_center[point].z);
+      right_normal[point] = terrain.normal(
+          right_center[point].x, right_center[point].z);
+    } else {
+      left_normal[point] = {0.0, 1.0, 0.0};
+      right_normal[point] = {0.0, 1.0, 0.0};
+    }
+    left_top[point] = road_vec3_add(
+        left_center[point], road_vec3_scale(left_normal[point], half_height));
+    right_top[point] = road_vec3_add(
+        right_center[point], road_vec3_scale(right_normal[point], half_height));
+    left_bottom[point] = road_vec3_subtract(
+        left_center[point], road_vec3_scale(left_normal[point], half_height));
+    right_bottom[point] = road_vec3_subtract(
+        right_center[point], road_vec3_scale(right_normal[point], half_height));
+  }
+
+  const int quad_count = segment_count * 4 +
+      (job.cap_start ? 1 : 0) + (job.cap_end ? 1 : 0);
+  mesh.vertices.resize(static_cast<std::size_t>(quad_count) * 12);
+  mesh.vertex_normals.resize(static_cast<std::size_t>(quad_count) * 12);
+  for (int segment = 0; segment < segment_count; ++segment) {
+    const int next = segment + 1;
+    const int top_quad = segment;
+    const int bottom_quad = segment_count + segment;
+    const int left_quad = segment_count * 2 + segment;
+    const int right_quad = segment_count * 3 + segment;
+    fill_road_quad_vec3(
+        mesh.vertices,
+        top_quad,
+        left_top[segment],
+        left_top[next],
+        right_top[next],
+        right_top[segment]);
+    fill_road_quad_vec3(
+        mesh.vertices,
+        bottom_quad,
+        left_bottom[segment],
+        right_bottom[segment],
+        right_bottom[next],
+        left_bottom[next]);
+    fill_road_quad_vec3(
+        mesh.vertices,
+        left_quad,
+        left_bottom[segment],
+        left_bottom[next],
+        left_top[next],
+        left_top[segment]);
+    fill_road_quad_vec3(
+        mesh.vertices,
+        right_quad,
+        right_bottom[segment],
+        right_top[segment],
+        right_top[next],
+        right_bottom[next]);
+    fill_road_quad_vec3(
+        mesh.vertex_normals,
+        top_quad,
+        left_normal[segment],
+        left_normal[next],
+        right_normal[next],
+        right_normal[segment]);
+    fill_road_quad_vec3(
+        mesh.vertex_normals,
+        bottom_quad,
+        road_vec3_scale(left_normal[segment], -1.0),
+        road_vec3_scale(right_normal[segment], -1.0),
+        road_vec3_scale(right_normal[next], -1.0),
+        road_vec3_scale(left_normal[next], -1.0));
+    fill_road_quad_vec3(
+        mesh.vertex_normals,
+        left_quad,
+        side[segment],
+        side[next],
+        side[next],
+        side[segment]);
+    fill_road_quad_vec3(
+        mesh.vertex_normals,
+        right_quad,
+        road_vec3_scale(side[segment], -1.0),
+        road_vec3_scale(side[segment], -1.0),
+        road_vec3_scale(side[next], -1.0),
+        road_vec3_scale(side[next], -1.0));
+  }
+  int cap_quad = segment_count * 4;
+  if (job.cap_start) {
+    const RoadVec3 cap_normal = road_vec3_scale(tangents[0], -1.0);
+    fill_road_quad_vec3(
+        mesh.vertices,
+        cap_quad,
+        left_bottom[0],
+        left_top[0],
+        right_top[0],
+        right_bottom[0]);
+    fill_road_quad_vec3(
+        mesh.vertex_normals,
+        cap_quad,
+        cap_normal,
+        cap_normal,
+        cap_normal,
+        cap_normal);
+    ++cap_quad;
+  }
+  if (job.cap_end) {
+    const int last = point_count - 1;
+    fill_road_quad_vec3(
+        mesh.vertices,
+        cap_quad,
+        left_bottom[last],
+        right_bottom[last],
+        right_top[last],
+        left_top[last]);
+    fill_road_quad_vec3(
+        mesh.vertex_normals,
+        cap_quad,
+        tangents[last],
+        tangents[last],
+        tangents[last],
+        tangents[last]);
+  }
+
+  for (std::size_t vertex = 0; vertex < mesh.vertices.size() / 3; ++vertex) {
+    mesh.vertices[vertex * 3] -= job.center.x;
+    mesh.vertices[vertex * 3 + 1] -= job.center.y;
+    mesh.vertices[vertex * 3 + 2] -= job.center.z;
+  }
+
+  mesh.input_triangle_count = quad_count * 2;
+  mesh.indices.reserve(static_cast<std::size_t>(mesh.input_triangle_count) * 3);
+  const double geometry_tolerance = std::pow(std::max(std::abs(job.width), 1.0), 2) * 1e-12;
+  for (int triangle_half = 0; triangle_half < 2; ++triangle_half) {
+    for (int quad = 0; quad < quad_count; ++quad) {
+      check_road_mesh_interrupt(quad);
+      const int start = quad * 4;
+      int first = start;
+      int second = triangle_half == 0 ? start + 1 : start + 2;
+      int third = triangle_half == 0 ? start + 2 : start + 3;
+      const RoadVec3 first_edge = road_vec3_subtract(
+          get_road_array_vec3(mesh.vertices, second),
+          get_road_array_vec3(mesh.vertices, first));
+      const RoadVec3 second_edge = road_vec3_subtract(
+          get_road_array_vec3(mesh.vertices, third),
+          get_road_array_vec3(mesh.vertices, first));
+      const RoadVec3 face_cross = road_vec3_cross(first_edge, second_edge);
+      const double face_area = road_vec3_length(face_cross);
+      RoadVec3 average_normal = road_vec3_add(
+          get_road_array_vec3(mesh.vertex_normals, first),
+          get_road_array_vec3(mesh.vertex_normals, second));
+      average_normal = road_vec3_add(
+          average_normal,
+          get_road_array_vec3(mesh.vertex_normals, third));
+      const double average_length = road_vec3_length(average_normal);
+      if (!road_vec3_finite(face_cross) || !std::isfinite(face_area) ||
+          face_area <= geometry_tolerance ||
+          !road_vec3_finite(average_normal) ||
+          !std::isfinite(average_length) ||
+          average_length <= std::sqrt(std::numeric_limits<double>::epsilon())) {
+        continue;
+      }
+      const RoadVec3 face_normal = road_vec3_scale(face_cross, 1.0 / face_area);
+      average_normal = road_vec3_scale(average_normal, 1.0 / average_length);
+      if (road_vec3_dot(face_normal, average_normal) < 0.0) {
+        std::swap(second, third);
+      }
+      mesh.indices.push_back(first + 1);
+      mesh.indices.push_back(second + 1);
+      mesh.indices.push_back(third + 1);
+      ++mesh.retained_triangle_count;
+    }
+  }
+  return mesh;
+}
+
+List wrap_stream_mesh_data(const StreamMeshData& mesh) {
+  IntegerMatrix indices(mesh.retained_triangle_count, 3);
+  for (int row = 0; row < indices.nrow(); ++row) {
+    for (int column = 0; column < 3; ++column) {
+      indices(row, column) = mesh.indices[row * 3 + column];
+    }
+  }
+  return List::create(
+      _["vertices"] = wrap_road_array_matrix(mesh.vertices, 3),
+      _["vertex_normals"] = wrap_road_array_matrix(mesh.vertex_normals, 3),
+      _["indices"] = indices,
+      _["diagnostics"] = List::create(
+          _["input_triangle_count"] = mesh.input_triangle_count,
+          _["retained_triangle_count"] = mesh.retained_triangle_count,
+          _["removed_triangle_count"] =
+              mesh.input_triangle_count - mesh.retained_triangle_count));
+}
+
 }  // namespace
 
 // [[Rcpp::export]]
@@ -1968,6 +2315,53 @@ List build_render_highquality_road_mesh_batch_cpp(
         _["success"] = true,
         _["error"] = R_NilValue,
         _["meshes"] = meshes);
+  }
+  return output;
+}
+
+// [[Rcpp::export]]
+List build_render_highquality_stream_mesh_batch_cpp(
+    const List& input_jobs,
+    const NumericMatrix& heightmap,
+    double zscale,
+    bool parallel,
+    bool verbose) {
+  const RoadTerrain terrain = copy_road_terrain(heightmap, zscale);
+  std::vector<StreamMeshJob> jobs;
+  jobs.reserve(input_jobs.size());
+  for (int index = 0; index < input_jobs.size(); ++index) {
+    jobs.push_back(parse_stream_mesh_job(as<List>(input_jobs[index])));
+  }
+  std::vector<StreamMeshData> results(jobs.size());
+  std::unique_ptr<RcppThread::ProgressCounter> progress;
+  if (verbose && !jobs.empty()) {
+    progress.reset(new RcppThread::ProgressCounter(
+        jobs.size(),
+        1,
+        "Converting streams to meshes: "));
+  }
+  const auto run_job = [&](std::size_t index) {
+    results[index] = build_stream_mesh_native(jobs[index], terrain);
+    if (progress) {
+      ++(*progress);
+    }
+  };
+  if (parallel && jobs.size() > 1) {
+    RcppThread::ThreadPool pool;
+    for (std::size_t index = 0; index < jobs.size(); ++index) {
+      pool.push(run_job, index);
+    }
+    pool.wait();
+  } else {
+    for (std::size_t index = 0; index < jobs.size(); ++index) {
+      RcppThread::checkUserInterrupt();
+      run_job(index);
+    }
+  }
+
+  List output(results.size());
+  for (std::size_t index = 0; index < results.size(); ++index) {
+    output[index] = wrap_stream_mesh_data(results[index]);
   }
   return output;
 }

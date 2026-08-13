@@ -1310,8 +1310,14 @@ render_highquality = function(
   )
   cached_road_meshes = get_scene_road_meshes(default = NULL)
   has_cached_road_meshes = length(cached_road_meshes) > 0L
+  cached_stream_meshes = get_scene_stream_meshes(default = NULL)
+  has_cached_stream_meshes =
+    length(cached_stream_meshes) > 0L && !isTRUE(joined_stream_mesh)
   if (has_cached_road_meshes) {
     pathinfo = pathinfo[pathinfo$tag != "road_path", , drop = FALSE]
+  }
+  if (has_cached_stream_meshes) {
+    pathinfo = pathinfo[pathinfo$tag != "water_path", , drop = FALSE]
   }
   pathids = pathinfo$id
   pathline = list()
@@ -1519,7 +1525,18 @@ render_highquality = function(
       line_progress$tick()
     }
   }
-  water_path_meshes = if (isTRUE(joined_stream_mesh)) {
+  water_path_meshes = if (has_cached_stream_meshes) {
+    make_render_highquality_cached_stream_meshes(
+      meshes = cached_stream_meshes,
+      bbox_center = bbox_center,
+      rgl_materials = rgl_materials,
+      water_material = water_material,
+      water_roughness = water_roughness,
+      water_ior = water_ior,
+      water_attenuation = water_attenuation,
+      water_surface_color = water_surface_color
+    )
+  } else if (isTRUE(joined_stream_mesh)) {
     make_render_highquality_joined_water_path_meshes(
       water_path_tasks,
       verbose = verbose
@@ -1527,7 +1544,8 @@ render_highquality = function(
   } else {
     make_render_highquality_water_path_meshes(
       water_path_tasks,
-      verbose = verbose
+      verbose = verbose,
+      parallel = parallel
     )
   }
   if (length(water_path_meshes) > 0) {

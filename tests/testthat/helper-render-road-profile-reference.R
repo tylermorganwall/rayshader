@@ -101,7 +101,7 @@ solve_render_road_profile_components_once = function(
     solution[variables] = result$x
   }
   controls = problem$controls
-  controls$height = solution[controls$height_variable]
+  controls$height = controls$terrain + solution[controls$height_variable]
   controls$grade = solution[controls$grade_variable]
   solved = list(
     problem = problem,

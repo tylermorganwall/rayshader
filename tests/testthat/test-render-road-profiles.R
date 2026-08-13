@@ -101,7 +101,6 @@ build_render_road_profile_test_problem = function(
       curvature_weight = 100,
       grade_weight = 1,
       terrain_reference_weight = 1e-3,
-      anchor_grade_weight = 10,
       uplift_weight = 1e-5
     ),
     settings
@@ -154,7 +153,7 @@ test_that("surface equality closure stops after one terminal partner", {
   ))
 })
 
-test_that("candidate ground anchors emit immediate junction equalities", {
+test_that("surface endpoints emit immediate junction equalities", {
   skip_render_road_profile_test_dependencies()
 
   roads = make_render_road_profile_test_roads(
@@ -213,6 +212,321 @@ test_that("candidate ground anchors emit immediate junction equalities", {
     topology$selected_continuations$fragment_a == active_surface_id |
       topology$selected_continuations$fragment_b == active_surface_id
   ))
+})
+
+test_that("terminal junction branches retain through-road continuations", {
+  skip_render_road_profile_test_dependencies()
+
+  roads = make_render_road_profile_test_roads(
+    lines = list(
+      make_render_road_profile_test_line(c(-100, 0, 0, 0)),
+      make_render_road_profile_test_line(c(0, 0, 0, 100)),
+      make_render_road_profile_test_line(c(0, 100, 0, 200)),
+      make_render_road_profile_test_line(c(-50, -20, -50, 20))
+    ),
+    layer = c(0, 0, 0, 1),
+    way_id = c("active", "branch", "branch", "bridge")
+  )
+  topology = build_render_road_profile_test_topology(roads)
+  fragment_id = topology$fragments$render_road_fragment_id
+  way_id = topology$fragments$render_road_way_id
+  branch_fragment = fragment_id[way_id == "branch"]
+
+  expect_equal(nrow(topology$selected_continuations), 1L)
+  expect_equal(nrow(topology$prospective_solve_continuations), 1L)
+  expect_true(all(
+    branch_fragment %in% topology$prospective_solve_fragment_id
+  ))
+  expect_true(all(
+    branch_fragment %in%
+      topology$prospective_solve_terminal_ground_fragment_id
+  ))
+  expect_false(any(
+    branch_fragment %in%
+      topology$prospective_solve_expandable_fragment_id
+  ))
+})
+
+test_that("surface continuations propagate without endpoint anchors", {
+  skip_render_road_profile_test_dependencies()
+
+  roads = make_render_road_profile_test_roads(
+    lines = list(
+      make_render_road_profile_test_line(c(-200, 0, -100, 0)),
+      make_render_road_profile_test_line(c(-100, 0, 0, 0)),
+      make_render_road_profile_test_line(c(0, 0, 100, 0)),
+      make_render_road_profile_test_line(c(100, 0, 200, 0)),
+      make_render_road_profile_test_line(c(-50, -40, -50, 40))
+    ),
+    layer = c(0, 0, 0, 0, 1),
+    way_id = c("surface", "surface", "surface", "surface", "bridge")
+  )
+  topology = build_render_road_profile_test_topology(roads)
+  surface_fragment = topology$fragments$render_road_fragment_id[
+    topology$fragments$render_road_way_id == "surface"
+  ]
+
+  expect_equal(nrow(topology$selected_continuations), 3L)
+  expect_true(all(
+    surface_fragment %in% topology$prospective_solve_fragment_id
+  ))
+  expect_true(all(
+    surface_fragment %in% topology$prospective_solve_expandable_fragment_id
+  ))
+  expect_false(any(
+    surface_fragment %in%
+      topology$prospective_solve_terminal_ground_fragment_id
+  ))
+
+  problem = build_render_road_profile_test_problem(topology)
+  expect_equal(nrow(problem$anchors), 0L)
+  expect_false(any(problem$constraints$type == "ground_anchor"))
+  expect_equal(nrow(problem$continuation_equalities), 3L)
+})
+
+test_that("elevated continuations return to terrain without snapping", {
+  skip_render_road_profile_test_dependencies(solver = TRUE)
+
+  roads = make_render_road_profile_test_roads(
+    lines = list(
+      make_render_road_profile_test_line(c(-300, 0, -100, 0)),
+      make_render_road_profile_test_line(c(-100, 0, 100, 0)),
+      make_render_road_profile_test_line(c(100, 0, 300, 0)),
+      make_render_road_profile_test_line(c(0, -100, 0, 100))
+    ),
+    layer = c(1, 0, 0, -1),
+    way_id = c("through", "through", "through", "lower")
+  )
+  topology = build_render_road_profile_test_topology(roads)
+  problem = build_render_road_profile_test_problem(
+    topology,
+    terrain_spacing = 5
+  )
+  solution = solve_render_road_profile_problem(
+    problem,
+    maximum_iterations = 100000
+  )
+  through_fragment = topology$fragments$render_road_fragment_id[
+    topology$fragments$render_road_way_id == "through"
+  ]
+  continuation = solution$problem$continuation_equalities
+  through_control = solution$controls$render_road_fragment_id %in%
+    through_fragment
+
+  expect_equal(nrow(problem$anchors), 0L)
+  expect_false(any(problem$constraints$type == "ground_anchor"))
+  expect_equal(nrow(continuation), 2L)
+  expect_equal(
+    solution$controls$height[continuation$control_a],
+    solution$controls$height[continuation$control_b],
+    tolerance = 1e-6
+  )
+  expect_equal(
+    continuation$sign_a * solution$controls$grade[continuation$control_a],
+    continuation$sign_b * solution$controls$grade[continuation$control_b],
+    tolerance = 1e-6
+  )
+  expect_lte(
+    max(abs(solution$controls$grade[through_control])),
+    problem$settings$maximum_grade + 1e-6
+  )
+  expect_gte(
+    min(
+      solution$controls$height[through_control] -
+        solution$controls$terrain[through_control]
+    ),
+    -solution$engineering_audit$tolerance
+  )
+  expect_lt(
+    min(
+      solution$controls$height[through_control] -
+        solution$controls$terrain[through_control]
+    ),
+    0.01
+  )
+})
+
+test_that("terrain-relative heights retain physical road grades", {
+  skip_render_road_profile_test_dependencies(solver = TRUE)
+
+  roads = make_render_road_profile_test_roads(
+    lines = list(
+      make_render_road_profile_test_line(c(-100, 0, 100, 0)),
+      make_render_road_profile_test_line(c(0, -100, 0, 100))
+    ),
+    layer = c(0, 1),
+    way_id = c("surface", "bridge")
+  )
+  topology = build_render_road_profile_test_topology(roads)
+  fragment_id = setNames(
+    topology$fragments$render_road_fragment_id,
+    topology$fragments$render_road_way_id
+  )
+  make_problem = function(vertical_shift = 0) {
+    terrain_profiles = list(
+      data.frame(
+        distance = c(0, 100, 200),
+        elevation = c(0, 50, 100) + vertical_shift
+      ),
+      data.frame(
+        distance = c(0, 100, 200),
+        elevation = c(40, 50, 60) + vertical_shift
+      )
+    )
+    names(terrain_profiles) = as.character(
+      topology$fragments$render_road_fragment_id
+    )
+    build_render_road_profile_problem(
+      topology,
+      terrain_profiles = terrain_profiles
+    )
+  }
+
+  problem = make_problem()
+  solution = solve_render_road_profile_problem(
+    problem,
+    maximum_iterations = 100000
+  )
+  surface_control = solution$controls$render_road_fragment_id ==
+    fragment_id[["surface"]]
+  surface_endpoint = surface_control & solution$controls$endpoint_control
+
+  expect_equal(nrow(problem$anchors), 0L)
+  expect_false(any(problem$constraints$type == "ground_anchor"))
+  expect_true(all(
+    solution$controls$height[surface_control] >=
+      solution$controls$terrain[surface_control] - 1e-6
+  ))
+  expect_equal(
+    min(
+      solution$controls$height[surface_endpoint] -
+        solution$controls$terrain[surface_endpoint]
+    ),
+    0,
+    tolerance = 1e-6
+  )
+  expect_lte(
+    max(abs(solution$controls$grade[surface_control])),
+    problem$settings$maximum_grade + 1e-6
+  )
+  expect_equal(
+    solution$controls$grade,
+    solution$solution[problem$controls$grade_variable],
+    tolerance = 0
+  )
+
+  shifted_problem = make_problem(3000)
+  shifted_solution = solve_render_road_profile_problem(
+    shifted_problem,
+    maximum_iterations = 100000
+  )
+  expect_equal(shifted_problem$q, problem$q, tolerance = 1e-12)
+  expect_equal(
+    shifted_solution$solution,
+    solution$solution,
+    tolerance = 1e-6
+  )
+  expect_equal(
+    shifted_solution$controls$height - 3000,
+    solution$controls$height,
+    tolerance = 1e-6
+  )
+})
+
+test_that("terrain-relative profile problems preserve large elevation shifts", {
+  skip_render_road_profile_test_dependencies()
+
+  roads = make_render_road_profile_test_roads(
+    lines = list(
+      make_render_road_profile_test_line(c(-100, 0, 100, 0)),
+      make_render_road_profile_test_line(c(0, -100, 0, 100))
+    ),
+    layer = c(0, 1),
+    way_id = c("surface", "bridge")
+  )
+  topology = build_render_road_profile_test_topology(roads)
+  make_problem = function(vertical_shift = 0) {
+    terrain_profiles = list(
+      data.frame(
+        distance = c(0, 100, 200),
+        elevation = c(0, 50, 100) + vertical_shift
+      ),
+      data.frame(
+        distance = c(0, 100, 200),
+        elevation = c(40, 50, 60) + vertical_shift
+      )
+    )
+    names(terrain_profiles) = as.character(
+      topology$fragments$render_road_fragment_id
+    )
+    build_render_road_profile_problem(
+      topology,
+      terrain_profiles = terrain_profiles
+    )
+  }
+
+  problem = make_problem()
+  shifted_problem = make_problem(1e7)
+
+  expect_equal(shifted_problem$P, problem$P, tolerance = 0)
+  expect_equal(shifted_problem$q, problem$q, tolerance = 1e-12)
+  expect_equal(shifted_problem$A, problem$A, tolerance = 0)
+  expect_equal(shifted_problem$lower, problem$lower, tolerance = 1e-8)
+  expect_equal(shifted_problem$upper, problem$upper, tolerance = 1e-8)
+})
+
+test_that("junctions share physical heights across terrain references", {
+  skip_render_road_profile_test_dependencies(solver = TRUE)
+
+  roads = make_render_road_profile_test_roads(
+    lines = list(
+      make_render_road_profile_test_line(c(-100, 0, 0, 0)),
+      make_render_road_profile_test_line(c(0, 0, 100, 5)),
+      make_render_road_profile_test_line(c(0, 0, 100, -5)),
+      make_render_road_profile_test_line(c(-50, -20, -50, 20))
+    ),
+    layer = c(0, 0, 0, 1),
+    way_id = c("active-surface", "approach-a", "approach-b", "bridge")
+  )
+  topology = build_render_road_profile_test_topology(roads)
+  junction = topology$prospective_solve_junction_equality_pairs
+  fragment_terrain = c(10, 11, 12, 20)
+  terrain_profiles = lapply(seq_len(nrow(topology$fragments)), function(row) {
+    fragment_length = as.numeric(sf::st_length(topology$fragments[row, ]))
+    data.frame(
+      distance = c(0, fragment_length),
+      elevation = rep(fragment_terrain[[row]], 2L)
+    )
+  })
+  names(terrain_profiles) = as.character(
+    topology$fragments$render_road_fragment_id
+  )
+  problem = build_render_road_profile_problem(
+    topology,
+    terrain_profiles = terrain_profiles
+  )
+  solution = solve_render_road_profile_problem(
+    problem,
+    maximum_iterations = 100000
+  )
+  equality = problem$junction_equalities
+  expect_equal(
+    solution$controls$height[equality$control_a],
+    solution$controls$height[equality$control_b],
+    tolerance = 1e-6
+  )
+  expect_true(all(
+    solution$controls$height[equality$control_a] >=
+      solution$controls$terrain[equality$control_a] - 1e-6
+  ))
+  expect_true(all(
+    solution$controls$height[equality$control_b] >=
+      solution$controls$terrain[equality$control_b] - 1e-6
+  ))
+  expect_lte(
+    max(abs(solution$controls$grade)),
+    problem$settings$maximum_grade + 1e-6
+  )
 })
 
 test_that("metadata-only tunnels seed independently and remain bounded", {

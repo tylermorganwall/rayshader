@@ -87,7 +87,7 @@ underground \code{location} metadata infer effective layer \code{-1}. Inferred v
 remain distinguishable from explicit OSM layer tags in diagnostics.
 Roads are grouped by exact physical events and conservative endpoint
 continuations. A sparse quadratic profile solve enforces crossing clearance,
-longitudinal grade and grade-rate limits, junction height continuity, and
+physical grade and grade-rate limits, junction height continuity, and
 selected through-road grade continuity. Surface roads retain a sampled
 terrain reference, elevated spans use endpoint support chords, and roads with
 explicit tunnel or underground metadata use a bounded terrain-relative

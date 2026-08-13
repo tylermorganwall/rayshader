@@ -125,6 +125,10 @@ build_render_highquality_road_mesh_batch_cpp <- function(input_jobs, parallel, v
     .Call(`_rayshader_build_render_highquality_road_mesh_batch_cpp`, input_jobs, parallel, verbose)
 }
 
+build_render_highquality_stream_mesh_batch_cpp <- function(input_jobs, heightmap, zscale, parallel, verbose) {
+    .Call(`_rayshader_build_render_highquality_stream_mesh_batch_cpp`, input_jobs, heightmap, zscale, parallel, verbose)
+}
+
 evaluate_render_road_profiles_cpp <- function(fragment_index, distance, control_start, control_count, control_row, control_distance, height, grade) {
     .Call(`_rayshader_evaluate_render_road_profiles_cpp`, fragment_index, distance, control_start, control_count, control_row, control_distance, height, grade)
 }

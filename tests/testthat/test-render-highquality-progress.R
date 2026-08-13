@@ -45,28 +45,84 @@ test_that("render_highquality progress bars honor verbose", {
   expect_true(progress_bar$finished)
 })
 
-test_that("stream mesh progress tracks every task", {
-  recorder = new_test_progress_recorder()
+test_that("stream mesh construction uses one native batch", {
+  captured = new.env(parent = emptyenv())
+  original_batch = build_render_highquality_stream_mesh_batch_cpp
+  heightmap = matrix(0, nrow = 8L, ncol = 8L)
+  tasks = lapply(seq_len(3L), function(index) {
+    list(
+      points = matrix(
+        c(-2, 0, index - 2, 2, 0, index - 2),
+        ncol = 3L,
+        byrow = TRUE
+      ),
+      bbox_center = c(0, 0, 0),
+      width = 0.5,
+      height = 0.05,
+      heightmap = heightmap,
+      zscale = 1,
+      material = NULL,
+      return_mesh = TRUE
+    )
+  })
   testthat::local_mocked_bindings(
-    new_render_highquality_progress_bar = recorder$factory,
-    make_render_highquality_water_path_mesh = function(value) value,
+    build_render_highquality_stream_mesh_batch_cpp = function(
+      input_jobs,
+      heightmap,
+      zscale,
+      parallel,
+      verbose
+    ) {
+      captured$jobs = input_jobs
+      captured$parallel = parallel
+      captured$verbose = verbose
+      original_batch(input_jobs, heightmap, zscale, parallel, FALSE)
+    },
     .package = "rayshader"
   )
 
   meshes = make_render_highquality_water_path_meshes(
-    list(list(value = 1L), list(value = 2L), list(value = 3L)),
+    tasks,
+    verbose = TRUE,
+    parallel = TRUE
+  )
+
+  expect_length(meshes, 3L)
+  expect_length(captured$jobs, 3L)
+  expect_true(captured$parallel)
+  expect_true(captured$verbose)
+})
+
+test_that("stream preview progress tracks width batches", {
+  on.exit(rgl::close3d(), add = TRUE)
+  local_rgl_use_null()
+  rgl::open3d()
+  recorder = new_test_progress_recorder()
+  testthat::local_mocked_bindings(
+    new_render_highquality_progress_bar = recorder$factory,
+    .package = "rayshader"
+  )
+  coord_list = list(
+    matrix(c(0, 0, 0, 1, 0, 0), ncol = 3L, byrow = TRUE),
+    matrix(c(0, 0, 1, 1, 0, 1), ncol = 3L, byrow = TRUE),
+    matrix(c(0, 0, 2, 1, 0, 2), ncol = 3L, byrow = TRUE)
+  )
+
+  ids = draw_render_stream_line_previews(
+    coord_list = coord_list,
+    coord_width = c(0.5, 0.5, 1),
+    watercolor = "blue",
+    height = 0.05,
     verbose = TRUE
   )
 
-  expect_equal(unlist(meshes), seq_len(3L))
+  expect_equal(ids[[1L]], ids[[2L]])
+  expect_false(identical(ids[[1L]], ids[[3L]]))
+  expect_length(unique(ids), 2L)
   expect_length(recorder$calls, 1L)
-  expect_true(recorder$calls[[1L]]$verbose)
-  expect_equal(
-    recorder$calls[[1L]]$label,
-    "Converting stream lines to meshes"
-  )
-  expect_equal(recorder$calls[[1L]]$total, 3L)
-  expect_equal(recorder$ticks[[1L]], 3L)
+  expect_equal(recorder$calls[[1L]]$label, "Drawing stream line previews")
+  expect_equal(recorder$calls[[1L]]$total, 2L)
+  expect_equal(recorder$ticks[[1L]], 2L)
 })
 
 test_that("road mesh progress tracks every assembled chain", {
@@ -353,9 +409,11 @@ test_that("render_highquality propagates verbose through scene building", {
     new_render_highquality_progress_bar = recorder$factory,
     make_render_highquality_water_path_meshes = function(
       tasks,
-      verbose = FALSE
+      verbose = FALSE,
+      parallel = FALSE
     ) {
       propagated$stream = verbose
+      propagated$stream_parallel = parallel
       list()
     },
     make_render_highquality_road_path_meshes = function(
@@ -379,6 +437,7 @@ test_that("render_highquality propagates verbose through scene building", {
   ))
 
   expect_true(propagated$stream)
+  expect_true(propagated$stream_parallel)
   expect_true(propagated$road)
   expect_true(propagated$road_parallel)
   expect_length(recorder$calls, 1L)

@@ -1191,7 +1191,8 @@ constexpr int constraint_quadratic_interval = 1;
 constexpr int constraint_grade_rate = 2;
 constexpr int constraint_grade_bound = 3;
 constexpr int constraint_terrain_floor = 4;
-constexpr int constraint_ground_anchor = 5;
+// Constraint code 5 was the removed endpoint terrain snap. Preserve later
+// codes so existing diagnostics retain stable numeric identities.
 constexpr int constraint_crossing_clearance = 6;
 constexpr int constraint_junction_height = 7;
 constexpr int constraint_overlap_clearance = 8;
@@ -1233,11 +1234,6 @@ struct CompilerSpecification {
   LogicalVector span_closed;
   LogicalVector span_no_dip;
   IntegerVector span_reference;
-  IntegerVector anchor_endpoint_id;
-  IntegerVector anchor_fragment;
-  IntegerVector anchor_side;
-  NumericVector anchor_distance;
-  NumericVector anchor_terrain_grade;
   IntegerVector crossing_id;
   IntegerVector crossing_pair_id;
   IntegerVector crossing_lower_fragment;
@@ -1277,7 +1273,6 @@ struct CompilerSpecification {
   double terrain_reference_weight;
   double underground_reference_depth;
   double underground_reference_weight;
-  double anchor_grade_weight;
   double uplift_weight;
   double control_tolerance;
 
@@ -1317,12 +1312,6 @@ struct CompilerSpecification {
     span_closed = span["closed"];
     span_no_dip = span["no_dip"];
     span_reference = span["reference"];
-    const List anchor = specification["anchor"];
-    anchor_endpoint_id = anchor["endpoint_id"];
-    anchor_fragment = anchor["fragment"];
-    anchor_side = anchor["side"];
-    anchor_distance = anchor["distance"];
-    anchor_terrain_grade = anchor["terrain_grade"];
     const List crossing = specification["crossing"];
     crossing_id = crossing["crossing_id"];
     crossing_pair_id = crossing["pair_id"];
@@ -1367,7 +1356,6 @@ struct CompilerSpecification {
     terrain_reference_weight = settings["terrain_reference_weight"];
     underground_reference_depth = settings["underground_reference_depth"];
     underground_reference_weight = settings["underground_reference_weight"];
-    anchor_grade_weight = settings["anchor_grade_weight"];
     uplift_weight = settings["uplift_weight"];
     control_tolerance = settings["control_tolerance"];
   }
@@ -2068,8 +2056,8 @@ List compile_render_road_profile_problem_cpp(
       constraint.add(
           {first, second, control_count + first, control_count + second},
           {-1.0, 1.0, -length / 2.0, -length / 2.0},
-          0.0,
-          0.0,
+          controls.terrain[first] - controls.terrain[second],
+          controls.terrain[first] - controls.terrain[second],
           constraint_quadratic_interval,
           component,
           specification.fragment_id[fragment],
@@ -2120,7 +2108,7 @@ List compile_render_road_profile_problem_cpp(
       constraint.add(
           {control},
           {1.0},
-          controls.terrain[control],
+          0.0,
           R_PosInf,
           constraint_terrain_floor,
           component,
@@ -2131,40 +2119,6 @@ List compile_render_road_profile_problem_cpp(
           controls.distance[control],
           NA_REAL);
     }
-  }
-
-  std::vector<int> anchor_control;
-  std::vector<double> anchor_terrain;
-  std::vector<int> anchor_component;
-  anchor_control.reserve(specification.anchor_endpoint_id.size());
-  anchor_terrain.reserve(specification.anchor_endpoint_id.size());
-  anchor_component.reserve(specification.anchor_endpoint_id.size());
-  for (R_xlen_t anchor = 0;
-       anchor < specification.anchor_endpoint_id.size();
-       ++anchor) {
-    const int fragment = specification.anchor_fragment[anchor];
-    const int control = match_compiler_control(
-        controls,
-        fragment,
-        specification.anchor_distance[anchor],
-        "ground anchor");
-    const int component = specification.component_id[fragment];
-    anchor_control.push_back(control);
-    anchor_terrain.push_back(controls.terrain[control]);
-    anchor_component.push_back(component);
-    constraint.add(
-        {control},
-        {1.0},
-        controls.terrain[control],
-        R_PosInf,
-        constraint_ground_anchor,
-        component,
-        specification.fragment_id[fragment],
-        NA_INTEGER,
-        NA_INTEGER,
-        NA_REAL,
-        specification.anchor_distance[anchor],
-        NA_REAL);
   }
 
   std::vector<int> clearance_type;
@@ -2233,7 +2187,9 @@ List compile_render_road_profile_problem_cpp(
     constraint.add(
         {lower_control, upper_control},
         {-1.0, 1.0},
-        specification.crossing_clearance[crossing],
+        specification.crossing_clearance[crossing] +
+            controls.terrain[lower_control] -
+            controls.terrain[upper_control],
         R_PosInf,
         constraint_crossing_clearance,
         component,
@@ -2287,11 +2243,13 @@ List compile_render_road_profile_problem_cpp(
     junction_control_a.push_back(control_a + 1);
     junction_control_b.push_back(control_b + 1);
     junction_component.push_back(component);
+    const double terrain_difference =
+        controls.terrain[control_a] - controls.terrain[control_b];
     constraint.add(
         {control_a, control_b},
         {-1.0, 1.0},
-        0.0,
-        0.0,
+        terrain_difference,
+        terrain_difference,
         constraint_junction_height,
         component,
         specification.fragment_id[fragment_a],
@@ -2333,7 +2291,9 @@ List compile_render_road_profile_problem_cpp(
       constraint.add(
           {lower_control, upper_control},
           {-1.0, 1.0},
-          specification.overlap_clearance[overlap],
+          specification.overlap_clearance[overlap] +
+              controls.terrain[lower_control] -
+              controls.terrain[upper_control],
           R_PosInf,
           constraint_overlap_clearance,
           component,
@@ -2382,7 +2342,9 @@ List compile_render_road_profile_problem_cpp(
     constraint.add(
         {lower_control, upper_control},
         {-1.0, 1.0},
-        adaptive.clearance[request],
+        adaptive.clearance[request] +
+            controls.terrain[lower_control] -
+            controls.terrain[upper_control],
         R_PosInf,
         constraint_overlap_clearance_adaptive,
         component,
@@ -2444,11 +2406,13 @@ List compile_render_road_profile_problem_cpp(
     const double sign_b = specification.continuation_sign_b[continuation];
     const double gap = specification.continuation_gap[continuation];
     if (specification.continuation_exact[continuation]) {
+      const double terrain_difference =
+          controls.terrain[control_a] - controls.terrain[control_b];
       constraint.add(
           {control_a, control_b},
           {-1.0, 1.0},
-          0.0,
-          0.0,
+          terrain_difference,
+          terrain_difference,
           constraint_continuation_height,
           component,
           specification.fragment_id[fragment_a],
@@ -2471,6 +2435,8 @@ List compile_render_road_profile_problem_cpp(
           specification.continuation_distance_a[continuation],
           specification.continuation_distance_b[continuation]);
     } else {
+      const double terrain_interval =
+          controls.terrain[control_a] - controls.terrain[control_b];
       constraint.add(
           {
               control_a,
@@ -2482,8 +2448,8 @@ List compile_render_road_profile_problem_cpp(
               1.0,
               -gap * sign_a / 2.0,
               -gap * sign_b / 2.0},
-          0.0,
-          0.0,
+          terrain_interval,
+          terrain_interval,
           constraint_continuation_gap_interval,
           component,
           specification.fragment_id[fragment_a],
@@ -2536,10 +2502,14 @@ List compile_render_road_profile_problem_cpp(
       if (control == start_control || control == end_control) {
         continue;
       }
+      const double terrain_chord_margin =
+          controls.terrain[control] -
+          (1.0 - resolved.fraction) * controls.terrain[start_control] -
+          resolved.fraction * controls.terrain[end_control];
       constraint.add(
           {start_control, control, end_control},
           {-(1.0 - resolved.fraction), 1.0, -resolved.fraction},
-          0.0,
+          -terrain_chord_margin,
           R_PosInf,
           constraint_no_dip_span_chord,
           specification.component_id[controls.fragment[control]],
@@ -2592,12 +2562,11 @@ List compile_render_road_profile_problem_cpp(
     if (underground_reference) {
       const double weight =
           specification.underground_reference_weight * station_weight;
-      const double reference_height =
-          controls.terrain[control] -
-          specification.underground_reference_depth;
+      const double reference_offset =
+          -specification.underground_reference_depth;
       objective_p.add(height_variable, height_variable, 2.0 * weight);
       objective_q[height_variable] -=
-          2.0 * weight * reference_height;
+          2.0 * weight * reference_offset;
     } else if (
         specification.terrain_reference_weight > 0.0 &&
         (reference == 3 || reference == 4)) {
@@ -2618,7 +2587,13 @@ List compile_render_road_profile_problem_cpp(
       }
       const double weight =
           specification.terrain_reference_weight * station_weight;
+      double terrain_constant = 0.0;
+      for (const auto& term : coefficient) {
+        terrain_constant += term.second * controls.terrain[term.first];
+      }
       for (const auto& first : coefficient) {
+        objective_q[first.first] +=
+            2.0 * weight * terrain_constant * first.second;
         for (const auto& second : coefficient) {
           objective_p.add(
               first.first,
@@ -2630,22 +2605,6 @@ List compile_render_road_profile_problem_cpp(
       const double weight =
           specification.terrain_reference_weight * station_weight;
       objective_p.add(height_variable, height_variable, 2.0 * weight);
-      objective_q[height_variable] -=
-          2.0 * weight * controls.terrain[control];
-    }
-  }
-  if (specification.anchor_grade_weight > 0.0) {
-    for (R_xlen_t anchor = 0;
-         anchor < specification.anchor_endpoint_id.size();
-         ++anchor) {
-      const int variable = control_count + anchor_control[anchor];
-      objective_p.add(
-          variable,
-          variable,
-          2.0 * specification.anchor_grade_weight);
-      objective_q[variable] -=
-          2.0 * specification.anchor_grade_weight *
-          specification.anchor_terrain_grade[anchor];
     }
   }
   if (specification.curvature_weight > 0.0) {
@@ -2724,15 +2683,6 @@ List compile_render_road_profile_problem_cpp(
         specification.overlap_lower_fragment[relation]];
     overlap_upper_id[relation] = specification.fragment_id[
         specification.overlap_upper_fragment[relation]];
-  }
-  IntegerVector anchor_fragment_id(specification.anchor_endpoint_id.size());
-  IntegerVector anchor_control_id(specification.anchor_endpoint_id.size());
-  for (R_xlen_t anchor = 0;
-       anchor < specification.anchor_endpoint_id.size();
-       ++anchor) {
-    anchor_fragment_id[anchor] =
-        specification.fragment_id[specification.anchor_fragment[anchor]];
-    anchor_control_id[anchor] = anchor_control[anchor] + 1;
   }
   IntegerVector continuation_fragment_a_id(
       specification.continuation_id.size());
@@ -2814,14 +2764,12 @@ List compile_render_road_profile_problem_cpp(
           _["closed"] = support_closed,
           _["support_arc_id"] = support_id),
       _["anchors"] = List::create(
-          _["render_road_endpoint_id"] =
-              specification.anchor_endpoint_id,
-          _["render_road_fragment_id"] = anchor_fragment_id,
-          _["endpoint_side"] = specification.anchor_side,
-          _["control_id"] = anchor_control_id,
-          _["terrain"] = wrap(anchor_terrain),
-          _["terrain_grade"] = specification.anchor_terrain_grade,
-          _["solve_component_id"] = wrap(anchor_component)),
+          _["render_road_endpoint_id"] = IntegerVector(0),
+          _["render_road_fragment_id"] = IntegerVector(0),
+          _["endpoint_side"] = IntegerVector(0),
+          _["control_id"] = IntegerVector(0),
+          _["terrain"] = NumericVector(0),
+          _["solve_component_id"] = IntegerVector(0)),
       _["clearances"] = List::create(
           _["type"] = wrap(clearance_type),
           _["event_id"] = wrap(clearance_event_id),
@@ -3737,10 +3685,11 @@ List solve_render_road_profiles_cpp(
     const List compiled_controls = compiled["controls"];
     const int control_count =
         as<IntegerVector>(compiled_controls["fragment_id"]).size();
+    const NumericVector control_terrain = compiled_controls["terrain"];
     height = NumericVector(control_count);
     grade = NumericVector(control_count);
     for (int control = 0; control < control_count; ++control) {
-      height[control] = solution[control];
+      height[control] = solution[control] + control_terrain[control];
       grade[control] = solution[control_count + control];
     }
 

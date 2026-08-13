@@ -453,6 +453,21 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// build_render_highquality_stream_mesh_batch_cpp
+List build_render_highquality_stream_mesh_batch_cpp(const List& input_jobs, const NumericMatrix& heightmap, double zscale, bool parallel, bool verbose);
+RcppExport SEXP _rayshader_build_render_highquality_stream_mesh_batch_cpp(SEXP input_jobsSEXP, SEXP heightmapSEXP, SEXP zscaleSEXP, SEXP parallelSEXP, SEXP verboseSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const List& >::type input_jobs(input_jobsSEXP);
+    Rcpp::traits::input_parameter< const NumericMatrix& >::type heightmap(heightmapSEXP);
+    Rcpp::traits::input_parameter< double >::type zscale(zscaleSEXP);
+    Rcpp::traits::input_parameter< bool >::type parallel(parallelSEXP);
+    Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
+    rcpp_result_gen = Rcpp::wrap(build_render_highquality_stream_mesh_batch_cpp(input_jobs, heightmap, zscale, parallel, verbose));
+    return rcpp_result_gen;
+END_RCPP
+}
 // evaluate_render_road_profiles_cpp
 List evaluate_render_road_profiles_cpp(IntegerVector fragment_index, NumericVector distance, IntegerVector control_start, IntegerVector control_count, IntegerVector control_row, NumericVector control_distance, NumericVector height, NumericVector grade);
 RcppExport SEXP _rayshader_evaluate_render_road_profiles_cpp(SEXP fragment_indexSEXP, SEXP distanceSEXP, SEXP control_startSEXP, SEXP control_countSEXP, SEXP control_rowSEXP, SEXP control_distanceSEXP, SEXP heightSEXP, SEXP gradeSEXP) {
@@ -622,6 +637,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_rayshader_densify_render_road_paths_batch_cpp", (DL_FUNC) &_rayshader_densify_render_road_paths_batch_cpp, 5},
     {"_rayshader_sample_render_road_sections_batch_cpp", (DL_FUNC) &_rayshader_sample_render_road_sections_batch_cpp, 5},
     {"_rayshader_build_render_highquality_road_mesh_batch_cpp", (DL_FUNC) &_rayshader_build_render_highquality_road_mesh_batch_cpp, 3},
+    {"_rayshader_build_render_highquality_stream_mesh_batch_cpp", (DL_FUNC) &_rayshader_build_render_highquality_stream_mesh_batch_cpp, 5},
     {"_rayshader_evaluate_render_road_profiles_cpp", (DL_FUNC) &_rayshader_evaluate_render_road_profiles_cpp, 8},
     {"_rayshader_audit_render_road_profiles_cpp", (DL_FUNC) &_rayshader_audit_render_road_profiles_cpp, 6},
     {"_rayshader_compile_render_road_profile_problem_cpp", (DL_FUNC) &_rayshader_compile_render_road_profile_problem_cpp, 2},

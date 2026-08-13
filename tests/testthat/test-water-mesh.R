@@ -846,18 +846,34 @@ test_that("render_streams removes stream sections beneath water polygons", {
     tolerance = 1e-8
   )
   water_path_ids = get_ids_with_labels(typeval = "water_path")
-  expect_equal(nrow(water_path_ids), 3)
+  expect_equal(nrow(water_path_ids), 1)
   expect_equal(
     vapply(
       water_path_ids$id,
       function(id) rgl::material3d("lwd", id = id),
       numeric(1)
     ),
-    rep(0.5, 3)
+    0.5
   )
+  expect_length(
+    split_render_highquality_path_vertices(
+      get_render_source_vertices(water_path_ids$id[[1L]])
+    ),
+    3L
+  )
+  cached_stream_meshes = get_scene_stream_meshes()
+  expect_length(cached_stream_meshes, 3L)
+  cached_rgl_ids = vapply(
+    cached_stream_meshes,
+    function(mesh) {
+      attr(mesh, "render_stream_mesh_specification")$rgl_id
+    },
+    integer(1)
+  )
+  expect_length(unique(cached_rgl_ids), 1L)
 })
 
-test_that("render_highquality forwards registered stream mesh heights", {
+test_that("render_streams caches stream mesh heights for render_highquality", {
   skip_if_not_installed("sf")
   skip_if_not_installed("terra")
   skip_if_not_installed("rayrender")
@@ -896,13 +912,25 @@ test_that("render_highquality forwards registered stream mesh heights", {
     height = 0.08
   ))
 
+  cached_stream_meshes = get_scene_stream_meshes()
+  expect_length(cached_stream_meshes, 1L)
+  expect_equal(
+    attr(
+      cached_stream_meshes[[1L]],
+      "render_stream_mesh_specification"
+    )$height,
+    0.08
+  )
+
   captured = new.env(parent = emptyenv())
+  captured$called = FALSE
   testthat::local_mocked_bindings(
     make_render_highquality_water_path_meshes = function(
       tasks,
-      verbose = FALSE
+      verbose = FALSE,
+      parallel = FALSE
     ) {
-      captured$tasks = tasks
+      captured$called = TRUE
       list()
     },
     .package = "rayshader"
@@ -911,8 +939,57 @@ test_that("render_highquality forwards registered stream mesh heights", {
     return_scene = TRUE,
     light = FALSE
   ))
-  expect_length(captured$tasks, 1)
-  expect_equal(captured$tasks[[1]]$height, 0.08)
+  expect_false(captured$called)
+})
+
+test_that("native stream mesh batches match the R reference", {
+  skip_if_not_installed("rayrender")
+
+  heightmap = outer(
+    seq_len(17L),
+    seq_len(19L),
+    function(row, column) sin(row / 3) + cos(column / 4)
+  )
+  task = list(
+    points = matrix(
+      c(-6.2, 0, -5.7, -1.1, 0.2, -0.3, 5.8, -0.1, 6.1),
+      ncol = 3L,
+      byrow = TRUE
+    ),
+    bbox_center = c(0.5, 0.25, -0.75),
+    width = 1.7,
+    height = 0.05,
+    heightmap = heightmap,
+    zscale = 2.3,
+    material = rayrender::dielectric(),
+    return_mesh = TRUE
+  )
+  reference = do.call(
+    make_render_highquality_water_path_mesh,
+    task
+  )
+  serial = make_render_highquality_water_path_meshes(
+    rep(list(task), 8L),
+    parallel = FALSE
+  )
+  threaded = make_render_highquality_water_path_meshes(
+    rep(list(task), 8L),
+    parallel = TRUE
+  )
+
+  expect_length(serial, 8L)
+  expect_equal(serial, threaded, tolerance = 0)
+  expect_equal(serial[[1L]]$vb, reference$vb, tolerance = 1e-12)
+  expect_equal(serial[[1L]]$normals, reference$normals, tolerance = 1e-12)
+  expect_identical(serial[[1L]]$it, reference$it)
+  expect_error(
+    make_render_highquality_water_path_meshes(
+      list(task),
+      parallel = NA
+    ),
+    "`parallel` must be TRUE or FALSE",
+    fixed = TRUE
+  )
 })
 
 test_that("water polygon clipping aligns CRS and accepts SpatVector input", {

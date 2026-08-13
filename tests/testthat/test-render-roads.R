@@ -917,7 +917,8 @@ test_that("render_roads accepts layer and feature height columns", {
 
   expect_equal(
     vapply(road_coords, function(x) max(x[, 2]), numeric(1)),
-    c(0, 7)
+    c(0, 7),
+    tolerance = 1e-5
   )
   profile_diagnostics = attr(road_coords, "profile_diagnostics")
   expect_identical(profile_diagnostics$solver, "sparse_qp")

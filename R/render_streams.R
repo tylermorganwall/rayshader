@@ -42,6 +42,9 @@
 #' @param height Default `0.05`. Total stream mesh thickness in scene units for
 #' [render_highquality()]. This is independent of `width` and centered on the
 #' sampled stream path, leaving the top surface slightly above the terrain.
+#' @param verbose Default `FALSE`. Whether to show native stream-meshing progress.
+#' @param parallel Default `TRUE`. Whether to build independent stream meshes in
+#' parallel with the native job queue.
 #'
 #' @return Invisibly returns the rendered stream coordinates.
 #' @examplesIf all(vapply(c("sf", "terra", "dplyr", "tigris", "elevatr", "rayrender", "rayvertex", "skymodelr"), requireNamespace, logical(1), quietly = TRUE)) && (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true"))
@@ -209,7 +212,9 @@ render_streams = function(
   merge = TRUE,
   clear_previous = TRUE,
   water_polygons = NULL,
-  height = 0.05
+  height = 0.05,
+  verbose = FALSE,
+  parallel = TRUE
 ) {
   # 1. Capture expressions needed to distinguish values from column references.
   heightmap_missing = missing(heightmap)
@@ -300,6 +305,20 @@ render_streams = function(
     )
   }
   height = resolve_render_positive_number(height, "height")
+  verbose = resolve_render_scalar(
+    verbose,
+    missing(verbose),
+    FALSE,
+    "verbose",
+    type = "logical"
+  )
+  parallel = resolve_render_scalar(
+    parallel,
+    missing(parallel),
+    TRUE,
+    "parallel",
+    type = "logical"
+  )
   if (rgl::cur3d() == 0) {
     stop("No rgl window currently open.")
   }
@@ -379,6 +398,7 @@ render_streams = function(
   if (isTRUE(clear_previous)) {
     rgl::pop3d(tag = "water_path")
     clear_render_water_path_info()
+    cache_scene_stream_meshes(NULL)
   }
 
   # 4. Normalize, clip, and preserve source identities in the line geometry.
@@ -442,23 +462,114 @@ render_streams = function(
   )
   path_members$source_feature_id = I(path_data$source_feature_id)
   attr(coord_list, "path_members") = path_members
-  for (coord_index in seq_along(coord_list)) {
-    coord = coord_list[[coord_index]]
-    if (is.matrix(coord) && nrow(coord) >= 2) {
-      water_path_rgl_id = rgl::lines3d(
-        coord,
-        color = watercolor,
-        tag = "water_path",
-        lwd = coord_width[[coord_index]],
-        line_antialias = FALSE
-      )
-      register_render_water_path_info(
-        id = water_path_rgl_id,
-        info = list(height = height)
+  water_path_rgl_ids = draw_render_stream_line_previews(
+    coord_list = coord_list,
+    coord_width = coord_width,
+    watercolor = watercolor,
+    height = height,
+    verbose = verbose
+  )
+
+  stream_mesh_tasks = lapply(
+    which(is.finite(water_path_rgl_ids)),
+    function(coord_index) {
+      list(
+        points = coord_list[[coord_index]],
+        bbox_center = c(0, 0, 0),
+        width = coord_width[[coord_index]],
+        height = height,
+        heightmap = heightmap,
+        zscale = zscale,
+        material = NULL,
+        return_mesh = TRUE,
+        rgl_id = water_path_rgl_ids[[coord_index]],
+        watercolor = watercolor
       )
     }
-  }
+  )
+  stream_meshes = make_render_highquality_water_path_meshes(
+    stream_mesh_tasks,
+    verbose = verbose,
+    parallel = parallel
+  )
+  cache_scene_stream_meshes(
+    stream_meshes,
+    append = !isTRUE(clear_previous)
+  )
   invisible(coord_list)
+}
+
+#' Draw stream line previews in width-compatible batches
+#'
+#' @param coord_list Stream path coordinate matrices.
+#' @param coord_width Stream width for every coordinate matrix.
+#' @param watercolor Stream preview color.
+#' @param height Stream mesh height registered with each rgl object.
+#' @param verbose Default `FALSE`. Whether to show preview submission progress.
+#'
+#' @return Integer rgl identifier corresponding to every input path. Paths in
+#' the same width group share an identifier.
+#' @keywords internal
+draw_render_stream_line_previews = function(
+  coord_list,
+  coord_width,
+  watercolor,
+  height,
+  verbose = FALSE
+) {
+  if (length(coord_width) != length(coord_list)) {
+    stop(
+      "Stream preview coordinates and widths must have equal lengths.",
+      call. = FALSE
+    )
+  }
+  water_path_rgl_ids = rep(NA_integer_, length(coord_list))
+  valid_path = which(vapply(
+    coord_list,
+    function(coord) is.matrix(coord) && nrow(coord) >= 2L,
+    logical(1)
+  ))
+  if (!length(valid_path)) {
+    return(water_path_rgl_ids)
+  }
+  width_groups = split(
+    valid_path,
+    match(coord_width[valid_path], unique(coord_width[valid_path]))
+  )
+  preview_progress = new_render_highquality_progress_bar(
+    verbose = verbose,
+    label = "Drawing stream line previews",
+    total = length(width_groups)
+  )
+  previous_rgl_parameters = rgl::par3d(skipRedraw = TRUE)
+  on.exit(rgl::par3d(previous_rgl_parameters), add = TRUE)
+  separator = matrix(NA_real_, nrow = 1L, ncol = 3L)
+  for (path_indices in width_groups) {
+    batched_coords = do.call(
+      rbind,
+      lapply(path_indices, function(index) {
+        rbind(coord_list[[index]], separator)
+      })
+    )
+    batched_coords = batched_coords[-nrow(batched_coords), , drop = FALSE]
+    water_path_rgl_id = rgl::lines3d(
+      batched_coords,
+      color = watercolor,
+      tag = "water_path",
+      lwd = coord_width[[path_indices[[1L]]]],
+      line_antialias = FALSE
+    )
+    water_path_rgl_id = as.integer(water_path_rgl_id[[1L]])
+    water_path_rgl_ids[path_indices] = water_path_rgl_id
+    register_render_water_path_info(
+      id = water_path_rgl_id,
+      info = list(height = height)
+    )
+    if (!is.null(preview_progress)) {
+      preview_progress$tick()
+    }
+  }
+  water_path_rgl_ids
 }
 
 #' Default stream mesh height
@@ -633,26 +744,165 @@ resolve_render_highquality_water_path_surface = function() {
 #'
 #' @param tasks Water path mesh task list.
 #' @param verbose Default `FALSE`. Whether to display mesh-building progress.
+#' @param parallel Default `FALSE`. Whether to build independent stream meshes
+#' in parallel in the native job queue.
 #'
 #' @return List of rayrender mesh objects.
 #' @keywords internal
-make_render_highquality_water_path_meshes = function(tasks, verbose = FALSE) {
+make_render_highquality_water_path_meshes = function(
+  tasks,
+  verbose = FALSE,
+  parallel = FALSE
+) {
   if (!length(tasks)) {
     return(list())
   }
-  mesh_progress = new_render_highquality_progress_bar(
-    verbose = verbose,
-    label = "Converting stream lines to meshes",
-    total = length(tasks)
+  parallel = resolve_render_logical(parallel, "parallel")
+  required = c("points", "bbox_center", "width", "material")
+  native_eligible = vapply(
+    tasks,
+    function(task) {
+      is.list(task) &&
+        all(required %in% names(task)) &&
+        is.null(task$segment_end)
+    },
+    logical(1)
   )
   meshes = vector("list", length(tasks))
-  for (index in seq_along(tasks)) {
+  fallback_indices = which(!native_eligible)
+  fallback_progress = new_render_highquality_progress_bar(
+    verbose = verbose && length(fallback_indices) > 0L,
+    label = "Converting stream lines to meshes",
+    total = length(fallback_indices)
+  )
+  for (index in fallback_indices) {
     meshes[[index]] = do.call(
       make_render_highquality_water_path_mesh,
       tasks[[index]]
     )
-    if (!is.null(mesh_progress)) {
-      mesh_progress$tick()
+    if (!is.null(fallback_progress)) {
+      fallback_progress$tick()
+    }
+  }
+
+  normalized_tasks = lapply(which(native_eligible), function(index) {
+    task = utils::modifyList(
+      list(
+        height = default_render_stream_height(),
+        heightmap = NULL,
+        zscale = 1,
+        cap_start = TRUE,
+        cap_end = TRUE,
+        return_mesh = FALSE,
+        rgl_id = NULL,
+        watercolor = NULL
+      ),
+      tasks[[index]],
+      keep.null = TRUE
+    )
+    task$points = as.matrix(task$points)
+    task$points = task$points[
+      stats::complete.cases(task$points),
+      ,
+      drop = FALSE
+    ]
+    task$width = resolve_render_positive_number(task$width, "width")
+    task$height = resolve_render_stream_height(task$height)
+    task$zscale = suppressWarnings(as.numeric(task$zscale[[1L]]))
+    if (!is.finite(task$zscale) || task$zscale <= 0) {
+      task$zscale = 1
+    }
+    task$bbox_center = suppressWarnings(as.numeric(task$bbox_center[1:3]))
+    if (length(task$bbox_center) != 3L || any(!is.finite(task$bbox_center))) {
+      stop("Stream mesh tasks require a finite scene center.", call. = FALSE)
+    }
+    task$cap_start = resolve_render_logical(task$cap_start, "cap_start")
+    task$cap_end = resolve_render_logical(task$cap_end, "cap_end")
+    task$return_mesh = resolve_render_logical(task$return_mesh, "return_mesh")
+    task$task_index = index
+    task
+  })
+  normalized_tasks = Filter(
+    function(task) nrow(task$points) >= 2L && ncol(task$points) == 3L,
+    normalized_tasks
+  )
+  terrain_groups = list()
+  for (task in normalized_tasks) {
+    group_index = 0L
+    for (index in seq_along(terrain_groups)) {
+      prototype = terrain_groups[[index]]$tasks[[1L]]
+      if (
+        identical(task$heightmap, prototype$heightmap) &&
+          identical(task$zscale, prototype$zscale)
+      ) {
+        group_index = index
+        break
+      }
+    }
+    if (!group_index) {
+      terrain_groups[[length(terrain_groups) + 1L]] = list(tasks = list(task))
+    } else {
+      terrain_groups[[group_index]]$tasks[[
+        length(terrain_groups[[group_index]]$tasks) + 1L
+      ]] = task
+    }
+  }
+  for (group in terrain_groups) {
+    group_tasks = group$tasks
+    prototype = group_tasks[[1L]]
+    native_jobs = lapply(group_tasks, function(task) {
+      list(
+        points = task$points,
+        bbox_center = task$bbox_center,
+        width = task$width,
+        height = task$height,
+        cap_start = task$cap_start,
+        cap_end = task$cap_end
+      )
+    })
+    native_meshes = build_render_highquality_stream_mesh_batch_cpp(
+      input_jobs = native_jobs,
+      heightmap = if (is.matrix(prototype$heightmap)) {
+        prototype$heightmap
+      } else {
+        matrix(numeric(0), nrow = 0L, ncol = 0L)
+      },
+      zscale = prototype$zscale,
+      parallel = parallel,
+      verbose = verbose
+    )
+    for (index in seq_along(group_tasks)) {
+      task = group_tasks[[index]]
+      mesh_data = native_meshes[[index]]
+      if (!nrow(mesh_data$indices)) {
+        next
+      }
+      colnames(mesh_data$indices) = c("quad_starts", "", "")
+      mesh = list(
+        vb = t(cbind(mesh_data$vertices, 1)),
+        it = t(mesh_data$indices),
+        normals = t(mesh_data$vertex_normals)
+      )
+      class(mesh) = "mesh3d"
+      attr(mesh, "render_stream_mesh_diagnostics") = mesh_data$diagnostics
+      attr(mesh, "render_stream_mesh_specification") = list(
+        rgl_id = task$rgl_id,
+        watercolor = task$watercolor,
+        width = task$width,
+        height = task$height,
+        material = task$material,
+        cap_start = task$cap_start,
+        cap_end = task$cap_end
+      )
+      meshes[[task$task_index]] = if (task$return_mesh) {
+        mesh
+      } else {
+        rayrender::mesh3d_model(
+          mesh,
+          override_material = TRUE,
+          material = task$material
+        )
+      }
     }
   }
   Filter(Negate(is.null), meshes)
@@ -1864,6 +2114,9 @@ sample_render_highquality_water_path_surface = function(
 #' @param segment_end Default `NULL`. Last segment index to emit.
 #' @param cap_start Default `TRUE`. Whether to cap the first emitted segment.
 #' @param cap_end Default `TRUE`. Whether to cap the last emitted segment.
+#' @param return_mesh Default `FALSE`. Whether to return the raw `mesh3d` object.
+#' @param rgl_id Default `NULL`. Source rgl identifier stored with raw meshes.
+#' @param watercolor Default `NULL`. Source stream color stored with raw meshes.
 #'
 #' @return Rayrender mesh object.
 #' @keywords internal
@@ -1878,7 +2131,10 @@ make_render_highquality_water_path_mesh = function(
   segment_start = 1L,
   segment_end = NULL,
   cap_start = TRUE,
-  cap_end = TRUE
+  cap_end = TRUE,
+  return_mesh = FALSE,
+  rgl_id = NULL,
+  watercolor = NULL
 ) {
   points = as.matrix(points)
   if (is.null(segment_end)) {
@@ -2116,11 +2372,87 @@ make_render_highquality_water_path_mesh = function(
     normals = t(vertex_normals)
   )
   class(mesh) = "mesh3d"
-  rayrender::mesh3d_model(
-    mesh,
-    override_material = TRUE,
-    material = material
+  attr(mesh, "render_stream_mesh_specification") = list(
+    rgl_id = rgl_id,
+    watercolor = watercolor,
+    width = width,
+    height = height,
+    material = material,
+    cap_start = cap_start,
+    cap_end = cap_end
   )
+  if (isTRUE(return_mesh)) {
+    return(mesh)
+  }
+  rayrender::mesh3d_model(mesh, override_material = TRUE, material = material)
+}
+
+#' Convert cached stream meshes into translated rayrender models
+#'
+#' @param meshes Absolute-coordinate cached stream `mesh3d` objects.
+#' @param bbox_center Active rayrender scene center.
+#' @param rgl_materials Default `list()`. Validated rgl material overrides.
+#' @param water_material Water material model.
+#' @param water_roughness Water roughness.
+#' @param water_ior Water index of refraction.
+#' @param water_attenuation Water attenuation.
+#' @param water_surface_color Whether the stream color tints the surface.
+#'
+#' @return List of translated rayrender mesh models.
+#' @keywords internal
+make_render_highquality_cached_stream_meshes = function(
+  meshes,
+  bbox_center,
+  rgl_materials = list(),
+  water_material,
+  water_roughness,
+  water_ior,
+  water_attenuation,
+  water_surface_color
+) {
+  bbox_center = suppressWarnings(as.numeric(bbox_center[1:3]))
+  if (length(bbox_center) != 3L || any(!is.finite(bbox_center))) {
+    stop("Cached stream meshes require a finite scene center.", call. = FALSE)
+  }
+  models = lapply(meshes, function(mesh) {
+    if (!inherits(mesh, "mesh3d")) {
+      return(NULL)
+    }
+    specification = attr(mesh, "render_stream_mesh_specification")
+    watercolor = specification$watercolor
+    if (is.null(watercolor) || !length(watercolor)) {
+      watercolor = "lightblue"
+    }
+    rgl_id = specification$rgl_id
+    if (is.null(rgl_id) || !length(rgl_id)) {
+      rgl_id = NA_integer_
+    }
+    material = resolve_render_highquality_rgl_material(
+      rgl_materials = rgl_materials,
+      id = rgl_id[[1L]],
+      tag = "water_path",
+      color = watercolor[[1L]]
+    )
+    if (is.null(material)) {
+      material = make_render_highquality_water_path_material(
+        color = watercolor[[1L]],
+        water_material = water_material,
+        water_roughness = water_roughness,
+        water_ior = water_ior,
+        water_attenuation = water_attenuation,
+        water_surface_color = water_surface_color
+      )
+    }
+    rayrender::mesh3d_model(
+      mesh,
+      x = -bbox_center[[1L]],
+      y = -bbox_center[[2L]],
+      z = -bbox_center[[3L]],
+      override_material = TRUE,
+      material = material
+    )
+  })
+  Filter(Negate(is.null), models)
 }
 
 make_render_highquality_water_path_material = function(

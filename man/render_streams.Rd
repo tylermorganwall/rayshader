@@ -17,7 +17,9 @@ render_streams(
   merge = TRUE,
   clear_previous = TRUE,
   water_polygons = NULL,
-  height = 0.05
+  height = 0.05,
+  verbose = FALSE,
+  parallel = TRUE
 )
 }
 \arguments{
@@ -73,6 +75,11 @@ returned rather than assuming the coordinate systems match.}
 \item{height}{Default \code{0.05}. Total stream mesh thickness in scene units for
 \code{\link[=render_highquality]{render_highquality()}}. This is independent of \code{width} and centered on the
 sampled stream path, leaving the top surface slightly above the terrain.}
+
+\item{verbose}{Default \code{FALSE}. Whether to show native stream-meshing progress.}
+
+\item{parallel}{Default \code{TRUE}. Whether to build independent stream meshes in
+parallel with the native job queue.}
 }
 \value{
 Invisibly returns the rendered stream coordinates.

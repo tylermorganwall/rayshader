@@ -43,7 +43,7 @@
 #' remain distinguishable from explicit OSM layer tags in diagnostics.
 #' Roads are grouped by exact physical events and conservative endpoint
 #' continuations. A sparse quadratic profile solve enforces crossing clearance,
-#' longitudinal grade and grade-rate limits, junction height continuity, and
+#' physical grade and grade-rate limits, junction height continuity, and
 #' selected through-road grade continuity. Surface roads retain a sampled
 #' terrain reference, elevated spans use endpoint support chords, and roads with
 #' explicit tunnel or underground metadata use a bounded terrain-relative
@@ -546,7 +546,11 @@ render_roads = function(
   if (!length(coord_list)) {
     return(invisible(coord_list))
   }
-  if (isTRUE(densify)) {
+  # Layered paths are resampled once after the continuous profile solve. Doing
+  # the ordinary terrain densification here first expands every source path at
+  # triangle boundaries, only for the layered solver to replace all heights and
+  # the native mesher to resample the final profile again.
+  if (isTRUE(densify) && is.null(layer_column)) {
     coord_list = densify_render_line_coords(
       coords = coord_list,
       heightmap = heightmap,
@@ -4106,16 +4110,13 @@ build_render_road_prospective_solve_graph = function(
       topology_type = character(0)
     )
   }
-  # Candidate anchors are endpoint-specific and use physical surface tags, not whether
-  # a zero-valued layer happened to be explicit. They remain candidates until the
-  # profile solver applies its final anchor policy.
+  # Surface endpoints are retained as diagnostics only. Selected continuation
+  # edges may cross them in either direction: surface contact is chosen by the
+  # profile objective under the terrain floor and physical grade constraints,
+  # never by terminating the solve at a candidate endpoint.
   candidate_anchors = identify_render_road_candidate_anchor_endpoints(prepared)
   candidate_anchor_endpoint_id = candidate_anchors$candidate_anchor_endpoint_id
-  reverse_continuation_edges = continuation_edges[
-    !(continuation_edges$to_endpoint %in% candidate_anchor_endpoint_id),
-    ,
-    drop = FALSE
-  ]
+  reverse_continuation_edges = continuation_edges
   if (nrow(reverse_continuation_edges)) {
     reverse_continuation_edges = data.frame(
       continuation_id = reverse_continuation_edges$continuation_id,
@@ -4128,19 +4129,14 @@ build_render_road_prospective_solve_graph = function(
     )
   }
   directed_continuation_edges = rbind(
-    continuation_edges[
-      !(continuation_edges$from_endpoint %in% candidate_anchor_endpoint_id),
-      ,
-      drop = FALSE
-    ],
+    continuation_edges,
     reverse_continuation_edges
   )
 
   # Track active solve context separately from fragments allowed to propagate it.
-  # A surface fragment reached through an equality supplies terminal context without
-  # opening the rest of its street network. Active fragments may still emit their
-  # immediate junction equalities at candidate anchors so every incident approach
-  # shares the junction height.
+  # Selected continuations always propagate the physical road profile. A surface
+  # fragment reached only through an ordinary junction supplies terminal context
+  # without opening the rest of its street network.
   active_fragment_id = sort(unique(seed_fragment_id))
   expandable_fragment_id = active_fragment_id
   terminal_ground_fragment_id = integer(0)
@@ -4152,7 +4148,7 @@ build_render_road_prospective_solve_graph = function(
     previous_continuation_id = permitted_continuation_id
     if (nrow(directed_continuation_edges)) {
       traversed = directed_continuation_edges$from %in%
-        as.character(expandable_fragment_id)
+        as.character(active_fragment_id)
       permitted_continuation_id = sort(unique(c(
         permitted_continuation_id,
         directed_continuation_edges$continuation_id[traversed]
@@ -4160,10 +4156,12 @@ build_render_road_prospective_solve_graph = function(
       target_fragment_id = as.integer(
         directed_continuation_edges$to[traversed]
       )
-      target_endpoint_id = directed_continuation_edges$to_endpoint[traversed]
-      terminal_target = target_fragment_id %in%
-        candidate_anchors$surface_fragment_id &
-        target_endpoint_id %in% candidate_anchor_endpoint_id
+      # Continue across every selected physical fragment boundary, including
+      # from a road admitted only as terminal junction context. Propagate its
+      # terminal status along that through-road so the solve cannot branch into
+      # the surrounding at-grade street grid.
+      terminal_target = !(directed_continuation_edges$from[traversed] %in%
+        as.character(expandable_fragment_id))
       active_fragment_id = sort(unique(c(
         active_fragment_id,
         target_fragment_id
@@ -5255,13 +5253,15 @@ normalize_render_road_adaptive_constraints = function(
 #' Resolve one road-profile control with a checked tolerance
 #'
 
-#' Classify ground anchors and free solve frontiers
+#' Classify road-profile solve frontiers
 #'
 #' @param topology Active road topology.
 #' @param fragment_length Named fragment lengths.
 #' @param control_tolerance Control matching tolerance in metres.
 #'
-#' @return Endpoint identifier sets and endpoint classifications.
+#' @return Endpoint identifier sets and endpoint classifications. Ground
+#' anchors are disabled; surface contact is determined by the terrain floor
+#' and terrain-reference objective.
 #' @keywords internal
 identify_render_road_profile_anchor_sets = function(
   topology,
@@ -5299,19 +5299,7 @@ identify_render_road_profile_anchor_sets = function(
     unique(conflict_endpoint_id)
   )
   selected_endpoint_id = intersect(active_endpoint_id, selected_endpoint_id)
-  candidate_endpoint_id = intersect(
-    active_endpoint_id,
-    topology$candidate_anchor_endpoint_id
-  )
-  ground_anchor_endpoint_id = setdiff(
-    candidate_endpoint_id,
-    unique(c(
-      boundary_endpoint_id,
-      ambiguous_endpoint_id,
-      conflict_endpoint_id,
-      selected_endpoint_id
-    ))
-  )
+  ground_anchor_endpoint_id = integer(0)
   solve_frontier_endpoint_id = setdiff(
     active_endpoint_id,
     unique(c(ground_anchor_endpoint_id, selected_endpoint_id))
@@ -5332,9 +5320,6 @@ identify_render_road_profile_anchor_sets = function(
   endpoints$endpoint_role[
     endpoints$render_road_endpoint_id %in% conflict_endpoint_id
   ] = "conflict_frontier"
-  endpoints$endpoint_role[
-    endpoints$render_road_endpoint_id %in% ground_anchor_endpoint_id
-  ] = "ground_anchor"
   list(
     ground_anchor_endpoint_id = sort(unique(ground_anchor_endpoint_id)),
     solve_frontier_endpoint_id = sort(unique(solve_frontier_endpoint_id)),
@@ -5345,49 +5330,6 @@ identify_render_road_profile_anchor_sets = function(
     endpoints = endpoints
   )
 }
-
-#' Calculate a smoothed terrain-reference grade
-#'
-#' @param profile Data frame containing `distance` and `elevation`.
-#' @param distance Distance to evaluate in metres.
-#' @param window Physical regression window in metres.
-#'
-#' @return Local terrain grade as rise divided by run.
-#' @keywords internal
-calculate_render_road_smoothed_reference_grade = function(
-  profile,
-  distance,
-  window
-) {
-  profile_length = max(profile$distance)
-  lower = max(0, distance - window / 2)
-  upper = min(profile_length, distance + window / 2)
-  if (distance <= window / 2) {
-    upper = min(profile_length, max(window, distance + window / 2))
-  }
-  if (distance >= profile_length - window / 2) {
-    lower = max(0, min(profile_length - window, distance - window / 2))
-  }
-  sample_distance = sort(unique(c(
-    lower,
-    upper,
-    distance,
-    profile$distance[
-      profile$distance >= lower & profile$distance <= upper
-    ]
-  )))
-  if (length(sample_distance) < 2L || upper <= lower) {
-    return(calculate_render_road_profile_reference_grade(profile, distance))
-  }
-  sample_elevation = interpolate_render_road_profile_reference(
-    profile,
-    sample_distance
-  )
-  fit = stats::lm(sample_elevation ~ sample_distance)
-  grade = unname(stats::coef(fit)[[2L]])
-  if (!is.finite(grade)) 0 else grade
-}
-
 
 #' Prepare immutable numerical road-profile compiler input
 #'
@@ -5406,11 +5348,7 @@ calculate_render_road_smoothed_reference_grade = function(
 #' `layer_spacing`. Terrain-relative reference depth in metres.
 #' @param underground_reference_weight Default `1e-3`. Underground reference
 #' objective weight.
-#' @param anchor_grade_weight Default `10`. Ground-anchor grade objective
-#' weight.
 #' @param uplift_weight Default `1e-5`. Linear uplift objective weight.
-#' @param anchor_grade_window Default `10`. Terrain-grade regression window in
-#' metres.
 #' @param control_tolerance Default `1e-7`. Control matching tolerance in
 #' metres.
 #'
@@ -5427,9 +5365,7 @@ prepare_render_road_profile_specification = function(
   terrain_reference_weight = 1e-3,
   underground_reference_depth = NULL,
   underground_reference_weight = 1e-3,
-  anchor_grade_weight = 10,
   uplift_weight = 1e-5,
-  anchor_grade_window = 10,
   control_tolerance = 1e-7
 ) {
   if (!requireNamespace("Matrix", quietly = TRUE)) {
@@ -5477,19 +5413,10 @@ prepare_render_road_profile_specification = function(
     underground_reference_weight,
     "underground_reference_weight"
   )
-  anchor_grade_weight = assert_render_road_profile_setting(
-    anchor_grade_weight,
-    "anchor_grade_weight",
-    allow_zero = TRUE
-  )
   uplift_weight = assert_render_road_profile_setting(
     uplift_weight,
     "uplift_weight",
     allow_zero = TRUE
-  )
-  anchor_grade_window = assert_render_road_profile_setting(
-    anchor_grade_window,
-    "anchor_grade_window"
   )
   control_tolerance = assert_render_road_profile_setting(
     control_tolerance,
@@ -5504,9 +5431,7 @@ prepare_render_road_profile_specification = function(
     terrain_reference_weight = terrain_reference_weight,
     underground_reference_depth = underground_reference_depth,
     underground_reference_weight = underground_reference_weight,
-    anchor_grade_weight = anchor_grade_weight,
     uplift_weight = uplift_weight,
-    anchor_grade_window = anchor_grade_window,
     control_tolerance = control_tolerance
   )
 
@@ -5784,41 +5709,15 @@ prepare_render_road_profile_specification = function(
   }
 
   endpoints = sf::st_drop_geometry(topology$endpoints)
-  anchor_endpoint = endpoints[
-    endpoints$render_road_endpoint_id %in%
-      anchor_sets$ground_anchor_endpoint_id,
-    ,
-    drop = FALSE
-  ]
-  anchor_count = nrow(anchor_endpoint)
+  # Endpoint terrain snaps are intentionally absent. This stable empty schema
+  # keeps compiler diagnostics compatible while the profile finds surface
+  # contact through the terrain objective and engineering constraints.
   anchor = list(
-    endpoint_id = as.integer(anchor_endpoint$render_road_endpoint_id),
-    fragment = unname(
-      fragment_index[
-        as.character(anchor_endpoint$render_road_fragment_id)
-      ]
-    ),
-    side = ifelse(anchor_endpoint$endpoint_side == "start", 0L, 1L),
-    distance = numeric(anchor_count),
-    terrain_grade = numeric(anchor_count)
+    endpoint_id = integer(0),
+    fragment = integer(0),
+    side = integer(0),
+    distance = numeric(0)
   )
-  if (anchor_count) {
-    for (row in seq_len(anchor_count)) {
-      fragment = anchor_endpoint$render_road_fragment_id[[row]]
-      distance = if (anchor$side[[row]] == 0L) {
-        0
-      } else {
-        fragment_length[[as.character(fragment)]]
-      }
-      anchor$distance[[row]] = distance
-      anchor$terrain_grade[[row]] =
-        calculate_render_road_smoothed_reference_grade(
-          terrain_profiles[[as.character(fragment)]],
-          distance,
-          anchor_grade_window
-        )
-    }
-  }
   endpoint_fragment = unname(
     fragment_index[as.character(endpoints$render_road_fragment_id)]
   )
@@ -5894,8 +5793,7 @@ prepare_render_road_profile_specification = function(
           "solve_frontier",
           "boundary_frontier",
           "ambiguous_frontier",
-          "conflict_frontier",
-          "ground_anchor"
+          "conflict_frontier"
         )
       )
     ),
@@ -6091,7 +5989,6 @@ compile_render_road_profile_problem = function(
     "endpoint_side",
     "control_id",
     "terrain",
-    "terrain_grade",
     "solve_component_id"
   )]
   clearances = as.data.frame(native$clearances)
@@ -6232,9 +6129,7 @@ build_render_road_profile_problem = function(
   terrain_reference_weight = 1e-3,
   underground_reference_depth = NULL,
   underground_reference_weight = 1e-3,
-  anchor_grade_weight = 10,
   uplift_weight = 1e-5,
-  anchor_grade_window = 10,
   control_tolerance = 1e-7,
   adaptive_constraints = NULL
 ) {
@@ -6249,9 +6144,7 @@ build_render_road_profile_problem = function(
     terrain_reference_weight = terrain_reference_weight,
     underground_reference_depth = underground_reference_depth,
     underground_reference_weight = underground_reference_weight,
-    anchor_grade_weight = anchor_grade_weight,
     uplift_weight = uplift_weight,
-    anchor_grade_window = anchor_grade_window,
     control_tolerance = control_tolerance
   )
   compile_render_road_profile_problem(
@@ -6428,8 +6321,7 @@ evaluate_render_road_profile_at = function(
   distance = as.numeric(distance)
   specification = problem$audit_specification
   if (is.null(specification)) {
-    specification =
-      prepare_render_road_profile_audit_specification(problem)
+    specification = prepare_render_road_profile_audit_specification(problem)
   }
   fragment_index = match(as.integer(fragment), specification$fragment_id)
   if (is.na(fragment_index)) {

@@ -15,7 +15,10 @@ make_render_highquality_water_path_mesh(
   segment_start = 1L,
   segment_end = NULL,
   cap_start = TRUE,
-  cap_end = TRUE
+  cap_end = TRUE,
+  return_mesh = FALSE,
+  rgl_id = NULL,
+  watercolor = NULL
 )
 }
 \arguments{
@@ -41,6 +44,12 @@ centered on the path.}
 \item{cap_start}{Default \code{TRUE}. Whether to cap the first emitted segment.}
 
 \item{cap_end}{Default \code{TRUE}. Whether to cap the last emitted segment.}
+
+\item{return_mesh}{Default \code{FALSE}. Whether to return the raw \code{mesh3d} object.}
+
+\item{rgl_id}{Default \code{NULL}. Source rgl identifier stored with raw meshes.}
+
+\item{watercolor}{Default \code{NULL}. Source stream color stored with raw meshes.}
 }
 \value{
 Rayrender mesh object.

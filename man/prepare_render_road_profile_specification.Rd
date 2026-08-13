@@ -15,9 +15,7 @@ prepare_render_road_profile_specification(
   terrain_reference_weight = 0.001,
   underground_reference_depth = NULL,
   underground_reference_weight = 0.001,
-  anchor_grade_weight = 10,
   uplift_weight = 1e-05,
-  anchor_grade_window = 10,
   control_tolerance = 1e-07
 )
 }
@@ -47,13 +45,7 @@ sampled terrain reference.}
 \item{underground_reference_weight}{Default \code{1e-3}. Underground reference
 objective weight.}
 
-\item{anchor_grade_weight}{Default \code{10}. Ground-anchor grade objective
-weight.}
-
 \item{uplift_weight}{Default \code{1e-5}. Linear uplift objective weight.}
-
-\item{anchor_grade_window}{Default \code{10}. Terrain-grade regression window in
-metres.}
 
 \item{control_tolerance}{Default \code{1e-7}. Control matching tolerance in
 metres.}

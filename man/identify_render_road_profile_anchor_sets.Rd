@@ -18,9 +18,11 @@ identify_render_road_profile_anchor_sets(
 \item{control_tolerance}{Control matching tolerance in metres.}
 }
 \value{
-Endpoint identifier sets and endpoint classifications.
+Endpoint identifier sets and endpoint classifications. Ground
+anchors are disabled; surface contact is determined by the terrain floor
+and terrain-reference objective.
 }
 \description{
-Classify ground anchors and free solve frontiers
+Classify road-profile solve frontiers
 }
 \keyword{internal}

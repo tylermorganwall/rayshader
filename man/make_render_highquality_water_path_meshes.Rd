@@ -4,12 +4,19 @@
 \alias{make_render_highquality_water_path_meshes}
 \title{Make render_highquality water path meshes}
 \usage{
-make_render_highquality_water_path_meshes(tasks, verbose = FALSE)
+make_render_highquality_water_path_meshes(
+  tasks,
+  verbose = FALSE,
+  parallel = FALSE
+)
 }
 \arguments{
 \item{tasks}{Water path mesh task list.}
 
 \item{verbose}{Default \code{FALSE}. Whether to display mesh-building progress.}
+
+\item{parallel}{Default \code{FALSE}. Whether to build independent stream meshes
+in parallel in the native job queue.}
 }
 \value{
 List of rayrender mesh objects.
