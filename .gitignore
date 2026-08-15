@@ -7,6 +7,7 @@ src/*.o
 src/*.so
 src/*.dll
 docs
+road-mesh-fuzz-artifacts/
 
 /.quarto/
 pkgdown/favicon/apple-touch-icon.png

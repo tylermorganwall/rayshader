@@ -7,7 +7,9 @@
 solve_render_road_path_profiles(
   coord_list,
   coord_feature,
+  coord_width,
   roads,
+  heightmap,
   layer_column,
   lane_column = NULL,
   lane_values = NULL,
@@ -22,7 +24,11 @@ solve_render_road_path_profiles(
 
 \item{coord_feature}{Source feature index for every coordinate matrix.}
 
+\item{coord_width}{Road widths by coordinate path.}
+
 \item{roads}{Prepared road features corresponding to \code{coord_feature}.}
+
+\item{heightmap}{Scene heightmap in elevation units.}
 
 \item{layer_column}{Column containing OSM-style layer values.}
 

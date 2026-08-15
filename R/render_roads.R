@@ -564,7 +564,9 @@ render_roads = function(
     coord_list = solve_render_road_path_profiles(
       coord_list = coord_list,
       coord_feature = coord_feature,
+      coord_width = coord_width,
       roads = roads,
+      heightmap = heightmap,
       layer_column = layer_column,
       lane_column = lanes_spec$column,
       lane_values = if (length(road_lanes) == 1L) {
@@ -1658,11 +1660,310 @@ build_render_road_mesh_chain_members = function(
   do.call(rbind, rows)
 }
 
+#' Select a terrain reference across one road cross-section
+#'
+#' @param coordinates Scene-coordinate road centerline.
+#' @param width Road width in scene units.
+#' @param heightmap Scene heightmap in elevation units.
+#' @param zscale Effective scene zscale.
+#' @param texture_world_scale Two-value scene-to-world horizontal scale.
+#' @param lateral_samples Default `5L`. Number of terrain candidates sampled
+#'   from one half-width left to one half-width right.
+#'
+#' @return Conditioned coordinates and terrain-stage diagnostics.
+#' @keywords internal
+condition_render_road_terrain_path = function(
+  coordinates,
+  width,
+  heightmap,
+  zscale,
+  texture_world_scale,
+  lateral_samples = 5L
+) {
+  coordinates = as.matrix(coordinates)
+  point_count = nrow(coordinates)
+  if (
+    point_count < 2L ||
+      !is.matrix(heightmap) ||
+      any(!is.finite(coordinates[, 1:3, drop = FALSE]))
+  ) {
+    return(list(
+      coordinates = coordinates,
+      regime = "easy",
+      hard_run_count = 0L,
+      hard_point_count = 0L,
+      maximum_lateral_relief = 0,
+      selected_lateral_fraction = rep(0, point_count)
+    ))
+  }
+  texture_world_scale = normalize_render_road_world_scale(
+    texture_world_scale
+  )
+  width = suppressWarnings(as.numeric(width[[1L]]))
+  if (!is.finite(width) || width <= 0) {
+    width = 1
+  }
+  lateral_samples = max(3L, as.integer(lateral_samples[[1L]]))
+  if (lateral_samples %% 2L == 0L) {
+    lateral_samples = lateral_samples + 1L
+  }
+  world = cbind(
+    coordinates[, 1L] * texture_world_scale[[1L]],
+    coordinates[, 3L] * texture_world_scale[[2L]]
+  )
+  previous = c(1L, seq_len(point_count - 1L))
+  following = c(seq.int(2L, point_count), point_count)
+  tangent = world[following, , drop = FALSE] -
+    world[previous, , drop = FALSE]
+  magnitude = sqrt(rowSums(tangent^2))
+  invalid_tangent = !is.finite(magnitude) |
+    magnitude <= sqrt(.Machine$double.eps)
+  tangent[!invalid_tangent, ] = tangent[!invalid_tangent, , drop = FALSE] /
+    magnitude[!invalid_tangent]
+  if (any(invalid_tangent)) {
+    tangent[invalid_tangent, ] = matrix(
+      c(1, 0),
+      nrow = sum(invalid_tangent),
+      ncol = 2L,
+      byrow = TRUE
+    )
+  }
+  side = cbind(-tangent[, 2L], tangent[, 1L])
+  half_width_world = width * mean(texture_world_scale) / 2
+  lateral_offset = seq(
+    -half_width_world,
+    half_width_world,
+    length.out = lateral_samples
+  )
+  sample_x = as.vector(
+    outer(
+      side[, 1L] / texture_world_scale[[1L]],
+      lateral_offset,
+      `*`
+    ) +
+      coordinates[, 1L]
+  )
+  sample_z = as.vector(
+    outer(
+      side[, 2L] / texture_world_scale[[2L]],
+      lateral_offset,
+      `*`
+    ) +
+      coordinates[, 3L]
+  )
+  lateral_height = matrix(
+    interpolate_render_heightmap_height(heightmap, sample_x, sample_z),
+    nrow = point_count,
+    ncol = lateral_samples
+  )
+  center_height = coordinates[, 2L] * zscale
+  invalid_height = !is.finite(lateral_height)
+  if (any(invalid_height)) {
+    lateral_height[invalid_height] = center_height[
+      row(lateral_height)[invalid_height]
+    ]
+  }
+  station = calculate_road_path_cumulative_distance(
+    coordinates,
+    texture_world_scale = texture_world_scale
+  )
+  lateral_minimum = apply(lateral_height, 1L, min)
+  lateral_maximum = apply(lateral_height, 1L, max)
+  lateral_median = apply(lateral_height, 1L, stats::median)
+  smooth_values = function(value, spar = 0.6) {
+    if (length(value) < 4L || length(unique(station)) < 4L) {
+      return(value)
+    }
+    tryCatch(
+      stats::predict(
+        stats::smooth.spline(
+          x = station,
+          y = value,
+          spar = spar,
+          all.knots = TRUE
+        ),
+        x = station
+      )$y,
+      error = function(error) value
+    )
+  }
+  preliminary = smooth_values(lateral_median, spar = 0.55)
+  target = preliminary + 0.35 * pmax(lateral_maximum - preliminary, 0)
+  relief_scale = max(
+    0.25,
+    stats::median(lateral_maximum - lateral_minimum),
+    na.rm = TRUE
+  )
+  local_cost = (lateral_height - target)^2 +
+    0.35 * pmax(lateral_maximum - lateral_height, 0)^2
+  cumulative_cost = matrix(Inf, point_count, lateral_samples)
+  predecessor = matrix(1L, point_count, lateral_samples)
+  cumulative_cost[1L, ] = local_cost[1L, ]
+  if (point_count > 1L) {
+    offset_scale = max(half_width_world, sqrt(.Machine$double.eps))
+    transition_cost = 0.05 *
+      relief_scale^2 *
+      outer(lateral_offset, lateral_offset, function(first, second) {
+        ((first - second) / offset_scale)^2
+      })
+    for (point in seq.int(2L, point_count)) {
+      for (candidate in seq_len(lateral_samples)) {
+        candidate_cost = cumulative_cost[point - 1L, ] +
+          transition_cost[, candidate]
+        best = which.min(candidate_cost)
+        predecessor[point, candidate] = best
+        cumulative_cost[point, candidate] =
+          candidate_cost[[best]] + local_cost[point, candidate]
+      }
+    }
+  }
+  selected_index = integer(point_count)
+  selected_index[[point_count]] = which.min(
+    cumulative_cost[point_count, ]
+  )
+  if (point_count > 1L) {
+    for (point in seq.int(point_count, 2L)) {
+      selected_index[[point - 1L]] = predecessor[
+        point,
+        selected_index[[point]]
+      ]
+    }
+  }
+  selected_height = lateral_height[cbind(
+    seq_len(point_count),
+    selected_index
+  )]
+  run = diff(station)
+  run[!is.finite(run) | run <= 0] = 1
+  grade = diff(selected_height) / run
+  grade_change = numeric(point_count)
+  if (length(grade) > 1L) {
+    change = abs(diff(grade))
+    grade_change[seq.int(2L, point_count - 1L)] = pmax(
+      grade_change[seq.int(2L, point_count - 1L)],
+      change
+    )
+    grade_change[seq_len(point_count - 2L)] = pmax(
+      grade_change[seq_len(point_count - 2L)],
+      change
+    )
+  }
+  lateral_relief = lateral_maximum - lateral_minimum
+  cross_grade = lateral_relief / max(2 * half_width_world, 0.1)
+  severity = pmax(
+    (cross_grade - 0.08) / 0.24,
+    (grade_change - 0.05) / 0.25,
+    0
+  )
+  severity = pmin(severity, 1)
+  hard = severity > 0
+  if (any(hard) && point_count > 2L) {
+    hard = hard |
+      c(FALSE, hard[-point_count]) |
+      c(hard[-1L], FALSE)
+    severity[hard] = pmax(severity[hard], 0.25)
+  }
+  if (!any(hard)) {
+    return(list(
+      coordinates = coordinates,
+      regime = "easy",
+      hard_run_count = 0L,
+      hard_point_count = 0L,
+      maximum_lateral_relief = max(lateral_relief),
+      selected_lateral_fraction = lateral_offset[selected_index] /
+        max(half_width_world, sqrt(.Machine$double.eps))
+    ))
+  }
+  smoothed_height = smooth_values(selected_height, spar = 0.65)
+  conditioned_height = selected_height +
+    severity * (smoothed_height - selected_height)
+  conditioned_height = pmin(
+    pmax(conditioned_height, lateral_minimum),
+    lateral_maximum
+  )
+  coordinates[, 2L] = conditioned_height / zscale
+  hard_start = hard & !c(FALSE, utils::head(hard, -1L))
+  list(
+    coordinates = coordinates,
+    regime = if (any(hard)) "hard" else "easy",
+    hard_run_count = sum(hard_start),
+    hard_point_count = sum(hard),
+    maximum_lateral_relief = max(lateral_relief),
+    selected_lateral_fraction = lateral_offset[selected_index] /
+      max(half_width_world, sqrt(.Machine$double.eps))
+  )
+}
+
+#' Apply lateral terrain conditioning to road paths
+#'
+#' @param coord_list Road coordinate matrices.
+#' @param coord_width Road widths by coordinate path.
+#' @param heightmap Scene heightmap.
+#' @param zscale Effective scene zscale.
+#' @param texture_world_scale Two-value scene-to-world horizontal scale.
+#'
+#' @return Conditioned coordinates, per-path regimes, and compact diagnostics.
+#' @keywords internal
+condition_render_road_terrain_paths = function(
+  coord_list,
+  coord_width,
+  heightmap,
+  zscale,
+  texture_world_scale
+) {
+  result = Map(
+    function(coordinates, width) {
+      condition_render_road_terrain_path(
+        coordinates = coordinates,
+        width = width,
+        heightmap = heightmap,
+        zscale = zscale,
+        texture_world_scale = texture_world_scale
+      )
+    },
+    coord_list,
+    as.list(coord_width)
+  )
+  hard_path = vapply(
+    result,
+    function(value) identical(value$regime, "hard"),
+    logical(1)
+  )
+  list(
+    coordinates = lapply(result, `[[`, "coordinates"),
+    hard_path = hard_path,
+    diagnostics = list(
+      easy_path_count = sum(!hard_path),
+      hard_path_count = sum(hard_path),
+      hard_run_count = sum(vapply(
+        result,
+        `[[`,
+        integer(1),
+        "hard_run_count"
+      )),
+      hard_point_count = sum(vapply(
+        result,
+        `[[`,
+        integer(1),
+        "hard_point_count"
+      )),
+      maximum_lateral_relief = max(vapply(
+        result,
+        `[[`,
+        numeric(1),
+        "maximum_lateral_relief"
+      ))
+    )
+  )
+}
+
 #' Solve road profiles for rendered path coordinates
 #'
 #' @param coord_list Terrain-sampled scene coordinate matrices.
 #' @param coord_feature Source feature index for every coordinate matrix.
+#' @param coord_width Road widths by coordinate path.
 #' @param roads Prepared road features corresponding to `coord_feature`.
+#' @param heightmap Scene heightmap in elevation units.
 #' @param layer_column Column containing OSM-style layer values.
 #' @param lane_column Default `NULL`. Optional lane-count column used as
 #' continuation evidence.
@@ -1677,10 +1978,14 @@ build_render_road_mesh_chain_members = function(
 #'
 #' @return Coordinate matrices with solved heights and profile diagnostics.
 #' @keywords internal
+# Engineering guardrail: before changing layered profile topology, anchors,
+# terrain sampling, or constraints, read tools/README-road-profile-solver.md.
 solve_render_road_path_profiles = function(
   coord_list,
   coord_feature,
+  coord_width,
   roads,
+  heightmap,
   layer_column,
   lane_column = NULL,
   lane_values = NULL,
@@ -1695,6 +2000,12 @@ solve_render_road_path_profiles = function(
   if (length(coord_feature) != length(coord_list)) {
     stop(
       "Rendered road feature indices must match the coordinate paths.",
+      call. = FALSE
+    )
+  }
+  if (length(coord_width) != length(coord_list)) {
+    stop(
+      "Rendered road widths must match the coordinate paths.",
       call. = FALSE
     )
   }
@@ -1763,6 +2074,15 @@ solve_render_road_path_profiles = function(
     layer_height_column = layer_height_column
   )
   topology = build_render_road_layer_topology(prepared)
+  terrain_stage = condition_render_road_terrain_paths(
+    coord_list = coord_list,
+    coord_width = coord_width,
+    heightmap = heightmap,
+    zscale = zscale,
+    texture_world_scale = texture_world_scale
+  )
+  coord_list = terrain_stage$coordinates
+  terrain_following[terrain_stage$hard_path] = FALSE
   mesh_topology = build_render_road_path_mesh_topology(
     topology = topology,
     coord_feature = coord_feature,
@@ -1776,7 +2096,8 @@ solve_render_road_path_profiles = function(
       solver = "sparse_qp",
       active_fragment_count = 0L,
       solve_component_count = 0L,
-      refinement_iterations = 0L
+      refinement_iterations = 0L,
+      terrain_stage = terrain_stage$diagnostics
     )
     return(coord_list)
   }
@@ -1866,10 +2187,9 @@ solve_render_road_path_profiles = function(
       distance = evaluation_distance
     )
     solved_height = profile$height / zscale
-    terrain_following[[path_index]] = max(
-      abs(solved_height - coordinates[, 2L])
-    ) <=
-      1e-3 / zscale
+    terrain_following[[path_index]] =
+      terrain_following[[path_index]] &&
+      max(abs(solved_height - coordinates[, 2L])) <= 1e-3 / zscale
     coordinates[, 2L] = solved_height
     coord_list[[path_index]] = coordinates
   }
@@ -1885,7 +2205,8 @@ solve_render_road_path_profiles = function(
     refinement_iterations = solution$refinement_iterations,
     maximum_violation = solution$engineering_audit$maximum_violation,
     engineering_tolerance = solution$engineering_audit$tolerance,
-    engineering_audit_passed = solution$engineering_audit$passed
+    engineering_audit_passed = solution$engineering_audit$passed,
+    terrain_stage = terrain_stage$diagnostics
   )
   coord_list
 }
