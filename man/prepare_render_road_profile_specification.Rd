@@ -8,11 +8,12 @@ prepare_render_road_profile_specification(
   topology,
   terrain_profiles = NULL,
   layer_spacing = 5.5,
-  maximum_grade = 0.07,
+  maximum_grade = 0.15,
   maximum_grade_rate = 0.001,
   curvature_weight = 100,
   grade_weight = 1,
   terrain_reference_weight = 0.001,
+  continuation_grade_tolerance = 0.14,
   underground_reference_depth = NULL,
   underground_reference_weight = 0.001,
   uplift_weight = 1e-05,
@@ -28,7 +29,8 @@ by \code{\link[=normalize_render_road_terrain_profiles]{normalize_render_road_te
 \item{layer_spacing}{Default \code{5.5}. Fallback adjacent-layer clearance in
 metres.}
 
-\item{maximum_grade}{Default \code{0.07}. Maximum absolute longitudinal grade.}
+\item{maximum_grade}{Default \code{0.15}. Maximum absolute longitudinal grade.
+Positive infinity removes the grade bound.}
 
 \item{maximum_grade_rate}{Default \code{1e-3}. Maximum grade change per metre.}
 
@@ -38,6 +40,9 @@ metres.}
 
 \item{terrain_reference_weight}{Default \code{1e-3}. Objective weight toward the
 sampled terrain reference.}
+
+\item{continuation_grade_tolerance}{Default \code{0.14}. Maximum absolute grade
+mismatch at selected road continuations. Continuation height remains exact.}
 
 \item{underground_reference_depth}{Default \code{NULL}, which uses
 \code{layer_spacing}. Terrain-relative reference depth in metres.}

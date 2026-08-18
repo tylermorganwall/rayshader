@@ -1271,6 +1271,7 @@ struct CompilerSpecification {
   double curvature_weight;
   double grade_weight;
   double terrain_reference_weight;
+  double continuation_grade_tolerance;
   double underground_reference_depth;
   double underground_reference_weight;
   double uplift_weight;
@@ -1354,6 +1355,7 @@ struct CompilerSpecification {
     curvature_weight = settings["curvature_weight"];
     grade_weight = settings["grade_weight"];
     terrain_reference_weight = settings["terrain_reference_weight"];
+    continuation_grade_tolerance = settings["continuation_grade_tolerance"];
     underground_reference_depth = settings["underground_reference_depth"];
     underground_reference_weight = settings["underground_reference_weight"];
     uplift_weight = settings["uplift_weight"];
@@ -2424,8 +2426,8 @@ List compile_render_road_profile_problem_cpp(
       constraint.add(
           {control_count + control_a, control_count + control_b},
           {sign_a, -sign_b},
-          0.0,
-          0.0,
+          -specification.continuation_grade_tolerance,
+          specification.continuation_grade_tolerance,
           constraint_continuation_grade,
           component,
           specification.fragment_id[fragment_a],

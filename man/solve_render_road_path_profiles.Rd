@@ -15,6 +15,8 @@ solve_render_road_path_profiles(
   lane_values = NULL,
   layer_height_column = NULL,
   layer_spacing = 5.5,
+  maximum_grade = 0.15,
+  continuation_grade_tolerance = 0.14,
   zscale = 1,
   texture_world_scale = c(1, 1)
 )
@@ -42,6 +44,12 @@ the rendered paths.}
 
 \item{layer_spacing}{Default \code{5.5}. Fallback adjacent-layer clearance in
 metres.}
+
+\item{maximum_grade}{Default \code{0.15}. Maximum absolute longitudinal grade.
+Positive infinity removes the grade bound.}
+
+\item{continuation_grade_tolerance}{Default \code{0.14}. Maximum absolute grade
+mismatch at selected road continuations. Continuation height remains exact.}
 
 \item{zscale}{Effective scene zscale.}
 

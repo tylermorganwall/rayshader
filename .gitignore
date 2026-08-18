@@ -8,6 +8,7 @@ src/*.so
 src/*.dll
 docs
 road-mesh-fuzz-artifacts/
+road-profile-screen-inputs/download-cache/
 
 /.quarto/
 pkgdown/favicon/apple-touch-icon.png

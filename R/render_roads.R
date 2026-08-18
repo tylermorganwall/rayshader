@@ -44,7 +44,7 @@
 #' Roads are grouped by exact physical events and conservative endpoint
 #' continuations. A sparse quadratic profile solve enforces crossing clearance,
 #' physical grade and grade-rate limits, junction height continuity, and
-#' selected through-road grade continuity. Surface roads retain a sampled
+#' selected through-road grade compatibility. Surface roads retain a sampled
 #' terrain reference, elevated spans use endpoint support chords, and roads with
 #' explicit tunnel or underground metadata use a bounded terrain-relative
 #' reference. Untagged negative layers are not independently activated as
@@ -55,6 +55,10 @@
 #' elevation units between locally ordered layers, or an unquoted or character
 #' column name containing each feature's positive separation above the lower
 #' road at an intersection. Column heights override constant layer spacing.
+#' @param maximum_grade Default `0.15`. Maximum absolute longitudinal road
+#' grade. Positive infinity removes the grade bound.
+#' @param continuation_grade_tolerance Default `0.14`. Maximum absolute grade
+#' mismatch at selected road continuations. Continuation height remains exact.
 #' @param merge Default `TRUE`. Whether to merge connected road linework before
 #' rendering. This reduces visible joins between adjacent line features in
 #' [render_highquality()].
@@ -142,7 +146,9 @@ render_roads = function(
   clear_previous = TRUE,
   preview = c("line", "mesh"),
   verbose = FALSE,
-  parallel = TRUE
+  parallel = TRUE,
+  maximum_grade = 0.15,
+  continuation_grade_tolerance = 0.14
 ) {
   # 1. Capture expressions needed to distinguish values from column references.
   heightmap_missing = missing(heightmap)
@@ -296,6 +302,16 @@ render_roads = function(
     TRUE,
     "parallel",
     type = "logical"
+  )
+  maximum_grade = assert_render_road_profile_setting(
+    maximum_grade,
+    "maximum_grade",
+    allow_infinite = TRUE
+  )
+  continuation_grade_tolerance = assert_render_road_profile_setting(
+    continuation_grade_tolerance,
+    "continuation_grade_tolerance",
+    allow_zero = TRUE
   )
   if (!is.null(lane_texture_file)) {
     if (
@@ -576,6 +592,8 @@ render_roads = function(
       },
       layer_height_column = layer_height_spec$column,
       layer_spacing = layer_spacing,
+      maximum_grade = maximum_grade,
+      continuation_grade_tolerance = continuation_grade_tolerance,
       zscale = zscale,
       texture_world_scale = texture_world_scale
     )
@@ -1972,6 +1990,10 @@ condition_render_road_terrain_paths = function(
 #' @param layer_height_column Default `NULL`. Optional clearance column.
 #' @param layer_spacing Default `5.5`. Fallback adjacent-layer clearance in
 #' metres.
+#' @param maximum_grade Default `0.15`. Maximum absolute longitudinal grade.
+#' Positive infinity removes the grade bound.
+#' @param continuation_grade_tolerance Default `0.14`. Maximum absolute grade
+#' mismatch at selected road continuations. Continuation height remains exact.
 #' @param zscale Effective scene zscale.
 #' @param texture_world_scale Two-value x-z multiplier from scene units to
 #' world units.
@@ -1991,6 +2013,8 @@ solve_render_road_path_profiles = function(
   lane_values = NULL,
   layer_height_column = NULL,
   layer_spacing = 5.5,
+  maximum_grade = 0.15,
+  continuation_grade_tolerance = 0.14,
   zscale = 1,
   texture_world_scale = c(1, 1)
 ) {
@@ -2153,7 +2177,9 @@ solve_render_road_path_profiles = function(
   problem = build_render_road_profile_problem(
     topology = topology,
     terrain_profiles = terrain_profiles,
-    layer_spacing = layer_spacing
+    layer_spacing = layer_spacing,
+    maximum_grade = maximum_grade,
+    continuation_grade_tolerance = continuation_grade_tolerance
   )
   solution = solve_render_road_profile_problem(
     problem,
@@ -2206,6 +2232,7 @@ solve_render_road_path_profiles = function(
     maximum_violation = solution$engineering_audit$maximum_violation,
     engineering_tolerance = solution$engineering_audit$tolerance,
     engineering_audit_passed = solution$engineering_audit$passed,
+    settings = problem$settings,
     terrain_stage = terrain_stage$diagnostics
   )
   coord_list
@@ -4994,23 +5021,28 @@ resolve_render_road_overlap_endpoint_distance = function(
 #' @param value Setting value.
 #' @param argument Argument name used in errors.
 #' @param allow_zero Default `FALSE`. Whether zero is valid.
+#' @param allow_infinite Default `FALSE`. Whether positive infinity is valid.
 #'
 #' @return An asserted numeric scalar.
 #' @keywords internal
 assert_render_road_profile_setting = function(
   value,
   argument,
-  allow_zero = FALSE
+  allow_zero = FALSE,
+  allow_infinite = FALSE
 ) {
   if (!is.numeric(value) || length(value) != 1L) {
     stop(sprintf("`%s` must be a single number.", argument), call. = FALSE)
   }
   value = as.numeric(value[[1L]])
-  invalid = !is.finite(value) || if (allow_zero) value < 0 else value <= 0
+  invalid = is.na(value) ||
+    (!allow_infinite && !is.finite(value)) ||
+    if (allow_zero) value < 0 else value <= 0
   if (invalid) {
     qualifier = if (allow_zero) "non-negative" else "positive"
+    finite = if (allow_infinite) "" else " and finite"
     stop(
-      sprintf("`%s` must be %s and finite.", argument, qualifier),
+      sprintf("`%s` must be %s%s.", argument, qualifier, finite),
       call. = FALSE
     )
   }
@@ -5659,12 +5691,15 @@ identify_render_road_profile_anchor_sets = function(
 #' by [normalize_render_road_terrain_profiles()].
 #' @param layer_spacing Default `5.5`. Fallback adjacent-layer clearance in
 #' metres.
-#' @param maximum_grade Default `0.07`. Maximum absolute longitudinal grade.
+#' @param maximum_grade Default `0.15`. Maximum absolute longitudinal grade.
+#' Positive infinity removes the grade bound.
 #' @param maximum_grade_rate Default `1e-3`. Maximum grade change per metre.
 #' @param curvature_weight Default `100`. Objective weight on grade change.
 #' @param grade_weight Default `1`. Objective weight on grade magnitude.
 #' @param terrain_reference_weight Default `1e-3`. Objective weight toward the
 #' sampled terrain reference.
+#' @param continuation_grade_tolerance Default `0.14`. Maximum absolute grade
+#' mismatch at selected road continuations. Continuation height remains exact.
 #' @param underground_reference_depth Default `NULL`, which uses
 #' `layer_spacing`. Terrain-relative reference depth in metres.
 #' @param underground_reference_weight Default `1e-3`. Underground reference
@@ -5679,11 +5714,12 @@ prepare_render_road_profile_specification = function(
   topology,
   terrain_profiles = NULL,
   layer_spacing = 5.5,
-  maximum_grade = 0.07,
+  maximum_grade = 0.15,
   maximum_grade_rate = 1e-3,
   curvature_weight = 100,
   grade_weight = 1,
   terrain_reference_weight = 1e-3,
+  continuation_grade_tolerance = 0.14,
   underground_reference_depth = NULL,
   underground_reference_weight = 1e-3,
   uplift_weight = 1e-5,
@@ -5701,7 +5737,8 @@ prepare_render_road_profile_specification = function(
   )
   maximum_grade = assert_render_road_profile_setting(
     maximum_grade,
-    "maximum_grade"
+    "maximum_grade",
+    allow_infinite = TRUE
   )
   maximum_grade_rate = assert_render_road_profile_setting(
     maximum_grade_rate,
@@ -5720,6 +5757,11 @@ prepare_render_road_profile_specification = function(
   terrain_reference_weight = assert_render_road_profile_setting(
     terrain_reference_weight,
     "terrain_reference_weight",
+    allow_zero = TRUE
+  )
+  continuation_grade_tolerance = assert_render_road_profile_setting(
+    continuation_grade_tolerance,
+    "continuation_grade_tolerance",
     allow_zero = TRUE
   )
   if (is.null(underground_reference_depth)) {
@@ -5750,6 +5792,7 @@ prepare_render_road_profile_specification = function(
     curvature_weight = curvature_weight,
     grade_weight = grade_weight,
     terrain_reference_weight = terrain_reference_weight,
+    continuation_grade_tolerance = continuation_grade_tolerance,
     underground_reference_depth = underground_reference_depth,
     underground_reference_weight = underground_reference_weight,
     uplift_weight = uplift_weight,
@@ -6443,11 +6486,12 @@ build_render_road_profile_problem = function(
   topology,
   terrain_profiles = NULL,
   layer_spacing = 5.5,
-  maximum_grade = 0.07,
+  maximum_grade = 0.15,
   maximum_grade_rate = 1e-3,
   curvature_weight = 100,
   grade_weight = 1,
   terrain_reference_weight = 1e-3,
+  continuation_grade_tolerance = 0.14,
   underground_reference_depth = NULL,
   underground_reference_weight = 1e-3,
   uplift_weight = 1e-5,
@@ -6463,6 +6507,7 @@ build_render_road_profile_problem = function(
     curvature_weight = curvature_weight,
     grade_weight = grade_weight,
     terrain_reference_weight = terrain_reference_weight,
+    continuation_grade_tolerance = continuation_grade_tolerance,
     underground_reference_depth = underground_reference_depth,
     underground_reference_weight = underground_reference_weight,
     uplift_weight = uplift_weight,

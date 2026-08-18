@@ -34,7 +34,9 @@ render_roads(
   clear_previous = TRUE,
   preview = c("line", "mesh"),
   verbose = FALSE,
-  parallel = TRUE
+  parallel = TRUE,
+  maximum_grade = 0.15,
+  continuation_grade_tolerance = 0.14
 )
 }
 \arguments{
@@ -88,7 +90,7 @@ remain distinguishable from explicit OSM layer tags in diagnostics.
 Roads are grouped by exact physical events and conservative endpoint
 continuations. A sparse quadratic profile solve enforces crossing clearance,
 physical grade and grade-rate limits, junction height continuity, and
-selected through-road grade continuity. Surface roads retain a sampled
+selected through-road grade compatibility. Surface roads retain a sampled
 terrain reference, elevated spans use endpoint support chords, and roads with
 explicit tunnel or underground metadata use a bounded terrain-relative
 reference. Untagged negative layers are not independently activated as
@@ -169,6 +171,12 @@ and caching the road meshes.}
 
 \item{parallel}{Default \code{TRUE}. Whether to use multiple native threads while
 building the cached road meshes.}
+
+\item{maximum_grade}{Default \code{0.15}. Maximum absolute longitudinal road
+grade. Positive infinity removes the grade bound.}
+
+\item{continuation_grade_tolerance}{Default \code{0.14}. Maximum absolute grade
+mismatch at selected road continuations. Continuation height remains exact.}
 }
 \value{
 Invisibly returns the rendered road coordinates. When \code{layer} is

@@ -4,7 +4,12 @@
 \alias{assert_render_road_profile_setting}
 \title{Assert one road-profile solver setting}
 \usage{
-assert_render_road_profile_setting(value, argument, allow_zero = FALSE)
+assert_render_road_profile_setting(
+  value,
+  argument,
+  allow_zero = FALSE,
+  allow_infinite = FALSE
+)
 }
 \arguments{
 \item{value}{Setting value.}
@@ -12,6 +17,8 @@ assert_render_road_profile_setting(value, argument, allow_zero = FALSE)
 \item{argument}{Argument name used in errors.}
 
 \item{allow_zero}{Default \code{FALSE}. Whether zero is valid.}
+
+\item{allow_infinite}{Default \code{FALSE}. Whether positive infinity is valid.}
 }
 \value{
 An asserted numeric scalar.
