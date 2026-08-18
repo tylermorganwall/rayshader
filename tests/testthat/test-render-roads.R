@@ -779,6 +779,71 @@ test_that("road offsets use local quadratic transitions", {
   )
 })
 
+test_that("terrain staging samples laterally across steep road sections", {
+  scene_coordinate = seq(-10, 10)
+  cross_slope_heightmap = outer(
+    scene_coordinate,
+    scene_coordinate,
+    function(x, z) 0.5 * x
+  )
+  coordinates = cbind(
+    x = 0,
+    y = 0,
+    z = seq(-8, 8, length.out = 17L)
+  )
+  conditioned = condition_render_road_terrain_path(
+    coordinates = coordinates,
+    width = 4,
+    heightmap = cross_slope_heightmap,
+    zscale = 1,
+    texture_world_scale = c(1, 1)
+  )
+
+  expect_identical(conditioned$regime, "hard")
+  expect_gt(conditioned$hard_point_count, 0L)
+  expect_equal(diff(range(conditioned$coordinates[, 2L])), 0)
+  expect_gte(min(conditioned$coordinates[, 2L]), -1)
+  expect_lte(max(conditioned$coordinates[, 2L]), 1)
+  expect_true(any(abs(conditioned$selected_lateral_fraction) > 0))
+
+  staged = condition_render_road_terrain_paths(
+    coord_list = list(coordinates),
+    coord_width = 4,
+    heightmap = cross_slope_heightmap,
+    zscale = 1,
+    texture_world_scale = c(1, 1)
+  )
+  expect_identical(staged$hard_path, TRUE)
+  expect_equal(staged$diagnostics$hard_path_count, 1L)
+
+  mild_heightmap = outer(
+    scene_coordinate,
+    scene_coordinate,
+    function(x, z) 0.01 * x
+  )
+  mild = condition_render_road_terrain_path(
+    coordinates = coordinates,
+    width = 4,
+    heightmap = mild_heightmap,
+    zscale = 1,
+    texture_world_scale = c(1, 1)
+  )
+  expect_identical(mild$regime, "easy")
+  expect_identical(mild$coordinates, coordinates)
+
+  flat_coordinates = coordinates
+  flat_coordinates[, 2L] = 12
+  flat = condition_render_road_terrain_path(
+    coordinates = flat_coordinates,
+    width = 4,
+    heightmap = matrix(12, 21, 21),
+    zscale = 1,
+    texture_world_scale = c(1, 1)
+  )
+  expect_identical(flat$regime, "easy")
+  expect_identical(flat$coordinates, flat_coordinates)
+})
+
 maximum_test_road_grade = function(coords, zscale = 1) {
   horizontal = sqrt(rowSums(
     (coords[-1L, c(1, 3), drop = FALSE] -
@@ -911,6 +976,8 @@ test_that("render_roads accepts layer and feature height columns", {
     vertical_exaggeration = 1,
     layer = osm_layer,
     layer_height = bridge_height,
+    maximum_grade = 0.12,
+    continuation_grade_tolerance = 0.08,
     lanes = lane_count,
     lane_texture = TRUE
   )
@@ -925,7 +992,17 @@ test_that("render_roads accepts layer and feature height columns", {
   expect_equal(profile_diagnostics$active_fragment_count, 2L)
   expect_equal(profile_diagnostics$solve_component_count, 1L)
   expect_true(profile_diagnostics$engineering_audit_passed)
-  expect_lte(maximum_test_road_grade(road_coords[[2]]), 0.07 + 1e-8)
+  expect_equal(
+    unlist(profile_diagnostics$settings[c(
+      "maximum_grade",
+      "continuation_grade_tolerance"
+    )]),
+    c(
+      maximum_grade = 0.12,
+      continuation_grade_tolerance = 0.08
+    )
+  )
+  expect_lte(maximum_test_road_grade(road_coords[[2]]), 0.12 + 1e-8)
   road_path_ids = get_ids_with_labels(typeval = "road_path")
   terrain_following = vapply(
     road_path_ids$id,

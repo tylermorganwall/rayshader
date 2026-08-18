@@ -97,6 +97,7 @@ build_render_road_profile_test_problem = function(
       terrain_profiles = terrain_profiles,
       layer_spacing = 5.5,
       maximum_grade = 0.07,
+      continuation_grade_tolerance = 0,
       maximum_grade_rate = 1e-3,
       curvature_weight = 100,
       grade_weight = 1,
@@ -108,6 +109,76 @@ build_render_road_profile_test_problem = function(
   do.call(build_render_road_profile_problem, arguments)
 }
 
+test_that("render_roads exposes only the accepted profile controls", {
+  arguments = formals(render_roads)
+
+  expect_identical(arguments$maximum_grade, 0.15)
+  expect_identical(arguments$continuation_grade_tolerance, 0.14)
+  expect_false(any(
+    c(
+      "maximum_grade_relaxed",
+      "maximum_grade_rate_relaxed",
+      "continuation_grade_tolerance_relaxed",
+      "terrain_reference_weight_relaxed"
+    ) %in%
+      names(arguments)
+  ))
+})
+
+test_that("accepted road-profile settings apply globally", {
+  skip_render_road_profile_test_dependencies()
+
+  roads = make_render_road_profile_test_roads(
+    lines = list(
+      make_render_road_profile_test_line(c(-20, 0, 0, 0)),
+      make_render_road_profile_test_line(c(0, 0, 20, 0)),
+      make_render_road_profile_test_line(c(-10, -20, -10, 20))
+    ),
+    layer = c(0, 0, 1),
+    way_id = c("surface", "surface", "bridge")
+  )
+  topology = build_render_road_profile_test_topology(roads)
+
+  problem = build_render_road_profile_problem(
+    topology,
+    maximum_grade = 0.15,
+    continuation_grade_tolerance = 0.14
+  )
+  grade = problem$constraints[
+    problem$constraints$type == "grade_bound",
+  ]
+  continuation = problem$constraints[
+    problem$constraints$type == "continuation_grade",
+  ]
+
+  expect_identical(problem$settings[["maximum_grade"]], 0.15)
+  expect_identical(
+    problem$settings[["continuation_grade_tolerance"]],
+    0.14
+  )
+  expect_true(nrow(grade) > 0L)
+  expect_equal(grade$lower, rep(-0.15, nrow(grade)))
+  expect_equal(grade$upper, rep(0.15, nrow(grade)))
+  expect_true(nrow(continuation) > 0L)
+  expect_equal(continuation$lower, rep(-0.14, nrow(continuation)))
+  expect_equal(continuation$upper, rep(0.14, nrow(continuation)))
+
+  strict = build_render_road_profile_problem(
+    topology,
+    maximum_grade = 0.07,
+    continuation_grade_tolerance = 0
+  )
+  strict_grade = strict$constraints[
+    strict$constraints$type == "grade_bound",
+  ]
+  strict_continuation = strict$constraints[
+    strict$constraints$type == "continuation_grade",
+  ]
+  expect_equal(strict_grade$lower, rep(-0.07, nrow(strict_grade)))
+  expect_equal(strict_grade$upper, rep(0.07, nrow(strict_grade)))
+  expect_equal(strict_continuation$lower, rep(0, nrow(strict_continuation)))
+  expect_equal(strict_continuation$upper, rep(0, nrow(strict_continuation)))
+})
 
 test_that("surface equality closure stops after one terminal partner", {
   skip_render_road_profile_test_dependencies()
@@ -378,7 +449,9 @@ test_that("terrain-relative heights retain physical road grades", {
     )
     build_render_road_profile_problem(
       topology,
-      terrain_profiles = terrain_profiles
+      terrain_profiles = terrain_profiles,
+      maximum_grade = 0.07,
+      continuation_grade_tolerance = 0
     )
   }
 
@@ -461,7 +534,9 @@ test_that("terrain-relative profile problems preserve large elevation shifts", {
     )
     build_render_road_profile_problem(
       topology,
-      terrain_profiles = terrain_profiles
+      terrain_profiles = terrain_profiles,
+      maximum_grade = 0.07,
+      continuation_grade_tolerance = 0
     )
   }
 
@@ -503,7 +578,9 @@ test_that("junctions share physical heights across terrain references", {
   )
   problem = build_render_road_profile_problem(
     topology,
-    terrain_profiles = terrain_profiles
+    terrain_profiles = terrain_profiles,
+    maximum_grade = 0.07,
+    continuation_grade_tolerance = 0
   )
   solution = solve_render_road_profile_problem(
     problem,
