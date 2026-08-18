@@ -4,12 +4,12 @@
 \alias{person_obj}
 \title{Resolve a Bundled Person OBJ}
 \usage{
-person_obj(pose = "standing", gender = "male")
+person_obj(pose = "standing", sex = "male")
 }
 \arguments{
 \item{pose}{Default \code{"standing"}. Name of a bundled person pose.}
 
-\item{gender}{Default \code{"male"}. Person model variant.}
+\item{sex}{Default \code{"male"}. Person model variant.}
 }
 \value{
 Path to the bundled OBJ file, stored with a \code{.txt} extension for R

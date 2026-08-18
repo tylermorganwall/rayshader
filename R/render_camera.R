@@ -1,13 +1,32 @@
 #'@title Render Camera
 #'
-#'@description Changes the position and properties of the camera around the scene. If no
-#'values are entered, prints and returns the current values.
+#'@description Changes the position and properties of the camera around the
+#'scene. `location`, or `lat` and `long`, can move the camera's look-at target to
+#'a geographic point using the active scene's cached CRS, extent, heightmap, and
+#'effective z-scale. If no values are entered, prints and returns the current
+#'camera values.
 #'
 #'@param theta Defaults to current value. Rotation angle.
 #'@param phi Defaults to current value. Azimuth angle. Maximum `90`.
 #'@param zoom Defaults to current value. Positive value indicating camera magnification.
 #'@param fov Defaults to current value. Field of view of the camera. Maximum `180`.
 #'@param shift_vertical Default `0`. Amount to shift the viewpoint.
+#'@param location Default `NULL`. A single spatial POINT to use as the camera's
+#'look-at target. Accepts `sf`, `sfc`, `sfg`, and `sp` inputs. The point is
+#'transformed to the active scene CRS. If the input contains a Z coordinate or
+#'an `altitude`, `alt`, `elevation`, or `z` column, that value sets the target
+#'height; otherwise, the target height is sampled from the cached heightmap.
+#'Cannot be combined with `lat` or `long`.
+#'@param lat Default `NULL`. Latitude in WGS84 decimal degrees for the camera's
+#'look-at target. Must be supplied with `long`.
+#'@param long Default `NULL`. Longitude in WGS84 decimal degrees for the
+#'camera's look-at target. Must be supplied with `lat`.
+#'@param altitude Default `NULL`. Elevation of the look-at target in the scene's
+#'elevation units. The value is converted to rgl coordinates using the cached
+#'effective z-scale. Requires `location` or both `lat` and `long`. When supplied
+#'with `location`, it overrides elevation embedded in the spatial input.
+#'@param panel Default `NULL`. Facet panel identifier for scenes created with
+#'[plot_gg()]. Required when the cached scene contains multiple panels.
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'montereybay_spatial |>
@@ -19,6 +38,11 @@
 #'render_camera(theta = -45, phi = 45)
 #'render_snapshot(title_text = "Monterey Bay, CA",
 #'                title_bar_color = "grey50")
+#'
+#'#Move the camera's look-at target to Moss Landing using the cached scene CRS.
+#'if (requireNamespace("sf", quietly = TRUE)) {
+#'  render_camera(lat = 36.806807, long = -121.793332, altitude = 100)
+#'}
 #'
 #'#Shift to an overhead view (and change the text/title bar color)
 #'render_camera(theta = 0, phi = 89.9, zoom = 0.9)
@@ -68,15 +92,52 @@ render_camera = function(
   phi = NULL,
   zoom = NULL,
   fov = NULL,
-  shift_vertical = 0
+  shift_vertical = 0,
+  location = NULL,
+  lat = NULL,
+  long = NULL,
+  altitude = NULL,
+  panel = NULL
 ) {
-  if (is.null(theta) && is.null(phi) && is.null(zoom) && is.null(fov)) {
+  has_location = !is.null(location)
+  has_lat = !is.null(lat)
+  has_long = !is.null(long)
+  if (has_location && (has_lat || has_long)) {
+    stop("Use either `location` or `lat` and `long`, not both.", call. = FALSE)
+  }
+  if (xor(has_lat, has_long)) {
+    stop("`lat` and `long` must be supplied together.", call. = FALSE)
+  }
+  has_lookat = has_location || (has_lat && has_long)
+  if (!is.null(altitude) && !has_lookat) {
+    stop(
+      "`altitude` requires `location` or both `lat` and `long`.",
+      call. = FALSE
+    )
+  }
+  if (
+    is.null(theta) &&
+      is.null(phi) &&
+      is.null(zoom) &&
+      is.null(fov) &&
+      !has_lookat
+  ) {
     allmissing = TRUE
   } else {
     allmissing = FALSE
   }
   if (rgl::cur3d() == 0) {
     stop("No rgl window currently open.")
+  }
+  camera_lookat = NULL
+  if (has_lookat) {
+    camera_lookat = resolve_render_camera_lookat(
+      location = location,
+      lat = lat,
+      long = long,
+      altitude = altitude,
+      panel = panel
+    )
   }
   if (is.null(fov)) {
     fov = rgl::par3d()$FOV
@@ -101,6 +162,20 @@ render_camera = function(
     }
   }
   rgl::view3d(theta = theta, phi = phi, fov = fov, zoom = zoom)
+  if (!is.null(camera_lookat)) {
+    user_matrix = rgl::par3d("userMatrix")
+    scene_bbox = rgl::par3d("bbox")
+    scene_center = c(
+      mean(scene_bbox[1:2]),
+      mean(scene_bbox[3:4]),
+      mean(scene_bbox[5:6])
+    )
+    scene_scale = rgl::par3d("scale")
+    target_translation = user_matrix[1:3, 1:3] %*%
+      ((scene_center - camera_lookat) * scene_scale)
+    user_matrix[1:3, 4] = as.numeric(target_translation)
+    rgl::par3d(userMatrix = user_matrix)
+  }
   if (shift_vertical != 0) {
     rgl::par3d(
       userMatrix = t(rgl::translationMatrix(0, -shift_vertical, 0)) %*%
@@ -111,4 +186,46 @@ render_camera = function(
     return(c("theta" = theta, "phi" = phi, "zoom" = zoom, "fov" = fov))
   }
   invisible(NULL)
+}
+
+#' Resolve a Render Camera Look-At Target
+#'
+#' @param location Default `NULL`. A single spatial POINT.
+#' @param lat Default `NULL`. Latitude in WGS84 decimal degrees.
+#' @param long Default `NULL`. Longitude in WGS84 decimal degrees.
+#' @param altitude Default `NULL`. Elevation in the scene's elevation units.
+#' @param panel Default `NULL`. Facet panel identifier.
+#'
+#' @return A length-three numeric vector in rgl scene coordinates.
+#' @keywords internal
+resolve_render_camera_lookat = function(
+  location = NULL,
+  lat = NULL,
+  long = NULL,
+  altitude = NULL,
+  panel = NULL
+) {
+  heightmap = resolve_scene_render_heightmap(caller = "render_camera")
+  target_crs = get_scene_target_crs(
+    heightmap = heightmap,
+    panel = panel,
+    caller = "render_camera"
+  )
+  if (is.null(target_crs)) {
+    stop(
+      "render_camera(): The active scene has no cached CRS for a geographic look-at target.",
+      call. = FALSE
+    )
+  }
+  camera_input = if (!is.null(location)) {
+    list(location = location, altitude = altitude, panel = panel)
+  } else {
+    list(lat = lat, long = long, altitude = altitude, panel = panel)
+  }
+  resolve_render_highquality_camera_point(
+    camera_input,
+    arg_name = if (is.null(location)) "lat/long" else "location",
+    bbox_center = NULL,
+    caller = "render_camera"
+  )
 }

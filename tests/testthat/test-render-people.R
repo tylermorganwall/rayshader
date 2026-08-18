@@ -1,4 +1,4 @@
-test_that("person_obj() resolves every bundled pose and gender", {
+test_that("person_obj() resolves every bundled pose and sex", {
   poses = c(
     "clapping",
     "ironman",
@@ -14,14 +14,14 @@ test_that("person_obj() resolves every bundled pose and gender", {
   )
   models = expand.grid(
     pose = poses,
-    gender = c("male", "female"),
+    sex = c("male", "female"),
     stringsAsFactors = FALSE
   )
 
   paths = vapply(
     seq_len(nrow(models)),
     function(i) {
-      rayshader:::person_obj(models$pose[i], models$gender[i])
+      rayshader:::person_obj(models$pose[i], models$sex[i])
     },
     character(1)
   )
@@ -32,11 +32,31 @@ test_that("person_obj() resolves every bundled pose and gender", {
   expect_true(all(grepl("raypeople", paths, fixed = TRUE)))
   expect_match(rayshader:::person_obj("rocky"), "person_man_yay\\.txt$")
   expect_match(
+    rayshader:::person_obj("slipping"),
+    "person_man_stack\\.txt$"
+  )
+  expect_match(
+    rayshader:::person_obj("stack"),
+    "person_man_slipping\\.txt$"
+  )
+  expect_match(
     rayshader:::person_obj("slip", "female"),
-    "person_woman_slipping\\.txt$"
+    "person_woman_stack\\.txt$"
   )
   expect_error(rayshader:::person_obj("sitting"), "should be one of")
-  expect_error(rayshader:::person_obj(gender = "robot"), "should be one of")
+  expect_error(rayshader:::person_obj(sex = "robot"), "should be one of")
+})
+
+test_that("render_people() orders its placement arguments consistently", {
+  expect_identical(
+    head(names(formals(render_people)), 3),
+    c("location", "x", "y")
+  )
+  expect_false("type" %in% names(formals(render_people)))
+  expect_false("gender" %in% names(formals(render_people)))
+  expect_false(
+    "gender" %in% names(formals(rayshader:::resolve_person_sex))
+  )
 })
 
 test_that("person patterns repeat in placement order", {
@@ -343,9 +363,9 @@ test_that("render_people() patterns and orients models along a line", {
 
   calls = list()
   expect_no_condition(render_people(
-    location = line,
+    line,
     pose = "stretch",
-    gender = "female",
+    sex = "female",
     spacing = 5
   ))
   expect_length(calls, 1)
@@ -499,7 +519,7 @@ test_that("render_people() preserves the native person scale", {
   )
 })
 
-test_that("render_people() selects genders and clears only prior people", {
+test_that("render_people() selects sexes and clears only prior people", {
   on.exit(rgl::close3d(), add = TRUE)
   local_rgl_use_null()
 
@@ -521,7 +541,7 @@ test_that("render_people() selects genders and clears only prior people", {
     y = 10,
     extent = extent,
     pose = "standing",
-    gender = "male",
+    sex = "male",
     altitude = 0,
     clear_previous = TRUE,
     lit = FALSE
@@ -531,7 +551,7 @@ test_that("render_people() selects genders and clears only prior people", {
     y = 10,
     extent = extent,
     pose = "walking",
-    gender = "female",
+    sex = "female",
     altitude = 0,
     lit = FALSE
   )
@@ -542,7 +562,7 @@ test_that("render_people() selects genders and clears only prior people", {
     y = 10,
     extent = extent,
     pose = "clapping",
-    type = "female",
+    sex = "female",
     altitude = 0,
     clear_previous = TRUE,
     lit = FALSE
@@ -584,4 +604,79 @@ test_that("render_people() renders patterned stretch models along a line", {
     lit = FALSE
   ))
   expect_equal(sum(get_ids_with_labels()$tag == "objperson"), 2)
+})
+
+test_that("render_people() stacks altitude vectors at one spatial point", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("raster")
+  on.exit(rgl::close3d(), add = TRUE)
+  local_rgl_use_null()
+
+  washington_monument_people = sf::st_point(c(-77.035249, 38.889462)) |>
+    sf::st_sfc(crs = 4326)
+  monument_xy = sf::st_coordinates(
+    sf::st_transform(washington_monument_people, 3857)
+  )[1, ]
+  elevation = suppressWarnings(raster::raster(
+    nrows = 20,
+    ncols = 20,
+    xmn = monument_xy[1] - 1000,
+    xmx = monument_xy[1] + 1000,
+    ymn = monument_xy[2] - 1000,
+    ymx = monument_xy[2] + 1000,
+    crs = "EPSG:3857"
+  ))
+  raster::values(elevation) = 0
+  heightmap = raster_to_matrix(elevation)
+  expect_no_condition(plot_3d_test(
+    sphere_shade(heightmap),
+    elevation,
+    zscale = 1,
+    shadow = FALSE,
+    water = FALSE,
+    windowsize = c(250, 250)
+  ))
+
+  altitudes = seq(0, 500, by = 2)
+  expect_no_warning(render_people(
+    location = washington_monument_people,
+    altitude = altitudes,
+    pose = "stack",
+    color = "black",
+    lit = FALSE
+  ))
+
+  person_ids = get_ids_with_labels()
+  person_id = person_ids$id[person_ids$tag == "objperson"][1]
+  person_vertices = rgl::rgl.attrib(person_id, "vertices")
+  stack_mesh = rayvertex::read_obj(rayshader:::person_obj("stack"))
+  native_vertices = stack_mesh$vertices[[1]]
+  placement = transform_into_heightmap_coords(
+    extent = get_scene_extent(),
+    heightmap = get_scene_heightmap(),
+    lat = monument_xy[2],
+    long = monument_xy[1],
+    altitude = 0,
+    zscale = get_scene_effective_zscale(),
+    transform_scene = FALSE
+  )[1, ]
+
+  expect_equal(
+    range(person_vertices[, 1]),
+    range(native_vertices[, 1]) + placement[1],
+    tolerance = 1e-6
+  )
+  expect_equal(
+    range(person_vertices[, 3]),
+    range(native_vertices[, 3]) + placement[3],
+    tolerance = 1e-6
+  )
+  expect_equal(
+    range(person_vertices[, 2]),
+    c(
+      min(native_vertices[, 2]) + min(altitudes),
+      max(native_vertices[, 2]) + max(altitudes)
+    ),
+    tolerance = 1e-6
+  )
 })

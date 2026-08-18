@@ -9,7 +9,12 @@ render_camera(
   phi = NULL,
   zoom = NULL,
   fov = NULL,
-  shift_vertical = 0
+  shift_vertical = 0,
+  location = NULL,
+  lat = NULL,
+  long = NULL,
+  altitude = NULL,
+  panel = NULL
 )
 }
 \arguments{
@@ -22,10 +27,34 @@ render_camera(
 \item{fov}{Defaults to current value. Field of view of the camera. Maximum \code{180}.}
 
 \item{shift_vertical}{Default \code{0}. Amount to shift the viewpoint.}
+
+\item{location}{Default \code{NULL}. A single spatial POINT to use as the camera's
+look-at target. Accepts \code{sf}, \code{sfc}, \code{sfg}, and \code{sp} inputs. The point is
+transformed to the active scene CRS. If the input contains a Z coordinate or
+an \code{altitude}, \code{alt}, \code{elevation}, or \code{z} column, that value sets the target
+height; otherwise, the target height is sampled from the cached heightmap.
+Cannot be combined with \code{lat} or \code{long}.}
+
+\item{lat}{Default \code{NULL}. Latitude in WGS84 decimal degrees for the camera's
+look-at target. Must be supplied with \code{long}.}
+
+\item{long}{Default \code{NULL}. Longitude in WGS84 decimal degrees for the
+camera's look-at target. Must be supplied with \code{lat}.}
+
+\item{altitude}{Default \code{NULL}. Elevation of the look-at target in the scene's
+elevation units. The value is converted to rgl coordinates using the cached
+effective z-scale. Requires \code{location} or both \code{lat} and \code{long}. When supplied
+with \code{location}, it overrides elevation embedded in the spatial input.}
+
+\item{panel}{Default \code{NULL}. Facet panel identifier for scenes created with
+\code{\link[=plot_gg]{plot_gg()}}. Required when the cached scene contains multiple panels.}
 }
 \description{
-Changes the position and properties of the camera around the scene. If no
-values are entered, prints and returns the current values.
+Changes the position and properties of the camera around the
+scene. \code{location}, or \code{lat} and \code{long}, can move the camera's look-at target to
+a geographic point using the active scene's cached CRS, extent, heightmap, and
+effective z-scale. If no values are entered, prints and returns the current
+camera values.
 }
 \examples{
 \dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
@@ -38,6 +67,11 @@ render_snapshot()
 render_camera(theta = -45, phi = 45)
 render_snapshot(title_text = "Monterey Bay, CA",
                title_bar_color = "grey50")
+
+#Move the camera's look-at target to Moss Landing using the cached scene CRS.
+if (requireNamespace("sf", quietly = TRUE)) {
+ render_camera(lat = 36.806807, long = -121.793332, altitude = 100)
+}
 
 #Shift to an overhead view (and change the text/title bar color)
 render_camera(theta = 0, phi = 89.9, zoom = 0.9)

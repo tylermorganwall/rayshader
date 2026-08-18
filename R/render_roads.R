@@ -4217,6 +4217,29 @@ select_render_road_continuations = function(
     )
   })
   candidates = do.call(rbind, candidate_rows)
+
+  # An exact node containing only two road endpoints is already an unambiguous
+  # topological continuation. Do not let a sharp bend split a named road into
+  # independently solved and independently capped meshes. Direction remains a
+  # required discriminator at multi-branch nodes and across nonzero gaps.
+  exact_rows = which(candidates$exact_endpoint)
+  exact_endpoint_count = table(c(
+    candidates$endpoint_a[exact_rows],
+    candidates$endpoint_b[exact_rows]
+  ))
+  exact_degree_two = candidates$exact_endpoint &
+    exact_endpoint_count[as.character(candidates$endpoint_a)] == 1L &
+    exact_endpoint_count[as.character(candidates$endpoint_b)] == 1L
+  continuity_evidence = candidates$same_way |
+    candidates$same_ref |
+    candidates$same_name |
+    (candidates$same_highway & candidates$same_lanes)
+  bypass_direction_cutoff = exact_degree_two & continuity_evidence
+  candidates$eligible[bypass_direction_cutoff] = TRUE
+  candidates$status[bypass_direction_cutoff] = "candidate"
+  candidates$selection_reason[bypass_direction_cutoff] =
+    "exact_degree_two_continuation"
+
   endpoint_selection = select_render_road_endpoint_candidate(
     candidates,
     endpoints,

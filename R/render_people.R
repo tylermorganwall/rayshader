@@ -5,7 +5,7 @@
 #' scene's effective `zscale`, including `vertical_exaggeration`, so that their
 #' native two-meter stature remains correctly sized relative to the terrain.
 #' Choose from several bundled poses with `pose` and select the model variant
-#' with `gender`. The bundled Wavefront OBJ models use `.txt` file extensions
+#' with `sex`. The bundled Wavefront OBJ models use `.txt` file extensions
 #' for R package compatibility.
 #'
 #' When `line` is supplied, or `location` contains line geometry, people are
@@ -17,6 +17,12 @@
 #' `options(rayshader.verbose_scene_cache = TRUE)` to print when cached metadata
 #' is reused.
 #'
+#' @param location Default `NULL`. Spatial input used to place people in the
+#' scene. Accepts `sf`, `sfc`, `sfg`, or `sp` POINT, MULTIPOINT, LINESTRING, or
+#' MULTILINESTRING geometries. Point inputs place one model at every point. Line
+#' inputs generate placements according to `spacing`. If the input carries a
+#' CRS, it is transformed automatically into the active scene CRS. If it has no
+#' CRS, supply `crs`.
 #' @param x Default `NULL`. Vector of x coordinates (or coordinates in the same
 #' coordinate reference system as `extent`).
 #' @param y Default `NULL`. Vector of y coordinates (or coordinates in the same
@@ -34,9 +40,8 @@
 #' `"stop_one_hand"`, `"stretch"`, `"walking"`, `"yay"`, and `"yelling"`.
 #' The legacy names `"slip"`, `"rocky"`, and `"yell"` remain aliases for
 #' `"slipping"`, `"yay"`, and `"yelling"`, respectively.
-#' @param gender Default `"male"`. Person model variant. Options are `"male"`
+#' @param sex Default `"male"`. Person model variant. Options are `"male"`
 #' and `"female"`.
-#' @param type Default `NULL`. Alias for `gender`.
 #' @param line Default `NULL`. Spatial line input along which to place people.
 #' Accepts `sf`, `sfc`, `sfg`, or `sp` LINESTRING or MULTILINESTRING geometry.
 #' Line geometry may alternatively be supplied through `location`.
@@ -50,14 +55,16 @@
 #' use plan-view distance.
 #' @param pattern Default `NULL`. Repeating male/female pattern used for line
 #' placement. Supply a single string containing `M` and `F`, such as `"MF"` or
-#' `"FMF"`. Overrides `gender` for line placements.
+#' `"FMF"`. Overrides `sex` for line placements.
 #' @param align_to_terrain Default `TRUE`. If `TRUE`, line placements are tilted
 #' so each person's local +Y up vector matches the terrain normal. The local +Z
 #' forward vector is lifted along the terrain without changing its plan-view
 #' alignment with the line direction.
 #' @param altitude Default `NULL`. Elevation of each person, in units of the
 #' elevation matrix. If left `NULL`, each person is placed on the surface plus
-#' `offset`. A single value places every person at that altitude.
+#' `offset`. A single value places every person at that altitude. When one
+#' horizontal location is supplied with multiple altitude values, that location
+#' is repeated to place one person at each altitude.
 #' @param xyz Default `NULL`. A three-column numeric matrix in which each row
 #' specifies the raw rgl x/y/z coordinates of a person. Overrides coordinate
 #' placement and `altitude`.
@@ -87,12 +94,6 @@
 #' people before rendering the new ones.
 #' @param lat Default `NULL`. Alias for `y` for geographic workflows.
 #' @param long Default `NULL`. Alias for `x` for geographic workflows.
-#' @param location Default `NULL`. Spatial input used to place people in the
-#' scene. Accepts `sf`, `sfc`, `sfg`, or `sp` POINT, MULTIPOINT, LINESTRING, or
-#' MULTILINESTRING geometries. Point inputs place one model at every point. Line
-#' inputs generate placements according to `spacing`. If the input carries a
-#' CRS, it is transformed automatically into the active scene CRS. If it has no
-#' CRS, supply `crs`.
 #' @param crs Default `NULL`. CRS of numeric x/y coordinates, or a CRS to assign
 #' to CRS-less spatial data before transforming it into the active scene CRS.
 #' @param filter_to_extent Default `TRUE`. If `TRUE`, placements outside the
@@ -104,30 +105,23 @@
 #'@examplesIf length(find.package("sf", quiet = TRUE)) && length(find.package("elevatr", quiet = TRUE)) && length(find.package("raster", quiet = TRUE)) && (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true"))
 #'library(sf)
 #'#Set location of washington monument
-#'washington_monument_location =  st_point(c(-77.035249, 38.889462))
+#'washington_monument_location = st_point(c(-77.035249, 38.889462))
 #'wm_point = washington_monument_location |>
 #'  st_point() |>
 #'  st_sfc(crs = 4326) |>
 #'  st_transform(st_crs(washington_monument_multipolygonz))
 #'
+#'washington_monument_people = st_point(c(-77.03525, 38.88945)) |>
+#'   st_sfc(crs = 4326)
 #'elevation_data = elevatr::get_elev_raster(locations = wm_point, z = 14)
 #'
 #'scene_bbox = st_bbox(st_buffer(wm_point,300))
 #'cropped_data = raster::crop(elevation_data, scene_bbox)
 #'
-#'#Use rayshader to convert that raster data to a matrix
-#'dc_elevation_matrix = raster_to_matrix(cropped_data)
-#'
-#'#Remove negative elevation data
-#'dc_elevation_matrix[dc_elevation_matrix < 0] = 0
-#'
 #'#Plot a 3D map of the national mall
-#'dc_elevation_matrix |>
+#'cropped_data |>
 #'  height_shade() |>
-#'  add_shadow(lamb_shade(), 0) |>
-#'  plot_3d(zscale=3.7, water = TRUE, waterdepth = 1,
-#'          soliddepth=-50, windowsize = 800,
-#'          extent = raster::extent(cropped_data))
+#'  plot_3d(soliddepth=-10, windowsize = 800)
 #'render_snapshot()
 #'#Zoom in on the monument
 #'render_camera(theta=150,  phi=35, zoom= 0.55, fov=70)
@@ -135,10 +129,12 @@
 #'rgl::par3d(ignoreExtent = TRUE)
 #'render_multipolygonz(washington_monument_multipolygonz,
 #'                     zscale = 4, color = "grey80")
+#'render_camera(location = washington_monument_people)
 #'render_snapshot()
 #'#This works with `render_highquality()`
 #'render_highquality(min_variance = 0, samples = 16)
-#' render_people(x = 25, y = 25, pose = "walking")
+#' render_people(location = washington_monument_people,
+#' pose = "stack", altitude = seq(0,170,by=2))
 #' @examplesIf length(find.package("sf", quiet = TRUE)) > 0 && (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true"))
 #' # Arrange alternating models around a closed line. The stretch pose extends
 #' # along local Z, so automatic line orientation creates a hands-around-the-world
@@ -188,18 +184,18 @@
 #'   color = c("dodgerblue", "tomato"), clear_previous=T
 #' )
 #' render_people(
-#'   y = 15.5,
 #'   x = 15.5,
+#'   y = 15.5,
 #'   pose = "rocky", color="white"
 #' )
 render_people = function(
-  y = NULL,
+  location = NULL,
   x = NULL,
+  y = NULL,
   extent = NULL,
   panel = NULL,
   pose = "standing",
-  gender = "male",
-  type = NULL,
+  sex = "male",
   line = NULL,
   spacing = 2,
   terrain_spacing = TRUE,
@@ -219,7 +215,6 @@ render_people = function(
   clear_previous = FALSE,
   lat = NULL,
   long = NULL,
-  location = NULL,
   crs = NULL,
   filter_to_extent = TRUE,
   ...
@@ -238,13 +233,8 @@ render_people = function(
   ) {
     stop("`terrain_spacing` must be a single logical value.", call. = FALSE)
   }
-  gender_missing = missing(gender)
   pose = resolve_person_pose(pose)
-  gender = resolve_person_gender(
-    gender = gender,
-    type = type,
-    gender_missing = gender_missing
-  )
+  sex = resolve_person_sex(sex)
   line_input = resolve_person_line_input(line = line, location = location)
   line_mode = !is.null(line_input)
   if (line_mode) {
@@ -300,15 +290,15 @@ render_people = function(
     if (!is.null(line_samples$panel)) {
       panel = line_samples$panel
     }
-    person_genders = resolve_person_pattern(
+    person_sexes = resolve_person_pattern(
       pattern = pattern,
       n = length(line_samples$x),
-      gender = gender
+      sex = sex
     )
     person_colors = resolve_person_pattern_colors(
       color = color,
       pattern = pattern,
-      n = length(person_genders)
+      n = length(person_sexes)
     )
     automatic_angles = if (isTRUE(align_to_terrain)) {
       person_terrain_line_angles(
@@ -329,18 +319,18 @@ render_people = function(
       automatic_angle = automatic_angles
     )
     rendered_group = FALSE
-    for (group_gender in unique(person_genders)) {
-      group_index = which(person_genders == group_gender)
+    for (group_sex in unique(person_sexes)) {
+      group_index = which(person_sexes == group_sex)
       render_people_obj(
-        filename = person_obj(pose, group_gender),
+        filename = person_obj(pose, group_sex),
         extent = extent,
         panel = panel,
-        y = line_samples$y[group_index],
         x = line_samples$x[group_index],
+        y = line_samples$y[group_index],
         altitude = subset_render_arg(
           altitude,
-          seq_along(person_genders) %in% group_index,
-          length(person_genders)
+          seq_along(person_sexes) %in% group_index,
+          length(person_sexes)
         ),
         zscale = effective_zscale,
         vertical_exaggeration = 1,
@@ -349,13 +339,13 @@ render_people = function(
         load_normals = load_normals,
         color = subset_render_color_arg(
           person_colors,
-          seq_along(person_genders) %in% group_index,
-          length(person_genders)
+          seq_along(person_sexes) %in% group_index,
+          length(person_sexes)
         ),
         offset = subset_render_arg(
           offset,
-          seq_along(person_genders) %in% group_index,
-          length(person_genders)
+          seq_along(person_sexes) %in% group_index,
+          length(person_sexes)
         ),
         obj_zscale = FALSE,
         swap_yz = FALSE,
@@ -374,11 +364,11 @@ render_people = function(
     return(invisible(NULL))
   }
   render_people_obj(
-    filename = person_obj(pose, gender),
+    filename = person_obj(pose, sex),
     extent = extent,
     panel = panel,
-    y = y,
     x = x,
+    y = y,
     altitude = altitude,
     xyz = xyz,
     zscale = effective_zscale,
@@ -407,26 +397,32 @@ render_people = function(
 #' Resolve a Bundled Person OBJ
 #'
 #' @param pose Default `"standing"`. Name of a bundled person pose.
-#' @param gender Default `"male"`. Person model variant.
+#' @param sex Default `"male"`. Person model variant.
 #'
 #' @return Path to the bundled OBJ file, stored with a `.txt` extension for R
 #' package compatibility.
 #' @keywords internal
-person_obj = function(pose = "standing", gender = "male") {
+person_obj = function(pose = "standing", sex = "male") {
   pose = resolve_person_pose(pose)
-  gender = resolve_person_gender(gender)
-  file_gender = if (gender == "male") "man" else "woman"
+  sex = resolve_person_sex(sex)
+  file_sex = if (sex == "male") "man" else "woman"
+  file_pose = switch(
+    pose,
+    slipping = "stack",
+    stack = "slipping",
+    pose
+  )
   path = system.file(
     "extdata",
     "raypeople",
-    paste0("person_", file_gender, "_", pose, ".txt"),
+    paste0("person_", file_sex, "_", file_pose, ".txt"),
     package = "rayshader"
   )
   if (!nzchar(path)) {
     stop(
       sprintf(
         "The bundled %s OBJ for pose %s could not be found.",
-        gender,
+        sex,
         shQuote(pose)
       ),
       call. = FALSE
@@ -471,47 +467,30 @@ resolve_person_pose = function(pose) {
   pose
 }
 
-#' Resolve a Person Gender
+#' Resolve a Person Sex
 #'
-#' @param gender Default `"male"`. Person model variant.
-#' @param type Default `NULL`. Alias for `gender`.
-#' @param gender_missing Default `FALSE`. Whether `gender` was omitted.
+#' @param sex Default `"male"`. Person model variant.
 #'
-#' @return Canonical gender name.
+#' @return Canonical sex name.
 #' @keywords internal
-resolve_person_gender = function(
-  gender = "male",
-  type = NULL,
-  gender_missing = FALSE
-) {
-  normalize_gender = function(value, argument) {
-    if (
-      !is.character(value) ||
-        length(value) != 1 ||
-        is.na(value) ||
-        !nzchar(value)
-    ) {
-      stop(
-        sprintf("`%s` must be either \"male\" or \"female\".", argument),
-        call. = FALSE
-      )
-    }
-    value = tolower(value)
-    aliases = c(man = "male", woman = "female")
-    if (value %in% names(aliases)) {
-      value = unname(aliases[[value]])
-    }
-    match.arg(value, c("male", "female"))
+resolve_person_sex = function(sex = "male") {
+  if (
+    !is.character(sex) ||
+      length(sex) != 1 ||
+      is.na(sex) ||
+      !nzchar(sex)
+  ) {
+    stop(
+      "`sex` must be either \"male\" or \"female\".",
+      call. = FALSE
+    )
   }
-  resolved_gender = normalize_gender(gender, "gender")
-  if (!is.null(type)) {
-    resolved_type = normalize_gender(type, "type")
-    if (!isTRUE(gender_missing) && resolved_gender != resolved_type) {
-      stop("Use only one of `gender` or `type`.", call. = FALSE)
-    }
-    resolved_gender = resolved_type
+  sex = tolower(sex)
+  aliases = c(man = "male", woman = "female")
+  if (sex %in% names(aliases)) {
+    sex = unname(aliases[[sex]])
   }
-  resolved_gender
+  match.arg(sex, c("male", "female"))
 }
 
 #' Detect Person Line Input
@@ -1328,13 +1307,13 @@ resolve_person_line_angles = function(
 #'
 #' @param pattern Default `NULL`. String containing `M` and `F`.
 #' @param n Number of people.
-#' @param gender Default `"male"`. Fallback gender when `pattern` is `NULL`.
+#' @param sex Default `"male"`. Fallback sex when `pattern` is `NULL`.
 #'
-#' @return Character vector of canonical gender names.
+#' @return Character vector of canonical sex names.
 #' @keywords internal
-resolve_person_pattern = function(pattern = NULL, n, gender = "male") {
+resolve_person_pattern = function(pattern = NULL, n, sex = "male") {
   if (is.null(pattern)) {
-    return(rep(resolve_person_gender(gender), n))
+    return(rep(resolve_person_sex(sex), n))
   }
   if (
     !is.character(pattern) ||
@@ -1351,8 +1330,8 @@ resolve_person_pattern = function(pattern = NULL, n, gender = "male") {
   if (any(!pattern_values %in% c("M", "F"))) {
     stop("`pattern` may contain only M and F.", call. = FALSE)
   }
-  pattern_genders = ifelse(pattern_values == "M", "male", "female")
-  rep(pattern_genders, length.out = n)
+  pattern_sexes = ifelse(pattern_values == "M", "male", "female")
+  rep(pattern_sexes, length.out = n)
 }
 
 #' Resolve Repeating Person Pattern Colors

@@ -58,7 +58,9 @@ for non-ggplot scenes.}
 
 \item{altitude}{Default \code{NULL}. Elevation of each point, in units of the elevation matrix (scaled by \code{zscale}).
 If left \code{NULL}, this will be just the elevation value at ths surface, offset by \code{offset}. If a single value,
-the OBJ will be rendered at that altitude.}
+the OBJ will be rendered at that altitude. When one horizontal location is
+supplied with multiple altitude values, that location is repeated to place one
+OBJ at each altitude.}
 
 \item{xyz}{Default \code{NULL}, ignored. A 3 column numeric matrix, with each row specifying the x/y/z
 coordinates of the OBJ model(s). Overrides x/y, lat/long, and altitude and ignores extent to plot the OBJ in raw rgl coordinates.}

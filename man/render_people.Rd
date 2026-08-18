@@ -5,13 +5,13 @@
 \title{Render People}
 \usage{
 render_people(
-  y = NULL,
+  location = NULL,
   x = NULL,
+  y = NULL,
   extent = NULL,
   panel = NULL,
   pose = "standing",
-  gender = "male",
-  type = NULL,
+  sex = "male",
   line = NULL,
   spacing = 2,
   terrain_spacing = TRUE,
@@ -31,17 +31,23 @@ render_people(
   clear_previous = FALSE,
   lat = NULL,
   long = NULL,
-  location = NULL,
   crs = NULL,
   filter_to_extent = TRUE,
   ...
 )
 }
 \arguments{
-\item{y}{Default \code{NULL}. Vector of y coordinates (or coordinates in the same
-coordinate reference system as \code{extent}).}
+\item{location}{Default \code{NULL}. Spatial input used to place people in the
+scene. Accepts \code{sf}, \code{sfc}, \code{sfg}, or \code{sp} POINT, MULTIPOINT, LINESTRING, or
+MULTILINESTRING geometries. Point inputs place one model at every point. Line
+inputs generate placements according to \code{spacing}. If the input carries a
+CRS, it is transformed automatically into the active scene CRS. If it has no
+CRS, supply \code{crs}.}
 
 \item{x}{Default \code{NULL}. Vector of x coordinates (or coordinates in the same
+coordinate reference system as \code{extent}).}
+
+\item{y}{Default \code{NULL}. Vector of y coordinates (or coordinates in the same
 coordinate reference system as \code{extent}).}
 
 \item{extent}{Default \code{NULL}. Either an object representing the spatial
@@ -60,10 +66,8 @@ panel-specific cached metadata is needed. Ignored for non-ggplot scenes.}
 The legacy names \code{"slip"}, \code{"rocky"}, and \code{"yell"} remain aliases for
 \code{"slipping"}, \code{"yay"}, and \code{"yelling"}, respectively.}
 
-\item{gender}{Default \code{"male"}. Person model variant. Options are \code{"male"}
+\item{sex}{Default \code{"male"}. Person model variant. Options are \code{"male"}
 and \code{"female"}.}
-
-\item{type}{Default \code{NULL}. Alias for \code{gender}.}
 
 \item{line}{Default \code{NULL}. Spatial line input along which to place people.
 Accepts \code{sf}, \code{sfc}, \code{sfg}, or \code{sp} LINESTRING or MULTILINESTRING geometry.
@@ -81,7 +85,7 @@ use plan-view distance.}
 
 \item{pattern}{Default \code{NULL}. Repeating male/female pattern used for line
 placement. Supply a single string containing \code{M} and \code{F}, such as \code{"MF"} or
-\code{"FMF"}. Overrides \code{gender} for line placements.}
+\code{"FMF"}. Overrides \code{sex} for line placements.}
 
 \item{align_to_terrain}{Default \code{TRUE}. If \code{TRUE}, line placements are tilted
 so each person's local +Y up vector matches the terrain normal. The local +Z
@@ -90,7 +94,9 @@ alignment with the line direction.}
 
 \item{altitude}{Default \code{NULL}. Elevation of each person, in units of the
 elevation matrix. If left \code{NULL}, each person is placed on the surface plus
-\code{offset}. A single value places every person at that altitude.}
+\code{offset}. A single value places every person at that altitude. When one
+horizontal location is supplied with multiple altitude values, that location
+is repeated to place one person at each altitude.}
 
 \item{xyz}{Default \code{NULL}. A three-column numeric matrix in which each row
 specifies the raw rgl x/y/z coordinates of a person. Overrides coordinate
@@ -134,13 +140,6 @@ people before rendering the new ones.}
 
 \item{long}{Default \code{NULL}. Alias for \code{x} for geographic workflows.}
 
-\item{location}{Default \code{NULL}. Spatial input used to place people in the
-scene. Accepts \code{sf}, \code{sfc}, \code{sfg}, or \code{sp} POINT, MULTIPOINT, LINESTRING, or
-MULTILINESTRING geometries. Point inputs place one model at every point. Line
-inputs generate placements according to \code{spacing}. If the input carries a
-CRS, it is transformed automatically into the active scene CRS. If it has no
-CRS, supply \code{crs}.}
-
 \item{crs}{Default \code{NULL}. CRS of numeric x/y coordinates, or a CRS to assign
 to CRS-less spatial data before transforming it into the active scene CRS.}
 
@@ -156,7 +155,7 @@ bundled person models use meter-based coordinates and are scaled using the
 scene's effective \code{zscale}, including \code{vertical_exaggeration}, so that their
 native two-meter stature remains correctly sized relative to the terrain.
 Choose from several bundled poses with \code{pose} and select the model variant
-with \code{gender}. The bundled Wavefront OBJ models use \code{.txt} file extensions
+with \code{sex}. The bundled Wavefront OBJ models use \code{.txt} file extensions
 for R package compatibility.
 
 When \code{line} is supplied, or \code{location} contains line geometry, people are
@@ -172,30 +171,23 @@ is reused.
 \dontshow{if (length(find.package("sf", quiet = TRUE)) && length(find.package("elevatr", quiet = TRUE)) && length(find.package("raster", quiet = TRUE)) && (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true"))) withAutoprint(\{ # examplesIf}
 library(sf)
 #Set location of washington monument
-washington_monument_location =  st_point(c(-77.035249, 38.889462))
+washington_monument_location = st_point(c(-77.035249, 38.889462))
 wm_point = washington_monument_location |>
  st_point() |>
  st_sfc(crs = 4326) |>
  st_transform(st_crs(washington_monument_multipolygonz))
 
+washington_monument_people = st_point(c(-77.03525, 38.88945)) |>
+  st_sfc(crs = 4326)
 elevation_data = elevatr::get_elev_raster(locations = wm_point, z = 14)
 
 scene_bbox = st_bbox(st_buffer(wm_point,300))
 cropped_data = raster::crop(elevation_data, scene_bbox)
 
-#Use rayshader to convert that raster data to a matrix
-dc_elevation_matrix = raster_to_matrix(cropped_data)
-
-#Remove negative elevation data
-dc_elevation_matrix[dc_elevation_matrix < 0] = 0
-
 #Plot a 3D map of the national mall
-dc_elevation_matrix |>
+cropped_data |>
  height_shade() |>
- add_shadow(lamb_shade(), 0) |>
- plot_3d(zscale=3.7, water = TRUE, waterdepth = 1,
-         soliddepth=-50, windowsize = 800,
-         extent = raster::extent(cropped_data))
+ plot_3d(soliddepth=-10, windowsize = 800)
 render_snapshot()
 #Zoom in on the monument
 render_camera(theta=150,  phi=35, zoom= 0.55, fov=70)
@@ -203,10 +195,12 @@ render_camera(theta=150,  phi=35, zoom= 0.55, fov=70)
 rgl::par3d(ignoreExtent = TRUE)
 render_multipolygonz(washington_monument_multipolygonz,
                     zscale = 4, color = "grey80")
+render_camera(location = washington_monument_people)
 render_snapshot()
 #This works with `render_highquality()`
 render_highquality(min_variance = 0, samples = 16)
-render_people(x = 25, y = 25, pose = "walking")
+render_people(location = washington_monument_people,
+pose = "stack", altitude = seq(0,170,by=2))
 \dontshow{\}) # examplesIf}
 \dontshow{if (length(find.package("sf", quiet = TRUE)) > 0 && (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true"))) withAutoprint(\{ # examplesIf}
 # Arrange alternating models around a closed line. The stretch pose extends
@@ -257,8 +251,8 @@ render_people(
   color = c("dodgerblue", "tomato"), clear_previous=T
 )
 render_people(
-  y = 15.5,
   x = 15.5,
+  y = 15.5,
   pose = "rocky", color="white"
 )
 \dontshow{\}) # examplesIf}

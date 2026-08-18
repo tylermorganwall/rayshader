@@ -318,6 +318,112 @@ test_that("terminal junction branches retain through-road continuations", {
   ))
 })
 
+test_that("exact degree-two road bends bypass the direction cutoff", {
+  skip_render_road_profile_test_dependencies(solver = TRUE)
+
+  turn_angle = 35 * pi / 180
+  roads = make_render_road_profile_test_roads(
+    lines = list(
+      make_render_road_profile_test_line(c(-100, 0, 0, 0)),
+      make_render_road_profile_test_line(c(
+        0,
+        0,
+        100 * cos(turn_angle),
+        100 * sin(turn_angle)
+      ))
+    ),
+    layer = c(0, 1),
+    way_id = c("surface-way", "bridge-way")
+  )
+  roads$ref = "1109"
+  roads$name = "Beatenbergstrasse"
+  roads$highway = "tertiary"
+  roads$lanes = 2L
+  roads$render_road_path_feature_index = seq_len(nrow(roads))
+
+  topology = build_render_road_profile_test_topology(roads)
+  continuation = topology$selected_continuations
+
+  expect_equal(nrow(continuation), 1L)
+  expect_lt(continuation$direction_score, cos(pi / 6))
+  expect_identical(
+    continuation$selection_reason,
+    "exact_degree_two_continuation"
+  )
+
+  mesh_topology = build_render_road_path_mesh_topology(
+    topology = topology,
+    coord_feature = 1:2,
+    valid_path = c(TRUE, TRUE)
+  )
+  expect_equal(nrow(mesh_topology$selected_connections), 1L)
+  expect_true(mesh_topology$selected_connections$mesh_chain_eligible)
+  expect_identical(
+    mesh_topology$selected_connections$connection_type,
+    "longitudinal_layer_transition"
+  )
+
+  problem = build_render_road_profile_test_problem(
+    topology,
+    terrain_elevation = c(0, 10),
+    terrain_spacing = 5,
+    settings = list(
+      maximum_grade = 0.15,
+      continuation_grade_tolerance = 0.14
+    )
+  )
+  solution = solve_render_road_profile_problem(
+    problem,
+    maximum_iterations = 100000
+  )
+  continuation = solution$problem$continuation_equalities
+  expect_equal(nrow(continuation), 1L)
+  expect_equal(
+    solution$controls$height[continuation$control_a],
+    solution$controls$height[continuation$control_b],
+    tolerance = 1e-6
+  )
+})
+
+test_that("direction still selects through roads at multi-branch nodes", {
+  skip_render_road_profile_test_dependencies()
+
+  turn_angle = 35 * pi / 180
+  roads = make_render_road_profile_test_roads(
+    lines = list(
+      make_render_road_profile_test_line(c(-100, 0, 0, 0)),
+      make_render_road_profile_test_line(c(0, 0, 100, 0)),
+      make_render_road_profile_test_line(c(
+        0,
+        0,
+        100 * cos(turn_angle),
+        100 * sin(turn_angle)
+      ))
+    ),
+    layer = c(0, 0, 0),
+    way_id = c("incoming", "straight", "bend")
+  )
+  roads$ref = "shared-ref"
+  roads$name = "Shared road"
+  roads$lanes = 2L
+
+  topology = build_render_road_profile_test_topology(roads)
+  selected_fragment = c(
+    topology$selected_continuations$fragment_a,
+    topology$selected_continuations$fragment_b
+  )
+  fragment_way = stats::setNames(
+    topology$fragments$render_road_way_id,
+    topology$fragments$render_road_fragment_id
+  )
+
+  expect_equal(nrow(topology$selected_continuations), 1L)
+  expect_setequal(
+    unname(fragment_way[as.character(selected_fragment)]),
+    c("incoming", "straight")
+  )
+})
+
 test_that("surface continuations propagate without endpoint anchors", {
   skip_render_road_profile_test_dependencies()
 

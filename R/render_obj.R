@@ -27,7 +27,9 @@
 #'@param location Default `NULL`. Spatial point input used to place the rendered object(s) in the scene. Accepts `sf`, `sfc`, `sfg`, or `sp` POINT or MULTIPOINT geometries. MULTIPOINT inputs are flattened to point placements internally, and vectorized arguments such as `scale`, `angle`, `color`, and `altitude` are applied against that flattened point count. If the input carries a CRS, it will be transformed automatically into the active scene CRS. If it has no CRS, supply `crs`.
 #'@param altitude Default `NULL`. Elevation of each point, in units of the elevation matrix (scaled by `zscale`).
 #'If left `NULL`, this will be just the elevation value at ths surface, offset by `offset`. If a single value,
-#'the OBJ will be rendered at that altitude.
+#'the OBJ will be rendered at that altitude. When one horizontal location is
+#'supplied with multiple altitude values, that location is repeated to place one
+#'OBJ at each altitude.
 #'@param xyz Default `NULL`, ignored. A 3 column numeric matrix, with each row specifying the x/y/z
 #'coordinates of the OBJ model(s). Overrides x/y, lat/long, and altitude and ignores extent to plot the OBJ in raw rgl coordinates.
 #'@param load_material Default `TRUE`. Whether to load the accompanying MTL file to load materials for the 3D model.
@@ -193,6 +195,16 @@ render_obj = function(
   )
   x = point_input$x
   y = point_input$y
+  if (
+    is.null(xyz) &&
+      !is.null(altitude) &&
+      length(altitude) > 1 &&
+      length(x) == 1 &&
+      length(y) == 1
+  ) {
+    x = rep(x, length(altitude))
+    y = rep(y, length(altitude))
+  }
   lat = y
   long = x
   input_crs = if (is.null(crs)) point_input$source_crs else crs
