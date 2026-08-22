@@ -35,7 +35,8 @@
 #' @param panel Default `NULL`. Facet panel identifier for scenes created with
 #' [plot_gg()]. Required to disambiguate faceted ggplot scenes when
 #' panel-specific cached metadata is needed. Ignored for non-ggplot scenes.
-#' @param pose Default `"standing"`. Bundled pose to render. Options are
+#' @param pose Default `"standing"`. Bundled pose to render. Supply one value
+#' for every person or a single value to use for all people. Options are
 #' `"clapping"`, `"ironman"`, `"slipping"`, `"stack"`, `"standing"`, `"stop"`,
 #' `"stop_one_hand"`, `"stretch"`, `"walking"`, `"rocky"`, and `"yelling"`.
 #' @param sex Default `"male"`. Person model variant. Options are `"male"`
@@ -274,9 +275,10 @@
 #'   color = c("dodgerblue", "tomato"), clear_previous=T
 #' )
 #' render_people(
-#'   x = 15.5,
-#'   y = 15.5,
-#'   pose = "rocky", color="white"
+#'   x = c(13.5, 15.5, 17.5),
+#'   y = rep(15.5, 3),
+#'   pose = c("standing", "rocky", "walking"),
+#'   color = "white"
 #' )
 render_people = function(
   location = NULL,
@@ -394,6 +396,7 @@ render_people = function(
       n = length(line_samples$x),
       sex = sex
     )
+    person_poses = expand_person_poses(pose, length(person_sexes))
     person_colors = resolve_person_pattern_colors(
       color = color,
       pattern = pattern,
@@ -417,11 +420,14 @@ render_people = function(
       line_angle = line_samples$angle,
       automatic_angle = automatic_angles
     )
-    rendered_group = FALSE
-    for (group_sex in unique(person_sexes)) {
-      group_index = which(person_sexes == group_sex)
+    person_groups = paste(person_poses, person_sexes, sep = "\r")
+    for (person_group in unique(person_groups)) {
+      group_index = which(person_groups == person_group)
       render_people_obj(
-        filename = person_obj(pose, group_sex),
+        filename = person_obj(
+          person_poses[group_index[1]],
+          person_sexes[group_index[1]]
+        ),
         extent = extent,
         panel = panel,
         x = line_samples$x[group_index],
@@ -458,7 +464,112 @@ render_people = function(
         filter_to_extent = filter_to_extent,
         transform_scene = FALSE
       )
-      rendered_group = TRUE
+    }
+    return(invisible(NULL))
+  }
+  if (length(pose) > 1L) {
+    point_input = resolve_render_location_input(
+      location = location,
+      x = x,
+      y = y,
+      long = long,
+      lat = lat,
+      missing_x = missing(x),
+      missing_y = missing(y),
+      missing_long = missing(long),
+      missing_lat = missing(lat),
+      extent = extent,
+      heightmap = heightmap,
+      panel = panel,
+      crs = crs,
+      caller = "render_people"
+    )
+    x = point_input$x
+    y = point_input$y
+    if (!is.null(point_input$extent)) {
+      extent = point_input$extent
+    }
+    if (!is.null(point_input$panel)) {
+      panel = point_input$panel
+    }
+    location_supplied = isTRUE(point_input$location_supplied)
+    input_crs = if (is.null(crs)) point_input$source_crs else crs
+    if (location_supplied) {
+      input_crs = NULL
+    }
+    if (
+      is.null(xyz) &&
+        !is.null(altitude) &&
+        length(altitude) > 1L &&
+        length(x) == 1L &&
+        length(y) == 1L
+    ) {
+      x = rep(x, length(altitude))
+      y = rep(y, length(altitude))
+    }
+    if (!is.null(xyz)) {
+      if (!is.matrix(xyz) || !is.numeric(xyz) || ncol(xyz) != 3L) {
+        stop(
+          "`xyz` must be a numeric matrix with three columns.",
+          call. = FALSE
+        )
+      }
+      n_people = nrow(xyz)
+    } else {
+      if (is.null(x) || is.null(y)) {
+        stop(
+          "Vectorized `pose` requires point locations or `xyz` coordinates.",
+          call. = FALSE
+        )
+      }
+      if (length(x) != length(y)) {
+        stop("`x` and `y` must have the same length.", call. = FALSE)
+      }
+      n_people = length(x)
+    }
+    person_poses = expand_person_poses(pose, n_people)
+    person_groups = paste(person_poses, sex, sep = "\r")
+    for (person_group in unique(person_groups)) {
+      group_index = which(person_groups == person_group)
+      render_people_obj(
+        filename = person_obj(person_poses[group_index[1]], sex),
+        extent = extent,
+        panel = panel,
+        x = subset_render_arg_by_index(x, group_index, n_people),
+        y = subset_render_arg_by_index(y, group_index, n_people),
+        altitude = subset_render_arg_by_index(
+          altitude,
+          group_index,
+          n_people
+        ),
+        xyz = subset_render_arg_by_index(xyz, group_index, n_people),
+        zscale = effective_zscale,
+        vertical_exaggeration = 1,
+        heightmap = heightmap,
+        load_material = FALSE,
+        load_normals = load_normals,
+        color = subset_render_color_arg(
+          color,
+          seq_len(n_people) %in% group_index,
+          n_people
+        ),
+        offset = subset_render_arg_by_index(offset, group_index, n_people),
+        obj_zscale = FALSE,
+        swap_yz = FALSE,
+        angle = subset_render_row_arg(
+          angle,
+          seq_len(n_people) %in% group_index,
+          n_people
+        ),
+        scale = person_scale,
+        clear_previous = FALSE,
+        baseshape = baseshape,
+        lit = lit,
+        rgl_tag = "person",
+        crs = input_crs,
+        filter_to_extent = filter_to_extent,
+        transform_scene = !location_supplied
+      )
     }
     return(invisible(NULL))
   }
@@ -503,6 +614,9 @@ render_people = function(
 #' @keywords internal
 person_obj = function(pose = "standing", sex = "male") {
   pose = resolve_person_pose(pose)
+  if (length(pose) != 1L) {
+    stop("`pose` must be a single pose name.", call. = FALSE)
+  }
   sex = resolve_person_sex(sex)
   file_sex = if (sex == "male") "man" else "woman"
   file_pose = switch(
@@ -533,9 +647,9 @@ person_obj = function(pose = "standing", sex = "male") {
 
 #' Resolve a Person Pose
 #'
-#' @param pose Name of a bundled person pose.
+#' @param pose Names of bundled person poses.
 #'
-#' @return Canonical pose name.
+#' @return Canonical pose names.
 #' @keywords internal
 resolve_person_pose = function(pose) {
   poses = c(
@@ -553,19 +667,39 @@ resolve_person_pose = function(pose) {
   )
   if (
     !is.character(pose) ||
-      length(pose) != 1 ||
-      is.na(pose) ||
-      !nzchar(pose)
+      !length(pose) ||
+      anyNA(pose) ||
+      any(!nzchar(pose))
   ) {
-    stop("`pose` must be a single non-empty character value.", call. = FALSE)
+    stop("`pose` must contain non-empty character values.", call. = FALSE)
   }
-  if (!(pose %in% poses)) {
+  if (any(!pose %in% poses)) {
     stop(
       paste0(
         "`pose` should be one of ",
         paste(shQuote(poses), collapse = ", "),
         "."
       ),
+      call. = FALSE
+    )
+  }
+  pose
+}
+
+#' Expand Person Poses
+#'
+#' @param pose Validated person pose names.
+#' @param n Number of people being rendered.
+#'
+#' @return One pose name per person.
+#' @keywords internal
+expand_person_poses = function(pose, n) {
+  if (length(pose) == 1L) {
+    return(rep(pose, n))
+  }
+  if (length(pose) != n) {
+    stop(
+      "`pose` must contain one value or one value per person.",
       call. = FALSE
     )
   }
