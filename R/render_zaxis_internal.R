@@ -202,7 +202,6 @@ project_zaxis_point_screen_x = function(point) {
 }
 
 render_zaxis_internal = function(
-  zaxis = FALSE,
   extent = NULL,
   zscale = 1,
   heightmap = NULL,
@@ -223,11 +222,8 @@ render_zaxis_internal = function(
   zaxis_corner_offset = NULL,
   zaxis_tick_size = NULL
 ) {
-  if (!isTRUE(zaxis)) {
-    return(invisible(NULL))
-  }
   if (is.null(extent)) {
-    stop("If `zaxis = TRUE`, `extent` must be provided.")
+    stop("`extent` must be provided to render the z-axis.")
   }
 
   extent_vals = get_extent(extent)

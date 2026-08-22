@@ -1,4 +1,4 @@
-test_that("render_points() can add a styled z-axis outside a specified corner", {
+test_that("render_zaxis() adds a styled axis after rendering points", {
   on.exit(rgl::close3d(), add = TRUE)
   local_rgl_use_null()
 
@@ -24,8 +24,12 @@ test_that("render_points() can add a styled z-axis outside a specified corner", 
     x = c(10, 20),
     extent = extent,
     heightmap = heightmap,
+    zscale = 10
+  ))
+  expect_no_condition(render_zaxis(
+    extent = extent,
+    heightmap = heightmap,
     zscale = 10,
-    zaxis = TRUE,
     zaxis_location = "bottomleft",
     zaxis_breaks = c(0, 25, 50),
     zaxis_labels = c("0", "25", "50"),
@@ -74,11 +78,12 @@ test_that("render_points() can add a styled z-axis outside a specified corner", 
   expect_true(any(abs(tick_verts[, 2] - axis_verts[1, 2]) <= 1e-6))
 
   expect_no_condition(render_points(
+    clear_previous = TRUE
+  ))
+  expect_no_condition(render_zaxis(
     extent = extent,
     heightmap = heightmap,
     zscale = 10,
-    clear_previous = TRUE,
-    zaxis = TRUE,
     zaxis_location = "bottomright",
     zaxis_breaks = c(0, 25, 50),
     zaxis_labels = c("0", "25", "50")
@@ -89,6 +94,34 @@ test_that("render_points() can add a styled z-axis outside a specified corner", 
   expect_equal(unname(label_adj_right[1]), 0)
   label_text_right = rgl::rgl.attrib(label_id_right, "texts")[1]
   expect_true(grepl("^\\s", label_text_right))
+})
+
+test_that("render_zaxis() is the only renderer that accepts axis arguments", {
+  render_environment = asNamespace("rayshader")
+  render_names = grep(
+    "^render_",
+    getNamespaceExports("rayshader"),
+    value = TRUE
+  )
+  other_render_names = setdiff(render_names, "render_zaxis")
+
+  for (render_name in other_render_names) {
+    render_function = get(render_name, envir = render_environment)
+    expect_false(any(startsWith(names(formals(render_function)), "zaxis")))
+  }
+
+  expect_false("..." %in% names(formals(render_points)))
+  expect_false("..." %in% names(formals(render_path)))
+  expect_false(exists(
+    "render_zaxis_from_dots",
+    envir = render_environment,
+    inherits = FALSE
+  ))
+  expect_false(exists(
+    "split_zaxis_dots",
+    envir = render_environment,
+    inherits = FALSE
+  ))
 })
 
 test_that("render_zaxis() accepts fractional text offsets", {
@@ -567,12 +600,8 @@ test_that("render_zaxis() can use cached polygon data-column values", {
     bottom = 0,
     data_column_top = "ALAND",
     scale_data = 2,
-    parallel = FALSE,
-    zaxis = TRUE,
-    zaxis_data = "polygon",
-    zaxis_breaks = c(10, 20)
+    parallel = FALSE
   ))
-  expect_true(any(get_ids_with_labels()$tag == "zaxis_axis"))
 
   out = render_zaxis(
     extent = extent,
@@ -581,6 +610,7 @@ test_that("render_zaxis() can use cached polygon data-column values", {
     zaxis_data = "polygon",
     zaxis_breaks = c(10, 20)
   )
+  expect_true(any(get_ids_with_labels()$tag == "zaxis_axis"))
 
   ids = get_ids_with_labels()
   tick_id = ids$id[ids$tag == "zaxis_ticks"][1]
@@ -1055,8 +1085,10 @@ test_that("ggplot z-axis defaults to panel placement", {
     x = c(2, 4),
     y = c(15, 30),
     extent = ext,
-    altitude = 100,
-    zaxis = TRUE,
+    altitude = 100
+  ))
+  expect_no_condition(render_zaxis(
+    extent = ext,
     zaxis_breaks = c(0, 50, 100)
   ))
 
@@ -1134,8 +1166,10 @@ test_that("ggplot z-axis supports explicit panel corners", {
     x = c(2, 4),
     y = c(15, 30),
     extent = ext,
-    altitude = 100,
-    zaxis = TRUE,
+    altitude = 100
+  ))
+  expect_no_condition(render_zaxis(
+    extent = ext,
     zaxis_location = "paneltopright",
     zaxis_breaks = c(0, 50, 100)
   ))
@@ -1190,8 +1224,10 @@ test_that("ggplot panel inset omits zero marker", {
     x = c(2, 4),
     y = c(15, 30),
     extent = ext,
-    altitude = 100,
-    zaxis = TRUE,
+    altitude = 100
+  ))
+  expect_no_condition(render_zaxis(
+    extent = ext,
     zaxis_location = "panelbottomleft",
     zaxis_breaks = c(0, 50, 100)
   ))
@@ -1210,7 +1246,7 @@ test_that("ggplot panel inset omits zero marker", {
   expect_false(any(label_texts == "0"))
 })
 
-test_that("render_points() validates z-axis labels length", {
+test_that("render_zaxis() validates z-axis labels length", {
   on.exit(rgl::close3d(), add = TRUE)
   local_rgl_use_null()
 
@@ -1231,14 +1267,18 @@ test_that("render_points() validates z-axis labels length", {
     ymin = 0,
     ymax = ncol(heightmap)
   )
+  expect_no_condition(render_points(
+    y = c(10, 20),
+    x = c(10, 20),
+    extent = extent,
+    heightmap = heightmap,
+    zscale = 10
+  ))
   expect_error(
-    render_points(
-      y = c(10, 20),
-      x = c(10, 20),
+    render_zaxis(
       extent = extent,
       heightmap = heightmap,
       zscale = 10,
-      zaxis = TRUE,
       zaxis_breaks = c(0, 25, 50),
       zaxis_labels = c("0", "25")
     ),
@@ -1246,7 +1286,7 @@ test_that("render_points() validates z-axis labels length", {
   )
 })
 
-test_that("render_contours() forwards z-axis options", {
+test_that("render_zaxis() adds an axis after rendering contours", {
   on.exit(rgl::close3d(), add = TRUE)
   local_rgl_use_null()
 
@@ -1264,8 +1304,17 @@ test_that("render_contours() forwards z-axis options", {
   expect_no_condition(render_contours(
     heightmap = heightmap,
     zscale = 10,
-    nlevels = 5,
-    zaxis = TRUE,
+    nlevels = 5
+  ))
+  expect_no_condition(render_zaxis(
+    extent = c(
+      xmin = 0,
+      xmax = nrow(heightmap),
+      ymin = 0,
+      ymax = ncol(heightmap)
+    ),
+    heightmap = heightmap,
+    zscale = 10,
     zaxis_location = "topright",
     zaxis_breaks = c(0, 50, 100),
     zaxis_labels = c("sea", "mid", "high"),

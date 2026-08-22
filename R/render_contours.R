@@ -17,9 +17,9 @@
 #'@param palette Default `NULL`. Overrides `color`. Either a function that returns a color palette
 #'of `n` colors, or a character vector with colors that specifies each color manually.
 #'@param offset Default `5`. Offset of the track from the surface, if `altitude = NULL`.
-#'@param clear_previous Default `FALSE`. If `TRUE`, it will clear all existing paths.
-#'@param ... Optional z-axis arguments passed to [render_zaxis()], such as
-#'`zaxis = TRUE`, `zaxis_location`, `zaxis_breaks`, and `zaxis_labels`.
+#'@param clear_previous Default `FALSE`. If `TRUE`, clears all existing
+#'contours. A clear-only call returns without rendering a replacement.
+#'@param ... Additional arguments passed to `rgl::lines3d()`.
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Add contours to the montereybay_spatial dataset
@@ -71,7 +71,16 @@ render_contours = function(
   clear_previous = FALSE,
   ...
 ) {
-  zaxis_split = split_zaxis_dots(list(...))
+  if (
+    is_render_clear_only_call(
+      clear_previous,
+      match.call(),
+      function() rgl::pop3d(tag = "contour3d")
+    )
+  ) {
+    return(invisible(NULL))
+  }
+  contour_args = list(...)
   zscale = resolve_scene_render_effective_zscale(
     zscale = zscale,
     zscale_missing = missing(zscale),
@@ -79,12 +88,6 @@ render_contours = function(
     vertical_exaggeration_missing = missing(vertical_exaggeration),
     caller = "render_contours"
   )
-  if (clear_previous) {
-    rgl::pop3d(tag = "contour3d")
-    if (missing(heightmap) && is.null(get_scene_heightmap(default = NULL))) {
-      return(invisible())
-    }
-  }
   heightmap = resolve_scene_render_heightmap(
     heightmap,
     caller = "render_contours"
@@ -164,7 +167,7 @@ render_contours = function(
             antialias = antialias,
             color = color[i]
           ),
-          zaxis_split$other_args
+          contour_args
         )
       )
     }
@@ -196,14 +199,9 @@ render_contours = function(
           antialias = antialias,
           color = color
         ),
-        zaxis_split$other_args
+        contour_args
       )
     )
   }
-  render_zaxis_from_dots(
-    zaxis_args = zaxis_split$zaxis_args,
-    extent = extent_heightmap,
-    zscale = zscale,
-    heightmap = heightmap
-  )
+  invisible(NULL)
 }

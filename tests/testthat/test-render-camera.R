@@ -92,6 +92,40 @@ test_that("render_camera() looks at WGS84 coordinates and spatial points", {
   )
   expect_equal(rgl::par3d("zoom"), 0.7, tolerance = 1e-6)
   expect_equal(rgl::par3d("FOV"), 50, tolerance = 1e-6)
+
+  target_altitude = 250
+  expected_altitude_lookat = transform_into_heightmap_coords(
+    extent = get_scene_extent(),
+    heightmap = get_scene_heightmap(),
+    lat = scene_xy[, 2],
+    long = scene_xy[, 1],
+    altitude = target_altitude,
+    zscale = get_scene_effective_zscale(),
+    transform_scene = FALSE,
+    caller = "test"
+  )[1, ]
+  expect_equal(expected_altitude_lookat[2], 50)
+
+  expect_no_condition(render_camera(
+    lat = target_lat,
+    long = target_long,
+    altitude = target_altitude
+  ))
+  expect_equal(
+    render_camera_lookat_from_rgl_test(),
+    unname(expected_altitude_lookat),
+    tolerance = 1e-6
+  )
+
+  expect_no_condition(render_camera(
+    location = target,
+    altitude = target_altitude
+  ))
+  expect_equal(
+    render_camera_lookat_from_rgl_test(),
+    unname(expected_altitude_lookat),
+    tolerance = 1e-6
+  )
 })
 
 test_that("render_camera() validates geographic look-at targets", {
@@ -111,6 +145,10 @@ test_that("render_camera() validates geographic look-at targets", {
   expect_error(
     render_camera(location = target, lat = 0.006, long = 0.0045),
     "either `location` or `lat` and `long`"
+  )
+  expect_error(
+    render_camera(altitude = 100),
+    "requires `location` or both `lat` and `long`"
   )
 
   multiple_targets = rbind(target, target)

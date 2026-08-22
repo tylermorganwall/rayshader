@@ -37,9 +37,7 @@
 #' panel-specific cached metadata is needed. Ignored for non-ggplot scenes.
 #' @param pose Default `"standing"`. Bundled pose to render. Options are
 #' `"clapping"`, `"ironman"`, `"slipping"`, `"stack"`, `"standing"`, `"stop"`,
-#' `"stop_one_hand"`, `"stretch"`, `"walking"`, `"yay"`, and `"yelling"`.
-#' The legacy names `"slip"`, `"rocky"`, and `"yell"` remain aliases for
-#' `"slipping"`, `"yay"`, and `"yelling"`, respectively.
+#' `"stop_one_hand"`, `"stretch"`, `"walking"`, `"rocky"`, and `"yelling"`.
 #' @param sex Default `"male"`. Person model variant. Options are `"male"`
 #' and `"female"`.
 #' @param line Default `NULL`. Spatial line input along which to place people.
@@ -91,7 +89,8 @@
 #' @param lit Default `TRUE`. Whether to light the model polygons.
 #' @param load_normals Default `TRUE`. Whether to load normals from the model.
 #' @param clear_previous Default `FALSE`. If `TRUE`, remove previously rendered
-#' people before rendering the new ones.
+#' people before rendering the new ones. A clear-only call returns without
+#' rendering a replacement.
 #' @param lat Default `NULL`. Alias for `y` for geographic workflows.
 #' @param long Default `NULL`. Alias for `x` for geographic workflows.
 #' @param crs Default `NULL`. CRS of numeric x/y coordinates, or a CRS to assign
@@ -111,8 +110,8 @@
 #'  st_sfc(crs = 4326) |>
 #'  st_transform(st_crs(washington_monument_multipolygonz))
 #'
-#'washington_monument_people = st_point(c(-77.03525, 38.88945)) |>
-#'   st_sfc(crs = 4326)
+#'washington_monument_people = st_point(c(-77.035249, 38.889462)) |>
+#'  st_sfc(crs = 4326)
 #'elevation_data = elevatr::get_elev_raster(locations = wm_point, z = 14)
 #'
 #'scene_bbox = st_bbox(st_buffer(wm_point,300))
@@ -127,15 +126,106 @@
 #'render_camera(theta=150,  phi=35, zoom= 0.55, fov=70)
 #'#Render the national monument
 #'rgl::par3d(ignoreExtent = TRUE)
-#'render_multipolygonz(washington_monument_multipolygonz,
-#'                     zscale = 4, color = "grey80")
+#'render_multipolygonz(
+#'  washington_monument_multipolygonz,
+#'  color = "grey80"
+#')
 #'render_camera(location = washington_monument_people)
 #'render_snapshot()
+#'#Create a meandering tourist queue that starts just beyond the camera-facing
+#'#edge of the monument and extends toward the foreground.
+#'monument_bbox = st_bbox(washington_monument_multipolygonz)
+#'monument_center = c(
+#'  mean(monument_bbox[c("xmin", "xmax")]),
+#'  mean(monument_bbox[c("ymin", "ymax")])
+#')
+#'camera_direction = c(sinpi(150 / 180), -cospi(150 / 180))
+#'cross_direction = c(-camera_direction[2], camera_direction[1])
+#'monument_half_size = c(
+#'  diff(monument_bbox[c("xmin", "xmax")]) / 2,
+#'  diff(monument_bbox[c("ymin", "ymax")]) / 2
+#')
+#'queue_start_distance =
+#'  min(monument_half_size / abs(camera_direction)) + 3
+#'queue_progress = seq(0, 180, length.out = 120)
+#'queue_meander =
+#'  10 * sin(queue_progress / 18) + 3 * sin(queue_progress / 7)
+#'tourist_queue_xy = cbind(
+#'  x = monument_center[1] +
+#'    (queue_start_distance + queue_progress) * camera_direction[1] +
+#'    queue_meander * cross_direction[1],
+#'  y = monument_center[2] +
+#'    (queue_start_distance + queue_progress) * camera_direction[2] +
+#'    queue_meander * cross_direction[2]
+#')
+#'tourist_queue = st_sfc(
+#'  st_linestring(tourist_queue_xy),
+#'  crs = st_crs(washington_monument_multipolygonz)
+#')
+#'
+#'render_people(
+#'  line = tourist_queue,
+#'  pose = "stretch",
+#'  spacing = 2,
+#'  pattern = "MF",
+#'  color = c("#355C7D", "#C06C84"),
+#'  clear_previous = TRUE
+#')
+#'render_snapshot()
+#'
+#'#Build a human pyramid as tall as the Washington Monument. The stack model
+#'#is about 0.75 meters wide, so adjacent people at each level just touch.
+#'monument_elevation = range(
+#'  st_coordinates(washington_monument_multipolygonz)[, "Z"]
+#')
+#'person_height = 2
+#'horizontal_spacing = 1
+#'level_count = ceiling(diff(monument_elevation) / person_height)
+#'people_per_level = rev(seq_len(level_count))
+#'pyramid_level = rep(
+#'  seq_len(level_count) - 1,
+#'  times = people_per_level
+#')
+#'pyramid_column = unlist(lapply(
+#'  people_per_level,
+#'  function(n) seq_len(n) - (n + 1) / 2
+#'))
+#'
+#'#Run the rows north-south and keep the pyramid just west of the monument.
+#'pyramid_center = washington_monument_people |>
+#'  st_transform(st_crs(washington_monument_multipolygonz))
+#'pyramid_center_xy = st_coordinates(pyramid_center)[1, 1:2]
+#'pyramid_center_xy[1] =
+#'  st_bbox(washington_monument_multipolygonz)[["xmin"]] +
+#'  horizontal_spacing
+#'
+#'pyramid_people = st_as_sf(
+#'  data.frame(
+#'    x = rep(unname(pyramid_center_xy[1]), length(pyramid_level)),
+#'    y = unname(pyramid_center_xy[2]) +
+#'      pyramid_column * horizontal_spacing,
+#'    altitude = monument_elevation[1] + pyramid_level * person_height
+#'  ),
+#'  coords = c("x", "y"),
+#'  crs = st_crs(washington_monument_multipolygonz)
+#')
+#'
+#'render_people(
+#'  location = pyramid_people,
+#'  pose = "stack",
+#'  altitude = pyramid_people$altitude,
+#'  angle = c(0, 90, 0),
+#'  color = "#030",
+#'  clear_previous = TRUE
+#')
 #'#This works with `render_highquality()`
-#'render_highquality(min_variance = 0, samples = 16)
-#' render_people(location = washington_monument_people,
-#' pose = "stack", altitude = seq(0,170,by=2))
-#' @examplesIf length(find.package("sf", quiet = TRUE)) > 0 && (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true"))
+#'render_highquality(
+#'  min_variance = 0,
+#'  samples = 16,
+#'  defer = TRUE,
+#'  datetime = as.POSIXct("2025-12-21 08:00:00", tz = "EST"),
+#'  sky_args = list(hosek = FALSE, iso = 20)
+#')
 #' # Arrange alternating models around a closed line. The stretch pose extends
 #' # along local Z, so automatic line orientation creates a hands-around-the-world
 #' # effect.
@@ -190,10 +280,6 @@
 #' )
 render_people = function(
   location = NULL,
-  x = NULL,
-  y = NULL,
-  extent = NULL,
-  panel = NULL,
   pose = "standing",
   sex = "male",
   line = NULL,
@@ -210,6 +296,10 @@ render_people = function(
   offset = 0,
   angle = c(0, 0, 0),
   baseshape = "rectangle",
+  x = NULL,
+  y = NULL,
+  extent = NULL,
+  panel = NULL,
   lit = TRUE,
   load_normals = TRUE,
   clear_previous = FALSE,
@@ -219,6 +309,15 @@ render_people = function(
   filter_to_extent = TRUE,
   ...
 ) {
+  if (
+    is_render_clear_only_call(
+      clear_previous,
+      match.call(),
+      function() rgl::pop3d(tag = "objperson")
+    )
+  ) {
+    return(invisible(NULL))
+  }
   if (
     !is.logical(align_to_terrain) ||
       length(align_to_terrain) != 1 ||
@@ -351,7 +450,7 @@ render_people = function(
         swap_yz = FALSE,
         angle = person_angles[group_index, , drop = FALSE],
         scale = person_scale,
-        clear_previous = isTRUE(clear_previous) && !rendered_group,
+        clear_previous = FALSE,
         baseshape = baseshape,
         lit = lit,
         rgl_tag = "person",
@@ -382,7 +481,7 @@ render_people = function(
     swap_yz = FALSE,
     angle = angle,
     scale = person_scale,
-    clear_previous = clear_previous,
+    clear_previous = FALSE,
     baseshape = baseshape,
     lit = lit,
     rgl_tag = "person",
@@ -410,6 +509,7 @@ person_obj = function(pose = "standing", sex = "male") {
     pose,
     slipping = "stack",
     stack = "slipping",
+    rocky = "yay",
     pose
   )
   path = system.file(
@@ -448,7 +548,7 @@ resolve_person_pose = function(pose) {
     "stop_one_hand",
     "stretch",
     "walking",
-    "yay",
+    "rocky",
     "yelling"
   )
   if (
@@ -459,11 +559,16 @@ resolve_person_pose = function(pose) {
   ) {
     stop("`pose` must be a single non-empty character value.", call. = FALSE)
   }
-  aliases = c(rocky = "yay", slip = "slipping", yell = "yelling")
-  if (pose %in% names(aliases)) {
-    return(unname(aliases[[pose]]))
+  if (!(pose %in% poses)) {
+    stop(
+      paste0(
+        "`pose` should be one of ",
+        paste(shQuote(poses), collapse = ", "),
+        "."
+      ),
+      call. = FALSE
+    )
   }
-  pose = match.arg(pose, poses)
   pose
 }
 
@@ -486,11 +591,18 @@ resolve_person_sex = function(sex = "male") {
     )
   }
   sex = tolower(sex)
-  aliases = c(man = "male", woman = "female")
-  if (sex %in% names(aliases)) {
-    sex = unname(aliases[[sex]])
+  sexes = c("male", "female")
+  if (!(sex %in% sexes)) {
+    stop(
+      paste0(
+        "`sex` should be one of ",
+        paste(shQuote(sexes), collapse = ", "),
+        "."
+      ),
+      call. = FALSE
+    )
   }
-  match.arg(sex, c("male", "female"))
+  sex
 }
 
 #' Detect Person Line Input

@@ -66,7 +66,8 @@
 #' @param flat_shading Default `FALSE`. Set to `TRUE` to have nicer shading on the 3D polygons. This comes
 #' with the slight penalty of increasing the memory use of the scene due to vertex duplication. This
 #' will not affect software or high quality renders.
-#' @param clear_previous Default `FALSE`. If `TRUE`, it will clear all existing polygons.
+#' @param clear_previous Default `FALSE`. If `TRUE`, clears all existing beveled
+#' polygons. A clear-only call returns without rendering a replacement.
 #' @param filter_to_extent Default `TRUE`. If `TRUE`, polygon data outside the scene extent is omitted. Spatial polygon inputs are cropped to the extent. For scenes created with [plot_gg()], filtering uses the ggplot panel extent rather than the full rendered 3D ggplot extent.
 #' @param ... Additional arguments to pass to `rgl::triangles3d()`.
 #' @export
@@ -184,6 +185,15 @@ render_beveled_polygons = function(
   filter_to_extent = TRUE,
   ...
 ) {
+  if (
+    is_render_clear_only_call(
+      clear_previous,
+      match.call(),
+      function() rgl::pop3d(tag = "obj_raymesh_beveled_polygon")
+    )
+  ) {
+    return(invisible(NULL))
+  }
   validate_filter_to_extent(
     filter_to_extent,
     caller = "render_beveled_polygons"
@@ -193,7 +203,6 @@ render_beveled_polygons = function(
     vertical_exaggeration_missing = missing(vertical_exaggeration),
     caller = "render_beveled_polygons"
   )
-  dot_split = split_zaxis_dots(list(...))
   zscale = resolve_scene_render_effective_zscale(
     zscale = zscale,
     zscale_missing = missing(zscale),
@@ -212,20 +221,6 @@ render_beveled_polygons = function(
   }
   if (!(length(find.package("raybevel", quiet = TRUE)) > 0)) {
     stop("raybevel required to use render_roofs()")
-  }
-  if (clear_previous) {
-    rgl::pop3d(tag = "obj_raymesh_beveled_polygon")
-    if (missing(polygon)) {
-      render_zaxis_from_dots(
-        zaxis_args = dot_split$zaxis_args,
-        extent = extent,
-        panel = panel,
-        zscale = zscale,
-        heightmap = heightmap,
-        caller = "render_beveled_polygons"
-      )
-      return(invisible())
-    }
   }
   if (is.character(material)) {
     material = rayvertex::material_list(diffuse = material)
@@ -286,14 +281,6 @@ render_beveled_polygons = function(
       )
     }
     if (is_empty_scene_sf(polygon)) {
-      render_zaxis_from_dots(
-        zaxis_args = dot_split$zaxis_args,
-        extent = extent,
-        panel = panel,
-        zscale = zscale,
-        heightmap = heightmap,
-        caller = "render_beveled_polygons"
-      )
       return(invisible(NULL))
     }
   }
@@ -376,14 +363,6 @@ render_beveled_polygons = function(
       n_polygon_before_data_drop
     )
     if (!nrow(polygon)) {
-      render_zaxis_from_dots(
-        zaxis_args = dot_split$zaxis_args,
-        extent = extent,
-        panel = panel,
-        zscale = zscale,
-        heightmap = heightmap,
-        caller = "render_beveled_polygons"
-      )
       return(invisible(NULL))
     }
   }

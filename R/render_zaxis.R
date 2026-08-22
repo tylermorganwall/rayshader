@@ -206,7 +206,6 @@ render_zaxis = function(
     allow_ggplot_extent = use_ggplot_panel_extent
   )
   render_zaxis_internal(
-    zaxis = TRUE,
     extent = extent,
     zscale = zscale,
     heightmap = heightmap,
@@ -282,90 +281,4 @@ zaxis_location_uses_panel_extent = function(zaxis_location = "auto") {
         "paneltopright",
         "paneltr"
       )
-}
-
-zaxis_dot_names = function() {
-  c(
-    "zaxis",
-    "zaxis_data",
-    "zaxis_location",
-    "zaxis_breaks",
-    "zaxis_labels",
-    "zaxis_title",
-    "zaxis_title_location",
-    "zaxis_title_offset",
-    "zaxis_title_size",
-    "zaxis_color",
-    "zaxis_linewidth",
-    "zaxis_text_offset",
-    "zaxis_label_size",
-    "zaxis_label_side",
-    "zaxis_title_side",
-    "zaxis_corner_offset",
-    "zaxis_tick_size"
-  )
-}
-
-split_zaxis_dots = function(dots) {
-  if (is.null(dots)) {
-    dots = list()
-  }
-  dot_names = names(dots)
-  is_zaxis = rep(FALSE, length(dots))
-  if (length(dots) > 0 && !is.null(dot_names)) {
-    is_zaxis = nzchar(dot_names) & dot_names %in% zaxis_dot_names()
-  }
-  list(
-    zaxis_args = dots[is_zaxis],
-    other_args = dots[!is_zaxis]
-  )
-}
-
-render_zaxis_from_dots = function(
-  zaxis_args = list(),
-  extent = NULL,
-  panel = NULL,
-  zscale = 1,
-  heightmap = NULL,
-  caller = NULL
-) {
-  if (length(zaxis_args) == 0) {
-    return(invisible(NULL))
-  }
-  if (is.null(zscale)) {
-    zscale = get_scene_effective_zscale(default = 1)
-  } else {
-    zscale = suppressWarnings(as.numeric(zscale)[1])
-    if (!is.finite(zscale) || zscale <= 0) {
-      zscale = get_scene_effective_zscale(default = 1)
-    }
-  }
-  heightmap = resolve_scene_render_heightmap(heightmap)
-  use_ggplot_panel_extent = zaxis_location_uses_panel_extent(
-    zaxis_args$zaxis_location
-  )
-  if (!use_ggplot_panel_extent && is.null(extent)) {
-    extent = get_cached_plot_gg_scene_extent_for_zaxis(heightmap = heightmap)
-  }
-  extent = resolve_scene_render_extent(
-    extent = extent,
-    heightmap = heightmap,
-    panel = panel,
-    caller = caller,
-    allow_ggplot_extent = use_ggplot_panel_extent
-  )
-  if (is.null(zaxis_args$zaxis)) {
-    zaxis_args$zaxis = TRUE
-  }
-  do.call(
-    render_zaxis_internal,
-    c(
-      zaxis_args,
-      list(
-        extent = extent,
-        zscale = zscale,
-        heightmap = heightmap
-      )
-    )
-  )
 }

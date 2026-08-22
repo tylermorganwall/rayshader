@@ -21,12 +21,17 @@
 #' @param vertical_exaggeration Default `1`. Multiplier applied to the effective
 #' visual relief. If omitted, rayshader uses the cached scene value from [plot_3d()]
 #' or [plot_gg()] when available; pass explicitly to override for this call.
-#' @param width Default `1`. Stream width in scene grid-cell units for
-#' [render_highquality()]. The rgl preview uses the same value as line width.
+#' @param width Default `1`. Stream width in the units selected by `width_units`
+#' for [render_highquality()]. The rgl preview uses the converted scene width as
+#' its line width.
 #' @param width_column Default `NULL`. Column name in an `sf` stream object used
 #' to set per-feature stream widths. Values must be positive finite numbers and
 #' use the same units as `width`. When supplied, stream merging is disabled to
 #' preserve feature attributes.
+#' @param width_units Default `"scene"`. Units used by `width` and
+#' `width_column`. `"scene"` treats values as scene grid-cell units, preserving
+#' the legacy behavior. `"meters"` converts physical widths to scene units from
+#' the cached or supplied spatial extent and CRS.
 #' @param densify Default `TRUE`. Whether to densify stream paths and resample
 #' them along the terrain before [render_highquality()] meshing. Set to `FALSE`
 #' to use the vertices returned by [render_path()] directly.
@@ -38,7 +43,8 @@
 #' rendering. This reduces visible caps between adjacent line features in
 #' [render_highquality()].
 #' @param clear_previous Default `TRUE`. If `TRUE`, removes the existing stream
-#' layer before drawing the new one.
+#' layer before drawing the new one. A clear-only call returns without rendering
+#' a replacement.
 #' @param height Default `0.05`. Total stream mesh thickness in scene units for
 #' [render_highquality()]. This is independent of `width` and centered on the
 #' sampled stream path, leaving the top surface slightly above the terrain.
@@ -207,6 +213,7 @@ render_streams = function(
   vertical_exaggeration = 1,
   width = 1,
   width_column = NULL,
+  width_units = c("scene", "meters"),
   densify = TRUE,
   offset = NULL,
   merge = TRUE,
@@ -216,6 +223,20 @@ render_streams = function(
   verbose = FALSE,
   parallel = TRUE
 ) {
+  clear_stream_layer = function() {
+    rgl::pop3d(tag = "water_path")
+    clear_render_water_path_info()
+    cache_scene_stream_meshes(NULL)
+  }
+  if (
+    is_render_clear_only_call(
+      clear_previous,
+      match.call(),
+      clear_stream_layer
+    )
+  ) {
+    return(invisible(NULL))
+  }
   # 1. Capture expressions needed to distinguish values from column references.
   heightmap_missing = missing(heightmap)
   zscale_missing = missing(zscale)
@@ -272,6 +293,7 @@ render_streams = function(
     heightmap = heightmap,
     caller = "render_streams"
   )
+  width_units = match.arg(width_units)
   densify = resolve_render_scalar(
     densify,
     missing(densify),
@@ -395,12 +417,6 @@ render_streams = function(
   } else {
     NULL
   }
-  if (isTRUE(clear_previous)) {
-    rgl::pop3d(tag = "water_path")
-    clear_render_water_path_info()
-    cache_scene_stream_meshes(NULL)
-  }
-
   # 4. Normalize, clip, and preserve source identities in the line geometry.
   extent = resolve_scene_render_extent(
     heightmap = heightmap,
@@ -422,6 +438,12 @@ render_streams = function(
   } else {
     as.numeric(streams[[width_column]])
   }
+  stream_width = convert_render_stream_width_to_scene_units(
+    width = stream_width,
+    width_units = width_units,
+    heightmap = heightmap,
+    extent = extent
+  )
 
   # 5. Build terrain-sampled coordinates and their feature mapping.
   path_data = render_line_coords_by_width(
@@ -497,6 +519,59 @@ render_streams = function(
     append = !isTRUE(clear_previous)
   )
   invisible(coord_list)
+}
+
+#' Convert stream widths to scene units
+#'
+#' @param width Stream widths.
+#' @param width_units Units used by `width`.
+#' @param heightmap Scene heightmap matrix.
+#' @param extent Scene spatial extent.
+#'
+#' @return Stream widths in scene grid-cell units.
+#' @keywords internal
+convert_render_stream_width_to_scene_units = function(
+  width,
+  width_units,
+  heightmap,
+  extent
+) {
+  if (identical(width_units, "scene")) {
+    return(width)
+  }
+  scene_crs = try_parse_scene_crs(attr(heightmap, "crs", exact = TRUE))
+  if (is.null(scene_crs)) {
+    scene_crs = get_scene_target_crs(
+      extent = extent,
+      heightmap = heightmap,
+      caller = "render_streams"
+    )
+  }
+  if (is.null(scene_crs)) {
+    stop(
+      paste0(
+        "render_streams(): `width_units = \"meters\"` requires a spatial ",
+        "scene with a CRS."
+      ),
+      call. = FALSE
+    )
+  }
+  world_scale = calculate_road_path_world_scale(
+    heightmap = heightmap,
+    extent = extent,
+    crs = scene_crs
+  )
+  meters_per_scene_unit = mean(world_scale)
+  if (
+    !is.finite(meters_per_scene_unit) ||
+      meters_per_scene_unit <= 0
+  ) {
+    stop(
+      "render_streams(): Could not convert stream widths from meters to scene units.",
+      call. = FALSE
+    )
+  }
+  width / meters_per_scene_unit
 }
 
 #' Draw stream line previews in width-compatible batches

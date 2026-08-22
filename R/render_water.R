@@ -19,7 +19,9 @@
 #'@param water_edge_extension Default `0.5`. For spatial `waterdepth` inputs, amount in grid cells to expand finite water cells at boundary edges, up to a maximum of half a cell.
 #'@param water_edge_clamp Default `FALSE`. For spatial `waterdepth` inputs, if `TRUE`, resolves each connected water footprint to a single level, then lowers it by the largest finite exterior sidewall height after edge expansion. Heightmap-boundary and NA-slice edges are ignored when computing the lowering amount.
 #'@param water_polygon_failure Default `"raster"`. Behavior for spatial polygon water components that cannot be fit to an admissible terrain-triangle flood. `"raster"` renders the failed component with the raster method; `"remove"` omits it.
-#'@param clear_previous Default `TRUE`. If `TRUE`, will remove existing water layer and replace it with new layer.
+#'@param clear_previous Default `TRUE`. If `TRUE`, removes the existing water
+#'layer before drawing the new one. A clear-only call returns without rendering
+#'a replacement.
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'montereybay_spatial |>
@@ -75,6 +77,15 @@ render_water = function(
   water_polygon_failure = c("raster", "remove"),
   clear_previous = TRUE
 ) {
+  if (
+    is_render_clear_only_call(
+      clear_previous,
+      match.call(),
+      function() rgl::pop3d(tag = c("waterlines", "water"))
+    )
+  ) {
+    return(invisible(NULL))
+  }
   water_render_method = match.arg(water_render_method)
   water_polygon_failure = match.arg(water_polygon_failure)
   heightmap = resolve_scene_render_heightmap(
@@ -122,9 +133,6 @@ render_water = function(
         error = function(e) NULL
       )
     }
-  }
-  if (clear_previous) {
-    rgl::pop3d(tag = c("waterlines", "water"))
   }
   water_mesh = list(
     vertices = list(),

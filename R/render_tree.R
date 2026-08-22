@@ -66,7 +66,8 @@
 #'of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
 #' All points are assumed to be evenly spaced.
 #'@param lit Default `TRUE`. Whether to apply lighting to the tree.
-#'@param clear_previous Default `FALSE`. If `TRUE`, it will clear all existing trees.
+#'@param clear_previous Default `FALSE`. If `TRUE`, clears all existing trees.
+#'A clear-only call returns without rendering a replacement.
 #'@param filter_to_extent Default `TRUE`. If `TRUE`, tree placements outside the scene extent are omitted. For scenes created with [plot_gg()], filtering uses the ggplot panel extent rather than the full rendered 3D ggplot extent.
 #'@param ... Additional arguments to pass to `rgl::triangles3d()`.
 #'@export
@@ -181,9 +182,18 @@ render_tree = function(
   filter_to_extent = TRUE,
   ...
 ) {
+  if (
+    is_render_clear_only_call(
+      clear_previous,
+      match.call(),
+      function() rgl::pop3d(tag = "objtree")
+    )
+  ) {
+    return(invisible(NULL))
+  }
   validate_filter_to_extent(filter_to_extent, caller = "render_tree")
   tree_height_supplied = !missing(tree_height) && !is.null(tree_height)
-  dot_split = split_zaxis_dots(list(...))
+  tree_args = list(...)
   zscale = resolve_scene_render_effective_zscale(
     zscale = zscale,
     zscale_missing = missing(zscale),
@@ -195,8 +205,6 @@ render_tree = function(
     heightmap,
     caller = "render_tree"
   )
-  zaxis_args = dot_split$zaxis_args
-  tree_args = dot_split$other_args
   scene_extent = resolve_scene_render_extent(
     extent = extent,
     heightmap = heightmap,
@@ -244,21 +252,6 @@ render_tree = function(
   }
   render_obj_tree = function(...) {
     do.call(render_obj, c(list(..., vertical_exaggeration = 1), tree_args))
-  }
-  # If clear_previous is TRUE, remove previous tree object
-  if (clear_previous) {
-    rgl::pop3d(tag = "objtree")
-    if (is.null(lat) || is.null(long)) {
-      render_zaxis_from_dots(
-        zaxis_args = zaxis_args,
-        extent = extent,
-        panel = panel,
-        zscale = zscale,
-        heightmap = heightmap,
-        caller = "render_tree"
-      )
-      return(invisible())
-    }
   }
   if (!is.null(lat) && !is.null(long)) {
     if (!location_supplied) {
@@ -334,14 +327,6 @@ render_tree = function(
       )
     }
     if (!length(lat) || !length(long)) {
-      render_zaxis_from_dots(
-        zaxis_args = zaxis_args,
-        extent = extent,
-        panel = panel,
-        zscale = zscale,
-        heightmap = heightmap,
-        caller = "render_tree"
-      )
       return(invisible())
     }
   }
@@ -864,14 +849,7 @@ render_tree = function(
     scene_altitude = tree_zaxis_scene,
     label = tree_zaxis_label
   )
-  render_zaxis_from_dots(
-    zaxis_args = zaxis_args,
-    extent = extent,
-    panel = panel,
-    zscale = zscale,
-    heightmap = heightmap,
-    caller = "render_tree"
-  )
+  invisible(NULL)
 }
 
 resolve_render_tree_height_column = function(

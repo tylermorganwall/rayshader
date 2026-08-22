@@ -28,7 +28,9 @@
 #' All points are assumed to be evenly spaced.
 #'@param color Default `black`. Color of the 3D model, if `load_material = FALSE`.
 #'@param offset Default `5`. Offset of the track from the surface, if `altitude = NULL`.
-#'@param clear_previous Default `FALSE`. If `TRUE`, it will clear all existing points.
+#'@param clear_previous Default `FALSE`. If `TRUE`, clears all existing rendered
+#'multipolygons for `rgl_tag`. A clear-only call returns without rendering a
+#'replacement.
 #'@param rgl_tag Default `""`. Tag to add to the rgl scene id, will be prefixed by `"obj"`
 #'@param baseshape Default `rectangle`. Shape of the base. Options are `c("rectangle","circle","hex")`.
 #'@param filter_to_extent Default `TRUE`. If `TRUE`, MULTIPOLYGON Z data outside the scene extent is omitted. Spatial inputs are cropped to the extent. For scenes created with [plot_gg()], filtering uses the ggplot panel extent rather than the full rendered 3D ggplot extent.
@@ -72,112 +74,99 @@
 #'#This works with `render_highquality()`
 #'render_highquality(min_variance = 0, samples = 16)
 render_multipolygonz = function(
-	sfobj,
-	extent = NULL,
-	panel = NULL,
-	zscale = 1,
-	vertical_exaggeration = 1,
-	heightmap = NULL,
-	color = "grey50",
-	offset = 0,
-	obj_zscale = TRUE,
-	swap_yz = TRUE,
-	clear_previous = FALSE,
-	baseshape = "rectangle",
-	rgl_tag = "_multipolygon",
-	crs = NULL,
-	filter_to_extent = TRUE,
-	...
+  sfobj,
+  extent = NULL,
+  panel = NULL,
+  zscale = 1,
+  vertical_exaggeration = 1,
+  heightmap = NULL,
+  color = "grey50",
+  offset = 0,
+  obj_zscale = TRUE,
+  swap_yz = TRUE,
+  clear_previous = FALSE,
+  baseshape = "rectangle",
+  rgl_tag = "_multipolygon",
+  crs = NULL,
+  filter_to_extent = TRUE,
+  ...
 ) {
-	validate_filter_to_extent(filter_to_extent, caller = "render_multipolygonz")
-	dot_split = split_zaxis_dots(list(...))
-	zscale = resolve_scene_render_effective_zscale(
-		zscale = zscale,
-		zscale_missing = missing(zscale),
-		vertical_exaggeration = vertical_exaggeration,
-		vertical_exaggeration_missing = missing(vertical_exaggeration),
-		caller = "render_multipolygonz"
-	)
-	heightmap = resolve_scene_render_heightmap(
-		heightmap,
-		caller = "render_multipolygonz"
-	)
-	if (clear_previous) {
-		rgl::pop3d(tag = sprintf("obj%s", rgl_tag))
-		if (missing(sfobj)) {
-			render_zaxis_from_dots(
-				zaxis_args = dot_split$zaxis_args,
-				extent = extent,
-				panel = panel,
-				zscale = zscale,
-				heightmap = heightmap,
-				caller = "render_multipolygonz"
-			)
-			return(invisible())
-		}
-	}
-	if (inherits(sfobj, "Spatial")) {
-		sfobj = sf::st_as_sf(sfobj)
-	}
-	if (inherits(sfobj, "sfc")) {
-		sfobj = sf::st_sf(geometry = sfobj)
-	}
-	if (inherits(sfobj, "sfg")) {
-		sfobj = sf::st_sf(geometry = sf::st_sfc(sfobj))
-	}
-	scene_sfobj = auto_transform_scene_sf(
-		sf_object = sfobj,
-		extent = extent,
-		heightmap = heightmap,
-		panel = panel,
-		crs = crs,
-		caller = "render_multipolygonz"
-	)
-	sfobj = scene_sfobj$object
-	if (!is.null(scene_sfobj$extent)) {
-		extent = scene_sfobj$extent
-	}
-	filtered_sfobj = filter_scene_sf_to_extent(
-		sf_object = sfobj,
-		extent = extent,
-		heightmap = heightmap,
-		panel = panel,
-		filter_to_extent = filter_to_extent,
-		preserve_z = TRUE,
-		caller = "render_multipolygonz"
-	)
-	sfobj = filtered_sfobj$object
-	if (is_empty_scene_sf(sfobj)) {
-		render_zaxis_from_dots(
-			zaxis_args = dot_split$zaxis_args,
-			extent = extent,
-			panel = panel,
-			zscale = zscale,
-			heightmap = heightmap,
-			caller = "render_multipolygonz"
-		)
-		return(invisible(NULL))
-	}
-	sfobj = suppressWarnings(sf::st_cast(sfobj, "MULTIPOLYGON", warn = FALSE))
-	multipolygon_mesh = multipolygonz_to_raymesh(sfobj)
-	render_raymesh(
-		raymesh = multipolygon_mesh,
-		extent = extent,
-		panel = panel,
-		obj_zscale = obj_zscale,
-		clear_previous = FALSE,
-		zscale = zscale,
-		vertical_exaggeration = 1,
-		color = color,
-		offset = offset,
-		swap_yz = swap_yz,
-		heightmap = heightmap,
-		baseshape = baseshape,
-		rgl_tag = rgl_tag,
-		crs = crs,
-		rgl_tag_prefix = "obj",
-		swap_yz_transform = "rotate",
-		filter_to_extent = filter_to_extent,
-		...
-	)
+  if (
+    is_render_clear_only_call(
+      clear_previous,
+      match.call(),
+      function() rgl::pop3d(tag = sprintf("obj%s", rgl_tag)),
+      routing_arguments = "rgl_tag"
+    )
+  ) {
+    return(invisible(NULL))
+  }
+  validate_filter_to_extent(filter_to_extent, caller = "render_multipolygonz")
+  zscale = resolve_scene_render_effective_zscale(
+    zscale = zscale,
+    zscale_missing = missing(zscale),
+    vertical_exaggeration = vertical_exaggeration,
+    vertical_exaggeration_missing = missing(vertical_exaggeration),
+    caller = "render_multipolygonz"
+  )
+  heightmap = resolve_scene_render_heightmap(
+    heightmap,
+    caller = "render_multipolygonz"
+  )
+  if (inherits(sfobj, "Spatial")) {
+    sfobj = sf::st_as_sf(sfobj)
+  }
+  if (inherits(sfobj, "sfc")) {
+    sfobj = sf::st_sf(geometry = sfobj)
+  }
+  if (inherits(sfobj, "sfg")) {
+    sfobj = sf::st_sf(geometry = sf::st_sfc(sfobj))
+  }
+  scene_sfobj = auto_transform_scene_sf(
+    sf_object = sfobj,
+    extent = extent,
+    heightmap = heightmap,
+    panel = panel,
+    crs = crs,
+    caller = "render_multipolygonz"
+  )
+  sfobj = scene_sfobj$object
+  if (!is.null(scene_sfobj$extent)) {
+    extent = scene_sfobj$extent
+  }
+  filtered_sfobj = filter_scene_sf_to_extent(
+    sf_object = sfobj,
+    extent = extent,
+    heightmap = heightmap,
+    panel = panel,
+    filter_to_extent = filter_to_extent,
+    preserve_z = TRUE,
+    caller = "render_multipolygonz"
+  )
+  sfobj = filtered_sfobj$object
+  if (is_empty_scene_sf(sfobj)) {
+    return(invisible(NULL))
+  }
+  sfobj = suppressWarnings(sf::st_cast(sfobj, "MULTIPOLYGON", warn = FALSE))
+  multipolygon_mesh = multipolygonz_to_raymesh(sfobj)
+  render_raymesh(
+    raymesh = multipolygon_mesh,
+    extent = extent,
+    panel = panel,
+    obj_zscale = obj_zscale,
+    clear_previous = FALSE,
+    zscale = zscale,
+    vertical_exaggeration = 1,
+    color = color,
+    offset = offset,
+    swap_yz = swap_yz,
+    heightmap = heightmap,
+    baseshape = baseshape,
+    rgl_tag = rgl_tag,
+    crs = crs,
+    rgl_tag_prefix = "obj",
+    swap_yz_transform = "rotate",
+    filter_to_extent = filter_to_extent,
+    ...
+  )
 }

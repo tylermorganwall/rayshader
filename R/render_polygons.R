@@ -45,10 +45,10 @@
 #' @param light_intensity Default `0.3`. Intensity of the specular highlight on the polygons.
 #' @param light_relative Default `FALSE`. Whether the light direction should be taken relative to the camera,
 #' or absolute.
-#' @param clear_previous Default `FALSE`. If `TRUE`, it will clear all existing polygons.
+#' @param clear_previous Default `FALSE`. If `TRUE`, clears all existing
+#' polygons. A clear-only call returns without rendering a replacement.
 #' @param filter_to_extent Default `TRUE`. If `TRUE`, polygon data outside the scene extent is omitted. Spatial polygon inputs are cropped to the extent. For scenes created with [plot_gg()], filtering uses the ggplot panel extent rather than the full rendered 3D ggplot extent.
-#' @param ... Optional z-axis arguments passed to [render_zaxis()], such as
-#' `zaxis = TRUE`, `zaxis_location`, `zaxis_breaks`, and `zaxis_labels`.
+#' @param ... Additional arguments passed to `rgl::triangles3d()`.
 #' @export
 #' @examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #' #Render the county borders as polygons in Monterey Bay
@@ -109,13 +109,21 @@ render_polygons = function(
   filter_to_extent = TRUE,
   ...
 ) {
+  if (
+    is_render_clear_only_call(
+      clear_previous,
+      match.call(),
+      function() rgl::pop3d(tag = "polygon3d")
+    )
+  ) {
+    return(invisible(NULL))
+  }
   validate_filter_to_extent(filter_to_extent, caller = "render_polygons")
   warn_scale_data_with_vertical_exaggeration(
     scale_data_missing = missing(scale_data),
     vertical_exaggeration_missing = missing(vertical_exaggeration),
     caller = "render_polygons"
   )
-  zaxis_split = split_zaxis_dots(list(...))
   zscale = resolve_scene_render_effective_zscale(
     zscale = zscale,
     zscale_missing = missing(zscale),
@@ -129,20 +137,6 @@ render_polygons = function(
   )
   if (rgl::cur3d() == 0) {
     stop("No rgl window currently open.")
-  }
-  if (clear_previous) {
-    rgl::pop3d(tag = "polygon3d")
-    if (missing(polygon)) {
-      render_zaxis_from_dots(
-        zaxis_args = zaxis_split$zaxis_args,
-        extent = extent,
-        panel = panel,
-        zscale = zscale,
-        heightmap = heightmap,
-        caller = "render_polygons"
-      )
-      return(invisible())
-    }
   }
   if (!(length(find.package("rayrender", quiet = TRUE)) > 0)) {
     stop("rayrender required to use render_polygon()")
@@ -211,14 +205,6 @@ render_polygons = function(
       )
     }
     if (is_empty_scene_sf(polygon)) {
-      render_zaxis_from_dots(
-        zaxis_args = zaxis_split$zaxis_args,
-        extent = extent,
-        panel = panel,
-        zscale = zscale,
-        heightmap = heightmap,
-        caller = "render_polygons"
-      )
       return(invisible(NULL))
     }
   }
@@ -242,14 +228,6 @@ render_polygons = function(
       n_polygon_before_data_drop
     )
     if (!nrow(polygon)) {
-      render_zaxis_from_dots(
-        zaxis_args = zaxis_split$zaxis_args,
-        extent = extent,
-        panel = panel,
-        zscale = zscale,
-        heightmap = heightmap,
-        caller = "render_polygons"
-      )
       return(invisible(NULL))
     }
   }
@@ -423,14 +401,6 @@ render_polygons = function(
     data_column_top = data_column_top,
     data_column_bottom = data_column_bottom,
     scale_data = scale_data
-  )
-  render_zaxis_from_dots(
-    zaxis_args = zaxis_split$zaxis_args,
-    extent = extent,
-    panel = panel,
-    zscale = zscale,
-    heightmap = heightmap,
-    caller = "render_polygons"
   )
   invisible(NULL)
 }

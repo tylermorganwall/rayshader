@@ -22,6 +22,39 @@ validate_filter_to_extent = function(filter_to_extent = TRUE, caller = NULL) {
   invisible(filter_to_extent)
 }
 
+#' Clear a render layer and detect clear-only calls
+#'
+#' Calls `clear_previous_handler` whenever `clear_previous` is `TRUE`, then
+#' reports whether the call contains no arguments that request new geometry.
+#'
+#' @param clear_previous Clear-previous argument value.
+#' @param call Matched render call.
+#' @param clear_previous_handler Function that removes the existing render
+#' layer.
+#' @param routing_arguments Default `character()`. Arguments that select the
+#' render layer without supplying new geometry.
+#'
+#' @return Whether rendering should return after clearing the existing layer.
+#' @keywords internal
+is_render_clear_only_call = function(
+  clear_previous,
+  call,
+  clear_previous_handler,
+  routing_arguments = character()
+) {
+  if (!isTRUE(clear_previous)) {
+    return(FALSE)
+  }
+  clear_previous_handler()
+  supplied_arguments = names(as.list(call)[-1L])
+  length(supplied_arguments) > 0L &&
+    "clear_previous" %in% supplied_arguments &&
+    all(
+      supplied_arguments %in%
+        c("clear_previous", routing_arguments)
+    )
+}
+
 #' Resolve a positive render number
 #'
 #' @param value Numeric-like value.

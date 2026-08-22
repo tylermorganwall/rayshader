@@ -9,7 +9,7 @@ test_that("person_obj() resolves every bundled pose and sex", {
     "stop_one_hand",
     "stretch",
     "walking",
-    "yay",
+    "rocky",
     "yelling"
   )
   models = expand.grid(
@@ -30,7 +30,6 @@ test_that("person_obj() resolves every bundled pose and sex", {
   expect_equal(tools::file_ext(paths), rep("txt", length(paths)))
   expect_equal(length(unique(paths)), 2 * length(poses))
   expect_true(all(grepl("raypeople", paths, fixed = TRUE)))
-  expect_match(rayshader:::person_obj("rocky"), "person_man_yay\\.txt$")
   expect_match(
     rayshader:::person_obj("slipping"),
     "person_man_stack\\.txt$"
@@ -38,10 +37,6 @@ test_that("person_obj() resolves every bundled pose and sex", {
   expect_match(
     rayshader:::person_obj("stack"),
     "person_man_slipping\\.txt$"
-  )
-  expect_match(
-    rayshader:::person_obj("slip", "female"),
-    "person_woman_stack\\.txt$"
   )
   expect_error(rayshader:::person_obj("sitting"), "should be one of")
   expect_error(rayshader:::person_obj(sex = "robot"), "should be one of")
@@ -51,11 +46,6 @@ test_that("render_people() orders its placement arguments consistently", {
   expect_identical(
     head(names(formals(render_people)), 3),
     c("location", "x", "y")
-  )
-  expect_false("type" %in% names(formals(render_people)))
-  expect_false("gender" %in% names(formals(render_people)))
-  expect_false(
-    "gender" %in% names(formals(rayshader:::resolve_person_sex))
   )
 })
 
@@ -357,7 +347,7 @@ test_that("render_people() patterns and orients models along a line", {
   expect_equal(calls[[2]]$angle[, 2], rep(-80, 2))
   expect_equal(calls[[1]]$color, c("red", "green", "red", "green"))
   expect_equal(calls[[2]]$color, c("blue", "blue"))
-  expect_true(calls[[1]]$clear_previous)
+  expect_false(calls[[1]]$clear_previous)
   expect_false(calls[[2]]$clear_previous)
   expect_false(calls[[1]]$transform_scene)
 

@@ -28,8 +28,9 @@
 #'@param vertical_exaggeration Default `1`. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from [plot_3d()] or [plot_gg()] when available; pass explicitly to override for this call.
 #'@param relativez Default `FALSE`. Whether `z` should be measured in relation to the underlying elevation at that point in the heightmap, or set absolutely (`FALSE`).
 #'@param offset Elevation above the surface (at the label point) to start drawing the line.
-#'@param clear_previous Default `FALSE`. If `TRUE`, it will clear all existing text and lines rendered with [render_label()]. If no
-#'other arguments are passed to [render_label()], this will just remove all existing lines.
+#'@param clear_previous Default `FALSE`. If `TRUE`, clears all existing text and
+#'lines rendered with [render_label()]. A clear-only call returns without
+#'rendering a replacement.
 #'@param textsize Default `1`. A numeric character expansion value.
 #'@param line Default `TRUE`. If `FALSE`, the vertical line connecting the label to the surface is not drawn.
 #'@param dashed Default `FALSE`. If `TRUE`, the label line is dashed.
@@ -133,581 +134,579 @@ render_label = function(
   filter_to_extent = TRUE,
   heightmap = NULL
 ) {
+  if (
+    is_render_clear_only_call(
+      clear_previous,
+      match.call(),
+      function() rgl::pop3d(tag = c("textline", "raytext"))
+    )
+  ) {
+    return(invisible(NULL))
+  }
   validate_filter_to_extent(filter_to_extent, caller = "render_label")
   warn_scale_data_with_vertical_exaggeration(
     scale_data_missing = missing(scale_data),
     vertical_exaggeration_missing = missing(vertical_exaggeration),
     caller = "render_label"
   )
-  exit_early = FALSE
-  if (clear_previous) {
-    rgl::pop3d(tag = c("textline", "raytext"))
-    if (missing(text) && is.null(data_column_text)) {
-      exit_early = TRUE
-    }
+  zscale = resolve_scene_render_effective_zscale(
+    zscale = zscale,
+    zscale_missing = missing(zscale),
+    vertical_exaggeration = vertical_exaggeration,
+    vertical_exaggeration_missing = missing(vertical_exaggeration),
+    caller = "render_label"
+  )
+  heightmap = resolve_scene_render_heightmap(
+    heightmap,
+    caller = "render_label"
+  )
+  if (is.null(heightmap)) {
+    stop(
+      "No heightmap found. Call `plot_3d()` or `plot_gg()` first, or pass `heightmap` explicitly."
+    )
   }
-  if (!exit_early) {
-    zscale = resolve_scene_render_effective_zscale(
-      zscale = zscale,
-      zscale_missing = missing(zscale),
-      vertical_exaggeration = vertical_exaggeration,
-      vertical_exaggeration_missing = missing(vertical_exaggeration),
-      caller = "render_label"
+  z_supplied = !missing(z) && !is.null(z)
+  altitude_supplied = !missing(altitude) && !is.null(altitude)
+  text_supplied = !missing(text) && !is.null(text)
+  if (!is.null(altitude)) {
+    z = altitude
+  }
+  extent = resolve_scene_render_extent(
+    extent = extent,
+    heightmap = heightmap,
+    caller = "render_label",
+    panel = panel,
+    error_if_missing = FALSE
+  )
+  if (
+    is.null(extent) &&
+      !is.null(heightmap) &&
+      is.null(get_cached_plot_gg_transform_info(
+        heightmap = heightmap,
+        default = NULL
+      ))
+  ) {
+    extent = c(
+      xmin = 1,
+      xmax = nrow(heightmap),
+      ymin = 1,
+      ymax = ncol(heightmap)
     )
-    heightmap = resolve_scene_render_heightmap(
-      heightmap,
-      caller = "render_label"
-    )
-    if (is.null(heightmap)) {
-      stop(
-        "No heightmap found. Call `plot_3d()` or `plot_gg()` first, or pass `heightmap` explicitly."
-      )
-    }
-    z_supplied = !missing(z) && !is.null(z)
-    altitude_supplied = !missing(altitude) && !is.null(altitude)
-    text_supplied = !missing(text) && !is.null(text)
-    if (!is.null(altitude)) {
-      z = altitude
-    }
-    extent = resolve_scene_render_extent(
-      extent = extent,
-      heightmap = heightmap,
-      caller = "render_label",
-      panel = panel,
-      error_if_missing = FALSE
-    )
-    if (
-      is.null(extent) &&
-        !is.null(heightmap) &&
-        is.null(get_cached_plot_gg_transform_info(
-          heightmap = heightmap,
-          default = NULL
-        ))
-    ) {
-      extent = c(
-        xmin = 1,
-        xmax = nrow(heightmap),
-        ymin = 1,
-        ymax = ncol(heightmap)
-      )
-    }
-    label_location = prepare_render_label_location(
-      location = location,
-      caller = "render_label"
-    )
-    point_input = resolve_render_location_input(
+  }
+  label_location = prepare_render_label_location(
+    location = location,
+    caller = "render_label"
+  )
+  point_input = resolve_render_location_input(
+    location = label_location,
+    x = x,
+    y = y,
+    long = long,
+    lat = lat,
+    missing_x = missing(x),
+    missing_y = missing(y),
+    missing_long = missing(long),
+    missing_lat = missing(lat),
+    extent = extent,
+    heightmap = heightmap,
+    panel = panel,
+    crs = crs,
+    caller = "render_label"
+  )
+  x = point_input$x
+  y = point_input$y
+  input_crs = if (is.null(crs)) point_input$source_crs else crs
+  if (!is.null(point_input$extent)) {
+    extent = point_input$extent
+  }
+  if (!is.null(data_column_z)) {
+    z = resolve_render_label_z_column(
       location = label_location,
-      x = x,
-      y = y,
-      long = long,
-      lat = lat,
-      missing_x = missing(x),
-      missing_y = missing(y),
-      missing_long = missing(long),
-      missing_lat = missing(lat),
-      extent = extent,
-      heightmap = heightmap,
-      panel = panel,
+      point_input = point_input,
+      data_column_z = data_column_z,
+      z_supplied = z_supplied,
+      altitude_supplied = altitude_supplied,
+      scale_data = scale_data,
       crs = crs,
       caller = "render_label"
     )
-    x = point_input$x
-    y = point_input$y
-    input_crs = if (is.null(crs)) point_input$source_crs else crs
-    if (!is.null(point_input$extent)) {
-      extent = point_input$extent
-    }
-    if (!is.null(data_column_z)) {
-      z = resolve_render_label_z_column(
-        location = label_location,
-        point_input = point_input,
-        data_column_z = data_column_z,
-        z_supplied = z_supplied,
-        altitude_supplied = altitude_supplied,
-        scale_data = scale_data,
-        crs = crs,
-        caller = "render_label"
-      )
-    }
-    if (!is.null(data_column_text)) {
-      text = resolve_render_label_text_column(
-        location = label_location,
-        point_input = point_input,
-        data_column_text = data_column_text,
-        text_supplied = text_supplied,
-        crs = crs,
-        caller = "render_label"
-      )
-    }
-    if (!is.null(data_column_z)) {
-      data_column_z_keep = is.finite(z)
-      n_label_before_data_drop = length(x)
-      if (
-        length(data_column_z_keep) == n_label_before_data_drop &&
-          !all(data_column_z_keep)
-      ) {
-        x = x[data_column_z_keep]
-        y = y[data_column_z_keep]
-        z = subset_render_arg(
-          z,
-          data_column_z_keep,
-          n_label_before_data_drop
-        )
-        text = subset_render_arg(
-          text,
-          data_column_z_keep,
-          n_label_before_data_drop
-        )
-        offset = subset_render_arg(
-          offset,
-          data_column_z_keep,
-          n_label_before_data_drop
-        )
-        textsize = subset_render_arg(
-          textsize,
-          data_column_z_keep,
-          n_label_before_data_drop
-        )
-        line = subset_render_arg(
-          line,
-          data_column_z_keep,
-          n_label_before_data_drop
-        )
-        dashed = subset_render_arg(
-          dashed,
-          data_column_z_keep,
-          n_label_before_data_drop
-        )
-        dashlength = subset_render_arg(
-          dashlength,
-          data_column_z_keep,
-          n_label_before_data_drop
-        )
-        linewidth = subset_render_arg(
-          linewidth,
-          data_column_z_keep,
-          n_label_before_data_drop
-        )
-        alpha = subset_render_arg(
-          alpha,
-          data_column_z_keep,
-          n_label_before_data_drop
-        )
-        textalpha = subset_render_arg(
-          textalpha,
-          data_column_z_keep,
-          n_label_before_data_drop
-        )
-        linecolor = subset_render_color_arg(
-          linecolor,
-          data_column_z_keep,
-          n_label_before_data_drop
-        )
-        textcolor = subset_render_color_arg(
-          textcolor,
-          data_column_z_keep,
-          n_label_before_data_drop
-        )
-      }
-    }
-    if (is.null(z)) {
-      z = max(heightmap, na.rm = TRUE) * 1.1
-    }
-    label_zaxis_raw = if (
-      !is.null(data_column_z) && !identical(scale_data, 0)
+  }
+  if (!is.null(data_column_text)) {
+    text = resolve_render_label_text_column(
+      location = label_location,
+      point_input = point_input,
+      data_column_text = data_column_text,
+      text_supplied = text_supplied,
+      crs = crs,
+      caller = "render_label"
+    )
+  }
+  if (!is.null(data_column_z)) {
+    data_column_z_keep = is.finite(z)
+    n_label_before_data_drop = length(x)
+    if (
+      length(data_column_z_keep) == n_label_before_data_drop &&
+        !all(data_column_z_keep)
     ) {
-      z / scale_data
-    } else {
-      z
-    }
-    label_zaxis_label = if (!is.null(data_column_z)) data_column_z else "label"
-    if (is.null(text)) {
-      stop(
-        paste0(
-          format_render_caller_prefix("render_label"),
-          "Must provide `text` or `data_column_text`."
-        ),
-        call. = FALSE
+      x = x[data_column_z_keep]
+      y = y[data_column_z_keep]
+      z = subset_render_arg(
+        z,
+        data_column_z_keep,
+        n_label_before_data_drop
+      )
+      text = subset_render_arg(
+        text,
+        data_column_z_keep,
+        n_label_before_data_drop
+      )
+      offset = subset_render_arg(
+        offset,
+        data_column_z_keep,
+        n_label_before_data_drop
+      )
+      textsize = subset_render_arg(
+        textsize,
+        data_column_z_keep,
+        n_label_before_data_drop
+      )
+      line = subset_render_arg(
+        line,
+        data_column_z_keep,
+        n_label_before_data_drop
+      )
+      dashed = subset_render_arg(
+        dashed,
+        data_column_z_keep,
+        n_label_before_data_drop
+      )
+      dashlength = subset_render_arg(
+        dashlength,
+        data_column_z_keep,
+        n_label_before_data_drop
+      )
+      linewidth = subset_render_arg(
+        linewidth,
+        data_column_z_keep,
+        n_label_before_data_drop
+      )
+      alpha = subset_render_arg(
+        alpha,
+        data_column_z_keep,
+        n_label_before_data_drop
+      )
+      textalpha = subset_render_arg(
+        textalpha,
+        data_column_z_keep,
+        n_label_before_data_drop
+      )
+      linecolor = subset_render_color_arg(
+        linecolor,
+        data_column_z_keep,
+        n_label_before_data_drop
+      )
+      textcolor = subset_render_color_arg(
+        textcolor,
+        data_column_z_keep,
+        n_label_before_data_drop
       )
     }
-    if (is.null(x) || is.null(y)) {
-      stop("Must provide `x`/`y` coordinates.", call. = FALSE)
-    }
-    if (!point_input$location_supplied) {
-      scene_xy = auto_transform_scene_xy(
-        x = x,
-        y = y,
-        extent = extent,
-        heightmap = heightmap,
-        panel = panel,
-        crs = input_crs,
-        caller = "render_label"
-      )
-      x = scene_xy$x
-      y = scene_xy$y
-      if (!is.null(scene_xy$extent)) {
-        extent = scene_xy$extent
-      }
-    }
-    n_label_before_filter = length(x)
-    filtered_label = filter_scene_xy_to_extent(
+  }
+  if (is.null(z)) {
+    z = max(heightmap, na.rm = TRUE) * 1.1
+  }
+  label_zaxis_raw = if (!is.null(data_column_z) && !identical(scale_data, 0)) {
+    z / scale_data
+  } else {
+    z
+  }
+  label_zaxis_label = if (!is.null(data_column_z)) data_column_z else "label"
+  if (is.null(text)) {
+    stop(
+      paste0(
+        format_render_caller_prefix("render_label"),
+        "Must provide `text` or `data_column_text`."
+      ),
+      call. = FALSE
+    )
+  }
+  if (is.null(x) || is.null(y)) {
+    stop("Must provide `x`/`y` coordinates.", call. = FALSE)
+  }
+  if (!point_input$location_supplied) {
+    scene_xy = auto_transform_scene_xy(
       x = x,
       y = y,
       extent = extent,
       heightmap = heightmap,
       panel = panel,
-      filter_to_extent = filter_to_extent,
+      crs = input_crs,
       caller = "render_label"
     )
-    x = filtered_label$x
-    y = filtered_label$y
-    if (length(filtered_label$keep) == n_label_before_filter) {
-      z = subset_render_arg(z, filtered_label$keep, n_label_before_filter)
-      label_zaxis_raw = subset_render_arg(
-        label_zaxis_raw,
-        filtered_label$keep,
-        n_label_before_filter
-      )
-      text = subset_render_arg(text, filtered_label$keep, n_label_before_filter)
-      offset = subset_render_arg(
-        offset,
-        filtered_label$keep,
-        n_label_before_filter
-      )
-      textsize = subset_render_arg(
-        textsize,
-        filtered_label$keep,
-        n_label_before_filter
-      )
-      line = subset_render_arg(line, filtered_label$keep, n_label_before_filter)
-      dashed = subset_render_arg(
-        dashed,
-        filtered_label$keep,
-        n_label_before_filter
-      )
-      dashlength = subset_render_arg(
-        dashlength,
-        filtered_label$keep,
-        n_label_before_filter
-      )
-      linewidth = subset_render_arg(
-        linewidth,
-        filtered_label$keep,
-        n_label_before_filter
-      )
-      alpha = subset_render_arg(
-        alpha,
-        filtered_label$keep,
-        n_label_before_filter
-      )
-      textalpha = subset_render_arg(
-        textalpha,
-        filtered_label$keep,
-        n_label_before_filter
-      )
-      linecolor = subset_render_color_arg(
-        linecolor,
-        filtered_label$keep,
-        n_label_before_filter
-      )
-      textcolor = subset_render_color_arg(
-        textcolor,
-        filtered_label$keep,
-        n_label_before_filter
-      )
+    x = scene_xy$x
+    y = scene_xy$y
+    if (!is.null(scene_xy$extent)) {
+      extent = scene_xy$extent
     }
-    if (!length(x) || !length(y)) {
-      return(invisible(NULL))
-    }
-    if (length(x) != length(y)) {
-      stop(
-        paste0(
-          format_render_caller_prefix("render_label"),
-          "`x` and `y` must resolve to the same number of points."
-        ),
-        call. = FALSE
-      )
-    }
-    linecolor = resolve_ggplot_height_palette_color(
-      color = linecolor,
-      values = label_zaxis_raw,
-      heightmap = heightmap,
-      caller = "render_label",
-      arg_name = "linecolor"
+  }
+  n_label_before_filter = length(x)
+  filtered_label = filter_scene_xy_to_extent(
+    x = x,
+    y = y,
+    extent = extent,
+    heightmap = heightmap,
+    panel = panel,
+    filter_to_extent = filter_to_extent,
+    caller = "render_label"
+  )
+  x = filtered_label$x
+  y = filtered_label$y
+  if (length(filtered_label$keep) == n_label_before_filter) {
+    z = subset_render_arg(z, filtered_label$keep, n_label_before_filter)
+    label_zaxis_raw = subset_render_arg(
+      label_zaxis_raw,
+      filtered_label$keep,
+      n_label_before_filter
     )
-    textcolor = resolve_ggplot_height_palette_color(
-      color = textcolor,
-      values = label_zaxis_raw,
-      heightmap = heightmap,
-      caller = "render_label",
-      arg_name = "textcolor"
+    text = subset_render_arg(text, filtered_label$keep, n_label_before_filter)
+    offset = subset_render_arg(
+      offset,
+      filtered_label$keep,
+      n_label_before_filter
     )
-    label_height_transform = get_scene_height_transform(
-      heightmap = heightmap,
-      extent = extent
+    textsize = subset_render_arg(
+      textsize,
+      filtered_label$keep,
+      n_label_before_filter
     )
-    if (!is.null(label_height_transform)) {
-      label_height_reference = suppressWarnings(as.numeric(
-        label_height_transform$height_range
-      ))
-      label_height_reference =
-        label_height_reference[is.finite(label_height_reference)]
-      if (length(unique(label_height_reference)) <= 1) {
-        label_height_reference = z
-      }
-      z = map_scene_altitudes(
-        z,
-        height_transform = label_height_transform,
-        reference_values = label_height_reference
-      )
-    }
-    n_label = length(x)
-    validate_render_label_vector_arg(text, "text", n_label)
-    validate_render_label_vector_arg(z, "z", n_label)
-    validate_render_label_vector_arg(offset, "offset", n_label)
-    validate_render_label_vector_arg(textsize, "textsize", n_label)
-    validate_render_label_vector_arg(line, "line", n_label)
-    validate_render_label_vector_arg(dashed, "dashed", n_label)
-    validate_render_label_vector_arg(dashlength, "dashlength", n_label)
-    validate_render_label_vector_arg(linewidth, "linewidth", n_label)
-    validate_render_label_vector_arg(alpha, "alpha", n_label)
-    validate_render_label_vector_arg(textalpha, "textalpha", n_label)
-    validate_render_label_vector_arg(
+    line = subset_render_arg(line, filtered_label$keep, n_label_before_filter)
+    dashed = subset_render_arg(
+      dashed,
+      filtered_label$keep,
+      n_label_before_filter
+    )
+    dashlength = subset_render_arg(
+      dashlength,
+      filtered_label$keep,
+      n_label_before_filter
+    )
+    linewidth = subset_render_arg(
+      linewidth,
+      filtered_label$keep,
+      n_label_before_filter
+    )
+    alpha = subset_render_arg(
+      alpha,
+      filtered_label$keep,
+      n_label_before_filter
+    )
+    textalpha = subset_render_arg(
+      textalpha,
+      filtered_label$keep,
+      n_label_before_filter
+    )
+    linecolor = subset_render_color_arg(
       linecolor,
-      "linecolor",
-      n_label,
-      color = TRUE
+      filtered_label$keep,
+      n_label_before_filter
     )
-    validate_render_label_vector_arg(
+    textcolor = subset_render_color_arg(
       textcolor,
-      "textcolor",
-      n_label,
-      color = TRUE
+      filtered_label$keep,
+      n_label_before_filter
     )
-    if (rgl::cur3d() == 0) {
-      stop("No rgl window currently open.")
-    }
-    if (.Platform$OS.type == "unix") {
-      windows = FALSE
-    } else {
-      windows = TRUE
-    }
-    fontlist = list("standard" = 1, "bold" = 2, "italic" = 3, "bolditalic" = 4)
-    fonttype = fontlist[[fonttype]]
-    e = get_extent(extent)
-    nrow_map = nrow(heightmap) - 1
-    ncol_map = ncol(heightmap) - 1
-    label_scene_altitude = z
-    if (isTRUE(relativez)) {
-      label_surface_altitude = tryCatch(
-        transform_into_heightmap_coords(
-          extent = extent,
-          heightmap = heightmap,
-          lat = y,
-          long = x,
-          altitude = NULL,
-          offset = 0,
-          zscale = 1,
-          panel = panel,
-          transform_scene = FALSE,
-          caller = "render_label"
-        )[, 2],
-        error = function(e) rep(NA_real_, length(z))
-      )
-      label_scene_altitude = z +
-        ifelse(
-          is.finite(label_surface_altitude),
-          label_surface_altitude,
-          0
-        )
-    }
-    cache_altitude_zaxis_data(
-      source = "label",
-      altitude = label_zaxis_raw,
-      scene_altitude = label_scene_altitude,
-      label = label_zaxis_label
+  }
+  if (!length(x) || !length(y)) {
+    return(invisible(NULL))
+  }
+  if (length(x) != length(y)) {
+    stop(
+      paste0(
+        format_render_caller_prefix("render_label"),
+        "`x` and `y` must resolve to the same number of points."
+      ),
+      call. = FALSE
     )
-    ignoreex = par3d()$ignoreExtent
-    par3d(ignoreExtent = TRUE)
-    on.exit(par3d(ignoreExtent = ignoreex), add = TRUE)
-    if (freetype) {
-      seriflist = c(
-        "fonts/FreeSerif.ttf",
-        "fonts/FreeSerifBold.ttf",
-        "fonts/FreeSerifItalic.ttf",
-        "fonts/FreeSerifBoldItalic.ttf"
+  }
+  linecolor = resolve_ggplot_height_palette_color(
+    color = linecolor,
+    values = label_zaxis_raw,
+    heightmap = heightmap,
+    caller = "render_label",
+    arg_name = "linecolor"
+  )
+  textcolor = resolve_ggplot_height_palette_color(
+    color = textcolor,
+    values = label_zaxis_raw,
+    heightmap = heightmap,
+    caller = "render_label",
+    arg_name = "textcolor"
+  )
+  label_height_transform = get_scene_height_transform(
+    heightmap = heightmap,
+    extent = extent
+  )
+  if (!is.null(label_height_transform)) {
+    label_height_reference = suppressWarnings(as.numeric(
+      label_height_transform$height_range
+    ))
+    label_height_reference =
+      label_height_reference[is.finite(label_height_reference)]
+    if (length(unique(label_height_reference)) <= 1) {
+      label_height_reference = z
+    }
+    z = map_scene_altitudes(
+      z,
+      height_transform = label_height_transform,
+      reference_values = label_height_reference
+    )
+  }
+  n_label = length(x)
+  validate_render_label_vector_arg(text, "text", n_label)
+  validate_render_label_vector_arg(z, "z", n_label)
+  validate_render_label_vector_arg(offset, "offset", n_label)
+  validate_render_label_vector_arg(textsize, "textsize", n_label)
+  validate_render_label_vector_arg(line, "line", n_label)
+  validate_render_label_vector_arg(dashed, "dashed", n_label)
+  validate_render_label_vector_arg(dashlength, "dashlength", n_label)
+  validate_render_label_vector_arg(linewidth, "linewidth", n_label)
+  validate_render_label_vector_arg(alpha, "alpha", n_label)
+  validate_render_label_vector_arg(textalpha, "textalpha", n_label)
+  validate_render_label_vector_arg(
+    linecolor,
+    "linecolor",
+    n_label,
+    color = TRUE
+  )
+  validate_render_label_vector_arg(
+    textcolor,
+    "textcolor",
+    n_label,
+    color = TRUE
+  )
+  if (rgl::cur3d() == 0) {
+    stop("No rgl window currently open.")
+  }
+  if (.Platform$OS.type == "unix") {
+    windows = FALSE
+  } else {
+    windows = TRUE
+  }
+  fontlist = list("standard" = 1, "bold" = 2, "italic" = 3, "bolditalic" = 4)
+  fonttype = fontlist[[fonttype]]
+  e = get_extent(extent)
+  nrow_map = nrow(heightmap) - 1
+  ncol_map = ncol(heightmap) - 1
+  label_scene_altitude = z
+  if (isTRUE(relativez)) {
+    label_surface_altitude = tryCatch(
+      transform_into_heightmap_coords(
+        extent = extent,
+        heightmap = heightmap,
+        lat = y,
+        long = x,
+        altitude = NULL,
+        offset = 0,
+        zscale = 1,
+        panel = panel,
+        transform_scene = FALSE,
+        caller = "render_label"
+      )[, 2],
+      error = function(e) rep(NA_real_, length(z))
+    )
+    label_scene_altitude = z +
+      ifelse(
+        is.finite(label_surface_altitude),
+        label_surface_altitude,
+        0
       )
-      sanslist = c(
-        "fonts/FreeSans.ttf",
-        "fonts/FreeSansBold.ttf",
-        "fonts/FreeSansOblique.ttf",
-        "fonts/FreeSansBoldOblique.ttf"
-      )
-      monolist = c(
-        "fonts/FreeMono.ttf",
-        "fonts/FreeMonoBold.ttf",
-        "fonts/FreeMonoOblique.ttf",
-        "fonts/FreeMonoBoldOblique.ttf"
-      )
-      symbollist = c(
-        "fonts/ESSTIX10.TTF",
-        "fonts/ESSTIX12.TTF",
-        "fonts/ESSTIX9_.TTF",
-        "fonts/ESSTIX11.TTF"
-      )
-      seriflist2 = unlist(lapply(seriflist, system.file, package = "rgl"))
-      sanslist2 = unlist(lapply(sanslist, system.file, package = "rgl"))
-      monolist2 = unlist(lapply(monolist, system.file, package = "rgl"))
-      symbollist2 = unlist(lapply(symbollist, system.file, package = "rgl"))
-      rglFonts(
-        serif = seriflist2,
-        sans = sanslist2,
-        mono = monolist2,
-        symbol = symbollist2
-      )
-      warningstring = " "
-      if (family == "serif") {
-        if (nchar(seriflist2[[fonttype]]) == 0) {
-          family = "bitmap"
-          if (fonttype != 1) {
-            warningstring = ", setting fonttype to \"standard\", "
-          }
-          freetype = FALSE
-          if (!windows) {
-            textsize = 1
-            windowsstring = "and setting textsize to 1."
-          } else {
-            windowsstring = "."
-          }
-          warning(paste0(
-            seriflist[[fonttype]],
-            " not found. Turning freetype off",
-            warningstring,
-            windowsstring
-          ))
-          fonttype = 1
+  }
+  cache_altitude_zaxis_data(
+    source = "label",
+    altitude = label_zaxis_raw,
+    scene_altitude = label_scene_altitude,
+    label = label_zaxis_label
+  )
+  ignoreex = par3d()$ignoreExtent
+  par3d(ignoreExtent = TRUE)
+  on.exit(par3d(ignoreExtent = ignoreex), add = TRUE)
+  if (freetype) {
+    seriflist = c(
+      "fonts/FreeSerif.ttf",
+      "fonts/FreeSerifBold.ttf",
+      "fonts/FreeSerifItalic.ttf",
+      "fonts/FreeSerifBoldItalic.ttf"
+    )
+    sanslist = c(
+      "fonts/FreeSans.ttf",
+      "fonts/FreeSansBold.ttf",
+      "fonts/FreeSansOblique.ttf",
+      "fonts/FreeSansBoldOblique.ttf"
+    )
+    monolist = c(
+      "fonts/FreeMono.ttf",
+      "fonts/FreeMonoBold.ttf",
+      "fonts/FreeMonoOblique.ttf",
+      "fonts/FreeMonoBoldOblique.ttf"
+    )
+    symbollist = c(
+      "fonts/ESSTIX10.TTF",
+      "fonts/ESSTIX12.TTF",
+      "fonts/ESSTIX9_.TTF",
+      "fonts/ESSTIX11.TTF"
+    )
+    seriflist2 = unlist(lapply(seriflist, system.file, package = "rgl"))
+    sanslist2 = unlist(lapply(sanslist, system.file, package = "rgl"))
+    monolist2 = unlist(lapply(monolist, system.file, package = "rgl"))
+    symbollist2 = unlist(lapply(symbollist, system.file, package = "rgl"))
+    rglFonts(
+      serif = seriflist2,
+      sans = sanslist2,
+      mono = monolist2,
+      symbol = symbollist2
+    )
+    warningstring = " "
+    if (family == "serif") {
+      if (nchar(seriflist2[[fonttype]]) == 0) {
+        family = "bitmap"
+        if (fonttype != 1) {
+          warningstring = ", setting fonttype to \"standard\", "
         }
-      }
-      if (family == "sans") {
-        if (nchar(sanslist2[[fonttype]]) == 0) {
-          family = "bitmap"
-          if (fonttype != 1) {
-            warningstring = ", setting fonttype to \"standard\", "
-          }
-          if (!windows) {
-            textsize = 1
-            windowsstring = "and setting textsize to 1."
-          } else {
-            windowsstring = "."
-          }
-          freetype = FALSE
-          warning(paste0(
-            sanslist[[fonttype]],
-            " not found. Turning freetype off",
-            warningstring,
-            windowsstring
-          ))
-          fonttype = 1
+        freetype = FALSE
+        if (!windows) {
+          textsize = 1
+          windowsstring = "and setting textsize to 1."
+        } else {
+          windowsstring = "."
         }
-      }
-      if (family == "mono") {
-        if (nchar(monolist2[[fonttype]]) == 0) {
-          family = "bitmap"
-          if (fonttype != 1) {
-            warningstring = ", setting fonttype to \"standard\", "
-          }
-          if (!windows) {
-            textsize = 1
-            windowsstring = "and setting textsize to 1."
-          } else {
-            windowsstring = "."
-          }
-          freetype = FALSE
-          warning(paste0(
-            monolist[[fonttype]],
-            " not found. Turning freetype off",
-            warningstring,
-            windowsstring
-          ))
-          fonttype = 1
-        }
-      }
-      if (family == "symbol") {
-        if (nchar(symbollist2[[fonttype]]) == 0) {
-          family = "bitmap"
-          if (fonttype != 1) {
-            warningstring = ", setting fonttype to \"standard\", "
-          }
-          if (!windows) {
-            textsize = 1
-            windowsstring = "and setting textsize to 1."
-          } else {
-            windowsstring = "."
-          }
-          freetype = FALSE
-          warning(paste0(
-            symbollist[[fonttype]],
-            " not found. Turning freetype off",
-            warningstring,
-            windowsstring
-          ))
-          fonttype = 1
-        }
-      }
-    } else {
-      warningstring = ""
-      family = "bitmap"
-      if (fonttype != 1) {
-        warningstring = " and fonttype to \"standard\""
+        warning(paste0(
+          seriflist[[fonttype]],
+          " not found. Turning freetype off",
+          warningstring,
+          windowsstring
+        ))
         fonttype = 1
       }
-      freetype = FALSE
-      if (any(textsize != 1) && !windows) {
-        warning(
-          "Bitmap fonts do not support variable text sizes--setting textsize back to 1",
+    }
+    if (family == "sans") {
+      if (nchar(sanslist2[[fonttype]]) == 0) {
+        family = "bitmap"
+        if (fonttype != 1) {
+          warningstring = ", setting fonttype to \"standard\", "
+        }
+        if (!windows) {
+          textsize = 1
+          windowsstring = "and setting textsize to 1."
+        } else {
+          windowsstring = "."
+        }
+        freetype = FALSE
+        warning(paste0(
+          sanslist[[fonttype]],
+          " not found. Turning freetype off",
           warningstring,
-          "."
-        )
-        textsize = 1
+          windowsstring
+        ))
+        fonttype = 1
       }
     }
-    if (is.null(adjustvec)) {
-      if (freetype || windows) {
-        adjustvec = c(0.5, -0.5)
-      } else {
-        adjustvec = c(0.33, -0.5)
+    if (family == "mono") {
+      if (nchar(monolist2[[fonttype]]) == 0) {
+        family = "bitmap"
+        if (fonttype != 1) {
+          warningstring = ", setting fonttype to \"standard\", "
+        }
+        if (!windows) {
+          textsize = 1
+          windowsstring = "and setting textsize to 1."
+        } else {
+          windowsstring = "."
+        }
+        freetype = FALSE
+        warning(paste0(
+          monolist[[fonttype]],
+          " not found. Turning freetype off",
+          warningstring,
+          windowsstring
+        ))
+        fonttype = 1
       }
     }
-    for (label_index in seq_len(n_label)) {
-      render_single_label(
-        label_index = label_index,
-        x = x,
-        y = y,
-        z = z,
-        text = text,
-        offset = offset,
-        line = line,
-        heightmap = heightmap,
-        extent = e,
-        nrow_map = nrow_map,
-        ncol_map = ncol_map,
-        zscale = zscale,
-        relativez = relativez,
-        dashed = dashed,
-        dashlength = dashlength,
-        linewidth = linewidth,
-        antialias = antialias,
-        alpha = alpha,
-        textalpha = textalpha,
-        linecolor = linecolor,
-        textcolor = textcolor,
-        textsize = textsize,
-        adjustvec = adjustvec,
-        freetype = freetype,
-        family = family,
-        fonttype = fonttype
+    if (family == "symbol") {
+      if (nchar(symbollist2[[fonttype]]) == 0) {
+        family = "bitmap"
+        if (fonttype != 1) {
+          warningstring = ", setting fonttype to \"standard\", "
+        }
+        if (!windows) {
+          textsize = 1
+          windowsstring = "and setting textsize to 1."
+        } else {
+          windowsstring = "."
+        }
+        freetype = FALSE
+        warning(paste0(
+          symbollist[[fonttype]],
+          " not found. Turning freetype off",
+          warningstring,
+          windowsstring
+        ))
+        fonttype = 1
+      }
+    }
+  } else {
+    warningstring = ""
+    family = "bitmap"
+    if (fonttype != 1) {
+      warningstring = " and fonttype to \"standard\""
+      fonttype = 1
+    }
+    freetype = FALSE
+    if (any(textsize != 1) && !windows) {
+      warning(
+        "Bitmap fonts do not support variable text sizes--setting textsize back to 1",
+        warningstring,
+        "."
       )
+      textsize = 1
     }
+  }
+  if (is.null(adjustvec)) {
+    if (freetype || windows) {
+      adjustvec = c(0.5, -0.5)
+    } else {
+      adjustvec = c(0.33, -0.5)
+    }
+  }
+  for (label_index in seq_len(n_label)) {
+    render_single_label(
+      label_index = label_index,
+      x = x,
+      y = y,
+      z = z,
+      text = text,
+      offset = offset,
+      line = line,
+      heightmap = heightmap,
+      extent = e,
+      nrow_map = nrow_map,
+      ncol_map = ncol_map,
+      zscale = zscale,
+      relativez = relativez,
+      dashed = dashed,
+      dashlength = dashlength,
+      linewidth = linewidth,
+      antialias = antialias,
+      alpha = alpha,
+      textalpha = textalpha,
+      linecolor = linecolor,
+      textcolor = textcolor,
+      textsize = textsize,
+      adjustvec = adjustvec,
+      freetype = freetype,
+      family = family,
+      fonttype = fonttype
+    )
   }
   invisible(NULL)
 }

@@ -56,13 +56,12 @@
 #'the path to the tolerance specified. This happens after the data has been merged if `reorder = TRUE`.
 #'If the input data is specified with long-lat coordinates and `sf_use_s2()` returns `TRUE`,
 #'then the value of simplify_tolerance must be specified in meters.
-#'@param clear_previous Default `FALSE`. If `TRUE`, it will clear all existing paths.
+#'@param clear_previous Default `FALSE`. If `TRUE`, clears all existing paths
+#'for `tag`. A clear-only call returns without rendering a replacement.
 #'@param return_coords Default `FALSE`. If `TRUE`, this will return the internal rayshader coordinates of the path, instead of
 #'plotting the line.
 #'@param tag Default `"path3d"`. The rgl tag to use when adding the path to the scene.
 #'@param filter_to_extent Default `TRUE`. If `TRUE`, path data outside the scene extent is omitted. Spatial line inputs are cropped to the extent. For scenes created with [plot_gg()], filtering uses the ggplot panel extent rather than the full rendered 3D ggplot extent.
-#'@param ... Optional z-axis arguments passed to [render_zaxis()], such as
-#'`zaxis = TRUE`, `zaxis_location`, `zaxis_breaks`, and `zaxis_labels`.
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Starting at Moss Landing in Monterey Bay, we are going to simulate a flight of a bird going
@@ -180,9 +179,18 @@ render_path = function(
   lat = NULL,
   long = NULL,
   crs = NULL,
-  filter_to_extent = TRUE,
-  ...
+  filter_to_extent = TRUE
 ) {
+  if (
+    is_render_clear_only_call(
+      clear_previous,
+      match.call(),
+      function() rgl::pop3d(tag = tag),
+      routing_arguments = "tag"
+    )
+  ) {
+    return(invisible(NULL))
+  }
   validate_filter_to_extent(filter_to_extent, caller = "render_path")
   xy_inputs = resolve_render_xy_aliases(
     x = x,
@@ -200,7 +208,6 @@ render_path = function(
   input_crs = if (is.null(crs)) xy_inputs$source_crs else crs
   lat = y
   long = x
-  zaxis_split = split_zaxis_dots(list(...))
   zscale = resolve_scene_render_effective_zscale(
     zscale = zscale,
     zscale_missing = missing(zscale),
@@ -219,28 +226,8 @@ render_path = function(
     panel = panel,
     error_if_missing = FALSE
   )
-  zaxis_args = normalize_scene_zaxis_args(
-    zaxis_args = zaxis_split$zaxis_args,
-    altitude = altitude,
-    extent = extent,
-    heightmap = heightmap
-  )
   if (rgl::cur3d() == 0 && !return_coords) {
     stop("No rgl window currently open.")
-  }
-  if (clear_previous) {
-    rgl::pop3d(tag = tag)
-    if (is.null(lat)) {
-      render_zaxis_from_dots(
-        zaxis_args = zaxis_args,
-        extent = extent,
-        panel = panel,
-        zscale = zscale,
-        heightmap = heightmap,
-        caller = "render_path"
-      )
-      return(invisible())
-    }
   }
   if (resample_evenly) {
     if (
@@ -279,14 +266,6 @@ render_path = function(
       if (return_coords) {
         return(list())
       }
-      render_zaxis_from_dots(
-        zaxis_args = zaxis_args,
-        extent = extent,
-        panel = panel,
-        zscale = zscale,
-        heightmap = heightmap,
-        caller = "render_path"
-      )
       return(invisible(NULL))
     }
     xyz = lapply(xyz, get_interpolated_points_path, n = resample_n)
@@ -317,14 +296,6 @@ render_path = function(
             line_antialias = antialias
           )
         }
-        render_zaxis_from_dots(
-          zaxis_args = zaxis_args,
-          extent = extent,
-          panel = panel,
-          zscale = zscale,
-          heightmap = heightmap,
-          caller = "render_path"
-        )
         return(invisible())
       } else {
         rgl::lines3d(
@@ -333,14 +304,6 @@ render_path = function(
           tag = tag,
           lwd = linewidth,
           line_antialias = antialias
-        )
-        render_zaxis_from_dots(
-          zaxis_args = zaxis_args,
-          extent = extent,
-          panel = panel,
-          zscale = zscale,
-          heightmap = heightmap,
-          caller = "render_path"
         )
         return(invisible())
       }
@@ -415,14 +378,6 @@ render_path = function(
       if (return_coords) {
         return(list())
       }
-      render_zaxis_from_dots(
-        zaxis_args = zaxis_args,
-        extent = extent,
-        panel = panel,
-        zscale = zscale,
-        heightmap = heightmap,
-        caller = "render_path"
-      )
       return(invisible(NULL))
     }
     geometry_transformed = TRUE
@@ -498,14 +453,6 @@ render_path = function(
       if (return_coords) {
         return(list())
       }
-      render_zaxis_from_dots(
-        zaxis_args = zaxis_args,
-        extent = extent,
-        panel = panel,
-        zscale = zscale,
-        heightmap = heightmap,
-        caller = "render_path"
-      )
       return(invisible(NULL))
     }
   }
@@ -555,14 +502,6 @@ render_path = function(
     if (return_coords) {
       return(list())
     }
-    render_zaxis_from_dots(
-      zaxis_args = zaxis_args,
-      extent = extent,
-      panel = panel,
-      zscale = zscale,
-      heightmap = heightmap,
-      caller = "render_path"
-    )
     return(invisible(NULL))
   }
   path_scene_altitude = unlist(lapply(coord_list, function(coord) {
@@ -655,17 +594,10 @@ render_path = function(
         line_antialias = antialias
       )
     }
-    render_zaxis_from_dots(
-      zaxis_args = zaxis_args,
-      extent = extent,
-      panel = panel,
-      zscale = zscale,
-      heightmap = heightmap,
-      caller = "render_path"
-    )
   } else {
     return(coord_list)
   }
+  invisible(NULL)
 }
 
 #' Coerce render path geometry to line strings

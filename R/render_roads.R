@@ -102,7 +102,8 @@
 #' `lane_dash_length / (lane_dash_length + lane_gap_length)`. Fraction of each
 #' texture repetition occupied by a dash for dashed lane markings.
 #' @param clear_previous Default `TRUE`. If `TRUE`, removes the existing road
-#' layer before drawing the new one.
+#' layer before drawing the new one. A clear-only call returns without rendering
+#' a replacement.
 #' @param preview Default `"line"`. Whether roads are drawn in rgl as lightweight
 #' `"line"` previews or as their cached `"mesh"` geometry. The mesh is the exact
 #' high-quality geometry and does not include the line-only preview offset.
@@ -150,6 +151,25 @@ render_roads = function(
   maximum_grade = 0.15,
   continuation_grade_tolerance = 0.14
 ) {
+  clear_road_layer = function() {
+    road_scene_ids = get_ids_with_labels(
+      typeval = c("road_path", "road_mesh_preview")
+    )$id
+    for (road_scene_id in road_scene_ids) {
+      rgl::pop3d(id = road_scene_id)
+    }
+    clear_render_road_path_info()
+    cache_scene_road_meshes(NULL)
+  }
+  if (
+    is_render_clear_only_call(
+      clear_previous,
+      match.call(),
+      clear_road_layer
+    )
+  ) {
+    return(invisible(NULL))
+  }
   # 1. Capture expressions needed to distinguish values from column references.
   heightmap_missing = missing(heightmap)
   zscale_missing = missing(zscale)
@@ -481,17 +501,6 @@ render_roads = function(
     lanes_spec$column = "render_road_input_lanes"
     merge = FALSE
   }
-  if (isTRUE(clear_previous)) {
-    road_scene_ids = get_ids_with_labels(
-      typeval = c("road_path", "road_mesh_preview")
-    )$id
-    for (road_scene_id in road_scene_ids) {
-      rgl::pop3d(id = road_scene_id)
-    }
-    clear_render_road_path_info()
-    cache_scene_road_meshes(NULL)
-  }
-
   # 4. Normalize geometry and create terrain-sampled centerline paths.
   extent = resolve_scene_render_extent(
     heightmap = heightmap,

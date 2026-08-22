@@ -32,10 +32,9 @@
 #'a size for each point.
 #'@param color Default `black`. Color of the point. This can also be a vector specifying the color of each point. Use `"height"` to color points by the cached [plot_gg()] height aesthetic palette.
 #'@param offset Default `5`. Offset of the track from the surface, if `altitude = NULL`.
-#'@param clear_previous Default `FALSE`. If `TRUE`, it will clear all existing points.
+#'@param clear_previous Default `FALSE`. If `TRUE`, clears all existing points.
+#'A clear-only call returns without rendering a replacement.
 #'@param filter_to_extent Default `TRUE`. If `TRUE`, points outside the scene extent are omitted. For scenes created with [plot_gg()], filtering uses the ggplot panel extent rather than the full rendered 3D ggplot extent.
-#'@param ... Optional z-axis arguments passed to [render_zaxis()], such as
-#'`zaxis = TRUE`, `zaxis_location`, `zaxis_breaks`, and `zaxis_labels`.
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Starting at Moss Landing in Monterey Bay, we are going to simulate a flight of a bird going
@@ -130,12 +129,19 @@ render_points = function(
   long = NULL,
   location = NULL,
   crs = NULL,
-  filter_to_extent = TRUE,
-  ...
+  filter_to_extent = TRUE
 ) {
+  if (
+    is_render_clear_only_call(
+      clear_previous,
+      match.call(),
+      function() rgl::pop3d(tag = "points3d")
+    )
+  ) {
+    return(invisible(NULL))
+  }
   offset_missing = missing(offset)
   validate_filter_to_extent(filter_to_extent, caller = "render_points")
-  zaxis_split = split_zaxis_dots(list(...))
   zscale = resolve_scene_render_effective_zscale(
     zscale = zscale,
     zscale_missing = missing(zscale),
@@ -191,28 +197,8 @@ render_points = function(
   if (!is.null(point_input$extent)) {
     extent = point_input$extent
   }
-  zaxis_args = normalize_scene_zaxis_args(
-    zaxis_args = zaxis_split$zaxis_args,
-    altitude = altitude,
-    extent = extent,
-    heightmap = heightmap
-  )
   if (rgl::cur3d() == 0) {
     stop("No rgl window currently open.")
-  }
-  if (clear_previous) {
-    rgl::pop3d(tag = "points3d")
-    if (is.null(y) || is.null(x)) {
-      render_zaxis_from_dots(
-        zaxis_args = zaxis_args,
-        extent = extent,
-        panel = panel,
-        zscale = zscale,
-        heightmap = heightmap,
-        caller = "render_points"
-      )
-      return(invisible())
-    }
   }
   if (!point_input$location_supplied && !is.null(x) && !is.null(y)) {
     scene_xy = auto_transform_scene_xy(
@@ -256,14 +242,6 @@ render_points = function(
     )
   }
   if (!length(x) || !length(y)) {
-    render_zaxis_from_dots(
-      zaxis_args = zaxis_args,
-      extent = extent,
-      panel = panel,
-      zscale = zscale,
-      heightmap = heightmap,
-      caller = "render_points"
-    )
     return(invisible(NULL))
   }
   if (!is.null(altitude) && isTRUE(offset_missing)) {
@@ -322,14 +300,6 @@ render_points = function(
   cache_point_zaxis_data(
     altitude = altitude,
     scene_altitude = xyz[, 2] * zscale
-  )
-  render_zaxis_from_dots(
-    zaxis_args = zaxis_args,
-    extent = extent,
-    panel = panel,
-    zscale = zscale,
-    heightmap = heightmap,
-    caller = "render_points"
   )
   invisible(NULL)
 }

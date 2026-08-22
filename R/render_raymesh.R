@@ -58,7 +58,9 @@
 #'or absolute.
 #'@param color Default `black`. Color of the 3D model, if `load_material = FALSE`. Use `"height"` to color placed models by the cached [plot_gg()] height aesthetic palette.
 #'@param offset Default `5`. Offset of the track from the surface, if `altitude = NULL`.
-#'@param clear_previous Default `FALSE`. If `TRUE`, it will clear all existing points.
+#'@param clear_previous Default `FALSE`. If `TRUE`, clears all existing raymesh
+#'objects for `rgl_tag`. A clear-only call returns without rendering a
+#'replacement.
 #'@param rgl_tag Default `""`. Tag to add to the rgl scene id, will be prefixed by `"objraymsh"`
 #'@param filter_to_extent Default `TRUE`. If `TRUE`, raymesh placements outside the scene extent are omitted. For scenes created with [plot_gg()], filtering uses the ggplot panel extent rather than the full rendered 3D ggplot extent.
 #'@param ... Additional arguments to pass to `rgl::triangles3d()`.
@@ -136,12 +138,11 @@ render_raymesh = function(
   filter_to_extent = TRUE,
   ...
 ) {
-  validate_filter_to_extent(filter_to_extent, caller = "render_raymesh")
-  dot_split = split_zaxis_dots(list(...))
+  render_raymesh_args = list(...)
   rgl_tag_prefix = "obj_raymesh"
   swap_yz_transform = "swap"
-  if ("rgl_tag_prefix" %in% names(dot_split$other_args)) {
-    rgl_tag_prefix = dot_split$other_args$rgl_tag_prefix
+  if ("rgl_tag_prefix" %in% names(render_raymesh_args)) {
+    rgl_tag_prefix = render_raymesh_args$rgl_tag_prefix
     if (
       !is.character(rgl_tag_prefix) ||
         length(rgl_tag_prefix) != 1 ||
@@ -149,10 +150,22 @@ render_raymesh = function(
     ) {
       stop("`rgl_tag_prefix` must be a single string.", call. = FALSE)
     }
-    dot_split$other_args$rgl_tag_prefix = NULL
+    render_raymesh_args$rgl_tag_prefix = NULL
   }
-  if ("swap_yz_transform" %in% names(dot_split$other_args)) {
-    swap_yz_transform = dot_split$other_args$swap_yz_transform
+  if (
+    is_render_clear_only_call(
+      clear_previous,
+      match.call(),
+      function() {
+        rgl::pop3d(tag = sprintf("%s%s", rgl_tag_prefix, rgl_tag))
+      },
+      routing_arguments = c("rgl_tag", "rgl_tag_prefix")
+    )
+  ) {
+    return(invisible(NULL))
+  }
+  if ("swap_yz_transform" %in% names(render_raymesh_args)) {
+    swap_yz_transform = render_raymesh_args$swap_yz_transform
     if (
       !is.character(swap_yz_transform) ||
         length(swap_yz_transform) != 1 ||
@@ -163,8 +176,9 @@ render_raymesh = function(
         call. = FALSE
       )
     }
-    dot_split$other_args$swap_yz_transform = NULL
+    render_raymesh_args$swap_yz_transform = NULL
   }
+  validate_filter_to_extent(filter_to_extent, caller = "render_raymesh")
   zscale = resolve_scene_render_effective_zscale(
     zscale = zscale,
     zscale_missing = missing(zscale),
@@ -176,20 +190,6 @@ render_raymesh = function(
     heightmap,
     caller = "render_raymesh"
   )
-  zaxis_args = dot_split$zaxis_args
-  zaxis_extent = resolve_scene_render_extent(
-    extent = extent,
-    heightmap = heightmap,
-    caller = "render_raymesh",
-    panel = panel,
-    error_if_missing = FALSE
-  )
-  zaxis_args = normalize_scene_zaxis_args(
-    zaxis_args = zaxis_args,
-    altitude = altitude,
-    extent = zaxis_extent,
-    heightmap = heightmap
-  )
   point_input = resolve_render_location_input(
     location = location,
     x = x,
@@ -200,7 +200,7 @@ render_raymesh = function(
     missing_y = missing(y),
     missing_long = missing(long),
     missing_lat = missing(lat),
-    extent = if (!is.null(zaxis_extent)) zaxis_extent else extent,
+    extent = extent,
     heightmap = heightmap,
     panel = panel,
     crs = crs,
@@ -213,11 +213,8 @@ render_raymesh = function(
   input_crs = if (is.null(crs)) point_input$source_crs else crs
   if (!is.null(point_input$extent)) {
     extent = point_input$extent
-  } else if (is.null(extent) && !is.null(zaxis_extent)) {
-    extent = zaxis_extent
   }
   location_supplied = isTRUE(point_input$location_supplied)
-  render_raymesh_args = dot_split$other_args
   triangles3d_with_args = function(...) {
     do.call(rgl::triangles3d, c(list(...), render_raymesh_args))
   }
@@ -282,17 +279,6 @@ render_raymesh = function(
       )
     }
     if (!length(lat) || !length(long)) {
-      if (clear_previous) {
-        rgl::pop3d(tag = sprintf("%s%s", rgl_tag_prefix, rgl_tag))
-      }
-      render_zaxis_from_dots(
-        zaxis_args = zaxis_args,
-        extent = extent,
-        panel = panel,
-        zscale = zscale,
-        heightmap = heightmap,
-        caller = "render_raymesh"
-      )
       return(invisible(NULL))
     }
   }
@@ -344,20 +330,6 @@ render_raymesh = function(
     raw_coords = TRUE
   }
 
-  if (clear_previous) {
-    rgl::pop3d(tag = sprintf("%s%s", rgl_tag_prefix, rgl_tag))
-    if (missing(raymesh)) {
-      render_zaxis_from_dots(
-        zaxis_args = zaxis_args,
-        extent = extent,
-        panel = panel,
-        zscale = zscale,
-        heightmap = heightmap,
-        caller = "render_raymesh"
-      )
-      return(invisible())
-    }
-  }
   raymesh_color_values = if (!is.null(altitude)) {
     altitude
   } else {
@@ -719,12 +691,5 @@ render_raymesh = function(
       )
     }
   }
-  render_zaxis_from_dots(
-    zaxis_args = zaxis_args,
-    extent = extent,
-    panel = panel,
-    zscale = zscale,
-    heightmap = heightmap,
-    caller = "render_raymesh"
-  )
+  invisible(NULL)
 }

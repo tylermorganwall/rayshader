@@ -3199,48 +3199,6 @@ transform_scene_altitudes = function(
   )
 }
 
-normalize_scene_zaxis_args = function(
-  zaxis_args = list(),
-  altitude = NULL,
-  extent = NULL,
-  heightmap = NULL
-) {
-  if (length(zaxis_args) == 0 || is.null(altitude)) {
-    return(zaxis_args)
-  }
-  height_transform = get_scene_height_transform(
-    heightmap = heightmap,
-    extent = extent
-  )
-  if (is.null(height_transform)) {
-    return(zaxis_args)
-  }
-  altitude_vals = suppressWarnings(as.numeric(altitude))
-  altitude_vals = altitude_vals[is.finite(altitude_vals)]
-  if (length(unique(altitude_vals)) <= 1) {
-    return(zaxis_args)
-  }
-  raw_breaks = zaxis_args$zaxis_breaks
-  if (is.null(raw_breaks)) {
-    raw_breaks = pretty(range(altitude_vals), n = 4)
-    raw_breaks = raw_breaks[is.finite(raw_breaks)]
-  }
-  if (is.null(zaxis_args$zaxis_labels)) {
-    zaxis_args$zaxis_labels = format(
-      raw_breaks,
-      trim = TRUE,
-      scientific = FALSE
-    )
-  }
-  zaxis_args$zaxis_breaks = transform_scene_altitudes(
-    raw_breaks,
-    extent = extent,
-    heightmap = heightmap,
-    reference_values = altitude_vals
-  )
-  zaxis_args
-}
-
 capture_plot_gg_panel_info = function(
   ggplot_grob,
   ggplot_build_obj,

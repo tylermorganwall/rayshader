@@ -59,7 +59,8 @@
 #'@param light_relative Default `FALSE`. Whether the light direction should be taken relative to the camera,
 #'or absolute.
 #'@param offset Default `5`. Offset of the model from the surface, if `altitude = NULL`.
-#'@param clear_previous Default `FALSE`. If `TRUE`, it will clear all existing points.
+#'@param clear_previous Default `FALSE`. If `TRUE`, clears all existing objects
+#'for `rgl_tag`. A clear-only call returns without rendering a replacement.
 #'@param rgl_tag Default `""`. Tag to add to the rgl scene id, will be prefixed by `"obj"`
 #'@param filter_to_extent Default `TRUE`. If `TRUE`, object placements outside the scene extent are omitted. For scenes created with [plot_gg()], filtering uses the ggplot panel extent rather than the full rendered 3D ggplot extent.
 #'@param ... Additional arguments to pass to `rgl::triangles3d()`.
@@ -138,11 +139,21 @@ render_obj = function(
   filter_to_extent = TRUE,
   ...
 ) {
+  if (
+    is_render_clear_only_call(
+      clear_previous,
+      match.call(),
+      function() rgl::pop3d(tag = sprintf("obj%s", rgl_tag)),
+      routing_arguments = "rgl_tag"
+    )
+  ) {
+    return(invisible(NULL))
+  }
   validate_filter_to_extent(filter_to_extent, caller = "render_obj")
-  dot_split = split_zaxis_dots(list(...))
+  render_obj_args = list(...)
   transform_scene_input = TRUE
-  if ("transform_scene" %in% names(dot_split$other_args)) {
-    transform_scene_input = dot_split$other_args$transform_scene
+  if ("transform_scene" %in% names(render_obj_args)) {
+    transform_scene_input = render_obj_args$transform_scene
     if (
       !is.logical(transform_scene_input) ||
         length(transform_scene_input) != 1 ||
@@ -150,7 +161,7 @@ render_obj = function(
     ) {
       stop("`transform_scene` must be a single logical value.", call. = FALSE)
     }
-    dot_split$other_args$transform_scene = NULL
+    render_obj_args$transform_scene = NULL
   }
   zscale = resolve_scene_render_effective_zscale(
     zscale = zscale,
@@ -163,20 +174,6 @@ render_obj = function(
     heightmap,
     caller = "render_obj"
   )
-  zaxis_args = dot_split$zaxis_args
-  zaxis_extent = resolve_scene_render_extent(
-    extent = extent,
-    heightmap = heightmap,
-    caller = "render_obj",
-    panel = panel,
-    error_if_missing = FALSE
-  )
-  zaxis_args = normalize_scene_zaxis_args(
-    zaxis_args = zaxis_args,
-    altitude = altitude,
-    extent = zaxis_extent,
-    heightmap = heightmap
-  )
   point_input = resolve_render_location_input(
     location = location,
     x = x,
@@ -187,7 +184,7 @@ render_obj = function(
     missing_y = missing(y),
     missing_long = missing(long),
     missing_lat = missing(lat),
-    extent = if (!is.null(zaxis_extent)) zaxis_extent else extent,
+    extent = extent,
     heightmap = heightmap,
     panel = panel,
     crs = crs,
@@ -210,11 +207,8 @@ render_obj = function(
   input_crs = if (is.null(crs)) point_input$source_crs else crs
   if (!is.null(point_input$extent)) {
     extent = point_input$extent
-  } else if (is.null(extent) && !is.null(zaxis_extent)) {
-    extent = zaxis_extent
   }
   location_supplied = isTRUE(point_input$location_supplied)
-  render_obj_args = dot_split$other_args
   triangles3d_with_args = function(...) {
     do.call(rgl::triangles3d, c(list(...), render_obj_args))
   }
@@ -285,17 +279,6 @@ render_obj = function(
       )
     }
     if (!length(lat) || !length(long)) {
-      if (clear_previous) {
-        rgl::pop3d(tag = sprintf("obj%s", rgl_tag))
-      }
-      render_zaxis_from_dots(
-        zaxis_args = zaxis_args,
-        extent = extent,
-        panel = panel,
-        zscale = zscale,
-        heightmap = heightmap,
-        caller = "render_obj"
-      )
       return(invisible(NULL))
     }
   }
@@ -347,20 +330,6 @@ render_obj = function(
     raw_coords = TRUE
   }
 
-  if (clear_previous) {
-    rgl::pop3d(tag = sprintf("obj%s", rgl_tag))
-    if (missing(filename)) {
-      render_zaxis_from_dots(
-        zaxis_args = zaxis_args,
-        extent = extent,
-        panel = panel,
-        zscale = zscale,
-        heightmap = heightmap,
-        caller = "render_obj"
-      )
-      return(invisible())
-    }
-  }
   obj_color_values = if (!is.null(altitude)) {
     altitude
   } else {
@@ -680,12 +649,5 @@ render_obj = function(
       )
     }
   }
-  render_zaxis_from_dots(
-    zaxis_args = zaxis_args,
-    extent = extent,
-    panel = panel,
-    zscale = zscale,
-    heightmap = heightmap,
-    caller = "render_obj"
-  )
+  invisible(NULL)
 }

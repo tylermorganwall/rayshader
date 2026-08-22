@@ -1162,6 +1162,78 @@ test_that("render_streams reads widths from an sf column", {
   )
 })
 
+test_that("render_streams converts meter widths to cached scene units", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("terra")
+  on.exit(rgl::close3d(), add = TRUE)
+  local_rgl_use_null()
+
+  height_raster = terra::rast(
+    nrows = 11,
+    ncols = 11,
+    xmin = 500000,
+    xmax = 501000,
+    ymin = 5100000,
+    ymax = 5101000,
+    crs = "EPSG:32632"
+  )
+  terra::values(height_raster) = 0
+  streams = sf::st_sf(
+    width_m = c(200, 400),
+    geometry = sf::st_sfc(
+      sf::st_linestring(matrix(
+        c(500100, 5100200, 500400, 5100200),
+        ncol = 2,
+        byrow = TRUE
+      )),
+      sf::st_linestring(matrix(
+        c(500100, 5100600, 500400, 5100600),
+        ncol = 2,
+        byrow = TRUE
+      )),
+      crs = 32632
+    )
+  )
+
+  expect_no_condition(plot_3d_test(
+    constant_shade(height_raster),
+    height_raster,
+    solid = FALSE,
+    shadow = FALSE,
+    water = FALSE,
+    windowsize = c(200, 200)
+  ))
+  expect_no_condition(render_streams(
+    streams,
+    width_column = "width_m",
+    width_units = "meters"
+  ))
+
+  water_path_ids = get_ids_with_labels(typeval = "water_path")
+  water_path_widths = vapply(
+    water_path_ids$id,
+    function(id) rgl::material3d("lwd", id = id),
+    numeric(1)
+  )
+  expect_equal(sort(water_path_widths), c(2, 4), tolerance = 1e-7)
+})
+
+test_that("render_streams meter widths require a spatial scene CRS", {
+  local_mocked_bindings(
+    get_scene_target_crs = function(...) NULL
+  )
+  expect_error(
+    convert_render_stream_width_to_scene_units(
+      width = 10,
+      width_units = "meters",
+      heightmap = matrix(0, nrow = 5, ncol = 5),
+      extent = c(xmin = 0, xmax = 4, ymin = 0, ymax = 4)
+    ),
+    "requires a spatial scene with a CRS",
+    fixed = TRUE
+  )
+})
+
 test_that("water path densification samples terrain triangle boundaries", {
   heightmap = matrix(0, nrow = 5, ncol = 5)
 

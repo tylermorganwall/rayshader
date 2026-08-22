@@ -57,7 +57,8 @@
 #' will not affect software or high quality renders.
 #' @param filter_to_extent Default `TRUE`. If `TRUE`, building footprint data outside the scene extent is omitted. Spatial polygon inputs are cropped to the extent. For scenes created with [plot_gg()], filtering uses the ggplot panel extent rather than the full rendered 3D ggplot extent.
 #' @param ... Additional arguments to pass to `rgl::triangles3d()`.
-#' @param clear_previous Default `FALSE`. If `TRUE`, it will clear all existing polygons.
+#' @param clear_previous Default `FALSE`. If `TRUE`, clears all existing
+#' buildings. A clear-only call returns without rendering a replacement.
 #'
 #' @export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
@@ -315,13 +316,21 @@ render_buildings = function(
   filter_to_extent = TRUE,
   ...
 ) {
+  if (
+    is_render_clear_only_call(
+      clear_previous,
+      match.call(),
+      function() rgl::pop3d(tag = "obj_raymesh_building")
+    )
+  ) {
+    return(invisible(NULL))
+  }
   validate_filter_to_extent(filter_to_extent, caller = "render_buildings")
   warn_scale_data_with_vertical_exaggeration(
     scale_data_missing = missing(scale_data),
     vertical_exaggeration_missing = missing(vertical_exaggeration),
     caller = "render_buildings"
   )
-  dot_split = split_zaxis_dots(list(...))
   zscale = resolve_scene_render_effective_zscale(
     zscale = zscale,
     zscale_missing = missing(zscale),
@@ -340,20 +349,6 @@ render_buildings = function(
   }
   if (!(length(find.package("raybevel", quiet = TRUE)) > 0)) {
     stop("raybevel required to use render_roofs()")
-  }
-  if (clear_previous) {
-    rgl::pop3d(tag = "obj_raymesh_building")
-    if (missing(polygon)) {
-      render_zaxis_from_dots(
-        zaxis_args = dot_split$zaxis_args,
-        extent = extent,
-        panel = panel,
-        zscale = zscale,
-        heightmap = heightmap,
-        caller = "render_buildings"
-      )
-      return(invisible())
-    }
   }
   if (is.character(material)) {
     material = rayvertex::material_list(diffuse = material)
@@ -414,14 +409,6 @@ render_buildings = function(
       )
     }
     if (is_empty_scene_sf(polygon)) {
-      render_zaxis_from_dots(
-        zaxis_args = dot_split$zaxis_args,
-        extent = extent,
-        panel = panel,
-        zscale = zscale,
-        heightmap = heightmap,
-        caller = "render_buildings"
-      )
       return(invisible(NULL))
     }
   }
@@ -504,14 +491,6 @@ render_buildings = function(
       n_polygon_before_data_drop
     )
     if (!nrow(polygon)) {
-      render_zaxis_from_dots(
-        zaxis_args = dot_split$zaxis_args,
-        extent = extent,
-        panel = panel,
-        zscale = zscale,
-        heightmap = heightmap,
-        caller = "render_buildings"
-      )
       return(invisible(NULL))
     }
   }

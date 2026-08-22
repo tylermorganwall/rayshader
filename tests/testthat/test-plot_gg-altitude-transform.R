@@ -274,8 +274,10 @@ test_that("ggplot z-axis breaks use mapped height positions but keep raw labels"
     altitude = altitude_vals,
     color = "red",
     size = 4,
-    clear_previous = TRUE,
-    zaxis = TRUE,
+    clear_previous = TRUE
+  ))
+  expect_no_condition(render_zaxis(
+    zaxis_data = "point",
     zaxis_breaks = breaks,
     zaxis_labels = labels
   ))
