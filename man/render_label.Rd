@@ -7,121 +7,179 @@
 render_label(
   location = NULL,
   text = NULL,
-  y = NULL,
-  x = NULL,
-  z = NULL,
-  altitude = NULL,
-  data_column_z = NULL,
   data_column_text = NULL,
-  scale_data = 1,
-  extent = NULL,
-  panel = NULL,
-  zscale = 1,
-  vertical_exaggeration = 1,
-  relativez = FALSE,
-  offset = 0,
-  clear_previous = FALSE,
+  font = "sans",
+  family = "sans",
+  fonttype = "standard",
   textsize = 1,
-  line = TRUE,
-  dashed = FALSE,
-  dashlength = "auto",
-  linewidth = 3,
-  antialias = FALSE,
-  alpha = 1,
+  textcolor = "black",
   textalpha = 1,
   freetype = TRUE,
   adjustvec = NULL,
-  family = "sans",
-  fonttype = "standard",
+  line = TRUE,
   linecolor = "black",
-  textcolor = "black",
+  linewidth = 3,
+  alpha = 1,
+  dashed = FALSE,
+  dashlength = "auto",
+  antialias = FALSE,
+  clear_previous = FALSE,
+  x = NULL,
+  y = NULL,
+  z = NULL,
+  altitude = NULL,
+  data_column_z = NULL,
+  scale_data = 1,
+  relativez = FALSE,
+  offset = 0,
   lat = NULL,
   long = NULL,
   crs = NULL,
   filter_to_extent = TRUE,
+  extent = NULL,
+  panel = NULL,
+  zscale = 1,
+  vertical_exaggeration = 1,
   heightmap = NULL
 )
 }
 \arguments{
-\item{location}{Default \code{NULL}. Spatial input used to place the rendered label(s) in the scene. Accepts \code{sf}, \code{sfc}, \code{sfg}, or \code{sp} POINT, MULTIPOINT, POLYGON, or MULTIPOLYGON geometries. POLYGON and MULTIPOLYGON inputs are converted to label points with \code{sf::st_centroid()}. MULTIPOINT inputs are flattened to point placements internally, and vectorized arguments such as \code{text}, \code{z}, \code{altitude}, \code{data_column_text}, and \code{data_column_z} values are applied against that flattened point count. If the input carries a CRS, it will be transformed automatically into the active scene CRS. If it has no CRS, supply \code{crs}.}
+\item{location}{Default \code{NULL}. Spatial input used to place the rendered
+label(s) in the scene. Accepts \code{sf}, \code{sfc}, \code{sfg}, or \code{sp} POINT, MULTIPOINT,
+POLYGON, or MULTIPOLYGON geometries. POLYGON and MULTIPOLYGON inputs are
+converted to label points with \code{sf::st_centroid()}. MULTIPOINT inputs are
+flattened to point placements internally, and vectorized arguments such as
+\code{text}, \code{z}, \code{altitude}, \code{data_column_text}, and \code{data_column_z} values are
+applied against that flattened point count. If the input carries a CRS, it
+will be transformed automatically into the active scene CRS. If it has no
+CRS, supply \code{crs}.}
 
-\item{text}{Default \code{NULL}. The label text. If omitted, use \code{data_column_text} to read label text from \code{location}.}
+\item{text}{Default \code{NULL}. The label text. If omitted, use
+\code{data_column_text} to read label text from \code{location}.}
 
-\item{y}{Default \code{NULL}. Y coordinate for the label in the same coordinate reference system as \code{extent}.
-If no \code{extent} is available and the scene uses a plain matrix heightmap, this defaults to matrix dimensions.}
+\item{data_column_text}{Default \code{NULL}. Column name in \code{location} to use for
+\code{text}. Requires \code{location} to be an \code{sf}/spatial object with the named
+column. Values are applied after polygon centroid conversion and
+POINT/MULTIPOINT flattening.}
 
-\item{x}{Default \code{NULL}. X coordinate for the label in the same coordinate reference system as \code{extent}.
-If no \code{extent} is available and the scene uses a plain matrix heightmap, this defaults to matrix dimensions.}
+\item{font}{Default \code{"sans"}. Font family passed to \code{\link[=render_highquality]{render_highquality()}}
+for this label. This does not change the font used in the rgl preview; use
+\code{family} and \code{fonttype} to control the preview font.}
 
-\item{z}{Default \code{NULL}. Elevation of the label, in units of the elevation matrix (scaled by zscale).}
+\item{family}{Default \code{"sans"}. Font family used in the rgl preview. Choices
+are \code{c("serif", "sans", "mono", "symbol")}.}
 
-\item{altitude}{Default \code{NULL}. Elevation of the label, in units of the elevation matrix (scaled by zscale). If none is passed, this will default to 10 percent above the maximum altitude in the heightmap.}
-
-\item{data_column_z}{Default \code{NULL}. Column name in \code{location} to use for \code{z}. Requires \code{location} to be an \code{sf}/spatial object with values coercible to numeric. Values are applied after polygon centroid conversion and POINT/MULTIPOINT flattening, rows with missing or non-finite values after coercion are omitted, and retained values are multiplied by \code{scale_data}.}
-
-\item{data_column_text}{Default \code{NULL}. Column name in \code{location} to use for \code{text}. Requires \code{location} to be an \code{sf}/spatial object with the named column. Values are applied after polygon centroid conversion and POINT/MULTIPOINT flattening.}
-
-\item{scale_data}{Default \code{1}. If specifying \code{data_column_z}, how much to scale that value when rendering. If used with \code{vertical_exaggeration}, both are applied.}
-
-\item{extent}{Either an object representing the spatial extent of the scene
-(either from the \code{raster}, \code{terra}, \code{sf}, or \code{sp} packages),
-a length-4 numeric vector specifying \code{c("xmin", "xmax","ymin","ymax")}, or the spatial object (from
-the previously aforementioned packages) which will be automatically converted to an extent object.
-If omitted, rayshader will use extent metadata cached by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}. If no extent metadata
-is available for a plain matrix scene, rayshader defaults to \code{c(xmin = 1, xmax = nrow(heightmap), ymin = 1, ymax = ncol(heightmap))}.}
-
-\item{panel}{Default \code{NULL}. Facet panel identifier for scenes created with \code{\link[=plot_gg]{plot_gg()}}. Required
-to disambiguate faceted ggplot scenes when panel-specific cached metadata is needed. Ignored
-for non-ggplot scenes.}
-
-\item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units}
-
-\item{vertical_exaggeration}{Default \code{1}. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}} when available; pass explicitly to override for this call.}
-
-\item{relativez}{Default \code{FALSE}. Whether \code{z} should be measured in relation to the underlying elevation at that point in the heightmap, or set absolutely (\code{FALSE}).}
-
-\item{offset}{Elevation above the surface (at the label point) to start drawing the line.}
-
-\item{clear_previous}{Default \code{FALSE}. If \code{TRUE}, it will clear all existing text and lines rendered with \code{\link[=render_label]{render_label()}}. If no
-other arguments are passed to \code{\link[=render_label]{render_label()}}, this will just remove all existing lines.}
+\item{fonttype}{Default \code{"standard"}. Font type used in the rgl preview.
+Choices are \code{c("standard", "bold", "italic", "bolditalic")}. These require
+FreeType fonts, which may not be installed on your system. See
+\code{rgl::text3d()} for more information.}
 
 \item{textsize}{Default \code{1}. A numeric character expansion value.}
 
-\item{line}{Default \code{TRUE}. If \code{FALSE}, the vertical line connecting the label to the surface is not drawn.}
-
-\item{dashed}{Default \code{FALSE}. If \code{TRUE}, the label line is dashed.}
-
-\item{dashlength}{Default \code{auto}. Length, in units of the elevation matrix (scaled by \code{zscale}) of the dashes if \code{dashed = TRUE}.}
-
-\item{linewidth}{Default \code{3}. The line width.}
-
-\item{antialias}{Default \code{FALSE}. If \code{TRUE}, the line with be have anti-aliasing applied. NOTE: anti-aliasing can cause some unpredictable behavior with transparent surfaces.}
-
-\item{alpha}{Default \code{1}. Transparency of the label line.}
+\item{textcolor}{Default \code{"black"}. Color of the text. Use \code{"height"} to
+color label text by the cached \code{\link[=plot_gg]{plot_gg()}} height aesthetic palette.}
 
 \item{textalpha}{Default \code{1}. Transparency of the label text.}
 
-\item{freetype}{Default \code{TRUE}. Set to \code{FALSE} if freetype is not installed (freetype enables anti-aliased fonts). NOTE: There are occasionally transparency issues when positioning Freetype fonts in front and behind a transparent surface.}
+\item{freetype}{Default \code{TRUE}. Set to \code{FALSE} if FreeType is not installed.
+FreeType enables anti-aliased fonts, but can occasionally cause transparency
+issues when text is positioned in front of or behind a transparent surface.}
 
-\item{adjustvec}{Default \code{c(0.5,-0.5)}. The horizontal and vertical offset for the text. If \code{freetype = FALSE} and on macOS/Linux, this is adjusted to \code{c(0.33,-0.5)} to keep the type centered.}
+\item{adjustvec}{Default \code{NULL}. Horizontal and vertical offsets for the text.
+When omitted, this uses \code{c(0.5, -0.5)}, or \code{c(0.33, -0.5)} when
+\code{freetype = FALSE} on macOS or Linux, to keep the type centered.}
 
-\item{family}{Default \code{"sans"}. Font family. Choices are \code{c("serif", "sans", "mono", "symbol")}.}
+\item{line}{Default \code{TRUE}. If \code{FALSE}, the vertical line connecting the
+label to the surface is not drawn.}
 
-\item{fonttype}{Default \code{"standard"}. The font type. Choices are \code{c("standard", "bold", "italic", "bolditalic")}. NOTE: These require FreeType fonts, which may not be installed on your system. See the documentation for rgl::text3d() for more information.}
+\item{linecolor}{Default \code{"black"}. Color of the line. Use \code{"height"} to
+color label lines by the cached \code{\link[=plot_gg]{plot_gg()}} height aesthetic palette.}
 
-\item{linecolor}{Default \code{black}. Color of the line. Use \code{"height"} to color label lines by the cached \code{\link[=plot_gg]{plot_gg()}} height aesthetic palette.}
+\item{linewidth}{Default \code{3}. The line width.}
 
-\item{textcolor}{Default \code{black}. Color of the text. Use \code{"height"} to color label text by the cached \code{\link[=plot_gg]{plot_gg()}} height aesthetic palette.}
+\item{alpha}{Default \code{1}. Transparency of the label line.}
+
+\item{dashed}{Default \code{FALSE}. If \code{TRUE}, the label line is dashed.}
+
+\item{dashlength}{Default \code{"auto"}. Length, in units of the elevation matrix
+and scaled by \code{zscale}, of the dashes when \code{dashed = TRUE}.}
+
+\item{antialias}{Default \code{FALSE}. If \code{TRUE}, anti-aliasing is applied to the
+line. Anti-aliasing can cause unpredictable behavior with transparent
+surfaces.}
+
+\item{clear_previous}{Default \code{FALSE}. If \code{TRUE}, clears all existing text
+and lines rendered with \code{\link[=render_label]{render_label()}}. A clear-only call returns without
+rendering a replacement.}
+
+\item{x}{Default \code{NULL}. X coordinate for the label in the same coordinate
+reference system as \code{extent}. If no \code{extent} is available and the scene uses
+a plain matrix heightmap, this defaults to matrix dimensions.}
+
+\item{y}{Default \code{NULL}. Y coordinate for the label in the same coordinate
+reference system as \code{extent}. If no \code{extent} is available and the scene uses
+a plain matrix heightmap, this defaults to matrix dimensions.}
+
+\item{z}{Default \code{NULL}. Elevation of the label, in units of the elevation
+matrix and scaled by \code{zscale}.}
+
+\item{altitude}{Default \code{NULL}. Elevation of the label, in units of the
+elevation matrix and scaled by \code{zscale}. If omitted, this defaults to 10
+percent above the maximum altitude in the heightmap.}
+
+\item{data_column_z}{Default \code{NULL}. Column name in \code{location} to use for \code{z}.
+Requires \code{location} to be an \code{sf}/spatial object with values coercible to
+numeric. Values are applied after polygon centroid conversion and
+POINT/MULTIPOINT flattening. Rows with missing or non-finite values after
+coercion are omitted, and retained values are multiplied by \code{scale_data}.}
+
+\item{scale_data}{Default \code{1}. If specifying \code{data_column_z}, how much to
+scale that value when rendering. If used with \code{vertical_exaggeration}, both
+are applied.}
+
+\item{relativez}{Default \code{FALSE}. Whether \code{z} is measured relative to the
+underlying elevation at that point in the heightmap or set absolutely.}
+
+\item{offset}{Default \code{0}. Elevation above the surface at the label point at
+which to start drawing the line.}
 
 \item{lat}{Default \code{NULL}. Alias for \code{y} for geographic workflows.}
 
 \item{long}{Default \code{NULL}. Alias for \code{x} for geographic workflows.}
 
-\item{crs}{Default \code{NULL}. CRS of the input numeric x/y coordinates, or CRS to assign to CRS-less spatial data before transforming it into the active scene CRS. If spatial data already carries a CRS, that CRS is used automatically.}
+\item{crs}{Default \code{NULL}. CRS of the input numeric x/y coordinates, or CRS
+to assign to CRS-less spatial data before transforming it into the active
+scene CRS. If spatial data already carries a CRS, that CRS is used
+automatically.}
 
-\item{filter_to_extent}{Default \code{TRUE}. If \code{TRUE}, labels outside the scene extent are omitted. For scenes created with \code{\link[=plot_gg]{plot_gg()}}, filtering uses the ggplot panel extent rather than the full rendered 3D ggplot extent.}
+\item{filter_to_extent}{Default \code{TRUE}. If \code{TRUE}, labels outside the scene
+extent are omitted. For scenes created with \code{\link[=plot_gg]{plot_gg()}}, filtering uses the
+ggplot panel extent rather than the full rendered 3D ggplot extent.}
 
-\item{heightmap}{Default \code{NULL}. Height matrix for the current scene. If omitted, this is taken from the cached scene set by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}. Pass explicitly to override the cached value.}
+\item{extent}{Default \code{NULL}. An object representing the spatial extent of
+the scene from the \code{raster}, \code{terra}, \code{sf}, or \code{sp} packages; a length-4
+numeric vector specifying \code{c("xmin", "xmax", "ymin", "ymax")}; or a spatial
+object that can be converted to an extent. If omitted, rayshader uses extent
+metadata cached by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}. If no extent metadata is
+available for a plain matrix scene, rayshader defaults to
+\code{c(xmin = 1, xmax = nrow(heightmap), ymin = 1, ymax = ncol(heightmap))}.}
+
+\item{panel}{Default \code{NULL}. Facet panel identifier for scenes created with
+\code{\link[=plot_gg]{plot_gg()}}. Required to disambiguate faceted ggplot scenes when
+panel-specific cached metadata is needed. Ignored for non-ggplot scenes.}
+
+\item{zscale}{Default \code{1}. Ratio between horizontal spacing and the elevation
+units in the original heightmap. If omitted, rayshader uses the cached scene
+value when available.}
+
+\item{vertical_exaggeration}{Default \code{1}. Multiplier applied to the effective
+visual relief. If omitted, rayshader uses the cached scene value from
+\code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}} when available; pass explicitly to override it for
+this call.}
+
+\item{heightmap}{Default \code{NULL}. Height matrix for the current scene. If
+omitted, rayshader uses the cached scene set by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}.
+Pass explicitly to override the cached value.}
 }
 \description{
 Adds a marker and label to the current 3D plot

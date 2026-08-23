@@ -54,7 +54,9 @@ the size of the map. If zscale is very big, this will make the model very small.
 \item{swap_yz}{Default \code{TRUE}. Whether to swap and Y and Z axes. (Y axis is vertical in
 rayshader coordinates, but data is often provided with Z being vertical).}
 
-\item{clear_previous}{Default \code{FALSE}. If \code{TRUE}, it will clear all existing points.}
+\item{clear_previous}{Default \code{FALSE}. If \code{TRUE}, clears all existing rendered
+multipolygons for \code{rgl_tag}. A clear-only call returns without rendering a
+replacement.}
 
 \item{baseshape}{Default \code{rectangle}. Shape of the base. Options are \code{c("rectangle","circle","hex")}.}
 

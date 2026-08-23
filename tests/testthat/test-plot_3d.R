@@ -360,6 +360,10 @@ test_that("test raymesh conversion", {
   raymesh$materials[[1]][[1]]$diffuse_texname = "texture_location"
   raymesh$materials[[2]][[1]]$diffuse_texname = "texture_location"
   raymesh$materials[[3]][[1]]$diffuse_texname = "texture_location"
+  raymesh$materials[[2]][[1]]$diffuse = round(
+    raymesh$materials[[2]][[1]]$diffuse,
+    digits = 8
+  )
   class(raymesh) = "list"
   attr(raymesh, "material_hashes") = c(1, 2, 3)
   expect_snapshot_value(as.list(raymesh), style = "json2")

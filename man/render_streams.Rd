@@ -12,6 +12,7 @@ render_streams(
   vertical_exaggeration = 1,
   width = 1,
   width_column = NULL,
+  width_units = c("scene", "meters"),
   densify = TRUE,
   offset = NULL,
   merge = TRUE,
@@ -40,13 +41,19 @@ resolution.}
 visual relief. If omitted, rayshader uses the cached scene value from \code{\link[=plot_3d]{plot_3d()}}
 or \code{\link[=plot_gg]{plot_gg()}} when available; pass explicitly to override for this call.}
 
-\item{width}{Default \code{1}. Stream width in scene grid-cell units for
-\code{\link[=render_highquality]{render_highquality()}}. The rgl preview uses the same value as line width.}
+\item{width}{Default \code{1}. Stream width in the units selected by \code{width_units}
+for \code{\link[=render_highquality]{render_highquality()}}. The rgl preview uses the converted scene width as
+its line width.}
 
 \item{width_column}{Default \code{NULL}. Column name in an \code{sf} stream object used
 to set per-feature stream widths. Values must be positive finite numbers and
 use the same units as \code{width}. When supplied, stream merging is disabled to
 preserve feature attributes.}
+
+\item{width_units}{Default \code{"scene"}. Units used by \code{width} and
+\code{width_column}. \code{"scene"} treats values as scene grid-cell units, preserving
+the legacy behavior. \code{"meters"} converts physical widths to scene units from
+the cached or supplied spatial extent and CRS.}
 
 \item{densify}{Default \code{TRUE}. Whether to densify stream paths and resample
 them along the terrain before \code{\link[=render_highquality]{render_highquality()}} meshing. Set to \code{FALSE}
@@ -62,7 +69,8 @@ rendering. This reduces visible caps between adjacent line features in
 \code{\link[=render_highquality]{render_highquality()}}.}
 
 \item{clear_previous}{Default \code{TRUE}. If \code{TRUE}, removes the existing stream
-layer before drawing the new one.}
+layer before drawing the new one. A clear-only call returns without rendering
+a replacement.}
 
 \item{water_polygons}{Default \code{NULL}. Optional polygon data defining water
 areas where streams should not be rendered. Supports \code{sf}, \code{sfc}, \code{sfg},

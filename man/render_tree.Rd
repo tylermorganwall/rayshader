@@ -120,7 +120,8 @@ All points are assumed to be evenly spaced.}
 each row (or list entry) specifies the rotation of the nth tree specified (number of rows/length of list must
 equal the length of \code{x}/\code{y}).}
 
-\item{clear_previous}{Default \code{FALSE}. If \code{TRUE}, it will clear all existing trees.}
+\item{clear_previous}{Default \code{FALSE}. If \code{TRUE}, clears all existing trees.
+A clear-only call returns without rendering a replacement.}
 
 \item{lat}{Default \code{NULL}. Alias for \code{y} for geographic workflows.}
 

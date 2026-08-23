@@ -10,7 +10,7 @@
 #'
 #' When `line` is supplied, or `location` contains line geometry, people are
 #' placed along each line component at regular intervals. Their local +Z axes
-#' follow the direction of the line. Use `pattern` to repeat male and female
+#' follow the direction of the line. Use `line_pattern` to repeat male and female
 #' variants along the sampled positions.
 #'
 #' Cache fallback messages are disabled by default. Set
@@ -20,21 +20,9 @@
 #' @param location Default `NULL`. Spatial input used to place people in the
 #' scene. Accepts `sf`, `sfc`, `sfg`, or `sp` POINT, MULTIPOINT, LINESTRING, or
 #' MULTILINESTRING geometries. Point inputs place one model at every point. Line
-#' inputs generate placements according to `spacing`. If the input carries a
+#' inputs generate placements according to `line_spacing`. If the input carries a
 #' CRS, it is transformed automatically into the active scene CRS. If it has no
 #' CRS, supply `crs`.
-#' @param x Default `NULL`. Vector of x coordinates (or coordinates in the same
-#' coordinate reference system as `extent`).
-#' @param y Default `NULL`. Vector of y coordinates (or coordinates in the same
-#' coordinate reference system as `extent`).
-#' @param extent Default `NULL`. Either an object representing the spatial
-#' extent of the scene (from the `raster`, `terra`, `sf`, or `sp` packages), a
-#' length-4 numeric vector specifying `c("xmin", "xmax", "ymin", "ymax")`, or a
-#' spatial object that can be converted to an extent. If omitted, rayshader uses
-#' extent metadata cached by [plot_3d()] or [plot_gg()].
-#' @param panel Default `NULL`. Facet panel identifier for scenes created with
-#' [plot_gg()]. Required to disambiguate faceted ggplot scenes when
-#' panel-specific cached metadata is needed. Ignored for non-ggplot scenes.
 #' @param pose Default `"standing"`. Bundled pose to render. Supply one value
 #' for every person or a single value to use for all people. Options are
 #' `"clapping"`, `"ironman"`, `"slipping"`, `"stack"`, `"standing"`, `"stop"`,
@@ -44,18 +32,18 @@
 #' @param line Default `NULL`. Spatial line input along which to place people.
 #' Accepts `sf`, `sfc`, `sfg`, or `sp` LINESTRING or MULTILINESTRING geometry.
 #' Line geometry may alternatively be supplied through `location`.
-#' @param spacing Default `2`. Distance in meters between people placed along a
+#' @param line_spacing Default `2`. Distance in meters between people placed along a
 #' spatial line. For CRS-less lines, this is interpreted in the line's coordinate
 #' units. Sampling starts at the beginning of every line component.
-#' @param terrain_spacing Default `TRUE`. If `TRUE`, line spacing is measured
+#' @param line_terrain_spacing Default `TRUE`. If `TRUE`, line spacing is measured
 #' along the rendered terrain surface using the heightmap and effective `zscale`.
 #' This keeps neighboring models together on slopes. If terrain metadata is not
 #' available, spacing falls back to plan-view distance. Set to `FALSE` to always
 #' use plan-view distance.
-#' @param pattern Default `NULL`. Repeating male/female pattern used for line
+#' @param line_pattern Default `NULL`. Repeating male/female line_pattern used for line
 #' placement. Supply a single string containing `M` and `F`, such as `"MF"` or
 #' `"FMF"`. Overrides `sex` for line placements.
-#' @param align_to_terrain Default `TRUE`. If `TRUE`, line placements are tilted
+#' @param line_align_terrain Default `TRUE`. If `TRUE`, line placements are tilted
 #' so each person's local +Y up vector matches the terrain normal. The local +Z
 #' forward vector is lifted along the terrain without changing its plan-view
 #' alignment with the line direction.
@@ -79,7 +67,7 @@
 #' [plot_gg()].
 #' @param color Default `"grey50"`. Color of the person model. For line
 #' placement, supply one color per generated person or one color per entry in
-#' `pattern`; pattern colors are repeated with the pattern. Use `"height"` to
+#' `line_pattern`; pattern colors are repeated with the pattern. Use `"height"` to
 #' color placed models by the cached [plot_gg()] height aesthetic palette.
 #' @param offset Default `0`. Offset from the surface when `altitude = NULL`.
 #' @param angle Default `c(0, 0, 0)`. Rotation around the x, y, and z axes. A
@@ -92,6 +80,18 @@
 #' @param clear_previous Default `FALSE`. If `TRUE`, remove previously rendered
 #' people before rendering the new ones. A clear-only call returns without
 #' rendering a replacement.
+#' @param x Default `NULL`. Vector of x coordinates (or coordinates in the same
+#' coordinate reference system as `extent`).
+#' @param y Default `NULL`. Vector of y coordinates (or coordinates in the same
+#' coordinate reference system as `extent`).
+#' @param extent Default `NULL`. Either an object representing the spatial
+#' extent of the scene (from the `raster`, `terra`, `sf`, or `sp` packages), a
+#' length-4 numeric vector specifying `c("xmin", "xmax", "ymin", "ymax")`, or a
+#' spatial object that can be converted to an extent. If omitted, rayshader uses
+#' extent metadata cached by [plot_3d()] or [plot_gg()].
+#' @param panel Default `NULL`. Facet panel identifier for scenes created with
+#' [plot_gg()]. Required to disambiguate faceted ggplot scenes when
+#' panel-specific cached metadata is needed. Ignored for non-ggplot scenes.
 #' @param lat Default `NULL`. Alias for `y` for geographic workflows.
 #' @param long Default `NULL`. Alias for `x` for geographic workflows.
 #' @param crs Default `NULL`. CRS of numeric x/y coordinates, or a CRS to assign
@@ -167,8 +167,8 @@
 #'render_people(
 #'  line = tourist_queue,
 #'  pose = "stretch",
-#'  spacing = 2,
-#'  pattern = "MF",
+#'  line_spacing = 2,
+#'  line_pattern = "MF",
 #'  color = c("#355C7D", "#C06C84"),
 #'  clear_previous = TRUE
 #')
@@ -270,8 +270,8 @@
 #' render_people(
 #'   line = people_line,
 #'   pose = "stretch",
-#'   pattern = "MF",
-#'   spacing = 2,
+#'   line_pattern = "MF",
+#'   line_spacing = 2,
 #'   color = c("dodgerblue", "tomato"), clear_previous=T
 #' )
 #' render_people(
@@ -285,10 +285,10 @@ render_people = function(
   pose = "standing",
   sex = "male",
   line = NULL,
-  spacing = 2,
-  terrain_spacing = TRUE,
-  pattern = NULL,
-  align_to_terrain = TRUE,
+  line_spacing = 2,
+  line_terrain_spacing = TRUE,
+  line_pattern = NULL,
+  line_align_terrain = TRUE,
   altitude = NULL,
   xyz = NULL,
   zscale = 1,
@@ -321,18 +321,18 @@ render_people = function(
     return(invisible(NULL))
   }
   if (
-    !is.logical(align_to_terrain) ||
-      length(align_to_terrain) != 1 ||
-      is.na(align_to_terrain)
+    !is.logical(line_align_terrain) ||
+      length(line_align_terrain) != 1 ||
+      is.na(line_align_terrain)
   ) {
-    stop("`align_to_terrain` must be a single logical value.", call. = FALSE)
+    stop("`line_align_terrain` must be a single logical value.", call. = FALSE)
   }
   if (
-    !is.logical(terrain_spacing) ||
-      length(terrain_spacing) != 1 ||
-      is.na(terrain_spacing)
+    !is.logical(line_terrain_spacing) ||
+      length(line_terrain_spacing) != 1 ||
+      is.na(line_terrain_spacing)
   ) {
-    stop("`terrain_spacing` must be a single logical value.", call. = FALSE)
+    stop("`line_terrain_spacing` must be a single logical value.", call. = FALSE)
   }
   pose = resolve_person_pose(pose)
   sex = resolve_person_sex(sex)
@@ -354,8 +354,8 @@ render_people = function(
       )
     }
     location = NULL
-  } else if (!is.null(pattern)) {
-    stop("`pattern` requires line geometry.", call. = FALSE)
+  } else if (!is.null(line_pattern)) {
+    stop("`line_pattern` requires line geometry.", call. = FALSE)
   }
   effective_zscale = resolve_scene_render_effective_zscale(
     zscale = zscale,
@@ -376,8 +376,8 @@ render_people = function(
   if (line_mode) {
     line_samples = sample_person_line(
       line = line_input,
-      spacing = spacing,
-      terrain_spacing = terrain_spacing,
+      line_spacing = line_spacing,
+      line_terrain_spacing = line_terrain_spacing,
       extent = extent,
       heightmap = heightmap,
       zscale = effective_zscale,
@@ -392,17 +392,17 @@ render_people = function(
       panel = line_samples$panel
     }
     person_sexes = resolve_person_pattern(
-      pattern = pattern,
+      line_pattern = line_pattern,
       n = length(line_samples$x),
       sex = sex
     )
     person_poses = expand_person_poses(pose, length(person_sexes))
     person_colors = resolve_person_pattern_colors(
       color = color,
-      pattern = pattern,
+      line_pattern = line_pattern,
       n = length(person_sexes)
     )
-    automatic_angles = if (isTRUE(align_to_terrain)) {
+    automatic_angles = if (isTRUE(line_align_terrain)) {
       person_terrain_line_angles(
         x = line_samples$x,
         y = line_samples$y,
@@ -802,8 +802,8 @@ resolve_person_line_input = function(line = NULL, location = NULL) {
 #' Sample Person Placements Along Lines
 #'
 #' @param line Spatial line input.
-#' @param spacing Default `2`. Distance between samples in meters.
-#' @param terrain_spacing Default `TRUE`. Whether to measure spacing along the
+#' @param line_spacing Default `2`. Distance between samples in meters.
+#' @param line_terrain_spacing Default `TRUE`. Whether to measure line_spacing along the
 #' rendered terrain surface.
 #' @param extent Default `NULL`. Scene extent.
 #' @param heightmap Default `NULL`. Scene heightmap.
@@ -816,8 +816,8 @@ resolve_person_line_input = function(line = NULL, location = NULL) {
 #' @keywords internal
 sample_person_line = function(
   line,
-  spacing = 2,
-  terrain_spacing = TRUE,
+  line_spacing = 2,
+  line_terrain_spacing = TRUE,
   extent = NULL,
   heightmap = NULL,
   zscale = 1,
@@ -829,19 +829,19 @@ sample_person_line = function(
     stop("`sf` is required for person line placement.", call. = FALSE)
   }
   if (
-    !is.numeric(spacing) ||
-      length(spacing) != 1 ||
-      !is.finite(spacing) ||
-      spacing <= 0
+    !is.numeric(line_spacing) ||
+      length(line_spacing) != 1 ||
+      !is.finite(line_spacing) ||
+      line_spacing <= 0
   ) {
-    stop("`spacing` must be a single positive number.", call. = FALSE)
+    stop("`line_spacing` must be a single positive number.", call. = FALSE)
   }
   if (
-    !is.logical(terrain_spacing) ||
-      length(terrain_spacing) != 1 ||
-      is.na(terrain_spacing)
+    !is.logical(line_terrain_spacing) ||
+      length(line_terrain_spacing) != 1 ||
+      is.na(line_terrain_spacing)
   ) {
-    stop("`terrain_spacing` must be a single logical value.", call. = FALSE)
+    stop("`line_terrain_spacing` must be a single logical value.", call. = FALSE)
   }
   coerced_line = coerce_scene_sf_input(line)
   line_sf = coerced_line$sf_data
@@ -875,7 +875,7 @@ sample_person_line = function(
   }
   line_crs = suppressWarnings(sf::st_crs(line_sf))
   terrain_extent = NULL
-  if (isTRUE(terrain_spacing) && is.matrix(heightmap)) {
+  if (isTRUE(line_terrain_spacing) && is.matrix(heightmap)) {
     terrain_extent = resolve_scene_render_extent(
       extent = extent,
       heightmap = heightmap,
@@ -884,15 +884,15 @@ sample_person_line = function(
       error_if_missing = FALSE
     )
   }
-  use_terrain_spacing = !is.null(terrain_extent) &&
+  use_line_terrain_spacing = !is.null(terrain_extent) &&
     nrow(heightmap) >= 2 &&
     ncol(heightmap) >= 2
-  if (use_terrain_spacing) {
+  if (use_line_terrain_spacing) {
     sampling_line_sf = line_sf
     sampling_crs = line_crs
     raw_samples = sample_person_terrain_line_geometry(
       line_sf = sampling_line_sf,
-      spacing = spacing,
+      line_spacing = line_spacing,
       extent = terrain_extent,
       heightmap = heightmap,
       zscale = zscale
@@ -904,7 +904,7 @@ sample_person_line = function(
       sampling_crs = person_line_local_metric_crs(line_sf)
       sampling_line_sf = sf::st_transform(line_sf, sampling_crs)
     }
-    native_spacing = resolve_person_line_spacing(spacing, sampling_crs)
+    native_spacing = resolve_person_line_spacing(line_spacing, sampling_crs)
     raw_samples = sample_person_line_geometry(sampling_line_sf, native_spacing)
   }
   direction_xy = cbind(
@@ -975,30 +975,30 @@ person_line_local_metric_crs = function(line_sf) {
 
 #' Resolve Person Line Spacing Units
 #'
-#' @param spacing Spacing in meters.
+#' @param line_spacing Spacing in meters.
 #' @param crs Line coordinate reference system.
 #'
 #' @return Spacing in the native line-coordinate units.
 #' @keywords internal
-resolve_person_line_spacing = function(spacing, crs) {
+resolve_person_line_spacing = function(line_spacing, crs) {
   if (is.null(crs) || is.na(crs)) {
-    return(as.numeric(spacing))
+    return(as.numeric(line_spacing))
   }
   crs_units = crs$units_gdal
   if (is.null(crs_units) || is.na(crs_units) || !nzchar(crs_units)) {
-    return(as.numeric(spacing))
+    return(as.numeric(line_spacing))
   }
   unit_name = gsub(" ", "_", crs_units, fixed = TRUE)
   converted_spacing = tryCatch(
     units::set_units(
-      units::set_units(spacing, "m"),
+      units::set_units(line_spacing, "m"),
       unit_name,
       mode = "standard"
     ),
     error = function(e) {
       stop(
         sprintf(
-          "Could not convert `spacing` from meters to CRS units %s.",
+          "Could not convert `line_spacing` from meters to CRS units %s.",
           shQuote(crs_units)
         ),
         call. = FALSE
@@ -1011,11 +1011,11 @@ resolve_person_line_spacing = function(spacing, crs) {
 #' Sample Native Line Coordinates
 #'
 #' @param line_sf An `sf` object containing LINESTRING geometries.
-#' @param spacing Positive spacing in native coordinate units.
+#' @param line_spacing Positive spacing in native coordinate units.
 #'
 #' @return A data frame of sample coordinates and forward unit vectors.
 #' @keywords internal
-sample_person_line_geometry = function(line_sf, spacing) {
+sample_person_line_geometry = function(line_sf, line_spacing) {
   sample_list = lapply(
     seq_along(sf::st_geometry(line_sf)),
     function(line_index) {
@@ -1036,9 +1036,9 @@ sample_person_line_geometry = function(line_sf, spacing) {
         return(NULL)
       }
       n_intervals = floor(
-        (total_length + sqrt(.Machine$double.eps) * total_length) / spacing
+        (total_length + sqrt(.Machine$double.eps) * total_length) / line_spacing
       )
-      sample_distance = seq.int(0, n_intervals) * spacing
+      sample_distance = seq.int(0, n_intervals) * line_spacing
       cumulative_length = c(0, cumsum(segment_length))
       segment_index = findInterval(
         sample_distance,
@@ -1073,7 +1073,7 @@ sample_person_line_geometry = function(line_sf, spacing) {
 #'
 #' @param line_sf An `sf` object containing LINESTRING geometries in the scene
 #' coordinate reference system.
-#' @param spacing Distance between samples in meters.
+#' @param line_spacing Distance between samples in meters.
 #' @param extent Scene extent.
 #' @param heightmap Scene heightmap.
 #' @param zscale Effective scene zscale.
@@ -1082,7 +1082,7 @@ sample_person_line_geometry = function(line_sf, spacing) {
 #' @keywords internal
 sample_person_terrain_line_geometry = function(
   line_sf,
-  spacing,
+  line_spacing,
   extent,
   heightmap,
   zscale
@@ -1109,7 +1109,7 @@ sample_person_terrain_line_geometry = function(
 
   map_width = nrow(heightmap) - 1
   map_height = ncol(heightmap) - 1
-  spacing_scene = spacing / zscale
+  spacing_scene = line_spacing / zscale
   heightmap_scene = heightmap / zscale
   tolerance = sqrt(.Machine$double.eps)
 
@@ -1551,30 +1551,30 @@ resolve_person_line_angles = function(
 
 #' Resolve a Repeating Person Pattern
 #'
-#' @param pattern Default `NULL`. String containing `M` and `F`.
+#' @param line_pattern Default `NULL`. String containing `M` and `F`.
 #' @param n Number of people.
-#' @param sex Default `"male"`. Fallback sex when `pattern` is `NULL`.
+#' @param sex Default `"male"`. Fallback sex when `line_pattern` is `NULL`.
 #'
 #' @return Character vector of canonical sex names.
 #' @keywords internal
-resolve_person_pattern = function(pattern = NULL, n, sex = "male") {
-  if (is.null(pattern)) {
+resolve_person_pattern = function(line_pattern = NULL, n, sex = "male") {
+  if (is.null(line_pattern)) {
     return(rep(resolve_person_sex(sex), n))
   }
   if (
-    !is.character(pattern) ||
-      length(pattern) != 1 ||
-      is.na(pattern) ||
-      !nzchar(pattern)
+    !is.character(line_pattern) ||
+      length(line_pattern) != 1 ||
+      is.na(line_pattern) ||
+      !nzchar(line_pattern)
   ) {
     stop(
-      "`pattern` must be a non-empty string containing M and F.",
+      "`line_pattern` must be a non-empty string containing M and F.",
       call. = FALSE
     )
   }
-  pattern_values = strsplit(toupper(pattern), "", fixed = TRUE)[[1]]
+  pattern_values = strsplit(toupper(line_pattern), "", fixed = TRUE)[[1]]
   if (any(!pattern_values %in% c("M", "F"))) {
-    stop("`pattern` may contain only M and F.", call. = FALSE)
+    stop("`line_pattern` may contain only M and F.", call. = FALSE)
   }
   pattern_sexes = ifelse(pattern_values == "M", "male", "female")
   rep(pattern_sexes, length.out = n)
@@ -1583,20 +1583,20 @@ resolve_person_pattern = function(pattern = NULL, n, sex = "male") {
 #' Resolve Repeating Person Pattern Colors
 #'
 #' @param color Person model color specification.
-#' @param pattern Default `NULL`. Repeating male/female pattern.
+#' @param line_pattern Default `NULL`. Repeating male/female pattern.
 #' @param n Number of generated people.
 #'
 #' @return A color specification suitable for all line placements.
 #' @keywords internal
-resolve_person_pattern_colors = function(color, pattern = NULL, n) {
+resolve_person_pattern_colors = function(color, line_pattern = NULL, n) {
   if (is.numeric(color) && length(color) == 3) {
     return(color)
   }
   if (length(color) <= 1 || length(color) == n) {
     return(color)
   }
-  if (!is.null(pattern)) {
-    pattern_length = nchar(pattern, type = "chars")
+  if (!is.null(line_pattern)) {
+    pattern_length = nchar(line_pattern, type = "chars")
     if (length(color) == pattern_length) {
       return(rep(color, length.out = n))
     }
@@ -1604,7 +1604,7 @@ resolve_person_pattern_colors = function(color, pattern = NULL, n) {
   stop(
     paste0(
       "For line placement, `color` must contain one value, one value per ",
-      "generated person, or one value per entry in `pattern`."
+      "generated person, or one value per entry in `line_pattern`."
     ),
     call. = FALSE
   )

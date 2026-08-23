@@ -31,8 +31,7 @@ render_path(
   lat = NULL,
   long = NULL,
   crs = NULL,
-  filter_to_extent = TRUE,
-  ...
+  filter_to_extent = TRUE
 )
 }
 \arguments{
@@ -103,7 +102,8 @@ then the value of simplify_tolerance must be specified in meters.}
 
 \item{offset}{Default \code{5}. Offset of the track from the surface, if \code{altitude = NULL}.}
 
-\item{clear_previous}{Default \code{FALSE}. If \code{TRUE}, it will clear all existing paths.}
+\item{clear_previous}{Default \code{FALSE}. If \code{TRUE}, clears all existing paths
+for \code{tag}. A clear-only call returns without rendering a replacement.}
 
 \item{return_coords}{Default \code{FALSE}. If \code{TRUE}, this will return the internal rayshader coordinates of the path, instead of
 plotting the line.}
@@ -117,9 +117,6 @@ plotting the line.}
 \item{crs}{Default \code{NULL}. CRS of the input numeric x/y coordinates, or CRS to assign to CRS-less spatial data before transforming it into the active scene CRS. If spatial data already carries a CRS, that CRS is used automatically.}
 
 \item{filter_to_extent}{Default \code{TRUE}. If \code{TRUE}, path data outside the scene extent is omitted. Spatial line inputs are cropped to the extent. For scenes created with \code{\link[=plot_gg]{plot_gg()}}, filtering uses the ggplot panel extent rather than the full rendered 3D ggplot extent.}
-
-\item{...}{Optional z-axis arguments passed to \code{\link[=render_zaxis]{render_zaxis()}}, such as
-\code{zaxis = TRUE}, \code{zaxis_location}, \code{zaxis_breaks}, and \code{zaxis_labels}.}
 }
 \description{
 Adds a 3D path to the current scene, using x/y coordinates in the reference

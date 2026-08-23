@@ -6,8 +6,8 @@
 \usage{
 sample_person_line(
   line,
-  spacing = 2,
-  terrain_spacing = TRUE,
+  line_spacing = 2,
+  line_terrain_spacing = TRUE,
   extent = NULL,
   heightmap = NULL,
   zscale = 1,
@@ -19,9 +19,9 @@ sample_person_line(
 \arguments{
 \item{line}{Spatial line input.}
 
-\item{spacing}{Default \code{2}. Distance between samples in meters.}
+\item{line_spacing}{Default \code{2}. Distance between samples in meters.}
 
-\item{terrain_spacing}{Default \code{TRUE}. Whether to measure spacing along the
+\item{line_terrain_spacing}{Default \code{TRUE}. Whether to measure line_spacing along the
 rendered terrain surface.}
 
 \item{extent}{Default \code{NULL}. Scene extent.}

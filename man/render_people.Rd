@@ -6,17 +6,13 @@
 \usage{
 render_people(
   location = NULL,
-  x = NULL,
-  y = NULL,
-  extent = NULL,
-  panel = NULL,
   pose = "standing",
   sex = "male",
   line = NULL,
-  spacing = 2,
-  terrain_spacing = TRUE,
-  pattern = NULL,
-  align_to_terrain = TRUE,
+  line_spacing = 2,
+  line_terrain_spacing = TRUE,
+  line_pattern = NULL,
+  line_align_terrain = TRUE,
   altitude = NULL,
   xyz = NULL,
   zscale = 1,
@@ -26,6 +22,10 @@ render_people(
   offset = 0,
   angle = c(0, 0, 0),
   baseshape = "rectangle",
+  x = NULL,
+  y = NULL,
+  extent = NULL,
+  panel = NULL,
   lit = TRUE,
   load_normals = TRUE,
   clear_previous = FALSE,
@@ -40,31 +40,14 @@ render_people(
 \item{location}{Default \code{NULL}. Spatial input used to place people in the
 scene. Accepts \code{sf}, \code{sfc}, \code{sfg}, or \code{sp} POINT, MULTIPOINT, LINESTRING, or
 MULTILINESTRING geometries. Point inputs place one model at every point. Line
-inputs generate placements according to \code{spacing}. If the input carries a
+inputs generate placements according to \code{line_spacing}. If the input carries a
 CRS, it is transformed automatically into the active scene CRS. If it has no
 CRS, supply \code{crs}.}
 
-\item{x}{Default \code{NULL}. Vector of x coordinates (or coordinates in the same
-coordinate reference system as \code{extent}).}
-
-\item{y}{Default \code{NULL}. Vector of y coordinates (or coordinates in the same
-coordinate reference system as \code{extent}).}
-
-\item{extent}{Default \code{NULL}. Either an object representing the spatial
-extent of the scene (from the \code{raster}, \code{terra}, \code{sf}, or \code{sp} packages), a
-length-4 numeric vector specifying \code{c("xmin", "xmax", "ymin", "ymax")}, or a
-spatial object that can be converted to an extent. If omitted, rayshader uses
-extent metadata cached by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}.}
-
-\item{panel}{Default \code{NULL}. Facet panel identifier for scenes created with
-\code{\link[=plot_gg]{plot_gg()}}. Required to disambiguate faceted ggplot scenes when
-panel-specific cached metadata is needed. Ignored for non-ggplot scenes.}
-
-\item{pose}{Default \code{"standing"}. Bundled pose to render. Options are
+\item{pose}{Default \code{"standing"}. Bundled pose to render. Supply one value
+for every person or a single value to use for all people. Options are
 \code{"clapping"}, \code{"ironman"}, \code{"slipping"}, \code{"stack"}, \code{"standing"}, \code{"stop"},
-\code{"stop_one_hand"}, \code{"stretch"}, \code{"walking"}, \code{"yay"}, and \code{"yelling"}.
-The legacy names \code{"slip"}, \code{"rocky"}, and \code{"yell"} remain aliases for
-\code{"slipping"}, \code{"yay"}, and \code{"yelling"}, respectively.}
+\code{"stop_one_hand"}, \code{"stretch"}, \code{"walking"}, \code{"rocky"}, and \code{"yelling"}.}
 
 \item{sex}{Default \code{"male"}. Person model variant. Options are \code{"male"}
 and \code{"female"}.}
@@ -73,21 +56,21 @@ and \code{"female"}.}
 Accepts \code{sf}, \code{sfc}, \code{sfg}, or \code{sp} LINESTRING or MULTILINESTRING geometry.
 Line geometry may alternatively be supplied through \code{location}.}
 
-\item{spacing}{Default \code{2}. Distance in meters between people placed along a
+\item{line_spacing}{Default \code{2}. Distance in meters between people placed along a
 spatial line. For CRS-less lines, this is interpreted in the line's coordinate
 units. Sampling starts at the beginning of every line component.}
 
-\item{terrain_spacing}{Default \code{TRUE}. If \code{TRUE}, line spacing is measured
+\item{line_terrain_spacing}{Default \code{TRUE}. If \code{TRUE}, line spacing is measured
 along the rendered terrain surface using the heightmap and effective \code{zscale}.
 This keeps neighboring models together on slopes. If terrain metadata is not
 available, spacing falls back to plan-view distance. Set to \code{FALSE} to always
 use plan-view distance.}
 
-\item{pattern}{Default \code{NULL}. Repeating male/female pattern used for line
+\item{line_pattern}{Default \code{NULL}. Repeating male/female line_pattern used for line
 placement. Supply a single string containing \code{M} and \code{F}, such as \code{"MF"} or
 \code{"FMF"}. Overrides \code{sex} for line placements.}
 
-\item{align_to_terrain}{Default \code{TRUE}. If \code{TRUE}, line placements are tilted
+\item{line_align_terrain}{Default \code{TRUE}. If \code{TRUE}, line placements are tilted
 so each person's local +Y up vector matches the terrain normal. The local +Z
 forward vector is lifted along the terrain without changing its plan-view
 alignment with the line direction.}
@@ -117,7 +100,7 @@ omitted, rayshader uses the cached scene heightmap from \code{\link[=plot_3d]{pl
 
 \item{color}{Default \code{"grey50"}. Color of the person model. For line
 placement, supply one color per generated person or one color per entry in
-\code{pattern}; pattern colors are repeated with the pattern. Use \code{"height"} to
+\code{line_pattern}; pattern colors are repeated with the pattern. Use \code{"height"} to
 color placed models by the cached \code{\link[=plot_gg]{plot_gg()}} height aesthetic palette.}
 
 \item{offset}{Default \code{0}. Offset from the surface when \code{altitude = NULL}.}
@@ -129,12 +112,29 @@ placement, these rotations are added to the automatic line orientation.}
 \item{baseshape}{Default \code{"rectangle"}. Shape of the base. Options are
 \code{"rectangle"}, \code{"circle"}, and \code{"hex"}.}
 
+\item{x}{Default \code{NULL}. Vector of x coordinates (or coordinates in the same
+coordinate reference system as \code{extent}).}
+
+\item{y}{Default \code{NULL}. Vector of y coordinates (or coordinates in the same
+coordinate reference system as \code{extent}).}
+
+\item{extent}{Default \code{NULL}. Either an object representing the spatial
+extent of the scene (from the \code{raster}, \code{terra}, \code{sf}, or \code{sp} packages), a
+length-4 numeric vector specifying \code{c("xmin", "xmax", "ymin", "ymax")}, or a
+spatial object that can be converted to an extent. If omitted, rayshader uses
+extent metadata cached by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}.}
+
+\item{panel}{Default \code{NULL}. Facet panel identifier for scenes created with
+\code{\link[=plot_gg]{plot_gg()}}. Required to disambiguate faceted ggplot scenes when
+panel-specific cached metadata is needed. Ignored for non-ggplot scenes.}
+
 \item{lit}{Default \code{TRUE}. Whether to light the model polygons.}
 
 \item{load_normals}{Default \code{TRUE}. Whether to load normals from the model.}
 
 \item{clear_previous}{Default \code{FALSE}. If \code{TRUE}, remove previously rendered
-people before rendering the new ones.}
+people before rendering the new ones. A clear-only call returns without
+rendering a replacement.}
 
 \item{lat}{Default \code{NULL}. Alias for \code{y} for geographic workflows.}
 
@@ -160,7 +160,7 @@ for R package compatibility.
 
 When \code{line} is supplied, or \code{location} contains line geometry, people are
 placed along each line component at regular intervals. Their local +Z axes
-follow the direction of the line. Use \code{pattern} to repeat male and female
+follow the direction of the line. Use \code{line_pattern} to repeat male and female
 variants along the sampled positions.
 
 Cache fallback messages are disabled by default. Set
@@ -177,8 +177,8 @@ wm_point = washington_monument_location |>
  st_sfc(crs = 4326) |>
  st_transform(st_crs(washington_monument_multipolygonz))
 
-washington_monument_people = st_point(c(-77.03525, 38.88945)) |>
-  st_sfc(crs = 4326)
+washington_monument_people = st_point(c(-77.035249, 38.889462)) |>
+ st_sfc(crs = 4326)
 elevation_data = elevatr::get_elev_raster(locations = wm_point, z = 14)
 
 scene_bbox = st_bbox(st_buffer(wm_point,300))
@@ -193,16 +193,106 @@ render_snapshot()
 render_camera(theta=150,  phi=35, zoom= 0.55, fov=70)
 #Render the national monument
 rgl::par3d(ignoreExtent = TRUE)
-render_multipolygonz(washington_monument_multipolygonz,
-                    zscale = 4, color = "grey80")
+render_multipolygonz(
+ washington_monument_multipolygonz,
+ color = "grey80"
+)
 render_camera(location = washington_monument_people)
 render_snapshot()
+#Create a meandering tourist queue that starts just beyond the camera-facing
+#edge of the monument and extends toward the foreground.
+monument_bbox = st_bbox(washington_monument_multipolygonz)
+monument_center = c(
+ mean(monument_bbox[c("xmin", "xmax")]),
+ mean(monument_bbox[c("ymin", "ymax")])
+)
+camera_direction = c(sinpi(150 / 180), -cospi(150 / 180))
+cross_direction = c(-camera_direction[2], camera_direction[1])
+monument_half_size = c(
+ diff(monument_bbox[c("xmin", "xmax")]) / 2,
+ diff(monument_bbox[c("ymin", "ymax")]) / 2
+)
+queue_start_distance =
+ min(monument_half_size / abs(camera_direction)) + 3
+queue_progress = seq(0, 180, length.out = 120)
+queue_meander =
+ 10 * sin(queue_progress / 18) + 3 * sin(queue_progress / 7)
+tourist_queue_xy = cbind(
+ x = monument_center[1] +
+   (queue_start_distance + queue_progress) * camera_direction[1] +
+   queue_meander * cross_direction[1],
+ y = monument_center[2] +
+   (queue_start_distance + queue_progress) * camera_direction[2] +
+   queue_meander * cross_direction[2]
+)
+tourist_queue = st_sfc(
+ st_linestring(tourist_queue_xy),
+ crs = st_crs(washington_monument_multipolygonz)
+)
+
+render_people(
+ line = tourist_queue,
+ pose = "stretch",
+ line_spacing = 2,
+ line_pattern = "MF",
+ color = c("#355C7D", "#C06C84"),
+ clear_previous = TRUE
+)
+render_snapshot()
+
+#Build a human pyramid as tall as the Washington Monument. The stack model
+#is about 0.75 meters wide, so adjacent people at each level just touch.
+monument_elevation = range(
+ st_coordinates(washington_monument_multipolygonz)[, "Z"]
+)
+person_height = 2
+horizontal_spacing = 1
+level_count = ceiling(diff(monument_elevation) / person_height)
+people_per_level = rev(seq_len(level_count))
+pyramid_level = rep(
+ seq_len(level_count) - 1,
+ times = people_per_level
+)
+pyramid_column = unlist(lapply(
+ people_per_level,
+ function(n) seq_len(n) - (n + 1) / 2
+))
+
+#Run the rows north-south and keep the pyramid just west of the monument.
+pyramid_center = washington_monument_people |>
+ st_transform(st_crs(washington_monument_multipolygonz))
+pyramid_center_xy = st_coordinates(pyramid_center)[1, 1:2]
+pyramid_center_xy[1] =
+ st_bbox(washington_monument_multipolygonz)[["xmin"]] +
+ horizontal_spacing
+
+pyramid_people = st_as_sf(
+ data.frame(
+   x = rep(unname(pyramid_center_xy[1]), length(pyramid_level)),
+   y = unname(pyramid_center_xy[2]) +
+     pyramid_column * horizontal_spacing,
+   altitude = monument_elevation[1] + pyramid_level * person_height
+ ),
+ coords = c("x", "y"),
+ crs = st_crs(washington_monument_multipolygonz)
+)
+
+render_people(
+ location = pyramid_people,
+ pose = "stack",
+ altitude = pyramid_people$altitude,
+ angle = c(0, 90, 0),
+ color = "#030",
+ clear_previous = TRUE
+)
 #This works with `render_highquality()`
-render_highquality(min_variance = 0, samples = 16)
-render_people(location = washington_monument_people,
-pose = "stack", altitude = seq(0,170,by=2))
-\dontshow{\}) # examplesIf}
-\dontshow{if (length(find.package("sf", quiet = TRUE)) > 0 && (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true"))) withAutoprint(\{ # examplesIf}
+render_highquality(
+ min_variance = 0,
+ samples = 16,
+ defer = TRUE,
+ datetime = as.POSIXct("2025-12-21 08:00:00", tz = "EST"),
+ sky_args = list(hosek = FALSE, iso = 20)
+)
 # Arrange alternating models around a closed line. The stretch pose extends
 # along local Z, so automatic line orientation creates a hands-around-the-world
 # effect.
@@ -246,14 +336,15 @@ sf::st_linestring(cbind(
 render_people(
   line = people_line,
   pose = "stretch",
-  pattern = "MF",
-  spacing = 2,
+  line_pattern = "MF",
+  line_spacing = 2,
   color = c("dodgerblue", "tomato"), clear_previous=T
 )
 render_people(
-  x = 15.5,
-  y = 15.5,
-  pose = "rocky", color="white"
+  x = c(13.5, 15.5, 17.5),
+  y = rep(15.5, 3),
+  pose = c("standing", "rocky", "walking"),
+  color = "white"
 )
 \dontshow{\}) # examplesIf}
 }

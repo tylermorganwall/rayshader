@@ -42,6 +42,33 @@ test_that("rendering uses stable water and clamp defaults", {
   expect_identical(formals(convert_rgl_to_raymesh)$water_ior, 1.33)
 })
 
+test_that("rgl colors are linearized when converted to raymesh materials", {
+  skip_if_not_installed("rayvertex")
+  on.exit(rgl::close3d(), add = TRUE)
+  local_rgl_use_null()
+
+  heightmap = matrix(1:4, nrow = 2)
+  plot_3d_test(
+    constant_shade(heightmap, color = "#400"),
+    heightmap,
+    solidcolor = "#400",
+    solidlinecolor = NULL,
+    shadow = FALSE
+  )
+
+  raymesh = convert_rgl_to_raymesh(save_shadow = FALSE)
+  base_materials = Filter(
+    function(material) identical(material[[1]]$diffuse_texname, ""),
+    raymesh$materials
+  )
+
+  expect_length(base_materials, 1)
+  expect_equal(
+    base_materials[[1]][[1]]$diffuse,
+    convert_color("#400", linear = TRUE)
+  )
+})
+
 test_that("render_highquality() marks generated skies for white baking", {
   skip_if_not_installed("rayrender")
   skip_if_not_installed("skymodelr")
@@ -564,6 +591,60 @@ test_that("render_highquality() maps unclamped rgl text justification", {
 
   expect_equal(screen_text$hjust[label_row], 1.2)
   expect_equal(screen_text$vjust[label_row], 1)
+})
+
+test_that("render_label() fonts reach high quality screen and world text", {
+  skip_if_not_installed("rayrender")
+  skip_if_not_installed("rayvertex")
+  on.exit(rgl::close3d(), add = TRUE)
+  local_rgl_use_null()
+
+  heightmap = matrix(0, nrow = 20, ncol = 20)
+  extent = c(xmin = 0, xmax = 20, ymin = 0, ymax = 20)
+  sphere_shade(heightmap) |>
+    plot_3d(
+      zscale = 10,
+      shadow = FALSE,
+      water = FALSE,
+      windowsize = c(300, 300)
+    )
+  render_label(
+    x = 10,
+    y = 10,
+    text = "Custom font",
+    heightmap = heightmap,
+    extent = extent,
+    zscale = 10,
+    altitude = 10,
+    freetype = FALSE,
+    font = "mono"
+  )
+
+  screen_scene = render_highquality(return_scene = TRUE, light = FALSE)
+  screen_text = attr(screen_scene, "screen_text")
+  label_row = which(screen_text$label == "Custom font")[1]
+  expect_identical(screen_text$font[label_row], "mono")
+
+  text3d_fonts = list()
+  rayrender_text3d = rayrender::text3d
+  testthat::local_mocked_bindings(
+    text3d = function(label, font = "sans", ...) {
+      text3d_fonts[[label]] <<- font
+      rayrender_text3d(label = label, font = font, ...)
+    },
+    .package = "rayrender"
+  )
+  render_highquality(
+    return_scene = TRUE,
+    light = FALSE,
+    text_render = "world"
+  )
+  expect_identical(text3d_fonts[["Custom font"]], "mono")
+
+  label_id = get_ids_with_labels(typeval = "raytext")$id[[1]]
+  expect_identical(get_render_label_font(label_id), "mono")
+  render_label(clear_previous = TRUE)
+  expect_null(get_render_label_font(label_id, default = NULL))
 })
 
 test_that("render_highquality() can render paths as screen-space lines", {

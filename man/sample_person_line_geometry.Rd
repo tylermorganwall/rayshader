@@ -4,12 +4,12 @@
 \alias{sample_person_line_geometry}
 \title{Sample Native Line Coordinates}
 \usage{
-sample_person_line_geometry(line_sf, spacing)
+sample_person_line_geometry(line_sf, line_spacing)
 }
 \arguments{
 \item{line_sf}{An \code{sf} object containing LINESTRING geometries.}
 
-\item{spacing}{Positive spacing in native coordinate units.}
+\item{line_spacing}{Positive spacing in native coordinate units.}
 }
 \value{
 A data frame of sample coordinates and forward unit vectors.

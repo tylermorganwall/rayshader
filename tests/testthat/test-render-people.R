@@ -38,15 +38,32 @@ test_that("person_obj() resolves every bundled pose and sex", {
     rayshader:::person_obj("stack"),
     "person_man_slipping\\.txt$"
   )
+  expect_identical(
+    rayshader:::resolve_person_pose(c("standing", "walking")),
+    c("standing", "walking")
+  )
+  expect_error(
+    rayshader:::person_obj(c("standing", "walking")),
+    "single pose name"
+  )
   expect_error(rayshader:::person_obj("sitting"), "should be one of")
   expect_error(rayshader:::person_obj(sex = "robot"), "should be one of")
 })
 
-test_that("render_people() orders its placement arguments consistently", {
+test_that("render_people() groups line arguments and orders point coordinates", {
+  render_people_args = names(formals(render_people))
+  expect_identical(render_people_args[[1]], "location")
   expect_identical(
-    head(names(formals(render_people)), 3),
-    c("location", "x", "y")
+    render_people_args[4:8],
+    c(
+      "line",
+      "line_spacing",
+      "line_terrain_spacing",
+      "line_pattern",
+      "line_align_terrain"
+    )
   )
+  expect_lt(match("x", render_people_args), match("y", render_people_args))
 })
 
 test_that("person patterns repeat in placement order", {
@@ -67,7 +84,7 @@ test_that("person patterns repeat in placement order", {
   expect_equal(
     rayshader:::resolve_person_pattern_colors(
       c("red", "blue"),
-      pattern = "MF",
+      line_pattern = "MF",
       n = 5
     ),
     c("red", "blue", "red", "blue", "red")
@@ -75,7 +92,7 @@ test_that("person patterns repeat in placement order", {
   expect_equal(
     rayshader:::resolve_person_pattern_colors(
       rainbow(5),
-      pattern = "MF",
+      line_pattern = "MF",
       n = 5
     ),
     rainbow(5)
@@ -83,7 +100,7 @@ test_that("person patterns repeat in placement order", {
   expect_equal(
     rayshader:::resolve_person_pattern_colors(
       c(1, 0, 0),
-      pattern = "FMF",
+      line_pattern = "FMF",
       n = 6
     ),
     c(1, 0, 0)
@@ -91,11 +108,113 @@ test_that("person patterns repeat in placement order", {
   expect_error(
     rayshader:::resolve_person_pattern_colors(
       c("red", "blue", "green"),
-      pattern = "MF",
+      line_pattern = "MF",
       n = 6
     ),
     "one value per entry"
   )
+})
+
+test_that("render_people() vectorizes pose across point placements", {
+  calls = list()
+  testthat::local_mocked_bindings(
+    render_obj = function(...) {
+      calls[[length(calls) + 1L]] <<- list(...)
+      invisible(NULL)
+    },
+    .package = "rayshader"
+  )
+
+  person_angles = matrix(seq_len(12), ncol = 3, byrow = TRUE)
+  expect_no_condition(render_people(
+    x = 1:4,
+    y = rep(5, 4),
+    pose = c("standing", "walking", "standing", "rocky"),
+    sex = "female",
+    altitude = 11:14,
+    color = c("red", "blue", "green", "black"),
+    offset = 21:24,
+    angle = person_angles
+  ))
+
+  expect_length(calls, 3)
+  expect_match(calls[[1]]$filename, "person_woman_standing\\.txt$")
+  expect_match(calls[[2]]$filename, "person_woman_walking\\.txt$")
+  expect_match(calls[[3]]$filename, "person_woman_yay\\.txt$")
+  expect_equal(calls[[1]]$x, c(1, 3))
+  expect_equal(calls[[2]]$x, 2)
+  expect_equal(calls[[3]]$x, 4)
+  expect_equal(calls[[1]]$altitude, c(11, 13))
+  expect_equal(calls[[1]]$color, c("red", "green"))
+  expect_equal(calls[[1]]$offset, c(21, 23))
+  expect_equal(calls[[1]]$angle, person_angles[c(1, 3), , drop = FALSE])
+  expect_true(all(vapply(
+    calls,
+    function(call) {
+      identical(call$clear_previous, FALSE)
+    },
+    logical(1)
+  )))
+
+  calls = list()
+  expect_no_condition(render_people(
+    x = 5,
+    y = 6,
+    altitude = 1:3,
+    pose = c("standing", "walking", "rocky")
+  ))
+  expect_length(calls, 3)
+  expect_true(all(vapply(calls, function(call) call$x == 5, logical(1))))
+  expect_true(all(vapply(calls, function(call) call$y == 6, logical(1))))
+
+  expect_error(
+    render_people(
+      x = 1:3,
+      y = 1:3,
+      pose = c("standing", "walking")
+    ),
+    "one value or one value per person"
+  )
+})
+
+test_that("render_people() vectorizes pose for spatial point locations", {
+  skip_if_not_installed("sf")
+  reset_scene_context(
+    clear_scene_metadata = TRUE,
+    clear_scene_cache = TRUE
+  )
+  withr::defer(reset_scene_context(
+    clear_scene_metadata = TRUE,
+    clear_scene_cache = TRUE
+  ))
+
+  locations = sf::st_sfc(
+    sf::st_point(c(-77.00, 38.90)),
+    sf::st_point(c(-76.99, 38.91)),
+    sf::st_point(c(-76.98, 38.92)),
+    crs = 4326
+  )
+  calls = list()
+  testthat::local_mocked_bindings(
+    render_obj = function(...) {
+      calls[[length(calls) + 1L]] <<- list(...)
+      invisible(NULL)
+    },
+    .package = "rayshader"
+  )
+
+  expect_no_condition(render_people(
+    location = locations,
+    pose = c("standing", "walking", "standing")
+  ))
+
+  expect_length(calls, 2)
+  expect_equal(calls[[1]]$x, c(-77.00, -76.98))
+  expect_equal(calls[[1]]$y, c(38.90, 38.92))
+  expect_equal(calls[[2]]$x, -76.99)
+  expect_equal(calls[[2]]$y, 38.91)
+  expect_false(calls[[1]]$transform_scene)
+  expect_null(calls[[1]]$crs)
 })
 
 test_that("person line sampling follows outgoing segments", {
@@ -108,7 +227,7 @@ test_that("person line sampling follows outgoing segments", {
       byrow = TRUE
     )))
   )
-  samples = rayshader:::sample_person_line_geometry(line, spacing = 2)
+  samples = rayshader:::sample_person_line_geometry(line, line_spacing = 2)
 
   expect_equal(samples$x, c(0, 2, 4, 4, 4))
   expect_equal(samples$y, c(0, 0, 0, 2, 4))
@@ -137,7 +256,7 @@ test_that("person line spacing follows the rendered terrain surface", {
 
   terrain_samples = rayshader:::sample_person_line(
     line = line,
-    spacing = 2,
+    line_spacing = 2,
     extent = extent,
     heightmap = heightmap,
     zscale = 1,
@@ -156,7 +275,7 @@ test_that("person line spacing follows the rendered terrain surface", {
 
   scaled_samples = rayshader:::sample_person_line(
     line = line,
-    spacing = 2,
+    line_spacing = 2,
     extent = extent,
     heightmap = heightmap,
     zscale = 2,
@@ -170,8 +289,8 @@ test_that("person line spacing follows the rendered terrain surface", {
 
   planar_samples = rayshader:::sample_person_line(
     line = line,
-    spacing = 2,
-    terrain_spacing = FALSE,
+    line_spacing = 2,
+    line_terrain_spacing = FALSE,
     extent = extent,
     heightmap = heightmap,
     zscale = 1,
@@ -294,7 +413,7 @@ test_that("person line spacing is measured in meters across CRSs", {
   )
   samples = rayshader:::sample_person_line(
     line = geographic_line,
-    spacing = 2,
+    line_spacing = 2,
     caller = "test"
   )
   expect_gte(length(samples$x), 4)
@@ -329,8 +448,8 @@ test_that("render_people() patterns and orients models along a line", {
   expect_no_condition(render_people(
     line = line,
     pose = "stretch",
-    pattern = "FMF",
-    spacing = 2,
+    line_pattern = "FMF",
+    line_spacing = 2,
     color = c("red", "blue", "green"),
     angle = c(0, 10, 0),
     clear_previous = TRUE
@@ -353,13 +472,16 @@ test_that("render_people() patterns and orients models along a line", {
 
   calls = list()
   expect_no_condition(render_people(
-    line,
-    pose = "stretch",
+    location = line,
+    pose = c("standing", "walking", "standing"),
     sex = "female",
-    spacing = 5
+    line_spacing = 5
   ))
-  expect_length(calls, 1)
-  expect_equal(calls[[1]]$x, c(0, 5, 10))
+  expect_length(calls, 2)
+  expect_match(calls[[1]]$filename, "person_woman_standing\\.txt$")
+  expect_equal(calls[[1]]$x, c(0, 10))
+  expect_match(calls[[2]]$filename, "person_woman_walking\\.txt$")
+  expect_equal(calls[[2]]$x, 5)
 })
 
 test_that("render_people() aligns and spaces line placements on terrain", {
@@ -395,7 +517,7 @@ test_that("render_people() aligns and spaces line placements on terrain", {
 
   render_people(
     line = line,
-    spacing = 5,
+    line_spacing = 5,
     extent = extent,
     heightmap = heightmap,
     zscale = 1
@@ -407,12 +529,12 @@ test_that("render_people() aligns and spaces line placements on terrain", {
   calls = list()
   render_people(
     line = line,
-    spacing = 5,
+    line_spacing = 5,
     extent = extent,
     heightmap = heightmap,
     zscale = 1,
-    terrain_spacing = FALSE,
-    align_to_terrain = FALSE
+    line_terrain_spacing = FALSE,
+    line_align_terrain = FALSE
   )
   expect_equal(calls[[1]]$x, c(0, 5, 10))
   expect_equal(calls[[1]]$angle[, 1], rep(0, 3))
@@ -428,17 +550,23 @@ test_that("render_people() validates line placement arguments", {
     byrow = TRUE
   )))
 
-  expect_error(render_people(line = line, spacing = 0), "single positive")
   expect_error(
-    render_people(line = line, align_to_terrain = NA),
+    render_people(line = line, line_spacing = 0),
+    "single positive"
+  )
+  expect_error(
+    render_people(line = line, line_align_terrain = NA),
     "single logical"
   )
   expect_error(
-    render_people(line = line, terrain_spacing = NA),
+    render_people(line = line, line_terrain_spacing = NA),
     "single logical"
   )
   expect_error(render_people(line = line, x = 1), "cannot be combined")
-  expect_error(render_people(pattern = "MF"), "requires line geometry")
+  expect_error(
+    render_people(line_pattern = "MF"),
+    "requires line geometry"
+  )
   expect_error(
     render_people(line = line, location = line),
     "only one of `line` or `location`"
@@ -558,9 +686,21 @@ test_that("render_people() selects sexes and clears only prior people", {
     lit = FALSE
   )
   expect_equal(sum(get_ids_with_labels()$tag == "objperson"), 1)
+
+  render_people(
+    x = c(8, 12),
+    y = c(10, 10),
+    extent = extent,
+    pose = c("standing", "walking"),
+    sex = "female",
+    altitude = 0,
+    clear_previous = TRUE,
+    lit = FALSE
+  )
+  expect_equal(sum(get_ids_with_labels()$tag == "objperson"), 2)
 })
 
-test_that("render_people() renders patterned stretch models along a line", {
+test_that("render_people() renders vectorized poses along a line", {
   skip_if_not_installed("sf")
   on.exit(rgl::close3d(), add = TRUE)
   local_rgl_use_null()
@@ -586,9 +726,10 @@ test_that("render_people() renders patterned stretch models along a line", {
   expect_no_condition(render_people(
     line = line,
     extent = extent,
-    pose = "stretch",
-    pattern = "MF",
-    spacing = 2,
+    pose = rep(c("stretch", "standing"), 3),
+    line_pattern = "MF",
+    line_spacing = 2,
+    line_terrain_spacing = FALSE,
     altitude = 0,
     clear_previous = TRUE,
     lit = FALSE

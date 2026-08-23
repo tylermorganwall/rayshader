@@ -160,7 +160,8 @@ the road width in the generated texture.}
 texture repetition occupied by a dash for dashed lane markings.}
 
 \item{clear_previous}{Default \code{TRUE}. If \code{TRUE}, removes the existing road
-layer before drawing the new one.}
+layer before drawing the new one. A clear-only call returns without rendering
+a replacement.}
 
 \item{preview}{Default \code{"line"}. Whether roads are drawn in rgl as lightweight
 \code{"line"} previews or as their cached \code{"mesh"} geometry. The mesh is the exact

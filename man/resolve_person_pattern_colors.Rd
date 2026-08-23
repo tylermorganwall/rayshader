@@ -4,12 +4,12 @@
 \alias{resolve_person_pattern_colors}
 \title{Resolve Repeating Person Pattern Colors}
 \usage{
-resolve_person_pattern_colors(color, pattern = NULL, n)
+resolve_person_pattern_colors(color, line_pattern = NULL, n)
 }
 \arguments{
 \item{color}{Person model color specification.}
 
-\item{pattern}{Default \code{NULL}. Repeating male/female pattern.}
+\item{line_pattern}{Default \code{NULL}. Repeating male/female pattern.}
 
 \item{n}{Number of generated people.}
 }

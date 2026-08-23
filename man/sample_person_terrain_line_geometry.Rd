@@ -6,7 +6,7 @@
 \usage{
 sample_person_terrain_line_geometry(
   line_sf,
-  spacing,
+  line_spacing,
   extent,
   heightmap,
   zscale
@@ -16,7 +16,7 @@ sample_person_terrain_line_geometry(
 \item{line_sf}{An \code{sf} object containing LINESTRING geometries in the scene
 coordinate reference system.}
 
-\item{spacing}{Distance between samples in meters.}
+\item{line_spacing}{Distance between samples in meters.}
 
 \item{extent}{Scene extent.}
 

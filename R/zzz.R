@@ -2,6 +2,7 @@ ray_has_tex_envir = new.env(parent = emptyenv())
 ray_has_norm_envir = new.env(parent = emptyenv())
 ray_cache_scene_envir = new.env(parent = emptyenv())
 ray_surface_texture_envir = new.env(parent = emptyenv())
+ray_label_font_envir = new.env(parent = emptyenv())
 ray_road_path_envir = new.env(parent = emptyenv())
 ray_water_path_envir = new.env(parent = emptyenv())
 

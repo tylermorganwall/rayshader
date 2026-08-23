@@ -1863,6 +1863,7 @@ reset_scene_context = function(
     cache_plot_gg_panel_info(NULL)
     cache_plot_gg_transform_info(NULL)
     clear_scene_zaxis_data()
+    clear_render_label_fonts()
     clear_render_road_path_info()
     clear_render_water_path_info()
   }

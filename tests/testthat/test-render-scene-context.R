@@ -1,3 +1,47 @@
+test_that("render_label() groups aesthetics before placement and scene context", {
+  expect_identical(
+    names(formals(render_label)),
+    c(
+      "location",
+      "text",
+      "data_column_text",
+      "font",
+      "family",
+      "fonttype",
+      "textsize",
+      "textcolor",
+      "textalpha",
+      "freetype",
+      "adjustvec",
+      "line",
+      "linecolor",
+      "linewidth",
+      "alpha",
+      "dashed",
+      "dashlength",
+      "antialias",
+      "clear_previous",
+      "x",
+      "y",
+      "z",
+      "altitude",
+      "data_column_z",
+      "scale_data",
+      "relativez",
+      "offset",
+      "lat",
+      "long",
+      "crs",
+      "filter_to_extent",
+      "extent",
+      "panel",
+      "zscale",
+      "vertical_exaggeration",
+      "heightmap"
+    )
+  )
+})
+
 test_that("render_points() uses cached scene heightmap and zscale", {
   on.exit(rgl::close3d(), add = TRUE)
   local_rgl_use_null()

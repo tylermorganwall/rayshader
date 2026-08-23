@@ -96,7 +96,8 @@ equal the length of \code{x}/\code{y}).}
 each row (or list entry) specifies the scale of the nth model specified (number of rows/length of list must
 equal the length of \code{x}/\code{y}).}
 
-\item{clear_previous}{Default \code{FALSE}. If \code{TRUE}, it will clear all existing points.}
+\item{clear_previous}{Default \code{FALSE}. If \code{TRUE}, clears all existing objects
+for \code{rgl_tag}. A clear-only call returns without rendering a replacement.}
 
 \item{baseshape}{Default \code{rectangle}. Shape of the base. Options are \code{c("rectangle","circle","hex")}.}
 

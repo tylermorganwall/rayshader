@@ -50,7 +50,9 @@ If \code{zscale} is omitted and \code{heightmap} is a spatial raster, rayshader 
 
 \item{water_polygon_failure}{Default \code{"raster"}. Behavior for spatial polygon water components that cannot be fit to an admissible terrain-triangle flood. \code{"raster"} renders the failed component with the raster method; \code{"remove"} omits it.}
 
-\item{clear_previous}{Default \code{TRUE}. If \code{TRUE}, will remove existing water layer and replace it with new layer.}
+\item{clear_previous}{Default \code{TRUE}. If \code{TRUE}, removes the existing water
+layer before drawing the new one. A clear-only call returns without rendering
+a replacement.}
 }
 \description{
 Adds water layer to the scene, removing the previous water layer if desired.

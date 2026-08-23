@@ -1186,6 +1186,7 @@ render_highquality = function(
     temp_label = rgl.attrib(labelids[i], "texts")
     temp_center = rgl.attrib(labelids[i], "centers")
     temp_color = rgl.attrib(labelids[i], "colors")
+    temp_font = get_render_label_font(labelids[i])
     temp_adj = tryCatch(
       rgl.attrib(labelids[i], "adj"),
       error = function(e) NULL
@@ -1206,6 +1207,7 @@ render_highquality = function(
           label = temp_label[j, 1],
           point = screen_point,
           size = temp_size,
+          font = temp_font,
           color = format_render_highquality_screen_color(
             select_render_highquality_color(temp_color, j)
           ),
@@ -1229,6 +1231,7 @@ render_highquality = function(
           z = temp_center[j, 3] - bbox_center[3] + text_offset[3],
           angle = anglevec,
           text_height = temp_size,
+          font = temp_font,
           font_color = select_render_highquality_color(temp_color, j)[1:3]
         )
         counter = counter + 1

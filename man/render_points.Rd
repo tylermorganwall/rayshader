@@ -21,8 +21,7 @@ render_points(
   long = NULL,
   location = NULL,
   crs = NULL,
-  filter_to_extent = TRUE,
-  ...
+  filter_to_extent = TRUE
 )
 }
 \arguments{
@@ -58,7 +57,8 @@ a size for each point.}
 
 \item{offset}{Default \code{5}. Offset of the track from the surface, if \code{altitude = NULL}.}
 
-\item{clear_previous}{Default \code{FALSE}. If \code{TRUE}, it will clear all existing points.}
+\item{clear_previous}{Default \code{FALSE}. If \code{TRUE}, clears all existing points.
+A clear-only call returns without rendering a replacement.}
 
 \item{lat}{Default \code{NULL}. Alias for \code{y} for geographic workflows.}
 
@@ -69,9 +69,6 @@ a size for each point.}
 \item{crs}{Default \code{NULL}. CRS of the input numeric x/y coordinates, or CRS to assign to CRS-less spatial data before transforming it into the active scene CRS. If spatial data already carries a CRS, that CRS is used automatically.}
 
 \item{filter_to_extent}{Default \code{TRUE}. If \code{TRUE}, points outside the scene extent are omitted. For scenes created with \code{\link[=plot_gg]{plot_gg()}}, filtering uses the ggplot panel extent rather than the full rendered 3D ggplot extent.}
-
-\item{...}{Optional z-axis arguments passed to \code{\link[=render_zaxis]{render_zaxis()}}, such as
-\code{zaxis = TRUE}, \code{zaxis_location}, \code{zaxis_breaks}, and \code{zaxis_labels}.}
 }
 \description{
 Adds 3D datapoints to the current scene, using x/y coordinates in the reference

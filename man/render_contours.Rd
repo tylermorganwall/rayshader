@@ -43,10 +43,10 @@ of \code{n} colors, or a character vector with colors that specifies each color 
 
 \item{offset}{Default \code{5}. Offset of the track from the surface, if \code{altitude = NULL}.}
 
-\item{clear_previous}{Default \code{FALSE}. If \code{TRUE}, it will clear all existing paths.}
+\item{clear_previous}{Default \code{FALSE}. If \code{TRUE}, clears all existing
+contours. A clear-only call returns without rendering a replacement.}
 
-\item{...}{Optional z-axis arguments passed to \code{\link[=render_zaxis]{render_zaxis()}}, such as
-\code{zaxis = TRUE}, \code{zaxis_location}, \code{zaxis_breaks}, and \code{zaxis_labels}.}
+\item{...}{Additional arguments passed to \code{rgl::lines3d()}.}
 }
 \description{
 Adds 3D contours to the current scene, using the heightmap of the 3D surface.

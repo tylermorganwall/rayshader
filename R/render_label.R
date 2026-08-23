@@ -4,52 +4,107 @@
 #'
 #'Cache fallback messages are disabled by default. Set `options(rayshader.verbose_scene_cache = TRUE)` to print when cached metadata is reused.
 #'
-#'@param location Default `NULL`. Spatial input used to place the rendered label(s) in the scene. Accepts `sf`, `sfc`, `sfg`, or `sp` POINT, MULTIPOINT, POLYGON, or MULTIPOLYGON geometries. POLYGON and MULTIPOLYGON inputs are converted to label points with `sf::st_centroid()`. MULTIPOINT inputs are flattened to point placements internally, and vectorized arguments such as `text`, `z`, `altitude`, `data_column_text`, and `data_column_z` values are applied against that flattened point count. If the input carries a CRS, it will be transformed automatically into the active scene CRS. If it has no CRS, supply `crs`.
-#'@param text Default `NULL`. The label text. If omitted, use `data_column_text` to read label text from `location`.
-#'@param y Default `NULL`. Y coordinate for the label in the same coordinate reference system as `extent`.
-#'If no `extent` is available and the scene uses a plain matrix heightmap, this defaults to matrix dimensions.
-#'@param x Default `NULL`. X coordinate for the label in the same coordinate reference system as `extent`.
-#'If no `extent` is available and the scene uses a plain matrix heightmap, this defaults to matrix dimensions.
-#'@param z Default `NULL`. Elevation of the label, in units of the elevation matrix (scaled by zscale).
-#'@param altitude Default `NULL`. Elevation of the label, in units of the elevation matrix (scaled by zscale). If none is passed, this will default to 10 percent above the maximum altitude in the heightmap.
-#'@param data_column_z Default `NULL`. Column name in `location` to use for `z`. Requires `location` to be an `sf`/spatial object with values coercible to numeric. Values are applied after polygon centroid conversion and POINT/MULTIPOINT flattening, rows with missing or non-finite values after coercion are omitted, and retained values are multiplied by `scale_data`.
-#'@param data_column_text Default `NULL`. Column name in `location` to use for `text`. Requires `location` to be an `sf`/spatial object with the named column. Values are applied after polygon centroid conversion and POINT/MULTIPOINT flattening.
-#'@param scale_data Default `1`. If specifying `data_column_z`, how much to scale that value when rendering. If used with `vertical_exaggeration`, both are applied.
-#'@param extent Either an object representing the spatial extent of the scene
-#' (either from the `raster`, `terra`, `sf`, or `sp` packages),
-#' a length-4 numeric vector specifying `c("xmin", "xmax","ymin","ymax")`, or the spatial object (from
-#' the previously aforementioned packages) which will be automatically converted to an extent object.
-#' If omitted, rayshader will use extent metadata cached by [plot_3d()] or [plot_gg()]. If no extent metadata
-#' is available for a plain matrix scene, rayshader defaults to `c(xmin = 1, xmax = nrow(heightmap), ymin = 1, ymax = ncol(heightmap))`.
-#'@param panel Default `NULL`. Facet panel identifier for scenes created with [plot_gg()]. Required
-#'to disambiguate faceted ggplot scenes when panel-specific cached metadata is needed. Ignored
-#'for non-ggplot scenes.
-#'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
-#'@param vertical_exaggeration Default `1`. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from [plot_3d()] or [plot_gg()] when available; pass explicitly to override for this call.
-#'@param relativez Default `FALSE`. Whether `z` should be measured in relation to the underlying elevation at that point in the heightmap, or set absolutely (`FALSE`).
-#'@param offset Elevation above the surface (at the label point) to start drawing the line.
-#'@param clear_previous Default `FALSE`. If `TRUE`, clears all existing text and
-#'lines rendered with [render_label()]. A clear-only call returns without
-#'rendering a replacement.
-#'@param textsize Default `1`. A numeric character expansion value.
-#'@param line Default `TRUE`. If `FALSE`, the vertical line connecting the label to the surface is not drawn.
-#'@param dashed Default `FALSE`. If `TRUE`, the label line is dashed.
-#'@param dashlength Default `auto`. Length, in units of the elevation matrix (scaled by `zscale`) of the dashes if `dashed = TRUE`.
-#'@param linewidth Default `3`. The line width.
-#'@param antialias Default `FALSE`. If `TRUE`, the line with be have anti-aliasing applied. NOTE: anti-aliasing can cause some unpredictable behavior with transparent surfaces.
-#'@param alpha Default `1`. Transparency of the label line.
-#'@param textalpha Default `1`. Transparency of the label text.
-#'@param freetype Default `TRUE`. Set to `FALSE` if freetype is not installed (freetype enables anti-aliased fonts). NOTE: There are occasionally transparency issues when positioning Freetype fonts in front and behind a transparent surface.
-#'@param adjustvec Default `c(0.5,-0.5)`. The horizontal and vertical offset for the text. If `freetype = FALSE` and on macOS/Linux, this is adjusted to `c(0.33,-0.5)` to keep the type centered.
-#'@param family Default `"sans"`. Font family. Choices are `c("serif", "sans", "mono", "symbol")`.
-#'@param fonttype Default `"standard"`. The font type. Choices are `c("standard", "bold", "italic", "bolditalic")`. NOTE: These require FreeType fonts, which may not be installed on your system. See the documentation for rgl::text3d() for more information.
-#'@param linecolor Default `black`. Color of the line. Use `"height"` to color label lines by the cached [plot_gg()] height aesthetic palette.
-#'@param textcolor Default `black`. Color of the text. Use `"height"` to color label text by the cached [plot_gg()] height aesthetic palette.
-#'@param lat Default `NULL`. Alias for `y` for geographic workflows.
-#'@param long Default `NULL`. Alias for `x` for geographic workflows.
-#'@param crs Default `NULL`. CRS of the input numeric x/y coordinates, or CRS to assign to CRS-less spatial data before transforming it into the active scene CRS. If spatial data already carries a CRS, that CRS is used automatically.
-#'@param filter_to_extent Default `TRUE`. If `TRUE`, labels outside the scene extent are omitted. For scenes created with [plot_gg()], filtering uses the ggplot panel extent rather than the full rendered 3D ggplot extent.
-#'@param heightmap Default `NULL`. Height matrix for the current scene. If omitted, this is taken from the cached scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value.
+#' @param location Default `NULL`. Spatial input used to place the rendered
+#' label(s) in the scene. Accepts `sf`, `sfc`, `sfg`, or `sp` POINT, MULTIPOINT,
+#' POLYGON, or MULTIPOLYGON geometries. POLYGON and MULTIPOLYGON inputs are
+#' converted to label points with `sf::st_centroid()`. MULTIPOINT inputs are
+#' flattened to point placements internally, and vectorized arguments such as
+#' `text`, `z`, `altitude`, `data_column_text`, and `data_column_z` values are
+#' applied against that flattened point count. If the input carries a CRS, it
+#' will be transformed automatically into the active scene CRS. If it has no
+#' CRS, supply `crs`.
+#' @param text Default `NULL`. The label text. If omitted, use
+#' `data_column_text` to read label text from `location`.
+#' @param data_column_text Default `NULL`. Column name in `location` to use for
+#' `text`. Requires `location` to be an `sf`/spatial object with the named
+#' column. Values are applied after polygon centroid conversion and
+#' POINT/MULTIPOINT flattening.
+#' @param font Default `"sans"`. Font family passed to [render_highquality()]
+#' for this label. This does not change the font used in the rgl preview; use
+#' `family` and `fonttype` to control the preview font.
+#' @param family Default `"sans"`. Font family used in the rgl preview. Choices
+#' are `c("serif", "sans", "mono", "symbol")`.
+#' @param fonttype Default `"standard"`. Font type used in the rgl preview.
+#' Choices are `c("standard", "bold", "italic", "bolditalic")`. These require
+#' FreeType fonts, which may not be installed on your system. See
+#' `rgl::text3d()` for more information.
+#' @param textsize Default `1`. A numeric character expansion value.
+#' @param textcolor Default `"black"`. Color of the text. Use `"height"` to
+#' color label text by the cached [plot_gg()] height aesthetic palette.
+#' @param textalpha Default `1`. Transparency of the label text.
+#' @param freetype Default `TRUE`. Set to `FALSE` if FreeType is not installed.
+#' FreeType enables anti-aliased fonts, but can occasionally cause transparency
+#' issues when text is positioned in front of or behind a transparent surface.
+#' @param adjustvec Default `NULL`. Horizontal and vertical offsets for the text.
+#' When omitted, this uses `c(0.5, -0.5)`, or `c(0.33, -0.5)` when
+#' `freetype = FALSE` on macOS or Linux, to keep the type centered.
+#' @param line Default `TRUE`. If `FALSE`, the vertical line connecting the
+#' label to the surface is not drawn.
+#' @param linecolor Default `"black"`. Color of the line. Use `"height"` to
+#' color label lines by the cached [plot_gg()] height aesthetic palette.
+#' @param linewidth Default `3`. The line width.
+#' @param alpha Default `1`. Transparency of the label line.
+#' @param dashed Default `FALSE`. If `TRUE`, the label line is dashed.
+#' @param dashlength Default `"auto"`. Length, in units of the elevation matrix
+#' and scaled by `zscale`, of the dashes when `dashed = TRUE`.
+#' @param antialias Default `FALSE`. If `TRUE`, anti-aliasing is applied to the
+#' line. Anti-aliasing can cause unpredictable behavior with transparent
+#' surfaces.
+#' @param clear_previous Default `FALSE`. If `TRUE`, clears all existing text
+#' and lines rendered with [render_label()]. A clear-only call returns without
+#' rendering a replacement.
+#' @param x Default `NULL`. X coordinate for the label in the same coordinate
+#' reference system as `extent`. If no `extent` is available and the scene uses
+#' a plain matrix heightmap, this defaults to matrix dimensions.
+#' @param y Default `NULL`. Y coordinate for the label in the same coordinate
+#' reference system as `extent`. If no `extent` is available and the scene uses
+#' a plain matrix heightmap, this defaults to matrix dimensions.
+#' @param z Default `NULL`. Elevation of the label, in units of the elevation
+#' matrix and scaled by `zscale`.
+#' @param altitude Default `NULL`. Elevation of the label, in units of the
+#' elevation matrix and scaled by `zscale`. If omitted, this defaults to 10
+#' percent above the maximum altitude in the heightmap.
+#' @param data_column_z Default `NULL`. Column name in `location` to use for `z`.
+#' Requires `location` to be an `sf`/spatial object with values coercible to
+#' numeric. Values are applied after polygon centroid conversion and
+#' POINT/MULTIPOINT flattening. Rows with missing or non-finite values after
+#' coercion are omitted, and retained values are multiplied by `scale_data`.
+#' @param scale_data Default `1`. If specifying `data_column_z`, how much to
+#' scale that value when rendering. If used with `vertical_exaggeration`, both
+#' are applied.
+#' @param relativez Default `FALSE`. Whether `z` is measured relative to the
+#' underlying elevation at that point in the heightmap or set absolutely.
+#' @param offset Default `0`. Elevation above the surface at the label point at
+#' which to start drawing the line.
+#' @param lat Default `NULL`. Alias for `y` for geographic workflows.
+#' @param long Default `NULL`. Alias for `x` for geographic workflows.
+#' @param crs Default `NULL`. CRS of the input numeric x/y coordinates, or CRS
+#' to assign to CRS-less spatial data before transforming it into the active
+#' scene CRS. If spatial data already carries a CRS, that CRS is used
+#' automatically.
+#' @param filter_to_extent Default `TRUE`. If `TRUE`, labels outside the scene
+#' extent are omitted. For scenes created with [plot_gg()], filtering uses the
+#' ggplot panel extent rather than the full rendered 3D ggplot extent.
+#' @param extent Default `NULL`. An object representing the spatial extent of
+#' the scene from the `raster`, `terra`, `sf`, or `sp` packages; a length-4
+#' numeric vector specifying `c("xmin", "xmax", "ymin", "ymax")`; or a spatial
+#' object that can be converted to an extent. If omitted, rayshader uses extent
+#' metadata cached by [plot_3d()] or [plot_gg()]. If no extent metadata is
+#' available for a plain matrix scene, rayshader defaults to
+#' `c(xmin = 1, xmax = nrow(heightmap), ymin = 1, ymax = ncol(heightmap))`.
+#' @param panel Default `NULL`. Facet panel identifier for scenes created with
+#' [plot_gg()]. Required to disambiguate faceted ggplot scenes when
+#' panel-specific cached metadata is needed. Ignored for non-ggplot scenes.
+#' @param zscale Default `1`. Ratio between horizontal spacing and the elevation
+#' units in the original heightmap. If omitted, rayshader uses the cached scene
+#' value when available.
+#' @param vertical_exaggeration Default `1`. Multiplier applied to the effective
+#' visual relief. If omitted, rayshader uses the cached scene value from
+#' [plot_3d()] or [plot_gg()] when available; pass explicitly to override it for
+#' this call.
+#' @param heightmap Default `NULL`. Height matrix for the current scene. If
+#' omitted, rayshader uses the cached scene set by [plot_3d()] or [plot_gg()].
+#' Pass explicitly to override the cached value.
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'montereybay_spatial |>
@@ -100,48 +155,60 @@
 render_label = function(
   location = NULL,
   text = NULL,
-  y = NULL,
-  x = NULL,
-  z = NULL,
-  altitude = NULL,
-  data_column_z = NULL,
   data_column_text = NULL,
-  scale_data = 1,
-  extent = NULL,
-  panel = NULL,
-  zscale = 1,
-  vertical_exaggeration = 1,
-  relativez = FALSE,
-  offset = 0,
-  clear_previous = FALSE,
+  font = "sans",
+  family = "sans",
+  fonttype = "standard",
   textsize = 1,
-  line = TRUE,
-  dashed = FALSE,
-  dashlength = "auto",
-  linewidth = 3,
-  antialias = FALSE,
-  alpha = 1,
+  textcolor = "black",
   textalpha = 1,
   freetype = TRUE,
   adjustvec = NULL,
-  family = "sans",
-  fonttype = "standard",
+  line = TRUE,
   linecolor = "black",
-  textcolor = "black",
+  linewidth = 3,
+  alpha = 1,
+  dashed = FALSE,
+  dashlength = "auto",
+  antialias = FALSE,
+  clear_previous = FALSE,
+  x = NULL,
+  y = NULL,
+  z = NULL,
+  altitude = NULL,
+  data_column_z = NULL,
+  scale_data = 1,
+  relativez = FALSE,
+  offset = 0,
   lat = NULL,
   long = NULL,
   crs = NULL,
   filter_to_extent = TRUE,
+  extent = NULL,
+  panel = NULL,
+  zscale = 1,
+  vertical_exaggeration = 1,
   heightmap = NULL
 ) {
   if (
     is_render_clear_only_call(
       clear_previous,
       match.call(),
-      function() rgl::pop3d(tag = c("textline", "raytext"))
+      function() {
+        clear_render_label_fonts()
+        rgl::pop3d(tag = c("textline", "raytext"))
+      }
     )
   ) {
     return(invisible(NULL))
+  }
+  if (
+    !is.character(font) ||
+      length(font) != 1 ||
+      is.na(font) ||
+      !nzchar(font)
+  ) {
+    stop("`font` must be a non-empty string.", call. = FALSE)
   }
   validate_filter_to_extent(filter_to_extent, caller = "render_label")
   warn_scale_data_with_vertical_exaggeration(
@@ -705,7 +772,8 @@ render_label = function(
       adjustvec = adjustvec,
       freetype = freetype,
       family = family,
-      fonttype = fonttype
+      fonttype = fonttype,
+      font = font
     )
   }
   invisible(NULL)
@@ -996,7 +1064,8 @@ render_single_label = function(
   adjustvec,
   freetype,
   family,
-  fonttype
+  fonttype,
+  font
 ) {
   n_label = length(x)
   x = render_label_arg_value(x, label_index, n_label)
@@ -1123,7 +1192,7 @@ render_single_label = function(
       )
     }
   }
-  text3d(
+  text_id = text3d(
     x,
     z + offset,
     y,
@@ -1139,6 +1208,50 @@ render_single_label = function(
     tag = "raytext",
     lit = FALSE
   )
+  register_render_label_font(text_id, font)
+}
+
+render_label_font_key = function(id, device = rgl::cur3d()) {
+  paste(device, id, sep = ":")
+}
+
+register_render_label_font = function(id, font) {
+  for (id_single in id) {
+    assign(
+      render_label_font_key(id_single),
+      font,
+      envir = ray_label_font_envir
+    )
+  }
+  invisible(id)
+}
+
+get_render_label_font = function(id, default = "sans") {
+  get0(
+    render_label_font_key(id),
+    envir = ray_label_font_envir,
+    inherits = FALSE,
+    ifnotfound = default
+  )
+}
+
+clear_render_label_fonts = function(id = NULL, device = rgl::cur3d()) {
+  if (is.null(id)) {
+    font_keys = ls(envir = ray_label_font_envir, all.names = TRUE)
+    if (!isTRUE(device == 0)) {
+      font_keys = font_keys[startsWith(font_keys, paste0(device, ":"))]
+    }
+  } else {
+    font_keys = render_label_font_key(id, device = device)
+  }
+  font_keys = intersect(
+    font_keys,
+    ls(envir = ray_label_font_envir, all.names = TRUE)
+  )
+  if (length(font_keys)) {
+    rm(list = font_keys, envir = ray_label_font_envir)
+  }
+  invisible(NULL)
 }
 
 resolve_render_label_text_angle = function(text_angle = NULL, default_angle) {

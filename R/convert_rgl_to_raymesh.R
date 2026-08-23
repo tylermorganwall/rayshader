@@ -119,6 +119,7 @@ convert_rgl_to_raymesh = function(
     if (is.na(lit)) {
       lit = FALSE
     }
+    color = convert_color(color, linear = TRUE)
     if (lit) {
       if (shininess < 10) {
         type_val = "diffuse"

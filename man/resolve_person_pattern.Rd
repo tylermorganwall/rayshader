@@ -4,14 +4,14 @@
 \alias{resolve_person_pattern}
 \title{Resolve a Repeating Person Pattern}
 \usage{
-resolve_person_pattern(pattern = NULL, n, sex = "male")
+resolve_person_pattern(line_pattern = NULL, n, sex = "male")
 }
 \arguments{
-\item{pattern}{Default \code{NULL}. String containing \code{M} and \code{F}.}
+\item{line_pattern}{Default \code{NULL}. String containing \code{M} and \code{F}.}
 
 \item{n}{Number of people.}
 
-\item{sex}{Default \code{"male"}. Fallback sex when \code{pattern} is \code{NULL}.}
+\item{sex}{Default \code{"male"}. Fallback sex when \code{line_pattern} is \code{NULL}.}
 }
 \value{
 Character vector of canonical sex names.

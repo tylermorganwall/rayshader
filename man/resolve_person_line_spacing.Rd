@@ -4,10 +4,10 @@
 \alias{resolve_person_line_spacing}
 \title{Resolve Person Line Spacing Units}
 \usage{
-resolve_person_line_spacing(spacing, crs)
+resolve_person_line_spacing(line_spacing, crs)
 }
 \arguments{
-\item{spacing}{Spacing in meters.}
+\item{line_spacing}{Spacing in meters.}
 
 \item{crs}{Line coordinate reference system.}
 }

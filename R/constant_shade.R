@@ -66,7 +66,8 @@ constant_shade = function(heightmap, color = "white", alpha = 1) {
   return_array = rayimage::ray_read_image(
     return_array,
     assume_colorspace = rayimage::CS_SRGB,
-    assume_white = "D65"
+    assume_white = "D65",
+    source_linear = FALSE
   )
   cache_hillshade_map(return_array, label = hillshade_cache_label)
   return(return_array)

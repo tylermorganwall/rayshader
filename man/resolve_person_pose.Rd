@@ -7,10 +7,10 @@
 resolve_person_pose(pose)
 }
 \arguments{
-\item{pose}{Name of a bundled person pose.}
+\item{pose}{Names of bundled person poses.}
 }
 \value{
-Canonical pose name.
+Canonical pose names.
 }
 \description{
 Resolve a Person Pose
