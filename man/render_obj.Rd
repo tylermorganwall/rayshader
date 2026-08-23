@@ -6,24 +6,14 @@
 \usage{
 render_obj(
   filename,
-  extent = NULL,
-  panel = NULL,
-  y = NULL,
-  x = NULL,
-  altitude = NULL,
-  xyz = NULL,
-  zscale = 1,
-  vertical_exaggeration = 1,
-  heightmap = NULL,
+  location = NULL,
   load_material = FALSE,
   load_normals = TRUE,
   color = "grey50",
-  offset = 0,
   obj_zscale = FALSE,
   swap_yz = NULL,
   angle = c(0, 0, 0),
   scale = c(1, 1, 1),
-  clear_previous = FALSE,
   baseshape = "rectangle",
   lit = FALSE,
   light_altitude = c(45, 30),
@@ -31,55 +21,34 @@ render_obj(
   light_intensity = 0.3,
   light_relative = FALSE,
   rgl_tag = "",
+  clear_previous = FALSE,
+  x = NULL,
+  y = NULL,
+  altitude = NULL,
+  xyz = NULL,
+  offset = 0,
   lat = NULL,
   long = NULL,
-  location = NULL,
   crs = NULL,
   filter_to_extent = TRUE,
+  extent = NULL,
+  panel = NULL,
+  zscale = 1,
+  vertical_exaggeration = 1,
+  heightmap = NULL,
   ...
 )
 }
 \arguments{
 \item{filename}{Filename for the OBJ file.}
 
-\item{extent}{Either an object representing the spatial extent of the scene
-(either from the \code{raster}, \code{terra}, \code{sf}, or \code{sp} packages),
-a length-4 numeric vector specifying \code{c("xmin", "xmax","ymin","ymax")}, or the spatial object (from
-the previously aforementioned packages) which will be automatically converted to an extent object.
-If omitted, rayshader will use extent metadata cached by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}.}
-
-\item{panel}{Default \code{NULL}. Facet panel identifier for scenes created with \code{\link[=plot_gg]{plot_gg()}}. Required
-to disambiguate faceted ggplot scenes when panel-specific cached metadata is needed. Ignored
-for non-ggplot scenes.}
-
-\item{y}{Vector of y coordinates (or other coordinate in the same coordinate reference system as extent).}
-
-\item{x}{Vector of x coordinates (or other coordinate in the same coordinate reference system as extent).}
-
-\item{altitude}{Default \code{NULL}. Elevation of each point, in units of the elevation matrix (scaled by \code{zscale}).
-If left \code{NULL}, this will be just the elevation value at ths surface, offset by \code{offset}. If a single value,
-the OBJ will be rendered at that altitude. When one horizontal location is
-supplied with multiple altitude values, that location is repeated to place one
-OBJ at each altitude.}
-
-\item{xyz}{Default \code{NULL}, ignored. A 3 column numeric matrix, with each row specifying the x/y/z
-coordinates of the OBJ model(s). Overrides x/y, lat/long, and altitude and ignores extent to plot the OBJ in raw rgl coordinates.}
-
-\item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.}
-
-\item{vertical_exaggeration}{Default \code{1}. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}} when available; pass explicitly to override for this call.}
-
-\item{heightmap}{Default \code{NULL}. Height matrix for the current scene. If omitted, this is taken from the cached scene set by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}. Pass explicitly to override the cached value.
-of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
-All points are assumed to be evenly spaced.}
+\item{location}{Default \code{NULL}. Spatial point input used to place the rendered object(s) in the scene. Accepts \code{sf}, \code{sfc}, \code{sfg}, or \code{sp} POINT or MULTIPOINT geometries. MULTIPOINT inputs are flattened to point placements internally, and vectorized arguments such as \code{scale}, \code{angle}, \code{color}, and \code{altitude} are applied against that flattened point count. If the input carries a CRS, it will be transformed automatically into the active scene CRS. If it has no CRS, supply \code{crs}.}
 
 \item{load_material}{Default \code{TRUE}. Whether to load the accompanying MTL file to load materials for the 3D model.}
 
 \item{load_normals}{Default \code{TRUE}. Whether to load normals for the 3D model.}
 
 \item{color}{Default \code{black}. Color of the 3D model, if \code{load_material = FALSE}. Use \code{"height"} to color placed models by the cached \code{\link[=plot_gg]{plot_gg()}} height aesthetic palette.}
-
-\item{offset}{Default \code{5}. Offset of the model from the surface, if \code{altitude = NULL}.}
 
 \item{obj_zscale}{Default \code{FALSE}. Whether to scale the size of the OBJ by zscale to have it match
 the size of the map. If zscale is very big, this will make the model very small.}
@@ -96,9 +65,6 @@ equal the length of \code{x}/\code{y}).}
 each row (or list entry) specifies the scale of the nth model specified (number of rows/length of list must
 equal the length of \code{x}/\code{y}).}
 
-\item{clear_previous}{Default \code{FALSE}. If \code{TRUE}, clears all existing objects
-for \code{rgl_tag}. A clear-only call returns without rendering a replacement.}
-
 \item{baseshape}{Default \code{rectangle}. Shape of the base. Options are \code{c("rectangle","circle","hex")}.}
 
 \item{lit}{Default \code{TRUE}. Whether to light the polygons.}
@@ -114,15 +80,49 @@ or absolute.}
 
 \item{rgl_tag}{Default \code{""}. Tag to add to the rgl scene id, will be prefixed by \code{"obj"}}
 
+\item{clear_previous}{Default \code{FALSE}. If \code{TRUE}, clears all existing objects
+for \code{rgl_tag}. A clear-only call returns without rendering a replacement.}
+
+\item{x}{Vector of x coordinates (or other coordinate in the same coordinate reference system as extent).}
+
+\item{y}{Vector of y coordinates (or other coordinate in the same coordinate reference system as extent).}
+
+\item{altitude}{Default \code{NULL}. Elevation of each point, in units of the elevation matrix (scaled by \code{zscale}).
+If left \code{NULL}, this will be just the elevation value at ths surface, offset by \code{offset}. If a single value,
+the OBJ will be rendered at that altitude. When one horizontal location is
+supplied with multiple altitude values, that location is repeated to place one
+OBJ at each altitude.}
+
+\item{xyz}{Default \code{NULL}, ignored. A 3 column numeric matrix, with each row specifying the x/y/z
+coordinates of the OBJ model(s). Overrides x/y, lat/long, and altitude and ignores extent to plot the OBJ in raw rgl coordinates.}
+
+\item{offset}{Default \code{5}. Offset of the model from the surface, if \code{altitude = NULL}.}
+
 \item{lat}{Default \code{NULL}. Alias for \code{y} for geographic workflows.}
 
 \item{long}{Default \code{NULL}. Alias for \code{x} for geographic workflows.}
 
-\item{location}{Default \code{NULL}. Spatial point input used to place the rendered object(s) in the scene. Accepts \code{sf}, \code{sfc}, \code{sfg}, or \code{sp} POINT or MULTIPOINT geometries. MULTIPOINT inputs are flattened to point placements internally, and vectorized arguments such as \code{scale}, \code{angle}, \code{color}, and \code{altitude} are applied against that flattened point count. If the input carries a CRS, it will be transformed automatically into the active scene CRS. If it has no CRS, supply \code{crs}.}
-
 \item{crs}{Default \code{NULL}. CRS of the input numeric x/y coordinates, or CRS to assign to CRS-less spatial data before transforming it into the active scene CRS. If spatial data already carries a CRS, that CRS is used automatically.}
 
 \item{filter_to_extent}{Default \code{TRUE}. If \code{TRUE}, object placements outside the scene extent are omitted. For scenes created with \code{\link[=plot_gg]{plot_gg()}}, filtering uses the ggplot panel extent rather than the full rendered 3D ggplot extent.}
+
+\item{extent}{Either an object representing the spatial extent of the scene
+(either from the \code{raster}, \code{terra}, \code{sf}, or \code{sp} packages),
+a length-4 numeric vector specifying \code{c("xmin", "xmax","ymin","ymax")}, or the spatial object (from
+the previously aforementioned packages) which will be automatically converted to an extent object.
+If omitted, rayshader will use extent metadata cached by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}.}
+
+\item{panel}{Default \code{NULL}. Facet panel identifier for scenes created with \code{\link[=plot_gg]{plot_gg()}}. Required
+to disambiguate faceted ggplot scenes when panel-specific cached metadata is needed. Ignored
+for non-ggplot scenes.}
+
+\item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.}
+
+\item{vertical_exaggeration}{Default \code{1}. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}} when available; pass explicitly to override for this call.}
+
+\item{heightmap}{Default \code{NULL}. Height matrix for the current scene. If omitted, this is taken from the cached scene set by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}. Pass explicitly to override the cached value.
+of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
+All points are assumed to be evenly spaced.}
 
 \item{...}{Additional arguments to pass to \code{rgl::triangles3d()}.}
 }

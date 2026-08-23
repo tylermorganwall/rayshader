@@ -8,6 +8,19 @@
 #'You can also use [save_multipolygonz_to_obj()] manually to convert sf objects
 #'
 #'@param sfobj An sf object with MULTIPOLYGON Z geometry.
+#'@param color Default `black`. Color of the 3D model, if `load_material = FALSE`.
+#'@param obj_zscale Default `TRUE`. Whether to scale the size of the OBJ by zscale to have it match
+#'the size of the map. If zscale is very big, this will make the model very small.
+#'@param swap_yz Default `TRUE`. Whether to swap and Y and Z axes. (Y axis is vertical in
+#'rayshader coordinates, but data is often provided with Z being vertical).
+#'@param baseshape Default `rectangle`. Shape of the base. Options are `c("rectangle","circle","hex")`.
+#'@param rgl_tag Default `""`. Tag to add to the rgl scene id, will be prefixed by `"obj"`
+#'@param clear_previous Default `FALSE`. If `TRUE`, clears all existing rendered
+#'multipolygons for `rgl_tag`. A clear-only call returns without rendering a
+#'replacement.
+#'@param offset Default `5`. Offset of the track from the surface, if `altitude = NULL`.
+#'@param crs Default `NULL`. CRS of the input numeric x/y coordinates, or CRS to assign to CRS-less spatial data before transforming it into the active scene CRS. If spatial data already carries a CRS, that CRS is used automatically.
+#'@param filter_to_extent Default `TRUE`. If `TRUE`, MULTIPOLYGON Z data outside the scene extent is omitted. Spatial inputs are cropped to the extent. For scenes created with [plot_gg()], filtering uses the ggplot panel extent rather than the full rendered 3D ggplot extent.
 #'@param extent Either an object representing the spatial extent of the scene
 #' (either from the `raster`, `terra`, `sf`, or `sp` packages),
 #' a length-4 numeric vector specifying `c("xmin", "xmax","ymin","ymax")`, or the spatial object (from
@@ -16,24 +29,11 @@
 #'@param panel Default `NULL`. Facet panel identifier for scenes created with [plot_gg()]. Required
 #'to disambiguate faceted ggplot scenes when panel-specific cached metadata is needed. Ignored
 #'for non-ggplot scenes.
-#'@param crs Default `NULL`. CRS of the input numeric x/y coordinates, or CRS to assign to CRS-less spatial data before transforming it into the active scene CRS. If spatial data already carries a CRS, that CRS is used automatically.
-#'@param obj_zscale Default `TRUE`. Whether to scale the size of the OBJ by zscale to have it match
-#'the size of the map. If zscale is very big, this will make the model very small.
-#'@param swap_yz Default `TRUE`. Whether to swap and Y and Z axes. (Y axis is vertical in
-#'rayshader coordinates, but data is often provided with Z being vertical).
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.
 #'@param vertical_exaggeration Default `1`. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from [plot_3d()] or [plot_gg()] when available; pass explicitly to override for this call.
 #'@param heightmap Default `NULL`. Height matrix for the current scene. If omitted, this is taken from the cached scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value.
 #'of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
 #' All points are assumed to be evenly spaced.
-#'@param color Default `black`. Color of the 3D model, if `load_material = FALSE`.
-#'@param offset Default `5`. Offset of the track from the surface, if `altitude = NULL`.
-#'@param clear_previous Default `FALSE`. If `TRUE`, clears all existing rendered
-#'multipolygons for `rgl_tag`. A clear-only call returns without rendering a
-#'replacement.
-#'@param rgl_tag Default `""`. Tag to add to the rgl scene id, will be prefixed by `"obj"`
-#'@param baseshape Default `rectangle`. Shape of the base. Options are `c("rectangle","circle","hex")`.
-#'@param filter_to_extent Default `TRUE`. If `TRUE`, MULTIPOLYGON Z data outside the scene extent is omitted. Spatial inputs are cropped to the extent. For scenes created with [plot_gg()], filtering uses the ggplot panel extent rather than the full rendered 3D ggplot extent.
 #'@param ... Additional arguments to pass to `rgl::triangles3d()`.
 #'@export
 #'@examplesIf length(find.package("sf", quiet = TRUE)) && length(find.package("elevatr", quiet = TRUE)) && length(find.package("raster", quiet = TRUE)) && (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true"))
@@ -75,20 +75,20 @@
 #'render_highquality(min_variance = 0, samples = 16)
 render_multipolygonz = function(
   sfobj,
+  color = "grey50",
+  obj_zscale = TRUE,
+  swap_yz = TRUE,
+  baseshape = "rectangle",
+  rgl_tag = "_multipolygon",
+  clear_previous = FALSE,
+  offset = 0,
+  crs = NULL,
+  filter_to_extent = TRUE,
   extent = NULL,
   panel = NULL,
   zscale = 1,
   vertical_exaggeration = 1,
   heightmap = NULL,
-  color = "grey50",
-  offset = 0,
-  obj_zscale = TRUE,
-  swap_yz = TRUE,
-  clear_previous = FALSE,
-  baseshape = "rectangle",
-  rgl_tag = "_multipolygon",
-  crs = NULL,
-  filter_to_extent = TRUE,
   ...
 ) {
   if (

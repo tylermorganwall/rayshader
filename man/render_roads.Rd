@@ -6,10 +6,7 @@
 \usage{
 render_roads(
   roads,
-  heightmap = NULL,
   roadcolor = "#303030",
-  zscale = 1,
-  vertical_exaggeration = 1,
   width = NULL,
   width_column = NULL,
   densify = TRUE,
@@ -36,27 +33,17 @@ render_roads(
   verbose = FALSE,
   parallel = TRUE,
   maximum_grade = 0.15,
-  continuation_grade_tolerance = 0.14
+  continuation_grade_tolerance = 0.14,
+  zscale = 1,
+  vertical_exaggeration = 1,
+  heightmap = NULL
 )
 }
 \arguments{
 \item{roads}{Spatial line data used to draw road paths. Supports \code{sf},
 \code{sfc}, \code{sfg}, \code{SpatialLines}, and \code{SpatialLinesDataFrame} line inputs.}
 
-\item{heightmap}{Default \code{NULL}. Height matrix or spatial raster for the
-current scene. If omitted, this is taken from the cached scene set by
-\code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}. Pass explicitly to override the cached value.}
-
 \item{roadcolor}{Default \code{"#303030"}. sRGB road surface color.}
-
-\item{zscale}{Default \code{1}. The ratio between the x and y spacing and the z
-axis. If omitted and \code{heightmap} is a spatial raster, rayshader uses the
-raster cell resolution.}
-
-\item{vertical_exaggeration}{Default \code{1}. Multiplier applied to the effective
-visual relief. If omitted, rayshader uses the cached scene value from
-\code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}} when available; pass explicitly to override for
-this call.}
 
 \item{width}{Default \code{NULL}, which derives road width from \code{lanes} and
 \code{lane_width}. If supplied, road width in scene grid-cell units for
@@ -178,6 +165,19 @@ grade. Positive infinity removes the grade bound.}
 
 \item{continuation_grade_tolerance}{Default \code{0.14}. Maximum absolute grade
 mismatch at selected road continuations. Continuation height remains exact.}
+
+\item{zscale}{Default \code{1}. The ratio between the x and y spacing and the z
+axis. If omitted and \code{heightmap} is a spatial raster, rayshader uses the
+raster cell resolution.}
+
+\item{vertical_exaggeration}{Default \code{1}. Multiplier applied to the effective
+visual relief. If omitted, rayshader uses the cached scene value from
+\code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}} when available; pass explicitly to override for
+this call.}
+
+\item{heightmap}{Default \code{NULL}. Height matrix or spatial raster for the
+current scene. If omitted, this is taken from the cached scene set by
+\code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}. Pass explicitly to override the cached value.}
 }
 \value{
 Invisibly returns the rendered road coordinates. When \code{layer} is

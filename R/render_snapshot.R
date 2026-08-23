@@ -33,9 +33,6 @@
 #'height when `software_render = TRUE`.
 #'@param software_render Default `FALSE`. If `TRUE`, rayshader will use the rayvertex package to render the snapshot, which
 #'is not constrained by the screen size or requires OpenGL.
-#'@param cache_scene Default `FALSE`. Whether to cache the current scene to memory so it does not have to be converted to a `raymesh` object
-#'each time [render_snapshot()] is called. If `TRUE` and a scene has been cached, it will be used when rendering.
-#'@param reset_scene_cache Default `FALSE`. Resets the scene cache before rendering.
 #'@param background Default `NULL`, defaults to device background. Background color when `software_render = TRUE`.
 #'@param text_angle Default `NULL`, which forces the text always to face the camera. If a single angle (degrees),
 #'will specify the absolute angle all the labels are facing. If three angles, this will specify all three orientations
@@ -64,6 +61,9 @@
 #'@param rayvertex_shadow_map Default `FALSE`. If `TRUE` and `rayvertex_lighting = TRUE` along with `software_render = TRUE`, shadow mapping will also
 #'be applied to the rendered scene.
 #'@param plot Default `TRUE`. Whether to plot the snapshot.
+#'@param cache_scene Default `FALSE`. Whether to cache the current scene to memory so it does not have to be converted to a `raymesh` object
+#'each time [render_snapshot()] is called. If `TRUE` and a scene has been cached, it will be used when rendering.
+#'@param reset_scene_cache Default `FALSE`. Resets the scene cache before rendering.
 #'@param ... Additional parameters to pass to `rayvertex::rasterize_scene()`.
 #'@return Displays snapshot of current rgl plot (or saves to disk), as well as invisibly returns an RGBA `rayimg` array.
 #'@export
@@ -127,8 +127,6 @@ render_snapshot = function(
   line_offset = 1e-7,
   thick_lines = TRUE,
   line_radius = 0.25,
-  cache_scene = FALSE,
-  reset_scene_cache = FALSE,
   new_page = TRUE,
   print_scene_info = FALSE,
   fsaa = 1,
@@ -136,6 +134,8 @@ render_snapshot = function(
   rayvertex_lights = NULL,
   rayvertex_shadow_map = FALSE,
   plot = TRUE,
+  cache_scene = FALSE,
+  reset_scene_cache = FALSE,
   ...
 ) {
   if (rgl::rgl.useNULL()) {

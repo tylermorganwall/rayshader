@@ -9,6 +9,43 @@
 #' of polygon represented in a way that can be processed by `xy.coords()`.  If
 #' xy-coordinate based polygons are open, they will be closed by adding an
 #' edge from the last point to the first.
+#' @param material Default `"grey80"`. If a color string, this will specify the color of the sides/base of the building
+#' Alternatively (for more customization), this can be a r`ayvertex::material_list()` object to specify
+#' the full color/appearance/material options for the resulting `ray_mesh` mesh.
+#' @param roof_material Default `NA`, defaults to the material specified in `material`. If a color string, this will specify the color of the roof of the building.
+#' Alternatively (for more customization), this can be a `rayvertex::material_list()` object to specify
+#' the full color/appearance/material options for the resulting `ray_mesh` mesh.
+#' @param angle Default `45`. Angle of the roof.
+#' @param scale_data Default `1`. How much to scale the `top`/`bottom` value when rendering. Use
+#' `zscale` to adjust the data to account for `x`/`y` grid spacing, and this argument to scale the data
+#' for visualization. If used with `vertical_exaggeration`, both are applied.
+#' @param relative_heights Default `TRUE`. Whether the heights specified in `roof_height` and `base_height` should
+#' be measured relative to the underlying heightmap.
+#' @param heights_relative_to_centroid Default `FALSE`. Whether the heights should be measured in absolute
+#' terms, or relative to the centroid of the polygon.
+#' @param roof_height Default `1`. Height from the base of the building to the start of the roof.
+#' @param base_height Default `0`. Height of the base of the roof.
+#' @param data_column_top Default `NULL`. A string indicating the column in the `sf` object to use
+#' to specify the top of the extruded polygon. Values are coerced to numeric, and rows with missing or non-finite values after coercion are omitted.
+#' @param data_column_bottom Default `NULL`. A string indicating the column in the `sf` object to use
+#' to specify the bottom of the extruded polygon. Values are coerced to numeric, and rows with missing or non-finite values after coercion are omitted.
+#' @param holes Default `0`. If passing in a polygon directly, this specifies which index represents
+#' the holes in the polygon. See the `earcut` function in the `decido` package for more information.
+#' @param alpha Default `1`. Transparency of the polygons.
+#' @param lit Default `TRUE`. Whether to light the polygons.
+#' @param flat_shading Default `FALSE`. Set to `TRUE` to have nicer shading on the 3D polygons. This comes
+#' with the slight penalty of increasing the memory use of the scene due to vertex duplication. This
+#' will not affect software or high quality renders.
+#' @param light_altitude Default `c(45, 30)`. Degree(s) from the horizon from which to light the polygons.
+#' @param light_direction Default `c(315, 225)`. Degree(s) from north from which to light the polygons.
+#' @param light_intensity Default `1`. Intensity of the specular highlight on the polygons.
+#' @param light_relative Default `FALSE`. Whether the light direction should be taken relative to the camera,
+#' or absolute.
+#' @param clear_previous Default `FALSE`. If `TRUE`, clears all existing
+#' buildings. A clear-only call returns without rendering a replacement.
+#'
+#' @param crs Default `NULL`. CRS of the input numeric x/y coordinates, or CRS to assign to CRS-less spatial data before transforming it into the active scene CRS. If spatial data already carries a CRS, that CRS is used automatically.
+#' @param filter_to_extent Default `TRUE`. If `TRUE`, building footprint data outside the scene extent is omitted. Spatial polygon inputs are cropped to the extent. For scenes created with [plot_gg()], filtering uses the ggplot panel extent rather than the full rendered 3D ggplot extent.
 #' @param extent Either an object representing the spatial extent of the 3D scene
 #' (either from the `raster`, `terra`, `sf`, or `sp` packages),
 #' a length-4 numeric vector specifying `c("xmin", "xmax", "ymin", "ymax")`, or the spatial object (from
@@ -17,49 +54,12 @@
 #' @param panel Default `NULL`. Facet panel identifier for scenes created with [plot_gg()]. Required
 #' to disambiguate faceted ggplot scenes when panel-specific cached metadata is needed. Ignored
 #' for non-ggplot scenes.
-#' @param crs Default `NULL`. CRS of the input numeric x/y coordinates, or CRS to assign to CRS-less spatial data before transforming it into the active scene CRS. If spatial data already carries a CRS, that CRS is used automatically.
-#' @param material Default `"grey80"`. If a color string, this will specify the color of the sides/base of the building
-#' Alternatively (for more customization), this can be a r`ayvertex::material_list()` object to specify
-#' the full color/appearance/material options for the resulting `ray_mesh` mesh.
-#' @param roof_material Default `NA`, defaults to the material specified in `material`. If a color string, this will specify the color of the roof of the building.
-#' Alternatively (for more customization), this can be a `rayvertex::material_list()` object to specify
-#' the full color/appearance/material options for the resulting `ray_mesh` mesh.
-#' @param roof_height Default `1`. Height from the base of the building to the start of the roof.
-#' @param base_height Default `0`. Height of the base of the roof.
-#' @param heights_relative_to_centroid Default `FALSE`. Whether the heights should be measured in absolute
-#' terms, or relative to the centroid of the polygon.
-#' @param data_column_top Default `NULL`. A string indicating the column in the `sf` object to use
-#' to specify the top of the extruded polygon. Values are coerced to numeric, and rows with missing or non-finite values after coercion are omitted.
-#' @param data_column_bottom Default `NULL`. A string indicating the column in the `sf` object to use
-#' to specify the bottom of the extruded polygon. Values are coerced to numeric, and rows with missing or non-finite values after coercion are omitted.
-#' @param scale_data Default `1`. How much to scale the `top`/`bottom` value when rendering. Use
-#' `zscale` to adjust the data to account for `x`/`y` grid spacing, and this argument to scale the data
-#' for visualization. If used with `vertical_exaggeration`, both are applied.
-#' @param holes Default `0`. If passing in a polygon directly, this specifies which index represents
-#' the holes in the polygon. See the `earcut` function in the `decido` package for more information.
+#' @param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.
+#' @param vertical_exaggeration Default `1`. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from [plot_3d()] or [plot_gg()] when available; pass explicitly to override for this call.
 #' @param heightmap Default `NULL`. Height matrix for the current scene. If omitted, this is taken from the cached scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value.
 #' of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
 #'  All points are assumed to be evenly spaced.
-#' @param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.
-#' @param vertical_exaggeration Default `1`. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from [plot_3d()] or [plot_gg()] when available; pass explicitly to override for this call.
-#' @param alpha Default `1`. Transparency of the polygons.
-#' @param lit Default `TRUE`. Whether to light the polygons.
-#' @param light_altitude Default `c(45, 30)`. Degree(s) from the horizon from which to light the polygons.
-#' @param light_direction Default `c(315, 225)`. Degree(s) from north from which to light the polygons.
-#' @param light_intensity Default `1`. Intensity of the specular highlight on the polygons.
-#' @param light_relative Default `FALSE`. Whether the light direction should be taken relative to the camera,
-#' or absolute.
-#' @param angle Default `45`. Angle of the roof.
-#' @param relative_heights Default `TRUE`. Whether the heights specified in `roof_height` and `base_height` should
-#' be measured relative to the underlying heightmap.
-#' @param flat_shading Default `FALSE`. Set to `TRUE` to have nicer shading on the 3D polygons. This comes
-#' with the slight penalty of increasing the memory use of the scene due to vertex duplication. This
-#' will not affect software or high quality renders.
-#' @param filter_to_extent Default `TRUE`. If `TRUE`, building footprint data outside the scene extent is omitted. Spatial polygon inputs are cropped to the extent. For scenes created with [plot_gg()], filtering uses the ggplot panel extent rather than the full rendered 3D ggplot extent.
 #' @param ... Additional arguments to pass to `rgl::triangles3d()`.
-#' @param clear_previous Default `FALSE`. If `TRUE`, clears all existing
-#' buildings. A clear-only call returns without rendering a replacement.
-#'
 #' @export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #' # Load and visualize building footprints from Overture Maps
@@ -288,13 +288,9 @@
 #'
 render_buildings = function(
   polygon,
-  extent = NULL,
-  panel = NULL,
   material = "grey",
   roof_material = NA,
   angle = 45,
-  zscale = 1,
-  vertical_exaggeration = 1,
   scale_data = 1,
   relative_heights = TRUE,
   heights_relative_to_centroid = FALSE,
@@ -302,7 +298,6 @@ render_buildings = function(
   base_height = 0,
   data_column_top = NULL,
   data_column_bottom = NULL,
-  heightmap = NULL,
   holes = 0,
   alpha = 1,
   lit = TRUE,
@@ -314,6 +309,11 @@ render_buildings = function(
   clear_previous = FALSE,
   crs = NULL,
   filter_to_extent = TRUE,
+  extent = NULL,
+  panel = NULL,
+  zscale = 1,
+  vertical_exaggeration = 1,
+  heightmap = NULL,
   ...
 ) {
   if (

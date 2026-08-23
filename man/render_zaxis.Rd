@@ -5,11 +5,6 @@
 \title{Render Z-Axis}
 \usage{
 render_zaxis(
-  extent = NULL,
-  panel = NULL,
-  zscale = 1,
-  vertical_exaggeration = 1,
-  heightmap = NULL,
   zaxis_data = "auto",
   zaxis_location = "auto",
   zaxis_breaks = NULL,
@@ -25,29 +20,15 @@ render_zaxis(
   zaxis_label_side = "auto",
   zaxis_title_side = "auto",
   zaxis_corner_offset = NULL,
-  zaxis_tick_size = NULL
+  zaxis_tick_size = NULL,
+  extent = NULL,
+  panel = NULL,
+  zscale = 1,
+  vertical_exaggeration = 1,
+  heightmap = NULL
 )
 }
 \arguments{
-\item{extent}{Default \code{NULL}. Either an object representing the spatial extent of the scene
-(either from the \code{raster}, \code{terra}, \code{sf}, or \code{sp} packages),
-a length-4 numeric vector specifying \code{c("xmin", "xmax","ymin","ymax")}, or the spatial object (from
-the previously aforementioned packages) which will be automatically converted to an extent object.
-If omitted, rayshader will use cached extent metadata from \code{\link[=plot_gg]{plot_gg()}} or from \code{\link[=plot_3d]{plot_3d()}}
-(either from an explicitly passed \code{extent} argument, or the built-in \code{montereybay_spatial} scene metadata).}
-
-\item{panel}{Default \code{NULL}. Facet panel identifier for scenes created with \code{\link[=plot_gg]{plot_gg()}}. Required
-to disambiguate faceted ggplot scenes when panel-specific cached metadata is needed. Ignored
-for non-ggplot scenes.}
-
-\item{zscale}{Default \code{1}. The ratio between x/y spacing and z units.
-If left at \code{1} with \code{zaxis_breaks = NULL} on non-ggplot terrain scenes, rayshader
-will attempt to use the cached \code{plot_3d()} zscale to generate more meaningful defaults.}
-
-\item{vertical_exaggeration}{Default \code{1}. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}} when available; pass explicitly to override for this call.}
-
-\item{heightmap}{Default \code{NULL}. Height matrix for the current scene. If omitted, this is taken from the cached scene set by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}. Pass explicitly to override the cached value.}
-
 \item{zaxis_data}{Default \code{"auto"}. Data source used to generate z-axis
 breaks and labels. Options are \code{"auto"}, \code{"topographic"}, \code{"polygon"},
 \code{"point"}, \code{"path"}, \code{"obj"}, \code{"raymesh"}, \code{"tree"}, \code{"label"},
@@ -109,6 +90,25 @@ center-to-corner planar distance. If \code{NULL}, this defaults to \code{0} for 
 and \code{0.08} for non-ggplot scenes. \code{0} places the axis exactly at the corner.}
 
 \item{zaxis_tick_size}{Default \code{NULL}. Tick marker size. If \code{NULL}, auto-sized from line width.}
+
+\item{extent}{Default \code{NULL}. Either an object representing the spatial extent of the scene
+(either from the \code{raster}, \code{terra}, \code{sf}, or \code{sp} packages),
+a length-4 numeric vector specifying \code{c("xmin", "xmax","ymin","ymax")}, or the spatial object (from
+the previously aforementioned packages) which will be automatically converted to an extent object.
+If omitted, rayshader will use cached extent metadata from \code{\link[=plot_gg]{plot_gg()}} or from \code{\link[=plot_3d]{plot_3d()}}
+(either from an explicitly passed \code{extent} argument, or the built-in \code{montereybay_spatial} scene metadata).}
+
+\item{panel}{Default \code{NULL}. Facet panel identifier for scenes created with \code{\link[=plot_gg]{plot_gg()}}. Required
+to disambiguate faceted ggplot scenes when panel-specific cached metadata is needed. Ignored
+for non-ggplot scenes.}
+
+\item{zscale}{Default \code{1}. The ratio between x/y spacing and z units.
+If left at \code{1} with \code{zaxis_breaks = NULL} on non-ggplot terrain scenes, rayshader
+will attempt to use the cached \code{plot_3d()} zscale to generate more meaningful defaults.}
+
+\item{vertical_exaggeration}{Default \code{1}. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}} when available; pass explicitly to override for this call.}
+
+\item{heightmap}{Default \code{NULL}. Height matrix for the current scene. If omitted, this is taken from the cached scene set by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}. Pass explicitly to override the cached value.}
 }
 \description{
 Add a standalone z-axis to the active 3D scene.

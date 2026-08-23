@@ -6,25 +6,47 @@
 \usage{
 render_multipolygonz(
   sfobj,
+  color = "grey50",
+  obj_zscale = TRUE,
+  swap_yz = TRUE,
+  baseshape = "rectangle",
+  rgl_tag = "_multipolygon",
+  clear_previous = FALSE,
+  offset = 0,
+  crs = NULL,
+  filter_to_extent = TRUE,
   extent = NULL,
   panel = NULL,
   zscale = 1,
   vertical_exaggeration = 1,
   heightmap = NULL,
-  color = "grey50",
-  offset = 0,
-  obj_zscale = TRUE,
-  swap_yz = TRUE,
-  clear_previous = FALSE,
-  baseshape = "rectangle",
-  rgl_tag = "_multipolygon",
-  crs = NULL,
-  filter_to_extent = TRUE,
   ...
 )
 }
 \arguments{
 \item{sfobj}{An sf object with MULTIPOLYGON Z geometry.}
+
+\item{color}{Default \code{black}. Color of the 3D model, if \code{load_material = FALSE}.}
+
+\item{obj_zscale}{Default \code{TRUE}. Whether to scale the size of the OBJ by zscale to have it match
+the size of the map. If zscale is very big, this will make the model very small.}
+
+\item{swap_yz}{Default \code{TRUE}. Whether to swap and Y and Z axes. (Y axis is vertical in
+rayshader coordinates, but data is often provided with Z being vertical).}
+
+\item{baseshape}{Default \code{rectangle}. Shape of the base. Options are \code{c("rectangle","circle","hex")}.}
+
+\item{rgl_tag}{Default \code{""}. Tag to add to the rgl scene id, will be prefixed by \code{"obj"}}
+
+\item{clear_previous}{Default \code{FALSE}. If \code{TRUE}, clears all existing rendered
+multipolygons for \code{rgl_tag}. A clear-only call returns without rendering a
+replacement.}
+
+\item{offset}{Default \code{5}. Offset of the track from the surface, if \code{altitude = NULL}.}
+
+\item{crs}{Default \code{NULL}. CRS of the input numeric x/y coordinates, or CRS to assign to CRS-less spatial data before transforming it into the active scene CRS. If spatial data already carries a CRS, that CRS is used automatically.}
+
+\item{filter_to_extent}{Default \code{TRUE}. If \code{TRUE}, MULTIPOLYGON Z data outside the scene extent is omitted. Spatial inputs are cropped to the extent. For scenes created with \code{\link[=plot_gg]{plot_gg()}}, filtering uses the ggplot panel extent rather than the full rendered 3D ggplot extent.}
 
 \item{extent}{Either an object representing the spatial extent of the scene
 (either from the \code{raster}, \code{terra}, \code{sf}, or \code{sp} packages),
@@ -43,28 +65,6 @@ for non-ggplot scenes.}
 \item{heightmap}{Default \code{NULL}. Height matrix for the current scene. If omitted, this is taken from the cached scene set by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}. Pass explicitly to override the cached value.
 of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
 All points are assumed to be evenly spaced.}
-
-\item{color}{Default \code{black}. Color of the 3D model, if \code{load_material = FALSE}.}
-
-\item{offset}{Default \code{5}. Offset of the track from the surface, if \code{altitude = NULL}.}
-
-\item{obj_zscale}{Default \code{TRUE}. Whether to scale the size of the OBJ by zscale to have it match
-the size of the map. If zscale is very big, this will make the model very small.}
-
-\item{swap_yz}{Default \code{TRUE}. Whether to swap and Y and Z axes. (Y axis is vertical in
-rayshader coordinates, but data is often provided with Z being vertical).}
-
-\item{clear_previous}{Default \code{FALSE}. If \code{TRUE}, clears all existing rendered
-multipolygons for \code{rgl_tag}. A clear-only call returns without rendering a
-replacement.}
-
-\item{baseshape}{Default \code{rectangle}. Shape of the base. Options are \code{c("rectangle","circle","hex")}.}
-
-\item{rgl_tag}{Default \code{""}. Tag to add to the rgl scene id, will be prefixed by \code{"obj"}}
-
-\item{crs}{Default \code{NULL}. CRS of the input numeric x/y coordinates, or CRS to assign to CRS-less spatial data before transforming it into the active scene CRS. If spatial data already carries a CRS, that CRS is used automatically.}
-
-\item{filter_to_extent}{Default \code{TRUE}. If \code{TRUE}, MULTIPOLYGON Z data outside the scene extent is omitted. Spatial inputs are cropped to the extent. For scenes created with \code{\link[=plot_gg]{plot_gg()}}, filtering uses the ggplot panel extent rather than the full rendered 3D ggplot extent.}
 
 \item{...}{Additional arguments to pass to \code{rgl::triangles3d()}.}
 }

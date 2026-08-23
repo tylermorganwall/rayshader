@@ -21,13 +21,11 @@
 #'@param aberration Default `0`. Adds chromatic aberration to the image. Maximum of `1`.
 #'@param transparent_water Default `FALSE`. If `TRUE`, depth is determined without water layer. User will have to re-render the water
 #'layer from the active `rgl` subscene while capturing the depth map, then restores it.
-#'@param heightmap Deprecated and ignored. Retained for backward compatibility.
-#'@param zscale Deprecated and ignored. Retained for backward compatibility.
 #'@param title_text Default `NULL`. Text. Adds a title to the image, using magick::image_annotate.
 #'@param title_offset Default `c(20,20)`. Distance from the top-left (default, `gravity` direction in
 #'image_annotate) corner to offset the title.
-#'@param title_size Default `30`. Font size in pixels.
 #'@param title_color Default `black`. Font color.
+#'@param title_size Default `30`. Font size in pixels.
 #'@param title_font Default `sans`. String with font family such as "sans", "mono", "serif", "Times", "Helvetica",
 #'"Trebuchet", "Georgia", "Palatino" or "Comic Sans".
 #'@param title_bar_color Default `NA`. If a color, this will create a colored bar under the title.
@@ -41,35 +39,37 @@
 #'control the blurriness of the vignette effect.
 #'@param vignette_color Default `"black"`. Color of the vignette.
 #'@param vignette_radius Default `1.3`. Radius of the vignette, as a porportion of the image dimensions.
+#'@param progbar Default `TRUE` if in an interactive session. Displays a progress bar.
+#'@param software_render Default `FALSE`. If `TRUE`, rayshader will use the rayvertex package to render the snapshot, which
+#'is not constrained by the screen size or requires OpenGL.
 #'@param width Default `NULL`. Optional argument to pass to `rgl::snapshot3d()` to specify the
 #'width when `software_render = TRUE`..
 #'@param height Default `NULL`. Optional argument to pass to `rgl::snapshot3d()` to specify the
 #'height when `software_render = TRUE`.
-#'@param progbar Default `TRUE` if in an interactive session. Displays a progress bar.
-#'@param instant_capture Default `TRUE` if interactive, `FALSE` otherwise. If `FALSE`, a slight delay is added
-#'before taking the snapshot. This can help stop prevent rendering issues when running scripts.
-#'@param clear Default `FALSE`. If `TRUE`, the current `rgl` device will be cleared.
-#'@param bring_to_front Default `FALSE`. Whether to bring the window to the front when rendering the snapshot.
-#'@param software_render Default `FALSE`. If `TRUE`, rayshader will use the rayvertex package to render the snapshot, which
-#'is not constrained by the screen size or requires OpenGL.
-#'@param cache_scene Default `FALSE`. Whether to cache the current scene to memory so it does not have to be converted to a `raymesh` object
-#'each time [render_snapshot()] is called. If `TRUE` and a scene has been cached, it will be used when rendering.
-#'@param reset_scene_cache Default `FALSE`. Resets the scene cache before rendering.
+#'@param camera_location Default `NULL`. Custom position of the camera. The `FOV`, `width`, and `height` arguments will still
+#'be derived from the rgl window.
+#'@param camera_lookat Default `NULL`. Custom point at which the camera is directed. The `FOV`, `width`, and `height` arguments will still
+#'be derived from the rgl window.
 #'@param background Default `"white"`. Background color when `software_render = TRUE`.
 #'@param text_angle Default `NULL`, which forces the text always to face the camera. If a single angle (degrees),
 #'will specify the absolute angle all the labels are facing. If three angles, this will specify all three orientations
 #'(relative to the x,y, and z axes) of the text labels.
 #'@param text_size Default `10`. Height of the text.
+#'@param text_offset Default `c(0,0,0)`. Offset to be applied to all text labels.
 #'@param point_radius Default `0.5`. Radius of 3D points (rendered with [render_points()].
 #'@param line_offset Default `1e-7`. Small number indicating the offset in the scene to apply to lines if using software rendering. Increase this if your lines
 #'aren't showing up, or decrease it if lines are appearing through solid objects.
-#'@param camera_location Default `NULL`. Custom position of the camera. The `FOV`, `width`, and `height` arguments will still
-#'be derived from the rgl window.
-#'@param camera_lookat Default `NULL`. Custom point at which the camera is directed. The `FOV`, `width`, and `height` arguments will still
-#'be derived from the rgl window.
-#'@param text_offset Default `c(0,0,0)`. Offset to be applied to all text labels.
 #'@param print_scene_info Default `FALSE`. If `TRUE`, it will print the position and lookat point of the camera.
 #'@param verbose Default `FALSE`. If `TRUE`, prints additional render diagnostics such as the auto-derived focus distance.
+#'@param instant_capture Default `TRUE` if interactive, `FALSE` otherwise. If `FALSE`, a slight delay is added
+#'before taking the snapshot. This can help stop prevent rendering issues when running scripts.
+#'@param clear Default `FALSE`. If `TRUE`, the current `rgl` device will be cleared.
+#'@param bring_to_front Default `FALSE`. Whether to bring the window to the front when rendering the snapshot.
+#'@param heightmap Deprecated and ignored. Retained for backward compatibility.
+#'@param zscale Deprecated and ignored. Retained for backward compatibility.
+#'@param cache_scene Default `FALSE`. Whether to cache the current scene to memory so it does not have to be converted to a `raymesh` object
+#'each time [render_snapshot()] is called. If `TRUE` and a scene has been cached, it will be used when rendering.
+#'@param reset_scene_cache Default `FALSE`. Resets the scene cache before rendering.
 #'@param ... Additional parameters to pass to `rayvertex::rasterize_scene()`.
 #'@return 4-layer RGBA array.
 #'@export
@@ -114,8 +114,6 @@ render_depth = function(
   rotation = 0,
   aberration = 0,
   transparent_water = FALSE,
-  heightmap = NULL,
-  zscale = NULL,
   title_text = NULL,
   title_offset = c(20, 20),
   title_color = "black",
@@ -139,14 +137,16 @@ render_depth = function(
   text_size = 10,
   text_offset = c(0, 0, 0),
   point_radius = 0.5,
-  line_offset = 1e-7,
-  cache_scene = FALSE,
-  reset_scene_cache = FALSE,
+  line_offset = 1e-07,
   print_scene_info = FALSE,
   verbose = FALSE,
   instant_capture = interactive(),
   clear = FALSE,
   bring_to_front = FALSE,
+  heightmap = NULL,
+  zscale = NULL,
+  cache_scene = FALSE,
+  reset_scene_cache = FALSE,
   ...
 ) {
   if (rgl::cur3d() == 0) {

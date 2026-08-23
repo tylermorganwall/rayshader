@@ -9,15 +9,6 @@
 #' of polygon represented in a way that can be processed by `xy.coords()`.  If
 #' xy-coordinate based polygons are open, they will be closed by adding an
 #' edge from the last point to the first.
-#' @param extent Either an object representing the spatial extent of the 3D scene
-#' (either from the `raster`, `terra`, `sf`, or `sp` packages),
-#' a length-4 numeric vector specifying `c("xmin", "xmax", "ymin", "ymax")`, or the spatial object (from
-#' the previously aforementioned packages) which will be automatically converted to an extent object.
-#' If omitted, rayshader will use extent metadata cached by [plot_3d()] or [plot_gg()].
-#' @param panel Default `NULL`. Facet panel identifier for scenes created with [plot_gg()]. Required
-#' to disambiguate faceted ggplot scenes when panel-specific cached metadata is needed. Ignored
-#' for non-ggplot scenes.
-#' @param crs Default `NULL`. CRS of the input numeric x/y coordinates, or CRS to assign to CRS-less spatial data before transforming it into the active scene CRS. If spatial data already carries a CRS, that CRS is used automatically.
 #' @param color Default `black`. Color of the polygon. Use `"height"` to color polygons by the cached [plot_gg()] height aesthetic palette using `data_column_top`, `data_column_bottom`, or `top`.
 #' @param top Default `1`. Extruded top distance. If this equals `bottom`, the polygon will not be
 #' extruded and just the one side will be rendered.
@@ -33,11 +24,6 @@
 #' may be faster (depending on how many geometries are in `polygon`).
 #' @param holes Default `0`. If passing in a polygon directly, this specifies which index represents
 #' the holes in the polygon. See the `earcut` function in the `decido` package for more information.
-#' @param heightmap Default `NULL`. Height matrix for the current scene. If omitted, this is taken from the cached scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value.
-#' of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
-#'  All points are assumed to be evenly spaced.
-#' @param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.
-#' @param vertical_exaggeration Default `1`. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from [plot_3d()] or [plot_gg()] when available; pass explicitly to override for this call.
 #' @param alpha Default `1`. Transparency of the polygons.
 #' @param lit Default `TRUE`. Whether to light the polygons.
 #' @param light_altitude Default `c(45, 60)`. Degree(s) from the horizon from which to light the polygons.
@@ -47,7 +33,21 @@
 #' or absolute.
 #' @param clear_previous Default `FALSE`. If `TRUE`, clears all existing
 #' polygons. A clear-only call returns without rendering a replacement.
+#' @param crs Default `NULL`. CRS of the input numeric x/y coordinates, or CRS to assign to CRS-less spatial data before transforming it into the active scene CRS. If spatial data already carries a CRS, that CRS is used automatically.
 #' @param filter_to_extent Default `TRUE`. If `TRUE`, polygon data outside the scene extent is omitted. Spatial polygon inputs are cropped to the extent. For scenes created with [plot_gg()], filtering uses the ggplot panel extent rather than the full rendered 3D ggplot extent.
+#' @param extent Either an object representing the spatial extent of the 3D scene
+#' (either from the `raster`, `terra`, `sf`, or `sp` packages),
+#' a length-4 numeric vector specifying `c("xmin", "xmax", "ymin", "ymax")`, or the spatial object (from
+#' the previously aforementioned packages) which will be automatically converted to an extent object.
+#' If omitted, rayshader will use extent metadata cached by [plot_3d()] or [plot_gg()].
+#' @param panel Default `NULL`. Facet panel identifier for scenes created with [plot_gg()]. Required
+#' to disambiguate faceted ggplot scenes when panel-specific cached metadata is needed. Ignored
+#' for non-ggplot scenes.
+#' @param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.
+#' @param vertical_exaggeration Default `1`. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from [plot_3d()] or [plot_gg()] when available; pass explicitly to override for this call.
+#' @param heightmap Default `NULL`. Height matrix for the current scene. If omitted, this is taken from the cached scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value.
+#' of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
+#'  All points are assumed to be evenly spaced.
 #' @param ... Additional arguments passed to `rgl::triangles3d()`.
 #' @export
 #' @examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
@@ -85,16 +85,11 @@
 #' render_highquality(samples = 16, min_variance = 0)
 render_polygons = function(
   polygon,
-  extent = NULL,
-  panel = NULL,
   color = "red",
   top = 1,
   bottom = NA,
   data_column_top = NULL,
   data_column_bottom = NULL,
-  heightmap = NULL,
-  zscale = 1,
-  vertical_exaggeration = 1,
   scale_data = 1,
   parallel = FALSE,
   holes = 0,
@@ -107,6 +102,11 @@ render_polygons = function(
   clear_previous = FALSE,
   crs = NULL,
   filter_to_extent = TRUE,
+  extent = NULL,
+  panel = NULL,
+  zscale = 1,
+  vertical_exaggeration = 1,
+  heightmap = NULL,
   ...
 ) {
   if (

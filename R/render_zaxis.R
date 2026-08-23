@@ -4,20 +4,6 @@
 #'
 #'Cache fallback messages are disabled by default. Set `options(rayshader.verbose_scene_cache = TRUE)` to print when cached metadata is reused.
 #'
-#'@param extent Default `NULL`. Either an object representing the spatial extent of the scene
-#' (either from the `raster`, `terra`, `sf`, or `sp` packages),
-#' a length-4 numeric vector specifying `c("xmin", "xmax","ymin","ymax")`, or the spatial object (from
-#' the previously aforementioned packages) which will be automatically converted to an extent object.
-#' If omitted, rayshader will use cached extent metadata from [plot_gg()] or from [plot_3d()]
-#'(either from an explicitly passed `extent` argument, or the built-in `montereybay_spatial` scene metadata).
-#'@param panel Default `NULL`. Facet panel identifier for scenes created with [plot_gg()]. Required
-#'to disambiguate faceted ggplot scenes when panel-specific cached metadata is needed. Ignored
-#'for non-ggplot scenes.
-#'@param zscale Default `1`. The ratio between x/y spacing and z units.
-#'If left at `1` with `zaxis_breaks = NULL` on non-ggplot terrain scenes, rayshader
-#'will attempt to use the cached `plot_3d()` zscale to generate more meaningful defaults.
-#'@param vertical_exaggeration Default `1`. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from [plot_3d()] or [plot_gg()] when available; pass explicitly to override for this call.
-#'@param heightmap Default `NULL`. Height matrix for the current scene. If omitted, this is taken from the cached scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value.
 #'@param zaxis_data Default `"auto"`. Data source used to generate z-axis
 #'breaks and labels. Options are `"auto"`, `"topographic"`, `"polygon"`,
 #'`"point"`, `"path"`, `"obj"`, `"raymesh"`, `"tree"`, `"label"`,
@@ -64,6 +50,20 @@
 #'center-to-corner planar distance. If `NULL`, this defaults to `0` for ggplot scenes
 #'and `0.08` for non-ggplot scenes. `0` places the axis exactly at the corner.
 #'@param zaxis_tick_size Default `NULL`. Tick marker size. If `NULL`, auto-sized from line width.
+#'@param extent Default `NULL`. Either an object representing the spatial extent of the scene
+#' (either from the `raster`, `terra`, `sf`, or `sp` packages),
+#' a length-4 numeric vector specifying `c("xmin", "xmax","ymin","ymax")`, or the spatial object (from
+#' the previously aforementioned packages) which will be automatically converted to an extent object.
+#' If omitted, rayshader will use cached extent metadata from [plot_gg()] or from [plot_3d()]
+#'(either from an explicitly passed `extent` argument, or the built-in `montereybay_spatial` scene metadata).
+#'@param panel Default `NULL`. Facet panel identifier for scenes created with [plot_gg()]. Required
+#'to disambiguate faceted ggplot scenes when panel-specific cached metadata is needed. Ignored
+#'for non-ggplot scenes.
+#'@param zscale Default `1`. The ratio between x/y spacing and z units.
+#'If left at `1` with `zaxis_breaks = NULL` on non-ggplot terrain scenes, rayshader
+#'will attempt to use the cached `plot_3d()` zscale to generate more meaningful defaults.
+#'@param vertical_exaggeration Default `1`. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from [plot_3d()] or [plot_gg()] when available; pass explicitly to override for this call.
+#'@param heightmap Default `NULL`. Height matrix for the current scene. If omitted, this is taken from the cached scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value.
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'# Add a z-axis to a Monterey Bay terrain scene. The spatial extent and zscale
@@ -151,11 +151,6 @@
 #')
 #'render_snapshot()
 render_zaxis = function(
-  extent = NULL,
-  panel = NULL,
-  zscale = 1,
-  vertical_exaggeration = 1,
-  heightmap = NULL,
   zaxis_data = "auto",
   zaxis_location = "auto",
   zaxis_breaks = NULL,
@@ -171,7 +166,12 @@ render_zaxis = function(
   zaxis_label_side = "auto",
   zaxis_title_side = "auto",
   zaxis_corner_offset = NULL,
-  zaxis_tick_size = NULL
+  zaxis_tick_size = NULL,
+  extent = NULL,
+  panel = NULL,
+  zscale = 1,
+  vertical_exaggeration = 1,
+  heightmap = NULL
 ) {
   if (rgl::cur3d() == 0) {
     stop("No rgl window currently open.")

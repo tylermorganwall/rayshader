@@ -4,13 +4,8 @@
 #'
 #'Cache fallback messages are disabled by default. Set `options(rayshader.verbose_scene_cache = TRUE)` to print when cached metadata is reused.
 #'
-#'@param heightmap Default `NULL`. Height matrix or spatial raster for the current scene. If omitted, this is taken from the cached scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value.
 #'@param waterdepth Default `0`. Water level. Either a scalar, a matrix with the same dimensions as `heightmap`, or a spatial raster that can be projected/resampled to the heightmap grid. For spatial rasters, finite cells define the water footprint.
 #'@param watercolor Default `lightblue`.
-#'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
-#'of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
-#'If `zscale` is omitted and `heightmap` is a spatial raster, rayshader uses the raster cell resolution.
-#'@param vertical_exaggeration Default `1`. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from [plot_3d()] or [plot_gg()] when available; pass explicitly to override for this call.
 #'@param wateralpha Default `0.5`. Water transparency.
 #'@param waterlinecolor Default `NULL`. Color of the lines around the edges of the water layer.
 #'@param waterlinealpha Default `1`. Water line tranparency.
@@ -22,6 +17,11 @@
 #'@param clear_previous Default `TRUE`. If `TRUE`, removes the existing water
 #'layer before drawing the new one. A clear-only call returns without rendering
 #'a replacement.
+#'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
+#'of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
+#'If `zscale` is omitted and `heightmap` is a spatial raster, rayshader uses the raster cell resolution.
+#'@param vertical_exaggeration Default `1`. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from [plot_3d()] or [plot_gg()] when available; pass explicitly to override for this call.
+#'@param heightmap Default `NULL`. Height matrix or spatial raster for the current scene. If omitted, this is taken from the cached scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value.
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'montereybay_spatial |>
@@ -62,11 +62,8 @@
 #'render_water(waterlinecolor="white", watercolor = "dodgerblue4")
 #'render_snapshot()
 render_water = function(
-  heightmap = NULL,
   waterdepth = 0,
   watercolor = "lightblue",
-  zscale = 1,
-  vertical_exaggeration = 1,
   wateralpha = 0.5,
   waterlinecolor = NULL,
   waterlinealpha = 1,
@@ -75,7 +72,10 @@ render_water = function(
   water_edge_extension = 0.5,
   water_edge_clamp = FALSE,
   water_polygon_failure = c("raster", "remove"),
-  clear_previous = TRUE
+  clear_previous = TRUE,
+  zscale = 1,
+  vertical_exaggeration = 1,
+  heightmap = NULL
 ) {
   if (
     is_render_clear_only_call(

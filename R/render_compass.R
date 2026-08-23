@@ -8,13 +8,6 @@
 #'@param angle Default `0`. The direction the arrow should be facing.
 #'@param position Default `SE`. A string representing a cardinal direction. Ignored if `x`, `y`, and `z`
 #'are manually specified.
-#'@param altitude Default `NULL`. Altitude of the compass, defaults to maximum height in the map.
-#'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis.
-#'Only used in combination with `altitude`.
-#'@param vertical_exaggeration Default `1`. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from [plot_3d()] or [plot_gg()] when available; pass explicitly to override for this call.
-#'@param x Default `NULL`. X position. If not entered, automatically calculated using `position` argument.
-#'@param y Default `NULL`. Y position. If not entered, automatically calculated using `position` argument.
-#'@param z Default `NULL`. Z position. If not entered, automatically calculated using `position` argument.
 #'@param compass_radius Default `NULL`. The radius of the compass. If not entered, automatically calculated.
 #'Increase or decrease the size of the compass.
 #'@param scale_distance Default `1`. Multiplier that moves the compass away from the center of the map.
@@ -26,6 +19,13 @@
 #'the map, as opposed to directly next to it. Overridden if user manually specifies position.
 #'@param clear_compass Default `FALSE`. Clears the compass symbol(s) on the map.
 #'
+#'@param x Default `NULL`. X position. If not entered, automatically calculated using `position` argument.
+#'@param y Default `NULL`. Y position. If not entered, automatically calculated using `position` argument.
+#'@param z Default `NULL`. Z position. If not entered, automatically calculated using `position` argument.
+#'@param altitude Default `NULL`. Altitude of the compass, defaults to maximum height in the map.
+#'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis.
+#'Only used in combination with `altitude`.
+#'@param vertical_exaggeration Default `1`. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from [plot_3d()] or [plot_gg()] when available; pass explicitly to override for this call.
 #'@return Adds compass to map. No return value.
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
@@ -103,12 +103,6 @@
 render_compass = function(
   angle = 0,
   position = "SE",
-  altitude = NULL,
-  zscale = 1,
-  vertical_exaggeration = 1,
-  x = NULL,
-  y = NULL,
-  z = NULL,
   compass_radius = NULL,
   scale_distance = 1,
   color_n = "darkred",
@@ -116,7 +110,13 @@ render_compass = function(
   color_background = "grey60",
   color_bevel = "grey20",
   position_circular = FALSE,
-  clear_compass = FALSE
+  clear_compass = FALSE,
+  x = NULL,
+  y = NULL,
+  z = NULL,
+  altitude = NULL,
+  zscale = 1,
+  vertical_exaggeration = 1
 ) {
   if (clear_compass) {
     rgl::pop3d(

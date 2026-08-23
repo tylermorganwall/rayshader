@@ -9,10 +9,6 @@
 #'
 #'Cache fallback messages are disabled by default. Set `options(rayshader.verbose_scene_cache = TRUE)` to print when cached metadata is reused.
 #'
-#'@param x Vector of x coordinates (or other coordinate in the same coordinate reference system as extent).
-#'@param y Vector of y coordinates (or other coordinate in the same coordinate reference system as extent).
-#'@param lat Default `NULL`. Alias for `y` for geographic workflows.
-#'@param long Default `NULL`. Alias for `x` for geographic workflows.
 #'@param location Default `NULL`. Spatial point input used to place the rendered tree(s) in the scene. Accepts `sf`, `sfc`, `sfg`, or `sp` POINT or MULTIPOINT geometries. MULTIPOINT inputs are flattened to point placements internally, and vectorized arguments such as `tree_height`, `angle`, `crown_color`, and `trunk_color` are applied against that flattened point count. If the input carries a CRS, it will be transformed automatically into the active scene CRS. If it has no CRS, supply `crs`.
 #'@param type Default `"basic"`. Type of tree. Other built-in option: `"cone"`.
 #'@param custom_obj_tree Default `NULL`. Instead of using the built-in types, users can also load a custom tree
@@ -47,9 +43,19 @@
 #'below that height.
 #'@param max_height Default `NA`. Maximum height of a tree. Set to a positive number to filter out trees
 #'above that height.
+#'@param lit Default `TRUE`. Whether to apply lighting to the tree.
+#'@param baseshape Default `rectangle`. Shape of the base. Options are `c("rectangle","circle","hex")`.
 #'@param angle Default `c(0,0,0)`. Angle of rotation around the x, y, and z axes. If this is a matrix or list,
 #'each row (or list entry) specifies the rotation of the nth tree specified (number of rows/length of list must
 #'equal the length of `x`/`y`).
+#'@param clear_previous Default `FALSE`. If `TRUE`, clears all existing trees.
+#'A clear-only call returns without rendering a replacement.
+#'@param x Vector of x coordinates (or other coordinate in the same coordinate reference system as extent).
+#'@param y Vector of y coordinates (or other coordinate in the same coordinate reference system as extent).
+#'@param lat Default `NULL`. Alias for `y` for geographic workflows.
+#'@param long Default `NULL`. Alias for `x` for geographic workflows.
+#'@param crs Default `NULL`. CRS of the input numeric x/y coordinates, or CRS to assign to CRS-less spatial data before transforming it into the active scene CRS. If spatial data already carries a CRS, that CRS is used automatically.
+#'@param filter_to_extent Default `TRUE`. If `TRUE`, tree placements outside the scene extent are omitted. For scenes created with [plot_gg()], filtering uses the ggplot panel extent rather than the full rendered 3D ggplot extent.
 #'@param extent Either an object representing the spatial extent of the 3D scene
 #' (either from the `raster`, `terra`, `sf`, or `sp` packages),
 #' a length-4 numeric vector specifying `c("xmin", "xmax", "ymin", "ymax")`, or the spatial object (from
@@ -58,17 +64,11 @@
 #'@param panel Default `NULL`. Facet panel identifier for scenes created with [plot_gg()]. Required
 #'to disambiguate faceted ggplot scenes when panel-specific cached metadata is needed. Ignored
 #'for non-ggplot scenes.
-#'@param crs Default `NULL`. CRS of the input numeric x/y coordinates, or CRS to assign to CRS-less spatial data before transforming it into the active scene CRS. If spatial data already carries a CRS, that CRS is used automatically.
-#'@param baseshape Default `rectangle`. Shape of the base. Options are `c("rectangle","circle","hex")`.
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.
 #'@param vertical_exaggeration Default `1`. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from [plot_3d()] or [plot_gg()] when available; pass explicitly to override for this call.
 #'@param heightmap Default `NULL`. Height matrix for the current scene. If omitted, this is taken from the cached scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value.
 #'of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
 #' All points are assumed to be evenly spaced.
-#'@param lit Default `TRUE`. Whether to apply lighting to the tree.
-#'@param clear_previous Default `FALSE`. If `TRUE`, clears all existing trees.
-#'A clear-only call returns without rendering a replacement.
-#'@param filter_to_extent Default `TRUE`. If `TRUE`, tree placements outside the scene extent are omitted. For scenes created with [plot_gg()], filtering uses the ggplot panel extent rather than the full rendered 3D ggplot extent.
 #'@param ... Additional arguments to pass to `rgl::triangles3d()`.
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
@@ -148,10 +148,7 @@
 #'#Render tree also works with `render_highquality()`
 #'render_highquality(sky_sun_elevation = 30, sky_sun_azimuth=225, iso=3)
 render_tree = function(
-  y = NULL,
-  x = NULL,
-  extent = NULL,
-  panel = NULL,
+  location = NULL,
   type = "basic",
   custom_obj_tree = NULL,
   custom_obj_crown = NULL,
@@ -168,18 +165,21 @@ render_tree = function(
   tree_zscale = TRUE,
   min_height = 0,
   max_height = Inf,
-  zscale = 1,
-  vertical_exaggeration = 1,
   lit = TRUE,
-  heightmap = NULL,
   baseshape = "rectangle",
   angle = c(0, 0, 0),
   clear_previous = FALSE,
+  x = NULL,
+  y = NULL,
   lat = NULL,
   long = NULL,
-  location = NULL,
   crs = NULL,
   filter_to_extent = TRUE,
+  extent = NULL,
+  panel = NULL,
+  zscale = 1,
+  vertical_exaggeration = 1,
+  heightmap = NULL,
   ...
 ) {
   if (

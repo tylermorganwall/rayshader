@@ -16,8 +16,6 @@ render_depth(
   rotation = 0,
   aberration = 0,
   transparent_water = FALSE,
-  heightmap = NULL,
-  zscale = NULL,
   title_text = NULL,
   title_offset = c(20, 20),
   title_color = "black",
@@ -42,13 +40,15 @@ render_depth(
   text_offset = c(0, 0, 0),
   point_radius = 0.5,
   line_offset = 1e-07,
-  cache_scene = FALSE,
-  reset_scene_cache = FALSE,
   print_scene_info = FALSE,
   verbose = FALSE,
   instant_capture = interactive(),
   clear = FALSE,
   bring_to_front = FALSE,
+  heightmap = NULL,
+  zscale = NULL,
+  cache_scene = FALSE,
+  reset_scene_cache = FALSE,
   ...
 )
 }
@@ -76,10 +76,6 @@ showing where the camera will be focused.}
 
 \item{transparent_water}{Default \code{FALSE}. If \code{TRUE}, depth is determined without water layer. User will have to re-render the water
 layer from the active \code{rgl} subscene while capturing the depth map, then restores it.}
-
-\item{heightmap}{Deprecated and ignored. Retained for backward compatibility.}
-
-\item{zscale}{Deprecated and ignored. Retained for backward compatibility.}
 
 \item{title_text}{Default \code{NULL}. Text. Adds a title to the image, using magick::image_annotate.}
 
@@ -143,11 +139,6 @@ will specify the absolute angle all the labels are facing. If three angles, this
 \item{line_offset}{Default \code{1e-7}. Small number indicating the offset in the scene to apply to lines if using software rendering. Increase this if your lines
 aren't showing up, or decrease it if lines are appearing through solid objects.}
 
-\item{cache_scene}{Default \code{FALSE}. Whether to cache the current scene to memory so it does not have to be converted to a \code{raymesh} object
-each time \code{\link[=render_snapshot]{render_snapshot()}} is called. If \code{TRUE} and a scene has been cached, it will be used when rendering.}
-
-\item{reset_scene_cache}{Default \code{FALSE}. Resets the scene cache before rendering.}
-
 \item{print_scene_info}{Default \code{FALSE}. If \code{TRUE}, it will print the position and lookat point of the camera.}
 
 \item{verbose}{Default \code{FALSE}. If \code{TRUE}, prints additional render diagnostics such as the auto-derived focus distance.}
@@ -158,6 +149,15 @@ before taking the snapshot. This can help stop prevent rendering issues when run
 \item{clear}{Default \code{FALSE}. If \code{TRUE}, the current \code{rgl} device will be cleared.}
 
 \item{bring_to_front}{Default \code{FALSE}. Whether to bring the window to the front when rendering the snapshot.}
+
+\item{heightmap}{Deprecated and ignored. Retained for backward compatibility.}
+
+\item{zscale}{Deprecated and ignored. Retained for backward compatibility.}
+
+\item{cache_scene}{Default \code{FALSE}. Whether to cache the current scene to memory so it does not have to be converted to a \code{raymesh} object
+each time \code{\link[=render_snapshot]{render_snapshot()}} is called. If \code{TRUE} and a scene has been cached, it will be used when rendering.}
+
+\item{reset_scene_cache}{Default \code{FALSE}. Resets the scene cache before rendering.}
 
 \item{...}{Additional parameters to pass to \code{rayvertex::rasterize_scene()}.}
 }

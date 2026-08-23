@@ -85,9 +85,6 @@ new_render_highquality_progress_bar = function(verbose, label, total) {
 #'@param water_roughness Default `0.1`. Roughness used when `water_material = "microfacet"`.
 #'@param material Default `rayrender::diffuse()`. The material properties of the object file. Only used if `override_material = TRUE`
 #'@param override_material Default `FALSE`. Whether to override the default diffuse material with that in argument `material`.
-#'@param cache_scene Default `FALSE`. Whether to cache the current scene to memory so it does not have to be converted to a `raymesh` object
-#'each time [render_snapshot()] is called. If `TRUE` and a scene has been cached, it will be used when rendering.
-#'@param reset_scene_cache Default `FALSE`. Resets the scene cache before rendering.
 #'@param width Defaults to the width of the rgl window. Width of the rendering.
 #'@param height Defaults to the height of the rgl window. Height of the rendering.
 #'@param ortho_dimensions Default `NULL`, which uses the orthographic dimensions
@@ -178,6 +175,9 @@ new_render_highquality_progress_bar = function(verbose, label, total) {
 #'built by [render_roads()] are reused from the active scene cache.
 #'@param parallel Default `TRUE`. Whether to use multiple threads for raytracing
 #'and for legacy uncached road-path conversion.
+#'@param cache_scene Default `FALSE`. Whether to cache the current scene to memory so it does not have to be converted to a `raymesh` object
+#'each time [render_snapshot()] is called. If `TRUE` and a scene has been cached, it will be used when rendering.
+#'@param reset_scene_cache Default `FALSE`. Resets the scene cache before rendering.
 #'@param ... Additional parameters to pass to `rayrender::render_scene()`.
 #'
 #'@export
@@ -316,8 +316,6 @@ render_highquality = function(
   water_material = c("glassy", "microfacet"),
   water_roughness = 0.1,
   override_material = FALSE,
-  cache_scene = FALSE,
-  reset_scene_cache = FALSE,
   width = NULL,
   height = NULL,
   ortho_dimensions = NULL,
@@ -367,6 +365,8 @@ render_highquality = function(
   plot = is.na(filename),
   verbose = FALSE,
   parallel = TRUE,
+  cache_scene = FALSE,
+  reset_scene_cache = FALSE,
   ...
 ) {
   text_offset_missing = missing(text_offset)

@@ -7,12 +7,6 @@
 render_compass(
   angle = 0,
   position = "SE",
-  altitude = NULL,
-  zscale = 1,
-  vertical_exaggeration = 1,
-  x = NULL,
-  y = NULL,
-  z = NULL,
   compass_radius = NULL,
   scale_distance = 1,
   color_n = "darkred",
@@ -20,7 +14,13 @@ render_compass(
   color_background = "grey60",
   color_bevel = "grey20",
   position_circular = FALSE,
-  clear_compass = FALSE
+  clear_compass = FALSE,
+  x = NULL,
+  y = NULL,
+  z = NULL,
+  altitude = NULL,
+  zscale = 1,
+  vertical_exaggeration = 1
 )
 }
 \arguments{
@@ -28,19 +28,6 @@ render_compass(
 
 \item{position}{Default \code{SE}. A string representing a cardinal direction. Ignored if \code{x}, \code{y}, and \code{z}
 are manually specified.}
-
-\item{altitude}{Default \code{NULL}. Altitude of the compass, defaults to maximum height in the map.}
-
-\item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis.
-Only used in combination with \code{altitude}.}
-
-\item{vertical_exaggeration}{Default \code{1}. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}} when available; pass explicitly to override for this call.}
-
-\item{x}{Default \code{NULL}. X position. If not entered, automatically calculated using \code{position} argument.}
-
-\item{y}{Default \code{NULL}. Y position. If not entered, automatically calculated using \code{position} argument.}
-
-\item{z}{Default \code{NULL}. Z position. If not entered, automatically calculated using \code{position} argument.}
 
 \item{compass_radius}{Default \code{NULL}. The radius of the compass. If not entered, automatically calculated.
 Increase or decrease the size of the compass.}
@@ -59,6 +46,19 @@ Increase or decrease the size of the compass.}
 the map, as opposed to directly next to it. Overridden if user manually specifies position.}
 
 \item{clear_compass}{Default \code{FALSE}. Clears the compass symbol(s) on the map.}
+
+\item{x}{Default \code{NULL}. X position. If not entered, automatically calculated using \code{position} argument.}
+
+\item{y}{Default \code{NULL}. Y position. If not entered, automatically calculated using \code{position} argument.}
+
+\item{z}{Default \code{NULL}. Z position. If not entered, automatically calculated using \code{position} argument.}
+
+\item{altitude}{Default \code{NULL}. Altitude of the compass, defaults to maximum height in the map.}
+
+\item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis.
+Only used in combination with \code{altitude}.}
+
+\item{vertical_exaggeration}{Default \code{1}. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}} when available; pass explicitly to override for this call.}
 }
 \value{
 Adds compass to map. No return value.

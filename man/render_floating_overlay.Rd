@@ -7,15 +7,15 @@
 render_floating_overlay(
   overlay = NULL,
   altitude = NULL,
-  heightmap = NULL,
-  zscale = 1,
-  vertical_exaggeration = 1,
   alpha = 1,
   baseshape = "rectangle",
   remove_na = TRUE,
   reorient = TRUE,
   clear_layers = FALSE,
   horizontal_offset = c(0, 0),
+  zscale = 1,
+  vertical_exaggeration = 1,
+  heightmap = NULL,
   ...
 )
 }
@@ -23,13 +23,6 @@ render_floating_overlay(
 \item{overlay}{Overlay (4D RGBA array) to be rendered on the 3D map.}
 
 \item{altitude}{Altitude to place the overlay.}
-
-\item{heightmap}{Default \code{NULL}. Height matrix for the current scene. If omitted, this is taken from the cached scene set by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}. Pass explicitly to override the cached value.}
-
-\item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
-of 1 meter and the grid values are separated by 10 meters, \code{zscale} would be 10. Adjust the zscale down to exaggerate elevation features.}
-
-\item{vertical_exaggeration}{Default \code{1}. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}} when available; pass explicitly to override for this call.}
 
 \item{alpha}{Default \code{1}. Multiplies the layer's transparency by this factor. 0 is completely transparent.}
 
@@ -42,6 +35,13 @@ of 1 meter and the grid values are separated by 10 meters, \code{zscale} would b
 \item{clear_layers}{Default \code{FALSE}. Clears all existing floating layers on the visualization.}
 
 \item{horizontal_offset}{Default \code{c(0,0)}. Distance (in 3D space) to offset the floating offset in the x/y directions.}
+
+\item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
+of 1 meter and the grid values are separated by 10 meters, \code{zscale} would be 10. Adjust the zscale down to exaggerate elevation features.}
+
+\item{vertical_exaggeration}{Default \code{1}. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}} when available; pass explicitly to override for this call.}
+
+\item{heightmap}{Default \code{NULL}. Height matrix for the current scene. If omitted, this is taken from the cached scene set by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}. Pass explicitly to override the cached value.}
 
 \item{...}{Additional arguments to pass to \code{rgl::triangles3d()}.}
 }

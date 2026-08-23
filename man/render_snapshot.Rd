@@ -35,8 +35,6 @@ render_snapshot(
   line_offset = 1e-07,
   thick_lines = TRUE,
   line_radius = 0.25,
-  cache_scene = FALSE,
-  reset_scene_cache = FALSE,
   new_page = TRUE,
   print_scene_info = FALSE,
   fsaa = 1,
@@ -44,6 +42,8 @@ render_snapshot(
   rayvertex_lights = NULL,
   rayvertex_shadow_map = FALSE,
   plot = TRUE,
+  cache_scene = FALSE,
+  reset_scene_cache = FALSE,
   ...
 )
 }
@@ -126,11 +126,6 @@ render the lines using a single-pixel anti-aliased line algorithm.}
 
 \item{line_radius}{Default \code{0.25}. The radius of the thick cylinders if \code{thick_lines = TRUE} and \code{software_render = TRUE}.}
 
-\item{cache_scene}{Default \code{FALSE}. Whether to cache the current scene to memory so it does not have to be converted to a \code{raymesh} object
-each time \code{\link[=render_snapshot]{render_snapshot()}} is called. If \code{TRUE} and a scene has been cached, it will be used when rendering.}
-
-\item{reset_scene_cache}{Default \code{FALSE}. Resets the scene cache before rendering.}
-
 \item{new_page}{Default \code{TRUE}. Whether to call \code{grid::grid.newpage()} before plotting the image.}
 
 \item{print_scene_info}{Default \code{FALSE}. If \code{TRUE}, it will print the position and lookat point of the camera.}
@@ -148,6 +143,11 @@ from \code{light} objects in the \code{rgl} scene.}
 be applied to the rendered scene.}
 
 \item{plot}{Default \code{TRUE}. Whether to plot the snapshot.}
+
+\item{cache_scene}{Default \code{FALSE}. Whether to cache the current scene to memory so it does not have to be converted to a \code{raymesh} object
+each time \code{\link[=render_snapshot]{render_snapshot()}} is called. If \code{TRUE} and a scene has been cached, it will be used when rendering.}
+
+\item{reset_scene_cache}{Default \code{FALSE}. Resets the scene cache before rendering.}
 
 \item{...}{Additional parameters to pass to \code{rayvertex::rasterize_scene()}.}
 }

@@ -6,17 +6,7 @@
 #'
 #' @param roads Spatial line data used to draw road paths. Supports `sf`,
 #' `sfc`, `sfg`, `SpatialLines`, and `SpatialLinesDataFrame` line inputs.
-#' @param heightmap Default `NULL`. Height matrix or spatial raster for the
-#' current scene. If omitted, this is taken from the cached scene set by
-#' [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value.
 #' @param roadcolor Default `"#303030"`. sRGB road surface color.
-#' @param zscale Default `1`. The ratio between the x and y spacing and the z
-#' axis. If omitted and `heightmap` is a spatial raster, rayshader uses the
-#' raster cell resolution.
-#' @param vertical_exaggeration Default `1`. Multiplier applied to the effective
-#' visual relief. If omitted, rayshader uses the cached scene value from
-#' [plot_3d()] or [plot_gg()] when available; pass explicitly to override for
-#' this call.
 #' @param width Default `NULL`, which derives road width from `lanes` and
 #' `lane_width`. If supplied, road width in scene grid-cell units for
 #' [render_highquality()]. The rgl preview uses the same value as line width.
@@ -55,10 +45,6 @@
 #' elevation units between locally ordered layers, or an unquoted or character
 #' column name containing each feature's positive separation above the lower
 #' road at an intersection. Column heights override constant layer spacing.
-#' @param maximum_grade Default `0.15`. Maximum absolute longitudinal road
-#' grade. Positive infinity removes the grade bound.
-#' @param continuation_grade_tolerance Default `0.14`. Maximum absolute grade
-#' mismatch at selected road continuations. Continuation height remains exact.
 #' @param merge Default `TRUE`. Whether to merge connected road linework before
 #' rendering. This reduces visible joins between adjacent line features in
 #' [render_highquality()].
@@ -112,6 +98,20 @@
 #' @param parallel Default `TRUE`. Whether to use multiple native threads while
 #' building the cached road meshes.
 #'
+#' @param maximum_grade Default `0.15`. Maximum absolute longitudinal road
+#' grade. Positive infinity removes the grade bound.
+#' @param continuation_grade_tolerance Default `0.14`. Maximum absolute grade
+#' mismatch at selected road continuations. Continuation height remains exact.
+#' @param zscale Default `1`. The ratio between the x and y spacing and the z
+#' axis. If omitted and `heightmap` is a spatial raster, rayshader uses the
+#' raster cell resolution.
+#' @param vertical_exaggeration Default `1`. Multiplier applied to the effective
+#' visual relief. If omitted, rayshader uses the cached scene value from
+#' [plot_3d()] or [plot_gg()] when available; pass explicitly to override for
+#' this call.
+#' @param heightmap Default `NULL`. Height matrix or spatial raster for the
+#' current scene. If omitted, this is taken from the cached scene set by
+#' [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value.
 #' @return Invisibly returns the rendered road coordinates. When `layer` is
 #' supplied, the result has `terrain_following`, `profile_diagnostics`, and
 #' `mesh_topology` attributes describing the sparse profile solve and selected
@@ -119,10 +119,7 @@
 #' @export
 render_roads = function(
   roads,
-  heightmap = NULL,
   roadcolor = "#303030",
-  zscale = 1,
-  vertical_exaggeration = 1,
   width = NULL,
   width_column = NULL,
   densify = TRUE,
@@ -149,7 +146,10 @@ render_roads = function(
   verbose = FALSE,
   parallel = TRUE,
   maximum_grade = 0.15,
-  continuation_grade_tolerance = 0.14
+  continuation_grade_tolerance = 0.14,
+  zscale = 1,
+  vertical_exaggeration = 1,
+  heightmap = NULL
 ) {
   clear_road_layer = function() {
     road_scene_ids = get_ids_with_labels(

@@ -6,40 +6,28 @@
 \usage{
 render_streams(
   streams,
-  heightmap = NULL,
   watercolor = "lightblue",
-  zscale = 1,
-  vertical_exaggeration = 1,
   width = 1,
   width_column = NULL,
   width_units = c("scene", "meters"),
   densify = TRUE,
   offset = NULL,
   merge = TRUE,
-  clear_previous = TRUE,
   water_polygons = NULL,
   height = 0.05,
+  clear_previous = TRUE,
   verbose = FALSE,
-  parallel = TRUE
+  parallel = TRUE,
+  zscale = 1,
+  vertical_exaggeration = 1,
+  heightmap = NULL
 )
 }
 \arguments{
 \item{streams}{Spatial line data used to draw stream paths. Supports \code{sf},
 \code{sfc}, \code{sfg}, \code{SpatialLines}, and \code{SpatialLinesDataFrame} line inputs.}
 
-\item{heightmap}{Default \code{NULL}. Height matrix or spatial raster for the current
-scene. If omitted, this is taken from the cached scene set by \code{\link[=plot_3d]{plot_3d()}} or
-\code{\link[=plot_gg]{plot_gg()}}. Pass explicitly to override the cached value.}
-
 \item{watercolor}{Default \code{"lightblue"}. Stream color.}
-
-\item{zscale}{Default \code{1}. The ratio between the x and y spacing and the z axis.
-If omitted and \code{heightmap} is a spatial raster, rayshader uses the raster cell
-resolution.}
-
-\item{vertical_exaggeration}{Default \code{1}. Multiplier applied to the effective
-visual relief. If omitted, rayshader uses the cached scene value from \code{\link[=plot_3d]{plot_3d()}}
-or \code{\link[=plot_gg]{plot_gg()}} when available; pass explicitly to override for this call.}
 
 \item{width}{Default \code{1}. Stream width in the units selected by \code{width_units}
 for \code{\link[=render_highquality]{render_highquality()}}. The rgl preview uses the converted scene width as
@@ -68,10 +56,6 @@ terrain.}
 rendering. This reduces visible caps between adjacent line features in
 \code{\link[=render_highquality]{render_highquality()}}.}
 
-\item{clear_previous}{Default \code{TRUE}. If \code{TRUE}, removes the existing stream
-layer before drawing the new one. A clear-only call returns without rendering
-a replacement.}
-
 \item{water_polygons}{Default \code{NULL}. Optional polygon data defining water
 areas where streams should not be rendered. Supports \code{sf}, \code{sfc}, \code{sfg},
 \code{terra::SpatVector}, \code{SpatialPolygons}, and \code{SpatialPolygonsDataFrame} inputs.
@@ -84,10 +68,26 @@ returned rather than assuming the coordinate systems match.}
 \code{\link[=render_highquality]{render_highquality()}}. This is independent of \code{width} and centered on the
 sampled stream path, leaving the top surface slightly above the terrain.}
 
+\item{clear_previous}{Default \code{TRUE}. If \code{TRUE}, removes the existing stream
+layer before drawing the new one. A clear-only call returns without rendering
+a replacement.}
+
 \item{verbose}{Default \code{FALSE}. Whether to show native stream-meshing progress.}
 
 \item{parallel}{Default \code{TRUE}. Whether to build independent stream meshes in
 parallel with the native job queue.}
+
+\item{zscale}{Default \code{1}. The ratio between the x and y spacing and the z axis.
+If omitted and \code{heightmap} is a spatial raster, rayshader uses the raster cell
+resolution.}
+
+\item{vertical_exaggeration}{Default \code{1}. Multiplier applied to the effective
+visual relief. If omitted, rayshader uses the cached scene value from \code{\link[=plot_3d]{plot_3d()}}
+or \code{\link[=plot_gg]{plot_gg()}} when available; pass explicitly to override for this call.}
+
+\item{heightmap}{Default \code{NULL}. Height matrix or spatial raster for the current
+scene. If omitted, this is taken from the cached scene set by \code{\link[=plot_3d]{plot_3d()}} or
+\code{\link[=plot_gg]{plot_gg()}}. Pass explicitly to override the cached value.}
 }
 \value{
 Invisibly returns the rendered stream coordinates.

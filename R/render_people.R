@@ -47,29 +47,10 @@
 #' so each person's local +Y up vector matches the terrain normal. The local +Z
 #' forward vector is lifted along the terrain without changing its plan-view
 #' alignment with the line direction.
-#' @param altitude Default `NULL`. Elevation of each person, in units of the
-#' elevation matrix. If left `NULL`, each person is placed on the surface plus
-#' `offset`. A single value places every person at that altitude. When one
-#' horizontal location is supplied with multiple altitude values, that location
-#' is repeated to place one person at each altitude.
-#' @param xyz Default `NULL`. A three-column numeric matrix in which each row
-#' specifies the raw rgl x/y/z coordinates of a person. Overrides coordinate
-#' placement and `altitude`.
-#' @param zscale Default `1`. Ratio between horizontal spacing and the elevation
-#' units in the original heightmap. If omitted, rayshader uses the cached scene
-#' value when available.
-#' @param vertical_exaggeration Default `1`. Multiplier applied to the effective
-#' visual relief. If omitted, rayshader uses the cached scene value from
-#' [plot_3d()] or [plot_gg()] when available; pass explicitly to override it for
-#' this call.
-#' @param heightmap Default `NULL`. Height matrix for the current scene. If
-#' omitted, rayshader uses the cached scene heightmap from [plot_3d()] or
-#' [plot_gg()].
 #' @param color Default `"grey50"`. Color of the person model. For line
 #' placement, supply one color per generated person or one color per entry in
 #' `line_pattern`; pattern colors are repeated with the pattern. Use `"height"` to
 #' color placed models by the cached [plot_gg()] height aesthetic palette.
-#' @param offset Default `0`. Offset from the surface when `altitude = NULL`.
 #' @param angle Default `c(0, 0, 0)`. Rotation around the x, y, and z axes. A
 #' matrix or list can specify a separate rotation for each person. For line
 #' placement, these rotations are added to the automatic line orientation.
@@ -84,6 +65,21 @@
 #' coordinate reference system as `extent`).
 #' @param y Default `NULL`. Vector of y coordinates (or coordinates in the same
 #' coordinate reference system as `extent`).
+#' @param altitude Default `NULL`. Elevation of each person, in units of the
+#' elevation matrix. If left `NULL`, each person is placed on the surface plus
+#' `offset`. A single value places every person at that altitude. When one
+#' horizontal location is supplied with multiple altitude values, that location
+#' is repeated to place one person at each altitude.
+#' @param xyz Default `NULL`. A three-column numeric matrix in which each row
+#' specifies the raw rgl x/y/z coordinates of a person. Overrides coordinate
+#' placement and `altitude`.
+#' @param offset Default `0`. Offset from the surface when `altitude = NULL`.
+#' @param lat Default `NULL`. Alias for `y` for geographic workflows.
+#' @param long Default `NULL`. Alias for `x` for geographic workflows.
+#' @param crs Default `NULL`. CRS of numeric x/y coordinates, or a CRS to assign
+#' to CRS-less spatial data before transforming it into the active scene CRS.
+#' @param filter_to_extent Default `TRUE`. If `TRUE`, placements outside the
+#' scene extent are omitted.
 #' @param extent Default `NULL`. Either an object representing the spatial
 #' extent of the scene (from the `raster`, `terra`, `sf`, or `sp` packages), a
 #' length-4 numeric vector specifying `c("xmin", "xmax", "ymin", "ymax")`, or a
@@ -92,12 +88,16 @@
 #' @param panel Default `NULL`. Facet panel identifier for scenes created with
 #' [plot_gg()]. Required to disambiguate faceted ggplot scenes when
 #' panel-specific cached metadata is needed. Ignored for non-ggplot scenes.
-#' @param lat Default `NULL`. Alias for `y` for geographic workflows.
-#' @param long Default `NULL`. Alias for `x` for geographic workflows.
-#' @param crs Default `NULL`. CRS of numeric x/y coordinates, or a CRS to assign
-#' to CRS-less spatial data before transforming it into the active scene CRS.
-#' @param filter_to_extent Default `TRUE`. If `TRUE`, placements outside the
-#' scene extent are omitted.
+#' @param zscale Default `1`. Ratio between horizontal spacing and the elevation
+#' units in the original heightmap. If omitted, rayshader uses the cached scene
+#' value when available.
+#' @param vertical_exaggeration Default `1`. Multiplier applied to the effective
+#' visual relief. If omitted, rayshader uses the cached scene value from
+#' [plot_3d()] or [plot_gg()] when available; pass explicitly to override it for
+#' this call.
+#' @param heightmap Default `NULL`. Height matrix for the current scene. If
+#' omitted, rayshader uses the cached scene heightmap from [plot_3d()] or
+#' [plot_gg()].
 #' @param ... Additional arguments passed to [render_obj()] and then to
 #' `rgl::triangles3d()`.
 #'
@@ -289,26 +289,26 @@ render_people = function(
   line_terrain_spacing = TRUE,
   line_pattern = NULL,
   line_align_terrain = TRUE,
-  altitude = NULL,
-  xyz = NULL,
-  zscale = 1,
-  vertical_exaggeration = 1,
-  heightmap = NULL,
   color = "grey50",
-  offset = 0,
   angle = c(0, 0, 0),
   baseshape = "rectangle",
-  x = NULL,
-  y = NULL,
-  extent = NULL,
-  panel = NULL,
   lit = TRUE,
   load_normals = TRUE,
   clear_previous = FALSE,
+  x = NULL,
+  y = NULL,
+  altitude = NULL,
+  xyz = NULL,
+  offset = 0,
   lat = NULL,
   long = NULL,
   crs = NULL,
   filter_to_extent = TRUE,
+  extent = NULL,
+  panel = NULL,
+  zscale = 1,
+  vertical_exaggeration = 1,
+  heightmap = NULL,
   ...
 ) {
   if (
@@ -332,7 +332,10 @@ render_people = function(
       length(line_terrain_spacing) != 1 ||
       is.na(line_terrain_spacing)
   ) {
-    stop("`line_terrain_spacing` must be a single logical value.", call. = FALSE)
+    stop(
+      "`line_terrain_spacing` must be a single logical value.",
+      call. = FALSE
+    )
   }
   pose = resolve_person_pose(pose)
   sex = resolve_person_sex(sex)
@@ -841,7 +844,10 @@ sample_person_line = function(
       length(line_terrain_spacing) != 1 ||
       is.na(line_terrain_spacing)
   ) {
-    stop("`line_terrain_spacing` must be a single logical value.", call. = FALSE)
+    stop(
+      "`line_terrain_spacing` must be a single logical value.",
+      call. = FALSE
+    )
   }
   coerced_line = coerce_scene_sf_input(line)
   line_sf = coerced_line$sf_data

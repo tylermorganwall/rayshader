@@ -5,9 +5,6 @@
 \title{Render Contours}
 \usage{
 render_contours(
-  heightmap = NULL,
-  zscale = 1,
-  vertical_exaggeration = 1,
   levels = NA,
   nlevels = NA,
   linewidth = 1,
@@ -16,17 +13,13 @@ render_contours(
   antialias = FALSE,
   offset = 0,
   clear_previous = FALSE,
+  zscale = 1,
+  vertical_exaggeration = 1,
+  heightmap = NULL,
   ...
 )
 }
 \arguments{
-\item{heightmap}{Default \code{NULL}. Height matrix for the current scene. If omitted, this is taken from the cached scene set by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}. Pass explicitly to override the cached value.}
-
-\item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
-of 1 meter and the grid values are separated by 10 meters, \code{zscale} would be 10.}
-
-\item{vertical_exaggeration}{Default \code{1}. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}} when available; pass explicitly to override for this call.}
-
 \item{levels}{Default \code{NA}. Automatically generated with 10 levels. This argument specifies the exact height levels of each contour.}
 
 \item{nlevels}{Default \code{NA}. Controls the auto-generation of levels. If levels is length-2,
@@ -45,6 +38,13 @@ of \code{n} colors, or a character vector with colors that specifies each color 
 
 \item{clear_previous}{Default \code{FALSE}. If \code{TRUE}, clears all existing
 contours. A clear-only call returns without rendering a replacement.}
+
+\item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
+of 1 meter and the grid values are separated by 10 meters, \code{zscale} would be 10.}
+
+\item{vertical_exaggeration}{Default \code{1}. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}} when available; pass explicitly to override for this call.}
+
+\item{heightmap}{Default \code{NULL}. Height matrix for the current scene. If omitted, this is taken from the cached scene set by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}. Pass explicitly to override the cached value.}
 
 \item{...}{Additional arguments passed to \code{rgl::lines3d()}.}
 }

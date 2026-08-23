@@ -5,11 +5,8 @@
 \title{Render Water Layer}
 \usage{
 render_water(
-  heightmap = NULL,
   waterdepth = 0,
   watercolor = "lightblue",
-  zscale = 1,
-  vertical_exaggeration = 1,
   wateralpha = 0.5,
   waterlinecolor = NULL,
   waterlinealpha = 1,
@@ -18,21 +15,16 @@ render_water(
   water_edge_extension = 0.5,
   water_edge_clamp = FALSE,
   water_polygon_failure = c("raster", "remove"),
-  clear_previous = TRUE
+  clear_previous = TRUE,
+  zscale = 1,
+  vertical_exaggeration = 1,
+  heightmap = NULL
 )
 }
 \arguments{
-\item{heightmap}{Default \code{NULL}. Height matrix or spatial raster for the current scene. If omitted, this is taken from the cached scene set by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}. Pass explicitly to override the cached value.}
-
 \item{waterdepth}{Default \code{0}. Water level. Either a scalar, a matrix with the same dimensions as \code{heightmap}, or a spatial raster that can be projected/resampled to the heightmap grid. For spatial rasters, finite cells define the water footprint.}
 
 \item{watercolor}{Default \code{lightblue}.}
-
-\item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
-of 1 meter and the grid values are separated by 10 meters, \code{zscale} would be 10.
-If \code{zscale} is omitted and \code{heightmap} is a spatial raster, rayshader uses the raster cell resolution.}
-
-\item{vertical_exaggeration}{Default \code{1}. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}} when available; pass explicitly to override for this call.}
 
 \item{wateralpha}{Default \code{0.5}. Water transparency.}
 
@@ -53,6 +45,14 @@ If \code{zscale} is omitted and \code{heightmap} is a spatial raster, rayshader 
 \item{clear_previous}{Default \code{TRUE}. If \code{TRUE}, removes the existing water
 layer before drawing the new one. A clear-only call returns without rendering
 a replacement.}
+
+\item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
+of 1 meter and the grid values are separated by 10 meters, \code{zscale} would be 10.
+If \code{zscale} is omitted and \code{heightmap} is a spatial raster, rayshader uses the raster cell resolution.}
+
+\item{vertical_exaggeration}{Default \code{1}. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}} when available; pass explicitly to override for this call.}
+
+\item{heightmap}{Default \code{NULL}. Height matrix or spatial raster for the current scene. If omitted, this is taken from the cached scene set by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}. Pass explicitly to override the cached value.}
 }
 \description{
 Adds water layer to the scene, removing the previous water layer if desired.

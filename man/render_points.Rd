@@ -5,32 +5,52 @@
 \title{Render Points}
 \usage{
 render_points(
-  y = NULL,
+  location = NULL,
+  size = 0.5,
+  color = "black",
+  clear_previous = FALSE,
   x = NULL,
+  y = NULL,
   altitude = NULL,
+  offset = 5,
+  lat = NULL,
+  long = NULL,
+  crs = NULL,
+  filter_to_extent = TRUE,
   extent = NULL,
   panel = NULL,
   zscale = 1,
   vertical_exaggeration = 1,
-  heightmap = NULL,
-  size = 0.5,
-  color = "black",
-  offset = 5,
-  clear_previous = FALSE,
-  lat = NULL,
-  long = NULL,
-  location = NULL,
-  crs = NULL,
-  filter_to_extent = TRUE
+  heightmap = NULL
 )
 }
 \arguments{
-\item{y}{Vector of y coordinates (or other coordinate in the same coordinate reference system as extent).}
+\item{location}{Default \code{NULL}. Spatial point input used to place the rendered point(s) in the scene. Accepts \code{sf}, \code{sfc}, \code{sfg}, or \code{sp} POINT or MULTIPOINT geometries. MULTIPOINT inputs are flattened to point placements internally, and vectorized arguments such as \code{size}, \code{color}, and \code{altitude} are applied against that flattened point count. If the input carries a CRS, it will be transformed automatically into the active scene CRS. If it has no CRS, supply \code{crs}.}
+
+\item{size}{Default \code{3}. The point size. This can be a vector (the same length as \code{x} and \code{y}) specifying
+a size for each point.}
+
+\item{color}{Default \code{black}. Color of the point. This can also be a vector specifying the color of each point. Use \code{"height"} to color points by the cached \code{\link[=plot_gg]{plot_gg()}} height aesthetic palette.}
+
+\item{clear_previous}{Default \code{FALSE}. If \code{TRUE}, clears all existing points.
+A clear-only call returns without rendering a replacement.}
 
 \item{x}{Vector of x coordinates (or other coordinate in the same coordinate reference system as extent).}
 
+\item{y}{Vector of y coordinates (or other coordinate in the same coordinate reference system as extent).}
+
 \item{altitude}{Default \code{NULL}. Elevation of each point, in units of the elevation matrix (scaled by zscale). If a single value,
 all data will be rendered at that altitude.}
+
+\item{offset}{Default \code{5}. Offset of the track from the surface, if \code{altitude = NULL}.}
+
+\item{lat}{Default \code{NULL}. Alias for \code{y} for geographic workflows.}
+
+\item{long}{Default \code{NULL}. Alias for \code{x} for geographic workflows.}
+
+\item{crs}{Default \code{NULL}. CRS of the input numeric x/y coordinates, or CRS to assign to CRS-less spatial data before transforming it into the active scene CRS. If spatial data already carries a CRS, that CRS is used automatically.}
+
+\item{filter_to_extent}{Default \code{TRUE}. If \code{TRUE}, points outside the scene extent are omitted. For scenes created with \code{\link[=plot_gg]{plot_gg()}}, filtering uses the ggplot panel extent rather than the full rendered 3D ggplot extent.}
 
 \item{extent}{Either an object representing the spatial extent of the 3D scene
 (either from the \code{raster}, \code{terra}, \code{sf}, or \code{sp} packages),
@@ -49,26 +69,6 @@ for non-ggplot scenes.}
 \item{heightmap}{Default \code{NULL}. Height matrix for the current scene. If omitted, this is taken from the cached scene set by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}. Pass explicitly to override the cached value.
 of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
 All points are assumed to be evenly spaced.}
-
-\item{size}{Default \code{3}. The point size. This can be a vector (the same length as \code{x} and \code{y}) specifying
-a size for each point.}
-
-\item{color}{Default \code{black}. Color of the point. This can also be a vector specifying the color of each point. Use \code{"height"} to color points by the cached \code{\link[=plot_gg]{plot_gg()}} height aesthetic palette.}
-
-\item{offset}{Default \code{5}. Offset of the track from the surface, if \code{altitude = NULL}.}
-
-\item{clear_previous}{Default \code{FALSE}. If \code{TRUE}, clears all existing points.
-A clear-only call returns without rendering a replacement.}
-
-\item{lat}{Default \code{NULL}. Alias for \code{y} for geographic workflows.}
-
-\item{long}{Default \code{NULL}. Alias for \code{x} for geographic workflows.}
-
-\item{location}{Default \code{NULL}. Spatial point input used to place the rendered point(s) in the scene. Accepts \code{sf}, \code{sfc}, \code{sfg}, or \code{sp} POINT or MULTIPOINT geometries. MULTIPOINT inputs are flattened to point placements internally, and vectorized arguments such as \code{size}, \code{color}, and \code{altitude} are applied against that flattened point count. If the input carries a CRS, it will be transformed automatically into the active scene CRS. If it has no CRS, supply \code{crs}.}
-
-\item{crs}{Default \code{NULL}. CRS of the input numeric x/y coordinates, or CRS to assign to CRS-less spatial data before transforming it into the active scene CRS. If spatial data already carries a CRS, that CRS is used automatically.}
-
-\item{filter_to_extent}{Default \code{TRUE}. If \code{TRUE}, points outside the scene extent are omitted. For scenes created with \code{\link[=plot_gg]{plot_gg()}}, filtering uses the ggplot panel extent rather than the full rendered 3D ggplot extent.}
 }
 \description{
 Adds 3D datapoints to the current scene, using x/y coordinates in the reference

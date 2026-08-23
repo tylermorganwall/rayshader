@@ -4,23 +4,7 @@
 #'
 #' @param streams Spatial line data used to draw stream paths. Supports `sf`,
 #' `sfc`, `sfg`, `SpatialLines`, and `SpatialLinesDataFrame` line inputs.
-#' @param water_polygons Default `NULL`. Optional polygon data defining water
-#' areas where streams should not be rendered. Supports `sf`, `sfc`, `sfg`,
-#' `terra::SpatVector`, `SpatialPolygons`, and `SpatialPolygonsDataFrame` inputs.
-#' Multiple polygons are combined before they are removed from the stream
-#' linework. When both inputs have a CRS, the polygons are transformed to the
-#' stream CRS before clipping. When only one input has a CRS, an error is
-#' returned rather than assuming the coordinate systems match.
-#' @param heightmap Default `NULL`. Height matrix or spatial raster for the current
-#' scene. If omitted, this is taken from the cached scene set by [plot_3d()] or
-#' [plot_gg()]. Pass explicitly to override the cached value.
 #' @param watercolor Default `"lightblue"`. Stream color.
-#' @param zscale Default `1`. The ratio between the x and y spacing and the z axis.
-#' If omitted and `heightmap` is a spatial raster, rayshader uses the raster cell
-#' resolution.
-#' @param vertical_exaggeration Default `1`. Multiplier applied to the effective
-#' visual relief. If omitted, rayshader uses the cached scene value from [plot_3d()]
-#' or [plot_gg()] when available; pass explicitly to override for this call.
 #' @param width Default `1`. Stream width in the units selected by `width_units`
 #' for [render_highquality()]. The rgl preview uses the converted scene width as
 #' its line width.
@@ -42,16 +26,32 @@
 #' @param merge Default `TRUE`. Whether to merge connected stream linework before
 #' rendering. This reduces visible caps between adjacent line features in
 #' [render_highquality()].
-#' @param clear_previous Default `TRUE`. If `TRUE`, removes the existing stream
-#' layer before drawing the new one. A clear-only call returns without rendering
-#' a replacement.
+#' @param water_polygons Default `NULL`. Optional polygon data defining water
+#' areas where streams should not be rendered. Supports `sf`, `sfc`, `sfg`,
+#' `terra::SpatVector`, `SpatialPolygons`, and `SpatialPolygonsDataFrame` inputs.
+#' Multiple polygons are combined before they are removed from the stream
+#' linework. When both inputs have a CRS, the polygons are transformed to the
+#' stream CRS before clipping. When only one input has a CRS, an error is
+#' returned rather than assuming the coordinate systems match.
 #' @param height Default `0.05`. Total stream mesh thickness in scene units for
 #' [render_highquality()]. This is independent of `width` and centered on the
 #' sampled stream path, leaving the top surface slightly above the terrain.
+#' @param clear_previous Default `TRUE`. If `TRUE`, removes the existing stream
+#' layer before drawing the new one. A clear-only call returns without rendering
+#' a replacement.
 #' @param verbose Default `FALSE`. Whether to show native stream-meshing progress.
 #' @param parallel Default `TRUE`. Whether to build independent stream meshes in
 #' parallel with the native job queue.
 #'
+#' @param zscale Default `1`. The ratio between the x and y spacing and the z axis.
+#' If omitted and `heightmap` is a spatial raster, rayshader uses the raster cell
+#' resolution.
+#' @param vertical_exaggeration Default `1`. Multiplier applied to the effective
+#' visual relief. If omitted, rayshader uses the cached scene value from [plot_3d()]
+#' or [plot_gg()] when available; pass explicitly to override for this call.
+#' @param heightmap Default `NULL`. Height matrix or spatial raster for the current
+#' scene. If omitted, this is taken from the cached scene set by [plot_3d()] or
+#' [plot_gg()]. Pass explicitly to override the cached value.
 #' @return Invisibly returns the rendered stream coordinates.
 #' @examplesIf all(vapply(c("sf", "terra", "dplyr", "tigris", "elevatr", "rayrender", "rayvertex", "skymodelr"), requireNamespace, logical(1), quietly = TRUE)) && (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true"))
 #' library(sf)
@@ -207,21 +207,21 @@
 #' @export
 render_streams = function(
   streams,
-  heightmap = NULL,
   watercolor = "lightblue",
-  zscale = 1,
-  vertical_exaggeration = 1,
   width = 1,
   width_column = NULL,
   width_units = c("scene", "meters"),
   densify = TRUE,
   offset = NULL,
   merge = TRUE,
-  clear_previous = TRUE,
   water_polygons = NULL,
   height = 0.05,
+  clear_previous = TRUE,
   verbose = FALSE,
-  parallel = TRUE
+  parallel = TRUE,
+  zscale = 1,
+  vertical_exaggeration = 1,
+  heightmap = NULL
 ) {
   clear_stream_layer = function() {
     rgl::pop3d(tag = "water_path")

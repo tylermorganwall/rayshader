@@ -1,3 +1,12 @@
+reset_render_people_test_caches = function() {
+  reset_scene_context(
+    clear_scene_metadata = TRUE,
+    clear_scene_cache = TRUE
+  )
+  rayshader:::clear_hillshade_cache()
+  invisible(NULL)
+}
+
 test_that("person_obj() resolves every bundled pose and sex", {
   poses = c(
     "clapping",
@@ -179,14 +188,8 @@ test_that("render_people() vectorizes pose across point placements", {
 
 test_that("render_people() vectorizes pose for spatial point locations", {
   skip_if_not_installed("sf")
-  reset_scene_context(
-    clear_scene_metadata = TRUE,
-    clear_scene_cache = TRUE
-  )
-  withr::defer(reset_scene_context(
-    clear_scene_metadata = TRUE,
-    clear_scene_cache = TRUE
-  ))
+  reset_render_people_test_caches()
+  withr::defer(reset_render_people_test_caches())
 
   locations = sf::st_sfc(
     sf::st_point(c(-77.00, 38.90)),
@@ -241,6 +244,8 @@ test_that("person line sampling follows outgoing segments", {
 
 test_that("person line spacing follows the rendered terrain surface", {
   skip_if_not_installed("sf")
+  reset_render_people_test_caches()
+  withr::defer(reset_render_people_test_caches())
 
   line = sf::st_sfc(sf::st_linestring(matrix(
     c(0, 5, 10, 5),
@@ -384,14 +389,8 @@ test_that("person terrain orientation preserves up and line-forward vectors", {
 
 test_that("person line spacing is measured in meters across CRSs", {
   skip_if_not_installed("sf")
-  reset_scene_context(
-    clear_scene_metadata = TRUE,
-    clear_scene_cache = TRUE
-  )
-  withr::defer(reset_scene_context(
-    clear_scene_metadata = TRUE,
-    clear_scene_cache = TRUE
-  ))
+  reset_render_people_test_caches()
+  withr::defer(reset_render_people_test_caches())
 
   expect_equal(
     rayshader:::resolve_person_line_spacing(2, sf::st_crs(32611)),
@@ -422,14 +421,8 @@ test_that("person line spacing is measured in meters across CRSs", {
 
 test_that("render_people() patterns and orients models along a line", {
   skip_if_not_installed("sf")
-  reset_scene_context(
-    clear_scene_metadata = TRUE,
-    clear_scene_cache = TRUE
-  )
-  withr::defer(reset_scene_context(
-    clear_scene_metadata = TRUE,
-    clear_scene_cache = TRUE
-  ))
+  reset_render_people_test_caches()
+  withr::defer(reset_render_people_test_caches())
 
   line = sf::st_sfc(sf::st_linestring(matrix(
     c(0, 0, 10, 0),
@@ -486,14 +479,8 @@ test_that("render_people() patterns and orients models along a line", {
 
 test_that("render_people() aligns and spaces line placements on terrain", {
   skip_if_not_installed("sf")
-  reset_scene_context(
-    clear_scene_metadata = TRUE,
-    clear_scene_cache = TRUE
-  )
-  withr::defer(reset_scene_context(
-    clear_scene_metadata = TRUE,
-    clear_scene_cache = TRUE
-  ))
+  reset_render_people_test_caches()
+  withr::defer(reset_render_people_test_caches())
 
   line = sf::st_sfc(sf::st_linestring(matrix(
     c(0, 5, 10, 5),

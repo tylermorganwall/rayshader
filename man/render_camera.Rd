@@ -5,19 +5,26 @@
 \title{Render Camera}
 \usage{
 render_camera(
+  location = NULL,
   theta = NULL,
   phi = NULL,
   zoom = NULL,
   fov = NULL,
   shift_vertical = 0,
-  location = NULL,
+  altitude = NULL,
   lat = NULL,
   long = NULL,
-  altitude = NULL,
   panel = NULL
 )
 }
 \arguments{
+\item{location}{Default \code{NULL}. A single spatial POINT to use as the camera's
+look-at target. Accepts \code{sf}, \code{sfc}, \code{sfg}, and \code{sp} inputs. The point is
+transformed to the active scene CRS. If the input contains a Z coordinate or
+an \code{altitude}, \code{alt}, \code{elevation}, or \code{z} column, that value sets the target
+height; otherwise, the target height is sampled from the cached heightmap.
+Cannot be combined with \code{lat} or \code{long}.}
+
 \item{theta}{Defaults to current value. Rotation angle.}
 
 \item{phi}{Defaults to current value. Azimuth angle. Maximum \code{90}.}
@@ -28,23 +35,16 @@ render_camera(
 
 \item{shift_vertical}{Default \code{0}. Amount to shift the viewpoint.}
 
-\item{location}{Default \code{NULL}. A single spatial POINT to use as the camera's
-look-at target. Accepts \code{sf}, \code{sfc}, \code{sfg}, and \code{sp} inputs. The point is
-transformed to the active scene CRS. If the input contains a Z coordinate or
-an \code{altitude}, \code{alt}, \code{elevation}, or \code{z} column, that value sets the target
-height; otherwise, the target height is sampled from the cached heightmap.
-Cannot be combined with \code{lat} or \code{long}.}
+\item{altitude}{Default \code{NULL}. Elevation of the look-at target in the scene's
+elevation units. The value is converted to rgl coordinates using the cached
+effective z-scale. Requires \code{location} or both \code{lat} and \code{long}. When supplied
+with \code{location}, it overrides elevation embedded in the spatial input.}
 
 \item{lat}{Default \code{NULL}. Latitude in WGS84 decimal degrees for the camera's
 look-at target. Must be supplied with \code{long}.}
 
 \item{long}{Default \code{NULL}. Longitude in WGS84 decimal degrees for the
 camera's look-at target. Must be supplied with \code{lat}.}
-
-\item{altitude}{Default \code{NULL}. Elevation of the look-at target in the scene's
-elevation units. The value is converted to rgl coordinates using the cached
-effective z-scale. Requires \code{location} or both \code{lat} and \code{long}. When supplied
-with \code{location}, it overrides elevation embedded in the spatial input.}
 
 \item{panel}{Default \code{NULL}. Facet panel identifier for scenes created with
 \code{\link[=plot_gg]{plot_gg()}}. Required when the cached scene contains multiple panels.}

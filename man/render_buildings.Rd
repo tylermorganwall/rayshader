@@ -6,13 +6,9 @@
 \usage{
 render_buildings(
   polygon,
-  extent = NULL,
-  panel = NULL,
   material = "grey",
   roof_material = NA,
   angle = 45,
-  zscale = 1,
-  vertical_exaggeration = 1,
   scale_data = 1,
   relative_heights = TRUE,
   heights_relative_to_centroid = FALSE,
@@ -20,7 +16,6 @@ render_buildings(
   base_height = 0,
   data_column_top = NULL,
   data_column_bottom = NULL,
-  heightmap = NULL,
   holes = 0,
   alpha = 1,
   lit = TRUE,
@@ -32,6 +27,11 @@ render_buildings(
   clear_previous = FALSE,
   crs = NULL,
   filter_to_extent = TRUE,
+  extent = NULL,
+  panel = NULL,
+  zscale = 1,
+  vertical_exaggeration = 1,
+  heightmap = NULL,
   ...
 )
 }
@@ -40,16 +40,6 @@ render_buildings(
 of polygon represented in a way that can be processed by \code{xy.coords()}.  If
 xy-coordinate based polygons are open, they will be closed by adding an
 edge from the last point to the first.}
-
-\item{extent}{Either an object representing the spatial extent of the 3D scene
-(either from the \code{raster}, \code{terra}, \code{sf}, or \code{sp} packages),
-a length-4 numeric vector specifying \code{c("xmin", "xmax", "ymin", "ymax")}, or the spatial object (from
-the previously aforementioned packages) which will be automatically converted to an extent object.
-If omitted, rayshader will use extent metadata cached by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}.}
-
-\item{panel}{Default \code{NULL}. Facet panel identifier for scenes created with \code{\link[=plot_gg]{plot_gg()}}. Required
-to disambiguate faceted ggplot scenes when panel-specific cached metadata is needed. Ignored
-for non-ggplot scenes.}
 
 \item{material}{Default \code{"grey80"}. If a color string, this will specify the color of the sides/base of the building
 Alternatively (for more customization), this can be a r\code{ayvertex::material_list()} object to specify
@@ -60,10 +50,6 @@ Alternatively (for more customization), this can be a \code{rayvertex::material_
 the full color/appearance/material options for the resulting \code{ray_mesh} mesh.}
 
 \item{angle}{Default \code{45}. Angle of the roof.}
-
-\item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.}
-
-\item{vertical_exaggeration}{Default \code{1}. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}} when available; pass explicitly to override for this call.}
 
 \item{scale_data}{Default \code{1}. How much to scale the \code{top}/\code{bottom} value when rendering. Use
 \code{zscale} to adjust the data to account for \code{x}/\code{y} grid spacing, and this argument to scale the data
@@ -84,10 +70,6 @@ to specify the top of the extruded polygon. Values are coerced to numeric, and r
 
 \item{data_column_bottom}{Default \code{NULL}. A string indicating the column in the \code{sf} object to use
 to specify the bottom of the extruded polygon. Values are coerced to numeric, and rows with missing or non-finite values after coercion are omitted.}
-
-\item{heightmap}{Default \code{NULL}. Height matrix for the current scene. If omitted, this is taken from the cached scene set by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}. Pass explicitly to override the cached value.
-of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
-All points are assumed to be evenly spaced.}
 
 \item{holes}{Default \code{0}. If passing in a polygon directly, this specifies which index represents
 the holes in the polygon. See the \code{earcut} function in the \code{decido} package for more information.}
@@ -115,6 +97,24 @@ buildings. A clear-only call returns without rendering a replacement.}
 \item{crs}{Default \code{NULL}. CRS of the input numeric x/y coordinates, or CRS to assign to CRS-less spatial data before transforming it into the active scene CRS. If spatial data already carries a CRS, that CRS is used automatically.}
 
 \item{filter_to_extent}{Default \code{TRUE}. If \code{TRUE}, building footprint data outside the scene extent is omitted. Spatial polygon inputs are cropped to the extent. For scenes created with \code{\link[=plot_gg]{plot_gg()}}, filtering uses the ggplot panel extent rather than the full rendered 3D ggplot extent.}
+
+\item{extent}{Either an object representing the spatial extent of the 3D scene
+(either from the \code{raster}, \code{terra}, \code{sf}, or \code{sp} packages),
+a length-4 numeric vector specifying \code{c("xmin", "xmax", "ymin", "ymax")}, or the spatial object (from
+the previously aforementioned packages) which will be automatically converted to an extent object.
+If omitted, rayshader will use extent metadata cached by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}.}
+
+\item{panel}{Default \code{NULL}. Facet panel identifier for scenes created with \code{\link[=plot_gg]{plot_gg()}}. Required
+to disambiguate faceted ggplot scenes when panel-specific cached metadata is needed. Ignored
+for non-ggplot scenes.}
+
+\item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.}
+
+\item{vertical_exaggeration}{Default \code{1}. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}} when available; pass explicitly to override for this call.}
+
+\item{heightmap}{Default \code{NULL}. Height matrix for the current scene. If omitted, this is taken from the cached scene set by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}. Pass explicitly to override the cached value.
+of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
+All points are assumed to be evenly spaced.}
 
 \item{...}{Additional arguments to pass to \code{rgl::triangles3d()}.}
 }

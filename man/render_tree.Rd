@@ -5,10 +5,7 @@
 \title{Render Tree}
 \usage{
 render_tree(
-  y = NULL,
-  x = NULL,
-  extent = NULL,
-  panel = NULL,
+  location = NULL,
   type = "basic",
   custom_obj_tree = NULL,
   custom_obj_crown = NULL,
@@ -25,35 +22,26 @@ render_tree(
   tree_zscale = TRUE,
   min_height = 0,
   max_height = Inf,
-  zscale = 1,
-  vertical_exaggeration = 1,
   lit = TRUE,
-  heightmap = NULL,
   baseshape = "rectangle",
   angle = c(0, 0, 0),
   clear_previous = FALSE,
+  x = NULL,
+  y = NULL,
   lat = NULL,
   long = NULL,
-  location = NULL,
   crs = NULL,
   filter_to_extent = TRUE,
+  extent = NULL,
+  panel = NULL,
+  zscale = 1,
+  vertical_exaggeration = 1,
+  heightmap = NULL,
   ...
 )
 }
 \arguments{
-\item{y}{Vector of y coordinates (or other coordinate in the same coordinate reference system as extent).}
-
-\item{x}{Vector of x coordinates (or other coordinate in the same coordinate reference system as extent).}
-
-\item{extent}{Either an object representing the spatial extent of the 3D scene
-(either from the \code{raster}, \code{terra}, \code{sf}, or \code{sp} packages),
-a length-4 numeric vector specifying \code{c("xmin", "xmax", "ymin", "ymax")}, or the spatial object (from
-the previously aforementioned packages) which will be automatically converted to an extent object.
-If omitted, rayshader will use extent metadata cached by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}.}
-
-\item{panel}{Default \code{NULL}. Facet panel identifier for scenes created with \code{\link[=plot_gg]{plot_gg()}}. Required
-to disambiguate faceted ggplot scenes when panel-specific cached metadata is needed. Ignored
-for non-ggplot scenes.}
+\item{location}{Default \code{NULL}. Spatial point input used to place the rendered tree(s) in the scene. Accepts \code{sf}, \code{sfc}, \code{sfg}, or \code{sp} POINT or MULTIPOINT geometries. MULTIPOINT inputs are flattened to point placements internally, and vectorized arguments such as \code{tree_height}, \code{angle}, \code{crown_color}, and \code{trunk_color} are applied against that flattened point count. If the input carries a CRS, it will be transformed automatically into the active scene CRS. If it has no CRS, supply \code{crs}.}
 
 \item{type}{Default \code{"basic"}. Type of tree. Other built-in option: \code{"cone"}.}
 
@@ -104,15 +92,7 @@ below that height.}
 \item{max_height}{Default \code{NA}. Maximum height of a tree. Set to a positive number to filter out trees
 above that height.}
 
-\item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.}
-
-\item{vertical_exaggeration}{Default \code{1}. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}} when available; pass explicitly to override for this call.}
-
 \item{lit}{Default \code{TRUE}. Whether to apply lighting to the tree.}
-
-\item{heightmap}{Default \code{NULL}. Height matrix for the current scene. If omitted, this is taken from the cached scene set by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}. Pass explicitly to override the cached value.
-of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
-All points are assumed to be evenly spaced.}
 
 \item{baseshape}{Default \code{rectangle}. Shape of the base. Options are \code{c("rectangle","circle","hex")}.}
 
@@ -123,15 +103,35 @@ equal the length of \code{x}/\code{y}).}
 \item{clear_previous}{Default \code{FALSE}. If \code{TRUE}, clears all existing trees.
 A clear-only call returns without rendering a replacement.}
 
+\item{x}{Vector of x coordinates (or other coordinate in the same coordinate reference system as extent).}
+
+\item{y}{Vector of y coordinates (or other coordinate in the same coordinate reference system as extent).}
+
 \item{lat}{Default \code{NULL}. Alias for \code{y} for geographic workflows.}
 
 \item{long}{Default \code{NULL}. Alias for \code{x} for geographic workflows.}
 
-\item{location}{Default \code{NULL}. Spatial point input used to place the rendered tree(s) in the scene. Accepts \code{sf}, \code{sfc}, \code{sfg}, or \code{sp} POINT or MULTIPOINT geometries. MULTIPOINT inputs are flattened to point placements internally, and vectorized arguments such as \code{tree_height}, \code{angle}, \code{crown_color}, and \code{trunk_color} are applied against that flattened point count. If the input carries a CRS, it will be transformed automatically into the active scene CRS. If it has no CRS, supply \code{crs}.}
-
 \item{crs}{Default \code{NULL}. CRS of the input numeric x/y coordinates, or CRS to assign to CRS-less spatial data before transforming it into the active scene CRS. If spatial data already carries a CRS, that CRS is used automatically.}
 
 \item{filter_to_extent}{Default \code{TRUE}. If \code{TRUE}, tree placements outside the scene extent are omitted. For scenes created with \code{\link[=plot_gg]{plot_gg()}}, filtering uses the ggplot panel extent rather than the full rendered 3D ggplot extent.}
+
+\item{extent}{Either an object representing the spatial extent of the 3D scene
+(either from the \code{raster}, \code{terra}, \code{sf}, or \code{sp} packages),
+a length-4 numeric vector specifying \code{c("xmin", "xmax", "ymin", "ymax")}, or the spatial object (from
+the previously aforementioned packages) which will be automatically converted to an extent object.
+If omitted, rayshader will use extent metadata cached by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}.}
+
+\item{panel}{Default \code{NULL}. Facet panel identifier for scenes created with \code{\link[=plot_gg]{plot_gg()}}. Required
+to disambiguate faceted ggplot scenes when panel-specific cached metadata is needed. Ignored
+for non-ggplot scenes.}
+
+\item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.}
+
+\item{vertical_exaggeration}{Default \code{1}. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}} when available; pass explicitly to override for this call.}
+
+\item{heightmap}{Default \code{NULL}. Height matrix for the current scene. If omitted, this is taken from the cached scene set by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}. Pass explicitly to override the cached value.
+of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
+All points are assumed to be evenly spaced.}
 
 \item{...}{Additional arguments to pass to \code{rgl::triangles3d()}.}
 }

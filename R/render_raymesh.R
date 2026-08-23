@@ -11,43 +11,21 @@
 #'in the proper location (but for ease of use, use [render_multipolygonz()] to plot this data directly).
 #'
 #'@param raymesh `raymesh` object (see the rayvertex package for a description)
-#'@param extent Either an object representing the spatial extent of the scene
-#' (either from the `raster`, `terra`, `sf`, or `sp` packages),
-#' a length-4 numeric vector specifying `c("xmin", "xmax","ymin","ymax")`, or the spatial object (from
-#' the previously aforementioned packages) which will be automatically converted to an extent object.
-#' If omitted, rayshader will use extent metadata cached by [plot_3d()] or [plot_gg()].
-#'@param panel Default `NULL`. Facet panel identifier for scenes created with [plot_gg()]. Required
-#'to disambiguate faceted ggplot scenes when panel-specific cached metadata is needed. Ignored
-#'for non-ggplot scenes.
-#'@param crs Default `NULL`. CRS of the input numeric x/y coordinates, or CRS to assign to CRS-less spatial data before transforming it into the active scene CRS. If spatial data already carries a CRS, that CRS is used automatically.
-#'@param x Vector of x coordinates (or other coordinate in the same coordinate reference system as extent).
-#'@param y Vector of y coordinates (or other coordinate in the same coordinate reference system as extent).
-#'@param lat Default `NULL`. Alias for `y` for geographic workflows.
-#'@param long Default `NULL`. Alias for `x` for geographic workflows.
 #'@param location Default `NULL`. Spatial point input used to place the rendered object(s) in the scene. Accepts `sf`, `sfc`, `sfg`, or `sp` POINT or MULTIPOINT geometries. MULTIPOINT inputs are flattened to point placements internally, and vectorized arguments such as `scale`, `angle`, `color`, and `altitude` are applied against that flattened point count. If the input carries a CRS, it will be transformed automatically into the active scene CRS. If it has no CRS, supply `crs`.
-#'@param altitude Default `NULL`. Elevation of each point, in units of the elevation matrix (scaled by `zscale`).
-#'If left `NULL`, this will be just the elevation value at ths surface, offset by `offset`. If a single value,
-#'the OBJ will be rendered at that altitude.
-#'@param xyz Default `NULL`, ignored. A 3 column numeric matrix, with each row specifying the x/y/z
-#'coordinates of the OBJ model(s). Overrides x/y, lat/long, and altitude and ignores extent to plot the OBJ in raw rgl coordinates.
 #'@param load_normals Default `TRUE`. Whether to load normals for the 3D model.
 #'@param change_material Default `TRUE`. Whether to change the raymesh material (to customize the color).
+#'@param color Default `black`. Color of the 3D model, if `load_material = FALSE`. Use `"height"` to color placed models by the cached [plot_gg()] height aesthetic palette.
+#'@param obj_zscale Default `FALSE`. Whether to scale the size of the OBJ by zscale to have it match
+#'the size of the map. If zscale is very big, this will make the model very small.
+#'@param swap_yz Default `NULL`, defaults to `FALSE` unless plotting raw coordinates (no x/y or lat/long passed).
+#' Whether to swap and Y and Z axes. (Y axis is vertical in
+#'rayshader coordinates, but data is often provided with Z being vertical).
 #'@param angle Default `c(0,0,0)`. Angle of rotation around the x, y, and z axes. If this is a matrix or list,
 #'each row (or list entry) specifies the rotation of the nth model specified (number of rows/length of list must
 #'equal the length of `x`/`y`).
 #'@param scale Default `c(1,1,1)`. Amount to scale the 3D model in the x, y, and z axes. If this is a matrix or list,
 #'each row (or list entry) specifies the scale of the nth model specified (number of rows/length of list must
 #'equal the length of `x`/`y`).
-#'@param obj_zscale Default `FALSE`. Whether to scale the size of the OBJ by zscale to have it match
-#'the size of the map. If zscale is very big, this will make the model very small.
-#'@param swap_yz Default `NULL`, defaults to `FALSE` unless plotting raw coordinates (no x/y or lat/long passed).
-#' Whether to swap and Y and Z axes. (Y axis is vertical in
-#'rayshader coordinates, but data is often provided with Z being vertical).
-#'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.
-#'@param vertical_exaggeration Default `1`. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from [plot_3d()] or [plot_gg()] when available; pass explicitly to override for this call.
-#'@param heightmap Default `NULL`. Height matrix for the current scene. If omitted, this is taken from the cached scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value.
-#'of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
-#' All points are assumed to be evenly spaced.
 #'@param baseshape Default `rectangle`. Shape of the base. Options are `c("rectangle","circle","hex")`.
 #'@param flat_shading Default `FALSE`. If `TRUE`, this will use rgl's flat shading.
 #'@param lit Default `TRUE`. Whether to light the polygons.
@@ -56,13 +34,35 @@
 #'@param light_intensity Default `0.3`. Intensity of the specular highlight on the polygons.
 #'@param light_relative Default `FALSE`. Whether the light direction should be taken relative to the camera,
 #'or absolute.
-#'@param color Default `black`. Color of the 3D model, if `load_material = FALSE`. Use `"height"` to color placed models by the cached [plot_gg()] height aesthetic palette.
-#'@param offset Default `5`. Offset of the track from the surface, if `altitude = NULL`.
+#'@param rgl_tag Default `""`. Tag to add to the rgl scene id, will be prefixed by `"objraymsh"`
 #'@param clear_previous Default `FALSE`. If `TRUE`, clears all existing raymesh
 #'objects for `rgl_tag`. A clear-only call returns without rendering a
 #'replacement.
-#'@param rgl_tag Default `""`. Tag to add to the rgl scene id, will be prefixed by `"objraymsh"`
+#'@param x Vector of x coordinates (or other coordinate in the same coordinate reference system as extent).
+#'@param y Vector of y coordinates (or other coordinate in the same coordinate reference system as extent).
+#'@param altitude Default `NULL`. Elevation of each point, in units of the elevation matrix (scaled by `zscale`).
+#'If left `NULL`, this will be just the elevation value at ths surface, offset by `offset`. If a single value,
+#'the OBJ will be rendered at that altitude.
+#'@param xyz Default `NULL`, ignored. A 3 column numeric matrix, with each row specifying the x/y/z
+#'coordinates of the OBJ model(s). Overrides x/y, lat/long, and altitude and ignores extent to plot the OBJ in raw rgl coordinates.
+#'@param offset Default `5`. Offset of the track from the surface, if `altitude = NULL`.
+#'@param lat Default `NULL`. Alias for `y` for geographic workflows.
+#'@param long Default `NULL`. Alias for `x` for geographic workflows.
+#'@param crs Default `NULL`. CRS of the input numeric x/y coordinates, or CRS to assign to CRS-less spatial data before transforming it into the active scene CRS. If spatial data already carries a CRS, that CRS is used automatically.
 #'@param filter_to_extent Default `TRUE`. If `TRUE`, raymesh placements outside the scene extent are omitted. For scenes created with [plot_gg()], filtering uses the ggplot panel extent rather than the full rendered 3D ggplot extent.
+#'@param extent Either an object representing the spatial extent of the scene
+#' (either from the `raster`, `terra`, `sf`, or `sp` packages),
+#' a length-4 numeric vector specifying `c("xmin", "xmax","ymin","ymax")`, or the spatial object (from
+#' the previously aforementioned packages) which will be automatically converted to an extent object.
+#' If omitted, rayshader will use extent metadata cached by [plot_3d()] or [plot_gg()].
+#'@param panel Default `NULL`. Facet panel identifier for scenes created with [plot_gg()]. Required
+#'to disambiguate faceted ggplot scenes when panel-specific cached metadata is needed. Ignored
+#'for non-ggplot scenes.
+#'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.
+#'@param vertical_exaggeration Default `1`. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from [plot_3d()] or [plot_gg()] when available; pass explicitly to override for this call.
+#'@param heightmap Default `NULL`. Height matrix for the current scene. If omitted, this is taken from the cached scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value.
+#'of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
+#' All points are assumed to be evenly spaced.
 #'@param ... Additional arguments to pass to `rgl::triangles3d()`.
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
@@ -105,24 +105,14 @@
 #'render_highquality(sky_sun_azimuth=10, sky_sun_elevation=10,iso=5)
 render_raymesh = function(
   raymesh,
-  extent = NULL,
-  panel = NULL,
-  y = NULL,
-  x = NULL,
-  altitude = NULL,
-  xyz = NULL,
-  zscale = 1,
-  vertical_exaggeration = 1,
-  heightmap = NULL,
+  location = NULL,
   load_normals = TRUE,
   change_material = TRUE,
   color = "grey50",
-  offset = 0,
   obj_zscale = FALSE,
   swap_yz = NULL,
   angle = c(0, 0, 0),
   scale = c(1, 1, 1),
-  clear_previous = FALSE,
   baseshape = "rectangle",
   flat_shading = FALSE,
   lit = FALSE,
@@ -131,11 +121,21 @@ render_raymesh = function(
   light_intensity = 1,
   light_relative = FALSE,
   rgl_tag = "",
+  clear_previous = FALSE,
+  x = NULL,
+  y = NULL,
+  altitude = NULL,
+  xyz = NULL,
+  offset = 0,
   lat = NULL,
   long = NULL,
-  location = NULL,
   crs = NULL,
   filter_to_extent = TRUE,
+  extent = NULL,
+  panel = NULL,
+  zscale = 1,
+  vertical_exaggeration = 1,
+  heightmap = NULL,
   ...
 ) {
   render_raymesh_args = list(...)

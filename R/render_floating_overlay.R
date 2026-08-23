@@ -8,16 +8,16 @@
 #'
 #'@param overlay Overlay (4D RGBA array) to be rendered on the 3D map.
 #'@param altitude Altitude to place the overlay.
-#'@param heightmap Default `NULL`. Height matrix for the current scene. If omitted, this is taken from the cached scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value.
+#'@param alpha Default `1`. Multiplies the layer's transparency by this factor. 0 is completely transparent.
+#'@param baseshape Default `rectangle`. Shape of the overlay. Options are `c("rectangle", "circle", "hex")`.
+#'@param remove_na Default `TRUE`. Whether to make the overlay transparent above empty spaces (represented by `NA` values) in the underlying elevation matrix.
+#'@param reorient Default `TRUE`. Whether to reorient the image array to match the 3D plot.
+#'@param clear_layers Default `FALSE`. Clears all existing floating layers on the visualization.
+#'@param horizontal_offset Default `c(0,0)`. Distance (in 3D space) to offset the floating offset in the x/y directions.
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
 #'of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10. Adjust the zscale down to exaggerate elevation features.
 #'@param vertical_exaggeration Default `1`. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from [plot_3d()] or [plot_gg()] when available; pass explicitly to override for this call.
-#'@param alpha Default `1`. Multiplies the layer's transparency by this factor. 0 is completely transparent.
-#'@param baseshape Default `rectangle`. Shape of the overlay. Options are `c("rectangle", "circle", "hex")`.
-#'@param clear_layers Default `FALSE`. Clears all existing floating layers on the visualization.
-#'@param remove_na Default `TRUE`. Whether to make the overlay transparent above empty spaces (represented by `NA` values) in the underlying elevation matrix.
-#'@param reorient Default `TRUE`. Whether to reorient the image array to match the 3D plot.
-#'@param horizontal_offset Default `c(0,0)`. Distance (in 3D space) to offset the floating offset in the x/y directions.
+#'@param heightmap Default `NULL`. Height matrix for the current scene. If omitted, this is taken from the cached scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value.
 #'@param ... Additional arguments to pass to `rgl::triangles3d()`.
 #'@return Adds a 3D floating layer to the map. No return value.
 #'@export
@@ -55,15 +55,15 @@
 render_floating_overlay = function(
   overlay = NULL,
   altitude = NULL,
-  heightmap = NULL,
-  zscale = 1,
-  vertical_exaggeration = 1,
   alpha = 1,
   baseshape = "rectangle",
   remove_na = TRUE,
   reorient = TRUE,
   clear_layers = FALSE,
   horizontal_offset = c(0, 0),
+  zscale = 1,
+  vertical_exaggeration = 1,
+  heightmap = NULL,
   ...
 ) {
   zscale = resolve_scene_render_effective_zscale(

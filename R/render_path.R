@@ -6,39 +6,20 @@
 #'
 #'Cache fallback messages are disabled by default. Set `options(rayshader.verbose_scene_cache = TRUE)` to print when cached metadata is reused.
 #'
-#'@param x Default `NULL`. Vector of x coordinates (or other coordinate in the same coordinate reference system as extent).
-#'Ignored if `y` is an `sf` or `SpatialLineDataFrame` object.
 #'@param y Vector of y coordinates (or other coordinate in the same coordinate reference system as extent).
 #'Can also be an `sf` or `SpatialLineDataFrame` object.
-#'@param lat Default `NULL`. Alias for `y` for geographic workflows.
-#'@param long Default `NULL`. Alias for `x` for geographic workflows.
+#'@param x Default `NULL`. Vector of x coordinates (or other coordinate in the same coordinate reference system as extent).
+#'Ignored if `y` is an `sf` or `SpatialLineDataFrame` object.
 #'@param altitude Default `NULL`. Elevation of each point, in units of the elevation matrix (scaled by zscale).
 #'If left `NULL`, this will be just the elevation value at ths surface, offset by `offset`. If a single value,
 #'all data will be rendered at that altitude.
 #'@param groups Default `NULL`. Integer vector specifying the grouping of each x/y path segment, if x/y are
 #'specified as numeric vectors (as opposed to `sf` or `SpatialLineDataFrame` objects, where this information
 #'is built-in to the object).
-#'@param extent Either an object representing the spatial extent of the 3D scene
-#' (either from the `raster`, `terra`, `sf`, or `sp` packages),
-#' a length-4 numeric vector specifying `c("xmin", "xmax","ymin","ymax")`, or the spatial object (from
-#' the previously aforementioned packages) which will be automatically converted to an extent object.
-#' If omitted, rayshader will use extent metadata cached by [plot_3d()] or [plot_gg()].
-#'@param panel Default `NULL`. Facet panel identifier for scenes created with [plot_gg()]. Required
-#'to disambiguate faceted ggplot scenes when panel-specific cached metadata is needed. Ignored
-#'for non-ggplot scenes.
-#'@param crs Default `NULL`. CRS of the input numeric x/y coordinates, or CRS to assign to CRS-less spatial data before transforming it into the active scene CRS. If spatial data already carries a CRS, that CRS is used automatically.
-#'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.
-#'@param vertical_exaggeration Default `1`. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from [plot_3d()] or [plot_gg()] when available; pass explicitly to override for this call.
-#'@param heightmap Default `NULL`. Height matrix for the current scene. If omitted, this is taken from the cached scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value.
-#' All points are assumed to be evenly spaced.
 #'@param resample_evenly Default `FALSE`. If `TRUE`, this will re-sample the path evenly from beginning to end, which can help vastly
 #'reduce the number of points used to draw it (which can improve the performance of [render_highquality()] and \code{\link[=render_snapshot]{render_snapshot()}} when using `software_render = TRUE`).
 #'This function works only if `reorder = TRUE`, or if the sf object is already ordered from beginning to end.
 #'@param resample_n Default `360`. Number of breaks in which to evenly resample the line if `resample_evenly = TRUE`.
-#'@param linewidth Default `3`. The line width.
-#'@param antialias Default `FALSE`. If `TRUE`, the line with be have anti-aliasing applied. NOTE: anti-aliasing can cause some unpredictable behavior with transparent surfaces.
-#'@param color Default `black`. Color of the line. Use `"height"` to color the path by the cached [plot_gg()] height aesthetic palette.
-#'@param offset Default `5`. Offset of the track from the surface, if `altitude = NULL`.
 #'@param reorder Default `FALSE`. If `TRUE`, this will attempt to re-order the rows within an `sf` object with
 #'multiple paths to be one continuous, end-to-end path. This happens in two steps: merging duplicate
 #'paths that have end points that match with another object (within `reorder_duplicate_tolerance` distance), and then
@@ -56,12 +37,31 @@
 #'the path to the tolerance specified. This happens after the data has been merged if `reorder = TRUE`.
 #'If the input data is specified with long-lat coordinates and `sf_use_s2()` returns `TRUE`,
 #'then the value of simplify_tolerance must be specified in meters.
+#'@param linewidth Default `3`. The line width.
+#'@param color Default `black`. Color of the line. Use `"height"` to color the path by the cached [plot_gg()] height aesthetic palette.
+#'@param antialias Default `FALSE`. If `TRUE`, the line with be have anti-aliasing applied. NOTE: anti-aliasing can cause some unpredictable behavior with transparent surfaces.
+#'@param offset Default `5`. Offset of the track from the surface, if `altitude = NULL`.
 #'@param clear_previous Default `FALSE`. If `TRUE`, clears all existing paths
 #'for `tag`. A clear-only call returns without rendering a replacement.
 #'@param return_coords Default `FALSE`. If `TRUE`, this will return the internal rayshader coordinates of the path, instead of
 #'plotting the line.
 #'@param tag Default `"path3d"`. The rgl tag to use when adding the path to the scene.
+#'@param lat Default `NULL`. Alias for `y` for geographic workflows.
+#'@param long Default `NULL`. Alias for `x` for geographic workflows.
+#'@param crs Default `NULL`. CRS of the input numeric x/y coordinates, or CRS to assign to CRS-less spatial data before transforming it into the active scene CRS. If spatial data already carries a CRS, that CRS is used automatically.
 #'@param filter_to_extent Default `TRUE`. If `TRUE`, path data outside the scene extent is omitted. Spatial line inputs are cropped to the extent. For scenes created with [plot_gg()], filtering uses the ggplot panel extent rather than the full rendered 3D ggplot extent.
+#'@param extent Either an object representing the spatial extent of the 3D scene
+#' (either from the `raster`, `terra`, `sf`, or `sp` packages),
+#' a length-4 numeric vector specifying `c("xmin", "xmax","ymin","ymax")`, or the spatial object (from
+#' the previously aforementioned packages) which will be automatically converted to an extent object.
+#' If omitted, rayshader will use extent metadata cached by [plot_3d()] or [plot_gg()].
+#'@param panel Default `NULL`. Facet panel identifier for scenes created with [plot_gg()]. Required
+#'to disambiguate faceted ggplot scenes when panel-specific cached metadata is needed. Ignored
+#'for non-ggplot scenes.
+#'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.
+#'@param vertical_exaggeration Default `1`. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from [plot_3d()] or [plot_gg()] when available; pass explicitly to override for this call.
+#'@param heightmap Default `NULL`. Height matrix for the current scene. If omitted, this is taken from the cached scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value.
+#' All points are assumed to be evenly spaced.
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Starting at Moss Landing in Monterey Bay, we are going to simulate a flight of a bird going
@@ -157,11 +157,6 @@ render_path = function(
   x = NULL,
   altitude = NULL,
   groups = NULL,
-  extent = NULL,
-  panel = NULL,
-  zscale = 1,
-  vertical_exaggeration = 1,
-  heightmap = NULL,
   resample_evenly = FALSE,
   resample_n = 360,
   reorder = FALSE,
@@ -179,7 +174,12 @@ render_path = function(
   lat = NULL,
   long = NULL,
   crs = NULL,
-  filter_to_extent = TRUE
+  filter_to_extent = TRUE,
+  extent = NULL,
+  panel = NULL,
+  zscale = 1,
+  vertical_exaggeration = 1,
+  heightmap = NULL
 ) {
   if (
     is_render_clear_only_call(

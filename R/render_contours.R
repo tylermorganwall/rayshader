@@ -4,21 +4,21 @@
 #'
 #'Cache fallback messages are disabled by default. Set `options(rayshader.verbose_scene_cache = TRUE)` to print when cached metadata is reused.
 #'
-#'@param heightmap Default `NULL`. Height matrix for the current scene. If omitted, this is taken from the cached scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value.
-#'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
-#'of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
-#'@param vertical_exaggeration Default `1`. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from [plot_3d()] or [plot_gg()] when available; pass explicitly to override for this call.
 #'@param levels Default `NA`. Automatically generated with 10 levels. This argument specifies the exact height levels of each contour.
 #'@param nlevels Default `NA`. Controls the auto-generation of levels. If levels is length-2,
 #'this will automatically generate `nlevels` breaks between `levels[1]` and `levels[2]`.
 #'@param linewidth Default `3`. The line width.
-#'@param antialias Default `FALSE`. If `TRUE`, the line with be have anti-aliasing applied. NOTE: anti-aliasing can cause some unpredictable behavior with transparent surfaces.
 #'@param color Default `black`. Color of the line. Use `"height"` to color contours by the cached [plot_gg()] height aesthetic palette.
 #'@param palette Default `NULL`. Overrides `color`. Either a function that returns a color palette
 #'of `n` colors, or a character vector with colors that specifies each color manually.
+#'@param antialias Default `FALSE`. If `TRUE`, the line with be have anti-aliasing applied. NOTE: anti-aliasing can cause some unpredictable behavior with transparent surfaces.
 #'@param offset Default `5`. Offset of the track from the surface, if `altitude = NULL`.
 #'@param clear_previous Default `FALSE`. If `TRUE`, clears all existing
 #'contours. A clear-only call returns without rendering a replacement.
+#'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
+#'of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
+#'@param vertical_exaggeration Default `1`. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from [plot_3d()] or [plot_gg()] when available; pass explicitly to override for this call.
+#'@param heightmap Default `NULL`. Height matrix for the current scene. If omitted, this is taken from the cached scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value.
 #'@param ... Additional arguments passed to `rgl::lines3d()`.
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
@@ -58,9 +58,6 @@
 #'                                 color = "purple", intensity = 2)
 #'                   )))
 render_contours = function(
-  heightmap = NULL,
-  zscale = 1,
-  vertical_exaggeration = 1,
   levels = NA,
   nlevels = NA,
   linewidth = 1,
@@ -69,6 +66,9 @@ render_contours = function(
   antialias = FALSE,
   offset = 0,
   clear_previous = FALSE,
+  zscale = 1,
+  vertical_exaggeration = 1,
+  heightmap = NULL,
   ...
 ) {
   if (

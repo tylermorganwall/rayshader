@@ -29,8 +29,6 @@ render_highquality(
   water_material = c("glassy", "microfacet"),
   water_roughness = 0.1,
   override_material = FALSE,
-  cache_scene = FALSE,
-  reset_scene_cache = FALSE,
   width = NULL,
   height = NULL,
   ortho_dimensions = NULL,
@@ -80,6 +78,8 @@ render_highquality(
   plot = is.na(filename),
   verbose = FALSE,
   parallel = TRUE,
+  cache_scene = FALSE,
+  reset_scene_cache = FALSE,
   ...
 )
 }
@@ -159,11 +159,6 @@ setting a non-zero water attenuation, where the color comes from the attenuation
 \item{water_roughness}{Default \code{0.1}. Roughness used when \code{water_material = "microfacet"}.}
 
 \item{override_material}{Default \code{FALSE}. Whether to override the default diffuse material with that in argument \code{material}.}
-
-\item{cache_scene}{Default \code{FALSE}. Whether to cache the current scene to memory so it does not have to be converted to a \code{raymesh} object
-each time \code{\link[=render_snapshot]{render_snapshot()}} is called. If \code{TRUE} and a scene has been cached, it will be used when rendering.}
-
-\item{reset_scene_cache}{Default \code{FALSE}. Resets the scene cache before rendering.}
 
 \item{width}{Defaults to the width of the rgl window. Width of the rendering.}
 
@@ -303,6 +298,11 @@ built by \code{\link[=render_roads]{render_roads()}} are reused from the active 
 
 \item{parallel}{Default \code{TRUE}. Whether to use multiple threads for raytracing
 and for legacy uncached road-path conversion.}
+
+\item{cache_scene}{Default \code{FALSE}. Whether to cache the current scene to memory so it does not have to be converted to a \code{raymesh} object
+each time \code{\link[=render_snapshot]{render_snapshot()}} is called. If \code{TRUE} and a scene has been cached, it will be used when rendering.}
+
+\item{reset_scene_cache}{Default \code{FALSE}. Resets the scene cache before rendering.}
 
 \item{...}{Additional parameters to pass to \code{rayrender::render_scene()}.}
 }

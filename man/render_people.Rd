@@ -13,26 +13,26 @@ render_people(
   line_terrain_spacing = TRUE,
   line_pattern = NULL,
   line_align_terrain = TRUE,
-  altitude = NULL,
-  xyz = NULL,
-  zscale = 1,
-  vertical_exaggeration = 1,
-  heightmap = NULL,
   color = "grey50",
-  offset = 0,
   angle = c(0, 0, 0),
   baseshape = "rectangle",
-  x = NULL,
-  y = NULL,
-  extent = NULL,
-  panel = NULL,
   lit = TRUE,
   load_normals = TRUE,
   clear_previous = FALSE,
+  x = NULL,
+  y = NULL,
+  altitude = NULL,
+  xyz = NULL,
+  offset = 0,
   lat = NULL,
   long = NULL,
   crs = NULL,
   filter_to_extent = TRUE,
+  extent = NULL,
+  panel = NULL,
+  zscale = 1,
+  vertical_exaggeration = 1,
+  heightmap = NULL,
   ...
 )
 }
@@ -75,6 +75,32 @@ so each person's local +Y up vector matches the terrain normal. The local +Z
 forward vector is lifted along the terrain without changing its plan-view
 alignment with the line direction.}
 
+\item{color}{Default \code{"grey50"}. Color of the person model. For line
+placement, supply one color per generated person or one color per entry in
+\code{line_pattern}; pattern colors are repeated with the pattern. Use \code{"height"} to
+color placed models by the cached \code{\link[=plot_gg]{plot_gg()}} height aesthetic palette.}
+
+\item{angle}{Default \code{c(0, 0, 0)}. Rotation around the x, y, and z axes. A
+matrix or list can specify a separate rotation for each person. For line
+placement, these rotations are added to the automatic line orientation.}
+
+\item{baseshape}{Default \code{"rectangle"}. Shape of the base. Options are
+\code{"rectangle"}, \code{"circle"}, and \code{"hex"}.}
+
+\item{lit}{Default \code{TRUE}. Whether to light the model polygons.}
+
+\item{load_normals}{Default \code{TRUE}. Whether to load normals from the model.}
+
+\item{clear_previous}{Default \code{FALSE}. If \code{TRUE}, remove previously rendered
+people before rendering the new ones. A clear-only call returns without
+rendering a replacement.}
+
+\item{x}{Default \code{NULL}. Vector of x coordinates (or coordinates in the same
+coordinate reference system as \code{extent}).}
+
+\item{y}{Default \code{NULL}. Vector of y coordinates (or coordinates in the same
+coordinate reference system as \code{extent}).}
+
 \item{altitude}{Default \code{NULL}. Elevation of each person, in units of the
 elevation matrix. If left \code{NULL}, each person is placed on the surface plus
 \code{offset}. A single value places every person at that altitude. When one
@@ -84,6 +110,28 @@ is repeated to place one person at each altitude.}
 \item{xyz}{Default \code{NULL}. A three-column numeric matrix in which each row
 specifies the raw rgl x/y/z coordinates of a person. Overrides coordinate
 placement and \code{altitude}.}
+
+\item{offset}{Default \code{0}. Offset from the surface when \code{altitude = NULL}.}
+
+\item{lat}{Default \code{NULL}. Alias for \code{y} for geographic workflows.}
+
+\item{long}{Default \code{NULL}. Alias for \code{x} for geographic workflows.}
+
+\item{crs}{Default \code{NULL}. CRS of numeric x/y coordinates, or a CRS to assign
+to CRS-less spatial data before transforming it into the active scene CRS.}
+
+\item{filter_to_extent}{Default \code{TRUE}. If \code{TRUE}, placements outside the
+scene extent are omitted.}
+
+\item{extent}{Default \code{NULL}. Either an object representing the spatial
+extent of the scene (from the \code{raster}, \code{terra}, \code{sf}, or \code{sp} packages), a
+length-4 numeric vector specifying \code{c("xmin", "xmax", "ymin", "ymax")}, or a
+spatial object that can be converted to an extent. If omitted, rayshader uses
+extent metadata cached by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}.}
+
+\item{panel}{Default \code{NULL}. Facet panel identifier for scenes created with
+\code{\link[=plot_gg]{plot_gg()}}. Required to disambiguate faceted ggplot scenes when
+panel-specific cached metadata is needed. Ignored for non-ggplot scenes.}
 
 \item{zscale}{Default \code{1}. Ratio between horizontal spacing and the elevation
 units in the original heightmap. If omitted, rayshader uses the cached scene
@@ -97,54 +145,6 @@ this call.}
 \item{heightmap}{Default \code{NULL}. Height matrix for the current scene. If
 omitted, rayshader uses the cached scene heightmap from \code{\link[=plot_3d]{plot_3d()}} or
 \code{\link[=plot_gg]{plot_gg()}}.}
-
-\item{color}{Default \code{"grey50"}. Color of the person model. For line
-placement, supply one color per generated person or one color per entry in
-\code{line_pattern}; pattern colors are repeated with the pattern. Use \code{"height"} to
-color placed models by the cached \code{\link[=plot_gg]{plot_gg()}} height aesthetic palette.}
-
-\item{offset}{Default \code{0}. Offset from the surface when \code{altitude = NULL}.}
-
-\item{angle}{Default \code{c(0, 0, 0)}. Rotation around the x, y, and z axes. A
-matrix or list can specify a separate rotation for each person. For line
-placement, these rotations are added to the automatic line orientation.}
-
-\item{baseshape}{Default \code{"rectangle"}. Shape of the base. Options are
-\code{"rectangle"}, \code{"circle"}, and \code{"hex"}.}
-
-\item{x}{Default \code{NULL}. Vector of x coordinates (or coordinates in the same
-coordinate reference system as \code{extent}).}
-
-\item{y}{Default \code{NULL}. Vector of y coordinates (or coordinates in the same
-coordinate reference system as \code{extent}).}
-
-\item{extent}{Default \code{NULL}. Either an object representing the spatial
-extent of the scene (from the \code{raster}, \code{terra}, \code{sf}, or \code{sp} packages), a
-length-4 numeric vector specifying \code{c("xmin", "xmax", "ymin", "ymax")}, or a
-spatial object that can be converted to an extent. If omitted, rayshader uses
-extent metadata cached by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}.}
-
-\item{panel}{Default \code{NULL}. Facet panel identifier for scenes created with
-\code{\link[=plot_gg]{plot_gg()}}. Required to disambiguate faceted ggplot scenes when
-panel-specific cached metadata is needed. Ignored for non-ggplot scenes.}
-
-\item{lit}{Default \code{TRUE}. Whether to light the model polygons.}
-
-\item{load_normals}{Default \code{TRUE}. Whether to load normals from the model.}
-
-\item{clear_previous}{Default \code{FALSE}. If \code{TRUE}, remove previously rendered
-people before rendering the new ones. A clear-only call returns without
-rendering a replacement.}
-
-\item{lat}{Default \code{NULL}. Alias for \code{y} for geographic workflows.}
-
-\item{long}{Default \code{NULL}. Alias for \code{x} for geographic workflows.}
-
-\item{crs}{Default \code{NULL}. CRS of numeric x/y coordinates, or a CRS to assign
-to CRS-less spatial data before transforming it into the active scene CRS.}
-
-\item{filter_to_extent}{Default \code{TRUE}. If \code{TRUE}, placements outside the
-scene extent are omitted.}
 
 \item{...}{Additional arguments passed to \code{\link[=render_obj]{render_obj()}} and then to
 \code{rgl::triangles3d()}.}
