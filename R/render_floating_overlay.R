@@ -9,15 +9,19 @@
 #'@param overlay Overlay (4D RGBA array) to be rendered on the 3D map.
 #'@param altitude Altitude to place the overlay.
 #'@param alpha Default `1`. Multiplies the layer's transparency by this factor. 0 is completely transparent.
-#'@param baseshape Default `rectangle`. Shape of the overlay. Options are `c("rectangle", "circle", "hex")`.
-#'@param remove_na Default `TRUE`. Whether to make the overlay transparent above empty spaces (represented by `NA` values) in the underlying elevation matrix.
-#'@param reorient Default `TRUE`. Whether to reorient the image array to match the 3D plot.
+#'@param remove_na Default `TRUE`. Whether to make the overlay transparent above
+#'empty spaces represented by `NA` values in the active heightmap.
+#'@param reorient Default `TRUE`. Whether to transpose the heightmap's `NA` mask
+#'to match the overlay texture orientation.
 #'@param clear_layers Default `FALSE`. Clears all existing floating layers on the visualization.
 #'@param horizontal_offset Default `c(0,0)`. Distance (in 3D space) to offset the floating offset in the x/y directions.
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
 #'of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10. Adjust the zscale down to exaggerate elevation features.
 #'@param vertical_exaggeration Default `1`. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from [plot_3d()] or [plot_gg()] when available; pass explicitly to override for this call.
-#'@param heightmap Default `NULL`. Height matrix for the current scene. If omitted, this is taken from the cached scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value.
+#'@param heightmap Default `NULL`. Height matrix whose existing `NA` cells mask
+#'the overlay when `remove_na = TRUE`. If omitted, this is taken from the cached
+#'scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the
+#'cached value.
 #'@param ... Additional arguments to pass to `rgl::triangles3d()`.
 #'@return Adds a 3D floating layer to the map. No return value.
 #'@export
@@ -56,7 +60,6 @@ render_floating_overlay = function(
   overlay = NULL,
   altitude = NULL,
   alpha = 1,
-  baseshape = "rectangle",
   remove_na = TRUE,
   reorient = TRUE,
   clear_layers = FALSE,
@@ -66,6 +69,13 @@ render_floating_overlay = function(
   heightmap = NULL,
   ...
 ) {
+  if (
+    !is.logical(reorient) ||
+      length(reorient) != 1L ||
+      is.na(reorient)
+  ) {
+    stop("`reorient` must be a single logical value.", call. = FALSE)
+  }
   zscale = resolve_scene_render_effective_zscale(
     zscale = zscale,
     zscale_missing = missing(zscale),
@@ -105,24 +115,24 @@ render_floating_overlay = function(
 
   hm = matrix(altitude, nrow = dim(overlay)[1], ncol = dim(overlay)[2])
   tempmap = tempfile(fileext = ".png")
-  if (baseshape != "rectangle") {
-    overlay_alpha = is.na(generate_base_shape(
-      overlay[,, 1],
-      baseshape,
-      angle = 30 * pi / 180
-    ))
-    overlay[,, 4][overlay_alpha] = 0
-  }
   if (remove_na && !is.null(heightmap)) {
+    heightmap_na_mask = is.na(heightmap)
+    if (reorient) {
+      heightmap_na_mask = t(heightmap_na_mask)
+    }
     if (
-      any(dim(overlay)[1:2] != dim(heightmap)[1:2]) && any(is.na(heightmap))
+      any(dim(overlay)[1:2] != dim(heightmap_na_mask)) &&
+        any(heightmap_na_mask)
     ) {
       stop(
-        "If `remove_na = TRUE`, `heightmap` and `overlay` must have same number of rows and columns to make overlay transparent at those points"
+        paste0(
+          "If `remove_na = TRUE`, the oriented heightmap mask and `overlay` ",
+          "must have the same number of rows and columns."
+        )
       )
     }
-    if (any(is.na(heightmap))) {
-      overlay[,, 4][is.na(heightmap)] = 0
+    if (any(heightmap_na_mask)) {
+      overlay[,, 4][heightmap_na_mask] = 0
     }
   }
   if (is.null(heightmap)) {

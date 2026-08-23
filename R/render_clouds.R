@@ -179,12 +179,13 @@ generate_cloud_layer = function(
 #'@param fractal_levels Default `16`. The fractal dimension used to calculate the noise. Higher values give more fine structure, but take longer to calculate.
 #'@param attenuation_coef Default `1`. Amount of attenuation in the cloud (higher numbers give darker shadows).  This value is automatically scaled to account for increasing the number of layers.
 #'@param seed Default `1`. Random seed used to generate clouds.
-#'@param baseshape Default `rectangle`. Shape of the base. Options are `c("rectangle","circle","hex")`.
 #'@param clear_clouds Default `FALSE`. Clears all existing floating layers on the visualization.
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
 #'of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
 #'@param vertical_exaggeration Default `1`. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from [plot_3d()] or [plot_gg()] when available; pass explicitly to override for this call.
-#'@param heightmap Default `NULL`. Height matrix for the current scene. If omitted, this is taken from the cached scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value.
+#'@param heightmap Default `NULL`. Height matrix whose existing `NA` cells mask
+#'the cloud layers. If omitted, this is taken from the cached scene set by
+#'[plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value.
 #'@return Adds a 3D floating cloud layer to the map. No return value.
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
@@ -238,11 +239,11 @@ generate_cloud_layer = function(
 #'render_clouds(sun_angle=45, sun_altitude= 5, attenuation_coef = 5,
 #'              clear_clouds = T)
 #'render_snapshot()
-#'#Render the scene with a different baseshape
+#'#The cloud layers automatically follow the shaped heightmap's NA mask
 #'montereybay_spatial  |>
 #'  sphere_shade(vertical_exaggeration = 10)  |>
 #'  plot_3d(background="darkred", vertical_exaggeration = 4, baseshape="hex")
-#'render_clouds(seed=3, baseshape="hex", clear_clouds = T)
+#'render_clouds(seed=3, clear_clouds = T)
 #'render_camera(zoom=0.65)
 #'render_snapshot()
 render_clouds = function(
@@ -262,7 +263,6 @@ render_clouds = function(
   fractal_levels = 16,
   attenuation_coef = 1,
   seed = 1,
-  baseshape = "rectangle",
   clear_clouds = FALSE,
   zscale = 1,
   vertical_exaggeration = 1,
@@ -349,7 +349,6 @@ render_clouds = function(
         freq = frequency
       ),
       altitudes[i],
-      baseshape = baseshape,
       heightmap = heightmap,
       zscale = zscale,
       vertical_exaggeration = 1
@@ -373,7 +372,6 @@ render_clouds = function(
   fractal_levels = 16,
   attenuation_coef = 1,
   seed = 1,
-  baseshape = "rectangle",
   clear_clouds = FALSE,
   zscale = 1,
   vertical_exaggeration = 1,
@@ -476,7 +474,6 @@ render_clouds = function(
       ),
       # Render at the upper boundary so the last slice sits at the true top
       altitudes[i + 1],
-      baseshape = baseshape,
       heightmap = heightmap,
       zscale = zscale,
       vertical_exaggeration = 1

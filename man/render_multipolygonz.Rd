@@ -9,7 +9,6 @@ render_multipolygonz(
   color = "grey50",
   obj_zscale = TRUE,
   swap_yz = TRUE,
-  baseshape = "rectangle",
   rgl_tag = "_multipolygon",
   clear_previous = FALSE,
   offset = 0,
@@ -33,8 +32,6 @@ the size of the map. If zscale is very big, this will make the model very small.
 
 \item{swap_yz}{Default \code{TRUE}. Whether to swap and Y and Z axes. (Y axis is vertical in
 rayshader coordinates, but data is often provided with Z being vertical).}
-
-\item{baseshape}{Default \code{rectangle}. Shape of the base. Options are \code{c("rectangle","circle","hex")}.}
 
 \item{rgl_tag}{Default \code{""}. Tag to add to the rgl scene id, will be prefixed by \code{"obj"}}
 
@@ -62,9 +59,10 @@ for non-ggplot scenes.}
 
 \item{vertical_exaggeration}{Default \code{1}. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}} when available; pass explicitly to override for this call.}
 
-\item{heightmap}{Default \code{NULL}. Height matrix for the current scene. If omitted, this is taken from the cached scene set by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}. Pass explicitly to override the cached value.
-of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
-All points are assumed to be evenly spaced.}
+\item{heightmap}{Default \code{NULL}. Height matrix containing the scene terrain
+and its existing \code{NA} cells. If omitted, this is taken from the cached scene
+set by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}. Pass explicitly to override the cached
+value.}
 
 \item{...}{Additional arguments to pass to \code{rgl::triangles3d()}.}
 }

@@ -13,7 +13,6 @@
 #'the size of the map. If zscale is very big, this will make the model very small.
 #'@param swap_yz Default `TRUE`. Whether to swap and Y and Z axes. (Y axis is vertical in
 #'rayshader coordinates, but data is often provided with Z being vertical).
-#'@param baseshape Default `rectangle`. Shape of the base. Options are `c("rectangle","circle","hex")`.
 #'@param rgl_tag Default `""`. Tag to add to the rgl scene id, will be prefixed by `"obj"`
 #'@param clear_previous Default `FALSE`. If `TRUE`, clears all existing rendered
 #'multipolygons for `rgl_tag`. A clear-only call returns without rendering a
@@ -31,9 +30,10 @@
 #'for non-ggplot scenes.
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.
 #'@param vertical_exaggeration Default `1`. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from [plot_3d()] or [plot_gg()] when available; pass explicitly to override for this call.
-#'@param heightmap Default `NULL`. Height matrix for the current scene. If omitted, this is taken from the cached scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value.
-#'of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
-#' All points are assumed to be evenly spaced.
+#'@param heightmap Default `NULL`. Height matrix containing the scene terrain
+#'and its existing `NA` cells. If omitted, this is taken from the cached scene
+#'set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached
+#'value.
 #'@param ... Additional arguments to pass to `rgl::triangles3d()`.
 #'@export
 #'@examplesIf length(find.package("sf", quiet = TRUE)) && length(find.package("elevatr", quiet = TRUE)) && length(find.package("raster", quiet = TRUE)) && (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true"))
@@ -78,7 +78,6 @@ render_multipolygonz = function(
   color = "grey50",
   obj_zscale = TRUE,
   swap_yz = TRUE,
-  baseshape = "rectangle",
   rgl_tag = "_multipolygon",
   clear_previous = FALSE,
   offset = 0,
@@ -161,7 +160,6 @@ render_multipolygonz = function(
     offset = offset,
     swap_yz = swap_yz,
     heightmap = heightmap,
-    baseshape = baseshape,
     rgl_tag = rgl_tag,
     crs = crs,
     rgl_tag_prefix = "obj",

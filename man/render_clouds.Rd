@@ -21,7 +21,6 @@ render_clouds(
   fractal_levels = 16,
   attenuation_coef = 1,
   seed = 1,
-  baseshape = "rectangle",
   clear_clouds = FALSE,
   zscale = 1,
   vertical_exaggeration = 1,
@@ -62,8 +61,6 @@ The default is \code{layers/(start_altitude - end_altitude)}.}
 
 \item{seed}{Default \code{1}. Random seed used to generate clouds.}
 
-\item{baseshape}{Default \code{rectangle}. Shape of the base. Options are \code{c("rectangle","circle","hex")}.}
-
 \item{clear_clouds}{Default \code{FALSE}. Clears all existing floating layers on the visualization.}
 
 \item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
@@ -71,7 +68,9 @@ of 1 meter and the grid values are separated by 10 meters, \code{zscale} would b
 
 \item{vertical_exaggeration}{Default \code{1}. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}} when available; pass explicitly to override for this call.}
 
-\item{heightmap}{Default \code{NULL}. Height matrix for the current scene. If omitted, this is taken from the cached scene set by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}. Pass explicitly to override the cached value.}
+\item{heightmap}{Default \code{NULL}. Height matrix whose existing \code{NA} cells mask
+the cloud layers. If omitted, this is taken from the cached scene set by
+\code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}. Pass explicitly to override the cached value.}
 }
 \value{
 Adds a 3D floating cloud layer to the map. No return value.
@@ -135,11 +134,11 @@ render_snapshot()
 render_clouds(sun_angle=45, sun_altitude= 5, attenuation_coef = 5,
              clear_clouds = T)
 render_snapshot()
-#Render the scene with a different baseshape
+#The cloud layers automatically follow the shaped heightmap's NA mask
 montereybay_spatial  |>
  sphere_shade(vertical_exaggeration = 10)  |>
  plot_3d(background="darkred", vertical_exaggeration = 4, baseshape="hex")
-render_clouds(seed=3, baseshape="hex", clear_clouds = T)
+render_clouds(seed=3, clear_clouds = T)
 render_camera(zoom=0.65)
 render_snapshot()
 \dontshow{\}) # examplesIf}

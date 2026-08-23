@@ -8,7 +8,6 @@ render_floating_overlay(
   overlay = NULL,
   altitude = NULL,
   alpha = 1,
-  baseshape = "rectangle",
   remove_na = TRUE,
   reorient = TRUE,
   clear_layers = FALSE,
@@ -26,11 +25,11 @@ render_floating_overlay(
 
 \item{alpha}{Default \code{1}. Multiplies the layer's transparency by this factor. 0 is completely transparent.}
 
-\item{baseshape}{Default \code{rectangle}. Shape of the overlay. Options are \code{c("rectangle", "circle", "hex")}.}
+\item{remove_na}{Default \code{TRUE}. Whether to make the overlay transparent above
+empty spaces represented by \code{NA} values in the active heightmap.}
 
-\item{remove_na}{Default \code{TRUE}. Whether to make the overlay transparent above empty spaces (represented by \code{NA} values) in the underlying elevation matrix.}
-
-\item{reorient}{Default \code{TRUE}. Whether to reorient the image array to match the 3D plot.}
+\item{reorient}{Default \code{TRUE}. Whether to transpose the heightmap's \code{NA} mask
+to match the overlay texture orientation.}
 
 \item{clear_layers}{Default \code{FALSE}. Clears all existing floating layers on the visualization.}
 
@@ -41,7 +40,10 @@ of 1 meter and the grid values are separated by 10 meters, \code{zscale} would b
 
 \item{vertical_exaggeration}{Default \code{1}. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}} when available; pass explicitly to override for this call.}
 
-\item{heightmap}{Default \code{NULL}. Height matrix for the current scene. If omitted, this is taken from the cached scene set by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}. Pass explicitly to override the cached value.}
+\item{heightmap}{Default \code{NULL}. Height matrix whose existing \code{NA} cells mask
+the overlay when \code{remove_na = TRUE}. If omitted, this is taken from the cached
+scene set by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}. Pass explicitly to override the
+cached value.}
 
 \item{...}{Additional arguments to pass to \code{rgl::triangles3d()}.}
 }

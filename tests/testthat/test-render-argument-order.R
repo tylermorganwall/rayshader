@@ -170,3 +170,21 @@ test_that("low-level coordinate render arguments keep x before y", {
     )
   }
 })
+
+test_that("render functions derive the base mask from the heightmap", {
+  render_function_names = ls(
+    envir = asNamespace("rayshader"),
+    pattern = "^render_"
+  )
+  render_functions = Filter(
+    is.function,
+    mget(render_function_names, envir = asNamespace("rayshader"))
+  )
+
+  for (function_name in names(render_functions)) {
+    expect_false(
+      "baseshape" %in% names(formals(render_functions[[function_name]])),
+      info = function_name
+    )
+  }
+})

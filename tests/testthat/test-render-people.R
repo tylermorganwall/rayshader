@@ -39,13 +39,15 @@ test_that("person_obj() resolves every bundled pose and sex", {
   expect_equal(tools::file_ext(paths), rep("txt", length(paths)))
   expect_equal(length(unique(paths)), 2 * length(poses))
   expect_true(all(grepl("raypeople", paths, fixed = TRUE)))
-  expect_match(
-    rayshader:::person_obj("slipping"),
-    "person_man_stack\\.txt$"
-  )
-  expect_match(
-    rayshader:::person_obj("stack"),
-    "person_man_slipping\\.txt$"
+  expect_identical(
+    basename(paths),
+    paste0(
+      "person_",
+      ifelse(models$sex == "male", "man", "woman"),
+      "_",
+      models$pose,
+      ".txt"
+    )
   )
   expect_identical(
     rayshader:::resolve_person_pose(c("standing", "walking")),
@@ -149,7 +151,7 @@ test_that("render_people() vectorizes pose across point placements", {
   expect_length(calls, 3)
   expect_match(calls[[1]]$filename, "person_woman_standing\\.txt$")
   expect_match(calls[[2]]$filename, "person_woman_walking\\.txt$")
-  expect_match(calls[[3]]$filename, "person_woman_yay\\.txt$")
+  expect_match(calls[[3]]$filename, "person_woman_rocky\\.txt$")
   expect_equal(calls[[1]]$x, c(1, 3))
   expect_equal(calls[[2]]$x, 2)
   expect_equal(calls[[3]]$x, 4)

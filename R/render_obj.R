@@ -26,7 +26,6 @@
 #'@param scale Default `c(1,1,1)`. Amount to scale the 3D model in the x, y, and z axes. If this is a matrix or list,
 #'each row (or list entry) specifies the scale of the nth model specified (number of rows/length of list must
 #'equal the length of `x`/`y`).
-#'@param baseshape Default `rectangle`. Shape of the base. Options are `c("rectangle","circle","hex")`.
 #'@param lit Default `TRUE`. Whether to light the polygons.
 #'@param light_altitude Default `c(45, 60)`. Degree(s) from the horizon from which to light the polygons.
 #'@param light_direction Default `c(45, 60)`. Degree(s) from north from which to light the polygons.
@@ -60,9 +59,10 @@
 #'for non-ggplot scenes.
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.
 #'@param vertical_exaggeration Default `1`. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from [plot_3d()] or [plot_gg()] when available; pass explicitly to override for this call.
-#'@param heightmap Default `NULL`. Height matrix for the current scene. If omitted, this is taken from the cached scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value.
-#'of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
-#' All points are assumed to be evenly spaced.
+#'@param heightmap Default `NULL`. Height matrix used to determine terrain
+#'elevations and existing `NA` cells. If omitted, this is taken from the cached
+#'scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the
+#'cached value.
 #'@param ... Additional arguments to pass to `rgl::triangles3d()`.
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
@@ -115,7 +115,6 @@ render_obj = function(
   swap_yz = NULL,
   angle = c(0, 0, 0),
   scale = c(1, 1, 1),
-  baseshape = "rectangle",
   lit = FALSE,
   light_altitude = c(45, 30),
   light_direction = c(315, 135),
@@ -281,9 +280,6 @@ render_obj = function(
     if (!length(lat) || !length(long)) {
       return(invisible(NULL))
     }
-  }
-  if (!is.null(heightmap)) {
-    heightmap = generate_base_shape(heightmap, baseshape)
   }
   if (is.null(xyz)) {
     raw_coords = FALSE

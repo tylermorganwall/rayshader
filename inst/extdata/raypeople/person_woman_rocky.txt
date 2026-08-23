@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Tyler Morgan-Wall
-o __export_woman_yay_body_woman
+o __export_woman_rocky_body_woman
 v 0.031015 1.089594 0.085442
 v 0.084061 1.521300 0.113872
 v 0.099680 1.572445 0.096092

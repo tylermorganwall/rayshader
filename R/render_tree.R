@@ -44,7 +44,6 @@
 #'@param max_height Default `NA`. Maximum height of a tree. Set to a positive number to filter out trees
 #'above that height.
 #'@param lit Default `TRUE`. Whether to apply lighting to the tree.
-#'@param baseshape Default `rectangle`. Shape of the base. Options are `c("rectangle","circle","hex")`.
 #'@param angle Default `c(0,0,0)`. Angle of rotation around the x, y, and z axes. If this is a matrix or list,
 #'each row (or list entry) specifies the rotation of the nth tree specified (number of rows/length of list must
 #'equal the length of `x`/`y`).
@@ -66,9 +65,10 @@
 #'for non-ggplot scenes.
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis in the original heightmap.
 #'@param vertical_exaggeration Default `1`. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from [plot_3d()] or [plot_gg()] when available; pass explicitly to override for this call.
-#'@param heightmap Default `NULL`. Height matrix for the current scene. If omitted, this is taken from the cached scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value.
-#'of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
-#' All points are assumed to be evenly spaced.
+#'@param heightmap Default `NULL`. Height matrix used to determine terrain
+#'elevations and existing `NA` cells. If omitted, this is taken from the cached
+#'scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the
+#'cached value.
 #'@param ... Additional arguments to pass to `rgl::triangles3d()`.
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
@@ -166,7 +166,6 @@ render_tree = function(
   min_height = 0,
   max_height = Inf,
   lit = TRUE,
-  baseshape = "rectangle",
   angle = c(0, 0, 0),
   clear_previous = FALSE,
   x = NULL,
@@ -707,7 +706,6 @@ render_tree = function(
       heightmap = heightmap,
       angle = angle,
       scale = tree_scale,
-      baseshape = baseshape,
       lit = lit,
       transform_scene = !location_supplied && !tree_coords_transformed,
       filter_to_extent = filter_to_extent,
@@ -724,7 +722,6 @@ render_tree = function(
       zscale = zscale,
       crs = render_obj_crs,
       offset = 0,
-      baseshape = baseshape,
       lit = lit,
       heightmap = heightmap,
       angle = angle,
@@ -748,7 +745,6 @@ render_tree = function(
       heightmap = heightmap,
       angle = angle,
       scale = tree_scale,
-      baseshape = baseshape,
       transform_scene = !location_supplied && !tree_coords_transformed,
       filter_to_extent = filter_to_extent,
       clear_previous = FALSE,
@@ -770,7 +766,6 @@ render_tree = function(
       heightmap = heightmap,
       angle = angle,
       scale = tree_scale,
-      baseshape = baseshape,
       lit = lit,
       transform_scene = !location_supplied && !tree_coords_transformed,
       filter_to_extent = filter_to_extent,
@@ -787,7 +782,6 @@ render_tree = function(
       zscale = zscale,
       crs = render_obj_crs,
       offset = 0,
-      baseshape = baseshape,
       lit = lit,
       heightmap = heightmap,
       angle = angle,
@@ -808,7 +802,6 @@ render_tree = function(
       zscale = zscale,
       crs = render_obj_crs,
       offset = trunk_height * height_zscale,
-      baseshape = baseshape,
       lit = lit,
       heightmap = heightmap,
       angle = angle,
@@ -828,7 +821,6 @@ render_tree = function(
       zscale = zscale,
       crs = render_obj_crs,
       offset = 0,
-      baseshape = baseshape,
       lit = lit,
       heightmap = heightmap,
       angle = angle,

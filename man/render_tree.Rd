@@ -23,7 +23,6 @@ render_tree(
   min_height = 0,
   max_height = Inf,
   lit = TRUE,
-  baseshape = "rectangle",
   angle = c(0, 0, 0),
   clear_previous = FALSE,
   x = NULL,
@@ -94,8 +93,6 @@ above that height.}
 
 \item{lit}{Default \code{TRUE}. Whether to apply lighting to the tree.}
 
-\item{baseshape}{Default \code{rectangle}. Shape of the base. Options are \code{c("rectangle","circle","hex")}.}
-
 \item{angle}{Default \code{c(0,0,0)}. Angle of rotation around the x, y, and z axes. If this is a matrix or list,
 each row (or list entry) specifies the rotation of the nth tree specified (number of rows/length of list must
 equal the length of \code{x}/\code{y}).}
@@ -129,9 +126,10 @@ for non-ggplot scenes.}
 
 \item{vertical_exaggeration}{Default \code{1}. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}} when available; pass explicitly to override for this call.}
 
-\item{heightmap}{Default \code{NULL}. Height matrix for the current scene. If omitted, this is taken from the cached scene set by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}. Pass explicitly to override the cached value.
-of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
-All points are assumed to be evenly spaced.}
+\item{heightmap}{Default \code{NULL}. Height matrix used to determine terrain
+elevations and existing \code{NA} cells. If omitted, this is taken from the cached
+scene set by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}. Pass explicitly to override the
+cached value.}
 
 \item{...}{Additional arguments to pass to \code{rgl::triangles3d()}.}
 }

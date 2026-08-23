@@ -47,15 +47,13 @@
 #' so each person's local +Y up vector matches the terrain normal. The local +Z
 #' forward vector is lifted along the terrain without changing its plan-view
 #' alignment with the line direction.
-#' @param color Default `"grey50"`. Color of the person model. For line
+#' @param color Default `"white"`. Color of the person model. For line
 #' placement, supply one color per generated person or one color per entry in
 #' `line_pattern`; pattern colors are repeated with the pattern. Use `"height"` to
 #' color placed models by the cached [plot_gg()] height aesthetic palette.
 #' @param angle Default `c(0, 0, 0)`. Rotation around the x, y, and z axes. A
 #' matrix or list can specify a separate rotation for each person. For line
 #' placement, these rotations are added to the automatic line orientation.
-#' @param baseshape Default `"rectangle"`. Shape of the base. Options are
-#' `"rectangle"`, `"circle"`, and `"hex"`.
 #' @param lit Default `TRUE`. Whether to light the model polygons.
 #' @param load_normals Default `TRUE`. Whether to load normals from the model.
 #' @param clear_previous Default `FALSE`. If `TRUE`, remove previously rendered
@@ -97,11 +95,150 @@
 #' this call.
 #' @param heightmap Default `NULL`. Height matrix for the current scene. If
 #' omitted, rayshader uses the cached scene heightmap from [plot_3d()] or
-#' [plot_gg()].
+#' [plot_gg()]. Terrain elevations and existing `NA` cells are read directly
+#' from this matrix.
 #' @param ... Additional arguments passed to [render_obj()] and then to
 #' `rgl::triangles3d()`.
 #'
 #' @export
+#' @examples
+#' # Build a stepped pose gallery.
+#' flat_heightmap = matrix(1:16 / 2, nrow = 4, byrow = TRUE) |>
+#'   rayimage::render_reorient(flipy = TRUE, transpose = TRUE) |>
+#'   rayimage::render_resized(mag = 50, method = "box")
+#' scene_extent = c(xmin = 0, xmax = 400, ymin = 0, ymax = 400)
+#' scene_zscale = 1 / 25
+#'
+#' flat_heightmap |>
+#'   constant_shade("#800") |>
+#'   plot_3d(
+#'     heightmap = flat_heightmap,
+#'     zscale = scene_zscale,
+#'     vertical_exaggeration = 1,
+#'     shadowdepth = 0,
+#'     soliddepth = 0,
+#'     solidcolor = "#800",
+#'     extent = scene_extent,
+#'     windowsize = c(800, 800)
+#'   )
+#' render_camera(
+#'   theta = -28,
+#'   phi = 16,
+#'   zoom = 0.70,
+#'   fov = 0,
+#'   shift_vertical = -10
+#' )
+#'
+#' # Place every pose on the podium. The ironman model is raised to
+#' # clear its step, and the tenth person will support a second stack model.
+#' gallery_positions = expand.grid(
+#'   x = seq(50, 350, by = 100),
+#'   y = seq(50, 250, by = 100)
+#' )
+#' gallery_poses = c(
+#'   "standing",
+#'   "walking",
+#'   "stop",
+#'   "stop_one_hand",
+#'   "clapping",
+#'   "yelling",
+#'   "stretch",
+#'   "slipping",
+#'   "stack",
+#'   "stack",
+#'   "ironman",
+#'   "rocky"
+#' )
+#' gallery_positions$offset = 0
+#' gallery_positions$offset[gallery_poses == "ironman"] = 1
+#' stack_index = 10L
+#' stack_position = gallery_positions[stack_index, , drop = FALSE]
+#' person_height = 2
+#' label_clearance = 0.1
+#'
+#' # Render and label male pose gallery
+#' render_people(
+#'   pose = gallery_poses,
+#'   sex = "male",
+#'   clear_previous = TRUE,
+#'   x = gallery_positions$x,
+#'   y = gallery_positions$y,
+#'   offset = gallery_positions$offset
+#' )
+#' render_people(
+#'   pose = "stack",
+#'   sex = "male",
+#'   x = stack_position$x,
+#'   y = stack_position$y,
+#'   offset = stack_position$offset + person_height
+#' )
+#'
+#' # Label the standalone models first, then label the completed tower above
+#' # its upper person without relying on negative indexing.
+#' regular_label_indices = setdiff(seq_along(gallery_poses), stack_index)
+#' render_label(
+#'   text = gallery_poses[regular_label_indices],
+#'   font = "serif",
+#'   family = "serif",
+#'   fonttype = "standard",
+#'   textcolor = "white",
+#'   line = FALSE,
+#'   clear_previous = TRUE,
+#'   x = gallery_positions$x[regular_label_indices],
+#'   y = gallery_positions$y[regular_label_indices],
+#'   altitude = gallery_positions$offset[regular_label_indices] +
+#'     person_height + label_clearance,
+#'   relativez = TRUE
+#' )
+#' render_label(
+#'   text = "stack",
+#'   font = "serif",
+#'   family = "serif",
+#'   fonttype = "standard",
+#'   textcolor = "white",
+#'   line = FALSE,
+#'   x = stack_position$x,
+#'   y = stack_position$y,
+#'   altitude = stack_position$offset + 2 * person_height + label_clearance,
+#'   relativez = TRUE
+#' )
+#'
+#' # Produce an 800-by-800 high-quality image of the male pose variants.
+#' render_highquality(
+#'   width = 800,
+#'   height = 800,
+#'   sky_sun_elevation = 10,
+#'   sky_sun_azimuth = 0,
+#'   rotate_env = 160,
+#'   iso = 5
+#' )
+#'
+#' # Female models
+#' render_people(
+#'   pose = gallery_poses,
+#'   sex = "female",
+#'   clear_previous = TRUE,
+#'   x = gallery_positions$x,
+#'   y = gallery_positions$y,
+#'   offset = gallery_positions$offset
+#' )
+#' render_people(
+#'   pose = "stack",
+#'   sex = "female",
+#'   x = stack_position$x,
+#'   y = stack_position$y,
+#'   offset = stack_position$offset + person_height
+#' )
+#' render_highquality(
+#'   width = 800,
+#'   height = 800,
+#'   sky_sun_elevation = 10,
+#'   sky_sun_azimuth = 0,
+#'   rotate_env = 160,
+#'   iso = 5
+#' )
+#'
+#'
 #'@examplesIf length(find.package("sf", quiet = TRUE)) && length(find.package("elevatr", quiet = TRUE)) && length(find.package("raster", quiet = TRUE)) && (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true"))
 #'library(sf)
 #'#Set location of washington monument
@@ -289,9 +426,8 @@ render_people = function(
   line_terrain_spacing = TRUE,
   line_pattern = NULL,
   line_align_terrain = TRUE,
-  color = "grey50",
+  color = "white",
   angle = c(0, 0, 0),
-  baseshape = "rectangle",
   lit = TRUE,
   load_normals = TRUE,
   clear_previous = FALSE,
@@ -460,7 +596,6 @@ render_people = function(
         angle = person_angles[group_index, , drop = FALSE],
         scale = person_scale,
         clear_previous = FALSE,
-        baseshape = baseshape,
         lit = lit,
         rgl_tag = "person",
         crs = NULL,
@@ -566,7 +701,6 @@ render_people = function(
         ),
         scale = person_scale,
         clear_previous = FALSE,
-        baseshape = baseshape,
         lit = lit,
         rgl_tag = "person",
         crs = input_crs,
@@ -596,7 +730,6 @@ render_people = function(
     angle = angle,
     scale = person_scale,
     clear_previous = FALSE,
-    baseshape = baseshape,
     lit = lit,
     rgl_tag = "person",
     lat = lat,
@@ -622,17 +755,10 @@ person_obj = function(pose = "standing", sex = "male") {
   }
   sex = resolve_person_sex(sex)
   file_sex = if (sex == "male") "man" else "woman"
-  file_pose = switch(
-    pose,
-    slipping = "stack",
-    stack = "slipping",
-    rocky = "yay",
-    pose
-  )
   path = system.file(
     "extdata",
     "raypeople",
-    paste0("person_", file_sex, "_", file_pose, ".txt"),
+    paste0("person_", file_sex, "_", pose, ".txt"),
     package = "rayshader"
   )
   if (!nzchar(path)) {

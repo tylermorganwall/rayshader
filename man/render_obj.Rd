@@ -14,7 +14,6 @@ render_obj(
   swap_yz = NULL,
   angle = c(0, 0, 0),
   scale = c(1, 1, 1),
-  baseshape = "rectangle",
   lit = FALSE,
   light_altitude = c(45, 30),
   light_direction = c(315, 135),
@@ -64,8 +63,6 @@ equal the length of \code{x}/\code{y}).}
 \item{scale}{Default \code{c(1,1,1)}. Amount to scale the 3D model in the x, y, and z axes. If this is a matrix or list,
 each row (or list entry) specifies the scale of the nth model specified (number of rows/length of list must
 equal the length of \code{x}/\code{y}).}
-
-\item{baseshape}{Default \code{rectangle}. Shape of the base. Options are \code{c("rectangle","circle","hex")}.}
 
 \item{lit}{Default \code{TRUE}. Whether to light the polygons.}
 
@@ -120,9 +117,10 @@ for non-ggplot scenes.}
 
 \item{vertical_exaggeration}{Default \code{1}. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}} when available; pass explicitly to override for this call.}
 
-\item{heightmap}{Default \code{NULL}. Height matrix for the current scene. If omitted, this is taken from the cached scene set by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}. Pass explicitly to override the cached value.
-of matrix extent isn't working. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
-All points are assumed to be evenly spaced.}
+\item{heightmap}{Default \code{NULL}. Height matrix used to determine terrain
+elevations and existing \code{NA} cells. If omitted, this is taken from the cached
+scene set by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}. Pass explicitly to override the
+cached value.}
 
 \item{...}{Additional arguments to pass to \code{rgl::triangles3d()}.}
 }

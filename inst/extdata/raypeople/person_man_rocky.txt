@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Tyler Morgan-Wall
-o __export_man_yay_body_man
+o __export_man_rocky_body_man
 v 0.047518 1.059300 0.086319
 v 0.504830 2.237713 0.088869
 v 0.056853 0.796567 -0.028735
