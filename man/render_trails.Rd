@@ -81,15 +81,17 @@ road grades, lanes, layer rules, intersection solving, or mesh joining.
 \dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 volcano_dem = volcano_spatial()
 volcano_dem |>
-  sphere_shade(texture = "desert") |>
-  plot_3d(heightmap = volcano_dem, solid = FALSE, shadow = FALSE)
+  height_shade() |>
+  plot_3d()
 
 render_trails(
   volcano_trails,
   color = "grey50",
-  width = 2,
+  width = 3,
   width_units = "meters"
 )
+render_camera(theta=-33,phi=40,zoom=0.4)
+render_highquality()
 \dontshow{\}) # examplesIf}
 }
 \seealso{

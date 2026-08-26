@@ -1,21 +1,22 @@
 #'@title Render Camera
 #'
 #'@description Changes the position and properties of the camera around the
-#'scene. `location`, or `lat` and `long`, can move the camera's look-at target to
-#'a geographic point using the active scene's cached CRS, extent, heightmap, and
-#'effective z-scale. If no values are entered, prints and returns the current
-#'camera values.
+#'scene. `location` can move the camera's look-at target to scene x/y coordinates
+#'or a spatial point. `lat` and `long` move it to a geographic point. These inputs
+#'use the active scene's cached CRS, extent, heightmap, and effective z-scale as
+#'needed. If no values are entered, prints and returns the current camera values.
 #'
-#'@param location Default `NULL`. A single spatial POINT to use as the camera's
-#'look-at target. Accepts `sf`, `sfc`, `sfg`, and `sp` inputs. The point is
-#'transformed to the active scene CRS. If the input contains a Z coordinate or
-#'an `altitude`, `alt`, `elevation`, or `z` column, that value sets the target
-#'height; otherwise, the target height is sampled from the cached heightmap.
-#'Cannot be combined with `lat` or `long`.
 #'@param theta Defaults to current value. Rotation angle.
 #'@param phi Defaults to current value. Azimuth angle. Maximum `90`.
 #'@param zoom Defaults to current value. Positive value indicating camera magnification.
 #'@param fov Defaults to current value. Field of view of the camera. Maximum `180`.
+#'@param location Default `NULL`. A numeric `c(x, y)` pair in the scene's cached
+#'extent, or a single spatial POINT to use as the camera's look-at target. Spatial
+#'inputs accept `sf`, `sfc`, `sfg`, and `sp` objects and are transformed to the
+#'active scene CRS. If a spatial input contains a Z coordinate or an `altitude`,
+#'`alt`, `elevation`, or `z` column, that value sets the target height; otherwise,
+#'the target height is sampled from the cached heightmap. Cannot be combined with
+#'`lat` or `long`.
 #'@param shift_vertical Default `0`. Amount to shift the viewpoint.
 #'@param altitude Default `NULL`. Elevation of the look-at target in the scene's
 #'elevation units. The value is converted to rgl coordinates using the cached
@@ -88,11 +89,11 @@
 #'#render_movie(filename = tempfile(fileext = ".mp4"), type = "custom",
 #'#             theta = thetavec, phi = phivecfull, zoom = zoomvec, fov=0)
 render_camera = function(
-  location = NULL,
   theta = NULL,
   phi = NULL,
   zoom = NULL,
   fov = NULL,
+  location = NULL,
   shift_vertical = 0,
   altitude = NULL,
   lat = NULL,
@@ -190,7 +191,8 @@ render_camera = function(
 
 #' Resolve a Render Camera Look-At Target
 #'
-#' @param location Default `NULL`. A single spatial POINT.
+#' @param location Default `NULL`. A numeric scene `c(x, y)` pair or a single
+#' spatial POINT.
 #' @param lat Default `NULL`. Latitude in WGS84 decimal degrees.
 #' @param long Default `NULL`. Longitude in WGS84 decimal degrees.
 #' @param altitude Default `NULL`. Elevation in the scene's elevation units.
@@ -206,6 +208,41 @@ resolve_render_camera_lookat = function(
   panel = NULL
 ) {
   heightmap = resolve_scene_render_heightmap(caller = "render_camera")
+  if (!is.null(location) && is.numeric(location)) {
+    if (
+      !is.null(dim(location)) ||
+        length(location) != 2 ||
+        any(!is.finite(location))
+    ) {
+      stop(
+        "render_camera(): `location` must be a finite numeric `c(x, y)` pair or a single spatial POINT.",
+        call. = FALSE
+      )
+    }
+    extent = resolve_render_highquality_camera_extent(
+      heightmap = heightmap,
+      panel = panel,
+      caller = "render_camera"
+    )
+    altitude = normalize_render_highquality_camera_altitude(
+      altitude,
+      arg_name = "location",
+      caller = "render_camera"
+    )
+    camera_coords = transform_into_heightmap_coords(
+      extent = extent,
+      heightmap = heightmap,
+      lat = location[2],
+      long = location[1],
+      altitude = altitude,
+      offset = 0,
+      zscale = resolve_render_highquality_camera_zscale(),
+      panel = panel,
+      transform_scene = FALSE,
+      caller = "render_camera"
+    )
+    return(as.numeric(camera_coords[1, ]))
+  }
   target_crs = get_scene_target_crs(
     heightmap = heightmap,
     panel = panel,

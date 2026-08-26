@@ -176,3 +176,42 @@ test_that("render_camera() requires a cached CRS for latitude and longitude", {
     "no cached CRS"
   )
 })
+
+test_that("render_camera() accepts matrix coordinates without a cached CRS", {
+  on.exit(rgl::close3d(), add = TRUE)
+  local_rgl_use_null()
+
+  heightmap = rayimage::generate_2d_gaussian(dim = c(30, 30)) * 1000
+  expect_no_condition(
+    heightmap |>
+      height_shade() |>
+      plot_3d_test(
+        shadow = FALSE,
+        water = FALSE,
+        windowsize = c(250, 250)
+      )
+  )
+  expect_null(get_scene_crs(default = NULL))
+
+  expected_lookat = transform_into_heightmap_coords(
+    extent = get_scene_extent(),
+    heightmap = get_scene_heightmap(),
+    lat = 15.5,
+    long = 15.5,
+    zscale = get_scene_effective_zscale(),
+    transform_scene = FALSE,
+    caller = "test"
+  )[1, ]
+
+  expect_no_condition(render_camera(location = c(15.5, 15.5)))
+  expect_equal(
+    render_camera_lookat_from_rgl_test(),
+    unname(expected_lookat),
+    tolerance = 1e-6
+  )
+  expect_equal(unname(expected_lookat[c(1, 3)]), c(0, 0), tolerance = 1e-8)
+  expect_error(
+    render_camera(location = c(15.5, 15.5, 0)),
+    "finite numeric `c\\(x, y\\)` pair"
+  )
+})

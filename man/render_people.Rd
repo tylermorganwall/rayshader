@@ -165,42 +165,8 @@ Cache fallback messages are disabled by default. Set
 is reused.
 }
 \examples{
-# Add the OSM walking trails and place two-meter people along the summit
-# circuit to show the scale of Maungawhau.
-if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) {
-  volcano_dem = volcano_spatial()
-
-  volcano_dem |>
-    sphere_shade(texture = "desert") |>
-    plot_3d(
-      heightmap = volcano_dem,
-      solid = FALSE,
-      shadow = FALSE,
-      windowsize = c(800, 600)
-    )
-
-  render_trails(
-    volcano_trails,
-    color = "grey50",
-    width = 2,
-    width_units = "meters"
-  )
-
-  summit_walk = volcano_trails[
-    !is.na(volcano_trails$name) &
-      volcano_trails$name == "Puhi Huia Road",
-  ]
-  render_people(
-    line = summit_walk,
-    pose = "walking",
-    line_spacing = 30,
-    line_pattern = "MF",
-    color = c("#F6E8C3", "white"),
-    clear_previous = TRUE
-  )
-  render_camera(theta = -40, phi = 35, zoom = 0.75)
-}
-
+\dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
+# Example 1
 # Build a stepped pose gallery.
 flat_heightmap = matrix(1:16 / 2, nrow = 4, byrow = TRUE) |>
   rayimage::render_reorient(flipy = TRUE, transpose = TRUE) |>
@@ -306,9 +272,9 @@ render_highquality(
   width = 800,
   height = 800,
   sky_sun_elevation = 10,
-  sky_sun_azimuth = 0,
-  rotate_env = 160,
-  iso = 5
+  sky_sun_azimuth = 160,
+  iso = 5, 
+  samples=16
 )
 
 # Female models
@@ -331,188 +297,84 @@ render_highquality(
   width = 800,
   height = 800,
   sky_sun_elevation = 10,
-  sky_sun_azimuth = 0,
-  rotate_env = 160,
-  iso = 5
+  sky_sun_azimuth = 160,
+  iso = 5, 
+  samples=16
 )
 
-\dontshow{if (length(find.package("sf", quiet = TRUE)) && length(find.package("elevatr", quiet = TRUE)) && length(find.package("raster", quiet = TRUE)) && (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true"))) withAutoprint(\{ # examplesIf}
-library(sf)
-#Set location of washington monument
-washington_monument_location = st_point(c(-77.035249, 38.889462))
-wm_point = washington_monument_location |>
- st_point() |>
- st_sfc(crs = 4326) |>
- st_transform(st_crs(washington_monument_multipolygonz))
-
-washington_monument_people = st_point(c(-77.035249, 38.889462)) |>
- st_sfc(crs = 4326)
-elevation_data = elevatr::get_elev_raster(locations = wm_point, z = 14)
-
-scene_bbox = st_bbox(st_buffer(wm_point,300))
-cropped_data = raster::crop(elevation_data, scene_bbox)
-
-#Plot a 3D map of the national mall
-cropped_data |>
- height_shade() |>
- plot_3d(soliddepth=-10, windowsize = 800)
-render_snapshot()
-#Zoom in on the monument
-render_camera(theta=150,  phi=35, zoom= 0.55, fov=70)
-#Render the national monument
-rgl::par3d(ignoreExtent = TRUE)
-render_multipolygonz(
- washington_monument_multipolygonz,
- color = "grey80"
-)
-render_camera(location = washington_monument_people)
-render_snapshot()
-#Create a meandering tourist queue that starts just beyond the camera-facing
-#edge of the monument and extends toward the foreground.
-monument_bbox = st_bbox(washington_monument_multipolygonz)
-monument_center = c(
- mean(monument_bbox[c("xmin", "xmax")]),
- mean(monument_bbox[c("ymin", "ymax")])
-)
-camera_direction = c(sinpi(150 / 180), -cospi(150 / 180))
-cross_direction = c(-camera_direction[2], camera_direction[1])
-monument_half_size = c(
- diff(monument_bbox[c("xmin", "xmax")]) / 2,
- diff(monument_bbox[c("ymin", "ymax")]) / 2
-)
-queue_start_distance =
- min(monument_half_size / abs(camera_direction)) + 3
-queue_progress = seq(0, 180, length.out = 120)
-queue_meander =
- 10 * sin(queue_progress / 18) + 3 * sin(queue_progress / 7)
-tourist_queue_xy = cbind(
- x = monument_center[1] +
-   (queue_start_distance + queue_progress) * camera_direction[1] +
-   queue_meander * cross_direction[1],
- y = monument_center[2] +
-   (queue_start_distance + queue_progress) * camera_direction[2] +
-   queue_meander * cross_direction[2]
-)
-tourist_queue = st_sfc(
- st_linestring(tourist_queue_xy),
- crs = st_crs(washington_monument_multipolygonz)
-)
-
-render_people(
- line = tourist_queue,
- pose = "stretch",
- line_spacing = 2,
- line_pattern = "MF",
- color = c("#355C7D", "#C06C84"),
- clear_previous = TRUE
-)
-render_snapshot()
-
-#Build a human pyramid as tall as the Washington Monument. The stack model
-#is about 0.75 meters wide, so adjacent people at each level just touch.
-monument_elevation = range(
- st_coordinates(washington_monument_multipolygonz)[, "Z"]
-)
-person_height = 2
-horizontal_spacing = 1
-level_count = ceiling(diff(monument_elevation) / person_height)
-people_per_level = rev(seq_len(level_count))
-pyramid_level = rep(
- seq_len(level_count) - 1,
- times = people_per_level
-)
-pyramid_column = unlist(lapply(
- people_per_level,
- function(n) seq_len(n) - (n + 1) / 2
-))
-
-#Run the rows north-south and keep the pyramid just west of the monument.
-pyramid_center = washington_monument_people |>
- st_transform(st_crs(washington_monument_multipolygonz))
-pyramid_center_xy = st_coordinates(pyramid_center)[1, 1:2]
-pyramid_center_xy[1] =
- st_bbox(washington_monument_multipolygonz)[["xmin"]] +
- horizontal_spacing
-
-pyramid_people = st_as_sf(
- data.frame(
-   x = rep(unname(pyramid_center_xy[1]), length(pyramid_level)),
-   y = unname(pyramid_center_xy[2]) +
-     pyramid_column * horizontal_spacing,
-   altitude = monument_elevation[1] + pyramid_level * person_height
- ),
- coords = c("x", "y"),
- crs = st_crs(washington_monument_multipolygonz)
-)
-
-render_people(
- location = pyramid_people,
- pose = "stack",
- altitude = pyramid_people$altitude,
- angle = c(0, 90, 0),
- color = "#030",
- clear_previous = TRUE
-)
-#This works with `render_highquality()`
-render_highquality(
- min_variance = 0,
- samples = 16,
- defer = TRUE,
- datetime = as.POSIXct("2025-12-21 08:00:00", tz = "EST"),
- sky_args = list(hosek = FALSE, iso = 20)
-)
-# Arrange alternating models around a closed line. The stretch pose extends
-# along local Z, so automatic line orientation creates a hands-around-the-world
-# effect.
-flat_heightmap = rayimage::generate_2d_gaussian(dim = c(31,31)) * 1000
-flat_extent = c(xmin = 0, xmax = 31, ymin = 0, ymax = 31)
-flat_heightmap |>
+# Example 2
+# Show the scale of the "volcano" 3D dataset
+volcano_dem = volcano_spatial()
+volcano_dem |>
   height_shade() |>
   plot_3d(
-    flat_heightmap,
-    zscale = 1,
-    shadow = FALSE,
-    extent = flat_extent
+    windowsize = c(800, 800)
   )
 
-theta = seq(0, 2 * pi, length.out = 200)
+render_trails(
+  volcano_trails,
+  color = "grey50",
+  width = 2, 
+  preview = "mesh",
+  width_units = "meters"
+)
+
+summit_walk = volcano_trails[
+  !is.na(volcano_trails$name) &
+    volcano_trails$name == "Puhi Huia Road",
+]
+render_snapshot()
+render_people(
+  line = summit_walk,
+  pose = "walking",
+  line_spacing = 5,
+  offset=0.2, 
+  line_pattern = "MF",
+  color = c("#F6E8C3", "white"),
+  clear_previous = TRUE
+)
+render_camera(theta = -36, phi = 15, zoom = 0.08, fov=100)
+render_snapshot()
+
+# Example 3
+# Arrange alternating models around a closed line. Models orient themselves
+# according to the local normal and orient the people along the line
+bump_heightmap = rayimage::generate_2d_gaussian(dim = c(30,30)) * 1000
+bump_heightmap |>
+  height_shade() |>
+  plot_3d()
+
+circle_r = function(x) {
+  theta = seq(0, 2 * pi, length.out = 200)
+  sf::st_linestring(cbind(
+    15.5 + x * cos(theta),
+    15.5 + x * sin(theta)
+  ))
+}
 people_line = sf::st_sfc(
-sf::st_linestring(cbind(
-  15.5 + 12.5 * cos(theta),
-  15.5 + 12.5 * sin(theta)
-)),
-sf::st_linestring(cbind(
-  15.5 + 10.5 * cos(theta),
-  15.5 + 10.5 * sin(theta)
-)),
-sf::st_linestring(cbind(
-  15.5 + 8.5 * cos(theta),
-  15.5 + 8.5 * sin(theta)
-)),
-sf::st_linestring(cbind(
-  15.5 + 6.5 * cos(theta),
-  15.5 + 6.5 * sin(theta)
-)),
-sf::st_linestring(cbind(
-  15.5 + 4.5 * cos(theta),
-  15.5 + 4.5 * sin(theta)
-)),
-sf::st_linestring(cbind(
-  15.5 + 2.5 * cos(theta),
-  15.5 + 2.5 * sin(theta)
-)))
+  circle_r(12.5),
+  circle_r(10.5),
+  circle_r(8.5),
+  circle_r(6.5),
+  circle_r(4.5),
+  circle_r(2.5)
+)
 render_people(
   line = people_line,
   pose = "stretch",
   line_pattern = "MF",
   line_spacing = 2,
-  color = c("dodgerblue", "tomato"), clear_previous=T
+  color = c("dodgerblue", "tomato"),
 )
 render_people(
   x = c(13.5, 15.5, 17.5),
   y = rep(15.5, 3),
-  pose = c("standing", "rocky", "walking"),
+  offset = c(2,0,2),
+  angle = list(c(30,45,0),c(0,0,0),c(30,-45,0)),
+  pose = c("ironman", "rocky", "ironman"),
   color = "white"
 )
+render_camera(location = c(15.5,15.5), theta = 0, phi = 10,zoom=0.2,fov=80)
+render_highquality(lightdirection = 225,samples=16)
 \dontshow{\}) # examplesIf}
 }

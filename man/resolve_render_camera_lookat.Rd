@@ -13,7 +13,8 @@ resolve_render_camera_lookat(
 )
 }
 \arguments{
-\item{location}{Default \code{NULL}. A single spatial POINT.}
+\item{location}{Default \code{NULL}. A numeric scene \code{c(x, y)} pair or a single
+spatial POINT.}
 
 \item{lat}{Default \code{NULL}. Latitude in WGS84 decimal degrees.}
 

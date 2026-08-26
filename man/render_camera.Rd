@@ -5,11 +5,11 @@
 \title{Render Camera}
 \usage{
 render_camera(
-  location = NULL,
   theta = NULL,
   phi = NULL,
   zoom = NULL,
   fov = NULL,
+  location = NULL,
   shift_vertical = 0,
   altitude = NULL,
   lat = NULL,
@@ -18,13 +18,6 @@ render_camera(
 )
 }
 \arguments{
-\item{location}{Default \code{NULL}. A single spatial POINT to use as the camera's
-look-at target. Accepts \code{sf}, \code{sfc}, \code{sfg}, and \code{sp} inputs. The point is
-transformed to the active scene CRS. If the input contains a Z coordinate or
-an \code{altitude}, \code{alt}, \code{elevation}, or \code{z} column, that value sets the target
-height; otherwise, the target height is sampled from the cached heightmap.
-Cannot be combined with \code{lat} or \code{long}.}
-
 \item{theta}{Defaults to current value. Rotation angle.}
 
 \item{phi}{Defaults to current value. Azimuth angle. Maximum \code{90}.}
@@ -32,6 +25,14 @@ Cannot be combined with \code{lat} or \code{long}.}
 \item{zoom}{Defaults to current value. Positive value indicating camera magnification.}
 
 \item{fov}{Defaults to current value. Field of view of the camera. Maximum \code{180}.}
+
+\item{location}{Default \code{NULL}. A numeric \code{c(x, y)} pair in the scene's cached
+extent, or a single spatial POINT to use as the camera's look-at target. Spatial
+inputs accept \code{sf}, \code{sfc}, \code{sfg}, and \code{sp} objects and are transformed to the
+active scene CRS. If a spatial input contains a Z coordinate or an \code{altitude},
+\code{alt}, \code{elevation}, or \code{z} column, that value sets the target height; otherwise,
+the target height is sampled from the cached heightmap. Cannot be combined with
+\code{lat} or \code{long}.}
 
 \item{shift_vertical}{Default \code{0}. Amount to shift the viewpoint.}
 
@@ -51,10 +52,10 @@ camera's look-at target. Must be supplied with \code{lat}.}
 }
 \description{
 Changes the position and properties of the camera around the
-scene. \code{location}, or \code{lat} and \code{long}, can move the camera's look-at target to
-a geographic point using the active scene's cached CRS, extent, heightmap, and
-effective z-scale. If no values are entered, prints and returns the current
-camera values.
+scene. \code{location} can move the camera's look-at target to scene x/y coordinates
+or a spatial point. \code{lat} and \code{long} move it to a geographic point. These inputs
+use the active scene's cached CRS, extent, heightmap, and effective z-scale as
+needed. If no values are entered, prints and returns the current camera values.
 }
 \examples{
 \dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
