@@ -101,42 +101,36 @@
 #' `rgl::triangles3d()`.
 #'
 #' @export
-#' @examples
-#' # Add the OSM walking trails and place two-meter people along the summit
-#' # circuit to show the scale of Maungawhau.
-#' if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) {
-#'   volcano_dem = volcano_spatial()
+#' @examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
+#' volcano_dem = volcano_spatial()
 #'
-#'   volcano_dem |>
-#'     sphere_shade(texture = "desert") |>
-#'     plot_3d(
-#'       heightmap = volcano_dem,
-#'       solid = FALSE,
-#'       shadow = FALSE,
-#'       windowsize = c(800, 600)
-#'     )
-#'
-#'   render_trails(
-#'     volcano_trails,
-#'     color = "grey50",
-#'     width = 2,
-#'     width_units = "meters"
+#' volcano_dem |>
+#'   height_shade() |>
+#'   plot_3d(
+#'     windowsize = c(800, 800)
 #'   )
 #'
-#'   summit_walk = volcano_trails[
-#'     !is.na(volcano_trails$name) &
-#'       volcano_trails$name == "Puhi Huia Road",
-#'   ]
-#'   render_people(
-#'     line = summit_walk,
-#'     pose = "walking",
-#'     line_spacing = 30,
-#'     line_pattern = "MF",
-#'     color = c("#F6E8C3", "white"),
-#'     clear_previous = TRUE
-#'   )
-#'   render_camera(theta = -40, phi = 35, zoom = 0.75)
-#' }
+#' render_trails(
+#'   volcano_trails,
+#'   color = "grey50",
+#'   width = 2,
+#'   width_units = "meters"
+#' )
+#'
+#' summit_walk = volcano_trails[
+#'   !is.na(volcano_trails$name) &
+#'     volcano_trails$name == "Puhi Huia Road",
+#' ]
+#' render_people(
+#'   line = summit_walk,
+#'   pose = "walking",
+#'   line_spacing = 5,
+#'   offset=0.2,
+#'   line_pattern = "MF",
+#'   color = c("#F6E8C3", "white"),
+#'   clear_previous = TRUE
+#' )
+#' render_camera(theta = -40, phi = 35, zoom = 0.75)
 #'
 #' # Build a stepped pose gallery.
 #' flat_heightmap = matrix(1:16 / 2, nrow = 4, byrow = TRUE) |>
@@ -272,7 +266,6 @@
 #'   rotate_env = 160,
 #'   iso = 5
 #' )
-#'
 #'@examplesIf length(find.package("sf", quiet = TRUE)) && length(find.package("elevatr", quiet = TRUE)) && length(find.package("raster", quiet = TRUE)) && (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true"))
 #'library(sf)
 #'#Set location of washington monument
@@ -401,43 +394,26 @@
 #' # Arrange alternating models around a closed line. The stretch pose extends
 #' # along local Z, so automatic line orientation creates a hands-around-the-world
 #' # effect.
-#' flat_heightmap = rayimage::generate_2d_gaussian(dim = c(31,31)) * 1000
-#' flat_extent = c(xmin = 0, xmax = 31, ymin = 0, ymax = 31)
-#' flat_heightmap |>
+#' bump_heightmap = rayimage::generate_2d_gaussian(dim = c(30,30)) * 1000
+#' bump_heightmap |>
 #'   height_shade() |>
-#'   plot_3d(
-#'     flat_heightmap,
-#'     zscale = 1,
-#'     shadow = FALSE,
-#'     extent = flat_extent
-#'   )
+#'   plot_3d()
 #'
-#' theta = seq(0, 2 * pi, length.out = 200)
+#' circle_r = function(x) {
+#'   theta = seq(0, 2 * pi, length.out = 200)
+#'   sf::st_linestring(cbind(
+#'     15.5 + x * cos(theta),
+#'     15.5 + x * sin(theta)
+#'   ))
+#' }
 #' people_line = sf::st_sfc(
-#' sf::st_linestring(cbind(
-#'   15.5 + 12.5 * cos(theta),
-#'   15.5 + 12.5 * sin(theta)
-#' )),
-#' sf::st_linestring(cbind(
-#'   15.5 + 10.5 * cos(theta),
-#'   15.5 + 10.5 * sin(theta)
-#' )),
-#' sf::st_linestring(cbind(
-#'   15.5 + 8.5 * cos(theta),
-#'   15.5 + 8.5 * sin(theta)
-#' )),
-#' sf::st_linestring(cbind(
-#'   15.5 + 6.5 * cos(theta),
-#'   15.5 + 6.5 * sin(theta)
-#' )),
-#' sf::st_linestring(cbind(
-#'   15.5 + 4.5 * cos(theta),
-#'   15.5 + 4.5 * sin(theta)
-#' )),
-#' sf::st_linestring(cbind(
-#'   15.5 + 2.5 * cos(theta),
-#'   15.5 + 2.5 * sin(theta)
-#' )))
+#'   circle_r(12.5),
+#'   circle_r(10.5),
+#'   circle_r(8.5),
+#'   circle_r(6.5),
+#'   circle_r(4.5),
+#'   circle_r(2.5)
+#' )
 #' render_people(
 #'   line = people_line,
 #'   pose = "stretch",
@@ -448,7 +424,9 @@
 #' render_people(
 #'   x = c(13.5, 15.5, 17.5),
 #'   y = rep(15.5, 3),
-#'   pose = c("standing", "rocky", "walking"),
+#'   offset = c(2,0,2),
+#'   angle = list(c(30,45,0),c(0,0,0),c(30,-45,0)),
+#'   pose = c("ironman", "rocky", "ironman"),
 #'   color = "white"
 #' )
 render_people = function(

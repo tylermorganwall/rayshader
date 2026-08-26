@@ -53,10 +53,17 @@ make_shadow = function(
   tempmap = tempfile(fileext = ".png")
   has_rayimage = length(find.package("rayimage", quiet = TRUE)) > 0
   if (has_rayimage) {
+    shadow_blur_dimension = max(
+      1L,
+      as.integer(round(shadowwidth_texture / 2))
+    )
+    if (shadow_blur_dimension %% 2L == 0L) {
+      shadow_blur_dimension = shadow_blur_dimension + 1L
+    }
     blurred_shadow = rayimage::render_convolution_fft(
       shadow_mask,
       kernel = rayimage::generate_2d_gaussian(
-        dim = rep(max(1L, as.integer(round(shadowwidth_texture / 2))), 2L)
+        dim = rep(shadow_blur_dimension, 2L)
       )
     )
   } else {
@@ -72,12 +79,12 @@ make_shadow = function(
   )
   png::writePNG(shadowarray, tempmap)
 
-  rowmin = min((-shadowwidth + 1):(rows + shadowwidth) - rows / 2) + offset[1]
-  rowmax = max((-shadowwidth + 1):(rows + shadowwidth) - rows / 2) + offset[1]
-  colmin = min(-(-shadowwidth + 1):-(cols + shadowwidth) + cols / 2 + 1) +
-    offset[2]
-  colmax = max(-(-shadowwidth + 1):-(cols + shadowwidth) + cols / 2 + 1) +
-    offset[2]
+  row_radius = (rows - 1) / 2 + shadowwidth
+  col_radius = (cols - 1) / 2 + shadowwidth
+  rowmin = -row_radius + offset[1]
+  rowmax = row_radius + offset[1]
+  colmin = -col_radius + offset[2]
+  colmax = col_radius + offset[2]
 
   tri1 = matrix(
     c(

@@ -101,8 +101,44 @@ test_that("plot_3d caps shadow texture resolution without changing shadow extent
   shadow_vertices = rgl::rgl.attrib(shadow$id[1], "vertices")
 
   expect_lte(max(dim(shadow_image)[1:2]), 40)
-  expect_equal(range(shadow_vertices[, 1]), c(-51, 52), tolerance = 1e-8)
-  expect_equal(range(shadow_vertices[, 3]), c(-71, 72), tolerance = 1e-8)
+  expect_equal(range(shadow_vertices[, 1]), c(-51.5, 51.5), tolerance = 1e-8)
+  expect_equal(range(shadow_vertices[, 3]), c(-71.5, 71.5), tolerance = 1e-8)
+  expect_equal(mean(range(shadow_vertices[, 1])), 0, tolerance = 1e-8)
+  expect_equal(mean(range(shadow_vertices[, 3])), 0, tolerance = 1e-8)
+})
+
+test_that("shadow blur remains centered for even heightmap dimensions", {
+  on.exit(rgl::close3d(), add = TRUE)
+  local_rgl_use_null()
+  rgl::open3d(useNULL = TRUE)
+
+  make_shadow(
+    matrix(0, nrow = 30, ncol = 40),
+    basedepth = -1,
+    shadowwidth = 5,
+    color = "white",
+    shadowcolor = "black",
+    shadow_texture_size = Inf
+  )
+
+  shadow = get_ids_with_labels(typeval = "shadow")
+  shadow_vertices = rgl::rgl.attrib(shadow$id[1], "vertices")
+  shadow_texture = rgl::material3d(id = shadow$id[1])$texture
+  shadow_image = png::readPNG(shadow_texture)[,, 1]
+  shadow_darkness = 1 - shadow_image
+
+  expect_equal(mean(range(shadow_vertices[, 1])), 0, tolerance = 1e-8)
+  expect_equal(mean(range(shadow_vertices[, 3])), 0, tolerance = 1e-8)
+  expect_equal(
+    sum(row(shadow_darkness) * shadow_darkness) / sum(shadow_darkness),
+    (nrow(shadow_darkness) + 1) / 2,
+    tolerance = 1e-3
+  )
+  expect_equal(
+    sum(col(shadow_darkness) * shadow_darkness) / sum(shadow_darkness),
+    (ncol(shadow_darkness) + 1) / 2,
+    tolerance = 1e-3
+  )
 })
 
 test_that("full resolution shadow textures can be requested", {
