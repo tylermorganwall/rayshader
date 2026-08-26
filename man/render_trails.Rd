@@ -91,7 +91,20 @@ render_trails(
   width_units = "meters"
 )
 render_camera(theta=-33,phi=40,zoom=0.4)
-render_highquality()
+# RGL render uses lines for speed
+render_snapshot()
+# High quality render uses mesh trail
+render_highquality(samples=16)
+# RGL preview can be set to use (potentially slower) mesh preview
+render_trails(
+  volcano_trails,
+  color = "grey50",
+  width = 3,
+  width_units = "meters",
+  preview="mesh", 
+  clear_previous = TRUE
+)
+render_snapshot()
 \dontshow{\}) # examplesIf}
 }
 \seealso{
