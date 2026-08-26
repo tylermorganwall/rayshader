@@ -1015,9 +1015,13 @@ render_highquality = function(
   road_mesh_preview_ids = get_ids_with_labels(
     typeval = "road_mesh_preview"
   )$id
+  trail_mesh_preview_ids = get_ids_with_labels(
+    typeval = "trail_mesh_preview"
+  )$id
   raymesh_exclude_ids = unique(c(
     raymesh_material_ids,
-    road_mesh_preview_ids
+    road_mesh_preview_ids,
+    trail_mesh_preview_ids
   ))
   if (
     !use_extruded_paths &&
@@ -1071,7 +1075,7 @@ render_highquality = function(
         water_attenuation = water_attenuation,
         water_surface_color = water_surface_color,
         water_ior = water_ior,
-        exclude_ids = road_mesh_preview_ids
+        exclude_ids = c(road_mesh_preview_ids, trail_mesh_preview_ids)
       )
       cache_scene_cache(ray_scene)
     }
@@ -1186,6 +1190,7 @@ render_highquality = function(
     temp_label = rgl.attrib(labelids[i], "texts")
     temp_center = rgl.attrib(labelids[i], "centers")
     temp_color = rgl.attrib(labelids[i], "colors")
+    temp_label_info = get_render_label_info(labelids[i])
     temp_font = get_render_label_font(labelids[i])
     temp_adj = tryCatch(
       rgl.attrib(labelids[i], "adj"),
@@ -1195,6 +1200,14 @@ render_highquality = function(
       rgl.attrib(labelids[i], "cex"),
       error = function(e) NULL
     )
+    if (!is.null(temp_label_info)) {
+      if (!is.null(temp_label_info$adjustvec)) {
+        temp_adj = temp_label_info$adjustvec
+      }
+      if (!is.null(temp_label_info$textsize)) {
+        temp_cex = temp_label_info$textsize
+      }
+    }
     for (j in seq_len(nrow(temp_label))) {
       temp_size = text_size * get_render_highquality_text_cex(temp_cex, j)
       if (identical(text_render, "screen")) {
@@ -1307,6 +1320,7 @@ render_highquality = function(
       "contour3d",
       "water_path",
       "road_path",
+      "trail_path",
       "zaxis_axis",
       "zaxis_ticks"
     )
@@ -1316,11 +1330,16 @@ render_highquality = function(
   cached_stream_meshes = get_scene_stream_meshes(default = NULL)
   has_cached_stream_meshes =
     length(cached_stream_meshes) > 0L && !isTRUE(joined_stream_mesh)
+  cached_trail_meshes = get_scene_trail_meshes(default = NULL)
+  has_cached_trail_meshes = length(cached_trail_meshes) > 0L
   if (has_cached_road_meshes) {
     pathinfo = pathinfo[pathinfo$tag != "road_path", , drop = FALSE]
   }
   if (has_cached_stream_meshes) {
     pathinfo = pathinfo[pathinfo$tag != "water_path", , drop = FALSE]
+  }
+  if (has_cached_trail_meshes) {
+    pathinfo = pathinfo[pathinfo$tag != "trail_path", , drop = FALSE]
   }
   pathids = pathinfo$id
   pathline = list()
@@ -1569,6 +1588,18 @@ render_highquality = function(
   }
   if (length(road_path_meshes) > 0) {
     pathline = c(pathline, road_path_meshes)
+  }
+  trail_path_meshes = if (has_cached_trail_meshes) {
+    make_render_highquality_cached_trail_meshes(
+      meshes = cached_trail_meshes,
+      bbox_center = bbox_center,
+      rgl_materials = rgl_materials
+    )
+  } else {
+    list()
+  }
+  if (length(trail_path_meshes) > 0) {
+    pathline = c(pathline, trail_path_meshes)
   }
   pointinfo = get_ids_with_labels(typeval = "points3d")
   pointids = pointinfo$id
@@ -2680,13 +2711,14 @@ is_render_highquality_path_tag = function(tag) {
       "contour3d",
       "water_path",
       "road_path",
+      "trail_path",
       "zaxis_axis",
       "zaxis_ticks"
     )
 }
 
 should_render_highquality_screen_line = function(line_render, tag) {
-  if (tag %in% c("water_path", "road_path")) {
+  if (tag %in% c("water_path", "road_path", "trail_path")) {
     return(FALSE)
   }
   if (identical(line_render, "screen")) {

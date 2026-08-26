@@ -165,11 +165,46 @@ Cache fallback messages are disabled by default. Set
 is reused.
 }
 \examples{
+# Add the OSM walking trails and place two-meter people along the summit
+# circuit to show the scale of Maungawhau.
+if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) {
+  volcano_dem = volcano_spatial()
+
+  volcano_dem |>
+    sphere_shade(texture = "desert") |>
+    plot_3d(
+      heightmap = volcano_dem,
+      solid = FALSE,
+      shadow = FALSE,
+      windowsize = c(800, 600)
+    )
+
+  render_trails(
+    volcano_trails,
+    color = "grey50",
+    width = 2,
+    width_units = "meters"
+  )
+
+  summit_walk = volcano_trails[
+    !is.na(volcano_trails$name) &
+      volcano_trails$name == "Puhi Huia Road",
+  ]
+  render_people(
+    line = summit_walk,
+    pose = "walking",
+    line_spacing = 30,
+    line_pattern = "MF",
+    color = c("#F6E8C3", "white"),
+    clear_previous = TRUE
+  )
+  render_camera(theta = -40, phi = 35, zoom = 0.75)
+}
+
 # Build a stepped pose gallery.
 flat_heightmap = matrix(1:16 / 2, nrow = 4, byrow = TRUE) |>
   rayimage::render_reorient(flipy = TRUE, transpose = TRUE) |>
   rayimage::render_resized(mag = 50, method = "box")
-scene_extent = c(xmin = 0, xmax = 400, ymin = 0, ymax = 400)
 scene_zscale = 1 / 25
 
 flat_heightmap |>
@@ -181,7 +216,6 @@ flat_heightmap |>
     shadowdepth = 0,
     soliddepth = 0,
     solidcolor = "#800",
-    extent = scene_extent,
     windowsize = c(800, 800)
   )
 render_camera(
@@ -194,9 +228,10 @@ render_camera(
 
 # Place every pose on the podium. The ironman model is raised to
 # clear its step, and the tenth person will support a second stack model.
+# These x/y values use the raw matrix's cached 1-based extent.
 gallery_positions = expand.grid(
-  x = seq(50, 350, by = 100),
-  y = seq(50, 250, by = 100)
+  x = seq(25, 175, by = 50),
+  y = seq(25, 125, by = 50)
 )
 gallery_poses = c(
   "standing",
@@ -241,7 +276,7 @@ render_people(
 regular_label_indices = setdiff(seq_along(gallery_poses), stack_index)
 render_label(
   text = gallery_poses[regular_label_indices],
-  font = "serif",
+  font = "Helvetica",
   family = "serif",
   fonttype = "standard",
   textcolor = "white",
@@ -255,7 +290,7 @@ render_label(
 )
 render_label(
   text = "stack",
-  font = "serif",
+  font = "Helvetica",
   family = "serif",
   fonttype = "standard",
   textcolor = "white",
@@ -300,7 +335,6 @@ render_highquality(
   rotate_env = 160,
   iso = 5
 )
-
 
 \dontshow{if (length(find.package("sf", quiet = TRUE)) && length(find.package("elevatr", quiet = TRUE)) && length(find.package("raster", quiet = TRUE)) && (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true"))) withAutoprint(\{ # examplesIf}
 library(sf)

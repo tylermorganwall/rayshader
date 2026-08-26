@@ -894,6 +894,8 @@ draw_render_road_mesh_preview = function(meshes, color = "#303030") {
     mesh_id = rgl::shade3d(
       mesh,
       color = mesh_color[[1L]],
+      specular = "black",
+      shininess = 0,
       tag = "road_mesh_preview"
     )
     mesh_ids = c(mesh_ids, as.integer(mesh_id))

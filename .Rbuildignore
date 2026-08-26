@@ -34,3 +34,4 @@
 ^[.]vscode$
 ^air[.]toml$
 ^dem_01[.]tif$
+^road-mesh-fuzz-artifacts$

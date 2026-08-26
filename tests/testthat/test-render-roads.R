@@ -188,6 +188,14 @@ test_that("render_roads can preview the exact cached road meshes", {
   expect_equal(nrow(road_path_ids), 1L)
   expect_gt(nrow(mesh_preview_ids), 0L)
   expect_equal(
+    rgl::material3d("specular", id = mesh_preview_ids$id[[1L]]),
+    "#000000"
+  )
+  expect_equal(
+    rgl::material3d("shininess", id = mesh_preview_ids$id[[1L]]),
+    0
+  )
+  expect_equal(
     rgl::material3d("alpha", id = road_path_ids$id[[1L]]),
     0
   )

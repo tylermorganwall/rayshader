@@ -26,6 +26,7 @@ test_that("scene-aware render functions put their primary input first", {
     render_roads = "roads",
     render_snapshot = "filename",
     render_streams = "streams",
+    render_trails = "trails",
     render_tree = "location",
     render_water = "waterdepth",
     render_zaxis = "zaxis_data"
@@ -124,6 +125,7 @@ test_that("scene-aware render functions put shared scene inputs last", {
     render_roads = c("zscale", "vertical_exaggeration", "heightmap"),
     render_snapshot = c("cache_scene", "reset_scene_cache"),
     render_streams = c("zscale", "vertical_exaggeration", "heightmap"),
+    render_trails = c("zscale", "vertical_exaggeration", "heightmap"),
     render_tree = c(
       "extent",
       "panel",

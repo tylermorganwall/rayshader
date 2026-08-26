@@ -59,6 +59,7 @@ reference:
       - starts_with("resize")
       - starts_with("reduce_matrix_size")
       - starts_with("shift")
+      - "volcano_spatial"
   - title: "Included Data"
     desc: "Elevation data included with rayshader"
     contents:
@@ -66,6 +67,7 @@ reference:
       - "montereybay_spatial"
       - "monterey_counties_sf"
       - "monterey_roads_sf"
+      - "volcano_trails"
       - "washington_monument_multipolygonz"
       - starts_with("flag")
 

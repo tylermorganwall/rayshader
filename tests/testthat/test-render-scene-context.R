@@ -467,11 +467,11 @@ test_that("render_label() reads text from sf columns and labels polygon centroid
   )
 })
 
-test_that("render_label() matrix fallback extent preserves 1-based indexing", {
+test_that("plot_3d() caches a raw matrix's 1-based extent", {
   on.exit(rgl::close3d(), add = TRUE)
   local_rgl_use_null()
 
-  heightmap = matrix(0, nrow = 20, ncol = 20)
+  heightmap = matrix(0, nrow = 20, ncol = 30)
   texture = sphere_shade(heightmap)
   expect_no_condition(plot_3d_test(
     texture,
@@ -481,6 +481,16 @@ test_that("render_label() matrix fallback extent preserves 1-based indexing", {
     water = FALSE,
     windowsize = c(250, 250)
   ))
+
+  expect_equal(
+    get_scene_extent(),
+    c(
+      xmin = 1,
+      xmax = nrow(heightmap),
+      ymin = 1,
+      ymax = ncol(heightmap)
+    )
+  )
 
   expect_no_condition(render_label(
     text = "A",
@@ -503,6 +513,15 @@ test_that("render_label() matrix fallback extent preserves 1-based indexing", {
     (ncol(heightmap) - 1) / 2,
     tolerance = 1e-6
   )
+
+  expect_no_condition(render_people(
+    x = 10,
+    y = 15,
+    altitude = 0,
+    clear_previous = TRUE,
+    lit = FALSE
+  ))
+  expect_equal(sum(get_ids_with_labels()$tag == "objperson"), 1)
 })
 
 test_that("render_points() accepts x/y names and lat/long aliases", {

@@ -5,6 +5,7 @@ ray_surface_texture_envir = new.env(parent = emptyenv())
 ray_label_font_envir = new.env(parent = emptyenv())
 ray_road_path_envir = new.env(parent = emptyenv())
 ray_water_path_envir = new.env(parent = emptyenv())
+ray_volcano_envir = new.env(parent = emptyenv())
 
 assign("scene_cache", NULL, envir = ray_cache_scene_envir)
 assign("scene_context_token", NULL, envir = ray_cache_scene_envir)
@@ -47,5 +48,10 @@ assign("scene_context_token", NULL, envir = ray_cache_scene_envir)
   terra::values(spatial_raster) = as.vector(montereybay_matrix)
   names(spatial_raster) = "Band1"
   assign("montereybay_spatial", spatial_raster, envir = ns)
+  assign(
+    "volcano",
+    make_volcano_spatial(),
+    envir = ray_volcano_envir
+  )
   invisible(NULL)
 }

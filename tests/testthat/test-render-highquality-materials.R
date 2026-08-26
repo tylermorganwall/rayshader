@@ -593,6 +593,51 @@ test_that("render_highquality() maps unclamped rgl text justification", {
   expect_equal(screen_text$vjust[label_row], 1)
 })
 
+test_that("rgl bitmap fallback preserves high-quality label appearance", {
+  skip_if_not_installed("rayrender")
+  skip_if_not_installed("rayvertex")
+  skip_on_os("windows")
+  on.exit(rgl::close3d(), add = TRUE)
+  local_rgl_use_null()
+
+  heightmap = matrix(0, nrow = 20, ncol = 20)
+  sphere_shade(heightmap) |>
+    plot_3d(
+      zscale = 10,
+      shadow = FALSE,
+      water = FALSE,
+      windowsize = c(300, 300)
+    )
+  testthat::local_mocked_bindings(
+    system.file = function(...) "",
+    .package = "rayshader"
+  )
+  expect_no_warning(
+    expect_message(
+      render_label(
+        x = 10,
+        y = 10,
+        text = "Fallback",
+        altitude = 10,
+        textsize = 2,
+        fonttype = "bold"
+      ),
+      "requested rgl preview font"
+    )
+  )
+
+  label_id = get_ids_with_labels(typeval = "raytext")$id[[1]]
+  expect_equal(as.numeric(rgl::rgl.attrib(label_id, "cex")), 1)
+  expect_equal(unname(rgl::rgl.attrib(label_id, "adj"))[1:2], c(0.33, -0.5))
+
+  scene = render_highquality(return_scene = TRUE, light = FALSE)
+  screen_text = attr(scene, "screen_text")
+  label_row = which(screen_text$label == "Fallback")[1]
+  expect_equal(screen_text$size[label_row], 32)
+  expect_equal(screen_text$hjust[label_row], 0.5)
+  expect_equal(screen_text$vjust[label_row], 1)
+})
+
 test_that("render_label() fonts reach high quality screen and world text", {
   skip_if_not_installed("rayrender")
   skip_if_not_installed("rayvertex")

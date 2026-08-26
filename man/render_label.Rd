@@ -71,10 +71,13 @@ are \code{c("serif", "sans", "mono", "symbol")}.}
 
 \item{fonttype}{Default \code{"standard"}. Font type used in the rgl preview.
 Choices are \code{c("standard", "bold", "italic", "bolditalic")}. These require
-FreeType fonts, which may not be installed on your system. See
-\code{rgl::text3d()} for more information.}
+FreeType fonts, which may not be installed on your system. If the selected
+face is unavailable, rayshader emits a message and uses rgl's bitmap font to
+preview label placement. See \code{rgl::text3d()} for more information.}
 
-\item{textsize}{Default \code{1}. A numeric character expansion value.}
+\item{textsize}{Default \code{1}. A numeric character expansion value. If rgl
+falls back to its fixed-size bitmap font, the requested value is still used
+by \code{\link[=render_highquality]{render_highquality()}}.}
 
 \item{textcolor}{Default \code{"black"}. Color of the text. Use \code{"height"} to
 color label text by the cached \code{\link[=plot_gg]{plot_gg()}} height aesthetic palette.}
@@ -86,8 +89,9 @@ FreeType enables anti-aliased fonts, but can occasionally cause transparency
 issues when text is positioned in front of or behind a transparent surface.}
 
 \item{adjustvec}{Default \code{NULL}. Horizontal and vertical offsets for the text.
-When omitted, this uses \code{c(0.5, -0.5)}, or \code{c(0.33, -0.5)} when
-\code{freetype = FALSE} on macOS or Linux, to keep the type centered.}
+When omitted, \code{\link[=render_highquality]{render_highquality()}} uses \code{c(0.5, -0.5)}. The rgl preview
+uses \code{c(0.33, -0.5)} when \code{freetype = FALSE} on macOS or Linux to center its
+bitmap font without changing the high-quality justification.}
 
 \item{line}{Default \code{TRUE}. If \code{FALSE}, the vertical line connecting the
 label to the surface is not drawn.}
@@ -216,18 +220,37 @@ render_label(lat = canyon[1], long = canyon[2], altitude = 2000,
             textsize = 2, text = "Monterey Canyon", relativez = TRUE)
 render_snapshot()
 
-#We can also render labels in high quality with `render_highquality()`, specifying a custom
-#line radius. By default, the labels point towards the camera, but you can fix their angle with
-#argument `text_angle`.
+#Query the fonts installed on this system and select a concrete family,
+#preferring commonly available fonts with broad Latin character coverage.
+installed_font_families = unique(systemfonts::system_fonts()$family)
+preferred_font_families = c("Avenir", "Arial", "Liberation Sans", "DejaVu Sans")
+label_font = intersect(preferred_font_families, installed_font_families)
+if (length(label_font)) {
+ label_font = label_font[1]
+} else {
+ label_font = systemfonts::font_info("sans")$family[1]
+}
+
+#The `font` argument uses that installed family in `render_highquality()`.
+#The rgl preview still uses `family` and `fonttype` independently.
 render_camera(theta=35, phi = 35, zoom = 0.80, fov=60)
+#Register its bold face under a dedicated family name for high-quality text.
+systemfonts::register_variant(
+ name = "rayshader_label_bold",
+ family = label_font,
+ weight = "bold"
+)
+
 render_label(lat = monterey[1], long = monterey[2], altitude = 10000,
             textsize = 2, text = "Monterey", textcolor = "black", linecolor="darkred",
-            dashed = TRUE, clear_previous = TRUE)
+            dashed = TRUE, clear_previous = TRUE, fonttype = "bold",
+            family = "sans", font = "rayshader_label_bold")
 
 render_label(lat = canyon[1], long = canyon[2],
             altitude = 2000, textsize = 2,
-            textcolor = "black", linecolor="black",
-            text = "Monterey Canyon", relativez=FALSE)
+            textcolor = "white", linecolor="black",fonttype = "bold",
+            text = "Monterey Canyon", relativez=FALSE,
+            family = "sans", font = "rayshader_label_bold")
 
 render_highquality(samples = 16)
 #We can remove all existing labels by calling `render_label(clear_previous = TRUE)`

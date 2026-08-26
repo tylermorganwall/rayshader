@@ -90,6 +90,23 @@ montereybay_spatial = NULL
 #' #monterey_roads_sf = sf::st_crop(counties, monterey_bbox)
 "monterey_roads_sf"
 
+#' Walking Trails Around Maungawhau
+#'
+#' Public walking paths from OpenStreetMap clipped to the extent of
+#' [volcano_spatial()]. Restricted and customer-only paths are omitted.
+#'
+#' @format An `sf` object with 160 LINESTRING features in EPSG:27200,
+#' NZGD49 / New Zealand Map Grid. It contains `osm_id`, `highway`, `name`,
+#' `foot`, `surface`, `access`, and `sac_scale` attributes.
+#' @source © OpenStreetMap contributors, retrieved 2026-08-25 from
+#' [OpenStreetMap](https://www.openstreetmap.org/) under the
+#' [Open Data Commons Open Database License](https://opendatacommons.org/licenses/odbl/).
+#' @examples
+#' if (requireNamespace("sf", quietly = TRUE)) {
+#'   plot(sf::st_geometry(volcano_trails))
+#' }
+"volcano_trails"
+
 #' Washington Monument 3D Model as Multipolygon Z Data
 #'
 #' This dataset is an `sf` object containing MULTIPOLYGON Z 3D data of the Washington Monument in Washington, DC.

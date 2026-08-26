@@ -364,10 +364,11 @@ get_plot_3d_surface_texture = function(id, rgl_texture_file) {
 #'effective visual relief for this scene. Values greater than `1` increase
 #'apparent relief and values between `0` and `1` flatten it. This does not
 #'update cached hillshade `zscale` metadata.
-#'@param extent Default `NULL`. Optional extent metadata to cache with the scene for later
-#'calls (e.g., [render_zaxis()] without an explicit `extent`). Accepts any input supported
-#'by [get_extent()] (numeric xmin/xmax/ymin/ymax vector, `raster`, `terra`, `sf`, or `sp` objects).
-#'If omitted and `heightmap` is a spatial raster, extent is extracted automatically.
+#' @param extent Default `NULL`. Optional extent metadata to cache with the scene for later
+#' calls (e.g., [render_zaxis()] without an explicit `extent`). Accepts any input supported
+#' by [get_extent()] (numeric xmin/xmax/ymin/ymax vector, `raster`, `terra`, `sf`, or `sp` objects).
+#' If omitted, a spatial raster uses its spatial extent and a raw matrix uses its native
+#' 1-based extent: `c(xmin = 1, xmax = nrow(heightmap), ymin = 1, ymax = ncol(heightmap))`.
 #'@param baseshape Default `rectangle`. Shape of the base. Options are `c("rectangle","circle","hex")`.
 #'@param solid Default `TRUE`. If `FALSE`, just the surface is rendered.
 #'@param soliddepth Default `auto`, which sets it to the lowest elevation in the matrix minus one unit (scaled by zscale). Depth of the solid base. If heightmap is uniform and set on `auto`, this is automatically set to a slightly lower level than the uniform elevation.
@@ -615,6 +616,18 @@ plot_3d = function(
   ) {
     extent_cache_value = get_scene_extent(default = NULL)
     extent_cache_label = get_scene_extent_label(default = NULL)
+  }
+  if (is.null(extent_cache_value) && is.matrix(heightmap)) {
+    extent_cache_value = c(
+      xmin = 1,
+      xmax = nrow(heightmap),
+      ymin = 1,
+      ymax = ncol(heightmap)
+    )
+    extent_cache_label = format_scene_cache_label(sprintf(
+      "%s_matrix_extent",
+      heightmap_cache_label
+    ))
   }
   resolved_zscale = resolve_hillshade_zscale(
     zscale = zscale,

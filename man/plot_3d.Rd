@@ -187,7 +187,8 @@ old windows will be kept open.}
 \item{extent}{Default \code{NULL}. Optional extent metadata to cache with the scene for later
 calls (e.g., \code{\link[=render_zaxis]{render_zaxis()}} without an explicit \code{extent}). Accepts any input supported
 by \code{\link[=get_extent]{get_extent()}} (numeric xmin/xmax/ymin/ymax vector, \code{raster}, \code{terra}, \code{sf}, or \code{sp} objects).
-If omitted and \code{heightmap} is a spatial raster, extent is extracted automatically.}
+If omitted, a spatial raster uses its spatial extent and a raw matrix uses its native
+1-based extent: \code{c(xmin = 1, xmax = nrow(heightmap), ymin = 1, ymax = ncol(heightmap))}.}
 }
 \description{
 Displays the shaded map in 3D with the \code{rgl} package.

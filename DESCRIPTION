@@ -59,6 +59,7 @@ Suggests:
     raybevel (>= 0.2.1),
 	ragg,
 	skymodelr,
+	systemfonts,
 	tigris
 LinkingTo: Rcpp, RcppThread (>= 2.4.0), progress, RcppArmadillo
 Roxygen: list(markdown = TRUE)

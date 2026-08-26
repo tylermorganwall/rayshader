@@ -26,9 +26,12 @@
 #' are `c("serif", "sans", "mono", "symbol")`.
 #' @param fonttype Default `"standard"`. Font type used in the rgl preview.
 #' Choices are `c("standard", "bold", "italic", "bolditalic")`. These require
-#' FreeType fonts, which may not be installed on your system. See
-#' `rgl::text3d()` for more information.
-#' @param textsize Default `1`. A numeric character expansion value.
+#' FreeType fonts, which may not be installed on your system. If the selected
+#' face is unavailable, rayshader emits a message and uses rgl's bitmap font to
+#' preview label placement. See `rgl::text3d()` for more information.
+#' @param textsize Default `1`. A numeric character expansion value. If rgl
+#' falls back to its fixed-size bitmap font, the requested value is still used
+#' by [render_highquality()].
 #' @param textcolor Default `"black"`. Color of the text. Use `"height"` to
 #' color label text by the cached [plot_gg()] height aesthetic palette.
 #' @param textalpha Default `1`. Transparency of the label text.
@@ -36,8 +39,9 @@
 #' FreeType enables anti-aliased fonts, but can occasionally cause transparency
 #' issues when text is positioned in front of or behind a transparent surface.
 #' @param adjustvec Default `NULL`. Horizontal and vertical offsets for the text.
-#' When omitted, this uses `c(0.5, -0.5)`, or `c(0.33, -0.5)` when
-#' `freetype = FALSE` on macOS or Linux, to keep the type centered.
+#' When omitted, [render_highquality()] uses `c(0.5, -0.5)`. The rgl preview
+#' uses `c(0.33, -0.5)` when `freetype = FALSE` on macOS or Linux to center its
+#' bitmap font without changing the high-quality justification.
 #' @param line Default `TRUE`. If `FALSE`, the vertical line connecting the
 #' label to the surface is not drawn.
 #' @param linecolor Default `"black"`. Color of the line. Use `"height"` to
@@ -135,18 +139,37 @@
 #'             textsize = 2, text = "Monterey Canyon", relativez = TRUE)
 #'render_snapshot()
 #'
-#'#We can also render labels in high quality with `render_highquality()`, specifying a custom
-#'#line radius. By default, the labels point towards the camera, but you can fix their angle with
-#'#argument `text_angle`.
+#'#Query the fonts installed on this system and select a concrete family,
+#'#preferring commonly available fonts with broad Latin character coverage.
+#'installed_font_families = unique(systemfonts::system_fonts()$family)
+#'preferred_font_families = c("Avenir", "Arial", "Liberation Sans", "DejaVu Sans")
+#'label_font = intersect(preferred_font_families, installed_font_families)
+#'if (length(label_font)) {
+#'  label_font = label_font[1]
+#'} else {
+#'  label_font = systemfonts::font_info("sans")$family[1]
+#'}
+#'
+#'#The `font` argument uses that installed family in `render_highquality()`.
+#'#The rgl preview still uses `family` and `fonttype` independently.
 #'render_camera(theta=35, phi = 35, zoom = 0.80, fov=60)
+#'#Register its bold face under a dedicated family name for high-quality text.
+#'systemfonts::register_variant(
+#'  name = "rayshader_label_bold",
+#'  family = label_font,
+#'  weight = "bold"
+#')
+#'
 #'render_label(lat = monterey[1], long = monterey[2], altitude = 10000,
 #'             textsize = 2, text = "Monterey", textcolor = "black", linecolor="darkred",
-#'             dashed = TRUE, clear_previous = TRUE)
+#'             dashed = TRUE, clear_previous = TRUE, fonttype = "bold",
+#'             family = "sans", font = "rayshader_label_bold")
 #'
 #'render_label(lat = canyon[1], long = canyon[2],
 #'             altitude = 2000, textsize = 2,
-#'             textcolor = "black", linecolor="black",
-#'             text = "Monterey Canyon", relativez=FALSE)
+#'             textcolor = "white", linecolor="black",fonttype = "bold",
+#'             text = "Monterey Canyon", relativez=FALSE,
+#'             family = "sans", font = "rayshader_label_bold")
 #'
 #'render_highquality(samples = 16)
 #'#We can remove all existing labels by calling `render_label(clear_previous = TRUE)`
@@ -560,7 +583,14 @@ render_label = function(
     windows = TRUE
   }
   fontlist = list("standard" = 1, "bold" = 2, "italic" = 3, "bolditalic" = 4)
-  fonttype = fontlist[[fonttype]]
+  fonttype_name = fonttype
+  fonttype = fontlist[[fonttype_name]]
+  if (is.null(fonttype)) {
+    stop(
+      "`fonttype` must be one of: \"standard\", \"bold\", \"italic\", or \"bolditalic\".",
+      call. = FALSE
+    )
+  }
   e = get_extent(extent)
   nrow_map = nrow(heightmap) - 1
   ncol_map = ncol(heightmap) - 1
@@ -597,144 +627,76 @@ render_label = function(
   ignoreex = par3d()$ignoreExtent
   par3d(ignoreExtent = TRUE)
   on.exit(par3d(ignoreExtent = ignoreex), add = TRUE)
-  if (freetype) {
-    seriflist = c(
-      "fonts/FreeSerif.ttf",
-      "fonts/FreeSerifBold.ttf",
-      "fonts/FreeSerifItalic.ttf",
-      "fonts/FreeSerifBoldItalic.ttf"
-    )
-    sanslist = c(
-      "fonts/FreeSans.ttf",
-      "fonts/FreeSansBold.ttf",
-      "fonts/FreeSansOblique.ttf",
-      "fonts/FreeSansBoldOblique.ttf"
-    )
-    monolist = c(
-      "fonts/FreeMono.ttf",
-      "fonts/FreeMonoBold.ttf",
-      "fonts/FreeMonoOblique.ttf",
-      "fonts/FreeMonoBoldOblique.ttf"
-    )
-    symbollist = c(
-      "fonts/ESSTIX10.TTF",
-      "fonts/ESSTIX12.TTF",
-      "fonts/ESSTIX9_.TTF",
-      "fonts/ESSTIX11.TTF"
-    )
-    seriflist2 = unlist(lapply(seriflist, system.file, package = "rgl"))
-    sanslist2 = unlist(lapply(sanslist, system.file, package = "rgl"))
-    monolist2 = unlist(lapply(monolist, system.file, package = "rgl"))
-    symbollist2 = unlist(lapply(symbollist, system.file, package = "rgl"))
-    rglFonts(
-      serif = seriflist2,
-      sans = sanslist2,
-      mono = monolist2,
-      symbol = symbollist2
-    )
-    warningstring = " "
-    if (family == "serif") {
-      if (nchar(seriflist2[[fonttype]]) == 0) {
-        family = "bitmap"
-        if (fonttype != 1) {
-          warningstring = ", setting fonttype to \"standard\", "
-        }
-        freetype = FALSE
-        if (!windows) {
-          textsize = 1
-          windowsstring = "and setting textsize to 1."
-        } else {
-          windowsstring = "."
-        }
-        warning(paste0(
-          seriflist[[fonttype]],
-          " not found. Turning freetype off",
-          warningstring,
-          windowsstring
-        ))
-        fonttype = 1
-      }
-    }
-    if (family == "sans") {
-      if (nchar(sanslist2[[fonttype]]) == 0) {
-        family = "bitmap"
-        if (fonttype != 1) {
-          warningstring = ", setting fonttype to \"standard\", "
-        }
-        if (!windows) {
-          textsize = 1
-          windowsstring = "and setting textsize to 1."
-        } else {
-          windowsstring = "."
-        }
-        freetype = FALSE
-        warning(paste0(
-          sanslist[[fonttype]],
-          " not found. Turning freetype off",
-          warningstring,
-          windowsstring
-        ))
-        fonttype = 1
-      }
-    }
-    if (family == "mono") {
-      if (nchar(monolist2[[fonttype]]) == 0) {
-        family = "bitmap"
-        if (fonttype != 1) {
-          warningstring = ", setting fonttype to \"standard\", "
-        }
-        if (!windows) {
-          textsize = 1
-          windowsstring = "and setting textsize to 1."
-        } else {
-          windowsstring = "."
-        }
-        freetype = FALSE
-        warning(paste0(
-          monolist[[fonttype]],
-          " not found. Turning freetype off",
-          warningstring,
-          windowsstring
-        ))
-        fonttype = 1
-      }
-    }
-    if (family == "symbol") {
-      if (nchar(symbollist2[[fonttype]]) == 0) {
-        family = "bitmap"
-        if (fonttype != 1) {
-          warningstring = ", setting fonttype to \"standard\", "
-        }
-        if (!windows) {
-          textsize = 1
-          windowsstring = "and setting textsize to 1."
-        } else {
-          windowsstring = "."
-        }
-        freetype = FALSE
-        warning(paste0(
-          symbollist[[fonttype]],
-          " not found. Turning freetype off",
-          warningstring,
-          windowsstring
-        ))
-        fonttype = 1
-      }
-    }
+  highquality_textsize = textsize
+  highquality_adjustvec = if (is.null(adjustvec)) {
+    c(0.5, -0.5)
   } else {
-    warningstring = ""
-    family = "bitmap"
-    if (fonttype != 1) {
-      warningstring = " and fonttype to \"standard\""
-      fonttype = 1
-    }
-    freetype = FALSE
-    if (any(textsize != 1) && !windows) {
-      warning(
-        "Bitmap fonts do not support variable text sizes--setting textsize back to 1",
-        warningstring,
-        "."
+    adjustvec
+  }
+  if (freetype) {
+    rgl_font_files = list(
+      serif = c(
+        "fonts/FreeSerif.ttf",
+        "fonts/FreeSerifBold.ttf",
+        "fonts/FreeSerifItalic.ttf",
+        "fonts/FreeSerifBoldItalic.ttf"
+      ),
+      sans = c(
+        "fonts/FreeSans.ttf",
+        "fonts/FreeSansBold.ttf",
+        "fonts/FreeSansOblique.ttf",
+        "fonts/FreeSansBoldOblique.ttf"
+      ),
+      mono = c(
+        "fonts/FreeMono.ttf",
+        "fonts/FreeMonoBold.ttf",
+        "fonts/FreeMonoOblique.ttf",
+        "fonts/FreeMonoBoldOblique.ttf"
+      ),
+      symbol = c(
+        "fonts/ESSTIX10.TTF",
+        "fonts/ESSTIX12.TTF",
+        "fonts/ESSTIX9_.TTF",
+        "fonts/ESSTIX11.TTF"
       )
+    )
+    family_font_files = rgl_font_files[[family]]
+    family_font_paths = if (is.null(family_font_files)) {
+      character()
+    } else {
+      vapply(
+        family_font_files,
+        system.file,
+        character(1),
+        package = "rgl"
+      )
+    }
+    requested_font_path = if (length(family_font_paths) >= fonttype) {
+      family_font_paths[[fonttype]]
+    } else {
+      ""
+    }
+    if (nzchar(requested_font_path)) {
+      family_font_paths[!nzchar(family_font_paths)] = requested_font_path
+      do.call(rglFonts, setNames(list(family_font_paths), family))
+    } else {
+      message(
+        sprintf(
+          paste(
+            "The requested rgl preview font family %s with `fonttype = %s` is not available.",
+            "Using rgl's bitmap font for preview placement; `render_highquality()` is unaffected."
+          ),
+          shQuote(family),
+          shQuote(fonttype_name)
+        )
+      )
+      freetype = FALSE
+    }
+  }
+  if (!freetype) {
+    family = "bitmap"
+    fonttype = 1
+    if (!windows) {
       textsize = 1
     }
   }
@@ -770,6 +732,8 @@ render_label = function(
       textcolor = textcolor,
       textsize = textsize,
       adjustvec = adjustvec,
+      highquality_textsize = highquality_textsize,
+      highquality_adjustvec = highquality_adjustvec,
       freetype = freetype,
       family = family,
       fonttype = fonttype,
@@ -1062,6 +1026,8 @@ render_single_label = function(
   textcolor,
   textsize,
   adjustvec,
+  highquality_textsize,
+  highquality_adjustvec,
   freetype,
   family,
   fonttype,
@@ -1092,6 +1058,11 @@ render_single_label = function(
     color = TRUE
   )
   textsize = render_label_arg_value(textsize, label_index, n_label)
+  highquality_textsize = render_label_arg_value(
+    highquality_textsize,
+    label_index,
+    n_label
+  )
   x_index = (x - extent["xmin"]) /
     (extent["xmax"] - extent["xmin"]) *
     nrow_map +
@@ -1208,31 +1179,52 @@ render_single_label = function(
     tag = "raytext",
     lit = FALSE
   )
-  register_render_label_font(text_id, font)
+  register_render_label_info(
+    text_id,
+    font = font,
+    textsize = highquality_textsize,
+    adjustvec = highquality_adjustvec
+  )
 }
 
 render_label_font_key = function(id, device = rgl::cur3d()) {
   paste(device, id, sep = ":")
 }
 
-register_render_label_font = function(id, font) {
+register_render_label_info = function(id, font, textsize, adjustvec) {
   for (id_single in id) {
     assign(
       render_label_font_key(id_single),
-      font,
+      list(
+        font = font,
+        textsize = textsize,
+        adjustvec = adjustvec
+      ),
       envir = ray_label_font_envir
     )
   }
   invisible(id)
 }
 
-get_render_label_font = function(id, default = "sans") {
-  get0(
+get_render_label_info = function(id, default = NULL) {
+  label_info = get0(
     render_label_font_key(id),
     envir = ray_label_font_envir,
     inherits = FALSE,
     ifnotfound = default
   )
+  if (is.character(label_info)) {
+    return(list(font = label_info))
+  }
+  label_info
+}
+
+get_render_label_font = function(id, default = "sans") {
+  label_info = get_render_label_info(id)
+  if (is.null(label_info) || is.null(label_info$font)) {
+    return(default)
+  }
+  label_info$font
 }
 
 clear_render_label_fonts = function(id = NULL, device = rgl::cur3d()) {

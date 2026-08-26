@@ -778,7 +778,7 @@ test_that("render_zaxis() uses extent cached by plot_3d()", {
   ))
 })
 
-test_that("render_zaxis() errors without extent metadata on plain terrain matrices", {
+test_that("render_zaxis() uses the native extent cached for terrain matrices", {
   on.exit(rgl::close3d(), add = TRUE)
   local_rgl_use_null()
 
@@ -793,13 +793,19 @@ test_that("render_zaxis() errors without extent metadata on plain terrain matric
     windowsize = c(300, 300)
   ))
 
-  expect_error(
-    render_zaxis(zaxis_breaks = c(0, 50, 100)),
-    "Could not determine `extent`"
+  expect_equal(
+    get_scene_extent(),
+    c(
+      xmin = 1,
+      xmax = nrow(heightmap),
+      ymin = 1,
+      ymax = ncol(heightmap)
+    )
   )
+  expect_no_condition(render_zaxis(zaxis_breaks = c(0, 50, 100)))
 })
 
-test_that("render_zaxis() does not infer extent from heightmap attributes", {
+test_that("plot_3d() does not treat raw matrix attributes as spatial extents", {
   on.exit(rgl::close3d(), add = TRUE)
   local_rgl_use_null()
 
@@ -820,10 +826,16 @@ test_that("render_zaxis() does not infer extent from heightmap attributes", {
     windowsize = c(300, 300)
   ))
 
-  expect_error(
-    render_zaxis(zaxis_breaks = c(0, 50, 100)),
-    "Could not determine `extent`"
+  expect_equal(
+    get_scene_extent(),
+    c(
+      xmin = 1,
+      xmax = nrow(heightmap),
+      ymin = 1,
+      ymax = ncol(heightmap)
+    )
   )
+  expect_no_condition(render_zaxis(zaxis_breaks = c(0, 50, 100)))
 })
 
 test_that("plot_3d() and plot_gg() return invisibly by default", {
