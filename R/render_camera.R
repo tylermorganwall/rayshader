@@ -17,11 +17,11 @@
 #'`alt`, `elevation`, or `z` column, that value sets the target height; otherwise,
 #'the target height is sampled from the cached heightmap. Cannot be combined with
 #'`lat` or `long`.
-#'@param shift_vertical Default `0`. Amount to shift the viewpoint.
 #'@param altitude Default `NULL`. Elevation of the look-at target in the scene's
 #'elevation units. The value is converted to rgl coordinates using the cached
 #'effective z-scale. Requires `location` or both `lat` and `long`. When supplied
 #'with `location`, it overrides elevation embedded in the spatial input.
+#'@param shift_vertical Default `0`. Amount to shift the viewpoint.
 #'@param lat Default `NULL`. Latitude in WGS84 decimal degrees for the camera's
 #'look-at target. Must be supplied with `long`.
 #'@param long Default `NULL`. Longitude in WGS84 decimal degrees for the
@@ -94,8 +94,8 @@ render_camera = function(
   zoom = NULL,
   fov = NULL,
   location = NULL,
-  shift_vertical = 0,
   altitude = NULL,
+  shift_vertical = 0,
   lat = NULL,
   long = NULL,
   panel = NULL
