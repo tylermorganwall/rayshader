@@ -42,6 +42,9 @@ radiance_shade(
   capture_scene = FALSE,
   scene_elements = NULL,
   plot = FALSE,
+  geographic_aspect = TRUE,
+  extent = NULL,
+  crs = NULL,
   ...
 )
 }
@@ -146,6 +149,14 @@ hillshade context.}
 \item{scene_elements}{Default \code{NULL}. Extra rayrender objects to add.}
 
 \item{plot}{Default \code{FALSE}. Whether to preview the rendered image.}
+
+\item{geographic_aspect}{Default \code{TRUE}. Correct unequal metric x/y cell
+spacing in the temporary radiance scene.}
+
+\item{extent}{Default \code{NULL}. Spatial extent for a matrix heightmap.}
+
+\item{crs}{Default \code{NULL}. CRS to assign to the input before calculating
+metric cell spacing.}
 
 \item{...}{Additional parameters passed to \code{\link[=render_highquality]{render_highquality()}}.}
 }

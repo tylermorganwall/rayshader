@@ -15,6 +15,11 @@
 #'apparent relief and values between `0` and `1` flatten it. This does not
 #'update cached `zscale` metadata.
 #'@param zero_negative Default `TRUE`. Zeros out all values below 0 (corresponding to surfaces facing away from the light source).
+#' @param geographic_aspect Default `TRUE`. Correct unequal metric x/y cell
+#' spacing using the input extent and CRS.
+#' @param extent Default `NULL`. Spatial extent for a matrix heightmap.
+#' @param crs Default `NULL`. CRS to assign to the input before calculating
+#' metric cell spacing.
 #'@return Matrix of light intensities at each point.
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
@@ -48,9 +53,14 @@ lamb_shade = function(
   sunangle = 315,
   zscale = 1,
   vertical_exaggeration = 1,
-  zero_negative = TRUE
+  zero_negative = TRUE,
+  geographic_aspect = TRUE,
+  extent = NULL,
+  crs = NULL
 ) {
   heightmap_missing = missing(heightmap)
+  extent_missing = missing(extent)
+  crs_missing = missing(crs)
   heightmap_cache_label = format_scene_cache_label(deparse(substitute(
     heightmap
   )))
@@ -65,12 +75,43 @@ lamb_shade = function(
     )
     heightmap = resolved_heightmap$heightmap
     allow_scene_zscale_cache = identical(resolved_heightmap$source, "scene")
+    if (extent_missing) {
+      extent = if (identical(resolved_heightmap$source, "scene")) {
+        get_scene_extent(default = NULL)
+      } else {
+        get_hillshade_extent(default = NULL)
+      }
+    }
+    if (crs_missing) {
+      crs = if (identical(resolved_heightmap$source, "scene")) {
+        get_scene_crs(default = NULL)
+      } else {
+        get_hillshade_crs(default = NULL)
+      }
+    }
   } else {
-    heightmap_info = coerce_plot_3d_heightmap(heightmap)
-    heightmap = heightmap_info$heightmap
-    heightmap_auto_zscale = heightmap_info$zscale
-    cache_hillshade_heightmap(heightmap, label = heightmap_cache_label)
     allow_scene_zscale_cache = FALSE
+  }
+  heightmap_info = coerce_plot_3d_heightmap(
+    heightmap,
+    extent = extent,
+    crs = crs,
+    geographic_aspect = geographic_aspect
+  )
+  heightmap = heightmap_info$heightmap
+  heightmap_auto_zscale = heightmap_info$zscale
+  if (heightmap_missing) {
+    heightmap_info$geographic_aspect = resolve_cached_geographic_aspect(
+      source = resolved_heightmap$source,
+      geographic_aspect = geographic_aspect,
+      fallback = heightmap_info$geographic_aspect
+    )
+    if (is.finite(heightmap_info$geographic_aspect$mean_cell_meters)) {
+      heightmap_auto_zscale = heightmap_info$geographic_aspect$mean_cell_meters
+    }
+  }
+  if (!heightmap_missing) {
+    cache_hillshade_input_context(heightmap_info, label = heightmap_cache_label)
   }
   if (!is.matrix(heightmap)) {
     stop("`heightmap` must be a matrix.", call. = FALSE)
@@ -110,7 +151,13 @@ lamb_shade = function(
   )
   heightmap = add_padding(heightmap)
   heightmap = heightmap / zscale
-  shadowmatrix = lambshade_cpp(heightmap = heightmap, rayvector = rayvector)
+  aspect = heightmap_info$geographic_aspect
+  shadowmatrix = lambshade_cpp(
+    heightmap = heightmap,
+    rayvector = rayvector,
+    column_scale = aspect$scale[["z"]],
+    row_scale = aspect$scale[["x"]]
+  )
   shadowmatrix = scales::rescale_max(shadowmatrix, c(0, 1))
   if (zero_negative) {
     shadowmatrix[shadowmatrix < 0] = 0

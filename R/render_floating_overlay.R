@@ -145,10 +145,19 @@ render_floating_overlay = function(
   }
 
   rayimage::ray_write_image(overlay, tempmap)
-  rowmin = min((+1):(rows) - rows / 2) + horizontal_offset[1]
-  rowmax = max((+1):(rows) - rows / 2) + horizontal_offset[1]
-  colmin = min(-(+1):-(cols) + cols / 2 + 1) + horizontal_offset[2]
-  colmax = max(-(+1):-(cols) + cols / 2 + 1) + horizontal_offset[2]
+  scene_aspect = get_scene_geographic_aspect()
+  rowmin = min((+1):(rows) - rows / 2) *
+    scene_aspect$scale[["x"]] +
+    horizontal_offset[1]
+  rowmax = max((+1):(rows) - rows / 2) *
+    scene_aspect$scale[["x"]] +
+    horizontal_offset[1]
+  colmin = min(-(+1):-(cols) + cols / 2 + 1) *
+    scene_aspect$scale[["z"]] +
+    horizontal_offset[2]
+  colmax = max(-(+1):-(cols) + cols / 2 + 1) *
+    scene_aspect$scale[["z"]] +
+    horizontal_offset[2]
   depth = altitude / zscale
 
   tri1 = matrix(

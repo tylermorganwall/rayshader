@@ -10,7 +10,10 @@ lamb_shade(
   sunangle = 315,
   zscale = 1,
   vertical_exaggeration = 1,
-  zero_negative = TRUE
+  zero_negative = TRUE,
+  geographic_aspect = TRUE,
+  extent = NULL,
+  crs = NULL
 )
 }
 \arguments{
@@ -28,6 +31,14 @@ apparent relief and values between \code{0} and \code{1} flatten it. This does n
 update cached \code{zscale} metadata.}
 
 \item{zero_negative}{Default \code{TRUE}. Zeros out all values below 0 (corresponding to surfaces facing away from the light source).}
+
+\item{geographic_aspect}{Default \code{TRUE}. Correct unequal metric x/y cell
+spacing using the input extent and CRS.}
+
+\item{extent}{Default \code{NULL}. Spatial extent for a matrix heightmap.}
+
+\item{crs}{Default \code{NULL}. CRS to assign to the input before calculating
+metric cell spacing.}
 }
 \value{
 Matrix of light intensities at each point.

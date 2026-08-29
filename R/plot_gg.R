@@ -415,6 +415,12 @@ plot_gg = function(
     shadowdepth
   }
   dot_args = list(...)
+  if ("geographic_aspect" %in% names(dot_args)) {
+    message(
+      "plot_gg(): `geographic_aspect` is ignored; ggplot panel geometry is preserved."
+    )
+    dot_args$geographic_aspect = NULL
+  }
   clone_plot_gg_object = function(x) {
     cloned = unserialize(serialize(x, NULL))
     if (inherits(x, "ggplot")) {
@@ -1845,15 +1851,21 @@ plot_gg = function(
   map_with_shading = mapcolor
   if (raytrace_mode == "raytrace") {
     if (is.null(saved_shadow_matrix)) {
-      shadelayer = ray_shade(
-        height_matrix,
-        maxsearch = 600,
-        sunangle = sunangle,
-        anglebreaks = anglebreaks,
-        zscale = zscale,
-        multicore = multicore,
-        lambert = lambert,
-        ...
+      shadelayer = do.call(
+        ray_shade,
+        c(
+          list(
+            heightmap = height_matrix,
+            maxsearch = 600,
+            sunangle = sunangle,
+            anglebreaks = anglebreaks,
+            zscale = zscale,
+            multicore = multicore,
+            lambert = lambert,
+            geographic_aspect = FALSE
+          ),
+          dot_args
+        )
       )
     } else {
       shadelayer = saved_shadow_matrix
@@ -1881,6 +1893,7 @@ plot_gg = function(
           heightmap = height_matrix,
           texture = mapcolor,
           zscale = zscale,
+          geographic_aspect = FALSE,
           plot = FALSE
         )
       )
@@ -1895,20 +1908,26 @@ plot_gg = function(
     )
   }
   if (!preview) {
-    plot_3d(
-      map_with_shading,
-      height_matrix,
-      zscale = resolved_height_zscale$base_zscale,
-      vertical_exaggeration = resolved_height_zscale$vertical_exaggeration,
-      triangulate = triangulate,
-      max_error = max_error,
-      max_tri = max_tri,
-      verbose = verbose,
-      shadow = shadow,
-      shadowdepth = shadowdepth * zscale,
-      background = background,
-      shadowcolor = shadowcolor,
-      ...
+    do.call(
+      plot_3d,
+      c(
+        list(
+          hillshade = map_with_shading,
+          heightmap = height_matrix,
+          zscale = resolved_height_zscale$base_zscale,
+          vertical_exaggeration = resolved_height_zscale$vertical_exaggeration,
+          geographic_aspect = FALSE,
+          triangulate = triangulate,
+          max_error = max_error,
+          max_tri = max_tri,
+          verbose = verbose,
+          shadow = shadow,
+          shadowdepth = shadowdepth * zscale,
+          background = background,
+          shadowcolor = shadowcolor
+        ),
+        dot_args
+      )
     )
   } else {
     if (plot) {

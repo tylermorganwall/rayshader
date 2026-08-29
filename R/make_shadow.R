@@ -81,10 +81,11 @@ make_shadow = function(
 
   row_radius = (rows - 1) / 2 + shadowwidth
   col_radius = (cols - 1) / 2 + shadowwidth
-  rowmin = -row_radius + offset[1]
-  rowmax = row_radius + offset[1]
-  colmin = -col_radius + offset[2]
-  colmax = col_radius + offset[2]
+  scene_aspect = get_scene_geographic_aspect()
+  rowmin = -row_radius * scene_aspect$scale[["x"]] + offset[1]
+  rowmax = row_radius * scene_aspect$scale[["x"]] + offset[1]
+  colmin = -col_radius * scene_aspect$scale[["z"]] + offset[2]
+  colmax = col_radius * scene_aspect$scale[["z"]] + offset[2]
 
   tri1 = matrix(
     c(

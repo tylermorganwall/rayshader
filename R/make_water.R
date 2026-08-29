@@ -116,6 +116,11 @@ make_water_raster = function(
   }
 
   water_mesh = make_water_mesh_cpp(heightmap, waterheight)
+  water_mesh$vertices = lapply(
+    water_mesh$vertices,
+    apply_geographic_aspect_to_vertices
+  )
+  water_mesh$lines = apply_geographic_aspect_to_vertices(water_mesh$lines)
   vertices = water_mesh$vertices
   if (length(vertices) > 0) {
     for (component in vertices) {
@@ -197,6 +202,8 @@ make_spatial_water_surface = function(
       lines = matrix(nrow = 0, ncol = 3)
     )))
   }
+  triangle_vertices = apply_geographic_aspect_to_vertices(triangle_vertices)
+  line_vertices = apply_geographic_aspect_to_vertices(line_vertices)
   rgl::triangles3d(
     x = triangle_vertices,
     indices = seq_len(nrow(triangle_vertices)),
@@ -5155,7 +5162,7 @@ make_water_legacy = function(
       )
       indices = seq_len(6L)
       rgl::triangles3d(
-        x = vertices,
+        x = apply_geographic_aspect_to_vertices(vertices),
         indices = indices,
         color = watercolor,
         alpha = wateralpha,
@@ -5168,7 +5175,7 @@ make_water_legacy = function(
       if (length(heightlist) > 0) {
         indices = rev(seq_len(nrow(fullsides)))
         rgl::triangles3d(
-          fullsides,
+          apply_geographic_aspect_to_vertices(fullsides),
           indices = indices,
           lit = FALSE,
           color = watercolor,
@@ -5184,7 +5191,7 @@ make_water_legacy = function(
       if (length(heightlist) > 0) {
         indices = rev(seq_len(nrow(fullsides)))
         rgl::triangles3d(
-          fullsides,
+          apply_geographic_aspect_to_vertices(fullsides),
           indices = indices,
           lit = FALSE,
           color = watercolor,

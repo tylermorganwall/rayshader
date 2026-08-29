@@ -581,8 +581,11 @@ render_buildings = function(
     if (is.null(heightmap)) {
       stop("Must pass in heightmap argument if using relative heights")
     }
+    scene_aspect = get_scene_geographic_aspect()
     offset_building_heightmap = function(verts, bottom_value) {
       tmpval = verts
+      tmpval[, 1] = tmpval[, 1] / scene_aspect$scale[["x"]]
+      tmpval[, 3] = tmpval[, 3] / scene_aspect$scale[["z"]]
       tmpval[, 1] = tmpval[, 1] + nrow(heightmap) / 2 + 0.5
       tmpval[, 3] = tmpval[, 3] + ncol(heightmap) / 2 + 0.5
       tmpval[tmpval[, 1] < 1, 1] = 1

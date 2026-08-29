@@ -6,28 +6,28 @@
 #'use the active scene's cached CRS, extent, heightmap, and effective z-scale as
 #'needed. If no values are entered, prints and returns the current camera values.
 #'
-#'@param theta Defaults to current value. Rotation angle.
-#'@param phi Defaults to current value. Azimuth angle. Maximum `90`.
-#'@param zoom Defaults to current value. Positive value indicating camera magnification.
-#'@param fov Defaults to current value. Field of view of the camera. Maximum `180`.
-#'@param location Default `NULL`. A numeric `c(x, y)` pair in the scene's cached
-#'extent, or a single spatial POINT to use as the camera's look-at target. Spatial
-#'inputs accept `sf`, `sfc`, `sfg`, and `sp` objects and are transformed to the
-#'active scene CRS. If a spatial input contains a Z coordinate or an `altitude`,
-#'`alt`, `elevation`, or `z` column, that value sets the target height; otherwise,
-#'the target height is sampled from the cached heightmap. Cannot be combined with
-#'`lat` or `long`.
-#'@param altitude Default `NULL`. Elevation of the look-at target in the scene's
-#'elevation units. The value is converted to rgl coordinates using the cached
-#'effective z-scale. Requires `location` or both `lat` and `long`. When supplied
-#'with `location`, it overrides elevation embedded in the spatial input.
-#'@param shift_vertical Default `0`. Amount to shift the viewpoint.
-#'@param lat Default `NULL`. Latitude in WGS84 decimal degrees for the camera's
-#'look-at target. Must be supplied with `long`.
-#'@param long Default `NULL`. Longitude in WGS84 decimal degrees for the
-#'camera's look-at target. Must be supplied with `lat`.
-#'@param panel Default `NULL`. Facet panel identifier for scenes created with
-#'[plot_gg()]. Required when the cached scene contains multiple panels.
+#' @param location Default `NULL`. A numeric `c(x, y)` pair in the scene's cached
+#' extent, or a single spatial POINT to use as the camera's look-at target. Spatial
+#' inputs accept `sf`, `sfc`, `sfg`, and `sp` objects and are transformed to the
+#' active scene CRS. If a spatial input contains a Z coordinate or an `altitude`,
+#' `alt`, `elevation`, or `z` column, that value sets the target height; otherwise,
+#' the target height is sampled from the cached heightmap. Cannot be combined with
+#' `lat` or `long`.
+#' @param theta Defaults to current value. Rotation angle.
+#' @param phi Defaults to current value. Azimuth angle. Maximum `90`.
+#' @param zoom Defaults to current value. Positive value indicating camera magnification.
+#' @param fov Defaults to current value. Field of view of the camera. Maximum `180`.
+#' @param altitude Default `NULL`. Elevation of the look-at target in the scene's
+#' elevation units. The value is converted to rgl coordinates using the cached
+#' effective z-scale. Requires `location` or both `lat` and `long`. When supplied
+#' with `location`, it overrides elevation embedded in the spatial input.
+#' @param shift_vertical Default `0`. Amount to shift the viewpoint.
+#' @param lat Default `NULL`. Latitude in WGS84 decimal degrees for the camera's
+#' look-at target. Must be supplied with `long`.
+#' @param long Default `NULL`. Longitude in WGS84 decimal degrees for the
+#' camera's look-at target. Must be supplied with `lat`.
+#' @param panel Default `NULL`. Facet panel identifier for scenes created with
+#' [plot_gg()]. Required when the cached scene contains multiple panels.
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'montereybay_spatial |>
@@ -89,11 +89,11 @@
 #'#render_movie(filename = tempfile(fileext = ".mp4"), type = "custom",
 #'#             theta = thetavec, phi = phivecfull, zoom = zoomvec, fov=0)
 render_camera = function(
+  location = NULL,
   theta = NULL,
   phi = NULL,
   zoom = NULL,
   fov = NULL,
-  location = NULL,
   altitude = NULL,
   shift_vertical = 0,
   lat = NULL,

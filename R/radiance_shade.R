@@ -87,6 +87,11 @@
 #'hillshade context.
 #'@param scene_elements Default `NULL`. Extra rayrender objects to add.
 #'@param plot Default `FALSE`. Whether to preview the rendered image.
+#' @param geographic_aspect Default `TRUE`. Correct unequal metric x/y cell
+#' spacing in the temporary radiance scene.
+#' @param extent Default `NULL`. Spatial extent for a matrix heightmap.
+#' @param crs Default `NULL`. CRS to assign to the input before calculating
+#' metric cell spacing.
 #'@param ... Additional parameters passed to [render_highquality()].
 #'
 #'@return RGBA array representing the top-down radiance render.
@@ -140,6 +145,9 @@ radiance_shade = function(
   capture_scene = FALSE,
   scene_elements = NULL,
   plot = FALSE,
+  geographic_aspect = TRUE,
+  extent = NULL,
+  crs = NULL,
   ...
 ) {
   if (samples > 256 && sample_method == "sobol_blue") {
@@ -173,7 +181,15 @@ radiance_shade = function(
     )
   }
 
-  radiance_matrix_texture = function(heightmap, texture, color, zscale) {
+  radiance_matrix_texture = function(
+    heightmap,
+    texture,
+    color,
+    zscale,
+    geographic_aspect,
+    extent,
+    crs
+  ) {
     if (is.null(texture)) {
       return(constant_shade(heightmap, color = color, alpha = 1))
     }
@@ -189,7 +205,14 @@ radiance_shade = function(
           texture %in%
             c("imhof1", "imhof2", "imhof3", "imhof4", "desert", "bw", "unicorn")
         ) {
-          return(sphere_shade(heightmap, texture = texture, zscale = zscale))
+          return(sphere_shade(
+            heightmap,
+            texture = texture,
+            zscale = zscale,
+            geographic_aspect = geographic_aspect,
+            extent = extent,
+            crs = crs
+          ))
         }
         if (radiance_is_color_string(texture)) {
           return(constant_shade(heightmap, color = texture, alpha = 1))
@@ -241,7 +264,10 @@ radiance_shade = function(
             ),
             plot_new = TRUE,
             close_previous = TRUE,
-            clear_previous = TRUE
+            clear_previous = TRUE,
+            geographic_aspect = child_args$geographic_aspect,
+            extent = child_args$extent,
+            crs = child_args$crs
           )
           do.call(rayshader::plot_3d, plot_3d_args)
           # Use unscaled scene units so orthographic dimensions map directly to matrix axes.
@@ -340,10 +366,21 @@ radiance_shade = function(
   }
   heightmap_supplied = !is.null(heightmap)
   zscale_missing = missing(zscale)
+  extent_missing = missing(extent)
+  crs_missing = missing(crs)
+  aspect = identity_geographic_aspect()
 
   if (heightmap_supplied) {
-    heightmap_info = coerce_plot_3d_heightmap(heightmap)
+    heightmap_info = coerce_plot_3d_heightmap(
+      heightmap,
+      extent = extent,
+      crs = crs,
+      geographic_aspect = geographic_aspect
+    )
     heightmap = heightmap_info$heightmap
+    extent = heightmap_info$extent
+    crs = heightmap_info$crs
+    aspect = heightmap_info$geographic_aspect
     if (!is.matrix(heightmap)) {
       stop("`heightmap` must be a matrix or a supported spatial raster input.")
     }
@@ -367,7 +404,10 @@ radiance_shade = function(
       heightmap = heightmap,
       texture = texture,
       color = color,
-      zscale = zscale
+      zscale = zscale,
+      geographic_aspect = geographic_aspect,
+      extent = extent,
+      crs = crs
     )
   } else {
     if (isTRUE(capture_scene)) {
@@ -399,6 +439,13 @@ radiance_shade = function(
         vertical_exaggeration_missing = missing(vertical_exaggeration),
         caller = "radiance_shade"
       )
+      if (extent_missing) {
+        extent = get_scene_extent(default = NULL)
+      }
+      if (crs_missing) {
+        crs = get_scene_crs(default = NULL)
+      }
+      aspect = get_scene_geographic_aspect()
 
       surface_texture = as.character(surface_id$texture_file[1])
       has_surface_texture =
@@ -415,7 +462,10 @@ radiance_shade = function(
           heightmap = heightmap,
           texture = texture,
           color = color,
-          zscale = zscale
+          zscale = zscale,
+          geographic_aspect = aspect$enabled,
+          extent = extent,
+          crs = crs
         )
       }
     } else {
@@ -445,6 +495,23 @@ radiance_shade = function(
         label = get_hillshade_heightmap_label(default = NULL)
       )
       heightmap = resolved_heightmap$heightmap
+      if (extent_missing) {
+        extent = get_hillshade_extent(default = NULL)
+      }
+      if (crs_missing) {
+        crs = get_hillshade_crs(default = NULL)
+      }
+      aspect = get_hillshade_geographic_aspect()
+      if (is.finite(aspect$mean_cell_meters)) {
+        aspect = set_geographic_aspect_enabled(aspect, geographic_aspect)
+      } else {
+        aspect = calculate_geographic_aspect(
+          heightmap = heightmap,
+          extent = extent,
+          crs = crs,
+          geographic_aspect = geographic_aspect
+        )
+      }
       zscale = resolve_hillshade_zscale(
         zscale = zscale,
         zscale_missing = zscale_missing,
@@ -473,7 +540,10 @@ radiance_shade = function(
             heightmap = heightmap,
             texture = NULL,
             color = color,
-            zscale = zscale
+            zscale = zscale,
+            geographic_aspect = geographic_aspect,
+            extent = extent,
+            crs = crs
           )
         }
       } else {
@@ -481,7 +551,10 @@ radiance_shade = function(
           heightmap = heightmap,
           texture = texture,
           color = color,
-          zscale = zscale
+          zscale = zscale,
+          geographic_aspect = geographic_aspect,
+          extent = extent,
+          crs = crs
         )
       }
     }
@@ -515,14 +588,21 @@ radiance_shade = function(
   } else {
     # Match rayshader surface axes for top-down orthographic renders:
     # x <- matrix rows, z <- matrix cols.
-    ortho_dimensions_value = c(nrow(heightmap), ncol(heightmap))
+    ortho_dimensions_value = c(
+      nrow(heightmap) * aspect$scale[["x"]],
+      ncol(heightmap) * aspect$scale[["z"]]
+    )
   }
   if (!("camera_location" %in% names(dot_args))) {
     height_range = suppressWarnings(range(heightmap / zscale, na.rm = TRUE))
     if (!all(is.finite(height_range))) {
       height_range = c(0, 1)
     }
-    scene_span = max(nrow(heightmap), ncol(heightmap), 1)
+    scene_span = max(
+      nrow(heightmap) * aspect$scale[["x"]],
+      ncol(heightmap) * aspect$scale[["z"]],
+      1
+    )
     camera_distance = scene_span * 5 + max(diff(height_range), 1)
     dot_args$camera_location = c(0, camera_distance, 0)
   }
@@ -567,6 +647,9 @@ radiance_shade = function(
     clamp_value = clamp_value,
     auto_exposure = auto_exposure,
     scene_elements = scene_elements,
+    geographic_aspect = aspect$enabled,
+    extent = extent,
+    crs = crs,
     dot_args = dot_args
   )
 

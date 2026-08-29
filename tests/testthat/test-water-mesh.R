@@ -1215,7 +1215,12 @@ test_that("render_streams converts meter widths to cached scene units", {
     function(id) rgl::material3d("lwd", id = id),
     numeric(1)
   )
-  expect_equal(sort(water_path_widths), c(2, 4), tolerance = 1e-7)
+  meters_per_scene_unit = get_scene_geographic_aspect()$mean_cell_meters
+  expect_equal(
+    sort(water_path_widths),
+    c(200, 400) / meters_per_scene_unit,
+    tolerance = 1e-7
+  )
 })
 
 test_that("render_streams meter widths require a spatial scene CRS", {
@@ -1507,8 +1512,9 @@ test_that("render_water resolves zscale from explicit spatial heightmaps", {
     heightmap_missing = FALSE,
     caller = "test"
   )
+  expected_zscale = extract_spatial_heightmap_zscale(height_raster)
 
-  expect_equal(attr(heightmap, "zscale", exact = TRUE), 10)
+  expect_equal(attr(heightmap, "zscale", exact = TRUE), expected_zscale)
   expect_equal(
     resolve_render_water_effective_zscale(
       zscale = 1,
@@ -1518,7 +1524,7 @@ test_that("render_water resolves zscale from explicit spatial heightmaps", {
       heightmap = heightmap,
       caller = "test"
     ),
-    10
+    expected_zscale
   )
   expect_equal(
     resolve_render_water_effective_zscale(
@@ -3079,7 +3085,12 @@ test_that("plot_3d renders explicit spatial waterdepth and applies cached zscale
   water_ids = get_ids_with_labels(typeval = "water")
   expect_gt(nrow(water_ids), 0)
   water_verts = rgl::rgl.attrib(water_ids$id[1], "vertices")
-  expect_equal(max(water_verts[, 2], na.rm = TRUE), 20, tolerance = 1e-6)
+  expected_zscale = extract_spatial_heightmap_zscale(height_raster)
+  expect_equal(
+    max(water_verts[, 2], na.rm = TRUE),
+    100 / (expected_zscale / 2),
+    tolerance = 1e-6
+  )
 })
 
 test_that("convert_rgl_to_raymesh handles raster water ids", {

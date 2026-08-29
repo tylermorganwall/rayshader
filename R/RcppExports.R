@@ -5,8 +5,8 @@ bilineargrid <- function(colorarray) {
     .Call(`_rayshader_bilineargrid`, colorarray)
 }
 
-calculate_normal_cpp <- function(heightmap, progbar) {
-    .Call(`_rayshader_calculate_normal_cpp`, heightmap, progbar)
+calculate_normal_cpp <- function(heightmap, progbar, column_scale, row_scale) {
+    .Call(`_rayshader_calculate_normal_cpp`, heightmap, progbar, column_scale, row_scale)
 }
 
 construct_matrix <- function(image_reference, number_rows, number_cols, index_x, index_y) {
@@ -25,8 +25,8 @@ interpolate_color <- function(color_nw, color_ne, color_se, color_sw) {
     .Call(`_rayshader_interpolate_color`, color_nw, color_ne, color_se, color_sw)
 }
 
-lambshade_cpp <- function(heightmap, rayvector) {
-    .Call(`_rayshader_lambshade_cpp`, heightmap, rayvector)
+lambshade_cpp <- function(heightmap, rayvector, column_scale, row_scale) {
+    .Call(`_rayshader_lambshade_cpp`, heightmap, rayvector, column_scale, row_scale)
 }
 
 make_surface_cpp <- function(heightmap, na_matrix, normalsx, normalsy, normalsz, basedepth) {
@@ -89,12 +89,12 @@ psf <- function(image, blurmatrix, depthmap, depth, custombokeh, type, bokehinte
     .Call(`_rayshader_psf`, image, blurmatrix, depthmap, depth, custombokeh, type, bokehintensity, bokehlimit, rotation, progbar, channel)
 }
 
-rayshade_cpp <- function(sunangle, anglebreaks, heightmap, zscale, maxsearch, cache_mask, progbar) {
-    .Call(`_rayshader_rayshade_cpp`, sunangle, anglebreaks, heightmap, zscale, maxsearch, cache_mask, progbar)
+rayshade_cpp <- function(sunangle, anglebreaks, heightmap, zscale, maxsearch, cache_mask, progbar, row_scale, column_scale) {
+    .Call(`_rayshader_rayshade_cpp`, sunangle, anglebreaks, heightmap, zscale, maxsearch, cache_mask, progbar, row_scale, column_scale)
 }
 
-rayshade_multicore <- function(sunangle, anglebreaks, heightmap, zscale, chunkindices, maxsearch, cache_mask) {
-    .Call(`_rayshader_rayshade_multicore`, sunangle, anglebreaks, heightmap, zscale, chunkindices, maxsearch, cache_mask)
+rayshade_multicore <- function(sunangle, anglebreaks, heightmap, zscale, chunkindices, maxsearch, cache_mask, row_scale, column_scale) {
+    .Call(`_rayshader_rayshade_multicore`, sunangle, anglebreaks, heightmap, zscale, chunkindices, maxsearch, cache_mask, row_scale, column_scale)
 }
 
 calculate_render_road_vertex_frames_cpp <- function(points, closed, miter_limit) {

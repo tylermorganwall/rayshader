@@ -194,5 +194,6 @@ transform_into_heightmap_coords = function(
       }
     }
   }
+  matrix_vals = apply_geographic_aspect_to_vertices(matrix_vals)
   return(matrix_vals)
 }

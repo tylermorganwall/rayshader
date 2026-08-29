@@ -1120,6 +1120,9 @@ render_single_label = function(
   }
   x = x_index - nrow_map / 2 - 1
   y = y_index - ncol_map / 2 - 1
+  scene_aspect = get_scene_geographic_aspect()
+  x = x * scene_aspect$scale[["x"]]
+  y = y * scene_aspect$scale[["z"]]
   if (isTRUE(line)) {
     if (dashlength == "auto") {
       dashlength = (z - startline + offset) / 20

@@ -366,6 +366,11 @@ render_polygons = function(
       single_poly$vb[3, ] = ncol_map /
         2 -
         (single_poly$vb[3, ] - e["ymin"]) / (e["ymax"] - e["ymin"]) * ncol_map
+      scene_aspect = get_scene_geographic_aspect()
+      single_poly$vb[1, ] = single_poly$vb[1, ] *
+        scene_aspect$scale[["x"]]
+      single_poly$vb[3, ] = single_poly$vb[3, ] *
+        scene_aspect$scale[["z"]]
       single_poly$vb[2, ] = single_poly$vb[2, ] / zscale
 
       rgl::shade3d(

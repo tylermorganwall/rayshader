@@ -18,6 +18,11 @@
 #'@param cache_mask Default `NULL`. A matrix of 1 and 0s, indicating which points on which the raytracer will operate.
 #'@param shadow_cache Default `NULL`. The shadow matrix to be updated at the points defined by the argument `cache_mask`.
 #'@param progbar Default `TRUE` if interactive, `FALSE` otherwise. If `FALSE`, turns off progress bar.
+#' @param geographic_aspect Default `TRUE`. Correct unequal metric x/y cell
+#' spacing using the input extent and CRS.
+#' @param extent Default `NULL`. Spatial extent for a matrix heightmap.
+#' @param crs Default `NULL`. CRS to assign to the input before calculating
+#' metric cell spacing.
 #'@param ... Additional arguments to pass to the `makeCluster` function when `multicore=TRUE`.
 #'@return Shaded texture map.
 #'@export
@@ -56,9 +61,14 @@ ambient_shade = function(
   cache_mask = NULL,
   shadow_cache = NULL,
   progbar = interactive(),
+  geographic_aspect = TRUE,
+  extent = NULL,
+  crs = NULL,
   ...
 ) {
   heightmap_missing = missing(heightmap)
+  extent_missing = missing(extent)
+  crs_missing = missing(crs)
   heightmap_cache_label = format_scene_cache_label(deparse(substitute(
     heightmap
   )))
@@ -73,12 +83,45 @@ ambient_shade = function(
     )
     heightmap = resolved_heightmap$heightmap
     allow_scene_zscale_cache = identical(resolved_heightmap$source, "scene")
+    if (extent_missing) {
+      extent = if (identical(resolved_heightmap$source, "scene")) {
+        get_scene_extent(default = NULL)
+      } else {
+        get_hillshade_extent(default = NULL)
+      }
+    }
+    if (crs_missing) {
+      crs = if (identical(resolved_heightmap$source, "scene")) {
+        get_scene_crs(default = NULL)
+      } else {
+        get_hillshade_crs(default = NULL)
+      }
+    }
   } else {
-    heightmap_info = coerce_plot_3d_heightmap(heightmap)
-    heightmap = heightmap_info$heightmap
-    heightmap_auto_zscale = heightmap_info$zscale
-    cache_hillshade_heightmap(heightmap, label = heightmap_cache_label)
     allow_scene_zscale_cache = FALSE
+  }
+  heightmap_info = coerce_plot_3d_heightmap(
+    heightmap,
+    extent = extent,
+    crs = crs,
+    geographic_aspect = geographic_aspect
+  )
+  heightmap = heightmap_info$heightmap
+  heightmap_auto_zscale = heightmap_info$zscale
+  if (heightmap_missing) {
+    heightmap_info$geographic_aspect = resolve_cached_geographic_aspect(
+      source = resolved_heightmap$source,
+      geographic_aspect = geographic_aspect,
+      fallback = heightmap_info$geographic_aspect
+    )
+    if (is.finite(heightmap_info$geographic_aspect$mean_cell_meters)) {
+      heightmap_auto_zscale = heightmap_info$geographic_aspect$mean_cell_meters
+    }
+  }
+  attr(heightmap, "rayshader_geographic_aspect") =
+    heightmap_info$geographic_aspect
+  if (!heightmap_missing) {
+    cache_hillshade_input_context(heightmap_info, label = heightmap_cache_label)
   }
   if (!is.matrix(heightmap)) {
     stop("`heightmap` must be a matrix.", call. = FALSE)
@@ -127,6 +170,9 @@ ambient_shade = function(
             lambert = FALSE,
             cache_mask = cache_mask,
             progbar = progbar,
+            geographic_aspect = geographic_aspect,
+            extent = extent,
+            crs = crs,
             ...
           )
         )
@@ -168,6 +214,9 @@ ambient_shade = function(
                 lambert = FALSE,
                 cache_mask = cache_mask,
                 progbar = FALSE,
+                geographic_aspect = geographic_aspect,
+                extent = extent,
+                crs = crs,
                 ...
               )
             )

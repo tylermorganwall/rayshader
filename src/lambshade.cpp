@@ -16,14 +16,15 @@ double dot_product(const NumericVector x, const NumericVector y) {
 }
 
 // [[Rcpp::export]]
-NumericMatrix lambshade_cpp(NumericMatrix heightmap, NumericVector rayvector) {
+NumericMatrix lambshade_cpp(NumericMatrix heightmap, NumericVector rayvector,
+                            double column_scale, double row_scale) {
   NumericMatrix shaded_matrix(heightmap.nrow(),heightmap.ncol());
   NumericVector storevector1(3);
   NumericVector storevector2(3);
-  NumericVector tempvector1 = NumericVector::create(-1,0,0);
-  NumericVector tempvector2 = NumericVector::create(0,1,0);
-  NumericVector tempvector3 = NumericVector::create(1,0,0);
-  NumericVector tempvector4 = NumericVector::create(0,-1,0);
+  NumericVector tempvector1 = NumericVector::create(-column_scale,0,0);
+  NumericVector tempvector2 = NumericVector::create(0,row_scale,0);
+  NumericVector tempvector3 = NumericVector::create(column_scale,0,0);
+  NumericVector tempvector4 = NumericVector::create(0,-row_scale,0);
   for(int col = 0; col < heightmap.ncol(); col++) {
     for(int row = 0; row < heightmap.nrow(); row++) {
       if(row != 0 && col != 0 && row < heightmap.nrow() - 1 && col < heightmap.ncol() - 1) {

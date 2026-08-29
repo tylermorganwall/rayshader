@@ -1205,22 +1205,7 @@ resolve_scene_sf_source_crs = function(
   } else {
     NULL
   }
-  existing_crs = suppressWarnings(sf::st_crs(sf_data))
-  has_existing_crs = !is.na(existing_crs)
-  if (
-    !is.null(explicit_crs) &&
-      has_existing_crs &&
-      !scene_crs_equal(existing_crs, explicit_crs)
-  ) {
-    stop(
-      paste0(
-        format_render_caller_prefix(caller),
-        "Input spatial data already has a CRS that conflicts with `crs`."
-      ),
-      call. = FALSE
-    )
-  }
-  if (!has_existing_crs && !is.null(explicit_crs)) {
+  if (!is.null(explicit_crs)) {
     sf_data = suppressWarnings(sf::st_set_crs(sf_data, explicit_crs))
   }
   source_crs = suppressWarnings(sf::st_crs(sf_data))
@@ -1897,6 +1882,7 @@ reset_scene_context = function(
     cache_scene_heightmap(NULL, label = NULL)
     cache_scene_extent(NULL, label = NULL)
     cache_scene_crs(NULL, label = NULL)
+    cache_scene_geographic_aspect(NULL)
     cache_plot_gg_panel_info(NULL)
     cache_plot_gg_transform_info(NULL)
     clear_scene_zaxis_data()
@@ -2053,7 +2039,7 @@ cache_hillshade_zscale = function(zscale = NULL, label = NULL) {
     inherits = FALSE,
     ifnotfound = FALSE
   ))
-  if (suppress_cache && !is.null(zscale)) {
+  if (suppress_cache) {
     return(invisible(NULL))
   }
   assign("hillshade_zscale", zscale, envir = ray_cache_scene_envir)
@@ -2124,6 +2110,7 @@ cache_hillshade_input_context = function(heightmap_info, label = NULL) {
   } else {
     cache_hillshade_crs(NULL, label = NULL)
   }
+  cache_hillshade_geographic_aspect(heightmap_info$geographic_aspect)
   invisible(NULL)
 }
 
@@ -2234,6 +2221,7 @@ clear_hillshade_cache = function() {
   cache_hillshade_zscale(NULL, label = NULL)
   cache_hillshade_extent(NULL, label = NULL)
   cache_hillshade_crs(NULL, label = NULL)
+  cache_hillshade_geographic_aspect(NULL)
   cache_hillshade_map(NULL, label = NULL)
   invisible(NULL)
 }
@@ -2543,7 +2531,13 @@ resolve_scene_render_heightmap = function(
 ) {
   if (!isTRUE(heightmap_missing) && !is.null(heightmap)) {
     if (is_spatial_heightmap_input(heightmap)) {
-      heightmap_info = coerce_plot_3d_heightmap(heightmap)
+      heightmap_info = coerce_heightmap_to_scene_grid(
+        heightmap,
+        caller = caller
+      )
+      if (is.null(heightmap_info)) {
+        heightmap_info = coerce_plot_3d_heightmap(heightmap)
+      }
       if (!is.null(heightmap_info$extent)) {
         attr(heightmap_info$heightmap, "extent") = heightmap_info$extent
       }

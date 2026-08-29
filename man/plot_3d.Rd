@@ -52,7 +52,9 @@ plot_3d(
   plot_new = TRUE,
   close_previous = TRUE,
   clear_previous = TRUE,
-  extent = NULL
+  extent = NULL,
+  geographic_aspect = TRUE,
+  crs = NULL
 )
 }
 \arguments{
@@ -189,6 +191,12 @@ calls (e.g., \code{\link[=render_zaxis]{render_zaxis()}} without an explicit \co
 by \code{\link[=get_extent]{get_extent()}} (numeric xmin/xmax/ymin/ymax vector, \code{raster}, \code{terra}, \code{sf}, or \code{sp} objects).
 If omitted, a spatial raster uses its spatial extent and a raw matrix uses its native
 1-based extent: \code{c(xmin = 1, xmax = nrow(heightmap), ymin = 1, ymax = ncol(heightmap))}.}
+
+\item{geographic_aspect}{Default \code{TRUE}. Correct unequal metric x/y cell
+spacing in terrain geometry and cache the transform for later render calls.}
+
+\item{crs}{Default \code{NULL}. CRS to assign to the terrain input. An explicit
+value overrides embedded CRS metadata.}
 }
 \description{
 Displays the shaded map in 3D with the \code{rgl} package.

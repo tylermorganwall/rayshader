@@ -16,12 +16,13 @@ bool ray_intersects(NumericMatrix& heightmap, NumericVector& tanangles,
                     double maxheight, double precisionval,
                     double cossunangle, double sinsunangle, 
                     int numbercols, int numberrows,
-                    double zscale, double maxdist) {
+                    double zscale, double maxdist,
+                    double row_scale, double column_scale) {
   double xcoord, ycoord, tanangheight;
   double ceilxcoord,ceilycoord,floorxcoord,floorycoord;
   for(int k = 1; k < maxdist; k++) {
-    xcoord = i + sinsunangle * k;
-    ycoord = j + cossunangle * k;
+    xcoord = i + sinsunangle * k / row_scale;
+    ycoord = j + cossunangle * k / column_scale;
     tanangheight = heightmap(i, j) + tanangles[angentry] * k * zscale;
     if(xcoord > numberrows-1 || ycoord > numbercols-1 || xcoord < 0 || ycoord < 0 || tanangheight > maxheight) {
       break;
@@ -74,7 +75,8 @@ bool ray_intersects(NumericMatrix& heightmap, NumericVector& tanangles,
 // [[Rcpp::export]]
 NumericMatrix rayshade_cpp(double sunangle, NumericVector anglebreaks, NumericMatrix& heightmap, 
                            double zscale, double maxsearch, const NumericMatrix cache_mask,
-                           bool progbar) {
+                           bool progbar, double row_scale,
+                           double column_scale) {
   
   double precisionval = 1e-10;
   
@@ -119,7 +121,7 @@ NumericMatrix rayshade_cpp(double sunangle, NumericVector anglebreaks, NumericMa
                               maxheight, precisionval,
                               cossunangle, sinsunangle, 
                               numbercols, numberrows,
-                              zscale, maxdist)) {
+                              zscale, maxdist, row_scale, column_scale)) {
               shadowmatrix(i,j) = 1 - ((double)ang + 1) * invnumberangles;
             } 
           }
@@ -130,7 +132,7 @@ NumericMatrix rayshade_cpp(double sunangle, NumericVector anglebreaks, NumericMa
                               maxheight, precisionval,
                               cossunangle, sinsunangle, 
                               numbercols, numberrows,
-                              zscale, maxdist)) {
+                              zscale, maxdist, row_scale, column_scale)) {
               current_min_entry = current_entry;
               current_entry = (current_max_entry + current_entry)/2;
               anyfound = true;

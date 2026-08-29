@@ -13,7 +13,10 @@ sphere_shade(
   zscale = 1,
   vertical_exaggeration = 1,
   na_color = NULL,
-  progbar = interactive()
+  progbar = interactive(),
+  geographic_aspect = TRUE,
+  extent = NULL,
+  crs = NULL
 )
 }
 \arguments{
@@ -45,6 +48,14 @@ used. This does not affect transparency; \code{NA} heightmap cells are always
 returned with alpha \code{0}.}
 
 \item{progbar}{Default \code{TRUE} if interactive, \code{FALSE} otherwise. If \code{FALSE}, turns off progress bar.}
+
+\item{geographic_aspect}{Default \code{TRUE}. Correct unequal metric x/y cell
+spacing using the input extent and CRS.}
+
+\item{extent}{Default \code{NULL}. Spatial extent for a matrix heightmap.}
+
+\item{crs}{Default \code{NULL}. CRS to assign to the input before calculating
+metric cell spacing.}
 }
 \value{
 RGBA array of hillshaded texture mappings.

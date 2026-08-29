@@ -273,7 +273,7 @@ render_highquality(
   height = 800,
   sky_sun_elevation = 10,
   sky_sun_azimuth = 160,
-  iso = 5, 
+  iso = 5,
   samples=16
 )
 
@@ -298,7 +298,7 @@ render_highquality(
   height = 800,
   sky_sun_elevation = 10,
   sky_sun_azimuth = 160,
-  iso = 5, 
+  iso = 5,
   samples=16
 )
 
@@ -314,7 +314,7 @@ volcano_dem |>
 render_trails(
   volcano_trails,
   color = "grey50",
-  width = 2, 
+  width = 2,
   preview = "mesh",
   width_units = "meters"
 )
@@ -328,7 +328,7 @@ render_people(
   line = summit_walk,
   pose = "walking",
   line_spacing = 5,
-  offset=0.2, 
+  offset=0.2,
   line_pattern = "MF",
   color = c("#F6E8C3", "white"),
   clear_previous = TRUE

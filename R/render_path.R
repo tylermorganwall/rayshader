@@ -657,6 +657,16 @@ is_render_line_input = function(x) {
 render_heightmap_row_col = function(heightmap, x, z, clamp = TRUE) {
   nr = nrow(heightmap)
   nc = ncol(heightmap)
+  scene_heightmap = get_scene_heightmap(default = NULL)
+  aspect = if (
+    is.matrix(scene_heightmap) && identical(scene_heightmap, heightmap)
+  ) {
+    get_scene_geographic_aspect()
+  } else {
+    identity_geographic_aspect()
+  }
+  x = x / aspect$scale[["x"]]
+  z = z / aspect$scale[["z"]]
   row = x + (nr - 1) / 2 + 1
   col = z + (nc - 1) / 2 + 1
   if (isTRUE(clamp)) {

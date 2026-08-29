@@ -7855,9 +7855,35 @@ calculate_road_path_world_scale = function(heightmap, extent, crs = NULL) {
     error = function(error) c(NA_real_, NA_real_)
   )
   if (any(!is.finite(metric_scale)) || any(metric_scale <= 0)) {
-    return(axis_scale)
+    metric_scale = axis_scale
   }
-  metric_scale
+  scene_heightmap = get_scene_heightmap(default = NULL)
+  scene_extent = tryCatch(
+    get_extent(get_scene_extent(default = NULL)),
+    error = function(error) NULL
+  )
+  scene_crs = try_parse_scene_crs(get_scene_crs(default = NULL))
+  input_crs = try_parse_scene_crs(crs)
+  matches_scene = is.matrix(scene_heightmap) &&
+    identical(scene_heightmap, heightmap) &&
+    !is.null(scene_extent) &&
+    isTRUE(all.equal(unname(scene_extent), unname(extent))) &&
+    ((is.null(scene_crs) && is.null(input_crs)) ||
+      (!is.null(scene_crs) &&
+        !is.null(input_crs) &&
+        scene_crs_equal(scene_crs, input_crs)))
+  if (matches_scene) {
+    scene_aspect = get_scene_geographic_aspect()
+    if (
+      is.finite(scene_aspect$mean_cell_meters) &&
+        scene_aspect$mean_cell_meters > 0
+    ) {
+      metric_scale = rep(scene_aspect$mean_cell_meters, 2L)
+    } else {
+      metric_scale = metric_scale / scene_aspect$scale
+    }
+  }
+  unname(metric_scale)
 }
 
 #' Resolve render road width

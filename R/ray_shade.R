@@ -30,6 +30,11 @@
 #'@param anglebreaks Default `NULL`. A vector of angle(s) in degrees (as measured from the horizon) specifying from where the light originates.
 #'Use this instead of `sunaltitude` to create a softer shadow by specifying a wider light. E.g. `anglebreaks = seq(40,50,by=0.5)` creates a light
 #'10 degrees wide, as opposed to the default
+#' @param geographic_aspect Default `TRUE`. Correct unequal metric x/y cell
+#' spacing using the input extent and CRS.
+#' @param extent Default `NULL`. Spatial extent for a matrix heightmap.
+#' @param crs Default `NULL`. CRS to assign to the input before calculating
+#' metric cell spacing.
 #'@param ... Additional arguments to pass to the `makeCluster` function when `multicore=TRUE`.
 #'@import foreach doParallel parallel progress
 #'@return Matrix of light intensities at each point.
@@ -66,9 +71,14 @@ ray_shade = function(
   shadow_cache = NULL,
   progbar = interactive(),
   anglebreaks = NULL,
+  geographic_aspect = TRUE,
+  extent = NULL,
+  crs = NULL,
   ...
 ) {
   heightmap_missing = missing(heightmap)
+  extent_missing = missing(extent)
+  crs_missing = missing(crs)
   heightmap_cache_label = format_scene_cache_label(deparse(substitute(
     heightmap
   )))
@@ -83,12 +93,43 @@ ray_shade = function(
     )
     heightmap = resolved_heightmap$heightmap
     allow_scene_zscale_cache = identical(resolved_heightmap$source, "scene")
+    if (extent_missing) {
+      extent = if (identical(resolved_heightmap$source, "scene")) {
+        get_scene_extent(default = NULL)
+      } else {
+        get_hillshade_extent(default = NULL)
+      }
+    }
+    if (crs_missing) {
+      crs = if (identical(resolved_heightmap$source, "scene")) {
+        get_scene_crs(default = NULL)
+      } else {
+        get_hillshade_crs(default = NULL)
+      }
+    }
   } else {
-    heightmap_info = coerce_plot_3d_heightmap(heightmap)
-    heightmap = heightmap_info$heightmap
-    heightmap_auto_zscale = heightmap_info$zscale
-    cache_hillshade_heightmap(heightmap, label = heightmap_cache_label)
     allow_scene_zscale_cache = FALSE
+  }
+  heightmap_info = coerce_plot_3d_heightmap(
+    heightmap,
+    extent = extent,
+    crs = crs,
+    geographic_aspect = geographic_aspect
+  )
+  heightmap = heightmap_info$heightmap
+  heightmap_auto_zscale = heightmap_info$zscale
+  if (heightmap_missing) {
+    heightmap_info$geographic_aspect = resolve_cached_geographic_aspect(
+      source = resolved_heightmap$source,
+      geographic_aspect = geographic_aspect,
+      fallback = heightmap_info$geographic_aspect
+    )
+    if (is.finite(heightmap_info$geographic_aspect$mean_cell_meters)) {
+      heightmap_auto_zscale = heightmap_info$geographic_aspect$mean_cell_meters
+    }
+  }
+  if (!heightmap_missing) {
+    cache_hillshade_input_context(heightmap_info, label = heightmap_cache_label)
   }
   if (!is.matrix(heightmap)) {
     stop("`heightmap` must be a matrix.", call. = FALSE)
@@ -142,6 +183,7 @@ ray_shade = function(
   anglebreaks_rad = anglebreaks * pi / 180
   sunangle_rad_ray = -pi / 2 - sunangle * pi / 180
   heightmap = add_padding(heightmap)
+  aspect = heightmap_info$geographic_aspect
   if (is.null(cache_mask)) {
     cache_mask = matrix(1, nrow = nrow(heightmap), ncol = ncol(heightmap))
   } else {
@@ -157,7 +199,9 @@ ray_shade = function(
       zscale = zscale,
       maxsearch = maxsearch,
       cache_mask = cache_mask,
-      progbar = progbar
+      progbar = progbar,
+      row_scale = aspect$scale[["x"]],
+      column_scale = aspect$scale[["z"]]
     ))
     shadowmatrix = shadowmatrix[
       c(-1, -nrow(shadowmatrix)),
@@ -172,7 +216,10 @@ ray_shade = function(
             originalheightmap,
             sunaltitude = mean(anglebreaks),
             sunangle = sunangle,
-            zscale = zscale
+            zscale = zscale,
+            geographic_aspect = geographic_aspect,
+            extent = extent,
+            crs = crs
           )
         )
     }
@@ -235,7 +282,9 @@ ray_shade = function(
               zscale = zscale,
               chunkindices = c(itervec[i], (itervec[i + 1])),
               maxsearch = maxsearch,
-              cache_mask = cache_mask
+              cache_mask = cache_mask,
+              row_scale = aspect$scale[["x"]],
+              column_scale = aspect$scale[["z"]]
             )
           }
       },
@@ -265,7 +314,10 @@ ray_shade = function(
             originalheightmap,
             sunaltitude = mean(anglebreaks),
             sunangle = sunangle,
-            zscale = zscale
+            zscale = zscale,
+            geographic_aspect = geographic_aspect,
+            extent = extent,
+            crs = crs
           )
         )
     }

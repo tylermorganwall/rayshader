@@ -17,6 +17,9 @@ ray_shade(
   shadow_cache = NULL,
   progbar = interactive(),
   anglebreaks = NULL,
+  geographic_aspect = TRUE,
+  extent = NULL,
+  crs = NULL,
   ...
 )
 }
@@ -57,6 +60,14 @@ If present, this will only compute the raytraced shadows for those points with v
 \item{anglebreaks}{Default \code{NULL}. A vector of angle(s) in degrees (as measured from the horizon) specifying from where the light originates.
 Use this instead of \code{sunaltitude} to create a softer shadow by specifying a wider light. E.g. \code{anglebreaks = seq(40,50,by=0.5)} creates a light
 10 degrees wide, as opposed to the default}
+
+\item{geographic_aspect}{Default \code{TRUE}. Correct unequal metric x/y cell
+spacing using the input extent and CRS.}
+
+\item{extent}{Default \code{NULL}. Spatial extent for a matrix heightmap.}
+
+\item{crs}{Default \code{NULL}. CRS to assign to the input before calculating
+metric cell spacing.}
 
 \item{...}{Additional arguments to pass to the \code{makeCluster} function when \code{multicore=TRUE}.}
 }

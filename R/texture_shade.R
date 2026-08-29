@@ -18,6 +18,12 @@
 #'@param dy Default `1`. The distance between each column of data (compared to the height axis).
 #'@param pad Default `50`. The amount to pad the heightmap so edge effects don't appear from the
 #'fourier transform. Only increase this if you encounter boundary effects.
+#' @param geographic_aspect Default `TRUE`. Correct unequal metric x/y cell
+#' spacing using the input extent and CRS. Explicit `dx` and `dy` values take
+#' precedence.
+#' @param extent Default `NULL`. Spatial extent for a matrix heightmap.
+#' @param crs Default `NULL`. CRS to assign to the input before calculating
+#' metric cell spacing.
 #'@return 2D matrix of hillshade values.
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
@@ -61,9 +67,16 @@ texture_shade = function(
   transform = TRUE,
   dx = 1,
   dy = 1,
-  pad = 50
+  pad = 50,
+  geographic_aspect = TRUE,
+  extent = NULL,
+  crs = NULL
 ) {
   heightmap_missing = missing(heightmap)
+  dx_missing = missing(dx)
+  dy_missing = missing(dy)
+  extent_missing = missing(extent)
+  crs_missing = missing(crs)
   heightmap_cache_label = format_scene_cache_label(deparse(substitute(
     heightmap
   )))
@@ -73,10 +86,43 @@ texture_shade = function(
       caller = "texture_shade"
     )
     heightmap = resolved_heightmap$heightmap
-  } else {
-    heightmap_info = coerce_plot_3d_heightmap(heightmap)
-    heightmap = heightmap_info$heightmap
+    if (extent_missing) {
+      extent = if (identical(resolved_heightmap$source, "scene")) {
+        get_scene_extent(default = NULL)
+      } else {
+        get_hillshade_extent(default = NULL)
+      }
+    }
+    if (crs_missing) {
+      crs = if (identical(resolved_heightmap$source, "scene")) {
+        get_scene_crs(default = NULL)
+      } else {
+        get_hillshade_crs(default = NULL)
+      }
+    }
+  }
+  heightmap_info = coerce_plot_3d_heightmap(
+    heightmap,
+    extent = extent,
+    crs = crs,
+    geographic_aspect = geographic_aspect
+  )
+  heightmap = heightmap_info$heightmap
+  if (heightmap_missing) {
+    heightmap_info$geographic_aspect = resolve_cached_geographic_aspect(
+      source = resolved_heightmap$source,
+      geographic_aspect = geographic_aspect,
+      fallback = heightmap_info$geographic_aspect
+    )
+  }
+  if (!heightmap_missing) {
     cache_hillshade_input_context(heightmap_info, label = heightmap_cache_label)
+  }
+  if (dx_missing) {
+    dx = heightmap_info$geographic_aspect$scale[["z"]]
+  }
+  if (dy_missing) {
+    dy = heightmap_info$geographic_aspect$scale[["x"]]
   }
   if (!is.matrix(heightmap)) {
     stop("`heightmap` must be a matrix.", call. = FALSE)

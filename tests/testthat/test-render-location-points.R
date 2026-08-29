@@ -741,15 +741,16 @@ test_that("point-anchored renderers validate location inputs", {
   fixtures = monterey_point_location_fixtures_test()
   setup_plot3d_location_scene_test()
 
-  expect_error(
+  original_location_crs = sf::st_crs(fixtures$single_sf)
+  expect_no_error(
     render_points(
       location = fixtures$single_sf,
       crs = sf::st_crs(4326),
       altitude = 0,
       clear_previous = TRUE
-    ),
-    "conflicts with `crs`"
+    )
   )
+  expect_equal(sf::st_crs(fixtures$single_sf), original_location_crs)
   expect_error(
     render_points(
       location = monterey_roads_sf[1, ],

@@ -104,12 +104,13 @@ test_that("render_trails builds independent solid terrain-following meshes", {
   )
   cached_meshes = get_scene_trail_meshes()
   expect_length(cached_meshes, 2L)
+  expected_width = 2 / get_scene_geographic_aspect()$mean_cell_meters
   for (mesh in cached_meshes) {
     expect_s3_class(mesh, "mesh3d")
     expect_gt(ncol(mesh$it), 0L)
     specification = attr(mesh, "render_trail_mesh_specification")
     expect_equal(specification$color, "grey50")
-    expect_equal(specification$width, 0.18, tolerance = 1e-8)
+    expect_equal(specification$width, expected_width, tolerance = 1e-8)
     expect_equal(specification$height, 0.1)
     expect_true(specification$rgl_id %in% trail_ids$id)
     expect_null(attr(mesh, "render_stream_mesh_specification"))

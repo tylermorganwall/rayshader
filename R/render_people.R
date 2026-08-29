@@ -209,7 +209,7 @@
 #'   height = 800,
 #'   sky_sun_elevation = 10,
 #'   sky_sun_azimuth = 160,
-#'   iso = 5, 
+#'   iso = 5,
 #'   samples=16
 #' )
 #'
@@ -234,10 +234,10 @@
 #'   height = 800,
 #'   sky_sun_elevation = 10,
 #'   sky_sun_azimuth = 160,
-#'   iso = 5, 
+#'   iso = 5,
 #'   samples=16
 #' )
-#' 
+#'
 #' # Example 2
 #' # Show the scale of the "volcano" 3D dataset
 #' volcano_dem = volcano_spatial()
@@ -250,7 +250,7 @@
 #' render_trails(
 #'   volcano_trails,
 #'   color = "grey50",
-#'   width = 2, 
+#'   width = 2,
 #'   preview = "mesh",
 #'   width_units = "meters"
 #' )
@@ -264,14 +264,14 @@
 #'   line = summit_walk,
 #'   pose = "walking",
 #'   line_spacing = 5,
-#'   offset=0.2, 
+#'   offset=0.2,
 #'   line_pattern = "MF",
 #'   color = c("#F6E8C3", "white"),
 #'   clear_previous = TRUE
 #' )
 #' render_camera(theta = -36, phi = 15, zoom = 0.08, fov=100)
 #' render_snapshot()
-#' 
+#'
 #' # Example 3
 #' # Arrange alternating models around a closed line. Models orient themselves
 #' # according to the local normal and orient the people along the line
@@ -966,6 +966,20 @@ sample_person_line = function(
   sample_y = transformed_xy$y[seq_len(n_samples)]
   direction_x = transformed_xy$x[n_samples + seq_len(n_samples)] - sample_x
   direction_y = transformed_xy$y[n_samples + seq_len(n_samples)] - sample_y
+  scene_aspect = get_scene_geographic_aspect()
+  if (
+    scene_aspect$enabled &&
+      is.matrix(heightmap) &&
+      !is.null(transformed_xy$extent)
+  ) {
+    scene_extent = get_extent(transformed_xy$extent)
+    x_step = (scene_extent[["xmax"]] - scene_extent[["xmin"]]) /
+      (nrow(heightmap) - 1L)
+    y_step = (scene_extent[["ymax"]] - scene_extent[["ymin"]]) /
+      (ncol(heightmap) - 1L)
+    direction_x = direction_x / x_step * scene_aspect$scale[["x"]]
+    direction_y = direction_y / y_step * scene_aspect$scale[["z"]]
+  }
   list(
     x = sample_x,
     y = sample_y,
@@ -1241,10 +1255,13 @@ sample_person_terrain_line_geometry = function(
         (profile$y - terrain_extent["ymin"]) /
           extent_height *
           map_height
+      scene_aspect = get_scene_geographic_aspect()
+      profile$world_x = profile$scene_x * scene_aspect$scale[["x"]]
+      profile$world_z = profile$scene_z * scene_aspect$scale[["z"]]
       terrain_y = interpolate_render_heightmap_height(
         heightmap_scene,
-        profile$scene_x,
-        profile$scene_z
+        profile$world_x,
+        profile$world_z
       )
       if (any(!is.finite(terrain_y))) {
         fallback_height = suppressWarnings(min(heightmap_scene, na.rm = TRUE))
@@ -1254,9 +1271,9 @@ sample_person_terrain_line_geometry = function(
         terrain_y[!is.finite(terrain_y)] = fallback_height
       }
       segment_length = sqrt(
-        diff(profile$scene_x)^2 +
+        diff(profile$world_x)^2 +
           diff(terrain_y)^2 +
-          diff(profile$scene_z)^2
+          diff(profile$world_z)^2
       )
       keep = c(TRUE, segment_length > .Machine$double.eps)
       profile = profile[keep, , drop = FALSE]
@@ -1265,9 +1282,9 @@ sample_person_terrain_line_geometry = function(
         return(NULL)
       }
       segment_length = sqrt(
-        diff(profile$scene_x)^2 +
+        diff(profile$world_x)^2 +
           diff(terrain_y)^2 +
-          diff(profile$scene_z)^2
+          diff(profile$world_z)^2
       )
       total_length = sum(segment_length)
       if (!is.finite(total_length) || total_length <= 0) {
@@ -1383,6 +1400,7 @@ person_terrain_line_angles = function(
     2 -
     (y - terrain_extent["ymin"]) / extent_height * map_height
   terrain_points = cbind(scene_x, 0, scene_z)
+  terrain_points = apply_geographic_aspect_to_vertices(terrain_points)
   terrain_normals = interpolate_render_highquality_normals(
     points = terrain_points,
     heightmap = heightmap,

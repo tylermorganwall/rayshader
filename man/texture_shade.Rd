@@ -12,7 +12,10 @@ texture_shade(
   transform = TRUE,
   dx = 1,
   dy = 1,
-  pad = 50
+  pad = 50,
+  geographic_aspect = TRUE,
+  extent = NULL,
+  crs = NULL
 )
 }
 \arguments{
@@ -36,6 +39,15 @@ This transforms the resulting darkness using the formula \code{tanh(input * cont
 
 \item{pad}{Default \code{50}. The amount to pad the heightmap so edge effects don't appear from the
 fourier transform. Only increase this if you encounter boundary effects.}
+
+\item{geographic_aspect}{Default \code{TRUE}. Correct unequal metric x/y cell
+spacing using the input extent and CRS. Explicit \code{dx} and \code{dy} values take
+precedence.}
+
+\item{extent}{Default \code{NULL}. Spatial extent for a matrix heightmap.}
+
+\item{crs}{Default \code{NULL}. CRS to assign to the input before calculating
+metric cell spacing.}
 }
 \value{
 2D matrix of hillshade values.

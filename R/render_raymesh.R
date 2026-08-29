@@ -460,6 +460,9 @@ render_raymesh = function(
     minpoint_y = (extent["ymax"] + extent["ymin"]) / 2 + zscale / 2
     scale_x = (nrow_map - 1) / (extent["xmax"] - extent["xmin"])
     scale_z = (ncol_map - 1) / (extent["ymax"] - extent["ymin"])
+    scene_aspect = get_scene_geographic_aspect()
+    scale_x = scale_x * scene_aspect$scale[["x"]]
+    scale_z = scale_z * scene_aspect$scale[["z"]]
     scale_y = 1 / zscale
     if (single_obj) {
       obj_zscale = FALSE

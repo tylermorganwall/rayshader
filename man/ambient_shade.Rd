@@ -15,6 +15,9 @@ ambient_shade(
   cache_mask = NULL,
   shadow_cache = NULL,
   progbar = interactive(),
+  geographic_aspect = TRUE,
+  extent = NULL,
+  crs = NULL,
   ...
 )
 }
@@ -42,6 +45,14 @@ update cached \code{zscale} metadata.}
 \item{shadow_cache}{Default \code{NULL}. The shadow matrix to be updated at the points defined by the argument \code{cache_mask}.}
 
 \item{progbar}{Default \code{TRUE} if interactive, \code{FALSE} otherwise. If \code{FALSE}, turns off progress bar.}
+
+\item{geographic_aspect}{Default \code{TRUE}. Correct unequal metric x/y cell
+spacing using the input extent and CRS.}
+
+\item{extent}{Default \code{NULL}. Spatial extent for a matrix heightmap.}
+
+\item{crs}{Default \code{NULL}. CRS to assign to the input before calculating
+metric cell spacing.}
 
 \item{...}{Additional arguments to pass to the \code{makeCluster} function when \code{multicore=TRUE}.}
 }

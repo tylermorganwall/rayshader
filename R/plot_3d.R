@@ -78,6 +78,44 @@ extract_longlat_heightmap_zscale = function(heightmap, resolution) {
 }
 
 extract_spatial_heightmap_zscale = function(heightmap) {
+  spatial_nrow = if (inherits(heightmap, "SpatRaster")) {
+    terra::nrow(heightmap)
+  } else if (
+    inherits(heightmap, c("RasterLayer", "RasterBrick", "RasterStack"))
+  ) {
+    raster::nrow(heightmap)
+  } else {
+    NA_integer_
+  }
+  spatial_ncol = if (inherits(heightmap, "SpatRaster")) {
+    terra::ncol(heightmap)
+  } else if (
+    inherits(heightmap, c("RasterLayer", "RasterBrick", "RasterStack"))
+  ) {
+    raster::ncol(heightmap)
+  } else {
+    NA_integer_
+  }
+  if (
+    is.finite(spatial_nrow) &&
+      is.finite(spatial_ncol) &&
+      spatial_nrow > 1L &&
+      spatial_ncol > 1L
+  ) {
+    metric_aspect = calculate_geographic_aspect(
+      heightmap = matrix(0, nrow = spatial_ncol, ncol = spatial_nrow),
+      extent = tryCatch(get_extent(heightmap), error = function(error) NULL),
+      crs = extract_spatial_heightmap_crs(heightmap),
+      geographic_aspect = TRUE,
+      extent_is_cell_bounds = TRUE
+    )
+    if (
+      is.finite(metric_aspect$mean_cell_meters) &&
+        metric_aspect$mean_cell_meters > 0
+    ) {
+      return(metric_aspect$mean_cell_meters)
+    }
+  }
   resolution = NULL
   if (inherits(heightmap, "SpatRaster")) {
     resolution = terra::res(heightmap)
@@ -137,15 +175,46 @@ extract_spatial_heightmap_crs = function(heightmap) {
   NULL
 }
 
-coerce_plot_3d_heightmap = function(heightmap) {
+coerce_plot_3d_heightmap = function(
+  heightmap,
+  extent = NULL,
+  crs = NULL,
+  geographic_aspect = TRUE
+) {
   info = list(
     heightmap = heightmap,
-    extent = NULL,
-    crs = NULL,
+    extent = extent,
+    crs = try_parse_scene_crs(crs),
     zscale = NA_real_,
-    is_spatial = FALSE
+    is_spatial = FALSE,
+    geographic_aspect = identity_geographic_aspect()
   )
   if (!is_spatial_heightmap_input(heightmap)) {
+    if (is.matrix(heightmap)) {
+      embedded_aspect = attr(
+        heightmap,
+        "rayshader_geographic_aspect",
+        exact = TRUE
+      )
+      info$heightmap = heightmap
+      attr(info$heightmap, "rayshader_geographic_aspect") = NULL
+      info$geographic_aspect = if (is.list(embedded_aspect)) {
+        set_geographic_aspect_enabled(embedded_aspect, geographic_aspect)
+      } else {
+        calculate_geographic_aspect(
+          heightmap = heightmap,
+          extent = info$extent,
+          crs = info$crs,
+          geographic_aspect = geographic_aspect
+        )
+      }
+      if (
+        isTRUE(geographic_aspect) &&
+          is.finite(info$geographic_aspect$mean_cell_meters)
+      ) {
+        info$zscale = info$geographic_aspect$mean_cell_meters
+      }
+    }
     return(info)
   }
   if (is.character(heightmap)) {
@@ -163,12 +232,102 @@ coerce_plot_3d_heightmap = function(heightmap) {
       caller = "plot_3d"
     )
   }
+  if (!is.null(info$crs)) {
+    if (inherits(heightmap, "SpatRaster")) {
+      heightmap = terra::deepcopy(heightmap)
+      terra::crs(heightmap) = info$crs$wkt
+    } else {
+      heightmap = raster::raster(heightmap)
+      raster::crs(heightmap) = info$crs$wkt
+    }
+  }
   info$is_spatial = TRUE
-  info$extent = get_extent(heightmap)
-  info$crs = extract_spatial_heightmap_crs(heightmap)
-  info$zscale = extract_spatial_heightmap_zscale(heightmap)
+  if (is.null(info$extent)) {
+    info$extent = get_extent(heightmap)
+  }
+  if (is.null(info$crs)) {
+    info$crs = extract_spatial_heightmap_crs(heightmap)
+  }
   info$heightmap = raster_to_matrix(heightmap, verbose = FALSE)
+  info$geographic_aspect = calculate_geographic_aspect(
+    heightmap = info$heightmap,
+    extent = info$extent,
+    crs = info$crs,
+    geographic_aspect = geographic_aspect,
+    extent_is_cell_bounds = TRUE
+  )
+  info$zscale = info$geographic_aspect$mean_cell_meters
+  if (!is.finite(info$zscale) || info$zscale <= 0) {
+    info$zscale = extract_spatial_heightmap_zscale(heightmap)
+  }
   info
+}
+
+#' Reproject a spatial heightmap to the active scene grid
+#'
+#' @param heightmap Spatial raster input.
+#' @param caller Default `NULL`. Calling function used in messages.
+#'
+#' @return Heightmap information aligned to the active scene, or `NULL` when
+#' there is no usable spatial target.
+#' @keywords internal
+coerce_heightmap_to_scene_grid = function(heightmap, caller = NULL) {
+  if (!is_spatial_heightmap_input(heightmap)) {
+    return(NULL)
+  }
+  scene_heightmap = get_scene_heightmap(default = NULL)
+  scene_extent = tryCatch(
+    get_extent(get_scene_extent(default = NULL)),
+    error = function(error) NULL
+  )
+  scene_crs = try_parse_scene_crs(get_scene_crs(default = NULL))
+  if (
+    !is.matrix(scene_heightmap) ||
+      nrow(scene_heightmap) < 1L ||
+      ncol(scene_heightmap) < 1L ||
+      is.null(scene_extent) ||
+      is.null(scene_crs) ||
+      !requireNamespace("terra", quietly = TRUE)
+  ) {
+    return(NULL)
+  }
+  source = if (is.character(heightmap)) {
+    read_spatial_raster(heightmap, caller = caller)
+  } else if (inherits(heightmap, "SpatRaster")) {
+    terra::deepcopy(heightmap)
+  } else {
+    terra::rast(heightmap)
+  }
+  if (terra::nlyr(source) > 1L) {
+    warning("`heightmap` has multiple layers; using the first layer.")
+    source = source[[1L]]
+  }
+  if (is.null(extract_spatial_heightmap_crs(source))) {
+    return(NULL)
+  }
+  target = terra::rast(
+    nrows = ncol(scene_heightmap),
+    ncols = nrow(scene_heightmap),
+    xmin = scene_extent[["xmin"]],
+    xmax = scene_extent[["xmax"]],
+    ymin = scene_extent[["ymin"]],
+    ymax = scene_extent[["ymax"]],
+    crs = scene_crs$wkt
+  )
+  aligned = tryCatch(
+    terra::project(source, target, method = "bilinear"),
+    error = function(error) NULL
+  )
+  if (is.null(aligned)) {
+    return(NULL)
+  }
+  scene_aspect = get_scene_geographic_aspect()
+  coerce_plot_3d_heightmap(
+    aligned,
+    extent = scene_extent,
+    crs = scene_crs,
+    geographic_aspect = scene_aspect$enabled
+  )
 }
 
 get_plot_3d_max_texture_size = function() {
@@ -369,6 +528,10 @@ get_plot_3d_surface_texture = function(id, rgl_texture_file) {
 #' by [get_extent()] (numeric xmin/xmax/ymin/ymax vector, `raster`, `terra`, `sf`, or `sp` objects).
 #' If omitted, a spatial raster uses its spatial extent and a raw matrix uses its native
 #' 1-based extent: `c(xmin = 1, xmax = nrow(heightmap), ymin = 1, ymax = ncol(heightmap))`.
+#' @param geographic_aspect Default `TRUE`. Correct unequal metric x/y cell
+#' spacing in terrain geometry and cache the transform for later render calls.
+#' @param crs Default `NULL`. CRS to assign to the terrain input. An explicit
+#' value overrides embedded CRS metadata.
 #'@param baseshape Default `rectangle`. Shape of the base. Options are `c("rectangle","circle","hex")`.
 #'@param solid Default `TRUE`. If `FALSE`, just the surface is rendered.
 #'@param soliddepth Default `auto`, which sets it to the lowest elevation in the matrix minus one unit (scaled by zscale). Depth of the solid base. If heightmap is uniform and set on `auto`, this is automatically set to a slightly lower level than the uniform elevation.
@@ -542,7 +705,9 @@ plot_3d = function(
   plot_new = TRUE,
   close_previous = TRUE,
   clear_previous = TRUE,
-  extent = NULL
+  extent = NULL,
+  geographic_aspect = TRUE,
+  crs = NULL
 ) {
   water_was_missing = missing(water)
   waterdepth_was_missing = missing(waterdepth)
@@ -560,6 +725,7 @@ plot_3d = function(
   zscale_was_missing = missing(zscale)
   vertical_exaggeration_was_missing = missing(vertical_exaggeration)
   extent_was_missing = missing(extent)
+  crs_was_missing = missing(crs)
   heightmap_cache_label = NULL
   zscale_cache_input_label = format_scene_cache_label(deparse(substitute(
     zscale
@@ -584,7 +750,32 @@ plot_3d = function(
     )))
     allow_scene_zscale_cache = FALSE
   }
-  heightmap_info = coerce_plot_3d_heightmap(heightmap)
+  if (heightmap_was_missing && crs_was_missing) {
+    crs = if (
+      !is.null(resolved_heightmap) &&
+        identical(resolved_heightmap$source, "scene")
+    ) {
+      get_scene_crs(default = NULL)
+    } else {
+      get_hillshade_crs(default = NULL)
+    }
+  }
+  if (heightmap_was_missing && extent_was_missing) {
+    extent = if (
+      !is.null(resolved_heightmap) &&
+        identical(resolved_heightmap$source, "scene")
+    ) {
+      get_scene_extent(default = NULL)
+    } else {
+      get_hillshade_extent(default = NULL)
+    }
+  }
+  heightmap_info = coerce_plot_3d_heightmap(
+    heightmap,
+    extent = extent,
+    crs = crs,
+    geographic_aspect = geographic_aspect
+  )
   heightmap = heightmap_info$heightmap
   auto_extent = heightmap_info$extent
   auto_crs = heightmap_info$crs
@@ -628,6 +819,32 @@ plot_3d = function(
       "%s_matrix_extent",
       heightmap_cache_label
     ))
+  }
+  geographic_aspect_info = heightmap_info$geographic_aspect
+  if (
+    heightmap_was_missing &&
+      extent_was_missing &&
+      crs_was_missing &&
+      !is.null(resolved_heightmap)
+  ) {
+    cached_aspect = if (identical(resolved_heightmap$source, "scene")) {
+      get_scene_geographic_aspect()
+    } else {
+      get_hillshade_geographic_aspect()
+    }
+    if (is.finite(cached_aspect$mean_cell_meters)) {
+      geographic_aspect_info = set_geographic_aspect_enabled(
+        cached_aspect,
+        geographic_aspect
+      )
+    }
+  }
+  if (
+    zscale_was_missing &&
+      is.finite(geographic_aspect_info$mean_cell_meters) &&
+      geographic_aspect_info$mean_cell_meters > 0
+  ) {
+    auto_zscale = geographic_aspect_info$mean_cell_meters
   }
   resolved_zscale = resolve_hillshade_zscale(
     zscale = zscale,
@@ -703,6 +920,7 @@ plot_3d = function(
     clear_scene_metadata = TRUE,
     clear_scene_cache = TRUE
   )
+  cache_scene_geographic_aspect(geographic_aspect_info)
   if (shadowcolor == "auto") {
     shadowcolor = convert_color(
       darken_color(background, darken = shadow_darkness),
@@ -878,7 +1096,19 @@ plot_3d = function(
   )
   if (!triangulate) {
     if (!precomputed) {
-      normals = calculate_normal(heightmap, zscale = zscale)
+      normal_heightmap = heightmap
+      attr(normal_heightmap, "rayshader_geographic_aspect") =
+        geographic_aspect_info
+      normals = calculate_normal(
+        normal_heightmap,
+        zscale = zscale,
+        geographic_aspect = geographic_aspect
+      )
+    } else {
+      normals = correct_normal_geographic_aspect(
+        normals,
+        geographic_aspect_info
+      )
     }
     dim(heightmap) = unname(dim(heightmap))
     normalsx = (t(normals$x[c(-1, -nrow(normals$x)), c(-1, -ncol(normals$x))]))
@@ -889,7 +1119,11 @@ plot_3d = function(
     normalsy[replace_na_vals] = 1
     normalsz[replace_na_vals] = 0
 
-    ray_surface = generate_surface(heightmap, zscale = zscale)
+    ray_surface = generate_surface(
+      heightmap,
+      zscale = zscale,
+      geographic_aspect = geographic_aspect_info
+    )
     surface_id = rgl::triangles3d(
       x = ray_surface$verts,
       indices = ray_surface$inds,
@@ -929,6 +1163,8 @@ plot_3d = function(
     tris[, 1] = tris[, 1] - (nr - 1) / 2 # +1
     tris[, 3] = tris[, 3] - (nc - 1) / 2
     tris[, 3] = -tris[, 3]
+    tris[, 1] = tris[, 1] * geographic_aspect_info$scale[["x"]]
+    tris[, 3] = tris[, 3] * geographic_aspect_info$scale[["z"]]
 
     surface_id = rgl::triangles3d(
       tris,
@@ -1044,5 +1280,6 @@ plot_3d = function(
   cache_scene_triangulate(triangulate)
   cache_scene_extent(extent_cache_value, label = extent_cache_label)
   cache_scene_crs(crs_cache_value, label = crs_cache_label)
+  cache_scene_geographic_aspect(geographic_aspect_info)
   invisible(NULL)
 }

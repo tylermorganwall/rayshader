@@ -91,7 +91,7 @@ make_base = function(
     fullsides[, 1] = fullsides[, 1] - (nr - 1) / 2
     fullsides[, 3] = fullsides[, 3] - (nc - 1) / 2
     rgl::triangles3d(
-      fullsides,
+      apply_geographic_aspect_to_vertices(fullsides),
       texture = NULL,
       lit = FALSE,
       color = basecolor,
@@ -181,7 +181,7 @@ make_base = function(
       vertical_texcoords_y[vertical_sides[, 2] == basedepth] = 1
 
       rgl::triangles3d(
-        horizontal_sides,
+        apply_geographic_aspect_to_vertices(horizontal_sides),
         color = "white",
         texture = textures[1],
         texcoords = cbind(horizontal_texcoords_x, horizontal_texcoords_y),
@@ -192,7 +192,7 @@ make_base = function(
       )
 
       rgl::triangles3d(
-        vertical_sides,
+        apply_geographic_aspect_to_vertices(vertical_sides),
         color = "white",
         texture = textures[2],
         texcoords = cbind(vertical_texcoords_x, vertical_texcoords_y),
@@ -203,7 +203,7 @@ make_base = function(
       )
     } else {
       rgl::triangles3d(
-        fullsides,
+        apply_geographic_aspect_to_vertices(fullsides),
         lit = FALSE,
         color = basecolor,
         front = "filled",
@@ -290,7 +290,7 @@ make_base = function(
         (max_vside_y - min_vside_y)
 
       rgl::triangles3d(
-        horizontal_sides,
+        apply_geographic_aspect_to_vertices(horizontal_sides),
         texture = textures[1],
         texcoords = cbind(horizontal_texcoords_x, horizontal_texcoords_y),
         lit = FALSE,
@@ -301,7 +301,7 @@ make_base = function(
       )
 
       rgl::triangles3d(
-        vertical_sides,
+        apply_geographic_aspect_to_vertices(vertical_sides),
         texture = textures[2],
         texcoords = cbind(vertical_texcoords_x, vertical_texcoords_y),
         lit = FALSE,
@@ -312,7 +312,7 @@ make_base = function(
       )
     } else {
       rgl::triangles3d(
-        fullsides,
+        apply_geographic_aspect_to_vertices(fullsides),
         texture = NULL,
         lit = FALSE,
         color = basecolor,

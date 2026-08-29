@@ -5,11 +5,11 @@
 \title{Render Camera}
 \usage{
 render_camera(
+  location = NULL,
   theta = NULL,
   phi = NULL,
   zoom = NULL,
   fov = NULL,
-  location = NULL,
   altitude = NULL,
   shift_vertical = 0,
   lat = NULL,
@@ -18,14 +18,6 @@ render_camera(
 )
 }
 \arguments{
-\item{theta}{Defaults to current value. Rotation angle.}
-
-\item{phi}{Defaults to current value. Azimuth angle. Maximum \code{90}.}
-
-\item{zoom}{Defaults to current value. Positive value indicating camera magnification.}
-
-\item{fov}{Defaults to current value. Field of view of the camera. Maximum \code{180}.}
-
 \item{location}{Default \code{NULL}. A numeric \code{c(x, y)} pair in the scene's cached
 extent, or a single spatial POINT to use as the camera's look-at target. Spatial
 inputs accept \code{sf}, \code{sfc}, \code{sfg}, and \code{sp} objects and are transformed to the
@@ -33,6 +25,14 @@ active scene CRS. If a spatial input contains a Z coordinate or an \code{altitud
 \code{alt}, \code{elevation}, or \code{z} column, that value sets the target height; otherwise,
 the target height is sampled from the cached heightmap. Cannot be combined with
 \code{lat} or \code{long}.}
+
+\item{theta}{Defaults to current value. Rotation angle.}
+
+\item{phi}{Defaults to current value. Azimuth angle. Maximum \code{90}.}
+
+\item{zoom}{Defaults to current value. Positive value indicating camera magnification.}
+
+\item{fov}{Defaults to current value. Field of view of the camera. Maximum \code{180}.}
 
 \item{altitude}{Default \code{NULL}. Elevation of the look-at target in the scene's
 elevation units. The value is converted to rgl coordinates using the cached
