@@ -6,17 +6,21 @@
 \usage{
 generate_altitude_overlay(
   hillshade,
-  heightmap,
+  heightmap = NULL,
   start_transition,
   end_transition = NULL,
   lower = TRUE,
-  relative = FALSE
+  relative = FALSE,
+  extent = NULL,
+  crs = NULL
 )
 }
 \arguments{
 \item{hillshade}{The hillshade to transition into.}
 
-\item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All grid points are assumed to be evenly spaced.}
+\item{heightmap}{Default \code{NULL}. A two-dimensional matrix, where each entry
+in the matrix is the elevation at that point. If omitted, rayshader uses the
+cached hillshade or scene heightmap.}
 
 \item{start_transition}{Elevation threshold, or proportion of the height range if \code{relative = TRUE}.}
 
@@ -25,6 +29,11 @@ generate_altitude_overlay(
 \item{lower}{Default \code{TRUE}. If \code{TRUE}, the overlay is most opaque at lower elevations. If \code{FALSE}, the direction is reversed.}
 
 \item{relative}{Default \code{FALSE}. If \code{TRUE}, interpret \code{start_transition} and \code{end_transition} as proportions of the height range in 0..1.}
+
+\item{extent}{Default \code{NULL}. Spatial extent for a matrix heightmap.}
+
+\item{crs}{Default \code{NULL}. CRS describing the input heightmap. An explicit
+value overrides embedded metadata on a copy of the input.}
 }
 \value{
 4-layer RGB array representing the semi-transparent hillshade.

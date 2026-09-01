@@ -5,7 +5,8 @@
 #'Cache fallback messages are disabled by default. Set `options(rayshader.verbose_scene_cache = TRUE)` to print when cached metadata is reused.
 #'
 #
-#'@param angle Default `0`. The direction the arrow should be facing.
+#'@param angle Default `0`. The direction the arrow should be facing. When
+#'omitted, rayshader rotates grid north to true north using cached metadata.
 #'@param position Default `SE`. A string representing a cardinal direction. Ignored if `x`, `y`, and `z`
 #'are manually specified.
 #'@param compass_radius Default `NULL`. The radius of the compass. If not entered, automatically calculated.
@@ -118,6 +119,7 @@ render_compass = function(
   zscale = 1,
   vertical_exaggeration = 1
 ) {
+  angle_missing = missing(angle)
   if (clear_compass) {
     rgl::pop3d(
       tag = c(
@@ -136,6 +138,9 @@ render_compass = function(
     vertical_exaggeration_missing = missing(vertical_exaggeration),
     caller = "render_compass"
   )
+  if (isTRUE(angle_missing)) {
+    angle = angle + resolve_cached_north_rotation(source = "scene")
+  }
   if (rgl::cur3d() == 0) {
     stop("No rgl window currently open.")
   }

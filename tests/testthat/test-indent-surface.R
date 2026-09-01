@@ -336,6 +336,34 @@ test_that("matrix and SpatRaster inputs preserve their return contracts", {
   expect_s4_class(raster_result, "SpatRaster")
 })
 
+test_that("explicit raster CRS overrides metadata without mutating input", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("terra")
+
+  heightmap = terra::rast(
+    nrows = 4,
+    ncols = 4,
+    xmin = 0,
+    xmax = 4,
+    ymin = 0,
+    ymax = 4,
+    crs = "EPSG:4326"
+  )
+  terra::values(heightmap) = 10
+  original_crs = terra::crs(heightmap)
+  result = shift_terrain(
+    heightmap,
+    make_shift_test_polygon(1, 3, 1, 3, crs = 3857),
+    amount = -2,
+    crs = 3857,
+    touches = FALSE
+  )
+
+  expect_true(terra::same.crs(result, "EPSG:3857"))
+  expect_true(terra::same.crs(terra::crs(heightmap), original_crs))
+  expect_equal(sum(terra::values(result) == 8), 4)
+})
+
 test_that("RasterLayer inputs warn and return SpatRaster output", {
   skip_if_not_installed("sf")
   skip_if_not_installed("terra")

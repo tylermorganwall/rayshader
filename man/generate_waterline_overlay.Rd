@@ -5,7 +5,7 @@
 \title{Generate Waterline Overlay}
 \usage{
 generate_waterline_overlay(
-  heightmap,
+  heightmap = NULL,
   color = "white",
   linewidth = 1,
   boolean = FALSE,
@@ -23,14 +23,19 @@ generate_waterline_overlay(
   width = NA,
   height = NA,
   resolution_multiply = 1,
-  min_area = length(heightmap)/400,
+  min_area = NULL,
   max_height = NULL,
-  return_distance_matrix = FALSE
+  return_distance_matrix = FALSE,
+  geographic_aspect = TRUE,
+  extent = NULL,
+  crs = NULL
 )
 }
 \arguments{
-\item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
-If \code{boolean = TRUE}, this will instead be interpreted as a logical matrix indicating areas of water.}
+\item{heightmap}{Default \code{NULL}. A two-dimensional matrix, where each entry
+in the matrix is the elevation at that point. If \code{boolean = TRUE}, this will
+instead be interpreted as a logical matrix indicating areas of water. If
+omitted, rayshader uses the cached hillshade or scene heightmap.}
 
 \item{color}{Default \code{white}. Color of the lines.}
 
@@ -59,7 +64,8 @@ waterlines fade entirely, when \code{fade = TRUE}.}
 \item{evenly_spaced}{Default \code{FALSE}. If \code{TRUE}, \code{falloff} will be ignored and the lines will be evenly spaced.}
 
 \item{zscale}{Default \code{1}. Base \code{zscale} used for water detection when \code{boolean = FALSE}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
-of 1 meter and the grid values are separated by 10 meters, \code{zscale} would be 10.}
+of 1 meter and the grid values are separated by 10 meters, \code{zscale} would be
+10. If omitted, rayshader uses raster-derived or matching cached metadata.}
 
 \item{cutoff}{Default \code{0.999}. Arguments passed to \code{\link[=detect_water]{detect_water()}}. Ignored if \code{boolean = TRUE}.The lower limit of the z-component of the unit normal vector to be classified as water.}
 
@@ -72,13 +78,23 @@ increase the resolution of the overlay, which should make lines/polygons/text fi
 Should be combined with \code{\link[=add_overlay]{add_overlay()}} with \code{rescale_original = TRUE} to ensure those added details are captured
 in the final map.}
 
-\item{min_area}{Default \code{length(heightmap)/400}. Arguments passed to \code{\link[=detect_water]{detect_water()}}. Ignored if \code{boolean = TRUE}. Minimum area (in units of the height matrix x and y spacing) to be considered a body of water.}
+\item{min_area}{Default \code{NULL}, equivalent to \code{length(heightmap)/400} after
+the heightmap is resolved. Arguments passed to \code{\link[=detect_water]{detect_water()}}. Ignored if
+\code{boolean = TRUE}. Minimum area (in grid cells) to be considered water.}
 
-\item{max_height}{Default \code{NULL}. Arguments passed to \code{\link[=detect_water]{detect_water()}}. Ignored if \code{boolean = TRUE}. If passed, this number will specify the maximum height a point can be considered to be water.
-\code{FALSE}, the direction will be reversed.}
+\item{max_height}{Default \code{NULL}. Arguments passed to \code{\link[=detect_water]{detect_water()}}. Ignored if \code{boolean = TRUE}. If passed, this number will specify the maximum height a point can be considered to be water.}
 
 \item{return_distance_matrix}{Default \code{FALSE}. If \code{TRUE}, this function will return the boolean distance matrix instead of
 contour lines.}
+
+\item{geographic_aspect}{Default \code{TRUE}. If \code{TRUE}, use supplied or cached
+spatial metadata when detecting water and measuring distance from shore.}
+
+\item{extent}{Default \code{NULL}. Spatial extent for a matrix heightmap.}
+
+\item{crs}{Default \code{NULL}. CRS describing the input heightmap. An explicit
+value overrides embedded metadata on a copy of the input.
+\code{FALSE}, the direction will be reversed.}
 }
 \value{
 4-layer RGB array representing the waterline overlay.

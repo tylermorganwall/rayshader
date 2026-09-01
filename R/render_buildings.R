@@ -316,6 +316,7 @@ render_buildings = function(
   heightmap = NULL,
   ...
 ) {
+  light_direction_missing = missing(light_direction)
   if (
     is_render_clear_only_call(
       clear_previous,
@@ -341,6 +342,11 @@ render_buildings = function(
   heightmap = resolve_scene_render_heightmap(
     heightmap,
     caller = "render_buildings"
+  )
+  light_direction = resolve_scene_light_direction(
+    light_direction,
+    light_direction_missing,
+    light_relative
   )
   top = roof_height
   bottom = base_height

@@ -150,6 +150,7 @@ radiance_shade = function(
   crs = NULL,
   ...
 ) {
+  lightdirection_missing = missing(lightdirection)
   if (samples > 256 && sample_method == "sobol_blue") {
     warning(
       r"{When `sample_method = "sobol_blue"`, `samples` must be less than or equal to 256. Setting `sample_method` to `"sobol"`.}"
@@ -286,7 +287,6 @@ radiance_shade = function(
             sky_sun_azimuth = child_args$sky_sun_azimuth,
             sky_altitude = child_args$sky_altitude,
             sky_args = child_args$sky_args,
-            lightdirection = child_args$lightdirection,
             lightaltitude = child_args$lightaltitude,
             lightsize = child_args$lightsize,
             lightintensity = child_args$lightintensity,
@@ -304,6 +304,9 @@ radiance_shade = function(
             scene_elements = child_args$scene_elements,
             plot = FALSE
           )
+          if (!isTRUE(child_args$lightdirection_missing)) {
+            render_args$lightdirection = child_args$lightdirection
+          }
           if (
             "auto_exposure" %in%
               names(formals(rayrender::render_scene))
@@ -463,7 +466,7 @@ radiance_shade = function(
           texture = texture,
           color = color,
           zscale = zscale,
-          geographic_aspect = aspect$enabled,
+          geographic_aspect = aspect$active,
           extent = extent,
           crs = crs
         )
@@ -630,6 +633,7 @@ radiance_shade = function(
     sky_altitude = sky_altitude,
     sky_args = sky_args,
     lightdirection = lightdirection,
+    lightdirection_missing = lightdirection_missing,
     lightaltitude = lightaltitude,
     lightsize = lightsize,
     lightintensity = lightintensity,
@@ -647,7 +651,7 @@ radiance_shade = function(
     clamp_value = clamp_value,
     auto_exposure = auto_exposure,
     scene_elements = scene_elements,
-    geographic_aspect = aspect$enabled,
+    geographic_aspect = aspect$active,
     extent = extent,
     crs = crs,
     dot_args = dot_args

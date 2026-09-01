@@ -6,13 +6,13 @@
 \usage{
 generate_scalebar_overlay(
   extent = NULL,
-  length,
+  length = NULL,
   x = 0.05,
   y = 0.05,
   latlong = NA,
   thickness = NA,
-  bearing = 90,
-  unit = "m",
+  bearing = NULL,
+  unit = NULL,
   flip_ticks = FALSE,
   labels = NA,
   text_size = 1,
@@ -49,8 +49,8 @@ the previously aforementioned packages) which will be automatically converted to
 lat/long coordinates, rayshader will infer that from the spatial metadata when possible. If omitted, rayshader will infer the extent
 from \code{heightmap} when possible, otherwise from the active scene or cached hillshade metadata.}
 
-\item{length}{The length of the scale bar, in \code{units}. This should match the units used on the map,
-unless \code{extent} uses lat/long coordinates. In that case, the distance should be in meters.}
+\item{length}{Default \code{NULL}. Length of the scale bar in \code{unit}. If omitted,
+rayshader derives a pretty length approximately half of the longer map side.}
 
 \item{x}{Default \code{0.05}. The x-coordinate of the bottom-left corner of the scale bar, as a proportion of the full map width.}
 
@@ -62,9 +62,12 @@ used as a fallback for matrix heightmaps without cached spatial metadata.}
 
 \item{thickness}{Default \code{NA}, automatically computed as 1/20th the length of the scale bar. Width of the scale bar.}
 
-\item{bearing}{Default \code{90}, horizontal. Direction (measured from north) of the scale bar.}
+\item{bearing}{Default \code{NULL}. Direction measured clockwise from grid north.
+If omitted, the scale bar follows the longer map axis.}
 
-\item{unit}{Default \code{m}. Displayed unit on the scale bar.}
+\item{unit}{Default \code{NULL}. Distance unit for \code{length} and the displayed label.
+If omitted, rayshader uses metres or kilometres for longitude/latitude scenes,
+the CRS linear units for projected scenes, and no suffix for raw matrices.}
 
 \item{flip_ticks}{Default \code{FALSE}. Whether to flip the ticks to the other side of the scale bar.}
 
@@ -131,7 +134,9 @@ of this color.}
 Semi-transparent overlay with a scale bar.
 }
 \description{
-This function creates an overlay with a scale bar of a user-specified length.
+This function creates an overlay with a scale bar. By default,
+the scale bar spans approximately half of the longer map dimension and uses
+pretty breaks and units derived from the cached spatial metadata.
 It uses the coordinates of the map (specified by passing an extent)
 and then creates a scale bar at a specified x/y proportion across the map. If the map is not projected
 (i.e. is in lat/long coordinates) this function will use the \code{geosphere} package to create a

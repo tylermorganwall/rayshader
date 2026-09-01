@@ -14,6 +14,8 @@ test_that("geographic aspect resolves metric cell dimensions", {
   expect_gt(aspect$scale[["z"]], 1)
   expect_equal(mean(aspect$scale), 1)
   expect_equal(aspect$center_latitude, 60.3, tolerance = 1e-6)
+  expect_equal(aspect$center_longitude, -74.6, tolerance = 1e-6)
+  expect_equal(aspect$north_rotation, 0, tolerance = 1e-6)
 
   identity = calculate_geographic_aspect(
     heightmap,
@@ -46,6 +48,198 @@ test_that("geographic aspect resolves metric cell dimensions", {
     crs = 4326
   )
   expect_equal(missing_metadata, identity_geographic_aspect())
+})
+
+test_that("geographic aspect records projected true north", {
+  skip_if_not_installed("sf")
+
+  heightmap = matrix(0, nrow = 9, ncol = 7)
+  extent = c(
+    xmin = 300000,
+    xmax = 380000,
+    ymin = 6600000,
+    ymax = 6660000
+  )
+  aspect = calculate_geographic_aspect(
+    heightmap,
+    extent = extent,
+    crs = 32610
+  )
+
+  expect_true(is.finite(aspect$north_rotation))
+  expect_gt(abs(aspect$north_rotation), 1)
+
+  heightmap = outer(seq_len(9), seq_len(7), `+`)
+  default_light = lamb_shade(
+    heightmap,
+    zscale = 1000,
+    extent = extent,
+    crs = 32610
+  )
+  true_north_light = lamb_shade(
+    heightmap,
+    sunangle = 315 + aspect$north_rotation,
+    zscale = 1000,
+    extent = extent,
+    crs = 32610
+  )
+  grid_north_light = lamb_shade(
+    heightmap,
+    sunangle = 315,
+    zscale = 1000,
+    extent = extent,
+    crs = 32610
+  )
+
+  expect_equal(default_light, true_north_light, tolerance = 1e-12)
+  expect_false(isTRUE(all.equal(default_light, grid_north_light)))
+
+  legacy_default = lamb_shade(
+    heightmap,
+    zscale = 1000,
+    geographic_aspect = FALSE,
+    extent = extent,
+    crs = 32610
+  )
+  legacy_grid_north = lamb_shade(
+    heightmap,
+    sunangle = 315,
+    zscale = 1000,
+    geographic_aspect = FALSE,
+    extent = extent,
+    crs = 32610
+  )
+  expect_equal(legacy_default, legacy_grid_north, tolerance = 1e-12)
+})
+
+test_that("waterline distance uses cached horizontal cell shape", {
+  non_water = matrix(TRUE, nrow = 5, ncol = 5)
+  non_water[2:4, 2:4] = FALSE
+  aspect = identity_geographic_aspect()
+  aspect$active = TRUE
+  aspect$enabled = TRUE
+  aspect$scale = c(x = 0.5, z = 1.5)
+
+  distance = calculate_waterline_distance(non_water, aspect)
+
+  expect_equal(distance[2, 3], 0.5)
+  expect_equal(distance[3, 3], 1)
+  expect_equal(distance[3, 2], 1)
+  expect_equal(distance[3, 4], 1)
+})
+
+test_that("detect_water retains geographic aspect metadata", {
+  skip_if_not_installed("sf")
+
+  heightmap = matrix(0, nrow = 20, ncol = 20)
+  water = detect_water(
+    heightmap,
+    min_area = 1,
+    extent = c(xmin = -75, xmax = -74, ymin = 60, ymax = 60.5),
+    crs = 4326
+  )
+
+  expect_true(attr(water, "rayshader_geographic_aspect")$enabled)
+})
+
+test_that("waterline overlays retain cached spatial distance metadata", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("terra")
+
+  clear_hillshade_cache()
+  withr::defer(clear_hillshade_cache())
+  heightmap = terra::rast(
+    nrows = 20,
+    ncols = 20,
+    xmin = -75,
+    xmax = -74,
+    ymin = 60,
+    ymax = 60.5,
+    crs = "EPSG:4326"
+  )
+  values = matrix(10, nrow = 20, ncol = 20)
+  values[6:15, 6:15] = 0
+  terra::values(heightmap) = as.vector(t(values))
+  height_shade(heightmap)
+
+  distance = generate_waterline_overlay(
+    min_area = 1,
+    return_distance_matrix = TRUE
+  )
+
+  expect_true(attr(distance, "rayshader_geographic_aspect")$active)
+  expect_true(attr(distance, "rayshader_geographic_aspect")$enabled)
+})
+
+test_that("cloud shadows use geographic aspect", {
+  skip_if_not_installed("ambient")
+  skip_if_not_installed("sf")
+
+  heightmap = outer(seq_len(12), seq_len(10), `+`)
+  arguments = list(
+    heightmap = heightmap,
+    layers = 3,
+    fractal_levels = 2,
+    start_altitude = 10,
+    end_altitude = 15,
+    sun_angle = 315,
+    zscale = 1000,
+    extent = c(xmin = -75, xmax = -74, ymin = 60, ymax = 60.5),
+    crs = 4326
+  )
+  corrected = do.call(cloud_shade, arguments)
+  uncorrected = do.call(
+    cloud_shade,
+    c(arguments, list(geographic_aspect = FALSE))
+  )
+
+  expect_equal(dim(corrected), c(ncol(heightmap), nrow(heightmap)))
+  expect_false(isTRUE(all.equal(corrected, uncorrected)))
+})
+
+test_that("scene distance units resolve from cached spatial metadata", {
+  skip_if_not_installed("sf")
+  local_rgl_use_null()
+  rgl::open3d()
+  withr::defer(rgl::close3d())
+
+  reset_scene_context(
+    clear_scene_metadata = TRUE,
+    clear_scene_cache = TRUE
+  )
+  withr::defer(reset_scene_context(
+    clear_scene_metadata = TRUE,
+    clear_scene_cache = TRUE
+  ))
+  aspect = identity_geographic_aspect()
+  aspect$active = TRUE
+  aspect$mean_cell_meters = 10
+  aspect$north_rotation = 2.5
+  cache_scene_context_token()
+  cache_scene_geographic_aspect(aspect)
+  cache_scene_crs(sf::st_crs(2230))
+
+  expect_equal(resolve_scene_distance_multiplier("auto"), 0.1)
+  expect_equal(resolve_scene_distance_multiplier("meters"), 0.1)
+  expect_equal(
+    resolve_scene_distance_multiplier("map"),
+    (1200 / 3937) / 10,
+    tolerance = 1e-12
+  )
+  expect_equal(resolve_scene_distance_multiplier("scene"), 1)
+  expect_equal(resolve_cached_north_rotation("scene"), 2.5)
+  expect_equal(
+    resolve_scene_light_direction(c(315, 135), TRUE, FALSE),
+    c(317.5, 137.5)
+  )
+  expect_equal(
+    resolve_scene_light_direction(c(315, 135), FALSE, FALSE),
+    c(315, 135)
+  )
+  expect_equal(
+    resolve_scene_light_direction(c(315, 135), TRUE, TRUE),
+    c(315, 135)
+  )
 })
 
 test_that("geometry-aware 2D shades preserve dimensions and use aspect", {

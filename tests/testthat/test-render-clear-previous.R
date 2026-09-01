@@ -95,6 +95,10 @@ test_that("clear-only render calls remove their existing layers", {
       call = quote(render_roads(clear_previous = TRUE)),
       tags = c("road_path", "road_mesh_preview")
     ),
+    scalebars = list(
+      call = quote(render_scalebar(clear_previous = TRUE)),
+      tags = c("scalebar_col1", "scalebar_col2", "text_scalebar")
+    ),
     streams = list(
       call = quote(render_streams(clear_previous = TRUE)),
       tags = "water_path"
@@ -125,10 +129,31 @@ test_that("clear-only render calls remove their existing layers", {
   }
 })
 
+test_that("render_scalebar uses the standard clear argument", {
+  expect_true("clear_previous" %in% names(formals(render_scalebar)))
+  expect_false("clear_scalebar" %in% names(formals(render_scalebar)))
+})
+
 test_that("renderers clear before validating a replacement layer", {
   local_rgl_use_null()
   rgl::open3d()
   on.exit(rgl::close3d(), add = TRUE)
+
+  for (tag in c("scalebar_col1", "scalebar_col2", "text_scalebar")) {
+    rgl::points3d(0, 0, 0, tag = tag)
+  }
+
+  expect_error(
+    render_scalebar(limits = -1, clear_previous = TRUE),
+    "limits must be greater than (or equal to) 0",
+    fixed = TRUE
+  )
+
+  remaining_tags = rgl::ids3d(tags = TRUE)$tag
+  expect_false(any(
+    c("scalebar_col1", "scalebar_col2", "text_scalebar") %in%
+      remaining_tags
+  ))
 
   rgl::points3d(0, 0, 0, tag = "textline")
   rgl::points3d(0, 0, 0, tag = "raytext")

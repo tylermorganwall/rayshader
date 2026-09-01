@@ -12,11 +12,14 @@ detect_water(
   max_height = NULL,
   normalvectors = NULL,
   keep_groups = FALSE,
-  progbar = FALSE
+  progbar = FALSE,
+  geographic_aspect = TRUE,
+  extent = NULL,
+  crs = NULL
 )
 }
 \arguments{
-\item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
+\item{heightmap}{Default \code{NULL}. A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
 All grid points are assumed to be evenly spaced. Alternatively, if heightmap is a logical matrix, each entry
 specifies whether that point is water or not. If omitted, rayshader will use the cached hillshade/scene heightmap.}
 
@@ -26,7 +29,9 @@ of 1 meter and the grid values are separated by 10 meters, \code{zscale} would b
 
 \item{cutoff}{Default \code{1-1e-7}. The lower limit of the z-component of the unit normal vector to be classified as water.}
 
-\item{min_area}{Default \code{length(heightmap)/400}. Minimum area (in units of the height matrix x and y spacing) to be considered a body of water.}
+\item{min_area}{Default \code{NULL}, equivalent to \code{length(heightmap)/400} after
+the heightmap is resolved. Minimum area (in grid cells) to be considered a
+body of water.}
 
 \item{max_height}{Default \code{NULL}. If passed, this number will specify the maximum height a point can be considered to be water.}
 
@@ -35,6 +40,15 @@ of 1 meter and the grid values are separated by 10 meters, \code{zscale} would b
 \item{keep_groups}{Default \code{FALSE}. If \code{TRUE}, the matrix returned will retain the numbered grouping information.}
 
 \item{progbar}{Default \code{FALSE}. If \code{TRUE}, turns on progress bar.}
+
+\item{geographic_aspect}{Default \code{TRUE}. If \code{TRUE}, account for unequal
+horizontal cell sizes using the supplied or cached spatial metadata.}
+
+\item{extent}{Default \code{NULL}. Spatial extent for a matrix heightmap. If
+omitted, rayshader uses matching cached metadata when available.}
+
+\item{crs}{Default \code{NULL}. CRS describing the input heightmap. An explicit
+value overrides embedded metadata on a copy of the input.}
 }
 \value{
 Matrix indicating whether water was detected at that point. 1 indicates water, 0 indicates no water.

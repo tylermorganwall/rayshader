@@ -2,9 +2,12 @@
 #'
 #'@description Calculates and returns an overlay of contour lines for the current height map.
 #'
-#'@param heightmap A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All grid points are assumed to be evenly spaced.
+#'@param heightmap Default `NULL`. A two-dimensional matrix, where each entry
+#'in the matrix is the elevation at that point. If omitted, rayshader uses the
+#'cached hillshade or scene heightmap.
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
-#'of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
+#'of 1 meter and the grid values are separated by 10 meters, `zscale` would be
+#'10. If omitted, rayshader uses raster-derived or matching cached metadata.
 #'@param levels Default `NA`. Automatically generated with 10 levels. This argument specifies the exact height levels of each contour.
 #'@param nlevels Default `NA`. Controls the auto-generation of levels. If levels is length-2,
 #'this will automatically generate `nlevels` breaks between `levels[1]` and `levels[2]`.
@@ -16,6 +19,11 @@
 #'in the final map.
 #'@param color Default `black`. Color.
 #'@param linewidth Default `1`. Line width.
+#'@param geographic_aspect Default `TRUE`. If `TRUE`, use supplied or cached
+#'spatial metadata when deriving the default horizontal scale.
+#'@param extent Default `NULL`. Spatial extent for a matrix heightmap.
+#'@param crs Default `NULL`. CRS describing the input heightmap. An explicit
+#'value overrides embedded metadata on a copy of the input.
 #'@return Semi-transparent overlay with contours.
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
@@ -68,7 +76,7 @@
 #'  add_shadow(ray_shade(vertical_exaggeration = 4),0.3) |>
 #'  plot_map()
 generate_contour_overlay = function(
-  heightmap,
+  heightmap = NULL,
   levels = NA,
   nlevels = NA,
   zscale = 1,
@@ -76,9 +84,58 @@ generate_contour_overlay = function(
   height = NA,
   resolution_multiply = 1,
   color = "black",
-  linewidth = 1
+  linewidth = 1,
+  geographic_aspect = TRUE,
+  extent = NULL,
+  crs = NULL
 ) {
-  heightmap = coerce_plot_3d_heightmap(heightmap)$heightmap / zscale
+  heightmap_missing = missing(heightmap) || is.null(heightmap)
+  extent_missing = missing(extent)
+  crs_missing = missing(crs)
+  if (heightmap_missing) {
+    resolved_heightmap = resolve_hillshade_heightmap(
+      heightmap_missing = TRUE,
+      caller = "generate_contour_overlay"
+    )
+    heightmap = resolved_heightmap$heightmap
+    if (extent_missing) {
+      extent = if (identical(resolved_heightmap$source, "scene")) {
+        get_scene_extent(default = NULL)
+      } else {
+        get_hillshade_extent(default = NULL)
+      }
+    }
+    if (crs_missing) {
+      crs = if (identical(resolved_heightmap$source, "scene")) {
+        get_scene_crs(default = NULL)
+      } else {
+        get_hillshade_crs(default = NULL)
+      }
+    }
+  }
+  heightmap_info = coerce_plot_3d_heightmap(
+    heightmap,
+    extent = extent,
+    crs = crs,
+    geographic_aspect = geographic_aspect
+  )
+  if (!heightmap_missing) {
+    cache_hillshade_input_context(
+      heightmap_info,
+      label = format_scene_cache_label(deparse(substitute(heightmap)))
+    )
+  }
+  resolved_zscale = resolve_hillshade_zscale(
+    zscale = zscale,
+    zscale_missing = missing(zscale),
+    caller = "generate_contour_overlay",
+    auto_zscale = heightmap_info$zscale,
+    allow_hillshade_cache = heightmap_missing,
+    allow_scene_cache = heightmap_missing &&
+      identical(resolved_heightmap$source, "scene")
+  )
+  zscale = resolved_zscale$zscale
+  heightmap = heightmap_info$heightmap / zscale
   if (!(length(find.package("sf", quiet = TRUE)) > 0)) {
     stop("`sf` package required for generate_contour_overlay()")
   }

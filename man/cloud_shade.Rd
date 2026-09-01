@@ -23,7 +23,10 @@ cloud_shade(
   attenuation_coef = 1,
   seed = 1,
   zscale = 1,
-  vertical_exaggeration = 1
+  vertical_exaggeration = 1,
+  geographic_aspect = TRUE,
+  extent = NULL,
+  crs = NULL
 )
 }
 \arguments{
@@ -69,6 +72,14 @@ of 1 meter and the grid values are separated by 10 meters, \code{zscale} would b
 effective visual relief for this call. Values greater than \code{1} increase
 apparent relief and values between \code{0} and \code{1} flatten it. This does not
 update cached \code{zscale} metadata.}
+
+\item{geographic_aspect}{Default \code{TRUE}. Correct unequal metric x/y cell
+spacing in the cloud noise and shadow ray march.}
+
+\item{extent}{Default \code{NULL}. Spatial extent for a matrix heightmap.}
+
+\item{crs}{Default \code{NULL}. CRS to assign to the input before calculating
+metric cell spacing.}
 }
 \value{
 A 2D shadow matrix.

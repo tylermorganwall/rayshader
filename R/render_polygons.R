@@ -109,6 +109,7 @@ render_polygons = function(
   heightmap = NULL,
   ...
 ) {
+  light_direction_missing = missing(light_direction)
   if (
     is_render_clear_only_call(
       clear_previous,
@@ -134,6 +135,11 @@ render_polygons = function(
   heightmap = resolve_scene_render_heightmap(
     heightmap,
     caller = "render_polygons"
+  )
+  light_direction = resolve_scene_light_direction(
+    light_direction,
+    light_direction_missing,
+    light_relative
   )
   if (rgl::cur3d() == 0) {
     stop("No rgl window currently open.")

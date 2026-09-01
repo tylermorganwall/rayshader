@@ -76,6 +76,7 @@ ray_shade = function(
   crs = NULL,
   ...
 ) {
+  sunangle_missing = missing(sunangle)
   heightmap_missing = missing(heightmap)
   extent_missing = missing(extent)
   crs_missing = missing(crs)
@@ -160,6 +161,13 @@ ray_shade = function(
     vertical_exaggeration = vertical_exaggeration,
     caller = "ray_shade"
   )
+  if (
+    isTRUE(sunangle_missing) &&
+      isTRUE(heightmap_info$geographic_aspect$active) &&
+      is.finite(heightmap_info$geographic_aspect$north_rotation)
+  ) {
+    sunangle = sunangle + heightmap_info$geographic_aspect$north_rotation
+  }
   originalheightmap = heightmap
   heightmap = fliplr(t(heightmap))
   if (!is.null(cache_mask)) {

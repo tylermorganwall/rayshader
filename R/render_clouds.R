@@ -77,15 +77,21 @@ generate_cloud_layer = function(
   scale_z = 1,
   freq = 0.01 / 2,
   coef = 0.05,
-  seed = 1
+  seed = 1,
+  geographic_aspect = identity_geographic_aspect()
 ) {
   nrow = nrow(heightmap)
   ncol = ncol(heightmap)
+  aspect = normalize_geographic_aspect(geographic_aspect)
   ray_d = c(
     cospi(sun_altitude / 180) * cospi(sun_angle / 180),
     sinpi(sun_altitude / 180),
     cospi(sun_altitude / 180) * sinpi(sun_angle / 180)
   )
+  ray_d[1] = ray_d[1] / aspect$scale[["x"]]
+  ray_d[3] = ray_d[3] / aspect$scale[["z"]]
+  scale_x = scale_x / aspect$scale[["x"]]
+  scale_y = scale_y / aspect$scale[["z"]]
   xyz = as.matrix(expand.grid(
     x = 1:nrow - offset_x,
     y = 0,
@@ -268,6 +274,7 @@ render_clouds = function(
   vertical_exaggeration = 1,
   heightmap = NULL
 ) {
+  sun_angle_missing = missing(sun_angle)
   if (all(length(find.package("ambient", quiet = TRUE)) == 0)) {
     stop("`render_clouds()` requires the `ambient` package to be installed")
   }
@@ -311,6 +318,14 @@ render_clouds = function(
     stop(
       "No heightmap found. Call `plot_3d()` or `plot_gg()` first, or pass `heightmap` explicitly."
     )
+  }
+  scene_aspect = get_scene_geographic_aspect()
+  if (
+    isTRUE(sun_angle_missing) &&
+      isTRUE(scene_aspect$active) &&
+      is.finite(scene_aspect$north_rotation)
+  ) {
+    sun_angle = sun_angle + scene_aspect$north_rotation
   }
   if (cloud_cover < 0 || cloud_cover > 1) {
     stop("`cloud_cover` must be between zero and one.")
@@ -346,7 +361,8 @@ render_clouds = function(
         scale_y = scale_y,
         scale_z = scale_z,
         seed = seed,
-        freq = frequency
+        freq = frequency,
+        geographic_aspect = scene_aspect
       ),
       altitudes[i],
       heightmap = heightmap,
@@ -377,6 +393,7 @@ render_clouds = function(
   vertical_exaggeration = 1,
   heightmap = NULL
 ) {
+  sun_angle_missing = missing(sun_angle)
   if (all(length(find.package("ambient", quiet = TRUE)) == 0)) {
     stop("`render_clouds()` requires the `ambient` package to be installed")
   }
@@ -420,6 +437,14 @@ render_clouds = function(
     stop(
       "No heightmap found. Call `plot_3d()` or `plot_gg()` first, or pass `heightmap` explicitly."
     )
+  }
+  scene_aspect = get_scene_geographic_aspect()
+  if (
+    isTRUE(sun_angle_missing) &&
+      isTRUE(scene_aspect$active) &&
+      is.finite(scene_aspect$north_rotation)
+  ) {
+    sun_angle = sun_angle + scene_aspect$north_rotation
   }
   if (cloud_cover < 0 || cloud_cover > 1) {
     stop("`cloud_cover` must be between zero and one.")
@@ -470,7 +495,8 @@ render_clouds = function(
         scale_y = scale_y,
         scale_z = scale_z,
         seed = seed,
-        freq = frequency
+        freq = frequency,
+        geographic_aspect = scene_aspect
       ),
       # Render at the upper boundary so the last slice sits at the true top
       altitudes[i + 1],
@@ -506,13 +532,19 @@ raymarch_cloud_layer = function(
   step = 100,
   freq = 0.01 / 2,
   coef = 0.05,
-  seed = 1
+  seed = 1,
+  geographic_aspect = identity_geographic_aspect()
 ) {
+  aspect = normalize_geographic_aspect(geographic_aspect)
   ray_d = c(
     cospi(sun_altitude / 180) * cospi(sun_angle / 180),
     sinpi(sun_altitude / 180),
     cospi(sun_altitude / 180) * sinpi(sun_angle / 180)
   )
+  ray_d[1] = ray_d[1] / aspect$scale[["x"]]
+  ray_d[3] = ray_d[3] / aspect$scale[["z"]]
+  scale_x = scale_x / aspect$scale[["x"]]
+  scale_y = scale_y / aspect$scale[["z"]]
   nrow = nrow(heightmap)
   ncol = ncol(heightmap)
   xyz = as.matrix(expand.grid(
@@ -629,6 +661,11 @@ raymarch_cloud_layer = function(
 #'effective visual relief for this call. Values greater than `1` increase
 #'apparent relief and values between `0` and `1` flatten it. This does not
 #'update cached `zscale` metadata.
+#'@param geographic_aspect Default `TRUE`. Correct unequal metric x/y cell
+#'spacing in the cloud noise and shadow ray march.
+#'@param extent Default `NULL`. Spatial extent for a matrix heightmap.
+#'@param crs Default `NULL`. CRS to assign to the input before calculating
+#'metric cell spacing.
 #'@return A 2D shadow matrix.
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
@@ -667,8 +704,12 @@ cloud_shade = function(
   attenuation_coef = 1,
   seed = 1,
   zscale = 1,
-  vertical_exaggeration = 1
+  vertical_exaggeration = 1,
+  geographic_aspect = TRUE,
+  extent = NULL,
+  crs = NULL
 ) {
+  sun_angle_missing = missing(sun_angle)
   validate_cloud_parameters(
     start_altitude = start_altitude,
     end_altitude = end_altitude,
@@ -676,6 +717,8 @@ cloud_shade = function(
     sun_altitude = sun_altitude
   )
   heightmap_missing = missing(heightmap)
+  extent_missing = missing(extent)
+  crs_missing = missing(crs)
   heightmap_cache_label = format_scene_cache_label(deparse(substitute(
     heightmap
   )))
@@ -690,26 +733,45 @@ cloud_shade = function(
     )
     heightmap = resolved_heightmap$heightmap
     allow_scene_zscale_cache = identical(resolved_heightmap$source, "scene")
+    if (extent_missing) {
+      extent = if (identical(resolved_heightmap$source, "scene")) {
+        get_scene_extent(default = NULL)
+      } else {
+        get_hillshade_extent(default = NULL)
+      }
+    }
+    if (crs_missing) {
+      crs = if (identical(resolved_heightmap$source, "scene")) {
+        get_scene_crs(default = NULL)
+      } else {
+        get_hillshade_crs(default = NULL)
+      }
+    }
   } else {
-    heightmap_info = coerce_plot_3d_heightmap(heightmap)
-    heightmap = heightmap_info$heightmap
-    heightmap_auto_zscale = heightmap_info$zscale
-    cache_hillshade_heightmap(heightmap, label = heightmap_cache_label)
-    if (!is.null(heightmap_info$extent)) {
-      cache_hillshade_extent(
-        heightmap_info$extent,
-        label = heightmap_cache_label
-      )
-    } else {
-      cache_hillshade_extent(NULL, label = NULL)
-    }
-    if (!is.null(heightmap_info$crs)) {
-      cache_hillshade_crs(heightmap_info$crs, label = heightmap_cache_label)
-    } else {
-      cache_hillshade_crs(NULL, label = NULL)
-    }
     allow_scene_zscale_cache = FALSE
   }
+  heightmap_info = coerce_plot_3d_heightmap(
+    heightmap,
+    extent = extent,
+    crs = crs,
+    geographic_aspect = geographic_aspect
+  )
+  heightmap = heightmap_info$heightmap
+  heightmap_auto_zscale = heightmap_info$zscale
+  if (heightmap_missing) {
+    heightmap_info$geographic_aspect = resolve_cached_geographic_aspect(
+      source = resolved_heightmap$source,
+      geographic_aspect = geographic_aspect,
+      fallback = heightmap_info$geographic_aspect
+    )
+    if (is.finite(heightmap_info$geographic_aspect$mean_cell_meters)) {
+      heightmap_auto_zscale = heightmap_info$geographic_aspect$mean_cell_meters
+    }
+  } else {
+    cache_hillshade_input_context(heightmap_info, label = heightmap_cache_label)
+  }
+  attr(heightmap, "rayshader_geographic_aspect") =
+    heightmap_info$geographic_aspect
   if (!is.matrix(heightmap)) {
     stop("`heightmap` must be a matrix.", call. = FALSE)
   }
@@ -739,6 +801,13 @@ cloud_shade = function(
     vertical_exaggeration = vertical_exaggeration,
     caller = "cloud_shade"
   )
+  if (
+    isTRUE(sun_angle_missing) &&
+      isTRUE(heightmap_info$geographic_aspect$active) &&
+      is.finite(heightmap_info$geographic_aspect$north_rotation)
+  ) {
+    sun_angle = sun_angle + heightmap_info$geographic_aspect$north_rotation
+  }
   time = -time
   if (start_altitude > end_altitude) {
     temp_alt = start_altitude
@@ -793,7 +862,8 @@ cloud_shade = function(
     scale_y = scale_y,
     scale_z = scale_z,
     seed = seed,
-    freq = frequency
+    freq = frequency,
+    geographic_aspect = heightmap_info$geographic_aspect
   )))
 }
 #'@param vertical_exaggeration Default `1`. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from [plot_3d()] or [plot_gg()] when available; pass explicitly to override for this call.

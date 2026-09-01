@@ -26,9 +26,9 @@
 #' CRS and spatial resolution.
 #' @param extent Default `NULL`. Spatial extent for matrix `heightmap` inputs.
 #' Ignored for spatial raster inputs.
-#' @param crs Default `NULL`. CRS for matrix `heightmap` inputs or CRS-less
-#' spatial raster inputs. If a spatial raster already has a CRS, explicit `crs`
-#' must match it.
+#' @param crs Default `NULL`. CRS describing the input heightmap. For spatial
+#' raster inputs, an explicit value overrides embedded metadata on a copy of
+#' the raster before geometry is transformed into that CRS.
 #' @param touches Default `TRUE`. Passed to `terra::rasterize()`. If `TRUE`,
 #' cells touched by polygons or lines are modified.
 #' @param fun Default `"max"`. Rasterization reducer passed to
@@ -264,7 +264,7 @@ prepare_indent_surface_matrix = function(
 #' Prepare spatial heightmap for surface indentation
 #'
 #' @param heightmap Spatial raster DEM.
-#' @param crs Default `NULL`. CRS for CRS-less spatial rasters.
+#' @param crs Default `NULL`. CRS assigned to a copy of the spatial raster.
 #' @param caller Default `NULL`. Calling function.
 #'
 #' @return Surface metadata list.
@@ -296,6 +296,7 @@ prepare_indent_surface_spatial = function(
       call. = FALSE
     )
   }
+  heightmap = terra::deepcopy(heightmap)
   if (terra::nlyr(heightmap) > 1) {
     warning("`heightmap` has multiple layers; using the first layer.")
     heightmap = heightmap[[1]]
@@ -368,29 +369,10 @@ resolve_indent_surface_spatial_crs = function(
   caller = NULL
 ) {
   explicit_crs = indent_surface_terra_crs(crs)
-  existing_crs = tryCatch(terra::crs(heightmap), error = function(e) "")
-  existing_has_crs = indent_surface_has_crs(existing_crs)
   if (is.null(explicit_crs)) {
     return(heightmap)
   }
-  if (!existing_has_crs) {
-    terra::crs(heightmap) = explicit_crs
-    return(heightmap)
-  }
-  if (
-    !isTRUE(tryCatch(
-      terra::same.crs(existing_crs, explicit_crs),
-      error = function(e) FALSE
-    ))
-  ) {
-    stop(
-      paste0(
-        format_render_caller_prefix(caller),
-        "Explicit `crs` does not match the CRS on spatial `heightmap`."
-      ),
-      call. = FALSE
-    )
-  }
+  terra::crs(heightmap) = explicit_crs
   heightmap
 }
 

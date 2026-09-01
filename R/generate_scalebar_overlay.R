@@ -1,6 +1,8 @@
 #'@title Generate Scalebar Overlay
 #'
-#'@description This function creates an overlay with a scale bar of a user-specified length.
+#'@description This function creates an overlay with a scale bar. By default,
+#'the scale bar spans approximately half of the longer map dimension and uses
+#'pretty breaks and units derived from the cached spatial metadata.
 #'It uses the coordinates of the map (specified by passing an extent)
 #'and then creates a scale bar at a specified x/y proportion across the map. If the map is not projected
 #'(i.e. is in lat/long coordinates) this function will use the `geosphere` package to create a
@@ -12,16 +14,19 @@
 #' the previously aforementioned packages) which will be automatically converted to an extent object. If this is in
 #' lat/long coordinates, rayshader will infer that from the spatial metadata when possible. If omitted, rayshader will infer the extent
 #' from `heightmap` when possible, otherwise from the active scene or cached hillshade metadata.
-#'@param length The length of the scale bar, in `units`. This should match the units used on the map,
-#'unless `extent` uses lat/long coordinates. In that case, the distance should be in meters.
+#'@param length Default `NULL`. Length of the scale bar in `unit`. If omitted,
+#'rayshader derives a pretty length approximately half of the longer map side.
 #'@param x Default `0.05`. The x-coordinate of the bottom-left corner of the scale bar, as a proportion of the full map width.
 #'@param y Default `0.05`. The y-coordinate of the bottom-left corner of the scale bar, as a proportion of the full map height.
 #'@param latlong Default `NA`. If `NA`, rayshader infers whether the map is in lat/long coordinates from
 #'spatial metadata on `extent`, `heightmap`, the active scene, or cached hillshade data. Explicit values are only
 #'used as a fallback for matrix heightmaps without cached spatial metadata.
 #'@param thickness Default `NA`, automatically computed as 1/20th the length of the scale bar. Width of the scale bar.
-#'@param bearing Default `90`, horizontal. Direction (measured from north) of the scale bar.
-#'@param unit Default `m`. Displayed unit on the scale bar.
+#'@param bearing Default `NULL`. Direction measured clockwise from grid north.
+#'If omitted, the scale bar follows the longer map axis.
+#'@param unit Default `NULL`. Distance unit for `length` and the displayed label.
+#'If omitted, rayshader uses metres or kilometres for longitude/latitude scenes,
+#'the CRS linear units for projected scenes, and no suffix for raw matrices.
 #'@param labels Default `NA`. Manually specify the three labels with a length-3 character vector.
 #'Use this if you want display units other than meters.
 #'@param flip_ticks Default `FALSE`. Whether to flip the ticks to the other side of the scale bar.
@@ -145,13 +150,13 @@
 #'  plot_map()
 generate_scalebar_overlay = function(
   extent = NULL,
-  length,
+  length = NULL,
   x = 0.05,
   y = 0.05,
   latlong = NA,
   thickness = NA,
-  bearing = 90,
-  unit = "m",
+  bearing = NULL,
+  unit = NULL,
   flip_ticks = FALSE,
   labels = NA,
   text_size = 1,
@@ -179,6 +184,9 @@ generate_scalebar_overlay = function(
   halo_gap_fill = 2,
   halo_gap_fill_alpha_threshold = 0.25
 ) {
+  length_missing = missing(length) || is.null(length)
+  bearing_missing = missing(bearing) || is.null(bearing)
+  unit_missing = missing(unit) || is.null(unit)
   loc = rep(0, 2)
   heightmap = resolve_overlay_heightmap(
     heightmap = heightmap,
@@ -198,6 +206,27 @@ generate_scalebar_overlay = function(
     heightmap = heightmap,
     caller = "generate_scalebar_overlay"
   )
+  scene_info = resolve_scalebar_overlay_scene_info(
+    heightmap = heightmap,
+    extent = extent,
+    caller = "generate_scalebar_overlay"
+  )
+  scalebar_specification = resolve_scalebar_overlay_specification(
+    length = length,
+    length_missing = length_missing,
+    unit = unit,
+    unit_missing = unit_missing,
+    bearing = bearing,
+    bearing_missing = bearing_missing,
+    latlong = latlong,
+    thickness = thickness,
+    scene_info = scene_info
+  )
+  length = scalebar_specification$geometry_length
+  display_length = scalebar_specification$display_length
+  unit = scalebar_specification$unit
+  bearing = scalebar_specification$bearing
+  thickness = scalebar_specification$geometry_thickness
   extent = get_extent(extent)
   xdiff = extent["xmax"] - extent["xmin"]
   ydiff = extent["ymax"] - extent["ymin"]
@@ -235,10 +264,6 @@ generate_scalebar_overlay = function(
     stop("If specified, `labels` must be length-3 vector")
   }
 
-  proj_length = length
-  if (is.na(thickness)) {
-    thickness = proj_length / 20
-  }
   poly_list = list()
   line_list = list()
   text_list = list()
@@ -470,7 +495,7 @@ generate_scalebar_overlay = function(
   if (all(is.na(labels)) || length(labels) != 3) {
     format_string = paste0(c("%0.", decimals, "f"), collapse = "")
     labels = paste0(
-      c(sprintf(format_string, c(0, length / 2, length))),
+      c(sprintf(format_string, c(0, display_length / 2, display_length))),
       c("", "", unit)
     )
   }
@@ -600,6 +625,197 @@ generate_scalebar_overlay = function(
     )
   }
   return(overlay_temp)
+}
+
+#' Resolve scale-bar overlay scene measurements
+#'
+#' @param heightmap Heightmap or spatial raster.
+#' @param extent Scene extent.
+#' @param caller Default `NULL`. Calling function used in errors.
+#'
+#' @return Physical map dimensions and CRS unit metadata.
+#' @keywords internal
+resolve_scalebar_overlay_scene_info = function(
+  heightmap,
+  extent,
+  caller = NULL
+) {
+  extent_values = get_extent(extent)
+  scene_crs = tryCatch(
+    get_scene_target_crs(
+      extent = extent,
+      heightmap = heightmap,
+      caller = caller
+    ),
+    error = function(error) NULL
+  )
+  scene_crs = try_parse_scene_crs(scene_crs)
+  raw_dimensions = abs(c(
+    extent_values[["xmax"]] - extent_values[["xmin"]],
+    extent_values[["ymax"]] - extent_values[["ymin"]]
+  ))
+  if (is.null(scene_crs) || !requireNamespace("sf", quietly = TRUE)) {
+    return(list(
+      dimensions = raw_dimensions,
+      metric = FALSE,
+      crs = scene_crs,
+      map_unit_meters = 1
+    ))
+  }
+
+  center = c(
+    mean(extent_values[c("xmin", "xmax")]),
+    mean(extent_values[c("ymin", "ymax")])
+  )
+  dimension_points = sf::st_sfc(
+    sf::st_point(c(extent_values[["xmin"]], center[[2L]])),
+    sf::st_point(c(extent_values[["xmax"]], center[[2L]])),
+    sf::st_point(c(center[[1L]], extent_values[["ymin"]])),
+    sf::st_point(c(center[[1L]], extent_values[["ymax"]])),
+    crs = scene_crs
+  )
+  metric_points = sf::st_transform(dimension_points, 4326)
+  dimensions = c(
+    as.numeric(sf::st_distance(metric_points[1], metric_points[2])),
+    as.numeric(sf::st_distance(metric_points[3], metric_points[4]))
+  )
+  map_unit_meters = if (isTRUE(sf::st_is_longlat(scene_crs))) {
+    NA_real_
+  } else {
+    render_scalebar_unit_meters(scene_crs$units_gdal)
+  }
+  list(
+    dimensions = dimensions,
+    metric = all(is.finite(dimensions)) && all(dimensions > 0),
+    crs = scene_crs,
+    map_unit_meters = map_unit_meters
+  )
+}
+
+#' Resolve automatic scale-bar overlay arguments
+#'
+#' @param length Scale-bar length.
+#' @param length_missing Whether `length` was omitted.
+#' @param unit Scale-bar distance unit.
+#' @param unit_missing Whether `unit` was omitted.
+#' @param bearing Scale-bar bearing.
+#' @param bearing_missing Whether `bearing` was omitted.
+#' @param latlong Whether geometry uses longitude/latitude coordinates.
+#' @param thickness Scale-bar thickness.
+#' @param scene_info Scene measurement metadata.
+#'
+#' @return Resolved geometry and display measurements.
+#' @keywords internal
+resolve_scalebar_overlay_specification = function(
+  length = NULL,
+  length_missing = is.null(length),
+  unit = NULL,
+  unit_missing = is.null(unit),
+  bearing = NULL,
+  bearing_missing = is.null(bearing),
+  latlong = FALSE,
+  thickness = NA,
+  scene_info
+) {
+  dimensions = suppressWarnings(as.numeric(scene_info$dimensions))
+  if (
+    length(dimensions) != 2L ||
+      any(!is.finite(dimensions)) ||
+      any(dimensions <= 0)
+  ) {
+    stop("Could not determine positive map dimensions.", call. = FALSE)
+  }
+  target_distance = max(dimensions) / 2
+  if (isTRUE(length_missing)) {
+    unit_info = resolve_render_scalebar_unit(
+      label_unit = NULL,
+      scene_info = scene_info,
+      target_distance = target_distance
+    )
+    display_breaks = pretty_render_scalebar_limits(
+      target_distance / unit_info$distance_per_unit
+    )
+    display_length = max(display_breaks)
+    physical_length = display_length * unit_info$distance_per_unit
+  } else {
+    length = suppressWarnings(as.numeric(length)[1L])
+    if (!is.finite(length) || length <= 0) {
+      stop("`length` must be a positive finite number.", call. = FALSE)
+    }
+    if (isTRUE(unit_missing)) {
+      if (!isTRUE(scene_info$metric)) {
+        unit_info = list(label = "", distance_per_unit = 1)
+      } else if (isTRUE(latlong)) {
+        unit_info = list(label = "m", distance_per_unit = 1)
+      } else {
+        crs_unit = scene_info$crs$units_gdal
+        unit_info = list(
+          label = abbreviate_render_scalebar_unit(crs_unit),
+          distance_per_unit = scene_info$map_unit_meters
+        )
+      }
+    } else {
+      unit_info = resolve_render_scalebar_unit(
+        label_unit = unit,
+        scene_info = scene_info,
+        target_distance = target_distance
+      )
+    }
+    if (!is.finite(unit_info$distance_per_unit)) {
+      stop("Could not convert `unit` to map distance units.", call. = FALSE)
+    }
+    display_length = length
+    physical_length = length * unit_info$distance_per_unit
+  }
+
+  geometry_length = if (!isTRUE(scene_info$metric)) {
+    display_length
+  } else if (isTRUE(latlong)) {
+    physical_length
+  } else {
+    physical_length / scene_info$map_unit_meters
+  }
+  if (!is.finite(geometry_length) || geometry_length <= 0) {
+    stop(
+      "Could not convert the scale-bar length into map units.",
+      call. = FALSE
+    )
+  }
+
+  if (isTRUE(bearing_missing)) {
+    bearing = if (dimensions[[1L]] >= dimensions[[2L]]) 90 else 0
+  }
+  bearing = suppressWarnings(as.numeric(bearing)[1L])
+  if (!is.finite(bearing)) {
+    stop("`bearing` must be a finite number.", call. = FALSE)
+  }
+
+  if (length(thickness) != 1L || is.na(thickness)) {
+    geometry_thickness = geometry_length / 20
+  } else {
+    thickness = suppressWarnings(as.numeric(thickness)[1L])
+    if (!is.finite(thickness) || thickness <= 0) {
+      stop("`thickness` must be a positive finite number.", call. = FALSE)
+    }
+    geometry_thickness = if (isTRUE(unit_missing)) {
+      thickness
+    } else if (!isTRUE(scene_info$metric)) {
+      thickness
+    } else if (isTRUE(latlong)) {
+      thickness * unit_info$distance_per_unit
+    } else {
+      thickness * unit_info$distance_per_unit / scene_info$map_unit_meters
+    }
+  }
+
+  list(
+    geometry_length = geometry_length,
+    display_length = display_length,
+    geometry_thickness = geometry_thickness,
+    unit = unit_info$label,
+    bearing = bearing,
+    physical_length = physical_length
+  )
 }
 
 resolve_scalebar_overlay_latlong = function(

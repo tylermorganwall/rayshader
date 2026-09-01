@@ -4,11 +4,16 @@
 #'layer onto an existing map.
 #'
 #'@param hillshade The hillshade to transition into.
-#'@param heightmap A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All grid points are assumed to be evenly spaced.
+#'@param heightmap Default `NULL`. A two-dimensional matrix, where each entry
+#'in the matrix is the elevation at that point. If omitted, rayshader uses the
+#'cached hillshade or scene heightmap.
 #'@param start_transition Elevation threshold, or proportion of the height range if `relative = TRUE`.
 #'@param end_transition Default `NULL`. Elevation threshold, or proportion of the height range if `relative = TRUE`. By default, this is equal to `start_transition`.
 #'@param lower Default `TRUE`. If `TRUE`, the overlay is most opaque at lower elevations. If `FALSE`, the direction is reversed.
 #'@param relative Default `FALSE`. If `TRUE`, interpret `start_transition` and `end_transition` as proportions of the height range in 0..1.
+#'@param extent Default `NULL`. Spatial extent for a matrix heightmap.
+#'@param crs Default `NULL`. CRS describing the input heightmap. An explicit
+#'value overrides embedded metadata on a copy of the input.
 #'@return 4-layer RGB array representing the semi-transparent hillshade.
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
@@ -37,16 +42,36 @@
 #'  plot_map()
 generate_altitude_overlay = function(
   hillshade,
-  heightmap,
+  heightmap = NULL,
   start_transition,
   end_transition = NULL,
   lower = TRUE,
-  relative = FALSE
+  relative = FALSE,
+  extent = NULL,
+  crs = NULL
 ) {
+  heightmap_missing = missing(heightmap) || is.null(heightmap)
+  if (heightmap_missing) {
+    heightmap = resolve_hillshade_heightmap(
+      heightmap_missing = TRUE,
+      caller = "generate_altitude_overlay"
+    )$heightmap
+  }
   if (is.null(end_transition)) {
     end_transition = start_transition
   }
-  heightmap = coerce_plot_3d_heightmap(heightmap)$heightmap
+  heightmap_info = coerce_plot_3d_heightmap(
+    heightmap,
+    extent = extent,
+    crs = crs
+  )
+  if (!heightmap_missing) {
+    cache_hillshade_input_context(
+      heightmap_info,
+      label = format_scene_cache_label(deparse(substitute(heightmap)))
+    )
+  }
+  heightmap = heightmap_info$heightmap
 
   if (relative) {
     if (

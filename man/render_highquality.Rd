@@ -127,7 +127,9 @@ passes this value to its \code{altitude} argument.}
 when direct sun arguments are used (except \code{filename}, which is managed internally).
 The EXR is cached in \code{tempdir()} using a filename derived from these inputs.}
 
-\item{lightdirection}{Default \code{315}. Position of the light angle around the scene.
+\item{lightdirection}{Default \code{315}. Position of the light angle around the
+scene. When omitted, rayshader interprets the default relative to true north
+using cached spatial metadata.
 If this is a vector longer than one, multiple lights will be generated (using values from
 \code{lightaltitude}, \code{lightintensity}, and \code{lightcolor})}
 

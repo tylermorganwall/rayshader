@@ -185,6 +185,7 @@ render_beveled_polygons = function(
   heightmap = NULL,
   ...
 ) {
+  light_direction_missing = missing(light_direction)
   if (
     is_render_clear_only_call(
       clear_previous,
@@ -213,6 +214,11 @@ render_beveled_polygons = function(
   heightmap = resolve_scene_render_heightmap(
     heightmap,
     caller = "render_beveled_polygons"
+  )
+  light_direction = resolve_scene_light_direction(
+    light_direction,
+    light_direction_missing,
+    light_relative
   )
   top = bevel_height
   bottom = base_height

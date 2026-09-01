@@ -24,7 +24,8 @@ raymarch_cloud_layer(
   step = 100,
   freq = 0.01/2,
   coef = 0.05,
-  seed = 1
+  seed = 1,
+  geographic_aspect = identity_geographic_aspect()
 )
 }
 \value{

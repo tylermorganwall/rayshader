@@ -5,7 +5,7 @@
 \title{Generate Contour Overlay}
 \usage{
 generate_contour_overlay(
-  heightmap,
+  heightmap = NULL,
   levels = NA,
   nlevels = NA,
   zscale = 1,
@@ -13,11 +13,16 @@ generate_contour_overlay(
   height = NA,
   resolution_multiply = 1,
   color = "black",
-  linewidth = 1
+  linewidth = 1,
+  geographic_aspect = TRUE,
+  extent = NULL,
+  crs = NULL
 )
 }
 \arguments{
-\item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All grid points are assumed to be evenly spaced.}
+\item{heightmap}{Default \code{NULL}. A two-dimensional matrix, where each entry
+in the matrix is the elevation at that point. If omitted, rayshader uses the
+cached hillshade or scene heightmap.}
 
 \item{levels}{Default \code{NA}. Automatically generated with 10 levels. This argument specifies the exact height levels of each contour.}
 
@@ -25,7 +30,8 @@ generate_contour_overlay(
 this will automatically generate \code{nlevels} breaks between \code{levels[1]} and \code{levels[2]}.}
 
 \item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
-of 1 meter and the grid values are separated by 10 meters, \code{zscale} would be 10.}
+of 1 meter and the grid values are separated by 10 meters, \code{zscale} would be
+10. If omitted, rayshader uses raster-derived or matching cached metadata.}
 
 \item{width}{Default \code{NA}. Width of the resulting overlay. Default the same dimensions as heightmap.}
 
@@ -39,6 +45,14 @@ in the final map.}
 \item{color}{Default \code{black}. Color.}
 
 \item{linewidth}{Default \code{1}. Line width.}
+
+\item{geographic_aspect}{Default \code{TRUE}. If \code{TRUE}, use supplied or cached
+spatial metadata when deriving the default horizontal scale.}
+
+\item{extent}{Default \code{NULL}. Spatial extent for a matrix heightmap.}
+
+\item{crs}{Default \code{NULL}. CRS describing the input heightmap. An explicit
+value overrides embedded metadata on a copy of the input.}
 }
 \value{
 Semi-transparent overlay with contours.

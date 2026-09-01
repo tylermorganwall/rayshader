@@ -24,7 +24,8 @@ render_compass(
 )
 }
 \arguments{
-\item{angle}{Default \code{0}. The direction the arrow should be facing.}
+\item{angle}{Default \code{0}. The direction the arrow should be facing. When
+omitted, rayshader rotates grid north to true north using cached metadata.}
 
 \item{position}{Default \code{SE}. A string representing a cardinal direction. Ignored if \code{x}, \code{y}, and \code{z}
 are manually specified.}

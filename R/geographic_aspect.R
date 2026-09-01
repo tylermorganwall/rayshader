@@ -4,11 +4,14 @@
 #' @keywords internal
 identity_geographic_aspect = function() {
   list(
+    active = FALSE,
     enabled = FALSE,
     scale = c(x = 1, z = 1),
     cell_meters = c(x = NA_real_, z = NA_real_),
     mean_cell_meters = NA_real_,
-    center_latitude = NA_real_
+    center_latitude = NA_real_,
+    center_longitude = NA_real_,
+    north_rotation = NA_real_
   )
 }
 
@@ -50,12 +53,28 @@ normalize_geographic_aspect = function(aspect = NULL) {
   if (!is.finite(center_latitude)) {
     center_latitude = NA_real_
   }
+  center_longitude = suppressWarnings(as.numeric(aspect$center_longitude)[1])
+  if (!is.finite(center_longitude)) {
+    center_longitude = NA_real_
+  }
+  north_rotation = suppressWarnings(as.numeric(aspect$north_rotation)[1])
+  if (!is.finite(north_rotation)) {
+    north_rotation = NA_real_
+  }
+  active = if (!is.null(aspect$active)) {
+    isTRUE(aspect$active)
+  } else {
+    isTRUE(aspect$enabled)
+  }
   list(
-    enabled = isTRUE(aspect$enabled) && !isTRUE(all.equal(scale, c(1, 1))),
+    active = active,
+    enabled = active && !isTRUE(all.equal(scale, c(1, 1))),
     scale = scale,
     cell_meters = cell_meters,
     mean_cell_meters = mean_cell_meters,
-    center_latitude = center_latitude
+    center_latitude = center_latitude,
+    center_longitude = center_longitude,
+    north_rotation = north_rotation
   )
 }
 
@@ -68,6 +87,7 @@ normalize_geographic_aspect = function(aspect = NULL) {
 #' @keywords internal
 set_geographic_aspect_enabled = function(aspect, enabled = TRUE) {
   aspect = normalize_geographic_aspect(aspect)
+  aspect$active = isTRUE(enabled)
   aspect$enabled = isTRUE(enabled)
   aspect$scale = if (
     isTRUE(enabled) &&
@@ -196,9 +216,21 @@ calculate_geographic_aspect = function(
         ))
       )
       center_longlat = sf::st_coordinates(axis_points_longlat[1])
+      north_latitude = min(center_longlat[1, 2] + 1e-5, 89.99999)
+      north_point = sf::st_sfc(
+        sf::st_point(c(center_longlat[1, 1], north_latitude)),
+        crs = 4326
+      )
+      north_point_scene = sf::st_coordinates(
+        sf::st_transform(north_point, parsed_crs)
+      )[1, 1:2]
+      north_delta = north_point_scene - center
+      north_rotation = atan2(north_delta[[1L]], north_delta[[2L]]) * 180 / pi
       list(
         cell_meters = cell_meters,
-        center_latitude = center_longlat[1, 2]
+        center_latitude = center_longlat[1, 2],
+        center_longitude = center_longlat[1, 1],
+        north_rotation = north_rotation
       )
     },
     error = function(error) NULL
@@ -217,12 +249,129 @@ calculate_geographic_aspect = function(
     c(1, 1)
   }
   normalize_geographic_aspect(list(
+    active = isTRUE(geographic_aspect),
     enabled = isTRUE(geographic_aspect),
     scale = scale,
     cell_meters = metric_info$cell_meters,
     mean_cell_meters = mean_cell_meters,
-    center_latitude = metric_info$center_latitude
+    center_latitude = metric_info$center_latitude,
+    center_longitude = metric_info$center_longitude,
+    north_rotation = metric_info$north_rotation
   ))
+}
+
+#' Resolve cached true-north rotation
+#'
+#' @param source Default `c("scene", "hillshade")`. Cache order to inspect.
+#' @param default Default `0`. Value returned when no rotation is cached.
+#'
+#' @return Clockwise angle from grid north to true north, in degrees.
+#' @keywords internal
+resolve_cached_north_rotation = function(
+  source = c("scene", "hillshade"),
+  default = 0
+) {
+  source = match.arg(source, several.ok = TRUE)
+  for (cache_source in source) {
+    aspect = if (identical(cache_source, "scene")) {
+      get_scene_geographic_aspect()
+    } else {
+      get_hillshade_geographic_aspect()
+    }
+    if (isTRUE(aspect$active) && is.finite(aspect$north_rotation)) {
+      return(aspect$north_rotation)
+    }
+  }
+  default
+}
+
+#' Resolve a default scene light direction
+#'
+#' @param light_direction Light direction in degrees.
+#' @param light_direction_missing Whether the argument was omitted.
+#' @param light_relative Whether the light is relative to the camera.
+#'
+#' @return Light direction in scene coordinates.
+#' @keywords internal
+resolve_scene_light_direction = function(
+  light_direction,
+  light_direction_missing,
+  light_relative = FALSE
+) {
+  if (isTRUE(light_direction_missing) && !isTRUE(light_relative)) {
+    light_direction = light_direction +
+      resolve_cached_north_rotation(source = "scene")
+  }
+  light_direction
+}
+
+#' Convert physical or map distances to scene units
+#'
+#' @param units One of `"auto"`, `"scene"`, `"meters"`, or `"map"`.
+#' @param caller Default `NULL`. Calling function used in errors.
+#'
+#' @return Multiplier from the requested distance units to scene units.
+#' @keywords internal
+resolve_scene_distance_multiplier = function(
+  units = c("auto", "scene", "meters", "map"),
+  caller = NULL
+) {
+  units = match.arg(units)
+  aspect = get_scene_geographic_aspect()
+  meters_per_scene_unit = aspect$mean_cell_meters
+  if (identical(units, "auto")) {
+    units = if (
+      isTRUE(aspect$active) &&
+        is.finite(meters_per_scene_unit) &&
+        meters_per_scene_unit > 0
+    ) {
+      "meters"
+    } else {
+      "scene"
+    }
+  }
+  if (identical(units, "scene")) {
+    return(1)
+  }
+  if (!is.finite(meters_per_scene_unit) || meters_per_scene_unit <= 0) {
+    stop(
+      paste0(
+        format_render_caller_prefix(caller),
+        "`distance_units = \"",
+        units,
+        "\"` requires cached spatial distance metadata."
+      ),
+      call. = FALSE
+    )
+  }
+  if (identical(units, "meters")) {
+    return(1 / meters_per_scene_unit)
+  }
+  scene_crs = try_parse_scene_crs(get_scene_crs(default = NULL))
+  if (
+    is.null(scene_crs) ||
+      (requireNamespace("sf", quietly = TRUE) &&
+        isTRUE(sf::st_is_longlat(scene_crs)))
+  ) {
+    stop(
+      paste0(
+        format_render_caller_prefix(caller),
+        "`distance_units = \"map\"` requires a projected scene CRS."
+      ),
+      call. = FALSE
+    )
+  }
+  meters_per_map_unit = render_scalebar_unit_meters(scene_crs$units_gdal)
+  if (!is.finite(meters_per_map_unit) || meters_per_map_unit <= 0) {
+    stop(
+      paste0(
+        format_render_caller_prefix(caller),
+        "Could not convert the scene CRS units to metres."
+      ),
+      call. = FALSE
+    )
+  }
+  meters_per_map_unit / meters_per_scene_unit
 }
 
 #' Cache hillshade geographic aspect metadata

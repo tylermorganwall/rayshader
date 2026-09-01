@@ -58,6 +58,43 @@ test_that("detect_water reuses cached hillshade heightmap and zscale", {
   expect_true(any(grepl("hillshade_zscale", out, fixed = TRUE)))
 })
 
+test_that("terrain-derived overlays reuse the cached heightmap", {
+  clear_hillshade_test_cache()
+  withr::defer(clear_hillshade_test_cache())
+
+  heightmap = matrix(seq_len(400), nrow = 20, ncol = 20)
+  height_shade(heightmap)
+  contour_cached = generate_contour_overlay()
+  contour_explicit = generate_contour_overlay(heightmap)
+  expect_equal(contour_cached, contour_explicit)
+
+  overlay = constant_shade(heightmap, color = "white")
+  altitude_cached = generate_altitude_overlay(
+    overlay,
+    start_transition = 200
+  )
+  altitude_explicit = generate_altitude_overlay(
+    overlay,
+    heightmap,
+    start_transition = 200
+  )
+  expect_equal(altitude_cached, altitude_explicit)
+
+  water_heightmap = heightmap
+  water_heightmap[6:15, 6:15] = 0
+  height_shade(water_heightmap)
+  waterline_cached = generate_waterline_overlay(
+    min_area = 1,
+    return_distance_matrix = TRUE
+  )
+  waterline_explicit = generate_waterline_overlay(
+    water_heightmap,
+    min_area = 1,
+    return_distance_matrix = TRUE
+  )
+  expect_equal(waterline_cached, waterline_explicit)
+})
+
 test_that("hillshade map functions cache the latest map texture", {
   clear_hillshade_test_cache()
   withr::defer(clear_hillshade_test_cache())

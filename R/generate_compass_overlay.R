@@ -10,7 +10,8 @@
 #'the compass is located.
 #'@param size Default `0.05`. Size of the compass, in percentage of the map size..
 #'@param text_size Default `1`. Text size.
-#'@param bearing Default `0`. Angle (in degrees) of north.
+#'@param bearing Default `0`. Angle (in degrees) of north. When omitted,
+#'rayshader rotates grid north to true north using cached spatial metadata.
 #'@param color1 Default `NA`, `white` except for `compass_type == "triangle_circle"` . Primary color of the compass.
 #'@param color2 Default `NA`, `black`. Secondary color of the symcompass.
 #'@param text_color Default `black`. Text color.
@@ -166,6 +167,7 @@ generate_compass_overlay = function(
   halo_gap_fill = 2,
   halo_gap_fill_alpha_threshold = 0.25
 ) {
+  bearing_missing = missing(bearing)
   compass_type = match.arg(compass_type)
   heightmap = resolve_overlay_heightmap(
     heightmap = heightmap,
@@ -174,6 +176,12 @@ generate_compass_overlay = function(
     height = height,
     caller = "generate_compass_overlay"
   )
+  if (isTRUE(bearing_missing)) {
+    bearing = bearing +
+      resolve_cached_north_rotation(
+        source = c("hillshade", "scene")
+      )
+  }
   if (!(length(find.package("ragg", quiet = TRUE)) > 0)) {
     png_device = grDevices::png
   } else {

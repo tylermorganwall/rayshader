@@ -5,12 +5,12 @@
 \title{Render Scale Bar}
 \usage{
 render_scalebar(
-  limits,
-  position = "W",
+  limits = NULL,
+  position = NULL,
   y = NULL,
   segments = 10,
-  scale_length = 1,
-  label_unit = "",
+  scale_length = NULL,
+  label_unit = NULL,
   offset = NULL,
   radius = NULL,
   color_first = "darkred",
@@ -20,25 +20,31 @@ render_scalebar(
   text_x_offset = 0,
   text_y_offset = 0,
   text_z_offset = 0,
-  clear_scalebar = FALSE
+  clear_previous = FALSE
 )
 }
 \arguments{
-\item{limits}{The distance represented by the scale bar. If a numeric vector greater than length 1,
-this will specify the breaks along the scale bar to place labels, with the maximum value in
-limits assumed to be the last label. Must be non-negative.}
+\item{limits}{Default \code{NULL}. The distances represented by the scale bar. If
+\code{NULL}, rayshader uses cached scene dimensions to generate pretty breaks for
+a bar approximately half the longer side of the map. Otherwise, the maximum
+value is the total represented distance. Must be non-negative.}
 
-\item{position}{Default \code{W}. A string representing a direction. Can be \code{N}, \code{E}, \code{S}, and \code{W}.}
+\item{position}{Default \code{NULL}. Scale-bar side: \code{"N"}, \code{"E"}, \code{"S"}, or
+\code{"W"}. If \code{NULL}, the scale bar follows the longer map axis, using \code{"S"} for
+wider maps and \code{"W"} for taller maps.}
 
 \item{y}{Default \code{NULL}. The height of the scale bar, automatically calculated if \code{NULL}.}
 
 \item{segments}{Default \code{10}. Number of colored segments in the scalebar.}
 
-\item{scale_length}{Default \code{1}. Length of the scale bar, relative to the
-side of the map specified in \code{position}. If a length-2 vector, the first number specifies the start
-and stop points along the side.}
+\item{scale_length}{Default \code{NULL}. Length of the scale bar relative to the
+side selected by \code{position}. If \code{NULL}, this is calculated from \code{limits} and
+cached spatial metadata. A scalar starts at the beginning of the side; a
+length-2 vector specifies the start and end proportions.}
 
-\item{label_unit}{Default \code{NULL}. The distance unit for the label.}
+\item{label_unit}{Default \code{NULL}. Distance-unit suffix. If \code{NULL}, rayshader
+uses the projected CRS unit, or kilometres for geographic coordinates and
+metres when kilometres would be too large for the scene.}
 
 \item{offset}{Default \code{NULL}. The distance away from the edge to place the scale bar.
 If \code{NULL}, automatically calculated.}
@@ -60,47 +66,48 @@ If \code{NULL}, automatically calculated.}
 
 \item{text_z_offset}{Default \code{0}. Distance offset for text in the z direction.}
 
-\item{clear_scalebar}{Default \code{FALSE}. Clears the scale bar(s) on the map.}
+\item{clear_previous}{Default \code{FALSE}. Clears any existing scale bars before
+rendering. A clear-only call returns without rendering a replacement.}
 }
 \value{
-Displays snapshot of current rgl plot (or saves to disk).
+The resolved scale-bar specification, invisibly.
 }
 \description{
 Places a scale bar on the map in 3D.
 }
 \examples{
 \dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
-#Add a scale bar to the montereybay_spatial dataset, here representing about 80km
+#Add an automatically sized scale bar to the montereybay_spatial dataset
 montereybay_spatial |>
  sphere_shade(vertical_exaggeration = 20) |>
  plot_3d(theta=45, vertical_exaggeration = 4, water=TRUE)
-render_scalebar(limits=c(0, 80), label_unit = "km")
+render_scalebar()
 render_snapshot()
 #This function works with `render_highquality()`
 render_highquality(lightdirection = 250, lightaltitude = 40, samples = 16)
-render_scalebar(clear_scalebar = TRUE)
+render_scalebar(clear_previous = TRUE)
 #We can change the position by specifying a cardinal direction to `position`, and the
 #color by setting `color_first` and `color_second`
 
 render_scalebar(limits=c(0,80), label_unit = "km", position = "N",
                color_first = "darkgreen", color_second = "lightgreen")
 render_snapshot()
-render_scalebar(clear_scalebar = TRUE)
+render_scalebar(clear_previous = TRUE)
 #And switch the orientation by setting `text_switch_side = TRUE`
 render_scalebar(limits=c(0,80), label_unit = "km", position = "N", text_switch_side = TRUE,
                color_first = "darkgreen", color_second = "lightgreen")
 render_snapshot()
-render_scalebar(clear_scalebar = TRUE)
+render_scalebar(clear_previous = TRUE)
 #We can add additional breaks by specifying additional distances in `limits`
 
 render_scalebar(limits=c(0,40,80), label_unit = "km")
 render_snapshot()
-render_scalebar(clear_scalebar = TRUE)
+render_scalebar(clear_previous = TRUE)
 #We can also manually specify the height by setting the `y` argument:
 
 render_scalebar(limits=c(0,40,80), y=-70, label_unit = "km")
 render_snapshot()
-render_scalebar(clear_scalebar = TRUE)
+render_scalebar(clear_previous = TRUE)
 #Here we change the total size by specifying a start and end point along the side,
 #and set the number of colored `segments`:
 
@@ -108,7 +115,7 @@ render_scalebar(limits=c(0,20, 40), segments = 4, scale_length = c(0.5,1), label
 render_scalebar(limits=c(0,20, 40), segments = 4, position = "N", text_switch_side = TRUE,
                scale_length = c(0.25,0.75), label_unit = "km")
 render_snapshot()
-render_scalebar(clear_scalebar = TRUE)
+render_scalebar(clear_previous = TRUE)
 #Change the radius of the scale bar with `radius`. Here, the autopositioning doesn't work well with
 #the labels, so we provide additional offsets with `text_y_offset` and `text_x_offset` to fix it.
 

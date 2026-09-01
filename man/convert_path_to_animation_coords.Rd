@@ -30,6 +30,7 @@ convert_path_to_animation_coords(
   follow_rotations = 0,
   follow_fixed = FALSE,
   follow_fixed_offset = c(10, 10, 10),
+  distance_units = c("auto", "scene", "meters", "map"),
   damp_motion = FALSE,
   damp_magnitude = 0.1,
   resample_path_evenly = TRUE,
@@ -119,6 +120,11 @@ but rather sits at a fixed relative location to the path.}
 
 \item{follow_fixed_offset}{Default \code{c(10,10,10)}. If \code{follow_fixed = TRUE}, the offset from the path to place
 the camera.}
+
+\item{distance_units}{Default \code{"auto"}. Units for \code{offset_lookat},
+\code{follow_distance}, and \code{follow_fixed_offset}. \code{"auto"} uses metres when
+spatial distance metadata is cached and scene units otherwise. Other options
+are \code{"scene"}, \code{"meters"}, and \code{"map"}; map units require a projected CRS.}
 
 \item{damp_motion}{Default \code{FALSE}. Whether the suppress quick, jerky movements of the camera by linearly interpolating
 between the current camera position and the goal position. Amount of linear interpolation set in \code{damp_magnitude}.}

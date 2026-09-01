@@ -64,7 +64,9 @@ new_render_highquality_progress_bar = function(verbose, label, total) {
 #'`skymodelr::generate_sky_latlong()` (default) or `skymodelr::generate_sky()`
 #'when direct sun arguments are used (except `filename`, which is managed internally).
 #'The EXR is cached in `tempdir()` using a filename derived from these inputs.
-#'@param lightdirection Default `315`. Position of the light angle around the scene.
+#'@param lightdirection Default `315`. Position of the light angle around the
+#'scene. When omitted, rayshader interprets the default relative to true north
+#'using cached spatial metadata.
 #'If this is a vector longer than one, multiple lights will be generated (using values from
 #'`lightaltitude`, `lightintensity`, and `lightcolor`)
 #'@param lightaltitude Default `45`. Angle above the horizon that the light is located.
@@ -369,6 +371,7 @@ render_highquality = function(
   reset_scene_cache = FALSE,
   ...
 ) {
+  lightdirection_missing = missing(lightdirection)
   text_offset_missing = missing(text_offset)
   scale_text_offset_missing = missing(scale_text_offset)
   verbose = suppressWarnings(as.logical(verbose))
@@ -469,6 +472,10 @@ render_highquality = function(
   )
   dot_args = list(...)
   dot_args$parallel = parallel
+  if (isTRUE(lightdirection_missing)) {
+    lightdirection = lightdirection +
+      resolve_cached_north_rotation(source = "scene")
+  }
   render_scene_formals = formals(rayrender::render_scene)
   render_scene_supports_environment_light_bake_white =
     "environment_light_bake_white" %in% names(render_scene_formals)
@@ -563,6 +570,12 @@ render_highquality = function(
     )
   }
   sky_mode = ifelse(has_direct_sky, "direct", "latlong")
+  if (isTRUE(use_sky) && !("rotate_env" %in% names(dot_args))) {
+    north_rotation = resolve_cached_north_rotation(source = "scene")
+    if (!isTRUE(all.equal(north_rotation, 0))) {
+      dot_args$rotate_env = north_rotation
+    }
+  }
 
   sky_file = NULL
   sky_environment_light_bake_white = FALSE
@@ -1876,6 +1889,9 @@ render_highquality = function(
       attr(scene, "environment_light") = sky_file
       attr(scene, "environment_light_bake_white") =
         sky_environment_light_bake_white
+      if ("rotate_env" %in% names(dot_args)) {
+        attr(scene, "rotate_env") = dot_args$rotate_env
+      }
     }
     return(scene)
   }

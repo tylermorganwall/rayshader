@@ -65,6 +65,10 @@
 #'but rather sits at a fixed relative location to the path.
 #'@param follow_fixed_offset Default `c(10,10,10)`. If `follow_fixed = TRUE`, the offset from the path to place
 #'the camera.
+#'@param distance_units Default `"auto"`. Units for `offset_lookat`,
+#'`follow_distance`, and `follow_fixed_offset`. `"auto"` uses metres when
+#'spatial distance metadata is cached and scene units otherwise. Other options
+#'are `"scene"`, `"meters"`, and `"map"`; map units require a projected CRS.
 #'@param damp_motion Default `FALSE`. Whether the suppress quick, jerky movements of the camera by linearly interpolating
 #'between the current camera position and the goal position. Amount of linear interpolation set in `damp_magnitude`.
 #'@param damp_magnitude Default `0.1`. Amount of linear interpolation if `damp_motion = TRUE`.
@@ -191,6 +195,7 @@ convert_path_to_animation_coords = function(
   follow_rotations = 0,
   follow_fixed = FALSE,
   follow_fixed_offset = c(10, 10, 10),
+  distance_units = c("auto", "scene", "meters", "map"),
   damp_motion = FALSE,
   damp_magnitude = 0.1,
   resample_path_evenly = TRUE,
@@ -218,6 +223,14 @@ convert_path_to_animation_coords = function(
     render_path_args$vertical_exaggeration = vertical_exaggeration
   }
   xyz = do.call(render_path, render_path_args)
+
+  distance_multiplier = resolve_scene_distance_multiplier(
+    units = distance_units,
+    caller = "convert_path_to_animation_coords"
+  )
+  offset_lookat = offset_lookat * distance_multiplier
+  follow_distance = follow_distance * distance_multiplier
+  follow_fixed_offset = follow_fixed_offset * distance_multiplier
 
   xyz = do.call(rbind, xyz)
   if (rgl::cur3d() != 0) {

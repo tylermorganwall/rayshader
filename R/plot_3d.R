@@ -326,7 +326,7 @@ coerce_heightmap_to_scene_grid = function(heightmap, caller = NULL) {
     aligned,
     extent = scene_extent,
     crs = scene_crs,
-    geographic_aspect = scene_aspect$enabled
+    geographic_aspect = scene_aspect$active
   )
 }
 

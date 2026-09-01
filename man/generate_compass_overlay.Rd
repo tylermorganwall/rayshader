@@ -41,7 +41,8 @@ the compass is located.}
 
 \item{text_size}{Default \code{1}. Text size.}
 
-\item{bearing}{Default \code{0}. Angle (in degrees) of north.}
+\item{bearing}{Default \code{0}. Angle (in degrees) of north. When omitted,
+rayshader rotates grid north to true north using cached spatial metadata.}
 
 \item{heightmap}{Default \code{NULL}. The original height map. If omitted, rayshader will reuse the
 cached heightmap from the active scene or most recent hillshade call.}

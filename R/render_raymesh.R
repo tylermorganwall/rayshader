@@ -137,6 +137,7 @@ render_raymesh = function(
   heightmap = NULL,
   ...
 ) {
+  light_direction_missing = missing(light_direction)
   render_raymesh_args = list(...)
   rgl_tag_prefix = "obj_raymesh"
   swap_yz_transform = "swap"
@@ -188,6 +189,11 @@ render_raymesh = function(
   heightmap = resolve_scene_render_heightmap(
     heightmap,
     caller = "render_raymesh"
+  )
+  light_direction = resolve_scene_light_direction(
+    light_direction,
+    light_direction_missing,
+    light_relative
   )
   point_input = resolve_render_location_input(
     location = location,

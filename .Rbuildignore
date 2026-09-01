@@ -1,6 +1,8 @@
 ^build_gh_pages_rayshader\.R$
 ^man/figures$
 ^tools/readme$
+^tools/*.R$
+^tools/*.md$
 ^tic\.R$
 ^appveyor\.yml$
 ^\.travis\.yml$

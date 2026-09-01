@@ -249,6 +249,17 @@ render_movie_hq = function(
       dot_args$environment_light = NULL
     }
     animation_args$environment_light = environment_light
+    rotate_env = attr(scene, "rotate_env", exact = TRUE)
+    if (!is.null(rotate_env)) {
+      if ("rotate_env" %in% names(dot_args)) {
+        warning(
+          "`rotate_env` supplied in `...` ignored because ",
+          "`render_highquality_args` generated an oriented environment map."
+        )
+        dot_args$rotate_env = NULL
+      }
+      animation_args$rotate_env = rotate_env
+    }
     environment_light_bake_white = attr(
       scene,
       "environment_light_bake_white",

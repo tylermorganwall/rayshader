@@ -58,6 +58,7 @@ lamb_shade = function(
   extent = NULL,
   crs = NULL
 ) {
+  sunangle_missing = missing(sunangle)
   heightmap_missing = missing(heightmap)
   extent_missing = missing(extent)
   crs_missing = missing(crs)
@@ -142,6 +143,13 @@ lamb_shade = function(
     vertical_exaggeration = vertical_exaggeration,
     caller = "lamb_shade"
   )
+  if (
+    isTRUE(sunangle_missing) &&
+      isTRUE(heightmap_info$geographic_aspect$active) &&
+      is.finite(heightmap_info$geographic_aspect$north_rotation)
+  ) {
+    sunangle = sunangle + heightmap_info$geographic_aspect$north_rotation
+  }
   sunang_rad = sunangle * pi / 180
   rayang_rad = sunaltitude * pi / 180
   rayvector = c(
