@@ -146,6 +146,39 @@ test_that("render_movie_hq routes dots only to render_animation", {
   expect_false(animation_args$progress)
 })
 
+test_that("render_movie_hq uses explicitly supplied keyframes", {
+  keyframes = data.frame(
+    x = c(0, 1),
+    y = c(2, 3),
+    z = c(4, 5)
+  )
+  motion_positions = NULL
+
+  testthat::local_mocked_bindings(
+    render_highquality = function(...) list(label = "rendered-scene"),
+    .package = "rayshader"
+  )
+  testthat::local_mocked_bindings(
+    get_saved_keyframes = function() {
+      stop("get_saved_keyframes() should not be called")
+    },
+    generate_camera_motion = function(positions, ...) {
+      motion_positions <<- positions
+      data.frame(frame = seq_len(4))
+    },
+    render_animation = function(...) "animation-result",
+    .package = "rayrender"
+  )
+
+  result = render_movie_hq(
+    keyframes = keyframes,
+    frames = 4
+  )
+
+  expect_identical(result, "animation-result")
+  expect_identical(motion_positions, keyframes)
+})
+
 test_that("render_movie_hq validates scene extraction arguments", {
   expect_error(
     render_movie_hq(render_highquality_args = "light = FALSE"),
@@ -175,4 +208,19 @@ test_that("render_movie_hq stops before scene extraction when no keyframes exist
     fixed = TRUE
   )
   expect_false(scene_extracted)
+})
+
+test_that("render_movie_hq rejects explicitly supplied empty keyframes", {
+  testthat::local_mocked_bindings(
+    get_saved_keyframes = function() {
+      stop("get_saved_keyframes() should not be called")
+    },
+    .package = "rayrender"
+  )
+
+  expect_error(
+    render_movie_hq(keyframes = data.frame()),
+    "`keyframes` must contain at least one keyframe.",
+    fixed = TRUE
+  )
 })

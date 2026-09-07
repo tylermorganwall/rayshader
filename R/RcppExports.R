@@ -113,16 +113,20 @@ build_render_road_section_mesh_cpp <- function(left_bottom_matrix, right_bottom_
     .Call(`_rayshader_build_render_road_section_mesh_cpp`, left_bottom_matrix, right_bottom_matrix, left_top_matrix, right_top_matrix, incoming_tangent, outgoing_tangent, texture_v, closing_v, bbox_center, top_left_normal_matrix, top_right_normal_matrix, bottom_left_normal_matrix, bottom_right_normal_matrix, cap_start, cap_end, closed, parallel, geometry_tolerance, uv_tolerance)
 }
 
-densify_render_road_paths_batch_cpp <- function(input_jobs, heightmap, zscale, parallel, verbose) {
-    .Call(`_rayshader_densify_render_road_paths_batch_cpp`, input_jobs, heightmap, zscale, parallel, verbose)
+densify_render_road_paths_batch_cpp <- function(input_jobs, heightmap, zscale, parallel, verbose, terrain_scale = NULL) {
+    .Call(`_rayshader_densify_render_road_paths_batch_cpp`, input_jobs, heightmap, zscale, parallel, verbose, terrain_scale)
 }
 
-sample_render_road_sections_batch_cpp <- function(input_jobs, heightmap, zscale, parallel, verbose) {
-    .Call(`_rayshader_sample_render_road_sections_batch_cpp`, input_jobs, heightmap, zscale, parallel, verbose)
+sample_render_road_sections_batch_cpp <- function(input_jobs, heightmap, zscale, parallel, verbose, terrain_scale = NULL) {
+    .Call(`_rayshader_sample_render_road_sections_batch_cpp`, input_jobs, heightmap, zscale, parallel, verbose, terrain_scale)
 }
 
 build_render_highquality_road_mesh_batch_cpp <- function(input_jobs, parallel, verbose) {
     .Call(`_rayshader_build_render_highquality_road_mesh_batch_cpp`, input_jobs, parallel, verbose)
+}
+
+build_render_highquality_grounded_road_mesh_batch_cpp <- function(input_jobs, heightmap, zscale, parallel, verbose, terrain_scale = NULL) {
+    .Call(`_rayshader_build_render_highquality_grounded_road_mesh_batch_cpp`, input_jobs, heightmap, zscale, parallel, verbose, terrain_scale)
 }
 
 build_render_highquality_stream_mesh_batch_cpp <- function(input_jobs, heightmap, zscale, parallel, verbose) {

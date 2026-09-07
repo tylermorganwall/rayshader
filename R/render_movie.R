@@ -180,8 +180,8 @@ render_movie = function(
 #'@title Render High Quality Movie
 #'
 #'@description Renders a high quality movie by extracting the current rayshader
-#'scene with [render_highquality()], reading saved rayrender interactive keyframes
-#'with `rayrender::get_saved_keyframes()`, generating camera motion with
+#'scene with [render_highquality()], generating camera motion from supplied or
+#'saved rayrender interactive keyframes with
 #'`rayrender::generate_camera_motion()`, and passing the result to
 #'`rayrender::render_animation()`.
 #'
@@ -194,6 +194,10 @@ render_movie = function(
 #'@param render_highquality_args Default `list()`. Additional arguments passed
 #'to [render_highquality()] when extracting the scene. `return_scene = TRUE` is
 #'always applied.
+#'@param keyframes Default `NULL`. Keyframes returned by
+#'`rayrender::get_saved_keyframes()`. When supplied, these are passed directly
+#'to `rayrender::generate_camera_motion()` without reading the currently saved
+#'interactive keyframes.
 #'@param ... Additional parameters to pass to `rayrender::render_animation()`.
 #'@return Invisibly returns the value from `rayrender::render_animation()`.
 #'@export
@@ -203,6 +207,7 @@ render_movie_hq = function(
   closed = TRUE,
   damp_motion = TRUE,
   render_highquality_args = list(),
+  keyframes = NULL,
   ...
 ) {
   if (!(length(find.package("rayrender", quiet = TRUE)) > 0)) {
@@ -216,12 +221,19 @@ render_movie_hq = function(
   }
   dot_args = list(...)
   render_animation_formals = formals(rayrender::render_animation)
-  keyframes = rayrender::get_saved_keyframes()
+  supplied_keyframes = !is.null(keyframes)
+  if (!supplied_keyframes) {
+    keyframes = rayrender::get_saved_keyframes()
+  }
   if (is.null(keyframes) || NROW(keyframes) == 0) {
-    stop(
-      "No keyframes saved: use the rayrender interactive preview to save ",
-      "keyframes before calling render_movie_hq()."
-    )
+    if (supplied_keyframes) {
+      stop("`keyframes` must contain at least one keyframe.")
+    } else {
+      stop(
+        "No keyframes saved: use the rayrender interactive preview to save ",
+        "keyframes before calling render_movie_hq()."
+      )
+    }
   }
   camera_motion = rayrender::generate_camera_motion(
     keyframes,

@@ -105,7 +105,7 @@ test_that("clear-only render calls remove their existing layers", {
     ),
     trees = list(
       call = quote(render_tree(clear_previous = TRUE)),
-      tags = "objtree"
+      tags = c("objtree", "tree_preview")
     ),
     water = list(
       call = quote(render_water(clear_previous = TRUE)),

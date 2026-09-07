@@ -32,6 +32,7 @@ get_ids_with_labels = function(typeval = NULL) {
     "trail_path",
     "road_mesh_preview",
     "trail_mesh_preview",
+    "tree_preview",
     "points3d",
     "polygon3d",
     "floating_overlay",

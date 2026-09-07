@@ -101,7 +101,7 @@ render_trails(
   color = "grey50",
   width = 3,
   width_units = "meters",
-  preview="mesh", 
+  preview="mesh",
   clear_previous = TRUE
 )
 render_snapshot()

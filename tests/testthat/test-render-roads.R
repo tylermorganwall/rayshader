@@ -1120,6 +1120,165 @@ test_that("elevated road meshes preserve absolute profiles", {
   expect_lt(min(vertices[, 2]), 1)
 })
 
+test_that("grounded textured roads follow terrain between their rails", {
+  heightmap = matrix(0, nrow = 7L, ncol = 7L)
+  heightmap[4L, ] = 10
+  points = cbind(
+    x = 0,
+    y = 10,
+    z = c(-2, 2)
+  )
+  road_mesh = make_render_highquality_road_chain_mesh(
+    points = points,
+    bbox_center = c(0, 0, 0),
+    width = 2,
+    heightmap = heightmap,
+    zscale = 1,
+    material = list(),
+    texture_file = "lane-texture.png",
+    texture_length = 2,
+    terrain_following = TRUE,
+    return_mesh = TRUE
+  )
+  vertices = t(road_mesh$vb[1:3, , drop = FALSE])
+  normals = t(road_mesh$normals)
+  texture_coordinates = t(road_mesh$texcoords)
+  triangles = t(road_mesh$it)
+  top_triangle = apply(triangles, 1L, function(index) {
+    all(normals[index, 2L] > 0)
+  })
+  top_triangles = triangles[top_triangle, , drop = FALSE]
+  centroids = t(apply(top_triangles, 1L, function(index) {
+    colMeans(vertices[index, , drop = FALSE])
+  }))
+  terrain_height = interpolate_render_heightmap_height(
+    heightmap,
+    centroids[, 1L],
+    centroids[, 3L]
+  )
+
+  expect_gt(nrow(top_triangles), 8L)
+  expect_equal(
+    centroids[, 2L] - terrain_height,
+    rep(0.055, nrow(centroids)),
+    tolerance = 1e-8
+  )
+  expect_true(any(abs(vertices[, 1L]) < 1e-10))
+  expect_true(any(abs(texture_coordinates[, 1L] - 0.5) < 1e-10))
+  expect_true(all(is.finite(texture_coordinates)))
+})
+
+test_that("grounded roads use rendered terrain scale and float-safe faces", {
+  terrain_scale = c(0.8, 1.2)
+  heightmap = outer(
+    seq_len(9L),
+    seq_len(9L),
+    function(row, column) row / 3 + column / 5
+  )
+  heightmap[, 6:9] = heightmap[, 6:9] + 20
+  grid_x = c(-2.5, -1, 0.5, 2.5)
+  grid_z = c(-3, -1, 1, 3)
+  points = cbind(
+    grid_x * terrain_scale[[1L]],
+    interpolate_render_heightmap_height(heightmap, grid_x, grid_z),
+    grid_z * terrain_scale[[2L]]
+  )
+  road_mesh = make_render_highquality_road_chain_mesh(
+    points = points,
+    bbox_center = c(0, 0, 0),
+    width = 2,
+    heightmap = heightmap,
+    zscale = 1,
+    terrain_scale = terrain_scale,
+    material = list(),
+    texture_file = "lane-texture.png",
+    texture_length = 2,
+    terrain_following = TRUE,
+    return_mesh = TRUE
+  )
+  vertices = t(road_mesh$vb[1:3, , drop = FALSE])
+  normals = t(road_mesh$normals)
+  triangles = t(road_mesh$it)
+  top_triangle = apply(triangles, 1L, function(index) {
+    all(normals[index, 2L] > 0)
+  })
+  top_triangles = triangles[top_triangle, , drop = FALSE]
+  centroids = t(apply(top_triangles, 1L, function(index) {
+    colMeans(vertices[index, , drop = FALSE])
+  }))
+  terrain_height = interpolate_render_heightmap_height(
+    heightmap,
+    centroids[, 1L] / terrain_scale[[1L]],
+    centroids[, 3L] / terrain_scale[[2L]]
+  )
+
+  expect_equal(
+    centroids[, 2L] - terrain_height,
+    rep(0.055, nrow(centroids)),
+    tolerance = 1e-8
+  )
+
+  float_values = readBin(
+    writeBin(as.numeric(vertices), raw(), size = 4L),
+    what = double(),
+    n = length(vertices),
+    size = 4L
+  )
+  float_vertices = matrix(float_values, ncol = 3L)
+  first_edge = float_vertices[triangles[, 2L], , drop = FALSE] -
+    float_vertices[triangles[, 1L], , drop = FALSE]
+  second_edge = float_vertices[triangles[, 3L], , drop = FALSE] -
+    float_vertices[triangles[, 1L], , drop = FALSE]
+  third_edge = float_vertices[triangles[, 3L], , drop = FALSE] -
+    float_vertices[triangles[, 2L], , drop = FALSE]
+  float_cross = row_cross(first_edge, second_edge)
+  float_cross_squared = rowSums(float_cross^2)
+  maximum_edge_squared = pmax(
+    rowSums(first_edge^2),
+    rowSums(second_edge^2),
+    rowSums(third_edge^2)
+  )
+  float_shape_tolerance = 16 * .Machine$single.eps
+
+  expect_true(all(
+    float_cross_squared > float_shape_tolerance^2 * maximum_edge_squared^2
+  ))
+})
+
+test_that("road line densification samples aspect-scaled terrain", {
+  terrain_scale = c(0.75, 1.25)
+  heightmap = outer(
+    seq_len(8L),
+    seq_len(10L),
+    function(row, column) row + 2 * column
+  )
+  grid_x = c(-2.5, 2.5)
+  grid_z = c(-3.5, 3.5)
+  coordinates = cbind(
+    grid_x * terrain_scale[[1L]],
+    interpolate_render_heightmap_height(heightmap, grid_x, grid_z),
+    grid_z * terrain_scale[[2L]]
+  )
+  densified = densify_render_line_coords(
+    coords = list(coordinates),
+    heightmap = heightmap,
+    zscale = 1,
+    offset = 0,
+    terrain_scale = terrain_scale
+  )[[1L]]
+
+  expect_gt(nrow(densified), nrow(coordinates))
+  expect_equal(
+    densified[, 2L],
+    interpolate_render_heightmap_height(
+      heightmap,
+      densified[, 1L] / terrain_scale[[1L]],
+      densified[, 3L] / terrain_scale[[2L]]
+    ),
+    tolerance = 1e-10
+  )
+})
+
 test_that("native road meshing matches the R reference and threaded output", {
   point_count = 200L
   point_x = seq(0, 100, length.out = point_count)
@@ -1278,11 +1437,13 @@ test_that("batched terrain preparation matches R and threaded output", {
     heightmap,
     zscale = 2
   )
-  left_top = left_surface + left_normal * 0.055
-  right_top = right_surface + right_normal * 0.055
+  left_top = left_surface
+  left_top[, 2L] = left_top[, 2L] + 0.055
+  right_top = right_surface
+  right_top[, 2L] = right_top[, 2L] + 0.055
   section_reference = list(
-    left_bottom = left_top - left_normal * 0.11,
-    right_bottom = right_top - right_normal * 0.11,
+    left_bottom = left_top - matrix(c(0, 0.11, 0), nrow(points), 3L, TRUE),
+    right_bottom = right_top - matrix(c(0, 0.11, 0), nrow(points), 3L, TRUE),
     left_top = left_top,
     right_top = right_top,
     left_normal = left_normal,
@@ -1807,6 +1968,59 @@ test_that("terrain-buffered road fallback handles self-overlapping sweeps", {
     tolerance = 1e-8
   )
   expect_no_condition(rayrender:::process_scene(meshes[[1L]]))
+})
+
+test_that("textured road chains are dropped when no mesh fallback works", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("rayrender")
+  skip_if_not_installed("rayvertex")
+
+  task = list(
+    points = matrix(
+      c(0, 0, 0, 5, 0, 0, 4.9, 0, 0.1),
+      ncol = 3,
+      byrow = TRUE
+    ),
+    bbox_center = c(0, 0, 0),
+    width = 4,
+    heightmap = matrix(0, nrow = 9, ncol = 9),
+    zscale = 1,
+    material = rayrender::diffuse(color = "white"),
+    texture_file = "lane-texture.png",
+    texture_world_scale = c(1, 1),
+    terrain_following = TRUE
+  )
+  attr(task, "mesh_topology") = list(
+    mesh_chain_id = 1L,
+    road_path_id = 1L,
+    render_road_fragment_id = 17L,
+    render_road_feature_id = 9L,
+    member_order = 1L,
+    orientation = 1L,
+    closed = FALSE,
+    road_lanes = 2L
+  )
+
+  expect_warning(
+    meshes <- make_render_highquality_road_path_meshes(list(task)),
+    "Dropped 1 high-quality road mesh chain"
+  )
+  diagnostics = attr(meshes, "mesh_chain_diagnostics")
+
+  expect_length(meshes, 0L)
+  expect_equal(diagnostics$buffered_fallback_count, 0L)
+  expect_equal(diagnostics$dropped_chain_count, 1L)
+  expect_equal(diagnostics$dropped_chain_id, 1L)
+  expect_equal(diagnostics$dropped_chains$chain_index, 1L)
+  expect_equal(diagnostics$dropped_chains$source_tasks, "17")
+  expect_match(
+    diagnostics$dropped_chains$sweep_error,
+    "inverted surface segments"
+  )
+  expect_equal(
+    diagnostics$dropped_chains$fallback_error,
+    "the chain uses a road texture"
+  )
 })
 
 test_that("road mesh drops sub-millimeter densification fragments", {

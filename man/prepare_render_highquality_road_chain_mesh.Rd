@@ -10,6 +10,7 @@ prepare_render_highquality_road_chain_mesh(
   width,
   heightmap = NULL,
   zscale = 1,
+  terrain_scale = c(1, 1),
   material,
   texture_file = NULL,
   texture_length = 20,
@@ -42,6 +43,8 @@ prepare_render_highquality_road_chain_mesh(
 \item{heightmap}{Cached heightmap.}
 
 \item{zscale}{Effective zscale.}
+
+\item{terrain_scale}{Default \code{c(1, 1)}. Horizontal x-z terrain scale.}
 
 \item{material}{Rayrender material.}
 

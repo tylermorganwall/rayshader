@@ -4,7 +4,13 @@
 \alias{densify_render_line_coords}
 \title{Densify render line coordinates}
 \usage{
-densify_render_line_coords(coords, heightmap, zscale, offset)
+densify_render_line_coords(
+  coords,
+  heightmap,
+  zscale,
+  offset,
+  terrain_scale = c(1, 1)
+)
 }
 \arguments{
 \item{coords}{List of scene coordinate matrices.}
@@ -14,6 +20,9 @@ densify_render_line_coords(coords, heightmap, zscale, offset)
 \item{zscale}{Effective zscale.}
 
 \item{offset}{Centerline offset in elevation units.}
+
+\item{terrain_scale}{Default \code{c(1, 1)}. Horizontal x-z scale applied to the
+rendered terrain vertices.}
 }
 \value{
 List of densified coordinate matrices.

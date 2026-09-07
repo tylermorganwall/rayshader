@@ -4,7 +4,12 @@
 \alias{interpolate_render_highquality_normals}
 \title{Interpolate render path normals}
 \usage{
-interpolate_render_highquality_normals(points, heightmap = NULL, zscale = 1)
+interpolate_render_highquality_normals(
+  points,
+  heightmap = NULL,
+  zscale = 1,
+  terrain_scale = c(1, 1)
+)
 }
 \arguments{
 \item{points}{Path points in rgl scene coordinates.}
@@ -12,6 +17,8 @@ interpolate_render_highquality_normals(points, heightmap = NULL, zscale = 1)
 \item{heightmap}{Default \code{NULL}. Cached heightmap matrix.}
 
 \item{zscale}{Effective zscale.}
+
+\item{terrain_scale}{Default \code{c(1, 1)}. Horizontal x-z terrain scale.}
 }
 \value{
 Matrix of normal vectors.

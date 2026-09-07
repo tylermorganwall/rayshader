@@ -8,7 +8,8 @@ sample_render_highquality_water_path_surface(
   points_xz,
   heightmap,
   terrain_triangles = NULL,
-  tri_id = NULL
+  tri_id = NULL,
+  terrain_scale = c(1, 1)
 )
 }
 \arguments{
@@ -19,6 +20,8 @@ sample_render_highquality_water_path_surface(
 \item{terrain_triangles}{Default \code{NULL}. Terrain triangle metadata.}
 
 \item{tri_id}{Default \code{NULL}. Terrain triangle id for each point.}
+
+\item{terrain_scale}{Default \code{c(1, 1)}. Horizontal x-z terrain scale.}
 }
 \value{
 Numeric terrain heights.

@@ -920,11 +920,11 @@ spatial_water_original_vertices_edge_id = function(
 spatial_water_component_mask_metrics = function(component_mask) {
   seed = make_spatial_water_component_seed(component_mask)
   area = sum((seed$x1 - seed$x0) * (seed$z1 - seed$z0))
-  perimeter = spatial_water_component_seed_perimeter(
+  boundary_area = spatial_water_component_seed_boundary_area(
     component_mask = component_mask,
     seed = seed
   )
-  list(area = area, perimeter = perimeter)
+  list(area = area, boundary_area = boundary_area)
 }
 
 #'@keywords internal
@@ -1002,36 +1002,30 @@ make_spatial_water_component_seed = function(
 }
 
 #'@keywords internal
-spatial_water_component_seed_perimeter = function(component_mask, seed) {
+spatial_water_component_seed_boundary_area = function(component_mask, seed) {
   if (!length(seed$row)) {
     return(0)
   }
-  perimeter = 0
+  boundary_area = 0
   for (cell_index in seq_along(seed$row)) {
     row_index = seed$row[cell_index]
     col_index = seed$col[cell_index]
-    side_height = seed$z1[cell_index] - seed$z0[cell_index]
-    side_width = seed$x1[cell_index] - seed$x0[cell_index]
-    if (row_index == 1L || !component_mask[row_index - 1L, col_index]) {
-      perimeter = perimeter + side_height
-    }
-    if (
+    boundary_cell =
+      row_index == 1L ||
       row_index == nrow(component_mask) ||
-        !component_mask[row_index + 1L, col_index]
-    ) {
-      perimeter = perimeter + side_height
-    }
-    if (col_index == 1L || !component_mask[row_index, col_index - 1L]) {
-      perimeter = perimeter + side_width
-    }
-    if (
+      col_index == 1L ||
       col_index == ncol(component_mask) ||
-        !component_mask[row_index, col_index + 1L]
-    ) {
-      perimeter = perimeter + side_width
+      !component_mask[max(1L, row_index - 1L), col_index] ||
+      !component_mask[min(nrow(component_mask), row_index + 1L), col_index] ||
+      !component_mask[row_index, max(1L, col_index - 1L)] ||
+      !component_mask[row_index, min(ncol(component_mask), col_index + 1L)]
+    if (boundary_cell) {
+      boundary_area = boundary_area +
+        (seed$x1[cell_index] - seed$x0[cell_index]) *
+          (seed$z1[cell_index] - seed$z0[cell_index])
     }
   }
-  perimeter
+  boundary_area
 }
 
 #'@keywords internal
@@ -1090,8 +1084,7 @@ evaluate_spatial_water_triangle_clipped_component = function(
   }
   tolerances = spatial_water_triangle_clip_tolerances(
     water_level = water_level,
-    heights = terrain_mesh$vertices[, "h"],
-    target_area = target_area_limit
+    heights = terrain_mesh$vertices[, "h"]
   )
   traversal = spatial_water_traverse_seeded_clipped_faces(
     terrain_mesh = terrain_mesh,
@@ -1155,24 +1148,18 @@ spatial_water_level_tolerance = function(water_level, heights) {
 #'@keywords internal
 spatial_water_triangle_clip_tolerances = function(
   water_level,
-  heights,
-  target_area = 1
+  heights
 ) {
   height_tol = spatial_water_level_tolerance(
     water_level = water_level,
     heights = heights
   )
-  finite_target_area = target_area[is.finite(target_area)]
-  area_scale = if (length(finite_target_area)) {
-    max(1, finite_target_area, na.rm = TRUE)
-  } else {
-    1
-  }
   list(
     height_tol = height_tol,
     t_tol = sqrt(.Machine$double.eps),
     length_tol = sqrt(.Machine$double.eps),
-    area_tol = sqrt(.Machine$double.eps) * area_scale,
+    # Keep seed topology identical during bounded fitting and mesh construction.
+    area_tol = sqrt(.Machine$double.eps),
     surface_area_tol = sqrt(.Machine$double.eps) *
       max(
         1,
@@ -2632,8 +2619,12 @@ fit_spatial_water_component_polygon = function(
   if (!is.finite(target_area) || target_area <= sqrt(.Machine$double.eps)) {
     return(NULL)
   }
-  target_perimeter = component_metrics$perimeter
-  target_area_limit = target_area + target_perimeter
+  target_area_tolerance = component_metrics$boundary_area
+  if (!is.finite(target_area_tolerance) || target_area_tolerance < 0) {
+    return(NULL)
+  }
+  target_area_min = max(0, target_area - target_area_tolerance)
+  target_area_limit = target_area + target_area_tolerance
   component_seed = make_spatial_water_component_seed(
     component_mask,
     terrain_mesh = terrain_mesh
@@ -2771,6 +2762,13 @@ fit_spatial_water_component_polygon = function(
   }
   best = update_best(lower_result)
   best = update_best(upper_result)
+  if (
+    is.null(best) ||
+      best$area < target_area_min - area_tol ||
+      best$area > target_area_limit + area_tol
+  ) {
+    return(NULL)
+  }
   best
 }
 

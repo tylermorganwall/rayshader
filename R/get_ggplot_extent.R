@@ -1864,6 +1864,42 @@ get_scene_trail_meshes = function(default = NULL) {
   get_scene_context_value("trail_meshes", default = default)
 }
 
+#' Cache lightweight tree instance layers for the active scene
+#'
+#' @param instances Default `NULL`. Tree component transforms for one render
+#' layer.
+#' @param append Default `FALSE`. Whether to append a new tree layer.
+#'
+#' @return Invisibly returns `NULL`.
+#' @keywords internal
+cache_scene_tree_instances = function(instances = NULL, append = FALSE) {
+  if (is.null(instances)) {
+    assign("tree_instances", NULL, envir = ray_cache_scene_envir)
+    return(invisible(NULL))
+  }
+  existing = if (isTRUE(append)) {
+    get_scene_tree_instances(default = list())
+  } else {
+    list()
+  }
+  assign(
+    "tree_instances",
+    c(existing, list(instances)),
+    envir = ray_cache_scene_envir
+  )
+  invisible(NULL)
+}
+
+#' Get lightweight tree instance layers for the active scene
+#'
+#' @param default Default `NULL`. Value returned when no cache is available.
+#'
+#' @return Cached tree component transform layers.
+#' @keywords internal
+get_scene_tree_instances = function(default = NULL) {
+  get_scene_context_value("tree_instances", default = default)
+}
+
 reset_scene_context = function(
   clear_scene_metadata = TRUE,
   clear_scene_cache = TRUE
@@ -1873,6 +1909,7 @@ reset_scene_context = function(
     cache_scene_road_meshes(NULL)
     cache_scene_stream_meshes(NULL)
     cache_scene_trail_meshes(NULL)
+    cache_scene_tree_instances(NULL)
   }
   if (isTRUE(clear_scene_metadata)) {
     cache_scene_context_token(NULL)

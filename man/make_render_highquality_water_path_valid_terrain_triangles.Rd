@@ -7,7 +7,8 @@
 make_render_highquality_water_path_valid_terrain_triangles(
   heightmap,
   bbox = NULL,
-  margin = 0
+  margin = 0,
+  terrain_scale = c(1, 1)
 )
 }
 \arguments{
@@ -16,6 +17,8 @@ make_render_highquality_water_path_valid_terrain_triangles(
 \item{bbox}{Default \code{NULL}. Optional stream footprint bounding box.}
 
 \item{margin}{Default \code{0}. Extra scene-unit margin around \code{bbox}.}
+
+\item{terrain_scale}{Default \code{c(1, 1)}. Horizontal x-z terrain scale.}
 }
 \value{
 \code{sf} object containing terrain triangle footprints.

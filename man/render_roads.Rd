@@ -188,5 +188,7 @@ physical mesh continuations.
 \description{
 Adds road paths to the scene and eagerly builds their reusable
 high-quality meshes. Roads can be previewed as rgl lines or as the same mesh
-geometry consumed by \code{\link[=render_highquality]{render_highquality()}}.
+geometry consumed by \code{\link[=render_highquality]{render_highquality()}}. Road chains that cannot be
+represented by either mesh method are omitted with a warning while the
+remaining meshes continue rendering.
 }

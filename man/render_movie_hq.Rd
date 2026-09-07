@@ -10,6 +10,7 @@ render_movie_hq(
   closed = TRUE,
   damp_motion = TRUE,
   render_highquality_args = list(),
+  keyframes = NULL,
   ...
 )
 }
@@ -28,6 +29,11 @@ the first saved keyframe.}
 to \code{\link[=render_highquality]{render_highquality()}} when extracting the scene. \code{return_scene = TRUE} is
 always applied.}
 
+\item{keyframes}{Default \code{NULL}. Keyframes returned by
+\code{rayrender::get_saved_keyframes()}. When supplied, these are passed directly
+to \code{rayrender::generate_camera_motion()} without reading the currently saved
+interactive keyframes.}
+
 \item{...}{Additional parameters to pass to \code{rayrender::render_animation()}.}
 }
 \value{
@@ -35,8 +41,8 @@ Invisibly returns the value from \code{rayrender::render_animation()}.
 }
 \description{
 Renders a high quality movie by extracting the current rayshader
-scene with \code{\link[=render_highquality]{render_highquality()}}, reading saved rayrender interactive keyframes
-with \code{rayrender::get_saved_keyframes()}, generating camera motion with
+scene with \code{\link[=render_highquality]{render_highquality()}}, generating camera motion from supplied or
+saved rayrender interactive keyframes with
 \code{rayrender::generate_camera_motion()}, and passing the result to
 \code{rayrender::render_animation()}.
 }

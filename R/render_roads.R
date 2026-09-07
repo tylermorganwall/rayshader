@@ -2,7 +2,9 @@
 #'
 #' @description Adds road paths to the scene and eagerly builds their reusable
 #' high-quality meshes. Roads can be previewed as rgl lines or as the same mesh
-#' geometry consumed by [render_highquality()].
+#' geometry consumed by [render_highquality()]. Road chains that cannot be
+#' represented by either mesh method are omitted with a warning while the
+#' remaining meshes continue rendering.
 #'
 #' @param roads Spatial line data used to draw road paths. Supports `sf`,
 #' `sfc`, `sfg`, `SpatialLines`, and `SpatialLinesDataFrame` line inputs.
@@ -530,6 +532,7 @@ render_roads = function(
     extent = extent,
     crs = scene_crs
   )
+  terrain_scale = unname(get_scene_geographic_aspect()$scale)
   road_width = resolve_render_road_width(
     road_width = width,
     lanes = road_lanes,
@@ -580,7 +583,8 @@ render_roads = function(
       coords = coord_list,
       heightmap = heightmap,
       zscale = zscale,
-      offset = 0
+      offset = 0,
+      terrain_scale = terrain_scale
     )
   }
 
@@ -829,6 +833,7 @@ render_roads = function(
         texture_length = road_info$texture_length,
         texture_repeats = road_info$texture_repeats,
         texture_world_scale = road_info$texture_world_scale,
+        terrain_scale = terrain_scale,
         terrain_following = road_info$terrain_following,
         return_mesh = TRUE,
         rgl_id = road_id_by_path[[coord_index]],
@@ -8471,25 +8476,12 @@ make_render_highquality_road_path_meshes = function(
     verbose = verbose,
     parallel = parallel
   )
-  prepared_index = which(vapply(
-    prepared_results,
-    function(result) is.null(result$error) && !is.null(result$prepared),
-    logical(1)
-  ))
-  native_results = if (length(prepared_index)) {
-    build_render_highquality_road_mesh_batch_cpp(
-      input_jobs = lapply(
-        prepared_results[prepared_index],
-        function(result) result$prepared$job
-      ),
-      parallel = parallel,
-      verbose = verbose
-    )
-  } else {
-    list()
-  }
-  native_result_by_chain = vector("list", length(chain_tasks))
-  native_result_by_chain[prepared_index] = native_results
+  native_result_by_chain = build_render_highquality_prepared_road_meshes(
+    prepared_results = prepared_results,
+    tasks = chain_tasks,
+    verbose = verbose,
+    parallel = parallel
+  )
   mesh_results = vector("list", length(chain_tasks))
   for (chain_index in seq_along(chain_tasks)) {
     preparation_result = prepared_results[[chain_index]]
@@ -8546,30 +8538,64 @@ make_render_highquality_road_path_meshes = function(
         )
     }
   }
-  for (chain_index in seq_along(mesh_results)) {
-    mesh_result = mesh_results[[chain_index]]
-    if (!isTRUE(mesh_result$failed)) {
-      next
+  dropped_chain_index = which(vapply(
+    mesh_results,
+    function(mesh_result) isTRUE(mesh_result$failed),
+    logical(1)
+  ))
+  dropped_chain_diagnostics = if (length(dropped_chain_index)) {
+    do.call(
+      rbind,
+      lapply(dropped_chain_index, function(chain_index) {
+        mesh_result = mesh_results[[chain_index]]
+        task = chain_tasks[[chain_index]]
+        mesh_chain_id = attr(task, "mesh_topology")$mesh_chain_id
+        source_task = chain_members$render_road_fragment_id[
+          chain_members$mesh_chain_id == mesh_chain_id
+        ]
+        data.frame(
+          chain_index = chain_index,
+          mesh_chain_id = mesh_chain_id,
+          source_tasks = paste(source_task, collapse = ", "),
+          sweep_error = mesh_result$sweep_error,
+          fallback_error = mesh_result$fallback_error,
+          stringsAsFactors = FALSE
+        )
+      })
+    )
+  } else {
+    data.frame(
+      chain_index = integer(0),
+      mesh_chain_id = integer(0),
+      source_tasks = character(0),
+      sweep_error = character(0),
+      fallback_error = character(0),
+      stringsAsFactors = FALSE
+    )
+  }
+  if (nrow(dropped_chain_diagnostics)) {
+    chain_label = if (nrow(dropped_chain_diagnostics) == 1L) {
+      "chain"
+    } else {
+      "chains"
     }
-    task = chain_tasks[[chain_index]]
-    mesh_chain_id = attr(task, "mesh_topology")$mesh_chain_id
-    source_task = chain_members$render_road_fragment_id[
-      chain_members$mesh_chain_id == mesh_chain_id
-    ]
-    stop(
+    dropped_label = paste0(
+      dropped_chain_diagnostics$chain_index,
+      " (source tasks ",
+      dropped_chain_diagnostics$source_tasks,
+      ")",
+      collapse = ", "
+    )
+    warning(
       sprintf(
         paste0(
-          "High-quality road mesh chain %i (source tasks %s) ",
-          "failed: %s"
+          "Dropped %i high-quality road mesh %s after both the road sweep ",
+          "and buffered fallback failed: %s. The remaining road meshes ",
+          "will still be rendered."
         ),
-        chain_index,
-        paste(source_task, collapse = ", "),
-        paste0(
-          mesh_result$sweep_error,
-          " Buffered fallback failed: ",
-          mesh_result$fallback_error,
-          "."
-        )
+        nrow(dropped_chain_diagnostics),
+        chain_label,
+        dropped_label
       ),
       call. = FALSE
     )
@@ -8608,7 +8634,7 @@ make_render_highquality_road_path_meshes = function(
     }
     list(mesh)
   })
-  meshes = do.call(c, mesh_groups)
+  meshes = if (length(mesh_groups)) do.call(c, mesh_groups) else list()
   attr(meshes, "mesh_chain_members") = chain_members
   attr(meshes, "envelope_sections") = envelope_sections
   chain_diagnostics$buffered_fallback_count = buffered_fallback_count
@@ -8617,6 +8643,9 @@ make_render_highquality_road_path_meshes = function(
     function(task) attr(task, "mesh_topology")$mesh_chain_id,
     integer(1)
   )
+  chain_diagnostics$dropped_chain_count = nrow(dropped_chain_diagnostics)
+  chain_diagnostics$dropped_chain_id = dropped_chain_diagnostics$mesh_chain_id
+  chain_diagnostics$dropped_chains = dropped_chain_diagnostics
   attr(meshes, "mesh_chain_diagnostics") = chain_diagnostics
   meshes
 }
@@ -8714,10 +8743,11 @@ make_render_highquality_road_chain_mesh_result = function(
       native_result = if (is.null(prepared)) {
         NULL
       } else {
-        build_render_highquality_road_mesh_batch_cpp(
-          input_jobs = list(prepared$job),
-          parallel = parallel,
-          verbose = FALSE
+        build_render_highquality_prepared_road_meshes(
+          prepared_results = list(preparation_result),
+          tasks = list(task),
+          verbose = FALSE,
+          parallel = parallel
         )[[1L]]
       }
       if (!is.null(native_result) && !isTRUE(native_result$success)) {
@@ -9063,6 +9093,7 @@ expand_render_road_unstable_joins = function(
 #' @param right_distance Right distance from the centerline.
 #' @param heightmap Cached heightmap.
 #' @param zscale Effective zscale.
+#' @param terrain_scale Default `c(1, 1)`. Horizontal x-z terrain scale.
 #' @param closed Whether the path is periodic.
 #' @param miter_limit Maximum permitted miter scale.
 #' @param frames Default `NULL`. Optional precomputed vertex frames.
@@ -9075,6 +9106,7 @@ calculate_render_road_vertex_sections = function(
   right_distance,
   heightmap = NULL,
   zscale = 1,
+  terrain_scale = c(1, 1),
   closed = FALSE,
   miter_limit = 4,
   frames = NULL
@@ -9119,7 +9151,8 @@ calculate_render_road_vertex_sections = function(
     heightmap = terrain_heightmap,
     zscale = zscale,
     parallel = FALSE,
-    verbose = FALSE
+    verbose = FALSE,
+    terrain_scale = terrain_scale
   )[[1L]]
   c(
     list(
@@ -10245,6 +10278,7 @@ initialize_render_highquality_road_chain_preparation = function(task) {
   defaults = list(
     heightmap = NULL,
     zscale = 1,
+    terrain_scale = c(1, 1),
     texture_file = NULL,
     texture_length = 20,
     texture_repeats = NULL,
@@ -10287,6 +10321,14 @@ initialize_render_highquality_road_chain_preparation = function(task) {
   task$zscale = suppressWarnings(as.numeric(task$zscale[[1L]]))
   if (!is.finite(task$zscale) || task$zscale <= 0) {
     task$zscale = 1
+  }
+  task$terrain_scale = suppressWarnings(as.numeric(task$terrain_scale[1:2]))
+  if (
+    length(task$terrain_scale) != 2L ||
+      any(!is.finite(task$terrain_scale)) ||
+      any(task$terrain_scale <= 0)
+  ) {
+    task$terrain_scale = c(1, 1)
   }
   task$texture_world_scale = suppressWarnings(as.numeric(
     task$texture_world_scale[1:2]
@@ -10464,7 +10506,7 @@ group_render_highquality_road_preparations_by_terrain = function(
   for (index in indices) {
     preparation = preparations[[index]]
     task = preparation$task
-    has_terrain = task$terrain_following && is.matrix(task$heightmap)
+    has_terrain = isTRUE(task$terrain_following) && is.matrix(task$heightmap)
     matched = FALSE
     for (group_index in seq_along(groups)) {
       group = groups[[group_index]]
@@ -10474,6 +10516,7 @@ group_render_highquality_road_preparations_by_terrain = function(
         has_terrain &&
           group$has_terrain &&
           identical(task$zscale, group$zscale) &&
+          identical(task$terrain_scale, group$terrain_scale) &&
           identical(task$heightmap, group$heightmap)
       }
       if (same_terrain) {
@@ -10491,11 +10534,70 @@ group_render_highquality_road_preparations_by_terrain = function(
         } else {
           matrix(numeric(), nrow = 0L, ncol = 0L)
         },
-        zscale = if (has_terrain) task$zscale else 1
+        zscale = if (has_terrain) task$zscale else 1,
+        terrain_scale = if (has_terrain) task$terrain_scale else c(1, 1)
       )
     }
   }
   groups
+}
+
+#' Build prepared road meshes against their source terrains
+#'
+#' @param prepared_results Per-task preparation results.
+#' @param tasks Road mesh-chain tasks matching `prepared_results`.
+#' @param verbose Whether to display native mesh-building progress.
+#' @param parallel Whether to use native worker threads.
+#'
+#' @return Native mesh results in task order, with `NULL` for unprepared tasks.
+#' @keywords internal
+build_render_highquality_prepared_road_meshes = function(
+  prepared_results,
+  tasks,
+  verbose = FALSE,
+  parallel = FALSE
+) {
+  if (length(prepared_results) != length(tasks)) {
+    stop("Prepared road mesh results do not match their tasks.", call. = FALSE)
+  }
+  prepared_index = which(vapply(
+    prepared_results,
+    function(result) is.null(result$error) && !is.null(result$prepared),
+    logical(1)
+  ))
+  native_results = vector("list", length(tasks))
+  if (!length(prepared_index)) {
+    return(native_results)
+  }
+  preparations = lapply(tasks, function(task) list(task = task))
+  groups = group_render_highquality_road_preparations_by_terrain(
+    preparations,
+    prepared_index
+  )
+  for (group in groups) {
+    input_jobs = lapply(
+      prepared_results[group$indices],
+      function(result) result$prepared$job
+    )
+    group_results = if (group$has_terrain) {
+      build_render_highquality_grounded_road_mesh_batch_cpp(
+        input_jobs = input_jobs,
+        heightmap = group$heightmap,
+        zscale = group$zscale,
+        parallel = parallel,
+        verbose = verbose,
+        terrain_scale = group$terrain_scale
+      )
+    } else {
+      build_render_highquality_road_mesh_batch_cpp(
+        input_jobs = input_jobs,
+        parallel = parallel,
+        verbose = verbose
+      )
+    }
+    native_results[group$indices] = group_results
+  }
+  native_results
 }
 
 #' Prepare all high-quality road chains with native terrain queues
@@ -10550,7 +10652,8 @@ prepare_render_highquality_road_chain_meshes = function(
       heightmap = group$heightmap,
       zscale = group$zscale,
       parallel = parallel,
-      verbose = verbose
+      verbose = verbose,
+      terrain_scale = group$terrain_scale
     )
   }
   geometry_results = vector("list", length(tasks))
@@ -10595,7 +10698,8 @@ prepare_render_highquality_road_chain_meshes = function(
       heightmap = group$heightmap,
       zscale = group$zscale,
       parallel = parallel,
-      verbose = verbose
+      verbose = verbose,
+      terrain_scale = group$terrain_scale
     )
   }
   prepared_results = vector("list", length(tasks))
@@ -10655,6 +10759,7 @@ prepare_render_highquality_road_chain_meshes = function(
 #' @param width Road width.
 #' @param heightmap Cached heightmap.
 #' @param zscale Effective zscale.
+#' @param terrain_scale Default `c(1, 1)`. Horizontal x-z terrain scale.
 #' @param material Rayrender material.
 #' @param texture_file Default `NULL`. Road texture file.
 #' @param texture_length Texture repeat length in scene units.
@@ -10690,6 +10795,7 @@ prepare_render_highquality_road_chain_mesh = function(
   width,
   heightmap = NULL,
   zscale = 1,
+  terrain_scale = c(1, 1),
   material,
   texture_file = NULL,
   texture_length = 20,
@@ -10760,7 +10866,8 @@ prepare_render_highquality_road_chain_mesh = function(
       points = densify_points,
       width = width,
       heightmap = mesh_heightmap,
-      zscale = zscale
+      zscale = zscale,
+      terrain_scale = terrain_scale
     )
     if (closed) {
       densify_points = densify_points[-nrow(densify_points), , drop = FALSE]
@@ -10851,6 +10958,7 @@ prepare_render_highquality_road_chain_mesh = function(
       right_distance = right_distance,
       heightmap = mesh_heightmap,
       zscale = zscale,
+      terrain_scale = terrain_scale,
       closed = closed,
       miter_limit = miter_limit
     )
@@ -10911,6 +11019,7 @@ prepare_render_highquality_road_chain_mesh = function(
             right_distance = right_distance,
             heightmap = mesh_heightmap,
             zscale = zscale,
+            terrain_scale = terrain_scale,
             closed = closed,
             miter_limit = miter_limit,
             frames = stabilized_frames
@@ -11263,6 +11372,7 @@ make_render_highquality_road_chain_mesh = function(
   width,
   heightmap = NULL,
   zscale = 1,
+  terrain_scale = c(1, 1),
   material,
   texture_file = NULL,
   texture_length = 20,
@@ -11298,10 +11408,11 @@ make_render_highquality_road_chain_mesh = function(
   if (is.null(prepared)) {
     return(NULL)
   }
-  native_result = build_render_highquality_road_mesh_batch_cpp(
-    input_jobs = list(prepared$job),
-    parallel = parallel,
-    verbose = FALSE
+  native_result = build_render_highquality_prepared_road_meshes(
+    prepared_results = list(preparation_result),
+    tasks = list(preparation_arguments),
+    verbose = FALSE,
+    parallel = parallel
   )[[1L]]
   if (!isTRUE(native_result$success)) {
     stop(native_result$error, call. = FALSE)

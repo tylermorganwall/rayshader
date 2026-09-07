@@ -9,7 +9,8 @@ make_render_highquality_path_edge_centers(
   side_vectors,
   half_width,
   heightmap = NULL,
-  zscale = 1
+  zscale = 1,
+  terrain_scale = c(1, 1)
 )
 }
 \arguments{
@@ -22,6 +23,8 @@ make_render_highquality_path_edge_centers(
 \item{heightmap}{Default \code{NULL}. Cached heightmap matrix.}
 
 \item{zscale}{Effective zscale.}
+
+\item{terrain_scale}{Default \code{c(1, 1)}. Horizontal x-z terrain scale.}
 }
 \value{
 List with left and right edge center matrices.

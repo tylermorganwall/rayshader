@@ -8,10 +8,12 @@
 #include <cstdio>
 #include <exception>
 #include <limits>
+#include <map>
 #include <memory>
 #include <stdexcept>
 #include <string>
 #include <thread>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -730,6 +732,8 @@ struct RoadTerrain {
   int row_count = 0;
   int column_count = 0;
   double height_scale = 1.0;
+  double horizontal_scale_x = 1.0;
+  double horizontal_scale_z = 1.0;
   std::vector<double> height;
 
   bool available() const {
@@ -746,8 +750,9 @@ struct RoadTerrain {
     if (!available()) {
       return std::numeric_limits<double>::quiet_NaN();
     }
-    double row = x + (row_count - 1.0) / 2.0;
-    double column = z + (column_count - 1.0) / 2.0;
+    double row = x / horizontal_scale_x + (row_count - 1.0) / 2.0;
+    double column =
+        z / horizontal_scale_z + (column_count - 1.0) / 2.0;
     row = std::min(std::max(row, 0.0), row_count - 1.0);
     column = std::min(std::max(column, 0.0), column_count - 1.0);
     const int row0 = std::min(
@@ -783,8 +788,14 @@ struct RoadTerrain {
   }
 
   RoadVec3 normal(double x, double z) const {
-    const double dx = (sample(x + 1.0, z) - sample(x - 1.0, z)) / 2.0;
-    const double dz = (sample(x, z + 1.0) - sample(x, z - 1.0)) / 2.0;
+    const double dx =
+        (sample(x + horizontal_scale_x, z) -
+         sample(x - horizontal_scale_x, z)) /
+        (2.0 * horizontal_scale_x);
+    const double dz =
+        (sample(x, z + horizontal_scale_z) -
+         sample(x, z - horizontal_scale_z)) /
+        (2.0 * horizontal_scale_z);
     RoadVec3 result;
     if (!normalize_road_vec3({-dx, 1.0, -dz}, result)) {
       return {0.0, 1.0, 0.0};
@@ -825,15 +836,41 @@ void check_road_mesh_interrupt(int index) {
 
 RoadTerrain copy_road_terrain(
     const NumericMatrix& heightmap,
-    double zscale) {
+    double zscale,
+    double horizontal_scale_x = 1.0,
+    double horizontal_scale_z = 1.0) {
   RoadTerrain terrain;
   terrain.row_count = heightmap.nrow();
   terrain.column_count = heightmap.ncol();
   terrain.height_scale = std::isfinite(zscale) && zscale > 0.0
       ? 1.0 / zscale
       : 1.0;
+  terrain.horizontal_scale_x =
+      std::isfinite(horizontal_scale_x) && horizontal_scale_x > 0.0
+      ? horizontal_scale_x
+      : 1.0;
+  terrain.horizontal_scale_z =
+      std::isfinite(horizontal_scale_z) && horizontal_scale_z > 0.0
+      ? horizontal_scale_z
+      : 1.0;
   terrain.height.assign(heightmap.begin(), heightmap.end());
   return terrain;
+}
+
+RoadTerrain copy_scaled_road_terrain(
+    const NumericMatrix& heightmap,
+    double zscale,
+    const Nullable<NumericVector>& terrain_scale) {
+  if (terrain_scale.isNull()) {
+    return copy_road_terrain(heightmap, zscale);
+  }
+  const NumericVector scale(terrain_scale);
+  if (scale.size() != 2 ||
+      !std::isfinite(scale[0]) || scale[0] <= 0.0 ||
+      !std::isfinite(scale[1]) || scale[1] <= 0.0) {
+    stop("Road terrain scale must contain two positive finite values.");
+  }
+  return copy_road_terrain(heightmap, zscale, scale[0], scale[1]);
 }
 
 std::vector<RoadVec3> densify_road_path_native(
@@ -896,26 +933,26 @@ std::vector<RoadVec3> densify_road_path_native(
     std::vector<double> combined;
     const std::vector<double> center_t =
         calculate_render_line_triangle_boundary_t_cpp(
-            job.points[segment].x,
-            job.points[segment].z,
-            job.points[segment + 1].x,
-            job.points[segment + 1].z,
+            job.points[segment].x / terrain.horizontal_scale_x,
+            job.points[segment].z / terrain.horizontal_scale_z,
+            job.points[segment + 1].x / terrain.horizontal_scale_x,
+            job.points[segment + 1].z / terrain.horizontal_scale_z,
             terrain.row_count,
             terrain.column_count);
     const std::vector<double> left_t =
         calculate_render_line_triangle_boundary_t_cpp(
-            left_edge[segment].x,
-            left_edge[segment].z,
-            left_edge[segment + 1].x,
-            left_edge[segment + 1].z,
+            left_edge[segment].x / terrain.horizontal_scale_x,
+            left_edge[segment].z / terrain.horizontal_scale_z,
+            left_edge[segment + 1].x / terrain.horizontal_scale_x,
+            left_edge[segment + 1].z / terrain.horizontal_scale_z,
             terrain.row_count,
             terrain.column_count);
     const std::vector<double> right_t =
         calculate_render_line_triangle_boundary_t_cpp(
-            right_edge[segment].x,
-            right_edge[segment].z,
-            right_edge[segment + 1].x,
-            right_edge[segment + 1].z,
+            right_edge[segment].x / terrain.horizontal_scale_x,
+            right_edge[segment].z / terrain.horizontal_scale_z,
+            right_edge[segment + 1].x / terrain.horizontal_scale_x,
+            right_edge[segment + 1].z / terrain.horizontal_scale_z,
             terrain.row_count,
             terrain.column_count);
     combined.reserve(center_t.size() + left_t.size() + right_t.size());
@@ -989,20 +1026,14 @@ RoadSectionData sample_road_sections_native(
       result.left_normal[point] = {0.0, 1.0, 0.0};
       result.right_normal[point] = {0.0, 1.0, 0.0};
     }
-    result.left_top[point] = road_vec3_add(
-        left_surface,
-        road_vec3_scale(
-            result.left_normal[point], road_surface_clearance));
-    result.right_top[point] = road_vec3_add(
-        right_surface,
-        road_vec3_scale(
-            result.right_normal[point], road_surface_clearance));
-    result.left_bottom[point] = road_vec3_subtract(
-        result.left_top[point],
-        road_vec3_scale(result.left_normal[point], road_height));
-    result.right_bottom[point] = road_vec3_subtract(
-        result.right_top[point],
-        road_vec3_scale(result.right_normal[point], road_height));
+    result.left_top[point] = left_surface;
+    result.left_top[point].y += road_surface_clearance;
+    result.right_top[point] = right_surface;
+    result.right_top[point].y += road_surface_clearance;
+    result.left_bottom[point] = result.left_top[point];
+    result.left_bottom[point].y -= road_height;
+    result.right_bottom[point] = result.right_top[point];
+    result.right_bottom[point].y -= road_height;
   }
   return result;
 }
@@ -1687,7 +1718,7 @@ NumericMatrix wrap_road_array_matrix(
 }
 
 List wrap_road_mesh_data(const RoadMeshData& mesh) {
-  IntegerMatrix indices(mesh.retained_quad_count * 2, 3);
+  IntegerMatrix indices(mesh.indices.size() / 3, 3);
   for (int row = 0; row < indices.nrow(); ++row) {
     for (int column = 0; column < 3; ++column) {
       indices(row, column) = mesh.indices[row * 3 + column];
@@ -1725,6 +1756,10 @@ struct StreamMeshJob {
   RoadVec3 center;
   double width = 1.0;
   double height = 0.05;
+  double terrain_offset = 0.0;
+  double terrain_scale_x = 1.0;
+  double terrain_scale_z = 1.0;
+  bool terrain_clamped = false;
   bool cap_start = true;
   bool cap_end = true;
 };
@@ -1795,14 +1830,502 @@ StreamMeshJob parse_stream_mesh_job(const List& input) {
   }
   job.width = width;
   job.height = height;
+  if (input.containsElementNamed("terrain_offset")) {
+    job.terrain_offset = as<double>(input["terrain_offset"]);
+  }
+  if (!std::isfinite(job.terrain_offset)) {
+    stop("Stream mesh terrain offsets must be finite.");
+  }
+  if (input.containsElementNamed("terrain_scale")) {
+    const NumericVector terrain_scale = input["terrain_scale"];
+    if (terrain_scale.size() != 2) {
+      stop("Stream mesh terrain scales must contain x and z values.");
+    }
+    job.terrain_scale_x = terrain_scale[0];
+    job.terrain_scale_z = terrain_scale[1];
+  }
+  if (!std::isfinite(job.terrain_scale_x) || job.terrain_scale_x <= 0.0 ||
+      !std::isfinite(job.terrain_scale_z) || job.terrain_scale_z <= 0.0) {
+    stop("Stream mesh terrain scales must be positive and finite.");
+  }
+  if (input.containsElementNamed("terrain_clamped")) {
+    job.terrain_clamped = as<bool>(input["terrain_clamped"]);
+  }
   job.cap_start = as<bool>(input["cap_start"]);
   job.cap_end = as<bool>(input["cap_end"]);
   return job;
 }
 
+struct StreamVec2 {
+  double x;
+  double z;
+};
+
+struct StreamBoundaryEdge {
+  int start = 0;
+  int end = 0;
+  int count = 0;
+};
+
+double stream_cross_2d(
+    const StreamVec2& first,
+    const StreamVec2& second,
+    const StreamVec2& third) {
+  return (second.x - first.x) * (third.z - first.z) -
+      (second.z - first.z) * (third.x - first.x);
+}
+
+double stream_distance_squared_2d(
+    const StreamVec2& first,
+    const StreamVec2& second) {
+  const double dx = first.x - second.x;
+  const double dz = first.z - second.z;
+  return dx * dx + dz * dz;
+}
+
+std::vector<StreamVec2> clip_stream_polygon_to_edge(
+    const std::vector<StreamVec2>& polygon,
+    const StreamVec2& clip_start,
+    const StreamVec2& clip_end,
+    double tolerance) {
+  std::vector<StreamVec2> output;
+  if (polygon.empty()) {
+    return output;
+  }
+  output.reserve(polygon.size() + 1);
+  StreamVec2 previous = polygon.back();
+  double previous_side = stream_cross_2d(
+      clip_start, clip_end, previous);
+  bool previous_inside = previous_side >= -tolerance;
+  for (const StreamVec2& current : polygon) {
+    const double current_side = stream_cross_2d(
+        clip_start, clip_end, current);
+    const bool current_inside = current_side >= -tolerance;
+    if (current_inside != previous_inside) {
+      const double denominator = previous_side - current_side;
+      if (std::isfinite(denominator) &&
+          std::abs(denominator) > std::numeric_limits<double>::epsilon()) {
+        const double fraction = std::min(std::max(
+            previous_side / denominator, 0.0), 1.0);
+        output.push_back({
+            previous.x + (current.x - previous.x) * fraction,
+            previous.z + (current.z - previous.z) * fraction});
+      }
+    }
+    if (current_inside) {
+      output.push_back(current);
+    }
+    previous = current;
+    previous_side = current_side;
+    previous_inside = current_inside;
+  }
+  return output;
+}
+
+std::vector<StreamVec2> clip_stream_triangle_to_terrain_triangle(
+    const std::array<StreamVec2, 3>& stream_triangle,
+    const std::array<StreamVec2, 3>& terrain_triangle,
+    double tolerance) {
+  std::vector<StreamVec2> polygon(
+      stream_triangle.begin(), stream_triangle.end());
+  for (int edge = 0; edge < 3 && !polygon.empty(); ++edge) {
+    polygon = clip_stream_polygon_to_edge(
+        polygon,
+        terrain_triangle[edge],
+        terrain_triangle[(edge + 1) % 3],
+        tolerance);
+  }
+  if (polygon.size() < 3) {
+    return {};
+  }
+  std::vector<StreamVec2> collapsed;
+  collapsed.reserve(polygon.size());
+  const double distance_tolerance = tolerance * tolerance;
+  for (const StreamVec2& point : polygon) {
+    if (collapsed.empty() ||
+        stream_distance_squared_2d(point, collapsed.back()) >
+            distance_tolerance) {
+      collapsed.push_back(point);
+    }
+  }
+  if (collapsed.size() > 1 &&
+      stream_distance_squared_2d(collapsed.front(), collapsed.back()) <=
+          distance_tolerance) {
+    collapsed.pop_back();
+  }
+  return collapsed.size() >= 3 ? collapsed : std::vector<StreamVec2>();
+}
+
+double stream_polygon_area_2d(const std::vector<StreamVec2>& polygon) {
+  double area_twice = 0.0;
+  for (std::size_t index = 0; index < polygon.size(); ++index) {
+    const StreamVec2& current = polygon[index];
+    const StreamVec2& next = polygon[(index + 1) % polygon.size()];
+    area_twice += current.x * next.z - current.z * next.x;
+  }
+  return std::abs(area_twice) / 2.0;
+}
+
+bool stream_point_on_segment(
+    const StreamVec2& point,
+    const StreamVec2& start,
+    const StreamVec2& end,
+    double tolerance) {
+  if (std::abs(stream_cross_2d(start, end, point)) > tolerance) {
+    return false;
+  }
+  const double dot = (point.x - start.x) * (point.x - end.x) +
+      (point.z - start.z) * (point.z - end.z);
+  return dot <= tolerance;
+}
+
+double sample_stream_terrain(
+    const RoadTerrain& terrain,
+    const StreamMeshJob& job,
+    double x,
+    double z) {
+  return terrain.sample(
+      x / job.terrain_scale_x,
+      z / job.terrain_scale_z);
+}
+
+RoadVec3 sample_stream_terrain_normal(
+    const RoadTerrain& terrain,
+    const StreamMeshJob& job,
+    double x,
+    double z) {
+  const double dx = (
+      sample_stream_terrain(
+          terrain, job, x + job.terrain_scale_x, z) -
+      sample_stream_terrain(
+          terrain, job, x - job.terrain_scale_x, z)) /
+      (2.0 * job.terrain_scale_x);
+  const double dz = (
+      sample_stream_terrain(
+          terrain, job, x, z + job.terrain_scale_z) -
+      sample_stream_terrain(
+          terrain, job, x, z - job.terrain_scale_z)) /
+      (2.0 * job.terrain_scale_z);
+  RoadVec3 normal;
+  if (!normalize_road_vec3({-dx, 1.0, -dz}, normal)) {
+    return {0.0, 1.0, 0.0};
+  }
+  return normal;
+}
+
+StreamMeshData build_terrain_clipped_stream_mesh_native(
+    const StreamMeshJob& job,
+    const RoadTerrain& terrain) {
+  // A two-rail strip can bridge a terrain diagonal even when both rails are
+  // sampled at every grid crossing. Clip the full ribbon footprint to each
+  // terrain triangle so every emitted top face lies on one DEM plane.
+  StreamMeshData mesh;
+  std::vector<RoadVec3> points = job.points;
+  for (RoadVec3& point : points) {
+    point.y = sample_stream_terrain(
+        terrain, job, point.x, point.z) + job.terrain_offset;
+  }
+  points = collapse_stream_path_vertices(
+      points,
+      std::max(
+          std::abs(job.width) * 0.01,
+          std::sqrt(std::numeric_limits<double>::epsilon())));
+  if (points.size() < 2) {
+    return mesh;
+  }
+
+  const int point_count = static_cast<int>(points.size());
+  std::vector<RoadVec3> normals(point_count);
+  std::vector<RoadVec3> tangents(point_count);
+  std::vector<RoadVec3> sides(point_count);
+  std::vector<StreamVec2> left(point_count);
+  std::vector<StreamVec2> right(point_count);
+  for (int point = 0; point < point_count; ++point) {
+    normals[point] = sample_stream_terrain_normal(
+        terrain, job, points[point].x, points[point].z);
+  }
+  for (int point = 0; point < point_count; ++point) {
+    RoadVec3 raw;
+    if (point == 0) {
+      raw = road_vec3_subtract(points[1], points[0]);
+    } else if (point == point_count - 1) {
+      raw = road_vec3_subtract(points[point], points[point - 1]);
+    } else {
+      raw = road_vec3_subtract(points[point + 1], points[point - 1]);
+    }
+    raw = road_vec3_subtract(
+        raw,
+        road_vec3_scale(normals[point], road_vec3_dot(raw, normals[point])));
+    if (!normalize_road_vec3(raw, tangents[point])) {
+      tangents[point] = {1.0, 0.0, 0.0};
+    }
+    if (!normalize_road_vec3(
+            road_vec3_cross(tangents[point], normals[point]),
+            sides[point])) {
+      sides[point] = {0.0, 0.0, 1.0};
+    }
+    const double half_width = job.width / 2.0;
+    left[point] = {
+        points[point].x + sides[point].x * half_width,
+        points[point].z + sides[point].z * half_width};
+    right[point] = {
+        points[point].x - sides[point].x * half_width,
+        points[point].z - sides[point].z * half_width};
+  }
+
+  const double coordinate_tolerance =
+      std::max(std::abs(job.width), 1.0) * 1e-9;
+  const double area_tolerance =
+      std::pow(std::max(std::abs(job.width), 1.0), 2) * 1e-12;
+  const double row_center = (terrain.row_count - 1.0) / 2.0;
+  const double column_center = (terrain.column_count - 1.0) / 2.0;
+  std::vector<RoadVec3> surface_vertices;
+  std::vector<RoadVec3> surface_normals;
+  std::vector<std::array<int, 3>> top_triangles;
+  std::map<std::pair<long long, long long>, int> vertex_lookup;
+
+  const auto surface_vertex_index = [&](const StreamVec2& point) {
+    const long long x_key = static_cast<long long>(std::llround(
+        point.x / coordinate_tolerance));
+    const long long z_key = static_cast<long long>(std::llround(
+        point.z / coordinate_tolerance));
+    const std::pair<long long, long long> key = {x_key, z_key};
+    const auto found = vertex_lookup.find(key);
+    if (found != vertex_lookup.end()) {
+      return found->second;
+    }
+    const int index = static_cast<int>(surface_vertices.size());
+    surface_vertices.push_back({
+        point.x,
+        sample_stream_terrain(terrain, job, point.x, point.z) +
+            job.terrain_offset,
+        point.z});
+    surface_normals.push_back(sample_stream_terrain_normal(
+        terrain, job, point.x, point.z));
+    vertex_lookup[key] = index;
+    return index;
+  };
+
+  const auto append_clipped_polygon = [&](const std::vector<StreamVec2>& polygon) {
+    if (polygon.size() < 3 ||
+        stream_polygon_area_2d(polygon) <= area_tolerance) {
+      return;
+    }
+    std::vector<int> polygon_indices;
+    polygon_indices.reserve(polygon.size());
+    for (const StreamVec2& point : polygon) {
+      polygon_indices.push_back(surface_vertex_index(point));
+    }
+    for (std::size_t corner = 1; corner + 1 < polygon_indices.size(); ++corner) {
+      int first = polygon_indices[0];
+      int second = polygon_indices[corner];
+      int third = polygon_indices[corner + 1];
+      if (first == second || second == third || first == third) {
+        continue;
+      }
+      RoadVec3 first_edge = road_vec3_subtract(
+          surface_vertices[second], surface_vertices[first]);
+      RoadVec3 second_edge = road_vec3_subtract(
+          surface_vertices[third], surface_vertices[first]);
+      RoadVec3 face_cross = road_vec3_cross(first_edge, second_edge);
+      const double face_area = road_vec3_length(face_cross);
+      if (!std::isfinite(face_area) || face_area <= area_tolerance) {
+        continue;
+      }
+      RoadVec3 average_normal = road_vec3_add(
+          surface_normals[first], surface_normals[second]);
+      average_normal = road_vec3_add(average_normal, surface_normals[third]);
+      if (road_vec3_dot(face_cross, average_normal) < 0.0) {
+        std::swap(second, third);
+      }
+      top_triangles.push_back({first, second, third});
+    }
+  };
+
+  for (int segment = 0; segment + 1 < point_count; ++segment) {
+    check_road_mesh_interrupt(segment);
+    const std::array<std::array<StreamVec2, 3>, 2> stream_triangles = {{
+        {{left[segment], left[segment + 1], right[segment + 1]}},
+        {{left[segment], right[segment + 1], right[segment]}}
+    }};
+    for (const std::array<StreamVec2, 3>& stream_triangle : stream_triangles) {
+      double minimum_x = stream_triangle[0].x;
+      double maximum_x = stream_triangle[0].x;
+      double minimum_z = stream_triangle[0].z;
+      double maximum_z = stream_triangle[0].z;
+      for (int corner = 1; corner < 3; ++corner) {
+        minimum_x = std::min(minimum_x, stream_triangle[corner].x);
+        maximum_x = std::max(maximum_x, stream_triangle[corner].x);
+        minimum_z = std::min(minimum_z, stream_triangle[corner].z);
+        maximum_z = std::max(maximum_z, stream_triangle[corner].z);
+      }
+      const int row_minimum = std::max(
+          static_cast<int>(std::floor(
+              minimum_x / job.terrain_scale_x + row_center)),
+          0);
+      const int row_maximum = std::min(
+          static_cast<int>(std::floor(
+              maximum_x / job.terrain_scale_x + row_center)),
+          terrain.row_count - 2);
+      const int column_minimum = std::max(
+          static_cast<int>(std::floor(
+              minimum_z / job.terrain_scale_z + column_center)),
+          0);
+      const int column_maximum = std::min(
+          static_cast<int>(std::floor(
+              maximum_z / job.terrain_scale_z + column_center)),
+          terrain.column_count - 2);
+      for (int row = row_minimum; row <= row_maximum; ++row) {
+        for (int column = column_minimum;
+             column <= column_maximum;
+             ++column) {
+          const double x0 =
+              (row - row_center) * job.terrain_scale_x;
+          const double x1 = x0 + job.terrain_scale_x;
+          const double z0 =
+              (column - column_center) * job.terrain_scale_z;
+          const double z1 = z0 + job.terrain_scale_z;
+          const std::array<std::array<StreamVec2, 3>, 2> terrain_triangles = {{
+              {{{x0, z0}, {x1, z0}, {x0, z1}}},
+              {{{x1, z0}, {x1, z1}, {x0, z1}}}
+          }};
+          for (const auto& terrain_triangle : terrain_triangles) {
+            append_clipped_polygon(
+                clip_stream_triangle_to_terrain_triangle(
+                    stream_triangle,
+                    terrain_triangle,
+                    coordinate_tolerance));
+          }
+        }
+      }
+    }
+  }
+  if (top_triangles.empty()) {
+    return mesh;
+  }
+
+  std::map<std::pair<int, int>, StreamBoundaryEdge> edges;
+  for (const std::array<int, 3>& triangle : top_triangles) {
+    for (int edge = 0; edge < 3; ++edge) {
+      const int start = triangle[edge];
+      const int end = triangle[(edge + 1) % 3];
+      const std::pair<int, int> key = {
+          std::min(start, end), std::max(start, end)};
+      StreamBoundaryEdge& boundary = edges[key];
+      if (boundary.count == 0) {
+        boundary.start = start;
+        boundary.end = end;
+      }
+      ++boundary.count;
+    }
+  }
+  std::vector<StreamBoundaryEdge> boundary_edges;
+  boundary_edges.reserve(edges.size());
+  const StreamVec2 start_left = left.front();
+  const StreamVec2 start_right = right.front();
+  const StreamVec2 end_left = left.back();
+  const StreamVec2 end_right = right.back();
+  for (const auto& edge_entry : edges) {
+    const StreamBoundaryEdge& edge = edge_entry.second;
+    if (edge.count != 1) {
+      continue;
+    }
+    const StreamVec2 first = {
+        surface_vertices[edge.start].x, surface_vertices[edge.start].z};
+    const StreamVec2 second = {
+        surface_vertices[edge.end].x, surface_vertices[edge.end].z};
+    if (!job.cap_start &&
+        stream_point_on_segment(
+            first, start_left, start_right, coordinate_tolerance) &&
+        stream_point_on_segment(
+            second, start_left, start_right, coordinate_tolerance)) {
+      continue;
+    }
+    if (!job.cap_end &&
+        stream_point_on_segment(
+            first, end_left, end_right, coordinate_tolerance) &&
+        stream_point_on_segment(
+            second, end_left, end_right, coordinate_tolerance)) {
+      continue;
+    }
+    boundary_edges.push_back(edge);
+  }
+
+  const int surface_vertex_count = static_cast<int>(surface_vertices.size());
+  const double half_height = job.height / 2.0;
+  mesh.vertices.reserve(
+      static_cast<std::size_t>(surface_vertex_count * 2 +
+          boundary_edges.size() * 4) * 3);
+  mesh.vertex_normals.reserve(mesh.vertices.capacity());
+  const auto append_vertex = [&](const RoadVec3& vertex, const RoadVec3& normal) {
+    mesh.vertices.push_back(vertex.x - job.center.x);
+    mesh.vertices.push_back(vertex.y - job.center.y);
+    mesh.vertices.push_back(vertex.z - job.center.z);
+    mesh.vertex_normals.push_back(normal.x);
+    mesh.vertex_normals.push_back(normal.y);
+    mesh.vertex_normals.push_back(normal.z);
+  };
+  // Extrude vertically so the lower half remains below the sampled surface.
+  // Moving along a steep terrain normal would also shift x-z and detach the
+  // stream from the DEM at cliffs.
+  for (int vertex = 0; vertex < surface_vertex_count; ++vertex) {
+    RoadVec3 top = surface_vertices[vertex];
+    top.y += half_height;
+    append_vertex(top, surface_normals[vertex]);
+  }
+  for (int vertex = 0; vertex < surface_vertex_count; ++vertex) {
+    RoadVec3 bottom = surface_vertices[vertex];
+    bottom.y -= half_height;
+    append_vertex(bottom, road_vec3_scale(surface_normals[vertex], -1.0));
+  }
+
+  const auto append_triangle = [&](int first, int second, int third) {
+    mesh.indices.push_back(first + 1);
+    mesh.indices.push_back(second + 1);
+    mesh.indices.push_back(third + 1);
+    ++mesh.retained_triangle_count;
+  };
+  for (const std::array<int, 3>& triangle : top_triangles) {
+    append_triangle(triangle[0], triangle[1], triangle[2]);
+    append_triangle(
+        triangle[0] + surface_vertex_count,
+        triangle[2] + surface_vertex_count,
+        triangle[1] + surface_vertex_count);
+  }
+  for (const StreamBoundaryEdge& edge : boundary_edges) {
+    RoadVec3 top_start = surface_vertices[edge.start];
+    RoadVec3 top_end = surface_vertices[edge.end];
+    RoadVec3 bottom_start = top_start;
+    RoadVec3 bottom_end = top_end;
+    top_start.y += half_height;
+    top_end.y += half_height;
+    bottom_start.y -= half_height;
+    bottom_end.y -= half_height;
+    RoadVec3 first_edge = road_vec3_subtract(bottom_start, top_start);
+    RoadVec3 second_edge = road_vec3_subtract(bottom_end, top_start);
+    RoadVec3 side_normal;
+    if (!normalize_road_vec3(
+            road_vec3_cross(first_edge, second_edge), side_normal)) {
+      side_normal = {0.0, 0.0, 1.0};
+    }
+    const int start = static_cast<int>(mesh.vertices.size() / 3);
+    append_vertex(top_start, side_normal);
+    append_vertex(bottom_start, side_normal);
+    append_vertex(bottom_end, side_normal);
+    append_vertex(top_end, side_normal);
+    append_triangle(start, start + 1, start + 2);
+    append_triangle(start, start + 2, start + 3);
+  }
+  mesh.input_triangle_count = mesh.retained_triangle_count;
+  return mesh;
+}
+
 StreamMeshData build_stream_mesh_native(
     const StreamMeshJob& job,
     const RoadTerrain& terrain) {
+  if (job.terrain_clamped && terrain.available()) {
+    return build_terrain_clipped_stream_mesh_native(job, terrain);
+  }
   RoadDensifyJob densify_job;
   densify_job.points = job.points;
   densify_job.width = job.width;
@@ -2049,6 +2572,571 @@ StreamMeshData build_stream_mesh_native(
   return mesh;
 }
 
+struct RoadClippedVertex {
+  double x;
+  double z;
+  double u;
+  double v;
+  double clearance;
+};
+
+RoadClippedVertex interpolate_road_clipped_vertex(
+    const RoadClippedVertex& first,
+    const RoadClippedVertex& second,
+    double fraction) {
+  return {
+      first.x + (second.x - first.x) * fraction,
+      first.z + (second.z - first.z) * fraction,
+      first.u + (second.u - first.u) * fraction,
+      first.v + (second.v - first.v) * fraction,
+      first.clearance +
+          (second.clearance - first.clearance) * fraction};
+}
+
+std::vector<RoadClippedVertex> clip_road_polygon_to_edge(
+    const std::vector<RoadClippedVertex>& polygon,
+    const StreamVec2& clip_start,
+    const StreamVec2& clip_end,
+    double tolerance) {
+  std::vector<RoadClippedVertex> output;
+  if (polygon.empty()) {
+    return output;
+  }
+  output.reserve(polygon.size() + 1);
+  RoadClippedVertex previous = polygon.back();
+  double previous_side = stream_cross_2d(
+      clip_start, clip_end, {previous.x, previous.z});
+  bool previous_inside = previous_side >= -tolerance;
+  for (const RoadClippedVertex& current : polygon) {
+    const double current_side = stream_cross_2d(
+        clip_start, clip_end, {current.x, current.z});
+    const bool current_inside = current_side >= -tolerance;
+    if (current_inside != previous_inside) {
+      const double denominator = previous_side - current_side;
+      if (std::isfinite(denominator) &&
+          std::abs(denominator) > std::numeric_limits<double>::epsilon()) {
+        const double fraction = std::min(std::max(
+            previous_side / denominator, 0.0), 1.0);
+        output.push_back(interpolate_road_clipped_vertex(
+            previous, current, fraction));
+      }
+    }
+    if (current_inside) {
+      output.push_back(current);
+    }
+    previous = current;
+    previous_side = current_side;
+    previous_inside = current_inside;
+  }
+  return output;
+}
+
+std::vector<RoadClippedVertex> clip_road_triangle_to_terrain_triangle(
+    const std::array<RoadClippedVertex, 3>& road_triangle,
+    const std::array<StreamVec2, 3>& terrain_triangle,
+    double tolerance) {
+  std::vector<RoadClippedVertex> polygon(
+      road_triangle.begin(), road_triangle.end());
+  for (int edge = 0; edge < 3 && !polygon.empty(); ++edge) {
+    polygon = clip_road_polygon_to_edge(
+        polygon,
+        terrain_triangle[edge],
+        terrain_triangle[(edge + 1) % 3],
+        tolerance);
+  }
+  if (polygon.size() < 3) {
+    return {};
+  }
+  std::vector<RoadClippedVertex> collapsed;
+  collapsed.reserve(polygon.size());
+  const double distance_tolerance = tolerance * tolerance;
+  for (const RoadClippedVertex& point : polygon) {
+    if (collapsed.empty() ||
+        stream_distance_squared_2d(
+            {point.x, point.z},
+            {collapsed.back().x, collapsed.back().z}) >
+            distance_tolerance) {
+      collapsed.push_back(point);
+    }
+  }
+  if (collapsed.size() > 1 &&
+      stream_distance_squared_2d(
+          {collapsed.front().x, collapsed.front().z},
+          {collapsed.back().x, collapsed.back().z}) <=
+          distance_tolerance) {
+    collapsed.pop_back();
+  }
+  return collapsed.size() >= 3
+      ? collapsed
+      : std::vector<RoadClippedVertex>();
+}
+
+RoadMeshData build_terrain_clipped_road_section_mesh_native(
+    const RoadMeshJob& job,
+    const RoadMeshSectionInput& section,
+    const RoadTerrain& terrain) {
+  constexpr double road_height = 0.11;
+  constexpr double minimum_surface_clearance = 0.055;
+  const double side_u0 = 0.01;
+  const double side_u1 = 0.02;
+  const double cap_v_span = 1e-4;
+  const std::vector<RoadVec3> left_top =
+      subset_road_values(job.left_top, section.indices);
+  const std::vector<RoadVec3> right_top =
+      subset_road_values(job.right_top, section.indices);
+  const int point_count = static_cast<int>(left_top.size());
+  const int segment_count = section.closed ? point_count : point_count - 1;
+
+  double coordinate_scale = 1.0;
+  for (int point = 0; point < point_count; ++point) {
+    coordinate_scale = std::max(
+        coordinate_scale,
+        std::hypot(
+            left_top[point].x - right_top[point].x,
+            left_top[point].z - right_top[point].z));
+  }
+  const double coordinate_tolerance = coordinate_scale * 1e-9;
+  const double area_tolerance = coordinate_scale * coordinate_scale * 1e-12;
+  const double attribute_tolerance = 1e-10;
+  const double uv_cross_tolerance = 1.01e-8;
+  const double row_center = (terrain.row_count - 1.0) / 2.0;
+  const double column_center = (terrain.column_count - 1.0) / 2.0;
+
+  std::vector<RoadVec3> surface_vertices;
+  std::vector<RoadVec3> surface_normals;
+  std::vector<std::array<double, 2>> surface_texcoords;
+  std::vector<std::array<int, 3>> top_triangles;
+  using VertexKey = std::tuple<
+      long long, long long, long long, long long, long long>;
+  std::map<VertexKey, int> vertex_lookup;
+
+  const auto surface_vertex_index = [&](const RoadClippedVertex& point) {
+    const VertexKey key = {
+        static_cast<long long>(std::llround(
+            point.x / coordinate_tolerance)),
+        static_cast<long long>(std::llround(
+            point.z / coordinate_tolerance)),
+        static_cast<long long>(std::llround(
+            point.u / attribute_tolerance)),
+        static_cast<long long>(std::llround(
+            point.v / attribute_tolerance)),
+        static_cast<long long>(std::llround(
+            point.clearance / attribute_tolerance))};
+    const auto found = vertex_lookup.find(key);
+    if (found != vertex_lookup.end()) {
+      return found->second;
+    }
+    const int index = static_cast<int>(surface_vertices.size());
+    surface_vertices.push_back({
+        point.x,
+        terrain.sample(point.x, point.z) +
+            std::max(point.clearance, minimum_surface_clearance),
+        point.z});
+    surface_normals.push_back(terrain.normal(point.x, point.z));
+    surface_texcoords.push_back({point.u, point.v});
+    vertex_lookup[key] = index;
+    return index;
+  };
+
+  const auto append_clipped_polygon =
+      [&](const std::vector<RoadClippedVertex>& polygon) {
+    if (polygon.size() < 3) {
+      return;
+    }
+    std::vector<StreamVec2> footprint;
+    footprint.reserve(polygon.size());
+    for (const RoadClippedVertex& point : polygon) {
+      footprint.push_back({point.x, point.z});
+    }
+    if (stream_polygon_area_2d(footprint) <= area_tolerance) {
+      return;
+    }
+    std::vector<int> polygon_indices;
+    polygon_indices.reserve(polygon.size());
+    for (const RoadClippedVertex& point : polygon) {
+      polygon_indices.push_back(surface_vertex_index(point));
+    }
+    for (std::size_t corner = 1;
+         corner + 1 < polygon_indices.size();
+         ++corner) {
+      int first = polygon_indices[0];
+      int second = polygon_indices[corner];
+      int third = polygon_indices[corner + 1];
+      if (first == second || second == third || first == third) {
+        continue;
+      }
+      const RoadVec3 first_edge = road_vec3_subtract(
+          surface_vertices[second], surface_vertices[first]);
+      const RoadVec3 second_edge = road_vec3_subtract(
+          surface_vertices[third], surface_vertices[first]);
+      const RoadVec3 face_cross = road_vec3_cross(first_edge, second_edge);
+      const double face_area = road_vec3_length(face_cross) / 2.0;
+      if (!std::isfinite(face_area) || face_area <= area_tolerance) {
+        continue;
+      }
+      RoadVec3 average_normal = road_vec3_add(
+          surface_normals[first], surface_normals[second]);
+      average_normal = road_vec3_add(
+          average_normal, surface_normals[third]);
+      if (road_vec3_dot(face_cross, average_normal) < 0.0) {
+        std::swap(second, third);
+      }
+      const std::array<double, 2>& first_uv = surface_texcoords[first];
+      const std::array<double, 2>& second_uv = surface_texcoords[second];
+      const std::array<double, 2>& third_uv = surface_texcoords[third];
+      const double uv_cross = std::abs(
+          (second_uv[0] - first_uv[0]) *
+              (third_uv[1] - first_uv[1]) -
+          (second_uv[1] - first_uv[1]) *
+              (third_uv[0] - first_uv[0]));
+      if (!std::isfinite(uv_cross) || uv_cross <= uv_cross_tolerance) {
+        continue;
+      }
+      top_triangles.push_back({first, second, third});
+    }
+  };
+
+  for (int segment = 0; segment < segment_count; ++segment) {
+    check_road_mesh_interrupt(segment);
+    const int next = section.closed
+        ? (segment + 1) % point_count
+        : segment + 1;
+    const double v0 = section.texture_v[segment];
+    const double v1 = section.closed && segment == segment_count - 1
+        ? section.closing_v
+        : section.texture_v[next];
+    const auto make_vertex = [&](const RoadVec3& point, double u, double v) {
+      return RoadClippedVertex{
+          point.x,
+          point.z,
+          u,
+          v,
+          point.y - terrain.sample(point.x, point.z)};
+    };
+    const RoadClippedVertex left_start =
+        make_vertex(left_top[segment], 0.0, v0);
+    const RoadClippedVertex left_end =
+        make_vertex(left_top[next], 0.0, v1);
+    const RoadClippedVertex right_end =
+        make_vertex(right_top[next], 1.0, v1);
+    const RoadClippedVertex right_start =
+        make_vertex(right_top[segment], 1.0, v0);
+    const std::array<std::array<RoadClippedVertex, 3>, 2> road_triangles = {{
+        {{left_start, left_end, right_end}},
+        {{left_start, right_end, right_start}}
+    }};
+    for (const auto& road_triangle : road_triangles) {
+      double minimum_x = road_triangle[0].x;
+      double maximum_x = road_triangle[0].x;
+      double minimum_z = road_triangle[0].z;
+      double maximum_z = road_triangle[0].z;
+      for (int corner = 1; corner < 3; ++corner) {
+        minimum_x = std::min(minimum_x, road_triangle[corner].x);
+        maximum_x = std::max(maximum_x, road_triangle[corner].x);
+        minimum_z = std::min(minimum_z, road_triangle[corner].z);
+        maximum_z = std::max(maximum_z, road_triangle[corner].z);
+      }
+      const int row_minimum =
+          static_cast<int>(std::floor(
+              minimum_x / terrain.horizontal_scale_x + row_center));
+      const int row_maximum =
+          static_cast<int>(std::floor(
+              maximum_x / terrain.horizontal_scale_x + row_center));
+      const int column_minimum =
+          static_cast<int>(std::floor(
+              minimum_z / terrain.horizontal_scale_z + column_center));
+      const int column_maximum =
+          static_cast<int>(std::floor(
+              maximum_z / terrain.horizontal_scale_z + column_center));
+      for (int row = row_minimum; row <= row_maximum; ++row) {
+        for (int column = column_minimum;
+             column <= column_maximum;
+             ++column) {
+          const double x0 =
+              (row - row_center) * terrain.horizontal_scale_x;
+          const double x1 = x0 + terrain.horizontal_scale_x;
+          const double z0 =
+              (column - column_center) * terrain.horizontal_scale_z;
+          const double z1 = z0 + terrain.horizontal_scale_z;
+          const std::array<std::array<StreamVec2, 3>, 2>
+              terrain_triangles = {{
+                  {{{x0, z0}, {x1, z0}, {x0, z1}}},
+                  {{{x1, z0}, {x1, z1}, {x0, z1}}}
+              }};
+          for (const auto& terrain_triangle : terrain_triangles) {
+            append_clipped_polygon(
+                clip_road_triangle_to_terrain_triangle(
+                    road_triangle,
+                    terrain_triangle,
+                    coordinate_tolerance));
+          }
+        }
+      }
+    }
+  }
+
+  RoadMeshData mesh;
+  const int start_cap_count =
+      !section.closed && section.cap_start ? 1 : 0;
+  const int end_cap_count = !section.closed && section.cap_end ? 1 : 0;
+  mesh.input_quad_count =
+      segment_count * 4 + start_cap_count + end_cap_count;
+  mesh.retained_quad_count = mesh.input_quad_count;
+  if (top_triangles.empty()) {
+    mesh.retained_quad_count = 0;
+    return mesh;
+  }
+
+  using CoordinateKey = std::pair<long long, long long>;
+  using EdgeKey = std::pair<CoordinateKey, CoordinateKey>;
+  struct RoadBoundaryEdge {
+    int start = 0;
+    int end = 0;
+    int count = 0;
+  };
+  const auto coordinate_key = [&](const RoadVec3& point) {
+    return CoordinateKey{
+        static_cast<long long>(std::llround(
+            point.x / coordinate_tolerance)),
+        static_cast<long long>(std::llround(
+            point.z / coordinate_tolerance))};
+  };
+  std::map<EdgeKey, RoadBoundaryEdge> edges;
+  for (const auto& triangle : top_triangles) {
+    for (int edge = 0; edge < 3; ++edge) {
+      const int start = triangle[edge];
+      const int end = triangle[(edge + 1) % 3];
+      CoordinateKey start_key = coordinate_key(surface_vertices[start]);
+      CoordinateKey end_key = coordinate_key(surface_vertices[end]);
+      const EdgeKey key = start_key < end_key
+          ? EdgeKey{start_key, end_key}
+          : EdgeKey{end_key, start_key};
+      RoadBoundaryEdge& boundary = edges[key];
+      if (boundary.count == 0) {
+        boundary.start = start;
+        boundary.end = end;
+      }
+      ++boundary.count;
+    }
+  }
+  std::vector<RoadBoundaryEdge> boundary_edges;
+  boundary_edges.reserve(edges.size());
+  const double start_v = section.texture_v.front();
+  const double end_v = section.closed
+      ? section.closing_v
+      : section.texture_v.back();
+  for (const auto& edge_entry : edges) {
+    const RoadBoundaryEdge& edge = edge_entry.second;
+    if (edge.count != 1) {
+      continue;
+    }
+    const std::array<double, 2>& first_uv =
+        surface_texcoords[edge.start];
+    const std::array<double, 2>& second_uv =
+        surface_texcoords[edge.end];
+    const bool left_edge =
+        std::abs(first_uv[0]) <= attribute_tolerance &&
+        std::abs(second_uv[0]) <= attribute_tolerance;
+    const bool right_edge =
+        std::abs(first_uv[0] - 1.0) <= attribute_tolerance &&
+        std::abs(second_uv[0] - 1.0) <= attribute_tolerance;
+    const bool start_edge = !section.closed &&
+        std::abs(first_uv[1] - start_v) <= attribute_tolerance &&
+        std::abs(second_uv[1] - start_v) <= attribute_tolerance;
+    const bool end_edge = !section.closed &&
+        std::abs(first_uv[1] - end_v) <= attribute_tolerance &&
+        std::abs(second_uv[1] - end_v) <= attribute_tolerance;
+    if (!left_edge && !right_edge && !start_edge && !end_edge) {
+      continue;
+    }
+    if ((start_edge && !section.cap_start) ||
+        (end_edge && !section.cap_end)) {
+      continue;
+    }
+    boundary_edges.push_back(edge);
+  }
+
+  double minimum_triangle_area = std::numeric_limits<double>::infinity();
+  double minimum_uv_triangle_area = std::numeric_limits<double>::infinity();
+  const auto append_vertex =
+      [&](const RoadVec3& vertex,
+          const RoadVec3& normal,
+          const std::array<double, 2>& texcoord) {
+    mesh.vertices.push_back(vertex.x - job.center.x);
+    mesh.vertices.push_back(vertex.y - job.center.y);
+    mesh.vertices.push_back(vertex.z - job.center.z);
+    mesh.vertex_normals.push_back(normal.x);
+    mesh.vertex_normals.push_back(normal.y);
+    mesh.vertex_normals.push_back(normal.z);
+    mesh.texcoords.push_back(texcoord[0]);
+    mesh.texcoords.push_back(texcoord[1]);
+  };
+  const auto append_triangle =
+      [&](int first, int second, int third) {
+    const RoadVec3 first_vertex = get_road_array_vec3(mesh.vertices, first);
+    const RoadVec3 second_vertex = get_road_array_vec3(mesh.vertices, second);
+    const RoadVec3 third_vertex = get_road_array_vec3(mesh.vertices, third);
+    const double triangle_area = road_vec3_length(road_vec3_cross(
+        road_vec3_subtract(second_vertex, first_vertex),
+        road_vec3_subtract(third_vertex, first_vertex))) / 2.0;
+    const std::array<double, 2> first_uv =
+        get_road_array_vec2(mesh.texcoords, first);
+    const std::array<double, 2> second_uv =
+        get_road_array_vec2(mesh.texcoords, second);
+    const std::array<double, 2> third_uv =
+        get_road_array_vec2(mesh.texcoords, third);
+    const double uv_cross = std::abs(
+        (second_uv[0] - first_uv[0]) *
+            (third_uv[1] - first_uv[1]) -
+        (second_uv[1] - first_uv[1]) *
+            (third_uv[0] - first_uv[0]));
+    const auto float_vertex = [](const RoadVec3& vertex) {
+      return RoadVec3{
+          static_cast<float>(vertex.x),
+          static_cast<float>(vertex.y),
+          static_cast<float>(vertex.z)};
+    };
+    const RoadVec3 float_first = float_vertex(first_vertex);
+    const RoadVec3 float_second = float_vertex(second_vertex);
+    const RoadVec3 float_third = float_vertex(third_vertex);
+    const RoadVec3 float_first_edge = road_vec3_subtract(
+        float_second, float_first);
+    const RoadVec3 float_second_edge = road_vec3_subtract(
+        float_third, float_first);
+    const RoadVec3 float_cross = road_vec3_cross(
+        float_first_edge, float_second_edge);
+    const double float_cross_length_squared = road_vec3_dot(
+        float_cross, float_cross);
+    const double maximum_float_edge_squared = std::max({
+        road_vec3_dot(float_first_edge, float_first_edge),
+        road_vec3_dot(float_second_edge, float_second_edge),
+        road_vec3_dot(
+            road_vec3_subtract(float_third, float_second),
+            road_vec3_subtract(float_third, float_second))});
+    constexpr double float_shape_tolerance =
+        16.0 * std::numeric_limits<float>::epsilon();
+    const double minimum_float_cross_squared =
+        float_shape_tolerance * float_shape_tolerance *
+        maximum_float_edge_squared * maximum_float_edge_squared;
+    if (!std::isfinite(triangle_area) || triangle_area <= area_tolerance ||
+        !std::isfinite(uv_cross) || uv_cross <= uv_cross_tolerance ||
+        !std::isfinite(float_cross_length_squared) ||
+        !std::isfinite(maximum_float_edge_squared) ||
+        maximum_float_edge_squared <= 0.0 ||
+        float_cross_length_squared <= minimum_float_cross_squared) {
+      return;
+    }
+    mesh.indices.push_back(first + 1);
+    mesh.indices.push_back(second + 1);
+    mesh.indices.push_back(third + 1);
+    const double uv_area = uv_cross / 2.0;
+    minimum_triangle_area = std::min(minimum_triangle_area, triangle_area);
+    if (uv_area > 0.0) {
+      minimum_uv_triangle_area = std::min(
+          minimum_uv_triangle_area, uv_area);
+    }
+  };
+
+  const int surface_vertex_count = static_cast<int>(surface_vertices.size());
+  for (int vertex = 0; vertex < surface_vertex_count; ++vertex) {
+    append_vertex(
+        surface_vertices[vertex],
+        surface_normals[vertex],
+        surface_texcoords[vertex]);
+  }
+  for (int vertex = 0; vertex < surface_vertex_count; ++vertex) {
+    RoadVec3 bottom = surface_vertices[vertex];
+    bottom.y -= road_height;
+    append_vertex(
+        bottom,
+        road_vec3_scale(surface_normals[vertex], -1.0),
+        surface_texcoords[vertex]);
+  }
+  for (const auto& triangle : top_triangles) {
+    append_triangle(triangle[0], triangle[1], triangle[2]);
+    append_triangle(
+        triangle[0] + surface_vertex_count,
+        triangle[2] + surface_vertex_count,
+        triangle[1] + surface_vertex_count);
+  }
+  for (const RoadBoundaryEdge& edge : boundary_edges) {
+    const RoadVec3 top_start = surface_vertices[edge.start];
+    const RoadVec3 top_end = surface_vertices[edge.end];
+    RoadVec3 bottom_start = top_start;
+    RoadVec3 bottom_end = top_end;
+    bottom_start.y -= road_height;
+    bottom_end.y -= road_height;
+    RoadVec3 side_normal;
+    if (!normalize_road_vec3(
+            road_vec3_cross(
+                road_vec3_subtract(bottom_start, top_start),
+                road_vec3_subtract(bottom_end, top_start)),
+            side_normal)) {
+      side_normal = {0.0, 0.0, 1.0};
+    }
+    const std::array<double, 2> start_uv = surface_texcoords[edge.start];
+    const std::array<double, 2> end_uv = surface_texcoords[edge.end];
+    const bool cross_road_edge =
+        std::abs(end_uv[0] - start_uv[0]) >
+        std::abs(end_uv[1] - start_uv[1]);
+    std::array<double, 2> top_start_uv;
+    std::array<double, 2> bottom_start_uv;
+    std::array<double, 2> bottom_end_uv;
+    std::array<double, 2> top_end_uv;
+    if (cross_road_edge) {
+      const double edge_v = (start_uv[1] + end_uv[1]) / 2.0;
+      const double v_direction =
+          std::abs(edge_v - start_v) <= std::abs(edge_v - end_v)
+          ? 1.0
+          : -1.0;
+      top_start_uv = {start_uv[0], start_uv[1] + v_direction * cap_v_span};
+      bottom_start_uv = start_uv;
+      bottom_end_uv = end_uv;
+      top_end_uv = {end_uv[0], end_uv[1] + v_direction * cap_v_span};
+    } else {
+      top_start_uv = {side_u0, start_uv[1]};
+      bottom_start_uv = {side_u1, start_uv[1]};
+      bottom_end_uv = {side_u1, end_uv[1]};
+      top_end_uv = {side_u0, end_uv[1]};
+    }
+    const int start = static_cast<int>(mesh.vertices.size() / 3);
+    append_vertex(top_start, side_normal, top_start_uv);
+    append_vertex(bottom_start, side_normal, bottom_start_uv);
+    append_vertex(bottom_end, side_normal, bottom_end_uv);
+    append_vertex(top_end, side_normal, top_end_uv);
+    append_triangle(start, start + 1, start + 2);
+    append_triangle(start, start + 2, start + 3);
+  }
+  if (std::isfinite(minimum_triangle_area)) {
+    mesh.minimum_triangle_area = minimum_triangle_area;
+  }
+  if (std::isfinite(minimum_uv_triangle_area)) {
+    mesh.minimum_uv_triangle_area = minimum_uv_triangle_area;
+  }
+  return mesh;
+}
+
+RoadMeshJobResult run_terrain_clipped_road_mesh_job(
+    const RoadMeshJob& job,
+    const RoadTerrain& terrain) {
+  RoadMeshJobResult result;
+  try {
+    result.meshes.reserve(job.mesh_sections.size());
+    for (std::size_t section_index = 0;
+         section_index < job.mesh_sections.size();
+         ++section_index) {
+      check_road_mesh_interrupt(static_cast<int>(section_index));
+      result.meshes.push_back(build_terrain_clipped_road_section_mesh_native(
+          job, job.mesh_sections[section_index], terrain));
+    }
+  } catch (const RoadMeshGeometryError& error) {
+    result.success = false;
+    result.error = error.what();
+    result.meshes.clear();
+  }
+  return result;
+}
+
 List wrap_stream_mesh_data(const StreamMeshData& mesh) {
   IntegerMatrix indices(mesh.retained_triangle_count, 3);
   for (int row = 0; row < indices.nrow(); ++row) {
@@ -2172,8 +3260,10 @@ List densify_render_road_paths_batch_cpp(
     const NumericMatrix& heightmap,
     double zscale,
     bool parallel,
-    bool verbose) {
-  const RoadTerrain terrain = copy_road_terrain(heightmap, zscale);
+    bool verbose,
+    Nullable<NumericVector> terrain_scale = R_NilValue) {
+  const RoadTerrain terrain = copy_scaled_road_terrain(
+      heightmap, zscale, terrain_scale);
   std::vector<RoadDensifyJob> jobs;
   jobs.reserve(input_jobs.size());
   for (int index = 0; index < input_jobs.size(); ++index) {
@@ -2218,8 +3308,10 @@ List sample_render_road_sections_batch_cpp(
     const NumericMatrix& heightmap,
     double zscale,
     bool parallel,
-    bool verbose) {
-  const RoadTerrain terrain = copy_road_terrain(heightmap, zscale);
+    bool verbose,
+    Nullable<NumericVector> terrain_scale = R_NilValue) {
+  const RoadTerrain terrain = copy_scaled_road_terrain(
+      heightmap, zscale, terrain_scale);
   std::vector<RoadSectionJob> jobs;
   jobs.reserve(input_jobs.size());
   for (int index = 0; index < input_jobs.size(); ++index) {
@@ -2278,6 +3370,76 @@ List build_render_highquality_road_mesh_batch_cpp(
   }
   const auto run_job = [&](std::size_t index) {
     results[index] = run_road_mesh_job(jobs[index]);
+    if (progress) {
+      ++(*progress);
+    }
+  };
+  if (parallel && jobs.size() > 1) {
+    RcppThread::ThreadPool pool;
+    for (std::size_t index = 0; index < jobs.size(); ++index) {
+      pool.push(run_job, index);
+    }
+    pool.wait();
+  } else {
+    for (std::size_t index = 0; index < jobs.size(); ++index) {
+      RcppThread::checkUserInterrupt();
+      run_job(index);
+    }
+  }
+
+  List output(results.size());
+  for (std::size_t index = 0; index < results.size(); ++index) {
+    const RoadMeshJobResult& result = results[index];
+    if (!result.success) {
+      output[index] = List::create(
+          _["success"] = false,
+          _["error"] = result.error,
+          _["meshes"] = List::create());
+      continue;
+    }
+    List meshes(result.meshes.size());
+    for (std::size_t mesh_index = 0;
+         mesh_index < result.meshes.size();
+         ++mesh_index) {
+      meshes[mesh_index] = wrap_road_mesh_data(result.meshes[mesh_index]);
+    }
+    output[index] = List::create(
+        _["success"] = true,
+        _["error"] = R_NilValue,
+        _["meshes"] = meshes);
+  }
+  return output;
+}
+
+// [[Rcpp::export]]
+List build_render_highquality_grounded_road_mesh_batch_cpp(
+    const List& input_jobs,
+    const NumericMatrix& heightmap,
+    double zscale,
+    bool parallel,
+    bool verbose,
+    Nullable<NumericVector> terrain_scale = R_NilValue) {
+  const RoadTerrain terrain = copy_scaled_road_terrain(
+      heightmap, zscale, terrain_scale);
+  if (!terrain.available()) {
+    stop("Grounded road meshes require a terrain heightmap.");
+  }
+  std::vector<RoadMeshJob> jobs;
+  jobs.reserve(input_jobs.size());
+  for (int index = 0; index < input_jobs.size(); ++index) {
+    jobs.push_back(parse_road_mesh_job(as<List>(input_jobs[index])));
+  }
+  std::vector<RoadMeshJobResult> results(jobs.size());
+  std::unique_ptr<RcppThread::ProgressCounter> progress;
+  if (verbose && !jobs.empty()) {
+    progress.reset(new RcppThread::ProgressCounter(
+        jobs.size(),
+        1,
+        "Converting grounded roads to meshes: "));
+  }
+  const auto run_job = [&](std::size_t index) {
+    results[index] = run_terrain_clipped_road_mesh_job(
+        jobs[index], terrain);
     if (progress) {
       ++(*progress);
     }

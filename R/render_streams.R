@@ -293,6 +293,7 @@ render_streams = function(
     heightmap = heightmap,
     caller = "render_streams"
   )
+  terrain_scale = resolve_render_stream_terrain_scale()
   width_units = match.arg(width_units)
   densify = resolve_render_scalar(
     densify,
@@ -489,6 +490,7 @@ render_streams = function(
     coord_width = coord_width,
     watercolor = watercolor,
     height = height,
+    terrain_offset = offset / zscale,
     verbose = verbose
   )
 
@@ -502,6 +504,9 @@ render_streams = function(
         height = height,
         heightmap = heightmap,
         zscale = zscale,
+        terrain_clamped = TRUE,
+        terrain_offset = offset / zscale,
+        terrain_scale = terrain_scale,
         material = NULL,
         return_mesh = TRUE,
         rgl_id = water_path_rgl_ids[[coord_index]],
@@ -580,6 +585,8 @@ convert_render_stream_width_to_scene_units = function(
 #' @param coord_width Stream width for every coordinate matrix.
 #' @param watercolor Stream preview color.
 #' @param height Stream mesh height registered with each rgl object.
+#' @param terrain_offset Default `0`. Stream centerline offset above the terrain
+#' in scene units.
 #' @param verbose Default `FALSE`. Whether to show preview submission progress.
 #'
 #' @return Integer rgl identifier corresponding to every input path. Paths in
@@ -590,6 +597,7 @@ draw_render_stream_line_previews = function(
   coord_width,
   watercolor,
   height,
+  terrain_offset = 0,
   verbose = FALSE
 ) {
   if (length(coord_width) != length(coord_list)) {
@@ -638,7 +646,10 @@ draw_render_stream_line_previews = function(
     water_path_rgl_ids[path_indices] = water_path_rgl_id
     register_render_water_path_info(
       id = water_path_rgl_id,
-      info = list(height = height)
+      info = list(
+        height = height,
+        terrain_offset = terrain_offset
+      )
     )
     if (!is.null(preview_progress)) {
       preview_progress$tick()
@@ -666,6 +677,16 @@ resolve_render_stream_height = function(height = NULL) {
     height = default_render_stream_height()
   }
   resolve_render_positive_number(height, "height")
+}
+
+#' Resolve stream terrain horizontal scale
+#'
+#' @return Two-value x-z scale for the active terrain grid.
+#' @keywords internal
+resolve_render_stream_terrain_scale = function() {
+  unname(normalize_geographic_aspect(
+    get_scene_geographic_aspect()
+  )$scale[c("x", "z")])
 }
 
 #' Register water path info
@@ -866,6 +887,9 @@ make_render_highquality_water_path_meshes = function(
         height = default_render_stream_height(),
         heightmap = NULL,
         zscale = 1,
+        terrain_clamped = FALSE,
+        terrain_offset = 0,
+        terrain_scale = c(1, 1),
         cap_start = TRUE,
         cap_end = TRUE,
         return_mesh = FALSE,
@@ -886,6 +910,27 @@ make_render_highquality_water_path_meshes = function(
     task$zscale = suppressWarnings(as.numeric(task$zscale[[1L]]))
     if (!is.finite(task$zscale) || task$zscale <= 0) {
       task$zscale = 1
+    }
+    task$terrain_clamped = resolve_render_logical(
+      task$terrain_clamped,
+      "terrain_clamped"
+    )
+    task$terrain_offset = suppressWarnings(as.numeric(
+      task$terrain_offset
+    ))[1L]
+    if (!is.finite(task$terrain_offset)) {
+      stop("Stream mesh tasks require a finite terrain offset.", call. = FALSE)
+    }
+    task$terrain_scale = suppressWarnings(as.numeric(task$terrain_scale))
+    if (
+      length(task$terrain_scale) != 2L ||
+        any(!is.finite(task$terrain_scale)) ||
+        any(task$terrain_scale <= 0)
+    ) {
+      stop(
+        "Stream mesh tasks require positive finite x-z terrain scales.",
+        call. = FALSE
+      )
     }
     task$bbox_center = suppressWarnings(as.numeric(task$bbox_center[1:3]))
     if (length(task$bbox_center) != 3L || any(!is.finite(task$bbox_center))) {
@@ -931,6 +976,9 @@ make_render_highquality_water_path_meshes = function(
         bbox_center = task$bbox_center,
         width = task$width,
         height = task$height,
+        terrain_clamped = task$terrain_clamped,
+        terrain_offset = task$terrain_offset,
+        terrain_scale = task$terrain_scale,
         cap_start = task$cap_start,
         cap_end = task$cap_end
       )
@@ -965,6 +1013,9 @@ make_render_highquality_water_path_meshes = function(
         watercolor = task$watercolor,
         width = task$width,
         height = task$height,
+        terrain_clamped = task$terrain_clamped,
+        terrain_offset = task$terrain_offset,
+        terrain_scale = task$terrain_scale,
         material = task$material,
         cap_start = task$cap_start,
         cap_end = task$cap_end
@@ -1073,6 +1124,30 @@ group_render_highquality_water_path_tasks = function(tasks) {
       same_number(
         resolve_render_stream_height(task[["height"]]),
         resolve_render_stream_height(prototype[["height"]])
+      ) &&
+      identical(
+        isTRUE(task[["terrain_clamped"]]),
+        isTRUE(prototype[["terrain_clamped"]])
+      ) &&
+      same_number(
+        if (is.null(task[["terrain_offset"]])) 0 else task[["terrain_offset"]],
+        if (is.null(prototype[["terrain_offset"]])) {
+          0
+        } else {
+          prototype[["terrain_offset"]]
+        }
+      ) &&
+      same_vector(
+        if (is.null(task[["terrain_scale"]])) {
+          c(1, 1)
+        } else {
+          task[["terrain_scale"]]
+        },
+        if (is.null(prototype[["terrain_scale"]])) {
+          c(1, 1)
+        } else {
+          prototype[["terrain_scale"]]
+        }
       ) &&
       same_number(task$zscale, prototype$zscale) &&
       same_vector(task$bbox_center, prototype$bbox_center) &&
@@ -1186,7 +1261,8 @@ make_render_highquality_joined_water_path_mesh = function(
   terrain_triangles = make_render_highquality_water_path_valid_terrain_triangles(
     heightmap = group$heightmap,
     bbox = sf::st_bbox(footprint),
-    margin = group$width
+    margin = group$width,
+    terrain_scale = group$terrain_scale
   )
   if (!nrow(terrain_triangles)) {
     stop("No valid terrain triangles intersect the stream footprint bounds.")
@@ -1214,7 +1290,8 @@ make_render_highquality_joined_water_path_mesh = function(
     points_xz = triangulated$vertices_xz,
     heightmap = group$heightmap,
     terrain_triangles = terrain_triangles,
-    tri_id = triangulated$vertex_tri_id
+    tri_id = triangulated$vertex_tri_id,
+    terrain_scale = group$terrain_scale
   )
   if (any(!is.finite(terrain_y))) {
     stop("Joined stream mesh height sampling produced non-finite values.")
@@ -1279,7 +1356,8 @@ make_render_highquality_joined_water_path_mesh = function(
   top_normals = interpolate_render_highquality_normals(
     points = top_vertices,
     heightmap = group$heightmap,
-    zscale = 1
+    zscale = 1,
+    terrain_scale = group$terrain_scale
   )
 
   directed_edges = rbind(
@@ -1421,6 +1499,16 @@ prepare_render_highquality_water_path_line_group = function(tasks) {
     return(NULL)
   }
   height = resolve_render_stream_height(prototype[["height"]])
+  terrain_scale = suppressWarnings(as.numeric(
+    prototype[["terrain_scale"]]
+  ))
+  if (
+    length(terrain_scale) != 2L ||
+      any(!is.finite(terrain_scale)) ||
+      any(terrain_scale <= 0)
+  ) {
+    terrain_scale = c(1, 1)
+  }
   heightmap_scene = scale_render_highquality_heightmap(
     heightmap = prototype$heightmap,
     zscale = prototype$zscale
@@ -1433,6 +1521,7 @@ prepare_render_highquality_water_path_line_group = function(tasks) {
   ) {
     return(NULL)
   }
+  attr(heightmap_scene, "rayshader_stream_terrain_scale") = terrain_scale
   lines = list()
   offset_values = numeric(0)
   for (task in tasks) {
@@ -1442,8 +1531,8 @@ prepare_render_highquality_water_path_line_group = function(tasks) {
       if (any(finite_xyz)) {
         terrain_y = interpolate_render_heightmap_height(
           heightmap_scene,
-          points[finite_xyz, 1],
-          points[finite_xyz, 3]
+          points[finite_xyz, 1] / terrain_scale[[1L]],
+          points[finite_xyz, 3] / terrain_scale[[2L]]
         )
         offset_values = c(
           offset_values,
@@ -1459,7 +1548,13 @@ prepare_render_highquality_water_path_line_group = function(tasks) {
     }
   }
   offset_values = offset_values[is.finite(offset_values)]
-  offset_scene = if (length(offset_values)) {
+  terrain_clamped = isTRUE(prototype[["terrain_clamped"]])
+  explicit_terrain_offset = suppressWarnings(as.numeric(
+    prototype[["terrain_offset"]]
+  ))[1L]
+  offset_scene = if (terrain_clamped && is.finite(explicit_terrain_offset)) {
+    explicit_terrain_offset
+  } else if (length(offset_values)) {
     stats::median(offset_values, na.rm = TRUE)
   } else {
     0
@@ -1475,6 +1570,8 @@ prepare_render_highquality_water_path_line_group = function(tasks) {
     heightmap = heightmap_scene,
     zscale = 1,
     material = prototype$material,
+    terrain_clamped = terrain_clamped,
+    terrain_scale = terrain_scale,
     offset_scene = offset_scene,
     tasks = tasks
   )
@@ -1671,13 +1768,15 @@ assert_render_highquality_stream_footprint = function(footprint) {
 #' @param heightmap Heightmap matrix in scene units.
 #' @param bbox Default `NULL`. Optional stream footprint bounding box.
 #' @param margin Default `0`. Extra scene-unit margin around `bbox`.
+#' @param terrain_scale Default `c(1, 1)`. Horizontal x-z terrain scale.
 #'
 #' @return `sf` object containing terrain triangle footprints.
 #' @keywords internal
 make_render_highquality_water_path_valid_terrain_triangles = function(
   heightmap,
   bbox = NULL,
-  margin = 0
+  margin = 0,
+  terrain_scale = c(1, 1)
 ) {
   if (!requireNamespace("sf", quietly = TRUE)) {
     stop("The `sf` package is required for joined stream meshes.")
@@ -1708,6 +1807,14 @@ make_render_highquality_water_path_valid_terrain_triangles = function(
   }
   nr = nrow(heightmap)
   nc = ncol(heightmap)
+  terrain_scale = suppressWarnings(as.numeric(terrain_scale))
+  if (
+    length(terrain_scale) != 2L ||
+      any(!is.finite(terrain_scale)) ||
+      any(terrain_scale <= 0)
+  ) {
+    terrain_scale = c(1, 1)
+  }
   row_range = c(1L, nr - 1L)
   col_range = c(1L, nc - 1L)
   if (!is.null(bbox)) {
@@ -1718,14 +1825,14 @@ make_render_highquality_water_path_valid_terrain_triangles = function(
     bbox = as.numeric(bbox)
     if (length(bbox) >= 4 && all(is.finite(bbox[1:4]))) {
       row_range = bbox_cell_range(
-        min_value = bbox[[1]] - margin,
-        max_value = bbox[[3]] + margin,
+        min_value = (bbox[[1]] - margin) / terrain_scale[[1L]],
+        max_value = (bbox[[3]] + margin) / terrain_scale[[1L]],
         center = (nr - 1) / 2,
         upper = nr - 1L
       )
       col_range = bbox_cell_range(
-        min_value = bbox[[2]] - margin,
-        max_value = bbox[[4]] + margin,
+        min_value = (bbox[[2]] - margin) / terrain_scale[[2L]],
+        max_value = (bbox[[4]] + margin) / terrain_scale[[2L]],
         center = (nc - 1) / 2,
         upper = nc - 1L
       )
@@ -1751,10 +1858,10 @@ make_render_highquality_water_path_valid_terrain_triangles = function(
       if (!all(is.finite(cell_heights))) {
         next
       }
-      x0 = row - 1 - row_center
-      x1 = row - row_center
-      z0 = col - 1 - col_center
-      z1 = col - col_center
+      x0 = (row - 1 - row_center) * terrain_scale[[1L]]
+      x1 = (row - row_center) * terrain_scale[[1L]]
+      z0 = (col - 1 - col_center) * terrain_scale[[2L]]
+      z1 = (col - col_center) * terrain_scale[[2L]]
       top_ring = rbind(
         c(x0, z0),
         c(x1, z0),
@@ -2088,6 +2195,7 @@ triangulate_render_highquality_water_path_fragments = function(
 #' @param heightmap Heightmap matrix in scene units.
 #' @param terrain_triangles Default `NULL`. Terrain triangle metadata.
 #' @param tri_id Default `NULL`. Terrain triangle id for each point.
+#' @param terrain_scale Default `c(1, 1)`. Horizontal x-z terrain scale.
 #'
 #' @return Numeric terrain heights.
 #' @keywords internal
@@ -2095,7 +2203,8 @@ sample_render_highquality_water_path_surface = function(
   points_xz,
   heightmap,
   terrain_triangles = NULL,
-  tri_id = NULL
+  tri_id = NULL,
+  terrain_scale = c(1, 1)
 ) {
   calculate_triangle_height = function(
     heightmap,
@@ -2104,8 +2213,8 @@ sample_render_highquality_water_path_surface = function(
   ) {
     row_col = render_heightmap_row_col(
       heightmap,
-      points_xz[, 1],
-      points_xz[, 2],
+      points_xz[, 1] / terrain_scale[[1L]],
+      points_xz[, 2] / terrain_scale[[2L]],
       clamp = FALSE
     )
     row_weight = row_col$row - terrain_triangles$row
@@ -2142,10 +2251,18 @@ sample_render_highquality_water_path_surface = function(
   }
 
   points_xz = as.matrix(points_xz)
+  terrain_scale = suppressWarnings(as.numeric(terrain_scale))
+  if (
+    length(terrain_scale) != 2L ||
+      any(!is.finite(terrain_scale)) ||
+      any(terrain_scale <= 0)
+  ) {
+    terrain_scale = c(1, 1)
+  }
   heights = interpolate_render_heightmap_height(
     heightmap,
-    points_xz[, 1],
-    points_xz[, 2]
+    points_xz[, 1] / terrain_scale[[1L]],
+    points_xz[, 2] / terrain_scale[[2L]]
   )
   if (
     !is.null(terrain_triangles) &&

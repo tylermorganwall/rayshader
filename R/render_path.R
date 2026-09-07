@@ -1251,18 +1251,40 @@ render_line_coords_by_width = function(
 #' @param heightmap Heightmap matrix.
 #' @param zscale Effective zscale.
 #' @param offset Centerline offset in elevation units.
+#' @param terrain_scale Default `c(1, 1)`. Horizontal x-z scale applied to the
+#' rendered terrain vertices.
 #'
 #' @return List of densified coordinate matrices.
 #' @keywords internal
-densify_render_line_coords = function(coords, heightmap, zscale, offset) {
+densify_render_line_coords = function(
+  coords,
+  heightmap,
+  zscale,
+  offset,
+  terrain_scale = c(1, 1)
+) {
   heightmap_scene = heightmap / zscale
   offset_scene = offset / zscale
+  terrain_scale = suppressWarnings(as.numeric(terrain_scale[1:2]))
+  if (
+    length(terrain_scale) != 2L ||
+      any(!is.finite(terrain_scale)) ||
+      any(terrain_scale <= 0)
+  ) {
+    terrain_scale = c(1, 1)
+  }
   lapply(coords, function(path_coords) {
-    densify_single_render_line_coord(
-      coords = path_coords,
+    grid_coords = path_coords
+    grid_coords[, 1L] = grid_coords[, 1L] / terrain_scale[[1L]]
+    grid_coords[, 3L] = grid_coords[, 3L] / terrain_scale[[2L]]
+    densified = densify_single_render_line_coord(
+      coords = grid_coords,
       heightmap = heightmap_scene,
       offset = offset_scene
     )
+    densified[, 1L] = densified[, 1L] * terrain_scale[[1L]]
+    densified[, 3L] = densified[, 3L] * terrain_scale[[2L]]
+    densified
   })
 }
 

@@ -9,6 +9,7 @@ draw_render_stream_line_previews(
   coord_width,
   watercolor,
   height,
+  terrain_offset = 0,
   verbose = FALSE
 )
 }
@@ -20,6 +21,9 @@ draw_render_stream_line_previews(
 \item{watercolor}{Stream preview color.}
 
 \item{height}{Stream mesh height registered with each rgl object.}
+
+\item{terrain_offset}{Default \code{0}. Stream centerline offset above the terrain
+in scene units.}
 
 \item{verbose}{Default \code{FALSE}. Whether to show preview submission progress.}
 }

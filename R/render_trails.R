@@ -62,7 +62,7 @@
 #'   color = "grey50",
 #'   width = 3,
 #'   width_units = "meters",
-#'   preview="mesh", 
+#'   preview="mesh",
 #'   clear_previous = TRUE
 #' )
 #' render_snapshot()
@@ -134,6 +134,7 @@ render_trails = function(
     heightmap = heightmap,
     caller = "render_trails"
   )
+  terrain_scale = resolve_render_stream_terrain_scale()
   width_units = match.arg(width_units)
   densify = resolve_render_scalar(
     densify,
@@ -338,6 +339,9 @@ render_trails = function(
         height = height,
         heightmap = heightmap,
         zscale = zscale,
+        terrain_clamped = TRUE,
+        terrain_offset = offset / zscale,
+        terrain_scale = terrain_scale,
         material = rayrender::diffuse(
           color = convert_color(color, linear = TRUE)
         ),

@@ -44,6 +44,12 @@
 #'@param max_height Default `NA`. Maximum height of a tree. Set to a positive number to filter out trees
 #'above that height.
 #'@param lit Default `TRUE`. Whether to apply lighting to the tree.
+#' @param preview_simple Default `FALSE`. Set to `TRUE` or `"point"` to show one
+#' green rgl point at each canopy while caching the full tree transforms for
+#' [render_highquality()]. Set to `"none"` to cache the trees without adding
+#' anything to the rgl preview.
+#' @param preview_point_size Default `1`. Size of the green rgl canopy points
+#' when `preview_simple = TRUE` or `"point"`.
 #'@param angle Default `c(0,0,0)`. Angle of rotation around the x, y, and z axes. If this is a matrix or list,
 #'each row (or list entry) specifies the rotation of the nth tree specified (number of rows/length of list must
 #'equal the length of `x`/`y`).
@@ -166,6 +172,8 @@ render_tree = function(
   min_height = 0,
   max_height = Inf,
   lit = TRUE,
+  preview_simple = FALSE,
+  preview_point_size = 1,
   angle = c(0, 0, 0),
   clear_previous = FALSE,
   x = NULL,
@@ -181,14 +189,31 @@ render_tree = function(
   heightmap = NULL,
   ...
 ) {
+  clear_tree_layer = function() {
+    rgl::pop3d(tag = "objtree")
+    rgl::pop3d(tag = "tree_preview")
+    cache_scene_tree_instances(NULL)
+  }
   if (
     is_render_clear_only_call(
       clear_previous,
       match.call(),
-      function() rgl::pop3d(tag = "objtree")
+      clear_tree_layer
     )
   ) {
     return(invisible(NULL))
+  }
+  tree_preview_mode = resolve_render_tree_preview_mode(preview_simple)
+  if (
+    !is.numeric(preview_point_size) ||
+      length(preview_point_size) != 1L ||
+      !is.finite(preview_point_size) ||
+      preview_point_size <= 0
+  ) {
+    stop(
+      "`preview_point_size` must be a single positive finite number.",
+      call. = FALSE
+    )
   }
   validate_filter_to_extent(filter_to_extent, caller = "render_tree")
   tree_height_supplied = !missing(tree_height) && !is.null(tree_height)
@@ -691,6 +716,131 @@ render_tree = function(
       }
     }
   }
+  if (!identical(tree_preview_mode, "full")) {
+    load_tree_normals = if (is.null(tree_args$load_normals)) {
+      TRUE
+    } else {
+      resolve_render_logical(tree_args$load_normals, "load_normals")
+    }
+    if (fully_custom_tree) {
+      tree_components = list(
+        list(
+          component = "crown",
+          model_file = custom_obj_crown,
+          load_material = FALSE,
+          load_normals = load_tree_normals,
+          color = crown_color,
+          scale = tree_scale,
+          offset = trunk_height * height_zscale
+        ),
+        list(
+          component = "trunk",
+          model_file = custom_obj_trunk,
+          load_material = FALSE,
+          load_normals = load_tree_normals,
+          color = trunk_color,
+          scale = trunk_scale,
+          offset = 0
+        )
+      )
+      canopy_offset = trunk_height * height_zscale
+    } else if (custom_tree) {
+      tree_components = list(
+        list(
+          component = "tree",
+          model_file = custom_obj_tree,
+          load_material = TRUE,
+          load_normals = load_tree_normals,
+          color = "white",
+          scale = tree_scale,
+          offset = 0
+        )
+      )
+      canopy_offset = crown_height * height_zscale / 2
+    } else if (identical(type, "basic")) {
+      tree_components = list(
+        list(
+          component = "crown",
+          model_file = tree_basic_center_obj(),
+          load_material = FALSE,
+          load_normals = load_tree_normals,
+          color = crown_color,
+          scale = tree_scale,
+          offset = (trunk_height + crown_height / 3) * height_zscale
+        ),
+        list(
+          component = "trunk",
+          model_file = tree_trunk_obj(),
+          load_material = FALSE,
+          load_normals = load_tree_normals,
+          color = trunk_color,
+          scale = trunk_scale,
+          offset = 0
+        )
+      )
+      canopy_offset = (trunk_height + crown_height / 3) * height_zscale
+    } else if (identical(type, "cone")) {
+      tree_components = list(
+        list(
+          component = "crown",
+          model_file = tree_cone_center_obj(),
+          load_material = FALSE,
+          load_normals = load_tree_normals,
+          color = crown_color,
+          scale = tree_scale,
+          offset = trunk_height * height_zscale
+        ),
+        list(
+          component = "trunk",
+          model_file = tree_trunk_obj(),
+          load_material = FALSE,
+          load_normals = load_tree_normals,
+          color = trunk_color,
+          scale = trunk_scale,
+          offset = 0
+        )
+      )
+      canopy_offset = trunk_height * height_zscale
+    } else {
+      stop(sprintf("%s not recognized as built-in type of tree", type))
+    }
+    tree_instance_layer = make_render_tree_instance_layer(
+      components = tree_components,
+      lat = lat,
+      long = long,
+      angle = angle,
+      canopy_offset = canopy_offset,
+      extent = extent,
+      panel = panel,
+      zscale = zscale,
+      crs = render_obj_crs,
+      heightmap = heightmap,
+      transform_scene = !location_supplied && !tree_coords_transformed
+    )
+    cache_scene_tree_instances(tree_instance_layer, append = TRUE)
+    if (identical(tree_preview_mode, "point")) {
+      canopy_xyz = attr(tree_instance_layer, "canopy_xyz")
+      rgl::points3d(
+        x = canopy_xyz[, 1L],
+        y = canopy_xyz[, 2L],
+        z = canopy_xyz[, 3L],
+        color = "#22aa22",
+        size = preview_point_size,
+        lit = FALSE,
+        tag = "tree_preview"
+      )
+    }
+    if (!isTRUE(absolute_height)) {
+      tree_zaxis_scene = tree_height
+    }
+    cache_altitude_zaxis_data(
+      source = "tree",
+      altitude = tree_zaxis_raw,
+      scene_altitude = tree_zaxis_scene,
+      label = tree_zaxis_label
+    )
+    return(invisible(NULL))
+  }
   if (fully_custom_tree) {
     # If a fully custom tree is specified, render the custom crown and trunk
     render_obj_tree(
@@ -842,6 +992,341 @@ render_tree = function(
     label = tree_zaxis_label
   )
   invisible(NULL)
+}
+
+#' Resolve the lightweight tree preview mode
+#'
+#' @param preview_simple Lightweight preview selection.
+#'
+#' @return One of `"full"`, `"point"`, or `"none"`.
+#' @keywords internal
+resolve_render_tree_preview_mode = function(preview_simple) {
+  if (
+    is.logical(preview_simple) &&
+      length(preview_simple) == 1L &&
+      !is.na(preview_simple)
+  ) {
+    return(if (preview_simple) "point" else "full")
+  }
+  if (is.character(preview_simple) && length(preview_simple) == 1L) {
+    preview_mode = tolower(trimws(preview_simple))
+    if (preview_mode %in% c("point", "points")) {
+      return("point")
+    }
+    if (preview_mode %in% c("none", "full")) {
+      return(preview_mode)
+    }
+  }
+  stop(
+    "`preview_simple` must be FALSE, TRUE, \"point\", or \"none\".",
+    call. = FALSE
+  )
+}
+
+#' Normalize cached tree angles
+#'
+#' @param angle Tree rotation input.
+#' @param tree_count Number of tree placements.
+#'
+#' @return A three-column angle matrix with one row per tree.
+#' @keywords internal
+normalize_render_tree_instance_angles = function(angle, tree_count) {
+  if (is.list(angle) && !is.data.frame(angle)) {
+    angle = do.call(rbind, angle)
+  }
+  if (is.data.frame(angle)) {
+    angle = as.matrix(angle)
+  }
+  if (is.matrix(angle)) {
+    if (!is.numeric(angle) || ncol(angle) != 3L) {
+      stop("`angle` must have exactly three numeric columns.", call. = FALSE)
+    }
+    if (nrow(angle) == 1L && tree_count > 1L) {
+      angle = matrix(angle, nrow = tree_count, ncol = 3L, byrow = TRUE)
+    }
+    if (nrow(angle) != tree_count) {
+      stop("`angle` must have one row per tree.", call. = FALSE)
+    }
+  } else {
+    if (!is.numeric(angle) || length(angle) != 3L) {
+      stop("`angle` must contain exactly three numeric values.", call. = FALSE)
+    }
+    angle = matrix(angle, nrow = tree_count, ncol = 3L, byrow = TRUE)
+  }
+  if (any(!is.finite(angle))) {
+    stop("`angle` must contain finite values.", call. = FALSE)
+  }
+  angle
+}
+
+#' Normalize cached tree component colors
+#'
+#' @param color Component color input.
+#' @param tree_count Number of tree placements.
+#' @param name Argument name used in errors.
+#'
+#' @return A character color vector with one entry per tree.
+#' @keywords internal
+normalize_render_tree_instance_colors = function(color, tree_count, name) {
+  if (is.numeric(color) && length(color) == 3L) {
+    color = convert_color(color, as_hex = TRUE)
+  }
+  if (length(color) == 1L) {
+    color = rep(color, tree_count)
+  }
+  if (length(color) != tree_count || anyNA(color)) {
+    stop(
+      sprintf("`%s` must provide one color or one color per tree.", name),
+      call. = FALSE
+    )
+  }
+  as.character(color)
+}
+
+#' Build a lightweight tree instance cache layer
+#'
+#' @param components Tree component model specifications.
+#' @param lat Tree y coordinates in the resolved scene CRS.
+#' @param long Tree x coordinates in the resolved scene CRS.
+#' @param angle Tree rotation input.
+#' @param canopy_offset Canopy preview offset in source elevation units.
+#' @param extent Scene extent.
+#' @param panel Default `NULL`. Facet panel identifier.
+#' @param zscale Effective zscale.
+#' @param crs Default `NULL`. Input coordinate reference system.
+#' @param heightmap Scene heightmap.
+#' @param transform_scene Whether coordinates still require scene
+#' transformation.
+#'
+#' @return A data frame of cached component transforms. The `canopy_xyz`
+#' attribute contains lightweight preview locations.
+#' @keywords internal
+make_render_tree_instance_layer = function(
+  components,
+  lat,
+  long,
+  angle,
+  canopy_offset,
+  extent,
+  panel = NULL,
+  zscale,
+  crs = NULL,
+  heightmap,
+  transform_scene
+) {
+  tree_count = length(lat)
+  if (!tree_count || length(long) != tree_count) {
+    stop(
+      "Tree x/y coordinates must have the same positive length.",
+      call. = FALSE
+    )
+  }
+  ground_xyz = transform_into_heightmap_coords(
+    extent = extent,
+    heightmap = heightmap,
+    lat = lat,
+    long = long,
+    altitude = NULL,
+    offset = 0,
+    zscale = zscale,
+    crs = crs,
+    panel = panel,
+    transform_scene = transform_scene,
+    caller = "render_tree"
+  )
+  angle = normalize_render_tree_instance_angles(angle, tree_count)
+  component_scales = lapply(components, function(component) {
+    scale = as.matrix(component$scale)
+    if (!is.numeric(scale) || ncol(scale) != 3L) {
+      stop(
+        "Cached tree component scales must have three columns.",
+        call. = FALSE
+      )
+    }
+    if (nrow(scale) == 1L && tree_count > 1L) {
+      scale = matrix(scale, nrow = tree_count, ncol = 3L, byrow = TRUE)
+    }
+    if (nrow(scale) != tree_count || any(!is.finite(scale))) {
+      stop(
+        "Cached tree component scales must have one finite row per tree.",
+        call. = FALSE
+      )
+    }
+    scale
+  })
+  all_scales = do.call(cbind, component_scales)
+  instance_scale = apply(abs(all_scales), 1L, max)
+  instance_scale[!is.finite(instance_scale) | instance_scale <= 0] = 1
+
+  component_rows = lapply(seq_along(components), function(component_index) {
+    component = components[[component_index]]
+    component_scale = component_scales[[component_index]]
+    component_offset = suppressWarnings(as.numeric(component$offset))
+    if (length(component_offset) == 1L) {
+      component_offset = rep(component_offset, tree_count)
+    }
+    if (
+      length(component_offset) != tree_count ||
+        any(!is.finite(component_offset))
+    ) {
+      stop(
+        "Cached tree component offsets must be finite per-tree values.",
+        call. = FALSE
+      )
+    }
+    component_xyz = ground_xyz
+    component_xyz[, 2L] = component_xyz[, 2L] + component_offset / zscale
+    component_color = normalize_render_tree_instance_colors(
+      component$color,
+      tree_count,
+      paste0(component$component, "_color")
+    )
+    data.frame(
+      tree_index = seq_len(tree_count),
+      component = component$component,
+      model_file = path.expand(component$model_file),
+      load_material = isTRUE(component$load_material),
+      load_normals = isTRUE(component$load_normals),
+      color = component_color,
+      x = component_xyz[, 1L],
+      y = component_xyz[, 2L],
+      z = component_xyz[, 3L],
+      angle_x = angle[, 1L],
+      angle_y = angle[, 2L],
+      angle_z = angle[, 3L],
+      scale_x = component_scale[, 1L],
+      scale_y = component_scale[, 2L],
+      scale_z = component_scale[, 3L],
+      base_scale_x = component_scale[, 1L] / instance_scale,
+      base_scale_y = component_scale[, 2L] / instance_scale,
+      base_scale_z = component_scale[, 3L] / instance_scale,
+      instance_scale = instance_scale,
+      stringsAsFactors = FALSE
+    )
+  })
+  instance_layer = do.call(rbind, component_rows)
+  row.names(instance_layer) = NULL
+  canopy_offset = suppressWarnings(as.numeric(canopy_offset))
+  if (length(canopy_offset) == 1L) {
+    canopy_offset = rep(canopy_offset, tree_count)
+  }
+  if (length(canopy_offset) != tree_count || any(!is.finite(canopy_offset))) {
+    stop("Cached canopy offsets must be finite per-tree values.", call. = FALSE)
+  }
+  canopy_xyz = ground_xyz
+  canopy_xyz[, 2L] = canopy_xyz[, 2L] + canopy_offset / zscale
+  attr(instance_layer, "canopy_xyz") = canopy_xyz
+  instance_layer
+}
+
+#' Build rayrender instances from cached lightweight trees
+#'
+#' @param instance_layers Cached tree transform layers.
+#' @param bbox_center Scene bounding-box center.
+#' @param override_material Whether the global high-quality material overrides
+#' tree materials.
+#' @param material Global high-quality material.
+#' @param rgl_materials Named rgl material overrides.
+#' @param calculate_consistent_normals Whether rayrender should make model
+#' normals consistent.
+#'
+#' @return A list of rayrender instance objects.
+#' @keywords internal
+make_render_highquality_cached_tree_instances = function(
+  instance_layers,
+  bbox_center,
+  override_material,
+  material,
+  rgl_materials,
+  calculate_consistent_normals
+) {
+  if (!length(instance_layers)) {
+    return(list())
+  }
+  required_columns = c(
+    "model_file",
+    "load_material",
+    "load_normals",
+    "color",
+    "x",
+    "y",
+    "z",
+    "angle_x",
+    "angle_y",
+    "angle_z",
+    "scale_x",
+    "scale_y",
+    "scale_z",
+    "base_scale_x",
+    "base_scale_y",
+    "base_scale_z"
+  )
+  valid_layers = Filter(
+    function(layer) {
+      is.data.frame(layer) &&
+        nrow(layer) > 0L &&
+        all(required_columns %in% names(layer))
+    },
+    instance_layers
+  )
+  if (!length(valid_layers)) {
+    return(list())
+  }
+  components = do.call(rbind, valid_layers)
+  row.names(components) = NULL
+  proportion_value = function(value) {
+    formatC(signif(value, 12L), digits = 12L, format = "fg", flag = "#")
+  }
+  group_key = paste(
+    components$model_file,
+    components$load_material,
+    components$load_normals,
+    components$color,
+    proportion_value(components$base_scale_x),
+    proportion_value(components$base_scale_y),
+    proportion_value(components$base_scale_z),
+    sep = "\r"
+  )
+  component_groups = split(seq_len(nrow(components)), group_key)
+  lapply(component_groups, function(group_rows) {
+    group = components[group_rows, , drop = FALSE]
+    color = convert_color(group$color[[1L]], linear = TRUE)
+    component_material = NULL
+    if (isTRUE(override_material)) {
+      component_material = material
+    } else {
+      component_material = resolve_render_highquality_rgl_material(
+        rgl_materials = rgl_materials,
+        id = NA_integer_,
+        tag = "objtree",
+        color = color
+      )
+    }
+    load_material = isTRUE(group$load_material[[1L]]) &&
+      is.null(component_material)
+    if (is.null(component_material)) {
+      component_material = rayrender::diffuse(color = color)
+    }
+    base_model = rayrender::obj_model(
+      filename = group$model_file[[1L]],
+      load_material = load_material,
+      load_normals = isTRUE(group$load_normals[[1L]]),
+      calculate_consistent_normals = calculate_consistent_normals,
+      material = component_material
+    )
+    rayrender::create_instances(
+      ray_scene = base_model,
+      x = group$x - bbox_center[[1L]],
+      y = group$y - bbox_center[[2L]],
+      z = group$z - bbox_center[[3L]],
+      angle_x = group$angle_x,
+      angle_y = group$angle_y,
+      angle_z = group$angle_z,
+      scale_x = group$scale_x,
+      scale_y = group$scale_y,
+      scale_z = group$scale_z
+    )
+  })
 }
 
 resolve_render_tree_height_column = function(

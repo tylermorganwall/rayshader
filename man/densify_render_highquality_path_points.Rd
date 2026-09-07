@@ -8,7 +8,8 @@ densify_render_highquality_path_points(
   points,
   width,
   heightmap = NULL,
-  zscale = 1
+  zscale = 1,
+  terrain_scale = c(1, 1)
 )
 }
 \arguments{
@@ -19,6 +20,8 @@ densify_render_highquality_path_points(
 \item{heightmap}{Default \code{NULL}. Cached heightmap matrix.}
 
 \item{zscale}{Effective zscale.}
+
+\item{terrain_scale}{Default \code{c(1, 1)}. Horizontal x-z terrain scale.}
 }
 \value{
 Path center points with additional terrain triangle edge samples.

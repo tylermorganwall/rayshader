@@ -419,8 +419,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // densify_render_road_paths_batch_cpp
-List densify_render_road_paths_batch_cpp(const List& input_jobs, const NumericMatrix& heightmap, double zscale, bool parallel, bool verbose);
-RcppExport SEXP _rayshader_densify_render_road_paths_batch_cpp(SEXP input_jobsSEXP, SEXP heightmapSEXP, SEXP zscaleSEXP, SEXP parallelSEXP, SEXP verboseSEXP) {
+List densify_render_road_paths_batch_cpp(const List& input_jobs, const NumericMatrix& heightmap, double zscale, bool parallel, bool verbose, Nullable<NumericVector> terrain_scale);
+RcppExport SEXP _rayshader_densify_render_road_paths_batch_cpp(SEXP input_jobsSEXP, SEXP heightmapSEXP, SEXP zscaleSEXP, SEXP parallelSEXP, SEXP verboseSEXP, SEXP terrain_scaleSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -429,13 +429,14 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type zscale(zscaleSEXP);
     Rcpp::traits::input_parameter< bool >::type parallel(parallelSEXP);
     Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
-    rcpp_result_gen = Rcpp::wrap(densify_render_road_paths_batch_cpp(input_jobs, heightmap, zscale, parallel, verbose));
+    Rcpp::traits::input_parameter< Nullable<NumericVector> >::type terrain_scale(terrain_scaleSEXP);
+    rcpp_result_gen = Rcpp::wrap(densify_render_road_paths_batch_cpp(input_jobs, heightmap, zscale, parallel, verbose, terrain_scale));
     return rcpp_result_gen;
 END_RCPP
 }
 // sample_render_road_sections_batch_cpp
-List sample_render_road_sections_batch_cpp(const List& input_jobs, const NumericMatrix& heightmap, double zscale, bool parallel, bool verbose);
-RcppExport SEXP _rayshader_sample_render_road_sections_batch_cpp(SEXP input_jobsSEXP, SEXP heightmapSEXP, SEXP zscaleSEXP, SEXP parallelSEXP, SEXP verboseSEXP) {
+List sample_render_road_sections_batch_cpp(const List& input_jobs, const NumericMatrix& heightmap, double zscale, bool parallel, bool verbose, Nullable<NumericVector> terrain_scale);
+RcppExport SEXP _rayshader_sample_render_road_sections_batch_cpp(SEXP input_jobsSEXP, SEXP heightmapSEXP, SEXP zscaleSEXP, SEXP parallelSEXP, SEXP verboseSEXP, SEXP terrain_scaleSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -444,7 +445,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type zscale(zscaleSEXP);
     Rcpp::traits::input_parameter< bool >::type parallel(parallelSEXP);
     Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
-    rcpp_result_gen = Rcpp::wrap(sample_render_road_sections_batch_cpp(input_jobs, heightmap, zscale, parallel, verbose));
+    Rcpp::traits::input_parameter< Nullable<NumericVector> >::type terrain_scale(terrain_scaleSEXP);
+    rcpp_result_gen = Rcpp::wrap(sample_render_road_sections_batch_cpp(input_jobs, heightmap, zscale, parallel, verbose, terrain_scale));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -458,6 +460,22 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< bool >::type parallel(parallelSEXP);
     Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
     rcpp_result_gen = Rcpp::wrap(build_render_highquality_road_mesh_batch_cpp(input_jobs, parallel, verbose));
+    return rcpp_result_gen;
+END_RCPP
+}
+// build_render_highquality_grounded_road_mesh_batch_cpp
+List build_render_highquality_grounded_road_mesh_batch_cpp(const List& input_jobs, const NumericMatrix& heightmap, double zscale, bool parallel, bool verbose, Nullable<NumericVector> terrain_scale);
+RcppExport SEXP _rayshader_build_render_highquality_grounded_road_mesh_batch_cpp(SEXP input_jobsSEXP, SEXP heightmapSEXP, SEXP zscaleSEXP, SEXP parallelSEXP, SEXP verboseSEXP, SEXP terrain_scaleSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const List& >::type input_jobs(input_jobsSEXP);
+    Rcpp::traits::input_parameter< const NumericMatrix& >::type heightmap(heightmapSEXP);
+    Rcpp::traits::input_parameter< double >::type zscale(zscaleSEXP);
+    Rcpp::traits::input_parameter< bool >::type parallel(parallelSEXP);
+    Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
+    Rcpp::traits::input_parameter< Nullable<NumericVector> >::type terrain_scale(terrain_scaleSEXP);
+    rcpp_result_gen = Rcpp::wrap(build_render_highquality_grounded_road_mesh_batch_cpp(input_jobs, heightmap, zscale, parallel, verbose, terrain_scale));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -642,9 +660,10 @@ static const R_CallMethodDef CallEntries[] = {
     {"_rayshader_densify_render_highquality_path_xz_cpp", (DL_FUNC) &_rayshader_densify_render_highquality_path_xz_cpp, 6},
     {"_rayshader_calculate_render_road_surface_normals_cpp", (DL_FUNC) &_rayshader_calculate_render_road_surface_normals_cpp, 5},
     {"_rayshader_build_render_road_section_mesh_cpp", (DL_FUNC) &_rayshader_build_render_road_section_mesh_cpp, 19},
-    {"_rayshader_densify_render_road_paths_batch_cpp", (DL_FUNC) &_rayshader_densify_render_road_paths_batch_cpp, 5},
-    {"_rayshader_sample_render_road_sections_batch_cpp", (DL_FUNC) &_rayshader_sample_render_road_sections_batch_cpp, 5},
+    {"_rayshader_densify_render_road_paths_batch_cpp", (DL_FUNC) &_rayshader_densify_render_road_paths_batch_cpp, 6},
+    {"_rayshader_sample_render_road_sections_batch_cpp", (DL_FUNC) &_rayshader_sample_render_road_sections_batch_cpp, 6},
     {"_rayshader_build_render_highquality_road_mesh_batch_cpp", (DL_FUNC) &_rayshader_build_render_highquality_road_mesh_batch_cpp, 3},
+    {"_rayshader_build_render_highquality_grounded_road_mesh_batch_cpp", (DL_FUNC) &_rayshader_build_render_highquality_grounded_road_mesh_batch_cpp, 6},
     {"_rayshader_build_render_highquality_stream_mesh_batch_cpp", (DL_FUNC) &_rayshader_build_render_highquality_stream_mesh_batch_cpp, 5},
     {"_rayshader_evaluate_render_road_profiles_cpp", (DL_FUNC) &_rayshader_evaluate_render_road_profiles_cpp, 8},
     {"_rayshader_audit_render_road_profiles_cpp", (DL_FUNC) &_rayshader_audit_render_road_profiles_cpp, 6},

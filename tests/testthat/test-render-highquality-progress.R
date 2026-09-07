@@ -71,7 +71,8 @@ test_that("stream mesh construction uses one native batch", {
       heightmap,
       zscale,
       parallel,
-      verbose
+      verbose,
+      terrain_scale
     ) {
       captured$jobs = input_jobs
       captured$parallel = parallel
@@ -231,7 +232,8 @@ test_that("road preparation batches each shared terrain once", {
       heightmap,
       zscale,
       parallel,
-      verbose
+      verbose,
+      terrain_scale
     ) {
       calls$densify[[length(calls$densify) + 1L]] = list(
         total = length(input_jobs),
@@ -243,7 +245,8 @@ test_that("road preparation batches each shared terrain once", {
         heightmap,
         zscale,
         parallel,
-        FALSE
+        FALSE,
+        terrain_scale
       )
     },
     sample_render_road_sections_batch_cpp = function(
@@ -251,7 +254,8 @@ test_that("road preparation batches each shared terrain once", {
       heightmap,
       zscale,
       parallel,
-      verbose
+      verbose,
+      terrain_scale
     ) {
       calls$sections[[length(calls$sections) + 1L]] = list(
         total = length(input_jobs),
@@ -263,7 +267,8 @@ test_that("road preparation batches each shared terrain once", {
         heightmap,
         zscale,
         parallel,
-        FALSE
+        FALSE,
+        terrain_scale
       )
     },
     .package = "rayshader"
@@ -380,6 +385,77 @@ test_that("road batch failures fall back in source order", {
     attr(meshes, "mesh_chain_diagnostics")$buffered_fallback_chain_id,
     1:2
   )
+})
+
+test_that("failed road chains do not discard successful mesh results", {
+  chain_tasks = lapply(seq_len(2L), function(value) {
+    task = list(value = value)
+    attr(task, "mesh_topology") = list(mesh_chain_id = value)
+    task
+  })
+  attr(chain_tasks, "mesh_chain_members") = data.frame(
+    mesh_chain_id = seq_len(2L),
+    render_road_fragment_id = 11:12
+  )
+  attr(chain_tasks, "envelope_sections") = NULL
+  attr(chain_tasks, "mesh_chain_diagnostics") = list()
+  testthat::local_mocked_bindings(
+    attach_render_road_mesh_task_metadata = function(tasks) tasks,
+    assemble_render_road_mesh_chain_tasks = function(tasks) chain_tasks,
+    prepare_render_highquality_road_chain_meshes = function(
+      tasks,
+      verbose,
+      parallel
+    ) {
+      list(
+        list(prepared = NULL, error = "preparation failed"),
+        list(
+          prepared = list(
+            job = list(value = 2L),
+            specifications = list(list()),
+            value = 2L
+          ),
+          error = NULL
+        )
+      )
+    },
+    build_render_highquality_road_mesh_batch_cpp = function(
+      input_jobs,
+      parallel,
+      verbose
+    ) {
+      list(list(success = TRUE, error = NULL, meshes = list(input_jobs[[1L]])))
+    },
+    finalize_render_highquality_road_chain_mesh = function(
+      prepared,
+      native_result
+    ) {
+      structure(list(value = prepared$value), class = "test_road_mesh")
+    },
+    make_render_highquality_buffered_road_chain_mesh = function(
+      task,
+      sweep_error
+    ) {
+      stop("the chain uses a road texture")
+    },
+    .package = "rayshader"
+  )
+
+  expect_warning(
+    meshes <- make_render_highquality_road_path_meshes(
+      list(list(value = 1L)),
+      verbose = FALSE,
+      parallel = TRUE
+    ),
+    "Dropped 1 high-quality road mesh chain"
+  )
+  diagnostics = attr(meshes, "mesh_chain_diagnostics")
+
+  expect_length(meshes, 1L)
+  expect_equal(meshes[[1L]]$value, 2L)
+  expect_equal(diagnostics$dropped_chain_count, 1L)
+  expect_equal(diagnostics$dropped_chain_id, 1L)
+  expect_equal(diagnostics$dropped_chains$source_tasks, "11")
 })
 
 test_that("render_highquality propagates verbose through scene building", {

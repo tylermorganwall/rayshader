@@ -10,6 +10,7 @@ calculate_render_road_vertex_sections(
   right_distance,
   heightmap = NULL,
   zscale = 1,
+  terrain_scale = c(1, 1),
   closed = FALSE,
   miter_limit = 4,
   frames = NULL
@@ -25,6 +26,8 @@ calculate_render_road_vertex_sections(
 \item{heightmap}{Cached heightmap.}
 
 \item{zscale}{Effective zscale.}
+
+\item{terrain_scale}{Default \code{c(1, 1)}. Horizontal x-z terrain scale.}
 
 \item{closed}{Whether the path is periodic.}
 

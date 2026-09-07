@@ -23,6 +23,8 @@ render_tree(
   min_height = 0,
   max_height = Inf,
   lit = TRUE,
+  preview_simple = FALSE,
+  preview_point_size = 1,
   angle = c(0, 0, 0),
   clear_previous = FALSE,
   x = NULL,
@@ -92,6 +94,14 @@ below that height.}
 above that height.}
 
 \item{lit}{Default \code{TRUE}. Whether to apply lighting to the tree.}
+
+\item{preview_simple}{Default \code{FALSE}. Set to \code{TRUE} or \code{"point"} to show one
+green rgl point at each canopy while caching the full tree transforms for
+\code{\link[=render_highquality]{render_highquality()}}. Set to \code{"none"} to cache the trees without adding
+anything to the rgl preview.}
+
+\item{preview_point_size}{Default \code{1}. Size of the green rgl canopy points
+when \code{preview_simple = TRUE} or \code{"point"}.}
 
 \item{angle}{Default \code{c(0,0,0)}. Angle of rotation around the x, y, and z axes. If this is a matrix or list,
 each row (or list entry) specifies the rotation of the nth tree specified (number of rows/length of list must

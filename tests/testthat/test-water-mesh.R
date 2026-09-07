@@ -914,13 +914,17 @@ test_that("render_streams caches stream mesh heights for render_highquality", {
 
   cached_stream_meshes = get_scene_stream_meshes()
   expect_length(cached_stream_meshes, 1L)
+  cached_stream_specification = attr(
+    cached_stream_meshes[[1L]],
+    "render_stream_mesh_specification"
+  )
   expect_equal(
-    attr(
-      cached_stream_meshes[[1L]],
-      "render_stream_mesh_specification"
-    )$height,
+    cached_stream_specification$height,
     0.08
   )
+  expect_true(cached_stream_specification$terrain_clamped)
+  expect_equal(cached_stream_specification$terrain_offset, 0)
+  expect_equal(cached_stream_specification$terrain_scale, c(1, 1))
 
   captured = new.env(parent = emptyenv())
   captured$called = FALSE
@@ -989,6 +993,77 @@ test_that("native stream mesh batches match the R reference", {
     ),
     "`parallel` must be TRUE or FALSE",
     fixed = TRUE
+  )
+})
+
+test_that("terrain-clamped stream meshes stay on every DEM triangle", {
+  heightmap = matrix(0, nrow = 9, ncol = 9)
+  heightmap[5:9, 5:9] = 10
+  terrain_offset = 0.2
+  stream_height = 0.05
+  terrain_scale = c(0.5, 1.5)
+  stream_mesh = make_render_highquality_water_path_meshes(list(list(
+    points = matrix(
+      c(
+        -0.2 * terrain_scale[[1L]],
+        4,
+        -3.2 * terrain_scale[[2L]],
+        0.2 * terrain_scale[[1L]],
+        -3,
+        3.1 * terrain_scale[[2L]]
+      ),
+      ncol = 3,
+      byrow = TRUE
+    ),
+    bbox_center = c(0, 0, 0),
+    width = 0.35,
+    height = stream_height,
+    heightmap = heightmap,
+    zscale = 1,
+    terrain_clamped = TRUE,
+    terrain_offset = terrain_offset,
+    terrain_scale = terrain_scale,
+    material = NULL,
+    return_mesh = TRUE
+  )))[[1L]]
+
+  vertices = t(stream_mesh$vb[1:3, , drop = FALSE])
+  indices = t(stream_mesh$it)
+  first = vertices[indices[, 1L], , drop = FALSE]
+  second = vertices[indices[, 2L], , drop = FALSE]
+  third = vertices[indices[, 3L], , drop = FALSE]
+  face_cross = row_cross(second - first, third - first)
+  top_face = face_cross[, 2L] > 1e-10
+  bottom_face = face_cross[, 2L] < -1e-10
+  top_centroid = (first[top_face, , drop = FALSE] +
+    second[top_face, , drop = FALSE] +
+    third[top_face, , drop = FALSE]) /
+    3
+  bottom_centroid = (first[bottom_face, , drop = FALSE] +
+    second[bottom_face, , drop = FALSE] +
+    third[bottom_face, , drop = FALSE]) /
+    3
+  top_terrain = interpolate_render_heightmap_height(
+    heightmap,
+    top_centroid[, 1L] / terrain_scale[[1L]],
+    top_centroid[, 3L] / terrain_scale[[2L]]
+  )
+  bottom_terrain = interpolate_render_heightmap_height(
+    heightmap,
+    bottom_centroid[, 1L] / terrain_scale[[1L]],
+    bottom_centroid[, 3L] / terrain_scale[[2L]]
+  )
+
+  expect_gt(nrow(top_centroid), 2L)
+  expect_equal(
+    top_centroid[, 2L] - top_terrain,
+    rep(terrain_offset + stream_height / 2, nrow(top_centroid)),
+    tolerance = 1e-8
+  )
+  expect_equal(
+    bottom_centroid[, 2L] - bottom_terrain,
+    rep(terrain_offset - stream_height / 2, nrow(bottom_centroid)),
+    tolerance = 1e-8
   )
 })
 
@@ -1411,6 +1486,65 @@ test_that("joined stream terrain overlay clips invalid cells and closes meshes",
     abs(y_delta - 0.025) < 1e-8 |
       abs(y_delta + 0.02501) < 1e-8
   ))
+})
+
+test_that("joined stream terrain clipping respects horizontal scene scale", {
+  skip_if_not_installed("sf")
+
+  heightmap = matrix(0, nrow = 9, ncol = 9)
+  heightmap[5:9, 5:9] = 10
+  terrain_scale = c(0.5, 1.5)
+  stream_height = 0.05
+  task = list(list(
+    points = matrix(
+      c(
+        -0.2 * terrain_scale[[1L]],
+        4,
+        -3.2 * terrain_scale[[2L]],
+        0.2 * terrain_scale[[1L]],
+        -3,
+        3.1 * terrain_scale[[2L]]
+      ),
+      ncol = 3,
+      byrow = TRUE
+    ),
+    bbox_center = c(0, 0, 0),
+    width = 0.35,
+    height = stream_height,
+    heightmap = heightmap,
+    zscale = 1,
+    terrain_clamped = TRUE,
+    terrain_offset = 0,
+    terrain_scale = terrain_scale,
+    material = NULL
+  ))
+  stream_mesh = make_render_highquality_joined_water_path_mesh(
+    task,
+    return_mesh = TRUE
+  )
+  vertices = t(stream_mesh$vb[1:3, , drop = FALSE])
+  indices = t(stream_mesh$it)
+  first = vertices[indices[, 1L], , drop = FALSE]
+  second = vertices[indices[, 2L], , drop = FALSE]
+  third = vertices[indices[, 3L], , drop = FALSE]
+  face_cross = row_cross(second - first, third - first)
+  top_face = face_cross[, 2L] > 1e-10
+  top_centroid = (first[top_face, , drop = FALSE] +
+    second[top_face, , drop = FALSE] +
+    third[top_face, , drop = FALSE]) /
+    3
+  terrain_height = interpolate_render_heightmap_height(
+    heightmap,
+    top_centroid[, 1L] / terrain_scale[[1L]],
+    top_centroid[, 3L] / terrain_scale[[2L]]
+  )
+
+  expect_gt(nrow(top_centroid), 2L)
+  expect_equal(
+    top_centroid[, 2L] - terrain_height,
+    rep(stream_height / 2, nrow(top_centroid)),
+    tolerance = 1e-8
+  )
 })
 
 test_that("render_highquality can render joined stream paths", {
@@ -2224,9 +2358,9 @@ test_that("spatial polygon water rejects open terrain floods", {
   water_surface[20:30, 20:30] = 100
   component_mask = is.finite(water_surface)
   component_footprint = make_spatial_water_component_footprint(component_mask)
-  target_area = spatial_water_polygon_area(component_footprint)
-  target_area_limit = target_area +
-    spatial_water_polygon_perimeter(component_footprint)
+  component_metrics = spatial_water_component_mask_metrics(component_mask)
+  target_area = component_metrics$area
+  target_area_limit = target_area + component_metrics$boundary_area
   candidate = spatial_water_component_area_fit_at_level(
     heightmap = heightmap,
     component_footprint = component_footprint,
@@ -2245,6 +2379,39 @@ test_that("spatial polygon water rejects open terrain floods", {
   expect_gt(candidate$area, target_area_limit)
   expect_true(candidate$rejected)
   expect_null(fit)
+})
+
+test_that("spatial polygon water bounds fits by boundary-cell area", {
+  heightmap = matrix(10, nrow = 20, ncol = 20)
+  heightmap[10, 10] = 0
+  water_surface = matrix(NA_real_, nrow = 20, ncol = 20)
+  water_surface[8:12, 8:12] = 100
+  component_mask = is.finite(water_surface)
+  component_metrics = spatial_water_component_mask_metrics(component_mask)
+  fit = fit_spatial_water_component_polygon(
+    component_mask = component_mask,
+    heightmap = heightmap,
+    component_metrics = component_metrics,
+    fallback_level = 100
+  )
+  raster_mesh = make_spatial_water_polygon_surface(
+    water_surface = water_surface,
+    heightmap = heightmap,
+    water_edge_extension = 0,
+    water_polygon_failure = "raster"
+  )
+  removed_mesh = make_spatial_water_polygon_surface(
+    water_surface = water_surface,
+    heightmap = heightmap,
+    water_edge_extension = 0,
+    water_polygon_failure = "remove"
+  )
+
+  expect_equal(component_metrics$area, 25)
+  expect_equal(component_metrics$boundary_area, 16)
+  expect_null(fit)
+  expect_gt(nrow(raster_mesh$vertices), 0)
+  expect_equal(nrow(removed_mesh$vertices), 0)
 })
 
 test_that("spatial polygon water falls back to raster for failed fits", {
@@ -2661,8 +2828,7 @@ test_that("spatial polygon water Rcpp topology and traversal match R reference",
   r_seed = make_spatial_water_component_seed(component_mask, r_mesh)
   tolerances = spatial_water_triangle_clip_tolerances(
     water_level = 0.45,
-    heights = cpp_mesh$vertices[, "h"],
-    target_area = 10
+    heights = cpp_mesh$vertices[, "h"]
   )
   cpp_eval = spatial_water_traverse_seeded_clipped_faces(
     terrain_mesh = cpp_mesh,
@@ -2818,6 +2984,29 @@ test_that("spatial polygon water rejects early during traversal", {
   expect_true(evaluation$rejected)
   expect_true(evaluation$diagnostics$rejected_early)
   expect_lt(evaluation$diagnostics$visited_face_count, nrow(terrain_mesh$faces))
+})
+
+test_that("spatial polygon water uses stable seed overlap tolerances", {
+  heightmap = matrix(-0.001, nrow = 20, ncol = 20)
+  heightmap[10, 10] = 1
+  terrain_mesh = make_spatial_water_fixed_grid_terrain_mesh(heightmap)
+  component_mask = matrix(FALSE, nrow = 20, ncol = 20)
+  component_mask[10, 10] = TRUE
+  component_seed = make_spatial_water_component_seed(
+    component_mask,
+    terrain_mesh = terrain_mesh
+  )
+  evaluation = evaluate_spatial_water_triangle_clipped_component(
+    terrain_mesh = terrain_mesh,
+    component_seed = component_seed,
+    water_level = 0,
+    target_area_limit = 100,
+    diagnostics = TRUE
+  )
+
+  expect_gt(evaluation$diagnostics$seed_face_count, 0)
+  expect_true(evaluation$rejected)
+  expect_true(evaluation$diagnostics$rejected_early)
 })
 
 test_that("spatial polygon water analytic area matches explicit clipping", {

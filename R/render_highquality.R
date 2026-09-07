@@ -1031,10 +1031,13 @@ render_highquality = function(
   trail_mesh_preview_ids = get_ids_with_labels(
     typeval = "trail_mesh_preview"
   )$id
+  tree_preview_ids = get_ids_with_labels(typeval = "tree_preview")$id
+  cached_tree_instances = get_scene_tree_instances(default = list())
   raymesh_exclude_ids = unique(c(
     raymesh_material_ids,
     road_mesh_preview_ids,
-    trail_mesh_preview_ids
+    trail_mesh_preview_ids,
+    tree_preview_ids
   ))
   if (
     !use_extruded_paths &&
@@ -1088,7 +1091,11 @@ render_highquality = function(
         water_attenuation = water_attenuation,
         water_surface_color = water_surface_color,
         water_ior = water_ior,
-        exclude_ids = c(road_mesh_preview_ids, trail_mesh_preview_ids)
+        exclude_ids = c(
+          road_mesh_preview_ids,
+          trail_mesh_preview_ids,
+          tree_preview_ids
+        )
       )
       cache_scene_cache(ray_scene)
     }
@@ -1360,6 +1367,7 @@ render_highquality = function(
   counter = 1
   screen_counter = 1
   water_path_surface = resolve_render_highquality_water_path_surface()
+  water_path_terrain_scale = resolve_render_stream_terrain_scale()
   water_path_tasks = list()
   road_path_tasks = list()
   line_progress = new_render_highquality_progress_bar(
@@ -1388,6 +1396,13 @@ render_highquality = function(
     water_path_height = resolve_render_stream_height(
       water_path_info[["height"]]
     )
+    water_path_terrain_offset = suppressWarnings(as.numeric(
+      water_path_info[["terrain_offset"]]
+    ))
+    water_path_terrain_offset = water_path_terrain_offset[1L]
+    if (!is.finite(water_path_terrain_offset)) {
+      water_path_terrain_offset = 0
+    }
     road_texture_file = road_path_info$texture_file
     road_texture_length = road_path_info$texture_length
     if (is.null(road_texture_length)) {
@@ -1516,6 +1531,9 @@ render_highquality = function(
           height = water_path_height,
           heightmap = water_path_surface$heightmap,
           zscale = water_path_surface$zscale,
+          terrain_clamped = TRUE,
+          terrain_offset = water_path_terrain_offset,
+          terrain_scale = water_path_terrain_scale,
           material = temp_material
         )
         next
@@ -1614,7 +1632,20 @@ render_highquality = function(
   if (length(trail_path_meshes) > 0) {
     pathline = c(pathline, trail_path_meshes)
   }
+  tree_instance_models = make_render_highquality_cached_tree_instances(
+    instance_layers = cached_tree_instances,
+    bbox_center = bbox_center,
+    override_material = override_material,
+    material = material,
+    rgl_materials = rgl_materials,
+    calculate_consistent_normals = calculate_consistent_normals
+  )
   pointinfo = get_ids_with_labels(typeval = "points3d")
+  pointinfo = pointinfo[
+    !(pointinfo$id %in% tree_preview_ids),
+    ,
+    drop = FALSE
+  ]
   pointids = pointinfo$id
   pointlist = list()
   counter = 1
@@ -1755,6 +1786,10 @@ render_highquality = function(
   if (length(pathline) > 0) {
     all_pathline = do.call(rbind, pathline)
     scene = rayrender::add_object(scene, all_pathline)
+  }
+  if (length(tree_instance_models) > 0) {
+    all_tree_instances = do.call(rbind, tree_instance_models)
+    scene = rayrender::add_object(scene, all_tree_instances)
   }
   if (length(pointlist) > 0) {
     all_pointlist = do.call(rbind, pointlist)
@@ -3144,13 +3179,15 @@ row_cross = function(x, y) {
 #' @param points Path points in rgl scene coordinates.
 #' @param heightmap Default `NULL`. Cached heightmap matrix.
 #' @param zscale Effective zscale.
+#' @param terrain_scale Default `c(1, 1)`. Horizontal x-z terrain scale.
 #'
 #' @return Matrix of normal vectors.
 #' @keywords internal
 interpolate_render_highquality_normals = function(
   points,
   heightmap = NULL,
-  zscale = 1
+  zscale = 1,
+  terrain_scale = c(1, 1)
 ) {
   fallback = matrix(
     c(0, 1, 0),
@@ -3165,19 +3202,27 @@ interpolate_render_highquality_normals = function(
   if (!is.finite(zscale) || zscale <= 0) {
     zscale = 1
   }
+  terrain_scale = suppressWarnings(as.numeric(terrain_scale))
+  if (
+    length(terrain_scale) != 2L ||
+      any(!is.finite(terrain_scale)) ||
+      any(terrain_scale <= 0)
+  ) {
+    terrain_scale = c(1, 1)
+  }
   heightmap_scene = if (abs(zscale - 1) <= sqrt(.Machine$double.eps)) {
     heightmap
   } else {
     heightmap / zscale
   }
-  x = points[, 1]
-  z = points[, 3]
+  x = points[, 1] / terrain_scale[[1L]]
+  z = points[, 3] / terrain_scale[[2L]]
   dx = (interpolate_render_heightmap_height(heightmap_scene, x + 1, z) -
     interpolate_render_heightmap_height(heightmap_scene, x - 1, z)) /
-    2
+    (2 * terrain_scale[[1L]])
   dz = (interpolate_render_heightmap_height(heightmap_scene, x, z + 1) -
     interpolate_render_heightmap_height(heightmap_scene, x, z - 1)) /
-    2
+    (2 * terrain_scale[[2L]])
   normals = cbind(-dx, 1, -dz)
   normals = normalize_render_highquality_rows(normals)
   replace_invalid_render_highquality_vectors(normals, fallback = c(0, 1, 0))
@@ -3212,6 +3257,7 @@ calculate_render_highquality_path_tangents = function(points, normals) {
 #' @param half_width Half path width.
 #' @param heightmap Default `NULL`. Cached heightmap matrix.
 #' @param zscale Effective zscale.
+#' @param terrain_scale Default `c(1, 1)`. Horizontal x-z terrain scale.
 #'
 #' @return List with left and right edge center matrices.
 #' @keywords internal
@@ -3220,7 +3266,8 @@ make_render_highquality_path_edge_centers = function(
   side_vectors,
   half_width,
   heightmap = NULL,
-  zscale = 1
+  zscale = 1,
+  terrain_scale = c(1, 1)
 ) {
   left_center = points + side_vectors * half_width
   right_center = points - side_vectors * half_width
@@ -3231,22 +3278,30 @@ make_render_highquality_path_edge_centers = function(
   if (is.null(heightmap_scene) || !is.matrix(heightmap_scene)) {
     return(list(left = left_center, right = right_center))
   }
+  terrain_scale = suppressWarnings(as.numeric(terrain_scale[1:2]))
+  if (
+    length(terrain_scale) != 2L ||
+      any(!is.finite(terrain_scale)) ||
+      any(terrain_scale <= 0)
+  ) {
+    terrain_scale = c(1, 1)
+  }
   center_height = interpolate_render_heightmap_height(
     heightmap_scene,
-    points[, 1],
-    points[, 3]
+    points[, 1] / terrain_scale[[1L]],
+    points[, 3] / terrain_scale[[2L]]
   )
   center_offset = points[, 2] - center_height
   left_center[, 2] = interpolate_render_heightmap_height(
     heightmap_scene,
-    left_center[, 1],
-    left_center[, 3]
+    left_center[, 1] / terrain_scale[[1L]],
+    left_center[, 3] / terrain_scale[[2L]]
   ) +
     center_offset
   right_center[, 2] = interpolate_render_heightmap_height(
     heightmap_scene,
-    right_center[, 1],
-    right_center[, 3]
+    right_center[, 1] / terrain_scale[[1L]],
+    right_center[, 3] / terrain_scale[[2L]]
   ) +
     center_offset
   list(left = left_center, right = right_center)
@@ -3258,6 +3313,7 @@ make_render_highquality_path_edge_centers = function(
 #' @param width Path width.
 #' @param heightmap Default `NULL`. Cached heightmap matrix.
 #' @param zscale Effective zscale.
+#' @param terrain_scale Default `c(1, 1)`. Horizontal x-z terrain scale.
 #'
 #' @return Path center points with additional terrain triangle edge samples.
 #' @keywords internal
@@ -3265,7 +3321,8 @@ densify_render_highquality_path_points = function(
   points,
   width,
   heightmap = NULL,
-  zscale = 1
+  zscale = 1,
+  terrain_scale = c(1, 1)
 ) {
   points = as.matrix(points)
   if (nrow(points) < 2L || is.null(heightmap) || !is.matrix(heightmap)) {
@@ -3278,16 +3335,25 @@ densify_render_highquality_path_points = function(
   if (is.null(heightmap_scene) || !is.matrix(heightmap_scene)) {
     return(points)
   }
+  terrain_scale = suppressWarnings(as.numeric(terrain_scale[1:2]))
+  if (
+    length(terrain_scale) != 2L ||
+      any(!is.finite(terrain_scale)) ||
+      any(terrain_scale <= 0)
+  ) {
+    terrain_scale = c(1, 1)
+  }
   center_height = interpolate_render_heightmap_height(
     heightmap_scene,
-    points[, 1],
-    points[, 3]
+    points[, 1] / terrain_scale[[1L]],
+    points[, 3] / terrain_scale[[2L]]
   )
   center_offset = points[, 2] - center_height
   normals = interpolate_render_highquality_normals(
     points = points,
     heightmap = heightmap_scene,
-    zscale = 1
+    zscale = 1,
+    terrain_scale = terrain_scale
   )
   tangents = calculate_render_highquality_path_tangents(
     points = points,
@@ -3303,12 +3369,22 @@ densify_render_highquality_path_points = function(
     side_vectors = side_vectors,
     half_width = width / 2,
     heightmap = heightmap_scene,
-    zscale = 1
+    zscale = 1,
+    terrain_scale = terrain_scale
   )
+  grid_points = points
+  grid_points[, 1L] = grid_points[, 1L] / terrain_scale[[1L]]
+  grid_points[, 3L] = grid_points[, 3L] / terrain_scale[[2L]]
+  grid_left = edge_centers$left
+  grid_left[, 1L] = grid_left[, 1L] / terrain_scale[[1L]]
+  grid_left[, 3L] = grid_left[, 3L] / terrain_scale[[2L]]
+  grid_right = edge_centers$right
+  grid_right[, 1L] = grid_right[, 1L] / terrain_scale[[1L]]
+  grid_right[, 3L] = grid_right[, 3L] / terrain_scale[[2L]]
   densified = densify_render_highquality_path_xz_cpp(
-    points = points,
-    left_edge = edge_centers$left,
-    right_edge = edge_centers$right,
+    points = grid_points,
+    left_edge = grid_left,
+    right_edge = grid_right,
     center_offset = center_offset,
     row_count = nrow(heightmap_scene),
     column_count = ncol(heightmap_scene)
@@ -3317,7 +3393,11 @@ densify_render_highquality_path_points = function(
   z_vals = densified[, 2L]
   offset_vals = densified[, 3L]
   y_vals = interpolate_render_heightmap_height(heightmap_scene, x_vals, z_vals)
-  cbind(x_vals, y_vals + offset_vals, z_vals)
+  cbind(
+    x_vals * terrain_scale[[1L]],
+    y_vals + offset_vals,
+    z_vals * terrain_scale[[2L]]
+  )
 }
 
 #' Make render path quad rows
