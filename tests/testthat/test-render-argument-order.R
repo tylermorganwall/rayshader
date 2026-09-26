@@ -28,7 +28,7 @@ test_that("scene-aware render functions put their primary input first", {
     render_streams = "streams",
     render_trails = "trails",
     render_tree = "location",
-    render_water = "waterdepth",
+    render_water = "water_input",
     render_zaxis = "zaxis_data"
   )
 

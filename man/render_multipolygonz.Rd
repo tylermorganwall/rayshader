@@ -99,7 +99,7 @@ dc_elevation_matrix[dc_elevation_matrix < 0] = 0
 dc_elevation_matrix |>
  height_shade() |>
  add_shadow(lamb_shade(), 0) |>
- plot_3d(zscale=3.7, water = TRUE, waterdepth = 1,
+ plot_3d(zscale=3.7, water = TRUE, water_input = 1,
          soliddepth=-50, windowsize = 800,
          extent = raster::extent(cropped_data))
 render_snapshot()

@@ -195,7 +195,7 @@ make_spatial_water_surface = function(
   }
   if (!nrow(triangle_vertices)) {
     warning(
-      "No water rendered--spatial `waterdepth` does not cover any renderable heightmap cells."
+      "No water rendered--spatial `water_input` does not cover any renderable heightmap cells."
     )
     return(invisible(list(
       vertices = list(),
@@ -5092,7 +5092,7 @@ make_water_legacy = function(
       length(waterheight) != 1
   ) {
     stop(
-      "`water_render_method = \"legacy\"` only supports a scalar `waterdepth`.",
+      "`water_render_method = \"legacy\"` only supports a scalar `water_input`.",
       call. = FALSE
     )
   }
@@ -5234,12 +5234,12 @@ normalize_waterheight_matrix = function(
 ) {
   if (is.matrix(waterheight)) {
     if (!is.numeric(waterheight)) {
-      stop("`waterdepth` must be numeric.", call. = FALSE)
+      stop("`water_input` must be numeric.", call. = FALSE)
     }
     if (!all(dim(waterheight) == c(nr, nc))) {
       stop(
         sprintf(
-          "`waterdepth` matrix must have dimensions %i x %i to match `heightmap`.",
+          "`water_input` matrix must have dimensions %i x %i to match `heightmap`.",
           nr,
           nc
         ),
@@ -5264,7 +5264,7 @@ normalize_waterheight_matrix = function(
   ) {
     stop(
       sprintf(
-        "`waterdepth` must be a scalar, a matrix, or a spatial raster for %s().",
+        "`water_input` must be a scalar, a matrix, or a spatial raster for %s().",
         caller
       ),
       call. = FALSE
@@ -5303,7 +5303,7 @@ resolve_spatial_waterheight_matrix = function(
     stop(
       paste0(
         format_render_caller_prefix(caller),
-        "Spatial `waterdepth` inputs must have a CRS when the active heightmap has a CRS."
+        "Spatial `water_input` inputs must have a CRS when the active heightmap has a CRS."
       ),
       call. = FALSE
     )
@@ -5329,7 +5329,7 @@ resolve_spatial_waterheight_matrix = function(
       stop(
         paste0(
           format_render_caller_prefix(caller),
-          "Could not project/resample spatial `waterdepth` to the active heightmap grid: ",
+          "Could not project/resample spatial `water_input` to the active heightmap grid: ",
           conditionMessage(e)
         ),
         call. = FALSE
@@ -5341,7 +5341,7 @@ resolve_spatial_waterheight_matrix = function(
     stop(
       paste0(
         format_render_caller_prefix(caller),
-        "Spatial `waterdepth` could not be aligned to the active heightmap grid."
+        "Spatial `water_input` could not be aligned to the active heightmap grid."
       ),
       call. = FALSE
     )
@@ -5359,10 +5359,10 @@ coerce_spatial_waterheight_raster = function(waterheight) {
     waterheight = terra::rast(waterheight)
   }
   if (!inherits(waterheight, "SpatRaster")) {
-    stop("`waterdepth` must resolve to a spatial raster.", call. = FALSE)
+    stop("`water_input` must resolve to a spatial raster.", call. = FALSE)
   }
   if (terra::nlyr(waterheight) > 1) {
-    warning("`waterdepth` has multiple layers; using the first layer.")
+    warning("`water_input` has multiple layers; using the first layer.")
     waterheight = waterheight[[1]]
   }
   waterheight
@@ -5386,7 +5386,7 @@ build_waterheight_template = function(
     stop(
       paste0(
         format_render_caller_prefix(caller),
-        "Spatial `waterdepth` inputs require an active heightmap extent."
+        "Spatial `water_input` inputs require an active heightmap extent."
       ),
       call. = FALSE
     )
@@ -5397,7 +5397,7 @@ build_waterheight_template = function(
       stop(
         paste0(
           format_render_caller_prefix(caller),
-          "Could not interpret the active heightmap extent for spatial `waterdepth`: ",
+          "Could not interpret the active heightmap extent for spatial `water_input`: ",
           conditionMessage(e)
         ),
         call. = FALSE

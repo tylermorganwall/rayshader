@@ -522,7 +522,7 @@ render_highquality(
 ![](man/figures/skymnodelr2-1.png)<!-- -->
 
 You can also easily add a water layer by setting `water = TRUE` in
-`plot_3d()` (and setting `waterdepth` if the water level is not 0), or
+`plot_3d()` (and setting `water_input` if the water level is not 0), or
 by using the function `render_water()` after the 3D map has been
 rendered. You can customize the appearance and transparancy of the water
 layer via function arguments. Here’s an example using
@@ -542,7 +542,7 @@ montereybay_spatial |>
         windowsize = c(1000, 800),
         zoom = 0.75,
         water = TRUE,
-        waterdepth = 0,
+        water_input = 0,
         wateralpha = 0.5,
         watercolor = "lightblue",
         waterlinecolor = "white",
@@ -572,7 +572,7 @@ montereybay_spatial |>
         windowsize = c(1000, 800),
         zoom = 0.6,
         water = TRUE,
-        waterdepth = 0,
+        water_input = 0,
         wateralpha = 0.5,
         watercolor = "#233aa1",
         waterlinecolor = "white",
@@ -723,7 +723,7 @@ new_dem |>
     )
 
 render_water(
-    waterdepth = water_level_rast,
+    water_input = water_level_rast,
     water_edge_extension = 0.25,
     watercolor = "dodgerblue"
 )
@@ -772,7 +772,7 @@ montereybay_spatial |>
         windowsize = c(1000, 800),
         zoom = 0.6,
         water = TRUE,
-        waterdepth = 0,
+        water_input = 0,
         wateralpha = 0.5,
         watercolor = "lightblue",
         waterlinecolor = "white",
@@ -798,7 +798,7 @@ montereybay_spatial |>
         windowsize = c(1000, 800),
         zoom = 0.6,
         water = TRUE,
-        waterdepth = 0,
+        water_input = 0,
         wateralpha = 0.5,
         watercolor = "lightblue",
         waterlinecolor = "white",
@@ -828,7 +828,7 @@ montereybay_spatial |>
         windowsize = c(1000, 800),
         zoom = 0.6,
         water = TRUE,
-        waterdepth = 0,
+        water_input = 0,
         waterlinecolor = "white",
         waterlinealpha = 0.5,
         wateralpha = 0.5,

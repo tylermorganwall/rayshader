@@ -50,7 +50,7 @@
 #' @param merge Default `TRUE`. Whether to merge connected road linework before
 #' rendering. This reduces visible joins between adjacent line features in
 #' [render_highquality()].
-#' @param lane_texture Default `FALSE`. If `TRUE`, [render_highquality()] uses a
+#' @param lane_texture Default `TRUE`. If `TRUE`, [render_highquality()] uses a
 #' generated repeating texture on the top road surface for lane markings.
 #' @param lane_texture_file Default `NULL`. Optional path to a custom road lane
 #' texture. When supplied, it is used instead of the generated texture and
@@ -130,7 +130,7 @@ render_roads = function(
   layer = NULL,
   layer_height = 5.5,
   merge = TRUE,
-  lane_texture = FALSE,
+  lane_texture = TRUE,
   lane_texture_file = NULL,
   lane_dash_length = 3,
   lane_gap_length = 10,

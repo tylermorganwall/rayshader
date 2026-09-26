@@ -118,10 +118,13 @@ Other options \code{c("z", "x", "-x", "y", "-y")}.}
 
 \item{shadowdepth}{Default \code{auto}, which sets it to \code{soliddepth - soliddepth/10}. Depth of the shadow layer.}
 
-\item{shadowcolor}{Default \code{auto}. Color of the shadow, automatically computed as \code{shadow_darkness}
-the luminance of the \code{background} color in the CIELab colorspace if not specified.}
+\item{shadowcolor}{Default \code{"auto"}. Color of the shadow. Automatically darkens
+the \code{background} color by scaling its CIELuv lightness and chroma together by
+\code{shadow_darkness}, preserving the background hue.}
 
-\item{shadow_darkness}{Default \code{0.5}. Darkness of the shadow, if \code{shadowcolor = "auto"}.}
+\item{shadow_darkness}{Default \code{0.5}. Lightness multiplier for the shadow when
+\code{shadowcolor = "auto"}. Values between \code{0} and \code{1} darken the background color;
+\code{0} gives a black shadow and \code{1} matches the background.}
 
 \item{background}{Default \code{"white"}. Background color for the 3D scene.
 This is independent of the ggplot \code{plot.background} fill used for the

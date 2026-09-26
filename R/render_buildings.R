@@ -235,7 +235,7 @@
 #'   ) |>
 #'   plot_3d(
 #'     water = TRUE,
-#'     waterdepth = 0.5,
+#'     water_input = 0.5,
 #'     windowsize = 800,
 #'     watercolor = "dodgerblue",
 #'     background = "pink"

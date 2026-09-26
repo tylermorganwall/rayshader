@@ -144,9 +144,6 @@ render_polygons = function(
   if (rgl::cur3d() == 0) {
     stop("No rgl window currently open.")
   }
-  if (!(length(find.package("rayrender", quiet = TRUE)) > 0)) {
-    stop("rayrender required to use render_polygon()")
-  }
   extent = resolve_scene_render_extent(
     extent = extent,
     heightmap = heightmap,
@@ -264,9 +261,6 @@ render_polygons = function(
     heightmap = heightmap,
     caller = "render_polygons"
   )
-  shape_to_vertex = function(poly_list) {
-    matrix(poly_list[4:12], ncol = 3, nrow = 3, byrow = TRUE)
-  }
   vertex_list = list()
   if (!parallel) {
     if (inherits(polygon, "data.frame")) {
@@ -278,7 +272,7 @@ render_polygons = function(
         ) {
           holes = NULL
         }
-        mesh = rayrender::extruded_polygon(
+        mesh = rayvertex::extruded_polygon_mesh(
           polygon[i, ],
           top = top,
           bottom = bottom,
@@ -286,10 +280,10 @@ render_polygons = function(
           data_column_bottom = data_column_bottom,
           scale_data = scale_data,
           holes = holes
-        )$shape_info[[1]]$mesh_info[[1]]
+        )
         mesh_obj = rgl::mesh3d(
-          vertices = c(t(mesh$vertices)),
-          triangles = c(t(mesh$indices)) + 1
+          vertices = c(t(mesh$vertices[[1]])),
+          triangles = c(t(mesh$shapes[[1]]$indices)) + 1
         )
         vertex_list[[i]] = mesh_obj
       }
@@ -306,7 +300,7 @@ render_polygons = function(
       {
         foreach::foreach(
           i = seq_len(nrow(polygon)),
-          .packages = c("rayrender", "sf")
+          .packages = c("rayvertex", "sf")
         ) %dopar%
           {
             if (
@@ -316,7 +310,7 @@ render_polygons = function(
             ) {
               holes = NULL
             }
-            mesh = rayrender::extruded_polygon(
+            mesh = rayvertex::extruded_polygon_mesh(
               polygon[i, ],
               top = top,
               bottom = bottom,
@@ -324,10 +318,10 @@ render_polygons = function(
               data_column_bottom = data_column_bottom,
               scale_data = scale_data,
               holes = holes
-            )$shape_info[[1]]$mesh_info[[1]]
+            )
             mesh_obj = rgl::mesh3d(
-              vertices = c(t(mesh$vertices)),
-              triangles = c(t(mesh$indices)) + 1
+              vertices = c(t(mesh$vertices[[1]])),
+              triangles = c(t(mesh$shapes[[1]]$indices)) + 1
             )
             mesh_obj
           }

@@ -6,7 +6,7 @@
 \usage{
 make_waterlines(
   heightmap,
-  waterdepth = 0,
+  water_input = 0,
   linecolor = "grey40",
   zscale = 1,
   alpha = 1,
@@ -17,7 +17,7 @@ make_waterlines(
 \arguments{
 \item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.}
 
-\item{waterdepth}{Default \code{0}.}
+\item{water_input}{Default \code{0}.}
 
 \item{linecolor}{Default \code{grey40}.}
 

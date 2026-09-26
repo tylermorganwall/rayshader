@@ -155,7 +155,7 @@ test_that("scene cache is rejected after switching to a different open scene", {
   expect_null(get_scene_zscale(default = NULL))
   expect_null(get_scene_vertical_exaggeration(default = NULL))
   expect_error(
-    render_water(waterdepth = 1),
+    render_water(water_input = 1),
     "No heightmap found"
   )
 
@@ -163,7 +163,7 @@ test_that("scene cache is rejected after switching to a different open scene", {
   expect_equal(get_scene_heightmap(default = NULL), heightmap2)
   expect_equal(get_scene_zscale(default = NULL), 5)
   expect_equal(get_scene_vertical_exaggeration(default = NULL), 1)
-  expect_no_condition(render_water(waterdepth = 2, watercolor = "lightblue"))
+  expect_no_condition(render_water(water_input = 2, watercolor = "lightblue"))
 })
 
 test_that("render_water() uses cached scene heightmap and zscale", {
@@ -182,7 +182,7 @@ test_that("render_water() uses cached scene heightmap and zscale", {
   ))
 
   expect_no_condition(render_water(
-    waterdepth = 100,
+    water_input = 100,
     watercolor = "lightblue"
   ))
 

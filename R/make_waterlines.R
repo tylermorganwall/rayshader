@@ -3,7 +3,7 @@
 #'@description Makes the edge lines of
 #'
 #'@param heightmap A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.
-#'@param waterdepth Default `0`.
+#'@param water_input Default `0`.
 #'@param linecolor Default `grey40`.
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
 #'of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
@@ -13,7 +13,7 @@
 #'@keywords internal
 make_waterlines = function(
   heightmap,
-  waterdepth = 0,
+  water_input = 0,
   linecolor = "grey40",
   zscale = 1,
   alpha = 1,
@@ -22,7 +22,7 @@ make_waterlines = function(
 ) {
   heightmap = heightmap / zscale
   na_matrix = is.na(heightmap)
-  heightlist = make_waterlines_cpp(heightmap, na_matrix, waterdepth / zscale)
+  heightlist = make_waterlines_cpp(heightmap, na_matrix, water_input / zscale)
   nr = nrow(heightmap)
   nc = ncol(heightmap)
   if (length(heightlist) > 0) {

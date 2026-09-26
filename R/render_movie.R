@@ -251,6 +251,15 @@ render_movie_hq = function(
     scene = scene,
     camera_motion = camera_motion
   )
+  # Native sky scenes carry the required integrator and any explicit sky rotation.
+  if (!is.null(attr(scene, "integrator_type", exact = TRUE))) {
+    for (setting in c("integrator_type", "rotate_env")) {
+      value = attr(scene, setting, exact = TRUE)
+      if (!is.null(value) && !(setting %in% names(dot_args))) {
+        animation_args[[setting]] = value
+      }
+    }
+  }
   environment_light = attr(scene, "environment_light", exact = TRUE)
   if (!is.null(environment_light)) {
     if ("environment_light" %in% names(dot_args)) {

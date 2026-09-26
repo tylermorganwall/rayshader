@@ -210,7 +210,7 @@ test_that("plot_3d plots basic options", {
 
   plot_3d_args_meshing_subset = expand.grid(
     water = list(TRUE, FALSE),
-    waterdepth = list(150, 300),
+    water_input = list(150, 300),
     solid = list(TRUE, FALSE),
     shadow = list(TRUE, FALSE),
     shadowdepth = list(-100, 0, 200),
@@ -262,7 +262,7 @@ test_that("plot_3d plots color options", {
 
   plot_3d_args_water_colors = expand.grid(
     water = list(TRUE),
-    waterdepth = list(150),
+    water_input = list(150),
     watercolor = list("lightblue", "green"),
     wateralpha = list(0.5, 1)
   )
@@ -331,7 +331,7 @@ test_that("plot_3d plots line options", {
   hillshade = sphere_shade(volcano)
   plot_3d_args_lines = expand.grid(
     water = list(TRUE, FALSE),
-    waterdepth = list(0, 150),
+    water_input = list(0, 150),
     waterlinecolor = list(NULL, "red"),
     waterlinealpha = list(0.5, 1),
     linewidth = list(2, 5),

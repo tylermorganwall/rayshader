@@ -113,9 +113,12 @@ remove_plot_gg_grob_background_line = function(grob) {
 #'Other options `c("z", "x", "-x", "y", "-y")`.
 #'@param shadow Default `TRUE`. If `FALSE`, no shadow is rendered.
 #'@param shadowdepth Default `auto`, which sets it to `soliddepth - soliddepth/10`. Depth of the shadow layer.
-#'@param shadow_darkness Default `0.5`. Darkness of the shadow, if `shadowcolor = "auto"`.
-#'@param shadowcolor Default `auto`. Color of the shadow, automatically computed as `shadow_darkness`
-#'the luminance of the `background` color in the CIELab colorspace if not specified.
+#' @param shadow_darkness Default `0.5`. Lightness multiplier for the shadow when
+#' `shadowcolor = "auto"`. Values between `0` and `1` darken the background color;
+#' `0` gives a black shadow and `1` matches the background.
+#' @param shadowcolor Default `"auto"`. Color of the shadow. Automatically darkens
+#' the `background` color by scaling its CIELuv lightness and chroma together by
+#' `shadow_darkness`, preserving the background hue.
 #'@param background Default `"white"`. Background color for the 3D scene.
 #'This is independent of the ggplot `plot.background` fill used for the
 #'captured texture.

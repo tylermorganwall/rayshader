@@ -206,7 +206,7 @@ test_that("make_water_mesh_cpp handles NA holes and variable water levels", {
   expect_true(any(abs(vertices[, 2] - 0.5) < 1e-8))
 })
 
-test_that("spatial waterdepth inputs align to the heightmap grid", {
+test_that("spatial water_input inputs align to the heightmap grid", {
   skip_if_not_installed("terra")
 
   water_raster = terra::rast(
@@ -240,7 +240,7 @@ test_that("spatial waterdepth inputs align to the heightmap grid", {
   expect_true(any(waterheight < -1, na.rm = TRUE))
 })
 
-test_that("spatial waterdepth inputs project to the heightmap CRS", {
+test_that("spatial water_input inputs project to the heightmap CRS", {
   skip_if_not_installed("terra")
 
   water_raster = terra::rast(
@@ -311,7 +311,7 @@ test_that("water rendering API validates method and matrix inputs", {
   )
 })
 
-test_that("legacy water rendering rejects spatial waterdepth inputs", {
+test_that("legacy water rendering rejects spatial water_input inputs", {
   skip_if_not_installed("terra")
 
   heightmap = matrix(0, nrow = 3, ncol = 3)
@@ -350,7 +350,7 @@ test_that("plot_3d creates separate water ids for disconnected raster water", {
     solid = FALSE,
     shadow = FALSE,
     water = TRUE,
-    waterdepth = 1,
+    water_input = 1,
     windowsize = c(200, 200)
   ))
 
@@ -358,7 +358,7 @@ test_that("plot_3d creates separate water ids for disconnected raster water", {
   expect_equal(nrow(water_ids), 2)
 })
 
-test_that("plot_3d and render_water accept spatial waterdepth rasters", {
+test_that("plot_3d and render_water accept spatial water_input rasters", {
   skip_if_not_installed("terra")
   on.exit(rgl::close3d(), add = TRUE)
   local_rgl_use_null()
@@ -391,15 +391,15 @@ test_that("plot_3d and render_water accept spatial waterdepth rasters", {
     solid = FALSE,
     shadow = FALSE,
     water = TRUE,
-    waterdepth = water_raster,
+    water_input = water_raster,
     windowsize = c(200, 200)
   ))
   expect_gt(nrow(get_ids_with_labels(typeval = "water")), 0)
 
-  expect_no_condition(render_water(waterdepth = water_raster))
+  expect_no_condition(render_water(water_input = water_raster))
   expect_gt(nrow(get_ids_with_labels(typeval = "water")), 0)
 
-  expect_no_condition(render_water(heightmap = height_raster, waterdepth = 1))
+  expect_no_condition(render_water(heightmap = height_raster, water_input = 1))
   expect_gt(nrow(get_ids_with_labels(typeval = "water")), 0)
 })
 
@@ -1673,7 +1673,7 @@ test_that("render_water resolves zscale from explicit spatial heightmaps", {
   )
 })
 
-test_that("render_water scales spatial waterdepth rasters by zscale and vertical_exaggeration", {
+test_that("render_water scales spatial water_input rasters by zscale and vertical_exaggeration", {
   skip_if_not_installed("terra")
   on.exit(rgl::close3d(), add = TRUE)
   local_rgl_use_null()
@@ -1711,13 +1711,13 @@ test_that("render_water scales spatial waterdepth rasters by zscale and vertical
     windowsize = c(200, 200)
   ))
 
-  expect_no_condition(render_water(waterdepth = water_level_rast))
+  expect_no_condition(render_water(water_input = water_level_rast))
   water_ids = get_ids_with_labels(typeval = "water")
   water_verts = rgl::rgl.attrib(water_ids$id[1], "vertices")
   expect_equal(max(water_verts[, 2], na.rm = TRUE), 20, tolerance = 1e-6)
 
   expect_no_condition(render_water(
-    waterdepth = water_level_rast,
+    water_input = water_level_rast,
     zscale = 20,
     vertical_exaggeration = 2
   ))
@@ -1726,7 +1726,7 @@ test_that("render_water scales spatial waterdepth rasters by zscale and vertical
   expect_equal(max(water_verts[, 2], na.rm = TRUE), 10, tolerance = 1e-6)
 })
 
-test_that("render_water clamps spatial waterdepth edges to terrain", {
+test_that("render_water clamps spatial water_input edges to terrain", {
   skip_if_not_installed("terra")
   on.exit(rgl::close3d(), add = TRUE)
   local_rgl_use_null()
@@ -1757,7 +1757,7 @@ test_that("render_water clamps spatial waterdepth edges to terrain", {
   ))
 
   expect_no_condition(render_water(
-    waterdepth = water_level_rast,
+    water_input = water_level_rast,
     water_edge_clamp = TRUE
   ))
   water_ids = get_ids_with_labels(typeval = "water")
@@ -1765,7 +1765,7 @@ test_that("render_water clamps spatial waterdepth edges to terrain", {
   expect_equal(max(water_verts[, 2], na.rm = TRUE), 8, tolerance = 1e-6)
 })
 
-test_that("spatial waterdepth rasters render finite cells at equal terrain height", {
+test_that("spatial water_input rasters render finite cells at equal terrain height", {
   skip_if_not_installed("terra")
   on.exit(rgl::close3d(), add = TRUE)
   local_rgl_use_null()
@@ -1789,7 +1789,7 @@ test_that("spatial waterdepth rasters render finite cells at equal terrain heigh
     solid = FALSE,
     shadow = FALSE,
     water = TRUE,
-    waterdepth = water_level_rast,
+    water_input = water_level_rast,
     windowsize = c(200, 200)
   ))
 
@@ -1803,7 +1803,7 @@ test_that("spatial waterdepth rasters render finite cells at equal terrain heigh
   )
 })
 
-test_that("spatial waterdepth rasters render cell footprints instead of inset vertices", {
+test_that("spatial water_input rasters render cell footprints instead of inset vertices", {
   local_rgl_use_null()
 
   water_surface = matrix(NA_real_, nrow = 4, ncol = 4)
@@ -1821,7 +1821,7 @@ test_that("spatial waterdepth rasters render cell footprints instead of inset ve
   expect_equal(range(vertices[, 2]), c(0, 10), tolerance = 1e-8)
 })
 
-test_that("spatial waterdepth rasters can render isolated finite cells", {
+test_that("spatial water_input rasters can render isolated finite cells", {
   local_rgl_use_null()
 
   water_surface = matrix(NA_real_, nrow = 4, ncol = 4)
@@ -1839,7 +1839,7 @@ test_that("spatial waterdepth rasters can render isolated finite cells", {
   expect_equal(range(vertices[, 2]), c(0, 10), tolerance = 1e-8)
 })
 
-test_that("spatial waterdepth edge extension can be disabled", {
+test_that("spatial water_input edge extension can be disabled", {
   local_rgl_use_null()
 
   water_surface = matrix(NA_real_, nrow = 4, ncol = 4)
@@ -1857,7 +1857,7 @@ test_that("spatial waterdepth edge extension can be disabled", {
   expect_equal(range(vertices[, 3]), c(-1, 1), tolerance = 1e-8)
 })
 
-test_that("spatial waterdepth edge extension stops at terrain contact", {
+test_that("spatial water_input edge extension stops at terrain contact", {
   local_rgl_use_null()
 
   water_surface = matrix(NA_real_, nrow = 4, ncol = 4)
@@ -1910,7 +1910,7 @@ test_that("spatial waterdepth edge extension stops at terrain contact", {
   expect_false(any(rising_bank_vertices[, 2] < rising_bank_terrain - 1e-6))
 })
 
-test_that("spatial waterdepth edge extension does not expand into high banks", {
+test_that("spatial water_input edge extension does not expand into high banks", {
   local_rgl_use_null()
 
   water_surface = matrix(NA_real_, nrow = 4, ncol = 4)
@@ -1936,7 +1936,7 @@ test_that("spatial waterdepth edge extension does not expand into high banks", {
   expect_false(any(vertices[, 2] < terrain - 1e-6))
 })
 
-test_that("spatial waterdepth edge extension stops at NA terrain cuts", {
+test_that("spatial water_input edge extension stops at NA terrain cuts", {
   local_rgl_use_null()
 
   heightmap = matrix(0, nrow = 5, ncol = 5)
@@ -2023,7 +2023,7 @@ test_that("spatial water sidewalls are clipped to the expanded water footprint",
   expect_equal(nrow(vertices_no_extension), 144)
 })
 
-test_that("spatial waterdepth edge sides follow local terrain heights", {
+test_that("spatial water_input edge sides follow local terrain heights", {
   local_rgl_use_null()
 
   water_surface = matrix(NA_real_, nrow = 4, ncol = 4)
@@ -3118,7 +3118,7 @@ test_that("render_water accepts spatial polygon water method", {
     windowsize = c(200, 200)
   ))
   expect_no_condition(render_water(
-    waterdepth = water_level_rast,
+    water_input = water_level_rast,
     water_render_method = "polygon"
   ))
   water_ids = get_ids_with_labels(typeval = "water")
@@ -3234,7 +3234,7 @@ test_that("spatial water sidewalls are drawn when adjacent water is lower", {
   ))
 })
 
-test_that("plot_3d renders explicit spatial waterdepth and applies cached zscale", {
+test_that("plot_3d renders explicit spatial water_input and applies cached zscale", {
   skip_if_not_installed("terra")
   on.exit(rgl::close3d(), add = TRUE)
   local_rgl_use_null()
@@ -3265,7 +3265,7 @@ test_that("plot_3d renders explicit spatial waterdepth and applies cached zscale
   expect_no_condition(plot_3d_test(
     hillshade,
     vertical_exaggeration = 2,
-    waterdepth = water_level_rast,
+    water_input = water_level_rast,
     solid = FALSE,
     shadow = FALSE,
     windowsize = c(200, 200)
@@ -3297,7 +3297,7 @@ test_that("convert_rgl_to_raymesh handles raster water ids", {
     solid = FALSE,
     shadow = FALSE,
     water = TRUE,
-    waterdepth = 1,
+    water_input = 1,
     windowsize = c(200, 200)
   ))
 

@@ -220,7 +220,7 @@ new_dem |>
   )
 
 render_water(
-  waterdepth = water_level_rast,
+  water_input = water_level_rast,
   water_edge_extension = 0.25,
   watercolor = "dodgerblue"
 )

@@ -157,28 +157,28 @@ BEGIN_RCPP
 END_RCPP
 }
 // make_waterlines_cpp
-List make_waterlines_cpp(NumericMatrix& heightmap, LogicalMatrix& na_matrix, double waterdepth);
-RcppExport SEXP _rayshader_make_waterlines_cpp(SEXP heightmapSEXP, SEXP na_matrixSEXP, SEXP waterdepthSEXP) {
+List make_waterlines_cpp(NumericMatrix& heightmap, LogicalMatrix& na_matrix, double water_input);
+RcppExport SEXP _rayshader_make_waterlines_cpp(SEXP heightmapSEXP, SEXP na_matrixSEXP, SEXP water_inputSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< NumericMatrix& >::type heightmap(heightmapSEXP);
     Rcpp::traits::input_parameter< LogicalMatrix& >::type na_matrix(na_matrixSEXP);
-    Rcpp::traits::input_parameter< double >::type waterdepth(waterdepthSEXP);
-    rcpp_result_gen = Rcpp::wrap(make_waterlines_cpp(heightmap, na_matrix, waterdepth));
+    Rcpp::traits::input_parameter< double >::type water_input(water_inputSEXP);
+    rcpp_result_gen = Rcpp::wrap(make_waterlines_cpp(heightmap, na_matrix, water_input));
     return rcpp_result_gen;
 END_RCPP
 }
 // make_baselines_cpp
-List make_baselines_cpp(NumericMatrix& heightmap, LogicalMatrix& na_matrix, double waterdepth);
-RcppExport SEXP _rayshader_make_baselines_cpp(SEXP heightmapSEXP, SEXP na_matrixSEXP, SEXP waterdepthSEXP) {
+List make_baselines_cpp(NumericMatrix& heightmap, LogicalMatrix& na_matrix, double water_input);
+RcppExport SEXP _rayshader_make_baselines_cpp(SEXP heightmapSEXP, SEXP na_matrixSEXP, SEXP water_inputSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< NumericMatrix& >::type heightmap(heightmapSEXP);
     Rcpp::traits::input_parameter< LogicalMatrix& >::type na_matrix(na_matrixSEXP);
-    Rcpp::traits::input_parameter< double >::type waterdepth(waterdepthSEXP);
-    rcpp_result_gen = Rcpp::wrap(make_baselines_cpp(heightmap, na_matrix, waterdepth));
+    Rcpp::traits::input_parameter< double >::type water_input(water_inputSEXP);
+    rcpp_result_gen = Rcpp::wrap(make_baselines_cpp(heightmap, na_matrix, water_input));
     return rcpp_result_gen;
 END_RCPP
 }

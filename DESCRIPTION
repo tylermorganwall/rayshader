@@ -27,7 +27,7 @@ Imports: doParallel,
          methods,
          terrainmeshr,
          rayimage (>= 0.26.0),
-         rayvertex (>= 0.13.1),
+         rayvertex (>= 0.16.0),
          rayrender (>= 0.40.0)
 Suggests: 
     DBI,

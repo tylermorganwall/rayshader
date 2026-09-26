@@ -168,7 +168,7 @@ test_that("render_highquality() can render water with a microfacet material", {
     solid = FALSE,
     shadow = FALSE,
     water = TRUE,
-    waterdepth = 1,
+    water_input = 1,
     watercolor = "dodgerblue",
     windowsize = c(200, 200)
   ))

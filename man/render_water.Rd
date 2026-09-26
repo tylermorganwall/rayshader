@@ -5,7 +5,7 @@
 \title{Render Water Layer}
 \usage{
 render_water(
-  waterdepth = 0,
+  water_input = 0,
   watercolor = "lightblue",
   wateralpha = 0.5,
   waterlinecolor = NULL,
@@ -22,7 +22,7 @@ render_water(
 )
 }
 \arguments{
-\item{waterdepth}{Default \code{0}. Water level. Either a scalar, a matrix with the same dimensions as \code{heightmap}, or a spatial raster that can be projected/resampled to the heightmap grid. For spatial rasters, finite cells define the water footprint.}
+\item{water_input}{Default \code{0}. Water level. Either a scalar, a matrix with the same dimensions as \code{heightmap}, or a spatial raster that can be projected/resampled to the heightmap grid. For spatial rasters, finite cells define the water footprint.}
 
 \item{watercolor}{Default \code{lightblue}.}
 
@@ -36,9 +36,9 @@ render_water(
 
 \item{water_render_method}{Default \code{"raster"}. Water meshing method. \code{"raster"} renders water at the supplied elevation and emits sidewalls down to the terrain wherever exposed water floats above the surface; \code{"polygon"} fits each spatial water component by matching flooded terrain-triangle area to raster footprint area, then clips the fixed-grid terrain triangles; \code{"legacy"} uses the previous box/grid renderer.}
 
-\item{water_edge_extension}{Default \code{0.5}. For spatial \code{waterdepth} inputs, amount in grid cells to expand finite water cells at boundary edges, up to a maximum of half a cell.}
+\item{water_edge_extension}{Default \code{0.5}. For spatial \code{water_input} inputs, amount in grid cells to expand finite water cells at boundary edges, up to a maximum of half a cell.}
 
-\item{water_edge_clamp}{Default \code{FALSE}. For spatial \code{waterdepth} inputs, if \code{TRUE}, resolves each connected water footprint to a single level, then lowers it by the largest finite exterior sidewall height after edge expansion. Heightmap-boundary and NA-slice edges are ignored when computing the lowering amount.}
+\item{water_edge_clamp}{Default \code{FALSE}. For spatial \code{water_input} inputs, if \code{TRUE}, resolves each connected water footprint to a single level, then lowers it by the largest finite exterior sidewall height after edge expansion. Heightmap-boundary and NA-slice edges are ignored when computing the lowering amount.}
 
 \item{water_polygon_failure}{Default \code{"raster"}. Behavior for spatial polygon water components that cannot be fit to an admissible terrain-triangle flood. \code{"raster"} renders the failed component with the raster method; \code{"remove"} omits it.}
 
@@ -71,7 +71,7 @@ render_water()
 render_snapshot()
 
 #Call it again to change the water depth
-render_water(waterdepth=-1000, watercolor = "dodgerblue3")
+render_water(water_input=-1000, watercolor = "dodgerblue3")
 render_snapshot()
 
 #Slice the water out to the edge
@@ -82,7 +82,7 @@ water_levels = matrix(
 )
 water_levels[col(water_levels) > ncol(water_levels) / 2 + 20 |
 col(water_levels) < ncol(water_levels) / 2-20] = -8000
-render_water(waterdepth = water_levels, watercolor = "dodgerblue4")
+render_water(water_input = water_levels, watercolor = "dodgerblue4")
 render_snapshot()
 
 #Use a matrix to vary the water level across the scene
@@ -91,7 +91,7 @@ water_ramp = matrix(
  nrow = nrow(montereybay_spatial),
  ncol = ncol(montereybay_spatial)
 )
-render_water(waterdepth = water_ramp, watercolor = "dodgerblue3")
+render_water(water_input = water_ramp, watercolor = "dodgerblue3")
 render_highquality()
 
 #Add waterlines

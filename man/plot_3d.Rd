@@ -21,7 +21,7 @@ plot_3d(
   shadowwidth = "auto",
   shadow_texture_size = getOption("rayshader.max_shadow_texture_size", 1024),
   water = FALSE,
-  waterdepth = 0,
+  water_input = 0,
   watercolor = "dodgerblue",
   wateralpha = 0.5,
   waterlinecolor = NULL,
@@ -92,19 +92,22 @@ update cached hillshade \code{zscale} metadata.}
 
 \item{shadowdepth}{Default \code{auto}, which sets it to \code{soliddepth - soliddepth/10}. Depth of the shadow layer.}
 
-\item{shadowcolor}{Default \code{auto}. Color of the shadow, automatically computed as \code{shadow_darkness}
-the luminance of the \code{background} color in the CIELuv colorspace if not specified.}
+\item{shadowcolor}{Default \code{"auto"}. Color of the shadow. Automatically darkens
+the \code{background} color by scaling its CIELuv lightness and chroma together by
+\code{shadow_darkness}, preserving the background hue.}
 
-\item{shadow_darkness}{Default \code{0.5}. Darkness of the shadow, if \code{shadowcolor = "auto"}.}
+\item{shadow_darkness}{Default \code{0.5}. Lightness multiplier for the shadow when
+\code{shadowcolor = "auto"}. Values between \code{0} and \code{1} darken the background color;
+\code{0} gives a black shadow and \code{1} matches the background.}
 
 \item{shadowwidth}{Default \code{auto}, which sizes it to 1/10th the smallest dimension of \code{heightmap}. Width of the shadow in units of the matrix.}
 
 \item{shadow_texture_size}{Default \code{getOption("rayshader.max_shadow_texture_size", 1024)}. Maximum width or height, in pixels, of the blurred shadow texture. Set to \code{Inf} or \code{FALSE} to render the shadow texture at full heightmap resolution.}
 
 \item{water}{Default \code{FALSE}. If \code{TRUE}, a water layer is rendered. If \code{water}
-is omitted and \code{waterdepth} is explicitly supplied, a water layer is rendered.}
+is omitted and \code{water_input} is explicitly supplied, a water layer is rendered.}
 
-\item{waterdepth}{Default \code{0}. Water level. Either a scalar, a matrix with the same dimensions as \code{heightmap}, or a spatial raster that can be projected/resampled to the heightmap grid. For spatial rasters, finite cells define the water footprint.}
+\item{water_input}{Default \code{0}. Water level. Either a scalar, a matrix with the same dimensions as \code{heightmap}, or a spatial raster that can be projected/resampled to the heightmap grid. For spatial rasters, finite cells define the water footprint.}
 
 \item{watercolor}{Default \code{lightblue}. Color of the water.}
 
@@ -120,7 +123,7 @@ is omitted and \code{waterdepth} is explicitly supplied, a water layer is render
 
 \item{water_render_method}{Default \code{"raster"}. Water meshing method. \code{"raster"} renders water at the supplied elevation and emits sidewalls down to the terrain wherever exposed water floats above the surface; \code{"polygon"} fits each spatial water component by matching flooded terrain-triangle area to raster footprint area, then clips the fixed-grid terrain triangles; \code{"legacy"} uses the previous box/grid renderer.}
 
-\item{water_edge_extension}{Default \code{0.5}. For spatial \code{waterdepth} inputs, amount in grid cells to expand finite water cells at boundary edges, up to a maximum of half a cell.}
+\item{water_edge_extension}{Default \code{0.5}. For spatial \code{water_input} inputs, amount in grid cells to expand finite water cells at boundary edges, up to a maximum of half a cell.}
 
 \item{water_polygon_failure}{Default \code{"raster"}. Behavior for spatial polygon water components that cannot be fit to an admissible terrain-triangle flood. \code{"raster"} renders the failed component with the raster method; \code{"remove"} omits it.}
 
@@ -147,7 +150,7 @@ numbers increase the darkening effect.}
 
 \item{zoom}{Default \code{1}. Zoom factor.}
 
-\item{background}{Default \code{grey10}. Color of the background.}
+\item{background}{Default \code{"white"}. Color of the background.}
 
 \item{windowsize}{Default \code{600}. Position, width, and height of the \code{rgl} device displaying the plot.
 If a single number, viewport will be a square and located in upper left corner.

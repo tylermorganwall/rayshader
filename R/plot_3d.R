@@ -539,14 +539,17 @@ get_plot_3d_surface_texture = function(id, rgl_texture_file) {
 #'@param solidlinecolor Default `grey30`. Base edge line color.
 #'@param shadow Default `TRUE`. If `FALSE`, no shadow is rendered.
 #'@param shadowdepth Default `auto`, which sets it to `soliddepth - soliddepth/10`. Depth of the shadow layer.
-#'@param shadowcolor Default `auto`. Color of the shadow, automatically computed as `shadow_darkness`
-#'the luminance of the `background` color in the CIELuv colorspace if not specified.
-#'@param shadow_darkness Default `0.5`. Darkness of the shadow, if `shadowcolor = "auto"`.
+#' @param shadowcolor Default `"auto"`. Color of the shadow. Automatically darkens
+#' the `background` color by scaling its CIELuv lightness and chroma together by
+#' `shadow_darkness`, preserving the background hue.
+#' @param shadow_darkness Default `0.5`. Lightness multiplier for the shadow when
+#' `shadowcolor = "auto"`. Values between `0` and `1` darken the background color;
+#' `0` gives a black shadow and `1` matches the background.
 #'@param shadowwidth Default `auto`, which sizes it to 1/10th the smallest dimension of `heightmap`. Width of the shadow in units of the matrix.
 #'@param shadow_texture_size Default `getOption("rayshader.max_shadow_texture_size", 1024)`. Maximum width or height, in pixels, of the blurred shadow texture. Set to `Inf` or `FALSE` to render the shadow texture at full heightmap resolution.
 #'@param water Default `FALSE`. If `TRUE`, a water layer is rendered. If `water`
-#'is omitted and `waterdepth` is explicitly supplied, a water layer is rendered.
-#'@param waterdepth Default `0`. Water level. Either a scalar, a matrix with the same dimensions as `heightmap`, or a spatial raster that can be projected/resampled to the heightmap grid. For spatial rasters, finite cells define the water footprint.
+#'is omitted and `water_input` is explicitly supplied, a water layer is rendered.
+#'@param water_input Default `0`. Water level. Either a scalar, a matrix with the same dimensions as `heightmap`, or a spatial raster that can be projected/resampled to the heightmap grid. For spatial rasters, finite cells define the water footprint.
 #'@param watercolor Default `lightblue`. Color of the water.
 #'@param wateralpha Default `0.5`. Water transparency.
 #'@param waterlinecolor Default `NULL`. Color of the lines around the edges of the water layer.
@@ -554,7 +557,7 @@ get_plot_3d_surface_texture = function(id, rgl_texture_file) {
 #'@param linewidth Default `2`. Width of the edge lines in the scene.
 #'@param lineantialias Default `FALSE`. Whether to anti-alias the lines in the scene.
 #'@param water_render_method Default `"raster"`. Water meshing method. `"raster"` renders water at the supplied elevation and emits sidewalls down to the terrain wherever exposed water floats above the surface; `"polygon"` fits each spatial water component by matching flooded terrain-triangle area to raster footprint area, then clips the fixed-grid terrain triangles; `"legacy"` uses the previous box/grid renderer.
-#'@param water_edge_extension Default `0.5`. For spatial `waterdepth` inputs, amount in grid cells to expand finite water cells at boundary edges, up to a maximum of half a cell.
+#'@param water_edge_extension Default `0.5`. For spatial `water_input` inputs, amount in grid cells to expand finite water cells at boundary edges, up to a maximum of half a cell.
 #'@param water_polygon_failure Default `"raster"`. Behavior for spatial polygon water components that cannot be fit to an admissible terrain-triangle flood. `"raster"` renders the failed component with the raster method; `"remove"` omits it.
 #'@param soil Default `FALSE`. Whether to draw the solid base with a textured soil layer.
 #'@param soil_freq Default `0.1`. Frequency of soil clumps. Higher frequency values give smaller soil clumps.
@@ -568,7 +571,7 @@ get_plot_3d_surface_texture = function(id, rgl_texture_file) {
 #'@param phi Default `45`. Azimuth angle.
 #'@param fov Default `0`--isometric. Field-of-view angle.
 #'@param zoom Default `1`. Zoom factor.
-#'@param background Default `grey10`. Color of the background.
+#' @param background Default `"white"`. Color of the background.
 #'@param windowsize Default `600`. Position, width, and height of the `rgl` device displaying the plot.
 #'If a single number, viewport will be a square and located in upper left corner.
 #'If two numbers, (e.g. `c(600,800)`), user will specify width and height separately.
@@ -674,7 +677,7 @@ plot_3d = function(
   shadowwidth = "auto",
   shadow_texture_size = getOption("rayshader.max_shadow_texture_size", 1024),
   water = FALSE,
-  waterdepth = 0,
+  water_input = 0,
   watercolor = "dodgerblue",
   wateralpha = 0.5,
   waterlinecolor = NULL,
@@ -710,10 +713,10 @@ plot_3d = function(
   crs = NULL
 ) {
   water_was_missing = missing(water)
-  waterdepth_was_missing = missing(waterdepth)
+  water_input_was_missing = missing(water_input)
   water_render_method = match.arg(water_render_method)
   water_polygon_failure = match.arg(water_polygon_failure)
-  if (water_was_missing && !waterdepth_was_missing) {
+  if (water_was_missing && !water_input_was_missing) {
     water = TRUE
   }
   if (!plot_new && clear_previous) {
@@ -1226,7 +1229,7 @@ plot_3d = function(
     )
     water_mesh = make_water(
       heightmap,
-      waterheight = waterdepth,
+      waterheight = water_input,
       wateralpha = wateralpha,
       watercolor = watercolor,
       zscale = zscale,
@@ -1250,7 +1253,7 @@ plot_3d = function(
       if (all(!is.na(heightmap))) {
         make_lines(
           fliplr(heightmap),
-          basedepth = waterdepth,
+          basedepth = water_input,
           linecolor = waterlinecolor,
           zscale = zscale,
           linewidth = linewidth,
@@ -1260,7 +1263,7 @@ plot_3d = function(
       }
       make_waterlines(
         heightmap,
-        waterdepth = waterdepth,
+        water_input = water_input,
         linecolor = waterlinecolor,
         zscale = zscale,
         alpha = waterlinealpha,
