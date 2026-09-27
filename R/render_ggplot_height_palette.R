@@ -60,7 +60,7 @@ map_plot_gg_height_palette = function(
   }
   height_color_scale = transform_info$height_color_scale
   mapped = tryCatch(
-    height_color_scale$map(values),
+    height_color_scale$map(height_color_scale$transform(values)),
     error = function(e) NULL
   )
   if (is.null(mapped) || !length(mapped)) {

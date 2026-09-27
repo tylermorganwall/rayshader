@@ -3216,54 +3216,55 @@ get_scene_height_transform = function(heightmap = NULL, extent = NULL) {
   ) {
     return(NULL)
   }
-  height_target_range = c(0, 1)
-  if (!is.null(heightmap)) {
-    height_vals = as.numeric(heightmap)
-    height_vals = height_vals[is.finite(height_vals)]
-    if (length(height_vals) > 1) {
-      height_target_range = range(height_vals)
-      if (identical(height_target_range[1], height_target_range[2])) {
-        height_target_range = c(0, 1)
-      }
-    }
+  height_scale = transform_info$height_scale
+  height_range = height_scale$get_limits()
+  if (!height_scale$is_discrete()) {
+    height_range = height_scale$get_transformation()$inverse(height_range)
   }
   list(
-    height_scale = transform_info$height_scale,
+    height_scale = height_scale,
     height_aes = transform_info$height_aes,
     height_inverted = isTRUE(transform_info$height_inverted),
-    height_range = transform_info$height_range,
-    height_target_range = height_target_range
+    height_range = height_range
   )
 }
 
-map_scene_altitudes = function(
-  values,
-  height_transform,
-  reference_values = values
-) {
+#' @param values Raw height-aesthetic values to map.
+#' @param height_transform Cached scene height transformation, or `NULL` for raw heights.
+#' @return Heights in normalized scene units, before division by zscale.
+#' @keywords internal
+map_scene_altitudes = function(values, height_transform) {
   if (is.null(values) || is.null(height_transform)) {
     return(values)
   }
-  reference_values = suppressWarnings(as.numeric(reference_values))
-  reference_values = reference_values[is.finite(reference_values)]
-  if (length(unique(reference_values)) <= 1) {
-    return(values)
+  # Use the trained scale, not the overlay's range. A numeric palette exposes
+  # ggplot's normalized heights while retaining limits, rescaling, binning and
+  # out-of-bounds handling. Clone so the cached plot palette remains unchanged.
+  height_scale = height_transform$height_scale$clone()
+  height_scale$limits = height_transform$height_scale$get_limits()
+  transformed = height_scale$transform(values)
+  if (height_scale$is_discrete()) {
+    colors = height_scale$map(transformed)
+    normalized_height = 1 - grDevices::col2rgb(colors)[1, ] / 255
+  } else {
+    height_scale$palette = function(x) x
+    height_scale$palette.cache = NULL
+    height_scale$na.value = NA_real_
+    normalized_height = as.numeric(height_scale$map(transformed))
   }
-  missing_vals = is.na(values)
-  normalized_height = scales::rescale(
-    values,
-    to = height_transform$height_target_range,
-    from = range(reference_values)
-  )
-  normalized_height[missing_vals] = NA_real_
+  # plot_gg renders censored values with its white NA color (zero elevation).
+  normalized_height[is.na(normalized_height)] = 0
+  if (isTRUE(height_transform$height_inverted)) {
+    normalized_height = 1 - normalized_height
+  }
+  normalized_height[is.na(values)] = NA_real_
   as.numeric(normalized_height)
 }
 
 transform_scene_altitudes = function(
   values,
   extent = NULL,
-  heightmap = NULL,
-  reference_values = values
+  heightmap = NULL
 ) {
   height_transform = get_scene_height_transform(
     heightmap = heightmap,
@@ -3274,8 +3275,7 @@ transform_scene_altitudes = function(
   }
   map_scene_altitudes(
     values,
-    height_transform = height_transform,
-    reference_values = reference_values
+    height_transform = height_transform
   )
 }
 

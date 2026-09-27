@@ -57,8 +57,7 @@ transform_into_heightmap_coords = function(
     if (!is.null(scene_height_transform)) {
       altitude = map_scene_altitudes(
         altitude,
-        height_transform = scene_height_transform,
-        reference_values = altitude
+        height_transform = scene_height_transform
       )
     }
   }

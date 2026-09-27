@@ -19,7 +19,10 @@
 #' @param data_column_bottom Default `NULL`. A string indicating the column in the `sf` object to use
 #' to specify the bottom of the extruded polygon. Values are coerced to numeric, and rows with missing or non-finite values after coercion are omitted.
 #' @param scale_data Default `1`. If specifying `data_column_top` or `data_column_bottom`, how
-#' much to scale that value when rendering. If used with `vertical_exaggeration`, both are applied.
+#' much to scale that value when rendering. When omitted in a mapped [plot_gg()] scene,
+#' data-column values use the cached ggplot height scale. Supplying `scale_data` explicitly
+#' uses raw values multiplied by this factor instead. Explicit `top` and `bottom` remain
+#' in scene height units. If used with `vertical_exaggeration`, both are applied.
 #' @param parallel Default `FALSE`. If `TRUE`, polygons will be extruded in parallel, which
 #' may be faster (depending on how many geometries are in `polygon`).
 #' @param holes Default `0`. If passing in a polygon directly, this specifies which index represents
@@ -262,6 +265,16 @@ render_polygons = function(
     heightmap = heightmap,
     caller = "render_polygons"
   )
+  polygon_raw = polygon
+  if (missing(scale_data)) {
+    height_transform = get_scene_height_transform(heightmap, extent)
+    for (column in unique(c(data_column_top, data_column_bottom))) {
+      polygon[[column]] = map_scene_altitudes(
+        polygon[[column]],
+        height_transform
+      )
+    }
+  }
   vertex_list = list()
   if (!parallel) {
     if (inherits(polygon, "data.frame")) {
@@ -400,13 +413,23 @@ render_polygons = function(
       )
     }
   }
-  cache_polygon_zaxis_data(
-    polygon = polygon,
-    top = top,
-    bottom = bottom,
-    data_column_top = data_column_top,
-    data_column_bottom = data_column_bottom,
-    scale_data = scale_data
-  )
+  if (missing(scale_data) && !is.null(c(data_column_top, data_column_bottom))) {
+    column = c(data_column_top, data_column_bottom)[1]
+    cache_scene_zaxis_data(
+      source = "polygon",
+      raw_values = polygon_raw[[column]],
+      scene_values = polygon[[column]],
+      label = column
+    )
+  } else {
+    cache_polygon_zaxis_data(
+      polygon = polygon,
+      top = top,
+      bottom = bottom,
+      data_column_top = data_column_top,
+      data_column_bottom = data_column_bottom,
+      scale_data = scale_data
+    )
+  }
   invisible(NULL)
 }

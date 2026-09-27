@@ -537,18 +537,9 @@ render_label = function(
     extent = extent
   )
   if (!is.null(label_height_transform)) {
-    label_height_reference = suppressWarnings(as.numeric(
-      label_height_transform$height_range
-    ))
-    label_height_reference =
-      label_height_reference[is.finite(label_height_reference)]
-    if (length(unique(label_height_reference)) <= 1) {
-      label_height_reference = z
-    }
     z = map_scene_altitudes(
       z,
-      height_transform = label_height_transform,
-      reference_values = label_height_reference
+      height_transform = label_height_transform
     )
   }
   n_label = length(x)

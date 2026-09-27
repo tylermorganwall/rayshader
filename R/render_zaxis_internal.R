@@ -602,8 +602,7 @@ render_zaxis_internal = function(
         zaxis_label_breaks = raw_zaxis_breaks
         zaxis_breaks = map_scene_altitudes(
           raw_zaxis_breaks,
-          height_transform = height_transform,
-          reference_values = height_range
+          height_transform = height_transform
         )
       }
     }

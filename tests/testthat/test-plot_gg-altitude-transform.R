@@ -17,8 +17,7 @@ test_that("ggplot scenes transform mapped overlay altitudes into scene units", {
   gg_extent = rayshader:::get_ggplot_extent()
   scene_heightmap = get_scene_heightmap()
   scene_zscale = get_scene_effective_zscale()
-  altitude_vals = c(min(mtcars$disp), max(mtcars$disp))
-  scene_height_range = range(scene_heightmap[is.finite(scene_heightmap)])
+  altitude_vals = range(mtcars$mpg)
 
   xyz = transform_into_heightmap_coords(
     extent = gg_extent,
@@ -32,7 +31,7 @@ test_that("ggplot scenes transform mapped overlay altitudes into scene units", {
 
   expected_y = scales::rescale(
     altitude_vals,
-    to = scene_height_range,
+    to = c(0, 1),
     from = range(altitude_vals)
   ) /
     scene_zscale
@@ -112,9 +111,8 @@ test_that("flat substrate ggplot scenes keep panels flat but map overlay altitud
   expect_true(transform_info$height_is_mapped)
 
   gg_extent = rayshader:::get_ggplot_extent()
-  scene_height_range = range(height_matrix[is.finite(height_matrix)])
   scene_zscale = get_scene_effective_zscale()
-  altitude_vals = c(100, 200)
+  altitude_vals = range(mtcars$mpg)
 
   xyz = transform_into_heightmap_coords(
     extent = gg_extent,
@@ -128,7 +126,7 @@ test_that("flat substrate ggplot scenes keep panels flat but map overlay altitud
 
   expected_y = scales::rescale(
     altitude_vals,
-    to = scene_height_range,
+    to = c(0, 1),
     from = range(altitude_vals)
   ) /
     scene_zscale
@@ -184,7 +182,7 @@ test_that("render point colors can use cached ggplot height palette", {
   expected_colors = t(grDevices::col2rgb(mapped_colors, alpha = TRUE) / 255)
   expected_y = scales::rescale(
     altitude_vals,
-    to = range(get_scene_heightmap()[is.finite(get_scene_heightmap())]),
+    to = c(0, 1),
     from = range(altitude_vals)
   ) /
     get_scene_effective_zscale()
@@ -262,10 +260,9 @@ test_that("ggplot z-axis breaks use mapped height positions but keep raw labels"
   gg_extent = rayshader:::get_ggplot_extent()
   scene_heightmap = get_scene_heightmap()
   scene_zscale = get_scene_effective_zscale()
-  altitude_vals = c(min(mtcars$disp), max(mtcars$disp))
-  breaks = altitude_vals + c(10, -10)
+  altitude_vals = range(mtcars$mpg)
+  breaks = altitude_vals + c(2, -2)
   labels = c("low", "high")
-  scene_height_range = range(scene_heightmap[is.finite(scene_heightmap)])
 
   expect_no_condition(render_points(
     x = c(min(mtcars$wt), max(mtcars$wt)),
@@ -294,7 +291,7 @@ test_that("ggplot z-axis breaks use mapped height positions but keep raw labels"
   expected_y = sort(
     scales::rescale(
       breaks,
-      to = scene_height_range,
+      to = c(0, 1),
       from = range(altitude_vals)
     ) /
       scene_zscale
@@ -331,8 +328,7 @@ test_that("standalone ggplot z-axis defaults use mapped height scale labels", {
   raw_breaks = raw_breaks[is.finite(raw_breaks)]
   scene_breaks = map_scene_altitudes(
     raw_breaks,
-    height_transform = height_transform,
-    reference_values = raw_range
+    height_transform = height_transform
   )
   draw_idx = abs(scene_breaks) > .Machine$double.eps^0.5
   expected_y = sort(scene_breaks[draw_idx] / scene_zscale)

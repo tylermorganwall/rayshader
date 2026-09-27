@@ -52,7 +52,10 @@ to specify the top of the extruded polygon. Values are coerced to numeric, and r
 to specify the bottom of the extruded polygon. Values are coerced to numeric, and rows with missing or non-finite values after coercion are omitted.}
 
 \item{scale_data}{Default \code{1}. If specifying \code{data_column_top} or \code{data_column_bottom}, how
-much to scale that value when rendering. If used with \code{vertical_exaggeration}, both are applied.}
+much to scale that value when rendering. When omitted in a mapped \code{\link[=plot_gg]{plot_gg()}} scene,
+data-column values use the cached ggplot height scale. Supplying \code{scale_data} explicitly
+uses raw values multiplied by this factor instead. Explicit \code{top} and \code{bottom} remain
+in scene height units. If used with \code{vertical_exaggeration}, both are applied.}
 
 \item{parallel}{Default \code{FALSE}. If \code{TRUE}, polygons will be extruded in parallel, which
 may be faster (depending on how many geometries are in \code{polygon}).}

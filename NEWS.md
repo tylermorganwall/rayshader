@@ -1,15 +1,37 @@
 # rayshader 0.41.0.9000
 
-## Argument names
+## New features
 
-* Joined descriptive argument names now use snake case throughout the public API.
+- `render_polygons()` Automatically maps data-column heights through the cached
+  `plot_gg()` height scale when `scale_data` is omitted. Explicit `scale_data`
+  retains manual scaling, and explicit `top` and `bottom` retain scene height units.
+- `render_highquality()` Uses infinite disk lights for `light = TRUE`.
+  `light_size` specifies the full angular diameter in degrees (default `5`),
+  independent of scene size and camera position.
+
+## Bugfixes
+
+- Overall: Overlay altitude mapping uses the cached ggplot scale, including its
+  limits, transformation, binning, and inversion. Single values and subsets retain
+  consistent heights, including on flat substrates without legends.
+- Overall: `color = "height"` applies the cached ggplot scale transformation before
+  mapping colors, correcting colors for nonlinear scales.
+- Overall: Geographic extent filtering uses straight panel boundaries, preventing
+  polygons inside the plot from being incorrectly clipped.
+- `render_polygons()` Corrects automatic bottom placement when the scene uses
+  vertical scaling, keeping polygon bases between the scene base and surface.
+
+## Other
+
+- `render_polygons()` Uses `rayvertex::extruded_polygon_mesh()` for extrusion.
+- Overall: Joined descriptive argument names now use snake case throughout the public API.
   Examples include `window_size`, `base_shape`, `solid_depth`, `shadow_color`,
-  `water_color`, `water_alpha`, `water_line_color`, `text_size`,
+  `water_color`, `water_alpha`, `water_line_color`, `water_input`, `text_size`,
   `sun_angle`, `sun_altitude`, `normal_vectors`, and `progress_bar`. Update named
   arguments in existing calls to their new names.
   Established terms such as `heightmap`, `hillshade`, `zscale`, `filename`, and `linewidth`
-  are unchanged. Argument values, defaults, and rendering behavior are unchanged
-  by this naming update.
+  are unchanged, and `camera_lookat` retains `lookat` as one concept.
+  Argument renaming alone does not change defaults or rendering behavior.
 
 # rayshader 0.10.0:
 
