@@ -68,9 +68,9 @@ remove_plot_gg_grob_background_line = function(grob) {
 #'custom, solid shapes. By default in ggplot2, only the first three shapes are solid, which is a requirement to be projected
 #'into 3D.
 #'
-#'@param ggobj ggplot object to projected into 3D.
-#'@param ggobj_height Default `NULL`. A ggplot object that can be used to specify the 3D extrusion separately from the
-#'`ggobj`. If this plot includes a `tidyterra::geom_spatraster()` height layer,
+#'@param gg_obj ggplot object to projected into 3D.
+#'@param gg_obj_height Default `NULL`. A ggplot object that can be used to specify the 3D extrusion separately from the
+#'`gg_obj`. If this plot includes a `tidyterra::geom_spatraster()` height layer,
 #'rayshader preserves the mapped raster data scale when building the height map
 #'and uses the final rendered scene spacing as the default `zscale` unless
 #'`zscale` is supplied.
@@ -86,7 +86,7 @@ remove_plot_gg_grob_background_line = function(grob) {
 #'strength of the radiance overlay.
 #'@param units Default `in`. One of c("in", "cm", "mm").
 #'@param zscale Default `NULL`. The ratio between the x/y spacing and the z axis
-#'for the height surface. If omitted and `ggobj_height` includes a spatial raster
+#'for the height surface. If omitted and `gg_obj_height` includes a spatial raster
 #'height layer, rayshader derives `zscale` from the final rendered ggplot scene
 #'extent and output matrix spacing, which accounts for ggplot rasterization and
 #'reprojection. Otherwise, the base `zscale` defaults to `1`.
@@ -95,7 +95,7 @@ remove_plot_gg_grob_background_line = function(grob) {
 #'for spatial raster height sources and `150` for non-raster ggplot height
 #'mappings, which preserves the legacy `plot_gg()` default appearance.
 #'@param scale Deprecated. Use `vertical_exaggeration` instead.
-#'@param pointcontract Default `0.7`. This multiplies the size of the points and shrinks
+#'@param point_contract Default `0.7`. This multiplies the size of the points and shrinks
 #'them around their center in the 3D surface mapping. Decrease this to reduce color bleed on edges, and set to
 #'`1` to turn off entirely. Note: If `size` is passed as an aesthetic to the same geom
 #'that is being mapped to elevation, this scaling will not be applied. If `alpha` varies on the variable
@@ -112,11 +112,11 @@ remove_plot_gg_grob_background_line = function(grob) {
 #'@param flat_direction Default `"-z"`. Direction to render the flat copy of the plot, if `flat_plot_render = TRUE`.
 #'Other options `c("z", "x", "-x", "y", "-y")`.
 #'@param shadow Default `TRUE`. If `FALSE`, no shadow is rendered.
-#'@param shadowdepth Default `auto`, which sets it to `soliddepth - soliddepth/10`. Depth of the shadow layer.
+#'@param shadow_depth Default `auto`, which sets it to `solid_depth - solid_depth/10`. Depth of the shadow layer.
 #' @param shadow_darkness Default `0.5`. Lightness multiplier for the shadow when
-#' `shadowcolor = "auto"`. Values between `0` and `1` darken the background color;
+#' `shadow_color = "auto"`. Values between `0` and `1` darken the background color;
 #' `0` gives a black shadow and `1` matches the background.
-#' @param shadowcolor Default `"auto"`. Color of the shadow. Automatically darkens
+#' @param shadow_color Default `"auto"`. Color of the shadow. Automatically darkens
 #' the `background` color by scaling its CIELuv lightness and chroma together by
 #' `shadow_darkness`, preserving the background hue.
 #'@param background Default `"white"`. Background color for the 3D scene.
@@ -128,10 +128,10 @@ remove_plot_gg_grob_background_line = function(grob) {
 #'for no extra shading, or `"radiance"` for [radiance_shade()].
 #'@param radiance_args Default `list()`. Additional arguments passed to
 #'[radiance_shade()] when `raytrace = "radiance"`. By default,
-#'`lightdirection` is derived from `sunangle` and `lightaltitude` from the
-#'midpoint of `anglebreaks`.
-#'@param sunangle Default `315` (NW). If raytracing, the angle (in degrees) around the matrix from which the light originates.
-#'@param anglebreaks Default `seq(30,40,0.1)`. The azimuth angle(s), in degrees, as measured from the horizon from which the light originates.
+#'`light_direction` is derived from `sun_angle` and `light_altitude` from the
+#'midpoint of `angle_breaks`.
+#'@param sun_angle Default `315` (NW). If raytracing, the angle (in degrees) around the matrix from which the light originates.
+#'@param angle_breaks Default `seq(30,40,0.1)`. The azimuth angle(s), in degrees, as measured from the horizon from which the light originates.
 #'@param lambert Default `TRUE`. If raytracing, changes the intensity of the light at each point based proportional to the
 #'dot product of the ray direction and the surface normal at that point. Zeros out all values directed away from
 #'the ray.
@@ -191,7 +191,7 @@ remove_plot_gg_grob_background_line = function(grob) {
 #'  scale_fill_viridis_c(option = "A") +
 #'  scale_color_viridis_c(option = "A")
 #'plot_gg(ggdiamonds,multicore = TRUE,width=5,height=5,
-#'        vertical_exaggeration=250,windowsize=c(1400,866),
+#'        vertical_exaggeration=250,window_size=c(1400,866),
 #'        zoom = 0.55, phi = 30)
 #'render_snapshot()
 #'#Change the camera angle and take a snapshot:
@@ -212,10 +212,10 @@ remove_plot_gg_grob_background_line = function(grob) {
 #'ggvolcano
 #'
 #'plot_gg(ggvolcano, multicore = TRUE, raytrace = TRUE, width = 7, height = 4,
-#'        vertical_exaggeration = 300, windowsize = c(1400, 866), zoom = 0.6, phi = 30, theta = 30)
+#'        vertical_exaggeration = 300, window_size = c(1400, 866), zoom = 0.6, phi = 30, theta = 30)
 #'render_snapshot()
 #'
-#'#You can specify the color and height separately using the `ggobj_height()` argument.
+#'#You can specify the color and height separately using the `gg_obj_height()` argument.
 #'ggvolcano_surface = volcano |>
 #'reshape2::melt() |>
 #'  ggplot() +
@@ -226,9 +226,9 @@ remove_plot_gg_grob_background_line = function(grob) {
 #'  coord_fixed() +
 #'  theme(legend.position = "none")
 #'
-#'plot_gg(ggvolcano_surface, ggobj_height = ggvolcano,
+#'plot_gg(ggvolcano_surface, gg_obj_height = ggvolcano,
 #'       multicore = TRUE, raytrace = TRUE, width = 7, height = 4,
-#'       vertical_exaggeration = 300, windowsize = c(1400, 866), zoom = 0.6, phi = 30, theta = 30)
+#'       vertical_exaggeration = 300, window_size = c(1400, 866), zoom = 0.6, phi = 30, theta = 30)
 #'render_snapshot()
 #'#Here, we will create a 3D plot of the mtcars dataset. This automatically detects
 #'#that the user used the `color` aesthetic instead of the `fill`.
@@ -237,8 +237,8 @@ remove_plot_gg_grob_background_line = function(grob) {
 #'  scale_color_continuous(limits=c(0,8))
 #'
 #'#Preview how the plot will look by setting `preview = TRUE`: We also adjust the angle of the light.
-#'plot_gg(mtplot, width=3.5, sunangle=225, preview = TRUE)
-#'plot_gg(mtplot, width=3.5, multicore = TRUE, windowsize = c(1400,866), sunangle=225,
+#'plot_gg(mtplot, width=3.5, sun_angle=225, preview = TRUE)
+#'plot_gg(mtplot, width=3.5, multicore = TRUE, window_size = c(1400,866), sun_angle=225,
 #'        zoom = 0.60, phi = 30, theta = 45)
 #'render_snapshot()
 #'
@@ -248,14 +248,14 @@ remove_plot_gg_grob_background_line = function(grob) {
 #'  scale_fill_viridis_c() +
 #'  theme_minimal()
 #'plot_gg(bleedplot, width = 5, height = 4, vertical_exaggeration = 220,
-#'        windowsize = c(1400,866), theta = -20, phi = 35, zoom = 0.60,
+#'        window_size = c(1400,866), theta = -20, phi = 35, zoom = 0.60,
 #'        guide_bar_bleed_target = "height")
 #'render_snapshot()
 #'plot_gg(bleedplot, width = 5, height = 4, vertical_exaggeration = 220,
-#'        windowsize = c(1400,866), theta = -20, phi = 35, zoom = 0.60,
+#'        window_size = c(1400,866), theta = -20, phi = 35, zoom = 0.60,
 #'        guide_bar_bleed_target = "texture")
 #'render_snapshot()
-#'plot_gg(mtplot, width=3.5, multicore = TRUE, windowsize = c(1400,866), sunangle=225,
+#'plot_gg(mtplot, width=3.5, multicore = TRUE, window_size = c(1400,866), sun_angle=225,
 #'        zoom = 0.60, phi = 30, theta = 45)
 #'render_zaxis(zaxis_location = "panel_bottomleft")
 #'render_snapshot()
@@ -269,32 +269,32 @@ remove_plot_gg_grob_background_line = function(grob) {
 #'mtplot_density
 #'
 #'plot_gg(mtplot_density, width = 4,zoom = 0.60, theta = -45, phi = 30,
-#'        windowsize = c(1400,866))
+#'        window_size = c(1400,866))
 #'render_snapshot()
 #'#This also works facetted.
 #'mtplot_density_facet = mtplot_density + facet_wrap(~cyl)
 #'
 #'#Preview this plot in 2D:
 #'plot_gg(mtplot_density_facet, preview = TRUE)
-#'plot_gg(mtplot_density_facet, windowsize=c(1400,866),
+#'plot_gg(mtplot_density_facet, window_size=c(1400,866),
 #'        zoom = 0.55, theta = -10, phi = 25)
 #'render_snapshot()
 #'#That is a little cramped. Specifying a larger width will improve the readability of this plot.
 #'plot_gg(mtplot_density_facet, width = 6, preview = TRUE)
 #'
 #'#That's better. Let's plot it in 3D, and increase the vertical exaggeration.
-#'plot_gg(mtplot_density_facet, width = 6, windowsize=c(1400,866),
+#'plot_gg(mtplot_density_facet, width = 6, window_size=c(1400,866),
 #'        zoom = 0.55, theta = -10, phi = 25, vertical_exaggeration=300)
 #'render_snapshot()
 #'
 #'#We can also render a flat version of the plot alongside (or above/below) the 3D version.
-#'plot_gg(mtplot_density_facet, width = 6, windowsize=c(1400,866),
+#'plot_gg(mtplot_density_facet, width = 6, window_size=c(1400,866),
 #'        zoom = 0.65, theta = -25, phi = 35, vertical_exaggeration=300, flat_plot_render=TRUE,
 #'        flat_direction = "x")
 #'render_snapshot()
 plot_gg = function(
-  ggobj,
-  ggobj_height = NULL,
+  gg_obj,
+  gg_obj_height = NULL,
   width = 3,
   height = 3,
   height_aes = NULL,
@@ -304,7 +304,7 @@ plot_gg = function(
   scale = NULL,
   zscale = NULL,
   vertical_exaggeration = NULL,
-  pointcontract = 0.7,
+  point_contract = 0.7,
   offset_edges = FALSE,
   flat_substrate = FALSE,
   flat_plot_render = FALSE,
@@ -312,15 +312,15 @@ plot_gg = function(
   flat_transparent_bg = FALSE,
   flat_direction = "-z",
   shadow = TRUE,
-  shadowdepth = "auto",
-  shadowcolor = "auto",
+  shadow_depth = "auto",
+  shadow_color = "auto",
   shadow_darkness = 0.5,
   background = "white",
   preview = FALSE,
   raytrace = TRUE,
   radiance_args = list(),
-  sunangle = 315,
-  anglebreaks = seq(30, 40, 0.1),
+  sun_angle = 315,
+  angle_breaks = seq(30, 40, 0.1),
   multicore = FALSE,
   lambert = TRUE,
   triangulate = FALSE,
@@ -345,77 +345,77 @@ plot_gg = function(
   resolve_plot_gg_shadowdepth = function(
     height_matrix,
     zscale,
-    shadowdepth,
+    shadow_depth,
     dot_args = list()
   ) {
     solid = TRUE
     if ("solid" %in% names(dot_args) && !is.null(dot_args$solid)) {
       solid = isTRUE(dot_args$solid[[1]])
     }
-    soliddepth = if ("soliddepth" %in% names(dot_args)) {
-      dot_args$soliddepth
+    solid_depth = if ("solid_depth" %in% names(dot_args)) {
+      dot_args$solid_depth
     } else {
       "auto"
     }
     min_height = min(height_matrix, na.rm = TRUE)
     max_height = max(height_matrix, na.rm = TRUE)
 
-    if (identical(soliddepth, "auto")) {
+    if (identical(solid_depth, "auto")) {
       if (min_height != max_height) {
-        soliddepth = min_height /
+        solid_depth = min_height /
           zscale -
           (max_height / zscale - min_height / zscale) / 5
       } else {
         max_dim = max(dim(height_matrix))
-        soliddepth = min_height / zscale - max_dim / 25
+        solid_depth = min_height / zscale - max_dim / 25
       }
     } else {
-      if (soliddepth > min_height) {
+      if (solid_depth > min_height) {
         message(sprintf(
-          "`soliddepth` (set to %f) must be less than or equal to heightmap minimum value (%f). Setting to min(heightmap)",
-          soliddepth,
+          "`solid_depth` (set to %f) must be less than or equal to heightmap minimum value (%f). Setting to min(heightmap)",
+          solid_depth,
           min_height
         ))
-        soliddepth = min_height / zscale
+        solid_depth = min_height / zscale
       } else {
-        soliddepth = soliddepth / zscale
+        solid_depth = solid_depth / zscale
       }
     }
     if (solid) {
-      min_height_shadow = min(c(min_height, soliddepth * zscale))
+      min_height_shadow = min(c(min_height, solid_depth * zscale))
     } else {
       min_height_shadow = min_height
     }
-    if (identical(shadowdepth, "auto")) {
+    if (identical(shadow_depth, "auto")) {
       if (min_height_shadow != max_height) {
         if (solid) {
-          shadowdepth = soliddepth -
+          shadow_depth = solid_depth -
             (max_height / zscale - min_height_shadow / zscale) / 5
         } else {
-          shadowdepth = min_height_shadow /
+          shadow_depth = min_height_shadow /
             zscale -
             (max_height / zscale - min_height_shadow / zscale) / 5
         }
       } else {
         max_dim = max(dim(height_matrix))
         if (solid) {
-          shadowdepth = soliddepth - max_dim / 25
+          shadow_depth = solid_depth - max_dim / 25
         } else {
-          shadowdepth = min_height - max_dim / 25
+          shadow_depth = min_height - max_dim / 25
         }
       }
     } else {
-      if (shadowdepth > min_height) {
+      if (shadow_depth > min_height) {
         message(sprintf(
-          "`shadowdepth` (set to %f) is greater to heightmap minimum value (%f). Shadow will appear to be intersecting 3D model.",
-          shadowdepth,
+          "`shadow_depth` (set to %f) is greater to heightmap minimum value (%f). Shadow will appear to be intersecting 3D model.",
+          shadow_depth,
           min_height
         ))
       } else {
-        shadowdepth = shadowdepth / zscale
+        shadow_depth = shadow_depth / zscale
       }
     }
-    shadowdepth
+    shadow_depth
   }
   dot_args = list(...)
   if ("geographic_aspect" %in% names(dot_args)) {
@@ -522,14 +522,14 @@ plot_gg = function(
   png_device = grDevices::png
   apply_manual_correction = FALSE
   guide_bar_bleed_target = match.arg(guide_bar_bleed_target)
-  height_plot_source = if (is.null(ggobj_height)) {
-    if (methods::is(ggobj, "list") && length(ggobj) == 2) {
-      ggobj[[2]]
+  height_plot_source = if (is.null(gg_obj_height)) {
+    if (methods::is(gg_obj, "list") && length(gg_obj) == 2) {
+      gg_obj[[2]]
     } else {
-      ggobj
+      gg_obj
     }
   } else {
-    ggobj_height
+    gg_obj_height
   }
   if (requireNamespace("ragg", quietly = TRUE)) {
     png_device = function(...) ragg::agg_png(...)
@@ -538,38 +538,38 @@ plot_gg = function(
   } else {
     apply_manual_correction = TRUE
   }
-  if (is.null(ggobj_height)) {
-    if (methods::is(ggobj, "list") && length(ggobj) == 2) {
+  if (is.null(gg_obj_height)) {
+    if (methods::is(gg_obj, "list") && length(gg_obj) == 2) {
       if (
-        !inherits(ggobj[[1]], "ggplot") ||
-          !inherits(ggobj[[2]], "ggplot")
+        !inherits(gg_obj[[1]], "ggplot") ||
+          !inherits(gg_obj[[2]], "ggplot")
       ) {
         stop(
-          "When `ggobj` is a list, both elements must be ggplot objects.",
+          "When `gg_obj` is a list, both elements must be ggplot objects.",
           call. = FALSE
         )
       }
-      ggplotobj2 = clone_plot_gg_object(ggobj[[2]])
-      color_gg = clone_plot_gg_object(ggobj[[1]])
+      ggplotobj2 = clone_plot_gg_object(gg_obj[[2]])
+      color_gg = clone_plot_gg_object(gg_obj[[1]])
     } else {
-      if (!inherits(ggobj, "ggplot")) {
+      if (!inherits(gg_obj, "ggplot")) {
         stop(
-          "`ggobj` must be a ggplot object or a length-2 list of ggplot objects.",
+          "`gg_obj` must be a ggplot object or a length-2 list of ggplot objects.",
           call. = FALSE
         )
       }
-      ggplotobj2 = clone_plot_gg_object(ggobj)
-      color_gg = clone_plot_gg_object(ggobj)
+      ggplotobj2 = clone_plot_gg_object(gg_obj)
+      color_gg = clone_plot_gg_object(gg_obj)
     }
   } else {
-    if (!inherits(ggobj, "ggplot")) {
-      stop("`ggobj` must be a ggplot object.", call. = FALSE)
+    if (!inherits(gg_obj, "ggplot")) {
+      stop("`gg_obj` must be a ggplot object.", call. = FALSE)
     }
-    if (!inherits(ggobj_height, "ggplot")) {
-      stop("`ggobj_height` must be a ggplot object.", call. = FALSE)
+    if (!inherits(gg_obj_height, "ggplot")) {
+      stop("`gg_obj_height` must be a ggplot object.", call. = FALSE)
     }
-    ggplotobj2 = clone_plot_gg_object(ggobj_height)
-    color_gg = clone_plot_gg_object(ggobj)
+    ggplotobj2 = clone_plot_gg_object(gg_obj_height)
+    color_gg = clone_plot_gg_object(gg_obj)
   }
   color_gg_grob = ggplot2::ggplotGrob(color_gg)
   plot_background = get_plot_gg_grob_background(color_gg_grob)
@@ -1571,18 +1571,18 @@ plot_gg = function(
           ggplotobj2$layers[[i]]$aes_params$alpha = 0
         }
       }
-      if (pointcontract != 1) {
+      if (point_contract != 1) {
         for (i in seq_along(ggplotobj2$layers)) {
           if (!is.null(ggplotobj2$layers[[i]]$aes_params$size)) {
             ggplotobj2$layers[[i]]$aes_params$size = ggplotobj2$layers[[
               i
             ]]$aes_params$size *
-              pointcontract
+              point_contract
           } else {
             geom_defaults = ggplot2::get_geom_defaults(ggplotobj2$layers[[i]])
             if (!is.null(geom_defaults$size)) {
               ggplotobj2$layers[[i]]$aes_params$size = geom_defaults$size *
-                pointcontract
+                point_contract
             }
           }
         }
@@ -1815,10 +1815,10 @@ plot_gg = function(
       transform_info = plot_gg_transform_info
     )
   }
-  shadowdepth = resolve_plot_gg_shadowdepth(
+  shadow_depth = resolve_plot_gg_shadowdepth(
     height_matrix = height_matrix,
     zscale = zscale,
-    shadowdepth = shadowdepth,
+    shadow_depth = shadow_depth,
     dot_args = dot_args
   )
 
@@ -1844,11 +1844,11 @@ plot_gg = function(
   }
   shadow_flat = flat_plot_render &&
     shadow &&
-    flat_distance / zscale < shadowdepth
-  shadowdepth = ifelse(
+    flat_distance / zscale < shadow_depth
+  shadow_depth = ifelse(
     shadow_flat,
-    flat_distance / zscale + shadowdepth,
-    shadowdepth
+    flat_distance / zscale + shadow_depth,
+    shadow_depth
   )
   shadelayer = NULL
   map_with_shading = mapcolor
@@ -1859,9 +1859,9 @@ plot_gg = function(
         c(
           list(
             heightmap = height_matrix,
-            maxsearch = 600,
-            sunangle = sunangle,
-            anglebreaks = anglebreaks,
+            max_search = 600,
+            sun_angle = sun_angle,
+            angle_breaks = angle_breaks,
             zscale = zscale,
             multicore = multicore,
             lambert = lambert,
@@ -1876,17 +1876,17 @@ plot_gg = function(
     map_with_shading = add_shadow(mapcolor, shadelayer, shadow_intensity)
   } else if (raytrace_mode == "radiance") {
     if (is.null(saved_shadow_matrix)) {
-      finite_anglebreaks = suppressWarnings(as.numeric(anglebreaks))
+      finite_anglebreaks = suppressWarnings(as.numeric(angle_breaks))
       finite_anglebreaks = finite_anglebreaks[is.finite(finite_anglebreaks)]
-      default_lightaltitude = if (length(finite_anglebreaks)) {
+      default_light_altitude = if (length(finite_anglebreaks)) {
         mean(range(finite_anglebreaks))
       } else {
         45
       }
       radiance_call_args = utils::modifyList(
         list(
-          lightdirection = sunangle,
-          lightaltitude = default_lightaltitude
+          light_direction = sun_angle,
+          light_altitude = default_light_altitude
         ),
         radiance_args
       )
@@ -1907,7 +1907,7 @@ plot_gg = function(
     map_with_shading = add_overlay(
       mapcolor,
       shadelayer,
-      alphalayer = 1 - shadow_intensity
+      alpha_layer = 1 - shadow_intensity
     )
   }
   if (!preview) {
@@ -1925,9 +1925,9 @@ plot_gg = function(
           max_tri = max_tri,
           verbose = verbose,
           shadow = shadow,
-          shadowdepth = shadowdepth * zscale,
+          shadow_depth = shadow_depth * zscale,
           background = background,
-          shadowcolor = shadowcolor
+          shadow_color = shadow_color
         ),
         dot_args
       )
@@ -1966,13 +1966,13 @@ plot_gg = function(
     }
     mapcolor = png::readPNG(colormaptemp)
     horizontal_offset = c(0, 0)
-    shadowwidth = max(floor(min(dim(height_matrix)) / 10), 5)
+    shadow_width = max(floor(min(dim(height_matrix)) / 10), 5)
     if (flat_direction == "x" || flat_direction == "-x") {
       horizontal_offset = abs(
         c(width * 300, 0) *
           flat_distance +
           c(width * 150, 0) +
-          c(shadowwidth * 2, 0)
+          c(shadow_width * 2, 0)
       )
       if (flat_direction == "-x") {
         horizontal_offset = -horizontal_offset
@@ -1983,7 +1983,7 @@ plot_gg = function(
         c(0, height * 300) *
           flat_distance +
           c(0, height * 150) +
-          c(0, shadowwidth * 2)
+          c(0, shadow_width * 2)
       )
       if (flat_direction == "y") {
         horizontal_offset = -horizontal_offset
@@ -1999,18 +1999,18 @@ plot_gg = function(
       horizontal_offset = horizontal_offset
     )
     if (shadow && flat_direction %in% c("x", "-x", "y", "-y")) {
-      if (shadowcolor == "auto") {
-        shadowcolor = convert_color(
+      if (shadow_color == "auto") {
+        shadow_color = convert_color(
           darken_color(background, darken = shadow_darkness),
           as_hex = TRUE
         )
       }
       make_shadow(
         height_matrix,
-        shadowdepth,
-        shadowwidth,
+        shadow_depth,
+        shadow_width,
         background,
-        shadowcolor,
+        shadow_color,
         offset = horizontal_offset
       )
     }

@@ -2,9 +2,9 @@
 #'
 #'@description Converts MULTIPOLYGON Z features into a 3D OBJ model
 #'
-#'@param sfobj sf object with MULTIPOLYGON Z geometry,
+#'@param sf_obj sf object with MULTIPOLYGON Z geometry,
 #'@param filename Filename of the OBJ to save the 3D model to.
-#'@param swap_yz Default `TRUE`., Whether to swap and Y and Z axes. (Y axis is vertical in 
+#'@param swap_yz Default `TRUE`., Whether to swap and Y and Z axes. (Y axis is vertical in
 #'rayshader coordinates, but data is often provided with Z being vertical).
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
@@ -15,14 +15,14 @@
 #'rgl::open3d()
 #'render_obj(filename=obj_temp, xyz=matrix(c(0,0,0),ncol=3), color="red")
 #'render_camera(theta=30,phi=40)
-save_multipolygonz_to_obj = function(sfobj, filename, swap_yz = FALSE) {
-	if (!(length(find.package("sf", quiet = TRUE)) > 0)) {
-		stop("`sf` package required for save_multipolygonz_to_obj()")
-	}
+save_multipolygonz_to_obj = function(sf_obj, filename, swap_yz = FALSE) {
+  if (!(length(find.package("sf", quiet = TRUE)) > 0)) {
+    stop("`sf` package required for save_multipolygonz_to_obj()")
+  }
   con = file(filename, "w")
   on.exit(close(con))
   total_verts = 0
-  geom = multipolygonz_geometry_indices(sfobj)
+  geom = multipolygonz_geometry_indices(sf_obj)
   mat_coords = geom$coords
   geometry_list = geom$geometry
   cat_list = vector("list", length(geometry_list) * 2)
@@ -40,7 +40,12 @@ save_multipolygonz_to_obj = function(sfobj, filename, swap_yz = FALSE) {
       indices = rev(indices)
     }
 
-    cat_list[[counter]] = sprintf("v %.4f %.4f %.4f", mat[, 1], mat[, 2], mat[, 3])
+    cat_list[[counter]] = sprintf(
+      "v %.4f %.4f %.4f",
+      mat[, 1],
+      mat[, 2],
+      mat[, 3]
+    )
     counter = counter + 1
     cat_list[[counter]] = sprintf("f %s", paste0(indices, collapse = " "))
     counter = counter + 1
@@ -49,10 +54,10 @@ save_multipolygonz_to_obj = function(sfobj, filename, swap_yz = FALSE) {
   writeLines(unlist(cat_list, use.names = FALSE), con)
 }
 
-multipolygonz_geometry_indices = function(sfobj) {
-  mat_coords = sf::st_coordinates(sf::st_geometry(sfobj))
+multipolygonz_geometry_indices = function(sf_obj) {
+  mat_coords = sf::st_coordinates(sf::st_geometry(sf_obj))
   if (!all(c("X", "Y", "Z", "L2") %in% colnames(mat_coords))) {
-    stop("sfobj must contain MULTIPOLYGON Z geometry.", call. = FALSE)
+    stop("sf_obj must contain MULTIPOLYGON Z geometry.", call. = FALSE)
   }
   group_cols = intersect(c("L3", "L2"), colnames(mat_coords))
   group_id = do.call(
@@ -82,10 +87,13 @@ multipolygonz_triangulate_face = function(mat, face) {
   )
 }
 
-multipolygonz_to_raymesh = function(sfobj, swap_yz = FALSE) {
-  geom = multipolygonz_geometry_indices(sfobj)
+multipolygonz_to_raymesh = function(sf_obj, swap_yz = FALSE) {
+  geom = multipolygonz_geometry_indices(sf_obj)
   verts_per_geometry = lengths(geom$geometry) - 1
-  vertex_rows = unlist(lapply(geom$geometry, function(x) x[-1]), use.names = FALSE)
+  vertex_rows = unlist(
+    lapply(geom$geometry, function(x) x[-1]),
+    use.names = FALSE
+  )
   vertices = geom$coords[vertex_rows, 1:3, drop = FALSE]
   if (swap_yz) {
     vertices = vertices[, c(1, 3, 2), drop = FALSE]
@@ -94,7 +102,10 @@ multipolygonz_to_raymesh = function(sfobj, swap_yz = FALSE) {
   vertex_offsets = cumsum(c(0, verts_per_geometry[-length(verts_per_geometry)]))
   indices = vector("list", length(geom$geometry))
   for (i in seq_along(geom$geometry)) {
-    row_range = seq.int(vertex_offsets[i] + 1, vertex_offsets[i] + verts_per_geometry[i])
+    row_range = seq.int(
+      vertex_offsets[i] + 1,
+      vertex_offsets[i] + verts_per_geometry[i]
+    )
     mat = vertices[row_range, , drop = FALSE]
     face = row_range - 1
     if (swap_yz) {

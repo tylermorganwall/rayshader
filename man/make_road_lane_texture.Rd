@@ -5,7 +5,7 @@
 \title{Make default road lane texture}
 \usage{
 make_road_lane_texture(
-  roadcolor = "#303030",
+  road_color = "#303030",
   lanes = 2,
   lane_color = "white",
   centerline_color = "#ffd23f",
@@ -18,7 +18,7 @@ make_road_lane_texture(
 )
 }
 \arguments{
-\item{roadcolor}{Default \code{"#303030"}. sRGB road surface color.}
+\item{road_color}{Default \code{"#303030"}. sRGB road surface color.}
 
 \item{lanes}{Default \code{2}. Number of lanes used when generating the default
 lane texture and, when \code{width = NULL}, deriving the road width. May also be

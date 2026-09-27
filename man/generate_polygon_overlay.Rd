@@ -13,7 +13,7 @@ generate_polygon_overlay(
   resolution_multiply = 1,
   offset = c(0, 0),
   data_column_fill = NULL,
-  linecolor = "black",
+  line_color = "black",
   palette = "white",
   linewidth = 1
 )
@@ -46,7 +46,7 @@ in the final map.}
 
 \item{data_column_fill}{Default \code{NULL}. The column to map the polygon fill color to.}
 
-\item{linecolor}{Default \code{black}. Color of the lines.}
+\item{line_color}{Default \code{black}. Color of the lines.}
 
 \item{palette}{Default \code{black}. Single color, named vector color palette, or palette function.
 If this is a named vector and \code{data_column_fill} is not \code{NULL},
@@ -80,7 +80,7 @@ montereybay_spatial |>
  sphere_shade(texture = "bw") |>
  add_overlay(generate_polygon_overlay(monterey_counties_sf,
                         palette = terrain.colors, linewidth=NA),
-                        alphalayer=0.7) |>
+                        alpha_layer=0.7) |>
  add_overlay(generate_altitude_overlay(bathy_hs, montereybay_spatial, start_transition = 0)) |>
  add_shadow(ray_shade(vertical_exaggeration = 4),0) |>
  plot_map()
@@ -90,9 +90,9 @@ county_palette = c("087" = "red",    "053" = "blue",   "081" = "green",
 montereybay_spatial |>
  sphere_shade(texture = "bw") |>
  add_shadow(ray_shade(vertical_exaggeration = 4),0) |>
- add_overlay(generate_polygon_overlay(monterey_counties_sf, linecolor="white", linewidth=3,
+ add_overlay(generate_polygon_overlay(monterey_counties_sf, line_color="white", linewidth=3,
                         palette = county_palette, data_column_fill = "COUNTYFP"),
-                        alphalayer=0.7) |>
+                        alpha_layer=0.7) |>
  add_overlay(generate_altitude_overlay(bathy_hs, montereybay_spatial, start_transition = 0)) |>
  add_shadow(ray_shade(vertical_exaggeration = 4),0.5) |>
  plot_map()

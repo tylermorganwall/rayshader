@@ -62,7 +62,7 @@ test_that("render_trails builds independent solid terrain-following meshes", {
     height_raster,
     solid = FALSE,
     shadow = FALSE,
-    windowsize = c(200, 200)
+    window_size = c(200, 200)
   ))
   trail_coords = render_trails(
     trails,

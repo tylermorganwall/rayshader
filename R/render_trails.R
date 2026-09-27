@@ -347,7 +347,7 @@ render_trails = function(
         ),
         return_mesh = TRUE,
         rgl_id = trail_id_by_path[[coord_index]],
-        watercolor = color
+        water_color = color
       )
     }
   )

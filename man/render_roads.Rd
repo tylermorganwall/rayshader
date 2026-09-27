@@ -6,7 +6,7 @@
 \usage{
 render_roads(
   roads,
-  roadcolor = "#303030",
+  road_color = "#303030",
   width = NULL,
   width_column = NULL,
   densify = TRUE,
@@ -43,7 +43,7 @@ render_roads(
 \item{roads}{Spatial line data used to draw road paths. Supports \code{sf},
 \code{sfc}, \code{sfg}, \code{SpatialLines}, and \code{SpatialLinesDataFrame} line inputs.}
 
-\item{roadcolor}{Default \code{"#303030"}. sRGB road surface color.}
+\item{road_color}{Default \code{"#303030"}. sRGB road surface color.}
 
 \item{width}{Default \code{NULL}, which derives road width from \code{lanes} and
 \code{lane_width}. If supplied, road width in scene grid-cell units for

@@ -249,7 +249,7 @@ elmat |>
 ``` r
 #sphere_shade can shift the sun direction:
 elmat |>
-    sphere_shade(sunangle = 45, texture = "desert") |>
+    sphere_shade(sun_angle = 45, texture = "desert") |>
     plot_map()
 ```
 
@@ -284,7 +284,7 @@ elmat |>
     sphere_shade(texture = "desert") |>
     add_water(detect_water(), color = "desert") |>
     add_shadow(ray_shade(), 0.5) |>
-    add_shadow(ambient_shade(maxsearch = 30), 0) |>
+    add_shadow(ambient_shade(max_search = 30), 0) |>
     plot_map()
 ```
 
@@ -305,9 +305,9 @@ radiance_shade(
         texture = desert_water,
         zscale = 3,
         samples = 16, 
-        lightdirection = 315,
-        lightintensity = 800,
-        lightaltitude = 50
+        light_direction = 315,
+        light_intensity = 800,
+        light_altitude = 50
     ) |> 
     plot_map()
 ```
@@ -329,7 +329,7 @@ elmat |>
         theta = 135,
         zoom = 0.75,
         phi = 45,
-        windowsize = c(1000, 800)
+        window_size = c(1000, 800)
     )
 Sys.sleep(0.2)
 render_snapshot()
@@ -377,7 +377,7 @@ elmat |>
         theta = 135,
         zoom = 0.75,
         phi = 45,
-        windowsize = c(1000, 800),
+        window_size = c(1000, 800),
         background = "darkred"
     )
 render_camera(theta = 20, phi = 40, zoom = 0.64, fov = 56)
@@ -426,7 +426,7 @@ elmat |>
         theta = 135,
         zoom = 0.75,
         phi = 45,
-        windowsize = c(1000, 800),
+        window_size = c(1000, 800),
         background = "darkred"
     )
 render_camera(theta = 125, phi = 22, zoom = 0.47, fov = 60)
@@ -464,9 +464,9 @@ elmat |>
         theta = 72,
         zoom = 0.68,
         phi = 40,
-        shadowdepth = -100,
-        soliddepth = -100,
-        windowsize = c(1000, 800)
+        shadow_depth = -100,
+        solid_depth = -100,
+        window_size = c(1000, 800)
     )
 
 render_scalebar(
@@ -539,14 +539,14 @@ montereybay_spatial |>
         fov = 0,
         theta = -45,
         phi = 45,
-        windowsize = c(1000, 800),
+        window_size = c(1000, 800),
         zoom = 0.75,
         water = TRUE,
         water_input = 0,
-        wateralpha = 0.5,
-        watercolor = "lightblue",
-        waterlinecolor = "white",
-        waterlinealpha = 0.5
+        water_alpha = 0.5,
+        water_color = "lightblue",
+        water_line_color = "white",
+        water_line_alpha = 0.5
     )
 Sys.sleep(0.2)
 render_snapshot(clear = TRUE)
@@ -569,19 +569,19 @@ montereybay_spatial |>
         fov = 70,
         theta = 270,
         phi = 30,
-        windowsize = c(1000, 800),
+        window_size = c(1000, 800),
         zoom = 0.6,
         water = TRUE,
         water_input = 0,
-        wateralpha = 0.5,
-        watercolor = "#233aa1",
-        waterlinecolor = "white",
-        waterlinealpha = 0.5
+        water_alpha = 0.5,
+        water_color = "#233aa1",
+        water_line_color = "white",
+        water_line_alpha = 0.5
     )
 Sys.sleep(0.2)
 render_highquality(
-    lightdirection = c(-45, 45),
-    lightaltitude = 30,
+    light_direction = c(-45, 45),
+    light_altitude = 30,
     samples = 16,
     camera_lookat = c(0, -50, 0),
     ground_material = diffuse(
@@ -725,13 +725,13 @@ new_dem |>
 render_water(
     water_input = water_level_rast,
     water_edge_extension = 0.25,
-    watercolor = "dodgerblue"
+    water_color = "dodgerblue"
 )
 
 render_streams(
     streams = streams,
     water_polygons = water,
-    watercolor = "dodgerblue",
+    water_color = "dodgerblue",
     width = 0.35,
     clear_previous = TRUE
 )
@@ -769,15 +769,15 @@ montereybay_spatial |>
         fov = 0,
         theta = -45,
         phi = 45,
-        windowsize = c(1000, 800),
+        window_size = c(1000, 800),
         zoom = 0.6,
         water = TRUE,
         water_input = 0,
-        wateralpha = 0.5,
-        watercolor = "lightblue",
-        waterlinecolor = "white",
-        waterlinealpha = 0.5,
-        baseshape = "circle"
+        water_alpha = 0.5,
+        water_color = "lightblue",
+        water_line_color = "white",
+        water_line_alpha = 0.5,
+        base_shape = "circle"
     )
 
 render_snapshot(clear = TRUE)
@@ -795,15 +795,15 @@ montereybay_spatial |>
         fov = 0,
         theta = -45,
         phi = 45,
-        windowsize = c(1000, 800),
+        window_size = c(1000, 800),
         zoom = 0.6,
         water = TRUE,
         water_input = 0,
-        wateralpha = 0.5,
-        watercolor = "lightblue",
-        waterlinecolor = "white",
-        waterlinealpha = 0.5,
-        baseshape = "hex"
+        water_alpha = 0.5,
+        water_color = "lightblue",
+        water_line_color = "white",
+        water_line_alpha = 0.5,
+        base_shape = "hex"
     )
 
 render_snapshot(clear = TRUE)
@@ -825,14 +825,14 @@ montereybay_spatial |>
         fov = 0,
         theta = -100,
         phi = 30,
-        windowsize = c(1000, 800),
+        window_size = c(1000, 800),
         zoom = 0.6,
         water = TRUE,
         water_input = 0,
-        waterlinecolor = "white",
-        waterlinealpha = 0.5,
-        wateralpha = 0.5,
-        watercolor = "lightblue"
+        water_line_color = "white",
+        water_line_alpha = 0.5,
+        water_alpha = 0.5,
+        water_color = "lightblue"
     )
 moss_landing_coord = c(36.806807, -121.793332)
 santa_cruz = c(36.962957, -122.021033)
@@ -843,7 +843,7 @@ render_label(
     long = moss_landing_coord[2],
     altitude = 1000,
     text = "Moss Landing",
-    textsize = 2,
+    text_size = 2,
     linewidth = 5
 )
 render_label(
@@ -851,9 +851,9 @@ render_label(
     long = santa_cruz[2],
     altitude = 7000,
     text = "Santa Cruz",
-    textcolor = "darkred",
-    linecolor = "darkred",
-    textsize = 2,
+    text_color = "darkred",
+    line_color = "darkred",
+    text_size = 2,
     linewidth = 5
 )
 render_label(
@@ -862,18 +862,18 @@ render_label(
     altitude = 4000,
     text = "Monterey",
     dashed = TRUE,
-    textsize = 2,
+    text_size = 2,
     linewidth = 5
 )
 render_label(
     lat = canyon[1],
     long = canyon[2],
     altitude = 1000,
-    textcolor = "white",
-    linecolor = "white",
+    text_color = "white",
+    line_color = "white",
     text = "Monterey Canyon",
-    relativez = FALSE,
-    textsize = 2,
+    relative_z = FALSE,
+    text_size = 2,
     linewidth = 5
 )
 Sys.sleep(0.2)
@@ -908,8 +908,8 @@ montereybay_spatial |>
     plot_3d(
         vertical_exaggeration = 4,
         water = TRUE,
-        windowsize = c(1000, 800),
-        watercolor = "dodgerblue"
+        window_size = c(1000, 800),
+        water_color = "dodgerblue"
     )
 render_camera(theta = -60, phi = 60, zoom = 0.85, fov = 30)
 
@@ -1012,11 +1012,11 @@ elmat |>
         fov = 30,
         theta = -225,
         phi = 25,
-        windowsize = c(1000, 800),
+        window_size = c(1000, 800),
         zoom = 0.3
     )
 Sys.sleep(0.2)
-render_depth(focallength = 800, clear = TRUE)
+render_depth(focal_length = 800, clear = TRUE)
 ```
 
 ![](man/figures/README_three-d-depth-1.png)<!-- -->
@@ -1074,7 +1074,7 @@ plot_gg(
     zoom = 0.7,
     theta = 10,
     phi = 30,
-    windowsize = c(800, 800)
+    window_size = c(800, 800)
 )
 Sys.sleep(0.2)
 gg2 = render_snapshot(clear = TRUE, plot = FALSE)
@@ -1122,7 +1122,7 @@ plot_gg(
     width = 7,
     height = 4,
     scale = 300,
-    windowsize = c(1400, 866),
+    window_size = c(1400, 866),
     zoom = 0.6,
     phi = 30,
     theta = 30
@@ -1157,11 +1157,11 @@ plot_gg(
     mtplot,
     width = 3.5,
     multicore = TRUE, 
-    windowsize = c(800, 800),
+    window_size = c(800, 800),
     zoom = 0.85,
     phi = 35, 
     theta = 30,
-    sunangle = 225
+    sun_angle = 225
 )
 Sys.sleep(0.2)
 gg6 = render_snapshot(clear = TRUE, plot = FALSE)
@@ -1206,7 +1206,7 @@ plot_gg(
     height = 4, 
     scale = 300, 
     multicore = TRUE,
-    windowsize = c(1000, 800)
+    window_size = c(1000, 800)
 )
 render_camera(fov = 70, zoom = 0.5, theta = 130, phi = 35)
 Sys.sleep(0.2)
@@ -1229,14 +1229,14 @@ plot_gg(
     height = 4,
     scale = 300,
     multicore = TRUE, offset_edges = 0,
-    windowsize = c(1200, 960), 
+    window_size = c(1200, 960),
     fov = 70, 
     zoom = 0.4, 
     theta = 330,
     phi = 40
 )
 Sys.sleep(0.2)
-render_depth(focallength = 600, focus = 1700, clear = TRUE)
+render_depth(focal_length = 600, focus = 1700, clear = TRUE)
 ```
 
 ![](man/figures/README_ggplots_5-1.png)<!-- -->
@@ -1262,7 +1262,7 @@ plot_gg(
     height = 4, 
     scale = 300,
     raytrace = FALSE,
-    windowsize = c(1200, 960),
+    window_size = c(1200, 960),
     fov = 129,
     zoom = 0.21,
     theta = -25,

@@ -23,11 +23,11 @@ radiance_shade(
   sky_sun_azimuth = NA,
   sky_altitude = NA,
   sky_args = list(),
-  lightdirection = 315,
-  lightaltitude = 45,
-  lightsize = NULL,
-  lightintensity = 500,
-  lightcolor = "white",
+  light_direction = 315,
+  light_altitude = 45,
+  light_size = 5,
+  light_intensity = 500,
+  light_color = "white",
   material = rayrender::diffuse(),
   water_attenuation = 0,
   water_surface_color = TRUE,
@@ -104,15 +104,15 @@ and passes this value to its \code{altitude} argument.}
 \code{skymodelr::generate_sky_latlong()} (default) or \code{skymodelr::generate_sky()}
 when direct sky arguments are used.}
 
-\item{lightdirection}{Default \code{315}. Light direction angle(s), in degrees.}
+\item{light_direction}{Default \code{315}. Light direction angle(s), in degrees.}
 
-\item{lightaltitude}{Default \code{45}. Light altitude angle(s), in degrees.}
+\item{light_altitude}{Default \code{45}. Light altitude angle(s), in degrees.}
 
-\item{lightsize}{Default \code{NULL}. Light radius; auto-derived from scene size.}
+\item{light_size}{Default \code{5}. Full angular diameter of the disk light(s), in degrees, greater than 0 and less than 180. Independent of scene size and camera position.}
 
-\item{lightintensity}{Default \code{500}. Light intensity value(s).}
+\item{light_intensity}{Default \code{500}. Light intensity value(s).}
 
-\item{lightcolor}{Default \code{"white"}. Light color(s).}
+\item{light_color}{Default \code{"white"}. Light color(s).}
 
 \item{material}{Default \code{rayrender::diffuse()}. Forwarded to
 \code{\link[=render_highquality]{render_highquality()}}.}

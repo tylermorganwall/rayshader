@@ -3,7 +3,7 @@
 #'@description Adds a layer of water to a map.
 #'
 #'@param hillshade A three-dimensional RGB array.
-#'@param watermap Matrix indicating whether water was detected at that point. 1 indicates water, 0 indicates no water.
+#'@param water_map Matrix indicating whether water was detected at that point. 1 indicates water, 0 indicates no water.
 #'@param color Default `imhof1`. The water fill color. A hexcode or recognized color string.
 #'Also includes built-in colors to match the palettes included in [sphere_shade()]:
 #'(`imhof1`,`imhof2`,`imhof3`,`imhof4`, `desert`, `bw`, and `unicorn`).
@@ -29,14 +29,14 @@
 #'  sphere_shade(texture="imhof4",vertical_exaggeration=20) |>
 #'  add_water(detect_water(montbay_water),color="imhof4") |>
 #'  plot_map()
-add_water = function(hillshade, watermap, color = "imhof1") {
+add_water = function(hillshade, water_map, color = "imhof1") {
   hillshade_cache_label = get_hillshade_map_label(
     default = format_scene_cache_label(deparse(substitute(hillshade)))
   )
   hillshade = rayimage::ray_read_image(hillshade)
   colorspace = attr(hillshade, "colorspace")
   white_point = attr(hillshade, "white_current")
-  watermap = t(flipud(watermap))
+  water_map = t(flipud(water_map))
   if (color == "imhof1") {
     color = col2rgb_linear("#e9f9ee")
   } else if (color == "imhof2") {
@@ -66,26 +66,26 @@ add_water = function(hillshade, watermap, color = "imhof1") {
       hillshade = temp
     }
   }
-  if (missing(watermap)) {
+  if (missing(water_map)) {
     stop("User must provide matrix indicating locations of bodies of water")
   }
-  if (all(dim(watermap) != dim(hillshade)[1:2])) {
+  if (all(dim(water_map) != dim(hillshade)[1:2])) {
     stop(
-      "`hillshade` and `watermap` dimensions must be the same; hillshade is ",
+      "`hillshade` and `water_map` dimensions must be the same; hillshade is ",
       paste0(dim(hillshade)[1:2], collapse = "x"),
-      ", watermap is ",
-      paste0(dim(watermap)[1:2], collapse = "x")
+      ", water_map is ",
+      paste0(dim(water_map)[1:2], collapse = "x")
     )
   }
   for (i in 1:3) {
     tempmat = hillshade[,, i]
     if (color[1] != "unicorn") {
-      tempmat[watermap >= 1] = color[i]
+      tempmat[water_map >= 1] = color[i]
     } else {
       unicolors = t(col2rgb_linear(rainbow(256)))
-      for (row in seq_len(nrow(watermap))) {
-        for (col in seq_len(ncol(watermap))) {
-          if (watermap[row, col] >= 1) {
+      for (row in seq_len(nrow(water_map))) {
+        for (col in seq_len(ncol(water_map))) {
+          if (water_map[row, col] >= 1) {
             tempmat[row, col] = unicolors[i, (col - 1) %% 256 + 1]
           }
         }

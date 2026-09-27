@@ -6,15 +6,15 @@
 \usage{
 ambient_shade(
   heightmap,
-  anglebreaks = 90 * cospi(seq(5, 85, by = 5)/180),
-  sunbreaks = 24,
-  maxsearch = 30,
+  angle_breaks = 90 * cospi(seq(5, 85, by = 5)/180),
+  sun_breaks = 24,
+  max_search = 30,
   multicore = FALSE,
   zscale = 1,
   vertical_exaggeration = 1,
   cache_mask = NULL,
   shadow_cache = NULL,
-  progbar = interactive(),
+  progress_bar = interactive(),
   geographic_aspect = TRUE,
   extent = NULL,
   crs = NULL,
@@ -24,11 +24,11 @@ ambient_shade(
 \arguments{
 \item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.}
 
-\item{anglebreaks}{Default \code{90*cospi(seq(5, 85,by =5)/180)}. The angle(s), in degrees, as measured from the horizon from which the light originates.}
+\item{angle_breaks}{Default \code{90*cospi(seq(5, 85,by =5)/180)}. The angle(s), in degrees, as measured from the horizon from which the light originates.}
 
-\item{sunbreaks}{Default \code{24}. Number of rays to be sent out in a circle, evenly spaced, around the point being tested.}
+\item{sun_breaks}{Default \code{24}. Number of rays to be sent out in a circle, evenly spaced, around the point being tested.}
 
-\item{maxsearch}{Default \code{30}. The maximum horizontal distance that the system should propogate rays to check for surface intersections.}
+\item{max_search}{Default \code{30}. The maximum horizontal distance that the system should propogate rays to check for surface intersections.}
 
 \item{multicore}{Default FALSE. If TRUE, multiple cores will be used to compute the shadow matrix. By default, this uses all cores available, unless the user has
 set \code{options("cores")} in which the multicore option will only use that many cores.}
@@ -44,7 +44,7 @@ update cached \code{zscale} metadata.}
 
 \item{shadow_cache}{Default \code{NULL}. The shadow matrix to be updated at the points defined by the argument \code{cache_mask}.}
 
-\item{progbar}{Default \code{TRUE} if interactive, \code{FALSE} otherwise. If \code{FALSE}, turns off progress bar.}
+\item{progress_bar}{Default \code{TRUE} if interactive, \code{FALSE} otherwise. If \code{FALSE}, turns off progress bar.}
 
 \item{geographic_aspect}{Default \code{TRUE}. Correct unequal metric x/y cell
 spacing using the input extent and CRS.}
@@ -73,10 +73,10 @@ montereybay_spatial |>
  ambient_shade(vertical_exaggeration = 20) |>
  plot_map()
 
-#We can increase the distance to look for surface intersections `maxsearch`
-#and the density of rays sent out around the point `sunbreaks`.
+#We can increase the distance to look for surface intersections `max_search`
+#and the density of rays sent out around the point `sun_breaks`.
 montereybay_spatial |>
- ambient_shade(sunbreaks = 24,maxsearch = 100, multicore = TRUE,
+ ambient_shade(sun_breaks = 24,max_search = 100, multicore = TRUE,
                vertical_exaggeration = 20) |>
  plot_map()
 #Create the Red Relief Image Map (RRIM) technique using a custom texture and ambient_shade(),
@@ -85,7 +85,7 @@ bigmb = resize_spatial(montereybay_spatial, scale=2, method_up="cubic")
 bigmb |>
  sphere_shade(texture = create_texture("red","red","red","red","white"),
               vertical_exaggeration = 20) |>
- add_shadow(ambient_shade(maxsearch = 100, multicore = TRUE,
+ add_shadow(ambient_shade(max_search = 100, multicore = TRUE,
                           vertical_exaggeration = 20),0) |>
  add_shadow(lamb_shade(),0.5) |>
  plot_map()

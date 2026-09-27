@@ -19,7 +19,7 @@
 #'increase the resolution of the overlay, which should make lines/polygons/text finer.
 #'Should be combined with \code{\link[=add_overlay]{add_overlay()}} with `rescale_original = TRUE` to ensure those added details are captured
 #'in the final map.
-#'@param linecolor Default `black`. Color of the lines.
+#'@param line_color Default `black`. Color of the lines.
 #'@param palette Default `black`. Single color, named vector color palette, or palette function.
 #'If this is a named vector and `data_column_fill` is not `NULL`,
 #'it will map the colors in the vector to the names. If `data_column_fill` is a numeric column,
@@ -47,7 +47,7 @@
 #'  sphere_shade(texture = "bw") |>
 #'  add_overlay(generate_polygon_overlay(monterey_counties_sf,
 #'                         palette = terrain.colors, linewidth=NA),
-#'                         alphalayer=0.7) |>
+#'                         alpha_layer=0.7) |>
 #'  add_overlay(generate_altitude_overlay(bathy_hs, montereybay_spatial, start_transition = 0)) |>
 #'  add_shadow(ray_shade(vertical_exaggeration = 4),0) |>
 #'  plot_map()
@@ -57,9 +57,9 @@
 #'montereybay_spatial |>
 #'  sphere_shade(texture = "bw") |>
 #'  add_shadow(ray_shade(vertical_exaggeration = 4),0) |>
-#'  add_overlay(generate_polygon_overlay(monterey_counties_sf, linecolor="white", linewidth=3,
+#'  add_overlay(generate_polygon_overlay(monterey_counties_sf, line_color="white", linewidth=3,
 #'                         palette = county_palette, data_column_fill = "COUNTYFP"),
-#'                         alphalayer=0.7) |>
+#'                         alpha_layer=0.7) |>
 #'  add_overlay(generate_altitude_overlay(bathy_hs, montereybay_spatial, start_transition = 0)) |>
 #'  add_shadow(ray_shade(vertical_exaggeration = 4),0.5) |>
 #'  plot_map()
@@ -72,7 +72,7 @@ generate_polygon_overlay = function(
   resolution_multiply = 1,
   offset = c(0, 0),
   data_column_fill = NULL,
-  linecolor = "black",
+  line_color = "black",
   palette = "white",
   linewidth = 1
 ) {
@@ -258,7 +258,7 @@ generate_polygon_overlay = function(
       yaxs = "i",
       lwd = linewidth_plot,
       col = NA,
-      border = linecolor
+      border = line_color
     )
   }
   grDevices::dev.off() #resets par

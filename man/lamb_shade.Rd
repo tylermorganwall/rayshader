@@ -6,8 +6,8 @@
 \usage{
 lamb_shade(
   heightmap,
-  sunaltitude = 45,
-  sunangle = 315,
+  sun_altitude = 45,
+  sun_angle = 315,
   zscale = 1,
   vertical_exaggeration = 1,
   zero_negative = TRUE,
@@ -19,9 +19,9 @@ lamb_shade(
 \arguments{
 \item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.}
 
-\item{sunaltitude}{Default \code{45}. The azimuth angle as measured from the horizon from which the light originates.}
+\item{sun_altitude}{Default \code{45}. The azimuth angle as measured from the horizon from which the light originates.}
 
-\item{sunangle}{Default \code{315} (NW). The angle around the matrix from which the light originates.}
+\item{sun_angle}{Default \code{315} (NW). The angle around the matrix from which the light originates.}
 
 \item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis.}
 
@@ -64,17 +64,17 @@ montereybay_spatial |>
 
 #Change the sun direction
 montereybay_spatial |>
- lamb_shade(sunangle=45, vertical_exaggeration = 4) |>
+ lamb_shade(sun_angle=45, vertical_exaggeration = 4) |>
  plot_map()
 
 #Change the sun altitude
 montereybay_spatial |>
- lamb_shade(sunaltitude=60, vertical_exaggeration = 4) |>
+ lamb_shade(sun_altitude=60, vertical_exaggeration = 4) |>
  plot_map()
 
 #Change the sun to directly overhead, the shading here represents the slope angle
 montereybay_spatial |>
- lamb_shade(sunaltitude=90, vertical_exaggeration = 8) |>
+ lamb_shade(sun_altitude=90, vertical_exaggeration = 8) |>
  plot_map()
 \dontshow{\}) # examplesIf}
 }

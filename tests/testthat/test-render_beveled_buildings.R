@@ -78,7 +78,7 @@ test_that("render_beveled_polygons() and render_buildings() work for single poly
     zscale = 1,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(400, 400)
+    window_size = c(400, 400)
   ))
   extent = c(
     xmin = 0,
@@ -135,7 +135,7 @@ test_that("render_polygons() warns and combines scale_data with vertical_exagger
     zscale = 1,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(100, 100)
+    window_size = c(100, 100)
   ))
   polygon = sf::st_sf(
     value = "10",
@@ -184,7 +184,7 @@ test_that("raybevel polygon renderers warn when scale_data and vertical_exaggera
     zscale = 1,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(100, 100)
+    window_size = c(100, 100)
   ))
   polygon = sf::st_sf(
     value = "10",

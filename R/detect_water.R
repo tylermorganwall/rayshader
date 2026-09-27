@@ -15,9 +15,9 @@
 #'the heightmap is resolved. Minimum area (in grid cells) to be considered a
 #'body of water.
 #'@param max_height Default `NULL`. If passed, this number will specify the maximum height a point can be considered to be water.
-#'@param normalvectors Default `NULL`. Pre-computed array of normal vectors from the [calculate_normal()] function. Supplying this will speed up water detection.
+#'@param normal_vectors Default `NULL`. Pre-computed array of normal vectors from the [calculate_normal()] function. Supplying this will speed up water detection.
 #'@param keep_groups Default `FALSE`. If `TRUE`, the matrix returned will retain the numbered grouping information.
-#'@param progbar Default `FALSE`. If `TRUE`, turns on progress bar.
+#'@param progress_bar Default `FALSE`. If `TRUE`, turns on progress bar.
 #'@param geographic_aspect Default `TRUE`. If `TRUE`, account for unequal
 #'horizontal cell sizes using the supplied or cached spatial metadata.
 #'@param extent Default `NULL`. Spatial extent for a matrix heightmap. If
@@ -42,9 +42,9 @@ detect_water = function(
   cutoff = 0.9999999,
   min_area = NULL,
   max_height = NULL,
-  normalvectors = NULL,
+  normal_vectors = NULL,
   keep_groups = FALSE,
-  progbar = FALSE,
+  progress_bar = FALSE,
   geographic_aspect = TRUE,
   extent = NULL,
   crs = NULL
@@ -131,12 +131,12 @@ detect_water = function(
   if (is.null(min_area)) {
     min_area = length(heightmap) / 400
   }
-  if (!is.null(normalvectors)) {
-    normalvectors = correct_normal_geographic_aspect(
-      normalvectors,
+  if (!is.null(normal_vectors)) {
+    normal_vectors = correct_normal_geographic_aspect(
+      normal_vectors,
       heightmap_info$geographic_aspect
     )
-    zmatrix = abs(normalvectors$z)
+    zmatrix = abs(normal_vectors$z)
     zmatrix = abs(zmatrix)
     zmatrix[zmatrix < cutoff] = 0
     zmatrix[zmatrix >= cutoff] = 1
@@ -145,7 +145,11 @@ detect_water = function(
     zmatrix[nrow(zmatrix), ] = 0
     zmatrix[, ncol(zmatrix)] = 0
   } else {
-    zmatrix = calculate_normal(heightmap, zscale = zscale, progbar = progbar)$z
+    zmatrix = calculate_normal(
+      heightmap,
+      zscale = zscale,
+      progress_bar = progress_bar
+    )$z
     zmatrix = abs(zmatrix)
     zmatrix[zmatrix < cutoff] = 0
     zmatrix[zmatrix >= cutoff] = 1

@@ -28,7 +28,7 @@ prepare_render_highquality_road_chain_mesh(
   round_join_segments = 5L,
   return_mesh = FALSE,
   rgl_id = NULL,
-  roadcolor = NULL,
+  road_color = NULL,
   preparation_geometry = NULL,
   precomputed_sections = NULL
 )
@@ -83,7 +83,7 @@ sections along the physical mesh chain.}
 \item{rgl_id}{Default \code{NULL}. Source rgl path identifier used for later
 material overrides.}
 
-\item{roadcolor}{Default \code{NULL}. Source road color used for mesh previews and
+\item{road_color}{Default \code{NULL}. Source road color used for mesh previews and
 material functions.}
 
 \item{preparation_geometry}{Default \code{NULL}. Precomputed road geometry used

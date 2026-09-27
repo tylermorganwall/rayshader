@@ -4,10 +4,10 @@
 #'
 #'@param heightmap A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.
 #'@param waterheight Default `0`. Water level. Either a scalar, a matrix with the same dimensions as `heightmap`, or a spatial raster that can be projected/resampled to the heightmap grid.
-#'@param watercolor Default `blue`.
+#'@param water_color Default `blue`.
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
 #'of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
-#'@param wateralpha Default `0.5`. Water transparency.
+#'@param water_alpha Default `0.5`. Water transparency.
 #'@param water_render_method Default `"raster"`. Water meshing method. `"raster"` renders water at the supplied elevation and emits sidewalls down to the terrain wherever exposed water floats above the surface; `"polygon"` fits each spatial water component by matching flooded terrain-triangle area to raster footprint area, then clips the fixed-grid terrain triangles; `"legacy"` uses the previous box/grid renderer.
 #'@param water_edge_extension Default `0.5`. For spatial `waterheight` inputs, amount in grid cells to expand finite water cells at boundary edges, up to a maximum of half a cell.
 #'@param water_edge_clamp Default `FALSE`. For spatial `waterheight` inputs, if `TRUE`, resolves each connected water footprint to a single level, then lowers it by the largest finite exterior sidewall height after edge expansion. Heightmap-boundary and NA-slice edges are ignored when computing the lowering amount.
@@ -18,9 +18,9 @@
 make_water = function(
   heightmap,
   waterheight = mean(heightmap),
-  watercolor = "lightblue",
+  water_color = "lightblue",
   zscale = 1,
-  wateralpha = 0.5,
+  water_alpha = 0.5,
   water_render_method = c("raster", "polygon", "legacy"),
   water_edge_extension = 0.5,
   water_edge_clamp = FALSE,
@@ -34,17 +34,17 @@ make_water = function(
     return(make_water_legacy(
       heightmap = heightmap,
       waterheight = waterheight,
-      watercolor = watercolor,
+      water_color = water_color,
       zscale = zscale,
-      wateralpha = wateralpha
+      water_alpha = water_alpha
     ))
   }
   make_water_raster(
     heightmap = heightmap,
     waterheight = waterheight,
-    watercolor = watercolor,
+    water_color = water_color,
     zscale = zscale,
-    wateralpha = wateralpha,
+    water_alpha = water_alpha,
     water_render_method = water_render_method,
     water_edge_extension = water_edge_extension,
     water_edge_clamp = water_edge_clamp,
@@ -58,9 +58,9 @@ make_water = function(
 make_water_raster = function(
   heightmap,
   waterheight = mean(heightmap),
-  watercolor = "lightblue",
+  water_color = "lightblue",
   zscale = 1,
-  wateralpha = 0.5,
+  water_alpha = 0.5,
   water_render_method = c("raster", "polygon"),
   water_edge_extension = 0.5,
   water_edge_clamp = FALSE,
@@ -89,8 +89,8 @@ make_water_raster = function(
       waterheight = waterheight,
       heightmap = heightmap,
       valid_water = valid_water,
-      watercolor = watercolor,
-      wateralpha = wateralpha,
+      water_color = water_color,
+      water_alpha = water_alpha,
       water_render_method = water_render_method,
       water_edge_extension = water_edge_extension,
       water_edge_clamp = water_edge_clamp,
@@ -128,8 +128,8 @@ make_water_raster = function(
         rgl::triangles3d(
           x = component,
           indices = seq_len(nrow(component)),
-          color = watercolor,
-          alpha = wateralpha,
+          color = water_color,
+          alpha = water_alpha,
           lit = FALSE,
           front = "filled",
           back = "filled",
@@ -147,8 +147,8 @@ make_spatial_water_surface = function(
   waterheight,
   heightmap = NULL,
   valid_water,
-  watercolor = "lightblue",
-  wateralpha = 0.5,
+  water_color = "lightblue",
+  water_alpha = 0.5,
   water_render_method = c("raster", "polygon"),
   water_edge_extension = 0.5,
   water_edge_clamp = FALSE,
@@ -207,8 +207,8 @@ make_spatial_water_surface = function(
   rgl::triangles3d(
     x = triangle_vertices,
     indices = seq_len(nrow(triangle_vertices)),
-    color = watercolor,
-    alpha = wateralpha,
+    color = water_color,
+    alpha = water_alpha,
     lit = FALSE,
     front = "filled",
     back = "filled",
@@ -5082,9 +5082,9 @@ interpolate_spatial_water_surface_height_unclamped = function(heightmap, x, z) {
 make_water_legacy = function(
   heightmap,
   waterheight = mean(heightmap),
-  watercolor = "lightblue",
+  water_color = "lightblue",
   zscale = 1,
-  wateralpha = 0.5
+  water_alpha = 0.5
 ) {
   if (
     is.matrix(waterheight) ||
@@ -5162,8 +5162,8 @@ make_water_legacy = function(
       rgl::triangles3d(
         x = apply_geographic_aspect_to_vertices(vertices),
         indices = indices,
-        color = watercolor,
-        alpha = wateralpha,
+        color = water_color,
+        alpha = water_alpha,
         lit = FALSE,
         front = "filled",
         back = "cull",
@@ -5176,8 +5176,8 @@ make_water_legacy = function(
           apply_geographic_aspect_to_vertices(fullsides),
           indices = indices,
           lit = FALSE,
-          color = watercolor,
-          alpha = wateralpha,
+          color = water_color,
+          alpha = water_alpha,
           front = "filled",
           back = "cull",
           depth_test = "less",
@@ -5192,8 +5192,8 @@ make_water_legacy = function(
           apply_geographic_aspect_to_vertices(fullsides),
           indices = indices,
           lit = FALSE,
-          color = watercolor,
-          alpha = wateralpha,
+          color = water_color,
+          alpha = water_alpha,
           front = "fill",
           back = "culled",
           texture = NULL,
@@ -5209,8 +5209,8 @@ make_water_legacy = function(
         x = ray_surface$verts,
         indices = ray_surface$inds,
         texcoords = ray_surface$texcoords,
-        color = watercolor,
-        alpha = wateralpha,
+        color = water_color,
+        alpha = water_alpha,
         back = "culled",
         front = "fill",
         lit = FALSE,
@@ -5466,7 +5466,7 @@ format_no_water_warning = function(heightmap, waterheight, zscale) {
 #'@keywords internal
 make_waterlines_from_mesh = function(
   water_mesh,
-  linecolor = "grey40",
+  line_color = "grey40",
   alpha = 1,
   linewidth = 2,
   antialias = FALSE
@@ -5480,7 +5480,7 @@ make_waterlines_from_mesh = function(
   }
   rgl::segments3d(
     segmentlist,
-    color = linecolor,
+    color = line_color,
     lwd = linewidth,
     alpha = alpha,
     depth_mask = TRUE,

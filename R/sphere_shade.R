@@ -7,10 +7,10 @@
 #'Cache fallback messages are disabled by default. Set `options(rayshader.verbose_scene_cache = TRUE)` to print when cached metadata is reused.
 #'
 #'@param heightmap A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.
-#'@param sunangle Default `315` (NW). The direction of the main highlight color (derived from the built-in palettes or the [create_texture()] function).
+#'@param sun_angle Default `315` (NW). The direction of the main highlight color (derived from the built-in palettes or the [create_texture()] function).
 #'@param texture Default `imhof1`. Either a square matrix indicating the spherical texture mapping, or a string indicating one
 #'of the built-in palettes (`imhof1`,`imhof2`,`imhof3`,`imhof4`,`desert`, `bw`, and `unicorn`).
-#'@param normalvectors Default `NULL`. Cache of the normal vectors (from [calculate_normal()] function). Supply this to speed up texture mapping.
+#'@param normal_vectors Default `NULL`. Cache of the normal vectors (from [calculate_normal()] function). Supply this to speed up texture mapping.
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis.
 #'If omitted and `heightmap` is a spatial raster, rayshader automatically uses
 #'the raster cell resolution. Geographic longitude/latitude rasters are converted
@@ -20,7 +20,7 @@
 #'effective visual relief for this call. Values greater than `1` increase
 #'apparent relief and values between `0` and `1` flatten it. This does not
 #'update cached `zscale` metadata.
-#'@param colorintensity Deprecated alias for `vertical_exaggeration`.
+#'@param color_intensity Deprecated alias for `vertical_exaggeration`.
 #'@param na_color Default `NULL`. RGB color stored in the returned image for
 #'transparent `NA` heightmap cells. If `NULL`, the texture's center/up color is
 #'used. This does not affect transparency; `NA` heightmap cells are always
@@ -31,7 +31,7 @@
 #' @param crs Default `NULL`. CRS to assign to the input before calculating
 #' metric cell spacing.
 #'
-#'@param progbar Default `TRUE` if interactive, `FALSE` otherwise. If `FALSE`, turns off progress bar.
+#'@param progress_bar Default `TRUE` if interactive, `FALSE` otherwise. If `FALSE`, turns off progress bar.
 #'@return RGBA array of hillshaded texture mappings.
 #'@export
 #'@examples
@@ -52,7 +52,7 @@
 #'
 #'#Change the highlight angle:
 #'montereybay_spatial |>
-#'  sphere_shade(texture="desert", sunangle = 45, vertical_exaggeration=10) |>
+#'  sphere_shade(texture="desert", sun_angle = 45, vertical_exaggeration=10) |>
 #'  plot_map()
 #'
 #'#Create our own texture using the `create_texture` function:
@@ -64,19 +64,19 @@
 #'  plot_map()
 sphere_shade = function(
   heightmap,
-  sunangle = 315,
+  sun_angle = 315,
   texture = "imhof1",
-  normalvectors = NULL,
-  colorintensity = 1,
+  normal_vectors = NULL,
+  color_intensity = 1,
   zscale = 1,
   vertical_exaggeration = 1,
   na_color = NULL,
-  progbar = interactive(),
+  progress_bar = interactive(),
   geographic_aspect = TRUE,
   extent = NULL,
   crs = NULL
 ) {
-  sunangle_missing = missing(sunangle)
+  sunangle_missing = missing(sun_angle)
   heightmap_missing = missing(heightmap)
   extent_missing = missing(extent)
   crs_missing = missing(crs)
@@ -87,15 +87,15 @@ sphere_shade = function(
     zscale
   )))
   vertical_exaggeration_missing = missing(vertical_exaggeration)
-  if (!missing(colorintensity)) {
+  if (!missing(color_intensity)) {
     .Deprecated(
       msg = paste(
-        "`colorintensity` is deprecated in `sphere_shade()`.",
+        "`color_intensity` is deprecated in `sphere_shade()`.",
         "Use `vertical_exaggeration` instead."
       )
     )
     if (vertical_exaggeration_missing) {
-      vertical_exaggeration = colorintensity
+      vertical_exaggeration = color_intensity
     }
   }
   if (heightmap_missing) {
@@ -184,22 +184,22 @@ sphere_shade = function(
       isTRUE(heightmap_info$geographic_aspect$active) &&
       is.finite(heightmap_info$geographic_aspect$north_rotation)
   ) {
-    sunangle = sunangle + heightmap_info$geographic_aspect$north_rotation
+    sun_angle = sun_angle + heightmap_info$geographic_aspect$north_rotation
   }
-  sunangle = sunangle / 180 * pi
-  if (is.null(normalvectors)) {
+  sun_angle = sun_angle / 180 * pi
+  if (is.null(normal_vectors)) {
     normal_heightmap = heightmap
     attr(normal_heightmap, "rayshader_geographic_aspect") =
       heightmap_info$geographic_aspect
-    normalvectors = calculate_normal(
+    normal_vectors = calculate_normal(
       heightmap = normal_heightmap,
       zscale = zscale,
       geographic_aspect = geographic_aspect,
-      progbar = progbar
+      progress_bar = progress_bar
     )
   }
-  normalvectors = correct_normal_geographic_aspect(
-    normalvectors,
+  normal_vectors = correct_normal_geographic_aspect(
+    normal_vectors,
     heightmap_info$geographic_aspect
   )
   heightmap = add_padding(heightmap)
@@ -262,16 +262,16 @@ sphere_shade = function(
   center = dim(texture)[1:2] / 2
   heightmap = flipud(t(heightmap)) / zscale
   na_mask = !is.finite(heightmap)
-  distancemat = (1 - normalvectors[["z"]]) * center[1]
-  lengthmat = sqrt(1 - (normalvectors[["z"]])^2)
-  image_x_nocenter = ((-normalvectors[["x"]] / lengthmat * distancemat))
-  image_y_nocenter = ((normalvectors[["y"]] / lengthmat * distancemat))
+  distancemat = (1 - normal_vectors[["z"]]) * center[1]
+  lengthmat = sqrt(1 - (normal_vectors[["z"]])^2)
+  image_x_nocenter = ((-normal_vectors[["x"]] / lengthmat * distancemat))
+  image_y_nocenter = ((normal_vectors[["y"]] / lengthmat * distancemat))
   image_x = floor(
-    cos(sunangle) * image_x_nocenter - sin(sunangle) * image_y_nocenter
+    cos(sun_angle) * image_x_nocenter - sin(sun_angle) * image_y_nocenter
   ) +
     center[1]
   image_y = floor(
-    sin(sunangle) * image_x_nocenter + cos(sunangle) * image_y_nocenter
+    sin(sun_angle) * image_x_nocenter + cos(sun_angle) * image_y_nocenter
   ) +
     center[2]
   image_x[is.na(image_x)] = center[1]

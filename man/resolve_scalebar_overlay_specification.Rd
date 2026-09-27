@@ -11,7 +11,7 @@ resolve_scalebar_overlay_specification(
   unit_missing = is.null(unit),
   bearing = NULL,
   bearing_missing = is.null(bearing),
-  latlong = FALSE,
+  lat_long = FALSE,
   thickness = NA,
   scene_info
 )
@@ -29,7 +29,7 @@ resolve_scalebar_overlay_specification(
 
 \item{bearing_missing}{Whether \code{bearing} was omitted.}
 
-\item{latlong}{Whether geometry uses longitude/latitude coordinates.}
+\item{lat_long}{Whether geometry uses longitude/latitude coordinates.}
 
 \item{thickness}{Scale-bar thickness.}
 

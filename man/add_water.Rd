@@ -4,12 +4,12 @@
 \alias{add_water}
 \title{Add Water}
 \usage{
-add_water(hillshade, watermap, color = "imhof1")
+add_water(hillshade, water_map, color = "imhof1")
 }
 \arguments{
 \item{hillshade}{A three-dimensional RGB array.}
 
-\item{watermap}{Matrix indicating whether water was detected at that point. 1 indicates water, 0 indicates no water.}
+\item{water_map}{Matrix indicating whether water was detected at that point. 1 indicates water, 0 indicates no water.}
 
 \item{color}{Default \code{imhof1}. The water fill color. A hexcode or recognized color string.
 Also includes built-in colors to match the palettes included in \code{\link[=sphere_shade]{sphere_shade()}}:

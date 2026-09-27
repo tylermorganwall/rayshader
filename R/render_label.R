@@ -21,35 +21,35 @@
 #' POINT/MULTIPOINT flattening.
 #' @param font Default `"sans"`. Font family passed to [render_highquality()]
 #' for this label. This does not change the font used in the rgl preview; use
-#' `family` and `fonttype` to control the preview font.
+#' `family` and `font_type` to control the preview font.
 #' @param family Default `"sans"`. Font family used in the rgl preview. Choices
 #' are `c("serif", "sans", "mono", "symbol")`.
-#' @param fonttype Default `"standard"`. Font type used in the rgl preview.
+#' @param font_type Default `"standard"`. Font type used in the rgl preview.
 #' Choices are `c("standard", "bold", "italic", "bolditalic")`. These require
 #' FreeType fonts, which may not be installed on your system. If the selected
 #' face is unavailable, rayshader emits a message and uses rgl's bitmap font to
 #' preview label placement. See `rgl::text3d()` for more information.
-#' @param textsize Default `1`. A numeric character expansion value. If rgl
+#' @param text_size Default `1`. A numeric character expansion value. If rgl
 #' falls back to its fixed-size bitmap font, the requested value is still used
 #' by [render_highquality()].
-#' @param textcolor Default `"black"`. Color of the text. Use `"height"` to
+#' @param text_color Default `"black"`. Color of the text. Use `"height"` to
 #' color label text by the cached [plot_gg()] height aesthetic palette.
-#' @param textalpha Default `1`. Transparency of the label text.
+#' @param text_alpha Default `1`. Transparency of the label text.
 #' @param freetype Default `TRUE`. Set to `FALSE` if FreeType is not installed.
 #' FreeType enables anti-aliased fonts, but can occasionally cause transparency
 #' issues when text is positioned in front of or behind a transparent surface.
-#' @param adjustvec Default `NULL`. Horizontal and vertical offsets for the text.
+#' @param adjust_vec Default `NULL`. Horizontal and vertical offsets for the text.
 #' When omitted, [render_highquality()] uses `c(0.5, -0.5)`. The rgl preview
 #' uses `c(0.33, -0.5)` when `freetype = FALSE` on macOS or Linux to center its
 #' bitmap font without changing the high-quality justification.
 #' @param line Default `TRUE`. If `FALSE`, the vertical line connecting the
 #' label to the surface is not drawn.
-#' @param linecolor Default `"black"`. Color of the line. Use `"height"` to
+#' @param line_color Default `"black"`. Color of the line. Use `"height"` to
 #' color label lines by the cached [plot_gg()] height aesthetic palette.
 #' @param linewidth Default `3`. The line width.
 #' @param alpha Default `1`. Transparency of the label line.
 #' @param dashed Default `FALSE`. If `TRUE`, the label line is dashed.
-#' @param dashlength Default `"auto"`. Length, in units of the elevation matrix
+#' @param dash_length Default `"auto"`. Length, in units of the elevation matrix
 #' and scaled by `zscale`, of the dashes when `dashed = TRUE`.
 #' @param antialias Default `FALSE`. If `TRUE`, anti-aliasing is applied to the
 #' line. Anti-aliasing can cause unpredictable behavior with transparent
@@ -76,7 +76,7 @@
 #' @param scale_data Default `1`. If specifying `data_column_z`, how much to
 #' scale that value when rendering. If used with `vertical_exaggeration`, both
 #' are applied.
-#' @param relativez Default `FALSE`. Whether `z` is measured relative to the
+#' @param relative_z Default `FALSE`. Whether `z` is measured relative to the
 #' underlying elevation at that point in the heightmap or set absolutely.
 #' @param offset Default `0`. Elevation above the surface at the label point at
 #' which to start drawing the line.
@@ -113,14 +113,14 @@
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'montereybay_spatial |>
 #'  sphere_shade(vertical_exaggeration = 10) |>
-#'  plot_3d(vertical_exaggeration = 4,water=TRUE, watercolor="#233aa1",
-#'          zoom=0.9, windowsize = 800)
+#'  plot_3d(vertical_exaggeration = 4,water=TRUE, water_color="#233aa1",
+#'          zoom=0.9, window_size = 800)
 #'render_snapshot()
 #'
 #'santa_cruz = c(36.962957, -122.021033)
 #'#We want to add a label to Santa Cruz, so we use latitude/longitude coordinates.
 #'render_label(lat = santa_cruz[1], long = santa_cruz[2],
-#'             textsize = 2, altitude=12000, text = "Santa Cruz")
+#'             text_size = 2, altitude=12000, text = "Santa Cruz")
 #'render_snapshot()
 #'
 #'monterey = c(36.603053, -121.892933)
@@ -128,15 +128,15 @@
 #'#the user to control the dash length). You can clear the existing lines by setting
 #'#`clear_previous = TRUE`.
 #'render_label(lat = monterey[1], long = monterey[2], altitude = 10000,
-#'             textsize = 2, text = "Monterey", textcolor = "white", linecolor="darkred",
+#'             text_size = 2, text = "Monterey", text_color = "white", line_color="darkred",
 #'             dashed = TRUE, clear_previous = TRUE)
 #'render_snapshot()
 #'
 #'canyon = c(36.621049, -122.333912)
 #'#By default, z specifies the absolute altitude. We can also specify
-#'#an relative height by setting `relativez=FALSE`.
+#'#an relative height by setting `relative_z=FALSE`.
 #'render_label(lat = canyon[1], long = canyon[2], altitude = 2000,
-#'             textsize = 2, text = "Monterey Canyon", relativez = TRUE)
+#'             text_size = 2, text = "Monterey Canyon", relative_z = TRUE)
 #'render_snapshot()
 #'
 #'#Query the fonts installed on this system and select a concrete family,
@@ -151,7 +151,7 @@
 #'}
 #'
 #'#The `font` argument uses that installed family in `render_highquality()`.
-#'#The rgl preview still uses `family` and `fonttype` independently.
+#'#The rgl preview still uses `family` and `font_type` independently.
 #'render_camera(theta=35, phi = 35, zoom = 0.80, fov=60)
 #'#Register its bold face under a dedicated family name for high-quality text.
 #'systemfonts::register_variant(
@@ -161,14 +161,14 @@
 #')
 #'
 #'render_label(lat = monterey[1], long = monterey[2], altitude = 10000,
-#'             textsize = 2, text = "Monterey", textcolor = "black", linecolor="darkred",
-#'             dashed = TRUE, clear_previous = TRUE, fonttype = "bold",
+#'             text_size = 2, text = "Monterey", text_color = "black", line_color="darkred",
+#'             dashed = TRUE, clear_previous = TRUE, font_type = "bold",
 #'             family = "sans", font = "rayshader_label_bold")
 #'
 #'render_label(lat = canyon[1], long = canyon[2],
-#'             altitude = 2000, textsize = 2,
-#'             textcolor = "white", linecolor="black",fonttype = "bold",
-#'             text = "Monterey Canyon", relativez=FALSE,
+#'             altitude = 2000, text_size = 2,
+#'             text_color = "white", line_color="black",font_type = "bold",
+#'             text = "Monterey Canyon", relative_z=FALSE,
 #'             family = "sans", font = "rayshader_label_bold")
 #'
 #'render_highquality(samples = 16)
@@ -181,18 +181,18 @@ render_label = function(
   data_column_text = NULL,
   font = "sans",
   family = "sans",
-  fonttype = "standard",
-  textsize = 1,
-  textcolor = "black",
-  textalpha = 1,
+  font_type = "standard",
+  text_size = 1,
+  text_color = "black",
+  text_alpha = 1,
   freetype = TRUE,
-  adjustvec = NULL,
+  adjust_vec = NULL,
   line = TRUE,
-  linecolor = "black",
+  line_color = "black",
   linewidth = 3,
   alpha = 1,
   dashed = FALSE,
-  dashlength = "auto",
+  dash_length = "auto",
   antialias = FALSE,
   clear_previous = FALSE,
   x = NULL,
@@ -201,7 +201,7 @@ render_label = function(
   altitude = NULL,
   data_column_z = NULL,
   scale_data = 1,
-  relativez = FALSE,
+  relative_z = FALSE,
   offset = 0,
   lat = NULL,
   long = NULL,
@@ -355,8 +355,8 @@ render_label = function(
         data_column_z_keep,
         n_label_before_data_drop
       )
-      textsize = subset_render_arg(
-        textsize,
+      text_size = subset_render_arg(
+        text_size,
         data_column_z_keep,
         n_label_before_data_drop
       )
@@ -370,8 +370,8 @@ render_label = function(
         data_column_z_keep,
         n_label_before_data_drop
       )
-      dashlength = subset_render_arg(
-        dashlength,
+      dash_length = subset_render_arg(
+        dash_length,
         data_column_z_keep,
         n_label_before_data_drop
       )
@@ -385,18 +385,18 @@ render_label = function(
         data_column_z_keep,
         n_label_before_data_drop
       )
-      textalpha = subset_render_arg(
-        textalpha,
+      text_alpha = subset_render_arg(
+        text_alpha,
         data_column_z_keep,
         n_label_before_data_drop
       )
-      linecolor = subset_render_color_arg(
-        linecolor,
+      line_color = subset_render_color_arg(
+        line_color,
         data_column_z_keep,
         n_label_before_data_drop
       )
-      textcolor = subset_render_color_arg(
-        textcolor,
+      text_color = subset_render_color_arg(
+        text_color,
         data_column_z_keep,
         n_label_before_data_drop
       )
@@ -464,8 +464,8 @@ render_label = function(
       filtered_label$keep,
       n_label_before_filter
     )
-    textsize = subset_render_arg(
-      textsize,
+    text_size = subset_render_arg(
+      text_size,
       filtered_label$keep,
       n_label_before_filter
     )
@@ -475,8 +475,8 @@ render_label = function(
       filtered_label$keep,
       n_label_before_filter
     )
-    dashlength = subset_render_arg(
-      dashlength,
+    dash_length = subset_render_arg(
+      dash_length,
       filtered_label$keep,
       n_label_before_filter
     )
@@ -490,18 +490,18 @@ render_label = function(
       filtered_label$keep,
       n_label_before_filter
     )
-    textalpha = subset_render_arg(
-      textalpha,
+    text_alpha = subset_render_arg(
+      text_alpha,
       filtered_label$keep,
       n_label_before_filter
     )
-    linecolor = subset_render_color_arg(
-      linecolor,
+    line_color = subset_render_color_arg(
+      line_color,
       filtered_label$keep,
       n_label_before_filter
     )
-    textcolor = subset_render_color_arg(
-      textcolor,
+    text_color = subset_render_color_arg(
+      text_color,
       filtered_label$keep,
       n_label_before_filter
     )
@@ -518,19 +518,19 @@ render_label = function(
       call. = FALSE
     )
   }
-  linecolor = resolve_ggplot_height_palette_color(
-    color = linecolor,
+  line_color = resolve_ggplot_height_palette_color(
+    color = line_color,
     values = label_zaxis_raw,
     heightmap = heightmap,
     caller = "render_label",
-    arg_name = "linecolor"
+    arg_name = "line_color"
   )
-  textcolor = resolve_ggplot_height_palette_color(
-    color = textcolor,
+  text_color = resolve_ggplot_height_palette_color(
+    color = text_color,
     values = label_zaxis_raw,
     heightmap = heightmap,
     caller = "render_label",
-    arg_name = "textcolor"
+    arg_name = "text_color"
   )
   label_height_transform = get_scene_height_transform(
     heightmap = heightmap,
@@ -555,22 +555,22 @@ render_label = function(
   validate_render_label_vector_arg(text, "text", n_label)
   validate_render_label_vector_arg(z, "z", n_label)
   validate_render_label_vector_arg(offset, "offset", n_label)
-  validate_render_label_vector_arg(textsize, "textsize", n_label)
+  validate_render_label_vector_arg(text_size, "text_size", n_label)
   validate_render_label_vector_arg(line, "line", n_label)
   validate_render_label_vector_arg(dashed, "dashed", n_label)
-  validate_render_label_vector_arg(dashlength, "dashlength", n_label)
+  validate_render_label_vector_arg(dash_length, "dash_length", n_label)
   validate_render_label_vector_arg(linewidth, "linewidth", n_label)
   validate_render_label_vector_arg(alpha, "alpha", n_label)
-  validate_render_label_vector_arg(textalpha, "textalpha", n_label)
+  validate_render_label_vector_arg(text_alpha, "text_alpha", n_label)
   validate_render_label_vector_arg(
-    linecolor,
-    "linecolor",
+    line_color,
+    "line_color",
     n_label,
     color = TRUE
   )
   validate_render_label_vector_arg(
-    textcolor,
-    "textcolor",
+    text_color,
+    "text_color",
     n_label,
     color = TRUE
   )
@@ -583,11 +583,11 @@ render_label = function(
     windows = TRUE
   }
   fontlist = list("standard" = 1, "bold" = 2, "italic" = 3, "bolditalic" = 4)
-  fonttype_name = fonttype
-  fonttype = fontlist[[fonttype_name]]
-  if (is.null(fonttype)) {
+  fonttype_name = font_type
+  font_type = fontlist[[fonttype_name]]
+  if (is.null(font_type)) {
     stop(
-      "`fonttype` must be one of: \"standard\", \"bold\", \"italic\", or \"bolditalic\".",
+      "`font_type` must be one of: \"standard\", \"bold\", \"italic\", or \"bolditalic\".",
       call. = FALSE
     )
   }
@@ -595,7 +595,7 @@ render_label = function(
   nrow_map = nrow(heightmap) - 1
   ncol_map = ncol(heightmap) - 1
   label_scene_altitude = z
-  if (isTRUE(relativez)) {
+  if (isTRUE(relative_z)) {
     label_surface_altitude = tryCatch(
       transform_into_heightmap_coords(
         extent = extent,
@@ -627,11 +627,11 @@ render_label = function(
   ignoreex = par3d()$ignoreExtent
   par3d(ignoreExtent = TRUE)
   on.exit(par3d(ignoreExtent = ignoreex), add = TRUE)
-  highquality_textsize = textsize
-  highquality_adjustvec = if (is.null(adjustvec)) {
+  highquality_textsize = text_size
+  highquality_adjustvec = if (is.null(adjust_vec)) {
     c(0.5, -0.5)
   } else {
-    adjustvec
+    adjust_vec
   }
   if (freetype) {
     rgl_font_files = list(
@@ -671,8 +671,8 @@ render_label = function(
         package = "rgl"
       )
     }
-    requested_font_path = if (length(family_font_paths) >= fonttype) {
-      family_font_paths[[fonttype]]
+    requested_font_path = if (length(family_font_paths) >= font_type) {
+      family_font_paths[[font_type]]
     } else {
       ""
     }
@@ -683,7 +683,7 @@ render_label = function(
       message(
         sprintf(
           paste(
-            "The requested rgl preview font family %s with `fonttype = %s` is not available.",
+            "The requested rgl preview font family %s with `font_type = %s` is not available.",
             "Using rgl's bitmap font for preview placement; `render_highquality()` is unaffected."
           ),
           shQuote(family),
@@ -695,16 +695,16 @@ render_label = function(
   }
   if (!freetype) {
     family = "bitmap"
-    fonttype = 1
+    font_type = 1
     if (!windows) {
-      textsize = 1
+      text_size = 1
     }
   }
-  if (is.null(adjustvec)) {
+  if (is.null(adjust_vec)) {
     if (freetype || windows) {
-      adjustvec = c(0.5, -0.5)
+      adjust_vec = c(0.5, -0.5)
     } else {
-      adjustvec = c(0.33, -0.5)
+      adjust_vec = c(0.33, -0.5)
     }
   }
   for (label_index in seq_len(n_label)) {
@@ -721,22 +721,22 @@ render_label = function(
       nrow_map = nrow_map,
       ncol_map = ncol_map,
       zscale = zscale,
-      relativez = relativez,
+      relative_z = relative_z,
       dashed = dashed,
-      dashlength = dashlength,
+      dash_length = dash_length,
       linewidth = linewidth,
       antialias = antialias,
       alpha = alpha,
-      textalpha = textalpha,
-      linecolor = linecolor,
-      textcolor = textcolor,
-      textsize = textsize,
-      adjustvec = adjustvec,
+      text_alpha = text_alpha,
+      line_color = line_color,
+      text_color = text_color,
+      text_size = text_size,
+      adjust_vec = adjust_vec,
       highquality_textsize = highquality_textsize,
       highquality_adjustvec = highquality_adjustvec,
       freetype = freetype,
       family = family,
-      fonttype = fonttype,
+      font_type = font_type,
       font = font
     )
   }
@@ -1015,22 +1015,22 @@ render_single_label = function(
   nrow_map,
   ncol_map,
   zscale,
-  relativez,
+  relative_z,
   dashed,
-  dashlength,
+  dash_length,
   linewidth,
   antialias,
   alpha,
-  textalpha,
-  linecolor,
-  textcolor,
-  textsize,
-  adjustvec,
+  text_alpha,
+  line_color,
+  text_color,
+  text_size,
+  adjust_vec,
   highquality_textsize,
   highquality_adjustvec,
   freetype,
   family,
-  fonttype,
+  font_type,
   font
 ) {
   n_label = length(x)
@@ -1041,23 +1041,23 @@ render_single_label = function(
   offset = render_label_arg_value(offset, label_index, n_label)
   line = render_label_arg_value(line, label_index, n_label)
   dashed = render_label_arg_value(dashed, label_index, n_label)
-  dashlength = render_label_arg_value(dashlength, label_index, n_label)
+  dash_length = render_label_arg_value(dash_length, label_index, n_label)
   linewidth = render_label_arg_value(linewidth, label_index, n_label)
   alpha = render_label_arg_value(alpha, label_index, n_label)
-  textalpha = render_label_arg_value(textalpha, label_index, n_label)
-  linecolor = render_label_arg_value(
-    linecolor,
+  text_alpha = render_label_arg_value(text_alpha, label_index, n_label)
+  line_color = render_label_arg_value(
+    line_color,
     label_index,
     n_label,
     color = TRUE
   )
-  textcolor = render_label_arg_value(
-    textcolor,
+  text_color = render_label_arg_value(
+    text_color,
     label_index,
     n_label,
     color = TRUE
   )
-  textsize = render_label_arg_value(textsize, label_index, n_label)
+  text_size = render_label_arg_value(text_size, label_index, n_label)
   highquality_textsize = render_label_arg_value(
     highquality_textsize,
     label_index,
@@ -1115,7 +1115,7 @@ render_single_label = function(
   if (in_bounds) {
     startline = surface_altitude / zscale
   }
-  if (relativez && in_bounds) {
+  if (relative_z && in_bounds) {
     z = z + startline
   }
   x = x_index - nrow_map / 2 - 1
@@ -1124,21 +1124,21 @@ render_single_label = function(
   x = x * scene_aspect$scale[["x"]]
   y = y * scene_aspect$scale[["z"]]
   if (isTRUE(line)) {
-    if (dashlength == "auto") {
-      dashlength = (z - startline + offset) / 20
+    if (dash_length == "auto") {
+      dash_length = (z - startline + offset) / 20
     } else {
-      dashlength = as.numeric(dashlength)
+      dash_length = as.numeric(dash_length)
     }
     linelist = list()
     if (isTRUE(dashed)) {
       counter = 1
-      while (startline + dashlength < z) {
+      while (startline + dash_length < z) {
         linelist[[counter]] = matrix(
-          c(x, x, startline + dashlength + offset, startline + offset, y, y),
+          c(x, x, startline + dash_length + offset, startline + offset, y, y),
           2,
           3
         )
-        startline = startline + dashlength * 2
+        startline = startline + dash_length * 2
         counter = counter + 1
       }
       linelist[[counter]] = matrix(
@@ -1156,7 +1156,7 @@ render_single_label = function(
     for (i in seq_along(linelist)) {
       rgl::lines3d(
         linelist[[i]],
-        color = linecolor,
+        color = line_color,
         lwd = linewidth,
         lit = FALSE,
         line_antialias = antialias,
@@ -1171,13 +1171,13 @@ render_single_label = function(
     z + offset,
     y,
     text,
-    color = textcolor,
-    adj = adjustvec,
+    color = text_color,
+    adj = adjust_vec,
     useFreeType = freetype,
-    alpha = textalpha,
+    alpha = text_alpha,
     family = family,
-    font = fonttype,
-    cex = textsize,
+    font = font_type,
+    cex = text_size,
     depth_test = "less",
     tag = "raytext",
     lit = FALSE
@@ -1185,8 +1185,8 @@ render_single_label = function(
   register_render_label_info(
     text_id,
     font = font,
-    textsize = highquality_textsize,
-    adjustvec = highquality_adjustvec
+    text_size = highquality_textsize,
+    adjust_vec = highquality_adjustvec
   )
 }
 
@@ -1194,14 +1194,14 @@ render_label_font_key = function(id, device = rgl::cur3d()) {
   paste(device, id, sep = ":")
 }
 
-register_render_label_info = function(id, font, textsize, adjustvec) {
+register_render_label_info = function(id, font, text_size, adjust_vec) {
   for (id_single in id) {
     assign(
       render_label_font_key(id_single),
       list(
         font = font,
-        textsize = textsize,
-        adjustvec = adjustvec
+        text_size = text_size,
+        adjust_vec = adjust_vec
       ),
       envir = ray_label_font_envir
     )

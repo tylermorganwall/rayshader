@@ -152,7 +152,7 @@ bird_track_long[[i]] = bird_track_long[[i-1]] + x_vel_out[i]
 montereybay_spatial |>
  sphere_shade(vertical_exaggeration = 10) |>
  plot_3d(vertical_exaggeration = 4,water=TRUE,
-         shadowcolor="#40310a", watercolor="#233aa1", background = "tan",
+         shadow_color="#40310a", water_color="#233aa1", background = "tan",
          theta=210,  phi=22, zoom=0.20, fov=55)
 
 #Pass in the latitude/longitude coordinates and altitudes of the track.
@@ -209,7 +209,7 @@ render_path(clear_previous = TRUE,
            lat = unlist(circle_coords_lat), long = unlist(circle_coords_long),
            color="white", offset=200, linewidth=5)
 render_highquality(line_radius=1, min_variance = 0, samples = 16,
-                  lightsize = 2000, lightintensity = 10,
+                  light_size = 60, light_intensity = 10,
                   use_extruded_paths = TRUE,
                   rgl_materials = list(path3d = list(
                     material = rayrender::dielectric,

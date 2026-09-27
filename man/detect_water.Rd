@@ -10,9 +10,9 @@ detect_water(
   cutoff = 0.9999999,
   min_area = NULL,
   max_height = NULL,
-  normalvectors = NULL,
+  normal_vectors = NULL,
   keep_groups = FALSE,
-  progbar = FALSE,
+  progress_bar = FALSE,
   geographic_aspect = TRUE,
   extent = NULL,
   crs = NULL
@@ -35,11 +35,11 @@ body of water.}
 
 \item{max_height}{Default \code{NULL}. If passed, this number will specify the maximum height a point can be considered to be water.}
 
-\item{normalvectors}{Default \code{NULL}. Pre-computed array of normal vectors from the \code{\link[=calculate_normal]{calculate_normal()}} function. Supplying this will speed up water detection.}
+\item{normal_vectors}{Default \code{NULL}. Pre-computed array of normal vectors from the \code{\link[=calculate_normal]{calculate_normal()}} function. Supplying this will speed up water detection.}
 
 \item{keep_groups}{Default \code{FALSE}. If \code{TRUE}, the matrix returned will retain the numbered grouping information.}
 
-\item{progbar}{Default \code{FALSE}. If \code{TRUE}, turns on progress bar.}
+\item{progress_bar}{Default \code{FALSE}. If \code{TRUE}, turns on progress bar.}
 
 \item{geographic_aspect}{Default \code{TRUE}. If \code{TRUE}, account for unequal
 horizontal cell sizes using the supplied or cached spatial metadata.}

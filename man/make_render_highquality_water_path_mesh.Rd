@@ -18,7 +18,7 @@ make_render_highquality_water_path_mesh(
   cap_end = TRUE,
   return_mesh = FALSE,
   rgl_id = NULL,
-  watercolor = NULL
+  water_color = NULL
 )
 }
 \arguments{
@@ -49,7 +49,7 @@ centered on the path.}
 
 \item{rgl_id}{Default \code{NULL}. Source rgl identifier stored with raw meshes.}
 
-\item{watercolor}{Default \code{NULL}. Source stream color stored with raw meshes.}
+\item{water_color}{Default \code{NULL}. Source stream color stored with raw meshes.}
 }
 \value{
 Rayrender mesh object.

@@ -12,7 +12,7 @@ NumericVector vcrossnorm2(const NumericVector& a, const NumericVector& b) {
 }
 
 // [[Rcpp::export]]
-List calculate_normal_cpp(const NumericMatrix& heightmap, bool progbar,
+List calculate_normal_cpp(const NumericMatrix& heightmap, bool progress_bar,
                           double column_scale, double row_scale) {
   NumericMatrix shaded_matrix(heightmap.nrow(),heightmap.ncol());
   NumericMatrix xmat(heightmap.nrow(),heightmap.ncol());
@@ -26,7 +26,7 @@ List calculate_normal_cpp(const NumericMatrix& heightmap, bool progbar,
   NumericVector tempvector3 = NumericVector::create(column_scale,0,0);
   NumericVector tempvector4 = NumericVector::create(0,-row_scale,0);
   RProgress::RProgress pb("Calculating Surface Normal [:bar] ETA: :eta");
-  if(progbar) {
+  if(progress_bar) {
     pb.set_total(heightmap.ncol());
   }
   bool first_na  = false;
@@ -35,7 +35,7 @@ List calculate_normal_cpp(const NumericMatrix& heightmap, bool progbar,
   bool fourth_na = false;
   
   for(int col = 0; col < heightmap.ncol(); col++) {
-    if(progbar) {
+    if(progress_bar) {
       pb.tick();
     }
     for(int row = 0; row < heightmap.nrow(); row++) {

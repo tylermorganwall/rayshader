@@ -6,7 +6,7 @@
 \usage{
 render_streams(
   streams,
-  watercolor = "lightblue",
+  water_color = "lightblue",
   width = 1,
   width_column = NULL,
   width_units = c("scene", "meters"),
@@ -27,7 +27,7 @@ render_streams(
 \item{streams}{Spatial line data used to draw stream paths. Supports \code{sf},
 \code{sfc}, \code{sfg}, \code{SpatialLines}, and \code{SpatialLinesDataFrame} line inputs.}
 
-\item{watercolor}{Default \code{"lightblue"}. Stream color.}
+\item{water_color}{Default \code{"lightblue"}. Stream color.}
 
 \item{width}{Default \code{1}. Stream width in the units selected by \code{width_units}
 for \code{\link[=render_highquality]{render_highquality()}}. The rgl preview uses the converted scene width as
@@ -222,13 +222,13 @@ new_dem |>
 render_water(
   water_input = water_level_rast,
   water_edge_extension = 0.25,
-  watercolor = "dodgerblue"
+  water_color = "dodgerblue"
 )
 
 render_streams(
   streams = streams,
   water_polygons = water,
-  watercolor = "dodgerblue",
+  water_color = "dodgerblue",
   width = 0.35,
   clear_previous = TRUE
 )

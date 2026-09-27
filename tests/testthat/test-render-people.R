@@ -577,7 +577,7 @@ test_that("render_people() preserves the native person scale", {
     vertical_exaggeration = 2,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(250, 250)
+    window_size = c(250, 250)
   ))
 
   expect_no_condition(render_people(
@@ -640,7 +640,7 @@ test_that("render_people() selects sexes and clears only prior people", {
     zscale = 1,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(250, 250)
+    window_size = c(250, 250)
   ))
 
   render_people(
@@ -704,7 +704,7 @@ test_that("render_people() renders vectorized poses along a line", {
     zscale = 1,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(250, 250)
+    window_size = c(250, 250)
   ))
   line = sf::st_sfc(sf::st_linestring(matrix(
     c(5, 10, 15, 10),
@@ -754,7 +754,7 @@ test_that("render_people() stacks altitude vectors at one spatial point", {
     zscale = 1,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(250, 250)
+    window_size = c(250, 250)
   ))
 
   altitudes = seq(0, 500, by = 2)

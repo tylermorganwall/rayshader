@@ -76,13 +76,13 @@ if(all(length(find.package("sf", quiet = TRUE)) > 0,
  montereybay_spatial |>
    height_shade() |>
    add_shadow(ray_shade(vertical_exaggeration = 4),0.3) |>
-   plot_3d(water = TRUE, wateralpha = 1, windowsize = 800,
-           watercolor = "lightblue", vertical_exaggeration = 4)
+   plot_3d(water = TRUE, water_alpha = 1, window_size = 800,
+           water_color = "lightblue", vertical_exaggeration = 4)
  render_camera(theta=-55,phi=45,zoom=0.8)
 
  #Render label
  render_label(lat = monterey[2], long = monterey[1], altitude = 9900,
-              text = "Monterey", textcolor = "black", linecolor="darkred")
+              text = "Monterey", text_color = "black", line_color="darkred")
 
  #Render Floating Overlays
  render_floating_overlay(road_overlay, altitude = 10000)

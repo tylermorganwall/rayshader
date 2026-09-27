@@ -32,7 +32,7 @@
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'montereybay_spatial |>
 #'  sphere_shade(vertical_exaggeration = 10) |>
-#'  plot_3d(vertical_exaggeration = 4, water = TRUE, waterlinecolor="white")
+#'  plot_3d(vertical_exaggeration = 4, water = TRUE, water_line_color="white")
 #'render_snapshot()
 #'
 #'#Shift the camera over and add a title

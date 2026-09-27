@@ -148,8 +148,8 @@ arma::mat gen_hex_psf(const double radius, const double rotation) {
 // [[Rcpp::export]]
 arma::mat psf(const arma::mat& image, const IntegerMatrix blurmatrix,
               const arma::mat& depthmap, double depth, const arma::mat custombokeh,
-              int type, double bokehintensity, double bokehlimit,
-              double rotation, bool progbar, int channel) {
+              int type, double bokeh_intensity, double bokeh_limit,
+              double rotation, bool progress_bar, int channel) {
   int maxsteps = max(blurmatrix);
   int rows = image.n_rows;
   int cols = image.n_cols;
@@ -187,7 +187,7 @@ arma::mat psf(const arma::mat& image, const IntegerMatrix blurmatrix,
     pbtext =  "Rendering Bokeh 3/3 [:bar] ETA: :eta";
   }
   RProgress::RProgress pb(pbtext);
-  if(progbar) {
+  if(progress_bar) {
     pb.set_total(rows*cols);
   }
   
@@ -197,7 +197,7 @@ arma::mat psf(const arma::mat& image, const IntegerMatrix blurmatrix,
     
     Rcpp::checkUserInterrupt();
     for (int j = halfwidth; j < cols-halfwidth; ++j) {
-      if(progbar) {
+      if(progress_bar) {
         pb.tick();
       }
       temp = kernels[blurmatrix(i,j)]/pow(depthmap(i,j),2);
@@ -210,8 +210,8 @@ arma::mat psf(const arma::mat& image, const IntegerMatrix blurmatrix,
       beginj = j - (temp.n_cols-1)/2;
       endi = i + (temp.n_rows-1)/2;
       endj = j + (temp.n_cols-1)/2;
-      if(image(i,j) > bokehlimit) {
-        temp = temp * bokehintensity;
+      if(image(i,j) > bokeh_limit) {
+        temp = temp * bokeh_intensity;
       }
       result.submat(begini, beginj, endi, endj) += image(i,j) * temp;
       normalize.submat(begini, beginj, endi, endj) += temp;
@@ -221,7 +221,7 @@ arma::mat psf(const arma::mat& image, const IntegerMatrix blurmatrix,
   for (int i = 0; i < halfwidth; ++i) {
     Rcpp::checkUserInterrupt();
     for (int j = 0; j < cols; ++j) {
-      if(progbar) {
+      if(progress_bar) {
         pb.tick();
       }
       temp = kernels[blurmatrix(i,j)]/pow(depthmap(i,j),2);
@@ -256,8 +256,8 @@ arma::mat psf(const arma::mat& image, const IntegerMatrix blurmatrix,
         endslicej = endslicej - (j  + temphalfj - cols + 1);
         endj = cols - 1;
       }
-      if(image(i,j) > bokehlimit) {
-        temp = temp * bokehintensity;
+      if(image(i,j) > bokeh_limit) {
+        temp = temp * bokeh_intensity;
       }
       temp2 = temp.submat(beginslicei,beginslicej,endslicei,endslicej);
       result.submat(begini, beginj, endi, endj) += image(i,j) * temp2;
@@ -267,7 +267,7 @@ arma::mat psf(const arma::mat& image, const IntegerMatrix blurmatrix,
   for (int i = halfwidth; i < rows-halfwidth; ++i) {
     Rcpp::checkUserInterrupt();
     for (int j = 0; j < halfwidth; ++j) {
-      if(progbar) {
+      if(progress_bar) {
         pb.tick();
       }
       temp = kernels[blurmatrix(i,j)]/pow(depthmap(i,j),2);
@@ -302,8 +302,8 @@ arma::mat psf(const arma::mat& image, const IntegerMatrix blurmatrix,
         endslicej = endslicej - (j  + temphalfj - cols + 1);
         endj = cols - 1;
       }
-      if(image(i,j) > bokehlimit) {
-        temp = temp * bokehintensity;
+      if(image(i,j) > bokeh_limit) {
+        temp = temp * bokeh_intensity;
       }
       temp2 = temp.submat(beginslicei,beginslicej,endslicei,endslicej);
       result.submat(begini, beginj, endi, endj) += image(i,j) * temp2;
@@ -313,7 +313,7 @@ arma::mat psf(const arma::mat& image, const IntegerMatrix blurmatrix,
   for (int i = halfwidth; i < rows-halfwidth; ++i) {
     Rcpp::checkUserInterrupt();
     for (int j = cols-halfwidth; j < cols; ++j) {
-      if(progbar) {
+      if(progress_bar) {
         pb.tick();
       }
       temp = kernels[blurmatrix(i,j)]/pow(depthmap(i,j),2);
@@ -348,8 +348,8 @@ arma::mat psf(const arma::mat& image, const IntegerMatrix blurmatrix,
         endslicej = endslicej - (j  + temphalfj - cols + 1);
         endj = cols - 1;
       }
-      if(image(i,j) > bokehlimit) {
-        temp = temp * bokehintensity;
+      if(image(i,j) > bokeh_limit) {
+        temp = temp * bokeh_intensity;
       }
       temp2 = temp.submat(beginslicei,beginslicej,endslicei,endslicej);
       result.submat(begini, beginj, endi, endj) += image(i,j) * temp2;
@@ -359,7 +359,7 @@ arma::mat psf(const arma::mat& image, const IntegerMatrix blurmatrix,
   for (int i = rows-halfwidth; i < rows; ++i) {
     Rcpp::checkUserInterrupt();
     for (int j = 0; j < cols; ++j) {
-      if(progbar) {
+      if(progress_bar) {
         pb.tick();
       }
       temp = kernels[blurmatrix(i,j)]/pow(depthmap(i,j),2);
@@ -394,8 +394,8 @@ arma::mat psf(const arma::mat& image, const IntegerMatrix blurmatrix,
         endslicej = endslicej - (j  + temphalfj - cols + 1);
         endj = cols - 1;
       }
-      if(image(i,j) > bokehlimit) {
-        temp = temp * bokehintensity;
+      if(image(i,j) > bokeh_limit) {
+        temp = temp * bokeh_intensity;
       }
       temp2 = temp.submat(beginslicei,beginslicej,endslicei,endslicej);
       result.submat(begini, beginj, endi, endj) += image(i,j) * temp2;

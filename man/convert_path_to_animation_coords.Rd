@@ -20,7 +20,7 @@ convert_path_to_animation_coords(
   heightmap = NULL,
   offset = 5,
   type = "bezier",
-  offset_lookat = 1,
+  offset_look_at = 1,
   constant_step = TRUE,
   curvature_adjust = "none",
   curvature_scale = 30,
@@ -88,7 +88,7 @@ then the value of simplify_tolerance must be specified in meters.}
 Other options are \code{linear}, \code{quad}, \code{bezier}, \code{exp}, and \code{manual}. \code{manual} just returns the values
 passed in, properly formatted to be passed to \code{render_animation()}.}
 
-\item{offset_lookat}{Default \code{0}. Amount to offset the lookat position, either along the path (if \code{constant_step = TRUE})
+\item{offset_look_at}{Default \code{0}. Amount to offset the lookat position, either along the path (if \code{constant_step = TRUE})
 or towards the derivative of the Bezier curve.}
 
 \item{constant_step}{Default \code{TRUE}. This will make the camera travel at a constant speed.}
@@ -97,7 +97,7 @@ or towards the derivative of the Bezier curve.}
 to prevent fast swings. Only used for curve \code{type = bezier}. This does not preserve key frame positions.
 Note: This feature will likely result in the \code{lookat} and \code{position} diverging if they do not
 have similar curvatures at each point. This feature is best used when passing the same set of points to \code{positions} and \code{lookats}
-and providing an \code{offset_lookat} value, which ensures the curvature will be the same.}
+and providing an \code{offset_look_at} value, which ensures the curvature will be the same.}
 
 \item{curvature_scale}{Default \code{30}. Constant dividing factor for curvature. Higher values will subdivide the
 path more, potentially finding a smoother path, but increasing the calculation time. Only used for curve \code{type = bezier}.
@@ -121,7 +121,7 @@ but rather sits at a fixed relative location to the path.}
 \item{follow_fixed_offset}{Default \code{c(10,10,10)}. If \code{follow_fixed = TRUE}, the offset from the path to place
 the camera.}
 
-\item{distance_units}{Default \code{"auto"}. Units for \code{offset_lookat},
+\item{distance_units}{Default \code{"auto"}. Units for \code{offset_look_at},
 \code{follow_distance}, and \code{follow_fixed_offset}. \code{"auto"} uses metres when
 spatial distance metadata is cached and scene units otherwise. Other options
 are \code{"scene"}, \code{"meters"}, and \code{"map"}; map units require a projected CRS.}
@@ -162,7 +162,7 @@ sphere_shade() |>
 plot_3d(
 	vertical_exaggeration = 4,
 	water = TRUE,
-	shadowcolor = "#40310a",
+	shadow_color = "#40310a",
 	background = "tan",
 	theta = 210,
 	phi = 22,

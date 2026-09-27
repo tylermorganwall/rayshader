@@ -248,7 +248,7 @@ generate_cloud_layer = function(
 #'#The cloud layers automatically follow the shaped heightmap's NA mask
 #'montereybay_spatial  |>
 #'  sphere_shade(vertical_exaggeration = 10)  |>
-#'  plot_3d(background="darkred", vertical_exaggeration = 4, baseshape="hex")
+#'  plot_3d(background="darkred", vertical_exaggeration = 4, base_shape="hex")
 #'render_clouds(seed=3, clear_clouds = T)
 #'render_camera(zoom=0.65)
 #'render_snapshot()

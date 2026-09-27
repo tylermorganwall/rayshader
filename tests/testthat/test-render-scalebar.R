@@ -145,7 +145,7 @@ test_that("render_scalebar uses cached scene measurements", {
     height_raster,
     solid = FALSE,
     shadow = FALSE,
-    windowsize = c(100, 100)
+    window_size = c(100, 100)
   )
 
   specification = render_scalebar()

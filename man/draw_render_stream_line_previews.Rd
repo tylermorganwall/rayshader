@@ -7,7 +7,7 @@
 draw_render_stream_line_previews(
   coord_list,
   coord_width,
-  watercolor,
+  water_color,
   height,
   terrain_offset = 0,
   verbose = FALSE
@@ -18,7 +18,7 @@ draw_render_stream_line_previews(
 
 \item{coord_width}{Stream width for every coordinate matrix.}
 
-\item{watercolor}{Stream preview color.}
+\item{water_color}{Stream preview color.}
 
 \item{height}{Stream mesh height registered with each rgl object.}
 

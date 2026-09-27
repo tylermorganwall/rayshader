@@ -10,18 +10,18 @@ render_label(
   data_column_text = NULL,
   font = "sans",
   family = "sans",
-  fonttype = "standard",
-  textsize = 1,
-  textcolor = "black",
-  textalpha = 1,
+  font_type = "standard",
+  text_size = 1,
+  text_color = "black",
+  text_alpha = 1,
   freetype = TRUE,
-  adjustvec = NULL,
+  adjust_vec = NULL,
   line = TRUE,
-  linecolor = "black",
+  line_color = "black",
   linewidth = 3,
   alpha = 1,
   dashed = FALSE,
-  dashlength = "auto",
+  dash_length = "auto",
   antialias = FALSE,
   clear_previous = FALSE,
   x = NULL,
@@ -30,7 +30,7 @@ render_label(
   altitude = NULL,
   data_column_z = NULL,
   scale_data = 1,
-  relativez = FALSE,
+  relative_z = FALSE,
   offset = 0,
   lat = NULL,
   long = NULL,
@@ -64,31 +64,31 @@ POINT/MULTIPOINT flattening.}
 
 \item{font}{Default \code{"sans"}. Font family passed to \code{\link[=render_highquality]{render_highquality()}}
 for this label. This does not change the font used in the rgl preview; use
-\code{family} and \code{fonttype} to control the preview font.}
+\code{family} and \code{font_type} to control the preview font.}
 
 \item{family}{Default \code{"sans"}. Font family used in the rgl preview. Choices
 are \code{c("serif", "sans", "mono", "symbol")}.}
 
-\item{fonttype}{Default \code{"standard"}. Font type used in the rgl preview.
+\item{font_type}{Default \code{"standard"}. Font type used in the rgl preview.
 Choices are \code{c("standard", "bold", "italic", "bolditalic")}. These require
 FreeType fonts, which may not be installed on your system. If the selected
 face is unavailable, rayshader emits a message and uses rgl's bitmap font to
 preview label placement. See \code{rgl::text3d()} for more information.}
 
-\item{textsize}{Default \code{1}. A numeric character expansion value. If rgl
+\item{text_size}{Default \code{1}. A numeric character expansion value. If rgl
 falls back to its fixed-size bitmap font, the requested value is still used
 by \code{\link[=render_highquality]{render_highquality()}}.}
 
-\item{textcolor}{Default \code{"black"}. Color of the text. Use \code{"height"} to
+\item{text_color}{Default \code{"black"}. Color of the text. Use \code{"height"} to
 color label text by the cached \code{\link[=plot_gg]{plot_gg()}} height aesthetic palette.}
 
-\item{textalpha}{Default \code{1}. Transparency of the label text.}
+\item{text_alpha}{Default \code{1}. Transparency of the label text.}
 
 \item{freetype}{Default \code{TRUE}. Set to \code{FALSE} if FreeType is not installed.
 FreeType enables anti-aliased fonts, but can occasionally cause transparency
 issues when text is positioned in front of or behind a transparent surface.}
 
-\item{adjustvec}{Default \code{NULL}. Horizontal and vertical offsets for the text.
+\item{adjust_vec}{Default \code{NULL}. Horizontal and vertical offsets for the text.
 When omitted, \code{\link[=render_highquality]{render_highquality()}} uses \code{c(0.5, -0.5)}. The rgl preview
 uses \code{c(0.33, -0.5)} when \code{freetype = FALSE} on macOS or Linux to center its
 bitmap font without changing the high-quality justification.}
@@ -96,7 +96,7 @@ bitmap font without changing the high-quality justification.}
 \item{line}{Default \code{TRUE}. If \code{FALSE}, the vertical line connecting the
 label to the surface is not drawn.}
 
-\item{linecolor}{Default \code{"black"}. Color of the line. Use \code{"height"} to
+\item{line_color}{Default \code{"black"}. Color of the line. Use \code{"height"} to
 color label lines by the cached \code{\link[=plot_gg]{plot_gg()}} height aesthetic palette.}
 
 \item{linewidth}{Default \code{3}. The line width.}
@@ -105,7 +105,7 @@ color label lines by the cached \code{\link[=plot_gg]{plot_gg()}} height aesthet
 
 \item{dashed}{Default \code{FALSE}. If \code{TRUE}, the label line is dashed.}
 
-\item{dashlength}{Default \code{"auto"}. Length, in units of the elevation matrix
+\item{dash_length}{Default \code{"auto"}. Length, in units of the elevation matrix
 and scaled by \code{zscale}, of the dashes when \code{dashed = TRUE}.}
 
 \item{antialias}{Default \code{FALSE}. If \code{TRUE}, anti-aliasing is applied to the
@@ -141,7 +141,7 @@ coercion are omitted, and retained values are multiplied by \code{scale_data}.}
 scale that value when rendering. If used with \code{vertical_exaggeration}, both
 are applied.}
 
-\item{relativez}{Default \code{FALSE}. Whether \code{z} is measured relative to the
+\item{relative_z}{Default \code{FALSE}. Whether \code{z} is measured relative to the
 underlying elevation at that point in the heightmap or set absolutely.}
 
 \item{offset}{Default \code{0}. Elevation above the surface at the label point at
@@ -194,14 +194,14 @@ Cache fallback messages are disabled by default. Set \code{options(rayshader.ver
 \dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 montereybay_spatial |>
  sphere_shade(vertical_exaggeration = 10) |>
- plot_3d(vertical_exaggeration = 4,water=TRUE, watercolor="#233aa1",
-         zoom=0.9, windowsize = 800)
+ plot_3d(vertical_exaggeration = 4,water=TRUE, water_color="#233aa1",
+         zoom=0.9, window_size = 800)
 render_snapshot()
 
 santa_cruz = c(36.962957, -122.021033)
 #We want to add a label to Santa Cruz, so we use latitude/longitude coordinates.
 render_label(lat = santa_cruz[1], long = santa_cruz[2],
-            textsize = 2, altitude=12000, text = "Santa Cruz")
+            text_size = 2, altitude=12000, text = "Santa Cruz")
 render_snapshot()
 
 monterey = c(36.603053, -121.892933)
@@ -209,15 +209,15 @@ monterey = c(36.603053, -121.892933)
 #the user to control the dash length). You can clear the existing lines by setting
 #`clear_previous = TRUE`.
 render_label(lat = monterey[1], long = monterey[2], altitude = 10000,
-            textsize = 2, text = "Monterey", textcolor = "white", linecolor="darkred",
+            text_size = 2, text = "Monterey", text_color = "white", line_color="darkred",
             dashed = TRUE, clear_previous = TRUE)
 render_snapshot()
 
 canyon = c(36.621049, -122.333912)
 #By default, z specifies the absolute altitude. We can also specify
-#an relative height by setting `relativez=FALSE`.
+#an relative height by setting `relative_z=FALSE`.
 render_label(lat = canyon[1], long = canyon[2], altitude = 2000,
-            textsize = 2, text = "Monterey Canyon", relativez = TRUE)
+            text_size = 2, text = "Monterey Canyon", relative_z = TRUE)
 render_snapshot()
 
 #Query the fonts installed on this system and select a concrete family,
@@ -232,7 +232,7 @@ if (length(label_font)) {
 }
 
 #The `font` argument uses that installed family in `render_highquality()`.
-#The rgl preview still uses `family` and `fonttype` independently.
+#The rgl preview still uses `family` and `font_type` independently.
 render_camera(theta=35, phi = 35, zoom = 0.80, fov=60)
 #Register its bold face under a dedicated family name for high-quality text.
 systemfonts::register_variant(
@@ -242,14 +242,14 @@ systemfonts::register_variant(
 )
 
 render_label(lat = monterey[1], long = monterey[2], altitude = 10000,
-            textsize = 2, text = "Monterey", textcolor = "black", linecolor="darkred",
-            dashed = TRUE, clear_previous = TRUE, fonttype = "bold",
+            text_size = 2, text = "Monterey", text_color = "black", line_color="darkred",
+            dashed = TRUE, clear_previous = TRUE, font_type = "bold",
             family = "sans", font = "rayshader_label_bold")
 
 render_label(lat = canyon[1], long = canyon[2],
-            altitude = 2000, textsize = 2,
-            textcolor = "white", linecolor="black",fonttype = "bold",
-            text = "Monterey Canyon", relativez=FALSE,
+            altitude = 2000, text_size = 2,
+            text_color = "white", line_color="black",font_type = "bold",
+            text = "Monterey Canyon", relative_z=FALSE,
             family = "sans", font = "rayshader_label_bold")
 
 render_highquality(samples = 16)

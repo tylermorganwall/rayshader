@@ -532,30 +532,30 @@ get_plot_3d_surface_texture = function(id, rgl_texture_file) {
 #' spacing in terrain geometry and cache the transform for later render calls.
 #' @param crs Default `NULL`. CRS to assign to the terrain input. An explicit
 #' value overrides embedded CRS metadata.
-#'@param baseshape Default `rectangle`. Shape of the base. Options are `c("rectangle","circle","hex")`.
+#'@param base_shape Default `rectangle`. Shape of the base. Options are `c("rectangle","circle","hex")`.
 #'@param solid Default `TRUE`. If `FALSE`, just the surface is rendered.
-#'@param soliddepth Default `auto`, which sets it to the lowest elevation in the matrix minus one unit (scaled by zscale). Depth of the solid base. If heightmap is uniform and set on `auto`, this is automatically set to a slightly lower level than the uniform elevation.
-#'@param solidcolor Default `grey20`. Base color.
-#'@param solidlinecolor Default `grey30`. Base edge line color.
+#'@param solid_depth Default `auto`, which sets it to the lowest elevation in the matrix minus one unit (scaled by zscale). Depth of the solid base. If heightmap is uniform and set on `auto`, this is automatically set to a slightly lower level than the uniform elevation.
+#'@param solid_color Default `grey20`. Base color.
+#'@param solid_line_color Default `grey30`. Base edge line color.
 #'@param shadow Default `TRUE`. If `FALSE`, no shadow is rendered.
-#'@param shadowdepth Default `auto`, which sets it to `soliddepth - soliddepth/10`. Depth of the shadow layer.
-#' @param shadowcolor Default `"auto"`. Color of the shadow. Automatically darkens
+#'@param shadow_depth Default `auto`, which sets it to `solid_depth - solid_depth/10`. Depth of the shadow layer.
+#' @param shadow_color Default `"auto"`. Color of the shadow. Automatically darkens
 #' the `background` color by scaling its CIELuv lightness and chroma together by
 #' `shadow_darkness`, preserving the background hue.
 #' @param shadow_darkness Default `0.5`. Lightness multiplier for the shadow when
-#' `shadowcolor = "auto"`. Values between `0` and `1` darken the background color;
+#' `shadow_color = "auto"`. Values between `0` and `1` darken the background color;
 #' `0` gives a black shadow and `1` matches the background.
-#'@param shadowwidth Default `auto`, which sizes it to 1/10th the smallest dimension of `heightmap`. Width of the shadow in units of the matrix.
+#'@param shadow_width Default `auto`, which sizes it to 1/10th the smallest dimension of `heightmap`. Width of the shadow in units of the matrix.
 #'@param shadow_texture_size Default `getOption("rayshader.max_shadow_texture_size", 1024)`. Maximum width or height, in pixels, of the blurred shadow texture. Set to `Inf` or `FALSE` to render the shadow texture at full heightmap resolution.
 #'@param water Default `FALSE`. If `TRUE`, a water layer is rendered. If `water`
 #'is omitted and `water_input` is explicitly supplied, a water layer is rendered.
 #'@param water_input Default `0`. Water level. Either a scalar, a matrix with the same dimensions as `heightmap`, or a spatial raster that can be projected/resampled to the heightmap grid. For spatial rasters, finite cells define the water footprint.
-#'@param watercolor Default `lightblue`. Color of the water.
-#'@param wateralpha Default `0.5`. Water transparency.
-#'@param waterlinecolor Default `NULL`. Color of the lines around the edges of the water layer.
-#'@param waterlinealpha Default `1`. Water line tranparency.
+#'@param water_color Default `lightblue`. Color of the water.
+#'@param water_alpha Default `0.5`. Water transparency.
+#'@param water_line_color Default `NULL`. Color of the lines around the edges of the water layer.
+#'@param water_line_alpha Default `1`. Water line tranparency.
 #'@param linewidth Default `2`. Width of the edge lines in the scene.
-#'@param lineantialias Default `FALSE`. Whether to anti-alias the lines in the scene.
+#'@param line_antialias Default `FALSE`. Whether to anti-alias the lines in the scene.
 #'@param water_render_method Default `"raster"`. Water meshing method. `"raster"` renders water at the supplied elevation and emits sidewalls down to the terrain wherever exposed water floats above the surface; `"polygon"` fits each spatial water component by matching flooded terrain-triangle area to raster footprint area, then clips the fixed-grid terrain triangles; `"legacy"` uses the previous box/grid renderer.
 #'@param water_edge_extension Default `0.5`. For spatial `water_input` inputs, amount in grid cells to expand finite water cells at boundary edges, up to a maximum of half a cell.
 #'@param water_polygon_failure Default `"raster"`. Behavior for spatial polygon water components that cannot be fit to an admissible terrain-triangle flood. `"raster"` renders the failed component with the raster method; `"remove"` omits it.
@@ -572,7 +572,7 @@ get_plot_3d_surface_texture = function(id, rgl_texture_file) {
 #'@param fov Default `0`--isometric. Field-of-view angle.
 #'@param zoom Default `1`. Zoom factor.
 #' @param background Default `"white"`. Color of the background.
-#'@param windowsize Default `600`. Position, width, and height of the `rgl` device displaying the plot.
+#'@param window_size Default `600`. Position, width, and height of the `rgl` device displaying the plot.
 #'If a single number, viewport will be a square and located in upper left corner.
 #'If two numbers, (e.g. `c(600,800)`), user will specify width and height separately.
 #'If four numbers (e.g. `c(200,0,600,800)`), the first two coordinates
@@ -619,29 +619,29 @@ get_plot_3d_surface_texture = function(id, rgl_texture_file) {
 #'#With a water layer
 #'montereybay_spatial |>
 #'  sphere_shade(texture="imhof2", vertical_exaggeration = 10) |>
-#'  plot_3d(vertical_exaggeration = 4, water = TRUE, watercolor="imhof2",
-#'          waterlinecolor="white", waterlinealpha=0.5)
+#'  plot_3d(vertical_exaggeration = 4, water = TRUE, water_color="imhof2",
+#'          water_line_color="white", water_line_alpha=0.5)
 #'render_snapshot()
 #'
 #'#With a soil texture to the base
 #'montereybay_spatial |>
 #'  sphere_shade(texture="imhof3", vertical_exaggeration = 10) |>
-#'  plot_3d(vertical_exaggeration = 4, water = TRUE,  watercolor="imhof4",
-#'          waterlinecolor="white", waterlinealpha=0.5, soil=TRUE)
+#'  plot_3d(vertical_exaggeration = 4, water = TRUE,  water_color="imhof4",
+#'          water_line_color="white", water_line_alpha=0.5, soil=TRUE)
 #'render_camera(theta=225, phi=7, zoom=0.5, fov=67)
 #'render_snapshot()
 #'
-#'#We can also change the base by setting "baseshape" to "hex" or "circle"
+#'#We can also change the base by setting "base_shape" to "hex" or "circle"
 #'montereybay_spatial |>
 #'  sphere_shade(texture="imhof1", vertical_exaggeration = 10) |>
-#'  plot_3d(vertical_exaggeration = 4, water = TRUE, watercolor="imhof1", theta=-45, zoom=0.7,
-#'          waterlinecolor="white", waterlinealpha=0.5,baseshape="circle")
+#'  plot_3d(vertical_exaggeration = 4, water = TRUE, water_color="imhof1", theta=-45, zoom=0.7,
+#'          water_line_color="white", water_line_alpha=0.5,base_shape="circle")
 #'render_snapshot()
 #'
 #'montereybay_spatial |>
 #'  sphere_shade(texture="imhof1", vertical_exaggeration = 10) |>
-#'  plot_3d(vertical_exaggeration = 4, water = TRUE, watercolor="imhof1", theta=-45, zoom=0.7,
-#'          waterlinecolor="white", waterlinealpha=0.5,baseshape="hex")
+#'  plot_3d(vertical_exaggeration = 4, water = TRUE, water_color="imhof1", theta=-45, zoom=0.7,
+#'          water_line_color="white", water_line_alpha=0.5,base_shape="hex")
 #'render_snapshot()
 #'
 #'
@@ -657,33 +657,33 @@ get_plot_3d_surface_texture = function(id, rgl_texture_file) {
 #'
 #'montereybay_spatial |>
 #'  sphere_shade(texture="imhof1", vertical_exaggeration = 10) |>
-#'  plot_3d(mb_water, vertical_exaggeration = 4, water = TRUE, watercolor="imhof1", theta=-45,
-#'          waterlinecolor="white", waterlinealpha=0.5)
+#'  plot_3d(mb_water, vertical_exaggeration = 4, water = TRUE, water_color="imhof1", theta=-45,
+#'          water_line_color="white", water_line_alpha=0.5)
 #'render_snapshot()
 plot_3d = function(
   hillshade,
   heightmap,
   zscale = 1,
   vertical_exaggeration = 1,
-  baseshape = "rectangle",
+  base_shape = "rectangle",
   solid = TRUE,
-  soliddepth = "auto",
-  solidcolor = "grey20",
-  solidlinecolor = "grey30",
+  solid_depth = "auto",
+  solid_color = "grey20",
+  solid_line_color = "grey30",
   shadow = TRUE,
-  shadowdepth = "auto",
-  shadowcolor = "auto",
+  shadow_depth = "auto",
+  shadow_color = "auto",
   shadow_darkness = 0.5,
-  shadowwidth = "auto",
+  shadow_width = "auto",
   shadow_texture_size = getOption("rayshader.max_shadow_texture_size", 1024),
   water = FALSE,
   water_input = 0,
-  watercolor = "dodgerblue",
-  wateralpha = 0.5,
-  waterlinecolor = NULL,
-  waterlinealpha = 1,
+  water_color = "dodgerblue",
+  water_alpha = 0.5,
+  water_line_color = NULL,
+  water_line_alpha = 1,
   linewidth = 2,
-  lineantialias = FALSE,
+  line_antialias = FALSE,
   water_render_method = c("raster", "polygon", "legacy"),
   water_edge_extension = 0.5,
   water_polygon_failure = c("raster", "remove"),
@@ -699,7 +699,7 @@ plot_3d = function(
   fov = 0,
   zoom = 1,
   background = "white",
-  windowsize = 600,
+  window_size = 600,
   precomputed_normals = NULL,
   triangulate = FALSE,
   max_error = 0,
@@ -924,38 +924,38 @@ plot_3d = function(
     clear_scene_cache = TRUE
   )
   cache_scene_geographic_aspect(geographic_aspect_info)
-  if (shadowcolor == "auto") {
-    shadowcolor = convert_color(
+  if (shadow_color == "auto") {
+    shadow_color = convert_color(
       darken_color(background, darken = shadow_darkness),
       as_hex = TRUE
     )
   }
   #Set window size and position
-  if (length(windowsize) == 1) {
-    windowsize = c(0, 0, windowsize, windowsize)
-  } else if (length(windowsize) == 2) {
-    windowsize = c(0, 0, windowsize)
-  } else if (length(windowsize) == 3) {
-    windowsize = c(
-      windowsize[1],
-      windowsize[2],
-      windowsize[1] + windowsize[3],
-      windowsize[2] + windowsize[3]
+  if (length(window_size) == 1) {
+    window_size = c(0, 0, window_size, window_size)
+  } else if (length(window_size) == 2) {
+    window_size = c(0, 0, window_size)
+  } else if (length(window_size) == 3) {
+    window_size = c(
+      window_size[1],
+      window_size[2],
+      window_size[1] + window_size[3],
+      window_size[2] + window_size[3]
     )
-  } else if (length(windowsize) == 4) {
-    windowsize = c(
-      windowsize[1],
-      windowsize[2],
-      windowsize[1] + windowsize[3],
-      windowsize[2] + windowsize[4]
+  } else if (length(window_size) == 4) {
+    window_size = c(
+      window_size[1],
+      window_size[2],
+      window_size[1] + window_size[3],
+      window_size[2] + window_size[4]
     )
   } else {
     stop(paste0(
-      "Don't know what to do with `windowsize` argument of length ",
-      length(windowsize)
+      "Don't know what to do with `window_size` argument of length ",
+      length(window_size)
     ))
   }
-  heightmap = generate_base_shape(heightmap, baseshape)
+  heightmap = generate_base_shape(heightmap, base_shape)
   hillshade = rayimage::render_clamp(hillshade)
   rgl_hillshade = check_plot_3d_texture_size(hillshade)
 
@@ -966,95 +966,95 @@ plot_3d = function(
   }
   min_height = min(heightmap, na.rm = TRUE)
   max_height = max(heightmap, na.rm = TRUE)
-  if (soliddepth == "auto") {
+  if (solid_depth == "auto") {
     if (min_height != max_height) {
-      soliddepth = min_height /
+      solid_depth = min_height /
         zscale -
         (max_height / zscale - min_height / zscale) / 5
     } else {
       max_dim = max(dim(heightmap))
-      soliddepth = min_height / zscale - max_dim / 25
+      solid_depth = min_height / zscale - max_dim / 25
     }
   } else {
-    if (soliddepth > min_height) {
+    if (solid_depth > min_height) {
       message(sprintf(
-        "`soliddepth` (set to %f) must be less than or equal to heightmap minimum value (%f). Setting to min(heightmap)",
-        soliddepth,
+        "`solid_depth` (set to %f) must be less than or equal to heightmap minimum value (%f). Setting to min(heightmap)",
+        solid_depth,
         min_height
       ))
-      soliddepth = min_height / zscale
+      solid_depth = min_height / zscale
     } else {
-      soliddepth = soliddepth / zscale
+      solid_depth = solid_depth / zscale
     }
   }
   if (solid) {
-    min_height_shadow = min(c(min_height, soliddepth * zscale))
+    min_height_shadow = min(c(min_height, solid_depth * zscale))
   } else {
     min_height_shadow = min_height
   }
-  if (shadowdepth == "auto") {
+  if (shadow_depth == "auto") {
     if (min_height_shadow != max_height) {
       if (solid) {
-        shadowdepth = soliddepth -
+        shadow_depth = solid_depth -
           (max_height / zscale - min_height_shadow / zscale) / 5
       } else {
-        shadowdepth = min_height_shadow /
+        shadow_depth = min_height_shadow /
           zscale -
           (max_height / zscale - min_height_shadow / zscale) / 5
       }
     } else {
       if (solid) {
         max_dim = max(dim(heightmap))
-        shadowdepth = soliddepth - max_dim / 25
+        shadow_depth = solid_depth - max_dim / 25
       } else {
         max_dim = max(dim(heightmap))
-        shadowdepth = min_height - max_dim / 25
+        shadow_depth = min_height - max_dim / 25
       }
     }
   } else {
-    if (shadowdepth > min_height) {
+    if (shadow_depth > min_height) {
       message(sprintf(
-        "`shadowdepth` (set to %f) is greater to heightmap minimum value (%f). Shadow will appear to be intersecting 3D model.",
-        shadowdepth,
+        "`shadow_depth` (set to %f) is greater to heightmap minimum value (%f). Shadow will appear to be intersecting 3D model.",
+        shadow_depth,
         min_height
       ))
     } else {
-      shadowdepth = shadowdepth / zscale
+      shadow_depth = shadow_depth / zscale
     }
   }
-  if (shadowwidth == "auto") {
-    shadowwidth = max(floor(min(dim(heightmap)) / 10), 5)
+  if (shadow_width == "auto") {
+    shadow_width = max(floor(min(dim(heightmap)) / 10), 5)
   }
   if (water) {
-    if (watercolor == "imhof1") {
-      watercolor = "#defcf5"
-    } else if (watercolor == "imhof2") {
-      watercolor = "#337c73"
-    } else if (watercolor == "imhof3") {
-      watercolor = "#4e7982"
-    } else if (watercolor == "imhof4") {
-      watercolor = "#638d99"
-    } else if (watercolor == "desert") {
-      watercolor = "#caf0f7"
-    } else if (watercolor == "bw") {
-      watercolor = "#dddddd"
-    } else if (watercolor == "unicorn") {
-      watercolor = "#ff00ff"
+    if (water_color == "imhof1") {
+      water_color = "#defcf5"
+    } else if (water_color == "imhof2") {
+      water_color = "#337c73"
+    } else if (water_color == "imhof3") {
+      water_color = "#4e7982"
+    } else if (water_color == "imhof4") {
+      water_color = "#638d99"
+    } else if (water_color == "desert") {
+      water_color = "#caf0f7"
+    } else if (water_color == "bw") {
+      water_color = "#dddddd"
+    } else if (water_color == "unicorn") {
+      water_color = "#ff00ff"
     }
-    if (is.null(waterlinecolor)) {} else if (waterlinecolor == "imhof1") {
-      waterlinecolor = "#f9fffb"
-    } else if (waterlinecolor == "imhof2") {
-      waterlinecolor = "#8accc4"
-    } else if (waterlinecolor == "imhof3") {
-      waterlinecolor = "#8cd4e2"
-    } else if (waterlinecolor == "imhof4") {
-      waterlinecolor = "#c7dfe5"
-    } else if (waterlinecolor == "desert") {
-      waterlinecolor = "#cde3f2"
-    } else if (waterlinecolor == "bw") {
-      waterlinecolor = "#ffffff"
-    } else if (waterlinecolor == "unicorn") {
-      waterlinecolor = "#ffd1fb"
+    if (is.null(water_line_color)) {} else if (water_line_color == "imhof1") {
+      water_line_color = "#f9fffb"
+    } else if (water_line_color == "imhof2") {
+      water_line_color = "#8accc4"
+    } else if (water_line_color == "imhof3") {
+      water_line_color = "#8cd4e2"
+    } else if (water_line_color == "imhof4") {
+      water_line_color = "#c7dfe5"
+    } else if (water_line_color == "desert") {
+      water_line_color = "#cde3f2"
+    } else if (water_line_color == "bw") {
+      water_line_color = "#ffffff"
+    } else if (water_line_color == "unicorn") {
+      water_line_color = "#ffd1fb"
     }
   }
   full_texture_map = tempfile(fileext = ".png")
@@ -1085,7 +1085,7 @@ plot_3d = function(
   }
   if (plot_new || rgl::cur3d() == 0) {
     rgl::open3d(
-      windowRect = windowsize,
+      windowRect = window_size,
       mouseMode = c("none", "polar", "fov", "zoom", "pull")
     )
   }
@@ -1186,8 +1186,8 @@ plot_3d = function(
   if (solid && !triangulate) {
     make_base(
       heightmap,
-      basedepth = soliddepth,
-      basecolor = solidcolor,
+      basedepth = solid_depth,
+      basecolor = solid_color,
       zscale = zscale,
       soil = soil,
       soil_freq = soil_freq,
@@ -1198,13 +1198,17 @@ plot_3d = function(
       gradient_darken = soil_gradient_darken
     )
   } else if (solid && triangulate) {
-    make_base_triangulated(tris, basedepth = soliddepth, basecolor = solidcolor)
+    make_base_triangulated(
+      tris,
+      basedepth = solid_depth,
+      basecolor = solid_color
+    )
   }
-  if (!is.null(solidlinecolor) && solid) {
+  if (!is.null(solid_line_color) && solid) {
     make_lines(
       heightmap,
-      basedepth = soliddepth,
-      linecolor = solidlinecolor,
+      basedepth = solid_depth,
+      line_color = solid_line_color,
       zscale = zscale,
       linewidth = linewidth
     )
@@ -1212,10 +1216,10 @@ plot_3d = function(
   if (shadow) {
     make_shadow(
       heightmap,
-      shadowdepth,
-      shadowwidth,
+      shadow_depth,
+      shadow_width,
       background,
-      shadowcolor,
+      shadow_color,
       shadow_texture_size = shadow_texture_size
     )
   }
@@ -1230,8 +1234,8 @@ plot_3d = function(
     water_mesh = make_water(
       heightmap,
       waterheight = water_input,
-      wateralpha = wateralpha,
-      watercolor = watercolor,
+      water_alpha = water_alpha,
+      water_color = water_color,
       zscale = zscale,
       water_render_method = water_render_method_current,
       water_edge_extension = water_edge_extension,
@@ -1240,35 +1244,35 @@ plot_3d = function(
       heightmap_crs = crs_cache_value
     )
   }
-  if (!is.null(waterlinecolor) && water) {
+  if (!is.null(water_line_color) && water) {
     if (!identical(water_render_method_current, "legacy")) {
       make_waterlines_from_mesh(
         water_mesh,
-        linecolor = waterlinecolor,
-        alpha = waterlinealpha,
+        line_color = water_line_color,
+        alpha = water_line_alpha,
         linewidth = linewidth,
-        antialias = lineantialias
+        antialias = line_antialias
       )
     } else {
       if (all(!is.na(heightmap))) {
         make_lines(
           fliplr(heightmap),
           basedepth = water_input,
-          linecolor = waterlinecolor,
+          line_color = water_line_color,
           zscale = zscale,
           linewidth = linewidth,
-          alpha = waterlinealpha,
+          alpha = water_line_alpha,
           solid = FALSE
         )
       }
       make_waterlines(
         heightmap,
         water_input = water_input,
-        linecolor = waterlinecolor,
+        line_color = water_line_color,
         zscale = zscale,
-        alpha = waterlinealpha,
+        alpha = water_line_alpha,
         linewidth = linewidth,
-        antialias = lineantialias
+        antialias = line_antialias
       )
     }
   }

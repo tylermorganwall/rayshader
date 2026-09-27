@@ -6,11 +6,11 @@
 #'Cache fallback messages are disabled by default. Set `options(rayshader.verbose_scene_cache = TRUE)` to print when cached metadata is reused.
 #'
 #'@param heightmap A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.
-#'@param sunaltitude Default `45`. The angle, in degrees (as measured from the horizon) from which the light originates. The width of the light
-#'is centered on this value and has an angular extent of 0.533 degrees, which is the angular extent of the sun. Use the `anglebreaks` argument
+#'@param sun_altitude Default `45`. The angle, in degrees (as measured from the horizon) from which the light originates. The width of the light
+#'is centered on this value and has an angular extent of 0.533 degrees, which is the angular extent of the sun. Use the `angle_breaks` argument
 #'to create a softer (wider) light. This has a hard minimum/maximum of 0/90 degrees.
-#'@param sunangle Default `315` (NW). The angle, in degrees, around the matrix from which the light originates. Zero degrees is North, increasing clockwise.
-#'@param maxsearch Defaults to the longest possible shadow given the `sunaltitude` and `heightmap`.
+#'@param sun_angle Default `315` (NW). The angle, in degrees, around the matrix from which the light originates. Zero degrees is North, increasing clockwise.
+#'@param max_search Defaults to the longest possible shadow given the `sun_altitude` and `heightmap`.
 #'Otherwise, this argument specifies the maximum distance that the system should propagate rays to check.
 #'@param lambert Default `TRUE`. Changes the intensity of the light at each point based proportional to the
 #'dot product of the ray direction and the surface normal at that point. Zeros out all values directed away from
@@ -26,9 +26,9 @@
 #'@param cache_mask Default `NULL`. A matrix of 1 and 0s, indicating which points on which the raytracer will operate.
 #'@param shadow_cache Default `NULL`. The shadow matrix to be updated at the points defined by the argument `cache_mask`.
 #'If present, this will only compute the raytraced shadows for those points with value `1` in the mask.
-#'@param progbar Default `TRUE` if interactive, `FALSE` otherwise. If `FALSE`, turns off progress bar.
-#'@param anglebreaks Default `NULL`. A vector of angle(s) in degrees (as measured from the horizon) specifying from where the light originates.
-#'Use this instead of `sunaltitude` to create a softer shadow by specifying a wider light. E.g. `anglebreaks = seq(40,50,by=0.5)` creates a light
+#'@param progress_bar Default `TRUE` if interactive, `FALSE` otherwise. If `FALSE`, turns off progress bar.
+#'@param angle_breaks Default `NULL`. A vector of angle(s) in degrees (as measured from the horizon) specifying from where the light originates.
+#'Use this instead of `sun_altitude` to create a softer shadow by specifying a wider light. E.g. `angle_breaks = seq(40,50,by=0.5)` creates a light
 #'10 degrees wide, as opposed to the default
 #' @param geographic_aspect Default `TRUE`. Correct unequal metric x/y cell
 #' spacing using the input extent and CRS.
@@ -47,36 +47,36 @@
 #'  plot_map()
 #'#Change the altitude of the sun to 25 degrees
 #'montereybay_spatial |>
-#'  ray_shade(vertical_exaggeration = 4, sunaltitude=25) |>
+#'  ray_shade(vertical_exaggeration = 4, sun_altitude=25) |>
 #'  plot_map()
 #'#Remove the lambertian shading to just calculate shadow intensity.
 #'montereybay_spatial |>
-#'  ray_shade(vertical_exaggeration = 4, sunaltitude=25, lambert=FALSE) |>
+#'  ray_shade(vertical_exaggeration = 4, sun_altitude=25, lambert=FALSE) |>
 #'  plot_map()
 #'
 #'#Change the direction of the sun to the South East
 #'montereybay_spatial |>
-#'  ray_shade(vertical_exaggeration = 4, sunaltitude=25, sunangle=225) |>
+#'  ray_shade(vertical_exaggeration = 4, sun_altitude=25, sun_angle=225) |>
 #'  plot_map()
 ray_shade = function(
   heightmap,
-  sunaltitude = 45,
-  sunangle = 315,
-  maxsearch = NULL,
+  sun_altitude = 45,
+  sun_angle = 315,
+  max_search = NULL,
   lambert = TRUE,
   zscale = 1,
   vertical_exaggeration = 1,
   multicore = FALSE,
   cache_mask = NULL,
   shadow_cache = NULL,
-  progbar = interactive(),
-  anglebreaks = NULL,
+  progress_bar = interactive(),
+  angle_breaks = NULL,
   geographic_aspect = TRUE,
   extent = NULL,
   crs = NULL,
   ...
 ) {
-  sunangle_missing = missing(sunangle)
+  sunangle_missing = missing(sun_angle)
   heightmap_missing = missing(heightmap)
   extent_missing = missing(extent)
   crs_missing = missing(crs)
@@ -166,30 +166,30 @@ ray_shade = function(
       isTRUE(heightmap_info$geographic_aspect$active) &&
       is.finite(heightmap_info$geographic_aspect$north_rotation)
   ) {
-    sunangle = sunangle + heightmap_info$geographic_aspect$north_rotation
+    sun_angle = sun_angle + heightmap_info$geographic_aspect$north_rotation
   }
   originalheightmap = heightmap
   heightmap = fliplr(t(heightmap))
   if (!is.null(cache_mask)) {
     cache_mask = fliplr(t(cache_mask))
   }
-  if (is.null(anglebreaks)) {
-    anglebreaks = seq(
-      max(0, sunaltitude - 0.533 / 2),
-      min(90, sunaltitude + 0.533 / 2),
+  if (is.null(angle_breaks)) {
+    angle_breaks = seq(
+      max(0, sun_altitude - 0.533 / 2),
+      min(90, sun_altitude + 0.533 / 2),
       length.out = 10
     )
   }
-  if (all(anglebreaks <= 0)) {
+  if (all(angle_breaks <= 0)) {
     return(matrix(0, nrow = nrow(heightmap), ncol = ncol(heightmap)))
   }
-  if (is.null(maxsearch)) {
-    maxsearch = (max(heightmap, na.rm = TRUE) - min(heightmap, na.rm = TRUE)) /
-      (zscale * sinpi(min(anglebreaks[anglebreaks > 0]) / 180))
+  if (is.null(max_search)) {
+    max_search = (max(heightmap, na.rm = TRUE) - min(heightmap, na.rm = TRUE)) /
+      (zscale * sinpi(min(angle_breaks[angle_breaks > 0]) / 180))
   }
-  anglebreaks = anglebreaks[order(anglebreaks)]
-  anglebreaks_rad = anglebreaks * pi / 180
-  sunangle_rad_ray = -pi / 2 - sunangle * pi / 180
+  angle_breaks = angle_breaks[order(angle_breaks)]
+  anglebreaks_rad = angle_breaks * pi / 180
+  sunangle_rad_ray = -pi / 2 - sun_angle * pi / 180
   heightmap = add_padding(heightmap)
   aspect = heightmap_info$geographic_aspect
   if (is.null(cache_mask)) {
@@ -201,13 +201,13 @@ ray_shade = function(
   }
   if (!multicore) {
     shadowmatrix = fliplr(rayshade_cpp(
-      sunangle = sunangle_rad_ray,
-      anglebreaks = anglebreaks_rad,
+      sun_angle = sunangle_rad_ray,
+      angle_breaks = anglebreaks_rad,
       heightmap = heightmap,
       zscale = zscale,
-      maxsearch = maxsearch,
+      max_search = max_search,
       cache_mask = cache_mask,
-      progbar = progbar,
+      progress_bar = progress_bar,
       row_scale = aspect$scale[["x"]],
       column_scale = aspect$scale[["z"]]
     ))
@@ -222,8 +222,8 @@ ray_shade = function(
         with_suppressed_hillshade_zscale_cache(
           lamb_shade(
             originalheightmap,
-            sunaltitude = mean(anglebreaks),
-            sunangle = sunangle,
+            sun_altitude = mean(angle_breaks),
+            sun_angle = sun_angle,
             zscale = zscale,
             geographic_aspect = geographic_aspect,
             extent = extent,
@@ -284,12 +284,12 @@ ray_shade = function(
         ) %dopar%
           {
             rayshade_multicore(
-              sunangle = sunangle_rad_ray,
-              anglebreaks = anglebreaks_rad,
+              sun_angle = sunangle_rad_ray,
+              angle_breaks = anglebreaks_rad,
               heightmap = heightmap,
               zscale = zscale,
               chunkindices = c(itervec[i], (itervec[i + 1])),
-              maxsearch = maxsearch,
+              max_search = max_search,
               cache_mask = cache_mask,
               row_scale = aspect$scale[["x"]],
               column_scale = aspect$scale[["z"]]
@@ -320,8 +320,8 @@ ray_shade = function(
         with_suppressed_hillshade_zscale_cache(
           lamb_shade(
             originalheightmap,
-            sunaltitude = mean(anglebreaks),
-            sunangle = sunangle,
+            sun_altitude = mean(angle_breaks),
+            sun_angle = sun_angle,
             zscale = zscale,
             geographic_aspect = geographic_aspect,
             extent = extent,

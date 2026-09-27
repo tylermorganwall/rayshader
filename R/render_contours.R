@@ -5,8 +5,8 @@
 #'Cache fallback messages are disabled by default. Set `options(rayshader.verbose_scene_cache = TRUE)` to print when cached metadata is reused.
 #'
 #'@param levels Default `NA`. Automatically generated with 10 levels. This argument specifies the exact height levels of each contour.
-#'@param nlevels Default `NA`. Controls the auto-generation of levels. If levels is length-2,
-#'this will automatically generate `nlevels` breaks between `levels[1]` and `levels[2]`.
+#'@param n_levels Default `NA`. Controls the auto-generation of levels. If levels is length-2,
+#'this will automatically generate `n_levels` breaks between `levels[1]` and `levels[2]`.
 #'@param linewidth Default `3`. The line width.
 #'@param color Default `black`. Color of the line. Use `"height"` to color contours by the cached [plot_gg()] height aesthetic palette.
 #'@param palette Default `NULL`. Overrides `color`. Either a function that returns a color palette
@@ -26,12 +26,12 @@
 #'montereybay_spatial |>
 #'  height_shade() |>
 #'  add_shadow(ray_shade(),0.3) |>
-#'  plot_3d(theta = -45,  zoom=0.9, windowsize=800, vertical_exaggeration = 4)
+#'  plot_3d(theta = -45,  zoom=0.9, window_size=800, vertical_exaggeration = 4)
 #'render_contours(offset = 100)
 #'render_snapshot()
 #'
 #'#Specify the number of levels
-#'render_contours(offset = 100, nlevels = 30,
+#'render_contours(offset = 100, n_levels = 30,
 #'                clear_previous = TRUE)
 #'render_snapshot()
 #'
@@ -45,7 +45,7 @@
 #'  constant_shade() |>
 #'  plot_3d(zscale = 2, solid = FALSE, zoom = 0.8)
 #'palette = grDevices::colorRampPalette(c("red", "purple", "pink"))
-#'render_contours(offset = 1, palette = palette, nlevels = 20)
+#'render_contours(offset = 1, palette = palette, n_levels = 20)
 #'render_snapshot()
 #'
 #'#Render using `render_highquality()` for a neon light effect
@@ -59,7 +59,7 @@
 #'                   )))
 render_contours = function(
   levels = NA,
-  nlevels = NA,
+  n_levels = NA,
   linewidth = 1,
   color = "black",
   palette = NULL,
@@ -105,14 +105,14 @@ render_contours = function(
     stop("`isoband` package required for generate_contour_overlay()")
   }
   if (is.na(levels[1])) {
-    if (is.na(nlevels[1])) {
-      nlevels = 10
+    if (is.na(n_levels[1])) {
+      n_levels = 10
     }
     rangelevels = range(heightmap, na.rm = TRUE)
-    levels = seq(rangelevels[1], rangelevels[2], length.out = nlevels + 2)
-  } else if (length(levels) == 2 && !is.na(nlevels)) {
+    levels = seq(rangelevels[1], rangelevels[2], length.out = n_levels + 2)
+  } else if (length(levels) == 2 && !is.na(n_levels)) {
     rangelevels = range(levels, na.rm = TRUE)
-    levels = seq(rangelevels[1], rangelevels[2], length.out = nlevels + 2)
+    levels = seq(rangelevels[1], rangelevels[2], length.out = n_levels + 2)
   }
   levels = sort(unique(levels))
   extent_heightmap = c(1, nrow(heightmap), 1, ncol(heightmap))

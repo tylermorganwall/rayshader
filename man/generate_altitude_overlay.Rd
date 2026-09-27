@@ -65,7 +65,7 @@ montereybay_spatial |>
  sphere_shade(texture = "desert") |>
  add_overlay(generate_altitude_overlay(bathy_hs, montereybay_spatial, 0, 0))  |>
  add_overlay(generate_altitude_overlay(snow_hs, montereybay_spatial, 500, 1200, lower=FALSE))  |>
- add_shadow(ambient_shade(vertical_exaggeration = 4,maxsearch=100),0) |>
+ add_shadow(ambient_shade(vertical_exaggeration = 4,max_search=100),0) |>
  plot_map()
 \dontshow{\}) # examplesIf}
 }

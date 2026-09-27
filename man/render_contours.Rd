@@ -6,7 +6,7 @@
 \usage{
 render_contours(
   levels = NA,
-  nlevels = NA,
+  n_levels = NA,
   linewidth = 1,
   color = "black",
   palette = NULL,
@@ -22,8 +22,8 @@ render_contours(
 \arguments{
 \item{levels}{Default \code{NA}. Automatically generated with 10 levels. This argument specifies the exact height levels of each contour.}
 
-\item{nlevels}{Default \code{NA}. Controls the auto-generation of levels. If levels is length-2,
-this will automatically generate \code{nlevels} breaks between \code{levels[1]} and \code{levels[2]}.}
+\item{n_levels}{Default \code{NA}. Controls the auto-generation of levels. If levels is length-2,
+this will automatically generate \code{n_levels} breaks between \code{levels[1]} and \code{levels[2]}.}
 
 \item{linewidth}{Default \code{3}. The line width.}
 
@@ -59,12 +59,12 @@ Cache fallback messages are disabled by default. Set \code{options(rayshader.ver
 montereybay_spatial |>
  height_shade() |>
  add_shadow(ray_shade(),0.3) |>
- plot_3d(theta = -45,  zoom=0.9, windowsize=800, vertical_exaggeration = 4)
+ plot_3d(theta = -45,  zoom=0.9, window_size=800, vertical_exaggeration = 4)
 render_contours(offset = 100)
 render_snapshot()
 
 #Specify the number of levels
-render_contours(offset = 100, nlevels = 30,
+render_contours(offset = 100, n_levels = 30,
                clear_previous = TRUE)
 render_snapshot()
 
@@ -78,7 +78,7 @@ volcano |>
  constant_shade() |>
  plot_3d(zscale = 2, solid = FALSE, zoom = 0.8)
 palette = grDevices::colorRampPalette(c("red", "purple", "pink"))
-render_contours(offset = 1, palette = palette, nlevels = 20)
+render_contours(offset = 1, palette = palette, n_levels = 20)
 render_snapshot()
 
 #Render using `render_highquality()` for a neon light effect

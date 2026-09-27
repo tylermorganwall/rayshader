@@ -11,7 +11,7 @@ test_that("missing heights do not overwrite horizontal coordinates", {
     zscale = 1,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(250, 250),
+    window_size = c(250, 250),
     extent = extent
   ))
 
@@ -52,7 +52,7 @@ test_that("batched missing heights use path-local replacements", {
     zscale = 1,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(250, 250),
+    window_size = c(250, 250),
     extent = extent
   ))
 

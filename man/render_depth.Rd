@@ -6,13 +6,13 @@
 \usage{
 render_depth(
   focus = NULL,
-  focallength = 100,
-  fstop = 4,
+  focal_length = 100,
+  f_stop = 4,
   filename = NULL,
   preview_focus = FALSE,
-  bokehshape = "circle",
-  bokehintensity = 1,
-  bokehlimit = 0.8,
+  bokeh_shape = "circle",
+  bokeh_intensity = 1,
+  bokeh_limit = 0.8,
   rotation = 0,
   aberration = 0,
   transparent_water = FALSE,
@@ -28,7 +28,7 @@ render_depth(
   vignette = FALSE,
   vignette_color = "black",
   vignette_radius = 1.3,
-  progbar = interactive(),
+  progress_bar = interactive(),
   software_render = FALSE,
   width = NULL,
   height = NULL,
@@ -55,20 +55,20 @@ render_depth(
 \arguments{
 \item{focus}{Focal point. Defaults to the center of the bounding box. Depth in which to blur, in distance to the camera plane.}
 
-\item{focallength}{Default \code{1}. Focal length of the virtual camera.}
+\item{focal_length}{Default \code{1}. Focal length of the virtual camera.}
 
-\item{fstop}{Default \code{1}. F-stop of the virtual camera.}
+\item{f_stop}{Default \code{1}. F-stop of the virtual camera.}
 
 \item{filename}{The filename of the image to be saved. If this is not given, the image will be plotted instead.}
 
 \item{preview_focus}{Default \code{FALSE}. If \code{TRUE}, a red line will be drawn across the image
 showing where the camera will be focused.}
 
-\item{bokehshape}{Default \code{circle}. Also built-in: \code{hex}. The shape of the bokeh.}
+\item{bokeh_shape}{Default \code{circle}. Also built-in: \code{hex}. The shape of the bokeh.}
 
-\item{bokehintensity}{Default \code{3}. Intensity of the bokeh when the pixel intensity is greater than \code{bokehlimit}.}
+\item{bokeh_intensity}{Default \code{3}. Intensity of the bokeh when the pixel intensity is greater than \code{bokeh_limit}.}
 
-\item{bokehlimit}{Default \code{0.8}. Limit after which the bokeh intensity is increased by \code{bokehintensity}.}
+\item{bokeh_limit}{Default \code{0.8}. Limit after which the bokeh intensity is increased by \code{bokeh_intensity}.}
 
 \item{rotation}{Default \code{0}. Number of degrees to rotate the hexagon bokeh shape.}
 
@@ -107,7 +107,7 @@ control the blurriness of the vignette effect.}
 
 \item{vignette_radius}{Default \code{1.3}. Radius of the vignette, as a porportion of the image dimensions.}
 
-\item{progbar}{Default \code{TRUE} if in an interactive session. Displays a progress bar.}
+\item{progress_bar}{Default \code{TRUE} if in an interactive session. Displays a progress bar.}
 
 \item{software_render}{Default \code{FALSE}. If \code{TRUE}, rayshader will use the rayvertex package to render the snapshot, which
 is not constrained by the screen size or requires OpenGL.}
@@ -177,31 +177,31 @@ The size of the circle of confusion is determined by the following formula (z_de
 \dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
 montereybay_spatial |>
  sphere_shade(vertical_exaggeration = 10) |>
- plot_3d(vertical_exaggeration = 4, water=TRUE, waterlinecolor="white",
+ plot_3d(vertical_exaggeration = 4, water=TRUE, water_line_color="white",
          zoom=0.3,theta=-135,fov=70, phi=20)
 
 #Preview where the focal plane lies
 render_depth(preview_focus=TRUE)
 #Render the depth of field effect
-render_depth(focallength = 300)
+render_depth(focal_length = 300)
 #Add a chromatic aberration effect
-render_depth(focallength = 300, aberration = 0.3)
+render_depth(focal_length = 300, aberration = 0.3)
 #Render the depth of field effect, ignoring water in the depth pass
-render_depth(preview_focus=TRUE, focallength=300, transparent_water=TRUE)
-render_depth(focallength=300, transparent_water=TRUE)
+render_depth(preview_focus=TRUE, focal_length=300, transparent_water=TRUE)
+render_depth(focal_length=300, transparent_water=TRUE)
 render_camera(theta=45,zoom=0.15,phi=20)
 
 #Change the bokeh shape and intensity
-render_depth(focus=900, bokehshape = "circle",focallength=500,bokehintensity=30,
+render_depth(focus=900, bokeh_shape = "circle",focal_length=500,bokeh_intensity=30,
             title_text = "Circular Bokeh", title_size = 30, title_color = "white",
             title_bar_color = "black")
-render_depth(focus=900, bokehshape = "hex",focallength=500,bokehintensity=30,
+render_depth(focus=900, bokeh_shape = "hex",focal_length=500,bokeh_intensity=30,
             title_text = "Hexagonal Bokeh", title_size = 30, title_color = "white",
             title_bar_color = "black")
 
 #Add a title and vignette effect.
 render_camera(theta=0,zoom=0.7,phi=30)
-render_depth(focallength = 250, title_text = "Monterey Bay, CA",
+render_depth(focal_length = 250, title_text = "Monterey Bay, CA",
             title_size = 20, title_color = "white", title_bar_color = "black", vignette = TRUE)
 \dontshow{\}) # examplesIf}
 }

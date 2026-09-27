@@ -7,7 +7,7 @@
 calculate_normal(
   heightmap,
   zscale = 1,
-  progbar = FALSE,
+  progress_bar = FALSE,
   geographic_aspect = TRUE,
   extent = NULL,
   crs = NULL
@@ -19,7 +19,7 @@ elevation values.}
 
 \item{zscale}{Default \code{1}. Ratio of horizontal spacing to elevation units.}
 
-\item{progbar}{Default \code{FALSE}. If \code{TRUE}, turns on progress bar.}
+\item{progress_bar}{Default \code{FALSE}. If \code{TRUE}, turns on progress bar.}
 
 \item{geographic_aspect}{Default \code{TRUE}. Correct unequal metric x/y cell
 spacing using the input extent and CRS.}
@@ -43,7 +43,7 @@ Calculates the normal unit vector for every point on the grid.
 volcanocache = calculate_normal(volcano)
 
 #Use the cached vectors to speed up calculation of `sphere_shade()` on a map.
-sphere_shade(volcano,normalvectors = volcanocache) |>
+sphere_shade(volcano,normal_vectors = volcanocache) |>
  plot_map()
 \dontshow{\}) # examplesIf}
 }

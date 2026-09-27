@@ -19,11 +19,11 @@ render_highquality(
   sky_args = list(),
   sky_haze = FALSE,
   sky_query_altitude = FALSE,
-  lightdirection = 315,
-  lightaltitude = 45,
-  lightsize = NULL,
-  lightintensity = 500,
-  lightcolor = "white",
+  light_direction = 315,
+  light_altitude = 45,
+  light_size = 5,
+  light_intensity = 500,
+  light_color = "white",
   material = rayrender::diffuse(),
   water_attenuation = 0,
   water_surface_color = TRUE,
@@ -100,7 +100,7 @@ The other options are \code{random} (worst quality but fastest),
 Smaller numbers give higher quality images, at the expense of longer rendering times.
 If this is set to zero, the adaptive sampler will be turned off and the renderer will use the maximum number of samples everywhere.}
 
-\item{light}{Default \code{TRUE}. Whether there should be a light in the scene. If not, the scene will be lit with a bluish sky.}
+\item{light}{Default \code{TRUE}. Whether to illuminate the scene with an infinite disk light from \code{rayrender::disk_light()}. If not, the scene will be lit with a bluish sky.}
 
 \item{lat}{Default \code{NA}. Latitude (degrees) for automatic sky generation.
 When latitude, longitude, and datetime are available, uses \code{rayrender::sky_light()}
@@ -155,21 +155,21 @@ clouds to receive sunlight while lower areas are dark. With \code{FALSE}, lighti
 uses the fixed \code{sky_altitude} (zero by default). Image skies do not support this
 option.}
 
-\item{lightdirection}{Default \code{315}. Position of the light angle around the
+\item{light_direction}{Default \code{315}. Position of the light angle around the
 scene. When omitted, rayshader interprets the default relative to true north
 using cached spatial metadata.
 If this is a vector longer than one, multiple lights will be generated (using values from
-\code{lightaltitude}, \code{lightintensity}, and \code{lightcolor})}
+\code{light_altitude}, \code{light_intensity}, and \code{light_color})}
 
-\item{lightaltitude}{Default \code{45}. Angle above the horizon that the light is located.
+\item{light_altitude}{Default \code{45}. Angle above the horizon that the light is located.
 If this is a vector longer than one, multiple lights will be generated (using values from
-\code{lightdirection}, \code{lightintensity}, and \code{lightcolor})}
+\code{light_direction}, \code{light_intensity}, and \code{light_color})}
 
-\item{lightsize}{Default \code{NULL}. Radius of the light(s). Automatically chosen, but can be set here by the user.}
+\item{light_size}{Default \code{5}. Full angular diameter of the disk light(s), in degrees, greater than 0 and less than 180. Independent of scene size and camera position.}
 
-\item{lightintensity}{Default \code{500}. Intensity of the light.}
+\item{light_intensity}{Default \code{500}. Intensity of the light.}
 
-\item{lightcolor}{Default \code{white}. The color of the light.}
+\item{light_color}{Default \code{white}. The color of the light.}
 
 \item{material}{Default \code{rayrender::diffuse()}. The material properties of the object file. Only used if \code{override_material = TRUE}}
 
@@ -349,51 +349,51 @@ either \code{\link[=convert_path_to_animation_coords]{convert_path_to_animation_
 #Render the volcano dataset using pathtracing
 volcano |>
  sphere_shade(vertical_exaggeration = 2) |>
- plot_3d(vertical_exaggeration = 1/2, shadowdepth=min(volcano)*0.8)
+ plot_3d(vertical_exaggeration = 1/2, shadow_depth=min(volcano)*0.8)
 render_highquality(min_variance = 0, sample_method = "sobol_blue", samples = 16)
 
 #Change position of light
-render_highquality(lightdirection = 45, min_variance = 0,
+render_highquality(light_direction = 45, min_variance = 0,
                   sample_method = "sobol_blue", samples = 16)
 
 #Change vertical position of light
-render_highquality(lightdirection = 45, lightaltitude = 10,
+render_highquality(light_direction = 45, light_altitude = 10,
                   min_variance = 0, samples = 16)
 
 #Change the ground material
-render_highquality(lightdirection = 45, lightaltitude=60,
+render_highquality(light_direction = 45, light_altitude=60,
                   ground_material = rayrender::diffuse(checkerperiod = 30, checkercolor="grey50"),
                   min_variance = 0, samples = 16)
 
 #Add three different color lights and a title
-render_highquality(lightdirection = c(0,120,240), lightaltitude=45,
-                  lightcolor=c("red","green","blue"), title_text = "Red, Green, Blue",
+render_highquality(light_direction = c(0,120,240), light_altitude=45,
+                  light_color=c("red","green","blue"), title_text = "Red, Green, Blue",
                   title_bar_color="white", title_bar_alpha=0.8,
                   min_variance = 0, samples = 16)
 
 #Change the camera:
 render_camera(theta=-45,phi=60,fov=60,zoom=0.8)
-render_highquality(lightdirection = c(0),
+render_highquality(light_direction = c(0),
                   title_bar_color="white", title_bar_alpha=0.8,
                   min_variance = 0, samples = 16)
 #Add a shiny metal sphere
 render_camera(theta=-45,phi=60,fov=60,zoom=0.8)
-render_highquality(lightdirection = c(0,120,240), lightaltitude=45,
-                  lightcolor=c("red","green","blue"),
+render_highquality(light_direction = c(0,120,240), light_altitude=45,
+                  light_color=c("red","green","blue"),
                   scene_elements = rayrender::sphere(z=-60,y=0,
                                                      radius=20,material=rayrender::metal()),
                   min_variance = 0, samples = 16)
 
 #Add a red light to the volcano and change the ambient light to dusk
 render_camera(theta=45,phi=45)
-render_highquality(lightdirection = c(240), lightaltitude=30,
-                  lightcolor=c("#5555ff"),
+render_highquality(light_direction = c(240), light_altitude=30,
+                  light_color=c("#5555ff"),
                   scene_elements = rayrender::sphere(z=0,y=6, x=-18, radius=5,
                                    material=rayrender::light(color="red",intensity=100)),
                   min_variance = 0, samples = 16)
 #Manually change the camera location and direction
 render_camera(fov=111)
-render_highquality(lightdirection = c(240), lightaltitude=30, lightcolor=c("#5555ff"),
+render_highquality(light_direction = c(240), light_altitude=30, light_color=c("#5555ff"),
                   camera_location = c(-8.91, 24.36, 6.96), camera_lookat = c(4.25, 20.86, 2.18),
                   scene_elements = rayrender::sphere(z=0,y=15, x=-18, radius=5,
                                    material=rayrender::light(color="red",intensity=10)),
@@ -422,7 +422,7 @@ cropped_data = raster::crop(elevation_data, scene_bbox)
 cropped_data |>
  sphere_shade(vertical_exaggeration = 30) |>
  plot_3d(water = TRUE, water_input = 1.5,
-         soliddepth=-50, windowsize = 800)
+         solid_depth=-50, window_size = 800)
 #Zoom in on the monument
 render_camera(theta=115,  phi=25, zoom= 0.25, fov=40)
 #Render the national monument at solar noon on the solstice

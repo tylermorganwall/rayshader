@@ -10,7 +10,7 @@ setup_simple_tree_preview_scene = function() {
     zscale = 5,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(200, 200)
+    window_size = c(200, 200)
   )
   list(
     heightmap = heightmap,

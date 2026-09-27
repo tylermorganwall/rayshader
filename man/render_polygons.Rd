@@ -112,7 +112,7 @@ Cache fallback messages are disabled by default. Set \code{options(rayshader.ver
 montereybay_spatial |>
   sphere_shade(texture = "desert", vertical_exaggeration = 20) |>
   add_shadow(ray_shade(vertical_exaggeration = 4)) |>
-  plot_3d(water = TRUE, vertical_exaggeration = 4, windowsize = 800, watercolor = "dodgerblue")
+  plot_3d(water = TRUE, vertical_exaggeration = 4, window_size = 800, water_color = "dodgerblue")
 render_camera(theta = 140,  phi = 55, zoom = 0.85, fov = 30)
 
 #We will apply a negative buffer to create space between adjacent polygons. You may

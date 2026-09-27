@@ -13,10 +13,10 @@
 #'to a spatial water raster on the resolved heightmap grid. Polygon holes are
 #'retained at that grid resolution. Features smaller than a cell use touched
 #'cells when they contain no cell centers. Polygon input requires `sf` and `terra`.
-#'@param watercolor Default `lightblue`.
-#'@param wateralpha Default `0.5`. Water transparency.
-#'@param waterlinecolor Default `NULL`. Color of the lines around the edges of the water layer.
-#'@param waterlinealpha Default `1`. Water line tranparency.
+#'@param water_color Default `lightblue`.
+#'@param water_alpha Default `0.5`. Water transparency.
+#'@param water_line_color Default `NULL`. Color of the lines around the edges of the water layer.
+#'@param water_line_alpha Default `1`. Water line tranparency.
 #'@param linewidth Default `2`. Width of the edge lines in the scene.
 #'@param water_render_method Default `"raster"`. Water meshing method. `"raster"` renders water at the supplied elevation and emits sidewalls down to the terrain wherever exposed water floats above the surface; `"polygon"` fits each spatial water component by matching flooded terrain-triangle area to raster footprint area, then clips the fixed-grid terrain triangles; `"legacy"` uses the previous box/grid renderer.
 #'@param water_edge_extension Default `0.5`. For spatial `water_input` inputs, amount in grid cells to expand finite water cells at boundary edges, up to a maximum of half a cell.
@@ -57,7 +57,7 @@
 #'render_snapshot()
 #'
 #'#Call it again to change the water depth
-#'render_water(water_input=-1000, watercolor = "dodgerblue3")
+#'render_water(water_input=-1000, water_color = "dodgerblue3")
 #'render_snapshot()
 #'
 #'#Slice the water out to the edge
@@ -68,7 +68,7 @@
 #')
 #'water_levels[col(water_levels) > ncol(water_levels) / 2 + 20 |
 #' col(water_levels) < ncol(water_levels) / 2-20] = -8000
-#'render_water(water_input = water_levels, watercolor = "dodgerblue4")
+#'render_water(water_input = water_levels, water_color = "dodgerblue4")
 #'render_snapshot()
 #'
 #'#Use a matrix to vary the water level across the scene
@@ -77,19 +77,19 @@
 #'  nrow = nrow(montereybay_spatial),
 #'  ncol = ncol(montereybay_spatial)
 #')
-#'render_water(water_input = water_ramp, watercolor = "dodgerblue3")
+#'render_water(water_input = water_ramp, water_color = "dodgerblue3")
 #'render_highquality()
 #'
 #'#Add waterlines
 #'render_camera(theta=-45)
-#'render_water(waterlinecolor="white", watercolor = "dodgerblue4")
+#'render_water(water_line_color="white", water_color = "dodgerblue4")
 #'render_snapshot()
 render_water = function(
   water_input = 0,
-  watercolor = "lightblue",
-  wateralpha = 0.5,
-  waterlinecolor = NULL,
-  waterlinealpha = 1,
+  water_color = "lightblue",
+  water_alpha = 0.5,
+  water_line_color = NULL,
+  water_line_alpha = 1,
   linewidth = 2,
   water_render_method = c("raster", "polygon", "legacy"),
   water_edge_extension = 0.5,
@@ -193,8 +193,8 @@ render_water = function(
     water_mesh = make_water(
       heightmap,
       waterheight = water_input,
-      wateralpha = wateralpha,
-      watercolor = watercolor,
+      water_alpha = water_alpha,
+      water_color = water_color,
       zscale = zscale,
       water_render_method = water_render_method_current,
       water_edge_extension = water_edge_extension,
@@ -204,12 +204,12 @@ render_water = function(
       heightmap_crs = heightmap_crs
     )
   }
-  if (!is.null(waterlinecolor)) {
+  if (!is.null(water_line_color)) {
     if (!identical(water_render_method_current, "legacy")) {
       make_waterlines_from_mesh(
         water_mesh,
-        linecolor = waterlinecolor,
-        alpha = waterlinealpha,
+        line_color = water_line_color,
+        alpha = water_line_alpha,
         linewidth = linewidth
       )
     } else {
@@ -217,19 +217,19 @@ render_water = function(
         make_lines(
           fliplr(heightmap),
           basedepth = water_input,
-          linecolor = waterlinecolor,
+          line_color = water_line_color,
           zscale = zscale,
           linewidth = linewidth,
-          alpha = waterlinealpha,
+          alpha = water_line_alpha,
           solid = FALSE
         )
       }
       make_waterlines(
         heightmap,
         water_input = water_input,
-        linecolor = waterlinecolor,
+        line_color = water_line_color,
         zscale = zscale,
-        alpha = waterlinealpha,
+        alpha = water_line_alpha,
         linewidth = linewidth
       )
     }

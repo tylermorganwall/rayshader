@@ -11,7 +11,7 @@ test_that("side-effect render helpers return invisibly", {
     zscale = 10,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(250, 250)
+    window_size = c(250, 250)
   ))
 
   camera_vis = withVisible(render_camera(theta = 20))
@@ -39,7 +39,7 @@ test_that("side-effect render helpers return invisibly", {
 
   water_vis = withVisible(render_water(
     water_input = 1,
-    waterlinecolor = "white"
+    water_line_color = "white"
   ))
   expect_false(water_vis$visible)
 
@@ -76,7 +76,7 @@ test_that("render_camera returns camera values visibly when queried", {
     zscale = 10,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(250, 250)
+    window_size = c(250, 250)
   ))
 
   camera_vis = withVisible(render_camera())

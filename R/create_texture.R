@@ -2,15 +2,15 @@
 #'
 #'@description Creates a texture map based on 5 user-supplied colors.
 #'
-#'@param lightcolor The main highlight color. Corresponds to the top center of the texture map.
-#'@param shadowcolor The main shadow color. Corresponds to the bottom center of the texture map. This color represents slopes directed
+#'@param light_color The main highlight color. Corresponds to the top center of the texture map.
+#'@param shadow_color The main shadow color. Corresponds to the bottom center of the texture map. This color represents slopes directed
 #'directly opposite to the main highlight color.
-#'@param leftcolor The left fill color. Corresponds to the left center of the texture map. This color represents slopes directed
+#'@param left_color The left fill color. Corresponds to the left center of the texture map. This color represents slopes directed
 #'90 degrees to the left of the main highlight color.
-#'@param rightcolor The right fill color. Corresponds to the right center of the texture map. This color represents slopes directed
+#'@param right_color The right fill color. Corresponds to the right center of the texture map. This color represents slopes directed
 #'90 degrees to the right of the main highlight color.
-#'@param centercolor The center color. Corresponds to the center of the texture map. This color represents flat areas.
-#'@param cornercolors Default `NULL`. The colors at the corners, in this order: NW, NE, SW, SE. If this vector isn't present (or
+#'@param center_color The center color. Corresponds to the center of the texture map. This color represents flat areas.
+#'@param corner_colors Default `NULL`. The colors at the corners, in this order: NW, NE, SW, SE. If this vector isn't present (or
 #'all corners are specified), the mid-points will just be interpolated from the main colors.
 #'@param old_method Default `FALSE`. Whether to use the original method rayshader used for computing textures,
 #'which had non-standard color handling.
@@ -25,28 +25,28 @@
 #'create_texture("red","green","blue","yellow","white") |>
 #'  plot_map()
 create_texture = function(
-  lightcolor,
-  shadowcolor,
-  leftcolor,
-  rightcolor,
-  centercolor,
-  cornercolors = NULL,
+  light_color,
+  shadow_color,
+  left_color,
+  right_color,
+  center_color,
+  corner_colors = NULL,
   old_method = FALSE,
   darken = 1
 ) {
   if (old_method) {
-    lightrgb = col2rgb(lightcolor)
-    shadowrgb = col2rgb(shadowcolor)
-    leftrgb = col2rgb(leftcolor)
-    rightrgb = col2rgb(rightcolor)
-    centerrgb = col2rgb(centercolor)
-    if (is.null(cornercolors) || length(cornercolors) != 4) {
+    lightrgb = col2rgb(light_color)
+    shadowrgb = col2rgb(shadow_color)
+    leftrgb = col2rgb(left_color)
+    rightrgb = col2rgb(right_color)
+    centerrgb = col2rgb(center_color)
+    if (is.null(corner_colors) || length(corner_colors) != 4) {
       nw_corner = (lightrgb + leftrgb) / 2
       ne_corner = (lightrgb + rightrgb) / 2
       sw_corner = (shadowrgb + leftrgb) / 2
       se_corner = (shadowrgb + rightrgb) / 2
     } else {
-      cornercolorsrgb = lapply(cornercolors, col2rgb)
+      cornercolorsrgb = lapply(corner_colors, col2rgb)
       nw_corner = cornercolorsrgb[[1]]
       ne_corner = cornercolorsrgb[[2]]
       se_corner = cornercolorsrgb[[3]]
@@ -80,20 +80,20 @@ create_texture = function(
       as.numeric(col2rgb_linear(col))
     }
 
-    l = to01(lightcolor)
-    s = to01(shadowcolor)
-    lf = to01(leftcolor)
-    rf = to01(rightcolor)
-    c0 = to01(centercolor)
+    l = to01(light_color)
+    s = to01(shadow_color)
+    lf = to01(left_color)
+    rf = to01(right_color)
+    c0 = to01(center_color)
 
     # Optional corners
-    if (is.null(cornercolors) || length(cornercolors) != 4) {
+    if (is.null(corner_colors) || length(corner_colors) != 4) {
       nw = (l + lf) / 2
       ne = (l + rf) / 2
       sw = (s + lf) / 2
       se = (s + rf) / 2
     } else {
-      corners = lapply(cornercolors, to01)
+      corners = lapply(corner_colors, to01)
       nw = corners[[1]]
       ne = corners[[2]]
       sw = corners[[3]]

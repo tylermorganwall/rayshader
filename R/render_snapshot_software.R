@@ -115,7 +115,7 @@ render_snapshot_software = function(
   shadowid = get_ids_with_labels(typeval = "shadow")
   if (nrow(shadowid) > 0) {
     shadowvertices = rgl.attrib(shadowid$id[1], "vertices")
-    shadowdepth = shadowvertices[1, 2]
+    shadow_depth = shadowvertices[1, 2]
     has_shadow = TRUE
   } else {
     has_shadow = FALSE
@@ -385,7 +385,7 @@ render_snapshot_software = function(
     scene = rayvertex::add_shape(
       scene,
       rayvertex::xz_rect_mesh(
-        position = c(0, shadowdepth - bbox_center[2], 0),
+        position = c(0, shadow_depth - bbox_center[2], 0),
         scale = c(ranges[2, 1] - ranges[1, 1], 1, ranges[2, 3] - ranges[1, 3]) *
           2,
         material = rayvertex::material_list(diffuse = "white")

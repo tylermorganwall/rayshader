@@ -4,10 +4,10 @@
 \alias{save_multipolygonz_to_obj}
 \title{Save MULTIPOLYGON Z sf data to OBJ file}
 \usage{
-save_multipolygonz_to_obj(sfobj, filename, swap_yz = FALSE)
+save_multipolygonz_to_obj(sf_obj, filename, swap_yz = FALSE)
 }
 \arguments{
-\item{sfobj}{sf object with MULTIPOLYGON Z geometry,}
+\item{sf_obj}{sf object with MULTIPOLYGON Z geometry,}
 
 \item{filename}{Filename of the OBJ to save the 3D model to.}
 

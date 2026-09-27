@@ -7,7 +7,7 @@
 #'
 #'You can also use [save_multipolygonz_to_obj()] manually to convert sf objects
 #'
-#'@param sfobj An sf object with MULTIPOLYGON Z geometry.
+#'@param sf_obj An sf object with MULTIPOLYGON Z geometry.
 #'@param color Default `black`. Color of the 3D model, if `load_material = FALSE`.
 #'@param obj_zscale Default `TRUE`. Whether to scale the size of the OBJ by zscale to have it match
 #'the size of the map. If zscale is very big, this will make the model very small.
@@ -61,7 +61,7 @@
 #'  height_shade() |>
 #'  add_shadow(lamb_shade(), 0) |>
 #'  plot_3d(zscale=3.7, water = TRUE, water_input = 1,
-#'          soliddepth=-50, windowsize = 800,
+#'          solid_depth=-50, window_size = 800,
 #'          extent = raster::extent(cropped_data))
 #'render_snapshot()
 #'#Zoom in on the monument
@@ -74,7 +74,7 @@
 #'#This works with `render_highquality()`
 #'render_highquality(min_variance = 0, samples = 16)
 render_multipolygonz = function(
-  sfobj,
+  sf_obj,
   color = "grey50",
   obj_zscale = TRUE,
   swap_yz = TRUE,
@@ -112,29 +112,29 @@ render_multipolygonz = function(
     heightmap,
     caller = "render_multipolygonz"
   )
-  if (inherits(sfobj, "Spatial")) {
-    sfobj = sf::st_as_sf(sfobj)
+  if (inherits(sf_obj, "Spatial")) {
+    sf_obj = sf::st_as_sf(sf_obj)
   }
-  if (inherits(sfobj, "sfc")) {
-    sfobj = sf::st_sf(geometry = sfobj)
+  if (inherits(sf_obj, "sfc")) {
+    sf_obj = sf::st_sf(geometry = sf_obj)
   }
-  if (inherits(sfobj, "sfg")) {
-    sfobj = sf::st_sf(geometry = sf::st_sfc(sfobj))
+  if (inherits(sf_obj, "sfg")) {
+    sf_obj = sf::st_sf(geometry = sf::st_sfc(sf_obj))
   }
   scene_sfobj = auto_transform_scene_sf(
-    sf_object = sfobj,
+    sf_object = sf_obj,
     extent = extent,
     heightmap = heightmap,
     panel = panel,
     crs = crs,
     caller = "render_multipolygonz"
   )
-  sfobj = scene_sfobj$object
+  sf_obj = scene_sfobj$object
   if (!is.null(scene_sfobj$extent)) {
     extent = scene_sfobj$extent
   }
   filtered_sfobj = filter_scene_sf_to_extent(
-    sf_object = sfobj,
+    sf_object = sf_obj,
     extent = extent,
     heightmap = heightmap,
     panel = panel,
@@ -142,12 +142,12 @@ render_multipolygonz = function(
     preserve_z = TRUE,
     caller = "render_multipolygonz"
   )
-  sfobj = filtered_sfobj$object
-  if (is_empty_scene_sf(sfobj)) {
+  sf_obj = filtered_sfobj$object
+  if (is_empty_scene_sf(sf_obj)) {
     return(invisible(NULL))
   }
-  sfobj = suppressWarnings(sf::st_cast(sfobj, "MULTIPOLYGON", warn = FALSE))
-  multipolygon_mesh = multipolygonz_to_raymesh(sfobj)
+  sf_obj = suppressWarnings(sf::st_cast(sf_obj, "MULTIPOLYGON", warn = FALSE))
+  multipolygon_mesh = multipolygonz_to_raymesh(sf_obj)
   render_raymesh(
     raymesh = multipolygon_mesh,
     extent = extent,

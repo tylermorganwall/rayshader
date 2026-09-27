@@ -236,8 +236,8 @@
 #'   plot_3d(
 #'     water = TRUE,
 #'     water_input = 0.5,
-#'     windowsize = 800,
-#'     watercolor = "dodgerblue",
+#'     window_size = 800,
+#'     water_color = "dodgerblue",
 #'     background = "pink"
 #'   )
 #'
@@ -264,7 +264,7 @@
 #' render_label(long = c(building_extent[1]+building_extent[3])/2,
 #'              lat =  c(building_extent[2]+building_extent[4])/2,
 #'              text = "St. Johns, Newfoundland",
-#'              textcolor = "white",
+#'              text_color = "white",
 #'              altitude = 100
 #' )
 #'

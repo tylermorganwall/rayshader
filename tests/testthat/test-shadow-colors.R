@@ -68,7 +68,7 @@ test_that("plot_3d derives a dark blue rgl shadow from a blue background", {
     phi = 30,
     fov = 0,
     zoom = 0.6,
-    windowsize = c(600, 500),
+    window_size = c(600, 500),
     background = "#33d"
   )
 
@@ -99,9 +99,9 @@ test_that("plot_3d honors an explicit shadow color on a blue background", {
     constant_shade(heightmap),
     heightmap,
     background = "#33d",
-    shadowcolor = "#551122",
+    shadow_color = "#551122",
     shadow_darkness = 0,
-    shadowwidth = 5
+    shadow_width = 5
   )
 
   shadow = get_ids_with_labels(typeval = "shadow")

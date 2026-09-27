@@ -40,7 +40,7 @@ setup_spatial_plot3d_scene_test = function() {
     elev_raster,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(250, 250)
+    window_size = c(250, 250)
   ))
   invisible(elev_raster)
 }
@@ -357,7 +357,7 @@ test_that("coord_sf scenes transform numeric renderer coordinates with explicit 
     p,
     width = 3,
     height = 3,
-    windowsize = c(600, 600),
+    window_size = c(600, 600),
     raytrace = FALSE,
     shadow = FALSE,
     multicore = FALSE
@@ -454,7 +454,7 @@ test_that("coord_sf faceted scenes require panel and allow explicit crs override
     p,
     width = 5,
     height = 3,
-    windowsize = c(900, 700),
+    window_size = c(900, 700),
     raytrace = FALSE,
     shadow = FALSE,
     multicore = FALSE
@@ -526,7 +526,7 @@ test_that("scenes without CRS metadata leave inputs unchanged", {
     zscale = 1,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(250, 250)
+    window_size = c(250, 250)
   ))
 
   expected_numeric = transform_into_heightmap_coords(

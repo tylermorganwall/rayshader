@@ -7,9 +7,9 @@
 make_water(
   heightmap,
   waterheight = mean(heightmap),
-  watercolor = "lightblue",
+  water_color = "lightblue",
   zscale = 1,
-  wateralpha = 0.5,
+  water_alpha = 0.5,
   water_render_method = c("raster", "polygon", "legacy"),
   water_edge_extension = 0.5,
   water_edge_clamp = FALSE,
@@ -23,12 +23,12 @@ make_water(
 
 \item{waterheight}{Default \code{0}. Water level. Either a scalar, a matrix with the same dimensions as \code{heightmap}, or a spatial raster that can be projected/resampled to the heightmap grid.}
 
-\item{watercolor}{Default \code{blue}.}
+\item{water_color}{Default \code{blue}.}
 
 \item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
 of 1 meter and the grid values are separated by 10 meters, \code{zscale} would be 10.}
 
-\item{wateralpha}{Default \code{0.5}. Water transparency.}
+\item{water_alpha}{Default \code{0.5}. Water transparency.}
 
 \item{water_render_method}{Default \code{"raster"}. Water meshing method. \code{"raster"} renders water at the supplied elevation and emits sidewalls down to the terrain wherever exposed water floats above the surface; \code{"polygon"} fits each spatial water component by matching flooded terrain-triangle area to raster footprint area, then clips the fixed-grid terrain triangles; \code{"legacy"} uses the previous box/grid renderer.}
 

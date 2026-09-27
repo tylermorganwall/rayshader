@@ -7,9 +7,9 @@
 make_shadow(
   heightmap,
   basedepth,
-  shadowwidth,
+  shadow_width,
   color,
-  shadowcolor,
+  shadow_color,
   offset = c(0, 0),
   shadow_texture_size = getOption("rayshader.max_shadow_texture_size", 1024)
 )
@@ -19,11 +19,11 @@ make_shadow(
 
 \item{basedepth}{Depth of the shadow layer.}
 
-\item{shadowwidth}{Width of the shadow in matrix units.}
+\item{shadow_width}{Width of the shadow in matrix units.}
 
 \item{color}{Background color.}
 
-\item{shadowcolor}{Shadow color.}
+\item{shadow_color}{Shadow color.}
 
 \item{offset}{Default \code{c(0, 0)}. Shadow plane offset.}
 

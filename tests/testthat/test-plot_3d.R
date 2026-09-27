@@ -90,9 +90,9 @@ test_that("plot_3d caps shadow texture resolution without changing shadow extent
     heightmap,
     solid = FALSE,
     shadow = TRUE,
-    shadowwidth = 12,
+    shadow_width = 12,
     shadow_texture_size = 40,
-    windowsize = c(100, 100)
+    window_size = c(100, 100)
   ))
 
   shadow = get_ids_with_labels(typeval = "shadow")
@@ -115,9 +115,9 @@ test_that("shadow blur remains centered for even heightmap dimensions", {
   make_shadow(
     matrix(0, nrow = 30, ncol = 40),
     basedepth = -1,
-    shadowwidth = 5,
+    shadow_width = 5,
     color = "white",
-    shadowcolor = "black",
+    shadow_color = "black",
     shadow_texture_size = Inf
   )
 
@@ -149,9 +149,9 @@ test_that("full resolution shadow textures can be requested", {
   make_shadow(
     matrix(0, nrow = 20, ncol = 30),
     basedepth = -1,
-    shadowwidth = 5,
+    shadow_width = 5,
     color = "white",
-    shadowcolor = "grey50",
+    shadow_color = "grey50",
     shadow_texture_size = Inf
   )
 
@@ -173,9 +173,9 @@ test_that("colored shadow texture background matches scene background", {
   make_shadow(
     matrix(0, nrow = 20, ncol = 30),
     basedepth = -1,
-    shadowwidth = 5,
+    shadow_width = 5,
     color = background,
-    shadowcolor = "grey25",
+    shadow_color = "grey25",
     shadow_texture_size = Inf
   )
 
@@ -202,9 +202,9 @@ test_that("plot_3d plots basic options", {
 
   plot_3d_args_meshing = expand.grid(
     zscale = list(1, 3),
-    baseshape = list("rectangle", "circle", "hex"),
+    base_shape = list("rectangle", "circle", "hex"),
     solid = list(TRUE, FALSE),
-    soliddepth = list("auto", -100, 200),
+    solid_depth = list("auto", -100, 200),
     shadow = list(TRUE, FALSE)
   )
 
@@ -213,8 +213,8 @@ test_that("plot_3d plots basic options", {
     water_input = list(150, 300),
     solid = list(TRUE, FALSE),
     shadow = list(TRUE, FALSE),
-    shadowdepth = list(-100, 0, 200),
-    soliddepth = list("auto", -100, 200)
+    shadow_depth = list(-100, 0, 200),
+    solid_depth = list("auto", -100, 200)
   )
 
   run_tests(
@@ -224,7 +224,7 @@ test_that("plot_3d plots basic options", {
     list(
       hillshade = hillshade,
       heightmap = volcano,
-      windowsize = 200,
+      window_size = 200,
       close_previous = FALSE,
       clear_previous = TRUE,
       plot_new = FALSE
@@ -237,7 +237,7 @@ test_that("plot_3d plots basic options", {
     list(
       hillshade = hillshade,
       heightmap = volcano_na,
-      windowsize = 200,
+      window_size = 200,
       close_previous = FALSE,
       clear_previous = TRUE,
       plot_new = FALSE
@@ -253,9 +253,9 @@ test_that("plot_3d plots color options", {
 
   hillshade = sphere_shade(volcano)
   plot_3d_args_colors = expand.grid(
-    solidlinecolor = list(NULL, "#d8b8c8"),
-    solidcolor = list("grey20", "#28b8d8"),
-    shadowcolor = list("auto", "red"),
+    solid_line_color = list(NULL, "#d8b8c8"),
+    solid_color = list("grey20", "#28b8d8"),
+    shadow_color = list("auto", "red"),
     shadow_darkness = list(0.5, 0.2),
     background = list("white", "purple")
   )
@@ -263,8 +263,8 @@ test_that("plot_3d plots color options", {
   plot_3d_args_water_colors = expand.grid(
     water = list(TRUE),
     water_input = list(150),
-    watercolor = list("lightblue", "green"),
-    wateralpha = list(0.5, 1)
+    water_color = list("lightblue", "green"),
+    water_alpha = list(0.5, 1)
   )
 
   run_tests(
@@ -274,7 +274,7 @@ test_that("plot_3d plots color options", {
     list(
       hillshade = hillshade,
       heightmap = volcano,
-      windowsize = 200,
+      window_size = 200,
       close_previous = FALSE,
       clear_previous = TRUE,
       plot_new = FALSE
@@ -287,7 +287,7 @@ test_that("plot_3d plots color options", {
     list(
       hillshade = hillshade,
       heightmap = volcano,
-      windowsize = 200,
+      window_size = 200,
       close_previous = FALSE,
       clear_previous = TRUE,
       plot_new = FALSE
@@ -314,7 +314,7 @@ test_that("plot_3d triangulation", {
     list(
       hillshade = hillshade,
       heightmap = volcano,
-      windowsize = 200,
+      window_size = 200,
       close_previous = FALSE,
       clear_previous = TRUE,
       plot_new = FALSE
@@ -332,10 +332,10 @@ test_that("plot_3d plots line options", {
   plot_3d_args_lines = expand.grid(
     water = list(TRUE, FALSE),
     water_input = list(0, 150),
-    waterlinecolor = list(NULL, "red"),
-    waterlinealpha = list(0.5, 1),
+    water_line_color = list(NULL, "red"),
+    water_line_alpha = list(0.5, 1),
     linewidth = list(2, 5),
-    lineantialias = list(FALSE, TRUE)
+    line_antialias = list(FALSE, TRUE)
   )
 
   run_tests(
@@ -345,7 +345,7 @@ test_that("plot_3d plots line options", {
     list(
       hillshade = hillshade,
       heightmap = volcano,
-      windowsize = 200,
+      window_size = 200,
       close_previous = FALSE,
       clear_previous = TRUE,
       plot_new = FALSE
@@ -378,7 +378,7 @@ test_that("plot_3d plots soil options", {
     list(
       hillshade = hillshade,
       heightmap = volcano,
-      windowsize = 200,
+      window_size = 200,
       close_previous = FALSE,
       clear_previous = TRUE,
       plot_new = FALSE

@@ -43,7 +43,7 @@
 #'render_scalebar()
 #'render_snapshot()
 #'#This function works with `render_highquality()`
-#'render_highquality(lightdirection = 250, lightaltitude = 40, samples = 16)
+#'render_highquality(light_direction = 250, light_altitude = 40, samples = 16)
 #'render_scalebar(clear_previous = TRUE)
 #'#We can change the position by specifying a cardinal direction to `position`, and the
 #'#color by setting `color_first` and `color_second`

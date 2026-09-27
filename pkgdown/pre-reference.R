@@ -24,7 +24,7 @@ if (!file.exists("man/figures/monterey-circle.mp4")) {
       vertical_exaggeration = 4,
       zscale = 50,
       water = TRUE,
-      shadowcolor = "#40310a",
+      shadow_color = "#40310a",
       background = "tan",
       theta = 210,
       phi = 22,

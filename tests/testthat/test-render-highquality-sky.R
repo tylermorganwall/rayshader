@@ -9,7 +9,7 @@ local_highquality_sky_scene = function(env = parent.frame()) {
     zscale = 2,
     solid = FALSE,
     shadow = FALSE,
-    windowsize = c(100, 100)
+    window_size = c(100, 100)
   )
   withr::defer(rgl::close3d(), envir = env)
 }

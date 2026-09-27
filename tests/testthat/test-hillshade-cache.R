@@ -111,13 +111,13 @@ test_that("hillshade map functions cache the latest map texture", {
   overlay_map = add_overlay(
     sphere_map,
     height_shade(volcano),
-    alphalayer = 0.5
+    alpha_layer = 0.5
   )
   expect_equal(get_hillshade_map(), overlay_map)
 
   shadow_map = add_shadow(
     sphere_map,
-    ray_shade(volcano, zscale = 50, maxsearch = 10, sunaltitude = 25),
+    ray_shade(volcano, zscale = 50, max_search = 10, sun_altitude = 25),
     max_darken = 0.5
   )
   expect_equal(get_hillshade_map(), shadow_map)
@@ -137,7 +137,7 @@ test_that("new explicit 2D heightmap invalidates stale cached hillshade metadata
   clear_hillshade_test_cache()
   withr::defer(clear_hillshade_test_cache())
 
-  ray_shade(volcano, zscale = 50, sunaltitude = 25, sunangle = 225)
+  ray_shade(volcano, zscale = 50, sun_altitude = 25, sun_angle = 225)
   expect_equal(get_hillshade_zscale(), 50)
 
   height_shade(volcano)
@@ -199,7 +199,7 @@ test_that("lonlat SpatRaster hillshade caches meter zscale for plot_3d", {
     hillshade,
     shadow = FALSE,
     solid = FALSE,
-    windowsize = c(100, 100)
+    window_size = c(100, 100)
   ))
   expect_equal(get_scene_zscale(), auto_zscale, tolerance = 1e-8)
   expect_equal(
@@ -242,7 +242,7 @@ test_that("raster-backed hillshade metadata supports cached 2D spatial overlays"
   polygon_overlay = generate_polygon_overlay(
     geometry = sf::st_sf(id = 1, geometry = polygon_ll),
     palette = "dodgerblue3",
-    linecolor = NA
+    line_color = NA
   )
   line_overlay = generate_line_overlay(
     geometry = sf::st_sf(
@@ -324,7 +324,7 @@ test_that("invalid cached hillshade CRS does not abort spatial overlays", {
       )
     ),
     palette = "dodgerblue3",
-    linecolor = NA
+    line_color = NA
   ))
 })
 
@@ -345,7 +345,7 @@ test_that("generate_polygon_overlay returns transparent overlay for empty crop",
     extent = c(0, nrow(volcano), 0, ncol(volcano)),
     heightmap = volcano,
     palette = "dodgerblue3",
-    linecolor = NA
+    line_color = NA
   )
 
   expect_equal(dim(empty_overlay), c(ncol(volcano), nrow(volcano), 4))
@@ -392,7 +392,7 @@ test_that("vertical_exaggeration is one-off for cached hillshade and scene zscal
     vertical_exaggeration = 2,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(200, 200)
+    window_size = c(200, 200)
   ))
   expect_equal(get_hillshade_zscale(), 50)
   expect_equal(get_scene_zscale(), 50)
@@ -409,7 +409,7 @@ test_that("plot_3d vertical_exaggeration is independent of hillshade exaggeratio
   hillshade = volcano |>
     sphere_shade(zscale = 20, vertical_exaggeration = 20) |>
     add_shadow(
-      ray_shade(vertical_exaggeration = 4, maxsearch = 10),
+      ray_shade(vertical_exaggeration = 4, max_search = 10),
       0.5
     )
   expect_equal(get_hillshade_zscale(), 20)
@@ -419,7 +419,7 @@ test_that("plot_3d vertical_exaggeration is independent of hillshade exaggeratio
     vertical_exaggeration = 1,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(200, 200)
+    window_size = c(200, 200)
   ))
   expect_equal(get_scene_zscale(), 20)
   expect_equal(get_scene_vertical_exaggeration(), 1)
@@ -435,34 +435,34 @@ test_that("ray based hillshade functions reuse cached zscale", {
   expect_equal(
     ray_shade(
       zscale = 50,
-      sunaltitude = 25,
-      sunangle = 225,
-      maxsearch = 10
+      sun_altitude = 25,
+      sun_angle = 225,
+      max_search = 10
     ),
     ray_shade(
       volcano,
       zscale = 50,
-      sunaltitude = 25,
-      sunangle = 225,
-      maxsearch = 10
+      sun_altitude = 25,
+      sun_angle = 225,
+      max_search = 10
     )
   )
   expect_equal(get_hillshade_zscale(), 50)
   expect_equal(
-    lamb_shade(sunaltitude = 25, sunangle = 225),
-    lamb_shade(volcano, sunaltitude = 25, sunangle = 225, zscale = 50)
+    lamb_shade(sun_altitude = 25, sun_angle = 225),
+    lamb_shade(volcano, sun_altitude = 25, sun_angle = 225, zscale = 50)
   )
   expect_equal(
     ambient_shade(
-      sunbreaks = 3,
-      maxsearch = 10,
-      anglebreaks = seq(10, 20, by = 5)
+      sun_breaks = 3,
+      max_search = 10,
+      angle_breaks = seq(10, 20, by = 5)
     ),
     ambient_shade(
       volcano,
-      sunbreaks = 3,
-      maxsearch = 10,
-      anglebreaks = seq(10, 20, by = 5),
+      sun_breaks = 3,
+      max_search = 10,
+      angle_breaks = seq(10, 20, by = 5),
       zscale = 50
     )
   )
@@ -535,14 +535,14 @@ test_that("plot_3d uses cached hillshade heightmap and zscale", {
     sphere_shade(vertical_exaggeration = 50) |>
     add_overlay(height_shade(), 0.5) |>
     add_shadow(
-      ray_shade(zscale = 50, maxsearch = 10, sunaltitude = 25),
+      ray_shade(zscale = 50, max_search = 10, sun_altitude = 25),
       0.5
     ) |>
     add_shadow(
       ambient_shade(
-        sunbreaks = 3,
-        maxsearch = 10,
-        anglebreaks = seq(10, 20, by = 5)
+        sun_breaks = 3,
+        max_search = 10,
+        angle_breaks = seq(10, 20, by = 5)
       ),
       0.2
     )
@@ -553,7 +553,7 @@ test_that("plot_3d uses cached hillshade heightmap and zscale", {
       hillshade,
       shadow = FALSE,
       water = FALSE,
-      windowsize = c(200, 200)
+      window_size = c(200, 200)
     ),
     message = function(cnd) {
       out <<- c(out, conditionMessage(cnd))
@@ -582,7 +582,7 @@ test_that("plot_3d explicit matrix heightmap does not reuse stale cached zscale"
     zscale = 3,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(200, 200)
+    window_size = c(200, 200)
   ))
   expect_equal(get_hillshade_zscale(), 3)
 
@@ -593,7 +593,7 @@ test_that("plot_3d explicit matrix heightmap does not reuse stale cached zscale"
     heightmap = volcano,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(200, 200)
+    window_size = c(200, 200)
   ))
   expect_equal(get_scene_zscale(), 1)
   expect_equal(get_hillshade_zscale(), 1)
@@ -612,7 +612,7 @@ test_that("plot_3d cached hillshade heightmap does not reuse stale scene zscale"
     zscale = 200,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(200, 200)
+    window_size = c(200, 200)
   ))
   expect_equal(get_scene_zscale(), 200)
 
@@ -625,7 +625,7 @@ test_that("plot_3d cached hillshade heightmap does not reuse stale scene zscale"
     vertical_exaggeration = 1 / 2,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(200, 200)
+    window_size = c(200, 200)
   ))
   expect_equal(get_scene_zscale(), 1)
   expect_equal(get_scene_vertical_exaggeration(), 1 / 2)

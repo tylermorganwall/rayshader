@@ -79,7 +79,7 @@ setup_plot3d_location_scene_test = function() {
     vertical_exaggeration = 4,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(320, 320)
+    window_size = c(320, 320)
   ))
   render_camera(theta = 220, phi = 35, zoom = 0.55, fov = 60)
 }
@@ -92,7 +92,7 @@ setup_plot3d_location_snapshot_scene_test = function(label = FALSE) {
     vertical_exaggeration = 4,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(420, 420)
+    window_size = c(420, 420)
   ))
   if (label) {
     render_camera(theta = 220, phi = 60, zoom = 0.82, fov = 32)
@@ -109,7 +109,7 @@ setup_plotgg_location_scene_test = function(topdown = FALSE) {
     p,
     width = 4,
     height = 4,
-    windowsize = c(500, 500),
+    window_size = c(500, 500),
     raytrace = FALSE,
     shadow = FALSE,
     multicore = FALSE
@@ -135,7 +135,7 @@ setup_plotgg_location_scene_faceted_test = function(topdown = TRUE) {
     p,
     width = 6,
     height = 3.5,
-    windowsize = c(700, 450),
+    window_size = c(700, 450),
     raytrace = FALSE,
     shadow = FALSE,
     multicore = FALSE
@@ -248,8 +248,8 @@ renderer_location_cases_test = function(
           location = location,
           crs = sf::st_crs(fixtures$single_sf),
           z = label_z,
-          linecolor = "firebrick",
-          textalpha = 1,
+          line_color = "firebrick",
+          text_alpha = 1,
           linewidth = 4,
           clear_previous = TRUE
         )
@@ -268,8 +268,8 @@ renderer_location_cases_test = function(
           location = location,
           crs = sf::st_crs(fixtures$single_sf),
           z = label_z,
-          linecolor = "firebrick",
-          textalpha = 1,
+          line_color = "firebrick",
+          text_alpha = 1,
           linewidth = 4,
           clear_previous = FALSE
         )

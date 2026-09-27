@@ -62,7 +62,7 @@
 #'montereybay_spatial |>
 #'  sphere_shade(vertical_exaggeration = 20) |>
 #'  plot_3d(vertical_exaggeration = 4,water=TRUE,
-#'          shadowcolor="#40310a", background = "tan",
+#'          shadow_color="#40310a", background = "tan",
 #'          theta=210,  phi=22, zoom=0.20, fov=55)
 #'
 #'#Pass in the latitude/longitude coordinates and altitudes of the track.

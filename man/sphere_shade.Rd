@@ -6,14 +6,14 @@
 \usage{
 sphere_shade(
   heightmap,
-  sunangle = 315,
+  sun_angle = 315,
   texture = "imhof1",
-  normalvectors = NULL,
-  colorintensity = 1,
+  normal_vectors = NULL,
+  color_intensity = 1,
   zscale = 1,
   vertical_exaggeration = 1,
   na_color = NULL,
-  progbar = interactive(),
+  progress_bar = interactive(),
   geographic_aspect = TRUE,
   extent = NULL,
   crs = NULL
@@ -22,14 +22,14 @@ sphere_shade(
 \arguments{
 \item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.}
 
-\item{sunangle}{Default \code{315} (NW). The direction of the main highlight color (derived from the built-in palettes or the \code{\link[=create_texture]{create_texture()}} function).}
+\item{sun_angle}{Default \code{315} (NW). The direction of the main highlight color (derived from the built-in palettes or the \code{\link[=create_texture]{create_texture()}} function).}
 
 \item{texture}{Default \code{imhof1}. Either a square matrix indicating the spherical texture mapping, or a string indicating one
 of the built-in palettes (\code{imhof1},\code{imhof2},\code{imhof3},\code{imhof4},\code{desert}, \code{bw}, and \code{unicorn}).}
 
-\item{normalvectors}{Default \code{NULL}. Cache of the normal vectors (from \code{\link[=calculate_normal]{calculate_normal()}} function). Supply this to speed up texture mapping.}
+\item{normal_vectors}{Default \code{NULL}. Cache of the normal vectors (from \code{\link[=calculate_normal]{calculate_normal()}} function). Supply this to speed up texture mapping.}
 
-\item{colorintensity}{Deprecated alias for \code{vertical_exaggeration}.}
+\item{color_intensity}{Deprecated alias for \code{vertical_exaggeration}.}
 
 \item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis.
 If omitted and \code{heightmap} is a spatial raster, rayshader automatically uses
@@ -47,7 +47,7 @@ transparent \code{NA} heightmap cells. If \code{NULL}, the texture's center/up c
 used. This does not affect transparency; \code{NA} heightmap cells are always
 returned with alpha \code{0}.}
 
-\item{progbar}{Default \code{TRUE} if interactive, \code{FALSE} otherwise. If \code{FALSE}, turns off progress bar.}
+\item{progress_bar}{Default \code{TRUE} if interactive, \code{FALSE} otherwise. If \code{FALSE}, turns off progress bar.}
 
 \item{geographic_aspect}{Default \code{TRUE}. Correct unequal metric x/y cell
 spacing using the input extent and CRS.}
@@ -85,7 +85,7 @@ montereybay_spatial |>
 
 #Change the highlight angle:
 montereybay_spatial |>
- sphere_shade(texture="desert", sunangle = 45, vertical_exaggeration=10) |>
+ sphere_shade(texture="desert", sun_angle = 45, vertical_exaggeration=10) |>
  plot_map()
 
 #Create our own texture using the `create_texture` function:

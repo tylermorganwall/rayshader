@@ -5,31 +5,31 @@
 \title{Create Texture}
 \usage{
 create_texture(
-  lightcolor,
-  shadowcolor,
-  leftcolor,
-  rightcolor,
-  centercolor,
-  cornercolors = NULL,
+  light_color,
+  shadow_color,
+  left_color,
+  right_color,
+  center_color,
+  corner_colors = NULL,
   old_method = FALSE,
   darken = 1
 )
 }
 \arguments{
-\item{lightcolor}{The main highlight color. Corresponds to the top center of the texture map.}
+\item{light_color}{The main highlight color. Corresponds to the top center of the texture map.}
 
-\item{shadowcolor}{The main shadow color. Corresponds to the bottom center of the texture map. This color represents slopes directed
+\item{shadow_color}{The main shadow color. Corresponds to the bottom center of the texture map. This color represents slopes directed
 directly opposite to the main highlight color.}
 
-\item{leftcolor}{The left fill color. Corresponds to the left center of the texture map. This color represents slopes directed
+\item{left_color}{The left fill color. Corresponds to the left center of the texture map. This color represents slopes directed
 90 degrees to the left of the main highlight color.}
 
-\item{rightcolor}{The right fill color. Corresponds to the right center of the texture map. This color represents slopes directed
+\item{right_color}{The right fill color. Corresponds to the right center of the texture map. This color represents slopes directed
 90 degrees to the right of the main highlight color.}
 
-\item{centercolor}{The center color. Corresponds to the center of the texture map. This color represents flat areas.}
+\item{center_color}{The center color. Corresponds to the center of the texture map. This color represents flat areas.}
 
-\item{cornercolors}{Default \code{NULL}. The colors at the corners, in this order: NW, NE, SW, SE. If this vector isn't present (or
+\item{corner_colors}{Default \code{NULL}. The colors at the corners, in this order: NW, NE, SW, SE. If this vector isn't present (or
 all corners are specified), the mid-points will just be interpolated from the main colors.}
 
 \item{old_method}{Default \code{FALSE}. Whether to use the original method rayshader used for computing textures,

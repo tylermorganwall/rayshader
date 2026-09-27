@@ -9,8 +9,8 @@
 #'of 1 meter and the grid values are separated by 10 meters, `zscale` would be
 #'10. If omitted, rayshader uses raster-derived or matching cached metadata.
 #'@param levels Default `NA`. Automatically generated with 10 levels. This argument specifies the exact height levels of each contour.
-#'@param nlevels Default `NA`. Controls the auto-generation of levels. If levels is length-2,
-#'this will automatically generate `nlevels` breaks between `levels[1]` and `levels[2]`.
+#'@param n_levels Default `NA`. Controls the auto-generation of levels. If levels is length-2,
+#'this will automatically generate `n_levels` breaks between `levels[1]` and `levels[2]`.
 #'@param width Default `NA`. Width of the resulting overlay. Default the same dimensions as heightmap.
 #'@param height Default `NA`. Width of the resulting overlay. Default the same dimensions as heightmap.
 #'@param resolution_multiply Default `1`. If passing in `heightmap` instead of width/height, amount to
@@ -65,9 +65,9 @@
 #'montereybay_spatial |>
 #'  height_shade() |>
 #'  add_shadow(ray_shade(vertical_exaggeration = 4),0.3) |>
-#'  add_overlay(generate_contour_overlay(montereybay_spatial, linewidth=2, nlevels=100,
+#'  add_overlay(generate_contour_overlay(montereybay_spatial, linewidth=2, n_levels=100,
 #'                                       height = nrow(montereybay_spatial)*2, color="black",
-#'                                       width  = ncol(montereybay_spatial)*2), alphalayer=0.5) |>
+#'                                       width  = ncol(montereybay_spatial)*2), alpha_layer=0.5) |>
 #'  plot_map()
 #'#Manually specify the breaks with levels
 #'montereybay_spatial |>
@@ -78,7 +78,7 @@
 generate_contour_overlay = function(
   heightmap = NULL,
   levels = NA,
-  nlevels = NA,
+  n_levels = NA,
   zscale = 1,
   width = NA,
   height = NA,
@@ -143,14 +143,14 @@ generate_contour_overlay = function(
     stop("`isoband` package required for generate_contour_overlay()")
   }
   if (is.na(levels[1])) {
-    if (is.na(nlevels[1])) {
-      nlevels = 10
+    if (is.na(n_levels[1])) {
+      n_levels = 10
     }
     rangelevels = range(heightmap, na.rm = TRUE)
-    levels = seq(rangelevels[1], rangelevels[2], length.out = nlevels + 2)
-  } else if (length(levels) == 2 && !is.na(nlevels)) {
+    levels = seq(rangelevels[1], rangelevels[2], length.out = n_levels + 2)
+  } else if (length(levels) == 2 && !is.na(n_levels)) {
     rangelevels = range(levels, na.rm = TRUE)
-    levels = seq(rangelevels[1], rangelevels[2], length.out = nlevels + 2)
+    levels = seq(rangelevels[1], rangelevels[2], length.out = n_levels + 2)
   }
   levels = levels[levels > min(heightmap, na.rm = TRUE)]
   levels = levels[levels < max(heightmap, na.rm = TRUE)]

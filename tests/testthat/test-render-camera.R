@@ -32,7 +32,7 @@ setup_render_camera_spatial_scene_test = function() {
     vertical_exaggeration = 2,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(250, 250)
+    window_size = c(250, 250)
   ))
   invisible(heightmap)
 }
@@ -169,7 +169,7 @@ test_that("render_camera() requires a cached CRS for latitude and longitude", {
     extent = c(xmin = 0, xmax = 20, ymin = 0, ymax = 20),
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(250, 250)
+    window_size = c(250, 250)
   ))
   expect_error(
     render_camera(lat = 10, long = 20),
@@ -188,7 +188,7 @@ test_that("render_camera() accepts matrix coordinates without a cached CRS", {
       plot_3d_test(
         shadow = FALSE,
         water = FALSE,
-        windowsize = c(250, 250)
+        window_size = c(250, 250)
       )
   )
   expect_null(get_scene_crs(default = NULL))

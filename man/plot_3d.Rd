@@ -9,25 +9,25 @@ plot_3d(
   heightmap,
   zscale = 1,
   vertical_exaggeration = 1,
-  baseshape = "rectangle",
+  base_shape = "rectangle",
   solid = TRUE,
-  soliddepth = "auto",
-  solidcolor = "grey20",
-  solidlinecolor = "grey30",
+  solid_depth = "auto",
+  solid_color = "grey20",
+  solid_line_color = "grey30",
   shadow = TRUE,
-  shadowdepth = "auto",
-  shadowcolor = "auto",
+  shadow_depth = "auto",
+  shadow_color = "auto",
   shadow_darkness = 0.5,
-  shadowwidth = "auto",
+  shadow_width = "auto",
   shadow_texture_size = getOption("rayshader.max_shadow_texture_size", 1024),
   water = FALSE,
   water_input = 0,
-  watercolor = "dodgerblue",
-  wateralpha = 0.5,
-  waterlinecolor = NULL,
-  waterlinealpha = 1,
+  water_color = "dodgerblue",
+  water_alpha = 0.5,
+  water_line_color = NULL,
+  water_line_alpha = 1,
   linewidth = 2,
-  lineantialias = FALSE,
+  line_antialias = FALSE,
   water_render_method = c("raster", "polygon", "legacy"),
   water_edge_extension = 0.5,
   water_polygon_failure = c("raster", "remove"),
@@ -43,7 +43,7 @@ plot_3d(
   fov = 0,
   zoom = 1,
   background = "white",
-  windowsize = 600,
+  window_size = 600,
   precomputed_normals = NULL,
   triangulate = FALSE,
   max_error = 0,
@@ -78,29 +78,29 @@ effective visual relief for this scene. Values greater than \code{1} increase
 apparent relief and values between \code{0} and \code{1} flatten it. This does not
 update cached hillshade \code{zscale} metadata.}
 
-\item{baseshape}{Default \code{rectangle}. Shape of the base. Options are \code{c("rectangle","circle","hex")}.}
+\item{base_shape}{Default \code{rectangle}. Shape of the base. Options are \code{c("rectangle","circle","hex")}.}
 
 \item{solid}{Default \code{TRUE}. If \code{FALSE}, just the surface is rendered.}
 
-\item{soliddepth}{Default \code{auto}, which sets it to the lowest elevation in the matrix minus one unit (scaled by zscale). Depth of the solid base. If heightmap is uniform and set on \code{auto}, this is automatically set to a slightly lower level than the uniform elevation.}
+\item{solid_depth}{Default \code{auto}, which sets it to the lowest elevation in the matrix minus one unit (scaled by zscale). Depth of the solid base. If heightmap is uniform and set on \code{auto}, this is automatically set to a slightly lower level than the uniform elevation.}
 
-\item{solidcolor}{Default \code{grey20}. Base color.}
+\item{solid_color}{Default \code{grey20}. Base color.}
 
-\item{solidlinecolor}{Default \code{grey30}. Base edge line color.}
+\item{solid_line_color}{Default \code{grey30}. Base edge line color.}
 
 \item{shadow}{Default \code{TRUE}. If \code{FALSE}, no shadow is rendered.}
 
-\item{shadowdepth}{Default \code{auto}, which sets it to \code{soliddepth - soliddepth/10}. Depth of the shadow layer.}
+\item{shadow_depth}{Default \code{auto}, which sets it to \code{solid_depth - solid_depth/10}. Depth of the shadow layer.}
 
-\item{shadowcolor}{Default \code{"auto"}. Color of the shadow. Automatically darkens
+\item{shadow_color}{Default \code{"auto"}. Color of the shadow. Automatically darkens
 the \code{background} color by scaling its CIELuv lightness and chroma together by
 \code{shadow_darkness}, preserving the background hue.}
 
 \item{shadow_darkness}{Default \code{0.5}. Lightness multiplier for the shadow when
-\code{shadowcolor = "auto"}. Values between \code{0} and \code{1} darken the background color;
+\code{shadow_color = "auto"}. Values between \code{0} and \code{1} darken the background color;
 \code{0} gives a black shadow and \code{1} matches the background.}
 
-\item{shadowwidth}{Default \code{auto}, which sizes it to 1/10th the smallest dimension of \code{heightmap}. Width of the shadow in units of the matrix.}
+\item{shadow_width}{Default \code{auto}, which sizes it to 1/10th the smallest dimension of \code{heightmap}. Width of the shadow in units of the matrix.}
 
 \item{shadow_texture_size}{Default \code{getOption("rayshader.max_shadow_texture_size", 1024)}. Maximum width or height, in pixels, of the blurred shadow texture. Set to \code{Inf} or \code{FALSE} to render the shadow texture at full heightmap resolution.}
 
@@ -109,17 +109,17 @@ is omitted and \code{water_input} is explicitly supplied, a water layer is rende
 
 \item{water_input}{Default \code{0}. Water level. Either a scalar, a matrix with the same dimensions as \code{heightmap}, or a spatial raster that can be projected/resampled to the heightmap grid. For spatial rasters, finite cells define the water footprint.}
 
-\item{watercolor}{Default \code{lightblue}. Color of the water.}
+\item{water_color}{Default \code{lightblue}. Color of the water.}
 
-\item{wateralpha}{Default \code{0.5}. Water transparency.}
+\item{water_alpha}{Default \code{0.5}. Water transparency.}
 
-\item{waterlinecolor}{Default \code{NULL}. Color of the lines around the edges of the water layer.}
+\item{water_line_color}{Default \code{NULL}. Color of the lines around the edges of the water layer.}
 
-\item{waterlinealpha}{Default \code{1}. Water line tranparency.}
+\item{water_line_alpha}{Default \code{1}. Water line tranparency.}
 
 \item{linewidth}{Default \code{2}. Width of the edge lines in the scene.}
 
-\item{lineantialias}{Default \code{FALSE}. Whether to anti-alias the lines in the scene.}
+\item{line_antialias}{Default \code{FALSE}. Whether to anti-alias the lines in the scene.}
 
 \item{water_render_method}{Default \code{"raster"}. Water meshing method. \code{"raster"} renders water at the supplied elevation and emits sidewalls down to the terrain wherever exposed water floats above the surface; \code{"polygon"} fits each spatial water component by matching flooded terrain-triangle area to raster footprint area, then clips the fixed-grid terrain triangles; \code{"legacy"} uses the previous box/grid renderer.}
 
@@ -152,7 +152,7 @@ numbers increase the darkening effect.}
 
 \item{background}{Default \code{"white"}. Color of the background.}
 
-\item{windowsize}{Default \code{600}. Position, width, and height of the \code{rgl} device displaying the plot.
+\item{window_size}{Default \code{600}. Position, width, and height of the \code{rgl} device displaying the plot.
 If a single number, viewport will be a square and located in upper left corner.
 If two numbers, (e.g. \code{c(600,800)}), user will specify width and height separately.
 If four numbers (e.g. \code{c(200,0,600,800)}), the first two coordinates
@@ -231,29 +231,29 @@ render_snapshot()
 #With a water layer
 montereybay_spatial |>
  sphere_shade(texture="imhof2", vertical_exaggeration = 10) |>
- plot_3d(vertical_exaggeration = 4, water = TRUE, watercolor="imhof2",
-         waterlinecolor="white", waterlinealpha=0.5)
+ plot_3d(vertical_exaggeration = 4, water = TRUE, water_color="imhof2",
+         water_line_color="white", water_line_alpha=0.5)
 render_snapshot()
 
 #With a soil texture to the base
 montereybay_spatial |>
  sphere_shade(texture="imhof3", vertical_exaggeration = 10) |>
- plot_3d(vertical_exaggeration = 4, water = TRUE,  watercolor="imhof4",
-         waterlinecolor="white", waterlinealpha=0.5, soil=TRUE)
+ plot_3d(vertical_exaggeration = 4, water = TRUE,  water_color="imhof4",
+         water_line_color="white", water_line_alpha=0.5, soil=TRUE)
 render_camera(theta=225, phi=7, zoom=0.5, fov=67)
 render_snapshot()
 
-#We can also change the base by setting "baseshape" to "hex" or "circle"
+#We can also change the base by setting "base_shape" to "hex" or "circle"
 montereybay_spatial |>
  sphere_shade(texture="imhof1", vertical_exaggeration = 10) |>
- plot_3d(vertical_exaggeration = 4, water = TRUE, watercolor="imhof1", theta=-45, zoom=0.7,
-         waterlinecolor="white", waterlinealpha=0.5,baseshape="circle")
+ plot_3d(vertical_exaggeration = 4, water = TRUE, water_color="imhof1", theta=-45, zoom=0.7,
+         water_line_color="white", water_line_alpha=0.5,base_shape="circle")
 render_snapshot()
 
 montereybay_spatial |>
  sphere_shade(texture="imhof1", vertical_exaggeration = 10) |>
- plot_3d(vertical_exaggeration = 4, water = TRUE, watercolor="imhof1", theta=-45, zoom=0.7,
-         waterlinecolor="white", waterlinealpha=0.5,baseshape="hex")
+ plot_3d(vertical_exaggeration = 4, water = TRUE, water_color="imhof1", theta=-45, zoom=0.7,
+         water_line_color="white", water_line_alpha=0.5,base_shape="hex")
 render_snapshot()
 
 
@@ -269,8 +269,8 @@ mb_water[mb_water > -10] = NA
 
 montereybay_spatial |>
  sphere_shade(texture="imhof1", vertical_exaggeration = 10) |>
- plot_3d(mb_water, vertical_exaggeration = 4, water = TRUE, watercolor="imhof1", theta=-45,
-         waterlinecolor="white", waterlinealpha=0.5)
+ plot_3d(mb_water, vertical_exaggeration = 4, water = TRUE, water_color="imhof1", theta=-45,
+         water_line_color="white", water_line_alpha=0.5)
 render_snapshot()
 \dontshow{\}) # examplesIf}
 }

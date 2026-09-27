@@ -34,7 +34,7 @@
 #' scenes.
 #' @param include_alpha Default `FALSE`. If `FALSE` and `image` has four
 #' channels, drop alpha. If `TRUE`, include alpha as a fourth raster layer.
-#' @param toRGB Default `TRUE`. If `TRUE`, convert color channels from linear
+#' @param to_rgb Default `TRUE`. If `TRUE`, convert color channels from linear
 #' rayshader values to sRGB with [rayimage::render_gamma_linear()], then scale
 #' to the `0-255` range and clamp. Alpha is not gamma-adjusted, but is scaled
 #' and clamped to match.
@@ -76,7 +76,7 @@ spatialize_image = function(
   crs = NULL,
   panel = NULL,
   include_alpha = FALSE,
-  toRGB = TRUE,
+  to_rgb = TRUE,
   flip_vertical = FALSE,
   flip_horizontal = FALSE,
   layer_names = NULL,
@@ -94,8 +94,8 @@ spatialize_image = function(
   ) {
     stop("`include_alpha` must be `TRUE` or `FALSE`.", call. = FALSE)
   }
-  if (!is.logical(toRGB) || length(toRGB) != 1 || is.na(toRGB)) {
-    stop("`toRGB` must be `TRUE` or `FALSE`.", call. = FALSE)
+  if (!is.logical(to_rgb) || length(to_rgb) != 1 || is.na(to_rgb)) {
+    stop("`to_rgb` must be `TRUE` or `FALSE`.", call. = FALSE)
   }
   if (
     !is.logical(include_height) ||
@@ -141,7 +141,7 @@ spatialize_image = function(
   )
   image_array = convert_spatialize_image_to_rgb(
     image = image_array,
-    toRGB = toRGB
+    to_rgb = to_rgb
   )
 
   resolved_extent = resolve_spatialize_image_extent(
@@ -274,8 +274,8 @@ flip_spatialize_image_array = function(
   image
 }
 
-convert_spatialize_image_to_rgb = function(image, toRGB = FALSE) {
-  if (!isTRUE(toRGB)) {
+convert_spatialize_image_to_rgb = function(image, to_rgb = FALSE) {
+  if (!isTRUE(to_rgb)) {
     return(image)
   }
   image = rayimage::render_gamma_linear(

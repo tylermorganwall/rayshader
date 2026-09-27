@@ -5,7 +5,7 @@
 \title{Render MULTIPOLYGON Z Geometry}
 \usage{
 render_multipolygonz(
-  sfobj,
+  sf_obj,
   color = "grey50",
   obj_zscale = TRUE,
   swap_yz = TRUE,
@@ -23,7 +23,7 @@ render_multipolygonz(
 )
 }
 \arguments{
-\item{sfobj}{An sf object with MULTIPOLYGON Z geometry.}
+\item{sf_obj}{An sf object with MULTIPOLYGON Z geometry.}
 
 \item{color}{Default \code{black}. Color of the 3D model, if \code{load_material = FALSE}.}
 
@@ -100,7 +100,7 @@ dc_elevation_matrix |>
  height_shade() |>
  add_shadow(lamb_shade(), 0) |>
  plot_3d(zscale=3.7, water = TRUE, water_input = 1,
-         soliddepth=-50, windowsize = 800,
+         solid_depth=-50, window_size = 800,
          extent = raster::extent(cropped_data))
 render_snapshot()
 #Zoom in on the monument

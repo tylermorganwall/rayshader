@@ -74,8 +74,8 @@ test_that("exported entry points use argument-specific errors", {
     fixed = TRUE
   )
   expect_error(
-    plot_gg(ggobj = 1),
-    "`ggobj` must be a ggplot object or a length-2 list of ggplot objects.",
+    plot_gg(gg_obj = 1),
+    "`gg_obj` must be a ggplot object or a length-2 list of ggplot objects.",
     fixed = TRUE
   )
 })

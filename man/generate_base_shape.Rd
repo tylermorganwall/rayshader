@@ -4,7 +4,7 @@
 \alias{generate_base_shape}
 \title{Generate Base Shape}
 \usage{
-generate_base_shape(heightmap, baseshape, angle = 0)
+generate_base_shape(heightmap, base_shape, angle = 0)
 }
 \value{
 image array

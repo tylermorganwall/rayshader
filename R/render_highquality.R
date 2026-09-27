@@ -43,7 +43,7 @@ new_render_highquality_progress_bar = function(verbose, label, total) {
 #'@param min_variance Default `1e-6`. Minimum acceptable variance for a block of pixels for the adaptive sampler.
 #'Smaller numbers give higher quality images, at the expense of longer rendering times.
 #'If this is set to zero, the adaptive sampler will be turned off and the renderer will use the maximum number of samples everywhere.
-#'@param light Default `TRUE`. Whether there should be a light in the scene. If not, the scene will be lit with a bluish sky.
+#'@param light Default `TRUE`. Whether to illuminate the scene with an infinite disk light from `rayrender::disk_light()`. If not, the scene will be lit with a bluish sky.
 #'@param lat Default `NA`. Latitude (degrees) for automatic sky generation.
 #'When latitude, longitude, and datetime are available, uses `rayrender::sky_light()`
 #'with detailed Sun and Moon disks if supported by the installed rayrender and skymodelr.
@@ -88,17 +88,17 @@ new_render_highquality_progress_bar = function(verbose, label, total) {
 #'clouds to receive sunlight while lower areas are dark. With `FALSE`, lighting
 #'uses the fixed `sky_altitude` (zero by default). Image skies do not support this
 #'option.
-#'@param lightdirection Default `315`. Position of the light angle around the
+#'@param light_direction Default `315`. Position of the light angle around the
 #'scene. When omitted, rayshader interprets the default relative to true north
 #'using cached spatial metadata.
 #'If this is a vector longer than one, multiple lights will be generated (using values from
-#'`lightaltitude`, `lightintensity`, and `lightcolor`)
-#'@param lightaltitude Default `45`. Angle above the horizon that the light is located.
+#'`light_altitude`, `light_intensity`, and `light_color`)
+#'@param light_altitude Default `45`. Angle above the horizon that the light is located.
 #'If this is a vector longer than one, multiple lights will be generated (using values from
-#'`lightdirection`, `lightintensity`, and `lightcolor`)
-#'@param lightsize Default `NULL`. Radius of the light(s). Automatically chosen, but can be set here by the user.
-#'@param lightintensity Default `500`. Intensity of the light.
-#'@param lightcolor Default `white`. The color of the light.
+#'`light_direction`, `light_intensity`, and `light_color`)
+#'@param light_size Default `5`. Full angular diameter of the disk light(s), in degrees, greater than 0 and less than 180. Independent of scene size and camera position.
+#'@param light_intensity Default `500`. Intensity of the light.
+#'@param light_color Default `white`. The color of the light.
 #'@param water_attenuation Default `0`, no attenuation. Amount that light should be attenuated when traveling through water. This
 #'calculates 1-color
 #'@param water_surface_color Default `TRUE`. Whether the water should have a colored surface or not. This is in contrast to
@@ -211,51 +211,51 @@ new_render_highquality_progress_bar = function(verbose, label, total) {
 #'#Render the volcano dataset using pathtracing
 #'volcano |>
 #'  sphere_shade(vertical_exaggeration = 2) |>
-#'  plot_3d(vertical_exaggeration = 1/2, shadowdepth=min(volcano)*0.8)
+#'  plot_3d(vertical_exaggeration = 1/2, shadow_depth=min(volcano)*0.8)
 #'render_highquality(min_variance = 0, sample_method = "sobol_blue", samples = 16)
 #'
 #'#Change position of light
-#'render_highquality(lightdirection = 45, min_variance = 0,
+#'render_highquality(light_direction = 45, min_variance = 0,
 #'                   sample_method = "sobol_blue", samples = 16)
 #'
 #'#Change vertical position of light
-#'render_highquality(lightdirection = 45, lightaltitude = 10,
+#'render_highquality(light_direction = 45, light_altitude = 10,
 #'                   min_variance = 0, samples = 16)
 #'
 #'#Change the ground material
-#'render_highquality(lightdirection = 45, lightaltitude=60,
+#'render_highquality(light_direction = 45, light_altitude=60,
 #'                   ground_material = rayrender::diffuse(checkerperiod = 30, checkercolor="grey50"),
 #'                   min_variance = 0, samples = 16)
 #'
 #'#Add three different color lights and a title
-#'render_highquality(lightdirection = c(0,120,240), lightaltitude=45,
-#'                   lightcolor=c("red","green","blue"), title_text = "Red, Green, Blue",
+#'render_highquality(light_direction = c(0,120,240), light_altitude=45,
+#'                   light_color=c("red","green","blue"), title_text = "Red, Green, Blue",
 #'                   title_bar_color="white", title_bar_alpha=0.8,
 #'                   min_variance = 0, samples = 16)
 #'
 #'#Change the camera:
 #'render_camera(theta=-45,phi=60,fov=60,zoom=0.8)
-#'render_highquality(lightdirection = c(0),
+#'render_highquality(light_direction = c(0),
 #'                   title_bar_color="white", title_bar_alpha=0.8,
 #'                   min_variance = 0, samples = 16)
 #'#Add a shiny metal sphere
 #'render_camera(theta=-45,phi=60,fov=60,zoom=0.8)
-#'render_highquality(lightdirection = c(0,120,240), lightaltitude=45,
-#'                   lightcolor=c("red","green","blue"),
+#'render_highquality(light_direction = c(0,120,240), light_altitude=45,
+#'                   light_color=c("red","green","blue"),
 #'                   scene_elements = rayrender::sphere(z=-60,y=0,
 #'                                                      radius=20,material=rayrender::metal()),
 #'                   min_variance = 0, samples = 16)
 #'
 #'#Add a red light to the volcano and change the ambient light to dusk
 #'render_camera(theta=45,phi=45)
-#'render_highquality(lightdirection = c(240), lightaltitude=30,
-#'                   lightcolor=c("#5555ff"),
+#'render_highquality(light_direction = c(240), light_altitude=30,
+#'                   light_color=c("#5555ff"),
 #'                   scene_elements = rayrender::sphere(z=0,y=6, x=-18, radius=5,
 #'                                    material=rayrender::light(color="red",intensity=100)),
 #'                   min_variance = 0, samples = 16)
 #'#Manually change the camera location and direction
 #'render_camera(fov=111)
-#'render_highquality(lightdirection = c(240), lightaltitude=30, lightcolor=c("#5555ff"),
+#'render_highquality(light_direction = c(240), light_altitude=30, light_color=c("#5555ff"),
 #'                   camera_location = c(-8.91, 24.36, 6.96), camera_lookat = c(4.25, 20.86, 2.18),
 #'                   scene_elements = rayrender::sphere(z=0,y=15, x=-18, radius=5,
 #'                                    material=rayrender::light(color="red",intensity=10)),
@@ -283,7 +283,7 @@ new_render_highquality_progress_bar = function(verbose, label, total) {
 #'cropped_data |>
 #'  sphere_shade(vertical_exaggeration = 30) |>
 #'  plot_3d(water = TRUE, water_input = 1.5,
-#'          soliddepth=-50, windowsize = 800)
+#'          solid_depth=-50, window_size = 800)
 #'#Zoom in on the monument
 #'render_camera(theta=115,  phi=25, zoom= 0.25, fov=40)
 #'#Render the national monument at solar noon on the solstice
@@ -335,11 +335,11 @@ render_highquality = function(
   sky_args = list(),
   sky_haze = FALSE,
   sky_query_altitude = FALSE,
-  lightdirection = 315,
-  lightaltitude = 45,
-  lightsize = NULL,
-  lightintensity = 500,
-  lightcolor = "white",
+  light_direction = 315,
+  light_altitude = 45,
+  light_size = 5,
+  light_intensity = 500,
+  light_color = "white",
   material = rayrender::diffuse(),
   water_attenuation = 0,
   water_surface_color = TRUE,
@@ -400,7 +400,7 @@ render_highquality = function(
   reset_scene_cache = FALSE,
   ...
 ) {
-  lightdirection_missing = missing(lightdirection)
+  light_direction_missing = missing(light_direction)
   sky_haze_supplied = !missing(sky_haze)
   sky_query_altitude_supplied = !missing(sky_query_altitude)
   text_offset_missing = missing(text_offset)
@@ -503,8 +503,8 @@ render_highquality = function(
   )
   dot_args = list(...)
   dot_args$parallel = parallel
-  if (isTRUE(lightdirection_missing)) {
-    lightdirection = lightdirection +
+  if (isTRUE(light_direction_missing)) {
+    light_direction = light_direction +
       resolve_cached_north_rotation(source = "scene")
   }
   render_scene_formals = formals(rayrender::render_scene)
@@ -1024,7 +1024,7 @@ render_highquality = function(
   shadowid = get_ids_with_labels(typeval = "shadow")
   if (nrow(shadowid) > 0) {
     shadowvertices = rgl.attrib(shadowid$id[1], "vertices")
-    shadowdepth = shadowvertices[1, 2]
+    shadow_depth = shadowvertices[1, 2]
     has_shadow = TRUE
   } else {
     has_shadow = FALSE
@@ -1318,11 +1318,11 @@ render_highquality = function(
       error = function(e) NULL
     )
     if (!is.null(temp_label_info)) {
-      if (!is.null(temp_label_info$adjustvec)) {
-        temp_adj = temp_label_info$adjustvec
+      if (!is.null(temp_label_info$adjust_vec)) {
+        temp_adj = temp_label_info$adjust_vec
       }
-      if (!is.null(temp_label_info$textsize)) {
-        temp_cex = temp_label_info$textsize
+      if (!is.null(temp_label_info$text_size)) {
+        temp_cex = temp_label_info$text_size
       }
     }
     for (j in seq_len(nrow(temp_label))) {
@@ -1908,7 +1908,7 @@ render_highquality = function(
       rayrender::xz_rect(
         zwidth = ground_size,
         xwidth = ground_size,
-        y = shadowdepth - bbox_center[2],
+        y = shadow_depth - bbox_center[2],
         material = ground_material
       )
     )
@@ -1924,74 +1924,6 @@ render_highquality = function(
   camera_lookat_rayrender = camera_lookat
   animation_camera_coords_rayrender = animation_camera_coords
 
-  if (light) {
-    if (is.null(lightsize)) {
-      lightsize = observer_radius / 5
-    }
-    if (length(lightaltitude) >= 1 || length(lightdirection) >= 1) {
-      if (
-        length(lightaltitude) > 1 &&
-          length(lightdirection) > 1 &&
-          length(lightdirection) != length(lightaltitude)
-      ) {
-        stop(
-          "lightaltitude vector ",
-          lightaltitude,
-          " and lightdirection vector ",
-          lightdirection,
-          "both greater than length 1 but not equal length"
-        )
-      }
-      numberlights = ifelse(
-        length(lightaltitude) > length(lightdirection),
-        length(lightaltitude),
-        length(lightdirection)
-      )
-      lightaltitudetemp = lightaltitude[1]
-      lightdirectiontemp = lightdirection[1]
-      lightintensitytemp = lightintensity[1]
-      lightcolortemp = lightcolor[1]
-      lightsizetemp = lightsize[1]
-      for (i in seq_len(numberlights)) {
-        if (!is.na(lightaltitude[i])) {
-          lightaltitudetemp = lightaltitude[i]
-        }
-        if (!is.na(lightdirection[i])) {
-          lightdirectiontemp = lightdirection[i]
-        }
-        if (!is.na(lightintensity[i])) {
-          lightintensitytemp = lightintensity[i]
-        }
-        if (!is.na(lightcolor[i])) {
-          lightcolortemp = lightcolor[i]
-        }
-        if (!is.na(lightsize[i])) {
-          lightsizetemp = lightsize[i]
-        }
-        scene = rayrender::add_object(
-          scene,
-          rayrender::sphere(
-            x = observer_radius *
-              5 *
-              cospi(lightaltitudetemp / 180) *
-              sinpi(lightdirectiontemp / 180),
-            y = observer_radius *
-              5 *
-              sinpi(lightaltitudetemp / 180),
-            z = -observer_radius *
-              5 *
-              cospi(lightaltitudetemp / 180) *
-              cospi(lightdirectiontemp / 180),
-            radius = lightsizetemp,
-            material = rayrender::light(
-              color = lightcolortemp,
-              intensity = lightintensitytemp
-            )
-          )
-        )
-      }
-    }
-  }
   if (print_scene_info) {
     dist_val = sqrt(sum((camera_lookat - lookfrom)^2))
     print(sprintf(
@@ -2013,6 +1945,67 @@ render_highquality = function(
   }
 
   scene = rayrender::group_objects(scene, angle = c(0, 180, 0))
+  # Infinite light directions use the final, rotated scene coordinates.
+  if (light) {
+    if (length(light_altitude) >= 1 || length(light_direction) >= 1) {
+      if (
+        length(light_altitude) > 1 &&
+          length(light_direction) > 1 &&
+          length(light_direction) != length(light_altitude)
+      ) {
+        stop(
+          "light_altitude vector ",
+          light_altitude,
+          " and light_direction vector ",
+          light_direction,
+          "both greater than length 1 but not equal length"
+        )
+      }
+      numberlights = ifelse(
+        length(light_altitude) > length(light_direction),
+        length(light_altitude),
+        length(light_direction)
+      )
+      light_altitude_temp = light_altitude[1]
+      light_direction_temp = light_direction[1]
+      light_intensity_temp = light_intensity[1]
+      light_color_temp = light_color[1]
+      light_size_temp = light_size[1]
+      for (i in seq_len(numberlights)) {
+        if (!is.na(light_altitude[i])) {
+          light_altitude_temp = light_altitude[i]
+        }
+        if (!is.na(light_direction[i])) {
+          light_direction_temp = light_direction[i]
+        }
+        if (!is.na(light_intensity[i])) {
+          light_intensity_temp = light_intensity[i]
+        }
+        if (!is.na(light_color[i])) {
+          light_color_temp = light_color[i]
+        }
+        if (!is.na(light_size[i])) {
+          light_size_temp = light_size[i]
+        }
+        scene = rayrender::add_infinite_light(
+          scene,
+          rayrender::disk_light(
+            direction = c(
+              -cospi(light_altitude_temp / 180) *
+                sinpi(light_direction_temp / 180),
+              sinpi(light_altitude_temp / 180),
+              cospi(light_altitude_temp / 180) *
+                cospi(light_direction_temp / 180)
+            ),
+            angular_diameter = light_size_temp,
+            color = light_color_temp,
+            intensity = light_intensity_temp,
+            name = paste0("rayshader_light_", i)
+          )
+        )
+      }
+    }
+  }
   if (!is.null(native_sky_light)) {
     scene = getExportedValue("rayrender", "add_infinite_light")(
       scene,

@@ -7,7 +7,7 @@
 generate_contour_overlay(
   heightmap = NULL,
   levels = NA,
-  nlevels = NA,
+  n_levels = NA,
   zscale = 1,
   width = NA,
   height = NA,
@@ -26,8 +26,8 @@ cached hillshade or scene heightmap.}
 
 \item{levels}{Default \code{NA}. Automatically generated with 10 levels. This argument specifies the exact height levels of each contour.}
 
-\item{nlevels}{Default \code{NA}. Controls the auto-generation of levels. If levels is length-2,
-this will automatically generate \code{nlevels} breaks between \code{levels[1]} and \code{levels[2]}.}
+\item{n_levels}{Default \code{NA}. Controls the auto-generation of levels. If levels is length-2,
+this will automatically generate \code{n_levels} breaks between \code{levels[1]} and \code{levels[2]}.}
 
 \item{zscale}{Default \code{1}. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
 of 1 meter and the grid values are separated by 10 meters, \code{zscale} would be
@@ -100,9 +100,9 @@ montereybay_spatial |>
 montereybay_spatial |>
  height_shade() |>
  add_shadow(ray_shade(vertical_exaggeration = 4),0.3) |>
- add_overlay(generate_contour_overlay(montereybay_spatial, linewidth=2, nlevels=100,
+ add_overlay(generate_contour_overlay(montereybay_spatial, linewidth=2, n_levels=100,
                                       height = nrow(montereybay_spatial)*2, color="black",
-                                      width  = ncol(montereybay_spatial)*2), alphalayer=0.5) |>
+                                      width  = ncol(montereybay_spatial)*2), alpha_layer=0.5) |>
  plot_map()
 #Manually specify the breaks with levels
 montereybay_spatial |>

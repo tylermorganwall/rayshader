@@ -11,7 +11,7 @@ test_that("ggplot scenes transform mapped overlay altitudes into scene units", {
     p,
     width = 2,
     raytrace = FALSE,
-    windowsize = c(300, 300)
+    window_size = c(300, 300)
   )))
 
   gg_extent = rayshader:::get_ggplot_extent()
@@ -51,7 +51,7 @@ test_that("ggplot scenes without mapped height keep raw overlay altitudes", {
     p,
     width = 2,
     raytrace = FALSE,
-    windowsize = c(300, 300)
+    window_size = c(300, 300)
   )))
 
   gg_extent = rayshader:::get_ggplot_extent()
@@ -84,7 +84,7 @@ test_that("flat substrate ggplot scenes keep panels flat but map overlay altitud
     raytrace = FALSE,
     flat_substrate = TRUE,
     save_height_matrix = TRUE,
-    windowsize = c(300, 300)
+    window_size = c(300, 300)
   ))
 
   panel_info = attr(height_matrix, "ggplot_panel_info", exact = TRUE)
@@ -154,7 +154,7 @@ test_that("render point colors can use cached ggplot height palette", {
     height_aes = "color",
     raytrace = FALSE,
     flat_substrate = TRUE,
-    windowsize = c(300, 300)
+    window_size = c(300, 300)
   ))
   expect_true(
     rayshader:::get_cached_plot_gg_transform_info(
@@ -207,7 +207,7 @@ test_that("render_label() uses cached plot_gg height scale and vertical exaggera
     raytrace = FALSE,
     flat_substrate = TRUE,
     vertical_exaggeration = 600,
-    windowsize = c(300, 300)
+    window_size = c(300, 300)
   ))
 
   expect_no_condition(render_points(
@@ -226,7 +226,7 @@ test_that("render_label() uses cached plot_gg height scale and vertical exaggera
     x = mtcars$mpg[label_index],
     y = mtcars$wt[label_index],
     altitude = mtcars$hp[label_index],
-    relativez = TRUE,
+    relative_z = TRUE,
     line = FALSE,
     text = rownames(mtcars)[label_index],
     freetype = FALSE,
@@ -256,7 +256,7 @@ test_that("ggplot z-axis breaks use mapped height positions but keep raw labels"
     p,
     width = 2,
     raytrace = FALSE,
-    windowsize = c(300, 300)
+    window_size = c(300, 300)
   )))
 
   gg_extent = rayshader:::get_ggplot_extent()
@@ -316,7 +316,7 @@ test_that("standalone ggplot z-axis defaults use mapped height scale labels", {
     p,
     width = 2,
     raytrace = FALSE,
-    windowsize = c(300, 300)
+    window_size = c(300, 300)
   )))
 
   gg_extent = get_ggplot_extent()
@@ -376,7 +376,7 @@ test_that("standalone ggplot z-axis auto-title uses implicit mapped height label
     p,
     width = 2,
     raytrace = FALSE,
-    windowsize = c(300, 300)
+    window_size = c(300, 300)
   )))
 
   transform_info = get_cached_plot_gg_transform_info(default = NULL)
@@ -415,7 +415,7 @@ test_that("plot_3d scenes keep raw altitude values in transform_into_heightmap_c
     zscale = 10,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(300, 300)
+    window_size = c(300, 300)
   ))
 
   extent = c(
@@ -450,7 +450,7 @@ test_that("transform_into_heightmap_coords() does not warn about derived altitud
     zscale = 10,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(300, 300)
+    window_size = c(300, 300)
   ))
 
   extent = c(

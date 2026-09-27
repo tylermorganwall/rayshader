@@ -78,14 +78,14 @@ test_that("geographic aspect records projected true north", {
   )
   true_north_light = lamb_shade(
     heightmap,
-    sunangle = 315 + aspect$north_rotation,
+    sun_angle = 315 + aspect$north_rotation,
     zscale = 1000,
     extent = extent,
     crs = 32610
   )
   grid_north_light = lamb_shade(
     heightmap,
-    sunangle = 315,
+    sun_angle = 315,
     zscale = 1000,
     extent = extent,
     crs = 32610
@@ -103,7 +103,7 @@ test_that("geographic aspect records projected true north", {
   )
   legacy_grid_north = lamb_shade(
     heightmap,
-    sunangle = 315,
+    sun_angle = 315,
     zscale = 1000,
     geographic_aspect = FALSE,
     extent = extent,
@@ -281,7 +281,7 @@ test_that("geometry-aware 2D shades preserve dimensions and use aspect", {
     zscale = 1000,
     extent = extent,
     crs = 4326,
-    progbar = FALSE
+    progress_bar = FALSE
   )
   sphere_identity = sphere_shade(
     heightmap,
@@ -289,7 +289,7 @@ test_that("geometry-aware 2D shades preserve dimensions and use aspect", {
     geographic_aspect = FALSE,
     extent = extent,
     crs = 4326,
-    progbar = FALSE
+    progress_bar = FALSE
   )
   expect_equal(dim(sphere), c(ncol(heightmap), nrow(heightmap), 4))
   expect_false(isTRUE(all.equal(sphere, sphere_identity)))
@@ -313,21 +313,21 @@ test_that("geometry-aware 2D shades preserve dimensions and use aspect", {
   shadows = ray_shade(
     heightmap,
     zscale = 1000,
-    maxsearch = 8,
-    anglebreaks = 25,
+    max_search = 8,
+    angle_breaks = 25,
     extent = extent,
     crs = 4326,
-    progbar = FALSE
+    progress_bar = FALSE
   )
   shadow_identity = ray_shade(
     heightmap,
     zscale = 1000,
-    maxsearch = 8,
-    anglebreaks = 25,
+    max_search = 8,
+    angle_breaks = 25,
     geographic_aspect = FALSE,
     extent = extent,
     crs = 4326,
-    progbar = FALSE
+    progress_bar = FALSE
   )
   expect_equal(dim(shadows), c(ncol(heightmap), nrow(heightmap)))
   expect_false(isTRUE(all.equal(shadows, shadow_identity)))
@@ -352,24 +352,24 @@ test_that("geometry-aware 2D shades preserve dimensions and use aspect", {
 
   ambient = ambient_shade(
     heightmap,
-    anglebreaks = 45,
-    sunbreaks = 3,
-    maxsearch = 6,
+    angle_breaks = 45,
+    sun_breaks = 3,
+    max_search = 6,
     zscale = 1,
     extent = extent,
     crs = 4326,
-    progbar = FALSE
+    progress_bar = FALSE
   )
   ambient_identity = ambient_shade(
     heightmap,
-    anglebreaks = 45,
-    sunbreaks = 3,
-    maxsearch = 6,
+    angle_breaks = 45,
+    sun_breaks = 3,
+    max_search = 6,
     zscale = 1,
     geographic_aspect = FALSE,
     extent = extent,
     crs = 4326,
-    progbar = FALSE
+    progress_bar = FALSE
   )
   expect_equal(dim(ambient), c(ncol(heightmap), nrow(heightmap)))
   expect_false(isTRUE(all.equal(ambient, ambient_identity)))
@@ -428,7 +428,7 @@ test_that("plot_3d caches and applies geographic aspect", {
     crs = 4326,
     solid = TRUE,
     shadow = TRUE,
-    windowsize = c(100, 100)
+    window_size = c(100, 100)
   )
 
   aspect = get_scene_geographic_aspect()
@@ -518,7 +518,7 @@ test_that("plot_3d caches and applies geographic aspect", {
     crs = 4326,
     solid = FALSE,
     shadow = FALSE,
-    windowsize = c(100, 100)
+    window_size = c(100, 100)
   )
   expect_false(get_scene_geographic_aspect()$enabled)
   identity_surface_id = get_ids_with_labels(typeval = "surface_tris")$id[[1]]
@@ -664,7 +664,7 @@ test_that("plot_gg reports and disables geographic aspect", {
       height = 2,
       raytrace = FALSE,
       shadow = FALSE,
-      windowsize = c(100, 100),
+      window_size = c(100, 100),
       geographic_aspect = TRUE
     )),
     "geographic_aspect.*ignored"

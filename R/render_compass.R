@@ -153,9 +153,9 @@ render_compass = function(
     fullverts = rgl::rgl.attrib(id_base, "vertices")
     xyz_range = apply(fullverts, 2, range, na.rm = TRUE)
     widths = xyz_range[2, c(1, 3)] - xyz_range[1, c(1, 3)]
-    maxwidth = max(widths)
-    compass_radius = c(maxwidth / 10, maxwidth / 10, maxwidth / 10)
-    radius = maxwidth / 10
+    max_width = max(widths)
+    compass_radius = c(max_width / 10, max_width / 10, max_width / 10)
+    radius = max_width / 10
   } else if (length(compass_radius) == 1) {
     radius = compass_radius / 1.5
     compass_radius = c(radius, radius, radius)

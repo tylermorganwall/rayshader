@@ -60,11 +60,11 @@
 #'@param sky_args Default `list()`. Extra arguments passed to
 #'`skymodelr::generate_sky_latlong()` (default) or `skymodelr::generate_sky()`
 #'when direct sky arguments are used.
-#'@param lightdirection Default `315`. Light direction angle(s), in degrees.
-#'@param lightaltitude Default `45`. Light altitude angle(s), in degrees.
-#'@param lightsize Default `NULL`. Light radius; auto-derived from scene size.
-#'@param lightintensity Default `500`. Light intensity value(s).
-#'@param lightcolor Default `"white"`. Light color(s).
+#'@param light_direction Default `315`. Light direction angle(s), in degrees.
+#'@param light_altitude Default `45`. Light altitude angle(s), in degrees.
+#'@param light_size Default `5`. Full angular diameter of the disk light(s), in degrees, greater than 0 and less than 180. Independent of scene size and camera position.
+#'@param light_intensity Default `500`. Light intensity value(s).
+#'@param light_color Default `"white"`. Light color(s).
 #'@param material Default `rayrender::diffuse()`. Forwarded to
 #'[render_highquality()].
 #'@param water_attenuation Default `0`. Forwarded to [render_highquality()].
@@ -126,11 +126,11 @@ radiance_shade = function(
   sky_sun_azimuth = NA,
   sky_altitude = NA,
   sky_args = list(),
-  lightdirection = 315,
-  lightaltitude = 45,
-  lightsize = NULL,
-  lightintensity = 500,
-  lightcolor = "white",
+  light_direction = 315,
+  light_altitude = 45,
+  light_size = 5,
+  light_intensity = 500,
+  light_color = "white",
   material = rayrender::diffuse(),
   water_attenuation = 0,
   water_surface_color = TRUE,
@@ -150,7 +150,7 @@ radiance_shade = function(
   crs = NULL,
   ...
 ) {
-  lightdirection_missing = missing(lightdirection)
+  light_direction_missing = missing(light_direction)
   if (samples > 256 && sample_method == "sobol_blue") {
     warning(
       r"{When `sample_method = "sobol_blue"`, `samples` must be less than or equal to 256. Setting `sample_method` to `"sobol"`.}"
@@ -259,7 +259,7 @@ radiance_shade = function(
             phi = 89.9,
             fov = 0,
             zoom = 1,
-            windowsize = c(
+            window_size = c(
               max(64L, as.integer(child_args$width)),
               max(64L, as.integer(child_args$height))
             ),
@@ -287,10 +287,10 @@ radiance_shade = function(
             sky_sun_azimuth = child_args$sky_sun_azimuth,
             sky_altitude = child_args$sky_altitude,
             sky_args = child_args$sky_args,
-            lightaltitude = child_args$lightaltitude,
-            lightsize = child_args$lightsize,
-            lightintensity = child_args$lightintensity,
-            lightcolor = child_args$lightcolor,
+            light_altitude = child_args$light_altitude,
+            light_size = child_args$light_size,
+            light_intensity = child_args$light_intensity,
+            light_color = child_args$light_color,
             material = child_args$material,
             water_attenuation = child_args$water_attenuation,
             water_surface_color = child_args$water_surface_color,
@@ -304,8 +304,8 @@ radiance_shade = function(
             scene_elements = child_args$scene_elements,
             plot = FALSE
           )
-          if (!isTRUE(child_args$lightdirection_missing)) {
-            render_args$lightdirection = child_args$lightdirection
+          if (!isTRUE(child_args$light_direction_missing)) {
+            render_args$light_direction = child_args$light_direction
           }
           if (
             "auto_exposure" %in%
@@ -632,12 +632,12 @@ radiance_shade = function(
     sky_sun_azimuth = sky_sun_azimuth,
     sky_altitude = sky_altitude,
     sky_args = sky_args,
-    lightdirection = lightdirection,
-    lightdirection_missing = lightdirection_missing,
-    lightaltitude = lightaltitude,
-    lightsize = lightsize,
-    lightintensity = lightintensity,
-    lightcolor = lightcolor,
+    light_direction = light_direction,
+    light_direction_missing = light_direction_missing,
+    light_altitude = light_altitude,
+    light_size = light_size,
+    light_intensity = light_intensity,
+    light_color = light_color,
     material = material,
     water_attenuation = water_attenuation,
     water_surface_color = water_surface_color,

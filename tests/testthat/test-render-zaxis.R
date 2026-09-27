@@ -10,7 +10,7 @@ test_that("render_zaxis() adds a styled axis after rendering points", {
     zscale = 10,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(300, 300)
+    window_size = c(300, 300)
   ))
 
   extent = c(
@@ -136,7 +136,7 @@ test_that("render_zaxis() accepts fractional text offsets", {
     zscale = 10,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(300, 300)
+    window_size = c(300, 300)
   ))
 
   extent = c(
@@ -167,7 +167,7 @@ test_that("render_zaxis() adds side and top titles", {
     zscale = 10,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(300, 300)
+    window_size = c(300, 300)
   ))
 
   extent = c(
@@ -265,7 +265,7 @@ test_that("render_zaxis() defaults side title opposite the label side horizontal
     zscale = 10,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(300, 300)
+    window_size = c(300, 300)
   ))
 
   extent = c(
@@ -337,7 +337,7 @@ test_that("render_zaxis() can use cached point altitude data", {
     zscale = 10,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(300, 300)
+    window_size = c(300, 300)
   ))
   expect_no_condition(render_points(
     x = c(5, 15),
@@ -386,7 +386,7 @@ test_that("render_zaxis() can use cached path and label altitude data", {
     zscale = 10,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(300, 300)
+    window_size = c(300, 300)
   ))
   expect_no_condition(render_path(
     x = c(5, 15),
@@ -422,7 +422,7 @@ test_that("render_zaxis() can use cached path and label altitude data", {
     zscale = 10,
     z = c(300, 400),
     text = c("a", "b"),
-    relativez = FALSE
+    relative_z = FALSE
   ))
 
   out = render_zaxis(
@@ -455,7 +455,7 @@ test_that("render_zaxis() accepts cached render-type data sources", {
     zscale = 10,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(300, 300)
+    window_size = c(300, 300)
   ))
 
   for (source in c("obj", "raymesh", "tree", "building", "cloud")) {
@@ -491,7 +491,7 @@ test_that("render_zaxis() formats large automatic data labels with digit groupin
     zscale = 10,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(300, 300)
+    window_size = c(300, 300)
   ))
   cache_scene_zaxis_data(
     source = "polygon",
@@ -525,7 +525,7 @@ test_that("render_zaxis() keeps top titles close to tall data axes", {
     zscale = 1,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(300, 300)
+    window_size = c(300, 300)
   ))
   cache_scene_zaxis_data(
     source = "polygon",
@@ -590,7 +590,7 @@ test_that("render_zaxis() can use cached polygon data-column values", {
     zscale = 10,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(300, 300)
+    window_size = c(300, 300)
   ))
   expect_no_condition(render_polygons(
     polygon,
@@ -641,7 +641,7 @@ test_that("render_zaxis() works as a standalone entry point", {
     zscale = 10,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(300, 300)
+    window_size = c(300, 300)
   ))
 
   extent = c(
@@ -673,7 +673,7 @@ test_that("render_zaxis() infers ggplot panel extent when omitted", {
     ggplot2::geom_point(ggplot2::aes(x = wt, y = mpg))
   expect_no_condition(suppressWarnings(plot_gg_test(
     p,
-    windowsize = c(300, 300),
+    window_size = c(300, 300),
     raytrace = FALSE,
     multicore = FALSE
   )))
@@ -703,7 +703,7 @@ test_that("render_zaxis() uses cached coord_sf scene metadata when omitted", {
     p,
     width = 3,
     height = 3,
-    windowsize = c(600, 600),
+    window_size = c(600, 600),
     raytrace = FALSE,
     shadow = FALSE,
     multicore = FALSE
@@ -731,7 +731,7 @@ test_that("render_zaxis() uses cached user extent when omitted", {
     zscale = 10,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(300, 300)
+    window_size = c(300, 300)
   ))
 
   extent = c(
@@ -770,7 +770,7 @@ test_that("render_zaxis() uses extent cached by plot_3d()", {
     zscale = 10,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(300, 300)
+    window_size = c(300, 300)
   ))
 
   expect_no_condition(render_zaxis(
@@ -790,7 +790,7 @@ test_that("render_zaxis() uses the native extent cached for terrain matrices", {
     zscale = 10,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(300, 300)
+    window_size = c(300, 300)
   ))
 
   expect_equal(
@@ -823,7 +823,7 @@ test_that("plot_3d() does not treat raw matrix attributes as spatial extents", {
     zscale = 10,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(300, 300)
+    window_size = c(300, 300)
   ))
 
   expect_equal(
@@ -850,7 +850,7 @@ test_that("plot_3d() and plot_gg() return invisibly by default", {
     zscale = 10,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(300, 300)
+    window_size = c(300, 300)
   ))
   expect_false(vis_3d$visible)
 
@@ -859,7 +859,7 @@ test_that("plot_3d() and plot_gg() return invisibly by default", {
     ggplot2::geom_point(ggplot2::aes(x = wt, y = mpg))
   vis_gg = withVisible(suppressWarnings(plot_gg_test(
     p,
-    windowsize = c(300, 300),
+    window_size = c(300, 300),
     raytrace = FALSE,
     multicore = FALSE
   )))
@@ -878,7 +878,7 @@ test_that("render_zaxis() infers cached terrain zscale for default breaks", {
     zscale = 10,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(300, 300)
+    window_size = c(300, 300)
   ))
 
   extent = c(
@@ -916,7 +916,7 @@ test_that("render_zaxis() default breaks span negative and positive terrain", {
     zscale = 10,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(300, 300)
+    window_size = c(300, 300)
   ))
 
   extent = c(
@@ -961,7 +961,7 @@ test_that("render_zaxis() corner offset is user-configurable", {
     zscale = 10,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(300, 300)
+    window_size = c(300, 300)
   ))
 
   extent = c(
@@ -1034,7 +1034,7 @@ test_that("render_zaxis() sizes text offsets in scene units for spatial extents"
     zscale = 100,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(300, 300)
+    window_size = c(300, 300)
   ))
 
   expect_no_condition(render_zaxis(
@@ -1085,7 +1085,7 @@ test_that("ggplot z-axis defaults to panel placement", {
     ggplot2::geom_point(ggplot2::aes(x = wt, y = mpg))
   expect_no_condition(suppressWarnings(plot_gg_test(
     p,
-    windowsize = c(300, 300)
+    window_size = c(300, 300)
   )))
 
   ext = rayshader:::get_ggplot_extent()
@@ -1166,7 +1166,7 @@ test_that("ggplot z-axis supports explicit panel corners", {
     ggplot2::geom_point(ggplot2::aes(x = wt, y = mpg))
   expect_no_condition(suppressWarnings(plot_gg_test(
     p,
-    windowsize = c(300, 300)
+    window_size = c(300, 300)
   )))
 
   ext = rayshader:::get_ggplot_extent()
@@ -1228,7 +1228,7 @@ test_that("ggplot panel inset omits zero marker", {
     ggplot2::geom_point(ggplot2::aes(x = wt, y = mpg))
   expect_no_condition(suppressWarnings(plot_gg_test(
     p,
-    windowsize = c(300, 300)
+    window_size = c(300, 300)
   )))
 
   ext = rayshader:::get_ggplot_extent()
@@ -1270,7 +1270,7 @@ test_that("render_zaxis() validates z-axis labels length", {
     zscale = 10,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(300, 300)
+    window_size = c(300, 300)
   ))
 
   extent = c(
@@ -1310,13 +1310,13 @@ test_that("render_zaxis() adds an axis after rendering contours", {
     zscale = 10,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(300, 300)
+    window_size = c(300, 300)
   ))
 
   expect_no_condition(render_contours(
     heightmap = heightmap,
     zscale = 10,
-    nlevels = 5
+    n_levels = 5
   ))
   expect_no_condition(render_zaxis(
     extent = c(

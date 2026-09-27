@@ -80,7 +80,7 @@
 #' montereybay_spatial |>
 #'   sphere_shade(texture = "desert",vertical_exaggeration = 20) |>
 #'   add_shadow(ray_shade(vertical_exaggeration = 4)) |>
-#'   plot_3d(water = TRUE, windowsize = 800, watercolor = "dodgerblue",
+#'   plot_3d(water = TRUE, window_size = 800, water_color = "dodgerblue",
 #'           background = "pink", vertical_exaggeration = 4)
 #'
 #' #We will apply a negative buffer to create space between adjacent polygons. You may

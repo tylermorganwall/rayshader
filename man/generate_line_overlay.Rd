@@ -76,7 +76,7 @@ montereybay_spatial |>
  height_shade() |>
  add_overlay(generate_altitude_overlay(bathy_hs, montereybay_spatial, 0, 0))  |>
  add_overlay(generate_line_overlay(monterey_roads_sf, linewidth=3, color="white"),
-                                   alphalayer=0.8)  |>
+                                   alpha_layer=0.8)  |>
  add_shadow(ray_shade(vertical_exaggeration = 4),0.3) |>
  plot_map()
 #Manually specify the width and height to improve visual quality of the lines
@@ -86,7 +86,7 @@ montereybay_spatial |>
  add_shadow(ray_shade(vertical_exaggeration = 4),0.3) |>
  add_overlay(generate_line_overlay(monterey_roads_sf, linewidth=3, color="white",
                                    width = 1080, height = 1080),
-                                   alphalayer=0.8)  |>
+                                   alpha_layer=0.8)  |>
  plot_map()
 \dontshow{\}) # examplesIf}
 }

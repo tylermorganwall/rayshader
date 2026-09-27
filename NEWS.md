@@ -1,3 +1,16 @@
+# rayshader 0.41.0.9000
+
+## Argument names
+
+* Joined descriptive argument names now use snake case throughout the public API.
+  Examples include `window_size`, `base_shape`, `solid_depth`, `shadow_color`,
+  `water_color`, `water_alpha`, `water_line_color`, `text_size`,
+  `sun_angle`, `sun_altitude`, `normal_vectors`, and `progress_bar`. Update named
+  arguments in existing calls to their new names.
+  Established terms such as `heightmap`, `hillshade`, `zscale`, `filename`, and `linewidth`
+  are unchanged. Argument values, defaults, and rendering behavior are unchanged
+  by this naming update.
+
 # rayshader 0.10.0:
 
 ## Additions
@@ -9,7 +22,7 @@
 # rayshader 0.9.2:
 
 ## Additions
-* Add additional arguments to windowsize in `plot_3d()` to specify location of viewport
+* Add additional arguments to window_size in `plot_3d()` to specify location of viewport
 
 # rayshader 0.9.1:
 
@@ -37,8 +50,8 @@
 ## Additions
 
 * Updated `plot_3d` to draw `NA` entries in the elevation matrix as holes in the 3D model. This can be used to slice the model into any shape.
-* Updated `plot_3d` to include the new `baseshape` argument, which has several built-in shapes `c("circle","hex")` to overlay onto a matrix. This removes points in the elevation matrix outside the masked region.
-* Added `lineantialias` option to `plot_3d` to allow the user to turn on antialiasing for the lines in the plot.
+* Updated `plot_3d` to include the new `base_shape` argument, which has several built-in shapes `c("circle","hex")` to overlay onto a matrix. This removes points in the elevation matrix outside the masked region.
+* Added `line_antialias` option to `plot_3d` to allow the user to turn on antialiasing for the lines in the plot.
 
 ## Changes
 
@@ -56,7 +69,7 @@
 ## Changes
 
 * Updated README
-* Fixed all `progbar` arguments to be either `FALSE` or `interactive()` by default
+* Fixed all `progress_bar` arguments to be either `FALSE` or `interactive()` by default
 
 # rayshader 0.6.4: 2018-11-08
 * Changed progress bar to appear only when the user is in an interactive session (thanks @hadley)

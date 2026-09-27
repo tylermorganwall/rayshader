@@ -16,7 +16,7 @@ test_that("scene-aware render functions put their primary input first", {
     render_depth = "focus",
     render_floating_overlay = "overlay",
     render_highquality = "filename",
-    render_multipolygonz = "sfobj",
+    render_multipolygonz = "sf_obj",
     render_obj = "filename",
     render_path = "y",
     render_people = "location",
@@ -185,7 +185,7 @@ test_that("render functions derive the base mask from the heightmap", {
 
   for (function_name in names(render_functions)) {
     expect_false(
-      "baseshape" %in% names(formals(render_functions[[function_name]])),
+      "base_shape" %in% names(formals(render_functions[[function_name]])),
       info = function_name
     )
   }

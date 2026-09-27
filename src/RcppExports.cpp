@@ -24,16 +24,16 @@ BEGIN_RCPP
 END_RCPP
 }
 // calculate_normal_cpp
-List calculate_normal_cpp(const NumericMatrix& heightmap, bool progbar, double column_scale, double row_scale);
-RcppExport SEXP _rayshader_calculate_normal_cpp(SEXP heightmapSEXP, SEXP progbarSEXP, SEXP column_scaleSEXP, SEXP row_scaleSEXP) {
+List calculate_normal_cpp(const NumericMatrix& heightmap, bool progress_bar, double column_scale, double row_scale);
+RcppExport SEXP _rayshader_calculate_normal_cpp(SEXP heightmapSEXP, SEXP progress_barSEXP, SEXP column_scaleSEXP, SEXP row_scaleSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const NumericMatrix& >::type heightmap(heightmapSEXP);
-    Rcpp::traits::input_parameter< bool >::type progbar(progbarSEXP);
+    Rcpp::traits::input_parameter< bool >::type progress_bar(progress_barSEXP);
     Rcpp::traits::input_parameter< double >::type column_scale(column_scaleSEXP);
     Rcpp::traits::input_parameter< double >::type row_scale(row_scaleSEXP);
-    rcpp_result_gen = Rcpp::wrap(calculate_normal_cpp(heightmap, progbar, column_scale, row_scale));
+    rcpp_result_gen = Rcpp::wrap(calculate_normal_cpp(heightmap, progress_bar, column_scale, row_scale));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -287,8 +287,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // psf
-arma::mat psf(const arma::mat& image, const IntegerMatrix blurmatrix, const arma::mat& depthmap, double depth, const arma::mat custombokeh, int type, double bokehintensity, double bokehlimit, double rotation, bool progbar, int channel);
-RcppExport SEXP _rayshader_psf(SEXP imageSEXP, SEXP blurmatrixSEXP, SEXP depthmapSEXP, SEXP depthSEXP, SEXP custombokehSEXP, SEXP typeSEXP, SEXP bokehintensitySEXP, SEXP bokehlimitSEXP, SEXP rotationSEXP, SEXP progbarSEXP, SEXP channelSEXP) {
+arma::mat psf(const arma::mat& image, const IntegerMatrix blurmatrix, const arma::mat& depthmap, double depth, const arma::mat custombokeh, int type, double bokeh_intensity, double bokeh_limit, double rotation, bool progress_bar, int channel);
+RcppExport SEXP _rayshader_psf(SEXP imageSEXP, SEXP blurmatrixSEXP, SEXP depthmapSEXP, SEXP depthSEXP, SEXP custombokehSEXP, SEXP typeSEXP, SEXP bokeh_intensitySEXP, SEXP bokeh_limitSEXP, SEXP rotationSEXP, SEXP progress_barSEXP, SEXP channelSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -298,50 +298,50 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type depth(depthSEXP);
     Rcpp::traits::input_parameter< const arma::mat >::type custombokeh(custombokehSEXP);
     Rcpp::traits::input_parameter< int >::type type(typeSEXP);
-    Rcpp::traits::input_parameter< double >::type bokehintensity(bokehintensitySEXP);
-    Rcpp::traits::input_parameter< double >::type bokehlimit(bokehlimitSEXP);
+    Rcpp::traits::input_parameter< double >::type bokeh_intensity(bokeh_intensitySEXP);
+    Rcpp::traits::input_parameter< double >::type bokeh_limit(bokeh_limitSEXP);
     Rcpp::traits::input_parameter< double >::type rotation(rotationSEXP);
-    Rcpp::traits::input_parameter< bool >::type progbar(progbarSEXP);
+    Rcpp::traits::input_parameter< bool >::type progress_bar(progress_barSEXP);
     Rcpp::traits::input_parameter< int >::type channel(channelSEXP);
-    rcpp_result_gen = Rcpp::wrap(psf(image, blurmatrix, depthmap, depth, custombokeh, type, bokehintensity, bokehlimit, rotation, progbar, channel));
+    rcpp_result_gen = Rcpp::wrap(psf(image, blurmatrix, depthmap, depth, custombokeh, type, bokeh_intensity, bokeh_limit, rotation, progress_bar, channel));
     return rcpp_result_gen;
 END_RCPP
 }
 // rayshade_cpp
-NumericMatrix rayshade_cpp(double sunangle, NumericVector anglebreaks, NumericMatrix& heightmap, double zscale, double maxsearch, const NumericMatrix cache_mask, bool progbar, double row_scale, double column_scale);
-RcppExport SEXP _rayshader_rayshade_cpp(SEXP sunangleSEXP, SEXP anglebreaksSEXP, SEXP heightmapSEXP, SEXP zscaleSEXP, SEXP maxsearchSEXP, SEXP cache_maskSEXP, SEXP progbarSEXP, SEXP row_scaleSEXP, SEXP column_scaleSEXP) {
+NumericMatrix rayshade_cpp(double sun_angle, NumericVector angle_breaks, NumericMatrix& heightmap, double zscale, double max_search, const NumericMatrix cache_mask, bool progress_bar, double row_scale, double column_scale);
+RcppExport SEXP _rayshader_rayshade_cpp(SEXP sun_angleSEXP, SEXP angle_breaksSEXP, SEXP heightmapSEXP, SEXP zscaleSEXP, SEXP max_searchSEXP, SEXP cache_maskSEXP, SEXP progress_barSEXP, SEXP row_scaleSEXP, SEXP column_scaleSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< double >::type sunangle(sunangleSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type anglebreaks(anglebreaksSEXP);
+    Rcpp::traits::input_parameter< double >::type sun_angle(sun_angleSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type angle_breaks(angle_breaksSEXP);
     Rcpp::traits::input_parameter< NumericMatrix& >::type heightmap(heightmapSEXP);
     Rcpp::traits::input_parameter< double >::type zscale(zscaleSEXP);
-    Rcpp::traits::input_parameter< double >::type maxsearch(maxsearchSEXP);
+    Rcpp::traits::input_parameter< double >::type max_search(max_searchSEXP);
     Rcpp::traits::input_parameter< const NumericMatrix >::type cache_mask(cache_maskSEXP);
-    Rcpp::traits::input_parameter< bool >::type progbar(progbarSEXP);
+    Rcpp::traits::input_parameter< bool >::type progress_bar(progress_barSEXP);
     Rcpp::traits::input_parameter< double >::type row_scale(row_scaleSEXP);
     Rcpp::traits::input_parameter< double >::type column_scale(column_scaleSEXP);
-    rcpp_result_gen = Rcpp::wrap(rayshade_cpp(sunangle, anglebreaks, heightmap, zscale, maxsearch, cache_mask, progbar, row_scale, column_scale));
+    rcpp_result_gen = Rcpp::wrap(rayshade_cpp(sun_angle, angle_breaks, heightmap, zscale, max_search, cache_mask, progress_bar, row_scale, column_scale));
     return rcpp_result_gen;
 END_RCPP
 }
 // rayshade_multicore
-NumericMatrix rayshade_multicore(double sunangle, NumericVector anglebreaks, NumericMatrix& heightmap, double zscale, NumericVector chunkindices, double maxsearch, NumericVector& cache_mask, double row_scale, double column_scale);
-RcppExport SEXP _rayshader_rayshade_multicore(SEXP sunangleSEXP, SEXP anglebreaksSEXP, SEXP heightmapSEXP, SEXP zscaleSEXP, SEXP chunkindicesSEXP, SEXP maxsearchSEXP, SEXP cache_maskSEXP, SEXP row_scaleSEXP, SEXP column_scaleSEXP) {
+NumericMatrix rayshade_multicore(double sun_angle, NumericVector angle_breaks, NumericMatrix& heightmap, double zscale, NumericVector chunkindices, double max_search, NumericVector& cache_mask, double row_scale, double column_scale);
+RcppExport SEXP _rayshader_rayshade_multicore(SEXP sun_angleSEXP, SEXP angle_breaksSEXP, SEXP heightmapSEXP, SEXP zscaleSEXP, SEXP chunkindicesSEXP, SEXP max_searchSEXP, SEXP cache_maskSEXP, SEXP row_scaleSEXP, SEXP column_scaleSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< double >::type sunangle(sunangleSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type anglebreaks(anglebreaksSEXP);
+    Rcpp::traits::input_parameter< double >::type sun_angle(sun_angleSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type angle_breaks(angle_breaksSEXP);
     Rcpp::traits::input_parameter< NumericMatrix& >::type heightmap(heightmapSEXP);
     Rcpp::traits::input_parameter< double >::type zscale(zscaleSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type chunkindices(chunkindicesSEXP);
-    Rcpp::traits::input_parameter< double >::type maxsearch(maxsearchSEXP);
+    Rcpp::traits::input_parameter< double >::type max_search(max_searchSEXP);
     Rcpp::traits::input_parameter< NumericVector& >::type cache_mask(cache_maskSEXP);
     Rcpp::traits::input_parameter< double >::type row_scale(row_scaleSEXP);
     Rcpp::traits::input_parameter< double >::type column_scale(column_scaleSEXP);
-    rcpp_result_gen = Rcpp::wrap(rayshade_multicore(sunangle, anglebreaks, heightmap, zscale, chunkindices, maxsearch, cache_mask, row_scale, column_scale));
+    rcpp_result_gen = Rcpp::wrap(rayshade_multicore(sun_angle, angle_breaks, heightmap, zscale, chunkindices, max_search, cache_mask, row_scale, column_scale));
     return rcpp_result_gen;
 END_RCPP
 }

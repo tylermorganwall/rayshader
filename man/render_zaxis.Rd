@@ -153,8 +153,8 @@ mtplot = ggplot(mtcars) +
 plot_gg(
  mtplot,
  width = 3.5,
- windowsize = c(1400, 866),
- sunangle = 225,
+ window_size = c(1400, 866),
+ sun_angle = 225,
  zoom = 0.50,
  phi = 20,
  theta = 45
@@ -177,7 +177,7 @@ density_plot = ggplot(mtcars) +
 plot_gg(
  density_plot,
  width = 6,
- windowsize = c(1400, 866),
+ window_size = c(1400, 866),
  zoom = 0.55,
  theta = 45,
  phi = 25,

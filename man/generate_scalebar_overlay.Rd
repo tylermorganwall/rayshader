@@ -9,7 +9,7 @@ generate_scalebar_overlay(
   length = NULL,
   x = 0.05,
   y = 0.05,
-  latlong = NA,
+  lat_long = NA,
   thickness = NA,
   bearing = NULL,
   unit = NULL,
@@ -56,7 +56,7 @@ rayshader derives a pretty length approximately half of the longer map side.}
 
 \item{y}{Default \code{0.05}. The y-coordinate of the bottom-left corner of the scale bar, as a proportion of the full map height.}
 
-\item{latlong}{Default \code{NA}. If \code{NA}, rayshader infers whether the map is in lat/long coordinates from
+\item{lat_long}{Default \code{NA}. If \code{NA}, rayshader infers whether the map is in lat/long coordinates from
 spatial metadata on \code{extent}, \code{heightmap}, the active scene, or cached hillshade data. Explicit values are only
 used as a fallback for matrix heightmaps without cached spatial metadata.}
 
@@ -162,32 +162,32 @@ add_shadow(lamb_shade(vertical_exaggeration = 4),0.3)
 #Add a scalebar
 base_map |>
 add_overlay(generate_scalebar_overlay(length = 40000,
-                                      latlong=TRUE)) |>
+                                      lat_long=TRUE)) |>
 plot_map()
 #Change the text color
 base_map |>
  add_overlay(generate_scalebar_overlay(length = 40000,
                                        text_color = "white",
-                                       latlong=TRUE)) |>
+                                       lat_long=TRUE)) |>
  plot_map()
 #Change the length
 base_map |>
  add_overlay(generate_scalebar_overlay(length = 30000,
                                        text_color = "white",
-                                       latlong=TRUE)) |>
+                                       lat_long=TRUE)) |>
  plot_map()
 #Change the thickness (default is length/20)
 base_map |>
  add_overlay(generate_scalebar_overlay(length = 30000,
                                        text_color = "white", thickness = 30000/10,
-                                       latlong=TRUE)) |>
+                                       lat_long=TRUE)) |>
  plot_map()
 #Change the text offset (given in multiples of thickness)
 base_map |>
  add_overlay(generate_scalebar_overlay(length = 30000,
                                        text_color = "white", thickness = 30000/10,
                                        text_offset = 0.75,
-                                       latlong=TRUE)) |>
+                                       lat_long=TRUE)) |>
  plot_map()
 #Change the primary and secondary colors, along with the border and tick color
 base_map |>
@@ -195,14 +195,14 @@ base_map |>
                                        text_color = "white", border_color = "white",
                                        tick_color = "white",
                                        color1 = "darkolivegreen4", color2 = "burlywood3",
-                                       latlong=TRUE)) |>
+                                       lat_long=TRUE)) |>
  plot_map()
 #Add a halo
 base_map |>
  add_overlay(generate_scalebar_overlay(length = 40000,
                                        halo_color = "white", halo_expand = 1,
                                        font = 2,
-                                       latlong=TRUE)) |>
+                                       lat_long=TRUE)) |>
  plot_map()
 #Change the orientation, position, text alignment, and flip the ticks to the other side
 base_map |>
@@ -210,7 +210,7 @@ base_map |>
                                        bearing=0, adj = 0, flip_ticks = TRUE,
                                        halo_color = "white", halo_expand = 1.5,
                                        font = 2,
-                                       latlong=TRUE)) |>
+                                       lat_long=TRUE)) |>
  plot_map()
 #64373.8 meters in 40 miles
 #Create custom labels, change font and text size, remove the border/ticks, and change the color
@@ -225,7 +225,7 @@ base_map |>
                                        halo_color="black", halo_blur=3, halo_alpha=0.5,
                                        width = ncol(montereybay_spatial)*2,
                                        height = nrow(montereybay_spatial)*2,
-                                       latlong=TRUE), rescale_original=TRUE) |>
+                                       lat_long=TRUE), rescale_original=TRUE) |>
  plot_map()
 \dontshow{\}) # examplesIf}
 }

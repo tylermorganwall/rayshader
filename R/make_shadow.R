@@ -4,51 +4,51 @@
 #'
 #' @param heightmap A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.
 #' @param basedepth Depth of the shadow layer.
-#' @param shadowwidth Width of the shadow in matrix units.
+#' @param shadow_width Width of the shadow in matrix units.
 #' @param color Background color.
-#' @param shadowcolor Shadow color.
+#' @param shadow_color Shadow color.
 #' @param offset Default `c(0, 0)`. Shadow plane offset.
 #' @param shadow_texture_size Default `getOption("rayshader.max_shadow_texture_size", 1024)`. Maximum width or height, in pixels, of the blurred shadow texture.
 #' @keywords internal
 make_shadow = function(
   heightmap,
   basedepth,
-  shadowwidth,
+  shadow_width,
   color,
-  shadowcolor,
+  shadow_color,
   offset = c(0, 0),
   shadow_texture_size = getOption("rayshader.max_shadow_texture_size", 1024)
 ) {
   rows = nrow(heightmap)
   cols = ncol(heightmap)
-  shadowwidth = as.integer(round(shadowwidth))
-  shadowwidth = max(shadowwidth, 0L)
+  shadow_width = as.integer(round(shadow_width))
+  shadow_width = max(shadow_width, 0L)
   shadow_texture_size = validate_shadow_texture_size(shadow_texture_size)
   colors = col2rgb(color) / 255
-  shadowcolors = col2rgb(shadowcolor) / 255
-  shadow_rows = rows + shadowwidth * 2L
-  shadow_cols = cols + shadowwidth * 2L
+  shadowcolors = col2rgb(shadow_color) / 255
+  shadow_rows = rows + shadow_width * 2L
+  shadow_cols = cols + shadow_width * 2L
   na_depth = matrix(FALSE, nrow = shadow_rows, ncol = shadow_cols)
   na_depth[
-    (shadowwidth + 1):(rows + shadowwidth),
-    (shadowwidth + 1):(cols + shadowwidth)
+    (shadow_width + 1):(rows + shadow_width),
+    (shadow_width + 1):(cols + shadow_width)
   ] = is.na(heightmap)
 
   shadow_mask = matrix(0, nrow = shadow_rows, ncol = shadow_cols)
   shadow_mask[
-    (shadowwidth + 1):(rows + shadowwidth),
-    (shadowwidth + 1):(cols + shadowwidth)
+    (shadow_width + 1):(rows + shadow_width),
+    (shadow_width + 1):(cols + shadow_width)
   ] = 1
   shadow_mask[fliplr(na_depth)] = 0
   shadow_mask = t(shadow_mask)
 
   resized_shadow = resize_shadow_mask(
     shadow_mask,
-    shadowwidth = shadowwidth,
+    shadow_width = shadow_width,
     shadow_texture_size = shadow_texture_size
   )
   shadow_mask = resized_shadow$mask
-  shadowwidth_texture = resized_shadow$shadowwidth
+  shadowwidth_texture = resized_shadow$shadow_width
 
   tempmap = tempfile(fileext = ".png")
   has_rayimage = length(find.package("rayimage", quiet = TRUE)) > 0
@@ -79,8 +79,8 @@ make_shadow = function(
   )
   png::writePNG(shadowarray, tempmap)
 
-  row_radius = (rows - 1) / 2 + shadowwidth
-  col_radius = (cols - 1) / 2 + shadowwidth
+  row_radius = (rows - 1) / 2 + shadow_width
+  col_radius = (cols - 1) / 2 + shadow_width
   scene_aspect = get_scene_geographic_aspect()
   rowmin = -row_radius * scene_aspect$scale[["x"]] + offset[1]
   rowmax = row_radius * scene_aspect$scale[["x"]] + offset[1]
@@ -155,7 +155,7 @@ validate_shadow_texture_size = function(shadow_texture_size) {
 #'@keywords internal
 resize_shadow_mask = function(
   shadow_mask,
-  shadowwidth,
+  shadow_width,
   shadow_texture_size = Inf
 ) {
   shadow_scale = 1
@@ -172,7 +172,7 @@ resize_shadow_mask = function(
   }
   list(
     mask = shadow_mask,
-    shadowwidth = max(1, as.integer(round(shadowwidth * shadow_scale)))
+    shadow_width = max(1, as.integer(round(shadow_width * shadow_scale)))
   )
 }
 

@@ -73,27 +73,27 @@ bool ray_intersects(NumericMatrix& heightmap, NumericVector& tanangles,
 }
 
 // [[Rcpp::export]]
-NumericMatrix rayshade_cpp(double sunangle, NumericVector anglebreaks, NumericMatrix& heightmap, 
-                           double zscale, double maxsearch, const NumericMatrix cache_mask,
-                           bool progbar, double row_scale,
+NumericMatrix rayshade_cpp(double sun_angle, NumericVector angle_breaks, NumericMatrix& heightmap,
+                           double zscale, double max_search, const NumericMatrix cache_mask,
+                           bool progress_bar, double row_scale,
                            double column_scale) {
   
   double precisionval = 1e-10;
   
   //Cache trig functions
-  double sinsunangle = sin(sunangle);
-  double cossunangle = cos(sunangle);
-  int numberangles = anglebreaks.size();
+  double sinsunangle = sin(sun_angle);
+  double cossunangle = cos(sun_angle);
+  int numberangles = angle_breaks.size();
   NumericVector tanangles(numberangles);
   for(int i = 0; i < numberangles; i++) {
-    tanangles(i) = tan(anglebreaks[i]);
+    tanangles(i) = tan(angle_breaks[i]);
   }
   
   int numbercols = heightmap.ncol();
   int numberrows = heightmap.nrow();
   NumericMatrix shadowmatrix(numberrows,numbercols);
   std::fill(shadowmatrix.begin(), shadowmatrix.end(), 1.0);
-  double maxdist = maxsearch;
+  double maxdist = max_search;
   int current_min_entry = 0;
   int current_max_entry = numberangles - 1;
   int current_entry = current_max_entry/2;
@@ -102,13 +102,13 @@ NumericMatrix rayshade_cpp(double sunangle, NumericVector anglebreaks, NumericMa
   RProgress::RProgress pb("Raytracing [:bar] ETA: :eta");
   double invnumberangles = 1 / (double)numberangles;
   
-  if(progbar) {
+  if(progress_bar) {
     pb.set_total(numberrows);
   }
 
   for(int i = 0; i < numberrows; i++) {
     Rcpp::checkUserInterrupt();
-    if(progbar) {
+    if(progress_bar) {
       pb.tick();
     }
     for(int j = 0; j < numbercols; j++) {

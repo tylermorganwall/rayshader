@@ -115,10 +115,10 @@
 #'     heightmap = flat_heightmap,
 #'     zscale = scene_zscale,
 #'     vertical_exaggeration = 1,
-#'     shadowdepth = 0,
-#'     soliddepth = 0,
-#'     solidcolor = "#800",
-#'     windowsize = c(800, 800)
+#'     shadow_depth = 0,
+#'     solid_depth = 0,
+#'     solid_color = "#800",
+#'     window_size = c(800, 800)
 #'   )
 #' render_camera(
 #'   theta = -28,
@@ -180,27 +180,27 @@
 #'   text = gallery_poses[regular_label_indices],
 #'   font = "Helvetica",
 #'   family = "serif",
-#'   fonttype = "standard",
-#'   textcolor = "white",
+#'   font_type = "standard",
+#'   text_color = "white",
 #'   line = FALSE,
 #'   clear_previous = TRUE,
 #'   x = gallery_positions$x[regular_label_indices],
 #'   y = gallery_positions$y[regular_label_indices],
 #'   altitude = gallery_positions$offset[regular_label_indices] +
 #'     person_height + label_clearance,
-#'   relativez = TRUE
+#'   relative_z = TRUE
 #' )
 #' render_label(
 #'   text = "stack",
 #'   font = "Helvetica",
 #'   family = "serif",
-#'   fonttype = "standard",
-#'   textcolor = "white",
+#'   font_type = "standard",
+#'   text_color = "white",
 #'   line = FALSE,
 #'   x = stack_position$x,
 #'   y = stack_position$y,
 #'   altitude = stack_position$offset + 2 * person_height + label_clearance,
-#'   relativez = TRUE
+#'   relative_z = TRUE
 #' )
 #'
 #' # Produce an 800-by-800 high-quality image of the male pose variants.
@@ -244,7 +244,7 @@
 #' volcano_dem |>
 #'   height_shade() |>
 #'   plot_3d(
-#'     windowsize = c(800, 800)
+#'     window_size = c(800, 800)
 #'   )
 #'
 #' render_trails(
@@ -311,7 +311,7 @@
 #'   color = "white"
 #' )
 #' render_camera(location = c(15.5,15.5), theta = 0, phi = 10,zoom=0.2,fov=80)
-#' render_highquality(lightdirection = 225,samples=16)
+#' render_highquality(light_direction = 225,samples=16)
 render_people = function(
   location = NULL,
   pose = "standing",

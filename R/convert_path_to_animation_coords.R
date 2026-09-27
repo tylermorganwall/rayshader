@@ -46,11 +46,11 @@
 #'to prevent fast swings. Only used for curve `type = bezier`. This does not preserve key frame positions.
 #'Note: This feature will likely result in the `lookat` and `position` diverging if they do not
 #'have similar curvatures at each point. This feature is best used when passing the same set of points to `positions` and `lookats`
-#'and providing an `offset_lookat` value, which ensures the curvature will be the same.
+#'and providing an `offset_look_at` value, which ensures the curvature will be the same.
 #'@param curvature_scale Default `30`. Constant dividing factor for curvature. Higher values will subdivide the
 #'path more, potentially finding a smoother path, but increasing the calculation time. Only used for curve `type = bezier`.
 #'Increasing this value after a certain point will not increase the quality of the path, but it is scene-dependent.
-#'@param offset_lookat Default `0`. Amount to offset the lookat position, either along the path (if `constant_step = TRUE`)
+#'@param offset_look_at Default `0`. Amount to offset the lookat position, either along the path (if `constant_step = TRUE`)
 #'or towards the derivative of the Bezier curve.
 #'@param offset Default `5`. Offset of the track from the surface, if `altitude = NULL`.
 #'@param follow_camera Default `FALSE`. If `TRUE`, this generates a 3rd person view that follows the path specified in `lat`, `long`, and `altitude`.
@@ -65,7 +65,7 @@
 #'but rather sits at a fixed relative location to the path.
 #'@param follow_fixed_offset Default `c(10,10,10)`. If `follow_fixed = TRUE`, the offset from the path to place
 #'the camera.
-#'@param distance_units Default `"auto"`. Units for `offset_lookat`,
+#'@param distance_units Default `"auto"`. Units for `offset_look_at`,
 #'`follow_distance`, and `follow_fixed_offset`. `"auto"` uses metres when
 #'spatial distance metadata is cached and scene units otherwise. Other options
 #'are `"scene"`, `"meters"`, and `"map"`; map units require a projected CRS.
@@ -94,7 +94,7 @@
 #'	plot_3d(
 #'		vertical_exaggeration = 4,
 #'		water = TRUE,
-#'		shadowcolor = "#40310a",
+#'		shadow_color = "#40310a",
 #'		background = "tan",
 #'		theta = 210,
 #'		phi = 22,
@@ -185,7 +185,7 @@ convert_path_to_animation_coords = function(
   heightmap = NULL,
   offset = 5,
   type = "bezier",
-  offset_lookat = 1,
+  offset_look_at = 1,
   constant_step = TRUE,
   curvature_adjust = "none",
   curvature_scale = 30,
@@ -228,7 +228,7 @@ convert_path_to_animation_coords = function(
     units = distance_units,
     caller = "convert_path_to_animation_coords"
   )
-  offset_lookat = offset_lookat * distance_multiplier
+  offset_look_at = offset_look_at * distance_multiplier
   follow_distance = follow_distance * distance_multiplier
   follow_fixed_offset = follow_fixed_offset * distance_multiplier
 
@@ -250,7 +250,7 @@ convert_path_to_animation_coords = function(
     lookats = xyz,
     frames = frames,
     type = type,
-    offset_lookat = offset_lookat,
+    offset_lookat = offset_look_at,
     constant_step = constant_step,
     curvature_adjust = curvature_adjust,
     damp_motion = damp_motion,

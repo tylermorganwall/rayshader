@@ -161,7 +161,7 @@ moss_landing_coord = c(36.806807, -121.793332)
 montereybay_spatial |>
  sphere_shade(vertical_exaggeration = 20) |>
  plot_3d(vertical_exaggeration = 4,water=TRUE,
-         shadowcolor="#40310a", background = "tan",
+         shadow_color="#40310a", background = "tan",
          theta=210,  phi=22, zoom=0.20, fov=55)
 
 t = seq(0,2*pi,length.out=20)
@@ -211,7 +211,7 @@ dem |>
  height_shade() |>
  add_shadow(texture_shade(),0) |>
  add_shadow(lamb_shade(),0) |>
- plot_3d(windowsize = 800, shadowdepth=min(raster_to_matrix(dem),na.rm=TRUE))
+ plot_3d(window_size = 800, shadow_depth=min(raster_to_matrix(dem),na.rm=TRUE))
 render_snapshot()
 #The tree locations are given as an absolute height (as opposed to relative to the surface)
 #so we set `absolute_height = TRUE`.

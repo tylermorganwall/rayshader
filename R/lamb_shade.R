@@ -7,8 +7,8 @@
 #'Cache fallback messages are disabled by default. Set `options(rayshader.verbose_scene_cache = TRUE)` to print when cached metadata is reused.
 #'
 #'@param heightmap A two-dimensional matrix, where each entry in the matrix is the elevation at that point. All points are assumed to be evenly spaced.
-#'@param sunaltitude Default `45`. The azimuth angle as measured from the horizon from which the light originates.
-#'@param sunangle Default `315` (NW). The angle around the matrix from which the light originates.
+#'@param sun_altitude Default `45`. The azimuth angle as measured from the horizon from which the light originates.
+#'@param sun_angle Default `315` (NW). The angle around the matrix from which the light originates.
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis.
 #'@param vertical_exaggeration Default `1`. One-off multiplier applied to the
 #'effective visual relief for this call. Values greater than `1` increase
@@ -35,22 +35,22 @@
 #'
 #'#Change the sun direction
 #'montereybay_spatial |>
-#'  lamb_shade(sunangle=45, vertical_exaggeration = 4) |>
+#'  lamb_shade(sun_angle=45, vertical_exaggeration = 4) |>
 #'  plot_map()
 #'
 #'#Change the sun altitude
 #'montereybay_spatial |>
-#'  lamb_shade(sunaltitude=60, vertical_exaggeration = 4) |>
+#'  lamb_shade(sun_altitude=60, vertical_exaggeration = 4) |>
 #'  plot_map()
 #'
 #'#Change the sun to directly overhead, the shading here represents the slope angle
 #'montereybay_spatial |>
-#'  lamb_shade(sunaltitude=90, vertical_exaggeration = 8) |>
+#'  lamb_shade(sun_altitude=90, vertical_exaggeration = 8) |>
 #'  plot_map()
 lamb_shade = function(
   heightmap,
-  sunaltitude = 45,
-  sunangle = 315,
+  sun_altitude = 45,
+  sun_angle = 315,
   zscale = 1,
   vertical_exaggeration = 1,
   zero_negative = TRUE,
@@ -58,7 +58,7 @@ lamb_shade = function(
   extent = NULL,
   crs = NULL
 ) {
-  sunangle_missing = missing(sunangle)
+  sunangle_missing = missing(sun_angle)
   heightmap_missing = missing(heightmap)
   extent_missing = missing(extent)
   crs_missing = missing(crs)
@@ -148,10 +148,10 @@ lamb_shade = function(
       isTRUE(heightmap_info$geographic_aspect$active) &&
       is.finite(heightmap_info$geographic_aspect$north_rotation)
   ) {
-    sunangle = sunangle + heightmap_info$geographic_aspect$north_rotation
+    sun_angle = sun_angle + heightmap_info$geographic_aspect$north_rotation
   }
-  sunang_rad = sunangle * pi / 180
-  rayang_rad = sunaltitude * pi / 180
+  sunang_rad = sun_angle * pi / 180
+  rayang_rad = sun_altitude * pi / 180
   rayvector = c(
     cos(sunang_rad) * cos(rayang_rad),
     sin(sunang_rad) * cos(rayang_rad),

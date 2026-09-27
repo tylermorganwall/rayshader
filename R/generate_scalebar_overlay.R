@@ -18,7 +18,7 @@
 #'rayshader derives a pretty length approximately half of the longer map side.
 #'@param x Default `0.05`. The x-coordinate of the bottom-left corner of the scale bar, as a proportion of the full map width.
 #'@param y Default `0.05`. The y-coordinate of the bottom-left corner of the scale bar, as a proportion of the full map height.
-#'@param latlong Default `NA`. If `NA`, rayshader infers whether the map is in lat/long coordinates from
+#'@param lat_long Default `NA`. If `NA`, rayshader infers whether the map is in lat/long coordinates from
 #'spatial metadata on `extent`, `heightmap`, the active scene, or cached hillshade data. Explicit values are only
 #'used as a fallback for matrix heightmaps without cached spatial metadata.
 #'@param thickness Default `NA`, automatically computed as 1/20th the length of the scale bar. Width of the scale bar.
@@ -83,32 +83,32 @@
 #'#Add a scalebar
 #'base_map |>
 #' add_overlay(generate_scalebar_overlay(length = 40000,
-#'                                       latlong=TRUE)) |>
+#'                                       lat_long=TRUE)) |>
 #' plot_map()
 #'#Change the text color
 #'base_map |>
 #'  add_overlay(generate_scalebar_overlay(length = 40000,
 #'                                        text_color = "white",
-#'                                        latlong=TRUE)) |>
+#'                                        lat_long=TRUE)) |>
 #'  plot_map()
 #'#Change the length
 #'base_map |>
 #'  add_overlay(generate_scalebar_overlay(length = 30000,
 #'                                        text_color = "white",
-#'                                        latlong=TRUE)) |>
+#'                                        lat_long=TRUE)) |>
 #'  plot_map()
 #'#Change the thickness (default is length/20)
 #'base_map |>
 #'  add_overlay(generate_scalebar_overlay(length = 30000,
 #'                                        text_color = "white", thickness = 30000/10,
-#'                                        latlong=TRUE)) |>
+#'                                        lat_long=TRUE)) |>
 #'  plot_map()
 #'#Change the text offset (given in multiples of thickness)
 #'base_map |>
 #'  add_overlay(generate_scalebar_overlay(length = 30000,
 #'                                        text_color = "white", thickness = 30000/10,
 #'                                        text_offset = 0.75,
-#'                                        latlong=TRUE)) |>
+#'                                        lat_long=TRUE)) |>
 #'  plot_map()
 #'#Change the primary and secondary colors, along with the border and tick color
 #'base_map |>
@@ -116,14 +116,14 @@
 #'                                        text_color = "white", border_color = "white",
 #'                                        tick_color = "white",
 #'                                        color1 = "darkolivegreen4", color2 = "burlywood3",
-#'                                        latlong=TRUE)) |>
+#'                                        lat_long=TRUE)) |>
 #'  plot_map()
 #'#Add a halo
 #'base_map |>
 #'  add_overlay(generate_scalebar_overlay(length = 40000,
 #'                                        halo_color = "white", halo_expand = 1,
 #'                                        font = 2,
-#'                                        latlong=TRUE)) |>
+#'                                        lat_long=TRUE)) |>
 #'  plot_map()
 #'#Change the orientation, position, text alignment, and flip the ticks to the other side
 #'base_map |>
@@ -131,7 +131,7 @@
 #'                                        bearing=0, adj = 0, flip_ticks = TRUE,
 #'                                        halo_color = "white", halo_expand = 1.5,
 #'                                        font = 2,
-#'                                        latlong=TRUE)) |>
+#'                                        lat_long=TRUE)) |>
 #'  plot_map()
 #'#64373.8 meters in 40 miles
 #'#Create custom labels, change font and text size, remove the border/ticks, and change the color
@@ -146,14 +146,14 @@
 #'                                        halo_color="black", halo_blur=3, halo_alpha=0.5,
 #'                                        width = ncol(montereybay_spatial)*2,
 #'                                        height = nrow(montereybay_spatial)*2,
-#'                                        latlong=TRUE), rescale_original=TRUE) |>
+#'                                        lat_long=TRUE), rescale_original=TRUE) |>
 #'  plot_map()
 generate_scalebar_overlay = function(
   extent = NULL,
   length = NULL,
   x = 0.05,
   y = 0.05,
-  latlong = NA,
+  lat_long = NA,
   thickness = NA,
   bearing = NULL,
   unit = NULL,
@@ -195,8 +195,8 @@ generate_scalebar_overlay = function(
     height = height,
     caller = "generate_scalebar_overlay"
   )
-  latlong = resolve_scalebar_overlay_latlong(
-    latlong = latlong,
+  lat_long = resolve_scalebar_overlay_latlong(
+    lat_long = lat_long,
     extent = extent,
     heightmap = heightmap,
     caller = "generate_scalebar_overlay"
@@ -218,7 +218,7 @@ generate_scalebar_overlay = function(
     unit_missing = unit_missing,
     bearing = bearing,
     bearing_missing = bearing_missing,
-    latlong = latlong,
+    lat_long = lat_long,
     thickness = thickness,
     scene_info = scene_info
   )
@@ -268,7 +268,7 @@ generate_scalebar_overlay = function(
   line_list = list()
   text_list = list()
 
-  if (latlong) {
+  if (lat_long) {
     if (!(length(find.package("geosphere", quiet = TRUE)) > 0)) {
       stop(
         "{geosphere} package required for generate_scalebar_overlay() using lat/long coordinates"
@@ -700,7 +700,7 @@ resolve_scalebar_overlay_scene_info = function(
 #' @param unit_missing Whether `unit` was omitted.
 #' @param bearing Scale-bar bearing.
 #' @param bearing_missing Whether `bearing` was omitted.
-#' @param latlong Whether geometry uses longitude/latitude coordinates.
+#' @param lat_long Whether geometry uses longitude/latitude coordinates.
 #' @param thickness Scale-bar thickness.
 #' @param scene_info Scene measurement metadata.
 #'
@@ -713,7 +713,7 @@ resolve_scalebar_overlay_specification = function(
   unit_missing = is.null(unit),
   bearing = NULL,
   bearing_missing = is.null(bearing),
-  latlong = FALSE,
+  lat_long = FALSE,
   thickness = NA,
   scene_info
 ) {
@@ -745,7 +745,7 @@ resolve_scalebar_overlay_specification = function(
     if (isTRUE(unit_missing)) {
       if (!isTRUE(scene_info$metric)) {
         unit_info = list(label = "", distance_per_unit = 1)
-      } else if (isTRUE(latlong)) {
+      } else if (isTRUE(lat_long)) {
         unit_info = list(label = "m", distance_per_unit = 1)
       } else {
         crs_unit = scene_info$crs$units_gdal
@@ -770,7 +770,7 @@ resolve_scalebar_overlay_specification = function(
 
   geometry_length = if (!isTRUE(scene_info$metric)) {
     display_length
-  } else if (isTRUE(latlong)) {
+  } else if (isTRUE(lat_long)) {
     physical_length
   } else {
     physical_length / scene_info$map_unit_meters
@@ -801,7 +801,7 @@ resolve_scalebar_overlay_specification = function(
       thickness
     } else if (!isTRUE(scene_info$metric)) {
       thickness
-    } else if (isTRUE(latlong)) {
+    } else if (isTRUE(lat_long)) {
       thickness * unit_info$distance_per_unit
     } else {
       thickness * unit_info$distance_per_unit / scene_info$map_unit_meters
@@ -819,12 +819,12 @@ resolve_scalebar_overlay_specification = function(
 }
 
 resolve_scalebar_overlay_latlong = function(
-  latlong = NA,
+  lat_long = NA,
   extent = NULL,
   heightmap = NULL,
   caller = NULL
 ) {
-  latlong = validate_scalebar_latlong(latlong, caller = caller)
+  lat_long = validate_scalebar_latlong(lat_long, caller = caller)
   inferred_latlong = infer_scalebar_spatial_latlong(
     extent = extent,
     heightmap = heightmap,
@@ -834,25 +834,25 @@ resolve_scalebar_overlay_latlong = function(
     return(inferred_latlong)
   }
   if (is.matrix(heightmap)) {
-    return(isTRUE(latlong))
+    return(isTRUE(lat_long))
   }
   FALSE
 }
 
-validate_scalebar_latlong = function(latlong = NA, caller = NULL) {
+validate_scalebar_latlong = function(lat_long = NA, caller = NULL) {
   if (
-    length(latlong) != 1 ||
-      !(is.logical(latlong) || is.numeric(latlong))
+    length(lat_long) != 1 ||
+      !(is.logical(lat_long) || is.numeric(lat_long))
   ) {
     stop(
       paste0(
         format_render_caller_prefix(caller),
-        "`latlong` must be TRUE, FALSE, or NA."
+        "`lat_long` must be TRUE, FALSE, or NA."
       ),
       call. = FALSE
     )
   }
-  as.logical(latlong)
+  as.logical(lat_long)
 }
 
 infer_scalebar_spatial_latlong = function(

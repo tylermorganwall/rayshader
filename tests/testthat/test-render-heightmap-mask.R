@@ -6,7 +6,7 @@ test_that("floating overlays orient the cached heightmap NA mask", {
   plot_3d(
     height_shade(heightmap),
     heightmap = heightmap,
-    baseshape = "hex",
+    base_shape = "hex",
     shadow = FALSE
   )
 
@@ -28,7 +28,7 @@ test_that("cloud layers follow the oriented cached heightmap mask", {
   plot_3d(
     height_shade(heightmap),
     heightmap = heightmap,
-    baseshape = "hex",
+    base_shape = "hex",
     shadow = FALSE
   )
   render_clouds(

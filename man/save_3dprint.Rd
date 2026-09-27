@@ -4,14 +4,14 @@
 \alias{save_3dprint}
 \title{Save 3D Print}
 \usage{
-save_3dprint(filename, maxwidth = 125, unit = "mm", rotate = FALSE)
+save_3dprint(filename, max_width = 125, unit = "mm", rotate = FALSE)
 }
 \arguments{
 \item{filename}{String with the filename. If \code{.stl} is not at the end of the string, it will be appended automatically.}
 
-\item{maxwidth}{Default \code{125}. Desired maximum width of the 3D print in millimeters. Uses the units set in \code{unit} argument. Can also pass in a string, "125mm" or "5in".}
+\item{max_width}{Default \code{125}. Desired maximum width of the 3D print in millimeters. Uses the units set in \code{unit} argument. Can also pass in a string, "125mm" or "5in".}
 
-\item{unit}{Default \code{mm}. Units of the \code{maxwidth} argument. Can also be set to inches with \verb{in}.}
+\item{unit}{Default \code{mm}. Units of the \code{max_width} argument. Can also be set to inches with \verb{in}.}
 
 \item{rotate}{Default \code{TRUE}. If \code{FALSE}, the map will be printing on its side. This may improve resolution for some 3D printing types.}
 }
@@ -37,19 +37,19 @@ volcano |>
  sphere_shade() |>
  plot_3d(vertical_exaggeration = 1/3)
 render_snapshot()
-save_3dprint(filename_stl, maxwidth = 100)
+save_3dprint(filename_stl, max_width = 100)
 
 #'#Save the STL file into `filename_stl`, setting maximum width to 4 inches
 volcano |>
  sphere_shade() |>
  plot_3d(vertical_exaggeration = 1/3)
 render_snapshot()
-save_3dprint(filename_stl, maxwidth = 4, unit = "in")
+save_3dprint(filename_stl, max_width = 4, unit = "in")
 #'#'#Save the STL file into `filename_stl`, setting maximum width (character) to 120mm
 volcano |>
  sphere_shade() |>
  plot_3d(vertical_exaggeration = 1/3)
 render_snapshot()
-save_3dprint(filename_stl, maxwidth = "120mm")
+save_3dprint(filename_stl, max_width = "120mm")
 \dontshow{\}) # examplesIf}
 }

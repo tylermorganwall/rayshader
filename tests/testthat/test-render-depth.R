@@ -14,7 +14,7 @@ test_that("render_depth is quiet by default when focus is auto-derived", {
     zscale = 10,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(200, 200)
+    window_size = c(200, 200)
   ))
 
   messages = character()
@@ -50,7 +50,7 @@ test_that("render_depth emits focus diagnostics only when verbose is TRUE", {
     zscale = 10,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(200, 200)
+    window_size = c(200, 200)
   ))
 
   messages = character()
@@ -84,8 +84,8 @@ test_that("render_depth transparent_water hides water via subscene membership an
     zscale = 10,
     shadow = FALSE,
     water = TRUE,
-    waterlinecolor = "white",
-    windowsize = c(200, 200)
+    water_line_color = "white",
+    window_size = c(200, 200)
   ))
 
   visible_tags = list()
@@ -148,7 +148,7 @@ test_that("render_depth focus preview preserves the sRGB color snapshot", {
     zscale = 10,
     shadow = FALSE,
     water = TRUE,
-    windowsize = c(200, 200)
+    window_size = c(200, 200)
   ))
 
   debug_modes = character()

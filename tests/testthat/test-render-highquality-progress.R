@@ -112,7 +112,7 @@ test_that("stream preview progress tracks width batches", {
   ids = draw_render_stream_line_previews(
     coord_list = coord_list,
     coord_width = c(0.5, 0.5, 1),
-    watercolor = "blue",
+    water_color = "blue",
     height = 0.05,
     verbose = TRUE
   )
@@ -469,7 +469,7 @@ test_that("render_highquality propagates verbose through scene building", {
     solid = FALSE,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(200, 200)
+    window_size = c(200, 200)
   ))
   rgl::lines3d(
     x = c(-1, 1),

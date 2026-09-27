@@ -6,10 +6,10 @@
 \usage{
 render_water(
   water_input = 0,
-  watercolor = "lightblue",
-  wateralpha = 0.5,
-  waterlinecolor = NULL,
-  waterlinealpha = 1,
+  water_color = "lightblue",
+  water_alpha = 0.5,
+  water_line_color = NULL,
+  water_line_alpha = 1,
   linewidth = 2,
   water_render_method = c("raster", "polygon", "legacy"),
   water_edge_extension = 0.5,
@@ -24,13 +24,13 @@ render_water(
 \arguments{
 \item{water_input}{Default \code{0}. Water level. Either a scalar, a matrix with the same dimensions as \code{heightmap}, or a spatial raster that can be projected/resampled to the heightmap grid. For spatial rasters, finite cells define the water footprint.}
 
-\item{watercolor}{Default \code{lightblue}.}
+\item{water_color}{Default \code{lightblue}.}
 
-\item{wateralpha}{Default \code{0.5}. Water transparency.}
+\item{water_alpha}{Default \code{0.5}. Water transparency.}
 
-\item{waterlinecolor}{Default \code{NULL}. Color of the lines around the edges of the water layer.}
+\item{water_line_color}{Default \code{NULL}. Color of the lines around the edges of the water layer.}
 
-\item{waterlinealpha}{Default \code{1}. Water line tranparency.}
+\item{water_line_alpha}{Default \code{1}. Water line tranparency.}
 
 \item{linewidth}{Default \code{2}. Width of the edge lines in the scene.}
 
@@ -71,7 +71,7 @@ render_water()
 render_snapshot()
 
 #Call it again to change the water depth
-render_water(water_input=-1000, watercolor = "dodgerblue3")
+render_water(water_input=-1000, water_color = "dodgerblue3")
 render_snapshot()
 
 #Slice the water out to the edge
@@ -82,7 +82,7 @@ water_levels = matrix(
 )
 water_levels[col(water_levels) > ncol(water_levels) / 2 + 20 |
 col(water_levels) < ncol(water_levels) / 2-20] = -8000
-render_water(water_input = water_levels, watercolor = "dodgerblue4")
+render_water(water_input = water_levels, water_color = "dodgerblue4")
 render_snapshot()
 
 #Use a matrix to vary the water level across the scene
@@ -91,12 +91,12 @@ water_ramp = matrix(
  nrow = nrow(montereybay_spatial),
  ncol = ncol(montereybay_spatial)
 )
-render_water(water_input = water_ramp, watercolor = "dodgerblue3")
+render_water(water_input = water_ramp, water_color = "dodgerblue3")
 render_highquality()
 
 #Add waterlines
 render_camera(theta=-45)
-render_water(waterlinecolor="white", watercolor = "dodgerblue4")
+render_water(water_line_color="white", water_color = "dodgerblue4")
 render_snapshot()
 \dontshow{\}) # examplesIf}
 }

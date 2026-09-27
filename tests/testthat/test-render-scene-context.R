@@ -7,18 +7,18 @@ test_that("render_label() groups aesthetics before placement and scene context",
       "data_column_text",
       "font",
       "family",
-      "fonttype",
-      "textsize",
-      "textcolor",
-      "textalpha",
+      "font_type",
+      "text_size",
+      "text_color",
+      "text_alpha",
       "freetype",
-      "adjustvec",
+      "adjust_vec",
       "line",
-      "linecolor",
+      "line_color",
       "linewidth",
       "alpha",
       "dashed",
-      "dashlength",
+      "dash_length",
       "antialias",
       "clear_previous",
       "x",
@@ -27,7 +27,7 @@ test_that("render_label() groups aesthetics before placement and scene context",
       "altitude",
       "data_column_z",
       "scale_data",
-      "relativez",
+      "relative_z",
       "offset",
       "lat",
       "long",
@@ -54,7 +54,7 @@ test_that("render_points() uses cached scene heightmap and zscale", {
     zscale = 10,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(250, 250)
+    window_size = c(250, 250)
   ))
   expect_equal(get_scene_vertical_exaggeration(), 1)
 
@@ -84,7 +84,7 @@ test_that("render_points() combines cached zscale and vertical_exaggeration", {
     vertical_exaggeration = 2,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(250, 250)
+    window_size = c(250, 250)
   ))
   expect_equal(get_scene_zscale(), 10)
   expect_equal(get_scene_vertical_exaggeration(), 2)
@@ -130,7 +130,7 @@ test_that("scene cache is rejected after switching to a different open scene", {
     zscale = 10,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(250, 250),
+    window_size = c(250, 250),
     close_previous = TRUE
   ))
   scene1 = rgl::cur3d()
@@ -142,7 +142,7 @@ test_that("scene cache is rejected after switching to a different open scene", {
     zscale = 5,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(250, 250),
+    window_size = c(250, 250),
     close_previous = FALSE
   ))
   scene2 = rgl::cur3d()
@@ -163,7 +163,7 @@ test_that("scene cache is rejected after switching to a different open scene", {
   expect_equal(get_scene_heightmap(default = NULL), heightmap2)
   expect_equal(get_scene_zscale(default = NULL), 5)
   expect_equal(get_scene_vertical_exaggeration(default = NULL), 1)
-  expect_no_condition(render_water(water_input = 2, watercolor = "lightblue"))
+  expect_no_condition(render_water(water_input = 2, water_color = "lightblue"))
 })
 
 test_that("render_water() uses cached scene heightmap and zscale", {
@@ -178,12 +178,12 @@ test_that("render_water() uses cached scene heightmap and zscale", {
     zscale = 10,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(250, 250)
+    window_size = c(250, 250)
   ))
 
   expect_no_condition(render_water(
     water_input = 100,
-    watercolor = "lightblue"
+    water_color = "lightblue"
   ))
 
   ids = get_ids_with_labels()
@@ -206,10 +206,10 @@ test_that("render_contours() uses cached scene heightmap", {
     zscale = 10,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(250, 250)
+    window_size = c(250, 250)
   ))
 
-  expect_no_condition(render_contours(nlevels = 5))
+  expect_no_condition(render_contours(n_levels = 5))
   ids = get_ids_with_labels(typeval = "contour3d")
   expect_gt(nrow(ids), 0)
 })
@@ -226,7 +226,7 @@ test_that("render_label() uses cached scene heightmap and zscale", {
     zscale = 10,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(250, 250)
+    window_size = c(250, 250)
   ))
 
   expect_no_condition(render_label(
@@ -252,7 +252,7 @@ test_that("render_label() can render text without label lines", {
     zscale = 10,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(250, 250)
+    window_size = c(250, 250)
   ))
 
   expect_no_condition(render_label(
@@ -283,7 +283,7 @@ test_that("render_label() accepts x/y names and lat/long aliases", {
     zscale = 10,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(250, 250)
+    window_size = c(250, 250)
   ))
 
   expect_no_condition(render_label(
@@ -351,7 +351,7 @@ test_that("render_label() reads label z values from an sf point column", {
     zscale = 10,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(250, 250),
+    window_size = c(250, 250),
     extent = extent
   ))
 
@@ -360,7 +360,7 @@ test_that("render_label() reads label z values from an sf point column", {
     text = labels_sf$text,
     data_column_z = "height_m",
     scale_data = 0.5,
-    relativez = FALSE,
+    relative_z = FALSE,
     offset = 0,
     freetype = FALSE,
     clear_previous = TRUE
@@ -391,7 +391,7 @@ test_that("render_label() reads label z values from an sf point column", {
     text = labels_sf$text,
     data_column_z = "height_m",
     scale_data = 0.5,
-    relativez = FALSE,
+    relative_z = FALSE,
     offset = 0,
     freetype = FALSE,
     clear_previous = TRUE
@@ -438,7 +438,7 @@ test_that("render_label() reads text from sf columns and labels polygon centroid
     zscale = 10,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(250, 250),
+    window_size = c(250, 250),
     extent = extent
   ))
 
@@ -447,7 +447,7 @@ test_that("render_label() reads text from sf columns and labels polygon centroid
     data_column_text = "label",
     data_column_z = "height_m",
     scale_data = 0.5,
-    relativez = FALSE,
+    relative_z = FALSE,
     line = FALSE,
     freetype = FALSE,
     clear_previous = TRUE
@@ -479,7 +479,7 @@ test_that("plot_3d() caches a raw matrix's 1-based extent", {
     zscale = 10,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(250, 250)
+    window_size = c(250, 250)
   ))
 
   expect_equal(
@@ -536,7 +536,7 @@ test_that("render_points() accepts x/y names and lat/long aliases", {
     zscale = 10,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(250, 250)
+    window_size = c(250, 250)
   ))
 
   expect_no_condition(render_points(
@@ -586,7 +586,7 @@ test_that("render_obj() and render_tree() accept x/y coordinates", {
     zscale = 10,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(250, 250)
+    window_size = c(250, 250)
   ))
 
   expect_no_condition(render_obj(
@@ -625,7 +625,7 @@ test_that("render_path() and render_raymesh() accept x/y coordinates", {
     zscale = 10,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(250, 250)
+    window_size = c(250, 250)
   ))
 
   expect_no_condition(render_path(
@@ -701,7 +701,7 @@ test_that("cached scene messages include cached symbol labels", {
     zscale = zs,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(250, 250)
+    window_size = c(250, 250)
   ))
 
   out = character()
@@ -764,7 +764,7 @@ test_that("plot_3d() accepts raster input and caches spatial metadata", {
     elev_raster,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(250, 250)
+    window_size = c(250, 250)
   ))
 
   expect_equal(
@@ -787,7 +787,7 @@ test_that("plot_3d() accepts raster input and caches spatial metadata", {
   ))
 })
 
-test_that("cached scene extent can resolve the scene center in latlong", {
+test_that("cached scene extent can resolve the scene center in lat_long", {
   on.exit(rgl::close3d(), add = TRUE)
   local_rgl_use_null()
   skip_if_not_installed("raster")
@@ -818,7 +818,7 @@ test_that("cached scene extent can resolve the scene center in latlong", {
     elev_raster,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(250, 250)
+    window_size = c(250, 250)
   ))
 
   scene_center_latlong = resolve_cached_extent_center_latlong(
@@ -850,7 +850,7 @@ test_that("transform_into_heightmap_coords() can use cached scene extent", {
     elev_raster,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(250, 250)
+    window_size = c(250, 250)
   ))
 
   coords = transform_into_heightmap_coords(

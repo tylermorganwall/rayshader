@@ -16,7 +16,7 @@ render_movie(
   width = NULL,
   height = NULL,
   audio = NULL,
-  progbar = interactive(),
+  progress_bar = interactive(),
   ...
 )
 }
@@ -48,7 +48,7 @@ be captured at the resolution (and aspect ratio) of the rgl window.}
 
 \item{audio}{Default \code{NULL}. Optional file with audio to add to the video.}
 
-\item{progbar}{Default \code{TRUE} if interactive, \code{FALSE} otherwise. If \code{FALSE}, turns off progress bar.
+\item{progress_bar}{Default \code{TRUE} if interactive, \code{FALSE} otherwise. If \code{FALSE}, turns off progress bar.
 Will display a progress bar when adding an overlay or title.}
 
 \item{...}{Additional parameters to pass to \code{\link[=render_snapshot]{render_snapshot()}}.}
@@ -69,8 +69,8 @@ filename_movie = tempfile()
 \donttest{
 montereybay_spatial |>
  sphere_shade(texture="imhof1") |>
- plot_3d(vertical_exaggeration = 4, water = TRUE, watercolor="imhof1",
-         waterlinecolor="white", waterlinealpha=0.5)
+ plot_3d(vertical_exaggeration = 4, water = TRUE, water_color="imhof1",
+         water_line_color="white", water_line_alpha=0.5)
 #Un-comment the following to run:
 #render_movie(filename = filename_movie)
 }

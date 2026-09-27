@@ -148,7 +148,7 @@ montereybay_spatial |>
  plot_3d(
    vertical_exaggeration = 4,
    water = TRUE,
-   shadowcolor = "#40310a",
+   shadow_color = "#40310a",
    background = "tan",
    theta = 210,
    phi = 22,

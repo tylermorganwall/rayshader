@@ -23,7 +23,7 @@
 #'@param height Default `NULL`, uses the window size by default. Height of the movie. Note that the frames will still
 #'be captured at the resolution (and aspect ratio) of the rgl window.
 #'@param audio Default `NULL`. Optional file with audio to add to the video.
-#'@param progbar Default `TRUE` if interactive, `FALSE` otherwise. If `FALSE`, turns off progress bar.
+#'@param progress_bar Default `TRUE` if interactive, `FALSE` otherwise. If `FALSE`, turns off progress bar.
 #'Will display a progress bar when adding an overlay or title.
 #'@param ... Additional parameters to pass to [render_snapshot()].
 #'@export
@@ -35,8 +35,8 @@
 #'\donttest{
 #'montereybay_spatial |>
 #'  sphere_shade(texture="imhof1") |>
-#'  plot_3d(vertical_exaggeration = 4, water = TRUE, watercolor="imhof1",
-#'          waterlinecolor="white", waterlinealpha=0.5)
+#'  plot_3d(vertical_exaggeration = 4, water = TRUE, water_color="imhof1",
+#'          water_line_color="white", water_line_alpha=0.5)
 #'#Un-comment the following to run:
 #'#render_movie(filename = filename_movie)
 #'}
@@ -78,7 +78,7 @@ render_movie = function(
   width = NULL,
   height = NULL,
   audio = NULL,
-  progbar = interactive(),
+  progress_bar = interactive(),
   ...
 ) {
   if (rgl::cur3d() == 0) {
@@ -103,7 +103,7 @@ render_movie = function(
     use_av = FALSE
   }
 
-  windowsize = rgl::par3d()$viewport
+  window_size = rgl::par3d()$viewport
   if (is.null(fov)) {
     fov = rgl::par3d()$FOV
   }

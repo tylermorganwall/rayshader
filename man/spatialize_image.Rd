@@ -10,7 +10,7 @@ spatialize_image(
   crs = NULL,
   panel = NULL,
   include_alpha = FALSE,
-  toRGB = TRUE,
+  to_rgb = TRUE,
   flip_vertical = FALSE,
   flip_horizontal = FALSE,
   layer_names = NULL,
@@ -42,7 +42,7 @@ scenes.}
 \item{include_alpha}{Default \code{FALSE}. If \code{FALSE} and \code{image} has four
 channels, drop alpha. If \code{TRUE}, include alpha as a fourth raster layer.}
 
-\item{toRGB}{Default \code{TRUE}. If \code{TRUE}, convert color channels from linear
+\item{to_rgb}{Default \code{TRUE}. If \code{TRUE}, convert color channels from linear
 rayshader values to sRGB with \code{\link[rayimage:render_gamma_linear]{rayimage::render_gamma_linear()}}, then scale
 to the \code{0-255} range and clamp. Alpha is not gamma-adjusted, but is scaled
 and clamped to match.}

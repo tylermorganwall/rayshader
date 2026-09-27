@@ -30,14 +30,14 @@ test_that("render_roads caches road metadata by rgl id", {
     solid = FALSE,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(200, 200)
+    window_size = c(200, 200)
   ))
   road_coords = NULL
   expect_no_condition(
     road_coords <- render_roads(
       roads,
       heightmap = height_raster,
-      roadcolor = "#303030",
+      road_color = "#303030",
       width = 0.5,
       lane_texture = TRUE
     )
@@ -173,7 +173,7 @@ test_that("render_roads can preview the exact cached road meshes", {
     solid = FALSE,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(200, 200)
+    window_size = c(200, 200)
   ))
 
   expect_no_condition(render_roads(
@@ -276,7 +276,7 @@ test_that("render_roads appends, replaces, and resets cached road meshes", {
     solid = FALSE,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(200, 200)
+    window_size = c(200, 200)
   ))
 
   expect_no_condition(render_roads(
@@ -399,7 +399,7 @@ test_that("spatial road paths transform and crop once without changing path data
     solid = FALSE,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(200, 200)
+    window_size = c(200, 200)
   ))
   filter_calls = new.env(parent = emptyenv())
   filter_calls$count = 0L
@@ -505,7 +505,7 @@ test_that("render_roads defers and restores rgl redraw state", {
     solid = FALSE,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(200, 200)
+    window_size = c(200, 200)
   ))
 
   redraw_state = new.env(parent = emptyenv())
@@ -534,9 +534,9 @@ test_that("render_roads defers and restores rgl redraw state", {
 })
 
 test_that("colored generated lane textures preserve the road color", {
-  roadcolor = "#536878"
+  road_color = "#536878"
   texture_file = make_road_lane_texture(
-    roadcolor = roadcolor,
+    road_color = road_color,
     lanes = 2,
     size = 128
   )
@@ -544,7 +544,7 @@ test_that("colored generated lane textures preserve the road color", {
 
   expect_equal(
     unname(texture[128, 32, ]),
-    as.vector(col2rgb(roadcolor)) / 255,
+    as.vector(col2rgb(road_color)) / 255,
     tolerance = 1 / 255
   )
 
@@ -601,7 +601,7 @@ test_that("colored generated lane textures preserve the road color", {
     edge = "#d45d35"
   )
   srgb_texture_file = make_road_lane_texture(
-    roadcolor = colors[["road"]],
+    road_color = colors[["road"]],
     lanes = 4,
     lane_color = colors[["lane"]],
     centerline_color = colors[["centerline"]],
@@ -659,7 +659,7 @@ test_that("render_roads fits lane texture repeats to each road length", {
     solid = FALSE,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(200, 200)
+    window_size = c(200, 200)
   ))
   expect_no_condition(render_roads(
     roads,
@@ -975,7 +975,7 @@ test_that("render_roads accepts layer and feature height columns", {
     solid = FALSE,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(200, 200)
+    window_size = c(200, 200)
   ))
   road_coords = render_roads(
     roads,
@@ -1067,7 +1067,7 @@ test_that("render_roads accepts raw OSM bridge and lane metadata", {
     solid = FALSE,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(200, 200)
+    window_size = c(200, 200)
   ))
   road_coords = render_roads(
     roads,

@@ -71,7 +71,7 @@
 #'montereybay_spatial |>
 #'  sphere_shade(vertical_exaggeration = 10) |>
 #'  plot_3d(vertical_exaggeration = 4,water=TRUE,
-#'          shadowcolor="#40310a", background = "tan",
+#'          shadow_color="#40310a", background = "tan",
 #'          theta=210,  phi=22, zoom=0.20, fov=55)
 #'
 #'t = seq(0,2*pi,length.out=100)

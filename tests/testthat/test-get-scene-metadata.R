@@ -16,7 +16,7 @@ test_that("get_scene_metadata returns spatial and scene-coordinate bounds", {
     geographic_aspect = FALSE,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(200, 200)
+    window_size = c(200, 200)
   )
 
   metadata = get_scene_metadata()
@@ -62,7 +62,7 @@ test_that("get_scene_metadata reports plot_gg panel metadata", {
       ggplot2::geom_point(ggplot2::aes(x = wt, y = mpg)),
     width = 3,
     height = 2,
-    windowsize = c(300, 200),
+    window_size = c(300, 200),
     raytrace = FALSE,
     shadow = FALSE
   ))
@@ -92,7 +92,7 @@ test_that("get_scene_metadata includes geographic scene scaling", {
     geographic_aspect = TRUE,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(200, 200)
+    window_size = c(200, 200)
   )
 
   metadata = get_scene_metadata()

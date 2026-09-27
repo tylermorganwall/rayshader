@@ -36,15 +36,15 @@ test_that("Checking render_snapshot(software_render = TRUE) features", {
       montereybay_spatial,
       vertical_exaggeration = 4,
       water = TRUE,
-      shadowcolor = "#40310a",
-      watercolor = "#233aa1",
+      shadow_color = "#40310a",
+      water_color = "#233aa1",
       background = "tan",
-      waterlinecolor = "white",
+      water_line_color = "white",
       theta = 210,
       phi = 22,
       zoom = 0.20,
       fov = 55,
-      windowsize = 800
+      window_size = 800
     )
   set.seed(1)
   moss_landing_coord = c(36.806807, -121.793332)

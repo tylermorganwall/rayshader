@@ -4,7 +4,7 @@
 #'
 #' @param streams Spatial line data used to draw stream paths. Supports `sf`,
 #' `sfc`, `sfg`, `SpatialLines`, and `SpatialLinesDataFrame` line inputs.
-#' @param watercolor Default `"lightblue"`. Stream color.
+#' @param water_color Default `"lightblue"`. Stream color.
 #' @param width Default `1`. Stream width in the units selected by `width_units`
 #' for [render_highquality()]. The rgl preview uses the converted scene width as
 #' its line width.
@@ -179,13 +179,13 @@
 #' render_water(
 #'   water_input = water_level_rast,
 #'   water_edge_extension = 0.25,
-#'   watercolor = "dodgerblue"
+#'   water_color = "dodgerblue"
 #' )
 #'
 #' render_streams(
 #'   streams = streams,
 #'   water_polygons = water,
-#'   watercolor = "dodgerblue",
+#'   water_color = "dodgerblue",
 #'   width = 0.35,
 #'   clear_previous = TRUE
 #' )
@@ -207,7 +207,7 @@
 #' @export
 render_streams = function(
   streams,
-  watercolor = "lightblue",
+  water_color = "lightblue",
   width = 1,
   width_column = NULL,
   width_units = c("scene", "meters"),
@@ -452,7 +452,7 @@ render_streams = function(
     heightmap = heightmap,
     extent = extent,
     zscale = zscale,
-    color = watercolor,
+    color = water_color,
     width = stream_width,
     force_by_feature = TRUE
   )
@@ -488,7 +488,7 @@ render_streams = function(
   water_path_rgl_ids = draw_render_stream_line_previews(
     coord_list = coord_list,
     coord_width = coord_width,
-    watercolor = watercolor,
+    water_color = water_color,
     height = height,
     terrain_offset = offset / zscale,
     verbose = verbose
@@ -510,7 +510,7 @@ render_streams = function(
         material = NULL,
         return_mesh = TRUE,
         rgl_id = water_path_rgl_ids[[coord_index]],
-        watercolor = watercolor
+        water_color = water_color
       )
     }
   )
@@ -583,7 +583,7 @@ convert_render_stream_width_to_scene_units = function(
 #'
 #' @param coord_list Stream path coordinate matrices.
 #' @param coord_width Stream width for every coordinate matrix.
-#' @param watercolor Stream preview color.
+#' @param water_color Stream preview color.
 #' @param height Stream mesh height registered with each rgl object.
 #' @param terrain_offset Default `0`. Stream centerline offset above the terrain
 #' in scene units.
@@ -595,7 +595,7 @@ convert_render_stream_width_to_scene_units = function(
 draw_render_stream_line_previews = function(
   coord_list,
   coord_width,
-  watercolor,
+  water_color,
   height,
   terrain_offset = 0,
   verbose = FALSE
@@ -637,7 +637,7 @@ draw_render_stream_line_previews = function(
     batched_coords = batched_coords[-nrow(batched_coords), , drop = FALSE]
     water_path_rgl_id = rgl::lines3d(
       batched_coords,
-      color = watercolor,
+      color = water_color,
       tag = "water_path",
       lwd = coord_width[[path_indices[[1L]]]],
       line_antialias = FALSE
@@ -894,7 +894,7 @@ make_render_highquality_water_path_meshes = function(
         cap_end = TRUE,
         return_mesh = FALSE,
         rgl_id = NULL,
-        watercolor = NULL
+        water_color = NULL
       ),
       tasks[[index]],
       keep.null = TRUE
@@ -1010,7 +1010,7 @@ make_render_highquality_water_path_meshes = function(
       attr(mesh, "render_stream_mesh_diagnostics") = mesh_data$diagnostics
       attr(mesh, "render_stream_mesh_specification") = list(
         rgl_id = task$rgl_id,
-        watercolor = task$watercolor,
+        water_color = task$water_color,
         width = task$width,
         height = task$height,
         terrain_clamped = task$terrain_clamped,
@@ -2308,7 +2308,7 @@ sample_render_highquality_water_path_surface = function(
 #' @param cap_end Default `TRUE`. Whether to cap the last emitted segment.
 #' @param return_mesh Default `FALSE`. Whether to return the raw `mesh3d` object.
 #' @param rgl_id Default `NULL`. Source rgl identifier stored with raw meshes.
-#' @param watercolor Default `NULL`. Source stream color stored with raw meshes.
+#' @param water_color Default `NULL`. Source stream color stored with raw meshes.
 #'
 #' @return Rayrender mesh object.
 #' @keywords internal
@@ -2326,7 +2326,7 @@ make_render_highquality_water_path_mesh = function(
   cap_end = TRUE,
   return_mesh = FALSE,
   rgl_id = NULL,
-  watercolor = NULL
+  water_color = NULL
 ) {
   points = as.matrix(points)
   if (is.null(segment_end)) {
@@ -2566,7 +2566,7 @@ make_render_highquality_water_path_mesh = function(
   class(mesh) = "mesh3d"
   attr(mesh, "render_stream_mesh_specification") = list(
     rgl_id = rgl_id,
-    watercolor = watercolor,
+    water_color = water_color,
     width = width,
     height = height,
     material = material,
@@ -2611,9 +2611,9 @@ make_render_highquality_cached_stream_meshes = function(
       return(NULL)
     }
     specification = attr(mesh, "render_stream_mesh_specification")
-    watercolor = specification$watercolor
-    if (is.null(watercolor) || !length(watercolor)) {
-      watercolor = "lightblue"
+    water_color = specification$water_color
+    if (is.null(water_color) || !length(water_color)) {
+      water_color = "lightblue"
     }
     rgl_id = specification$rgl_id
     if (is.null(rgl_id) || !length(rgl_id)) {
@@ -2623,11 +2623,11 @@ make_render_highquality_cached_stream_meshes = function(
       rgl_materials = rgl_materials,
       id = rgl_id[[1L]],
       tag = "water_path",
-      color = watercolor[[1L]]
+      color = water_color[[1L]]
     )
     if (is.null(material)) {
       material = make_render_highquality_water_path_material(
-        color = watercolor[[1L]],
+        color = water_color[[1L]],
         water_material = water_material,
         water_roughness = water_roughness,
         water_ior = water_ior,

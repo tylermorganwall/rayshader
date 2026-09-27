@@ -351,7 +351,7 @@ test_that("plot_3d creates separate water ids for disconnected raster water", {
     shadow = FALSE,
     water = TRUE,
     water_input = 1,
-    windowsize = c(200, 200)
+    window_size = c(200, 200)
   ))
 
   water_ids = get_ids_with_labels(typeval = "water")
@@ -392,7 +392,7 @@ test_that("plot_3d and render_water accept spatial water_input rasters", {
     shadow = FALSE,
     water = TRUE,
     water_input = water_raster,
-    windowsize = c(200, 200)
+    window_size = c(200, 200)
   ))
   expect_gt(nrow(get_ids_with_labels(typeval = "water")), 0)
 
@@ -439,12 +439,12 @@ test_that("render_streams draws spatial stream paths as water paths", {
     solid = FALSE,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(200, 200)
+    window_size = c(200, 200)
   ))
   expect_no_condition(render_streams(
     stream,
     heightmap = height_raster,
-    watercolor = "dodgerblue",
+    water_color = "dodgerblue",
     width = 0.5
   ))
 
@@ -828,7 +828,7 @@ test_that("render_streams removes stream sections beneath water polygons", {
     solid = FALSE,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(200, 200)
+    window_size = c(200, 200)
   ))
   clipped_coords = render_streams(
     streams,
@@ -903,7 +903,7 @@ test_that("render_streams caches stream mesh heights for render_highquality", {
     solid = FALSE,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(200, 200)
+    window_size = c(200, 200)
   ))
   expect_no_condition(render_streams(
     stream,
@@ -1185,12 +1185,12 @@ test_that("render_streams reads widths from an sf column", {
     solid = FALSE,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(200, 200)
+    window_size = c(200, 200)
   ))
   expect_no_condition(render_streams(
     streams,
     heightmap = height_raster,
-    watercolor = "dodgerblue",
+    water_color = "dodgerblue",
     width_column = "stream_width",
     merge = TRUE
   ))
@@ -1276,7 +1276,7 @@ test_that("render_streams converts meter widths to cached scene units", {
     solid = FALSE,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(200, 200)
+    window_size = c(200, 200)
   ))
   expect_no_condition(render_streams(
     streams,
@@ -1580,12 +1580,12 @@ test_that("render_highquality can render joined stream paths", {
     solid = FALSE,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(200, 200)
+    window_size = c(200, 200)
   ))
   expect_no_condition(render_streams(
     streams,
     heightmap = height_raster,
-    watercolor = "dodgerblue",
+    water_color = "dodgerblue",
     width = 0.5,
     merge = FALSE
   ))
@@ -1708,7 +1708,7 @@ test_that("render_water scales spatial water_input rasters by zscale and vertica
     solid = FALSE,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(200, 200)
+    window_size = c(200, 200)
   ))
 
   expect_no_condition(render_water(water_input = water_level_rast))
@@ -1753,7 +1753,7 @@ test_that("render_water clamps spatial water_input edges to terrain", {
     solid = FALSE,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(200, 200)
+    window_size = c(200, 200)
   ))
 
   expect_no_condition(render_water(
@@ -1790,7 +1790,7 @@ test_that("spatial water_input rasters render finite cells at equal terrain heig
     shadow = FALSE,
     water = TRUE,
     water_input = water_level_rast,
-    windowsize = c(200, 200)
+    window_size = c(200, 200)
   ))
 
   water_ids = get_ids_with_labels(typeval = "water")
@@ -3115,7 +3115,7 @@ test_that("render_water accepts spatial polygon water method", {
     solid = FALSE,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(200, 200)
+    window_size = c(200, 200)
   ))
   expect_no_condition(render_water(
     water_input = water_level_rast,
@@ -3268,7 +3268,7 @@ test_that("plot_3d renders explicit spatial water_input and applies cached zscal
     water_input = water_level_rast,
     solid = FALSE,
     shadow = FALSE,
-    windowsize = c(200, 200)
+    window_size = c(200, 200)
   ))
 
   water_ids = get_ids_with_labels(typeval = "water")
@@ -3298,7 +3298,7 @@ test_that("convert_rgl_to_raymesh handles raster water ids", {
     shadow = FALSE,
     water = TRUE,
     water_input = 1,
-    windowsize = c(200, 200)
+    window_size = c(200, 200)
   ))
 
   expect_no_condition(ray_scene <- convert_rgl_to_raymesh(save_shadow = FALSE))

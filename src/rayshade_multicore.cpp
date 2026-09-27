@@ -72,19 +72,19 @@ bool ray_intersects_multi(NumericMatrix& heightmap, NumericVector& tanangles,
 }
 
 // [[Rcpp::export]]
-NumericMatrix rayshade_multicore(double sunangle, NumericVector anglebreaks, NumericMatrix& heightmap, 
+NumericMatrix rayshade_multicore(double sun_angle, NumericVector angle_breaks, NumericMatrix& heightmap,
                                  double zscale, NumericVector chunkindices,
-                                 double maxsearch, NumericVector& cache_mask,
+                                 double max_search, NumericVector& cache_mask,
                                  double row_scale, double column_scale) {
   double precisionval = 1e-10;
   
   //Cache trig functions
-  double sinsunangle = sin(sunangle);
-  double cossunangle = cos(sunangle);
-  int numberangles = anglebreaks.size();
+  double sinsunangle = sin(sun_angle);
+  double cossunangle = cos(sun_angle);
+  int numberangles = angle_breaks.size();
   NumericVector tanangles(numberangles);
   for(int i = 0; i < numberangles; i++) {
-    tanangles(i) = tan(anglebreaks[i]);
+    tanangles(i) = tan(angle_breaks[i]);
   }
   int minindex = chunkindices(0)-1;
   int maxindex = chunkindices(1)-1;
@@ -92,7 +92,7 @@ NumericMatrix rayshade_multicore(double sunangle, NumericVector anglebreaks, Num
   int numberrows = heightmap.nrow();
   NumericMatrix shadowmatrix(maxindex - minindex,numbercols);
   std::fill(shadowmatrix.begin(), shadowmatrix.end(), 1.0);
-  double maxdist = maxsearch;
+  double maxdist = max_search;
   int current_min_entry = 0;
   int current_max_entry = numberangles - 1;
   int current_entry = current_max_entry/2;

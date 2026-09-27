@@ -51,8 +51,8 @@ test_that("rgl colors are linearized when converted to raymesh materials", {
   plot_3d_test(
     constant_shade(heightmap, color = "#400"),
     heightmap,
-    solidcolor = "#400",
-    solidlinecolor = NULL,
+    solid_color = "#400",
+    solid_line_color = NULL,
     shadow = FALSE
   )
 
@@ -118,7 +118,7 @@ test_that("render_highquality() marks generated skies for white baking", {
     heightmap,
     solid = FALSE,
     shadow = FALSE,
-    windowsize = c(100, 100)
+    window_size = c(100, 100)
   ))
 
   scene = render_highquality(
@@ -169,8 +169,8 @@ test_that("render_highquality() can render water with a microfacet material", {
     shadow = FALSE,
     water = TRUE,
     water_input = 1,
-    watercolor = "dodgerblue",
-    windowsize = c(200, 200)
+    water_color = "dodgerblue",
+    window_size = c(200, 200)
   ))
   water_ids = get_ids_with_labels(typeval = "water")
   expect_equal(nrow(water_ids), 2)
@@ -254,7 +254,7 @@ test_that("render_highquality() resolves spatial camera inputs", {
     vertical_exaggeration = 2,
     shadow = FALSE,
     water = FALSE,
-    windowsize = c(250, 250)
+    window_size = c(250, 250)
   ))
   expect_equal(get_scene_effective_zscale(), 5)
 
@@ -434,7 +434,7 @@ test_that("render_highquality() defaults label and z-axis overlays to screen spa
       zscale = 10,
       shadow = FALSE,
       water = FALSE,
-      windowsize = c(300, 300)
+      window_size = c(300, 300)
     )
   render_label(
     x = 10,
@@ -572,7 +572,7 @@ test_that("render_highquality() maps unclamped rgl text justification", {
       zscale = 10,
       shadow = FALSE,
       water = FALSE,
-      windowsize = c(300, 300)
+      window_size = c(300, 300)
     )
   render_label(
     x = 10,
@@ -582,7 +582,7 @@ test_that("render_highquality() maps unclamped rgl text justification", {
     extent = extent,
     zscale = 10,
     altitude = 10,
-    adjustvec = c(1.2, -0.5)
+    adjust_vec = c(1.2, -0.5)
   )
 
   scene = render_highquality(return_scene = TRUE, light = FALSE)
@@ -606,7 +606,7 @@ test_that("rgl bitmap fallback preserves high-quality label appearance", {
       zscale = 10,
       shadow = FALSE,
       water = FALSE,
-      windowsize = c(300, 300)
+      window_size = c(300, 300)
     )
   testthat::local_mocked_bindings(
     system.file = function(...) "",
@@ -619,8 +619,8 @@ test_that("rgl bitmap fallback preserves high-quality label appearance", {
         y = 10,
         text = "Fallback",
         altitude = 10,
-        textsize = 2,
-        fonttype = "bold"
+        text_size = 2,
+        font_type = "bold"
       ),
       "requested rgl preview font"
     )
@@ -651,7 +651,7 @@ test_that("render_label() fonts reach high quality screen and world text", {
       zscale = 10,
       shadow = FALSE,
       water = FALSE,
-      windowsize = c(300, 300)
+      window_size = c(300, 300)
     )
   render_label(
     x = 10,
@@ -705,7 +705,7 @@ test_that("render_highquality() can render paths as screen-space lines", {
       zscale = 10,
       shadow = FALSE,
       water = FALSE,
-      windowsize = c(300, 300)
+      window_size = c(300, 300)
     )
   render_path(
     x = c(2, 18),

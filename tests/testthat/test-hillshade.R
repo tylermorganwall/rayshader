@@ -33,7 +33,7 @@ test_that("sphere_shade", {
       "bw",
       "unicorn"
     ),
-    sunangle = list(315)
+    sun_angle = list(315)
   )
   run_tests_success(
     "sphere_shade",
@@ -46,7 +46,7 @@ test_that("sphere_shade", {
 
   sphere_args_palette_sunangle = expand.grid(
     texture = list("imhof1"),
-    sunangle = list(315, -315, 0, 720, -800),
+    sun_angle = list(315, -315, 0, 720, -800),
     zscale = list(1, 10)
   )
   run_tests_success(
@@ -59,7 +59,7 @@ test_that("sphere_shade", {
 
   sphere_args_normals = expand.grid(
     texture = list("imhof1"),
-    normalvectors = list(normal_vecs)
+    normal_vectors = list(normal_vecs)
   )
   run_tests_success(
     "sphere_shade",
@@ -68,11 +68,11 @@ test_that("sphere_shade", {
   )
 
   expect_warning(
-    sphere_shade(heightmap = volcano, colorintensity = 2),
+    sphere_shade(heightmap = volcano, color_intensity = 2),
     "deprecated"
   )
   expect_equal(
-    suppressWarnings(sphere_shade(heightmap = volcano, colorintensity = 2)),
+    suppressWarnings(sphere_shade(heightmap = volcano, color_intensity = 2)),
     sphere_shade(heightmap = volcano, vertical_exaggeration = 2)
   )
 })
@@ -81,7 +81,7 @@ test_that("sphere_shade returns transparent pixels for NA heightmap cells", {
   heightmap = matrix(1, nrow = 5, ncol = 5)
   heightmap[3, 4] = NA
 
-  shaded = sphere_shade(heightmap, progbar = FALSE)
+  shaded = sphere_shade(heightmap, progress_bar = FALSE)
 
   expect_equal(dim(shaded), c(ncol(heightmap), nrow(heightmap), 4))
   expect_equal(sum(shaded[,, 4] == 0), 1)
@@ -92,7 +92,7 @@ test_that("sphere_shade uses na_color for transparent NA pixel RGB values", {
   heightmap = matrix(1, nrow = 5, ncol = 5)
   heightmap[3, 4] = NA
 
-  shaded = sphere_shade(heightmap, na_color = "black", progbar = FALSE)
+  shaded = sphere_shade(heightmap, na_color = "black", progress_bar = FALSE)
   na_pixel = which(shaded[,, 4] == 0, arr.ind = TRUE)
 
   expect_equal(
@@ -120,8 +120,8 @@ test_that("height_shade", {
 
 test_that("lamb_shade", {
   ls_args = expand.grid(
-    sunangle = list(-45, 780),
-    sunaltitude = list(0, 45, 90),
+    sun_angle = list(-45, 780),
+    sun_altitude = list(0, 45, 90),
     zscale = list(1, 10),
     zero_negative = list(TRUE, FALSE)
   )
@@ -143,11 +143,11 @@ test_that("texture_shade", {
 
 test_that("ray_shade", {
   rs_args = expand.grid(
-    sunangle = list(-45, 90),
-    sunaltitude = list(10, 90),
+    sun_angle = list(-45, 90),
+    sun_altitude = list(10, 90),
     zscale = list(1, 3),
-    maxsearch = list(NULL, 10),
-    anglebreaks = list(NULL, seq(10, 20, by = 1), seq(10, 50, by = 5))
+    max_search = list(NULL, 10),
+    angle_breaks = list(NULL, seq(10, 20, by = 1), seq(10, 50, by = 5))
   )
   run_tests_success("ray_shade", rs_args, list(heightmap = volcano))
 
@@ -168,10 +168,10 @@ test_that("ray_shade", {
 
 test_that("ambient_shade", {
   as_args = expand.grid(
-    sunbreaks = list(3, 12, 24),
+    sun_breaks = list(3, 12, 24),
     zscale = list(1, 3),
-    maxsearch = list(10, 30),
-    anglebreaks = list(NULL, seq(10, 20, by = 1))
+    max_search = list(10, 30),
+    angle_breaks = list(NULL, seq(10, 20, by = 1))
   )
   run_tests_success("ambient_shade", as_args, list(heightmap = volcano))
 
@@ -211,10 +211,10 @@ test_that("ambient_shade multicore does not print NULL progress output", {
   output = capture.output(
     ambient_shade(
       heightmap,
-      sunbreaks = 3,
-      maxsearch = 2,
+      sun_breaks = 3,
+      max_search = 2,
       multicore = TRUE,
-      progbar = TRUE
+      progress_bar = TRUE
     )
   )
 
@@ -243,7 +243,7 @@ test_that("create_texture", {
     "#8fb28a",
     "#55967a",
     "#cfe0a9",
-    cornercolors = c("red", "blue", "pink", "orange")
+    corner_colors = c("red", "blue", "pink", "orange")
   ))
 })
 
