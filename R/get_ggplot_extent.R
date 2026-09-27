@@ -378,6 +378,14 @@ filter_scene_sf_to_extent = function(
     source_index_col = paste0(source_index_col, "_")
   }
   sf_data[[source_index_col]] = seq_len(nrow(sf_data))
+  source_crs = sf::st_crs(sf_data)
+  geographic = isTRUE(sf::st_is_longlat(sf_data))
+  if (geographic) {
+    # Plot bounds have straight edges in scene coordinates. Removing the CRS
+    # selects planar clipping, preventing S2's great-circle edges from cutting
+    # into the panel. Restoring the CRS below does not transform coordinates.
+    sf_data = sf::st_set_crs(sf_data, NA)
+  }
   crop_bbox = sf::st_bbox(
     c(
       xmin = unname(filter_extent["xmin"]),
@@ -396,6 +404,9 @@ filter_scene_sf_to_extent = function(
       sf_data,
       crop_bbox
     )))
+  }
+  if (geographic) {
+    cropped = sf::st_set_crs(cropped, source_crs)
   }
   if (nrow(cropped)) {
     cropped = cropped[!sf::st_is_empty(cropped), , drop = FALSE]

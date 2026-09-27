@@ -42,7 +42,7 @@ edge from the last point to the first.}
 \item{top}{Default \code{1}. Extruded top distance. If this equals \code{bottom}, the polygon will not be
 extruded and just the one side will be rendered.}
 
-\item{bottom}{Default \code{0}. Extruded bottom distance. If this equals \code{top}, the polygon will not be
+\item{bottom}{Default \code{NA}. Extruded bottom distance. With \code{NA}, places the bottom halfway between the scene's base and lowest surface. If this equals \code{top}, the polygon will not be
 extruded and just the one side will be rendered.}
 
 \item{data_column_top}{Default \code{NULL}. A string indicating the column in the \code{sf} object to use

@@ -12,7 +12,7 @@
 #' @param color Default `black`. Color of the polygon. Use `"height"` to color polygons by the cached [plot_gg()] height aesthetic palette using `data_column_top`, `data_column_bottom`, or `top`.
 #' @param top Default `1`. Extruded top distance. If this equals `bottom`, the polygon will not be
 #' extruded and just the one side will be rendered.
-#' @param bottom Default `0`. Extruded bottom distance. If this equals `top`, the polygon will not be
+#' @param bottom Default `NA`. Extruded bottom distance. With `NA`, places the bottom halfway between the scene's base and lowest surface. If this equals `top`, the polygon will not be
 #' extruded and just the one side will be rendered.
 #' @param data_column_top Default `NULL`. A string indicating the column in the `sf` object to use
 #' to specify the top of the extruded polygon. Values are coerced to numeric, and rows with missing or non-finite values after coercion are omitted.
@@ -246,7 +246,8 @@ render_polygons = function(
       rgl::rgl.attrib(vertex_info2$id[1], "vertices")[, 2],
       na.rm = TRUE
     )
-    bottom = (bottom1 + bottom2) / 2
+    # Scene vertices are already scaled; extrusion heights are divided by zscale below.
+    bottom = (bottom1 + bottom2) / 2 * zscale
   }
   polygon_color_values = if (!is.null(data_column_top)) {
     polygon[[data_column_top]]

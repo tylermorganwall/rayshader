@@ -74,3 +74,74 @@ test_that("polygon meshes preserve holes, multipart caps, and parallel geometry"
     }
   }
 })
+
+test_that("automatic polygon bottoms stay within the base under cached scaling", {
+  skip_if_not_installed("sf")
+  local_rgl_use_null()
+  on.exit(rgl::close3d(), add = TRUE)
+  heightmap = matrix(0, 10, 10)
+  polygon = sf::st_sf(
+    upper = 100,
+    lower = 5,
+    geometry = sf::st_sfc(sf::st_polygon(list(rbind(
+      c(2, 2),
+      c(4, 2),
+      c(4, 4),
+      c(2, 4),
+      c(2, 2)
+    ))))
+  )
+
+  for (scene_zscale in c(0.1, 2)) {
+    plot_3d_test(
+      constant_shade(heightmap),
+      heightmap,
+      zscale = scene_zscale,
+      vertical_exaggeration = 2,
+      solid_depth = -2,
+      shadow = FALSE
+    )
+    base_id = get_ids_with_labels(typeval = "base")$id[1]
+    base_bottom = min(rgl::rgl.attrib(base_id, "vertices")[, 2])
+    render_polygons(
+      polygon,
+      extent = c(0, 10, 0, 10),
+      data_column_top = "upper",
+      scale_data = 0.1,
+      lit = FALSE
+    )
+    id = get_ids_with_labels(typeval = "polygon3d")$id[1]
+    heights = range(rgl::rgl.attrib(id, "vertices")[, 2])
+    expect_equal(heights, c(base_bottom / 2, 10 / (scene_zscale / 2)))
+
+    # Explicit heights retain their data-unit interpretation.
+    render_polygons(
+      polygon,
+      extent = c(0, 10, 0, 10),
+      top = 10,
+      bottom = 3,
+      lit = FALSE,
+      clear_previous = TRUE
+    )
+    id = get_ids_with_labels(typeval = "polygon3d")$id[1]
+    expect_equal(
+      range(rgl::rgl.attrib(id, "vertices")[, 2]),
+      c(3, 10) / (scene_zscale / 2)
+    )
+
+    render_polygons(
+      polygon,
+      extent = c(0, 10, 0, 10),
+      data_column_top = "upper",
+      data_column_bottom = "lower",
+      scale_data = 0.1,
+      lit = FALSE,
+      clear_previous = TRUE
+    )
+    id = get_ids_with_labels(typeval = "polygon3d")$id[1]
+    expect_equal(
+      range(rgl::rgl.attrib(id, "vertices")[, 2]),
+      c(0.5, 10) / (scene_zscale / 2)
+    )
+  }
+})
