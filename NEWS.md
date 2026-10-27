@@ -2,6 +2,17 @@
 
 ## New features
 
+- `add_water()` Accepts spatial raster masks, including comparisons such as
+  `montereybay_spatial < 0`, while preserving cached terrain elevations. Checks
+  mask alignment against the cached terrain and leaves missing mask cells unchanged.
+
+- `render_roads()` Adds `terrain_grading = TRUE` to cut terrain beneath pavement
+  and keep surface junctions near ground level instead of raising them over
+  adjacent banks. The scene and cached heightmap share the graded surface.
+
+- `render_people()` Sizes both model variants to 1.8 meters when standing,
+  preserving the relative proportions of every pose.
+
 - `render_polygons()` Automatically maps data-column heights through the cached
   `plot_gg()` height scale when `scale_data` is omitted. Explicit `scale_data`
   retains manual scaling, and explicit `top` and `bottom` retain scene height units.
@@ -10,6 +21,24 @@
   independent of scene size and camera position.
 
 ## Bugfixes
+
+- `render_roads()` Accepts micrometer-scale rounding at clipped terrain-profile
+  endpoints instead of rejecting otherwise complete profiles.
+
+- `render_highquality()` Uses rayrender's default integrator for native sky
+  lighting instead of forcing CPU NEE. Explicit integrator choices are preserved
+  for still renders and animations.
+
+- `render_roads()` Treats OSM `tunnel = "building_passage"` as a covered surface
+  road unless underground location metadata says otherwise. These passages no
+  longer sink below the DEM or escape terrain grading and clearance checks.
+
+- `render_roads()` Raises rgl line previews above the pavement surface so graded
+  terrain does not hide them. Rendered and exported road geometry is unchanged.
+
+- `render_roads()` Prevents layered road surfaces from cutting through terrain
+  between source vertices or across the road width. Preserves curved profiles
+  during meshing and local ground-following behavior along joined roads.
 
 - Overall: Overlay altitude mapping uses the cached ggplot scale, including its
   limits, transformation, binning, and inversion. Single values and subsets retain
