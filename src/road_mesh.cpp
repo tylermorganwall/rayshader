@@ -3527,3 +3527,141 @@ List build_render_highquality_stream_mesh_batch_cpp(
   }
   return output;
 }
+
+namespace {
+struct RoadContactPoint { double x, z; };
+
+double road_contact_cross(const RoadContactPoint& a,
+                          const RoadContactPoint& b,
+                          const RoadContactPoint& p) {
+  return (b.x - a.x) * (p.z - a.z) - (b.z - a.z) * (p.x - a.x);
+}
+
+// Clip a terrain triangle to a road triangle in the horizontal plane. Both
+// surfaces are affine within each triangle, so their clearance reaches its
+// minimum at a vertex of this intersection polygon (including edge crossings).
+std::vector<RoadContactPoint> clip_road_contact_polygon(
+    std::vector<RoadContactPoint> polygon,
+    const std::array<RoadContactPoint, 3>& road, double orientation) {
+  for (int edge = 0; edge < 3 && !polygon.empty(); ++edge) {
+    const auto& a = road[edge];
+    const auto& b = road[(edge + 1) % 3];
+    std::vector<RoadContactPoint> clipped;
+    auto previous = polygon.back();
+    double previous_side = orientation * road_contact_cross(a, b, previous);
+    for (const auto& current : polygon) {
+      const double current_side = orientation * road_contact_cross(a, b, current);
+      const bool previous_inside = previous_side >= 0.0;
+      const bool current_inside = current_side >= 0.0;
+      if (previous_inside != current_inside) {
+        const double t = previous_side / (previous_side - current_side);
+        clipped.push_back({previous.x + t * (current.x - previous.x),
+                           previous.z + t * (current.z - previous.z)});
+      }
+      if (current_inside) clipped.push_back(current);
+      previous = current;
+      previous_side = current_side;
+    }
+    polygon.swap(clipped);
+  }
+  return polygon;
+}
+} // namespace
+
+// Terrain/road intersection vertices serve two purposes: constructing a
+// full-width terrain floor before solving, and checking the finished mesh.
+// Station is affine on each road triangle. Sampling every intersection vertex
+// captures terrain peaks between road edges and between source OSM vertices.
+// [[Rcpp::export]]
+DataFrame sample_render_road_terrain_contacts_cpp(
+    const NumericMatrix& vertices, const IntegerMatrix& indices,
+    const NumericVector& station, const NumericMatrix& heightmap,
+    double zscale, const NumericVector& terrain_scale, bool grade_terrain = false) {
+  if (vertices.ncol() != 3 || indices.ncol() != 3 ||
+      station.size() != vertices.nrow() || terrain_scale.size() != 2 ||
+      !std::isfinite(zscale) || zscale <= 0 ||
+      !std::isfinite(terrain_scale[0]) || terrain_scale[0] <= 0 ||
+      !std::isfinite(terrain_scale[1]) || terrain_scale[1] <= 0) {
+    stop("Road terrain contacts require triangles, matching stations, and positive scales.");
+  }
+  const RoadTerrain terrain = copy_road_terrain(
+      heightmap, zscale, terrain_scale[0], terrain_scale[1]);
+  if (!terrain.available()) stop("Road terrain contacts require a terrain grid.");
+  std::vector<double> distances, elevations, clearances;
+  std::vector<int> triangles;
+  NumericMatrix graded;
+  if (grade_terrain) graded = clone(heightmap);
+  for (int face = 0; face < indices.nrow(); ++face) {
+    if ((face & 255) == 0) checkUserInterrupt();
+    std::array<RoadContactPoint, 3> road;
+    std::array<double, 3> height, along;
+    for (int corner = 0; corner < 3; ++corner) {
+      const int vertex = indices(face, corner) - 1;
+      if (vertex < 0 || vertex >= vertices.nrow()) stop("Invalid road triangle index.");
+      road[corner] = {vertices(vertex, 0), vertices(vertex, 2)};
+      height[corner] = vertices(vertex, 1);
+      along[corner] = station[vertex];
+      if (!std::isfinite(road[corner].x) || !std::isfinite(road[corner].z) ||
+          !std::isfinite(height[corner]) || !std::isfinite(along[corner]))
+        stop("Road terrain contacts require finite coordinates and stations.");
+    }
+    const double determinant = road_contact_cross(road[0], road[1], road[2]);
+    if (std::abs(determinant) <= 1e-14) continue;
+    const double orientation = determinant > 0 ? 1.0 : -1.0;
+    const double row_center = (terrain.row_count - 1.0) / 2.0;
+    const double col_center = (terrain.column_count - 1.0) / 2.0;
+    const int row_min = std::max(0, static_cast<int>(std::floor(
+        std::min({road[0].x, road[1].x, road[2].x}) / terrain_scale[0] + row_center)));
+    const int row_max = std::min(terrain.row_count - 2, static_cast<int>(std::floor(
+        std::max({road[0].x, road[1].x, road[2].x}) / terrain_scale[0] + row_center)));
+    const int col_min = std::max(0, static_cast<int>(std::floor(
+        std::min({road[0].z, road[1].z, road[2].z}) / terrain_scale[1] + col_center)));
+    const int col_max = std::min(terrain.column_count - 2, static_cast<int>(std::floor(
+        std::max({road[0].z, road[1].z, road[2].z}) / terrain_scale[1] + col_center)));
+    for (int row = row_min; row <= row_max; ++row) {
+      for (int col = col_min; col <= col_max; ++col) {
+        const double x = (row - row_center) * terrain_scale[0];
+        const double z = (col - col_center) * terrain_scale[1];
+        const double dx = terrain_scale[0], dz = terrain_scale[1];
+        for (int half = 0; half < 2; ++half) {
+          std::vector<RoadContactPoint> cell = half == 0
+              ? std::vector<RoadContactPoint>{{x,z}, {x+dx,z}, {x,z+dz}}
+              : std::vector<RoadContactPoint>{{x+dx,z+dz}, {x,z+dz}, {x+dx,z}};
+          const auto polygon = clip_road_contact_polygon(cell, road, orientation);
+          double minimum_road_height = R_PosInf;
+          for (const auto& p : polygon) {
+            const double a = road_contact_cross(road[1], road[2], p) / determinant;
+            const double b = road_contact_cross(road[2], road[0], p) / determinant;
+            const double c = 1.0 - a - b;
+            if (grade_terrain) {
+              minimum_road_height = std::min(minimum_road_height,
+                  (a * height[0] + b * height[1] + c * height[2]) * zscale);
+              continue;
+            }
+            const double ground = terrain.sample(p.x, p.z);
+            if (!std::isfinite(ground)) stop("Road footprint contains nonfinite terrain.");
+            distances.push_back(a * along[0] + b * along[1] + c * along[2]);
+            elevations.push_back(ground * zscale);
+            clearances.push_back((a * height[0] + b * height[1] + c * height[2] - ground) * zscale);
+            triangles.push_back(face + 1);
+          }
+          if (grade_terrain && std::isfinite(minimum_road_height)) {
+            // Lower every vertex of the intersected DEM triangle below the
+            // lowest pavement point in its overlap. Affine interpolation then
+            // cannot poke through the road between samples. Never raise terrain.
+            const double ceiling = minimum_road_height - 0.01;
+            if (half == 0) graded(row, col) = std::min(graded(row, col), ceiling);
+            else graded(row + 1, col + 1) = std::min(graded(row + 1, col + 1), ceiling);
+            graded(row + 1, col) = std::min(graded(row + 1, col), ceiling);
+            graded(row, col + 1) = std::min(graded(row, col + 1), ceiling);
+          }
+        }
+      }
+    }
+  }
+  DataFrame result = DataFrame::create(_["distance"] = wrap(distances),
+      _["floor"] = wrap(elevations), _["clearance"] = wrap(clearances),
+      _["triangle"] = wrap(triangles));
+  if (grade_terrain) result.attr("heightmap") = graded;
+  return result;
+}

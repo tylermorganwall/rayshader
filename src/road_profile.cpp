@@ -88,6 +88,7 @@ struct AuditSpecification {
   NumericVector prior_upper_distance;
   bool finite_geometry;
   bool finite_control_terrain;
+  LogicalVector terrain_grading;
 
   explicit AuditSpecification(const List& specification)
       : fragment_id(specification["fragment_id"]),
@@ -131,7 +132,10 @@ struct AuditSpecification {
         prior_upper_distance(specification["prior_upper_distance"]),
         finite_geometry(as<bool>(specification["finite_geometry"])),
         finite_control_terrain(
-            as<bool>(specification["finite_control_terrain"])) {}
+            as<bool>(specification["finite_control_terrain"])),
+        terrain_grading(specification.containsElementNamed("terrain_grading")
+                        ? as<LogicalVector>(specification["terrain_grading"])
+                        : LogicalVector(fragment_id.size(), false)) {}
 };
 
 inline bool finite_number(double value) {
@@ -712,7 +716,7 @@ List audit_render_road_profiles_cpp(
           finite_number(evaluation.height) &&
           finite_number(evaluation.grade);
     }
-    if (specification.underground[fragment_index]) {
+    if (specification.terrain_grading[fragment_index] || specification.underground[fragment_index]) {
       continue;
     }
     const int control_begin = specification.control_start[fragment_index];
@@ -1191,8 +1195,8 @@ constexpr int constraint_quadratic_interval = 1;
 constexpr int constraint_grade_rate = 2;
 constexpr int constraint_grade_bound = 3;
 constexpr int constraint_terrain_floor = 4;
-// Constraint code 5 was the removed endpoint terrain snap. Preserve later
-// codes so existing diagnostics retain stable numeric identities.
+// Ground contacts are opt-in upper bounds, not unconditional endpoint snaps.
+constexpr int constraint_ground_anchor = 5;
 constexpr int constraint_crossing_clearance = 6;
 constexpr int constraint_junction_height = 7;
 constexpr int constraint_overlap_clearance = 8;
@@ -1204,6 +1208,13 @@ constexpr int constraint_continuation_gap_grade_rate = 13;
 constexpr int constraint_no_dip_span_chord = 14;
 
 struct CompilerSpecification {
+  bool terrain_grading;
+  LogicalVector graded_fragment;
+  IntegerVector ground_fragment;
+  NumericVector ground_distance;
+  NumericVector ground_height;
+  NumericVector ground_weight;
+  LogicalVector ground_flat;
   IntegerVector fragment_id;
   IntegerVector feature_id;
   IntegerVector component_id;
@@ -1217,6 +1228,7 @@ struct CompilerSpecification {
   IntegerVector terrain_count;
   NumericVector terrain_distance;
   NumericVector terrain_elevation;
+  NumericVector terrain_floor;
   IntegerVector initial_fragment;
   NumericVector initial_distance;
   IntegerVector point_pair_id;
@@ -1278,8 +1290,20 @@ struct CompilerSpecification {
   double control_tolerance;
 
   explicit CompilerSpecification(const List& specification) {
+    terrain_grading = specification.containsElementNamed("ground_contacts");
+    if (terrain_grading) {
+      const List ground = specification["ground_contacts"];
+      ground_fragment = ground["fragment"];
+      ground_distance = ground["distance"];
+      ground_height = ground["height"];
+      ground_weight = ground["weight"];
+      ground_flat = ground["flat"];
+    }
     const List fragment = specification["fragment"];
     fragment_id = fragment["id"];
+    graded_fragment = fragment.containsElementNamed("terrain_grading")
+        ? as<LogicalVector>(fragment["terrain_grading"])
+        : LogicalVector(fragment_id.size(), false);
     feature_id = fragment["feature_id"];
     component_id = fragment["component_id"];
     fragment_length = fragment["length"];
@@ -1293,6 +1317,8 @@ struct CompilerSpecification {
     terrain_count = terrain["count"];
     terrain_distance = terrain["distance"];
     terrain_elevation = terrain["elevation"];
+    terrain_floor = terrain.containsElementNamed("floor")
+        ? as<NumericVector>(terrain["floor"]) : terrain_elevation;
     const List initial_control = specification["initial_control"];
     initial_fragment = initial_control["fragment_index"];
     initial_distance = initial_control["distance"];
@@ -1507,26 +1533,29 @@ inline bool valid_fragment(int fragment, int fragment_count) {
 double interpolate_compiler_terrain(
     const CompilerSpecification& specification,
     int fragment,
-    double distance) {
+    double distance,
+    bool use_floor = false) {
+  const NumericVector& elevation = use_floor
+      ? specification.terrain_floor : specification.terrain_elevation;
   const int start = specification.terrain_start[fragment];
   const int count = specification.terrain_count[fragment];
   const double* first = specification.terrain_distance.begin() + start;
   const double* last = first + count;
   if (distance <= *first) {
-    return specification.terrain_elevation[start];
+    return elevation[start];
   }
   if (distance >= *(last - 1)) {
-    return specification.terrain_elevation[start + count - 1];
+    return elevation[start + count - 1];
   }
   const double* upper = std::upper_bound(first, last, distance);
   const int right = static_cast<int>(upper - first);
   const int left = right - 1;
   const double fraction =
       (distance - first[left]) / (first[right] - first[left]);
-  return specification.terrain_elevation[start + left] +
+  return elevation[start + left] +
          fraction *
-             (specification.terrain_elevation[start + right] -
-              specification.terrain_elevation[start + left]);
+             (elevation[start + right] -
+              elevation[start + left]);
 }
 
 int match_compiler_control(
@@ -2106,11 +2135,12 @@ List compile_render_road_profile_problem_cpp(
         NA_REAL,
         controls.distance[control],
         NA_REAL);
-    if (!specification.underground[fragment]) {
+    if (!specification.graded_fragment[fragment] && !specification.underground[fragment]) {
       constraint.add(
           {control},
           {1.0},
-          0.0,
+          interpolate_compiler_terrain(specification, fragment,
+              controls.distance[control], true) - controls.terrain[control],
           R_PosInf,
           constraint_terrain_floor,
           component,
@@ -2538,6 +2568,27 @@ List compile_render_road_profile_problem_cpp(
   const int variable_count = control_count * 2;
   std::vector<double> objective_q(variable_count, 0.0);
   ObjectiveCompiler objective_p;
+  // Explicit opt-in terrain grading exchanges the original DEM floor for
+  // surface contacts. Junctions cannot be raised to satisfy a nearby bridge;
+  // cuts below the pavement are applied to the scene terrain after meshing.
+  for (R_xlen_t contact = 0; contact < specification.ground_fragment.size(); ++contact) {
+    const int fragment = specification.ground_fragment[contact];
+    const int control = match_compiler_control(controls, fragment,
+        specification.ground_distance[contact], "ground contact");
+    const double offset = specification.ground_height[contact] - controls.terrain[control];
+    constraint.add({control}, {1.0}, R_NegInf, offset, constraint_ground_anchor,
+        specification.component_id[fragment], specification.fragment_id[fragment],
+        NA_INTEGER, NA_INTEGER, NA_REAL, controls.distance[control], NA_REAL);
+    if (specification.ground_flat[contact]) {
+      // A hard zero slope at every junction can conflict with nearby crossings.
+      // Penalize junction slope: a 1% grade costs one square metre of contact
+      // error, while crossing clearance and curvature remain hard constraints.
+      objective_p.add(control_count + control, control_count + control, 20000.0);
+    }
+    const double weight = specification.ground_weight[contact];
+    objective_p.add(control, control, 2.0 * weight);
+    objective_q[control] -= 2.0 * weight * offset;
+  }
   objective_p.i.reserve(
       static_cast<std::size_t>(control_count) * 5 +
       curvature.size() * 4);
@@ -3201,7 +3252,11 @@ List make_native_audit_specification(
         finite_number(as<NumericVector>(control["terrain"])[row]);
   }
   const NumericVector terrain_distance = terrain["distance"];
-  const NumericVector terrain_elevation = terrain["elevation"];
+  // Continuous clearance is checked against the physical floor, independent
+  // of the smoothed reference used to parameterize the QP variables.
+  const NumericVector terrain_elevation = terrain.containsElementNamed("floor")
+      ? as<NumericVector>(terrain["floor"])
+      : as<NumericVector>(terrain["elevation"]);
   for (R_xlen_t row = 0; row < terrain_distance.size(); ++row) {
     finite_control_terrain =
         finite_control_terrain &&
@@ -3219,6 +3274,9 @@ List make_native_audit_specification(
 
   return List::create(
       _["fragment_id"] = fragment_id,
+      _["terrain_grading"] = fragment.containsElementNamed("terrain_grading")
+          ? as<LogicalVector>(fragment["terrain_grading"])
+          : LogicalVector(fragment_id.size(), false),
       _["fragment_component"] = fragment_component,
       _["control_start"] = control_start,
       _["control_count"] = control_count,

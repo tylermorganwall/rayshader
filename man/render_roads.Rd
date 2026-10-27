@@ -15,7 +15,7 @@ render_roads(
   layer = NULL,
   layer_height = 5.5,
   merge = TRUE,
-  lane_texture = FALSE,
+  lane_texture = TRUE,
   lane_texture_file = NULL,
   lane_dash_length = 3,
   lane_gap_length = 10,
@@ -36,7 +36,8 @@ render_roads(
   continuation_grade_tolerance = 0.14,
   zscale = 1,
   vertical_exaggeration = 1,
-  heightmap = NULL
+  heightmap = NULL,
+  terrain_grading = FALSE
 )
 }
 \arguments{
@@ -74,6 +75,9 @@ treated as implicit layer \code{0}, except affirmative \code{bridge} or elevated
 \code{location} metadata infer effective layer \code{1} and affirmative \code{tunnel} or
 underground \code{location} metadata infer effective layer \code{-1}. Inferred values
 remain distinguishable from explicit OSM layer tags in diagnostics.
+\code{tunnel = "building_passage"} describes a covered passage through a building;
+it does not imply a below-ground layer or exemption from terrain clearance.
+Explicit underground \code{location} metadata still takes precedence.
 Roads are grouped by exact physical events and conservative endpoint
 continuations. A sparse quadratic profile solve enforces crossing clearance,
 physical grade and grade-rate limits, junction height continuity, and
@@ -83,7 +87,10 @@ explicit tunnel or underground metadata use a bounded terrain-relative
 reference. Untagged negative layers are not independently activated as
 tunnels. Ambiguous endpoint matches that would create a contradictory
 clearance cycle are excluded. Supplying \code{layer} disables \code{merge} and requires
-the suggested \code{sf}, \code{igraph}, \code{Matrix}, and \code{osqp} packages.}
+the suggested \code{sf}, \code{igraph}, \code{Matrix}, and \code{osqp} packages. Terrain-floor
+constraints use the unmodified DEM across the road width, independently of
+the smoothed fitting reference. Curved profiles are tessellated before meshing
+so rendered decks preserve the solved heights between source road vertices.}
 
 \item{layer_height}{Default \code{5.5}. Either a single positive spacing in
 elevation units between locally ordered layers, or an unquoted or character
@@ -94,7 +101,7 @@ road at an intersection. Column heights override constant layer spacing.}
 rendering. This reduces visible joins between adjacent line features in
 \code{\link[=render_highquality]{render_highquality()}}.}
 
-\item{lane_texture}{Default \code{FALSE}. If \code{TRUE}, \code{\link[=render_highquality]{render_highquality()}} uses a
+\item{lane_texture}{Default \code{TRUE}. If \code{TRUE}, \code{\link[=render_highquality]{render_highquality()}} uses a
 generated repeating texture on the top road surface for lane markings.}
 
 \item{lane_texture_file}{Default \code{NULL}. Optional path to a custom road lane
@@ -152,7 +159,9 @@ a replacement.}
 
 \item{preview}{Default \code{"line"}. Whether roads are drawn in rgl as lightweight
 \code{"line"} previews or as their cached \code{"mesh"} geometry. The mesh is the exact
-high-quality geometry and does not include the line-only preview offset.}
+high-quality geometry. Lines are raised slightly above the pavement surface
+for visibility in rgl; this display offset does not affect rendered or
+exported road geometry.}
 
 \item{verbose}{Default \code{FALSE}. Whether to display progress while building
 and caching the road meshes.}
@@ -178,12 +187,21 @@ this call.}
 \item{heightmap}{Default \code{NULL}. Height matrix or spatial raster for the
 current scene. If omitted, this is taken from the cached scene set by
 \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}. Pass explicitly to override the cached value.}
+
+\item{terrain_grading}{Default \code{FALSE}. Cut the displayed terrain locally
+beneath road pavement instead of lifting roads over adjacent DEM banks.
+With \code{layer}, surface junctions are held at or below their sampled ground
+elevation and their approaches are flattened while retaining crossing
+clearance and grade limits. Explicit tunnels retain their terrain cover.
+This replaces the scene surface with a regular terrain grid and updates the
+cached heightmap; it does not modify the input raster or matrix.}
 }
 \value{
 Invisibly returns the rendered road coordinates. When \code{layer} is
 supplied, the result has \code{terrain_following}, \code{profile_diagnostics}, and
 \code{mesh_topology} attributes describing the sparse profile solve and selected
 physical mesh continuations.
+With \code{terrain_grading = TRUE}, \code{graded_heightmap} contains the modified terrain.
 }
 \description{
 Adds road paths to the scene and eagerly builds their reusable

@@ -54,12 +54,12 @@ test_that("render_roads caches road metadata by rgl id", {
     0
   )
   preview_vertices = rgl::rgl.attrib(road_path_ids$id[[1]], "vertices")
-  expect_equal(unname(unique(preview_vertices[, 2])), 0.01, tolerance = 1e-7)
+  expect_equal(unname(unique(preview_vertices[, 2])), 0.065, tolerance = 1e-7)
   source_vertices = get_render_source_vertices(road_path_ids$id[[1]])
   expect_equal(unname(unique(source_vertices[, 2])), 0, tolerance = 1e-7)
 
   road_info = get_render_road_path_info(road_path_ids$id[[1]])
-  expect_equal(road_info$rgl_preview_offset, 0.01)
+  expect_equal(road_info$rgl_preview_offset, 0.065)
   expect_true(file.exists(road_info$texture_file))
   expect_equal(road_info$lanes, 2L)
   expect_equal(road_info$width, 0.5)
@@ -68,6 +68,7 @@ test_that("render_roads caches road metadata by rgl id", {
   cached_road_meshes = get_scene_road_meshes()
   expect_length(cached_road_meshes, 1L)
   expect_s3_class(cached_road_meshes[[1L]], "mesh3d")
+  expect_gt(min(preview_vertices[, 2]), max(cached_road_meshes[[1L]]$vb[2, ]))
   expect_equal(
     attr(
       cached_road_meshes[[1L]],
@@ -2365,4 +2366,79 @@ test_that("compiled road vertex frames match the reference implementation", {
       )
     }
   }
+})
+
+test_that('building passages retain surface constraints and explicit metadata', {
+  skip_if_not_installed('sf')
+  skip_if_not_installed('igraph')
+  roads = sf::st_sf(
+    layer = c(NA, NA, NA, -1, NA),
+    tunnel = c(
+      'building_passage',
+      'yes',
+      ' BUILDING_PASSAGE ',
+      'building_passage',
+      NA
+    ),
+    location = c(NA, NA, 'underground', NA, 'underground'),
+    geometry = sf::st_sfc(
+      lapply(seq_len(5), function(i) {
+        sf::st_linestring(rbind(c(0, i * 30), c(100, i * 30)))
+      }),
+      crs = 32615
+    )
+  )
+  prepared = prepare_render_road_layer_features(roads, 'layer')
+  f = prepared$fragments
+  expect_equal(f$render_road_layer, c(0, -1, -1, -1, -1))
+  expect_identical(
+    f$render_road_layer_inferred,
+    c(FALSE, TRUE, TRUE, FALSE, TRUE)
+  )
+  expect_identical(
+    identify_render_road_underground_fragments(f),
+    c(FALSE, TRUE, TRUE, FALSE, TRUE)
+  )
+  anchors = identify_render_road_candidate_anchor_endpoints(prepared)
+  expect_true(f$render_road_fragment_id[[1]] %in% anchors$surface_fragment_id)
+})
+
+test_that('building passages remain above terrain beneath a bridge', {
+  skip_if_not_installed('sf')
+  skip_if_not_installed('igraph')
+  skip_if_not_installed('osqp')
+  roads = sf::st_sf(
+    layer = c(NA, 1),
+    tunnel = c('building_passage', NA),
+    bridge = c(NA, 'yes'),
+    geometry = sf::st_sfc(
+      sf::st_linestring(rbind(c(-100, 0), c(100, 0))),
+      sf::st_linestring(rbind(c(0, -100), c(0, 100))),
+      crs = 32615
+    )
+  )
+  prepared = prepare_render_road_layer_features(roads, 'layer')
+  topology = build_render_road_layer_topology(prepared)
+  terrain = lapply(seq_len(nrow(topology$fragments)), function(i) {
+    data.frame(distance = c(0, 100, 200), elevation = c(4, 4, 4))
+  })
+  problem = build_render_road_profile_problem(topology, terrain)
+  passage = topology$fragments$render_road_fragment_id[
+    topology$fragments$render_road_feature_id == 1
+  ]
+  passage_spans = problem$span_members$span_id[
+    problem$span_members$render_road_fragment_id %in% passage
+  ]
+  expect_gt(length(passage_spans), 0L)
+  expect_false(any(
+    problem$spans$reference_regime[
+      match(passage_spans, problem$spans$span_id)
+    ] ==
+      'underground'
+  ))
+  solution = solve_render_road_profile_problem(problem)
+  expect_true(solution$engineering_audit$passed)
+  expect_false(any(identify_render_road_underground_fragments(
+    topology$fragments
+  )))
 })

@@ -30,7 +30,7 @@ test_that("native skies include celestial disks with haze and altitude off", {
   expect_true(sky$moon)
   expect_false(sky$haze)
   expect_false(sky$query_altitude)
-  expect_identical(attr(scene, "integrator_type", exact = TRUE), "nee")
+  expect_null(attr(scene, "integrator_type", exact = TRUE))
   expect_equal(sky$meters_per_unit, 1)
   expect_identical(sky$datetime, sky_time)
   expect_null(attr(scene, "environment_light", exact = TRUE))
@@ -94,7 +94,7 @@ test_that("native skies use terrain scale, original elevation, and true north", 
   expect_true(sky$haze)
   expect_true(sky$query_altitude)
   expect_null(rendered$rotate_env)
-  expect_identical(rendered$integrator_type, "nee")
+  expect_null(rendered$integrator_type)
   expect_null(rendered$environment_light)
   expect_null(rendered$environment_light_bake_white)
 
@@ -237,7 +237,7 @@ test_that("native skies and their integrator survive both animation paths", {
   sky = rayrender::get_infinite_light(animated$scene, "sky")
   expect_true(sky$haze)
   expect_true(sky$query_altitude)
-  expect_identical(animated$integrator_type, "nee")
+  expect_null(animated$integrator_type)
   expect_equal(animated$rotate_env, 30)
 
   expect_identical(
@@ -251,7 +251,7 @@ test_that("native skies and their integrator survive both animation paths", {
   sky = rayrender::get_infinite_light(animated$scene, "sky")
   expect_true(sky$haze)
   expect_true(sky$query_altitude)
-  expect_identical(animated$integrator_type, "nee")
+  expect_null(animated$integrator_type)
   expect_equal(animated$rotate_env, 30)
   expect_null(animated$environment_light)
   expect_identical(animated$camera_motion, motion)
@@ -331,4 +331,43 @@ test_that("image skies remain available and reject native-only controls", {
     "compatible rayrender/skymodelr versions",
     fixed = TRUE
   )
+})
+
+test_that("native skies preserve explicit integrators for stills and movies", {
+  local_highquality_sky_scene()
+  skip_if_not(render_highquality_supports_sky_light())
+  rendered = animated = NULL
+  motion = as.data.frame(matrix(0, nrow = 2, ncol = 14))
+  local_mocked_bindings(
+    render_scene = function(...) {
+      rendered <<- list(...)
+      "render-result"
+    },
+    render_animation = function(...) {
+      animated <<- list(...)
+      "animation-result"
+    },
+    generate_camera_motion = function(...) motion,
+    .package = "rayrender"
+  )
+  for (integrator in c("auto", "metal", "nee")) {
+    args = list(
+      lat = 40.7,
+      long = -74,
+      datetime = as.POSIXct("2026-06-21 12:00:00", tz = "UTC"),
+      integrator_type = integrator
+    )
+    do.call(render_highquality, args)
+    expect_identical(rendered$integrator_type, integrator)
+    scene = do.call(render_highquality, c(args, list(return_scene = TRUE)))
+    expect_identical(attr(scene, "integrator_type", exact = TRUE), integrator)
+    do.call(render_highquality, c(args, list(animation_camera_coords = motion)))
+    expect_identical(animated$integrator_type, integrator)
+    render_movie_hq(
+      frames = 2,
+      keyframes = data.frame(x = c(0, 1), y = 2, z = 4),
+      render_highquality_args = args
+    )
+    expect_identical(animated$integrator_type, integrator)
+  }
 })

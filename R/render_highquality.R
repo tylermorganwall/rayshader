@@ -47,7 +47,7 @@ new_render_highquality_progress_bar = function(verbose, label, total) {
 #'@param lat Default `NA`. Latitude (degrees) for automatic sky generation.
 #'When latitude, longitude, and datetime are available, uses `rayrender::sky_light()`
 #'with detailed Sun and Moon disks if supported by the installed rayrender and skymodelr.
-#'This replaces the default scene light and selects `integrator_type = "nee"`
+#'This replaces the default scene light and uses rayrender's default integrator
 #'unless an integrator was supplied explicitly. The native model requires Prague data;
 #'install it first with `skymodelr::download_sky_data(sea_level = FALSE)`.
 #'Older versions, direct Sun angles, and
@@ -787,9 +787,6 @@ render_highquality = function(
       query_altitude_supplied = sky_query_altitude_supplied,
       direct = has_direct_sky
     )
-    if (!is.null(sky_light_args) && !("integrator_type" %in% names(dot_args))) {
-      dot_args$integrator_type = "nee"
-    }
     if (!is.null(sky_light_args) && automatic_sky_rotation) {
       # Store true-north alignment in the light itself, including returned scenes
       # and scenes passed through render_movie_hq(), without rotating it twice.

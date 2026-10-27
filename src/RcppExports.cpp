@@ -494,6 +494,23 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// sample_render_road_terrain_contacts_cpp
+DataFrame sample_render_road_terrain_contacts_cpp(const NumericMatrix& vertices, const IntegerMatrix& indices, const NumericVector& station, const NumericMatrix& heightmap, double zscale, const NumericVector& terrain_scale, bool grade_terrain);
+RcppExport SEXP _rayshader_sample_render_road_terrain_contacts_cpp(SEXP verticesSEXP, SEXP indicesSEXP, SEXP stationSEXP, SEXP heightmapSEXP, SEXP zscaleSEXP, SEXP terrain_scaleSEXP, SEXP grade_terrainSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const NumericMatrix& >::type vertices(verticesSEXP);
+    Rcpp::traits::input_parameter< const IntegerMatrix& >::type indices(indicesSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type station(stationSEXP);
+    Rcpp::traits::input_parameter< const NumericMatrix& >::type heightmap(heightmapSEXP);
+    Rcpp::traits::input_parameter< double >::type zscale(zscaleSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type terrain_scale(terrain_scaleSEXP);
+    Rcpp::traits::input_parameter< bool >::type grade_terrain(grade_terrainSEXP);
+    rcpp_result_gen = Rcpp::wrap(sample_render_road_terrain_contacts_cpp(vertices, indices, station, heightmap, zscale, terrain_scale, grade_terrain));
+    return rcpp_result_gen;
+END_RCPP
+}
 // evaluate_render_road_profiles_cpp
 List evaluate_render_road_profiles_cpp(IntegerVector fragment_index, NumericVector distance, IntegerVector control_start, IntegerVector control_count, IntegerVector control_row, NumericVector control_distance, NumericVector height, NumericVector grade);
 RcppExport SEXP _rayshader_evaluate_render_road_profiles_cpp(SEXP fragment_indexSEXP, SEXP distanceSEXP, SEXP control_startSEXP, SEXP control_countSEXP, SEXP control_rowSEXP, SEXP control_distanceSEXP, SEXP heightSEXP, SEXP gradeSEXP) {
@@ -665,6 +682,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_rayshader_build_render_highquality_road_mesh_batch_cpp", (DL_FUNC) &_rayshader_build_render_highquality_road_mesh_batch_cpp, 3},
     {"_rayshader_build_render_highquality_grounded_road_mesh_batch_cpp", (DL_FUNC) &_rayshader_build_render_highquality_grounded_road_mesh_batch_cpp, 6},
     {"_rayshader_build_render_highquality_stream_mesh_batch_cpp", (DL_FUNC) &_rayshader_build_render_highquality_stream_mesh_batch_cpp, 5},
+    {"_rayshader_sample_render_road_terrain_contacts_cpp", (DL_FUNC) &_rayshader_sample_render_road_terrain_contacts_cpp, 7},
     {"_rayshader_evaluate_render_road_profiles_cpp", (DL_FUNC) &_rayshader_evaluate_render_road_profiles_cpp, 8},
     {"_rayshader_audit_render_road_profiles_cpp", (DL_FUNC) &_rayshader_audit_render_road_profiles_cpp, 6},
     {"_rayshader_compile_render_road_profile_problem_cpp", (DL_FUNC) &_rayshader_compile_render_road_profile_problem_cpp, 2},

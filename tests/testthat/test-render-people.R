@@ -800,3 +800,11 @@ test_that("render_people() stacks altitude vectors at one spatial point", {
     tolerance = 1e-6
   )
 })
+
+
+test_that("bundled standing people measure 1.8 meters", {
+  for (sex in c("male", "female")) {
+    mesh = rayvertex::read_obj(person_obj("standing", sex))
+    expect_equal(diff(range(mesh$vertices[[1]][, 2])), 1.8, tolerance = 1e-7)
+  }
+})

@@ -18,7 +18,8 @@ solve_render_road_path_profiles(
   maximum_grade = 0.15,
   continuation_grade_tolerance = 0.14,
   zscale = 1,
-  texture_world_scale = c(1, 1)
+  texture_world_scale = c(1, 1),
+  terrain_grading = FALSE
 )
 }
 \arguments{
@@ -55,6 +56,9 @@ mismatch at selected road continuations. Continuation height remains exact.}
 
 \item{texture_world_scale}{Two-value x-z multiplier from scene units to
 world units.}
+
+\item{terrain_grading}{Default \code{FALSE}. Allow terrain cuts and ground-level
+junction contacts instead of enforcing the original DEM as a lower bound.}
 }
 \value{
 Coordinate matrices with solved heights and profile diagnostics.

@@ -105,7 +105,7 @@ If this is set to zero, the adaptive sampler will be turned off and the renderer
 \item{lat}{Default \code{NA}. Latitude (degrees) for automatic sky generation.
 When latitude, longitude, and datetime are available, uses \code{rayrender::sky_light()}
 with detailed Sun and Moon disks if supported by the installed rayrender and skymodelr.
-This replaces the default scene light and selects \code{integrator_type = "nee"}
+This replaces the default scene light and uses rayrender's default integrator
 unless an integrator was supplied explicitly. The native model requires Prague data;
 install it first with \code{skymodelr::download_sky_data(sea_level = FALSE)}.
 Older versions, direct Sun angles, and

@@ -150,7 +150,7 @@ from this matrix.}
 Adds one or more 3D people to an existing rayshader scene. The
 bundled person models use meter-based coordinates and are scaled using the
 scene's effective \code{zscale}, including \code{vertical_exaggeration}, so that their
-native two-meter stature remains correctly sized relative to the terrain.
+native 1.8-meter standing stature remains correctly sized relative to the terrain.
 Choose from several bundled poses with \code{pose} and select the model variant
 with \code{sex}. The bundled Wavefront OBJ models use \code{.txt} file extensions
 for R package compatibility.

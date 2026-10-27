@@ -133,6 +133,10 @@ build_render_highquality_stream_mesh_batch_cpp <- function(input_jobs, heightmap
     .Call(`_rayshader_build_render_highquality_stream_mesh_batch_cpp`, input_jobs, heightmap, zscale, parallel, verbose)
 }
 
+sample_render_road_terrain_contacts_cpp <- function(vertices, indices, station, heightmap, zscale, terrain_scale, grade_terrain = FALSE) {
+    .Call(`_rayshader_sample_render_road_terrain_contacts_cpp`, vertices, indices, station, heightmap, zscale, terrain_scale, grade_terrain)
+}
+
 evaluate_render_road_profiles_cpp <- function(fragment_index, distance, control_start, control_count, control_row, control_distance, height, grade) {
     .Call(`_rayshader_evaluate_render_road_profiles_cpp`, fragment_index, distance, control_start, control_count, control_row, control_distance, height, grade)
 }

@@ -9,14 +9,23 @@ add_water(hillshade, water_map, color = "imhof1")
 \arguments{
 \item{hillshade}{A three-dimensional RGB array.}
 
-\item{water_map}{Matrix indicating whether water was detected at that point. 1 indicates water, 0 indicates no water.}
+\item{water_map}{A numeric or logical matrix in heightmap orientation, a
+single-layer \code{terra::SpatRaster} or \code{raster::RasterLayer}, or a raster file path.
+Values greater than or equal to 1 (including \code{TRUE}) indicate water. Missing
+values and values below 1 leave the map unchanged. Spatial masks must match
+the cached terrain's grid, extent, and coordinate reference system when that
+context is available; masks are not reprojected or resampled.}
 
 \item{color}{Default \code{imhof1}. The water fill color. A hexcode or recognized color string.
 Also includes built-in colors to match the palettes included in \code{\link[=sphere_shade]{sphere_shade()}}:
 (\code{imhof1},\code{imhof2},\code{imhof3},\code{imhof4}, \code{desert}, \code{bw}, and \code{unicorn}).}
 }
+\value{
+A three-dimensional RGB array with water cells colored. The result is
+cached as the current shaded map without changing the cached terrain.
+}
 \description{
-Adds a layer of water to a map.
+Colors water cells in a shaded map using a matrix or spatial raster mask.
 }
 \examples{
 \dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}
@@ -30,14 +39,10 @@ island_volcano |>
  add_water(detect_water(min_area = 400),color="imhof3") |>
  plot_map()
 
-#We'll do the same thing with the Monterey Bay dataset to fill in the ocean:
-
-montbay_water = raster_to_matrix(montereybay_spatial)
-montbay_water[montbay_water < 0] = 0
-
+#Color ocean cells directly from the spatial elevation raster:
 montereybay_spatial |>
- sphere_shade(texture="imhof4",vertical_exaggeration=20) |>
- add_water(detect_water(montbay_water),color="imhof4") |>
+ sphere_shade(texture = "imhof4", vertical_exaggeration = 20) |>
+ add_water(montereybay_spatial < 0, color = "imhof4") |>
  plot_map()
 \dontshow{\}) # examplesIf}
 }

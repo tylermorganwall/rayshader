@@ -11,10 +11,12 @@ normalize_render_road_terrain_profiles(topology, terrain_profiles = NULL)
 
 \item{terrain_profiles}{Default \code{NULL}. List of terrain reference profiles,
 one per fragment. Each entry may be elevations at original vertices or a
-two-column distance/elevation table.}
+distance/elevation table. An optional \code{floor} column supplies an independent
+physical terrain floor; \code{elevation} remains the profile-fitting reference.}
 }
 \value{
-Named distance/elevation data frames covering every fragment.
+Named reference data frames covering every fragment, retaining an
+optional physical floor column.
 }
 \description{
 Normalize terrain references for road profile solving
