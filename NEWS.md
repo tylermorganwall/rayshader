@@ -22,6 +22,12 @@
 
 ## Bugfixes
 
+- `render_highquality()` Honors an explicit `fov` instead of replacing it with
+  the rgl camera projection. Omitting `fov` retains automatic camera matching.
+
+- `add_water()` Aligns water masks with shaded maps without mirroring them
+  horizontally, for both matrix and spatial raster masks.
+
 - `render_roads()` Accepts micrometer-scale rounding at clipped terrain-profile
   endpoints instead of rejecting otherwise complete profiles.
 
