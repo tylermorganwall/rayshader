@@ -204,6 +204,11 @@ new_render_highquality_progress_bar = function(verbose, label, total) {
 #'@param cache_scene Default `FALSE`. Whether to cache the current scene to memory so it does not have to be converted to a `raymesh` object
 #'each time [render_snapshot()] is called. If `TRUE` and a scene has been cached, it will be used when rendering.
 #'@param reset_scene_cache Default `FALSE`. Resets the scene cache before rendering.
+#' @param fov Default `NULL`. Vertical field of view in degrees. When `NULL`,
+#' matches the current rgl projection, including zoom. An explicit value
+#' overrides rgl's field of view; use `0` for an orthographic camera and
+#' `ortho_dimensions` to control its width and height. Animation camera paths
+#' continue to use their per-frame field of view.
 #'@param ... Additional parameters to pass to `rayrender::render_scene()`.
 #'
 #'@export
@@ -398,8 +403,15 @@ render_highquality = function(
   parallel = TRUE,
   cache_scene = FALSE,
   reset_scene_cache = FALSE,
+  fov = NULL,
   ...
 ) {
+  if (
+    !is.null(fov) &&
+      (!is.numeric(fov) || length(fov) != 1L || !is.finite(fov))
+  ) {
+    stop("`fov` must be NULL or a single finite number.", call. = FALSE)
+  }
   light_direction_missing = missing(light_direction)
   sky_haze_supplied = !missing(sky_haze)
   sky_query_altitude_supplied = !missing(sky_query_altitude)
@@ -1028,7 +1040,7 @@ render_highquality = function(
   }
   camera_interpolate[camera_interpolate > 1] = 1
   camera_interpolate[camera_interpolate < 0] = 0
-  fov = rgl::par3d()$FOV
+  rgl_fov = rgl::par3d()$FOV
   rotmat = rot_to_euler(rgl::par3d()$userMatrix)
   projmat = rgl::par3d()$projMatrix
   zoom = rgl::par3d()$zoom
@@ -1054,10 +1066,12 @@ render_highquality = function(
   observer_radius = rgl::par3d()$observer[3]
   lookvals = rgl::par3d()$bbox
   # lookvals[4] = surfacerange[2]
+  if (is.null(fov)) {
+    fov = if (rgl_fov == 0) 0 else 2 * atan(1 / projmat[2, 2]) * 180 / pi
+  }
   if (fov == 0) {
     ortho_dimensions = c(2 / projmat[1, 1], 2 / projmat[2, 2])
   } else {
-    fov = 2 * atan(1 / projmat[2, 2]) * 180 / pi
     ortho_dimensions = c(1, 1)
   }
   if (!is.null(ortho_dimensions_override)) {

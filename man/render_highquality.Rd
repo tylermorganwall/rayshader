@@ -82,6 +82,7 @@ render_highquality(
   parallel = TRUE,
   cache_scene = FALSE,
   reset_scene_cache = FALSE,
+  fov = NULL,
   ...
 )
 }
@@ -333,6 +334,12 @@ and for legacy uncached road-path conversion.}
 each time \code{\link[=render_snapshot]{render_snapshot()}} is called. If \code{TRUE} and a scene has been cached, it will be used when rendering.}
 
 \item{reset_scene_cache}{Default \code{FALSE}. Resets the scene cache before rendering.}
+
+\item{fov}{Default \code{NULL}. Vertical field of view in degrees. When \code{NULL},
+matches the current rgl projection, including zoom. An explicit value
+overrides rgl's field of view; use \code{0} for an orthographic camera and
+\code{ortho_dimensions} to control its width and height. Animation camera paths
+continue to use their per-frame field of view.}
 
 \item{...}{Additional parameters to pass to \code{rayrender::render_scene()}.}
 }

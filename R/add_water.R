@@ -58,7 +58,8 @@ add_water = function(hillshade, water_map, color = "imhof1") {
   hillshade = rayimage::ray_read_image(hillshade)
   colorspace = attr(hillshade, "colorspace")
   white_point = attr(hillshade, "white_current")
-  water_map = t(flipud(water_map))
+  # Heightmaps index east-west first; images index north-south first.
+  water_map = t(water_map)
   if (color == "imhof1") {
     color = col2rgb_linear("#e9f9ee")
   } else if (color == "imhof2") {

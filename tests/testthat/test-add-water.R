@@ -48,28 +48,8 @@ test_that("spatial water masks preserve orientation and terrain context", {
   expect_equal(actual, expected)
   expect_identical(mget(keys, envir = ray_cache_scene_envir), before)
   expect_identical(get_hillshade_map(), expected)
-  # Input rows run north to south; the RGB map's first dimension runs south to north.
-  wet = matrix(
-    c(
-      FALSE,
-      FALSE,
-      FALSE,
-      FALSE,
-      TRUE,
-      FALSE,
-      FALSE,
-      TRUE,
-      FALSE,
-      FALSE,
-      TRUE,
-      FALSE,
-      FALSE,
-      FALSE,
-      FALSE
-    ),
-    nrow = 3,
-    byrow = TRUE
-  )
+  # Use the raster's native north-to-south rows, independently of add_water().
+  wet = terra::as.matrix(mask, wide = TRUE) == 1
   expect_equal(as.numeric(actual[,, 1][wet]), rep(1, 3))
   expect_equal(as.numeric(actual[,, 2][wet]), rep(0, 3))
   expect_equal(actual[,, 3][!wet], image[,, 3][!wet])
@@ -178,4 +158,37 @@ test_that("piped shading establishes the terrain cache before validating the mas
     matrix(seq_len(12), 4, 3) |> height_shade() |> add_water(terrain < 0),
     "grid dimensions"
   )
+})
+
+
+test_that("water cells align with elevation colors and preserve dry land", {
+  skip_if_not_installed("terra")
+  clear_hillshade_cache()
+  withr::defer(clear_hillshade_cache())
+  terrain = terra::rast(
+    nrows = 4,
+    ncols = 7,
+    xmin = 0,
+    xmax = 7,
+    ymin = 0,
+    ymax = 4,
+    crs = "EPSG:3857"
+  )
+  # A single off-center water cell distinguishes horizontal and vertical flips.
+  terra::values(terrain) = 1
+  terrain[2, 3] = -1
+  image = height_shade(terrain, texture = c("black", "white"))
+  expect_equal(as.numeric(image[2, 3, 1:3]), rep(0, 3))
+  wet = terra::as.matrix(terrain, wide = TRUE) < 0
+  for (mask in list(
+    terrain < 0,
+    raster_to_matrix(terrain, verbose = FALSE) < 0
+  )) {
+    actual = add_water(image, mask, color = "red")
+    expect_equal(as.numeric(actual[2, 3, 1:3]), c(1, 0, 0))
+    for (channel in 1:3) {
+      expect_equal(as.numeric(actual[,, channel][!wet]), rep(1, sum(!wet)))
+    }
+    expect_identical(actual[,, 4], image[,, 4])
+  }
 })
