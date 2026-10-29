@@ -18,11 +18,22 @@ render_water(
   clear_previous = TRUE,
   zscale = 1,
   vertical_exaggeration = 1,
-  heightmap = NULL
+  heightmap = NULL,
+  water_elevation = NULL
 )
 }
 \arguments{
-\item{water_input}{Default \code{0}. Water level. Either a scalar, a matrix with the same dimensions as \code{heightmap}, or a spatial raster that can be projected/resampled to the heightmap grid. For spatial rasters, finite cells define the water footprint.}
+\item{water_input}{Default \code{0}. Water level or footprint. Either a scalar,
+a matrix with the same dimensions as \code{heightmap}, a spatial raster that can
+be projected/resampled to the heightmap grid, or an \code{sf}/\code{sfc} object containing
+POLYGON or MULTIPOLYGON geometries. Non-polygon features are ignored; polygon
+parts within GEOMETRYCOLLECTION features are retained. If no nonempty polygons
+remain, no water is drawn. For spatial rasters, finite cells define
+the water footprint. Polygon inputs require known source and heightmap CRSs
+and a heightmap extent; they are transformed to the scene CRS and converted
+to a spatial water raster on the resolved heightmap grid. Polygon holes are
+retained at that grid resolution. Features smaller than a cell use touched
+cells when they contain no cell centers. Polygon input requires \code{sf} and \code{terra}.}
 
 \item{water_color}{Default \code{lightblue}.}
 
@@ -53,6 +64,22 @@ If \code{zscale} is omitted and \code{heightmap} is a spatial raster, rayshader 
 \item{vertical_exaggeration}{Default \code{1}. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}} when available; pass explicitly to override for this call.}
 
 \item{heightmap}{Default \code{NULL}. Height matrix or spatial raster for the current scene. If omitted, this is taken from the cached scene set by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}. Pass explicitly to override the cached value.}
+
+\item{water_elevation}{Default \code{NULL}. For polygon \code{water_input} only: a finite
+numeric elevation, one elevation per original feature, or the name of a
+numeric column in an \code{sf} object. Values use the heightmap's elevation units,
+before \code{zscale} and \code{vertical_exaggeration}. If \code{NULL}, each polygon part uses
+the median finite terrain elevation sampled along its exterior ring, falling
+back to its interior cells when no finite shoreline samples are available.
+Inferred levels receive a small positive lift, \code{max(1e-4, abs(level) * 1e-6)},
+to avoid coplanar water on flat terrain. Explicit levels are not lifted.
+This default is a visualization estimate, not a measured water-surface level.
+Overlapping raster cells use the highest component level. With method
+\code{"polygon"}, the existing area-fit algorithm may replace these levels; they
+are the supplied levels for raster rendering and polygon-to-raster fallback.
+\code{water_edge_clamp = TRUE} may also lower the supplied levels. Use method
+\code{"raster"} with clamping disabled to retain explicit elevations. With polygon
+inputs, method \code{"legacy"} warns and uses \code{"raster"} instead.}
 }
 \description{
 Adds water layer to the scene, removing the previous water layer if desired.

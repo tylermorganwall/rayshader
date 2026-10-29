@@ -11,11 +11,17 @@ save_multipolygonz_to_obj(sf_obj, filename, swap_yz = FALSE)
 
 \item{filename}{Filename of the OBJ to save the 3D model to.}
 
-\item{swap_yz}{Default \code{TRUE}., Whether to swap and Y and Z axes. (Y axis is vertical in
+\item{swap_yz}{Default \code{FALSE}. Whether to swap the Y and Z axes. (Y axis is vertical in
 rayshader coordinates, but data is often provided with Z being vertical).}
 }
 \description{
-Converts MULTIPOLYGON Z features into a 3D OBJ model
+Converts MULTIPOLYGON Z features into a triangulated 3D OBJ model,
+preserving concave boundaries and holes in each face.
+}
+\details{
+Faces with more than three vertices or holes require the \code{decido}
+package. Triangulation uses each face's dominant plane and preserves its
+original winding. OBJ coordinates are written to four decimal places.
 }
 \examples{
 \dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}

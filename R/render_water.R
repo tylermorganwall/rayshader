@@ -7,7 +7,9 @@
 #'@param water_input Default `0`. Water level or footprint. Either a scalar,
 #'a matrix with the same dimensions as `heightmap`, a spatial raster that can
 #'be projected/resampled to the heightmap grid, or an `sf`/`sfc` object containing
-#'POLYGON or MULTIPOLYGON geometries. For spatial rasters, finite cells define
+#'POLYGON or MULTIPOLYGON geometries. Non-polygon features are ignored; polygon
+#'parts within GEOMETRYCOLLECTION features are retained. If no nonempty polygons
+#'remain, no water is drawn. For spatial rasters, finite cells define
 #'the water footprint. Polygon inputs require known source and heightmap CRSs
 #'and a heightmap extent; they are transformed to the scene CRS and converted
 #'to a spatial water raster on the resolved heightmap grid. Polygon holes are
@@ -371,16 +373,16 @@ water_sf_to_raster = function(
     water_elevation,
     length(geometry)
   )
-  nonempty = !sf::st_is_empty(geometry)
+  # Keep original feature indices so filtering does not shift elevations.
+  # Collections may contain usable polygons alongside line/point remnants.
+  nonempty = !sf::st_is_empty(geometry) &
+    vapply(
+      geometry,
+      function(feature) length(water_sf_polygon_parts(feature)) > 0L,
+      logical(1)
+    )
   if (!any(nonempty)) {
     return(NULL)
-  }
-  types = as.character(sf::st_geometry_type(geometry[nonempty]))
-  if (any(!types %in% c("POLYGON", "MULTIPOLYGON"))) {
-    stop(
-      "`water_input` must contain only POLYGON or MULTIPOLYGON geometries.",
-      call. = FALSE
-    )
   }
   if (
     !is.matrix(heightmap) || !is.numeric(heightmap) || any(dim(heightmap) < 1L)

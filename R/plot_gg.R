@@ -2031,8 +2031,18 @@ plot_gg = function(
         attr(height_matrix, "extent"),
         label = "ggplot_panel_extent"
       )
+      if (inherits(plot_gg_transform_info$coord, "CoordSf")) {
+        # The panel extent uses the display CRS, which may differ from the
+        # source raster's CRS. Cache the pair for sky-location resolution.
+        panel_crs = get_coord_sf_target_crs(
+          plot_gg_transform_info$panel_params[[1L]]
+        )
+        attr(height_matrix, "crs") = panel_crs
+        cache_scene_crs(panel_crs, label = "ggplot_panel_crs")
+      }
     } else {
       cache_scene_extent(NULL)
+      cache_scene_crs(NULL)
     }
   }
   if (save_shadow_matrix & !save_height_matrix) {

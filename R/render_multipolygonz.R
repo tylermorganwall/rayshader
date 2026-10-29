@@ -36,6 +36,9 @@
 #'value.
 #'@param ... Additional arguments to pass to `rgl::triangles3d()`.
 #'@export
+#'@details Faces with more than three vertices or holes require the `decido`
+#'package. Concave boundaries and interior holes are preserved when triangulating
+#'horizontal, vertical, and sloping faces.
 #'@examplesIf length(find.package("sf", quiet = TRUE)) && length(find.package("elevatr", quiet = TRUE)) && length(find.package("raster", quiet = TRUE)) && (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true"))
 #'library(sf)
 #'#Set location of washington monument

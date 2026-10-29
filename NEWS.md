@@ -22,6 +22,21 @@
 
 ## Bugfixes
 
+- `render_multipolygonz()` Preserves concave face boundaries and holes instead
+  of creating spurious roof overhangs. The same triangulation fixes
+  `save_multipolygonz_to_obj()` exports, including vertical and sloping faces.
+
+- `render_highquality()` Infers datetime sky location from the selected ggplot
+  panel's map bounds and display CRS. Use `panel`, or the panel in a spatial
+  camera target/location; faceted maps without a selection request one instead
+  of using unrelated cached terrain metadata.
+
+- `plot_gg()` Caches the display CRS with the extent for single-panel `coord_sf()`
+  plots, allowing `render_highquality(datetime = ...)` to infer the sky location.
+
+- `render_water()` Ignores non-polygon features in mixed spatial inputs, retaining
+  polygon parts of geometry collections and their original feature elevations.
+
 - `render_highquality()` Honors an explicit `fov` instead of replacing it with
   the rgl camera projection. Omitting `fov` retains automatic camera matching.
 

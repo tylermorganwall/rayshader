@@ -1001,6 +1001,9 @@ get_plot_gg_panel_transform_context = function(
     }
     panel = panel_table$panel[1]
   }
+  if (length(panel) != 1L || !is.atomic(panel) || is.na(panel)) {
+    stop("`panel` must identify a single ggplot panel.", call. = FALSE)
+  }
   panel_index = match(panel, panel_table$panel)
   if (is.na(panel_index)) {
     stop(sprintf(
@@ -1310,22 +1313,46 @@ get_scene_target_crs = function(
   NULL
 }
 
-resolve_cached_extent_center_latlong = function(caller = NULL) {
+resolve_cached_extent_center_latlong = function(caller = NULL, panel = NULL) {
   if (!(length(find.package("sf", quiet = TRUE)) > 0)) {
     return(NULL)
   }
-  extent_candidates = list(
-    list(
-      extent = get_scene_extent(default = NULL),
-      crs = try_parse_scene_crs(get_scene_crs(default = NULL)),
-      source = "scene"
-    ),
-    list(
-      extent = get_hillshade_extent(default = NULL),
-      crs = try_parse_scene_crs(get_hillshade_crs(default = NULL)),
-      source = "hillshade"
+  transform_info = get_cached_plot_gg_transform_info()
+  if (!is.null(transform_info)) {
+    # Never pair a ggplot panel with an unrelated terrain/hillshade cache.
+    if (!inherits(transform_info$coord, "CoordSf")) {
+      return(NULL)
+    }
+    context = get_plot_gg_panel_transform_context(
+      transform_info,
+      panel = panel,
+      caller = caller
     )
-  )
+    # The full-canvas extent includes margins and other facets. Use the map
+    # bounds inside the selected panel when locating the sun on Earth.
+    extent_candidates = list(list(
+      extent = get_scene_data_filter_extent(
+        extent = context$transformed_extent,
+        panel = context$panel,
+        caller = caller
+      ),
+      crs = get_coord_sf_target_crs(context$panel_params),
+      source = "ggplot_panel"
+    ))
+  } else {
+    extent_candidates = list(
+      list(
+        extent = get_scene_extent(default = NULL),
+        crs = try_parse_scene_crs(get_scene_crs(default = NULL)),
+        source = "scene"
+      ),
+      list(
+        extent = get_hillshade_extent(default = NULL),
+        crs = try_parse_scene_crs(get_hillshade_crs(default = NULL)),
+        source = "hillshade"
+      )
+    )
+  }
   for (candidate in extent_candidates) {
     if (is.null(candidate$extent) || is.null(candidate$crs)) {
       next

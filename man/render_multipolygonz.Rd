@@ -74,6 +74,11 @@ Cache fallback messages are disabled by default. Set \code{options(rayshader.ver
 
 You can also use \code{\link[=save_multipolygonz_to_obj]{save_multipolygonz_to_obj()}} manually to convert sf objects
 }
+\details{
+Faces with more than three vertices or holes require the \code{decido}
+package. Concave boundaries and interior holes are preserved when triangulating
+horizontal, vertical, and sloping faces.
+}
 \examples{
 \dontshow{if (length(find.package("sf", quiet = TRUE)) && length(find.package("elevatr", quiet = TRUE)) && length(find.package("raster", quiet = TRUE)) && (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true"))) withAutoprint(\{ # examplesIf}
 library(sf)
