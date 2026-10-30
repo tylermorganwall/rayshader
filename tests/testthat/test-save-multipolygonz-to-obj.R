@@ -268,7 +268,7 @@ test_that("OBJ exports use the same hole-preserving triangles as rendering", {
   }
 })
 
-test_that("MULTIPOLYGON Z conversion rejects untriangulatable faces clearly", {
+test_that("MULTIPOLYGON Z conversion warns and returns no geometry for degenerate input", {
   skip_if_not_installed("sf")
   collinear = matrix(
     c(0, 0, 1, 1, 0, 1, 2, 0, 1, 0, 0, 1),
@@ -276,9 +276,239 @@ test_that("MULTIPOLYGON Z conversion rejects untriangulatable faces clearly", {
     byrow = TRUE
   )
   input = sf::st_sfc(sf::st_multipolygon(list(list(collinear))))
-  expect_error(multipolygonz_to_raymesh(input), "face 1:.*zero area")
+  expect_warning(
+    {
+      mesh = multipolygonz_to_raymesh(input)
+    },
+    "zero-area"
+  )
+  expect_null(mesh)
   file = tempfile(fileext = ".obj")
   writeLines("keep existing file", file)
-  expect_error(save_multipolygonz_to_obj(input, file), "zero area")
-  expect_identical(readLines(file), "keep existing file")
+  expect_warning(save_multipolygonz_to_obj(input, file), "zero-area")
+  expect_length(readLines(file), 0L)
+})
+
+test_that("crossed walls and touching holes are repaired in the face plane", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("decido")
+  skip_if_not_installed("rayvertex")
+  skip_if_not("st_triangulate_constrained" %in% getNamespaceExports("sf"))
+  fixtures = readRDS(test_path(
+    "fixtures",
+    "spatial",
+    "multipolygonz-malformed.rds"
+  ))
+  symmetric = list(cbind(
+    matrix(c(0, 0, 2, 2, 0, 2, 2, 0), ncol = 2, byrow = TRUE),
+    5
+  ))
+  cases = c(
+    fixtures[c(
+      "bowtie",
+      "touching_hole",
+      "overlapping_edges",
+      "roundoff_sliver"
+    )],
+    list(symmetric = symmetric)
+  )
+  axes = list(c(2, 3), c(1, 3), c(1, 2), c(1, 2), c(1, 2))
+  for (case in seq_along(cases)) {
+    rings = cases[[case]]
+    closed = lapply(rings, function(r) rbind(r, r[1, ]))
+    source = sf::st_sfc(sf::st_multipolygon(list(closed)))
+    # Check coverage against an independently repaired 2D source polygon,
+    # including both lobes of a symmetric bow-tie whose signed area is zero.
+    origin = rings[[1]][1, axes[[case]]]
+    projected = lapply(closed, function(r) {
+      sweep(r[, axes[[case]], drop = FALSE], 2, origin)
+    })
+    region = sf::st_make_valid(
+      sf::st_sfc(sf::st_polygon(projected)),
+      geos_method = "valid_linework"
+    )
+    expected = sum(as.numeric(sf::st_area(region)))
+    expect_gt(expected, 0)
+    for (swap in c(FALSE, TRUE)) {
+      mesh = multipolygonz_to_raymesh(source, swap_yz = swap)
+      vertices = mesh$vertices[[1]]
+      if (swap) {
+        vertices = vertices[, c(1, 3, 2), drop = FALSE]
+      }
+      indices = mesh$shapes[[1]]$indices + 1L
+      xy = sweep(vertices[, axes[[case]], drop = FALSE], 2, origin)
+      triangles = sf::st_sfc(lapply(seq_len(nrow(indices)), function(i) {
+        sf::st_polygon(list(xy[indices[i, c(1, 2, 3, 1)], , drop = FALSE]))
+      }))
+      expect_equal(
+        sum(as.numeric(sf::st_area(triangles))),
+        expected,
+        tolerance = 1e-7
+      )
+      difference = suppressWarnings(sf::st_sym_difference(
+        sf::st_union(triangles),
+        region
+      ))
+      expect_lt(sum(as.numeric(sf::st_area(difference))), 1e-7)
+      expect_true(all(is.finite(vertices)))
+      # Every new XYZ point lies on an original 3D edge; no flattened wall.
+      starts = do.call(rbind, rings)
+      ends = do.call(
+        rbind,
+        lapply(rings, function(r) r[c(2:nrow(r), 1), , drop = FALSE])
+      )
+      edges = ends - starts
+      distances = vapply(
+        seq_len(nrow(vertices)),
+        function(i) {
+          delta = sweep(starts, 2, vertices[i, ], function(a, b) b - a)
+          t = rowSums(delta * edges) / rowSums(edges * edges)
+          t[!is.finite(t)] = 0
+          t = pmax(0, pmin(1, t))
+          min(sqrt(rowSums(sweep(starts + edges * t, 2, vertices[i, ])^2)))
+        },
+        0
+      )
+      expect_lt(max(distances), 1e-8)
+    }
+  }
+})
+
+test_that("zero-area faces do not stop other building faces from rendering", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("decido")
+  fixtures = readRDS(test_path(
+    "fixtures",
+    "spatial",
+    "multipolygonz-malformed.rds"
+  ))
+  collapsed = lapply(fixtures$collapsed, function(r) rbind(r, r[1, ]))
+  line = matrix(c(0, 0, 0, 0, 0, 1, 0, 0, 2, 0, 0, 0), ncol = 3, byrow = TRUE)
+  good = matrix(c(0, 0, 3, 2, 0, 3, 0, 2, 3, 0, 0, 3), ncol = 3, byrow = TRUE)
+  source = sf::st_sfc(sf::st_multipolygon(list(
+    collapsed,
+    list(line),
+    list(good)
+  )))
+  expect_warning(
+    mesh <- multipolygonz_to_raymesh(source),
+    "Skipped 2 polygon face"
+  )
+  expect_equal(nrow(mesh$shapes[[1]]$indices), 1L)
+  expect_equal(nrow(mesh$vertices[[1]]), 3L)
+})
+
+
+test_that("ambiguous 3D crossings and nonfinite faces are dropped independently", {
+  withr::local_options(rayshader.multipolygonz_repair = FALSE)
+  skip_if_not_installed("sf")
+  skip_if_not_installed("decido")
+  skip_if_not_installed("rayvertex")
+  # The two diagonals cross in XY, but one lies at z=0 and the other at z=0.1.
+  warped = rbind(c(0, 0, 0), c(4, 4, 0), c(0, 3, 0.1), c(3, 0, 0.1), c(0, 0, 0))
+  good = rbind(c(10, 0, 0), c(11, 0, 0), c(10, 1, 0), c(10, 0, 0))
+  nonfinite = good
+  nonfinite[2, 3] = Inf
+  input = sf::st_sfc(sf::st_multipolygon(list(
+    list(warped),
+    list(nonfinite),
+    list(good)
+  )))
+  expect_warning(
+    {
+      faces = multipolygonz_mesh_faces(input)
+    },
+    "Skipped 2 polygon face.*Face 1: Projected edges.*Face 2: Polygon face coordinates"
+  )
+  expect_length(faces, 1L)
+  expect_equal(nrow(faces[[1]]$indices), 1L)
+  file = tempfile(fileext = ".obj")
+  expect_warning(save_multipolygonz_to_obj(input, file), "Skipped 2")
+  expect_equal(sum(startsWith(readLines(file), "f ")), 1L)
+  bad = sf::st_sfc(sf::st_multipolygon(list(list(warped))))
+  expect_warning(
+    {
+      mesh = multipolygonz_to_raymesh(bad)
+    },
+    "different 3D depths"
+  )
+  expect_null(mesh)
+})
+
+test_that("rendering entirely unusable faces adds no geometry", {
+  skip_if_not_installed("sf")
+  local_rgl_use_null()
+  terrain = matrix(0, 10, 10)
+  plot_3d_test(
+    constant_shade(terrain),
+    terrain,
+    extent = c(0, 10, 0, 10),
+    zscale = 1,
+    solid = FALSE,
+    shadow = FALSE
+  )
+  on.exit(rgl::close3d(), add = TRUE)
+  ring = rbind(c(1, 1, 1), c(2, 1, 1), c(3, 1, 1), c(1, 1, 1))
+  input = sf::st_sf(
+    geometry = sf::st_sfc(sf::st_multipolygon(list(list(ring))))
+  )
+  before = rgl::ids3d()
+  expect_warning(
+    {
+      result = render_multipolygonz(input, filter_to_extent = FALSE)
+    },
+    "zero-area"
+  )
+  expect_null(result)
+  expect_equal(rgl::ids3d(), before)
+})
+
+
+test_that("ambiguous face repair defaults on and affects mesh and OBJ equally", {
+  skip_if_not_installed("sf")
+  skip_if_not_installed("decido")
+  skip_if_not_installed("rayvertex")
+  withr::local_options(rayshader.multipolygonz_repair = NULL)
+  warped = rbind(c(0, 0, 0), c(4, 4, 0), c(0, 3, 0.1), c(3, 0, 0.1), c(0, 0, 0))
+  input = sf::st_sfc(sf::st_multipolygon(list(list(warped))))
+  expect_no_warning({
+    default = multipolygonz_to_raymesh(input)
+  })
+  expect_true(all(is.finite(default$vertices[[1]])))
+  expect_gt(nrow(default$shapes[[1]]$indices), 0L)
+  options(rayshader.multipolygonz_repair = TRUE)
+  expect_equal(multipolygonz_to_raymesh(input), default)
+  file = tempfile(fileext = ".obj")
+  expect_no_warning(save_multipolygonz_to_obj(input, file))
+  expect_equal(
+    sum(startsWith(readLines(file), "f ")),
+    nrow(default$shapes[[1]]$indices)
+  )
+  # A valid triangle and an unusable face still follow their normal paths in
+  # repair mode: the unusable face warns, while valid geometry survives.
+  good = rbind(c(10, 0, 0), c(11, 0, 0), c(10, 1, 0), c(10, 0, 0))
+  nonfinite = good
+  nonfinite[2, 3] = Inf
+  mixed = sf::st_sfc(sf::st_multipolygon(list(
+    list(warped),
+    list(nonfinite),
+    list(good)
+  )))
+  expect_warning(
+    {
+      faces = multipolygonz_mesh_faces(mixed)
+    },
+    "Skipped 1 polygon face.*finite"
+  )
+  expect_length(faces, 2L)
+  options(rayshader.multipolygonz_repair = FALSE)
+  expect_warning(
+    {
+      dropped = multipolygonz_to_raymesh(input)
+    },
+    "different 3D depths"
+  )
+  expect_null(dropped)
+  expect_warning(save_multipolygonz_to_obj(input, file), "different 3D depths")
+  expect_length(readLines(file), 0L)
 })

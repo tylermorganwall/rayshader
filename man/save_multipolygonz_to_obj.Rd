@@ -21,7 +21,18 @@ preserving concave boundaries and holes in each face.
 \details{
 Faces with more than three vertices or holes require the \code{decido}
 package. Triangulation uses each face's dominant plane and preserves its
-original winding. OBJ coordinates are written to four decimal places.
+original winding. Crossed or overlapping rings are repaired in the face plane;
+new intersection vertices are interpolated along the original 3D edges.
+By default, \code{options(rayshader.multipolygonz_repair = TRUE)} also repairs
+ambiguous projected intersections: existing XYZ vertices are retained and new
+vertices use the nearest projected source edge (the first edge breaks ties).
+This depth choice is a heuristic for nonplanar faces. Set
+\code{options(rayshader.multipolygonz_repair = FALSE)} to drop these ambiguous faces
+instead. Unambiguous planar repairs are performed in either mode.
+Zero-area faces and faces that still cannot be triangulated are skipped with a
+summary warning in either mode. If no faces remain, an empty OBJ is written.
+Touching-hole cases may require an sf/GEOS version supporting constrained
+triangulation. OBJ coordinates are written to four decimal places.
 }
 \examples{
 \dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}

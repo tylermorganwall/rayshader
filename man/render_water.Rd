@@ -45,7 +45,10 @@ cells when they contain no cell centers. Polygon input requires \code{sf} and \c
 
 \item{linewidth}{Default \code{2}. Width of the edge lines in the scene.}
 
-\item{water_render_method}{Default \code{"raster"}. Water meshing method. \code{"raster"} renders water at the supplied elevation and emits sidewalls down to the terrain wherever exposed water floats above the surface; \code{"polygon"} fits each spatial water component by matching flooded terrain-triangle area to raster footprint area, then clips the fixed-grid terrain triangles; \code{"legacy"} uses the previous box/grid renderer.}
+\item{water_render_method}{Default \code{"raster"}. Water meshing method. \code{"raster"} renders water at the supplied elevation and emits sidewalls down to the terrain wherever exposed water floats above the surface; \code{"polygon"} fits each spatial water component by matching flooded terrain-triangle area to raster footprint area, then clips the fixed-grid terrain triangles; \code{"legacy"} uses the previous box/grid renderer.
+With simplified (\code{triangulate = TRUE}) terrain, raster caps retain the supplied
+footprint and the rendered terrain hides buried portions, avoiding holes from
+clipping against a different terrain triangulation.}
 
 \item{water_edge_extension}{Default \code{0.5}. For spatial \code{water_input} inputs, amount in grid cells to expand finite water cells at boundary edges, up to a maximum of half a cell.}
 
@@ -71,8 +74,10 @@ numeric column in an \code{sf} object. Values use the heightmap's elevation unit
 before \code{zscale} and \code{vertical_exaggeration}. If \code{NULL}, each polygon part uses
 the median finite terrain elevation sampled along its exterior ring, falling
 back to its interior cells when no finite shoreline samples are available.
-Inferred levels receive a small positive lift, \code{max(1e-4, abs(level) * 1e-6)},
-to avoid coplanar water on flat terrain. Explicit levels are not lifted.
+Inferred levels receive a small positive lift to avoid coplanar water on flat
+terrain. The lift is at least \code{max(1e-4, abs(level) * 1e-6)} in elevation units
+and accounts for scene size and \code{zscale} so it survives rendering precision.
+Explicit levels are not lifted.
 This default is a visualization estimate, not a measured water-surface level.
 Overlapping raster cells use the highest component level. With method
 \code{"polygon"}, the existing area-fit algorithm may replace these levels; they

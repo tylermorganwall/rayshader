@@ -189,7 +189,8 @@ make_spatial_water_surface = function(
     triangle_vertices = make_spatial_water_cell_surface(
       water_surface = water_surface,
       heightmap = heightmap,
-      water_edge_extension = water_edge_extension
+      water_edge_extension = water_edge_extension,
+      clip_to_terrain = !get_scene_triangulate(default = FALSE)
     )
     line_vertices = matrix(nrow = 0, ncol = 3)
   }
@@ -422,7 +423,8 @@ empty_spatial_water_cell_geometry = function(nr, nc) {
 make_spatial_water_cell_surface = function(
   water_surface,
   heightmap = NULL,
-  water_edge_extension = 0.5
+  water_edge_extension = 0.5,
+  clip_to_terrain = TRUE
 ) {
   geometry = make_spatial_water_cell_geometry(
     water_surface = water_surface,
@@ -439,12 +441,19 @@ make_spatial_water_cell_surface = function(
     x1 = geometry$x1,
     z0 = geometry$z0,
     z1 = geometry$z1,
-    water_height = geometry$water_height
+    water_height = geometry$water_height,
+    clip_to_terrain = clip_to_terrain
   )
-  top_vertices = clip_spatial_water_top_to_terrain(
-    top_vertices = top_vertices,
-    heightmap = heightmap
-  )
+  # A simplified terrain can use different diagonals even at max_error = 0.
+  # Cutting water against the regular grid would remove visible water above
+  # that different surface. Keep raster caps and let the actual terrain occlude
+  # buried portions; continue trimming away missing-data cells.
+  if (clip_to_terrain) {
+    top_vertices = clip_spatial_water_top_to_terrain(
+      top_vertices = top_vertices,
+      heightmap = heightmap
+    )
+  }
 
   side_vertices = make_spatial_water_edge_sides(
     heightmap = heightmap,
@@ -462,7 +471,7 @@ make_spatial_water_cell_surface = function(
     nr = geometry$nr,
     nc = geometry$nc
   )
-  rbind(top_vertices, side_vertices)
+  filter_spatial_water_degenerate_triangles(rbind(top_vertices, side_vertices))
 }
 
 #'@keywords internal
@@ -3478,11 +3487,11 @@ max_spatial_water_finite_sidewall_height = function(side_vertices, heightmap) {
   if (!any(finite_sidewall)) {
     return(NA_real_)
   }
-  first_vertex = seq.int(1L, nrow(side_vertices), by = 6L)
+  first_vertex = seq.int(1L, nrow(side_vertices), by = 3L)
   finite_rows = as.vector(vapply(
     first_vertex[finite_sidewall],
-    function(first_row) seq.int(first_row, first_row + 5L),
-    integer(6)
+    function(first_row) seq.int(first_row, first_row + 2L),
+    integer(3)
   ))
   max_spatial_water_sidewall_height(side_vertices[finite_rows, , drop = FALSE])
 }
@@ -3492,13 +3501,16 @@ max_spatial_water_sidewall_height = function(side_vertices) {
   if (!nrow(side_vertices)) {
     return(NA_real_)
   }
-  first_vertex = seq.int(1L, nrow(side_vertices), by = 6L)
-  top_height = side_vertices[first_vertex, 2]
-  bottom_height = c(
-    side_vertices[first_vertex + 2L, 2],
-    side_vertices[first_vertex + 4L, 2]
+  first_vertex = seq.int(1L, nrow(side_vertices), by = 3L)
+  # Tapered walls may contain one triangle instead of a paired quad. Measure
+  # each triangle's vertical span without depending on winding or vertex slots.
+  heights = cbind(
+    side_vertices[first_vertex, 2],
+    side_vertices[first_vertex + 1L, 2],
+    side_vertices[first_vertex + 2L, 2]
   )
-  side_height = rep(top_height, 2L) - bottom_height
+  side_height = pmax(heights[, 1], heights[, 2], heights[, 3]) -
+    pmin(heights[, 1], heights[, 2], heights[, 3])
   side_height = side_height[is.finite(side_height)]
   if (!length(side_height)) {
     return(NA_real_)
@@ -3514,11 +3526,11 @@ spatial_water_sidewall_faces_finite_terrain = function(
   if (!nrow(side_vertices)) {
     return(logical())
   }
-  first_vertex = seq.int(1L, nrow(side_vertices), by = 6L)
+  first_vertex = seq.int(1L, nrow(side_vertices), by = 3L)
   finite_edge = rep(FALSE, length(first_vertex))
   eps = 1e-6
   for (side_index in seq_along(first_vertex)) {
-    rows = seq.int(first_vertex[side_index], first_vertex[side_index] + 5L)
+    rows = seq.int(first_vertex[side_index], first_vertex[side_index] + 2L)
     sidewall = side_vertices[rows, , drop = FALSE]
     first_edge = sidewall[2L, ] - sidewall[1L, ]
     second_edge = sidewall[3L, ] - sidewall[1L, ]
@@ -3534,9 +3546,9 @@ spatial_water_sidewall_faces_finite_terrain = function(
     ) {
       next
     }
-    outward_normal = -horizontal_normal / normal_length
-    sample_x = mean(sidewall[c(1L, 2L), 1L]) + outward_normal[1L] * eps
-    sample_z = mean(sidewall[c(1L, 2L), 3L]) + outward_normal[2L] * eps
+    outward_normal = horizontal_normal / normal_length
+    sample_x = mean(range(sidewall[, 1L])) + outward_normal[1L] * eps
+    sample_z = mean(range(sidewall[, 3L])) + outward_normal[2L] * eps
     finite_edge[side_index] = is.finite(
       interpolate_spatial_water_surface_height_unclamped(
         heightmap = heightmap,
@@ -3633,11 +3645,13 @@ make_spatial_water_top_vertices = function(
   x1,
   z0,
   z1,
-  water_height
+  water_height,
+  clip_to_terrain = TRUE
 ) {
   if (
     is.null(heightmap) ||
-      !is.matrix(heightmap)
+      !is.matrix(heightmap) ||
+      (!clip_to_terrain && all(is.finite(heightmap)))
   ) {
     return(make_spatial_water_rect_top_vertices(x0, x1, z0, z1, water_height))
   }
@@ -3668,7 +3682,8 @@ make_spatial_water_top_vertices = function(
         x1 = x1[cell_index],
         z0 = z0[cell_index],
         z1 = z1[cell_index],
-        water_height = water_height[cell_index]
+        water_height = water_height[cell_index],
+        clip_to_terrain = clip_to_terrain
       )
     }
   }
@@ -3685,11 +3700,12 @@ make_spatial_water_rect_top_vertices = function(x0, x1, z0, z1, water_height) {
   top_vertices = matrix(NA_real_, nrow = n_cells * 6L, ncol = 3L)
   first_vertex = seq.int(1L, nrow(top_vertices), by = 6L)
   top_vertices[first_vertex, ] = cbind(x0, water_height, z0)
-  top_vertices[first_vertex + 1L, ] = cbind(x1, water_height, z0)
-  top_vertices[first_vertex + 2L, ] = cbind(x0, water_height, z1)
+  # Scene Y is up: wind the top faces toward +Y for air-to-water refraction.
+  top_vertices[first_vertex + 1L, ] = cbind(x0, water_height, z1)
+  top_vertices[first_vertex + 2L, ] = cbind(x1, water_height, z0)
   top_vertices[first_vertex + 3L, ] = cbind(x1, water_height, z0)
-  top_vertices[first_vertex + 4L, ] = cbind(x1, water_height, z1)
-  top_vertices[first_vertex + 5L, ] = cbind(x0, water_height, z1)
+  top_vertices[first_vertex + 4L, ] = cbind(x0, water_height, z1)
+  top_vertices[first_vertex + 5L, ] = cbind(x1, water_height, z1)
   top_vertices
 }
 
@@ -3753,7 +3769,8 @@ make_spatial_water_terrain_top_vertices = function(
   x1,
   z0,
   z1,
-  water_height
+  water_height,
+  clip_to_terrain = TRUE
 ) {
   terrain_cells = spatial_water_overlapping_terrain_cells(
     heightmap,
@@ -3787,17 +3804,18 @@ make_spatial_water_terrain_top_vertices = function(
         next
       }
 
+      # Start with upward winding; clipping and fan triangulation retain it.
       terrain_triangle_top = matrix(
         c(
           x_left,
           height00,
           z_bottom,
-          x_right,
-          height10,
-          z_bottom,
           x_left,
           height01,
-          z_top
+          z_top,
+          x_right,
+          height10,
+          z_bottom
         ),
         ncol = 3,
         byrow = TRUE
@@ -3807,11 +3825,11 @@ make_spatial_water_terrain_top_vertices = function(
           x_right,
           height10,
           z_bottom,
-          x_right,
-          height11,
-          z_top,
           x_left,
           height01,
+          z_top,
+          x_right,
+          height11,
           z_top
         ),
         ncol = 3,
@@ -3828,10 +3846,12 @@ make_spatial_water_terrain_top_vertices = function(
           z0 = z0,
           z1 = z1
         )
-        clipped_triangle = clip_spatial_water_polygon_to_water_height(
-          polygon = clipped_triangle,
-          water_height = water_height
-        )
+        if (clip_to_terrain) {
+          clipped_triangle = clip_spatial_water_polygon_to_water_height(
+            polygon = clipped_triangle,
+            water_height = water_height
+          )
+        }
         clipped_triangle = clean_spatial_water_polygon(clipped_triangle)
         if (nrow(clipped_triangle) < 3L) {
           next
@@ -4503,6 +4523,41 @@ make_spatial_water_edge_sides = function(
   )
 }
 
+#' @param vertices Triangle vertices, three consecutive XYZ rows per face.
+#' @return Original vertices of triangles with nonzero area at rgl precision.
+#' @keywords internal
+#' @noRd
+filter_spatial_water_degenerate_triangles = function(vertices) {
+  if (!nrow(vertices)) {
+    return(vertices)
+  }
+  # rgl stores single-precision vertices. Clipping can leave a thin sliver
+  # that has area in R's doubles but becomes collinear after that conversion.
+  # Test the actual destination precision instead of an arbitrary area cutoff;
+  # retain the original doubles for surviving triangles and other consumers.
+  single_vertices = matrix(
+    readBin(
+      writeBin(as.vector(vertices), raw(), size = 4L),
+      what = "numeric",
+      n = length(vertices),
+      size = 4L
+    ),
+    ncol = 3L
+  )
+  first = seq.int(1L, nrow(vertices), by = 3L)
+  a = single_vertices[first + 1L, , drop = FALSE] -
+    single_vertices[first, , drop = FALSE]
+  b = single_vertices[first + 2L, , drop = FALSE] -
+    single_vertices[first, , drop = FALSE]
+  cross = cbind(
+    a[, 2] * b[, 3] - a[, 3] * b[, 2],
+    a[, 3] * b[, 1] - a[, 1] * b[, 3],
+    a[, 1] * b[, 2] - a[, 2] * b[, 1]
+  )
+  keep = rowSums(abs(cross)) > 0
+  vertices[rep(keep, each = 3L), , drop = FALSE]
+}
+
 #'@keywords internal
 make_spatial_water_side_vertices = function(
   side,
@@ -4634,6 +4689,8 @@ make_spatial_water_sidewall_vertices = function(
     subsegment_bottom_start = segment_bottom[start_index]
     subsegment_bottom_end = segment_bottom[end_index]
 
+    # Boundary segments run clockwise in X/Z. With Y up, reversing each
+    # former triangle makes the wall face away from the water volume.
     n_edges = length(start_index)
     vertices = matrix(NA_real_, nrow = n_edges * 6L, ncol = 3L)
     first_vertex = seq.int(1L, nrow(vertices), by = 6L)
@@ -4643,14 +4700,14 @@ make_spatial_water_sidewall_vertices = function(
       subsegment_z_start
     )
     vertices[first_vertex + 1L, ] = cbind(
-      subsegment_x_end,
-      water_height[segment_index],
-      subsegment_z_end
-    )
-    vertices[first_vertex + 2L, ] = cbind(
       subsegment_x_start,
       subsegment_bottom_start,
       subsegment_z_start
+    )
+    vertices[first_vertex + 2L, ] = cbind(
+      subsegment_x_end,
+      water_height[segment_index],
+      subsegment_z_end
     )
     vertices[first_vertex + 3L, ] = cbind(
       subsegment_x_end,
@@ -4658,16 +4715,28 @@ make_spatial_water_sidewall_vertices = function(
       subsegment_z_end
     )
     vertices[first_vertex + 4L, ] = cbind(
-      subsegment_x_end,
-      subsegment_bottom_end,
-      subsegment_z_end
-    )
-    vertices[first_vertex + 5L, ] = cbind(
       subsegment_x_start,
       subsegment_bottom_start,
       subsegment_z_start
     )
-    side_vertices[[segment_index]] = vertices
+    vertices[first_vertex + 5L, ] = cbind(
+      subsegment_x_end,
+      subsegment_bottom_end,
+      subsegment_z_end
+    )
+    # At a shoreline endpoint the wall height is zero. Emit only the triangle
+    # supported by the other endpoint, instead of a quad with a collapsed half.
+    nonzero_segment = subsegment_x_start != subsegment_x_end |
+      subsegment_z_start != subsegment_z_end
+    keep_triangles = as.vector(rbind(
+      nonzero_segment & water_height[segment_index] > subsegment_bottom_start,
+      nonzero_segment & water_height[segment_index] > subsegment_bottom_end
+    ))
+    side_vertices[[segment_index]] = vertices[
+      rep(keep_triangles, each = 3L),
+      ,
+      drop = FALSE
+    ]
   }
   side_vertices = side_vertices[lengths(side_vertices) > 0]
   if (!length(side_vertices)) {
@@ -5311,7 +5380,17 @@ resolve_spatial_waterheight_matrix = function(
 
   aligned_raster = tryCatch(
     {
-      if (target_has_crs) {
+      if (
+        isTRUE(terra::compareGeom(
+          water_raster,
+          target_template,
+          stopOnError = FALSE
+        ))
+      ) {
+        # Even an identity bilinear warp can round elevations to float and
+        # erase a small shoreline clearance. Preserve an already aligned grid.
+        water_raster
+      } else if (target_has_crs) {
         same_crs = isTRUE(tryCatch(
           scene_crs_equal(source_crs, target_crs),
           error = function(e) FALSE
@@ -5391,6 +5470,12 @@ build_waterheight_template = function(
       call. = FALSE
     )
   }
+  # ggplot extents describe the first and last pixel centers (the same
+  # coordinates used by points, roads and meshes), not raster outer edges.
+  ggplot_panel = match_plot_gg_panel_from_extent(
+    heightmap_extent,
+    get_cached_plot_gg_panel_info()
+  )
   heightmap_extent = tryCatch(
     get_extent(heightmap_extent),
     error = function(e) {
@@ -5404,6 +5489,26 @@ build_waterheight_template = function(
       )
     }
   )
+  if (!is.null(ggplot_panel)) {
+    if (nr > 1L) {
+      half_cell_x = (heightmap_extent["xmax"] - heightmap_extent["xmin"]) /
+        (2 * (nr - 1L))
+      heightmap_extent[c("xmin", "xmax")] = heightmap_extent[c(
+        "xmin",
+        "xmax"
+      )] +
+        c(-half_cell_x, half_cell_x)
+    }
+    if (nc > 1L) {
+      half_cell_y = (heightmap_extent["ymax"] - heightmap_extent["ymin"]) /
+        (2 * (nc - 1L))
+      heightmap_extent[c("ymin", "ymax")] = heightmap_extent[c(
+        "ymin",
+        "ymax"
+      )] +
+        c(-half_cell_y, half_cell_y)
+    }
+  }
   target_template = terra::rast(
     nrows = nc,
     ncols = nr,

@@ -2254,7 +2254,7 @@ test_that("spatial water edge clamp ignores NA slice edges", {
   expect_true(is.na(adjusted[3, 3]))
 })
 
-test_that("spatial water edge clamp keeps sidewalls at void cuts", {
+test_that("spatial water edge clamp keeps valid walls without collapsed void corners", {
   local_rgl_use_null()
 
   water_surface = matrix(10, nrow = 5, ncol = 5)
@@ -2273,11 +2273,10 @@ test_that("spatial water edge clamp keeps sidewalls at void cuts", {
   sidewalls = abs(triangle_info$normals[, 2]) < 1e-8
 
   expect_true(any(sidewalls))
-  expect_true(any(
-    sidewalls &
-      abs(triangle_info$centers[, 1]) < 0.6 &
-      abs(triangle_info$centers[, 3]) < 0.6
-  ))
+  # This one-cell void formerly contributed zero-width walls at (-0.5, -0.5).
+  # Those duplicate-vertex triangles are not real sidewalls and must be absent.
+  expect_true(all(rowSums(triangle_info$normals^2) > 0))
+  expect_equal(max(vertices[, 2]), 10)
 })
 
 test_that("spatial polygon water fits full raster coverage", {
@@ -3303,4 +3302,125 @@ test_that("convert_rgl_to_raymesh handles raster water ids", {
 
   expect_no_condition(ray_scene <- convert_rgl_to_raymesh(save_shadow = FALSE))
   expect_false(is_empty_raymesh_scene(ray_scene))
+})
+
+test_that("raster-water tops face upward before and after terrain clipping", {
+  rectangles = make_spatial_water_rect_top_vertices(
+    x0 = c(-1, 0),
+    x1 = c(0, 1),
+    z0 = c(-1, 0),
+    z1 = c(0, 1),
+    water_height = c(1, 2)
+  )
+  expect_true(all(water_mesh_triangle_normals(rectangles)$normals[, 2] > 0))
+  slope = outer(seq(0, 4), rep(1, 5))
+  clipped = make_spatial_water_top_vertices(
+    heightmap = slope,
+    x0 = -1.5,
+    x1 = 1.5,
+    z0 = -1.5,
+    z1 = 1.5,
+    water_height = 2.3
+  )
+  expect_gt(nrow(clipped), 0L)
+  expect_true(all(water_mesh_triangle_normals(clipped)$normals[, 2] > 0))
+  expect_equal(unique(clipped[, 2]), 2.3)
+  expect_true(all(clipped[, 1] <= 0.3 + 1e-7))
+})
+
+test_that("raster-water outer walls and hole walls face away from water", {
+  for (hole in c(FALSE, TRUE)) {
+    surface = matrix(NA_real_, 9, 9)
+    surface[2:8, 2:8] = 2
+    if (hole) {
+      surface[4:6, 4:6] = NA_real_
+    }
+    vertices = make_spatial_water_cell_surface(surface, matrix(0, 9, 9))
+    info = water_mesh_triangle_normals(vertices)
+    expect_true(all(rowSums(info$normals^2) > 0))
+    walls = info$normals[, 2] == 0
+    outward = rowSums(
+      info$normals[, c(1, 3), drop = FALSE] *
+        info$centers[, c(1, 3), drop = FALSE]
+    )
+    inner = walls & abs(info$centers[, 1]) < 2 & abs(info$centers[, 3]) < 2
+    expect_true(any(walls & !inner))
+    expect_true(all(outward[walls & !inner] > 0))
+    if (hole) {
+      expect_true(any(inner))
+      expect_true(all(outward[inner] < 0))
+    }
+    expect_true(all(info$normals[!walls, 2] > 0))
+  }
+})
+
+test_that("a tapered shoreline wall emits only its noncollapsed triangle", {
+  terrain = outer(rep(1, 3), seq(0, 1, length.out = 3))
+  for (reverse in c(FALSE, TRUE)) {
+    vertices = make_spatial_water_sidewall_vertices(
+      heightmap = terrain,
+      x_start = -1,
+      z_start = if (reverse) 1 else -1,
+      x_end = -1,
+      z_end = if (reverse) -1 else 1,
+      water_height = 1
+    )
+    expect_equal(nrow(vertices), 3L)
+    expect_equal(max_spatial_water_sidewall_height(vertices), 1)
+    info = water_mesh_triangle_normals(vertices)
+    expect_equal(sqrt(sum(info$normals^2)) / 2, 1)
+    expect_equal(sign(info$normals[1, 1]), if (reverse) 1 else -1)
+  }
+})
+
+test_that("raster-water clipping slivers are tested at rgl vertex precision", {
+  # The first triangle has area in doubles, but all X values round to one float.
+  sliver = rbind(
+    c(4.660691388585974, 5, -0.660691388585974),
+    c(4.660691388585974, 5, -0.500000577335673),
+    c(4.660691373592443, 5, -0.5)
+  )
+  expect_gt(sum(water_mesh_triangle_normals(sliver)$normals^2), 0)
+  valid = rbind(c(0, 1, 0), c(0, 1, 1), c(1, 1, 0))
+  collinear = rbind(c(0, 1, 0), c(1, 1, 0), c(2, 1, 0))
+  expect_equal(
+    filter_spatial_water_degenerate_triangles(rbind(sliver, valid, collinear)),
+    valid
+  )
+  expect_equal(nrow(filter_spatial_water_degenerate_triangles(sliver)), 0L)
+  expect_equal(
+    nrow(filter_spatial_water_degenerate_triangles(matrix(
+      numeric(),
+      ncol = 3
+    ))),
+    0L
+  )
+})
+
+test_that("rendered raster-water basin has upward tops and no collapsed faces", {
+  local_rgl_use_null()
+  rgl::open3d()
+  on.exit(rgl::close3d(), add = TRUE)
+  grid = seq(-1, 1, length.out = 21)
+  x = outer(grid, rep(1, 21))
+  z = t(x)
+  radius = sqrt((x / 0.9)^2 + (z / 0.75)^2)
+  angle = atan2(z, x)
+  terrain = (110 +
+    55 * exp(-((radius - 0.72) / 0.21)^2) +
+    (5 * sin(5 * angle + radius * 8) + 3 * cos(9 * angle)) * pmin(radius, 1) +
+    8 * radius +
+    2 * sin(13 * x) * cos(11 * z)) /
+    (650 / 21)
+  water = matrix(NA_real_, 21, 21)
+  water[radius < 0.6] = 158 / (650 / 21)
+  make_spatial_water_surface(water, terrain, is.finite(water))
+  ids = get_ids_with_labels(typeval = "water")$id
+  expect_length(ids, 1L)
+  vertices = rgl::rgl.attrib(ids[1], "vertices")
+  info = water_mesh_triangle_normals(vertices)
+  expect_true(all(is.finite(info$normals)))
+  expect_true(all(rowSums(info$normals^2) > 0))
+  expect_true(all(info$normals[, 2] >= 0))
+  expect_true(any(info$normals[, 2] > 0))
 })

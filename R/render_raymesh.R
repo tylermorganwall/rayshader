@@ -462,8 +462,10 @@ render_raymesh = function(
       panel = panel
     )
     extent = get_extent(extent)
-    minpoint_x = (extent["xmax"] + extent["xmin"]) / 2 - zscale / 2
-    minpoint_y = (extent["ymax"] + extent["ymin"]) / 2 + zscale / 2
+    # Match spatial points and paths: the extent midpoint is the scene origin.
+    # zscale converts elevations only; it must not translate XY coordinates.
+    minpoint_x = (extent["xmax"] + extent["xmin"]) / 2
+    minpoint_y = (extent["ymax"] + extent["ymin"]) / 2
     scale_x = (nrow_map - 1) / (extent["xmax"] - extent["xmin"])
     scale_z = (ncol_map - 1) / (extent["ymax"] - extent["ymin"])
     scene_aspect = get_scene_geographic_aspect()

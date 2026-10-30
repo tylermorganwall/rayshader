@@ -21,6 +21,9 @@
 #'@param water_line_alpha Default `1`. Water line tranparency.
 #'@param linewidth Default `2`. Width of the edge lines in the scene.
 #'@param water_render_method Default `"raster"`. Water meshing method. `"raster"` renders water at the supplied elevation and emits sidewalls down to the terrain wherever exposed water floats above the surface; `"polygon"` fits each spatial water component by matching flooded terrain-triangle area to raster footprint area, then clips the fixed-grid terrain triangles; `"legacy"` uses the previous box/grid renderer.
+#'With simplified (`triangulate = TRUE`) terrain, raster caps retain the supplied
+#'footprint and the rendered terrain hides buried portions, avoiding holes from
+#'clipping against a different terrain triangulation.
 #'@param water_edge_extension Default `0.5`. For spatial `water_input` inputs, amount in grid cells to expand finite water cells at boundary edges, up to a maximum of half a cell.
 #'@param water_edge_clamp Default `FALSE`. For spatial `water_input` inputs, if `TRUE`, resolves each connected water footprint to a single level, then lowers it by the largest finite exterior sidewall height after edge expansion. Heightmap-boundary and NA-slice edges are ignored when computing the lowering amount.
 #'@param water_polygon_failure Default `"raster"`. Behavior for spatial polygon water components that cannot be fit to an admissible terrain-triangle flood. `"raster"` renders the failed component with the raster method; `"remove"` omits it.
@@ -38,8 +41,10 @@
 #'before `zscale` and `vertical_exaggeration`. If `NULL`, each polygon part uses
 #'the median finite terrain elevation sampled along its exterior ring, falling
 #'back to its interior cells when no finite shoreline samples are available.
-#'Inferred levels receive a small positive lift, `max(1e-4, abs(level) * 1e-6)`,
-#'to avoid coplanar water on flat terrain. Explicit levels are not lifted.
+#'Inferred levels receive a small positive lift to avoid coplanar water on flat
+#'terrain. The lift is at least `max(1e-4, abs(level) * 1e-6)` in elevation units
+#'and accounts for scene size and `zscale` so it survives rendering precision.
+#'Explicit levels are not lifted.
 #'This default is a visualization estimate, not a measured water-surface level.
 #'Overlapping raster cells use the highest component level. With method
 #'`"polygon"`, the existing area-fit algorithm may replace these levels; they
@@ -181,7 +186,8 @@ render_water = function(
       heightmap = heightmap,
       heightmap_extent = heightmap_extent,
       heightmap_crs = heightmap_crs,
-      water_elevation = water_elevation
+      water_elevation = water_elevation,
+      zscale = zscale
     )
     if (is.null(water_input)) {
       return(invisible(NULL))
@@ -355,7 +361,8 @@ water_sf_to_raster = function(
   heightmap,
   heightmap_extent,
   heightmap_crs,
-  water_elevation = NULL
+  water_elevation = NULL,
+  zscale = 1
 ) {
   if (!requireNamespace("sf", quietly = TRUE)) {
     stop("Package `sf` is required for polygon water inputs.", call. = FALSE)
@@ -446,16 +453,14 @@ water_sf_to_raster = function(
   # Inverse of raster_to_matrix(): rayshader's matrix row index is raster
   # column (west -> east), and its column index is raster row (north -> south).
   # This matters particularly for rectangular and resized scenes.
-  terrain = terra::rast(
-    nrows = ncol(heightmap),
-    ncols = nrow(heightmap),
-    xmin = unname(extent["xmin"]),
-    xmax = unname(extent["xmax"]),
-    ymin = unname(extent["ymin"]),
-    ymax = unname(extent["ymax"]),
-    crs = target_crs$wkt,
-    vals = as.numeric(heightmap)
+  terrain = build_waterheight_template(
+    nr = nrow(heightmap),
+    nc = ncol(heightmap),
+    heightmap_extent = heightmap_extent,
+    heightmap_crs = target_crs,
+    caller = "render_water"
   )
+  terra::values(terrain) = as.numeric(heightmap)
   names(terrain) = "water_terrain"
 
   # Geometry is a footprint only; numeric data columns and Z/M coordinates
@@ -541,7 +546,16 @@ water_sf_to_raster = function(
       # Inferred levels receive a tiny positive lift to avoid an exactly
       # coplanar surface on flat DEM lakes. Explicit elevations are untouched.
       # This is a visualization heuristic, not a measured hydrological level.
-      lift = max(1e-4, abs(level) * 1e-6)
+      # The previous lift was in DEM units only: after zscale it could be
+      # smaller than float roundoff in rgl/rayrender, producing patchy contact
+      # on flat waterbeds. Reserve 16 single-precision epsilons at scene scale
+      # for intersection arithmetic, then convert that clearance to DEM units.
+      scene_magnitude = max(
+        1,
+        (max(dim(heightmap)) - 1) / 2,
+        abs(level) / zscale
+      )
+      lift = max(1e-4, abs(level) * 1e-6, 16 * 2^-23 * scene_magnitude * zscale)
       component_levels[id] = level + lift
     }
   } else {

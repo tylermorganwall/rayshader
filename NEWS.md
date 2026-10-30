@@ -22,9 +22,28 @@
 
 ## Bugfixes
 
+- `render_multipolygonz()`, `render_raymesh()`, and `render_obj()` Align absolute
+  spatial meshes with points and roads, without a horizontal offset that changes
+  with `zscale` or vertical exaggeration.
+- `render_water()` Aligns rasterized polygon water with the pixel centers of
+  spatial `plot_gg()` scenes. Raster water on simplified terrain no longer loses
+  caps to clipping against a different triangulation. The terrain representation
+  is detected automatically from the `plot_3d()` / `plot_gg()` scene cache.
+  Inferred levels use a
+  scene-scale clearance to avoid coplanar rendering artifacts; explicit levels
+  remain unchanged, and already-aligned raster elevations retain their precision.
+
+- `render_water()` Fixes raster-water surfaces winding order. Tapered shoreline walls no
+  longer emit collapsed triangles; clipping slivers that collapse at rgl's
+  vertex precision are omitted.
+
 - `render_multipolygonz()` Preserves concave face boundaries and holes instead
   of creating spurious roof overhangs. The same triangulation fixes
   `save_multipolygonz_to_obj()` exports, including vertical and sloping faces.
+  Repairs crossed and overlapping boundaries in the face plane and skips
+  zero-area or untriangulatable faces with a summary warning instead of stopping
+  an entire building render. Repairs ambiguous 3D intersections by default; set
+  `options(rayshader.multipolygonz_repair = FALSE)` to drop those faces instead.
 
 - `render_highquality()` Infers datetime sky location from the selected ggplot
   panel's map bounds and display CRS. Use `panel`, or the panel in a spatial

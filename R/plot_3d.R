@@ -1181,6 +1181,8 @@ plot_3d = function(
       tag = tag_surface
     )
   }
+  # Cache the actual terrain representation before constructing water.
+  cache_scene_triangulate(triangulate)
   register_plot_3d_surface_texture(surface_id, full_texture_map, tempmap)
   rgl::bg3d(color = background, texture = NULL)
   if (solid && !triangulate) {
@@ -1284,7 +1286,6 @@ plot_3d = function(
     cached_scene_vertical_exaggeration,
     label = vertical_exaggeration_cache_label
   )
-  cache_scene_triangulate(triangulate)
   cache_scene_extent(extent_cache_value, label = extent_cache_label)
   cache_scene_crs(crs_cache_value, label = crs_cache_label)
   cache_scene_geographic_aspect(geographic_aspect_info)

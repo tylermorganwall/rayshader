@@ -38,7 +38,17 @@
 #'@export
 #'@details Faces with more than three vertices or holes require the `decido`
 #'package. Concave boundaries and interior holes are preserved when triangulating
-#'horizontal, vertical, and sloping faces.
+#'horizontal, vertical, and sloping faces. Crossed or overlapping rings are
+#'repaired in the face plane, with new intersection vertices interpolated along
+#'the original 3D edges. By default, `options(rayshader.multipolygonz_repair = TRUE)`
+#'also repairs ambiguous projected intersections, retaining existing vertices
+#'and choosing the nearest projected source edge for new vertex depths (first
+#'edge breaks ties). This is a heuristic for nonplanar faces. Set
+#'`options(rayshader.multipolygonz_repair = FALSE)` to drop those faces with a
+#'summary warning instead. Unambiguous planar repairs occur in either mode.
+#'Zero-area faces and faces that still cannot be triangulated are warned about
+#'and skipped in either mode. If no faces remain, nothing is added to the scene. Some
+#'touching-hole cases require sf/GEOS constrained triangulation support.
 #'@examplesIf length(find.package("sf", quiet = TRUE)) && length(find.package("elevatr", quiet = TRUE)) && length(find.package("raster", quiet = TRUE)) && (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true"))
 #'library(sf)
 #'#Set location of washington monument
@@ -151,6 +161,9 @@ render_multipolygonz = function(
   }
   sf_obj = suppressWarnings(sf::st_cast(sf_obj, "MULTIPOLYGON", warn = FALSE))
   multipolygon_mesh = multipolygonz_to_raymesh(sf_obj)
+  if (is.null(multipolygon_mesh)) {
+    return(invisible(NULL))
+  }
   render_raymesh(
     raymesh = multipolygon_mesh,
     extent = extent,
