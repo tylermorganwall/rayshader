@@ -2,6 +2,15 @@
 
 ## New features
 
+- `render_water()` Adds exact-footprint `water_render_method = "polygon"`,
+  now the default in `render_water()` and `plot_3d()`. It extrudes water from
+  the lowest rendered terrain beneath each polygon while
+  preserving small features and holes. Nearly coincident tops receive a small
+  clearance controlled by `water_surface_tolerance`. Roundoff-only shoreline
+  vertices are removed before extrusion to retain large clipped polygons.
+  The previous area-fitting
+  `"polygon"` method is now named `"optimized"`.
+
 - `add_water()` Accepts spatial raster masks, including comparisons such as
   `montereybay_spatial < 0`, while preserving cached terrain elevations. Checks
   mask alignment against the cached terrain and leaves missing mask cells unchanged.

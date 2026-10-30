@@ -549,16 +549,16 @@ get_plot_3d_surface_texture = function(id, rgl_texture_file) {
 #'@param shadow_texture_size Default `getOption("rayshader.max_shadow_texture_size", 1024)`. Maximum width or height, in pixels, of the blurred shadow texture. Set to `Inf` or `FALSE` to render the shadow texture at full heightmap resolution.
 #'@param water Default `FALSE`. If `TRUE`, a water layer is rendered. If `water`
 #'is omitted and `water_input` is explicitly supplied, a water layer is rendered.
-#'@param water_input Default `0`. Water level. Either a scalar, a matrix with the same dimensions as `heightmap`, or a spatial raster that can be projected/resampled to the heightmap grid. For spatial rasters, finite cells define the water footprint.
+#'@param water_input Default `0`. Water level or footprint. A scalar, matrix matching `heightmap`, spatial raster, or `sf`/`sfc` polygon object. Finite raster cells define water coverage. Method `"polygon"` retains supplied polygon boundaries and holes.
 #'@param water_color Default `lightblue`. Color of the water.
 #'@param water_alpha Default `0.5`. Water transparency.
 #'@param water_line_color Default `NULL`. Color of the lines around the edges of the water layer.
 #'@param water_line_alpha Default `1`. Water line tranparency.
 #'@param linewidth Default `2`. Width of the edge lines in the scene.
 #'@param line_antialias Default `FALSE`. Whether to anti-alias the lines in the scene.
-#'@param water_render_method Default `"raster"`. Water meshing method. `"raster"` renders water at the supplied elevation and emits sidewalls down to the terrain wherever exposed water floats above the surface; `"polygon"` fits each spatial water component by matching flooded terrain-triangle area to raster footprint area, then clips the fixed-grid terrain triangles; `"legacy"` uses the previous box/grid renderer.
+#'@param water_render_method Default `"polygon"`. Water meshing method. `"raster"` renders water at the supplied elevation and emits sidewalls down to the terrain wherever exposed water floats above the surface; `"polygon"` preserves polygon footprints and holes, extruding from the lowest terrain beneath each part to a flat water level; `"optimized"` fits each spatial water component by matching flooded terrain-triangle area to raster footprint area, then clips the fixed-grid terrain triangles; `"legacy"` uses the previous box/grid renderer.
 #'@param water_edge_extension Default `0.5`. For spatial `water_input` inputs, amount in grid cells to expand finite water cells at boundary edges, up to a maximum of half a cell.
-#'@param water_polygon_failure Default `"raster"`. Behavior for spatial polygon water components that cannot be fit to an admissible terrain-triangle flood. `"raster"` renders the failed component with the raster method; `"remove"` omits it.
+#'@param water_polygon_failure Default `"raster"`. Behavior for `"optimized"` water components that cannot be fit to an admissible terrain-triangle flood. `"raster"` renders the failed component with the raster method; `"remove"` omits it.
 #'@param soil Default `FALSE`. Whether to draw the solid base with a textured soil layer.
 #'@param soil_freq Default `0.1`. Frequency of soil clumps. Higher frequency values give smaller soil clumps.
 #'@param soil_levels Default `16`. Fractal level of the soil.
@@ -600,7 +600,8 @@ get_plot_3d_surface_texture = function(id, rgl_texture_file) {
 #'@param close_previous Default `TRUE`. Closes any previously open `rgl` window. If `FALSE`,
 #'old windows will be kept open.
 #'@param clear_previous Default `TRUE`. Clears the previously open `rgl` window if `plot_new = FALSE`.
-#'
+#'@param water_elevation Default `NULL`. Polygon water elevations; see [render_water()].
+#'@param water_surface_tolerance Default `NULL`. Polygon water coincidence tolerance in terrain elevation units; see [render_water()].
 #'@import rgl
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
@@ -684,7 +685,7 @@ plot_3d = function(
   water_line_alpha = 1,
   linewidth = 2,
   line_antialias = FALSE,
-  water_render_method = c("raster", "polygon", "legacy"),
+  water_render_method = c("polygon", "raster", "optimized", "legacy"),
   water_edge_extension = 0.5,
   water_polygon_failure = c("raster", "remove"),
   soil = FALSE,
@@ -710,7 +711,9 @@ plot_3d = function(
   clear_previous = TRUE,
   extent = NULL,
   geographic_aspect = TRUE,
-  crs = NULL
+  crs = NULL,
+  water_elevation = NULL,
+  water_surface_tolerance = NULL
 ) {
   water_was_missing = missing(water)
   water_input_was_missing = missing(water_input)
@@ -1228,7 +1231,7 @@ plot_3d = function(
   water_mesh = NULL
   water_render_method_current = water_render_method
   if (water) {
-    water_render_method_current = resolve_polygon_water_render_method_for_terrain(
+    water_render_method_current = resolve_optimized_water_render_method_for_terrain(
       water_render_method = water_render_method,
       triangulate = triangulate,
       caller = "plot_3d"
@@ -1243,7 +1246,9 @@ plot_3d = function(
       water_edge_extension = water_edge_extension,
       water_polygon_failure = water_polygon_failure,
       heightmap_extent = extent_cache_value,
-      heightmap_crs = crs_cache_value
+      heightmap_crs = crs_cache_value,
+      water_elevation = water_elevation,
+      water_surface_tolerance = water_surface_tolerance
     )
   }
   if (!is.null(water_line_color) && water) {

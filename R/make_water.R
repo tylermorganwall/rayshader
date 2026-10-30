@@ -8,12 +8,14 @@
 #'@param zscale Default `1`. The ratio between the x and y spacing (which are assumed to be equal) and the z axis. For example, if the elevation levels are in units
 #'of 1 meter and the grid values are separated by 10 meters, `zscale` would be 10.
 #'@param water_alpha Default `0.5`. Water transparency.
-#'@param water_render_method Default `"raster"`. Water meshing method. `"raster"` renders water at the supplied elevation and emits sidewalls down to the terrain wherever exposed water floats above the surface; `"polygon"` fits each spatial water component by matching flooded terrain-triangle area to raster footprint area, then clips the fixed-grid terrain triangles; `"legacy"` uses the previous box/grid renderer.
+#'@param water_render_method Default `"polygon"`. Water meshing method. `"raster"` renders water at the supplied elevation and emits sidewalls down to the terrain wherever exposed water floats above the surface; `"polygon"` preserves polygon footprints and holes, extruding from the lowest terrain beneath each part to a flat water level; `"optimized"` fits each spatial water component by matching flooded terrain-triangle area to raster footprint area, then clips the fixed-grid terrain triangles; `"legacy"` uses the previous box/grid renderer.
 #'@param water_edge_extension Default `0.5`. For spatial `waterheight` inputs, amount in grid cells to expand finite water cells at boundary edges, up to a maximum of half a cell.
 #'@param water_edge_clamp Default `FALSE`. For spatial `waterheight` inputs, if `TRUE`, resolves each connected water footprint to a single level, then lowers it by the largest finite exterior sidewall height after edge expansion. Heightmap-boundary and NA-slice edges are ignored when computing the lowering amount.
-#'@param water_polygon_failure Default `"raster"`. Behavior for spatial polygon water components that cannot be fit to an admissible terrain-triangle flood. `"raster"` renders the failed component with the raster method; `"remove"` omits it.
+#'@param water_polygon_failure Default `"raster"`. Behavior for `"optimized"` water components that cannot be fit to an admissible terrain-triangle flood. `"raster"` renders the failed component with the raster method; `"remove"` omits it.
 #'@param heightmap_extent Default `NULL`. Active scene extent for spatial `waterheight` inputs.
 #'@param heightmap_crs Default `NULL`. Active scene CRS for spatial `waterheight` inputs.
+#'@param water_surface_tolerance Default `NULL`. Near-coincidence tolerance for exact polygon water, in terrain elevation units.
+#'@param water_elevation Default `NULL`. Explicit elevations for polygon footprints.
 #'@keywords internal
 make_water = function(
   heightmap,
@@ -21,15 +23,53 @@ make_water = function(
   water_color = "lightblue",
   zscale = 1,
   water_alpha = 0.5,
-  water_render_method = c("raster", "polygon", "legacy"),
+  water_render_method = c("polygon", "raster", "optimized", "legacy"),
   water_edge_extension = 0.5,
   water_edge_clamp = FALSE,
   water_polygon_failure = c("raster", "remove"),
   heightmap_extent = NULL,
-  heightmap_crs = NULL
+  heightmap_crs = NULL,
+  water_surface_tolerance = NULL,
+  water_elevation = NULL
 ) {
   water_render_method = match.arg(water_render_method)
   water_polygon_failure = match.arg(water_polygon_failure)
+  if (identical(water_render_method, "polygon")) {
+    return(make_polygon_water(
+      heightmap,
+      waterheight,
+      zscale,
+      heightmap_extent,
+      heightmap_crs,
+      water_elevation = water_elevation,
+      water_surface_tolerance = water_surface_tolerance,
+      water_color = water_color,
+      water_alpha = water_alpha
+    ))
+  }
+  if (is_sf_water_input(waterheight)) {
+    if (identical(water_render_method, "legacy")) {
+      warning(
+        'Polygon footprints require a modern water method; using "raster".',
+        call. = FALSE
+      )
+      water_render_method = "raster"
+    }
+    waterheight = water_sf_to_raster(
+      waterheight,
+      heightmap,
+      heightmap_extent,
+      heightmap_crs,
+      water_elevation = water_elevation,
+      zscale = zscale
+    )
+    if (is.null(waterheight)) {
+      return(invisible(list(
+        vertices = list(),
+        lines = matrix(numeric(), ncol = 3)
+      )))
+    }
+  }
   if (identical(water_render_method, "legacy")) {
     return(make_water_legacy(
       heightmap = heightmap,
@@ -61,7 +101,7 @@ make_water_raster = function(
   water_color = "lightblue",
   zscale = 1,
   water_alpha = 0.5,
-  water_render_method = c("raster", "polygon"),
+  water_render_method = c("raster", "optimized"),
   water_edge_extension = 0.5,
   water_edge_clamp = FALSE,
   water_polygon_failure = c("raster", "remove"),
@@ -149,7 +189,7 @@ make_spatial_water_surface = function(
   valid_water,
   water_color = "lightblue",
   water_alpha = 0.5,
-  water_render_method = c("raster", "polygon"),
+  water_render_method = c("raster", "optimized"),
   water_edge_extension = 0.5,
   water_edge_clamp = FALSE,
   water_polygon_failure = c("raster", "remove")
@@ -176,7 +216,7 @@ make_spatial_water_surface = function(
       water_edge_extension = water_edge_extension
     )
   }
-  if (identical(water_render_method, "polygon")) {
+  if (identical(water_render_method, "optimized")) {
     water_mesh = make_spatial_water_polygon_surface(
       water_surface = water_surface,
       heightmap = heightmap,
@@ -253,14 +293,14 @@ validate_water_edge_clamp = function(water_edge_clamp = FALSE) {
 }
 
 #'@keywords internal
-resolve_polygon_water_render_method_for_terrain = function(
+resolve_optimized_water_render_method_for_terrain = function(
   water_render_method,
   triangulate = FALSE,
   caller = "render_water"
 ) {
-  if (isTRUE(triangulate) && identical(water_render_method, "polygon")) {
+  if (isTRUE(triangulate) && identical(water_render_method, "optimized")) {
     warning(
-      "`water_render_method = \"polygon\"` clips the fixed grid terrain mesh ",
+      "`water_render_method = \"optimized\"` clips the fixed grid terrain mesh ",
       "and cannot exactly conform to `triangulate = TRUE` terrain; falling back ",
       "to `water_render_method = \"raster\"` for this ",
       caller,
@@ -483,7 +523,7 @@ make_spatial_water_polygon_surface = function(
 ) {
   if (is.null(heightmap) || !is.matrix(heightmap)) {
     stop(
-      "`water_render_method = \"polygon\"` requires a matrix heightmap.",
+      "`water_render_method = \"optimized\"` requires a matrix heightmap.",
       call. = FALSE
     )
   }
@@ -548,7 +588,7 @@ require_spatial_water_polygon_packages = function() {
   if (length(missing_packages)) {
     stop(
       paste0(
-        "`water_render_method = \"polygon\"` requires the ",
+        "`water_render_method = \"optimized\"` requires the ",
         paste(missing_packages, collapse = ", "),
         " package",
         if (length(missing_packages) == 1) "." else "s."

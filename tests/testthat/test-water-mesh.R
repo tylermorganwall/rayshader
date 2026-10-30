@@ -350,6 +350,7 @@ test_that("plot_3d creates separate water ids for disconnected raster water", {
     solid = FALSE,
     shadow = FALSE,
     water = TRUE,
+    water_render_method = "raster",
     water_input = 1,
     window_size = c(200, 200)
   ))
@@ -1758,6 +1759,7 @@ test_that("render_water clamps spatial water_input edges to terrain", {
 
   expect_no_condition(render_water(
     water_input = water_level_rast,
+    water_render_method = "raster",
     water_edge_clamp = TRUE
   ))
   water_ids = get_ids_with_labels(typeval = "water")
@@ -1789,6 +1791,7 @@ test_that("spatial water_input rasters render finite cells at equal terrain heig
     solid = FALSE,
     shadow = FALSE,
     water = TRUE,
+    water_render_method = "raster",
     water_input = water_level_rast,
     window_size = c(200, 200)
   ))
@@ -2293,7 +2296,7 @@ test_that("spatial polygon water fits full raster coverage", {
     waterheight = water_surface,
     heightmap = heightmap,
     valid_water = is.finite(water_surface),
-    water_render_method = "polygon",
+    water_render_method = "optimized",
     water_edge_extension = 0
   )
   vertices = water_mesh_vertices(water_mesh)
@@ -2331,7 +2334,7 @@ test_that("spatial polygon water fits flooded area to raster coverage", {
     waterheight = water_surface,
     heightmap = heightmap,
     valid_water = is.finite(water_surface),
-    water_render_method = "polygon",
+    water_render_method = "optimized",
     water_edge_extension = 0.5
   )
   vertices = water_mesh_vertices(water_mesh)
@@ -2509,7 +2512,7 @@ test_that("spatial polygon water selects only intersecting terrain islands", {
     waterheight = water_surface,
     heightmap = heightmap,
     valid_water = is.finite(water_surface),
-    water_render_method = "polygon"
+    water_render_method = "optimized"
   )
   vertices = water_mesh_vertices(water_mesh)
 
@@ -2554,7 +2557,7 @@ test_that("spatial polygon water keeps sidewalls at scene and NA cuts", {
     waterheight = water_surface,
     heightmap = heightmap,
     valid_water = is.finite(heightmap) & is.finite(water_surface),
-    water_render_method = "polygon",
+    water_render_method = "optimized",
     water_edge_extension = 0
   )
   vertices = water_mesh_vertices(water_mesh)
@@ -2585,7 +2588,7 @@ test_that("spatial polygon water supports non-square heightmaps", {
     waterheight = water_surface,
     heightmap = heightmap,
     valid_water = is.finite(water_surface),
-    water_render_method = "polygon",
+    water_render_method = "optimized",
     water_edge_extension = 0
   )
   vertices = water_mesh_vertices(water_mesh)
@@ -3118,7 +3121,7 @@ test_that("render_water accepts spatial polygon water method", {
   ))
   expect_no_condition(render_water(
     water_input = water_level_rast,
-    water_render_method = "polygon"
+    water_render_method = "optimized"
   ))
   water_ids = get_ids_with_labels(typeval = "water")
   water_verts = rgl::rgl.attrib(water_ids$id[1], "vertices")

@@ -28,7 +28,7 @@ plot_3d(
   water_line_alpha = 1,
   linewidth = 2,
   line_antialias = FALSE,
-  water_render_method = c("raster", "polygon", "legacy"),
+  water_render_method = c("polygon", "raster", "optimized", "legacy"),
   water_edge_extension = 0.5,
   water_polygon_failure = c("raster", "remove"),
   soil = FALSE,
@@ -54,7 +54,9 @@ plot_3d(
   clear_previous = TRUE,
   extent = NULL,
   geographic_aspect = TRUE,
-  crs = NULL
+  crs = NULL,
+  water_elevation = NULL,
+  water_surface_tolerance = NULL
 )
 }
 \arguments{
@@ -107,7 +109,7 @@ the \code{background} color by scaling its CIELuv lightness and chroma together 
 \item{water}{Default \code{FALSE}. If \code{TRUE}, a water layer is rendered. If \code{water}
 is omitted and \code{water_input} is explicitly supplied, a water layer is rendered.}
 
-\item{water_input}{Default \code{0}. Water level. Either a scalar, a matrix with the same dimensions as \code{heightmap}, or a spatial raster that can be projected/resampled to the heightmap grid. For spatial rasters, finite cells define the water footprint.}
+\item{water_input}{Default \code{0}. Water level or footprint. A scalar, matrix matching \code{heightmap}, spatial raster, or \code{sf}/\code{sfc} polygon object. Finite raster cells define water coverage. Method \code{"polygon"} retains supplied polygon boundaries and holes.}
 
 \item{water_color}{Default \code{lightblue}. Color of the water.}
 
@@ -121,11 +123,11 @@ is omitted and \code{water_input} is explicitly supplied, a water layer is rende
 
 \item{line_antialias}{Default \code{FALSE}. Whether to anti-alias the lines in the scene.}
 
-\item{water_render_method}{Default \code{"raster"}. Water meshing method. \code{"raster"} renders water at the supplied elevation and emits sidewalls down to the terrain wherever exposed water floats above the surface; \code{"polygon"} fits each spatial water component by matching flooded terrain-triangle area to raster footprint area, then clips the fixed-grid terrain triangles; \code{"legacy"} uses the previous box/grid renderer.}
+\item{water_render_method}{Default \code{"polygon"}. Water meshing method. \code{"raster"} renders water at the supplied elevation and emits sidewalls down to the terrain wherever exposed water floats above the surface; \code{"polygon"} preserves polygon footprints and holes, extruding from the lowest terrain beneath each part to a flat water level; \code{"optimized"} fits each spatial water component by matching flooded terrain-triangle area to raster footprint area, then clips the fixed-grid terrain triangles; \code{"legacy"} uses the previous box/grid renderer.}
 
 \item{water_edge_extension}{Default \code{0.5}. For spatial \code{water_input} inputs, amount in grid cells to expand finite water cells at boundary edges, up to a maximum of half a cell.}
 
-\item{water_polygon_failure}{Default \code{"raster"}. Behavior for spatial polygon water components that cannot be fit to an admissible terrain-triangle flood. \code{"raster"} renders the failed component with the raster method; \code{"remove"} omits it.}
+\item{water_polygon_failure}{Default \code{"raster"}. Behavior for \code{"optimized"} water components that cannot be fit to an admissible terrain-triangle flood. \code{"raster"} renders the failed component with the raster method; \code{"remove"} omits it.}
 
 \item{soil}{Default \code{FALSE}. Whether to draw the solid base with a textured soil layer.}
 
@@ -200,6 +202,10 @@ spacing in terrain geometry and cache the transform for later render calls.}
 
 \item{crs}{Default \code{NULL}. CRS to assign to the terrain input. An explicit
 value overrides embedded CRS metadata.}
+
+\item{water_elevation}{Default \code{NULL}. Polygon water elevations; see \code{\link[=render_water]{render_water()}}.}
+
+\item{water_surface_tolerance}{Default \code{NULL}. Polygon water coincidence tolerance in terrain elevation units; see \code{\link[=render_water]{render_water()}}.}
 }
 \description{
 Displays the shaded map in 3D with the \code{rgl} package.

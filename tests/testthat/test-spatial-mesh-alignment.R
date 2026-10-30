@@ -284,6 +284,7 @@ test_that("both public water entry points preserve caps on simplified terrain", 
       shadow = FALSE,
       solid = FALSE,
       water = TRUE,
+      water_render_method = "raster",
       water_input = w,
       water_edge_extension = 0,
       geographic_aspect = FALSE
@@ -291,7 +292,11 @@ test_that("both public water entry points preserve caps on simplified terrain", 
     expect_identical(get_scene_triangulate(), triangulate)
     for (entry in c("plot_3d", "render_water")) {
       if (entry == "render_water") {
-        render_water(w, water_edge_extension = 0)
+        render_water(
+          w,
+          water_edge_extension = 0,
+          water_render_method = "raster"
+        )
       }
       id = get_ids_with_labels(typeval = "water")$id
       v = rgl::rgl.attrib(id, "vertices")

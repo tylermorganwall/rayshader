@@ -10,12 +10,14 @@ make_water(
   water_color = "lightblue",
   zscale = 1,
   water_alpha = 0.5,
-  water_render_method = c("raster", "polygon", "legacy"),
+  water_render_method = c("polygon", "raster", "optimized", "legacy"),
   water_edge_extension = 0.5,
   water_edge_clamp = FALSE,
   water_polygon_failure = c("raster", "remove"),
   heightmap_extent = NULL,
-  heightmap_crs = NULL
+  heightmap_crs = NULL,
+  water_surface_tolerance = NULL,
+  water_elevation = NULL
 )
 }
 \arguments{
@@ -30,17 +32,21 @@ of 1 meter and the grid values are separated by 10 meters, \code{zscale} would b
 
 \item{water_alpha}{Default \code{0.5}. Water transparency.}
 
-\item{water_render_method}{Default \code{"raster"}. Water meshing method. \code{"raster"} renders water at the supplied elevation and emits sidewalls down to the terrain wherever exposed water floats above the surface; \code{"polygon"} fits each spatial water component by matching flooded terrain-triangle area to raster footprint area, then clips the fixed-grid terrain triangles; \code{"legacy"} uses the previous box/grid renderer.}
+\item{water_render_method}{Default \code{"polygon"}. Water meshing method. \code{"raster"} renders water at the supplied elevation and emits sidewalls down to the terrain wherever exposed water floats above the surface; \code{"polygon"} preserves polygon footprints and holes, extruding from the lowest terrain beneath each part to a flat water level; \code{"optimized"} fits each spatial water component by matching flooded terrain-triangle area to raster footprint area, then clips the fixed-grid terrain triangles; \code{"legacy"} uses the previous box/grid renderer.}
 
 \item{water_edge_extension}{Default \code{0.5}. For spatial \code{waterheight} inputs, amount in grid cells to expand finite water cells at boundary edges, up to a maximum of half a cell.}
 
 \item{water_edge_clamp}{Default \code{FALSE}. For spatial \code{waterheight} inputs, if \code{TRUE}, resolves each connected water footprint to a single level, then lowers it by the largest finite exterior sidewall height after edge expansion. Heightmap-boundary and NA-slice edges are ignored when computing the lowering amount.}
 
-\item{water_polygon_failure}{Default \code{"raster"}. Behavior for spatial polygon water components that cannot be fit to an admissible terrain-triangle flood. \code{"raster"} renders the failed component with the raster method; \code{"remove"} omits it.}
+\item{water_polygon_failure}{Default \code{"raster"}. Behavior for \code{"optimized"} water components that cannot be fit to an admissible terrain-triangle flood. \code{"raster"} renders the failed component with the raster method; \code{"remove"} omits it.}
 
 \item{heightmap_extent}{Default \code{NULL}. Active scene extent for spatial \code{waterheight} inputs.}
 
 \item{heightmap_crs}{Default \code{NULL}. Active scene CRS for spatial \code{waterheight} inputs.}
+
+\item{water_surface_tolerance}{Default \code{NULL}. Near-coincidence tolerance for exact polygon water, in terrain elevation units.}
+
+\item{water_elevation}{Default \code{NULL}. Explicit elevations for polygon footprints.}
 }
 \description{
 Makes the water in the 3D elevation map.

@@ -11,7 +11,7 @@ render_water(
   water_line_color = NULL,
   water_line_alpha = 1,
   linewidth = 2,
-  water_render_method = c("raster", "polygon", "legacy"),
+  water_render_method = c("polygon", "raster", "optimized", "legacy"),
   water_edge_extension = 0.5,
   water_edge_clamp = FALSE,
   water_polygon_failure = c("raster", "remove"),
@@ -19,7 +19,8 @@ render_water(
   zscale = 1,
   vertical_exaggeration = 1,
   heightmap = NULL,
-  water_elevation = NULL
+  water_elevation = NULL,
+  water_surface_tolerance = NULL
 )
 }
 \arguments{
@@ -30,10 +31,10 @@ POLYGON or MULTIPOLYGON geometries. Non-polygon features are ignored; polygon
 parts within GEOMETRYCOLLECTION features are retained. If no nonempty polygons
 remain, no water is drawn. For spatial rasters, finite cells define
 the water footprint. Polygon inputs require known source and heightmap CRSs
-and a heightmap extent; they are transformed to the scene CRS and converted
-to a spatial water raster on the resolved heightmap grid. Polygon holes are
-retained at that grid resolution. Features smaller than a cell use touched
-cells when they contain no cell centers. Polygon input requires \code{sf} and \code{terra}.}
+and a heightmap extent. Method \code{"polygon"} retains exact boundaries and holes.
+Methods \code{"raster"} and \code{"optimized"} convert polygons to the heightmap grid;
+features smaller than a cell use touched cells when they contain no cell centers.
+Polygon input requires \code{sf} and \code{terra}.}
 
 \item{water_color}{Default \code{lightblue}.}
 
@@ -45,7 +46,7 @@ cells when they contain no cell centers. Polygon input requires \code{sf} and \c
 
 \item{linewidth}{Default \code{2}. Width of the edge lines in the scene.}
 
-\item{water_render_method}{Default \code{"raster"}. Water meshing method. \code{"raster"} renders water at the supplied elevation and emits sidewalls down to the terrain wherever exposed water floats above the surface; \code{"polygon"} fits each spatial water component by matching flooded terrain-triangle area to raster footprint area, then clips the fixed-grid terrain triangles; \code{"legacy"} uses the previous box/grid renderer.
+\item{water_render_method}{Default \code{"polygon"}. Water meshing method. \code{"raster"} renders water at the supplied elevation and emits sidewalls down to the terrain wherever exposed water floats above the surface; \code{"polygon"} preserves polygon footprints and holes, extruding from the lowest terrain beneath each part to a flat water level; \code{"optimized"} fits each spatial water component by matching flooded terrain-triangle area to raster footprint area, then clips the fixed-grid terrain triangles; \code{"legacy"} uses the previous box/grid renderer.
 With simplified (\code{triangulate = TRUE}) terrain, raster caps retain the supplied
 footprint and the rendered terrain hides buried portions, avoiding holes from
 clipping against a different terrain triangulation.}
@@ -54,7 +55,7 @@ clipping against a different terrain triangulation.}
 
 \item{water_edge_clamp}{Default \code{FALSE}. For spatial \code{water_input} inputs, if \code{TRUE}, resolves each connected water footprint to a single level, then lowers it by the largest finite exterior sidewall height after edge expansion. Heightmap-boundary and NA-slice edges are ignored when computing the lowering amount.}
 
-\item{water_polygon_failure}{Default \code{"raster"}. Behavior for spatial polygon water components that cannot be fit to an admissible terrain-triangle flood. \code{"raster"} renders the failed component with the raster method; \code{"remove"} omits it.}
+\item{water_polygon_failure}{Default \code{"raster"}. Behavior for \code{"optimized"} water components that cannot be fit to an admissible terrain-triangle flood. \code{"raster"} renders the failed component with the raster method; \code{"remove"} omits it.}
 
 \item{clear_previous}{Default \code{TRUE}. If \code{TRUE}, removes the existing water
 layer before drawing the new one. A clear-only call returns without rendering
@@ -77,14 +78,26 @@ back to its interior cells when no finite shoreline samples are available.
 Inferred levels receive a small positive lift to avoid coplanar water on flat
 terrain. The lift is at least \code{max(1e-4, abs(level) * 1e-6)} in elevation units
 and accounts for scene size and \code{zscale} so it survives rendering precision.
-Explicit levels are not lifted.
+Explicit levels are not lifted by \code{"raster"} or \code{"optimized"}. Exact polygon
+water checks the actual rendered terrain, infers the shoreline median if needed,
+and lifts even explicit levels when nearly coincident with a terrain patch.
 This default is a visualization estimate, not a measured water-surface level.
 Overlapping raster cells use the highest component level. With method
-\code{"polygon"}, the existing area-fit algorithm may replace these levels; they
+\code{"optimized"}, the existing area-fit algorithm may replace these levels; they
 are the supplied levels for raster rendering and polygon-to-raster fallback.
 \code{water_edge_clamp = TRUE} may also lower the supplied levels. Use method
 \code{"raster"} with clamping disabled to retain explicit elevations. With polygon
 inputs, method \code{"legacy"} warns and uses \code{"raster"} instead.}
+
+\item{water_surface_tolerance}{Default \code{NULL}. For \code{"polygon"}, maximum
+difference in terrain elevation units for treating a nearly horizontal terrain
+patch as coincident with the water top. \code{NULL} uses a tolerance scaled to
+single-precision scene coordinates. Coincident tops are raised just above the
+highest matching patch by a scene-scale clearance. \code{0} tests exact coincidence.
+The extrusion bottom is the lowest rendered terrain point within each polygon.
+Polygon footprints are clipped only to valid terrain coverage; buried water is
+hidden by terrain. Grid edge expansion, clamping, and fitting-failure settings
+do not alter exact polygon water.}
 }
 \description{
 Adds water layer to the scene, removing the previous water layer if desired.

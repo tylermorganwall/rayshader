@@ -11,22 +11,22 @@
 #'parts within GEOMETRYCOLLECTION features are retained. If no nonempty polygons
 #'remain, no water is drawn. For spatial rasters, finite cells define
 #'the water footprint. Polygon inputs require known source and heightmap CRSs
-#'and a heightmap extent; they are transformed to the scene CRS and converted
-#'to a spatial water raster on the resolved heightmap grid. Polygon holes are
-#'retained at that grid resolution. Features smaller than a cell use touched
-#'cells when they contain no cell centers. Polygon input requires `sf` and `terra`.
+#'and a heightmap extent. Method `"polygon"` retains exact boundaries and holes.
+#'Methods `"raster"` and `"optimized"` convert polygons to the heightmap grid;
+#'features smaller than a cell use touched cells when they contain no cell centers.
+#'Polygon input requires `sf` and `terra`.
 #'@param water_color Default `lightblue`.
 #'@param water_alpha Default `0.5`. Water transparency.
 #'@param water_line_color Default `NULL`. Color of the lines around the edges of the water layer.
 #'@param water_line_alpha Default `1`. Water line tranparency.
 #'@param linewidth Default `2`. Width of the edge lines in the scene.
-#'@param water_render_method Default `"raster"`. Water meshing method. `"raster"` renders water at the supplied elevation and emits sidewalls down to the terrain wherever exposed water floats above the surface; `"polygon"` fits each spatial water component by matching flooded terrain-triangle area to raster footprint area, then clips the fixed-grid terrain triangles; `"legacy"` uses the previous box/grid renderer.
+#'@param water_render_method Default `"polygon"`. Water meshing method. `"raster"` renders water at the supplied elevation and emits sidewalls down to the terrain wherever exposed water floats above the surface; `"polygon"` preserves polygon footprints and holes, extruding from the lowest terrain beneath each part to a flat water level; `"optimized"` fits each spatial water component by matching flooded terrain-triangle area to raster footprint area, then clips the fixed-grid terrain triangles; `"legacy"` uses the previous box/grid renderer.
 #'With simplified (`triangulate = TRUE`) terrain, raster caps retain the supplied
 #'footprint and the rendered terrain hides buried portions, avoiding holes from
 #'clipping against a different terrain triangulation.
 #'@param water_edge_extension Default `0.5`. For spatial `water_input` inputs, amount in grid cells to expand finite water cells at boundary edges, up to a maximum of half a cell.
 #'@param water_edge_clamp Default `FALSE`. For spatial `water_input` inputs, if `TRUE`, resolves each connected water footprint to a single level, then lowers it by the largest finite exterior sidewall height after edge expansion. Heightmap-boundary and NA-slice edges are ignored when computing the lowering amount.
-#'@param water_polygon_failure Default `"raster"`. Behavior for spatial polygon water components that cannot be fit to an admissible terrain-triangle flood. `"raster"` renders the failed component with the raster method; `"remove"` omits it.
+#'@param water_polygon_failure Default `"raster"`. Behavior for `"optimized"` water components that cannot be fit to an admissible terrain-triangle flood. `"raster"` renders the failed component with the raster method; `"remove"` omits it.
 #'@param clear_previous Default `TRUE`. If `TRUE`, removes the existing water
 #'layer before drawing the new one. A clear-only call returns without rendering
 #'a replacement.
@@ -44,14 +44,25 @@
 #'Inferred levels receive a small positive lift to avoid coplanar water on flat
 #'terrain. The lift is at least `max(1e-4, abs(level) * 1e-6)` in elevation units
 #'and accounts for scene size and `zscale` so it survives rendering precision.
-#'Explicit levels are not lifted.
+#'Explicit levels are not lifted by `"raster"` or `"optimized"`. Exact polygon
+#'water checks the actual rendered terrain, infers the shoreline median if needed,
+#'and lifts even explicit levels when nearly coincident with a terrain patch.
 #'This default is a visualization estimate, not a measured water-surface level.
 #'Overlapping raster cells use the highest component level. With method
-#'`"polygon"`, the existing area-fit algorithm may replace these levels; they
+#'`"optimized"`, the existing area-fit algorithm may replace these levels; they
 #'are the supplied levels for raster rendering and polygon-to-raster fallback.
 #'`water_edge_clamp = TRUE` may also lower the supplied levels. Use method
 #'`"raster"` with clamping disabled to retain explicit elevations. With polygon
 #'inputs, method `"legacy"` warns and uses `"raster"` instead.
+#'@param water_surface_tolerance Default `NULL`. For `"polygon"`, maximum
+#'difference in terrain elevation units for treating a nearly horizontal terrain
+#'patch as coincident with the water top. `NULL` uses a tolerance scaled to
+#'single-precision scene coordinates. Coincident tops are raised just above the
+#'highest matching patch by a scene-scale clearance. `0` tests exact coincidence.
+#'The extrusion bottom is the lowest rendered terrain point within each polygon.
+#'Polygon footprints are clipped only to valid terrain coverage; buried water is
+#'hidden by terrain. Grid edge expansion, clamping, and fitting-failure settings
+#'do not alter exact polygon water.
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'montereybay_spatial |>
@@ -98,7 +109,7 @@ render_water = function(
   water_line_color = NULL,
   water_line_alpha = 1,
   linewidth = 2,
-  water_render_method = c("raster", "polygon", "legacy"),
+  water_render_method = c("polygon", "raster", "optimized", "legacy"),
   water_edge_extension = 0.5,
   water_edge_clamp = FALSE,
   water_polygon_failure = c("raster", "remove"),
@@ -106,7 +117,8 @@ render_water = function(
   zscale = 1,
   vertical_exaggeration = 1,
   heightmap = NULL,
-  water_elevation = NULL
+  water_elevation = NULL,
+  water_surface_tolerance = NULL
 ) {
   if (
     is_render_clear_only_call(
@@ -152,7 +164,7 @@ render_water = function(
     heightmap = heightmap,
     caller = "render_water"
   )
-  water_render_method_current = resolve_polygon_water_render_method_for_terrain(
+  water_render_method_current = resolve_optimized_water_render_method_for_terrain(
     water_render_method = water_render_method,
     triangulate = get_scene_triangulate(default = FALSE),
     caller = "render_water"
@@ -180,7 +192,7 @@ render_water = function(
       )
     }
   }
-  if (water_input_is_sf) {
+  if (water_input_is_sf && !identical(water_render_method_current, "polygon")) {
     water_input = water_sf_to_raster(
       water_input = water_input,
       heightmap = heightmap,
@@ -209,7 +221,9 @@ render_water = function(
       water_edge_clamp = water_edge_clamp,
       water_polygon_failure = water_polygon_failure,
       heightmap_extent = heightmap_extent,
-      heightmap_crs = heightmap_crs
+      heightmap_crs = heightmap_crs,
+      water_elevation = water_elevation,
+      water_surface_tolerance = water_surface_tolerance
     )
   }
   if (!is.null(water_line_color)) {
