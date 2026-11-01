@@ -10,7 +10,8 @@ convert_rgl_to_raymesh(
   water_surface_color = TRUE,
   water_ior = 1.33,
   include_ids = NULL,
-  exclude_ids = NULL
+  exclude_ids = NULL,
+  id_table = NULL
 )
 }
 \arguments{
@@ -26,6 +27,8 @@ setting a non-zero water attenuation, where the color comes from the attenuation
 \item{include_ids}{Default \code{NULL}. Internal use. Optional rgl ids to include when converting.}
 
 \item{exclude_ids}{Default \code{NULL}. Internal use. Optional rgl ids to exclude when converting.}
+
+\item{id_table}{Default \code{NULL}. Internal use. Optional current rgl ID/tag snapshot.}
 }
 \value{
 A \code{ray_mesh} object

@@ -1783,6 +1783,14 @@ plot_gg = function(
     height_matrix,
     transform_info = plot_gg_transform_info
   )
+  if (!apply_manual_correction && !invert) {
+    height_matrix = restore_plot_gg_raster_precision(
+      height_matrix,
+      height_plot_source,
+      plot_gg_panel_info,
+      plot_gg_transform_info
+    )
+  }
   if (isTRUE(flat_substrate)) {
     height_matrix = flatten_plot_gg_panel_data(
       height_matrix = height_matrix,
@@ -2058,4 +2066,100 @@ plot_gg = function(
     return(list(height_matrix, shadelayer))
   }
   invisible(NULL)
+}
+
+#' Preserve numeric terrain heights instead of quantizing them through a PNG.
+#'
+#' @param height_matrix Heights recovered from the plotted image.
+#' @param plot_obj Original height plot.
+#' @param panel_info Rendered panel bounds and coordinate ranges.
+#' @param transform_info Cached plot coordinate and height transformations.
+#' @return A height matrix with original raster precision in its data panel.
+#' @keywords internal
+restore_plot_gg_raster_precision = function(
+  height_matrix,
+  plot_obj,
+  panel_info,
+  transform_info
+) {
+  # Only a single numeric raster drawn last has an unambiguous height field.
+  # Keep image-based heights for facets, mixed height geometries, transformed
+  # color scales, and deliberately altered height images.
+  if (
+    is.null(panel_info) ||
+      nrow(panel_info) != 1L ||
+      !isTRUE(transform_info$height_use_data_scale) ||
+      !isTRUE(transform_info$height_is_mapped) ||
+      !inherits(transform_info$coord, "CoordSf") ||
+      !length(plot_obj$layers)
+  ) {
+    return(height_matrix)
+  }
+  # tidyterra appends an empty geom_sf layer to establish the coordinate CRS.
+  # It contributes no visible height geometry.
+  visible_layers = Filter(
+    function(layer) {
+      !(inherits(layer$data, "sf") && all(sf::st_is_empty(layer$data)))
+    },
+    plot_obj$layers
+  )
+  if (!length(visible_layers)) {
+    return(height_matrix)
+  }
+  layer = tail(visible_layers, 1L)[[1L]]
+  if (!inherits(layer$stat, "StatTerraSpatRaster")) {
+    return(height_matrix)
+  }
+  scale_transform = transform_info$height_scale$get_transformation()
+  if (!identical(scale_transform$name, "identity")) {
+    return(height_matrix)
+  }
+  rasters = layer$data$spatraster
+  if (
+    length(rasters) != 1L ||
+      !inherits(rasters[[1L]], "SpatRaster") ||
+      terra::nlyr(rasters[[1L]]) != 1L
+  ) {
+    return(height_matrix)
+  }
+  raster = rasters[[1L]]
+
+  # Use the same extent-to-vertex mapping as spatial scene placement. Rows are
+  # west-to-east and columns north-to-south in a rayshader height matrix.
+  x = seq(
+    panel_info$extent_xmin,
+    panel_info$extent_xmax,
+    length.out = nrow(height_matrix)
+  )
+  y = seq(
+    panel_info$extent_ymax,
+    panel_info$extent_ymin,
+    length.out = ncol(height_matrix)
+  )
+  rows = which(x >= panel_info$data_xmin & x <= panel_info$data_xmax)
+  cols = which(y >= panel_info$data_ymin & y <= panel_info$data_ymax)
+  if (!length(rows) || !length(cols)) {
+    return(height_matrix)
+  }
+  xy = expand.grid(x = x[rows], y = y[cols])
+  source_crs = get_coord_sf_target_crs(transform_info$panel_params[[1L]])
+  coords = transform_xy_between_crs(
+    x_vals = xy$x,
+    y_vals = xy$y,
+    source_crs = source_crs,
+    target_crs = terra::crs(raster),
+    caller = "plot_gg"
+  )
+  method = if (isTRUE(layer$geom_params$interpolate)) "bilinear" else "simple"
+  values = terra::extract(raster, cbind(coords$x, coords$y), method = method)[[
+    1L
+  ]]
+  values = matrix(values, nrow = length(rows), ncol = length(cols))
+  # Missing raster cells retain their plotted background, as they did in the
+  # image path; only finite terrain samples replace the quantized heights.
+  panel = height_matrix[rows, cols, drop = FALSE]
+  finite = is.finite(values)
+  panel[finite] = values[finite]
+  height_matrix[rows, cols] = panel
+  height_matrix
 }

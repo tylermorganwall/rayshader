@@ -78,7 +78,7 @@ test_that("simple tree previews cache transforms and use rayrender instances", {
     "scale_z"
   )]))))
 
-  instance_models = make_render_highquality_cached_tree_instances(
+  instance_models = make_render_highquality_cached_model_instances(
     instance_layers = instance_layers,
     bbox_center = c(0, 0, 0),
     override_material = FALSE,
@@ -128,7 +128,7 @@ test_that("simple tree previews cache transforms and use rayrender instances", {
     preview_simple = "none",
     clear_previous = TRUE
   )
-  varied_models = make_render_highquality_cached_tree_instances(
+  varied_models = make_render_highquality_cached_model_instances(
     instance_layers = get_scene_tree_instances(),
     bbox_center = c(0, 0, 0),
     override_material = FALSE,
@@ -228,7 +228,7 @@ test_that("tree normals default off in full and cached previews, with opt-in", {
       } else {
         components = get_scene_tree_instances()[[1L]]
         expect_true(all(components$load_normals == smooth))
-        instances = make_render_highquality_cached_tree_instances(
+        instances = make_render_highquality_cached_model_instances(
           get_scene_tree_instances(),
           bbox_center = c(0, 0, 0),
           override_material = FALSE,

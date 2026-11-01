@@ -151,6 +151,10 @@ render_obj = function(
   }
   validate_filter_to_extent(filter_to_extent, caller = "render_obj")
   render_obj_args = list(...)
+  # Internal route used by render_people(): reuse the spatial placement and
+  # filtering pipeline, then cache transforms before reading or expanding OBJ.
+  instance_preview = isTRUE(render_obj_args$instance_preview)
+  render_obj_args$instance_preview = NULL
   transform_scene_input = TRUE
   if ("transform_scene" %in% names(render_obj_args)) {
     transform_scene_input = render_obj_args$transform_scene
@@ -355,14 +359,6 @@ render_obj = function(
       )
     }
   }
-  if (load_material) {
-    obj = rayvertex::read_obj(
-      path.expand(filename),
-      materialspath = dirname(filename)
-    )
-  } else {
-    obj = rayvertex::read_obj(path.expand(filename))
-  }
   if (inherits(angle, "matrix")) {
     if (!is.numeric(angle) || ncol(angle) != 3) {
       stop(
@@ -425,10 +421,10 @@ render_obj = function(
     if (length(obj_cache_altitude) == length(valid_xyz)) {
       obj_cache_altitude = obj_cache_altitude[valid_xyz]
     }
-    scale = scale[valid_xyz, ]
-    angle = angle[valid_xyz, ]
+    scale = scale[valid_xyz, , drop = FALSE]
+    angle = angle[valid_xyz, , drop = FALSE]
     color = color[valid_xyz]
-    xyz = xyz[valid_xyz, ]
+    xyz = xyz[valid_xyz, , drop = FALSE]
     if (nrow(xyz) == 0) {
       stop(
         "All models outside extent--check x/y or lat/long values and extent object."
@@ -441,6 +437,24 @@ render_obj = function(
     scene_altitude = xyz[, 2] * zscale,
     label = "obj"
   )
+  if (instance_preview) {
+    return(cache_render_person_preview(
+      filename,
+      xyz,
+      scale,
+      angle,
+      color,
+      load_normals
+    ))
+  }
+  if (load_material) {
+    obj = rayvertex::read_obj(
+      path.expand(filename),
+      materialspath = dirname(filename)
+    )
+  } else {
+    obj = rayvertex::read_obj(path.expand(filename))
+  }
   # Batch ordinary repeated instances. Keep the established transform path for
   # rotations, raw single models, and nonfinite transforms.
   batched_instances = nrow(xyz) > 1L &&

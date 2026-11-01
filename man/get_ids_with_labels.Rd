@@ -4,10 +4,21 @@
 \alias{get_ids_with_labels}
 \title{Get IDs with Labels}
 \usage{
-get_ids_with_labels(typeval = NULL)
+get_ids_with_labels(
+  typeval = NULL,
+  id_table = NULL,
+  include_ids = NULL,
+  exclude_ids = NULL
+)
 }
 \arguments{
 \item{typeval}{Default \code{NULL}. Select to filter just one of the types: \code{surface}, \code{base},\code{lines}, \code{waterlines},\code{shadow}, \code{basebottom},}
+
+\item{id_table}{Default \code{NULL}. Optional snapshot from \code{rgl::ids3d(tags = TRUE)}.}
+
+\item{include_ids}{Default \code{NULL}. Restrict material queries to these object IDs.}
+
+\item{exclude_ids}{Default \code{NULL}. Omit these IDs before querying materials.}
 }
 \value{
 Data frame of IDs with labels

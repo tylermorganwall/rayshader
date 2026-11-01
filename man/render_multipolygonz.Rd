@@ -19,6 +19,7 @@ render_multipolygonz(
   zscale = 1,
   vertical_exaggeration = 1,
   heightmap = NULL,
+  verbose = FALSE,
   ...
 )
 }
@@ -63,6 +64,8 @@ for non-ggplot scenes.}
 and its existing \code{NA} cells. If omitted, this is taken from the cached scene
 set by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}. Pass explicitly to override the cached
 value.}
+
+\item{verbose}{Default \code{FALSE}. Report triangulation and scene-upload stages.}
 
 \item{...}{Additional arguments to pass to \code{rgl::triangles3d()}.}
 }

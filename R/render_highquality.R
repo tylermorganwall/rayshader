@@ -197,7 +197,8 @@ new_render_highquality_progress_bar = function(verbose, label, total) {
 #'@param animation_camera_coords Default `NULL`. Expects camera animation output from either [convert_path_to_animation_coords()]
 #'or `rayrender::generate_camera_motion()` functions.
 #'@param plot Default `is.na(filename)`. Whether to plot the scene, or just return the RGBA array.
-#'@param verbose Default `FALSE`. If `TRUE`, displays progress bars while
+#'@param verbose Default `FALSE`. If `TRUE`, reports scene-conversion phase timings,
+#'forwards verbose construction timing to rayrender, and displays progress bars while
 #'converting line and stream paths into raytraced scene objects. Road meshes
 #'built by [render_roads()] are reused from the active scene cache.
 #'@param parallel Default `TRUE`. Whether to use multiple threads for raytracing
@@ -430,6 +431,28 @@ render_highquality = function(
     stop("`verbose` must be TRUE or FALSE.", call. = FALSE)
   }
   verbose = verbose[1L]
+  phase = NULL
+  phase_started = proc.time()[["elapsed"]]
+  report_phase = function(next_phase = NULL) {
+    if (!verbose) {
+      return(invisible(NULL))
+    }
+    now = proc.time()[["elapsed"]]
+    if (!is.null(phase)) {
+      message(sprintf(
+        "render_highquality(): %s finished in %.2f s",
+        phase,
+        now - phase_started
+      ))
+    }
+    if (!is.null(next_phase)) {
+      message("render_highquality(): Starting ", next_phase)
+    }
+    phase <<- next_phase
+    phase_started <<- now
+    invisible(NULL)
+  }
+  report_phase("sky and scene metadata")
   parallel = resolve_render_logical(parallel, "parallel")
   water_material = match.arg(water_material)
   water_roughness = validate_render_highquality_water_roughness(
@@ -993,6 +1016,13 @@ render_highquality = function(
 
   rgl_materials = validate_render_highquality_rgl_materials(rgl_materials)
 
+  # The scene is read-only throughout conversion. rgl tag discovery queries
+  # every object's material, so share one snapshot across all layer lookups.
+  rgl_object_ids = rgl::ids3d(tags = TRUE)
+  scene_object_info = function(typeval = NULL) {
+    get_ids_with_labels(typeval, id_table = rgl_object_ids)
+  }
+
   #Get scene info
   windowrect = rgl::par3d()$windowRect
   if (!is.null(title_text)) {
@@ -1012,10 +1042,10 @@ render_highquality = function(
     sepval = "/"
   }
 
-  surfaceid = get_ids_with_labels(typeval = c("surface", "surface_tris"))
+  surfaceid = scene_object_info(typeval = c("surface", "surface_tris"))
   surfacevertices = rgl.attrib(surfaceid$id[1], "vertices")
-  polygonid = get_ids_with_labels(typeval = c("polygon3d"))
-  baseid = get_ids_with_labels(typeval = c("base"))
+  polygonid = scene_object_info(typeval = c("polygon3d"))
+  baseid = scene_object_info(typeval = c("base"))
   if (nrow(polygonid) > 0) {
     polyrange = c()
     polyrange_x = c()
@@ -1052,7 +1082,7 @@ render_highquality = function(
   if (nrow(baseid) > 0) {
     surfacerange[2] = range(c(surfacerange, baserange))[2]
   }
-  shadowid = get_ids_with_labels(typeval = "shadow")
+  shadowid = scene_object_info(typeval = "shadow")
   if (nrow(shadowid) > 0) {
     shadowvertices = rgl.attrib(shadowid$id[1], "vertices")
     shadow_depth = shadowvertices[1, 2]
@@ -1147,7 +1177,10 @@ render_highquality = function(
     bbox_center = bbox_center,
     caller = "render_highquality"
   )
-  rgl_material_info = get_render_highquality_rgl_material_info(rgl_materials)
+  rgl_material_info = get_render_highquality_rgl_material_info(
+    rgl_materials,
+    id_table = rgl_object_ids
+  )
   raymesh_material_info = get_render_highquality_raymesh_material_info(
     rgl_material_info
   )
@@ -1157,19 +1190,22 @@ render_highquality = function(
     rgl_material_info = rgl_material_info
   )
   raymesh_material_ids = unique(raymesh_material_info$id)
-  road_mesh_preview_ids = get_ids_with_labels(
+  road_mesh_preview_ids = scene_object_info(
     typeval = "road_mesh_preview"
   )$id
-  trail_mesh_preview_ids = get_ids_with_labels(
+  trail_mesh_preview_ids = scene_object_info(
     typeval = "trail_mesh_preview"
   )$id
-  tree_preview_ids = get_ids_with_labels(typeval = "tree_preview")$id
+  tree_preview_ids = scene_object_info(typeval = "tree_preview")$id
   cached_tree_instances = get_scene_tree_instances(default = list())
+  person_preview_ids = scene_object_info(typeval = "person_preview")$id
+  cached_person_instances = get_scene_person_instances(default = list())
   raymesh_exclude_ids = unique(c(
     raymesh_material_ids,
     road_mesh_preview_ids,
     trail_mesh_preview_ids,
-    tree_preview_ids
+    tree_preview_ids,
+    person_preview_ids
   ))
   if (
     !use_extruded_paths &&
@@ -1215,10 +1251,12 @@ render_highquality = function(
     )
     water_attenuation[water_attenuation > 1] = 1
   }
+  report_phase("rgl mesh conversion")
   if (cache_scene && length(raymesh_material_ids) == 0) {
     ray_scene = get_scene_cache(default = NULL)
     if (is.null(ray_scene)) {
       ray_scene = convert_rgl_to_raymesh(
+        id_table = rgl_object_ids,
         save_shadow = FALSE,
         water_attenuation = water_attenuation,
         water_surface_color = water_surface_color,
@@ -1226,13 +1264,15 @@ render_highquality = function(
         exclude_ids = c(
           road_mesh_preview_ids,
           trail_mesh_preview_ids,
-          tree_preview_ids
+          tree_preview_ids,
+          person_preview_ids
         )
       )
       cache_scene_cache(ray_scene)
     }
   } else {
     ray_scene = convert_rgl_to_raymesh(
+      id_table = rgl_object_ids,
       save_shadow = FALSE,
       water_attenuation = water_attenuation,
       water_surface_color = water_surface_color,
@@ -1268,6 +1308,7 @@ render_highquality = function(
   if (nrow(raymesh_material_info) > 0) {
     for (material_row in seq_len(nrow(raymesh_material_info))) {
       temp_ray_scene = convert_rgl_to_raymesh(
+        id_table = rgl_object_ids,
         save_shadow = FALSE,
         water_attenuation = water_attenuation,
         water_surface_color = water_surface_color,
@@ -1328,7 +1369,8 @@ render_highquality = function(
     warning("`rayimage` package required for labels")
     has_rayimage = FALSE
   }
-  labelids = get_ids_with_labels(
+  report_phase("labels and line paths")
+  labelids = scene_object_info(
     typeval = c("raytext", "zaxis_labels", "zaxis_title")
   )$id
   labels = list()
@@ -1407,7 +1449,7 @@ render_highquality = function(
     all_labels = do.call(rbind, labels)
     scene = rayrender::add_object(scene, all_labels)
   }
-  labellineinfo = get_ids_with_labels(typeval = "textline")
+  labellineinfo = scene_object_info(typeval = "textline")
   labellineids = labellineinfo$id
   labelline = list()
   labelline_screen = list()
@@ -1466,17 +1508,6 @@ render_highquality = function(
       }
     }
   }
-  pathinfo = get_ids_with_labels(
-    typeval = c(
-      "path3d",
-      "contour3d",
-      "water_path",
-      "road_path",
-      "trail_path",
-      "zaxis_axis",
-      "zaxis_ticks"
-    )
-  )
   cached_road_meshes = get_scene_road_meshes(default = NULL)
   has_cached_road_meshes = length(cached_road_meshes) > 0L
   cached_stream_meshes = get_scene_stream_meshes(default = NULL)
@@ -1484,15 +1515,25 @@ render_highquality = function(
     length(cached_stream_meshes) > 0L && !isTRUE(joined_stream_mesh)
   cached_trail_meshes = get_scene_trail_meshes(default = NULL)
   has_cached_trail_meshes = length(cached_trail_meshes) > 0L
+  path_types = c(
+    "path3d",
+    "contour3d",
+    "water_path",
+    "road_path",
+    "trail_path",
+    "zaxis_axis",
+    "zaxis_ticks"
+  )
   if (has_cached_road_meshes) {
-    pathinfo = pathinfo[pathinfo$tag != "road_path", , drop = FALSE]
+    path_types = setdiff(path_types, "road_path")
   }
   if (has_cached_stream_meshes) {
-    pathinfo = pathinfo[pathinfo$tag != "water_path", , drop = FALSE]
+    path_types = setdiff(path_types, "water_path")
   }
   if (has_cached_trail_meshes) {
-    pathinfo = pathinfo[pathinfo$tag != "trail_path", , drop = FALSE]
+    path_types = setdiff(path_types, "trail_path")
   }
+  pathinfo = scene_object_info(typeval = path_types)
   pathids = pathinfo$id
   pathline = list()
   pathline_screen = list()
@@ -1736,6 +1777,7 @@ render_highquality = function(
   if (length(water_path_meshes) > 0) {
     pathline = c(pathline, water_path_meshes)
   }
+  report_phase("road models")
   road_path_meshes = if (has_cached_road_meshes) {
     make_render_highquality_cached_road_meshes(
       meshes = cached_road_meshes,
@@ -1752,6 +1794,7 @@ render_highquality = function(
   if (length(road_path_meshes) > 0) {
     pathline = c(pathline, road_path_meshes)
   }
+  report_phase("trail models")
   trail_path_meshes = if (has_cached_trail_meshes) {
     make_render_highquality_cached_trail_meshes(
       meshes = cached_trail_meshes,
@@ -1764,7 +1807,8 @@ render_highquality = function(
   if (length(trail_path_meshes) > 0) {
     pathline = c(pathline, trail_path_meshes)
   }
-  tree_instance_models = make_render_highquality_cached_tree_instances(
+  report_phase("tree and person instances")
+  tree_instance_models = make_render_highquality_cached_model_instances(
     instance_layers = cached_tree_instances,
     bbox_center = bbox_center,
     override_material = override_material,
@@ -1772,9 +1816,19 @@ render_highquality = function(
     rgl_materials = rgl_materials,
     calculate_consistent_normals = calculate_consistent_normals
   )
-  pointinfo = get_ids_with_labels(typeval = "points3d")
+  person_instance_models = make_render_highquality_cached_model_instances(
+    instance_layers = cached_person_instances,
+    bbox_center = bbox_center,
+    override_material = override_material,
+    material = material,
+    rgl_materials = rgl_materials,
+    calculate_consistent_normals = calculate_consistent_normals,
+    rgl_tag = "objperson"
+  )
+  report_phase("point models")
+  pointinfo = scene_object_info(typeval = "points3d")
   pointinfo = pointinfo[
-    !(pointinfo$id %in% tree_preview_ids),
+    !(pointinfo$id %in% c(tree_preview_ids, person_preview_ids)),
     ,
     drop = FALSE
   ]
@@ -1838,7 +1892,7 @@ render_highquality = function(
       }
     }
   }
-  scalelabelids = get_ids_with_labels(typeval = "text_scalebar")$id
+  scalelabelids = scene_object_info(typeval = "text_scalebar")$id
   scalelabels = list()
   scalelabels_screen = list()
   counter = 1
@@ -1901,6 +1955,7 @@ render_highquality = function(
       }
     }
   }
+  report_phase("scene assembly")
   screen_labels = c(labels_screen, scalelabels_screen)
   screen_lines = c(labelline_screen, pathline_screen)
   if (length(labels) > 0) {
@@ -1921,7 +1976,19 @@ render_highquality = function(
   }
   if (length(tree_instance_models) > 0) {
     all_tree_instances = do.call(rbind, tree_instance_models)
-    scene = rayrender::add_object(scene, all_tree_instances)
+    scene = if (is.null(scene)) {
+      all_tree_instances
+    } else {
+      rayrender::add_object(scene, all_tree_instances)
+    }
+  }
+  if (length(person_instance_models) > 0) {
+    all_person_instances = do.call(rbind, person_instance_models)
+    scene = if (is.null(scene)) {
+      all_person_instances
+    } else {
+      rayrender::add_object(scene, all_person_instances)
+    }
   }
   if (length(pointlist) > 0) {
     all_pointlist = do.call(rbind, pointlist)
@@ -2048,6 +2115,7 @@ render_highquality = function(
     )
   }
 
+  report_phase()
   if (return_scene) {
     attr(scene, "screen_text") = screen_text_objects
     attr(scene, "screen_line") = screen_line_objects
@@ -2119,7 +2187,8 @@ render_highquality = function(
     width = width,
     height = height,
     clamp_value = clamp_value,
-    plot_scene = plot
+    plot_scene = plot,
+    verbose = verbose
   )
   if (!is.null(screen_text_objects)) {
     render_scene_args$screen_text = screen_text_objects
@@ -2144,6 +2213,11 @@ render_highquality = function(
     dot_args[duplicate_render_scene_args] = NULL
   }
   render_scene_call = function(extra_args = list()) {
+    if (verbose) {
+      message(
+        "render_highquality(): Passing scene to rayrender; renderer timings follow."
+      )
+    }
     do.call(
       rayrender::render_scene,
       c(render_scene_args, extra_args, dot_args)
@@ -2799,11 +2873,14 @@ validate_render_highquality_water_roughness = function(water_roughness) {
   water_roughness
 }
 
-get_render_highquality_rgl_material_info = function(rgl_materials) {
+get_render_highquality_rgl_material_info = function(
+  rgl_materials,
+  id_table = NULL
+) {
   if (length(rgl_materials) == 0) {
     return(data.frame(id = integer(), tag = character()))
   }
-  id_info = get_ids_with_labels()
+  id_info = if (is.null(id_table)) rgl::ids3d(tags = TRUE) else id_table
   material_names = names(rgl_materials)
   matches = rep(FALSE, nrow(id_info))
   for (material_name in material_names) {

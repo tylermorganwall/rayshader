@@ -1938,6 +1938,42 @@ get_scene_tree_instances = function(default = NULL) {
   get_scene_context_value("tree_instances", default = default)
 }
 
+#' Cache lightweight person instance layers for the active scene
+#'
+#' @param instances Default `NULL`. Person component transforms for one render
+#' layer.
+#' @param append Default `FALSE`. Whether to append a new person layer.
+#'
+#' @return Invisibly returns `NULL`.
+#' @keywords internal
+cache_scene_person_instances = function(instances = NULL, append = FALSE) {
+  if (is.null(instances)) {
+    assign("person_instances", NULL, envir = ray_cache_scene_envir)
+    return(invisible(NULL))
+  }
+  existing = if (isTRUE(append)) {
+    get_scene_person_instances(default = list())
+  } else {
+    list()
+  }
+  assign(
+    "person_instances",
+    c(existing, list(instances)),
+    envir = ray_cache_scene_envir
+  )
+  invisible(NULL)
+}
+
+#' Get lightweight person instance layers for the active scene
+#'
+#' @param default Default `NULL`. Value returned when no cache is available.
+#'
+#' @return Cached person component transform layers.
+#' @keywords internal
+get_scene_person_instances = function(default = NULL) {
+  get_scene_context_value("person_instances", default = default)
+}
+
 reset_scene_context = function(
   clear_scene_metadata = TRUE,
   clear_scene_cache = TRUE
@@ -1948,6 +1984,7 @@ reset_scene_context = function(
     cache_scene_stream_meshes(NULL)
     cache_scene_trail_meshes(NULL)
     cache_scene_tree_instances(NULL)
+    cache_scene_person_instances(NULL)
   }
   if (isTRUE(clear_scene_metadata)) {
     cache_scene_context_token(NULL)

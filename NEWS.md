@@ -2,6 +2,17 @@
 
 ## New features
 
+- `render_roads()` Moves intersection, continuation, neighbor-search, and event
+  preparation into native batches, avoiding per-contact spatial-object allocation.
+  Indexes endpoint candidates instead of repeatedly scanning the whole network.
+  Bridge connections and solver constraints are preserved.
+- `render_multipolygonz()` Triangulates ordinary building faces in native batches,
+  retaining the existing repair path for difficult faces. `verbose = TRUE`
+  reports preparation and upload stages.
+- `render_people()` Adds `simple_rgl = TRUE` for point previews of large crowds.
+  High-quality renders share full models by pose, model variant, and material
+  instead of expanding the geometry for each person.
+
 - `render_water()` Builds exact-polygon water meshes in native code using
   `libgeos`. Large batches use threads sharing one terrain snapshot, avoiding
   separate R worker startup and terrain copies. Uses `options(cores = ...)`;
@@ -39,6 +50,13 @@
   independent of scene size and camera position.
 
 ## Bugfixes
+
+- `render_highquality()` Reuses one rgl ID snapshot and skips unused preview materials during conversion. `verbose = TRUE` reports conversion phase timings and enables rayrender construction timings.
+
+- `plot_gg()` Preserves source elevation precision in single-panel numeric
+  `geom_spatraster()` height plots instead of quantizing terrain through an
+  8-bit image. Avoids meter-scale steps and gaps beneath absolute-elevation
+  buildings. Mixed height layers and faceted plots retain image-based behavior.
 
 - `render_roads()` Preserves elevation scaling when batch-building solved roads
   and bridges, preventing their pavement thickness and placement offset from

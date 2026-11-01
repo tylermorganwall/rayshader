@@ -34,6 +34,7 @@
 #'and its existing `NA` cells. If omitted, this is taken from the cached scene
 #'set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached
 #'value.
+#'@param verbose Default `FALSE`. Report triangulation and scene-upload stages.
 #'@param ... Additional arguments to pass to `rgl::triangles3d()`.
 #'@export
 #'@details Faces with more than three vertices or holes require the `decido`
@@ -101,6 +102,7 @@ render_multipolygonz = function(
   zscale = 1,
   vertical_exaggeration = 1,
   heightmap = NULL,
+  verbose = FALSE,
   ...
 ) {
   if (
@@ -160,7 +162,14 @@ render_multipolygonz = function(
     return(invisible(NULL))
   }
   sf_obj = suppressWarnings(sf::st_cast(sf_obj, "MULTIPOLYGON", warn = FALSE))
+  verbose = resolve_render_logical(verbose, "verbose")
+  if (verbose) {
+    message("Triangulating 3D building faces...")
+  }
   multipolygon_mesh = multipolygonz_to_raymesh(sf_obj)
+  if (verbose) {
+    message("Adding building mesh to the scene...")
+  }
   if (is.null(multipolygon_mesh)) {
     return(invisible(NULL))
   }

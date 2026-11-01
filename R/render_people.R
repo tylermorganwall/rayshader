@@ -97,6 +97,10 @@
 #' omitted, rayshader uses the cached scene heightmap from [plot_3d()] or
 #' [plot_gg()]. Terrain elevations and existing `NA` cells are read directly
 #' from this matrix.
+#' @param simple_rgl Default `FALSE`. Show one colored point per person in rgl
+#' instead of expanding the person meshes. [render_highquality()] replaces these
+#' points with full instances grouped by model and material. Use this for large
+#' crowds; positions, poses, colors, and rotations are retained.
 #' @param ... Additional arguments passed to [render_obj()] and then to
 #' `rgl::triangles3d()`.
 #'
@@ -340,13 +344,18 @@ render_people = function(
   zscale = 1,
   vertical_exaggeration = 1,
   heightmap = NULL,
+  simple_rgl = FALSE,
   ...
 ) {
   if (
     is_render_clear_only_call(
       clear_previous,
       match.call(),
-      function() rgl::pop3d(tag = "objperson")
+      function() {
+        rgl::pop3d(tag = "objperson")
+        rgl::pop3d(tag = "person_preview")
+        cache_scene_person_instances(NULL)
+      }
     )
   ) {
     return(invisible(NULL))
@@ -368,6 +377,7 @@ render_people = function(
       call. = FALSE
     )
   }
+  simple_rgl = resolve_render_logical(simple_rgl, "simple_rgl")
   pose = resolve_person_pose(pose)
   sex = resolve_person_sex(sex)
   line_input = resolve_person_line_input(line = line, location = location)
@@ -404,6 +414,7 @@ render_people = function(
   )
   person_scale = rep(1 / effective_zscale, 3)
   person_args = list(...)
+  person_args$instance_preview = simple_rgl
   render_people_obj = function(...) {
     do.call(render_obj, c(list(...), person_args))
   }
@@ -633,6 +644,64 @@ render_people = function(
     crs = crs,
     filter_to_extent = filter_to_extent
   )
+}
+
+#' Cache point previews and full-model transforms for people
+#'
+#' @param filename Bundled person model path.
+#' @param xyz Absolute scene positions after spatial filtering.
+#' @param scale Per-person scales with three columns.
+#' @param angle Per-person rotations with three columns.
+#' @param color Per-person colors.
+#' @param load_normals Whether to load vertex normals for the full model.
+#' @return Invisibly returns the rgl point identifier.
+#' @keywords internal
+cache_render_person_preview = function(
+  filename,
+  xyz,
+  scale,
+  angle,
+  color,
+  load_normals
+) {
+  if (!nrow(xyz)) {
+    return(invisible(NULL))
+  }
+  if (
+    any(!is.finite(xyz)) || any(!is.finite(scale)) || any(!is.finite(angle))
+  ) {
+    stop("Person instance transforms must be finite.", call. = FALSE)
+  }
+  id = rgl::points3d(
+    xyz,
+    color = color,
+    size = 2,
+    lit = FALSE,
+    tag = "person_preview"
+  )
+  # Store only transforms. No per-person triangles are expanded here or during
+  # conversion; rayrender shares one model for each pose/sex/material group.
+  layer = data.frame(
+    model_file = normalizePath(filename, mustWork = TRUE),
+    load_material = FALSE,
+    load_normals = load_normals,
+    color = color,
+    x = xyz[, 1],
+    y = xyz[, 2],
+    z = xyz[, 3],
+    angle_x = angle[, 1],
+    angle_y = angle[, 2],
+    angle_z = angle[, 3],
+    scale_x = scale[, 1],
+    scale_y = scale[, 2],
+    scale_z = scale[, 3],
+    base_scale_x = 1,
+    base_scale_y = 1,
+    base_scale_z = 1,
+    preview_id = as.integer(id)
+  )
+  cache_scene_person_instances(layer, append = TRUE)
+  invisible(id)
 }
 
 #' Resolve a Bundled Person OBJ

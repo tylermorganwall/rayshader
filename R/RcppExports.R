@@ -181,6 +181,34 @@ solve_render_road_profiles_cpp <- function(specification, solve_component, profi
     .Call(`_rayshader_solve_render_road_profiles_cpp`, specification, solve_component, profile_tolerance, maximum_refinement_iterations, diagnostics, maximum_requests_per_relation)
 }
 
+initialize_scene_geos_cpp <- function() {
+    invisible(.Call(`_rayshader_initialize_scene_geos_cpp`))
+}
+
+triangulate_polygon_faces_cpp <- function(coordinates, face_columns, ring_column) {
+    .Call(`_rayshader_triangulate_polygon_faces_cpp`, coordinates, face_columns, ring_column)
+}
+
+intersect_road_pairs_cpp <- function(geometry, pairs, tolerance) {
+    .Call(`_rayshader_intersect_road_pairs_cpp`, geometry, pairs, tolerance)
+}
+
+score_road_continuations_cpp <- function(xy_direction, metadata, feature, lanes, pairs, endpoint_tolerance, minimum_direction_score) {
+    .Call(`_rayshader_score_road_continuations_cpp`, xy_direction, metadata, feature, lanes, pairs, endpoint_tolerance, minimum_direction_score)
+}
+
+select_road_candidates_cpp <- function(endpoint_rows, eligible, evidence, lanes, direction, endpoint_count, margin) {
+    .Call(`_rayshader_select_road_candidates_cpp`, endpoint_rows, eligible, evidence, lanes, direction, endpoint_count, margin)
+}
+
+summarize_road_events_cpp <- function(membership, xy, fragments, stations, layers) {
+    .Call(`_rayshader_summarize_road_events_cpp`, membership, xy, fragments, stations, layers)
+}
+
+road_point_neighbors_cpp <- function(xy, tolerance) {
+    .Call(`_rayshader_road_point_neighbors_cpp`, xy, tolerance)
+}
+
 make_spatial_water_fixed_grid_terrain_mesh_cpp <- function(heightmap) {
     .Call(`_rayshader_make_spatial_water_fixed_grid_terrain_mesh_cpp`, heightmap)
 }

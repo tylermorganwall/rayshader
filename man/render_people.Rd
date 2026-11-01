@@ -32,6 +32,7 @@ render_people(
   zscale = 1,
   vertical_exaggeration = 1,
   heightmap = NULL,
+  simple_rgl = FALSE,
   ...
 )
 }
@@ -142,6 +143,11 @@ this call.}
 omitted, rayshader uses the cached scene heightmap from \code{\link[=plot_3d]{plot_3d()}} or
 \code{\link[=plot_gg]{plot_gg()}}. Terrain elevations and existing \code{NA} cells are read directly
 from this matrix.}
+
+\item{simple_rgl}{Default \code{FALSE}. Show one colored point per person in rgl
+instead of expanding the person meshes. \code{\link[=render_highquality]{render_highquality()}} replaces these
+points with full instances grouped by model and material. Use this for large
+crowds; positions, poses, colors, and rotations are retained.}
 
 \item{...}{Additional arguments passed to \code{\link[=render_obj]{render_obj()}} and then to
 \code{rgl::triangles3d()}.}

@@ -30,8 +30,15 @@
 #'rgl::open3d()
 #'render_obj(filename=obj_temp, xyz=matrix(c(0,0,0),ncol=3), color="red")
 #'render_camera(theta=30,phi=40)
-save_multipolygonz_to_obj = function(sf_obj, filename, swap_yz = FALSE) {
-  faces = multipolygonz_mesh_faces(sf_obj, swap_yz = swap_yz)
+save_multipolygonz_to_obj = function(
+  sf_obj,
+  filename,
+  swap_yz = FALSE
+) {
+  faces = multipolygonz_mesh_faces(
+    sf_obj,
+    swap_yz = swap_yz
+  )
   con = file(filename, "w")
   on.exit(close(con))
   total_verts = 0L
@@ -55,7 +62,10 @@ save_multipolygonz_to_obj = function(sf_obj, filename, swap_yz = FALSE) {
 }
 
 multipolygonz_to_raymesh = function(sf_obj, swap_yz = FALSE) {
-  faces = multipolygonz_mesh_faces(sf_obj, swap_yz = swap_yz)
+  faces = multipolygonz_mesh_faces(
+    sf_obj,
+    swap_yz = swap_yz
+  )
   if (!length(faces)) {
     return(NULL)
   }
@@ -89,22 +99,21 @@ multipolygonz_mesh_faces = function(sf_obj, swap_yz = FALSE) {
   if (!all(c("X", "Y", "Z", "L1", "L2") %in% colnames(coords))) {
     stop("sf_obj must contain MULTIPOLYGON Z geometry.", call. = FALSE)
   }
-  # L3 identifies features and L2 identifies faces; L1 must remain separate
-  # because it identifies the exterior ring and each interior hole.
-  group_cols = intersect(c("L3", "L2"), colnames(coords))
-  group_id = do.call(
-    paste,
-    c(as.data.frame(coords[, group_cols, drop = FALSE]), sep = "\r")
+  # Preserve feature/face/ring boundaries without allocating R row vectors for
+  # every face. The native batch returns row ranges only for faces needing repair.
+  faces = triangulate_polygon_faces_cpp(
+    coords,
+    match(intersect(c("L3", "L2"), colnames(coords)), colnames(coords)),
+    match("L1", colnames(coords))
   )
-  face_rows = split(
-    seq_len(nrow(coords)),
-    factor(group_id, levels = unique(group_id))
-  )
-  failures = character(length(face_rows))
-  faces = lapply(seq_along(face_rows), function(i) {
-    tryCatch(
+  fallback = attr(faces, "fallback")
+  attr(faces, "fallback") = NULL
+  failures = character(length(faces))
+  for (repair_index in seq_along(fallback$id)) {
+    i = fallback$id[repair_index]
+    faces[i] = list(tryCatch(
       {
-        rows = face_rows[[i]]
+        rows = seq.int(fallback$begin[repair_index], fallback$end[repair_index])
         if (any(!is.finite(coords[rows, c("X", "Y", "Z")]))) {
           stop("Polygon face coordinates must be finite.", call. = FALSE)
         }
@@ -136,22 +145,29 @@ multipolygonz_mesh_faces = function(sf_obj, swap_yz = FALSE) {
         triangulated = multipolygonz_triangulate_face(rings)
         vertices = triangulated$vertices
         indices = triangulated$indices
-        if (swap_yz) {
-          vertices = vertices[, c(1, 3, 2), drop = FALSE]
-          indices = indices[, 3:1, drop = FALSE]
-        }
         if (!nrow(indices)) {
-          failures[i] <<- "zero-area face"
-          return(NULL)
+          failures[i] = "zero-area face"
+          NULL
+        } else {
+          list(vertices = vertices, indices = indices)
         }
-        list(vertices = vertices, indices = indices)
       },
       error = function(e) {
         failures[i] <<- conditionMessage(e)
         NULL
       }
-    )
-  })
+    ))
+  }
+  if (swap_yz) {
+    faces = lapply(faces, function(face) {
+      if (is.null(face)) {
+        return(NULL)
+      }
+      face$vertices = face$vertices[, c(1, 3, 2), drop = FALSE]
+      face$indices = face$indices[, 3:1, drop = FALSE]
+      face
+    })
+  }
   skipped = which(nzchar(failures))
   if (length(skipped)) {
     # One bounded summary keeps large building datasets from flooding the console.

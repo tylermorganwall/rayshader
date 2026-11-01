@@ -4,9 +4,17 @@
 #'
 #'@param typeval Default `NULL`. Select to filter just one of the types: `surface`, `base`,`lines`, `waterlines`,`shadow`, `basebottom`,
 #'@importFrom utils getFromNamespace
+#'@param id_table Default `NULL`. Optional snapshot from `rgl::ids3d(tags = TRUE)`.
+#'@param include_ids Default `NULL`. Restrict material queries to these object IDs.
+#'@param exclude_ids Default `NULL`. Omit these IDs before querying materials.
 #'@return Data frame of IDs with labels
 #'@keywords internal
-get_ids_with_labels = function(typeval = NULL) {
+get_ids_with_labels = function(
+  typeval = NULL,
+  id_table = NULL,
+  include_ids = NULL,
+  exclude_ids = NULL
+) {
   ray_types = c(
     "surface",
     "base",
@@ -33,6 +41,7 @@ get_ids_with_labels = function(typeval = NULL) {
     "road_mesh_preview",
     "trail_mesh_preview",
     "tree_preview",
+    "person_preview",
     "points3d",
     "polygon3d",
     "floating_overlay",
@@ -41,12 +50,18 @@ get_ids_with_labels = function(typeval = NULL) {
     "base_soil2",
     "obj"
   )
-  idvals = rgl::ids3d(tags = TRUE)
+  idvals = if (is.null(id_table)) rgl::ids3d(tags = TRUE) else id_table
   prune_plot_3d_surface_textures()
   # Tags are cheap to inspect; materials require an rgl query per object.
   # Select before fetching materials, especially when a scene has thousands of
   # road preview objects but the caller only needs labels, water, or a surface.
   had_objects = nrow(idvals) > 0L
+  if (!is.null(include_ids)) {
+    idvals = idvals[idvals$id %in% include_ids, , drop = FALSE]
+  }
+  if (!is.null(exclude_ids)) {
+    idvals = idvals[!idvals$id %in% exclude_ids, , drop = FALSE]
+  }
   if (!is.null(typeval)) {
     is_surface_tri = substr(idvals$tag, 1, 12) == "surface_tris" &
       any(typeval == "surface_tris")
@@ -110,7 +125,11 @@ get_ids_with_labels = function(typeval = NULL) {
         if (is.null(full_texture)) {
           full_texture = material_type_single$texture
         }
-        material_properties[[i]]$texture_file = full_texture
+        material_properties[[i]]$texture_file = if (is.null(full_texture)) {
+          ""
+        } else {
+          full_texture
+        }
         dim_string = strsplit(material_type[i], "-")[[1]][2]
         dim_dem = as.integer(unlist(strsplit(dim_string, "_")[[1]])[2:3])
         material_properties[[i]]$nrow = dim_dem[1]

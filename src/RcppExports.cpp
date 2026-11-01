@@ -672,6 +672,95 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// initialize_scene_geos_cpp
+void initialize_scene_geos_cpp();
+RcppExport SEXP _rayshader_initialize_scene_geos_cpp() {
+BEGIN_RCPP
+    initialize_scene_geos_cpp();
+    return R_NilValue;
+END_RCPP
+}
+// triangulate_polygon_faces_cpp
+Rcpp::List triangulate_polygon_faces_cpp(Rcpp::NumericMatrix coordinates, Rcpp::IntegerVector face_columns, int ring_column);
+RcppExport SEXP _rayshader_triangulate_polygon_faces_cpp(SEXP coordinatesSEXP, SEXP face_columnsSEXP, SEXP ring_columnSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type coordinates(coordinatesSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type face_columns(face_columnsSEXP);
+    Rcpp::traits::input_parameter< int >::type ring_column(ring_columnSEXP);
+    rcpp_result_gen = Rcpp::wrap(triangulate_polygon_faces_cpp(coordinates, face_columns, ring_column));
+    return rcpp_result_gen;
+END_RCPP
+}
+// intersect_road_pairs_cpp
+Rcpp::List intersect_road_pairs_cpp(Rcpp::List geometry, Rcpp::IntegerMatrix pairs, double tolerance);
+RcppExport SEXP _rayshader_intersect_road_pairs_cpp(SEXP geometrySEXP, SEXP pairsSEXP, SEXP toleranceSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type geometry(geometrySEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerMatrix >::type pairs(pairsSEXP);
+    Rcpp::traits::input_parameter< double >::type tolerance(toleranceSEXP);
+    rcpp_result_gen = Rcpp::wrap(intersect_road_pairs_cpp(geometry, pairs, tolerance));
+    return rcpp_result_gen;
+END_RCPP
+}
+// score_road_continuations_cpp
+Rcpp::List score_road_continuations_cpp(Rcpp::NumericMatrix xy_direction, Rcpp::IntegerMatrix metadata, Rcpp::IntegerVector feature, Rcpp::IntegerVector lanes, Rcpp::IntegerMatrix pairs, double endpoint_tolerance, double minimum_direction_score);
+RcppExport SEXP _rayshader_score_road_continuations_cpp(SEXP xy_directionSEXP, SEXP metadataSEXP, SEXP featureSEXP, SEXP lanesSEXP, SEXP pairsSEXP, SEXP endpoint_toleranceSEXP, SEXP minimum_direction_scoreSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type xy_direction(xy_directionSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerMatrix >::type metadata(metadataSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type feature(featureSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type lanes(lanesSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerMatrix >::type pairs(pairsSEXP);
+    Rcpp::traits::input_parameter< double >::type endpoint_tolerance(endpoint_toleranceSEXP);
+    Rcpp::traits::input_parameter< double >::type minimum_direction_score(minimum_direction_scoreSEXP);
+    rcpp_result_gen = Rcpp::wrap(score_road_continuations_cpp(xy_direction, metadata, feature, lanes, pairs, endpoint_tolerance, minimum_direction_score));
+    return rcpp_result_gen;
+END_RCPP
+}
+// select_road_candidates_cpp
+Rcpp::List select_road_candidates_cpp(Rcpp::IntegerMatrix endpoint_rows, Rcpp::LogicalVector eligible, Rcpp::IntegerVector evidence, Rcpp::IntegerVector lanes, Rcpp::NumericVector direction, int endpoint_count, double margin);
+RcppExport SEXP _rayshader_select_road_candidates_cpp(SEXP endpoint_rowsSEXP, SEXP eligibleSEXP, SEXP evidenceSEXP, SEXP lanesSEXP, SEXP directionSEXP, SEXP endpoint_countSEXP, SEXP marginSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< Rcpp::IntegerMatrix >::type endpoint_rows(endpoint_rowsSEXP);
+    Rcpp::traits::input_parameter< Rcpp::LogicalVector >::type eligible(eligibleSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type evidence(evidenceSEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type lanes(lanesSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type direction(directionSEXP);
+    Rcpp::traits::input_parameter< int >::type endpoint_count(endpoint_countSEXP);
+    Rcpp::traits::input_parameter< double >::type margin(marginSEXP);
+    rcpp_result_gen = Rcpp::wrap(select_road_candidates_cpp(endpoint_rows, eligible, evidence, lanes, direction, endpoint_count, margin));
+    return rcpp_result_gen;
+END_RCPP
+}
+// summarize_road_events_cpp
+Rcpp::List summarize_road_events_cpp(Rcpp::IntegerVector membership, Rcpp::NumericMatrix xy, Rcpp::IntegerMatrix fragments, Rcpp::NumericMatrix stations, Rcpp::NumericVector layers);
+RcppExport SEXP _rayshader_summarize_road_events_cpp(SEXP membershipSEXP, SEXP xySEXP, SEXP fragmentsSEXP, SEXP stationsSEXP, SEXP layersSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< Rcpp::IntegerVector >::type membership(membershipSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type xy(xySEXP);
+    Rcpp::traits::input_parameter< Rcpp::IntegerMatrix >::type fragments(fragmentsSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type stations(stationsSEXP);
+    Rcpp::traits::input_parameter< Rcpp::NumericVector >::type layers(layersSEXP);
+    rcpp_result_gen = Rcpp::wrap(summarize_road_events_cpp(membership, xy, fragments, stations, layers));
+    return rcpp_result_gen;
+END_RCPP
+}
+// road_point_neighbors_cpp
+Rcpp::List road_point_neighbors_cpp(Rcpp::NumericMatrix xy, double tolerance);
+RcppExport SEXP _rayshader_road_point_neighbors_cpp(SEXP xySEXP, SEXP toleranceSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< Rcpp::NumericMatrix >::type xy(xySEXP);
+    Rcpp::traits::input_parameter< double >::type tolerance(toleranceSEXP);
+    rcpp_result_gen = Rcpp::wrap(road_point_neighbors_cpp(xy, tolerance));
+    return rcpp_result_gen;
+END_RCPP
+}
 // make_spatial_water_fixed_grid_terrain_mesh_cpp
 List make_spatial_water_fixed_grid_terrain_mesh_cpp(const NumericMatrix& heightmap);
 RcppExport SEXP _rayshader_make_spatial_water_fixed_grid_terrain_mesh_cpp(SEXP heightmapSEXP) {
@@ -793,6 +882,13 @@ static const R_CallMethodDef CallEntries[] = {
     {"_rayshader_audit_render_road_profiles_cpp", (DL_FUNC) &_rayshader_audit_render_road_profiles_cpp, 6},
     {"_rayshader_compile_render_road_profile_problem_cpp", (DL_FUNC) &_rayshader_compile_render_road_profile_problem_cpp, 2},
     {"_rayshader_solve_render_road_profiles_cpp", (DL_FUNC) &_rayshader_solve_render_road_profiles_cpp, 6},
+    {"_rayshader_initialize_scene_geos_cpp", (DL_FUNC) &_rayshader_initialize_scene_geos_cpp, 0},
+    {"_rayshader_triangulate_polygon_faces_cpp", (DL_FUNC) &_rayshader_triangulate_polygon_faces_cpp, 3},
+    {"_rayshader_intersect_road_pairs_cpp", (DL_FUNC) &_rayshader_intersect_road_pairs_cpp, 3},
+    {"_rayshader_score_road_continuations_cpp", (DL_FUNC) &_rayshader_score_road_continuations_cpp, 7},
+    {"_rayshader_select_road_candidates_cpp", (DL_FUNC) &_rayshader_select_road_candidates_cpp, 7},
+    {"_rayshader_summarize_road_events_cpp", (DL_FUNC) &_rayshader_summarize_road_events_cpp, 5},
+    {"_rayshader_road_point_neighbors_cpp", (DL_FUNC) &_rayshader_road_point_neighbors_cpp, 2},
     {"_rayshader_make_spatial_water_fixed_grid_terrain_mesh_cpp", (DL_FUNC) &_rayshader_make_spatial_water_fixed_grid_terrain_mesh_cpp, 1},
     {"_rayshader_spatial_water_face_sublevel_area_cpp", (DL_FUNC) &_rayshader_spatial_water_face_sublevel_area_cpp, 4},
     {"_rayshader_spatial_water_traverse_seeded_clipped_faces_cpp", (DL_FUNC) &_rayshader_spatial_water_traverse_seeded_clipped_faces_cpp, 8},

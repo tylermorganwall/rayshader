@@ -9,6 +9,7 @@
 #'@param water_ior Default `1.33`. Water index of refraction.
 #'@param include_ids Default `NULL`. Internal use. Optional rgl ids to include when converting.
 #'@param exclude_ids Default `NULL`. Internal use. Optional rgl ids to exclude when converting.
+#'@param id_table Default `NULL`. Internal use. Optional current rgl ID/tag snapshot.
 #'@return A `ray_mesh` object
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
@@ -25,7 +26,8 @@ convert_rgl_to_raymesh = function(
   water_surface_color = TRUE,
   water_ior = 1.33,
   include_ids = NULL,
-  exclude_ids = NULL
+  exclude_ids = NULL,
+  id_table = NULL
 ) {
   if (rgl::cur3d() == 0) {
     stop("No rgl window currently open.")
@@ -33,21 +35,36 @@ convert_rgl_to_raymesh = function(
   final_scene = list()
   num_elems = 1
 
-  vertex_info = get_ids_with_labels()
-  if (!is.null(include_ids)) {
-    vertex_info = vertex_info[
-      vertex_info$id %in% as.integer(include_ids),
-      ,
-      drop = FALSE
-    ]
+  if (is.null(id_table)) {
+    id_table = rgl::ids3d(tags = TRUE)
   }
-  if (!is.null(exclude_ids)) {
-    vertex_info = vertex_info[
-      !(vertex_info$id %in% as.integer(exclude_ids)),
-      ,
-      drop = FALSE
-    ]
-  }
+  # Preview paths and points are converted separately by render_highquality().
+  # Do not fetch their full materials merely to discard them in the mesh loop.
+  mesh_tags = c(
+    "basebottom",
+    "base",
+    "water",
+    "north_symbol",
+    "arrow_symbol",
+    "bevel_symbol",
+    "background_symbol",
+    "scalebar_col1",
+    "scalebar_col2",
+    "polygon3d",
+    "floating_overlay",
+    "floating_overlay_tris",
+    "base_soil1",
+    "base_soil2"
+  )
+  selected = startsWith(id_table$tag, "surface") |
+    grepl("obj", id_table$tag, fixed = TRUE) |
+    id_table$tag %in% mesh_tags |
+    (save_shadow & id_table$tag == "shadow")
+  vertex_info = get_ids_with_labels(
+    id_table = id_table[selected, , drop = FALSE],
+    include_ids = include_ids,
+    exclude_ids = exclude_ids
+  )
   basic_load_mesh = function(
     row,
     texture_loc,

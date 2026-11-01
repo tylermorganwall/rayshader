@@ -4028,85 +4028,44 @@ group_render_road_point_events = function(
   membership = match(membership, unique(membership))
   pair_events[[event_id_column]] = membership
 
-  # Split pair rows by physical event and choose a representative event point.
-  event_groups = split(seq_len(nrow(pair_events)), membership)
-  pair_coordinates = sf::st_coordinates(pair_events)[, 1:2, drop = FALSE]
-  event_geometry = sf::st_sfc(
-    lapply(event_groups, function(rows) {
-      sf::st_point(colMeans(pair_coordinates[rows, , drop = FALSE]))
-    }),
-    crs = sf::st_crs(pair_events)
+  # Aggregate the grouped pair columns natively. In particular, do not allocate
+  # one data.frame per event and another per participant on large road networks.
+  aggregated = summarize_road_events_cpp(
+    membership,
+    sf::st_coordinates(pair_events)[, 1:2, drop = FALSE],
+    cbind(
+      match(pair_events$fragment_a, fragments$render_road_fragment_id),
+      match(pair_events$fragment_b, fragments$render_road_fragment_id)
+    ),
+    cbind(pair_events$distance_a, pair_events$distance_b),
+    fragments$render_road_layer
   )
-  # Summarize each event by participant count and observed layer range. This describes
-  # the local vertical stack without assigning physical elevations yet.
-  event_rows = lapply(seq_along(event_groups), function(event_id) {
-    rows = event_groups[[event_id]]
-    fragments_present = unique(c(
-      pair_events$fragment_a[rows],
-      pair_events$fragment_b[rows]
-    ))
-    event_coordinates = pair_coordinates[rows, , drop = FALSE]
-    event_spread = if (nrow(event_coordinates) > 1L) {
-      max(stats::dist(event_coordinates))
-    } else {
-      0
-    }
-    data.frame(
-      event_id = event_id,
-      participant_count = length(fragments_present),
-      layer_min = min(
-        fragments$render_road_layer[match(
-          fragments_present,
-          fragments$render_road_fragment_id
-        )]
-      ),
-      layer_max = max(
-        fragments$render_road_layer[match(
-          fragments_present,
-          fragments$render_road_fragment_id
-        )]
-      ),
-      event_spread = event_spread
-    )
-  })
+  values = aggregated$events
   events = sf::st_sf(
-    do.call(rbind, event_rows),
-    geometry = event_geometry,
-    crs = sf::st_crs(pair_events)
+    event_id = seq_len(nrow(values)),
+    participant_count = as.integer(values[, 3L]),
+    layer_min = values[, 4L],
+    layer_max = values[, 5L],
+    event_spread = values[, 6L],
+    geometry = sf::st_sfc(
+      lapply(seq_len(nrow(values)), function(i) {
+        sf::st_point(stats::setNames(values[i, 1:2], c("X", "Y")))
+      }),
+      crs = sf::st_crs(pair_events)
+    )
   )
+  names(sf::st_geometry(events)) = as.character(seq_len(nrow(events)))
   names(events)[names(events) == "event_id"] = event_id_column
-
-  # Build one participant row per road fragment per event. Averaging repeated pairwise
-  # distances reconciles the same road appearing in several pair relationships at a
-  # multi-road crossing.
-  participant_rows = lapply(seq_along(event_groups), function(event_id) {
-    rows = event_groups[[event_id]]
-    fragment_id = unique(c(
-      pair_events$fragment_a[rows],
-      pair_events$fragment_b[rows]
-    ))
-    data_rows = lapply(fragment_id, function(fragment) {
-      distance = c(
-        pair_events$distance_a[rows][pair_events$fragment_a[rows] == fragment],
-        pair_events$distance_b[rows][pair_events$fragment_b[rows] == fragment]
-      )
-      fragment_row = match(fragment, fragments$render_road_fragment_id)
-      data.frame(
-        event_id = event_id,
-        render_road_fragment_id = fragment,
-        render_road_feature_id = fragments$render_road_feature_id[[
-          fragment_row
-        ]],
-        distance = mean(distance),
-        render_road_layer = fragments$render_road_layer[[fragment_row]],
-        render_road_layer_explicit = fragments$render_road_layer_explicit[[
-          fragment_row
-        ]]
-      )
-    })
-    do.call(rbind, data_rows)
-  })
-  participants = do.call(rbind, participant_rows)
+  members = aggregated$participants
+  rows = as.integer(members[, 2L])
+  participants = data.frame(
+    event_id = as.integer(members[, 1L]),
+    render_road_fragment_id = fragments$render_road_fragment_id[rows],
+    render_road_feature_id = fragments$render_road_feature_id[rows],
+    distance = members[, 3L],
+    render_road_layer = fragments$render_road_layer[rows],
+    render_road_layer_explicit = fragments$render_road_layer_explicit[rows]
+  )
   names(participants)[names(participants) == "event_id"] = event_id_column
   # Retain the original pair relationships with event IDs for detailed diagnostics and
   # later construction of adjacent upper/lower constraints.
@@ -4125,32 +4084,10 @@ group_render_road_point_events = function(
 # changes: tolerance, coincident points, ordering, and single-linkage grouping
 # retain their existing semantics. Worst-case dense output remains quadratic.
 find_render_road_point_neighbors = function(points, tolerance) {
-  xy = sf::st_coordinates(points)[, 1:2, drop = FALSE]
-  if (!nrow(xy)) {
-    return(list())
-  }
-  # Expand only the candidate envelopes for representational roundoff. The
-  # final Euclidean comparison still uses the original distance tolerance.
-  padding = 8 *
-    .Machine$double.eps *
-    pmax(1, abs(xy[, 1]), abs(xy[, 2]), tolerance)
-  boxes = sf::st_sfc(
-    lapply(seq_len(nrow(xy)), function(i) {
-      radius = tolerance + padding[[i]]
-      sf::st_polygon(list(cbind(
-        xy[i, 1] + c(-radius, radius, radius, -radius, -radius),
-        xy[i, 2] + c(-radius, -radius, radius, radius, -radius)
-      )))
-    }),
-    crs = sf::st_crs(points)
+  road_point_neighbors_cpp(
+    sf::st_coordinates(points)[, 1:2, drop = FALSE],
+    tolerance
   )
-  candidates = sf::st_intersects(points, boxes, sparse = TRUE)
-  lapply(seq_along(candidates), function(i) {
-    ids = candidates[[i]]
-    dx = xy[ids, 1] - xy[i, 1]
-    dy = xy[ids, 2] - xy[i, 2]
-    sort(ids[sqrt(dx * dx + dy * dy) <= tolerance])
-  })
 }
 
 #' Classify one exact road point pair without deciding solver behavior
@@ -4484,6 +4421,137 @@ intersect_render_road_fragment_pair = function(
   )
 }
 
+#' @param prepared Prepared metric road fragments and endpoints.
+#' @param pairs Matrix of one-based fragment-row pairs.
+#' @param tolerance Endpoint distance tolerance in metres.
+#' @return Batched point records, overlap records, and retained failures.
+#' @keywords internal
+#' @noRd
+build_render_road_contact_batch = function(
+  prepared,
+  pairs,
+  tolerance
+) {
+  fragments = prepared$fragments
+  endpoints = prepared$endpoints
+  crs = sf::st_crs(fragments)
+  native = intersect_road_pairs_cpp(
+    sf::st_geometry(fragments),
+    pairs,
+    tolerance
+  )
+  contacts = native$points
+  a = pairs[contacts[, 1L], 1L]
+  b = pairs[contacts[, 1L], 2L]
+  fragment_a = fragments$render_road_fragment_id[a]
+  fragment_b = fragments$render_road_fragment_id[b]
+  start_a = contacts[, 6L] != 0
+  end_a = contacts[, 7L] != 0
+  start_b = contacts[, 8L] != 0
+  end_b = contacts[, 9L] != 0
+  endpoint_a = start_a | end_a
+  endpoint_b = start_b | end_b
+
+  # Endpoint lookup is indexed once for the entire batch, including both ends
+  # of very short fragments. Identity favors start, as in the scalar projector.
+  endpoint_keys = paste(
+    endpoints$render_road_fragment_id,
+    endpoints$endpoint_side
+  )
+  a_start = match(paste(fragment_a, "start"), endpoint_keys)
+  a_end = match(paste(fragment_a, "end"), endpoint_keys)
+  b_start = match(paste(fragment_b, "start"), endpoint_keys)
+  b_end = match(paste(fragment_b, "end"), endpoint_keys)
+  identity_a = ifelse(start_a, a_start, ifelse(end_a, a_end, NA_integer_))
+  identity_b = ifelse(start_b, b_start, ifelse(end_b, b_end, NA_integer_))
+  if (
+    any(endpoint_a & is.na(identity_a)) || any(endpoint_b & is.na(identity_b))
+  ) {
+    stop(
+      "A projected fragment endpoint did not resolve to one prepared endpoint.",
+      call. = FALSE
+    )
+  }
+  supplied_a = (start_a & endpoints$supplied_boundary[a_start]) |
+    (end_a & endpoints$supplied_boundary[a_end])
+  supplied_b = (start_b & endpoints$supplied_boundary[b_start]) |
+    (end_b & endpoints$supplied_boundary[b_end])
+  relationship = fragments$render_road_layer[a] !=
+    fragments$render_road_layer[b]
+  relation = ifelse(
+    endpoint_a & endpoint_b,
+    "shared_endpoint",
+    ifelse(
+      xor(endpoint_a, endpoint_b),
+      "endpoint_to_interior",
+      ifelse(relationship, "interior_crossing", "equal_layer_interior")
+    )
+  )
+  boundary = supplied_a | supplied_b
+  conflict = relationship & (endpoint_a | endpoint_b)
+  # Bridge-only metadata orders interior crossings, but must not disconnect a
+  # bridge from an untagged ground approach. Explicit layer conflicts stay intact.
+  sources = fragments$render_road_layer_source
+  inferred_attachment = (sources[a] == "bridge" &
+    sources[b] == "implicit_surface") |
+    (sources[b] == "bridge" & sources[a] == "implicit_surface")
+  conflict[inferred_attachment & (endpoint_a | endpoint_b)] = FALSE
+  points = sf::st_sf(
+    fragment_a = fragment_a,
+    fragment_b = fragment_b,
+    distance_a = contacts[, 4L],
+    distance_b = contacts[, 5L],
+    endpoint_a = endpoint_a,
+    endpoint_b = endpoint_b,
+    endpoint_id_a = endpoints$render_road_endpoint_id[identity_a],
+    endpoint_id_b = endpoints$render_road_endpoint_id[identity_b],
+    endpoint_side_a = endpoints$endpoint_side[identity_a],
+    endpoint_side_b = endpoints$endpoint_side[identity_b],
+    supplied_boundary_a = supplied_a,
+    supplied_boundary_b = supplied_b,
+    layer_relationship = relationship,
+    topology_relation = relation,
+    point_relation = ifelse(boundary, "boundary_endpoint", relation),
+    boundary_endpoint = boundary,
+    topology_layer_conflict = conflict,
+    geometry = sf::st_sfc(
+      lapply(seq_len(nrow(contacts)), function(i) {
+        sf::st_point(contacts[i, 2:3])
+      }),
+      crs = crs
+    )
+  )
+  # Line overlaps are uncommon and retain the existing scalar classification.
+  # Their GEOS intersection itself has already been computed in the native batch.
+  overlaps = lapply(seq_along(native$overlap_lines), function(i) {
+    pair = pairs[native$overlap_pairs[i], ]
+    build_render_road_overlap_pair(
+      fragments,
+      pair[1L],
+      pair[2L],
+      sf::st_sfc(sf::st_linestring(native$overlap_lines[[i]]), crs = crs),
+      tolerance
+    )
+  })
+  failed = which(nzchar(native$errors))
+  failures = if (length(failed)) {
+    list(data.frame(
+      candidate_pair_id = failed,
+      fragment_a = fragments$render_road_fragment_id[pairs[failed, 1L]],
+      fragment_b = fragments$render_road_fragment_id[pairs[failed, 2L]],
+      error_message = native$errors[failed],
+      stringsAsFactors = FALSE
+    ))
+  } else {
+    list()
+  }
+  list(
+    points = points,
+    overlaps = Filter(Negate(is.null), overlaps),
+    failures = failures
+  )
+}
+
 #' Derive relation-specific views from unified physical point events
 #'
 #' @param point_events Unified grouped point events.
@@ -4584,34 +4652,16 @@ find_render_road_layer_events = function(
   } else {
     matrix(integer(0), ncol = 2L)
   }
-  # Coordinates are already in the prepared metric CRS. sf otherwise repeats
-  # expensive CRS/unit parsing for every tiny pair operation. Use a call-local
-  # planar geometry copy for intersections; event records retain the real CRS.
-  prepared$intersection_geometry = sf::st_geometry(fragments)
-  sf::st_crs(prepared$intersection_geometry) = NA
-  pair_results = lapply(seq_len(nrow(candidate_pairs)), function(pair_id) {
-    intersect_render_road_fragment_pair(
-      prepared,
-      candidate_pairs[pair_id, 1L],
-      candidate_pairs[pair_id, 2L],
-      pair_id,
-      endpoint_tolerance
-    )
-  })
-  point_rows = unlist(lapply(pair_results, `[[`, "points"), recursive = FALSE)
-  overlap_rows = unlist(
-    lapply(pair_results, `[[`, "overlaps"),
-    recursive = FALSE
+  # Intersect/project in native batches, then assemble whole columns once. This
+  # avoids per-contact sf/data.frame construction and repeated endpoint scans.
+  batch = build_render_road_contact_batch(
+    prepared,
+    candidate_pairs,
+    endpoint_tolerance
   )
-  failure_rows = Filter(
-    Negate(is.null),
-    lapply(pair_results, `[[`, "failure")
-  )
-  points = if (length(point_rows)) {
-    bind_render_road_topology_rows(point_rows)
-  } else {
-    empty_points
-  }
+  points = if (nrow(batch$points)) batch$points else empty_points
+  overlap_rows = batch$overlaps
+  failure_rows = batch$failures
   points$point_pair_id = seq_len(nrow(points))
   points = points[, c(
     "point_pair_id",
@@ -4980,44 +5030,17 @@ select_render_road_endpoint_candidate = function(
   endpoints,
   ambiguity_direction_margin
 ) {
-  eligible_rows = which(candidates$eligible)
-  best_candidate = integer(nrow(endpoints))
-  ambiguous_endpoint = logical(nrow(endpoints))
-  ambiguous_candidate = logical(nrow(candidates))
-  for (endpoint_row in seq_len(nrow(endpoints))) {
-    endpoint_id = endpoints$render_road_endpoint_id[[endpoint_row]]
-    rows = eligible_rows[
-      candidates$endpoint_a[eligible_rows] == endpoint_id |
-        candidates$endpoint_b[eligible_rows] == endpoint_id
-    ]
-    if (!length(rows)) {
-      next
-    }
-    highest_evidence = max(candidates$evidence_rank[rows])
-    tier_rows = rows[candidates$evidence_rank[rows] == highest_evidence]
-    highest_lane_continuity = max(
-      candidates$lane_continuity_rank[tier_rows]
-    )
-    tier_rows = tier_rows[
-      candidates$lane_continuity_rank[tier_rows] == highest_lane_continuity
-    ]
-    best_direction = max(candidates$direction_score[tier_rows])
-    competing = tier_rows[
-      candidates$direction_score[tier_rows] >=
-        best_direction - ambiguity_direction_margin
-    ]
-    if (length(competing) == 1L) {
-      best_candidate[[endpoint_row]] = competing
-    } else {
-      ambiguous_endpoint[[endpoint_row]] = TRUE
-      ambiguous_candidate[competing] = TRUE
-    }
-  }
-  list(
-    eligible_rows = eligible_rows,
-    best_candidate = best_candidate,
-    ambiguous_endpoint = ambiguous_endpoint,
-    ambiguous_candidate = ambiguous_candidate
+  select_road_candidates_cpp(
+    cbind(
+      match(candidates$endpoint_a, endpoints$render_road_endpoint_id),
+      match(candidates$endpoint_b, endpoints$render_road_endpoint_id)
+    ),
+    candidates$eligible,
+    candidates$evidence_rank,
+    candidates$lane_continuity_rank,
+    candidates$direction_score,
+    nrow(endpoints),
+    ambiguity_direction_margin
   )
 }
 
@@ -5148,18 +5171,49 @@ select_render_road_continuations = function(
   pair_index = do.call(rbind, pair_index)
 
   endpoint_coordinates = sf::st_coordinates(endpoints)[, 1:2, drop = FALSE]
-  candidate_rows = lapply(seq_len(nrow(pair_index)), function(candidate_id) {
-    score_render_road_continuation_pair(
-      endpoints = endpoints,
-      endpoint_coordinates = endpoint_coordinates,
-      first = pair_index[candidate_id, 1L],
-      second = pair_index[candidate_id, 2L],
-      candidate_id = candidate_id,
-      endpoint_tolerance = endpoint_tolerance,
-      minimum_direction_score = minimum_direction_score
+  # Clean metadata once per endpoint, not once per candidate and field. R keeps
+  # its locale-aware case folding; native code compares compact integer labels.
+  metadata = vapply(
+    c(
+      "render_road_way_id",
+      "render_road_ref",
+      "render_road_name",
+      "render_road_highway"
+    ),
+    function(column) {
+      values = tolower(trimws(as.character(endpoints[[column]])))
+      values[is.na(values) | !nzchar(values)] = NA_character_
+      as.integer(factor(values))
+    },
+    integer(nrow(endpoints))
+  )
+  scored = score_road_continuations_cpp(
+    cbind(endpoint_coordinates, endpoints$direction_x, endpoints$direction_y),
+    metadata,
+    endpoints$render_road_feature_id,
+    suppressWarnings(as.integer(endpoints$render_road_lanes)),
+    pair_index,
+    endpoint_tolerance,
+    minimum_direction_score
+  )
+  a = pair_index[, 1L]
+  b = pair_index[, 2L]
+  candidates = sf::st_sf(
+    continuation_id = seq_len(nrow(pair_index)),
+    endpoint_a = endpoints$render_road_endpoint_id[a],
+    endpoint_b = endpoints$render_road_endpoint_id[b],
+    fragment_a = endpoints$render_road_fragment_id[a],
+    fragment_b = endpoints$render_road_fragment_id[b],
+    side_a = endpoints$endpoint_side[a],
+    side_b = endpoints$endpoint_side[b],
+    as.data.frame(scored),
+    geometry = sf::st_sfc(
+      lapply(seq_len(nrow(pair_index)), function(i) {
+        sf::st_linestring(endpoint_coordinates[c(a[i], b[i]), , drop = FALSE])
+      }),
+      crs = sf::st_crs(endpoints)
     )
-  })
-  candidates = bind_render_road_topology_rows(candidate_rows)
+  )
 
   # An exact node containing only two road endpoints is already an unambiguous
   # topological continuation. Do not let a sharp bend split a named road into

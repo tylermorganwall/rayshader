@@ -325,7 +325,8 @@ or \code{rayrender::generate_camera_motion()} functions.}
 
 \item{plot}{Default \code{is.na(filename)}. Whether to plot the scene, or just return the RGBA array.}
 
-\item{verbose}{Default \code{FALSE}. If \code{TRUE}, displays progress bars while
+\item{verbose}{Default \code{FALSE}. If \code{TRUE}, reports scene-conversion phase timings,
+forwards verbose construction timing to rayrender, and displays progress bars while
 converting line and stream paths into raytraced scene objects. Road meshes
 built by \code{\link[=render_roads]{render_roads()}} are reused from the active scene cache.}
 
