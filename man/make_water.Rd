@@ -17,7 +17,8 @@ make_water(
   heightmap_extent = NULL,
   heightmap_crs = NULL,
   water_surface_tolerance = NULL,
-  water_elevation = NULL
+  water_elevation = NULL,
+  parallel = TRUE
 )
 }
 \arguments{
@@ -47,6 +48,8 @@ of 1 meter and the grid values are separated by 10 meters, \code{zscale} would b
 \item{water_surface_tolerance}{Default \code{NULL}. Near-coincidence tolerance for exact polygon water, in terrain elevation units.}
 
 \item{water_elevation}{Default \code{NULL}. Explicit elevations for polygon footprints.}
+
+\item{parallel}{Default \code{TRUE}. Build large exact-polygon water batches in separate R workers.}
 }
 \description{
 Makes the water in the 3D elevation map.

@@ -19,7 +19,10 @@ solve_render_road_path_profiles(
   continuation_grade_tolerance = 0.14,
   zscale = 1,
   texture_world_scale = c(1, 1),
-  terrain_grading = FALSE
+  terrain_grading = FALSE,
+  parallel = FALSE,
+  verbose = FALSE,
+  path_geometry = NULL
 )
 }
 \arguments{
@@ -59,6 +62,13 @@ world units.}
 
 \item{terrain_grading}{Default \code{FALSE}. Allow terrain cuts and ground-level
 junction contacts instead of enforcing the original DEM as a lower bound.}
+
+\item{parallel}{Default \code{FALSE}. Use native threads for terrain contacts.}
+
+\item{verbose}{Default \code{FALSE}. Report profile preparation and solve stages.}
+
+\item{path_geometry}{Default \code{NULL}. Clipped spatial LINESTRING per rendered
+path, in the same order and direction as \code{coord_list}.}
 }
 \value{
 Coordinate matrices with solved heights and profile diagnostics.

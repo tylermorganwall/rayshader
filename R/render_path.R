@@ -943,6 +943,7 @@ prepare_render_line_geometry = function(
 #' @param width Numeric width per path.
 #' @param feature_id Integer normalized feature ID per path.
 #' @param source_feature_id List of source feature IDs per path.
+#' @param geometry Default `NULL`. Clipped spatial LINESTRING per rendered path.
 #'
 #' @return Structured internal path-data list.
 #' @keywords internal
@@ -950,13 +951,15 @@ new_render_line_path_data = function(
   coords,
   width,
   feature_id,
-  source_feature_id
+  source_feature_id,
+  geometry = NULL
 ) {
   path_count = length(coords)
   if (
     length(width) != path_count ||
       length(feature_id) != path_count ||
-      length(source_feature_id) != path_count
+      length(source_feature_id) != path_count ||
+      (!is.null(geometry) && length(geometry) != path_count)
   ) {
     stop("Render line path data fields must have equal lengths.", call. = FALSE)
   }
@@ -965,7 +968,8 @@ new_render_line_path_data = function(
       coords = coords,
       width = as.numeric(width),
       feature_id = as.integer(feature_id),
-      source_feature_id = source_feature_id
+      source_feature_id = source_feature_id,
+      geometry = geometry
     ),
     class = c("render_line_path_data", "list")
   )
@@ -1084,7 +1088,16 @@ render_spatial_line_path_data = function(
   list(
     coords = coords,
     feature_id = feature_id,
-    source_feature_id = source_feature_id
+    source_feature_id = source_feature_id,
+    # Retain the exact clipped/noded parts and their direction before converting
+    # to scene coordinates. Profile topology must use these same parts, rather
+    # than independently splitting the original source features.
+    geometry = sf::st_sfc(
+      lapply(coordinate_rows, function(rows) {
+        sf::st_linestring(line_coordinates[rows, 1:2, drop = FALSE])
+      }),
+      crs = sf::st_crs(lines)
+    )
   )
 }
 
@@ -1183,7 +1196,8 @@ render_line_coords_by_width = function(
       coords = spatial_path_data$coords,
       width = path_width,
       feature_id = spatial_path_data$feature_id,
-      source_feature_id = spatial_path_data$source_feature_id
+      source_feature_id = spatial_path_data$source_feature_id,
+      geometry = spatial_path_data$geometry
     ))
   }
   if (

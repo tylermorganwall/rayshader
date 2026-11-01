@@ -7,6 +7,7 @@
 #' @param water_surface_tolerance Default `NULL`. Coincidence tolerance in elevation units; `NULL` uses scene precision.
 #' @param water_color Default `"lightblue"`. Water color.
 #' @param water_alpha Default `0.5`. Water opacity.
+#' @param parallel Default `TRUE`. Build large polygon batches with native threads.
 #' @return Water triangle components and top boundary segments, invisibly.
 #' @keywords internal
 #' @noRd
@@ -19,8 +20,10 @@ make_polygon_water = function(
   water_elevation = NULL,
   water_surface_tolerance = NULL,
   water_color = "lightblue",
-  water_alpha = 0.5
+  water_alpha = 0.5,
+  parallel = TRUE
 ) {
+  parallel = resolve_render_logical(parallel, "parallel")
   if (
     !requireNamespace("sf", quietly = TRUE) ||
       !requireNamespace("terra", quietly = TRUE)
@@ -62,80 +65,22 @@ make_polygon_water = function(
   } else {
     water_surface_tolerance / zscale
   }
+  results = build_polygon_water_parts(
+    footprints,
+    terrain,
+    zscale,
+    tolerance,
+    clearance,
+    parallel
+  )
   vertices = lines = list()
-  for (i in seq_along(footprints$geometry)) {
-    result = tryCatch(
-      {
-        support = polygon_water_terrain_support(footprints$geometry[i], terrain)
-        if (is.null(support)) {
-          next
-        }
-        level = footprints$levels[i] / zscale
-        if (!is.finite(level)) {
-          # Prefer the original exterior shoreline. Intersecting it with terrain
-          # triangles samples the actual rendered surface even for tiny pools.
-          level = if (length(support$shore)) {
-            stats::median(support$shore)
-          } else {
-            stats::median(support$heights)
-          }
-        }
-        # Only nearly horizontal terrain patches coincident with the top trigger
-        # a lift. A shoreline crossing on a slope must not raise an entire lake.
-        near = abs(support$min_height - level) <= tolerance &
-          abs(support$max_height - level) <= tolerance
-        if (any(near)) {
-          level = max(level, max(support$max_height[near]) + clearance)
-        }
-        bottom = min(support$heights)
-        if (level <= bottom) {
-          next
-        }
-        # Union the clipped triangles to retain the input outline and holes, but
-        # omit portions outside the scene or over missing terrain. No cell-sized
-        # footprint is introduced, and no area fitting changes the water level.
-        geometry = sf::st_union(support$geometry)
-        # Triangle intersections split straight shoreline edges into nearly
-        # collinear fragments. Remove only double-roundoff-scale deviations,
-        # consistently from caps and walls, before the extrusion triangulator
-        # checks for collapsed faces. This is far below rgl vertex precision.
-        geometry = sf::st_simplify(
-          geometry,
-          preserveTopology = TRUE,
-          dTolerance = 8 * .Machine$double.eps * terrain$magnitude
-        )
-        mesh = rayvertex::extruded_polygon_mesh(
-          sf::st_sf(geometry = geometry),
-          top = level,
-          bottom = bottom,
-          flip_horizontal = TRUE
-        )
-        triangles = mesh$vertices[[1]][
-          as.vector(t(mesh$shapes[[1]]$indices)) + 1L,
-          ,
-          drop = FALSE
-        ]
-        boundary = list()
-        for (part in water_sf_polygon_parts(geometry[[1]])) {
-          for (ring in part) {
-            p = cbind(ring[, 1], level, ring[, 2])
-            boundary[[length(boundary) + 1L]] = p[
-              as.vector(rbind(seq_len(nrow(p) - 1L), 2:nrow(p))),
-              ,
-              drop = FALSE
-            ]
-          }
-        }
-        list(vertices = triangles, lines = do.call(rbind, boundary))
-      },
-      error = function(e) {
-        warning(
-          sprintf('Omitted water polygon %s: %s', i, conditionMessage(e)),
-          call. = FALSE
-        )
-        NULL
-      }
-    )
+  # Workers never touch rgl. Replay diagnostics and insert geometry in input
+  # order, regardless of which worker finished each polygon first.
+  for (record in results) {
+    for (condition in record$warnings) {
+      warning(condition)
+    }
+    result = record$mesh
     if (!is.null(result)) {
       vertices[[length(vertices) + 1L]] = result$vertices
       lines[[length(lines) + 1L]] = result$lines
@@ -144,18 +89,36 @@ make_polygon_water = function(
   if (!length(vertices)) {
     return(invisible(empty))
   }
-  for (v in vertices) {
-    rgl::triangles3d(
-      v,
-      color = water_color,
-      alpha = water_alpha,
-      lit = FALSE,
-      front = 'filled',
-      back = 'filled',
-      texture = NULL,
-      tag = 'water'
+  # Disconnected solids can share one triangle object: concatenating complete
+  # triangles preserves their caps, holes, levels and winding without joining
+  # them. Upload the entire water batch once instead of one object per polygon.
+  # Preserve per-component recycling when callers provide material vectors.
+  if (length(water_color) > 1L) {
+    water_color = unlist(
+      lapply(vertices, function(v) {
+        rep(water_color, length.out = nrow(v))
+      }),
+      use.names = FALSE
     )
   }
+  if (length(water_alpha) > 1L) {
+    water_alpha = unlist(
+      lapply(vertices, function(v) {
+        rep(water_alpha, length.out = nrow(v))
+      }),
+      use.names = FALSE
+    )
+  }
+  rgl::triangles3d(
+    do.call(rbind, vertices),
+    color = water_color,
+    alpha = water_alpha,
+    lit = FALSE,
+    front = 'filled',
+    back = 'filled',
+    texture = NULL,
+    tag = 'water'
+  )
   invisible(list(vertices = vertices, lines = do.call(rbind, lines)))
 }
 
@@ -346,6 +309,173 @@ index_polygon_water_terrain = function(heightmap, zscale) {
   )
 }
 
+
+#' @param footprints Polygon geometries and corresponding elevation-unit levels.
+#' @param terrain Read-only indexed terrain snapshot in scene coordinates.
+#' @param zscale Elevation units per scene unit.
+#' @param tolerance Near-coincidence tolerance in scene units.
+#' @param clearance Minimum cap-to-terrain clearance in scene units.
+#' @param parallel Whether to use native threads for large batches.
+#' @return Ordered records containing each polygon mesh and its warning conditions.
+#' @keywords internal
+#' @noRd
+build_polygon_water_parts = function(
+  footprints,
+  terrain,
+  zscale,
+  tolerance,
+  clearance,
+  parallel
+) {
+  count = length(footprints$geometry)
+  if (!count) {
+    return(list())
+  }
+  cores = getOption("cores", parallel::detectCores(logical = FALSE))
+  if (
+    !is.numeric(cores) || length(cores) != 1L || !is.finite(cores) || cores < 1
+  ) {
+    cores = 1L
+  }
+  # Retain the existing conservative batch threshold. Threads share terrain,
+  # but each still allocates scratch storage and owns a GEOS context.
+  workers = if (parallel && count >= 4096L) {
+    min(floor(cores), floor(count / 1024L))
+  } else {
+    1L
+  }
+  records = build_polygon_water_meshes_cpp(
+    footprints,
+    terrain,
+    zscale,
+    tolerance,
+    clearance,
+    as.integer(workers)
+  )
+  # Workers return native error strings only. Construct warning conditions on
+  # the main thread and replay them in input order, independent of scheduling.
+  lapply(seq_along(records), function(i) {
+    record = records[[i]]
+    if (nzchar(record$error)) {
+      # GEOS versions differ in overlay roundoff. Retry rejected boundaries
+      # through the established sf/rayvertex path before dropping geometry.
+      # This rare recovery runs on the main thread, never inside a worker.
+      return(build_polygon_water_part(
+        i,
+        footprints,
+        terrain,
+        zscale,
+        tolerance,
+        clearance
+      ))
+    }
+    list(mesh = record$mesh, warnings = list())
+  })
+}
+
+#' @param i One-based polygon index, used in omission diagnostics.
+#' @param footprints Polygon geometries and corresponding elevation-unit levels.
+#' @param terrain Read-only indexed terrain snapshot in scene coordinates.
+#' @param zscale Elevation units per scene unit.
+#' @param tolerance Near-coincidence tolerance in scene units.
+#' @param clearance Minimum cap-to-terrain clearance in scene units.
+#' @return One mesh (or `NULL`) and warning conditions for ordered main-process replay.
+#' @keywords internal
+#' @noRd
+build_polygon_water_part = function(
+  i,
+  footprints,
+  terrain,
+  zscale,
+  tolerance,
+  clearance
+) {
+  warnings = list()
+  mesh = withCallingHandlers(
+    tryCatch(
+      {
+        support = polygon_water_terrain_support(footprints$geometry[i], terrain)
+        if (is.null(support)) {
+          return(list(mesh = NULL, warnings = warnings))
+        }
+        level = footprints$levels[i] / zscale
+        if (!is.finite(level)) {
+          # Prefer the original exterior shoreline. Intersecting it with terrain
+          # triangles samples the actual rendered surface even for tiny pools.
+          level = if (length(support$shore)) {
+            stats::median(support$shore)
+          } else {
+            stats::median(support$heights)
+          }
+        }
+        # Only nearly horizontal terrain patches coincident with the top trigger
+        # a lift. A shoreline crossing on a slope must not raise an entire lake.
+        near = abs(support$min_height - level) <= tolerance &
+          abs(support$max_height - level) <= tolerance
+        if (any(near)) {
+          level = max(level, max(support$max_height[near]) + clearance)
+        }
+        bottom = min(support$heights)
+        if (level <= bottom) {
+          return(list(mesh = NULL, warnings = warnings))
+        }
+        # Keep the hidden cap below the terrain using the same scene-scaled
+        # clearance as the native builder. Coincident bottoms cause ray-traced
+        # z-fighting even when the water has no absorption.
+        bottom = bottom - clearance
+        # Union the clipped triangles to retain the input outline and holes, but
+        # omit portions outside the scene or over missing terrain. No cell-sized
+        # footprint is introduced, and no area fitting changes the water level.
+        geometry = sf::st_union(support$geometry)
+        # Triangle intersections split straight shoreline edges into nearly
+        # collinear fragments. Remove only double-roundoff-scale deviations,
+        # consistently from caps and walls, before the extrusion triangulator
+        # checks for collapsed faces. This is far below rgl vertex precision.
+        geometry = sf::st_simplify(
+          geometry,
+          preserveTopology = TRUE,
+          dTolerance = 8 * .Machine$double.eps * terrain$magnitude
+        )
+        mesh = rayvertex::extruded_polygon_mesh(
+          sf::st_sf(geometry = geometry),
+          top = level,
+          bottom = bottom,
+          flip_horizontal = TRUE
+        )
+        triangles = mesh$vertices[[1]][
+          as.vector(t(mesh$shapes[[1]]$indices)) + 1L,
+          ,
+          drop = FALSE
+        ]
+        boundary = list()
+        for (part in water_sf_polygon_parts(geometry[[1]])) {
+          for (ring in part) {
+            p = cbind(ring[, 1], level, ring[, 2])
+            boundary[[length(boundary) + 1L]] = p[
+              as.vector(rbind(seq_len(nrow(p) - 1L), 2:nrow(p))),
+              ,
+              drop = FALSE
+            ]
+          }
+        }
+        list(vertices = triangles, lines = do.call(rbind, boundary))
+      },
+      error = function(e) {
+        warning(
+          sprintf("Omitted water polygon %s: %s", i, conditionMessage(e)),
+          call. = FALSE
+        )
+        NULL
+      }
+    ),
+    warning = function(w) {
+      warnings[[length(warnings) + 1L]] <<- w
+      invokeRestart("muffleWarning")
+    }
+  )
+  list(mesh = mesh, warnings = warnings)
+}
+
 #' @param footprint One polygon in scene XZ coordinates.
 #' @param terrain Indexed rendered terrain triangles.
 #' @return Clipped terrain footprints, heights, and exterior shoreline samples; `NULL` without coverage.
@@ -376,56 +506,49 @@ polygon_water_terrain_support = function(footprint, terrain) {
   if (!length(ids)) {
     return(NULL)
   }
-  geometry = sf::st_sfc(lapply(ids, function(i) {
-    sf::st_polygon(list(rbind(
-      terrain$a[i, c(1, 3)],
-      terrain$b[i, c(1, 3)],
-      terrain$c[i, c(1, 3)],
-      terrain$a[i, c(1, 3)]
-    )))
-  }))
-  clipped = suppressWarnings(sf::st_intersection(
-    sf::st_sf(face = ids, geometry = geometry),
-    footprint
+  # The terrain index has already rejected nonfinite and collapsed triangles.
+  # Construct these known-valid sfg rings without repeating st_polygon's
+  # per-ring validation for every candidate face.
+  geometry = sf::st_sfc(water_triangle_rings_cpp(
+    terrain$a,
+    terrain$b,
+    terrain$c,
+    ids
   ))
-  clipped = suppressWarnings(sf::st_collection_extract(clipped, 'POLYGON'))
-  clipped = clipped[as.numeric(sf::st_area(clipped)) > 0, ]
-  if (!nrow(clipped)) {
+  # Use geometry vectors through the ordinary polygon path. The intersection
+  # index preserves the originating terrain face without repeatedly rebuilding
+  # sf data frames and their geometry/attribute relationships.
+  clipped = suppressWarnings(sf::st_intersection(geometry, footprint))
+  face = ids[attr(clipped, 'idx')[, 1L]]
+  if (
+    !inherits(clipped, 'sfc_POLYGON') && !inherits(clipped, 'sfc_MULTIPOLYGON')
+  ) {
+    # Edge-only contacts and mixed collections need the existing extraction
+    # rules, including duplication of face IDs for split collection members.
+    extracted = suppressWarnings(sf::st_collection_extract(
+      sf::st_sf(face = face, geometry = clipped),
+      'POLYGON'
+    ))
+    face = extracted$face
+    clipped = sf::st_geometry(extracted)
+  }
+  keep = as.numeric(sf::st_area(clipped)) > 0
+  clipped = clipped[keep]
+  face = face[keep]
+  if (!length(clipped)) {
     return(NULL)
   }
   xyz = sf::st_coordinates(clipped)
-  # POLYGON/MULTIPOLYGON coordinates carry the feature index in the last column.
-  feature = xyz[, ncol(xyz)]
-  id = clipped$face[feature]
-  a = terrain$a[id, , drop = FALSE]
-  b = terrain$b[id, , drop = FALSE]
-  c = terrain$c[id, , drop = FALSE]
-  det = (b[, 1] - a[, 1]) *
-    (c[, 3] - a[, 3]) -
-    (b[, 3] - a[, 3]) * (c[, 1] - a[, 1])
-  u = ((xyz[, 1] - a[, 1]) *
-    (c[, 3] - a[, 3]) -
-    (xyz[, 2] - a[, 3]) * (c[, 1] - a[, 1])) /
-    det
-  v = ((b[, 1] - a[, 1]) *
-    (xyz[, 2] - a[, 3]) -
-    (b[, 3] - a[, 3]) * (xyz[, 1] - a[, 1])) /
-    det
-  heights = a[, 2] + u * (b[, 2] - a[, 2]) + v * (c[, 2] - a[, 2])
-  by_face = split(heights, feature)
-  outer = sf::st_sfc(sf::st_linestring(footprint[[1]][[1]]))
-  # Coordinate-to-boundary distance avoids treating a scene/NA cut as shore.
-  on_shore = lengths(sf::st_is_within_distance(
-    sf::st_as_sf(data.frame(x = xyz[, 1], z = xyz[, 2]), coords = c('x', 'z')),
-    outer,
-    dist = 1e-8 * terrain$magnitude
-  )) >
-    0
-  list(
-    geometry = sf::st_geometry(clipped),
-    heights = heights,
-    shore = heights[on_shore],
-    min_height = vapply(by_face, min, numeric(1)),
-    max_height = vapply(by_face, max, numeric(1))
+  # The last coordinate column identifies the clipped feature. Native sampling
+  # retains coordinate order and tests only the original exterior shoreline.
+  samples = water_support_samples_cpp(
+    xyz,
+    face,
+    terrain$a,
+    terrain$b,
+    terrain$c,
+    footprint[[1]][[1]],
+    1e-8 * terrain$magnitude
   )
+  c(list(geometry = clipped), samples)
 }

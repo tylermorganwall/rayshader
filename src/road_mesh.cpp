@@ -732,6 +732,7 @@ struct RoadTerrain {
   int row_count = 0;
   int column_count = 0;
   double height_scale = 1.0;
+  double surface_clearance = 0.055;
   double horizontal_scale_x = 1.0;
   double horizontal_scale_z = 1.0;
   std::vector<double> height;
@@ -854,6 +855,21 @@ RoadTerrain copy_road_terrain(
       ? horizontal_scale_z
       : 1.0;
   terrain.height.assign(heightmap.begin(), heightmap.end());
+
+  // Pavement dimensions are elevation units, not grid/scene units. The float
+  // margin matches resolve_render_road_surface_clearance() used by previews.
+  double magnitude = std::max({
+      1.0,
+      (terrain.row_count - 1.0) * terrain.horizontal_scale_x / 2.0,
+      (terrain.column_count - 1.0) * terrain.horizontal_scale_z / 2.0});
+  for (double height : terrain.height) {
+    if (std::isfinite(height)) {
+      magnitude = std::max(magnitude, std::abs(height * terrain.height_scale));
+    }
+  }
+  terrain.surface_clearance = std::max(
+      0.055 * terrain.height_scale,
+      16.0 * std::numeric_limits<float>::epsilon() * magnitude);
   return terrain;
 }
 
@@ -871,6 +887,28 @@ RoadTerrain copy_scaled_road_terrain(
     stop("Road terrain scale must contain two positive finite values.");
   }
   return copy_road_terrain(heightmap, zscale, scale[0], scale[1]);
+}
+
+// Resolve one immutable terrain snapshot on the calling R thread. When no
+// context is supplied, retain the standalone helper behavior by owning a local
+// copy. A context is call-scoped, never a global cache keyed by an R address.
+const RoadTerrain& resolve_road_terrain_context(
+    SEXP terrain_context,
+    const NumericMatrix& heightmap,
+    double zscale,
+    const Nullable<NumericVector>& terrain_scale,
+    std::unique_ptr<RoadTerrain>& local_terrain) {
+  if (terrain_context != R_NilValue) {
+    if (TYPEOF(terrain_context) != EXTPTRSXP ||
+        R_ExternalPtrTag(terrain_context) != Rf_install("rayshader_road_terrain") ||
+        R_ExternalPtrAddr(terrain_context) == nullptr) {
+      stop("Road terrain context is invalid or has expired.");
+    }
+    return *static_cast<const RoadTerrain*>(R_ExternalPtrAddr(terrain_context));
+  }
+  local_terrain.reset(new RoadTerrain(
+      copy_scaled_road_terrain(heightmap, zscale, terrain_scale)));
+  return *local_terrain;
 }
 
 std::vector<RoadVec3> densify_road_path_native(
@@ -996,8 +1034,11 @@ RoadSectionData sample_road_sections_native(
   result.left_normal.resize(point_count);
   result.right_normal.resize(point_count);
   const bool sample_terrain = job.terrain_following && terrain.available();
-  constexpr double road_height = 0.11;
-  constexpr double road_surface_clearance = 0.055;
+  // Placement clearance may grow to survive rgl float rounding, but it must
+  // never thicken the opaque pavement. Keep the underside a fixed physical
+  // distance below the top, independent of terrain height and scene extent.
+  const double road_height = 0.11 * terrain.height_scale;
+  const double road_surface_clearance = terrain.surface_clearance;
   for (int point = 0; point < point_count; ++point) {
     check_road_mesh_interrupt(point);
     const RoadVec3 side = {
@@ -2675,8 +2716,11 @@ RoadMeshData build_terrain_clipped_road_section_mesh_native(
     const RoadMeshJob& job,
     const RoadMeshSectionInput& section,
     const RoadTerrain& terrain) {
-  constexpr double road_height = 0.11;
-  constexpr double minimum_surface_clearance = 0.055;
+  // Placement clearance may grow to survive rgl float rounding, but it must
+  // never thicken the opaque pavement. Keep the underside a fixed physical
+  // distance below the top, independent of terrain height and scene extent.
+  const double road_height = 0.11 * terrain.height_scale;
+  const double minimum_surface_clearance = terrain.surface_clearance;
   const double side_u0 = 0.01;
   const double side_u1 = 0.02;
   const double cap_v_span = 1e-4;
@@ -3255,15 +3299,31 @@ List build_render_road_section_mesh_cpp(
 }
 
 // [[Rcpp::export]]
+SEXP create_render_road_terrain_context_cpp(
+    const NumericMatrix& heightmap,
+    double zscale,
+    Nullable<NumericVector> terrain_scale = R_NilValue) {
+  // Copy elevations and compute precision bounds once. R owns the finalizer;
+  // all thread pools finish before a consumer releases its context argument.
+  XPtr<RoadTerrain> context(
+      new RoadTerrain(copy_scaled_road_terrain(heightmap, zscale, terrain_scale)),
+      true,
+      Rf_install("rayshader_road_terrain"));
+  return context;
+}
+
+// [[Rcpp::export]]
 List densify_render_road_paths_batch_cpp(
     const List& input_jobs,
     const NumericMatrix& heightmap,
     double zscale,
     bool parallel,
     bool verbose,
-    Nullable<NumericVector> terrain_scale = R_NilValue) {
-  const RoadTerrain terrain = copy_scaled_road_terrain(
-      heightmap, zscale, terrain_scale);
+    Nullable<NumericVector> terrain_scale = R_NilValue,
+    SEXP terrain_context = R_NilValue) {
+  std::unique_ptr<RoadTerrain> local_terrain;
+  const RoadTerrain& terrain = resolve_road_terrain_context(
+      terrain_context, heightmap, zscale, terrain_scale, local_terrain);
   std::vector<RoadDensifyJob> jobs;
   jobs.reserve(input_jobs.size());
   for (int index = 0; index < input_jobs.size(); ++index) {
@@ -3309,9 +3369,11 @@ List sample_render_road_sections_batch_cpp(
     double zscale,
     bool parallel,
     bool verbose,
-    Nullable<NumericVector> terrain_scale = R_NilValue) {
-  const RoadTerrain terrain = copy_scaled_road_terrain(
-      heightmap, zscale, terrain_scale);
+    Nullable<NumericVector> terrain_scale = R_NilValue,
+    SEXP terrain_context = R_NilValue) {
+  std::unique_ptr<RoadTerrain> local_terrain;
+  const RoadTerrain& terrain = resolve_road_terrain_context(
+      terrain_context, heightmap, zscale, terrain_scale, local_terrain);
   std::vector<RoadSectionJob> jobs;
   jobs.reserve(input_jobs.size());
   for (int index = 0; index < input_jobs.size(); ++index) {
@@ -3568,100 +3630,242 @@ std::vector<RoadContactPoint> clip_road_contact_polygon(
 }
 } // namespace
 
-// Terrain/road intersection vertices serve two purposes: constructing a
-// full-width terrain floor before solving, and checking the finished mesh.
-// Station is affine on each road triangle. Sampling every intersection vertex
-// captures terrain peaks between road edges and between source OSM vertices.
-// [[Rcpp::export]]
-DataFrame sample_render_road_terrain_contacts_cpp(
+namespace {
+
+// R data is copied and validated before dispatch. Workers own their output
+// vectors and share only the immutable terrain snapshot; no worker touches R.
+struct RoadContactJob {
+  std::vector<RoadVec3> vertices;
+  std::vector<std::array<int, 3>> indices;
+  std::vector<double> station;
+};
+
+struct RoadContactData {
+  std::vector<double> distances;
+  std::vector<double> elevations;
+  std::vector<double> clearances;
+  std::vector<int> triangles;
+};
+
+RoadContactJob parse_road_contact_job(
     const NumericMatrix& vertices, const IntegerMatrix& indices,
-    const NumericVector& station, const NumericMatrix& heightmap,
-    double zscale, const NumericVector& terrain_scale, bool grade_terrain = false) {
+    const NumericVector& station) {
   if (vertices.ncol() != 3 || indices.ncol() != 3 ||
-      station.size() != vertices.nrow() || terrain_scale.size() != 2 ||
-      !std::isfinite(zscale) || zscale <= 0 ||
-      !std::isfinite(terrain_scale[0]) || terrain_scale[0] <= 0 ||
-      !std::isfinite(terrain_scale[1]) || terrain_scale[1] <= 0) {
+      station.size() != vertices.nrow()) {
     stop("Road terrain contacts require triangles, matching stations, and positive scales.");
   }
-  const RoadTerrain terrain = copy_road_terrain(
-      heightmap, zscale, terrain_scale[0], terrain_scale[1]);
-  if (!terrain.available()) stop("Road terrain contacts require a terrain grid.");
-  std::vector<double> distances, elevations, clearances;
-  std::vector<int> triangles;
-  NumericMatrix graded;
-  if (grade_terrain) graded = clone(heightmap);
+  RoadContactJob job;
+  job.vertices = copy_road_vec3_matrix(vertices);
+  job.station.assign(station.begin(), station.end());
+  job.indices.resize(indices.nrow());
   for (int face = 0; face < indices.nrow(); ++face) {
-    if ((face & 255) == 0) checkUserInterrupt();
+    if ((face & 255) == 0) Rcpp::checkUserInterrupt();
+    for (int corner = 0; corner < 3; ++corner) {
+      const int index = indices(face, corner);
+      if (index == NA_INTEGER || index < 1 || index > vertices.nrow()) {
+        stop("Invalid road triangle index.");
+      }
+      const RoadVec3& point = job.vertices[index - 1];
+      if (!std::isfinite(point.x) || !std::isfinite(point.y) ||
+          !std::isfinite(point.z) || !std::isfinite(job.station[index - 1])) {
+        stop("Road terrain contacts require finite coordinates and stations.");
+      }
+      job.indices[face][corner] = index - 1;
+    }
+  }
+  return job;
+}
+
+// Intersect each footprint triangle only with terrain cells in its horizontal
+// bounds. Keep the original face/cell/vertex order so serial and threaded jobs
+// produce identical contact stations and conservative terrain floors.
+// A grading call has its own mutable DEM; the shared snapshot is never modified.
+RoadContactData sample_road_terrain_contacts_native(
+    const RoadContactJob& job, const RoadTerrain& terrain, double zscale,
+    std::vector<double>* graded = nullptr) {
+  RoadContactData result;
+  for (std::size_t face = 0; face < job.indices.size(); ++face) {
+    check_road_mesh_interrupt(static_cast<int>(face));
     std::array<RoadContactPoint, 3> road;
     std::array<double, 3> height, along;
     for (int corner = 0; corner < 3; ++corner) {
-      const int vertex = indices(face, corner) - 1;
-      if (vertex < 0 || vertex >= vertices.nrow()) stop("Invalid road triangle index.");
-      road[corner] = {vertices(vertex, 0), vertices(vertex, 2)};
-      height[corner] = vertices(vertex, 1);
-      along[corner] = station[vertex];
-      if (!std::isfinite(road[corner].x) || !std::isfinite(road[corner].z) ||
-          !std::isfinite(height[corner]) || !std::isfinite(along[corner]))
-        stop("Road terrain contacts require finite coordinates and stations.");
+      const int vertex = job.indices[face][corner];
+      const RoadVec3& point = job.vertices[vertex];
+      road[corner] = {point.x, point.z};
+      height[corner] = point.y;
+      along[corner] = job.station[vertex];
     }
+
+    // Reject collapsed footprints, then restrict work to intersecting DEM cells.
     const double determinant = road_contact_cross(road[0], road[1], road[2]);
     if (std::abs(determinant) <= 1e-14) continue;
     const double orientation = determinant > 0 ? 1.0 : -1.0;
     const double row_center = (terrain.row_count - 1.0) / 2.0;
     const double col_center = (terrain.column_count - 1.0) / 2.0;
     const int row_min = std::max(0, static_cast<int>(std::floor(
-        std::min({road[0].x, road[1].x, road[2].x}) / terrain_scale[0] + row_center)));
+        std::min({road[0].x, road[1].x, road[2].x}) / terrain.horizontal_scale_x + row_center)));
     const int row_max = std::min(terrain.row_count - 2, static_cast<int>(std::floor(
-        std::max({road[0].x, road[1].x, road[2].x}) / terrain_scale[0] + row_center)));
+        std::max({road[0].x, road[1].x, road[2].x}) / terrain.horizontal_scale_x + row_center)));
     const int col_min = std::max(0, static_cast<int>(std::floor(
-        std::min({road[0].z, road[1].z, road[2].z}) / terrain_scale[1] + col_center)));
+        std::min({road[0].z, road[1].z, road[2].z}) / terrain.horizontal_scale_z + col_center)));
     const int col_max = std::min(terrain.column_count - 2, static_cast<int>(std::floor(
-        std::max({road[0].z, road[1].z, road[2].z}) / terrain_scale[1] + col_center)));
+        std::max({road[0].z, road[1].z, road[2].z}) / terrain.horizontal_scale_z + col_center)));
+
+    // Preserve both terrain triangles and every intersection vertex. Their
+    // affine extrema supply the exact full-width floor used by the solver.
     for (int row = row_min; row <= row_max; ++row) {
       for (int col = col_min; col <= col_max; ++col) {
-        const double x = (row - row_center) * terrain_scale[0];
-        const double z = (col - col_center) * terrain_scale[1];
-        const double dx = terrain_scale[0], dz = terrain_scale[1];
+        const double x = (row - row_center) * terrain.horizontal_scale_x;
+        const double z = (col - col_center) * terrain.horizontal_scale_z;
+        const double dx = terrain.horizontal_scale_x, dz = terrain.horizontal_scale_z;
         for (int half = 0; half < 2; ++half) {
           std::vector<RoadContactPoint> cell = half == 0
               ? std::vector<RoadContactPoint>{{x,z}, {x+dx,z}, {x,z+dz}}
               : std::vector<RoadContactPoint>{{x+dx,z+dz}, {x,z+dz}, {x+dx,z}};
           const auto polygon = clip_road_contact_polygon(cell, road, orientation);
-          double minimum_road_height = R_PosInf;
+          double minimum_road_height = std::numeric_limits<double>::infinity();
           for (const auto& p : polygon) {
             const double a = road_contact_cross(road[1], road[2], p) / determinant;
             const double b = road_contact_cross(road[2], road[0], p) / determinant;
             const double c = 1.0 - a - b;
-            if (grade_terrain) {
+            if (graded != nullptr) {
               minimum_road_height = std::min(minimum_road_height,
                   (a * height[0] + b * height[1] + c * height[2]) * zscale);
               continue;
             }
             const double ground = terrain.sample(p.x, p.z);
-            if (!std::isfinite(ground)) stop("Road footprint contains nonfinite terrain.");
-            distances.push_back(a * along[0] + b * along[1] + c * along[2]);
-            elevations.push_back(ground * zscale);
-            clearances.push_back((a * height[0] + b * height[1] + c * height[2] - ground) * zscale);
-            triangles.push_back(face + 1);
+            if (!std::isfinite(ground)) {
+              throw std::runtime_error("Road footprint contains nonfinite terrain.");
+            }
+            result.distances.push_back(a * along[0] + b * along[1] + c * along[2]);
+            result.elevations.push_back(ground * zscale);
+            result.clearances.push_back(
+                (a * height[0] + b * height[1] + c * height[2] - ground) * zscale);
+            result.triangles.push_back(face + 1);
           }
-          if (grade_terrain && std::isfinite(minimum_road_height)) {
+          if (graded != nullptr && std::isfinite(minimum_road_height)) {
             // Lower every vertex of the intersected DEM triangle below the
             // lowest pavement point in its overlap. Affine interpolation then
             // cannot poke through the road between samples. Never raise terrain.
             const double ceiling = minimum_road_height - 0.01;
-            if (half == 0) graded(row, col) = std::min(graded(row, col), ceiling);
-            else graded(row + 1, col + 1) = std::min(graded(row + 1, col + 1), ceiling);
-            graded(row + 1, col) = std::min(graded(row + 1, col), ceiling);
-            graded(row, col + 1) = std::min(graded(row, col + 1), ceiling);
+            const int diagonal = half == 0
+                ? row + col * terrain.row_count
+                : row + 1 + (col + 1) * terrain.row_count;
+            const int lower_right = row + 1 + col * terrain.row_count;
+            const int upper_left = row + (col + 1) * terrain.row_count;
+            (*graded)[diagonal] = std::min((*graded)[diagonal], ceiling);
+            (*graded)[lower_right] = std::min((*graded)[lower_right], ceiling);
+            (*graded)[upper_left] = std::min((*graded)[upper_left], ceiling);
           }
         }
       }
     }
   }
-  DataFrame result = DataFrame::create(_["distance"] = wrap(distances),
-      _["floor"] = wrap(elevations), _["clearance"] = wrap(clearances),
-      _["triangle"] = wrap(triangles));
-  if (grade_terrain) result.attr("heightmap") = graded;
   return result;
+}
+
+DataFrame wrap_road_contact_data(const RoadContactData& result) {
+  return DataFrame::create(
+      _["distance"] = wrap(result.distances),
+      _["floor"] = wrap(result.elevations),
+      _["clearance"] = wrap(result.clearances),
+      _["triangle"] = wrap(result.triangles));
+}
+
+}  // namespace
+
+// Standalone contact and grading entry point. Both use the same kernel as the
+// batch sampler, preserving the finished-mesh audit and grading behavior.
+// [[Rcpp::export]]
+DataFrame sample_render_road_terrain_contacts_cpp(
+    const NumericMatrix& vertices, const IntegerMatrix& indices,
+    const NumericVector& station, const NumericMatrix& heightmap,
+    double zscale, const NumericVector& terrain_scale, bool grade_terrain = false) {
+  if (terrain_scale.size() != 2 || !std::isfinite(zscale) || zscale <= 0 ||
+      !std::isfinite(terrain_scale[0]) || terrain_scale[0] <= 0 ||
+      !std::isfinite(terrain_scale[1]) || terrain_scale[1] <= 0) {
+    stop("Road terrain contacts require triangles, matching stations, and positive scales.");
+  }
+  const RoadContactJob job = parse_road_contact_job(vertices, indices, station);
+  const RoadTerrain terrain = copy_road_terrain(
+      heightmap, zscale, terrain_scale[0], terrain_scale[1]);
+  if (!terrain.available()) stop("Road terrain contacts require a terrain grid.");
+
+  std::vector<double> graded;
+  if (grade_terrain) graded = terrain.height;
+  const RoadContactData contacts = sample_road_terrain_contacts_native(
+      job, terrain, zscale, grade_terrain ? &graded : nullptr);
+  DataFrame result = wrap_road_contact_data(contacts);
+  if (grade_terrain) {
+    NumericMatrix output = clone(heightmap);
+    std::copy(graded.begin(), graded.end(), output.begin());
+    result.attr("heightmap") = output;
+  }
+  return result;
+}
+
+// Batch independent road footprints over one call-scoped terrain snapshot.
+// Chunks may reuse the supplied context without copying or scanning the DEM.
+// [[Rcpp::export]]
+List sample_render_road_terrain_contacts_batch_cpp(
+    const List& input_jobs, const NumericMatrix& heightmap,
+    double zscale, const NumericVector& terrain_scale, bool parallel = false,
+    SEXP terrain_context = R_NilValue) {
+  if (terrain_scale.size() != 2 || !std::isfinite(zscale) || zscale <= 0 ||
+      !std::isfinite(terrain_scale[0]) || terrain_scale[0] <= 0 ||
+      !std::isfinite(terrain_scale[1]) || terrain_scale[1] <= 0) {
+    stop("Road terrain contacts require triangles, matching stations, and positive scales.");
+  }
+  std::unique_ptr<RoadTerrain> local_terrain;
+  const RoadTerrain& terrain = resolve_road_terrain_context(
+      terrain_context, heightmap, zscale, terrain_scale, local_terrain);
+  if (!terrain.available()) stop("Road terrain contacts require a terrain grid.");
+
+  // Convert all R inputs before starting the pool. Keep jobs and results in
+  // source order, independent of worker scheduling, including error reporting.
+  std::vector<RoadContactJob> jobs;
+  jobs.reserve(input_jobs.size());
+  for (int index = 0; index < input_jobs.size(); ++index) {
+    const List input = input_jobs[index];
+    jobs.push_back(parse_road_contact_job(
+        as<NumericMatrix>(input["vertices"]),
+        as<IntegerMatrix>(input["indices"]),
+        as<NumericVector>(input["station"])));
+  }
+  std::vector<RoadContactData> results(jobs.size());
+  std::vector<std::string> errors(jobs.size());
+  const auto run_job = [&](std::size_t index) {
+    try {
+      results[index] = sample_road_terrain_contacts_native(jobs[index], terrain, zscale);
+    } catch (const std::exception& error) {
+      errors[index] = error.what();
+    }
+  };
+
+  if (parallel && jobs.size() > 1) {
+    const std::size_t workers = std::min(jobs.size(),
+        static_cast<std::size_t>(std::max(1u, std::thread::hardware_concurrency())));
+    RcppThread::ThreadPool pool(workers);
+    for (std::size_t index = 0; index < jobs.size(); ++index) {
+      pool.push(run_job, index);
+    }
+    pool.wait();
+  } else {
+    for (std::size_t index = 0; index < jobs.size(); ++index) {
+      RcppThread::checkUserInterrupt();
+      run_job(index);
+    }
+  }
+  RcppThread::checkUserInterrupt();
+
+  // Only the main R thread allocates result objects or reports worker errors.
+  List output(results.size());
+  for (std::size_t index = 0; index < results.size(); ++index) {
+    if (!errors[index].empty()) {
+      stop("Road terrain contact job " + std::to_string(index + 1) +
+           ": " + errors[index]);
+    }
+    output[index] = wrap_road_contact_data(results[index]);
+  }
+  return output;
 }

@@ -1674,7 +1674,10 @@ plot_gg = function(
     height_plot_source = height_plot_source,
     caller = "plot_gg"
   )
-  height_gg_grob = ggplot2::ggplotGrob(ggplotobj2)
+  # The height plot has already been built for its scales and panel metadata.
+  # Reuse that build so expensive raster statistics are evaluated only once,
+  # and the drawn height image uses the same computed data as its metadata.
+  height_gg_grob = ggplot2::ggplot_gtable(ggplot_build_obj)
   ggplotobj2 = compose_height_grob(
     color_grob = color_gg_grob,
     height_grob = height_gg_grob,

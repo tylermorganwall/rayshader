@@ -54,12 +54,16 @@ test_that("render_roads caches road metadata by rgl id", {
     0
   )
   preview_vertices = rgl::rgl.attrib(road_path_ids$id[[1]], "vertices")
-  expect_equal(unname(unique(preview_vertices[, 2])), 0.065, tolerance = 1e-7)
+  expect_equal(
+    unname(unique(preview_vertices[, 2])),
+    0.11 / get_scene_zscale(),
+    tolerance = 1e-7
+  )
   source_vertices = get_render_source_vertices(road_path_ids$id[[1]])
   expect_equal(unname(unique(source_vertices[, 2])), 0, tolerance = 1e-7)
 
   road_info = get_render_road_path_info(road_path_ids$id[[1]])
-  expect_equal(road_info$rgl_preview_offset, 0.065)
+  expect_equal(road_info$rgl_preview_offset, 0.11 / get_scene_zscale())
   expect_true(file.exists(road_info$texture_file))
   expect_equal(road_info$lanes, 2L)
   expect_equal(road_info$width, 0.5)
@@ -1439,12 +1443,13 @@ test_that("batched terrain preparation matches R and threaded output", {
     zscale = 2
   )
   left_top = left_surface
-  left_top[, 2L] = left_top[, 2L] + 0.055
+  left_top[, 2L] = left_top[, 2L] + 0.055 / 2
   right_top = right_surface
-  right_top[, 2L] = right_top[, 2L] + 0.055
+  right_top[, 2L] = right_top[, 2L] + 0.055 / 2
   section_reference = list(
-    left_bottom = left_top - matrix(c(0, 0.11, 0), nrow(points), 3L, TRUE),
-    right_bottom = right_top - matrix(c(0, 0.11, 0), nrow(points), 3L, TRUE),
+    left_bottom = left_top - matrix(c(0, 0.11 / 2, 0), nrow(points), 3L, TRUE),
+    right_bottom = right_top -
+      matrix(c(0, 0.11 / 2, 0), nrow(points), 3L, TRUE),
     left_top = left_top,
     right_top = right_top,
     left_normal = left_normal,
@@ -2441,4 +2446,116 @@ test_that('building passages remain above terrain beneath a bridge', {
   expect_false(any(identify_render_road_underground_fragments(
     topology$fragments
   )))
+})
+
+
+test_that("road pavement clearance scales with elevations and retains offsets", {
+  heightmap = matrix(100, 9, 9)
+  for (zscale in c(1, 100)) {
+    for (offset in c(0, 0.3)) {
+      points = cbind(c(-2, 2), 100 / zscale + offset, 0)
+      sections = calculate_render_road_vertex_sections(
+        points,
+        left_distance = c(0.3, 0.3),
+        right_distance = c(0.3, 0.3),
+        heightmap = heightmap,
+        zscale = zscale
+      )
+      clearance = resolve_render_road_surface_clearance(
+        heightmap,
+        zscale,
+        c(1, 1)
+      )
+      expect_equal(clearance, 0.055 / zscale)
+      expect_equal(
+        sections$left_top[, 2],
+        rep(100 / zscale + offset + clearance, 2)
+      )
+      expect_equal(
+        sections$left_top[, 2] - sections$left_bottom[, 2],
+        rep(2 * clearance, 2)
+      )
+      mesh = make_render_highquality_road_chain_mesh(
+        points = points,
+        bbox_center = c(0, 0, 0),
+        width = 0.6,
+        heightmap = heightmap,
+        zscale = zscale,
+        material = list(),
+        texture_file = "lane-texture.png",
+        texture_length = 2,
+        terrain_following = TRUE,
+        return_mesh = TRUE
+      )
+      expect_equal(max(mesh$vb[2, ]), 100 / zscale + offset + clearance)
+      expect_equal(min(mesh$vb[2, ]), 100 / zscale + offset - clearance)
+    }
+  }
+})
+
+test_that("road clearance preserves separation after float conversion", {
+  heightmap = matrix(100, 9, 9)
+  zscale = 100
+  scale = c(10000, 10000)
+  clearance = resolve_render_road_surface_clearance(heightmap, zscale, scale)
+  expect_gt(clearance, 0.055 / zscale)
+  sections = calculate_render_road_vertex_sections(
+    points = cbind(c(-2, 2), 1, 0),
+    left_distance = c(0.3, 0.3),
+    right_distance = c(0.3, 0.3),
+    heightmap = heightmap,
+    zscale = zscale,
+    terrain_scale = scale
+  )
+  expect_equal(sections$left_top[, 2], rep(1 + clearance, 2))
+  # A larger placement margin must not turn into a thicker pavement slab.
+  expect_equal(
+    sections$left_top[, 2] - sections$left_bottom[, 2],
+    rep(0.11 / zscale, 2)
+  )
+  mesh = make_render_highquality_road_chain_mesh(
+    points = cbind(c(-2, 2), 1, 0),
+    bbox_center = c(0, 0, 0),
+    width = 0.6,
+    heightmap = heightmap,
+    zscale = zscale,
+    terrain_scale = scale,
+    material = list(),
+    texture_file = "lane-texture.png",
+    texture_length = 2,
+    terrain_following = TRUE,
+    return_mesh = TRUE
+  )
+  expect_equal(diff(range(mesh$vb[2, ])), 0.11 / zscale)
+  rounded = readBin(
+    writeBin(sections$left_top[, 2], raw(), size = 4L),
+    "double",
+    n = 2,
+    size = 4L
+  )
+  expect_true(all(rounded > 1))
+})
+
+test_that("road removal defers redraw and restores the caller state", {
+  local_rgl_use_null()
+  rgl::open3d()
+  on.exit(rgl::close3d(), add = TRUE)
+  rgl::lines3d(c(0, 1), c(0, 0), c(0, 1), tag = "road_path")
+  observed = logical()
+  original_clear = clear_render_road_path_info
+  testthat::local_mocked_bindings(
+    clear_render_road_path_info = function(...) {
+      observed <<- c(observed, rgl::par3d("skipRedraw"))
+      original_clear(...)
+    },
+    .package = "rayshader"
+  )
+  render_roads(clear_previous = TRUE)
+  expect_identical(observed, TRUE)
+  expect_false(rgl::par3d("skipRedraw"))
+  expect_error(render_roads(roads = NULL), "must be")
+  expect_false(rgl::par3d("skipRedraw"))
+  rgl::par3d(skipRedraw = TRUE)
+  render_roads(clear_previous = TRUE)
+  expect_true(rgl::par3d("skipRedraw"))
 })

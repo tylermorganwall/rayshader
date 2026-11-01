@@ -63,6 +63,10 @@
 #'Polygon footprints are clipped only to valid terrain coverage; buried water is
 #'hidden by terrain. Grid edge expansion, clamping, and fitting-failure settings
 #'do not alter exact polygon water.
+#' @param parallel Default `TRUE`. Build large exact-polygon water batches in
+#' native threads. Uses `options(cores = ...)`, or physical core count when
+#' unset. Small batches run sequentially; `FALSE` always uses one thread.
+#' Threads share the terrain snapshot; each has its own geometry scratch space.
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'montereybay_spatial |>
@@ -118,8 +122,24 @@ render_water = function(
   vertical_exaggeration = 1,
   heightmap = NULL,
   water_elevation = NULL,
-  water_surface_tolerance = NULL
+  water_surface_tolerance = NULL,
+  parallel = TRUE
 ) {
+  # A visible rgl device otherwise repaints the whole scene for every inserted
+  # polygon (including transparency sorting). Defer redraws across removal,
+  # insertion and waterlines, then restore the caller's state even on failure.
+  water_device = rgl::cur3d()
+  if (water_device != 0) {
+    previous_rgl_parameters = rgl::par3d(skipRedraw = TRUE, dev = water_device)
+    on.exit(
+      {
+        if (water_device %in% rgl::rgl.dev.list()) {
+          rgl::par3d(previous_rgl_parameters, dev = water_device)
+        }
+      },
+      add = TRUE
+    )
+  }
   if (
     is_render_clear_only_call(
       clear_previous,
@@ -129,6 +149,7 @@ render_water = function(
   ) {
     return(invisible(NULL))
   }
+  parallel = resolve_render_logical(parallel, "parallel")
   water_render_method = match.arg(water_render_method)
   water_polygon_failure = match.arg(water_polygon_failure)
   water_input_is_sf = is_sf_water_input(water_input)
@@ -223,7 +244,8 @@ render_water = function(
       heightmap_extent = heightmap_extent,
       heightmap_crs = heightmap_crs,
       water_elevation = water_elevation,
-      water_surface_tolerance = water_surface_tolerance
+      water_surface_tolerance = water_surface_tolerance,
+      parallel = parallel
     )
   }
   if (!is.null(water_line_color)) {

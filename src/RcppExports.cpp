@@ -74,6 +74,20 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// instance_obj_cpp
+List instance_obj_cpp(List templates, IntegerVector template_id, NumericMatrix xyz, NumericMatrix scale);
+RcppExport SEXP _rayshader_instance_obj_cpp(SEXP templatesSEXP, SEXP template_idSEXP, SEXP xyzSEXP, SEXP scaleSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< List >::type templates(templatesSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type template_id(template_idSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type xyz(xyzSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type scale(scaleSEXP);
+    rcpp_result_gen = Rcpp::wrap(instance_obj_cpp(templates, template_id, xyz, scale));
+    return rcpp_result_gen;
+END_RCPP
+}
 // interpolate_color
 NumericMatrix interpolate_color(double color_nw, double color_ne, double color_se, double color_sw);
 RcppExport SEXP _rayshader_interpolate_color(SEXP color_nwSEXP, SEXP color_neSEXP, SEXP color_seSEXP, SEXP color_swSEXP) {
@@ -307,6 +321,60 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// initialize_water_geos_cpp
+void initialize_water_geos_cpp();
+RcppExport SEXP _rayshader_initialize_water_geos_cpp() {
+BEGIN_RCPP
+    initialize_water_geos_cpp();
+    return R_NilValue;
+END_RCPP
+}
+// build_polygon_water_meshes_cpp
+Rcpp::List build_polygon_water_meshes_cpp(Rcpp::List footprints, Rcpp::List terrain, double zscale, double tolerance, double clearance, int threads);
+RcppExport SEXP _rayshader_build_polygon_water_meshes_cpp(SEXP footprintsSEXP, SEXP terrainSEXP, SEXP zscaleSEXP, SEXP toleranceSEXP, SEXP clearanceSEXP, SEXP threadsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::traits::input_parameter< Rcpp::List >::type footprints(footprintsSEXP);
+    Rcpp::traits::input_parameter< Rcpp::List >::type terrain(terrainSEXP);
+    Rcpp::traits::input_parameter< double >::type zscale(zscaleSEXP);
+    Rcpp::traits::input_parameter< double >::type tolerance(toleranceSEXP);
+    Rcpp::traits::input_parameter< double >::type clearance(clearanceSEXP);
+    Rcpp::traits::input_parameter< int >::type threads(threadsSEXP);
+    rcpp_result_gen = Rcpp::wrap(build_polygon_water_meshes_cpp(footprints, terrain, zscale, tolerance, clearance, threads));
+    return rcpp_result_gen;
+END_RCPP
+}
+// water_triangle_rings_cpp
+List water_triangle_rings_cpp(NumericMatrix a, NumericMatrix b, NumericMatrix c, IntegerVector ids);
+RcppExport SEXP _rayshader_water_triangle_rings_cpp(SEXP aSEXP, SEXP bSEXP, SEXP cSEXP, SEXP idsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix >::type a(aSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type b(bSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type c(cSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type ids(idsSEXP);
+    rcpp_result_gen = Rcpp::wrap(water_triangle_rings_cpp(a, b, c, ids));
+    return rcpp_result_gen;
+END_RCPP
+}
+// water_support_samples_cpp
+List water_support_samples_cpp(NumericMatrix coordinates, IntegerVector face, NumericMatrix a, NumericMatrix b, NumericMatrix c, NumericMatrix exterior, double tolerance);
+RcppExport SEXP _rayshader_water_support_samples_cpp(SEXP coordinatesSEXP, SEXP faceSEXP, SEXP aSEXP, SEXP bSEXP, SEXP cSEXP, SEXP exteriorSEXP, SEXP toleranceSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix >::type coordinates(coordinatesSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type face(faceSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type a(aSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type b(bSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type c(cSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type exterior(exteriorSEXP);
+    Rcpp::traits::input_parameter< double >::type tolerance(toleranceSEXP);
+    rcpp_result_gen = Rcpp::wrap(water_support_samples_cpp(coordinates, face, a, b, c, exterior, tolerance));
+    return rcpp_result_gen;
+END_RCPP
+}
 // rayshade_cpp
 NumericMatrix rayshade_cpp(double sun_angle, NumericVector angle_breaks, NumericMatrix& heightmap, double zscale, double max_search, const NumericMatrix cache_mask, bool progress_bar, double row_scale, double column_scale);
 RcppExport SEXP _rayshader_rayshade_cpp(SEXP sun_angleSEXP, SEXP angle_breaksSEXP, SEXP heightmapSEXP, SEXP zscaleSEXP, SEXP max_searchSEXP, SEXP cache_maskSEXP, SEXP progress_barSEXP, SEXP row_scaleSEXP, SEXP column_scaleSEXP) {
@@ -418,9 +486,22 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// create_render_road_terrain_context_cpp
+SEXP create_render_road_terrain_context_cpp(const NumericMatrix& heightmap, double zscale, Nullable<NumericVector> terrain_scale);
+RcppExport SEXP _rayshader_create_render_road_terrain_context_cpp(SEXP heightmapSEXP, SEXP zscaleSEXP, SEXP terrain_scaleSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const NumericMatrix& >::type heightmap(heightmapSEXP);
+    Rcpp::traits::input_parameter< double >::type zscale(zscaleSEXP);
+    Rcpp::traits::input_parameter< Nullable<NumericVector> >::type terrain_scale(terrain_scaleSEXP);
+    rcpp_result_gen = Rcpp::wrap(create_render_road_terrain_context_cpp(heightmap, zscale, terrain_scale));
+    return rcpp_result_gen;
+END_RCPP
+}
 // densify_render_road_paths_batch_cpp
-List densify_render_road_paths_batch_cpp(const List& input_jobs, const NumericMatrix& heightmap, double zscale, bool parallel, bool verbose, Nullable<NumericVector> terrain_scale);
-RcppExport SEXP _rayshader_densify_render_road_paths_batch_cpp(SEXP input_jobsSEXP, SEXP heightmapSEXP, SEXP zscaleSEXP, SEXP parallelSEXP, SEXP verboseSEXP, SEXP terrain_scaleSEXP) {
+List densify_render_road_paths_batch_cpp(const List& input_jobs, const NumericMatrix& heightmap, double zscale, bool parallel, bool verbose, Nullable<NumericVector> terrain_scale, SEXP terrain_context);
+RcppExport SEXP _rayshader_densify_render_road_paths_batch_cpp(SEXP input_jobsSEXP, SEXP heightmapSEXP, SEXP zscaleSEXP, SEXP parallelSEXP, SEXP verboseSEXP, SEXP terrain_scaleSEXP, SEXP terrain_contextSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -430,13 +511,14 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< bool >::type parallel(parallelSEXP);
     Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
     Rcpp::traits::input_parameter< Nullable<NumericVector> >::type terrain_scale(terrain_scaleSEXP);
-    rcpp_result_gen = Rcpp::wrap(densify_render_road_paths_batch_cpp(input_jobs, heightmap, zscale, parallel, verbose, terrain_scale));
+    Rcpp::traits::input_parameter< SEXP >::type terrain_context(terrain_contextSEXP);
+    rcpp_result_gen = Rcpp::wrap(densify_render_road_paths_batch_cpp(input_jobs, heightmap, zscale, parallel, verbose, terrain_scale, terrain_context));
     return rcpp_result_gen;
 END_RCPP
 }
 // sample_render_road_sections_batch_cpp
-List sample_render_road_sections_batch_cpp(const List& input_jobs, const NumericMatrix& heightmap, double zscale, bool parallel, bool verbose, Nullable<NumericVector> terrain_scale);
-RcppExport SEXP _rayshader_sample_render_road_sections_batch_cpp(SEXP input_jobsSEXP, SEXP heightmapSEXP, SEXP zscaleSEXP, SEXP parallelSEXP, SEXP verboseSEXP, SEXP terrain_scaleSEXP) {
+List sample_render_road_sections_batch_cpp(const List& input_jobs, const NumericMatrix& heightmap, double zscale, bool parallel, bool verbose, Nullable<NumericVector> terrain_scale, SEXP terrain_context);
+RcppExport SEXP _rayshader_sample_render_road_sections_batch_cpp(SEXP input_jobsSEXP, SEXP heightmapSEXP, SEXP zscaleSEXP, SEXP parallelSEXP, SEXP verboseSEXP, SEXP terrain_scaleSEXP, SEXP terrain_contextSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -446,7 +528,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< bool >::type parallel(parallelSEXP);
     Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
     Rcpp::traits::input_parameter< Nullable<NumericVector> >::type terrain_scale(terrain_scaleSEXP);
-    rcpp_result_gen = Rcpp::wrap(sample_render_road_sections_batch_cpp(input_jobs, heightmap, zscale, parallel, verbose, terrain_scale));
+    Rcpp::traits::input_parameter< SEXP >::type terrain_context(terrain_contextSEXP);
+    rcpp_result_gen = Rcpp::wrap(sample_render_road_sections_batch_cpp(input_jobs, heightmap, zscale, parallel, verbose, terrain_scale, terrain_context));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -508,6 +591,22 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const NumericVector& >::type terrain_scale(terrain_scaleSEXP);
     Rcpp::traits::input_parameter< bool >::type grade_terrain(grade_terrainSEXP);
     rcpp_result_gen = Rcpp::wrap(sample_render_road_terrain_contacts_cpp(vertices, indices, station, heightmap, zscale, terrain_scale, grade_terrain));
+    return rcpp_result_gen;
+END_RCPP
+}
+// sample_render_road_terrain_contacts_batch_cpp
+List sample_render_road_terrain_contacts_batch_cpp(const List& input_jobs, const NumericMatrix& heightmap, double zscale, const NumericVector& terrain_scale, bool parallel, SEXP terrain_context);
+RcppExport SEXP _rayshader_sample_render_road_terrain_contacts_batch_cpp(SEXP input_jobsSEXP, SEXP heightmapSEXP, SEXP zscaleSEXP, SEXP terrain_scaleSEXP, SEXP parallelSEXP, SEXP terrain_contextSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const List& >::type input_jobs(input_jobsSEXP);
+    Rcpp::traits::input_parameter< const NumericMatrix& >::type heightmap(heightmapSEXP);
+    Rcpp::traits::input_parameter< double >::type zscale(zscaleSEXP);
+    Rcpp::traits::input_parameter< const NumericVector& >::type terrain_scale(terrain_scaleSEXP);
+    Rcpp::traits::input_parameter< bool >::type parallel(parallelSEXP);
+    Rcpp::traits::input_parameter< SEXP >::type terrain_context(terrain_contextSEXP);
+    rcpp_result_gen = Rcpp::wrap(sample_render_road_terrain_contacts_batch_cpp(input_jobs, heightmap, zscale, terrain_scale, parallel, terrain_context));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -654,6 +753,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_rayshader_construct_matrix", (DL_FUNC) &_rayshader_construct_matrix, 5},
     {"_rayshader_fill_find_groups", (DL_FUNC) &_rayshader_fill_find_groups, 1},
     {"_rayshader_find_groups_cpp", (DL_FUNC) &_rayshader_find_groups_cpp, 1},
+    {"_rayshader_instance_obj_cpp", (DL_FUNC) &_rayshader_instance_obj_cpp, 4},
     {"_rayshader_interpolate_color", (DL_FUNC) &_rayshader_interpolate_color, 4},
     {"_rayshader_lambshade_cpp", (DL_FUNC) &_rayshader_lambshade_cpp, 4},
     {"_rayshader_make_surface_cpp", (DL_FUNC) &_rayshader_make_surface_cpp, 6},
@@ -671,18 +771,24 @@ static const R_CallMethodDef CallEntries[] = {
     {"_rayshader_is_inside", (DL_FUNC) &_rayshader_is_inside, 5},
     {"_rayshader_gen_hex_psf", (DL_FUNC) &_rayshader_gen_hex_psf, 2},
     {"_rayshader_psf", (DL_FUNC) &_rayshader_psf, 11},
+    {"_rayshader_initialize_water_geos_cpp", (DL_FUNC) &_rayshader_initialize_water_geos_cpp, 0},
+    {"_rayshader_build_polygon_water_meshes_cpp", (DL_FUNC) &_rayshader_build_polygon_water_meshes_cpp, 6},
+    {"_rayshader_water_triangle_rings_cpp", (DL_FUNC) &_rayshader_water_triangle_rings_cpp, 4},
+    {"_rayshader_water_support_samples_cpp", (DL_FUNC) &_rayshader_water_support_samples_cpp, 7},
     {"_rayshader_rayshade_cpp", (DL_FUNC) &_rayshader_rayshade_cpp, 9},
     {"_rayshader_rayshade_multicore", (DL_FUNC) &_rayshader_rayshade_multicore, 9},
     {"_rayshader_calculate_render_road_vertex_frames_cpp", (DL_FUNC) &_rayshader_calculate_render_road_vertex_frames_cpp, 3},
     {"_rayshader_densify_render_highquality_path_xz_cpp", (DL_FUNC) &_rayshader_densify_render_highquality_path_xz_cpp, 6},
     {"_rayshader_calculate_render_road_surface_normals_cpp", (DL_FUNC) &_rayshader_calculate_render_road_surface_normals_cpp, 5},
     {"_rayshader_build_render_road_section_mesh_cpp", (DL_FUNC) &_rayshader_build_render_road_section_mesh_cpp, 19},
-    {"_rayshader_densify_render_road_paths_batch_cpp", (DL_FUNC) &_rayshader_densify_render_road_paths_batch_cpp, 6},
-    {"_rayshader_sample_render_road_sections_batch_cpp", (DL_FUNC) &_rayshader_sample_render_road_sections_batch_cpp, 6},
+    {"_rayshader_create_render_road_terrain_context_cpp", (DL_FUNC) &_rayshader_create_render_road_terrain_context_cpp, 3},
+    {"_rayshader_densify_render_road_paths_batch_cpp", (DL_FUNC) &_rayshader_densify_render_road_paths_batch_cpp, 7},
+    {"_rayshader_sample_render_road_sections_batch_cpp", (DL_FUNC) &_rayshader_sample_render_road_sections_batch_cpp, 7},
     {"_rayshader_build_render_highquality_road_mesh_batch_cpp", (DL_FUNC) &_rayshader_build_render_highquality_road_mesh_batch_cpp, 3},
     {"_rayshader_build_render_highquality_grounded_road_mesh_batch_cpp", (DL_FUNC) &_rayshader_build_render_highquality_grounded_road_mesh_batch_cpp, 6},
     {"_rayshader_build_render_highquality_stream_mesh_batch_cpp", (DL_FUNC) &_rayshader_build_render_highquality_stream_mesh_batch_cpp, 5},
     {"_rayshader_sample_render_road_terrain_contacts_cpp", (DL_FUNC) &_rayshader_sample_render_road_terrain_contacts_cpp, 7},
+    {"_rayshader_sample_render_road_terrain_contacts_batch_cpp", (DL_FUNC) &_rayshader_sample_render_road_terrain_contacts_batch_cpp, 6},
     {"_rayshader_evaluate_render_road_profiles_cpp", (DL_FUNC) &_rayshader_evaluate_render_road_profiles_cpp, 8},
     {"_rayshader_audit_render_road_profiles_cpp", (DL_FUNC) &_rayshader_audit_render_road_profiles_cpp, 6},
     {"_rayshader_compile_render_road_profile_problem_cpp", (DL_FUNC) &_rayshader_compile_render_road_profile_problem_cpp, 2},

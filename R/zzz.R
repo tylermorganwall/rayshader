@@ -10,7 +10,10 @@ ray_volcano_envir = new.env(parent = emptyenv())
 assign("scene_cache", NULL, envir = ray_cache_scene_envir)
 assign("scene_context_token", NULL, envir = ray_cache_scene_envir)
 
+#' @importFrom libgeos libgeos_version
 .onLoad = function(libname, pkgname) {
+  # All C callable lookup happens before native water workers can be started.
+  initialize_water_geos_cpp()
   ns = asNamespace(pkgname)
   package_data = new.env(parent = emptyenv())
   utils::data(

@@ -20,7 +20,8 @@ render_water(
   vertical_exaggeration = 1,
   heightmap = NULL,
   water_elevation = NULL,
-  water_surface_tolerance = NULL
+  water_surface_tolerance = NULL,
+  parallel = TRUE
 )
 }
 \arguments{
@@ -98,6 +99,11 @@ The extrusion bottom is the lowest rendered terrain point within each polygon.
 Polygon footprints are clipped only to valid terrain coverage; buried water is
 hidden by terrain. Grid edge expansion, clamping, and fitting-failure settings
 do not alter exact polygon water.}
+
+\item{parallel}{Default \code{TRUE}. Build large exact-polygon water batches in
+native threads. Uses \code{options(cores = ...)}, or physical core count when
+unset. Small batches run sequentially; \code{FALSE} always uses one thread.
+Threads share the terrain snapshot; each has its own geometry scratch space.}
 }
 \description{
 Adds water layer to the scene, removing the previous water layer if desired.

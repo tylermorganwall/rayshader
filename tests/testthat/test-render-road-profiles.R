@@ -1732,7 +1732,8 @@ test_that("native adaptive failures retain classed diagnostics", {
     ),
     error = identity
   )
-  expect_s3_class(native_solver, "render_road_profile_infeasible")
+  expect_s3_class(native_solver, "render_road_profile_solver_failure")
+  expect_false(inherits(native_solver, "render_road_profile_infeasible"))
   expect_type(native_solver$diagnostics, "list")
 
   incomplete_problem = problem

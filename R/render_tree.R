@@ -27,6 +27,8 @@
 #'@param tree_height Default `NULL`. Height of the tree, automatically set to `10` if not specified. If `absolute_height = TRUE`, then this is interpreted as
 #'the altitude of the top of the tree in the coordinate reference system used. If `absolute_height = FALSE`, then
 #'this is interpreted as the height of the tree relative to the underlying heightmap.
+#'Trees with negative sizes are discarded; absolute elevations are first converted
+#'to sizes above the terrain.
 #'@param tree_height_column Default `NULL`. Column name in `location` to use for
 #'`tree_height`. Requires `location` to be an `sf`/spatial point object with
 #'attribute data. Cannot be combined with an explicit `tree_height`.
@@ -75,6 +77,8 @@
 #'elevations and existing `NA` cells. If omitted, this is taken from the cached
 #'scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the
 #'cached value.
+#'@param load_normals Default `FALSE`. Whether to load the model's vertex normals
+#'for smooth shading. Applies to both full previews and cached tree instances.
 #'@param ... Additional arguments to pass to `rgl::triangles3d()`.
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
@@ -187,6 +191,7 @@ render_tree = function(
   zscale = 1,
   vertical_exaggeration = 1,
   heightmap = NULL,
+  load_normals = FALSE,
   ...
 ) {
   clear_tree_layer = function() {
@@ -217,7 +222,8 @@ render_tree = function(
   }
   validate_filter_to_extent(filter_to_extent, caller = "render_tree")
   tree_height_supplied = !missing(tree_height) && !is.null(tree_height)
-  tree_args = list(...)
+  load_normals = resolve_render_logical(load_normals, "load_normals")
+  tree_args = c(list(load_normals = load_normals), list(...))
   zscale = resolve_scene_render_effective_zscale(
     zscale = zscale,
     zscale_missing = missing(zscale),
@@ -536,6 +542,32 @@ render_tree = function(
       return(invisible())
     }
   }
+  # Heights describe sizes after the absolute-elevation conversion above.
+  # Negative sizes are invalid observations, not mirrored tree instances.
+  if (any(tree_height < 0, na.rm = TRUE)) {
+    n_tree = length(lat)
+    if (length(tree_height) == 1L) {
+      return(invisible(NULL))
+    }
+    if (length(tree_height) == n_tree) {
+      keep = is.na(tree_height) | tree_height >= 0
+      lat = lat[keep]
+      long = long[keep]
+      tree_height = subset_render_arg(tree_height, keep, n_tree)
+      tree_zaxis_raw = subset_render_arg(tree_zaxis_raw, keep, n_tree)
+      tree_zaxis_scene = subset_render_arg(tree_zaxis_scene, keep, n_tree)
+      crown_height = subset_render_arg(crown_height, keep, n_tree)
+      trunk_height = subset_render_arg(trunk_height, keep, n_tree)
+      trunk_height_ratio = subset_render_arg(trunk_height_ratio, keep, n_tree)
+      crown_width_ratio = subset_render_arg(crown_width_ratio, keep, n_tree)
+      crown_width = subset_render_arg(crown_width, keep, n_tree)
+      trunk_radius = subset_render_arg(trunk_radius, keep, n_tree)
+      crown_color = subset_render_color_arg(crown_color, keep, n_tree)
+      trunk_color = subset_render_color_arg(trunk_color, keep, n_tree)
+      angle = subset_render_row_arg(angle, keep, n_tree)
+      if (!length(lat)) return(invisible(NULL))
+    }
+  }
   # Determine default trunk height and radius based on tree type
   # The basic trunk included has a radius of 0.6 units and a height of 1.0 units,
   # with the bottom of the trunk located at 0.0 (midpoint at 0.5).
@@ -717,18 +749,13 @@ render_tree = function(
     }
   }
   if (!identical(tree_preview_mode, "full")) {
-    load_tree_normals = if (is.null(tree_args$load_normals)) {
-      TRUE
-    } else {
-      resolve_render_logical(tree_args$load_normals, "load_normals")
-    }
     if (fully_custom_tree) {
       tree_components = list(
         list(
           component = "crown",
           model_file = custom_obj_crown,
           load_material = FALSE,
-          load_normals = load_tree_normals,
+          load_normals = load_normals,
           color = crown_color,
           scale = tree_scale,
           offset = trunk_height * height_zscale
@@ -737,7 +764,7 @@ render_tree = function(
           component = "trunk",
           model_file = custom_obj_trunk,
           load_material = FALSE,
-          load_normals = load_tree_normals,
+          load_normals = load_normals,
           color = trunk_color,
           scale = trunk_scale,
           offset = 0
@@ -750,7 +777,7 @@ render_tree = function(
           component = "tree",
           model_file = custom_obj_tree,
           load_material = TRUE,
-          load_normals = load_tree_normals,
+          load_normals = load_normals,
           color = "white",
           scale = tree_scale,
           offset = 0
@@ -763,7 +790,7 @@ render_tree = function(
           component = "crown",
           model_file = tree_basic_center_obj(),
           load_material = FALSE,
-          load_normals = load_tree_normals,
+          load_normals = load_normals,
           color = crown_color,
           scale = tree_scale,
           offset = (trunk_height + crown_height / 3) * height_zscale
@@ -772,7 +799,7 @@ render_tree = function(
           component = "trunk",
           model_file = tree_trunk_obj(),
           load_material = FALSE,
-          load_normals = load_tree_normals,
+          load_normals = load_normals,
           color = trunk_color,
           scale = trunk_scale,
           offset = 0
@@ -785,7 +812,7 @@ render_tree = function(
           component = "crown",
           model_file = tree_cone_center_obj(),
           load_material = FALSE,
-          load_normals = load_tree_normals,
+          load_normals = load_normals,
           color = crown_color,
           scale = tree_scale,
           offset = trunk_height * height_zscale
@@ -794,7 +821,7 @@ render_tree = function(
           component = "trunk",
           model_file = tree_trunk_obj(),
           load_material = FALSE,
-          load_normals = load_tree_normals,
+          load_normals = load_normals,
           color = trunk_color,
           scale = trunk_scale,
           offset = 0

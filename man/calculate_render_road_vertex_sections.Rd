@@ -13,7 +13,8 @@ calculate_render_road_vertex_sections(
   terrain_scale = c(1, 1),
   closed = FALSE,
   miter_limit = 4,
-  frames = NULL
+  frames = NULL,
+  terrain_context = NULL
 )
 }
 \arguments{
@@ -34,6 +35,8 @@ calculate_render_road_vertex_sections(
 \item{miter_limit}{Maximum permitted miter scale.}
 
 \item{frames}{Default \code{NULL}. Optional precomputed vertex frames.}
+
+\item{terrain_context}{Default \code{NULL}. Call-scoped native terrain snapshot.}
 }
 \value{
 Bottom and top edge positions, normals, and vertex frames.

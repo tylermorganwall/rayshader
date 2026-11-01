@@ -59,7 +59,7 @@ test_that('exact polygon water retains subcell footprints, holes, and closed out
       expected_area,
       tolerance = 1e-6
     )
-    expect_equal(range(v[, 2]), c(0, 1))
+    expect_equal(range(v[, 2]), c(-1e-4, 1), tolerance = 1e-7)
     a = v[seq(1, nrow(v), 3), ]
     b = v[seq(2, nrow(v), 3), ]
     c = v[seq(3, nrow(v), 3), ]
@@ -68,7 +68,11 @@ test_that('exact polygon water retains subcell footprints, holes, and closed out
       b[, 3] * c[, 1] - b[, 1] * c[, 3],
       b[, 1] * c[, 2] - b[, 2] * c[, 1]
     )
-    expect_equal(sum(a * cross) / 6, expected_area, tolerance = 1e-6)
+    expect_equal(
+      sum(a * cross) / 6,
+      expected_area * (1 + 1e-4),
+      tolerance = 1e-6
+    )
     keys = apply(round(v, 6), 1, paste, collapse = ',')
     faces = matrix(keys, ncol = 3, byrow = TRUE)
     edges = rbind(faces[, 1:2], faces[, 2:3], faces[, c(3, 1)])
@@ -132,7 +136,7 @@ test_that('polygon clearance is conditional and respects sensitivity and elevati
     water_elevation = 100
   )
   expect_gt(max(polygon_water_test_vertices()[, 2]), 1)
-  expect_equal(min(polygon_water_test_vertices()[, 2]), 1)
+  expect_lt(min(polygon_water_test_vertices()[, 2]), 1)
 })
 
 test_that('polygon bottoms and coincidence use the actual rendered terrain', {
@@ -155,7 +159,7 @@ test_that('polygon bottoms and coincidence use the actual rendered terrain', {
   p = sf::st_as_sfc('POLYGON ((2 2,5 2,5 5,2 5,2 2))', crs = 3857)
   render_water(p, water_render_method = 'polygon', water_elevation = 3)
   v = polygon_water_test_vertices()
-  expect_equal(min(v[, 2]), (min(v[, 1]) + 5) * .2, tolerance = 1e-6)
+  expect_equal(min(v[, 2]), (min(v[, 1]) + 5) * .2 - 1e-4, tolerance = 1e-6)
   expect_equal(max(v[, 2]), 3)
 })
 
@@ -221,7 +225,11 @@ test_that('polygon parts retain original elevations and alternate input CRSs', {
     water_render_method = 'polygon',
     water_elevation = 'level'
   )
-  expect_equal(sort(unique(polygon_water_test_vertices()[, 2])), c(0, 1, 2))
+  expect_equal(
+    sort(unique(polygon_water_test_vertices()[, 2])),
+    c(-1e-4, 1, 2),
+    tolerance = 1e-7
+  )
 })
 
 

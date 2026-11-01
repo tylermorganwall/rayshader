@@ -43,39 +43,63 @@ get_ids_with_labels = function(typeval = NULL) {
   )
   idvals = rgl::ids3d(tags = TRUE)
   prune_plot_3d_surface_textures()
+  # Tags are cheap to inspect; materials require an rgl query per object.
+  # Select before fetching materials, especially when a scene has thousands of
+  # road preview objects but the caller only needs labels, water, or a surface.
+  had_objects = nrow(idvals) > 0L
+  if (!is.null(typeval)) {
+    is_surface_tri = substr(idvals$tag, 1, 12) == "surface_tris" &
+      any(typeval == "surface_tris")
+    is_surface = (substr(idvals$tag, 1, 7) == "surface") &
+      !is_surface_tri &
+      any(typeval == "surface")
+    is_obj = substr(idvals$tag, 1, 3) == "obj" & any(typeval == "obj")
+
+    if (
+      any(typeval %in% ray_types) ||
+        any(is_surface) ||
+        any(is_surface_tri) ||
+        any(is_obj)
+    ) {
+      idvals = idvals[
+        idvals$tag %in% typeval | is_surface | is_surface_tri | is_obj,
+      ]
+    }
+  }
   material_type = idvals$tag
-  material_properties = vector("list", nrow(idvals))
+  empty_properties = list(
+    texture_file = NA,
+    layer_texture_file = NA,
+    base_color = NA,
+    soil_texture = NA,
+    water_color = NA,
+    water_alpha = NA,
+    line_color = NA,
+    waterline_color = NA,
+    waterline_alpha = NA,
+    shadow_texture_file = NA,
+    north_color = NA,
+    arrow_color = NA,
+    bevel_color = NA,
+    background_color = NA,
+    scalebar1_color = NA,
+    scalebar2_color = NA,
+    point_color = NA,
+    tricolor = NA,
+    polygon_alpha = NA,
+    lit = NA,
+    obj_color = NA_character_,
+    obj_alpha = NA_real_,
+    obj_ambient = NA_character_,
+    obj_specular = NA_character_,
+    obj_emission = NA_character_,
+    shininess = NA,
+    nrow = NA,
+    ncol = NA
+  )
+  material_properties = rep(list(empty_properties), nrow(idvals))
   for (i in seq_len(nrow(idvals))) {
     material_type_single = rgl::material3d(id = idvals[i, 1])
-    material_properties[[i]]$texture_file = NA
-    material_properties[[i]]$layer_texture_file = NA
-    material_properties[[i]]$base_color = NA
-    material_properties[[i]]$soil_texture = NA
-    material_properties[[i]]$water_color = NA
-    material_properties[[i]]$water_alpha = NA
-    material_properties[[i]]$line_color = NA
-    material_properties[[i]]$waterline_color = NA
-    material_properties[[i]]$waterline_alpha = NA
-    material_properties[[i]]$shadow_texture_file = NA
-    material_properties[[i]]$north_color = NA
-    material_properties[[i]]$arrow_color = NA
-    material_properties[[i]]$bevel_color = NA
-    material_properties[[i]]$background_color = NA
-    material_properties[[i]]$scalebar1_color = NA
-    material_properties[[i]]$scalebar2_color = NA
-    material_properties[[i]]$point_color = NA
-    material_properties[[i]]$tricolor = NA
-    material_properties[[i]]$polygon_alpha = NA
-    material_properties[[i]]$lit = NA
-    material_properties[[i]]$obj_color = NA_character_
-    material_properties[[i]]$obj_alpha = NA_real_
-    material_properties[[i]]$obj_ambient = NA_character_
-    material_properties[[i]]$obj_specular = NA_character_
-    material_properties[[i]]$obj_emission = NA_character_
-    material_properties[[i]]$shininess = NA
-    material_properties[[i]]$shininess = NA
-    material_properties[[i]]$nrow = NA
-    material_properties[[i]]$ncol = NA
 
     if (idvals$type[i] != "text") {
       if (substr(material_type[i], 1, 7) == "surface") {
@@ -177,25 +201,11 @@ get_ids_with_labels = function(typeval = NULL) {
     }
   }
   full_properties = do.call(rbind, material_properties)
-  retval = cbind(idvals, full_properties)
-  if (!is.null(typeval)) {
-    is_surface_tri = substr(retval$tag, 1, 12) == "surface_tris" &
-      any(typeval == "surface_tris")
-    is_surface = (substr(retval$tag, 1, 7) == "surface") &
-      !is_surface_tri &
-      any(typeval == "surface")
-    is_obj = substr(material_type, 1, 3) == "obj" & any(typeval == "obj")
-
-    if (
-      any(typeval %in% ray_types) ||
-        any(is_surface) ||
-        any(is_surface_tri) ||
-        any(is_obj)
-    ) {
-      retval = retval[
-        retval$tag %in% typeval | is_surface | is_surface_tri | is_obj,
-      ]
-    }
+  if (had_objects && !nrow(idvals)) {
+    # Keep the same property columns as filtering a populated result down to
+    # zero rows. A genuinely empty rgl scene retains its original ID-only schema.
+    full_properties = do.call(rbind, list(empty_properties))[0, , drop = FALSE]
   }
+  retval = cbind(idvals, full_properties)
   return(retval)
 }

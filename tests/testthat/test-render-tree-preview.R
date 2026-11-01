@@ -192,3 +192,53 @@ test_that("cache-only tree previews draw nothing and clear with the tree layer",
   expect_invisible(render_tree(clear_previous = TRUE))
   expect_null(get_scene_tree_instances())
 })
+
+
+test_that("tree normals default off in full and cached previews, with opt-in", {
+  skip_if_not_installed("rayvertex")
+  local_rgl_use_null()
+  on.exit(rgl::close3d(), add = TRUE)
+  scene = setup_simple_tree_preview_scene()
+  for (preview in list(FALSE, "point", "none")) {
+    for (smooth in c(FALSE, TRUE)) {
+      args = list(
+        x = 10,
+        y = 10,
+        extent = scene$extent,
+        heightmap = scene$heightmap,
+        tree_height = 8,
+        preview_simple = preview,
+        clear_previous = TRUE
+      )
+      # Omit the argument to exercise the public default, not just FALSE.
+      if (smooth) {
+        args$load_normals = TRUE
+      }
+      do.call(render_tree, args)
+      if (identical(preview, FALSE)) {
+        ids = rgl::ids3d(tags = TRUE)
+        mesh = convert_rgl_to_raymesh(
+          include_ids = ids$id[ids$tag == "objtree"]
+        )
+        expect_gt(length(mesh$shapes), 0)
+        flags = unlist(lapply(mesh$shapes, function(shape) {
+          shape$has_vertex_normals
+        }))
+        expect_true(length(flags) > 0 && all(flags == smooth))
+      } else {
+        components = get_scene_tree_instances()[[1L]]
+        expect_true(all(components$load_normals == smooth))
+        instances = make_render_highquality_cached_tree_instances(
+          get_scene_tree_instances(),
+          bbox_center = c(0, 0, 0),
+          override_material = FALSE,
+          material = rayrender::diffuse(),
+          rgl_materials = list(),
+          calculate_consistent_normals = TRUE
+        )
+        # The cached component flag is forwarded to the rayrender OBJ loader.
+        expect_gt(length(instances), 0)
+      }
+    }
+  }
+})

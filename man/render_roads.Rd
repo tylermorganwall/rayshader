@@ -37,7 +37,8 @@ render_roads(
   zscale = 1,
   vertical_exaggeration = 1,
   heightmap = NULL,
-  terrain_grading = FALSE
+  terrain_grading = FALSE,
+  bridge = NULL
 )
 }
 \arguments{
@@ -70,7 +71,8 @@ is shorter than twice this distance, each ramp is shortened to half the road
 length.}
 
 \item{layer}{Default \code{NULL}. An unquoted or character column name in an \code{sf}
-road object containing OpenStreetMap-style layer values. Missing values are
+road object containing OpenStreetMap-style layer values. When omitted, uses
+the \code{layer} column if present; explicit \code{NULL} disables this lookup. Missing values are
 treated as implicit layer \code{0}, except affirmative \code{bridge} or elevated
 \code{location} metadata infer effective layer \code{1} and affirmative \code{tunnel} or
 underground \code{location} metadata infer effective layer \code{-1}. Inferred values
@@ -86,7 +88,7 @@ terrain reference, elevated spans use endpoint support chords, and roads with
 explicit tunnel or underground metadata use a bounded terrain-relative
 reference. Untagged negative layers are not independently activated as
 tunnels. Ambiguous endpoint matches that would create a contradictory
-clearance cycle are excluded. Supplying \code{layer} disables \code{merge} and requires
+clearance cycle are excluded. Using \code{layer} or \code{bridge} disables \code{merge} and requires
 the suggested \code{sf}, \code{igraph}, \code{Matrix}, and \code{osqp} packages. Terrain-floor
 constraints use the unmodified DEM across the road width, independently of
 the smoothed fitting reference. Curved profiles are tessellated before meshing
@@ -163,11 +165,11 @@ high-quality geometry. Lines are raised slightly above the pavement surface
 for visibility in rgl; this display offset does not affect rendered or
 exported road geometry.}
 
-\item{verbose}{Default \code{FALSE}. Whether to display progress while building
-and caching the road meshes.}
+\item{verbose}{Default \code{FALSE}. Whether to display progress during road
+profile preparation, solving, and mesh construction.}
 
 \item{parallel}{Default \code{TRUE}. Whether to use multiple native threads while
-building the cached road meshes.}
+sampling road terrain contacts and building the cached road meshes.}
 
 \item{maximum_grade}{Default \code{0.15}. Maximum absolute longitudinal road
 grade. Positive infinity removes the grade bound.}
@@ -195,10 +197,20 @@ elevation and their approaches are flattened while retaining crossing
 clearance and grade limits. Explicit tunnels retain their terrain cover.
 This replaces the scene surface with a regular terrain grid and updates the
 cached heightmap; it does not modify the input raster or matrix.}
+
+\item{bridge}{Default \code{NULL}. An unquoted or character column name containing
+bridge status. When omitted, uses the \code{bridge} column if present; explicit
+\code{NULL} disables this lookup. Accepts logical values or OSM tags: missing,
+empty, \code{"no"}, \code{"false"}, and \code{"0"} mean no bridge; affirmative tags such as
+\code{"yes"} and \code{"viaduct"} identify bridges. Bridge status activates the profile
+solver even without a layer column or an intersecting road. Explicit layer
+values retain their ordering; missing bridge layers infer layer \code{1}, while
+ordinary missing layers remain \code{0}. Pass \verb{layer = NULL, bridge = NULL} to
+disable automatic structure profiles and use terrain-following roads.}
 }
 \value{
-Invisibly returns the rendered road coordinates. When \code{layer} is
-supplied, the result has \code{terrain_following}, \code{profile_diagnostics}, and
+Invisibly returns the rendered road coordinates. When \code{layer} or
+\code{bridge} metadata is used, the result has \code{terrain_following}, \code{profile_diagnostics}, and
 \code{mesh_topology} attributes describing the sparse profile solve and selected
 physical mesh continuations.
 With \code{terrain_grading = TRUE}, \code{graded_heightmap} contains the modified terrain.
@@ -208,5 +220,8 @@ Adds road paths to the scene and eagerly builds their reusable
 high-quality meshes. Roads can be previewed as rgl lines or as the same mesh
 geometry consumed by \code{\link[=render_highquality]{render_highquality()}}. Road chains that cannot be
 represented by either mesh method are omitted with a warning while the
-remaining meshes continue rendering.
+remaining meshes continue rendering. Pavement is raised by 0.055 elevation
+units (5.5 cm for meter elevations), converted using the effective zscale.
+A small scene-precision margin prevents coplanar top surfaces in large scenes.
+Pavement thickness stays at 0.11 elevation units independently of that margin.
 }

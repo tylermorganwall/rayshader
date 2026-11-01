@@ -4,7 +4,13 @@
 \alias{new_render_line_path_data}
 \title{Create render line path data}
 \usage{
-new_render_line_path_data(coords, width, feature_id, source_feature_id)
+new_render_line_path_data(
+  coords,
+  width,
+  feature_id,
+  source_feature_id,
+  geometry = NULL
+)
 }
 \arguments{
 \item{coords}{List of path coordinate matrices.}
@@ -14,6 +20,8 @@ new_render_line_path_data(coords, width, feature_id, source_feature_id)
 \item{feature_id}{Integer normalized feature ID per path.}
 
 \item{source_feature_id}{List of source feature IDs per path.}
+
+\item{geometry}{Default \code{NULL}. Clipped spatial LINESTRING per rendered path.}
 }
 \value{
 Structured internal path-data list.

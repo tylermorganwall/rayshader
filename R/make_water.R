@@ -16,6 +16,7 @@
 #'@param heightmap_crs Default `NULL`. Active scene CRS for spatial `waterheight` inputs.
 #'@param water_surface_tolerance Default `NULL`. Near-coincidence tolerance for exact polygon water, in terrain elevation units.
 #'@param water_elevation Default `NULL`. Explicit elevations for polygon footprints.
+#' @param parallel Default `TRUE`. Build large exact-polygon water batches in separate R workers.
 #'@keywords internal
 make_water = function(
   heightmap,
@@ -30,7 +31,8 @@ make_water = function(
   heightmap_extent = NULL,
   heightmap_crs = NULL,
   water_surface_tolerance = NULL,
-  water_elevation = NULL
+  water_elevation = NULL,
+  parallel = TRUE
 ) {
   water_render_method = match.arg(water_render_method)
   water_polygon_failure = match.arg(water_polygon_failure)
@@ -44,7 +46,8 @@ make_water = function(
       water_elevation = water_elevation,
       water_surface_tolerance = water_surface_tolerance,
       water_color = water_color,
-      water_alpha = water_alpha
+      water_alpha = water_alpha,
+      parallel = parallel
     ))
   }
   if (is_sf_water_input(waterheight)) {

@@ -227,7 +227,7 @@ render_obj = function(
   }
   if (
     is.null(xyz) &&
-      !single_obj &&
+      (!single_obj || raw_coords) &&
       isTRUE(transform_scene_input) &&
       !location_supplied
   ) {
@@ -441,19 +441,37 @@ render_obj = function(
     scene_altitude = xyz[, 2] * zscale,
     label = "obj"
   )
-  scenelist = list()
-  for (k in seq_len(nrow(xyz))) {
-    tempobj = obj
-    if (any(angle != 0)) {
-      tempobj = rayvertex::rotate_mesh(tempobj, as.numeric(angle[k, ]))
+  # Batch ordinary repeated instances. Keep the established transform path for
+  # rotations, raw single models, and nonfinite transforms.
+  batched_instances = nrow(xyz) > 1L &&
+    (!single_obj || raw_coords) &&
+    !any(angle != 0) &&
+    nrow(scale) == nrow(xyz) &&
+    all(is.finite(xyz)) &&
+    all(is.finite(scale)) &&
+    length(obj$shapes) == 1L &&
+    all(is.finite(obj$vertices[[1L]])) &&
+    all(is.finite(obj$normals[[1L]])) &&
+    (!load_material || length(attr(obj, "material_hashes")) == 1L)
+  if (batched_instances) {
+    instance_scene = render_obj_instances(obj, xyz, scale, color, load_material)
+  } else {
+    scenelist = vector("list", nrow(xyz))
+    # The same all-instance predicate was previously rescanned for every tree.
+    has_rotation = any(angle != 0)
+    for (k in seq_len(nrow(xyz))) {
+      tempobj = obj
+      if (has_rotation) {
+        tempobj = rayvertex::rotate_mesh(tempobj, as.numeric(angle[k, ]))
+      }
+      if (any(scale[k, ] != 1)) {
+        tempobj = rayvertex::scale_mesh(tempobj, as.numeric(scale[k, ]))
+      }
+      if (!load_material) {
+        tempobj = rayvertex::set_material(tempobj, diffuse = color[k])
+      }
+      scenelist[[k]] = rayvertex::translate_mesh(tempobj, as.numeric(xyz[k, ]))
     }
-    if (any(scale[k, ] != 1)) {
-      tempobj = rayvertex::scale_mesh(tempobj, as.numeric(scale[k, ]))
-    }
-    if (!load_material) {
-      tempobj = rayvertex::set_material(tempobj, diffuse = color[k])
-    }
-    scenelist[[k]] = rayvertex::translate_mesh(tempobj, as.numeric(xyz[k, ]))
   }
   if (!raw_coords) {
     if (is.null(heightmap)) {
@@ -510,7 +528,11 @@ render_obj = function(
   if (nrow(xyz) == 0) {
     scenelist[[1]] = obj
   }
-  obj = rayvertex::scene_from_list(scenelist)
+  obj = if (batched_instances) {
+    instance_scene
+  } else {
+    rayvertex::scene_from_list(scenelist)
+  }
   if (obj_zscale) {
     obj = rayvertex::scale_mesh(obj, c(1, 1, 1) / zscale)
   }
@@ -556,13 +578,25 @@ render_obj = function(
     tex_vec = c(t(tex_by_material[[j]] + 1))
     norm_vec = c(t(norm_by_material[[j]] + 1))
 
-    for (k in seq_len(length(ind_temp))) {
-      if (tex_vec[k] != 0) {
-        new_tex[ind_temp[k], ] = obj$texcoords[tex_vec[k], ]
-      }
-      if (norm_vec[k] != 0) {
-        new_norm[ind_temp[k], ] = obj$normals[norm_vec[k], ]
-      }
+    # Gather attributes in batches. R row assignment retains the last value
+    # for repeated destination indices, matching the old corner-by-corner
+    # loop. Missing OBJ indices are zero after the one-based conversion and
+    # must leave their destination rows unchanged.
+    has_tex = tex_vec != 0
+    if (any(has_tex)) {
+      new_tex[ind_temp[has_tex], ] = obj$texcoords[
+        tex_vec[has_tex],
+        ,
+        drop = FALSE
+      ]
+    }
+    has_norm = norm_vec != 0
+    if (any(has_norm)) {
+      new_norm[ind_temp[has_norm], ] = obj$normals[
+        norm_vec[has_norm],
+        ,
+        drop = FALSE
+      ]
     }
     texture = obj$materials[[j]]$diffuse_texname
     diffuse_col = "white"
@@ -654,4 +688,29 @@ render_obj = function(
     }
   }
   invisible(NULL)
+}
+
+#' @param obj Single-shape rayvertex OBJ mesh.
+#' @param xyz Finite instance positions, one row per instance.
+#' @param scale Finite per-axis scales, one row per instance.
+#' @param color Per-instance diffuse colors when materials are replaced.
+#' @param load_material Whether to retain OBJ materials.
+#' @return A combined rayvertex mesh with independently transformed instances.
+#' @keywords internal
+#' @noRd
+render_obj_instances = function(obj, xyz, scale, color, load_material) {
+  if (load_material) {
+    templates = list(rayvertex::scene_from_list(list(obj)))
+    template_id = rep.int(1L, nrow(xyz))
+  } else {
+    palette = unique(color)
+    templates = lapply(palette, function(value) {
+      rayvertex::scene_from_list(list(rayvertex::set_material(
+        obj,
+        diffuse = value
+      )))
+    })
+    template_id = match(color, palette)
+  }
+  instance_obj_cpp(templates, template_id, xyz, scale)
 }

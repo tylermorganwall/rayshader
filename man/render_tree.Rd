@@ -38,6 +38,7 @@ render_tree(
   zscale = 1,
   vertical_exaggeration = 1,
   heightmap = NULL,
+  load_normals = FALSE,
   ...
 )
 }
@@ -67,7 +68,9 @@ Total tree height will be \code{crown_height + trunk_height}.}
 
 \item{tree_height}{Default \code{NULL}. Height of the tree, automatically set to \code{10} if not specified. If \code{absolute_height = TRUE}, then this is interpreted as
 the altitude of the top of the tree in the coordinate reference system used. If \code{absolute_height = FALSE}, then
-this is interpreted as the height of the tree relative to the underlying heightmap.}
+this is interpreted as the height of the tree relative to the underlying heightmap.
+Trees with negative sizes are discarded; absolute elevations are first converted
+to sizes above the terrain.}
 
 \item{tree_height_column}{Default \code{NULL}. Column name in \code{location} to use for
 \code{tree_height}. Requires \code{location} to be an \code{sf}/spatial point object with
@@ -140,6 +143,9 @@ for non-ggplot scenes.}
 elevations and existing \code{NA} cells. If omitted, this is taken from the cached
 scene set by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}. Pass explicitly to override the
 cached value.}
+
+\item{load_normals}{Default \code{FALSE}. Whether to load the model's vertex normals
+for smooth shading. Applies to both full previews and cached tree instances.}
 
 \item{...}{Additional arguments to pass to \code{rgl::triangles3d()}.}
 }

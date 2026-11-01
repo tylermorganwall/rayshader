@@ -4,7 +4,10 @@
 #' high-quality meshes. Roads can be previewed as rgl lines or as the same mesh
 #' geometry consumed by [render_highquality()]. Road chains that cannot be
 #' represented by either mesh method are omitted with a warning while the
-#' remaining meshes continue rendering.
+#' remaining meshes continue rendering. Pavement is raised by 0.055 elevation
+#' units (5.5 cm for meter elevations), converted using the effective zscale.
+#' A small scene-precision margin prevents coplanar top surfaces in large scenes.
+#' Pavement thickness stays at 0.11 elevation units independently of that margin.
 #'
 #' @param roads Spatial line data used to draw road paths. Supports `sf`,
 #' `sfc`, `sfg`, `SpatialLines`, and `SpatialLinesDataFrame` line inputs.
@@ -28,7 +31,8 @@
 #' is shorter than twice this distance, each ramp is shortened to half the road
 #' length.
 #' @param layer Default `NULL`. An unquoted or character column name in an `sf`
-#' road object containing OpenStreetMap-style layer values. Missing values are
+#' road object containing OpenStreetMap-style layer values. When omitted, uses
+#' the `layer` column if present; explicit `NULL` disables this lookup. Missing values are
 #' treated as implicit layer `0`, except affirmative `bridge` or elevated
 #' `location` metadata infer effective layer `1` and affirmative `tunnel` or
 #' underground `location` metadata infer effective layer `-1`. Inferred values
@@ -44,7 +48,7 @@
 #' explicit tunnel or underground metadata use a bounded terrain-relative
 #' reference. Untagged negative layers are not independently activated as
 #' tunnels. Ambiguous endpoint matches that would create a contradictory
-#' clearance cycle are excluded. Supplying `layer` disables `merge` and requires
+#' clearance cycle are excluded. Using `layer` or `bridge` disables `merge` and requires
 #' the suggested `sf`, `igraph`, `Matrix`, and `osqp` packages. Terrain-floor
 #' constraints use the unmodified DEM across the road width, independently of
 #' the smoothed fitting reference. Curved profiles are tessellated before meshing
@@ -103,10 +107,10 @@
 #' high-quality geometry. Lines are raised slightly above the pavement surface
 #' for visibility in rgl; this display offset does not affect rendered or
 #' exported road geometry.
-#' @param verbose Default `FALSE`. Whether to display progress while building
-#' and caching the road meshes.
+#' @param verbose Default `FALSE`. Whether to display progress during road
+#' profile preparation, solving, and mesh construction.
 #' @param parallel Default `TRUE`. Whether to use multiple native threads while
-#' building the cached road meshes.
+#' sampling road terrain contacts and building the cached road meshes.
 #'
 #' @param maximum_grade Default `0.15`. Maximum absolute longitudinal road
 #' grade. Positive infinity removes the grade bound.
@@ -129,8 +133,17 @@
 #' clearance and grade limits. Explicit tunnels retain their terrain cover.
 #' This replaces the scene surface with a regular terrain grid and updates the
 #' cached heightmap; it does not modify the input raster or matrix.
-#' @return Invisibly returns the rendered road coordinates. When `layer` is
-#' supplied, the result has `terrain_following`, `profile_diagnostics`, and
+#' @param bridge Default `NULL`. An unquoted or character column name containing
+#' bridge status. When omitted, uses the `bridge` column if present; explicit
+#' `NULL` disables this lookup. Accepts logical values or OSM tags: missing,
+#' empty, `"no"`, `"false"`, and `"0"` mean no bridge; affirmative tags such as
+#' `"yes"` and `"viaduct"` identify bridges. Bridge status activates the profile
+#' solver even without a layer column or an intersecting road. Explicit layer
+#' values retain their ordering; missing bridge layers infer layer `1`, while
+#' ordinary missing layers remain `0`. Pass `layer = NULL, bridge = NULL` to
+#' disable automatic structure profiles and use terrain-following roads.
+#' @return Invisibly returns the rendered road coordinates. When `layer` or
+#' `bridge` metadata is used, the result has `terrain_following`, `profile_diagnostics`, and
 #' `mesh_topology` attributes describing the sparse profile solve and selected
 #' physical mesh continuations.
 #' With `terrain_grading = TRUE`, `graded_heightmap` contains the modified terrain.
@@ -168,7 +181,8 @@ render_roads = function(
   zscale = 1,
   vertical_exaggeration = 1,
   heightmap = NULL,
-  terrain_grading = FALSE
+  terrain_grading = FALSE,
+  bridge = NULL
 ) {
   if (
     !is.logical(terrain_grading) ||
@@ -177,12 +191,26 @@ render_roads = function(
   ) {
     stop("`terrain_grading` must be TRUE or FALSE.", call. = FALSE)
   }
+  # Removing thousands of previous paths must not repaint the scene per path.
+  # Restore the caller's redraw state on normal return and on errors.
+  road_device = rgl::cur3d()
+  if (road_device != 0) {
+    previous_rgl_parameters = rgl::par3d(skipRedraw = TRUE, dev = road_device)
+    on.exit(
+      {
+        if (road_device %in% rgl::rgl.dev.list()) {
+          rgl::par3d(previous_rgl_parameters, dev = road_device)
+        }
+      },
+      add = TRUE
+    )
+  }
   clear_road_layer = function() {
     road_scene_ids = get_ids_with_labels(
       typeval = c("road_path", "road_mesh_preview")
     )$id
-    for (road_scene_id in road_scene_ids) {
-      rgl::pop3d(id = road_scene_id)
+    if (length(road_scene_ids)) {
+      rgl::pop3d(id = road_scene_ids)
     }
     clear_render_road_path_info()
     cache_scene_road_meshes(NULL)
@@ -203,6 +231,7 @@ render_roads = function(
   width_missing = missing(width)
   width_expr = substitute(width)
   width_column_expr = substitute(width_column)
+  bridge_expr = substitute(bridge)
   layer_expr = substitute(layer)
   layer_height_expr = substitute(layer_height)
   lanes_expr = substitute(lanes)
@@ -393,6 +422,29 @@ render_roads = function(
     missing = missing(layer),
     argument = "layer"
   )
+  bridge_column = resolve_render_column_name(
+    value = bridge,
+    value_expr = bridge_expr,
+    missing = missing(bridge),
+    argument = "bridge"
+  )
+  # OSM exports often provide bridge tags without any layer column. Resolve
+  # these independently so bridge-only data can reach the same profile solver.
+  # An explicit NULL opts out; omitted arguments discover conventional names.
+  road_columns = if (inherits(roads, "SpatialLinesDataFrame")) {
+    names(roads@data)
+  } else if (inherits(roads, "sf")) {
+    names(roads)
+  } else {
+    character()
+  }
+  if (missing(layer) && "layer" %in% road_columns) {
+    layer_column = "layer"
+  }
+  if (missing(bridge) && "bridge" %in% road_columns) {
+    bridge_column = "bridge"
+  }
+  structure_profiles = !is.null(layer_column) || !is.null(bridge_column)
   layer_height_spec = resolve_render_scalar_or_column(
     value = layer_height,
     value_expr = layer_height_expr,
@@ -413,18 +465,20 @@ render_roads = function(
     type = "integer",
     lower = 1
   )
-  if (is.null(layer_column) && !is.null(layer_height_spec$column)) {
-    stop("`layer_height` can only name a column when `layer` is supplied.")
-  }
-  if (!is.null(layer_column) && (offset != 0 || offset_transition != 0)) {
+  if (!structure_profiles && !is.null(layer_height_spec$column)) {
     stop(
-      "`layer` cannot be combined with `offset` or `offset_transition`.",
+      "`layer_height` can only name a column when `layer` or `bridge` is used."
+    )
+  }
+  if (structure_profiles && (offset != 0 || offset_transition != 0)) {
+    stop(
+      "Road structure profiles (`layer` or `bridge`) cannot be combined with `offset` or `offset_transition`.",
       call. = FALSE
     )
   }
   column_input = any(c(
     !is.null(width_column),
-    !is.null(layer_column),
+    structure_profiles,
     !is.null(layer_height_spec$column),
     !is.null(lanes_spec$column)
   ))
@@ -480,17 +534,48 @@ render_roads = function(
       width = if (length(width_values)) width_values[[1L]] else 1
     }
   }
-  if (!is.null(layer_column)) {
-    roads$render_road_input_layer = resolve_render_feature_values(
-      data = roads,
-      value = layer,
-      value_expr = layer_expr,
-      missing = FALSE,
-      default = NA_real_,
-      argument = "layer",
-      type = "double",
-      allow_na = TRUE
-    )
+  if (structure_profiles) {
+    # Normalize selected columns before clipping/splitting features. Keep missing
+    # layers as NA so the topology records bridge-inferred and explicit ordering
+    # separately. The caller's sf object is not mutated.
+    roads$render_road_input_layer = if (is.null(layer_column)) {
+      rep(NA_real_, nrow(roads))
+    } else {
+      if (!(layer_column %in% names(roads))) {
+        stop(
+          sprintf(
+            "`layer` column `%s` was not found in `roads`.",
+            layer_column
+          ),
+          call. = FALSE
+        )
+      }
+      resolve_render_feature_values(
+        data = roads,
+        value = layer_column,
+        value_expr = layer_column,
+        missing = FALSE,
+        default = NA_real_,
+        argument = "layer",
+        type = "double",
+        allow_na = TRUE
+      )
+    }
+    if (!is.null(bridge_column) && !(bridge_column %in% names(roads))) {
+      stop(
+        sprintf(
+          "`bridge` column `%s` was not found in `roads`.",
+          bridge_column
+        ),
+        call. = FALSE
+      )
+    }
+    # All downstream topology/anchor rules share the normalized bridge field.
+    roads$bridge = if (is.null(bridge_column)) {
+      rep(FALSE, nrow(roads))
+    } else {
+      is_truthy_render_road_osm_tag(roads[[bridge_column]])
+    }
     layer_column = "render_road_input_layer"
     merge = FALSE
   }
@@ -617,6 +702,7 @@ render_roads = function(
     coord_list = solve_render_road_path_profiles(
       coord_list = coord_list,
       coord_feature = coord_feature,
+      path_geometry = path_data$geometry,
       coord_width = coord_width,
       roads = roads,
       heightmap = heightmap,
@@ -633,7 +719,9 @@ render_roads = function(
       continuation_grade_tolerance = continuation_grade_tolerance,
       zscale = zscale,
       texture_world_scale = texture_world_scale,
-      terrain_grading = terrain_grading
+      terrain_grading = terrain_grading,
+      parallel = parallel,
+      verbose = verbose
     )
     layer_terrain_following = attr(coord_list, "terrain_following")
     if (length(layer_terrain_following) == length(coord_list)) {
@@ -754,14 +842,16 @@ render_roads = function(
   attr(coord_list, "mesh_chain_members") = mesh_chain_members
 
   # 8. Draw source paths and register the compact high-quality mesh contract.
-  # The mesher adds 0.055 scene units from profile to pavement top. Put preview
-  # lines another 0.01 above that surface, including after terrain grading.
-  # Store the total offset so scene conversion/export recover the source path.
-  rgl_preview_offset = 0.055 + 0.01
+  # Put preview lines just above the pavement, using the same scaled clearance
+  # as the mesher. Conversion subtracts this offset to recover the source path.
+  rgl_preview_offset = 2 *
+    resolve_render_road_surface_clearance(
+      heightmap,
+      zscale,
+      terrain_scale
+    )
   mesh_preview = identical(preview, "mesh")
   road_id_by_path = rep(NA_integer_, length(coord_list))
-  previous_rgl_parameters = rgl::par3d(skipRedraw = TRUE)
-  on.exit(rgl::par3d(previous_rgl_parameters), add = TRUE)
   for (coord_index in seq_along(coord_list)) {
     coord = coord_list[[coord_index]]
     if (is.matrix(coord) && nrow(coord) >= 2) {
@@ -923,6 +1013,43 @@ render_roads = function(
 
   # 10. Preserve the public coordinate-list return value and diagnostics.
   invisible(coord_list)
+}
+
+#' Resolve pavement clearance in scene coordinates
+#'
+#' @param heightmap Cached terrain elevations, or `NULL`.
+#' @param zscale Effective elevation-to-scene divisor.
+#' @param terrain_scale Horizontal x-z terrain scale.
+#' @return Clearance above the road profile, including float precision margin.
+#' @keywords internal
+#' @noRd
+resolve_render_road_surface_clearance = function(
+  heightmap,
+  zscale,
+  terrain_scale
+) {
+  if (length(zscale) != 1L || !is.finite(zscale) || zscale <= 0) {
+    zscale = 1
+  }
+  if (
+    length(terrain_scale) != 2L ||
+      any(!is.finite(terrain_scale)) ||
+      any(terrain_scale <= 0)
+  ) {
+    terrain_scale = c(1, 1)
+  }
+  magnitude = 1
+  if (is.matrix(heightmap) && length(heightmap)) {
+    elevations = range(heightmap, finite = TRUE)
+    magnitude = max(
+      1,
+      (dim(heightmap) - 1) / 2 * terrain_scale,
+      abs(elevations[is.finite(elevations)]) / zscale
+    )
+  }
+  # Five and a half centimeters when elevations are meters. Keep a few float
+  # ULPs of separation in large scenes so shrinking the slab avoids z-fighting.
+  max(0.055 / zscale, 16 * 2^-23 * magnitude)
 }
 
 #' @param meshes Finished road meshes in absolute scene coordinates.
@@ -1327,6 +1454,30 @@ build_render_road_path_mesh_members = function(
   if (!nrow(fragments) || !path_count) {
     return(members)
   }
+  if ("render_road_path_id" %in% names(fragments)) {
+    path_rows = fragments$render_road_path_id
+    if (
+      anyNA(path_rows) ||
+        anyDuplicated(path_rows) ||
+        any(path_rows < 1L | path_rows > path_count) ||
+        any(!valid_path[path_rows]) ||
+        any(
+          coord_feature[path_rows] != fragments$render_road_path_feature_index
+        )
+    ) {
+      stop(
+        "Road topology contains invalid rendered-path identities.",
+        call. = FALSE
+      )
+    }
+    members$render_road_fragment_id[
+      path_rows
+    ] = fragments$render_road_fragment_id
+    members$render_road_feature_id[path_rows] = fragments$render_road_feature_id
+    members$render_road_layer[path_rows] = fragments$render_road_layer
+    members$mapping_status[path_rows] = "mapped"
+    return(members)
+  }
   fragment_feature = fragments$render_road_path_feature_index
   fragment_groups = split(
     seq_len(nrow(fragments)),
@@ -1575,6 +1726,8 @@ order_render_road_precomputed_mesh_chain = function(
     ,
     drop = FALSE
   ]
+  # These small tables already have explicit names and fixed column types.
+  # Avoid data.frame's repeated name inference/coercion for every road.
   endpoint_rows = lapply(road_path_id, function(path_id) {
     points = as.matrix(coord_list[[path_id]])
     endpoint = rbind(points[1L, 1:3], points[nrow(points), 1:3])
@@ -1584,17 +1737,16 @@ order_render_road_precomputed_mesh_chain = function(
     valid = is.finite(magnitude) & magnitude > sqrt(.Machine$double.eps)
     direction[valid, ] = direction[valid, , drop = FALSE] / magnitude[valid]
     direction[!valid, ] = 0
-    data.frame(
-      road_path_id = path_id,
+    list2DF(list(
+      road_path_id = rep(path_id, 2L),
       endpoint_side = c("start", "end"),
       x = endpoint[, 1L],
       y = endpoint[, 2L],
       z = endpoint[, 3L],
       direction_x = direction[, 1L],
       direction_y = direction[, 2L],
-      direction_z = direction[, 3L],
-      stringsAsFactors = FALSE
-    )
+      direction_z = direction[, 3L]
+    ))
   })
   endpoints = do.call(rbind, endpoint_rows)
   endpoint_key = paste0(
@@ -1679,11 +1831,10 @@ order_render_road_precomputed_mesh_chain = function(
   members = list()
   visited = integer(0)
   while (!(current_path %in% visited)) {
-    members[[length(members) + 1L]] = data.frame(
+    members[[length(members) + 1L]] = list2DF(list(
       road_path_id = current_path,
-      orientation = if (identical(entry_side, "start")) 1L else -1L,
-      stringsAsFactors = FALSE
-    )
+      orientation = if (identical(entry_side, "start")) 1L else -1L
+    ))
     visited = c(visited, current_path)
     exit_side = if (identical(entry_side, "start")) "end" else "start"
     connection_row = endpoint_connection[[
@@ -1840,7 +1991,7 @@ build_render_road_mesh_chain_members = function(
       } else {
         texture = as.character(texture[[1L]])
       }
-      data.frame(
+      list2DF(list(
         mesh_chain_id = chain_id,
         road_path_id = path_id,
         fragment_id = if (is.finite(membership_row)) {
@@ -1860,9 +2011,8 @@ build_render_road_mesh_chain_members = function(
         width = as.numeric(width[[path_id]]),
         texture_file = texture,
         texture_length = as.numeric(texture_length[[path_id]]),
-        texture_repeats = as.numeric(texture_repeats[[path_id]]),
-        stringsAsFactors = FALSE
-      )
+        texture_repeats = as.numeric(texture_repeats[[path_id]])
+      ))
     })
     do.call(rbind, member_rows)
   })
@@ -2191,6 +2341,10 @@ condition_render_road_terrain_paths = function(
 #' @param terrain_grading Default `FALSE`. Allow terrain cuts and ground-level
 #' junction contacts instead of enforcing the original DEM as a lower bound.
 #'
+#' @param parallel Default `FALSE`. Use native threads for terrain contacts.
+#' @param verbose Default `FALSE`. Report profile preparation and solve stages.
+#' @param path_geometry Default `NULL`. Clipped spatial LINESTRING per rendered
+#' path, in the same order and direction as `coord_list`.
 #' @return Coordinate matrices with solved heights and profile diagnostics.
 #' @keywords internal
 # Engineering guardrail: before changing layered profile topology, anchors,
@@ -2210,7 +2364,10 @@ solve_render_road_path_profiles = function(
   continuation_grade_tolerance = 0.14,
   zscale = 1,
   texture_world_scale = c(1, 1),
-  terrain_grading = FALSE
+  terrain_grading = FALSE,
+  parallel = FALSE,
+  verbose = FALSE,
+  path_geometry = NULL
 ) {
   if (!inherits(roads, "sf")) {
     stop("Road profile solving requires an `sf` road object.", call. = FALSE)
@@ -2269,8 +2426,35 @@ solve_render_road_path_profiles = function(
     return(coord_list)
   }
 
-  profile_roads = roads[visible_feature, , drop = FALSE]
-  profile_roads$render_road_path_feature_index = visible_feature
+  if (is.null(path_geometry)) {
+    # Compatibility for callers supplying unsplit source geometry directly.
+    profile_feature = visible_feature
+    profile_roads = roads[profile_feature, , drop = FALSE]
+  } else {
+    if (
+      !inherits(path_geometry, "sfc_LINESTRING") ||
+        length(path_geometry) != length(coord_list)
+    ) {
+      stop(
+        "Road path geometry must contain one LINESTRING per rendered path.",
+        call. = FALSE
+      )
+    }
+    path_id = which(valid_path)
+    profile_feature = as.integer(coord_feature[path_id])
+    profile_roads = roads[profile_feature, , drop = FALSE]
+    sf::st_geometry(profile_roads) = path_geometry[path_id]
+    # Part identity survives metric projection and topology cleanup. Source
+    # feature identity remains separate for metadata and diagnostic reporting.
+    profile_roads$render_road_path_id = path_id
+    if (!("render_line_source_feature_id" %in% names(profile_roads))) {
+      profile_roads$render_line_source_feature_id = lapply(
+        profile_feature,
+        as.integer
+      )
+    }
+  }
+  profile_roads$render_road_path_feature_index = profile_feature
   if (!is.null(lane_values)) {
     lane_values = suppressWarnings(as.integer(lane_values))
     if (
@@ -2283,7 +2467,10 @@ solve_render_road_path_profiles = function(
       )
     }
     lane_column = "render_road_effective_lanes"
-    profile_roads[[lane_column]] = lane_values[visible_feature]
+    profile_roads[[lane_column]] = lane_values[profile_feature]
+  }
+  if (verbose) {
+    message("Preparing road profile features...")
   }
   prepared = prepare_render_road_layer_features(
     roads = profile_roads,
@@ -2291,23 +2478,27 @@ solve_render_road_path_profiles = function(
     lane_column = lane_column,
     layer_height_column = layer_height_column
   )
+  if (verbose) {
+    message("Finding road crossings and continuations...")
+  }
   topology = build_render_road_layer_topology(prepared)
   original_coordinates = coord_list
   # Keep the physical DEM separate from the smoothed fitting reference.
   # Sampling it after conditioning would silently lower the collision floor.
-  terrain_envelopes = Map(
-    function(points, width) {
-      sample_render_road_terrain_envelope(
-        points,
-        width,
-        heightmap,
-        zscale,
-        texture_world_scale
-      )
-    },
+  if (verbose) {
+    message("Sampling road terrain contacts...")
+  }
+  terrain_envelopes = sample_render_road_terrain_envelopes(
     coord_list,
-    as.list(coord_width)
+    coord_width,
+    heightmap,
+    zscale,
+    texture_world_scale,
+    parallel = parallel
   )
+  if (verbose) {
+    message("Conditioning road terrain paths...")
+  }
   terrain_stage = condition_render_road_terrain_paths(
     coord_list = coord_list,
     coord_width = coord_width,
@@ -2352,7 +2543,11 @@ solve_render_road_path_profiles = function(
     feature_index = active_fragments$render_road_path_feature_index[[
       fragment_row
     ]]
-    path_index = path_by_feature[[as.character(feature_index)]]
+    path_index = if ("render_road_path_id" %in% names(active_fragments)) {
+      active_fragments$render_road_path_id[[fragment_row]]
+    } else {
+      path_by_feature[[as.character(feature_index)]]
+    }
     if (length(path_index) != 1L) {
       stop(
         sprintf(
@@ -2392,6 +2587,9 @@ solve_render_road_path_profiles = function(
     )
   }
 
+  if (verbose) {
+    message("Building road profile constraints...")
+  }
   problem = build_render_road_profile_problem(
     topology = topology,
     terrain_profiles = terrain_profiles,
@@ -2409,11 +2607,17 @@ solve_render_road_path_profiles = function(
       texture_world_scale
     )
   }
+  if (verbose) {
+    message("Solving road profiles...")
+  }
   solution = solve_render_road_profile_problem(
     problem,
     maximum_iterations = 100000,
     profile_tolerance = 0.05
   )
+  if (verbose) {
+    message("Evaluating solved road profiles...")
+  }
   problem = solution$problem
   solved_fragment_id = problem$topology$fragments$render_road_fragment_id
   fragment_row = match(
@@ -2521,7 +2725,11 @@ add_render_road_ground_contacts = function(
     problem$spans$span_id[
       problem$spans$reference_regime == "surface"
     ]
-  paths = match(fragments$render_road_path_feature_index, features)
+  paths = if ("render_road_path_id" %in% names(fragments)) {
+    fragments$render_road_path_id
+  } else {
+    match(fragments$render_road_path_feature_index, features)
+  }
   raw_height = numeric(nrow(controls))
   for (fragment in seq_len(nrow(fragments))) {
     id = fragments$render_road_fragment_id[[fragment]]
@@ -2644,6 +2852,99 @@ sample_render_road_terrain_envelope = function(
   zscale,
   texture_world_scale
 ) {
+  job = prepare_render_road_terrain_contact_job(
+    points,
+    width,
+    texture_world_scale
+  )
+  contacts = sample_render_road_terrain_contacts_cpp(
+    job$vertices,
+    job$indices,
+    job$station,
+    heightmap,
+    zscale,
+    unname(get_scene_geographic_aspect()$scale)
+  )
+  reduce_render_road_terrain_contacts(contacts, job, heightmap)
+}
+
+#' @param coord_list Source centerlines in scene coordinates.
+#' @param coord_width Full road widths in scene units.
+#' @param heightmap Unmodified scene terrain in elevation units.
+#' @param zscale Effective elevation-to-scene divisor.
+#' @param texture_world_scale Horizontal scene-to-metre multipliers.
+#' @param parallel Default `FALSE`. Use native threads for independent footprints.
+#' @return Full-width terrain envelopes in input path order.
+#' @keywords internal
+#' @noRd
+sample_render_road_terrain_envelopes = function(
+  coord_list,
+  coord_width,
+  heightmap,
+  zscale,
+  texture_world_scale,
+  parallel = FALSE
+) {
+  if (length(coord_list) != length(coord_width)) {
+    stop("Road contact widths must match the coordinate paths.", call. = FALSE)
+  }
+  result = vector("list", length(coord_list))
+  if (!length(result)) {
+    return(result)
+  }
+  parallel = resolve_render_logical(parallel, "parallel")
+  terrain_scale = unname(get_scene_geographic_aspect()$scale)
+  terrain_context = create_render_road_terrain_context_cpp(
+    heightmap,
+    zscale,
+    terrain_scale
+  )
+  # Bound temporary footprint/contact storage on large networks. All chunks
+  # share one owned DEM snapshot, including the serial fallback. R preparation
+  # and envelope reduction stay on the main thread; workers only intersect.
+  chunks = split(seq_along(coord_list), (seq_along(coord_list) - 1L) %/% 256L)
+  for (indices in chunks) {
+    jobs = Map(
+      function(points, width) {
+        prepare_render_road_terrain_contact_job(
+          points,
+          width,
+          texture_world_scale
+        )
+      },
+      coord_list[indices],
+      as.list(coord_width[indices])
+    )
+    contacts = sample_render_road_terrain_contacts_batch_cpp(
+      jobs,
+      heightmap,
+      zscale,
+      terrain_scale,
+      parallel,
+      terrain_context
+    )
+    result[indices] = Map(
+      function(contact, job) {
+        reduce_render_road_terrain_contacts(contact, job, heightmap)
+      },
+      contacts,
+      jobs
+    )
+  }
+  result
+}
+
+#' @param points Source centerline in scene coordinates.
+#' @param width Full road width in scene units.
+#' @param texture_world_scale Horizontal scene-to-metre multipliers.
+#' @return Native footprint inputs plus centerline samples for envelope reduction.
+#' @keywords internal
+#' @noRd
+prepare_render_road_terrain_contact_job = function(
+  points,
+  width,
+  texture_world_scale
+) {
   station = calculate_road_path_cumulative_distance(
     points,
     texture_world_scale
@@ -2670,44 +2971,125 @@ sample_render_road_terrain_envelope = function(
   # Intersect the whole swept footprint with the terrain triangulation.
   # The maximum terrain height at every resulting station bounds the terrain
   # between stations too: each intersection polygon is piecewise affine.
-  offset = frames$side * (frames$miter_scale * width / 2)
-  left = right = dense
-  left[, c(1L, 3L)] = left[, c(1L, 3L)] + offset
-  right[, c(1L, 3L)] = right[, c(1L, 3L)] - offset
-  n = nrow(dense)
-  first = seq_len(n - 1L)
-  indices = rbind(
-    cbind(first, first + 1L, first + 1L + n),
-    cbind(first, first + 1L + n, first + n)
+  footprint = build_render_road_contact_footprint(
+    dense,
+    width,
+    distance,
+    frames
   )
-  contacts = sample_render_road_terrain_contacts_cpp(
-    rbind(left, right),
-    indices,
-    rep(distance, 2L),
-    heightmap,
-    zscale,
-    unname(get_scene_geographic_aspect()$scale)
-  )
+  footprint$dense = dense
+  footprint$distance = distance
+  footprint$total_distance = utils::tail(station, 1L)
+  footprint
+}
+
+#' @param contacts Native footprint intersections.
+#' @param job Prepared footprint and centerline samples.
+#' @param heightmap Unmodified scene terrain in elevation units.
+#' @return Ordered station distances and maximum terrain floors in metres.
+#' @keywords internal
+#' @noRd
+reduce_render_road_terrain_contacts = function(contacts, job, heightmap) {
   # Keep endpoints even when a clipped road has an edge outside the terrain.
   contacts = rbind(
     contacts[, c("distance", "floor")],
     data.frame(
-      distance = distance,
+      distance = job$distance,
       floor = interpolate_render_heightmap_height(
         heightmap,
-        dense[, 1L],
-        dense[, 3L]
+        job$dense[, 1L],
+        job$dense[, 3L]
       )
     )
   )
   contacts$distance = pmin(
     pmax(contacts$distance, 0),
-    utils::tail(station, 1L)
+    job$total_distance
   )
   contacts$distance = round(contacts$distance, 8L)
   envelope = stats::aggregate(floor ~ distance, contacts, max)
   envelope = envelope[order(envelope$distance), ]
   list(distance = envelope$distance, floor = envelope$floor)
+}
+
+#' @param points Dense centerline coordinates in scene units.
+#' @param width Full road width in scene units.
+#' @param station Centerline distances in metres, one per point.
+#' @param frames Vertex frames, including miter and rounded-join classifications.
+#' @return Footprint vertices, one-based triangles, and per-vertex stations.
+#' @keywords internal
+#' @noRd
+build_render_road_contact_footprint = function(points, width, station, frames) {
+  # An NA miter scale marks a deliberately rejected sharp miter, not bad input.
+  # Preserve ordinary miter sections exactly. At rounded corners use separate
+  # incoming/outgoing sections at the same station, avoiding an unbounded miter.
+  rounded = which(frames$join_style == "round")
+  section_count = rep(1L, nrow(points))
+  section_count[rounded] = 2L
+  source = rep(seq_len(nrow(points)), section_count)
+  side = frames$side[source, , drop = FALSE]
+  scale = frames$miter_scale[source]
+  if (length(rounded)) {
+    outgoing = cumsum(section_count)[rounded]
+    incoming = outgoing - 1L
+    side[incoming, ] = cbind(
+      -frames$incoming_tangent[rounded, 2L],
+      frames$incoming_tangent[rounded, 1L]
+    )
+    side[outgoing, ] = cbind(
+      -frames$outgoing_tangent[rounded, 2L],
+      frames$outgoing_tangent[rounded, 1L]
+    )
+    scale[c(incoming, outgoing)] = 1
+  }
+  offset = side * (scale * width / 2)
+  left = right = points[source, , drop = FALSE]
+  left[, c(1L, 3L)] = left[, c(1L, 3L)] + offset
+  right[, c(1L, 3L)] = right[, c(1L, 3L)] - offset
+  n = nrow(left)
+  first = seq_len(n - 1L)
+  vertices = rbind(left, right)
+  indices = rbind(
+    cbind(first, first + 1L, first + 1L + n),
+    cbind(first, first + 1L + n, first + n)
+  )
+  vertex_station = rep(station[source], 2L)
+
+  # Cover the circular join as well as its adjacent segment strips. A
+  # circumscribed 16-gon bounds the radius width/2 disk (under 2% excess radius)
+  # so a sampled terrain peak cannot fall between polygon chords. All fan
+  # vertices share the corner station; overlaps are harmless because terrain
+  # contacts are reduced by maximum height, not accumulated as render geometry.
+  sides = 16L
+  angle = seq.int(0L, sides - 1L) * (2 * pi / sides)
+  radius = (width / 2) / cos(pi / sides)
+  for (corner in rounded) {
+    center = points[corner, ]
+    ring = matrix(rep(center, each = sides), ncol = 3L)
+    ring[, 1L] = ring[, 1L] + radius * cos(angle)
+    ring[, 3L] = ring[, 3L] + radius * sin(angle)
+    start = nrow(vertices)
+    vertices = rbind(vertices, center, ring)
+    indices = rbind(
+      indices,
+      cbind(
+        start + 1L,
+        start + 1L + seq_len(sides),
+        start + 1L + c(2:sides, 1L)
+      )
+    )
+    vertex_station = c(vertex_station, rep(station[corner], sides + 1L))
+  }
+  # A true reversal produces coincident strip edges at the duplicated station.
+  # Its zero-area triangles have no footprint; the join fan supplies coverage.
+  if (length(rounded)) {
+    a = vertices[indices[, 1L], c(1L, 3L), drop = FALSE]
+    b = vertices[indices[, 2L], c(1L, 3L), drop = FALSE] - a
+    c = vertices[indices[, 3L], c(1L, 3L), drop = FALSE] - a
+    area = b[, 1L] * c[, 2L] - b[, 2L] * c[, 1L]
+    indices = indices[abs(area) > 1e-14, , drop = FALSE]
+  }
+  list(vertices = vertices, indices = indices, station = vertex_station)
 }
 
 #' Offset road path coordinates
@@ -3620,11 +4002,7 @@ group_render_road_point_events = function(
 
   # Find pair-event points within tolerance of one another. Pairwise intersections from
   # a three-road stack should become one physical event, not three independent events.
-  neighbors = sf::st_is_within_distance(
-    pair_events,
-    pair_events,
-    dist = tolerance
-  )
+  neighbors = find_render_road_point_neighbors(pair_events, tolerance)
   # Convert the proximity relation into an undirected edge list without self-edges or
   # duplicate reverse edges.
   edge_rows = lapply(seq_along(neighbors), function(from) {
@@ -3734,6 +4112,45 @@ group_render_road_point_events = function(
   # later construction of adjacent upper/lower constraints.
   pairs = sf::st_drop_geometry(pair_events)
   list(events = events, participants = participants, pairs = pairs)
+}
+
+#' @param points Finite POINT geometries in the topology's projected metric CRS.
+#' @param tolerance Nonnegative distance tolerance in metres.
+#' @return Sorted neighbor indices for each point, including itself.
+#' @keywords internal
+#' @noRd
+# A planar st_is_within_distance() call enumerates all point pairs in GEOS.
+# Use the indexed intersects predicate on tolerance-expanded square envelopes
+# instead, then apply the exact Euclidean test. Only candidate enumeration
+# changes: tolerance, coincident points, ordering, and single-linkage grouping
+# retain their existing semantics. Worst-case dense output remains quadratic.
+find_render_road_point_neighbors = function(points, tolerance) {
+  xy = sf::st_coordinates(points)[, 1:2, drop = FALSE]
+  if (!nrow(xy)) {
+    return(list())
+  }
+  # Expand only the candidate envelopes for representational roundoff. The
+  # final Euclidean comparison still uses the original distance tolerance.
+  padding = 8 *
+    .Machine$double.eps *
+    pmax(1, abs(xy[, 1]), abs(xy[, 2]), tolerance)
+  boxes = sf::st_sfc(
+    lapply(seq_len(nrow(xy)), function(i) {
+      radius = tolerance + padding[[i]]
+      sf::st_polygon(list(cbind(
+        xy[i, 1] + c(-radius, radius, radius, -radius, -radius),
+        xy[i, 2] + c(-radius, -radius, radius, radius, -radius)
+      )))
+    }),
+    crs = sf::st_crs(points)
+  )
+  candidates = sf::st_intersects(points, boxes, sparse = TRUE)
+  lapply(seq_along(candidates), function(i) {
+    ids = candidates[[i]]
+    dx = xy[ids, 1] - xy[i, 1]
+    dy = xy[ids, 2] - xy[i, 2]
+    sort(ids[sqrt(dx * dx + dy * dy) <= tolerance])
+  })
 }
 
 #' Classify one exact road point pair without deciding solver behavior
@@ -3891,6 +4308,21 @@ build_render_road_point_pair = function(
     supplied_boundary_a,
     supplied_boundary_b
   )
+  # A bridge flag supplies ordering at an interior crossing, not a distinct
+  # physical level at the bridge's attachment to an untagged surface approach.
+  # Preserve that attachment even when the junction branches and no single
+  # through-road continuation can be selected. Explicit conflicting layers
+  # remain conflicts; two interior crossings retain their clearance ordering.
+  inferred_bridge_attachment =
+    (fragments$render_road_layer_source[[row_a]] == "bridge" &&
+      fragments$render_road_layer_source[[row_b]] == "implicit_surface") ||
+    (fragments$render_road_layer_source[[row_b]] == "bridge" &&
+      fragments$render_road_layer_source[[row_a]] == "implicit_surface")
+  if (
+    inferred_bridge_attachment && (relation$endpoint_a || relation$endpoint_b)
+  ) {
+    relation$topology_layer_conflict = FALSE
+  }
   endpoint_identity_a = resolve_render_road_projection_endpoint(
     prepared$endpoints,
     fragment_a,
@@ -3997,11 +4429,15 @@ intersect_render_road_fragment_pair = function(
   fragments = prepared$fragments
   fragment_a = fragments$render_road_fragment_id[[row_a]]
   fragment_b = fragments$render_road_fragment_id[[row_b]]
+  geometry = prepared$intersection_geometry
+  if (is.null(geometry)) {
+    geometry = sf::st_geometry(fragments)
+  }
   intersection_result = tryCatch(
     list(
       value = suppressWarnings(sf::st_intersection(
-        sf::st_geometry(fragments)[row_a],
-        sf::st_geometry(fragments)[row_b]
+        geometry[row_a],
+        geometry[row_b]
       )),
       error_message = NULL
     ),
@@ -4148,6 +4584,11 @@ find_render_road_layer_events = function(
   } else {
     matrix(integer(0), ncol = 2L)
   }
+  # Coordinates are already in the prepared metric CRS. sf otherwise repeats
+  # expensive CRS/unit parsing for every tiny pair operation. Use a call-local
+  # planar geometry copy for intersections; event records retain the real CRS.
+  prepared$intersection_geometry = sf::st_geometry(fragments)
+  sf::st_crs(prepared$intersection_geometry) = NA
   pair_results = lapply(seq_len(nrow(candidate_pairs)), function(pair_id) {
     intersect_render_road_fragment_pair(
       prepared,
@@ -4166,7 +4607,11 @@ find_render_road_layer_events = function(
     Negate(is.null),
     lapply(pair_results, `[[`, "failure")
   )
-  points = if (length(point_rows)) do.call(rbind, point_rows) else empty_points
+  points = if (length(point_rows)) {
+    bind_render_road_topology_rows(point_rows)
+  } else {
+    empty_points
+  }
   points$point_pair_id = seq_len(nrow(points))
   points = points[, c(
     "point_pair_id",
@@ -4174,7 +4619,7 @@ find_render_road_layer_events = function(
     attr(points, "sf_column")
   )]
   overlaps = if (length(overlap_rows)) {
-    do.call(rbind, overlap_rows)
+    bind_render_road_topology_rows(overlap_rows)
   } else {
     empty_overlaps[, setdiff(names(empty_overlaps), "overlap_id"), drop = FALSE]
   }
@@ -4229,7 +4674,7 @@ find_render_road_layer_events = function(
     function(id) {
       rows = pair_table$point_event_id == id
       any(
-        !pair_table$layer_relationship[rows] &
+        !pair_table$topology_layer_conflict[rows] &
           pair_table$topology_relation[rows] %in%
             c(
               "shared_endpoint",
@@ -4254,7 +4699,7 @@ find_render_road_layer_events = function(
     drop = FALSE
   ]
   junction_pairs = pair_table[
-    !pair_table$layer_relationship &
+    !pair_table$topology_layer_conflict &
       pair_table$topology_relation %in%
         c(
           "shared_endpoint",
@@ -4311,6 +4756,36 @@ find_render_road_layer_events = function(
 }
 
 # Endpoint continuations and topology graph -------------------------------
+
+#' @param rows Nonempty list of schema-matched internal topology sf records.
+#' @return One sf table, retaining column types, geometry order, and CRS.
+#' @keywords internal
+#' @noRd
+bind_render_road_topology_rows = function(rows) {
+  first = rows[[1L]]
+  geometry_column = attr(first, "sf_column")
+  columns = setdiff(names(first), geometry_column)
+  data = lapply(columns, function(column) {
+    do.call(c, lapply(rows, `[[`, column))
+  })
+  names(data) = columns
+  # Construct attributes column-wise and the sfc collection just once. These
+  # internal schemas contain plain atomic columns; no unit/factor coercion or
+  # name-based schema union is needed. Caller order defines event identity.
+  data = as.data.frame(data, stringsAsFactors = FALSE)
+  geometry = unlist(lapply(rows, sf::st_geometry), recursive = FALSE)
+  data[[geometry_column]] = sf::st_sfc(
+    geometry,
+    crs = sf::st_crs(first),
+    precision = sf::st_precision(first)
+  )
+  result = sf::st_sf(
+    data,
+    sf_column_name = geometry_column,
+    agr = sf::st_agr(first)
+  )
+  result[, names(first), drop = FALSE]
+}
 
 #' Score one road endpoint continuation pair
 #'
@@ -4647,12 +5122,8 @@ select_render_road_continuations = function(
     ambiguity_direction_margin = 0.04
   }
 
-  # Use sf's distance index to enumerate nearby endpoint pairs from different fragments.
-  nearby = sf::st_is_within_distance(
-    endpoints,
-    endpoints,
-    dist = continuation_tolerance
-  )
+  # Query nearby endpoints without an all-pairs GEOS distance calculation.
+  nearby = find_render_road_point_neighbors(endpoints, continuation_tolerance)
   pair_index = lapply(seq_along(nearby), function(first) {
     second = nearby[[first]]
     second = second[
@@ -4688,7 +5159,7 @@ select_render_road_continuations = function(
       minimum_direction_score = minimum_direction_score
     )
   })
-  candidates = do.call(rbind, candidate_rows)
+  candidates = bind_render_road_topology_rows(candidate_rows)
 
   # An exact node containing only two road endpoints is already an unambiguous
   # topological continuation. Do not let a sharp bend split a named road into
@@ -4914,6 +5385,7 @@ build_render_road_prospective_solve_graph = function(
   )
   structure_profile_seed_id = fragment_id[
     fragments$render_road_layer > 0 |
+      is_truthy_render_road_osm_tag(fragments$render_road_bridge) |
       underground
   ]
   seed_fragment_id = unique(c(
@@ -5745,7 +6217,8 @@ identify_render_road_elevated_fragments = function(topology) {
     fragments$render_road_fragment_id
   )
   elevated = fragments$render_road_fragment_id[
-    fragments$render_road_layer > 0
+    fragments$render_road_layer > 0 |
+      is_truthy_render_road_osm_tag(fragments$render_road_bridge)
   ]
   if (nrow(topology$crossing_pairs)) {
     for (pair in seq_len(nrow(topology$crossing_pairs))) {
@@ -7580,6 +8053,10 @@ solve_render_road_profile_problem = function(
             eps_abs = absolute_tolerance,
             eps_rel = relative_tolerance,
             max_iter = as.integer(maximum_iterations),
+            # Rebalance primal/dual penalties more frequently: a 50-iteration
+            # interval can stall even small feasible road components. This
+            # changes convergence only, not the objective or engineering bounds.
+            adaptive_rho_interval = 25L,
             polishing = TRUE
           )
         )
@@ -7656,7 +8133,11 @@ solve_render_road_profile_problem = function(
         diagnostics = diagnostics
       ),
       class = c(
-        "render_road_profile_infeasible",
+        if (grepl("infeasible", tolower(status), fixed = TRUE)) {
+          "render_road_profile_infeasible"
+        } else {
+          "render_road_profile_solver_failure"
+        },
         "error",
         "condition"
       )
@@ -8824,7 +9305,7 @@ assemble_render_road_mesh_chain_tasks = function(
       if (!length(road_width) || !is.finite(road_width)) {
         road_width = NA_real_
       }
-      chain_member_rows[[member_index]] = data.frame(
+      chain_member_rows[[member_index]] = list2DF(list(
         mesh_chain_id = current_chain_id,
         road_path_task_id = current_task_id,
         render_road_fragment_id = fragment_id,
@@ -8837,9 +9318,8 @@ assemble_render_road_mesh_chain_tasks = function(
         chain_station_end = station_end,
         cap_start = !closed && member_index == 1L,
         cap_end = !closed && member_index == length(task_id),
-        closed = closed,
-        stringsAsFactors = FALSE
-      )
+        closed = closed
+      ))
       chain_station = station_end
       if (is.null(chain_points)) {
         chain_points = member_points
@@ -9415,14 +9895,18 @@ make_render_highquality_buffered_road_chain_mesh = function(
       fallback_task$points[1L, , drop = FALSE]
     )
   }
-  road_surface_clearance = 0.055
+  road_surface_clearance = resolve_render_road_surface_clearance(
+    task$heightmap,
+    task$zscale,
+    task$terrain_scale
+  )
   fallback_task$points[, 2] =
     fallback_task$points[, 2] + road_surface_clearance
   mesh = make_render_highquality_joined_water_path_mesh(
     tasks = list(fallback_task),
     seal_epsilon = 0,
     bottom_cap = TRUE,
-    height = 0.11,
+    height = 0.11 / task$zscale,
     extrusion_alignment = "below",
     return_mesh = isTRUE(task$return_mesh)
   )
@@ -9661,6 +10145,7 @@ expand_render_road_unstable_joins = function(
 #' @param closed Whether the path is periodic.
 #' @param miter_limit Maximum permitted miter scale.
 #' @param frames Default `NULL`. Optional precomputed vertex frames.
+#' @param terrain_context Default `NULL`. Call-scoped native terrain snapshot.
 #'
 #' @return Bottom and top edge positions, normals, and vertex frames.
 #' @keywords internal
@@ -9673,7 +10158,8 @@ calculate_render_road_vertex_sections = function(
   terrain_scale = c(1, 1),
   closed = FALSE,
   miter_limit = 4,
-  frames = NULL
+  frames = NULL,
+  terrain_context = NULL
 ) {
   points = as.matrix(points)
   if (is.null(frames)) {
@@ -9716,7 +10202,8 @@ calculate_render_road_vertex_sections = function(
     zscale = zscale,
     parallel = FALSE,
     verbose = FALSE,
-    terrain_scale = terrain_scale
+    terrain_scale = terrain_scale,
+    terrain_context = terrain_context
   )[[1L]]
   c(
     list(
@@ -11071,15 +11558,19 @@ group_render_highquality_road_preparations_by_terrain = function(
     preparation = preparations[[index]]
     task = preparation$task
     has_terrain = isTRUE(task$terrain_following) && is.matrix(task$heightmap)
+    # A solved bridge skips terrain sampling, but still needs the scene's
+    # elevation conversion for pavement thickness and its placement offset.
+    # Only share a native context when those units match, even without a DEM.
+    zscale = if (is.null(task$zscale)) 1 else task$zscale
     matched = FALSE
     for (group_index in seq_along(groups)) {
       group = groups[[group_index]]
       same_terrain = if (!has_terrain && !group$has_terrain) {
-        TRUE
+        identical(zscale, group$zscale)
       } else {
         has_terrain &&
           group$has_terrain &&
-          identical(task$zscale, group$zscale) &&
+          identical(zscale, group$zscale) &&
           identical(task$terrain_scale, group$terrain_scale) &&
           identical(task$heightmap, group$heightmap)
       }
@@ -11098,7 +11589,7 @@ group_render_highquality_road_preparations_by_terrain = function(
         } else {
           matrix(numeric(), nrow = 0L, ncol = 0L)
         },
-        zscale = if (has_terrain) task$zscale else 1,
+        zscale = zscale,
         terrain_scale = if (has_terrain) task$terrain_scale else c(1, 1)
       )
     }
@@ -11206,7 +11697,20 @@ prepare_render_highquality_road_chain_meshes = function(
     initialized,
     initialized_index
   )
+  # Stabilization can resample the same terrain many times. One owned native
+  # snapshot per terrain group serves densification, sections, and all retries.
+  # These handles die with this call; later renders always see current terrain.
+  terrain_contexts = vector("list", length(tasks))
   for (group in terrain_groups) {
+    terrain_context = create_render_road_terrain_context_cpp(
+      group$heightmap,
+      group$zscale,
+      group$terrain_scale
+    )
+    terrain_contexts[group$indices] = rep(
+      list(terrain_context),
+      length(group$indices)
+    )
     densified[group$indices] = densify_render_road_paths_batch_cpp(
       input_jobs = lapply(
         initialized[group$indices],
@@ -11217,7 +11721,8 @@ prepare_render_highquality_road_chain_meshes = function(
       zscale = group$zscale,
       parallel = parallel,
       verbose = verbose,
-      terrain_scale = group$terrain_scale
+      terrain_scale = group$terrain_scale,
+      terrain_context = terrain_context
     )
   }
   geometry_results = vector("list", length(tasks))
@@ -11253,6 +11758,7 @@ prepare_render_highquality_road_chain_meshes = function(
     geometry_index
   )
   for (group in section_groups) {
+    terrain_context = terrain_contexts[[group$indices[[1L]]]]
     section_data[group$indices] = sample_render_road_sections_batch_cpp(
       input_jobs = lapply(
         geometry[group$indices],
@@ -11263,7 +11769,8 @@ prepare_render_highquality_road_chain_meshes = function(
       zscale = group$zscale,
       parallel = parallel,
       verbose = verbose,
-      terrain_scale = group$terrain_scale
+      terrain_scale = group$terrain_scale,
+      terrain_context = terrain_context
     )
   }
   prepared_results = vector("list", length(tasks))
@@ -11298,7 +11805,8 @@ prepare_render_highquality_road_chain_meshes = function(
               tasks[[index]],
               list(
                 preparation_geometry = geometry[[index]],
-                precomputed_sections = sections
+                precomputed_sections = sections,
+                terrain_context = terrain_contexts[[index]]
               )
             )
           ),
@@ -11350,6 +11858,7 @@ prepare_render_highquality_road_chain_meshes = function(
 #' by the collection preparation queue.
 #' @param precomputed_sections Default `NULL`. Precomputed terrain-following
 #' road sections used by the collection preparation queue.
+#' @param terrain_context Default `NULL`. Call-scoped native terrain snapshot.
 #'
 #' @return Prepared native mesh job and R-only finalization metadata, or `NULL`.
 #' @keywords internal
@@ -11379,7 +11888,8 @@ prepare_render_highquality_road_chain_mesh = function(
   rgl_id = NULL,
   road_color = NULL,
   preparation_geometry = NULL,
-  precomputed_sections = NULL
+  precomputed_sections = NULL,
+  terrain_context = NULL
 ) {
   if (is.null(preparation_geometry)) {
     terrain_following = resolve_render_logical(
@@ -11588,7 +12098,8 @@ prepare_render_highquality_road_chain_mesh = function(
             terrain_scale = terrain_scale,
             closed = closed,
             miter_limit = miter_limit,
-            frames = stabilized_frames
+            frames = stabilized_frames,
+            terrain_context = terrain_context
           )
           remaining_inverted_segment = sort(unique(c(
             identify_render_road_inverted_surface_segments(

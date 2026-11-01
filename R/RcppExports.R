@@ -21,6 +21,10 @@ find_groups_cpp <- function(max_z_matrix) {
     .Call(`_rayshader_find_groups_cpp`, max_z_matrix)
 }
 
+instance_obj_cpp <- function(templates, template_id, xyz, scale) {
+    .Call(`_rayshader_instance_obj_cpp`, templates, template_id, xyz, scale)
+}
+
 interpolate_color <- function(color_nw, color_ne, color_se, color_sw) {
     .Call(`_rayshader_interpolate_color`, color_nw, color_ne, color_se, color_sw)
 }
@@ -89,6 +93,22 @@ psf <- function(image, blurmatrix, depthmap, depth, custombokeh, type, bokeh_int
     .Call(`_rayshader_psf`, image, blurmatrix, depthmap, depth, custombokeh, type, bokeh_intensity, bokeh_limit, rotation, progress_bar, channel)
 }
 
+initialize_water_geos_cpp <- function() {
+    invisible(.Call(`_rayshader_initialize_water_geos_cpp`))
+}
+
+build_polygon_water_meshes_cpp <- function(footprints, terrain, zscale, tolerance, clearance, threads) {
+    .Call(`_rayshader_build_polygon_water_meshes_cpp`, footprints, terrain, zscale, tolerance, clearance, threads)
+}
+
+water_triangle_rings_cpp <- function(a, b, c, ids) {
+    .Call(`_rayshader_water_triangle_rings_cpp`, a, b, c, ids)
+}
+
+water_support_samples_cpp <- function(coordinates, face, a, b, c, exterior, tolerance) {
+    .Call(`_rayshader_water_support_samples_cpp`, coordinates, face, a, b, c, exterior, tolerance)
+}
+
 rayshade_cpp <- function(sun_angle, angle_breaks, heightmap, zscale, max_search, cache_mask, progress_bar, row_scale, column_scale) {
     .Call(`_rayshader_rayshade_cpp`, sun_angle, angle_breaks, heightmap, zscale, max_search, cache_mask, progress_bar, row_scale, column_scale)
 }
@@ -113,12 +133,16 @@ build_render_road_section_mesh_cpp <- function(left_bottom_matrix, right_bottom_
     .Call(`_rayshader_build_render_road_section_mesh_cpp`, left_bottom_matrix, right_bottom_matrix, left_top_matrix, right_top_matrix, incoming_tangent, outgoing_tangent, texture_v, closing_v, bbox_center, top_left_normal_matrix, top_right_normal_matrix, bottom_left_normal_matrix, bottom_right_normal_matrix, cap_start, cap_end, closed, parallel, geometry_tolerance, uv_tolerance)
 }
 
-densify_render_road_paths_batch_cpp <- function(input_jobs, heightmap, zscale, parallel, verbose, terrain_scale = NULL) {
-    .Call(`_rayshader_densify_render_road_paths_batch_cpp`, input_jobs, heightmap, zscale, parallel, verbose, terrain_scale)
+create_render_road_terrain_context_cpp <- function(heightmap, zscale, terrain_scale = NULL) {
+    .Call(`_rayshader_create_render_road_terrain_context_cpp`, heightmap, zscale, terrain_scale)
 }
 
-sample_render_road_sections_batch_cpp <- function(input_jobs, heightmap, zscale, parallel, verbose, terrain_scale = NULL) {
-    .Call(`_rayshader_sample_render_road_sections_batch_cpp`, input_jobs, heightmap, zscale, parallel, verbose, terrain_scale)
+densify_render_road_paths_batch_cpp <- function(input_jobs, heightmap, zscale, parallel, verbose, terrain_scale = NULL, terrain_context = NULL) {
+    .Call(`_rayshader_densify_render_road_paths_batch_cpp`, input_jobs, heightmap, zscale, parallel, verbose, terrain_scale, terrain_context)
+}
+
+sample_render_road_sections_batch_cpp <- function(input_jobs, heightmap, zscale, parallel, verbose, terrain_scale = NULL, terrain_context = NULL) {
+    .Call(`_rayshader_sample_render_road_sections_batch_cpp`, input_jobs, heightmap, zscale, parallel, verbose, terrain_scale, terrain_context)
 }
 
 build_render_highquality_road_mesh_batch_cpp <- function(input_jobs, parallel, verbose) {
@@ -135,6 +159,10 @@ build_render_highquality_stream_mesh_batch_cpp <- function(input_jobs, heightmap
 
 sample_render_road_terrain_contacts_cpp <- function(vertices, indices, station, heightmap, zscale, terrain_scale, grade_terrain = FALSE) {
     .Call(`_rayshader_sample_render_road_terrain_contacts_cpp`, vertices, indices, station, heightmap, zscale, terrain_scale, grade_terrain)
+}
+
+sample_render_road_terrain_contacts_batch_cpp <- function(input_jobs, heightmap, zscale, terrain_scale, parallel = FALSE, terrain_context = NULL) {
+    .Call(`_rayshader_sample_render_road_terrain_contacts_batch_cpp`, input_jobs, heightmap, zscale, terrain_scale, parallel, terrain_context)
 }
 
 evaluate_render_road_profiles_cpp <- function(fragment_index, distance, control_start, control_count, control_row, control_distance, height, grade) {

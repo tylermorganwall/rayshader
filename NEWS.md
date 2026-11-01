@@ -2,6 +2,15 @@
 
 ## New features
 
+- `render_water()` Builds exact-polygon water meshes in native code using
+  `libgeos`. Large batches use threads sharing one terrain snapshot, avoiding
+  separate R worker startup and terrain copies. Uses `options(cores = ...)`;
+  `parallel = FALSE` selects one thread. Geometry diagnostics retain input order.
+  Terrain coverage and missing-data holes are computed once per call; only
+  shoreline-crossing triangles need full polygon intersections. Mask boundaries
+  form closed sidewalls, while interior vertices retain terrain minima and
+  water-surface clearance checks.
+
 - `render_water()` Adds exact-footprint `water_render_method = "polygon"`,
   now the default in `render_water()` and `plot_3d()`. It extrudes water from
   the lowest rendered terrain beneath each polygon while
@@ -30,6 +39,65 @@
   independent of scene size and camera position.
 
 ## Bugfixes
+
+- `render_roads()` Preserves elevation scaling when batch-building solved roads
+  and bridges, preventing their pavement thickness and placement offset from
+  being interpreted as scene units instead of elevation units.
+
+- `render_roads()` Keeps opaque pavement at a fixed 0.11 elevation-unit thickness,
+  independent of its placement clearance. Bridge-only inputs retain shared
+  junctions with untagged surface approaches, including branching ramps, so
+  connected approaches participate in the profile solve.
+
+- `plot_gg()` Reuses the built height plot when drawing its image, avoiding a
+  redundant evaluation of raster statistics and keeping the image consistent
+  with the computed panel metadata.
+
+- `render_roads()` Uses indexed proximity queries for crossing events and road
+  endpoints, avoiding all-pairs distance searches on large networks while
+  preserving the same exact distance tolerances and neighbor relationships.
+
+- `render_roads()` Preserves clipped road-part identity through profile solving,
+  terrain grading, and meshing, including loop-and-tail and multipart features.
+  Improves convergence for small feasible profile components without relaxing
+  engineering constraints, and distinguishes solver failure from infeasibility.
+
+- `render_roads()` Samples terrain beneath sharp and reversing road joins without generating nonfinite coordinates from rejected miter scales.
+
+- `render_roads()` Automatically uses OSM `bridge` and `layer` columns. Adds a configurable `bridge` column and activates bridge profiles even when layer metadata or road crossings are absent, retaining explicit layer ordering.
+
+- `render_highquality()` Avoids fetching materials for unrelated rgl objects during tag-specific queries, reducing preparation time in scenes with many road previews.
+
+- `render_roads()` Scales pavement clearance and thickness by the effective
+  zscale instead of treating them as scene units, avoiding meter-high road
+  slabs. Retains a small float-precision margin against z-fighting. Reduces
+  metadata-table overhead and defers redraws while removing previous roads.
+
+- `render_tree()` Defaults to `load_normals = FALSE` for full and cached tree
+  rendering, avoiding smooth-normal artifacts on low-poly crowns. Use
+  `load_normals = TRUE` to opt back into the model's vertex normals.
+
+- `render_water()` Separates polygon water bottom caps from the underlying
+  terrain, preventing dark triangular z-fighting artifacts in high-quality
+  renders without moving the visible water surface or shoreline.
+
+- `render_water()` Uploads exact-polygon water as one triangle object and
+  defers visible-window redraws until the batch and optional lines are added,
+  avoiding an object and a full scene repaint for every polygon. Preserves
+  disconnected geometry and restores the caller's redraw setting after success,
+  errors, or interruption.
+
+- `render_tree()` and `render_obj()` Prepare repeated meshes faster by batching
+  unrotated OBJ instance construction in native code and reusing materials.
+  Rotated models retain the general transformation path.
+  Geometry, normals, texture coordinates, and material assignments are preserved.
+
+- `render_tree()` Discards negative tree sizes while preserving the alignment of
+  per-tree colors, dimensions, and rotations. Absolute elevations are converted
+  to sizes above the terrain before this filter.
+
+- `render_water()` Uses native terrain sampling to reduce construction time while preserving
+  the exact terrain intersections, water levels, footprints, and waterlines.
 
 - `render_multipolygonz()`, `render_raymesh()`, and `render_obj()` Align absolute
   spatial meshes with points and roads, without a horizontal offset that changes
@@ -100,6 +168,21 @@
   vertical scaling, keeping polygon bases between the scene base and surface.
 
 ## Other
+
+- `render_roads()` Avoids repeated CRS parsing and growing spatial-table binds
+  when preparing road crossings and continuations. `verbose = TRUE` now reports
+  profile preparation and solving stages before mesh construction begins.
+
+- `render_roads()` Batches bridge-profile terrain contacts across native threads
+  when `parallel = TRUE`. Roads share one terrain snapshot instead of copying
+  and rescanning the full raster for each path. The serial fallback shares the
+  same snapshot; terrain-contact geometry and profile constraints are unchanged.
+
+- `render_roads()` Reuses one owned native terrain snapshot across road
+  densification, cross-sections, and stabilization retries. This avoids repeated
+  full-raster copies and precision scans without changing mesh geometry. The
+  snapshot lasts only for the current call, so terrain edits are picked up on
+  the next call.
 
 - `render_polygons()` Uses `rayvertex::extruded_polygon_mesh()` for extrusion.
 - Overall: Joined descriptive argument names now use snake case throughout the public API.

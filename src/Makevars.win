@@ -1,0 +1,2 @@
+# Windows uses the standard Rtools linker settings.
+# Override Makevars to skip the Unix RcppThread::LdFlags() probe.

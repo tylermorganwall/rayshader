@@ -30,7 +30,8 @@ prepare_render_highquality_road_chain_mesh(
   rgl_id = NULL,
   road_color = NULL,
   preparation_geometry = NULL,
-  precomputed_sections = NULL
+  precomputed_sections = NULL,
+  terrain_context = NULL
 )
 }
 \arguments{
@@ -91,6 +92,8 @@ by the collection preparation queue.}
 
 \item{precomputed_sections}{Default \code{NULL}. Precomputed terrain-following
 road sections used by the collection preparation queue.}
+
+\item{terrain_context}{Default \code{NULL}. Call-scoped native terrain snapshot.}
 }
 \value{
 Prepared native mesh job and R-only finalization metadata, or \code{NULL}.

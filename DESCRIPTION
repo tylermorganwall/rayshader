@@ -11,7 +11,8 @@ Description: Uses a combination of raytracing and multiple hill shading methods 
 License: GPL-3
 LazyData: true
 Depends: R (>= 4.1)
-Imports: doParallel,
+Imports: libgeos (>= 3.11.1-3),
+         doParallel,
          foreach,
          Rcpp,
          progress,
@@ -61,7 +62,7 @@ Suggests:
 	skymodelr,
 	systemfonts,
 	tigris
-LinkingTo: Rcpp, RcppThread (>= 2.4.0), progress, RcppArmadillo
+LinkingTo: libgeos (>= 3.11.1-3), decido, Rcpp, RcppThread (>= 2.4.0), progress, RcppArmadillo
 Roxygen: list(markdown = TRUE)
 Encoding: UTF-8
 URL: https://www.rayshader.com,
