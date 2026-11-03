@@ -185,7 +185,10 @@ new_render_highquality_progress_bar = function(verbose, label, total) {
 #'@param clear Default `FALSE`. If `TRUE`, the current `rgl` device will be cleared.
 #'@param print_scene_info Default `FALSE`. If `TRUE`, it will print the position and lookat point of the camera.
 #'@param clamp_value Default `1000`. Radiance clamp value. If `NA`, uses `1000`.
-#'@param return_scene Default `FALSE`. If `TRUE`, this will return the rayrender scene (instead of rendering the image).
+#'@param return_scene Default `FALSE`. If `TRUE`, returns a rayrender scene with
+#' its resolved camera and render defaults. Asset files are not embedded.
+#' Use `rayrender::write_usd()` for an explicit export that collects referenced
+#' assets, then restore it with `rayrender::read_usd()` in a later session.
 #'@param load_normals Default `TRUE`. Whether to load the vertex normals if they exist in the OBJ file.
 #'@param calculate_consistent_normals Default `FALSE`. Whether to calculate consistent vertex normals to prevent energy
 #'loss at edges.
@@ -2116,23 +2119,6 @@ render_highquality = function(
   }
 
   report_phase()
-  if (return_scene) {
-    attr(scene, "screen_text") = screen_text_objects
-    attr(scene, "screen_line") = screen_line_objects
-    if (!is.null(native_sky_light)) {
-      attr(scene, "integrator_type") = dot_args$integrator_type
-      attr(scene, "rotate_env") = dot_args$rotate_env
-    }
-    if (!is.null(sky_file)) {
-      attr(scene, "environment_light") = sky_file
-      attr(scene, "environment_light_bake_white") =
-        sky_environment_light_bake_white
-      if ("rotate_env" %in% names(dot_args)) {
-        attr(scene, "rotate_env") = dot_args$rotate_env
-      }
-    }
-    return(scene)
-  }
 
   if (!is.null(animation_camera_coords)) {
     if (
@@ -2171,8 +2157,10 @@ render_highquality = function(
         animation_args$environment_light_bake_white = TRUE
       }
     }
-    do.call(rayrender::render_animation, c(animation_args, dot_args))
-    return()
+    if (!return_scene) {
+      do.call(rayrender::render_animation, c(animation_args, dot_args))
+      return()
+    }
   }
 
   render_scene_args = list(
@@ -2211,6 +2199,48 @@ render_highquality = function(
   )
   if (length(duplicate_render_scene_args) > 0) {
     dot_args[duplicate_render_scene_args] = NULL
+  }
+  if (return_scene) {
+    required_exports = c(
+      "camera",
+      "add_camera"
+    )
+    if (!all(required_exports %in% getNamespaceExports("rayrender"))) {
+      stop(
+        "return_scene = TRUE requires a rayrender version with scene cameras.",
+        call. = FALSE
+      )
+    }
+    # Reuse the final renderer arguments, including overrides from ... . Camera
+    # positions here already use rayrender coordinates and the resolved rgl view.
+    saved_args = c(render_scene_args, dot_args)
+    camera_fields = intersect(
+      names(saved_args),
+      names(formals(rayrender::camera))
+    )
+    camera_fields = setdiff(camera_fields, c("name", "filename"))
+    camera_args = saved_args[camera_fields]
+    if (!is.null(animation_camera_coords_rayrender)) {
+      camera_args$motion = animation_camera_coords_rayrender
+    }
+    saved_camera = do.call(
+      rayrender::camera,
+      c(camera_args, list(name = "rayshader"))
+    )
+    scene = rayrender::add_camera(scene, saved_camera, replace = TRUE)
+    setting_names = setdiff(
+      names(saved_args),
+      c("scene", "filename", "camera", camera_fields)
+    )
+    # Settings are scene metadata, automatically captured from the resolved
+    # renderer arguments and preserved by USD export/import.
+    settings = attr(scene, "ray_render_settings", exact = TRUE)
+    if (is.null(settings)) {
+      settings = list()
+    }
+    settings[setting_names] = saved_args[setting_names]
+    attr(scene, "ray_render_settings") = settings
+    return(scene)
   }
   render_scene_call = function(extra_args = list()) {
     if (verbose) {

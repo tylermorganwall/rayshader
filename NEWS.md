@@ -2,6 +2,10 @@
 
 ## New features
 
+- `render_highquality()` Returns scenes with a resolved camera and render defaults
+  when `return_scene = TRUE`. Asset collection is explicit through rayrender's
+  `write_usd()`; ordinary returns no longer embed textures.
+
 - `render_roads()` Moves intersection, continuation, neighbor-search, and event
   preparation into native batches, avoiding per-contact spatial-object allocation.
   Indexes endpoint candidates instead of repeatedly scanning the whole network.

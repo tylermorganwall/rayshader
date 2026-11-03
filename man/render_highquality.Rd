@@ -303,7 +303,10 @@ and \code{camera_lookat} vectors.}
 
 \item{clear}{Default \code{FALSE}. If \code{TRUE}, the current \code{rgl} device will be cleared.}
 
-\item{return_scene}{Default \code{FALSE}. If \code{TRUE}, this will return the rayrender scene (instead of rendering the image).}
+\item{return_scene}{Default \code{FALSE}. If \code{TRUE}, returns a rayrender scene with
+its resolved camera and render defaults. Asset files are not embedded.
+Use \code{rayrender::write_usd()} for an explicit export that collects referenced
+assets, then restore it with \code{rayrender::read_usd()} in a later session.}
 
 \item{print_scene_info}{Default \code{FALSE}. If \code{TRUE}, it will print the position and lookat point of the camera.}
 
