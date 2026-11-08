@@ -286,3 +286,4 @@ build_gh_pages_rayshader.R
 tests/testthat/fixtures/spatial/DC_Trees.geojson
 README_cache/**/*
 .Rprofile
+road-profile-screen-inputs/*

@@ -55,6 +55,9 @@
 
 ## Bugfixes
 
+- `render_highquality()` Falls back to spherical lights when the installed
+  rayrender does not export disk-light support.
+
 - `render_highquality()` Reuses one rgl ID snapshot and skips unused preview materials during conversion. `verbose = TRUE` reports conversion phase timings and enables rayrender construction timings.
 
 - `plot_gg()` Preserves source elevation precision in single-panel numeric

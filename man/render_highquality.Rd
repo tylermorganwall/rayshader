@@ -102,7 +102,7 @@ The other options are \code{random} (worst quality but fastest),
 Smaller numbers give higher quality images, at the expense of longer rendering times.
 If this is set to zero, the adaptive sampler will be turned off and the renderer will use the maximum number of samples everywhere.}
 
-\item{light}{Default \code{TRUE}. Whether to illuminate the scene with an infinite disk light from \code{rayrender::disk_light()}. If not, the scene will be lit with a bluish sky.}
+\item{light}{Default \code{TRUE}. Whether to illuminate the scene with an infinite disk light from \code{rayrender::disk_light()}, or a spherical light on older rayrender versions. If not, the scene will be lit with a bluish sky.}
 
 \item{lat}{Default \code{NA}. Latitude (degrees) for automatic sky generation.
 When latitude, longitude, and datetime are available, uses \code{rayrender::sky_light()}
@@ -168,7 +168,7 @@ If this is a vector longer than one, multiple lights will be generated (using va
 If this is a vector longer than one, multiple lights will be generated (using values from
 \code{light_direction}, \code{light_intensity}, and \code{light_color})}
 
-\item{light_size}{Default \code{5}. Full angular diameter of the disk light(s), in degrees, greater than 0 and less than 180. Independent of scene size and camera position.}
+\item{light_size}{Default \code{5}. Full angular diameter of the disk light(s), in degrees, greater than 0 and less than 180. Independent of scene size and camera position. On older rayrender versions without disk lights, this is the spherical light radius in scene units; \code{NULL} uses one fifth of the rgl observer radius.}
 
 \item{light_intensity}{Default \code{500}. Intensity of the light.}
 

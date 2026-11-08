@@ -43,7 +43,7 @@ new_render_highquality_progress_bar = function(verbose, label, total) {
 #'@param min_variance Default `1e-6`. Minimum acceptable variance for a block of pixels for the adaptive sampler.
 #'Smaller numbers give higher quality images, at the expense of longer rendering times.
 #'If this is set to zero, the adaptive sampler will be turned off and the renderer will use the maximum number of samples everywhere.
-#'@param light Default `TRUE`. Whether to illuminate the scene with an infinite disk light from `rayrender::disk_light()`. If not, the scene will be lit with a bluish sky.
+#'@param light Default `TRUE`. Whether to illuminate the scene with an infinite disk light from `rayrender::disk_light()`, or a spherical light on older rayrender versions. If not, the scene will be lit with a bluish sky.
 #'@param lat Default `NA`. Latitude (degrees) for automatic sky generation.
 #'When latitude, longitude, and datetime are available, uses `rayrender::sky_light()`
 #'with detailed Sun and Moon disks if supported by the installed rayrender and skymodelr.
@@ -97,7 +97,7 @@ new_render_highquality_progress_bar = function(verbose, label, total) {
 #'@param light_altitude Default `45`. Angle above the horizon that the light is located.
 #'If this is a vector longer than one, multiple lights will be generated (using values from
 #'`light_direction`, `light_intensity`, and `light_color`)
-#'@param light_size Default `5`. Full angular diameter of the disk light(s), in degrees, greater than 0 and less than 180. Independent of scene size and camera position.
+#'@param light_size Default `5`. Full angular diameter of the disk light(s), in degrees, greater than 0 and less than 180. Independent of scene size and camera position. On older rayrender versions without disk lights, this is the spherical light radius in scene units; `NULL` uses one fifth of the rgl observer radius.
 #'@param light_intensity Default `500`. Intensity of the light.
 #'@param light_color Default `white`. The color of the light.
 #'@param water_attenuation Default `0`, no attenuation. Amount that light should be attenuated when traveling through water. This
@@ -2050,8 +2050,15 @@ render_highquality = function(
   }
 
   scene = rayrender::group_objects(scene, angle = c(0, 180, 0))
-  # Infinite light directions use the final, rotated scene coordinates.
+  # Both light types use the final, rotated scene coordinates.
   if (light) {
+    use_disk_light = all(
+      c("disk_light", "add_infinite_light") %in%
+        getNamespaceExports("rayrender")
+    )
+    if (!use_disk_light && is.null(light_size)) {
+      light_size = observer_radius / 5
+    }
     if (length(light_altitude) >= 1 || length(light_direction) >= 1) {
       if (
         length(light_altitude) > 1 &&
@@ -2092,22 +2099,40 @@ render_highquality = function(
         if (!is.na(light_size[i])) {
           light_size_temp = light_size[i]
         }
-        scene = rayrender::add_infinite_light(
-          scene,
-          rayrender::disk_light(
-            direction = c(
-              -cospi(light_altitude_temp / 180) *
-                sinpi(light_direction_temp / 180),
-              sinpi(light_altitude_temp / 180),
-              cospi(light_altitude_temp / 180) *
-                cospi(light_direction_temp / 180)
-            ),
-            angular_diameter = light_size_temp,
-            color = light_color_temp,
-            intensity = light_intensity_temp,
-            name = paste0("rayshader_light_", i)
-          )
+        light_vector = c(
+          -cospi(light_altitude_temp / 180) * sinpi(light_direction_temp / 180),
+          sinpi(light_altitude_temp / 180),
+          cospi(light_altitude_temp / 180) * cospi(light_direction_temp / 180)
         )
+        if (use_disk_light) {
+          scene = rayrender::add_infinite_light(
+            scene,
+            rayrender::disk_light(
+              direction = light_vector,
+              angular_diameter = light_size_temp,
+              color = light_color_temp,
+              intensity = light_intensity_temp,
+              name = paste0("rayshader_light_", i)
+            )
+          )
+        } else {
+          # Preserve the former finite light's distance and radius. Its position
+          # already includes the 180-degree scene rotation applied above.
+          light_position = observer_radius * 5 * light_vector
+          scene = rayrender::add_object(
+            scene,
+            rayrender::sphere(
+              x = light_position[1],
+              y = light_position[2],
+              z = light_position[3],
+              radius = light_size_temp,
+              material = rayrender::light(
+                color = light_color_temp,
+                intensity = light_intensity_temp
+              )
+            )
+          )
+        }
       }
     }
   }
