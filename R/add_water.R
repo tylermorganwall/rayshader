@@ -12,6 +12,7 @@
 #'@param color Default `imhof1`. The water fill color. A hexcode or recognized color string.
 #'Also includes built-in colors to match the palettes included in [sphere_shade()]:
 #'(`imhof1`,`imhof2`,`imhof3`,`imhof4`, `desert`, `bw`, and `unicorn`).
+#' @param ... Deprecated argument spellings are accepted with a warning and forwarded to their current names.
 #'@importFrom grDevices col2rgb rainbow
 #'@return A three-dimensional RGB array with water cells colored. The result is
 #'cached as the current shaded map without changing the cached terrain.
@@ -32,7 +33,16 @@
 #'  sphere_shade(texture = "imhof4", vertical_exaggeration = 20) |>
 #'  add_water(montereybay_spatial < 0, color = "imhof4") |>
 #'  plot_map()
-add_water = function(hillshade, water_map, color = "imhof1") {
+add_water = function(hillshade, water_map, color = "imhof1", ...) {
+  deprecated_call = deprecated_argument_call(
+    match.call(expand.dots = FALSE),
+    c(watermap = "water_map"),
+    "add_water",
+    allow_dots = FALSE
+  )
+  if (!is.null(deprecated_call)) {
+    return(eval(deprecated_call, parent.frame()))
+  }
   force(hillshade)
   if (missing(water_map)) {
     stop(

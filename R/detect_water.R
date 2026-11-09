@@ -24,6 +24,7 @@
 #'omitted, rayshader uses matching cached metadata when available.
 #'@param crs Default `NULL`. CRS describing the input heightmap. An explicit
 #'value overrides embedded metadata on a copy of the input.
+#' @param ... Deprecated argument spellings are accepted with a warning and forwarded to their current names.
 #'@return Matrix indicating whether water was detected at that point. 1 indicates water, 0 indicates no water.
 #'@export
 #'@examples
@@ -47,8 +48,18 @@ detect_water = function(
   progress_bar = FALSE,
   geographic_aspect = TRUE,
   extent = NULL,
-  crs = NULL
+  crs = NULL,
+  ...
 ) {
+  deprecated_call = deprecated_argument_call(
+    match.call(expand.dots = FALSE),
+    c(normalvectors = "normal_vectors", progbar = "progress_bar"),
+    "detect_water",
+    allow_dots = FALSE
+  )
+  if (!is.null(deprecated_call)) {
+    return(eval(deprecated_call, parent.frame()))
+  }
   heightmap_missing = missing(heightmap) || is.null(heightmap)
   extent_missing = missing(extent)
   crs_missing = missing(crs)

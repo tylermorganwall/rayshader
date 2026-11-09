@@ -4,7 +4,7 @@
 \alias{add_water}
 \title{Add Water}
 \usage{
-add_water(hillshade, water_map, color = "imhof1")
+add_water(hillshade, water_map, color = "imhof1", ...)
 }
 \arguments{
 \item{hillshade}{A three-dimensional RGB array.}
@@ -19,6 +19,8 @@ context is available; masks are not reprojected or resampled.}
 \item{color}{Default \code{imhof1}. The water fill color. A hexcode or recognized color string.
 Also includes built-in colors to match the palettes included in \code{\link[=sphere_shade]{sphere_shade()}}:
 (\code{imhof1},\code{imhof2},\code{imhof3},\code{imhof4}, \code{desert}, \code{bw}, and \code{unicorn}).}
+
+\item{...}{Deprecated argument spellings are accepted with a warning and forwarded to their current names.}
 }
 \value{
 A three-dimensional RGB array with water cells colored. The result is

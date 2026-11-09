@@ -16,7 +16,8 @@ spatialize_image(
   layer_names = NULL,
   include_height = FALSE,
   heightmap = NULL,
-  height_layer_name = "height"
+  height_layer_name = "height",
+  ...
 )
 }
 \arguments{
@@ -70,6 +71,8 @@ require an explicit \code{heightmap} for height export.}
 
 \item{height_layer_name}{Default \code{"height"}. Name of the appended height
 layer when \code{include_height = TRUE}.}
+
+\item{...}{Deprecated argument spellings are accepted with a warning and forwarded to their current names.}
 }
 \value{
 A \code{terra::SpatRaster}.

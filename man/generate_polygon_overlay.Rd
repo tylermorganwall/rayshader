@@ -15,7 +15,8 @@ generate_polygon_overlay(
   data_column_fill = NULL,
   line_color = "black",
   palette = "white",
-  linewidth = 1
+  linewidth = 1,
+  ...
 )
 }
 \arguments{
@@ -54,6 +55,8 @@ it will map the colors in the vector to the names. If \code{data_column_fill} is
 this will give a continuous mapping.}
 
 \item{linewidth}{Default \code{1}. Line width.}
+
+\item{...}{Deprecated argument spellings are accepted with a warning and forwarded to their current names.}
 }
 \value{
 Image overlay representing the input polygon data.

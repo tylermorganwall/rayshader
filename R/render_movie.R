@@ -26,6 +26,7 @@
 #'@param progress_bar Default `TRUE` if interactive, `FALSE` otherwise. If `FALSE`, turns off progress bar.
 #'Will display a progress bar when adding an overlay or title.
 #'@param ... Additional parameters to pass to [render_snapshot()].
+#' Deprecated argument spellings are accepted with a warning and forwarded to their current names.
 #'@export
 #'@examples
 #'if(interactive()) {
@@ -81,6 +82,14 @@ render_movie = function(
   progress_bar = interactive(),
   ...
 ) {
+  deprecated_call = deprecated_argument_call(
+    match.call(expand.dots = FALSE),
+    c(progbar = "progress_bar"),
+    "render_movie"
+  )
+  if (!is.null(deprecated_call)) {
+    return(eval(deprecated_call, parent.frame()))
+  }
   if (rgl::cur3d() == 0) {
     stop("No rgl window currently open.")
   }
@@ -251,15 +260,16 @@ render_movie_hq = function(
     scene = scene,
     camera_motion = camera_motion
   )
+  settings = attr(scene, "ray_render_settings", exact = TRUE)
   # Preserve explicit sky settings independently; an omitted integrator uses
   # rayrender's default and must not prevent forwarding the sky rotation.
   for (setting in c("integrator_type", "rotate_env")) {
-    value = attr(scene, setting, exact = TRUE)
+    value = settings[[setting]]
     if (!is.null(value) && !(setting %in% names(dot_args))) {
       animation_args[[setting]] = value
     }
   }
-  environment_light = attr(scene, "environment_light", exact = TRUE)
+  environment_light = settings$environment_light
   if (!is.null(environment_light)) {
     if ("environment_light" %in% names(dot_args)) {
       warning(
@@ -269,7 +279,7 @@ render_movie_hq = function(
       dot_args$environment_light = NULL
     }
     animation_args$environment_light = environment_light
-    rotate_env = attr(scene, "rotate_env", exact = TRUE)
+    rotate_env = settings$rotate_env
     if (!is.null(rotate_env)) {
       if ("rotate_env" %in% names(dot_args)) {
         warning(
@@ -280,11 +290,7 @@ render_movie_hq = function(
       }
       animation_args$rotate_env = rotate_env
     }
-    environment_light_bake_white = attr(
-      scene,
-      "environment_light_bake_white",
-      exact = TRUE
-    )
+    environment_light_bake_white = settings$environment_light_bake_white
     if (
       isTRUE(environment_light_bake_white) &&
         "environment_light_bake_white" %in% names(render_animation_formals)

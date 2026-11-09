@@ -8,6 +8,7 @@
 #'1 means the shadow map will have no effect.
 #'@param rescale_original Default `FALSE`. If `TRUE`, `hillshade` will be scaled to match the dimensions of `shadow_map` (instead of
 #'the other way around).
+#' @param ... Deprecated argument spellings are accepted with a warning and forwarded to their current names.
 #'@return Shaded texture map.
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
@@ -38,8 +39,18 @@ add_shadow = function(
   hillshade,
   shadow_map,
   max_darken = 0.7,
-  rescale_original = FALSE
+  rescale_original = FALSE,
+  ...
 ) {
+  deprecated_call = deprecated_argument_call(
+    match.call(expand.dots = FALSE),
+    c(shadowmap = "shadow_map"),
+    "add_shadow",
+    allow_dots = FALSE
+  )
+  if (!is.null(deprecated_call)) {
+    return(eval(deprecated_call, parent.frame()))
+  }
   force(hillshade)
   hillshade_cache_label = get_hillshade_map_label(
     default = format_scene_cache_label(deparse(substitute(hillshade)))

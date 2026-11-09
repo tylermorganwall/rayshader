@@ -158,7 +158,8 @@ spacing in the temporary radiance scene.}
 \item{crs}{Default \code{NULL}. CRS to assign to the input before calculating
 metric cell spacing.}
 
-\item{...}{Additional parameters passed to \code{\link[=render_highquality]{render_highquality()}}.}
+\item{...}{Additional parameters passed to \code{\link[=render_highquality]{render_highquality()}}.
+Deprecated argument spellings are accepted with a warning and forwarded to their current names.}
 }
 \value{
 RGBA array representing the top-down radiance render.

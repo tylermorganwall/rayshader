@@ -69,7 +69,8 @@ spacing using the input extent and CRS.}
 \item{crs}{Default \code{NULL}. CRS to assign to the input before calculating
 metric cell spacing.}
 
-\item{...}{Additional arguments to pass to the \code{makeCluster} function when \code{multicore=TRUE}.}
+\item{...}{Additional arguments to pass to the \code{makeCluster} function when \code{multicore=TRUE}.
+Deprecated argument spellings are accepted with a warning and forwarded to their current names.}
 }
 \value{
 Matrix of light intensities at each point.

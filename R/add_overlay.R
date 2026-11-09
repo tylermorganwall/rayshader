@@ -14,6 +14,7 @@
 #'@param color_epsilon Default `1e-3`. Tolerance for equality for alpha_color to determine transparency.
 #'@param rescale_original Default `FALSE`. If `TRUE`, `hillshade` will be scaled to match the dimensions of `overlay` (instead of
 #'the other way around).
+#' @param ... Deprecated argument spellings are accepted with a warning and forwarded to their current names.
 #'@return Hillshade with overlay.
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
@@ -37,8 +38,22 @@ add_overlay = function(
   alpha_color = NULL,
   alpha_method = "max",
   color_epsilon = 1e-3,
-  rescale_original = FALSE
+  rescale_original = FALSE,
+  ...
 ) {
+  deprecated_call = deprecated_argument_call(
+    match.call(expand.dots = FALSE),
+    c(
+      alphalayer = "alpha_layer",
+      alphacolor = "alpha_color",
+      alphamethod = "alpha_method"
+    ),
+    "add_overlay",
+    allow_dots = FALSE
+  )
+  if (!is.null(deprecated_call)) {
+    return(eval(deprecated_call, parent.frame()))
+  }
   force(hillshade)
   hillshade_cache_label = get_hillshade_map_label(
     default = format_scene_cache_label(deparse(substitute(hillshade)))

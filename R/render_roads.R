@@ -142,6 +142,7 @@
 #' values retain their ordering; missing bridge layers infer layer `1`, while
 #' ordinary missing layers remain `0`. Pass `layer = NULL, bridge = NULL` to
 #' disable automatic structure profiles and use terrain-following roads.
+#' @param ... Deprecated argument spellings are accepted with a warning and forwarded to their current names.
 #' @return Invisibly returns the rendered road coordinates. When `layer` or
 #' `bridge` metadata is used, the result has `terrain_following`, `profile_diagnostics`, and
 #' `mesh_topology` attributes describing the sparse profile solve and selected
@@ -182,8 +183,18 @@ render_roads = function(
   vertical_exaggeration = 1,
   heightmap = NULL,
   terrain_grading = FALSE,
-  bridge = NULL
+  bridge = NULL,
+  ...
 ) {
+  deprecated_call = deprecated_argument_call(
+    match.call(expand.dots = FALSE),
+    c(roadcolor = "road_color"),
+    "render_roads",
+    allow_dots = FALSE
+  )
+  if (!is.null(deprecated_call)) {
+    return(eval(deprecated_call, parent.frame()))
+  }
   if (
     !is.logical(terrain_grading) ||
       length(terrain_grading) != 1L ||
@@ -1473,7 +1484,9 @@ build_render_road_path_mesh_members = function(
     members$render_road_fragment_id[
       path_rows
     ] = fragments$render_road_fragment_id
-    members$render_road_feature_id[path_rows] = fragments$render_road_feature_id
+    members$render_road_feature_id[
+      path_rows
+    ] = fragments$render_road_feature_id
     members$render_road_layer[path_rows] = fragments$render_road_layer
     members$mapping_status[path_rows] = "mapped"
     return(members)
@@ -3019,7 +3032,12 @@ reduce_render_road_terrain_contacts = function(contacts, job, heightmap) {
 #' @return Footprint vertices, one-based triangles, and per-vertex stations.
 #' @keywords internal
 #' @noRd
-build_render_road_contact_footprint = function(points, width, station, frames) {
+build_render_road_contact_footprint = function(
+  points,
+  width,
+  station,
+  frames
+) {
   # An NA miter scale marks a deliberately rejected sharp miter, not bad input.
   # Preserve ordinary miter sections exactly. At rounded corners use separate
   # incoming/outgoing sections at the same station, avoiding an unbounded miter.

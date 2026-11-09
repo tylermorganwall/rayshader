@@ -16,7 +16,8 @@ generate_contour_overlay(
   linewidth = 1,
   geographic_aspect = TRUE,
   extent = NULL,
-  crs = NULL
+  crs = NULL,
+  ...
 )
 }
 \arguments{
@@ -53,6 +54,8 @@ spatial metadata when deriving the default horizontal scale.}
 
 \item{crs}{Default \code{NULL}. CRS describing the input heightmap. An explicit
 value overrides embedded metadata on a copy of the input.}
+
+\item{...}{Deprecated argument spellings are accepted with a warning and forwarded to their current names.}
 }
 \value{
 Semi-transparent overlay with contours.

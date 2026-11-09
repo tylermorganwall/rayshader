@@ -135,7 +135,8 @@ between the current camera position and the goal position. Amount of linear inte
 at a constant speed along the path. This also allows paths with large numbers of points to be used with a
 smaller number of frames, and improves computation time of the animation path in those instances.}
 
-\item{...}{Other arguments to pass to \code{rayrender::generate_camera_motion()}}
+\item{...}{Other arguments to pass to \code{rayrender::generate_camera_motion()}
+Deprecated argument spellings are accepted with a warning and forwarded to their current names.}
 }
 \description{
 Transforms latitude/longitude/altitude coordinates to the reference system used in \code{\link[=render_highquality]{render_highquality()}},

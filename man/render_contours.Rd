@@ -46,7 +46,8 @@ of 1 meter and the grid values are separated by 10 meters, \code{zscale} would b
 
 \item{heightmap}{Default \code{NULL}. Height matrix for the current scene. If omitted, this is taken from the cached scene set by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}. Pass explicitly to override the cached value.}
 
-\item{...}{Additional arguments passed to \code{rgl::lines3d()}.}
+\item{...}{Additional arguments passed to \code{rgl::lines3d()}.
+Deprecated argument spellings are accepted with a warning and forwarded to their current names.}
 }
 \description{
 Adds 3D contours to the current scene, using the heightmap of the 3D surface.

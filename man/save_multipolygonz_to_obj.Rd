@@ -4,7 +4,7 @@
 \alias{save_multipolygonz_to_obj}
 \title{Save MULTIPOLYGON Z sf data to OBJ file}
 \usage{
-save_multipolygonz_to_obj(sf_obj, filename, swap_yz = FALSE)
+save_multipolygonz_to_obj(sf_obj, filename, swap_yz = FALSE, ...)
 }
 \arguments{
 \item{sf_obj}{sf object with MULTIPOLYGON Z geometry,}
@@ -13,6 +13,8 @@ save_multipolygonz_to_obj(sf_obj, filename, swap_yz = FALSE)
 
 \item{swap_yz}{Default \code{FALSE}. Whether to swap the Y and Z axes. (Y axis is vertical in
 rayshader coordinates, but data is often provided with Z being vertical).}
+
+\item{...}{Deprecated argument spellings are accepted with a warning and forwarded to their current names.}
 }
 \description{
 Converts MULTIPOLYGON Z features into a triangulated 3D OBJ model,

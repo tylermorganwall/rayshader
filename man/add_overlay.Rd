@@ -11,7 +11,8 @@ add_overlay(
   alpha_color = NULL,
   alpha_method = "max",
   color_epsilon = 0.001,
-  rescale_original = FALSE
+  rescale_original = FALSE,
+  ...
 )
 }
 \arguments{
@@ -33,6 +34,8 @@ this just sets all transparency to \code{layeralpha}.}
 
 \item{rescale_original}{Default \code{FALSE}. If \code{TRUE}, \code{hillshade} will be scaled to match the dimensions of \code{overlay} (instead of
 the other way around).}
+
+\item{...}{Deprecated argument spellings are accepted with a warning and forwarded to their current names.}
 }
 \value{
 Hillshade with overlay.

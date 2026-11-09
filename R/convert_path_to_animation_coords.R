@@ -76,6 +76,7 @@
 #'at a constant speed along the path. This also allows paths with large numbers of points to be used with a
 #'smaller number of frames, and improves computation time of the animation path in those instances.
 #'@param ... Other arguments to pass to `rayrender::generate_camera_motion()`
+#' Deprecated argument spellings are accepted with a warning and forwarded to their current names.
 #'@export
 #'@examples
 #'#Generate a circle in Monterey Bay and fly around on top of it
@@ -201,6 +202,14 @@ convert_path_to_animation_coords = function(
   resample_path_evenly = TRUE,
   ...
 ) {
+  deprecated_call = deprecated_argument_call(
+    match.call(expand.dots = FALSE),
+    c(offset_lookat = "offset_look_at"),
+    "convert_path_to_animation_coords"
+  )
+  if (!is.null(deprecated_call)) {
+    return(eval(deprecated_call, parent.frame()))
+  }
   render_path_args = list(
     extent = extent,
     lat = lat,

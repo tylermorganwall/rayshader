@@ -71,6 +71,7 @@
 #'each time [render_snapshot()] is called. If `TRUE` and a scene has been cached, it will be used when rendering.
 #'@param reset_scene_cache Default `FALSE`. Resets the scene cache before rendering.
 #'@param ... Additional parameters to pass to `rayvertex::rasterize_scene()`.
+#' Deprecated argument spellings are accepted with a warning and forwarded to their current names.
 #'@return 4-layer RGBA array.
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
@@ -149,6 +150,21 @@ render_depth = function(
   reset_scene_cache = FALSE,
   ...
 ) {
+  deprecated_call = deprecated_argument_call(
+    match.call(expand.dots = FALSE),
+    c(
+      focallength = "focal_length",
+      fstop = "f_stop",
+      bokehshape = "bokeh_shape",
+      bokehintensity = "bokeh_intensity",
+      bokehlimit = "bokeh_limit",
+      progbar = "progress_bar"
+    ),
+    "render_depth"
+  )
+  if (!is.null(deprecated_call)) {
+    return(eval(deprecated_call, parent.frame()))
+  }
   if (rgl::cur3d() == 0) {
     stop("No rgl window currently open.")
   }
@@ -307,7 +323,11 @@ render_depth = function(
   } else {
     depthmap = (all_image$linear_depth)
   }
-  depthmap = rayimage::render_reorient(depthmap, flipx = TRUE, transpose = TRUE)
+  depthmap = rayimage::render_reorient(
+    depthmap,
+    flipx = TRUE,
+    transpose = TRUE
+  )
   if (preview_focus) {
     depthmap = (depthmap)
     temp_depth = paste0(tempfile(), ".png")

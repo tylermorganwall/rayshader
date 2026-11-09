@@ -93,6 +93,7 @@
 #' @param crs Default `NULL`. CRS to assign to the input before calculating
 #' metric cell spacing.
 #'@param ... Additional parameters passed to [render_highquality()].
+#' Deprecated argument spellings are accepted with a warning and forwarded to their current names.
 #'
 #'@return RGBA array representing the top-down radiance render.
 #'@export
@@ -150,6 +151,20 @@ radiance_shade = function(
   crs = NULL,
   ...
 ) {
+  deprecated_call = deprecated_argument_call(
+    match.call(expand.dots = FALSE),
+    c(
+      lightdirection = "light_direction",
+      lightaltitude = "light_altitude",
+      lightsize = "light_size",
+      lightintensity = "light_intensity",
+      lightcolor = "light_color"
+    ),
+    "radiance_shade"
+  )
+  if (!is.null(deprecated_call)) {
+    return(eval(deprecated_call, parent.frame()))
+  }
   light_direction_missing = missing(light_direction)
   if (samples > 256 && sample_method == "sobol_blue") {
     warning(

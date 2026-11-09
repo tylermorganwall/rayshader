@@ -174,6 +174,7 @@ remove_plot_gg_grob_background_line = function(grob) {
 #'@param monitor_gamma Default `1.8`. Undo the gamma correction applied by the png device. Ignored if `ragg` is installed or the `cairo` PNG device is available.
 #'@param plot Default `TRUE`. Whether to plot the image when `preview = TRUE`, or just return the RGBA rayimg.
 #'@param ... Additional arguments to be passed to [plot_3d()].
+#' Deprecated argument spellings are accepted with a warning and forwarded to their current names.
 #'@return Opens a 3D plot in rgl.
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
@@ -339,6 +340,22 @@ plot_gg = function(
   plot = TRUE,
   ...
 ) {
+  deprecated_call = deprecated_argument_call(
+    match.call(expand.dots = FALSE),
+    c(
+      ggobj = "gg_obj",
+      ggobj_height = "gg_obj_height",
+      pointcontract = "point_contract",
+      shadowdepth = "shadow_depth",
+      shadowcolor = "shadow_color",
+      sunangle = "sun_angle",
+      anglebreaks = "angle_breaks"
+    ),
+    "plot_gg"
+  )
+  if (!is.null(deprecated_call)) {
+    return(eval(deprecated_call, parent.frame()))
+  }
   if (!(length(find.package("ggplot2", quiet = TRUE)) > 0)) {
     stop("Must have ggplot2 installed to use plot_gg()")
   }
@@ -1302,7 +1319,10 @@ plot_gg = function(
       if (height_aes %in% ggplotobj2$scales$scales[[i]]$aesthetics) {
         ggplotobj2$scales$scales[[i]]$palette = black_white_pal
         ggplotobj2$scales$scales[[i]]$na.value = "white"
-        has_guide = !any(inherits(ggplotobj2$scales$scales[[i]]$guide, "guide"))
+        has_guide = !any(inherits(
+          ggplotobj2$scales$scales[[i]]$guide,
+          "guide"
+        ))
         if (any(inherits(ggplotobj2$scales$scales[[i]]$guide, "logical"))) {
           has_guide = ggplotobj2$scales$scales[[i]]$guide
         }

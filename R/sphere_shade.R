@@ -32,6 +32,7 @@
 #' metric cell spacing.
 #'
 #'@param progress_bar Default `TRUE` if interactive, `FALSE` otherwise. If `FALSE`, turns off progress bar.
+#' @param ... Deprecated argument spellings are accepted with a warning and forwarded to their current names.
 #'@return RGBA array of hillshaded texture mappings.
 #'@export
 #'@examples
@@ -74,8 +75,23 @@ sphere_shade = function(
   progress_bar = interactive(),
   geographic_aspect = TRUE,
   extent = NULL,
-  crs = NULL
+  crs = NULL,
+  ...
 ) {
+  deprecated_call = deprecated_argument_call(
+    match.call(expand.dots = FALSE),
+    c(
+      sunangle = "sun_angle",
+      normalvectors = "normal_vectors",
+      colorintensity = "color_intensity",
+      progbar = "progress_bar"
+    ),
+    "sphere_shade",
+    allow_dots = FALSE
+  )
+  if (!is.null(deprecated_call)) {
+    return(eval(deprecated_call, parent.frame()))
+  }
   sunangle_missing = missing(sun_angle)
   heightmap_missing = missing(heightmap)
   extent_missing = missing(extent)
@@ -241,7 +257,13 @@ sphere_shade = function(
           "#abaf98"
         )
       } else if (texture == "bw") {
-        texture = create_texture("white", "black", "grey75", "grey25", "grey50")
+        texture = create_texture(
+          "white",
+          "black",
+          "grey75",
+          "grey25",
+          "grey50"
+        )
       } else if (texture == "desert") {
         texture = create_texture(
           "#ffe3b3",

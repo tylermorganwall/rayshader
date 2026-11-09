@@ -602,6 +602,7 @@ get_plot_3d_surface_texture = function(id, rgl_texture_file) {
 #'@param clear_previous Default `TRUE`. Clears the previously open `rgl` window if `plot_new = FALSE`.
 #'@param water_elevation Default `NULL`. Polygon water elevations; see [render_water()].
 #'@param water_surface_tolerance Default `NULL`. Polygon water coincidence tolerance in terrain elevation units; see [render_water()].
+#' @param ... Deprecated argument spellings are accepted with a warning and forwarded to their current names.
 #'@import rgl
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
@@ -713,8 +714,33 @@ plot_3d = function(
   geographic_aspect = TRUE,
   crs = NULL,
   water_elevation = NULL,
-  water_surface_tolerance = NULL
+  water_surface_tolerance = NULL,
+  ...
 ) {
+  deprecated_call = deprecated_argument_call(
+    match.call(expand.dots = FALSE),
+    c(
+      baseshape = "base_shape",
+      soliddepth = "solid_depth",
+      solidcolor = "solid_color",
+      solidlinecolor = "solid_line_color",
+      shadowdepth = "shadow_depth",
+      shadowcolor = "shadow_color",
+      shadowwidth = "shadow_width",
+      watercolor = "water_color",
+      wateralpha = "water_alpha",
+      waterlinecolor = "water_line_color",
+      waterlinealpha = "water_line_alpha",
+      lineantialias = "line_antialias",
+      windowsize = "window_size",
+      waterdepth = "water_input"
+    ),
+    "plot_3d",
+    allow_dots = FALSE
+  )
+  if (!is.null(deprecated_call)) {
+    return(eval(deprecated_call, parent.frame()))
+  }
   water_was_missing = missing(water)
   water_input_was_missing = missing(water_input)
   water_render_method = match.arg(water_render_method)

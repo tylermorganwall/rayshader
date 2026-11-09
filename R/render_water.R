@@ -67,6 +67,7 @@
 #' native threads. Uses `options(cores = ...)`, or physical core count when
 #' unset. Small batches run sequentially; `FALSE` always uses one thread.
 #' Threads share the terrain snapshot; each has its own geometry scratch space.
+#' @param ... Deprecated argument spellings are accepted with a warning and forwarded to their current names.
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'montereybay_spatial |>
@@ -123,8 +124,24 @@ render_water = function(
   heightmap = NULL,
   water_elevation = NULL,
   water_surface_tolerance = NULL,
-  parallel = TRUE
+  parallel = TRUE,
+  ...
 ) {
+  deprecated_call = deprecated_argument_call(
+    match.call(expand.dots = FALSE),
+    c(
+      watercolor = "water_color",
+      wateralpha = "water_alpha",
+      waterlinecolor = "water_line_color",
+      waterlinealpha = "water_line_alpha",
+      waterdepth = "water_input"
+    ),
+    "render_water",
+    allow_dots = FALSE
+  )
+  if (!is.null(deprecated_call)) {
+    return(eval(deprecated_call, parent.frame()))
+  }
   # A visible rgl device otherwise repaints the whole scene for every inserted
   # polygon (including transparency sorting). Defer redraws across removal,
   # insertion and waterlines, then restore the caller's state even on failure.
@@ -591,7 +608,11 @@ water_sf_to_raster = function(
         (max(dim(heightmap)) - 1) / 2,
         abs(level) / zscale
       )
-      lift = max(1e-4, abs(level) * 1e-6, 16 * 2^-23 * scene_magnitude * zscale)
+      lift = max(
+        1e-4,
+        abs(level) * 1e-6,
+        16 * 2^-23 * scene_magnitude * zscale
+      )
       component_levels[id] = level + lift
     }
   } else {

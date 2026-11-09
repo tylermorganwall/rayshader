@@ -51,7 +51,8 @@ be captured at the resolution (and aspect ratio) of the rgl window.}
 \item{progress_bar}{Default \code{TRUE} if interactive, \code{FALSE} otherwise. If \code{FALSE}, turns off progress bar.
 Will display a progress bar when adding an overlay or title.}
 
-\item{...}{Additional parameters to pass to \code{\link[=render_snapshot]{render_snapshot()}}.}
+\item{...}{Additional parameters to pass to \code{\link[=render_snapshot]{render_snapshot()}}.
+Deprecated argument spellings are accepted with a warning and forwarded to their current names.}
 }
 \description{
 Renders a movie using the \pkg{av} or \pkg{gifski} packages. Moves the camera around a 3D visualization

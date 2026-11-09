@@ -38,7 +38,8 @@ render_roads(
   vertical_exaggeration = 1,
   heightmap = NULL,
   terrain_grading = FALSE,
-  bridge = NULL
+  bridge = NULL,
+  ...
 )
 }
 \arguments{
@@ -207,6 +208,8 @@ solver even without a layer column or an intersecting road. Explicit layer
 values retain their ordering; missing bridge layers infer layer \code{1}, while
 ordinary missing layers remain \code{0}. Pass \verb{layer = NULL, bridge = NULL} to
 disable automatic structure profiles and use terrain-following roads.}
+
+\item{...}{Deprecated argument spellings are accepted with a warning and forwarded to their current names.}
 }
 \value{
 Invisibly returns the rendered road coordinates. When \code{layer} or

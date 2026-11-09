@@ -4,7 +4,7 @@
 \alias{save_3dprint}
 \title{Save 3D Print}
 \usage{
-save_3dprint(filename, max_width = 125, unit = "mm", rotate = FALSE)
+save_3dprint(filename, max_width = 125, unit = "mm", rotate = FALSE, ...)
 }
 \arguments{
 \item{filename}{String with the filename. If \code{.stl} is not at the end of the string, it will be appended automatically.}
@@ -14,6 +14,8 @@ save_3dprint(filename, max_width = 125, unit = "mm", rotate = FALSE)
 \item{unit}{Default \code{mm}. Units of the \code{max_width} argument. Can also be set to inches with \verb{in}.}
 
 \item{rotate}{Default \code{TRUE}. If \code{FALSE}, the map will be printing on its side. This may improve resolution for some 3D printing types.}
+
+\item{...}{Deprecated argument spellings are accepted with a warning and forwarded to their current names.}
 }
 \value{
 Writes an STL file to \code{filename}. Regardless of the unit displayed, the output STL is in millimeters.

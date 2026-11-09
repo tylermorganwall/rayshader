@@ -20,7 +20,8 @@ render_streams(
   parallel = TRUE,
   zscale = 1,
   vertical_exaggeration = 1,
-  heightmap = NULL
+  heightmap = NULL,
+  ...
 )
 }
 \arguments{
@@ -88,6 +89,8 @@ or \code{\link[=plot_gg]{plot_gg()}} when available; pass explicitly to override
 \item{heightmap}{Default \code{NULL}. Height matrix or spatial raster for the current
 scene. If omitted, this is taken from the cached scene set by \code{\link[=plot_3d]{plot_3d()}} or
 \code{\link[=plot_gg]{plot_gg()}}. Pass explicitly to override the cached value.}
+
+\item{...}{Deprecated argument spellings are accepted with a warning and forwarded to their current names.}
 }
 \value{
 Invisibly returns the rendered stream coordinates.

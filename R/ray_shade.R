@@ -36,6 +36,7 @@
 #' @param crs Default `NULL`. CRS to assign to the input before calculating
 #' metric cell spacing.
 #'@param ... Additional arguments to pass to the `makeCluster` function when `multicore=TRUE`.
+#' Deprecated argument spellings are accepted with a warning and forwarded to their current names.
 #'@import foreach doParallel parallel progress
 #'@return Matrix of light intensities at each point.
 #'@export
@@ -76,6 +77,20 @@ ray_shade = function(
   crs = NULL,
   ...
 ) {
+  deprecated_call = deprecated_argument_call(
+    match.call(expand.dots = FALSE),
+    c(
+      sunaltitude = "sun_altitude",
+      sunangle = "sun_angle",
+      maxsearch = "max_search",
+      progbar = "progress_bar",
+      anglebreaks = "angle_breaks"
+    ),
+    "ray_shade"
+  )
+  if (!is.null(deprecated_call)) {
+    return(eval(deprecated_call, parent.frame()))
+  }
   sunangle_missing = missing(sun_angle)
   heightmap_missing = missing(heightmap)
   extent_missing = missing(extent)
@@ -184,7 +199,8 @@ ray_shade = function(
     return(matrix(0, nrow = nrow(heightmap), ncol = ncol(heightmap)))
   }
   if (is.null(max_search)) {
-    max_search = (max(heightmap, na.rm = TRUE) - min(heightmap, na.rm = TRUE)) /
+    max_search = (max(heightmap, na.rm = TRUE) -
+      min(heightmap, na.rm = TRUE)) /
       (zscale * sinpi(min(angle_breaks[angle_breaks > 0]) / 180))
   }
   angle_breaks = angle_breaks[order(angle_breaks)]

@@ -159,7 +159,8 @@ each time \code{\link[=render_snapshot]{render_snapshot()}} is called. If \code{
 
 \item{reset_scene_cache}{Default \code{FALSE}. Resets the scene cache before rendering.}
 
-\item{...}{Additional parameters to pass to \code{rayvertex::rasterize_scene()}.}
+\item{...}{Additional parameters to pass to \code{rayvertex::rasterize_scene()}.
+Deprecated argument spellings are accepted with a warning and forwarded to their current names.}
 }
 \value{
 4-layer RGBA array.

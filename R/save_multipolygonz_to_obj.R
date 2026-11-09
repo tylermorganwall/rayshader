@@ -7,6 +7,7 @@
 #'@param filename Filename of the OBJ to save the 3D model to.
 #'@param swap_yz Default `FALSE`. Whether to swap the Y and Z axes. (Y axis is vertical in
 #'rayshader coordinates, but data is often provided with Z being vertical).
+#' @param ... Deprecated argument spellings are accepted with a warning and forwarded to their current names.
 #'@export
 #'@details Faces with more than three vertices or holes require the `decido`
 #'package. Triangulation uses each face's dominant plane and preserves its
@@ -33,8 +34,18 @@
 save_multipolygonz_to_obj = function(
   sf_obj,
   filename,
-  swap_yz = FALSE
+  swap_yz = FALSE,
+  ...
 ) {
+  deprecated_call = deprecated_argument_call(
+    match.call(expand.dots = FALSE),
+    c(sfobj = "sf_obj"),
+    "save_multipolygonz_to_obj",
+    allow_dots = FALSE
+  )
+  if (!is.null(deprecated_call)) {
+    return(eval(deprecated_call, parent.frame()))
+  }
   faces = multipolygonz_mesh_faces(
     sf_obj,
     swap_yz = swap_yz
@@ -113,7 +124,10 @@ multipolygonz_mesh_faces = function(sf_obj, swap_yz = FALSE) {
     i = fallback$id[repair_index]
     faces[i] = list(tryCatch(
       {
-        rows = seq.int(fallback$begin[repair_index], fallback$end[repair_index])
+        rows = seq.int(
+          fallback$begin[repair_index],
+          fallback$end[repair_index]
+        )
         if (any(!is.finite(coords[rows, c("X", "Y", "Z")]))) {
           stop("Polygon face coordinates must be finite.", call. = FALSE)
         }
@@ -199,7 +213,10 @@ multipolygonz_mesh_faces = function(sf_obj, swap_yz = FALSE) {
 multipolygonz_triangulate_face = function(rings) {
   sizes = vapply(rings, nrow, 0L)
   vertices = do.call(rbind, rings)
-  empty_face = list(vertices = vertices, indices = matrix(integer(), ncol = 3L))
+  empty_face = list(
+    vertices = vertices,
+    indices = matrix(integer(), ncol = 3L)
+  )
   if (sizes[1] < 3L) {
     return(empty_face)
   }

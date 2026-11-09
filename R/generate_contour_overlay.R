@@ -24,6 +24,7 @@
 #'@param extent Default `NULL`. Spatial extent for a matrix heightmap.
 #'@param crs Default `NULL`. CRS describing the input heightmap. An explicit
 #'value overrides embedded metadata on a copy of the input.
+#' @param ... Deprecated argument spellings are accepted with a warning and forwarded to their current names.
 #'@return Semi-transparent overlay with contours.
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
@@ -87,8 +88,18 @@ generate_contour_overlay = function(
   linewidth = 1,
   geographic_aspect = TRUE,
   extent = NULL,
-  crs = NULL
+  crs = NULL,
+  ...
 ) {
+  deprecated_call = deprecated_argument_call(
+    match.call(expand.dots = FALSE),
+    c(nlevels = "n_levels"),
+    "generate_contour_overlay",
+    allow_dots = FALSE
+  )
+  if (!is.null(deprecated_call)) {
+    return(eval(deprecated_call, parent.frame()))
+  }
   heightmap_missing = missing(heightmap) || is.null(heightmap)
   extent_missing = missing(extent)
   crs_missing = missing(crs)

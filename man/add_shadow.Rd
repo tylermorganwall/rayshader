@@ -4,7 +4,13 @@
 \alias{add_shadow}
 \title{Add Shadow}
 \usage{
-add_shadow(hillshade, shadow_map, max_darken = 0.7, rescale_original = FALSE)
+add_shadow(
+  hillshade,
+  shadow_map,
+  max_darken = 0.7,
+  rescale_original = FALSE,
+  ...
+)
 }
 \arguments{
 \item{hillshade}{A three-dimensional RGB array or 2D matrix of shadow intensities.}
@@ -16,6 +22,8 @@ add_shadow(hillshade, shadow_map, max_darken = 0.7, rescale_original = FALSE)
 
 \item{rescale_original}{Default \code{FALSE}. If \code{TRUE}, \code{hillshade} will be scaled to match the dimensions of \code{shadow_map} (instead of
 the other way around).}
+
+\item{...}{Deprecated argument spellings are accepted with a warning and forwarded to their current names.}
 }
 \value{
 Shaded texture map.

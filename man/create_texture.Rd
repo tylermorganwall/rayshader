@@ -12,7 +12,8 @@ create_texture(
   center_color,
   corner_colors = NULL,
   old_method = FALSE,
-  darken = 1
+  darken = 1,
+  ...
 )
 }
 \arguments{
@@ -36,6 +37,8 @@ all corners are specified), the mid-points will just be interpolated from the ma
 which had non-standard color handling.}
 
 \item{darken}{Default \code{1}. Amount to darken the colors.}
+
+\item{...}{Deprecated argument spellings are accepted with a warning and forwarded to their current names.}
 }
 \description{
 Creates a texture map based on 5 user-supplied colors.

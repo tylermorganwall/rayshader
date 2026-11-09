@@ -72,7 +72,8 @@ test_that("stream mesh construction uses one native batch", {
       zscale,
       parallel,
       verbose,
-      terrain_scale
+      terrain_scale,
+      terrain_context = NULL
     ) {
       captured$jobs = input_jobs
       captured$parallel = parallel
@@ -233,7 +234,8 @@ test_that("road preparation batches each shared terrain once", {
       zscale,
       parallel,
       verbose,
-      terrain_scale
+      terrain_scale,
+      terrain_context = NULL
     ) {
       calls$densify[[length(calls$densify) + 1L]] = list(
         total = length(input_jobs),
@@ -246,7 +248,8 @@ test_that("road preparation batches each shared terrain once", {
         zscale,
         parallel,
         FALSE,
-        terrain_scale
+        terrain_scale,
+        terrain_context
       )
     },
     sample_render_road_sections_batch_cpp = function(
@@ -255,7 +258,8 @@ test_that("road preparation batches each shared terrain once", {
       zscale,
       parallel,
       verbose,
-      terrain_scale
+      terrain_scale,
+      terrain_context = NULL
     ) {
       calls$sections[[length(calls$sections) + 1L]] = list(
         total = length(input_jobs),
@@ -268,7 +272,8 @@ test_that("road preparation batches each shared terrain once", {
         zscale,
         parallel,
         FALSE,
-        terrain_scale
+        terrain_scale,
+        terrain_context
       )
     },
     .package = "rayshader"
@@ -504,13 +509,16 @@ test_that("render_highquality propagates verbose through scene building", {
     .package = "rayshader"
   )
 
-  expect_no_condition(render_highquality(
-    return_scene = TRUE,
-    light = FALSE,
-    line_render = "world",
-    verbose = TRUE,
-    parallel = TRUE
-  ))
+  expect_message(
+    render_highquality(
+      return_scene = TRUE,
+      light = FALSE,
+      line_render = "world",
+      verbose = TRUE,
+      parallel = TRUE
+    ),
+    "render_highquality\\(\\): Starting"
+  )
 
   expect_true(propagated$stream)
   expect_true(propagated$stream_parallel)

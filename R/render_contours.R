@@ -20,6 +20,7 @@
 #'@param vertical_exaggeration Default `1`. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from [plot_3d()] or [plot_gg()] when available; pass explicitly to override for this call.
 #'@param heightmap Default `NULL`. Height matrix for the current scene. If omitted, this is taken from the cached scene set by [plot_3d()] or [plot_gg()]. Pass explicitly to override the cached value.
 #'@param ... Additional arguments passed to `rgl::lines3d()`.
+#' Deprecated argument spellings are accepted with a warning and forwarded to their current names.
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Add contours to the montereybay_spatial dataset
@@ -71,6 +72,14 @@ render_contours = function(
   heightmap = NULL,
   ...
 ) {
+  deprecated_call = deprecated_argument_call(
+    match.call(expand.dots = FALSE),
+    c(nlevels = "n_levels"),
+    "render_contours"
+  )
+  if (!is.null(deprecated_call)) {
+    return(eval(deprecated_call, parent.frame()))
+  }
   if (
     is_render_clear_only_call(
       clear_previous,

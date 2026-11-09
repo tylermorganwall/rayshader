@@ -27,6 +27,7 @@
 #'@param linewidth Default `1`. Line width.
 #'@param offset Default `c(0,0)`. Horizontal and vertical offset to apply to the polygon, in units of `geometry`.
 #'@param data_column_fill Default `NULL`. The column to map the polygon fill color to.
+#' @param ... Deprecated argument spellings are accepted with a warning and forwarded to their current names.
 #'@return Image overlay representing the input polygon data.
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
@@ -74,8 +75,18 @@ generate_polygon_overlay = function(
   data_column_fill = NULL,
   line_color = "black",
   palette = "white",
-  linewidth = 1
+  linewidth = 1,
+  ...
 ) {
+  deprecated_call = deprecated_argument_call(
+    match.call(expand.dots = FALSE),
+    c(linecolor = "line_color"),
+    "generate_polygon_overlay",
+    allow_dots = FALSE
+  )
+  if (!is.null(deprecated_call)) {
+    return(eval(deprecated_call, parent.frame()))
+  }
   if (!(length(find.package("sf", quiet = TRUE)) > 0)) {
     stop("{sf} package required for generate_polygon_overlay()")
   }

@@ -20,6 +20,7 @@
 #' @param extent Default `NULL`. Spatial extent for a matrix heightmap.
 #' @param crs Default `NULL`. CRS to assign to the input before calculating
 #' metric cell spacing.
+#' @param ... Deprecated argument spellings are accepted with a warning and forwarded to their current names.
 #'@return Matrix of light intensities at each point.
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
@@ -56,8 +57,18 @@ lamb_shade = function(
   zero_negative = TRUE,
   geographic_aspect = TRUE,
   extent = NULL,
-  crs = NULL
+  crs = NULL,
+  ...
 ) {
+  deprecated_call = deprecated_argument_call(
+    match.call(expand.dots = FALSE),
+    c(sunaltitude = "sun_altitude", sunangle = "sun_angle"),
+    "lamb_shade",
+    allow_dots = FALSE
+  )
+  if (!is.null(deprecated_call)) {
+    return(eval(deprecated_call, parent.frame()))
+  }
   sunangle_missing = missing(sun_angle)
   heightmap_missing = missing(heightmap)
   extent_missing = missing(extent)

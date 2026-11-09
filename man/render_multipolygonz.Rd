@@ -67,7 +67,8 @@ value.}
 
 \item{verbose}{Default \code{FALSE}. Report triangulation and scene-upload stages.}
 
-\item{...}{Additional arguments to pass to \code{rgl::triangles3d()}.}
+\item{...}{Additional arguments to pass to \code{rgl::triangles3d()}.
+Deprecated argument spellings are accepted with a warning and forwarded to their current names.}
 }
 \description{
 Adds MULTIPOLYGONZ will be plotted in the coordinate system set by the user-specified

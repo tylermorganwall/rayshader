@@ -6,6 +6,7 @@
 #'@param max_width Default `125`. Desired maximum width of the 3D print in millimeters. Uses the units set in `unit` argument. Can also pass in a string, "125mm" or "5in".
 #'@param unit Default `mm`. Units of the `max_width` argument. Can also be set to inches with `in`.
 #'@param rotate Default `TRUE`. If `FALSE`, the map will be printing on its side. This may improve resolution for some 3D printing types.
+#' @param ... Deprecated argument spellings are accepted with a warning and forwarded to their current names.
 #'@return Writes an STL file to `filename`. Regardless of the unit displayed, the output STL is in millimeters.
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
@@ -41,8 +42,18 @@ save_3dprint = function(
   filename,
   max_width = 125,
   unit = "mm",
-  rotate = FALSE
+  rotate = FALSE,
+  ...
 ) {
+  deprecated_call = deprecated_argument_call(
+    match.call(expand.dots = FALSE),
+    c(maxwidth = "max_width"),
+    "save_3dprint",
+    allow_dots = FALSE
+  )
+  if (!is.null(deprecated_call)) {
+    return(eval(deprecated_call, parent.frame()))
+  }
   if (substring(filename, nchar(filename) - 3, nchar(filename)) != ".stl") {
     filename = paste0(filename, ".stl")
   }

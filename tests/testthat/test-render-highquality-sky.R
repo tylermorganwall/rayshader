@@ -30,11 +30,19 @@ test_that("native skies include celestial disks with haze and altitude off", {
   expect_true(sky$moon)
   expect_false(sky$haze)
   expect_false(sky$query_altitude)
-  expect_null(attr(scene, "integrator_type", exact = TRUE))
+  expect_null(attr(scene, "ray_render_settings", exact = TRUE)$integrator_type)
   expect_equal(sky$meters_per_unit, 1)
   expect_identical(sky$datetime, sky_time)
-  expect_null(attr(scene, "environment_light", exact = TRUE))
-  expect_null(attr(scene, "environment_light_bake_white", exact = TRUE))
+  expect_null(
+    attr(scene, "ray_render_settings", exact = TRUE)$environment_light
+  )
+  expect_null(
+    attr(
+      scene,
+      "ray_render_settings",
+      exact = TRUE
+    )$environment_light_bake_white
+  )
   expect_length(attr(scene, "ray_infinite_lights"), 1)
   expect_false(any(scene$shape == "sphere"))
 })
@@ -268,6 +276,15 @@ test_that("native skies and their integrator survive both animation paths", {
 test_that("image skies remain available and reject native-only controls", {
   local_highquality_sky_scene()
   generated = list()
+  # Only renderers exposing the legacy white-balance flag receive it. The
+  # supported interface is exercised explicitly in the material tests.
+  expected_bake_white = if (
+    "environment_light_bake_white" %in% names(formals(rayrender::render_scene))
+  ) {
+    TRUE
+  } else {
+    NULL
+  }
   testthat::local_mocked_bindings(
     generate_sky_latlong = function(...) {
       args = list(...)
@@ -286,8 +303,17 @@ test_that("image skies remain available and reject native-only controls", {
   for (options in list(list(hosek = TRUE), list(resolution = 16))) {
     scene = do.call(render_highquality, c(arguments, list(sky_args = options)))
     expect_null(attr(scene, "ray_infinite_lights", exact = TRUE))
-    expect_true(file.exists(attr(scene, "environment_light")))
-    expect_true(attr(scene, "environment_light_bake_white"))
+    expect_true(file.exists(
+      attr(scene, "ray_render_settings", exact = TRUE)$environment_light
+    ))
+    expect_identical(
+      attr(
+        scene,
+        "ray_render_settings",
+        exact = TRUE
+      )$environment_light_bake_white,
+      expected_bake_white
+    )
     expect_error(
       do.call(
         render_highquality,
@@ -323,7 +349,14 @@ test_that("image skies remain available and reject native-only controls", {
       c(arguments, list(sky_altitude = altitude))
     )
     expect_null(attr(scene, "ray_infinite_lights", exact = TRUE))
-    expect_true(attr(scene, "environment_light_bake_white"))
+    expect_identical(
+      attr(
+        scene,
+        "ray_render_settings",
+        exact = TRUE
+      )$environment_light_bake_white,
+      expected_bake_white
+    )
     expect_equal(tail(generated, 1)[[1]]$altitude, altitude)
   }
   expect_error(
@@ -360,7 +393,10 @@ test_that("native skies preserve explicit integrators for stills and movies", {
     do.call(render_highquality, args)
     expect_identical(rendered$integrator_type, integrator)
     scene = do.call(render_highquality, c(args, list(return_scene = TRUE)))
-    expect_identical(attr(scene, "integrator_type", exact = TRUE), integrator)
+    expect_identical(
+      attr(scene, "ray_render_settings", exact = TRUE)$integrator_type,
+      integrator
+    )
     do.call(render_highquality, c(args, list(animation_camera_coords = motion)))
     expect_identical(animated$integrator_type, integrator)
     render_movie_hq(

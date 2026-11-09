@@ -202,7 +202,8 @@ previous invocation of \code{\link[=plot_gg]{plot_gg()}} with \code{save_shadow_
 
 \item{plot}{Default \code{TRUE}. Whether to plot the image when \code{preview = TRUE}, or just return the RGBA rayimg.}
 
-\item{...}{Additional arguments to be passed to \code{\link[=plot_3d]{plot_3d()}}.}
+\item{...}{Additional arguments to be passed to \code{\link[=plot_3d]{plot_3d()}}.
+Deprecated argument spellings are accepted with a warning and forwarded to their current names.}
 }
 \value{
 Opens a 3D plot in rgl.

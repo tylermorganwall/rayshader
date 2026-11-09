@@ -38,7 +38,8 @@ generate_scalebar_overlay(
   halo_blur = 0,
   halo_edge_softness = 0.1,
   halo_gap_fill = 2,
-  halo_gap_fill_alpha_threshold = 0.25
+  halo_gap_fill_alpha_threshold = 0.25,
+  ...
 )
 }
 \arguments{
@@ -129,6 +130,8 @@ of this color.}
 \item{halo_gap_fill}{Default \code{2}. Maximum alpha gap width, in pixels, to bridge in the halo outline.}
 
 \item{halo_gap_fill_alpha_threshold}{Default \code{0.25}. Alpha threshold used to protect enclosed interior halo gaps from \code{halo_gap_fill}.}
+
+\item{...}{Deprecated argument spellings are accepted with a warning and forwarded to their current names.}
 }
 \value{
 Semi-transparent overlay with a scale bar.

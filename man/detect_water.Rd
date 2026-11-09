@@ -15,7 +15,8 @@ detect_water(
   progress_bar = FALSE,
   geographic_aspect = TRUE,
   extent = NULL,
-  crs = NULL
+  crs = NULL,
+  ...
 )
 }
 \arguments{
@@ -49,6 +50,8 @@ omitted, rayshader uses matching cached metadata when available.}
 
 \item{crs}{Default \code{NULL}. CRS describing the input heightmap. An explicit
 value overrides embedded metadata on a copy of the input.}
+
+\item{...}{Deprecated argument spellings are accepted with a warning and forwarded to their current names.}
 }
 \value{
 Matrix indicating whether water was detected at that point. 1 indicates water, 0 indicates no water.

@@ -56,7 +56,8 @@ plot_3d(
   geographic_aspect = TRUE,
   crs = NULL,
   water_elevation = NULL,
-  water_surface_tolerance = NULL
+  water_surface_tolerance = NULL,
+  ...
 )
 }
 \arguments{
@@ -206,6 +207,8 @@ value overrides embedded CRS metadata.}
 \item{water_elevation}{Default \code{NULL}. Polygon water elevations; see \code{\link[=render_water]{render_water()}}.}
 
 \item{water_surface_tolerance}{Default \code{NULL}. Polygon water coincidence tolerance in terrain elevation units; see \code{\link[=render_water]{render_water()}}.}
+
+\item{...}{Deprecated argument spellings are accepted with a warning and forwarded to their current names.}
 }
 \description{
 Displays the shaded map in 3D with the \code{rgl} package.

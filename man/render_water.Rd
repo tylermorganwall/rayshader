@@ -21,7 +21,8 @@ render_water(
   heightmap = NULL,
   water_elevation = NULL,
   water_surface_tolerance = NULL,
-  parallel = TRUE
+  parallel = TRUE,
+  ...
 )
 }
 \arguments{
@@ -104,6 +105,8 @@ do not alter exact polygon water.}
 native threads. Uses \code{options(cores = ...)}, or physical core count when
 unset. Small batches run sequentially; \code{FALSE} always uses one thread.
 Threads share the terrain snapshot; each has its own geometry scratch space.}
+
+\item{...}{Deprecated argument spellings are accepted with a warning and forwarded to their current names.}
 }
 \description{
 Adds water layer to the scene, removing the previous water layer if desired.

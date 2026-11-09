@@ -24,6 +24,7 @@
 #' @param crs Default `NULL`. CRS to assign to the input before calculating
 #' metric cell spacing.
 #'@param ... Additional arguments to pass to the `makeCluster` function when `multicore=TRUE`.
+#' Deprecated argument spellings are accepted with a warning and forwarded to their current names.
 #'@return Shaded texture map.
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
@@ -66,6 +67,19 @@ ambient_shade = function(
   crs = NULL,
   ...
 ) {
+  deprecated_call = deprecated_argument_call(
+    match.call(expand.dots = FALSE),
+    c(
+      anglebreaks = "angle_breaks",
+      sunbreaks = "sun_breaks",
+      maxsearch = "max_search",
+      progbar = "progress_bar"
+    ),
+    "ambient_shade"
+  )
+  if (!is.null(deprecated_call)) {
+    return(eval(deprecated_call, parent.frame()))
+  }
   heightmap_missing = missing(heightmap)
   extent_missing = missing(extent)
   crs_missing = missing(crs)

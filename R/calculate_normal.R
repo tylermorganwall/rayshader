@@ -11,6 +11,7 @@
 #' @param extent Default `NULL`. Spatial extent for a matrix heightmap.
 #' @param crs Default `NULL`. CRS to assign to the input before calculating
 #' metric cell spacing.
+#' @param ... Deprecated argument spellings are accepted with a warning and forwarded to their current names.
 #'@return Matrix of light intensities at each point.
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
@@ -28,8 +29,18 @@ calculate_normal = function(
   progress_bar = FALSE,
   geographic_aspect = TRUE,
   extent = NULL,
-  crs = NULL
+  crs = NULL,
+  ...
 ) {
+  deprecated_call = deprecated_argument_call(
+    match.call(expand.dots = FALSE),
+    c(progbar = "progress_bar"),
+    "calculate_normal",
+    allow_dots = FALSE
+  )
+  if (!is.null(deprecated_call)) {
+    return(eval(deprecated_call, parent.frame()))
+  }
   zscale_missing = missing(zscale)
   heightmap_info = coerce_plot_3d_heightmap(
     heightmap,

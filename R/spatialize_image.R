@@ -57,6 +57,7 @@
 #' @param height_layer_name Default `"height"`. Name of the appended height
 #' layer when `include_height = TRUE`.
 #'
+#' @param ... Deprecated argument spellings are accepted with a warning and forwarded to their current names.
 #' @returns A `terra::SpatRaster`.
 #' @export
 #'
@@ -82,8 +83,18 @@ spatialize_image = function(
   layer_names = NULL,
   include_height = FALSE,
   heightmap = NULL,
-  height_layer_name = "height"
+  height_layer_name = "height",
+  ...
 ) {
+  deprecated_call = deprecated_argument_call(
+    match.call(expand.dots = FALSE),
+    c(toRGB = "to_rgb"),
+    "spatialize_image",
+    allow_dots = FALSE
+  )
+  if (!is.null(deprecated_call)) {
+    return(eval(deprecated_call, parent.frame()))
+  }
   if (!(length(find.package("terra", quiet = TRUE)) > 0)) {
     stop("`terra` package required for spatialize_image().", call. = FALSE)
   }
@@ -551,6 +562,10 @@ interpolate_spatialize_image_height_matrix = function(
 ) {
   x_coords = rep(seq(1, ncol(heightmap), length.out = ncols), each = nrows)
   y_coords = rep(seq(1, nrow(heightmap), length.out = nrows), times = ncols)
-  interpolated_vals = rayimage::interpolate_array(heightmap, x_coords, y_coords)
+  interpolated_vals = rayimage::interpolate_array(
+    heightmap,
+    x_coords,
+    y_coords
+  )
   matrix(interpolated_vals, nrow = nrows, byrow = FALSE)
 }

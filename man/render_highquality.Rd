@@ -354,7 +354,8 @@ When omitted, sky inference uses \code{camera_lookat$panel}, then
 \code{camera_location$panel}. Faceted maps require a selection when inferring
 latitude or longitude. Explicit \code{lat} and \code{long} bypass this inference.}
 
-\item{...}{Additional parameters to pass to \code{rayrender::render_scene()}.}
+\item{...}{Additional parameters to pass to \code{rayrender::render_scene()}.
+Deprecated argument spellings are accepted with a warning and forwarded to their current names.}
 }
 \description{
 Renders a raytraced version of the displayed rgl scene, using the \code{rayrender} package.

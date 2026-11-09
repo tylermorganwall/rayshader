@@ -15,6 +15,7 @@
 #'@param old_method Default `FALSE`. Whether to use the original method rayshader used for computing textures,
 #'which had non-standard color handling.
 #'@param darken Default `1`. Amount to darken the colors.
+#' @param ... Deprecated argument spellings are accepted with a warning and forwarded to their current names.
 #'@export
 #'@examples
 #'#Here is the `imhof1` palette:
@@ -32,8 +33,25 @@ create_texture = function(
   center_color,
   corner_colors = NULL,
   old_method = FALSE,
-  darken = 1
+  darken = 1,
+  ...
 ) {
+  deprecated_call = deprecated_argument_call(
+    match.call(expand.dots = FALSE),
+    c(
+      lightcolor = "light_color",
+      shadowcolor = "shadow_color",
+      leftcolor = "left_color",
+      rightcolor = "right_color",
+      centercolor = "center_color",
+      cornercolors = "corner_colors"
+    ),
+    "create_texture",
+    allow_dots = FALSE
+  )
+  if (!is.null(deprecated_call)) {
+    return(eval(deprecated_call, parent.frame()))
+  }
   if (old_method) {
     lightrgb = col2rgb(light_color)
     shadowrgb = col2rgb(shadow_color)

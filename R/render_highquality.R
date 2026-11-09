@@ -221,6 +221,7 @@ new_render_highquality_progress_bar = function(verbose, label, total) {
 #' `camera_location$panel`. Faceted maps require a selection when inferring
 #' latitude or longitude. Explicit `lat` and `long` bypass this inference.
 #'@param ... Additional parameters to pass to `rayrender::render_scene()`.
+#' Deprecated argument spellings are accepted with a warning and forwarded to their current names.
 #'
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
@@ -418,6 +419,20 @@ render_highquality = function(
   panel = NULL,
   ...
 ) {
+  deprecated_call = deprecated_argument_call(
+    match.call(expand.dots = FALSE),
+    c(
+      lightdirection = "light_direction",
+      lightaltitude = "light_altitude",
+      lightsize = "light_size",
+      lightintensity = "light_intensity",
+      lightcolor = "light_color"
+    ),
+    "render_highquality"
+  )
+  if (!is.null(deprecated_call)) {
+    return(eval(deprecated_call, parent.frame()))
+  }
   if (
     !is.null(fov) &&
       (!is.numeric(fov) || length(fov) != 1L || !is.finite(fov))
@@ -1916,7 +1931,8 @@ render_highquality = function(
       error = function(e) NULL
     )
     for (j in seq_len(nrow(temp_label))) {
-      temp_size = scale_text_size * get_render_highquality_text_cex(temp_cex, j)
+      temp_size = scale_text_size *
+        get_render_highquality_text_cex(temp_cex, j)
       if (identical(text_render, "screen")) {
         screen_point = transform_render_highquality_screen_points(
           temp_center[j, ] + screen_scale_text_offset,
@@ -2027,6 +2043,20 @@ render_highquality = function(
   }
   lookfrom_rayrender = lookfrom
   camera_lookat_rayrender = camera_lookat
+
+  # World Y is parallel to a straight-down view. Choose a stable image-up
+  # direction only when the caller has not supplied a camera_up override.
+  if (!("camera_up" %in% names(dot_args))) {
+    view_direction = camera_lookat_rayrender - lookfrom_rayrender
+    view_scale = max(abs(view_direction))
+    if (
+      view_scale > 0 &&
+        max(abs(view_direction[c(1, 3)])) <=
+          sqrt(.Machine$double.eps) * view_scale
+    ) {
+      dot_args$camera_up = c(0, 0, -1)
+    }
+  }
   animation_camera_coords_rayrender = animation_camera_coords
 
   if (print_scene_info) {
@@ -3630,7 +3660,10 @@ densify_render_highquality_path_points = function(
     points = points,
     normals = normals
   )
-  side_vectors = normalize_render_highquality_rows(row_cross(tangents, normals))
+  side_vectors = normalize_render_highquality_rows(row_cross(
+    tangents,
+    normals
+  ))
   side_vectors = replace_invalid_render_highquality_vectors(
     side_vectors,
     fallback = c(0, 0, 1)

@@ -40,7 +40,8 @@ render_label(
   panel = NULL,
   zscale = 1,
   vertical_exaggeration = 1,
-  heightmap = NULL
+  heightmap = NULL,
+  ...
 )
 }
 \arguments{
@@ -184,6 +185,8 @@ this call.}
 \item{heightmap}{Default \code{NULL}. Height matrix for the current scene. If
 omitted, rayshader uses the cached scene set by \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}}.
 Pass explicitly to override the cached value.}
+
+\item{...}{Deprecated argument spellings are accepted with a warning and forwarded to their current names.}
 }
 \description{
 Adds a marker and label to the current 3D plot

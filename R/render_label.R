@@ -109,6 +109,7 @@
 #' @param heightmap Default `NULL`. Height matrix for the current scene. If
 #' omitted, rayshader uses the cached scene set by [plot_3d()] or [plot_gg()].
 #' Pass explicitly to override the cached value.
+#' @param ... Deprecated argument spellings are accepted with a warning and forwarded to their current names.
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'montereybay_spatial |>
@@ -211,8 +212,27 @@ render_label = function(
   panel = NULL,
   zscale = 1,
   vertical_exaggeration = 1,
-  heightmap = NULL
+  heightmap = NULL,
+  ...
 ) {
+  deprecated_call = deprecated_argument_call(
+    match.call(expand.dots = FALSE),
+    c(
+      fonttype = "font_type",
+      textsize = "text_size",
+      textcolor = "text_color",
+      textalpha = "text_alpha",
+      adjustvec = "adjust_vec",
+      linecolor = "line_color",
+      dashlength = "dash_length",
+      relativez = "relative_z"
+    ),
+    "render_label",
+    allow_dots = FALSE
+  )
+  if (!is.null(deprecated_call)) {
+    return(eval(deprecated_call, parent.frame()))
+  }
   if (
     is_render_clear_only_call(
       clear_previous,

@@ -52,6 +52,7 @@
 #' @param heightmap Default `NULL`. Height matrix or spatial raster for the current
 #' scene. If omitted, this is taken from the cached scene set by [plot_3d()] or
 #' [plot_gg()]. Pass explicitly to override the cached value.
+#' @param ... Deprecated argument spellings are accepted with a warning and forwarded to their current names.
 #' @return Invisibly returns the rendered stream coordinates.
 #' @examplesIf all(vapply(c("sf", "terra", "dplyr", "tigris", "elevatr", "rayrender", "rayvertex", "skymodelr"), requireNamespace, logical(1), quietly = TRUE)) && (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true"))
 #' library(sf)
@@ -221,8 +222,18 @@ render_streams = function(
   parallel = TRUE,
   zscale = 1,
   vertical_exaggeration = 1,
-  heightmap = NULL
+  heightmap = NULL,
+  ...
 ) {
+  deprecated_call = deprecated_argument_call(
+    match.call(expand.dots = FALSE),
+    c(watercolor = "water_color"),
+    "render_streams",
+    allow_dots = FALSE
+  )
+  if (!is.null(deprecated_call)) {
+    return(eval(deprecated_call, parent.frame()))
+  }
   clear_stream_layer = function() {
     rgl::pop3d(tag = "water_path")
     clear_render_water_path_info()
@@ -2152,7 +2163,9 @@ triangulate_render_highquality_water_path_fragments = function(
       next
     }
     for (triangle_index in seq_along(triangles)) {
-      triangle_vertices = extract_triangle_vertices(triangles[[triangle_index]])
+      triangle_vertices = extract_triangle_vertices(triangles[[
+        triangle_index
+      ]])
       for (triangle_vertex in triangle_vertices) {
         area2 = signed_area2(triangle_vertex)
         if (!is.finite(area2) || abs(area2) <= precision^2) {
@@ -2170,7 +2183,10 @@ triangulate_render_highquality_water_path_fragments = function(
             lookup_index = vertex_lookup[[key]]
           } else {
             vertices = rbind(vertices, triangle_vertex[vertex_index, ])
-            vertex_tri_id = c(vertex_tri_id, fragments$tri_id[[fragment_index]])
+            vertex_tri_id = c(
+              vertex_tri_id,
+              fragments$tri_id[[fragment_index]]
+            )
             lookup_index = nrow(vertices)
             vertex_lookup[[key]] = lookup_index
           }
@@ -2391,7 +2407,10 @@ make_render_highquality_water_path_mesh = function(
     points = points,
     normals = normals
   )
-  side_vectors = normalize_render_highquality_rows(row_cross(tangents, normals))
+  side_vectors = normalize_render_highquality_rows(row_cross(
+    tangents,
+    normals
+  ))
   side_vectors = replace_invalid_render_highquality_vectors(
     side_vectors,
     fallback = c(0, 0, 1)

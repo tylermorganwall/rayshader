@@ -36,6 +36,7 @@
 #'value.
 #'@param verbose Default `FALSE`. Report triangulation and scene-upload stages.
 #'@param ... Additional arguments to pass to `rgl::triangles3d()`.
+#' Deprecated argument spellings are accepted with a warning and forwarded to their current names.
 #'@export
 #'@details Faces with more than three vertices or holes require the `decido`
 #'package. Concave boundaries and interior holes are preserved when triangulating
@@ -105,6 +106,14 @@ render_multipolygonz = function(
   verbose = FALSE,
   ...
 ) {
+  deprecated_call = deprecated_argument_call(
+    match.call(expand.dots = FALSE),
+    c(sfobj = "sf_obj"),
+    "render_multipolygonz"
+  )
+  if (!is.null(deprecated_call)) {
+    return(eval(deprecated_call, parent.frame()))
+  }
   if (
     is_render_clear_only_call(
       clear_previous,

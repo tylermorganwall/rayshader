@@ -62,6 +62,7 @@
 #'@param halo_edge_softness Default `0.1`. Width of the softened halo edge transition, in pixels.
 #'@param halo_gap_fill Default `2`. Maximum alpha gap width, in pixels, to bridge in the halo outline.
 #'@param halo_gap_fill_alpha_threshold Default `0.25`. Alpha threshold used to protect enclosed interior halo gaps from `halo_gap_fill`.
+#' @param ... Deprecated argument spellings are accepted with a warning and forwarded to their current names.
 #'@return Semi-transparent overlay with a scale bar.
 #'@export
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
@@ -182,8 +183,18 @@ generate_scalebar_overlay = function(
   halo_blur = 0,
   halo_edge_softness = 0.1,
   halo_gap_fill = 2,
-  halo_gap_fill_alpha_threshold = 0.25
+  halo_gap_fill_alpha_threshold = 0.25,
+  ...
 ) {
+  deprecated_call = deprecated_argument_call(
+    match.call(expand.dots = FALSE),
+    c(latlong = "lat_long"),
+    "generate_scalebar_overlay",
+    allow_dots = FALSE
+  )
+  if (!is.null(deprecated_call)) {
+    return(eval(deprecated_call, parent.frame()))
+  }
   length_missing = missing(length) || is.null(length)
   bearing_missing = missing(bearing) || is.null(bearing)
   unit_missing = missing(unit) || is.null(unit)

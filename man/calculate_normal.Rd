@@ -10,7 +10,8 @@ calculate_normal(
   progress_bar = FALSE,
   geographic_aspect = TRUE,
   extent = NULL,
-  crs = NULL
+  crs = NULL,
+  ...
 )
 }
 \arguments{
@@ -28,6 +29,8 @@ spacing using the input extent and CRS.}
 
 \item{crs}{Default \code{NULL}. CRS to assign to the input before calculating
 metric cell spacing.}
+
+\item{...}{Deprecated argument spellings are accepted with a warning and forwarded to their current names.}
 }
 \value{
 Matrix of light intensities at each point.

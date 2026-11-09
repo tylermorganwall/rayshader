@@ -55,6 +55,10 @@
 
 ## Bugfixes
 
+- Overall: Legacy argument spellings are accepted through `...`, with deprecation warnings naming their replacements. Supplying both spellings raises an error.
+- `render_highquality()` Chooses a valid up vector for straight-down spatial cameras when no explicit up vector is supplied.
+- `render_movie_hq()` Preserves sky, integrator, and environment settings stored in returned scenes.
+
 - `render_highquality()` Falls back to spherical lights when the installed
   rayrender does not export disk-light support.
 
