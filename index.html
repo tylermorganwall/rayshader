@@ -129,6 +129,13 @@
 <p>The models can be rotated and examined interactively or the camera movement can be scripted to create animations. Scenes can also be rendered using a high-quality pathtracer, <strong>rayrender</strong>. The user can also create a cinematic depth of field post-processing effect to direct the user’s focus to important regions in the figure. The 3D models can also be exported to a 3D-printable format with a built-in STL export function, and can be exported to an OBJ file.</p>
 </div>
 <div class="section level2">
+<h2 id="development-source-builds">Development source builds<a class="anchor" aria-label="anchor" href="#development-source-builds"></a>
+</h2>
+<p><a href="https://github.com/tylermorganwall/rayshader/releases/tag/source-master" class="external-link">Download the latest successful master source build</a>. The download is an R source package produced by <code>R CMD build</code>, not GitHub’s automatically generated source archive or a compiled binary.</p>
+<p><a href="https://github.com/tylermorganwall/rayshader/actions/workflows/source-build.yaml" class="external-link">Source-build workflow runs</a> provide verified tarballs, SHA-256 checksums, and commit metadata for every branch, including <code>ggplot_data</code>. Actions artifacts are retained for 30 days and require GitHub sign-in. Only successful <code>master</code> builds update the durable <code>source-master</code> release; preview branches do not replace it. The release link becomes available after the first successful master publication.</p>
+<p>A successful source build verifies packaging and the saved artifact. It does not verify installation, dependencies, or rendering.</p>
+</div>
+<div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
