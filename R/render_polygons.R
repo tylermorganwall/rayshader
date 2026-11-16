@@ -81,8 +81,8 @@
 #' render_polygons(mont_county_buff, data_column_top = "ALAND",
 #'                 scale_data = 300/(5E7), color = "chartreuse4",
 #'                 clear_previous = TRUE)
-#' render_zaxis(zaxis_data = "polygon", zaxis_location = "topright",
-#'              zaxis_title_location = "top")
+#' render_zaxis(data = "polygon", location = "topright",
+#'              title_location = "top")
 #' render_snapshot()
 #' #This function also works with `render_highquality()`
 #' render_highquality(samples = 16, min_variance = 0)

@@ -456,8 +456,8 @@ test_that("render_highquality() defaults label and z-axis overlays to screen spa
     extent = extent,
     heightmap = heightmap,
     zscale = 10,
-    zaxis_breaks = c(0, 10),
-    zaxis_title = "Z"
+    breaks = c(0, 10),
+    title = "Z"
   )
 
   scene = render_highquality(

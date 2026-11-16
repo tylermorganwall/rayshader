@@ -318,7 +318,7 @@ render_zaxis_internal = function(
     zaxis_location = "topright"
   } else {
     stop(
-      "`zaxis_location` must be one of: ",
+      "`location` must be one of: ",
       paste(valid_locations, collapse = ", ")
     )
   }
@@ -333,26 +333,26 @@ render_zaxis_internal = function(
   }
   zaxis_linewidth = as.numeric(zaxis_linewidth)[1]
   if (is.na(zaxis_linewidth) || zaxis_linewidth <= 0) {
-    stop("`zaxis_linewidth` must be a positive number.")
+    stop("`linewidth` must be a positive number.")
   }
   zaxis_text_offset = as.numeric(zaxis_text_offset)[1]
   if (is.na(zaxis_text_offset) || zaxis_text_offset < 0) {
-    stop("`zaxis_text_offset` must be a non-negative number.")
+    stop("`text_offset` must be a non-negative number.")
   }
   zaxis_label_size = as.numeric(zaxis_label_size)[1]
   if (is.na(zaxis_label_size) || zaxis_label_size <= 0) {
-    stop("`zaxis_label_size` must be a positive number.")
+    stop("`label_size` must be a positive number.")
   }
   if (is.null(zaxis_title_size)) {
     zaxis_title_size = zaxis_label_size
   }
   zaxis_label_side = normalize_zaxis_text_side(
     zaxis_label_side,
-    arg_name = "zaxis_label_side"
+    arg_name = "label_side"
   )
   zaxis_title_side = normalize_zaxis_text_side(
     zaxis_title_side,
-    arg_name = "zaxis_title_side"
+    arg_name = "title_side"
   )
   if (is.null(zaxis_title_location)) {
     zaxis_title_location = "side"
@@ -360,28 +360,28 @@ render_zaxis_internal = function(
   zaxis_title_location = tolower(as.character(zaxis_title_location)[1])
   zaxis_title_location = gsub("[-_[:space:]]", "", zaxis_title_location)
   if (!zaxis_title_location %in% c("side", "top")) {
-    stop("`zaxis_title_location` must be either \"side\" or \"top\".")
+    stop("`title_location` must be either \"side\" or \"top\".")
   }
   zaxis_title_offset = as.numeric(zaxis_title_offset)[1]
   if (is.na(zaxis_title_offset) || zaxis_title_offset < 0) {
-    stop("`zaxis_title_offset` must be a non-negative number.")
+    stop("`title_offset` must be a non-negative number.")
   }
   zaxis_title_size = as.numeric(zaxis_title_size)[1]
   if (is.na(zaxis_title_size) || zaxis_title_size <= 0) {
-    stop("`zaxis_title_size` must be a positive number.")
+    stop("`title_size` must be a positive number.")
   }
   if (is.null(zaxis_corner_offset)) {
     zaxis_corner_offset = if (has_panel_info) 0 else 0.08
   } else {
     zaxis_corner_offset = as.numeric(zaxis_corner_offset)[1]
     if (is.na(zaxis_corner_offset) || zaxis_corner_offset < 0) {
-      stop("`zaxis_corner_offset` must be a non-negative number.")
+      stop("`corner_offset` must be a non-negative number.")
     }
   }
   if (!is.null(zaxis_tick_size)) {
     zaxis_tick_size = as.numeric(zaxis_tick_size)[1]
     if (is.na(zaxis_tick_size) || zaxis_tick_size <= 0) {
-      stop("`zaxis_tick_size` must be a positive number.")
+      stop("`tick_size` must be a positive number.")
     }
   }
   # Clear previous z-axis objects before deriving scene-based defaults.
@@ -570,7 +570,7 @@ render_zaxis_internal = function(
     } else {
       raw_zaxis_breaks = as.numeric(zaxis_breaks)
       if (any(is.na(raw_zaxis_breaks))) {
-        stop("`zaxis_breaks` must be numeric.")
+        stop("`breaks` must be numeric.")
       }
       raw_zaxis_breaks = sort(unique(raw_zaxis_breaks))
     }
@@ -636,7 +636,7 @@ render_zaxis_internal = function(
   } else if (is.null(zaxis_data_info)) {
     zaxis_breaks = as.numeric(zaxis_breaks)
     if (any(is.na(zaxis_breaks))) {
-      stop("`zaxis_breaks` must be numeric.")
+      stop("`breaks` must be numeric.")
     }
     zaxis_breaks = sort(unique(zaxis_breaks))
   }
@@ -652,7 +652,7 @@ render_zaxis_internal = function(
     }
   } else {
     if (length(zaxis_labels) != length(zaxis_breaks)) {
-      stop("`zaxis_labels` must be the same length as `zaxis_breaks`.")
+      stop("`labels` must be the same length as `breaks`.")
     }
     zaxis_labels = as.character(zaxis_labels)
   }

@@ -29,7 +29,7 @@ test_that("scene-aware render functions put their primary input first", {
     render_trails = "trails",
     render_tree = "location",
     render_water = "water_input",
-    render_zaxis = "zaxis_data"
+    render_zaxis = "data"
   )
 
   for (function_name in names(primary_arguments)) {

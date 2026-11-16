@@ -5,22 +5,22 @@
 \title{Render Z-Axis}
 \usage{
 render_zaxis(
-  zaxis_data = "auto",
-  zaxis_location = "auto",
-  zaxis_breaks = NULL,
-  zaxis_labels = NULL,
-  zaxis_title = "auto",
-  zaxis_title_location = "side",
-  zaxis_title_offset = 1.25,
-  zaxis_title_size = NULL,
-  zaxis_color = "black",
-  zaxis_linewidth = 2,
-  zaxis_text_offset = 0,
-  zaxis_label_size = 0.8,
-  zaxis_label_side = "auto",
-  zaxis_title_side = "auto",
-  zaxis_corner_offset = NULL,
-  zaxis_tick_size = NULL,
+  data = "auto",
+  location = "auto",
+  breaks = NULL,
+  labels = NULL,
+  title = "auto",
+  title_location = "side",
+  title_offset = 1.25,
+  title_size = NULL,
+  color = "black",
+  linewidth = 2,
+  text_offset = 0,
+  label_size = 0.8,
+  label_side = "auto",
+  title_side = "auto",
+  corner_offset = NULL,
+  tick_size = NULL,
   extent = NULL,
   panel = NULL,
   zscale = 1,
@@ -29,7 +29,7 @@ render_zaxis(
 )
 }
 \arguments{
-\item{zaxis_data}{Default \code{"auto"}. Data source used to generate z-axis
+\item{data}{Default \code{"auto"}. Data source used to generate z-axis
 breaks and labels. Options are \code{"auto"}, \code{"topographic"}, \code{"polygon"},
 \code{"point"}, \code{"path"}, \code{"obj"}, \code{"raymesh"}, \code{"tree"}, \code{"label"},
 \code{"building"}, and \code{"cloud"}. Use \code{"polygon"} after \code{\link[=render_polygons]{render_polygons()}} or
@@ -39,57 +39,57 @@ heights. Use \code{"building"} after \code{\link[=render_buildings]{render_build
 height data, or the matching render type after point/path/object/tree/label
 and cloud calls to use those cached altitude values.}
 
-\item{zaxis_location}{Default \code{"auto"}. Axis location. Options:
+\item{location}{Default \code{"auto"}. Axis location. Options:
 \code{"auto"}, \code{"panel"}, \code{"panelbottomleft"}, \code{"panelbottomright"},
 \code{"paneltopleft"}, \code{"paneltopright"}, \code{"bottomleft"}, \code{"bottomright"},
 \code{"topleft"}, \code{"topright"}.}
 
-\item{zaxis_breaks}{Default \code{NULL}. Numeric breaks (in altitude units). If \code{NULL},
+\item{breaks}{Default \code{NULL}. Numeric breaks (in altitude units). If \code{NULL},
 breaks are generated from the full scene height range (minimum to maximum elevation).}
 
-\item{zaxis_labels}{Default \code{NULL}. Labels for \code{zaxis_breaks}.}
+\item{labels}{Default \code{NULL}. Labels for \code{breaks}.}
 
-\item{zaxis_title}{Default \code{"auto"}. Title for the z-axis. If \code{"auto"}, rayshader
+\item{title}{Default \code{"auto"}. Title for the z-axis. If \code{"auto"}, rayshader
 uses the cached height aesthetic label from \code{\link[=plot_gg]{plot_gg()}} scenes when available.
 Set to \code{NULL} to omit the title, or pass a character string to override it.}
 
-\item{zaxis_title_location}{Default \code{"top"}. Title location. Options are
+\item{title_location}{Default \code{"side"}. Title location. Options are
 \code{"side"} and \code{"top"}. \code{"side"} places the title horizontally opposite the
 tick-label side by default and centered on the axis.}
 
-\item{zaxis_title_offset}{Default \code{1.25}. Title offset multiplier in tick
+\item{title_offset}{Default \code{1.25}. Title offset multiplier in tick
 lengths. For
-\code{zaxis_title_location = "side"}, this moves the title away from the axis on the
+\code{title_location = "side"}, this moves the title away from the axis on the
 chosen title side, but never closer than one tick length beyond the tick label
 offset.
 For \code{"top"}, this moves the title above the top of the axis using
 tick-length-scaled spacing.}
 
-\item{zaxis_title_size}{Default \code{NULL}, which matches \code{zaxis_label_size}. Title text size passed to \code{rgl::texts3d()} as \code{cex}.}
+\item{title_size}{Default \code{NULL}. Matches \code{label_size} when omitted. Title text size passed to \code{rgl::texts3d()} as \code{cex}.}
 
-\item{zaxis_color}{Default \code{"black"}. Axis/tick/label color.}
+\item{color}{Default \code{"black"}. Axis/tick/label color.}
 
-\item{zaxis_linewidth}{Default \code{2}. Axis line width.}
+\item{linewidth}{Default \code{2}. Axis line width.}
 
-\item{zaxis_text_offset}{Default \code{0}. Label offset multiplier from the axis,
+\item{text_offset}{Default \code{0}. Label offset multiplier from the axis,
 applied in the outward corner direction (diagonal for corner placements).}
 
-\item{zaxis_label_size}{Default \code{0.8}. Tick label text size passed to \code{rgl::texts3d()} as \code{cex}.}
+\item{label_size}{Default \code{0.8}. Tick label text size passed to \code{rgl::texts3d()} as \code{cex}.}
 
-\item{zaxis_label_side}{Default \code{"auto"}. Side of the axis where tick labels
+\item{label_side}{Default \code{"auto"}. Side of the axis where tick labels
 are placed from the current camera perspective. Options are \code{"auto"},
 \code{"left"}, and \code{"right"}. \code{"auto"} keeps the inferred outside-corner side.}
 
-\item{zaxis_title_side}{Default \code{"auto"}. Side of the axis where the title is
+\item{title_side}{Default \code{"auto"}. Side of the axis where the title is
 placed from the current camera perspective. Options are \code{"auto"}, \code{"left"},
 and \code{"right"}. \code{"auto"} places side titles opposite the tick-label side and top
 titles on the tick-label side.}
 
-\item{zaxis_corner_offset}{Default \code{NULL}. Corner offset as a proportion of the
+\item{corner_offset}{Default \code{NULL}. Corner offset as a proportion of the
 center-to-corner planar distance. If \code{NULL}, this defaults to \code{0} for ggplot scenes
 and \code{0.08} for non-ggplot scenes. \code{0} places the axis exactly at the corner.}
 
-\item{zaxis_tick_size}{Default \code{NULL}. Tick marker size. If \code{NULL}, auto-sized from line width.}
+\item{tick_size}{Default \code{NULL}. Tick marker size. If \code{NULL}, auto-sized from line width.}
 
 \item{extent}{Default \code{NULL}. Either an object representing the spatial extent of the scene
 (either from the \code{raster}, \code{terra}, \code{sf}, or \code{sp} packages),
@@ -103,7 +103,7 @@ to disambiguate faceted ggplot scenes when panel-specific cached metadata is nee
 for non-ggplot scenes.}
 
 \item{zscale}{Default \code{1}. The ratio between x/y spacing and z units.
-If left at \code{1} with \code{zaxis_breaks = NULL} on non-ggplot terrain scenes, rayshader
+If left at \code{1} with \code{breaks = NULL} on non-ggplot terrain scenes, rayshader
 will attempt to use the cached \code{plot_3d()} zscale to generate more meaningful defaults.}
 
 \item{vertical_exaggeration}{Default \code{1}. Multiplier applied to the effective visual relief. If omitted, rayshader uses the cached scene value from \code{\link[=plot_3d]{plot_3d()}} or \code{\link[=plot_gg]{plot_gg()}} when available; pass explicitly to override for this call.}
@@ -129,20 +129,20 @@ montereybay_spatial |>
    zoom = 1
  )
 render_zaxis(
- zaxis_location = "bottomleft",
- zaxis_color = "black",
- zaxis_corner_offset = 0.2
+ location = "bottomleft",
+ color = "black",
+ corner_offset = 0.2
 )
 render_snapshot()
 
 #Change the location
 render_zaxis(
- zaxis_location = "topright",
- zaxis_title = "Elevation (m)",
- zaxis_title_location = "top",
- zaxis_color = "red",
- zaxis_corner_offset = 0.3,
- zaxis_tick_size = 3
+ location = "topright",
+ title = "Elevation (m)",
+ title_location = "top",
+ color = "red",
+ corner_offset = 0.3,
+ tick_size = 3
 )
 render_snapshot()
 # Add a z-axis to a ggplot scene.
@@ -159,8 +159,8 @@ plot_gg(
  phi = 20,
  theta = 45
 )
-render_zaxis(zaxis_location = "panel_bottomleft", zaxis_color = "red",
-            zaxis_label_size = 1.5)
+render_zaxis(location = "panel_bottomleft", color = "red",
+            label_size = 1.5)
 render_snapshot()
 
 # For faceted ggplot scenes, specify the panel whose corner should anchor the axis.
@@ -185,20 +185,20 @@ plot_gg(
 )
 render_zaxis(
  panel = 1,
- zaxis_location = "panel_bottomleft"
+ location = "panel_bottomleft"
 )
 render_snapshot()
 #Move to the second panel, top left
 render_camera(theta=-20, phi=20)
 render_zaxis(
  panel = 2,
- zaxis_location = "panel_topleft"
+ location = "panel_topleft"
 )
 render_snapshot()
 #Move to corner of the plot
 render_camera(theta=-20, phi=20,zoom=0.6)
 render_zaxis(
- zaxis_location = "topleft"
+ location = "topleft"
 )
 render_snapshot()
 \dontshow{\}) # examplesIf}

@@ -258,7 +258,7 @@ remove_plot_gg_grob_background_line = function(grob) {
 #'render_snapshot()
 #'plot_gg(mtplot, width=3.5, multicore = TRUE, window_size = c(1400,866), sun_angle=225,
 #'        zoom = 0.60, phi = 30, theta = 45)
-#'render_zaxis(zaxis_location = "panel_bottomleft")
+#'render_zaxis(location = "panel_bottomleft")
 #'render_snapshot()
 #'#Now let's plot a density plot in 3D.
 #'mtplot_density = ggplot(mtcars) +

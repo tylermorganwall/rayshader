@@ -274,9 +274,9 @@ test_that("ggplot z-axis breaks use mapped height positions but keep raw labels"
     clear_previous = TRUE
   ))
   expect_no_condition(render_zaxis(
-    zaxis_data = "point",
-    zaxis_breaks = breaks,
-    zaxis_labels = labels
+    data = "point",
+    breaks = breaks,
+    labels = labels
   ))
 
   ids = get_ids_with_labels()
@@ -338,7 +338,7 @@ test_that("standalone ggplot z-axis defaults use mapped height scale labels", {
     scientific = FALSE
   )[draw_idx]
 
-  expect_no_condition(render_zaxis(zaxis_location = "panel_bottomleft"))
+  expect_no_condition(render_zaxis(location = "panel_bottomleft"))
 
   ids = get_ids_with_labels()
   tick_id = ids$id[ids$tag == "zaxis_ticks"][1]
@@ -378,7 +378,7 @@ test_that("standalone ggplot z-axis auto-title uses implicit mapped height label
   transform_info = get_cached_plot_gg_transform_info(default = NULL)
   expect_equal(transform_info$height_label, "cyl")
 
-  expect_no_condition(render_zaxis(zaxis_location = "panel_bottomleft"))
+  expect_no_condition(render_zaxis(location = "panel_bottomleft"))
 
   ids = get_ids_with_labels()
   axis_id = ids$id[ids$tag == "zaxis_axis"][1]

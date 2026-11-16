@@ -234,7 +234,7 @@ render_snapshot()
 montereybay_spatial |>
  sphere_shade(texture="desert", vertical_exaggeration = 10) |>
  plot_3d(vertical_exaggeration = 4)
-render_zaxis(zaxis_location = "bottomleft")
+render_zaxis(location = "bottomleft")
 render_snapshot()
 
 #With a water layer

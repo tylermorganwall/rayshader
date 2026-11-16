@@ -30,13 +30,13 @@ test_that("render_zaxis() adds a styled axis after rendering points", {
     extent = extent,
     heightmap = heightmap,
     zscale = 10,
-    zaxis_location = "bottomleft",
-    zaxis_breaks = c(0, 25, 50),
-    zaxis_labels = c("0", "25", "50"),
-    zaxis_color = "red",
-    zaxis_linewidth = 5,
-    zaxis_text_offset = 4,
-    zaxis_tick_size = 9
+    location = "bottomleft",
+    breaks = c(0, 25, 50),
+    labels = c("0", "25", "50"),
+    color = "red",
+    linewidth = 5,
+    text_offset = 4,
+    tick_size = 9
   ))
 
   ids = get_ids_with_labels()
@@ -84,9 +84,9 @@ test_that("render_zaxis() adds a styled axis after rendering points", {
     extent = extent,
     heightmap = heightmap,
     zscale = 10,
-    zaxis_location = "bottomright",
-    zaxis_breaks = c(0, 25, 50),
-    zaxis_labels = c("0", "25", "50")
+    location = "bottomright",
+    breaks = c(0, 25, 50),
+    labels = c("0", "25", "50")
   ))
   ids = get_ids_with_labels()
   label_id_right = ids$id[ids$tag == "zaxis_labels"][1]
@@ -149,9 +149,9 @@ test_that("render_zaxis() accepts fractional text offsets", {
     extent = extent,
     zscale = 10,
     heightmap = heightmap,
-    zaxis_location = "bottomleft",
-    zaxis_breaks = c(0, 25, 50),
-    zaxis_text_offset = 0.25
+    location = "bottomleft",
+    breaks = c(0, 25, 50),
+    text_offset = 0.25
   ))
 })
 
@@ -180,16 +180,16 @@ test_that("render_zaxis() adds side and top titles", {
     extent = extent,
     zscale = 10,
     heightmap = heightmap,
-    zaxis_location = "bottomleft",
-    zaxis_breaks = c(0, 50, 100),
-    zaxis_title = "Elevation (m)",
-    zaxis_title_location = "side",
-    zaxis_title_size = 1.4,
-    zaxis_label_size = 1.2,
-    zaxis_label_side = "right",
-    zaxis_title_side = "left",
-    zaxis_text_offset = 1,
-    zaxis_color = "blue"
+    location = "bottomleft",
+    breaks = c(0, 50, 100),
+    title = "Elevation (m)",
+    title_location = "side",
+    title_size = 1.4,
+    label_size = 1.2,
+    label_side = "right",
+    title_side = "left",
+    text_offset = 1,
+    color = "blue"
   ))
 
   ids = get_ids_with_labels()
@@ -238,10 +238,10 @@ test_that("render_zaxis() adds side and top titles", {
     extent = extent,
     zscale = 10,
     heightmap = heightmap,
-    zaxis_location = "bottomleft",
-    zaxis_breaks = c(0, 50, 100),
-    zaxis_title = "Elevation (m)",
-    zaxis_title_location = "top"
+    location = "bottomleft",
+    breaks = c(0, 50, 100),
+    title = "Elevation (m)",
+    title_location = "top"
   ))
 
   ids = get_ids_with_labels()
@@ -278,10 +278,10 @@ test_that("render_zaxis() defaults side title opposite the label side horizontal
     extent = extent,
     zscale = 10,
     heightmap = heightmap,
-    zaxis_location = "bottomleft",
-    zaxis_breaks = c(0, 50, 100),
-    zaxis_title = "Elevation (m)",
-    zaxis_text_offset = 1
+    location = "bottomleft",
+    breaks = c(0, 50, 100),
+    title = "Elevation (m)",
+    text_offset = 1
   )
 
   ids = get_ids_with_labels()
@@ -353,9 +353,9 @@ test_that("render_zaxis() can use cached point altitude data", {
     extent = extent,
     heightmap = heightmap,
     zscale = 10,
-    zaxis_data = "point",
-    zaxis_breaks = c(100, 200),
-    zaxis_title = NULL
+    data = "point",
+    breaks = c(100, 200),
+    title = NULL
   )
 
   ids = get_ids_with_labels()
@@ -402,9 +402,9 @@ test_that("render_zaxis() can use cached path and label altitude data", {
     extent = extent,
     heightmap = heightmap,
     zscale = 10,
-    zaxis_data = "path",
-    zaxis_breaks = c(100, 200),
-    zaxis_title = NULL
+    data = "path",
+    breaks = c(100, 200),
+    title = NULL
   )
 
   ids = get_ids_with_labels()
@@ -429,9 +429,9 @@ test_that("render_zaxis() can use cached path and label altitude data", {
     extent = extent,
     heightmap = heightmap,
     zscale = 10,
-    zaxis_data = "label",
-    zaxis_breaks = c(300, 400),
-    zaxis_title = NULL
+    data = "label",
+    breaks = c(300, 400),
+    title = NULL
   )
 
   ids = get_ids_with_labels()
@@ -469,8 +469,8 @@ test_that("render_zaxis() accepts cached render-type data sources", {
       extent = extent,
       heightmap = heightmap,
       zscale = 10,
-      zaxis_data = source,
-      zaxis_breaks = c(10, 20)
+      data = source,
+      breaks = c(10, 20)
     )
     expect_equal(out$data, source)
     expect_equal(out$breaks, c(100, 200), tolerance = 1e-6)
@@ -504,7 +504,7 @@ test_that("render_zaxis() formats large automatic data labels with digit groupin
     extent = extent,
     heightmap = heightmap,
     zscale = 10,
-    zaxis_data = "polygon"
+    data = "polygon"
   )
 
   expect_true(all(grepl(",", out$labels)))
@@ -538,9 +538,9 @@ test_that("render_zaxis() keeps top titles close to tall data axes", {
     extent = extent,
     heightmap = heightmap,
     zscale = 1,
-    zaxis_data = "polygon",
-    zaxis_location = "topright",
-    zaxis_title_location = "top"
+    data = "polygon",
+    location = "topright",
+    title_location = "top"
   ))
 
   ids = get_ids_with_labels()
@@ -607,8 +607,8 @@ test_that("render_zaxis() can use cached polygon data-column values", {
     extent = extent,
     heightmap = heightmap,
     zscale = 10,
-    zaxis_data = "polygon",
-    zaxis_breaks = c(10, 20)
+    data = "polygon",
+    breaks = c(10, 20)
   )
   expect_true(any(get_ids_with_labels()$tag == "zaxis_axis"))
 
@@ -654,8 +654,8 @@ test_that("render_zaxis() works as a standalone entry point", {
     extent = extent,
     zscale = 10,
     heightmap = heightmap,
-    zaxis_breaks = c(0, 50, 100),
-    zaxis_tick_size = 5
+    breaks = c(0, 50, 100),
+    tick_size = 5
   ))
 
   ids = get_ids_with_labels()
@@ -679,8 +679,8 @@ test_that("render_zaxis() infers ggplot panel extent when omitted", {
   )))
 
   expect_no_condition(render_zaxis(
-    zaxis_location = "panel_bottomleft",
-    zaxis_breaks = c(0, 50, 100)
+    location = "panel_bottomleft",
+    breaks = c(0, 50, 100)
   ))
 
   ids = get_ids_with_labels()
@@ -710,7 +710,7 @@ test_that("render_zaxis() uses cached coord_sf scene metadata when omitted", {
   )))
 
   expect_no_condition(render_zaxis(
-    zaxis_breaks = c(0, 50, 100)
+    breaks = c(0, 50, 100)
   ))
 
   ids = get_ids_with_labels()
@@ -744,10 +744,10 @@ test_that("render_zaxis() uses cached user extent when omitted", {
     extent = extent,
     zscale = 10,
     heightmap = heightmap,
-    zaxis_breaks = c(0, 50, 100)
+    breaks = c(0, 50, 100)
   ))
   expect_no_condition(render_zaxis(
-    zaxis_breaks = c(0, 50, 100)
+    breaks = c(0, 50, 100)
   ))
 })
 
@@ -774,7 +774,7 @@ test_that("render_zaxis() uses extent cached by plot_3d()", {
   ))
 
   expect_no_condition(render_zaxis(
-    zaxis_breaks = c(0, 50, 100)
+    breaks = c(0, 50, 100)
   ))
 })
 
@@ -802,7 +802,7 @@ test_that("render_zaxis() uses the native extent cached for terrain matrices", {
       ymax = ncol(heightmap)
     )
   )
-  expect_no_condition(render_zaxis(zaxis_breaks = c(0, 50, 100)))
+  expect_no_condition(render_zaxis(breaks = c(0, 50, 100)))
 })
 
 test_that("plot_3d() does not treat raw matrix attributes as spatial extents", {
@@ -835,7 +835,7 @@ test_that("plot_3d() does not treat raw matrix attributes as spatial extents", {
       ymax = ncol(heightmap)
     )
   )
-  expect_no_condition(render_zaxis(zaxis_breaks = c(0, 50, 100)))
+  expect_no_condition(render_zaxis(breaks = c(0, 50, 100)))
 })
 
 test_that("plot_3d() and plot_gg() return invisibly by default", {
@@ -889,7 +889,7 @@ test_that("render_zaxis() infers cached terrain zscale for default breaks", {
   )
   expect_no_condition(render_zaxis(
     extent = extent,
-    zaxis_location = "bottomleft"
+    location = "bottomleft"
   ))
 
   ids = get_ids_with_labels()
@@ -927,8 +927,8 @@ test_that("render_zaxis() default breaks span negative and positive terrain", {
   )
   expect_no_condition(render_zaxis(
     extent = extent,
-    zaxis_location = "bottomleft",
-    zaxis_label_side = "left"
+    location = "bottomleft",
+    label_side = "left"
   ))
 
   ids = get_ids_with_labels()
@@ -984,9 +984,9 @@ test_that("render_zaxis() corner offset is user-configurable", {
     extent = extent,
     zscale = 10,
     heightmap = heightmap,
-    zaxis_location = "bottomleft",
-    zaxis_breaks = c(0, 25, 50),
-    zaxis_corner_offset = 0
+    location = "bottomleft",
+    breaks = c(0, 25, 50),
+    corner_offset = 0
   ))
   ids = get_ids_with_labels()
   axis_id = ids$id[ids$tag == "zaxis_axis"][1]
@@ -1000,9 +1000,9 @@ test_that("render_zaxis() corner offset is user-configurable", {
     extent = extent,
     zscale = 10,
     heightmap = heightmap,
-    zaxis_location = "bottomleft",
-    zaxis_breaks = c(0, 25, 50),
-    zaxis_corner_offset = 0.2
+    location = "bottomleft",
+    breaks = c(0, 25, 50),
+    corner_offset = 0.2
   ))
   ids = get_ids_with_labels()
   axis_id = ids$id[ids$tag == "zaxis_axis"][1]
@@ -1038,10 +1038,10 @@ test_that("render_zaxis() sizes text offsets in scene units for spatial extents"
   ))
 
   expect_no_condition(render_zaxis(
-    zaxis_location = "bottomleft",
-    zaxis_breaks = c(0, 500, 1000),
-    zaxis_title = "Elevation (m)",
-    zaxis_text_offset = 1
+    location = "bottomleft",
+    breaks = c(0, 500, 1000),
+    title = "Elevation (m)",
+    text_offset = 1
   ))
 
   ids = get_ids_with_labels()
@@ -1101,7 +1101,7 @@ test_that("ggplot z-axis defaults to panel placement", {
   ))
   expect_no_condition(render_zaxis(
     extent = ext,
-    zaxis_breaks = c(0, 50, 100)
+    breaks = c(0, 50, 100)
   ))
 
   ids = get_ids_with_labels()
@@ -1182,8 +1182,8 @@ test_that("ggplot z-axis supports explicit panel corners", {
   ))
   expect_no_condition(render_zaxis(
     extent = ext,
-    zaxis_location = "paneltopright",
-    zaxis_breaks = c(0, 50, 100)
+    location = "paneltopright",
+    breaks = c(0, 50, 100)
   ))
 
   ids = get_ids_with_labels()
@@ -1240,8 +1240,8 @@ test_that("ggplot panel inset omits zero marker", {
   ))
   expect_no_condition(render_zaxis(
     extent = ext,
-    zaxis_location = "panelbottomleft",
-    zaxis_breaks = c(0, 50, 100)
+    location = "panelbottomleft",
+    breaks = c(0, 50, 100)
   ))
 
   ids = get_ids_with_labels()
@@ -1291,10 +1291,10 @@ test_that("render_zaxis() validates z-axis labels length", {
       extent = extent,
       heightmap = heightmap,
       zscale = 10,
-      zaxis_breaks = c(0, 25, 50),
-      zaxis_labels = c("0", "25")
+      breaks = c(0, 25, 50),
+      labels = c("0", "25")
     ),
-    "`zaxis_labels` must be the same length as `zaxis_breaks`."
+    "`labels` must be the same length as `breaks`."
   )
 })
 
@@ -1327,11 +1327,11 @@ test_that("render_zaxis() adds an axis after rendering contours", {
     ),
     heightmap = heightmap,
     zscale = 10,
-    zaxis_location = "topright",
-    zaxis_breaks = c(0, 50, 100),
-    zaxis_labels = c("sea", "mid", "high"),
-    zaxis_title = "Elevation",
-    zaxis_title_location = "top"
+    location = "topright",
+    breaks = c(0, 50, 100),
+    labels = c("sea", "mid", "high"),
+    title = "Elevation",
+    title_location = "top"
   ))
 
   ids = get_ids_with_labels()

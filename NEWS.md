@@ -2,6 +2,10 @@
 
 ## New features
 
+- `render_zaxis()` Drops the redundant `zaxis_` prefix from its arguments.
+  Use `data`, `location`, `breaks`, `labels`, `title`, and the corresponding
+  unprefixed styling arguments.
+
 - `render_highquality()` Returns scenes with a resolved camera and render defaults
   when `return_scene = TRUE`. Asset collection is explicit through rayrender's
   `write_usd()`; ordinary returns no longer embed textures.

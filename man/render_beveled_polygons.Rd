@@ -223,7 +223,7 @@ render_beveled_polygons(mont_county_buff,  flat_shading  = TRUE, angle = 45, bev
                  material = rayvertex::material_list(diffuse="red"),
                  light_intensity = 1, light_relative = FALSE,
                  clear_previous = TRUE)
-render_zaxis(zaxis_data = "beveled_polygon")
+render_zaxis(data = "beveled_polygon")
 render_camera(theta=194, phi= 35,   zoom = 0.7, fov= 80)
 render_highquality(rgl_materials = list("obj_raymesh_beveled_polygon" = poly_material))
 \dontshow{\}) # examplesIf}
