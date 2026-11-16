@@ -92,6 +92,7 @@ sphere_shade = function(
   if (!is.null(deprecated_call)) {
     return(eval(deprecated_call, parent.frame()))
   }
+  na_color = normalize_rgb_color(na_color)
   sunangle_missing = missing(sun_angle)
   heightmap_missing = missing(heightmap)
   extent_missing = missing(extent)

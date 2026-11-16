@@ -741,6 +741,14 @@ plot_3d = function(
   if (!is.null(deprecated_call)) {
     return(eval(deprecated_call, parent.frame()))
   }
+  solid_color = normalize_rgb_color(solid_color)
+  solid_line_color = normalize_rgb_color(solid_line_color)
+  shadow_color = normalize_rgb_color(shadow_color)
+  water_color = normalize_rgb_color(water_color)
+  water_line_color = normalize_rgb_color(water_line_color)
+  soil_color_light = normalize_rgb_color(soil_color_light)
+  soil_color_dark = normalize_rgb_color(soil_color_dark)
+  background = normalize_rgb_color(background)
   water_was_missing = missing(water)
   water_input_was_missing = missing(water_input)
   water_render_method = match.arg(water_render_method)

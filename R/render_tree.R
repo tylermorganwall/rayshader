@@ -194,6 +194,8 @@ render_tree = function(
   load_normals = FALSE,
   ...
 ) {
+  crown_color = normalize_rgb_color(crown_color)
+  trunk_color = normalize_rgb_color(trunk_color)
   clear_tree_layer = function() {
     rgl::pop3d(tag = "objtree")
     rgl::pop3d(tag = "tree_preview")

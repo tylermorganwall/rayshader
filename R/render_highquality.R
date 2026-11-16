@@ -433,6 +433,10 @@ render_highquality = function(
   if (!is.null(deprecated_call)) {
     return(eval(deprecated_call, parent.frame()))
   }
+  light_color = normalize_rgb_color(light_color)
+  water_surface_color = normalize_rgb_color(water_surface_color)
+  title_color = normalize_rgb_color(title_color)
+  title_bar_color = normalize_rgb_color(title_bar_color)
   if (
     !is.null(fov) &&
       (!is.numeric(fov) || length(fov) != 1L || !is.finite(fov))

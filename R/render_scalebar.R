@@ -99,6 +99,9 @@ render_scalebar = function(
   text_z_offset = 0,
   clear_previous = FALSE
 ) {
+  color_first = normalize_rgb_color(color_first)
+  color_second = normalize_rgb_color(color_second)
+  color_text = normalize_rgb_color(color_text)
   if (
     is_render_clear_only_call(
       clear_previous,

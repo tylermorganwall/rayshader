@@ -347,6 +347,7 @@ render_people = function(
   simple_rgl = FALSE,
   ...
 ) {
+  color = normalize_rgb_color(color)
   if (
     is_render_clear_only_call(
       clear_previous,

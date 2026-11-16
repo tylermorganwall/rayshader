@@ -173,6 +173,7 @@ render_zaxis = function(
   vertical_exaggeration = 1,
   heightmap = NULL
 ) {
+  color = normalize_rgb_color(color)
   if (rgl::cur3d() == 0) {
     stop("No rgl window currently open.")
   }

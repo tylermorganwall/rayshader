@@ -100,6 +100,7 @@ generate_contour_overlay = function(
   if (!is.null(deprecated_call)) {
     return(eval(deprecated_call, parent.frame()))
   }
+  color = normalize_rgb_color(color)
   heightmap_missing = missing(heightmap) || is.null(heightmap)
   extent_missing = missing(extent)
   crs_missing = missing(crs)

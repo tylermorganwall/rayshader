@@ -2,6 +2,10 @@
 
 ## New features
 
+- Overall: Color inputs accept comma-separated `rgb(r, g, b)` strings with
+  channels from `0` to `255`, including optional whitespace. Existing named,
+  hexadecimal, and numeric colors retain their behavior.
+
 - `render_zaxis()` Drops the redundant `zaxis_` prefix from its arguments.
   Use `data`, `location`, `breaks`, `labels`, `title`, and the corresponding
   unprefixed styling arguments.

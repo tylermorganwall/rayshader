@@ -234,6 +234,7 @@ render_streams = function(
   if (!is.null(deprecated_call)) {
     return(eval(deprecated_call, parent.frame()))
   }
+  water_color = normalize_rgb_color(water_color)
   clear_stream_layer = function() {
     rgl::pop3d(tag = "water_path")
     clear_render_water_path_info()

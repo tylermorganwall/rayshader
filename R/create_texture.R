@@ -52,6 +52,12 @@ create_texture = function(
   if (!is.null(deprecated_call)) {
     return(eval(deprecated_call, parent.frame()))
   }
+  light_color = normalize_rgb_color(light_color)
+  shadow_color = normalize_rgb_color(shadow_color)
+  left_color = normalize_rgb_color(left_color)
+  right_color = normalize_rgb_color(right_color)
+  center_color = normalize_rgb_color(center_color)
+  corner_colors = normalize_rgb_color(corner_colors)
   if (old_method) {
     lightrgb = col2rgb(light_color)
     shadowrgb = col2rgb(shadow_color)

@@ -195,6 +195,12 @@ generate_scalebar_overlay = function(
   if (!is.null(deprecated_call)) {
     return(eval(deprecated_call, parent.frame()))
   }
+  color1 = normalize_rgb_color(color1)
+  color2 = normalize_rgb_color(color2)
+  text_color = normalize_rgb_color(text_color)
+  border_color = normalize_rgb_color(border_color)
+  tick_color = normalize_rgb_color(tick_color)
+  halo_color = normalize_rgb_color(halo_color)
   length_missing = missing(length) || is.null(length)
   bearing_missing = missing(bearing) || is.null(bearing)
   unit_missing = missing(unit) || is.null(unit)

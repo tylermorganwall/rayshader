@@ -124,6 +124,7 @@ generate_waterline_overlay = function(
   extent = NULL,
   crs = NULL
 ) {
+  color = normalize_rgb_color(color)
   heightmap_missing = missing(heightmap) || is.null(heightmap)
   zscale_missing = missing(zscale)
   extent_missing = missing(extent)

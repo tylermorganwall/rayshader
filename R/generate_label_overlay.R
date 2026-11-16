@@ -143,6 +143,9 @@ generate_label_overlay = function(
   halo_gap_fill_alpha_threshold = 0.25,
   seed = NA
 ) {
+  color = normalize_rgb_color(color)
+  point_color = normalize_rgb_color(point_color)
+  halo_color = normalize_rgb_color(halo_color)
   if (!is.na(seed)) {
     set.seed(seed)
   } else {

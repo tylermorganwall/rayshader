@@ -68,6 +68,7 @@ generate_line_overlay = function(
   data_column_width = NULL,
   offset = c(0, 0)
 ) {
+  color = normalize_rgb_color(color)
   if (!(length(find.package("sf", quiet = TRUE)) > 0)) {
     stop("{sf} package required for generate_line_overlay()")
   }

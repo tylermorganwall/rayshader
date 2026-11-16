@@ -40,6 +40,7 @@ height_shade = function(
   ),
   range = NULL
 ) {
+  texture = normalize_rgb_color(texture)
   heightmap_missing = missing(heightmap)
   heightmap_cache_label = format_scene_cache_label(deparse(substitute(
     heightmap

@@ -114,6 +114,7 @@ render_multipolygonz = function(
   if (!is.null(deprecated_call)) {
     return(eval(deprecated_call, parent.frame()))
   }
+  color = normalize_rgb_color(color)
   if (
     is_render_clear_only_call(
       clear_previous,

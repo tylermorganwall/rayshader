@@ -112,6 +112,7 @@ render_polygons = function(
   heightmap = NULL,
   ...
 ) {
+  color = normalize_rgb_color(color)
   light_direction_missing = missing(light_direction)
   if (
     is_render_clear_only_call(

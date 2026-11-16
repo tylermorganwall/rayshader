@@ -9,7 +9,9 @@ constant_shade(heightmap, color = "white", alpha = 1)
 \arguments{
 \item{heightmap}{A two-dimensional matrix, where each entry in the matrix is the elevation at that point.}
 
-\item{color}{Default \code{"white"}. Color for the constant layer.}
+\item{color}{Default \code{"white"}. Color for the constant layer, as an R color name,
+hexadecimal code, \code{rgb(r, g, b)} string with channels from \code{0} to \code{255}, or a
+numeric RGB vector with intensities between \code{0} and \code{1}.}
 
 \item{alpha}{Default \code{1}, the alpha transparency.}
 }

@@ -195,6 +195,10 @@ render_roads = function(
   if (!is.null(deprecated_call)) {
     return(eval(deprecated_call, parent.frame()))
   }
+  road_color = normalize_rgb_color(road_color)
+  lane_color = normalize_rgb_color(lane_color)
+  centerline_color = normalize_rgb_color(centerline_color)
+  edge_line_color = normalize_rgb_color(edge_line_color)
   if (
     !is.logical(terrain_grading) ||
       length(terrain_grading) != 1L ||

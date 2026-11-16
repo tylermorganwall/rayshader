@@ -87,6 +87,7 @@ generate_polygon_overlay = function(
   if (!is.null(deprecated_call)) {
     return(eval(deprecated_call, parent.frame()))
   }
+  line_color = normalize_rgb_color(line_color)
   if (!(length(find.package("sf", quiet = TRUE)) > 0)) {
     stop("{sf} package required for generate_polygon_overlay()")
   }
@@ -168,6 +169,7 @@ generate_polygon_overlay = function(
   if (is.function(palette)) {
     palette = palette(nrow(sf_polygons_cropped))
   }
+  palette = normalize_rgb_color(palette)
   if (is.function(palette)) {
     transparent = FALSE
   } else if (length(palette) == 1 && is.na(palette[1])) {

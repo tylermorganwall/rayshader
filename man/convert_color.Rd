@@ -7,8 +7,13 @@
 convert_color(color, as_hex = FALSE, linear = FALSE)
 }
 \arguments{
-\item{color}{The color to convert. Can be either a hexadecimal code, or a numeric rgb
+\item{color}{The color to convert. Can be an R color name, a hexadecimal code, an \code{rgb(r, g, b)} string
+with channels between \code{0} and \code{255}, or a numeric rgb
 vector listing three intensities between \code{0} and \code{1}.}
+
+\item{as_hex}{Default \code{FALSE}. Return a hexadecimal color instead of numeric channels.}
+
+\item{linear}{Default \code{FALSE}. Convert numeric output from sRGB to linear RGB.}
 }
 \value{
 Color vector

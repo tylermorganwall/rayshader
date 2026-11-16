@@ -142,6 +142,8 @@ render_water = function(
   if (!is.null(deprecated_call)) {
     return(eval(deprecated_call, parent.frame()))
   }
+  water_color = normalize_rgb_color(water_color)
+  water_line_color = normalize_rgb_color(water_line_color)
   # A visible rgl device otherwise repaints the whole scene for every inserted
   # polygon (including transparency sorting). Defer redraws across removal,
   # insertion and waterlines, then restore the caller's state even on failure.

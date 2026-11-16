@@ -165,6 +165,10 @@ render_depth = function(
   if (!is.null(deprecated_call)) {
     return(eval(deprecated_call, parent.frame()))
   }
+  title_color = normalize_rgb_color(title_color)
+  title_bar_color = normalize_rgb_color(title_bar_color)
+  vignette_color = normalize_rgb_color(vignette_color)
+  background = normalize_rgb_color(background)
   if (rgl::cur3d() == 0) {
     stop("No rgl window currently open.")
   }

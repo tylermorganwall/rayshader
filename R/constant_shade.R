@@ -5,7 +5,9 @@
 #'Cache fallback messages are disabled by default. Set `options(rayshader.verbose_scene_cache = TRUE)` to print when cached metadata is reused.
 #'
 #'@param heightmap A two-dimensional matrix, where each entry in the matrix is the elevation at that point.
-#'@param color Default `"white"`. Color for the constant layer.
+#' @param color Default `"white"`. Color for the constant layer, as an R color name,
+#' hexadecimal code, `rgb(r, g, b)` string with channels from `0` to `255`, or a
+#' numeric RGB vector with intensities between `0` and `1`.
 #'@param alpha Default `1`, the alpha transparency.
 #'@return RGB array of a single color layer.
 #'@export

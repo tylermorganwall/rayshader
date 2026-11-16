@@ -131,6 +131,7 @@ render_points = function(
   vertical_exaggeration = 1,
   heightmap = NULL
 ) {
+  color = normalize_rgb_color(color)
   if (
     is_render_clear_only_call(
       clear_previous,

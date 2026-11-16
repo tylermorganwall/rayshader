@@ -138,6 +138,10 @@ render_snapshot = function(
   reset_scene_cache = FALSE,
   ...
 ) {
+  title_color = normalize_rgb_color(title_color)
+  title_bar_color = normalize_rgb_color(title_bar_color)
+  vignette_color = normalize_rgb_color(vignette_color)
+  background = normalize_rgb_color(background)
   if (rgl::rgl.useNULL()) {
     software_render = TRUE
   }

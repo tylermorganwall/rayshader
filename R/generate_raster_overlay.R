@@ -436,6 +436,7 @@ raster_overlay_matrix_to_rgba = function(
   if (is.function(palette)) {
     palette = palette(256)
   }
+  palette = normalize_rgb_color(palette)
   if (
     !is.character(palette) ||
       length(palette) < 1 ||

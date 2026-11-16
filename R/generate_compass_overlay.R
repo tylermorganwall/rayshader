@@ -167,6 +167,11 @@ generate_compass_overlay = function(
   halo_gap_fill = 2,
   halo_gap_fill_alpha_threshold = 0.25
 ) {
+  color1 = normalize_rgb_color(color1)
+  color2 = normalize_rgb_color(color2)
+  text_color = normalize_rgb_color(text_color)
+  border_color = normalize_rgb_color(border_color)
+  halo_color = normalize_rgb_color(halo_color)
   bearing_missing = missing(bearing)
   compass_type = match.arg(compass_type)
   heightmap = resolve_overlay_heightmap(

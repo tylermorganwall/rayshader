@@ -165,6 +165,9 @@ radiance_shade = function(
   if (!is.null(deprecated_call)) {
     return(eval(deprecated_call, parent.frame()))
   }
+  color = normalize_rgb_color(color)
+  light_color = normalize_rgb_color(light_color)
+  water_surface_color = normalize_rgb_color(water_surface_color)
   light_direction_missing = missing(light_direction)
   if (samples > 256 && sample_method == "sobol_blue") {
     warning(

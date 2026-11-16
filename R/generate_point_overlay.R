@@ -57,6 +57,7 @@ generate_point_overlay = function(
   offset = c(0, 0),
   data_column_width = NULL
 ) {
+  color = normalize_rgb_color(color)
   if (!(length(find.package("sf", quiet = TRUE)) > 0)) {
     stop("{sf} package required for generate_point_overlay()")
   }

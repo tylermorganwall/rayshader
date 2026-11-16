@@ -36,6 +36,8 @@ save_png = function(
   title_bar_alpha = 0.5,
   title_just = "left"
 ) {
+  title_color = normalize_rgb_color(title_color)
+  title_bar_color = normalize_rgb_color(title_bar_color)
   if (is.null(filename)) {
     stop("save_png requires a filename")
   }
