@@ -20,6 +20,15 @@ the user’s focus to important regions in the figure. The 3D models can
 also be exported to a 3D-printable format with a built-in STL export
 function, and can be exported to an OBJ file.
 
+## Development source builds
+
+[Download the latest successful master source build](https://github.com/tylermorganwall/rayshader/releases/tag/source-master).
+The download is an R source package produced by `R CMD build`, not GitHub's automatically generated source archive or a compiled binary.
+
+[Source-build workflow runs](https://github.com/tylermorganwall/rayshader/actions/workflows/source-build.yaml) provide verified tarballs, SHA-256 checksums, and commit metadata for every branch, including `ggplot_data`. Actions artifacts are retained for 30 days and require GitHub sign-in. Only successful `master` builds update the durable `source-master` release; preview branches do not replace it. The release link becomes available after the first successful master publication.
+
+A successful source build verifies packaging and the saved artifact. It does not verify installation, dependencies, or rendering.
+
 ## Installation
 
 ``` r
