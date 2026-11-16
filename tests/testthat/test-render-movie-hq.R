@@ -13,9 +13,11 @@ test_that("render_movie_hq generates motion from saved keyframes", {
     render_highquality = function(...) {
       scene_args <<- list(...)
       scene = list(label = "rendered-scene")
-      attr(scene, "environment_light") = "sky.exr"
-      attr(scene, "environment_light_bake_white") = TRUE
-      attr(scene, "rotate_env") = 2.5
+      attr(scene, "ray_render_settings") = list(
+        environment_light = "sky.exr",
+        environment_light_bake_white = TRUE,
+        rotate_env = 2.5
+      )
       scene
     },
     .package = "rayshader"

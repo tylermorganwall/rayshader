@@ -192,7 +192,8 @@ render_movie = function(
 #'scene with [render_highquality()], generating camera motion from supplied or
 #'saved rayrender interactive keyframes with
 #'`rayrender::generate_camera_motion()`, and passing the result to
-#'`rayrender::render_animation()`.
+#'`rayrender::render_animation()`. Screen-space text and lines are retained and
+#'reprojected for each frame by rayrender.
 #'
 #'@param frames Default `360`. Number of frames in the generated camera motion.
 #'@param type Default `"linear"`. Type of transition between saved keyframes.

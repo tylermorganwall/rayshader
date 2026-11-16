@@ -44,5 +44,6 @@ Renders a high quality movie by extracting the current rayshader
 scene with \code{\link[=render_highquality]{render_highquality()}}, generating camera motion from supplied or
 saved rayrender interactive keyframes with
 \code{rayrender::generate_camera_motion()}, and passing the result to
-\code{rayrender::render_animation()}.
+\code{rayrender::render_animation()}. Screen-space text and lines are retained and
+reprojected for each frame by rayrender.
 }

@@ -63,6 +63,10 @@
 
 ## Bugfixes
 
+- `render_movie_hq()` and `render_highquality()` animations retain screen-space
+  text and lines, including z-axis labels and ticks, with per-frame projection
+  and occlusion. Requires rayrender with animation overlay support.
+
 - Overall: Legacy argument spellings are accepted through `...`, with deprecation warnings naming their replacements. Supplying both spellings raises an error.
 - `render_highquality()` Chooses a valid up vector for straight-down spatial cameras when no explicit up vector is supplied.
 - `render_movie_hq()` Preserves sky, integrator, and environment settings stored in returned scenes.

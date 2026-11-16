@@ -2201,10 +2201,21 @@ render_highquality = function(
       clamp_value = clamp_value
     )
     if (!is.null(screen_text_objects) || !is.null(screen_line_objects)) {
-      warning(
-        "Screen-space text and lines are not supported by `rayrender::render_animation()`; ",
-        "use `text_render = \"world\"` and `line_render = \"world\"` for animated labels."
-      )
+      if (
+        all(
+          c("screen_text", "screen_line") %in%
+            names(formals(rayrender::render_animation))
+        )
+      ) {
+        animation_args$screen_text = screen_text_objects
+        animation_args$screen_line = screen_line_objects
+        dot_args[c("screen_text", "screen_line")] = NULL
+      } else {
+        warning(
+          "Update rayrender to include screen-space text and lines in animations; ",
+          "or use `text_render = \"world\"` and `line_render = \"world\"`."
+        )
+      }
     }
     if (!is.null(sky_file)) {
       animation_args$environment_light = sky_file
