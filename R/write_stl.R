@@ -34,7 +34,8 @@ write_stl = function(filename, rotate = FALSE, maxwidth = 100, unit="mm") {
   #Write data
   triangles = 0L
   ids_with_tags = rgl::ids3d(tags=TRUE)
-  id_val = ids_with_tags$id[substr(ids_with_tags$tag, 1,7) == "surface" | ids_with_tags$tag == "base"]
+  id_val = ids_with_tags$id[substr(ids_with_tags$tag, 1,7) == "surface" |
+                            ids_with_tags$tag %in% c("base", "basebottom")]
   if(length(id_val) == 0) {
     stop("rayshader: No 3D scene data found")
   }
