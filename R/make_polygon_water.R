@@ -82,8 +82,10 @@ make_polygon_water = function(
     }
     result = record$mesh
     if (!is.null(result)) {
-      vertices[[length(vertices) + 1L]] = result$vertices
-      lines[[length(lines) + 1L]] = result$lines
+      vertices[[length(vertices) + 1L]] = curve_scene_primitives(
+        result$vertices
+      )
+      lines[[length(lines) + 1L]] = curve_scene_primitives(result$lines, 2L)
     }
   }
   if (!length(vertices)) {
@@ -248,6 +250,8 @@ index_polygon_water_terrain = function(heightmap, zscale) {
     # road grading. Never infer its diagonal or elevations from a second mesh.
     chunks = lapply(ids, function(id) {
       v = rgl::rgl.attrib(id, 'vertices')
+      # Shoreline clipping and water levels use the physical elevation datum.
+      v[, 2] = v[, 2] + scene_curvature_drop(v[, 1], v[, 3])
       indices = as.integer(rgl::rgl.attrib(id, 'indices'))
       if (length(indices)) {
         v = v[indices, , drop = FALSE]

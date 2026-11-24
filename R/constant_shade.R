@@ -60,17 +60,27 @@ constant_shade = function(heightmap, color = "white", alpha = 1) {
   if (!is.matrix(heightmap)) {
     stop("`heightmap` must be a matrix.", call. = FALSE)
   }
+  return_array = constant_shade_image(heightmap, color, alpha)
+  cache_hillshade_map(return_array, label = hillshade_cache_label)
+  return(return_array)
+}
+
+#' @param heightmap Matrix of terrain elevations.
+#' @param color Layer color.
+#' @param alpha Layer opacity.
+#' @return A constant RGBA image with the heightmap's map orientation.
+#' @keywords internal
+#' @noRd
+constant_shade_image = function(heightmap, color, alpha) {
   return_array = array(alpha, dim = c(ncol(heightmap), nrow(heightmap), 4))
   const_col = convert_color(color)
   return_array[,, 1] = const_col[1]
   return_array[,, 2] = const_col[2]
   return_array[,, 3] = const_col[3]
-  return_array = rayimage::ray_read_image(
+  rayimage::ray_read_image(
     return_array,
     assume_colorspace = rayimage::CS_SRGB,
     assume_white = "D65",
     source_linear = FALSE
   )
-  cache_hillshade_map(return_array, label = hillshade_cache_label)
-  return(return_array)
 }

@@ -3180,8 +3180,10 @@ get_render_highquality_screen_text_just = function(
   label_index = 1
 ) {
   convert_just = function(value) {
-    if (index == 2 && value < 0) {
-      return(0.5 - value)
+    # rgl measures vertical adjustment from the bottom; screen_text uses
+    # the top. Preserve offsets outside [0, 1] with the same conversion.
+    if (index == 2) {
+      return(1 - value)
     }
     value
   }

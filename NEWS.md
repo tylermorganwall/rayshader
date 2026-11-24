@@ -2,6 +2,18 @@
 
 ## New features
 
+- `plot_3d()` Caches Earth curvature for spatial render layers, including water,
+  terrain-relative objects, and explicit altitudes. Inspect the setting with
+  `get_scene_metadata()$earth_curvature`.
+
+- `plot_3d()` Adds `earth_curvature = TRUE` to bend spatial terrain around the
+  bounding-box center using a spherical Earth. Vertical exaggeration scales
+  the relief independently of the curvature.
+
+- `plot_3d()` Adds `normals = FALSE` to disable smooth DEM vertex normals,
+  skip their calculation, and use face normals in high-quality renders and
+  OBJ exports. Other scene objects retain their normals.
+
 - Overall: Color inputs accept comma-separated `rgb(r, g, b)` strings with
   channels from `0` to `255`, including optional whitespace. Existing named,
   hexadecimal, and numeric colors retain their behavior.
@@ -62,6 +74,16 @@
   independent of scene size and camera position.
 
 ## Bugfixes
+
+- `sphere_shade()` Prevents out-of-bounds texture lookups on steep terrain.
+  `calculate_normal()` returns unit-length edge normals with consistent
+  upward orientation at all corners.
+
+- `render_highquality()` Preserves rgl's vertical text alignment for screen-space
+  labels, including top z-axis titles and offsets beyond the text bounds.
+
+- `haze_shade()` preserves the terrain’s spatial metadata so a subsequent
+  `plot_3d()` can reuse the raster’s inferred `zscale`, extent, and CRS.
 
 - `render_movie_hq()` and `render_highquality()` animations retain screen-space
   text and lines, including z-axis labels and ticks, with per-frame projection

@@ -161,9 +161,12 @@ make_water_raster = function(
   water_mesh = make_water_mesh_cpp(heightmap, waterheight)
   water_mesh$vertices = lapply(
     water_mesh$vertices,
-    apply_geographic_aspect_to_vertices
+    function(v) curve_scene_primitives(apply_geographic_aspect_to_vertices(v))
   )
-  water_mesh$lines = apply_geographic_aspect_to_vertices(water_mesh$lines)
+  water_mesh$lines = curve_scene_primitives(
+    apply_geographic_aspect_to_vertices(water_mesh$lines),
+    2L
+  )
   vertices = water_mesh$vertices
   if (length(vertices) > 0) {
     for (component in vertices) {
@@ -246,8 +249,13 @@ make_spatial_water_surface = function(
       lines = matrix(nrow = 0, ncol = 3)
     )))
   }
-  triangle_vertices = apply_geographic_aspect_to_vertices(triangle_vertices)
-  line_vertices = apply_geographic_aspect_to_vertices(line_vertices)
+  triangle_vertices = curve_scene_primitives(apply_geographic_aspect_to_vertices(
+    triangle_vertices
+  ))
+  line_vertices = curve_scene_primitives(
+    apply_geographic_aspect_to_vertices(line_vertices),
+    2L
+  )
   rgl::triangles3d(
     x = triangle_vertices,
     indices = seq_len(nrow(triangle_vertices)),
@@ -5237,7 +5245,7 @@ make_water_legacy = function(
     nr1 = nr - 1
     nc1 = nc - 1
 
-    if (all(!na_matrix)) {
+    if (all(!na_matrix) && !get_scene_earth_curvature()) {
       vertices = rbind(
         matrix(
           c(
@@ -5285,7 +5293,7 @@ make_water_legacy = function(
       if (length(heightlist) > 0) {
         indices = rev(seq_len(nrow(fullsides)))
         rgl::triangles3d(
-          apply_geographic_aspect_to_vertices(fullsides),
+          curve_scene_vertices(apply_geographic_aspect_to_vertices(fullsides)),
           indices = indices,
           lit = FALSE,
           color = water_color,
@@ -5301,7 +5309,7 @@ make_water_legacy = function(
       if (length(heightlist) > 0) {
         indices = rev(seq_len(nrow(fullsides)))
         rgl::triangles3d(
-          apply_geographic_aspect_to_vertices(fullsides),
+          curve_scene_vertices(apply_geographic_aspect_to_vertices(fullsides)),
           indices = indices,
           lit = FALSE,
           color = water_color,
@@ -5318,7 +5326,7 @@ make_water_legacy = function(
       ray_surface = generate_surface(basemat, zscale = 1)
 
       rgl::triangles3d(
-        x = ray_surface$verts,
+        x = curve_scene_vertices(ray_surface$verts),
         indices = ray_surface$inds,
         texcoords = ray_surface$texcoords,
         color = water_color,

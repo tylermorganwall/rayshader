@@ -134,6 +134,7 @@ render_trails = function(
     heightmap = heightmap,
     caller = "render_trails"
   )
+  heightmap = scene_draping_heightmap(heightmap, zscale)
   terrain_scale = resolve_render_stream_terrain_scale()
   width_units = match.arg(width_units)
   densify = resolve_render_scalar(

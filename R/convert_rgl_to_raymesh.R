@@ -102,7 +102,12 @@ convert_rgl_to_raymesh = function(
       ))
     }
     textures = rgl.attrib(vertex_info$id[row], "texcoords")
-    normals = rgl.attrib(vertex_info$id[row], "normals")
+    # rgl synthesizes normals for an unlit mesh; honor the DEM's explicit opt-out.
+    normals = if (isTRUE(vertex_info$load_normals[[row]])) {
+      rgl.attrib(vertex_info$id[row], "normals")
+    } else {
+      matrix(numeric(), ncol = 3L)
+    }
     if (obj) {
       has_norm = get(id, envir = ray_has_norm_envir)
       if (!has_norm || nrow(normals) == 0) {

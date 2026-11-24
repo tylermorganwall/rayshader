@@ -453,6 +453,7 @@ render_buildings = function(
       altitude = NULL,
       offset = 0,
       zscale = 1,
+      curve = FALSE,
       crs = centroid_source_crs,
       panel = panel,
       transform_scene = centroid_transform_scene,
@@ -617,6 +618,7 @@ render_buildings = function(
     }
   }
 
+  roof_mesh$vertices = lapply(roof_mesh$vertices, curve_scene_vertices)
   render_raymesh(
     roof_mesh,
     extent = extent,

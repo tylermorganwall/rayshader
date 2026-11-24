@@ -92,12 +92,16 @@ save_obj = function(
   number_normals = 0
   # allvertices = matrix(nrow=0,ncol=3) #Debug line
   #Writes data and increments vertex/normal/texture counter
-  write_data = function(id, con) {
+  write_data = function(id, con, load_normals = TRUE) {
     vertices = get_render_source_vertices(id)
     vertices[is.na(vertices)] = 0
     # allvertices <<- rbind(allvertices,vertices) #Debug line
     textures = rgl.attrib(id, "texcoords")
-    normals = rgl.attrib(id, "normals")
+    normals = if (load_normals) {
+      rgl.attrib(id, "normals")
+    } else {
+      matrix(numeric(), ncol = 3L)
+    }
     # has_degenerate_normals = any(normals[,1] == 0 & normals[,2] == 0 & normals[,3] == 0)
     cat(
       paste0(
@@ -566,7 +570,7 @@ save_obj = function(
       }
       vertex_info$startindexnormals[row] = number_normals + 1
       write_comment(sprintf("# %s\n", vertex_info$tag[row]), con)
-      write_data(id, con)
+      write_data(id, con, load_normals = vertex_info$load_normals[[row]])
       if (vertex_info$tag[row] != "water") {
         if (save_texture) {
           if (vertex_info$tag[row] != "base") {

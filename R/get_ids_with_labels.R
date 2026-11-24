@@ -84,6 +84,7 @@ get_ids_with_labels = function(
   material_type = idvals$tag
   empty_properties = list(
     texture_file = NA,
+    load_normals = TRUE,
     layer_texture_file = NA,
     base_color = NA,
     soil_texture = NA,
@@ -118,6 +119,10 @@ get_ids_with_labels = function(
 
     if (idvals$type[i] != "text") {
       if (substr(material_type[i], 1, 7) == "surface") {
+        material_properties[[i]]$load_normals = !identical(
+          material_type_single$smooth,
+          FALSE
+        )
         full_texture = get_plot_3d_surface_texture(
           idvals$id[i],
           material_type_single$texture

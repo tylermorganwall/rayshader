@@ -387,6 +387,19 @@ render_polygons = function(
       single_poly$vb[3, ] = single_poly$vb[3, ] *
         scene_aspect$scale[["z"]]
       single_poly$vb[2, ] = single_poly$vb[2, ] / zscale
+      if (get_scene_earth_curvature()) {
+        triangles = t(single_poly$vb[
+          1:3,
+          as.vector(single_poly$it),
+          drop = FALSE
+        ])
+        vertices = curve_scene_primitives(triangles)
+        single_poly = rgl::tmesh3d(
+          vertices = t(vertices),
+          indices = matrix(seq_len(nrow(vertices)), nrow = 3),
+          homogeneous = FALSE
+        )
+      }
 
       rgl::shade3d(
         single_poly,

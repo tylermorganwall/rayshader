@@ -413,6 +413,7 @@ render_people = function(
     heightmap,
     caller = "render_people"
   )
+  heightmap = scene_draping_heightmap(heightmap, effective_zscale)
   person_scale = rep(1 / effective_zscale, 3)
   person_args = list(...)
   person_args$instance_preview = simple_rgl

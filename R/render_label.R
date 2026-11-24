@@ -618,6 +618,7 @@ render_label = function(
         altitude = NULL,
         offset = 0,
         zscale = 1,
+        curve = FALSE,
         panel = panel,
         transform_scene = FALSE,
         caller = "render_label"
@@ -1136,6 +1137,11 @@ render_single_label = function(
   scene_aspect = get_scene_geographic_aspect()
   x = x * scene_aspect$scale[["x"]]
   y = y * scene_aspect$scale[["z"]]
+  drop = scene_curvature_drop(x, y)
+  z = z - drop
+  if (in_bounds) {
+    startline = startline - drop
+  }
   if (isTRUE(line)) {
     if (dash_length == "auto") {
       dash_length = (z - startline + offset) / 20

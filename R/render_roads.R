@@ -276,6 +276,7 @@ render_roads = function(
     heightmap = heightmap,
     caller = "render_roads"
   )
+  heightmap = scene_draping_heightmap(heightmap, zscale)
   densify = resolve_render_scalar(
     densify,
     missing(densify),
@@ -1016,7 +1017,10 @@ render_roads = function(
       terrain_scale
     )
     replace_render_road_scene_terrain(graded, zscale)
-    attr(coord_list, "graded_heightmap") = graded
+    attr(coord_list, "graded_heightmap") = get_scene_context_value(
+      "scene_source_heightmap",
+      default = graded
+    )
   }
   cache_scene_road_meshes(
     road_meshes,
@@ -1170,7 +1174,16 @@ replace_render_road_scene_terrain = function(heightmap, zscale) {
   if (!is.null(full_texture)) {
     register_plot_3d_surface_texture(id, full_texture, material$texture)
   }
-  cache_scene_heightmap(heightmap, label = "road-graded terrain")
+  source_heightmap = NULL
+  if (get_scene_earth_curvature()) {
+    attr(heightmap, "rayshader_curved_terrain") = NULL
+    source_heightmap = apply_earth_curvature(heightmap, aspect, -zscale)
+  }
+  cache_scene_heightmap(
+    heightmap,
+    label = "road-graded terrain",
+    source_heightmap = source_heightmap
+  )
   cache_scene_triangulate(FALSE)
   invisible(id)
 }
@@ -8921,6 +8934,7 @@ calculate_road_path_world_scale = function(heightmap, extent, crs = NULL) {
   )
   scene_crs = try_parse_scene_crs(get_scene_crs(default = NULL))
   input_crs = try_parse_scene_crs(crs)
+  attr(heightmap, "rayshader_curved_terrain") = NULL
   matches_scene = is.matrix(scene_heightmap) &&
     identical(scene_heightmap, heightmap) &&
     !is.null(scene_extent) &&

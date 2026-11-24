@@ -35,7 +35,7 @@ make_waterlines = function(
     segmentlist[, 3] = segmentlist[, 3] - (nc - 1) / 2
     segmentlist = apply_geographic_aspect_to_vertices(segmentlist)
     rgl::segments3d(
-      segmentlist,
+      curve_scene_primitives(segmentlist, 2L),
       color = line_color,
       lwd = linewidth,
       alpha = alpha,

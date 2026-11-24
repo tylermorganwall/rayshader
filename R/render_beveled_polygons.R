@@ -325,6 +325,7 @@ render_beveled_polygons = function(
       altitude = NULL,
       offset = 0,
       zscale = 1,
+      curve = FALSE,
       crs = centroid_source_crs,
       panel = panel,
       transform_scene = centroid_transform_scene,
@@ -492,6 +493,7 @@ render_beveled_polygons = function(
     )
   }
 
+  poly_mesh$vertices = lapply(poly_mesh$vertices, curve_scene_vertices)
   render_raymesh(
     poly_mesh,
     extent = extent,

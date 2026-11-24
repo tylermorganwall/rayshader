@@ -229,6 +229,15 @@ render_compass = function(
       x = xyz_range[1, 1] - radius
       z = xyz_range[1, 3] - radius
     }
+    if (
+      get_scene_earth_curvature() && (!is.null(altitude) || !length(id_shadow))
+    ) {
+      if (is.null(altitude)) {
+        y = max(resolve_scene_render_heightmap(), na.rm = TRUE) /
+          get_scene_effective_zscale()
+      }
+      y = y - scene_curvature_drop(x, z)
+    }
   }
   north_symbol = .north_symbol_rgl
   change_color_shape = function(shapes, color, shape_index) {

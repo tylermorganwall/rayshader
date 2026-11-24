@@ -336,10 +336,15 @@ render_obj = function(
     raw_coords = TRUE
   }
 
+  placement_altitude = xyz[, 2] * zscale
+  if (!raw_coords && !single_obj && get_scene_earth_curvature()) {
+    placement_altitude = (xyz[, 2] + scene_curvature_drop(xyz[, 1], xyz[, 3])) *
+      zscale
+  }
   obj_color_values = if (!is.null(altitude)) {
     altitude
   } else {
-    xyz[, 2] * zscale
+    placement_altitude
   }
   color = resolve_ggplot_height_palette_color(
     color = color,
@@ -418,6 +423,7 @@ render_obj = function(
   obj_cache_altitude = altitude
   if (!is.null(lat) && !is.null(long) && any(is.na(xyz[, 2]))) {
     valid_xyz = !is.na(xyz[, 2])
+    placement_altitude = placement_altitude[valid_xyz]
     if (length(obj_cache_altitude) == length(valid_xyz)) {
       obj_cache_altitude = obj_cache_altitude[valid_xyz]
     }
@@ -434,9 +440,14 @@ render_obj = function(
   cache_altitude_zaxis_data(
     source = "obj",
     altitude = obj_cache_altitude,
-    scene_altitude = xyz[, 2] * zscale,
+    scene_altitude = placement_altitude,
     label = "obj"
   )
+  if (obj_zscale && !raw_coords && !single_obj && get_scene_earth_curvature()) {
+    # Scale the model locally so its georeferenced anchor stays on the terrain.
+    scale = scale / zscale
+    obj_zscale = FALSE
+  }
   if (instance_preview) {
     return(cache_render_person_preview(
       filename,
@@ -557,6 +568,11 @@ render_obj = function(
     )
   }
   obj = rayvertex:::merge_scene(obj, flatten_materials = TRUE)
+  if (single_obj && !raw_coords && get_scene_earth_curvature()) {
+    obj$vertices = curve_scene_vertices(apply_geographic_aspect_to_vertices(
+      obj$vertices
+    ))
+  }
   obj = rayvertex:::remove_duplicate_materials(obj)
 
   number_shapes = length(obj$shapes)

@@ -57,6 +57,8 @@ plot_3d(
   crs = NULL,
   water_elevation = NULL,
   water_surface_tolerance = NULL,
+  normals = TRUE,
+  earth_curvature = FALSE,
   ...
 )
 }
@@ -163,8 +165,8 @@ specify the location of the x-y coordinates of the bottom-left corner of the vie
 and the next two (or one, if square) specify the window size. NOTE: The absolute positioning of the
 window does not currently work on macOS (tested on Mojave), but the size can still be specified.}
 
-\item{precomputed_normals}{Default \code{NULL}. Takes the output of \code{calculate_normals()} to save
-computing normals internally.}
+\item{precomputed_normals}{Default \code{NULL}. Takes the output of \code{calculate_normal()} to save
+computing normals internally. Ignored when \code{normals = FALSE} or \code{earth_curvature = TRUE}.}
 
 \item{triangulate}{Default \code{FALSE}. Reduce the size of the 3D model by triangulating the height map.
 Set this to \code{TRUE} if generating the model is slow, or moving it is choppy. Will also reduce the size
@@ -208,6 +210,16 @@ value overrides embedded CRS metadata.}
 
 \item{water_surface_tolerance}{Default \code{NULL}. Polygon water coincidence tolerance in terrain elevation units; see \code{\link[=render_water]{render_water()}}.}
 
+\item{normals}{Default \code{TRUE}. Whether to use smooth vertex normals for the DEM.
+Set to \code{FALSE} to skip rayshader's terrain normal calculation and ignore
+\code{precomputed_normals}.
+The DEM uses flat shading in rgl, and high-quality renders and OBJ exports use
+triangle face normals. Normals on other scene objects are unaffected.}
+
+\item{earth_curvature}{Default \code{FALSE}. Bend the terrain away from the tangent
+plane at the bounding-box center. Supply a georeferenced DEM or a matrix
+with an extent and CRS so ground distances can be measured.}
+
 \item{...}{Deprecated argument spellings are accepted with a warning and forwarded to their current names.}
 }
 \description{
@@ -222,6 +234,23 @@ conversion paths. This is a conservative OpenGL texture-size guard; set the opti
 your system supports larger textures, or to \code{Inf}/\code{FALSE} to disable the check.
 
 Note: Calling \code{\link[=plot_3d]{plot_3d()}} resets the scene cache for the \code{\link[=render_snapshot]{render_snapshot()}}, \code{\link[=render_depth]{render_depth()}}, and \code{\link[=render_highquality]{render_highquality()}}
+}
+\details{
+With \code{earth_curvature = TRUE}, the terrain follows a sphere of mean
+radius 6,371,008.8 meters. Ground distances use the east-west and north-south
+cell spacing at the bounding-box center, a local approximation for regional
+maps. The center retains its elevation. Earth's curvature is always drawn
+at its true scale, regardless of \code{vertical_exaggeration}. At a ground
+distance of 100 km from the center, sea level lies about 785 m below the
+tangent plane with either \code{vertical_exaggeration = 1} or
+\code{vertical_exaggeration = 4}. The latter draws terrain relief four times
+taller above local sea level.
+
+Spatial layers added by
+the render functions inherit the scene's curvature. Supply water levels and
+object altitudes in the original elevation datum. Terrain-relative offsets
+are measured above the local surface. Explicit raw scene coordinates already
+refer to the rendered coordinate system.
 }
 \examples{
 \dontshow{if (interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")) withAutoprint(\{ # examplesIf}

@@ -699,7 +699,9 @@ render_zaxis_internal = function(
     }
   }
 
-  y_vals = zaxis_breaks / zscale
+  y_vals = zaxis_breaks /
+    zscale -
+    scene_curvature_drop(anchor_xyz[1], anchor_xyz[3])
   y_min = min(y_vals)
   y_max = max(y_vals)
   if (length(y_vals) == 1 || identical(y_min, y_max)) {

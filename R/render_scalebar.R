@@ -165,7 +165,12 @@ render_scalebar = function(
     radius = offset / 8
   }
   if (is.null(y)) {
-    y = xyz_range[2, 2]
+    y = if (get_scene_earth_curvature()) {
+      max(resolve_scene_render_heightmap(), na.rm = TRUE) /
+        get_scene_effective_zscale()
+    } else {
+      xyz_range[2, 2]
+    }
   }
   if (position %in% c("N", "S")) {
     xstart = xyz_range[2, 1] *
@@ -340,6 +345,15 @@ render_scalebar = function(
       }
     }
   }
+  if (get_scene_earth_curvature()) {
+    bend_segment = function(mesh) {
+      mesh$vb[2, ] = mesh$vb[2, ] -
+        scene_curvature_drop(mesh$vb[1, ], mesh$vb[3, ])
+      mesh
+    }
+    meshlist1 = lapply(meshlist1, bend_segment)
+    meshlist2 = lapply(meshlist2, bend_segment)
+  }
   shapelist3d(
     meshlist1,
     lit = FALSE,
@@ -355,13 +369,16 @@ render_scalebar = function(
     plot = TRUE
   )
 
+  draw_scale_label = function(x, y, z, ...) {
+    text3d(x = x, y = y - scene_curvature_drop(x, z), z = z, ...)
+  }
   max_distance = max(limits)
   breakpoints = limits / max_distance
   for (i in seq_along(breakpoints)) {
     if (position == "N") {
       if (text_switch_side) {
         break_dist = breakpoints[i] * xend + (1 - breakpoints[i]) * xstart
-        text3d(
+        draw_scale_label(
           x = break_dist + text_x_offset,
           y = y + text_y_offset + radius * 3,
           z = zend - offset + text_z_offset - radius * 5,
@@ -371,7 +388,7 @@ render_scalebar = function(
         )
       } else {
         break_dist = breakpoints[i] * xstart + (1 - breakpoints[i]) * xend
-        text3d(
+        draw_scale_label(
           x = break_dist + text_x_offset,
           y = y + text_y_offset + radius * 3,
           z = zend - offset + text_z_offset - radius * 5,
@@ -383,7 +400,7 @@ render_scalebar = function(
     } else if (position == "W") {
       if (text_switch_side) {
         break_dist = breakpoints[i] * zstart + (1 - breakpoints[i]) * zend
-        text3d(
+        draw_scale_label(
           x = xend - offset + text_x_offset - radius * 5,
           y = y + text_y_offset + radius * 3,
           z = break_dist + text_z_offset,
@@ -393,7 +410,7 @@ render_scalebar = function(
         )
       } else {
         break_dist = breakpoints[i] * zend + (1 - breakpoints[i]) * zstart
-        text3d(
+        draw_scale_label(
           x = xend - offset + text_x_offset - radius * 5,
           y = y + text_y_offset + radius * 3,
           z = break_dist + text_z_offset,
@@ -405,7 +422,7 @@ render_scalebar = function(
     } else if (position == "S") {
       if (text_switch_side) {
         break_dist = breakpoints[i] * xstart + (1 - breakpoints[i]) * xend
-        text3d(
+        draw_scale_label(
           x = break_dist + text_x_offset,
           y = y + text_y_offset + radius * 3,
           z = zstart + offset + text_z_offset + radius * 5,
@@ -415,7 +432,7 @@ render_scalebar = function(
         )
       } else {
         break_dist = breakpoints[i] * xend + (1 - breakpoints[i]) * xstart
-        text3d(
+        draw_scale_label(
           x = break_dist + text_x_offset,
           y = y + text_y_offset + radius * 3,
           z = zstart + offset + text_z_offset + radius * 5,
@@ -427,7 +444,7 @@ render_scalebar = function(
     } else if (position == "E") {
       if (text_switch_side) {
         break_dist = breakpoints[i] * zend + (1 - breakpoints[i]) * zstart
-        text3d(
+        draw_scale_label(
           x = xstart + offset + text_x_offset + radius * 5,
           y = y + text_y_offset + radius * 3,
           z = break_dist + text_z_offset,
@@ -437,7 +454,7 @@ render_scalebar = function(
         )
       } else {
         break_dist = breakpoints[i] * zstart + (1 - breakpoints[i]) * zend
-        text3d(
+        draw_scale_label(
           x = xstart + offset + text_x_offset + radius * 5,
           y = y + text_y_offset + radius * 3,
           z = break_dist + text_z_offset,

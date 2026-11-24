@@ -264,7 +264,7 @@ render_points = function(
   point_color_values = if (!is.null(altitude)) {
     altitude
   } else {
-    xyz[, 2] * zscale
+    (xyz[, 2] + scene_curvature_drop(xyz[, 1], xyz[, 3])) * zscale
   }
   color = resolve_ggplot_height_palette_color(
     color = color,
@@ -300,7 +300,8 @@ render_points = function(
   }
   cache_point_zaxis_data(
     altitude = altitude,
-    scene_altitude = xyz[, 2] * zscale
+    scene_altitude = (xyz[, 2] + scene_curvature_drop(xyz[, 1], xyz[, 3])) *
+      zscale
   )
   invisible(NULL)
 }

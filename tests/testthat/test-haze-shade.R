@@ -190,3 +190,39 @@ test_that("haze_shade caches the returned haze map", {
 
   expect_equal(rayshader:::get_hillshade_map(), haze)
 })
+
+test_that("a haze overlay preserves the terrain scale used by plot_3d", {
+  skip_if_not_installed("terra")
+  local_rgl_use_null()
+  on.exit(rgl::close3d(), add = TRUE)
+  terrain = terra::rast(
+    nrows = 5,
+    ncols = 6,
+    xmin = 500000,
+    xmax = 500180,
+    ymin = 4100000,
+    ymax = 4100150,
+    crs = "EPSG:32610"
+  )
+  terra::values(terrain) = seq_len(terra::ncell(terrain))
+  relief = sphere_shade(terrain, vertical_exaggeration = 10)
+  raster_scale = get_hillshade_zscale()
+  expect_gt(raster_scale, 29)
+  relief |>
+    add_overlay(haze_shade(terrain)) |>
+    plot_3d_test(solid = FALSE, shadow = FALSE)
+  expect_equal(get_scene_zscale(), raster_scale)
+  expect_equal(
+    as.numeric(get_scene_extent()),
+    as.vector(terra::ext(terrain)),
+    ignore_attr = TRUE
+  )
+  expect_true(sf::st_crs(get_scene_crs()) == sf::st_crs(32610))
+})
+
+test_that("haze from a cached matrix keeps the explicit hillshade zscale", {
+  heightmap = matrix(seq_len(30), 5, 6)
+  sphere_shade(heightmap, zscale = 7)
+  haze_shade()
+  expect_equal(get_hillshade_zscale(), 7)
+})

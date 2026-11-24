@@ -3,6 +3,7 @@
 #' @param missing_height_group Default `NULL`. Optional grouping vector used to
 #' replace missing heights with the minimum height from the same path.
 #'
+#' @param curve Default `TRUE`. Apply scene curvature to output elevations.
 #' @return x/y/z
 #' @keywords internal
 #'
@@ -22,7 +23,8 @@ transform_into_heightmap_coords = function(
   panel = NULL,
   transform_scene = TRUE,
   caller = NULL,
-  missing_height_group = NULL
+  missing_height_group = NULL,
+  curve = TRUE
 ) {
   altitude_supplied = !is.null(altitude)
   offset = offset / zscale
@@ -194,5 +196,13 @@ transform_into_heightmap_coords = function(
     }
   }
   matrix_vals = apply_geographic_aspect_to_vertices(matrix_vals)
+  if (
+    curve &&
+      use_altitude &&
+      (altitude_supplied ||
+        !isTRUE(attr(heightmap, "rayshader_curved_terrain")))
+  ) {
+    matrix_vals = curve_scene_vertices(matrix_vals)
+  }
   return(matrix_vals)
 }

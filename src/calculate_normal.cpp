@@ -1,4 +1,5 @@
 #include <Rcpp.h>
+#include <cmath>
 #include <RProgress.h>
 using namespace Rcpp;
 
@@ -77,7 +78,7 @@ List calculate_normal_cpp(const NumericMatrix& heightmap, bool progress_bar,
           storevector2 = vcrossnorm2(tempvector3,tempvector4);
           storevector3 = (storevector1 + storevector2);
         }
-        storevector3 = storevector3/sqrt(pow(storevector3(0),2) + pow(storevector3(1),2) + pow(storevector3(2),2));
+
       } else {
         if((row == 0 || col == 0) && (row != heightmap.nrow() - 1 && col != heightmap.ncol() - 1)) {
           tempvector1(2) = heightmap(row,col)-heightmap(row,col+1);
@@ -99,7 +100,7 @@ List calculate_normal_cpp(const NumericMatrix& heightmap, bool progress_bar,
   }
   tempvector2(2) = heightmap(0,heightmap.ncol()-1)-heightmap(1,heightmap.ncol()-1);
   tempvector3(2) = heightmap(0,heightmap.ncol()-1)-heightmap(0,heightmap.ncol()-2);
-  storevector3 = vcrossnorm2(tempvector3,tempvector2);
+  storevector3 = vcrossnorm2(tempvector2,tempvector3);
   xmat(0,heightmap.ncol()-1) = storevector3(0);
   ymat(0,heightmap.ncol()-1) = storevector3(1);
   zmat(0,heightmap.ncol()-1) = -storevector3(2);
@@ -109,5 +110,17 @@ List calculate_normal_cpp(const NumericMatrix& heightmap, bool progress_bar,
   xmat(heightmap.nrow()-1,0) = storevector3(0);
   ymat(heightmap.nrow()-1,0) = storevector3(1);
   zmat(heightmap.nrow()-1,0) = -storevector3(2);
+  // Normalize after all edge and corner cross products have been written.
+  // Texture projection expects unit vectors, including the padded boundary.
+  for (R_xlen_t i = 0; i < xmat.size(); ++i) {
+    const double length = std::hypot(xmat[i], ymat[i], zmat[i]);
+    if (std::isfinite(length) && length > 0) {
+      xmat[i] /= length;
+      ymat[i] /= length;
+      zmat[i] /= length;
+    } else {
+      xmat[i] = ymat[i] = zmat[i] = NA_REAL;
+    }
+  }
   return(List::create(_["x"] = xmat, _["y"] = ymat, _["z"] = zmat));
 }

@@ -332,10 +332,15 @@ render_raymesh = function(
     raw_coords = TRUE
   }
 
+  placement_altitude = xyz[, 2] * zscale
+  if (!raw_coords && !single_obj && get_scene_earth_curvature()) {
+    placement_altitude = (xyz[, 2] + scene_curvature_drop(xyz[, 1], xyz[, 3])) *
+      zscale
+  }
   raymesh_color_values = if (!is.null(altitude)) {
     altitude
   } else {
-    xyz[, 2] * zscale
+    placement_altitude
   }
   color = resolve_ggplot_height_palette_color(
     color = color,
@@ -415,6 +420,7 @@ render_raymesh = function(
   raymesh_cache_altitude = altitude
   if (!is.null(lat) && !is.null(long) && any(is.na(xyz[, 2]))) {
     valid_xyz = !is.na(xyz[, 2])
+    placement_altitude = placement_altitude[valid_xyz]
     if (length(raymesh_cache_altitude) == length(valid_xyz)) {
       raymesh_cache_altitude = raymesh_cache_altitude[valid_xyz]
     }
@@ -431,9 +437,14 @@ render_raymesh = function(
   cache_altitude_zaxis_data(
     source = "raymesh",
     altitude = raymesh_cache_altitude,
-    scene_altitude = xyz[, 2] * zscale,
+    scene_altitude = placement_altitude,
     label = "raymesh"
   )
+  if (obj_zscale && !raw_coords && !single_obj && get_scene_earth_curvature()) {
+    # Scale the model locally so its georeferenced anchor stays on the terrain.
+    scale = scale / zscale
+    obj_zscale = FALSE
+  }
   scenelist = list()
   for (k in seq_len(nrow(xyz))) {
     tempobj = obj
@@ -525,6 +536,9 @@ render_raymesh = function(
     }
   }
   obj = rayvertex:::merge_scene(obj, flatten_materials = TRUE)
+  if (single_obj && !raw_coords) {
+    obj$vertices = curve_scene_vertices(obj$vertices)
+  }
   obj = rayvertex:::remove_duplicate_materials(obj)
 
   number_shapes = length(obj$shapes)

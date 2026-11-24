@@ -89,6 +89,9 @@ make_lines = function(
     segmentlist[, 1] = segmentlist[, 1] - (nr - 1) / 2
     segmentlist[, 3] = segmentlist[, 3] - (nc - 1) / 2
     segmentlist = apply_geographic_aspect_to_vertices(segmentlist)
+    if (!solid) {
+      segmentlist = curve_scene_primitives(segmentlist, 2L)
+    }
     rgl::segments3d(
       segmentlist,
       color = line_color,

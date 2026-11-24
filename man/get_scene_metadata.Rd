@@ -29,12 +29,13 @@ center, and size in rgl x/y/z coordinates.
 \item \code{meters_per_scene_unit} and \code{map_units_per_scene_unit}: Available physical
 and coordinate-unit conversions for horizontal scene distances.
 \item \code{scene_axis_mapping}: Mapping from spatial axes to rgl scene axes.
+\item \code{earth_curvature}: Whether terrain and spatial layers follow Earth's curvature.
 \item \code{triangulate}: Whether the terrain used mesh simplification.
 \item \code{panel_extents} and \code{panel_info}: Cached \code{\link[=plot_gg]{plot_gg()}} panel metadata, when
 applicable.
 \item \code{sources}: Labels describing the expressions that populated core cache
 values.
-\item \code{heightmap}: The cached matrix when \code{include_heightmap = TRUE}, otherwise
+\item \code{heightmap}: The source elevation matrix when \code{include_heightmap = TRUE}, otherwise
 \code{NULL}.
 }
 }
@@ -48,8 +49,9 @@ The returned \code{extent_3d} uses conventional spatial axes: x, y, and elevatio
 z in the cached heightmap's units. For \code{\link[=plot_3d]{plot_3d()}} these are the input
 elevation units; \code{\link[=plot_gg]{plot_gg()}} may use a transformed height scale.
 \code{scene_bounds} uses rgl axes: x, vertical y, and horizontal z. Spatial y
-increases toward negative scene z, and cached heightmap elevations are divided
-by \code{effective_zscale} to obtain scene y coordinates.
+increases toward negative scene z. To obtain scene y, divide the source
+elevation by \code{effective_zscale}. In a curved scene, also subtract the
+local drop below the tangent plane at the center of the extent.
 }
 \examples{
 \dontshow{if (interactive()) withAutoprint(\{ # examplesIf}

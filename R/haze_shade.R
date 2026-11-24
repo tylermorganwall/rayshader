@@ -319,7 +319,7 @@ haze_shade = function(
     }
   }
 
-  haze = constant_shade(heightmap, color = color, alpha = 1)
+  haze = constant_shade_image(heightmap, color, alpha = 1)
 
   heightmap_img = t(heightmap)
 

@@ -303,10 +303,9 @@ sphere_shade = function(
   image_y[is.nan(image_y)] = center[2]
   image_x[is.infinite(image_x)] = center[1]
   image_y[is.infinite(image_y)] = center[2]
-  image_x[image_x > dim(texture)[1]] = dim(texture)[1]
-  image_y[image_y > dim(texture)[2]] = dim(texture)[2]
-  image_x[image_x == 0] = 1
-  image_y[image_y == 0] = 1
+  # construct_matrix() indexes the texture in C++, from zero to size - 1.
+  image_x[] = pmax(0, pmin(dim(texture)[1] - 1, image_x))
+  image_y[] = pmax(0, pmin(dim(texture)[2] - 1, image_y))
   returnimage = array(1, dim = c(nrow(heightmap), ncol(heightmap), 4))
   returnimage[,, 1] = construct_matrix(
     texture[,, 1],

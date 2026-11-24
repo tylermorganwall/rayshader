@@ -269,7 +269,10 @@ render_path = function(
       }
       return(invisible(NULL))
     }
-    xyz = lapply(xyz, get_interpolated_points_path, n = resample_n)
+    xyz = lapply(xyz, function(coords) {
+      coords[, 2] = coords[, 2] + scene_curvature_drop(coords[, 1], coords[, 3])
+      curve_scene_vertices(get_interpolated_points_path(coords, n = resample_n))
+    })
     xyz = do.call(
       "rbind",
       lapply(xyz, \(x) rbind(x, matrix(NA, ncol = 3, nrow = 1)))
@@ -289,7 +292,7 @@ render_path = function(
         }
         color_length = length(color)
         for (i in seq_len(nrow(xyz) - 1)) {
-          rgl::lines3d(
+          draw_scene_path(
             xyz[i:(i + 1), ],
             color = color[((i - 1) %% color_length) + 1],
             tag = tag,
@@ -299,7 +302,7 @@ render_path = function(
         }
         return(invisible())
       } else {
-        rgl::lines3d(
+        draw_scene_path(
           xyz,
           color = color,
           tag = tag,
@@ -506,7 +509,7 @@ render_path = function(
     return(invisible(NULL))
   }
   path_scene_altitude = unlist(lapply(coord_list, function(coord) {
-    coord[, 2] * zscale
+    (coord[, 2] + scene_curvature_drop(coord[, 1], coord[, 3])) * zscale
   }))
   if (
     !is.null(path_altitude_values) &&
@@ -555,7 +558,7 @@ render_path = function(
         }
         color_length = length(color)
         for (i in seq_len(nrow(xyz) - 1)) {
-          rgl::lines3d(
+          draw_scene_path(
             xyz[i:(i + 1), ],
             color = color[((i - 1) %% color_length) + 1],
             tag = tag,
@@ -572,7 +575,7 @@ render_path = function(
         }
         color_length = length(color)
         for (i in seq_len(length(coord_list))) {
-          rgl::lines3d(
+          draw_scene_path(
             coord_list[[i]],
             color = color[((i - 1) %% color_length) + 1],
             tag = tag,
@@ -587,7 +590,7 @@ render_path = function(
         lapply(coord_list, \(x) rbind(x, matrix(NA, ncol = 3, nrow = 1)))
       )
       xyz = xyz[-nrow(xyz), ]
-      rgl::lines3d(
+      draw_scene_path(
         xyz,
         color = color,
         tag = tag,
@@ -660,7 +663,8 @@ render_heightmap_row_col = function(heightmap, x, z, clamp = TRUE) {
   nc = ncol(heightmap)
   scene_heightmap = get_scene_heightmap(default = NULL)
   aspect = if (
-    is.matrix(scene_heightmap) && identical(scene_heightmap, heightmap)
+    isTRUE(attr(heightmap, "rayshader_curved_terrain")) ||
+      (is.matrix(scene_heightmap) && identical(scene_heightmap, heightmap))
   ) {
     get_scene_geographic_aspect()
   } else {
@@ -1546,4 +1550,39 @@ densify_single_render_line_coord = function(coords, heightmap, offset) {
     y_vals[!is.finite(y_vals)] = min(heightmap, na.rm = TRUE)
   }
   cbind(x_vals, y_vals + offset, z_vals)
+}
+
+#' @param xyz Path vertices already placed in scene coordinates, with optional NA separators.
+#' @param color Path colors.
+#' @param ... Arguments forwarded to the rgl line strip.
+#' @keywords internal
+#' @noRd
+draw_scene_path = function(xyz, color, ...) {
+  if (get_scene_earth_curvature() && nrow(xyz) > 1L) {
+    aspect = get_scene_geographic_aspect()
+    meters = aspect$cell_meters / aspect$scale
+    length_m = sqrt(
+      (diff(xyz[, 1]) * meters[["x"]])^2 + (diff(xyz[, 3]) * meters[["z"]])^2
+    )
+    steps = pmax(1L, ceiling(length_m / curvature_chord_limit(aspect)))
+    steps[!is.finite(steps)] = 1L
+    if (any(steps > 1L)) {
+      # Interpolate the original elevations, then displace the new samples.
+      xyz[, 2] = xyz[, 2] + scene_curvature_drop(xyz[, 1], xyz[, 3])
+      starts = rep(seq_along(steps), steps)
+      index = c(starts, nrow(xyz))
+      fraction = (sequence(steps) - 1) / steps[starts]
+      vertices = xyz[index, , drop = FALSE]
+      interior = which(fraction > 0)
+      left = starts[interior]
+      vertices[interior, ] = xyz[left, , drop = FALSE] +
+        (xyz[left + 1L, , drop = FALSE] - xyz[left, , drop = FALSE]) *
+          fraction[interior]
+      if (length(color) > 1L) {
+        color = rep_len(color, nrow(xyz))[index]
+      }
+      xyz = curve_scene_vertices(vertices)
+    }
+  }
+  rgl::lines3d(xyz, color = color, ...)
 }

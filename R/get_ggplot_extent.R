@@ -1990,6 +1990,7 @@ reset_scene_context = function(
     cache_scene_context_token(NULL)
     cache_scene_zscale(NULL, label = NULL)
     cache_scene_vertical_exaggeration(NULL, label = NULL)
+    assign("scene_earth_curvature", FALSE, envir = ray_cache_scene_envir)
     cache_scene_triangulate(NULL)
     cache_scene_heightmap(NULL, label = NULL)
     cache_scene_extent(NULL, label = NULL)
@@ -2119,7 +2120,16 @@ get_scene_triangulate = function(default = FALSE) {
   isTRUE(triangulate)
 }
 
-cache_scene_heightmap = function(heightmap = NULL, label = NULL) {
+cache_scene_heightmap = function(
+  heightmap = NULL,
+  label = NULL,
+  source_heightmap = NULL
+) {
+  assign(
+    "scene_source_heightmap",
+    source_heightmap,
+    envir = ray_cache_scene_envir
+  )
   assign("scene_heightmap", heightmap, envir = ray_cache_scene_envir)
   assign("scene_heightmap_label", label, envir = ray_cache_scene_envir)
   invisible(NULL)
@@ -2675,7 +2685,7 @@ resolve_scene_render_heightmap = function(
       cache_label = get_scene_heightmap_label(default = NULL)
     )
   }
-  scene_heightmap
+  get_scene_context_value("scene_source_heightmap", default = scene_heightmap)
 }
 
 

@@ -601,7 +601,7 @@ test_that("render_highquality() maps unclamped rgl text justification", {
   label_row = which(screen_text$label == "A")[1]
 
   expect_equal(screen_text$hjust[label_row], 1.2)
-  expect_equal(screen_text$vjust[label_row], 1)
+  expect_equal(screen_text$vjust[label_row], 1.5)
 })
 
 test_that("rgl bitmap fallback preserves high-quality label appearance", {
@@ -652,7 +652,7 @@ test_that("rgl bitmap fallback preserves high-quality label appearance", {
   label_row = which(screen_text$label == "Fallback")[1]
   expect_equal(screen_text$size[label_row], 32)
   expect_equal(screen_text$hjust[label_row], 0.5)
-  expect_equal(screen_text$vjust[label_row], 1)
+  expect_equal(screen_text$vjust[label_row], 1.5)
 })
 
 test_that("render_label() fonts reach high quality screen and world text", {

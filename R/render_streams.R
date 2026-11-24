@@ -305,6 +305,7 @@ render_streams = function(
     heightmap = heightmap,
     caller = "render_streams"
   )
+  heightmap = scene_draping_heightmap(heightmap, zscale)
   terrain_scale = resolve_render_stream_terrain_scale()
   width_units = match.arg(width_units)
   densify = resolve_render_scalar(
@@ -832,7 +833,7 @@ make_render_highquality_water_path_polygon = function(
 #' @keywords internal
 resolve_render_highquality_water_path_surface = function() {
   heightmap = tryCatch(
-    resolve_scene_render_heightmap(caller = "render_highquality"),
+    get_scene_heightmap(default = NULL),
     error = function(e) NULL
   )
   if (!is.matrix(heightmap)) {

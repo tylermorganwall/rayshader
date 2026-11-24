@@ -170,18 +170,18 @@ render_floating_overlay = function(
     nrow = 3,
     ncol = 3
   )
+  vertices = rbind(tri1, tri2)
+  texcoords = matrix(c(1, 1, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1), ncol = 2)
+  # Interpolate UVs along with position when the curved sheet needs more faces.
+  overlay_vertices = curve_scene_primitives(cbind(vertices, texcoords))
   rgl::triangles3d(
-    x = rbind(tri1, tri2),
-    texcoords = matrix(
-      c(1, 1, 0, 0, 1, 0, 0, 1, 1, 0, 0, 1),
-      nrow = 6,
-      ncol = 2
-    ),
-    normals = matrix(
-      c(0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0),
-      nrow = 6,
-      ncol = 3
-    ),
+    x = overlay_vertices[, 1:3, drop = FALSE],
+    texcoords = overlay_vertices[, 4:5, drop = FALSE],
+    normals = if (get_scene_earth_curvature()) {
+      NULL
+    } else {
+      matrix(rep(c(0, 1, 0), 6), ncol = 3, byrow = TRUE)
+    },
     texture = tempmap,
     color = "white",
     lit = FALSE,

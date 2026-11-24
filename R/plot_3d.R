@@ -579,8 +579,8 @@ get_plot_3d_surface_texture = function(id, rgl_texture_file) {
 #'specify the location of the x-y coordinates of the bottom-left corner of the viewport on the screen,
 #'and the next two (or one, if square) specify the window size. NOTE: The absolute positioning of the
 #'window does not currently work on macOS (tested on Mojave), but the size can still be specified.
-#'@param precomputed_normals Default `NULL`. Takes the output of `calculate_normals()` to save
-#' computing normals internally.
+#'@param precomputed_normals Default `NULL`. Takes the output of `calculate_normal()` to save
+#' computing normals internally. Ignored when `normals = FALSE` or `earth_curvature = TRUE`.
 #'@param triangulate Default `FALSE`. Reduce the size of the 3D model by triangulating the height map.
 #'Set this to `TRUE` if generating the model is slow, or moving it is choppy. Will also reduce the size
 #'of 3D models saved to disk.
@@ -602,9 +602,32 @@ get_plot_3d_surface_texture = function(id, rgl_texture_file) {
 #'@param clear_previous Default `TRUE`. Clears the previously open `rgl` window if `plot_new = FALSE`.
 #'@param water_elevation Default `NULL`. Polygon water elevations; see [render_water()].
 #'@param water_surface_tolerance Default `NULL`. Polygon water coincidence tolerance in terrain elevation units; see [render_water()].
+#' @param normals Default `TRUE`. Whether to use smooth vertex normals for the DEM.
+#' Set to `FALSE` to skip rayshader's terrain normal calculation and ignore
+#' `precomputed_normals`.
+#' The DEM uses flat shading in rgl, and high-quality renders and OBJ exports use
+#' triangle face normals. Normals on other scene objects are unaffected.
+#' @param earth_curvature Default `FALSE`. Bend the terrain away from the tangent
+#' plane at the bounding-box center. Supply a georeferenced DEM or a matrix
+#' with an extent and CRS so ground distances can be measured.
 #' @param ... Deprecated argument spellings are accepted with a warning and forwarded to their current names.
 #'@import rgl
 #'@export
+#' @details With `earth_curvature = TRUE`, the terrain follows a sphere of mean
+#' radius 6,371,008.8 meters. Ground distances use the east-west and north-south
+#' cell spacing at the bounding-box center, a local approximation for regional
+#' maps. The center retains its elevation. Earth's curvature is always drawn
+#' at its true scale, regardless of `vertical_exaggeration`. At a ground
+#' distance of 100 km from the center, sea level lies about 785 m below the
+#' tangent plane with either `vertical_exaggeration = 1` or
+#' `vertical_exaggeration = 4`. The latter draws terrain relief four times
+#' taller above local sea level.
+#'
+#' Spatial layers added by
+#' the render functions inherit the scene's curvature. Supply water levels and
+#' object altitudes in the original elevation datum. Terrain-relative offsets
+#' are measured above the local surface. Explicit raw scene coordinates already
+#' refer to the rendered coordinate system.
 #'@examplesIf interactive() || identical(Sys.getenv("IN_PKGDOWN"), "true")
 #'#Plotting a spherical texture map of the built-in `montereybay_spatial` dataset.
 #'montereybay_spatial |>
@@ -715,6 +738,8 @@ plot_3d = function(
   crs = NULL,
   water_elevation = NULL,
   water_surface_tolerance = NULL,
+  normals = TRUE,
+  earth_curvature = FALSE,
   ...
 ) {
   deprecated_call = deprecated_argument_call(
@@ -740,6 +765,16 @@ plot_3d = function(
   )
   if (!is.null(deprecated_call)) {
     return(eval(deprecated_call, parent.frame()))
+  }
+  if (!is.logical(normals) || length(normals) != 1L || is.na(normals)) {
+    stop("`normals` must be a single TRUE/FALSE value.", call. = FALSE)
+  }
+  if (
+    !is.logical(earth_curvature) ||
+      length(earth_curvature) != 1L ||
+      is.na(earth_curvature)
+  ) {
+    stop("`earth_curvature` must be a single TRUE/FALSE value.", call. = FALSE)
   }
   solid_color = normalize_rgb_color(solid_color)
   solid_line_color = normalize_rgb_color(solid_line_color)
@@ -784,6 +819,12 @@ plot_3d = function(
     heightmap = resolved_heightmap$heightmap
     heightmap_cache_label = resolved_heightmap$label
     allow_scene_zscale_cache = identical(resolved_heightmap$source, "scene")
+    if (allow_scene_zscale_cache) {
+      heightmap = get_scene_context_value(
+        "scene_source_heightmap",
+        default = heightmap
+      )
+    }
   } else {
     heightmap_cache_label = format_scene_cache_label(deparse(substitute(
       heightmap
@@ -956,6 +997,15 @@ plot_3d = function(
     crs_cache_value = get_scene_crs(default = NULL)
     crs_cache_label = get_scene_crs_label(default = NULL)
   }
+  if (earth_curvature) {
+    hillshade_source = heightmap
+  }
+  heightmap = generate_base_shape(heightmap, base_shape)
+  source_heightmap = NULL
+  if (earth_curvature) {
+    source_heightmap = heightmap
+    heightmap = apply_earth_curvature(heightmap, geographic_aspect_info, zscale)
+  }
   reset_scene_context(
     clear_scene_metadata = TRUE,
     clear_scene_cache = TRUE
@@ -992,7 +1042,6 @@ plot_3d = function(
       length(window_size)
     ))
   }
-  heightmap = generate_base_shape(heightmap, base_shape)
   hillshade = rayimage::render_clamp(hillshade)
   rgl_hillshade = check_plot_3d_texture_size(hillshade)
 
@@ -1103,8 +1152,8 @@ plot_3d = function(
     rayimage::ray_write_image(rgl_hillshade, tempmap)
   }
   precomputed = FALSE
-  if (is.list(precomputed_normals)) {
-    normals = precomputed_normals
+  if (normals && !earth_curvature && is.list(precomputed_normals)) {
+    normal_data = precomputed_normals
     precomputed = TRUE
   }
   if (triangulate && any(is.na(heightmap))) {
@@ -1127,6 +1176,11 @@ plot_3d = function(
     )
   }
   cache_scene_context_token()
+  assign(
+    "scene_earth_curvature",
+    earth_curvature,
+    envir = ray_cache_scene_envir
+  )
   rgl::view3d(zoom = zoom, phi = phi, theta = theta, fov = fov)
   attributes(heightmap) = attributes(heightmap)["dim"]
   tag_surface = sprintf(
@@ -1135,29 +1189,42 @@ plot_3d = function(
     ncol(heightmap)
   )
   if (!triangulate) {
-    if (!precomputed) {
-      normal_heightmap = heightmap
-      attr(normal_heightmap, "rayshader_geographic_aspect") =
-        geographic_aspect_info
-      normals = calculate_normal(
-        normal_heightmap,
-        zscale = zscale,
-        geographic_aspect = geographic_aspect
-      )
-    } else {
-      normals = correct_normal_geographic_aspect(
-        normals,
-        geographic_aspect_info
-      )
-    }
     dim(heightmap) = unname(dim(heightmap))
-    normalsx = (t(normals$x[c(-1, -nrow(normals$x)), c(-1, -ncol(normals$x))]))
-    normalsy = (t(normals$z[c(-1, -nrow(normals$z)), c(-1, -ncol(normals$z))]))
-    normalsz = (t(normals$y[c(-1, -nrow(normals$y)), c(-1, -ncol(normals$y))]))
-    replace_na_vals = is.na(normalsx) | is.na(normalsy) | is.na(normalsz)
-    normalsx[replace_na_vals] = 0
-    normalsy[replace_na_vals] = 1
-    normalsz[replace_na_vals] = 0
+    surface_normals = NULL
+    if (normals) {
+      if (!precomputed) {
+        normal_heightmap = heightmap
+        attr(normal_heightmap, "rayshader_geographic_aspect") =
+          geographic_aspect_info
+        normal_data = calculate_normal(
+          normal_heightmap,
+          zscale = zscale,
+          geographic_aspect = geographic_aspect
+        )
+      } else {
+        normal_data = correct_normal_geographic_aspect(
+          normal_data,
+          geographic_aspect_info
+        )
+      }
+      normalsx = (t(normal_data$x[
+        c(-1, -nrow(normal_data$x)),
+        c(-1, -ncol(normal_data$x))
+      ]))
+      normalsy = (t(normal_data$z[
+        c(-1, -nrow(normal_data$z)),
+        c(-1, -ncol(normal_data$z))
+      ]))
+      normalsz = (t(normal_data$y[
+        c(-1, -nrow(normal_data$y)),
+        c(-1, -ncol(normal_data$y))
+      ]))
+      replace_na_vals = is.na(normalsx) | is.na(normalsy) | is.na(normalsz)
+      normalsx[replace_na_vals] = 0
+      normalsy[replace_na_vals] = 1
+      normalsz[replace_na_vals] = 0
+      surface_normals = matrix(c(normalsz, normalsy, -normalsx), ncol = 3L)
+    }
 
     ray_surface = generate_surface(
       heightmap,
@@ -1168,7 +1235,8 @@ plot_3d = function(
       x = ray_surface$verts,
       indices = ray_surface$inds,
       texcoords = ray_surface$texcoords,
-      normals = matrix(c(normalsz, normalsy, -normalsx), ncol = 3L),
+      normals = surface_normals,
+      smooth = normals,
       texture = tempmap,
       color = "white",
       lit = FALSE,
@@ -1211,7 +1279,7 @@ plot_3d = function(
       texcoords = texcoords,
       indices = index_vals,
       back = "cull",
-      #normals = normal_comp,
+      smooth = normals,
       texture = tempmap,
       lit = FALSE,
       color = "white",
@@ -1262,6 +1330,7 @@ plot_3d = function(
       shadow_texture_size = shadow_texture_size
     )
   }
+  water_heightmap = if (earth_curvature) source_heightmap else heightmap
   water_mesh = NULL
   water_render_method_current = water_render_method
   if (water) {
@@ -1271,7 +1340,7 @@ plot_3d = function(
       caller = "plot_3d"
     )
     water_mesh = make_water(
-      heightmap,
+      water_heightmap,
       waterheight = water_input,
       water_alpha = water_alpha,
       water_color = water_color,
@@ -1295,9 +1364,9 @@ plot_3d = function(
         antialias = line_antialias
       )
     } else {
-      if (all(!is.na(heightmap))) {
+      if (all(!is.na(water_heightmap))) {
         make_lines(
-          fliplr(heightmap),
+          fliplr(water_heightmap),
           basedepth = water_input,
           line_color = water_line_color,
           zscale = zscale,
@@ -1307,7 +1376,7 @@ plot_3d = function(
         )
       }
       make_waterlines(
-        heightmap,
+        water_heightmap,
         water_input = water_input,
         line_color = water_line_color,
         zscale = zscale,
@@ -1317,9 +1386,20 @@ plot_3d = function(
       )
     }
   }
-  cache_hillshade_heightmap(heightmap, label = heightmap_cache_label)
+  if (earth_curvature) {
+    cache_hillshade_heightmap(hillshade_source, label = heightmap_cache_label)
+    cache_hillshade_extent(extent_cache_value, label = extent_cache_label)
+    cache_hillshade_crs(crs_cache_value, label = crs_cache_label)
+    cache_hillshade_geographic_aspect(geographic_aspect_info)
+  } else {
+    cache_hillshade_heightmap(heightmap, label = heightmap_cache_label)
+  }
   cache_hillshade_zscale(base_zscale, label = zscale_cache_label)
-  cache_scene_heightmap(heightmap, label = heightmap_cache_label)
+  cache_scene_heightmap(
+    heightmap,
+    label = heightmap_cache_label,
+    source_heightmap = source_heightmap
+  )
   cache_scene_zscale(base_zscale, label = zscale_cache_label)
   cache_scene_vertical_exaggeration(
     cached_scene_vertical_exaggeration,
@@ -1329,4 +1409,33 @@ plot_3d = function(
   cache_scene_crs(crs_cache_value, label = crs_cache_label)
   cache_scene_geographic_aspect(geographic_aspect_info)
   invisible(NULL)
+}
+
+#' Apply the spherical drop below the center tangent plane
+#'
+#' @param heightmap Terrain elevation matrix.
+#' @param aspect Geographic aspect metadata with metric cell spacing.
+#' @param zscale Effective elevation units per scene unit.
+#' @return Elevations adjusted for Earth curvature in the input height units.
+#' @keywords internal
+#' @noRd
+apply_earth_curvature = function(heightmap, aspect, zscale) {
+  if (!is.finite(aspect$mean_cell_meters)) {
+    stop(
+      "`earth_curvature = TRUE` requires a spatial heightmap with a valid extent and CRS, or a matrix with extent and CRS.",
+      call. = FALSE
+    )
+  }
+  x_m = (seq_len(nrow(heightmap)) - (nrow(heightmap) + 1) / 2) *
+    aspect$cell_meters[["x"]]
+  y_m = (seq_len(ncol(heightmap)) - (ncol(heightmap) + 1) / 2) *
+    aspect$cell_meters[["z"]]
+  # Process one column at a time to bound temporary memory on large DEMs.
+  x_squared = x_m^2
+  height_units_per_meter = zscale / aspect$mean_cell_meters
+  for (j in seq_along(y_m)) {
+    drop_m = earth_curvature_drop_meters(x_squared + y_m[j]^2)
+    heightmap[, j] = heightmap[, j] - drop_m * height_units_per_meter
+  }
+  heightmap
 }

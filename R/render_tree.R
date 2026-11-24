@@ -461,6 +461,7 @@ render_tree = function(
       altitude = NULL,
       offset = 0,
       zscale = 1,
+      curve = FALSE,
       crs = render_obj_crs,
       panel = panel,
       transform_scene = !location_supplied && !tree_coords_transformed,

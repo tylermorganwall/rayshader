@@ -9,8 +9,9 @@
 #' z in the cached heightmap's units. For [plot_3d()] these are the input
 #' elevation units; [plot_gg()] may use a transformed height scale.
 #' `scene_bounds` uses rgl axes: x, vertical y, and horizontal z. Spatial y
-#' increases toward negative scene z, and cached heightmap elevations are divided
-#' by `effective_zscale` to obtain scene y coordinates.
+#' increases toward negative scene z. To obtain scene y, divide the source
+#' elevation by `effective_zscale`. In a curved scene, also subtract the
+#' local drop below the tangent plane at the center of the extent.
 #'
 #' @param include_heightmap Default `FALSE`. Whether to include the cached
 #' height matrix in the returned list. The heightmap can be large; its dimensions
@@ -32,12 +33,13 @@
 #' * `meters_per_scene_unit` and `map_units_per_scene_unit`: Available physical
 #'   and coordinate-unit conversions for horizontal scene distances.
 #' * `scene_axis_mapping`: Mapping from spatial axes to rgl scene axes.
+#' * `earth_curvature`: Whether terrain and spatial layers follow Earth's curvature.
 #' * `triangulate`: Whether the terrain used mesh simplification.
 #' * `panel_extents` and `panel_info`: Cached [plot_gg()] panel metadata, when
 #'   applicable.
 #' * `sources`: Labels describing the expressions that populated core cache
 #'   values.
-#' * `heightmap`: The cached matrix when `include_heightmap = TRUE`, otherwise
+#' * `heightmap`: The source elevation matrix when `include_heightmap = TRUE`, otherwise
 #'   `NULL`.
 #'
 #' @export
@@ -119,13 +121,20 @@ get_scene_metadata = function(include_heightmap = FALSE) {
     )
   }
 
-  finite_elevations = heightmap[is.finite(heightmap)]
+  source_heightmap = get_scene_context_value(
+    "scene_source_heightmap",
+    default = heightmap
+  )
+  finite_elevations = source_heightmap[is.finite(source_heightmap)]
   elevation_range = if (length(finite_elevations)) {
     stats::setNames(range(finite_elevations), c("min", "max"))
   } else {
     c(min = NA_real_, max = NA_real_)
   }
   scene_elevation_range = elevation_range / effective_zscale
+  if (get_scene_earth_curvature()) {
+    scene_elevation_range[] = range(heightmap, finite = TRUE) / effective_zscale
+  }
 
   geographic_aspect = get_scene_geographic_aspect()
   half_x = (nrow(heightmap) - 1) / 2 * geographic_aspect$scale[["x"]]
@@ -198,6 +207,7 @@ get_scene_metadata = function(include_heightmap = FALSE) {
     meters_per_scene_unit = meters_per_scene_unit,
     map_units_per_scene_unit = map_units_per_scene_unit,
     scene_axis_mapping = c(x = "x", y = "-z", elevation = "y"),
+    earth_curvature = get_scene_earth_curvature(),
     triangulate = get_scene_triangulate(default = FALSE),
     panel_extents = panel_extents,
     panel_info = panel_info,
@@ -210,6 +220,6 @@ get_scene_metadata = function(include_heightmap = FALSE) {
         default = NULL
       )
     ),
-    heightmap = if (isTRUE(include_heightmap)) heightmap else NULL
+    heightmap = if (isTRUE(include_heightmap)) source_heightmap else NULL
   )
 }
