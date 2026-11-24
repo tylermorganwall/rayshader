@@ -18,7 +18,7 @@
 #'  sphere_shade(vertical_exaggeration=20) |>
 #'  plot_map()
 #'
-#'#Raytrace the `montereybay_spatial` elevation map and add that shadow to the output of sphere_shade()
+#' # Raytrace the elevation map and add shadows to the sphere_shade() hillshade.
 #'montereybay_spatial |>
 #'  sphere_shade(vertical_exaggeration=20) |>
 #'  add_shadow(ray_shade(sun_altitude=20, vertical_exaggeration = 4),max_darken=0.3) |>

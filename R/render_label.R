@@ -692,7 +692,7 @@ render_label = function(
     }
     if (nzchar(requested_font_path)) {
       family_font_paths[!nzchar(family_font_paths)] = requested_font_path
-      do.call(rglFonts, setNames(list(family_font_paths), family))
+      do.call(rglFonts, stats::setNames(list(family_font_paths), family))
     } else {
       message(
         sprintf(

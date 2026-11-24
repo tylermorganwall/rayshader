@@ -81,7 +81,7 @@ multipolygonz_to_raymesh = function(sf_obj, swap_yz = FALSE) {
     return(NULL)
   }
   sizes = vapply(faces, function(face) nrow(face$vertices), 0L)
-  offsets = c(0L, head(cumsum(sizes), -1L))
+  offsets = c(0L, utils::head(cumsum(sizes), -1L))
   rayvertex::construct_mesh(
     vertices = do.call(rbind, lapply(faces, `[[`, "vertices")),
     indices = do.call(
@@ -185,7 +185,7 @@ multipolygonz_mesh_faces = function(sf_obj, swap_yz = FALSE) {
   skipped = which(nzchar(failures))
   if (length(skipped)) {
     # One bounded summary keeps large building datasets from flooding the console.
-    examples = head(skipped, 5L)
+    examples = utils::head(skipped, 5L)
     warning(
       sprintf(
         "Skipped %d polygon face(s). %s%s",
@@ -262,7 +262,7 @@ multipolygonz_triangulate_face = function(rings) {
     )
   }
   xy = local[, setdiff(1:3, which.max(abs(normal))), drop = FALSE]
-  starts = c(0L, head(cumsum(sizes), -1L))
+  starts = c(0L, utils::head(cumsum(sizes), -1L))
   projected_rings = lapply(seq_along(sizes), function(i) {
     rows = starts[i] + seq_len(sizes[i])
     xy[c(rows, rows[1]), , drop = FALSE]
@@ -322,7 +322,7 @@ multipolygonz_triangulate_face = function(rings) {
 #' @noRd
 multipolygonz_repair_face = function(vertices, xy, sizes, normal) {
   repair_ambiguous = isTRUE(getOption("rayshader.multipolygonz_repair", TRUE))
-  starts = c(0L, head(cumsum(sizes), -1L))
+  starts = c(0L, utils::head(cumsum(sizes), -1L))
   rings = lapply(seq_along(sizes), function(i) {
     rows = starts[i] + seq_len(sizes[i])
     xy[c(rows, rows[1]), , drop = FALSE]
@@ -373,7 +373,7 @@ multipolygonz_repair_face = function(vertices, xy, sizes, normal) {
     })
     repaired_xy = do.call(rbind, repaired_rings)
     repaired_sizes = vapply(repaired_rings, nrow, 0L)
-    hole_starts = head(cumsum(repaired_sizes), -1L) + 1L
+    hole_starts = utils::head(cumsum(repaired_sizes), -1L) + 1L
     triangles = matrix(
       decido::earcut(
         repaired_xy,

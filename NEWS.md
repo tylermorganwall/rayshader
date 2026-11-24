@@ -75,6 +75,10 @@
 
 ## Bugfixes
 
+- `render_highquality()` Resolves optional disk lights only when rayrender
+  exports them, preserving compatibility with older rayrender versions during
+  package checks.
+
 - `sphere_shade()` Prevents out-of-bounds texture lookups on steep terrain.
   `calculate_normal()` returns unit-length edge normals with consistent
   upward orientation at all corners.

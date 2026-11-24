@@ -2090,6 +2090,10 @@ render_highquality = function(
       c("disk_light", "add_infinite_light") %in%
         getNamespaceExports("rayrender")
     )
+    if (use_disk_light) {
+      disk_light = getExportedValue("rayrender", "disk_light")
+      add_infinite_light = getExportedValue("rayrender", "add_infinite_light")
+    }
     if (!use_disk_light && is.null(light_size)) {
       light_size = observer_radius / 5
     }
@@ -2139,9 +2143,9 @@ render_highquality = function(
           cospi(light_altitude_temp / 180) * cospi(light_direction_temp / 180)
         )
         if (use_disk_light) {
-          scene = rayrender::add_infinite_light(
+          scene = add_infinite_light(
             scene,
-            rayrender::disk_light(
+            disk_light(
               direction = light_vector,
               angular_diameter = light_size_temp,
               color = light_color_temp,

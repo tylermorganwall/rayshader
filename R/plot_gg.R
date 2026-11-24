@@ -2126,7 +2126,7 @@ restore_plot_gg_raster_precision = function(
   if (!length(visible_layers)) {
     return(height_matrix)
   }
-  layer = tail(visible_layers, 1L)[[1L]]
+  layer = utils::tail(visible_layers, 1L)[[1L]]
   if (!inherits(layer$stat, "StatTerraSpatRaster")) {
     return(height_matrix)
   }
