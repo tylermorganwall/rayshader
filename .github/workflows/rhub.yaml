@@ -63,12 +63,28 @@ jobs:
           options(width = 1000)
           print(getOption("repos"))
         shell: Rscript {0}
+      - name: Check CMake for native dependencies
+        id: cmake
+        shell: Rscript {0}
+        run: |
+          cmake = Sys.which("cmake")
+          version = if (nzchar(cmake)) numeric_version(sub("^cmake version ", "", system2(cmake, "--version", stdout = TRUE)[1L])) else numeric_version("0")
+          cat("install=", tolower(version < "3.24"), "\n", sep = "", file = Sys.getenv("GITHUB_OUTPUT"), append = TRUE)
+      - uses: jwlawson/actions-setup-cmake@0d6a7d60b009d01c9e7523be22153ff8f19460d3 # v2
+        if: steps.cmake.outputs.install == 'true'
+        with:
+          cmake-version: '3.31.10'
+      - name: Add release dependencies to R-hub repositories
+        shell: Rscript {0}
+        run: |
+          cat('\noptions(repos = c(getOption("repos"), rayverse = "https://tylermorganwall.r-universe.dev"))\n',
+              file = path.expand("~/.Rprofile"), append = TRUE)
       - uses: r-hub/actions/setup-deps@v1
         with:
           token: ${{ secrets.RHUB_TOKEN }}
           job-config: ${{ matrix.config.job-config }}
           pak-version: stable
-          extra-packages: any::rcmdcheck, cran::pillar, rlas=?ignore, lidR=?ignore
+          extra-packages: any::rcmdcheck, rlas=?ignore, lidR=?ignore
       - uses: r-hub/actions/run-check@v1
         with:
           token: ${{ secrets.RHUB_TOKEN }}
@@ -101,12 +117,17 @@ jobs:
           options(width = 1000)
           print(getOption("repos"))
         shell: Rscript {0}
+      - name: Add release dependencies to R-hub repositories
+        shell: Rscript {0}
+        run: |
+          cat('\noptions(repos = c(getOption("repos"), rayverse = "https://tylermorganwall.r-universe.dev"))\n',
+              file = path.expand("~/.Rprofile"), append = TRUE)
       - uses: r-hub/actions/setup-deps@v1
         with:
           token: ${{ secrets.RHUB_TOKEN }}
           job-config: ${{ matrix.config.job-config }}
           pak-version: stable
-          extra-packages: any::rcmdcheck, cran::pillar, rlas=?ignore, lidR=?ignore
+          extra-packages: any::rcmdcheck, rlas=?ignore, lidR=?ignore
       - uses: r-hub/actions/run-check@v1
         with:
           job-config: ${{ matrix.config.job-config }}
