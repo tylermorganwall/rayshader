@@ -79,6 +79,8 @@ jobs:
         run: |
           cat('\noptions(repos = c(getOption("repos"), rayverse = "https://tylermorganwall.r-universe.dev"))\n',
               file = path.expand("~/.Rprofile"), append = TRUE)
+      - name: Configure R package builds for Flang
+        run: bash .github/configure-flang.sh
       - name: Select vctrs for older R-devel snapshots
         id: vctrs
         shell: Rscript {0}
@@ -87,9 +89,9 @@ jobs:
           if (R.version[["svn rev"]] %in% c("89623", "89629")) {
             cat("package=vctrs@0.7.1\n", file = Sys.getenv("GITHUB_OUTPUT"), append = TRUE)
           }
-      - name: Install Blosc runtime for cached openvdbr builds
+      - name: Install Linux dependencies for gifski and openvdbr
         if: runner.os == 'Linux'
-        run: bash .github/install-blosc-runtime.sh
+        run: bash .github/install-linux-dependencies.sh
       - uses: r-hub/actions/setup-deps@v1
         with:
           token: ${{ secrets.RHUB_TOKEN }}
@@ -133,9 +135,9 @@ jobs:
         run: |
           cat('\noptions(repos = c(getOption("repos"), rayverse = "https://tylermorganwall.r-universe.dev"))\n',
               file = path.expand("~/.Rprofile"), append = TRUE)
-      - name: Install Blosc runtime for cached openvdbr builds
+      - name: Install Linux dependencies for gifski and openvdbr
         if: runner.os == 'Linux'
-        run: bash .github/install-blosc-runtime.sh
+        run: bash .github/install-linux-dependencies.sh
       - uses: r-hub/actions/setup-deps@v1
         with:
           token: ${{ secrets.RHUB_TOKEN }}

@@ -37,7 +37,7 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libavfilter-dev libblosc1
+          sudo apt-get install -y libavfilter-dev libblosc1 xz-utils
       - uses: actions/checkout@v4
 
       - uses: r-lib/actions/setup-pandoc@v2
