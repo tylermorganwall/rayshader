@@ -1816,8 +1816,11 @@ struct StreamMeshData {
 std::vector<RoadVec3> collapse_stream_path_vertices(
     const std::vector<RoadVec3>& points,
     double minimum_step) {
-  if (points.size() < 2) {
-    return points;
+  if (points.empty()) {
+    return {};
+  }
+  if (points.size() == 1) {
+    return {points.front()};
   }
   std::vector<int> keep;
   keep.reserve(points.size());

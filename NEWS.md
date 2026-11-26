@@ -75,6 +75,9 @@
 
 ## Bugfixes
 
+- Fixed a GCC array-bounds warning when compiling the stream mesh code with
+  Rtools45 on Windows.
+
 - `render_highquality()` Resolves optional disk lights only when rayrender
   exports them, preserving compatibility with older rayrender versions during
   package checks.

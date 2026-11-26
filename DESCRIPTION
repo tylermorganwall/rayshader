@@ -71,7 +71,7 @@ BugReports: https://github.com/tylermorganwall/rayshader/issues
 Config/testthat/edition: 3
 Remotes: tylermorganwall/raybevel, 
     tylermorganwall/rayimage, 
-    tylermorganwall/rayrender, 
+    tylermorganwall/rayrender@wavefront,
     dmurdoch/rgl,
 	tylermorganwall/skymodelr
 Config/roxygen2/version: 8.0.0
