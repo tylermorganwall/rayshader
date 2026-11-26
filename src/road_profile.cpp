@@ -759,8 +759,8 @@ List audit_render_road_profiles_cpp(
             (specification.terrain_elevation[terrain_row + 1] -
              specification.terrain_elevation[terrain_row]) /
             (terrain_end_distance - terrain_start);
-        double candidate[3] = {check_start, check_end, 0.0};
-        int candidate_count = 2;
+        double candidate[3] = {check_start};
+        int candidate_count = 1;
         if (std::abs(quadratic_coefficient) > quadratic_tolerance) {
           const double stationary_local =
               (terrain_slope - grade[control_a]) /
@@ -770,9 +770,9 @@ List audit_render_road_profiles_cpp(
             candidate[candidate_count++] = stationary;
           }
         }
-        std::sort(candidate, candidate + candidate_count);
-        candidate_count = static_cast<int>(
-            std::unique(candidate, candidate + candidate_count) - candidate);
+        if (check_end != check_start) {
+          candidate[candidate_count++] = check_end;
+        }
         int worst = 0;
         double worst_height = NA_REAL;
         double worst_terrain = NA_REAL;
@@ -876,8 +876,8 @@ List audit_render_road_profiles_cpp(
           specification.arc_length[midpoint_arc];
       const double chord_local_slope =
           span_slope * specification.chord_orientation[member];
-      double candidate[3] = {interval_start, interval_end, 0.0};
-      int candidate_count = 2;
+      double candidate[3] = {interval_start};
+      int candidate_count = 1;
       if (std::abs(quadratic_coefficient) > quadratic_tolerance) {
         const double stationary_local =
             (chord_local_slope - grade[control_a]) /
@@ -887,9 +887,7 @@ List audit_render_road_profiles_cpp(
           candidate[candidate_count++] = stationary;
         }
       }
-      std::sort(candidate, candidate + candidate_count);
-      candidate_count = static_cast<int>(
-          std::unique(candidate, candidate + candidate_count) - candidate);
+      candidate[candidate_count++] = interval_end;
       int worst = 0;
       int worst_arc = -1;
       double worst_station = NA_REAL;
@@ -1062,8 +1060,8 @@ List audit_render_road_profiles_cpp(
           finite_number(coefficient_a) &&
           finite_number(coefficient_b) &&
           finite_number(coefficient_c);
-      double local_candidate[3] = {0.0, 1.0, 0.0};
-      int candidate_count = 2;
+      double local_candidate[3] = {0.0};
+      int candidate_count = 1;
       if (std::abs(coefficient_a) > quadratic_tolerance) {
         const double stationary =
             -coefficient_b / (2.0 * coefficient_a);
@@ -1071,12 +1069,7 @@ List audit_render_road_profiles_cpp(
           local_candidate[candidate_count++] = stationary;
         }
       }
-      std::sort(local_candidate, local_candidate + candidate_count);
-      candidate_count = static_cast<int>(
-          std::unique(
-              local_candidate,
-              local_candidate + candidate_count) -
-          local_candidate);
+      local_candidate[candidate_count++] = 1.0;
       int worst = 0;
       double worst_margin = R_PosInf;
       for (int index = 0; index < candidate_count; ++index) {

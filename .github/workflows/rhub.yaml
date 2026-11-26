@@ -81,14 +81,9 @@ jobs:
               file = path.expand("~/.Rprofile"), append = TRUE)
       - name: Configure R package builds for Flang
         run: bash .github/configure-flang.sh
-      - name: Select vctrs for older R-devel snapshots
-        id: vctrs
-        shell: Rscript {0}
-        run: |
-          # These March snapshots reject symbol bindings used by vctrs 0.7.2.
-          if (R.version[["svn rev"]] %in% c("89623", "89629")) {
-            cat("package=vctrs@0.7.1\n", file = Sys.getenv("GITHUB_OUTPUT"), append = TRUE)
-          }
+      - name: Select compatible dependency versions
+        id: dependency-pins
+        run: Rscript .github/dependency-pins.R
       - name: Install Linux dependencies for gifski and openvdbr
         if: runner.os == 'Linux'
         run: bash .github/install-linux-dependencies.sh
@@ -97,7 +92,7 @@ jobs:
           token: ${{ secrets.RHUB_TOKEN }}
           job-config: ${{ matrix.config.job-config }}
           pak-version: stable
-          extra-packages: any::rcmdcheck, rlas=?ignore, lidR=?ignore ${{ steps.vctrs.outputs.package }}
+          extra-packages: any::rcmdcheck, rlas=?ignore, lidR=?ignore ${{ steps.dependency-pins.outputs.packages }}
       - uses: r-hub/actions/run-check@v1
         with:
           token: ${{ secrets.RHUB_TOKEN }}
