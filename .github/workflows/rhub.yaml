@@ -93,6 +93,12 @@ jobs:
           job-config: ${{ matrix.config.job-config }}
           pak-version: stable
           extra-packages: any::rcmdcheck, rlas=?ignore, lidR=?ignore ${{ steps.dependency-pins.outputs.packages }}
+      - name: Measure the spatial dependencies alone under Valgrind
+        if: matrix.config.label == 'valgrind'
+        shell: bash
+        run: |
+          R -d valgrind --vanilla --slave -e \
+            'library(units); library(s2); x <- terra::rast(nrows = 2, ncols = 2, crs = "EPSG:4326"); stopifnot(nzchar(terra::crs(x)))'
       - uses: r-hub/actions/run-check@v1
         with:
           token: ${{ secrets.RHUB_TOKEN }}
