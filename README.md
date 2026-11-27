@@ -24,8 +24,8 @@ function, and can be exported to an OBJ file.
 
 ``` r
 # To install the latest version from Github:
-# install.packages("devtools")
-devtools::install_github("tylermorganwall/rayshader")
+# install.packages("pak")
+pak::pkg_install("tylermorganwall/rayshader")
 ```
 
 On Ubuntu, the following libraries are required:
