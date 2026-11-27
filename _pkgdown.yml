@@ -51,6 +51,7 @@ reference:
     desc: "Functions for adding features to 3D maps, rendering post-processing effects, and saving snapshots"
     contents:
       - starts_with("render")
+      - get_scene_metadata
   - title: "Helper functions for manipulating rasters"
     desc: "Helper functions to manipulate and simplify rasters."
     contents:   
