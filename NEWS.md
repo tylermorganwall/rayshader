@@ -1,268 +1,246 @@
-# rayshader 0.41.0.9000
+# rayshader 1.0.0
 
-## New features
+## Spatial rasters and scene coordinates
 
-- `plot_3d()` Caches Earth curvature for spatial render layers, including water,
-  terrain-relative objects, and explicit altitudes. Inspect the setting with
-  `get_scene_metadata()$earth_curvature`.
+- Build a terrain scene directly from a georeferenced elevation raster.
+  `montereybay_spatial |> sphere_shade() |> plot_3d()` carries the elevation,
+  extent, and coordinate reference system (CRS) through shading into the
+  scene. Heightmaps can be matrices, terra or raster package objects, or raster
+  filenames. Rayshader infers `zscale` from cell spacing, including the spacing
+  in meters at the center of a longitude/latitude raster. Use
+  `vertical_exaggeration` to scale relief independently. Matrix-based
+  workflows and explicit spatial arguments are still supported. The default
+  geographic aspect correction accounts for unequal east-west and north-south
+  cell spacing.
+- Add layers in their own coordinates. After `plot_3d()`, a call such as
+  `render_path(roads)` can use the scene's cached terrain, extent, CRS, and
+  vertical scale to transform the roads and place them on the surface.
+  Spatial layers support filtering to the scene extent with `filter_to_extent`.
+  `get_scene_metadata()` exposes the coordinate information for the active scene.
+- Take a shaded map back into GIS with `spatialize_image()`. It returns a
+  georeferenced `terra::SpatRaster` with RGB bands and optional alpha and
+  original elevation bands. `generate_raster_overlay()` aligns a raster
+  overlay to a map, and `resize_spatial()` changes raster resolution while
+  preserving extent and CRS.
+- The bundled `montereybay_spatial`, `volcano_spatial`, and `volcano_trails`
+  provide elevations and trail geometry for spatial examples. The original
+  `montereybay` elevation matrix remains available.
 
-- `plot_3d()` Adds `earth_curvature = TRUE` to bend spatial terrain around the
-  bounding-box center using a spherical Earth. Vertical exaggeration scales
-  the relief independently of the curvature.
+## Integrating 3D data with ggplot2
 
-- `plot_3d()` Adds `normals = FALSE` to disable smooth DEM vertex normals,
-  skip their calculation, and use face normals in high-quality renders and
-  OBJ exports. Other scene objects retain their normals.
+- `plot_gg()` records how ggplot2 maps data into each panel. Points, paths,
+  buildings, and extruded polygons can now share coordinates and heights
+  with the original plot, including maps drawn with `coord_sf()`. Use
+  `flat_substrate = TRUE` for a flat base beneath the 3D geometry.
+- `render_polygons()` maps a height column through the plot's height scale.
+  A subset uses the same limits, transformation, binning, and inversion as
+  the full data, including on flat plots with hidden legends.
+  `color = "height"` also respects nonlinear scales. Supply `scale_data`
+  for manual scaling or `top` and `bottom` for heights in scene units.
+- `render_zaxis()` adds a vertical axis to terrain and ggplot scenes. Set
+  breaks, labels, and a title in the units of the data being shown. Faceted
+  ggplots retain panel-specific coordinate information for layers and cameras.
 
-- Overall: Color inputs accept comma-separated `rgb(r, g, b)` strings with
-  channels from `0` to `255`, including optional whitespace. Existing named,
-  hexadecimal, and numeric colors retain their behavior.
+## Lakes, shorelines, and streams
 
-- `render_zaxis()` Drops the redundant `zaxis_` prefix from its arguments.
-  Use `data`, `location`, `breaks`, `labels`, `title`, and the corresponding
-  unprefixed styling arguments.
+- `render_water()` and `plot_3d()` now default to
+  `water_render_method = "polygon"` for exact polygon footprints. Each part
+  extends from the lowest terrain beneath it to a level surface, preserving
+  islands, small inlets, and exposed walls. Choose `"optimized"` to fit a
+  lake's elevation by matching flooded terrain area to its mapped footprint,
+  `"raster"` for a cell-based shoreline, or `"legacy"` for the earlier
+  box/grid renderer. Code using the development version's area-fitting
+  `"polygon"` method should select `"optimized"`.
+- `render_streams()` draws streams along the terrain with widths that can
+  vary by feature. Set their units with `width_units`. `render_highquality(joined_stream_mesh = TRUE)` can join
+  the stream geometry. For reflected sunlight on rippled water, use
+  `water_material = "microfacet"` in `render_highquality()`. The default
+  material is `"glassy"`.
+- `add_water()` accepts spatial masks such as `montereybay_spatial < 0`.
+  It checks alignment, preserves the cached elevations, and leaves cells
+  with missing mask values alone. `shift_terrain()` raises or lowers terrain
+  beneath spatial features by a constant or a per-feature amount, for example
+  to make room for a lake bed.
 
-- `render_highquality()` Returns scenes with a resolved camera and render defaults
-  when `return_scene = TRUE`. Asset collection is explicit through rayrender's
-  `write_usd()`; ordinary returns no longer embed textures.
+## Roads, trails, and people at map scale
 
-- `render_roads()` Moves intersection, continuation, neighbor-search, and event
-  preparation into native batches, avoiding per-contact spatial-object allocation.
-  Indexes endpoint candidates instead of repeatedly scanning the whole network.
-  Bridge connections and solver constraints are preserved.
-- `render_multipolygonz()` Triangulates ordinary building faces in native batches,
-  retaining the existing repair path for difficult faces. `verbose = TRUE`
-  reports preparation and upload stages.
-- `render_people()` Adds `simple_rgl = TRUE` for point previews of large crowds.
-  High-quality renders share full models by pose, model variant, and material
-  instead of expanding the geometry for each person.
+- `render_roads()` builds pavement and lane markings at real-world widths
+  and spacing. It reads OpenStreetMap lane, bridge, and layer attributes
+  and models vertical road profiles from layer ordering, grades, and
+  clearance constraints. Connected ramps meet at junctions even where
+  several roads occupy different levels.
+- `terrain_grading = TRUE` cuts the terrain beneath roads so that surface
+  junctions can stay near ground level. Later layers use the same graded
+  terrain as the visible scene. `render_trails()` follows the surface with
+  a fixed width or a width column and a choice of width units.
+- `render_people()` places posed human figures at geographic locations or
+  along paths. Both model variants stand 1.8 meters tall, and other poses
+  retain their relative proportions. Use `simple_rgl = TRUE` to preview a
+  crowd as points. High-quality renders share full geometry among people
+  with the same pose, model variant, and material.
 
-- `render_water()` Builds exact-polygon water meshes in native code using
-  `libgeos`. Large batches use threads sharing one terrain snapshot, avoiding
-  separate R worker startup and terrain copies. Uses `options(cores = ...)`;
-  `parallel = FALSE` selects one thread. Geometry diagnostics retain input order.
-  Terrain coverage and missing-data holes are computed once per call; only
-  shoreline-crossing triangles need full polygon intersections. Mask boundaries
-  form closed sidewalls, while interior vertices retain terrain minima and
-  water-surface clearance checks.
+## Spatial objects, shading, and Earth curvature
 
-- `render_water()` Adds exact-footprint `water_render_method = "polygon"`,
-  now the default in `render_water()` and `plot_3d()`. It extrudes water from
-  the lowest rendered terrain beneath each polygon while
-  preserving small features and holes. Nearly coincident tops receive a small
-  clearance controlled by `water_surface_tolerance`. Roundoff-only shoreline
-  vertices are removed before extrusion to retain large clipped polygons.
-  The previous area-fitting
-  `"polygon"` method is now named `"optimized"`.
+- `render_points()` and `render_path()` accept spatial points and lines.
+  `render_label()` accepts points and multipoints and can label polygons at
+  their centroids, with text from a data column and a choice of font.
+  `render_polygons()` and `render_beveled_polygons()` use
+  cached terrain and bounds. `render_buildings()` places footprints using
+  CRS-aware filtering, height columns, roof angles, and roof materials.
+  `render_obj()` can place models from spatial point data and repeat a single
+  location at several altitudes. `render_tree()` accepts a tree-height column
+  and offers a lightweight point preview with `preview_simple = TRUE`.
+- `haze_shade()` creates a transparent haze overlay from an exponential
+  atmospheric model. `radiance_shade()` renders a top-down lighting pass from
+  a DEM, cached shading data, or the active scene. Haze retains the raster's
+  inferred `zscale`, extent, and CRS for subsequent calls to `plot_3d()`.
+  `generate_altitude_overlay(relative = TRUE)` sets transitions as fractions
+  of the elevation range.
+- For regional scenes, `plot_3d(earth_curvature = TRUE)` bends the terrain
+  relative to the center of its bounding box using a spherical Earth.
+  Vertical exaggeration scales terrain relief independently of curvature.
+  Spatial layers reuse the curvature setting for water, terrain-relative
+  objects, and explicit altitudes. Inspect it with
+  `get_scene_metadata()$earth_curvature`. It is off by default.
+- `plot_3d(normals = FALSE)` skips smooth terrain vertex normals and uses
+  face normals in high-quality renders and OBJ exports. Other objects keep
+  their own normals. `shadow_texture_size` controls the maximum resolution
+  of the blurred base shadow.
 
-- `add_water()` Accepts spatial raster masks, including comparisons such as
-  `montereybay_spatial < 0`, while preserving cached terrain elevations. Checks
-  mask alignment against the cached terrain and leaves missing mask cells unchanged.
+## High-quality rendering and animation
 
-- `render_roads()` Adds `terrain_grading = TRUE` to cut terrain beneath pavement
-  and keep surface junctions near ground level instead of raising them over
-  adjacent banks. The scene and cached heightmap share the graded surface.
+- Set a camera position using map coordinates in `render_camera()` or
+  `render_highquality()`. High-quality renders also accept explicit
+  orthographic dimensions and per-object-type materials through `rgl_materials`.
+- Give `render_highquality()` a `datetime` to light a georeferenced scene
+  for its location and time. Depending on the sky model, the sky can include
+  stars, planets, and the Moon's phase and brightness. For a faceted map,
+  select a `panel` directly or through a spatial camera target or location.
+  The sky uses that panel's map bounds and display CRS.
+- The default `text_render = "screen"` draws camera-facing labels and annotation lines
+  without casting shadows on the scene. Labels keep their screen size while
+  their anchors follow the map. They appear in the interactive preview.
+  `deferred_render = TRUE` gives you time to set up the camera before sampling.
+- `render_movie_hq()` renders camera animations from keyframes. Returned
+  scenes carry their camera, sky, environment, and integrator settings into
+  the movie. With animation overlay support in rayrender, screen-space labels,
+  leader lines, and z-axis ticks are projected and checked for occlusion on
+  each frame.
+- `render_highquality(return_scene = TRUE)` returns the resolved camera and
+  render defaults. Collect texture assets explicitly with
+  `rayrender::write_usd()` when exporting. Native sky lighting uses
+  rayrender's default integrator unless one is supplied.
+- `light = TRUE` uses infinite disk lights. `light_size` is the full angular
+  diameter in degrees (default `5`), independent of scene size and camera
+  position. Older rayrender versions without disk lights use spherical lights.
 
-- `render_people()` Sizes both model variants to 1.8 meters when standing,
-  preserving the relative proportions of every pose.
+## Updating existing code
 
-- `render_polygons()` Automatically maps data-column heights through the cached
-  `plot_gg()` height scale when `scale_data` is omitted. Explicit `scale_data`
-  retains manual scaling, and explicit `top` and `bottom` retain scene height units.
-- `render_highquality()` Uses infinite disk lights for `light = TRUE`.
-  `light_size` specifies the full angular diameter in degrees (default `5`),
-  independent of scene size and camera position.
+- Public arguments with joined descriptive words now use snake case,
+  including `window_size`, `base_shape`, `solid_depth`, `shadow_color`,
+  `water_color`, `water_alpha`, `water_line_color`, `water_input`,
+  `text_size`, `sun_angle`, `sun_altitude`, `normal_vectors`, and
+  `progress_bar`. Legacy spellings passed through `...` warn with the
+  replacement name. Passing both spellings raises an error. Established
+  names such as `heightmap`, `hillshade`, `zscale`, `filename`, `linewidth`,
+  and `camera_lookat` keep their spelling. In `sphere_shade()`, use
+  `vertical_exaggeration` in place of the deprecated `color_intensity`.
+- `render_zaxis()` uses `data`, `location`, `breaks`, `labels`, `title`, and
+  styling arguments without the development version's `zaxis_` prefix.
+- Rayshader no longer re-exports `%>%` or exports `run_documentation()`.
+  Use R's native `|>` for simple pipelines or import `%>%` from magrittr.
+- Color arguments also accept strings of the form `"rgb(20, 100, 255)"`,
+  with channels from 0 to 255 and optional whitespace. Named, hexadecimal,
+  and numeric colors retain their behavior.
 
-## Bugfixes
+## Fixes and performance improvements
 
-- Fixed a GCC array-bounds warning when compiling the stream mesh code with
-  Rtools45 on Windows.
+### Terrain, ggplot2, and cameras
 
-- `render_highquality()` Resolves optional disk lights only when rayrender
-  exports them, preserving compatibility with older rayrender versions during
-  package checks.
+- `sphere_shade()` bounds texture lookups on steep terrain.
+  `calculate_normal()` returns unit-length edge normals oriented upward
+  at all four corners.
+- Single-panel numeric `geom_spatraster()` height layers retain source
+  precision, eliminating 8-bit elevation steps and gaps beneath buildings.
+  Mixed and faceted height layers still use the image-based path.
+  `plot_gg()` reuses the built height plot so that raster statistics, panel
+  metadata, and the drawn image agree.
+- Geographic clipping follows straight panel boundaries. Polygon bases
+  respect vertical scaling, and `render_multipolygonz()`, `render_raymesh()`,
+  and `render_obj()` align absolute-elevation meshes horizontally with
+  points and roads at different values of `zscale` and vertical exaggeration.
+- High-quality renders honor explicit `fov` values and choose a valid up
+  vector for straight-down cameras. Screen-space text matches rgl's vertical
+  alignment, including top z-axis titles and offsets beyond the text bounds.
+- Scene conversion takes one snapshot of rgl object IDs and skips unrelated
+  preview materials. `verbose = TRUE` reports conversion and rayrender
+  construction timings.
 
-- `sphere_shade()` Prevents out-of-bounds texture lookups on steep terrain.
-  `calculate_normal()` returns unit-length edge normals with consistent
-  upward orientation at all corners.
+### Water geometry
 
-- `render_highquality()` Preserves rgl's vertical text alignment for screen-space
-  labels, including top z-axis titles and offsets beyond the text bounds.
+- Polygon meshing uses native `libgeos` intersections only for triangles
+  crossing the shoreline. Threads share one terrain snapshot and reuse
+  terrain coverage and missing-data boundaries. `options(cores = ...)`
+  controls concurrency and `parallel = FALSE` selects one thread.
+  Diagnostics follow input order. Native terrain sampling preserves water
+  levels, waterlines, and exact terrain intersections.
+- Mask boundaries have closed sidewalls. Meshing checks interior terrain
+  minima, removes roundoff-only shoreline vertices, and separates bottom
+  caps from coplanar terrain. `water_surface_tolerance` controls clearance
+  for nearly coincident tops. Mixed geometry collections retain polygon
+  parts and their original elevations.
+- Raster water aligns with pixel centers on spatial ggplots and uses the
+  scene's actual terrain triangulation, including simplified terrain.
+  Inferred levels get a small clearance, while explicit levels and aligned
+  raster elevations retain their precision. Surface winding is corrected,
+  and collapsed shoreline triangles are discarded. `add_water()` applies
+  matrix and raster masks without horizontally mirroring them.
+- Exact polygon water uploads as one rgl triangle object even for disconnected
+  features. Redraws are deferred until the batch and optional lines are ready.
+  The previous redraw setting is restored on completion, error, or interruption.
 
-- `haze_shade()` preserves the terrain’s spatial metadata so a subsequent
-  `plot_3d()` can reuse the raster’s inferred `zscale`, extent, and CRS.
+### Roads and bridges
 
-- `render_movie_hq()` and `render_highquality()` animations retain screen-space
-  text and lines, including z-axis labels and ticks, with per-frame projection
-  and occlusion. Requires rayrender with animation overlay support.
+- Bridge tags activate profiles even without layer tags or crossings. Bridge
+  inputs retain junctions with untagged approaches and branching ramps.
+  Covered surface roads tagged `tunnel = "building_passage"` stay at ground
+  level unless explicitly marked underground.
+- Road profiles preserve multipart, loop, and clipped segment identity through
+  solving, grading, and meshing. Ground clearance is checked between vertices
+  and across pavement width. Sharp and reversing joins produce finite terrain
+  samples, and clipped endpoints tolerate micrometer-scale rounding. Small
+  feasible networks converge more reliably, and diagnostics distinguish a
+  solver failure from infeasible constraints.
+- Opaque pavement is 0.11 elevation units thick, independent of placement
+  clearance. Both use the effective `zscale`, with a small precision margin
+  against z-fighting. Graded terrain no longer hides rgl road-line previews.
+- Indexed native batches find intersections, continuations, endpoints, and
+  crossing events without all-pairs searches. Profile preparation avoids
+  repeated CRS parsing and spatial-table copies. Serial and parallel paths
+  share a terrain snapshot across densification, cross-sections, bridge
+  contacts, and stabilization retries. A new call sees any terrain edits.
+  Road replacement defers redraws. `verbose = TRUE` reports preparation
+  and solver stages before meshing.
 
-- Overall: Legacy argument spellings are accepted through `...`, with deprecation warnings naming their replacements. Supplying both spellings raises an error.
-- `render_highquality()` Chooses a valid up vector for straight-down spatial cameras when no explicit up vector is supplied.
-- `render_movie_hq()` Preserves sky, integrator, and environment settings stored in returned scenes.
+### Buildings, trees, and native builds
 
-- `render_highquality()` Falls back to spherical lights when the installed
-  rayrender does not export disk-light support.
-
-- `render_highquality()` Reuses one rgl ID snapshot and skips unused preview materials during conversion. `verbose = TRUE` reports conversion phase timings and enables rayrender construction timings.
-
-- `plot_gg()` Preserves source elevation precision in single-panel numeric
-  `geom_spatraster()` height plots instead of quantizing terrain through an
-  8-bit image. Avoids meter-scale steps and gaps beneath absolute-elevation
-  buildings. Mixed height layers and faceted plots retain image-based behavior.
-
-- `render_roads()` Preserves elevation scaling when batch-building solved roads
-  and bridges, preventing their pavement thickness and placement offset from
-  being interpreted as scene units instead of elevation units.
-
-- `render_roads()` Keeps opaque pavement at a fixed 0.11 elevation-unit thickness,
-  independent of its placement clearance. Bridge-only inputs retain shared
-  junctions with untagged surface approaches, including branching ramps, so
-  connected approaches participate in the profile solve.
-
-- `plot_gg()` Reuses the built height plot when drawing its image, avoiding a
-  redundant evaluation of raster statistics and keeping the image consistent
-  with the computed panel metadata.
-
-- `render_roads()` Uses indexed proximity queries for crossing events and road
-  endpoints, avoiding all-pairs distance searches on large networks while
-  preserving the same exact distance tolerances and neighbor relationships.
-
-- `render_roads()` Preserves clipped road-part identity through profile solving,
-  terrain grading, and meshing, including loop-and-tail and multipart features.
-  Improves convergence for small feasible profile components without relaxing
-  engineering constraints, and distinguishes solver failure from infeasibility.
-
-- `render_roads()` Samples terrain beneath sharp and reversing road joins without generating nonfinite coordinates from rejected miter scales.
-
-- `render_roads()` Automatically uses OSM `bridge` and `layer` columns. Adds a configurable `bridge` column and activates bridge profiles even when layer metadata or road crossings are absent, retaining explicit layer ordering.
-
-- `render_highquality()` Avoids fetching materials for unrelated rgl objects during tag-specific queries, reducing preparation time in scenes with many road previews.
-
-- `render_roads()` Scales pavement clearance and thickness by the effective
-  zscale instead of treating them as scene units, avoiding meter-high road
-  slabs. Retains a small float-precision margin against z-fighting. Reduces
-  metadata-table overhead and defers redraws while removing previous roads.
-
-- `render_tree()` Defaults to `load_normals = FALSE` for full and cached tree
-  rendering, avoiding smooth-normal artifacts on low-poly crowns. Use
-  `load_normals = TRUE` to opt back into the model's vertex normals.
-
-- `render_water()` Separates polygon water bottom caps from the underlying
-  terrain, preventing dark triangular z-fighting artifacts in high-quality
-  renders without moving the visible water surface or shoreline.
-
-- `render_water()` Uploads exact-polygon water as one triangle object and
-  defers visible-window redraws until the batch and optional lines are added,
-  avoiding an object and a full scene repaint for every polygon. Preserves
-  disconnected geometry and restores the caller's redraw setting after success,
-  errors, or interruption.
-
-- `render_tree()` and `render_obj()` Prepare repeated meshes faster by batching
-  unrotated OBJ instance construction in native code and reusing materials.
-  Rotated models retain the general transformation path.
-  Geometry, normals, texture coordinates, and material assignments are preserved.
-
-- `render_tree()` Discards negative tree sizes while preserving the alignment of
-  per-tree colors, dimensions, and rotations. Absolute elevations are converted
-  to sizes above the terrain before this filter.
-
-- `render_water()` Uses native terrain sampling to reduce construction time while preserving
-  the exact terrain intersections, water levels, footprints, and waterlines.
-
-- `render_multipolygonz()`, `render_raymesh()`, and `render_obj()` Align absolute
-  spatial meshes with points and roads, without a horizontal offset that changes
-  with `zscale` or vertical exaggeration.
-- `render_water()` Aligns rasterized polygon water with the pixel centers of
-  spatial `plot_gg()` scenes. Raster water on simplified terrain no longer loses
-  caps to clipping against a different triangulation. The terrain representation
-  is detected automatically from the `plot_3d()` / `plot_gg()` scene cache.
-  Inferred levels use a
-  scene-scale clearance to avoid coplanar rendering artifacts; explicit levels
-  remain unchanged, and already-aligned raster elevations retain their precision.
-
-- `render_water()` Fixes raster-water surfaces winding order. Tapered shoreline walls no
-  longer emit collapsed triangles; clipping slivers that collapse at rgl's
-  vertex precision are omitted.
-
-- `render_multipolygonz()` Preserves concave face boundaries and holes instead
-  of creating spurious roof overhangs. The same triangulation fixes
-  `save_multipolygonz_to_obj()` exports, including vertical and sloping faces.
-  Repairs crossed and overlapping boundaries in the face plane and skips
-  zero-area or untriangulatable faces with a summary warning instead of stopping
-  an entire building render. Repairs ambiguous 3D intersections by default; set
-  `options(rayshader.multipolygonz_repair = FALSE)` to drop those faces instead.
-
-- `render_highquality()` Infers datetime sky location from the selected ggplot
-  panel's map bounds and display CRS. Use `panel`, or the panel in a spatial
-  camera target/location; faceted maps without a selection request one instead
-  of using unrelated cached terrain metadata.
-
-- `plot_gg()` Caches the display CRS with the extent for single-panel `coord_sf()`
-  plots, allowing `render_highquality(datetime = ...)` to infer the sky location.
-
-- `render_water()` Ignores non-polygon features in mixed spatial inputs, retaining
-  polygon parts of geometry collections and their original feature elevations.
-
-- `render_highquality()` Honors an explicit `fov` instead of replacing it with
-  the rgl camera projection. Omitting `fov` retains automatic camera matching.
-
-- `add_water()` Aligns water masks with shaded maps without mirroring them
-  horizontally, for both matrix and spatial raster masks.
-
-- `render_roads()` Accepts micrometer-scale rounding at clipped terrain-profile
-  endpoints instead of rejecting otherwise complete profiles.
-
-- `render_highquality()` Uses rayrender's default integrator for native sky
-  lighting instead of forcing CPU NEE. Explicit integrator choices are preserved
-  for still renders and animations.
-
-- `render_roads()` Treats OSM `tunnel = "building_passage"` as a covered surface
-  road unless underground location metadata says otherwise. These passages no
-  longer sink below the DEM or escape terrain grading and clearance checks.
-
-- `render_roads()` Raises rgl line previews above the pavement surface so graded
-  terrain does not hide them. Rendered and exported road geometry is unchanged.
-
-- `render_roads()` Prevents layered road surfaces from cutting through terrain
-  between source vertices or across the road width. Preserves curved profiles
-  during meshing and local ground-following behavior along joined roads.
-
-- Overall: Overlay altitude mapping uses the cached ggplot scale, including its
-  limits, transformation, binning, and inversion. Single values and subsets retain
-  consistent heights, including on flat substrates without legends.
-- Overall: `color = "height"` applies the cached ggplot scale transformation before
-  mapping colors, correcting colors for nonlinear scales.
-- Overall: Geographic extent filtering uses straight panel boundaries, preventing
-  polygons inside the plot from being incorrectly clipped.
-- `render_polygons()` Corrects automatic bottom placement when the scene uses
-  vertical scaling, keeping polygon bases between the scene base and surface.
-
-## Other
-
-- `render_roads()` Avoids repeated CRS parsing and growing spatial-table binds
-  when preparing road crossings and continuations. `verbose = TRUE` now reports
-  profile preparation and solving stages before mesh construction begins.
-
-- `render_roads()` Batches bridge-profile terrain contacts across native threads
-  when `parallel = TRUE`. Roads share one terrain snapshot instead of copying
-  and rescanning the full raster for each path. The serial fallback shares the
-  same snapshot; terrain-contact geometry and profile constraints are unchanged.
-
-- `render_roads()` Reuses one owned native terrain snapshot across road
-  densification, cross-sections, and stabilization retries. This avoids repeated
-  full-raster copies and precision scans without changing mesh geometry. The
-  snapshot lasts only for the current call, so terrain edits are picked up on
-  the next call.
-
-- `render_polygons()` Uses `rayvertex::extruded_polygon_mesh()` for extrusion.
-- Overall: Joined descriptive argument names now use snake case throughout the public API.
-  Examples include `window_size`, `base_shape`, `solid_depth`, `shadow_color`,
-  `water_color`, `water_alpha`, `water_line_color`, `water_input`, `text_size`,
-  `sun_angle`, `sun_altitude`, `normal_vectors`, and `progress_bar`. Update named
-  arguments in existing calls to their new names.
-  Established terms such as `heightmap`, `hillshade`, `zscale`, `filename`, and `linewidth`
-  are unchanged, and `camera_lookat` retains `lookat` as one concept.
-  Argument renaming alone does not change defaults or rendering behavior.
+- `render_multipolygonz()` and `save_multipolygonz_to_obj()` preserve
+  concave faces and holes on horizontal, sloping, and vertical surfaces.
+  Ordinary faces are triangulated in native batches. Crossed or overlapping
+  boundaries are repaired in the face plane, and a summary warning identifies
+  faces skipped after triangulation fails or yields zero area. Set
+  `options(rayshader.multipolygonz_repair = FALSE)` to drop ambiguous
+  intersections. `verbose = TRUE` reports preparation and upload stages.
+  `render_polygons()` uses `rayvertex::extruded_polygon_mesh()` for extrusion.
+- `render_tree()` defaults to `load_normals = FALSE` to avoid shading artifacts
+  on low-poly crowns. Set it to `TRUE` to use the model's normals. Negative
+  sizes are discarded after converting absolute elevations, keeping each
+  tree's color, dimensions, and rotation together.
+- Repeated trees and OBJ models share materials. Unrotated instances are built
+  in native batches, preserving geometry, normals, and texture coordinates.
+  Rotated instances retain the general transformation path.
+- Fixed GCC array-bounds warnings in native stream and road code, including
+  stream mesh compilation with Rtools45 on Windows.
 
 # rayshader 0.10.0:
 
